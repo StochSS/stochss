@@ -1,0 +1,23 @@
+{% extends "base.html" %}
+{% block title%}Manage Datastore{% endblock %}
+{% block content %}
+
+        
+        <div class="span9">
+          <div class="hero-unit">
+              <p> A simple status page that lets users see the status and progress
+                  for their jobs that are running in the cloud? </p>
+
+              <div class="progress progress-striped active">
+                  <div class="bar" style="width: 40%;"> Parameter sweep</div>
+              </div>
+              <div class="progress progress-danger active">
+                  <div class="bar" style="width: 20%;">Spatial simulation</div>
+              </div>
+              <div class="progress progress-striped active">
+                  <div class="bar" style="width: 80%;">Basic Model Exploration</div>
+              </div>
+              
+          </div>
+        </div><!--/span-->
+{% endblock %}

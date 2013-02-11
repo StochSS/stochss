@@ -1,0 +1,51 @@
+{% extends "modeleditor.html" %}
+{% block title%}Species Editor{% endblock %}
+{% block modeleditorcontent %}
+
+<div class="span9">
+    
+    <div class="row-fluid">
+    
+        <div class="well well-large">
+             <p> A page that shows a nice overview representation of the model.
+                 Annotations might show up here, and for example number of reactions, #species etc. Maybe also links to output data of computations/visualization of that data that currently exists in the datastore of the app?
+            
+             </p>
+            
+             <h2>Example1</h2>
+            </br>
+            <p> Species: 2 (S,P) </br>
+                Reactions: 2 (R1,R2)</br>
+                Parameters: 5 (mu,k1,k2,k3,Km)</br>
+                Geometry: single compartment (vol=1e-15 L)
+            </p>
+            
+            <hr>
+            
+            <h3> Annotations </h3>
+            
+            My first example model in StochSS. Michaelis-Menten well mixed model.
+            </br>
+            
+            <a href="dfjhsdkfhjksdh">Link to a paper/doc where more info about the model is available. </a>
+            <hr>
+            
+            <h3> Simulations </h3>
+            
+            Example1 is referenced as parent model to the following Jobs:
+            </br>
+            
+            <br>
+            Job id: Ensamble1</br>
+            
+                &nbsp;&nbsp; <a href="dfhdjksfhkjsdhfjksh"> Timeseries plot mean of S,P </a>
+            
+            </br>
+            Job id: paramter sweep 1</br>
+            &nbsp;&nbsp; <a href="dfhdjksfhkjsdhfjksh"> Heat map Km vs mu </a>
+            
+         </div>
+    </div> <!--/row-->
+</div> <!--/span9-->
+
+{% endblock %}

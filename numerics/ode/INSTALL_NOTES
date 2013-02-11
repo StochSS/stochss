@@ -1,0 +1,15 @@
+1. Install StochKit2.0.6 
+2. Set $STOCHKIT_HOME to the home directory of StochKit2.0.6, and add $STOCHKIT_HOME/libs/boost_1_42_0/stage/lib to $LD_LIBRARY_PATH
+3. Unzip cvode-2.7.0 in the cvode directory, configure cvode with parameter --prefix=$PWD/cvode, then install covde:
+	cd cvode
+	tar xzf cvode-2.7.0.tar.gz
+	cd cvode-2.7.0
+	./configure --prefix=$PWD/cvode
+	make
+	make install
+4. Go back to the ODE directory and type "make"
+5. Set $STOCHKIT_ODE to the ODE directory
+6. The executable is ./bin/stochkit_ode (or ./bin/stochkit_ode_debug for debug mode)
+   Example:
+	./bin/stochkit_ode -m $STOCHKIT_HOME/models/examples/dimer_decay.xml -t 10 -i 20 --out-dir ./dimer_decay_ode_output
+     (-i and --out-dir optional)

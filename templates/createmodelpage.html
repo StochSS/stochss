@@ -1,0 +1,68 @@
+{% extends "base.html" %}
+{% block title%}Manage Models{% endblock %}
+{% block content %}
+
+
+<div class="span9">
+    
+    <div class="row-fluid">
+       <div class"span9">
+            
+    </div class="menubar">
+       <ul class="nav nav-tabs">
+          <li><a href="modeleditor/overview">Overview</a></li>
+          <li><a href="modeleditor/specieseditor">Species</a></li>
+          <li><a href="modeleditor/geometryeditor">Geometry</a></li>
+          <li><a href="modeleditor/reactioneditor">Reactions</a></li>
+          <li><a href="modeleditor/codeeditor">Editor</a></li>
+          <li><a href="modeleditor/import">Import</a></li>
+       </ul>
+    </div> <!--/ul-->
+    
+
+
+            <div class="well">
+             
+             <p> This page will evolve into a graphical tool to build
+                 models from scratch. In this version, a model is created
+                 by uploading a StochKit2 model in its native .xml
+                 format. </p> 
+              
+            <h2>Import a Model</h2>
+              
+            <form class="well form" enctype="multipart/form-data" method="post"
+              action="/upload">
+              {% if error %}
+                <div class="control-group error">
+                  <label class="control-label" for="inputError">
+                    There were errors with your submission:
+                      {{ error }}
+                  </label>
+                </div>
+                <br />
+              {% endif %}
+              <label>Name</label>
+              <input type="text" class="span3" id="name" name="name" 
+                placeholder="fooModel" />
+              <span class="help-block">The name this model should be referenced by.
+              </span>
+
+              <br />
+              <div>
+                <label class="control-label" for="model">File:</label>
+                <input class="input-file" name="model" id="model" type="file" />
+              </div>
+
+              <br />
+              <button id="upload" class="btn-primary btn-large">
+                Upload &raquo;
+              </button>
+            </form>
+          </div>
+
+        </div><!--/hero-->
+    
+     </div>
+    </div> <!--/row-->>
+</div> <!--/span9-->
+{% endblock %}

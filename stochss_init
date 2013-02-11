@@ -1,0 +1,6 @@
+#!/bin/bash
+
+# Initalize stochsslib. Set STOCHSSHOME and PYTHONPATH
+wd=$(pwd)
+export STOCHSSHOME=$wd
+export PYTHONPATH=$PYTHONPATH:$STOCHSSHOME

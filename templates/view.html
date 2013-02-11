@@ -1,0 +1,32 @@
+{% extends "base.html" %}
+{% block title%}Upload a Model{% endblock %}
+{% block content %}
+        <div class="span9">
+          <div class="hero-unit">
+            <h2>View Results</h2>
+            <div class="well form" id="form">
+              {% if results_present %}
+                <label class="control-label" for="result">Results:</label>
+                {% for result in results %}
+                  <label class="radio">
+                    <input type="radio" name="result_name" id="result_name"
+                      value="{{result}}">
+                    {{ result }}
+                  </label>
+                {% endfor %}
+                <br />
+                <br />
+                <label id="result"></label>
+                <br />
+                <br />
+                <button id="view" class="btn-primary btn-large">
+                  View Results &raquo;
+                </button>
+              {% else %}
+                No jobs have been run yet. <a href="/run">Run a job?</a>
+              {% endif %}
+
+            </div>
+          </div>
+        </div><!--/span-->
+{% endblock %}

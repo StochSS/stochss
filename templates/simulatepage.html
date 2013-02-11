@@ -1,0 +1,45 @@
+{% extends "base.html" %}
+{% block title%}Simulate{% endblock %}
+{% block content %}
+        <div class="span9">
+          <div class="hero-unit">
+            <h2>Run a stochastic simulation</h2>
+            
+              <br />
+              {% if models_present %}
+              <p>Select a model to get started.</p>
+              <label class="control-label" for="model">Model:</label>
+              {% for model in models %}
+              <label class="radio">
+                  <input type="radio" name="model_name" id="model_name" 
+                      value="{{model}}">
+                      {{ model }}
+                      </label>
+              
+              <br />
+              {% endfor %}
+              
+              <p>
+              <button class="btn btn-primary btn-large" id="newensemble">
+                  New ensemble &raquo;
+              </button>
+              <button class="btn btn-primary btn-large" id="newparametersweep">
+                  New parameter sweep &raquo;
+              </button>
+              </p>
+              <br />
+              
+              <p> Need more control? <a href="/simulate/pipeline">Configure a new computational pipeline.</a></p>
+
+              {% else %}
+              <p>There are no models in the system. <a href="/createmodel">Create a new model?</a></p>
+              {% endif %}
+              
+              
+            <br />
+            <br />
+
+           
+          </div>
+        </div><!--/span-->
+{% endblock %}

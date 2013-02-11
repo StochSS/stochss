@@ -1,0 +1,5 @@
+name:   max
+lang:   python
+input:  ndarray, Timeseries, StochKitTrajectory
+output: ndarray
+
