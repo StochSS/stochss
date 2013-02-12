@@ -63,6 +63,7 @@
 						Add reaction
 					</button>
 
+
 				</div>
 				{% if msg %}
 				{% if status == False %}
@@ -76,6 +77,19 @@
 			<div id="msg" style="display:none"></div>
 			
 			{% if all_reactions %}
+			<a class = "button" href= "#"><span> All the Species</span></a>
+				<ol>
+					{% for key, value in all_reactions.items() %}
+						<li><a href="#">{{all_reactants[key]}}</a></li>
+					{% endfor %}
+				</ol>
+			</div>
+
+			<script>$('div#right-column-sidebar ol li:gt(3)').hide();
+			$('a.button').on("click", function() {
+			$('div#right-column-sidebar ol li:gt(3)').slideToggle();
+			});
+			</script>
 			<h3><a data-toggle="collapse" data-target="#species_list" default> Reactions </a>&raquo; </h3>
 			<br/>
 			<div id="species_list" class="in collapse" style="height: auto">
@@ -103,6 +117,7 @@
 								</td>
 								<td><a href="javascript:void(0)" onclick="javascript:deleteElement('{{key}}')">Delete</a></td>
 							</tr>
+		
 							{% endfor %}
 						</tbody>
 					</table>					
