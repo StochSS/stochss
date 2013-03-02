@@ -71,20 +71,6 @@ def MichaelisMenten(model_name=""):
     
     return model
 
-def Vilar():
-    """ 
-        The Vilar Ocillator.
-        Demonstrates how to create a StochKitModel instance from an existing StochML document.
-    """
-    try:
-        # The environmental variable STOCHSSHOME needs to be defines and should point at the base directory
-        basepath = os.environ['STOCHSSHOME']
-        doc = StochMLDocument.fromFile(basepath+ "/stochss/vilar.xml")
-    except:
-        raise NameError("Could not open vilar.xml")
-    model = doc.toModel('vilar')
-    return model
-
 if __name__ == '__main__':
     """ Create a model and print it to StochML. """
     #model = dimerdecay()
