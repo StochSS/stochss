@@ -14,14 +14,11 @@ import traceback
 import logging
 from google.appengine.api import users
 
-
 from stochss.model import *
 from stochss.stochkit import *
 from stochssapp import BaseHandler
 from stochssapp import StochKitModelWrapper
 from stochssapp import ObjectProperty
-#import stochss.Workspace as wsp
-
 
 try:
     import json
@@ -61,7 +58,6 @@ class SimulatePage(BaseHandler):
 
         model = self.request.get("model_to_simulate")
         self.set_session_property('model_to_simulate',model)
-        #self.response.out.write(model)
         self.redirect('/simulate/newstochkitensemble')
 
 class NewStochkitEnsemblePage(BaseHandler):

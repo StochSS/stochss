@@ -23,6 +23,7 @@ try:
     isSCIPY = True
 except:
     pass
+
 ###### Model description ######
 
 class StochKitModel(Model):

@@ -89,7 +89,6 @@
                     class="active"
                     {% endif %}
                     
-                
               <li
               {% if active_index %}
               class="active"
@@ -103,19 +102,12 @@
                 
               <li class="nav-header">Simulation</li>
                 
-              <!-- <li><a href="/#">Deterministic well mixed</a></li>
-              <li><a href="/#">Stochastic well mixed</a></li>
-              <li><a href="/#">Deterministic spatial</a></li>
-              <li><a href="/#">Stochastic spatial</a></li> -->
               <li><a href="/simulate" TITLE = "Manage Simulations">Simulation manager</a></li>
                 
-                
-              
-              <li class="nav-header">Tools</li>
+              <!-- <li class="nav-header">Tools</li>
               <li><a href="tools/parametersweep" TITLE = "Run a Sweep of all parameters"> Parameter sweep</a></li>
-              <!-- <li><a href="#"> Parameter estimation</a></li> -->
-              <!-- <li><a href="#"> Model exploration</a></li> -->
-                  
+              <li><a href="#"> Parameter estimation</a></li>
+              <li><a href="#"> Model exploration</a></li> -->
                   
               <li class="nav-header">Postprocessing</li>
               
@@ -126,12 +118,6 @@
                 ><a href="/visualize" TITLE = "Generate graphs of the Simulation">Visualize</a>
               </li>
     
-              <!-- <li
-              {% if active_view %}
-              class="active"
-              {% endif %}
-              ><a href="/analyze">Analyze</a></li> -->
-              
                 
               <li class="nav-header">Job Management</li>
                   
@@ -141,11 +127,7 @@
                     {% endif %}
                     ><a href="/status" TITLE = "Observe the progress of your Simulation">Job Status</a></li>
 
-              <!--<li
-              {% if active_visulize %}
-              class="active"
-              {% endif %}
-              ><a href="/workspace">Workspace</a></li> -->
+             
             </ul>
               
           </div><!--/.well -->

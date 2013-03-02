@@ -1,3 +1,0 @@
-These are core numerics routines that operate on the basic datatype, 
-a nd-array. Hence, routines that go here are Stochkit/URDME agnostic. 
-

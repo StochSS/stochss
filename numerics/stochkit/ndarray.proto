@@ -1,6 +1,0 @@
-message ndarray
-{
-    required int64 M = 1;
-    required int64 N = 2;
-    optional bytes data = 3 [default = ""];
-}

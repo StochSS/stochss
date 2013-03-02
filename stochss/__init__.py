@@ -1,1 +1,1 @@
-__all__ = ['model','stochkit']
+__all__ = ["model","stochkit","examplemodels"]
