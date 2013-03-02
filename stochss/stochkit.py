@@ -1,6 +1,33 @@
 """ 
-    StochSS interface for StochKit2.
-    Defines a StochKit2 model, serialization and output datastructures. 
+    
+    StochSS interface to StochKit2.
+    
+    This module implements a class (StochKitModel) that defines a StochKit2 
+    object. StochKitModel extends Model in the 'model.py' module, and supplements 
+    it with StochKit2 specific model serialization (to StochKit's naive XML format). 
+    
+    For examples of how to initialize and makes use of StochKitModel, 
+    consult the examples in the module 'examplemodels.py'.
+    
+    The XML serialization is implemented through a StochMLDocument class, which 
+    rely on either the lxml or etree modules. To serialize a StochKitModel object 'model',
+    simply do
+    
+        print model.serialize()
+
+    which is equivalent to 
+    
+        document = StochMLDocument.fromModel(model)
+        print document.toString()
+    
+    You can also initalize a model from an exisiting XML file (See class documentation).
+    
+    The module also conatains some experimental code for wrapping StochKit output data
+    and writing it to .mat files. This should not presently be used by the GAE app.
+    
+    Raises: InvalidModelError, InvalidStochMLError
+    
+    Contact: Andreas Hellander
     
 """
 
@@ -24,15 +51,13 @@ try:
 except:
     pass
 
-###### Model description ######
-
 class StochKitModel(Model):
     """ StochKitModel extends a well mixed model with StochKit specific serialization. """
 
     def serialize(self):
         """ Serializes a Model object to StochML. """
         
-        # We need to make sure that we can resolve composit parameter values before we can write the StochML document
+        # We need to make sure that we can resolve any composit parameter values before we write the StochML document.
         self.updateNamespace()
         for param in self.listOfParameters:
             try:
@@ -42,12 +67,11 @@ class StochKitModel(Model):
         
         doc = StochMLDocument().fromModel(self)
         return doc.toString()
-        #print doc.toString()
 
-#######  XML Serialization ######
 
 class StochMLDocument():
-    """ Serializiation and deserialization of a StochKitModel to/from StochKit2 XML format (StochML). """
+    """ Serializiation and deserialization of a StochKitModel to/from 
+        the native StochKit2 XML format. """
     
     def __init__(self):
         # The root element
@@ -55,6 +79,8 @@ class StochMLDocument():
     
     @classmethod
     def fromModel(cls,model):
+        """ Intitialzes the document from an exisiting StochKitModel object. """
+        
         # Description
         md = cls()
         
@@ -94,7 +120,7 @@ class StochMLDocument():
     
     @classmethod
     def fromFile(cls,filepath):
-        
+        """ Intializes the document from an exisiting native StochKit XML file. """
         tree = etree.parse(filepath)
         root = tree.getroot()
         md = cls()
@@ -102,7 +128,7 @@ class StochMLDocument():
         return md
     
     def toModel(self,name):
-        """ a model object from a StochMLDocument """
+        """ Instantiates a StochKitModel object from a StochMLDocument. """
         
         # Empty model
         model = StochKitModel(name=name)
@@ -137,7 +163,8 @@ class StochMLDocument():
             s = Species(name,initial_value = val)
             model.addSpecies([s])
         
-        # The namespace_propensity for evaluating the propensity function for reactions should contain all the species and parameters.
+        # The namespace_propensity for evaluating the propensity function for reactions must
+        # contain all the species and parameters.
         namespace_propensity = OrderedDict()
         all_species = model.getAllSpecies()
         all_parameters = model.getAllParameters()
@@ -209,12 +236,11 @@ class StochMLDocument():
         return model
     
     def toString(self):
-        
-        # Print the document
+        """ Returns  the document as a string. """
         try:
             return etree.tostring(self.document, pretty_print=True)
         except:
-            # Hack to print pretty xml without pretty-print. Thanks to stackoverflow!
+            # Hack to print pretty xml without pretty-print (requires the lxml module).
             doc = etree.tostring(self.document)
             xmldoc = xml.dom.minidom.parseString(doc)
             uglyXml = xmldoc.toprettyxml(indent='  ')
@@ -308,7 +334,6 @@ class StochMLDocument():
 
         return e
 
-########## Basic output data types ############
 
 class StochKitTrajectory():
     """
