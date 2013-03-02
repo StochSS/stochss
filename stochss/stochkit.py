@@ -308,7 +308,7 @@ class StochMLDocument():
 
         elif R.type=='customized':
             try:
-                functionElement = etree.Element('propensity_function')
+                functionElement = etree.Element('PropensityFunction')
                 functionElement.text = R.propensity_function
                 e.append(functionElement)
             except:

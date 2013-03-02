@@ -7,8 +7,7 @@ from stochkit import *
 # Examplemodels
 from examplemodels import dimerdecay
 from examplemodels import MichaelisMenten
-from examplemodels import Vilar
-
+#from ../examples/Vilar import Vilar
 
 import unittest
 

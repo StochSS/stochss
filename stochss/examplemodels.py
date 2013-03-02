@@ -48,36 +48,36 @@ def MichaelisMenten(model_name=""):
     model = StochKitModel(name=model_name)
 
     # Species
-    S = Species(name="S",initial_value=1000)
+    S = Species(name="S",initial_value=0)
     P = Species(name="P",initial_value=0)
     
     model.addSpecies([S,P])
 
     # Parameters
+    mu   = Parameter(name="mu",expression=10)
     k1   = Parameter(name="k1",expression=0.1)
     k2   = Parameter(name="k2",expression=10)
     k3   = Parameter(name="k3",expression=1)
     Etot = Parameter(name="Etot",expression=10)
     Vmax = Parameter(name="Vmax",expression='k3*Etot')
     Km   = Parameter(name="Km",expression='(k2+k3)/k1')
-    
-    model.addParameter([k1,k2,k3,Etot,Vmax,Km])
+
+    model.addParameter([mu,k1,k2,k3,Etot,Vmax,Km])
     
     # Reactions
     R1 = Reaction(name="R1", reactants={S:1}, products={P:1}, propensity_function="Vmax*S/(Km+S)",annotation="S->P")
     R2 = Reaction(name="R2", reactants={P:1}, propensity_function="k3*P", annotation="P->0")
-    
-    model.addReaction([R1,R2])
+    R3 = Reaction(name="R3", products={S:1}, propensity_function="mu",annotation="EmptySet->S")
+
+
+    model.addReaction([R1,R2,R3])
     
     return model
 
 if __name__ == '__main__':
     """ Create a model and print it to StochML. """
-    #model = dimerdecay()
     model = MichaelisMenten()
-    #model = Vilar()
-    
-    model.serialize()
-   
+    doc=model.serialize()
+    print doc
 
     
