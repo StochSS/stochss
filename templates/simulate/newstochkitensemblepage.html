@@ -2,17 +2,11 @@
 {% block title%}Simulate{% endblock %}
 {% block simulatecontent %}
 
-<!--  <div class="control-group error">
- <label id="errors" />
- </div> -->
-
-
 <div class="well well-large">
-    
     <form id="submit_stochkit_ensemble" method="post" action="/simulate/newstochkitensemble">
         
         <h2> New StochKit2 Ensemble</h2>
-        <p> Generate a new ensemble using StochKit2. <a href="/help/ensemble.html"> Not sure what this means? </a></p>
+        <p> Generate a new ensemble using StochKit2.</p>
         <label>Name:</label>
         <input type="text" class="span3" name="output" value="">
             
@@ -21,81 +15,70 @@
         <br />
             Simulation time
         <br />
-        <input type="text" class="input-small" disabled="disabled"value="0">
+        <input type="text" class="input-small" disabled="disabled" value="0">
             &nbsp; to &nbsp;
         <input type="text" class="input-small" name="time" placeholder="100">
             &nbsp; store state every &nbsp;
         <input type="text" class="input-small" name="increment" placeholder="0.1"> &nbsp; t.u.
             
-                        <br />
-                        <br />
-                        <label>Realizations</label>
-                        <input type="text" class="span3" name="realizations" value="1">
-                            <span class="help-block">Number of realizations.</span>
+        <br />
+        <label>Realizations</label>
+        <input type="text" class="span3" name="realizations" value="1">
+        <span class="help-block">Number of realizations.</span>
+        <br />
                             
-                            <br />
-                            <br />
-                            <h3>
-                                <a data-toggle="collapse" data-target="#optional">
-                                    Optional Parameters&raquo;
-                                </a>
-                            </h3>
+            
+        <label class="toggle"> Algorithm</label>
+        <input type="radio" id="run-ssa"> SSA</input>
+        <input type="radio" id="run-ssa"> Tau-leaping</input>
+            
+        </br></br>
+        <h3>
+            <a data-toggle="collapse" data-target="#advanced-settings">
+            Advanced settings&raquo;
+            </a>
+        </h3>
                             
-                            <div id="optional" class="collapse">
-                                <br />
+        <div id="advanced-settings" class="collapse">
+            
+            <br />
+            <label class="checkbox">
+                <input type="checkbox" id="only-moments">
+                Store only mean and variances
+            </label>
+            <label class="checkbox">
+                <input type="checkbox" id="keep-histograms">
+                Create histogram data
+            </label>
+            <label class="checkbox">
+                <input type="checkbox" id="label-columns">
+                Label columns with species names
+            </label>
                                 
-                                <!-- <label class="checkbox">
-                                 <input type="checkbox" id="keep-trajectories">
-                                 Keep trajectory data
-                                 </label>
-                                 <label class="checkbox">
-                                 <input type="checkbox" id="keep-histograms">
-                                 Keep histogram data
-                                 </label>
-                                 <label class="checkbox">
-                                 <input type="checkbox" id="label">
-                                 Label columns with species names
-                                 </label> -->
-                                
-                                <br />
-                                <label>Seed</label>
-                                <input type="text" class="span3" name="seed" value="0">
-                                    <span class="help-block">Seed the random number generator.
-                                    </span>
+            <label>Seed</label>
+            <input type="text" class="span3" name="seed" value="0">
+            <span class="help-block">Seed the random number generator.</span>
                                     
-                                    <br />
-                                    <br />
-                                    <label>Epsilon</label>
-                                    <input type="text" class="span3" name="epsilon" value="0.3">
-                                        <span class="help-block">Set the tolerance (applicable to tau
-                                            leaping only). Valid values: must be greater than 0.0 and less than 1.0.
-                                        </span>
+            <br />
+                    
+            <label>Epsilon</label>
+            <input type="text" class="span3" name="epsilon" value="0.1">
+            <span class="help-block">Set the tolerance (applicable to tau
+                                     leaping only). Valid values: must be greater than 0.0 and less than 1.0.</span>
                                         
-                                        <br />
-                                        <br />
-                                        <label>Threshold</label>
-                                        <input type="text" class="span3" name="threshold" value="10">
-                                            <span class="help-block">Set the threshold (minimum number of
-                                                reactions per leap before switching to SSA) for tau leaping.
-                                            </span>
-                                            
-                                            </div>
+            <br />
+            <label>Threshold</label>
+            <input type="text" class="span3" name="threshold" value="10">
+            <span class="help-block">Set the threshold (minimum number of reactions per leap before switching to SSA) for tau leaping.</span>
+                
+        </div> <!-- Advanced settings -->
                             
-                            <br />
-                            <p>
-                            
-                            
-                            <button type="submit" class="btn btn-primary btn-large">
-                                Run Locally &raquo;
-                            </button>
-                            
-                            <button class="btn btn-primary btn-large" id="putonjobstack">
-                                Run via Cloud &raquo;
-                            </button>
-                            
-                            </p>
-                            </form>
-    
-</div>
+        <br />
+            
+        <button type="submit" class="btn btn-primary btn-large">Run Locally &raquo;</button>
+        <button class="btn btn-primary btn-large" id="putonjobstack">Run via Cloud &raquo;</button>
+        
+    </form>
+</div> <!-- well -->
             
 {% endblock %}
