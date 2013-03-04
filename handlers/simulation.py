@@ -61,65 +61,50 @@ class SimulatePage(BaseHandler):
         self.redirect('/simulate/newstochkitensemble')
 
 class NewStochkitEnsemblePage(BaseHandler):
-    
-    """ Page to configure a well mixed stochastic (StochKit2) simulation job.  """
+    """ Page with a form to configure a well mixed stochastic (StochKit2) simulation job.  """
     
     def get(self):
         template = jinja_environment.get_template('simulate/newstochkitensemblepage.html')
         self.response.out.write(template.render({'active_upload': True}))
 
     def post(self):
-        """ Submit StochKit2 job (locally). """
+        """ Assemble the input to StochKit2 and submit the job (locally). """
         
-        # Get the model that is currently in scope
+        
+        params = self.request.POST
+
+        # Get the model that is currently in scope for simulation via the seesion property 'model_to_simulate'
         model_to_simulate=self.get_session_property('model_to_simulate')
         model = db.GqlQuery("SELECT * FROM StochKitModelWrapper WHERE user_id = :1 AND model_name = :2", self.user.user_id(),model_to_simulate).get()
-            #if model_in_scope is None:
-        #   self.response.out.write("No model in scope.")
-            #else:
         model = model.model
         
-        # Create a temporary directory to hold all the StochKit output
-        #tmpbasedir = os.path.join(os.path.dirname(__file__), '../.tmp')
-        #process = os.popen('mktemp -d -p ' + tmpbasedir +'stochkit_output_dir.XXXXXX')
-        #outputdir = process.read()
-        #print outputdir
-        #process.close()
+        # We write all StochKit input and output files to a temporary folder in the root folder of the app
+        prefix_outdir = os.path.join(os.path.dirname(__file__), '../.stochkit_tmp')
         
-        #w = wsp.Workspace()
-        
-        #print(dir(os))
-        
-        # A temporary file to hold the stochkit input XML file
-        # Create a temporary directory to hold all the StochKit output
-        #process = os.popen('mktemp -p '+ tmpbasedir + 'stochkit_input.XXXXXX')
-        #outfile = process.read()
-        #process.close()
-        
-        # Trim newline from outfile
-        #outfile = outfile[:-1]
-        outdir = os.path.join(os.path.dirname(__file__), '../.tmp')
-        # Clean up outdir
+        # If the temporary folder already constains output directories, we remove them
         process = os.popen('rm -rf '+outdir+'/trajectories')
         process.close()
         outfile = "stochkit_temp_input.xml"
-        #fileh = open('newfile.txt','w')
-        #fileh.write('test')
-        #fileh.close()
         mfhandle = open(outfile,'w')
         document = StochMLDocument.fromModel(model)
         mfhandle.write(document.toString())
         mfhandle.close()
     
-        # Parse arguments
-        params = self.request.POST
+        
+        # Parse the required arguments
+        # TODO: Error Checking needed here! But preferably also using AJAX calls similar to what Gautham
+        #       implemented for the Model editor.
+        
         ensemblename = params['output']
         time = params['time']
         realizations = params['realizations']
         increment = params['increment']
         seed = params['seed']
         
-        # Assemble the argment list for StochKit ssa
+        # Algorithm, SSA or Tau-leaping?
+        executable = params['algorithm']
+        
+        # Assemble the argument list
         args = ""
         args+='--model '
         args+=outfile
@@ -131,19 +116,18 @@ class NewStochkitEnsemblePage(BaseHandler):
         args+=' --realizations '
         args+=str(realizations)
         
-        # We keep all the trajectories
+        # We keep all the trajectories by default. The user can select to only store means and variance
+        # throught the advanced options.
         args+=' --keep-trajectories'
-        
         args+=' --seed '
         args+=str(seed)
 
-        # Run StochKit
+        # If we are using local mode, shell out and run StochKit
         process = os.popen('ssa '+args)
         stochkit_output_message = process.read()
         process.close()
         
         # Collect output trajectories into a 3D numpy array
-        #files = os.listdir(outdir + '/trajectories') AH: os.listdir not activated!
         process = os.popen('ls '+outdir+'/trajectories')
         files = process.read()
         process.close()
@@ -176,7 +160,6 @@ class NewStochkitEnsemblePage(BaseHandler):
         #ensemblewrapper.user_id = self.user.user_id()
         #ensemblewrapper.name = stochkit_ensemble.id
         #ensemblewrapper.put()
-                    
                     
         self.response.out.write("Mean values: " + str(np.mean(listOfTrajectories,axis=0)))
 
