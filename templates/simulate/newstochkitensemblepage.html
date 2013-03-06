@@ -28,11 +28,13 @@
         <br />
                             
         <div>
-        <label> Algorithm</label>
+        <label>Algorithm</label>
         <input type="radio" name="algorithm" value="ssa" checked> SSA</input>
         <input style="padding-left: 100px;" type="radio" name="algorithm" value="tau_leaping"> Tau-leaping</input>
         </div>
         </br></br>
+          
+        <!-- Optional parameters to the SSA and Tau-leaping solvers. -->
         <h3>
             <a data-toggle="collapse" data-target="#advanced-settings">
             Advanced settings&raquo;
@@ -42,18 +44,23 @@
         <div id="advanced-settings" class="collapse">
             
             <br />
+            <div class="control-group">
             <label class="checkbox">
-                <input type="checkbox" id="only-moments">
+                <input type="checkbox" name="only-moments" value="only-moments">
                 Store only mean and variances
             </label>
             <label class="checkbox">
-                <input type="checkbox" id="keep-histograms">
-                Create histogram data
+                <input type="checkbox" name="label-columns" value="label-columns">
+                Label trajectories with species names
+                <span class="help-block"> (Only applicable if all trajectories are stored.)</span>
+
             </label>
             <label class="checkbox">
-                <input type="checkbox" id="label-columns">
-                Label columns with species names
+                <input type="checkbox" name="keep-histograms" value="keep-histograms">
+                Create histogram data
             </label>
+            
+            </div>
                                 
             <label>Seed</label>
             <input type="text" class="span3" name="seed" value="0">

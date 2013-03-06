@@ -32,7 +32,7 @@
 """
 
 from model import *
-import numpy as np
+#import numpy as np
 from collections import OrderedDict
 
 try:

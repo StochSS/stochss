@@ -6,7 +6,7 @@ import urllib
 import webapp2
 import subprocess
 import tempfile
-import numpy as np
+#import numpy as np
 
 from google.appengine.ext import db
 import pickle
@@ -60,6 +60,11 @@ class SimulatePage(BaseHandler):
         self.set_session_property('model_to_simulate',model)
         self.redirect('/simulate/newstochkitensemble')
 
+
+def parseNewStochKitEnsblePage(params):
+    """ Helper function to parse the form """
+    
+
 class NewStochkitEnsemblePage(BaseHandler):
     """ Page with a form to configure a well mixed stochastic (StochKit2) simulation job.  """
     
@@ -70,32 +75,43 @@ class NewStochkitEnsemblePage(BaseHandler):
     def post(self):
         """ Assemble the input to StochKit2 and submit the job (locally). """
         
-        
+        # Params is a dict that constains all response elements of the form
         params = self.request.POST
-
+        
         # Get the model that is currently in scope for simulation via the seesion property 'model_to_simulate'
         model_to_simulate=self.get_session_property('model_to_simulate')
         model = db.GqlQuery("SELECT * FROM StochKitModelWrapper WHERE user_id = :1 AND model_name = :2", self.user.user_id(),model_to_simulate).get()
         model = model.model
         
         # We write all StochKit input and output files to a temporary folder in the root folder of the app
-        prefix_outdir = os.path.join(os.path.dirname(__file__), '../.stochkit_tmp')
+        prefix_outdir = os.path.join(os.path.dirname(__file__), '../.stochkit_output')
         
-        # If the temporary folder already constains output directories, we remove them
-        process = os.popen('rm -rf '+outdir+'/trajectories')
+        # If the base output directory does not exsit, we create it
+        process = os.popen('mkdir '+prefix_outdir);
         process.close()
-        outfile = "stochkit_temp_input.xml"
+
+        # Write a temporary StochKit2 input file.
+        outfile =  "stochkit_temp_input.xml"
         mfhandle = open(outfile,'w')
         document = StochMLDocument.fromModel(model)
         mfhandle.write(document.toString())
         mfhandle.close()
-    
         
         # Parse the required arguments
         # TODO: Error Checking needed here! But preferably also using AJAX calls similar to what Gautham
         #       implemented for the Model editor.
         
         ensemblename = params['output']
+        
+        # If the temporary folder we need to create to hold the output data already exists, we error
+        process = os.popen('ls '+prefix_outdir)
+        directories = process.read();
+        process.close()
+        if ensemblename in directories:
+            raise ValueError
+
+        outdir = prefix_outdir+'/'+ensemblename
+                
         time = params['time']
         realizations = params['realizations']
         increment = params['increment']
@@ -105,10 +121,10 @@ class NewStochkitEnsemblePage(BaseHandler):
         executable = params['algorithm']
         
         # Assemble the argument list
-        args = ""
+        args = ''
         args+='--model '
         args+=outfile
-        args+=' --out-dir '+outdir + ' --force '
+        args+=' --out-dir '+outdir
         args+=' -t '
         args+=str(time)
         num_output_points = str(int(float(time)/int(increment)))
@@ -118,50 +134,31 @@ class NewStochkitEnsemblePage(BaseHandler):
         
         # We keep all the trajectories by default. The user can select to only store means and variance
         # throught the advanced options.
-        args+=' --keep-trajectories'
+        
+        # TODO: Check the advanced options to figure out if --keep-trajectories should be defined or not.
+        if not "only-moments" in params:
+            args+=' --keep-trajectories'
+        
+        if "label-columns" in params:
+            args+=' --label'
+                
+        if "keep-histograms" in params:
+            args+=' --keep-histograms'
+
+        # TODO: We need a robust way to pick a default seed for the ensemble. It needs to be robust in a ditributed, parallel env.
         args+=' --seed '
         args+=str(seed)
 
-        # If we are using local mode, shell out and run StochKit
-        process = os.popen('ssa '+args)
+        # If we are using local mode, shell out and run StochKit (SSA or Tau-leaping)
+        cmd = executable+' '+args
+        # AH: Can't test for failed execution here, popen does not return stderr.   
+        process = os.popen(cmd)
         stochkit_output_message = process.read()
         process.close()
-        
-        # Collect output trajectories into a 3D numpy array
-        process = os.popen('ls '+outdir+'/trajectories')
-        files = process.read()
-        process.close()
-        files = files.split()
-        listOfTrajectories = []
-        for filename in files:
-            if 'trajectory' in filename:
-                resfile=outdir + '/trajectories/' + filename
-                locresfile = os.path.join(os.path.dirname(__file__), '../')+filename
-                process = os.popen('cp '+ resfile +' '+locresfile)
-                process.read()
-                process.close()
-                tfile = open(locresfile,'r')
-                listOfTrajectories.append(np.loadtxt(tfile))
-                tfile.close()
-                process = os.popen('rm '+locresfile)
-                process.close()
-            else:
-                self.response.write('Couldn\'t identify file (' + filename + ') found in output folder')
-    
-        # Initialize a StochKitEnsemble Object
-        stochkit_ensemble=StochKitEnsemble(id=ensemblename,trajectories=listOfTrajectories,parentmodel=model)
-        # Requires SciPy
-        #stochkit_ensemble.dump(filename=ensemblename+'.mat')
-        
-        # Stage-Out (put StochKitEnsemble in the datastore)
-    
-        # This fails if the data is too big.
-        #ensemblewrapper = StochKitEnsembleWrapper()
-        #ensemblewrapper.user_id = self.user.user_id()
-        #ensemblewrapper.name = stochkit_ensemble.id
-        #ensemblewrapper.put()
-                    
-        self.response.out.write("Mean values: " + str(np.mean(listOfTrajectories,axis=0)))
+                
+        self.response.out.write(stochkit_output_message)
+        # Run StochKit
+        # process = runLocal(cmd,)
 
 
 class JobSettingsPage(webapp2.RequestHandler):
