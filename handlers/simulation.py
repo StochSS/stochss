@@ -107,8 +107,11 @@ class NewStochkitEnsemblePage(BaseHandler):
         process = os.popen('ls '+prefix_outdir)
         directories = process.read();
         process.close()
+        
+        # TODO: Replace this simple test with something better.
         if ensemblename in directories:
-            raise ValueError
+            self.response.out.write("Ensemble name already exist. You need to input a unique name.")
+            return
 
         outdir = prefix_outdir+'/'+ensemblename
                 
@@ -133,9 +136,7 @@ class NewStochkitEnsemblePage(BaseHandler):
         args+=str(realizations)
         
         # We keep all the trajectories by default. The user can select to only store means and variance
-        # throught the advanced options.
-        
-        # TODO: Check the advanced options to figure out if --keep-trajectories should be defined or not.
+        # throught the advanced options.        
         if not "only-moments" in params:
             args+=' --keep-trajectories'
         
