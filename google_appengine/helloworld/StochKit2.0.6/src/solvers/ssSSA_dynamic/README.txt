@@ -1,1 +1,0 @@
-Please consult the file ssSSA_manual.pdf for installation and usage instructions for this beta implementation of the slow-scale SSA.
