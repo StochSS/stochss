@@ -1,0 +1,17 @@
+#!/bin/bash
+#check environment variables and run single_trajectory_debug
+
+#set -x
+
+if [ "$STOCHKIT_HOME" == "" ]; then
+  pushd "$(dirname "$0")" > /dev/null
+  export STOCHKIT_HOME="`pwd -P`/../.."
+  popd > /dev/null
+fi
+
+#Linux
+export LD_LIBRARY_PATH="$LD_LIRARY_PATH:$STOCHKIT_HOME/libs/boost_1_42_0/stage/lib/"
+#Mac
+export DYLD_LIBRARY_PATH="$DYLD_LIRARY_PATH:$STOCHKIT_HOME/libs/boost_1_42_0/stage/lib/"
+
+"$STOCHKIT_HOME/custom_drivers/single_trajectory/bin/single_trajectory_debug" $@

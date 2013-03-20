@@ -1,0 +1,30 @@
+<Model>
+  <NumberOfReactions>1</NumberOfReactions>
+  <NumberOfSpecies>1</NumberOfSpecies>
+
+  <ParametersList>
+    <Parameter>
+      <Id>P1</Id>
+      <Expression>1.0</Expression>
+    </Parameter>
+  </ParametersList>
+
+  <ReactionsList>
+     <Reaction>
+       <Id>R1</Id>
+       <Type>mass-action</Type>
+       <Rate>P1</Rate> 
+       <Reactants>
+           <SpeciesReference id="S1" stoichiometry="1"/>
+       </Reactants>
+     </Reaction>
+  </ReactionsList>
+
+  <SpeciesList>
+     <Species>
+       <Id>S1</Id>
+       <InitialPopulation>100</InitialPopulation>
+     </Species>
+  </SpeciesList>
+
+</Model>

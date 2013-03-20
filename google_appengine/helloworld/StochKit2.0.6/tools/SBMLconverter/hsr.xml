@@ -1,0 +1,908 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<sbml xmlns="http://www.sbml.org/sbml/level1" level="1" version="1">
+<model name="HeatShock">
+  
+  <listOfCompartments>
+    <compartment name="HeatShock" />
+  </listOfCompartments>
+  
+  <listOfSpecies>
+    <specie name="S1" compartment="HeatShock" initialAmount="0" boundaryCondition="false" />
+    <specie name="S2" compartment="HeatShock" initialAmount="0" boundaryCondition="false" />
+    <specie name="S3" compartment="HeatShock" initialAmount="0" boundaryCondition="false" />
+    <specie name="S4" compartment="HeatShock" initialAmount="0" boundaryCondition="false" />
+    <specie name="S5" compartment="HeatShock" initialAmount="1" boundaryCondition="false" />
+    <specie name="S6" compartment="HeatShock" initialAmount="4.64567e+06" boundaryCondition="false" />
+    <specie name="S7" compartment="HeatShock" initialAmount="1324" boundaryCondition="false" />
+    <specie name="S8" compartment="HeatShock" initialAmount="80" boundaryCondition="false" />
+    <specie name="S9" compartment="HeatShock" initialAmount="16" boundaryCondition="false" />
+    <specie name="S10" compartment="HeatShock" initialAmount="3413" boundaryCondition="false" />
+    <specie name="S11" compartment="HeatShock" initialAmount="29" boundaryCondition="false" />
+    <specie name="S12" compartment="HeatShock" initialAmount="584" boundaryCondition="false" />
+    <specie name="S13" compartment="HeatShock" initialAmount="1" boundaryCondition="false" />
+    <specie name="S14" compartment="HeatShock" initialAmount="22" boundaryCondition="false" />
+    <specie name="S15" compartment="HeatShock" initialAmount="0" boundaryCondition="false" />
+    <specie name="S16" compartment="HeatShock" initialAmount="171440" boundaryCondition="false" />
+    <specie name="S17" compartment="HeatShock" initialAmount="9150" boundaryCondition="false" />
+    <specie name="S18" compartment="HeatShock" initialAmount="2280" boundaryCondition="false" />
+    <specie name="S19" compartment="HeatShock" initialAmount="6" boundaryCondition="false" />
+    <specie name="S20" compartment="HeatShock" initialAmount="596" boundaryCondition="false" />
+    <specie name="S21" compartment="HeatShock" initialAmount="0" boundaryCondition="false" />
+    <specie name="S22" compartment="HeatShock" initialAmount="13" boundaryCondition="false" />
+    <specie name="S23" compartment="HeatShock" initialAmount="3" boundaryCondition="false" />
+    <specie name="S24" compartment="HeatShock" initialAmount="3" boundaryCondition="false" />
+    <specie name="S25" compartment="HeatShock" initialAmount="7" boundaryCondition="false" />
+    <specie name="S26" compartment="HeatShock" initialAmount="0" boundaryCondition="false" />
+    <specie name="S27" compartment="HeatShock" initialAmount="260" boundaryCondition="false" />
+    <specie name="S28" compartment="HeatShock" initialAmount="0" boundaryCondition="false" />
+  </listOfSpecies>
+
+  <listOfReactions>
+    <reaction name="Reaction1" reversible="false">
+      <listOfReactants>
+        <specieReference specie="S1" stoichiometry="1"/>
+        <specieReference specie="S2" stoichiometry="1"/>
+      </listOfReactants>
+      <listOfProducts>
+        <specieReference specie="S3" stoichiometry="1"/>
+      </listOfProducts>
+      <kineticLaw formula="C1*S1*S2">
+        <listOfParameters>
+        <parameter name="C1" value="2.54" />
+        </listOfParameters>
+      </kineticLaw>
+    </reaction>
+
+    <reaction name="Reaction2" reversible="false">
+      <listOfReactants>
+        <specieReference specie="S3" stoichiometry="1"/>
+      </listOfReactants>
+      <listOfProducts>
+        <specieReference specie="S1" stoichiometry="1"/>
+        <specieReference specie="S2" stoichiometry="1"/>
+      </listOfProducts>
+      <kineticLaw formula="C2*S3">
+        <listOfParameters>
+        <parameter name="C2" value="1" />
+        </listOfParameters>
+      </kineticLaw>
+    </reaction>
+
+    <reaction name="Reaction3" reversible="false">
+      <listOfReactants>
+        <specieReference specie="S4" stoichiometry="1"/>
+        <specieReference specie="S1" stoichiometry="1"/>
+      </listOfReactants>
+      <listOfProducts>
+        <specieReference specie="S5" stoichiometry="1"/>
+      </listOfProducts>
+      <kineticLaw formula="C3*S1*S4">
+        <listOfParameters>
+        <parameter name="C3" value="0.254" />
+        </listOfParameters>
+      </kineticLaw>
+    </reaction>
+
+    <reaction name="Reaction4" reversible="false">
+      <listOfReactants>
+        <specieReference specie="S5" stoichiometry="1"/>
+      </listOfReactants>
+      <listOfProducts>
+        <specieReference specie="S4" stoichiometry="1"/>
+        <specieReference specie="S1" stoichiometry="1"/>
+      </listOfProducts>
+      <kineticLaw formula="C4*S5">
+        <listOfParameters>
+        <parameter name="C4" value="1" />
+        </listOfParameters>
+      </kineticLaw>
+    </reaction>
+
+    <reaction name="Reaction5" reversible="false">
+      <listOfReactants>
+        <specieReference specie="S1" stoichiometry="1"/>
+        <specieReference specie="S6" stoichiometry="1"/>
+      </listOfReactants>
+      <listOfProducts>
+        <specieReference specie="S7" stoichiometry="1"/>
+      </listOfProducts>
+      <kineticLaw formula="C5*S1*S6">
+        <listOfParameters>
+        <parameter name="C5" value="0.0254" />
+        </listOfParameters>
+      </kineticLaw>
+    </reaction>
+
+    <reaction name="Reaction6" reversible="false">
+      <listOfReactants>
+        <specieReference specie="S7" stoichiometry="1"/>
+      </listOfReactants>
+      <listOfProducts>
+        <specieReference specie="S1" stoichiometry="1"/>
+        <specieReference specie="S6" stoichiometry="1"/>
+      </listOfProducts>
+      <kineticLaw formula="C6*S7">
+        <listOfParameters>
+        <parameter name="C6" value="10" />
+        </listOfParameters>
+      </kineticLaw>
+    </reaction>
+
+    <reaction name="Reaction7" reversible="false">
+      <listOfReactants>
+        <specieReference specie="S4" stoichiometry="1"/>
+        <specieReference specie="S14" stoichiometry="1"/>
+      </listOfReactants>
+      <listOfProducts>
+        <specieReference specie="S15" stoichiometry="1"/>
+      </listOfProducts>
+      <kineticLaw formula="C7*S4*S14">
+        <listOfParameters>
+        <parameter name="C7" value="254" />
+        </listOfParameters>
+      </kineticLaw>
+    </reaction>
+
+    <reaction name="Reaction8" reversible="false">
+      <listOfReactants>
+        <specieReference specie="S15" stoichiometry="1"/>
+      </listOfReactants>
+      <listOfProducts>
+        <specieReference specie="S4" stoichiometry="1"/>
+        <specieReference specie="S14" stoichiometry="1"/>
+      </listOfProducts>
+      <kineticLaw formula="C8*S15">
+        <listOfParameters>
+        <parameter name="C8" value="10000" />
+        </listOfParameters>
+      </kineticLaw>
+    </reaction>
+
+    <reaction name="Reaction9" reversible="false">
+      <listOfReactants>
+        <specieReference specie="S16" stoichiometry="1"/>
+        <specieReference specie="S14" stoichiometry="1"/>
+      </listOfReactants>
+      <listOfProducts>
+        <specieReference specie="S17" stoichiometry="1"/>
+      </listOfProducts>
+      <kineticLaw formula="C9*S14*S16">
+        <listOfParameters>
+        <parameter name="C9" value="0.000254" />
+        </listOfParameters>
+      </kineticLaw>
+    </reaction>
+
+    <reaction name="Reaction10" reversible="false">
+      <listOfReactants>
+        <specieReference specie="S17" stoichiometry="1"/>
+      </listOfReactants>
+      <listOfProducts>
+        <specieReference specie="S16" stoichiometry="1"/>
+        <specieReference specie="S14" stoichiometry="1"/>
+      </listOfProducts>
+      <kineticLaw formula="C10*S17">
+        <listOfParameters>
+        <parameter name="C10" value="0.01" />
+        </listOfParameters>
+      </kineticLaw>
+    </reaction>
+
+    <reaction name="Reaction11" reversible="false">
+      <listOfReactants>
+        <specieReference specie="S3" stoichiometry="1"/>
+        <specieReference specie="S6" stoichiometry="1"/>
+      </listOfReactants>
+      <listOfProducts>
+        <specieReference specie="S8" stoichiometry="1"/>
+      </listOfProducts>
+      <kineticLaw formula="C11*S3*S6">
+        <listOfParameters>
+        <parameter name="C11" value="0.000254" />
+        </listOfParameters>
+      </kineticLaw>
+    </reaction>
+
+    <reaction name="Reaction12" reversible="false">
+      <listOfReactants>
+        <specieReference specie="S8" stoichiometry="1"/>
+      </listOfReactants>
+      <listOfProducts>
+        <specieReference specie="S3" stoichiometry="1"/>
+        <specieReference specie="S6" stoichiometry="1"/>
+      </listOfProducts>
+      <kineticLaw formula="C12*S8">
+        <listOfParameters>
+        <parameter name="C12" value="1" />
+        </listOfParameters>
+      </kineticLaw>
+    </reaction>
+
+    <reaction name="Reaction13" reversible="false">
+      <listOfReactants>
+        <specieReference specie="S5" stoichiometry="1"/>
+        <specieReference specie="S6" stoichiometry="1"/>
+      </listOfReactants>
+      <listOfProducts>
+        <specieReference specie="S9" stoichiometry="1"/>
+      </listOfProducts>
+      <kineticLaw formula="C13*S5*S6">
+        <listOfParameters>
+        <parameter name="C13" value="0.000254" />
+        </listOfParameters>
+      </kineticLaw>
+    </reaction>
+
+    <reaction name="Reaction14" reversible="false">
+      <listOfReactants>
+        <specieReference specie="S9" stoichiometry="1"/>
+      </listOfReactants>
+      <listOfProducts>
+        <specieReference specie="S5" stoichiometry="1"/>
+        <specieReference specie="S6" stoichiometry="1"/>
+      </listOfProducts>
+      <kineticLaw formula="C14*S9">
+        <listOfParameters>
+        <parameter name="C14" value="1" />
+        </listOfParameters>
+      </kineticLaw>
+    </reaction>
+
+    <reaction name="Reaction15" reversible="false">
+      <listOfReactants>
+        <specieReference specie="S3" stoichiometry="1"/>
+        <specieReference specie="S10" stoichiometry="1"/>
+      </listOfReactants>
+      <listOfProducts>
+        <specieReference specie="S12" stoichiometry="1"/>
+      </listOfProducts>
+      <kineticLaw formula="C15*S3*S10">
+        <listOfParameters>
+        <parameter name="C15" value="2.54" />
+        </listOfParameters>
+      </kineticLaw>
+    </reaction>
+
+    <reaction name="Reaction16" reversible="false">
+      <listOfReactants>
+        <specieReference specie="S12" stoichiometry="1"/>
+      </listOfReactants>
+      <listOfProducts>
+        <specieReference specie="S3" stoichiometry="1"/>
+        <specieReference specie="S10" stoichiometry="1"/>
+      </listOfProducts>
+      <kineticLaw formula="C16*S12">
+        <listOfParameters>
+        <parameter name="C16" value="1" />
+        </listOfParameters>
+      </kineticLaw>
+    </reaction>
+
+    <reaction name="Reaction17" reversible="false">
+      <listOfReactants>
+        <specieReference specie="S5" stoichiometry="1"/>
+        <specieReference specie="S11" stoichiometry="1"/>
+      </listOfReactants>
+      <listOfProducts>
+        <specieReference specie="S13" stoichiometry="1"/>
+      </listOfProducts>
+      <kineticLaw formula="C17*S5*S11">
+        <listOfParameters>
+        <parameter name="C17" value="2540" />
+        </listOfParameters>
+      </kineticLaw>
+    </reaction>
+
+    <reaction name="Reaction18" reversible="false">
+      <listOfReactants>
+        <specieReference specie="S13" stoichiometry="1"/>
+      </listOfReactants>
+      <listOfProducts>
+        <specieReference specie="S5" stoichiometry="1"/>
+        <specieReference specie="S11" stoichiometry="1"/>
+      </listOfProducts>
+      <kineticLaw formula="C18*S13">
+        <listOfParameters>
+        <parameter name="C18" value="1000" />
+        </listOfParameters>
+      </kineticLaw>
+    </reaction>
+
+    <reaction name="Reaction19" reversible="false">
+      <listOfReactants>
+        <specieReference specie="S15" stoichiometry="1"/>
+        <specieReference specie="S18" stoichiometry="1"/>
+      </listOfReactants>
+      <listOfProducts>
+        <specieReference specie="S19" stoichiometry="1"/>
+      </listOfProducts>
+      <kineticLaw formula="C19*S15*S18">
+        <listOfParameters>
+        <parameter name="C19" value="0.0254" />
+        </listOfParameters>
+      </kineticLaw>
+    </reaction>
+
+    <reaction name="Reaction20" reversible="false">
+      <listOfReactants>
+        <specieReference specie="S19" stoichiometry="1"/>
+      </listOfReactants>
+      <listOfProducts>
+        <specieReference specie="S15" stoichiometry="1"/>
+        <specieReference specie="S18" stoichiometry="1"/>
+      </listOfProducts>
+      <kineticLaw formula="C20*S19">
+        <listOfParameters>
+        <parameter name="C20" value="1" />
+        </listOfParameters>
+      </kineticLaw>
+    </reaction>
+
+    <reaction name="Reaction21" reversible="false">
+      <listOfReactants>
+        <specieReference specie="S13" stoichiometry="1"/>
+      </listOfReactants>
+      <listOfProducts>
+        <specieReference specie="S22" stoichiometry="1"/>
+        <specieReference specie="S13" stoichiometry="1"/>
+      </listOfProducts>
+      <kineticLaw formula="C21*S13">
+        <listOfParameters>
+        <parameter name="C21" value="6.62" />
+        </listOfParameters>
+      </kineticLaw>
+    </reaction>
+
+    <reaction name="Reaction22" reversible="false">
+      <listOfReactants>
+        <specieReference specie="S22" stoichiometry="1"/>
+      </listOfReactants>
+      <kineticLaw formula="C22*S22">
+        <listOfParameters>
+        <parameter name="C22" value="0.5" />
+        </listOfParameters>
+      </kineticLaw>
+    </reaction>
+
+    <reaction name="Reaction23" reversible="false">
+      <listOfReactants>
+        <specieReference specie="S22" stoichiometry="1"/>
+      </listOfReactants>
+      <listOfProducts>
+        <specieReference specie="S14" stoichiometry="1"/>
+        <specieReference specie="S22" stoichiometry="1"/>
+      </listOfProducts>
+      <kineticLaw formula="C23*S22">
+        <listOfParameters>
+        <parameter name="C23" value="20" />
+        </listOfParameters>
+      </kineticLaw>
+    </reaction>
+
+    <reaction name="Reaction24" reversible="false">
+      <listOfReactants>
+        <specieReference specie="S14" stoichiometry="1"/>
+      </listOfReactants>
+      <kineticLaw formula="C24*S14">
+        <listOfParameters>
+        <parameter name="C24" value="0.03" />
+        </listOfParameters>
+      </kineticLaw>
+    </reaction>
+
+    <reaction name="Reaction25" reversible="false">
+      <listOfReactants>
+        <specieReference specie="S17" stoichiometry="1"/>
+      </listOfReactants>
+      <listOfProducts>
+        <specieReference specie="S16" stoichiometry="1"/>
+      </listOfProducts>
+      <kineticLaw formula="C25*S17">
+        <listOfParameters>
+        <parameter name="C25" value="0.03" />
+        </listOfParameters>
+      </kineticLaw>
+    </reaction>
+
+    <reaction name="Reaction26" reversible="false">
+      <listOfReactants>
+        <specieReference specie="S15" stoichiometry="1"/>
+      </listOfReactants>
+      <listOfProducts>
+        <specieReference specie="S4" stoichiometry="1"/>
+      </listOfProducts>
+      <kineticLaw formula="C26*S15">
+        <listOfParameters>
+        <parameter name="C26" value="0.03" />
+        </listOfParameters>
+      </kineticLaw>
+    </reaction>
+
+    <reaction name="Reaction27" reversible="false">
+      <listOfReactants>
+        <specieReference specie="S19" stoichiometry="1"/>
+      </listOfReactants>
+      <listOfProducts>
+        <specieReference specie="S4" stoichiometry="1"/>
+        <specieReference specie="S18" stoichiometry="1"/>
+      </listOfProducts>
+      <kineticLaw formula="C27*S19">
+        <listOfParameters>
+        <parameter name="C27" value="0.03" />
+        </listOfParameters>
+      </kineticLaw>
+    </reaction>
+
+    <reaction name="Reaction28" reversible="false">
+      <listOfReactants>
+        <specieReference specie="S28" stoichiometry="1"/>
+      </listOfReactants>
+      <listOfProducts>
+        <specieReference specie="S4" stoichiometry="1"/>
+        <specieReference specie="S27" stoichiometry="1"/>
+      </listOfProducts>
+      <kineticLaw formula="C28*S28">
+        <listOfParameters>
+        <parameter name="C28" value="0.03" />
+        </listOfParameters>
+      </kineticLaw>
+    </reaction>
+
+    <reaction name="Reaction29" reversible="false">
+      <listOfReactants>
+        <specieReference specie="S13" stoichiometry="1"/>
+      </listOfReactants>
+      <listOfProducts>
+        <specieReference specie="S23" stoichiometry="1"/>
+        <specieReference specie="S13" stoichiometry="1"/>
+      </listOfProducts>
+      <kineticLaw formula="C29*S13">
+        <listOfParameters>
+        <parameter name="C29" value="1.67" />
+        </listOfParameters>
+      </kineticLaw>
+    </reaction>
+
+    <reaction name="Reaction30" reversible="false">
+      <listOfReactants>
+        <specieReference specie="S23" stoichiometry="1"/>
+      </listOfReactants>
+      <kineticLaw formula="C30*S23">
+        <listOfParameters>
+        <parameter name="C30" value="0.5" />
+        </listOfParameters>
+      </kineticLaw>
+    </reaction>
+
+    <reaction name="Reaction31" reversible="false">
+      <listOfReactants>
+        <specieReference specie="S23" stoichiometry="1"/>
+      </listOfReactants>
+      <listOfProducts>
+        <specieReference specie="S18" stoichiometry="1"/>
+        <specieReference specie="S23" stoichiometry="1"/>
+      </listOfProducts>
+      <kineticLaw formula="C31*S23">
+        <listOfParameters>
+        <parameter name="C31" value="20" />
+        </listOfParameters>
+      </kineticLaw>
+    </reaction>
+
+    <reaction name="Reaction32" reversible="false">
+      <listOfReactants>
+        <specieReference specie="S18" stoichiometry="1"/>
+      </listOfReactants>
+      <kineticLaw formula="C32*S18">
+        <listOfParameters>
+        <parameter name="C32" value="0.03" />
+        </listOfParameters>
+      </kineticLaw>
+    </reaction>
+
+    <reaction name="Reaction33" reversible="false">
+      <listOfReactants>
+        <specieReference specie="S19" stoichiometry="1"/>
+      </listOfReactants>
+      <listOfProducts>
+        <specieReference specie="S15" stoichiometry="1"/>
+      </listOfProducts>
+      <kineticLaw formula="C33*S19">
+        <listOfParameters>
+        <parameter name="C33" value="0.03" />
+        </listOfParameters>
+      </kineticLaw>
+    </reaction>
+
+    <reaction name="Reaction34" reversible="false">
+      <listOfReactants>
+        <specieReference specie="S12" stoichiometry="1"/>
+      </listOfReactants>
+      <listOfProducts>
+        <specieReference specie="S25" stoichiometry="1"/>
+        <specieReference specie="S12" stoichiometry="1"/>
+      </listOfProducts>
+      <kineticLaw formula="C34*S12">
+        <listOfParameters>
+        <parameter name="C34" value="0.00625" />
+        </listOfParameters>
+      </kineticLaw>
+    </reaction>
+
+    <reaction name="Reaction35" reversible="false">
+      <listOfReactants>
+        <specieReference specie="S25" stoichiometry="1"/>
+      </listOfReactants>
+      <kineticLaw formula="C35*S25">
+        <listOfParameters>
+        <parameter name="C35" value="0.5" />
+        </listOfParameters>
+      </kineticLaw>
+    </reaction>
+
+    <reaction name="Reaction36" reversible="false">
+      <listOfReactants>
+        <specieReference specie="S25" stoichiometry="1"/>
+      </listOfReactants>
+      <listOfProducts>
+        <specieReference specie="S4" stoichiometry="1"/>
+        <specieReference specie="S25" stoichiometry="1"/>
+      </listOfProducts>
+      <kineticLaw formula="C36*S25">
+        <listOfParameters>
+        <parameter name="C36" value="7" />
+        </listOfParameters>
+      </kineticLaw>
+    </reaction>
+
+    <reaction name="Reaction37" reversible="false">
+      <listOfReactants>
+        <specieReference specie="S4" stoichiometry="1"/>
+      </listOfReactants>
+      <kineticLaw formula="C37*S4">
+        <listOfParameters>
+        <parameter name="C37" value="0.03" />
+        </listOfParameters>
+      </kineticLaw>
+    </reaction>
+
+    <reaction name="Reaction38" reversible="false">
+      <listOfReactants>
+        <specieReference specie="S19" stoichiometry="1"/>
+      </listOfReactants>
+      <listOfProducts>
+        <specieReference specie="S18" stoichiometry="1"/>
+        <specieReference specie="S14" stoichiometry="1"/>
+      </listOfProducts>
+      <kineticLaw formula="C38*S19">
+        <listOfParameters>
+        <parameter name="C38" value="3" />
+        </listOfParameters>
+      </kineticLaw>
+    </reaction>
+
+    <reaction name="Reaction39" reversible="false">
+      <listOfReactants>
+        <specieReference specie="S21" stoichiometry="1"/>
+      </listOfReactants>
+      <listOfProducts>
+        <specieReference specie="S20" stoichiometry="1"/>
+      </listOfProducts>
+      <kineticLaw formula="C39*S21">
+        <listOfParameters>
+        <parameter name="C39" value="0.7" />
+        </listOfParameters>
+      </kineticLaw>
+    </reaction>
+
+    <reaction name="Reaction40" reversible="false">
+      <listOfReactants>
+        <specieReference specie="S28" stoichiometry="1"/>
+      </listOfReactants>
+      <listOfProducts>
+        <specieReference specie="S14" stoichiometry="1"/>
+        <specieReference specie="S27" stoichiometry="1"/>
+      </listOfProducts>
+      <kineticLaw formula="C40*S28">
+        <listOfParameters>
+        <parameter name="C40" value="0.5" />
+        </listOfParameters>
+      </kineticLaw>
+    </reaction>
+
+    <reaction name="Reaction41" reversible="false">
+      <listOfReactants>
+        <specieReference specie="S13" stoichiometry="1"/>
+      </listOfReactants>
+      <listOfProducts>
+        <specieReference specie="S24" stoichiometry="1"/>
+        <specieReference specie="S13" stoichiometry="1"/>
+      </listOfProducts>
+      <kineticLaw formula="C41*S13">
+        <listOfParameters>
+        <parameter name="C41" value="1" />
+        </listOfParameters>
+      </kineticLaw>
+    </reaction>
+
+    <reaction name="Reaction42" reversible="false">
+      <listOfReactants>
+        <specieReference specie="S24" stoichiometry="1"/>
+      </listOfReactants>
+      <kineticLaw formula="C42*S24">
+        <listOfParameters>
+        <parameter name="C42" value="0.5" />
+        </listOfParameters>
+      </kineticLaw>
+    </reaction>
+
+    <reaction name="Reaction43" reversible="false">
+      <listOfReactants>
+        <specieReference specie="S24" stoichiometry="1"/>
+      </listOfReactants>
+      <listOfProducts>
+        <specieReference specie="S20" stoichiometry="1"/>
+        <specieReference specie="S24" stoichiometry="1"/>
+      </listOfProducts>
+      <kineticLaw formula="C43*S24">
+        <listOfParameters>
+        <parameter name="C43" value="20" />
+        </listOfParameters>
+      </kineticLaw>
+    </reaction>
+
+    <reaction name="Reaction44" reversible="false">
+      <listOfReactants>
+        <specieReference specie="S20" stoichiometry="1"/>
+      </listOfReactants>
+      <kineticLaw formula="C44*S20">
+        <listOfParameters>
+        <parameter name="C44" value="0.03" />
+        </listOfParameters>
+      </kineticLaw>
+    </reaction>
+
+    <reaction name="Reaction45" reversible="false">
+      <listOfReactants>
+        <specieReference specie="S21" stoichiometry="1"/>
+      </listOfReactants>
+      <listOfProducts>
+        <specieReference specie="S4" stoichiometry="1"/>
+      </listOfProducts>
+      <kineticLaw formula="C45*S21">
+        <listOfParameters>
+        <parameter name="C45" value="0.03" />
+        </listOfParameters>
+      </kineticLaw>
+    </reaction>
+
+    <reaction name="Reaction46" reversible="false">
+      <listOfReactants>
+        <specieReference specie="S4" stoichiometry="1"/>
+        <specieReference specie="S20" stoichiometry="1"/>
+      </listOfReactants>
+      <listOfProducts>
+        <specieReference specie="S21" stoichiometry="1"/>
+      </listOfProducts>
+      <kineticLaw formula="C46*S4*S20">
+        <listOfParameters>
+        <parameter name="C46" value="2.54" />
+        </listOfParameters>
+      </kineticLaw>
+    </reaction>
+
+    <reaction name="Reaction47" reversible="false">
+      <listOfReactants>
+        <specieReference specie="S21" stoichiometry="1"/>
+      </listOfReactants>
+      <listOfProducts>
+        <specieReference specie="S4" stoichiometry="1"/>
+        <specieReference specie="S20" stoichiometry="1"/>
+      </listOfProducts>
+      <kineticLaw formula="C47*S21">
+        <listOfParameters>
+        <parameter name="C47" value="10000" />
+        </listOfParameters>
+      </kineticLaw>
+    </reaction>
+
+    <reaction name="Reaction48" reversible="false">
+      <listOfReactants>
+        <specieReference specie="S13" stoichiometry="1"/>
+      </listOfReactants>
+      <listOfProducts>
+        <specieReference specie="S26" stoichiometry="1"/>
+        <specieReference specie="S13" stoichiometry="1"/>
+      </listOfProducts>
+      <kineticLaw formula="C48*S13">
+        <listOfParameters>
+        <parameter name="C48" value="0.43333" />
+        </listOfParameters>
+      </kineticLaw>
+    </reaction>
+
+    <reaction name="Reaction49" reversible="false">
+      <listOfReactants>
+        <specieReference specie="S26" stoichiometry="1"/>
+      </listOfReactants>
+      <kineticLaw formula="C49*S26">
+        <listOfParameters>
+        <parameter name="C49" value="0.5" />
+        </listOfParameters>
+      </kineticLaw>
+    </reaction>
+
+    <reaction name="Reaction50" reversible="false">
+      <listOfReactants>
+        <specieReference specie="S26" stoichiometry="1"/>
+      </listOfReactants>
+      <listOfProducts>
+        <specieReference specie="S27" stoichiometry="1"/>
+        <specieReference specie="S26" stoichiometry="1"/>
+      </listOfProducts>
+      <kineticLaw formula="C50*S26">
+        <listOfParameters>
+        <parameter name="C50" value="20" />
+        </listOfParameters>
+      </kineticLaw>
+    </reaction>
+
+    <reaction name="Reaction51" reversible="false">
+      <listOfReactants>
+        <specieReference specie="S27" stoichiometry="1"/>
+      </listOfReactants>
+      <kineticLaw formula="C51*S27">
+        <listOfParameters>
+        <parameter name="C51" value="0.03" />
+        </listOfParameters>
+      </kineticLaw>
+    </reaction>
+
+    <reaction name="Reaction52" reversible="false">
+      <listOfReactants>
+        <specieReference specie="S28" stoichiometry="1"/>
+      </listOfReactants>
+      <listOfProducts>
+        <specieReference specie="S15" stoichiometry="1"/>
+      </listOfProducts>
+      <kineticLaw formula="C52*S28">
+        <listOfParameters>
+        <parameter name="C52" value="0.03" />
+        </listOfParameters>
+      </kineticLaw>
+    </reaction>
+
+    <reaction name="Reaction53" reversible="false">
+      <listOfReactants>
+        <specieReference specie="S15" stoichiometry="1"/>
+        <specieReference specie="S27" stoichiometry="1"/>
+      </listOfReactants>
+      <listOfProducts>
+        <specieReference specie="S28" stoichiometry="1"/>
+      </listOfProducts>
+      <kineticLaw formula="C53*S15*S27">
+        <listOfParameters>
+        <parameter name="C53" value="2.54" />
+        </listOfParameters>
+      </kineticLaw>
+    </reaction>
+
+    <reaction name="Reaction54" reversible="false">
+      <listOfReactants>
+        <specieReference specie="S28" stoichiometry="1"/>
+      </listOfReactants>
+      <listOfProducts>
+        <specieReference specie="S15" stoichiometry="1"/>
+        <specieReference specie="S27" stoichiometry="1"/>
+      </listOfProducts>
+      <kineticLaw formula="C54*S28">
+        <listOfParameters>
+        <parameter name="C54" value="10000" />
+        </listOfParameters>
+      </kineticLaw>
+    </reaction>
+
+    <reaction name="Reaction55" reversible="false">
+      <listOfReactants>
+        <specieReference specie="S5" stoichiometry="1"/>
+      </listOfReactants>
+      <listOfProducts>
+        <specieReference specie="S1" stoichiometry="1"/>
+      </listOfProducts>
+      <kineticLaw formula="C55*S5">
+        <listOfParameters>
+        <parameter name="C55" value="0.03" />
+        </listOfParameters>
+      </kineticLaw>
+    </reaction>
+
+    <reaction name="Reaction56" reversible="false">
+      <listOfReactants>
+        <specieReference specie="S13" stoichiometry="1"/>
+      </listOfReactants>
+      <listOfProducts>
+        <specieReference specie="S1" stoichiometry="1"/>
+        <specieReference specie="S11" stoichiometry="1"/>
+      </listOfProducts>
+      <kineticLaw formula="C56*S13">
+        <listOfParameters>
+        <parameter name="C56" value="0.03" />
+        </listOfParameters>
+      </kineticLaw>
+    </reaction>
+
+    <reaction name="Reaction57" reversible="false">
+      <listOfReactants>
+        <specieReference specie="S9" stoichiometry="1"/>
+      </listOfReactants>
+      <listOfProducts>
+        <specieReference specie="S7" stoichiometry="1"/>
+      </listOfProducts>
+      <kineticLaw formula="C57*S9">
+        <listOfParameters>
+        <parameter name="C57" value="0.03" />
+        </listOfParameters>
+      </kineticLaw>
+    </reaction>
+
+    <reaction name="Reaction58" reversible="false">
+      <listOfReactants>
+        <specieReference specie="S15" stoichiometry="1"/>
+      </listOfReactants>
+      <listOfProducts>
+        <specieReference specie="S14" stoichiometry="1"/>
+      </listOfProducts>
+      <kineticLaw formula="C58*S15">
+        <listOfParameters>
+        <parameter name="C58" value="0.03" />
+        </listOfParameters>
+      </kineticLaw>
+    </reaction>
+
+    <reaction name="Reaction59" reversible="false">
+      <listOfReactants>
+        <specieReference specie="S19" stoichiometry="1"/>
+      </listOfReactants>
+      <listOfProducts>
+        <specieReference specie="S14" stoichiometry="1"/>
+        <specieReference specie="S18" stoichiometry="1"/>
+      </listOfProducts>
+      <kineticLaw formula="C59*S19">
+        <listOfParameters>
+        <parameter name="C59" value="0.03" />
+        </listOfParameters>
+      </kineticLaw>
+    </reaction>
+
+    <reaction name="Reaction60" reversible="false">
+      <listOfReactants>
+        <specieReference specie="S28" stoichiometry="1"/>
+      </listOfReactants>
+      <listOfProducts>
+        <specieReference specie="S14" stoichiometry="1"/>
+        <specieReference specie="S27" stoichiometry="1"/>
+      </listOfProducts>
+      <kineticLaw formula="C60*S28">
+        <listOfParameters>
+        <parameter name="C60" value="0.03" />
+        </listOfParameters>
+      </kineticLaw>
+    </reaction>
+
+    <reaction name="Reaction61" reversible="false">
+      <listOfReactants>
+        <specieReference specie="S21" stoichiometry="1"/>
+      </listOfReactants>
+      <listOfProducts>
+        <specieReference specie="S20" stoichiometry="1"/>
+      </listOfProducts>
+      <kineticLaw formula="C61*S21">
+        <listOfParameters>
+        <parameter name="C61" value="0.03" />
+        </listOfParameters>
+      </kineticLaw>
+    </reaction>
+
+  </listOfReactions>
+</model>
+</sbml>

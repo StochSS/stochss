@@ -1,0 +1,42 @@
+#utility
+_RANDOM_DEPS = Random.h Random.cpp
+_UTILITY_DEPS = StandardDriverUtilities.h StandardDriverUtilities.cpp CommandLineInterface.h CommandLineInterface.cpp StandardDriverTypes.h
+_TRIGGER = TimeBasedTrigger.h TimeBasedTrigger.cpp
+_COMMAND_LINE_INTERFACE = CommandLineInterface.h CommandLineInterface.cpp
+
+RANDOM_DEPS  =  $(patsubst %,$(STOCHKIT_SRC)/utility/%,$(_RANDOM_DEPS))
+UTILITY_DEPS =  $(patsubst %,$(STOCHKIT_SRC)/utility/%,$(_UTILITY_DEPS))
+TRIGGER      =  $(patsubst %,$(STOCHKIT_SRC)/utility/%,$(_TRIGGER))
+COMMAND_LINE_INTERFACE  =  $(patsubst %,$(STOCHKIT_SRC)/utility/%,$(_COMMAND_LINE_INTERFACE))
+
+#output
+_OUTPUT_DEPS = StatsOutput.h  IntervalOutput.h StandardDriverOutput.h
+
+OUTPUT_DEPS =  $(patsubst %,$(STOCHKIT_SRC)/output/%,$(_OUTPUT_DEPS))
+
+#model_parser
+_INPUT_DEPS = Input.h Input.ipp Input_mass_action.h StringCalculator.h StringCalculator.cpp 
+_PARAMETER = Parameter.h Parameter.cpp
+_INPUT_MIXED_BEF_AFT_COM = Input_mixed_before_compile.h Input_mixed_after_compile.h
+
+INPUT_DEPS = $(patsubst %,$(STOCHKIT_SRC)/model_parser/%,$(_INPUT_DEPS))
+PARAMETER = $(patsubst %,$(STOCHKIT_SRC)/model_parser/%,$(_PARAMETER))
+INPUT_MIXED_BEF_AFT_COM = $(patsubst %,$(STOCHKIT_SRC)/model_parser/%,$(_INPUT_MIXED_BEF_AFT_COM))
+
+#driver
+_SERIAL_DEPS = SerialIntervalSimulationDriver.h
+_PARALLEL_INTERVAL_DEPS = ParallelIntervalSimulation.h ParallelIntervalSimulation.cpp
+
+SERIAL_DEPS =  $(patsubst %,$(STOCHKIT_SRC)/driver/%,$(_SERIAL_DEPS))
+PARALLEL_INTERVAL_DEPS =  $(patsubst %,$(STOCHKIT_SRC)/driver/%,$(_PARALLEL_INTERVAL_DEPS))
+
+#solver
+_SSA_DIRECT_EVENT = ssa_direct_events.cpp SSA_Direct_Events.h
+_SSA_DIRECT_DEPS = SSA_Direct.h SSA_Direct.ipp
+
+SSA_DIRECT_EVENT = $(patsubst %,$(STOCHKIT_SRC)/solver/%,$(_SSA_DIRECT_EVENT))
+SSA_DIRECT_DEPS = $(patsubst %,$(STOCHKIT_SRC)/solver/%,$(_SSA_DIRECT_DEPS))
+
+_TAG_DEP = Input_tag.h ModelTag.h
+TAG_DEP = $(patsubst %,$(STOCHKIT_SRC)/solver/%,$(_TAG_DEP))
+
