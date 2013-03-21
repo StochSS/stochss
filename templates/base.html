@@ -2,7 +2,7 @@
 <html lang="en">
   <head>
     <meta charset="utf-8">
-    <title>StochSS: {% block title %}Stochastic Simlation as a Service{% endblock %}</title>
+    <title>StochSS: {% block title %}Stochastic Simlation Service{% endblock %}</title>
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta name="description" content="">
     <meta name="author" content="">
@@ -66,7 +66,7 @@
             <ul class="nav">
               <li class="active"><a href="/">Home</a></li>
               <li><a href="http://www.stochss.org" target="_blank">About</a></li>
-              <li><a href="mailto:help@stochss.org">Contact</a></li>
+              <li><a href="mailto:stochss-users@googlegroups.com">Support</a></li>
             </ul>
           </div><!--/.nav-collapse -->
         </div>
@@ -97,37 +97,20 @@
               {% if active_createmodel %}
               class="active"
               {% endif %}
-              ><a href="/modeleditor" TITLE = "Create/Load Modle">Model editor</a></li>
-              <!--<li><a href="/modeleditor/import/fromfile">Import</a></li>-->
+              ><a href="/modeleditor" TITLE = "Create/Import models">Model editor</a></li>
                 
               <li class="nav-header">Simulation</li>
                 
-              <li><a href="/simulate" TITLE = "Manage Simulations">Simulation manager</a></li>
-                
-              <!-- <li class="nav-header">Tools</li>
-              <li><a href="tools/parametersweep" TITLE = "Run a Sweep of all parameters"> Parameter sweep</a></li>
-              <li><a href="#"> Parameter estimation</a></li>
-              <li><a href="#"> Model exploration</a></li> -->
-                  
-              <li class="nav-header">Postprocessing</li>
+              <li><a href="/simulate" TITLE = "Configure and run simulations">Simulation manager</a></li>
               
-              <li
-                {% if active_visulize %}
-                class="active"
-                {% endif %}
-                ><a href="/visualize" TITLE = "Generate graphs of the Simulation">Visualize</a>
-              </li>
-    
-                
               <li class="nav-header">Job Management</li>
                   
               <li
                 {% if active_visulize %}
                 class="active"
                     {% endif %}
-                    ><a href="/status" TITLE = "Observe the progress of your Simulation">Job Status</a></li>
+                    ><a href="/status" TITLE = "Monitor the progress of your Simulation">Job Status</a></li>
 
-             
             </ul>
               
           </div><!--/.well -->

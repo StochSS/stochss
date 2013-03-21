@@ -23,9 +23,10 @@
 					<div>
 						<label>Name</label>
 						<input type="text" class="span3" name="name" placeholder="R1" value="{{ name }}" TITLE = "Give a Name to the Reaction">
-						<input type="checkbox" class="hide" checked="checked"style="padding-left: 20px;" id="reaction-mass-action"> Mass action
+						<input type="checkbox" class="hide" checked="checked" style="padding-left: 20px;" id="reaction-mass-action"> Mass action
 
-<input type="checkbox" class="hide" checked="checked" /><input type="text" value="Propensity Function" /><br>
+<input type="checkbox" class="hide" checked="checked" />
+<input type="text" value="Propensity Function"/><br>
 <script>
 $(document).ready(function() {
  
@@ -73,27 +74,7 @@ $('.hide:checked').next().hide();
                                 <input type="text" class="span3 auto_complete" name="Rate constant" placeholder="kb" id="ma-rateconstant-back" value="{{ rateconstant }}" TITLE = "Enter the name of the rate constant for the backward mass-action reaction.">
                                     
                         </div>
-                        
-                      
-                        <!-- <label class="checkbox">
-                         <input type="checkbox" id="reaction-reversible">
-                         Reversible
-                         </label> -->
-                        
-					<!-- <fieldset>
-					<div class="control-group" style="float:left; padding-left: 20px;">
-					<div class="controls">
-                        <select>
-                            <option value="1">mu</option>
-                            <option value="2">k1</option>
-                            <option value="3">k2</option>
-                            <option value="3">k3</option>
-                            <option value="3">Km</option>
-                        </select> Parameter
-					</div>
-					</div>
-					</fieldset> -->
-
+                    
 					<br />
 					<button type="submit" class="btn btn-primary" style="float: right;">
 						Add reaction
@@ -119,7 +100,7 @@ $('.hide:checked').next().hide();
 				.horizontal { display: inline; color: black; }
 				</style>
 
-				<h4><a data-toggle="collapse" data-target="#" default> All Species </a> </h4>
+				<h4><a data-toggle="collapse" data-target="#" default> Show species names </a> </h4>
 				<ul>
 					{% for key, value in all_reactions.items() %}
 						<li class = "horizontal"><a href="#">{{all_reactants[key]}}</a></li>
@@ -135,7 +116,7 @@ $('.hide:checked').next().hide();
 					<table cellpadding="0" cellspacing="0" border="0" class="table table-striped table-bordered" id="dataTable">
 						<thead>
 							<tr>
-								<th>Name </th><th>Reactants </th><th>Products</th><th>Propensity</th><th>&nbsp;</th>
+								<th>Name</th><th>Reactants </th><th>Products</th><th>Propensity</th><th>&nbsp;</th>
 							</tr>
 						</thead>
 						<tbody>
