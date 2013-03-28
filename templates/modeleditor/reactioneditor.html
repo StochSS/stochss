@@ -2,12 +2,6 @@
 {% block title%}Species Editor{% endblock %}
 {% block modeleditorcontent %}
 
-<script>
-	$('#reaction-mass-action').change(function(){ 
-    $('#propensity_function').parent().css( 'visibility', this.checked ? 'visible' : 'hidden' );
-});
-					</script>
-
 <div class="span9">
 
 	<div class="row-fluid">
@@ -23,25 +17,14 @@
 					<div>
 						<label>Name</label>
 						<input type="text" class="span3" name="name" placeholder="R1" value="{{ name }}" TITLE = "Give a Name to the Reaction">
-						<input type="checkbox" class="hide" checked="checked" style="padding-left: 20px;" id="reaction-mass-action"> Mass action
-
-<input type="checkbox" class="hide" checked="checked" />
-<input type="text" value="Propensity Function"/><br>
-<script>
-$(document).ready(function() {
- 
-$('.hide').click(function() {
-$(this).next().toggle();
-});
-$('.hide:checked').next().hide();
- 
-});
-</script>
+			
+<input type="checkbox" onclick="javascript:toggleField('propensity');"/>
+Mass Action
+<label>Propensity Function</label>
+<input name="propensity" id="propensity" type="text" placeholder="k*A*B" name="propensity_function" value="{{ propensity_function }}" style="display:block;" TITLE = "Define the propensity function. If the propensity is of mass-action type, you can use the checkboxes below to automatically generate the propensity function."/>
                             
 					</div>
-
-
-					
+			
 					<div style="float:left; padding-right: 10px;">
 						<label>Reactants</label>
 						<input type="text" class="auto_complete" name="reactants" placeholder="A, B" id="reactants" style="width: 160px" value="{{ reactants }}" TITLE = "Reactants are species consumed by the reaction. Input species names separated by commas.">						
@@ -55,12 +38,8 @@ $('.hide:checked').next().hide();
 						<label>Products</label>
 						<input type="text" class="span3 auto_complete" name="products" placeholder="C" id="products" value="{{ products }}" TITLE = "Products are species produced by the reaction. Input species names separated by comma.">
 					</div>
-					<div style="display: none" id="reaction-mass-action">
-					<input type="text" class="span3"  placeholder="k*A*B" name="propensity_function" value="{{ propensity_function }}" TITLE = "Define the propensity function. If the propensity is of mass-action type, you can use the checkboxes below to automatically generate the propensity function.">
-					</div>
                     </br>
-                        <p> Arvind: Can you write a sctript that presents the users with the below inputs if the mass-action box to the right of the reaction name is checked, and in that case also hide the 'Propensity Function' input above?</p>
-                        <a data-toggle="collapse" data-target="#mass-action" default>Mass action reaction parameters</a> &raquo;
+                       <a data-toggle="collapse" data-target="#mass-action" default>Mass action reaction parameters</a> &raquo;
                         <div id="mass-action" class="in collapse" style="height: auto">
                             </br>
                             <label>Forward rate constant</label>
@@ -74,7 +53,27 @@ $('.hide:checked').next().hide();
                                 <input type="text" class="span3 auto_complete" name="Rate constant" placeholder="kb" id="ma-rateconstant-back" value="{{ rateconstant }}" TITLE = "Enter the name of the rate constant for the backward mass-action reaction.">
                                     
                         </div>
-                    
+                        
+                      
+                        <!-- <label class="checkbox">
+                         <input type="checkbox" id="reaction-reversible">
+                         Reversible
+                         </label> -->
+                        
+					<!-- <fieldset>
+					<div class="control-group" style="float:left; padding-left: 20px;">
+					<div class="controls">
+                        <select>
+                            <option value="1">mu</option>
+                            <option value="2">k1</option>
+                            <option value="3">k2</option>
+                            <option value="3">k3</option>
+                            <option value="3">Km</option>
+                        </select> Parameter
+					</div>
+					</div>
+					</fieldset> -->
+
 					<br />
 					<button type="submit" class="btn btn-primary" style="float: right;">
 						Add reaction
@@ -100,7 +99,7 @@ $('.hide:checked').next().hide();
 				.horizontal { display: inline; color: black; }
 				</style>
 
-				<h4><a data-toggle="collapse" data-target="#" default> Show species names </a> </h4>
+				<h4><a data-toggle="collapse" data-target="#" default> All Species </a> </h4>
 				<ul>
 					{% for key, value in all_reactions.items() %}
 						<li class = "horizontal"><a href="#">{{all_reactants[key]}}</a></li>
@@ -116,7 +115,7 @@ $('.hide:checked').next().hide();
 					<table cellpadding="0" cellspacing="0" border="0" class="table table-striped table-bordered" id="dataTable">
 						<thead>
 							<tr>
-								<th>Name</th><th>Reactants </th><th>Products</th><th>Propensity</th><th>&nbsp;</th>
+								<th>Name </th><th>Reactants </th><th>Products</th><th>Propensity</th><th>&nbsp;</th>
 							</tr>
 						</thead>
 						<tbody>
@@ -156,6 +155,18 @@ $('.hide:checked').next().hide();
 
 {% endblock %}
 {% block innerjscontent %}
+
+<script type="text/javascript">
+function toggleField(field) {
+var myTarget = document.getElementById(field);
+if(myTarget.style.display == 'none'){
+  myTarget.style.display = 'block';
+    } else {
+  myTarget.style.display = 'none';
+  myTarget.value = '';
+}
+}
+</script>
 <script type="text/javascript">
 	
 	var species = {{all_species | safe}}
