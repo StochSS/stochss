@@ -97,6 +97,16 @@ class Model():
         p = self.listOfParameters[pname]
         p.value = expression
     
+    def resolveParameters(self):
+        """ Attempt to resolve all parameter expressions to scalar floats. This
+            methods must be called before exporting the model. """
+        self.updateNamespace()
+        for param in self.listOfParameters:
+            try:
+                self.listOfParameters[param].evaluate(self.namespace)
+            except:
+                raise ParameterError("Could not resolve Parameter expression "+param + "to a scalar value.")
+    
     def deleteAllParameters(self):
         self.listOfParameters.clear()
 
@@ -130,6 +140,8 @@ class Model():
 
     def _cmp_(self,other):
         """ Compare """
+
+    
 
 class Species():
     """ Chemical species. """

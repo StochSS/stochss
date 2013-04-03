@@ -326,10 +326,10 @@ class ModelEditorExportToStochkit2(BaseHandler):
             self.render_response('modeleditor.html', **result)
             return
         try:
-            doc = StochMLDocument.fromModel(model)
+            doc = model.serialize()
             self.response.headers['Content-Type'] = 'text/xml'
             self.response.headers['Content-Disposition'] = 'attachment;filename=' + model.name.encode('utf-8') + '.xml'
-            self.response.write(doc.toString())
+            self.response.write(doc)
         except Exception, e:
             logging.error('Error in exporting to StochML. %s', e)
             traceback.print_exc()

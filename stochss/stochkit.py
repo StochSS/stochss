@@ -55,16 +55,8 @@ class StochKitModel(Model):
     """ StochKitModel extends a well mixed model with StochKit specific serialization. """
 
     def serialize(self):
-        """ Serializes a Model object to StochML. """
-        
-        # We need to make sure that we can resolve any composit parameter values before we write the StochML document.
-        self.updateNamespace()
-        for param in self.listOfParameters:
-            try:
-                self.listOfParameters[param].evaluate(self.namespace)
-            except:
-                raise ValueError("Could not resolve Parameter expressions to scalar values.")
-        
+        """ Serializes a Model object to valid StochML. """
+        self.resolveParameters()
         doc = StochMLDocument().fromModel(self)
         return doc.toString()
 
@@ -79,7 +71,22 @@ class StochMLDocument():
     
     @classmethod
     def fromModel(cls,model):
-        """ Intitialzes the document from an exisiting StochKitModel object. """
+        """ Creates an StochKit XML document from an exisiting StochKitModel object.
+            This method assumes that all the parameters in the model are already resolved
+            to scalar floats (see Model.resolveParamters). 
+                
+            Note, this method is intended to be used interanally by the models 'serialization' 
+            function, which performs additional operations and tests on the model prior to 
+            writing out the XML file. You should NOT do 
+            
+            document = StochMLDocument.fromModel(model)
+            print document.toString()
+            
+            you SHOULD do
+            
+            print model.serialize()            
+            
+        """
         
         # Description
         md = cls()
@@ -103,6 +110,7 @@ class StochMLDocument():
         for sname in model.listOfSpecies:
             spec.append(md.SpeciestoElement(model.listOfSpecies[sname]))
         md.document.append(spec)
+                
         # Parameters
         params = etree.Element('ParametersList')
         for pname in model.listOfParameters:

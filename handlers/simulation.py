@@ -87,14 +87,15 @@ class NewStochkitEnsemblePage(BaseHandler):
         prefix_outdir = os.path.join(os.path.dirname(__file__), '../.stochkit_output')
         
         # If the base output directory does not exsit, we create it
-        process = os.popen('mkdir '+prefix_outdir);
+        process = os.popen('mkdir ' + prefix_outdir);
         process.close()
 
         # Write a temporary StochKit2 input file.
         outfile =  "stochkit_temp_input.xml"
         mfhandle = open(outfile,'w')
-        document = StochMLDocument.fromModel(model)
-        mfhandle.write(document.toString())
+        #document = StochMLDocument.fromModel(model)
+        document = model.serialize()
+        mfhandle.write(document)
         mfhandle.close()
         
         # Parse the required arguments
@@ -110,7 +111,7 @@ class NewStochkitEnsemblePage(BaseHandler):
         
         # TODO: Replace this simple test with something better.
         if ensemblename in directories:
-            self.response.out.write("Ensemble name already exist. You need to input a unique name.")
+            self.response.out.write("The ensemble name already exists. You need to input a unique name.")
             return
 
         outdir = prefix_outdir+'/'+ensemblename
