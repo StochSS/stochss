@@ -17,6 +17,7 @@
                    <a href="/simulate/newstochkitensemble">Well mixed stochastic</a>
                 </ul>
            </li>
+          <li><a href="/simulate/jobsettings">Job settings</a></li>
 
         </ul>
     </div> <!--/ul-->

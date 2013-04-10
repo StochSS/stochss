@@ -106,6 +106,12 @@ class StatusPage(webapp2.RequestHandler):
         template = jinja_environment.get_template('statuspage.html')
         self.response.out.write(template.render({'active_visualize': True}))
 
+class CredentialsPage(webapp2.RequestHandler):
+    """ Render a page for viewing job status. """
+    def get(self):
+        template = jinja_environment.get_template('credentialspage.html')
+        self.response.out.write(template.render({'active_visualize': True}))
+
 
 config = {}
 config['webapp2_extras.sessions'] = {
@@ -134,6 +140,7 @@ app = webapp2.WSGIApplication([
                                ('/simulate/jobsettings',JobSettingsPage),
                                ('/visualize',VisualizePage),
                                ('/status',StatusPage),
+                               ('/credentials',CredentialsPage),
                                ('/signout', Signout)
                                ],
                                 config = config,

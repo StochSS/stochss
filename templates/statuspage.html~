@@ -9,6 +9,13 @@
 
 		<div class"span9">
 
+			<div class="menubar">
+				<ul class="nav nav-tabs">
+					<li>
+						<a href="/status" TITLE = "Shows the status of your jobs">Status</a>
+					</li>                    
+						</ul>
+
 
 <h3><a data-toggle="collapse" data-target="#optional"> List of Output Files </a> </h3>
 <form name=myform>
