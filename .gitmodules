@@ -1,0 +1,9 @@
+[submodule "lib/boto"]
+	path = lib/boto
+	url = git://github.com/boto/boto.git
+[submodule "lib/celery"]
+	path = lib/celery
+	url = git://github.com/celery/celery.git
+[submodule "lib/kombu"]
+	path = lib/kombu
+	url = git://github.com/celery/kombu.git
