@@ -12,15 +12,11 @@
 
 				<h3><a data-toggle="collapse" data-target="#optional" default> Create new reaction </a>&raquo; </h3>
 
-				<div id="optional" class="in collapse" style="height: auto">
+				 <div id="optional" class="in collapse" style="height: auto">
 					<br/>
 					<div>
 						<label>Name</label>
 						<input type="text" class="span3" name="name" placeholder="R1" value="{{ name }}" TITLE = "Give a Name to the Reaction">
-			
-<input type="checkbox" onclick="javascript:toggleField('propensity');"/>
-Mass Action
-<input name="propensity" id="propensity" type="text" placeholder="Propensity Function: k*A*B" name="propensity_function" value="{{ propensity_function }}" style="display:block;" TITLE = "Define the propensity function. If the propensity is of mass-action type, you can use the checkboxes below to automatically generate the propensity function."/>
                             
 					</div>
 			
@@ -36,7 +32,13 @@ Mass Action
 					<div>
 						<label>Products</label>
 						<input type="text" class="span3 auto_complete" name="products" placeholder="C" id="products" value="{{ products }}" TITLE = "Products are species produced by the reaction. Input species names separated by comma.">
+                            <input type="checkbox" onclick="javascript:toggleField('propensity');"/>
+                            Mass Action
 					</div>
+                    
+                 
+                    <input name="propensity" id="propensity" type="text" placeholder="Propensity Function: k*A*B" name="propensity_function" value="{{ propensity_function }}" style="display:block;" TITLE = "Define the propensity function. If the propensity is of mass-action type, you can use the checkboxes below to automatically generate the propensity function."/>
+                    
                     </br>
                        <a data-toggle="collapse" data-target="#mass-action" default>Mass action reaction parameters</a> &raquo;
                         <div id="mass-action" class="in collapse" style="height: auto">
@@ -53,13 +55,8 @@ Mass Action
                                     
                         </div>
                         
-                      
-                        <!-- <label class="checkbox">
-                         <input type="checkbox" id="reaction-reversible">
-                         Reversible
-                         </label> -->
-                        
 					<br />
+                     
 					<button type="submit" class="btn btn-primary" style="float: right;">
 						Add reaction
 					</button>
@@ -152,6 +149,7 @@ if(myTarget.style.display == 'none'){
 }
 }
 </script>
+
 <script type="text/javascript">
 	
 	var species = {{all_species | safe}}
