@@ -22,11 +22,13 @@ class ReactionEditorPage(BaseHandler):
 
     def post(self):
         if self.request.get('update') == "1":
+            # Update the page
             result = self.update_reaction()
             self.response.headers['Content-Type'] = 'application/json'
             self.response.write(json.dumps(result))
             
         elif self.request.get('delete') == "1":
+            #Delete a reaction
             result = self.delete_reaction(self.request.get('toDelete'))
             all_reactions = self.get_all_reactions()
             if all_reactions is not None:
@@ -35,6 +37,7 @@ class ReactionEditorPage(BaseHandler):
             self.render_response('modeleditor/reactioneditor.html', **result)            
                 
         else:
+            # Create a new reaction
             result = self.create_reaction()
             all_reactions = self.get_all_reactions()
             if all_reactions is not None:
@@ -82,10 +85,35 @@ class ReactionEditorPage(BaseHandler):
             return {'status': False, 'msg': 'There was an error while deleting the reaction.'}
 
     def create_reaction(self):
+        """ Create a new reaction. """
+        
+        # Grab the currently edited model
+        model = self.get_session_property('model_edited')
+        if model is None:
+            return {'status': False, 'msg': 'You have not selected any model to edit.'}
+        
+        
+        # Get the names of the reaction, the reactants and the products
         name = self.request.get('name').strip()
         reactants = self.request.get('reactants').strip()
         products = self.request.get('products').strip()
-        propensity_function = self.request.get('propensity_function').strip()
+        
+        # Process the propensity function. If the mass-action checkbox is checked,
+        # we generate the propensity function.
+        mass_action=False
+        if self.request.get('is_mass_action'):
+            mass_action=True
+            try:
+                ma_rate = self.request.get('ma_rate').strip()
+                ma_rate_parameter = model.getParameter(str(ma_rate))
+                # Set the proponsity_function variable to a dummy value to avoid an error to be raised below.
+                propensity_function = "mass_action"
+            except:
+                error =  {'status': False, 'msg': 'Mass action specified, but the rate constant could not be parsed.'}
+                return error
+        else:
+            # Read the custom proponsity function from the form.
+            propensity_function = self.request.get('propensity_function').strip()
 
         error = self.check_input(name, reactants, products, propensity_function)
         if error is not None:
@@ -97,11 +125,9 @@ class ReactionEditorPage(BaseHandler):
             reactants = self.preprocess_input(reactants)
             products = self.preprocess_input(products)
             
-            model = self.get_session_property('model_edited')
-
-            if model is None:
-                return {'status': False, 'msg': 'You have not selected any model to edit.'}
-
+            # model = self.get_session_property('model_edited')
+                #if model is None:
+            #    return {'status': False, 'msg': 'You have not selected any model to edit.'}
             all_reactions = model.getAllReactions()
             
             # Check if the reaction already exists
@@ -123,16 +149,26 @@ class ReactionEditorPage(BaseHandler):
                     if key not in all_species:
                         return {'status': False, 'msg': 'Product ' + key + ' has not been defined.', 'name': name, 'reactants': self.encode_species(None, name, reactants), 'products': self.encode_species(None, name, products), 'propensity_function': propensity_function}
             
-            all_parameters = model.getAllParameters()
 
-            # The namespace should contain all the species and parameters.
+            # Build a namespace comprised of all paramter and all species names.
+            # The propensity functions should be evaluable in that namespace.
             namespace = OrderedDict()
-
+            all_parameters = model.getAllParameters()
+    
             for param in all_species:
                 namespace[param] = all_species[param].initial_value
 
             for param in all_parameters:
                 namespace[param] = all_parameters[param].value
+
+            # If we are processing a mass-action reaction, we generate a temporary reaction here in
+            # order to compile the propensity function.
+            if mass_action:
+                try:
+                    rtemp = Reaction(name="foo", reactants=reactants, products=products, massaction=True,rate=ma_rate_parameter)
+                    propensity_function = rtemp.propensity_function
+                except Exception,re:
+                    return {'status': False, 'msg': re}
 
             try:
                 value = eval(compile(propensity_function, '<string>', 'eval', __future__.division.compiler_flag), namespace)
@@ -146,7 +182,9 @@ class ReactionEditorPage(BaseHandler):
             logging.debug("products " + str(products))
             logging.debug("propensity " + str(propensity_function))
 
+            # Finally create the reaction and add it to the model
             reaction = Reaction(name=name, propensity_function=propensity_function, reactants=reactants, products=products)
+
             model.addReaction(reaction)
 
             # Update the cache
@@ -157,7 +195,7 @@ class ReactionEditorPage(BaseHandler):
         except Exception, e:
             logging.error("parameter::create_reaction: Reaction creation failed with error %s", e)
             traceback.print_exc()
-            return {'status': False, 'msg': 'There was an error while creating the reaction.'}
+            return {'status': False, 'msg': 'There was an error while creating the reaction.'+str(e)}
 
 
     def decode_species(self, input):

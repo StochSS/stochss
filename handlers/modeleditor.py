@@ -230,32 +230,6 @@ class ModelEditorPage(BaseHandler):
           traceback.print_exc()
           return {'status': False, 'msg': 'There was an error while creating the model.'}
       
-          
-class ModelOverviewPage(BaseHandler):
-
-    def get(self):
-        template = jinja_environment.get_template('modeleditor/modeloverviewpage.html')
-        self.response.out.write(template.render({'active_visualize': True}))
-
-
-class GeometryEditorPage(BaseHandler):
-
-    def get(self):
-        template = jinja_environment.get_template('pagenotfound.html')
-        self.response.out.write(template.render({'active_visualize': True}))
-
-class GeometryEditorPageBearded(BaseHandler):
-
-    def get(self):
-        template = jinja_environment.get_template('modeleditor/editgeometrypage.html')
-        self.response.out.write(template.render({'active_visualize': True}))
-
-class CodeEditorPage(BaseHandler):
-
-    def get(self):
-        template = jinja_environment.get_template('modeleditor/codeeditor.html')
-        self.response.out.write(template.render({'active_visualize': True}))
-
 
 class ModelEditorImportFromFilePage(BaseHandler):
     
@@ -311,11 +285,59 @@ class ModelEditorImportFromLibrary(BaseHandler):
         model_class = self.request.get('model_class')   
         return do_import(self, name, False, model_class)   
 
-class ModelEditorImportFromBioModelsPage(BaseHandler):
+def do_import(handler, name, from_file = True, model_class=""):
+    """
+        Helper function to import models from file / library.
+        """
+    try:
+        user_id = handler.user.user_id()
+        db_model = db.GqlQuery("SELECT * FROM StochKitModelWrapper WHERE user_id = :1 AND model_name = :2", user_id, name).get()
+        
+        if db_model is not None:
+            return {'status': False, 'msg': 'A Model already exists by that name.'}
+        
+        if from_file:
+            doc = StochMLDocument.fromFile(handler.request.POST['model_file'].file)
+            model = doc.toModel(name)
+        
+        else:
+            if model_class == 'dimerdecay':
+                model = dimerdecay(name)
+            elif model_class == 'MichaelisMenten':
+                model = MichaelisMenten(name)
+            else:
+                return {'status': False, 'msg': 'Invalid model class'}
 
-    def get(self):
-        template = jinja_environment.get_template('modeleditor/importfrombiomodels.html')
-        self.response.out.write(template.render({'active_visualize': True}))
+        # Save the model to the datastore.
+        save_model(model, name, user_id)
+        
+        # Add this model to cache
+        add_model_to_cache(handler, name)
+        
+        # After importing the model and before setting this as the currently edited model, check if the previously edited model was saved.
+        is_model_saved = handler.get_session_property('is_model_saved')
+        if is_model_saved is not None and not is_model_saved:
+            logging.debug("Model not saved!")
+            return {'status': False, 'save_msg': 'Please save your changes first!', 'is_saved': False, 'template_file': 'modeleditor.html', 'model_edited': name, 'redirect_page': '/modeleditor'}
+
+        # For the model to display and function properly in the UI, we need to make sure that all
+        # the paramters have been resolved to scalar values.
+        try:
+            model.resolveParameters()
+            # Save the model so the resolved paramter values are persisted
+            save_model(model, name, user_id)
+        except:
+            raise ModelError("Could not resolve model parameters.")
+        # Set the new model as the one that is being edited.
+        handler.set_session_property('model_edited', model)
+
+    except Exception, e:
+        logging.error("model::import_model failed with error %s", e)
+        traceback.print_exc()
+        return {'status': False, 'msg': 'Model could not be imported.'}
+
+    return {'status': True, 'msg': 'Model imported successfully.'}
+
 
 class ModelEditorExportToStochkit2(BaseHandler):
     def get(self):
@@ -359,50 +381,6 @@ def add_model_to_cache(obj, new_model_name):
         logging.debug("Model added to cache.")
 
 
-def do_import(handler, name, from_file = True, model_class=""):
-    """
-    Helper function to import models from file / library.
-    """
-    try:
-        user_id = handler.user.user_id()
-        db_model = db.GqlQuery("SELECT * FROM StochKitModelWrapper WHERE user_id = :1 AND model_name = :2", user_id, name).get()
-
-        if db_model is not None:
-            return {'status': False, 'msg': 'A Model already exists by that name.'}
-
-        if from_file:
-            doc = StochMLDocument.fromFile(handler.request.POST['model_file'].file)
-            model = doc.toModel(name)
-        
-        else:
-            if model_class == 'dimerdecay':
-                model = dimerdecay(name)
-            elif model_class == 'MichaelisMenten':
-                model = MichaelisMenten(name)        
-            else:
-                return {'status': False, 'msg': 'Invalid model class'}
-                
-        # Save the model to the datastore.
-        save_model(model, name, user_id)
-        
-        # Add this model to cache
-        add_model_to_cache(handler, name)
-        
-        # After importing the model and before setting this as the currently edited model, check if the previously edited model was saved.
-        is_model_saved = handler.get_session_property('is_model_saved')
-        if is_model_saved is not None and not is_model_saved:
-            logging.debug("Model not saved!")
-            return {'status': False, 'save_msg': 'Please save your changes first!', 'is_saved': False, 'template_file': 'modeleditor.html', 'model_edited': name, 'redirect_page': '/modeleditor'}
-        
-        # Set the new model as the one that is being edited.
-        handler.set_session_property('model_edited', model)
-
-    except Exception, e:
-        logging.error("model::import_model failed with error %s", e)
-        traceback.print_exc()
-        return {'status': False, 'msg': 'Model could not be imported.'}
-    
-    return {'status': True, 'msg': 'Model imported successfully.'}
 
 def get_all_models(handler):
     """

@@ -32,26 +32,26 @@
 					<div>
 						<label>Products</label>
 						<input type="text" class="span3 auto_complete" name="products" placeholder="C" id="products" value="{{ products }}" TITLE = "Products are species produced by the reaction. Input species names separated by comma.">
-                            <input type="checkbox" onclick="javascript:toggleField('propensity');"/>
-                            Mass Action
-					</div>
+                        </div>
                     
                  
-                    <input name="propensity" id="propensity" type="text" placeholder="Propensity Function: k*A*B" name="propensity_function" value="{{ propensity_function }}" style="display:block;" TITLE = "Define the propensity function. If the propensity is of mass-action type, you can use the checkboxes below to automatically generate the propensity function."/>
+                     <input type="text" placeholder="Propensity Function: k*A*B" name="propensity_function" id="propensity" value="{{ propensity_function }}" style="display:block;" TITLE = "Define the propensity function. If the propensity is of mass-action type, you can use the checkboxes below to automatically generate the propensity function."/>
+                     <input type="checkbox" onclick="javascript:toggleField('propensity');" name='is_mass_action'> Mass Action</input>
+
                     
                     </br>
                        <a data-toggle="collapse" data-target="#mass-action" default>Mass action reaction parameters</a> &raquo;
                         <div id="mass-action" class="in collapse" style="height: auto">
                             </br>
                             <label>Forward rate constant</label>
-                        	<input type="text" class="span3 auto_complete" name="Rate constant" placeholder="kf" id="ma-rateconstant-forward" value="{{ rateconstant }}" TITLE = "Enter the name of the forward rate constant for the mass-action reaction.">
+                        	<input type="text" class="span3 auto_complete" name="ma_rate" placeholder="kf" id="ma-rateconstant-forward" value="{{ rateconstant }}" TITLE = "Enter the name of the forward rate constant for the mass-action reaction."/>
                             </br>
-                                <label>Name of backward reaction (only applicable for reversible reactions)</label>
-
+                                
+                             <!--   <label>Name of backward reaction (only applicable for reversible reactions)</label>
                                 <input type="text" class="span3 auto_complete" name="Rate constant" placeholder="kb" id="ma-rateconstant-back" value="{{ rateconstant }}" TITLE = "Enter the name of the rate constant for the mass-action reaction.">
 
                                 <label>Backward rate constant (only applicable for reversible reactions)</label>
-                                <input type="text" class="span3 auto_complete" name="Rate constant" placeholder="kb" id="ma-rateconstant-back" value="{{ rateconstant }}" TITLE = "Enter the name of the rate constant for the backward mass-action reaction.">
+                                <input type="text" class="span3 auto_complete" name="Rate constant" placeholder="kb" id="ma-rateconstant-back" value="{{ rateconstant }}" TITLE = "Enter the name of the rate constant for the backward mass-action reaction."> -->
                                     
                         </div>
                         
@@ -81,7 +81,7 @@
 				.horizontal { display: inline; color: black; }
 				</style>
 
-				<h4><a data-toggle="collapse" data-target="#" default> All Species </a> </h4>
+				<h4><a data-toggle="collapse" data-target="#" default> Show all species names</a> </h4>
 				<ul>
 					{% for key, value in all_reactions.items() %}
 						<li class = "horizontal"><a href="#">{{all_reactants[key]}}</a></li>
