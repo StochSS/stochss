@@ -162,7 +162,7 @@ class ReactionEditorPage(BaseHandler):
                 namespace[param] = all_parameters[param].value
 
             # If we are processing a mass-action reaction, we generate a temporary reaction here in
-            # order to compile the propensity function.
+            # order to compile the propensity function for error checking below.
             if mass_action:
                 try:
                     rtemp = Reaction(name="foo", reactants=reactants, products=products, massaction=True,rate=ma_rate_parameter)
