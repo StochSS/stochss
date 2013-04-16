@@ -249,9 +249,11 @@ class ReactionEditorPage(BaseHandler):
         if name == "":
             return {'status': False, 'msg': 'Reaction name is missing.'}
         
-        if reactants == "":
-            return {'status': False, 'msg': 'Reactant for ' + name + ' is missing.'}
-        
+        # The reactant and product lists can be empty. But we probably need more (different)
+        # error checking here. 
+        # if reactants == "":
+        #    return {'status': False, 'msg': 'Reactant for ' + name + ' is missing.'}
+    
         if propensity_function == "":
             return {'status': False, 'msg': 'Propensity function for ' + name + ' is missing.'}
         
