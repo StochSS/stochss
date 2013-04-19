@@ -7,3 +7,6 @@
 [submodule "lib/kombu"]
 	path = lib/kombu
 	url = git://github.com/celery/kombu.git
+[submodule "lib/fabric"]
+	path = lib/fabric
+	url = git://github.com/fabric/fabric.git
