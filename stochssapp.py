@@ -130,7 +130,6 @@ app = webapp2.WSGIApplication([
                                ('/modeleditor/specieseditor', SpeciesEditorPage),
                                ('/modeleditor/reactioneditor', ReactionEditorPage),
                                ('/modeleditor/parametereditor', ParameterEditorPage),
-                               ('/modeleditor/geometryeditor', GeometryEditorPage),
                                ('/modeleditor/import/fromfile', ModelEditorImportFromFilePage),
                                ('/modeleditor/import/examplelibrary', ModelEditorImportFromLibrary),
                                ('/modeleditor/export/tostochkit2', ModelEditorExportToStochkit2),

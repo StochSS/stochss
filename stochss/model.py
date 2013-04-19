@@ -69,8 +69,10 @@ class Model():
         self.listOfSpecies.clear()
 
     def getParameter(self,pname):
-        return listOfParameters[pname]
-    
+        try:
+            return self.listOfParameters[pname]
+        except:
+            raise ModelError("No paramter named "+pname)
     def getAllParameters(self):
         return self.listOfParameters
     
@@ -200,14 +202,14 @@ class Reaction():
             
             Input: 
                 name:                       string that the model is referenced by
-                parameters:                 a list of parmeter instances
+                parameters:                 a list of parameter instances
                 propensity_function:         string with the expression for the reaction's propensity
                 reactants:                  List of (species,stoiciometry) tuples
                 product:                    List of (species,stoiciometry) tuples
                 annotation:                 Description of the reaction (meta)
             
                 massaction True,{False}     is the reaction of mass action type or not?
-                rate                        if mass action, rate is a reference to a paramter onbject.
+                rate                        if mass action, rate is a reference to a paramter instance.
             
             Raises: ReactionError
             
@@ -298,6 +300,9 @@ class Reaction():
         self.annotation = annotation
 
 # Module exceptions
+class ModelError(Exception):
+    pass
+
 class SpeciesError(Exception):
     pass
 
