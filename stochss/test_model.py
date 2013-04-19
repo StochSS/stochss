@@ -1,5 +1,9 @@
 #!/usr/bin/env python
-""" Unit tests for stochss.model module. """
+""" 
+    Unit tests for stochss.model module.
+    A. Hellander, 2013.
+    
+"""
 
 from model import *
 from stochkit import *
@@ -9,18 +13,32 @@ from examplemodels import MichaelisMenten
 import unittest
 
 class TestModelSerialization(unittest.TestCase):
-    """ Test model serialization. """
+
     def setUp(self):
         self.model = dimerdecay()
         self.mmmodel = MichaelisMenten()
         # Create the model document using the API
         self.modeldoc = StochMLDocument.fromModel(self.model)
 
-
+    
+    def test_species(self):
+        """ Testing basic functionality of the Species class """
+        model = Model(name="testspecies")
+        S1 = Species(name="S1",initial_value=10);
+        S2 = Species(name="S2",initial_value=100);
+        S3 = Species(name="S3",initial_value=100);
+    
+        # Both these calls should be supported
+        model.addSpecies(S1)
+        model.addSpecies([S2,S3])
+    
+        # This should raise a ModelError since S1 is already in the list.
+        self.assertRaises(ModelError,model.addSpecies,S1)
+ 
     def test_parameters(self):
-        """ Parameter evaluations. """
+        """ Testing parameter evaluations. """
         # Create a model to hold the list of parameters
-        model = Model(name="testparamters")
+        model = Model(name="testparameters")
         # Create a parameter with a scalar value
         p1 = Parameter(name="p1",expression='0.1')
         model.addParameter(p1)
@@ -32,10 +50,8 @@ class TestModelSerialization(unittest.TestCase):
         p2.evaluate(namespace=model.namespace)
         self.assertEqual(p2.value,0.01)
     
-    
-
     def test_massaction(self):
-        """ Auto-generation of mass-action propensities. """
+        """ Testing auto-generation of mass-action propensities. """
         S1 = Species('S1',10);
         S2 = Species('S2',10);
         S3 = Species('S3',10);
@@ -43,7 +59,7 @@ class TestModelSerialization(unittest.TestCase):
         c2 = Parameter(name="c2",expression='0.1')
         c3 = Parameter(name="c3",expression='0.1')
        
-        # These are the currently allowed cases
+        # These are the allowed cases
             
         # 1.) EmptySet->X
         R = Reaction(name='R1',products={S2.name:1},massaction=True,rate=c1)
@@ -56,21 +72,31 @@ class TestModelSerialization(unittest.TestCase):
         self.assertEqual(R.propensity_function,"0.5*c2*S1*(S1-1)")
         # 4.) X1 + X2 -> Y
         R = Reaction(name='R1',reactants={S1.name:1,S2.name:1},products={S3.name:1},massaction=True,rate=c2)
-        # We cannot guarantee the order of the species in the expression
+        # We cannot guarantee the order of the species in the expression. This is not a problem
+        # for the actual simulation so both orders should be allowed. 
         valid_expressions = ["c2*S1*S2","c2*S2*S1"]
-        self.assertIn(R.propensity_function,valid_expressions)
+        iscorrect = R.propensity_function in valid_expressions
+        self.assertEqual(iscorrect,True)
     
-    def test_modelserialization():
-        doc1 = self.mmmodel.serialize()
+    def test_mmserialization(self):
+        """ Serializing MichaelisMenten example model to StochKit XML """
+        doc = self.mmmodel.serialize()
+        model2 = doc1.toModel("MichaelisMenten")
+        assertEqual(self.mmmodel.__dict__,model2.__dict__)
         
-        
-    
     """def test_readstochml(self):
         # Instantiate a Vilar model from a valid StochML
         doc = StochMLDocument.fromFile('vilar.xml')
         model = doc.toModel('Vilar')
         #model.serialize()"""
     
+    def test_read_heat_shock_mixed(self):
+        """ Instantiate a model from heat_shock_mixed.xml """
+        doc = StochMLDocument.fromFile("../examples/heat_shock_mixed.xml")
+        model = doc.toModel("heat_shock_mixed")
+        xmlstr = model.serialize()
+        
+            
     def test_readmodelfromstochmlfile(self):
         """ Initialize a model object from StochML. """
         # Initialize a model object from the stochml document

@@ -167,7 +167,7 @@ class StochMLDocument():
         # Create species
         for spec in root.iter('Species'):
             name = spec.find('Id').text
-            val  = int(spec.find('InitialPopulation').text)
+            val  = spec.find('InitialPopulation').text
             s = Species(name,initial_value = val)
             model.addSpecies([s])
         
