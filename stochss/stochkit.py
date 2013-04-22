@@ -152,15 +152,17 @@ class StochMLDocument():
         
         # Set annotiation
         ann = root.find('Description')
-        if ann.text is None:
-            model.annotation = ""
-        else:
-            model.annotation = ann.text
-        
+        if ann is not None:
+            if ann.text is None:
+                model.annotation = ""
+            else:
+                model.annotation = ann.text
+    
         # Create parameters
         for px in root.iter('Parameter'):
             name = px.find('Id').text
-            val = float(px.find('Expression').text)
+            # TODO: It is not safe to use eval like this
+            val = float(eval(px.find('Expression').text))
             p = Parameter(name,expression=val)
             model.addParameter(p)
         
@@ -232,9 +234,23 @@ class StochMLDocument():
                 reaction.massaction = True
                 reaction.type = 'mass-action'
                 # If it is mass-action, a parameter reference is needed.
+                # This has to be a reference to a species instance. We explicitly
+                # disallow a scalar value to be passed as the paramtete.  
                 try:
                     ratename=reac.find('Rate').text
-                    reaction.marate = model.listOfParameters[ratename]
+                    try:
+                        reaction.marate = model.listOfParameters[ratename]
+                    except KeyError, k:
+                        # No paramter name is given. This is a valid use case in StochKit.
+                        # We generate a name for the paramter, and create a new parameter instance.
+                        # The parameter's value should now be found in 'ratename'.
+                        generated_rate_name = "Reaction_" + name + "_rate_constant";
+                        p = Parameter(name=generated_rate_name, expression=ratename);
+                        # Try to evaluate the parameter to set its value
+                        p.evaluate()
+                        model.addParameter(p)
+                        reaction.marate = model.listOfParameters[generated_rate_name]
+
                     reaction.createMassAction()
                 except Exception, e:
                     raise

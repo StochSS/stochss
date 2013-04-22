@@ -81,24 +81,64 @@ class TestModelSerialization(unittest.TestCase):
     def test_mmserialization(self):
         """ Serializing MichaelisMenten example model to StochKit XML """
         doc = self.mmmodel.serialize()
-        model2 = doc1.toModel("MichaelisMenten")
-        assertEqual(self.mmmodel.__dict__,model2.__dict__)
+        #model2 = doc1.toModel("MichaelisMenten")
+    #assertEqual(self.mmmodel.__dict__,model2.__dict__)
         
-    """def test_readstochml(self):
-        # Instantiate a Vilar model from a valid StochML
-        doc = StochMLDocument.fromFile('vilar.xml')
-        model = doc.toModel('Vilar')
-        #model.serialize()"""
+    
+    def test_read_dimer_decay(self):
+        """ Instantiate a model from dimer_decay.xml """
+        doc = StochMLDocument.fromFile("../examples/dimer_decay.xml")
+        model = doc.toModel("dimer_decay")
+        xmlstr = model.serialize()
+    
+    def test_read_schlogl(self):
+        """ Instantiate a model from schlogl.xml """
+        doc = StochMLDocument.fromFile("../examples/schlogl.xml")
+        model = doc.toModel("schlogl")
+        xmlstr = model.serialize()
+    
+    def test_read_simple1(self):
+        """ Instantiate a model from simple1.xml """
+        doc = StochMLDocument.fromFile("../examples/simple1.xml")
+        model = doc.toModel("simple1")
+        xmlstr = model.serialize()
+    
+    def test_read_simple1p(self):
+        """ Instantiate a model from simple1p.xml """
+        doc = StochMLDocument.fromFile("../examples/simple1p.xml")
+        model = doc.toModel("simple1p")
+        xmlstr = model.serialize()
+    
+    def test_read_vilar(self):
+        """ Instantiate a model from vilar.xml """
+        doc = StochMLDocument.fromFile("../examples/vilar.xml")
+        model = doc.toModel("vilar")
+        xmlstr = model.serialize()
+
     
     def test_read_heat_shock_mixed(self):
         """ Instantiate a model from heat_shock_mixed.xml """
         doc = StochMLDocument.fromFile("../examples/heat_shock_mixed.xml")
         model = doc.toModel("heat_shock_mixed")
         xmlstr = model.serialize()
+
+    def test_read_heat_shock_mass_action(self):
+        """ Instantiate a model from heat_shock_mass_action.xml """
+        doc = StochMLDocument.fromFile("../examples/heat_shock_mass_action.xml")
+        model = doc.toModel("heat_shock_mass_action")
+        xmlstr = model.serialize()
+    
+    def test_read_heat_shock_mass_action(self):
+        """ Instantiate a model from heat_shock_10x.xml """
+        doc = StochMLDocument.fromFile("../examples/heat_shock_10x.xml")
+        model = doc.toModel("heat_shock_10x")
+        xmlstr = model.serialize()
+
         
+    
             
-    def test_readmodelfromstochmlfile(self):
-        """ Initialize a model object from StochML. """
+        # def test_readmodelfromstochmlfile(self):
+    # """ Initialize a model object from StochML. """
         # Initialize a model object from the stochml document
         # model2 = self.modeldoc2.toModel("Example 2")
         #  And write it to a new stochml document
@@ -122,7 +162,6 @@ class TestModelSerialization(unittest.TestCase):
         # make sure that the serialization of the newly read document is
         # identical to the base document.
     
-        #TODO: This test is broken, dom.minidom causes something weird to happen with the formatting of the document when read back in.  
         #self.assertEqual(modelstr,modeldoc2.toString())
 
 
