@@ -161,9 +161,10 @@ class StochMLDocument():
         # Create parameters
         for px in root.iter('Parameter'):
             name = px.find('Id').text
-            # TODO: It is not safe to use eval like this
-            val = float(eval(px.find('Expression').text))
-            p = Parameter(name,expression=val)
+            expr = px.find('Expression').text
+            p = Parameter(name,expression=expr)
+            # Try to evaluate the expression in the empty namespace (if the expr is a scalar value)
+            p.evaluate()
             model.addParameter(p)
         
         # Create species

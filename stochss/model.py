@@ -274,9 +274,8 @@ class Reaction():
         for r in self.reactants:
             total_stoch+=self.reactants[r]
         if total_stoch>2:
-            raise ReactionError("Reaction: " +self.name + "A mass action reaction cannot involve more than two molecules.")
+            raise ReactionError("Reaction: " +self.name + "A mass-action reaction cannot involve more than two species.")
     
-        
         # Case EmptySet -> Y
         propensity_function = self.marate.name;
              
