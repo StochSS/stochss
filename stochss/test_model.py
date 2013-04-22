@@ -87,9 +87,16 @@ class TestModelSerialization(unittest.TestCase):
     
     def test_read_dimer_decay(self):
         """ Instantiate a model from dimer_decay.xml """
-        doc = StochMLDocument.fromFile("../examples/dimer_decay.xml")
-        model = doc.toModel("dimer_decay")
+        doc    = StochMLDocument.fromFile("../examples/dimer_decay.xml")
+        model  = doc.toModel("dimer_decay")
         xmlstr = model.serialize()
+    
+        # Most stringent test. Run StochKit with the same seed for both the
+        # original model (diectly using the XML file) and using the file
+        # serialized from the imported model instance. They should result in
+        # the same output even if the format of the XML file is not identical.
+        # TODO:
+        stochkit(model,job_id="test_dd_1",seed=45367)
     
     def test_read_schlogl(self):
         """ Instantiate a model from schlogl.xml """
@@ -115,7 +122,6 @@ class TestModelSerialization(unittest.TestCase):
         model = doc.toModel("vilar")
         xmlstr = model.serialize()
 
-    
     def test_read_heat_shock_mixed(self):
         """ Instantiate a model from heat_shock_mixed.xml """
         doc = StochMLDocument.fromFile("../examples/heat_shock_mixed.xml")
@@ -128,14 +134,12 @@ class TestModelSerialization(unittest.TestCase):
         model = doc.toModel("heat_shock_mass_action")
         xmlstr = model.serialize()
     
-    def test_read_heat_shock_mass_action(self):
+    def test_read_heat_shock_10x(self):
         """ Instantiate a model from heat_shock_10x.xml """
         doc = StochMLDocument.fromFile("../examples/heat_shock_10x.xml")
         model = doc.toModel("heat_shock_10x")
         xmlstr = model.serialize()
 
-        
-    
             
         # def test_readmodelfromstochmlfile(self):
     # """ Initialize a model object from StochML. """
@@ -163,8 +167,6 @@ class TestModelSerialization(unittest.TestCase):
         # identical to the base document.
     
         #self.assertEqual(modelstr,modeldoc2.toString())
-
-
 
 if __name__ == '__main__':
     suite = unittest.TestLoader().loadTestsFromTestCase(TestModelSerialization)

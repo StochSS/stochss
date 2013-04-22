@@ -6,8 +6,7 @@
     object. StochKitModel extends Model in the 'model.py' module, and supplements 
     it with StochKit2 specific model serialization (to StochKit's naive XML format). 
     
-    For examples of how to initialize and makes use of StochKitModel, 
-    consult the examples in the module 'examplemodels.py'.
+    For examples of use the model API consult the examples in the module 'examplemodels.py'.
     
     The XML serialization is implemented through a StochMLDocument class, which 
     rely on either the lxml or etree modules. To serialize a StochKitModel object 'model',
@@ -25,9 +24,13 @@
     The module also conatains some experimental code for wrapping StochKit output data
     and writing it to .mat files. This should not presently be used by the GAE app.
     
+    It also implements a wrapper around StochKit, which uses systems calls to execute
+    StochKit and collect its results. This function is mainly inteded to be used by 
+    the test suite, but is include here since it can be useful in other contexts as well.
+    
     Raises: InvalidModelError, InvalidStochMLError
     
-    Contact: Andreas Hellander
+    Andreas Hellander, April 2013.
     
 """
 
@@ -48,6 +51,12 @@ try:
     import scipy.sparse as scisp
     import scipy.io as spio
     isSCIPY = True
+except:
+    pass
+
+import os
+try:
+    import shutil
 except:
     pass
 
@@ -128,7 +137,7 @@ class StochMLDocument():
     
     @classmethod
     def fromFile(cls,filepath):
-        """ Intializes the document from an exisiting native StochKit XML file. """
+        """ Intializes the document from an exisiting native StochKit XML file read from disk. """
         tree = etree.parse(filepath)
         root = tree.getroot()
         md = cls()
@@ -206,29 +215,34 @@ class StochMLDocument():
             try:
                 for ss in reactants.iter('SpeciesReference'):
                     specname = ss.get('id')
-                    stoch = int(ss.get('stoichiometry'))
+                    # The stochiometry should be an integer value, but some
+                    # exising StoxhKit models have them as floats. This is why we
+                    # need the slightly odd conversion below. 
+                    stoch = int(float(ss.get('stoichiometry')))
                     # Select a reference to species with name specname
                     sref = model.listOfSpecies[specname]
                     try:
                         # The sref list should only contain one element if the XML file is valid.
                         reaction.reactants[specname] = stoch
-                    except:
-                        pass
+                    except Exception,e:
+                        StochMLImportError(e)
             except:
+                # Yes, this is correct. 'reactants' can be None
                 pass
 
             products  = reac.find('Products')
             try:
                 for ss in products.iter('SpeciesReference'):
                     specname = ss.get('id')
-                    stoch = int(ss.get('stoichiometry'))
+                    stoch = int(float(ss.get('stoichiometry')))
                     sref = model.listOfSpecies[specname]
                     try:
                         # The sref list should only contain one element if the XML file is valid.
                         reaction.products[specname] = stoch
-                    except:
-                        pass
+                    except Exception,e:
+                        raise StochMLImportError(e)
             except:
+                # Yes, this is correct. 'products' can be None
                 pass
                             
             if type == 'mass-action':
@@ -255,6 +269,14 @@ class StochMLDocument():
                     reaction.createMassAction()
                 except Exception, e:
                     raise
+            elif type == 'customized':
+                try:
+                    propfunc = reac.find('PropensityFunction').text
+                except Exception,e:
+                    raise InvalidStochMLError("Found a customized propensity function, but no expression was given."+e)
+                reaction.propensity_function = propfunc
+            else:
+                raise InvalidStochMLError("Unsupported or no reaction type given for reaction" + name)
 
             model.addReaction(reaction)
         
@@ -431,7 +453,82 @@ class StochKitOutputCollection():
     def addEnsemble(self,ensemble):
         self.collection.append(ensemble)
 
+
+def stochkit(model, job_id="",time=1.0,number_of_trajectories=1,increment=None,seed=None,algorithm="ssa"):
+    """ Call out and run StochKit. Collect the results. This routine is mainly
+        intended to be used by the (command line) test suite. """
+    # We write all StochKit input and output files to a temporary folder
+    prefix_outdir = os.path.join(os.path.dirname(__file__), '.stochkit_output')
+
+    # If the base output directory does not exist, we create it
+    process = os.popen('mkdir -p ' + prefix_outdir);
+    process.close()
+    
+    # Write a temporary StochKit2 input file.
+    outfile =  "stochkit_temp_input.xml"
+    mfhandle = open(outfile,'w')
+    #document = StochMLDocument.fromModel(model)
+    document = model.serialize()
+    mfhandle.write(document)
+    mfhandle.close()
+    
+    # Assemble argument list
+    ensemblename = job_id
+    
+    # If the temporary folder we need to create to hold the output data already exists, we error
+    process = os.popen('ls '+prefix_outdir)
+    directories = process.read();
+    process.close()
+    
+    if ensemblename in directories:
+        raise Exception("The ensemble name already exists. You need to input a unique name.")
+    
+    outdir = prefix_outdir+'/'+ensemblename
+    
+    realizations = number_of_trajectories
+    if increment == None:
+        increment = time/10;
+
+    if seed == None:
+        seed = 0
+
+    # Algorithm, SSA or Tau-leaping?
+    executable = algorithm
+    
+    # Assemble the argument list
+    args = ''
+    args+='--model '
+    args+=outfile
+    args+=' --out-dir '+outdir
+    args+=' -t '
+    args+=str(time)
+    num_output_points = str(int(float(time/increment)))
+    args+=' -i ' + num_output_points
+    args+=' --realizations '
+    args+=str(realizations)
+    
+    # We keep all the trajectories by default.
+    args+=' --keep-trajectories'
+
+    # TODO: We need a robust way to pick a default seed for the ensemble. It needs to be robust in a ditributed, parallel env.
+    args+=' --seed '
+    args+=str(seed)
+
+    # If we are using local mode, shell out and run StochKit (SSA or Tau-leaping)
+    cmd = executable+' '+args
+
+    # Can't test for failed execution here, popen does not return stderr.
+    process = os.popen(cmd)
+    stochkit_output_message = process.read()
+    process.close()
+
+    # Clean up
+    shutil.rmtree(outdir)
+
 # Exceptions
+class StochMLImportError(Exception):
+    pass
+
 class InvalidStochMLError(Exception):
     pass
 
