@@ -95,20 +95,34 @@ class TestModelSerialization(unittest.TestCase):
         # original model (diectly using the XML file) and using the file
         # serialized from the imported model instance. They should result in
         # the same output even if the format of the XML file is not identical.
-        stochkit(model,job_id="test_dd_1",seed=45367)
-        stochkit("../examples/dimer_decay.xml",job_id="test_dd_2",seed=45367)
+        means1,variances1,trajectories1 = stochkit(model,job_id="test_dd_1",seed=45367)
+        means2,variances2,trajectories2 = stochkit("../examples/dimer_decay.xml",job_id="test_dd_2",seed=45367)
+        isok = (means1==means2).all()
+        self.assertEqual(isok,True)
     
     def test_read_schlogl(self):
         """ Instantiate a model from schlogl.xml """
         doc = StochMLDocument.fromFile("../examples/schlogl.xml")
         model = doc.toModel("schlogl")
         xmlstr = model.serialize()
+        
+        # Run StochKit
+        means1,variances1,trajectories1 = stochkit(model,job_id="test_s_1",seed=45367,time=1.0)
+        means2,variances2,trajectories2 = stochkit("../examples/schlogl.xml",job_id="test_s_2",seed=45367,time=1.0)
+        isok = (means1==means2).all()
+        self.assertEqual(isok,True)
     
     def test_read_simple1(self):
         """ Instantiate a model from simple1.xml """
         doc = StochMLDocument.fromFile("../examples/simple1.xml")
         model = doc.toModel("simple1")
         xmlstr = model.serialize()
+        
+        # Run StochKit
+        means1,variances1,trajectories1 = stochkit(model,job_id="test_1",seed=45367)
+        means2,variances2,trajectories2 = stochkit("../examples/simple1.xml",job_id="test_2",seed=45367)
+        isok = (means1==means2).all()
+        self.assertEqual(isok,True)
     
     def test_read_simple1p(self):
         """ Instantiate a model from simple1p.xml """
@@ -116,17 +130,36 @@ class TestModelSerialization(unittest.TestCase):
         model = doc.toModel("simple1p")
         xmlstr = model.serialize()
     
+        # Run StochKit
+        means1,variances1,trajectories1 = stochkit(model,job_id="test_1",seed=45367)
+        means2,variances2,trajectories2 = stochkit("../examples/simple1p.xml",job_id="test_2",seed=45367)
+        isok = (means1==means2).all()
+        self.assertEqual(isok,True)
+
+    
     def test_read_vilar(self):
         """ Instantiate a model from vilar.xml """
         doc = StochMLDocument.fromFile("../examples/vilar.xml")
         model = doc.toModel("vilar")
         xmlstr = model.serialize()
+    
+        # Run StochKit
+        means1,variances1,trajectories1 = stochkit(model,job_id="test_1",seed=45367)
+        means2,variances2,trajectories2 = stochkit("../examples/vilar.xml",job_id="test_2",seed=45367)
+        isok = (means1==means2).all()
+        self.assertEqual(isok,True)
 
     def test_read_heat_shock_mixed(self):
         """ Instantiate a model from heat_shock_mixed.xml """
         doc = StochMLDocument.fromFile("../examples/heat_shock_mixed.xml")
         model = doc.toModel("heat_shock_mixed")
         xmlstr = model.serialize()
+    
+        # Run StochKit
+        means1,variances1,trajectories1 = stochkit(model,job_id="test_1",seed=45367)
+        means2,variances2,trajectories2 = stochkit("../examples/heat_shock_mixed.xml",job_id="test_2",seed=45367)
+        isok = (means1==means2).all()
+        self.assertEqual(isok,True)
 
     def test_read_heat_shock_mass_action(self):
         """ Instantiate a model from heat_shock_mass_action.xml """
@@ -134,11 +167,24 @@ class TestModelSerialization(unittest.TestCase):
         model = doc.toModel("heat_shock_mass_action")
         xmlstr = model.serialize()
     
+        # Run StochKit
+        means1,variances1,trajectories1 = stochkit(model,job_id="test_1",seed=45367)
+        means2,variances2,trajectories2 = stochkit("../examples/heat_shock_mass_action.xml",job_id="test_2",seed=45367)
+        isok = (means1==means2).all()
+        self.assertEqual(isok,True)
+
+    
     def test_read_heat_shock_10x(self):
         """ Instantiate a model from heat_shock_10x.xml """
         doc = StochMLDocument.fromFile("../examples/heat_shock_10x.xml")
         model = doc.toModel("heat_shock_10x")
         xmlstr = model.serialize()
+    
+        # Run StochKit
+        means1,variances1,trajectories1 = stochkit(model,job_id="test_1",seed=45367)
+        means2,variances2,trajectories2 = stochkit("../examples/heat_shock_10x.xml",job_id="test_2",seed=45367)
+        isok = (means1==means2).all()
+        self.assertEqual(isok,True)
 
             
         # def test_readmodelfromstochmlfile(self):

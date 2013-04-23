@@ -35,7 +35,6 @@
 """
 
 from model import *
-#import numpy as np
 from collections import OrderedDict
 
 try:
@@ -57,6 +56,7 @@ except:
 import os
 try:
     import shutil
+    import numpy
 except:
     pass
 
@@ -529,8 +529,27 @@ def stochkit(model, job_id="",time=1.0,number_of_trajectories=1,increment=None,s
     stochkit_output_message = process.read()
     process.close()
 
+    # Collect all the output data
+    files = os.listdir(outdir + '/stats')
+    means = numpy.loadtxt(outdir + '/stats/means.txt')
+    variances = numpy.loadtxt(outdir + '/stats/variances.txt')
+    
+    
+    trajectories = []
+    files = os.listdir(outdir + '/trajectories')
+        
+    for filename in files:
+        if 'trajectory' in filename:
+            trajectories.append(numpy.loadtxt(outdir + '/trajectories/' + filename))
+        else:
+            sys.stderr.write('Couldn\'t identify file (' + filename + ') found in output folder')
+            sys.exit(-1)
+
+
     # Clean up
     shutil.rmtree(outdir)
+
+    return means,variances,trajectories
 
 # Exceptions
 class StochMLImportError(Exception):
