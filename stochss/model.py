@@ -55,11 +55,15 @@ class Model():
             Add a species to listOfSpecies. Accepts input either as a single Species object, or
             as a list of Species objects.
         """
-        # TODO, make sure that we don't overwrite an existing species
+                
         if isinstance(obj, Species):
+            if obj.name in self.listOfSpecies:
+                raise ModelError("Can't add species. A species with that name alredy exisits.")
             self.listOfSpecies[obj.name] = obj;
         else: # obj is a list of species
             for S in obj:
+                if S.name in self.listOfSpecies:
+                    raise ModelError("Can't add species. A species with that name alredy exisits.")
                 self.listOfSpecies[S.name] = S;
     
     def deleteSpecies(self, obj):
@@ -72,7 +76,7 @@ class Model():
         try:
             return self.listOfParameters[pname]
         except:
-            raise ModelError("No paramter named "+pname)
+            raise ModelError("No parameter named "+pname)
     def getAllParameters(self):
         return self.listOfParameters
     
@@ -149,9 +153,13 @@ class Species():
     """ Chemical species. """
     
     def __init__(self,name="",initial_value=0):
-        # A species has a name (string) and an intial value (integer)
+        # A species has a name (string) and an initial value (positive integer)
         self.name = name
         self.initial_value = initial_value
+        assert self.initial_value >= 0, "A species initial value has to be a positive number."
+
+            #def __eq__(self,other):
+#  return self.__dict__ == other.__dict__
 
 class Parameter():
     """ 
@@ -266,9 +274,8 @@ class Reaction():
         for r in self.reactants:
             total_stoch+=self.reactants[r]
         if total_stoch>2:
-            raise ReactionError("Reaction: " +self.name + "A mass action reaction cannot involve more than two molecules.")
+            raise ReactionError("Reaction: " +self.name + "A mass-action reaction cannot involve more than two species.")
     
-        
         # Case EmptySet -> Y
         propensity_function = self.marate.name;
              
@@ -303,11 +310,11 @@ class Reaction():
 class ModelError(Exception):
     pass
 
-class SpeciesError(Exception):
+class SpeciesError(ModelError):
     pass
 
-class ReactionError(Exception):
+class ReactionError(ModelError):
     pass
 
-class ParameterError(Exception):
+class ParameterError(ModelError):
     pass
