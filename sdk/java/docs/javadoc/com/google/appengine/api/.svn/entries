@@ -1,64 +1,0 @@
-10
-
-dir
-340
-http://googleappengine.googlecode.com/svn/trunk/java/docs/javadoc/com/google/appengine/api
-http://googleappengine.googlecode.com/svn
-
-
-
-2011-02-14T23:53:44.779755Z
-148
-schwardo@google.com
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-80f5ef21-4148-0410-bacc-cfb02402ada8
-
-oauth
-dir
-
-utils
-dir
-
-labs
-dir
-
-users
-dir
-
-memcache
-dir
-
-mail
-dir
-
-xmpp
-dir
-
-images
-dir
-
-datastore
-dir
-
-quota
-dir
-
-blobstore
-dir
-
-urlfetch
-dir
-
