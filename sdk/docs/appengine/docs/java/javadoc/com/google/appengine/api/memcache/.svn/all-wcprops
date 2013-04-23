@@ -1,0 +1,131 @@
+K 25
+svn:wc:ra_dav:version-url
+V 90
+/svn/!svn/ver/223/trunk/docs/appengine/docs/java/javadoc/com/google/appengine/api/memcache
+END
+BaseMemcacheService.html
+K 25
+svn:wc:ra_dav:version-url
+V 115
+/svn/!svn/ver/223/trunk/docs/appengine/docs/java/javadoc/com/google/appengine/api/memcache/BaseMemcacheService.html
+END
+StrictErrorHandler.html
+K 25
+svn:wc:ra_dav:version-url
+V 114
+/svn/!svn/ver/223/trunk/docs/appengine/docs/java/javadoc/com/google/appengine/api/memcache/StrictErrorHandler.html
+END
+LogAndContinueErrorHandler.html
+K 25
+svn:wc:ra_dav:version-url
+V 122
+/svn/!svn/ver/223/trunk/docs/appengine/docs/java/javadoc/com/google/appengine/api/memcache/LogAndContinueErrorHandler.html
+END
+AsyncMemcacheService.html
+K 25
+svn:wc:ra_dav:version-url
+V 116
+/svn/!svn/ver/223/trunk/docs/appengine/docs/java/javadoc/com/google/appengine/api/memcache/AsyncMemcacheService.html
+END
+Expiration.html
+K 25
+svn:wc:ra_dav:version-url
+V 106
+/svn/!svn/ver/223/trunk/docs/appengine/docs/java/javadoc/com/google/appengine/api/memcache/Expiration.html
+END
+MemcacheService.html
+K 25
+svn:wc:ra_dav:version-url
+V 111
+/svn/!svn/ver/223/trunk/docs/appengine/docs/java/javadoc/com/google/appengine/api/memcache/MemcacheService.html
+END
+package-frame.html
+K 25
+svn:wc:ra_dav:version-url
+V 109
+/svn/!svn/ver/223/trunk/docs/appengine/docs/java/javadoc/com/google/appengine/api/memcache/package-frame.html
+END
+package-summary.html
+K 25
+svn:wc:ra_dav:version-url
+V 111
+/svn/!svn/ver/223/trunk/docs/appengine/docs/java/javadoc/com/google/appengine/api/memcache/package-summary.html
+END
+ErrorHandler.html
+K 25
+svn:wc:ra_dav:version-url
+V 108
+/svn/!svn/ver/223/trunk/docs/appengine/docs/java/javadoc/com/google/appengine/api/memcache/ErrorHandler.html
+END
+package-tree.html
+K 25
+svn:wc:ra_dav:version-url
+V 108
+/svn/!svn/ver/223/trunk/docs/appengine/docs/java/javadoc/com/google/appengine/api/memcache/package-tree.html
+END
+MemcacheService.SetPolicy.html
+K 25
+svn:wc:ra_dav:version-url
+V 121
+/svn/!svn/ver/223/trunk/docs/appengine/docs/java/javadoc/com/google/appengine/api/memcache/MemcacheService.SetPolicy.html
+END
+MemcacheService.IdentifiableValue.html
+K 25
+svn:wc:ra_dav:version-url
+V 129
+/svn/!svn/ver/223/trunk/docs/appengine/docs/java/javadoc/com/google/appengine/api/memcache/MemcacheService.IdentifiableValue.html
+END
+Stats.html
+K 25
+svn:wc:ra_dav:version-url
+V 101
+/svn/!svn/ver/223/trunk/docs/appengine/docs/java/javadoc/com/google/appengine/api/memcache/Stats.html
+END
+MemcacheSerialization.html
+K 25
+svn:wc:ra_dav:version-url
+V 117
+/svn/!svn/ver/223/trunk/docs/appengine/docs/java/javadoc/com/google/appengine/api/memcache/MemcacheSerialization.html
+END
+MemcacheServiceException.html
+K 25
+svn:wc:ra_dav:version-url
+V 120
+/svn/!svn/ver/223/trunk/docs/appengine/docs/java/javadoc/com/google/appengine/api/memcache/MemcacheServiceException.html
+END
+InvalidValueException.html
+K 25
+svn:wc:ra_dav:version-url
+V 117
+/svn/!svn/ver/223/trunk/docs/appengine/docs/java/javadoc/com/google/appengine/api/memcache/InvalidValueException.html
+END
+MemcacheService.CasValues.html
+K 25
+svn:wc:ra_dav:version-url
+V 121
+/svn/!svn/ver/223/trunk/docs/appengine/docs/java/javadoc/com/google/appengine/api/memcache/MemcacheService.CasValues.html
+END
+MemcacheSerialization.Flag.html
+K 25
+svn:wc:ra_dav:version-url
+V 122
+/svn/!svn/ver/223/trunk/docs/appengine/docs/java/javadoc/com/google/appengine/api/memcache/MemcacheSerialization.Flag.html
+END
+ErrorHandlers.html
+K 25
+svn:wc:ra_dav:version-url
+V 109
+/svn/!svn/ver/223/trunk/docs/appengine/docs/java/javadoc/com/google/appengine/api/memcache/ErrorHandlers.html
+END
+MemcacheSerialization.ValueAndFlags.html
+K 25
+svn:wc:ra_dav:version-url
+V 131
+/svn/!svn/ver/223/trunk/docs/appengine/docs/java/javadoc/com/google/appengine/api/memcache/MemcacheSerialization.ValueAndFlags.html
+END
+MemcacheServiceFactory.html
+K 25
+svn:wc:ra_dav:version-url
+V 118
+/svn/!svn/ver/223/trunk/docs/appengine/docs/java/javadoc/com/google/appengine/api/memcache/MemcacheServiceFactory.html
+END

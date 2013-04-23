@@ -1,0 +1,307 @@
+10
+
+dir
+340
+http://googleappengine.googlecode.com/svn/trunk/python/lib/django-1.2/tests/regressiontests
+http://googleappengine.googlecode.com/svn
+
+
+
+2013-03-26T21:48:15.277985Z
+327
+proppy@google.com
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+80f5ef21-4148-0410-bacc-cfb02402ada8
+
+defer_regress
+dir
+
+humanize
+dir
+
+custom_managers_regress
+dir
+
+null_fk_ordering
+dir
+
+text
+dir
+
+db_typecasts
+dir
+
+m2m_regress
+dir
+
+null_fk
+dir
+
+get_or_create_regress
+dir
+
+string_lookup
+dir
+
+test_utils
+dir
+
+model_inheritance_regress
+dir
+
+cache
+dir
+
+admin_views
+dir
+
+special_headers
+dir
+
+defaultfilters
+dir
+
+admin_widgets
+dir
+
+bug639
+dir
+
+multiple_database
+dir
+
+aggregation_regress
+dir
+
+admin_ordering
+dir
+
+formwizard
+dir
+
+admin_util
+dir
+
+select_related_onetoone
+dir
+
+servers
+dir
+
+delete_regress
+dir
+
+views
+dir
+
+dispatch
+dir
+
+conditional_processing
+dir
+
+model_forms_regress
+dir
+
+bug8245
+dir
+
+many_to_one_regress
+dir
+
+admin_validation
+dir
+
+file_storage
+dir
+
+makemessages
+dir
+
+file_uploads
+dir
+
+null_queries
+dir
+
+test_client_regress
+dir
+
+test_runner
+dir
+
+queryset_pickle
+dir
+
+requests
+dir
+
+expressions_regress
+dir
+
+app_loading
+dir
+
+one_to_one_regress
+dir
+
+generic_inline_admin
+dir
+
+comment_tests
+dir
+
+syndication
+dir
+
+m2m_through_regress
+dir
+
+managers_regress
+dir
+
+admin_changelist
+dir
+
+model_regress
+dir
+
+signals_regress
+dir
+
+builtin_server
+dir
+
+datatypes
+dir
+
+locale
+dir
+
+localflavor
+dir
+
+decorators
+dir
+
+context_processors
+dir
+
+admin_inlines
+dir
+
+max_lengths
+dir
+
+modeladmin
+dir
+
+inspectdb
+dir
+
+model_formsets_regress
+dir
+
+reverse_single_related
+dir
+
+middleware
+dir
+
+extra_regress
+dir
+
+middleware_exceptions
+dir
+
+i18n
+dir
+
+csrf_tests
+dir
+
+admin_registration
+dir
+
+settings_tests
+dir
+
+mail
+dir
+
+pagination_regress
+dir
+
+model_fields
+dir
+
+generic_relations_regress
+dir
+
+serializers_regress
+dir
+
+forms
+dir
+
+templates
+dir
+
+admin_scripts
+dir
+
+utils
+dir
+
+introspection
+dir
+
+inline_formsets
+dir
+
+initial_sql_regress
+dir
+
+fixtures_regress
+dir
+
+httpwrappers
+dir
+
+custom_columns_regress
+dir
+
+sites_framework
+dir
+
+bash_completion
+dir
+
+model_inheritance_select_related
+dir
+
+select_related_regress
+dir
+
+backends
+dir
+
+queries
+dir
+
+urlpatterns_reverse
+dir
+

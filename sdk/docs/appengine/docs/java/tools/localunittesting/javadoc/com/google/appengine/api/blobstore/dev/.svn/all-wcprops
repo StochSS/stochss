@@ -1,0 +1,77 @@
+K 25
+svn:wc:ra_dav:version-url
+V 118
+/svn/!svn/ver/223/trunk/docs/appengine/docs/java/tools/localunittesting/javadoc/com/google/appengine/api/blobstore/dev
+END
+BlobUploadSessionStorage.html
+K 25
+svn:wc:ra_dav:version-url
+V 148
+/svn/!svn/ver/223/trunk/docs/appengine/docs/java/tools/localunittesting/javadoc/com/google/appengine/api/blobstore/dev/BlobUploadSessionStorage.html
+END
+BlobInfoStorage.html
+K 25
+svn:wc:ra_dav:version-url
+V 139
+/svn/!svn/ver/223/trunk/docs/appengine/docs/java/tools/localunittesting/javadoc/com/google/appengine/api/blobstore/dev/BlobInfoStorage.html
+END
+BlobStorage.html
+K 25
+svn:wc:ra_dav:version-url
+V 135
+/svn/!svn/ver/223/trunk/docs/appengine/docs/java/tools/localunittesting/javadoc/com/google/appengine/api/blobstore/dev/BlobStorage.html
+END
+package-frame.html
+K 25
+svn:wc:ra_dav:version-url
+V 137
+/svn/!svn/ver/223/trunk/docs/appengine/docs/java/tools/localunittesting/javadoc/com/google/appengine/api/blobstore/dev/package-frame.html
+END
+package-summary.html
+K 25
+svn:wc:ra_dav:version-url
+V 139
+/svn/!svn/ver/223/trunk/docs/appengine/docs/java/tools/localunittesting/javadoc/com/google/appengine/api/blobstore/dev/package-summary.html
+END
+ServeBlobFilter.ResponseWrapper.html
+K 25
+svn:wc:ra_dav:version-url
+V 155
+/svn/!svn/ver/223/trunk/docs/appengine/docs/java/tools/localunittesting/javadoc/com/google/appengine/api/blobstore/dev/ServeBlobFilter.ResponseWrapper.html
+END
+LocalBlobstoreService.html
+K 25
+svn:wc:ra_dav:version-url
+V 145
+/svn/!svn/ver/223/trunk/docs/appengine/docs/java/tools/localunittesting/javadoc/com/google/appengine/api/blobstore/dev/LocalBlobstoreService.html
+END
+UploadBlobServlet.html
+K 25
+svn:wc:ra_dav:version-url
+V 141
+/svn/!svn/ver/223/trunk/docs/appengine/docs/java/tools/localunittesting/javadoc/com/google/appengine/api/blobstore/dev/UploadBlobServlet.html
+END
+package-tree.html
+K 25
+svn:wc:ra_dav:version-url
+V 136
+/svn/!svn/ver/223/trunk/docs/appengine/docs/java/tools/localunittesting/javadoc/com/google/appengine/api/blobstore/dev/package-tree.html
+END
+ReservedKinds.html
+K 25
+svn:wc:ra_dav:version-url
+V 137
+/svn/!svn/ver/223/trunk/docs/appengine/docs/java/tools/localunittesting/javadoc/com/google/appengine/api/blobstore/dev/ReservedKinds.html
+END
+ServeBlobFilter.html
+K 25
+svn:wc:ra_dav:version-url
+V 139
+/svn/!svn/ver/223/trunk/docs/appengine/docs/java/tools/localunittesting/javadoc/com/google/appengine/api/blobstore/dev/ServeBlobFilter.html
+END
+BlobStorageFactory.html
+K 25
+svn:wc:ra_dav:version-url
+V 142
+/svn/!svn/ver/223/trunk/docs/appengine/docs/java/tools/localunittesting/javadoc/com/google/appengine/api/blobstore/dev/BlobStorageFactory.html
+END

@@ -1,0 +1,347 @@
+K 25
+svn:wc:ra_dav:version-url
+V 47
+/svn/!svn/ver/223/trunk/docs/appengine/articles
+END
+openid.html
+K 25
+svn:wc:ra_dav:version-url
+V 59
+/svn/!svn/ver/223/trunk/docs/appengine/articles/openid.html
+END
+filter_time.jpg
+K 25
+svn:wc:ra_dav:version-url
+V 63
+/svn/!svn/ver/223/trunk/docs/appengine/articles/filter_time.jpg
+END
+transaction_iso.png
+K 25
+svn:wc:ra_dav:version-url
+V 67
+/svn/!svn/ver/223/trunk/docs/appengine/articles/transaction_iso.png
+END
+django10_zipimport.html
+K 25
+svn:wc:ra_dav:version-url
+V 71
+/svn/!svn/ver/223/trunk/docs/appengine/articles/django10_zipimport.html
+END
+deferred.html
+K 25
+svn:wc:ra_dav:version-url
+V 61
+/svn/!svn/ver/223/trunk/docs/appengine/articles/deferred.html
+END
+app-engine-patch.html
+K 25
+svn:wc:ra_dav:version-url
+V 69
+/svn/!svn/ver/223/trunk/docs/appengine/articles/app-engine-patch.html
+END
+remote_api.html
+K 25
+svn:wc:ra_dav:version-url
+V 63
+/svn/!svn/ver/223/trunk/docs/appengine/articles/remote_api.html
+END
+add_new_urls.png
+K 25
+svn:wc:ra_dav:version-url
+V 64
+/svn/!svn/ver/223/trunk/docs/appengine/articles/add_new_urls.png
+END
+logging.html
+K 25
+svn:wc:ra_dav:version-url
+V 60
+/svn/!svn/ver/223/trunk/docs/appengine/articles/logging.html
+END
+shelftalkers.html
+K 25
+svn:wc:ra_dav:version-url
+V 65
+/svn/!svn/ver/223/trunk/docs/appengine/articles/shelftalkers.html
+END
+versions.png
+K 25
+svn:wc:ra_dav:version-url
+V 60
+/svn/!svn/ver/223/trunk/docs/appengine/articles/versions.png
+END
+extending_models.html
+K 25
+svn:wc:ra_dav:version-url
+V 69
+/svn/!svn/ver/223/trunk/docs/appengine/articles/extending_models.html
+END
+managing-resources.html
+K 25
+svn:wc:ra_dav:version-url
+V 71
+/svn/!svn/ver/223/trunk/docs/appengine/articles/managing-resources.html
+END
+domains.html
+K 25
+svn:wc:ra_dav:version-url
+V 60
+/svn/!svn/ver/223/trunk/docs/appengine/articles/domains.html
+END
+appengine_helper_for_django.html
+K 25
+svn:wc:ra_dav:version-url
+V 80
+/svn/!svn/ver/223/trunk/docs/appengine/articles/appengine_helper_for_django.html
+END
+pure_django.html
+K 25
+svn:wc:ra_dav:version-url
+V 64
+/svn/!svn/ver/223/trunk/docs/appengine/articles/pure_django.html
+END
+modeling.html
+K 25
+svn:wc:ra_dav:version-url
+V 61
+/svn/!svn/ver/223/trunk/docs/appengine/articles/modeling.html
+END
+add_domain.png
+K 25
+svn:wc:ra_dav:version-url
+V 62
+/svn/!svn/ver/223/trunk/docs/appengine/articles/add_domain.png
+END
+expand.png
+K 25
+svn:wc:ra_dav:version-url
+V 58
+/svn/!svn/ver/223/trunk/docs/appengine/articles/expand.png
+END
+geosearch.html
+K 25
+svn:wc:ra_dav:version-url
+V 62
+/svn/!svn/ver/223/trunk/docs/appengine/articles/geosearch.html
+END
+filter.jpg
+K 25
+svn:wc:ra_dav:version-url
+V 58
+/svn/!svn/ver/223/trunk/docs/appengine/articles/filter.jpg
+END
+auth.html
+K 25
+svn:wc:ra_dav:version-url
+V 57
+/svn/!svn/ver/223/trunk/docs/appengine/articles/auth.html
+END
+django.html
+K 25
+svn:wc:ra_dav:version-url
+V 59
+/svn/!svn/ver/223/trunk/docs/appengine/articles/django.html
+END
+soap.html
+K 25
+svn:wc:ra_dav:version-url
+V 57
+/svn/!svn/ver/223/trunk/docs/appengine/articles/soap.html
+END
+create1.png
+K 25
+svn:wc:ra_dav:version-url
+V 59
+/svn/!svn/ver/223/trunk/docs/appengine/articles/create1.png
+END
+paging.html
+K 25
+svn:wc:ra_dav:version-url
+V 59
+/svn/!svn/ver/223/trunk/docs/appengine/articles/paging.html
+END
+transaction_isolation.html
+K 25
+svn:wc:ra_dav:version-url
+V 74
+/svn/!svn/ver/223/trunk/docs/appengine/articles/transaction_isolation.html
+END
+new_bill.png
+K 25
+svn:wc:ra_dav:version-url
+V 60
+/svn/!svn/ver/223/trunk/docs/appengine/articles/new_bill.png
+END
+create_restricted.png
+K 25
+svn:wc:ra_dav:version-url
+V 69
+/svn/!svn/ver/223/trunk/docs/appengine/articles/create_restricted.png
+END
+indexselection.html
+K 25
+svn:wc:ra_dav:version-url
+V 67
+/svn/!svn/ver/223/trunk/docs/appengine/articles/indexselection.html
+END
+life_of_write.html
+K 25
+svn:wc:ra_dav:version-url
+V 66
+/svn/!svn/ver/223/trunk/docs/appengine/articles/life_of_write.html
+END
+load_test.html
+K 25
+svn:wc:ra_dav:version-url
+V 62
+/svn/!svn/ver/223/trunk/docs/appengine/articles/load_test.html
+END
+rietveld.html
+K 25
+svn:wc:ra_dav:version-url
+V 61
+/svn/!svn/ver/223/trunk/docs/appengine/articles/rietveld.html
+END
+articles.js
+K 25
+svn:wc:ra_dav:version-url
+V 59
+/svn/!svn/ver/223/trunk/docs/appengine/articles/articles.js
+END
+overheard.html
+K 25
+svn:wc:ra_dav:version-url
+V 62
+/svn/!svn/ver/223/trunk/docs/appengine/articles/overheard.html
+END
+gdata.html
+K 25
+svn:wc:ra_dav:version-url
+V 58
+/svn/!svn/ver/223/trunk/docs/appengine/articles/gdata.html
+END
+sharding_counters.html
+K 25
+svn:wc:ra_dav:version-url
+V 70
+/svn/!svn/ver/223/trunk/docs/appengine/articles/sharding_counters.html
+END
+hooks.html
+K 25
+svn:wc:ra_dav:version-url
+V 58
+/svn/!svn/ver/223/trunk/docs/appengine/articles/hooks.html
+END
+index_building.html
+K 25
+svn:wc:ra_dav:version-url
+V 67
+/svn/!svn/ver/223/trunk/docs/appengine/articles/index_building.html
+END
+rpc.html
+K 25
+svn:wc:ra_dav:version-url
+V 56
+/svn/!svn/ver/223/trunk/docs/appengine/articles/rpc.html
+END
+eclipse.html
+K 25
+svn:wc:ra_dav:version-url
+V 60
+/svn/!svn/ver/223/trunk/docs/appengine/articles/eclipse.html
+END
+handling_datastore_errors.html
+K 25
+svn:wc:ra_dav:version-url
+V 78
+/svn/!svn/ver/223/trunk/docs/appengine/articles/handling_datastore_errors.html
+END
+more_google_data.html
+K 25
+svn:wc:ra_dav:version-url
+V 69
+/svn/!svn/ver/223/trunk/docs/appengine/articles/more_google_data.html
+END
+load_test_screenshot.jpg
+K 25
+svn:wc:ra_dav:version-url
+V 72
+/svn/!svn/ver/223/trunk/docs/appengine/articles/load_test_screenshot.jpg
+END
+firepython.html
+K 25
+svn:wc:ra_dav:version-url
+V 63
+/svn/!svn/ver/223/trunk/docs/appengine/articles/firepython.html
+END
+using_xmpp.html
+K 25
+svn:wc:ra_dav:version-url
+V 63
+/svn/!svn/ver/223/trunk/docs/appengine/articles/using_xmpp.html
+END
+fantasm.html
+K 25
+svn:wc:ra_dav:version-url
+V 60
+/svn/!svn/ver/223/trunk/docs/appengine/articles/fantasm.html
+END
+cf1-text.html
+K 25
+svn:wc:ra_dav:version-url
+V 61
+/svn/!svn/ver/223/trunk/docs/appengine/articles/cf1-text.html
+END
+logs_admin.png
+K 25
+svn:wc:ra_dav:version-url
+V 62
+/svn/!svn/ver/223/trunk/docs/appengine/articles/logs_admin.png
+END
+django-nonrel.html
+K 25
+svn:wc:ra_dav:version-url
+V 66
+/svn/!svn/ver/223/trunk/docs/appengine/articles/django-nonrel.html
+END
+storage_breakdown.html
+K 25
+svn:wc:ra_dav:version-url
+V 70
+/svn/!svn/ver/223/trunk/docs/appengine/articles/storage_breakdown.html
+END
+add_to_domain.png
+K 25
+svn:wc:ra_dav:version-url
+V 65
+/svn/!svn/ver/223/trunk/docs/appengine/articles/add_to_domain.png
+END
+update_schema.html
+K 25
+svn:wc:ra_dav:version-url
+V 66
+/svn/!svn/ver/223/trunk/docs/appengine/articles/update_schema.html
+END
+polymodel.html
+K 25
+svn:wc:ra_dav:version-url
+V 62
+/svn/!svn/ver/223/trunk/docs/appengine/articles/polymodel.html
+END
+gae_backup_and_restore.html
+K 25
+svn:wc:ra_dav:version-url
+V 75
+/svn/!svn/ver/223/trunk/docs/appengine/articles/gae_backup_and_restore.html
+END
+index.html
+K 25
+svn:wc:ra_dav:version-url
+V 58
+/svn/!svn/ver/223/trunk/docs/appengine/articles/index.html
+END
+djangoforms.html
+K 25
+svn:wc:ra_dav:version-url
+V 64
+/svn/!svn/ver/223/trunk/docs/appengine/articles/djangoforms.html
+END

@@ -1,0 +1,113 @@
+K 25
+svn:wc:ra_dav:version-url
+V 50
+/svn/!svn/ver/327/trunk/python/lib/jinja2-2.6/docs
+END
+api.rst
+K 25
+svn:wc:ra_dav:version-url
+V 58
+/svn/!svn/ver/327/trunk/python/lib/jinja2-2.6/docs/api.rst
+END
+cache_extension.py
+K 25
+svn:wc:ra_dav:version-url
+V 69
+/svn/!svn/ver/327/trunk/python/lib/jinja2-2.6/docs/cache_extension.py
+END
+jinjastyle.sty
+K 25
+svn:wc:ra_dav:version-url
+V 65
+/svn/!svn/ver/327/trunk/python/lib/jinja2-2.6/docs/jinjastyle.sty
+END
+integration.rst
+K 25
+svn:wc:ra_dav:version-url
+V 66
+/svn/!svn/ver/327/trunk/python/lib/jinja2-2.6/docs/integration.rst
+END
+changelog.rst
+K 25
+svn:wc:ra_dav:version-url
+V 64
+/svn/!svn/ver/327/trunk/python/lib/jinja2-2.6/docs/changelog.rst
+END
+intro.rst
+K 25
+svn:wc:ra_dav:version-url
+V 60
+/svn/!svn/ver/327/trunk/python/lib/jinja2-2.6/docs/intro.rst
+END
+jinjaext.py
+K 25
+svn:wc:ra_dav:version-url
+V 62
+/svn/!svn/ver/327/trunk/python/lib/jinja2-2.6/docs/jinjaext.py
+END
+templates.rst
+K 25
+svn:wc:ra_dav:version-url
+V 64
+/svn/!svn/ver/327/trunk/python/lib/jinja2-2.6/docs/templates.rst
+END
+sandbox.rst
+K 25
+svn:wc:ra_dav:version-url
+V 62
+/svn/!svn/ver/327/trunk/python/lib/jinja2-2.6/docs/sandbox.rst
+END
+tricks.rst
+K 25
+svn:wc:ra_dav:version-url
+V 61
+/svn/!svn/ver/327/trunk/python/lib/jinja2-2.6/docs/tricks.rst
+END
+extensions.rst
+K 25
+svn:wc:ra_dav:version-url
+V 65
+/svn/!svn/ver/327/trunk/python/lib/jinja2-2.6/docs/extensions.rst
+END
+switching.rst
+K 25
+svn:wc:ra_dav:version-url
+V 64
+/svn/!svn/ver/327/trunk/python/lib/jinja2-2.6/docs/switching.rst
+END
+conf.py
+K 25
+svn:wc:ra_dav:version-url
+V 58
+/svn/!svn/ver/327/trunk/python/lib/jinja2-2.6/docs/conf.py
+END
+latexindex.rst
+K 25
+svn:wc:ra_dav:version-url
+V 65
+/svn/!svn/ver/327/trunk/python/lib/jinja2-2.6/docs/latexindex.rst
+END
+contents.rst.inc
+K 25
+svn:wc:ra_dav:version-url
+V 67
+/svn/!svn/ver/327/trunk/python/lib/jinja2-2.6/docs/contents.rst.inc
+END
+Makefile
+K 25
+svn:wc:ra_dav:version-url
+V 59
+/svn/!svn/ver/327/trunk/python/lib/jinja2-2.6/docs/Makefile
+END
+faq.rst
+K 25
+svn:wc:ra_dav:version-url
+V 58
+/svn/!svn/ver/327/trunk/python/lib/jinja2-2.6/docs/faq.rst
+END
+index.rst
+K 25
+svn:wc:ra_dav:version-url
+V 60
+/svn/!svn/ver/327/trunk/python/lib/jinja2-2.6/docs/index.rst
+END

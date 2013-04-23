@@ -1,0 +1,29 @@
+K 25
+svn:wc:ra_dav:version-url
+V 75
+/svn/!svn/ver/327/trunk/python/google/storage/speckle/python/django/backend
+END
+base.py
+K 25
+svn:wc:ra_dav:version-url
+V 83
+/svn/!svn/ver/327/trunk/python/google/storage/speckle/python/django/backend/base.py
+END
+client.py
+K 25
+svn:wc:ra_dav:version-url
+V 85
+/svn/!svn/ver/327/trunk/python/google/storage/speckle/python/django/backend/client.py
+END
+__init__.py
+K 25
+svn:wc:ra_dav:version-url
+V 87
+/svn/!svn/ver/327/trunk/python/google/storage/speckle/python/django/backend/__init__.py
+END
+oauth2storage.py
+K 25
+svn:wc:ra_dav:version-url
+V 92
+/svn/!svn/ver/327/trunk/python/google/storage/speckle/python/django/backend/oauth2storage.py
+END

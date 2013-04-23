@@ -1,0 +1,473 @@
+K 25
+svn:wc:ra_dav:version-url
+V 76
+/svn/!svn/ver/340/trunk/java/src/main/com/google/appengine/tools/development
+END
+LatencySimulator.java
+K 25
+svn:wc:ra_dav:version-url
+V 98
+/svn/!svn/ver/173/trunk/java/src/main/com/google/appengine/tools/development/LatencySimulator.java
+END
+AutomaticServerInstanceHolder.java
+K 25
+svn:wc:ra_dav:version-url
+V 111
+/svn/!svn/ver/340/trunk/java/src/main/com/google/appengine/tools/development/AutomaticServerInstanceHolder.java
+END
+DevSocketImplFactory.java
+K 25
+svn:wc:ra_dav:version-url
+V 102
+/svn/!svn/ver/290/trunk/java/src/main/com/google/appengine/tools/development/DevSocketImplFactory.java
+END
+queue.xsd
+K 25
+svn:wc:ra_dav:version-url
+V 86
+/svn/!svn/ver/270/trunk/java/src/main/com/google/appengine/tools/development/queue.xsd
+END
+LocalApiProxyServletFilter.java
+K 25
+svn:wc:ra_dav:version-url
+V 108
+/svn/!svn/ver/326/trunk/java/src/main/com/google/appengine/tools/development/LocalApiProxyServletFilter.java
+END
+HeaderVerificationFilter.java
+K 25
+svn:wc:ra_dav:version-url
+V 106
+/svn/!svn/ver/290/trunk/java/src/main/com/google/appengine/tools/development/HeaderVerificationFilter.java
+END
+ContainerUtils.java
+K 25
+svn:wc:ra_dav:version-url
+V 96
+/svn/!svn/ver/326/trunk/java/src/main/com/google/appengine/tools/development/ContainerUtils.java
+END
+ContainerService.java
+K 25
+svn:wc:ra_dav:version-url
+V 98
+/svn/!svn/ver/326/trunk/java/src/main/com/google/appengine/tools/development/ContainerService.java
+END
+ManualServer.java
+K 25
+svn:wc:ra_dav:version-url
+V 94
+/svn/!svn/ver/340/trunk/java/src/main/com/google/appengine/tools/development/ManualServer.java
+END
+ApiProxyLocalImpl.java
+K 25
+svn:wc:ra_dav:version-url
+V 99
+/svn/!svn/ver/340/trunk/java/src/main/com/google/appengine/tools/development/ApiProxyLocalImpl.java
+END
+ExtendedRootResource.java
+K 25
+svn:wc:ra_dav:version-url
+V 102
+/svn/!svn/ver/270/trunk/java/src/main/com/google/appengine/tools/development/ExtendedRootResource.java
+END
+AbstractServerInstanceHolder.java
+K 25
+svn:wc:ra_dav:version-url
+V 110
+/svn/!svn/ver/340/trunk/java/src/main/com/google/appengine/tools/development/AbstractServerInstanceHolder.java
+END
+LocalServiceContext.java
+K 25
+svn:wc:ra_dav:version-url
+V 101
+/svn/!svn/ver/219/trunk/java/src/main/com/google/appengine/tools/development/LocalServiceContext.java
+END
+IsolatedAppClassLoader.java
+K 25
+svn:wc:ra_dav:version-url
+V 104
+/svn/!svn/ver/326/trunk/java/src/main/com/google/appengine/tools/development/IsolatedAppClassLoader.java
+END
+DevAppServerClassLoader.java
+K 25
+svn:wc:ra_dav:version-url
+V 105
+/svn/!svn/ver/326/trunk/java/src/main/com/google/appengine/tools/development/DevAppServerClassLoader.java
+END
+AbstractBackendServers.java
+K 25
+svn:wc:ra_dav:version-url
+V 104
+/svn/!svn/ver/340/trunk/java/src/main/com/google/appengine/tools/development/AbstractBackendServers.java
+END
+DevAppServerServersFilter.java
+K 25
+svn:wc:ra_dav:version-url
+V 107
+/svn/!svn/ver/340/trunk/java/src/main/com/google/appengine/tools/development/DevAppServerServersFilter.java
+END
+ApiProxyLocal.java
+K 25
+svn:wc:ra_dav:version-url
+V 95
+/svn/!svn/ver/173/trunk/java/src/main/com/google/appengine/tools/development/ApiProxyLocal.java
+END
+ManualServerInstanceHolder.java
+K 25
+svn:wc:ra_dav:version-url
+V 108
+/svn/!svn/ver/340/trunk/java/src/main/com/google/appengine/tools/development/ManualServerInstanceHolder.java
+END
+backends.xsd
+K 25
+svn:wc:ra_dav:version-url
+V 89
+/svn/!svn/ver/165/trunk/java/src/main/com/google/appengine/tools/development/backends.xsd
+END
+LocalHttpRequestEnvironment.java
+K 25
+svn:wc:ra_dav:version-url
+V 109
+/svn/!svn/ver/326/trunk/java/src/main/com/google/appengine/tools/development/LocalHttpRequestEnvironment.java
+END
+ResponseRewriterFilter.java
+K 25
+svn:wc:ra_dav:version-url
+V 104
+/svn/!svn/ver/326/trunk/java/src/main/com/google/appengine/tools/development/ResponseRewriterFilter.java
+END
+BackendContainer.java
+K 25
+svn:wc:ra_dav:version-url
+V 98
+/svn/!svn/ver/317/trunk/java/src/main/com/google/appengine/tools/development/BackendContainer.java
+END
+Clock.java
+K 25
+svn:wc:ra_dav:version-url
+V 87
+/svn/!svn/ver/326/trunk/java/src/main/com/google/appengine/tools/development/Clock.java
+END
+EnvironmentVariableChecker.java
+K 25
+svn:wc:ra_dav:version-url
+V 108
+/svn/!svn/ver/310/trunk/java/src/main/com/google/appengine/tools/development/EnvironmentVariableChecker.java
+END
+BackgroundThreadFactory.java
+K 25
+svn:wc:ra_dav:version-url
+V 105
+/svn/!svn/ver/326/trunk/java/src/main/com/google/appengine/tools/development/BackgroundThreadFactory.java
+END
+InstanceStateHolder.java
+K 25
+svn:wc:ra_dav:version-url
+V 101
+/svn/!svn/ver/326/trunk/java/src/main/com/google/appengine/tools/development/InstanceStateHolder.java
+END
+InstanceHelper.java
+K 25
+svn:wc:ra_dav:version-url
+V 96
+/svn/!svn/ver/326/trunk/java/src/main/com/google/appengine/tools/development/InstanceHelper.java
+END
+Server.java
+K 25
+svn:wc:ra_dav:version-url
+V 88
+/svn/!svn/ver/340/trunk/java/src/main/com/google/appengine/tools/development/Server.java
+END
+LocalResourceFileServlet.java
+K 25
+svn:wc:ra_dav:version-url
+V 106
+/svn/!svn/ver/270/trunk/java/src/main/com/google/appengine/tools/development/LocalResourceFileServlet.java
+END
+ServiceProviderProcessor.java
+K 25
+svn:wc:ra_dav:version-url
+V 106
+/svn/!svn/ver/165/trunk/java/src/main/com/google/appengine/tools/development/ServiceProviderProcessor.java
+END
+AutomaticServer.java
+K 25
+svn:wc:ra_dav:version-url
+V 97
+/svn/!svn/ver/340/trunk/java/src/main/com/google/appengine/tools/development/AutomaticServer.java
+END
+ApiProxyLocalFactory.java
+K 25
+svn:wc:ra_dav:version-url
+V 102
+/svn/!svn/ver/165/trunk/java/src/main/com/google/appengine/tools/development/ApiProxyLocalFactory.java
+END
+DevAppServerPortPropertyHelper.java
+K 25
+svn:wc:ra_dav:version-url
+V 112
+/svn/!svn/ver/317/trunk/java/src/main/com/google/appengine/tools/development/DevAppServerPortPropertyHelper.java
+END
+ServicesFile.java
+K 25
+svn:wc:ra_dav:version-url
+V 94
+/svn/!svn/ver/165/trunk/java/src/main/com/google/appengine/tools/development/ServicesFile.java
+END
+RequestEndListener.java
+K 25
+svn:wc:ra_dav:version-url
+V 100
+/svn/!svn/ver/290/trunk/java/src/main/com/google/appengine/tools/development/RequestEndListener.java
+END
+RequestEndListenerHelper.java
+K 25
+svn:wc:ra_dav:version-url
+V 106
+/svn/!svn/ver/290/trunk/java/src/main/com/google/appengine/tools/development/RequestEndListenerHelper.java
+END
+SerializableObjectsOnlyHashSessionManager.java
+K 25
+svn:wc:ra_dav:version-url
+V 123
+/svn/!svn/ver/326/trunk/java/src/main/com/google/appengine/tools/development/SerializableObjectsOnlyHashSessionManager.java
+END
+ApplicationConfigurationManager.java
+K 25
+svn:wc:ra_dav:version-url
+V 113
+/svn/!svn/ver/326/trunk/java/src/main/com/google/appengine/tools/development/ApplicationConfigurationManager.java
+END
+LatencyPercentiles.java
+K 25
+svn:wc:ra_dav:version-url
+V 100
+/svn/!svn/ver/173/trunk/java/src/main/com/google/appengine/tools/development/LatencyPercentiles.java
+END
+appengine-web.xsd
+K 25
+svn:wc:ra_dav:version-url
+V 94
+/svn/!svn/ver/340/trunk/java/src/main/com/google/appengine/tools/development/appengine-web.xsd
+END
+BackendServers.java
+K 25
+svn:wc:ra_dav:version-url
+V 96
+/svn/!svn/ver/326/trunk/java/src/main/com/google/appengine/tools/development/BackendServers.java
+END
+dos.xsd
+K 25
+svn:wc:ra_dav:version-url
+V 84
+/svn/!svn/ver/165/trunk/java/src/main/com/google/appengine/tools/development/dos.xsd
+END
+AbstractLocalRpcService.java
+K 25
+svn:wc:ra_dav:version-url
+V 105
+/svn/!svn/ver/326/trunk/java/src/main/com/google/appengine/tools/development/AbstractLocalRpcService.java
+END
+LocalServerEnvironment.java
+K 25
+svn:wc:ra_dav:version-url
+V 104
+/svn/!svn/ver/200/trunk/java/src/main/com/google/appengine/tools/development/LocalServerEnvironment.java
+END
+WebAppUserCodeClasspathManager.java
+K 25
+svn:wc:ra_dav:version-url
+V 112
+/svn/!svn/ver/326/trunk/java/src/main/com/google/appengine/tools/development/WebAppUserCodeClasspathManager.java
+END
+DynamicLatencyAdjuster.java
+K 25
+svn:wc:ra_dav:version-url
+V 104
+/svn/!svn/ver/173/trunk/java/src/main/com/google/appengine/tools/development/DynamicLatencyAdjuster.java
+END
+UserCodeClasspathManager.java
+K 25
+svn:wc:ra_dav:version-url
+V 106
+/svn/!svn/ver/290/trunk/java/src/main/com/google/appengine/tools/development/UserCodeClasspathManager.java
+END
+RequestThreadFactory.java
+K 25
+svn:wc:ra_dav:version-url
+V 102
+/svn/!svn/ver/290/trunk/java/src/main/com/google/appengine/tools/development/RequestThreadFactory.java
+END
+StaticFileUtils.java
+K 25
+svn:wc:ra_dav:version-url
+V 97
+/svn/!svn/ver/326/trunk/java/src/main/com/google/appengine/tools/development/StaticFileUtils.java
+END
+LocalJspC.java
+K 25
+svn:wc:ra_dav:version-url
+V 91
+/svn/!svn/ver/340/trunk/java/src/main/com/google/appengine/tools/development/LocalJspC.java
+END
+ServiceProvider.java
+K 25
+svn:wc:ra_dav:version-url
+V 97
+/svn/!svn/ver/165/trunk/java/src/main/com/google/appengine/tools/development/ServiceProvider.java
+END
+DevAppServerMain.java
+K 25
+svn:wc:ra_dav:version-url
+V 98
+/svn/!svn/ver/326/trunk/java/src/main/com/google/appengine/tools/development/DevAppServerMain.java
+END
+PrivilegedJspServlet.java
+K 25
+svn:wc:ra_dav:version-url
+V 102
+/svn/!svn/ver/326/trunk/java/src/main/com/google/appengine/tools/development/PrivilegedJspServlet.java
+END
+cron.xsd
+K 25
+svn:wc:ra_dav:version-url
+V 85
+/svn/!svn/ver/165/trunk/java/src/main/com/google/appengine/tools/development/cron.xsd
+END
+LocalEnvironment.java
+K 25
+svn:wc:ra_dav:version-url
+V 98
+/svn/!svn/ver/326/trunk/java/src/main/com/google/appengine/tools/development/LocalEnvironment.java
+END
+AppContext.java
+K 25
+svn:wc:ra_dav:version-url
+V 92
+/svn/!svn/ver/165/trunk/java/src/main/com/google/appengine/tools/development/AppContext.java
+END
+AbstractContainerService.java
+K 25
+svn:wc:ra_dav:version-url
+V 106
+/svn/!svn/ver/340/trunk/java/src/main/com/google/appengine/tools/development/AbstractContainerService.java
+END
+DevAppServerImpl.java
+K 25
+svn:wc:ra_dav:version-url
+V 98
+/svn/!svn/ver/340/trunk/java/src/main/com/google/appengine/tools/development/DevAppServerImpl.java
+END
+Servers.java
+K 25
+svn:wc:ra_dav:version-url
+V 89
+/svn/!svn/ver/340/trunk/java/src/main/com/google/appengine/tools/development/Servers.java
+END
+LocalCapabilitiesEnvironment.java
+K 25
+svn:wc:ra_dav:version-url
+V 110
+/svn/!svn/ver/219/trunk/java/src/main/com/google/appengine/tools/development/LocalCapabilitiesEnvironment.java
+END
+StaticFileFilter.java
+K 25
+svn:wc:ra_dav:version-url
+V 98
+/svn/!svn/ver/270/trunk/java/src/main/com/google/appengine/tools/development/StaticFileFilter.java
+END
+ServersFilterHelper.java
+K 25
+svn:wc:ra_dav:version-url
+V 101
+/svn/!svn/ver/340/trunk/java/src/main/com/google/appengine/tools/development/ServersFilterHelper.java
+END
+datastore-indexes.xsd
+K 25
+svn:wc:ra_dav:version-url
+V 98
+/svn/!svn/ver/165/trunk/java/src/main/com/google/appengine/tools/development/datastore-indexes.xsd
+END
+InstanceHolder.java
+K 25
+svn:wc:ra_dav:version-url
+V 96
+/svn/!svn/ver/340/trunk/java/src/main/com/google/appengine/tools/development/InstanceHolder.java
+END
+DevAppServer.java
+K 25
+svn:wc:ra_dav:version-url
+V 94
+/svn/!svn/ver/317/trunk/java/src/main/com/google/appengine/tools/development/DevAppServer.java
+END
+LoggingConfigurationManager.java
+K 25
+svn:wc:ra_dav:version-url
+V 109
+/svn/!svn/ver/317/trunk/java/src/main/com/google/appengine/tools/development/LoggingConfigurationManager.java
+END
+DevAppEngineWebAppContext.java
+K 25
+svn:wc:ra_dav:version-url
+V 107
+/svn/!svn/ver/326/trunk/java/src/main/com/google/appengine/tools/development/DevAppEngineWebAppContext.java
+END
+LocalRpcService.java
+K 25
+svn:wc:ra_dav:version-url
+V 97
+/svn/!svn/ver/173/trunk/java/src/main/com/google/appengine/tools/development/LocalRpcService.java
+END
+StreamHandlerFactory.java
+K 25
+svn:wc:ra_dav:version-url
+V 102
+/svn/!svn/ver/326/trunk/java/src/main/com/google/appengine/tools/development/StreamHandlerFactory.java
+END
+LocalURLFetchServiceStreamHandler.java
+K 25
+svn:wc:ra_dav:version-url
+V 115
+/svn/!svn/ver/165/trunk/java/src/main/com/google/appengine/tools/development/LocalURLFetchServiceStreamHandler.java
+END
+DelegatingServersFilterHelper.java
+K 25
+svn:wc:ra_dav:version-url
+V 111
+/svn/!svn/ver/340/trunk/java/src/main/com/google/appengine/tools/development/DelegatingServersFilterHelper.java
+END
+JettyContainerService.java
+K 25
+svn:wc:ra_dav:version-url
+V 103
+/svn/!svn/ver/326/trunk/java/src/main/com/google/appengine/tools/development/JettyContainerService.java
+END
+AbstractServer.java
+K 25
+svn:wc:ra_dav:version-url
+V 96
+/svn/!svn/ver/340/trunk/java/src/main/com/google/appengine/tools/development/AbstractServer.java
+END
+SystemPropertiesManager.java
+K 25
+svn:wc:ra_dav:version-url
+V 105
+/svn/!svn/ver/310/trunk/java/src/main/com/google/appengine/tools/development/SystemPropertiesManager.java
+END
+ServersController.java
+K 25
+svn:wc:ra_dav:version-url
+V 99
+/svn/!svn/ver/326/trunk/java/src/main/com/google/appengine/tools/development/ServersController.java
+END
+TimedFuture.java
+K 25
+svn:wc:ra_dav:version-url
+V 93
+/svn/!svn/ver/326/trunk/java/src/main/com/google/appengine/tools/development/TimedFuture.java
+END
+DevAppServerFactory.java
+K 25
+svn:wc:ra_dav:version-url
+V 101
+/svn/!svn/ver/326/trunk/java/src/main/com/google/appengine/tools/development/DevAppServerFactory.java
+END

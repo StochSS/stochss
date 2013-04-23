@@ -1,0 +1,23 @@
+K 25
+svn:wc:ra_dav:version-url
+V 55
+/svn/!svn/ver/327/trunk/python/lib/django-1.4/docs/_ext
+END
+literals_to_xrefs.py
+K 25
+svn:wc:ra_dav:version-url
+V 76
+/svn/!svn/ver/327/trunk/python/lib/django-1.4/docs/_ext/literals_to_xrefs.py
+END
+djangodocs.py
+K 25
+svn:wc:ra_dav:version-url
+V 69
+/svn/!svn/ver/327/trunk/python/lib/django-1.4/docs/_ext/djangodocs.py
+END
+applyxrefs.py
+K 25
+svn:wc:ra_dav:version-url
+V 69
+/svn/!svn/ver/327/trunk/python/lib/django-1.4/docs/_ext/applyxrefs.py
+END

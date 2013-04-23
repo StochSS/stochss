@@ -1,0 +1,11 @@
+K 25
+svn:wc:ra_dav:version-url
+V 92
+/svn/!svn/ver/327/trunk/python/lib/django-1.2/tests/regressiontests/admin_scripts/broken_app
+END
+models.py
+K 25
+svn:wc:ra_dav:version-url
+V 102
+/svn/!svn/ver/327/trunk/python/lib/django-1.2/tests/regressiontests/admin_scripts/broken_app/models.py
+END

@@ -1,0 +1,77 @@
+K 25
+svn:wc:ra_dav:version-url
+V 61
+/svn/!svn/ver/327/trunk/python/lib/cherrypy/cherrypy/tutorial
+END
+tut01_helloworld.py
+K 25
+svn:wc:ra_dav:version-url
+V 81
+/svn/!svn/ver/327/trunk/python/lib/cherrypy/cherrypy/tutorial/tut01_helloworld.py
+END
+tut10_http_errors.py
+K 25
+svn:wc:ra_dav:version-url
+V 82
+/svn/!svn/ver/327/trunk/python/lib/cherrypy/cherrypy/tutorial/tut10_http_errors.py
+END
+tut07_sessions.py
+K 25
+svn:wc:ra_dav:version-url
+V 79
+/svn/!svn/ver/327/trunk/python/lib/cherrypy/cherrypy/tutorial/tut07_sessions.py
+END
+bonus-sqlobject.py
+K 25
+svn:wc:ra_dav:version-url
+V 80
+/svn/!svn/ver/327/trunk/python/lib/cherrypy/cherrypy/tutorial/bonus-sqlobject.py
+END
+tut04_complex_site.py
+K 25
+svn:wc:ra_dav:version-url
+V 83
+/svn/!svn/ver/327/trunk/python/lib/cherrypy/cherrypy/tutorial/tut04_complex_site.py
+END
+tut05_derived_objects.py
+K 25
+svn:wc:ra_dav:version-url
+V 86
+/svn/!svn/ver/327/trunk/python/lib/cherrypy/cherrypy/tutorial/tut05_derived_objects.py
+END
+__init__.py
+K 25
+svn:wc:ra_dav:version-url
+V 73
+/svn/!svn/ver/327/trunk/python/lib/cherrypy/cherrypy/tutorial/__init__.py
+END
+tut02_expose_methods.py
+K 25
+svn:wc:ra_dav:version-url
+V 85
+/svn/!svn/ver/327/trunk/python/lib/cherrypy/cherrypy/tutorial/tut02_expose_methods.py
+END
+tut08_generators_and_yield.py
+K 25
+svn:wc:ra_dav:version-url
+V 91
+/svn/!svn/ver/327/trunk/python/lib/cherrypy/cherrypy/tutorial/tut08_generators_and_yield.py
+END
+tut03_get_and_post.py
+K 25
+svn:wc:ra_dav:version-url
+V 83
+/svn/!svn/ver/327/trunk/python/lib/cherrypy/cherrypy/tutorial/tut03_get_and_post.py
+END
+tut06_default_method.py
+K 25
+svn:wc:ra_dav:version-url
+V 85
+/svn/!svn/ver/327/trunk/python/lib/cherrypy/cherrypy/tutorial/tut06_default_method.py
+END
+tut09_files.py
+K 25
+svn:wc:ra_dav:version-url
+V 76
+/svn/!svn/ver/327/trunk/python/lib/cherrypy/cherrypy/tutorial/tut09_files.py
+END

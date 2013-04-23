@@ -1,0 +1,23 @@
+K 25
+svn:wc:ra_dav:version-url
+V 75
+/svn/!svn/ver/327/trunk/python/lib/django-1.3/django/contrib/localflavor/pl
+END
+pl_voivodeships.py
+K 25
+svn:wc:ra_dav:version-url
+V 94
+/svn/!svn/ver/327/trunk/python/lib/django-1.3/django/contrib/localflavor/pl/pl_voivodeships.py
+END
+pl_administrativeunits.py
+K 25
+svn:wc:ra_dav:version-url
+V 101
+/svn/!svn/ver/327/trunk/python/lib/django-1.3/django/contrib/localflavor/pl/pl_administrativeunits.py
+END
+forms.py
+K 25
+svn:wc:ra_dav:version-url
+V 84
+/svn/!svn/ver/327/trunk/python/lib/django-1.3/django/contrib/localflavor/pl/forms.py
+END

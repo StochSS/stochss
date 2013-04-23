@@ -1,0 +1,29 @@
+K 25
+svn:wc:ra_dav:version-url
+V 80
+/svn/!svn/ver/327/trunk/python/lib/python-gflags/tests/flags_modules_for_testing
+END
+module_foo.py
+K 25
+svn:wc:ra_dav:version-url
+V 94
+/svn/!svn/ver/327/trunk/python/lib/python-gflags/tests/flags_modules_for_testing/module_foo.py
+END
+module_bar.py
+K 25
+svn:wc:ra_dav:version-url
+V 94
+/svn/!svn/ver/327/trunk/python/lib/python-gflags/tests/flags_modules_for_testing/module_bar.py
+END
+__init__.py
+K 25
+svn:wc:ra_dav:version-url
+V 92
+/svn/!svn/ver/224/trunk/python/lib/python-gflags/tests/flags_modules_for_testing/__init__.py
+END
+module_baz.py
+K 25
+svn:wc:ra_dav:version-url
+V 94
+/svn/!svn/ver/327/trunk/python/lib/python-gflags/tests/flags_modules_for_testing/module_baz.py
+END

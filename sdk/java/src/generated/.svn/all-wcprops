@@ -1,0 +1,41 @@
+K 25
+svn:wc:ra_dav:version-url
+V 42
+/svn/!svn/ver/340/trunk/java/src/generated
+END
+jsr107cache-1.1.jar
+K 25
+svn:wc:ra_dav:version-url
+V 62
+/svn/!svn/ver/165/trunk/java/src/generated/jsr107cache-1.1.jar
+END
+appengine-orm.zip
+K 25
+svn:wc:ra_dav:version-url
+V 60
+/svn/!svn/ver/340/trunk/java/src/generated/appengine-orm.zip
+END
+junit.jar
+K 25
+svn:wc:ra_dav:version-url
+V 52
+/svn/!svn/ver/284/trunk/java/src/generated/junit.jar
+END
+appengine-java-sdk.zip
+K 25
+svn:wc:ra_dav:version-url
+V 65
+/svn/!svn/ver/340/trunk/java/src/generated/appengine-java-sdk.zip
+END
+easymock.jar
+K 25
+svn:wc:ra_dav:version-url
+V 55
+/svn/!svn/ver/340/trunk/java/src/generated/easymock.jar
+END
+datanucleus-appengine-dist.zip
+K 25
+svn:wc:ra_dav:version-url
+V 73
+/svn/!svn/ver/317/trunk/java/src/generated/datanucleus-appengine-dist.zip
+END

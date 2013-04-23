@@ -1,0 +1,29 @@
+K 25
+svn:wc:ra_dav:version-url
+V 58
+/svn/!svn/ver/339/trunk/python/google/appengine/api/images
+END
+__init__.py
+K 25
+svn:wc:ra_dav:version-url
+V 70
+/svn/!svn/ver/339/trunk/python/google/appengine/api/images/__init__.py
+END
+images_stub.py
+K 25
+svn:wc:ra_dav:version-url
+V 73
+/svn/!svn/ver/327/trunk/python/google/appengine/api/images/images_stub.py
+END
+images_not_implemented_stub.py
+K 25
+svn:wc:ra_dav:version-url
+V 89
+/svn/!svn/ver/327/trunk/python/google/appengine/api/images/images_not_implemented_stub.py
+END
+images_service_pb.py
+K 25
+svn:wc:ra_dav:version-url
+V 79
+/svn/!svn/ver/327/trunk/python/google/appengine/api/images/images_service_pb.py
+END

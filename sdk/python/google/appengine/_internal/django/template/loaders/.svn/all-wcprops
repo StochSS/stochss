@@ -1,0 +1,35 @@
+K 25
+svn:wc:ra_dav:version-url
+V 81
+/svn/!svn/ver/327/trunk/python/google/appengine/_internal/django/template/loaders
+END
+app_directories.py
+K 25
+svn:wc:ra_dav:version-url
+V 100
+/svn/!svn/ver/327/trunk/python/google/appengine/_internal/django/template/loaders/app_directories.py
+END
+__init__.py
+K 25
+svn:wc:ra_dav:version-url
+V 93
+/svn/!svn/ver/199/trunk/python/google/appengine/_internal/django/template/loaders/__init__.py
+END
+filesystem.py
+K 25
+svn:wc:ra_dav:version-url
+V 95
+/svn/!svn/ver/327/trunk/python/google/appengine/_internal/django/template/loaders/filesystem.py
+END
+eggs.py
+K 25
+svn:wc:ra_dav:version-url
+V 89
+/svn/!svn/ver/327/trunk/python/google/appengine/_internal/django/template/loaders/eggs.py
+END
+cached.py
+K 25
+svn:wc:ra_dav:version-url
+V 91
+/svn/!svn/ver/327/trunk/python/google/appengine/_internal/django/template/loaders/cached.py
+END

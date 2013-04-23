@@ -1,0 +1,113 @@
+K 25
+svn:wc:ra_dav:version-url
+V 87
+/svn/!svn/ver/223/trunk/docs/appengine/docs/java/javadoc/com/google/appengine/api/files
+END
+Crc32c.html
+K 25
+svn:wc:ra_dav:version-url
+V 99
+/svn/!svn/ver/223/trunk/docs/appengine/docs/java/javadoc/com/google/appengine/api/files/Crc32c.html
+END
+GSFileOptions.GSFileOptionsBuilder.html
+K 25
+svn:wc:ra_dav:version-url
+V 127
+/svn/!svn/ver/223/trunk/docs/appengine/docs/java/javadoc/com/google/appengine/api/files/GSFileOptions.GSFileOptionsBuilder.html
+END
+RecordWriteChannel.html
+K 25
+svn:wc:ra_dav:version-url
+V 111
+/svn/!svn/ver/223/trunk/docs/appengine/docs/java/javadoc/com/google/appengine/api/files/RecordWriteChannel.html
+END
+FileWriteChannel.html
+K 25
+svn:wc:ra_dav:version-url
+V 109
+/svn/!svn/ver/223/trunk/docs/appengine/docs/java/javadoc/com/google/appengine/api/files/FileWriteChannel.html
+END
+package-frame.html
+K 25
+svn:wc:ra_dav:version-url
+V 106
+/svn/!svn/ver/223/trunk/docs/appengine/docs/java/javadoc/com/google/appengine/api/files/package-frame.html
+END
+GSFileOptions.html
+K 25
+svn:wc:ra_dav:version-url
+V 106
+/svn/!svn/ver/223/trunk/docs/appengine/docs/java/javadoc/com/google/appengine/api/files/GSFileOptions.html
+END
+package-summary.html
+K 25
+svn:wc:ra_dav:version-url
+V 108
+/svn/!svn/ver/223/trunk/docs/appengine/docs/java/javadoc/com/google/appengine/api/files/package-summary.html
+END
+package-tree.html
+K 25
+svn:wc:ra_dav:version-url
+V 105
+/svn/!svn/ver/223/trunk/docs/appengine/docs/java/javadoc/com/google/appengine/api/files/package-tree.html
+END
+FileServiceFactory.html
+K 25
+svn:wc:ra_dav:version-url
+V 111
+/svn/!svn/ver/223/trunk/docs/appengine/docs/java/javadoc/com/google/appengine/api/files/FileServiceFactory.html
+END
+AppEngineFile.FileSystem.html
+K 25
+svn:wc:ra_dav:version-url
+V 117
+/svn/!svn/ver/223/trunk/docs/appengine/docs/java/javadoc/com/google/appengine/api/files/AppEngineFile.FileSystem.html
+END
+FileService.html
+K 25
+svn:wc:ra_dav:version-url
+V 104
+/svn/!svn/ver/223/trunk/docs/appengine/docs/java/javadoc/com/google/appengine/api/files/FileService.html
+END
+KeyOrderingException.html
+K 25
+svn:wc:ra_dav:version-url
+V 113
+/svn/!svn/ver/223/trunk/docs/appengine/docs/java/javadoc/com/google/appengine/api/files/KeyOrderingException.html
+END
+RecordReadChannel.html
+K 25
+svn:wc:ra_dav:version-url
+V 110
+/svn/!svn/ver/223/trunk/docs/appengine/docs/java/javadoc/com/google/appengine/api/files/RecordReadChannel.html
+END
+RecordWriteChannelImpl.html
+K 25
+svn:wc:ra_dav:version-url
+V 115
+/svn/!svn/ver/223/trunk/docs/appengine/docs/java/javadoc/com/google/appengine/api/files/RecordWriteChannelImpl.html
+END
+FileReadChannel.html
+K 25
+svn:wc:ra_dav:version-url
+V 108
+/svn/!svn/ver/223/trunk/docs/appengine/docs/java/javadoc/com/google/appengine/api/files/FileReadChannel.html
+END
+AppEngineFile.html
+K 25
+svn:wc:ra_dav:version-url
+V 106
+/svn/!svn/ver/223/trunk/docs/appengine/docs/java/javadoc/com/google/appengine/api/files/AppEngineFile.html
+END
+FinalizationException.html
+K 25
+svn:wc:ra_dav:version-url
+V 114
+/svn/!svn/ver/223/trunk/docs/appengine/docs/java/javadoc/com/google/appengine/api/files/FinalizationException.html
+END
+LockException.html
+K 25
+svn:wc:ra_dav:version-url
+V 106
+/svn/!svn/ver/223/trunk/docs/appengine/docs/java/javadoc/com/google/appengine/api/files/LockException.html
+END

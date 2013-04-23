@@ -1,0 +1,29 @@
+K 25
+svn:wc:ra_dav:version-url
+V 69
+/svn/!svn/ver/327/trunk/python/lib/django-1.4/docs/topics/db/examples
+END
+one_to_one.txt
+K 25
+svn:wc:ra_dav:version-url
+V 84
+/svn/!svn/ver/327/trunk/python/lib/django-1.4/docs/topics/db/examples/one_to_one.txt
+END
+index.txt
+K 25
+svn:wc:ra_dav:version-url
+V 79
+/svn/!svn/ver/327/trunk/python/lib/django-1.4/docs/topics/db/examples/index.txt
+END
+many_to_one.txt
+K 25
+svn:wc:ra_dav:version-url
+V 85
+/svn/!svn/ver/327/trunk/python/lib/django-1.4/docs/topics/db/examples/many_to_one.txt
+END
+many_to_many.txt
+K 25
+svn:wc:ra_dav:version-url
+V 86
+/svn/!svn/ver/327/trunk/python/lib/django-1.4/docs/topics/db/examples/many_to_many.txt
+END

@@ -1,0 +1,29 @@
+K 25
+svn:wc:ra_dav:version-url
+V 73
+/svn/!svn/ver/327/trunk/python/lib/django-0.96/django/db/backends/sqlite3
+END
+base.py
+K 25
+svn:wc:ra_dav:version-url
+V 81
+/svn/!svn/ver/327/trunk/python/lib/django-0.96/django/db/backends/sqlite3/base.py
+END
+client.py
+K 25
+svn:wc:ra_dav:version-url
+V 83
+/svn/!svn/ver/327/trunk/python/lib/django-0.96/django/db/backends/sqlite3/client.py
+END
+introspection.py
+K 25
+svn:wc:ra_dav:version-url
+V 90
+/svn/!svn/ver/327/trunk/python/lib/django-0.96/django/db/backends/sqlite3/introspection.py
+END
+creation.py
+K 25
+svn:wc:ra_dav:version-url
+V 85
+/svn/!svn/ver/327/trunk/python/lib/django-0.96/django/db/backends/sqlite3/creation.py
+END

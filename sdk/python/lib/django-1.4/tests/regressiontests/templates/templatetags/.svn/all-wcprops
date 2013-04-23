@@ -1,0 +1,23 @@
+K 25
+svn:wc:ra_dav:version-url
+V 90
+/svn/!svn/ver/327/trunk/python/lib/django-1.4/tests/regressiontests/templates/templatetags
+END
+custom.py
+K 25
+svn:wc:ra_dav:version-url
+V 100
+/svn/!svn/ver/327/trunk/python/lib/django-1.4/tests/regressiontests/templates/templatetags/custom.py
+END
+broken_tag.py
+K 25
+svn:wc:ra_dav:version-url
+V 104
+/svn/!svn/ver/327/trunk/python/lib/django-1.4/tests/regressiontests/templates/templatetags/broken_tag.py
+END
+bad_tag.py
+K 25
+svn:wc:ra_dav:version-url
+V 101
+/svn/!svn/ver/327/trunk/python/lib/django-1.4/tests/regressiontests/templates/templatetags/bad_tag.py
+END

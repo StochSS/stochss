@@ -1,0 +1,53 @@
+K 25
+svn:wc:ra_dav:version-url
+V 43
+/svn/!svn/ver/327/trunk/python/lib/argparse
+END
+LICENSE.txt
+K 25
+svn:wc:ra_dav:version-url
+V 55
+/svn/!svn/ver/327/trunk/python/lib/argparse/LICENSE.txt
+END
+setup.py
+K 25
+svn:wc:ra_dav:version-url
+V 52
+/svn/!svn/ver/327/trunk/python/lib/argparse/setup.py
+END
+PKG-INFO
+K 25
+svn:wc:ra_dav:version-url
+V 52
+/svn/!svn/ver/327/trunk/python/lib/argparse/PKG-INFO
+END
+NEWS.txt
+K 25
+svn:wc:ra_dav:version-url
+V 52
+/svn/!svn/ver/327/trunk/python/lib/argparse/NEWS.txt
+END
+argparse.py
+K 25
+svn:wc:ra_dav:version-url
+V 55
+/svn/!svn/ver/327/trunk/python/lib/argparse/argparse.py
+END
+README.txt
+K 25
+svn:wc:ra_dav:version-url
+V 54
+/svn/!svn/ver/327/trunk/python/lib/argparse/README.txt
+END
+MANIFEST.in
+K 25
+svn:wc:ra_dav:version-url
+V 55
+/svn/!svn/ver/327/trunk/python/lib/argparse/MANIFEST.in
+END
+setup.cfg
+K 25
+svn:wc:ra_dav:version-url
+V 53
+/svn/!svn/ver/327/trunk/python/lib/argparse/setup.cfg
+END

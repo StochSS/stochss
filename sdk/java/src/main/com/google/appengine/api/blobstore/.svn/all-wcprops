@@ -1,0 +1,101 @@
+K 25
+svn:wc:ra_dav:version-url
+V 72
+/svn/!svn/ver/340/trunk/java/src/main/com/google/appengine/api/blobstore
+END
+UploadOptions.java
+K 25
+svn:wc:ra_dav:version-url
+V 91
+/svn/!svn/ver/270/trunk/java/src/main/com/google/appengine/api/blobstore/UploadOptions.java
+END
+BlobstoreServiceFactory.java
+K 25
+svn:wc:ra_dav:version-url
+V 101
+/svn/!svn/ver/317/trunk/java/src/main/com/google/appengine/api/blobstore/BlobstoreServiceFactory.java
+END
+BlobstoreService.java
+K 25
+svn:wc:ra_dav:version-url
+V 94
+/svn/!svn/ver/326/trunk/java/src/main/com/google/appengine/api/blobstore/BlobstoreService.java
+END
+IBlobstoreServiceFactory.java
+K 25
+svn:wc:ra_dav:version-url
+V 102
+/svn/!svn/ver/317/trunk/java/src/main/com/google/appengine/api/blobstore/IBlobstoreServiceFactory.java
+END
+ByteRange.java
+K 25
+svn:wc:ra_dav:version-url
+V 87
+/svn/!svn/ver/200/trunk/java/src/main/com/google/appengine/api/blobstore/ByteRange.java
+END
+BlobInfoFactory.java
+K 25
+svn:wc:ra_dav:version-url
+V 93
+/svn/!svn/ver/340/trunk/java/src/main/com/google/appengine/api/blobstore/BlobInfoFactory.java
+END
+BlobstoreFailureException.java
+K 25
+svn:wc:ra_dav:version-url
+V 103
+/svn/!svn/ver/165/trunk/java/src/main/com/google/appengine/api/blobstore/BlobstoreFailureException.java
+END
+RangeFormatException.java
+K 25
+svn:wc:ra_dav:version-url
+V 98
+/svn/!svn/ver/165/trunk/java/src/main/com/google/appengine/api/blobstore/RangeFormatException.java
+END
+BlobstoreServiceFactoryImpl.java
+K 25
+svn:wc:ra_dav:version-url
+V 105
+/svn/!svn/ver/317/trunk/java/src/main/com/google/appengine/api/blobstore/BlobstoreServiceFactoryImpl.java
+END
+BlobKey.java
+K 25
+svn:wc:ra_dav:version-url
+V 85
+/svn/!svn/ver/340/trunk/java/src/main/com/google/appengine/api/blobstore/BlobKey.java
+END
+BlobstoreInputStream.java
+K 25
+svn:wc:ra_dav:version-url
+V 98
+/svn/!svn/ver/340/trunk/java/src/main/com/google/appengine/api/blobstore/BlobstoreInputStream.java
+END
+IBlobstoreServiceFactoryProvider.java
+K 25
+svn:wc:ra_dav:version-url
+V 110
+/svn/!svn/ver/317/trunk/java/src/main/com/google/appengine/api/blobstore/IBlobstoreServiceFactoryProvider.java
+END
+BlobInfo.java
+K 25
+svn:wc:ra_dav:version-url
+V 86
+/svn/!svn/ver/317/trunk/java/src/main/com/google/appengine/api/blobstore/BlobInfo.java
+END
+FileInfo.java
+K 25
+svn:wc:ra_dav:version-url
+V 86
+/svn/!svn/ver/317/trunk/java/src/main/com/google/appengine/api/blobstore/FileInfo.java
+END
+UnsupportedRangeFormatException.java
+K 25
+svn:wc:ra_dav:version-url
+V 109
+/svn/!svn/ver/165/trunk/java/src/main/com/google/appengine/api/blobstore/UnsupportedRangeFormatException.java
+END
+BlobstoreServiceImpl.java
+K 25
+svn:wc:ra_dav:version-url
+V 98
+/svn/!svn/ver/340/trunk/java/src/main/com/google/appengine/api/blobstore/BlobstoreServiceImpl.java
+END

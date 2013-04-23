@@ -1,0 +1,59 @@
+K 25
+svn:wc:ra_dav:version-url
+V 75
+/svn/!svn/ver/317/trunk/java/src/main/com/google/appengine/api/capabilities
+END
+Capability.java
+K 25
+svn:wc:ra_dav:version-url
+V 91
+/svn/!svn/ver/229/trunk/java/src/main/com/google/appengine/api/capabilities/Capability.java
+END
+CapabilityState.java
+K 25
+svn:wc:ra_dav:version-url
+V 96
+/svn/!svn/ver/165/trunk/java/src/main/com/google/appengine/api/capabilities/CapabilityState.java
+END
+CapabilitiesServiceFactory.java
+K 25
+svn:wc:ra_dav:version-url
+V 107
+/svn/!svn/ver/317/trunk/java/src/main/com/google/appengine/api/capabilities/CapabilitiesServiceFactory.java
+END
+CapabilitiesServiceFactoryImpl.java
+K 25
+svn:wc:ra_dav:version-url
+V 111
+/svn/!svn/ver/317/trunk/java/src/main/com/google/appengine/api/capabilities/CapabilitiesServiceFactoryImpl.java
+END
+CapabilityStatus.java
+K 25
+svn:wc:ra_dav:version-url
+V 97
+/svn/!svn/ver/165/trunk/java/src/main/com/google/appengine/api/capabilities/CapabilityStatus.java
+END
+ICapabilitiesServiceFactoryProvider.java
+K 25
+svn:wc:ra_dav:version-url
+V 116
+/svn/!svn/ver/317/trunk/java/src/main/com/google/appengine/api/capabilities/ICapabilitiesServiceFactoryProvider.java
+END
+CapabilitiesService.java
+K 25
+svn:wc:ra_dav:version-url
+V 100
+/svn/!svn/ver/165/trunk/java/src/main/com/google/appengine/api/capabilities/CapabilitiesService.java
+END
+ICapabilitiesServiceFactory.java
+K 25
+svn:wc:ra_dav:version-url
+V 108
+/svn/!svn/ver/317/trunk/java/src/main/com/google/appengine/api/capabilities/ICapabilitiesServiceFactory.java
+END
+CapabilitiesServiceImpl.java
+K 25
+svn:wc:ra_dav:version-url
+V 104
+/svn/!svn/ver/165/trunk/java/src/main/com/google/appengine/api/capabilities/CapabilitiesServiceImpl.java
+END

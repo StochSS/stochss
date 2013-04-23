@@ -1,0 +1,77 @@
+K 25
+svn:wc:ra_dav:version-url
+V 90
+/svn/!svn/ver/223/trunk/docs/appengine/docs/java/javadoc/com/google/appengine/api/urlfetch
+END
+URLFetchService.html
+K 25
+svn:wc:ra_dav:version-url
+V 111
+/svn/!svn/ver/223/trunk/docs/appengine/docs/java/javadoc/com/google/appengine/api/urlfetch/URLFetchService.html
+END
+HTTPResponse.html
+K 25
+svn:wc:ra_dav:version-url
+V 108
+/svn/!svn/ver/223/trunk/docs/appengine/docs/java/javadoc/com/google/appengine/api/urlfetch/HTTPResponse.html
+END
+HTTPMethod.html
+K 25
+svn:wc:ra_dav:version-url
+V 106
+/svn/!svn/ver/223/trunk/docs/appengine/docs/java/javadoc/com/google/appengine/api/urlfetch/HTTPMethod.html
+END
+package-frame.html
+K 25
+svn:wc:ra_dav:version-url
+V 109
+/svn/!svn/ver/223/trunk/docs/appengine/docs/java/javadoc/com/google/appengine/api/urlfetch/package-frame.html
+END
+FetchOptions.html
+K 25
+svn:wc:ra_dav:version-url
+V 108
+/svn/!svn/ver/223/trunk/docs/appengine/docs/java/javadoc/com/google/appengine/api/urlfetch/FetchOptions.html
+END
+URLFetchServiceFactory.html
+K 25
+svn:wc:ra_dav:version-url
+V 118
+/svn/!svn/ver/223/trunk/docs/appengine/docs/java/javadoc/com/google/appengine/api/urlfetch/URLFetchServiceFactory.html
+END
+package-summary.html
+K 25
+svn:wc:ra_dav:version-url
+V 111
+/svn/!svn/ver/223/trunk/docs/appengine/docs/java/javadoc/com/google/appengine/api/urlfetch/package-summary.html
+END
+HTTPHeader.html
+K 25
+svn:wc:ra_dav:version-url
+V 106
+/svn/!svn/ver/223/trunk/docs/appengine/docs/java/javadoc/com/google/appengine/api/urlfetch/HTTPHeader.html
+END
+package-tree.html
+K 25
+svn:wc:ra_dav:version-url
+V 108
+/svn/!svn/ver/223/trunk/docs/appengine/docs/java/javadoc/com/google/appengine/api/urlfetch/package-tree.html
+END
+HTTPRequest.html
+K 25
+svn:wc:ra_dav:version-url
+V 107
+/svn/!svn/ver/223/trunk/docs/appengine/docs/java/javadoc/com/google/appengine/api/urlfetch/HTTPRequest.html
+END
+FetchOptions.Builder.html
+K 25
+svn:wc:ra_dav:version-url
+V 116
+/svn/!svn/ver/223/trunk/docs/appengine/docs/java/javadoc/com/google/appengine/api/urlfetch/FetchOptions.Builder.html
+END
+ResponseTooLargeException.html
+K 25
+svn:wc:ra_dav:version-url
+V 121
+/svn/!svn/ver/223/trunk/docs/appengine/docs/java/javadoc/com/google/appengine/api/urlfetch/ResponseTooLargeException.html
+END

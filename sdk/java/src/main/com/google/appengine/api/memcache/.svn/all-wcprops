@@ -1,0 +1,137 @@
+K 25
+svn:wc:ra_dav:version-url
+V 71
+/svn/!svn/ver/340/trunk/java/src/main/com/google/appengine/api/memcache
+END
+IMemcacheServiceFactoryProvider.java
+K 25
+svn:wc:ra_dav:version-url
+V 108
+/svn/!svn/ver/317/trunk/java/src/main/com/google/appengine/api/memcache/IMemcacheServiceFactoryProvider.java
+END
+BaseMemcacheServiceImpl.java
+K 25
+svn:wc:ra_dav:version-url
+V 100
+/svn/!svn/ver/207/trunk/java/src/main/com/google/appengine/api/memcache/BaseMemcacheServiceImpl.java
+END
+MemcacheSerialization.java
+K 25
+svn:wc:ra_dav:version-url
+V 98
+/svn/!svn/ver/317/trunk/java/src/main/com/google/appengine/api/memcache/MemcacheSerialization.java
+END
+ConsistentErrorHandler.java
+K 25
+svn:wc:ra_dav:version-url
+V 99
+/svn/!svn/ver/284/trunk/java/src/main/com/google/appengine/api/memcache/ConsistentErrorHandler.java
+END
+InvalidValueException.java
+K 25
+svn:wc:ra_dav:version-url
+V 98
+/svn/!svn/ver/165/trunk/java/src/main/com/google/appengine/api/memcache/InvalidValueException.java
+END
+MemcacheServiceException.java
+K 25
+svn:wc:ra_dav:version-url
+V 101
+/svn/!svn/ver/248/trunk/java/src/main/com/google/appengine/api/memcache/MemcacheServiceException.java
+END
+AsyncMemcacheServiceImpl.java
+K 25
+svn:wc:ra_dav:version-url
+V 101
+/svn/!svn/ver/340/trunk/java/src/main/com/google/appengine/api/memcache/AsyncMemcacheServiceImpl.java
+END
+MemcacheServiceImpl.java
+K 25
+svn:wc:ra_dav:version-url
+V 96
+/svn/!svn/ver/248/trunk/java/src/main/com/google/appengine/api/memcache/MemcacheServiceImpl.java
+END
+ErrorHandlers.java
+K 25
+svn:wc:ra_dav:version-url
+V 90
+/svn/!svn/ver/284/trunk/java/src/main/com/google/appengine/api/memcache/ErrorHandlers.java
+END
+MemcacheServiceFactory.java
+K 25
+svn:wc:ra_dav:version-url
+V 99
+/svn/!svn/ver/317/trunk/java/src/main/com/google/appengine/api/memcache/MemcacheServiceFactory.java
+END
+MemcacheServiceApiHelper.java
+K 25
+svn:wc:ra_dav:version-url
+V 101
+/svn/!svn/ver/248/trunk/java/src/main/com/google/appengine/api/memcache/MemcacheServiceApiHelper.java
+END
+BaseMemcacheService.java
+K 25
+svn:wc:ra_dav:version-url
+V 96
+/svn/!svn/ver/207/trunk/java/src/main/com/google/appengine/api/memcache/BaseMemcacheService.java
+END
+StrictErrorHandler.java
+K 25
+svn:wc:ra_dav:version-url
+V 95
+/svn/!svn/ver/284/trunk/java/src/main/com/google/appengine/api/memcache/StrictErrorHandler.java
+END
+AsyncMemcacheService.java
+K 25
+svn:wc:ra_dav:version-url
+V 97
+/svn/!svn/ver/219/trunk/java/src/main/com/google/appengine/api/memcache/AsyncMemcacheService.java
+END
+LogAndContinueErrorHandler.java
+K 25
+svn:wc:ra_dav:version-url
+V 103
+/svn/!svn/ver/284/trunk/java/src/main/com/google/appengine/api/memcache/LogAndContinueErrorHandler.java
+END
+Expiration.java
+K 25
+svn:wc:ra_dav:version-url
+V 87
+/svn/!svn/ver/165/trunk/java/src/main/com/google/appengine/api/memcache/Expiration.java
+END
+MemcacheService.java
+K 25
+svn:wc:ra_dav:version-url
+V 92
+/svn/!svn/ver/340/trunk/java/src/main/com/google/appengine/api/memcache/MemcacheService.java
+END
+IMemcacheServiceFactory.java
+K 25
+svn:wc:ra_dav:version-url
+V 100
+/svn/!svn/ver/317/trunk/java/src/main/com/google/appengine/api/memcache/IMemcacheServiceFactory.java
+END
+ErrorHandler.java
+K 25
+svn:wc:ra_dav:version-url
+V 89
+/svn/!svn/ver/248/trunk/java/src/main/com/google/appengine/api/memcache/ErrorHandler.java
+END
+ConsistentLogAndContinueErrorHandler.java
+K 25
+svn:wc:ra_dav:version-url
+V 113
+/svn/!svn/ver/284/trunk/java/src/main/com/google/appengine/api/memcache/ConsistentLogAndContinueErrorHandler.java
+END
+MemcacheServiceFactoryImpl.java
+K 25
+svn:wc:ra_dav:version-url
+V 103
+/svn/!svn/ver/317/trunk/java/src/main/com/google/appengine/api/memcache/MemcacheServiceFactoryImpl.java
+END
+Stats.java
+K 25
+svn:wc:ra_dav:version-url
+V 82
+/svn/!svn/ver/165/trunk/java/src/main/com/google/appengine/api/memcache/Stats.java
+END

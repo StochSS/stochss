@@ -1,0 +1,35 @@
+K 25
+svn:wc:ra_dav:version-url
+V 63
+/svn/!svn/ver/327/trunk/python/lib/cherrypy/cherrypy/wsgiserver
+END
+ssl_pyopenssl.py
+K 25
+svn:wc:ra_dav:version-url
+V 80
+/svn/!svn/ver/327/trunk/python/lib/cherrypy/cherrypy/wsgiserver/ssl_pyopenssl.py
+END
+__init__.py
+K 25
+svn:wc:ra_dav:version-url
+V 75
+/svn/!svn/ver/327/trunk/python/lib/cherrypy/cherrypy/wsgiserver/__init__.py
+END
+wsgiserver2.py
+K 25
+svn:wc:ra_dav:version-url
+V 78
+/svn/!svn/ver/327/trunk/python/lib/cherrypy/cherrypy/wsgiserver/wsgiserver2.py
+END
+wsgiserver3.py
+K 25
+svn:wc:ra_dav:version-url
+V 78
+/svn/!svn/ver/327/trunk/python/lib/cherrypy/cherrypy/wsgiserver/wsgiserver3.py
+END
+ssl_builtin.py
+K 25
+svn:wc:ra_dav:version-url
+V 78
+/svn/!svn/ver/327/trunk/python/lib/cherrypy/cherrypy/wsgiserver/ssl_builtin.py
+END

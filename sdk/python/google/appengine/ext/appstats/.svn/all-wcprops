@@ -1,0 +1,47 @@
+K 25
+svn:wc:ra_dav:version-url
+V 60
+/svn/!svn/ver/339/trunk/python/google/appengine/ext/appstats
+END
+formatting.py
+K 25
+svn:wc:ra_dav:version-url
+V 74
+/svn/!svn/ver/327/trunk/python/google/appengine/ext/appstats/formatting.py
+END
+datamodel_pb.py
+K 25
+svn:wc:ra_dav:version-url
+V 76
+/svn/!svn/ver/327/trunk/python/google/appengine/ext/appstats/datamodel_pb.py
+END
+recording.py
+K 25
+svn:wc:ra_dav:version-url
+V 73
+/svn/!svn/ver/327/trunk/python/google/appengine/ext/appstats/recording.py
+END
+sample_appengine_config.py
+K 25
+svn:wc:ra_dav:version-url
+V 87
+/svn/!svn/ver/327/trunk/python/google/appengine/ext/appstats/sample_appengine_config.py
+END
+ui.py
+K 25
+svn:wc:ra_dav:version-url
+V 66
+/svn/!svn/ver/327/trunk/python/google/appengine/ext/appstats/ui.py
+END
+__init__.py
+K 25
+svn:wc:ra_dav:version-url
+V 72
+/svn/!svn/ver/327/trunk/python/google/appengine/ext/appstats/__init__.py
+END
+loader.py
+K 25
+svn:wc:ra_dav:version-url
+V 70
+/svn/!svn/ver/327/trunk/python/google/appengine/ext/appstats/loader.py
+END

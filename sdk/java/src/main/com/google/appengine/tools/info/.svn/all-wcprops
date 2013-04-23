@@ -1,0 +1,59 @@
+K 25
+svn:wc:ra_dav:version-url
+V 69
+/svn/!svn/ver/301/trunk/java/src/main/com/google/appengine/tools/info
+END
+SdkImplInfo.java
+K 25
+svn:wc:ra_dav:version-url
+V 86
+/svn/!svn/ver/270/trunk/java/src/main/com/google/appengine/tools/info/SdkImplInfo.java
+END
+UpdateCheck.java
+K 25
+svn:wc:ra_dav:version-url
+V 86
+/svn/!svn/ver/301/trunk/java/src/main/com/google/appengine/tools/info/UpdateCheck.java
+END
+UpdateCheckResults.java
+K 25
+svn:wc:ra_dav:version-url
+V 93
+/svn/!svn/ver/165/trunk/java/src/main/com/google/appengine/tools/info/UpdateCheckResults.java
+END
+Version.java
+K 25
+svn:wc:ra_dav:version-url
+V 82
+/svn/!svn/ver/165/trunk/java/src/main/com/google/appengine/tools/info/Version.java
+END
+LocalVersionFactory.java
+K 25
+svn:wc:ra_dav:version-url
+V 94
+/svn/!svn/ver/165/trunk/java/src/main/com/google/appengine/tools/info/LocalVersionFactory.java
+END
+SupportInfo.java
+K 25
+svn:wc:ra_dav:version-url
+V 86
+/svn/!svn/ver/165/trunk/java/src/main/com/google/appengine/tools/info/SupportInfo.java
+END
+RemoteVersionFactory.java
+K 25
+svn:wc:ra_dav:version-url
+V 95
+/svn/!svn/ver/165/trunk/java/src/main/com/google/appengine/tools/info/RemoteVersionFactory.java
+END
+OptionalLib.java
+K 25
+svn:wc:ra_dav:version-url
+V 86
+/svn/!svn/ver/229/trunk/java/src/main/com/google/appengine/tools/info/OptionalLib.java
+END
+SdkInfo.java
+K 25
+svn:wc:ra_dav:version-url
+V 82
+/svn/!svn/ver/248/trunk/java/src/main/com/google/appengine/tools/info/SdkInfo.java
+END

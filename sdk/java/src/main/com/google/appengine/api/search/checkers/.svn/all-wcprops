@@ -1,0 +1,89 @@
+K 25
+svn:wc:ra_dav:version-url
+V 78
+/svn/!svn/ver/326/trunk/java/src/main/com/google/appengine/api/search/checkers
+END
+Preconditions.java
+K 25
+svn:wc:ra_dav:version-url
+V 97
+/svn/!svn/ver/290/trunk/java/src/main/com/google/appengine/api/search/checkers/Preconditions.java
+END
+SearchApiLimits.java
+K 25
+svn:wc:ra_dav:version-url
+V 99
+/svn/!svn/ver/310/trunk/java/src/main/com/google/appengine/api/search/checkers/SearchApiLimits.java
+END
+CursorChecker.java
+K 25
+svn:wc:ra_dav:version-url
+V 97
+/svn/!svn/ver/326/trunk/java/src/main/com/google/appengine/api/search/checkers/CursorChecker.java
+END
+DocumentChecker.java
+K 25
+svn:wc:ra_dav:version-url
+V 99
+/svn/!svn/ver/326/trunk/java/src/main/com/google/appengine/api/search/checkers/DocumentChecker.java
+END
+QueryOptionsChecker.java
+K 25
+svn:wc:ra_dav:version-url
+V 103
+/svn/!svn/ver/326/trunk/java/src/main/com/google/appengine/api/search/checkers/QueryOptionsChecker.java
+END
+SortOptionsChecker.java
+K 25
+svn:wc:ra_dav:version-url
+V 102
+/svn/!svn/ver/326/trunk/java/src/main/com/google/appengine/api/search/checkers/SortOptionsChecker.java
+END
+FieldChecker.java
+K 25
+svn:wc:ra_dav:version-url
+V 96
+/svn/!svn/ver/326/trunk/java/src/main/com/google/appengine/api/search/checkers/FieldChecker.java
+END
+GeoPointChecker.java
+K 25
+svn:wc:ra_dav:version-url
+V 99
+/svn/!svn/ver/326/trunk/java/src/main/com/google/appengine/api/search/checkers/GeoPointChecker.java
+END
+QueryChecker.java
+K 25
+svn:wc:ra_dav:version-url
+V 96
+/svn/!svn/ver/326/trunk/java/src/main/com/google/appengine/api/search/checkers/QueryChecker.java
+END
+IndexChecker.java
+K 25
+svn:wc:ra_dav:version-url
+V 96
+/svn/!svn/ver/326/trunk/java/src/main/com/google/appengine/api/search/checkers/IndexChecker.java
+END
+SortExpressionChecker.java
+K 25
+svn:wc:ra_dav:version-url
+V 105
+/svn/!svn/ver/290/trunk/java/src/main/com/google/appengine/api/search/checkers/SortExpressionChecker.java
+END
+GetIndexesRequestChecker.java
+K 25
+svn:wc:ra_dav:version-url
+V 108
+/svn/!svn/ver/326/trunk/java/src/main/com/google/appengine/api/search/checkers/GetIndexesRequestChecker.java
+END
+GetRequestChecker.java
+K 25
+svn:wc:ra_dav:version-url
+V 101
+/svn/!svn/ver/326/trunk/java/src/main/com/google/appengine/api/search/checkers/GetRequestChecker.java
+END
+QueryOnlyCustomerDocumentChecker.java
+K 25
+svn:wc:ra_dav:version-url
+V 116
+/svn/!svn/ver/317/trunk/java/src/main/com/google/appengine/api/search/checkers/QueryOnlyCustomerDocumentChecker.java
+END

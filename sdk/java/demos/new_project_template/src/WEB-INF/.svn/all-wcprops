@@ -1,0 +1,17 @@
+K 25
+svn:wc:ra_dav:version-url
+V 67
+/svn/!svn/ver/290/trunk/java/demos/new_project_template/src/WEB-INF
+END
+appengine-web.xml
+K 25
+svn:wc:ra_dav:version-url
+V 85
+/svn/!svn/ver/290/trunk/java/demos/new_project_template/src/WEB-INF/appengine-web.xml
+END
+web.xml
+K 25
+svn:wc:ra_dav:version-url
+V 75
+/svn/!svn/ver/290/trunk/java/demos/new_project_template/src/WEB-INF/web.xml
+END

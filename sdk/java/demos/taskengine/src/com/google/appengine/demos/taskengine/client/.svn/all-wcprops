@@ -1,0 +1,77 @@
+K 25
+svn:wc:ra_dav:version-url
+V 94
+/svn/!svn/ver/207/trunk/java/demos/taskengine/src/com/google/appengine/demos/taskengine/client
+END
+TasksApi.java
+K 25
+svn:wc:ra_dav:version-url
+V 107
+/svn/!svn/ver/44/trunk/java/demos/taskengine/src/com/google/appengine/demos/taskengine/client/TasksApi.java
+END
+DeferredCommand.java
+K 25
+svn:wc:ra_dav:version-url
+V 115
+/svn/!svn/ver/207/trunk/java/demos/taskengine/src/com/google/appengine/demos/taskengine/client/DeferredCommand.java
+END
+DomUtils.java
+K 25
+svn:wc:ra_dav:version-url
+V 108
+/svn/!svn/ver/207/trunk/java/demos/taskengine/src/com/google/appengine/demos/taskengine/client/DomUtils.java
+END
+Widget.java
+K 25
+svn:wc:ra_dav:version-url
+V 106
+/svn/!svn/ver/165/trunk/java/demos/taskengine/src/com/google/appengine/demos/taskengine/client/Widget.java
+END
+LabelMatrix.java
+K 25
+svn:wc:ra_dav:version-url
+V 111
+/svn/!svn/ver/165/trunk/java/demos/taskengine/src/com/google/appengine/demos/taskengine/client/LabelMatrix.java
+END
+Tasks.java
+K 25
+svn:wc:ra_dav:version-url
+V 105
+/svn/!svn/ver/165/trunk/java/demos/taskengine/src/com/google/appengine/demos/taskengine/client/Tasks.java
+END
+ControlBar.java
+K 25
+svn:wc:ra_dav:version-url
+V 110
+/svn/!svn/ver/165/trunk/java/demos/taskengine/src/com/google/appengine/demos/taskengine/client/ControlBar.java
+END
+PageTransitionPanel.java
+K 25
+svn:wc:ra_dav:version-url
+V 119
+/svn/!svn/ver/165/trunk/java/demos/taskengine/src/com/google/appengine/demos/taskengine/client/PageTransitionPanel.java
+END
+TaskDetails.java
+K 25
+svn:wc:ra_dav:version-url
+V 111
+/svn/!svn/ver/165/trunk/java/demos/taskengine/src/com/google/appengine/demos/taskengine/client/TaskDetails.java
+END
+Page.java
+K 25
+svn:wc:ra_dav:version-url
+V 104
+/svn/!svn/ver/165/trunk/java/demos/taskengine/src/com/google/appengine/demos/taskengine/client/Page.java
+END
+TasksApiAsync.java
+K 25
+svn:wc:ra_dav:version-url
+V 112
+/svn/!svn/ver/44/trunk/java/demos/taskengine/src/com/google/appengine/demos/taskengine/client/TasksApiAsync.java
+END
+TaskList.java
+K 25
+svn:wc:ra_dav:version-url
+V 108
+/svn/!svn/ver/165/trunk/java/demos/taskengine/src/com/google/appengine/demos/taskengine/client/TaskList.java
+END

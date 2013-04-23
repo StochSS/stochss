@@ -1,0 +1,11 @@
+K 25
+svn:wc:ra_dav:version-url
+V 100
+/svn/!svn/ver/327/trunk/python/lib/django-1.4/tests/regressiontests/views/app1/locale/fr/LC_MESSAGES
+END
+djangojs.po
+K 25
+svn:wc:ra_dav:version-url
+V 112
+/svn/!svn/ver/327/trunk/python/lib/django-1.4/tests/regressiontests/views/app1/locale/fr/LC_MESSAGES/djangojs.po
+END

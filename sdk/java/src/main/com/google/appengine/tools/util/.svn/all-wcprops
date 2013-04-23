@@ -1,0 +1,83 @@
+K 25
+svn:wc:ra_dav:version-url
+V 69
+/svn/!svn/ver/310/trunk/java/src/main/com/google/appengine/tools/util
+END
+HttpHeaderParseException.java
+K 25
+svn:wc:ra_dav:version-url
+V 99
+/svn/!svn/ver/165/trunk/java/src/main/com/google/appengine/tools/util/HttpHeaderParseException.java
+END
+ClientCookieManager.java
+K 25
+svn:wc:ra_dav:version-url
+V 94
+/svn/!svn/ver/290/trunk/java/src/main/com/google/appengine/tools/util/ClientCookieManager.java
+END
+JarSplitter.java
+K 25
+svn:wc:ra_dav:version-url
+V 86
+/svn/!svn/ver/284/trunk/java/src/main/com/google/appengine/tools/util/JarSplitter.java
+END
+HttpHeaderParser.java
+K 25
+svn:wc:ra_dav:version-url
+V 91
+/svn/!svn/ver/165/trunk/java/src/main/com/google/appengine/tools/util/HttpHeaderParser.java
+END
+Logging.java
+K 25
+svn:wc:ra_dav:version-url
+V 82
+/svn/!svn/ver/165/trunk/java/src/main/com/google/appengine/tools/util/Logging.java
+END
+ApiVersionFinder.java
+K 25
+svn:wc:ra_dav:version-url
+V 91
+/svn/!svn/ver/165/trunk/java/src/main/com/google/appengine/tools/util/ApiVersionFinder.java
+END
+ClientCookie.java
+K 25
+svn:wc:ra_dav:version-url
+V 87
+/svn/!svn/ver/165/trunk/java/src/main/com/google/appengine/tools/util/ClientCookie.java
+END
+Option.java
+K 25
+svn:wc:ra_dav:version-url
+V 81
+/svn/!svn/ver/290/trunk/java/src/main/com/google/appengine/tools/util/Option.java
+END
+FileIterator.java
+K 25
+svn:wc:ra_dav:version-url
+V 87
+/svn/!svn/ver/165/trunk/java/src/main/com/google/appengine/tools/util/FileIterator.java
+END
+JarTool.java
+K 25
+svn:wc:ra_dav:version-url
+V 82
+/svn/!svn/ver/310/trunk/java/src/main/com/google/appengine/tools/util/JarTool.java
+END
+JarMaker.java
+K 25
+svn:wc:ra_dav:version-url
+V 83
+/svn/!svn/ver/284/trunk/java/src/main/com/google/appengine/tools/util/JarMaker.java
+END
+Parser.java
+K 25
+svn:wc:ra_dav:version-url
+V 81
+/svn/!svn/ver/165/trunk/java/src/main/com/google/appengine/tools/util/Parser.java
+END
+Action.java
+K 25
+svn:wc:ra_dav:version-url
+V 81
+/svn/!svn/ver/284/trunk/java/src/main/com/google/appengine/tools/util/Action.java
+END

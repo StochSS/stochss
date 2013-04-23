@@ -1,0 +1,59 @@
+K 25
+svn:wc:ra_dav:version-url
+V 92
+/svn/!svn/ver/207/trunk/java/demos/sticky/src/com/google/appengine/demos/sticky/client/model
+END
+SurfaceLoader.java
+K 25
+svn:wc:ra_dav:version-url
+V 111
+/svn/!svn/ver/165/trunk/java/demos/sticky/src/com/google/appengine/demos/sticky/client/model/SurfaceLoader.java
+END
+Service.java
+K 25
+svn:wc:ra_dav:version-url
+V 105
+/svn/!svn/ver/148/trunk/java/demos/sticky/src/com/google/appengine/demos/sticky/client/model/Service.java
+END
+Model.java
+K 25
+svn:wc:ra_dav:version-url
+V 103
+/svn/!svn/ver/207/trunk/java/demos/sticky/src/com/google/appengine/demos/sticky/client/model/Model.java
+END
+Author.java
+K 25
+svn:wc:ra_dav:version-url
+V 104
+/svn/!svn/ver/148/trunk/java/demos/sticky/src/com/google/appengine/demos/sticky/client/model/Author.java
+END
+Note.java
+K 25
+svn:wc:ra_dav:version-url
+V 102
+/svn/!svn/ver/148/trunk/java/demos/sticky/src/com/google/appengine/demos/sticky/client/model/Note.java
+END
+RetryTimer.java
+K 25
+svn:wc:ra_dav:version-url
+V 108
+/svn/!svn/ver/165/trunk/java/demos/sticky/src/com/google/appengine/demos/sticky/client/model/RetryTimer.java
+END
+Surface.java
+K 25
+svn:wc:ra_dav:version-url
+V 105
+/svn/!svn/ver/148/trunk/java/demos/sticky/src/com/google/appengine/demos/sticky/client/model/Surface.java
+END
+NoteLoader.java
+K 25
+svn:wc:ra_dav:version-url
+V 108
+/svn/!svn/ver/165/trunk/java/demos/sticky/src/com/google/appengine/demos/sticky/client/model/NoteLoader.java
+END
+ServiceAsync.java
+K 25
+svn:wc:ra_dav:version-url
+V 110
+/svn/!svn/ver/148/trunk/java/demos/sticky/src/com/google/appengine/demos/sticky/client/model/ServiceAsync.java
+END

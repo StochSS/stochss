@@ -1,0 +1,35 @@
+K 25
+svn:wc:ra_dav:version-url
+V 85
+/svn/!svn/ver/327/trunk/python/lib/django-1.4/django/contrib/formtools/wizard/storage
+END
+cookie.py
+K 25
+svn:wc:ra_dav:version-url
+V 95
+/svn/!svn/ver/327/trunk/python/lib/django-1.4/django/contrib/formtools/wizard/storage/cookie.py
+END
+base.py
+K 25
+svn:wc:ra_dav:version-url
+V 93
+/svn/!svn/ver/327/trunk/python/lib/django-1.4/django/contrib/formtools/wizard/storage/base.py
+END
+__init__.py
+K 25
+svn:wc:ra_dav:version-url
+V 97
+/svn/!svn/ver/327/trunk/python/lib/django-1.4/django/contrib/formtools/wizard/storage/__init__.py
+END
+exceptions.py
+K 25
+svn:wc:ra_dav:version-url
+V 99
+/svn/!svn/ver/327/trunk/python/lib/django-1.4/django/contrib/formtools/wizard/storage/exceptions.py
+END
+session.py
+K 25
+svn:wc:ra_dav:version-url
+V 96
+/svn/!svn/ver/327/trunk/python/lib/django-1.4/django/contrib/formtools/wizard/storage/session.py
+END

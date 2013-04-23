@@ -1,0 +1,23 @@
+K 25
+svn:wc:ra_dav:version-url
+V 83
+/svn/!svn/ver/327/trunk/python/lib/django-1.4/tests/regressiontests/bash_completion
+END
+__init__.py
+K 25
+svn:wc:ra_dav:version-url
+V 95
+/svn/!svn/ver/327/trunk/python/lib/django-1.4/tests/regressiontests/bash_completion/__init__.py
+END
+tests.py
+K 25
+svn:wc:ra_dav:version-url
+V 92
+/svn/!svn/ver/327/trunk/python/lib/django-1.4/tests/regressiontests/bash_completion/tests.py
+END
+models.py
+K 25
+svn:wc:ra_dav:version-url
+V 93
+/svn/!svn/ver/327/trunk/python/lib/django-1.4/tests/regressiontests/bash_completion/models.py
+END

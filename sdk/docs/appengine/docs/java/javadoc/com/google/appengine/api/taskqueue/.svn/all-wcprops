@@ -1,0 +1,143 @@
+K 25
+svn:wc:ra_dav:version-url
+V 91
+/svn/!svn/ver/223/trunk/docs/appengine/docs/java/javadoc/com/google/appengine/api/taskqueue
+END
+QueueFactory.html
+K 25
+svn:wc:ra_dav:version-url
+V 109
+/svn/!svn/ver/223/trunk/docs/appengine/docs/java/javadoc/com/google/appengine/api/taskqueue/QueueFactory.html
+END
+TaskHandle.html
+K 25
+svn:wc:ra_dav:version-url
+V 107
+/svn/!svn/ver/223/trunk/docs/appengine/docs/java/javadoc/com/google/appengine/api/taskqueue/TaskHandle.html
+END
+TaskOptions.html
+K 25
+svn:wc:ra_dav:version-url
+V 108
+/svn/!svn/ver/223/trunk/docs/appengine/docs/java/javadoc/com/google/appengine/api/taskqueue/TaskOptions.html
+END
+InvalidQueueModeException.html
+K 25
+svn:wc:ra_dav:version-url
+V 122
+/svn/!svn/ver/223/trunk/docs/appengine/docs/java/javadoc/com/google/appengine/api/taskqueue/InvalidQueueModeException.html
+END
+RetryOptions.html
+K 25
+svn:wc:ra_dav:version-url
+V 109
+/svn/!svn/ver/223/trunk/docs/appengine/docs/java/javadoc/com/google/appengine/api/taskqueue/RetryOptions.html
+END
+QueueConstants.html
+K 25
+svn:wc:ra_dav:version-url
+V 111
+/svn/!svn/ver/223/trunk/docs/appengine/docs/java/javadoc/com/google/appengine/api/taskqueue/QueueConstants.html
+END
+package-frame.html
+K 25
+svn:wc:ra_dav:version-url
+V 110
+/svn/!svn/ver/223/trunk/docs/appengine/docs/java/javadoc/com/google/appengine/api/taskqueue/package-frame.html
+END
+TaskAlreadyExistsException.html
+K 25
+svn:wc:ra_dav:version-url
+V 123
+/svn/!svn/ver/223/trunk/docs/appengine/docs/java/javadoc/com/google/appengine/api/taskqueue/TaskAlreadyExistsException.html
+END
+Queue.html
+K 25
+svn:wc:ra_dav:version-url
+V 102
+/svn/!svn/ver/223/trunk/docs/appengine/docs/java/javadoc/com/google/appengine/api/taskqueue/Queue.html
+END
+package-summary.html
+K 25
+svn:wc:ra_dav:version-url
+V 112
+/svn/!svn/ver/223/trunk/docs/appengine/docs/java/javadoc/com/google/appengine/api/taskqueue/package-summary.html
+END
+UnsupportedTranslationException.html
+K 25
+svn:wc:ra_dav:version-url
+V 128
+/svn/!svn/ver/223/trunk/docs/appengine/docs/java/javadoc/com/google/appengine/api/taskqueue/UnsupportedTranslationException.html
+END
+package-tree.html
+K 25
+svn:wc:ra_dav:version-url
+V 109
+/svn/!svn/ver/223/trunk/docs/appengine/docs/java/javadoc/com/google/appengine/api/taskqueue/package-tree.html
+END
+QueueNameMismatchException.html
+K 25
+svn:wc:ra_dav:version-url
+V 123
+/svn/!svn/ver/223/trunk/docs/appengine/docs/java/javadoc/com/google/appengine/api/taskqueue/QueueNameMismatchException.html
+END
+TaskOptions.Method.html
+K 25
+svn:wc:ra_dav:version-url
+V 115
+/svn/!svn/ver/223/trunk/docs/appengine/docs/java/javadoc/com/google/appengine/api/taskqueue/TaskOptions.Method.html
+END
+TransientFailureException.html
+K 25
+svn:wc:ra_dav:version-url
+V 122
+/svn/!svn/ver/223/trunk/docs/appengine/docs/java/javadoc/com/google/appengine/api/taskqueue/TransientFailureException.html
+END
+InternalFailureException.html
+K 25
+svn:wc:ra_dav:version-url
+V 121
+/svn/!svn/ver/223/trunk/docs/appengine/docs/java/javadoc/com/google/appengine/api/taskqueue/InternalFailureException.html
+END
+DeferredTask.html
+K 25
+svn:wc:ra_dav:version-url
+V 109
+/svn/!svn/ver/223/trunk/docs/appengine/docs/java/javadoc/com/google/appengine/api/taskqueue/DeferredTask.html
+END
+TaskOptions.Builder.html
+K 25
+svn:wc:ra_dav:version-url
+V 116
+/svn/!svn/ver/223/trunk/docs/appengine/docs/java/javadoc/com/google/appengine/api/taskqueue/TaskOptions.Builder.html
+END
+TransactionalTaskException.html
+K 25
+svn:wc:ra_dav:version-url
+V 123
+/svn/!svn/ver/223/trunk/docs/appengine/docs/java/javadoc/com/google/appengine/api/taskqueue/TransactionalTaskException.html
+END
+RetryOptions.Builder.html
+K 25
+svn:wc:ra_dav:version-url
+V 117
+/svn/!svn/ver/223/trunk/docs/appengine/docs/java/javadoc/com/google/appengine/api/taskqueue/RetryOptions.Builder.html
+END
+DeferredTaskCreationException.html
+K 25
+svn:wc:ra_dav:version-url
+V 126
+/svn/!svn/ver/223/trunk/docs/appengine/docs/java/javadoc/com/google/appengine/api/taskqueue/DeferredTaskCreationException.html
+END
+DeferredTaskContext.html
+K 25
+svn:wc:ra_dav:version-url
+V 116
+/svn/!svn/ver/223/trunk/docs/appengine/docs/java/javadoc/com/google/appengine/api/taskqueue/DeferredTaskContext.html
+END
+QueueFailureException.html
+K 25
+svn:wc:ra_dav:version-url
+V 118
+/svn/!svn/ver/223/trunk/docs/appengine/docs/java/javadoc/com/google/appengine/api/taskqueue/QueueFailureException.html
+END

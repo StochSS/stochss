@@ -1,0 +1,23 @@
+K 25
+svn:wc:ra_dav:version-url
+V 83
+/svn/!svn/ver/233/trunk/python/lib/django_1_3/django/contrib/gis/tests/data/invalid
+END
+emptypoints.shp
+K 25
+svn:wc:ra_dav:version-url
+V 99
+/svn/!svn/ver/233/trunk/python/lib/django_1_3/django/contrib/gis/tests/data/invalid/emptypoints.shp
+END
+emptypoints.dbf
+K 25
+svn:wc:ra_dav:version-url
+V 99
+/svn/!svn/ver/233/trunk/python/lib/django_1_3/django/contrib/gis/tests/data/invalid/emptypoints.dbf
+END
+emptypoints.shx
+K 25
+svn:wc:ra_dav:version-url
+V 99
+/svn/!svn/ver/233/trunk/python/lib/django_1_3/django/contrib/gis/tests/data/invalid/emptypoints.shx
+END

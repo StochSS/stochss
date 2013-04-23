@@ -1,0 +1,71 @@
+K 25
+svn:wc:ra_dav:version-url
+V 114
+/svn/!svn/ver/223/trunk/docs/appengine/docs/java/tools/localunittesting/javadoc/com/google/appengine/api/users/dev
+END
+LocalOAuthAuthorizeTokenServlet.html
+K 25
+svn:wc:ra_dav:version-url
+V 151
+/svn/!svn/ver/223/trunk/docs/appengine/docs/java/tools/localunittesting/javadoc/com/google/appengine/api/users/dev/LocalOAuthAuthorizeTokenServlet.html
+END
+LoginCookieUtils.html
+K 25
+svn:wc:ra_dav:version-url
+V 136
+/svn/!svn/ver/223/trunk/docs/appengine/docs/java/tools/localunittesting/javadoc/com/google/appengine/api/users/dev/LoginCookieUtils.html
+END
+LocalOAuthAccessTokenServlet.html
+K 25
+svn:wc:ra_dav:version-url
+V 148
+/svn/!svn/ver/223/trunk/docs/appengine/docs/java/tools/localunittesting/javadoc/com/google/appengine/api/users/dev/LocalOAuthAccessTokenServlet.html
+END
+package-frame.html
+K 25
+svn:wc:ra_dav:version-url
+V 133
+/svn/!svn/ver/223/trunk/docs/appengine/docs/java/tools/localunittesting/javadoc/com/google/appengine/api/users/dev/package-frame.html
+END
+LoginCookieUtils.CookieData.html
+K 25
+svn:wc:ra_dav:version-url
+V 147
+/svn/!svn/ver/223/trunk/docs/appengine/docs/java/tools/localunittesting/javadoc/com/google/appengine/api/users/dev/LoginCookieUtils.CookieData.html
+END
+package-summary.html
+K 25
+svn:wc:ra_dav:version-url
+V 135
+/svn/!svn/ver/223/trunk/docs/appengine/docs/java/tools/localunittesting/javadoc/com/google/appengine/api/users/dev/package-summary.html
+END
+LocalLoginServlet.html
+K 25
+svn:wc:ra_dav:version-url
+V 137
+/svn/!svn/ver/223/trunk/docs/appengine/docs/java/tools/localunittesting/javadoc/com/google/appengine/api/users/dev/LocalLoginServlet.html
+END
+package-tree.html
+K 25
+svn:wc:ra_dav:version-url
+V 132
+/svn/!svn/ver/223/trunk/docs/appengine/docs/java/tools/localunittesting/javadoc/com/google/appengine/api/users/dev/package-tree.html
+END
+LocalLogoutServlet.html
+K 25
+svn:wc:ra_dav:version-url
+V 138
+/svn/!svn/ver/223/trunk/docs/appengine/docs/java/tools/localunittesting/javadoc/com/google/appengine/api/users/dev/LocalLogoutServlet.html
+END
+LocalOAuthRequestTokenServlet.html
+K 25
+svn:wc:ra_dav:version-url
+V 149
+/svn/!svn/ver/223/trunk/docs/appengine/docs/java/tools/localunittesting/javadoc/com/google/appengine/api/users/dev/LocalOAuthRequestTokenServlet.html
+END
+LocalUserService.html
+K 25
+svn:wc:ra_dav:version-url
+V 136
+/svn/!svn/ver/223/trunk/docs/appengine/docs/java/tools/localunittesting/javadoc/com/google/appengine/api/users/dev/LocalUserService.html
+END

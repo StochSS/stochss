@@ -1,0 +1,29 @@
+K 25
+svn:wc:ra_dav:version-url
+V 59
+/svn/!svn/ver/339/trunk/python/google/appengine/api/channel
+END
+channel.py
+K 25
+svn:wc:ra_dav:version-url
+V 70
+/svn/!svn/ver/339/trunk/python/google/appengine/api/channel/channel.py
+END
+channel_service_pb.py
+K 25
+svn:wc:ra_dav:version-url
+V 81
+/svn/!svn/ver/327/trunk/python/google/appengine/api/channel/channel_service_pb.py
+END
+__init__.py
+K 25
+svn:wc:ra_dav:version-url
+V 71
+/svn/!svn/ver/327/trunk/python/google/appengine/api/channel/__init__.py
+END
+channel_service_stub.py
+K 25
+svn:wc:ra_dav:version-url
+V 83
+/svn/!svn/ver/327/trunk/python/google/appengine/api/channel/channel_service_stub.py
+END

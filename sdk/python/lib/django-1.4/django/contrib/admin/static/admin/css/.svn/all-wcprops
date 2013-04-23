@@ -1,0 +1,53 @@
+K 25
+svn:wc:ra_dav:version-url
+V 83
+/svn/!svn/ver/327/trunk/python/lib/django-1.4/django/contrib/admin/static/admin/css
+END
+login.css
+K 25
+svn:wc:ra_dav:version-url
+V 93
+/svn/!svn/ver/327/trunk/python/lib/django-1.4/django/contrib/admin/static/admin/css/login.css
+END
+base.css
+K 25
+svn:wc:ra_dav:version-url
+V 92
+/svn/!svn/ver/327/trunk/python/lib/django-1.4/django/contrib/admin/static/admin/css/base.css
+END
+ie.css
+K 25
+svn:wc:ra_dav:version-url
+V 90
+/svn/!svn/ver/327/trunk/python/lib/django-1.4/django/contrib/admin/static/admin/css/ie.css
+END
+rtl.css
+K 25
+svn:wc:ra_dav:version-url
+V 91
+/svn/!svn/ver/327/trunk/python/lib/django-1.4/django/contrib/admin/static/admin/css/rtl.css
+END
+changelists.css
+K 25
+svn:wc:ra_dav:version-url
+V 99
+/svn/!svn/ver/327/trunk/python/lib/django-1.4/django/contrib/admin/static/admin/css/changelists.css
+END
+forms.css
+K 25
+svn:wc:ra_dav:version-url
+V 93
+/svn/!svn/ver/327/trunk/python/lib/django-1.4/django/contrib/admin/static/admin/css/forms.css
+END
+widgets.css
+K 25
+svn:wc:ra_dav:version-url
+V 95
+/svn/!svn/ver/327/trunk/python/lib/django-1.4/django/contrib/admin/static/admin/css/widgets.css
+END
+dashboard.css
+K 25
+svn:wc:ra_dav:version-url
+V 97
+/svn/!svn/ver/327/trunk/python/lib/django-1.4/django/contrib/admin/static/admin/css/dashboard.css
+END

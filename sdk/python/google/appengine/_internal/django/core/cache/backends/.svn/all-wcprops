@@ -1,0 +1,47 @@
+K 25
+svn:wc:ra_dav:version-url
+V 84
+/svn/!svn/ver/327/trunk/python/google/appengine/_internal/django/core/cache/backends
+END
+base.py
+K 25
+svn:wc:ra_dav:version-url
+V 92
+/svn/!svn/ver/327/trunk/python/google/appengine/_internal/django/core/cache/backends/base.py
+END
+dummy.py
+K 25
+svn:wc:ra_dav:version-url
+V 93
+/svn/!svn/ver/327/trunk/python/google/appengine/_internal/django/core/cache/backends/dummy.py
+END
+locmem.py
+K 25
+svn:wc:ra_dav:version-url
+V 94
+/svn/!svn/ver/327/trunk/python/google/appengine/_internal/django/core/cache/backends/locmem.py
+END
+filebased.py
+K 25
+svn:wc:ra_dav:version-url
+V 97
+/svn/!svn/ver/327/trunk/python/google/appengine/_internal/django/core/cache/backends/filebased.py
+END
+__init__.py
+K 25
+svn:wc:ra_dav:version-url
+V 96
+/svn/!svn/ver/199/trunk/python/google/appengine/_internal/django/core/cache/backends/__init__.py
+END
+db.py
+K 25
+svn:wc:ra_dav:version-url
+V 90
+/svn/!svn/ver/327/trunk/python/google/appengine/_internal/django/core/cache/backends/db.py
+END
+memcached.py
+K 25
+svn:wc:ra_dav:version-url
+V 97
+/svn/!svn/ver/327/trunk/python/google/appengine/_internal/django/core/cache/backends/memcached.py
+END

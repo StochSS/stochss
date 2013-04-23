@@ -1,0 +1,59 @@
+K 25
+svn:wc:ra_dav:version-url
+V 74
+/svn/!svn/ver/340/trunk/java/src/main/com/google/appengine/api/appidentity
+END
+PublicCertificate.java
+K 25
+svn:wc:ra_dav:version-url
+V 97
+/svn/!svn/ver/229/trunk/java/src/main/com/google/appengine/api/appidentity/PublicCertificate.java
+END
+AppIdentityServiceFailureException.java
+K 25
+svn:wc:ra_dav:version-url
+V 114
+/svn/!svn/ver/173/trunk/java/src/main/com/google/appengine/api/appidentity/AppIdentityServiceFailureException.java
+END
+AppIdentityServiceFactory.java
+K 25
+svn:wc:ra_dav:version-url
+V 105
+/svn/!svn/ver/317/trunk/java/src/main/com/google/appengine/api/appidentity/AppIdentityServiceFactory.java
+END
+package-info.java
+K 25
+svn:wc:ra_dav:version-url
+V 92
+/svn/!svn/ver/248/trunk/java/src/main/com/google/appengine/api/appidentity/package-info.java
+END
+AppIdentityServiceFactoryImpl.java
+K 25
+svn:wc:ra_dav:version-url
+V 109
+/svn/!svn/ver/317/trunk/java/src/main/com/google/appengine/api/appidentity/AppIdentityServiceFactoryImpl.java
+END
+IAppIdentityServiceFactoryProvider.java
+K 25
+svn:wc:ra_dav:version-url
+V 114
+/svn/!svn/ver/317/trunk/java/src/main/com/google/appengine/api/appidentity/IAppIdentityServiceFactoryProvider.java
+END
+AppIdentityService.java
+K 25
+svn:wc:ra_dav:version-url
+V 98
+/svn/!svn/ver/270/trunk/java/src/main/com/google/appengine/api/appidentity/AppIdentityService.java
+END
+IAppIdentityServiceFactory.java
+K 25
+svn:wc:ra_dav:version-url
+V 106
+/svn/!svn/ver/317/trunk/java/src/main/com/google/appengine/api/appidentity/IAppIdentityServiceFactory.java
+END
+AppIdentityServiceImpl.java
+K 25
+svn:wc:ra_dav:version-url
+V 102
+/svn/!svn/ver/340/trunk/java/src/main/com/google/appengine/api/appidentity/AppIdentityServiceImpl.java
+END

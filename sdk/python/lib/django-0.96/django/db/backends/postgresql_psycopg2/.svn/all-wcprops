@@ -1,0 +1,29 @@
+K 25
+svn:wc:ra_dav:version-url
+V 85
+/svn/!svn/ver/327/trunk/python/lib/django-0.96/django/db/backends/postgresql_psycopg2
+END
+base.py
+K 25
+svn:wc:ra_dav:version-url
+V 93
+/svn/!svn/ver/327/trunk/python/lib/django-0.96/django/db/backends/postgresql_psycopg2/base.py
+END
+client.py
+K 25
+svn:wc:ra_dav:version-url
+V 95
+/svn/!svn/ver/327/trunk/python/lib/django-0.96/django/db/backends/postgresql_psycopg2/client.py
+END
+introspection.py
+K 25
+svn:wc:ra_dav:version-url
+V 102
+/svn/!svn/ver/327/trunk/python/lib/django-0.96/django/db/backends/postgresql_psycopg2/introspection.py
+END
+creation.py
+K 25
+svn:wc:ra_dav:version-url
+V 97
+/svn/!svn/ver/327/trunk/python/lib/django-0.96/django/db/backends/postgresql_psycopg2/creation.py
+END

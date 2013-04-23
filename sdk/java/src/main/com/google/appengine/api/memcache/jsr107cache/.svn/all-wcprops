@@ -1,0 +1,29 @@
+K 25
+svn:wc:ra_dav:version-url
+V 83
+/svn/!svn/ver/165/trunk/java/src/main/com/google/appengine/api/memcache/jsr107cache
+END
+GCacheFactory.java
+K 25
+svn:wc:ra_dav:version-url
+V 102
+/svn/!svn/ver/165/trunk/java/src/main/com/google/appengine/api/memcache/jsr107cache/GCacheFactory.java
+END
+GCacheException.java
+K 25
+svn:wc:ra_dav:version-url
+V 104
+/svn/!svn/ver/165/trunk/java/src/main/com/google/appengine/api/memcache/jsr107cache/GCacheException.java
+END
+GCache.java
+K 25
+svn:wc:ra_dav:version-url
+V 95
+/svn/!svn/ver/165/trunk/java/src/main/com/google/appengine/api/memcache/jsr107cache/GCache.java
+END
+GCacheEntry.java
+K 25
+svn:wc:ra_dav:version-url
+V 100
+/svn/!svn/ver/165/trunk/java/src/main/com/google/appengine/api/memcache/jsr107cache/GCacheEntry.java
+END

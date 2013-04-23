@@ -1,0 +1,47 @@
+K 25
+svn:wc:ra_dav:version-url
+V 69
+/svn/!svn/ver/327/trunk/python/lib/django-1.4/django/views/decorators
+END
+gzip.py
+K 25
+svn:wc:ra_dav:version-url
+V 77
+/svn/!svn/ver/327/trunk/python/lib/django-1.4/django/views/decorators/gzip.py
+END
+clickjacking.py
+K 25
+svn:wc:ra_dav:version-url
+V 85
+/svn/!svn/ver/327/trunk/python/lib/django-1.4/django/views/decorators/clickjacking.py
+END
+csrf.py
+K 25
+svn:wc:ra_dav:version-url
+V 77
+/svn/!svn/ver/327/trunk/python/lib/django-1.4/django/views/decorators/csrf.py
+END
+http.py
+K 25
+svn:wc:ra_dav:version-url
+V 77
+/svn/!svn/ver/327/trunk/python/lib/django-1.4/django/views/decorators/http.py
+END
+vary.py
+K 25
+svn:wc:ra_dav:version-url
+V 77
+/svn/!svn/ver/327/trunk/python/lib/django-1.4/django/views/decorators/vary.py
+END
+cache.py
+K 25
+svn:wc:ra_dav:version-url
+V 78
+/svn/!svn/ver/327/trunk/python/lib/django-1.4/django/views/decorators/cache.py
+END
+debug.py
+K 25
+svn:wc:ra_dav:version-url
+V 78
+/svn/!svn/ver/327/trunk/python/lib/django-1.4/django/views/decorators/debug.py
+END

@@ -1,0 +1,53 @@
+K 25
+svn:wc:ra_dav:version-url
+V 89
+/svn/!svn/ver/223/trunk/docs/appengine/docs/java/javadoc/com/google/appengine/api/channel
+END
+ChannelPresence.html
+K 25
+svn:wc:ra_dav:version-url
+V 110
+/svn/!svn/ver/223/trunk/docs/appengine/docs/java/javadoc/com/google/appengine/api/channel/ChannelPresence.html
+END
+ChannelMessage.html
+K 25
+svn:wc:ra_dav:version-url
+V 109
+/svn/!svn/ver/223/trunk/docs/appengine/docs/java/javadoc/com/google/appengine/api/channel/ChannelMessage.html
+END
+ChannelFailureException.html
+K 25
+svn:wc:ra_dav:version-url
+V 118
+/svn/!svn/ver/223/trunk/docs/appengine/docs/java/javadoc/com/google/appengine/api/channel/ChannelFailureException.html
+END
+ChannelServiceFactory.html
+K 25
+svn:wc:ra_dav:version-url
+V 116
+/svn/!svn/ver/223/trunk/docs/appengine/docs/java/javadoc/com/google/appengine/api/channel/ChannelServiceFactory.html
+END
+package-frame.html
+K 25
+svn:wc:ra_dav:version-url
+V 108
+/svn/!svn/ver/223/trunk/docs/appengine/docs/java/javadoc/com/google/appengine/api/channel/package-frame.html
+END
+package-summary.html
+K 25
+svn:wc:ra_dav:version-url
+V 110
+/svn/!svn/ver/223/trunk/docs/appengine/docs/java/javadoc/com/google/appengine/api/channel/package-summary.html
+END
+package-tree.html
+K 25
+svn:wc:ra_dav:version-url
+V 107
+/svn/!svn/ver/223/trunk/docs/appengine/docs/java/javadoc/com/google/appengine/api/channel/package-tree.html
+END
+ChannelService.html
+K 25
+svn:wc:ra_dav:version-url
+V 109
+/svn/!svn/ver/223/trunk/docs/appengine/docs/java/javadoc/com/google/appengine/api/channel/ChannelService.html
+END

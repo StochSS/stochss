@@ -1,0 +1,17 @@
+K 25
+svn:wc:ra_dav:version-url
+V 44
+/svn/!svn/ver/284/trunk/java/demos/guestbook
+END
+COPYING
+K 25
+svn:wc:ra_dav:version-url
+V 51
+/svn/!svn/ver/44/trunk/java/demos/guestbook/COPYING
+END
+build.xml
+K 25
+svn:wc:ra_dav:version-url
+V 54
+/svn/!svn/ver/229/trunk/java/demos/guestbook/build.xml
+END

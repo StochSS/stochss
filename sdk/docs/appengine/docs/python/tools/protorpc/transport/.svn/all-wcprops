@@ -1,0 +1,17 @@
+K 25
+svn:wc:ra_dav:version-url
+V 75
+/svn/!svn/ver/223/trunk/docs/appengine/docs/python/tools/protorpc/transport
+END
+transport.html
+K 25
+svn:wc:ra_dav:version-url
+V 90
+/svn/!svn/ver/223/trunk/docs/appengine/docs/python/tools/protorpc/transport/transport.html
+END
+httptransport.html
+K 25
+svn:wc:ra_dav:version-url
+V 94
+/svn/!svn/ver/223/trunk/docs/appengine/docs/python/tools/protorpc/transport/httptransport.html
+END

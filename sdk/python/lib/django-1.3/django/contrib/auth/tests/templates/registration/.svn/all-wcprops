@@ -1,0 +1,53 @@
+K 25
+svn:wc:ra_dav:version-url
+V 94
+/svn/!svn/ver/327/trunk/python/lib/django-1.3/django/contrib/auth/tests/templates/registration
+END
+password_reset_complete.html
+K 25
+svn:wc:ra_dav:version-url
+V 123
+/svn/!svn/ver/327/trunk/python/lib/django-1.3/django/contrib/auth/tests/templates/registration/password_reset_complete.html
+END
+password_reset_confirm.html
+K 25
+svn:wc:ra_dav:version-url
+V 122
+/svn/!svn/ver/327/trunk/python/lib/django-1.3/django/contrib/auth/tests/templates/registration/password_reset_confirm.html
+END
+password_reset_form.html
+K 25
+svn:wc:ra_dav:version-url
+V 119
+/svn/!svn/ver/327/trunk/python/lib/django-1.3/django/contrib/auth/tests/templates/registration/password_reset_form.html
+END
+login.html
+K 25
+svn:wc:ra_dav:version-url
+V 105
+/svn/!svn/ver/327/trunk/python/lib/django-1.3/django/contrib/auth/tests/templates/registration/login.html
+END
+logged_out.html
+K 25
+svn:wc:ra_dav:version-url
+V 110
+/svn/!svn/ver/327/trunk/python/lib/django-1.3/django/contrib/auth/tests/templates/registration/logged_out.html
+END
+password_reset_done.html
+K 25
+svn:wc:ra_dav:version-url
+V 119
+/svn/!svn/ver/327/trunk/python/lib/django-1.3/django/contrib/auth/tests/templates/registration/password_reset_done.html
+END
+password_change_form.html
+K 25
+svn:wc:ra_dav:version-url
+V 120
+/svn/!svn/ver/327/trunk/python/lib/django-1.3/django/contrib/auth/tests/templates/registration/password_change_form.html
+END
+password_reset_email.html
+K 25
+svn:wc:ra_dav:version-url
+V 120
+/svn/!svn/ver/327/trunk/python/lib/django-1.3/django/contrib/auth/tests/templates/registration/password_reset_email.html
+END

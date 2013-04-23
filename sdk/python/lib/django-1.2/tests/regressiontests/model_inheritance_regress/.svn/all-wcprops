@@ -1,0 +1,17 @@
+K 25
+svn:wc:ra_dav:version-url
+V 93
+/svn/!svn/ver/327/trunk/python/lib/django-1.2/tests/regressiontests/model_inheritance_regress
+END
+tests.py
+K 25
+svn:wc:ra_dav:version-url
+V 102
+/svn/!svn/ver/327/trunk/python/lib/django-1.2/tests/regressiontests/model_inheritance_regress/tests.py
+END
+models.py
+K 25
+svn:wc:ra_dav:version-url
+V 103
+/svn/!svn/ver/327/trunk/python/lib/django-1.2/tests/regressiontests/model_inheritance_regress/models.py
+END

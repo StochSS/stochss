@@ -1,0 +1,47 @@
+K 25
+svn:wc:ra_dav:version-url
+V 61
+/svn/!svn/ver/339/trunk/python/google/appengine/ext/analytics
+END
+standaloneapp.py
+K 25
+svn:wc:ra_dav:version-url
+V 78
+/svn/!svn/ver/327/trunk/python/google/appengine/ext/analytics/standaloneapp.py
+END
+app.yaml
+K 25
+svn:wc:ra_dav:version-url
+V 70
+/svn/!svn/ver/327/trunk/python/google/appengine/ext/analytics/app.yaml
+END
+entity.py
+K 25
+svn:wc:ra_dav:version-url
+V 71
+/svn/!svn/ver/327/trunk/python/google/appengine/ext/analytics/entity.py
+END
+process.py
+K 25
+svn:wc:ra_dav:version-url
+V 72
+/svn/!svn/ver/327/trunk/python/google/appengine/ext/analytics/process.py
+END
+stats.py
+K 25
+svn:wc:ra_dav:version-url
+V 70
+/svn/!svn/ver/327/trunk/python/google/appengine/ext/analytics/stats.py
+END
+__init__.py
+K 25
+svn:wc:ra_dav:version-url
+V 73
+/svn/!svn/ver/327/trunk/python/google/appengine/ext/analytics/__init__.py
+END
+main.py
+K 25
+svn:wc:ra_dav:version-url
+V 69
+/svn/!svn/ver/327/trunk/python/google/appengine/ext/analytics/main.py
+END

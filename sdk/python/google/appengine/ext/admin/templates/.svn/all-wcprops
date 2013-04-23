@@ -1,0 +1,125 @@
+K 25
+svn:wc:ra_dav:version-url
+V 67
+/svn/!svn/ver/327/trunk/python/google/appengine/ext/admin/templates
+END
+interactive.html
+K 25
+svn:wc:ra_dav:version-url
+V 84
+/svn/!svn/ver/327/trunk/python/google/appengine/ext/admin/templates/interactive.html
+END
+xmpp.html
+K 25
+svn:wc:ra_dav:version-url
+V 77
+/svn/!svn/ver/327/trunk/python/google/appengine/ext/admin/templates/xmpp.html
+END
+tasks.html
+K 25
+svn:wc:ra_dav:version-url
+V 78
+/svn/!svn/ver/327/trunk/python/google/appengine/ext/admin/templates/tasks.html
+END
+datastore.html
+K 25
+svn:wc:ra_dav:version-url
+V 82
+/svn/!svn/ver/327/trunk/python/google/appengine/ext/admin/templates/datastore.html
+END
+backend.html
+K 25
+svn:wc:ra_dav:version-url
+V 80
+/svn/!svn/ver/327/trunk/python/google/appengine/ext/admin/templates/backend.html
+END
+datastore_edit.html
+K 25
+svn:wc:ra_dav:version-url
+V 87
+/svn/!svn/ver/327/trunk/python/google/appengine/ext/admin/templates/datastore_edit.html
+END
+search_index.html
+K 25
+svn:wc:ra_dav:version-url
+V 85
+/svn/!svn/ver/327/trunk/python/google/appengine/ext/admin/templates/search_index.html
+END
+pager.html
+K 25
+svn:wc:ra_dav:version-url
+V 78
+/svn/!svn/ver/327/trunk/python/google/appengine/ext/admin/templates/pager.html
+END
+cron.html
+K 25
+svn:wc:ra_dav:version-url
+V 77
+/svn/!svn/ver/327/trunk/python/google/appengine/ext/admin/templates/cron.html
+END
+inboundmail.html
+K 25
+svn:wc:ra_dav:version-url
+V 84
+/svn/!svn/ver/327/trunk/python/google/appengine/ext/admin/templates/inboundmail.html
+END
+memcache.html
+K 25
+svn:wc:ra_dav:version-url
+V 81
+/svn/!svn/ver/327/trunk/python/google/appengine/ext/admin/templates/memcache.html
+END
+search_document.html
+K 25
+svn:wc:ra_dav:version-url
+V 88
+/svn/!svn/ver/327/trunk/python/google/appengine/ext/admin/templates/search_document.html
+END
+datastore_stats.html
+K 25
+svn:wc:ra_dav:version-url
+V 88
+/svn/!svn/ver/327/trunk/python/google/appengine/ext/admin/templates/datastore_stats.html
+END
+datastore_indexes.html
+K 25
+svn:wc:ra_dav:version-url
+V 90
+/svn/!svn/ver/327/trunk/python/google/appengine/ext/admin/templates/datastore_indexes.html
+END
+search.html
+K 25
+svn:wc:ra_dav:version-url
+V 79
+/svn/!svn/ver/327/trunk/python/google/appengine/ext/admin/templates/search.html
+END
+queues.html
+K 25
+svn:wc:ra_dav:version-url
+V 79
+/svn/!svn/ver/327/trunk/python/google/appengine/ext/admin/templates/queues.html
+END
+datastore_admin_frame.html
+K 25
+svn:wc:ra_dav:version-url
+V 94
+/svn/!svn/ver/327/trunk/python/google/appengine/ext/admin/templates/datastore_admin_frame.html
+END
+base.html
+K 25
+svn:wc:ra_dav:version-url
+V 77
+/svn/!svn/ver/327/trunk/python/google/appengine/ext/admin/templates/base.html
+END
+backends.html
+K 25
+svn:wc:ra_dav:version-url
+V 81
+/svn/!svn/ver/327/trunk/python/google/appengine/ext/admin/templates/backends.html
+END
+interactive-output.html
+K 25
+svn:wc:ra_dav:version-url
+V 91
+/svn/!svn/ver/327/trunk/python/google/appengine/ext/admin/templates/interactive-output.html
+END

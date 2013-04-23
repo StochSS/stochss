@@ -1,0 +1,23 @@
+K 25
+svn:wc:ra_dav:version-url
+V 76
+/svn/!svn/ver/327/trunk/python/lib/jinja2-2.6/jinja2/testsuite/res/templates
+END
+test.html
+K 25
+svn:wc:ra_dav:version-url
+V 86
+/svn/!svn/ver/327/trunk/python/lib/jinja2-2.6/jinja2/testsuite/res/templates/test.html
+END
+syntaxerror.html
+K 25
+svn:wc:ra_dav:version-url
+V 93
+/svn/!svn/ver/327/trunk/python/lib/jinja2-2.6/jinja2/testsuite/res/templates/syntaxerror.html
+END
+broken.html
+K 25
+svn:wc:ra_dav:version-url
+V 88
+/svn/!svn/ver/327/trunk/python/lib/jinja2-2.6/jinja2/testsuite/res/templates/broken.html
+END

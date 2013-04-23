@@ -1,0 +1,29 @@
+K 25
+svn:wc:ra_dav:version-url
+V 85
+/svn/!svn/ver/327/trunk/python/lib/django-1.2/django/contrib/gis/templates/gis/google
+END
+google-multi.js
+K 25
+svn:wc:ra_dav:version-url
+V 101
+/svn/!svn/ver/327/trunk/python/lib/django-1.2/django/contrib/gis/templates/gis/google/google-multi.js
+END
+google-map.js
+K 25
+svn:wc:ra_dav:version-url
+V 99
+/svn/!svn/ver/327/trunk/python/lib/django-1.2/django/contrib/gis/templates/gis/google/google-map.js
+END
+google-single.js
+K 25
+svn:wc:ra_dav:version-url
+V 102
+/svn/!svn/ver/327/trunk/python/lib/django-1.2/django/contrib/gis/templates/gis/google/google-single.js
+END
+google-map.html
+K 25
+svn:wc:ra_dav:version-url
+V 101
+/svn/!svn/ver/327/trunk/python/lib/django-1.2/django/contrib/gis/templates/gis/google/google-map.html
+END

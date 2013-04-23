@@ -1,0 +1,29 @@
+K 25
+svn:wc:ra_dav:version-url
+V 61
+/svn/!svn/ver/339/trunk/python/google/appengine/api/taskqueue
+END
+taskqueue_service_pb.py
+K 25
+svn:wc:ra_dav:version-url
+V 85
+/svn/!svn/ver/327/trunk/python/google/appengine/api/taskqueue/taskqueue_service_pb.py
+END
+__init__.py
+K 25
+svn:wc:ra_dav:version-url
+V 73
+/svn/!svn/ver/327/trunk/python/google/appengine/api/taskqueue/__init__.py
+END
+taskqueue_stub.py
+K 25
+svn:wc:ra_dav:version-url
+V 79
+/svn/!svn/ver/339/trunk/python/google/appengine/api/taskqueue/taskqueue_stub.py
+END
+taskqueue.py
+K 25
+svn:wc:ra_dav:version-url
+V 74
+/svn/!svn/ver/339/trunk/python/google/appengine/api/taskqueue/taskqueue.py
+END

@@ -1,0 +1,35 @@
+K 25
+svn:wc:ra_dav:version-url
+V 110
+/svn/!svn/ver/327/trunk/python/lib/django-1.4/tests/regressiontests/staticfiles_tests/project/documents/cached
+END
+relative.css
+K 25
+svn:wc:ra_dav:version-url
+V 123
+/svn/!svn/ver/327/trunk/python/lib/django-1.4/tests/regressiontests/staticfiles_tests/project/documents/cached/relative.css
+END
+absolute.css
+K 25
+svn:wc:ra_dav:version-url
+V 123
+/svn/!svn/ver/327/trunk/python/lib/django-1.4/tests/regressiontests/staticfiles_tests/project/documents/cached/absolute.css
+END
+url.css
+K 25
+svn:wc:ra_dav:version-url
+V 118
+/svn/!svn/ver/327/trunk/python/lib/django-1.4/tests/regressiontests/staticfiles_tests/project/documents/cached/url.css
+END
+styles.css
+K 25
+svn:wc:ra_dav:version-url
+V 121
+/svn/!svn/ver/327/trunk/python/lib/django-1.4/tests/regressiontests/staticfiles_tests/project/documents/cached/styles.css
+END
+denorm.css
+K 25
+svn:wc:ra_dav:version-url
+V 121
+/svn/!svn/ver/327/trunk/python/lib/django-1.4/tests/regressiontests/staticfiles_tests/project/documents/cached/denorm.css
+END

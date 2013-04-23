@@ -1,0 +1,65 @@
+K 25
+svn:wc:ra_dav:version-url
+V 70
+/svn/!svn/ver/317/trunk/java/src/main/com/google/appengine/api/channel
+END
+ChannelFailureException.java
+K 25
+svn:wc:ra_dav:version-url
+V 99
+/svn/!svn/ver/165/trunk/java/src/main/com/google/appengine/api/channel/ChannelFailureException.java
+END
+ChannelServiceFactory.java
+K 25
+svn:wc:ra_dav:version-url
+V 97
+/svn/!svn/ver/317/trunk/java/src/main/com/google/appengine/api/channel/ChannelServiceFactory.java
+END
+ChannelServiceFactoryImpl.java
+K 25
+svn:wc:ra_dav:version-url
+V 101
+/svn/!svn/ver/317/trunk/java/src/main/com/google/appengine/api/channel/ChannelServiceFactoryImpl.java
+END
+IChannelServiceFactoryProvider.java
+K 25
+svn:wc:ra_dav:version-url
+V 106
+/svn/!svn/ver/317/trunk/java/src/main/com/google/appengine/api/channel/IChannelServiceFactoryProvider.java
+END
+ChannelService.java
+K 25
+svn:wc:ra_dav:version-url
+V 90
+/svn/!svn/ver/229/trunk/java/src/main/com/google/appengine/api/channel/ChannelService.java
+END
+ChannelPresenceParser.java
+K 25
+svn:wc:ra_dav:version-url
+V 97
+/svn/!svn/ver/173/trunk/java/src/main/com/google/appengine/api/channel/ChannelPresenceParser.java
+END
+IChannelServiceFactory.java
+K 25
+svn:wc:ra_dav:version-url
+V 98
+/svn/!svn/ver/317/trunk/java/src/main/com/google/appengine/api/channel/IChannelServiceFactory.java
+END
+ChannelServiceImpl.java
+K 25
+svn:wc:ra_dav:version-url
+V 94
+/svn/!svn/ver/317/trunk/java/src/main/com/google/appengine/api/channel/ChannelServiceImpl.java
+END
+ChannelPresence.java
+K 25
+svn:wc:ra_dav:version-url
+V 91
+/svn/!svn/ver/173/trunk/java/src/main/com/google/appengine/api/channel/ChannelPresence.java
+END
+ChannelMessage.java
+K 25
+svn:wc:ra_dav:version-url
+V 90
+/svn/!svn/ver/165/trunk/java/src/main/com/google/appengine/api/channel/ChannelMessage.java
+END

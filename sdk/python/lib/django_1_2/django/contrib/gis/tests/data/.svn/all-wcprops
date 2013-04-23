@@ -1,0 +1,11 @@
+K 25
+svn:wc:ra_dav:version-url
+V 75
+/svn/!svn/ver/318/trunk/python/lib/django_1_2/django/contrib/gis/tests/data
+END
+geometries.json.gz
+K 25
+svn:wc:ra_dav:version-url
+V 94
+/svn/!svn/ver/155/trunk/python/lib/django_1_2/django/contrib/gis/tests/data/geometries.json.gz
+END

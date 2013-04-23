@@ -1,0 +1,83 @@
+K 25
+svn:wc:ra_dav:version-url
+V 79
+/svn/!svn/ver/327/trunk/python/lib/django-1.3/tests/regressiontests/forms/tests
+END
+validators.py
+K 25
+svn:wc:ra_dav:version-url
+V 93
+/svn/!svn/ver/327/trunk/python/lib/django-1.3/tests/regressiontests/forms/tests/validators.py
+END
+input_formats.py
+K 25
+svn:wc:ra_dav:version-url
+V 96
+/svn/!svn/ver/327/trunk/python/lib/django-1.3/tests/regressiontests/forms/tests/input_formats.py
+END
+util.py
+K 25
+svn:wc:ra_dav:version-url
+V 87
+/svn/!svn/ver/327/trunk/python/lib/django-1.3/tests/regressiontests/forms/tests/util.py
+END
+__init__.py
+K 25
+svn:wc:ra_dav:version-url
+V 91
+/svn/!svn/ver/327/trunk/python/lib/django-1.3/tests/regressiontests/forms/tests/__init__.py
+END
+media.py
+K 25
+svn:wc:ra_dav:version-url
+V 88
+/svn/!svn/ver/327/trunk/python/lib/django-1.3/tests/regressiontests/forms/tests/media.py
+END
+error_messages.py
+K 25
+svn:wc:ra_dav:version-url
+V 97
+/svn/!svn/ver/327/trunk/python/lib/django-1.3/tests/regressiontests/forms/tests/error_messages.py
+END
+formsets.py
+K 25
+svn:wc:ra_dav:version-url
+V 91
+/svn/!svn/ver/327/trunk/python/lib/django-1.3/tests/regressiontests/forms/tests/formsets.py
+END
+regressions.py
+K 25
+svn:wc:ra_dav:version-url
+V 94
+/svn/!svn/ver/327/trunk/python/lib/django-1.3/tests/regressiontests/forms/tests/regressions.py
+END
+extra.py
+K 25
+svn:wc:ra_dav:version-url
+V 88
+/svn/!svn/ver/327/trunk/python/lib/django-1.3/tests/regressiontests/forms/tests/extra.py
+END
+models.py
+K 25
+svn:wc:ra_dav:version-url
+V 89
+/svn/!svn/ver/327/trunk/python/lib/django-1.3/tests/regressiontests/forms/tests/models.py
+END
+fields.py
+K 25
+svn:wc:ra_dav:version-url
+V 89
+/svn/!svn/ver/327/trunk/python/lib/django-1.3/tests/regressiontests/forms/tests/fields.py
+END
+widgets.py
+K 25
+svn:wc:ra_dav:version-url
+V 90
+/svn/!svn/ver/327/trunk/python/lib/django-1.3/tests/regressiontests/forms/tests/widgets.py
+END
+forms.py
+K 25
+svn:wc:ra_dav:version-url
+V 88
+/svn/!svn/ver/327/trunk/python/lib/django-1.3/tests/regressiontests/forms/tests/forms.py
+END

@@ -1,0 +1,23 @@
+K 25
+svn:wc:ra_dav:version-url
+V 92
+/svn/!svn/ver/327/trunk/python/lib/django-1.3/django/contrib/staticfiles/management/commands
+END
+findstatic.py
+K 25
+svn:wc:ra_dav:version-url
+V 106
+/svn/!svn/ver/327/trunk/python/lib/django-1.3/django/contrib/staticfiles/management/commands/findstatic.py
+END
+runserver.py
+K 25
+svn:wc:ra_dav:version-url
+V 105
+/svn/!svn/ver/327/trunk/python/lib/django-1.3/django/contrib/staticfiles/management/commands/runserver.py
+END
+collectstatic.py
+K 25
+svn:wc:ra_dav:version-url
+V 109
+/svn/!svn/ver/327/trunk/python/lib/django-1.3/django/contrib/staticfiles/management/commands/collectstatic.py
+END

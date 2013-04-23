@@ -1,0 +1,23 @@
+K 25
+svn:wc:ra_dav:version-url
+V 90
+/svn/!svn/ver/290/trunk/java/src/main/com/google/appengine/tools/development/agent/runtime
+END
+Runtime.java
+K 25
+svn:wc:ra_dav:version-url
+V 103
+/svn/!svn/ver/270/trunk/java/src/main/com/google/appengine/tools/development/agent/runtime/Runtime.java
+END
+RuntimeHelper.java
+K 25
+svn:wc:ra_dav:version-url
+V 109
+/svn/!svn/ver/290/trunk/java/src/main/com/google/appengine/tools/development/agent/runtime/RuntimeHelper.java
+END
+package-info.java
+K 25
+svn:wc:ra_dav:version-url
+V 108
+/svn/!svn/ver/173/trunk/java/src/main/com/google/appengine/tools/development/agent/runtime/package-info.java
+END

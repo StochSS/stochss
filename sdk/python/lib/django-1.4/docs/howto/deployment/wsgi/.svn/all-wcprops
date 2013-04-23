@@ -1,0 +1,29 @@
+K 25
+svn:wc:ra_dav:version-url
+V 72
+/svn/!svn/ver/327/trunk/python/lib/django-1.4/docs/howto/deployment/wsgi
+END
+gunicorn.txt
+K 25
+svn:wc:ra_dav:version-url
+V 85
+/svn/!svn/ver/327/trunk/python/lib/django-1.4/docs/howto/deployment/wsgi/gunicorn.txt
+END
+index.txt
+K 25
+svn:wc:ra_dav:version-url
+V 82
+/svn/!svn/ver/327/trunk/python/lib/django-1.4/docs/howto/deployment/wsgi/index.txt
+END
+modwsgi.txt
+K 25
+svn:wc:ra_dav:version-url
+V 84
+/svn/!svn/ver/327/trunk/python/lib/django-1.4/docs/howto/deployment/wsgi/modwsgi.txt
+END
+uwsgi.txt
+K 25
+svn:wc:ra_dav:version-url
+V 82
+/svn/!svn/ver/327/trunk/python/lib/django-1.4/docs/howto/deployment/wsgi/uwsgi.txt
+END

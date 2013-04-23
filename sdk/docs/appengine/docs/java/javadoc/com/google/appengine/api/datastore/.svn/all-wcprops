@@ -1,0 +1,437 @@
+K 25
+svn:wc:ra_dav:version-url
+V 91
+/svn/!svn/ver/223/trunk/docs/appengine/docs/java/javadoc/com/google/appengine/api/datastore
+END
+Entity.html
+K 25
+svn:wc:ra_dav:version-url
+V 103
+/svn/!svn/ver/223/trunk/docs/appengine/docs/java/javadoc/com/google/appengine/api/datastore/Entity.html
+END
+DatastoreFailureException.html
+K 25
+svn:wc:ra_dav:version-url
+V 122
+/svn/!svn/ver/223/trunk/docs/appengine/docs/java/javadoc/com/google/appengine/api/datastore/DatastoreFailureException.html
+END
+Category.html
+K 25
+svn:wc:ra_dav:version-url
+V 105
+/svn/!svn/ver/223/trunk/docs/appengine/docs/java/javadoc/com/google/appengine/api/datastore/Category.html
+END
+Cursor.html
+K 25
+svn:wc:ra_dav:version-url
+V 103
+/svn/!svn/ver/223/trunk/docs/appengine/docs/java/javadoc/com/google/appengine/api/datastore/Cursor.html
+END
+Index.IndexState.html
+K 25
+svn:wc:ra_dav:version-url
+V 113
+/svn/!svn/ver/223/trunk/docs/appengine/docs/java/javadoc/com/google/appengine/api/datastore/Index.IndexState.html
+END
+Blob.html
+K 25
+svn:wc:ra_dav:version-url
+V 101
+/svn/!svn/ver/223/trunk/docs/appengine/docs/java/javadoc/com/google/appengine/api/datastore/Blob.html
+END
+QueryResultIterator.html
+K 25
+svn:wc:ra_dav:version-url
+V 116
+/svn/!svn/ver/223/trunk/docs/appengine/docs/java/javadoc/com/google/appengine/api/datastore/QueryResultIterator.html
+END
+DatastoreApiHelper.html
+K 25
+svn:wc:ra_dav:version-url
+V 115
+/svn/!svn/ver/223/trunk/docs/appengine/docs/java/javadoc/com/google/appengine/api/datastore/DatastoreApiHelper.html
+END
+KeyFactory.html
+K 25
+svn:wc:ra_dav:version-url
+V 107
+/svn/!svn/ver/223/trunk/docs/appengine/docs/java/javadoc/com/google/appengine/api/datastore/KeyFactory.html
+END
+IMHandle.html
+K 25
+svn:wc:ra_dav:version-url
+V 105
+/svn/!svn/ver/223/trunk/docs/appengine/docs/java/javadoc/com/google/appengine/api/datastore/IMHandle.html
+END
+PhoneNumber.html
+K 25
+svn:wc:ra_dav:version-url
+V 108
+/svn/!svn/ver/223/trunk/docs/appengine/docs/java/javadoc/com/google/appengine/api/datastore/PhoneNumber.html
+END
+Text.html
+K 25
+svn:wc:ra_dav:version-url
+V 101
+/svn/!svn/ver/223/trunk/docs/appengine/docs/java/javadoc/com/google/appengine/api/datastore/Text.html
+END
+DataTypeTranslator.html
+K 25
+svn:wc:ra_dav:version-url
+V 115
+/svn/!svn/ver/223/trunk/docs/appengine/docs/java/javadoc/com/google/appengine/api/datastore/DataTypeTranslator.html
+END
+Index.Property.html
+K 25
+svn:wc:ra_dav:version-url
+V 111
+/svn/!svn/ver/223/trunk/docs/appengine/docs/java/javadoc/com/google/appengine/api/datastore/Index.Property.html
+END
+CommittedButStillApplyingException.html
+K 25
+svn:wc:ra_dav:version-url
+V 131
+/svn/!svn/ver/223/trunk/docs/appengine/docs/java/javadoc/com/google/appengine/api/datastore/CommittedButStillApplyingException.html
+END
+Query.SortDirection.html
+K 25
+svn:wc:ra_dav:version-url
+V 116
+/svn/!svn/ver/223/trunk/docs/appengine/docs/java/javadoc/com/google/appengine/api/datastore/Query.SortDirection.html
+END
+DataTypeUtils.html
+K 25
+svn:wc:ra_dav:version-url
+V 110
+/svn/!svn/ver/223/trunk/docs/appengine/docs/java/javadoc/com/google/appengine/api/datastore/DataTypeUtils.html
+END
+DatastoreAttributes.html
+K 25
+svn:wc:ra_dav:version-url
+V 116
+/svn/!svn/ver/223/trunk/docs/appengine/docs/java/javadoc/com/google/appengine/api/datastore/DatastoreAttributes.html
+END
+ShortBlob.html
+K 25
+svn:wc:ra_dav:version-url
+V 106
+/svn/!svn/ver/223/trunk/docs/appengine/docs/java/javadoc/com/google/appengine/api/datastore/ShortBlob.html
+END
+TransactionOptions.html
+K 25
+svn:wc:ra_dav:version-url
+V 115
+/svn/!svn/ver/223/trunk/docs/appengine/docs/java/javadoc/com/google/appengine/api/datastore/TransactionOptions.html
+END
+BaseDatastoreService.html
+K 25
+svn:wc:ra_dav:version-url
+V 117
+/svn/!svn/ver/223/trunk/docs/appengine/docs/java/javadoc/com/google/appengine/api/datastore/BaseDatastoreService.html
+END
+KeyRange.html
+K 25
+svn:wc:ra_dav:version-url
+V 105
+/svn/!svn/ver/223/trunk/docs/appengine/docs/java/javadoc/com/google/appengine/api/datastore/KeyRange.html
+END
+KeyFactory.Builder.html
+K 25
+svn:wc:ra_dav:version-url
+V 115
+/svn/!svn/ver/223/trunk/docs/appengine/docs/java/javadoc/com/google/appengine/api/datastore/KeyFactory.Builder.html
+END
+EntityProtoComparators.html
+K 25
+svn:wc:ra_dav:version-url
+V 119
+/svn/!svn/ver/223/trunk/docs/appengine/docs/java/javadoc/com/google/appengine/api/datastore/EntityProtoComparators.html
+END
+DatastoreConfig.html
+K 25
+svn:wc:ra_dav:version-url
+V 112
+/svn/!svn/ver/223/trunk/docs/appengine/docs/java/javadoc/com/google/appengine/api/datastore/DatastoreConfig.html
+END
+DatastoreTimeoutException.html
+K 25
+svn:wc:ra_dav:version-url
+V 122
+/svn/!svn/ver/223/trunk/docs/appengine/docs/java/javadoc/com/google/appengine/api/datastore/DatastoreTimeoutException.html
+END
+package-frame.html
+K 25
+svn:wc:ra_dav:version-url
+V 110
+/svn/!svn/ver/223/trunk/docs/appengine/docs/java/javadoc/com/google/appengine/api/datastore/package-frame.html
+END
+EntityTranslator.html
+K 25
+svn:wc:ra_dav:version-url
+V 113
+/svn/!svn/ver/223/trunk/docs/appengine/docs/java/javadoc/com/google/appengine/api/datastore/EntityTranslator.html
+END
+TransactionOptions.Builder.html
+K 25
+svn:wc:ra_dav:version-url
+V 123
+/svn/!svn/ver/223/trunk/docs/appengine/docs/java/javadoc/com/google/appengine/api/datastore/TransactionOptions.Builder.html
+END
+Email.html
+K 25
+svn:wc:ra_dav:version-url
+V 102
+/svn/!svn/ver/223/trunk/docs/appengine/docs/java/javadoc/com/google/appengine/api/datastore/Email.html
+END
+Key.html
+K 25
+svn:wc:ra_dav:version-url
+V 100
+/svn/!svn/ver/223/trunk/docs/appengine/docs/java/javadoc/com/google/appengine/api/datastore/Key.html
+END
+ReadPolicy.html
+K 25
+svn:wc:ra_dav:version-url
+V 107
+/svn/!svn/ver/223/trunk/docs/appengine/docs/java/javadoc/com/google/appengine/api/datastore/ReadPolicy.html
+END
+ImplicitTransactionManagementPolicy.html
+K 25
+svn:wc:ra_dav:version-url
+V 132
+/svn/!svn/ver/223/trunk/docs/appengine/docs/java/javadoc/com/google/appengine/api/datastore/ImplicitTransactionManagementPolicy.html
+END
+DatastoreServiceConfig.html
+K 25
+svn:wc:ra_dav:version-url
+V 119
+/svn/!svn/ver/223/trunk/docs/appengine/docs/java/javadoc/com/google/appengine/api/datastore/DatastoreServiceConfig.html
+END
+CallbackContext.html
+K 25
+svn:wc:ra_dav:version-url
+V 112
+/svn/!svn/ver/223/trunk/docs/appengine/docs/java/javadoc/com/google/appengine/api/datastore/CallbackContext.html
+END
+Query.html
+K 25
+svn:wc:ra_dav:version-url
+V 102
+/svn/!svn/ver/223/trunk/docs/appengine/docs/java/javadoc/com/google/appengine/api/datastore/Query.html
+END
+Query.FilterOperator.html
+K 25
+svn:wc:ra_dav:version-url
+V 117
+/svn/!svn/ver/223/trunk/docs/appengine/docs/java/javadoc/com/google/appengine/api/datastore/Query.FilterOperator.html
+END
+FetchOptions.html
+K 25
+svn:wc:ra_dav:version-url
+V 109
+/svn/!svn/ver/223/trunk/docs/appengine/docs/java/javadoc/com/google/appengine/api/datastore/FetchOptions.html
+END
+AsyncDatastoreService.html
+K 25
+svn:wc:ra_dav:version-url
+V 118
+/svn/!svn/ver/223/trunk/docs/appengine/docs/java/javadoc/com/google/appengine/api/datastore/AsyncDatastoreService.html
+END
+EntityNotFoundException.html
+K 25
+svn:wc:ra_dav:version-url
+V 120
+/svn/!svn/ver/223/trunk/docs/appengine/docs/java/javadoc/com/google/appengine/api/datastore/EntityNotFoundException.html
+END
+Query.FilterPredicate.html
+K 25
+svn:wc:ra_dav:version-url
+V 118
+/svn/!svn/ver/223/trunk/docs/appengine/docs/java/javadoc/com/google/appengine/api/datastore/Query.FilterPredicate.html
+END
+QueryResultIterable.html
+K 25
+svn:wc:ra_dav:version-url
+V 116
+/svn/!svn/ver/223/trunk/docs/appengine/docs/java/javadoc/com/google/appengine/api/datastore/QueryResultIterable.html
+END
+DataTypeTranslator.ComparableByteArray.html
+K 25
+svn:wc:ra_dav:version-url
+V 135
+/svn/!svn/ver/223/trunk/docs/appengine/docs/java/javadoc/com/google/appengine/api/datastore/DataTypeTranslator.ComparableByteArray.html
+END
+DatastoreService.KeyRangeState.html
+K 25
+svn:wc:ra_dav:version-url
+V 127
+/svn/!svn/ver/223/trunk/docs/appengine/docs/java/javadoc/com/google/appengine/api/datastore/DatastoreService.KeyRangeState.html
+END
+Query.SortPredicate.html
+K 25
+svn:wc:ra_dav:version-url
+V 116
+/svn/!svn/ver/223/trunk/docs/appengine/docs/java/javadoc/com/google/appengine/api/datastore/Query.SortPredicate.html
+END
+PutContext.html
+K 25
+svn:wc:ra_dav:version-url
+V 107
+/svn/!svn/ver/223/trunk/docs/appengine/docs/java/javadoc/com/google/appengine/api/datastore/PutContext.html
+END
+PostPut.html
+K 25
+svn:wc:ra_dav:version-url
+V 104
+/svn/!svn/ver/223/trunk/docs/appengine/docs/java/javadoc/com/google/appengine/api/datastore/PostPut.html
+END
+DatastoreServiceConfig.Builder.html
+K 25
+svn:wc:ra_dav:version-url
+V 127
+/svn/!svn/ver/223/trunk/docs/appengine/docs/java/javadoc/com/google/appengine/api/datastore/DatastoreServiceConfig.Builder.html
+END
+Rating.html
+K 25
+svn:wc:ra_dav:version-url
+V 103
+/svn/!svn/ver/223/trunk/docs/appengine/docs/java/javadoc/com/google/appengine/api/datastore/Rating.html
+END
+Transaction.html
+K 25
+svn:wc:ra_dav:version-url
+V 108
+/svn/!svn/ver/223/trunk/docs/appengine/docs/java/javadoc/com/google/appengine/api/datastore/Transaction.html
+END
+package-tree.html
+K 25
+svn:wc:ra_dav:version-url
+V 109
+/svn/!svn/ver/223/trunk/docs/appengine/docs/java/javadoc/com/google/appengine/api/datastore/package-tree.html
+END
+PreparedQuery.html
+K 25
+svn:wc:ra_dav:version-url
+V 110
+/svn/!svn/ver/223/trunk/docs/appengine/docs/java/javadoc/com/google/appengine/api/datastore/PreparedQuery.html
+END
+DatastoreNeedIndexException.html
+K 25
+svn:wc:ra_dav:version-url
+V 124
+/svn/!svn/ver/223/trunk/docs/appengine/docs/java/javadoc/com/google/appengine/api/datastore/DatastoreNeedIndexException.html
+END
+FetchOptions.Builder.html
+K 25
+svn:wc:ra_dav:version-url
+V 117
+/svn/!svn/ver/223/trunk/docs/appengine/docs/java/javadoc/com/google/appengine/api/datastore/FetchOptions.Builder.html
+END
+ReadPolicy.Consistency.html
+K 25
+svn:wc:ra_dav:version-url
+V 119
+/svn/!svn/ver/223/trunk/docs/appengine/docs/java/javadoc/com/google/appengine/api/datastore/ReadPolicy.Consistency.html
+END
+Link.html
+K 25
+svn:wc:ra_dav:version-url
+V 101
+/svn/!svn/ver/223/trunk/docs/appengine/docs/java/javadoc/com/google/appengine/api/datastore/Link.html
+END
+DatastoreServiceFactory.html
+K 25
+svn:wc:ra_dav:version-url
+V 120
+/svn/!svn/ver/223/trunk/docs/appengine/docs/java/javadoc/com/google/appengine/api/datastore/DatastoreServiceFactory.html
+END
+Index.html
+K 25
+svn:wc:ra_dav:version-url
+V 102
+/svn/!svn/ver/223/trunk/docs/appengine/docs/java/javadoc/com/google/appengine/api/datastore/Index.html
+END
+DatastoreService.html
+K 25
+svn:wc:ra_dav:version-url
+V 113
+/svn/!svn/ver/223/trunk/docs/appengine/docs/java/javadoc/com/google/appengine/api/datastore/DatastoreService.html
+END
+PostalAddress.html
+K 25
+svn:wc:ra_dav:version-url
+V 110
+/svn/!svn/ver/223/trunk/docs/appengine/docs/java/javadoc/com/google/appengine/api/datastore/PostalAddress.html
+END
+PreparedQuery.TooManyResultsException.html
+K 25
+svn:wc:ra_dav:version-url
+V 134
+/svn/!svn/ver/223/trunk/docs/appengine/docs/java/javadoc/com/google/appengine/api/datastore/PreparedQuery.TooManyResultsException.html
+END
+GeoPt.html
+K 25
+svn:wc:ra_dav:version-url
+V 102
+/svn/!svn/ver/223/trunk/docs/appengine/docs/java/javadoc/com/google/appengine/api/datastore/GeoPt.html
+END
+PrePut.html
+K 25
+svn:wc:ra_dav:version-url
+V 103
+/svn/!svn/ver/223/trunk/docs/appengine/docs/java/javadoc/com/google/appengine/api/datastore/PrePut.html
+END
+IMHandle.Scheme.html
+K 25
+svn:wc:ra_dav:version-url
+V 112
+/svn/!svn/ver/223/trunk/docs/appengine/docs/java/javadoc/com/google/appengine/api/datastore/IMHandle.Scheme.html
+END
+DatastoreAttributes.DatastoreType.html
+K 25
+svn:wc:ra_dav:version-url
+V 130
+/svn/!svn/ver/223/trunk/docs/appengine/docs/java/javadoc/com/google/appengine/api/datastore/DatastoreAttributes.DatastoreType.html
+END
+CompositeIndexManager.html
+K 25
+svn:wc:ra_dav:version-url
+V 118
+/svn/!svn/ver/223/trunk/docs/appengine/docs/java/javadoc/com/google/appengine/api/datastore/CompositeIndexManager.html
+END
+package-summary.html
+K 25
+svn:wc:ra_dav:version-url
+V 112
+/svn/!svn/ver/223/trunk/docs/appengine/docs/java/javadoc/com/google/appengine/api/datastore/package-summary.html
+END
+QueryResultList.html
+K 25
+svn:wc:ra_dav:version-url
+V 112
+/svn/!svn/ver/223/trunk/docs/appengine/docs/java/javadoc/com/google/appengine/api/datastore/QueryResultList.html
+END
+EntityProtoComparators.EntityProtoComparator.html
+K 25
+svn:wc:ra_dav:version-url
+V 141
+/svn/!svn/ver/223/trunk/docs/appengine/docs/java/javadoc/com/google/appengine/api/datastore/EntityProtoComparators.EntityProtoComparator.html
+END
+DeleteContext.html
+K 25
+svn:wc:ra_dav:version-url
+V 110
+/svn/!svn/ver/223/trunk/docs/appengine/docs/java/javadoc/com/google/appengine/api/datastore/DeleteContext.html
+END
+PostDelete.html
+K 25
+svn:wc:ra_dav:version-url
+V 107
+/svn/!svn/ver/223/trunk/docs/appengine/docs/java/javadoc/com/google/appengine/api/datastore/PostDelete.html
+END
+PreDelete.html
+K 25
+svn:wc:ra_dav:version-url
+V 106
+/svn/!svn/ver/223/trunk/docs/appengine/docs/java/javadoc/com/google/appengine/api/datastore/PreDelete.html
+END

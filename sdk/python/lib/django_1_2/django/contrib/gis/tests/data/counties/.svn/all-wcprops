@@ -1,0 +1,23 @@
+K 25
+svn:wc:ra_dav:version-url
+V 84
+/svn/!svn/ver/155/trunk/python/lib/django_1_2/django/contrib/gis/tests/data/counties
+END
+counties.shp
+K 25
+svn:wc:ra_dav:version-url
+V 97
+/svn/!svn/ver/155/trunk/python/lib/django_1_2/django/contrib/gis/tests/data/counties/counties.shp
+END
+counties.dbf
+K 25
+svn:wc:ra_dav:version-url
+V 97
+/svn/!svn/ver/155/trunk/python/lib/django_1_2/django/contrib/gis/tests/data/counties/counties.dbf
+END
+counties.shx
+K 25
+svn:wc:ra_dav:version-url
+V 97
+/svn/!svn/ver/155/trunk/python/lib/django_1_2/django/contrib/gis/tests/data/counties/counties.shx
+END

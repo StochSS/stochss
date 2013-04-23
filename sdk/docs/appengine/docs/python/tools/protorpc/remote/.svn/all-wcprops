@@ -1,0 +1,47 @@
+K 25
+svn:wc:ra_dav:version-url
+V 72
+/svn/!svn/ver/223/trunk/docs/appengine/docs/python/tools/protorpc/remote
+END
+rpcstatusclass.html
+K 25
+svn:wc:ra_dav:version-url
+V 92
+/svn/!svn/ver/223/trunk/docs/appengine/docs/python/tools/protorpc/remote/rpcstatusclass.html
+END
+httprequeststateclass.html
+K 25
+svn:wc:ra_dav:version-url
+V 99
+/svn/!svn/ver/223/trunk/docs/appengine/docs/python/tools/protorpc/remote/httprequeststateclass.html
+END
+requeststateclass.html
+K 25
+svn:wc:ra_dav:version-url
+V 95
+/svn/!svn/ver/223/trunk/docs/appengine/docs/python/tools/protorpc/remote/requeststateclass.html
+END
+exceptions.html
+K 25
+svn:wc:ra_dav:version-url
+V 88
+/svn/!svn/ver/223/trunk/docs/appengine/docs/python/tools/protorpc/remote/exceptions.html
+END
+serviceclass.html
+K 25
+svn:wc:ra_dav:version-url
+V 90
+/svn/!svn/ver/223/trunk/docs/appengine/docs/python/tools/protorpc/remote/serviceclass.html
+END
+index.html
+K 25
+svn:wc:ra_dav:version-url
+V 83
+/svn/!svn/ver/223/trunk/docs/appengine/docs/python/tools/protorpc/remote/index.html
+END
+functions.html
+K 25
+svn:wc:ra_dav:version-url
+V 87
+/svn/!svn/ver/223/trunk/docs/appengine/docs/python/tools/protorpc/remote/functions.html
+END

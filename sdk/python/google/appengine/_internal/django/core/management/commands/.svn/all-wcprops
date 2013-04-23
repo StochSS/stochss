@@ -1,0 +1,185 @@
+K 25
+svn:wc:ra_dav:version-url
+V 89
+/svn/!svn/ver/327/trunk/python/google/appengine/_internal/django/core/management/commands
+END
+sqlall.py
+K 25
+svn:wc:ra_dav:version-url
+V 99
+/svn/!svn/ver/327/trunk/python/google/appengine/_internal/django/core/management/commands/sqlall.py
+END
+validate.py
+K 25
+svn:wc:ra_dav:version-url
+V 101
+/svn/!svn/ver/327/trunk/python/google/appengine/_internal/django/core/management/commands/validate.py
+END
+diffsettings.py
+K 25
+svn:wc:ra_dav:version-url
+V 105
+/svn/!svn/ver/327/trunk/python/google/appengine/_internal/django/core/management/commands/diffsettings.py
+END
+sqlcustom.py
+K 25
+svn:wc:ra_dav:version-url
+V 102
+/svn/!svn/ver/327/trunk/python/google/appengine/_internal/django/core/management/commands/sqlcustom.py
+END
+runserver.py
+K 25
+svn:wc:ra_dav:version-url
+V 102
+/svn/!svn/ver/327/trunk/python/google/appengine/_internal/django/core/management/commands/runserver.py
+END
+sqlsequencereset.py
+K 25
+svn:wc:ra_dav:version-url
+V 109
+/svn/!svn/ver/327/trunk/python/google/appengine/_internal/django/core/management/commands/sqlsequencereset.py
+END
+runfcgi.py
+K 25
+svn:wc:ra_dav:version-url
+V 100
+/svn/!svn/ver/327/trunk/python/google/appengine/_internal/django/core/management/commands/runfcgi.py
+END
+startapp.py
+K 25
+svn:wc:ra_dav:version-url
+V 101
+/svn/!svn/ver/327/trunk/python/google/appengine/_internal/django/core/management/commands/startapp.py
+END
+sql.py
+K 25
+svn:wc:ra_dav:version-url
+V 96
+/svn/!svn/ver/327/trunk/python/google/appengine/_internal/django/core/management/commands/sql.py
+END
+__init__.py
+K 25
+svn:wc:ra_dav:version-url
+V 101
+/svn/!svn/ver/199/trunk/python/google/appengine/_internal/django/core/management/commands/__init__.py
+END
+createcachetable.py
+K 25
+svn:wc:ra_dav:version-url
+V 109
+/svn/!svn/ver/327/trunk/python/google/appengine/_internal/django/core/management/commands/createcachetable.py
+END
+dumpdata.py
+K 25
+svn:wc:ra_dav:version-url
+V 101
+/svn/!svn/ver/327/trunk/python/google/appengine/_internal/django/core/management/commands/dumpdata.py
+END
+sqlflush.py
+K 25
+svn:wc:ra_dav:version-url
+V 101
+/svn/!svn/ver/327/trunk/python/google/appengine/_internal/django/core/management/commands/sqlflush.py
+END
+sqlreset.py
+K 25
+svn:wc:ra_dav:version-url
+V 101
+/svn/!svn/ver/327/trunk/python/google/appengine/_internal/django/core/management/commands/sqlreset.py
+END
+sqlinitialdata.py
+K 25
+svn:wc:ra_dav:version-url
+V 107
+/svn/!svn/ver/327/trunk/python/google/appengine/_internal/django/core/management/commands/sqlinitialdata.py
+END
+makemessages.py
+K 25
+svn:wc:ra_dav:version-url
+V 105
+/svn/!svn/ver/327/trunk/python/google/appengine/_internal/django/core/management/commands/makemessages.py
+END
+testserver.py
+K 25
+svn:wc:ra_dav:version-url
+V 103
+/svn/!svn/ver/327/trunk/python/google/appengine/_internal/django/core/management/commands/testserver.py
+END
+sqlclear.py
+K 25
+svn:wc:ra_dav:version-url
+V 101
+/svn/!svn/ver/327/trunk/python/google/appengine/_internal/django/core/management/commands/sqlclear.py
+END
+shell.py
+K 25
+svn:wc:ra_dav:version-url
+V 98
+/svn/!svn/ver/327/trunk/python/google/appengine/_internal/django/core/management/commands/shell.py
+END
+loaddata.py
+K 25
+svn:wc:ra_dav:version-url
+V 101
+/svn/!svn/ver/327/trunk/python/google/appengine/_internal/django/core/management/commands/loaddata.py
+END
+inspectdb.py
+K 25
+svn:wc:ra_dav:version-url
+V 102
+/svn/!svn/ver/327/trunk/python/google/appengine/_internal/django/core/management/commands/inspectdb.py
+END
+dbshell.py
+K 25
+svn:wc:ra_dav:version-url
+V 100
+/svn/!svn/ver/327/trunk/python/google/appengine/_internal/django/core/management/commands/dbshell.py
+END
+test.py
+K 25
+svn:wc:ra_dav:version-url
+V 97
+/svn/!svn/ver/327/trunk/python/google/appengine/_internal/django/core/management/commands/test.py
+END
+sqlindexes.py
+K 25
+svn:wc:ra_dav:version-url
+V 103
+/svn/!svn/ver/327/trunk/python/google/appengine/_internal/django/core/management/commands/sqlindexes.py
+END
+compilemessages.py
+K 25
+svn:wc:ra_dav:version-url
+V 108
+/svn/!svn/ver/327/trunk/python/google/appengine/_internal/django/core/management/commands/compilemessages.py
+END
+flush.py
+K 25
+svn:wc:ra_dav:version-url
+V 98
+/svn/!svn/ver/327/trunk/python/google/appengine/_internal/django/core/management/commands/flush.py
+END
+reset.py
+K 25
+svn:wc:ra_dav:version-url
+V 98
+/svn/!svn/ver/327/trunk/python/google/appengine/_internal/django/core/management/commands/reset.py
+END
+syncdb.py
+K 25
+svn:wc:ra_dav:version-url
+V 99
+/svn/!svn/ver/327/trunk/python/google/appengine/_internal/django/core/management/commands/syncdb.py
+END
+startproject.py
+K 25
+svn:wc:ra_dav:version-url
+V 105
+/svn/!svn/ver/327/trunk/python/google/appengine/_internal/django/core/management/commands/startproject.py
+END
+cleanup.py
+K 25
+svn:wc:ra_dav:version-url
+V 100
+/svn/!svn/ver/327/trunk/python/google/appengine/_internal/django/core/management/commands/cleanup.py
+END

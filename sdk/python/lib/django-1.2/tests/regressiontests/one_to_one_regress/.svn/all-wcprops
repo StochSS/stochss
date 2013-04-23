@@ -1,0 +1,17 @@
+K 25
+svn:wc:ra_dav:version-url
+V 86
+/svn/!svn/ver/327/trunk/python/lib/django-1.2/tests/regressiontests/one_to_one_regress
+END
+tests.py
+K 25
+svn:wc:ra_dav:version-url
+V 95
+/svn/!svn/ver/327/trunk/python/lib/django-1.2/tests/regressiontests/one_to_one_regress/tests.py
+END
+models.py
+K 25
+svn:wc:ra_dav:version-url
+V 96
+/svn/!svn/ver/327/trunk/python/lib/django-1.2/tests/regressiontests/one_to_one_regress/models.py
+END

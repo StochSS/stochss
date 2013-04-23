@@ -1,0 +1,53 @@
+K 25
+svn:wc:ra_dav:version-url
+V 61
+/svn/!svn/ver/339/trunk/python/google/appengine/ext/endpoints
+END
+api_exceptions.py
+K 25
+svn:wc:ra_dav:version-url
+V 79
+/svn/!svn/ver/339/trunk/python/google/appengine/ext/endpoints/api_exceptions.py
+END
+users_id_token.py
+K 25
+svn:wc:ra_dav:version-url
+V 79
+/svn/!svn/ver/339/trunk/python/google/appengine/ext/endpoints/users_id_token.py
+END
+api_config.py
+K 25
+svn:wc:ra_dav:version-url
+V 75
+/svn/!svn/ver/339/trunk/python/google/appengine/ext/endpoints/api_config.py
+END
+__init__.py
+K 25
+svn:wc:ra_dav:version-url
+V 73
+/svn/!svn/ver/327/trunk/python/google/appengine/ext/endpoints/__init__.py
+END
+api_backend_service.py
+K 25
+svn:wc:ra_dav:version-url
+V 84
+/svn/!svn/ver/339/trunk/python/google/appengine/ext/endpoints/api_backend_service.py
+END
+message_parser.py
+K 25
+svn:wc:ra_dav:version-url
+V 79
+/svn/!svn/ver/327/trunk/python/google/appengine/ext/endpoints/message_parser.py
+END
+api_backend.py
+K 25
+svn:wc:ra_dav:version-url
+V 76
+/svn/!svn/ver/327/trunk/python/google/appengine/ext/endpoints/api_backend.py
+END
+apiserving.py
+K 25
+svn:wc:ra_dav:version-url
+V 75
+/svn/!svn/ver/339/trunk/python/google/appengine/ext/endpoints/apiserving.py
+END

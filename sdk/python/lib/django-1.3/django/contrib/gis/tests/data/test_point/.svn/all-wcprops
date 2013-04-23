@@ -1,0 +1,11 @@
+K 25
+svn:wc:ra_dav:version-url
+V 86
+/svn/!svn/ver/327/trunk/python/lib/django-1.3/django/contrib/gis/tests/data/test_point
+END
+test_point.prj
+K 25
+svn:wc:ra_dav:version-url
+V 101
+/svn/!svn/ver/327/trunk/python/lib/django-1.3/django/contrib/gis/tests/data/test_point/test_point.prj
+END

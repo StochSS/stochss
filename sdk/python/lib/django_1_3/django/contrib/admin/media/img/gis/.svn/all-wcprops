@@ -1,0 +1,17 @@
+K 25
+svn:wc:ra_dav:version-url
+V 80
+/svn/!svn/ver/233/trunk/python/lib/django_1_3/django/contrib/admin/media/img/gis
+END
+move_vertex_off.png
+K 25
+svn:wc:ra_dav:version-url
+V 100
+/svn/!svn/ver/233/trunk/python/lib/django_1_3/django/contrib/admin/media/img/gis/move_vertex_off.png
+END
+move_vertex_on.png
+K 25
+svn:wc:ra_dav:version-url
+V 99
+/svn/!svn/ver/233/trunk/python/lib/django_1_3/django/contrib/admin/media/img/gis/move_vertex_on.png
+END

@@ -1,0 +1,17 @@
+K 25
+svn:wc:ra_dav:version-url
+V 97
+/svn/!svn/ver/327/trunk/python/lib/django-1.3/tests/regressiontests/test_client_regress/templates
+END
+request_context.html
+K 25
+svn:wc:ra_dav:version-url
+V 118
+/svn/!svn/ver/327/trunk/python/lib/django-1.3/tests/regressiontests/test_client_regress/templates/request_context.html
+END
+unicode.html
+K 25
+svn:wc:ra_dav:version-url
+V 110
+/svn/!svn/ver/327/trunk/python/lib/django-1.3/tests/regressiontests/test_client_regress/templates/unicode.html
+END

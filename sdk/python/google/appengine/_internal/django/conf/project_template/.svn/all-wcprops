@@ -1,0 +1,29 @@
+K 25
+svn:wc:ra_dav:version-url
+V 86
+/svn/!svn/ver/327/trunk/python/google/appengine/_internal/django/conf/project_template
+END
+manage.py
+K 25
+svn:wc:ra_dav:version-url
+V 96
+/svn/!svn/ver/327/trunk/python/google/appengine/_internal/django/conf/project_template/manage.py
+END
+__init__.py
+K 25
+svn:wc:ra_dav:version-url
+V 98
+/svn/!svn/ver/199/trunk/python/google/appengine/_internal/django/conf/project_template/__init__.py
+END
+settings.py
+K 25
+svn:wc:ra_dav:version-url
+V 98
+/svn/!svn/ver/327/trunk/python/google/appengine/_internal/django/conf/project_template/settings.py
+END
+urls.py
+K 25
+svn:wc:ra_dav:version-url
+V 94
+/svn/!svn/ver/327/trunk/python/google/appengine/_internal/django/conf/project_template/urls.py
+END

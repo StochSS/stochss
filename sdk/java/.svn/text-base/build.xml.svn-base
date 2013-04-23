@@ -1,0 +1,210 @@
+<project name="appengine_java_sdk" default="dist">
+
+  <property name="root.dir" location="."/>
+
+  <property name="src.dir" location="${root.dir}/src"/>
+  <property name="generated.dir" location="${src.dir}/generated"/>
+
+  <property name="build.dir" location="${root.dir}/build"/>
+  <property name="dist.dir" location="${build.dir}/dist"/>
+
+  <property name="api.version" value="1.0"/>
+  <property name="version" value="SNAPSHOT"/>
+
+  <path id="main.path">
+    <pathelement path="${build.dir}/classes/main"/>
+    <fileset dir="${build.dir}/appengine-java-sdk/lib/user">
+      <include name="**.jar"/>
+    </fileset>
+    <fileset dir="${build.dir}/appengine-java-sdk/lib/opt">
+      <include name="**.jar"/>
+    </fileset>
+    <fileset dir="${generated.dir}">
+      <include name="jsr107cache-1.1.jar"/>
+    </fileset>
+  </path>
+
+  <path id="test.path">
+    <path refid="main.path"/>
+    <pathelement path="${build.dir}/classes/test"/>
+    <fileset dir="${generated.dir}">
+      <include name="junit.jar"/>
+      <include name="easymock.jar"/>
+    </fileset>
+  </path>
+
+  <target name="init">
+  </target>
+
+  <target name="unpack-generated" depends="init">
+    <unzip src="${generated.dir}/appengine-java-sdk.zip" dest="${build.dir}"/>
+    <unzip src="${generated.dir}/appengine-orm.zip" dest="${build.dir}/appengine-java-sdk"/>
+    <unzip src="${generated.dir}/datanucleus-appengine-dist.zip" dest="${build.dir}/appengine-java-sdk"/>
+  </target>
+
+  <target name="compile" depends="unpack-generated">
+    <mkdir dir="${build.dir}/classes/main"/>
+
+    <!-- Copy the subset of source we want to compile because javac tries -->
+    <!-- to recompile classes in the srcdir since it thinks they are      -->
+    <!-- out-of-date with respect to the compiled code. -->
+    <mkdir dir="${build.dir}/jsr107cache"/>
+    <copy todir="${build.dir}/jsr107cache">
+      <fileset dir="${src.dir}/main">
+        <include name="com/google/appengine/api/memcache/jsr107cache/*.java"/>
+      </fileset>
+    </copy>
+    <javac srcdir="${build.dir}/jsr107cache" destdir="${build.dir}/classes/main">
+      <classpath>
+        <path refid="main.path"/>
+      </classpath>
+    </javac>
+  </target>
+
+  <target name="test" depends="compile">
+    <!-- Commented out until we have at least one unit test that runs here.
+    <mkdir dir="${build.dir}/classes/test"/>
+
+    <javac srcdir="${src.dir}/test" destdir="${build.dir}/classes/test">
+      <classpath>
+        <path refid="test.path"/>
+      </classpath>
+    </javac>
+
+    <junit haltonfailure="yes">
+      <formatter type="brief" usefile="false"/>
+      <classpath>
+        <path refid="test.path"/>
+      </classpath>
+
+      <batchtest fork="yes">
+        <fileset dir="${build.dir}/classes/test">
+          <include name="**/*Test.class"/>
+        </fileset>
+      </batchtest>
+    </junit>
+    -->
+  </target>
+
+  <target name="create-jars" depends="compile">
+    <jar destfile="${build.dir}/appengine-java-sdk/lib/user/appengine-jsr107cache.jar">
+      <fileset dir="${build.dir}/classes/main">
+        <include name="com/google/appengine/api/memcache/jsr107cache/**"/>
+      </fileset>
+      <manifest>
+        <section name="com/google/appengine/api/memcache/jsr107cache/">
+          <attribute name="Specification-Vendor" value="Google"/>
+          <attribute name="Specification-Version" value="${api.version}"/>
+          <attribute name="Implementation-Vendor-Id" value="com.google"/>
+          <attribute name="Implementation-Vendor" value="Google"/>
+          <attribute name="Implementation-Version" value="${timestamp}"/>
+        </section>
+      </manifest>
+      <service type="net.sf.jsr107cache.CacheFactory"
+	       provider="com.google.appengine.api.memcache.jsr107cache.GCacheFactory"/>
+    </jar>
+
+    <!-- copy the jsr107 jar from its legacy location to its new location -->
+    <copy file="${build.dir}/appengine-java-sdk/lib/user/appengine-jsr107cache.jar"
+	  tofile="${build.dir}/appengine-java-sdk/lib/opt/user/jsr107/v1/appengine-jsr107cache.jar"/>
+  </target>
+
+  <target name="build-sdk" depends="create-jars">
+    <ant antfile="${root.dir}/demos/guestbook/build.xml"
+         dir="${root.dir}/demos/guestbook">
+      <property name="appengine.sdk" location="${build.dir}/appengine-java-sdk"/>
+    </ant>
+    <copy todir="${build.dir}/appengine-java-sdk/demos">
+      <fileset dir="${root.dir}/demos"/>
+    </copy>
+    <!-- Ant 1.7 strips file permissions when extracting zips, so add the execute bit back in. -->
+    <chmod dir="${build.dir}/appengine-java-sdk/bin" perm="ugo+rx" includes="**/*.sh"/>
+  </target>
+
+  <target name="build-demos" depends="build-sdk">
+    <ant antfile="${root.dir}/demos/guestbook/build.xml"
+	 dir="${root.dir}/demos/guestbook">
+      <property name="appengine.sdk" location="${build.dir}/appengine-java-sdk"/>
+    </ant>
+    <ant antfile="${root.dir}/demos/helloxmpp/build.xml"
+	 dir="${root.dir}/demos/helloxmpp">
+      <property name="appengine.sdk" location="${build.dir}/appengine-java-sdk"/>
+    </ant>
+    <ant antfile="${root.dir}/demos/jdoexamples/build.xml"
+	 dir="${root.dir}/demos/jdoexamples">
+      <property name="appengine.sdk" location="${build.dir}/appengine-java-sdk"/>
+    </ant>
+    <ant antfile="${root.dir}/demos/mandelbrot/build.xml"
+	 dir="${root.dir}/demos/mandelbrot">
+      <property name="appengine.sdk" location="${build.dir}/appengine-java-sdk"/>
+    </ant>
+    <ant antfile="${root.dir}/demos/new_project_template/build.xml"
+	 dir="${root.dir}/demos/new_project_template">
+      <property name="appengine.sdk" location="${build.dir}/appengine-java-sdk"/>
+    </ant>
+    <ant antfile="${root.dir}/demos/helloservers/build.xml"
+	 dir="${root.dir}/demos/helloservers">
+      <property name="appengine.sdk" location="${build.dir}/appengine-java-sdk"/>
+    </ant>
+    <ant antfile="${root.dir}/demos/shardedcounter/build.xml"
+	 dir="${root.dir}/demos/shardedcounter">
+      <property name="appengine.sdk" location="${build.dir}/appengine-java-sdk"/>
+    </ant>
+    <ant antfile="${root.dir}/demos/taskqueueexamples/build.xml"
+	 dir="${root.dir}/demos/taskqueueexamples">
+      <property name="appengine.sdk" location="${build.dir}/appengine-java-sdk"/>
+    </ant>
+
+<!-- These demos require a GWT installation:
+    <ant antfile="${root.dir}/demos/sticky/build.xml"
+	 dir="${root.dir}/demos/sticky">
+      <property name="appengine.sdk" location="${build.dir}/appengine-java-sdk"/>
+    </ant>
+    <ant antfile="${root.dir}/demos/taskengine/build.xml"
+	 dir="${root.dir}/demos/taskengine">
+      <property name="appengine.sdk" location="${build.dir}/appengine-java-sdk"/>
+    </ant>
+-->
+  </target>
+
+  <target name="dist" depends="build-sdk">
+    <mkdir dir="${dist.dir}"/>
+    <copy todir="${dist.dir}/appengine-java-sdk-${version}">
+      <fileset dir="${build.dir}/appengine-java-sdk"/>
+    </copy>
+    <move file="${dist.dir}/appengine-java-sdk-${version}/lib/user/appengine-api.jar"
+          tofile="${dist.dir}/appengine-java-sdk-${version}/lib/user/appengine-api-${api.version}-sdk-${version}.jar"/>
+    <move file="${dist.dir}/appengine-java-sdk-${version}/lib/user/appengine-api-labs.jar"
+          tofile="${dist.dir}/appengine-java-sdk-${version}/lib/user/appengine-api-labs-${version}.jar"/>
+    <move file="${dist.dir}/appengine-java-sdk-${version}/lib/user/appengine-jsr107cache.jar"
+          tofile="${dist.dir}/appengine-java-sdk-${version}/lib/user/appengine-jsr107cache-${version}.jar"/>
+    <move file="${dist.dir}/appengine-java-sdk-${version}/lib/opt/user/jsr107/v1/appengine-jsr107cache.jar"
+          tofile="${dist.dir}/appengine-java-sdk-${version}/lib/opt/user/jsr107/v1/appengine-jsr107cache-${version}.jar"/>
+    <copy file="${generated.dir}/jsr107cache-1.1.jar"
+          tofile="${dist.dir}/appengine-java-sdk-${version}/lib/user/jsr107cache-1.1.jar"/>
+    <copy file="${generated.dir}/jsr107cache-1.1.jar"
+          tofile="${dist.dir}/appengine-java-sdk-${version}/lib/opt/user/jsr107/v1/jsr107cache-1.1.jar"/>
+    <copy file="${src.dir}/appengine-api-src.zip"
+          tofile="${dist.dir}/appengine-java-sdk-${version}/src/user/appengine-api-${api.version}-sdk-${version}-src.zip"/>
+
+    <!-- Ant 1.7 does not preserve file permissions when creating zips, so we first create a tar. -->
+    <tar destfile="${dist.dir}/appengine-java-sdk-${version}.tar">
+       <tarfileset dir="${dist.dir}">
+         <include name="appengine-java-sdk-${version}/**"/>
+         <exclude name="**/*.sh"/>
+       </tarfileset>
+       <tarfileset dir="${dist.dir}" filemode="755">
+         <include name="appengine-java-sdk-${version}/**/*.sh"/>
+       </tarfileset>
+    </tar>
+
+    <zip destfile="${dist.dir}/appengine-java-sdk-${version}.zip">
+       <tarfileset src="${dist.dir}/appengine-java-sdk-${version}.tar"/>
+    </zip>
+  </target>
+
+  <target name="clean"
+          description="Force a clean build">
+    <delete dir="${build.dir}"/>
+  </target>
+</project>

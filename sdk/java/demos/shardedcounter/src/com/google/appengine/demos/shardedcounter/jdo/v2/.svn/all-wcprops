@@ -1,0 +1,35 @@
+K 25
+svn:wc:ra_dav:version-url
+V 102
+/svn/!svn/ver/219/trunk/java/demos/shardedcounter/src/com/google/appengine/demos/shardedcounter/jdo/v2
+END
+Counter.java
+K 25
+svn:wc:ra_dav:version-url
+V 115
+/svn/!svn/ver/219/trunk/java/demos/shardedcounter/src/com/google/appengine/demos/shardedcounter/jdo/v2/Counter.java
+END
+CounterShard.java
+K 25
+svn:wc:ra_dav:version-url
+V 120
+/svn/!svn/ver/219/trunk/java/demos/shardedcounter/src/com/google/appengine/demos/shardedcounter/jdo/v2/CounterShard.java
+END
+CounterFactory.java
+K 25
+svn:wc:ra_dav:version-url
+V 122
+/svn/!svn/ver/207/trunk/java/demos/shardedcounter/src/com/google/appengine/demos/shardedcounter/jdo/v2/CounterFactory.java
+END
+ShardedCounter.java
+K 25
+svn:wc:ra_dav:version-url
+V 122
+/svn/!svn/ver/207/trunk/java/demos/shardedcounter/src/com/google/appengine/demos/shardedcounter/jdo/v2/ShardedCounter.java
+END
+CounterPage.java
+K 25
+svn:wc:ra_dav:version-url
+V 119
+/svn/!svn/ver/207/trunk/java/demos/shardedcounter/src/com/google/appengine/demos/shardedcounter/jdo/v2/CounterPage.java
+END

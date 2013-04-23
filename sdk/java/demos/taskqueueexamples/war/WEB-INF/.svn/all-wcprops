@@ -1,0 +1,17 @@
+K 25
+svn:wc:ra_dav:version-url
+V 64
+/svn/!svn/ver/270/trunk/java/demos/taskqueueexamples/war/WEB-INF
+END
+appengine-web.xml
+K 25
+svn:wc:ra_dav:version-url
+V 82
+/svn/!svn/ver/270/trunk/java/demos/taskqueueexamples/war/WEB-INF/appengine-web.xml
+END
+web.xml
+K 25
+svn:wc:ra_dav:version-url
+V 71
+/svn/!svn/ver/73/trunk/java/demos/taskqueueexamples/war/WEB-INF/web.xml
+END

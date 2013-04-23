@@ -1,0 +1,29 @@
+K 25
+svn:wc:ra_dav:version-url
+V 55
+/svn/!svn/ver/223/trunk/docs/appengine/articles/scaling
+END
+contention.html
+K 25
+svn:wc:ra_dav:version-url
+V 71
+/svn/!svn/ver/223/trunk/docs/appengine/articles/scaling/contention.html
+END
+minimize.html
+K 25
+svn:wc:ra_dav:version-url
+V 69
+/svn/!svn/ver/223/trunk/docs/appengine/articles/scaling/minimize.html
+END
+memcache.html
+K 25
+svn:wc:ra_dav:version-url
+V 69
+/svn/!svn/ver/223/trunk/docs/appengine/articles/scaling/memcache.html
+END
+overview.html
+K 25
+svn:wc:ra_dav:version-url
+V 69
+/svn/!svn/ver/223/trunk/docs/appengine/articles/scaling/overview.html
+END

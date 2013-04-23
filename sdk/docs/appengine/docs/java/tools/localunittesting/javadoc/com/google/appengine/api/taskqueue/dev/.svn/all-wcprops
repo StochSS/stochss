@@ -1,0 +1,65 @@
+K 25
+svn:wc:ra_dav:version-url
+V 118
+/svn/!svn/ver/223/trunk/docs/appengine/docs/java/tools/localunittesting/javadoc/com/google/appengine/api/taskqueue/dev
+END
+QueueStateInfo.TaskStateInfo.html
+K 25
+svn:wc:ra_dav:version-url
+V 152
+/svn/!svn/ver/223/trunk/docs/appengine/docs/java/tools/localunittesting/javadoc/com/google/appengine/api/taskqueue/dev/QueueStateInfo.TaskStateInfo.html
+END
+LocalTaskQueueCallback.html
+K 25
+svn:wc:ra_dav:version-url
+V 146
+/svn/!svn/ver/223/trunk/docs/appengine/docs/java/tools/localunittesting/javadoc/com/google/appengine/api/taskqueue/dev/LocalTaskQueueCallback.html
+END
+DevPullQueue.html
+K 25
+svn:wc:ra_dav:version-url
+V 136
+/svn/!svn/ver/223/trunk/docs/appengine/docs/java/tools/localunittesting/javadoc/com/google/appengine/api/taskqueue/dev/DevPullQueue.html
+END
+QueueStateInfo.html
+K 25
+svn:wc:ra_dav:version-url
+V 138
+/svn/!svn/ver/223/trunk/docs/appengine/docs/java/tools/localunittesting/javadoc/com/google/appengine/api/taskqueue/dev/QueueStateInfo.html
+END
+LocalTaskQueue.html
+K 25
+svn:wc:ra_dav:version-url
+V 138
+/svn/!svn/ver/223/trunk/docs/appengine/docs/java/tools/localunittesting/javadoc/com/google/appengine/api/taskqueue/dev/LocalTaskQueue.html
+END
+package-frame.html
+K 25
+svn:wc:ra_dav:version-url
+V 137
+/svn/!svn/ver/223/trunk/docs/appengine/docs/java/tools/localunittesting/javadoc/com/google/appengine/api/taskqueue/dev/package-frame.html
+END
+package-summary.html
+K 25
+svn:wc:ra_dav:version-url
+V 139
+/svn/!svn/ver/223/trunk/docs/appengine/docs/java/tools/localunittesting/javadoc/com/google/appengine/api/taskqueue/dev/package-summary.html
+END
+UrlFetchJob.html
+K 25
+svn:wc:ra_dav:version-url
+V 135
+/svn/!svn/ver/223/trunk/docs/appengine/docs/java/tools/localunittesting/javadoc/com/google/appengine/api/taskqueue/dev/UrlFetchJob.html
+END
+package-tree.html
+K 25
+svn:wc:ra_dav:version-url
+V 136
+/svn/!svn/ver/223/trunk/docs/appengine/docs/java/tools/localunittesting/javadoc/com/google/appengine/api/taskqueue/dev/package-tree.html
+END
+QueueStateInfo.HeaderWrapper.html
+K 25
+svn:wc:ra_dav:version-url
+V 152
+/svn/!svn/ver/223/trunk/docs/appengine/docs/java/tools/localunittesting/javadoc/com/google/appengine/api/taskqueue/dev/QueueStateInfo.HeaderWrapper.html
+END

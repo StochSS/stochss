@@ -1,0 +1,101 @@
+K 25
+svn:wc:ra_dav:version-url
+V 88
+/svn/!svn/ver/223/trunk/docs/appengine/docs/java/javadoc/com/google/appengine/api/images
+END
+ImagesServiceFailureException.html
+K 25
+svn:wc:ra_dav:version-url
+V 123
+/svn/!svn/ver/223/trunk/docs/appengine/docs/java/javadoc/com/google/appengine/api/images/ImagesServiceFailureException.html
+END
+ImagesServiceFactory.html
+K 25
+svn:wc:ra_dav:version-url
+V 114
+/svn/!svn/ver/223/trunk/docs/appengine/docs/java/javadoc/com/google/appengine/api/images/ImagesServiceFactory.html
+END
+InputSettings.html
+K 25
+svn:wc:ra_dav:version-url
+V 107
+/svn/!svn/ver/223/trunk/docs/appengine/docs/java/javadoc/com/google/appengine/api/images/InputSettings.html
+END
+OutputSettings.html
+K 25
+svn:wc:ra_dav:version-url
+V 108
+/svn/!svn/ver/223/trunk/docs/appengine/docs/java/javadoc/com/google/appengine/api/images/OutputSettings.html
+END
+Image.html
+K 25
+svn:wc:ra_dav:version-url
+V 99
+/svn/!svn/ver/223/trunk/docs/appengine/docs/java/javadoc/com/google/appengine/api/images/Image.html
+END
+package-frame.html
+K 25
+svn:wc:ra_dav:version-url
+V 107
+/svn/!svn/ver/223/trunk/docs/appengine/docs/java/javadoc/com/google/appengine/api/images/package-frame.html
+END
+ImagesService.html
+K 25
+svn:wc:ra_dav:version-url
+V 107
+/svn/!svn/ver/223/trunk/docs/appengine/docs/java/javadoc/com/google/appengine/api/images/ImagesService.html
+END
+package-summary.html
+K 25
+svn:wc:ra_dav:version-url
+V 109
+/svn/!svn/ver/223/trunk/docs/appengine/docs/java/javadoc/com/google/appengine/api/images/package-summary.html
+END
+package-tree.html
+K 25
+svn:wc:ra_dav:version-url
+V 106
+/svn/!svn/ver/223/trunk/docs/appengine/docs/java/javadoc/com/google/appengine/api/images/package-tree.html
+END
+ImagesService.OutputEncoding.html
+K 25
+svn:wc:ra_dav:version-url
+V 122
+/svn/!svn/ver/223/trunk/docs/appengine/docs/java/javadoc/com/google/appengine/api/images/ImagesService.OutputEncoding.html
+END
+CompositeTransform.html
+K 25
+svn:wc:ra_dav:version-url
+V 112
+/svn/!svn/ver/223/trunk/docs/appengine/docs/java/javadoc/com/google/appengine/api/images/CompositeTransform.html
+END
+InputSettings.OrientationCorrection.html
+K 25
+svn:wc:ra_dav:version-url
+V 129
+/svn/!svn/ver/223/trunk/docs/appengine/docs/java/javadoc/com/google/appengine/api/images/InputSettings.OrientationCorrection.html
+END
+Composite.html
+K 25
+svn:wc:ra_dav:version-url
+V 103
+/svn/!svn/ver/223/trunk/docs/appengine/docs/java/javadoc/com/google/appengine/api/images/Composite.html
+END
+Image.Format.html
+K 25
+svn:wc:ra_dav:version-url
+V 106
+/svn/!svn/ver/223/trunk/docs/appengine/docs/java/javadoc/com/google/appengine/api/images/Image.Format.html
+END
+Composite.Anchor.html
+K 25
+svn:wc:ra_dav:version-url
+V 110
+/svn/!svn/ver/223/trunk/docs/appengine/docs/java/javadoc/com/google/appengine/api/images/Composite.Anchor.html
+END
+Transform.html
+K 25
+svn:wc:ra_dav:version-url
+V 103
+/svn/!svn/ver/223/trunk/docs/appengine/docs/java/javadoc/com/google/appengine/api/images/Transform.html
+END

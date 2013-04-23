@@ -1,0 +1,17 @@
+K 25
+svn:wc:ra_dav:version-url
+V 58
+/svn/!svn/ver/229/trunk/java/demos/guestbook/src/guestbook
+END
+GuestbookServlet.java
+K 25
+svn:wc:ra_dav:version-url
+V 80
+/svn/!svn/ver/229/trunk/java/demos/guestbook/src/guestbook/GuestbookServlet.java
+END
+SignGuestbookServlet.java
+K 25
+svn:wc:ra_dav:version-url
+V 84
+/svn/!svn/ver/229/trunk/java/demos/guestbook/src/guestbook/SignGuestbookServlet.java
+END

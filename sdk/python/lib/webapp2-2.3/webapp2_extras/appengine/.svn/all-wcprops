@@ -1,0 +1,29 @@
+K 25
+svn:wc:ra_dav:version-url
+V 71
+/svn/!svn/ver/327/trunk/python/lib/webapp2-2.3/webapp2_extras/appengine
+END
+sessions_memcache.py
+K 25
+svn:wc:ra_dav:version-url
+V 92
+/svn/!svn/ver/327/trunk/python/lib/webapp2-2.3/webapp2_extras/appengine/sessions_memcache.py
+END
+sessions_ndb.py
+K 25
+svn:wc:ra_dav:version-url
+V 87
+/svn/!svn/ver/327/trunk/python/lib/webapp2-2.3/webapp2_extras/appengine/sessions_ndb.py
+END
+__init__.py
+K 25
+svn:wc:ra_dav:version-url
+V 83
+/svn/!svn/ver/327/trunk/python/lib/webapp2-2.3/webapp2_extras/appengine/__init__.py
+END
+users.py
+K 25
+svn:wc:ra_dav:version-url
+V 80
+/svn/!svn/ver/327/trunk/python/lib/webapp2-2.3/webapp2_extras/appengine/users.py
+END

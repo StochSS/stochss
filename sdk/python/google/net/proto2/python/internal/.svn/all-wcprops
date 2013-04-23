@@ -1,0 +1,65 @@
+K 25
+svn:wc:ra_dav:version-url
+V 64
+/svn/!svn/ver/339/trunk/python/google/net/proto2/python/internal
+END
+type_checkers.py
+K 25
+svn:wc:ra_dav:version-url
+V 81
+/svn/!svn/ver/339/trunk/python/google/net/proto2/python/internal/type_checkers.py
+END
+message_listener.py
+K 25
+svn:wc:ra_dav:version-url
+V 84
+/svn/!svn/ver/327/trunk/python/google/net/proto2/python/internal/message_listener.py
+END
+api_implementation.py
+K 25
+svn:wc:ra_dav:version-url
+V 86
+/svn/!svn/ver/339/trunk/python/google/net/proto2/python/internal/api_implementation.py
+END
+wire_format.py
+K 25
+svn:wc:ra_dav:version-url
+V 79
+/svn/!svn/ver/327/trunk/python/google/net/proto2/python/internal/wire_format.py
+END
+__init__.py
+K 25
+svn:wc:ra_dav:version-url
+V 76
+/svn/!svn/ver/327/trunk/python/google/net/proto2/python/internal/__init__.py
+END
+encoder.py
+K 25
+svn:wc:ra_dav:version-url
+V 75
+/svn/!svn/ver/327/trunk/python/google/net/proto2/python/internal/encoder.py
+END
+python_message.py
+K 25
+svn:wc:ra_dav:version-url
+V 82
+/svn/!svn/ver/339/trunk/python/google/net/proto2/python/internal/python_message.py
+END
+containers.py
+K 25
+svn:wc:ra_dav:version-url
+V 78
+/svn/!svn/ver/327/trunk/python/google/net/proto2/python/internal/containers.py
+END
+enum_type_wrapper.py
+K 25
+svn:wc:ra_dav:version-url
+V 85
+/svn/!svn/ver/327/trunk/python/google/net/proto2/python/internal/enum_type_wrapper.py
+END
+decoder.py
+K 25
+svn:wc:ra_dav:version-url
+V 75
+/svn/!svn/ver/339/trunk/python/google/net/proto2/python/internal/decoder.py
+END

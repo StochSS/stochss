@@ -1,0 +1,23 @@
+K 25
+svn:wc:ra_dav:version-url
+V 51
+/svn/!svn/ver/327/trunk/python/lib/django-1.2/tests
+END
+test_sqlite.py
+K 25
+svn:wc:ra_dav:version-url
+V 66
+/svn/!svn/ver/327/trunk/python/lib/django-1.2/tests/test_sqlite.py
+END
+urls.py
+K 25
+svn:wc:ra_dav:version-url
+V 59
+/svn/!svn/ver/327/trunk/python/lib/django-1.2/tests/urls.py
+END
+runtests.py
+K 25
+svn:wc:ra_dav:version-url
+V 63
+/svn/!svn/ver/327/trunk/python/lib/django-1.2/tests/runtests.py
+END

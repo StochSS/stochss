@@ -1,0 +1,155 @@
+K 25
+svn:wc:ra_dav:version-url
+V 67
+/svn/!svn/ver/326/trunk/java/src/main/com/google/appengine/api/xmpp
+END
+ErrorBuilder.java
+K 25
+svn:wc:ra_dav:version-url
+V 85
+/svn/!svn/ver/229/trunk/java/src/main/com/google/appengine/api/xmpp/ErrorBuilder.java
+END
+InboundPresenceParser.java
+K 25
+svn:wc:ra_dav:version-url
+V 94
+/svn/!svn/ver/207/trunk/java/src/main/com/google/appengine/api/xmpp/InboundPresenceParser.java
+END
+Presence.java
+K 25
+svn:wc:ra_dav:version-url
+V 81
+/svn/!svn/ver/326/trunk/java/src/main/com/google/appengine/api/xmpp/Presence.java
+END
+PresenceShow.java
+K 25
+svn:wc:ra_dav:version-url
+V 85
+/svn/!svn/ver/229/trunk/java/src/main/com/google/appengine/api/xmpp/PresenceShow.java
+END
+XMPPService.java
+K 25
+svn:wc:ra_dav:version-url
+V 84
+/svn/!svn/ver/326/trunk/java/src/main/com/google/appengine/api/xmpp/XMPPService.java
+END
+PresenceType.java
+K 25
+svn:wc:ra_dav:version-url
+V 85
+/svn/!svn/ver/229/trunk/java/src/main/com/google/appengine/api/xmpp/PresenceType.java
+END
+IXMPPServiceFactory.java
+K 25
+svn:wc:ra_dav:version-url
+V 92
+/svn/!svn/ver/317/trunk/java/src/main/com/google/appengine/api/xmpp/IXMPPServiceFactory.java
+END
+JID.java
+K 25
+svn:wc:ra_dav:version-url
+V 76
+/svn/!svn/ver/165/trunk/java/src/main/com/google/appengine/api/xmpp/JID.java
+END
+SendResponse.java
+K 25
+svn:wc:ra_dav:version-url
+V 85
+/svn/!svn/ver/165/trunk/java/src/main/com/google/appengine/api/xmpp/SendResponse.java
+END
+PresenceBuilder.java
+K 25
+svn:wc:ra_dav:version-url
+V 88
+/svn/!svn/ver/326/trunk/java/src/main/com/google/appengine/api/xmpp/PresenceBuilder.java
+END
+XMPPFailureException.java
+K 25
+svn:wc:ra_dav:version-url
+V 93
+/svn/!svn/ver/165/trunk/java/src/main/com/google/appengine/api/xmpp/XMPPFailureException.java
+END
+XMPPServiceFactoryImpl.java
+K 25
+svn:wc:ra_dav:version-url
+V 95
+/svn/!svn/ver/317/trunk/java/src/main/com/google/appengine/api/xmpp/XMPPServiceFactoryImpl.java
+END
+InboundMessageParser.java
+K 25
+svn:wc:ra_dav:version-url
+V 93
+/svn/!svn/ver/207/trunk/java/src/main/com/google/appengine/api/xmpp/InboundMessageParser.java
+END
+InboundSubscriptionParser.java
+K 25
+svn:wc:ra_dav:version-url
+V 98
+/svn/!svn/ver/207/trunk/java/src/main/com/google/appengine/api/xmpp/InboundSubscriptionParser.java
+END
+IXMPPServiceFactoryProvider.java
+K 25
+svn:wc:ra_dav:version-url
+V 100
+/svn/!svn/ver/317/trunk/java/src/main/com/google/appengine/api/xmpp/IXMPPServiceFactoryProvider.java
+END
+Subscription.java
+K 25
+svn:wc:ra_dav:version-url
+V 85
+/svn/!svn/ver/165/trunk/java/src/main/com/google/appengine/api/xmpp/Subscription.java
+END
+Message.java
+K 25
+svn:wc:ra_dav:version-url
+V 80
+/svn/!svn/ver/317/trunk/java/src/main/com/google/appengine/api/xmpp/Message.java
+END
+InboundErrorParser.java
+K 25
+svn:wc:ra_dav:version-url
+V 91
+/svn/!svn/ver/229/trunk/java/src/main/com/google/appengine/api/xmpp/InboundErrorParser.java
+END
+SubscriptionType.java
+K 25
+svn:wc:ra_dav:version-url
+V 89
+/svn/!svn/ver/229/trunk/java/src/main/com/google/appengine/api/xmpp/SubscriptionType.java
+END
+MessageType.java
+K 25
+svn:wc:ra_dav:version-url
+V 84
+/svn/!svn/ver/229/trunk/java/src/main/com/google/appengine/api/xmpp/MessageType.java
+END
+XMPPServiceImpl.java
+K 25
+svn:wc:ra_dav:version-url
+V 88
+/svn/!svn/ver/326/trunk/java/src/main/com/google/appengine/api/xmpp/XMPPServiceImpl.java
+END
+Error.java
+K 25
+svn:wc:ra_dav:version-url
+V 78
+/svn/!svn/ver/229/trunk/java/src/main/com/google/appengine/api/xmpp/Error.java
+END
+SubscriptionBuilder.java
+K 25
+svn:wc:ra_dav:version-url
+V 92
+/svn/!svn/ver/165/trunk/java/src/main/com/google/appengine/api/xmpp/SubscriptionBuilder.java
+END
+MessageBuilder.java
+K 25
+svn:wc:ra_dav:version-url
+V 87
+/svn/!svn/ver/165/trunk/java/src/main/com/google/appengine/api/xmpp/MessageBuilder.java
+END
+XMPPServiceFactory.java
+K 25
+svn:wc:ra_dav:version-url
+V 91
+/svn/!svn/ver/317/trunk/java/src/main/com/google/appengine/api/xmpp/XMPPServiceFactory.java
+END

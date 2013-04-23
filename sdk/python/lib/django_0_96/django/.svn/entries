@@ -1,0 +1,79 @@
+10
+
+dir
+340
+http://googleappengine.googlecode.com/svn/trunk/python/lib/django_0_96/django
+http://googleappengine.googlecode.com/svn
+
+
+
+2013-02-22T00:57:15.225903Z
+318
+richmond@google.com
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+80f5ef21-4148-0410-bacc-cfb02402ada8
+
+test
+dir
+
+http
+dir
+
+conf
+dir
+
+oldforms
+dir
+
+db
+dir
+
+forms
+dir
+
+core
+dir
+
+templatetags
+dir
+
+views
+dir
+
+shortcuts
+dir
+
+dispatch
+dir
+
+newforms
+dir
+
+contrib
+dir
+
+utils
+dir
+
+bin
+dir
+
+template
+dir
+
+middleware
+dir
+

@@ -1,0 +1,71 @@
+K 25
+svn:wc:ra_dav:version-url
+V 69
+/svn/!svn/ver/317/trunk/java/src/main/com/google/appengine/api/socket
+END
+AppEngineSocketUtils.java
+K 25
+svn:wc:ra_dav:version-url
+V 95
+/svn/!svn/ver/317/trunk/java/src/main/com/google/appengine/api/socket/AppEngineSocketUtils.java
+END
+AppEngineSocketImpl.java
+K 25
+svn:wc:ra_dav:version-url
+V 94
+/svn/!svn/ver/317/trunk/java/src/main/com/google/appengine/api/socket/AppEngineSocketImpl.java
+END
+SocketApiHelper.java
+K 25
+svn:wc:ra_dav:version-url
+V 90
+/svn/!svn/ver/290/trunk/java/src/main/com/google/appengine/api/socket/SocketApiHelper.java
+END
+AppEngineDatagramSocketImpl.java
+K 25
+svn:wc:ra_dav:version-url
+V 102
+/svn/!svn/ver/317/trunk/java/src/main/com/google/appengine/api/socket/AppEngineDatagramSocketImpl.java
+END
+NameServiceImpl.java
+K 25
+svn:wc:ra_dav:version-url
+V 90
+/svn/!svn/ver/301/trunk/java/src/main/com/google/appengine/api/socket/NameServiceImpl.java
+END
+package-info.java
+K 25
+svn:wc:ra_dav:version-url
+V 87
+/svn/!svn/ver/248/trunk/java/src/main/com/google/appengine/api/socket/package-info.java
+END
+AppEngineSocketImplFactory.java
+K 25
+svn:wc:ra_dav:version-url
+V 101
+/svn/!svn/ver/290/trunk/java/src/main/com/google/appengine/api/socket/AppEngineSocketImplFactory.java
+END
+AppEngineSocketOptionsClient.java
+K 25
+svn:wc:ra_dav:version-url
+V 103
+/svn/!svn/ver/290/trunk/java/src/main/com/google/appengine/api/socket/AppEngineSocketOptionsClient.java
+END
+AppEngineSocketOptions.java
+K 25
+svn:wc:ra_dav:version-url
+V 97
+/svn/!svn/ver/290/trunk/java/src/main/com/google/appengine/api/socket/AppEngineSocketOptions.java
+END
+AppEngineSocketInputStream.java
+K 25
+svn:wc:ra_dav:version-url
+V 101
+/svn/!svn/ver/248/trunk/java/src/main/com/google/appengine/api/socket/AppEngineSocketInputStream.java
+END
+AppEngineSocketOutputStream.java
+K 25
+svn:wc:ra_dav:version-url
+V 102
+/svn/!svn/ver/248/trunk/java/src/main/com/google/appengine/api/socket/AppEngineSocketOutputStream.java
+END

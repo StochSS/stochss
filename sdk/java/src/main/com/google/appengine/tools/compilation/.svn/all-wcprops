@@ -1,0 +1,17 @@
+K 25
+svn:wc:ra_dav:version-url
+V 76
+/svn/!svn/ver/317/trunk/java/src/main/com/google/appengine/tools/compilation
+END
+DatastoreCallbacksProcessor.java
+K 25
+svn:wc:ra_dav:version-url
+V 109
+/svn/!svn/ver/317/trunk/java/src/main/com/google/appengine/tools/compilation/DatastoreCallbacksProcessor.java
+END
+DatastoreCallbacksConfigWriter.java
+K 25
+svn:wc:ra_dav:version-url
+V 112
+/svn/!svn/ver/301/trunk/java/src/main/com/google/appengine/tools/compilation/DatastoreCallbacksConfigWriter.java
+END

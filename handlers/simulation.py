@@ -50,6 +50,7 @@ class SimulatePage(BaseHandler):
             all_models=[]
             for q in all_models_q.run():
                 all_models.append(q)
+        
            
         template = jinja_environment.get_template('simulate.html')
         self.response.out.write(template.render({'active_view': True,'all_models': all_models}))
@@ -87,6 +88,7 @@ class NewStochkitEnsemblePage(BaseHandler):
         prefix_outdir = os.path.join(os.path.dirname(__file__), '../.stochkit_output')
         
         # If the base output directory does not exsit, we create it
+        
         process = os.popen('mkdir ' + prefix_outdir);
         process.close()
 

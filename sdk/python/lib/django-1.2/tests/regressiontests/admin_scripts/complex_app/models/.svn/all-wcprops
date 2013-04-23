@@ -1,0 +1,23 @@
+K 25
+svn:wc:ra_dav:version-url
+V 100
+/svn/!svn/ver/327/trunk/python/lib/django-1.2/tests/regressiontests/admin_scripts/complex_app/models
+END
+__init__.py
+K 25
+svn:wc:ra_dav:version-url
+V 112
+/svn/!svn/ver/327/trunk/python/lib/django-1.2/tests/regressiontests/admin_scripts/complex_app/models/__init__.py
+END
+foo.py
+K 25
+svn:wc:ra_dav:version-url
+V 107
+/svn/!svn/ver/327/trunk/python/lib/django-1.2/tests/regressiontests/admin_scripts/complex_app/models/foo.py
+END
+bar.py
+K 25
+svn:wc:ra_dav:version-url
+V 107
+/svn/!svn/ver/327/trunk/python/lib/django-1.2/tests/regressiontests/admin_scripts/complex_app/models/bar.py
+END

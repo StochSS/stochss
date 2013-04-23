@@ -1,0 +1,65 @@
+K 25
+svn:wc:ra_dav:version-url
+V 88
+/svn/!svn/ver/327/trunk/python/lib/django-1.3/tests/regressiontests/admin_views/fixtures
+END
+multiple-child-classes.json
+K 25
+svn:wc:ra_dav:version-url
+V 116
+/svn/!svn/ver/327/trunk/python/lib/django-1.3/tests/regressiontests/admin_views/fixtures/multiple-child-classes.json
+END
+admin-views-actions.xml
+K 25
+svn:wc:ra_dav:version-url
+V 112
+/svn/!svn/ver/327/trunk/python/lib/django-1.3/tests/regressiontests/admin_views/fixtures/admin-views-actions.xml
+END
+admin-views-users.xml
+K 25
+svn:wc:ra_dav:version-url
+V 110
+/svn/!svn/ver/327/trunk/python/lib/django-1.3/tests/regressiontests/admin_views/fixtures/admin-views-users.xml
+END
+admin-views-colors.xml
+K 25
+svn:wc:ra_dav:version-url
+V 111
+/svn/!svn/ver/327/trunk/python/lib/django-1.3/tests/regressiontests/admin_views/fixtures/admin-views-colors.xml
+END
+admin-views-person.xml
+K 25
+svn:wc:ra_dav:version-url
+V 111
+/svn/!svn/ver/327/trunk/python/lib/django-1.3/tests/regressiontests/admin_views/fixtures/admin-views-person.xml
+END
+admin-views-unicode.xml
+K 25
+svn:wc:ra_dav:version-url
+V 112
+/svn/!svn/ver/327/trunk/python/lib/django-1.3/tests/regressiontests/admin_views/fixtures/admin-views-unicode.xml
+END
+admin-views-fabrics.xml
+K 25
+svn:wc:ra_dav:version-url
+V 112
+/svn/!svn/ver/327/trunk/python/lib/django-1.3/tests/regressiontests/admin_views/fixtures/admin-views-fabrics.xml
+END
+deleted-objects.xml
+K 25
+svn:wc:ra_dav:version-url
+V 108
+/svn/!svn/ver/327/trunk/python/lib/django-1.3/tests/regressiontests/admin_views/fixtures/deleted-objects.xml
+END
+string-primary-key.xml
+K 25
+svn:wc:ra_dav:version-url
+V 111
+/svn/!svn/ver/327/trunk/python/lib/django-1.3/tests/regressiontests/admin_views/fixtures/string-primary-key.xml
+END
+admin-views-books.xml
+K 25
+svn:wc:ra_dav:version-url
+V 110
+/svn/!svn/ver/327/trunk/python/lib/django-1.3/tests/regressiontests/admin_views/fixtures/admin-views-books.xml
+END

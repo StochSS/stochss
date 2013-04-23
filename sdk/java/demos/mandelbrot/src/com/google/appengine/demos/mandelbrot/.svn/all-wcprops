@@ -1,0 +1,59 @@
+K 25
+svn:wc:ra_dav:version-url
+V 87
+/svn/!svn/ver/165/trunk/java/demos/mandelbrot/src/com/google/appengine/demos/mandelbrot
+END
+FractalTileServlet.java
+K 25
+svn:wc:ra_dav:version-url
+V 111
+/svn/!svn/ver/165/trunk/java/demos/mandelbrot/src/com/google/appengine/demos/mandelbrot/FractalTileServlet.java
+END
+ImageWriter.java
+K 25
+svn:wc:ra_dav:version-url
+V 104
+/svn/!svn/ver/165/trunk/java/demos/mandelbrot/src/com/google/appengine/demos/mandelbrot/ImageWriter.java
+END
+PngWriter.java
+K 25
+svn:wc:ra_dav:version-url
+V 102
+/svn/!svn/ver/165/trunk/java/demos/mandelbrot/src/com/google/appengine/demos/mandelbrot/PngWriter.java
+END
+PixelSource.java
+K 25
+svn:wc:ra_dav:version-url
+V 104
+/svn/!svn/ver/165/trunk/java/demos/mandelbrot/src/com/google/appengine/demos/mandelbrot/PixelSource.java
+END
+TileFactory.java
+K 25
+svn:wc:ra_dav:version-url
+V 104
+/svn/!svn/ver/165/trunk/java/demos/mandelbrot/src/com/google/appengine/demos/mandelbrot/TileFactory.java
+END
+MandelbrotSource.java
+K 25
+svn:wc:ra_dav:version-url
+V 109
+/svn/!svn/ver/165/trunk/java/demos/mandelbrot/src/com/google/appengine/demos/mandelbrot/MandelbrotSource.java
+END
+ColorUtil.java
+K 25
+svn:wc:ra_dav:version-url
+V 102
+/svn/!svn/ver/165/trunk/java/demos/mandelbrot/src/com/google/appengine/demos/mandelbrot/ColorUtil.java
+END
+FractalSource.java
+K 25
+svn:wc:ra_dav:version-url
+V 106
+/svn/!svn/ver/165/trunk/java/demos/mandelbrot/src/com/google/appengine/demos/mandelbrot/FractalSource.java
+END
+Palette.java
+K 25
+svn:wc:ra_dav:version-url
+V 100
+/svn/!svn/ver/165/trunk/java/demos/mandelbrot/src/com/google/appengine/demos/mandelbrot/Palette.java
+END
