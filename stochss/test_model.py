@@ -91,12 +91,12 @@ class TestModelSerialization(unittest.TestCase):
         model  = doc.toModel("dimer_decay")
         xmlstr = model.serialize()
     
-        # Most stringent test. Run StochKit with the same seed for both the
+        # Run StochKit with the same seed for both the
         # original model (diectly using the XML file) and using the file
         # serialized from the imported model instance. They should result in
         # the same output even if the format of the XML file is not identical.
-        # TODO:
         stochkit(model,job_id="test_dd_1",seed=45367)
+        stochkit("../examples/dimer_decay.xml",job_id="test_dd_2",seed=45367)
     
     def test_read_schlogl(self):
         """ Instantiate a model from schlogl.xml """

@@ -465,13 +465,20 @@ def stochkit(model, job_id="",time=1.0,number_of_trajectories=1,increment=None,s
     process.close()
     
     # Write a temporary StochKit2 input file.
+    
     outfile =  "stochkit_temp_input.xml"
     mfhandle = open(outfile,'w')
     #document = StochMLDocument.fromModel(model)
-    document = model.serialize()
-    mfhandle.write(document)
-    mfhandle.close()
-    
+
+    # If the model is a StochKitModel instance, we serialize it to XML,
+    # and if it is an XML file, we just make a copy.
+    if isinstance(model,StochKitModel):
+        document = model.serialize()
+        mfhandle.write(document)
+        mfhandle.close()
+    elif isinstance(model,str):
+        outfile = model
+
     # Assemble argument list
     ensemblename = job_id
     
