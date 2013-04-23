@@ -180,7 +180,7 @@ class StochMLDocument():
         for spec in root.iter('Species'):
             name = spec.find('Id').text
             val  = spec.find('InitialPopulation').text
-            s = Species(name,initial_value = val)
+            s = Species(name,initial_value = float(val))
             model.addSpecies([s])
         
         # The namespace_propensity for evaluating the propensity function for reactions must

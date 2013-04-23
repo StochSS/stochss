@@ -284,8 +284,8 @@ class ReactionEditorPage(BaseHandler):
             # The namespace should contain all the species and parameters.
             namespace = OrderedDict()
 
-            for param in all_species:
-                namespace[param] = all_species[param].initial_value
+            for spec in all_species:
+                namespace[spec] = all_species[spec].initial_value
 
             for param in all_parameters:
                 namespace[param] = all_parameters[param].value
@@ -316,9 +316,11 @@ class ReactionEditorPage(BaseHandler):
                 
                 new_products = self.decode_species(new_products)
             
-                for key in new_reactants.keys():
-                    if key not in all_species:
-                        return {'status': False, 'msg': 'Reactant ' + key + ' has not been defined for ' + new_name}
+                # Reactants can be empty
+                if len(new_reactants) > 0:
+                    for key in new_reactants.keys():
+                        if key not in all_species:
+                            return {'status': False, 'msg': 'Reactant ' + key + ' has not been defined for ' + new_name}
                 
                 # Products can be empty
                 if len(new_products) > 0:    
@@ -353,5 +355,5 @@ class ReactionEditorPage(BaseHandler):
         except Exception, e:
             logging.error("reaction::update_reaction: Updating of reactions failed with error %s", e)
             traceback.print_exc()
-            return {'status': False, 'msg': 'There was an error while updating the reaction.'}
+            return {'status': False, 'msg': 'There was an error while updating the reaction.'+str(e)}
 
