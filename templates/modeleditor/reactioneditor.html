@@ -73,15 +73,6 @@
 				<style type="text/css">
 				.horizontal { display: inline; color: black; }
 				</style>
-    
-                <!-- <h4><a data-toggle="collapse" data-target="#all_species_list"> Show all species names &raquo;</a> </h4>
-                <div id="all_species_list" class="collapse">
-                    <ul>
-                        {% for key, value in all_reactions.items() %}
-                            <li class = "horizontal"><a href="#">{{all_reactants[key]}}</a></li>
-                        {% endfor %}
-                    </ul>
-                </div> -->
 
 			</div>
 			<div id="msg" style="display:none"></div>
@@ -133,14 +124,21 @@
 {% endblock %}
 
 {% block customizesidebar %}
-</br>
-</br>
 {% if all_reactions %}
-<h4><a data-toggle="collapse" data-target="#all_species_list"> Show all species names &raquo;</a> </h4>
-<div id="all_species_list" class="collapse">
+<h4><a data-toggle="collapse" data-target="#all_species_list"> Show species &raquo;</a> </h4>
+<div id="all_species_list" class="in collapse">
     <ul>
-        {% for key, value in all_reactions.items() %}
-        <li class = "horizontal"><a href="#">{{all_reactants[key]}}</a></li>
+        {% for item in all_species_list %}
+        <li class = "horizontal"><a href="#">{{item}}</a></li>
+        {% endfor %}
+    </ul>
+</div>
+
+<h4><a data-toggle="collapse" data-target="#all_parameters_list"> Show parameters &raquo;</a> </h4>
+<div id="all_parameters_list" class="in collapse">
+    <ul>
+        {% for item in all_parameters %}
+        <li class = "horizontal"><a href="#">{{item}}</a></li>
         {% endfor %}
     </ul>
 </div>

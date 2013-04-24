@@ -171,21 +171,20 @@
 			<div class="span2">
 				{% if model_edited %}
 
-					<label><h3>{{model_edited}}</h3></label>
+					<label><h2>{{model_edited}}</h2></label>
 					<button class="btn btn-primary" onclick="javascript:saveChanges(true)">
 						Save changes
 					</button>
-					<br/>
-                    <hr>
+					<br/></br>
 					<a href="/modeleditor">Edit another model</a>
+                    <hr>
 
 				{% else %}
 				<p>
-					You are not editing any models
+					You are not editing a model
 				</p>
 				{% endif %}
 
-				<br/>
                 {% block customizesidebar %}
                 {% endblock %}
 			</div>
