@@ -308,6 +308,15 @@ def do_import(handler, name, from_file = True, model_class=""):
             else:
                 return {'status': False, 'msg': 'Invalid model class'}
 
+        # For the model to display and function properly in the UI, we need to make sure that all
+        # the parameters have been resolved to scalar values.
+        try:
+            model.resolveParameters()
+        # Save the model so the resolved parameter values are persisted
+        #save_model(model, name, user_id)
+        except:
+            raise ModelError("Could not resolve model parameters.")
+    
         # Save the model to the datastore.
         save_model(model, name, user_id)
         
@@ -320,17 +329,9 @@ def do_import(handler, name, from_file = True, model_class=""):
             logging.debug("Model not saved!")
             return {'status': False, 'save_msg': 'Please save your changes first!', 'is_saved': False, 'template_file': 'modeleditor.html', 'model_edited': name, 'redirect_page': '/modeleditor'}
 
-        # For the model to display and function properly in the UI, we need to make sure that all
-        # the paramters have been resolved to scalar values.
-        try:
-            model.resolveParameters()
-            # Save the model so the resolved paramter values are persisted
-            save_model(model, name, user_id)
-        except:
-            raise ModelError("Could not resolve model parameters.")
         # Set the new model as the one that is being edited.
         handler.set_session_property('model_edited', model)
-
+            
     except Exception, e:
         logging.error("model::import_model failed with error %s", e)
         traceback.print_exc()
@@ -361,6 +362,7 @@ class ModelEditorExportToStochkit2(BaseHandler):
 
 
 def save_model(model, model_name, user_id):
+    """ Save model as a new entity. """
     db_model = StochKitModelWrapper()
     db_model.user_id = user_id
     db_model.model = model
