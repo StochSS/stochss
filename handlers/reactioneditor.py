@@ -64,7 +64,7 @@ class ReactionEditorPage(BaseHandler):
         logging.debug("all_reactants " + str(all_reactants))
         logging.debug("all_products " + str(all_products))
 
-        return {'all_reactions': all_reactions, 'all_species': json.dumps(model.getAllSpecies().keys()), 'all_parameters': model.getAllParameters().keys(), 'all_reactants': all_reactants, 'all_products': all_products,'all_species_list':model.getAllSpecies().keys()}
+        return {'all_reactions': all_reactions, 'all_species': json.dumps(model.getAllSpecies().keys()), 'all_parameters': model.getAllParameters().keys(), 'all_reactants': all_reactants, 'all_products': all_products,'all_species_list':model.getAllSpecies(),'all_parameters_list':model.getAllParameters()}
 
 
     def delete_reaction(self, name):

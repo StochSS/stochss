@@ -128,8 +128,8 @@
 <h4><a data-toggle="collapse" data-target="#all_species_list"> Show species &raquo;</a> </h4>
 <div id="all_species_list" class="in collapse">
     <ul>
-        {% for item in all_species_list %}
-        <li class = "horizontal"><a href="#">{{item}}</a></li>
+        {% for key,value in all_species_list.items() %}
+        <li class = "horizontal"><a href="#" TITLE="{{all_species_list[key].initial_value}}">{{all_species_list[key].name}}</a></li>
         {% endfor %}
     </ul>
 </div>
@@ -137,8 +137,8 @@
 <h4><a data-toggle="collapse" data-target="#all_parameters_list"> Show parameters &raquo;</a> </h4>
 <div id="all_parameters_list" class="in collapse">
     <ul>
-        {% for item in all_parameters %}
-        <li class = "horizontal"><a href="#">{{item}}</a></li>
+        {% for key,value in all_parameters_list.items() %}
+        <li class = "horizontal"><a href="#" TITLE="{{all_parameters_list[key].value}}">{{all_parameters_list[key].name}}</a></li>
         {% endfor %}
     </ul>
 </div>
