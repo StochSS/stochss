@@ -140,7 +140,6 @@
 				</form>
 			</div>
 			
-
 			<form id="deleteForm" method="post" action="/modeleditor/delete">
 				<input type="hidden" name="toDelete" />
 				<input type="hidden" name="delete" value="1"/>
@@ -181,7 +180,9 @@
 
 				{% else %}
 				<p>
-					You are not editing a model
+					<h3>You are not editing a model</h3>
+                    </br></br>
+                    <a href="/modeleditor">Choose a model to edit or create a new model</a>
 				</p>
 				{% endif %}
 

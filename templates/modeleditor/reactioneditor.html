@@ -64,11 +64,11 @@
 				{% endif %}
 				{% endif %}
 			</form>
-			<hr/>
 
+            {% if all_reactions %}
+            <hr/>
 
-<div id = "right-column-sidebar">
-				{% if all_reactions %}
+            <div id = "right-column-sidebar">
 	
 				<style type="text/css">
 				.horizontal { display: inline; color: black; }
@@ -109,22 +109,23 @@
 					</table>					
 				</form>
 			</div>
-			{% endif %}
 			<form id="deleteForm" method="post" action="/modeleditor/reactioneditor">
 				<input type="hidden" name="toDelete" />
 				<input type="hidden" name="delete" value="1"/>
 			</form>
+
 		</div>
+        {% endif %}
 
 	</div>
 	<!--/row-->
 </div>
 <!--/span9-->
-
 {% endblock %}
 
+<!-- Show a list of Species and Parameters in the right sidebar for a visual aid when creating reactions. -->
 {% block customizesidebar %}
-{% if all_reactions %}
+{% if all_species_list %}
 <h4><a data-toggle="collapse" data-target="#all_species_list"> Show species &raquo;</a> </h4>
 <div id="all_species_list" class="in collapse">
     <ul>
@@ -133,7 +134,9 @@
         {% endfor %}
     </ul>
 </div>
+{% endif %}
 
+{% if all_parameters_list %}
 <h4><a data-toggle="collapse" data-target="#all_parameters_list"> Show parameters &raquo;</a> </h4>
 <div id="all_parameters_list" class="in collapse">
     <ul>

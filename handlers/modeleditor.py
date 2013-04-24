@@ -182,7 +182,7 @@ class ModelEditorPage(BaseHandler):
         except Exception, e:
             logging.error("model::edit_model - Editing the model failed with error: %s", e)
             traceback.print_exc()
-            return {'status': False, 'msg': 'There was an error while editing the model.'}
+            return {'status': False, 'msg': 'There was an error while editing the model.'+str(e)}
 
       
     def create_model(self):
