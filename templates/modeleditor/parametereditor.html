@@ -55,7 +55,7 @@
 								<input type="text" name="{{loop.index}}-expression" value="{{value.expression}}" style="width: 100px;" class="update_box">
 								</td>
 								<td>
-								<input type="text" name="{{loop.index}}-value" value = "{{'%0.2f'| format(value.value|float)}}" style="width: 150px;" readonly="readonly">
+								<input type="text" name="{{loop.index}}-value" value = "{{'%.2e'| format(value.value|float)}}" style="width: 150px;" readonly="readonly">
 								</td>
 								<td><a href="javascript:void(0)" onclick="javascript:deleteElement('{{key}}')">Delete</a></td>
 							</tr>
