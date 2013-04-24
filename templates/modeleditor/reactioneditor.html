@@ -40,7 +40,6 @@
 
                     
                     </br>
-                       <!-- <a data-toggle="collapse" data-target="#mass-action" default>Mass action reaction parameters</a> &raquo;-->
                         <div id="mass-action" style="height: auto; display:none;">
                             </br>
                             <label>Forward rate constant</label>
@@ -74,15 +73,15 @@
 				<style type="text/css">
 				.horizontal { display: inline; color: black; }
 				</style>
-
-                <h4><a data-toggle="collapse" data-target="#all_species_list"> Show all species names &raquo;</a> </h4>
+    
+                <!-- <h4><a data-toggle="collapse" data-target="#all_species_list"> Show all species names &raquo;</a> </h4>
                 <div id="all_species_list" class="collapse">
                     <ul>
                         {% for key, value in all_reactions.items() %}
                             <li class = "horizontal"><a href="#">{{all_reactants[key]}}</a></li>
                         {% endfor %}
                     </ul>
-                </div>
+                </div> -->
 
 			</div>
 			<div id="msg" style="display:none"></div>
@@ -132,6 +131,22 @@
 <!--/span9-->
 
 {% endblock %}
+
+{% block customizesidebar %}
+</br>
+</br>
+{% if all_reactions %}
+<h4><a data-toggle="collapse" data-target="#all_species_list"> Show all species names &raquo;</a> </h4>
+<div id="all_species_list" class="collapse">
+    <ul>
+        {% for key, value in all_reactions.items() %}
+        <li class = "horizontal"><a href="#">{{all_reactants[key]}}</a></li>
+        {% endfor %}
+    </ul>
+</div>
+{% endif %}
+{% endblock %}
+
 {% block innerjscontent %}
 
 <script type="text/javascript">
