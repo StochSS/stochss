@@ -109,7 +109,7 @@ class StatusPage(webapp2.RequestHandler):
 class CredentialsPage(webapp2.RequestHandler):
     """ Render a page for viewing job status. """
     def get(self):
-        template = jinja_environment.get_template('credentialspage.html')
+        template = jinja_environment.get_template('credentials.html')
         self.response.out.write(template.render({'active_visualize': True}))
 
 
