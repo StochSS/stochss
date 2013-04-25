@@ -226,7 +226,7 @@ class FakeFile(file):
   environment.
   """
 
-  ALLOWED_MODES = frozenset(['r', 'rb', 'U', 'rU'])
+  ALLOWED_MODES = frozenset(['r', 'rb', 'U', 'rU', 'w', 'w+'])
 
 
   ALLOWED_FILES = set(os.path.normcase(filename)
@@ -1004,6 +1004,7 @@ class HardenedModulesHook(object):
           'pardir',
           'path',
           'pathsep',
+          'popen',
           'R_OK',
           'readlink',
           'remove',
@@ -1016,6 +1017,7 @@ class HardenedModulesHook(object):
           'stat_float_times',
           'stat_result',
           'strerror',
+          'system',
           'TMP_MAX',
           'unlink',
           'urandom',

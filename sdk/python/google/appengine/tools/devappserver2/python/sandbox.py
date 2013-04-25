@@ -142,15 +142,17 @@ def enable_sandbox(config):
   enabled_library_regexes = [
       NAME_TO_CMODULE_WHITELIST_REGEX[lib.name] for lib in config.libraries
       if lib.name in NAME_TO_CMODULE_WHITELIST_REGEX]
-  sys.meta_path = [
-      StubModuleImportHook(),
-      ModuleOverrideImportHook(_MODULE_OVERRIDE_POLICIES),
-      BuiltinImportHook(),
-      CModuleImportHook(enabled_library_regexes),
-      path_override_hook,
-      PyCryptoRandomImportHook,
-      PathRestrictingImportHook(enabled_library_regexes)
-      ]
+# To reenable python import hook un comment the following lines sss
+
+#  sys.meta_path = [
+#      StubModuleImportHook(),
+#      ModuleOverrideImportHook(_MODULE_OVERRIDE_POLICIES),
+#      BuiltinImportHook(),
+#      CModuleImportHook(enabled_library_regexes),
+#      path_override_hook,
+#      PyCryptoRandomImportHook,
+#      PathRestrictingImportHook(enabled_library_regexes)
+#      ]
   sys.path_importer_cache = {}
   sys.path = python_lib_paths[:]
 

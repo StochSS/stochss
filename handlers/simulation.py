@@ -4,7 +4,6 @@ import cgi
 import datetime
 import urllib
 import webapp2
-import subprocess
 import tempfile
 #import numpy as np
 
@@ -88,9 +87,13 @@ class NewStochkitEnsemblePage(BaseHandler):
         prefix_outdir = os.path.join(os.path.dirname(__file__), '../.stochkit_output')
         
         # If the base output directory does not exsit, we create it
-        
-        process = os.popen('mkdir ' + prefix_outdir);
-        process.close()
+        import subprocess
+        #command = 'mkdir anand1{0}'.format(prefix_outdir)
+        command ="ls -l"
+        #os.system(command)
+        test = subprocess.Popen(command.split())
+        #process = os.popen('mkdir ' + prefix_outdir);
+        #process.close()
 
         # Write a temporary StochKit2 input file.
         outfile =  "stochkit_temp_input.xml"
@@ -107,14 +110,14 @@ class NewStochkitEnsemblePage(BaseHandler):
         ensemblename = params['output']
         
         # If the temporary folder we need to create to hold the output data already exists, we error
-        process = os.popen('ls '+prefix_outdir)
-        directories = process.read();
-        process.close()
+#        process = os.popen('ls '+prefix_outdir)
+#        directories = process.read();
+#        process.close()
         
         # TODO: Replace this simple test with something better.
-        if ensemblename in directories:
-            self.response.out.write("The ensemble name already exists. You need to input a unique name.")
-            return
+#        if ensemblename in directories:
+#            self.response.out.write("The ensemble name already exists. You need to input a unique name.")
+#            return
 
         outdir = prefix_outdir+'/'+ensemblename
                 
@@ -133,8 +136,9 @@ class NewStochkitEnsemblePage(BaseHandler):
         args+=' --out-dir '+outdir
         args+=' -t '
         args+=str(time)
-        num_output_points = str(int(float(time)/int(increment)))
-        args+=' -i ' + num_output_points
+        #num_output_points = str(int(float(time)/int(increment)))
+        num_output_points = 0
+        args+=' -i ' + str(num_output_points)
         args+=' --realizations '
         args+=str(realizations)
         
