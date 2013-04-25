@@ -11,6 +11,8 @@ import __future__
 from stochssapp import BaseHandler
 from stochss.backendservice import *
 
+
+
 class CredentialsPage(BaseHandler):
     """
     Provides a web UI around POST /model, to allow users to create
@@ -18,19 +20,39 @@ class CredentialsPage(BaseHandler):
     """
     
     def get(self):
-        all_vms = self.get_all_vms()
-        if all_vms is not None:
-            self.render_response('credentials.html', **all_vms)
-        else:
-            self.render_response('credentials.html')        
-     
-        
-
+        try:
+            # User id is a numeric value.
+            user_id = self.user.user_id()
+            if user_id is None:
+                raise InvalidUserException
+        except Exception, e:
+            raise InvalidUserException('Cannot determine the current user. '+str(e))
+                    
+        all_vms = self.get_all_vms(user_id)
+        context = {'vm_names':all_vms, 'number_of_vms':len(all_vms)}
+        self.render_response('credentials.html', **context)
 
 
     def post(self):
-            # First, check to see if it's a save_changes request and then route it to the appropriate function.
-        if self.request.get('save') == "1":
+        # First, check to see if it's a save_changes request and then route it to the appropriate function.
+        # First, check to see if it's a save_changes request and then route it to the appropriate function.
+        # self.render_response('credentials.html')
+        
+        params = self.request.POST
+        action = self.request.get('save')
+        if 'save' in params:
+            access_key = params['access_key']
+                self.response.out.write('delete')
+            
+            self.response.out.write('save')
+        elif 'start' in params:
+            self.response.out.write('start')
+        elif 'delete' in params:
+            self.response.out.write('delete')
+        else:
+            self.response.out.write('error')
+
+        """if self.request.get('save') == "1":
             result = self.save_credentials(save_creds)
             self.set_session_property('save',save_creds)            
             self.redirect('credentials')                                  
@@ -46,24 +68,39 @@ class CredentialsPage(BaseHandler):
         else self.request.get('delete') == "1":
             result = self.delete_vms() 
             result = dict(get_all_vms(self), **result)
-            self.render_response('credentials.html', **result)                          
+            self.render_response('credentials.html', **result)  """                        
             
-             
+    def get_all_vms(self,user):
+        """
             
-
-    def get_all_vms(self):
         """
-        Get all the reactants belonging to the current user.
-        This model must be in cache.
-        """
-        valid_username = self.get_session_property('username')
-        if valid_username is None:
+        #bs = Backendservice()
+        #valid_username = self.get_session_property('username')
+        if user is None or user is "":
             return None
-        else
-        	result = backendservice.describeMachines(valid_username)
-		self.render_response('credentials.html', **result)	
+        else:
+            result = ["VM1", "VM2", "VM3"]
+            #result = bs.describeMachines(user)
+        return result
+            #self.render_response('credentialspage.html', **result)
+    
 
-	def save_credentials(self, save_creds):
+    """def get_all_vms(self):
+        try:
+            # User id is a numeric value.
+            user_id = self.user.user_id()
+            if user_id is None:
+                raise InvalidUserException
+        except Exception, e:
+            raise InvalidUserException('Cannot determine the current user. '+str(e))
+                
+        all_vms = self.get_all_vms(user_id)
+        context = {'vm_names':all_vms, 'number_of_vms':len(all_vms)}
+        self.render_response('credentials.html', **context)"""
+    
+
+        
+	def save_credentials(self, save_changes):
 		"""
 		Save the Credentials
 		""" 
@@ -82,5 +119,7 @@ class CredentialsPage(BaseHandler):
         db_user = db.GqlQuery("SELECT * FROM StochKitModelWrapper WHERE user_id = :1", user_id).get()
         db_user.user = valid_username
         result =  backendservice.stopMachines(db_user.user)       
-            		
+
 		
+class InvalidUserException(Exception):
+    pass

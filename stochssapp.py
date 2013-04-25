@@ -123,7 +123,7 @@ from handlers.modeleditor import *
 from handlers.parametereditor import *
 from handlers.reactioneditor import *
 from handlers.simulation import *
-#from handlers.credentials import *
+from handlers.credentials import *
 
 
 app = webapp2.WSGIApplication([                                                              
