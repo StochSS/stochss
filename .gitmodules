@@ -10,3 +10,6 @@
 [submodule "lib/fabric"]
 	path = lib/fabric
 	url = git://github.com/fabric/fabric.git
+[submodule "iptracker"]
+	path = iptracker
+	url = git://github.com/StochSS/iptracker.git
