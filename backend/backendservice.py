@@ -4,7 +4,7 @@ It would accept all the calls from the front end and pass on to the backend.
 All the input validation is performed in this class.
 '''
 from infrastructure_manager import InfrastructureManager
-import os,subprocess,signal,uuid
+import os,subprocess,signal,uuid,sys
 
 class backendservices():
     ''' 
@@ -13,6 +13,8 @@ class backendservices():
     '''
     #agent_type= 
         
+    def backendservices(self): 
+        sys.path.append(os.path.join(os.path.dirname(__file__), 'lib/boto'))    
     def initialize_server(self):
          # check if the security group exists , if not then create a group
          pass

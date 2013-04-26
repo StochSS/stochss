@@ -1,11 +1,16 @@
-from agents.base_agent import BaseAgent, AgentConfigurationException, AgentRuntimeException
+
+from backend.agents.base_agent import BaseAgent, AgentConfigurationException, AgentRuntimeException
+import sys,os
+sys.path.append(os.path.join(os.path.dirname(__file__), '../../lib/boto'))
+sys.path.append(os.path.join(os.path.dirname(__file__), '../'))
+print sys.path
 import boto
 from boto.exception import EC2ResponseError
 import datetime
 import os
 import time
 from boto.ec2.cloudwatch import MetricAlarm
-from utils import utils
+from backend.utils import utils
 from uuid import uuid4
 
 __author__ = 'hiranya, anand'

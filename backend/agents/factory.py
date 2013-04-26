@@ -1,5 +1,5 @@
-from agents.ec2_agent import EC2Agent
-from agents.euca_agent import EucalyptusAgent
+from backend.agents.ec2_agent import EC2Agent
+from backend.agents.euca_agent import EucalyptusAgent
 
 __author__ = 'hiranya'
 __email__ = 'hiranya@appscale.com'
