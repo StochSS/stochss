@@ -139,7 +139,8 @@ class backendservices():
             from pprint import pprint
             pprint(i)
             print "==============================================="
-        pass
+        return res
+    
     
     def validateCredentials(self,params):
         i = InfrastructureManager()
@@ -165,6 +166,7 @@ if __name__ == "__main__":
              'use_spot_instances':False}
     #test  = obj.validateCredentials(params)
     #print test
+    val = obj.describeMachines(params)
     pids = [12680,12681,12682, 18526]
     #res  = obj.checkTaskStatusLocal(pids)
     pids = [18511,18519,19200]
@@ -172,8 +174,8 @@ if __name__ == "__main__":
     #print str(res)
     
     param = {'file':"/Users/RaceLab/StochKit2.0.6/models/examples/dimer_decay.xml",'paramstring':"--force -t 10 -r 1000"}
-    res = obj.executeTaskLocal(param)
-    print str(res)
+    #res = obj.executeTaskLocal(param)
+    #print str(res)
     #obj.startMachines(params)
     #obj.describeMachines(params)
     
