@@ -48,28 +48,26 @@ class SimulatePage(BaseHandler):
             all_models=[]
             for q in all_models_q.run():
                 all_models.append(q)
-        
-           
-        template = jinja_environment.get_template('simulate.html')
-        self.response.out.write(template.render({'active_view': True,'all_models': all_models}))
+    
+        context = {'all_models': all_models}
+        self.render_response('simulate.html',**context)
 
     def post(self):
-
+        
         model = self.request.get("model_to_simulate")
-        self.set_session_property('model_to_simulate',model)
-        self.redirect('/simulate/newstochkitensemble')
+        if model == None or model == "":
+            self.redirect('/simulate')
+        else:
+            self.set_session_property('model_to_simulate',model)
+            self.redirect('/simulate/newstochkitensemble')
 
-
-def parseNewStochKitEnsblePage(params):
-    """ Helper function to parse the form """
-    
 
 class NewStochkitEnsemblePage(BaseHandler):
     """ Page with a form to configure a well mixed stochastic (StochKit2) simulation job.  """
     
     def get(self):
-        template = jinja_environment.get_template('simulate/newstochkitensemblepage.html')
-        self.response.out.write(template.render({'active_upload': True}))
+        context = {'model_to_simulate':self.get_session_property('model_to_simulate')}
+        self.render_response('simulate/newstochkitensemblepage.html',**context)
 
     def post(self):
         """ Assemble the input to StochKit2 and submit the job (locally or via cloud). """

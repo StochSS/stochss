@@ -1,7 +1,8 @@
 {% extends "simulate.html" %}
 {% block title%}Simulate{% endblock %}
 {% block simulatecontent %}
-
+<div class="row-fluid">
+<div class="span9">
 <div class="well well-large">
     <form id="submit_stochkit_ensemble" method="post" action="/simulate/newstochkitensemble">
         
@@ -93,11 +94,19 @@
         <br>
         <br>
 
-            
         <button type="submit" class="btn btn-primary btn-large" name="run_local">Run Locally &raquo;</button>
-        <button type="submit" class="btn btn-primary btn-large" name="run_cloud"> Run via Cloud &raquo;</button>
+        <button type="submit" class="btn btn-primary btn-large" name="run_cloud">Run via Cloud &raquo;</button>
         
     </form>
 </div> <!-- well -->
+</div> <!-- span -->
+<div class="span3">
+{% if model_to_simulate  %}
+    <h3>You are simulating:<h3>
+    <p style="COLOR: green; font-size:26px;"> {{model_to_simulate}}</p>
+    <a href="/simulate">Select another model</a>
+{% endif %}
+</div>
+    </div>
             
 {% endblock %}

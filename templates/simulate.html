@@ -10,10 +10,8 @@
             
     </div class="menubar">
        <ul class="nav nav-tabs">
-          <!-- <li><a href="/simulate/overview">Overview</a></li> -->
            <li class="dropdown"><a class="dropdown-toggle" data-toggle="dropdown">Solvers<b class="caret"></b></a>
                <ul class="dropdown-menu">
-                   <!-- <a href="/simulate/wellmixed/deterministic">Well mixed deterministic</a> -->
                    <a href="/simulate/newstochkitensemble">Well mixed stochastic</a>
                 </ul>
            </li>
@@ -29,13 +27,12 @@
               <form id="model_simulated" method="post" action="/simulate">
                   {% for item in all_models %}
                   <label class="radio">
-                      <input type="radio" name="model_to_simulate" value={{ item.model.name }}> {{ item.model.name }}
-                      </input>
+                      <input type="radio" name="model_to_simulate" value={{ item.model.name }} checked>{{ item.model.name }}</input>
                       </br>
                   </label>
                   {% endfor %}
                   </br>
-                  <button type="submit" class="btn-primary btn-large" style="float: left;">Next&raquo;</button>
+                  <button type="submit" class="btn-primary btn-large">Next&raquo;</button>
               </form>
         </div>
         {% endblock %}
