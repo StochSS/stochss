@@ -66,7 +66,8 @@ class NewStochkitEnsemblePage(BaseHandler):
     """ Page with a form to configure a well mixed stochastic (StochKit2) simulation job.  """
     
     def get(self):
-        context = {'model_to_simulate':self.get_session_property('model_to_simulate')}
+        model_to_simulate=self.get_session_property('model_to_simulate')
+        context = {'model_to_simulate':model_to_simulate}
         self.render_response('simulate/newstochkitensemblepage.html',**context)
 
     def post(self):
@@ -86,7 +87,8 @@ class NewStochkitEnsemblePage(BaseHandler):
         else:
             result={'status':False,'msg':'There was an error processing your request.'}
 
-        self.render_response('simulate/newstochkitensemblepage.html',**result)
+        context = {'model_to_simulate':self.get_session_property('model_to_simulate')}
+        self.render_response('simulate/newstochkitensemblepage.html',**dict(context,**result))
 
     def parseForm(self):
         """ Parse the form, assemble the arguments to StochKit and check for errors. """
