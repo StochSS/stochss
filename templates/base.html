@@ -79,9 +79,7 @@
           
         <div class="span2">
           <div class="well sidebar-nav">
-              
             <ul class="nav nav-list">
-                
               <li class="nav-header">Modelling</li>
                 
                 <li
@@ -106,24 +104,25 @@
               <li class="nav-header">Job Management</li>
                   
               <li
-                {% if active_visulize %}
+                {% if active_visualize %}
                 class="active"
                     {% endif %}
-                    ><a href="/status" TITLE = "Monitor the progress of your Simulation">Job Status</a></li>
+                    ><a href="/status" TITLE = "Monitor the progress of your Simulation">Job Status</a>
+              </li>
 
-<li
+                <li
                 {% if active_visulize %}
                 class="active"
                     {% endif %}
-                    ><a href="/credentials" TITLE = "Monitor your Running Vms">Credentials</a></li>
+                    ><a href="/credentials" TITLE = "Monitor your Running Vms">Credentials</a>
+                </li>
 
             </ul>
               
           </div><!--/.well -->
         </div><!--/span-->
-          
-          {% block content %}{% endblock %}
-          
+          {% block content %}
+          {% endblock %}
       </div><!--/row-->
 
       <hr>
