@@ -33,48 +33,53 @@ class backendservices():
         pass 
     
     def executeTaskLocal(self,params):
-        # dump the file
-        # invoke stoch ss
-        # return the pid and the url of the task
-        #
+        '''
+        This method spawns a stochkit process.It doesn't wait for the process to finish. The status of the
+        process can be tracked using the pid and the output directory returned by this method. 
         
+        @param  params['file'] = the absolute path of the xml file 
+        @param  params['paramstring'] = the parameter to be passed to the stochkit execution
+        'STOCHKIT_HOME' = this is the environment variable which has the path of the stochkit executable
+        @return: 
+           {"pid" : 'the process id of the task spawned', "output": "the directory where the files will be generated"}
+         
+        '''
         try:
             #logging.basicConfig(filename='stochss.log',level=logging.INFO)
             #logging.info("inside task method")
+            res = {}
+            xmlfilepath = params['file'] 
+            paramstr =  params['paramstring']
             uuidstr = str(uuid.uuid4())
-            create_dir_str = "mkdir ~/output/%s " % uuidstr
-            change_dir_to_ouput_str = "cd output"
-            os.system(change_dir_to_ouput_str)
-            #logging.debug("directory changed to output")
+            create_dir_str = "mkdir -p output/%s " % uuidstr
             os.system(create_dir_str)
-            stochkit_exec_str = "~/StochKit2.0.6/ssa -m ~/output/%s/dimer_decay.xml -t 20 -i 10 -r 1000" % (uuidstr)
-            copy_file_str = "cp  ~/StochKit2.0.6/models/examples/dimer_decay.xml ~/output/%s" % (uuidstr)
+            # check if the env variable is set form STOCHKIT_HOME or else use the default location
+            STOCHKIT_DIR = "/Users/RaceLab/StochKit2.0.6"
+            try:
+                STOCHKIT_DIR = os.environ['STOCHKIT_HOME']
+            except Exception:
+                #ignores if the env variable is not set
+                pass
+            
+            # The following executiong string is of the form : stochkit_exec_str = "~/StochKit2.0.6/ssa -m ~/output/%s/dimer_decay.xml -t 20 -i 10 -r 1000" % (uuidstr)
+            stochkit_exec_str = "{0}/ssa -m {1} {2} --out-dir output/{3}/result ".format(STOCHKIT_DIR,xmlfilepath,paramstr,uuidstr)
+            #logging.debug("Spawning StochKit Task. String : ", stochkit_exec_str)
+            p = subprocess.Popen(stochkit_exec_str, shell=True, stdin=subprocess.PIPE,stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
+            pid = p.pid;
+            res['pid'] = pid
+            
+            filepath = "output/%s//" % (uuidstr)
+            absolute_file_path = os.path.abspath(filepath)
+            res['output'] = absolute_file_path
+            
+            #copes the XML file to the output direcory
+            copy_file_str = "cp  {0} output/{1}".format(xmlfilepath,uuidstr)
             os.system(copy_file_str)
-            p = subprocess.Popen(stochkit_exec_str, shell=True, stdin=subprocess.PIPE,stdout=subprocess.PIPE, stderr=subprocess.STDOUT, close_fds=True)
-            (s_in, s_out) = (p.stdin, p.stdout)
-            #os.system(stochkit_exec_str)
-            #logging.debug("stochkit executed succesfullu")
-            create_tar_output_str = "tar -zcvf ~/output/%s.tar ~/output/%s" %  (uuidstr)
-            #logging.debug("followig cmd to be executed %s" % (create_tar_output_str))
-            copy_to_s3_str = "python ~/sccpy.py output/%s.tar" % (uuidstr)
-            os.system(create_tar_output_str)
-            os.system(copy_to_s3_str)
-            
-            # Absolute file path
-            # the absolute file path of the file being generated
-            # can be obtained as ::
-            # os.path.abspath('mydir/myfile.txt')
-            
-            
-            #os.system("cd output; mkdir " +  uuid + "; cp  StochKit2.0.6/models/examples/dimer_decay.xml uuid/;../StochKit2.0.6/ssa -m " uuid +" /dimer_decay.xml -t 20 -i 10 -r 1000")
-            #os.system("python sccpy.py output/
+            return res
         except Exception as e:
                #logging.error("exception raised : %s" ) % e
                #traceback.print_stack()
                pass
-        
-        
-        pass
     
     def checkTaskStatusLocal(self,pids):
         '''
@@ -156,12 +161,16 @@ if __name__ == "__main__":
              'credentials':{"EC2_ACCESS_KEY":"AKIAJWILGFLOFVDRDRCQ", "EC2_SECRET_KEY":"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"},
              #'credentials':{"EC2_ACCESS_KEY":"sadsdsad", "EC2_SECRET_KEY":"/95VWaJ"},
              'use_spot_instances':False}
-    test  = obj.validateCredentials(params)
-    print test
+    #test  = obj.validateCredentials(params)
+    #print test
     pids = [12680,12681,12682, 18526]
-    res  = obj.checkTaskStatusLocal(pids)
+    #res  = obj.checkTaskStatusLocal(pids)
     pids = [18511,18519,19200]
-    obj.deleteTaskLocal(pids)
+    #obj.deleteTaskLocal(pids)
+    #print str(res)
+    
+    param = {'file':"/Users/RaceLab/StochKit2.0.6/models/examples/dimer_decay.xml",'paramstring':"--force -t 10 -r 1000"}
+    res = obj.executeTaskLocal(param)
     print str(res)
     #obj.startMachines(params)
     #obj.describeMachines(params)
