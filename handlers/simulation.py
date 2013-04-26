@@ -5,7 +5,6 @@ import datetime
 import urllib
 import webapp2
 import tempfile
-#import numpy as np
 
 from google.appengine.ext import db
 import pickle
@@ -73,101 +72,131 @@ class NewStochkitEnsemblePage(BaseHandler):
         self.response.out.write(template.render({'active_upload': True}))
 
     def post(self):
-        """ Assemble the input to StochKit2 and submit the job (locally). """
+        """ Assemble the input to StochKit2 and submit the job (locally or via cloud). """
         
         # Params is a dict that constains all response elements of the form
         params = self.request.POST
         
-        # Get the model that is currently in scope for simulation via the seesion property 'model_to_simulate'
-        model_to_simulate=self.get_session_property('model_to_simulate')
-        model = db.GqlQuery("SELECT * FROM StochKitModelWrapper WHERE user_id = :1 AND model_name = :2", self.user.user_id(),model_to_simulate).get()
-        model = model.model
+        # Check if the form was posted by pressing the 'Run Local' or 'Run Cloud' button.
+        # Note, I think that we need some refactoring here in the future,
+        # this is not a pretty solution....
         
-        # We write all StochKit input and output files to a temporary folder in the root folder of the app
-        prefix_outdir = os.path.join(os.path.dirname(__file__), '../.stochkit_output')
-        
-        # If the base output directory does not exsit, we create it
-        import subprocess
-        #command = 'mkdir anand1{0}'.format(prefix_outdir)
-        command ="ls -l"
-        #os.system(command)
-        test = subprocess.Popen(command.split())
-        #process = os.popen('mkdir ' + prefix_outdir);
-        #process.close()
+        if 'run_local' in params:
+            result=self.runLocal()
+        elif 'run_cloud' in params:
+            result=self.runCloud()
+        else:
+            result={'status':False,'msg':'There was an error processing your request.'}
 
-        # Write a temporary StochKit2 input file.
-        outfile =  "stochkit_temp_input.xml"
-        mfhandle = open(outfile,'w')
-        #document = StochMLDocument.fromModel(model)
-        document = model.serialize()
-        mfhandle.write(document)
-        mfhandle.close()
-        
-        # Parse the required arguments
-        # TODO: Error Checking needed here! But preferably also using AJAX calls similar to what Gautham
-        #       implemented for the Model editor.
-        
-        ensemblename = params['output']
-        
-        # If the temporary folder we need to create to hold the output data already exists, we error
-#        process = os.popen('ls '+prefix_outdir)
-#        directories = process.read();
-#        process.close()
-        
-        # TODO: Replace this simple test with something better.
-#        if ensemblename in directories:
-#            self.response.out.write("The ensemble name already exists. You need to input a unique name.")
-#            return
+        self.render_response('simulate/newstochkitensemblepage.html',**result)
 
-        outdir = prefix_outdir+'/'+ensemblename
+    def parseForm(self):
+        """ Parse the form, assemble the arguments to StochKit and check for errors. """
+        # TODO: Refactor: Move the parsing code form 'runLocal' so it can be reused for 'runCloud'.
+        # TODO: Check for errors....
+
+    def runCloud(self):
+        result = {'status':True,'msg': 'Calling the cloud execution function'}
+        return result
+
+    def runLocal(self):
+        try:
+            # Get the model that is currently in scope for simulation via the seesion property 'model_to_simulate'
+            model_to_simulate=self.get_session_property('model_to_simulate')
+            model = db.GqlQuery("SELECT * FROM StochKitModelWrapper WHERE user_id = :1 AND model_name = :2", self.user.user_id(),model_to_simulate).get()
+            model = model.model
+            
+            # The data from the form
+            params = self.request.POST
+            
+            # We write all StochKit input and output files to a temporary folder in the root folder of the app
+            prefix_outdir = os.path.join(os.path.dirname(__file__), '../.stochkit_output')
+            
+            # If the base output directory does not exsit, we create it
+            import subprocess
+            #command = 'mkdir anand1{0}'.format(prefix_outdir)
+            command ="ls -l"
+            #os.system(command)
+            test = subprocess.Popen(command.split())
+            #process = os.popen('mkdir ' + prefix_outdir);
+            #process.close()
+            
+            # Write a temporary StochKit2 input file.
+            outfile =  "stochkit_temp_input.xml"
+            mfhandle = open(outfile,'w')
+            #document = StochMLDocument.fromModel(model)
+            document = model.serialize()
+            mfhandle.write(document)
+            mfhandle.close()
+            
+            # Parse the required arguments
+            # TODO: Error Checking needed here! But preferably also using AJAX calls similar to what Gautham
+            #       implemented for the Model editor.
+            
+            
+            # If the temporary folder we need to create to hold the output data already exists, we error
+            #        process = os.popen('ls '+prefix_outdir)
+            #        directories = process.read();
+            #        process.close()
+            
+            # TODO: Replace this simple test with something better.
+            #        if ensemblename in directories:
+            #            self.response.out.write("The ensemble name already exists. You need to input a unique name.")
+            #            return
+            
+            
+            ensemblename = params['output']
+            time = params['time']
+            realizations = params['realizations']
+            increment = params['increment']
+            seed = params['seed']
+            # Algorithm, SSA or Tau-leaping?
+            executable = params['algorithm']
+            
+            outdir = prefix_outdir+'/'+ensemblename
+
+            
+            # Assemble the argument list
+            args = ''
+            args+='--model '
+            args+=outfile
+            args+=' --out-dir '+outdir
+            args+=' -t '
+            args+=str(time)
+            #num_output_points = str(int(float(time)/float(increment)))
+            num_output_points = 0
+            args+=' -i ' + str(num_output_points)
+            args+=' --realizations '
+            args+=str(realizations)
+            
+            # We keep all the trajectories by default. The user can select to only store means and variance
+            # throught the advanced options.
+            if not "only-moments" in params:
+                args+=' --keep-trajectories'
+            
+            if "label-columns" in params:
+                args+=' --label'
+            
+            if "keep-histograms" in params:
+                args+=' --keep-histograms'
+            
+            # TODO: We need a robust way to pick a default seed for the ensemble. It needs to be robust in a ditributed, parallel env.
+            args+=' --seed '
+            args+=str(seed)
+            
+            # If we are using local mode, shell out and run StochKit (SSA or Tau-leaping)
+            cmd = executable+' '+args
+            # AH: Can't test for failed execution here, popen does not return stderr.
+            process = os.popen(cmd)
+            stochkit_output_message = process.read()
+            process.close()
+            
+            result = {'status':True,'msg':stochkit_output_message}
+        
+        except Exception,e:
+            result = {'status':False,'msg':'Local execution failed: '+str(e)}
                 
-        time = params['time']
-        realizations = params['realizations']
-        increment = params['increment']
-        seed = params['seed']
-        
-        # Algorithm, SSA or Tau-leaping?
-        executable = params['algorithm']
-        
-        # Assemble the argument list
-        args = ''
-        args+='--model '
-        args+=outfile
-        args+=' --out-dir '+outdir
-        args+=' -t '
-        args+=str(time)
-        #num_output_points = str(int(float(time)/float(increment)))
-        num_output_points = 0
-        args+=' -i ' + str(num_output_points)
-        args+=' --realizations '
-        args+=str(realizations)
-        
-        # We keep all the trajectories by default. The user can select to only store means and variance
-        # throught the advanced options.        
-        if not "only-moments" in params:
-            args+=' --keep-trajectories'
-        
-        if "label-columns" in params:
-            args+=' --label'
-                
-        if "keep-histograms" in params:
-            args+=' --keep-histograms'
-
-        # TODO: We need a robust way to pick a default seed for the ensemble. It needs to be robust in a ditributed, parallel env.
-        args+=' --seed '
-        args+=str(seed)
-
-        # If we are using local mode, shell out and run StochKit (SSA or Tau-leaping)
-        cmd = executable+' '+args
-        # AH: Can't test for failed execution here, popen does not return stderr.   
-        process = os.popen(cmd)
-        stochkit_output_message = process.read()
-        process.close()
-                
-        self.response.out.write(stochkit_output_message)
-        # Run StochKit
-        # process = runLocal(cmd,)
-
+        return result
 
 class JobSettingsPage(webapp2.RequestHandler):
     

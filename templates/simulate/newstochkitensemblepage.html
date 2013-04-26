@@ -81,9 +81,21 @@
         </div> <!-- Advanced settings -->
                             
         <br />
+        <!-- Display status messages -->
+        {% if msg %}
+        <br>
+        {% if status == False %}
+        <span style="color: red">{{msg}}</span>
+        {% else %}
+        <span style="color: green">{{msg}}</span>
+        {% endif %}
+        {% endif %}
+        <br>
+        <br>
+
             
-        <button type="submit" class="btn btn-primary btn-large">Run Locally &raquo;</button>
-        <button class="btn btn-primary btn-large" id="putonjobstack">Run via Cloud &raquo;</button>
+        <button type="submit" class="btn btn-primary btn-large" name="run_local">Run Locally &raquo;</button>
+        <button type="submit" class="btn btn-primary btn-large" name="run_cloud"> Run via Cloud &raquo;</button>
         
     </form>
 </div> <!-- well -->
