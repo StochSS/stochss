@@ -7,9 +7,11 @@ from collections import OrderedDict
 import logging
 import traceback
 import __future__
-
+import random
+import string
 from stochssapp import BaseHandler
-from stochss.backendservice import *
+from backend.backendservice import *
+
 
 from google.appengine.ext import db
 
@@ -57,7 +59,7 @@ class CredentialsPage(BaseHandler):
             # Save the access and private keys to the datastore
             access_key = params['ec2_access_key']
             secret_key = params['ec2_secret_key']
-            credentials = {'access_key':access_key, 'secret_key':secret_key}
+            credentials = {'EC2_ACCESS_KEY':access_key, 'EC2_SECRET_KEY':secret_key}
             
             # See if the CredentialsWrapper is already created, in which case we modify it and rewrite.
             result = self.saveCredentials(user_id,credentials)
@@ -89,18 +91,27 @@ class CredentialsPage(BaseHandler):
 		Save the Credentials in the datastore.
 		"""
         try:
-            db_credentials = db.GqlQuery("SELECT * FROM CredentialsWrapper WHERE user_id = :1", user_id).get()
-            if db_credentials is None:
-                # Create a new credentials wrapper
-                db_credentials = CredentialsWrapper()
-                db_credentials.user_id = user_id
-                db_credentials.access_key = credentials['access_key']
-                db_credentials.secret_key = credentials['secret_key']
+            #check if the credentials are valid
+            service = backendservices()
+            params ={}
+            params['credentials'] =credentials
+            params["infrastructure"] = "ec2"
+            
+            if service.validateCredentials(params):
+                db_credentials = db.GqlQuery("SELECT * FROM CredentialsWrapper WHERE user_id = :1", user_id).get()
+                if db_credentials is None:
+                    # Create a new credentials wrapper
+                    db_credentials = CredentialsWrapper()
+                    db_credentials.user_id = user_id
+                    db_credentials.access_key = credentials['EC2_ACCESS_KEY']
+                    db_credentials.secret_key = credentials['EC2_SECRET_KEY']
+                else:
+                    db_credentials.secret_key = credentials['EC2_SECRET_KEY']
+                    db_credentials.access_key = credentials['EC2_ACCESS_KEY']
+                db_credentials.put()
+                result = {'status': True, 'credentials_msg': ' Credentials saved successfully!'}
             else:
-                db_credentials.secret_key = credentials['secret_key']
-                db_credentials.access_key = credentials['access_key']
-            db_credentials.put()
-            result = {'status': True, 'credentials_msg': ' Credentials saved successfully!'}
+                result = {'status': False, 'credentials_msg':' Invalid Secret Key or Access key specified'}
         except Exception,e:
             result = {'status': False, 'credentials_msg':' There was an error saving the credentials: '+str(e)}
         
@@ -113,34 +124,47 @@ class CredentialsPage(BaseHandler):
         try:
             db_credentials = db.GqlQuery("SELECT * FROM CredentialsWrapper WHERE user_id = :1", user_id).get()
             if db_credentials is None:
-                credentials = {'access_key':"",'secret_key':""}
+                credentials = {'EC2_SECRET_KEY':"",'EC2_ACCESS_KEY':""}
             else:
-                credentials = {'access_key':db_credentials.access_key,'secret_key':db_credentials.secret_key}
+                credentials = {'EC2_ACCESS_KEY':db_credentials.access_key,'EC2_SECRET_KEY':db_credentials.secret_key}
         except Exception, e:
-           # This should never fail at this stage, and if it does we crash the app. TODO: Improve error handling. 
+           # This should never fail at this stage, and if it does we crash the app. TODO: Improve error handling.
+           print str(e) 
            raise Exception
                     
         # I assumed here that all_vms is a list of VMs ""
-        all_vms = self.get_all_vms(user_id)
+        all_vms = self.get_all_vms(user_id,credentials)
+        if all_vms == None:
+            return None
+        number_pending = 0
+        number_running = 0;
+        for vm in all_vms:
+            if vm != None and vm['state']=='pending': number_pending = number_pending + 1
+            elif vm != None and vm['state']=='running': number_running = number_running + 1
         number_of_vms = len(all_vms)
+        print "number pending = " + str(number_pending)
+        print "number running = " + str(number_running)
         # ANAND: Check the status of the VMS
         #vm_status = backendservice.getStatusOfVMS(all_vms)
         vm_status = ['Pending','Running','Pending']
-        context = {'vm_names':all_vms, 'number_of_vms':number_of_vms,'vm_status':vm_status,'number_pending':2,'number_running':1}
+        context = {'vm_names':all_vms, 'number_of_vms':number_of_vms,'vm_status':vm_status,'number_pending':number_pending,'number_running':number_running}
         context = dict(context, **credentials)
         return context
     
-    def get_all_vms(self,user_id):
+    def get_all_vms(self,user_id,credentials):
         """
             
         """
-        #bs = Backendservice()
         #valid_username = self.get_session_property('username')
         if user_id is None or user_id is "":
             return None
         else:
-            result = ["VM1", "VM2", "VM3"]
-            #result = bs.describeMachines(user)
+            service = backendservices()
+            params ={"infrastructure":"ec2",
+                 'credentials':credentials}          
+            result = service.describeMachines(params)
+            print "i was here too"
+            print str(result)
         return result
     
     def start_vms(self, user_id, number_of_vms=None):
@@ -148,6 +172,22 @@ class CredentialsPage(BaseHandler):
         # db_user.user = valid_username
         #result = backendservice.startMachines(db_user.user)
         # ANAND: Modify 'result' as needed depending on the result of the call to backendservice.
+        group_random_name = user_id +"-"+''.join(random.choice(string.ascii_uppercase + string.digits) for x in range(6))
+        params ={"infrastructure":"ec2",
+             "num_vms":number_of_vms, 
+             'group':'stochss18', 
+             'image_id':'ami-44b6272d', 
+             'instance_type':'t1.micro',
+             'keyname':'stochssnew24', 
+             'email':['anand.bdk@gmail.com'],
+             'credentials':{"EC2_ACCESS_KEY":"AKIAJWILGFLOFVDRDRCQ", "EC2_SECRET_KEY":"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"},
+             #'credentials':{"EC2_ACCESS_KEY":"sadsdsad", "EC2_SECRET_KEY":"/95VWaJ"},
+             'use_spot_instances':False}
+        
+        
+        
+        
+        
         result = {'status': True, 'msg': 'Sucessfully requested '+ str(number_of_vms) + ' Virtual Machines.'}
         return result
     
