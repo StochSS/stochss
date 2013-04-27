@@ -20,6 +20,7 @@ class CredentialsWrapper(db.Model):
     user_id = db.StringProperty()
     access_key = db.StringProperty()
     secret_key = db.StringProperty()
+    validated = db.BooleanProperty()
 
 
 class CredentialsPage(BaseHandler):
@@ -42,7 +43,6 @@ class CredentialsPage(BaseHandler):
     def post(self):
 
         params = self.request.POST
-        action = self.request.get('save')
         
         try:
             # User id is a numeric value.
@@ -54,13 +54,14 @@ class CredentialsPage(BaseHandler):
     
         # Get the context of the page
         context = self.getVMContext(user_id)
+#print context
 
         if 'save' in params:
             # Save the access and private keys to the datastore
             access_key = params['ec2_access_key']
             secret_key = params['ec2_secret_key']
             credentials = {'EC2_ACCESS_KEY':access_key, 'EC2_SECRET_KEY':secret_key}
-            
+            print credentials
             # See if the CredentialsWrapper is already created, in which case we modify it and rewrite.
             result = self.saveCredentials(user_id,credentials)
             context = self.getVMContext(user_id)
@@ -112,21 +113,29 @@ class CredentialsPage(BaseHandler):
             params['credentials'] =credentials
             params["infrastructure"] = "ec2"
             
+            # We will save the user 
+            db_credentials = db.GqlQuery("SELECT * FROM CredentialsWrapper WHERE user_id = :1", user_id).get()
+            if db_credentials is None:
+                # Create a new credentials wrapper
+                db_credentials = CredentialsWrapper()
+                db_credentials.user_id = user_id
+                db_credentials.access_key = credentials['EC2_ACCESS_KEY']
+                db_credentials.secret_key = credentials['EC2_SECRET_KEY']
+            else:
+                db_credentials.access_key = credentials['EC2_ACCESS_KEY']
+                db_credentials.secret_key = credentials['EC2_SECRET_KEY']
+        
+            # Check if the supplied credentials are valid of not
             if service.validateCredentials(params):
-                db_credentials = db.GqlQuery("SELECT * FROM CredentialsWrapper WHERE user_id = :1", user_id).get()
-                if db_credentials is None:
-                    # Create a new credentials wrapper
-                    db_credentials = CredentialsWrapper()
-                    db_credentials.user_id = user_id
-                    db_credentials.access_key = credentials['EC2_ACCESS_KEY']
-                    db_credentials.secret_key = credentials['EC2_SECRET_KEY']
-                else:
-                    db_credentials.secret_key = credentials['EC2_SECRET_KEY']
-                    db_credentials.access_key = credentials['EC2_ACCESS_KEY']
-                db_credentials.put()
-                result = {'status': True, 'credentials_msg': ' Credentials saved successfully!'}
+                db_credentials.validated = True
+                result = {'status': True, 'credentials_msg': ' Credentials saved successfully! The EC2 keys have been validated.'}
             else:
                 result = {'status': False, 'credentials_msg':' Invalid Secret Key or Access key specified'}
+                db_credentials.validated = False
+             
+            # Write the credentials to the datastore
+            db_credentials.put()
+                
         except Exception,e:
             result = {'status': False, 'credentials_msg':' There was an error saving the credentials: '+str(e)}
         
@@ -146,24 +155,39 @@ class CredentialsPage(BaseHandler):
            # This should never fail at this stage, and if it does we crash the app. TODO: Improve error handling.
            print str(e) 
            raise Exception
-                    
-        # I assumed here that all_vms is a list of VMs ""
-        all_vms = self.get_all_vms(user_id,credentials)
-        if all_vms == None:
-            return None
-        number_pending = 0
-        number_running = 0;
-        for vm in all_vms:
-            if vm != None and vm['state']=='pending': number_pending = number_pending + 1
-            elif vm != None and vm['state']=='running': number_running = number_running + 1
-        number_of_vms = len(all_vms)
-        print "number pending = " + str(number_pending)
-        print "number running = " + str(number_running)
-        # ANAND: Check the status of the VMS
-        #vm_status = backendservice.getStatusOfVMS(all_vms)
-        vm_status = ['Pending','Running','Pending']
-        context = {'vm_names':all_vms, 'number_of_vms':number_of_vms,'vm_status':vm_status,'number_pending':number_pending,'number_running':number_running}
+        
+        # Try to validate the credentials
+        service = backendservices()
+        params ={}
+        params['credentials'] =credentials
+        params["infrastructure"] = "ec2"
+               
+        result = {}
+        # Check if the credentials are valid.
+        # TODO: Use an instance variable (boolean) in the CredentialsWrapper to check.
+        if not service.validateCredentials(params):
+            result = {'status':False,'vm_status_msg':'Could not determine the status of the VMs: Invalid Credentials.'}
+            context = {'vm_names':None,'number_pending':'NA','number_running':'NA'}
+        else:
+            all_vms = self.get_all_vms(user_id,credentials)
+            if all_vms == None:
+                result = {'status':False,'msg':'Could not determined the status of the VMs.'}
+                context = {'vm_names':all_vms,'number_pending':'NA','number_running':'NA'}
+            else:
+                #    return dict(credentials,**{'vm_names':all_vms,'number_pending':'NA','number_running':'NA'})
+                number_pending = 0
+                number_running = 0;
+                for vm in all_vms:
+                    if vm != None and vm['state']=='pending': number_pending = number_pending + 1
+                    elif vm != None and vm['state']=='running': number_running = number_running + 1
+                number_of_vms = len(all_vms)
+                print "number pending = " + str(number_pending)
+                print "number running = " + str(number_running)
+                context = {'vm_names':all_vms,'number_of_vms':number_of_vms,'number_pending':number_pending,'number_running':number_running}
+                result['status']= True
+                result['credentials_msg'] = 'The EC2 keys have been validated.'
         context = dict(context, **credentials)
+        context = dict(result, **context)
         return context
     
     def get_all_vms(self,user_id,credentials):
@@ -174,14 +198,15 @@ class CredentialsPage(BaseHandler):
         if user_id is None or user_id is "":
             return None
         else:
-            service = backendservices()
-            params ={"infrastructure":"ec2",
-                 'credentials':credentials}          
-            result = service.describeMachines(params)
-            print "i was here too"
-            print str(result)
-        return result
-    
+            try:
+                service = backendservices()
+                params ={"infrastructure":"ec2",
+                     'credentials':credentials}          
+                result = service.describeMachines(params)
+                return result
+            except:
+                return None
+                    
     def start_vms(self, user_id, credentials, number_of_vms=None):
         #  db_user = db.GqlQuery("SELECT * FROM StochKitModelWrapper WHERE user_id = :1", user_id).get()
         # db_user.user = valid_username
