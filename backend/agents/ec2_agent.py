@@ -28,7 +28,7 @@ class EC2Agent(BaseAgent):
   # because our image is roughly 10GB in size, and if Eucalyptus doesn't
   # have the image cached, it could take half an hour to get our image
   # started.
-  MAX_VM_CREATION_TIME = 1800
+  MAX_VM_CREATION_TIME = 1200
 
   # The amount of time that run_instances waits between each describe-instances
   # request. Setting this value too low can cause Eucalyptus to interpret
