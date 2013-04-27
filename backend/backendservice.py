@@ -4,7 +4,7 @@ It would accept all the calls from the front end and pass on to the backend.
 All the input validation is performed in this class.
 '''
 from infrastructure_manager import InfrastructureManager
-import os,subprocess,signal,uuid
+import os,subprocess,signal,uuid,sys
 
 class backendservices():
     ''' 
@@ -13,6 +13,8 @@ class backendservices():
     '''
     #agent_type= 
         
+    def backendservices(self): 
+        sys.path.append(os.path.join(os.path.dirname(__file__), 'lib/boto'))    
     def initialize_server(self):
          # check if the security group exists , if not then create a group
          pass
@@ -137,7 +139,8 @@ class backendservices():
             from pprint import pprint
             pprint(i)
             print "==============================================="
-        pass
+        return res
+    
     
     def validateCredentials(self,params):
         i = InfrastructureManager()
@@ -163,6 +166,7 @@ if __name__ == "__main__":
              'use_spot_instances':False}
     #test  = obj.validateCredentials(params)
     #print test
+    val = obj.describeMachines(params)
     pids = [12680,12681,12682, 18526]
     #res  = obj.checkTaskStatusLocal(pids)
     pids = [18511,18519,19200]
@@ -170,8 +174,8 @@ if __name__ == "__main__":
     #print str(res)
     
     param = {'file':"/Users/RaceLab/StochKit2.0.6/models/examples/dimer_decay.xml",'paramstring':"--force -t 10 -r 1000"}
-    res = obj.executeTaskLocal(param)
-    print str(res)
+    #res = obj.executeTaskLocal(param)
+    #print str(res)
     #obj.startMachines(params)
     #obj.describeMachines(params)
     
