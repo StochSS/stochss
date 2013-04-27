@@ -68,9 +68,24 @@ class CredentialsPage(BaseHandler):
             self.render_response('credentials.html', **(dict(context, **result)))
 
         elif 'start' in params:
-            number_of_new_vms = params['vm_number']
-            result = self.start_vms(user_id,number_of_new_vms)
             
+            db_credentials = db.GqlQuery("SELECT * FROM CredentialsWrapper WHERE user_id = :1", user_id).get()
+            access_key = ""
+            secret_key = ""
+            # the following code has to be refactored. The textbox should always have the key.
+            # We won't have to fetch the keys all the time from DB if it's prepopulated in the
+            # box.
+            if db_credentials is None:
+                # Create a new credentials wrapper
+                access_key = credentials['EC2_ACCESS_KEY']
+                secret_key = credentials['EC2_SECRET_KEY']
+            else:
+                secret_key = db_credentials.secret_key
+                access_key = db_credentials.access_key
+        
+            credentials = {'EC2_ACCESS_KEY':access_key, 'EC2_SECRET_KEY':secret_key}
+            number_of_new_vms = params['vm_number']
+            result = self.start_vms(user_id, credentials, number_of_new_vms)
             #if number_of_new_vms > 20:
             #    result = {'Status':False, 'msg': "Maximum allowed number of virtual machines is 20"}
             self.render_response('credentials.html', **(dict(context, **result)))
@@ -167,7 +182,7 @@ class CredentialsPage(BaseHandler):
             print str(result)
         return result
     
-    def start_vms(self, user_id, number_of_vms=None):
+    def start_vms(self, user_id, credentials, number_of_vms=None):
         #  db_user = db.GqlQuery("SELECT * FROM StochKitModelWrapper WHERE user_id = :1", user_id).get()
         # db_user.user = valid_username
         #result = backendservice.startMachines(db_user.user)
@@ -175,20 +190,20 @@ class CredentialsPage(BaseHandler):
         group_random_name = user_id +"-"+''.join(random.choice(string.ascii_uppercase + string.digits) for x in range(6))
         params ={"infrastructure":"ec2",
              "num_vms":number_of_vms, 
-             'group':'stochss18', 
+             'group':group_random_name, 
              'image_id':'ami-44b6272d', 
              'instance_type':'t1.micro',
-             'keyname':'stochssnew24', 
-             'email':['anand.bdk@gmail.com'],
-             'credentials':{"EC2_ACCESS_KEY":"AKIAJWILGFLOFVDRDRCQ", "EC2_SECRET_KEY":"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"},
-             #'credentials':{"EC2_ACCESS_KEY":"sadsdsad", "EC2_SECRET_KEY":"/95VWaJ"},
+             'keyname':group_random_name, 
+             'email':[user_id],
+             'credentials':credentials,
              'use_spot_instances':False}
-        
-        
-        
-        
-        
-        result = {'status': True, 'msg': 'Sucessfully requested '+ str(number_of_vms) + ' Virtual Machines.'}
+        service = backendservices()
+        res = service.startMachines(params)
+        if res != None and res['success']==True:
+            result = {'status':'Success' , 'msg': 'Sucessfully requested '+ str(number_of_vms) + ' Virtual Machines.'}
+        else:
+            result = {'status': 'False' , 'msg': 'Request to start the machines failed. Please contact the administrator.'}
+        #result = {'status': , 'msg': 'Sucessfully requested '+ str(number_of_vms) + ' Virtual Machines.'}
         return result
     
     def delete_vms():

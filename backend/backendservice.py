@@ -123,9 +123,9 @@ class backendservices():
         #this will basically start an instance in ec2
         # add call from the infrastructure manager here
         i = InfrastructureManager(blocking=True)
-        i.run_instances(params, params)
+        res = i.run_instances(params, params)
+        return res
         
-        pass
     def stopMachines(self,params):
         # add infrastcutre manager call to stop a virtual machines
         pass
@@ -156,17 +156,18 @@ if __name__ == "__main__":
     credentials = {"EC2_ACCESS_KEY":"KIAJWILGFLOFVDRDRCQ", "EC2_SECRET_KEY":"vnEvY4vFpmaPsPNTB80H8IsNqIkWGTMys/95VWaJ"}
     params ={"infrastructure":"ec2",
              "num_vms":1, 
-             'group':'stochss18', 
+             'group':'stochss19', 
              'image_id':'ami-44b6272d', 
              'instance_type':'t1.micro',
-             'keyname':'stochssnew24', 
+             'keyname':'stochssnew25', 
              'email':['anand.bdk@gmail.com'],
              'credentials':{"EC2_ACCESS_KEY":"AKIAJWILGFLOFVDRDRCQ", "EC2_SECRET_KEY":"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"},
              #'credentials':{"EC2_ACCESS_KEY":"sadsdsad", "EC2_SECRET_KEY":"/95VWaJ"},
              'use_spot_instances':False}
     #test  = obj.validateCredentials(params)
     #print test
-    val = obj.describeMachines(params)
+    print str(obj.startMachines(params))
+    #val = obj.describeMachines(params)
     pids = [12680,12681,12682, 18526]
     #res  = obj.checkTaskStatusLocal(pids)
     pids = [18511,18519,19200]
