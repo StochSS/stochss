@@ -166,13 +166,13 @@ class CredentialsPage(BaseHandler):
         # Check if the credentials are valid.
         # TODO: Use an instance variable (boolean) in the CredentialsWrapper to check.
         if not service.validateCredentials(params):
-            result = {'status':False,'vm_status_msg':'Could not determine the status of the VMs: Invalid Credentials.'}
-            context = {'vm_names':None,'number_pending':'NA','number_running':'NA'}
+            result = {'status':False,'vm_status':False,'vm_status_msg':'Could not determine the status of the VMs: Invalid Credentials.'}
+            context = {'vm_names':None}
         else:
             all_vms = self.get_all_vms(user_id,credentials)
             if all_vms == None:
-                result = {'status':False,'msg':'Could not determined the status of the VMs.'}
-                context = {'vm_names':all_vms,'number_pending':'NA','number_running':'NA'}
+                result = {'status':False,'vm_status':False,'vm_status_msg':'Could not determined the status of the VMs.'}
+                context = {'vm_names':all_vms}
             else:
                 #    return dict(credentials,**{'vm_names':all_vms,'number_pending':'NA','number_running':'NA'})
                 number_pending = 0
@@ -186,6 +186,8 @@ class CredentialsPage(BaseHandler):
                 context = {'vm_names':all_vms,'number_of_vms':number_of_vms,'number_pending':number_pending,'number_running':number_running}
                 result['status']= True
                 result['credentials_msg'] = 'The EC2 keys have been validated.'
+                if number_running+number_pending == 0:
+                    context['no_active_vms'] =  True
         context = dict(context, **credentials)
         context = dict(result, **context)
         return context
