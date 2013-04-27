@@ -11,14 +11,19 @@ import __future__
 from stochssapp import BaseHandler
 from stochss.backendservice import *
 
+
+class StochKitEnsembleTask():
+    """ Model for a StochKit Task """
+    
+
 class StatusPage(BaseHandler):
     
     def get(self):
         all_urls = self.get_all_urls()
         if all_urls is not None:
-            self.render_response('statuspage.html', **all_urls)            
+            self.render_response('status.html', **all_urls)
         else:
-            self.render_response('statuspage.html')
+            self.render_response('status.html')
 
     def post(self):
         if self.request.get('update') == "1":
@@ -32,7 +37,7 @@ class StatusPage(BaseHandler):
             if all_urls is not None:
                 result = dict(result, **all_urls)
                 
-            self.render_response('statuspage.html', **result)            
+            self.render_response('status.html', **result)            
                 
         else:
             result = self.create_reaction()
@@ -40,7 +45,7 @@ class StatusPage(BaseHandler):
             if all_reactions is not None:
                 result = dict(result, **all_reactions)
 
-            self.render_response('statuspage.html', **result)
+            self.render_response('status.html', **result)
 
     def get_all_urls(self):
         """
@@ -50,9 +55,9 @@ class StatusPage(BaseHandler):
         model = self.get_session_property('model_edited')
         if model is None:
             return None
-        else
+        else:
         	result = backendservice.describeTask(valid_username)
-		self.render_response('statuspage.html', **result)
+		self.render_response('status.html', **result)
 
 	def delete_tasks(self):
 		"""
@@ -60,7 +65,7 @@ class StatusPage(BaseHandler):
 		"""
         name = self.request.get('toDelete') 
 
-       try:
+        try:
             user = self.get_session_property('valid_username')
             backendservice.deleteTask()
 

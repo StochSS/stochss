@@ -18,6 +18,8 @@ from stochssapp import BaseHandler
 from stochssapp import StochKitModelWrapper
 from stochssapp import ObjectProperty
 
+#from backend import backendservice
+
 try:
     import json
 except ImportError:
@@ -26,15 +28,53 @@ except ImportError:
 jinja_environment = jinja2.Environment(autoescape=True,
                                        loader=(jinja2.FileSystemLoader(os.path.join(os.path.dirname(__file__), '../templates'))))
 
-class StochKitEnsembleWrapper(db.Model):
-    """
-        A wrapper for the StochKitEnsemble object
-    """
-    user_id = db.StringProperty()
-    name = db.StringProperty()
-    ensemble = ObjectProperty()
-    file_name = db.StringProperty()
 
+class StochKitJobWrapper(db.Model):
+    # A reference to the user that owns this job
+    user_id =  db.StringProperty()
+    stochkit_job = ObjectProperty()
+
+class StochKitJob():
+    """ Model for a StochKit job. Contains all the parameters associated with the call. """
+    
+    def __init__(self,name=None, final_time=None, increment=None, realizations=1,algorithm='ssa',store_only_mean=False, label_column_names=False,create_histogram_data=False, seed=None, epsilon=0.1,threshold=10, output_url = None):
+        """ fdsgfhsj """
+        
+        # Input parameters
+        self.name = name
+        self.final_time = final_time
+        self.increment = increment
+        self.realizations = realizations
+        self.algorithm = algorithm
+        
+        self.store_only_mean = store_only_mean
+        self.label_column_names = label_column_names
+        self.create_histogram_data = create_histogram_data
+        
+        # TODO: Fix this.
+        if seed == None:
+            self.seed = 6546358634
+        
+        self.epsilon = epsilon
+        self.threshold = threshold
+                
+        # Status of the Job (Running, Pending, Done)
+        status = 'Pending'
+        #  Process ID (only valid for local execution???)
+        pid = None
+                
+        # URL to the result (valid after a sucessful execution)
+        output_url = output_url
+    
+    
+    def setpid(self,pid):
+        """ Set the PID of the job after execcution """
+        self.pid = pid
+    
+    def getArgumentString(self):
+        """ Assemble the argument list for a StochKit2 execution. """
+        
+        
 
 class SimulatePage(BaseHandler):
     """ Render a page that lists the available models. """
@@ -73,15 +113,14 @@ class NewStochkitEnsemblePage(BaseHandler):
     def post(self):
         """ Assemble the input to StochKit2 and submit the job (locally or via cloud). """
         
+
         # Params is a dict that constains all response elements of the form
         params = self.request.POST
-        
-        # Check if the form was posted by pressing the 'Run Local' or 'Run Cloud' button.
-        # Note, I think that we need some refactoring here in the future,
-        # this is not a pretty solution....
+    
+        # Create a stochhkit_job instance
         
         if 'run_local' in params:
-            result=self.runLocal()
+            result=self.runStochKitLocal()
         elif 'run_cloud' in params:
             result=self.runCloud()
         else:
@@ -99,51 +138,35 @@ class NewStochkitEnsemblePage(BaseHandler):
         result = {'status':True,'msg': 'Calling the cloud execution function'}
         return result
 
-    def runLocal(self):
+    def runStochKitLocal(self):
+        """ Submit a local StochKit job """
         try:
             # Get the model that is currently in scope for simulation via the seesion property 'model_to_simulate'
             model_to_simulate=self.get_session_property('model_to_simulate')
             model = db.GqlQuery("SELECT * FROM StochKitModelWrapper WHERE user_id = :1 AND model_name = :2", self.user.user_id(),model_to_simulate).get()
             model = model.model
-            
             # The data from the form
             params = self.request.POST
             
             # We write all StochKit input and output files to a temporary folder in the root folder of the app
             prefix_outdir = os.path.join(os.path.dirname(__file__), '../.stochkit_output')
             
-            # If the base output directory does not exsit, we create it
-            import subprocess
+            # If the base output directory does not exist, we create it
+            #import subprocess
             #command = 'mkdir anand1{0}'.format(prefix_outdir)
             command ="ls -l"
             #os.system(command)
-            test = subprocess.Popen(command.split())
+            #test = subprocess.Popen(command.split())
             #process = os.popen('mkdir ' + prefix_outdir);
             #process.close()
             
             # Write a temporary StochKit2 input file.
             outfile =  "stochkit_temp_input.xml"
-            mfhandle = open(outfile,'w')
+            #mfhandle = open(outfile,'w')
             #document = StochMLDocument.fromModel(model)
             document = model.serialize()
-            mfhandle.write(document)
-            mfhandle.close()
-            
-            # Parse the required arguments
-            # TODO: Error Checking needed here! But preferably also using AJAX calls similar to what Gautham
-            #       implemented for the Model editor.
-            
-            
-            # If the temporary folder we need to create to hold the output data already exists, we error
-            #        process = os.popen('ls '+prefix_outdir)
-            #        directories = process.read();
-            #        process.close()
-            
-            # TODO: Replace this simple test with something better.
-            #        if ensemblename in directories:
-            #            self.response.out.write("The ensemble name already exists. You need to input a unique name.")
-            #            return
-            
+            #mfhandle.write(document)
+            #mfhandle.close()
             
             ensemblename = params['output']
             time = params['time']
@@ -152,10 +175,10 @@ class NewStochkitEnsemblePage(BaseHandler):
             seed = params['seed']
             # Algorithm, SSA or Tau-leaping?
             executable = params['algorithm']
+        
             
             outdir = prefix_outdir+'/'+ensemblename
 
-            
             # Assemble the argument list
             args = ''
             args+='--model '
@@ -183,15 +206,38 @@ class NewStochkitEnsemblePage(BaseHandler):
             # TODO: We need a robust way to pick a default seed for the ensemble. It needs to be robust in a ditributed, parallel env.
             args+=' --seed '
             args+=str(seed)
-            
-            # If we are using local mode, shell out and run StochKit (SSA or Tau-leaping)
+        
+        
             cmd = executable+' '+args
-            # AH: Can't test for failed execution here, popen does not return stderr.
-            process = os.popen(cmd)
-            stochkit_output_message = process.read()
-            process.close()
+        
+            # Create a StochKitJob instance
+            stochkit_job = StochKitJob(name=ensemblename, final_time=time, realizations=realizations,increment=increment,seed=seed,algorithm=executable)
+        
+            # Create the argument string
+            args = stochkit_job.getArgumentString()
             
-            result = {'status':True,'msg':stochkit_output_message}
+            # Run StochKit
+            
+            pid = "4675634875683745"
+            stochkit_job.pid = pid
+                
+            #cmd = executable+' '+args
+            #cmd = stochkit_job.getAlgorithm() + ' ' +args
+            #process = os.popen(cmd)
+            #stochkit_output_message = process.read()
+            #process.close()
+            # Create a StochKitJob instance
+            
+            # Create a wrapper to store the Job description in the datastore
+            stochkit_job_db = StochKitJobWrapper()
+            stochkit_job_db.user_id = self.user.user_id()
+            stochkit_job_db.stochkit_job = stochkit_job
+            stochkit_job_db.put()
+                
+            result = {'status':True,'msg':'Job submitted sucessfully'}
+            
+
+            #result = {'status':True,'msg':stochkit_output_message}
         
         except Exception,e:
             result = {'status':False,'msg':'Local execution failed: '+str(e)}

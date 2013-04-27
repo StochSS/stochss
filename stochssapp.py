@@ -100,11 +100,11 @@ class VisualizePage(webapp2.RequestHandler):
         self.response.out.write(template.render({'active_visualize': True}))
         
 
-class StatusPage(webapp2.RequestHandler):
-    """ Render a page for viewing job status. """
-    def get(self):
-        template = jinja_environment.get_template('statuspage.html')
-        self.response.out.write(template.render({'active_visualize': True}))
+    #class StatusPage(webapp2.RequestHandler):
+    #    """ Render a page for viewing job status. """
+        #    def get(self):
+        #      template = jinja_environment.get_template('statuspage.html')
+#     self.response.out.write(template.render({'active_visualize': True}))
 
 class CredentialsPage(webapp2.RequestHandler):
     """ Render a page for viewing job status. """
@@ -124,6 +124,7 @@ from handlers.parametereditor import *
 from handlers.reactioneditor import *
 from handlers.simulation import *
 from handlers.credentials import *
+from handlers.status import *
 
 
 app = webapp2.WSGIApplication([                                                              
