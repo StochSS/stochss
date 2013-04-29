@@ -14,6 +14,9 @@ from google.appengine.ext import db
 
 from stochssapp import BaseHandler
 from stochss.backendservice import *
+from backend.backendservice import backendservices
+
+import shutil
 
 class StatusPage(BaseHandler):
     
@@ -31,23 +34,33 @@ class StatusPage(BaseHandler):
             print "Deleting selected elements"
             jobs_to_delete = params.getall('select_job')
             
+            service = backendservices()
+
             # Select the jobs to delete from the datastore
             result = {}
             for job_name in jobs_to_delete:
                 try:
-                    stochkit_job = db.GqlQuery("SELECT * FROM StochKitJobWrapper WHERE user_id = :1 AND name = :2", self.user.user_id(),job_name).get()
+                    job = db.GqlQuery("SELECT * FROM StochKitJobWrapper WHERE user_id = :1 AND name = :2", self.user.user_id(),job_name).get()
+                    stochkit_job = job.stochkit_job
                 except Exception,e:
                     result = {'status':False,'msg':"Could not retreive the jobs"+job_name+ " from the datastore."}
         
                 # TODO: Call the backend to kill and delete the job and all associated files from EC2/local storage.
-                #isdeleted_backend = backend.deleteTask(stochkit_job.task_id,credentials)
-                isdeleted_backend = True
+                try:
+                    service.deleteTaskLocal([stochkit_job.pid])
+                    isdeleted_backend = True
+                except Exception,e:
+                    result['status']=False
+                    result['msg'] = "Failed to kill task with PID " + str(stochkit_job.pid) + str(e)
+                        
                 if isdeleted_backend:
-                    # Delete the job from the datastore
+                    # Delete all the local files and delete the job from the datastore
                     try:
-                        db.delete(stochkit_job)
+                        if stochkit_job.type == "Local":
+                            shutil.rmtree(stochkit_job.output_location)
+                        db.delete(job)
                     except Exception,e:
-                        result = {'status':False,'msg':"Could not delete the job"+job_name+ " from the datastore."}
+                        result = {'status':False,'msg':"Failed to delete job "+job_name}
 
             # Render the page
             time.sleep(0.5)
@@ -69,6 +82,8 @@ class StatusPage(BaseHandler):
         """
         
         context = {}
+        result = {}
+        service = backendservices()
         # Grab references to all the user's StochKitJobs in the system
         all_stochkit_jobs = db.GqlQuery("SELECT * FROM StochKitJobWrapper WHERE user_id = :1", self.user.user_id())
         if all_stochkit_jobs == None:
@@ -76,26 +91,32 @@ class StatusPage(BaseHandler):
         else:
             # We want to display the name of the job, the status of the Job, and if it is
             # completed, the URL where the user can download the output.
-            job_names = []
-            job_status = []
-            job_urls = []
             all_jobs = []
             for job in all_stochkit_jobs.run():
+                
                 # Get the job id
                 stochkit_job = job.stochkit_job
+                
+                # Query the backend for the status of the job, but only if the current status is not Finished
+                if not stochkit_job.status == "Finished":
+                    try:
+                        # First, check if the job is still running
+                        res = service.checkTaskStatusLocal([stochkit_job.pid])
+                        if res[stochkit_job.pid]:
+                            stochkit_job.status = "Running"
+                        else:
+                            stochkit_job.status = "Finished"
+                    except Exception,e:
+                        result = {'status':False,'msg':'Could not determine the status of the jobs.'+str(e)}
+                
                 all_jobs.append(stochkit_job)
-
-                task_id = stochkit_job.task_id
-                job_name = stochkit_job.name
-                job_names.append(job_name)
-                # Query the backend for the staus of the job
-                job_status.append(self.getJobStatus(task_id))
-
-            context['job_names']=job_names
-            context['job_status'] = job_status
-            context['all_jobs']=all_jobs
+                # Save changes to the status
+                job.put()
+                #job_status.append(self.getJobStatus(task_id))
+                
+        context['all_jobs']=all_jobs
     
-        return context
+        return dict(result,**context)
 
     def getJobStatus(self,task_id):
         # TODO: request the status from the backend.

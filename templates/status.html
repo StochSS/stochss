@@ -37,12 +37,13 @@
                         </td>
                         <td>
                             {% if job.status %}
-                            <span style="color: green" class="create_msg">Finished</span>
-                            {% else %}
-                            <span> Running </span>
+                            <span style="color: green" class="create_msg">{{job.status}}</span>
                             {% endif %}
-                        <td><a href={{job.output_url}}>{{job.output_url}}</a></td>
-                        <!-- <td><a href="javascript:void(0)" onclick="javascript:deleteElement('{{job.name}}')">Delete</a></td> -->
+                            {% if job.status == "Finished" %}
+                                <td><a href={{job.output_url}}>{{job.output_url}}</a></td>
+                            {% else %}
+                                <td><span></span></td>
+                            {% endif %}
                     </tr>
                     
                     {% endfor %}
@@ -53,6 +54,14 @@
 <button type="submit" class="btn btn-primary" name="refresh">Refresh</button>
 </form>
 
+            {% if msg %}
+            {% if status == False %}
+            <span style="color: red" class="create_msg">{{msg}}</span>
+            {% else %}
+            <span style="color: green" class="create_msg">{{msg}}</span>
+            {% endif %}
+            {% endif %}
+            
 <!-- <form id="deleteForm" method="post" action="/modeleditor/delete">
     <input type="hidden" name="toDelete" />
     <input type="hidden" name="delete" value="1"/>

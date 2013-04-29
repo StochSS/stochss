@@ -19,6 +19,8 @@ from stochssapp import StochKitModelWrapper
 from stochssapp import ObjectProperty
 from backend.backendservice import backendservices
 
+import os
+
 #from backend import backendservice
 
 try:
@@ -42,15 +44,15 @@ class StochKitJob():
     def __init__(self,name=None, final_time=None, increment=None, realizations=1,algorithm='ssa',store_only_mean=False, label_column_names=False,create_histogram_data=False, seed=None, epsilon=0.1,threshold=10, output_url = None):
         """ fdsgfhsj """
         
-        # task id. This is the variable we use to query the backend for the job status
-        self.task_id = 463764782347
+        # Type of the job {'Local','Cloud'}
+        self.type = None
         
-        # The status of the job, hardcoded to True for now (dev and testing of the frontend)
-        self.status = True
+        # The status of the job. Valid statuses are 'Running', 'Finished', 'Failed'
+        self.status = None
         
         # URL to the result (valid after a sucessful execution)
+        self.output_location = ""
         self.output_url = output_url
-        self.output_url = "http://fjshdfjksdhks.jdfjskl.com"
         # Input parameters
         self.name = name
         self.final_time = final_time
@@ -72,7 +74,7 @@ class StochKitJob():
         # Status of the Job (Running, Pending, Done)
         status = 'Pending'
         #  Process ID (only valid for local execution???)
-        pid = None
+        self.pid = None
                 
        
     
@@ -159,10 +161,7 @@ class NewStochkitEnsemblePage(BaseHandler):
             model = model.model
             # The data from the form
             params = self.request.POST
-            
-            # We write all StochKit input and output files to a temporary folder in the root folder of the app
-            prefix_outdir = os.path.join(os.path.dirname(__file__), '../.stochkit_output')
-            
+                        
             # Write a temporary StochKit2 input file.
             outfile =  params['output']+".xml"
             mfhandle = open(outfile,'w')
@@ -191,8 +190,7 @@ class NewStochkitEnsemblePage(BaseHandler):
             #args+=' --out-dir '+outdir
             args+=' -t '
             args+=str(time)
-            #num_output_points = str(int(float(time)/float(increment)))
-            num_output_points = 0
+            num_output_points = str(int(float(time)/float(increment)))
             args+=' -i ' + str(num_output_points)
             args+=' --realizations '
             args+=str(realizations)
@@ -212,33 +210,31 @@ class NewStochkitEnsemblePage(BaseHandler):
             args+=' --seed '
             args+=str(seed)
         
-        
             cmd = executable+' '+args
         
             # Create a StochKitJob instance
             stochkit_job = StochKitJob(name=ensemblename, final_time=time, realizations=realizations,increment=increment,seed=seed,algorithm=executable)
         
+            stochkit_job.type = 'Local'
             # Create the argument string
-            args = stochkit_job.getArgumentString()
+            #args = stochkit_job.getArgumentString()
             print cmd
             params['paramstring'] = cmd
             # Run StochKit
             service = backendservices()
             
             res = service.executeTaskLocal(params)
-            print str(res)
+            print "\n\n" + str(res) +"\n\n"
             
             if(res == None):
                 result = {'status':False,'msg':'Local execution failed. '}
                 return result
             stochkit_job.pid = res['pid']
-                
-            #cmd = executable+' '+args
-            #cmd = stochkit_job.getAlgorithm() + ' ' +args
-            #process = os.popen(cmd)
-            #stochkit_output_message = process.read()
-            #process.close()
-            # Create a StochKitJob instance
+            #stochkit_job.output_url = "http://localhost:8080/"+res['output']
+            stochkit_job.output_location = res['output']
+            stochkit_job.output_url = "http://localhost:8080/" + os.path.relpath(res['output'])
+            #stochkit_job.output_url = res['output']
+            stochkit_job.status = "Running"
             
             # Create a wrapper to store the Job description in the datastore
             stochkit_job_db = StochKitJobWrapper()
@@ -248,8 +244,7 @@ class NewStochkitEnsemblePage(BaseHandler):
             stochkit_job_db.put()
                 
             result = {'status':True,'msg':'Job submitted sucessfully'}
-            
-
+        
             #result = {'status':True,'msg':stochkit_output_message}
         
         except Exception,e:

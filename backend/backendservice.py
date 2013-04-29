@@ -34,7 +34,7 @@ class backendservices():
     
     def executeTaskLocal(self,params):
         '''
-        This method spawns a stochkit process.It doesn't wait for the process to finish. The status of the
+        This method spawns a stochkit process. It doesn't wait for the process to finish. The status of the
         process can be tracked using the pid and the output directory returned by this method. 
         
         @param  params['file'] = the absolute path of the xml file 
@@ -54,11 +54,14 @@ class backendservices():
             create_dir_str = "mkdir -p output/%s " % uuidstr
             os.system(create_dir_str)
             # check if the env variable is set form STOCHKIT_HOME or else use the default location
-            STOCHKIT_DIR = "/Users/RaceLab/StochKit2.0.6"
+            #STOCHKIT_DIR = "/Users/RaceLab/StochKit2.0.6"
+            STOCHKIT_DIR = "/Users/andreash/Downloads/StochKit2.0.6"
+            # AH: THIS DOES NOT WORK, FOR SOME REASON THE VARIABLE IS NOT PICKED UP FROM THE SHELL
             try:
                 STOCHKIT_DIR = os.environ['STOCHKIT_HOME']
             except Exception:
                 #ignores if the env variable is not set
+                print "VARIABLE NOT SET!!"
                 pass
             
             # The following executiong string is of the form : stochkit_exec_str = "~/StochKit2.0.6/ssa -m ~/output/%s/dimer_decay.xml -t 20 -i 10 -r 1000" % (uuidstr)
@@ -75,6 +78,7 @@ class backendservices():
             filepath = "output/%s//" % (uuidstr)
             absolute_file_path = os.path.abspath(filepath)
             res['output'] = absolute_file_path
+            #res['relative_output_path']=os.path.relpath(filepath,)
             
             #copes the XML file to the output direcory
             copy_file_str = "cp  {0} output/{1}".format(xmlfilepath,uuidstr)
@@ -94,6 +98,7 @@ class backendservices():
         returns a dictionary as {"pid1":"status", "pid2":"status", "pid3":"status"}
         '''
         res = {}
+        
         for pid in pids:
             try:
                 os.getpgid(pid)
