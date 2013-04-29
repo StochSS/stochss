@@ -86,7 +86,6 @@ class StatusPage(BaseHandler):
             Get information about all the jobs that exist in the system and assemble a dict
             with info to display on the page. 
         """
-        
         context = {}
         result = {}
         service = backendservices()

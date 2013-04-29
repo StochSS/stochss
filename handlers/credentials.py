@@ -12,8 +12,9 @@ import string
 from stochssapp import BaseHandler
 from backend.backendservice import *
 
-
 from google.appengine.ext import db
+
+import time
 
 class CredentialsWrapper(db.Model):
     """ This is a temporary model to be replaces by Arvind's User Model """
@@ -54,18 +55,18 @@ class CredentialsPage(BaseHandler):
     
         # Get the context of the page
         context = self.getVMContext(user_id)
-#print context
 
         if 'save' in params:
             # Save the access and private keys to the datastore
             access_key = params['ec2_access_key']
             secret_key = params['ec2_secret_key']
             credentials = {'EC2_ACCESS_KEY':access_key, 'EC2_SECRET_KEY':secret_key}
-            print credentials
             # See if the CredentialsWrapper is already created, in which case we modify it and rewrite.
             result = self.saveCredentials(user_id,credentials)
+            # TODO: This is a hack to make it unlikely that the db transaction has not completed
+            # before we re-render the page (which would cause an error). We need some real solution for this...
+            time.sleep(0.5)
             context = self.getVMContext(user_id)
-            #result = {'status':True,'credentials_msg':'Your credentials has been saved.'}
             self.render_response('credentials.html', **(dict(context, **result)))
 
         elif 'start' in params:

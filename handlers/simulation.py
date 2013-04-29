@@ -76,9 +76,6 @@ class StochKitJob():
         #  Process ID (only valid for local execution???)
         self.pid = None
                 
-       
-    
-    
     def setpid(self,pid):
         """ Set the PID of the job after execcution """
         self.pid = pid
@@ -125,12 +122,10 @@ class NewStochkitEnsemblePage(BaseHandler):
     def post(self):
         """ Assemble the input to StochKit2 and submit the job (locally or via cloud). """
         
-
         # Params is a dict that constains all response elements of the form
         params = self.request.POST
-    
-        # Create a stochhkit_job instance
         
+        # Create a stochhkit_job instance
         if 'run_local' in params:
             result=self.runStochKitLocal()
         elif 'run_cloud' in params:
@@ -141,27 +136,94 @@ class NewStochkitEnsemblePage(BaseHandler):
         context = {'model_to_simulate':self.get_session_property('model_to_simulate')}
         self.render_response('simulate/newstochkitensemblepage.html',**dict(context,**result))
 
-    def parseForm(self):
-        """ Parse the form, assemble the arguments to StochKit and check for errors. """
-        # TODO: Refactor: Move the parsing code form 'runLocal' so it can be reused for 'runCloud'.
-        # TODO: Check for errors....
-
     def runCloud(self):
         result = {'status':True,'msg': 'Calling the cloud execution function'}
         return result
 
+    def parseForm(self):
+        """ 
+            Parses the SotchKit2 Ensemble job submission form.
+            Returns a tuple of dicts (params, result) where params contains
+            the StochKit job parameters and result contains the status and a message.
+            
+        """
+        params = {}
+        result = {}
+        result['status']=True
+        result['msg']=''
+        
+        par = self.request.POST
+        
+        # Check the name of the simulation, make sure that no simulation with that name exists in the system
+        name = par['output']
+        model = db.GqlQuery("SELECT * FROM StochKitJobWrapper WHERE user_id = :1 AND name = :2", self.user.user_id(),name).get()
+        if model is not None:
+            result['status'] = False
+            result['msg'] = 'A job with that name already exists. You need to input a unique name.'
+        
+        # Make sure that the simulation time is a numeric value greater than 0
+        try:
+            endtime = float(par['time'])
+            assert endtime > 0.0
+        except:
+            result['status'] = False
+            result['msg'] =  result['msg']+'\nThe simulation end time must be a positive number greater than zero'
+        
+        # Make sure that the increment is a positive number
+        try:
+            increment = float(par['increment'])
+            assert increment > 0.0
+        except:
+            result['status'] = False
+            result['msg'] =  result['msg']+'\nThe output sampling times must be positive numbers greater than zero.'
+        
+        # Make sure that the number of relalizations is an integer value greater than or equal to 1
+        try:
+           realizations = int(par['realizations'])
+           assert realizations >=1
+        except:
+            result['status'] = False
+            result['msg'] =  result['msg']+'\nThe number of realizations must be positive integer greater than zero.'
+                
+        # Check the seed, needs to be a numeric value
+        try:
+            seed = float(par['seed'])
+            assert seed >= 0
+        except:
+            result['status'] = False
+            result['msg'] =  result['msg']+'\nThe seed positive number.'
+
+        # Check epsilon, needs to be a numeric value between 0 and one
+        try:
+            epsilon = float(par['epsilon'])
+            assert epsilon > 0.0 and epsilon < 1.0
+        except:
+            result['status'] = False
+            result['msg'] =  result['msg']+'\n Epsilon must be a number in (0,1)'
+
+        # TODO: Check with Sheng what numbers are valid for the threshold
+
+        return par,result
+    
     def runStochKitLocal(self):
         """ Submit a local StochKit job """
         try:
+            # Get the model that is currently in scope for simulation via the seesion property 'model_to_simulate'
+            try:
+                model_to_simulate=self.get_session_property('model_to_simulate')
+                model = db.GqlQuery("SELECT * FROM StochKitModelWrapper WHERE user_id = :1 AND model_name = :2", self.user.user_id(),model_to_simulate).get()
+                model = model.model
+            except:
+                return {'status':False,'msg':'Failed to retrive the model to simulate.'}
+            
+            # Check the data from the form for errors
+            params,result = self.parseForm()
+            if not result['status']:
+                return result
+        
             #the parameter dictionary to be passed to the backend
             param ={}
-            # Get the model that is currently in scope for simulation via the seesion property 'model_to_simulate'
-            model_to_simulate=self.get_session_property('model_to_simulate')
-            model = db.GqlQuery("SELECT * FROM StochKitModelWrapper WHERE user_id = :1 AND model_name = :2", self.user.user_id(),model_to_simulate).get()
-            model = model.model
-            # The data from the form
-            params = self.request.POST
-                        
+            
             # Write a temporary StochKit2 input file.
             outfile =  params['output']+".xml"
             mfhandle = open(outfile,'w')
@@ -171,14 +233,11 @@ class NewStochkitEnsemblePage(BaseHandler):
             mfhandle.close()
             filepath  = os.path.abspath(outfile)
             params['file'] = filepath
-            print filepath
-            
             ensemblename = params['output']
             time = params['time']
             realizations = params['realizations']
             increment = params['increment']
             seed = params['seed']
-            
             # Algorithm, SSA or Tau-leaping?
             executable = params['algorithm']
         
