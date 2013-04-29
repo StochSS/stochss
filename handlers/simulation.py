@@ -33,6 +33,7 @@ jinja_environment = jinja2.Environment(autoescape=True,
 class StochKitJobWrapper(db.Model):
     # A reference to the user that owns this job
     user_id =  db.StringProperty()
+    name = db.StringProperty()
     stochkit_job = ObjectProperty()
 
 class StochKitJob():
@@ -41,6 +42,15 @@ class StochKitJob():
     def __init__(self,name=None, final_time=None, increment=None, realizations=1,algorithm='ssa',store_only_mean=False, label_column_names=False,create_histogram_data=False, seed=None, epsilon=0.1,threshold=10, output_url = None):
         """ fdsgfhsj """
         
+        # task id. This is the variable we use to query the backend for the job status
+        self.task_id = 463764782347
+        
+        # The status of the job, hardcoded to True for now (dev and testing of the frontend)
+        self.status = True
+        
+        # URL to the result (valid after a sucessful execution)
+        self.output_url = output_url
+        self.output_url = "http://fjshdfjksdhks.jdfjskl.com"
         # Input parameters
         self.name = name
         self.final_time = final_time
@@ -64,8 +74,7 @@ class StochKitJob():
         #  Process ID (only valid for local execution???)
         pid = None
                 
-        # URL to the result (valid after a sucessful execution)
-        output_url = output_url
+       
     
     
     def setpid(self,pid):
@@ -234,6 +243,7 @@ class NewStochkitEnsemblePage(BaseHandler):
             # Create a wrapper to store the Job description in the datastore
             stochkit_job_db = StochKitJobWrapper()
             stochkit_job_db.user_id = self.user.user_id()
+            stochkit_job_db.name = stochkit_job.name
             stochkit_job_db.stochkit_job = stochkit_job
             stochkit_job_db.put()
                 

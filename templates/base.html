@@ -100,21 +100,17 @@
               <li class="nav-header">Simulation</li>
                 
               <li><a href="/simulate" TITLE = "Configure and run simulations">Simulation manager</a></li>
-              
-              <li class="nav-header">Job Management</li>
-                  
-              <li
-                {% if active_visualize %}
-                class="active"
-                    {% endif %}
-                    ><a href="/status" TITLE = "Monitor the progress of your Simulation">Job Status</a>
-              </li>
+              <li><a href="/status" TITLE = "Monitor the progress of your Simulation">Job Status</a></li>
 
+              
+              <li class="nav-header">Cloud Settings</li>
+                  
+              
                 <li
                 {% if active_visulize %}
                 class="active"
                     {% endif %}
-                    ><a href="/credentials" TITLE = "Monitor your Running Vms">Credentials</a>
+                    ><a href="/credentials" TITLE = "Monitor your Running Vms">Credentials & VMs </a>
                 </li>
 
             </ul>
