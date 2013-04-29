@@ -17,6 +17,7 @@ from stochss.stochkit import *
 from stochssapp import BaseHandler
 from stochssapp import StochKitModelWrapper
 from stochssapp import ObjectProperty
+from backend.backendservice import backendservices
 
 #from backend import backendservice
 
@@ -141,6 +142,8 @@ class NewStochkitEnsemblePage(BaseHandler):
     def runStochKitLocal(self):
         """ Submit a local StochKit job """
         try:
+            #the parameter dictionary to be passed to the backend
+            param ={}
             # Get the model that is currently in scope for simulation via the seesion property 'model_to_simulate'
             model_to_simulate=self.get_session_property('model_to_simulate')
             model = db.GqlQuery("SELECT * FROM StochKitModelWrapper WHERE user_id = :1 AND model_name = :2", self.user.user_id(),model_to_simulate).get()
@@ -151,39 +154,32 @@ class NewStochkitEnsemblePage(BaseHandler):
             # We write all StochKit input and output files to a temporary folder in the root folder of the app
             prefix_outdir = os.path.join(os.path.dirname(__file__), '../.stochkit_output')
             
-            # If the base output directory does not exist, we create it
-            #import subprocess
-            #command = 'mkdir anand1{0}'.format(prefix_outdir)
-            command ="ls -l"
-            #os.system(command)
-            #test = subprocess.Popen(command.split())
-            #process = os.popen('mkdir ' + prefix_outdir);
-            #process.close()
-            
             # Write a temporary StochKit2 input file.
-            outfile =  "stochkit_temp_input.xml"
-            #mfhandle = open(outfile,'w')
-            #document = StochMLDocument.fromModel(model)
+            outfile =  params['output']+".xml"
+            mfhandle = open(outfile,'w')
+            document = StochMLDocument.fromModel(model)
             document = model.serialize()
-            #mfhandle.write(document)
-            #mfhandle.close()
+            mfhandle.write(document)
+            mfhandle.close()
+            filepath  = os.path.abspath(outfile)
+            params['file'] = filepath
+            print filepath
             
             ensemblename = params['output']
             time = params['time']
             realizations = params['realizations']
             increment = params['increment']
             seed = params['seed']
+            
             # Algorithm, SSA or Tau-leaping?
             executable = params['algorithm']
         
-            
-            outdir = prefix_outdir+'/'+ensemblename
 
             # Assemble the argument list
             args = ''
             args+='--model '
-            args+=outfile
-            args+=' --out-dir '+outdir
+            args+=filepath
+            #args+=' --out-dir '+outdir
             args+=' -t '
             args+=str(time)
             #num_output_points = str(int(float(time)/float(increment)))
@@ -215,11 +211,18 @@ class NewStochkitEnsemblePage(BaseHandler):
         
             # Create the argument string
             args = stochkit_job.getArgumentString()
-            
+            print cmd
+            params['paramstring'] = cmd
             # Run StochKit
+            service = backendservices()
             
-            pid = "4675634875683745"
-            stochkit_job.pid = pid
+            res = service.executeTaskLocal(params)
+            print str(res)
+            
+            if(res == None):
+                result = {'status':False,'msg':'Local execution failed. '}
+                return result
+            stochkit_job.pid = res['pid']
                 
             #cmd = executable+' '+args
             #cmd = stochkit_job.getAlgorithm() + ' ' +args

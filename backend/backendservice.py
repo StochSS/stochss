@@ -19,9 +19,7 @@ class backendservices():
          # check if the security group exists , if not then create a group
          pass
         
-    def backendservices(self,params):
-        # create ec2 connection object
-        pass
+    
     def createTask(self, params):
         # this will be used to create the virtual machines
         # add the functionality for invoking the infrastrcuture 
@@ -64,12 +62,16 @@ class backendservices():
                 pass
             
             # The following executiong string is of the form : stochkit_exec_str = "~/StochKit2.0.6/ssa -m ~/output/%s/dimer_decay.xml -t 20 -i 10 -r 1000" % (uuidstr)
-            stochkit_exec_str = "{0}/ssa -m {1} {2} --out-dir output/{3}/result ".format(STOCHKIT_DIR,xmlfilepath,paramstr,uuidstr)
+            stochkit_exec_str = "{0}/{2} --out-dir output/{3}/result ".format(STOCHKIT_DIR,xmlfilepath,paramstr,uuidstr)
             #logging.debug("Spawning StochKit Task. String : ", stochkit_exec_str)
+            print "======================="
+            print " Command to be executed : "
+            print stochkit_exec_str
+            print "======================="
+            print "To test if the command string was correct. Copy the above line and execute in terminal."
             p = subprocess.Popen(stochkit_exec_str, shell=True, stdin=subprocess.PIPE,stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
             pid = p.pid;
-            res['pid'] = pid
-            
+            res['pid'] = pid 
             filepath = "output/%s//" % (uuidstr)
             absolute_file_path = os.path.abspath(filepath)
             res['output'] = absolute_file_path
@@ -77,6 +79,8 @@ class backendservices():
             #copes the XML file to the output direcory
             copy_file_str = "cp  {0} output/{1}".format(xmlfilepath,uuidstr)
             os.system(copy_file_str)
+            #removefilestr = "rm {0}".format(xmlfilepath)
+            #os.system(removefilestr) 
             return res
         except Exception as e:
                #logging.error("exception raised : %s" ) % e
