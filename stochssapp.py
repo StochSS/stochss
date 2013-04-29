@@ -13,6 +13,7 @@ from webapp2_extras import auth
 from google.appengine.ext import db
 from google.appengine.api import users
 
+
 """ Initializer section """
 
 # Initialize the jinja environment
@@ -125,6 +126,9 @@ from handlers.reactioneditor import *
 from handlers.simulation import *
 from handlers.credentials import *
 from handlers.status import *
+
+# Make an app to serve static files. We want the user to be able to Browse the
+# local job output folders.
 
 
 app = webapp2.WSGIApplication([                                                              

@@ -50,12 +50,14 @@ class StatusPage(BaseHandler):
                     service.deleteTaskLocal([stochkit_job.pid])
                     isdeleted_backend = True
                 except Exception,e:
+                    isdeleted_backend = False
                     result['status']=False
                     result['msg'] = "Failed to kill task with PID " + str(stochkit_job.pid) + str(e)
                         
                 if isdeleted_backend:
-                    # Delete all the local files and delete the job from the datastore
+                    # Delete all the files and delete the job from the datastore
                     try:
+                        # In case of a local job, we remove the output folder
                         if stochkit_job.type == "Local":
                             shutil.rmtree(stochkit_job.output_location)
                         db.delete(job)
@@ -63,6 +65,10 @@ class StatusPage(BaseHandler):
                         result = {'status':False,'msg':"Failed to delete job "+job_name}
 
             # Render the page
+                            
+            # AH: This is a hack to prevent the page from reloading before the datastore transactions
+            # have taken place. I think it is only necessary for the SQLLite backend stub.
+            # TODO: We need a better way to check if the entities are gone from the datastore...
             time.sleep(0.5)
             context = self.getContext()
             self.render_response('status.html', **dict(result,**context))

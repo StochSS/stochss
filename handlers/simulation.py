@@ -229,11 +229,10 @@ class NewStochkitEnsemblePage(BaseHandler):
             if(res == None):
                 result = {'status':False,'msg':'Local execution failed. '}
                 return result
+        
             stochkit_job.pid = res['pid']
-            #stochkit_job.output_url = "http://localhost:8080/"+res['output']
             stochkit_job.output_location = res['output']
             stochkit_job.output_url = "http://localhost:8080/" + os.path.relpath(res['output'])
-            #stochkit_job.output_url = res['output']
             stochkit_job.status = "Running"
             
             # Create a wrapper to store the Job description in the datastore
@@ -244,9 +243,7 @@ class NewStochkitEnsemblePage(BaseHandler):
             stochkit_job_db.put()
                 
             result = {'status':True,'msg':'Job submitted sucessfully'}
-        
-            #result = {'status':True,'msg':stochkit_output_message}
-        
+            
         except Exception,e:
             result = {'status':False,'msg':'Local execution failed: '+str(e)}
                 
