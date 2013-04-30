@@ -80,19 +80,18 @@ class EC2Agent(BaseAgent):
     ssh_key = os.path.abspath(key_path)
     utils.log('About to spawn EC2 instances - ' \
               'Expecting to find a key at {0}'.format(ssh_key))
-    if os.path.exists(ssh_key):
-      os.system("rm -r %s" % ssh_key )
-      utils.log('SSH keys found in the local system - '
-                'Not initializing EC2 security')
+    
       #return False
 
     try:
       conn = self.open_connection(parameters)
-      key_pair = conn.get_key_pair(keyname)
-      if key_pair is None:
-        utils.log('Creating key pair: ' + keyname)
-        key_pair = conn.create_key_pair(keyname)
-      utils.write_key_file(ssh_key, key_pair.material)
+      if os.path.exists(ssh_key):
+          utils.log('SSH keys found in the local system - '
+                'Not initializing EC2 security')
+      else:
+          utils.log('Creating key pair: ' + keyname)
+          key_pair = conn.create_key_pair(keyname)
+          utils.write_key_file(ssh_key, key_pair.material)
 
       security_groups = conn.get_all_security_groups()
       group_exists = False

@@ -26,6 +26,9 @@ class backendservices():
         # manager to create the virtual machine
         pass
     def executeTask(self,params):
+        '''
+        This method instantiates celery tasks in the cloud.
+        '''
         #create a celery task
         # parse the paramters
         # a UUID has to be created for the task
@@ -168,7 +171,7 @@ if __name__ == "__main__":
              'group':'stochss19', 
              'image_id':'ami-44b6272d', 
              'instance_type':'t1.micro',
-             'keyname':'stochssnew25', 
+             'keyname':'stochssnew32', 
              'email':['anand.bdk@gmail.com'],
              'credentials':{"EC2_ACCESS_KEY":"AKIAJWILGFLOFVDRDRCQ", "EC2_SECRET_KEY":"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"},
              #'credentials':{"EC2_ACCESS_KEY":"sadsdsad", "EC2_SECRET_KEY":"/95VWaJ"},
