@@ -310,7 +310,7 @@ class EC2Agent(BaseAgent):
             name=alarm_name, namespace='AWS/EC2',
             metric='CPUUtilization', statistic='Average',
             comparison='<', threshold='10',
-            period='3600', evaluation_periods=1,
+            period='3600', evaluation_periods=2,
             alarm_actions=[shutdown_arn],
             dimensions={'InstanceId':instance_id})
      
@@ -346,6 +346,35 @@ class EC2Agent(BaseAgent):
     utils.log('[{0}] [{1}] [{2}] [{3}] [ec2] [{4}] [{5}]'.format(count,
       image_id, instance_type, keyname, group, spot))
 
+
+    credentials = parameters[self.PARAM_CREDENTIALS]
+    creds = parameters['credentials']
+    f = open('userfile','w')
+    userstr  = """#!/bin/bash \nset -x\nexec > >(tee /var/log/user-data.log|logger -t user-data -s 2>/dev/console) 2>&1\ntouch anand3.txt\necho "testing logfile"\necho BEGIN\ndate '+%Y-%m-%d %H:%M:%S'\necho END\ntouch anand2.txt\n"""
+    userstr+='export AWS_ACCESS_KEY_ID={0}\n'.format(str(credentials['EC2_ACCESS_KEY']))
+    userstr+='export AWS_SECRET_ACCESS_KEY={0}\n'.format( str(credentials['EC2_SECRET_KEY']))
+    #userstr+='echo export AWS_ACCESS_KEY_ID={0} >> ~/.bashrc\n'.format(str(credentials['EC2_ACCESS_KEY']))
+    #userstr+='echo export AWS_SECRET_ACCESS_KEY={0} >> ~/.bashrc\n'.format( str(credentials['EC2_SECRET_KEY']))
+    userstr+='echo export AWS_ACCESS_KEY_ID={0} >> ~/.bashrc\n'.format(str(credentials['EC2_ACCESS_KEY']))
+    userstr+='echo export AWS_SECRET_ACCESS_KEY={0} >> ~/.bashrc\n'.format( str(credentials['EC2_SECRET_KEY']))
+    userstr+='echo export AWS_SECRET_ACCESS_KEY={0} >> /home/ubuntu/.bashrc\n'.format( str(credentials['EC2_SECRET_KEY']))
+    userstr+='echo export AWS_ACCESS_KEY_ID={0} >> /home/ubuntu/.bashrc\n'.format(str(credentials['EC2_ACCESS_KEY']))
+    userstr+='source ~/.bashrc \n'
+    userstr+='source /home/ec2-user/.bashrc \n'
+    f.write(userstr)
+#    f.write('sudo set -x \n')
+#    f.write('sudo exec > >(tee /var/log/user-data.log|logger -t user-data -s 2>/dev/console) 2>&1 \n')
+#    f.write('sudo echo "testing logfile" \n')
+#    f.write('sudo echo BEGIN \n')
+#    f.write("sudo date '+%Y-%m-%d %H:%M:%S' \n")
+#    f.write('sudo echo END \n')
+#    f.write('sudo touch anand2.txt \n')
+#    #f.write('export AWS_ACCESS_KEY_ID={0} \n'.format(str(credentials['EC2_ACCESS_KEY'])))
+#    #f.write('export AWS_SECRET_ACCESS_KEY={0} \n'.format( str(credentials['EC2_SECRET_KEY'])))
+#    f.write('sudo echo AWS_ACCESS_KEY_ID={0} >> ~/.bashrc \n'.format(str(credentials['EC2_ACCESS_KEY'])))
+#    f.write('sudo echo AWS_SECRET_ACCESS_KEY={0} >> ~/.bashrc \n'.format( str(credentials['EC2_SECRET_KEY'])))
+#    f.write('sudo source ~/.bashrc \n')
+    f.close()
     start_time = datetime.datetime.now()
     active_public_ips = []
     active_private_ips = []
@@ -372,10 +401,10 @@ class EC2Agent(BaseAgent):
       if spot == 'True':
         price = parameters[self.PARAM_SPOT_PRICE]
         conn.request_spot_instances(str(price), image_id, key_name=keyname,
-          security_groups=[group], instance_type=instance_type, count=count)
+          security_groups=[group], instance_type=instance_type, count=count, user_data = userstr)
       else:
         conn.run_instances(image_id, count, count, key_name=keyname,
-          security_groups=[group], instance_type=instance_type)
+          security_groups=[group], instance_type=instance_type, user_data=userstr)
 
       instance_ids = []
       public_ips = []
