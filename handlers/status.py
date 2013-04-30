@@ -11,7 +11,7 @@ import time
 
 from google.appengine.ext import db
 
-
+import os
 from stochssapp import BaseHandler
 from stochss.backendservice import *
 from backend.backendservice import backendservices
@@ -138,24 +138,40 @@ class StatusPage(BaseHandler):
         	result = backendservice.describeTask(valid_username)
 		self.render_response('status.html', **result)
 
-	def delete_tasks(self):
-		"""
-		Delete the selected tasks
-		"""
-        name = self.request.get('toDelete') 
 
+class JobOutPutPage(BaseHandler):
+
+    def get(self):
+        """ Well, I am not sure what to do here... """
+        context,result = self.getContext()
+        self.render_response('stochkitjoboutputpage.html',**dict(result,**context))
+
+    def post(self):
+        self.response.out.write("POST")
+
+    def getContext(self):
+        params = self.request.POST
+        params = dict(params,**self.request.GET)
+
+        job_name = params['job_name']
+        context={}
+        result = {}
+        context['job_name']=job_name
+        
+        # Grab the Job from the datastore
         try:
-            user = self.get_session_property('valid_username')
-            backendservice.deleteTask()
-
-            # Update the cache
-            self.set_session_property('valid_username', user)
-            return {'status': True, 'msg': 'Job ' + name + ' deleted successfully!'}
-        except Exception, e:
-            logging.error("Task::delete_Task: Task deletion failed with error %s", e)
-            traceback.print_exc()
-            return {'status': False, 'msg': 'There was an error while deleting the Task.'}       
-
+            job = db.GqlQuery("SELECT * FROM StochKitJobWrapper WHERE user_id = :1 AND name = :2", self.user.user_id(),job_name).get()
+            stochkit_job = job.stochkit_job
+            context['stochkit_job']=stochkit_job
+        except Exception,e:
+            result = {'status':False,'msg':"Could not retreive the jobs"+job_name+ " from the datastore."}
+        
+        # Local path to the file
+        #context['local_path']=stochkit_job.output_location
+        #context['resource'] = stochkit_job.resource
+        #context['type'] = stochkit_job.type
+        context['local_data'] = True
+        return context,result
 
 
 

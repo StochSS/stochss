@@ -94,26 +94,6 @@ class MainPage(BaseHandler):
         self.get()
 
 
-class VisualizePage(webapp2.RequestHandler):
-    """ Render a page for visualization of simulation resutls. """
-    def get(self):
-        template = jinja_environment.get_template('visualizepage.html')
-        self.response.out.write(template.render({'active_visualize': True}))
-        
-
-    #class StatusPage(webapp2.RequestHandler):
-    #    """ Render a page for viewing job status. """
-        #    def get(self):
-        #      template = jinja_environment.get_template('statuspage.html')
-#     self.response.out.write(template.render({'active_visualize': True}))
-
-class CredentialsPage(webapp2.RequestHandler):
-    """ Render a page for viewing job status. """
-    def get(self):
-        template = jinja_environment.get_template('credentials.html')
-        self.response.out.write(template.render({'active_visualize': True}))
-
-
 config = {}
 config['webapp2_extras.sessions'] = {
     'secret_key': 'my-super-secret-key',
@@ -143,8 +123,8 @@ app = webapp2.WSGIApplication([
                                ('/simulate',SimulatePage),
                                ('/simulate/newstochkitensemble',NewStochkitEnsemblePage),
                                ('/simulate/jobsettings',JobSettingsPage),
-                               ('/visualize',VisualizePage),
                                ('/status',StatusPage),
+                               ('/output',JobOutPutPage),
                                ('/credentials',CredentialsPage),
                                ('/signout', Signout)
                                ],

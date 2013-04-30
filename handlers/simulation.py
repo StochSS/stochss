@@ -53,6 +53,7 @@ class StochKitJob():
         # URL to the result (valid after a sucessful execution)
         self.output_location = ""
         self.output_url = output_url
+        
         # Input parameters
         self.name = name
         self.final_time = final_time
@@ -274,9 +275,12 @@ class NewStochkitEnsemblePage(BaseHandler):
             # Create a StochKitJob instance
             stochkit_job = StochKitJob(name=ensemblename, final_time=time, realizations=realizations,increment=increment,seed=seed,algorithm=executable)
         
-            stochkit_job.type = 'Local'
+            stochkit_job.resource = 'Local'
+            stochkit_job.type = 'StochKit2 Ensemble'
+        
             # Create the argument string
             #args = stochkit_job.getArgumentString()
+
             print cmd
             params['paramstring'] = cmd
             # Run StochKit
@@ -291,7 +295,7 @@ class NewStochkitEnsemblePage(BaseHandler):
         
             stochkit_job.pid = res['pid']
             stochkit_job.output_location = res['output']
-            stochkit_job.output_url = "http://localhost:8080/" + os.path.relpath(res['output'])
+            #stochkit_job.output_url = "http://localhost:8080/" + os.path.relpath(res['output'])
             stochkit_job.status = "Running"
             
             # Create a wrapper to store the Job description in the datastore
