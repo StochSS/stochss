@@ -19,7 +19,7 @@ from stochssapp import StochKitModelWrapper
 from stochssapp import ObjectProperty
 from backend.backendservice import backendservices
 
-import os
+import os, shutil
 
 #from backend import backendservice
 
@@ -156,7 +156,7 @@ class NewStochkitEnsemblePage(BaseHandler):
         par = self.request.POST
         
         # Check the name of the simulation, make sure that no simulation with that name exists in the system
-        name = par['output']
+        name = par['job_name']
         model = db.GqlQuery("SELECT * FROM StochKitJobWrapper WHERE user_id = :1 AND name = :2", self.user.user_id(),name).get()
         if model is not None:
             result['status'] = False
@@ -209,11 +209,11 @@ class NewStochkitEnsemblePage(BaseHandler):
     def runStochKitLocal(self):
         """ Submit a local StochKit job """
         try:
-            # Get the model that is currently in scope for simulation via the seesion property 'model_to_simulate'
+            # Get the model that is currently in scope for simulation via the session property 'model_to_simulate'
             try:
                 model_to_simulate=self.get_session_property('model_to_simulate')
-                model = db.GqlQuery("SELECT * FROM StochKitModelWrapper WHERE user_id = :1 AND model_name = :2", self.user.user_id(),model_to_simulate).get()
-                model = model.model
+                db_model = db.GqlQuery("SELECT * FROM StochKitModelWrapper WHERE user_id = :1 AND model_name = :2", self.user.user_id(),model_to_simulate).get()
+                model = db_model.model
             except:
                 return {'status':False,'msg':'Failed to retrive the model to simulate.'}
             
@@ -226,7 +226,7 @@ class NewStochkitEnsemblePage(BaseHandler):
             param ={}
             
             # Write a temporary StochKit2 input file.
-            outfile =  params['output']+".xml"
+            outfile =  params['job_name']+".xml"
             mfhandle = open(outfile,'w')
             document = StochMLDocument.fromModel(model)
             document = model.serialize()
@@ -234,7 +234,7 @@ class NewStochkitEnsemblePage(BaseHandler):
             mfhandle.close()
             filepath  = os.path.abspath(outfile)
             params['file'] = filepath
-            ensemblename = params['output']
+            ensemblename = params['job_name']
             time = params['time']
             realizations = params['realizations']
             increment = params['increment']
@@ -256,7 +256,7 @@ class NewStochkitEnsemblePage(BaseHandler):
             args+=str(realizations)
             
             # We keep all the trajectories by default. The user can select to only store means and variance
-            # throught the advanced options.
+            # through the advanced options.
             if not "only-moments" in params:
                 args+=' --keep-trajectories'
             
@@ -275,28 +275,27 @@ class NewStochkitEnsemblePage(BaseHandler):
             # Create a StochKitJob instance
             stochkit_job = StochKitJob(name=ensemblename, final_time=time, realizations=realizations,increment=increment,seed=seed,algorithm=executable)
         
-            stochkit_job.resource = 'Local'
-            stochkit_job.type = 'StochKit2 Ensemble'
-        
             # Create the argument string
             #args = stochkit_job.getArgumentString()
-
-            print cmd
+            #print cmd
             params['paramstring'] = cmd
-            # Run StochKit
+                    
+            # Call backendservices and execute StochKit
             service = backendservices()
-            
             res = service.executeTaskLocal(params)
-            print "\n\n" + str(res) +"\n\n"
+            #print "\n\n" + str(res) +"\n\n"
             
             if(res == None):
                 result = {'status':False,'msg':'Local execution failed. '}
                 return result
         
+            stochkit_job.resource = 'Local'
+            stochkit_job.type = 'StochKit2 Ensemble'
+                    
             stochkit_job.pid = res['pid']
             stochkit_job.output_location = res['output']
-            #stochkit_job.output_url = "http://localhost:8080/" + os.path.relpath(res['output'])
-            stochkit_job.status = "Running"
+            stochkit_job.uuid = res['uuid']
+            stochkit_job.status = 'Running'
             
             # Create a wrapper to store the Job description in the datastore
             stochkit_job_db = StochKitJobWrapper()
@@ -304,7 +303,10 @@ class NewStochkitEnsemblePage(BaseHandler):
             stochkit_job_db.name = stochkit_job.name
             stochkit_job_db.stochkit_job = stochkit_job
             stochkit_job_db.put()
-                
+    
+            # Clean up temporary files
+            os.remove(outfile)
+    
             result = {'status':True,'msg':'Job submitted sucessfully'}
             
         except Exception,e:

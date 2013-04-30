@@ -54,6 +54,7 @@ class backendservices():
             xmlfilepath = params['file'] 
             paramstr =  params['paramstring']
             uuidstr = str(uuid.uuid4())
+            res['uuid'] = uuidstr
             create_dir_str = "mkdir -p output/%s " % uuidstr
             os.system(create_dir_str)
             # check if the env variable is set form STOCHKIT_HOME or else use the default location
@@ -83,7 +84,7 @@ class backendservices():
             res['output'] = absolute_file_path
             #res['relative_output_path']=os.path.relpath(filepath,)
             
-            #copes the XML file to the output direcory
+            #copies the XML file to the output direcory
             copy_file_str = "cp  {0} output/{1}".format(xmlfilepath,uuidstr)
             os.system(copy_file_str)
             #removefilestr = "rm {0}".format(xmlfilepath)

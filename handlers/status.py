@@ -57,9 +57,10 @@ class StatusPage(BaseHandler):
                 if isdeleted_backend:
                     # Delete all the files and delete the job from the datastore
                     try:
-                        # In case of a local job, we remove the output folder
-                        if stochkit_job.type == "Local":
-                            shutil.rmtree(stochkit_job.output_location)
+                        # We remove the local entry of the job output directory
+                        shutil.rmtree(stochkit_job.output_location)
+                        # TODO: Check if it is a Cloud job, and in that case call the
+                        # backend to clean up all files from the remote end.
                         db.delete(job)
                     except Exception,e:
                         result = {'status':False,'msg':"Failed to delete job "+job_name}
@@ -72,6 +73,7 @@ class StatusPage(BaseHandler):
             time.sleep(0.5)
             context = self.getContext()
             self.render_response('status.html', **dict(result,**context))
+                
         elif 'refresh' in params:
             # Get the context and reload the page
             context = self.getContext()
