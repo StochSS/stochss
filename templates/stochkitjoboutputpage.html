@@ -32,12 +32,14 @@
             </div>
             
             <!-- Show the mean and variances if they are present locally. -->
+            {% if local_statistics %}
             <div class="well">
                 <h3> Basic statistics </h3>
                 <span class="thispage"><a href="/output/{{stochkit_job.uuid}}/result/stats/means.txt" class="thispage">Mean values</a>
                 </br>
                 <span class="thispage"><a href="/output/{{stochkit_job.uuid}}/result/stats/variances.txt" class="thispage">Variances</a>
             </div>
+            {% endif %}
             
             
             <div class="well form">
@@ -46,10 +48,19 @@
                 <!-- </br>
                 <span> Available locally: True</span> -->
                 </br>
+                <!-- We show the output URL if it is a cloud job -->
+                {% if stochkit_job.resource == "Cloud" %}
                 <span class="thispage">Remote URL: </span><a href="{{stochkit_job.output_url}}" class="thispage">{{stochkit_job.output_url}}</a>
+                {% endif %}
                 </br></br>
+                <!--  We show the export button if the output data is present locally -->
+                {% if local_data %}
                 <input type="submit" class="btn btn-primary btn-large dropdown-toggle" value="Export"></a>
+                {% endif %}
+                <!-- We show the "Fetch remote" button if the job is a Cloud job and the local data is not present -->
+                {% if stochkit_job.resource == "Cloud" and not local_data %}
                 <input type="submit" class="btn btn-primary btn-large" value="Fetch remote"></input>
+                {% endif %}
             </div>
         </div>
     </div>

@@ -107,12 +107,19 @@ class StatusPage(BaseHandler):
                 # Query the backend for the status of the job, but only if the current status is not Finished
                 if not stochkit_job.status == "Finished":
                     try:
-                        # First, check if the job is still running
-                        res = service.checkTaskStatusLocal([stochkit_job.pid])
-                        if res[stochkit_job.pid]:
-                            stochkit_job.status = "Running"
-                        else:
-                            stochkit_job.status = "Finished"
+                        if stochkit_job.resource == 'Local':
+                            # First, check if the job is still running
+                            res = service.checkTaskStatusLocal([stochkit_job.pid])
+                            if res[stochkit_job.pid]:
+                                stochkit_job.status = "Running"
+                            else:
+                                # Check if the output folder is present, in which case the job finsihed sucessfully.
+                                if os.path.exists(stochkit_job.output_location+"/result"):
+                                    stochkit_job.status = "Finished"
+                                else:
+                                    stochkit_job.status = "Failed"
+                        #elif stochkit_job.resource == 'Cloud'
+                        # Todo, implement check in the case of Cloud
                     except Exception,e:
                         result = {'status':False,'msg':'Could not determine the status of the jobs.'+str(e)}
                 
@@ -168,11 +175,13 @@ class JobOutPutPage(BaseHandler):
         except Exception,e:
             result = {'status':False,'msg':"Could not retreive the jobs"+job_name+ " from the datastore."}
         
-        # Local path to the file
-        #context['local_path']=stochkit_job.output_location
-        #context['resource'] = stochkit_job.resource
-        #context['type'] = stochkit_job.type
-        context['local_data'] = True
+        # Check if the results and stats folders are present locally
+        if os.path.exists(stochkit_job.output_location+"/result"):
+            context['local_data']=True
+        if os.path.exists(stochkit_job.output_location+"/result/stats"):
+            context['local_statistics']=True
+                
+    
         return context,result
 
 
