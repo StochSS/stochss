@@ -305,7 +305,7 @@ class NewStochkitEnsemblePage(BaseHandler):
             stochkit_job_db.put()
     
             # Clean up temporary files
-            os.remove(outfile)
+            #os.remove(outfile)
     
             result = {'status':True,'msg':'Job submitted sucessfully'}
             

@@ -22,7 +22,7 @@
             
             <div class="well">
             <h3>Meta</h3>
-                <span class="thispage"> Numer of trajectories: {{stochkit_job.realizations}}</span>
+                <span class="thispage"> Number of trajectories: {{stochkit_job.realizations}}</span>
                 </br>
                 <span class="thispage"> Simulation endtime: {{stochkit_job.final_time}}</span>
                 </br>
@@ -30,6 +30,15 @@
                 </br>
                 <span class="thispage"> Stochkit input file: </span> <a href="/output/{{stochkit_job.uuid}}/{{stochkit_job.name}}.xml" class="thispage"> {{job_name}}.xml </a>
             </div>
+            
+            <!-- Show the mean and variances if they are present locally. -->
+            <div class="well">
+                <h3> Basic statistics </h3>
+                <span class="thispage"><a href="/output/{{stochkit_job.uuid}}/result/stats/means.txt" class="thispage">Mean values</a>
+                </br>
+                <span class="thispage"><a href="/output/{{stochkit_job.uuid}}/result/stats/variances.txt" class="thispage">Variances</a>
+            </div>
+            
             
             <div class="well form">
             <h3>Output</h3>
