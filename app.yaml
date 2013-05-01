@@ -14,7 +14,8 @@ handlers:
   static_dir: static/img
 - url: /static/js
   static_dir: static/js
-
+- url: /lib/flot
+  static_dir: lib/flot
 
 - url: /.*
   script: stochssapp.app

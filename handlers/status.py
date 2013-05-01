@@ -214,8 +214,17 @@ class VisualizePage(BaseHandler):
                 file = open(meanfile,'rb')
                 table = [row.strip().split('\t') for row in file]
                 tspan = []
+                
+                # Extract the time span list
                 for row in table:
-                    tspan.append(row[0]) 
+                    tspan.append(row[0])
+            
+                # Make a dict with time series for one of the species, formatted for plotting with flot
+                spec = []
+                for row in table:
+                    spec.append([row[0],row[7]])
+
+                context['spec'] = spec
                 context['meanstr'] = table
                 context['tspan'] = tspan
                 #print meanstr
