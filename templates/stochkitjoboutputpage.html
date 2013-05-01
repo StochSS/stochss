@@ -26,7 +26,7 @@
                 </br>
                 <span class="thispage"> Simulation endtime: {{stochkit_job.final_time}}</span>
                 </br>
-                <span class="thispage"> Output time intervals: {{stochkit_job.increment}} t.u.</span>
+                <span class="thispage"> Output time intervals: {{stochkit_job.increment}} time units.</span>
                 </br>
                 <span class="thispage"> Stochkit input file: </span> <a href="/output/{{stochkit_job.uuid}}/{{stochkit_job.name}}.xml" class="thispage"> {{job_name}}.xml </a>
             </div>
@@ -35,7 +35,7 @@
             {% if local_statistics %}
             <div class="well">
                 <h3> Basic statistics </h3>
-                <span class="thispage"><a href="/output/{{stochkit_job.uuid}}/result/stats/means.txt" class="thispage">Mean values</a>
+                <span class="thispage"><a href="/output/visualize?job_folder={{stochkit_job.output_location}}" class="thispage">Mean values</a>
                 </br>
                 <span class="thispage"><a href="/output/{{stochkit_job.uuid}}/result/stats/variances.txt" class="thispage">Variances</a>
             </div>
@@ -49,8 +49,8 @@
                 <span> Available locally: True</span> -->
                 </br>
                 <!-- We show the output URL if it is a cloud job -->
-                {% if stochkit_job.resource == "Cloud" %}
                 <span class="thispage">Remote URL: </span><a href="{{stochkit_job.output_url}}" class="thispage">{{stochkit_job.output_url}}</a>
+                {% if stochkit_job.resource == "Cloud" %}
                 {% endif %}
                 </br></br>
                 <!--  We show the export button if the output data is present locally -->
@@ -58,8 +58,8 @@
                 <input type="submit" class="btn btn-primary btn-large dropdown-toggle" value="Export"></a>
                 {% endif %}
                 <!-- We show the "Fetch remote" button if the job is a Cloud job and the local data is not present -->
-                {% if stochkit_job.resource == "Cloud" and not local_data %}
                 <input type="submit" class="btn btn-primary btn-large" value="Fetch remote"></input>
+                {% if stochkit_job.resource == "Cloud" and not local_data %}
                 {% endif %}
             </div>
         </div>

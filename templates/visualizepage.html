@@ -1,33 +1,23 @@
 {% extends "base.html" %}
-{% block title%}Upload a Model{% endblock %}
+{% block title%}Basic statistics{% endblock %}
 {% block content %}
         <div class="span9">
-          <div class="hero-unit">
-              <p> A dedicated and simplified plotting page? This page contains shortcuts to execution of maps/reducers that produce graphics output and to displaing image objects in the datastore? </p>  
-            <h2>View Results</h2>
-            <div class="well form" id="form">
-              {% if results_present %}
-                <label class="control-label" for="result">Results:</label>
-                {% for result in results %}
-                  <label class="radio">
-                    <input type="radio" name="result_name" id="result_name"
-                      value="{{result}}">
-                    {{ result }}
-                  </label>
-                {% endfor %}
-                <br />
-                <br />
-                <label id="result"></label>
-                <br />
-                <br />
-                <button id="view" class="btn-primary btn-large">
-                  View Results &raquo;
-                </button>
-              {% else %}
-                No jobs have been run yet. <a href="/run">Run a job?</a>
-              {% endif %}
-                
+            <h2>Mean values</h2>
+            <hr>
+            </br>
+            {% if meanstr %}
+            <div class="well form" action="/output/visualize/" method="post">
+                <span> Time: </span>
+                <select name="timepoint">
+                    {% for time in tspan %}
+                    <option value="{{time}}">{{time}}</option>
+                    {% endfor %}
+                </select>
+                </br>
+                {{meanstr}}
             </div>
+            {% endif %}
+        
               <ul class="thumbnails">
                   <li class="span3"><a href="#" class="thumbnail"><img src="http://placehold.it/300x200" alt=""></a></li>
                   <li class="span3"><a href="#" class="thumbnail"><img src="http://placehold.it/300x200" alt=""></a></li>

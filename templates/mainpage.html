@@ -7,65 +7,17 @@
     <div class="page-header">
         <h1> Welcome to StochSS <small>Stochastic Simulation Service</small></h1>
     </div>
-    
     <div class="hero-unit">
-        
-        <h2>Welcome to the StochSS SandBox </h2>
-        <p>
-        <form name = "myform" action="/" method="post"> 
-           <input name="submitbutton" type="submit" class="btn btn-primary btn-large" id="initialize" value="Initialize"</>
-           <input name="submitbutton" type="submit" class="btn btn-primary btn-large" id="initialize" value="Empty"</>
-        </form>
-       
-        </p>
-                
-        <p> 
-        
-        {% if initialized %}
-        
-        The following models are stored in the datastore:
-        {% for model in models %}
-        <ul>
-            <li>{{model}}</li> 
-
-        </ul> 
-        
-        <br />
-        {% endfor %}
-        
-        The following ensembles:
-        {% for ensemble in ensembles %}
-        <ul>
-            <li>{{ensemble}}</li> 
-            
-        </ul>    
-        <br />
-        {% endfor %}
-        
-        The following functions that operate on ensembles:
-        {% for fun in fun_ens %}
-        <ul>
-            <li>{{fun}}</li> 
-            
-        </ul>    
-        <br />
-        {% endfor %}
-        
-        The following functions that operate on Trajectories in the ensemble:
-        {% for fun in fun_traj %}
-        <ul>
-            <li>{{fun}}</li> 
-            
-        </ul>    
-        <br />
-        {% endfor %}
-        
-        {% endif %}
-        
-        </p>
-        
-            
-        
+    <span style="font-size:16px">
+        Some introductory text will go here. Basic instructions.
+    </span>
     </div>
+    <h2> System Status </h2>
+    <hr>
+    </br>
+    <span style="font-size:20px">Local StochKit installation:&nbsp;&nbsp;&nbsp;</span><span style="font-size:16px;" class="label label-success">Functioning</span>
+    </br></br>
+    <span style="font-size:20px">EC2 credentials:&nbsp;&nbsp;&nbsp;</span><span style="font-size:16px;" class="label label-success">Validated</span>&nbsp;&nbsp;<a style="font-size:16px;" href="/credentials">Credentials settings</a>
+    
 </div><!--/span-->
 {% endblock %}

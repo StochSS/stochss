@@ -336,10 +336,10 @@ class NewStochkitEnsemblePage(BaseHandler):
             # Write a temporary StochKit2 input file.
             outfile =  params['job_name']+".xml"
             mfhandle = open(outfile,'w')
-            document = StochMLDocument.fromModel(model)
             document = model.serialize()
             mfhandle.write(document)
             mfhandle.close()
+        
             filepath  = os.path.abspath(outfile)
             params['file'] = filepath
             ensemblename = params['job_name']
