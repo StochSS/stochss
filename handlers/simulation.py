@@ -40,7 +40,7 @@ class StochKitJobWrapper(db.Model):
 class StochKitJob():
     """ Model for a StochKit job. Contains all the parameters associated with the call. """
     
-    def __init__(self,name=None, final_time=None, increment=None, realizations=1,algorithm='ssa',store_only_mean=False, label_column_names=False,create_histogram_data=False, seed=None, epsilon=0.1,threshold=10, output_url = None):
+    def __init__(self,name=None, final_time=None, increment=None, realizations=1,algorithm='ssa',store_only_mean=False, label_column_names=True,create_histogram_data=False, seed=None, epsilon=0.1,threshold=10, output_url = None):
         """ fdsgfhsj """
         
         # Type of the job {'Local','Cloud'}
@@ -191,7 +191,7 @@ class NewStochkitEnsemblePage(BaseHandler):
             if not "only-moments" in params:
                 args+=' --keep-trajectories'
             
-            if "label-columns" in params:
+            if "label-columns" in params or self.label_column_names:
                 args+=' --label'
             
             if "keep-histograms" in params:
