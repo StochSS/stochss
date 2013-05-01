@@ -152,6 +152,10 @@ class NewStochkitEnsemblePage(BaseHandler):
             if not result['status']:
                 return result
         
+            # enable these two lines by fetching the credentials from database
+            #os.environ["AWS_ACCESS_KEY_ID"] = params['AWS_ACCESS_KEY_ID']
+            #os.environ["AWS_SECRET_ACCESS_KEY"] = params['AWS_SECRET_ACCESS_KEY']
+        
             #the parameter dictionary to be passed to the backend
             param ={}
     
