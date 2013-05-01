@@ -4,8 +4,7 @@ import cgi
 import datetime
 import urllib
 import webapp2
-import tempfile
-
+import tempfile,sys
 from google.appengine.ext import db
 import pickle
 import traceback
@@ -138,6 +137,111 @@ class NewStochkitEnsemblePage(BaseHandler):
         self.render_response('simulate/newstochkitensemblepage.html',**dict(context,**result))
 
     def runCloud(self):
+        print 'inside cloud method'
+        try:
+            # Get the model that is currently in scope for simulation via the session property 'model_to_simulate'
+            try:
+                model_to_simulate=self.get_session_property('model_to_simulate')
+                db_model = db.GqlQuery("SELECT * FROM StochKitModelWrapper WHERE user_id = :1 AND model_name = :2", self.user.user_id(),model_to_simulate).get()
+                model = db_model.model
+            except:
+                return {'status':False,'msg':'Failed to retrive the model to simulate.'}
+            
+            # Check the data from the form for errors
+            params,result = self.parseForm()
+            if not result['status']:
+                return result
+        
+            #the parameter dictionary to be passed to the backend
+            param ={}
+    
+            document = model.serialize()
+            print str(document)
+            params['document']=str(document)
+            print 'model serialized'
+            filepath = ""
+            params['file'] = filepath
+            ensemblename = params['job_name']
+            time = params['time']
+            realizations = params['realizations']
+            increment = params['increment']
+            seed = params['seed']
+            # Algorithm, SSA or Tau-leaping?
+            executable = params['algorithm']
+        
+
+            # Assemble the argument list
+            args = ''
+#            args+='--model '
+#            args+=filepath
+            #args+=' --out-dir '+outdir
+            args+=' -t '
+            args+=str(time)
+            num_output_points = str(int(float(time)/float(increment)))
+            args+=' -i ' + str(num_output_points)
+            args+=' --realizations '
+            args+=str(realizations)
+            
+            # We keep all the trajectories by default. The user can select to only store means and variance
+            # through the advanced options.
+            if not "only-moments" in params:
+                args+=' --keep-trajectories'
+            
+            if "label-columns" in params:
+                args+=' --label'
+            
+            if "keep-histograms" in params:
+                args+=' --keep-histograms'
+            
+            # TODO: We need a robust way to pick a default seed for the ensemble. It needs to be robust in a ditributed, parallel env.
+            args+=' --seed '
+            args+=str(seed)
+        
+            cmd = executable+' '+args
+        
+            # Create a StochKitJob instance
+            stochkit_job = StochKitJob(name=ensemblename, final_time=time, realizations=realizations,increment=increment,seed=seed,algorithm=executable)
+        
+            # Create the argument string
+            #args = stochkit_job.getArgumentString()
+            #print cmd
+            params['paramstring'] = cmd
+                    
+            # Call backendservices and execute StochKit
+            service = backendservices()
+            print 'calling execute on cloud task'
+            res = service.executeTask(params)
+            #print "\n\n" + str(res) +"\n\n"
+            
+            if(res == None):
+                result = {'status':False,'msg':'Cloud execution failed. '}
+                return result
+        
+            stochkit_job.resource = 'Cloud'
+            stochkit_job.type = 'StochKit2 Ensemble'
+                    
+            stochkit_job.pid = res.id
+            stochkit_job.output_location = res.result
+            stochkit_job.uuid = res.id
+            stochkit_job.status = 'Running'
+            
+            # Create a wrapper to store the Job description in the datastore
+            stochkit_job_db = StochKitJobWrapper()
+            stochkit_job_db.user_id = self.user.user_id()
+            stochkit_job_db.name = stochkit_job.name
+            stochkit_job_db.stochkit_job = stochkit_job
+            stochkit_job_db.put()
+    
+            # Clean up temporary files  
+            #os.remove(outfile)
+    
+            result = {'status':True,'msg':'Job submitted sucessfully'}
+        except Exception,e:
+            result = {'status':False,'msg':'Cloud execution failed: '+str(e)}       
+        return result
+        
+        
+        
         result = {'status':True,'msg': 'Calling the cloud execution function'}
         return result
 

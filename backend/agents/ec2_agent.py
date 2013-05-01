@@ -361,6 +361,7 @@ class EC2Agent(BaseAgent):
     userstr+='echo export AWS_ACCESS_KEY_ID={0} >> /home/ubuntu/.bashrc\n'.format(str(credentials['EC2_ACCESS_KEY']))
     userstr+='source ~/.bashrc \n'
     userstr+='source /home/ec2-user/.bashrc \n'
+    userstr+="nohup celery -A tasks worker --loglevel=info --workdir /home/ubuntu > /home/ubuntu/nohup.log 2>&1 & \n"
     f.write(userstr)
 #    f.write('sudo set -x \n')
 #    f.write('sudo exec > >(tee /var/log/user-data.log|logger -t user-data -s 2>/dev/console) 2>&1 \n')

@@ -13,3 +13,15 @@
 [submodule "iptracker"]
 	path = iptracker
 	url = git://github.com/StochSS/iptracker.git
+[submodule "lib/amqp"]
+	path = lib/amqp
+	url = git://github.com/celery/py-amqp.git
+[submodule "lib/billiard"]
+	path = lib/billiard
+	url = git://github.com/celery/billiard.git
+[submodule "lib/anyjson"]
+	path = lib/anyjson
+	url = git://github.com/glance-/anyjson.git
+[submodule "lib/pytz"]
+	path = lib/pytz
+	url = git://github.com/newvem/pytz.git

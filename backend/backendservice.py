@@ -14,7 +14,10 @@ class backendservices():
     #agent_type= 
         
     def backendservices(self): 
-        sys.path.append(os.path.join(os.path.dirname(__file__), 'lib/boto'))    
+        sys.path.append(os.path.join(os.path.dirname(__file__), 'lib/boto'))
+        sys.path.append(os.path.join(os.path.dirname(__file__), 'lib/celery'))
+        sys.path.append(os.path.join(os.path.dirname(__file__), '/Library/Python/2.7/site-packages/amqp'))
+            
     def initialize_server(self):
          # check if the security group exists , if not then create a group
          pass
@@ -24,16 +27,26 @@ class backendservices():
         # this will be used to create the virtual machines
         # add the functionality for invoking the infrastrcuture 
         # manager to create the virtual machine
+        
         pass
     def executeTask(self,params):
         '''
         This method instantiates celery tasks in the cloud.
         '''
-        #create a celery task
-        # parse the paramters
-        # a UUID has to be created for the task
-        # the UUID will be used to track the status of the task
+        print 'inside execute task for cloud'
+        try:
+            from tasks import task
+            uuidstr = uuid.uuid4()
+            #create a celery task
+            tmp = task.delay(str(uuidstr),params)
+            # the UUID will be used to track the status of the task
+            print str(tmp)
+            return tmp
+        except Exception,e:
+            print str(e)
         pass 
+    
+    
     
     def executeTaskLocal(self,params):
         '''
@@ -111,9 +124,40 @@ class backendservices():
                 res[pid] = False
         return res
     
+    def checkTaskStatusCloud(self,ids):
+        '''
+        checks the status of the pids and returns true if the task is running or else returns false
+        pids = [list of pids to check for status]
+        returns a dictionary as {"pid1":"status", "pid2":"status", "pid3":"status"}
+        '''
+        res = {}
+        
+        return res
+    
+    
     def describeTask(self,params):
+        '''
+        @param params: A dictionary with the following fields
+         "AWS_ACCESS_KEY_ID" : AWS access key
+         "AWS_SECRET_ACCESS_KEY": AWS security key
+         taskids : list of celery taskids
+         @return: 
+         a dictionary of the form :
+         {"taskid":"result:"","state":""} 
+        '''
         # this method will make a call the 
-        pass
+        os.environ["AWS_ACCESS_KEY_ID"] = params['AWS_ACCESS_KEY_ID']
+        os.environ["AWS_SECRET_ACCESS_KEY"] = params['AWS_SECRET_ACCESS_KEY']
+        result = {}
+        from tasks import checkStatus
+        try:
+            for taskid in params['taskids']:
+                res = checkStatus(taskid)
+                result['taskid'] = res
+        except Exception,e:
+            print str(e)
+            return None
+        return result
     
     def deleteTask(self):
         #this would kill the celery task in the queue
@@ -170,7 +214,7 @@ if __name__ == "__main__":
     params ={"infrastructure":"ec2",
              "num_vms":1, 
              'group':'stochss19', 
-             'image_id':'ami-44b6272d', 
+             'image_id':'ami-ed2d4084', 
              'instance_type':'t1.micro',
              'keyname':'stochssnew32', 
              'email':['anand.bdk@gmail.com'],

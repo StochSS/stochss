@@ -219,7 +219,7 @@ class CredentialsPage(BaseHandler):
         params ={"infrastructure":"ec2",
              "num_vms":number_of_vms, 
              'group':group_random_name, 
-             'image_id':'ami-44b6272d', 
+             'image_id':'ami-ed2d4084', 
              'instance_type':'t1.micro',
              'keyname':group_random_name, 
              'email':[user_id],
