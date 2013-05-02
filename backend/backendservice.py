@@ -153,7 +153,7 @@ class backendservices():
         try:
             for taskid in params['taskids']:
                 res = checkStatus(taskid)
-                result['taskid'] = res
+                result[taskid] = res
         except Exception,e:
             print str(e)
             return None
