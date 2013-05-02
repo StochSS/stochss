@@ -5,6 +5,7 @@ All the input validation is performed in this class.
 '''
 from infrastructure_manager import InfrastructureManager
 import os,subprocess,signal,uuid,sys
+import logging
 
 class backendservices():
     ''' 
@@ -35,18 +36,18 @@ class backendservices():
         '''
         This method instantiates celery tasks in the cloud.
         '''
-        print 'inside execute task for cloud'
+        logging.info('inside execute task for cloud : Params - %s', str(params))
         try:
             from tasks import task
             uuidstr = uuid.uuid4()
             #create a celery task
+            logging.debug("executeTask : executing task with uuid : %s ", uuidstr)
             tmp = task.delay(str(uuidstr),params)
             # the UUID will be used to track the status of the task
-            print str(tmp)
+            logging.debug("executeTask :  result of task : %s", str(tmp))
             return tmp
         except Exception,e:
-            print str(e)
-        pass 
+            logging.error("executeTask : error - %s", str(e))
     
     
     
@@ -63,8 +64,8 @@ class backendservices():
          
         '''
         try:
-            #logging.basicConfig(filename='stochss.log',level=logging.INFO)
-            #logging.info("inside task method")
+           
+            logging.info("executeTaskLocal : inside method with params : %s ", str(params))
             res = {}
             xmlfilepath = params['file'] 
             paramstr =  params['paramstring']
@@ -73,42 +74,39 @@ class backendservices():
             create_dir_str = "mkdir -p output/%s " % uuidstr
             os.system(create_dir_str)
             # check if the env variable is set form STOCHKIT_HOME or else use the default location
-            #STOCHKIT_DIR = "/Users/RaceLab/StochKit2.0.6"
-            STOCHKIT_DIR = "/Users/andreash/Downloads/StochKit2.0.6"
+            STOCHKIT_DIR = "/Users/RaceLab/StochKit2.0.6"
+            #STOCHKIT_DIR = "/Users/andreash/Downloads/StochKit2.0.6"
             # AH: THIS DOES NOT WORK, FOR SOME REASON THE VARIABLE IS NOT PICKED UP FROM THE SHELL
             try:
                 STOCHKIT_DIR = os.environ['STOCHKIT_HOME']
+                logging.debug("executeTaskLocal : Environment variable set for STOCHKIT_HOME : %s",STOCHKIT_DIR )
             except Exception:
-                #ignores if the env variable is not set
-                print "VARIABLE NOT SET!!"
-                pass
-            
+                logging.debug(" executeTaskLocal : environment variable not set for STOCHKIT_HOME. Default location will be used : %s", STOCHKIT_DIR)
             # The following executiong string is of the form : stochkit_exec_str = "~/StochKit2.0.6/ssa -m ~/output/%s/dimer_decay.xml -t 20 -i 10 -r 1000" % (uuidstr)
             stochkit_exec_str = "{0}/{2} --out-dir output/{3}/result ".format(STOCHKIT_DIR,xmlfilepath,paramstr,uuidstr)
-            #logging.debug("Spawning StochKit Task. String : ", stochkit_exec_str)
-            print "======================="
-            print " Command to be executed : "
-            print stochkit_exec_str
-            print "======================="
-            print "To test if the command string was correct. Copy the above line and execute in terminal."
+            logging.debug("executeTaskLocal : Spawning StochKit Task. String : %s", stochkit_exec_str)
             p = subprocess.Popen(stochkit_exec_str, shell=True, stdin=subprocess.PIPE,stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
             pid = p.pid;
             res['pid'] = pid 
             filepath = "output/%s//" % (uuidstr)
+            logging.debug("executeTaskLocal : PID generated - %s", pid)
             absolute_file_path = os.path.abspath(filepath)
+            logging.debug("executeTaskLocal : Output file - %s", absolute_file_path)
             res['output'] = absolute_file_path
             #res['relative_output_path']=os.path.relpath(filepath,)
             
             #copies the XML file to the output direcory
+            logging.debug("executeTaskLocal: Copying xml file to output directory")
             copy_file_str = "cp  {0} output/{1}".format(xmlfilepath,uuidstr)
             os.system(copy_file_str)
             #removefilestr = "rm {0}".format(xmlfilepath)
-            #os.system(removefilestr) 
+            #os.system(removefilestr)
+            logging.info("executeTaskLocal: exiting with result : %s", str(res)) 
             return res
         except Exception as e:
-               #logging.error("exception raised : %s" ) % e
-               #traceback.print_stack()
-               pass
+               logging.error("executeTaskLocal : exception raised : %s" , str(e))
+               return None
+               
     
     def checkTaskStatusLocal(self,pids):
         '''
@@ -117,14 +115,19 @@ class backendservices():
         returns a dictionary as {"pid1":"status", "pid2":"status", "pid3":"status"}
         '''
         res = {}
-        
-        for pid in pids:
-            try:
-                os.getpgid(pid)
-                res[pid] = True
-            except Exception,e:
-                res[pid] = False
-        return res
+        logging.info("checkTaskStatusLocal : inside with params %s", str(pids))
+        try:
+            for pid in pids:
+                try:
+                    os.getpgid(pid)
+                    res[pid] = True
+                except Exception,e:
+                    res[pid] = False
+            logging.info("checkTaskStatusLocal : exiting with result : %s", str(res))
+            return res
+        except Exception,e:
+            logging.error("checkTaskStatusLocal: Exiting with error : %s", str(e))
+            return None
     
     def checkTaskStatusCloud(self,ids):
         '''
@@ -259,7 +262,7 @@ if __name__ == "__main__":
     params ={"infrastructure":"ec2",
              "num_vms":1, 
              'group':'stochss19', 
-             'image_id':'ami-ed2d4084', 
+             'image_id':'ami-1d066b74', 
              'instance_type':'t1.micro',
              'keyname':'stochssnew32', 
              'email':['anand.bdk@gmail.com'],

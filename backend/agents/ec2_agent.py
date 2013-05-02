@@ -298,22 +298,19 @@ class EC2Agent(BaseAgent):
         print "Making instance", instance_id, "sleepy..."
         credentials = parameters[self.PARAM_CREDENTIALS]
         ec2 = boto.connect_cloudwatch(str(credentials['EC2_ACCESS_KEY']),str(credentials['EC2_SECRET_KEY']))
-        #ec2 = self.open_connection(parameters)
-        # we build the 'stop' action ARN with region
         region = "us-east-1"
-        shutdown_arn = 'arn:aws:automate:{0}:ec2:terminate'.format(region)
+        terminate_arn = 'arn:aws:automate:{0}:ec2:terminate'.format(region)
         alarm_name = 'ec2_shutdown_sleepy_{0}'.format(instance_id)
      
-        # define our alarm to shutdown the instance if it gets sleepy
-        # i.e. if CPU utilisation is less than 2% for 24 x 1 hr intervals
+        # define our alarm to terminate the instance if it gets sleepy
+        # i.e. if CPU utilisation is less than 10% for 1 x 4 hr intervals    
         sleepy_alarm = MetricAlarm(
             name=alarm_name, namespace='AWS/EC2',
             metric='CPUUtilization', statistic='Average',
             comparison='<', threshold='10',
-            period='3600', evaluation_periods=2,
-            alarm_actions=[shutdown_arn],
+            period='3600', evaluation_periods=4,
+            alarm_actions=[terminate_arn],
             dimensions={'InstanceId':instance_id})
-     
         # create the alarm.. Zzzz!
         ec2.create_alarm(sleepy_alarm)
 
