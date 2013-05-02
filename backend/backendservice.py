@@ -159,11 +159,19 @@ class backendservices():
             return None
         return result
     
-    def deleteTask(self):
-        #this would kill the celery task in the queue
-        # it would basically remove the queue entery for the task
-        # from the list
-        pass
+    def deleteTasks(self,taskids):
+        '''
+        @param taskid:the list of taskids to be removed 
+        this method revokes scheduled tasks as well as the tasks in progress
+        
+        '''
+        try:
+            from tasks import removeTask
+            for taskid in taskids:
+                removeTask(taskid)
+        except Exception, e:
+            print "exception occured : {0}".format(str(e))
+
     
     def deleteTaskLocal(self, pids):
         """
