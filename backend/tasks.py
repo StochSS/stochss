@@ -107,3 +107,14 @@ def checkStatus(task_id):
         result['state'] = "FAILURE"
         result['result'] = str(e)
     return result
+
+
+def removeTask(task_id):
+    '''
+    this method revokes scheduled tasks as well as the tasks in progress
+    '''
+    try:
+        from celery.task.control import revoke
+        revoke(task_id,terminate=True)
+    except Exception,e:
+        print "task cannot be removed/deleted. Error : ".format(str(e))
