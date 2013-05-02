@@ -19,7 +19,8 @@ class backendservices():
         ''' 
         sys.path.append(os.path.join(os.path.dirname(__file__), 'lib/boto'))
         sys.path.append(os.path.join(os.path.dirname(__file__), 'lib/celery'))
-        sys.path.append(os.path.join(os.path.dirname(__file__), '/Library/Python/2.7/site-packages/amqp'))
+        sys.path.append(os.path.join(os.path.dirname(__file__), 
+                                     '/Library/Python/2.7/site-packages/amqp'))
             
     def executeTask(self,params):
         '''
@@ -30,7 +31,8 @@ class backendservices():
             from tasks import task
             uuidstr = uuid.uuid4()
             #create a celery task
-            logging.debug("executeTask : executing task with uuid : %s ", uuidstr)
+            logging.debug("executeTask : executing task with uuid : %s ",
+                           uuidstr)
             tmp = task.delay(str(uuidstr), params)
             # the UUID will be used to track the status of the task
             logging.debug("executeTask :  result of task : %s", str(tmp))
@@ -50,9 +52,9 @@ class backendservices():
            {"pid" : 'the process id of the task spawned', "output": "the directory where the files will be generated"}
          
         '''
-        try:
-           
-            logging.info("executeTaskLocal : inside method with params : %s ", str(params))
+        try:           
+            logging.info("executeTaskLocal : inside method with params : %s ", 
+                         str(params))
             res = {}
             xmlfilepath = params['file'] 
             paramstr =  params['paramstring']
@@ -60,19 +62,27 @@ class backendservices():
             res['uuid'] = uuidstr
             create_dir_str = "mkdir -p output/%s " % uuidstr
             os.system(create_dir_str)
-            # check if the env variable is set form STOCHKIT_HOME or else use the default location
+            # check if the env variable is set form STOCHKIT_HOME or else 
+            # use the default location
             STOCHKIT_DIR = "/Users/RaceLab/StochKit2.0.6"
             #STOCHKIT_DIR = "/Users/andreash/Downloads/StochKit2.0.6"
-            # AH: THIS DOES NOT WORK, FOR SOME REASON THE VARIABLE IS NOT PICKED UP FROM THE SHELL
+            # AH: THIS DOES NOT WORK, FOR SOME REASON THE VARIABLE 
+            #IS NOT PICKED UP FROM THE SHELL
             try:
                 STOCHKIT_DIR = os.environ['STOCHKIT_HOME']
-                logging.debug("executeTaskLocal : Environment variable set for STOCHKIT_HOME : %s", STOCHKIT_DIR )
+                logging.debug("executeTaskLocal : Environment variable set for \
+                             STOCHKIT_HOME : %s", STOCHKIT_DIR )
             except Exception:
-                logging.debug(" executeTaskLocal : environment variable not set for STOCHKIT_HOME. Default location will be used : %s", STOCHKIT_DIR)
-            # The following executiong string is of the form : stochkit_exec_str = "~/StochKit2.0.6/ssa -m ~/output/%s/dimer_decay.xml -t 20 -i 10 -r 1000" % (uuidstr)
+                logging.debug(" executeTaskLocal : environment variable not set for STOCHKIT_HOME.\
+                 Default location will be used : %s",
+                               STOCHKIT_DIR)
+            # The following executiong string is of the form :
+            # stochkit_exec_str = "~/StochKit2.0.6/ssa -m ~/output/%s/dimer_decay.xml -t 20 -i 10 -r 1000" % (uuidstr)
             stochkit_exec_str = "{0}/{2} --out-dir output/{3}/result ".format(STOCHKIT_DIR,xmlfilepath,paramstr,uuidstr)
-            logging.debug("executeTaskLocal : Spawning StochKit Task. String : %s", stochkit_exec_str)
-            p = subprocess.Popen(stochkit_exec_str, shell=True, stdin=subprocess.PIPE,stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
+            logging.debug("executeTaskLocal : Spawning StochKit Task. String : %s",
+                           stochkit_exec_str)
+            p = subprocess.Popen(stochkit_exec_str, shell=True, stdin=subprocess.PIPE,
+                                 stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
             pid = p.pid
             res['pid'] = pid 
             filepath = "output/%s//" % (uuidstr)
@@ -127,7 +137,7 @@ class backendservices():
         return res
     
     
-    def describeTask(self,params):
+    def describeTask(self, params):
         '''
         @param params: A dictionary with the following fields
          "AWS_ACCESS_KEY_ID" : AWS access key
@@ -184,6 +194,9 @@ class backendservices():
         logging.info("deleteTaskLocal : exiting method")        
     
     def startMachines(self, params):
+        '''
+        This method instantiates ec2 instances
+        '''
         #this will basically start an instance in ec2
         # add call from the infrastructure manager here
         logging.info("startMachines : inside method with params : %s", str(params))
@@ -201,6 +214,9 @@ class backendservices():
         pass
     
     def describeMachines(self, params):
+        '''
+        This method gets the status of all the instances of ec2
+        '''
         # add calls to the infrastructure manager for getting details of
         # machines
         logging.info("describeMachines : inside method with params : %s", str(params))
@@ -216,6 +232,9 @@ class backendservices():
     
     
     def validateCredentials(self, params):
+        '''
+        This method verifies the validity of ec2 credentials
+        '''
         logging.info("validateCredentials: inside method with params : %s", str(params))
         try:
             i = InfrastructureManager()
