@@ -70,12 +70,16 @@ class StochKitJob():
         
         self.epsilon = epsilon
         self.threshold = threshold
-                
+         
+    
         # Status of the Job (Running, Pending, Done)
         status = 'Pending'
         #  Process ID (only valid for local execution???)
         self.pid = None
-                
+    
+        # The result dict returned by the cloud submission
+        self.result = None
+    
     def setpid(self,pid):
         """ Set the PID of the job after execcution """
         self.pid = pid
@@ -231,10 +235,15 @@ class NewStochkitEnsemblePage(BaseHandler):
             stochkit_job.type = 'StochKit2 Ensemble'
                     
             stochkit_job.pid = res.id
-            stochkit_job.output_location = res.result
+            # The UI assumes that output_location is the local folder on disk that would be populated with data
+            # upon fetching it from the backend.
+            #stochkit_job.output_location = res.result
+            #stochkit_job.output_location = None
+            stochkit_job.result = res.result
             stochkit_job.uuid = res.id
             stochkit_job.status = 'Running'
-            
+            #stochkit_job.output_url = res.
+        
             # Create a wrapper to store the Job description in the datastore
             stochkit_job_db = StochKitJobWrapper()
             stochkit_job_db.user_id = self.user.user_id()

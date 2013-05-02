@@ -142,9 +142,11 @@ class StatusPage(BaseHandler):
         
                             if job_status['state'] == 'SUCCESS':
                                 stochkit_job.status = 'Finished'
+                                print job_status
+                                stochkit_job.output_url = job_status['output']
                             elif job_status['state'] == 'FAILED':
                                 stochkit_job.status == 'Failed'
-                            else
+                            else:
                                 # The state gives more fine-grained results, like if the job is being rerun, but
                                 #  we don't bother the users of the UI with this. 
                                 job_status.status == 'Running'
