@@ -18,6 +18,14 @@ from backend.backendservice import backendservices
 
 import shutil
 
+try:
+    #sys.path.append('/System/Library/Frameworks/Python.framework/Versions/2.7/Extras/lib/python')
+    #sys.path.append('/System/Library/Frameworks/Python.framework/Versions/2.7/Extras/lib/python/numpy')
+    import numpy as np
+    from matplotlib import pylab
+except:
+    pass
+
 class StatusPage(BaseHandler):
     
     def get(self):
@@ -158,7 +166,6 @@ class StatusPage(BaseHandler):
 class JobOutPutPage(BaseHandler):
 
     def get(self):
-        """ Well, I am not sure what to do here... """
         context,result = self.getContext()
         self.render_response('stochkitjoboutputpage.html',**dict(result,**context))
 
@@ -187,9 +194,90 @@ class JobOutPutPage(BaseHandler):
             context['local_data']=True
         if os.path.exists(stochkit_job.output_location+"/result/stats"):
             context['local_statistics']=True
-                
-    
+            
         return context,result
+
+class VisualizePage(BaseHandler):
+    """ Basic Visualization """
+
+    def get(self):
+        """ Well, I am not sure what to do here... """
+        # context,result = self.getContext()
+        #self.response.out.write("GET")
+        result = {}
+        context = {}
+        params = self.getContext()
+        meanfile = params['job_folder']+'/result/stats/means.txt'
+        # Read in the meanvalue.txt file as a numpy array
+        try:
+            mean_values = []
+            mean_values = np.loadtxt(params['job_folder']+'/results/stats/means.txt')
+            fig = pylab.plot(mean_values)
+            context['figures'] = [fig]
+        except Exception,e:
+            # In the case that we can't import numpy or matplotlib, we just dump
+            # the numbers in a window.
+            try:
+                file = open(meanfile,'rb')
+                table = [row.strip().split('\t') for row in file]
+                tspan = []
+                
+                # Extract the time span list
+                for row in table:
+                    tspan.append(row[0])
+            
+                # Make a dict with time series for one of the species, formatted for plotting with flot
+                spec = []
+                for row in table:
+                    spec.append([row[0],row[7]])
+
+                context['spec'] = spec
+                context['meanstr'] = table
+                context['tspan'] = tspan
+                #print meanstr
+                #self.response.out.write(meanstr.format())
+            except Exception,e:
+                self.response.out.write(str(e))
+            pass
+           
+                
+        self.render_response('visualizepage.html',**dict(result,**context))
+    
+    def post(self):
+        self.response.out.write("POST")
+    
+    def getContext(self):
+        params = self.request.POST
+        params = dict(params,**self.request.GET)
+        return params
+    
+    """def getContext(self):
+        params = self.request.POST
+        params = dict(params,**self.request.GET)
+        
+        job_name = params['job_name']
+        context={}
+        result = {}
+        context['job_name']=job_name
+        
+        # Grab the Job from the datastore
+        try:
+            job = db.GqlQuery("SELECT * FROM StochKitJobWrapper WHERE user_id = :1 AND name = :2", self.user.user_id(),job_name).get()
+            stochkit_job = job.stochkit_job
+            context['stochkit_job']=stochkit_job
+        except Exception,e:
+            result = {'status':False,'msg':"Could not retreive the jobs"+job_name+ " from the datastore."}
+        
+        # Check if the results and stats folders are present locally
+        if os.path.exists(stochkit_job.output_location+"/result"):
+            context['local_data']=True
+        if os.path.exists(stochkit_job.output_location+"/result/stats"):
+            context['local_statistics']=True
+        
+        
+        return context,result"""
+
+
 
 
 

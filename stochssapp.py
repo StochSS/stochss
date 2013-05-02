@@ -124,6 +124,7 @@ app = webapp2.WSGIApplication([
                                ('/simulate/newstochkitensemble',NewStochkitEnsemblePage),
                                ('/simulate/jobsettings',JobSettingsPage),
                                ('/status',StatusPage),
+                               ('/output/visualize',VisualizePage),
                                ('/output',JobOutPutPage),
                                ('/credentials',CredentialsPage),
                                ('/signout', Signout)

@@ -14,8 +14,8 @@ handlers:
   static_dir: static/img
 - url: /static/js
   static_dir: static/js
-- url: /output
-  static_dir: output
+- url: /lib/flot
+  static_dir: lib/flot
 
 - url: /.*
   script: stochssapp.app
@@ -24,8 +24,6 @@ handlers:
 
 libraries:
 - name: jinja2
-  version: latest
-- name: numpy
   version: latest
 - name: lxml
   version: latest

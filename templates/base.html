@@ -1,4 +1,5 @@
-<!DOCTYPE html>
+<!-- <!DOCTYPE html> -->
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN" "http://www.w3.org/TR/html4/loose.dtd">
 <html lang="en">
   <head>
     <meta charset="utf-8">
@@ -34,7 +35,7 @@
     <link rel="apple-touch-icon-precomposed" sizes="114x114" href="../static/ico/apple-touch-icon-114-precomposed.png">
     <link rel="apple-touch-icon-precomposed" sizes="72x72" href="../static/ico/apple-touch-icon-72-precomposed.png">
     <link rel="apple-touch-icon-precomposed" href="/static/ico/apple-touch-icon-57-precomposed.png">
-  </head>
+</head>
 
   <body>
 
@@ -132,7 +133,12 @@
     <!-- Le javascript
     ================================================== -->
     <!-- Placed at the end of the document so the pages load faster -->
-    <script src="/static/js/jquery.js"></script>
+    <!-- Flot fails with this version of jquery -->
+                        
+    <!--<script src="/static/js/jquery.js"></script>-->
+    <script src="/lib/flot/jquery.js"></script>
+    <script src="/lib/flot/jquery.flot.js"></script>
+    <script src="/lib/flot/jquery.flot.navigate.js"></script>
     <script src="/static/js/bootstrap-transition.js"></script>
     <script src="/static/js/bootstrap-alert.js"></script>
     <script src="/static/js/bootstrap-modal.js"></script>
@@ -145,7 +151,9 @@
     <script src="/static/js/bootstrap-collapse.js"></script>
     <script src="/static/js/bootstrap-carousel.js"></script>
     <script src="/static/js/bootstrap-typeahead.js"></script>
-    <script src="/static/js/custom.js"></script>
+    <script src="/static/js/custom.js"></script>                        
+
+
     {% block jscontent %}{% endblock %}
 
   </body>
