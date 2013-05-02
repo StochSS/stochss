@@ -4,34 +4,23 @@ It would accept all the calls from the front end and pass on to the backend.
 All the input validation is performed in this class.
 '''
 from infrastructure_manager import InfrastructureManager
-import os,subprocess,signal,uuid,sys
+import os, subprocess, signal, uuid, sys
 import logging
 
 class backendservices():
     ''' 
     constructor for the backend service class.
     It should be passed the agent creds
-    '''
-    #agent_type= 
+    ''' 
         
-    def backendservices(self): 
+    def backendservices(self):
+        '''
+        constructor to set the path of various libraries
+        ''' 
         sys.path.append(os.path.join(os.path.dirname(__file__), 'lib/boto'))
         sys.path.append(os.path.join(os.path.dirname(__file__), 'lib/celery'))
         sys.path.append(os.path.join(os.path.dirname(__file__), '/Library/Python/2.7/site-packages/amqp'))
             
-    def initialize_server(self):
-         # check if the security group exists , if not then create a group
-         pass
-        
-    
-    def createTask(self, params):
-        # this will be used to create the virtual machines
-        # add the functionality for invoking the infrastrcuture 
-        # manager to create the virtual machine
-        
-        pass
-    
-    
     def executeTask(self,params):
         '''
         This method instantiates celery tasks in the cloud.
@@ -42,16 +31,14 @@ class backendservices():
             uuidstr = uuid.uuid4()
             #create a celery task
             logging.debug("executeTask : executing task with uuid : %s ", uuidstr)
-            tmp = task.delay(str(uuidstr),params)
+            tmp = task.delay(str(uuidstr), params)
             # the UUID will be used to track the status of the task
             logging.debug("executeTask :  result of task : %s", str(tmp))
             return tmp
-        except Exception,e:
+        except Exception, e:
             logging.error("executeTask : error - %s", str(e))
     
-    
-    
-    def executeTaskLocal(self,params):
+    def executeTaskLocal(self, params):
         '''
         This method spawns a stochkit process. It doesn't wait for the process to finish. The status of the
         process can be tracked using the pid and the output directory returned by this method. 
@@ -79,14 +66,14 @@ class backendservices():
             # AH: THIS DOES NOT WORK, FOR SOME REASON THE VARIABLE IS NOT PICKED UP FROM THE SHELL
             try:
                 STOCHKIT_DIR = os.environ['STOCHKIT_HOME']
-                logging.debug("executeTaskLocal : Environment variable set for STOCHKIT_HOME : %s",STOCHKIT_DIR )
+                logging.debug("executeTaskLocal : Environment variable set for STOCHKIT_HOME : %s", STOCHKIT_DIR )
             except Exception:
                 logging.debug(" executeTaskLocal : environment variable not set for STOCHKIT_HOME. Default location will be used : %s", STOCHKIT_DIR)
             # The following executiong string is of the form : stochkit_exec_str = "~/StochKit2.0.6/ssa -m ~/output/%s/dimer_decay.xml -t 20 -i 10 -r 1000" % (uuidstr)
             stochkit_exec_str = "{0}/{2} --out-dir output/{3}/result ".format(STOCHKIT_DIR,xmlfilepath,paramstr,uuidstr)
             logging.debug("executeTaskLocal : Spawning StochKit Task. String : %s", stochkit_exec_str)
             p = subprocess.Popen(stochkit_exec_str, shell=True, stdin=subprocess.PIPE,stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
-            pid = p.pid;
+            pid = p.pid
             res['pid'] = pid 
             filepath = "output/%s//" % (uuidstr)
             logging.debug("executeTaskLocal : PID generated - %s", pid)
@@ -104,11 +91,11 @@ class backendservices():
             logging.info("executeTaskLocal: exiting with result : %s", str(res)) 
             return res
         except Exception as e:
-               logging.error("executeTaskLocal : exception raised : %s" , str(e))
-               return None
+            logging.error("executeTaskLocal : exception raised : %s" , str(e))
+            return None
                
     
-    def checkTaskStatusLocal(self,pids):
+    def checkTaskStatusLocal(self, pids):
         '''
         checks the status of the pids and returns true if the task is running or else returns false
         pids = [list of pids to check for status]
@@ -125,11 +112,11 @@ class backendservices():
                     res[pid] = False
             logging.info("checkTaskStatusLocal : exiting with result : %s", str(res))
             return res
-        except Exception,e:
+        except Exception as e:
             logging.error("checkTaskStatusLocal: Exiting with error : %s", str(e))
             return None
     
-    def checkTaskStatusCloud(self,ids):
+    def checkTaskStatusCloud(self, ids):
         '''
         checks the status of the pids and returns true if the task is running or else returns false
         pids = [list of pids to check for status]
@@ -161,13 +148,13 @@ class backendservices():
             for taskid in params['taskids']:
                 res = checkStatus(taskid)
                 result[taskid] = res
-        except Exception,e:
+        except Exception, e:
             logging.error("describeTask : exiting with error : %s", str(e))
             return None
         logging.info("describeTask : exiting with result : %s", str(result))
         return result
     
-    def deleteTasks(self,taskids):
+    def deleteTasks(self, taskids):
         '''
         @param taskid:the list of taskids to be removed 
         this method revokes scheduled tasks as well as the tasks in progress
@@ -180,7 +167,7 @@ class backendservices():
                 removeTask(taskid)
             logging.info("deleteTasks: All tasks removed")
         except Exception, e:
-            logging.error("deleteTasks : exiting with error : %s",str(e))
+            logging.error("deleteTasks : exiting with error : %s", str(e))
 
     
     def deleteTaskLocal(self, pids):
@@ -192,11 +179,11 @@ class backendservices():
         for pid in pids:
             try:
                 os.kill(pid, signal.SIGKILL)
-            except Exception,e:
+            except Exception, e:
                 logging.error("deleteTaskLocal : couldn't kill process. error: %s", str(e))
         logging.info("deleteTaskLocal : exiting method")        
     
-    def startMachines(self,params):
+    def startMachines(self, params):
         #this will basically start an instance in ec2
         # add call from the infrastructure manager here
         logging.info("startMachines : inside method with params : %s", str(params))
@@ -209,11 +196,11 @@ class backendservices():
             logging.error("startMachines : exiting method with error : %s", str(e))
             return None
         
-    def stopMachines(self,params):
+    def stopMachines(self, params):
         # add infrastcutre manager call to stop a virtual machines
         pass
     
-    def describeMachines(self,params):
+    def describeMachines(self, params):
         # add calls to the infrastructure manager for getting details of
         # machines
         logging.info("describeMachines : inside method with params : %s", str(params))
@@ -223,23 +210,23 @@ class backendservices():
             res = i.describe_instances(params, secret)
             logging.info("describeMachines : exiting method with result : %s", str(res))
             return res
-        except Exception,e:
+        except Exception, e:
             logging.error("describeMachines : exiting method with error : %s", str(e))
             return None
     
     
-    def validateCredentials(self,params):
+    def validateCredentials(self, params):
         logging.info("validateCredentials: inside method with params : %s", str(params))
         try:
             i = InfrastructureManager()
             logging.info("validateCredentials: exiting with result : %s", str(i))
             return i.validate_Credentials(params)
-        except Exception,e:
+        except Exception, e:
             logging.error("validateCredentials: exiting with error : %s", str(e))
             return False
     
     
-    def fetchOutput(self,taskid):
+    def fetchOutput(self, taskid):
         '''
         This method gets the output file from S3 and extracts it to the output 
         directory
@@ -273,41 +260,42 @@ class backendservices():
                 os.system(removetarcmd)
                 logging.info("fetchOutput : exiting with result : True")
                 return True
-        except Exception,e:
+        except Exception, e:
             logging.error("fetchOutput : exiting with error : %s", str(e))
             return False
         
 if __name__ == "__main__":
-    obj = backendservices()
-    PARAM_CREDENTIALS = 'credentials'
-    PARAM_GROUP = 'group'
-    PARAM_IMAGE_ID = 'image_id'
-    PARAM_INSTANCE_TYPE = 'instance_type'
-    PARAM_KEYNAME = 'keyname'
-    credentials = {"EC2_ACCESS_KEY":"KIAJWILGFLOFVDRDRCQ", "EC2_SECRET_KEY":"vnEvY4vFpmaPsPNTB80H8IsNqIkWGTMys/95VWaJ"}
-    params ={"infrastructure":"ec2",
-             "num_vms":1, 
-             'group':'stochss19', 
-             'image_id':'ami-1d066b74', 
-             'instance_type':'t1.micro',
-             'keyname':'stochssnew32', 
-             'email':['anand.bdk@gmail.com'],
-             'credentials':{"EC2_ACCESS_KEY":"AKIAJWILGFLOFVDRDRCQ", "EC2_SECRET_KEY":"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"},
-             #'credentials':{"EC2_ACCESS_KEY":"sadsdsad", "EC2_SECRET_KEY":"/95VWaJ"},
-             'use_spot_instances':False}
-    #test  = obj.validateCredentials(params)
-    #print test
-    #print str(obj.startMachines(params))
-    #val = obj.describeMachines(params)
-    pids = [12680,12681,12682, 18526]
-    #res  = obj.checkTaskStatusLocal(pids)
-    pids = [18511,18519,19200]
-    #obj.deleteTaskLocal(pids)
-    #print str(res)
-    obj.fetchOutput("dddd0430-a3c5-445a-a4fd-aad59d6927fa")
-    param = {'file':"/Users/RaceLab/StochKit2.0.6/models/examples/dimer_decay.xml",'paramstring':"--force -t 10 -r 1000"}
-    #res = obj.executeTaskLocal(param)
-    #print str(res)
-    #obj.startMachines(params)
-    #obj.describeMachines(params)
+    pass
+#    obj = backendservices()
+#    PARAM_CREDENTIALS = 'credentials'
+#    PARAM_GROUP = 'group'
+#    PARAM_IMAGE_ID = 'image_id'
+#    PARAM_INSTANCE_TYPE = 'instance_type'
+#    PARAM_KEYNAME = 'keyname'
+#    credentials = {"EC2_ACCESS_KEY":"KIAJWILGFLOFVDRDRCQ", "EC2_SECRET_KEY":"vnEvY4vFpmaPsPNTB80H8IsNqIkWGTMys/95VWaJ"}
+#    params ={"infrastructure":"ec2",
+#             "num_vms":1, 
+#             'group':'stochss19', 
+#             'image_id':'ami-1d066b74', 
+#             'instance_type':'t1.micro',
+#             'keyname':'stochssnew32', 
+#             'email':['anand.bdk@gmail.com'],
+#             'credentials':{"EC2_ACCESS_KEY":"AKIAJWILGFLOFVDRDRCQ", "EC2_SECRET_KEY":"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"},
+#             #'credentials':{"EC2_ACCESS_KEY":"sadsdsad", "EC2_SECRET_KEY":"/95VWaJ"},
+#             'use_spot_instances':False}
+#    #test  = obj.validateCredentials(params)
+#    #print test
+#    #print str(obj.startMachines(params))
+#    #val = obj.describeMachines(params)
+#    pids = [12680,12681,12682, 18526]
+#    #res  = obj.checkTaskStatusLocal(pids)
+#    pids = [18511,18519,19200]
+#    #obj.deleteTaskLocal(pids)
+#    #print str(res)
+#    obj.fetchOutput("dddd0430-a3c5-445a-a4fd-aad59d6927fa")
+#    param = {'file':"/Users/RaceLab/StochKit2.0.6/models/examples/dimer_decay.xml",'paramstring':"--force -t 10 -r 1000"}
+#    #res = obj.executeTaskLocal(param)
+#    #print str(res)
+#    #obj.startMachines(params)
+#    #obj.describeMachines(params)
     
