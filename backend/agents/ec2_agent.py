@@ -75,9 +75,9 @@ class EC2Agent(BaseAgent):
       parameters  A dictionary of parameters
     """
     keyname = parameters[self.PARAM_KEYNAME]
-    keyname = "stochss-keypair"
-    #group = parameters[self.PARAM_GROUP]
-    group = "stochss-security-group"
+    #keyname = "stochss-keypair"
+    group = parameters[self.PARAM_GROUP]
+    #group = "stochss-security-group"
 
     key_path = '{0}.key'.format(keyname)
     ssh_key = os.path.abspath(key_path)
