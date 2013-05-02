@@ -118,7 +118,14 @@ class StatusPage(BaseHandler):
                                     stochkit_job.status = "Finished"
                                 else:
                                     stochkit_job.status = "Failed"
-                        #elif stochkit_job.resource == 'Cloud'
+                        elif stochkit_job.resource == 'Cloud':
+                            # Retrive credentials from the datastore
+                            
+                            # Check the status on the remote end
+                            taskparams = {'AWS_ACCESS_KEY_ID':db_credentials.access_key,'AWS_SECRET_ACCESS_KEY':db_credentials.secret_key,'taskids':[stochkit_job.pid]}
+                            status = service.describeTask(taskparams)
+                            print status
+                
                         # Todo, implement check in the case of Cloud
                     except Exception,e:
                         result = {'status':False,'msg':'Could not determine the status of the jobs.'+str(e)}
