@@ -128,11 +128,26 @@ class StatusPage(BaseHandler):
                                     stochkit_job.status = "Failed"
                         elif stochkit_job.resource == 'Cloud':
                             # Retrive credentials from the datastore
-                            
+                            try:
+                                db_credentials = db.GqlQuery("SELECT * FROM CredentialsWrapper WHERE user_id = :1", self.user.user_id()).get()
+                            except:
+                                return {'status':False,'msg':'Could not retrieve the status of job '+stochkit_job.name +'. Failed to retrive the EC2 credentials.'}
                             # Check the status on the remote end
                             taskparams = {'AWS_ACCESS_KEY_ID':db_credentials.access_key,'AWS_SECRET_ACCESS_KEY':db_credentials.secret_key,'taskids':[stochkit_job.pid]}
-                            status = service.describeTask(taskparams)
-                            print status
+                            task_status = service.describeTask(taskparams)
+                            if task_status == None:
+                                return {'status':False,'msg':'Could not retrieve the status of job '+stochkit_job.name }
+
+                            job_status = task_status[stochkit_job.pid]
+        
+                            if job_status['state'] == 'SUCCESS':
+                                stochkit_job.status = 'Finished'
+                            elif job_status['state'] == 'FAILED':
+                                stochkit_job.status == 'Failed'
+                            else
+                                # The state gives more fine-grained results, like if the job is being rerun, but
+                                #  we don't bother the users of the UI with this. 
+                                job_status.status == 'Running'
                 
                         # Todo, implement check in the case of Cloud
                     except Exception,e:
