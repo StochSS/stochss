@@ -21,6 +21,7 @@ jinja_environment = jinja2.Environment(autoescape=True,
                                        loader=(jinja2.FileSystemLoader(os.path.join(os.path.dirname(__file__), 'templates')))) 
 
 
+
 class BaseHandler(webapp2.RequestHandler):
     """
     The base handler that extends the dispatch() method to start the session store and save all sessions at the end of a request:
@@ -86,7 +87,7 @@ class Signout(BaseHandler):
 
 class MainPage(BaseHandler):
     """ The Main page. Renders a welcome message and shortcuts to main menu items. """
-
+    
     def get(self):
         self.render_response("mainpage.html")
     
@@ -107,11 +108,10 @@ from handlers.simulation import *
 from handlers.credentials import *
 from handlers.status import *
 
-# Make an app to serve static files. We want the user to be able to Browse the
-# local job output folders.
+sys.path.append(os.path.join(os.path.dirname(__file__), '/lib/stochkit'))
+os.environ['STOCHKIT_HOME'] = os.path.join(os.path.dirname(__file__))+'/lib/stochkit'
 
-
-app = webapp2.WSGIApplication([                                                              
+app = webapp2.WSGIApplication([
                                ('/', MainPage),
                                ('/modeleditor/specieseditor', SpeciesEditorPage),
                                ('/modeleditor/reactioneditor', ReactionEditorPage),
