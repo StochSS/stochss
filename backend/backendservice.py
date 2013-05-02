@@ -204,6 +204,41 @@ class backendservices():
     def validateCredentials(self,params):
         i = InfrastructureManager()
         return i.validate_Credentials(params)
+    
+    
+    
+    def fetchOutput(self,taskid):
+        '''
+        This method gets the output file from S3 and extracts it to the output 
+        directory
+        @param taskid: the taskid for which the output has to be fetched
+        @return: True : if successful or False : if failed 
+        '''
+        filename = "{0}.tar".format(taskid)
+        #the output directory
+        
+        print "the name of file to be fetched : {0}".format(filename)
+        baseurl = "https://s3.amazonaws.com/stochkitoutput/output"
+        fileurl = "{0}/{1}".format(baseurl,filename)
+        fetchurlcmdstr = "curl --remote-name {0}".format(fileurl)
+        print "Fetching file using command : {0}".format(fetchurlcmdstr)
+        os.system(fetchurlcmdstr)
+        if not os.path.exists(filename):
+            print 'unable to download file'
+            return False
+        else:
+            outputdir = "{0}/../output/{1}".format(os.getcwd(),taskid)
+            createoutputdirstr = "mkdir -p {0}".format(outputdir)
+            os.system(createoutputdirstr)
+            print "the files will be extracted at {0} ".format(outputdir)
+            untarcmdstr = "tar -xzvf  {0} -C {1}/".format(filename,outputdir)
+            print "untaring file using command : {0}".format(untarcmdstr)
+            os.system(untarcmdstr)
+            os.system("pwd")
+            removetarcmd = "rm {0}".format(filename)
+            print "removing the fetched file using command : {0}".format(removetarcmd)
+            os.system(removetarcmd)
+            return True
         
 if __name__ == "__main__":
     obj = backendservices()
@@ -225,14 +260,14 @@ if __name__ == "__main__":
              'use_spot_instances':False}
     #test  = obj.validateCredentials(params)
     #print test
-    print str(obj.startMachines(params))
+    #print str(obj.startMachines(params))
     #val = obj.describeMachines(params)
     pids = [12680,12681,12682, 18526]
     #res  = obj.checkTaskStatusLocal(pids)
     pids = [18511,18519,19200]
     #obj.deleteTaskLocal(pids)
     #print str(res)
-    
+    obj.fetchOutput("dddd0430-a3c5-445a-a4fd-aad59d6927fa")
     param = {'file':"/Users/RaceLab/StochKit2.0.6/models/examples/dimer_decay.xml",'paramstring':"--force -t 10 -r 1000"}
     #res = obj.executeTaskLocal(param)
     #print str(res)
