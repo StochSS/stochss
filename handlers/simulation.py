@@ -153,8 +153,14 @@ class NewStochkitEnsemblePage(BaseHandler):
                 return result
         
             # enable these two lines by fetching the credentials from database
-            #os.environ["AWS_ACCESS_KEY_ID"] = params['AWS_ACCESS_KEY_ID']
-            #os.environ["AWS_SECRET_ACCESS_KEY"] = params['AWS_SECRET_ACCESS_KEY']
+            try:
+                db_credentials = db.GqlQuery("SELECT * FROM CredentialsWrapper WHERE user_id = :1", self.user.user_id()).get()
+            except:
+                return {'status':False,'msg':'Cloud job subission failed. Failed to retrive the EC2 credentials.'}
+
+            # Set the environmental variables 
+            os.environ["AWS_ACCESS_KEY_ID"] = db_credentials.access_key
+            os.environ["AWS_SECRET_ACCESS_KEY"] = db_credentials.secret_key
         
             #the parameter dictionary to be passed to the backend
             param ={}
@@ -191,8 +197,8 @@ class NewStochkitEnsemblePage(BaseHandler):
             if not "only-moments" in params:
                 args+=' --keep-trajectories'
             
-            if "label-columns" in params or self.label_column_names:
-                args+=' --label'
+                    #if "label-columns" in params or stochkit_job.label_column_names:
+            args+=' --label'
             
             if "keep-histograms" in params:
                 args+=' --keep-histograms'
@@ -368,8 +374,7 @@ class NewStochkitEnsemblePage(BaseHandler):
             if not "only-moments" in params:
                 args+=' --keep-trajectories'
             
-            if "label-columns" in params:
-                args+=' --label'
+            args+=' --label'
             
             if "keep-histograms" in params:
                 args+=' --keep-histograms'
