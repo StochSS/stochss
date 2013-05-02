@@ -12,6 +12,7 @@ import time
 from boto.ec2.cloudwatch import MetricAlarm
 from backend.utils import utils
 from uuid import uuid4
+import logging
 
 __author__ = 'hiranya, anand'
 __email__ = 'hiranya@appscale.com, anand@cs.ucsb.edu'

@@ -6,9 +6,10 @@ import os
 import sys
 import time
 import uuid
+import logging
 
-__author__ = 'hiranya'
-__email__ = 'hiranya@appscale.com'
+__author__ = 'hiranya,anand'
+__email__ = 'hiranya@appscale.com, anand@cs.ucsb.edu'
 
 def get_secret(filename='/etc/appscale/secret.key'):
   """
@@ -79,7 +80,7 @@ def log(msg):
   Args:
     msg  Message to be logged
   """
-  print msg
+  logging.debug(msg)
   sys.stdout.flush()
 
 

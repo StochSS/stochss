@@ -150,8 +150,10 @@ class backendservices():
          a dictionary of the form :
          {"taskid":"result:"","state":""} 
         '''
-        # this method will make a call the 
+        logging.info("describeTask : inside method with params : %s", params)
+        logging.debug("describeTask : setting environment variables : AWS_ACCESS_KEY_ID - %s", params['AWS_ACCESS_KEY_ID']) 
         os.environ["AWS_ACCESS_KEY_ID"] = params['AWS_ACCESS_KEY_ID']
+        logging.debug("describeTask : setting environment variables : AWS_SECRET_ACCESS_KEY - %s", params['AWS_SECRET_ACCESS_KEY'])
         os.environ["AWS_SECRET_ACCESS_KEY"] = params['AWS_SECRET_ACCESS_KEY']
         result = {}
         from tasks import checkStatus
@@ -160,8 +162,9 @@ class backendservices():
                 res = checkStatus(taskid)
                 result[taskid] = res
         except Exception,e:
-            print str(e)
+            logging.error("describeTask : exiting with error : %s", str(e))
             return None
+        logging.info("describeTask : exiting with result : %s", str(result))
         return result
     
     def deleteTasks(self,taskids):
@@ -170,12 +173,14 @@ class backendservices():
         this method revokes scheduled tasks as well as the tasks in progress
         
         '''
+        logging.info("deleteTasks : inside method with taskids : %s", taskids)
         try:
             from tasks import removeTask
             for taskid in taskids:
                 removeTask(taskid)
+            logging.info("deleteTasks: All tasks removed")
         except Exception, e:
-            print "exception occured : {0}".format(str(e))
+            logging.error("deleteTasks : exiting with error : %s",str(e))
 
     
     def deleteTaskLocal(self, pids):
@@ -183,39 +188,55 @@ class backendservices():
         pids : list of pids to be deleted.
         Terminates the processes associated with the PID. This methods ignores the PID which are not not active.
         """
+        logging.info("deleteTaskLocal : inside method with pids : %s", pids)
         for pid in pids:
             try:
                 os.kill(pid, signal.SIGKILL)
             except Exception,e:
-                pass
+                logging.error("deleteTaskLocal : couldn't kill process. error: %s", str(e))
+        logging.info("deleteTaskLocal : exiting method")        
     
     def startMachines(self,params):
         #this will basically start an instance in ec2
         # add call from the infrastructure manager here
-        i = InfrastructureManager(blocking=True)
-        res = i.run_instances(params, params)
-        return res
+        logging.info("startMachines : inside method with params : %s", str(params))
+        try:
+            i = InfrastructureManager(blocking=True)
+            res = i.run_instances(params, params)
+            return res
+            logging.info("startMachines : exiting method with result : %s", str(res))
+        except Exception, e:
+            logging.error("startMachines : exiting method with error : %s", str(e))
+            return None
         
     def stopMachines(self,params):
         # add infrastcutre manager call to stop a virtual machines
         pass
+    
     def describeMachines(self,params):
         # add calls to the infrastructure manager for getting details of
         # machines
-        i = InfrastructureManager()
-        secret =[]
-        res = i.describe_instances(params, secret)
-        for i in res:
-            from pprint import pprint
-            pprint(i)
-            print "==============================================="
-        return res
+        logging.info("describeMachines : inside method with params : %s", str(params))
+        try:
+            i = InfrastructureManager()
+            secret =[]
+            res = i.describe_instances(params, secret)
+            logging.info("describeMachines : exiting method with result : %s", str(res))
+            return res
+        except Exception,e:
+            logging.error("describeMachines : exiting method with error : %s", str(e))
+            return None
     
     
     def validateCredentials(self,params):
-        i = InfrastructureManager()
-        return i.validate_Credentials(params)
-    
+        logging.info("validateCredentials: inside method with params : %s", str(params))
+        try:
+            i = InfrastructureManager()
+            logging.info("validateCredentials: exiting with result : %s", str(i))
+            return i.validate_Credentials(params)
+        except Exception,e:
+            logging.error("validateCredentials: exiting with error : %s", str(e))
+            return False
     
     
     def fetchOutput(self,taskid):
@@ -225,31 +246,36 @@ class backendservices():
         @param taskid: the taskid for which the output has to be fetched
         @return: True : if successful or False : if failed 
         '''
-        filename = "{0}.tar".format(taskid)
-        #the output directory
-        
-        print "the name of file to be fetched : {0}".format(filename)
-        baseurl = "https://s3.amazonaws.com/stochkitoutput/output"
-        fileurl = "{0}/{1}".format(baseurl,filename)
-        fetchurlcmdstr = "curl --remote-name {0}".format(fileurl)
-        print "Fetching file using command : {0}".format(fetchurlcmdstr)
-        os.system(fetchurlcmdstr)
-        if not os.path.exists(filename):
-            print 'unable to download file'
+        try : 
+            logging.info("fetchOutput: inside method with taskid : %s", taskid)
+            filename = "{0}.tar".format(taskid)
+            #the output directory
+            logging.debug("fetchOutput : the name of file to be fetched : {0}".format(filename))
+            baseurl = "https://s3.amazonaws.com/stochkitoutput/output"
+            fileurl = "{0}/{1}".format(baseurl,filename)
+            fetchurlcmdstr = "curl --remote-name {0}".format(fileurl)
+            logging.debug("fetchOutput : Fetching file using command : {0}".format(fetchurlcmdstr))
+            os.system(fetchurlcmdstr)
+            if not os.path.exists(filename):
+                logging.error('unable to download file. Returning result as False')
+                return False
+            else:
+                outputdir = "{0}/../output/{1}".format(os.getcwd(),taskid)
+                createoutputdirstr = "mkdir -p {0}".format(outputdir)
+                os.system(createoutputdirstr)
+                logging.debug("fetchOutput : the files will be extracted at {0} ".format(outputdir))
+                untarcmdstr = "tar -xzvf  {0} -C {1}/".format(filename,outputdir)
+                logging.debug("fetchOutput : untaring file using command : {0}".format(untarcmdstr))
+                os.system(untarcmdstr)
+                os.system("pwd")
+                removetarcmd = "rm {0}".format(filename)
+                logging.debug("fetchOutput : removing the fetched file using command : {0}".format(removetarcmd))
+                os.system(removetarcmd)
+                logging.info("fetchOutput : exiting with result : True")
+                return True
+        except Exception,e:
+            logging.error("fetchOutput : exiting with error : %s", str(e))
             return False
-        else:
-            outputdir = "{0}/../output/{1}".format(os.getcwd(),taskid)
-            createoutputdirstr = "mkdir -p {0}".format(outputdir)
-            os.system(createoutputdirstr)
-            print "the files will be extracted at {0} ".format(outputdir)
-            untarcmdstr = "tar -xzvf  {0} -C {1}/".format(filename,outputdir)
-            print "untaring file using command : {0}".format(untarcmdstr)
-            os.system(untarcmdstr)
-            os.system("pwd")
-            removetarcmd = "rm {0}".format(filename)
-            print "removing the fetched file using command : {0}".format(removetarcmd)
-            os.system(removetarcmd)
-            return True
         
 if __name__ == "__main__":
     obj = backendservices()
