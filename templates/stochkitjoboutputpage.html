@@ -1,5 +1,5 @@
 {% extends "base.html" %}
-{% block title%}Manage Datastore{% endblock %}
+{% block title%}Job Summary{% endblock %}
 {% block content %}
 
 <style type=text/css>
@@ -14,14 +14,11 @@
             <h2> Job summary: <span style="COLOR:green;">{{stochkit_job.name}}</span></h2>
             </br>
             <div class="well">
-            <h3>Basic information</h3>
+                        
+            <h3>Job summary</h3>
                 <span class="thispage">Type:</t> {{stochkit_job.type}} </span>
                 </br>
                 <span class="thispage"> Resource:</t> {{stochkit_job.resource}} </span>
-            </div>
-            
-            <div class="well">
-            <h3>Meta</h3>
                 <span class="thispage"> Number of trajectories: {{stochkit_job.realizations}}</span>
                 </br>
                 <span class="thispage"> Simulation endtime: {{stochkit_job.final_time}}</span>
@@ -32,38 +29,38 @@
             </div>
             
             <!-- Show the mean and variances if they are present locally. -->
-            {% if local_statistics %}
+            {% if local_data %}
             <div class="well">
-                <h3> Basic statistics </h3>
-                <span class="thispage"><a href="/output/visualize?job_folder={{stochkit_job.output_location}}" class="thispage">Mean values</a>
+                <h3> Visualization </h3>
+                <span class="thispage"><a href="/output/visualize?job_folder={{stochkit_job.output_location}}" class="thispage"> Plot trajectories</a>
                 </br>
-                <span class="thispage"><a href="/output/{{stochkit_job.uuid}}/result/stats/variances.txt" class="thispage">Variances</a>
-            </div>
+               </div>
             {% endif %}
             
             
             <div class="well form">
             <h3>Output</h3>
+                </br>
                 <span class="thispage"> Local path: {{stochkit_job.output_location}} </span>
                 <!-- </br>
                 <span> Available locally: True</span> -->
                 </br>
                 <!-- We show the output URL if it is a cloud job -->
-                <span class="thispage">Remote URL: </span><a href="{{stochkit_job.output_url}}" class="thispage">{{stochkit_job.output_url}}</a>
                 {% if stochkit_job.resource == "Cloud" %}
+                <span class="thispage">Remote URL: </span><a href="{{stochkit_job.output_url}}" class="thispage">{{stochkit_job.output_url}}</a>
                 {% endif %}
                 </br></br>
                 <!--  We show the export button if the output data is present locally -->
                 {% if local_data %}
-                <input type="submit" class="btn btn-primary btn-large dropdown-toggle" value="Export"></a>
                 {% endif %}
+                
+                <!--<input type="submit" class="btn btn-primary btn-large dropdown-toggle" value="Export"></a> -->
                 <!-- We show the "Fetch remote" button if the job is a Cloud job and the local data is not present -->
-                <input type="submit" class="btn btn-primary btn-large" value="Fetch remote"></input>
                 {% if stochkit_job.resource == "Cloud" and not local_data %}
+                    <input type="submit" class="btn btn-primary btn-large" value="Fetch remote"></input>
                 {% endif %}
             </div>
         </div>
-    </div>
 </div>
 
 {% if msg %}

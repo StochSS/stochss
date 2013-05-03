@@ -21,10 +21,6 @@ class backendservices():
         sys.path.append(os.path.join(os.path.dirname(__file__), 'lib/celery'))
         sys.path.append(os.path.join(os.path.dirname(__file__), 
                                      '/Library/Python/2.7/site-packages/amqp'))
-    
-        #os.environ['STOCHKIT_HOME']="lib/stochkit"
-    #sys.path.append(os.environ['STOCHKIT_HOME'])
-    
             
     def executeTask(self,params):
         '''
@@ -56,6 +52,10 @@ class backendservices():
            {"pid" : 'the process id of the task spawned', "output": "the directory where the files will be generated"}
          
         '''
+        os.environ['STOCHKIT_HOME'] = '/Users/andreash/Downloads/StochKit2.0.7/'
+
+        logging.info("STOCHKIT_HOME" +os.environ['STOCHKIT_HOME'])
+        
         try:           
             logging.info("executeTaskLocal : inside method with params : %s ", 
                          str(params))
@@ -69,7 +69,6 @@ class backendservices():
             
             # This is now replaced by a global modification to os.environ in
             # the main file (stochssapp.py)
-            
             #STOCHKIT_DIR = os.environ['STOCHKIT_HOME']
             #logging.info("STOCHKIT_DIR is: "+STOCHKIT_DIR)
             # check if the env variable is set form STOCHKIT_HOME or else 
@@ -80,7 +79,6 @@ class backendservices():
             #STOCHKIT_DIR = "/Users/andreash/Downloads/StochKit2.0.6"
             # AH: THIS DOES NOT WORK, FOR SOME REASON THE VARIABLE 
             #IS NOT PICKED UP FROM THE SHELL
-            
             
             try:
                 STOCHKIT_DIR = os.environ['STOCHKIT_HOME']

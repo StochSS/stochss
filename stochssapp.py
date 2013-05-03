@@ -13,14 +13,12 @@ from webapp2_extras import auth
 from google.appengine.ext import db
 from google.appengine.api import users
 
+import json
 
 """ Initializer section """
-
 # Initialize the jinja environment
 jinja_environment = jinja2.Environment(autoescape=True,
                                        loader=(jinja2.FileSystemLoader(os.path.join(os.path.dirname(__file__), 'templates')))) 
-
-
 
 class BaseHandler(webapp2.RequestHandler):
     """
@@ -37,6 +35,7 @@ class BaseHandler(webapp2.RequestHandler):
         self.session_store = sessions.get_store(request=self.request)
         # Using memcache for storing sessions.
         self.session = self.session_store.get_session(name='mc_session', factory=sessions_memcache.MemcacheSessionFactory)
+        #self.session = self.session_store.get_session(name='mc_session')
         
         try:
             # Dispatch the request.
@@ -108,8 +107,8 @@ from handlers.simulation import *
 from handlers.credentials import *
 from handlers.status import *
 
-sys.path.append(os.path.join(os.path.dirname(__file__), '/lib/stochkit'))
-os.environ['STOCHKIT_HOME'] = os.path.join(os.path.dirname(__file__))+'/lib/stochkit'
+#sys.path.append(os.path.join(os.path.dirname(__file__), '/lib/stochkit'))
+#os.environ['STOCHKIT_HOME'] = os.path.join(os.path.dirname(__file__))+'/lib/stochkit'
 
 app = webapp2.WSGIApplication([
                                ('/', MainPage),

@@ -1,29 +1,57 @@
 {% extends "base.html" %}
-{% block title%}Basic statistics{% endblock %}
+{% block title%}Plot trajectories{% endblock %}
+
 {% block content %}
 
 <div class="span9">
-    <h2>Mean values</h2>
+    <h2>Plot trajectories</h2>
     <hr>
     </br>
-    {% if meanstr %}
-    <div class="well form" action="/output/visualize/" method="post">
+    <div class="well well-large">
+        <form id="select_species" action="/output/visualize" method="post">
         <span> Species: </span>
-            <select name="species">
+            <select name="species_name">
+            {% if species_names %}
             {% for name in species_names %}
                 <option value="{{name}}">{{name}}</option>
             {% endfor %}
+            {% endif %}
             </select>
-         <label>Trajectory number (show number of trajectories)</label><input type="text" value="1"></input>
+         <label>Trajectory number (show number of trajectories)</label><input type="text" name="trajectory_number" value="1"></input>
         </br>
-            <input type="submit" class="btn btn-primary btn-large" onclick="$.plot($('#placeholder'),[{{spec}}],{})" value="Plot">
-        </div>
-        <div id="placeholder" style="width:800px;height:400px;"></div>
-    {% endif %}
+            <input type="hidden" name="job_folder" value="{{job_folder}}"></input>
+            <input type="submit" name="plotbutton" class="btn btn-primary btn-large" value="Plot">
+            <input id="plotbutton" class="btn btn-primary btn-large" onClick="$.plot($('#placeholder'),[{{species_time_series}}],{});" value="test" type="hidden">
+                    
+        </form>
+        
+
     </div>
+    <div id="placeholder" style="width:800px;height:400px;"></div>
+
+</div>
+
+
+{% if msg %}
+{% if status == False %}
+<span style="color: red" class="create_msg">{{msg}}</span>
+{% else %}
+<span style="color: green" class="create_msg">{{msg}}</span>
+{% endif %}
+{% endif %}
+
 </div><!--/span-->
 
-
 {% endblock %}
+
+
+{% block jscontent %}
+<script type="text/javascript">
+    $(document).ready(function() {
+        $('#plotbutton').trigger('click');
+    });
+</script>
+{% endblock %}
+
 
 
