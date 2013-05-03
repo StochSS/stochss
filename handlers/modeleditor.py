@@ -199,7 +199,7 @@ class ModelEditorPage(BaseHandler):
         if not name:
           return {'status': False, 'msg': 'Model name is missing.'}
 
-        model = Model(name)
+        model = StochKitModel(name)
         try:
           user_id = self.user.user_id()
           logging.debug("user_id " + user_id)  

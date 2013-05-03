@@ -218,83 +218,90 @@ class VisualizePage(BaseHandler):
     """ Basic Visualization """
 
     def get(self):
-        """ Well, I am not sure what to do here... """
-        # context,result = self.getContext()
-        #self.response.out.write("GET")
+        
         result = {}
-        context = {}
-        params = self.getContext()
-        meanfile = params['job_folder']+'/result/stats/means.txt'
-        # Read in the meanvalue.txt file as a numpy array
+        context = self.getContext()
+        logging.info(context)
         try:
-            mean_values = []
-            mean_values = np.loadtxt(params['job_folder']+'/results/stats/means.txt')
-            fig = pylab.plot(mean_values)
-            context['figures'] = [fig]
+            # Get the species names
+            species_names = self.getSpeciesNames(context)
+            if species_names == None:
+                result['status'] = False
+                result['msg'] = 'Failed to retrive the species names'
+            context['species_names'] = species_names
+    
         except Exception,e:
-            # In the case that we can't import numpy or matplotlib, we just dump
-            # the numbers in a window.
-            try:
-                file = open(meanfile,'rb')
-                table = [row.strip().split('\t') for row in file]
-                tspan = []
-                
-                # Extract the time span list
-                for row in table:
-                    tspan.append(row[0])
-            
-                # Make a dict with time series for one of the species, formatted for plotting with flot
-                spec = []
-                for row in table:
-                    spec.append([row[0],row[7]])
-
-                context['spec'] = spec
-                context['meanstr'] = table
-                context['tspan'] = tspan
-                #print meanstr
-                #self.response.out.write(meanstr.format())
-            except Exception,e:
-                self.response.out.write(str(e))
-            pass
+            self.response.out.write(str(e))
+        pass
            
-                
         self.render_response('visualizepage.html',**dict(result,**context))
     
     def post(self):
-        self.response.out.write("POST")
-    
+        result = {}
+        context = self.getContext()
+        logging.info(context)
+        # Get the species names
+        species_names = self.getSpeciesNames(context)
+        if species_names == None:
+            result['status'] = False
+            result['msg'] = 'Failed to retrive the species names'
+        context['species_names'] = species_names
+        
+        trajectory_number = context['trajectory_number']
+        species_name = context['species_name']
+        species_time_series = self.getTrajectory(context,trajectory_number,species_name)
+        if species_time_series is None:
+            logging.info("ERRERRERERERRER")
+        context['species_time_series']=species_time_series
+            
+        self.render_response('visualizepage.html',**dict(result,**context))
+        
+    def getTrajectory(self, params, trajectory_number, species_name):
+        """ Get data from a specific trajectory in the StochKit output folder. """
+        logging.info(params)
+        try:
+            meanfile = params['job_folder']+'/result/trajectories/trajectory0.txt'
+            file = open(meanfile,'rb')
+            trajectory_data = [row.strip().split('\t') for row in file]
+            
+            species_names = trajectory_data[0]
+            for s in range(len(species_names)):
+                if species_names[s] == species_name:
+                    break
+            species_time_series = []
+            for row in trajectory_data:
+                species_time_series.append([row[0],row[s]]);
+            return species_time_series[1:]
+        except:
+            return None
+            
+    def getSpeciesNames(self,params):
+        """ Get a list with the species names. 
+            The result folder have to be populated in advance. """
+        meanfile = params['job_folder']+'/result/stats/means.txt'
+        logging.info(str(meanfile))
+        try:
+            # Try to grab them from the mean.txt file
+            meanfile = params['job_folder']+'/result/stats/means.txt'
+            file = open(meanfile,'rb')
+            row = file.readline()
+            logging.info(str(row))
+            species_names = row.strip().split('\t')
+            file.close()
+        except Exception, e:
+            logging.info(str(e))
+            return None
+            # Try to grab them from a trajectory file
+            #     meanfile = params['job_folder']+'/result/trajectories/trajectory0.txt'
+            # file = open(meanfile,'rb')
+            #row = file.readline()
+                #species_names = row.strip().split('\t')
+                
+        # The first value is always 'time' 
+        return species_names[1:]
+
     def getContext(self):
         params = self.request.POST
         params = dict(params,**self.request.GET)
         return params
     
-    """def getContext(self):
-        params = self.request.POST
-        params = dict(params,**self.request.GET)
-        
-        job_name = params['job_name']
-        context={}
-        result = {}
-        context['job_name']=job_name
-        
-        # Grab the Job from the datastore
-        try:
-            job = db.GqlQuery("SELECT * FROM StochKitJobWrapper WHERE user_id = :1 AND name = :2", self.user.user_id(),job_name).get()
-            stochkit_job = job.stochkit_job
-            context['stochkit_job']=stochkit_job
-        except Exception,e:
-            result = {'status':False,'msg':"Could not retreive the jobs"+job_name+ " from the datastore."}
-        
-        # Check if the results and stats folders are present locally
-        if os.path.exists(stochkit_job.output_location+"/result"):
-            context['local_data']=True
-        if os.path.exists(stochkit_job.output_location+"/result/stats"):
-            context['local_statistics']=True
-        
-        
-        return context,result"""
-
-
-
-
-

@@ -70,9 +70,9 @@
               <li><a href="mailto:stochss-users@googlegroups.com">Support</a></li>
             </ul>
           </div><!--/.nav-collapse -->
-        </div>
-      </div>
-    </div>
+        </div><!-- container fluid -->
+      </div><!-- navbar inner -->
+    </div><!-- navbar fixed -->
 
     <div class="container-fluid">
       
@@ -82,47 +82,23 @@
           <div class="well sidebar-nav">
             <ul class="nav nav-list">
               <li class="nav-header">Modelling</li>
-                
-                <li
-                    {% if active_index %}
-                    class="active"
-                    {% endif %}
-                    
-              <li
-              {% if active_index %}
-              class="active"
-              {% endif %}
-              <li
-              {% if active_createmodel %}
-              class="active"
-              {% endif %}
-              ><a href="/modeleditor" TITLE = "Create/Import models">Model editor</a></li>
-                
+                  <li><a href="/modeleditor" TITLE = "Create/Import models">Model editor</a></li>
+    
               <li class="nav-header">Simulation</li>
-                
-              <li><a href="/simulate" TITLE = "Configure and run simulations">Simulation manager</a></li>
-              <li><a href="/status" TITLE = "Monitor the progress of your Simulation">Job Status</a></li>
+                <li><a href="/simulate" TITLE = "Configure and run simulations">Simulation manager</a></li>
+                <li><a href="/status" TITLE = "Monitor the progress of your Simulation">Job Status</a></li>
 
-              
               <li class="nav-header">Cloud Settings</li>
-                  
-              
-                <li
-                {% if active_visulize %}
-                class="active"
-                    {% endif %}
-                    ><a href="/credentials" TITLE = "Monitor your Running Vms">Credentials & VMs </a>
-                </li>
+                  <li><a href="/credentials" TITLE = "Monitor your Running Vms">Credentials and VMs </a></li>
 
             </ul>
-              
           </div><!--/.well -->
-        </div><!--/span-->
+        </div><!--/span2-->
           {% block content %}
           {% endblock %}
       </div><!--/row-->
 
-      <hr>
+      </hr>
 
       <footer>
         <p></p>
@@ -138,7 +114,7 @@
     <!--<script src="/static/js/jquery.js"></script>-->
     <script src="/lib/flot/jquery.js"></script>
     <script src="/lib/flot/jquery.flot.js"></script>
-    <script src="/lib/flot/jquery.flot.navigate.js"></script>
+    <!--<script src="/lib/flot/jquery.flot.navigate.js"></script>-->
     <script src="/static/js/bootstrap-transition.js"></script>
     <script src="/static/js/bootstrap-alert.js"></script>
     <script src="/static/js/bootstrap-modal.js"></script>

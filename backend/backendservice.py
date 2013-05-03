@@ -52,6 +52,10 @@ class backendservices():
            {"pid" : 'the process id of the task spawned', "output": "the directory where the files will be generated"}
          
         '''
+        os.environ['STOCHKIT_HOME'] = '/Users/andreash/Downloads/StochKit2.0.7/'
+
+        logging.info("STOCHKIT_HOME" +os.environ['STOCHKIT_HOME'])
+        
         try:           
             logging.info("executeTaskLocal : inside method with params : %s ", 
                          str(params))
@@ -62,20 +66,27 @@ class backendservices():
             res['uuid'] = uuidstr
             create_dir_str = "mkdir -p output/%s " % uuidstr
             os.system(create_dir_str)
+            
+            # This is now replaced by a global modification to os.environ in
+            # the main file (stochssapp.py)
+            #STOCHKIT_DIR = os.environ['STOCHKIT_HOME']
+            #logging.info("STOCHKIT_DIR is: "+STOCHKIT_DIR)
             # check if the env variable is set form STOCHKIT_HOME or else 
             # use the default location
-            STOCHKIT_DIR = "/Users/RaceLab/StochKit2.0.6"
+            #STOCHKIT_DIR = "/Users/RaceLab/StochKit2.0.6"
+            #STOCHKIT_DIR = os.path.join(os.path.dirname(__file__))+"lib/stochkit"
+            #logging.info("STOCHKIT_DIR: " +STOCHKIT_DIR)
             #STOCHKIT_DIR = "/Users/andreash/Downloads/StochKit2.0.6"
             # AH: THIS DOES NOT WORK, FOR SOME REASON THE VARIABLE 
             #IS NOT PICKED UP FROM THE SHELL
+            
             try:
                 STOCHKIT_DIR = os.environ['STOCHKIT_HOME']
                 logging.debug("executeTaskLocal : Environment variable set for \
                              STOCHKIT_HOME : %s", STOCHKIT_DIR )
             except Exception:
                 logging.debug(" executeTaskLocal : environment variable not set for STOCHKIT_HOME.\
-                 Default location will be used : %s",
-                               STOCHKIT_DIR)
+                 Default location will be used.")
             # The following executiong string is of the form :
             # stochkit_exec_str = "~/StochKit2.0.6/ssa -m ~/output/%s/dimer_decay.xml -t 20 -i 10 -r 1000" % (uuidstr)
             stochkit_exec_str = "{0}/{2} --out-dir output/{3}/result ".format(STOCHKIT_DIR,xmlfilepath,paramstr,uuidstr)
