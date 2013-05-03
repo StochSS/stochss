@@ -59,25 +59,28 @@ def task(taskid,params):
         res['pid'] = taskid
         filepath = "output/%s//" % (uuidstr)
         absolute_file_path = os.path.abspath(filepath)
-        
         #res['relative_output_path']=os.path.relpath(filepath,)
-
         #copies the XML file to the output direcory
         copy_file_str = "cp  {0} output/{1}".format(xmlfilepath,uuidstr)
         print copy_file_str
         os.system(copy_file_str)
         print 'generating tar file'
-        create_tar_output_str = "tar -zcvf ~/output/{0}.tar ~/output/{0}".format(uuidstr)
+        create_tar_output_str = "tar -zcvf output/{0}.tar output/{0}".format(uuidstr)
         print create_tar_output_str
         logging.debug("followig cmd to be executed %s" % (create_tar_output_str))
-        copy_to_s3_str = "python ~/sccpy.py output/%s.tar" % (uuidstr)
+        bucketname = params['bucketname']
+        copy_to_s3_str = "python /home/ubuntu/sccpy.py output/{0}.tar {1}".format(uuidstr,bucketname)
         os.system(create_tar_output_str)
         print 'copying file to s3 : ' + copy_to_s3_str
         os.system(copy_to_s3_str)
         print 'removing xml file'
         removefilestr = "rm {0}".format(xmlfilepath)
         os.system(removefilestr)
-        res['output'] = "https://s3.amazonaws.com/stochkitoutput/output/{0}.tar".format(taskid)
+        removetarstr = "rm output/{0}.tar".format(uuidstr)
+        os.system(removetarstr)
+        removeoutputdirstr = "rm -r output/{0}".format(uuidstr)
+        os.system(removeoutputdirstr)
+        res['output'] = "https://s3.amazonaws.com/{1}/output/{0}.tar".format(taskid,bucketname)
   except Exception,e:
         print str(e)
         return None 

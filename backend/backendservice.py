@@ -285,36 +285,36 @@ class backendservices():
         
 if __name__ == "__main__":
     pass
-#    obj = backendservices()
-#    PARAM_CREDENTIALS = 'credentials'
-#    PARAM_GROUP = 'group'
-#    PARAM_IMAGE_ID = 'image_id'
-#    PARAM_INSTANCE_TYPE = 'instance_type'
-#    PARAM_KEYNAME = 'keyname'
-#    credentials = {"EC2_ACCESS_KEY":"KIAJWILGFLOFVDRDRCQ", "EC2_SECRET_KEY":"vnEvY4vFpmaPsPNTB80H8IsNqIkWGTMys/95VWaJ"}
-#    params ={"infrastructure":"ec2",
-#             "num_vms":1, 
-#             'group':'stochss19', 
-#             'image_id':'ami-1d066b74', 
-#             'instance_type':'t1.micro',
-#             'keyname':'stochssnew32', 
-#             'email':['anand.bdk@gmail.com'],
-#             'credentials':{"EC2_ACCESS_KEY":"AKIAJWILGFLOFVDRDRCQ", "EC2_SECRET_KEY":"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"},
-#             #'credentials':{"EC2_ACCESS_KEY":"sadsdsad", "EC2_SECRET_KEY":"/95VWaJ"},
-#             'use_spot_instances':False}
-#    #test  = obj.validateCredentials(params)
-#    #print test
-#    #print str(obj.startMachines(params))
-#    #val = obj.describeMachines(params)
-#    pids = [12680,12681,12682, 18526]
-#    #res  = obj.checkTaskStatusLocal(pids)
-#    pids = [18511,18519,19200]
-#    #obj.deleteTaskLocal(pids)
-#    #print str(res)
-#    obj.fetchOutput("dddd0430-a3c5-445a-a4fd-aad59d6927fa")
-#    param = {'file':"/Users/RaceLab/StochKit2.0.6/models/examples/dimer_decay.xml",'paramstring':"--force -t 10 -r 1000"}
-#    #res = obj.executeTaskLocal(param)
-#    #print str(res)
-#    #obj.startMachines(params)
-#    #obj.describeMachines(params)
+    obj = backendservices()
+    PARAM_CREDENTIALS = 'credentials'
+    PARAM_GROUP = 'group'
+    PARAM_IMAGE_ID = 'image_id'
+    PARAM_INSTANCE_TYPE = 'instance_type'
+    PARAM_KEYNAME = 'keyname'
+    credentials = {"EC2_ACCESS_KEY":"KIAJWILGFLOFVDRDRCQ", "EC2_SECRET_KEY":"vnEvY4vFpmaPsPNTB80H8IsNqIkWGTMys/95VWaJ"}
+    params ={"infrastructure":"ec2",
+             "num_vms":1, 
+             'group':'stochss19', 
+             'image_id':'ami-65bcd10c', 
+             'instance_type':'t1.micro',
+             'keyname':'stochssnew32', 
+             'email':['anand.bdk@gmail.com'],
+             'credentials':{"EC2_ACCESS_KEY":"AKIAJWILGFLOFVDRDRCQ", "EC2_SECRET_KEY":"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"},
+             #'credentials':{"EC2_ACCESS_KEY":"sadsdsad", "EC2_SECRET_KEY":"/95VWaJ"},
+             'use_spot_instances':False}
+    #test  = obj.validateCredentials(params)
+    #print test
+    print str(obj.startMachines(params))
+    #val = obj.describeMachines(params)
+    pids = [12680,12681,12682, 18526]
+    #res  = obj.checkTaskStatusLocal(pids)
+    pids = [18511,18519,19200]
+    #obj.deleteTaskLocal(pids)
+    #print str(res)
+    obj.fetchOutput("dddd0430-a3c5-445a-a4fd-aad59d6927fa")
+    param = {'file':"/Users/RaceLab/StochKit2.0.6/models/examples/dimer_decay.xml",'paramstring':"--force -t 10 -r 1000"}
+    #res = obj.executeTaskLocal(param)
+    #print str(res)
+    #obj.startMachines(params)
+    #obj.describeMachines(params)
     

@@ -220,7 +220,10 @@ class NewStochkitEnsemblePage(BaseHandler):
             #args = stochkit_job.getArgumentString()
             #print cmd
             params['paramstring'] = cmd
-                    
+            # TODO:Fetch the bucketname from the database
+            import uuid
+            bucketname = uuid.uuid4()         
+            params['bucketname'] = bucketname         
             # Call backendservices and execute StochKit
             service = backendservices()
             print 'calling execute on cloud task'
@@ -250,10 +253,8 @@ class NewStochkitEnsemblePage(BaseHandler):
             stochkit_job_db.name = stochkit_job.name
             stochkit_job_db.stochkit_job = stochkit_job
             stochkit_job_db.put()
-    
             # Clean up temporary files  
             #os.remove(outfile)
-    
             result = {'status':True,'msg':'Job submitted sucessfully'}
         except Exception,e:
             result = {'status':False,'msg':'Cloud execution failed: '+str(e)}       
