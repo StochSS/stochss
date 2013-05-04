@@ -187,16 +187,28 @@ class JobOutPutPage(BaseHandler):
         self.render_response('stochkitjoboutputpage.html',**dict(result,**context))
 
     def post(self):
-        self.response.out.write("POST")
+        context,result = self.getContext()
+        result = {}
+        logging.info(context)
+        if 'fetch_remote' in context:
+            logging.info("TRYING TO FETCH FILES")
+            service = backendservices()
+            job = context['stochkit_job']
+            try:
+                service.fetchOutput(job.pid)
+            except:
+                result['status']=False
+                result['msg'] = "Failed to fetch the remote files."
+        context,result = self.getContext()
+        self.render_response('stochkitjoboutputpage.html',**dict(result,**context))
+
 
     def getContext(self):
-        params = self.request.POST
-        params = dict(params,**self.request.GET)
+        context = self.request.POST
+        context = dict(context,**self.request.GET)
 
-        job_name = params['job_name']
-        context={}
+        job_name = context['job_name']
         result = {}
-        context['job_name']=job_name
         
         # Grab the Job from the datastore
         try:
