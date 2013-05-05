@@ -6,10 +6,12 @@ import urllib
 import webapp2
 import logging
 
+import webapp2_extras.appengine.auth.models
 from webapp2_extras import sessions
 from webapp2_extras import sessions_memcache
 from webapp2_extras import auth
 
+from google.appengine.ext import ndb
 from google.appengine.ext import db
 from google.appengine.api import users
 
@@ -20,6 +22,19 @@ import json
 jinja_environment = jinja2.Environment(autoescape=True,
                                        loader=(jinja2.FileSystemLoader(os.path.join(os.path.dirname(__file__), 'templates')))) 
 
+
+# A model to store data associated with a model. We extend the webapp2/GAE User Model.
+class StochSSUser(webapp2_extras.appengine.auth.models.User):
+    
+    aws_credentials = {}
+
+    def setCredentials(self, credentials):
+        self.aws_credentials = credentials
+
+    def getCredentials(self):
+        return self.aws_credentials
+
+
 class BaseHandler(webapp2.RequestHandler):
     """
     The base handler that extends the dispatch() method to start the session store and save all sessions at the end of a request:
@@ -27,6 +42,7 @@ class BaseHandler(webapp2.RequestHandler):
     All the request handlers should extend this class.
     """
     def __init__(self, request, response):
+        # Make sure a handler has a reference to the current user 
         self.user = users.get_current_user()
         webapp2.RequestHandler.__init__(self, request, response)
         
@@ -35,7 +51,6 @@ class BaseHandler(webapp2.RequestHandler):
         self.session_store = sessions.get_store(request=self.request)
         # Using memcache for storing sessions.
         self.session = self.session_store.get_session(name='mc_session', factory=sessions_memcache.MemcacheSessionFactory)
-        #self.session = self.session_store.get_session(name='mc_session')
         
         try:
             # Dispatch the request.
@@ -95,6 +110,10 @@ class MainPage(BaseHandler):
 
 
 config = {}
+config['webapp2_extras.auth'] = {
+    'user_model': 'StochSSUser',
+    'user_attributes': ['name']
+}
 config['webapp2_extras.sessions'] = {
     'secret_key': 'my-super-secret-key',
 }

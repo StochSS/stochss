@@ -21,7 +21,6 @@ import shutil
 class StatusPage(BaseHandler):
     
     def get(self):
-        #all_urls = self.get_all_urls()
         context = self.getContext()
         self.render_response('status.html', **context)
         

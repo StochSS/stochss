@@ -9,8 +9,12 @@
     :license: Apache Sotware License, see LICENSE for details.
 """
 import time
-
-from ndb import model
+# AH. Modifying the SDK to import ndb from the framework if it is not on the path.
+# This is known bug that was fixed in the 2.5 version of the SDK. 
+try:
+    from ndb import model
+except:
+    from google.appengine.ext.ndb import model
 
 from webapp2_extras import auth
 from webapp2_extras import security
