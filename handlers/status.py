@@ -245,7 +245,8 @@ class VisualizePage(BaseHandler):
         except Exception,e:
             self.response.out.write(str(e))
         pass
-           
+        
+        context['trajectory_number']="1"
         self.render_response('visualizepage.html',**dict(result,**context))
     
     def post(self):
@@ -272,7 +273,8 @@ class VisualizePage(BaseHandler):
         """ Get data from a specific trajectory in the StochKit output folder. """
         logging.info(params)
         try:
-            meanfile = params['job_folder']+'/result/trajectories/trajectory0.txt'
+            # StochKit labels the output files starting from 0, hence the "-1", since we label from 1 in the UI.
+            meanfile = params['job_folder']+'/result/trajectories/trajectory'+str(int(trajectory_number)-1)+'.txt'
             file = open(meanfile,'rb')
             trajectory_data = [row.strip().split('\t') for row in file]
             
@@ -303,11 +305,6 @@ class VisualizePage(BaseHandler):
         except Exception, e:
             logging.info(str(e))
             return None
-            # Try to grab them from a trajectory file
-            #     meanfile = params['job_folder']+'/result/trajectories/trajectory0.txt'
-            # file = open(meanfile,'rb')
-            #row = file.readline()
-                #species_names = row.strip().split('\t')
                 
         # The first value is always 'time' 
         return species_names[1:]
