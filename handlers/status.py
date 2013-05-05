@@ -104,9 +104,10 @@ class StatusPage(BaseHandler):
         if all_stochkit_jobs == None:
             context['no_jobs'] = 'There are no jobs in the system.'
         else:
-            # We want to display the name of the job, the status of the Job, and if it is
-            # completed, the URL where the user can download the output.
+            # We want to display the name of the job and the status of the Job.
             all_jobs = []
+            status = {}
+            
             for job in all_stochkit_jobs.run():
                 
                 # Get the job id
@@ -136,22 +137,22 @@ class StatusPage(BaseHandler):
                             taskparams = {'AWS_ACCESS_KEY_ID':db_credentials.access_key,'AWS_SECRET_ACCESS_KEY':db_credentials.secret_key,'taskids':[stochkit_job.pid]}
                             task_status = service.describeTask(taskparams)
                             if task_status == None:
-                                return {'status':False,'msg':'Could not retrieve the status of job '+stochkit_job.name }
-
-                            job_status = task_status[stochkit_job.pid]
-        
-                            if job_status['state'] == 'SUCCESS':
-                                stochkit_job.status = 'Finished'
-                                print job_status
-                                stochkit_job.output_url = job_status['output']
-                            elif job_status['state'] == 'FAILED':
-                                stochkit_job.status == 'Failed'
+                                stochkit_job.status = "Unknown"
+                                #return {'status':False,'msg':'Could not retrieve the status of job '+stochkit_job.name}    
                             else:
-                                # The state gives more fine-grained results, like if the job is being rerun, but
-                                #  we don't bother the users of the UI with this. 
-                                job_status.status == 'Running'
-                
-                        # Todo, implement check in the case of Cloud
+                                job_status = task_status[stochkit_job.pid]
+            
+                                if job_status['state'] == 'SUCCESS':
+                                    stochkit_job.status = 'Finished'
+                                    print job_status
+                                    stochkit_job.output_url = job_status['output']
+                                elif job_status['state'] == 'FAILED':
+                                    stochkit_job.status == 'Failed'
+                                else:
+                                    # The state gives more fine-grained results, like if the job is being rerun, but
+                                    #  we don't bother the users of the UI with this. 
+                                    job_status.status == 'Running'
+                    
                     except Exception,e:
                         result = {'status':False,'msg':'Could not determine the status of the jobs.'+str(e)}
                 

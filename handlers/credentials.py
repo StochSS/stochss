@@ -88,12 +88,9 @@ class CredentialsPage(BaseHandler):
             credentials = {'EC2_ACCESS_KEY':access_key, 'EC2_SECRET_KEY':secret_key}
             number_of_new_vms = params['vm_number']
             result = self.start_vms(user_id, credentials, number_of_new_vms)
-            #if number_of_new_vms > 20:
-            #    result = {'Status':False, 'msg': "Maximum allowed number of virtual machines is 20"}
-                #self.render_response('credentials.html', **(dict(context, **result)))
+
             self.redirect('/credentials')
 
-    
         elif 'delete' in params:
             # Delete all VMs.
             #result = self.delete_vms()
@@ -107,16 +104,14 @@ class CredentialsPage(BaseHandler):
 
     def saveCredentials(self, user_id, credentials):
         """
-		Save the Credentials in the datastore.
+            Save the Credentials to the datastore.
 		"""
         try:
-            #check if the credentials are valid
             service = backendservices()
             params ={}
             params['credentials'] =credentials
             params["infrastructure"] = "ec2"
             
-            # We will save the user 
             db_credentials = db.GqlQuery("SELECT * FROM CredentialsWrapper WHERE user_id = :1", user_id).get()
             if db_credentials is None:
                 # Create a new credentials wrapper
@@ -161,7 +156,7 @@ class CredentialsPage(BaseHandler):
         
         # Try to validate the credentials
         service = backendservices()
-        params ={}
+        params = {}
         params['credentials'] =credentials
         params["infrastructure"] = "ec2"
                
@@ -174,10 +169,9 @@ class CredentialsPage(BaseHandler):
         else:
             all_vms = self.get_all_vms(user_id,credentials)
             if all_vms == None:
-                result = {'status':False,'vm_status':False,'vm_status_msg':'Could not determined the status of the VMs.'}
+                result = {'status':False,'vm_status':False,'vm_status_msg':'Could not determine the status of the VMs.'}
                 context = {'vm_names':all_vms}
             else:
-                #    return dict(credentials,**{'vm_names':all_vms,'number_pending':'NA','number_running':'NA'})
                 number_pending = 0
                 number_running = 0;
                 for vm in all_vms:
@@ -213,10 +207,6 @@ class CredentialsPage(BaseHandler):
                 return None
                     
     def start_vms(self, user_id, credentials, number_of_vms=None):
-        #  db_user = db.GqlQuery("SELECT * FROM StochKitModelWrapper WHERE user_id = :1", user_id).get()
-        # db_user.user = valid_username
-        #result = backendservice.startMachines(db_user.user)
-        # ANAND: Modify 'result' as needed depending on the result of the call to backendservice.
         group_random_name = user_id +"-"+''.join(random.choice(string.ascii_uppercase + string.digits) for x in range(6))
         params ={"infrastructure":"ec2",
              "num_vms":number_of_vms, 

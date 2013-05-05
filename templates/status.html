@@ -39,7 +39,7 @@
                             {% if job.status == "Running" or job.status == "Finished"  %}
                             <span style="color: green" class="create_msg">{{job.status}}</span>
                             {% endif %}
-                            {% if job.status == "Failed"%}
+                            {% if job.status == "Failed" or job.status == "Unknown" %}
                             <span style="color: red" class="create_msg">{{job.status}}</span>
                             {% endif %}
                             {% if job.status == "Finished" %}
