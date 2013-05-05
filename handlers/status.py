@@ -18,14 +18,6 @@ from backend.backendservice import backendservices
 
 import shutil
 
-try:
-    #sys.path.append('/System/Library/Frameworks/Python.framework/Versions/2.7/Extras/lib/python')
-    #sys.path.append('/System/Library/Frameworks/Python.framework/Versions/2.7/Extras/lib/python/numpy')
-    import numpy as np
-    from matplotlib import pylab
-except:
-    pass
-
 class StatusPage(BaseHandler):
     
     def get(self):
@@ -72,9 +64,8 @@ class StatusPage(BaseHandler):
                         db.delete(job)
                     except Exception,e:
                         result = {'status':False,'msg':"Failed to delete job "+job_name}
-
-            # Render the page
-                            
+    
+            # Render the status page 
             # AH: This is a hack to prevent the page from reloading before the datastore transactions
             # have taken place. I think it is only necessary for the SQLLite backend stub.
             # TODO: We need a better way to check if the entities are gone from the datastore...
@@ -90,10 +81,12 @@ class StatusPage(BaseHandler):
             context = self.getContext()
             result = {'status':False,'msg':"There was an error processing the request."}
             self.render_response('status.html', **dict(result,**context))
+
     
+
     def getContext(self):
         """ 
-            Get information about all the jobs that exist in the system and assemble a dict
+            Get the status of all the jobs that exist in the system and assemble a dict
             with info to display on the page. 
         """
         context = {}
