@@ -90,7 +90,9 @@ class CredentialsPage(BaseHandler):
             result = self.start_vms(user_id, credentials, number_of_new_vms)
             #if number_of_new_vms > 20:
             #    result = {'Status':False, 'msg': "Maximum allowed number of virtual machines is 20"}
-            self.render_response('credentials.html', **(dict(context, **result)))
+                #self.render_response('credentials.html', **(dict(context, **result)))
+            self.redirect('/credentials')
+
     
         elif 'delete' in params:
             # Delete all VMs.
