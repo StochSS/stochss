@@ -41,10 +41,10 @@ class UserData(db.Model):
         return {'EC2_SECRET_KEY':self.ec2_secret_key,'EC2_ACCESS_KEY': self.ec2_access_key}
 
     def setBucketName(self,bucket_name):
-        self.S3_bucket_name = bucket_name
+        self.S3_bucket_name = str(bucket_name)
 
     def getBucketName(self):
-        return S3_bucket_name
+        return self.S3_bucket_name
 
 class BaseHandler(webapp2.RequestHandler):
     """
@@ -64,6 +64,9 @@ class BaseHandler(webapp2.RequestHandler):
             user_data.user_id = self.user.user_id()
             user_data.setCredentials({'EC2_SECRET_KEY':"",'EC2_ACCESS_KEY':""})
             user_data.valid_credentials = False
+            # Create a unique bucket name for the user
+            import uuid
+            user_data.setBucketName(uuid.uuid4())
             user_data.put()
             self.user_data = user_data
         

@@ -35,6 +35,8 @@ class StochKitJobWrapper(db.Model):
     # A reference to the user that owns this job
     user_id =  db.StringProperty()
     name = db.StringProperty()
+    # The type if the job {'local', 'cloud'}
+    type =  db.StringProperty()
     stochkit_job = ObjectProperty()
 
 class StochKitJob():
@@ -156,15 +158,10 @@ class NewStochkitEnsemblePage(BaseHandler):
             if not result['status']:
                 return result
         
-            # enable these two lines by fetching the credentials from database
-            try:
-                db_credentials = db.GqlQuery("SELECT * FROM CredentialsWrapper WHERE user_id = :1", self.user.user_id()).get()
-            except:
-                return {'status':False,'msg':'Cloud job subission failed. Failed to retrive the EC2 credentials.'}
-
+            db_credentials = self.user_data.getCredentials()
             # Set the environmental variables 
-            os.environ["AWS_ACCESS_KEY_ID"] = db_credentials.access_key
-            os.environ["AWS_SECRET_ACCESS_KEY"] = db_credentials.secret_key
+            os.environ["AWS_ACCESS_KEY_ID"] = db_credentials['EC2_ACCESS_KEY']
+            os.environ["AWS_SECRET_ACCESS_KEY"] = db_credentials['EC2_SECRET_KEY']
         
             #the parameter dictionary to be passed to the backend
             param ={}
@@ -201,7 +198,7 @@ class NewStochkitEnsemblePage(BaseHandler):
             if not "only-moments" in params:
                 args+=' --keep-trajectories'
             
-                    #if "label-columns" in params or stochkit_job.label_column_names:
+            # Columns need to be labeled for visulatization page to work.  
             args+=' --label'
             
             if "keep-histograms" in params:
@@ -221,8 +218,9 @@ class NewStochkitEnsemblePage(BaseHandler):
             #print cmd
             params['paramstring'] = cmd
             # TODO:Fetch the bucketname from the database
-            import uuid
-            bucketname = uuid.uuid4()         
+        #import uuid
+        #    bucketname = uuid.uuid4()
+            bucketname = self.user_data.getBucketName()
             params['bucketname'] = bucketname         
             # Call backendservices and execute StochKit
             service = backendservices()

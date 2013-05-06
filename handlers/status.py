@@ -122,11 +122,11 @@ class StatusPage(BaseHandler):
                         elif stochkit_job.resource == 'Cloud':
                             # Retrive credentials from the datastore
                             try:
-                                db_credentials = db.GqlQuery("SELECT * FROM CredentialsWrapper WHERE user_id = :1", self.user.user_id()).get()
+                                db_credentials = self.user_data.getCredentials()
                             except:
                                 return {'status':False,'msg':'Could not retrieve the status of job '+stochkit_job.name +'. Failed to retrive the EC2 credentials.'}
                             # Check the status on the remote end
-                            taskparams = {'AWS_ACCESS_KEY_ID':db_credentials.access_key,'AWS_SECRET_ACCESS_KEY':db_credentials.secret_key,'taskids':[stochkit_job.pid]}
+                            taskparams = {'AWS_ACCESS_KEY_ID':db_credentials['EC2_ACCESS_KEY'],'AWS_SECRET_ACCESS_KEY':db_credentials['EC2_SECRET_KEY'],'taskids':[stochkit_job.pid]}
                             task_status = service.describeTask(taskparams)
                             if task_status == None:
                                 stochkit_job.status = "Unknown"

@@ -52,7 +52,9 @@ class backendservices():
            {"pid" : 'the process id of the task spawned', "output": "the directory where the files will be generated"}
          
         '''
-        os.environ['STOCHKIT_HOME'] = '/Users/RaceLab/StochKit2.0.6'
+        #os.environ['STOCHKIT_HOME'] = '/Users/RaceLab/StochKit2.0.6'
+        os.environ['STOCHKIT_HOME'] = '/Users/andreash/github/stochss/lib/stochkit'
+
 
         logging.info("STOCHKIT_HOME" +os.environ['STOCHKIT_HOME'])
         
