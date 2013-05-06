@@ -1,4 +1,4 @@
-import sys,os
+import sys,os,logging
 sys.path.append(os.path.join(os.path.dirname(__file__), '../lib/celery'))
 sys.path.append(os.path.join(os.path.dirname(__file__), '../lib/kombu'))
 sys.path.append(os.path.join(os.path.dirname(__file__), '../'))
@@ -22,8 +22,7 @@ import logging, subprocess
 @celery.task(name='stochss')
 def task(taskid,params):
   try:
-        print 'task to be executed at remote location'
-        print 'inside celery task method'
+        logging.info('task : inside task method with params %s', str(params))
         res = {}
         filename = "{0}.xml".format(taskid)
         f = open(filename,'w')
@@ -91,10 +90,12 @@ def checkStatus(task_id):
     '''
     Method takes task_id as input and returns the result of the celery task
     '''
+    logging.info("checkStatus inside method with params %s", str(task_id))
     result = {}
     try:
         from celery.result import AsyncResult
         res = AsyncResult(task_id)
+        logging.debug("checkStatus: result returned for the taskid = {0} is {1}".format(task_id, str(res)))
         result = res.result
         result['state'] = res.status
         if res.status == "PROGRESS":
@@ -106,9 +107,12 @@ def checkStatus(task_id):
             result['result'] = res.result
         elif res.status == "FAILURE":
             result['result'] = res.result 
+        
     except Exception, e:
+        logging.debug("checkStatus error : %s", str(e))
         result['state'] = "FAILURE"
         result['result'] = str(e)
+    logging.debug("checkStatus : Exiting with result %s", str(res))
     return result
 
 
