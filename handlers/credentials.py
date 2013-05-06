@@ -37,7 +37,7 @@ class CredentialsPage(BaseHandler):
         except Exception, e:
             raise InvalidUserException('Cannot determine the current user. '+str(e))
 
-        context = self.getVMContext(user_id)
+        context = self.getContext(user_id)
         self.render_response('credentials.html', **context)
 
 
@@ -54,7 +54,7 @@ class CredentialsPage(BaseHandler):
             raise InvalidUserException('Cannot determine the current user. '+str(e))
     
         # Get the context of the page
-        context = self.getVMContext(user_id)
+        context = self.getContext(user_id)
 
         if 'save' in params:
             # Save the access and private keys to the datastore
@@ -62,33 +62,16 @@ class CredentialsPage(BaseHandler):
             secret_key = params['ec2_secret_key']
             credentials = {'EC2_ACCESS_KEY':access_key, 'EC2_SECRET_KEY':secret_key}
             # See if the CredentialsWrapper is already created, in which case we modify it and rewrite.
-            result = self.saveCredentials(user_id,credentials)
+            result = self.saveCredentials(credentials)
             # TODO: This is a hack to make it unlikely that the db transaction has not completed
             # before we re-render the page (which would cause an error). We need some real solution for this...
             time.sleep(0.5)
-            context = self.getVMContext(user_id)
+            context = self.getContext(user_id)
             self.render_response('credentials.html', **(dict(context, **result)))
 
         elif 'start' in params:
-            
-            db_credentials = db.GqlQuery("SELECT * FROM CredentialsWrapper WHERE user_id = :1", user_id).get()
-            access_key = ""
-            secret_key = ""
-            # the following code has to be refactored. The textbox should always have the key.
-            # We won't have to fetch the keys all the time from DB if it's prepopulated in the
-            # box.
-            if db_credentials is None:
-                # Create a new credentials wrapper
-                access_key = credentials['EC2_ACCESS_KEY']
-                secret_key = credentials['EC2_SECRET_KEY']
-            else:
-                secret_key = db_credentials.secret_key
-                access_key = db_credentials.access_key
-        
-            credentials = {'EC2_ACCESS_KEY':access_key, 'EC2_SECRET_KEY':secret_key}
             number_of_new_vms = params['vm_number']
-            result = self.start_vms(user_id, credentials, number_of_new_vms)
-
+            result = self.start_vms(user_id, self.user_data.getCredentials(), number_of_new_vms)
             self.redirect('/credentials')
 
         elif 'delete' in params:
@@ -102,68 +85,44 @@ class CredentialsPage(BaseHandler):
             result = {'status': False, 'msg': 'There was an error processing the request'}
             self.render_response('credentials.html', **(dict(context, **result)))
 
-    def saveCredentials(self, user_id, credentials):
-        """
-            Save the Credentials to the datastore.
-		"""
+    def saveCredentials(self, credentials):
+        """ Save the Credentials to the datastore. """
         try:
             service = backendservices()
             params ={}
             params['credentials'] =credentials
             params["infrastructure"] = "ec2"
             
-            db_credentials = db.GqlQuery("SELECT * FROM CredentialsWrapper WHERE user_id = :1", user_id).get()
-            if db_credentials is None:
-                # Create a new credentials wrapper
-                db_credentials = CredentialsWrapper()
-                db_credentials.user_id = user_id
-                db_credentials.access_key = credentials['EC2_ACCESS_KEY']
-                db_credentials.secret_key = credentials['EC2_SECRET_KEY']
-            else:
-                db_credentials.access_key = credentials['EC2_ACCESS_KEY']
-                db_credentials.secret_key = credentials['EC2_SECRET_KEY']
-        
             # Check if the supplied credentials are valid of not
             if service.validateCredentials(params):
-                db_credentials.validated = True
+                self.user_data.setCredentials(credentials)
+                self.user_data.valid_credentials = True
                 result = {'status': True, 'credentials_msg': ' Credentials saved successfully! The EC2 keys have been validated.'}
             else:
                 result = {'status': False, 'credentials_msg':' Invalid Secret Key or Access key specified'}
-                db_credentials.validated = False
-             
+                self.user_data.valid_credentials = False
+    
             # Write the credentials to the datastore
-            db_credentials.put()
-                
+            self.user_data.put()
+    
         except Exception,e:
             result = {'status': False, 'credentials_msg':' There was an error saving the credentials: '+str(e)}
         
         return result
 
 
-    def getVMContext(self,user_id):
+    def getContext(self,user_id):
         
-        # Obtain the user's credentials from the datastore
-        try:
-            db_credentials = db.GqlQuery("SELECT * FROM CredentialsWrapper WHERE user_id = :1", user_id).get()
-            if db_credentials is None:
-                credentials = {'EC2_SECRET_KEY':"",'EC2_ACCESS_KEY':""}
-            else:
-                credentials = {'EC2_ACCESS_KEY':db_credentials.access_key,'EC2_SECRET_KEY':db_credentials.secret_key}
-        except Exception, e:
-           # This should never fail at this stage, and if it does we crash the app. TODO: Improve error handling.
-           print str(e) 
-           raise Exception
-        
-        # Try to validate the credentials
         service = backendservices()
         params = {}
-        params['credentials'] =credentials
+        credentials =  self.user_data.getCredentials()
+        params['credentials'] = credentials
         params["infrastructure"] = "ec2"
                
         result = {}
         # Check if the credentials are valid.
-        # TODO: Use an instance variable (boolean) in the CredentialsWrapper to check.
-        if not service.validateCredentials(params):
+        if not self.user_data.valid_credentials:
+        #if not service.validateCredentials(params):
             result = {'status':False,'vm_status':False,'vm_status_msg':'Could not determine the status of the VMs: Invalid Credentials.'}
             context = {'vm_names':None}
         else:
@@ -223,7 +182,7 @@ class CredentialsPage(BaseHandler):
             result = {'status':'Success' , 'msg': 'Sucessfully requested '+ str(number_of_vms) + ' Virtual Machines.'}
         else:
             result = {'status': 'False' , 'msg': 'Request to start the machines failed. Please contact the administrator.'}
-        #result = {'status': , 'msg': 'Sucessfully requested '+ str(number_of_vms) + ' Virtual Machines.'}
+
         return result
     
     def delete_vms():

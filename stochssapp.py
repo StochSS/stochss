@@ -6,16 +6,12 @@ import urllib
 import webapp2
 import logging
 
-import webapp2_extras.appengine.auth.models
 from webapp2_extras import sessions
 from webapp2_extras import sessions_memcache
-from webapp2_extras import auth
 
 from google.appengine.ext import ndb
 from google.appengine.ext import db
 from google.appengine.api import users
-
-import json
 
 """ Initializer section """
 # Initialize the jinja environment
@@ -23,17 +19,32 @@ jinja_environment = jinja2.Environment(autoescape=True,
                                        loader=(jinja2.FileSystemLoader(os.path.join(os.path.dirname(__file__), 'templates')))) 
 
 
-# A model to store data associated with a model. We extend the webapp2/GAE User Model.
-class StochSSUser(webapp2_extras.appengine.auth.models.User):
+class UserData(db.Model):
+    """ A Model to stor user specific data, such as the AWS credentials. """
+
+    # user ID
+    user_id = db.StringProperty()
     
-    aws_credentials = {}
-
+    # The Amazon credentials
+    ec2_access_key = db.StringProperty()
+    ec2_secret_key = db.StringProperty()
+    valid_credentials = db.BooleanProperty()
+    
+    # The user's S3 bucket name used to store simulation results in S3
+    S3_bucket_name = db.StringProperty()
+    
     def setCredentials(self, credentials):
-        self.aws_credentials = credentials
-
+        self.ec2_secret_key  = credentials['EC2_SECRET_KEY']
+        self.ec2_access_key  = credentials['EC2_ACCESS_KEY']
+    
     def getCredentials(self):
-        return self.aws_credentials
+        return {'EC2_SECRET_KEY':self.ec2_secret_key,'EC2_ACCESS_KEY': self.ec2_access_key}
 
+    def setBucketName(self,bucket_name):
+        self.aws_bucket_name = bucket_name
+
+    def getBucketName(self):
+        return self.aws_bucket_name
 
 class BaseHandler(webapp2.RequestHandler):
     """
@@ -44,6 +55,14 @@ class BaseHandler(webapp2.RequestHandler):
     def __init__(self, request, response):
         # Make sure a handler has a reference to the current user 
         self.user = users.get_current_user()
+        # Most pages will need the UserData, so for convenience we add it here
+        self.user_data = db.GqlQuery("SELECT * FROM UserData WHERE user_id = :1", self.user.user_id()).get()
+        if self.user_data == None:
+            user_data = UserData()
+            user_data.user_id = self.user.user_id()
+            user_data.put()
+            self.user_data = user_data
+        
         webapp2.RequestHandler.__init__(self, request, response)
         
     def dispatch(self):
@@ -110,10 +129,6 @@ class MainPage(BaseHandler):
 
 
 config = {}
-config['webapp2_extras.auth'] = {
-    'user_model': 'StochSSUser',
-    'user_attributes': ['name']
-}
 config['webapp2_extras.sessions'] = {
     'secret_key': 'my-super-secret-key',
 }
