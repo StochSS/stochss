@@ -234,6 +234,7 @@ class NewStochkitEnsemblePage(BaseHandler):
             stochkit_job.resource = 'Cloud'
             stochkit_job.type = 'StochKit2 Ensemble'
                     
+            logging.info('RES: '+str(res))
             stochkit_job.pid = res.id
             # The UI assumes that output_location is the local folder on disk that would be populated with data
             # upon fetching it from the backend.
