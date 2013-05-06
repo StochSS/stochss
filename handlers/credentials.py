@@ -16,14 +16,6 @@ from google.appengine.ext import db
 
 import time
 
-class CredentialsWrapper(db.Model):
-    """ This is a temporary model to be replaces by Arvind's User Model """
-    user_id = db.StringProperty()
-    access_key = db.StringProperty()
-    secret_key = db.StringProperty()
-    validated = db.BooleanProperty()
-
-
 class CredentialsPage(BaseHandler):
     """
     """
@@ -61,7 +53,6 @@ class CredentialsPage(BaseHandler):
             access_key = params['ec2_access_key']
             secret_key = params['ec2_secret_key']
             credentials = {'EC2_ACCESS_KEY':access_key, 'EC2_SECRET_KEY':secret_key}
-            # See if the CredentialsWrapper is already created, in which case we modify it and rewrite.
             result = self.saveCredentials(credentials)
             # TODO: This is a hack to make it unlikely that the db transaction has not completed
             # before we re-render the page (which would cause an error). We need some real solution for this...
@@ -95,7 +86,6 @@ class CredentialsPage(BaseHandler):
             
             # Check if the supplied credentials are valid of not
             if service.validateCredentials(params):
-                self.user_data.setCredentials(credentials)
                 self.user_data.valid_credentials = True
                 result = {'status': True, 'credentials_msg': ' Credentials saved successfully! The EC2 keys have been validated.'}
             else:
@@ -103,7 +93,9 @@ class CredentialsPage(BaseHandler):
                 self.user_data.valid_credentials = False
     
             # Write the credentials to the datastore
+            self.user_data.setCredentials(credentials)
             self.user_data.put()
+        
     
         except Exception,e:
             result = {'status': False, 'credentials_msg':' There was an error saving the credentials: '+str(e)}
@@ -118,14 +110,16 @@ class CredentialsPage(BaseHandler):
         credentials =  self.user_data.getCredentials()
         params['credentials'] = credentials
         params["infrastructure"] = "ec2"
-               
+        
+        context = {}
         result = {}
         # Check if the credentials are valid.
         if not self.user_data.valid_credentials:
-        #if not service.validateCredentials(params):
             result = {'status':False,'vm_status':False,'vm_status_msg':'Could not determine the status of the VMs: Invalid Credentials.'}
-            context = {'vm_names':None}
+            context['vm_names'] = None
+            context['valid_credentials']=False
         else:
+            context['valid_credentials'] = True
             all_vms = self.get_all_vms(user_id,credentials)
             if all_vms == None:
                 result = {'status':False,'vm_status':False,'vm_status_msg':'Could not determine the status of the VMs.'}
@@ -139,11 +133,15 @@ class CredentialsPage(BaseHandler):
                 number_of_vms = len(all_vms)
                 print "number pending = " + str(number_pending)
                 print "number running = " + str(number_running)
-                context = {'vm_names':all_vms,'number_of_vms':number_of_vms,'number_pending':number_pending,'number_running':number_running}
+                context['number_of_vms'] = number_of_vms
+                context['vm_names'] = all_vms
+                context['number_pending'] = number_pending
+                context['number_running'] = number_running
                 result['status']= True
                 result['credentials_msg'] = 'The EC2 keys have been validated.'
                 if number_running+number_pending == 0:
                     context['no_active_vms'] =  True
+
         context = dict(context, **credentials)
         context = dict(result, **context)
         return context

@@ -34,17 +34,17 @@ class UserData(db.Model):
     S3_bucket_name = db.StringProperty()
     
     def setCredentials(self, credentials):
-        self.ec2_secret_key  = credentials['EC2_SECRET_KEY']
         self.ec2_access_key  = credentials['EC2_ACCESS_KEY']
+        self.ec2_secret_key  = credentials['EC2_SECRET_KEY']
     
     def getCredentials(self):
         return {'EC2_SECRET_KEY':self.ec2_secret_key,'EC2_ACCESS_KEY': self.ec2_access_key}
 
     def setBucketName(self,bucket_name):
-        self.aws_bucket_name = bucket_name
+        self.S3_bucket_name = bucket_name
 
     def getBucketName(self):
-        return self.aws_bucket_name
+        return S3_bucket_name
 
 class BaseHandler(webapp2.RequestHandler):
     """
@@ -55,11 +55,14 @@ class BaseHandler(webapp2.RequestHandler):
     def __init__(self, request, response):
         # Make sure a handler has a reference to the current user 
         self.user = users.get_current_user()
-        # Most pages will need the UserData, so for convenience we add it here
+        # Most pages will need the UserData, so for convenience we add it here.
+        # TODO: Make this a cached session property 
         self.user_data = db.GqlQuery("SELECT * FROM UserData WHERE user_id = :1", self.user.user_id()).get()
         if self.user_data == None:
             user_data = UserData()
             user_data.user_id = self.user.user_id()
+            user_data.setCredentials({'EC2_SECRET_KEY':"",'EC2_ACCESS_KEY':""})
+            user_data.valid_credentials = False
             user_data.put()
             self.user_data = user_data
         
