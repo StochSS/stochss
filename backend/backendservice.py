@@ -52,7 +52,7 @@ class backendservices():
            {"pid" : 'the process id of the task spawned', "output": "the directory where the files will be generated"}
          
         '''
-        os.environ['STOCHKIT_HOME'] = '/Users/andreash/Downloads/StochKit2.0.7/'
+        os.environ['STOCHKIT_HOME'] = '/Users/RaceLab/StochKit2.0.6'
 
         logging.info("STOCHKIT_HOME" +os.environ['STOCHKIT_HOME'])
         
@@ -256,7 +256,7 @@ class backendservices():
             return False
     
     
-    def fetchOutput(self, taskid):
+    def fetchOutput(self, taskid, outputurl):
         '''
         This method gets the output file from S3 and extracts it to the output 
         directory
@@ -264,13 +264,14 @@ class backendservices():
         @return: True : if successful or False : if failed 
         '''
         try : 
-            logging.info("fetchOutput: inside method with taskid : %s", taskid)
+            logging.info("fetchOutput: inside method with taskid : {0} and url {1}".format(taskid, outputurl))
             filename = "{0}.tar".format(taskid)
             #the output directory
-            logging.debug("fetchOutput : the name of file to be fetched : {0}".format(filename))
-            baseurl = "https://s3.amazonaws.com/stochkitoutput/output"
-            fileurl = "{0}/{1}".format(baseurl,filename)
-            fetchurlcmdstr = "curl --remote-name {0}".format(fileurl)
+            #logging.debug("fetchOutput : the name of file to be fetched : {0}".format(filename))
+            #baseurl = "https://s3.amazonaws.com/stochkitoutput/output"
+            #fileurl = "{0}/{1}".format(baseurl,filename)
+            logging.debug("url to be fetched : {0}".format(taskid))
+            fetchurlcmdstr = "curl --remote-name {0}".format(outputurl)
             logging.debug("fetchOutput : Fetching file using command : {0}".format(fetchurlcmdstr))
             os.system(fetchurlcmdstr)
             if not os.path.exists(filename):
@@ -315,14 +316,14 @@ if __name__ == "__main__":
              'use_spot_instances':False}
     #test  = obj.validateCredentials(params)
     #print test
-    print str(obj.startMachines(params))
+    #print str(obj.startMachines(params))
     #val = obj.describeMachines(params)
     pids = [12680,12681,12682, 18526]
     #res  = obj.checkTaskStatusLocal(pids)
     pids = [18511,18519,19200]
     #obj.deleteTaskLocal(pids)
     #print str(res)
-    obj.fetchOutput("dddd0430-a3c5-445a-a4fd-aad59d6927fa")
+    obj.fetchOutput("2f3d86eb-9231-407d-bfd9-19010695e6a3","https://s3.amazonaws.com/78d7d1dc-0dfe-48e8-95ae-eec20d0ca346/output/2f3d86eb-9231-407d-bfd9-19010695e6a3.tar")
     param = {'file':"/Users/RaceLab/StochKit2.0.6/models/examples/dimer_decay.xml",'paramstring':"--force -t 10 -r 1000"}
     #res = obj.executeTaskLocal(param)
     #print str(res)
