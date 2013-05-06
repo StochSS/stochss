@@ -217,11 +217,10 @@ class NewStochkitEnsemblePage(BaseHandler):
             #args = stochkit_job.getArgumentString()
             #print cmd
             params['paramstring'] = cmd
-            # TODO:Fetch the bucketname from the database
-        #import uuid
-        #    bucketname = uuid.uuid4()
+
             bucketname = self.user_data.getBucketName()
             params['bucketname'] = bucketname         
+        
             # Call backendservices and execute StochKit
             service = backendservices()
             print 'calling execute on cloud task'
@@ -238,12 +237,9 @@ class NewStochkitEnsemblePage(BaseHandler):
             stochkit_job.pid = res.id
             # The UI assumes that output_location is the local folder on disk that would be populated with data
             # upon fetching it from the backend.
-            #stochkit_job.output_location = res.result
-            #stochkit_job.output_location = None
             stochkit_job.result = res.result
-            stochkit_job.uuid = res.id
+            stochkit_job.uuid   = res.id
             stochkit_job.status = 'Running'
-            #stochkit_job.output_url = res.
         
             # Create a wrapper to store the Job description in the datastore
             stochkit_job_db = StochKitJobWrapper()

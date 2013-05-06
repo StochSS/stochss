@@ -11,7 +11,7 @@ import time
 
 from google.appengine.ext import db
 
-import os
+import os,subprocess
 from stochssapp import BaseHandler
 from stochss.backendservice import *
 from backend.backendservice import backendservices
@@ -188,7 +188,16 @@ class JobOutPutPage(BaseHandler):
             service = backendservices()
             job = context['stochkit_job']
             try:
-                service.fetchOutput(job.pid)
+                # Grab the remote files
+                service.fetchOutput(job.pid,job.output_url)
+                # Unpack it to its local output location
+                os.system('tar -xf' +job.uuid+'.tar')
+                
+                #job.output_location = os.path.abspath(os.path.dirname(__file__)+'../output'+job.pid)
+                #os.remove(job.pid+'.tar')
+                result['status']=True
+                result['msg'] = "Sucessfully fetched the remote output files."
+            
             except:
                 result['status']=False
                 result['msg'] = "Failed to fetch the remote files."
