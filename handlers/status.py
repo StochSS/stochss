@@ -46,23 +46,25 @@ class StatusPage(BaseHandler):
         
                 # TODO: Call the backend to kill and delete the job and all associated files from EC2/local storage.
                 try:
-                    service.deleteTaskLocal([stochkit_job.pid])
+                    if stochkit_job.resource == 'Local':
+                        service.deleteTaskLocal([stochkit_job.pid])
+                    else:
+                        service.deleteTasks([stochkit_job.pid])
                     isdeleted_backend = True
                 except Exception,e:
                     isdeleted_backend = False
                     result['status']=False
-                    result['msg'] = "Failed to kill task with PID " + str(stochkit_job.pid) + str(e)
+                    result['msg'] = "Failed to delete task with PID " + str(stochkit_job.pid) + str(e)
                         
                 if isdeleted_backend:
-                    # Delete all the files and delete the job from the datastore
+                    # Delete all the local files and delete the job from the datastore
                     try:
                         # We remove the local entry of the job output directory
-                        shutil.rmtree(stochkit_job.output_location)
-                        # TODO: Check if it is a Cloud job, and in that case call the
-                        # backend to clean up all files from the remote end.
+                        if os.path.exists(stochkit_job.output_location):
+                            shutil.rmtree(stochkit_job.output_location)
                         db.delete(job)
                     except Exception,e:
-                        result = {'status':False,'msg':"Failed to delete job "+job_name}
+                        result = {'status':False,'msg':"Failed to delete job "+job_name+str(e)}
     
             # Render the status page 
             # AH: This is a hack to prevent the page from reloading before the datastore transactions
@@ -277,9 +279,12 @@ class VisualizePage(BaseHandler):
         self.render_response('visualizepage.html',**dict(result,**context))
     
     def post(self):
+        # TODO: Error handling
+        
         result = {}
         context = self.getContext()
         logging.info(context)
+        
         # Get the species names
         species_names = self.getSpeciesNames(context)
         if species_names == None:
@@ -290,15 +295,13 @@ class VisualizePage(BaseHandler):
         trajectory_number = context['trajectory_number']
         species_name = context['species_name']
         species_time_series = self.getTrajectory(context,trajectory_number,species_name)
-        if species_time_series is None:
-            logging.info("ERRERRERERERRER")
         context['species_time_series']=species_time_series
             
         self.render_response('visualizepage.html',**dict(result,**context))
         
     def getTrajectory(self, params, trajectory_number, species_name):
         """ Get data from a specific trajectory in the StochKit output folder. """
-        logging.info(params)
+
         try:
             # StochKit labels the output files starting from 0, hence the "-1", since we label from 1 in the UI.
             meanfile = params['job_folder']+'/result/trajectories/trajectory'+str(int(trajectory_number)-1)+'.txt'
