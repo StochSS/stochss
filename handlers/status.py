@@ -29,8 +29,8 @@ class StatusPage(BaseHandler):
         params = self.request.POST
         
         if 'delete' in params:
-            # The jobs to delete are specified in the checkboxes 
-            print "Deleting selected elements"
+
+            # The jobs to delete are specified in the checkboxes
             jobs_to_delete = params.getall('select_job')
             
             service = backendservices()
@@ -116,11 +116,12 @@ class StatusPage(BaseHandler):
                             if res[stochkit_job.pid]:
                                 stochkit_job.status = "Running"
                             else:
-                                # Check if the output folder is present, in which case the job finsihed sucessfully.
+                                # Check if the output folder is present, in which case the job finsished sucessfully.
                                 if os.path.exists(stochkit_job.output_location+"/result"):
                                     stochkit_job.status = "Finished"
                                 else:
                                     stochkit_job.status = "Failed"
+                
                         elif stochkit_job.resource == 'Cloud':
                             # Retrive credentials from the datastore
                             if not self.user_data.valid_credentials:
@@ -130,9 +131,9 @@ class StatusPage(BaseHandler):
                             # Check the status on the remote end
                             taskparams = {'AWS_ACCESS_KEY_ID':credentials['EC2_ACCESS_KEY'],'AWS_SECRET_ACCESS_KEY':credentials['EC2_SECRET_KEY'],'taskids':[stochkit_job.pid]}
                             task_status = service.describeTask(taskparams)
+                            # It frequently happens that describeTasks return None before the job is finsihed.  
                             if task_status == None:
                                 stochkit_job.status = "Unknown"
-                                #return {'status':False,'msg':'Could not retrieve the status of job '+stochkit_job.name}    
                             else:
                                 job_status = task_status[stochkit_job.pid]
             
@@ -141,12 +142,12 @@ class StatusPage(BaseHandler):
                                     stochkit_job.status = 'Finished'
                                     stochkit_job.output_url = job_status['output']
                                     stochkit_job.uuid = job_status['uuid']
-                                    #stochkit_job.output_location
+                                
                                 elif job_status['state'] == 'FAILED':
                                     stochkit_job.status == 'Failed'
                                 else:
-                                    # The state gives more fine-grained results, like if the job is being rerun, but
-                                    #  we don't bother the users of the UI with this. 
+                                    # The state gives more fine-grained results, like if the job is being re-run, but
+                                    #  we don't bother the users with this info, we just tell them that it is still running.  
                                     job_status.status == 'Running'
                     
                     except Exception,e:

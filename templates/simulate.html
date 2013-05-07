@@ -22,6 +22,7 @@
         {% block simulatecontent %}
         <div class="span9">
             <div class="well">
+            {% if all_models %}
               <h3> Select model to simulate </h3>
               </br>
               <form id="model_simulated" method="post" action="/simulate">
@@ -34,6 +35,10 @@
                   </br>
                   <button type="submit" class="btn-primary btn-large">Next&raquo;</button>
               </form>
+            {% else %}
+               <h2>There are no models in the system</h2> </br>
+                <a style="font-size:18px;" href="/modeleditor"> Create a new model? </a>
+            {% endif %}
         </div>
         {% endblock %}
         

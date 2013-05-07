@@ -162,7 +162,6 @@ app = webapp2.WSGIApplication([
                                ('/modeleditor.*', ModelEditorPage),
                                ('/simulate',SimulatePage),
                                ('/simulate/newstochkitensemble',NewStochkitEnsemblePage),
-                               ('/simulate/jobsettings',JobSettingsPage),
                                ('/status',StatusPage),
                                ('/output/visualize',VisualizePage),
                                ('/output',JobOutPutPage),

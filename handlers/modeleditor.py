@@ -110,6 +110,7 @@ class ModelEditorPage(BaseHandler):
             all_models = self.get_session_property('all_models')
             all_models.pop(all_models.index(name))
             
+            
             self.set_session_property('all_models', all_models)
             
             return {'status': True, 'msg': name + ' deleted successfully.'}

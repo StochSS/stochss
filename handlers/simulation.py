@@ -20,8 +20,6 @@ from backend.backendservice import backendservices
 
 import os, shutil
 
-#from backend import backendservice
-
 try:
     import json
 except ImportError:
@@ -29,6 +27,16 @@ except ImportError:
 
 jinja_environment = jinja2.Environment(autoescape=True,
                                        loader=(jinja2.FileSystemLoader(os.path.join(os.path.dirname(__file__), '../templates'))))
+
+
+class Job():
+    """ Representation of a Job. A Job consists of a collection of Tasks. """
+
+    def __init__(self):
+        self.tasks = {}
+
+class Task():
+    """ Representation of a Task """
 
 
 class StochKitJobWrapper(db.Model):
@@ -76,19 +84,12 @@ class StochKitJob():
     
         # Status of the Job (Running, Pending, Done)
         status = 'Pending'
-        #  Process ID (only valid for local execution???)
+        #  Process ID
         self.pid = None
     
         # The result dict returned by the cloud submission
         self.result = None
     
-    def setpid(self,pid):
-        """ Set the PID of the job after execcution """
-        self.pid = pid
-    
-    def getArgumentString(self):
-        """ Assemble the argument list for a StochKit2 execution. """
-        
         
 
 class SimulatePage(BaseHandler):
@@ -225,7 +226,6 @@ class NewStochkitEnsemblePage(BaseHandler):
             service = backendservices()
             print 'calling execute on cloud task'
             res = service.executeTask(params)
-            #print "\n\n" + str(res) +"\n\n"
             
             if(res == None):
                 result = {'status':False,'msg':'Cloud execution failed. '}
@@ -233,12 +233,9 @@ class NewStochkitEnsemblePage(BaseHandler):
         
             stochkit_job.resource = 'Cloud'
             stochkit_job.type = 'StochKit2 Ensemble'
-                
+            
+            # The jobs pid is the Celery task id.  
             stochkit_job.pid = res.id
-            # The UI assumes that output_location is the local folder on disk that would be populated with data
-            # upon fetching it from the backend.
-        #stochkit_job.result = res.res
-            #stochkit_job.uuid   = res.id
             stochkit_job.status = 'Running'
         
             # Create a wrapper to store the Job description in the datastore
@@ -261,7 +258,7 @@ class NewStochkitEnsemblePage(BaseHandler):
 
     def parseForm(self):
         """ 
-            Parses the SotchKit2 Ensemble job submission form.
+            Parses the StochKit2 Ensemble job submission form.
             Returns a tuple of dicts (params, result) where params contains
             the StochKit job parameters and result contains the status and a message.
             
@@ -378,6 +375,7 @@ class NewStochkitEnsemblePage(BaseHandler):
             if not "only-moments" in params:
                 args+=' --keep-trajectories'
             
+            # For the visualizaton page to work, columns must be labeled with species names.
             args+=' --label'
             
             if "keep-histograms" in params:
@@ -393,14 +391,11 @@ class NewStochkitEnsemblePage(BaseHandler):
             stochkit_job = StochKitJob(name=ensemblename, final_time=time, realizations=realizations,increment=increment,seed=seed,algorithm=executable)
         
             # Create the argument string
-            #args = stochkit_job.getArgumentString()
-            #print cmd
             params['paramstring'] = cmd
                     
             # Call backendservices and execute StochKit
             service = backendservices()
             res = service.executeTaskLocal(params)
-            #print "\n\n" + str(res) +"\n\n"
             
             if(res == None):
                 result = {'status':False,'msg':'Local execution failed. '}
@@ -431,20 +426,3 @@ class NewStochkitEnsemblePage(BaseHandler):
                 
         return result
 
-class JobSettingsPage(webapp2.RequestHandler):
-    
-    """ Configure simulation settings for jobs """
-    
-    def get(self):
-        
-        template = jinja_environment.get_template('simulate/jobsettings.html')
-        self.response.out.write(template.render({'active_view': True}))
-
-class SubmitPage(webapp2.RequestHandler):
-    
-    """ Submit and terminate jobs. """
-    
-    def get(self):
-        
-        template = jinja_environment.get_template('simulate/submit.html')
-        self.response.out.write(template.render({'active_view': True}))
