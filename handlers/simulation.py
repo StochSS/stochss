@@ -233,13 +233,12 @@ class NewStochkitEnsemblePage(BaseHandler):
         
             stochkit_job.resource = 'Cloud'
             stochkit_job.type = 'StochKit2 Ensemble'
-                    
-            logging.info('RES: '+str(res))
+                
             stochkit_job.pid = res.id
             # The UI assumes that output_location is the local folder on disk that would be populated with data
             # upon fetching it from the backend.
-            stochkit_job.result = res.result
-            stochkit_job.uuid   = res.id
+        #stochkit_job.result = res.res
+            #stochkit_job.uuid   = res.id
             stochkit_job.status = 'Running'
         
             # Create a wrapper to store the Job description in the datastore

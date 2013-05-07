@@ -121,12 +121,12 @@ class StatusPage(BaseHandler):
                                     stochkit_job.status = "Failed"
                         elif stochkit_job.resource == 'Cloud':
                             # Retrive credentials from the datastore
-                            try:
-                                db_credentials = self.user_data.getCredentials()
-                            except:
-                                return {'status':False,'msg':'Could not retrieve the status of job '+stochkit_job.name +'. Failed to retrive the EC2 credentials.'}
+                            if not self.user_data.valid_credentials:
+                                return {'status':False,'msg':'Could not retrieve the status of job '+stochkit_job.name +'. Invalid credentials.'}
+                            credentials = self.user_data.getCredentials()
+
                             # Check the status on the remote end
-                            taskparams = {'AWS_ACCESS_KEY_ID':db_credentials['EC2_ACCESS_KEY'],'AWS_SECRET_ACCESS_KEY':db_credentials['EC2_SECRET_KEY'],'taskids':[stochkit_job.pid]}
+                            taskparams = {'AWS_ACCESS_KEY_ID':credentials['EC2_ACCESS_KEY'],'AWS_SECRET_ACCESS_KEY':credentials['EC2_SECRET_KEY'],'taskids':[stochkit_job.pid]}
                             task_status = service.describeTask(taskparams)
                             if task_status == None:
                                 stochkit_job.status = "Unknown"
@@ -135,9 +135,11 @@ class StatusPage(BaseHandler):
                                 job_status = task_status[stochkit_job.pid]
             
                                 if job_status['state'] == 'SUCCESS':
+                                    # Update the stochkit job 
                                     stochkit_job.status = 'Finished'
-                                    print job_status
                                     stochkit_job.output_url = job_status['output']
+                                    stochkit_job.uuid = job_status['uuid']
+                                    #stochkit_job.output_location
                                 elif job_status['state'] == 'FAILED':
                                     stochkit_job.status == 'Failed'
                                 else:
@@ -151,7 +153,6 @@ class StatusPage(BaseHandler):
                 all_jobs.append(stochkit_job)
                 # Save changes to the status
                 job.put()
-                #job_status.append(self.getJobStatus(task_id))
                 
         context['all_jobs']=all_jobs
     
@@ -182,30 +183,54 @@ class JobOutPutPage(BaseHandler):
     def post(self):
         context,result = self.getContext()
         result = {}
-        logging.info(context)
+        
         if 'fetch_remote' in context:
-            logging.info("TRYING TO FETCH FILES")
-            service = backendservices()
-            job = context['stochkit_job']
+            
+            logging.info("FETCHING REMOTE FILES")
+            
+            # Grab the Job from the datastore
+            job_name = context['job_name']
             try:
-                # Grab the remote files
-                service.fetchOutput(job.pid,job.output_url)
-                # Unpack it to its local output location
-                os.system('tar -xf' +job.uuid+'.tar')
+                job = db.GqlQuery("SELECT * FROM StochKitJobWrapper WHERE user_id = :1 AND name = :2", self.user.user_id(),job_name).get()
+                stochkit_job = job.stochkit_job
+                context['stochkit_job']=stochkit_job
+            except Exception,e:
+                result = {'status':False,'msg':"Could not retreive the jobs" +job_name+ " from the datastore."}
+
+            try:
                 
-                #job.output_location = os.path.abspath(os.path.dirname(__file__)+'../output'+job.pid)
-                #os.remove(job.pid+'.tar')
+                # Grab the remote files
+                service = backendservices()
+                service.fetchOutput(stochkit_job.pid,stochkit_job.output_url)
+                
+                # Unpack it to its local output location
+                os.system('tar -xf' +stochkit_job.uuid+'.tar')
+                stochkit_job.output_location = os.path.abspath(os.path.dirname(__file__))+'/../output/'+stochkit_job.uuid
+                stochkit_job.output_location = os.path.abspath(stochkit_job.output_location)
+                
+                # Clean up
+                os.remove(stochkit_job.uuid+'.tar')
+                
+                # Save the updated status
+                job.put()
+                
                 result['status']=True
                 result['msg'] = "Sucessfully fetched the remote output files."
-            
-            except:
+                
+            except Exception,e:
                 result['status']=False
                 result['msg'] = "Failed to fetch the remote files."
-        context,result = self.getContext()
-        self.render_response('stochkitjoboutputpage.html',**dict(result,**context))
-
-
+                    
+            # Check if the results and stats folders are present locally
+            if os.path.exists(stochkit_job.output_location+"/result"):
+                context['local_data']=True
+            if os.path.exists(stochkit_job.output_location+"/result/stats"):
+                context['local_statistics']=True
+                        
+            self.render_response('stochkitjoboutputpage.html',**dict(result,**context))
+            
     def getContext(self):
+        
         context = self.request.POST
         context = dict(context,**self.request.GET)
 
@@ -219,7 +244,7 @@ class JobOutPutPage(BaseHandler):
             context['stochkit_job']=stochkit_job
         except Exception,e:
             result = {'status':False,'msg':"Could not retreive the jobs"+job_name+ " from the datastore."}
-        
+
         # Check if the results and stats folders are present locally
         if os.path.exists(stochkit_job.output_location+"/result"):
             context['local_data']=True
