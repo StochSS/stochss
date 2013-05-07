@@ -33,6 +33,7 @@ class StatusPage(BaseHandler):
             # The jobs to delete are specified in the checkboxes
             jobs_to_delete = params.getall('select_job')
             
+            
             service = backendservices()
 
             # Select the jobs to delete from the datastore

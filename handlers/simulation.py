@@ -30,14 +30,17 @@ jinja_environment = jinja2.Environment(autoescape=True,
 
 
 class Job():
-    """ Representation of a Job. A Job consists of a collection of Tasks. """
+    """ Representation of a Job in StochSS. A Job consists of a collection of Tasks. """
 
     def __init__(self):
         self.tasks = {}
 
 class Task():
-    """ Representation of a Task """
+    """ Representation of a Task in StochSS """
 
+
+class JobWrapper(db.Model):
+    """ A wrapper around the Job object """
 
 class StochKitJobWrapper(db.Model):
     # A reference to the user that owns this job
@@ -47,7 +50,7 @@ class StochKitJobWrapper(db.Model):
     type =  db.StringProperty()
     stochkit_job = ObjectProperty()
 
-class StochKitJob():
+class StochKitJob(Job):
     """ Model for a StochKit job. Contains all the parameters associated with the call. """
     
     def __init__(self,name=None, final_time=None, increment=None, realizations=1,algorithm='ssa',store_only_mean=False, label_column_names=True,create_histogram_data=False, seed=None, epsilon=0.1,threshold=10, output_url = None):

@@ -13,8 +13,9 @@ from stochss.model import *
 from stochss.stochkit import *
 from stochss.examplemodels import *
 
-# A db property to store objects.
 class ObjectProperty(db.Property):
+    """  A db property to store objects. """
+
     def get_value_for_datastore(self, model_instance):
         result = super(ObjectProperty, self).get_value_for_datastore(model_instance)
         result = pickle.dumps(result)
@@ -40,8 +41,7 @@ class StochKitModelWrapper(db.Model):
 
 class ModelEditorPage(BaseHandler):
     """
-    Provides a web UI around POST /model, to allow users to create
-    StochKitModelWrappers via the web interface instead of the RESTful one.
+        
     """
     
     def get(self):
@@ -109,7 +109,6 @@ class ModelEditorPage(BaseHandler):
             db_model.delete()
             all_models = self.get_session_property('all_models')
             all_models.pop(all_models.index(name))
-            
             
             self.set_session_property('all_models', all_models)
             
