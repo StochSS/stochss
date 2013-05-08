@@ -131,9 +131,7 @@ class StatusPage(BaseHandler):
                             # Check the status on the remote end
                             taskparams = {'AWS_ACCESS_KEY_ID':credentials['EC2_ACCESS_KEY'],'AWS_SECRET_ACCESS_KEY':credentials['EC2_SECRET_KEY'],'taskids':[stochkit_job.pid]}
                             task_status = service.describeTask(taskparams)
-                            #logging.info(task_status)
                             job_status = task_status[stochkit_job.pid]
-                            logging.info("JOB STATUS:" + str(job_status))
                             # It frequently happens that describeTasks return None before the job is finsihed.
                             if job_status == None:
                                 stochkit_job.status = "Unknown"
@@ -150,7 +148,7 @@ class StatusPage(BaseHandler):
                                 else:
                                     # The state gives more fine-grained results, like if the job is being re-run, but
                                     #  we don't bother the users with this info, we just tell them that it is still running.  
-                                    job_status.status == 'Running'
+                                    stochkit_job.status == 'Running'
                     
                     except Exception,e:
                         result = {'status':False,'msg':'Could not determine the status of the jobs.'+str(e)}
