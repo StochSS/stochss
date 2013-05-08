@@ -178,7 +178,7 @@ class backendservices():
         try:
             for taskid in taskids:
                 removeTask(taskid) #this removes task from celery queue
-                removetask(taskid) #this removes task information from DB. ToDo: change the name of method
+                removetask(self.tablename,taskid) #this removes task information from DB. ToDo: change the name of method
             logging.info("deleteTasks: All tasks removed")
         except Exception, e:
             logging.error("deleteTasks : exiting with error : %s", str(e))
