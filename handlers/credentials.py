@@ -88,6 +88,19 @@ class CredentialsPage(BaseHandler):
             if service.validateCredentials(params):
                 self.user_data.valid_credentials = True
                 result = {'status': True, 'credentials_msg': ' Credentials saved successfully! The EC2 keys have been validated.'}
+                # See if the amazon db table is intitalized
+                if not self.user_data.isTable():
+                    from backend.tasks import createtable
+                    db_credentials = self.user_data.getCredentials()
+                    # Set the environmental variables
+                    os.environ["AWS_ACCESS_KEY_ID"] = credentials['EC2_ACCESS_KEY']
+                    os.environ["AWS_SECRET_ACCESS_KEY"] = credentials['EC2_SECRET_KEY']
+
+                    try:
+                        createtable("stochss")
+                        self.user_data.is_amazon_db_table=True
+                    except Exception,e:
+                        pass
             else:
                 result = {'status': False, 'credentials_msg':' Invalid Secret Key or Access key specified'}
                 self.user_data.valid_credentials = False

@@ -32,8 +32,7 @@ class StatusPage(BaseHandler):
 
             # The jobs to delete are specified in the checkboxes
             jobs_to_delete = params.getall('select_job')
-            
-            
+        
             service = backendservices()
 
             # Select the jobs to delete from the datastore
@@ -132,19 +131,21 @@ class StatusPage(BaseHandler):
                             # Check the status on the remote end
                             taskparams = {'AWS_ACCESS_KEY_ID':credentials['EC2_ACCESS_KEY'],'AWS_SECRET_ACCESS_KEY':credentials['EC2_SECRET_KEY'],'taskids':[stochkit_job.pid]}
                             task_status = service.describeTask(taskparams)
-                            # It frequently happens that describeTasks return None before the job is finsihed.  
-                            if task_status == None:
+                            logging.info(task_status)
+                            job_status = task_status[stochkit_job.pid]
+
+                            # It frequently happens that describeTasks return None before the job is finsihed.
+                            if job_status == None:
                                 stochkit_job.status = "Unknown"
                             else:
-                                job_status = task_status[stochkit_job.pid]
             
-                                if job_status['state'] == 'SUCCESS':
+                                if job_status['status'] == 'finished':
                                     # Update the stochkit job 
                                     stochkit_job.status = 'Finished'
                                     stochkit_job.output_url = job_status['output']
                                     stochkit_job.uuid = job_status['uuid']
                                 
-                                elif job_status['state'] == 'FAILED':
+                                elif job_status['status'] == 'Failed':
                                     stochkit_job.status == 'Failed'
                                 else:
                                     # The state gives more fine-grained results, like if the job is being re-run, but

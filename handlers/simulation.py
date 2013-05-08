@@ -169,7 +169,7 @@ class NewStochkitEnsemblePage(BaseHandler):
             os.environ["AWS_SECRET_ACCESS_KEY"] = db_credentials['EC2_SECRET_KEY']
         
             #the parameter dictionary to be passed to the backend
-            param ={}
+            param = {}
     
             document = model.serialize()
             print str(document)
@@ -184,13 +184,9 @@ class NewStochkitEnsemblePage(BaseHandler):
             seed = params['seed']
             # Algorithm, SSA or Tau-leaping?
             executable = params['algorithm']
-        
 
             # Assemble the argument list
             args = ''
-#            args+='--model '
-#            args+=filepath
-            #args+=' --out-dir '+outdir
             args+=' -t '
             args+=str(time)
             num_output_points = str(int(float(time)/float(increment)))

@@ -33,6 +33,9 @@ class UserData(db.Model):
     # The user's S3 bucket name used to store simulation results in S3
     S3_bucket_name = db.StringProperty()
     
+    # Is the amazon db table initalizes
+    is_amazon_db_table = db.BooleanProperty()
+    
     def setCredentials(self, credentials):
         self.ec2_access_key  = credentials['EC2_ACCESS_KEY']
         self.ec2_secret_key  = credentials['EC2_SECRET_KEY']
@@ -45,6 +48,9 @@ class UserData(db.Model):
 
     def getBucketName(self):
         return self.S3_bucket_name
+
+    def isTable(self):
+        return self.is_amazon_db_table
 
 class BaseHandler(webapp2.RequestHandler):
     """
