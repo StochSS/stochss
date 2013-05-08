@@ -73,7 +73,8 @@ class backendservices():
             res['uuid'] = uuidstr
             create_dir_str = "mkdir -p output/%s " % uuidstr
             os.system(create_dir_str)
-            STOCHKIT_DIR = 'home/ubuntu/StochKit2.0.7'
+            #STOCHKIT_DIR = '/Users/RaceLab/StochKit2.0.6'
+            STOCHKIT_DIR = '/home/ubuntu/StochKit2.0.7'
             try:
                 STOCHKIT_DIR = os.environ['STOCHKIT_HOME']
                 logging.debug("executeTaskLocal : Environment variable set for \
@@ -86,8 +87,10 @@ class backendservices():
             stochkit_exec_str = "{0}/{2} --out-dir output/{3}/result ".format(STOCHKIT_DIR,xmlfilepath,paramstr,uuidstr)
             logging.debug("executeTaskLocal : Spawning StochKit Task. String : %s",
                            stochkit_exec_str)
-            p = subprocess.Popen(stochkit_exec_str, shell=True, stdin=subprocess.PIPE,
-                                 stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
+            p = subprocess.Popen(stochkit_exec_str, shell=False, stdin=subprocess.PIPE,
+                                 stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+            output, error = p.communicate()
+            logging.debug("executeTaskLocal: the result of task {0} or error {1} ".format(output,error))
             pid = p.pid
             res['pid'] = pid 
             filepath = "output/%s//" % (uuidstr)
