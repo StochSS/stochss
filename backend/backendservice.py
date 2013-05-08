@@ -61,7 +61,7 @@ class backendservices():
          
         '''
         #os.environ['STOCHKIT_HOME'] = '/Users/RaceLab/StochKit2.0.6'
-        os.environ['STOCHKIT_HOME'] = '/Users/andreash/github/stochss/lib/stochkit'
+        #os.environ['STOCHKIT_HOME'] = '/Users/andreash/github/stochss/lib/stochkit'
 
 
         logging.info("STOCHKIT_HOME" +os.environ['STOCHKIT_HOME'])
