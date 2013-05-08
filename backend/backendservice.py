@@ -6,6 +6,8 @@ All the input validation is performed in this class.
 from infrastructure_manager import InfrastructureManager
 import os, subprocess, signal, uuid, sys
 import logging
+from datetime import datetime
+from tasks import *
 
 class backendservices():
     ''' 
@@ -13,6 +15,7 @@ class backendservices():
     It should be passed the agent creds
     ''' 
         
+    tablename = "stochss"
     def backendservices(self):
         '''
         constructor to set the path of various libraries
@@ -21,6 +24,7 @@ class backendservices():
         sys.path.append(os.path.join(os.path.dirname(__file__), 'lib/celery'))
         sys.path.append(os.path.join(os.path.dirname(__file__), 
                                      '/Library/Python/2.7/site-packages/amqp'))
+        createtable(self.tablename)
             
     def executeTask(self,params):
         '''
@@ -28,11 +32,14 @@ class backendservices():
         '''
         logging.info('inside execute task for cloud : Params - %s', str(params))
         try:
-            from tasks import task
+            from tasks import task,updateEntry
             uuidstr = uuid.uuid4()
             #create a celery task
             logging.debug("executeTask : executing task with uuid : %s ",
                            uuidstr)
+            timenow = datetime.now() 
+            data = {'status':"Pending","start_time":timenow.strftime('%Y-%m-%d %H:%M:%S'), 'Message':"Task sent to Cloud"}
+            updateEntry(str(uuid), data, self.tablename)
             tmp = task.delay(str(uuidstr), params)
             # the UUID will be used to track the status of the task
             logging.debug("executeTask :  result of task : %s", str(tmp))
@@ -52,8 +59,8 @@ class backendservices():
            {"pid" : 'the process id of the task spawned', "output": "the directory where the files will be generated"}
          
         '''
-        #os.environ['STOCHKIT_HOME'] = '/Users/RaceLab/StochKit2.0.6'
-        os.environ['STOCHKIT_HOME'] = '/Users/andreash/github/stochss/lib/stochkit'
+        os.environ['STOCHKIT_HOME'] = '/Users/RaceLab/StochKit2.0.6'
+        #os.environ['STOCHKIT_HOME'] = '/Users/andreash/github/stochss/lib/stochkit'
 
 
         logging.info("STOCHKIT_HOME" +os.environ['STOCHKIT_HOME'])
@@ -68,19 +75,6 @@ class backendservices():
             res['uuid'] = uuidstr
             create_dir_str = "mkdir -p output/%s " % uuidstr
             os.system(create_dir_str)
-            
-            # This is now replaced by a global modification to os.environ in
-            # the main file (stochssapp.py)
-            #STOCHKIT_DIR = os.environ['STOCHKIT_HOME']
-            #logging.info("STOCHKIT_DIR is: "+STOCHKIT_DIR)
-            # check if the env variable is set form STOCHKIT_HOME or else 
-            # use the default location
-            #STOCHKIT_DIR = "/Users/RaceLab/StochKit2.0.6"
-            #STOCHKIT_DIR = os.path.join(os.path.dirname(__file__))+"lib/stochkit"
-            #logging.info("STOCHKIT_DIR: " +STOCHKIT_DIR)
-            #STOCHKIT_DIR = "/Users/andreash/Downloads/StochKit2.0.6"
-            # AH: THIS DOES NOT WORK, FOR SOME REASON THE VARIABLE 
-            #IS NOT PICKED UP FROM THE SHELL
             
             try:
                 STOCHKIT_DIR = os.environ['STOCHKIT_HOME']
@@ -166,11 +160,8 @@ class backendservices():
         logging.debug("describeTask : setting environment variables : AWS_SECRET_ACCESS_KEY - %s", params['AWS_SECRET_ACCESS_KEY'])
         os.environ["AWS_SECRET_ACCESS_KEY"] = params['AWS_SECRET_ACCESS_KEY']
         result = {}
-        from tasks import checkStatus
         try:
-            for taskid in params['taskids']:
-                res = checkStatus(taskid)
-                result[taskid] = res
+                result = describetask(params['taskids'], self.tablename)
         except Exception, e:
             logging.error("describeTask : exiting with error : %s", str(e))
             return None
@@ -180,14 +171,14 @@ class backendservices():
     def deleteTasks(self, taskids):
         '''
         @param taskid:the list of taskids to be removed 
-        this method revokes scheduled tasks as well as the tasks in progress
-        
+        this method revokes scheduled tasks as well as the tasks in progress. It 
+        also removes task from the database. It ignores the taskids which are not active.
         '''
         logging.info("deleteTasks : inside method with taskids : %s", taskids)
         try:
-            from tasks import removeTask
             for taskid in taskids:
-                removeTask(taskid)
+                removeTask(taskid) #this removes task from celery queue
+                removetask(taskid) #this removes task information from DB. ToDo: change the name of method
             logging.info("deleteTasks: All tasks removed")
         except Exception, e:
             logging.error("deleteTasks : exiting with error : %s", str(e))
@@ -196,7 +187,8 @@ class backendservices():
     def deleteTaskLocal(self, pids):
         """
         pids : list of pids to be deleted.
-        Terminates the processes associated with the PID. This methods ignores the PID which are not not active.
+        Terminates the processes associated with the PID. 
+        This methods ignores the PID which are  not active.
         """
         logging.info("deleteTaskLocal : inside method with pids : %s", pids)
         for pid in pids:
@@ -309,7 +301,7 @@ if __name__ == "__main__":
     params ={"infrastructure":"ec2",
              "num_vms":1, 
              'group':'stochss19', 
-             'image_id':'ami-65bcd10c', 
+             'image_id':'ami-11bad678', 
              'instance_type':'t1.micro',
              'keyname':'stochssnew32', 
              'email':['anand.bdk@gmail.com'],
@@ -318,15 +310,15 @@ if __name__ == "__main__":
              'use_spot_instances':False}
     #test  = obj.validateCredentials(params)
     #print test
-    #print str(obj.startMachines(params))
+    print str(obj.startMachines(params))
     #val = obj.describeMachines(params)
     pids = [12680,12681,12682, 18526]
     #res  = obj.checkTaskStatusLocal(pids)
     pids = [18511,18519,19200]
     #obj.deleteTaskLocal(pids)
     #print str(res)
-    obj.fetchOutput("2f3d86eb-9231-407d-bfd9-19010695e6a3","https://s3.amazonaws.com/78d7d1dc-0dfe-48e8-95ae-eec20d0ca346/output/2f3d86eb-9231-407d-bfd9-19010695e6a3.tar")
-    param = {'file':"/Users/RaceLab/StochKit2.0.6/models/examples/dimer_decay.xml",'paramstring':"--force -t 10 -r 1000"}
+    #obj.fetchOutput("2f3d86eb-9231-407d-bfd9-19010695e6a3","https://s3.amazonaws.com/78d7d1dc-0dfe-48e8-95ae-eec20d0ca346/output/2f3d86eb-9231-407d-bfd9-19010695e6a3.tar")
+    #param = {'file':"/Users/RaceLab/StochKit2.0.6/models/examples/dimer_decay.xml",'paramstring':"--force -t 10 -r 1000"}
     #res = obj.executeTaskLocal(param)
     #print str(res)
     #obj.startMachines(params)
