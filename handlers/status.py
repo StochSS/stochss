@@ -145,6 +145,8 @@ class StatusPage(BaseHandler):
                                 
                                 elif job_status['status'] == 'Failed':
                                     stochkit_job.status == 'Failed'
+                                elif job_status['status'] == 'pending':
+                                    stochkit_job.status = 'Pending'
                                 else:
                                     # The state gives more fine-grained results, like if the job is being re-run, but
                                     #  we don't bother the users with this info, we just tell them that it is still running.  
