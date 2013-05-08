@@ -271,20 +271,21 @@ class backendservices():
             if not os.path.exists(filename):
                 logging.error('unable to download file. Returning result as False')
                 return False
-            else:
-                outputdir = "{0}/../output/{1}".format(os.getcwd(),taskid)
-                createoutputdirstr = "mkdir -p {0}".format(outputdir)
-                os.system(createoutputdirstr)
-                logging.debug("fetchOutput : the files will be extracted at {0} ".format(outputdir))
-                untarcmdstr = "tar -xzvf  {0} -C {1}/".format(filename,outputdir)
-                logging.debug("fetchOutput : untaring file using command : {0}".format(untarcmdstr))
-                os.system(untarcmdstr)
-                os.system("pwd")
-                removetarcmd = "rm {0}".format(filename)
-                logging.debug("fetchOutput : removing the fetched file using command : {0}".format(removetarcmd))
-                os.system(removetarcmd)
-                logging.info("fetchOutput : exiting with result : True")
-                return True
+                # else:
+                #    outputdir = "{0}/../output/{1}".format(os.getcwd(),taskid)
+                #   createoutputdirstr = "mkdir -p {0}".format(outputdir)
+                #  os.system(createoutputdirstr)
+                # logging.debug("fetchOutput : the files will be extracted at {0} ".format(outputdir))
+                # untarcmdstr = "tar -xzvf  {0} -C {1}/".format(filename,outputdir)
+                #  logging.debug("fetchOutput : untaring file using command : {0}".format(untarcmdstr))
+                #  os.system(untarcmdstr)
+                # os.system("pwd")
+                #removetarcmd = "rm {0}".format(filename)
+                #logging.debug("fetchOutput : removing the fetched file using command : {0}".format(removetarcmd))
+                #os.system(removetarcmd)
+                #logging.info("fetchOutput : exiting with result : True")
+                #return True
+            return True
         except Exception, e:
             logging.error("fetchOutput : exiting with error : %s", str(e))
             return False
