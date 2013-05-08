@@ -55,9 +55,8 @@ class BaseHandler(webapp2.RequestHandler):
     def __init__(self, request, response):
         # Make sure a handler has a reference to the current user 
         self.user = users.get_current_user()
-        # Most pages will need the UserData, so for convenience we add it here. This means that the
-        # credentials will always be initialized. 
-        # TODO: Make this a cached session property 
+        # Most pages will need the UserData, so for convenience we add it here.
+        # TODO: Make this a cached session property
         self.user_data = db.GqlQuery("SELECT * FROM UserData WHERE user_id = :1", self.user.user_id()).get()
         if self.user_data == None:
             user_data = UserData()

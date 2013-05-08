@@ -308,8 +308,7 @@ class NewStochkitEnsemblePage(BaseHandler):
                 
         # Check the seed, needs to be a numeric value
         try:
-            seed = par['seed']
-            if seed == None:
+            if par['seed']=="":
                 # Bootstrap StochKit RNG with a random int
                 seed = random.randrange(0,1000000)
                 logging.info('SEED: '+str(seed))
@@ -350,7 +349,7 @@ class NewStochkitEnsemblePage(BaseHandler):
                 return result
         
             #the parameter dictionary to be passed to the backend
-            param ={}
+            param = {}
             
             # Write a temporary StochKit2 input file.
             outfile =  params['job_name']+".xml"
