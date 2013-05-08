@@ -36,7 +36,7 @@
                             <span>{{job.name}}</span>
                         </td>
                         <td>
-                            {% if job.status == "Running" or job.status == "Finished"  %}
+                            {% if job.status == "Running" or job.status == "Finished" or job.status == 'Pending' %}
                             <span style="color: green" class="create_msg">{{job.status}}</span>
                             {% endif %}
                             {% if job.status == "Failed" or job.status == "Unknown" %}
