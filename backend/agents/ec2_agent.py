@@ -8,7 +8,7 @@ import boto
 from boto.exception import EC2ResponseError
 import datetime
 import os
-import time
+import time,uuid
 from boto.ec2.cloudwatch import MetricAlarm
 from backend.utils import utils
 from uuid import uuid4
@@ -249,28 +249,16 @@ class EC2Agent(BaseAgent):
     userstr  = """#!/bin/bash \nset -x\nexec > >(tee /var/log/user-data.log|logger -t user-data -s 2>/dev/console) 2>&1\ntouch anand3.txt\necho "testing logfile"\necho BEGIN\ndate '+%Y-%m-%d %H:%M:%S'\necho END\ntouch anand2.txt\n"""
     userstr+='export AWS_ACCESS_KEY_ID={0}\n'.format(str(credentials['EC2_ACCESS_KEY']))
     userstr+='export AWS_SECRET_ACCESS_KEY={0}\n'.format( str(credentials['EC2_SECRET_KEY']))
-    #userstr+='echo export AWS_ACCESS_KEY_ID={0} >> ~/.bashrc\n'.format(str(credentials['EC2_ACCESS_KEY']))
-    #userstr+='echo export AWS_SECRET_ACCESS_KEY={0} >> ~/.bashrc\n'.format( str(credentials['EC2_SECRET_KEY']))
     userstr+='echo export AWS_ACCESS_KEY_ID={0} >> ~/.bashrc\n'.format(str(credentials['EC2_ACCESS_KEY']))
     userstr+='echo export AWS_SECRET_ACCESS_KEY={0} >> ~/.bashrc\n'.format( str(credentials['EC2_SECRET_KEY']))
+    userstr+='echo export STOCHKIT_HOME={0} >> ~/.bashrc\n'.format("/home/ubuntu/StochKit2.0.6/")
     userstr+='echo export AWS_SECRET_ACCESS_KEY={0} >> /home/ubuntu/.bashrc\n'.format( str(credentials['EC2_SECRET_KEY']))
     userstr+='echo export AWS_ACCESS_KEY_ID={0} >> /home/ubuntu/.bashrc\n'.format(str(credentials['EC2_ACCESS_KEY']))
+    userstr+='echo export STOCHKIT_HOME={0} >> /home/ubuntu/.bashrc\n'.format("/home/ubuntu/StochKit2.0.6/")
     userstr+='source ~/.bashrc \n'
     userstr+='source /home/ec2-user/.bashrc \n'
-    userstr+="nohup celery -A tasks worker --autoreload --loglevel=info --workdir /home/ubuntu > /home/ubuntu/nohup.log 2>&1 & \n"
+    userstr+="nohup celery -A tasks worker --autoreload --loglevel=info -n {0} --workdir /home/ubuntu > /home/ubuntu/nohup.log 2>&1 & \n".format(str(uuid.uuid4()))
     f.write(userstr)
-#    f.write('sudo set -x \n')
-#    f.write('sudo exec > >(tee /var/log/user-data.log|logger -t user-data -s 2>/dev/console) 2>&1 \n')
-#    f.write('sudo echo "testing logfile" \n')
-#    f.write('sudo echo BEGIN \n')
-#    f.write("sudo date '+%Y-%m-%d %H:%M:%S' \n")
-#    f.write('sudo echo END \n')
-#    f.write('sudo touch anand2.txt \n')
-#    #f.write('export AWS_ACCESS_KEY_ID={0} \n'.format(str(credentials['EC2_ACCESS_KEY'])))
-#    #f.write('export AWS_SECRET_ACCESS_KEY={0} \n'.format( str(credentials['EC2_SECRET_KEY'])))
-#    f.write('sudo echo AWS_ACCESS_KEY_ID={0} >> ~/.bashrc \n'.format(str(credentials['EC2_ACCESS_KEY'])))
-#    f.write('sudo echo AWS_SECRET_ACCESS_KEY={0} >> ~/.bashrc \n'.format( str(credentials['EC2_SECRET_KEY'])))
-#    f.write('sudo source ~/.bashrc \n')
     f.close()
     start_time = datetime.datetime.now()
     active_public_ips = []
@@ -349,19 +337,7 @@ class EC2Agent(BaseAgent):
         
         utils.log('Creating Alarms for the instances')
         for machineid in instance_ids:
-            self.make_sleepy(parameters, machineid)
-            
-#            self.easy_alarm(machineid,
-#                             machineid, 
-#                             parameters["email"], 
-#                             "CPUUtilization", 
-#                             "<", 
-#                             "10", 
-#                             "3600", 
-#                             "1", 
-#                             "Average",
-#                              parameters)
-        
+            self.make_sleepy(parameters, machineid)   
       return instance_ids, public_ips, private_ips
     except EC2ResponseError as exception:
       self.handle_failure('EC2 response error while starting VMs: ' +
