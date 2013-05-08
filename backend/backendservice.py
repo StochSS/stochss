@@ -33,17 +33,18 @@ class backendservices():
         logging.info('inside execute task for cloud : Params - %s', str(params))
         try:
             from tasks import task,updateEntry
-            uuidstr = uuid.uuid4()
+            taskid = str(uuid.uuid4())
             #create a celery task
             logging.debug("executeTask : executing task with uuid : %s ",
-                           uuidstr)
+                           taskid)
             timenow = datetime.now() 
             data = {'status':"pending","start_time":timenow.strftime('%Y-%m-%d %H:%M:%S'), 'Message':"Task sent to Cloud"}
-            updateEntry(uuidstr, data, self.tablename)
-            tmp = task.delay(str(uuidstr), params)
+            updateEntry(taskid, data, self.tablename)
+            tmp = task.delay(taskid, params)
             # the UUID will be used to track the status of the task
+            #tmp['uuid'] = uuidstr
             logging.debug("executeTask :  result of task : %s", str(tmp))
-            return tmp
+            return tmp,taskid
         except Exception, e:
             logging.error("executeTask : error - %s", str(e))
     

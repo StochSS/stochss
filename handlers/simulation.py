@@ -226,7 +226,7 @@ class NewStochkitEnsemblePage(BaseHandler):
             # Call backendservices and execute StochKit
             service = backendservices()
             print 'calling execute on cloud task'
-            res = service.executeTask(params)
+            res,taskid = service.executeTask(params)
             
             if(res == None):
                 result = {'status':False,'msg':'Cloud execution failed. '}
@@ -235,8 +235,10 @@ class NewStochkitEnsemblePage(BaseHandler):
             stochkit_job.resource = 'Cloud'
             stochkit_job.type = 'StochKit2 Ensemble'
             
-            # The jobs pid is the Celery task id.  
-            stochkit_job.pid = res.id
+            ## The jobs pid is the Celery task id.   
+            #stochkit_job.pid = res.id
+            # the uuid of the task
+            stochkit_job.pid = taskid
             stochkit_job.status = 'Running'
         
             # Create a wrapper to store the Job description in the datastore
