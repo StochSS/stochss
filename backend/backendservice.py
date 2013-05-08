@@ -38,8 +38,8 @@ class backendservices():
             logging.debug("executeTask : executing task with uuid : %s ",
                            uuidstr)
             timenow = datetime.now() 
-            data = {'status':"Pending","start_time":timenow.strftime('%Y-%m-%d %H:%M:%S'), 'Message':"Task sent to Cloud"}
-            updateEntry(str(uuid), data, self.tablename)
+            data = {'status':"pending","start_time":timenow.strftime('%Y-%m-%d %H:%M:%S'), 'Message':"Task sent to Cloud"}
+            updateEntry(uuidstr, data, self.tablename)
             tmp = task.delay(str(uuidstr), params)
             # the UUID will be used to track the status of the task
             logging.debug("executeTask :  result of task : %s", str(tmp))

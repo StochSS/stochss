@@ -251,11 +251,11 @@ def updateEntry(taskid=str(), data=dict(), tablename=str()):
 if __name__ == "__main__":
     os.environ["AWS_ACCESS_KEY_ID"] = "AKIAJWILGFLOFVDRDRCQ"
     os.environ["AWS_SECRET_ACCESS_KEY"] = "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"
-    print createtable('stochss')
+    #print createtable('stochss')
     val = {'status':"running", 'message':'done'}
     #updateEntry('1234-1srf', val, 'testtable1')
     #print describetask(['1234-1srf', '1234-1sr2'], 'testtable1')
-    print removetask('testtable1', '1234-1srf')
-    print describetask(['bfe78780-3ae8-4c90-b56d-c54669a62b3a'], "stochss")
+    #print removetask('testtable1', '1234-1srf')
+    print describetask(['57919b2c-d34f-45cb-a8ff-a98d84a81f09'], "stochss")
     
     
