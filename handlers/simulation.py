@@ -19,6 +19,8 @@ from stochssapp import ObjectProperty
 from backend.backendservice import backendservices
 
 import os, shutil
+import random
+
 
 try:
     import json
@@ -77,9 +79,8 @@ class StochKitJob(Job):
         self.label_column_names = label_column_names
         self.create_histogram_data = create_histogram_data
         
-        # TODO: Fix this.
         if seed == None:
-            self.seed = 6546358634
+            self.seed = int(uuid.uuid())
         
         self.epsilon = epsilon
         self.threshold = threshold
@@ -209,6 +210,7 @@ class NewStochkitEnsemblePage(BaseHandler):
                 args+=' --keep-histograms'
             
             # TODO: We need a robust way to pick a default seed for the ensemble. It needs to be robust in a ditributed, parallel env.
+            
             args+=' --seed '
             args+=str(seed)
         
@@ -306,11 +308,18 @@ class NewStochkitEnsemblePage(BaseHandler):
                 
         # Check the seed, needs to be a numeric value
         try:
-            seed = float(par['seed'])
+            seed = par['seed']
+            if seed == None:
+                # Bootstrap StochKit RNG with a random int
+                seed = random.randrange(0,1000000)
+                logging.info('SEED: '+str(seed))
+                par['seed'] = str(seed)
+            else:
+                seed = float(par['seed'])
             assert seed >= 0
-        except:
+        except Exception,e:
             result['status'] = False
-            result['msg'] =  result['msg']+'\nThe seed positive number.'
+            result['msg'] =  result['msg']+'\nThe seed must be a positive number.' + str(e)
 
         # Check epsilon, needs to be a numeric value between 0 and one
         try:
@@ -384,7 +393,6 @@ class NewStochkitEnsemblePage(BaseHandler):
             if "keep-histograms" in params:
                 args+=' --keep-histograms'
             
-            # TODO: We need a robust way to pick a default seed for the ensemble. It needs to be robust in a ditributed, parallel env.
             args+=' --seed '
             args+=str(seed)
         
