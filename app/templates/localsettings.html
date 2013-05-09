@@ -1,0 +1,20 @@
+{% extends "base.html" %}
+{% block title%}Local Settings{% endblock %}
+{% block content %}
+
+<div class="span9">
+    
+    <div class="page-header">
+        <h1>Set paths to local plugins</h1>
+    </div>
+    
+    <div class="well">
+        <form id="env_variables" action="/localsettings" method="post">
+            <label>STOCHKIT_HOME:</label>
+            <input name=STOCHKIT_HOME value={{STOCHKIT_HOME}}/>
+        </br>
+        <input class="btn btn-primary btn-large" type="submit" value="Save settings">
+        </form>
+    </div>
+    </div><!--/span-->
+{% endblock %}
