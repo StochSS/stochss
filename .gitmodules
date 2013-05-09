@@ -25,6 +25,6 @@
 [submodule "lib/pytz"]
 	path = lib/pytz
 	url = git://github.com/newvem/pytz.git
-[submodule "lib/flot"]
-	path = lib/flot
+[submodule "app/static/js/flot"]
+	path = app/static/js/flot
 	url = https://github.com/flot/flot
