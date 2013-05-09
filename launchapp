@@ -1,6 +1,5 @@
 #!/bin/bash
 
-export PYTHONPATH=$PYTHONPATH:/Users/andreash/github/stochss
-export PYTHONPATH=$PYTHONPATH:/Users/andreash/github/backend
-
+# Add the StochSS libraries to the pythonpath
+export PYTHONPATH=$PYTHONPATH:$(pwd)
 python sdk/python/dev_appserver.py app
