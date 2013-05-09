@@ -1,4 +1,6 @@
 #!/bin/bash
 
-#export PYTHONPATH=$PYTHONPATH:./stochss:/.backend
+export PYTHONPATH=$PYTHONPATH:/Users/andreash/github/stochss
+export PYTHONPATH=$PYTHONPATH:/Users/andreash/github/backend
+
 python sdk/python/dev_appserver.py app
