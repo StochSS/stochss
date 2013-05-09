@@ -2,4 +2,6 @@
 
 # Add the StochSS libraries to the pythonpath
 export PYTHONPATH=$PYTHONPATH:$(pwd)
+export STOCHKIT_HOME=$(pwd)/lib/stochkit
 python sdk/python/dev_appserver.py app
+
