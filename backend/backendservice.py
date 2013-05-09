@@ -60,8 +60,6 @@ class backendservices():
            {"pid" : 'the process id of the task spawned', "output": "the directory where the files will be generated"}
          
         '''
-        #os.environ['STOCHKIT_HOME'] = '/Users/RaceLab/StochKit2.0.6'
-        #os.environ['STOCHKIT_HOME'] = '/Users/andreash/github/stochss/lib/stochkit'
 
         try:           
             logging.info("executeTaskLocal : inside method with params : %s ", 
@@ -73,8 +71,11 @@ class backendservices():
             res['uuid'] = uuidstr
             create_dir_str = "mkdir -p output/%s " % uuidstr
             os.system(create_dir_str)
+            
             #STOCHKIT_DIR = '/Users/RaceLab/StochKit2.0.6'
-            STOCHKIT_DIR = '/home/ubuntu/StochKit2.0.7'
+            #STOCHKIT_DIR = '/home/ubuntu/StochKit2.0.7'
+            #os.environ['STOCHKIT_HOME'] = os.path.dirname(__file__)+'/../lib/stochkit/'
+            STOCHKIT_DIR = os.environ['STOCHKIT_HOME']
             try:
                 STOCHKIT_DIR = os.environ['STOCHKIT_HOME']
                 logging.debug("executeTaskLocal : Environment variable set for \

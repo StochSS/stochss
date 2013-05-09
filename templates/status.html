@@ -36,8 +36,11 @@
                             <span>{{job.name}}</span>
                         </td>
                         <td>
-                            {% if job.status == "Running" or job.status == "Finished" or job.status == 'Pending' %}
+                            {% if job.status == "Running" or job.status == "Finished" %}
                             <span style="color: green" class="create_msg">{{job.status}}</span>
+                            {% endif %}
+                            {% if job.status == "Pending" %}
+                            <span style="color: orange" class="create_msg">{{job.status}}</span>
                             {% endif %}
                             {% if job.status == "Failed" or job.status == "Unknown" %}
                             <span style="color: red" class="create_msg">{{job.status}}</span>
@@ -60,19 +63,14 @@
 <h2> There are no Jobs present in the system</h2>
 {% endif %}
             
-            {% if msg %}
-            {% if status == False %}
-            <span style="color: red" class="create_msg">{{msg}}</span>
-            {% else %}
-            <span style="color: green" class="create_msg">{{msg}}</span>
-            {% endif %}
-            {% endif %}
-            
-<!-- <form id="deleteForm" method="post" action="/modeleditor/delete">
-    <input type="hidden" name="toDelete" />
-    <input type="hidden" name="delete" value="1"/>
-</form> -->
-            
+{% if msg %}
+{% if status == False %}
+<span style="color: red" class="create_msg">{{msg}}</span>
+{% else %}
+<span style="color: green" class="create_msg">{{msg}}</span>
+{% endif %}
+{% endif %}
+                    
 					
 </div>
 </div>
