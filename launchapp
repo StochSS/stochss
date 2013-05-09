@@ -1,3 +1,4 @@
 #!/bin/bash
 
-STOCHKIT_HOME=lib/stochkit python sdk/python/dev_appserver.py .
+#export PYTHONPATH=$PYTHONPATH:./stochss:/.backend
+python sdk/python/dev_appserver.py app
