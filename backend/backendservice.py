@@ -89,8 +89,8 @@ class backendservices():
             logging.debug("executeTaskLocal : Spawning StochKit Task. String : %s",
                            stochkit_exec_str)
             p = subprocess.Popen(stochkit_exec_str, shell=True, stdin=subprocess.PIPE, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
-            output, error = p.communicate()
-            logging.debug("executeTaskLocal: the result of task {0} or error {1} ".format(output,error))
+            #output, error = p.communicate()
+            #logging.debug("executeTaskLocal: the result of task {0} or error {1} ".format(output,error))
             pid = p.pid
             res['pid'] = pid 
             filepath = "output/%s//" % (uuidstr)
