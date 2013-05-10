@@ -1,30 +1,33 @@
-[submodule "lib/boto"]
-	path = lib/boto
+[submodule "app/lib/boto"]
+	path = app/lib/boto
 	url = git://github.com/boto/boto.git
-[submodule "lib/celery"]
-	path = lib/celery
+[submodule "app/lib/celery"]
+	path = app/lib/celery
 	url = git://github.com/celery/celery.git
-[submodule "lib/kombu"]
-	path = lib/kombu
+[submodule "app/lib/kombu"]
+	path = app/lib/kombu
 	url = git://github.com/celery/kombu.git
-[submodule "lib/fabric"]
-	path = lib/fabric
+[submodule "app/lib/fabric"]
+	path = app/lib/fabric
 	url = git://github.com/fabric/fabric.git
 [submodule "iptracker"]
 	path = iptracker
 	url = git://github.com/StochSS/iptracker.git
-[submodule "lib/amqp"]
-	path = lib/amqp
+[submodule "app/lib/amqp"]
+	path = app/lib/amqp
 	url = git://github.com/celery/py-amqp.git
-[submodule "lib/billiard"]
-	path = lib/billiard
+[submodule "app/lib/billiard"]
+	path = app/lib/billiard
 	url = git://github.com/celery/billiard.git
-[submodule "lib/anyjson"]
-	path = lib/anyjson
+[submodule "app/lib/anyjson"]
+	path = app/lib/anyjson
 	url = git://github.com/glance-/anyjson.git
-[submodule "lib/pytz"]
-	path = lib/pytz
+[submodule "aap/lib/pytz"]
+	path = app/lib/pytz
 	url = git://github.com/newvem/pytz.git
 [submodule "app/static/js/flot"]
 	path = app/static/js/flot
 	url = https://github.com/flot/flot
+[submodule "app/lib/pytz"]
+	path = app/lib/pytz
+	url = git://github.com/newvem/pytz.git
