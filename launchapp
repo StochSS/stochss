@@ -1,6 +1,4 @@
 #!/bin/bash
 
-# Add the StochSS libraries to the pythonpath
-export PYTHONPATH=$PYTHONPATH:$(pwd)
 python sdk/python/dev_appserver.py app
 
