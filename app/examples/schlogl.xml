@@ -1,0 +1,88 @@
+<?xml version="1.0"?>
+<!-- Stochkit 2.0 text input format -->
+
+<!--
+  Schlogl model; uses customized propensity functions
+
+reference:
+D.T. Gillespie. Markov Processes: an introduction for physical scientists. Academic Press, San Diego, CA.
+-->
+
+<Model>
+  <Description>Schlogl</Description>
+  <NumberOfReactions>4</NumberOfReactions>
+  <NumberOfSpecies>1</NumberOfSpecies>
+  <ParametersList>
+     <Parameter>
+       <Id>R1</Id>
+       <Expression>0.03</Expression>
+     </Parameter>
+     <Parameter>
+       <Id>R2</Id>
+       <Expression>0.0001</Expression>
+     </Parameter>
+     <Parameter>
+       <Id>R3</Id>
+       <Expression>200.0</Expression>
+     </Parameter>
+     <Parameter>
+       <Id>R4</Id>
+       <Expression>3.5</Expression>
+     </Parameter>
+  </ParametersList>
+  <ReactionsList>
+     <Reaction>
+       <Id>A1</Id>
+       <Description> 2 * S1 -> 3 * S1 </Description>
+       <Type>customized</Type>
+       <PropensityFunction>R1/2.0*S1*(S1-1)</PropensityFunction>
+       <Reactants>
+           <SpeciesReference id="S1" stoichiometry="2"/>
+       </Reactants>
+       <Products>
+           <SpeciesReference id="S1" stoichiometry="3"/>
+       </Products> 
+     </Reaction>
+     <Reaction>
+       <Id>A2</Id>
+       <Description> 3 * S1 -> 2 * S1 </Description>
+       <Type>customized</Type>
+       <PropensityFunction>R2/6.0*S1*(S1-1)*(S1-2)</PropensityFunction>
+       <Reactants>
+           <SpeciesReference id="S1" stoichiometry="3"/>
+       </Reactants>
+       <Products>
+           <SpeciesReference id="S1" stoichiometry="2"/>
+       </Products>
+     </Reaction>
+     <Reaction>
+       <Id>A3</Id>
+       <Description> null -> S1 </Description>
+       <Type>mass-action</Type>
+       <Rate>R3</Rate>
+       <Reactants>
+       </Reactants>
+       <Products>
+           <SpeciesReference id="S1" stoichiometry="1"/>
+       </Products>
+     </Reaction>
+     <Reaction>
+       <Id>A4</Id>
+       <Description> S1 -> null </Description>
+       <Type>mass-action</Type>
+       <Rate>R4</Rate>
+       <Reactants>
+            <SpeciesReference id="S1" stoichiometry="1"/>
+       </Reactants>
+       <Products>
+       </Products>
+     </Reaction>
+  </ReactionsList>
+  <SpeciesList>
+     <Species>
+       <Id>S1</Id>
+       <Description>Species #1</Description>
+       <InitialPopulation>250</InitialPopulation>
+     </Species>
+  </SpeciesList>
+</Model>
