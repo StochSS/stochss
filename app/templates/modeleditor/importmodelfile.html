@@ -1,0 +1,47 @@
+{% extends "modeleditor.html" %}
+{% block title%}Import Model from StochML{% endblock %}
+{% block modeleditorcontent %}
+        <div class="span9">
+          <div class="well well-large">
+            <h2>Import a Model from StochML</h2>
+            <form class="well form" enctype="multipart/form-data" method="post" action="/modeleditor/import/fromfile">
+              {% if error %}
+                <div class="control-group error">
+                  <label class="control-label" for="inputError">
+                    There were errors with your submission:
+                      {{ error }}
+                  </label>
+                </div>
+                <br/>
+              {% endif %}
+              <label>Name</label>
+              <input type="text" class="span3" id="name" name="name" placeholder="fooModel" />
+              <span class="help-block">
+                  The name this model will be referenced by after import.
+              </span>
+
+              <br />
+              <div>
+                <label class="control-label" for="model">File:</label>
+                <input class="input-file" name="model_file" id="model_file" type="file" />
+              </div>
+
+              <br />
+              <button id="upload" class="btn-primary btn">
+                Import &raquo;
+              </button>
+            </form>
+            {% if msg %}
+			{% if status == False %}
+			<span style="color: red" class="create_msg">{{msg}}</span>
+			{% else %}
+			<span style="color: green" class="create_msg">{{msg}}</span>
+			{% endif %}
+			{% endif %}
+			<hr/>
+			<div id="msg" style="display:none"></div>
+			
+          </div>
+        </div><!--/span-->
+        
+{% endblock %}

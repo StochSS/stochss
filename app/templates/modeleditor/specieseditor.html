@@ -1,0 +1,118 @@
+{% extends "modeleditor.html" %}
+{% block title%}Species Editor{% endblock %}
+
+{% block modeleditorcontent %}
+
+<div class="span9">
+	<div class="row-fluid">
+		<div class="well well-large">
+			<form method="post" action="/modeleditor/specieseditor">
+				<h3><a data-toggle="collapse" data-target="#optional" default> Create new species </a>&raquo; </h3>
+				<br/>
+				<div id="optional" class="in collapse" style="height:auto">
+					<div style="float: left; padding-right: 10px">
+						<label>Name</label>
+						<input type="text" name="name" placeholder="S" style="width: 160px" value="{{ name }}" TITLE = "Give a Name to the Reactant" >
+					</div>
+					<div>
+						<label>Initial value</label>
+                        {% if not initial_value %}
+                        {% set initial_value = "0" %}
+                        {% endif %}
+						<input type="text" class="span3" name="initial_value" value="{{ initial_value }}" TITLE = "Insert an Integer">
+					</div>
+					<div style="clear: both"></div>
+					<button type="submit" class="btn btn-primary" style="float: right;">
+						Add species
+					</button>
+				</div>
+			</form>
+			{% if msg %}
+			{% if status == False %}
+			<div style="color: red" class="create_msg">
+				{{msg}}
+			</div>
+			{% else %}
+			<div style="color: green" class="create_msg">
+				{{msg}}
+			</div>
+			{% endif %}
+			{% endif %}
+			<hr/>
+			<div id="msg" style="display:none"></div>
+			
+			{% if all_species %}
+			<h3><a data-toggle="collapse" data-target="#species_list" default>Species </a>&raquo; </h3><br/>
+			<div id="species_list" class="in collapse" style="height: auto">
+				<form id="update_form" method="post" action="/modeleditor/specieseditor">
+					<table cellpadding="0" cellspacing="0" border="0" class="table table-striped table-bordered" id="dataTable">
+						<thead>
+							<tr>
+								<th>Name </th><th>Initial value </th><th>Unit</th><th>&nbsp;</th>
+							</tr>
+						</thead>
+						<tbody>
+							{% for key, value in all_species.items() %}
+							<tr>
+								<td>
+								<input type="text" name="{{loop.index}}-name" value="{{key}}" style="width: 100px;" class="update_box auto_complete">
+								</td>
+								<td>
+								<input type="text" name="{{loop.index}}-initial_value" value="{{value.initial_value}}" style="width: 100px;" class="update_box">
+								</td>
+								<td>
+								<input type="text" name="unit" value="molecules" style="width: 100px;" readonly="readonly">
+								</td>
+								<td><a href="javascript:void(0)" onclick="javascript:deleteElement('{{key}}')">Delete</a></td>
+							</tr>
+							{% endfor %}
+						</tbody>
+					</table>					
+				</form>
+			</div>
+			{% endif %}
+			
+			<form id="deleteForm" method="post" action="/modeleditor/specieseditor">
+				<input type="hidden" name="toDelete" />
+				<input type="hidden" name="delete" value="1"/>
+			</form>
+		</div>
+
+	</div>
+	<!--/row-->
+</div>
+<!--/span9-->
+
+{% endblock %}
+{% block innerjscontent %}
+<script type="text/javascript">
+	// Global variables that will be used in the jscontent block in modeleditor
+	var isParameterEditor = false;
+	var oTable;
+
+	$(document).ready(function() {
+		oTable = $('#dataTable').dataTable({
+		"aoColumns": [
+			// for sorting based on form fields
+			{ "sSortDataType": "dom-text"},
+			{ "sSortDataType": "dom-text", "sType": "numeric", "bSearchable": false },
+			{ "sSortDataType": "dom-text", "bSearchable": false, "bSortable": false },
+			{ "sSortDataType": "dom-text", "bSearchable": false, "bSortable": false }					
+		]
+		});
+	});
+	
+	/**
+	 * Create an array with the values of all the input boxes in a column.
+	 * This is used to sort values inside input boxes.
+	*/
+	$.fn.dataTableExt.afnSortData['dom-text'] = function(oSettings, iColumn) {
+		var aData = [];
+		$('td:eq(' + iColumn + ') input', oSettings.oApi._fnGetTrNodes(oSettings)).each(function() {
+			aData.push(this.value);
+		});
+		return aData;
+	}
+		
+</script>	
+{% endblock %}
