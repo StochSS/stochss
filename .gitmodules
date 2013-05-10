@@ -1,3 +1,4 @@
+
 [submodule "app/lib/boto"]
 	path = app/lib/boto
 	url = git://github.com/boto/boto.git
@@ -22,9 +23,6 @@
 [submodule "app/lib/anyjson"]
 	path = app/lib/anyjson
 	url = git://github.com/glance-/anyjson.git
-[submodule "aap/lib/pytz"]
-	path = app/lib/pytz
-	url = git://github.com/newvem/pytz.git
 [submodule "app/static/js/flot"]
 	path = app/static/js/flot
 	url = https://github.com/flot/flot
