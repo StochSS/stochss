@@ -38,7 +38,7 @@
             
             
             <div class="well">
-            <form action="/output" method="post">
+            <form id="fetchoutputform" action="/output" method="post">
             <h3>Output</h3>
                 </br>
                 <span class="thispage"> Local path: {{stochkit_job.output_location}} </span>
@@ -56,8 +56,10 @@
                 
                 <!--<input type="submit" class="btn btn-primary btn-large dropdown-toggle" value="Export"></a> -->
                 <!-- We show the "Fetch remote" button if the job is a Cloud job and the local data is not present -->
+               
                 {% if stochkit_job.resource == "Cloud" and not local_data %}
-                    <input name="fetch_remote" type="submit" class="btn btn-primary btn-large" value="Fetch Remote"></input>
+                    <button type="submit" class="btn btn-primary btn-large"><i class="icon-download-alt"></i> Fetch Remote</button>
+                    <input type="hidden" name="fetch_remote" value="fetch_remote">
                     <input type="hidden" name="job_name" value="{{job_name}}">
                 {% endif %}
             </div>
