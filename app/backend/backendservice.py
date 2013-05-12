@@ -72,20 +72,10 @@ class backendservices():
             create_dir_str = "mkdir -p output/%s " % uuidstr
             os.system(create_dir_str)
             
-            #STOCHKIT_DIR = '/Users/RaceLab/StochKit2.0.6'
-            #STOCHKIT_DIR = '/home/ubuntu/StochKit2.0.7'
-            #os.environ['STOCHKIT_HOME'] = os.path.dirname(__file__)+'/../lib/stochkit/'
-            STOCHKIT_DIR = os.environ['STOCHKIT_HOME']
-            try:
-                STOCHKIT_DIR = os.environ['STOCHKIT_HOME']
-                logging.debug("executeTaskLocal : Environment variable set for \
-                             STOCHKIT_HOME : %s", STOCHKIT_DIR )
-            except Exception:
-                logging.debug(" executeTaskLocal : environment variable not set for STOCHKIT_HOME.\
-                 Default location will be used.")
             # The following executiong string is of the form :
             # stochkit_exec_str = "~/StochKit2.0.6/ssa -m ~/output/%s/dimer_decay.xml -t 20 -i 10 -r 1000" % (uuidstr)
-            stochkit_exec_str = "{0}/{2} --out-dir output/{3}/result ".format(STOCHKIT_DIR,xmlfilepath,paramstr,uuidstr)
+            #stochkit_exec_str = "{0}/{2} --out-dir output/{3}/result ".format(STOCHKIT_DIR,xmlfilepath,paramstr,uuidstr)
+            stochkit_exec_str = "{1} --out-dir output/{2}/result ".format(xmlfilepath,paramstr,uuidstr)
             logging.debug("executeTaskLocal : Spawning StochKit Task. String : %s",
                            stochkit_exec_str)
             p = subprocess.Popen(stochkit_exec_str, shell=True, stdin=subprocess.PIPE, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
