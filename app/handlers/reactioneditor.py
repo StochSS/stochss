@@ -181,9 +181,12 @@ class ReactionEditorPage(BaseHandler):
             logging.debug("reactants " + str(reactants))
             logging.debug("products " + str(products))
             logging.debug("propensity " + str(propensity_function))
-
+            
             # Finally create the reaction and add it to the model
-            reaction = Reaction(name=name, propensity_function=propensity_function, reactants=reactants, products=products)
+            if mass_action:
+                reaction = Reaction(name=name, reactants=reactants, products=products, massaction=True,rate=ma_rate_parameter)
+            else:
+                reaction = Reaction(name=name, propensity_function=propensity_function, reactants=reactants, products=products)
 
             model.addReaction(reaction)
 

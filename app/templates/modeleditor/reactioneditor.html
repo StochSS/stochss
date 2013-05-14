@@ -40,11 +40,11 @@
 
                     
                     </br>
+                     {% if all_parameters_list %}
                         <div id="mass-action" style="height: auto; display:none;">
                             </br>
                             <label>Forward rate constant</label>
                             <select name="ma_rate">
-                        	<!--<input type="text" class="span3 auto_complete" name="ma_rate" placeholder="kf" id="ma-rateconstant-forward" value="{{ rateconstant }}" TITLE = "Enter the name of the forward rate constant for the mass-action reaction."/> -->
                             {% for key,value in all_parameters_list.items() %}
                                 <option  name="ma_rate" value="{{all_parameters_list[key].name}}">{{all_parameters_list[key].name}}</option>
                             {% endfor %}
@@ -52,7 +52,7 @@
                             </br>
                                     
                         </div>
-                        
+                     {% endif %}
 					<br />
                      
 					<button type="submit" class="btn btn-primary" style="float: right;">
