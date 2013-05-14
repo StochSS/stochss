@@ -104,12 +104,12 @@ class ReactionEditorPage(BaseHandler):
         if self.request.get('is_mass_action'):
             mass_action=True
             try:
-                ma_rate = self.request.get('ma_rate').strip()
+                ma_rate = self.request.get('ma_rate')
                 ma_rate_parameter = model.getParameter(str(ma_rate))
                 # Set the proponsity_function variable to a dummy value to avoid an error to be raised below.
                 propensity_function = "mass_action"
-            except:
-                error =  {'status': False, 'msg': 'Mass action specified, but the rate constant could not be parsed.'}
+            except Exception,e:
+                error =  {'status': False, 'msg': 'Mass action specified, but the rate constant could not be parsed.'+str(e)}
                 return error
         else:
             # Read the custom proponsity function from the form.
