@@ -13,14 +13,15 @@ from google.appengine.api import users
 
 from stochss.model import *
 from stochss.stochkit import *
+
 from stochssapp import BaseHandler
 from stochssapp import StochKitModelWrapper
 from stochssapp import ObjectProperty
+
 from backend.backendservice import backendservices
 
 import os, shutil
 import random
-
 
 try:
     import json
@@ -31,18 +32,26 @@ jinja_environment = jinja2.Environment(autoescape=True,
                                        loader=(jinja2.FileSystemLoader(os.path.join(os.path.dirname(__file__), '../templates'))))
 
 
+class JobWrapper(db.Model):
+    """ A wrapper around the Job object """
+    # user_id =  db.StringProperty()
+    # job_id = db.StringProperty()
+    # job_type = db.StringProperty()
+    # job = ObjectProperty()
+
 class Job():
     """ Representation of a Job in StochSS. A Job consists of a collection of Tasks. """
 
     def __init__(self):
+        # tasks is a dict where the task_id is key and a task object is the value. 
         self.tasks = {}
 
 class Task():
     """ Representation of a Task in StochSS """
 
+    def __init__(self,task_id = None):
+        self.task_id = task_id
 
-class JobWrapper(db.Model):
-    """ A wrapper around the Job object """
 
 class StochKitJobWrapper(db.Model):
     # A reference to the user that owns this job
@@ -172,7 +181,6 @@ class NewStochkitEnsemblePage(BaseHandler):
             param = {}
     
             document = model.serialize()
-            print str(document)
             params['document']=str(document)
             print 'model serialized'
             filepath = ""
@@ -262,8 +270,8 @@ class NewStochkitEnsemblePage(BaseHandler):
     def parseForm(self):
         """ 
             Parses the StochKit2 Ensemble job submission form.
-            Returns a tuple of dicts (params, result) where params contains
-            the StochKit job parameters and result contains the status and a message.
+            Returns a tuple of dicts (params, result) where params contain
+            the StochKit job parameters and result contains the status and a sucess or error message.
             
         """
         params = {}
@@ -350,14 +358,14 @@ class NewStochkitEnsemblePage(BaseHandler):
             param = {}
             
             # Write a temporary StochKit2 input file.
-            outfile =  params['job_name']+".xml"
-            mfhandle = open(outfile,'w')
+        #outfile =  params['job_name']+".xml"
+        #    mfhandle = open(outfile,'w')
             document = model.serialize()
-            mfhandle.write(document)
-            mfhandle.close()
-        
-            filepath  = os.path.abspath(outfile)
-            params['file'] = filepath
+        #    mfhandle.write(document)
+        #    mfhandle.close()
+            params['document'] = str(document)
+        # filepath  = os.path.abspath(outfile)
+        #    params['file'] = filepath
             ensemblename = params['job_name']
             time = params['time']
             realizations = params['realizations']
@@ -379,8 +387,8 @@ class NewStochkitEnsemblePage(BaseHandler):
     
             # Assemble the argument list
             args = ''
-            args+='--model '
-            args+=filepath
+            #args+='--model '
+            #args+=filepath
             #args+=' --out-dir '+outdir
             args+=' -t '
             args+=str(time)

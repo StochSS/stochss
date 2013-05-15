@@ -18,6 +18,9 @@ from stochssapp import BaseHandler
 from backend.backendservice import backendservices
 
 class StatusPage(BaseHandler):
+    """ The main handler for the Job Status Page. Displays status messages for the jobs, options to delete/kill jobs and
+        options to view the Job metadata and Job results. """
+    
     
     def get(self):
         context = self.getContext()
@@ -41,9 +44,9 @@ class StatusPage(BaseHandler):
                     job = db.GqlQuery("SELECT * FROM StochKitJobWrapper WHERE user_id = :1 AND name = :2", self.user.user_id(),job_name).get()
                     stochkit_job = job.stochkit_job
                 except Exception,e:
-                    result = {'status':False,'msg':"Could not retreive the jobs"+job_name+ " from the datastore."}
+                    result = {'status':False,'msg':"Could not retrieve the jobs"+job_name+ " from the datastore."}
         
-                # TODO: Call the backend to kill and delete the job and all associated files from EC2/local storage.
+                # TODO: Call the backend to kill and delete the job and all associated files.
                 try:
                     if stochkit_job.resource == 'Local':
                         service.deleteTaskLocal([stochkit_job.pid])

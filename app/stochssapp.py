@@ -19,6 +19,8 @@ from google.appengine.ext import ndb
 from google.appengine.ext import db
 from google.appengine.api import users
 
+import mimetypes
+
 """ Initializer section """
 # Initialize the jinja environment
 jinja_environment = jinja2.Environment(autoescape=True,
@@ -180,6 +182,26 @@ from handlers.simulation import *
 from handlers.credentials import *
 from handlers.status import *
 
+class StaticFileHandler(BaseHandler):
+    """ Serve a file dynamically. """
+    
+    def get(self):
+        
+        try:
+            filename = self.request.get('filename')
+            filecontent = open(filename).read()
+        except:
+            self.response.write("Could not find the requested file on the server")
+        
+        # Try to guess the mimetype before writing the response
+        type,encoding = mimetypes.guess_type(filename)
+        if type == None:
+            type="text/html"
+    
+        self.response.headers.add_header("Content-Type",type)
+        self.response.write(filecontent)
+
+
 app = webapp2.WSGIApplication([
                                ('/', MainPage),
                                ('/modeleditor/specieseditor', SpeciesEditorPage),
@@ -194,6 +216,7 @@ app = webapp2.WSGIApplication([
                                ('/status',StatusPage),
                                ('/output/visualize',VisualizePage),
                                ('/output',JobOutPutPage),
+                               ('/output/servestatic',StaticFileHandler),
                                ('/credentials',CredentialsPage),
                                ('/localsettings',LocalSettingsPage),
                                ('/signout', Signout)

@@ -1,6 +1,6 @@
 '''
 This class exposes all the services offered by the backend
-It would accept all the calls from the front end and pass on to the backend.
+It accepts calls from the front-end and pass them on to the backend.
 All the input validation is performed in this class.
 '''
 from infrastructure_manager import InfrastructureManager
@@ -65,17 +65,25 @@ class backendservices():
             logging.info("executeTaskLocal : inside method with params : %s ", 
                          str(params))
             res = {}
-            xmlfilepath = params['file'] 
+            
+            #xmlfilepath = params['file']
             paramstr =  params['paramstring']
             uuidstr = str(uuid.uuid4())
             res['uuid'] = uuidstr
             create_dir_str = "mkdir -p output/%s " % uuidstr
             os.system(create_dir_str)
             
+            # Write the model document to file
+            xmlfilepath = "output/" + uuidstr +"/"+uuidstr+".xml"
+            xmlfilepath = os.path.abspath(xmlfilepath)
+            mfhandle = open(xmlfilepath,'w')
+            mfhandle.write(params['document'])
+            mfhandle.close()
+            
             # The following executiong string is of the form :
             # stochkit_exec_str = "~/StochKit2.0.6/ssa -m ~/output/%s/dimer_decay.xml -t 20 -i 10 -r 1000" % (uuidstr)
-            #stochkit_exec_str = "{0}/{2} --out-dir output/{3}/result ".format(STOCHKIT_DIR,xmlfilepath,paramstr,uuidstr)
-            stochkit_exec_str = "{1} --out-dir output/{2}/result ".format(xmlfilepath,paramstr,uuidstr)
+            stochkit_exec_str = "{0} --model {1} --out-dir output/{2}/result ".format(paramstr,xmlfilepath,uuidstr)
+            logging.info("STOCHKIT_EXEX_STR: "+stochkit_exec_str)
             logging.debug("executeTaskLocal : Spawning StochKit Task. String : %s",
                            stochkit_exec_str)
             p = subprocess.Popen(stochkit_exec_str, shell=True, stdin=subprocess.PIPE, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
@@ -88,20 +96,13 @@ class backendservices():
             absolute_file_path = os.path.abspath(filepath)
             logging.debug("executeTaskLocal : Output file - %s", absolute_file_path)
             res['output'] = absolute_file_path
-            #res['relative_output_path']=os.path.relpath(filepath,)
-            
-            #copies the XML file to the output direcory
-            logging.debug("executeTaskLocal: Copying xml file to output directory")
-            copy_file_str = "cp  {0} output/{1}".format(xmlfilepath,uuidstr)
-            os.system(copy_file_str)
-            #removefilestr = "rm {0}".format(xmlfilepath)
-            #os.system(removefilestr)
-            logging.info("executeTaskLocal: exiting with result : %s", str(res)) 
+
+            logging.info("executeTaskLocal: exiting with result : %s", str(res))
             return res
         except Exception as e:
             logging.error("executeTaskLocal : exception raised : %s" , str(e))
             return None
-               
+
     
     def checkTaskStatusLocal(self, pids):
         '''
