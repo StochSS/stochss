@@ -109,14 +109,12 @@ class SimulatePage(BaseHandler):
     """ Render a page that lists the available models. """
     
     def get(self):
-        # all_models = self.get_session_property('all_models')
-        all_models = None
-        if all_models==None:
-            # Query the datastore
-            all_models_q = db.GqlQuery("SELECT * FROM StochKitModelWrapper WHERE user_id = :1", self.user.user_id())
-            all_models=[]
-            for q in all_models_q.run():
-                all_models.append(q)
+
+        # Query the datastore
+        all_models_q = db.GqlQuery("SELECT * FROM StochKitModelWrapper WHERE user_id = :1", self.user.user_id())
+        all_models=[]
+        for q in all_models_q.run():
+            all_models.append(q)
     
         context = {'all_models': all_models}
         self.render_response('simulate.html',**context)
@@ -136,6 +134,26 @@ class NewStochkitEnsemblePage(BaseHandler):
     
     def get(self):
         model_to_simulate=self.get_session_property('model_to_simulate')
+        
+        # Make sure that the model is present in the datastore
+        if model_to_simulate is not None:
+            model_db = db.GqlQuery("SELECT * FROM StochKitModelWrapper WHERE user_id = :1 AND model_name = :2", self.user.user_id(),model_to_simulate).get()
+            if model_db == None:
+                self.set_session_property('model_to_simulate',None)
+                model_to_simulate = None
+
+        # If model_to_simulate has not been set using the simulation manager main page,
+        # we attempt to set it to the currently edited model
+        if model_to_simulate == None:
+            model_edited = self.get_session_property('model_edited')
+            if model_edited is not None and model_edited is not "":
+                model_to_simulate = model_edited.name
+                self.set_session_property('model_to_simulate',None)
+    
+        # If we have not managed to identify a model to simulate, we redirect to
+        # a page where the user can select a model
+        if model_to_simulate is None:
+            self.redirect("/simulate")
         context = {'model_to_simulate':model_to_simulate}
         self.render_response('simulate/newstochkitensemblepage.html',**context)
 

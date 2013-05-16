@@ -46,6 +46,11 @@ class ModelEditorPage(BaseHandler):
     
     def get(self):
         model_edited = self.request.get('model_edited')
+        # If no model is currently edited, just grab one from the datastore as default
+        #if model_edited is None or model_edited is "":
+        #    db_model = db.GqlQuery("SELECT * FROM StochKitModelWrapper WHERE user_id = :1", self.user.user_id()).get()
+        #    if db_model is not None:
+        #        self.set_session_property('model_edited', db_model.model)
         
         if model_edited is not None and model_edited is not "":
             result = self.edit_model(model_edited)
