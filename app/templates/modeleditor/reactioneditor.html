@@ -34,9 +34,9 @@
 						<input type="text" class="span3 auto_complete" name="products" placeholder="C" id="products" value="{{ products }}" TITLE = "Products are species produced by the reaction. Input species names separated by comma.">
                         </div>
                     
-                 
-                     <input type="text" placeholder="Propensity Function: k*A*B" name="propensity_function" id="propensity" value="{{ propensity_function }}" style="display:block;" TITLE = "Define the propensity function. If the propensity is of mass-action type, you can use the checkboxes below to automatically generate the propensity function."/>
-                     <input type="checkbox" onclick="javascript:toggleField('propensity');javascript:toggleField('mass-action');" name='is_mass_action'> Mass Action</input>
+                     <label id="propensity_label">Propensity Function</label>
+                     <input type="text" placeholder="k*A*B" name="propensity_function" id="propensity" value="{{ propensity_function }}" style="display:block;" TITLE = "Define the propensity function. If the propensity is of mass-action type, you can use the checkboxes below to automatically generate the propensity function."/>
+                     <input type="checkbox" onclick="javascript:toggleField('propensity');javascript:toggleField('propensity_label');javascript:toggleField('mass-action');" name='is_mass_action'> Mass Action</input>
 
                     
                     </br>

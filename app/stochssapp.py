@@ -93,6 +93,7 @@ class BaseHandler(webapp2.RequestHandler):
         # Most pages will need the UserData, so for convenience we add it here.
         # TODO: Make this a cached session property
         self.user_data = db.GqlQuery("SELECT * FROM UserData WHERE user_id = :1", self.user.user_id()).get()
+
         if self.user_data == None:
             user_data = UserData()
             user_data.user_id = self.user.user_id()

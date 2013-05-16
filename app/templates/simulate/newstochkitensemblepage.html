@@ -6,7 +6,15 @@
 <div class="well well-large">
     <form id="submit_stochkit_ensemble" method="post" action="/simulate/newstochkitensemble">
         
-        <h2> New StochKit2 Ensemble <a data-toggle="modal" href="#help-modal" style="text-decoration: none"><i class="icon-question-sign"></i></a></h2>
+        <h2> New StochKit2 Ensemble
+            {% set help_modal_id = "help_modal1" %}
+            {% set help_modal_title = "StochKit2 Ensemble" %}
+            {% set help_modal_message = "StochKit2 is a .." %}
+            {% include "help_modal.html" %}
+            {{help_modal|safe}}
+            <a data-toggle="modal" href="#help_modal1" style="text-decoration: none"><i class="icon-question-sign"></i></a>
+
+        </h2>
         <label>Name:</label>
         <input type="text" class="span3" name="job_name" value="">
             
@@ -118,18 +126,5 @@
 </div>
     </div>
 
-<div id="help-modal" class="modal hide fade in" style="display: none; ">
-    <div class="modal-header">
-        <a class="close" data-dismiss="modal">×</a>
-        <h3>Help</h3>
-    </div>
-    <div class="modal-body">
-        <h4>StochKit2 Ensemble</h4>
-        <p>{{Test}}A StochKit2 Ensemble is a collection of trajectories of the model to simulate...Etc.</p>
-    </div>
-  <!--<div class="modal-footer">
-        <a href="#" class="btn" data-dismiss="modal">Close</a>
-    </div>-->
-</div>
             
 {% endblock %}

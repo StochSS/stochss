@@ -5,7 +5,7 @@
 {% block content %}
 
 <div class="span9">
-    <h2>Plot trajectories</h2>
+    <h2>Visualize results</h2>
     <hr>
     <div class="well well-large">
         <form id="select_species" action="/output/visualize?job_folder={{job_folder}}" method="post">
@@ -21,10 +21,13 @@
             {% endfor %}
             {% endif %}
             </select>
-         <label>Trajectory number (show number of trajectories)</label><input type="text" name="trajectory_number" value="{{trajectory_number}}"></input>
+         <label>Trajectory number</label>
+            <input type="text" name="trajectory_number" value="{{trajectory_number}}"></input>
+            <span class="help-block">Input a single trajectory number that you want to visualize.</span>
+
         </br>
             <input type="hidden" name="job_folder" value="{{job_folder}}"></input>
-            <input type="submit" name="plotbutton" class="btn btn-primary btn-large" value="Plot">
+            <input type="submit" name="plotbutton" class="btn btn-primary btn-large" value="Plot realization">
             <input id="plotbutton" class="btn btn-primary btn-large" onClick="$.plot($('#placeholder'),[{{species_time_series}}],{});" value="test" type="hidden">
                     
         </form>
