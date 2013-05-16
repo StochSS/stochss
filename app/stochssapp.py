@@ -190,16 +190,17 @@ class StaticFileHandler(BaseHandler):
         try:
             filename = self.request.get('filename')
             filecontent = open(filename).read()
+            # Try to guess the mimetype before writing the response
+            type,encoding = mimetypes.guess_type(filename)
+            if type == None:
+                type="text/html"
+        
+            self.response.headers.add_header("Content-Type",type)
+            self.response.write(filecontent)
         except:
             self.response.write("Could not find the requested file on the server")
         
-        # Try to guess the mimetype before writing the response
-        type,encoding = mimetypes.guess_type(filename)
-        if type == None:
-            type="text/html"
-    
-        self.response.headers.add_header("Content-Type",type)
-        self.response.write(filecontent)
+        
 
 
 app = webapp2.WSGIApplication([

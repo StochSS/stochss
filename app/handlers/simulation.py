@@ -121,7 +121,7 @@ class SimulatePage(BaseHandler):
 
     def post(self):
         
-        model = self.request.get("model_to_simulate")
+        model = self.request.get('model_to_simulate')
         if model == None or model == "":
             self.redirect('/simulate')
         else:
@@ -144,11 +144,11 @@ class NewStochkitEnsemblePage(BaseHandler):
 
         # If model_to_simulate has not been set using the simulation manager main page,
         # we attempt to set it to the currently edited model
-        if model_to_simulate == None:
+        else:
             model_edited = self.get_session_property('model_edited')
             if model_edited is not None and model_edited is not "":
                 model_to_simulate = model_edited.name
-                self.set_session_property('model_to_simulate',None)
+                self.set_session_property('model_to_simulate',model_to_simulate)
     
         # If we have not managed to identify a model to simulate, we redirect to
         # a page where the user can select a model
