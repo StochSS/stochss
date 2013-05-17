@@ -32,7 +32,7 @@
 					<div>
 						<label>Products</label>
 						<input type="text" class="span3 auto_complete" name="products" placeholder="C" id="products" value="{{ products }}" TITLE = "Products are species produced by the reaction. Input species names separated by comma.">
-                        </div>
+                    </div>
                     
                      <label id="propensity_label">Propensity Function</label>
                      <input type="text" placeholder="k*A*B" name="propensity_function" id="propensity" value="{{ propensity_function }}" style="display:block;" TITLE = "Define the propensity function. If the propensity is of mass-action type, you can use the checkboxes below to automatically generate the propensity function."/>
@@ -70,7 +70,6 @@
 				{% endif %}
 			</form>
 
-            {% if all_reactions %}
             <hr/>
 
             <div id = "right-column-sidebar">
@@ -80,8 +79,12 @@
 				</style>
 
 			</div>
+            
+            {% if all_reactions %}
+
 			<div id="msg" style="display:none"></div>
-			<h3><a data-toggle="collapse" data-target="#species_list" default> Reactions </a>&raquo; </h3>
+			
+            <h3><a data-toggle="collapse" data-target="#species_list" default> Reactions </a>&raquo; </h3>
 			<br/>
 			<div id="species_list" class="in collapse" style="height: auto">
 				<form id="update_form" method="post" action="/modeleditor/reactioneditor">
@@ -114,13 +117,14 @@
 					</table>					
 				</form>
 			</div>
+            {% endif %}
+
 			<form id="deleteForm" method="post" action="/modeleditor/reactioneditor">
 				<input type="hidden" name="toDelete" />
 				<input type="hidden" name="delete" value="1"/>
 			</form>
 
 		</div>
-        {% endif %}
 
 	</div>
 	<!--/row-->

@@ -41,8 +41,6 @@ class backendservices():
             data = {'status':"pending","start_time":timenow.strftime('%Y-%m-%d %H:%M:%S'), 'Message':"Task sent to Cloud"}
             updateEntry(taskid, data, self.tablename)
             tmp = task.delay(taskid, params)
-            # the UUID will be used to track the status of the task
-            #tmp['uuid'] = uuidstr
             logging.debug("executeTask :  result of task : %s", str(tmp))
             return tmp,taskid
         except Exception, e:

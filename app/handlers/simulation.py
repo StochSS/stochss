@@ -175,7 +175,7 @@ class NewStochkitEnsemblePage(BaseHandler):
         self.render_response('simulate/newstochkitensemblepage.html',**dict(context,**result))
 
     def runCloud(self):
-        print 'inside cloud method'
+        
         try:
             # Get the model that is currently in scope for simulation via the session property 'model_to_simulate'
             try:
@@ -230,9 +230,7 @@ class NewStochkitEnsemblePage(BaseHandler):
             
             if "keep-histograms" in params:
                 args+=' --keep-histograms'
-            
-            # TODO: We need a robust way to pick a default seed for the ensemble. It needs to be robust in a ditributed, parallel env.
-            
+                        
             args+=' --seed '
             args+=str(seed)
         
@@ -241,9 +239,6 @@ class NewStochkitEnsemblePage(BaseHandler):
             # Create a StochKitJob instance
             stochkit_job = StochKitJob(name=ensemblename, final_time=time, realizations=realizations,increment=increment,seed=seed,algorithm=executable)
         
-            # Create the argument string
-            #args = stochkit_job.getArgumentString()
-            #print cmd
             params['paramstring'] = cmd
 
             bucketname = self.user_data.getBucketName()
@@ -251,19 +246,16 @@ class NewStochkitEnsemblePage(BaseHandler):
         
             # Call backendservices and execute StochKit
             service = backendservices()
-            print 'calling execute on cloud task'
             res,taskid = service.executeTask(params)
             
-            if(res == None):
+            if res == None:
                 result = {'status':False,'msg':'Cloud execution failed. '}
                 return result
         
             stochkit_job.resource = 'Cloud'
             stochkit_job.type = 'StochKit2 Ensemble'
             
-            ## The jobs pid is the Celery task id.   
-            #stochkit_job.pid = res.id
-            # the uuid of the task
+            # The jobs pid is the Celery task id.
             stochkit_job.pid = taskid
             stochkit_job.status = 'Running'
         
@@ -273,18 +265,12 @@ class NewStochkitEnsemblePage(BaseHandler):
             stochkit_job_db.name = stochkit_job.name
             stochkit_job_db.stochkit_job = stochkit_job
             stochkit_job_db.put()
-            # Clean up temporary files  
-            #os.remove(outfile)
-            result = {'status':True,'msg':'Job submitted sucessfully'}
+            result = {'status':True,'msg':'Job submitted sucessfully.'}
+                
         except Exception,e:
             result = {'status':False,'msg':'Cloud execution failed: '+str(e)}       
         return result
         
-        
-        
-        result = {'status':True,'msg': 'Calling the cloud execution function'}
-        return result
-
     def parseForm(self):
         """ 
             Parses the StochKit2 Ensemble job submission form.
@@ -376,24 +362,17 @@ class NewStochkitEnsemblePage(BaseHandler):
             param = {}
             
             # Write a temporary StochKit2 input file.
-        #outfile =  params['job_name']+".xml"
-        #    mfhandle = open(outfile,'w')
             document = model.serialize()
-        #    mfhandle.write(document)
-        #    mfhandle.close()
             params['document'] = str(document)
-        # filepath  = os.path.abspath(outfile)
-        #    params['file'] = filepath
             ensemblename = params['job_name']
             time = params['time']
             realizations = params['realizations']
             increment = params['increment']
             seed = params['seed']
             # Algorithm, SSA or Tau-leaping?
-            # Append the path to StochKit here
+                
             STOCHKIT_HOME = ""
             env_variables = self.user_data.env_variables
-           
             if env_variables is not None:
                 env_variables = json.loads(env_variables)
                 try:
@@ -459,9 +438,6 @@ class NewStochkitEnsemblePage(BaseHandler):
             stochkit_job_db.name = stochkit_job.name
             stochkit_job_db.stochkit_job = stochkit_job
             stochkit_job_db.put()
-    
-            # Clean up temporary files  
-            #os.remove(outfile)
     
             result = {'status':True,'msg':'Job submitted sucessfully'}
             
