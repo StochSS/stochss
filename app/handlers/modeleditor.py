@@ -6,6 +6,7 @@ from google.appengine.ext import db
 import pickle
 import traceback
 import logging
+import time
 from google.appengine.api import users
 
 from stochssapp import BaseHandler
@@ -141,6 +142,9 @@ class ModelEditorPage(BaseHandler):
                 db_model = db.GqlQuery("SELECT * FROM StochKitModelWrapper WHERE user_id = :1 AND model_name = :2", user_id, model.name).get()
                 db_model.model = model
                 db_model.put()
+                # TODO: This is a hack to make it unlikely that the db transaction has not completed
+                # before we re-render the page (which would cause an error). We need some real solution for this...
+                time.sleep(0.5)
                 result = {'status': True, 'msg': model.name + ' saved successfully!'}
 
             self.set_session_property('is_model_saved', True)
@@ -148,8 +152,8 @@ class ModelEditorPage(BaseHandler):
             new_model_name = self.request.get('model_edited')
             # Save called through the modal dialog box
             if new_model_name is not None and new_model_name is not "":
-                db_model = db.GqlQuery("SELECT * FROM StochKitModelWrapper WHERE user_id = :1 AND model_name = :2", user_id, new_model_name).get()
-                self.set_session_property('model_edited', db_model.model)
+                 db_model = db.GqlQuery("SELECT * FROM StochKitModelWrapper WHERE user_id = :1 AND model_name = :2", user_id, new_model_name).get()
+                 self.set_session_property('model_edited', db_model.model)
             
             # redirect_page refers to the page to be redirected to, after the user chooses to save or discard the recent changes.
             redirect_page = self.request.get('redirect_page')
