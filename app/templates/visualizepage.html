@@ -28,7 +28,10 @@
         </br>
             <input type="hidden" name="job_folder" value="{{job_folder}}"></input>
             <input type="submit" name="plotbutton" class="btn btn-primary btn-large" value="Plot realization">
+            <input type="submit" name="plotbuttonmean" class="btn btn-primary btn-large" value="Plot mean">
+
             <input id="plotbutton" class="btn btn-primary btn-large" onClick="$.plot($('#placeholder'),[{{species_time_series}}],{});" value="test" type="hidden">
+
                     
         </form>
         

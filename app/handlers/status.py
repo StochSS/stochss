@@ -289,6 +289,7 @@ class VisualizePage(BaseHandler):
         result = {}
         context = self.getContext()
         logging.info(context)
+        params = self.request.POST
         
         # Get the species names
         species_names = self.getSpeciesNames(context)
@@ -299,11 +300,34 @@ class VisualizePage(BaseHandler):
         
         trajectory_number = context['trajectory_number']
         species_name = context['species_name']
-        species_time_series = self.getTrajectory(context,trajectory_number,species_name)
+        if 'plotbuttonmean' in params:
+            species_time_series = self.getMeans(context,species_name)
+        elif 'plotbutton' in params:
+            species_time_series = self.getTrajectory(context,trajectory_number,species_name)
         context['species_time_series']=species_time_series
             
         self.render_response('visualizepage.html',**dict(result,**context))
-        
+    
+    def getMeans(self, params, species_name):
+        """ Get the mean values """
+        try:
+            # StochKit labels the output files starting from 0, hence the "-1", since we label from 1 in the UI.
+            meanfile = params['job_folder']+'/result/stats/means.txt'
+            file = open(meanfile,'rb')
+            trajectory_data = [row.strip().split('\t') for row in file]
+            
+            species_names = trajectory_data[0]
+            for s in range(len(species_names)):
+                if species_names[s] == species_name:
+                    break
+            species_time_series = []
+            for row in trajectory_data:
+                species_time_series.append([row[0],row[s]]);
+            return species_time_series[1:]
+        except:
+            return None
+
+    
     def getTrajectory(self, params, trajectory_number, species_name):
         """ Get data from a specific trajectory in the StochKit output folder. """
 
