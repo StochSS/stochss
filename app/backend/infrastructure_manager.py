@@ -220,7 +220,7 @@ class InfrastructureManager:
     return self.__generate_response(True,
       self.REASON_NONE, {'reservation_id': reservation_id})
 
-  def terminate_instances(self, parameters, secret):
+  def terminate_instances(self, parameters):
     """
     Terminate a group of virtual machines using the provided parameters.
     The input parameter map must contain an 'infrastructure' parameter which
@@ -251,23 +251,8 @@ class InfrastructureManager:
       TypeError   If the inputs are not of the expected types
       ValueError  If the input JSON string (parameters) cannot be parsed properly
     """
-    parameters, secret = self.__validate_args(parameters, secret)
-
-    if self.secret != secret:
-      return self.__generate_response(False, self.REASON_BAD_SECRET)
-
-    for param in self.TERMINATE_INSTANCES_REQUIRED_PARAMS:
-      if not utils.has_parameter(param, parameters):
-        return self.__generate_response(False, 'no ' + param)
-
     infrastructure = parameters[self.PARAM_INFRASTRUCTURE]
     agent = self.agent_factory.create_agent(infrastructure)
-    try:
-      agent.assert_required_parameters(parameters,
-        BaseAgent.OPERATION_TERMINATE)
-    except AgentConfigurationException as exception:
-      return self.__generate_response(False, exception.message)
-
     if self.blocking:
       self.__kill_vms(agent, parameters)
     else:
