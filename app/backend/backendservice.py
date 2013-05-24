@@ -218,6 +218,11 @@ class backendservices():
     def stopMachines(self, params):
         '''
         This method would terminate all the  instances associated with the account
+        It expects the following two fields in the  parameter argument
+        params ={"infrastructure":"ec2",
+             'credentials':{"EC2_ACCESS_KEY":"______________", 
+              "EC2_SECRET_KEY":"__________"},
+                  }
         '''
         try:
             i = InfrastructureManager(blocking=True)
