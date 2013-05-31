@@ -514,6 +514,9 @@ def stochkit(model, job_id="",time=1.0,number_of_trajectories=1,increment=None,s
     args+=' --realizations '
     args+=str(realizations)
     
+    # Only use on processor per StochKit job. 
+    args+= ' -p 1'
+    
     # We keep all the trajectories by default.
     args+=' --keep-trajectories'
 
@@ -531,10 +534,7 @@ def stochkit(model, job_id="",time=1.0,number_of_trajectories=1,increment=None,s
 
     # Collect all the output data
     files = os.listdir(outdir + '/stats')
-    means = numpy.loadtxt(outdir + '/stats/means.txt')
-    variances = numpy.loadtxt(outdir + '/stats/variances.txt')
-    
-    
+       
     trajectories = []
     files = os.listdir(outdir + '/trajectories')
         
@@ -548,8 +548,7 @@ def stochkit(model, job_id="",time=1.0,number_of_trajectories=1,increment=None,s
 
     # Clean up
     shutil.rmtree(outdir)
-
-    return means,variances,trajectories
+    return trajectories
 
 # Exceptions
 class StochMLImportError(Exception):

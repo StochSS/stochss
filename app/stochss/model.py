@@ -101,8 +101,9 @@ class Model():
     def setParameter(self,pname,expression):
         """ Set the expression of an existing paramter. """
         p = self.listOfParameters[pname]
-        p.value = expression
-    
+        p.expression = expression
+        p.evaluate()
+        
     def resolveParameters(self):
         """ Attempt to resolve all parameter expressions to scalar floats. This
             methods must be called before exporting the model. """
@@ -196,6 +197,19 @@ class Parameter():
             self.value = (float(eval(self.expression, namespace)))
         except:
             self.value = None
+            
+    def setExpression(self,expression):
+        self.expression = expression
+        # We allow expression to be passed in as a non-string type. Invalid strings
+        # will be caught below. It is perfectly fine to give a scalar value as the expression.
+        # This can then be evaluated in an empty namespace to the scalar value.
+        if expression != None:
+            self.expression = str(expression)
+                    
+        if self.expression == None:
+            raise TypeError
+    
+        self.evaluate()
 
 class Reaction():
     """ 
