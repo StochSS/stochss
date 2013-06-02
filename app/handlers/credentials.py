@@ -136,12 +136,14 @@ class CredentialsPage(BaseHandler):
         
         context = {}
         result = {}
+        
         # Check if the credentials are valid.
         if not self.user_data.valid_credentials:
             result = {'status':False,'vm_status':False,'vm_status_msg':'Could not determine the status of the VMs: Invalid Credentials.'}
             context['vm_names'] = None
             context['valid_credentials']=False
         else:
+            
             context['valid_credentials'] = True
             all_vms = self.get_all_vms(user_id,credentials)
             if all_vms == None:
@@ -163,8 +165,10 @@ class CredentialsPage(BaseHandler):
                 result['status']= True
                 result['credentials_msg'] = 'The EC2 keys have been validated.'
                 if number_running+number_pending == 0:
-                    context['no_active_vms'] =  True
-
+                    context['active_vms'] = False
+                else:
+                    context['active_vms'] = True
+                
         context = dict(context, **credentials)
         context = dict(result, **context)
         return context
