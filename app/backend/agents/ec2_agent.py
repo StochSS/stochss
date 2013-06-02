@@ -357,8 +357,12 @@ class EC2Agent(BaseAgent):
     Args:
       parameters  A dictionary of parameters
     """
-    instance_ids = parameters[self.PARAM_INSTANCE_IDS]
     conn = self.open_connection(parameters)
+    instance_ids = []
+    reservations = conn.get_all_instances()
+    instances = [i for r in reservations for i in r.instances]
+    for i in instances:
+        instance_ids.append(i.id)
     terminated_instances = conn.terminate_instances(instance_ids)
     for instance in terminated_instances:
       utils.log('Instance {0} was terminated'.format(instance.id))

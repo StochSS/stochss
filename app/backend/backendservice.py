@@ -205,8 +205,22 @@ class backendservices():
             return None
         
     def stopMachines(self, params):
-        # add infrastcutre manager call to stop a virtual machines
-        pass
+        '''
+        This method would terminate all the  instances associated with the account
+        It expects the following two fields in the  parameter argument
+        params ={"infrastructure":"ec2",
+             'credentials':{"EC2_ACCESS_KEY":"______________", 
+              "EC2_SECRET_KEY":"__________"},
+                  }
+        '''
+        try:
+            i = InfrastructureManager(blocking=True)
+            res = i.terminate_instances(params)
+            print str(res)
+            return True
+        except Exception, e:
+            logging.error("Terminate machine failed with error : %s", str(e))
+            return False
     
     def describeMachines(self, params):
         '''
@@ -301,7 +315,8 @@ if __name__ == "__main__":
              'use_spot_instances':False}
     #test  = obj.validateCredentials(params)
     #print test
-    print str(obj.startMachines(params))
+    #print str(obj.startMachines(params))
+    print obj.stopMachines(params)
     #val = obj.describeMachines(params)
     pids = [12680,12681,12682, 18526]
     #res  = obj.checkTaskStatusLocal(pids)
