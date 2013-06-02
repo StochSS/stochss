@@ -65,10 +65,20 @@ class CredentialsPage(BaseHandler):
             result = self.start_vms(user_id, self.user_data.getCredentials(), number_of_new_vms)
             self.redirect('/credentials')
 
-        elif 'delete' in params:
-            # Delete all VMs.
-            #result = self.delete_vms()
-            self.response.out.write('Deleting all the VMs')
+        elif 'stop' in params:
+            # Kill all running VMs.
+            try:
+                service = backendservices()
+                credentials = self.user_data.getCredentials()
+                stopped = service.stopMachines({"infrastructure":"ec2", "credentials":self.user_data.getCredentials()})
+                if not stopped:
+                    raise
+                result = {'status': True, 'msg': 'Sucessfully terminated all running VMs.'}
+            except Exception,e:
+                result = {'status': False, 'msg': 'Failed to terminate the VMs. Please check their status in the EC2 managment consol available from your Amazon account.'}
+            finally:
+                context = self.getContext(user_id)
+                self.render_response('credentials.html',**(dict(context,**result)))
     
         elif 'refresh' in params:
             self.redirect('/credentials')
