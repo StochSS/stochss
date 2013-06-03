@@ -29,3 +29,6 @@ nosetests.xml
 *.mo
 
 # Mr Developer
+
+# Folders
+app/output/
