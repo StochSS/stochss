@@ -1,0 +1,23 @@
+K 25
+svn:wc:ra_dav:version-url
+V 85
+/svn/!svn/ver/318/trunk/python/lib/django_1_3/django/contrib/gis/tests/data/test_poly
+END
+test_poly.shx
+K 25
+svn:wc:ra_dav:version-url
+V 99
+/svn/!svn/ver/233/trunk/python/lib/django_1_3/django/contrib/gis/tests/data/test_poly/test_poly.shx
+END
+test_poly.shp
+K 25
+svn:wc:ra_dav:version-url
+V 99
+/svn/!svn/ver/233/trunk/python/lib/django_1_3/django/contrib/gis/tests/data/test_poly/test_poly.shp
+END
+test_poly.dbf
+K 25
+svn:wc:ra_dav:version-url
+V 99
+/svn/!svn/ver/233/trunk/python/lib/django_1_3/django/contrib/gis/tests/data/test_poly/test_poly.dbf
+END

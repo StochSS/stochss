@@ -1,0 +1,29 @@
+K 25
+svn:wc:ra_dav:version-url
+V 74
+/svn/!svn/ver/327/trunk/python/google/storage/speckle/python/api/constants
+END
+FLAG.py
+K 25
+svn:wc:ra_dav:version-url
+V 82
+/svn/!svn/ver/327/trunk/python/google/storage/speckle/python/api/constants/FLAG.py
+END
+CLIENT.py
+K 25
+svn:wc:ra_dav:version-url
+V 84
+/svn/!svn/ver/327/trunk/python/google/storage/speckle/python/api/constants/CLIENT.py
+END
+__init__.py
+K 25
+svn:wc:ra_dav:version-url
+V 86
+/svn/!svn/ver/327/trunk/python/google/storage/speckle/python/api/constants/__init__.py
+END
+FIELD_TYPE.py
+K 25
+svn:wc:ra_dav:version-url
+V 88
+/svn/!svn/ver/327/trunk/python/google/storage/speckle/python/api/constants/FIELD_TYPE.py
+END

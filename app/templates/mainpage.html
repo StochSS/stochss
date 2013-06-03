@@ -1,0 +1,42 @@
+{% extends "base.html" %}
+{% block title%}Welcome to StochSS{% endblock %}
+{% block content %}
+
+
+<div class="span9">
+    
+    <div class="page-header">
+        <h1> Welcome to StochSS <small>Stochastic Simulation Service</small></h1>
+    </div>
+    <div class="hero-unit">
+        <p>Welcome to the StochSS App v1.0! In this first version, we provide a <a href="/modeleditor" style="font-size: 20px;">Model Editor</a> to create new well-mixed stochastic models, or to <a style="font-size: 20px;" href="/modeleditor/import/fromfile" >import existing StochKit2 models</a> expressed in its native XML format.
+        
+            Once you have defined your model, we let you <a style="font-size: 20px;" href="/simulate" >run simulations</a> with StochKit2.
+        </p>
+        
+       </br></br>
+        
+        <h3>Want to run simulations locally?</h3>
+            <p>
+        To use StochSS to run StochKit simulations on your local machine, you need to install StochKit2.0.7. <a href="http://sourceforge.net/projects/stochkit/" target="_blank">Download StochKit from Sourceforge</a> and follow the install instructions for your operating system.
+
+        StochSS treats StochKit as a computational plugin, so once it is installed, you need to <a href="/localsettings">tell us where it is located on your computer.</a>  Note that it is not necessary to install StochKit if you only plan to use Cloud resources for your simulations.
+        
+        </p>
+        </br>
+        <h3>Want to run simulations in the Cloud?</h3>
+        
+        <p>
+            StochSS will let you launch computational nodes in the Amazon EC2 compute cloud and use them to run your simulations, all with the click of a button! To use this feature, you need to sign up for an account with <a href="http://aws.amazon.com/" target="_blank">Amazon Web Services</a> and then <a href="/credentials">enter your AWS credentials</a>.
+        </p>
+        </br>
+        <p>
+            For more information, consult the <a href="https://docs.google.com/document/d/1QdbIE0Ja7q4yAK31vmj9SlF51WMPKdKrLwmyDXbUw7c/pub?embedded=true" target="_blank">User Manual</a>. Also, make sure to join the <a href="https://groups.google.com/forum/?fromgroups#!forum/stochss-users">StochSS Users Google group</a> to recieve information about updates and to ask questions.
+        </p>
+        
+    </div>
+    
+    
+    
+</div><!--/span-->
+{% endblock %}

@@ -1,0 +1,59 @@
+K 25
+svn:wc:ra_dav:version-url
+V 71
+/svn/!svn/ver/327/trunk/python/lib/django-1.4/docs/ref/contrib/comments
+END
+moderation.txt
+K 25
+svn:wc:ra_dav:version-url
+V 86
+/svn/!svn/ver/327/trunk/python/lib/django-1.4/docs/ref/contrib/comments/moderation.txt
+END
+models.txt
+K 25
+svn:wc:ra_dav:version-url
+V 82
+/svn/!svn/ver/327/trunk/python/lib/django-1.4/docs/ref/contrib/comments/models.txt
+END
+forms.txt
+K 25
+svn:wc:ra_dav:version-url
+V 81
+/svn/!svn/ver/327/trunk/python/lib/django-1.4/docs/ref/contrib/comments/forms.txt
+END
+upgrade.txt
+K 25
+svn:wc:ra_dav:version-url
+V 83
+/svn/!svn/ver/327/trunk/python/lib/django-1.4/docs/ref/contrib/comments/upgrade.txt
+END
+index.txt
+K 25
+svn:wc:ra_dav:version-url
+V 81
+/svn/!svn/ver/327/trunk/python/lib/django-1.4/docs/ref/contrib/comments/index.txt
+END
+custom.txt
+K 25
+svn:wc:ra_dav:version-url
+V 82
+/svn/!svn/ver/327/trunk/python/lib/django-1.4/docs/ref/contrib/comments/custom.txt
+END
+example.txt
+K 25
+svn:wc:ra_dav:version-url
+V 83
+/svn/!svn/ver/327/trunk/python/lib/django-1.4/docs/ref/contrib/comments/example.txt
+END
+settings.txt
+K 25
+svn:wc:ra_dav:version-url
+V 84
+/svn/!svn/ver/327/trunk/python/lib/django-1.4/docs/ref/contrib/comments/settings.txt
+END
+signals.txt
+K 25
+svn:wc:ra_dav:version-url
+V 83
+/svn/!svn/ver/327/trunk/python/lib/django-1.4/docs/ref/contrib/comments/signals.txt
+END

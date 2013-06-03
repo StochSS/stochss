@@ -1,0 +1,23 @@
+K 25
+svn:wc:ra_dav:version-url
+V 60
+/svn/!svn/ver/327/trunk/python/google/appengine/ext/deferred
+END
+handler.py
+K 25
+svn:wc:ra_dav:version-url
+V 71
+/svn/!svn/ver/327/trunk/python/google/appengine/ext/deferred/handler.py
+END
+__init__.py
+K 25
+svn:wc:ra_dav:version-url
+V 72
+/svn/!svn/ver/327/trunk/python/google/appengine/ext/deferred/__init__.py
+END
+deferred.py
+K 25
+svn:wc:ra_dav:version-url
+V 72
+/svn/!svn/ver/327/trunk/python/google/appengine/ext/deferred/deferred.py
+END

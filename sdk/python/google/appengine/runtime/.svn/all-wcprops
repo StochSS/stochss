@@ -1,0 +1,59 @@
+K 25
+svn:wc:ra_dav:version-url
+V 55
+/svn/!svn/ver/327/trunk/python/google/appengine/runtime
+END
+wsgi.py
+K 25
+svn:wc:ra_dav:version-url
+V 63
+/svn/!svn/ver/327/trunk/python/google/appengine/runtime/wsgi.py
+END
+apiproxy.py
+K 25
+svn:wc:ra_dav:version-url
+V 67
+/svn/!svn/ver/327/trunk/python/google/appengine/runtime/apiproxy.py
+END
+shutdown.py
+K 25
+svn:wc:ra_dav:version-url
+V 67
+/svn/!svn/ver/327/trunk/python/google/appengine/runtime/shutdown.py
+END
+request_environment.py
+K 25
+svn:wc:ra_dav:version-url
+V 78
+/svn/!svn/ver/327/trunk/python/google/appengine/runtime/request_environment.py
+END
+background.py
+K 25
+svn:wc:ra_dav:version-url
+V 69
+/svn/!svn/ver/327/trunk/python/google/appengine/runtime/background.py
+END
+__init__.py
+K 25
+svn:wc:ra_dav:version-url
+V 67
+/svn/!svn/ver/327/trunk/python/google/appengine/runtime/__init__.py
+END
+cgi.py
+K 25
+svn:wc:ra_dav:version-url
+V 62
+/svn/!svn/ver/327/trunk/python/google/appengine/runtime/cgi.py
+END
+runtime.py
+K 25
+svn:wc:ra_dav:version-url
+V 66
+/svn/!svn/ver/327/trunk/python/google/appengine/runtime/runtime.py
+END
+apiproxy_errors.py
+K 25
+svn:wc:ra_dav:version-url
+V 74
+/svn/!svn/ver/327/trunk/python/google/appengine/runtime/apiproxy_errors.py
+END

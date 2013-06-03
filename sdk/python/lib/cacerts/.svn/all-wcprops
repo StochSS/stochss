@@ -1,0 +1,17 @@
+K 25
+svn:wc:ra_dav:version-url
+V 42
+/svn/!svn/ver/339/trunk/python/lib/cacerts
+END
+cacerts.txt
+K 25
+svn:wc:ra_dav:version-url
+V 54
+/svn/!svn/ver/327/trunk/python/lib/cacerts/cacerts.txt
+END
+urlfetch_cacerts.txt
+K 25
+svn:wc:ra_dav:version-url
+V 63
+/svn/!svn/ver/339/trunk/python/lib/cacerts/urlfetch_cacerts.txt
+END

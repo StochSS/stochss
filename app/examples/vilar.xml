@@ -1,0 +1,325 @@
+<?xml version="1.0"?>
+<Model>
+
+  <Description>CircadianRhythm</Description>
+  <NumberOfReactions>18</NumberOfReactions>
+  <NumberOfSpecies>9</NumberOfSpecies>
+  <ParametersList>
+   
+    <Parameter>
+      <Id>alpha_A</Id>
+      <Expression>50</Expression>
+    </Parameter>
+    <Parameter>
+      <Id>alpha_a_prime</Id>
+      <Expression>500</Expression>
+    </Parameter>
+    <Parameter>
+      <Id>alpha_r</Id>
+      <Expression>0.01</Expression>
+    </Parameter>
+    <Parameter>
+      <Id>alpha_r_prime</Id>
+      <Expression>50</Expression>
+    </Parameter>
+    <Parameter>
+      <Id>beta_a</Id>
+      <Expression>50</Expression>
+    </Parameter>
+    <Parameter>
+      <Id>beta_r</Id>
+      <Expression>5</Expression>
+    </Parameter>
+    <Parameter>
+      <Id>delta_ma</Id>
+      <Expression>10</Expression>
+    </Parameter>
+    <Parameter>
+      <Id>delta_mr</Id>
+      <Expression>0.5</Expression>
+    </Parameter>
+    <Parameter>
+      <Id>delta_a</Id>
+      <Expression>1</Expression>
+    </Parameter>
+    <Parameter>
+      <Id>delta_r</Id>
+      <Expression>0.2</Expression>
+    </Parameter>
+    <Parameter>
+      <Id>gamma_a</Id>
+      <Expression>1</Expression>
+    </Parameter>
+    <Parameter>
+      <Id>gamma_r</Id>
+      <Expression>1</Expression>
+    </Parameter>
+    <Parameter>
+      <Id>gamma_c</Id>
+      <Expression>2</Expression>
+    </Parameter>
+    <Parameter>
+      <Id>Theta_a</Id>
+      <Expression>50</Expression>
+    </Parameter>
+    <Parameter>
+      <Id>Theta_r</Id>
+      <Expression>100</Expression>
+    </Parameter>
+  </ParametersList>
+  
+  
+  <ReactionsList>
+    <Reaction>
+      <Id>s_Da</Id>
+      <Type>mass-action</Type>
+      <Rate>Theta_a</Rate>
+      <Reactants>
+        <SpeciesReference id="Da_prime" stoichiometry="1"/>
+      </Reactants>
+      <Products>
+        <SpeciesReference id="Da" stoichiometry="1"/>
+      </Products>
+    </Reaction>
+    <Reaction>
+      <Id>s_Da_prime</Id>
+      <Type>mass-action</Type>
+      <Rate>gamma_a</Rate>
+      <Reactants>
+        <SpeciesReference id="Da" stoichiometry="1"/>
+        <SpeciesReference id="A" stoichiometry="1"/>
+      </Reactants>
+      <Products>
+        <SpeciesReference id="Da_prime" stoichiometry="1"/>
+      </Products>
+    </Reaction>
+    <Reaction>
+      <Id>s_Dr</Id>
+      <Type>mass-action</Type>
+      <Rate>Theta_r</Rate>
+      <Reactants>
+        <SpeciesReference id="Dr_prime" stoichiometry="1"/>
+      </Reactants>
+      <Products>
+        <SpeciesReference id="Dr" stoichiometry="1"/>
+      </Products>
+    </Reaction>
+    <Reaction>
+      <Id>s_Dr_prime</Id>
+      <Type>mass-action</Type>
+      <Rate>gamma_r</Rate>
+      <Reactants>
+        <SpeciesReference id="Dr" stoichiometry="1"/>
+        <SpeciesReference id="A" stoichiometry="1"/>
+      </Reactants>
+      <Products>
+        <SpeciesReference id="Dr_prime" stoichiometry="1"/>
+      </Products>
+    </Reaction>
+    <Reaction>
+        
+      <Id>s_Ma1</Id>
+      <Type>mass-action</Type>
+       <Rate>alpha_a_prime</Rate>
+      <Reactants>
+          <SpeciesReference id="Da_prime" stoichiometry="1"/>
+      </Reactants>
+      <Products>
+        <SpeciesReference id="Ma" stoichiometry="1"/>
+        <SpeciesReference id="Da_prime" stoichiometry="1"/>
+      </Products>
+        
+    </Reaction>
+      
+    <Reaction>
+      <Id>s_Ma2</Id>
+      <Type>mass-action</Type>
+        <Rate>alpha_A</Rate>
+        <Reactants>
+            <SpeciesReference id="Da" stoichiometry="1"/>
+        </Reactants>
+      <Products>
+        <SpeciesReference id="Ma" stoichiometry="1"/>
+        <SpeciesReference id="Da" stoichiometry="1"/>
+      </Products>
+    </Reaction>
+    <Reaction>
+      <Id>a_Ma</Id>
+      <Type>mass-action</Type>
+      <Rate>delta_ma</Rate>
+      <Reactants>
+        <SpeciesReference id="Ma" stoichiometry="1"/>
+      </Reactants>
+    </Reaction>
+    <Reaction>
+      <Id>s_A1</Id>
+      <Type>mass-action</Type>
+        <Rate>beta_a</Rate>
+       <Reactants>
+           <SpeciesReference id="Ma" stoichiometry="1"/>
+       </Reactants>
+        <Products>
+        <SpeciesReference id="A" stoichiometry="1"/>
+        <SpeciesReference id="Ma" stoichiometry="1"/>
+      </Products>
+    </Reaction>
+    <Reaction>
+      <Id>s_A2</Id>
+      <Type>mass-action</Type>
+        <Rate>Theta_a</Rate>
+        <Reactants>
+            <SpeciesReference id="Da_prime" stoichiometry="1"/>
+        </Reactants>
+        <Products>
+        <SpeciesReference id="A" stoichiometry="1"/>
+            <SpeciesReference id="Da_prime" stoichiometry="1"/>
+      </Products>
+    </Reaction>
+      
+    <Reaction>
+      <Id>s_A3</Id>
+      <Type>mass-action</Type>
+      <Rate>Theta_a</Rate>
+        <Reactants>
+            <SpeciesReference id="Dr_prime" stoichiometry="1"/>
+        </Reactants>
+      <Products>
+        <SpeciesReference id="A" stoichiometry="1"/>
+        <SpeciesReference id="Dr_prime" stoichiometry="1"/>
+      </Products>
+    </Reaction>
+    
+    <Reaction>
+      <Id>a_A</Id>
+      <Type>mass-action</Type>
+      <Rate>delta_a</Rate>
+      <Reactants>
+        <SpeciesReference id="A" stoichiometry="1"/>
+      </Reactants>
+    </Reaction>
+    
+    <Reaction>
+      <Id>s_C</Id>
+      <Type>mass-action</Type>
+      <Rate>gamma_c</Rate>
+      <Reactants>
+        <SpeciesReference id="A" stoichiometry="1"/>
+        <SpeciesReference id="R" stoichiometry="1"/>
+      </Reactants>
+      <Products>
+        <SpeciesReference id="C" stoichiometry="1"/>
+      </Products>
+    </Reaction>
+    
+    <Reaction>
+      <Id>s_Mr1</Id>
+      <Type>mass-action</Type>
+       <Rate>alpha_r_prime</Rate>
+        <Reactants>
+            <SpeciesReference id="Dr_prime" stoichiometry="1"/>
+
+        </Reactants>
+      <Products>
+        <SpeciesReference id="Mr" stoichiometry="1"/>
+          <SpeciesReference id="Dr_prime" stoichiometry="1"/>
+
+      </Products>
+    </Reaction>
+    
+    <Reaction>
+      <Id>s_Mr2</Id>
+      <Type>mass-action</Type>
+       <Rate>alpha_r</Rate>
+        <Reactants>
+            <SpeciesReference id="Dr" stoichiometry="1"/>
+
+        </Reactants>
+      <Products>
+        <SpeciesReference id="Mr" stoichiometry="1"/>
+          <SpeciesReference id="Dr" stoichiometry="1"/>
+  
+      </Products>
+    </Reaction>
+    <Reaction>
+      <Id>a_Mr</Id>
+      <Type>mass-action</Type>
+      <Rate>delta_mr</Rate>
+      <Reactants>
+        <SpeciesReference id="Mr" stoichiometry="1"/>
+      </Reactants>
+    </Reaction>
+    
+    <Reaction>
+      <Id>s_R1</Id>
+      <Type>mass-action</Type>
+        <Rate>beta_r</Rate>
+        <Reactants>
+            <SpeciesReference id="Mr" stoichiometry="1"/>
+        </Reactants>
+      <Products>
+        <SpeciesReference id="R" stoichiometry="1"/>
+        <SpeciesReference id="Mr" stoichiometry="1"/>
+      </Products>
+    </Reaction>
+    
+    <Reaction>
+      <Id>a_R</Id>
+      <Type>mass-action</Type>
+      <Rate>delta_r</Rate>
+      <Reactants>
+        <SpeciesReference id="R" stoichiometry="1"/>
+      </Reactants>
+    </Reaction>
+    
+    <Reaction>
+      <Id>s_r2</Id>
+      <Type>mass-action</Type>
+      <Rate>delta_a</Rate>
+      <Reactants>
+        <SpeciesReference id="C" stoichiometry="1"/>
+      </Reactants>
+      <Products>
+        <SpeciesReference id="R" stoichiometry="1"/>
+      </Products>
+    </Reaction>
+  </ReactionsList>
+  
+  <SpeciesList>
+    <Species>
+      <Id>Da</Id>
+      <InitialPopulation>1</InitialPopulation>
+    </Species>
+    <Species>
+      <Id>Da_prime</Id>
+      <InitialPopulation>0</InitialPopulation>
+    </Species>
+    <Species>
+      <Id>Ma</Id>
+      <InitialPopulation>0</InitialPopulation>
+    </Species>
+    <Species>
+      <Id>Dr</Id>
+      <InitialPopulation>1</InitialPopulation>
+    </Species>
+    <Species>
+      <Id>Dr_prime</Id>
+      <InitialPopulation>0</InitialPopulation>
+    </Species>
+    <Species>
+      <Id>Mr</Id>
+      <InitialPopulation>0</InitialPopulation>
+    </Species>
+    <Species>
+      <Id>C</Id>
+      <InitialPopulation>10</InitialPopulation>
+    </Species>
+    <Species>
+      <Id>A</Id>
+      <InitialPopulation>10</InitialPopulation>
+    </Species>
+    <Species>
+      <Id>R</Id>
+      <InitialPopulation>10</InitialPopulation>
+    </Species>
+  </SpeciesList>
+</Model>

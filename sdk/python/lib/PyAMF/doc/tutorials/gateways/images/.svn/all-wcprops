@@ -1,0 +1,35 @@
+K 25
+svn:wc:ra_dav:version-url
+V 70
+/svn/!svn/ver/262/trunk/python/lib/PyAMF/doc/tutorials/gateways/images
+END
+cherrypy-logo.jpg
+K 25
+svn:wc:ra_dav:version-url
+V 88
+/svn/!svn/ver/262/trunk/python/lib/PyAMF/doc/tutorials/gateways/images/cherrypy-logo.jpg
+END
+django-logo.png
+K 25
+svn:wc:ra_dav:version-url
+V 86
+/svn/!svn/ver/262/trunk/python/lib/PyAMF/doc/tutorials/gateways/images/django-logo.png
+END
+sqlalchemy-logo.gif
+K 25
+svn:wc:ra_dav:version-url
+V 90
+/svn/!svn/ver/262/trunk/python/lib/PyAMF/doc/tutorials/gateways/images/sqlalchemy-logo.gif
+END
+appengine-logo.gif
+K 25
+svn:wc:ra_dav:version-url
+V 89
+/svn/!svn/ver/262/trunk/python/lib/PyAMF/doc/tutorials/gateways/images/appengine-logo.gif
+END
+turbogears-logo.png
+K 25
+svn:wc:ra_dav:version-url
+V 90
+/svn/!svn/ver/262/trunk/python/lib/PyAMF/doc/tutorials/gateways/images/turbogears-logo.png
+END

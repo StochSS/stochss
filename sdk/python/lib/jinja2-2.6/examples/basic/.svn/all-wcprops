@@ -1,0 +1,53 @@
+K 25
+svn:wc:ra_dav:version-url
+V 60
+/svn/!svn/ver/327/trunk/python/lib/jinja2-2.6/examples/basic
+END
+inheritance.py
+K 25
+svn:wc:ra_dav:version-url
+V 75
+/svn/!svn/ver/327/trunk/python/lib/jinja2-2.6/examples/basic/inheritance.py
+END
+test_loop_filter.py
+K 25
+svn:wc:ra_dav:version-url
+V 80
+/svn/!svn/ver/327/trunk/python/lib/jinja2-2.6/examples/basic/test_loop_filter.py
+END
+translate.py
+K 25
+svn:wc:ra_dav:version-url
+V 73
+/svn/!svn/ver/327/trunk/python/lib/jinja2-2.6/examples/basic/translate.py
+END
+test.py
+K 25
+svn:wc:ra_dav:version-url
+V 68
+/svn/!svn/ver/327/trunk/python/lib/jinja2-2.6/examples/basic/test.py
+END
+cycle.py
+K 25
+svn:wc:ra_dav:version-url
+V 69
+/svn/!svn/ver/327/trunk/python/lib/jinja2-2.6/examples/basic/cycle.py
+END
+test2.py
+K 25
+svn:wc:ra_dav:version-url
+V 69
+/svn/!svn/ver/327/trunk/python/lib/jinja2-2.6/examples/basic/test2.py
+END
+debugger.py
+K 25
+svn:wc:ra_dav:version-url
+V 72
+/svn/!svn/ver/327/trunk/python/lib/jinja2-2.6/examples/basic/debugger.py
+END
+test_filter_and_linestatements.py
+K 25
+svn:wc:ra_dav:version-url
+V 94
+/svn/!svn/ver/327/trunk/python/lib/jinja2-2.6/examples/basic/test_filter_and_linestatements.py
+END

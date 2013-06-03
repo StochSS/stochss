@@ -1,0 +1,131 @@
+K 25
+svn:wc:ra_dav:version-url
+V 75
+/svn/!svn/ver/327/trunk/python/lib/django-1.2/django/contrib/admin/media/js
+END
+SelectFilter2.js
+K 25
+svn:wc:ra_dav:version-url
+V 92
+/svn/!svn/ver/327/trunk/python/lib/django-1.2/django/contrib/admin/media/js/SelectFilter2.js
+END
+compress.py
+K 25
+svn:wc:ra_dav:version-url
+V 87
+/svn/!svn/ver/327/trunk/python/lib/django-1.2/django/contrib/admin/media/js/compress.py
+END
+getElementsBySelector.js
+K 25
+svn:wc:ra_dav:version-url
+V 100
+/svn/!svn/ver/327/trunk/python/lib/django-1.2/django/contrib/admin/media/js/getElementsBySelector.js
+END
+dateparse.js
+K 25
+svn:wc:ra_dav:version-url
+V 88
+/svn/!svn/ver/327/trunk/python/lib/django-1.2/django/contrib/admin/media/js/dateparse.js
+END
+calendar.js
+K 25
+svn:wc:ra_dav:version-url
+V 87
+/svn/!svn/ver/327/trunk/python/lib/django-1.2/django/contrib/admin/media/js/calendar.js
+END
+urlify.js
+K 25
+svn:wc:ra_dav:version-url
+V 85
+/svn/!svn/ver/327/trunk/python/lib/django-1.2/django/contrib/admin/media/js/urlify.js
+END
+jquery.js
+K 25
+svn:wc:ra_dav:version-url
+V 85
+/svn/!svn/ver/327/trunk/python/lib/django-1.2/django/contrib/admin/media/js/jquery.js
+END
+jquery.init.js
+K 25
+svn:wc:ra_dav:version-url
+V 90
+/svn/!svn/ver/327/trunk/python/lib/django-1.2/django/contrib/admin/media/js/jquery.init.js
+END
+actions.min.js
+K 25
+svn:wc:ra_dav:version-url
+V 90
+/svn/!svn/ver/327/trunk/python/lib/django-1.2/django/contrib/admin/media/js/actions.min.js
+END
+prepopulate.min.js
+K 25
+svn:wc:ra_dav:version-url
+V 94
+/svn/!svn/ver/327/trunk/python/lib/django-1.2/django/contrib/admin/media/js/prepopulate.min.js
+END
+inlines.min.js
+K 25
+svn:wc:ra_dav:version-url
+V 90
+/svn/!svn/ver/327/trunk/python/lib/django-1.2/django/contrib/admin/media/js/inlines.min.js
+END
+collapse.min.js
+K 25
+svn:wc:ra_dav:version-url
+V 91
+/svn/!svn/ver/327/trunk/python/lib/django-1.2/django/contrib/admin/media/js/collapse.min.js
+END
+SelectBox.js
+K 25
+svn:wc:ra_dav:version-url
+V 88
+/svn/!svn/ver/327/trunk/python/lib/django-1.2/django/contrib/admin/media/js/SelectBox.js
+END
+core.js
+K 25
+svn:wc:ra_dav:version-url
+V 83
+/svn/!svn/ver/327/trunk/python/lib/django-1.2/django/contrib/admin/media/js/core.js
+END
+timeparse.js
+K 25
+svn:wc:ra_dav:version-url
+V 88
+/svn/!svn/ver/327/trunk/python/lib/django-1.2/django/contrib/admin/media/js/timeparse.js
+END
+actions.js
+K 25
+svn:wc:ra_dav:version-url
+V 86
+/svn/!svn/ver/327/trunk/python/lib/django-1.2/django/contrib/admin/media/js/actions.js
+END
+prepopulate.js
+K 25
+svn:wc:ra_dav:version-url
+V 90
+/svn/!svn/ver/327/trunk/python/lib/django-1.2/django/contrib/admin/media/js/prepopulate.js
+END
+jquery.min.js
+K 25
+svn:wc:ra_dav:version-url
+V 89
+/svn/!svn/ver/327/trunk/python/lib/django-1.2/django/contrib/admin/media/js/jquery.min.js
+END
+inlines.js
+K 25
+svn:wc:ra_dav:version-url
+V 86
+/svn/!svn/ver/327/trunk/python/lib/django-1.2/django/contrib/admin/media/js/inlines.js
+END
+collapse.js
+K 25
+svn:wc:ra_dav:version-url
+V 87
+/svn/!svn/ver/327/trunk/python/lib/django-1.2/django/contrib/admin/media/js/collapse.js
+END
+LICENSE-JQUERY.txt
+K 25
+svn:wc:ra_dav:version-url
+V 94
+/svn/!svn/ver/327/trunk/python/lib/django-1.2/django/contrib/admin/media/js/LICENSE-JQUERY.txt
+END

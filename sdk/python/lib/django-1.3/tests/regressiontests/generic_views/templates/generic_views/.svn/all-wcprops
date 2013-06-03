@@ -1,0 +1,137 @@
+K 25
+svn:wc:ra_dav:version-url
+V 105
+/svn/!svn/ver/327/trunk/python/lib/django-1.3/tests/regressiontests/generic_views/templates/generic_views
+END
+book_detail.html
+K 25
+svn:wc:ra_dav:version-url
+V 122
+/svn/!svn/ver/327/trunk/python/lib/django-1.3/tests/regressiontests/generic_views/templates/generic_views/book_detail.html
+END
+confirm_delete.html
+K 25
+svn:wc:ra_dav:version-url
+V 125
+/svn/!svn/ver/327/trunk/python/lib/django-1.3/tests/regressiontests/generic_views/templates/generic_views/confirm_delete.html
+END
+apple_detail.html
+K 25
+svn:wc:ra_dav:version-url
+V 123
+/svn/!svn/ver/327/trunk/python/lib/django-1.3/tests/regressiontests/generic_views/templates/generic_views/apple_detail.html
+END
+author_detail.html
+K 25
+svn:wc:ra_dav:version-url
+V 124
+/svn/!svn/ver/327/trunk/python/lib/django-1.3/tests/regressiontests/generic_views/templates/generic_views/author_detail.html
+END
+book_list.html
+K 25
+svn:wc:ra_dav:version-url
+V 120
+/svn/!svn/ver/327/trunk/python/lib/django-1.3/tests/regressiontests/generic_views/templates/generic_views/book_list.html
+END
+author_form.html
+K 25
+svn:wc:ra_dav:version-url
+V 122
+/svn/!svn/ver/327/trunk/python/lib/django-1.3/tests/regressiontests/generic_views/templates/generic_views/author_form.html
+END
+artist_detail.html
+K 25
+svn:wc:ra_dav:version-url
+V 124
+/svn/!svn/ver/327/trunk/python/lib/django-1.3/tests/regressiontests/generic_views/templates/generic_views/artist_detail.html
+END
+book_archive_day.html
+K 25
+svn:wc:ra_dav:version-url
+V 127
+/svn/!svn/ver/327/trunk/python/lib/django-1.3/tests/regressiontests/generic_views/templates/generic_views/book_archive_day.html
+END
+artist_form.html
+K 25
+svn:wc:ra_dav:version-url
+V 122
+/svn/!svn/ver/327/trunk/python/lib/django-1.3/tests/regressiontests/generic_views/templates/generic_views/artist_form.html
+END
+book_archive.html
+K 25
+svn:wc:ra_dav:version-url
+V 123
+/svn/!svn/ver/327/trunk/python/lib/django-1.3/tests/regressiontests/generic_views/templates/generic_views/book_archive.html
+END
+author_view.html
+K 25
+svn:wc:ra_dav:version-url
+V 122
+/svn/!svn/ver/327/trunk/python/lib/django-1.3/tests/regressiontests/generic_views/templates/generic_views/author_view.html
+END
+author_list.html
+K 25
+svn:wc:ra_dav:version-url
+V 122
+/svn/!svn/ver/327/trunk/python/lib/django-1.3/tests/regressiontests/generic_views/templates/generic_views/author_list.html
+END
+book_archive_month.html
+K 25
+svn:wc:ra_dav:version-url
+V 129
+/svn/!svn/ver/327/trunk/python/lib/django-1.3/tests/regressiontests/generic_views/templates/generic_views/book_archive_month.html
+END
+author_confirm_delete.html
+K 25
+svn:wc:ra_dav:version-url
+V 132
+/svn/!svn/ver/327/trunk/python/lib/django-1.3/tests/regressiontests/generic_views/templates/generic_views/author_confirm_delete.html
+END
+detail.html
+K 25
+svn:wc:ra_dav:version-url
+V 117
+/svn/!svn/ver/327/trunk/python/lib/django-1.3/tests/regressiontests/generic_views/templates/generic_views/detail.html
+END
+form.html
+K 25
+svn:wc:ra_dav:version-url
+V 115
+/svn/!svn/ver/327/trunk/python/lib/django-1.3/tests/regressiontests/generic_views/templates/generic_views/form.html
+END
+book_archive_week.html
+K 25
+svn:wc:ra_dav:version-url
+V 128
+/svn/!svn/ver/327/trunk/python/lib/django-1.3/tests/regressiontests/generic_views/templates/generic_views/book_archive_week.html
+END
+page_template.html
+K 25
+svn:wc:ra_dav:version-url
+V 124
+/svn/!svn/ver/327/trunk/python/lib/django-1.3/tests/regressiontests/generic_views/templates/generic_views/page_template.html
+END
+about.html
+K 25
+svn:wc:ra_dav:version-url
+V 116
+/svn/!svn/ver/327/trunk/python/lib/django-1.3/tests/regressiontests/generic_views/templates/generic_views/about.html
+END
+author_objects.html
+K 25
+svn:wc:ra_dav:version-url
+V 125
+/svn/!svn/ver/327/trunk/python/lib/django-1.3/tests/regressiontests/generic_views/templates/generic_views/author_objects.html
+END
+list.html
+K 25
+svn:wc:ra_dav:version-url
+V 115
+/svn/!svn/ver/327/trunk/python/lib/django-1.3/tests/regressiontests/generic_views/templates/generic_views/list.html
+END
+book_archive_year.html
+K 25
+svn:wc:ra_dav:version-url
+V 128
+/svn/!svn/ver/327/trunk/python/lib/django-1.3/tests/regressiontests/generic_views/templates/generic_views/book_archive_year.html
+END

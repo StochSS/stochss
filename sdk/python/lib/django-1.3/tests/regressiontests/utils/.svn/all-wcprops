@@ -1,0 +1,107 @@
+K 25
+svn:wc:ra_dav:version-url
+V 73
+/svn/!svn/ver/327/trunk/python/lib/django-1.3/tests/regressiontests/utils
+END
+termcolors.py
+K 25
+svn:wc:ra_dav:version-url
+V 87
+/svn/!svn/ver/327/trunk/python/lib/django-1.3/tests/regressiontests/utils/termcolors.py
+END
+datetime_safe.py
+K 25
+svn:wc:ra_dav:version-url
+V 90
+/svn/!svn/ver/327/trunk/python/lib/django-1.3/tests/regressiontests/utils/datetime_safe.py
+END
+tests.py
+K 25
+svn:wc:ra_dav:version-url
+V 82
+/svn/!svn/ver/327/trunk/python/lib/django-1.3/tests/regressiontests/utils/tests.py
+END
+functional.py
+K 25
+svn:wc:ra_dav:version-url
+V 87
+/svn/!svn/ver/327/trunk/python/lib/django-1.3/tests/regressiontests/utils/functional.py
+END
+html.py
+K 25
+svn:wc:ra_dav:version-url
+V 81
+/svn/!svn/ver/327/trunk/python/lib/django-1.3/tests/regressiontests/utils/html.py
+END
+decorators.py
+K 25
+svn:wc:ra_dav:version-url
+V 87
+/svn/!svn/ver/327/trunk/python/lib/django-1.3/tests/regressiontests/utils/decorators.py
+END
+tzinfo.py
+K 25
+svn:wc:ra_dav:version-url
+V 83
+/svn/!svn/ver/327/trunk/python/lib/django-1.3/tests/regressiontests/utils/tzinfo.py
+END
+feedgenerator.py
+K 25
+svn:wc:ra_dav:version-url
+V 90
+/svn/!svn/ver/327/trunk/python/lib/django-1.3/tests/regressiontests/utils/feedgenerator.py
+END
+datastructures.py
+K 25
+svn:wc:ra_dav:version-url
+V 91
+/svn/!svn/ver/327/trunk/python/lib/django-1.3/tests/regressiontests/utils/datastructures.py
+END
+http.py
+K 25
+svn:wc:ra_dav:version-url
+V 81
+/svn/!svn/ver/327/trunk/python/lib/django-1.3/tests/regressiontests/utils/http.py
+END
+timesince.py
+K 25
+svn:wc:ra_dav:version-url
+V 86
+/svn/!svn/ver/327/trunk/python/lib/django-1.3/tests/regressiontests/utils/timesince.py
+END
+simplelazyobject.py
+K 25
+svn:wc:ra_dav:version-url
+V 93
+/svn/!svn/ver/327/trunk/python/lib/django-1.3/tests/regressiontests/utils/simplelazyobject.py
+END
+module_loading.py
+K 25
+svn:wc:ra_dav:version-url
+V 91
+/svn/!svn/ver/327/trunk/python/lib/django-1.3/tests/regressiontests/utils/module_loading.py
+END
+models.py
+K 25
+svn:wc:ra_dav:version-url
+V 83
+/svn/!svn/ver/327/trunk/python/lib/django-1.3/tests/regressiontests/utils/models.py
+END
+text.py
+K 25
+svn:wc:ra_dav:version-url
+V 81
+/svn/!svn/ver/327/trunk/python/lib/django-1.3/tests/regressiontests/utils/text.py
+END
+checksums.py
+K 25
+svn:wc:ra_dav:version-url
+V 86
+/svn/!svn/ver/327/trunk/python/lib/django-1.3/tests/regressiontests/utils/checksums.py
+END
+dateformat.py
+K 25
+svn:wc:ra_dav:version-url
+V 87
+/svn/!svn/ver/327/trunk/python/lib/django-1.3/tests/regressiontests/utils/dateformat.py
+END

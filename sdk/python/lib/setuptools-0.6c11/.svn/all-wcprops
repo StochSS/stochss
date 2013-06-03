@@ -1,0 +1,23 @@
+K 25
+svn:wc:ra_dav:version-url
+V 52
+/svn/!svn/ver/327/trunk/python/lib/setuptools-0.6c11
+END
+pkg_resources.py
+K 25
+svn:wc:ra_dav:version-url
+V 69
+/svn/!svn/ver/327/trunk/python/lib/setuptools-0.6c11/pkg_resources.py
+END
+LICENSE
+K 25
+svn:wc:ra_dav:version-url
+V 60
+/svn/!svn/ver/327/trunk/python/lib/setuptools-0.6c11/LICENSE
+END
+easy_install.py
+K 25
+svn:wc:ra_dav:version-url
+V 68
+/svn/!svn/ver/327/trunk/python/lib/setuptools-0.6c11/easy_install.py
+END

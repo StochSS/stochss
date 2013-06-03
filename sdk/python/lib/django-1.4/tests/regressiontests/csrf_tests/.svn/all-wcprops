@@ -1,0 +1,17 @@
+K 25
+svn:wc:ra_dav:version-url
+V 78
+/svn/!svn/ver/327/trunk/python/lib/django-1.4/tests/regressiontests/csrf_tests
+END
+tests.py
+K 25
+svn:wc:ra_dav:version-url
+V 87
+/svn/!svn/ver/327/trunk/python/lib/django-1.4/tests/regressiontests/csrf_tests/tests.py
+END
+models.py
+K 25
+svn:wc:ra_dav:version-url
+V 88
+/svn/!svn/ver/327/trunk/python/lib/django-1.4/tests/regressiontests/csrf_tests/models.py
+END

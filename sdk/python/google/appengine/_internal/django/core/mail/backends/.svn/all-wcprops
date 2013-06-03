@@ -1,0 +1,47 @@
+K 25
+svn:wc:ra_dav:version-url
+V 83
+/svn/!svn/ver/327/trunk/python/google/appengine/_internal/django/core/mail/backends
+END
+base.py
+K 25
+svn:wc:ra_dav:version-url
+V 91
+/svn/!svn/ver/327/trunk/python/google/appengine/_internal/django/core/mail/backends/base.py
+END
+dummy.py
+K 25
+svn:wc:ra_dav:version-url
+V 92
+/svn/!svn/ver/327/trunk/python/google/appengine/_internal/django/core/mail/backends/dummy.py
+END
+locmem.py
+K 25
+svn:wc:ra_dav:version-url
+V 93
+/svn/!svn/ver/327/trunk/python/google/appengine/_internal/django/core/mail/backends/locmem.py
+END
+filebased.py
+K 25
+svn:wc:ra_dav:version-url
+V 96
+/svn/!svn/ver/327/trunk/python/google/appengine/_internal/django/core/mail/backends/filebased.py
+END
+__init__.py
+K 25
+svn:wc:ra_dav:version-url
+V 95
+/svn/!svn/ver/327/trunk/python/google/appengine/_internal/django/core/mail/backends/__init__.py
+END
+console.py
+K 25
+svn:wc:ra_dav:version-url
+V 94
+/svn/!svn/ver/327/trunk/python/google/appengine/_internal/django/core/mail/backends/console.py
+END
+smtp.py
+K 25
+svn:wc:ra_dav:version-url
+V 91
+/svn/!svn/ver/327/trunk/python/google/appengine/_internal/django/core/mail/backends/smtp.py
+END

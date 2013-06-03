@@ -1,0 +1,65 @@
+K 25
+svn:wc:ra_dav:version-url
+V 66
+/svn/!svn/ver/327/trunk/python/lib/django-1.4/django/views/generic
+END
+simple.py
+K 25
+svn:wc:ra_dav:version-url
+V 76
+/svn/!svn/ver/327/trunk/python/lib/django-1.4/django/views/generic/simple.py
+END
+base.py
+K 25
+svn:wc:ra_dav:version-url
+V 74
+/svn/!svn/ver/327/trunk/python/lib/django-1.4/django/views/generic/base.py
+END
+date_based.py
+K 25
+svn:wc:ra_dav:version-url
+V 80
+/svn/!svn/ver/327/trunk/python/lib/django-1.4/django/views/generic/date_based.py
+END
+list.py
+K 25
+svn:wc:ra_dav:version-url
+V 74
+/svn/!svn/ver/327/trunk/python/lib/django-1.4/django/views/generic/list.py
+END
+list_detail.py
+K 25
+svn:wc:ra_dav:version-url
+V 81
+/svn/!svn/ver/327/trunk/python/lib/django-1.4/django/views/generic/list_detail.py
+END
+__init__.py
+K 25
+svn:wc:ra_dav:version-url
+V 78
+/svn/!svn/ver/327/trunk/python/lib/django-1.4/django/views/generic/__init__.py
+END
+dates.py
+K 25
+svn:wc:ra_dav:version-url
+V 75
+/svn/!svn/ver/327/trunk/python/lib/django-1.4/django/views/generic/dates.py
+END
+detail.py
+K 25
+svn:wc:ra_dav:version-url
+V 76
+/svn/!svn/ver/327/trunk/python/lib/django-1.4/django/views/generic/detail.py
+END
+edit.py
+K 25
+svn:wc:ra_dav:version-url
+V 74
+/svn/!svn/ver/327/trunk/python/lib/django-1.4/django/views/generic/edit.py
+END
+create_update.py
+K 25
+svn:wc:ra_dav:version-url
+V 83
+/svn/!svn/ver/327/trunk/python/lib/django-1.4/django/views/generic/create_update.py
+END

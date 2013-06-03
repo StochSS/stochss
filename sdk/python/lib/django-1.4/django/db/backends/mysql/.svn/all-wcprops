@@ -1,0 +1,41 @@
+K 25
+svn:wc:ra_dav:version-url
+V 70
+/svn/!svn/ver/327/trunk/python/lib/django-1.4/django/db/backends/mysql
+END
+base.py
+K 25
+svn:wc:ra_dav:version-url
+V 78
+/svn/!svn/ver/327/trunk/python/lib/django-1.4/django/db/backends/mysql/base.py
+END
+validation.py
+K 25
+svn:wc:ra_dav:version-url
+V 84
+/svn/!svn/ver/327/trunk/python/lib/django-1.4/django/db/backends/mysql/validation.py
+END
+compiler.py
+K 25
+svn:wc:ra_dav:version-url
+V 82
+/svn/!svn/ver/327/trunk/python/lib/django-1.4/django/db/backends/mysql/compiler.py
+END
+client.py
+K 25
+svn:wc:ra_dav:version-url
+V 80
+/svn/!svn/ver/327/trunk/python/lib/django-1.4/django/db/backends/mysql/client.py
+END
+introspection.py
+K 25
+svn:wc:ra_dav:version-url
+V 87
+/svn/!svn/ver/327/trunk/python/lib/django-1.4/django/db/backends/mysql/introspection.py
+END
+creation.py
+K 25
+svn:wc:ra_dav:version-url
+V 82
+/svn/!svn/ver/327/trunk/python/lib/django-1.4/django/db/backends/mysql/creation.py
+END

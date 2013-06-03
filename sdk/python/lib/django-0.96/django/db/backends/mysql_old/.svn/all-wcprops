@@ -1,0 +1,29 @@
+K 25
+svn:wc:ra_dav:version-url
+V 75
+/svn/!svn/ver/327/trunk/python/lib/django-0.96/django/db/backends/mysql_old
+END
+base.py
+K 25
+svn:wc:ra_dav:version-url
+V 83
+/svn/!svn/ver/327/trunk/python/lib/django-0.96/django/db/backends/mysql_old/base.py
+END
+client.py
+K 25
+svn:wc:ra_dav:version-url
+V 85
+/svn/!svn/ver/327/trunk/python/lib/django-0.96/django/db/backends/mysql_old/client.py
+END
+introspection.py
+K 25
+svn:wc:ra_dav:version-url
+V 92
+/svn/!svn/ver/327/trunk/python/lib/django-0.96/django/db/backends/mysql_old/introspection.py
+END
+creation.py
+K 25
+svn:wc:ra_dav:version-url
+V 87
+/svn/!svn/ver/327/trunk/python/lib/django-0.96/django/db/backends/mysql_old/creation.py
+END

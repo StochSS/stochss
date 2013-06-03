@@ -1,0 +1,389 @@
+K 25
+svn:wc:ra_dav:version-url
+V 67
+/svn/!svn/ver/339/trunk/python/google/appengine/tools/devappserver2
+END
+wsgi_request_info_test.py
+K 25
+svn:wc:ra_dav:version-url
+V 93
+/svn/!svn/ver/327/trunk/python/google/appengine/tools/devappserver2/wsgi_request_info_test.py
+END
+wsgi_request_info.py
+K 25
+svn:wc:ra_dav:version-url
+V 88
+/svn/!svn/ver/327/trunk/python/google/appengine/tools/devappserver2/wsgi_request_info.py
+END
+__init__.py
+K 25
+svn:wc:ra_dav:version-url
+V 79
+/svn/!svn/ver/327/trunk/python/google/appengine/tools/devappserver2/__init__.py
+END
+url_handler.py
+K 25
+svn:wc:ra_dav:version-url
+V 82
+/svn/!svn/ver/327/trunk/python/google/appengine/tools/devappserver2/url_handler.py
+END
+server.py
+K 25
+svn:wc:ra_dav:version-url
+V 77
+/svn/!svn/ver/339/trunk/python/google/appengine/tools/devappserver2/server.py
+END
+static_files_handler.py
+K 25
+svn:wc:ra_dav:version-url
+V 91
+/svn/!svn/ver/327/trunk/python/google/appengine/tools/devappserver2/static_files_handler.py
+END
+login_test.py
+K 25
+svn:wc:ra_dav:version-url
+V 81
+/svn/!svn/ver/327/trunk/python/google/appengine/tools/devappserver2/login_test.py
+END
+login.py
+K 25
+svn:wc:ra_dav:version-url
+V 76
+/svn/!svn/ver/327/trunk/python/google/appengine/tools/devappserver2/login.py
+END
+request_rewriter.py
+K 25
+svn:wc:ra_dav:version-url
+V 87
+/svn/!svn/ver/327/trunk/python/google/appengine/tools/devappserver2/request_rewriter.py
+END
+util.py
+K 25
+svn:wc:ra_dav:version-url
+V 75
+/svn/!svn/ver/327/trunk/python/google/appengine/tools/devappserver2/util.py
+END
+scheduled_executor_test.py
+K 25
+svn:wc:ra_dav:version-url
+V 94
+/svn/!svn/ver/327/trunk/python/google/appengine/tools/devappserver2/scheduled_executor_test.py
+END
+win32_file_watcher.py
+K 25
+svn:wc:ra_dav:version-url
+V 89
+/svn/!svn/ver/327/trunk/python/google/appengine/tools/devappserver2/win32_file_watcher.py
+END
+thread_executor_test.py
+K 25
+svn:wc:ra_dav:version-url
+V 91
+/svn/!svn/ver/327/trunk/python/google/appengine/tools/devappserver2/thread_executor_test.py
+END
+dispatcher_test.py
+K 25
+svn:wc:ra_dav:version-url
+V 86
+/svn/!svn/ver/339/trunk/python/google/appengine/tools/devappserver2/dispatcher_test.py
+END
+safe_subprocess.py
+K 25
+svn:wc:ra_dav:version-url
+V 86
+/svn/!svn/ver/327/trunk/python/google/appengine/tools/devappserver2/safe_subprocess.py
+END
+mtime_file_watcher.py
+K 25
+svn:wc:ra_dav:version-url
+V 89
+/svn/!svn/ver/339/trunk/python/google/appengine/tools/devappserver2/mtime_file_watcher.py
+END
+application_configuration.py
+K 25
+svn:wc:ra_dav:version-url
+V 96
+/svn/!svn/ver/339/trunk/python/google/appengine/tools/devappserver2/application_configuration.py
+END
+file_watcher.py
+K 25
+svn:wc:ra_dav:version-url
+V 83
+/svn/!svn/ver/339/trunk/python/google/appengine/tools/devappserver2/file_watcher.py
+END
+inotify_file_watcher.py
+K 25
+svn:wc:ra_dav:version-url
+V 91
+/svn/!svn/ver/339/trunk/python/google/appengine/tools/devappserver2/inotify_file_watcher.py
+END
+wsgi_server_test.py
+K 25
+svn:wc:ra_dav:version-url
+V 87
+/svn/!svn/ver/339/trunk/python/google/appengine/tools/devappserver2/wsgi_server_test.py
+END
+api_server_test.py
+K 25
+svn:wc:ra_dav:version-url
+V 86
+/svn/!svn/ver/327/trunk/python/google/appengine/tools/devappserver2/api_server_test.py
+END
+blob_download.py
+K 25
+svn:wc:ra_dav:version-url
+V 84
+/svn/!svn/ver/327/trunk/python/google/appengine/tools/devappserver2/blob_download.py
+END
+update_checker.py
+K 25
+svn:wc:ra_dav:version-url
+V 85
+/svn/!svn/ver/327/trunk/python/google/appengine/tools/devappserver2/update_checker.py
+END
+go_runtime.py
+K 25
+svn:wc:ra_dav:version-url
+V 81
+/svn/!svn/ver/339/trunk/python/google/appengine/tools/devappserver2/go_runtime.py
+END
+runtime_config_pb2.py
+K 25
+svn:wc:ra_dav:version-url
+V 89
+/svn/!svn/ver/339/trunk/python/google/appengine/tools/devappserver2/runtime_config_pb2.py
+END
+constants.py
+K 25
+svn:wc:ra_dav:version-url
+V 80
+/svn/!svn/ver/327/trunk/python/google/appengine/tools/devappserver2/constants.py
+END
+util_test.py
+K 25
+svn:wc:ra_dav:version-url
+V 80
+/svn/!svn/ver/327/trunk/python/google/appengine/tools/devappserver2/util_test.py
+END
+http_runtime_constants.py
+K 25
+svn:wc:ra_dav:version-url
+V 93
+/svn/!svn/ver/327/trunk/python/google/appengine/tools/devappserver2/http_runtime_constants.py
+END
+blob_image_test.py
+K 25
+svn:wc:ra_dav:version-url
+V 86
+/svn/!svn/ver/327/trunk/python/google/appengine/tools/devappserver2/blob_image_test.py
+END
+blob_image.py
+K 25
+svn:wc:ra_dav:version-url
+V 81
+/svn/!svn/ver/327/trunk/python/google/appengine/tools/devappserver2/blob_image.py
+END
+http_runtime_test.py
+K 25
+svn:wc:ra_dav:version-url
+V 88
+/svn/!svn/ver/327/trunk/python/google/appengine/tools/devappserver2/http_runtime_test.py
+END
+blob_upload.py
+K 25
+svn:wc:ra_dav:version-url
+V 82
+/svn/!svn/ver/327/trunk/python/google/appengine/tools/devappserver2/blob_upload.py
+END
+go_application.py
+K 25
+svn:wc:ra_dav:version-url
+V 85
+/svn/!svn/ver/339/trunk/python/google/appengine/tools/devappserver2/go_application.py
+END
+start_response_utils_test.py
+K 25
+svn:wc:ra_dav:version-url
+V 96
+/svn/!svn/ver/327/trunk/python/google/appengine/tools/devappserver2/start_response_utils_test.py
+END
+inotify_file_watcher_test.py
+K 25
+svn:wc:ra_dav:version-url
+V 96
+/svn/!svn/ver/327/trunk/python/google/appengine/tools/devappserver2/inotify_file_watcher_test.py
+END
+api_server.py
+K 25
+svn:wc:ra_dav:version-url
+V 81
+/svn/!svn/ver/339/trunk/python/google/appengine/tools/devappserver2/api_server.py
+END
+wsgi_server.py
+K 25
+svn:wc:ra_dav:version-url
+V 82
+/svn/!svn/ver/339/trunk/python/google/appengine/tools/devappserver2/wsgi_server.py
+END
+instance_test.py
+K 25
+svn:wc:ra_dav:version-url
+V 84
+/svn/!svn/ver/339/trunk/python/google/appengine/tools/devappserver2/instance_test.py
+END
+blob_download_test.py
+K 25
+svn:wc:ra_dav:version-url
+V 89
+/svn/!svn/ver/327/trunk/python/google/appengine/tools/devappserver2/blob_download_test.py
+END
+instance.py
+K 25
+svn:wc:ra_dav:version-url
+V 79
+/svn/!svn/ver/339/trunk/python/google/appengine/tools/devappserver2/instance.py
+END
+server_test.py
+K 25
+svn:wc:ra_dav:version-url
+V 82
+/svn/!svn/ver/339/trunk/python/google/appengine/tools/devappserver2/server_test.py
+END
+static_files_handler_test.py
+K 25
+svn:wc:ra_dav:version-url
+V 96
+/svn/!svn/ver/327/trunk/python/google/appengine/tools/devappserver2/static_files_handler_test.py
+END
+wsgi_handler.py
+K 25
+svn:wc:ra_dav:version-url
+V 83
+/svn/!svn/ver/327/trunk/python/google/appengine/tools/devappserver2/wsgi_handler.py
+END
+shutdown_test.py
+K 25
+svn:wc:ra_dav:version-url
+V 84
+/svn/!svn/ver/327/trunk/python/google/appengine/tools/devappserver2/shutdown_test.py
+END
+win32_file_watcher_test.py
+K 25
+svn:wc:ra_dav:version-url
+V 94
+/svn/!svn/ver/327/trunk/python/google/appengine/tools/devappserver2/win32_file_watcher_test.py
+END
+scheduled_executor.py
+K 25
+svn:wc:ra_dav:version-url
+V 89
+/svn/!svn/ver/327/trunk/python/google/appengine/tools/devappserver2/scheduled_executor.py
+END
+dispatcher.py
+K 25
+svn:wc:ra_dav:version-url
+V 81
+/svn/!svn/ver/339/trunk/python/google/appengine/tools/devappserver2/dispatcher.py
+END
+devappserver2_test.py
+K 25
+svn:wc:ra_dav:version-url
+V 89
+/svn/!svn/ver/339/trunk/python/google/appengine/tools/devappserver2/devappserver2_test.py
+END
+wsgi_test_utils.py
+K 25
+svn:wc:ra_dav:version-url
+V 86
+/svn/!svn/ver/327/trunk/python/google/appengine/tools/devappserver2/wsgi_test_utils.py
+END
+devappserver2.py
+K 25
+svn:wc:ra_dav:version-url
+V 84
+/svn/!svn/ver/339/trunk/python/google/appengine/tools/devappserver2/devappserver2.py
+END
+application_configuration_test.py
+K 25
+svn:wc:ra_dav:version-url
+V 101
+/svn/!svn/ver/339/trunk/python/google/appengine/tools/devappserver2/application_configuration_test.py
+END
+start_response_utils.py
+K 25
+svn:wc:ra_dav:version-url
+V 91
+/svn/!svn/ver/327/trunk/python/google/appengine/tools/devappserver2/start_response_utils.py
+END
+url_handler_test.py
+K 25
+svn:wc:ra_dav:version-url
+V 87
+/svn/!svn/ver/327/trunk/python/google/appengine/tools/devappserver2/url_handler_test.py
+END
+update_checker_test.py
+K 25
+svn:wc:ra_dav:version-url
+V 90
+/svn/!svn/ver/327/trunk/python/google/appengine/tools/devappserver2/update_checker_test.py
+END
+channel_test.py
+K 25
+svn:wc:ra_dav:version-url
+V 83
+/svn/!svn/ver/327/trunk/python/google/appengine/tools/devappserver2/channel_test.py
+END
+channel.py
+K 25
+svn:wc:ra_dav:version-url
+V 78
+/svn/!svn/ver/327/trunk/python/google/appengine/tools/devappserver2/channel.py
+END
+request_rewriter_test.py
+K 25
+svn:wc:ra_dav:version-url
+V 92
+/svn/!svn/ver/327/trunk/python/google/appengine/tools/devappserver2/request_rewriter_test.py
+END
+shutdown.py
+K 25
+svn:wc:ra_dav:version-url
+V 79
+/svn/!svn/ver/327/trunk/python/google/appengine/tools/devappserver2/shutdown.py
+END
+errors.py
+K 25
+svn:wc:ra_dav:version-url
+V 77
+/svn/!svn/ver/327/trunk/python/google/appengine/tools/devappserver2/errors.py
+END
+blob_upload_test.py
+K 25
+svn:wc:ra_dav:version-url
+V 87
+/svn/!svn/ver/327/trunk/python/google/appengine/tools/devappserver2/blob_upload_test.py
+END
+http_runtime.py
+K 25
+svn:wc:ra_dav:version-url
+V 83
+/svn/!svn/ver/327/trunk/python/google/appengine/tools/devappserver2/http_runtime.py
+END
+python_runtime.py
+K 25
+svn:wc:ra_dav:version-url
+V 85
+/svn/!svn/ver/327/trunk/python/google/appengine/tools/devappserver2/python_runtime.py
+END
+thread_executor.py
+K 25
+svn:wc:ra_dav:version-url
+V 86
+/svn/!svn/ver/327/trunk/python/google/appengine/tools/devappserver2/thread_executor.py
+END
+mtime_file_watcher_test.py
+K 25
+svn:wc:ra_dav:version-url
+V 94
+/svn/!svn/ver/339/trunk/python/google/appengine/tools/devappserver2/mtime_file_watcher_test.py
+END

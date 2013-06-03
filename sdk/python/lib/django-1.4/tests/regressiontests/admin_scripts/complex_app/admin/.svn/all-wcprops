@@ -1,0 +1,11 @@
+K 25
+svn:wc:ra_dav:version-url
+V 99
+/svn/!svn/ver/327/trunk/python/lib/django-1.4/tests/regressiontests/admin_scripts/complex_app/admin
+END
+foo.py
+K 25
+svn:wc:ra_dav:version-url
+V 106
+/svn/!svn/ver/327/trunk/python/lib/django-1.4/tests/regressiontests/admin_scripts/complex_app/admin/foo.py
+END

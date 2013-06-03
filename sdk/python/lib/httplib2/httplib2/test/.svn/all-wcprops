@@ -1,0 +1,35 @@
+K 25
+svn:wc:ra_dav:version-url
+V 57
+/svn/!svn/ver/327/trunk/python/lib/httplib2/httplib2/test
+END
+other_cacerts.txt
+K 25
+svn:wc:ra_dav:version-url
+V 75
+/svn/!svn/ver/327/trunk/python/lib/httplib2/httplib2/test/other_cacerts.txt
+END
+smoke_test.py
+K 25
+svn:wc:ra_dav:version-url
+V 71
+/svn/!svn/ver/327/trunk/python/lib/httplib2/httplib2/test/smoke_test.py
+END
+__init__.py
+K 25
+svn:wc:ra_dav:version-url
+V 69
+/svn/!svn/ver/224/trunk/python/lib/httplib2/httplib2/test/__init__.py
+END
+test_no_socket.py
+K 25
+svn:wc:ra_dav:version-url
+V 75
+/svn/!svn/ver/327/trunk/python/lib/httplib2/httplib2/test/test_no_socket.py
+END
+miniserver.py
+K 25
+svn:wc:ra_dav:version-url
+V 71
+/svn/!svn/ver/327/trunk/python/lib/httplib2/httplib2/test/miniserver.py
+END

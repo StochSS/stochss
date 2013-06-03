@@ -1,0 +1,135 @@
+{% extends "simulate.html" %}
+{% block title%}Simulate{% endblock %}
+{% block simulatecontent %}
+<div class="row-fluid">
+<div class="span9">
+<div class="well well-large">
+    <form id="submit_stochkit_ensemble" method="post" action="/simulate/newstochkitensemble">
+        
+        <h2> New StochKit2 Ensemble <a data-toggle="modal" href="#help-modal" style="text-decoration: none"><i class="icon-question-sign"></i></a></h2>
+        <label>Name:</label>
+        <input type="text" class="span3" name="job_name" value="">
+            
+        <span class="help-block">The name that will be used to reference the ensemble.</span>
+        <h3>Required Parameters</h3>
+        <br />
+            Simulation time
+        <br />
+        <input type="text" class="input-small" disabled="disabled" value="0">
+            &nbsp; to &nbsp;
+        <input type="text" class="input-small" name="time" placeholder="100">
+            &nbsp; store state every &nbsp;
+        <input type="text" class="input-small" name="increment" placeholder="0.1"> &nbsp; time units.
+            
+        <br />
+        <label>Realizations</label>
+        <input type="text" class="span3" name="realizations" value="1">
+        <span class="help-block">Number of realizations in this ensemble.</span>
+        <br />
+                            
+        <div>
+        <label>Algorithm</label>
+        <input type="radio" name="algorithm" value="ssa" checked> SSA</input>
+        <input style="padding-left: 100px;" type="radio" name="algorithm" value="tau_leaping"> Tau-leaping</input>
+        </div>
+        </br></br>
+          
+        <!-- Optional parameters to the SSA and Tau-leaping solvers. -->
+        <h3>
+            <a data-toggle="collapse" data-target="#advanced-settings">
+            Advanced settings&raquo;
+            </a>
+        </h3>
+                            
+        <div id="advanced-settings" class="collapse">
+            
+            <br />
+            <div class="control-group">
+            <label class="checkbox">
+                <input type="checkbox" name="only-moments" value="only-moments">
+                Store only mean and variances
+            </label>
+            <label class="checkbox">
+                <input type="checkbox" name="label-columns" value="label-columns">
+                Label trajectories with species names
+                <span class="help-block"> (Only applicable if all trajectories are stored.)</span>
+
+            </label>
+            <label class="checkbox">
+                <input type="checkbox" name="keep-histograms" value="keep-histograms">
+                Create histogram data
+            </label>
+            
+            </div>
+                                
+            <label>Seed</label>
+            <input type="text" class="span3" name="seed">
+            <span class="help-block">Seed the random number generator (leave empty for a random seed).</span>
+                                    
+            <br />
+                    
+            <label>Epsilon</label>
+            <input type="text" class="span3" name="epsilon" value="0.1">
+            <span class="help-block">Set the tolerance (applicable to tau
+                                     leaping only). Valid values: must be greater than 0.0 and less than 1.0.</span>
+                                        
+            <br />
+            <label>Threshold</label>
+            <input type="text" class="span3" name="threshold" value="10">
+            <span class="help-block">Set the threshold (minimum number of reactions per leap before switching to SSA) for tau leaping.</span>
+                
+        </div> <!-- Advanced settings -->
+                            
+        <br />
+        <!-- Display status messages -->
+        {% if msg %}
+        <br>
+        {% if status == False %}
+        <span style="color: red">{{msg}}</span>
+        {% else %}
+        <span style="color: green">{{msg}}</span>
+        {% endif %}
+        {% endif %}
+        <br>
+        <br>
+
+        <button type="submit" class="btn btn-primary btn-large" name="run_local"><i class="icon-laptop"></i> Run Locally </button>
+            <button type="submit" class="btn btn-primary btn-large" name="run_cloud"><i class="icon-cloud"></i> Run via Cloud</button>
+        
+    </form>
+    
+    <!-- Prevent Submission on pressing enter -->
+    <script>
+    document.getElementById('submit_stochkit_ensemble').addEventListener('keypress', function(event) {
+        if (event.keyCode == 13) {
+            event.preventDefault();
+        }
+    });
+</script>
+
+</div> <!-- well -->
+</div> <!-- span -->
+<div class="span3">
+{% if model_to_simulate  %}
+    <h3>You are simulating:<h3>
+    <p style="COLOR: green; font-size:26px;"> {{model_to_simulate}}</p>
+    <a href="/simulate">Select another model</a>
+{% endif %}
+</div>
+    </div>
+
+<div id="help-modal" class="modal hide fade in" style="display: none; ">
+    <div class="modal-header">
+        <a class="close" data-dismiss="modal">×</a>
+        <h3>Help</h3>
+    </div>
+    <div class="modal-body">
+        <h4>StochKit2 Ensemble</h4>
+        <p>{{Test}}A StochKit2 Ensemble is a collection of trajectories of the model to simulate...Etc.</p>
+    </div>
+  <!--<div class="modal-footer">
+        <a href="#" class="btn" data-dismiss="modal">Close</a>
+    </div>-->
+</div>
+            
+{% endblock %}

@@ -1,0 +1,95 @@
+K 25
+svn:wc:ra_dav:version-url
+V 92
+/svn/!svn/ver/327/trunk/python/lib/django-1.4/django/contrib/databrowse/templates/databrowse
+END
+choice_detail.html
+K 25
+svn:wc:ra_dav:version-url
+V 111
+/svn/!svn/ver/327/trunk/python/lib/django-1.4/django/contrib/databrowse/templates/databrowse/choice_detail.html
+END
+calendar_main.html
+K 25
+svn:wc:ra_dav:version-url
+V 111
+/svn/!svn/ver/327/trunk/python/lib/django-1.4/django/contrib/databrowse/templates/databrowse/calendar_main.html
+END
+calendar_month.html
+K 25
+svn:wc:ra_dav:version-url
+V 112
+/svn/!svn/ver/327/trunk/python/lib/django-1.4/django/contrib/databrowse/templates/databrowse/calendar_month.html
+END
+calendar_homepage.html
+K 25
+svn:wc:ra_dav:version-url
+V 115
+/svn/!svn/ver/327/trunk/python/lib/django-1.4/django/contrib/databrowse/templates/databrowse/calendar_homepage.html
+END
+fieldchoice_detail.html
+K 25
+svn:wc:ra_dav:version-url
+V 116
+/svn/!svn/ver/327/trunk/python/lib/django-1.4/django/contrib/databrowse/templates/databrowse/fieldchoice_detail.html
+END
+model_detail.html
+K 25
+svn:wc:ra_dav:version-url
+V 110
+/svn/!svn/ver/327/trunk/python/lib/django-1.4/django/contrib/databrowse/templates/databrowse/model_detail.html
+END
+choice_list.html
+K 25
+svn:wc:ra_dav:version-url
+V 109
+/svn/!svn/ver/327/trunk/python/lib/django-1.4/django/contrib/databrowse/templates/databrowse/choice_list.html
+END
+homepage.html
+K 25
+svn:wc:ra_dav:version-url
+V 106
+/svn/!svn/ver/327/trunk/python/lib/django-1.4/django/contrib/databrowse/templates/databrowse/homepage.html
+END
+object_detail.html
+K 25
+svn:wc:ra_dav:version-url
+V 111
+/svn/!svn/ver/327/trunk/python/lib/django-1.4/django/contrib/databrowse/templates/databrowse/object_detail.html
+END
+calendar_year.html
+K 25
+svn:wc:ra_dav:version-url
+V 111
+/svn/!svn/ver/327/trunk/python/lib/django-1.4/django/contrib/databrowse/templates/databrowse/calendar_year.html
+END
+fieldchoice_list.html
+K 25
+svn:wc:ra_dav:version-url
+V 114
+/svn/!svn/ver/327/trunk/python/lib/django-1.4/django/contrib/databrowse/templates/databrowse/fieldchoice_list.html
+END
+base_site.html
+K 25
+svn:wc:ra_dav:version-url
+V 107
+/svn/!svn/ver/327/trunk/python/lib/django-1.4/django/contrib/databrowse/templates/databrowse/base_site.html
+END
+fieldchoice_homepage.html
+K 25
+svn:wc:ra_dav:version-url
+V 118
+/svn/!svn/ver/327/trunk/python/lib/django-1.4/django/contrib/databrowse/templates/databrowse/fieldchoice_homepage.html
+END
+calendar_day.html
+K 25
+svn:wc:ra_dav:version-url
+V 110
+/svn/!svn/ver/327/trunk/python/lib/django-1.4/django/contrib/databrowse/templates/databrowse/calendar_day.html
+END
+base.html
+K 25
+svn:wc:ra_dav:version-url
+V 102
+/svn/!svn/ver/327/trunk/python/lib/django-1.4/django/contrib/databrowse/templates/databrowse/base.html
+END

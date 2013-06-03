@@ -1,0 +1,23 @@
+K 25
+svn:wc:ra_dav:version-url
+V 70
+/svn/!svn/ver/327/trunk/python/lib/django-1.4/django/contrib/gis/admin
+END
+options.py
+K 25
+svn:wc:ra_dav:version-url
+V 81
+/svn/!svn/ver/327/trunk/python/lib/django-1.4/django/contrib/gis/admin/options.py
+END
+__init__.py
+K 25
+svn:wc:ra_dav:version-url
+V 82
+/svn/!svn/ver/327/trunk/python/lib/django-1.4/django/contrib/gis/admin/__init__.py
+END
+widgets.py
+K 25
+svn:wc:ra_dav:version-url
+V 81
+/svn/!svn/ver/327/trunk/python/lib/django-1.4/django/contrib/gis/admin/widgets.py
+END

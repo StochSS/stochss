@@ -1,0 +1,23 @@
+K 25
+svn:wc:ra_dav:version-url
+V 57
+/svn/!svn/ver/327/trunk/python/lib/PyAMF-0.6.1/pyamf/util
+END
+pure.py
+K 25
+svn:wc:ra_dav:version-url
+V 65
+/svn/!svn/ver/327/trunk/python/lib/PyAMF-0.6.1/pyamf/util/pure.py
+END
+imports.py
+K 25
+svn:wc:ra_dav:version-url
+V 68
+/svn/!svn/ver/327/trunk/python/lib/PyAMF-0.6.1/pyamf/util/imports.py
+END
+__init__.py
+K 25
+svn:wc:ra_dav:version-url
+V 69
+/svn/!svn/ver/327/trunk/python/lib/PyAMF-0.6.1/pyamf/util/__init__.py
+END

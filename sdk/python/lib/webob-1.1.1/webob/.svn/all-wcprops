@@ -1,0 +1,95 @@
+K 25
+svn:wc:ra_dav:version-url
+V 52
+/svn/!svn/ver/327/trunk/python/lib/webob-1.1.1/webob
+END
+request.py
+K 25
+svn:wc:ra_dav:version-url
+V 63
+/svn/!svn/ver/327/trunk/python/lib/webob-1.1.1/webob/request.py
+END
+acceptparse.py
+K 25
+svn:wc:ra_dav:version-url
+V 67
+/svn/!svn/ver/327/trunk/python/lib/webob-1.1.1/webob/acceptparse.py
+END
+dec.py
+K 25
+svn:wc:ra_dav:version-url
+V 59
+/svn/!svn/ver/327/trunk/python/lib/webob-1.1.1/webob/dec.py
+END
+cookies.py
+K 25
+svn:wc:ra_dav:version-url
+V 63
+/svn/!svn/ver/327/trunk/python/lib/webob-1.1.1/webob/cookies.py
+END
+multidict.py
+K 25
+svn:wc:ra_dav:version-url
+V 65
+/svn/!svn/ver/327/trunk/python/lib/webob-1.1.1/webob/multidict.py
+END
+response.py
+K 25
+svn:wc:ra_dav:version-url
+V 64
+/svn/!svn/ver/327/trunk/python/lib/webob-1.1.1/webob/response.py
+END
+__init__.py
+K 25
+svn:wc:ra_dav:version-url
+V 64
+/svn/!svn/ver/327/trunk/python/lib/webob-1.1.1/webob/__init__.py
+END
+descriptors.py
+K 25
+svn:wc:ra_dav:version-url
+V 67
+/svn/!svn/ver/327/trunk/python/lib/webob-1.1.1/webob/descriptors.py
+END
+cachecontrol.py
+K 25
+svn:wc:ra_dav:version-url
+V 68
+/svn/!svn/ver/327/trunk/python/lib/webob-1.1.1/webob/cachecontrol.py
+END
+headers.py
+K 25
+svn:wc:ra_dav:version-url
+V 63
+/svn/!svn/ver/327/trunk/python/lib/webob-1.1.1/webob/headers.py
+END
+datetime_utils.py
+K 25
+svn:wc:ra_dav:version-url
+V 70
+/svn/!svn/ver/327/trunk/python/lib/webob-1.1.1/webob/datetime_utils.py
+END
+util.py
+K 25
+svn:wc:ra_dav:version-url
+V 60
+/svn/!svn/ver/327/trunk/python/lib/webob-1.1.1/webob/util.py
+END
+exc.py
+K 25
+svn:wc:ra_dav:version-url
+V 59
+/svn/!svn/ver/327/trunk/python/lib/webob-1.1.1/webob/exc.py
+END
+byterange.py
+K 25
+svn:wc:ra_dav:version-url
+V 65
+/svn/!svn/ver/327/trunk/python/lib/webob-1.1.1/webob/byterange.py
+END
+etag.py
+K 25
+svn:wc:ra_dav:version-url
+V 60
+/svn/!svn/ver/327/trunk/python/lib/webob-1.1.1/webob/etag.py
+END

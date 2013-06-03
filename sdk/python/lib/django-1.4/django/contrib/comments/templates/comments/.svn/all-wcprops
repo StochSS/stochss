@@ -1,0 +1,77 @@
+K 25
+svn:wc:ra_dav:version-url
+V 88
+/svn/!svn/ver/327/trunk/python/lib/django-1.4/django/contrib/comments/templates/comments
+END
+approve.html
+K 25
+svn:wc:ra_dav:version-url
+V 101
+/svn/!svn/ver/327/trunk/python/lib/django-1.4/django/contrib/comments/templates/comments/approve.html
+END
+posted.html
+K 25
+svn:wc:ra_dav:version-url
+V 100
+/svn/!svn/ver/327/trunk/python/lib/django-1.4/django/contrib/comments/templates/comments/posted.html
+END
+approved.html
+K 25
+svn:wc:ra_dav:version-url
+V 102
+/svn/!svn/ver/327/trunk/python/lib/django-1.4/django/contrib/comments/templates/comments/approved.html
+END
+preview.html
+K 25
+svn:wc:ra_dav:version-url
+V 101
+/svn/!svn/ver/327/trunk/python/lib/django-1.4/django/contrib/comments/templates/comments/preview.html
+END
+delete.html
+K 25
+svn:wc:ra_dav:version-url
+V 100
+/svn/!svn/ver/327/trunk/python/lib/django-1.4/django/contrib/comments/templates/comments/delete.html
+END
+form.html
+K 25
+svn:wc:ra_dav:version-url
+V 98
+/svn/!svn/ver/327/trunk/python/lib/django-1.4/django/contrib/comments/templates/comments/form.html
+END
+deleted.html
+K 25
+svn:wc:ra_dav:version-url
+V 101
+/svn/!svn/ver/327/trunk/python/lib/django-1.4/django/contrib/comments/templates/comments/deleted.html
+END
+400-debug.html
+K 25
+svn:wc:ra_dav:version-url
+V 103
+/svn/!svn/ver/327/trunk/python/lib/django-1.4/django/contrib/comments/templates/comments/400-debug.html
+END
+flag.html
+K 25
+svn:wc:ra_dav:version-url
+V 98
+/svn/!svn/ver/327/trunk/python/lib/django-1.4/django/contrib/comments/templates/comments/flag.html
+END
+flagged.html
+K 25
+svn:wc:ra_dav:version-url
+V 101
+/svn/!svn/ver/327/trunk/python/lib/django-1.4/django/contrib/comments/templates/comments/flagged.html
+END
+base.html
+K 25
+svn:wc:ra_dav:version-url
+V 98
+/svn/!svn/ver/327/trunk/python/lib/django-1.4/django/contrib/comments/templates/comments/base.html
+END
+list.html
+K 25
+svn:wc:ra_dav:version-url
+V 98
+/svn/!svn/ver/327/trunk/python/lib/django-1.4/django/contrib/comments/templates/comments/list.html
+END

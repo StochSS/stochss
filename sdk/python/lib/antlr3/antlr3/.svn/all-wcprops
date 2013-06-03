@@ -1,0 +1,83 @@
+K 25
+svn:wc:ra_dav:version-url
+V 48
+/svn/!svn/ver/327/trunk/python/lib/antlr3/antlr3
+END
+dfa.py
+K 25
+svn:wc:ra_dav:version-url
+V 55
+/svn/!svn/ver/327/trunk/python/lib/antlr3/antlr3/dfa.py
+END
+recognizers.py
+K 25
+svn:wc:ra_dav:version-url
+V 63
+/svn/!svn/ver/327/trunk/python/lib/antlr3/antlr3/recognizers.py
+END
+constants.py
+K 25
+svn:wc:ra_dav:version-url
+V 61
+/svn/!svn/ver/327/trunk/python/lib/antlr3/antlr3/constants.py
+END
+streams.py
+K 25
+svn:wc:ra_dav:version-url
+V 59
+/svn/!svn/ver/327/trunk/python/lib/antlr3/antlr3/streams.py
+END
+tree.py
+K 25
+svn:wc:ra_dav:version-url
+V 56
+/svn/!svn/ver/327/trunk/python/lib/antlr3/antlr3/tree.py
+END
+__init__.py
+K 25
+svn:wc:ra_dav:version-url
+V 60
+/svn/!svn/ver/327/trunk/python/lib/antlr3/antlr3/__init__.py
+END
+treewizard.py
+K 25
+svn:wc:ra_dav:version-url
+V 62
+/svn/!svn/ver/327/trunk/python/lib/antlr3/antlr3/treewizard.py
+END
+dottreegen.py
+K 25
+svn:wc:ra_dav:version-url
+V 62
+/svn/!svn/ver/327/trunk/python/lib/antlr3/antlr3/dottreegen.py
+END
+exceptions.py
+K 25
+svn:wc:ra_dav:version-url
+V 62
+/svn/!svn/ver/327/trunk/python/lib/antlr3/antlr3/exceptions.py
+END
+compat.py
+K 25
+svn:wc:ra_dav:version-url
+V 58
+/svn/!svn/ver/327/trunk/python/lib/antlr3/antlr3/compat.py
+END
+tokens.py
+K 25
+svn:wc:ra_dav:version-url
+V 58
+/svn/!svn/ver/327/trunk/python/lib/antlr3/antlr3/tokens.py
+END
+main.py
+K 25
+svn:wc:ra_dav:version-url
+V 56
+/svn/!svn/ver/327/trunk/python/lib/antlr3/antlr3/main.py
+END
+extras.py
+K 25
+svn:wc:ra_dav:version-url
+V 58
+/svn/!svn/ver/327/trunk/python/lib/antlr3/antlr3/extras.py
+END

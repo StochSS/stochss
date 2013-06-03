@@ -1,0 +1,23 @@
+K 25
+svn:wc:ra_dav:version-url
+V 49
+/svn/!svn/ver/327/trunk/python/lib/enum/enum/test
+END
+__init__.py
+K 25
+svn:wc:ra_dav:version-url
+V 61
+/svn/!svn/ver/224/trunk/python/lib/enum/enum/test/__init__.py
+END
+tools.py
+K 25
+svn:wc:ra_dav:version-url
+V 58
+/svn/!svn/ver/327/trunk/python/lib/enum/enum/test/tools.py
+END
+test_enum.py
+K 25
+svn:wc:ra_dav:version-url
+V 62
+/svn/!svn/ver/327/trunk/python/lib/enum/enum/test/test_enum.py
+END

@@ -1,0 +1,29 @@
+K 25
+svn:wc:ra_dav:version-url
+V 75
+/svn/!svn/ver/327/trunk/python/lib/django-1.4/docs/_theme/djangodocs/static
+END
+djangodocs.css
+K 25
+svn:wc:ra_dav:version-url
+V 90
+/svn/!svn/ver/327/trunk/python/lib/django-1.4/docs/_theme/djangodocs/static/djangodocs.css
+END
+reset-fonts-grids.css
+K 25
+svn:wc:ra_dav:version-url
+V 97
+/svn/!svn/ver/327/trunk/python/lib/django-1.4/docs/_theme/djangodocs/static/reset-fonts-grids.css
+END
+default.css
+K 25
+svn:wc:ra_dav:version-url
+V 87
+/svn/!svn/ver/327/trunk/python/lib/django-1.4/docs/_theme/djangodocs/static/default.css
+END
+homepage.css
+K 25
+svn:wc:ra_dav:version-url
+V 88
+/svn/!svn/ver/327/trunk/python/lib/django-1.4/docs/_theme/djangodocs/static/homepage.css
+END

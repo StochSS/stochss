@@ -1,0 +1,47 @@
+K 25
+svn:wc:ra_dav:version-url
+V 63
+/svn/!svn/ver/327/trunk/python/lib/setuptools-0.6c11/setuptools
+END
+extension.py
+K 25
+svn:wc:ra_dav:version-url
+V 76
+/svn/!svn/ver/327/trunk/python/lib/setuptools-0.6c11/setuptools/extension.py
+END
+sandbox.py
+K 25
+svn:wc:ra_dav:version-url
+V 74
+/svn/!svn/ver/327/trunk/python/lib/setuptools-0.6c11/setuptools/sandbox.py
+END
+archive_util.py
+K 25
+svn:wc:ra_dav:version-url
+V 79
+/svn/!svn/ver/327/trunk/python/lib/setuptools-0.6c11/setuptools/archive_util.py
+END
+__init__.py
+K 25
+svn:wc:ra_dav:version-url
+V 75
+/svn/!svn/ver/327/trunk/python/lib/setuptools-0.6c11/setuptools/__init__.py
+END
+depends.py
+K 25
+svn:wc:ra_dav:version-url
+V 74
+/svn/!svn/ver/327/trunk/python/lib/setuptools-0.6c11/setuptools/depends.py
+END
+package_index.py
+K 25
+svn:wc:ra_dav:version-url
+V 80
+/svn/!svn/ver/327/trunk/python/lib/setuptools-0.6c11/setuptools/package_index.py
+END
+dist.py
+K 25
+svn:wc:ra_dav:version-url
+V 71
+/svn/!svn/ver/327/trunk/python/lib/setuptools-0.6c11/setuptools/dist.py
+END

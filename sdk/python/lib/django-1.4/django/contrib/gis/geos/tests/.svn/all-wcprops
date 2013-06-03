@@ -1,0 +1,35 @@
+K 25
+svn:wc:ra_dav:version-url
+V 75
+/svn/!svn/ver/327/trunk/python/lib/django-1.4/django/contrib/gis/geos/tests
+END
+test_geos_mutation.py
+K 25
+svn:wc:ra_dav:version-url
+V 97
+/svn/!svn/ver/327/trunk/python/lib/django-1.4/django/contrib/gis/geos/tests/test_geos_mutation.py
+END
+test_geos.py
+K 25
+svn:wc:ra_dav:version-url
+V 88
+/svn/!svn/ver/327/trunk/python/lib/django-1.4/django/contrib/gis/geos/tests/test_geos.py
+END
+__init__.py
+K 25
+svn:wc:ra_dav:version-url
+V 87
+/svn/!svn/ver/327/trunk/python/lib/django-1.4/django/contrib/gis/geos/tests/__init__.py
+END
+test_mutable_list.py
+K 25
+svn:wc:ra_dav:version-url
+V 96
+/svn/!svn/ver/327/trunk/python/lib/django-1.4/django/contrib/gis/geos/tests/test_mutable_list.py
+END
+test_io.py
+K 25
+svn:wc:ra_dav:version-url
+V 86
+/svn/!svn/ver/327/trunk/python/lib/django-1.4/django/contrib/gis/geos/tests/test_io.py
+END

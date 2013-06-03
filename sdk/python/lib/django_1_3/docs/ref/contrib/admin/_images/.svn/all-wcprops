@@ -1,0 +1,35 @@
+K 25
+svn:wc:ra_dav:version-url
+V 76
+/svn/!svn/ver/233/trunk/python/lib/django_1_3/docs/ref/contrib/admin/_images
+END
+user_actions.png
+K 25
+svn:wc:ra_dav:version-url
+V 93
+/svn/!svn/ver/233/trunk/python/lib/django_1_3/docs/ref/contrib/admin/_images/user_actions.png
+END
+flatfiles_admin.png
+K 25
+svn:wc:ra_dav:version-url
+V 96
+/svn/!svn/ver/233/trunk/python/lib/django_1_3/docs/ref/contrib/admin/_images/flatfiles_admin.png
+END
+users_changelist.png
+K 25
+svn:wc:ra_dav:version-url
+V 97
+/svn/!svn/ver/233/trunk/python/lib/django_1_3/docs/ref/contrib/admin/_images/users_changelist.png
+END
+article_actions.png
+K 25
+svn:wc:ra_dav:version-url
+V 96
+/svn/!svn/ver/233/trunk/python/lib/django_1_3/docs/ref/contrib/admin/_images/article_actions.png
+END
+article_actions_message.png
+K 25
+svn:wc:ra_dav:version-url
+V 104
+/svn/!svn/ver/233/trunk/python/lib/django_1_3/docs/ref/contrib/admin/_images/article_actions_message.png
+END

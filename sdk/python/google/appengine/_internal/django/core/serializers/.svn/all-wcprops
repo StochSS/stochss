@@ -1,0 +1,41 @@
+K 25
+svn:wc:ra_dav:version-url
+V 81
+/svn/!svn/ver/327/trunk/python/google/appengine/_internal/django/core/serializers
+END
+json.py
+K 25
+svn:wc:ra_dav:version-url
+V 89
+/svn/!svn/ver/327/trunk/python/google/appengine/_internal/django/core/serializers/json.py
+END
+xml_serializer.py
+K 25
+svn:wc:ra_dav:version-url
+V 99
+/svn/!svn/ver/327/trunk/python/google/appengine/_internal/django/core/serializers/xml_serializer.py
+END
+base.py
+K 25
+svn:wc:ra_dav:version-url
+V 89
+/svn/!svn/ver/327/trunk/python/google/appengine/_internal/django/core/serializers/base.py
+END
+pyyaml.py
+K 25
+svn:wc:ra_dav:version-url
+V 91
+/svn/!svn/ver/327/trunk/python/google/appengine/_internal/django/core/serializers/pyyaml.py
+END
+__init__.py
+K 25
+svn:wc:ra_dav:version-url
+V 93
+/svn/!svn/ver/327/trunk/python/google/appengine/_internal/django/core/serializers/__init__.py
+END
+python.py
+K 25
+svn:wc:ra_dav:version-url
+V 91
+/svn/!svn/ver/327/trunk/python/google/appengine/_internal/django/core/serializers/python.py
+END

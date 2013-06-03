@@ -1,0 +1,101 @@
+K 25
+svn:wc:ra_dav:version-url
+V 63
+/svn/!svn/ver/327/trunk/python/lib/webapp2-2.5.2/webapp2_extras
+END
+sessions_memcache.py
+K 25
+svn:wc:ra_dav:version-url
+V 84
+/svn/!svn/ver/327/trunk/python/lib/webapp2-2.5.2/webapp2_extras/sessions_memcache.py
+END
+sessions_ndb.py
+K 25
+svn:wc:ra_dav:version-url
+V 79
+/svn/!svn/ver/327/trunk/python/lib/webapp2-2.5.2/webapp2_extras/sessions_ndb.py
+END
+local.py
+K 25
+svn:wc:ra_dav:version-url
+V 72
+/svn/!svn/ver/327/trunk/python/lib/webapp2-2.5.2/webapp2_extras/local.py
+END
+local_app.py
+K 25
+svn:wc:ra_dav:version-url
+V 76
+/svn/!svn/ver/327/trunk/python/lib/webapp2-2.5.2/webapp2_extras/local_app.py
+END
+__init__.py
+K 25
+svn:wc:ra_dav:version-url
+V 75
+/svn/!svn/ver/327/trunk/python/lib/webapp2-2.5.2/webapp2_extras/__init__.py
+END
+auth.py
+K 25
+svn:wc:ra_dav:version-url
+V 71
+/svn/!svn/ver/327/trunk/python/lib/webapp2-2.5.2/webapp2_extras/auth.py
+END
+users.py
+K 25
+svn:wc:ra_dav:version-url
+V 72
+/svn/!svn/ver/327/trunk/python/lib/webapp2-2.5.2/webapp2_extras/users.py
+END
+config.py
+K 25
+svn:wc:ra_dav:version-url
+V 73
+/svn/!svn/ver/327/trunk/python/lib/webapp2-2.5.2/webapp2_extras/config.py
+END
+sessions.py
+K 25
+svn:wc:ra_dav:version-url
+V 75
+/svn/!svn/ver/327/trunk/python/lib/webapp2-2.5.2/webapp2_extras/sessions.py
+END
+security.py
+K 25
+svn:wc:ra_dav:version-url
+V 75
+/svn/!svn/ver/327/trunk/python/lib/webapp2-2.5.2/webapp2_extras/security.py
+END
+json.py
+K 25
+svn:wc:ra_dav:version-url
+V 71
+/svn/!svn/ver/327/trunk/python/lib/webapp2-2.5.2/webapp2_extras/json.py
+END
+jinja2.py
+K 25
+svn:wc:ra_dav:version-url
+V 73
+/svn/!svn/ver/327/trunk/python/lib/webapp2-2.5.2/webapp2_extras/jinja2.py
+END
+i18n.py
+K 25
+svn:wc:ra_dav:version-url
+V 71
+/svn/!svn/ver/327/trunk/python/lib/webapp2-2.5.2/webapp2_extras/i18n.py
+END
+securecookie.py
+K 25
+svn:wc:ra_dav:version-url
+V 79
+/svn/!svn/ver/327/trunk/python/lib/webapp2-2.5.2/webapp2_extras/securecookie.py
+END
+routes.py
+K 25
+svn:wc:ra_dav:version-url
+V 73
+/svn/!svn/ver/327/trunk/python/lib/webapp2-2.5.2/webapp2_extras/routes.py
+END
+mako.py
+K 25
+svn:wc:ra_dav:version-url
+V 71
+/svn/!svn/ver/327/trunk/python/lib/webapp2-2.5.2/webapp2_extras/mako.py
+END

@@ -1,0 +1,17 @@
+K 25
+svn:wc:ra_dav:version-url
+V 80
+/svn/!svn/ver/327/trunk/python/lib/django-1.4/django/contrib/sitemaps/tests/urls
+END
+http.py
+K 25
+svn:wc:ra_dav:version-url
+V 88
+/svn/!svn/ver/327/trunk/python/lib/django-1.4/django/contrib/sitemaps/tests/urls/http.py
+END
+https.py
+K 25
+svn:wc:ra_dav:version-url
+V 89
+/svn/!svn/ver/327/trunk/python/lib/django-1.4/django/contrib/sitemaps/tests/urls/https.py
+END

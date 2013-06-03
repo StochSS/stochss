@@ -1,0 +1,119 @@
+K 25
+svn:wc:ra_dav:version-url
+V 57
+/svn/!svn/ver/327/trunk/python/lib/django-1.4/docs/topics
+END
+auth.txt
+K 25
+svn:wc:ra_dav:version-url
+V 66
+/svn/!svn/ver/327/trunk/python/lib/django-1.4/docs/topics/auth.txt
+END
+files.txt
+K 25
+svn:wc:ra_dav:version-url
+V 67
+/svn/!svn/ver/327/trunk/python/lib/django-1.4/docs/topics/files.txt
+END
+cache.txt
+K 25
+svn:wc:ra_dav:version-url
+V 67
+/svn/!svn/ver/327/trunk/python/lib/django-1.4/docs/topics/cache.txt
+END
+install.txt
+K 25
+svn:wc:ra_dav:version-url
+V 69
+/svn/!svn/ver/327/trunk/python/lib/django-1.4/docs/topics/install.txt
+END
+generic-views.txt
+K 25
+svn:wc:ra_dav:version-url
+V 75
+/svn/!svn/ver/327/trunk/python/lib/django-1.4/docs/topics/generic-views.txt
+END
+security.txt
+K 25
+svn:wc:ra_dav:version-url
+V 70
+/svn/!svn/ver/327/trunk/python/lib/django-1.4/docs/topics/security.txt
+END
+index.txt
+K 25
+svn:wc:ra_dav:version-url
+V 67
+/svn/!svn/ver/327/trunk/python/lib/django-1.4/docs/topics/index.txt
+END
+class-based-views.txt
+K 25
+svn:wc:ra_dav:version-url
+V 79
+/svn/!svn/ver/327/trunk/python/lib/django-1.4/docs/topics/class-based-views.txt
+END
+serialization.txt
+K 25
+svn:wc:ra_dav:version-url
+V 75
+/svn/!svn/ver/327/trunk/python/lib/django-1.4/docs/topics/serialization.txt
+END
+testing.txt
+K 25
+svn:wc:ra_dav:version-url
+V 69
+/svn/!svn/ver/327/trunk/python/lib/django-1.4/docs/topics/testing.txt
+END
+conditional-view-processing.txt
+K 25
+svn:wc:ra_dav:version-url
+V 89
+/svn/!svn/ver/327/trunk/python/lib/django-1.4/docs/topics/conditional-view-processing.txt
+END
+logging.txt
+K 25
+svn:wc:ra_dav:version-url
+V 69
+/svn/!svn/ver/327/trunk/python/lib/django-1.4/docs/topics/logging.txt
+END
+email.txt
+K 25
+svn:wc:ra_dav:version-url
+V 67
+/svn/!svn/ver/327/trunk/python/lib/django-1.4/docs/topics/email.txt
+END
+pagination.txt
+K 25
+svn:wc:ra_dav:version-url
+V 72
+/svn/!svn/ver/327/trunk/python/lib/django-1.4/docs/topics/pagination.txt
+END
+generic-views-migration.txt
+K 25
+svn:wc:ra_dav:version-url
+V 85
+/svn/!svn/ver/327/trunk/python/lib/django-1.4/docs/topics/generic-views-migration.txt
+END
+templates.txt
+K 25
+svn:wc:ra_dav:version-url
+V 71
+/svn/!svn/ver/327/trunk/python/lib/django-1.4/docs/topics/templates.txt
+END
+signing.txt
+K 25
+svn:wc:ra_dav:version-url
+V 69
+/svn/!svn/ver/327/trunk/python/lib/django-1.4/docs/topics/signing.txt
+END
+settings.txt
+K 25
+svn:wc:ra_dav:version-url
+V 70
+/svn/!svn/ver/327/trunk/python/lib/django-1.4/docs/topics/settings.txt
+END
+signals.txt
+K 25
+svn:wc:ra_dav:version-url
+V 69
+/svn/!svn/ver/327/trunk/python/lib/django-1.4/docs/topics/signals.txt
+END

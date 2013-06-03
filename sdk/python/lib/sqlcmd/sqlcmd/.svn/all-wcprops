@@ -1,0 +1,47 @@
+K 25
+svn:wc:ra_dav:version-url
+V 48
+/svn/!svn/ver/327/trunk/python/lib/sqlcmd/sqlcmd
+END
+ecmd.py
+K 25
+svn:wc:ra_dav:version-url
+V 56
+/svn/!svn/ver/327/trunk/python/lib/sqlcmd/sqlcmd/ecmd.py
+END
+LICENSE
+K 25
+svn:wc:ra_dav:version-url
+V 56
+/svn/!svn/ver/327/trunk/python/lib/sqlcmd/sqlcmd/LICENSE
+END
+exception.py
+K 25
+svn:wc:ra_dav:version-url
+V 61
+/svn/!svn/ver/327/trunk/python/lib/sqlcmd/sqlcmd/exception.py
+END
+__init__.py
+K 25
+svn:wc:ra_dav:version-url
+V 60
+/svn/!svn/ver/327/trunk/python/lib/sqlcmd/sqlcmd/__init__.py
+END
+sqlcmd_test.py
+K 25
+svn:wc:ra_dav:version-url
+V 63
+/svn/!svn/ver/327/trunk/python/lib/sqlcmd/sqlcmd/sqlcmd_test.py
+END
+config.py
+K 25
+svn:wc:ra_dav:version-url
+V 58
+/svn/!svn/ver/327/trunk/python/lib/sqlcmd/sqlcmd/config.py
+END
+README
+K 25
+svn:wc:ra_dav:version-url
+V 55
+/svn/!svn/ver/327/trunk/python/lib/sqlcmd/sqlcmd/README
+END

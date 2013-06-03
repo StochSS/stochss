@@ -1,0 +1,35 @@
+K 25
+svn:wc:ra_dav:version-url
+V 60
+/svn/!svn/ver/327/trunk/python/lib/django-1.4/docs/internals
+END
+committers.txt
+K 25
+svn:wc:ra_dav:version-url
+V 75
+/svn/!svn/ver/327/trunk/python/lib/django-1.4/docs/internals/committers.txt
+END
+svn.txt
+K 25
+svn:wc:ra_dav:version-url
+V 68
+/svn/!svn/ver/327/trunk/python/lib/django-1.4/docs/internals/svn.txt
+END
+index.txt
+K 25
+svn:wc:ra_dav:version-url
+V 70
+/svn/!svn/ver/327/trunk/python/lib/django-1.4/docs/internals/index.txt
+END
+release-process.txt
+K 25
+svn:wc:ra_dav:version-url
+V 80
+/svn/!svn/ver/327/trunk/python/lib/django-1.4/docs/internals/release-process.txt
+END
+deprecation.txt
+K 25
+svn:wc:ra_dav:version-url
+V 76
+/svn/!svn/ver/327/trunk/python/lib/django-1.4/docs/internals/deprecation.txt
+END

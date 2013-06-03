@@ -1,0 +1,274 @@
+{% extends "modeleditor.html" %}
+{% block title%}Species Editor{% endblock %}
+{% block modeleditorcontent %}
+
+<div class="span9">
+
+	<div class="row-fluid">
+
+		<div class="well form">
+
+			<form name="create_reaction" method="post" action="/modeleditor/reactioneditor">
+
+				<h3><a data-toggle="collapse" data-target="#optional" default> Create new reaction </a>&raquo; </h3>
+
+				 <div id="optional" class="in collapse" style="height: auto">
+					<br/>
+					<div>
+						<label>Name</label>
+						<input type="text" class="span3" name="name" placeholder="R1" value="{{ name }}" TITLE = "Give a Name to the Reaction">
+                            
+					</div>
+			
+                   
+                     
+					<div style="float:left; padding-right: 10px;">
+						<label>Reactants
+                            {% set help_modal_id = "help_modal1" %}
+                            {% set help_modal_title = "Reactants and Products" %}
+                            {% set help_modal_message = "Enter the reactants in the input below as a comma separated list of species names. The stochiometry (the number of molecules produced or consumed) is preprended to the species name. For example, for the reaction A+B -> C, you write A,B in the reactants input, and C in the products input . For the reaction 2A+B->C, you write 2A in the reactant input and C in the product input. If a reaction does not involve any reactants (a zeroth order reaction) or if it does not produce any species (such as A->EmptySet), leave the corresponding input empty." %}
+                            {% include "help_modal.html" %}
+                            {{help_modal|safe}}
+                            <a data-toggle="modal" href="#help_modal1" style="text-decoration: none"><i class="icon-question-sign"></i></a>
+                        
+                        </label>
+						<input type="text" class="auto_complete" name="reactants" placeholder="A, B" id="reactants" style="width: 160px" value="{{ reactants }}" TITLE = "Reactants are species consumed by the reaction. Input species names separated by commas.">						
+					</div>
+					<div style="float:left; padding-right: 30px;">
+						<div>&nbsp;</div>
+						<img src="/static/img/reaction_arrow.png" height="20px" width="20px" style="padding-left: 18px; padding-top: 12px"/>						
+					</div>
+					
+					<div>
+						<label>Products</label>
+						<input type="text" class="span3 auto_complete" name="products" placeholder="C" id="products" value="{{ products }}" TITLE = "Products are species produced by the reaction. Input species names separated by comma.">
+                    </div>
+                    
+                     <label id="propensity_label">Propensity Function
+                     
+                         {% set help_modal_id = "help_modal2" %}
+                         {% set help_modal_title = "Propensity function" %}
+                         {% set help_modal_message = "The propensity function can be any simple arithmetic expression (+ , -, *, /) involving parameter and species names, for example 'k1*A*B'  or 'Vmax*S/(Km+S)'. For the propensity function to be valid, it needs to evaulate in the namespace consisting of all species and all parameter names. " %}
+                         {% include "help_modal.html" %}
+                         {{help_modal|safe}}
+                         <a data-toggle="modal" href="#help_modal2" style="text-decoration: none"><i class="icon-question-sign"></i></a>
+
+                     </label>
+                     <input type="text" placeholder="k*A*B" name="propensity_function" id="propensity" value="{{ propensity_function }}" style="display:block;" TITLE = "Define the propensity function. If the propensity is of mass-action type, you can use the checkboxes below to automatically generate the propensity function."/>
+                     <input type="checkbox" onclick="javascript:toggleField('propensity');javascript:toggleField('propensity_label');javascript:toggleField('mass-action');" name='is_mass_action'> Mass Action</input>
+                     {% set help_modal_id = "help_modal3" %}
+                     {% set help_modal_title = "Mass Action reaction" %}
+                     {% set help_modal_message = "By selecting the Mass Action checkbox, you will be presented with the option to choose a rate constant for the reaction. The propensity function will be automatically created assuming mass action kinetics when you click the 'Add reaction' button. For this option, only zeroth (EmptySet -> A), first (A->B) and second order (A+B->C) reactions are supported. If you use the StochKit2 solvers, specifying reactions as mass action can have a performance advantage, since models with only mass action reactions does not have to be compiled prior to simulations, which reduces the start-up time of the solver. "%}
+                     {% include "help_modal.html" %}
+                     {{help_modal|safe}}
+                     <a data-toggle="modal" href="#help_modal3" style="text-decoration: none"><i class="icon-question-sign"></i></a>
+
+                    </br>
+                     {% if all_parameters_list %}
+                        <div id="mass-action" style="height: auto; display:none;">
+                            </br>
+                            <label>Forward rate constant</label>
+                            <select name="ma_rate">
+                            {% for key,value in all_parameters_list.items() %}
+                                <option  name="ma_rate" value="{{all_parameters_list[key].name}}">{{all_parameters_list[key].name}}</option>
+                            {% endfor %}
+                            </select>
+                            </br>
+                                    
+                        </div>
+                     {% endif %}
+					<br />
+                     
+					<button type="submit" class="btn btn-primary" style="float: right;">
+						Add reaction
+					</button>
+
+				</div>
+				{% if msg %}
+				{% if status == False %}
+				<span style="color: red" class="create_msg">{{msg}}</span>
+				{% else %}
+				<span style="color: green" class="create_msg">{{msg}}</span>
+				{% endif %}
+				{% endif %}
+			</form>
+
+            <hr/>
+
+            <div id = "right-column-sidebar">
+	
+				<style type="text/css">
+				.horizontal { display: inline; color: black; }
+				</style>
+
+			</div>
+            
+            {% if all_reactions %}
+
+			<div id="msg" style="display:none"></div>
+			
+            <h3><a data-toggle="collapse" data-target="#species_list" default> Reactions </a>&raquo; </h3>
+			<br/>
+			<div id="species_list" class="in collapse" style="height: auto">
+				<form id="update_form" method="post" action="/modeleditor/reactioneditor">
+					<table cellpadding="0" cellspacing="0" border="0" class="table table-striped table-bordered" id="dataTable">
+						<thead>
+							<tr>
+								<th>Name </th><th>Reactants </th><th>Products</th><th>Propensity</th><th>&nbsp;</th>
+							</tr>
+						</thead>
+						<tbody>
+							{% for key, value in all_reactions.items() %}
+							<tr>
+								<td>
+								<input type="text" name="{{loop.index}}-name" value="{{key}}" style="width: 100px;" class="update_box">
+								</td>
+								<td>
+								<input type="text" name="{{loop.index}}-reactants" value="{{all_reactants[key]}}" style="width: 100px;" class="update_box auto_complete">
+								</td>
+								<td>
+								<input type="text" name="{{loop.index}}-products" value="{{all_products[key]}}" style="width: 100px;" class="update_box auto_complete">
+								</td>
+								<td>
+								<input type="text" name="{{loop.index}}-propensity_function" value = "{{value.propensity_function}}" style="width: 150px;" class="update_box">
+								</td>
+								<td><a href="javascript:void(0)" onclick="javascript:deleteElement('{{key}}')">Delete</a></td>
+							</tr>
+		
+							{% endfor %}
+						</tbody>
+					</table>					
+				</form>
+			</div>
+            {% endif %}
+
+			<form id="deleteForm" method="post" action="/modeleditor/reactioneditor">
+				<input type="hidden" name="toDelete" />
+				<input type="hidden" name="delete" value="1"/>
+			</form>
+
+		</div>
+
+	</div>
+	<!--/row-->
+</div>
+<!--/span9-->
+{% endblock %}
+
+<!-- Show a list of Species and Parameters in the right sidebar for a visual aid when creating reactions. -->
+{% block customizesidebar %}
+{% if all_species_list %}
+<h4><a data-toggle="collapse" data-target="#all_species_list"> Show species &raquo;</a> </h4>
+<div id="all_species_list" class="in collapse">
+    <ul>
+        {% for key,value in all_species_list.items() %}
+        <li class = "horizontal"><a href="#" TITLE="{{all_species_list[key].initial_value}}">{{all_species_list[key].name}}</a></li>
+        {% endfor %}
+    </ul>
+</div>
+{% endif %}
+
+{% if all_parameters_list %}
+<h4><a data-toggle="collapse" data-target="#all_parameters_list"> Show parameters &raquo;</a> </h4>
+<div id="all_parameters_list" class="in collapse">
+    <ul>
+        {% for key,value in all_parameters_list.items() %}
+        <li class = "horizontal"><a href="#" TITLE="{{all_parameters_list[key].value}}">{{all_parameters_list[key].name}}</a></li>
+        {% endfor %}
+    </ul>
+</div>
+{% endif %}
+{% endblock %}
+
+{% block innerjscontent %}
+
+<script type="text/javascript">
+function toggleField(field) {
+var myTarget = document.getElementById(field);
+if(myTarget.style.display == 'none'){
+  myTarget.style.display = 'block';
+    } else {
+  myTarget.style.display = 'none';
+  myTarget.value = '';
+}
+}
+</script>
+
+<script type="text/javascript">
+	
+	var species = {{all_species | safe}}
+
+	function split(val) {
+		return val.split(/[,]\s*/);
+	}
+
+	function split2(val) {
+		return val.split(/([,]\s*)*(\d*)/);
+	}
+
+	function extractLast(term) {
+		return split2(term).pop();
+	}
+
+	$(".auto_complete")
+	// don't navigate away from the field on tab when selecting an item
+	.bind("keydown", function(event) {
+		if (event.keyCode === $.ui.keyCode.TAB && $(this).data("autocomplete").menu.active) {
+			event.preventDefault();
+		}
+	}).autocomplete({
+		minLength : 0,
+		source : function(request, response) {
+			// delegate back to autocomplete, but extract the last term
+			response($.ui.autocomplete.filter(species, extractLast(request.term)));
+		},
+		focus : function() {
+			// prevent value inserted on focus
+			return false;
+		},
+		select : function(event, ui) {
+			var terms = split(this.value);
+			// remove the current input
+			var element = terms.pop();
+			// If the element is an integer, don't remove it
+			if (element % 1 === 0)
+				terms.push(element + ui.item.value);
+			else
+				// add the selected item
+				terms.push(ui.item.value);
+			// add placeholder to get the comma-and-space at the end
+			terms.push("");
+			this.value = terms.join(", ");
+			return false;
+		}
+	});
+	
+	var oTable;
+	$(document).ready(function() {
+		oTable = $('#dataTable').dataTable({
+		"aoColumns": [
+			// for sorting based on form fields
+			{ "sSortDataType": "dom-text" },			
+			{ "sSortDataType": "dom-text", "bSearchable": false },
+			{ "sSortDataType": "dom-text", "bSearchable": false },
+			{ "sSortDataType": "dom-text", "bSearchable": false },
+			{ "sSortDataType": "dom-text", "bSearchable": false, "bSortable": false }			
+		]
+		});
+	});
+	
+	/**
+	 * Create an array with the values of all the input boxes in a column.
+	 * This is used to sort values inside input boxes.
+	 */
+	$.fn.dataTableExt.afnSortData['dom-text'] = function(oSettings, iColumn) {
+		var aData = [];
+		$('td:eq(' + iColumn + ') input', oSettings.oApi._fnGetTrNodes(oSettings)).each(function() {
+			aData.push(this.value);
+		});
+		return aData;
+	}
+	
+	var isParameterEditor = false
+</script>
+{% endblock %}

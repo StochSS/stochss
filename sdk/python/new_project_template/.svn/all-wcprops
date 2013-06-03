@@ -1,0 +1,29 @@
+K 25
+svn:wc:ra_dav:version-url
+V 51
+/svn/!svn/ver/327/trunk/python/new_project_template
+END
+app.yaml
+K 25
+svn:wc:ra_dav:version-url
+V 60
+/svn/!svn/ver/327/trunk/python/new_project_template/app.yaml
+END
+index.yaml
+K 25
+svn:wc:ra_dav:version-url
+V 62
+/svn/!svn/ver/327/trunk/python/new_project_template/index.yaml
+END
+main.py
+K 25
+svn:wc:ra_dav:version-url
+V 59
+/svn/!svn/ver/327/trunk/python/new_project_template/main.py
+END
+favicon.ico
+K 25
+svn:wc:ra_dav:version-url
+V 63
+/svn/!svn/ver/233/trunk/python/new_project_template/favicon.ico
+END

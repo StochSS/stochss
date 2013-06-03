@@ -1,0 +1,352 @@
+{% extends "base.html" %}
+{% block title%}Manage Models{% endblock %}
+{% block content %}
+{% block csscontent %}
+<link href="/static/css/jquery.dataTables.css" rel="stylesheet">
+<link href="/static/css/jquery-ui-1.9.1.custom.min.css" rel="stylesheet">
+<style type="text/css">
+	.dataTables_length select{
+		width: 50px;
+	}
+</style>
+{% endblock %}
+
+<div class="span9">
+
+	<div class="row-fluid">
+
+		<div class"span9">
+
+			<div class="menubar">
+				<ul class="nav nav-tabs">
+					<li>
+						<a href="/modeleditor" TITLE = "Define the name of your model">Models</a>
+					</li>
+					<!-- <li><a href="/modeleditor/overview">Overview</a></li> -->
+					<li>
+						<a href="/modeleditor/specieseditor" TITLE = "Create a List of reacants">Species</a>
+					</li>
+                    <li>
+						<a href="/modeleditor/parametereditor" TITLE = "Create a List of Parameters">Parameters</a>
+					</li>
+					<li>
+						<a href="/modeleditor/reactioneditor" TITLE = "Create a List of Reactions">Reactions</a>
+					</li>
+					
+					<li class="dropdown">
+						<!--<a class="dropdown-toggle" data-toggle="dropdown">Geometry<b class="caret"></b></a> -->
+						<ul class="dropdown-menu">
+							<!-- <a href="/modeleditor/geometry/editgeometry"> <i class="icon-pencil"></i>Geometry editor</a> -->
+							<a href="/#" TITLE = "Define the Geometry">Compartment</a>
+							<!-- <a href="/#">Import mesh...</a> -->
+						</ul>
+					</li>
+					<!-- <li><a href="/modeleditor/codeeditor">Editor</a></li> -->
+					<li class="dropdown">
+						<a class="dropdown-toggle" data-toggle="dropdown" TITLE = "Import from File/ Load Existing Library">Import<b class="caret"></b></a>
+						<ul class="dropdown-menu">
+							<a href="/modeleditor/import/fromfile">From file..</a>
+							<a href="/modeleditor/import/examplelibrary">Example Library...</a>
+							<!-- <a href="/modeleditor/import/biomodels">BioModels database...</a>-->
+						</ul>
+					</li>
+                    
+                    <!-- <li><a href="/modeleditor/codeeditor">Editor</a></li> -->
+					<li class="dropdown">
+						<a class="dropdown-toggle" data-toggle="dropdown" TITLE = "Export File To Stochkit">Export<b class="caret"></b></a>
+						<ul class="dropdown-menu">
+							<a href="/modeleditor/export/tostochkit2">To StochML (StochKit2) ...</a>
+							<!-- <a href="/modeleditor/export/tosbml">To SBML ...</a> -->
+						</ul>
+					</li>
+
+				</ul>
+
+			</div>
+			<!--/ul-->
+
+			{% block modeleditorcontent %}
+			<div class="span9">
+				<div class="well well-large">
+					<form method="post" action="/modeleditor" name="create_model">
+						<h3><a style="text-decoration: None"> Create new model </a></h3>
+						<br/>
+						<div id="optional" class="in collapse" style="height:auto">
+							<label>Name</label>
+							<input type="text" class="span3" id="Formula" placeholder="Model name" name="name" value="{{ name }}" class="update_box auto_complete">
+
+							<button type="submit" class="btn btn-primary btn-large" style="float: right;">
+								Create model
+							</button>
+						</div>
+					</form>
+					{% if msg %}
+					{% if status == False %}
+					<span style="color: red">{{msg}}</span>
+					{% else %}
+					<span style="color: green">{{msg}}</span>
+					{% endif %}
+					{% endif %}											
+					<hr/>
+					<div id="msg" style="display:none"></div>					
+					{% if all_models %}
+					<div>
+						<h3><a style="text-decoration: None">Models</a></h3>
+					</div>
+					<div id="model_list" class="in collapse" style="height: auto">
+						<br/>
+						<div>
+							<h4>Select a model to edit</h4>
+						</div>
+						<br/>
+						<table cellpadding="0" cellspacing="0" border="0" class="table table-striped table-bordered" id="dataTable">
+							<thead>
+								<th>Model</th>								
+								<th>&nbsp;</th>
+							</thead>
+							<tbody>
+								{% for item in all_models %}
+								<tr>
+									<td><a href="/modeleditor?model_edited={{ item }}">{{ item }}</a></td>
+									<td><a href="javascript:void(0)" onclick="javascript:deleteElement('{{item}}')">Delete</a></td>
+								</tr>
+								{% endfor %}
+							</tbody>
+						</table>
+					</div>
+
+					{% endif %}					
+				</div>
+			</div>
+			<!-- Modal for saving changes. -->
+			<div id="myModal" class="modal hide fade" tabindex="-1" role="dialog" aria-labelledby="myModalLabel" aria-hidden="true">
+				<div class="modal-header">					
+					<h3 id="myModalLabel">Save Changes?</h3>
+				</div>
+				<form method="post" action="/modeleditor/save" name="save_form">
+					<div class="modal-body">						
+						<div>
+							You have not saved the recent changes that were done to the current model.
+						</div>						
+					</div>
+					<div class="modal-footer">
+						<button class="btn" data-dismiss="modal" aria-hidden="true" onclick="javascript:saveChanges(false)">
+							Discard
+						</button>
+						<button class="btn btn-primary" data-dismiss="modal" aria-hidden="true" onclick="javascript:saveChanges(true)">
+							Save changes
+						</button>
+					</div>
+				</form>
+			</div>
+			
+			<form id="deleteForm" method="post" action="/modeleditor/delete">
+				<input type="hidden" name="toDelete" />
+				<input type="hidden" name="delete" value="1"/>
+			</form>
+			{% endblock %}
+			
+			<!-- Modal for deletion. -->
+			<div id="deleteModal" class="modal hide fade" tabindex="-1" role="dialog" aria-labelledby="myModalLabel" aria-hidden="true">
+				<div class="modal-header">
+					<h3>Delete?</h3>
+				</div>
+
+				<div class="modal-body">
+					<div>
+						Are you sure you want to delete the selected element?
+					</div>
+				</div>
+				<div class="modal-footer">
+					<button class="btn btn-primary" data-dismiss="modal" aria-hidden="true" onclick="javascript:confirmDelete()">
+						Yes
+					</button>
+					<button class="btn" data-dismiss="modal" aria-hidden="true" onclick="javascript:void(0)">
+						No
+					</button>
+				</div>				
+			</div>
+						
+			<div class="span2">
+				{% if model_edited %}
+
+					<label><h2>{{model_edited}}</h2></label>
+					<button class="btn btn-primary" onclick="javascript:saveChanges(true)">
+						Save changes
+					</button>
+					<br/></br>
+					<a href="/modeleditor">Edit another model</a>
+                    <hr>
+
+				{% else %}
+				<p>
+					<h3>You are not editing a model</h3>
+                    </br></br>
+                    <a href="/modeleditor">Choose a model to edit or create a new model</a>
+				</p>
+				{% endif %}
+
+                {% block customizesidebar %}
+                {% endblock %}
+			</div>
+			</div>
+
+	</div>
+	<!--/span9-->
+
+</div>
+<!--/row-->
+
+<!--/span9-->
+{% endblock %}
+{% block jscontent %}
+<script src="/static/js/jquery.dataTables.min.js"></script>
+<script src="/static/js/jquery-ui-1.9.1.custom.min.js"></script>
+{% block innerjscontent %}
+<script type="text/javascript">
+	{% if is_saved == False %}
+	var options = {
+		keyboard : false,
+		backdrop : 'static',
+		show : true
+	}
+	$('#myModal').modal(options)
+	{% endif %}
+	
+	var oTable;
+	$(document).ready(function() {
+		oTable = $('#dataTable').dataTable({
+		"aoColumns": [
+			// for sorting based on form fields
+			{ "sSortDataType": "dom-text"},
+			{ "sSortDataType": "dom-text", "bSearchable": false, "bSortable": false}								
+		]
+		});
+	});
+</script>
+{% endblock %}
+
+<script type="text/javascript">
+	
+	var model_edited = "{{model_edited | safe}}"
+	
+	function saveChanges(save) {
+		dataString = save ? "save_changes=1" : "save_changes=0";
+		dataString += "&model_edited=" + model_edited + "&redirect_page={{redirect_page | safe}}";
+		$.ajax({
+			type : "POST",
+			url : "/modeleditor/save",
+			data : dataString,
+			dataType : 'json',
+			success : function(response) {
+				// Redirect without printing any messages if redirect_page is defined.
+				if (response['redirect_page'] != undefined){
+					$(location).attr('href', response['redirect_page']);
+				}
+				var status = response['status']
+				if (!status) {
+					$('#msg').css('color', 'red')
+				} else {					
+					$('#msg').css('color', 'green')
+				}
+				$('#msg').css('display', 'block')
+				$('#msg').html(response['msg']).hide().fadeIn(1500, function() {
+				});
+			},
+			error : function(response) {
+				alert('Sorry! There was an error while updating.')
+			}
+		});
+		return false;
+	}
+
+	/**
+	 * Function to set the delay for sending the ajax request after the user has entered something.
+	 */
+	var delay = (function() {
+		var timer = 0;
+		return function(callback, ms) {
+			clearTimeout(timer);
+			timer = setTimeout(callback, ms);
+		};
+	})();
+
+	/**
+	 * Function to call the ajax request after the specified amount of time.
+	 * update will send the ajax request.
+	 */
+	$('.update_box').keyup(function(event) {		
+		delay(function() {
+			update()
+		}, 1000);
+	});
+
+	
+	/**
+	 * The ajax call for form submit
+	 */
+	function update() {
+		var sData = $('input', oTable.fnGetHiddenNodes()).serialize() + "&update=1";
+		$.ajax({
+			type : "POST",
+			url : $("#update_form").attr('action'),
+			data : sData,
+			dataType : 'json',
+			success : function(response) {
+				var status = response['status']
+				$(".create_msg").html('')
+				if (!status) {
+					$('#msg').css('color', 'red')
+					$('#msg').html(response['msg']).hide().fadeIn(1500, function() {
+					});
+					$('#msg').css('display', 'block')
+				} else {
+					// Not displaying anything if successfully saved.
+					$('#msg').css('display', 'none')
+					if (isParameterEditor) {
+						updateValues(response)
+					}
+				}
+			},
+			error : function(response) {
+				$('#msg').css('color', 'red')
+				$('#msg').html('Sorry! There was an error processing your request.').hide().fadeIn(1500, function() {
+				});
+				$('#msg').css('display', 'block')
+			}
+		});
+	}
+
+	/**
+	 * Function to get the hidden nodes in a datatable.
+	 */
+	$.fn.dataTableExt.oApi.fnGetHiddenNodes = function(oSettings) {
+		/* Note the use of a DataTables 'private' function thought the 'oApi' object */
+		var anNodes = this.oApi._fnGetTrNodes(oSettings);
+		var anDisplay = $('tbody tr', oSettings.nTable);
+		/* Fire back the array to the caller */
+		return anNodes;
+	}
+
+	$.extend($.fn.dataTableExt.oStdClasses, {
+		"sWrapper" : "dataTables_wrapper form-inline"
+	});
+	
+	var toDelete;
+	function deleteElement(element){
+		toDelete = element
+		var options = {
+			keyboard : false,
+			backdrop : 'static',
+			show : true
+		}
+		$('#deleteModal').modal(options)			
+	}
+	
+	function confirmDelete(){
+		$("#deleteForm input[name='toDelete']").val(toDelete)
+		$("#deleteForm").submit()
+	}
+
+</script>
+{% endblock %}

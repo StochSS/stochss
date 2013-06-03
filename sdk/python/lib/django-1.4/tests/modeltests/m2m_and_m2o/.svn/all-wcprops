@@ -1,0 +1,17 @@
+K 25
+svn:wc:ra_dav:version-url
+V 74
+/svn/!svn/ver/327/trunk/python/lib/django-1.4/tests/modeltests/m2m_and_m2o
+END
+tests.py
+K 25
+svn:wc:ra_dav:version-url
+V 83
+/svn/!svn/ver/327/trunk/python/lib/django-1.4/tests/modeltests/m2m_and_m2o/tests.py
+END
+models.py
+K 25
+svn:wc:ra_dav:version-url
+V 84
+/svn/!svn/ver/327/trunk/python/lib/django-1.4/tests/modeltests/m2m_and_m2o/models.py
+END

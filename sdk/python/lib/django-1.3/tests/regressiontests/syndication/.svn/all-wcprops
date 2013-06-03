@@ -1,0 +1,29 @@
+K 25
+svn:wc:ra_dav:version-url
+V 79
+/svn/!svn/ver/327/trunk/python/lib/django-1.3/tests/regressiontests/syndication
+END
+tests.py
+K 25
+svn:wc:ra_dav:version-url
+V 88
+/svn/!svn/ver/327/trunk/python/lib/django-1.3/tests/regressiontests/syndication/tests.py
+END
+models.py
+K 25
+svn:wc:ra_dav:version-url
+V 89
+/svn/!svn/ver/327/trunk/python/lib/django-1.3/tests/regressiontests/syndication/models.py
+END
+urls.py
+K 25
+svn:wc:ra_dav:version-url
+V 87
+/svn/!svn/ver/327/trunk/python/lib/django-1.3/tests/regressiontests/syndication/urls.py
+END
+feeds.py
+K 25
+svn:wc:ra_dav:version-url
+V 88
+/svn/!svn/ver/327/trunk/python/lib/django-1.3/tests/regressiontests/syndication/feeds.py
+END

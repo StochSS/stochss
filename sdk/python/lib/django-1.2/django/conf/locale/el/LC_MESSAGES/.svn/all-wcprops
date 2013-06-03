@@ -1,0 +1,17 @@
+K 25
+svn:wc:ra_dav:version-url
+V 79
+/svn/!svn/ver/327/trunk/python/lib/django-1.2/django/conf/locale/el/LC_MESSAGES
+END
+django.po
+K 25
+svn:wc:ra_dav:version-url
+V 89
+/svn/!svn/ver/327/trunk/python/lib/django-1.2/django/conf/locale/el/LC_MESSAGES/django.po
+END
+djangojs.po
+K 25
+svn:wc:ra_dav:version-url
+V 91
+/svn/!svn/ver/327/trunk/python/lib/django-1.2/django/conf/locale/el/LC_MESSAGES/djangojs.po
+END

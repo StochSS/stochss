@@ -1,0 +1,23 @@
+K 25
+svn:wc:ra_dav:version-url
+V 88
+/svn/!svn/ver/327/trunk/python/lib/django-1.4/django/contrib/admin/static/admin/js/admin
+END
+RelatedObjectLookups.js
+K 25
+svn:wc:ra_dav:version-url
+V 112
+/svn/!svn/ver/327/trunk/python/lib/django-1.4/django/contrib/admin/static/admin/js/admin/RelatedObjectLookups.js
+END
+ordering.js
+K 25
+svn:wc:ra_dav:version-url
+V 100
+/svn/!svn/ver/327/trunk/python/lib/django-1.4/django/contrib/admin/static/admin/js/admin/ordering.js
+END
+DateTimeShortcuts.js
+K 25
+svn:wc:ra_dav:version-url
+V 109
+/svn/!svn/ver/327/trunk/python/lib/django-1.4/django/contrib/admin/static/admin/js/admin/DateTimeShortcuts.js
+END

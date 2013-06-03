@@ -1,0 +1,47 @@
+K 25
+svn:wc:ra_dav:version-url
+V 83
+/svn/!svn/ver/327/trunk/python/lib/django-1.4/django/contrib/gis/db/backends/oracle
+END
+base.py
+K 25
+svn:wc:ra_dav:version-url
+V 91
+/svn/!svn/ver/327/trunk/python/lib/django-1.4/django/contrib/gis/db/backends/oracle/base.py
+END
+compiler.py
+K 25
+svn:wc:ra_dav:version-url
+V 95
+/svn/!svn/ver/327/trunk/python/lib/django-1.4/django/contrib/gis/db/backends/oracle/compiler.py
+END
+introspection.py
+K 25
+svn:wc:ra_dav:version-url
+V 100
+/svn/!svn/ver/327/trunk/python/lib/django-1.4/django/contrib/gis/db/backends/oracle/introspection.py
+END
+adapter.py
+K 25
+svn:wc:ra_dav:version-url
+V 94
+/svn/!svn/ver/327/trunk/python/lib/django-1.4/django/contrib/gis/db/backends/oracle/adapter.py
+END
+operations.py
+K 25
+svn:wc:ra_dav:version-url
+V 97
+/svn/!svn/ver/327/trunk/python/lib/django-1.4/django/contrib/gis/db/backends/oracle/operations.py
+END
+models.py
+K 25
+svn:wc:ra_dav:version-url
+V 93
+/svn/!svn/ver/327/trunk/python/lib/django-1.4/django/contrib/gis/db/backends/oracle/models.py
+END
+creation.py
+K 25
+svn:wc:ra_dav:version-url
+V 95
+/svn/!svn/ver/327/trunk/python/lib/django-1.4/django/contrib/gis/db/backends/oracle/creation.py
+END

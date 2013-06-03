@@ -1,0 +1,35 @@
+K 25
+svn:wc:ra_dav:version-url
+V 72
+/svn/!svn/ver/327/trunk/python/lib/django-1.4/tests/modeltests/timezones
+END
+admin.py
+K 25
+svn:wc:ra_dav:version-url
+V 81
+/svn/!svn/ver/327/trunk/python/lib/django-1.4/tests/modeltests/timezones/admin.py
+END
+tests.py
+K 25
+svn:wc:ra_dav:version-url
+V 81
+/svn/!svn/ver/327/trunk/python/lib/django-1.4/tests/modeltests/timezones/tests.py
+END
+models.py
+K 25
+svn:wc:ra_dav:version-url
+V 82
+/svn/!svn/ver/327/trunk/python/lib/django-1.4/tests/modeltests/timezones/models.py
+END
+urls.py
+K 25
+svn:wc:ra_dav:version-url
+V 80
+/svn/!svn/ver/327/trunk/python/lib/django-1.4/tests/modeltests/timezones/urls.py
+END
+forms.py
+K 25
+svn:wc:ra_dav:version-url
+V 81
+/svn/!svn/ver/327/trunk/python/lib/django-1.4/tests/modeltests/timezones/forms.py
+END

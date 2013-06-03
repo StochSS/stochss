@@ -1,0 +1,17 @@
+K 25
+svn:wc:ra_dav:version-url
+V 120
+/svn/!svn/ver/327/trunk/python/lib/django-1.4/tests/regressiontests/staticfiles_tests/project/documents/cached/css/fonts
+END
+font.svg
+K 25
+svn:wc:ra_dav:version-url
+V 129
+/svn/!svn/ver/327/trunk/python/lib/django-1.4/tests/regressiontests/staticfiles_tests/project/documents/cached/css/fonts/font.svg
+END
+font.eot
+K 25
+svn:wc:ra_dav:version-url
+V 129
+/svn/!svn/ver/327/trunk/python/lib/django-1.4/tests/regressiontests/staticfiles_tests/project/documents/cached/css/fonts/font.eot
+END

@@ -1,0 +1,11 @@
+K 25
+svn:wc:ra_dav:version-url
+V 88
+/svn/!svn/ver/327/trunk/python/lib/django-1.4/tests/regressiontests/syndication/fixtures
+END
+feeddata.json
+K 25
+svn:wc:ra_dav:version-url
+V 102
+/svn/!svn/ver/327/trunk/python/lib/django-1.4/tests/regressiontests/syndication/fixtures/feeddata.json
+END

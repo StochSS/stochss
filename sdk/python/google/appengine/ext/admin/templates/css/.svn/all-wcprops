@@ -1,0 +1,83 @@
+K 25
+svn:wc:ra_dav:version-url
+V 71
+/svn/!svn/ver/327/trunk/python/google/appengine/ext/admin/templates/css
+END
+base.css
+K 25
+svn:wc:ra_dav:version-url
+V 80
+/svn/!svn/ver/327/trunk/python/google/appengine/ext/admin/templates/css/base.css
+END
+pager.css
+K 25
+svn:wc:ra_dav:version-url
+V 81
+/svn/!svn/ver/327/trunk/python/google/appengine/ext/admin/templates/css/pager.css
+END
+inboundmail.css
+K 25
+svn:wc:ra_dav:version-url
+V 87
+/svn/!svn/ver/327/trunk/python/google/appengine/ext/admin/templates/css/inboundmail.css
+END
+cron.css
+K 25
+svn:wc:ra_dav:version-url
+V 80
+/svn/!svn/ver/327/trunk/python/google/appengine/ext/admin/templates/css/cron.css
+END
+memcache.css
+K 25
+svn:wc:ra_dav:version-url
+V 84
+/svn/!svn/ver/327/trunk/python/google/appengine/ext/admin/templates/css/memcache.css
+END
+form.css
+K 25
+svn:wc:ra_dav:version-url
+V 80
+/svn/!svn/ver/327/trunk/python/google/appengine/ext/admin/templates/css/form.css
+END
+nav.css
+K 25
+svn:wc:ra_dav:version-url
+V 79
+/svn/!svn/ver/327/trunk/python/google/appengine/ext/admin/templates/css/nav.css
+END
+xmpp.css
+K 25
+svn:wc:ra_dav:version-url
+V 80
+/svn/!svn/ver/327/trunk/python/google/appengine/ext/admin/templates/css/xmpp.css
+END
+ae.css
+K 25
+svn:wc:ra_dav:version-url
+V 78
+/svn/!svn/ver/327/trunk/python/google/appengine/ext/admin/templates/css/ae.css
+END
+datastore_indexes.css
+K 25
+svn:wc:ra_dav:version-url
+V 93
+/svn/!svn/ver/327/trunk/python/google/appengine/ext/admin/templates/css/datastore_indexes.css
+END
+tasks.css
+K 25
+svn:wc:ra_dav:version-url
+V 81
+/svn/!svn/ver/327/trunk/python/google/appengine/ext/admin/templates/css/tasks.css
+END
+datastore.css
+K 25
+svn:wc:ra_dav:version-url
+V 85
+/svn/!svn/ver/327/trunk/python/google/appengine/ext/admin/templates/css/datastore.css
+END
+queues.css
+K 25
+svn:wc:ra_dav:version-url
+V 82
+/svn/!svn/ver/327/trunk/python/google/appengine/ext/admin/templates/css/queues.css
+END

@@ -1,0 +1,29 @@
+K 25
+svn:wc:ra_dav:version-url
+V 81
+/svn/!svn/ver/327/trunk/python/lib/django-1.4/tests/regressiontests/admin_inlines
+END
+admin.py
+K 25
+svn:wc:ra_dav:version-url
+V 90
+/svn/!svn/ver/327/trunk/python/lib/django-1.4/tests/regressiontests/admin_inlines/admin.py
+END
+tests.py
+K 25
+svn:wc:ra_dav:version-url
+V 90
+/svn/!svn/ver/327/trunk/python/lib/django-1.4/tests/regressiontests/admin_inlines/tests.py
+END
+models.py
+K 25
+svn:wc:ra_dav:version-url
+V 91
+/svn/!svn/ver/327/trunk/python/lib/django-1.4/tests/regressiontests/admin_inlines/models.py
+END
+urls.py
+K 25
+svn:wc:ra_dav:version-url
+V 89
+/svn/!svn/ver/327/trunk/python/lib/django-1.4/tests/regressiontests/admin_inlines/urls.py
+END

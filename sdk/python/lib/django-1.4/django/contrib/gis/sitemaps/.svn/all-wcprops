@@ -1,0 +1,29 @@
+K 25
+svn:wc:ra_dav:version-url
+V 73
+/svn/!svn/ver/327/trunk/python/lib/django-1.4/django/contrib/gis/sitemaps
+END
+views.py
+K 25
+svn:wc:ra_dav:version-url
+V 82
+/svn/!svn/ver/327/trunk/python/lib/django-1.4/django/contrib/gis/sitemaps/views.py
+END
+__init__.py
+K 25
+svn:wc:ra_dav:version-url
+V 85
+/svn/!svn/ver/327/trunk/python/lib/django-1.4/django/contrib/gis/sitemaps/__init__.py
+END
+georss.py
+K 25
+svn:wc:ra_dav:version-url
+V 83
+/svn/!svn/ver/327/trunk/python/lib/django-1.4/django/contrib/gis/sitemaps/georss.py
+END
+kml.py
+K 25
+svn:wc:ra_dav:version-url
+V 80
+/svn/!svn/ver/327/trunk/python/lib/django-1.4/django/contrib/gis/sitemaps/kml.py
+END

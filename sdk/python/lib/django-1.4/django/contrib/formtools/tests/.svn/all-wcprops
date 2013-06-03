@@ -1,0 +1,23 @@
+K 25
+svn:wc:ra_dav:version-url
+V 76
+/svn/!svn/ver/327/trunk/python/lib/django-1.4/django/contrib/formtools/tests
+END
+__init__.py
+K 25
+svn:wc:ra_dav:version-url
+V 88
+/svn/!svn/ver/327/trunk/python/lib/django-1.4/django/contrib/formtools/tests/__init__.py
+END
+urls.py
+K 25
+svn:wc:ra_dav:version-url
+V 84
+/svn/!svn/ver/327/trunk/python/lib/django-1.4/django/contrib/formtools/tests/urls.py
+END
+forms.py
+K 25
+svn:wc:ra_dav:version-url
+V 85
+/svn/!svn/ver/327/trunk/python/lib/django-1.4/django/contrib/formtools/tests/forms.py
+END

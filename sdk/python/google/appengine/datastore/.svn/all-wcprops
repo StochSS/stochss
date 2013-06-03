@@ -1,0 +1,101 @@
+K 25
+svn:wc:ra_dav:version-url
+V 57
+/svn/!svn/ver/339/trunk/python/google/appengine/datastore
+END
+datastore_rpc.py
+K 25
+svn:wc:ra_dav:version-url
+V 74
+/svn/!svn/ver/327/trunk/python/google/appengine/datastore/datastore_rpc.py
+END
+sortable_pb_encoder.py
+K 25
+svn:wc:ra_dav:version-url
+V 80
+/svn/!svn/ver/327/trunk/python/google/appengine/datastore/sortable_pb_encoder.py
+END
+entity_pb.py
+K 25
+svn:wc:ra_dav:version-url
+V 70
+/svn/!svn/ver/339/trunk/python/google/appengine/datastore/entity_pb.py
+END
+action_pb.py
+K 25
+svn:wc:ra_dav:version-url
+V 70
+/svn/!svn/ver/327/trunk/python/google/appengine/datastore/action_pb.py
+END
+document_pb.py
+K 25
+svn:wc:ra_dav:version-url
+V 72
+/svn/!svn/ver/327/trunk/python/google/appengine/datastore/document_pb.py
+END
+__init__.py
+K 25
+svn:wc:ra_dav:version-url
+V 69
+/svn/!svn/ver/327/trunk/python/google/appengine/datastore/__init__.py
+END
+datastore_sqlite_stub.py
+K 25
+svn:wc:ra_dav:version-url
+V 82
+/svn/!svn/ver/327/trunk/python/google/appengine/datastore/datastore_sqlite_stub.py
+END
+datastore_pb.py
+K 25
+svn:wc:ra_dav:version-url
+V 73
+/svn/!svn/ver/327/trunk/python/google/appengine/datastore/datastore_pb.py
+END
+datastore_stats_generator.py
+K 25
+svn:wc:ra_dav:version-url
+V 86
+/svn/!svn/ver/339/trunk/python/google/appengine/datastore/datastore_stats_generator.py
+END
+datastore_stub_index.py
+K 25
+svn:wc:ra_dav:version-url
+V 81
+/svn/!svn/ver/327/trunk/python/google/appengine/datastore/datastore_stub_index.py
+END
+datastore_query.py
+K 25
+svn:wc:ra_dav:version-url
+V 76
+/svn/!svn/ver/327/trunk/python/google/appengine/datastore/datastore_query.py
+END
+datastore_index.py
+K 25
+svn:wc:ra_dav:version-url
+V 76
+/svn/!svn/ver/327/trunk/python/google/appengine/datastore/datastore_index.py
+END
+datastore_v3_pb.py
+K 25
+svn:wc:ra_dav:version-url
+V 76
+/svn/!svn/ver/327/trunk/python/google/appengine/datastore/datastore_v3_pb.py
+END
+snapshot_pb.py
+K 25
+svn:wc:ra_dav:version-url
+V 72
+/svn/!svn/ver/327/trunk/python/google/appengine/datastore/snapshot_pb.py
+END
+acl_pb.py
+K 25
+svn:wc:ra_dav:version-url
+V 67
+/svn/!svn/ver/327/trunk/python/google/appengine/datastore/acl_pb.py
+END
+datastore_stub_util.py
+K 25
+svn:wc:ra_dav:version-url
+V 80
+/svn/!svn/ver/339/trunk/python/google/appengine/datastore/datastore_stub_util.py
+END

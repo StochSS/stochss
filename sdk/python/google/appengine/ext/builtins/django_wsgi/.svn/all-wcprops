@@ -1,0 +1,17 @@
+K 25
+svn:wc:ra_dav:version-url
+V 72
+/svn/!svn/ver/327/trunk/python/google/appengine/ext/builtins/django_wsgi
+END
+include.yaml
+K 25
+svn:wc:ra_dav:version-url
+V 85
+/svn/!svn/ver/327/trunk/python/google/appengine/ext/builtins/django_wsgi/include.yaml
+END
+include-python27.yaml
+K 25
+svn:wc:ra_dav:version-url
+V 94
+/svn/!svn/ver/327/trunk/python/google/appengine/ext/builtins/django_wsgi/include-python27.yaml
+END

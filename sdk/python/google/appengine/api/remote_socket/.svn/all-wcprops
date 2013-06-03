@@ -1,0 +1,41 @@
+K 25
+svn:wc:ra_dav:version-url
+V 65
+/svn/!svn/ver/339/trunk/python/google/appengine/api/remote_socket
+END
+_remote_socket_error.py
+K 25
+svn:wc:ra_dav:version-url
+V 89
+/svn/!svn/ver/327/trunk/python/google/appengine/api/remote_socket/_remote_socket_error.py
+END
+_remote_socket_addr.py
+K 25
+svn:wc:ra_dav:version-url
+V 88
+/svn/!svn/ver/327/trunk/python/google/appengine/api/remote_socket/_remote_socket_addr.py
+END
+_remote_socket_stub.py
+K 25
+svn:wc:ra_dav:version-url
+V 88
+/svn/!svn/ver/327/trunk/python/google/appengine/api/remote_socket/_remote_socket_stub.py
+END
+__init__.py
+K 25
+svn:wc:ra_dav:version-url
+V 77
+/svn/!svn/ver/327/trunk/python/google/appengine/api/remote_socket/__init__.py
+END
+_remote_socket.py
+K 25
+svn:wc:ra_dav:version-url
+V 83
+/svn/!svn/ver/339/trunk/python/google/appengine/api/remote_socket/_remote_socket.py
+END
+remote_socket_service_pb.py
+K 25
+svn:wc:ra_dav:version-url
+V 93
+/svn/!svn/ver/327/trunk/python/google/appengine/api/remote_socket/remote_socket_service_pb.py
+END

@@ -1,0 +1,11 @@
+K 25
+svn:wc:ra_dav:version-url
+V 81
+/svn/!svn/ver/327/trunk/python/lib/django-1.4/tests/modeltests/timezones/fixtures
+END
+tz_users.xml
+K 25
+svn:wc:ra_dav:version-url
+V 94
+/svn/!svn/ver/327/trunk/python/lib/django-1.4/tests/modeltests/timezones/fixtures/tz_users.xml
+END

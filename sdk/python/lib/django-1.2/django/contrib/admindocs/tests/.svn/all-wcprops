@@ -1,0 +1,17 @@
+K 25
+svn:wc:ra_dav:version-url
+V 76
+/svn/!svn/ver/327/trunk/python/lib/django-1.2/django/contrib/admindocs/tests
+END
+__init__.py
+K 25
+svn:wc:ra_dav:version-url
+V 88
+/svn/!svn/ver/327/trunk/python/lib/django-1.2/django/contrib/admindocs/tests/__init__.py
+END
+fields.py
+K 25
+svn:wc:ra_dav:version-url
+V 86
+/svn/!svn/ver/327/trunk/python/lib/django-1.2/django/contrib/admindocs/tests/fields.py
+END

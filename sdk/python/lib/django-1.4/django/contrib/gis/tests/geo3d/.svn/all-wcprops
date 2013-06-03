@@ -1,0 +1,23 @@
+K 25
+svn:wc:ra_dav:version-url
+V 76
+/svn/!svn/ver/327/trunk/python/lib/django-1.4/django/contrib/gis/tests/geo3d
+END
+views.py
+K 25
+svn:wc:ra_dav:version-url
+V 85
+/svn/!svn/ver/327/trunk/python/lib/django-1.4/django/contrib/gis/tests/geo3d/views.py
+END
+tests.py
+K 25
+svn:wc:ra_dav:version-url
+V 85
+/svn/!svn/ver/327/trunk/python/lib/django-1.4/django/contrib/gis/tests/geo3d/tests.py
+END
+models.py
+K 25
+svn:wc:ra_dav:version-url
+V 86
+/svn/!svn/ver/327/trunk/python/lib/django-1.4/django/contrib/gis/tests/geo3d/models.py
+END

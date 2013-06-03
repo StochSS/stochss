@@ -1,0 +1,59 @@
+K 25
+svn:wc:ra_dav:version-url
+V 62
+/svn/!svn/ver/327/trunk/python/lib/django-1.2/docs/topics/http
+END
+file-uploads.txt
+K 25
+svn:wc:ra_dav:version-url
+V 79
+/svn/!svn/ver/327/trunk/python/lib/django-1.2/docs/topics/http/file-uploads.txt
+END
+urls.txt
+K 25
+svn:wc:ra_dav:version-url
+V 71
+/svn/!svn/ver/327/trunk/python/lib/django-1.2/docs/topics/http/urls.txt
+END
+decorators.txt
+K 25
+svn:wc:ra_dav:version-url
+V 77
+/svn/!svn/ver/327/trunk/python/lib/django-1.2/docs/topics/http/decorators.txt
+END
+sessions.txt
+K 25
+svn:wc:ra_dav:version-url
+V 75
+/svn/!svn/ver/327/trunk/python/lib/django-1.2/docs/topics/http/sessions.txt
+END
+generic-views.txt
+K 25
+svn:wc:ra_dav:version-url
+V 80
+/svn/!svn/ver/327/trunk/python/lib/django-1.2/docs/topics/http/generic-views.txt
+END
+index.txt
+K 25
+svn:wc:ra_dav:version-url
+V 72
+/svn/!svn/ver/327/trunk/python/lib/django-1.2/docs/topics/http/index.txt
+END
+middleware.txt
+K 25
+svn:wc:ra_dav:version-url
+V 77
+/svn/!svn/ver/327/trunk/python/lib/django-1.2/docs/topics/http/middleware.txt
+END
+views.txt
+K 25
+svn:wc:ra_dav:version-url
+V 72
+/svn/!svn/ver/327/trunk/python/lib/django-1.2/docs/topics/http/views.txt
+END
+shortcuts.txt
+K 25
+svn:wc:ra_dav:version-url
+V 76
+/svn/!svn/ver/327/trunk/python/lib/django-1.2/docs/topics/http/shortcuts.txt
+END

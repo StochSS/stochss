@@ -1,0 +1,17 @@
+K 25
+svn:wc:ra_dav:version-url
+V 71
+/svn/!svn/ver/327/trunk/python/google/appengine/ext/builtins/remote_api
+END
+include.yaml
+K 25
+svn:wc:ra_dav:version-url
+V 84
+/svn/!svn/ver/327/trunk/python/google/appengine/ext/builtins/remote_api/include.yaml
+END
+include-python27.yaml
+K 25
+svn:wc:ra_dav:version-url
+V 93
+/svn/!svn/ver/327/trunk/python/google/appengine/ext/builtins/remote_api/include-python27.yaml
+END

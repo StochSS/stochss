@@ -1,0 +1,20 @@
+#!/bin/bash 
+set -x
+exec > >(tee /var/log/user-data.log|logger -t user-data -s 2>/dev/console) 2>&1
+touch anand3.txt
+echo "testing logfile"
+echo BEGIN
+date '+%Y-%m-%d %H:%M:%S'
+echo END
+touch anand2.txt
+export AWS_ACCESS_KEY_ID=AKIAJYVXC4RP3XZSG6XA
+export AWS_SECRET_ACCESS_KEY=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
+echo export AWS_ACCESS_KEY_ID=AKIAJYVXC4RP3XZSG6XA >> ~/.bashrc
+echo export AWS_SECRET_ACCESS_KEY=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 >> ~/.bashrc
+echo export STOCHKIT_HOME=/home/ubuntu/StochKit2.0.6/ >> ~/.bashrc
+echo export AWS_SECRET_ACCESS_KEY=BcBX3mlHQhwOgrVldn2HA77nTjfBvQ0F64+DaNnQ >> /home/ubuntu/.bashrc
+echo export AWS_ACCESS_KEY_ID=AKIAJYVXC4RP3XZSG6XA >> /home/ubuntu/.bashrc
+echo export STOCHKIT_HOME=/home/ubuntu/StochKit2.0.6/ >> /home/ubuntu/.bashrc
+source ~/.bashrc 
+source /home/ec2-user/.bashrc 
+nohup celery -A tasks worker --autoreload --loglevel=info -n 036bf0e1-3d34-419d-993c-7de60a922a99 --workdir /home/ubuntu > /home/ubuntu/nohup.log 2>&1 & 

@@ -1,0 +1,23 @@
+K 25
+svn:wc:ra_dav:version-url
+V 57
+/svn/!svn/ver/327/trunk/python/lib/django-1.4/django/http
+END
+multipartparser.py
+K 25
+svn:wc:ra_dav:version-url
+V 76
+/svn/!svn/ver/327/trunk/python/lib/django-1.4/django/http/multipartparser.py
+END
+__init__.py
+K 25
+svn:wc:ra_dav:version-url
+V 69
+/svn/!svn/ver/327/trunk/python/lib/django-1.4/django/http/__init__.py
+END
+utils.py
+K 25
+svn:wc:ra_dav:version-url
+V 66
+/svn/!svn/ver/327/trunk/python/lib/django-1.4/django/http/utils.py
+END

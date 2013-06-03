@@ -1,0 +1,17 @@
+K 25
+svn:wc:ra_dav:version-url
+V 96
+/svn/!svn/ver/327/trunk/python/lib/django-1.3/tests/modeltests/model_inheritance_same_model_name
+END
+tests.py
+K 25
+svn:wc:ra_dav:version-url
+V 105
+/svn/!svn/ver/327/trunk/python/lib/django-1.3/tests/modeltests/model_inheritance_same_model_name/tests.py
+END
+models.py
+K 25
+svn:wc:ra_dav:version-url
+V 106
+/svn/!svn/ver/327/trunk/python/lib/django-1.3/tests/modeltests/model_inheritance_same_model_name/models.py
+END

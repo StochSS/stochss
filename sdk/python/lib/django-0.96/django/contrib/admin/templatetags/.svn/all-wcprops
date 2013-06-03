@@ -1,0 +1,35 @@
+K 25
+svn:wc:ra_dav:version-url
+V 80
+/svn/!svn/ver/327/trunk/python/lib/django-0.96/django/contrib/admin/templatetags
+END
+adminmedia.py
+K 25
+svn:wc:ra_dav:version-url
+V 94
+/svn/!svn/ver/327/trunk/python/lib/django-0.96/django/contrib/admin/templatetags/adminmedia.py
+END
+admin_modify.py
+K 25
+svn:wc:ra_dav:version-url
+V 96
+/svn/!svn/ver/327/trunk/python/lib/django-0.96/django/contrib/admin/templatetags/admin_modify.py
+END
+log.py
+K 25
+svn:wc:ra_dav:version-url
+V 87
+/svn/!svn/ver/327/trunk/python/lib/django-0.96/django/contrib/admin/templatetags/log.py
+END
+admin_list.py
+K 25
+svn:wc:ra_dav:version-url
+V 94
+/svn/!svn/ver/327/trunk/python/lib/django-0.96/django/contrib/admin/templatetags/admin_list.py
+END
+adminapplist.py
+K 25
+svn:wc:ra_dav:version-url
+V 96
+/svn/!svn/ver/327/trunk/python/lib/django-0.96/django/contrib/admin/templatetags/adminapplist.py
+END

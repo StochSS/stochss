@@ -1,0 +1,41 @@
+K 25
+svn:wc:ra_dav:version-url
+V 61
+/svn/!svn/ver/327/trunk/python/google/appengine/api/blobstore
+END
+blobstore_stub.py
+K 25
+svn:wc:ra_dav:version-url
+V 79
+/svn/!svn/ver/327/trunk/python/google/appengine/api/blobstore/blobstore_stub.py
+END
+blobstore.py
+K 25
+svn:wc:ra_dav:version-url
+V 74
+/svn/!svn/ver/327/trunk/python/google/appengine/api/blobstore/blobstore.py
+END
+blobstore_service_pb.py
+K 25
+svn:wc:ra_dav:version-url
+V 85
+/svn/!svn/ver/327/trunk/python/google/appengine/api/blobstore/blobstore_service_pb.py
+END
+__init__.py
+K 25
+svn:wc:ra_dav:version-url
+V 73
+/svn/!svn/ver/327/trunk/python/google/appengine/api/blobstore/__init__.py
+END
+file_blob_storage.py
+K 25
+svn:wc:ra_dav:version-url
+V 82
+/svn/!svn/ver/327/trunk/python/google/appengine/api/blobstore/file_blob_storage.py
+END
+dict_blob_storage.py
+K 25
+svn:wc:ra_dav:version-url
+V 82
+/svn/!svn/ver/327/trunk/python/google/appengine/api/blobstore/dict_blob_storage.py
+END

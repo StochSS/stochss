@@ -1,0 +1,23 @@
+K 25
+svn:wc:ra_dav:version-url
+V 74
+/svn/!svn/ver/327/trunk/python/google/appengine/_internal/django/core/mail
+END
+__init__.py
+K 25
+svn:wc:ra_dav:version-url
+V 86
+/svn/!svn/ver/327/trunk/python/google/appengine/_internal/django/core/mail/__init__.py
+END
+utils.py
+K 25
+svn:wc:ra_dav:version-url
+V 83
+/svn/!svn/ver/327/trunk/python/google/appengine/_internal/django/core/mail/utils.py
+END
+message.py
+K 25
+svn:wc:ra_dav:version-url
+V 85
+/svn/!svn/ver/327/trunk/python/google/appengine/_internal/django/core/mail/message.py
+END

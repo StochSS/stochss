@@ -1,0 +1,47 @@
+K 25
+svn:wc:ra_dav:version-url
+V 87
+/svn/!svn/ver/327/trunk/python/lib/django-1.4/django/contrib/gis/db/backends/spatialite
+END
+base.py
+K 25
+svn:wc:ra_dav:version-url
+V 95
+/svn/!svn/ver/327/trunk/python/lib/django-1.4/django/contrib/gis/db/backends/spatialite/base.py
+END
+client.py
+K 25
+svn:wc:ra_dav:version-url
+V 97
+/svn/!svn/ver/327/trunk/python/lib/django-1.4/django/contrib/gis/db/backends/spatialite/client.py
+END
+introspection.py
+K 25
+svn:wc:ra_dav:version-url
+V 104
+/svn/!svn/ver/327/trunk/python/lib/django-1.4/django/contrib/gis/db/backends/spatialite/introspection.py
+END
+adapter.py
+K 25
+svn:wc:ra_dav:version-url
+V 98
+/svn/!svn/ver/327/trunk/python/lib/django-1.4/django/contrib/gis/db/backends/spatialite/adapter.py
+END
+operations.py
+K 25
+svn:wc:ra_dav:version-url
+V 101
+/svn/!svn/ver/327/trunk/python/lib/django-1.4/django/contrib/gis/db/backends/spatialite/operations.py
+END
+models.py
+K 25
+svn:wc:ra_dav:version-url
+V 97
+/svn/!svn/ver/327/trunk/python/lib/django-1.4/django/contrib/gis/db/backends/spatialite/models.py
+END
+creation.py
+K 25
+svn:wc:ra_dav:version-url
+V 99
+/svn/!svn/ver/327/trunk/python/lib/django-1.4/django/contrib/gis/db/backends/spatialite/creation.py
+END

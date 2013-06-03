@@ -1,0 +1,137 @@
+K 25
+svn:wc:ra_dav:version-url
+V 83
+/svn/!svn/ver/327/trunk/python/lib/django-0.96/django/contrib/admin/templates/admin
+END
+template_validator.html
+K 25
+svn:wc:ra_dav:version-url
+V 107
+/svn/!svn/ver/327/trunk/python/lib/django-0.96/django/contrib/admin/templates/admin/template_validator.html
+END
+change_list.html
+K 25
+svn:wc:ra_dav:version-url
+V 100
+/svn/!svn/ver/327/trunk/python/lib/django-0.96/django/contrib/admin/templates/admin/change_list.html
+END
+edit_inline_stacked.html
+K 25
+svn:wc:ra_dav:version-url
+V 108
+/svn/!svn/ver/327/trunk/python/lib/django-0.96/django/contrib/admin/templates/admin/edit_inline_stacked.html
+END
+filter.html
+K 25
+svn:wc:ra_dav:version-url
+V 95
+/svn/!svn/ver/327/trunk/python/lib/django-0.96/django/contrib/admin/templates/admin/filter.html
+END
+object_history.html
+K 25
+svn:wc:ra_dav:version-url
+V 103
+/svn/!svn/ver/327/trunk/python/lib/django-0.96/django/contrib/admin/templates/admin/object_history.html
+END
+search_form.html
+K 25
+svn:wc:ra_dav:version-url
+V 100
+/svn/!svn/ver/327/trunk/python/lib/django-0.96/django/contrib/admin/templates/admin/search_form.html
+END
+pagination.html
+K 25
+svn:wc:ra_dav:version-url
+V 99
+/svn/!svn/ver/327/trunk/python/lib/django-0.96/django/contrib/admin/templates/admin/pagination.html
+END
+field_line.html
+K 25
+svn:wc:ra_dav:version-url
+V 99
+/svn/!svn/ver/327/trunk/python/lib/django-0.96/django/contrib/admin/templates/admin/field_line.html
+END
+edit_inline_tabular.html
+K 25
+svn:wc:ra_dav:version-url
+V 108
+/svn/!svn/ver/327/trunk/python/lib/django-0.96/django/contrib/admin/templates/admin/edit_inline_tabular.html
+END
+base_site.html
+K 25
+svn:wc:ra_dav:version-url
+V 98
+/svn/!svn/ver/327/trunk/python/lib/django-0.96/django/contrib/admin/templates/admin/base_site.html
+END
+change_list_results.html
+K 25
+svn:wc:ra_dav:version-url
+V 108
+/svn/!svn/ver/327/trunk/python/lib/django-0.96/django/contrib/admin/templates/admin/change_list_results.html
+END
+500.html
+K 25
+svn:wc:ra_dav:version-url
+V 92
+/svn/!svn/ver/327/trunk/python/lib/django-0.96/django/contrib/admin/templates/admin/500.html
+END
+invalid_setup.html
+K 25
+svn:wc:ra_dav:version-url
+V 102
+/svn/!svn/ver/327/trunk/python/lib/django-0.96/django/contrib/admin/templates/admin/invalid_setup.html
+END
+index.html
+K 25
+svn:wc:ra_dav:version-url
+V 94
+/svn/!svn/ver/327/trunk/python/lib/django-0.96/django/contrib/admin/templates/admin/index.html
+END
+404.html
+K 25
+svn:wc:ra_dav:version-url
+V 92
+/svn/!svn/ver/327/trunk/python/lib/django-0.96/django/contrib/admin/templates/admin/404.html
+END
+change_form.html
+K 25
+svn:wc:ra_dav:version-url
+V 100
+/svn/!svn/ver/327/trunk/python/lib/django-0.96/django/contrib/admin/templates/admin/change_form.html
+END
+filters.html
+K 25
+svn:wc:ra_dav:version-url
+V 96
+/svn/!svn/ver/327/trunk/python/lib/django-0.96/django/contrib/admin/templates/admin/filters.html
+END
+login.html
+K 25
+svn:wc:ra_dav:version-url
+V 94
+/svn/!svn/ver/327/trunk/python/lib/django-0.96/django/contrib/admin/templates/admin/login.html
+END
+delete_confirmation.html
+K 25
+svn:wc:ra_dav:version-url
+V 108
+/svn/!svn/ver/327/trunk/python/lib/django-0.96/django/contrib/admin/templates/admin/delete_confirmation.html
+END
+base.html
+K 25
+svn:wc:ra_dav:version-url
+V 93
+/svn/!svn/ver/327/trunk/python/lib/django-0.96/django/contrib/admin/templates/admin/base.html
+END
+submit_line.html
+K 25
+svn:wc:ra_dav:version-url
+V 100
+/svn/!svn/ver/327/trunk/python/lib/django-0.96/django/contrib/admin/templates/admin/submit_line.html
+END
+date_hierarchy.html
+K 25
+svn:wc:ra_dav:version-url
+V 103
+/svn/!svn/ver/327/trunk/python/lib/django-0.96/django/contrib/admin/templates/admin/date_hierarchy.html
+END

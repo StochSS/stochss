@@ -1,0 +1,17 @@
+K 25
+svn:wc:ra_dav:version-url
+V 72
+/svn/!svn/ver/318/trunk/python/lib/django_1_3/tests/regressiontests/text
+END
+__init__.py
+K 25
+svn:wc:ra_dav:version-url
+V 84
+/svn/!svn/ver/233/trunk/python/lib/django_1_3/tests/regressiontests/text/__init__.py
+END
+models.py
+K 25
+svn:wc:ra_dav:version-url
+V 82
+/svn/!svn/ver/233/trunk/python/lib/django_1_3/tests/regressiontests/text/models.py
+END

@@ -1,0 +1,17 @@
+K 25
+svn:wc:ra_dav:version-url
+V 68
+/svn/!svn/ver/327/trunk/python/google/appengine/ext/builtins/default
+END
+include.yaml
+K 25
+svn:wc:ra_dav:version-url
+V 81
+/svn/!svn/ver/327/trunk/python/google/appengine/ext/builtins/default/include.yaml
+END
+include-python27.yaml
+K 25
+svn:wc:ra_dav:version-url
+V 90
+/svn/!svn/ver/327/trunk/python/google/appengine/ext/builtins/default/include-python27.yaml
+END

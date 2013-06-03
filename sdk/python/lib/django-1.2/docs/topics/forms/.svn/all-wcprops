@@ -1,0 +1,29 @@
+K 25
+svn:wc:ra_dav:version-url
+V 63
+/svn/!svn/ver/327/trunk/python/lib/django-1.2/docs/topics/forms
+END
+formsets.txt
+K 25
+svn:wc:ra_dav:version-url
+V 76
+/svn/!svn/ver/327/trunk/python/lib/django-1.2/docs/topics/forms/formsets.txt
+END
+modelforms.txt
+K 25
+svn:wc:ra_dav:version-url
+V 78
+/svn/!svn/ver/327/trunk/python/lib/django-1.2/docs/topics/forms/modelforms.txt
+END
+index.txt
+K 25
+svn:wc:ra_dav:version-url
+V 73
+/svn/!svn/ver/327/trunk/python/lib/django-1.2/docs/topics/forms/index.txt
+END
+media.txt
+K 25
+svn:wc:ra_dav:version-url
+V 73
+/svn/!svn/ver/327/trunk/python/lib/django-1.2/docs/topics/forms/media.txt
+END
