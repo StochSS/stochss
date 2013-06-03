@@ -69,13 +69,13 @@
 			<div class="span9">
 				<div class="well well-large">
 					<form method="post" action="/modeleditor" name="create_model">
-						<h3><a data-toggle="collapse" data-target="#optional"> Create new model </a>&raquo; </h3>
+						<h3><a style="text-decoration: None"> Create new model </a></h3>
 						<br/>
 						<div id="optional" class="in collapse" style="height:auto">
 							<label>Name</label>
 							<input type="text" class="span3" id="Formula" placeholder="Model name" name="name" value="{{ name }}" class="update_box auto_complete">
 
-							<button type="submit" class="btn btn-primary" style="float: right;">
+							<button type="submit" class="btn btn-primary btn-large" style="float: right;">
 								Create model
 							</button>
 						</div>
@@ -91,7 +91,7 @@
 					<div id="msg" style="display:none"></div>					
 					{% if all_models %}
 					<div>
-						<h3><a data-toggle="collapse" data-target="#model_list">Models</a>&raquo; </h3>
+						<h3><a style="text-decoration: None">Models</a></h3>
 					</div>
 					<div id="model_list" class="in collapse" style="height: auto">
 						<br/>

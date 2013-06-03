@@ -13,11 +13,19 @@
 				<div id="optional" class="in collapse" style="height:auto">
 					<div style="float: left; padding-right: 10px">
 						<label>Name</label>
-						<input type="text" name="name" placeholder="k3" style="width: 160px" value="{{ name }}" TITLE = "Define the Name of the Parameters" class="update_box auto_complete">
+						<input type="text" name="name" placeholder="Parameter name, e.g. k3" style="width: 160px" value="{{ name }}" TITLE = "Define the Name of the Parameters" class="update_box auto_complete">
 					</div>
 					<div>
-						<label>Expression</label>
+						<label>Expression
+                            {% set help_modal_id = "help_modal1" %}
+                            {% set help_modal_title = "Parameter expression" %}
+                            {% set help_modal_message = "A parameter can be defined as a scalar, numeric value, or through simple arithmetic expressions (+, - , * , /) that involves other already defined parameters. The expression must be evaluable in the namespace that consists of all parameter names. This means that at least one parameter must have a scalar value." %}
+                            {% include "help_modal.html" %}
+                            {{help_modal|safe}}
+                            <a data-toggle="modal" href="#help_modal1" style="text-decoration: none"><i class="icon-question-sign"></i></a>
+</label>
 						<input type="text" class="span3" name="expression" placeholder="10*(k1+k2)" value="{{ expression }}" TITLE = "Insert an Integer">
+                           
 					</div>
 					<div style="clear: both"></div>
 					<button type="submit" class="btn btn-primary" style="float: right;">

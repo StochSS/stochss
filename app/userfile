@@ -17,4 +17,4 @@ echo export AWS_ACCESS_KEY_ID=AKIAJYVXC4RP3XZSG6XA >> /home/ubuntu/.bashrc
 echo export STOCHKIT_HOME=/home/ubuntu/StochKit2.0.6/ >> /home/ubuntu/.bashrc
 source ~/.bashrc 
 source /home/ec2-user/.bashrc 
-nohup celery -A tasks worker --autoreload --loglevel=info -n a59bb84b-15ab-47de-b33a-be40e1fa184e --workdir /home/ubuntu > /home/ubuntu/nohup.log 2>&1 & 
+nohup celery -A tasks worker --autoreload --loglevel=info -n 4038d140-438a-4252-9915-418cb5a5a128 --workdir /home/ubuntu > /home/ubuntu/nohup.log 2>&1 & 
