@@ -14,9 +14,13 @@ git clone --recursive https://github.com/StochSS/stochss.git
 Installation:
 
 Ubuntu:
-=======
 
+In a terminal, type:
+
+./install_linux.sh
+./launchapp
 
 MacOSX:
-=======
 
+In a terminal, type:
+./launchapp
