@@ -18,9 +18,11 @@ Ubuntu:
 In a terminal, type:
 
 ./install_linux.sh
+
 ./launchapp
 
 MacOSX:
 
 In a terminal, type:
+
 ./launchapp
