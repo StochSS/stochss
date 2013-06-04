@@ -142,6 +142,7 @@ class CredentialsPage(BaseHandler):
             result = {'status':False,'vm_status':False,'vm_status_msg':'Could not determine the status of the VMs: Invalid Credentials.'}
             context['vm_names'] = None
             context['valid_credentials']=False
+            context['active_vms']=False
         else:
             
             context['valid_credentials'] = True
