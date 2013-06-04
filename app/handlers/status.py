@@ -118,8 +118,8 @@ class StatusPage(BaseHandler):
                             if res[stochkit_job.pid]:
                                 stochkit_job.status = "Running"
                             else:
-                                # Check if the output folder is present, in which case the job finsished sucessfully.
-                                if os.path.exists(stochkit_job.output_location+"/result"):
+                                # Check if the stats/means.txtis present, that will always be the case for a sucessful job.
+                                if os.path.exists(stochkit_job.output_location+"/result/stats/means.txt"):
                                     stochkit_job.status = "Finished"
                                 else:
                                     stochkit_job.status = "Failed"

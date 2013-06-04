@@ -20,9 +20,16 @@
                             {% set help_modal_id = "help_modal1" %}
                             {% set help_modal_title = "Parameter expression" %}
                             {% set help_modal_message = "A parameter can be defined as a scalar, numeric value, or through simple arithmetic expressions (+, - , * , /) that involves other already defined parameters. The expression must be evaluable in the namespace that consists of all parameter names. This means that at least one parameter must have a scalar value." %}
-                            {% include "help_modal.html" %}
+                            {% include "help_modal.html" %} 
+                            <div id='help_modal1' class='modal hide fade in' style='display: none;'>
+                                <div class='modal-header'>
+                                    <a class='close' data-dismiss='modal'>×</a><h3>Help: {{help_modal_title}}</h3>
+                                </div>
+                                <div class='modal-body'><p>{{help_modal_message}}</p>
+                                </div>
+                            </div>
                             {{help_modal|safe}}
-                            <a data-toggle="modal" href="#help_modal1" style="text-decoration: none"><i class="icon-question-sign"></i></a>
+                            <a data-toggle="modal" href="#help_modal1" style="text-decoration: none;"><i class="icon-question-sign"></i></a>
 </label>
 						<input type="text" class="span3" name="expression" placeholder="10*(k1+k2)" value="{{ expression }}" TITLE = "Insert an Integer">
                            
