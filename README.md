@@ -35,7 +35,7 @@ There are many ways to obtain Git for OSX.
 
 * Using a graphical installer:
 
-     [http://git-scm.com/downloads]('http://git-scm.com/downloads')
+     [http://git-scm.com/downloads](http://git-scm.com/downloads)
 
 * MacPorts:
 
