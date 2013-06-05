@@ -19,8 +19,6 @@
 						<input type="text" class="span3" name="name" placeholder="R1" value="{{ name }}" TITLE = "Give a Name to the Reaction">
                             
 					</div>
-			
-                   
                      
 					<div style="float:left; padding-right: 10px;">
 						<label> <a data-toggle="modal" class="show" href="#help_modal1" style="text-decoration: none">Reactants <i class="icon-question-sign"></i></a>
@@ -157,7 +155,7 @@
 <div id="all_species_list" class="in collapse">
     <ul>
         {% for key,value in all_species_list.items() %}
-        <li class = "horizontal"><a href="#" TITLE="{{all_species_list[key].initial_value}}">{{all_species_list[key].name}}</a></li>
+        <li class = "horizontal"><a TITLE="{{all_species_list[key].initial_value}}" style="text-decoration: none;">{{all_species_list[key].name}}</a></li>
         {% endfor %}
     </ul>
 </div>
@@ -168,7 +166,7 @@
 <div id="all_parameters_list" class="in collapse">
     <ul>
         {% for key,value in all_parameters_list.items() %}
-        <li class = "horizontal"><a href="#" TITLE="{{all_parameters_list[key].value}}">{{all_parameters_list[key].name}}</a></li>
+        <li class = "horizontal"><a  TITLE="{{all_parameters_list[key].value}}" style="text-decoration: none;">{{all_parameters_list[key].name}}</a></li>
         {% endfor %}
     </ul>
 </div>
