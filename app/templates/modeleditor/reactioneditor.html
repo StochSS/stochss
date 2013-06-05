@@ -23,14 +23,12 @@
                    
                      
 					<div style="float:left; padding-right: 10px;">
-						<label>Reactants
+						<label> <a data-toggle="modal" class="show" href="#help_modal1" style="text-decoration: none">Reactants <i class="icon-question-sign"></i></a>
                             {% set help_modal_id = "help_modal1" %}
                             {% set help_modal_title = "Reactants and Products" %}
                             {% set help_modal_message = "Enter the reactants in the input below as a comma separated list of species names. The stochiometry (the number of molecules produced or consumed) is preprended to the species name. For example, for the reaction A+B -> C, you write A,B in the reactants input, and C in the products input . For the reaction 2A+B->C, you write 2A in the reactant input and C in the product input. If a reaction does not involve any reactants (a zeroth order reaction) or if it does not produce any species (such as A->EmptySet), leave the corresponding input empty." %}
                             {% include "help_modal.html" %}
                             {{help_modal|safe}}
-                            <a data-toggle="modal" href="#help_modal1" style="text-decoration: none"><i class="icon-question-sign"></i></a>
-                        
                         </label>
 						<input type="text" class="auto_complete" name="reactants" placeholder="A, B" id="reactants" style="width: 160px" value="{{ reactants }}" TITLE = "Reactants are species consumed by the reaction. Input species names separated by commas.">						
 					</div>
@@ -44,25 +42,22 @@
 						<input type="text" class="span3 auto_complete" name="products" placeholder="C" id="products" value="{{ products }}" TITLE = "Products are species produced by the reaction. Input species names separated by comma.">
                     </div>
                     
-                     <label id="propensity_label">Propensity Function
+                     <label id="propensity_label"><a data-toggle="modal" href="#help_modal2" style="text-decoration: none"> Propensity Function <i class="icon-question-sign"></i> </a>
                      
                          {% set help_modal_id = "help_modal2" %}
                          {% set help_modal_title = "Propensity function" %}
                          {% set help_modal_message = "The propensity function can be any simple arithmetic expression (+ , -, *, /) involving parameter and species names, for example 'k1*A*B'  or 'Vmax*S/(Km+S)'. For the propensity function to be valid, it needs to evaulate in the namespace consisting of all species and all parameter names. " %}
                          {% include "help_modal.html" %}
                          {{help_modal|safe}}
-                         <a data-toggle="modal" href="#help_modal2" style="text-decoration: none"><i class="icon-question-sign"></i></a>
-
                      </label>
                      <input type="text" placeholder="k*A*B" name="propensity_function" id="propensity" value="{{ propensity_function }}" style="display:block;" TITLE = "Define the propensity function. If the propensity is of mass-action type, you can use the checkboxes below to automatically generate the propensity function."/>
-                     <input type="checkbox" onclick="javascript:toggleField('propensity');javascript:toggleField('propensity_label');javascript:toggleField('mass-action');" name='is_mass_action'> Mass Action</input>
+                    
+                     <input type="checkbox" onclick="javascript:toggleField('propensity');javascript:toggleField('propensity_label');javascript:toggleField('mass-action');" name='is_mass_action'> <a data-toggle="modal" href="#help_modal3" style="text-decoration: none"> Mass Action <i class="icon-question-sign"></i></a></input>
                      {% set help_modal_id = "help_modal3" %}
                      {% set help_modal_title = "Mass Action reaction" %}
                      {% set help_modal_message = "By selecting the Mass Action checkbox, you will be presented with the option to choose a rate constant for the reaction. The propensity function will be automatically created assuming mass action kinetics when you click the 'Add reaction' button. For this option, only zeroth (EmptySet -> A), first (A->B) and second order (A+B->C) reactions are supported. If you use the StochKit2 solvers, specifying reactions as mass action can have a performance advantage, since models with only mass action reactions does not have to be compiled prior to simulations, which reduces the start-up time of the solver. "%}
                      {% include "help_modal.html" %}
                      {{help_modal|safe}}
-                     <a data-toggle="modal" href="#help_modal3" style="text-decoration: none"><i class="icon-question-sign"></i></a>
-
                     </br>
                      {% if all_parameters_list %}
                         <div id="mass-action" style="height: auto; display:none;">
