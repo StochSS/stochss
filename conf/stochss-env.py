@@ -29,6 +29,5 @@ try:
     fh.close()
 except:
     print "Warning, failed to write configuration file."
-    raise
     pass
 
