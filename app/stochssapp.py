@@ -6,7 +6,6 @@ import urllib
 import webapp2
 import logging
 
-
 try:
     import json
 except ImportError:
@@ -19,7 +18,10 @@ from google.appengine.ext import ndb
 from google.appengine.ext import db
 from google.appengine.api import users
 
+from backend.backendservice import *
+
 import mimetypes
+
 
 """ Initializer section """
 # Initialize the jinja environment
@@ -42,7 +44,6 @@ class DictionaryProperty(db.Property):
     
     def empty(self, value):
         return value is None
-
 
 
 class UserData(db.Model):
@@ -90,18 +91,44 @@ class BaseHandler(webapp2.RequestHandler):
     def __init__(self, request, response):
         # Make sure a handler has a reference to the current user 
         self.user = users.get_current_user()
+
         # Most pages will need the UserData, so for convenience we add it here.
-        # TODO: Make this a cached session property
         self.user_data = db.GqlQuery("SELECT * FROM UserData WHERE user_id = :1", self.user.user_id()).get()
 
+        # If the user_data does not exist in the datastore, we instantiate it here
         if self.user_data == None:
+            
             user_data = UserData()
             user_data.user_id = self.user.user_id()
-            user_data.setCredentials({'EC2_SECRET_KEY':"",'EC2_ACCESS_KEY':""})
-            user_data.valid_credentials = False
-            # Create a unique bucket name for the user
+            
+            # Get optional app-instance configurations and add those to user_data
+            credentials = {'EC2_SECRET_KEY':"",'EC2_ACCESS_KEY':""}
+            try:
+                env_variables = app.config.get('env_variables')
+                user_data.env_variables = json.dumps(env_variables)
+                if 'AWS_ACCESS_KEY' in env_variables:
+                    credentials['EC2_ACCESS_KEY']=env_variables['AWS_ACCESS_KEY']
+                if 'AWS_SECRET_KEY' in env_variables:
+                    credentials['EC2_SECRET_KEY']=env_variables['AWS_SECRET_KEY']
+            except:
+                raise
+        
+            user_data.setCredentials(credentials)
+            
+            # Check if the credentials are valid
+            service = backendservices()
+            params ={}
+            params['credentials'] =credentials
+            params["infrastructure"] = "ec2"
+            if service.validateCredentials(params):
+                user_data.valid_credentials = True
+            else:
+                user_data.valid_credentials = False
+
+            # Create an unique bucket name for the user
             import uuid
-            user_data.setBucketName(uuid.uuid4())
+            user_data.setBucketName('stochss-output-'+str(uuid.uuid4()))
+            
             user_data.put()
             self.user_data = user_data
         
@@ -175,6 +202,14 @@ config['webapp2_extras.sessions'] = {
     'secret_key': 'my-super-secret-key',
 }
 
+# Try to add application configurations from the optional configuration file
+try:
+    import conf.app_config
+    env_variables = {'env_variables':conf.app_config.app_config}
+    config = dict(config,**env_variables)
+except:
+    pass
+
 from handlers.specieseditor import *
 from handlers.modeleditor import *
 from handlers.parametereditor import *
@@ -202,8 +237,6 @@ class StaticFileHandler(BaseHandler):
             self.response.write("Could not find the requested file on the server")
         
         
-
-
 app = webapp2.WSGIApplication([
                                ('/', MainPage),
                                ('/modeleditor/specieseditor', SpeciesEditorPage),
@@ -223,7 +256,7 @@ app = webapp2.WSGIApplication([
                                ('/localsettings',LocalSettingsPage),
                                ('/signout', Signout)
                                ],
-                                config = config,
+                                config=config,
                                 debug=True) 
 
 
@@ -234,4 +267,5 @@ if __name__ == '__main__':
     sys.path.append(os.path.join(os.path.dirname(__file__), 'lib'))
     print sys.path
     import boto
+        
     main()
