@@ -6,44 +6,61 @@
 #
 #
 
+STOCHKIT_VERSION=StochKit2.0.7
 STOCHKIT_PREFIX=$HOME
+STOCHKIT_HOME=$STOCHKIT_PREFIX/$STOCHKIT_VERSION
 
 # Check dependencies
 echo "Checking dependencies..."
 
+# Test for the precence of the GNU compilers
 echo "gcc: "
 if which gcc>/dev/null; then
-echo "OK"
+echo "gcc not found, attempting to install it..."	
 else
-echo "StochKit requires gcc and g++,..."
-exit 1
+echo "StochKit requires gcc."
+exit -1
 fi
 
 echo "g++"
 if which g++>/dev/null; then
 echo "OK"
 else
-echo "StochKit requires gcc and g++,..."
-exit 1
+echo "StochKit requires g++."
+exit -1
 fi
-exit 1
 
-echo "Downloading StochKit2.0.7"
+# Attempt to install libxml2
 
-wget http://sourceforge.net/projects/stochkit/files/StochKit2/StochKit2.0.7/StochKit2.0.7.tgz -O $STOCHKIT_PREFIX/StochKit2.0.7.tgz
+if [ ! -e $STOCHKIT_PREFIX/$STOCHKIT_VERSION.tgz ]; then
+echo "Downloading StochKit2.0.7..."
+wget http://sourceforge.net/projects/stochkit/files/StochKit2/$STOCHKIT_VERSION/$STOCHKIT_VERSION.tgz -O $STOCHKIT_PREFIX/$STOCHKIT_VERSION.tgz
+fi
 
-echo "Building StochKit"
-
+echo "Building StochKit..."
 wd=`pwd`
 cd $STOCHKIT_PREFIX
 tar -xf StochKit2.0.7.tgz
-cd StochKit2.0.7
+cd $STOCHKIT_HOME
 ./install.sh
 cd $wd
+
+echo "Testing StochKit2 installation..."
+# Test that StochKit was installed successfully by running it on a sample model
+if $STOCHKIT_HOME/ssa -m $STOCHKIT_HOME/models/examples/dimer_decay.xml -r 1 -t 1 -i 1>/dev/null; then
+    echo "StochKit2.0.7 was installed successfully."
+else
+    echo "StochKit2.0.7 failed to install. Consult the StochKit documentation for help on building StochKit for your platform."	
+    echo "Cleaning up..."
+    rm -f $STOCHKIT_PREFIX/$STOCHKIT_VERSION.tgz
+    rm -rf $STOCHKIT_PREFIX/$STOCHKIT_VERSION	
+    exit -1		 
+fi
 
 echo "Cleaning up..."
 rm -f $STOCHKIT_PREFIX/StochKit2.0.7.tgz
 
-echo "Configuring the app with STOCHKIT_HOME"
+echo "Configuring the app to use this installation of StochKit for local execution..."
 
 echo "Done!"
+exit 0
