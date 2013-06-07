@@ -28,17 +28,18 @@ echo "Checking dependencies..."
 # Test for the precence of the GNU compilers
 echo "gcc: "
 if which gcc>/dev/null; then
-echo "gcc not found, attempting to install it..."	
-$PKG_MNGR install -y gcc
+echo "OK"
 else
-echo "StochKit requires gcc."
+echo "gcc not found, attempting to install it..."
+$PKG_MNGR install -y gcc
 fi
 
 echo "g++"
 if which g++>/dev/null; then
 echo "OK"
 else
-echo "StochKit requires g++."
+echo "gcc not found, attempting to install it..."
+$PKG_MNGR install -y g++
 exit -1
 fi
 
