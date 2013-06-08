@@ -14,7 +14,7 @@ STOCHKIT_HOME=$STOCHKIT_PREFIX/$STOCHKIT_VERSION
 # Determine the package manager to use (for Linux flavors)
 if which yum>/dev/null; then
 PKG_MNGR=yum
-elif [ -x "$(which yum)" ]; then
+elif which apt-get>dev/null; then
 PKG_MNGR=apt-get
 else
 echo "No package manager found (yum or apt-get). If you are on OSX, 
@@ -43,8 +43,6 @@ $PKG_MNGR install -y g++
 exit -1
 fi
 
-# Attempt to install libxml2
-
 if [ ! -e $STOCHKIT_PREFIX/$STOCHKIT_VERSION.tgz ]; then
 echo "Downloading StochKit2.0.7..."
 curl -o $STOCHKIT_PREFIX/$STOCHKIT_VERSION.tgz -L http://sourceforge.net/projects/stochkit/files/StochKit2/$STOCHKIT_VERSION/$STOCHKIT_VERSION.tgz
@@ -59,8 +57,9 @@ cd $STOCHKIT_HOME
 cd $wd
 
 echo "Testing StochKit2 installation..."
+
 # Test that StochKit was installed successfully by running it on a sample model
-if $STOCHKIT_HOME/ssa -m $STOCHKIT_HOME/models/examples/dimer_decay.xml -r 1 -t 1 -i 1>/dev/null; then
+if $STOCHKIT_HOME/ssa -m $STOCHKIT_HOME/models/examples/dimer_decay.xml -r 1 -t 1 -i 1; then
     echo "StochKit2.0.7 was installed successfully."
 else
     echo "StochKit2.0.7 failed to install. Consult the StochKit documentation for help on building StochKit for your platform."	
