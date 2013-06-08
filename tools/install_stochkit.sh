@@ -13,7 +13,7 @@ STOCHKIT_HOME=$STOCHKIT_PREFIX/$STOCHKIT_VERSION
 # Determine the package manager to use (for Linux flavors). 
 if which yum>/dev/null; then
 PKG_MNGR=yum
-elif which apt-get>/dev/null; then
+else which apt-get>/dev/null; then
 PKG_MNGR=apt-get
 fi
 
@@ -24,7 +24,7 @@ echo "make: "
 if which make>/dev/null; then
 echo "OK"
 else
-echo "gcc not found, attempting to install it..."
+echo "make not found, attempting to install it..."
 $PKG_MNGR install -y make
 fi
 
