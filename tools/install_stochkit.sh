@@ -10,20 +10,24 @@ STOCHKIT_VERSION=StochKit2.0.7
 STOCHKIT_PREFIX=$HOME
 STOCHKIT_HOME=$STOCHKIT_PREFIX/$STOCHKIT_VERSION
 
-
-# Determine the package manager to use (for Linux flavors)
+# Determine the package manager to use (for Linux flavors). 
 if which yum>/dev/null; then
 PKG_MNGR=yum
-elif which apt-get>dev/null; then
+elif which apt-get>/dev/null; then
 PKG_MNGR=apt-get
-else
-echo "No package manager found (yum or apt-get). If you are on OSX, 
-please make sure that you have installed Xcode and the command line tools."
 fi
-echo $PKG_MNGR
 
 # Check dependencies
 echo "Checking dependencies..."
+
+echo "make: "
+if which make>/dev/null; then
+echo "OK"
+else
+echo "gcc not found, attempting to install it..."
+$PKG_MNGR install -y make
+fi
+
 
 # Test for the precence of the GNU compilers
 echo "gcc: "
@@ -40,7 +44,6 @@ echo "OK"
 else
 echo "gcc not found, attempting to install it..."
 $PKG_MNGR install -y g++
-exit -1
 fi
 
 if [ ! -e $STOCHKIT_PREFIX/$STOCHKIT_VERSION.tgz ]; then
