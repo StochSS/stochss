@@ -47,7 +47,7 @@ fi
 
 if [ ! -e $STOCHKIT_PREFIX/$STOCHKIT_VERSION.tgz ]; then
 echo "Downloading StochKit2.0.7..."
-wget http://sourceforge.net/projects/stochkit/files/StochKit2/$STOCHKIT_VERSION/$STOCHKIT_VERSION.tgz -O $STOCHKIT_PREFIX/$STOCHKIT_VERSION.tgz
+curl -o $STOCHKIT_PREFIX/$STOCHKIT_VERSION.tgz -L http://sourceforge.net/projects/stochkit/files/StochKit2/$STOCHKIT_VERSION/$STOCHKIT_VERSION.tgz
 fi
 
 echo "Building StochKit..."
