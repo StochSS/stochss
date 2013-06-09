@@ -19,6 +19,7 @@ elif which apt-get>/dev/null; then
 PKG_MNGR=apt-get
 apt-get install -y make gcc,g++ libxml2-dev
 else
+echo "Assuming MacOSX..."
 fi
 
 # Check that the dependencies are satiesfied
