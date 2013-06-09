@@ -17,7 +17,7 @@ PKG_MNGR=yum
 yum install -y make gcc-c++ libxml2-devel
 elif which apt-get>/dev/null; then
 PKG_MNGR=apt-get
-apt-get install -y make gcc,g++ libxml2-dev
+apt-get install -y make gcc g++ libxml2-dev
 else
 echo "Assuming MacOSX..."
 fi
