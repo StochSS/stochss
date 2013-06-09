@@ -51,8 +51,6 @@ echo "gcc not found, attempting to install it..."
 $PKG_MNGR install -y g++
 fi
 
-# libxml2 dev
-
 if [ ! -e $STOCHKIT_PREFIX/$STOCHKIT_VERSION.tgz ]; then
 echo "Downloading StochKit2.0.7..."
 curl -o $STOCHKIT_PREFIX/$STOCHKIT_VERSION.tgz -L http://sourceforge.net/projects/stochkit/files/StochKit2/$STOCHKIT_VERSION/$STOCHKIT_VERSION.tgz
