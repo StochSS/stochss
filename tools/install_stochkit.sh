@@ -10,14 +10,18 @@ STOCHKIT_VERSION=StochKit2.0.7
 STOCHKIT_PREFIX=$HOME
 STOCHKIT_HOME=$STOCHKIT_PREFIX/$STOCHKIT_VERSION
 
-# Determine the package manager to use (for Linux flavors). 
+# Determine the package manager to use (for Linux flavors) and
+# install dependencies
 if which yum>/dev/null; then
 PKG_MNGR=yum
-else which apt-get>/dev/null; then
+yum install -y make gcc-c++ libxml2-devel
+elif which apt-get>/dev/null; then
 PKG_MNGR=apt-get
+apt-get install -y make gcc,g++ libxml2-dev
+else
 fi
 
-# Check dependencies
+# Check that the dependencies are satiesfied
 echo "Checking dependencies..."
 
 echo "make: "
@@ -45,6 +49,8 @@ else
 echo "gcc not found, attempting to install it..."
 $PKG_MNGR install -y g++
 fi
+
+# libxml2 dev
 
 if [ ! -e $STOCHKIT_PREFIX/$STOCHKIT_VERSION.tgz ]; then
 echo "Downloading StochKit2.0.7..."
