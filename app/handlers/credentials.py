@@ -192,6 +192,7 @@ class CredentialsPage(BaseHandler):
                 return None
                     
     def start_vms(self, user_id, credentials, number_of_vms=None):
+        
         group_random_name = user_id +"-"+''.join(random.choice(string.ascii_uppercase + string.digits) for x in range(6))
         params ={"infrastructure":"ec2",
              "num_vms":number_of_vms, 
