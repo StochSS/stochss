@@ -10,7 +10,7 @@ author: andreash
 """
 import os
 
-STOCHKIT_HOME='/Users/andreash/StochKit2.0.7'
+STOCHKIT_HOME=''
 AWS_ACCESS_KEY_ID=''
 AWS_SECRET_ACCESS_KEY=''
 
