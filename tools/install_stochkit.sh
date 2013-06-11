@@ -67,7 +67,7 @@ cd $STOCHKIT_HOME
 ./install.sh
 cd $wd
 
-echo "Testing StochKit2 installation..."
+echo "Testing StochKit2..."
 
 # Test that StochKit was installed successfully by running it on a sample model
 if $STOCHKIT_HOME/ssa -m $STOCHKIT_HOME/models/examples/dimer_decay.xml -r 1 -t 1 -i 1; then

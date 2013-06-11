@@ -10,13 +10,14 @@ author: andreash
 """
 import os
 
+# Edit the following variables to have the app automatically configured
 STOCHKIT_HOME=''
 AWS_ACCESS_KEY_ID=''
 AWS_SECRET_ACCESS_KEY=''
 
-#### There is no need to modify anything below this line, unless you have added new variables above
+#### There is no need to modify anything below this line ###
 
-# If a variable is not set, try to set it from system environment variables
+# If a configuration variable is not set, try to set it from system environment variables
 if STOCHKIT_HOME=='':
    try:
       STOCHKIT_HOME=os.environ['STOCHKIT_HOME']
