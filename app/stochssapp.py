@@ -13,15 +13,14 @@ except ImportError:
 
 from webapp2_extras import sessions
 from webapp2_extras import sessions_memcache
+from webapp2 import Route
 
 from google.appengine.ext import ndb
 from google.appengine.ext import db
-from google.appengine.api import users
-
+#from google.appengine.api import users
 from backend.backendservice import *
 
 import mimetypes
-
 
 """ Initializer section """
 # Initialize the jinja environment
@@ -201,8 +200,12 @@ config = {}
 config['webapp2_extras.sessions'] = {
     'secret_key': 'my-super-secret-key',
 }
+config['webapp2_extras.auth'] = {
+    'user_attributes': []
+}
 
-# Try to add application configurations from the optional configuration file
+# Try to add application configurations from the optional configuration file created upon
+# launch of the app
 try:
     import conf.app_config
     env_variables = {'env_variables':conf.app_config.app_config}
@@ -218,6 +221,7 @@ from handlers.simulation import *
 from handlers.credentials import *
 from handlers.status import *
 
+# Handler to serve static files
 class StaticFileHandler(BaseHandler):
     """ Serve a file dynamically. """
     
@@ -235,8 +239,18 @@ class StaticFileHandler(BaseHandler):
             self.response.write(filecontent)
         except:
             self.response.write("Could not find the requested file on the server")
-        
-        
+
+# Handlers for SimpleAuth authentication
+# Map URLs to handlers
+if 'lib' not in sys.path:
+    sys.path[0:0] = ['lib']
+
+
+r1=Route('/profile', handler='auth_handlers.ProfileHandler', name='profile')
+r2=Route('/logout', handler='auth_handlers.AuthHandler:logout', name='logout')
+r3=Route('/auth/<provider>', handler='auth_handlers.AuthHandler:_simple_auth', name='auth_login')
+r4=Route('/auth/<provider>/callback', handler='auth_handlers.AuthHandler:_auth_callback', name='auth_callback')
+
 app = webapp2.WSGIApplication([
                                ('/', MainPage),
                                ('/modeleditor/specieseditor', SpeciesEditorPage),
@@ -254,7 +268,11 @@ app = webapp2.WSGIApplication([
                                ('/output/servestatic',StaticFileHandler),
                                ('/credentials',CredentialsPage),
                                ('/localsettings',LocalSettingsPage),
-                               ('/signout', Signout)
+                               r1,
+                               r2,
+                               r3,
+                               r4,
+                               ('/signout', Signout),
                                ],
                                 config=config,
                                 debug=True) 

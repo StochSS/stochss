@@ -1,15 +1,16 @@
 #!/env/python
 """ 
+    
 Write the App's (optional) configuration file. This script
 gets executed when launching the app via the utility script
 'launchapp', but not if you launch directly with dev_appserver.py
 
-author: andreash    
+author: andreash   
+    
 """
 import os
-import subprocess
 
-STOCHKIT_HOME=''
+STOCHKIT_HOME='/Users/andreash/StochKit2.0.7'
 AWS_ACCESS_KEY_ID=''
 AWS_SECRET_ACCESS_KEY=''
 
@@ -24,15 +25,15 @@ if STOCHKIT_HOME=='':
 
 if AWS_ACCESS_KEY_ID=='':
    try:
-   	AWS_ACCESS_KEY_ID=os.environ['AWS_ACCESS_KEY_ID']
+       AWS_ACCESS_KEY_ID=os.environ['AWS_ACCESS_KEY_ID']
    except:
-        pass
+       pass
 
 if AWS_SECRET_ACCESS_KEY=='':
    try:
-	AWS_SECRET_ACCESS_KEY=os.environ['AWS_SECRET_ACCESS_KEY']
+       AWS_SECRET_ACCESS_KEY=os.environ['AWS_SECRET_ACCESS_KEY']
    except:
- 	pass
+       pass
 
 try:
     config_file=os.path.join(os.path.dirname(__file__),'../app/conf/app_config.py')
