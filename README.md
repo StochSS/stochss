@@ -3,15 +3,17 @@ stochss
 
 StochSS - Stochastic Simulation Service.  
 
+StochSS is currently supported on Linux and Apple OSX platforms. 
 
-## Cloning the repo:
+## Obtaining the code:
 
-The repository relies on several submodules. To clone the repository and all the modules, 
-a recursive cloning has to be performed using the following command :
+StochSS is downloaded by cloning the GitHub repository. Since the repository relies on several submodules,  
+a recursive cloning has to be performed. Open a terminal and from a directory where you want to download the code,
+(your home folder is a good place) type the following command:
 
-    git clone --recursive https://github.com/StochSS/stochss.git
+    $ git clone --recursive https://github.com/StochSS/stochss.git
 
-If git is not already installed on your machine, obtain it for your platform:
+If git is not already installed on your machine, the above command will fail. To obtain Git for your platform:
 
 Ubuntu/Debian:
 
@@ -42,31 +44,29 @@ There are many ways to obtain Git for OSX.
     $ sudo port install git-core
       
 
-Quick start:
------
+## Quick start:
+  
+### Linux & MacOSX:
 
-Follow the instructions below to launch the app on localhost, port 8080.  
+After sucessfully cloning the repository as above, in a terminal, type:
 
-### Linux:
+    $ cd stochss
+    $ ./launchapp
 
-In a terminal, type:
-
-    ./install_linux.sh
-    ./launchapp
-
-If the app launched without error, open a browser and go to
+If the app launched without error, open a web browser (Firefox, Safari or Chrome) and navigate to
 
 http://localhost:8080
 
-### MacOSX:
+You will be promted with a login screen with the default username 'test@examples.com'. This version of StochSS does not support 
+a secure authentication mechanism, so any user name that is on the form of an e-mail address will do to log in to the app. 
+The e-mail you use will be mapped to a user id in the app, so whenever logging in with the same e-mail address at a later time, 
+your saved data will be there. 
 
-In a terminal, type:
+### Terminating the App 
 
-    ./launchapp
+Closing the browser does not terminate the App. To shut it down permanently, in the same terminal where you lunched the app,
+press "Ctrl-C" on your keyboard, after which you can close the terminal. Note that simply closing the terminal might lead to loss of data. 
 
-If the app launched without error, open a browser and go to
-
-http://localhost:8080
 
 ### Launching the app on a different host/port
 
