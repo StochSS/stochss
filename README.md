@@ -49,9 +49,19 @@ There are many ways to obtain Git for OSX.
   
 ### Linux & MacOSX:
 
+The application makes use of [StochKit2](http://www.engineering.ucsb.edu/~cse/StochKit/) to run well mixed stochastic
+simulations locally, and to use this feature you need to install StochKit2. StochSS contains a tool that will attempt to
+automatically download and install StochKit2.0.7 and configure the StochSS App to use this installation. 
+If the script fails, you need to consult the StochKit manual for troubleshooting the installation. On Ubuntu and Fedora,
+the script will try to install any dependencies (make, gcc, g++, libxml2) using the standard package managers. On MacOSX,
+since there are many different ways to satisfy the dependencies, we do not attempt an automatic install. 
+If you have Xcode and the command-line tools installed as recommended above, all dependencies are satesfied. If you want
+to install StochKit manually, simply skip the second step below. 
+
 After sucessfully cloning the repository as above, in a terminal, type:
 
     $ cd stochss
+    $ tools/install_stochkit.sh
     $ ./launchapp
 
 If the app launched without error, open a web browser (Firefox, Safari or Chrome) and navigate to
@@ -74,6 +84,8 @@ press "Ctrl-C" on your keyboard, after which you can close the terminal. Note th
 To launch the app on a different host and port, from the base directory:
 
     $ python sdk/python/dev_appserver.py --host hostname --port portnumber app
+    
+For more options, consult the help for dev_appserver.py.
 
 
 
