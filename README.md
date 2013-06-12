@@ -41,6 +41,7 @@ There are many ways to obtain Git for OSX.
 
 * MacPorts:
 
+
     $ sudo port install git-core
       
 
@@ -72,7 +73,7 @@ press "Ctrl-C" on your keyboard, after which you can close the terminal. Note th
 
 To launch the app on a different host and port, from the base directory:
 
-    python sdk/python/dev_appserver.py --host hostname --port portnumber app
+    $ python sdk/python/dev_appserver.py --host hostname --port portnumber app
 
 
 
