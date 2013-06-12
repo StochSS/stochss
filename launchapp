@@ -1,3 +1,6 @@
 #!/bin/bash
-python sdk/python/dev_appserver.py app
+# Write the configuration script
+python conf/stochss-env.py
+# Launch the app
+python sdk/python/dev_appserver.py --skip_sdk_update_check YES app
 

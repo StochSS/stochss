@@ -6,7 +6,6 @@ import urllib
 import webapp2
 import logging
 
-
 try:
     import json
 except ImportError:
@@ -14,10 +13,12 @@ except ImportError:
 
 from webapp2_extras import sessions
 from webapp2_extras import sessions_memcache
+from webapp2 import Route
 
 from google.appengine.ext import ndb
 from google.appengine.ext import db
-from google.appengine.api import users
+#from google.appengine.api import users
+from backend.backendservice import *
 
 import mimetypes
 
@@ -42,7 +43,6 @@ class DictionaryProperty(db.Property):
     
     def empty(self, value):
         return value is None
-
 
 
 class UserData(db.Model):
@@ -90,18 +90,44 @@ class BaseHandler(webapp2.RequestHandler):
     def __init__(self, request, response):
         # Make sure a handler has a reference to the current user 
         self.user = users.get_current_user()
+
         # Most pages will need the UserData, so for convenience we add it here.
-        # TODO: Make this a cached session property
         self.user_data = db.GqlQuery("SELECT * FROM UserData WHERE user_id = :1", self.user.user_id()).get()
 
+        # If the user_data does not exist in the datastore, we instantiate it here
         if self.user_data == None:
+            
             user_data = UserData()
             user_data.user_id = self.user.user_id()
-            user_data.setCredentials({'EC2_SECRET_KEY':"",'EC2_ACCESS_KEY':""})
-            user_data.valid_credentials = False
-            # Create a unique bucket name for the user
+            
+            # Get optional app-instance configurations and add those to user_data
+            credentials = {'EC2_SECRET_KEY':"",'EC2_ACCESS_KEY':""}
+            try:
+                env_variables = app.config.get('env_variables')
+                user_data.env_variables = json.dumps(env_variables)
+                if 'AWS_ACCESS_KEY' in env_variables:
+                    credentials['EC2_ACCESS_KEY']=env_variables['AWS_ACCESS_KEY']
+                if 'AWS_SECRET_KEY' in env_variables:
+                    credentials['EC2_SECRET_KEY']=env_variables['AWS_SECRET_KEY']
+            except:
+                raise
+        
+            user_data.setCredentials(credentials)
+            
+            # Check if the credentials are valid
+            service = backendservices()
+            params ={}
+            params['credentials'] =credentials
+            params["infrastructure"] = "ec2"
+            if service.validateCredentials(params):
+                user_data.valid_credentials = True
+            else:
+                user_data.valid_credentials = False
+
+            # Create an unique bucket name for the user
             import uuid
-            user_data.setBucketName(uuid.uuid4())
+            user_data.setBucketName('stochss-output-'+str(uuid.uuid4()))
+            
             user_data.put()
             self.user_data = user_data
         
@@ -174,6 +200,18 @@ config = {}
 config['webapp2_extras.sessions'] = {
     'secret_key': 'my-super-secret-key',
 }
+config['webapp2_extras.auth'] = {
+    'user_attributes': []
+}
+
+# Try to add application configurations from the optional configuration file created upon
+# launch of the app
+try:
+    import conf.app_config
+    env_variables = {'env_variables':conf.app_config.app_config}
+    config = dict(config,**env_variables)
+except:
+    pass
 
 from handlers.specieseditor import *
 from handlers.modeleditor import *
@@ -183,6 +221,7 @@ from handlers.simulation import *
 from handlers.credentials import *
 from handlers.status import *
 
+# Handler to serve static files
 class StaticFileHandler(BaseHandler):
     """ Serve a file dynamically. """
     
@@ -200,9 +239,17 @@ class StaticFileHandler(BaseHandler):
             self.response.write(filecontent)
         except:
             self.response.write("Could not find the requested file on the server")
-        
-        
 
+# Handlers for SimpleAuth authentication
+# Map URLs to handlers
+if 'lib' not in sys.path:
+    sys.path[0:0] = ['lib']
+
+
+r1=Route('/profile', handler='auth_handlers.ProfileHandler', name='profile')
+r2=Route('/logout', handler='auth_handlers.AuthHandler:logout', name='logout')
+r3=Route('/auth/<provider>', handler='auth_handlers.AuthHandler:_simple_auth', name='auth_login')
+r4=Route('/auth/<provider>/callback', handler='auth_handlers.AuthHandler:_auth_callback', name='auth_callback')
 
 app = webapp2.WSGIApplication([
                                ('/', MainPage),
@@ -221,9 +268,13 @@ app = webapp2.WSGIApplication([
                                ('/output/servestatic',StaticFileHandler),
                                ('/credentials',CredentialsPage),
                                ('/localsettings',LocalSettingsPage),
-                               ('/signout', Signout)
+                               r1,
+                               r2,
+                               r3,
+                               r4,
+                               ('/signout', Signout),
                                ],
-                                config = config,
+                                config=config,
                                 debug=True) 
 
 
@@ -234,4 +285,5 @@ if __name__ == '__main__':
     sys.path.append(os.path.join(os.path.dirname(__file__), 'lib'))
     print sys.path
     import boto
+        
     main()
