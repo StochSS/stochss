@@ -9,6 +9,8 @@
 MY_PATH="`dirname \"$0\"`"              # relative
 MY_PATH="`( cd \"$MY_PATH\" && pwd )`"  # absolutized and normalized
 STOCHSS_HOME=$MY_PATH/..
+STOCHSS_HOME="`( cd \"$STOCHSS_HOME\" && pwd )`" 
+echo $STOCHSS_HOME
 
 STOCHKIT_VERSION=StochKit2.0.7
 STOCHKIT_PREFIX=$STOCHSS_HOME
