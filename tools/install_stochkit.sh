@@ -11,47 +11,100 @@ MY_PATH="`( cd \"$MY_PATH\" && pwd )`"  # absolutized and normalized
 STOCHSS_HOME=$MY_PATH/..
 
 STOCHKIT_VERSION=StochKit2.0.7
-STOCHKIT_PREFIX=$HOME
+STOCHKIT_PREFIX=$STOCHSS_HOME
 STOCHKIT_HOME=$STOCHKIT_PREFIX/$STOCHKIT_VERSION
 
 # Determine the package manager to use (for Linux flavors) and
 # install dependencies
+PKG_MNGR=""
+
+libxml=""
 if which yum>/dev/null; then
-PKG_MNGR=yum
-yum install -y make gcc-c++ libxml2-devel
+    PKG_MNGR=yum
+    libxml="libxml2-devel"
 elif which apt-get>/dev/null; then
-PKG_MNGR=apt-get
-apt-get install -y make gcc g++ libxml2-dev
+    PKG_MNGR=apt-get
+    libxml="libxml2-dev"
 else
-echo "Assuming MacOSX..."
+    echo "Assuming MacOSX..."
 fi
 
 # Check that the dependencies are satiesfied
 echo "Checking dependencies..."
 
+packages=""
+
 echo "make: "
 if which make>/dev/null; then
-echo "OK"
+    echo "OK"
 else
-echo "make not found, attempting to install it..."
-$PKG_MNGR install -y make
+    echo "make not found"
+    packages="make"
 fi
 
 # Test for the precence of the GNU compilers
 echo "gcc: "
 if which gcc>/dev/null; then
-echo "OK"
+    echo "OK"
 else
-echo "gcc not found, attempting to install it..."
-$PKG_MNGR install -y gcc
+    echo "gcc not found"
+    if which yum>/dev/null; then
+	packages="$packages gcc-c++"
+    else
+	packages="$packages gcc"
+    fi
 fi
 
 echo "g++"
 if which g++>/dev/null; then
-echo "OK"
+    echo "OK"
 else
-echo "gcc not found, attempting to install it..."
-$PKG_MNGR install -y g++
+    echo "g++ not found"
+    if which yum>/dev/null; then
+	packages="$packages gcc-c++"
+    else
+	packages="$packages g++"
+    fi
+fi
+
+echo "$libxml"
+boolean=""
+if [ "$PKG_MNGR" == "yum" ]; then
+    yum list installed $libxml>&/dev/null
+    if [ $? != 0 ]; then
+	packages="$packages $libxml"
+    fi
+else
+    dpkg -s $libxml>&/dev/null
+    if [ $? != 0 ]; then
+	packages="$packages $libxml"
+    fi
+fi
+if [ -n "$(echo $packages)" ]; then
+    echo "NOT EMPTY: $packages"
+fi
+
+if [ -n "$(echo $packages)" ]; then
+
+    read -p "Do you want me to try to use sudo to install missing package(s) ($packages)? (y/n): " answer
+
+    answer=$(echo $answer | tr '[A-Z]' '[a-z]')
+
+    if [ $answer == 'y' ] || [ $answer == 'yes' ]; then
+        if which yum>/dev/null; then
+            echo "Running 'sudo yum install $packages'"
+            sudo yum install $packages
+
+        elif which apt-get>/dev/null; then
+            echo "Running 'sudo apt-get install $packages'"
+            sudo apt-get install $packages
+        else
+            echo "Cannot automatically install developer tools for MacOSX... see instructions on the website, http://www.github.com/StochSS/stochss"
+            exit -1
+        fi
+else
+    echo "Trying to install anyway..."
+fi
 fi
 
 if [ ! -e $STOCHKIT_PREFIX/$STOCHKIT_VERSION.tgz ]; then

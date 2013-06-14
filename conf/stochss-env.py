@@ -11,7 +11,7 @@ author: andreash
 import os
 
 # Edit the following variables to have the app automatically configured
-STOCHKIT_HOME=''
+STOCHKIT_HOME='/Users/andreash/github/stochss/tools/../StochKit2.0.7'
 AWS_ACCESS_KEY_ID=''
 AWS_SECRET_ACCESS_KEY=''
 
