@@ -82,9 +82,6 @@ else
 	packages="$packages $libxml"
     fi
 fi
-if [ -n "$(echo $packages)" ]; then
-    echo "NOT EMPTY: $packages"
-fi
 
 if [ -n "$(echo $packages)" ]; then
 
