@@ -7,8 +7,8 @@ StochSS is currently supported on Linux and Apple OSX platforms.
 
 ## Obtaining the code:
 
-StochSS is downloaded by cloning the GitHub repository. Since the repository relies on several submodules,  
-a recursive cloning has to be performed. Open a terminal and from a directory where you want to download the code,
+StochSS is downloaded by cloning the GitHub repository. **Since the repository relies on several submodules,  
+a recursive cloning has to be performed.** Open a terminal and from a directory to where you want to download the code,
 (your home folder is a good place) type the following command:
 
     $ git clone --recursive https://github.com/StochSS/stochss.git
@@ -64,6 +64,7 @@ After sucessfully cloning the repository as above, in a terminal, type:
     $ tools/install_stochkit.sh
     $ ./launchapp
 
+You can expect the StochKit installation to take a few minutes to complete. 
 If the app launched without error, open a web browser (Firefox, Safari or Chrome) and navigate to
 
 http://localhost:8080
