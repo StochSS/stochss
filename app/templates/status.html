@@ -47,19 +47,28 @@
                         </td>
                         <td>
                             {% if job.status == "Running" or job.status == "Finished" %}
-                            <span style="color: green" class="create_msg">{{job.status}}</span>
+                              <span style="color: green" class="create_msg">{{job.status}}</span>
                             {% endif %}
                             {% if job.status == "Pending" %}
-                            <span style="color: orange" class="create_msg">{{job.status}}</span>
+                              <span style="color: orange" class="create_msg">{{job.status}}</span>
                             {% endif %}
                             {% if job.status == "Failed" or job.status == "Unknown" %}
-                            <span style="color: red" class="create_msg">{{job.status}}</span>
+                              <span style="color: red" class="create_msg">{{job.status}}</span>
                             {% endif %}
+
+                        <td>
                             {% if job.status == "Finished" %}
-                            <td><a href="/output?job_name={{job.name}}">View results</a></td>
+                              <a href="/output?job_name={{job.name}}">View results</a>
                             {% else %}
-                                <td><span></span></td>
-                            {% endif %}
+                              {% if job.status == "Failed" %}
+                                {% if job.resource == "Local" %}
+                                  <a href="/output?job_name={{job.name}}&debug=true">Get Debugging Info</a>
+                                {% else %}
+                                  <span style="color: red" class="create_msg">Debug info only on local</span>
+                                {% endif %}
+                              {% endif %}
+                             {% endif %}
+                        </td>
                     </tr>
                     
                     {% endfor %}

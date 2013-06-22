@@ -7,6 +7,7 @@ import webapp2
 import tempfile,sys
 from google.appengine.ext import db
 import pickle
+import threading
 import traceback
 import logging
 from google.appengine.api import users
@@ -60,6 +61,9 @@ class StochKitJobWrapper(db.Model):
     # The type if the job {'local', 'cloud'}
     type =  db.StringProperty()
     stochkit_job = ObjectProperty()
+
+    stdout = db.StringProperty()
+    stderr = db.StringProperty()
 
 class StochKitJob(Job):
     """ Model for a StochKit job. Contains all the parameters associated with the call. """
@@ -194,6 +198,14 @@ class NewStochkitEnsemblePage(BaseHandler):
             # Set the environmental variables 
             os.environ["AWS_ACCESS_KEY_ID"] = db_credentials['EC2_ACCESS_KEY']
             os.environ["AWS_SECRET_ACCESS_KEY"] = db_credentials['EC2_SECRET_KEY']
+
+            if os.environ["AWS_ACCESS_KEY_ID"] == '':
+                result = {'status':False,'msg':'Access Key not set. Check : Settings > Cloud Computing'}
+                return result
+
+            if os.environ["AWS_SECRET_ACCESS_KEY"] == '':
+                result = {'status':False,'msg':'Secret Key not set. Check : Settings > Cloud Computing'}
+                return result
         
             #the parameter dictionary to be passed to the backend
             param = {}
@@ -431,12 +443,16 @@ class NewStochkitEnsemblePage(BaseHandler):
             stochkit_job.output_location = res['output']
             stochkit_job.uuid = res['uuid']
             stochkit_job.status = 'Running'
+            stochkit_job.stdout = res['stdout']
+            stochkit_job.stderr = res['stderr']
             
             # Create a wrapper to store the Job description in the datastore
             stochkit_job_db = StochKitJobWrapper()
             stochkit_job_db.user_id = self.user.user_id()
             stochkit_job_db.name = stochkit_job.name
             stochkit_job_db.stochkit_job = stochkit_job
+            stochkit_job_db.stdout = stochkit_job.stdout
+            stochkit_job_db.stderr = stochkit_job.stderr
             stochkit_job_db.put()
     
             result = {'status':True,'msg':'Job submitted sucessfully'}
