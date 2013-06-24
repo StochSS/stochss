@@ -137,10 +137,8 @@ rm -f $STOCHKIT_PREFIX/StochKit2.0.7.tgz
 
 echo "Configuring the app to use this installation of StochKit for local execution..."
 
-# Replace the STOCHKIT_HOME define in conf/stochss-env.py with the StochKit2 location from
-# this install. The backup file extension is required for sed on OSX with the -i flag.
-# Use comma for regexp separator since STOCHKIT_HOME is a path and contains forward slashes
-sed -i.bak "s,STOCHKIT_HOME='.*,STOCHKIT_HOME='$STOCHKIT_HOME',g" $STOCHSS_HOME/conf/stochss-env.py
+# Write STOCHKIT_HOME to the appropriate config file
+echo $STOCHKIT_HOME > $STOCHSS_HOME/conf/config
 echo "Done!"
 
 exit 0
