@@ -1,4 +1,4 @@
-#!/env/python
+#!/usr/bin/env python
 """ 
     
 Write the App's (optional) configuration file. This script
@@ -9,13 +9,32 @@ author: andreash
     
 """
 import os
+import sys
 
-# Edit the following variables to have the app automatically configured
-STOCHKIT_HOME=''
-AWS_ACCESS_KEY_ID=''
-AWS_SECRET_ACCESS_KEY=''
+path = os.path.abspath(os.path.dirname(__file__))
 
-#### There is no need to modify anything below this line ###
+# STOCHKIT_HOME, AWS_ACCESS_KEY, and AWS_SECRET_KEY should be written in a newline separated file 'conf/config'
+# /path/to/Stochkit2.0.7
+# AWS_ACCESS_KEY
+# AWS_SECRET_KEY
+ffile = open('{0}/config'.format(path))
+config = ffile.read().split()
+ffile.close()
+
+if len(config) == 0:
+   STOCHKIT_HOME=''
+else:
+   STOCHKIT_HOME = config[0]
+
+if len(config) <= 1:
+   AWS_ACCESS_KEY_ID=''
+else:
+   AWS_ACCESS_KEY_ID = config[1]
+
+if len(config) <= 2:
+   AWS_SECRET_ACCESS_KEY=''
+else:
+   AWS_SECRET_ACCESS_KEY = config[2]
 
 # If a configuration variable is not set, try to set it from system environment variables
 if STOCHKIT_HOME=='':

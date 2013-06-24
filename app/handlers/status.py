@@ -242,6 +242,14 @@ class JobOutPutPage(BaseHandler):
         context = dict(context,**self.request.GET)
 
         job_name = context['job_name']
+
+        # Detect if we should show the 'debug' version of the output
+        if 'debug' in context:
+          debug = (context['debug'] == 'true')
+          context['debug'] = debug #Store a copy for the django templates
+        else:
+          debug = False
+
         result = {}
         
         # Grab the Job from the datastore
@@ -252,11 +260,26 @@ class JobOutPutPage(BaseHandler):
         except Exception,e:
             result = {'status':False,'msg':"Could not retreive the jobs"+job_name+ " from the datastore."}
 
-        # Check if the results and stats folders are present locally
-        if os.path.exists(stochkit_job.output_location+"/result"):
+        # If not in debug mode, show the output
+        if debug == False:
+          # Check if the results and stats folders are present locally
+          if os.path.exists(stochkit_job.output_location+"/result"):
             context['local_data']=True
-        if os.path.exists(stochkit_job.output_location+"/result/stats"):
+          if os.path.exists(stochkit_job.output_location+"/result/stats"):
             context['local_statistics']=True
+        else:
+          # If in debug mode, show the stdout and stderr along with jobinfo
+          if os.path.exists(stochkit_job.output_location):
+            stdoutf = open(context['stochkit_job'].stdout, 'r')
+            context['stdout'] = stdoutf.read()
+            stdoutf.close()
+
+            stderrf = open(context['stochkit_job'].stderr, 'r')
+            context['stderr'] = stderrf.read()
+            stderrf.close()
+          else:
+            # Should never get here
+            pass
             
         return context,result
 
