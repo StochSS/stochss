@@ -4,6 +4,7 @@ It accepts calls from the front-end and pass them on to the backend.
 All the input validation is performed in this class.
 '''
 from infrastructure_manager import InfrastructureManager
+import threading
 import os, subprocess, signal, uuid, sys
 import logging
 from datetime import datetime
@@ -84,10 +85,29 @@ class backendservices():
             logging.info("STOCHKIT_EXEX_STR: "+stochkit_exec_str)
             logging.debug("executeTaskLocal : Spawning StochKit Task. String : %s",
                            stochkit_exec_str)
-            p = subprocess.Popen(stochkit_exec_str, shell=True, stdin=subprocess.PIPE, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
-            #output, error = p.communicate()
+
+            # Pipe output to these files
+            res['stdout'] = os.path.abspath('output/' + uuidstr + '/stdout')
+            res['stderr'] = os.path.abspath('output/' + uuidstr + '/stderr')
+
+            stdout = open(res['stdout'], 'w')
+            stderr = open(res['stderr'], 'w')
+
+            p = subprocess.Popen(stochkit_exec_str, shell=True, stdin=subprocess.PIPE, stdout=stdout, stderr=stderr)
+
+            # Have a thread wait for the Stochkit job to finish and close the filehandles
+            def process_thread():
+                p.wait()
+
+                stdout.close()
+                stderr.close()
+            
             #logging.debug("executeTaskLocal: the result of task {0} or error {1} ".format(output,error))
             pid = p.pid
+
+            thread = threading.Thread(target = process_thread())
+            thread.start()
+
             res['pid'] = pid 
             filepath = "output/%s//" % (uuidstr)
             logging.debug("executeTaskLocal : PID generated - %s", pid)

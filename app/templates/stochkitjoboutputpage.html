@@ -38,6 +38,20 @@
                 </br>
                </div>
             {% endif %}
+
+            {% if debug %}
+            <div class="well">
+                <h3> Debug Info </h3>
+                <hr>
+                These are the standard streams from the Stochkit executable used to run the job
+                <hr>
+                <h5>Stdout</h5>
+                <pre>{{stdout}}</pre>
+                <h5>Stderr</h5>
+                <pre>{{stderr}}</pre>
+                </br>
+               </div>
+            {% endif %}
             
             
             <div class="well">
