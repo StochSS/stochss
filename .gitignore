@@ -34,5 +34,6 @@ nosetests.xml
 app/output/
 
 # StochSS temporary config files
+conf/config
 app/userfile
 app/conf/app_config.py
