@@ -79,34 +79,21 @@ class backendservices():
             mfhandle.write(params['document'])
             mfhandle.close()
             
-            # The following executiong string is of the form :
-            # stochkit_exec_str = "~/StochKit2.0.6/ssa -m ~/output/%s/dimer_decay.xml -t 20 -i 10 -r 1000" % (uuidstr)
-            stochkit_exec_str = "{0} --model {1} --out-dir output/{2}/result ".format(paramstr,xmlfilepath,uuidstr)
-            logging.info("STOCHKIT_EXEX_STR: "+stochkit_exec_str)
-            logging.debug("executeTaskLocal : Spawning StochKit Task. String : %s",
-                           stochkit_exec_str)
-
             # Pipe output to these files
             res['stdout'] = os.path.abspath('output/' + uuidstr + '/stdout')
             res['stderr'] = os.path.abspath('output/' + uuidstr + '/stderr')
-
-            stdout = open(res['stdout'], 'w')
-            stderr = open(res['stderr'], 'w')
-
-            p = subprocess.Popen(stochkit_exec_str, shell=True, stdin=subprocess.PIPE, stdout=stdout, stderr=stderr)
-
-            # Have a thread wait for the Stochkit job to finish and close the filehandles
-            def process_thread():
-                p.wait()
-
-                stdout.close()
-                stderr.close()
             
+            # The following executiong string is of the form :
+            # stochkit_exec_str = "~/StochKit2.0.6/ssa -m ~/output/%s/dimer_decay.xml -t 20 -i 10 -r 1000" % (uuidstr)
+            stochkit_exec_str = "{backenddir}/wrapper.sh {stdout} {stderr} {0} --model {1} --out-dir output/{2}/result ".format(paramstr,xmlfilepath,uuidstr, stdout = res['stdout'], stderr = res['stderr'], backenddir = os.path.abspath(os.path.dirname(__file__)))
+            logging.info("STOCHKIT_EXEX_STR: "+stochkit_exec_str)
+            logging.debug("executeTaskLocal : Spawning StochKit Task. String : %s",
+                           stochkit_exec_str)
+            
+            p = subprocess.Popen(stochkit_exec_str, shell=True, stdin=subprocess.PIPE)
+
             #logging.debug("executeTaskLocal: the result of task {0} or error {1} ".format(output,error))
             pid = p.pid
-
-            thread = threading.Thread(target = process_thread())
-            thread.start()
 
             res['pid'] = pid 
             filepath = "output/%s//" % (uuidstr)
