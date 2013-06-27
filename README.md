@@ -75,7 +75,7 @@ your saved data will be available in the new session. **With that said, since th
 ### Terminating the App 
 
 Closing the browser does not terminate the App. To shut it down permanently, in the same terminal where you lunched the app,
-press "Ctrl-C" on your keyboard, after which you can close the terminal. **Note that simply closing the terminal might lead to loss of data.** 
+press "Ctrl-C" on your keyboard, after which you can close the terminal. **Note that the data created in the app is not persisted until the app is terminated. If the app is not terminated normally, the pending transactions will not be applied and the data will be lost.** 
 
 
 ### Launching the app on a different host/port
