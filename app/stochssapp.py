@@ -19,6 +19,8 @@ from webapp2 import Route
 from google.appengine.ext import ndb
 from google.appengine.ext import db
 
+#from google.appengine.tools import dev_appserver
+
 from backend.backendservice import *
 
 import mimetypes
@@ -172,6 +174,9 @@ class BaseHandler(webapp2.RequestHandler):
         finally:
             # Save all sessions.
             self.session_store.save_sessions(self.response)
+            # Flush the datastore to persist the data. This is inefficient, but
+            # makes it less likely to loose all data is the app has to force quit.
+            #dev_appserver.TearDownStubs()
     
     def get_session_property(self, key):
         """ Get the value for the given session property. """

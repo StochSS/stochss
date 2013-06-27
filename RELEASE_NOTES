@@ -1,0 +1,8 @@
+StochSS - Stochastic Simulation Service: Release Notes
+
+Version 1.0.0
+=============================
+
+- Creation and simulation of well-mixed stochastic models via StochKit2. Execution locally or in VMs in Amazon EC2.     
+
+
