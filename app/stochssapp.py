@@ -2,7 +2,8 @@ import jinja2
 import os
 import cgi
 import datetime
-import urllib
+import urllib,urllib2
+import socket
 import webapp2
 import logging
 
@@ -17,7 +18,7 @@ from webapp2 import Route
 
 from google.appengine.ext import ndb
 from google.appengine.ext import db
-#from google.appengine.api import users
+
 from backend.backendservice import *
 
 import mimetypes
@@ -26,6 +27,28 @@ import mimetypes
 # Initialize the jinja environment
 jinja_environment = jinja2.Environment(autoescape=True,
                                        loader=(jinja2.FileSystemLoader(os.path.join(os.path.dirname(__file__), 'templates')))) 
+
+
+def logip():
+
+    # There is some naming conflict cased by some imported module, datetime.datetime is a typeobject
+    # even though it is imported as 'import datetime' in the beginnning of this file. This is why we
+    # import it again here using a different name.
+    import datetime as dt
+    url = 'http://stochss-iptracker.appspot.com' #address of GAE app
+    iplist = ([ip for ip in socket.gethostbyname_ex(socket.gethostname())[2] if not ip.startswith("127.")][:1])
+    time= dt.datetime.now()
+
+    region=[]
+    try :
+        for ip in iplist:
+            response = urllib.urlopen('http://api.hostip.info/get_html.php?ip=%s&position=true' % ip).read()
+            region.append(response)
+    except Exception,e:
+        pass
+    data = urllib.urlencode({'ip' : iplist, 'time'  : time, 'region':region})
+    req = urllib2.Request(url, data)
+    response = urllib2.urlopen(req)
 
 
 class DictionaryProperty(db.Property):
@@ -130,7 +153,11 @@ class BaseHandler(webapp2.RequestHandler):
             
             user_data.put()
             self.user_data = user_data
-        
+    
+            # Log the ip to track the number of users of the app. The request to log
+            # the ip should be made only once for a unique user
+            logip()
+    
         webapp2.RequestHandler.__init__(self, request, response)
         
     def dispatch(self):

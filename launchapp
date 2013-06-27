@@ -1,8 +1,6 @@
 #!/bin/bash
 # Write the configuration script
 python conf/stochss-env.py
-# Track the IP for user statstics
-python iptracker/client.py
 # Launch the app
 python sdk/python/dev_appserver.py --skip_sdk_update_check YES app
 
