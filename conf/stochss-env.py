@@ -17,9 +17,14 @@ path = os.path.abspath(os.path.dirname(__file__))
 # /path/to/Stochkit2.0.7
 # AWS_ACCESS_KEY
 # AWS_SECRET_KEY
-ffile = open('{0}/config'.format(path))
-config = ffile.read().split()
-ffile.close()
+# Try to read the configuration file
+config = []
+try:
+    ffile = open('{0}/config'.format(path))
+    config = ffile.read().split()
+    ffile.close()
+except:
+    pass
 
 if len(config) == 0:
    STOCHKIT_HOME=''
