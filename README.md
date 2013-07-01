@@ -24,48 +24,43 @@ Fedora:
 
 MacOSX:
 
-There are many ways to obtain Git for OSX.
 
-* Xcode (recommended):
-  Git comes integrated with Xcode, Apples Integrated Development Environment. You will need many of the tools provided by Xcode in order to install StochKit2.
-  Xcode is available for free from App Store if you sign up as an "Apple Developer". After you have installed Xcode, you need to install the 'command line tools'. 
-  From the the Xcode menu:
-    
-  Xcode > Preferences > Downloads > Command Line Tools    
+* Install Xcode:
+    * Xcode, Apples Integrated Development Environment, contains all the tools you need in order to install StochSS and StochKit2.
+ Install Xcode for free from App Store. 
+
+    * After you have installed Xcode, you need to install the 'command line tools'. Open the Xcode application (in the "Applications" folder). Then, from the the Xcode menu:
+      Xcode > Preferences > Downloads > Command Line Tools    
   
 
-* Using a graphical installer:
-
-     [http://git-scm.com/downloads](http://git-scm.com/downloads)
-
-* MacPorts:
-
-    $ sudo port install git-core
-      
-
-## Quick start:
+## Quick start (Linux & MacOSX):
   
-### Linux & MacOSX:
+### Install StochKit2
 
 The application makes use of [StochKit2](http://www.engineering.ucsb.edu/~cse/StochKit/) to run well mixed stochastic
 simulations locally, and to use this feature you need to install StochKit2. StochSS contains a tool that will attempt to
 automatically download and install StochKit2.0.7 and configure the StochSS App to use this installation. 
-If the script fails, you need to consult the StochKit manual for troubleshooting the installation. On Ubuntu and Fedora,
-the script will try to install any dependencies (make, gcc, g++, libxml2) using the standard package managers. On MacOSX,
-since there are many different ways to satisfy the dependencies, we do not attempt an automatic install. 
-If you have Xcode and the command-line tools installed as recommended above, all dependencies are satesfied. If you want
-to install StochKit manually, simply skip the second step below. 
 
 After sucessfully cloning the repository as above, in a terminal, type:
 
     $ cd stochss
     $ tools/install_stochkit.sh
+
+You can expect the StochKit installation to take a few minutes to complete. If the script above fails, you need to consult the StochKit manual for troubleshooting the installation.
+On Ubuntu and Fedora, the script will try to install any dependencies (make, gcc, g++, libxml2) using the standard package managers. On MacOSX,
+since there are many different ways to satisfy the dependencies, we do not attempt an automatic install. If you have Xcode and the command-line tools installed as recommended above, all dependencies are satesfied. 
+
+If you only plan to run StochKit in virtual machines, you can skip the above steps. 
+
+## Launch the App
+
+In the stochss folder, type
+
     $ ./launchapp
 
-You can expect the StochKit installation to take a few minutes to complete. 
 If the app launched without error, open a web browser (Firefox, Safari or Chrome) and navigate to
 
-http://localhost:8080
+[http://localhost:8080](http://localhost:8080)
 
 You will be prompted with a login screen with the default username 'test@examples.com'. This version of StochSS does not support 
 a secure authentication mechanism, so any user name that is on the form of an e-mail address will do to log in to the app. 
