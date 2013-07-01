@@ -56,11 +56,13 @@ If you only plan to run StochKit in virtual machines, you can skip the above ste
 
 In the stochss folder, type
 
-    $ ./launchapp
+    $ python launchapp.py
 
-If the app launched without error, open a web browser (Firefox, Safari or Chrome) and navigate to
+If the webserver launched without error, the above script will open the App using your default webbrowser. The App will be served on the follwing address
 
 [http://localhost:8080](http://localhost:8080)
+
+If you prefer to use another browser than the default, simply navigate to the above address. 
 
 You will be prompted with a login screen with the default username 'test@examples.com'. This version of StochSS does not support 
 a secure authentication mechanism, so any user name that is on the form of an e-mail address will do to log in to the app. 
