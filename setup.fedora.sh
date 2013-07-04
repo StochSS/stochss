@@ -34,30 +34,16 @@ echo -n "Are dependencies satisfied?... "
 # install dependencies
 PKG_MNGR=""
 
-libxml=""
-if which yum>/dev/null; then
-    PKG_MNGR=yum
-    libxml=""
-elif which apt-get>/dev/null; then
-    PKG_MNGR=apt-get
-    libxml="libxml2-dev"
-else
-    echo "Assuming MacOSX..."
-fi
-
-# Check that the dependencies are satisfied
-echo "Checking dependencies..."
-
-yum list installed libxml2-devel make gcc-c++ >&/dev/null
-if [ $? != 0 ]; then
+packages=$(yum list installed | grep '^gcc.\|^gcc-c++.\|^make.\|^libxml2-devel.' | wc -l)
+if [ "$packages" != '4' ]; then
     echo "No"
-    read -p "Do you want me to try to use sudo to install missing package(s) (libxml2-devel make gcc-c++)? (y/n): " answer
+    read -p "Do you want me to try to use sudo to install missing package(s) (libxml2-devel make gcc-c++ gcc)? (y/n): " answer
 
     answer=$(echo $answer | tr '[A-Z]' '[a-z]')
 
     if [ $answer == 'y' ] || [ $answer == 'yes' ]; then
-        echo "Running 'sudo yum install libxml2-devel make gcc-c++ >&/dev/null'"
-        sudo yum install libxml2-devel make gcc-c++ >&/dev/null
+        echo "Running 'sudo yum install libxml2-devel gcc make gcc-c++'"
+        sudo yum install libxml2-devel make gcc-c++
     else
         read -p "Do you want me to still try to install Stochkit? (y/n): " answer
 
@@ -76,12 +62,6 @@ echo -n "Testing if StochKit2 built... "
 
 if "$STOCHKIT_HOME/ssa" -m "$STOCHKIT_HOME/models/examples/dimer_decay.xml" -r 1 -t 1 -i 1 >& /dev/null; then
     echo "StochKit2.0.7 found in $STOCHKIT_HOME"
-
-    echo -n "Configuring the app to use this installation of StochKit for local execution... "
-
-# Write STOCHKIT_HOME to the appropriate config file
-    echo -n "$STOCHKIT_HOME" > "$STOCHSS_HOME/conf/config"
-    echo "Done!"
 else
     echo "No"
 
@@ -118,6 +98,12 @@ else
     echo "Cleaning up..."
     rm -f "$STOCHKIT_PREFIX/StochKit2.0.7.tgz"
 fi
+
+echo -n "Configuring the app to use $STOCHKIT_HOME for local execution... "
+
+# Write STOCHKIT_HOME to the appropriate config file
+echo -n "$STOCHKIT_HOME" > "$STOCHSS_HOME/conf/config"
+echo "Done!"
 
 python "$STOCHSS_HOME/launchapp.py"
 

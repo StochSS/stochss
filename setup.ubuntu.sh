@@ -58,13 +58,8 @@ fi
 echo -n "Testing if StochKit2 built... "
 
 if "$STOCHKIT_HOME/ssa" -m "$STOCHKIT_HOME/models/examples/dimer_decay.xml" -r 1 -t 1 -i 1 >& /dev/null; then
+    echo "Yes"
     echo "StochKit2.0.7 found in $STOCHKIT_HOME"
-
-    echo -n "Configuring the app to use this installation of StochKit for local execution... "
-
-# Write STOCHKIT_HOME to the appropriate config file
-    echo -n "$STOCHKIT_HOME" > "$STOCHSS_HOME/conf/config"
-    echo "Done!"
 else
     echo "No"
 
@@ -101,6 +96,12 @@ else
     echo "Cleaning up..."
     rm -f "$STOCHKIT_PREFIX/StochKit2.0.7.tgz"
 fi
+
+echo -n "Configuring the app to use $STOCHKIT_HOME for local execution... "
+
+# Write STOCHKIT_HOME to the appropriate config file
+echo -n "$STOCHKIT_HOME" > "$STOCHSS_HOME/conf/config"
+echo "Done!"
 
 python "$STOCHSS_HOME/launchapp.py"
 
