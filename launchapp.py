@@ -10,6 +10,8 @@ import webbrowser
 
 path = os.path.abspath(os.path.dirname(__file__))
 
+print "--- Running StochSS Server ---"
+
 pwd = os.getcwd()
 os.chdir(path)
 
@@ -47,12 +49,13 @@ for tryy in range(0, 10):
 
 if serverUp:
     # Open web browser
-    webbrowser.open('http://localhost:8080/')
+    webbrowser.open_new('http://localhost:8080/')
 
     print "Logging stdout to " + path + "/stdout.log" + "and stderr to " + path + "/stderr.log"
 
     try:
-        print "Press enter key to end StochSS session"
+        print "Navigate to localhost:8080 to access StochSS"
+        print "Press enter key to terminate StochSS server"
         ch = sys.stdin.read(1)
     except KeyboardInterrupt:
         pass
