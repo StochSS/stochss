@@ -8,16 +8,19 @@ import threading
 import urllib2
 import webbrowser
 
-h = subprocess.Popen("python conf/stochss-env.py".split())
-h.wait()
-
 path = os.path.abspath(os.path.dirname(__file__))
+
+pwd = os.getcwd()
+os.chdir(path)
+
+h = subprocess.Popen(("python conf/stochss-env.py").split())
+h.wait()
 
 stdout = open('stdout.log', 'w')
 stderr = open('stderr.log', 'w')
 
 # Deploy the app on localhost
-h = subprocess.Popen("python sdk/python/dev_appserver.py --skip_sdk_update_check YES --datastore_consistency_policy=consistent app".split(), stdout = stdout, stderr = stderr)
+h = subprocess.Popen(("python sdk/python/dev_appserver.py --skip_sdk_update_check YES --datastore_consistency_policy=consistent app").split(), stdout = stdout, stderr = stderr)
 
 print "Starting admin server at: http://localhost:8000"
 
@@ -62,3 +65,5 @@ try:
     h.terminate()
 except:
     pass
+
+os.chdir(pwd)

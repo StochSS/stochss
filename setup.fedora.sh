@@ -8,13 +8,27 @@
 
 MY_PATH="`dirname \"$0\"`"              # relative
 MY_PATH="`( cd \"$MY_PATH\" && pwd )`"  # absolutized and normalized
-STOCHSS_HOME=$MY_PATH/..
+STOCHSS_HOME=$MY_PATH
 STOCHSS_HOME="`( cd \"$STOCHSS_HOME\" && pwd )`" 
-echo $STOCHSS_HOME
+
+echo "Installing in $STOCHSS_HOME"
+
+echo '[Desktop Entry]
+Version=1.0.0
+Name=StochSS
+Comment=This is my comment
+Exec=$MY_PATH/launchapp.py
+Icon=$MY_PATH/icon.png
+Terminal=true
+Type=Application
+Categories=Application;' > $STOCHSS_HOME/StochSS.desktop
 
 STOCHKIT_VERSION=StochKit2.0.7
 STOCHKIT_PREFIX=$STOCHSS_HOME
 STOCHKIT_HOME=$STOCHKIT_PREFIX/$STOCHKIT_VERSION
+
+# Check that the dependencies are satisfied
+echo -n "Are dependencies satisfied?... "
 
 # Determine the package manager to use (for Linux flavors) and
 # install dependencies
@@ -23,7 +37,7 @@ PKG_MNGR=""
 libxml=""
 if which yum>/dev/null; then
     PKG_MNGR=yum
-    libxml="libxml2-devel"
+    libxml=""
 elif which apt-get>/dev/null; then
     PKG_MNGR=apt-get
     libxml="libxml2-dev"
@@ -31,79 +45,31 @@ else
     echo "Assuming MacOSX..."
 fi
 
-# Check that the dependencies are satiesfied
+# Check that the dependencies are satisfied
 echo "Checking dependencies..."
 
-packages=""
-
-echo "make: "
-if which make>/dev/null; then
-    echo "OK"
-else
-    echo "make not found"
-    packages="make"
-fi
-
-# Test for the precence of the GNU compilers
-echo "gcc: "
-if which gcc>/dev/null; then
-    echo "OK"
-else
-    echo "gcc not found"
-    if which yum>/dev/null; then
-	packages="$packages gcc-c++"
-    else
-	packages="$packages gcc"
-    fi
-fi
-
-echo "g++"
-if which g++>/dev/null; then
-    echo "OK"
-else
-    echo "g++ not found"
-    if which yum>/dev/null; then
-	packages="$packages gcc-c++"
-    else
-	packages="$packages g++"
-    fi
-fi
-
-echo "$libxml"
-boolean=""
-if [ "$PKG_MNGR" == "yum" ]; then
-    yum list installed $libxml>&/dev/null
-    if [ $? != 0 ]; then
-	packages="$packages $libxml"
-    fi
-else
-    dpkg -s $libxml>&/dev/null
-    if [ $? != 0 ]; then
-	packages="$packages $libxml"
-    fi
-fi
-
-if [ -n "$(echo $packages)" ]; then
-
-    read -p "Do you want me to try to use sudo to install missing package(s) ($packages)? (y/n): " answer
+yum list installed libxml2-devel make gcc-c++ >&/dev/null
+if [ $? != 0 ]; then
+    echo "No"
+    read -p "Do you want me to try to use sudo to install missing package(s) (libxml2-devel make gcc-c++)? (y/n): " answer
 
     answer=$(echo $answer | tr '[A-Z]' '[a-z]')
 
     if [ $answer == 'y' ] || [ $answer == 'yes' ]; then
-        if which yum>/dev/null; then
-            echo "Running 'sudo yum install $packages'"
-            sudo yum install $packages
+        echo "Running 'sudo yum install libxml2-devel make gcc-c++ >&/dev/null'"
+        sudo yum install libxml2-devel make gcc-c++ >&/dev/null
+    else
+        read -p "Do you want me to still try to install Stochkit? (y/n): " answer
 
-        elif which apt-get>/dev/null; then
-            echo "Running 'sudo apt-get install $packages'"
-            sudo apt-get install $packages
-        else
-            echo "Cannot automatically install developer tools for MacOSX... see instructions on the website, http://www.github.com/StochSS/stochss"
+        answer=$(echo $answer | tr '[A-Z]' '[a-z]')
+
+        if [ $answer == 'n' ] || [ $answer == 'no' ]; then
+            echo "Installation Failed"
             exit -1
         fi
+    fi
 else
-    echo "Trying to install anyway..."
-fi
+    echo "Yes"
 fi
 
 if [ ! -e $STOCHKIT_PREFIX/$STOCHKIT_VERSION.tgz ]; then
