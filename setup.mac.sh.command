@@ -7,7 +7,7 @@
 #
 
 #read -p "Select a directory to use as StochSS home (default ~/StochSS)" MY_PATH
-MY_PATH="`dirname \"$0\"`"              # relative
+MY_PATH="`pwd`"#"`dirname \"$0\"`"              # relative
 MY_PATH="`( cd \"$MY_PATH\" && pwd )`"  # absolutized and normalized
 STOCHSS_HOME=$MY_PATH
 STOCHSS_HOME="`( cd \"$STOCHSS_HOME\" && pwd )`" 
@@ -48,8 +48,8 @@ else
     fi
 
     echo "Building StochKit (will take a few minutes)"
-    echo " Logging stdout in $STOCHKIT_PREFIX/$STOCHKIT_HOME/stdout.log and "
-    echo " stderr in $STOCHKIT_PREFIX/$STOCHKIT_HOME/stderr.log "
+    echo " Logging stdout in $STOCHKIT_HOME/stdout.log and "
+    echo " stderr in $STOCHKIT_HOME/stderr.log "
     wd=`pwd`
     cd "$STOCHKIT_PREFIX"
     tar -xf StochKit2.0.7.tgz
@@ -76,5 +76,5 @@ echo -n "Configuring the app to use $STOCHKIT_HOME StochKit for local execution.
 echo -n "$STOCHKIT_HOME" > "$STOCHSS_HOME/conf/config"
 echo "Done!"
 
-python "$STOCHSS_HOME/launchapp.py"
+python "$STOCHSS_HOME/launchapp.py inf"
 exit 0
