@@ -32,15 +32,15 @@ STOCHKIT_HOME=$STOCHKIT_PREFIX/$STOCHKIT_VERSION
 # Check that the dependencies are satisfied
 echo -n "Are dependencies satisfied?... "
 
-dpkg -s libxml2-dev g++ gcc make >& /dev/null
+dpkg -s libxml2-dev g++ gcc make curl >& /dev/null
 if [ $? != 0 ]; then
     echo "No"
-    read -p "Do you want me to try to use sudo to install required package(s) (make, gcc, g++, libxml2-dev)? (y/n): " answer
+    read -p "Do you want me to try to use sudo to install required package(s) (make, gcc, g++, libxml2-dev, curl)? (y/n): " answer
 
 
     if [ $answer == 'y' ] || [ $answer == 'yes' ]; then
-        echo "Running 'sudo apt-get install make gcc g++ libxml2-dev'"
-        sudo apt-get install make gcc g++ libxml2-dev
+        echo "Running 'sudo apt-get install make gcc g++ libxml2-dev curl'"
+        sudo apt-get install make gcc g++ libxml2-dev curl
     else
         read -p "Do you want me to still try to install Stochkit? (y/n): " answer
 
@@ -76,7 +76,7 @@ else
 
     echo "Building StochKit (will take a few minutes)"
     echo " Logging stdout in $STOCHKIT_PREFIX/$STOCHKIT_HOME/stdout.log and "
-    echo " stderr in $STOCHKIT_PREFIX/$STOCHKIT_HOME/stderr.log "
+    echo " stderr in $STOCHKIT_PREFIX/$STOCHKIT_HOME/stderr.log  "
     wd=`pwd`
     cd "$STOCHKIT_PREFIX"
     tar -xf StochKit2.0.7.tgz
