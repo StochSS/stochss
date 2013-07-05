@@ -8,6 +8,10 @@ import threading
 import urllib2
 import webbrowser
 
+run_indefinite = False
+if len(sys.argv) == 2:
+    run_indefinite = True
+
 path = os.path.abspath(os.path.dirname(__file__))
 
 print "--- Running StochSS Server ---"
@@ -55,8 +59,12 @@ if serverUp:
 
     try:
         print "Navigate to localhost:8080 to access StochSS"
-        print "Press enter key to terminate StochSS server"
-        ch = sys.stdin.read(1)
+        if run_indefinite:
+            while 1:
+                time.sleep(10)
+        else:
+            print "Press enter key to terminate StochSS server"
+            ch = sys.stdin.read(1)
     except KeyboardInterrupt:
         pass
 

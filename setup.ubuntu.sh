@@ -75,8 +75,8 @@ else
     fi
 
     echo "Building StochKit (will take a few minutes)"
-    echo " Logging stdout in $STOCHKIT_PREFIX/$STOCHKIT_HOME/stdout.log and "
-    echo " stderr in $STOCHKIT_PREFIX/$STOCHKIT_HOME/stderr.log "
+    echo " Logging stdout in $STOCHKIT_HOME/stdout.log and "
+    echo " stderr in $STOCHKIT_HOME/stderr.log "
     wd=`pwd`
     cd "$STOCHKIT_PREFIX"
     tar -xf StochKit2.0.7.tgz
