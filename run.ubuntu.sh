@@ -6,6 +6,7 @@
 #
 #
 
+
 #read -p "Select a directory to use as StochSS home (leave blank to use current directory): " MY_PATH
 
 MY_PATH="`dirname \"$0\"`"              # relative
