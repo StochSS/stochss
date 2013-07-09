@@ -35,7 +35,7 @@ echo -n "Are dependencies satisfied?... "
 PKG_MNGR=""
 
 packages=$(yum list installed | grep '^gcc.\|^gcc-c++.\|^make.\|^libxml2-devel.\|^curl.' | wc -l)
-if [ "$packages" != '4' ]; then
+if [ "$packages" != '5' ]; then
     echo "No"
     read -p "Do you want me to try to use sudo to install missing package(s) (libxml2-devel make gcc-c++ gcc curl)? (y/n): " answer
 
