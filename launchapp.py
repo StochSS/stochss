@@ -9,8 +9,10 @@ import threading
 import urllib2
 import webbrowser
 
+source_exec = sys.argv[1]
+
 mac = False
-if len(sys.argv) == 2:
+if len(sys.argv) == 3:
     mac = True
 
 path = os.path.abspath(os.path.dirname(__file__))
@@ -57,6 +59,28 @@ def clean_up_and_exit(signal, stack):
         h.terminate()
     except:
         pass
+
+    if os.path.isfile('update'):
+        sys.stdout.write('Updating application now...')
+        h = subprocess.Popen('git stash'.split())
+        if h.returncode != 0:
+            os.remove('update')
+            print "Error in updating, exiting"
+            exit(-1)
+
+        h = subprocess.Popen('git pull --rebase'.split())
+        if h.returncode != 0:
+            os.remove('update')
+            print "Error in updating, exiting"
+            exit(-1)
+
+        print "Success"
+        os.remove('update')
+
+        sys.stderr.flush()
+        sys.stdout.flush()
+
+        os.execl(source_exec, source_exec)
 
     if signal == None:
         exit(0)

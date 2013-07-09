@@ -76,4 +76,4 @@ echo -n "Configuring the app to use $STOCHKIT_HOME StochKit for local execution.
 echo -n "$STOCHKIT_HOME" > "$STOCHSS_HOME/conf/config"
 echo "Done!"
 
-exec python "$STOCHSS_HOME/launchapp.py inf"
+exec python "$STOCHSS_HOME/launchapp.py" $0 inf
