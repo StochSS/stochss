@@ -42,28 +42,28 @@ serverUp = False
 for tryy in range(0, 10):
     try:
         req = urllib2.urlopen("http://localhost:8080/")
-    except:
-        pass
 
-    if req.getcode() == 200:
-        # This is a strange sleep, but if we get a response from 8080, we must wait to make sure h has time to crash if it is going to
-        # If we just barrell through here, we could be accessing another server on 8080, and h could be in the process of crashing
-        time.sleep(1)
+        if req.getcode() == 200:
+            # This is a strange sleep, but if we get a response from 8080, we must wait to make sure h has time to crash if it is going to
+            # If we just barrell through here, we could be accessing another server on 8080, and h could be in the process of crashing
+            time.sleep(1)
 
-        ret = h.poll()
-        if h.poll() == 0:
-            serverUp = True
+            ret = h.poll()
+            if h.poll() == 0:
+                serverUp = True
+            else:
+                print "There seems to be another webserver already running on localhost:8080"
+                serverUp = False
+            break;
         else:
-            print "There seems to be another webserver already running on localhost:8080"
-            serverUp = False
-        break;
-    else:
-        ret = h.poll()
+            ret = h.poll()
         
         # Sometimes the server fails to start for weird reason, make sure it keeps trying to start
-        if ret is not None:
-            if ret != 0:
-                startserver()
+            if ret is not None:
+                if ret != 0:
+                    startserver()
+    except:
+        pass
                 
     time.sleep(1)
     print "Checking if launched -- try " + str(tryy + 1) +" of 10"
