@@ -1,6 +1,6 @@
 #!/bin/bash
 
-# Attempt to install StochKit 2.0.7
+# Attempt to install StochKit 2.0.8
 #
 # Install it in the user's home folder by default, to override
 #
@@ -23,7 +23,7 @@ Terminal=true
 Type=Application
 Categories=Application;' > $STOCHSS_HOME/StochSS.desktop
 
-STOCHKIT_VERSION=StochKit2.0.7
+STOCHKIT_VERSION=StochKit2.0.8
 STOCHKIT_PREFIX=$STOCHSS_HOME
 STOCHKIT_HOME=$STOCHKIT_PREFIX/$STOCHKIT_VERSION
 
@@ -61,18 +61,18 @@ fi
 echo -n "Testing if StochKit2 built... "
 
 if "$STOCHKIT_HOME/ssa" -m "$STOCHKIT_HOME/models/examples/dimer_decay.xml" -r 1 -t 1 -i 1 >& /dev/null; then
-    echo "StochKit2.0.7 found in $STOCHKIT_HOME"
+    echo "Yes"
+    echo "$STOCHKIT_VERSION found in $STOCHKIT_HOME"
 else
     echo "No"
 
     echo "Installing in $STOCHSS_HOME/$STOCHKIT_VERSION"
 
     echo "Cleaning up anything already there..."
-    rm -f "$STOCHKIT_PREFIX/$STOCHKIT_VERSION.tgz"
     rm -rf "$STOCHKIT_PREFIX/$STOCHKIT_VERSION"
 
     if [ ! -e "$STOCHKIT_PREFIX/$STOCHKIT_VERSION.tgz" ]; then
-	echo "Downloading StochKit2.0.7..."
+	echo "Downloading $STOCHKIT_VERSION..."
 	curl -o "$STOCHKIT_PREFIX/$STOCHKIT_VERSION.tgz" -L "http://sourceforge.net/projects/stochkit/files/StochKit2/$STOCHKIT_VERSION/$STOCHKIT_VERSION.tgz"
     fi
 
@@ -81,7 +81,7 @@ else
     echo " stderr in $STOCHKIT_HOME/stderr.log "
     wd=`pwd`
     cd "$STOCHKIT_PREFIX"
-    tar -xf StochKit2.0.7.tgz
+    tar -xf "$STOCHKIT_VERSION.tgz"
     cd "$STOCHKIT_HOME"
     ./install.sh 1>stdout.log 2>stderr.log
     cd $wd
@@ -91,12 +91,9 @@ else
 	echo "Success!"
     else
 	echo "Failed"
-	echo "StochKit2.0.7 failed to install. Consult logs above for errors, and the StochKit documentation for help on building StochKit for your platform. Rename successful build folder to $STOCHKIT_HOME"	
+	echo "$STOCHKIT_VERSION failed to install. Consult logs above for errors, and the StochKit documentation for help on building StochKit for your platform. Rename successful build folder to $STOCHKIT_HOME"	
 	exit -1
     fi
-
-    echo "Cleaning up..."
-    rm -f "$STOCHKIT_PREFIX/StochKit2.0.7.tgz"
 fi
 
 echo -n "Configuring the app to use $STOCHKIT_HOME for local execution... "
