@@ -11,6 +11,8 @@ import webbrowser
 
 source_exec = sys.argv[1]
 
+print source_exec
+
 mac = False
 if len(sys.argv) == 3:
     mac = True
@@ -68,13 +70,14 @@ def clean_up_and_exit(signal, stack):
             print "Error in updating, exiting"
             exit(-1)
 
-        h = subprocess.Popen('git pull --rebase'.split())
+        h = subprocess.Popen('git pull'.split())
         if h.returncode != 0:
             os.remove('update')
             print "Error in updating, exiting"
             exit(-1)
 
-        print "Success"
+        #print "Success"
+        print "Done updating, relaunching {0}...".format(source_exec)
         os.remove('update')
 
         sys.stderr.flush()

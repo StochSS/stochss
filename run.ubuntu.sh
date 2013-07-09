@@ -66,7 +66,6 @@ else
     echo "Installing in $STOCHSS_HOME/$STOCHKIT_VERSION"
 
     echo "Cleaning up anything already there..."
-    rm -f "$STOCHKIT_PREFIX/$STOCHKIT_VERSION.tgz"
     rm -rf "$STOCHKIT_PREFIX/$STOCHKIT_VERSION"
 
     if [ ! -e "$STOCHKIT_PREFIX/$STOCHKIT_VERSION.tgz" ]; then
