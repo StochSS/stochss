@@ -29,7 +29,11 @@ stderr = open('stderr.log', 'w')
 
 # Deploy the app on localhost
 print path
-h = subprocess.Popen(("python " + path + "/sdk/python/dev_appserver.py --skip_sdk_update_check YES --datastore_consistency_policy=consistent app").split(), stdout = stdout, stderr = stderr)
+
+def startserver():
+    h = subprocess.Popen(("python " + path + "/sdk/python/dev_appserver.py --skip_sdk_update_check YES --datastore_consistency_policy=consistent app").split(), stdout = stdout, stderr = stderr)
+
+startserver()
 
 print "Starting admin server at: http://localhost:8000"
 
@@ -38,19 +42,29 @@ serverUp = False
 for tryy in range(0, 10):
     try:
         req = urllib2.urlopen("http://localhost:8080/")
-
-        if req.getcode() == 200:
-            time.sleep(1)
-
-            if not h.poll():
-                serverUp = True
-            else:
-                print "There seems to be another webserver already running on localhost:8080"
-                serverUp = False
-            break;
     except:
         pass
 
+    if req.getcode() == 200:
+        # This is a strange sleep, but if we get a response from 8080, we must wait to make sure h has time to crash if it is going to
+        # If we just barrell through here, we could be accessing another server on 8080, and h could be in the process of crashing
+        time.sleep(1)
+
+        ret = h.poll()
+        if h.poll() == 0:
+            serverUp = True
+        else:
+            print "There seems to be another webserver already running on localhost:8080"
+            serverUp = False
+        break;
+    else:
+        ret = h.poll()
+        
+        # Sometimes the server fails to start for weird reason, make sure it keeps trying to start
+        if ret is not None:
+            if ret != 0:
+                startserver()
+                
     time.sleep(1)
     print "Checking if launched -- try " + str(tryy + 1) +" of 10"
 
