@@ -1,0 +1,36 @@
+{% extends "base.html" %}
+{% block title%}Updates{% endblock %}
+{% block content %}
+
+<div class="span9">
+    
+    <div class="page-header">
+        <h1>Updates</h1>
+    </div>
+    
+    <div class="well">
+        <form id="env_variables" action="/localsettings" method="post">
+            {% if updating %}
+            Updates are currently running. The StochSS application will become unresponsive until they complete.
+            {% else %}
+            {% if nointernet %}
+            No internet connection available to check for updates. Refresh page if connection becomes available
+            {% else %}
+            {% if update %}
+            {% if nojobs %}
+            Updates are available, click button to install.
+            <br />
+            <br />
+            <button name="save" class="btn btn-primary btn-large" type="submit"><i class="icon-save"></i> Update Now </button>
+            {% else %}
+            An update is available, but jobs are currently running. Wait for jobs to finish before running update.
+            {% endif %}
+            {% else %}
+            No update is available
+            {% endif %}
+            {% endif %}
+            {% endif %}
+        </form>
+    </div>
+    </div><!--/span-->
+{% endblock %}

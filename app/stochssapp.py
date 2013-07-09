@@ -251,6 +251,7 @@ from handlers.parametereditor import *
 from handlers.reactioneditor import *
 from handlers.simulation import *
 from handlers.credentials import *
+from handlers.updates import *
 from handlers.status import *
 
 # Handler to serve static files
@@ -300,6 +301,7 @@ app = webapp2.WSGIApplication([
                                ('/output/servestatic',StaticFileHandler),
                                ('/credentials',CredentialsPage),
                                ('/localsettings',LocalSettingsPage),
+                               ('/updates',UpdatesPage),
                                r1,
                                r2,
                                r3,
