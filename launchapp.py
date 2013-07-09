@@ -1,6 +1,7 @@
 #!/usr/bin/env python
 import os
 import StringIO
+import signal
 import subprocess
 import sys
 import time
@@ -8,25 +9,23 @@ import threading
 import urllib2
 import webbrowser
 
-run_indefinite = False
+mac = False
 if len(sys.argv) == 2:
-    run_indefinite = True
+    mac = True
 
 path = os.path.abspath(os.path.dirname(__file__))
 
 print "--- Running StochSS Server ---"
 
-pwd = os.getcwd()
-os.chdir(path)
-
-h = subprocess.Popen(("python conf/stochss-env.py").split())
+h = subprocess.Popen(("python " + path + "/conf/stochss-env.py").split())
 h.wait()
 
 stdout = open('stdout.log', 'w')
 stderr = open('stderr.log', 'w')
 
 # Deploy the app on localhost
-h = subprocess.Popen(("python sdk/python/dev_appserver.py --skip_sdk_update_check YES --datastore_consistency_policy=consistent app").split(), stdout = stdout, stderr = stderr)
+print path
+h = subprocess.Popen(("python " + path + "/sdk/python/dev_appserver.py --skip_sdk_update_check YES --datastore_consistency_policy=consistent app").split(), stdout = stdout, stderr = stderr)
 
 print "Starting admin server at: http://localhost:8000"
 
@@ -51,30 +50,42 @@ for tryy in range(0, 10):
     time.sleep(1)
     print "Checking if launched -- try " + str(tryy + 1) +" of 10"
 
+def clean_up_and_exit(signal, stack):
+    print "Killing webserver proces..."
+
+    try:
+        h.terminate()
+    except:
+        pass
+
+    if signal == None:
+        exit(0)
+    else:
+        exit(-1)
+
+signal.signal(signal.SIGHUP, clean_up_and_exit)
+signal.signal(signal.SIGINT, clean_up_and_exit)
+signal.signal(signal.SIGQUIT, clean_up_and_exit)
+signal.signal(signal.SIGILL, clean_up_and_exit)
+signal.signal(signal.SIGABRT, clean_up_and_exit)
+signal.signal(signal.SIGFPE, clean_up_and_exit)
+
 if serverUp:
     # Open web browser
     webbrowser.open_new('http://localhost:8080/')
 
-    print "Logging stdout to " + path + "/stdout.log" + "and stderr to " + path + "/stderr.log"
+    print "Logging stdout to " + path + "/stdout.log\n" + " and stderr to " + path + "/stderr.log"
 
     try:
-        print "Navigate to localhost:8080 to access StochSS"
-        if run_indefinite:
-            while 1:
-                time.sleep(10)
-        else:
-            print "Press enter key to terminate StochSS server"
-            ch = sys.stdin.read(1)
+        print "Navigate to http://localhost:8080 to access StochSS"
+        if not mac:
+            print "Press Control+C to terminate StochSS server"
+
+        while 1:
+            time.sleep(1)
     except KeyboardInterrupt:
         pass
 
-    print "Killing webserver proces..."
+    clean_up_and_exit(None, None)
 else:
     print "Webserver never launched, cleaning up processes and exiting. Check " + path + "/stderr.log"
-
-try:
-    h.terminate()
-except:
-    pass
-
-os.chdir(pwd)
