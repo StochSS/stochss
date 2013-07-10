@@ -1,2 +1,2 @@
 #!/usr/bin/env bash
-exec run.mac.sh
+exec ./run.mac.sh
