@@ -20,32 +20,6 @@ STOCHKIT_VERSION=StochKit2.0.8
 STOCHKIT_PREFIX=$STOCHSS_HOME
 STOCHKIT_HOME=$STOCHKIT_PREFIX/$STOCHKIT_VERSION
 
-# Check that the dependencies are satisfied
-echo -n "Are dependencies satisfied?... "
-
-dpkg -s libxml2-dev g++ gcc make curl >& /dev/null
-if [ $? != 0 ]; then
-    echo "No"
-    read -p "Do you want me to try to use sudo to install required package(s) (make, gcc, g++, libxml2-dev, curl)? (y/n): " answer
-
-
-    if [ $answer == 'y' ] || [ $answer == 'yes' ]; then
-        echo "Running 'sudo apt-get install make gcc g++ libxml2-dev curl'"
-        sudo apt-get install make gcc g++ libxml2-dev curl
-    else
-        read -p "Do you want me to still try to install Stochkit? (y/n): " answer
-
-        answer=$(echo $answer | tr '[A-Z]' '[a-z]')
-
-        if [ $answer == 'n' ] || [ $answer == 'no' ]; then
-            echo "Installation Failed"
-            exit -1
-        fi
-    fi
-else
-    echo "Yes"
-fi
-
 echo -n "Testing if StochKit2 built... "
 
 if "$STOCHKIT_HOME/ssa" -m "$STOCHKIT_HOME/models/examples/dimer_decay.xml" -r 1 -t 1 -i 1 >& /dev/null; then
