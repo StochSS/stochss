@@ -16,29 +16,34 @@ STOCHKIT_VERSION=StochKit2.0.8
 STOCHKIT_PREFIX=$STOCHSS_HOME
 STOCHKIT_HOME=$STOCHKIT_PREFIX/$STOCHKIT_VERSION
 
-echo "--- Checking StochSS configuration ---"
+echo "<html>"
+echo "<body>"
+
+echo "<h2>Checking StochSS configuration</h2><br />"
 
 echo -n "Testing if Xcode & Command Line Tools installed... "
 
 if ! which gcc > /dev/null; then
-    echo "No"
-    echo "gcc not found. Xcode or Command Line Tools not installed -- refer to documentation"
+    echo "No<br />"
+    echo "<font color=\"red\">"
+    echo "Gcc not found. Xcode or Command Line Tools not installed -- refer to documentation"
+    echo "</font>"
     exit -1
 fi
 
-echo "Yes"
+echo "Yes<br />"
 
 echo -n "Testing if StochKit2 built... "
 
 if "$STOCHKIT_HOME/ssa" -m "$STOCHKIT_HOME/models/examples/dimer_decay.xml" -r 1 -t 1 -i 1 >& /dev/null; then
-    echo "Yes"
-    echo "$STOCHKIT_VERSION found in $STOCHKIT_HOME"
+    echo "Yes <br />"
+    echo "$STOCHKIT_VERSION found in $STOCHKIT_HOME<br />"
 else
-    echo "No"
+    echo "No<br />"
 
-    echo "Installing in $STOCHSS_HOME/$STOCHKIT_VERSION"
+    echo "Installing in $STOCHSS_HOME/$STOCHKIT_VERSION<br />"
 
-    echo "Cleaning up anything already there..."
+    echo "Cleaning up anything already there...<br />"
     rm -rf "$STOCHKIT_PREFIX/$STOCHKIT_VERSION"
 
     if [ ! -e "$STOCHKIT_PREFIX/$STOCHKIT_VERSION.tgz" ]; then
@@ -46,23 +51,27 @@ else
 	curl -o "$STOCHKIT_PREFIX/$STOCHKIT_VERSION.tgz" -L "http://sourceforge.net/projects/stochkit/files/StochKit2/$STOCHKIT_VERSION/$STOCHKIT_VERSION.tgz"
     fi
 
-    echo "Building StochKit"
-    echo " Logging stdout in $STOCHKIT_HOME/stdout.log and "
-    echo " stderr in $STOCHKIT_HOME/stderr.log "
-    echo " * This process will take at least 5 minutes to complete, please be patient *"
+    echo "Building StochKit<br />"
+    echo " Logging process... Click to view <a href=\"$tmpdir/$STOCHKIT_VERSION/stdout.log\">stdout</a> and <br />"
+    echo " <a href=\"$tmpdir/$STOCHKIT_VERSION/stderr.log>stderr</a><br />"
+    echo "<font color=\"red\"><h3>This process will take at least 5 minutes to complete, please be patient</h3></font>"
     wd=`pwd`
     cd "$STOCHKIT_PREFIX"
-    tar -xf "$STOCHKIT_VERSION.tgz"
-    cd "$STOCHKIT_HOME"
+    tar -xzf "$STOCHKIT_VERSION.tgz"
+    tmpdir=$(mktemp -d /tmp/tmp.XXXXXX)
+    mv "$STOCHKIT_HOME" "$tmpdir/"
+    cd "$tmpdir/$STOCHKIT_VERSION"
     ./install.sh 1>stdout.log 2>stderr.log
     cd $wd
+    mv "$tmpdir/$STOCHKIT_VERSION" "$STOCHKIT_HOME"
 
 # Test that StochKit was installed successfully by running it on a sample model
     if "$STOCHKIT_HOME/ssa" -m "$STOCHKIT_HOME/models/examples/dimer_decay.xml" -r 1 -t 1 -i 1 >& /dev/null; then
-	echo "Success!"
+	echo "Success!<br \>"
     else
-	echo "Failed"
-	echo "$STOCHKIT_VERSION failed to install. Consult logs above for errors, and the StochKit documentation for help on building StochKit for your platform. Rename successful build folder to $STOCHKIT_HOME"	
+        echo "<font color=red>"
+	echo "Failed<br \>"
+	echo "$STOCHKIT_VERSION failed to install. Consult logs above for errors, and the StochKit documentation for help on building StochKit for your platform. Rename successful build folder to $STOCHKIT_HOME<br \></font>"
 	exit -1
     fi
 fi
@@ -71,6 +80,6 @@ echo -n "Configuring the app to use $STOCHKIT_HOME for local execution... "
 
 # Write STOCHKIT_HOME to the appropriate config file
 echo -n "$STOCHKIT_HOME" > "$STOCHSS_HOME/conf/config"
-echo "Done!"
+echo "Done!<br />"
 
 exec python "$STOCHSS_HOME/launchapp.py" $0 mac

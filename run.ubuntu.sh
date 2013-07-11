@@ -70,10 +70,14 @@ else
     echo " * This process will take at least 5 minutes to complete, please be patient *"
     wd=`pwd`
     cd "$STOCHKIT_PREFIX"
-    tar -xf "$STOCHKIT_VERSION.tgz"
-    cd "$STOCHKIT_HOME"
+    tar -xzf "$STOCHKIT_VERSION.tgz"
+    tmpdir=$(mktemp -d /tmp/tmp.XXXXXX)
+    mv "$STOCHKIT_HOME" "$tmpdir/"
+    cd "$tmpdir/$STOCHKIT_VERSION"
     ./install.sh 1>stdout.log 2>stderr.log
     cd $wd
+    mv "$tmpdir/$STOCHKIT_VERSION" "$STOCHKIT_HOME"
+    rm -rf "$tmpdir"
 
 # Test that StochKit was installed successfully by running it on a sample model
     if "$STOCHKIT_HOME/ssa" -m "$STOCHKIT_HOME/models/examples/dimer_decay.xml" -r 1 -t 1 -i 1 >& /dev/null; then

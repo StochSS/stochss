@@ -18,7 +18,10 @@ if len(sys.argv) == 3:
 path = os.path.abspath(os.path.dirname(__file__))
 
 if os.path.isfile('app/update'):
-    sys.stdout.write('Updating application now...')
+    if mac:
+        print "<h2>Updating application now</h2><br />"
+    else:
+        sys.stdout.write('Updating application now...')
     sys.stdout.flush()
     
     h = subprocess.Popen('git stash'.split())
@@ -26,6 +29,8 @@ if os.path.isfile('app/update'):
     if h.returncode != 0:
         os.remove('app/update')
         print "Error in updating, exiting"
+        if mac:
+            print "<br />"
         sys.stdout.flush()
         exit(-1)
         
@@ -34,11 +39,15 @@ if os.path.isfile('app/update'):
     if h.returncode != 0:
         os.remove('app/update')
         print "Error in updating, exiting"
+        if mac:
+            print "<br />"
         sys.stdout.flush()
         exit(-1)
 
     #print "Success"
     print "Done updating, relaunching {0}...".format(source_exec)
+    if mac:
+        print "<br />"
     os.remove('app/update')
 
     sys.stderr.flush()
@@ -46,7 +55,10 @@ if os.path.isfile('app/update'):
 
     os.execl(source_exec, source_exec)
 
-print "--- Running StochSS Server ---"
+if mac:
+    print "<h2>Running StochSS Server</h2><br />"
+else:
+    print "--- Running StochSS Server ---"
 
 h = subprocess.Popen(("python " + path + "/conf/stochss-env.py").split())
 h.wait()
@@ -63,6 +75,8 @@ def startserver():
 startserver()
 
 print "Starting admin server at: http://localhost:8000"
+if mac:
+    print "<br />"
 sys.stdout.flush()
 
 # Wait for server to launch
@@ -80,7 +94,13 @@ for tryy in range(0, 50):
             if h.poll() == 0:
                 serverUp = True
             else:
+                if mac:
+                    print "<font color=red>"
+
                 print "There seems to be another webserver already running on localhost:8080"
+
+                if mac:
+                    print "</font><br />"
                 sys.stdout.flush()
                 serverUp = False
             break;
@@ -96,10 +116,14 @@ for tryy in range(0, 50):
                 
     time.sleep(1)
     print "Checking if launched -- try " + str(tryy + 1) +" of 10"
+    if mac:
+        print "<br />"
     sys.stdout.flush()
 
 def clean_up_and_exit(signal, stack):
     print "Killing webserver proces..."
+    if mac:
+        print "<br />"
     sys.stdout.flush()
 
     try:
@@ -123,11 +147,18 @@ if serverUp:
     # Open web browser
     webbrowser.open_new('http://localhost:8080/')
 
-    print "Logging stdout to " + path + "/stdout.log\n" + " and stderr to " + path + "/stderr.log"
+    if mac:
+        print "Logging process, click to view <a href=\"" + path + "/stdout.log\">stdout</a><br />" + " or <a href=\"" + path + "/stderr.log\">stderr</a><br />"
+        print "<br />"
+    else:
+        print "Logging stdout to " + path + "/stdout.log\n" + " and stderr to " + path + "/stderr.log"
     sys.stdout.flush()
 
     try:
-        print "Navigate to http://localhost:8080 to access StochSS"
+        if mac:
+            print "Navigate to <a href=\"http://localhost:8080\">http://localhost:8080</a> to access StochSS"
+        else:
+            print "Navigate to http://localhost:8080 to access StochSS"
         sys.stdout.flush()
         if not mac:
             print "Press Control+C to terminate StochSS server"
@@ -140,6 +171,10 @@ if serverUp:
 
     clean_up_and_exit(None, None)
 else:
+    if mac:
+        print "<font color=red>"
     print "Webserver never launched, cleaning up processes and exiting. Check " + path + "/stderr.log"
+    if mac:
+        print "<br />"
     sys.stdout.flush()
     clean_up_and_exit(None, None)
