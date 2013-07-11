@@ -46,9 +46,10 @@ else
 	curl -o "$STOCHKIT_PREFIX/$STOCHKIT_VERSION.tgz" -L "http://sourceforge.net/projects/stochkit/files/StochKit2/$STOCHKIT_VERSION/$STOCHKIT_VERSION.tgz"
     fi
 
-    echo "Building StochKit (will take a few minutes)"
+    echo "Building StochKit"
     echo " Logging stdout in $STOCHKIT_HOME/stdout.log and "
     echo " stderr in $STOCHKIT_HOME/stderr.log "
+    echo " * This process will take at least 5 minutes to complete, please be patient *"
     wd=`pwd`
     cd "$STOCHKIT_PREFIX"
     tar -xf "$STOCHKIT_VERSION.tgz"
