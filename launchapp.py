@@ -17,6 +17,35 @@ if len(sys.argv) == 3:
 
 path = os.path.abspath(os.path.dirname(__file__))
 
+if os.path.isfile('app/update'):
+    sys.stdout.write('Updating application now...')
+    sys.stdout.flush()
+    
+    h = subprocess.Popen('git stash'.split())
+    h.communicate()
+    if h.returncode != 0:
+        os.remove('app/update')
+        print "Error in updating, exiting"
+        sys.stdout.flush()
+        exit(-1)
+        
+    h = subprocess.Popen('git pull'.split())
+    h.communicate()
+    if h.returncode != 0:
+        os.remove('app/update')
+        print "Error in updating, exiting"
+        sys.stdout.flush()
+        exit(-1)
+
+    #print "Success"
+    print "Done updating, relaunching {0}...".format(source_exec)
+    os.remove('app/update')
+
+    sys.stderr.flush()
+    sys.stdout.flush()
+
+    os.execl(source_exec, source_exec)
+
 print "--- Running StochSS Server ---"
 
 h = subprocess.Popen(("python " + path + "/conf/stochss-env.py").split())
@@ -77,35 +106,6 @@ def clean_up_and_exit(signal, stack):
         h.terminate()
     except:
         pass
-
-    if os.path.isfile('app/update'):
-        sys.stdout.write('Updating application now...')
-        sys.stdout.flush()
-
-        h = subprocess.Popen('git stash'.split())
-        h.communicate()
-        if h.returncode != 0:
-            os.remove('app/update')
-            print "Error in updating, exiting"
-            sys.stdout.flush()
-            exit(-1)
-
-        h = subprocess.Popen('git pull'.split())
-        h.communicate()
-        if h.returncode != 0:
-            os.remove('app/update')
-            print "Error in updating, exiting"
-            sys.stdout.flush()
-            exit(-1)
-
-        #print "Success"
-        print "Done updating, relaunching {0}...".format(source_exec)
-        os.remove('app/update')
-
-        sys.stderr.flush()
-        sys.stdout.flush()
-
-        os.execl(source_exec, source_exec)
 
     if signal == None:
         exit(0)
