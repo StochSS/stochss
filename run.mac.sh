@@ -7,7 +7,7 @@
 #
 
 #read -p "Select a directory to use as StochSS home (default ~/StochSS)" MY_PATH
-MY_PATH="`pwd`"#"`dirname \"$0\"`"              # relative
+MY_PATH="`pwd`"              # relative
 MY_PATH="`( cd \"$MY_PATH\" && pwd )`"  # absolutized and normalized
 STOCHSS_HOME=$MY_PATH
 STOCHSS_HOME="`( cd \"$STOCHSS_HOME\" && pwd )`" 
