@@ -12,17 +12,6 @@ STOCHSS_HOME=$MY_PATH
 STOCHSS_HOME="`( cd \"$STOCHSS_HOME\" && pwd )`" 
 
 echo "Installing in $STOCHSS_HOME"
-
-echo '[Desktop Entry]
-Version=1.0.0
-Name=StochSS
-Comment=This is my comment
-Exec=$MY_PATH/launchapp.py
-Icon=$MY_PATH/icon.png
-Terminal=true
-Type=Application
-Categories=Application;' > $STOCHSS_HOME/StochSS.desktop
-
 STOCHKIT_VERSION=StochKit2.0.8
 STOCHKIT_PREFIX=$STOCHSS_HOME
 STOCHKIT_HOME=$STOCHKIT_PREFIX/$STOCHKIT_VERSION
