@@ -76,23 +76,25 @@ def clean_up_and_exit(signal, stack):
     except:
         pass
 
-    if os.path.isfile('update'):
+    if os.path.isfile('app/update'):
         sys.stdout.write('Updating application now...')
         h = subprocess.Popen('git stash'.split())
+        h.communicate()
         if h.returncode != 0:
-            os.remove('update')
+            os.remove('app/update')
             print "Error in updating, exiting"
             exit(-1)
 
         h = subprocess.Popen('git pull'.split())
+        h.communicate()
         if h.returncode != 0:
-            os.remove('update')
+            os.remove('app/update')
             print "Error in updating, exiting"
             exit(-1)
 
         #print "Success"
         print "Done updating, relaunching {0}...".format(source_exec)
-        os.remove('update')
+        os.remove('app/update')
 
         sys.stderr.flush()
         sys.stdout.flush()
