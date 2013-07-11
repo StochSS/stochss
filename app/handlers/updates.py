@@ -8,12 +8,14 @@ import logging
 import traceback
 import __future__
 import random
+import re
 import string
 from stochssapp import BaseHandler
 from backend.backendservice import *
 
 from google.appengine.ext import db
 
+import os
 import time
 import urllib2
 from backend.backendservice import backendservices
@@ -44,10 +46,10 @@ class UpdatesPage(BaseHandler):
           h = subprocess.Popen('git remote update'.split(), stdout = subprocess.PIPE, stderr = subprocess.PIPE)
           stdout, stderr = h.communicate()
 
-          h = subprocess.Popen('git status -uno -s'.split(), stdout = subprocess.PIPE, stderr = subprocess.PIPE)
+          h = subprocess.Popen('git status -uno'.split(), stdout = subprocess.PIPE, stderr = subprocess.PIPE)
           stdout, stderr = h.communicate()
-          
-          update_available = len(stdout.strip()) > 0
+
+          update_available = re.search('behind', stdout)
           
           if update_available:
             service = backendservices()
@@ -98,9 +100,6 @@ class UpdatesPage(BaseHandler):
         env_variables['updating'] = True
 
         self.render_response("updates.html", **env_variables)
-
-        # Unglamorously exit
-        exit(0)
 
 class InvalidUserException(Exception):
     pass
