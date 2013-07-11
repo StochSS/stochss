@@ -121,7 +121,12 @@ signal.signal(signal.SIGFPE, clean_up_and_exit)
 
 if serverUp:
     # Open web browser
-    webbrowser.open_new('http://localhost:8080/')
+
+    if mac:
+        wbrowser = subprocess.Popen('open http://localhost:8080/'.split())
+        wbrowser.communicate()
+    else:
+        webbrowser.open_new('http://localhost:8080/')
 
     print "Logging stdout to " + path + "/stdout.log\n" + " and stderr to " + path + "/stderr.log"
     sys.stdout.flush()
