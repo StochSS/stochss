@@ -12,7 +12,7 @@ STOCHSS_HOME=$MY_PATH/..
 STOCHSS_HOME="`( cd \"$STOCHSS_HOME\" && pwd )`" 
 echo $STOCHSS_HOME
 
-STOCHKIT_VERSION=StochKit2.0.7
+STOCHKIT_VERSION=StochKit2.0.8
 STOCHKIT_PREFIX=$STOCHSS_HOME
 STOCHKIT_HOME=$STOCHKIT_PREFIX/$STOCHKIT_VERSION
 
@@ -107,14 +107,14 @@ fi
 fi
 
 if [ ! -e $STOCHKIT_PREFIX/$STOCHKIT_VERSION.tgz ]; then
-echo "Downloading StochKit2.0.7..."
+echo "Downloading StochKit"
 curl -o $STOCHKIT_PREFIX/$STOCHKIT_VERSION.tgz -L http://sourceforge.net/projects/stochkit/files/StochKit2/$STOCHKIT_VERSION/$STOCHKIT_VERSION.tgz
 fi
 
 echo "Building StochKit..."
 wd=`pwd`
 cd $STOCHKIT_PREFIX
-tar -xf StochKit2.0.7.tgz
+tar -xf $STOCHKIT_VERSION.tgz
 cd $STOCHKIT_HOME
 ./install.sh
 cd $wd
@@ -123,9 +123,9 @@ echo "Testing StochKit2..."
 
 # Test that StochKit was installed successfully by running it on a sample model
 if $STOCHKIT_HOME/ssa -m $STOCHKIT_HOME/models/examples/dimer_decay.xml -r 1 -t 1 -i 1; then
-    echo "StochKit2.0.7 was installed successfully."
+    echo "StochKit was installed successfully."
 else
-    echo "StochKit2.0.7 failed to install. Consult the StochKit documentation for help on building StochKit for your platform."	
+    echo "StochKit failed to install. Consult the StochKit documentation for help on building StochKit for your platform."	
     echo "Cleaning up..."
     rm -f $STOCHKIT_PREFIX/$STOCHKIT_VERSION.tgz
     rm -rf $STOCHKIT_PREFIX/$STOCHKIT_VERSION	
@@ -133,7 +133,7 @@ else
 fi
 
 echo "Cleaning up..."
-rm -f $STOCHKIT_PREFIX/StochKit2.0.7.tgz
+rm -f $STOCHKIT_PREFIX/$STOCHKIT_VERSION.tgz
 
 echo "Configuring the app to use this installation of StochKit for local execution..."
 
