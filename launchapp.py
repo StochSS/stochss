@@ -139,7 +139,7 @@ for tryy in range(0, 20):
 def clean_up_and_exit(signal, stack):
     print "Killing webserver proces..."
     if mac:
-        print "<br />"
+        print "<br /></body></html>"
     sys.stdout.flush()
 
     try:
