@@ -57,16 +57,16 @@ else
     fi
 
     echo "Building StochKit<br />"
-    echo " Logging process... Click to view <a href=\"$tmpdir/$STOCHKIT_VERSION/stdout.log\">stdout</a> and <br />"
-    echo " <a href=\"$tmpdir/$STOCHKIT_VERSION/stderr.log>stderr</a><br />"
-    echo "<font color=\"red\"><h3>This process will take at least 5 minutes to complete, please be patient</h3></font>"
     wd=`pwd`
     cd "$STOCHKIT_PREFIX"
     tar -xzf "$STOCHKIT_VERSION.tgz"
     tmpdir=$(mktemp -d /tmp/tmp.XXXXXX)
     mv "$STOCHKIT_HOME" "$tmpdir/"
     cd "$tmpdir/$STOCHKIT_VERSION"
-    ./install.sh 1>stdout.log 2>stderr.log
+    echo " Stdout available at $STOCHSS_HOME/stdout.log and <br />"
+    echo " Stderr available at $STOCHSS_HOME/stderr.log<br />"
+    echo "<font color=\"blue\"><h3>This process will take at least 5 minutes to complete, please be patient</h3></font>"
+    ./install.sh 1>"$STOCHSS_HOME/stdout.log" 2>"$STOCHSS_HOME/stderr.log"
     cd $wd
     mv "$tmpdir/$STOCHKIT_VERSION" "$STOCHKIT_HOME"
 

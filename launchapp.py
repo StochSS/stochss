@@ -60,14 +60,30 @@ if mac:
 else:
     print "--- Running StochSS Server ---"
 
-h = subprocess.Popen(("python " + path + "/conf/stochss-env.py").split())
-h.wait()
+try:
+    req = urllib2.urlopen("http://localhost:8080/")
+
+    if req.getcode() == 200:
+        if mac:
+            print "<font color=red>"
+
+        print "There seems to be another webserver already running on localhost:8080"
+        
+        if mac:
+            print "</font><br />"
+
+        exit(-1)
+except:
+    pass
+
+h = subprocess.Popen(("python " + path + "/conf/stochss-env.py").split(), stdout = subprocess.PIPE, stderr = subprocess.PIPE)
+h.communicate()
 
 stdout = open('stdout.log', 'w')
 stderr = open('stderr.log', 'w')
 
 # Deploy the app on localhost
-print path
+#print path
 
 def startserver():
     h = subprocess.Popen(("python " + path + "/sdk/python/dev_appserver.py --skip_sdk_update_check YES --datastore_consistency_policy=consistent app").split(), stdout = stdout, stderr = stderr)
@@ -81,7 +97,7 @@ sys.stdout.flush()
 
 # Wait for server to launch
 serverUp = False
-for tryy in range(0, 50):
+for tryy in range(0, 20):
     try:
         req = urllib2.urlopen("http://localhost:8080/")
 
@@ -114,8 +130,8 @@ for tryy in range(0, 50):
     except:
         pass
                 
-    time.sleep(1)
-    print "Checking if launched -- try " + str(tryy + 1) +" of 10"
+    time.sleep(2)
+    print "Checking if launched -- try " + str(tryy + 1) +" of 20"
     if mac:
         print "<br />"
     sys.stdout.flush()
@@ -123,7 +139,7 @@ for tryy in range(0, 50):
 def clean_up_and_exit(signal, stack):
     print "Killing webserver proces..."
     if mac:
-        print "<br />"
+        print "<br /></body></html>"
     sys.stdout.flush()
 
     try:
@@ -153,17 +169,18 @@ if serverUp:
         webbrowser.open_new('http://localhost:8080/')
 
     if mac:
-        print "Logging process, click to view <a href=\"" + path + "/stdout.log\">stdout</a><br />" + " or <a href=\"" + path + "/stderr.log\">stderr</a><br />"
+        print " Stdout available at {0}/stdout.log and <br />".format(path)
+        print " Stderr available at {0}/stderr.log<br />".format(path)
         print "<br />"
     else:
         print "Logging stdout to " + path + "/stdout.log\n" + " and stderr to " + path + "/stderr.log"
     sys.stdout.flush()
 
     try:
+        print "Navigate to http://localhost:8080 to access StochSS"
         if mac:
-            print "Navigate to <a href=\"http://localhost:8080\">http://localhost:8080</a> to access StochSS"
-        else:
-            print "Navigate to http://localhost:8080 to access StochSS"
+            print "<br />"
+
         sys.stdout.flush()
         if not mac:
             print "Press Control+C to terminate StochSS server"
