@@ -16,6 +16,11 @@ STOCHSS_HOME="`( cd \"$STOCHSS_HOME\" && pwd )`"
 
 echo "Installing in $STOCHSS_HOME"
 
+if [ "$(echo $STOCHSS_HOME | grep " ")" != "" ]; then
+    echo "Cannot execute StochSS under any directory that contains spaces (which the filename listed above has). This is an known issue"
+    exit -1
+fi
+
 STOCHKIT_VERSION=StochKit2.0.8
 STOCHKIT_PREFIX=$STOCHSS_HOME
 STOCHKIT_HOME=$STOCHKIT_PREFIX/$STOCHKIT_VERSION

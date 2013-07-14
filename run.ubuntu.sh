@@ -20,6 +20,11 @@ STOCHKIT_VERSION=StochKit2.0.8
 STOCHKIT_PREFIX=$STOCHSS_HOME
 STOCHKIT_HOME=$STOCHKIT_PREFIX/$STOCHKIT_VERSION
 
+if [ "$(echo $STOCHSS_HOME | grep " ")" != "" ]; then
+    echo "Cannot install StochSS under any directory that contains spaces (which the filename listed above has). This is an known issue"
+    exit -1
+fi
+
 # Check that the dependencies are satisfied
 echo -n "Are dependencies satisfied?... "
 

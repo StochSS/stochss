@@ -19,6 +19,11 @@ STOCHKIT_HOME=$STOCHKIT_PREFIX/$STOCHKIT_VERSION
 echo "<html>"
 echo "<body>"
 
+if [ "$(echo $STOCHSS_HOME | grep " ")" != "" ]; then
+    echo "<font color=\"red\"><h2>Cannot install StochSS under any directory that contains spaces (which \"$STOCHSS_HOME\" has). This is an known issue</h2></font>"
+    exit -1
+fi
+
 echo "<h2>Checking StochSS configuration</h2><br />"
 
 echo -n "Testing if Xcode & Command Line Tools installed... "
