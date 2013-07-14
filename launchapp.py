@@ -84,7 +84,6 @@ stderr = open('stderr.log', 'w')
 
 # Deploy the app on localhost
 #print path
-
 def startserver():
     h = subprocess.Popen(("python " + path + "/sdk/python/dev_appserver.py --skip_sdk_update_check YES --datastore_consistency_policy=consistent app").split(), stdout = stdout, stderr = stderr)
 

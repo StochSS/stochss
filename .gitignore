@@ -32,6 +32,8 @@ nosetests.xml
 
 # StochSS output files
 app/output/
+stdout.log
+stderr.log
 
 # StochSS temporary config files
 conf/config
