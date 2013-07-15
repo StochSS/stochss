@@ -28,16 +28,16 @@ echo -n "Are dependencies satisfied?... "
 # install dependencies
 PKG_MNGR=""
 
-packages=$(yum list installed | grep '^gcc.\|^gcc-c++.\|^make.\|^libxml2-devel.\|^curl.' | wc -l)
-if [ "$packages" != '5' ]; then
+packages=$(yum list installed | grep '^gcc.\|^gcc-c++.\|^make.\|^libxml2-devel.\|^curl.\|^git.' | wc -l)
+if [ "$packages" != '6' ]; then
     echo "No"
-    read -p "Do you want me to try to use sudo to install missing package(s) (libxml2-devel make gcc-c++ gcc curl)? (y/n): " answer
+    read -p "Do you want me to try to use sudo to install missing package(s) (libxml2-devel make gcc-c++ gcc curl git)? (y/n): " answer
 
     answer=$(echo $answer | tr '[A-Z]' '[a-z]')
 
     if [ $answer == 'y' ] || [ $answer == 'yes' ]; then
-        echo "Running 'sudo yum install libxml2-devel gcc make gcc-c++ curl'"
-        sudo yum install libxml2-devel make gcc-c++ curl
+        echo "Running 'sudo yum install libxml2-devel gcc make gcc-c++ curl git'"
+        sudo yum install libxml2-devel make gcc-c++ curl git
     else
         read -p "Do you want me to still try to install Stochkit? (y/n): " answer
 
