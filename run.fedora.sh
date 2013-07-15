@@ -32,14 +32,26 @@ packages=$(yum list installed | grep '^gcc.\|^gcc-c++.\|^make.\|^libxml2-devel.\
 if [ "$packages" != '6' ]; then
     echo "No"
     read -p "Do you want me to try to use sudo to install missing package(s) (libxml2-devel make gcc-c++ gcc curl git)? (y/n): " answer
+    
+    if [ $? != 0 ]; then
+        exit -1
+    fi
 
     answer=$(echo $answer | tr '[A-Z]' '[a-z]')
 
     if [ $answer == 'y' ] || [ $answer == 'yes' ]; then
         echo "Running 'sudo yum install libxml2-devel gcc make gcc-c++ curl git'"
         sudo yum install libxml2-devel make gcc-c++ curl git
+    
+        if [ $? != 0 ]; then
+            exit -1
+        fi
     else
         read -p "Do you want me to still try to install Stochkit? (y/n): " answer
+    
+        if [ $? != 0 ]; then
+            exit -1
+        fi
 
         answer=$(echo $answer | tr '[A-Z]' '[a-z]')
 
