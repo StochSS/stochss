@@ -65,7 +65,7 @@ else
     cd "$tmpdir/$STOCHKIT_VERSION"
     echo " Stdout available at $STOCHSS_HOME/stdout.log and <br />"
     echo " Stderr available at $STOCHSS_HOME/stderr.log<br />"
-    echo "<font color=\"blue\"><h3>This process will take at least 5 minutes to complete, please be patient</h3></font>"
+    echo "<font color=\"blue\"><h3>This process will take at least 5 minutes to complete. Please be patient.</h3></font>"
     ./install.sh 1>"$STOCHSS_HOME/stdout.log" 2>"$STOCHSS_HOME/stderr.log"
     cd $wd
     mv "$tmpdir/$STOCHKIT_VERSION" "$STOCHKIT_HOME"
