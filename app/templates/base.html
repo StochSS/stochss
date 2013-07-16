@@ -18,13 +18,15 @@
         background-repeat: no-repeat;
         background-attachment: fixed;
       }
+
       .sidebar-nav {
         padding: 9px 0;
         font-size: 14px;
       }
-        .nav {
-            font-size: 16px;
-        }
+
+      .nav {
+        font-size: 16px;
+      }
     </style>
     <link href="/static/css/bootstrap-responsive.css" rel="stylesheet">
     {% block csscontent %}{% endblock %}
@@ -73,7 +75,6 @@
               <li class="active"><a href="/">Home</a></li>
               <li><a href="http://www.stochss.org" target="_blank">About</a></li>
               <li><a href="https://docs.google.com/document/d/1QdbIE0Ja7q4yAK31vmj9SlF51WMPKdKrLwmyDXbUw7c/pub?embedded=true" target="_blank">User Manual</a></li>
-
               <li><a href="mailto:stochss-users@googlegroups.com">Contact</a></li>
                 
             </ul>
@@ -99,6 +100,8 @@
               <li class="nav-header"><i class="icon-cog"></i> Settings</li>
                   <li><a href="/credentials" TITLE = "Set AWS credentials and manage computational resources in the cloud">Cloud computing</a></li>
                   <li><a href="/localsettings" TITLE = "Set AWS credentials and manage computational resources in the cloud">Local plugins</a></li>
+              <li><a href="/updates" TITLE = "Check if updates are available for StochSS">Check For Updates</a></li>
+
 
             </ul>
           </div><!--/.well -->
