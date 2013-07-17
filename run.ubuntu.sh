@@ -30,8 +30,8 @@ echo -n "Are dependencies satisfied?... "
 
 count=$(dpkg-query -l gcc g++ make libxml2-dev curl git | grep '^[a-z]i' | wc -l)
 
-if [ count != 6 ]; then
-    echo "No $count"
+if [ $count != 6 ]; then
+    echo "No"
     read -p "Do you want me to try to use sudo to install required package(s) (make, gcc, g++, libxml2-dev, curl, git)? (y/n): " answer
 
     if [ $? != 0 ]; then

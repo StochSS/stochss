@@ -60,9 +60,13 @@ if mac:
 else:
     print "--- Running StochSS Server ---"
 
+req = None
 try:
     req = urllib2.urlopen("http://localhost:8080/")
+except:
+    pass
 
+if req:
     if req.getcode() == 200:
         if mac:
             print "<font color=red>"
@@ -73,8 +77,6 @@ try:
             print "</font><br />"
 
         exit(-1)
-except:
-    pass
 
 h = subprocess.Popen(("python " + path + "/conf/stochss-env.py").split(), stdout = subprocess.PIPE, stderr = subprocess.PIPE)
 h.communicate()
@@ -85,7 +87,7 @@ stderr = open('stderr.log', 'w')
 # Deploy the app on localhost
 #print path
 def startserver():
-    h = subprocess.Popen(("python " + path + "/sdk/python/dev_appserver.py --datastore_path={0}/mydatastore --skip_sdk_update_check YES --datastore_consistency_policy=consistent app".format(path)).split(), stdout = stdout, stderr = stderr)
+    h = subprocess.Popen(("python " + path + "/sdk/python/dev_appserver.py --skip_sdk_update_check YES --datastore_consistency_policy=consistent app").split(), stdout = stdout, stderr = stderr)
 
 startserver()
 
@@ -99,7 +101,10 @@ serverUp = False
 for tryy in range(0, 20):
     try:
         req = urllib2.urlopen("http://localhost:8080/")
+    except:
+        req = None
 
+    if req:
         if req.getcode() == 200:
             # This is a strange sleep, but if we get a response from 8080, we must wait to make sure h has time to crash if it is going to
             # If we just barrell through here, we could be accessing another server on 8080, and h could be in the process of crashing
@@ -116,6 +121,7 @@ for tryy in range(0, 20):
 
                 if mac:
                     print "</font><br />"
+
                 sys.stdout.flush()
                 serverUp = False
             break;
@@ -126,14 +132,14 @@ for tryy in range(0, 20):
             if ret is not None:
                 if ret != 0:
                     startserver()
-    except:
-        pass
                 
     time.sleep(2)
     print "Checking if launched -- try " + str(tryy + 1) +" of 20"
     if mac:
         print "<br />"
     sys.stdout.flush()
+
+print serverUp
 
 def clean_up_and_exit(signal, stack):
     print "Killing webserver proces..."
