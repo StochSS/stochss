@@ -35,28 +35,16 @@ MacOSX:
 
 ## Quick start (Linux & MacOSX):
   
-### Install StochKit2
-
 The application makes use of [StochKit2](http://www.engineering.ucsb.edu/~cse/StochKit/) to run well mixed stochastic
-simulations locally, and to use this feature you need to install StochKit2. StochSS contains a tool that will attempt to
-automatically download and install StochKit2.0.7 and configure the StochSS App to use this installation. 
+simulations locally. At fisrt start, StochSS will download and build StochKit and configure the app to use this installation. 
+You can expect the StochKit installation to take a few minutes to complete. 
 
-After sucessfully cloning the repository as above, in a terminal, type:
-
-    $ cd stochss
-    $ tools/install_stochkit.sh
-
-You can expect the StochKit installation to take a few minutes to complete. If the script above fails, you need to consult the StochKit manual for troubleshooting the installation.
-On Ubuntu and Fedora, the script will try to install any dependencies (make, gcc, g++, libxml2) using the standard package managers. On MacOSX,
-since there are many different ways to satisfy the dependencies, we do not attempt an automatic install. If you have Xcode and the command-line tools installed as recommended above, all dependencies are satesfied. 
-
-If you only plan to run StochKit in virtual machines, you can skip the above steps. 
 
 ## Launch the App
 
-In the stochss folder, type
+In the stochss folder, type (on Ubuntu or Fedora, use the corresponding script)
 
-    $ python launchapp.py
+    $ python launchapp.py run.mac.sh
 
 If the webserver launched without error, the above script will open the App using your default webbrowser. The App will be served on the follwing address
 
@@ -67,7 +55,7 @@ If you prefer to use another browser than the default, simply navigate to the ab
 You will be prompted with a login screen with the default username 'test@examples.com'. This version of StochSS does not support 
 a secure authentication mechanism, so any user name that is on the form of an e-mail address will do to log in to the app. 
 The e-mail you use will be mapped to a user id, so whenever logging in with the same e-mail address at a later time, 
-your saved data will be available in the new session. **With that said, since the app is in beta-status, we recommend that you save important models frequently by exporting them to StochKit's native XML format.**
+your saved data will be available in the new session. **With that said, we recommend that you save important models frequently by exporting them to StochKit's native XML format.**
 
 ### Terminating the App 
 
