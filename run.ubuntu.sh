@@ -38,24 +38,11 @@ if [ $count != 6 ]; then
         exit -1
     fi
 
-    if [ $answer == 'y' ] || [ $answer == 'yes' ]; then
+    if [ "$answer" == 'y' ] || [ "$answer" == 'yes' ]; then
         echo "Running 'sudo apt-get install make gcc g++ libxml2-dev curl git'"
         sudo apt-get install make gcc g++ libxml2-dev curl git
 
         if [ $? != 0 ]; then
-            exit -1
-        fi
-    else
-        read -p "Do you want me to still try to install Stochkit? (y/n): " answer
-
-        if [ $? != 0 ]; then
-            exit -1
-        fi
-
-        answer=$(echo $answer | tr '[A-Z]' '[a-z]')
-
-        if [ $answer == 'n' ] || [ $answer == 'no' ]; then
-            echo "Installation Failed"
             exit -1
         fi
     fi

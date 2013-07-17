@@ -39,24 +39,11 @@ if [ "$packages" != '6' ]; then
 
     answer=$(echo $answer | tr '[A-Z]' '[a-z]')
 
-    if [ $answer == 'y' ] || [ $answer == 'yes' ]; then
+    if [ "$answer" == 'y' ] || [ "$answer" == 'yes' ]; then
         echo "Running 'sudo yum install libxml2-devel gcc make gcc-c++ curl git'"
         sudo yum install libxml2-devel make gcc-c++ curl git
     
         if [ $? != 0 ]; then
-            exit -1
-        fi
-    else
-        read -p "Do you want me to still try to install Stochkit? (y/n): " answer
-    
-        if [ $? != 0 ]; then
-            exit -1
-        fi
-
-        answer=$(echo $answer | tr '[A-Z]' '[a-z]')
-
-        if [ $answer == 'n' ] || [ $answer == 'no' ]; then
-            echo "Installation Failed"
             exit -1
         fi
     fi
