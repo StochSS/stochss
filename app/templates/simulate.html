@@ -28,7 +28,7 @@
               <form id="model_simulated" method="post" action="/simulate">
                   {% for item in all_models %}
                   <label class="radio">
-                      <input type="radio" name="model_to_simulate" value={{ item.model.name }} checked>{{ item.model.name }}</input>
+                      <input type="radio" name="model_to_simulate" value="{{ item.model.name }}" checked>{{ item.model.name }}</input>
                       </br>
                   </label>
                   {% endfor %}
