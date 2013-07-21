@@ -7,7 +7,11 @@ StochSS is currently supported on Linux and Apple OSX platforms.
 
 ## Obtaining the code:
 
-StochSS is downloaded by cloning the GitHub repository. **Since the repository relies on several submodules, a recursive cloning has to be performed.** Open a terminal and from a directory to where you want to download the code,
+The easiest and recommended way to obtain StochSS is to download the latest package (Linux, OSX) on [http://iguana.cs.ucsb.edu/wordpress/?page_id=224](www.stochss.org).
+
+### Installing from source
+
+The StochSS source is downloaded by cloning the GitHub repository. **Since the repository relies on several submodules, a recursive cloning has to be performed.** Open a terminal and from a directory to where you want to download the code,
 (your home folder is a good place) type the following command:
 
     $ git clone --recursive https://github.com/StochSS/stochss.git
@@ -35,20 +39,34 @@ MacOSX:
 
 ## Quick start (Linux & MacOSX):
   
+<<<<<<< HEAD
 The application makes use of [StochKit2](http://www.engineering.ucsb.edu/~cse/StochKit/) to run well mixed stochastic
 simulations locally. At fisrt start, StochSS will download and build StochKit and configure the app to use this installation. 
 You can expect the StochKit installation to take a few minutes to complete. 
 
+=======
+### Installing StochKit2
+
+The application makes use of [StochKit2](http://www.engineering.ucsb.edu/~cse/StochKit/) to run well mixed stochastic
+simulations locally. The StochSS launch scripts will attempt to
+automatically download and install StochKit at first launch. You can expect the StochKit installation to take a few minutes to complete. 
 
 ## Launch the App
 
-In the stochss folder, type (on Ubuntu or Fedora, use the corresponding script)
+In the stochss folder, type
+OSX:
+    $ ./run.mac.wrap.sh
+    
+Ubuntu:
+    $ ./run.ubuntu.sh
 
-    $ python launchapp.py run.mac.sh
+Fedora:
+    $ ./run.fedora.sh
+    
+    
+If the webserver launched without error, the above scripts will open the App using your default webbrowser. The App will be served on the follwing address
 
-If the webserver launched without error, the above script will open the App using your default webbrowser. The App will be served on the follwing address
-
-[http://localhost:8080](http://localhost:8080)
+http://localhost:8080
 
 If you prefer to use another browser than the default, simply navigate to the above address. 
 
@@ -69,7 +87,7 @@ To launch the app on a different host and port, from the base directory:
 
     $ python sdk/python/dev_appserver.py --host hostname --port portnumber app
     
-For more options, consult the help for dev_appserver.py.
+For more options, consult the help for dev_appserver.py and the source code of the runscrips mentioned above.
 
 
 
