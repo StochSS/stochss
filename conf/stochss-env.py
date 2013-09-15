@@ -13,8 +13,9 @@ import sys
 
 path = os.path.abspath(os.path.dirname(__file__))
 
-# STOCHKIT_HOME, AWS_ACCESS_KEY, and AWS_SECRET_KEY should be written in a newline separated file 'conf/config'
-# /path/to/Stochkit2.0.7
+# STOCHKIT_HOME, STOCHKIT_ODE, AWS_ACCESS_KEY, and AWS_SECRET_KEY should be written in a newline separated file 'conf/config'
+# /path/to/Stochkit2.0.8
+# /path/to/ode
 # AWS_ACCESS_KEY
 # AWS_SECRET_KEY
 # Try to read the configuration file
@@ -31,22 +32,33 @@ if len(config) == 0:
 else:
    STOCHKIT_HOME = config[0]
 
-if len(config) <= 1:
-   AWS_ACCESS_KEY_ID=''
+if len(config) == 1:
+   STOCHKIT_ODE=''
 else:
-   AWS_ACCESS_KEY_ID = config[1]
+   STOCHKIT_ODE = config[1]
 
 if len(config) <= 2:
+   AWS_ACCESS_KEY_ID=''
+else:
+   AWS_ACCESS_KEY_ID = config[2]
+
+if len(config) <= 3:
    AWS_SECRET_ACCESS_KEY=''
 else:
-   AWS_SECRET_ACCESS_KEY = config[2]
+   AWS_SECRET_ACCESS_KEY = config[3]
 
 # If a configuration variable is not set, try to set it from system environment variables
 if STOCHKIT_HOME=='':
    try:
       STOCHKIT_HOME=os.environ['STOCHKIT_HOME']
    except:
-      pass	
+      pass
+
+if STOCHKIT_ODE=='':
+   try:
+      STOCHKIT_ODE=os.environ['STOCHKIT_ODE']
+   except:
+      pass
 
 if AWS_ACCESS_KEY_ID=='':
    try:
@@ -68,6 +80,8 @@ try:
              
     if STOCHKIT_HOME is not '':
         fh.write("app_config['STOCHKIT_HOME']="+"'"+STOCHKIT_HOME+"'"+os.linesep)
+    if STOCHKIT_ODE is not '':
+        fh.write("app_config['STOCHKIT_ODE']="+"'"+STOCHKIT_ODE+"'"+os.linesep)
     if AWS_ACCESS_KEY_ID is not '':
         fh.write("app_config['AWS_ACCESS_KEY']="+"'"+AWS_ACCESS_KEY_ID+"'"+os.linesep)
     if AWS_SECRET_ACCESS_KEY is not '':

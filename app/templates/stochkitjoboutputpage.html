@@ -19,8 +19,8 @@
             <h3>Metadata</h3>
                 <p class="thispage">
                 Resource:</t> {{stochkit_job.resource}}
-                </br>
-                Number of trajectories: {{stochkit_job.realizations}}
+                <!--</br>
+                Number of trajectories: stochkit_job.realizations-->
                 </br>
                 Simulation endtime: {{stochkit_job.final_time}}
                 </br>
@@ -34,7 +34,7 @@
             {% if local_data %}
             <div class="well">
                 <h3> Visualization </h3>
-                <span class="thispage"><a href="/output/visualize?job_folder={{stochkit_job.output_location}}" class="thispage"> Plot trajectories</a>
+                <span class="thispage"><a href="/output/visualize?job_folder={{stochkit_job.output_location}}&executable={{stochkit_job.algorithm}}" class="thispage"> Plot trajectories</a>
                 </br>
                </div>
             {% endif %}

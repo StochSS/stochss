@@ -1,3 +1,4 @@
+<<<<<<< HEAD
 *.py[cod]
 
 # C extensions
@@ -39,3 +40,12 @@ stderr.log
 conf/config
 app/userfile
 app/conf/app_config.py
+=======
+CVS
+.cvsignore
+*.pyc
+KEEPME
+build
+_trial_temp
+MANIFEST
+>>>>>>> b9a15232148c12c41bdc99d7c73dbc2164fa3d3f

@@ -52,20 +52,23 @@ class ModelEditorPage(BaseHandler):
         #    db_model = db.GqlQuery("SELECT * FROM StochKitModelWrapper WHERE user_id = :1", self.user.user_id()).get()
         #    if db_model is not None:
         #        self.set_session_property('model_edited', db_model.model)
-        
+
+        print model_edited
+
         if model_edited is not None and model_edited is not "":
             result = self.edit_model(model_edited)
-            result = dict(get_all_models(self), **result)
         
         elif self.request.get('get_model_edited') == "1":
             result = self.get_model_edited()    
             self.response.headers['Content-Type'] = 'application/json'
             self.response.write(json.dumps(result))
             return
-            
         else:
-            result = get_all_models(self)
-        
+          result = {}
+
+        models = get_all_models(self)
+        result.update({ "all_models" : map(lambda x : { "name" : x.name, "units" : x.units }, models) })
+
         self.render_response('modeleditor.html', **result)
 
 
@@ -76,24 +79,25 @@ class ModelEditorPage(BaseHandler):
             result = self.save_model(save_changes)
             self.response.headers['Content-Type'] = 'application/json'
             self.response.write(json.dumps(result))
-            
+            return
         elif self.request.get("delete") == "1":
             result = self.delete_model()
-            result = dict(get_all_models(self), **result)
-            self.render_response('modeleditor.html', **result)            
-            
         else:
             result = self.create_model()
-            result = dict(get_all_models(self), **result)
-            self.render_response('modeleditor.html', **result)
 
+        models = get_all_models(self)
+        result.update({ "all_models" : map(lambda x : { "name" : x.name, "units" : x.units }, models) })
+
+        print "post", result
+
+        self.render_response('modeleditor.html', **result)
 
     def get_model_edited(self):
         """
         Returns the current model that is being edited. This would be called asynchronously each time the modeleditor.html loads.
         """
         model_edited = self.get_session_property('model_edited')        
-        return {'status': True, 'model_edited': '' if model_edited is None else model_edited.name}
+        return {'status': True, 'model_edited': model_edited }
               
               
     def delete_model(self):
@@ -107,14 +111,16 @@ class ModelEditorPage(BaseHandler):
             # If the model selected for deletion is same as the one that is currently being edited,
             if model_edited is not None and model_edited.name == name:
                 self.session['model_edited'] = None                
-            
+
             db_model = db.GqlQuery("SELECT * FROM StochKitModelWrapper WHERE user_id = :1 AND model_name = :2", self.user.user_id(), name).get()
             if db_model is None:
                 return {'status': False, 'msg': 'The datastore does not have any such entry.'}
             
             db_model.delete()
             all_models = self.get_session_property('all_models')
-            all_models.pop(all_models.index(name))
+
+            if all_models:
+              all_models.pop(all_models.index(name))
             
             self.set_session_property('all_models', all_models)
             
@@ -175,11 +181,12 @@ class ModelEditorPage(BaseHandler):
         try:
             # If the user tries to edit another model before saving all the changes, show a message.
             is_model_saved = self.get_session_property('is_model_saved')
+
             if is_model_saved is not None and not is_model_saved:
                 model_edited = self.get_session_property('model_edited')
                 # It is okay if the currently edited model is the same as the newly chosen one.
                 if(model_edited.name == name):
-                    return {'status': True, 'model_edited': name}
+                    return { 'status': True, 'model_edited': model_edited, 'model_has_volume': bool(model_edited.volume)}
               
                 logging.debug('old_model: ' + self.get_session_property('model_edited').name)
                 return {'status': False, 'save_msg': 'Please save your changes first!', 'is_saved': False, 'model_edited': name}
@@ -187,7 +194,8 @@ class ModelEditorPage(BaseHandler):
             db_model = db.GqlQuery("SELECT * FROM StochKitModelWrapper WHERE user_id = :1 AND model_name = :2", self.user.user_id(), name).get()
             self.set_session_property('model_edited', db_model.model)
 
-            return {'status': True, 'model_edited': name}
+            print str(db_model.model.volume)
+            return {'status': True, 'model_edited': db_model.model, 'model_has_volume': bool(db_model.model.volume) }
         except Exception, e:
             logging.error("model::edit_model - Editing the model failed with error: %s", e)
             traceback.print_exc()
@@ -205,11 +213,17 @@ class ModelEditorPage(BaseHandler):
             A dict that indicates the status of this call.
         """
         name = self.request.get('name').strip()
+        units = self.request.get('exec_type').strip().lower()
         if not name:
           return {'status': False, 'msg': 'Model name is missing.'}
 
+        if not units:
+          return {'status': False, 'msg': 'Units are missing.'}
+
         model = StochKitModel(name)
         try:
+          model.setUnits(units)
+
           user_id = self.user.user_id()
           logging.debug("user_id " + user_id)  
           
@@ -354,7 +368,7 @@ class ModelEditorExportToStochkit2(BaseHandler):
         model = self.get_session_property('model_edited')
         if model is None:
             result = {'status': False, 'msg': 'You have not selected any model to export.'}
-            result = dict(get_all_models(self), **result)
+            result = dict(get_all_model_names(self), **result)
             self.render_response('modeleditor.html', **result)
             return
         try:
@@ -366,7 +380,7 @@ class ModelEditorExportToStochkit2(BaseHandler):
             logging.error('Error in exporting to StochML. %s', e)
             traceback.print_exc()
             result = {'status': False, 'msg': 'There was an error while exporting to StochML.'}
-            result = dict(get_all_models(self), **result)
+            result = dict(get_all_model_names(self), **result)
             self.render_response('modeleditor.html', **result)
 
 
@@ -393,7 +407,7 @@ def add_model_to_cache(obj, new_model_name):
 
 
 
-def get_all_models(handler):
+def get_all_model_names(handler):
     """
       Retrieves all models from the cache. If the cache is not already populated, db_models the datastore, populate the cache and then return it.
     """
@@ -411,7 +425,22 @@ def get_all_models(handler):
         return {'status': True, 'all_models': all_models}
 
     except Exception, e:
-        logging.error("model::get_all_models - Error retrieving all the models: %s", e)
+        logging.error("model::get_all_model_names - Error retrieving all the models: %s", e)
+        traceback.print_exc()
+        return {'status': False, 'msg': 'There was an error while getting all the models.'}
+        
+def get_all_models(handler):
+    """
+      Retrieves all models from the cache. If the cache is not already populated, db_models the datastore, populate the cache and then return it.
+    """
+    try:
+        db_models = db.GqlQuery("SELECT * FROM StochKitModelWrapper WHERE user_id = :1", handler.user.user_id())
+        all_models = [row.model for row in db_models]
+        
+        return all_models
+
+    except Exception, e:
+        logging.error("model::get_all_model - Error retrieving all the models: %s", e)
         traceback.print_exc()
         return {'status': False, 'msg': 'There was an error while getting all the models.'}
         

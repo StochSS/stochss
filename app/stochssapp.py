@@ -171,7 +171,7 @@ class BaseHandler(webapp2.RequestHandler):
         if 'model_edited' not in ctx:
             model_edited = self.get_session_property('model_edited')
             if model_edited is not None:
-                ctx.update({'model_edited': model_edited.name})
+                ctx.update({'model_edited': model_edited})
             
         template = jinja_environment.get_template(_template)
         self.response.out.write(template.render({'active_upload': True}, **ctx))
@@ -221,9 +221,11 @@ except:
 from handlers.specieseditor import *
 from handlers.modeleditor import *
 from handlers.parametereditor import *
+from handlers.volumeeditor import *
 from handlers.reactioneditor import *
 from handlers.simulation import *
 from handlers.credentials import *
+from handlers.converttopopulation import *
 from handlers.updates import *
 from handlers.status import *
 
@@ -262,6 +264,8 @@ app = webapp2.WSGIApplication([
                                ('/modeleditor/specieseditor', SpeciesEditorPage),
                                ('/modeleditor/reactioneditor', ReactionEditorPage),
                                ('/modeleditor/parametereditor', ParameterEditorPage),
+                               ('/modeleditor/volumeeditor', VolumeEditorPage),
+                               ('/modeleditor/converttopopulation', ConvertToPopulationPage),
                                ('/modeleditor/import/fromfile', ModelEditorImportFromFilePage),
                                ('/modeleditor/import/examplelibrary', ModelEditorImportFromLibrary),
                                ('/modeleditor/export/tostochkit2', ModelEditorExportToStochkit2),
