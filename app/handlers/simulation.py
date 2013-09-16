@@ -68,7 +68,7 @@ class StochKitJobWrapper(db.Model):
 class StochKitJob(Job):
     """ Model for a StochKit job. Contains all the parameters associated with the call. """
     
-    def __init__(self,name=None, final_time=None, increment=None, realizations=1,algorithm='ssa',store_only_mean=False, label_column_names=True,create_histogram_data=False, seed=None, epsilon=0.1,threshold=10, output_url = None):
+    def __init__(self,name=None, final_time=None, increment=None, realizations=1, exec_type="stochastic",store_only_mean=False, label_column_names=True,create_histogram_data=False, seed=None, epsilon=0.1,threshold=10, output_url = None):
         """ fdsgfhsj """
         
         # Type of the job {'Local','Cloud'}
@@ -86,7 +86,7 @@ class StochKitJob(Job):
         self.final_time = final_time
         self.increment = increment
         self.realizations = realizations
-        self.algorithm = algorithm
+        self.exec_type = exec_type
         
         self.store_only_mean = store_only_mean
         self.label_column_names = label_column_names
@@ -155,8 +155,6 @@ class NewStochkitEnsemblePage(BaseHandler):
             model_db = db.GqlQuery("SELECT * FROM StochKitModelWrapper WHERE user_id = :1 AND model_name = :2", self.user.user_id(), model_to_simulate).get()
 
             model_units = model_db.model.units
-            model_volume_exists = bool(model_db.model.volume)
-            print 'volume ' + repr(bool(model_db.model.volume))
 
             if model_db == None:
                 self.set_session_property('model_to_simulate', None)
@@ -167,7 +165,8 @@ class NewStochkitEnsemblePage(BaseHandler):
         if model_to_simulate is None:
             self.redirect("/simulate")
 
-        context = { 'model_to_simulate':model_to_simulate, 'model_units' : model_units, 'model_volume_exists' : model_volume_exists }
+        context = { 'model_to_simulate': model_to_simulate, 'model_units' : model_units }
+
         self.render_response('simulate/newstochkitensemblepage.html',**context)
 
     def post(self):
@@ -184,7 +183,21 @@ class NewStochkitEnsemblePage(BaseHandler):
         else:
             result={'status':False,'msg':'There was an error processing your request.'}
 
-        context = {'model_to_simulate':self.get_session_property('model_to_simulate')}
+        
+        model_to_simulate = self.get_session_property('model_to_simulate')
+        
+        # Make sure that the model is present in the datastore
+        #    Figure out what kind of model it is too (concentration or populatio)
+        if model_to_simulate is not None:
+            model_db = db.GqlQuery("SELECT * FROM StochKitModelWrapper WHERE user_id = :1 AND model_name = :2", self.user.user_id(), model_to_simulate).get()
+
+            model_units = model_db.model.units
+
+            if model_db == None:
+                self.set_session_property('model_to_simulate', None)
+                model_to_simulate = None
+
+        context = {'model_to_simulate' : model_to_simulate, 'model_units' : model_units }
         self.render_response('simulate/newstochkitensemblepage.html',**dict(context,**result))
 
     def runCloud(self):
@@ -222,26 +235,15 @@ class NewStochkitEnsemblePage(BaseHandler):
             # Execute as concentration or population?
             exec_type = params['exec_type']
 
-            if not (exec_type == 'concentration' or exec_type == "population"):
+            if not (exec_type == "deterministic" or exec_type == "stochastic"):
                 result = {
                      'status' : False, 'msg' : 'exec_type must be concentration or population. Try refreshing page, or e-mail developers'
                       }
                 return result
 
-
-            if exec_type.lower() != model.units.lower():
-                if exec_type.lower() == 'concentration' and model.units.lower() == 'population':
-                    if model.volume != None:
-                        model = model.toConcentration()
-                    else:
-                        result = { 'status' : False, 'msg' : '\'Volume\' must be defined to execute a population-based model by concentration. Do this with the \'Volume\' tab in the Model Editor' }
-                        return result
-                elif exec_type.lower() == 'population' and model.units.lower() == 'concentration':
-                    if model.volume != None:
-                        model = model.toPopulation()
-                    else:
-                        result = { 'status' : False, 'msg' : '\'Volume\' must be defined to execute a concentration-based model by population. Do this with the \'Volume\' tab in the Model Editor' }
-                        return result
+            if model.units.lower() == 'concentration' and exec_type.lower() == 'stochastic':
+                result = { 'status' : False, 'msg' : 'GUI Error: Concentration models cannot be executed Stochastically. Try leaving and returning to this page' }
+                return result
 
             document = model.serialize()
             params['document']=str(document)
@@ -249,11 +251,11 @@ class NewStochkitEnsemblePage(BaseHandler):
             filepath = ""
             params['file'] = filepath
             ensemblename = params['job_name']
+            executable = exec_type.lower()
             time = params['time']
             realizations = params['realizations']
             increment = params['increment']
             seed = params['seed']
-
 
             # Assemble the argument list
             args = ''
@@ -264,7 +266,7 @@ class NewStochkitEnsemblePage(BaseHandler):
             path = os.path.dirname(__file__)
 
             # Algorithm, SSA or Tau-leaping?
-            if executable != 'stochkit_ode':
+            if executable != 'deterministic':
                 executable = params['algorithm']
 
                 args+=' --realizations '
@@ -281,15 +283,17 @@ class NewStochkitEnsemblePage(BaseHandler):
                 args+=' --seed '
                 args+=str(seed)
             else:
-                executable = "{0}/../stochss/ode/stochkit_ode".format(path)
-            
+                executable = "{0}/../stochss/ode/stochkit_ode.py".format(path)
+
+            print executable
+    
             # Columns need to be labeled for visulatization page to work.  
             args += ' --label'
         
             cmd = executable+' '+args
         
             # Create a StochKitJob instance
-            stochkit_job = StochKitJob(name=ensemblename, final_time=time, realizations=realizations,increment=increment,seed=seed,algorithm=params['algorithm'])
+            stochkit_job = StochKitJob(name=ensemblename, final_time=time, realizations=realizations,increment=increment,seed=seed,exec_type=exec_type)
         
             params['paramstring'] = cmd
 
@@ -416,26 +420,16 @@ class NewStochkitEnsemblePage(BaseHandler):
             # Execute as concentration or population?
             exec_type = params['exec_type']
 
-            if not (exec_type == 'concentration' or exec_type == "population"):
+            if not (exec_type == "deterministic" or exec_type == "stochastic"):
                 result = {
                     'status' : False, 'msg' : 'exec_type must be concentration or population. Try refreshing page, or e-mail developers'
                     }
                 return result
 
+            if model.units.lower() == 'concentration' and exec_type.lower() == 'stochastic':
+                result = { 'status' : False, 'msg' : 'GUI Error: Concentration models cannot be executed Stochastically. Try leaving and returning to this page' }
+                return result
 
-            if exec_type.lower() != model.units.lower():
-                if exec_type.lower() == 'concentration' and model.units.lower() == 'population':
-                    if model.volume != None:
-                        model = model.toConcentration()
-                    else:
-                        result = { 'status' : False, 'msg' : '\'Volume\' must be defined to execute a population-based model by concentration. Do this with the \'Volume\' tab in the Model Editor' }
-                        return result
-                elif exec_type.lower() == 'population' and model.units.lower() == 'concentration':
-                    if model.volume != None:
-                        model = model.toPopulation()
-                    else:
-                        result = { 'status' : False, 'msg' : '\'Volume\' must be defined to execute a concentration-based model by population. Do this with the \'Volume\' tab in the Model Editor' }
-                        return result
 
             document = model.serialize()
             params['document']=str(document)
@@ -443,7 +437,7 @@ class NewStochkitEnsemblePage(BaseHandler):
             filepath = ""
             params['file'] = filepath
             ensemblename = params['job_name']
-            executable = params['algorithm']
+            executable = exec_type.lower()
             time = params['time']
             realizations = params['realizations']
             increment = params['increment']
@@ -458,7 +452,7 @@ class NewStochkitEnsemblePage(BaseHandler):
             path = os.path.dirname(__file__)
 
             # Algorithm, SSA or Tau-leaping?
-            if executable != 'stochkit_ode':
+            if executable != 'deterministic':
                 executable = params['algorithm']
 
                 args+=' --realizations '
@@ -475,15 +469,17 @@ class NewStochkitEnsemblePage(BaseHandler):
                 args+=' --seed '
                 args+=str(seed)
             else:
-                executable = "{0}/../stochss/ode/stochkit_ode".format(path)
-            
+                executable = "{0}/../stochss/ode/stochkit_ode.py".format(path)
+
+            print executable
+
             # Columns need to be labeled for visulatization page to work.  
             args += ' --label'
         
             cmd = executable+' '+args
         
             # Create a StochKitJob instance
-            stochkit_job = StochKitJob(name=ensemblename, final_time=time, realizations=realizations,increment=increment,seed=seed,algorithm=params['algorithm'])
+            stochkit_job = StochKitJob(name=ensemblename, final_time=time, realizations=realizations,increment=increment,seed=seed, exec_type = exec_type)
         
             # Create the argument string
             params['paramstring'] = cmd

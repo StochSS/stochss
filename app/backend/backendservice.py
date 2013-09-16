@@ -86,6 +86,7 @@ class backendservices():
             # The following executiong string is of the form :
             # stochkit_exec_str = "~/StochKit2.0.6/ssa -m ~/output/%s/dimer_decay.xml -t 20 -i 10 -r 1000" % (uuidstr)
             stochkit_exec_str = "{backenddir}/wrapper.py {stdout} {stderr} {0} --model {1} --out-dir output/{2}/result ".format(paramstr,xmlfilepath,uuidstr, stdout = res['stdout'], stderr = res['stderr'], backenddir = os.path.abspath(os.path.dirname(__file__)))
+            print stochkit_exec_str
             logging.info("STOCHKIT_EXEX_STR: "+stochkit_exec_str)
             logging.debug("executeTaskLocal : Spawning StochKit Task. String : %s",
                            stochkit_exec_str)

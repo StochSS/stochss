@@ -172,6 +172,12 @@ class BaseHandler(webapp2.RequestHandler):
             model_edited = self.get_session_property('model_edited')
             if model_edited is not None:
                 ctx.update({'model_edited': model_edited})
+
+        if 'is_model_saved' not in ctx:
+            is_model_saved = self.get_session_property('is_model_saved')
+            print is_model_saved
+            if is_model_saved is not None:
+                ctx.update({'is_model_saved': is_model_saved})
             
         template = jinja_environment.get_template(_template)
         self.response.out.write(template.render({'active_upload': True}, **ctx))

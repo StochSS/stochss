@@ -122,7 +122,7 @@ class StatusPage(BaseHandler):
                                 # for ssa and tau leaping, this is means.txt
                                 # for ode, this is output.txt
 
-                                if stochkit_job.algorithm == 'ssa' or stochkit_job.algorithm == 'tau_leap':
+                                if stochkit_job.exec_type == 'stochastic':
                                     file_to_check = stochkit_job.output_location+"/result/stats/means.txt"
                                 else:
                                     file_to_check = stochkit_job.output_location+"/result/output.txt"
@@ -408,11 +408,12 @@ class VisualizePage(BaseHandler):
         #logging.info(str(meanfile))
         try:
             # Try to grab them from the mean.txt file
-            if params['executable'] == 'stochkit_ode':
-                meanfile = params['job_folder']+ '/result/output.txt'
+            print params
+            if params['exec_type'] == 'deterministic':
+                meanfile = params['job_folder'] + '/result/output.txt'
             else:
-                meanfile = params['job_folder']+ '/result/stats/means.txt'
-
+                meanfile = params['job_folder'] + '/result/stats/means.txt'
+            
             #meanfile = params['job_folder']+'/result/stats/means.txt'
             file = open(meanfile,'rb')
             row = file.readline()

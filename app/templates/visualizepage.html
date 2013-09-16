@@ -8,7 +8,7 @@
     <h2>Visualize results</h2>
     <hr>
     <div class="well well-large">
-        <form id="select_species" action="/output/visualize?job_folder={{job_folder}}&executable={{executable}}" method="post">
+        <form id="select_species" action="/output/visualize?job_folder={{job_folder}}&exec_type={{exec_type}}" method="post">
         <label>Species:</label>
             <select name="species_name" default="{{species_name}}">
             {% if species_names %}
@@ -21,17 +21,16 @@
             {% endfor %}
             {% endif %}
             </select>
-            {% if executable == 'ssa' %}
+            <input type="hidden" name="job_folder" value="{{job_folder}}"></input>
+            {% if exec_type == 'stochastic' %}
             <label>Trajectory number</label>
             <input type="text" name="trajectory_number" value="{{trajectory_number}}"></input>
             <span class="help-block">Input a single trajectory number that you want to visualize.</span>
-            {% endif %}
-        </br>
-            <input type="hidden" name="job_folder" value="{{job_folder}}"></input>
-            {% if executable == 'ssa' %}
+            <br />
             <input type="submit" name="plotbutton" class="btn btn-primary btn-large" value="Plot realization">
             <input type="submit" name="plotbuttonmean" class="btn btn-primary btn-large" value="Plot mean">
             {% else %}
+            <br />
             <input type="submit" name="ode_plotbutton" class="btn btn-primary btn-large" value="Plot">
             {% endif %}
 

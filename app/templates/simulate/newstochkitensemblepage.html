@@ -27,11 +27,11 @@
         <br />
         Simulation type
         <br />
-        {% if model_units == "concentration" and not model_volume_exists %}
-        <input id="concentration" type="radio" name="exec_type" value="concentration" checked> Deterministic <br />
+        {% if model_units == "concentration" %}
+        <input id="deterministic" type="radio" name="exec_type" value="deterministic" checked> Deterministic <br />
         {% elif model_units == "population" %}
-        <input id="concentration" type="radio" name="exec_type" value="concentration"> Deterministic <br />
-        <input id="population" type="radio" name="exec_type" value="population" checked> Stochastic
+        <input id="deterministic" type="radio" name="exec_type" value="deterministic"> Deterministic <br />
+        <input id="stochastic" type="radio" name="exec_type" value="stochastic" checked> Stochastic
         {% else %}
         {% endif %}
 
@@ -61,44 +61,43 @@
         </h3>
         
         <div id="advanced-settings" class="collapse">
-          <span class="stochastic">
-            <br />
-            <label>Algorithm</label>
-            <input id="ssa" type="radio" name="algorithm" value="ssa" checked> SSA
-            <input id="tau_leap" style="padding-left: 100px;" type="radio" name="algorithm" value="tau_leaping"> Tau-leaping
-            <br />
-          
-            <br />
+            <div class="stochastic">
+                Algorithm<br />
+                SSA <input id="ssa" type="radio" name="algorithm" value="ssa" checked><br />
+                Tau-leaping <input id="tau-leaping" style="padding-left: 100px;" type="radio" name="algorithm" value="tau_leaping">
+              </div>
+
             <div class="control-group">
-              <label class="checkbox">
-                <input type="checkbox" name="only-moments" value="only-moments">
-                Store only mean and variances
-              </label>
-              <!--<label class="checkbox">
-                  <input type="checkbox" name="label-columns" value="label-columns">
-                  Label trajectories with species names
-                  <span class="help-block"> (Only applicable if all trajectories are stored.)</span>
-              </label>-->
-              <label class="checkbox">
-                <input type="checkbox" name="keep-histograms" value="keep-histograms">
-                Create histogram data
-              </label>
+                <label class="checkbox tau-leaping ssa">
+                    <input type="checkbox" name="only-moments" value="only-moments">
+                    Store only mean and variances
+                </label>
+                <!--<label class="checkbox stochastic">
+                    <input type="checkbox" name="label-columns" value="label-columns">
+                    Label trajectories with species names
+                    <span class="help-block"> (Only applicable if all trajectories are stored.)</span>
+                </label>-->
+                <label class="checkbox tau-leaping ssa">
+                    <input type="checkbox" name="keep-histograms" value="keep-histograms">
+                    Create histogram data
+                </label>
             </div>
             
-            <label>Seed</label>
-            <input type="text" class="span3" name="seed">
-            <span class="help-block">Seed the random number generator (leave empty for a random seed).</span>
+            <label class="tau-leaping ssa">Seed
+                <input type="text" class="span3" name="seed">
+                <span class="help-block">Seed the random number generator (leave empty for a random seed).</span>
+            </label>
             
-            <br />
-            <label>Threshold</label>
-            <input type="text" class="span3" name="threshold" value="10">
-            <span class="help-block">Set the threshold (minimum number of reactions per leap before switching to SSA) for tau leaping.</span>
-          </span>
-          
-          <label>Epsilon</label>
-          <input type="text" class="span3" name="epsilon" value="0.1">
-          <span class="help-block">Set the tolerance (applicable to tau
-            leaping and ode simulations only). Valid values: must be greater than 0.0 and less than 1.0.</span>
+            <label class="tau-leaping">Threshold
+                <input type="text" class="span3" name="threshold" value="10">
+                <span class="help-block">Set the threshold (minimum number of reactions per leap before switching to SSA) for tau leaping.</span>
+            </label>
+            
+            <label class="tau-leaping ode">Epsilon
+                <input type="text" class="span3" name="epsilon" value="0.1">
+                <span class="help-block">Set the tolerance (applicable to tau
+                    leaping and ode simulations only). Valid values: must be greater than 0.0 and less than 1.0.</span>
+            </label>
         </div> <!-- Advanced settings -->
         
         <!-- Display status messages -->
@@ -140,14 +139,35 @@
 
 <script src="/static/js/jquery-1.8.3.js"></script>
 <script type="text/javascript">
-  $( "#concentration, #population" ).change(function() {
-  if( $( "#concentraction" )[0].checked )
-  {
-  $( ".stochastic" ).hide()
-  }else{
-  $( ".stochastic" ).show()
-  }
-  })
+    var handle_type = function() {
+    if( $( "#deterministic" )[0].checked )
+    {
+    $( ".stochastic" ).hide()
+    $( ".tau-leaping" ).hide()
+    $( ".ssa" ).hide()
+    $( ".ode" ).show()
+    } else {
+    $( ".ode" ).hide()
+    handle_algo();
+    $( ".stochastic" ).show()
+    }
+    };
+   
+    var handle_algo = function() {
+    if( $( "#tau-leaping" )[0].checked )
+    {
+    $( ".ssa" ).hide()
+    $( ".tau-leaping" ).show()
+    }else{
+    $( ".tau-leaping" ).hide()
+    $( ".ssa" ).show()
+    }
+    };
+
+    $( "#stochastic, #deterministic" ).change(handle_type);
+    $( "#ssa, #tau-leaping" ).change(handle_algo);
+
+    handle_type();
 </script>
 
 {% endblock %}
