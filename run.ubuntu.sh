@@ -87,7 +87,6 @@ else
     mv "$tmpdir/$STOCHKIT_VERSION" "$STOCHKIT_HOME"
     rm -r "$tmpdir"
 
-    rm -r "$rundir"
 # Test that StochKit was installed successfully by running it on a sample model
     if "$STOCHKIT_HOME/ssa" -m "$STOCHKIT_HOME/models/examples/dimer_decay.xml" -r 1 -t 1 -i 1 --out-dir "$rundir" >& /dev/null; then
 	echo "Success!"
@@ -151,7 +150,6 @@ else
     cd ../
     cd $wd
 
-    rm -r "$rundir"
 # Test that StochKit was installed successfully by running it on a sample model
     if "$STOCHKIT_ODE/ode" -m "$STOCHKIT_HOME/models/examples/dimer_decay.xml" -t 1 -i 1 --out-dir "$rundir"; then
 	echo "Success!"
