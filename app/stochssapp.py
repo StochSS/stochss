@@ -168,6 +168,7 @@ class BaseHandler(webapp2.RequestHandler):
         """ Process the template and render response. """
         ctx = {'user': self.user}
         ctx.update(context)
+
         if 'model_edited' not in ctx:
             model_edited = self.get_session_property('model_edited')
             if model_edited is not None:
