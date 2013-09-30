@@ -283,7 +283,7 @@ class NewStochkitEnsemblePage(BaseHandler):
                 args+=' --seed '
                 args+=str(seed)
             else:
-                executable = "{0}/../stochss/ode/stochkit_ode.py".format(path)
+                executable = "{0}/../../ode/stochkit_ode.py".format(path)
 
             print executable
     
@@ -469,7 +469,7 @@ class NewStochkitEnsemblePage(BaseHandler):
                 args+=' --seed '
                 args+=str(seed)
             else:
-                executable = "{0}/../stochss/ode/stochkit_ode.py".format(path)
+                executable = "{0}/../../ode/stochkit_ode.py".format(path)
 
             print executable
 
