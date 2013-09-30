@@ -1,0 +1,139 @@
+{% extends "modeleditor.html" %}
+{% block title%}Convert To Population{% endblock %}
+
+{% block modeleditorcontent %}
+
+<div class="span9">
+    <div class="row-fluid">
+	<div class="well well-large">
+            {% if model_edited %}
+	    <form method="post" action="/modeleditor/converttopopulation">
+		<h3><a data-toggle="collapse" data-target="#optional" default> Set Scaling Volume </a>&raquo; </h3>
+		<br/>
+		<div id="optional" class="in collapse" style="height:auto">
+		    <div>
+                        Choose a scaling volume that represents an appropriate stochastic simulation size (initial guess set using table below)<br /><br />
+			<label>Volume</label>
+			<input id = "volume" type="text" class="span3" name="volume" value="{{ initial_value }}" TITLE = "Type a volume" />
+		    </div>
+		    <div>
+                        Choose a name for the converted model<br /><br />
+			<label>Name</label>
+			<input type="text" class="span3" id="Formula" placeholder="Model name" name="name" value="{{ model_edited.name }}_pop" class="update_box auto_complete">
+		    </div>
+		    <div style="clear: both"></div>
+		    <button type="submit" class="btn btn-primary" style="float: right;">
+			Create population model
+		    </button>
+		</div>
+	    </form>
+
+            Concentration models are defined in continuous units. moles/volume, or mass/volume, etc. The 'volume' parameter defined here as whatever it takes to convert that concentration to a discrete population (which reacts in a volume equal to the 'volume' parameter). The two conversion that happen are:<br /><br />
+
+            For every initial value, population_initial_value = concentration_initial_value / (avagadro's number * volume)<br />
+            For every reaction, the propensity is converted as population_propensity_of_reaction = concentration_propensity_of_reaction * (Avagardro's number * volume)<br />
+
+	    {% if msg %}
+	    {% if status == False %}
+	    <div style="color: red" class="create_msg">
+		{{msg}}
+	    </div>
+	    {% else %}
+	    <div style="color: green" class="create_msg">
+		{{msg}}
+	    </div>
+	    {% endif %}
+	    {% endif %}
+	    <hr/>
+	    <div id="msg" style="display:none"></div>
+            {% if minimum and maximum %}
+            <!--<h4>Volume assistant</h4>-->
+
+	    <h3><a data-toggle="collapse" data-target="#species_list" default>Volume Assistant </a>&raquo; </h3><br/>
+	    <div id="species_list" class="in collapse" style="height: auto">
+		<form id="update_form" method="post" action="/modeleditor/specieseditor">
+		    <table cellpadding="0" cellspacing="0" border="0" class="table table-striped table-bordered" id="dataTable">
+			<thead>
+			    <tr>
+				<th> </th><th>Name </th><th>Initial Value (concentration)</th><th>New Value (population)</th>
+			    </tr>
+			</thead>
+			<tbody>
+			    <tr>
+				<td>
+                                    Minimum non-zero initial value
+				</td>
+				<td>
+				    <input type="text" value="{{minimum.name}}" style="width: 100px;" readonly="readonly">
+				</td>
+				<td>
+				    <input type="text" id="minimum_concentration" value="{{minimum.initial_value}}" style="width: 100px;" readonly="readonly">
+				</td>
+				<td>
+				    <input type="text" id="minimum" style="width: 100px;" readonly="readonly">
+				</td>
+			    </tr>
+			    <tr>
+				<td>
+                                    Maximum initial value
+				</td>
+				<td>
+				    <input type="text" value="{{maximum.name}}" style="width: 100px;" readonly="readonly">
+				</td>
+				<td>
+				    <input type="text" id="maximum_concentration" value="{{maximum.initial_value}}" style="width: 100px;" readonly="readonly">
+				</td>
+				<td>
+				    <input type="text" id="maximum" style="width: 100px;" readonly="readonly">
+				</td>
+			    </tr>
+			</tbody>
+		    </table>					
+		</form>
+	    </div>
+
+            These values can be used to guide the volume choice. The exact conversion volume choice is not easily defined and will depend on the specific systems involved. In most cases though, the smallest non-zero concentration from the continuous model should have a non-zero population in the population model. Whether that be a population of ten, one hundred, or one thousand is unclear.
+            {% else %}
+            The volume assistant is unavailable with fewer than two non-zero initial populations.
+            {% endif %}
+            {% else %}
+            <h3>Please select a model to edit first</h3>
+            {% endif %}
+	</div>
+
+    </div>
+    <!--/row-->
+</div>
+<!--/span9-->
+
+{% endblock %}
+{% block innerjscontent %}
+<script type="text/javascript">
+    // Global variables that will be used in the jscontent block in modeleditor
+    var isParameterEditor = false;
+    var oTable;
+
+    var NA = 6.0221413e23;
+
+    {% if minimum and maximum %}
+    $(document).ready(function() {
+    // Handle when the user changes the volume, the population guides should adjust appropriately as well
+    minimum_concentration = parseFloat($( "#minimum_concentration" ).val())
+    maximum_concentration = parseFloat($( "#maximum_concentration" ).val())
+
+    $(" #volume ").keyup(function()
+    {
+    var volume = parseFloat($( "#volume" ).val())
+
+    if (!isNaN(volume))
+    {
+    $( "#minimum" ).val(Math.round(minimum_concentration * volume * NA));
+    $( "#maximum" ).val(Math.round(maximum_concentration * volume * NA));
+    }
+    });
+    var volume = (100 / (NA * minimum_concentration)).toPrecision(5)
+    $(" #volume ").val(volume).trigger('keyup')
+    });
+    {% endif %}
+</script>	
+{% endblock %}
