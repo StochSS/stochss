@@ -18,8 +18,9 @@ if [ "$(echo $STOCHSS_HOME | grep " ")" != "" ]; then
     exit -1
 fi
 STOCHKIT_VERSION=StochKit2.0.8
-STOCHKIT_PREFIX=$STOCHSS_HOME
-STOCHKIT_HOME=$STOCHKIT_PREFIX/$STOCHKIT_VERSION
+STOCHKIT_PREFIX="$STOCHSS_HOME"
+export STOCHKIT_HOME="$STOCHKIT_PREFIX/$STOCHKIT_VERSION"
+export STOCHKIT_ODE="$STOCHSS_HOME/ode"
 
 # Check that the dependencies are satisfied
 echo -n "Are dependencies satisfied?... "
@@ -53,7 +54,10 @@ fi
 
 echo -n "Testing if StochKit2 built... "
 
-if "$STOCHKIT_HOME/ssa" -m "$STOCHKIT_HOME/models/examples/dimer_decay.xml" -r 1 -t 1 -i 1 >& /dev/null; then
+rundir=$(mktemp -d /tmp/tmp.XXXXXX)
+rm -r "$rundir"
+
+if "$STOCHKIT_HOME/ssa" -m "$STOCHKIT_HOME/models/examples/dimer_decay.xml" -r 1 -t 1 -i 1 --out-dir "$rundir" >& /dev/null; then
     echo "Yes"
     echo "$STOCHKIT_VERSION found in $STOCHKIT_HOME"
 else
@@ -75,13 +79,18 @@ else
     echo " * This process will take at least 5 minutes to complete, please be patient *"
     wd=`pwd`
     cd "$STOCHKIT_PREFIX"
-    tar -xf "$STOCHKIT_VERSION.tgz"
-    cd "$STOCHKIT_HOME"
+    tar -xzf "$STOCHKIT_VERSION.tgz"
+    tmpdir=$(mktemp -d /tmp/tmp.XXXXXX)
+    mv "$STOCHKIT_HOME" "$tmpdir/"
+    cd "$tmpdir/$STOCHKIT_VERSION"
     ./install.sh 1>stdout.log 2>stderr.log
     cd $wd
+    mv "$tmpdir/$STOCHKIT_VERSION" "$STOCHKIT_HOME"
+    rm -r "$tmpdir"
 
+    rm -r "$rundir"
 # Test that StochKit was installed successfully by running it on a sample model
-    if "$STOCHKIT_HOME/ssa" -m "$STOCHKIT_HOME/models/examples/dimer_decay.xml" -r 1 -t 1 -i 1 >& /dev/null; then
+    if "$STOCHKIT_HOME/ssa" -m "$STOCHKIT_HOME/models/examples/dimer_decay.xml" -r 1 -t 1 -i 1 --out-dir "$rundir" >& /dev/null; then
 	echo "Success!"
     else
 	echo "Failed"
@@ -90,10 +99,78 @@ else
     fi
 fi
 
-echo -n "Configuring the app to use $STOCHKIT_HOME for local execution... "
+echo -n "Testing if StochKit2 ODE built... "
+
+rm -r "$rundir"
+if "$STOCHKIT_ODE/ode" -m "$STOCHKIT_HOME/models/examples/dimer_decay.xml" -t 1 -i 1 --out-dir "$rundir"; then
+    echo "Yes"
+    echo "ode found in $STOCHKIT_ODE"
+else
+    echo "No"
+
+    echo "Installing in $STOCHSS_HOME/ode"
+
+    echo "Cleaning up anything already there..."
+    rm -rf "$STOCHSS_HOME/ode"
+
+    stdout="$STOCHKIT_ODE/stdout.log"
+    stderr="$STOCHKIT_ODE/stderr.log"
+    echo "Building StochKit ODE"
+    echo " Logging stdout in $STOCHKIT_ODE/stdout.log and "
+    echo " stderr in $STOCHKIT_ODE/stderr.log "
+    echo " * This process should take about a minute to complete, please be patient *"
+    wd=`pwd`
+    tar -xzf "ode.tgz"
+    cd "ode/cvode"
+    tar -xzf "cvode-2.7.0.tar.gz"
+    cd "cvode-2.7.0"
+    ./configure --prefix="$PWD/cvode" 1>"$stdout" 2>"$stderr"
+    if [ $? != 0 ]; then
+	echo "Failed"
+	echo "StochKit ODE failed to install. Consult logs above for errors, and the StochKit documentation for help on building StochKit for your platform. Rename successful build folder to $STOCHKIT_ODE"
+        exit -1
+    fi
+    make 1>"$stdout" 2>"$stderr"
+    if [ $? != 0 ]; then
+	echo "Failed"
+	echo "StochKit ODE failed to install. Consult logs above for errors, and the StochKit documentation for help on building StochKit for your platform. Rename successful build folder to $STOCHKIT_ODE"
+        exit -1
+    fi
+    make install 1>"$stdout" 2>"$stderr"
+    if [ $? != 0 ]; then
+	echo "Failed"
+	echo "StochKit ODE failed to install. Consult logs above for errors, and the StochKit documentation for help on building StochKit for your platform. Rename successful build folder to $STOCHKIT_ODE"
+        exit -1
+    fi
+    cd ../../
+    make 1>"$stdout" 2>"$stderr"
+    if [ $? != 0 ]; then
+	echo "Failed"
+	echo "StochKit ODE failed to install. Consult logs above for errors, and the StochKit documentation for help on building StochKit for your platform. Rename successful build folder to $STOCHKIT_ODE"
+        exit -1
+    fi
+    cd ../
+    cd $wd
+
+    rm -r "$rundir"
+# Test that StochKit was installed successfully by running it on a sample model
+    if "$STOCHKIT_ODE/ode" -m "$STOCHKIT_HOME/models/examples/dimer_decay.xml" -t 1 -i 1 --out-dir "$rundir"; then
+	echo "Success!"
+    else
+	echo "Failed"
+	echo "StochKit ODE failed to install. Consult logs above for errors, and the StochKit documentation for help on building StochKit for your platform. Rename successful build folder to $STOCHKIT_ODE"
+	exit -1
+    fi
+fi
+
+rm -r "$rundir"
+
+echo -n "Configuring the app to use $STOCHKIT_HOME for StochKit... "
+echo -n "Configuring the app to use $STOCHKIT_ODE for StochKit ODE... "
 
 # Write STOCHKIT_HOME to the appropriate config file
 echo -n "$STOCHKIT_HOME" > "$STOCHSS_HOME/conf/config"
+echo -n "$STOCHKIT_ODE" >> "$STOCHSS_HOME/conf/config"
 echo "Done!"
 
 exec python "$STOCHSS_HOME/launchapp.py" $0
