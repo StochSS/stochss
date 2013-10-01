@@ -318,7 +318,8 @@ class Reaction():
         if type.lower() not in {'mass-action','customized'}:
             raise ReactionError("Invalid reaction type.")
         self.type = type.lower()
-        self.massaction = False if self.type is 'customized' else True
+
+        self.massaction = False if self.type == 'customized' else True
     
     def addReactant(self,S,stoichiometry):
         if stoichiometry <= 0:

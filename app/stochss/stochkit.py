@@ -266,7 +266,7 @@ class StochMLDocument():
         
         # Create reactions
         for reac in root.iter('Reaction'):
-            
+            print reac
             try:
                 name = reac.find('Id').text
             except:
@@ -315,6 +315,7 @@ class StochMLDocument():
                 pass
                             
             if type == 'mass-action':
+                print "mass+action"
                 reaction.massaction = True
                 reaction.type = 'mass-action'
                 # If it is mass-action, a parameter reference is needed.
@@ -337,8 +338,10 @@ class StochMLDocument():
 
                     reaction.createMassAction()
                 except Exception, e:
+                    print "wtf"
                     raise
             elif type == 'customized':
+                print "customized"
                 try:
                     propfunc = reac.find('PropensityFunction').text
                 except Exception,e:
@@ -392,6 +395,9 @@ class StochMLDocument():
         return e
     
     def ReactionToElement(self,R):
+        print R
+        print R.type
+
         e = etree.Element('Reaction')
         
         idElement = etree.Element('Id')
@@ -403,6 +409,7 @@ class StochMLDocument():
             descriptionElement.text = self.annotation
             e.append(descriptionElement)
         except:
+            print 'DO NOT ACCEPT'
             pass
         
         try:
@@ -410,10 +417,12 @@ class StochMLDocument():
             typeElement.text = R.type
             e.append(typeElement)
         except:
+            print 'DO NOT ACCEPT TYPE'
             pass
     
         # StochKit2 wants a rate for mass-action propensites
         if R.massaction:
+            print 'massaction'
             try:
                 rateElement = etree.Element('Rate')
                 # A mass-action reactions should only have one parameter
@@ -422,11 +431,12 @@ class StochMLDocument():
             except:
                 pass
 
-        elif R.type=='customized':
+        else:
+            print 'customized'
             #try:
-                functionElement = etree.Element('PropensityFunction')
-                functionElement.text = R.propensity_function
-                e.append(functionElement)
+            functionElement = etree.Element('PropensityFunction')
+            functionElement.text = R.propensity_function
+            e.append(functionElement)
             #except:
             #    pass
 
