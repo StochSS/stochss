@@ -12,6 +12,7 @@ try:
 except ImportError:
     from django.utils import simplejson as json
 
+from webapp2_extras import auth
 from webapp2_extras import sessions
 from webapp2_extras import sessions_memcache
 from webapp2 import Route
@@ -91,56 +92,65 @@ class BaseHandler(webapp2.RequestHandler):
     """
     def __init__(self, request, response):
         # Make sure a handler has a reference to the current user 
-        self.user = users.get_current_user()
+        # self.user = users.get_current_user()
+				
+        self.auth = auth.get_auth()
+        # If not logged in, the dispatch() call will redirect to /login if needed
+        if self.logged_in():
+            user_dict = self.auth.get_user_by_session()
+            self.user = self.auth.store.user_model.get_by_id(user_dict['user_id'])
 
-        # Most pages will need the UserData, so for convenience we add it here.
-        self.user_data = db.GqlQuery("SELECT * FROM UserData WHERE user_id = :1", self.user.user_id()).get()
+            # Most pages will need the UserData, so for convenience we add it here.
+            self.user_data = db.GqlQuery("SELECT * FROM UserData WHERE user_id = :1", self.user.email_address).get()
 
-        # If the user_data does not exist in the datastore, we instantiate it here
-        if self.user_data == None:
+            # If the user_data does not exist in the datastore, we instantiate it here
+            if self.user_data == None:
             
-            user_data = UserData()
-            user_data.user_id = self.user.user_id()
+                user_data = UserData()
+                user_data.user_id = self.user.email_address
             
-            # Get optional app-instance configurations and add those to user_data
-            credentials = {'EC2_SECRET_KEY':"",'EC2_ACCESS_KEY':""}
-            try:
-                env_variables = app.config.get('env_variables')
-                user_data.env_variables = json.dumps(env_variables)
-                if 'AWS_ACCESS_KEY' in env_variables:
-                    credentials['EC2_ACCESS_KEY']=env_variables['AWS_ACCESS_KEY']
-                if 'AWS_SECRET_KEY' in env_variables:
-                    credentials['EC2_SECRET_KEY']=env_variables['AWS_SECRET_KEY']
-            except:
-                raise
+                # Get optional app-instance configurations and add those to user_data
+                credentials = {'EC2_SECRET_KEY':"",'EC2_ACCESS_KEY':""}
+                try:
+                    env_variables = app.config.get('env_variables')
+                    user_data.env_variables = json.dumps(env_variables)
+                    if 'AWS_ACCESS_KEY' in env_variables:
+                        credentials['EC2_ACCESS_KEY']=env_variables['AWS_ACCESS_KEY']
+                    if 'AWS_SECRET_KEY' in env_variables:
+                        credentials['EC2_SECRET_KEY']=env_variables['AWS_SECRET_KEY']
+                except:
+                    raise
         
-            user_data.setCredentials(credentials)
+                user_data.setCredentials(credentials)
             
-            # Check if the credentials are valid
-            service = backendservices()
-            params ={}
-            params['credentials'] =credentials
-            params["infrastructure"] = "ec2"
-            if service.validateCredentials(params):
-                user_data.valid_credentials = True
-            else:
-                user_data.valid_credentials = False
+                # Check if the credentials are valid
+                service = backendservices()
+                params ={}
+                params['credentials'] =credentials
+                params["infrastructure"] = "ec2"
+                if service.validateCredentials(params):
+                    user_data.valid_credentials = True
+                else:
+                    user_data.valid_credentials = False
 
-            # Create an unique bucket name for the user
-            import uuid
-            user_data.setBucketName('stochss-output-'+str(uuid.uuid4()))
+                # Create an unique bucket name for the user
+                import uuid
+                user_data.setBucketName('stochss-output-'+str(uuid.uuid4()))
             
-            user_data.put()
-            self.user_data = user_data
+                user_data.put()
+                self.user_data = user_data
             
         webapp2.RequestHandler.__init__(self, request, response)
         
     def dispatch(self):
+        # Authentication check
+        if self.authentication_required() and not self.logged_in():
+            return self.redirect('/login')
         # Get a session store for this request.
         self.session_store = sessions.get_store(request=self.request)
         # Using memcache for storing sessions.
         self.session = self.session_store.get_session(name='mc_session', factory=sessions_memcache.MemcacheSessionFactory)
-        
+
         try:
             # Dispatch the request.
             webapp2.RequestHandler.dispatch(self)
@@ -150,7 +160,13 @@ class BaseHandler(webapp2.RequestHandler):
             # Flush the datastore to persist the data. This is inefficient, but
             # makes it less likely to loose all data is the app has to force quit.
             #dev_appserver.TearDownStubs()
-    
+            
+    def authentication_required(self):
+        raise Exception("Subclass must implement me!")
+        
+    def logged_in(self):
+        return self.auth.get_user_by_session() is not None
+			
     def get_session_property(self, key):
         """ Get the value for the given session property. """
         
@@ -166,7 +182,10 @@ class BaseHandler(webapp2.RequestHandler):
             
     def render_response(self, _template, **context):
         """ Process the template and render response. """
-        ctx = {'user': self.user}
+        if self.logged_in():
+            ctx = {'user': self.user}
+        else:
+            ctx = {}
         ctx.update(context)
         if 'model_edited' not in ctx:
             model_edited = self.get_session_property('model_edited')
@@ -176,24 +195,11 @@ class BaseHandler(webapp2.RequestHandler):
         template = jinja_environment.get_template(_template)
         self.response.out.write(template.render({'active_upload': True}, **ctx))
 
-class Signout(BaseHandler):
-    """ Signout handler that clears the current user's session and redirects to the signout url. """
-    def get(self):
-        # First, check if the recent changes have been saved.
-        is_model_saved = self.get_session_property('is_model_saved')
-        if is_model_saved is not None and not is_model_saved:
-            logging.debug("Model not saved!")
-            result = {'status': False, 'save_msg': 'Please save your changes first!', 'is_saved': False, 'redirect_page': '/signout'}
-            self.render_response('modeleditor.html', **result)
-            return
-        
-        self.session.clear()
-        self.redirect(users.create_logout_url('/'))
-
-
 class MainPage(BaseHandler):
     """ The Main page. Renders a welcome message and shortcuts to main menu items. """
-    
+    def authentication_required(self):
+        return True
+        
     def get(self):
         self.render_response("mainpage.html")
     
@@ -231,6 +237,9 @@ from handlers.status import *
 class StaticFileHandler(BaseHandler):
     """ Serve a file dynamically. """
     
+    def authentication_required(self):
+        return True
+        
     def get(self):
         
         try:
@@ -251,11 +260,11 @@ class StaticFileHandler(BaseHandler):
 if 'lib' not in sys.path:
     sys.path[0:0] = ['lib']
 
-
-r1=Route('/profile', handler='auth_handlers.ProfileHandler', name='profile')
-r2=Route('/logout', handler='auth_handlers.AuthHandler:logout', name='logout')
-r3=Route('/auth/<provider>', handler='auth_handlers.AuthHandler:_simple_auth', name='auth_login')
-r4=Route('/auth/<provider>/callback', handler='auth_handlers.AuthHandler:_auth_callback', name='auth_callback')
+r1=Route('/login', handler='handlers.auth.LoginPage', name='login')
+r2=Route('/profile', handler='handlers.auth.ProfilePage', name='profile')
+r3=Route('/logout', handler='handlers.auth.AuthHandler:logout', name='logout')
+r4=Route('/auth/<provider>', handler='handlers.auth.AuthHandler:_simple_auth', name='auth_login')
+r5=Route('/auth/<provider>/callback', handler='handlers.auth.AuthHandler:_auth_callback', name='auth_callback')
 
 app = webapp2.WSGIApplication([
                                ('/', MainPage),
@@ -279,7 +288,7 @@ app = webapp2.WSGIApplication([
                                r2,
                                r3,
                                r4,
-                               ('/signout', Signout),
+                               r5,
                                ],
                                 config=config,
                                 debug=True) 

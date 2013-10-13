@@ -1,0 +1,14 @@
+{% extends "base.html" %}
+{% block title %}Profile{% endblock %}
+{% block csscontent %}<link href="/static/css/user_profile.css" rel="stylesheet">{% endblock %}
+
+{% block content %}
+<div class="span4">
+  <h2 id='profile-heading'>{{ user.name }}'s Profile</h2>
+  <div class="media">
+    <img class='img-avatar' src="{{ user.avatar_url }}" />
+    <a href="{{ user.link }}" target="_blank" rel="nofollow">{{ user.link }}</a>
+  </div>
+  <a href="/logout" class="btn logout-btn">Sign Out</a>
+</div>
+{% endblock %}

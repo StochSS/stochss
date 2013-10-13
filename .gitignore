@@ -39,3 +39,6 @@ stderr.log
 conf/config
 app/userfile
 app/conf/app_config.py
+
+# Mac OS X related file
+.DS_Store

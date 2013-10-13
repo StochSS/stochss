@@ -30,6 +30,9 @@ def internet_on():
 class UpdatesPage(BaseHandler):
     """ Set paths for local plugin software. """
 
+    def authentication_required(self):
+        return True
+        
     def get(self):
         """ """
         env_variables = self.user_data.env_variables
@@ -54,7 +57,7 @@ class UpdatesPage(BaseHandler):
           if update_available:
             service = backendservices()
 
-            all_stochkit_jobs = db.GqlQuery("SELECT * FROM StochKitJobWrapper WHERE user_id = :1", self.user.user_id())
+            all_stochkit_jobs = db.GqlQuery("SELECT * FROM StochKitJobWrapper WHERE user_id = :1", self.user.email_address)
 
             # Check to make sure no jobs are running
             context['nojobs'] = True
