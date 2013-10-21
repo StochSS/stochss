@@ -1,0 +1,45 @@
+{% extends "base.html" %}
+{% block title %}Admin{% endblock %}
+{% block csscontent %}<link href="/static/css/admin_panel.css" rel="stylesheet">{% endblock %}
+
+{% block content %}
+<div class="span4">
+  <div class="well well-large">
+    <form id='approve-user-form' action="/admin" method="post">
+      <fieldset>
+        <legend>Admin Panel</legend>
+      
+        <label>Enter email address of user you wish to grant access to this system:</label>
+        <input id="email-input" type="email" placeholder="example@example.com">
+      
+        <button id="grant-access-button" class="btn btn-primary btn-large" type="submit">Grant Access</button>
+      </fieldset>
+    </form>
+  </div>
+</div>
+<div class="span6">
+  <div class="well well-large">
+    <h2 id="authorized-usr-heading">Currently Approved Users</h2>
+    <table class="table table-bordered authorized-usr-table">
+      <thead>
+        <tr>
+          <th>#</th>
+          <th>Name</th>
+          <th>Email</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for user in users %}
+        <tr>
+          <td>{{ loop.index }}</td>
+          <td>{{ user.name }}</td>
+          <td>{{ user.email_address }}</td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+</div>
+{% endblock %}
+
+{% block jscontent %}<script src="/static/js/admin_page.js"></script>{% endblock %}

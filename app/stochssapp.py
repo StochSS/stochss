@@ -17,6 +17,8 @@ from webapp2_extras import sessions
 from webapp2_extras import sessions_memcache
 from webapp2 import Route
 
+from webapp2_extras.appengine.auth.models import User as WebApp2User
+
 from google.appengine.ext import ndb
 from google.appengine.ext import db
 
@@ -91,12 +93,11 @@ class BaseHandler(webapp2.RequestHandler):
     All the request handlers should extend this class.
     """
     def __init__(self, request, response):
-        # Make sure a handler has a reference to the current user 
-        # self.user = users.get_current_user()
-				
+
         self.auth = auth.get_auth()
         # If not logged in, the dispatch() call will redirect to /login if needed
         if self.logged_in():
+            # Make sure a handler has a reference to the current user
             user_dict = self.auth.get_user_by_session()
             self.user = self.auth.store.user_model.get_by_id(user_dict['user_id'])
 
@@ -206,12 +207,23 @@ class MainPage(BaseHandler):
     def post(self):
         self.get()
 
-
+class User(WebApp2User):
+    """ Subclass of the WebApp2 User class to add functionality """
+    def is_admin_user(self):
+        """
+        Determine if this user is an admin by checking for the is_admin property
+        - this is an expando model and is_admin property is added dynamically only for admins
+        """
+        if "is_admin" in self._properties:
+            return True
+        return False
+        
 config = {}
 config['webapp2_extras.sessions'] = {
     'secret_key': 'my-super-secret-key',
 }
 config['webapp2_extras.auth'] = {
+    'user_model': User,
     'user_attributes': []
 }
 
@@ -262,9 +274,10 @@ if 'lib' not in sys.path:
 
 r1=Route('/login', handler='handlers.auth.LoginPage', name='login')
 r2=Route('/profile', handler='handlers.auth.ProfilePage', name='profile')
-r3=Route('/logout', handler='handlers.auth.AuthHandler:logout', name='logout')
-r4=Route('/auth/<provider>', handler='handlers.auth.AuthHandler:_simple_auth', name='auth_login')
-r5=Route('/auth/<provider>/callback', handler='handlers.auth.AuthHandler:_auth_callback', name='auth_callback')
+r3=Route('/admin', handler='handlers.admin.AdminPage', name='admin')
+r4=Route('/logout', handler='handlers.auth.AuthHandler:logout', name='logout')
+r5=Route('/auth/<provider>', handler='handlers.auth.AuthHandler:_simple_auth', name='auth_login')
+r6=Route('/auth/<provider>/callback', handler='handlers.auth.AuthHandler:_auth_callback', name='auth_callback')
 
 app = webapp2.WSGIApplication([
                                ('/', MainPage),
@@ -289,6 +302,7 @@ app = webapp2.WSGIApplication([
                                r3,
                                r4,
                                r5,
+                               r6,
                                ],
                                 config=config,
                                 debug=True) 

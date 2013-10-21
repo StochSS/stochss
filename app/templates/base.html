@@ -94,11 +94,12 @@
                 <li><a href="/status" TITLE = "Monitor the progress of a simulation">Job Status</a></li>
 
               <li class="nav-header"><i class="icon-cog"></i> Settings</li>
+              {% if user.is_admin_user() %}
+                  <li><a href="/admin">Admin Panel</a></li>
+              {% endif %}
                   <li><a href="/credentials" TITLE = "Set AWS credentials and manage computational resources in the cloud">Cloud computing</a></li>
                   <li><a href="/localsettings" TITLE = "Configure local plugins">Local plugins</a></li>
-              <li><a href="/updates" TITLE = "Check for available updates">Check For Updates</a></li>
-
-
+                  <li><a href="/updates" TITLE = "Check for available updates">Check For Updates</a></li>
             </ul>
           </div><!--/.well -->
         </div><!--/span2-->

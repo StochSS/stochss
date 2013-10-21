@@ -1,6 +1,9 @@
 {% extends "login_base.html" %}
 
 {% block content %}
+  {% if authError %}
+    <p class="alert">An error occurred with the authentication process. Did you deny access?</p>
+  {% endif %}
   <p>You can sign in to StochSS with any of the following:</p>
   <p>
     <a href="/auth/google" class="btn btn-primary">Google Account</a>

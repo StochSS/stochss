@@ -3,9 +3,8 @@ import secrets
 
 from google.appengine.ext import ndb
 
-from webapp2_extras.appengine.auth.models import User
-
 from stochssapp import BaseHandler
+from stochssapp import User
 
 from simpleauth import SimpleAuthHandler
 
@@ -79,6 +78,14 @@ class AuthHandler(BaseHandler, SimpleAuthHandler):
 
         user = self.auth.store.user_model.get_by_auth_id(auth_id)
         _attrs = self._to_user_model_attrs(data, self.USER_ATTRS[provider])
+        
+        if self.should_create_admin():
+            logging.info('Creating admin user')
+            _attrs['is_admin'] = 'YES'
+            ok, user = self.auth.store.user_model.create_user(auth_id, **_attrs)
+            if ok:
+                self.auth.set_session(self.auth.store.user_to_dict(user))
+            return self.redirect('/admin')
 
         if user:
             logging.info('Found existing user to log in')
@@ -90,13 +97,15 @@ class AuthHandler(BaseHandler, SimpleAuthHandler):
                     user.populate(**_attrs)
                     user.put()
                     break
+                    
             self.auth.set_session(self.auth.store.user_to_dict(user))
+            
+            if user.is_admin_user():
+                return self.redirect('/admin')
 
-        else:   
-            # Check to see if this person logged in with another provider
-            # using the same email address.
-            users = User.query(ndb.GenericProperty('email_address') == _attrs['email_address']).fetch()
-            user = users[0] if users else None
+        else:
+            user = self.check_if_user_exists(_attrs)
+            
             if user:
                 logging.info('Existing user logging in with new provider')
 
@@ -105,7 +114,9 @@ class AuthHandler(BaseHandler, SimpleAuthHandler):
                 user.put()
                 
                 self.auth.set_session(self.auth.store.user_to_dict(user))
-            # Else assume its a brand new user.
+                
+                if user.is_admin_user():
+                    return self.redirect('/admin')
             else:
                 logging.info('Creating a brand new user')
                 
@@ -129,6 +140,32 @@ class AuthHandler(BaseHandler, SimpleAuthHandler):
         self.session.clear()
         self.auth.unset_session()
         self.redirect('/login')
+        
+    def handle_exception(self, exception, debug):
+        logging.error(exception)
+        result = { 'authError': True }
+        self.render_response('login.html', **result)
+        
+    def should_create_admin(self):
+        """
+        Right now, just check to see if this is the first user being created.
+        i.e. the first user to log in is the admin.
+        """
+        users = User.query().fetch(1)
+        if users:
+            return False
+        else:
+            return True
+    
+    def check_if_user_exists(self, user_dict):
+        """
+        Check to see if the user has already logged in with another provider
+        Currently only comparing email address.
+        Returns the user object if it exists, otherwise None.
+        """
+        users = User.query(ndb.GenericProperty('email_address') == user_dict['email_address']).fetch()
+        user = users[0] if users else None
+        return user
 
     def _callback_uri_for(self, provider):
         return self.uri_for('auth_callback', provider=provider, _full=True)
