@@ -209,7 +209,16 @@ class StochMLDocument():
         md = cls()
         md.document = root
         return md
-    
+
+    @classmethod
+    def fromString(cls,string):
+        """ Intializes the document from an exisiting native StochKit XML file read from disk. """
+        root = etree.fromstring(string)
+
+        md = cls()
+        md.document = root
+        return md
+
     def toModel(self,name):
         """ Instantiates a StochKitModel object from a StochMLDocument. """
         

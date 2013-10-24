@@ -14,6 +14,8 @@ from stochss.model import *
 from stochss.stochkit import *
 from stochss.examplemodels import *
 
+import webapp2
+
 class ObjectProperty(db.Property):
     """  A db property to store objects. """
 
@@ -38,7 +40,125 @@ class StochKitModelWrapper(db.Model):
     user_id = db.StringProperty()
     model_name = db.StringProperty()    
     model = ObjectProperty()
-        
+    attributes = ObjectProperty()
+
+class ModelManager():
+    @staticmethod
+    def getModels(handler):
+        models = db.GqlQuery("SELECT * FROM StochKitModelWrapper WHERE user_id = :1", handler.user.user_id()).fetch(100000)
+
+        output = []
+
+        for model in models:
+            jsonModel = { "id" : model.key().id() }
+            if model.attributes:
+                jsonModel.update(model.attributes)
+            jsonModel["model"] = model.model.serialize()
+
+            #print jsonModel
+
+            output.append(jsonModel)
+
+    @staticmethod
+    def getModel(handler, model_id):
+        model = StochKitModelWrapper.get_by_id(model_id)
+
+        jsonModel = { "id" : model.key().id() }
+        if model.attributes:
+            jsonModel.update(model.attributes)
+        jsonModel["model"] = model.model.serialize()
+            
+        return jsonModel
+
+    @staticmethod
+    def createModel(handler, model):
+        modelWrap = StochKitModelWrapper()
+        if not hasattr(model, "name"):
+            name = "tmpname"
+        else:
+            name = model["name"]
+        modelWrap.model = StochMLDocument.fromString(model["model"]).toModel(name)
+
+        attributes = {}
+        for key in model:
+            if key != "model":
+                attributes[key] = model[key]
+
+        modelWrap.attributes = attributes
+
+        return modelWrap.put().id()
+
+    @staticmethod
+    def deleteModel(handler, model_id):
+        model = StochKitModelWrapper.get_by_id(model_id)
+        model.delete()
+
+    @staticmethod
+    def updateModel(handler, model):
+        modelWrap = StochKitModelWrapper.get_by_id(model_id)
+        if not hasattr(model, "name"):
+            name = "tmpname"
+        else:
+            name = model["name"]
+        modelWrap.model = StochMLDocument.fromString(model["model"]).toModel(name)
+
+        attributes = {}
+        for key in model:
+            if key != "model":
+                attributes[key] = model[key]
+
+        modelWrap.attributes = attributes
+
+        return modelWrap.put().id()
+
+class ModelBackboneInterface(BaseHandler):
+  def get(self):
+    req = self.request.path.split('/')[-1]
+    
+    self.response.content_type = 'application/json'
+    
+    if req == 'list':
+        models = ModelManager.getModels(self)
+
+        self.response.write(json.dumps(output))
+    else:
+        model = ModelManager.getModel(self, int(req))
+
+        self.response.write(json.dumps(model))
+
+  def post():
+      jsonModel = json.loads(self.request.body.read())
+      modelId = ModelManager.createModel(jsonModel)
+      
+      #print 'CREATE', model["id"]
+      
+      self.response.content_type = "application/json"
+      return json.dumps(ModelManager.getModel(modelId))
+
+  def put():
+      req = request.uri.split('/')[-1]
+
+      modelId = int(req)
+      jsonModel = json.loads(request.content.read())
+      modelId = ModelManager.createModel(jsonModel)
+      
+      print 'UPDATE', req, model["id"]
+      
+      if modelId != model["id"]:
+          raise Exception("modelId must be equal to model id stored in db")
+      
+      self.response.content_type = "application/json"
+      return json.dumps(ModelManager.getModel(modelId))
+
+  def delete():
+      model_id = request.uri.split('/')[-1]
+      
+      print 'DELETE', str(int(model_id))
+      
+      ModelManager.deleteModel(self, int(model_id))
+      
+      request.setHeader("Content-Type", "application/json")
+      return json.dumps([])
 
 class ModelEditorPage(BaseHandler):
     """
