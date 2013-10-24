@@ -9,7 +9,7 @@ $('#grant-access-button').on('click', function(e) {
         dataType: 'json',
         data: { 'email': emailInput.value },
         success: function(response) {
-            var tableBody = $('table.authorized-usr-table tbody');
+            var tableBody = $('table.approved-usr-table tbody');
             var nextRowNumber = tableBody.find("tr").length + 1;
             html = '<tr>' + 
                     '<td>' + nextRowNumber + '</td>' +

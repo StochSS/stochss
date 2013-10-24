@@ -11,7 +11,12 @@
     font-size: 35px;
 }
 
-.authorized-usr-table {
+table {
     background-color: white;
     margin-top: 20px;
+}
+
+.empty-table-message {
+    font-size: 20px;
+    margin: 0;
 }

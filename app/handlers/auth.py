@@ -8,6 +8,8 @@ from stochssapp import User
 
 from simpleauth import SimpleAuthHandler
 
+from admin import PendingUsersList
+
 class LoginPage(BaseHandler):
     """
     """
@@ -86,7 +88,8 @@ class AuthHandler(BaseHandler, SimpleAuthHandler):
             if ok:
                 self.auth.set_session(self.auth.store.user_to_dict(user))
             return self.redirect('/admin')
-
+        
+        should_update_user = False
         if user:
             logging.info('Found existing user to log in')
             # Existing users might've changed their profile data so we update our
@@ -94,37 +97,33 @@ class AuthHandler(BaseHandler, SimpleAuthHandler):
             for property in user._properties:
                 if property in _attrs and getattr(user, property) != _attrs[property]:
                     logging.info('Updating existing user credentials')
-                    user.populate(**_attrs)
-                    user.put()
-                    break
-                    
-            self.auth.set_session(self.auth.store.user_to_dict(user))
-            
-            if user.is_admin_user():
-                return self.redirect('/admin')
-
+                    should_update_user = True
+                    break                    
         else:
             user = self.check_if_user_exists(_attrs)
             
             if user:
                 logging.info('Existing user logging in with new provider')
-
-                user.populate(**_attrs)
-                user.auth_ids.append(auth_id)
-                user.put()
-                
-                self.auth.set_session(self.auth.store.user_to_dict(user))
-                
-                if user.is_admin_user():
-                    return self.redirect('/admin')
+                should_update_user = True
+                user.auth_ids.append(auth_id)                
             else:
-                logging.info('Creating a brand new user')
-                
-                ok, user = self.auth.store.user_model.create_user(auth_id, **_attrs)
-                if ok:
-                    self.auth.set_session(self.auth.store.user_to_dict(user))
+                pending_user_list = PendingUsersList.shared_list()
+                if pending_user_list.is_user_approved(_attrs['email_address']):
+                    logging.info('Creating a brand new user') 
+                    ok, user = self.auth.store.user_model.create_user(auth_id, **_attrs)
+                else:
+                    logging.info('User {0} is not approved'.format(_attrs['email_address']))
+                    pending_user_list.add_user_to_approval_waitlist(_attrs['email_address'])
+                    return self.redirect('/login')
 
-        # Go to the profile page
+        if should_update_user:
+            user.populate(**_attrs)
+            user.put()
+        self.auth.set_session(self.auth.store.user_to_dict(user))
+            
+        if user.is_admin_user():
+            return self.redirect('/admin')
+        # Else go to the profile page
         self.redirect('/profile')
 
     def logout(self):
@@ -166,6 +165,15 @@ class AuthHandler(BaseHandler, SimpleAuthHandler):
         users = User.query(ndb.GenericProperty('email_address') == user_dict['email_address']).fetch()
         user = users[0] if users else None
         return user
+    
+    def _to_user_model_attrs(self, data, attrs_map):
+        """Get needed info from the provider dataset """
+        user_attrs = {}
+        for k, v in attrs_map.iteritems():
+            attr = (v, data.get(k)) if isinstance(v, str) else v(data.get(k))
+            user_attrs.setdefault(*attr)
+
+        return user_attrs
 
     def _callback_uri_for(self, provider):
         return self.uri_for('auth_callback', provider=provider, _full=True)
@@ -184,12 +192,3 @@ class AuthHandler(BaseHandler, SimpleAuthHandler):
         resp = self._oauth2_request(url, auth_info['access_token'],
                                     token_param='oauth2_access_token')
         return self._parse_xml_user_info(resp)
-
-    def _to_user_model_attrs(self, data, attrs_map):
-        """Get needed info from the provider dataset """
-        user_attrs = {}
-        for k, v in attrs_map.iteritems():
-            attr = (v, data.get(k)) if isinstance(v, str) else v(data.get(k))
-            user_attrs.setdefault(*attr)
-
-        return user_attrs
