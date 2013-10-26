@@ -125,10 +125,17 @@ stochkit.Model = Backbone.Model.extend( {
         this.trigger('change', 'parameters');
     },
 
-    addReaction: function(name, reactants, products, prop) {
+    addReaction: function(name, reactants, products, prop, mass_action) {
         var reaction = XML( '<Reaction />' )
-            .append( XML( '<Id />' ).text(name) )
-            .append( XML( '<PropensityFunction />' ).text(prop) );
+            .append( XML( '<Id />' ).text(name) );
+
+        if(mass_action) {
+            reaction.append( XML( '<Rate />' ).text(prop) )
+                .append( XML( '<Type />').text('mass-action') );
+        } else {
+            reaction.append( XML( '<PropensityFunction />' ).text(prop) )
+                .append( XML( '<Type />' ).text('customized') );
+        }
 
         var reactantsXml = XML( '<Reactants />' );
         for(var i in reactants)
@@ -157,21 +164,32 @@ stochkit.Model = Backbone.Model.extend( {
     getReaction: function(name) {
         var reaction = this.ReactionsList.children().has('Id:contains(' +  name + ')');
 
-        name = reaction.find('Id').text();
-        reactants = _.map(reaction.find('Reactants').children(), function(x) {
+        var name = reaction.find('Id').text();
+        var reactants = _.map(reaction.find('Reactants').children(), function(x) {
             return [$(x).attr('id'), Number($(x).attr('stoichiometry'))];
         });
-        products = _.map(reaction.find('Products').children(), function(x) {
-            return [$(x).attr('id'), Number($(x).attr('stoichiometry'))];
-        });
-        prop = reaction.find('PropensityFunction').text();
 
-        return {name : name, reactants : reactants, products : products, prop : prop };
+        var products = _.map(reaction.find('Products').children(), function(x) {
+            return [$(x).attr('id'), Number($(x).attr('stoichiometry'))];
+        });
+        var type = reaction.find('Type').text();
+
+        if(type == 'mass-action') {
+            var mass_action = true;
+            var prop = reaction.find('Rate').text();
+        }
+        else
+        {
+            var prop = reaction.find('PropensityFunction').text();
+            var mass_action = false;
+        }   
+
+        return {name : name, reactants : reactants, products : products, prop : prop , mass_action : mass_action};
     },
 
-    setReaction: function(name, reactants, products, prop) {
+    setReaction: function(name, reactants, products, prop, mass_action) {
         this.removeReaction(name);
-        this.addReaction(name, reactants, products, prop);
+        this.addReaction(name, reactants, products, prop, mass_action);
     },
 
     setParameter: function(name, value) {
@@ -245,7 +263,12 @@ stochkit.PrettyPrint.Reaction = function(reaction) {
         }
 
         propensityString += '*';
-        propensityString += reactants.eq(j).attr('id');
+        if(s == '1')
+        {
+            propensityString += reactants.eq(j).attr('id');
+        } else {
+            propensityString += '(' + reactants.eq(j).attr('id') + '^' + s + ')';
+        }
         
         if(j != reactants.length - 1)
         {

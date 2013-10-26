@@ -207,7 +207,14 @@ Convert.ReactionVerify = Backbone.View.extend(
                     var type = reaction.find('Type').text();
 
                     //Count number of reactions
+                    //The model very well could lie about being mass action, we gotta check
                     var reactantCount = reaction.find('Reactants').children().length;
+                    var stoichiometries = reaction.find('Reactants').children().map( function(idex, item) { return $( item ).attr('stoichiometry'); } );
+                    var reactantParticleCount = 0;
+
+                    for(var j = 0; j < stoichiometries.length; j++) {
+                        reactantParticleCount += Number(stoichiometries[j]);
+                    }
 
                     var prettyReaction = stochkit.PrettyPrint.Reaction(reaction);
 
@@ -223,14 +230,22 @@ Convert.ReactionVerify = Backbone.View.extend(
                     if(type.toLowerCase() == 'mass-action')
                     {
                         expression.text(prettyReaction.expression);
-                        if(reactantCount == 1) {
+                        if(reactantCount == 1 && reactantParticleCount == 1) {
                             propensity.text(prettyReaction.propensity);
-                        } else {
-                            propensity.text(prettyReaction.propensity + '/' + vol);
-                        }
 
-                        result.prop('color', 'green');
-                        result.text('Successful, Mass Action');
+                            result.prop('color', 'green');
+                            result.text('Successful, Mass Action');
+                        } else if((reactantCount == 1 || reactantCount == 2) && reactantParticleCount == 2) {
+                            propensity.text(prettyReaction.propensity + '/' + vol);
+                            
+                            result.prop('color', 'green');
+                            result.text('Successful, Mass Action');
+                        } else {
+                            propensity.text(prettyReaction.propensity);
+
+                            result.prop('color', 'red');
+                            result.text('Failed, Valid Mass Action, but Invalid under SSA assumptions');
+                        }
                     }
                     else
                     {
@@ -324,14 +339,31 @@ var run = function()
 
                         //Count number of reactions
                         var reactantCount = reaction.find('Reactants').children().length;
+                        var stoichiometries = reaction.find('Reactants').children().map( function(idx, item) { return $( item ).attr('stoichiometry'); } );
+                        var reactantParticleCount = 0;
+                        
+                        for(var j = 0; j < stoichiometries.length; j++) {
+                            reactantParticleCount += Number(stoichiometries[j]);
+                        }
 
                         if(type.toLowerCase() == 'mass-action')
                         {
-                            if(reactantCount == 2) {
+                            if(reactantParticleCount == 2) {
                                 reacObj = newModel.getReaction(name);
-                                newModel.setReaction(name, reacObj.reactants, reacObj.products, reacObj.prop + ' / ' + vol);
+                                newModel.setReaction(name, reacObj.reactants, reacObj.products, reacObj.prop + ' / ' + vol, true);
                             }
                         }
+                    }
+
+                    var species = this.model.SpeciesList.children();
+
+                    for(var i = 0; i < species.length; i++) {
+                        specie = species.eq(i);
+                        
+                        name = specie.find('Id').text();
+                        expr = specie.find('InitialPopulation').text();
+
+                        newModel.setSpecies(name, Math.round(Number(expr) * vol));
                     }
                     
                     modelCollection.add(newModel);
