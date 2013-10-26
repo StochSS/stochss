@@ -1,0 +1,33 @@
+<div class="span9">
+    <div class="row-fluid">
+	<div class="well well-large">
+	  <h3><a data-toggle="collapse" data-target="#optional" default> Create new species </a>&raquo; </h3>
+	  <br/>
+	  <div id="optional" class="in collapse" style="height:auto">
+	    <label>Name:</label><br />
+	    <input class="name" type="text" placeholder="Species name" style="width: 160px" TITLE = "Give a Name to the Species" ><br /><br />
+	    <label>Initial value:</label><br />
+	    <input type="text" class="initialValue span3" name="initial_value" TITLE = "Insert an Integer"><br />
+	    <button class="createSpecies btn btn-primary" style="float: right;">
+	      Add species
+	    </button>
+	  </div>
+	    
+	  <h3><a data-toggle="collapse" data-target="#species_list" default>Species </a>&raquo; </h3><br/>
+	  <div id="species_list" class="in collapse" style="height: auto">
+	      <table cellpadding="0" cellspacing="0" border="0" class="table table-striped table-bordered" id="dataTable">
+		<thead>
+		  <tr>
+		    <th>Name </th><th>Initial value </th><th>Unit</th><th>&nbsp;</th>
+		  </tr>
+		</thead>
+		<tbody id="table">
+		</tbody>
+	      </table>					
+	  </div>
+	</div>
+
+    </div>
+    <!--/row-->
+</div>
+<!--/span9-->

@@ -50,22 +50,29 @@ class ModelManager():
         output = []
 
         for model in models:
-            jsonModel = { "id" : model.key().id() }
+            jsonModel = { "id" : model.key().id(),
+                          "name" : model.model_name }
             if model.attributes:
                 jsonModel.update(model.attributes)
+            print model.model.units
+            jsonModel["type"] = model.model.units
             jsonModel["model"] = model.model.serialize()
 
             #print jsonModel
 
             output.append(jsonModel)
 
+        return output
+
     @staticmethod
     def getModel(handler, model_id):
         model = StochKitModelWrapper.get_by_id(model_id)
 
-        jsonModel = { "id" : model.key().id() }
+        jsonModel = { "id" : model.key().id(),
+                      "name" : model.model_name }
         if model.attributes:
             jsonModel.update(model.attributes)
+        jsonModel["type"] = model.model.units
         jsonModel["model"] = model.model.serialize()
             
         return jsonModel
@@ -73,15 +80,19 @@ class ModelManager():
     @staticmethod
     def createModel(handler, model):
         modelWrap = StochKitModelWrapper()
-        if not hasattr(model, "name"):
-            name = "tmpname"
-        else:
+        if "name" in model:
             name = model["name"]
+        else:
+            name = "tmpname"
+
+        modelWrap.user_id = handler.user.user_id()
+        modelWrap.model_name = name
         modelWrap.model = StochMLDocument.fromString(model["model"]).toModel(name)
+        modelWrap.model.units = model["type"]
 
         attributes = {}
         for key in model:
-            if key != "model":
+            if key != "model" and key != "type" and key != "name":
                 attributes[key] = model[key]
 
         modelWrap.attributes = attributes
@@ -100,11 +111,15 @@ class ModelManager():
             name = "tmpname"
         else:
             name = model["name"]
+
+        modelWrap.user_id = handler.user.user_id()
+        modelWrap.model_name = name
         modelWrap.model = StochMLDocument.fromString(model["model"]).toModel(name)
+        modelWrap.model.units = model["type"]
 
         attributes = {}
         for key in model:
-            if key != "model":
+            if key != "model" and key != "type" and key != "name":
                 attributes[key] = model[key]
 
         modelWrap.attributes = attributes
@@ -120,27 +135,27 @@ class ModelBackboneInterface(BaseHandler):
     if req == 'list':
         models = ModelManager.getModels(self)
 
-        self.response.write(json.dumps(output))
+        self.response.write(json.dumps(models))
     else:
         model = ModelManager.getModel(self, int(req))
 
         self.response.write(json.dumps(model))
 
-  def post():
-      jsonModel = json.loads(self.request.body.read())
-      modelId = ModelManager.createModel(jsonModel)
+  def post(self):
+      jsonModel = json.loads(self.request.body)
+      modelId = ModelManager.createModel(self, jsonModel)
       
       #print 'CREATE', model["id"]
       
       self.response.content_type = "application/json"
-      return json.dumps(ModelManager.getModel(modelId))
+      self.response.write(json.dumps(ModelManager.getModel(self, modelId)))
 
-  def put():
+  def put(self):
       req = request.uri.split('/')[-1]
 
       modelId = int(req)
-      jsonModel = json.loads(request.content.read())
-      modelId = ModelManager.createModel(jsonModel)
+      jsonModel = json.loads(self.request.body)
+      modelId = ModelManager.updateModel(self, jsonModel)
       
       print 'UPDATE', req, model["id"]
       
@@ -148,9 +163,9 @@ class ModelBackboneInterface(BaseHandler):
           raise Exception("modelId must be equal to model id stored in db")
       
       self.response.content_type = "application/json"
-      return json.dumps(ModelManager.getModel(modelId))
+      self.response.write(json.dumps(ModelManager.getModel(self, modelId)))
 
-  def delete():
+  def delete(self):
       model_id = request.uri.split('/')[-1]
       
       print 'DELETE', str(int(model_id))
@@ -158,7 +173,7 @@ class ModelBackboneInterface(BaseHandler):
       ModelManager.deleteModel(self, int(model_id))
       
       request.setHeader("Content-Type", "application/json")
-      return json.dumps([])
+      self.response.write(json.dumps([]))
 
 class ModelEditorPage(BaseHandler):
     """

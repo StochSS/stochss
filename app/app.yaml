@@ -8,19 +8,10 @@ handlers:
 - url: /static/ico/favicon.ico
   static_files: static/ico/favicon.ico
   upload: static/ico/favicon.ico
-- url: /static/css
-  static_dir: static/css
-- url: /static/img
-  static_dir: static/img
-- url: /static/js
-  static_dir: static/js
-- url: /static/font-awesome
-  static_dir: static/font-awesome
+- url: /static
+  static_dir: static
 - url: /lib/flot
   static_dir: lib/flot
-
-
-
 
 - url: /.*
   script: stochssapp.app

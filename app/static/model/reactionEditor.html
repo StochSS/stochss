@@ -1,0 +1,47 @@
+<div class="span9">
+    <div class="row-fluid">
+	<div class="well well-large">
+	  <h3><a data-toggle="collapse" data-target="#optional" default> Create a new reaction </a>&raquo; </h3>
+	  <br/>
+	  <div id="optional" class="in collapse" style="height:auto">
+	    <label>Name:</label><br />
+	    <input id="name" type="text" placeholder="Species name" style="width: 160px" TITLE = "Give a Name to the Parameter" ><br /><br />
+	    <label>Propensity Type:</label><br />
+            <input class="massAction" name="propensityType" type="radio">Mass-action <br />
+            <input class="custom" name="propensityType" type="radio" checked>Custom <font color="red">(understand the <a href="difficulties.html">difficulties</a> of custom propensities)</font><br />
+	    <label>Reactants:</label><br />
+	    <input class="reactants" type="text" class="span3" TITLE = "Insert an Value"><br />
+	    <label>Products:</label><br />
+	    <input class="products" type="text" class="span3" TITLE = "Insert an Value"><br />
+	    <label>Rate:</label><br />
+	    <div class="rateSelect">
+	      <select>
+		<option value="volvo">Volvo</option>
+		<option value="saab">Saab</option>
+		<option value="mercedes">Mercedes</option>
+		<option value="audi">Audi</option>
+	      </select>
+	    </div>
+	    <button type="submit" class="btn btn-primary" style="float: right;">
+	      Add parameter
+	    </button>
+	  </div>
+
+	    <div id="msg"></div>
+	    
+	    <h3><a data-toggle="collapse" data-target="#parameterList" default>Species </a>&raquo; </h3><br/>
+	    <div id="parameterList" class="in collapse" style="height: auto">
+	      <table cellpadding="0" cellspacing="0" border="0" class="table table-striped table-bordered">
+		<thead>
+		  <tr>
+		    <th>Name </th><th>Expression </th>Propensity<th>&nbsp;</th>
+		  </tr>
+		</thead>
+		<tbody id="tableBody">
+		</tbody>
+	      </table>					
+	    </div>
+	</div>
+    </div>
+</div>
+<!--/span9-->
