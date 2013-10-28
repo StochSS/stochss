@@ -84,7 +84,12 @@ Convert.VolumeChoose = Backbone.View.extend(
                 }
             }
 
-            var vol = 100 / minConcentration;
+            if(minConcentration > 0 && minConcentration != null)
+            {
+                var vol = 100 / minConcentration;
+            } else {
+                var vol = 1;
+            }
 
             this.volume.val(vol);
 
@@ -162,6 +167,9 @@ Convert.ReactionVerify = Backbone.View.extend(
 </tr>');
 
             this.table = this.$el.find( 'tbody' );
+
+            this.listenTo(model, 'volumeChange', this.render);
+            this.listenTo(model, 'destroy', this.detach);           
 
             this.volume = options.volume; // exptract volume selector from other view
 
