@@ -168,9 +168,6 @@ Convert.ReactionVerify = Backbone.View.extend(
 
             this.table = this.$el.find( 'tbody' );
 
-            this.listenTo(model, 'volumeChange', this.render);
-            this.listenTo(model, 'destroy', this.detach);           
-
             this.volume = options.volume; // exptract volume selector from other view
 
             this.render();
@@ -183,6 +180,7 @@ Convert.ReactionVerify = Backbone.View.extend(
                 this.detach();
             }
 
+            this.listenTo(model, 'volumeChange', this.render);
             this.listenTo(model, 'destroy', this.detach);           
 
             this.model = model;
