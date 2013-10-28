@@ -175,6 +175,10 @@ class ModelBackboneInterface(BaseHandler):
       request.setHeader("Content-Type", "application/json")
       self.response.write(json.dumps([]))
 
+class ModelConvertPage(BaseHandler):
+    def get(self):
+        self.render_response('convert.html')
+
 class ModelEditorPage(BaseHandler):
     """
         
@@ -328,9 +332,10 @@ class ModelEditorPage(BaseHandler):
             
             db_model = db.GqlQuery("SELECT * FROM StochKitModelWrapper WHERE user_id = :1 AND model_name = :2", self.user.user_id(), name).get()
             self.set_session_property('model_edited', db_model.model)
+            self.set_session_property('is_model_saved', True)
 
             print str(db_model.model.volume)
-            return {'status': True, 'model_edited': db_model.model, 'model_has_volume': bool(db_model.model.volume) }
+            return {'status': True, 'model_edited': db_model.model, 'model_has_volume': bool(db_model.model.volume), 'is_model_saved' : True }
         except Exception, e:
             logging.error("model::edit_model - Editing the model failed with error: %s", e)
             traceback.print_exc()

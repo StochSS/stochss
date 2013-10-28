@@ -13,7 +13,7 @@ Convert.ModelSelect = Backbone.View.extend(
 <td><a class="select" href="#"><%= model.attributes.name %> (Model <%= model.attributes.id %>)</a></td>\
 </tr>');
 
-            this.table = this.$el.find('.table');
+            this.table = this.$el.find('tbody');
 
             this.render();
         },
@@ -47,7 +47,7 @@ Convert.VolumeChoose = Backbone.View.extend(
 <td><%= model.type %></td>\
 </tr>');
 
-            this.table = this.$el.find( '.table' )
+            this.table = this.$el.find( 'tbody' )
             
             this.volume = this.$el.find( '.volume' )
 
@@ -161,7 +161,7 @@ Convert.ReactionVerify = Backbone.View.extend(
 <td><font color="green" class="result"></font></td>\
 </tr>');
 
-            this.table = this.$el.find( '.table' );
+            this.table = this.$el.find( 'tbody' );
 
             this.volume = options.volume; // exptract volume selector from other view
 
@@ -367,7 +367,8 @@ var run = function()
                     }
                     
                     modelCollection.add(newModel);
-                    newModel.save();
+                    newModel.save({}, { success: _.partial(function(elem) { elem.html('<font color="green">Model successfully created</font>'); }, this.$el.find( '#msg' )),
+                                        error: _.partial(function(elem) { elem.html('<font color="red">Failed</font>'); }, this.$el.find( '#msg' )) });
                 }
             }
         });
