@@ -245,13 +245,21 @@ class NewStochkitEnsemblePage(BaseHandler):
                 result = { 'status' : False, 'msg' : 'GUI Error: Concentration models cannot be executed Stochastically. Try leaving and returning to this page' }
                 return result
 
+            executable = exec_type.lower()
             document = model.serialize()
+
+            if executable == 'deterministic' and model.units.lower() == 'population':
+                model = StochMLDocument.fromString(document).toModel()
+
+                for reaction in model.getAllReactions():
+                    if reaction.massaction:
+                        if len(reaction.reactants) == 1 and reaction.reactants[0][1] == 2:
+                            reaction.rate.setExpression(reaction.rate.expression + ' / 2')
+
             params['document']=str(document)
-            print 'model serialized'
             filepath = ""
             params['file'] = filepath
             ensemblename = params['job_name']
-            executable = exec_type.lower()
             time = params['time']
             realizations = params['realizations']
             increment = params['increment']
@@ -431,13 +439,28 @@ class NewStochkitEnsemblePage(BaseHandler):
                 return result
 
 
+            executable = exec_type.lower()
             document = model.serialize()
+
+            if executable == 'deterministic' and model.units.lower() == 'population':
+                model = StochMLDocument.fromString(document).toModel(model.name)
+
+                for reactionN in model.getAllReactions():
+                    reaction = model.getAllReactions()[reactionN]
+                    print reaction
+                    if reaction.massaction:
+                        print "woooo"
+                        if len(reaction.reactants) == 1 and reaction.reactants.values()[0] == 2:
+                            print "converted"
+                            reaction.marate.setExpression(reaction.marate.expression + ' / 2')
+
+            document = model.serialize()
+
             params['document']=str(document)
             print 'model serialized'
             filepath = ""
             params['file'] = filepath
             ensemblename = params['job_name']
-            executable = exec_type.lower()
             time = params['time']
             realizations = params['realizations']
             increment = params['increment']
@@ -514,7 +537,8 @@ class NewStochkitEnsemblePage(BaseHandler):
             result = {'status':True,'msg':'Job submitted sucessfully'}
             
         except Exception,e:
-            result = {'status':False,'msg':'Local execution failed: '+str(e)}
+            raise e
+        #result = {'status':False,'msg':'Local execution failed: '+str(e)}
                 
         return result
 

@@ -7,10 +7,11 @@ Convert.ModelSelect = Backbone.View.extend(
             this.listenTo(this.collection, 'change', this.render);
             this.listenTo(this.collection, 'destroy', this.remove);
             
-            this.$el.html($( '#modelSelectTemplate' ).html());
+            this.$el = $( '#modelSelect' );
 
 	    this.rowTemplate = _.template('<tr>\
-<td><a class="select" href="#"><%= model.attributes.name %> (Model <%= model.attributes.id %>)</a></td>\
+<td class="selected" width="15pt"></td>\
+<td><a class="select" href="#"><%= model.attributes.name %></a></td>\
 </tr>');
 
             this.table = this.$el.find('tbody');
@@ -29,9 +30,14 @@ Convert.ModelSelect = Backbone.View.extend(
                 if(model.attributes.type == 'concentration') {
                     row = $( this.rowTemplate({ model : model }) ).appendTo(this.table);
 
-                    row.find('.select').on('click', model, function(event) { event.data.trigger('select'); event.preventDefault(); });
+                    row.find('.select').on('click', { model : model, myrow : row, table : this.table }, function(event) {
+                        event.data.model.trigger('select');
+                        event.data.table.find( '.selected' ).text('');
+                        event.data.myrow.find( '.selected' ).text('*');
+                        event.preventDefault();
+                    });
                 }
-            } 
+            }
 
             return this;
         }
@@ -41,7 +47,8 @@ Convert.VolumeChoose = Backbone.View.extend(
     {
         initialize: function()
         {
-            this.$el.html( $( '#volumeChooseTemplate' ).html() );
+            this.$el = $( '#volumeChoose' ).hide();
+
 	    this.rowTemplate = _.template('<tr>\
 <td><a class="select" href="#"><%= model.attributes.name %> (Model <%= model.attributes.id %>)</a></td>\
 <td><%= model.type %></td>\
@@ -60,6 +67,8 @@ Convert.VolumeChoose = Backbone.View.extend(
             {
                 this.detach();
             }
+
+            this.$el.show();
 
             this.model = model;
 
@@ -93,7 +102,7 @@ Convert.VolumeChoose = Backbone.View.extend(
 
             this.volume.val(vol);
 
-            this.volume.on('keypress', _.debounce(_.partial(function(model) {
+            this.volume.on('keyup', _.debounce(_.partial(function(model) {
                 model.trigger('volumeChange');
             }, this.model), 400 ));
 
@@ -157,7 +166,7 @@ Convert.ReactionVerify = Backbone.View.extend(
     {
         initialize: function(attributes, options)
         {
-            this.$el.html( $( '#reactionVerifyTemplate' ).html() );
+            this.$el = $( '#reactionVerify' ).hide();
 
 	    this.rowTemplate = _.template('<tr>\
 <td class="id"></td>\
@@ -179,6 +188,8 @@ Convert.ReactionVerify = Backbone.View.extend(
             {
                 this.detach();
             }
+
+            this.$el.show();
 
             this.listenTo(model, 'volumeChange', this.render);
             this.listenTo(model, 'destroy', this.detach);           
@@ -291,6 +302,7 @@ var run = function()
 
             initialize: function() {
                 this.$el = $( 'body' );
+                this.$el.find( '#createModel' ).hide();
                 
                 this.listenTo(modelCollection, 'add', this.instrumentModel);
                 this.listenTo(modelCollection, 'destroy', this.unInstrumentModel);
@@ -314,6 +326,8 @@ var run = function()
 
             selectModel: function(model)
             {
+                this.$el.find( '#createModel' ).show();
+
                 volumeChoose.attach(model);
                 reactionVerify.attach(model);
 
@@ -356,7 +370,7 @@ var run = function()
                         {
                             if(reactantParticleCount == 2) {
                                 reacObj = newModel.getReaction(name);
-                                newModel.setReaction(name, reacObj.reactants, reacObj.products, reacObj.prop + ' / ' + vol, true);
+                                newModel.setReaction(name, reacObj.reactants, reacObj.products, reacObj.prop + ' * 2 / ' + vol, true);
                             }
                         }
                     }

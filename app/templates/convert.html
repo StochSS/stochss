@@ -9,15 +9,55 @@
 <div class="span9">
     <div class="row-fluid">
         <div class="span9">
-            <h3>1. Select a model:</h3>
-            <div id="modelSelect"></div>
-            <br />
+          <div id="modelSelect">
+            <h3>1. Select a concentration model:</h3>
+            <table class="table table-striped table-bordered">
+              <thead>
+                <tr>
+                  <th width="15pt"></th>
+                  <th>Model Name</th>
+                </tr>
+              </thead>
+              <tbody>
+              </tbody>
+            </table>
+          </div>
+          <br />
+          <div id="volumeChoose">
             <h3>2. Choose a conversion volume:</h3>
-            <div id="volumeChoose"></div>
-            <br />
+            Volume:<br />
+            <input class="volume" type="text" style="width: 100px;" class="id update_box auto_complete" />
+            
+            <table class="table table-striped table-bordered">
+              <thead>
+                <tr>
+                  <th>Parameter</th>
+                  <th>Concentration value</th>
+                  <th>Population Value</th>
+                </tr>
+              </thead>
+              <tbody>
+              </tbody>
+            </table>
+          </div>
+          <br />
+          <div id="reactionVerify">
             <h3>3. Verify reactions:</h3>
-            <div id="reactionVerify"></div>
-            <br />
+            <table class="table table-striped table-bordered">
+              <thead>
+                <tr>
+                  <th>Reaction</th>
+                  <th>Expression</th>
+                  <th>Propensity</th>
+                  <th>Converted Successfully?</th>
+                </tr>
+              </thead>
+              <tbody>
+              </tbody>
+            </table>
+          </div>
+          <br />
+          <div id="createModel">
             <h3>4. Create new model:</h3>
             Name:<br />
             <input type="text" style="width: 200px;" class="modelName id update_box auto_complete" /><br /><br />
@@ -25,6 +65,7 @@
             <br />
             <br />
             <div id="msg" />
+          </div>
 	</div>
     </div>
 </div>
@@ -38,49 +79,6 @@
 <script type="text/javascript" src = "/static/utils.js"></script>
 <script type="text/javascript" src = "/static/js/backbone.js"></script>
 <script type="text/javascript" src = "/static/model/stochkit.js"></script>
+
 <script type="text/javascript" src = "/static/convert/convert.js"></script>
-
-<script id="modelSelectTemplate" type="text/application">
-    <table class="table table-striped table-bordered">
-        <thead>
-            <tr>
-                <th>Model Name</th>
-            </tr>
-        </thead>
-        <tbody>
-        </tbody>
-    </table>
-</script>
-
-<script id="volumeChooseTemplate" type="text/application">
-    Volume:<br />
-    <input class="volume" type="text" style="width: 100px;" class="id update_box auto_complete" />
-
-    <table class="table table-striped table-bordered">
-        <thead>
-            <tr>
-                <th>Parameter</th>
-                <th>Concentration value</th>
-                <th>Population Value</th>
-            </tr>
-        </thead>
-        <tbody>
-        </tbody>
-    </table>
-</script>
-
-<script id="reactionVerifyTemplate" type="text/application">
-    <table class="table table-striped table-bordered">
-        <thead>
-            <tr>
-                <th>Reaction</th>
-                <th>Expression</th>
-                <th>Propensity</th>
-                <th>Converted Successfully?</th>
-            </tr>
-        </thead>
-        <tbody>
-        </tbody>
-    </table>
-</script>
 {% endblock %}
