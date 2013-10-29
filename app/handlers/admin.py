@@ -49,11 +49,15 @@ class PendingUsersList(db.Model):
         self.put()
         
     def approve_user(self, user_email):
-        """ Add given email address to list of approved users """
+        """
+        Add given email address to list of approved users
+        Returns False is email address already in list, else True
+        """
         if self.approved_users and (user_email in self.approved_users):
-            return
+            return False
         self.approved_users.append(user_email)
         self.put()
+        return True
 
 def admin_required(handler):
     """
@@ -93,11 +97,11 @@ class AdminPage(BaseHandler):
         """ Used to update the list of approved users """
         email_address = self.request.get('email')
         pending_users_list = PendingUsersList.shared_list()
-        pending_users_list.approve_user(email_address)
+        success = pending_users_list.approve_user(email_address)
 
         result = {
             'email': email_address,
-            'name': 'Need to send name'
+            'success': success
         }
         self.response.write(json.dumps(result))
         return

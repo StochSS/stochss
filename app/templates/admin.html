@@ -4,7 +4,7 @@
 
 {% block content %}
 <div class="span7">
-    <div class="tabbable">
+    <div id="admin-table-tabs-div" class="tabbable">
       <ul class="nav nav-tabs">
         
         <li class="active"><a href="#tab1" data-toggle="tab">Active Users</a></li>
@@ -33,7 +33,7 @@
                   <td>{{ loop.index }}</td>
                   <td>{{ user.name }}</td>
                   <td>{{ user.email_address }}</td>
-                  <td><button class="btn btn-danger">-</button></td>
+                  <td><button class="btn btn-danger">Delete</button></td>
                 </tr>
                 {% endfor %}
               </tbody>
@@ -56,7 +56,7 @@
                 <tr>
                   <td>{{ loop.index }}</td>
                   <td>{{ approved_email }}</td>
-                  <td><button class="btn btn-danger">-</button></td>
+                  <td><button class="btn btn-danger">Revoke</button></td>
                 </tr>
                 {% endfor %}
             </table>
@@ -80,8 +80,8 @@
                   <td>{{ loop.index }}</td>
                   <td>{{ email }}</td>
                   <td>
-                    <button class="btn btn-success">+</button>
-                    <button class="btn btn-danger">-</button>
+                    <button class="btn btn-success">Approve</button>
+                    <button class="btn btn-danger">Deny</button>
                   </td>
                 </tr>
                 {% endfor %}
