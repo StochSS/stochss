@@ -33,7 +33,7 @@
                   <td>{{ loop.index }}</td>
                   <td>{{ user.name }}</td>
                   <td>{{ user.email_address }}</td>
-                  <td><button class="btn btn-danger">Delete</button></td>
+                  <td><button class="btn btn-danger table-action-button" data-action="delete">Delete</button></td>
                 </tr>
                 {% endfor %}
               </tbody>
@@ -56,7 +56,7 @@
                 <tr>
                   <td>{{ loop.index }}</td>
                   <td>{{ approved_email }}</td>
-                  <td><button class="btn btn-danger">Revoke</button></td>
+                  <td><button class="btn btn-danger table-action-button" data-action="revoke">Revoke</button></td>
                 </tr>
                 {% endfor %}
             </table>
@@ -80,8 +80,8 @@
                   <td>{{ loop.index }}</td>
                   <td>{{ email }}</td>
                   <td>
-                    <button class="btn btn-success">Approve</button>
-                    <button class="btn btn-danger">Deny</button>
+                    <button class="btn btn-success table-action-button" data-action="approve1">Approve</button>
+                    <button class="btn btn-danger table-action-button" data-action="deny">Deny</button>
                   </td>
                 </tr>
                 {% endfor %}

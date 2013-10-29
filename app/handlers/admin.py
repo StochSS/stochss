@@ -42,22 +42,35 @@ class PendingUsersList(db.Model):
         """
         Add the given email address to the list of users waiting approval
          i.e. the users that have tried to log in without first being granted access
+        Returns False if email address already in list, else True
         """
         if self.users_waiting_approval and (user_email in self.users_waiting_approval):
-            return
+            return False
         self.users_waiting_approval.append(user_email)
         self.put()
+        return True
+    
+    def remove_user_from_approval_waitlist(self, user_email):
+        self.users_waiting_approval.remove(user_email)
+        self.put()
         
-    def approve_user(self, user_email):
+    def approve_user(self, user_email, awaiting_approval):
         """
-        Add given email address to list of approved users
-        Returns False is email address already in list, else True
+        Add given email address to list of approved users and 
+         remove it from waiting approval list if needed.
+        Returns False if email address already in list, else True
         """
         if self.approved_users and (user_email in self.approved_users):
             return False
+        if awaiting_approval:
+            self.users_waiting_approval.remove(user_email)
         self.approved_users.append(user_email)
         self.put()
         return True
+    
+    def remove_user_from_approved_list(self, user_email):
+        self.approved_users.remove(user_email)
+        self.put()
 
 def admin_required(handler):
     """
@@ -94,14 +107,51 @@ class AdminPage(BaseHandler):
         
     @admin_required
     def post(self):
-        """ Used to update the list of approved users """
-        email_address = self.request.get('email')
-        pending_users_list = PendingUsersList.shared_list()
-        success = pending_users_list.approve_user(email_address)
-
-        result = {
-            'email': email_address,
-            'success': success
+        """
+        Main entry point of ajax calls from Admin page.
+        """
+        action = self.request.get('action')
+        email = self.request.get('email')
+        
+        if action in ['approve', 'approve1']:
+            result = self._approve_user(email, action == 'approve1')
+        elif action == 'deny':
+            result = self._deny_user(email)
+        elif action == 'revoke':
+            result = self._revoke_user(email)
+        elif action == 'delete':
+            result = self._delete_user(email)
+        else:
+            return
+        
+        json_result = {
+            'email': email,
+            'success': result
         }
-        self.response.write(json.dumps(result))
+        self.response.write(json.dumps(json_result))
         return
+    
+    def _approve_user(self, email, awaiting_approval):
+        """ Add user to approved users list and remove it from the waiting approval list if necessary """
+        pending_users_list = PendingUsersList.shared_list()
+        success = pending_users_list.approve_user(email, awaiting_approval)
+        return success
+    
+    def _deny_user(self, email):
+        """ Remove user from waiting approval list """
+        pending_users_list = PendingUsersList.shared_list()
+        pending_users_list.remove_user_from_approval_waitlist(email)
+        return True
+        
+    def _revoke_user(self, email):
+        """ Remove user from approved users list """
+        pending_users_list = PendingUsersList.shared_list()
+        pending_users_list.remove_user_from_approved_list(email)
+        return True
+
+    def _delete_user(self, email):
+        """ Delete existing user """
+        users = User.query(ndb.GenericProperty('email_address') == user_dict['email_address']).fetch()
+        if users:
+            users[0].delete()
+        return True
