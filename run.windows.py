@@ -40,9 +40,9 @@ def launch_ec2_instance(instance_id, security_group):
     if instance_id is "":
         print "Launching new EC2 instance now. This may take a moment..."
         reservation = conn.run_instances(
-            'ami-2024bd10',
+            'ami-088d1538',
             # key_name=key_name,
-            instance_type='m1.small',
+            instance_type='t1.micro',
             security_groups=[security_group]
         )
         instance = reservation.instances[0]
