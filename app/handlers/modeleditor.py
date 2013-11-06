@@ -158,10 +158,7 @@ class ModelBackboneInterface(BaseHandler):
       modelId = ModelManager.updateModel(self, jsonModel)
       
       print 'UPDATE', req, model["id"]
-      
-      if modelId != model["id"]:
-          raise Exception("modelId must be equal to model id stored in db")
-      
+
       self.response.content_type = "application/json"
       self.response.write(json.dumps(ModelManager.getModel(self, modelId)))
 

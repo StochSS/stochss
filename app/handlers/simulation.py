@@ -60,10 +60,154 @@ class StochKitJobWrapper(db.Model):
     name = db.StringProperty()
     # The type if the job {'local', 'cloud'}
     type =  db.StringProperty()
+    attributes = ObjectProperty()
     stochkit_job = ObjectProperty()
 
     stdout = db.StringProperty()
     stderr = db.StringProperty()
+
+class JobManager():
+    @staticmethod
+    def getJobs(handler):
+        jobs = db.GqlQuery("SELECT * FROM StochKitJobWrapper WHERE user_id = :1", handler.user.user_id()).fetch(100000)
+
+        output = []
+
+        for job in jobs:
+            jsonJob = { "id" : job.key().id(),
+                        "name" : job.name,
+                        "stdout" : job.stdout,
+                        "stderr" : job.stderr,
+                        # These are things contained in the stochkit_job object
+                        "type" : job.stochkit_job.type,
+                        "status" : job.stochkit_job.status,
+                        "output_location" : job.stochkit_job.output_location,
+                        "output_url" : job.stochkit_job.output_url,
+                        "final_time" : job.stochkit_job.final_time,
+                        "increment" : job.stochkit_job.increment,
+                        "realizations" : job.stochkit_job.realizations,
+                        "exec_type" : job.stochkit_job.exec_type,
+                        "store_only_mean" : job.stochkit_job.store_only_mean,
+                        "label_column_names" : job.stochkit_job.label_column_names,
+                        "create_histogram_data" : job.stochkit_job.create_histogram_data,
+                        "epsilon" : job.stochkit_job.epsilon,
+                        "threshold" : job.stochkit_job.threshold,
+                        "pid" : job.stochkit_job.pid,
+                        "result" : job.stochkit_job.result }
+
+            if job.attributes:
+                jsonJob.update(job.attributes)
+
+            output.append(jsonJob)
+
+        return output
+
+    @staticmethod
+    def getJob(handler, job_id):
+        job = StochKitJobWrapper.get_by_id(job_id)
+
+        jsonJob = { "id" : job.key().id(),
+                    "name" : job.name,
+                    "stdout" : job.stdout,
+                    "stderr" : job.stderr,
+                    # These are things contained in the stochkit_job object
+                    "type" : job.stochkit_job.type,
+                    "status" : job.stochkit_job.status,
+                    "output_location" : job.stochkit_job.output_location,
+                    "output_url" : job.stochkit_job.output_url,
+                    "final_time" : job.stochkit_job.final_time,
+                    "increment" : job.stochkit_job.increment,
+                    "realizations" : job.stochkit_job.realizations,
+                    "exec_type" : job.stochkit_job.exec_type,
+                    "store_only_mean" : job.stochkit_job.store_only_mean,
+                    "label_column_names" : job.stochkit_job.label_column_names,
+                    "create_histogram_data" : job.stochkit_job.create_histogram_data,
+                    "epsilon" : job.stochkit_job.epsilon,
+                    "threshold" : job.stochkit_job.threshold,
+                    "pid" : job.stochkit_job.pid,
+                    "result" : job.stochkit_job.result}
+        
+        if job.attributes:
+            jsonJob.update(job.attributes)
+            
+        return jsonJob
+
+    @staticmethod
+    def createJob(handler, job):
+        jobWrap = StochKitJobWrapper()
+        jobWrap.user_id = handler.user.user_id()
+        jobWrap.attributes = job
+        jobWrap.put()
+        
+        jsonJob = { "id" : jobWrap.key().id() }
+        if job.attributes:
+            jsonJob.update(job)
+
+        return jsonJob
+
+    @staticmethod
+    def deleteJob(handler, job_id):
+        job = StochKitJobWrapper.get_by_id(job_id)
+        job.delete()
+
+    @staticmethod
+    def updateJob(handler, job):
+        jobWrap = StochKitJobWrapper.get_by_id(job_id)
+        jobWrap.user_id = handler.user.user_id()
+        jobWrap.attributes = job
+        jobWrap.put()
+        
+        jsonJob = { "id" : jobWrap.key().id() }
+        if job.attributes:
+            jsonJob.update(job)
+
+        return jsonJob
+
+class JobBackboneInterface(BaseHandler):
+  def get(self):
+    req = self.request.path.split('/')[-1]
+    
+    self.response.content_type = 'application/json'
+    
+    if req == 'list':
+        jobs = JobManager.getJobs(self)
+
+        self.response.write(json.dumps(jobs))
+    else:
+        job = JobManager.getJob(self, int(req))
+
+        self.response.write(json.dumps(job))
+
+  def post(self):
+      jsonJob = json.loads(self.request.body)
+      job = JobManager.createJob(self, jsonJob)
+      
+      #print 'CREATE', job["id"]
+      
+      self.response.content_type = "application/json"
+      self.response.write(json.dumps(job))
+
+  def put(self):
+      req = request.uri.split('/')[-1]
+
+      jobId = int(req)
+      jsonJob = json.loads(self.request.body)
+      job = JobManager.updateJob(self, jsonJob)
+      
+      print 'UPDATE', req, job["id"]
+
+      self.response.content_type = "application/json"
+      self.response.write(json.dumps(job))
+
+  def delete(self):
+      job_id = request.uri.split('/')[-1]
+      
+      print 'DELETE', str(int(job_id))
+      
+      JobManager.deleteJob(self, int(job_id))
+      
+      request.setHeader("Content-Type", "application/json")
+      self.response.write(json.dumps([]))
 
 class StochKitJob(Job):
     """ Model for a StochKit job. Contains all the parameters associated with the call. """
@@ -541,4 +685,3 @@ class NewStochkitEnsemblePage(BaseHandler):
         #result = {'status':False,'msg':'Local execution failed: '+str(e)}
                 
         return result
-

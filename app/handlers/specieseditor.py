@@ -64,7 +64,7 @@ class SpeciesEditorPage(BaseHandler):
             if name in model.getAllSpecies():
                 return {'status': False, 'msg': 'Species ' + name + ' already exists!', 'name': name, 'initial_value': initial_value}
 
-            species = Species(name, float(initial_value))
+            species = Species(name, initial_value)
             model.addSpecies(species)
 
             # Update the cache
@@ -147,7 +147,7 @@ class SpeciesEditorPage(BaseHandler):
 
                 # Add the new entry
                 value.name = new_name
-                value.initial_value = float(new_initial_value)
+                value.initial_value = new_initial_value
                 new_species_list.append(value)
                 index += 1
 

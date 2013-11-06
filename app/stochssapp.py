@@ -269,6 +269,7 @@ r4=Route('/auth/<provider>/callback', handler='auth_handlers.AuthHandler:_auth_c
 app = webapp2.WSGIApplication([
                                ('/', MainPage),
                                ('/models/list.*', ModelBackboneInterface),
+                               ('/stochkit/list.*', JobBackboneInterface),
                                ('/convert', ModelConvertPage),
                                ('/modeleditor/specieseditor', SpeciesEditorPage),
                                ('/modeleditor/reactioneditor', ReactionEditorPage),
