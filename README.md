@@ -103,6 +103,7 @@ To install Python, do the following:
 2. After the installer completes, open up the Command Prompt application and type: *dir C:\py\**.
 
   a) If this command outputs the name of a folder, this will tell you if Python installed successfully.
+  
   b) You will need to identify the folder name where Python is installed as this is how you will call Python. The folder name is likely "Python27" and using this folder name you would call Python like this: *C:\Python27\python*.
   
 ### Getting AWS Credentials
