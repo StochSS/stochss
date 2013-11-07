@@ -1,5 +1,8 @@
 StochSS - Stochastic Simulation Service: Release Notes
 
+1.0.3
+=============================
+- Fixes a bug where model names that contained spaces caused erraneous behavior of some UI elements. 
 
 1.0.2
 =============================

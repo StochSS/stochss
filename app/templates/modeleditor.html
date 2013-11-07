@@ -181,15 +181,15 @@
 		{% if model_edited %}
 
 		<label><h2>{{model_edited.name}}</h2></label>
-                {% if is_model_saved %}
+                <!--{% if is_model_saved %}
 		<button id="save_button" class="btn btn-success" onclick="javascript:saveChanges(true)">
 		    Changes saved
 		</button>
-                {% else %}
-		<button id="save_button" class="btn btn-danger" onclick="javascript:saveChanges(true)">
+                { % else % }-->
+		<button id="save_button" class="btn btn-primary" onclick="javascript:saveChanges(true)">
 		    Save changes
 		</button>
-                {% endif %}
+                <!--{% endif %}-->
 
 		<br/></br>
 		<a href="/modeleditor">Edit another model</a>
@@ -264,20 +264,20 @@
     button = $('#save_button');
     if (!status) {
     $('#msg').css('color', 'red')
-     if(button.hasClass('btn-success'))
+    /*if(button.hasClass('btn-success'))
      {
       button.removeClass('btn-success');
       button.addClass('btn-danger');
       button.text('Save changes');
-     }
+     }*/
     } else {					
      $('#msg').css('color', 'green')
-     if(button.hasClass('btn-danger'))
+     /*if(button.hasClass('btn-danger'))
      {
       button.removeClass('btn-danger');
       button.addClass('btn-success');
       button.text('Changes saved');
-     }
+     }*/
     }
     $('#msg').css('display', 'block')
     $('#msg').html(response['msg']).hide().fadeIn(1500, function() {

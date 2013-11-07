@@ -56,19 +56,15 @@
           </a>
           <a class="brand" href="/">StochSS</a>
           <div class="btn-group pull-right">
-            {% if user %}
             <a class="btn dropdown-toggle" data-toggle="dropdown" href="#">
-              <i class="icon-user"></i> {{ user.nickname() }}
+              <i class="icon-user"></i> {{ user.name }}
               <span class="caret"></span>
             </a>
             <ul class="dropdown-menu">
               <li><a href="/profile">Profile</a></li>
               <li class="divider"></li>
-              <li><a href="/signout">Sign Out</a></li>
+              <li><a href="/logout">Sign Out</a></li>
             </ul>
-            {% else %}
-              <a class="btn" href="/users/login">Login</a>
-            {% endif %}
           </div>
           <div class="nav-collapse">
             <ul class="nav">
@@ -98,11 +94,12 @@
                 <li><a href="/status" TITLE = "Monitor the progress of a simulation">Job Status</a></li>
 
               <li class="nav-header"><i class="icon-cog"></i> Settings</li>
+              {% if user.is_admin_user() %}
+                  <li><a href="/admin">Admin Panel</a></li>
+              {% endif %}
                   <li><a href="/credentials" TITLE = "Set AWS credentials and manage computational resources in the cloud">Cloud computing</a></li>
                   <li><a href="/localsettings" TITLE = "Configure local plugins">Local plugins</a></li>
-              <li><a href="/updates" TITLE = "Check for available updates">Check For Updates</a></li>
-
-
+                  <li><a href="/updates" TITLE = "Check for available updates">Check For Updates</a></li>
             </ul>
           </div><!--/.well -->
         </div><!--/span2-->

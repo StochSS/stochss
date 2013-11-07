@@ -14,6 +14,9 @@ from stochss.model import *
 
 class ParameterEditorPage(BaseHandler):
 
+    def authentication_required(self):
+        return True
+        
     def get(self):
         all_parameters = self.get_all_parameters()
 
