@@ -1,6 +1,7 @@
 import os, stat, time
 import boto.ec2
 import webbrowser
+import urllib2
 
 config_file_name = ".ec2-config"
 aws_access_key = None
@@ -28,6 +29,7 @@ try:
             ec2_region = line.split('=')[1].rstrip()
     config_file.close()
 except IOError:
+    # This is where the config file is first created
     config_file = open(config_file_name, "w")
     config_file.close()
     # chmod 600
@@ -130,7 +132,7 @@ def find_or_create_security_group():
         security_group.authorize('tcp', 80, 80, '0.0.0.0/0')
         security_group.authorize('tcp', 8080, 8080, '0.0.0.0/0')
         if preferred_ec2_key_pair is not None:
-            security_group.authorize('ssh', '0.0.0.0/0')
+            security_group.authorize('tcp', 22, 22, '0.0.0.0/0')
 
     return security_group
         
@@ -178,9 +180,16 @@ params_to_write = {
     "EC2_Instance_ID": instance.id
 }
 write_to_config_file(params_to_write)
-webbrowser.open_new('http://%s:8080/' % instance.public_dns_name)
+stochss_url = "http://" + str(instance.public_dns_name) + ":8080/"
+while True:
+    try:
+        req = urllib2.urlopen(stochss_url)
+        break
+    except:
+        time.sleep(5)
+webbrowser.open_new(stochss_url)
 print "============================================================================"
-print "EC2 instance launched! You can now access StochSS at {0}:8080".format(instance.public_dns_name)
+print "EC2 instance launched! You can now access StochSS at {0}".format(stochss_url)
 print "Note: it may take another minute or so before the above URL actually works. Please be patient."
 print "============================================================================"
 print "IMPORTANT: The instance ID of this EC2 instance is '{0}'.".format(instance.id)
