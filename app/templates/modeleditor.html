@@ -12,11 +12,8 @@
 {% endblock %}
 
 <div class="span9">
-
     <div class="row-fluid">
-
 	<div class"span9">
-
 	    <div class="menubar">
 		<ul class="nav nav-tabs">
 		    <li>
@@ -32,11 +29,6 @@
 		    <li>
 			<a href="/modeleditor/reactioneditor" TITLE = "Create a List of Reactions">Reactions</a>
 		    </li>
-                    {% if model_edited is defined and model_edited.units == "concentration" %}
-		    <li>
-			<a href="/modeleditor/converttopopulation" TITLE = "Convert concentration model to population model">Convert to population model</a>
-		    </li>
-		    {% endif %}
 		    <li class="dropdown">
 			<!--<a class="dropdown-toggle" data-toggle="dropdown">Geometry<b class="caret"></b></a> -->
 			<ul class="dropdown-menu">
@@ -45,6 +37,7 @@
 			    <!-- <a href="/#">Import mesh...</a> -->
 			</ul>
 		    </li>
+
 		    <!-- <li><a href="/modeleditor/codeeditor">Editor</a></li> -->
 		    <li class="dropdown">
 			<a class="dropdown-toggle" data-toggle="dropdown" TITLE = "Import from File/ Load Existing Library">Import<b class="caret"></b></a>
@@ -181,7 +174,7 @@
 		{% if model_edited %}
 
 		<label><h2>{{model_edited.name}}</h2></label>
-                <!--{% if is_model_saved %}
+                <!--{ % if is_model_saved % }
 		<button id="save_button" class="btn btn-success" onclick="javascript:saveChanges(true)">
 		    Changes saved
 		</button>
@@ -189,25 +182,40 @@
 		<button id="save_button" class="btn btn-primary" onclick="javascript:saveChanges(true)">
 		    Save changes
 		</button>
-                <!--{% endif %}-->
+                <!--{ % endif % }-->
 
-		<br/></br>
+		<br/><br />
 		<a href="/modeleditor">Edit another model</a>
                 <hr>
+
+                <hr />
+                <h3>Tasks</h3>
+                <ul>
+                  {% if model_edited is defined and model_edited.units == "concentration" %}
+		  <li>
+		    <a href="/modeleditor/converttopopulation?modelName={{model_edited.name}}" TITLE = "Create a List of Reactions">Convert To Population</a>
+		  </li>
+                  {% endif %}
+                  <li>
+		    <a href="#" id="duplicateModel" TITLE = "Duplicate model">Duplicate Model</a>
+                  </li>
+
+                  <hr />
+                  <div id="sidemsg" />
+                </ul>
 
 		{% else %}
 		<p>
 		    <h3>You are not editing a model</h3>
-                    </br></br>
+                    <br /><br />
                     <a href="/modeleditor">Choose a model to edit or create a new model</a>
 		</p>
 		{% endif %}
-
                 {% block customizesidebar %}
                 {% endblock %}
 	    </div>
 	</div>
-
+        
     </div>
     <!--/span9-->
 
@@ -219,6 +227,31 @@
 {% block jscontent %}
 <script src="/static/js/jquery.dataTables.min.js"></script>
 <script src="/static/js/jquery-ui-1.9.1.custom.min.js"></script>
+
+<script type="text/javascript">
+$( 'document' ).ready( function() {
+  $( '#duplicateModel' ).click( function() {
+{% if model_edited %}
+      $.ajax({ url : encodeURI('/modeleditor?duplicate={{model_edited.name}}&newName=' + $( '#duplicateNewName' ).text()),
+            error : function(data) {
+              $( '#sidemsg' ).text('Server error creating {{model_edited.name}}_dup');
+              $( '#sidemsg' ).css('color', 'red');
+            },
+            success : function(data) {
+              if($.trim(data).length > 0)
+              {
+                $( '#sidemsg' ).text('Successfully created model as ' + data);
+                $( '#sidemsg' ).css('color', 'green');
+              } else {
+                $( '#sidemsg' ).text('Failed to create model');
+                $( '#sidemsg' ).css('color', 'red');
+              }
+            }});
+{% endif %}
+  });
+});
+</script>
+
 {% block innerjscontent %}
 <script type="text/javascript">
     {% if is_saved == False %}

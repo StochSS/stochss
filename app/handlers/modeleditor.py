@@ -5,6 +5,7 @@ except ImportError:
 from google.appengine.ext import db
 import pickle
 import traceback
+import random
 import logging
 import time
 from google.appengine.api import users
@@ -78,7 +79,27 @@ class ModelManager():
         return jsonModel
 
     @staticmethod
+    def getModelByName(handler, modelName):
+        model = db.GqlQuery("SELECT * FROM StochKitModelWrapper WHERE user_id = :1 AND model_name = :2", handler.user.email_address, modelName).get()
+
+        if model == None:
+            return None
+
+        jsonModel = { "id" : model.key().id(),
+                      "name" : model.model_name }
+        if model.attributes:
+            jsonModel.update(model.attributes)
+        jsonModel["type"] = model.model.units
+        jsonModel["model"] = model.model.serialize()
+            
+        return jsonModel
+
+    @staticmethod
     def createModel(handler, model):
+        if "name" in model:
+            if ModelManager.getModelByName(handler, model["name"]):
+                return None
+
         modelWrap = StochKitModelWrapper()
         if "name" in model:
             name = model["name"]
@@ -197,11 +218,26 @@ class ModelEditorPage(BaseHandler):
         #    if db_model is not None:
         #        self.set_session_property('model_edited', db_model.model)
 
-        print model_edited
+        if self.request.get('duplicate'):
+            modelName = self.request.get('duplicate')
+            jsonModel = ModelManager.getModelByName(self, modelName)
+            del jsonModel["id"]
 
-        if model_edited is not None and model_edited is not "":
+            newName = modelName + '_' + ''.join(random.choice('abcdeABCDE1234567890') for x in range(3))
+            while ModelManager.getModelByName(self, newName) != None:
+                newName = modelName + '_' + ''.join(random.choice('abcdeABCDE1234567890') for x in range(3))
+
+            jsonModel["name"] = newName
+
+            self.response.content_type = "application/json"
+            if ModelManager.createModel(self, jsonModel):
+                self.response.write(json.dumps(newName))
+            else:
+                self.response.write(json.dumps(''))
+
+            return
+        elif model_edited is not None and model_edited is not "":
             result = self.edit_model(model_edited)
-        
         elif self.request.get('get_model_edited') == "1":
             result = self.get_model_edited()    
             self.response.headers['Content-Type'] = 'application/json'
@@ -264,8 +300,8 @@ class ModelEditorPage(BaseHandler):
             db_model.delete()
             all_models = self.get_session_property('all_models')
 
-            if all_models:
-              all_models.pop(all_models.index(name))
+            #if all_models:
+            #  all_models.pop(all_models.index(name))
             
             self.set_session_property('all_models', all_models)
             

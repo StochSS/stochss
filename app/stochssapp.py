@@ -188,6 +188,7 @@ class BaseHandler(webapp2.RequestHandler):
             ctx = {'user': self.user}
         else:
             ctx = {}
+
         ctx.update(context)
 
         if 'model_edited' not in ctx:
