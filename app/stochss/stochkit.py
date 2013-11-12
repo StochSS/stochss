@@ -70,62 +70,6 @@ class StochKitModel(Model):
 
         self.units = "population"
 
-    # In converting to concentration, we switch to all custom propensity functions
-    def toConcentration(self, volume):
-
-        factor_reaction = 6.02214129e23 * volume
-        factor = (1.0 / (6.02214129e23 * volume))
-
-        model = copy.deepcopy(self)
-
-        print model.serialize()
-
-        # If the model is already a concentration model, just return a copy
-        if model.units == "concentration":
-            return model
-
-        model.units = "concentration"
-
-        for species in model.listOfSpecies:
-            model.listOfSpecies[species].initial_value *= factor
-
-        for reaction in model.listOfReactions:
-            if model.listOfReactions[reaction].type == "mass-action":
-                model.listOfReactions[reaction].marate = None
-                model.listOfReactions[reaction].setType("customized")
-
-            model.listOfReactions[reaction].propensity_function = repr(factor_reaction) + ' * ' + model.listOfReactions[reaction].propensity_function
-
-        print '-----------------------------------------------'
-        print model.serialize()
-
-        return model
-
-    # In converting to population, we switch to all custom propensity functions
-    def toPopulation(self, volume):
-        factor_reaction = (1 / (6.02214129e23 * volume))
-        factor = (6.02214129e23 * volume)
-
-        model = copy.deepcopy(self)
-        
-        # If the model is already a concentration model, just return a copy
-        if model.units == "population":
-            return model
-
-        model.units = "population"
-
-        for species in model.listOfSpecies:
-            model.listOfSpecies[species].initial_value = int(round(model.listOfSpecies[species].initial_value * factor))
-
-        for reaction in model.listOfReactions:
-            if model.listOfReactions[reaction].type == "mass-action":
-                model.listOfReactions[reaction].marate = None
-                model.listOfReactions[reaction].setType("customized")
-
-            model.listOfReactions[reaction].propensity_function = repr(factor_reaction) + '*' + model.listOfReactions[reaction].propensity_function
-
-        return model
-
     def serialize(self):
         """ Serializes a Model object to valid StochML. """
         self.resolveParameters()
@@ -187,8 +131,8 @@ class StochMLDocument():
         for pname in model.listOfParameters:
             params.append(md.ParametertoElement(model.listOfParameters[pname]))
 
-        if model.volume != None and model.units == "population":
-            params.append(md.ParametertoElement(model.volume))
+        #if model.volume != None and model.units == "population":
+        #    params.append(md.ParametertoElement(model.volume))
 
         md.document.append(params)
         
