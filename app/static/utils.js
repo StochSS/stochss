@@ -1,6 +1,6 @@
 jQuery.fn.forceNumeric = function () {
     return this.each(function () {
-        $(this).keypress(function (e) {
+        $(this).keyup(function (e) {
             var key = e.which || e.keyCode;
 
             if(key == 32)
