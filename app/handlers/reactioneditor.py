@@ -11,6 +11,12 @@ import __future__
 from stochssapp import BaseHandler
 from stochss.model import *
 
+def int_or_float(s):
+    try:
+        return int(s)
+    except ValueError:
+        return float(s)
+    
 class ReactionEditorPage(BaseHandler):
     
     def authentication_required(self):
@@ -157,12 +163,12 @@ class ReactionEditorPage(BaseHandler):
             # The propensity functions should be evaluable in that namespace.
             namespace = OrderedDict()
             all_parameters = model.getAllParameters()
-    
+
             for param in all_species:
-                namespace[param] = all_species[param].initial_value
+                namespace[param] = int_or_float(all_species[param].initial_value)
 
             for param in all_parameters:
-                namespace[param] = all_parameters[param].value
+                namespace[param] = int_or_float(all_parameters[param].value)
 
             # If we are processing a mass-action reaction, we generate a temporary reaction here in
             # order to compile the propensity function for error checking below.
@@ -174,6 +180,7 @@ class ReactionEditorPage(BaseHandler):
                     return {'status': False, 'msg': re}
 
             try:
+                print propensity_function, name, namespace
                 value = eval(compile(propensity_function, '<string>', 'eval', __future__.division.compiler_flag), namespace)
                 logging.debug("value after evaluation: " + str(value))
             except Exception, e:
@@ -291,10 +298,10 @@ class ReactionEditorPage(BaseHandler):
             namespace = OrderedDict()
 
             for spec in all_species:
-                namespace[spec] = all_species[spec].initial_value
+                namespace[spec] = int_or_float(all_species[spec].initial_value)
 
             for param in all_parameters:
-                namespace[param] = all_parameters[param].value
+                namespace[param] = int_or_float(all_parameters[param].value)
                 
             index = 1
             for key, value in all_reactions.items():

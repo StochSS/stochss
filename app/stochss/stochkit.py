@@ -34,8 +34,11 @@
     
 """
 
+import copy
 from model import *
 from collections import OrderedDict
+
+import math
 
 try:
     import lxml.etree as etree
@@ -62,13 +65,72 @@ except:
 
 class StochKitModel(Model):
     """ StochKitModel extends a well mixed model with StochKit specific serialization. """
+    def __init__(self, *args, **kwargs):
+        super(StochKitModel, self).__init__(*args, **kwargs)
+
+        self.units = "population"
+
+    # In converting to concentration, we switch to all custom propensity functions
+    def toConcentration(self, volume):
+
+        factor_reaction = 6.02214129e23 * volume
+        factor = (1.0 / (6.02214129e23 * volume))
+
+        model = copy.deepcopy(self)
+
+        print model.serialize()
+
+        # If the model is already a concentration model, just return a copy
+        if model.units == "concentration":
+            return model
+
+        model.units = "concentration"
+
+        for species in model.listOfSpecies:
+            model.listOfSpecies[species].initial_value *= factor
+
+        for reaction in model.listOfReactions:
+            if model.listOfReactions[reaction].type == "mass-action":
+                model.listOfReactions[reaction].marate = None
+                model.listOfReactions[reaction].setType("customized")
+
+            model.listOfReactions[reaction].propensity_function = repr(factor_reaction) + ' * ' + model.listOfReactions[reaction].propensity_function
+
+        print '-----------------------------------------------'
+        print model.serialize()
+
+        return model
+
+    # In converting to population, we switch to all custom propensity functions
+    def toPopulation(self, volume):
+        factor_reaction = (1 / (6.02214129e23 * volume))
+        factor = (6.02214129e23 * volume)
+
+        model = copy.deepcopy(self)
+        
+        # If the model is already a concentration model, just return a copy
+        if model.units == "population":
+            return model
+
+        model.units = "population"
+
+        for species in model.listOfSpecies:
+            model.listOfSpecies[species].initial_value = int(round(model.listOfSpecies[species].initial_value * factor))
+
+        for reaction in model.listOfReactions:
+            if model.listOfReactions[reaction].type == "mass-action":
+                model.listOfReactions[reaction].marate = None
+                model.listOfReactions[reaction].setType("customized")
+
+            model.listOfReactions[reaction].propensity_function = repr(factor_reaction) + '*' + model.listOfReactions[reaction].propensity_function
+
+        return model
 
     def serialize(self):
         """ Serializes a Model object to valid StochML. """
         self.resolveParameters()
         doc = StochMLDocument().fromModel(self)
         return doc.toString()
-
 
 class StochMLDocument():
     """ Serializiation and deserialization of a StochKitModel to/from 
@@ -124,6 +186,10 @@ class StochMLDocument():
         params = etree.Element('ParametersList')
         for pname in model.listOfParameters:
             params.append(md.ParametertoElement(model.listOfParameters[pname]))
+
+        if model.volume != None and model.units == "population":
+            params.append(md.ParametertoElement(model.volume))
+
         md.document.append(params)
         
         # Reactions
@@ -143,7 +209,16 @@ class StochMLDocument():
         md = cls()
         md.document = root
         return md
-    
+
+    @classmethod
+    def fromString(cls,string):
+        """ Intializes the document from an exisiting native StochKit XML file read from disk. """
+        root = etree.fromstring(string)
+
+        md = cls()
+        md.document = root
+        return md
+
     def toModel(self,name):
         """ Instantiates a StochKitModel object from a StochMLDocument. """
         
@@ -171,10 +246,13 @@ class StochMLDocument():
         for px in root.iter('Parameter'):
             name = px.find('Id').text
             expr = px.find('Expression').text
-            p = Parameter(name,expression=expr)
-            # Try to evaluate the expression in the empty namespace (if the expr is a scalar value)
-            p.evaluate()
-            model.addParameter(p)
+            if name.lower() == 'volume':
+                model.volume = Parameter(name, expression = expr)
+            else:
+                p = Parameter(name,expression=expr)
+                # Try to evaluate the expression in the empty namespace (if the expr is a scalar value)
+                p.evaluate()
+                model.addParameter(p)
         
         # Create species
         for spec in root.iter('Species'):
@@ -197,7 +275,6 @@ class StochMLDocument():
         
         # Create reactions
         for reac in root.iter('Reaction'):
-            
             try:
                 name = reac.find('Id').text
             except:
@@ -353,13 +430,13 @@ class StochMLDocument():
             except:
                 pass
 
-        elif R.type=='customized':
-            try:
-                functionElement = etree.Element('PropensityFunction')
-                functionElement.text = R.propensity_function
-                e.append(functionElement)
-            except:
-                pass
+        else:
+            #try:
+            functionElement = etree.Element('PropensityFunction')
+            functionElement.text = R.propensity_function
+            e.append(functionElement)
+            #except:
+            #    pass
 
         reactants = etree.Element('Reactants')
 

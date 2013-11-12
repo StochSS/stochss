@@ -85,17 +85,18 @@ class backendservices():
             
             # The following executiong string is of the form :
             # stochkit_exec_str = "~/StochKit2.0.6/ssa -m ~/output/%s/dimer_decay.xml -t 20 -i 10 -r 1000" % (uuidstr)
-            stochkit_exec_str = "{backenddir}/wrapper.sh {stdout} {stderr} {0} --model {1} --out-dir output/{2}/result ".format(paramstr,xmlfilepath,uuidstr, stdout = res['stdout'], stderr = res['stderr'], backenddir = os.path.abspath(os.path.dirname(__file__)))
+            stochkit_exec_str = "{backenddir}/wrapper.py {stdout} {stderr} {0} --model {1} --out-dir output/{2}/result ".format(paramstr,xmlfilepath,uuidstr, stdout = res['stdout'], stderr = res['stderr'], backenddir = os.path.abspath(os.path.dirname(__file__)))
+            print stochkit_exec_str
             logging.info("STOCHKIT_EXEX_STR: "+stochkit_exec_str)
             logging.debug("executeTaskLocal : Spawning StochKit Task. String : %s",
                            stochkit_exec_str)
             
-            p = subprocess.Popen(stochkit_exec_str, shell=True, stdin=subprocess.PIPE)
+            p = subprocess.Popen(stochkit_exec_str.split(), stdin=subprocess.PIPE)
 
             #logging.debug("executeTaskLocal: the result of task {0} or error {1} ".format(output,error))
             pid = p.pid
 
-            res['pid'] = pid 
+            res['pid'] = pid
             filepath = "output/%s//" % (uuidstr)
             logging.debug("executeTaskLocal : PID generated - %s", pid)
             absolute_file_path = os.path.abspath(filepath)
@@ -190,7 +191,7 @@ class backendservices():
         logging.info("deleteTaskLocal : inside method with pids : %s", pids)
         for pid in pids:
             try:
-                os.kill(pid, signal.SIGKILL)
+                os.kill(pid, signal.SIGQUIT)
             except Exception, e:
                 logging.error("deleteTaskLocal : couldn't kill process. error: %s", str(e))
         logging.info("deleteTaskLocal : exiting method")        

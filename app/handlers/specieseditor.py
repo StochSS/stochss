@@ -67,7 +67,7 @@ class SpeciesEditorPage(BaseHandler):
             if name in model.getAllSpecies():
                 return {'status': False, 'msg': 'Species ' + name + ' already exists!', 'name': name, 'initial_value': initial_value}
 
-            species = Species(name, int(initial_value))
+            species = Species(name, initial_value)
             model.addSpecies(species)
 
             # Update the cache
@@ -102,6 +102,11 @@ class SpeciesEditorPage(BaseHandler):
         """
         Check to see if the input for species creation/updation is valid
         """
+        model = self.get_session_property('model_edited')
+        
+        if model is None:
+            return {'status': False, 'msg': 'You have not selected any model to edit.'}
+
         if not name:
             return {'status': False, 'msg': 'Species name is missing!'}
 
@@ -109,10 +114,11 @@ class SpeciesEditorPage(BaseHandler):
                 return {'status': False, 'msg': 'Initial value for species ' + name + ' is missing!'}
         
         # the initial_value must be an integer.        
-        try:
-            int(initial_value)
-        except ValueError:
-            return {'status': False, 'msg': 'Initial value for species ' + name + ' is not an integer!'}
+        if model.units == "population":
+            try:
+                int(initial_value)
+            except ValueError:
+                return {'status': False, 'msg': 'Initial value for species ' + name + ' is not an integer!'}
 
         # return None if there are no errors
         return None
@@ -144,7 +150,7 @@ class SpeciesEditorPage(BaseHandler):
 
                 # Add the new entry
                 value.name = new_name
-                value.initial_value = int(new_initial_value)
+                value.initial_value = new_initial_value
                 new_species_list.append(value)
                 index += 1
 

@@ -1,0 +1,85 @@
+{% extends "modeleditor.html" %}
+{% block title%}Convert Concentration Model to Population{% endblock %}
+{% block modeleditorcontent %}
+<div class="span9">
+    <div class="row-fluid">
+        <div class="well form">
+
+	    <h3><a default> Convert concentration model to population </a>&raquo; </h3>
+
+          <div style="display: none;" id="modelSelect">
+            {{ modelName }}
+            <!--<h3>1. Select a concentration model:</h3>
+            <table class="table table-striped table-bordered">
+              <thead>
+                <tr>
+                  <th width="15pt"></th>
+                  <th>Model Name</th>
+                </tr>
+              </thead>
+              <tbody>
+              </tbody>
+            </table>-->
+          </div>
+          <br />
+          <div id="volumeChoose">
+            <h3>1. Choose a conversion volume:</h3>
+            Volume:<br />
+            <input class="volume" type="text" style="width: 100px;" class="id update_box auto_complete" />
+            
+            <table class="table table-striped table-bordered">
+              <thead>
+                <tr>
+                  <th>Parameter</th>
+                  <th>Concentration value</th>
+                  <th>Population Value</th>
+                </tr>
+              </thead>
+              <tbody>
+              </tbody>
+            </table>
+          </div>
+          <br />
+          <div id="reactionVerify">
+            <h3>2. Verify reactions:</h3>
+            <table class="table table-striped table-bordered">
+              <thead>
+                <tr>
+                  <th>Reaction</th>
+                  <th>Expression</th>
+                  <th>Propensity</th>
+                  <th>Converted Successfully?</th>
+                </tr>
+              </thead>
+              <tbody>
+              </tbody>
+            </table>
+          </div>
+          <br />
+          <div id="createModel">
+            <h3>3. Create new model:</h3>
+            Name:<br />
+            <input type="text" style="width: 200px;" class="modelName id update_box auto_complete" /><br /><br />
+            <button class="createModel btn btn-primary" style="float: right;">Create Model</button>
+            <br />
+            <br />
+            <div id="msg" />
+          </div>
+	</div>
+    </div>
+</div>
+<!--WHY DOES THIS HAVE TO BE HERE?-->
+</div>
+
+{% endblock %}
+
+{% block innerjscontent %}
+<script src = "/static/js/jquery-ui-1.10.3/js/jquery-1.9.1.js"></script>
+<script src = "/static/js/jquery-ui-1.10.3/js/jquery-ui-1.10.3.custom.js"></script>
+<script type="text/javascript" src = "/static/js/underscore.js"></script>
+<script type="text/javascript" src = "/static/utils.js"></script>
+<script type="text/javascript" src = "/static/js/backbone.js"></script>
+<script type="text/javascript" src = "/static/model/stochkit.js"></script>
+
+<script type="text/javascript" src = "/static/convert/convert_modeleditor.js"></script>
+{% endblock %}

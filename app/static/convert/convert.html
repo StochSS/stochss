@@ -1,0 +1,66 @@
+<html>
+    <head>
+        <title>Waddup</title>
+        <!--<link rel="stylesheet" href="//netdna.bootstrapcdn.com/bootstrap/3.0.0/css/bootstrap.min.css">-->
+        <link href="/static/js/jquery-ui-1.10.3/css/ui-lightness/jquery-ui-1.10.3.custom.css" rel="stylesheet">
+        <script src = "/static/js/jquery-ui-1.10.3/js/jquery-1.9.1.js"></script>
+        <!--<script src="//netdna.bootstrapcdn.com/bootstrap/3.0.0/js/bootstrap.min.js"></script>-->
+        <script src = "/static/js/jquery-ui-1.10.3/js/jquery-ui-1.10.3.custom.js"></script>
+        <script type="text/javascript" src = "/static/js/underscore.js"></script>
+        <script type="text/javascript" src = "/static/utils.js"></script>
+        <script type="text/javascript" src = "/static/js/backbone.js"></script>
+        <script type="text/javascript" src = "/static/model/stochkit.js"></script>
+        <script type="text/javascript" src = "/static/convert/convert.js"></script>
+
+        <script id="modelSelectTemplate" type="text/application">
+          Concentration models:
+          <table border="1">
+            <tr>
+              <th>Model Name</th>
+            </tr>
+            <tbody class="table">
+            </tbody>
+        </script>
+
+        <script id="volumeChooseTemplate" type="text/application">
+          Volume:
+          <input class="volume" type="text" style="width: 100px;" class="id update_box auto_complete" />
+
+          <table border="1">
+            <tr>
+              <th>Parameter</th>
+              <th>Concentration value</th>
+              <th>Population Value</th>
+            </tr>
+            <tbody class="table">
+            </tbody>
+        </script>
+
+        <script id="reactionVerifyTemplate" type="text/application">
+          <table border="1">
+            <tr>
+              <th>Reaction</th>
+              <th>Expression</th>
+              <th>Propensity</th>
+              <th>Converted Successfully?</th>
+            </tr>
+            <tbody class="table">
+            </tbody>
+        </script>
+    </head>
+    <body>
+      1. Select a model:
+      <div id="modelSelect"></div>
+      
+      2. Choose a conversion volume:
+      <div id="volumeChoose"></div>
+      
+      3. Verify reactions:
+      <div id="reactionVerify"></div>
+
+      4. Create new model:
+      Name:<br />
+      <input type="text" style="width: 100px;" class="modelName id update_box auto_complete" /><br /><br />
+      <button class="createModel">Create Model</button>
+    </body>
+</html>

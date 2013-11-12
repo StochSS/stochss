@@ -120,8 +120,16 @@ class StatusPage(BaseHandler):
                             if res[stochkit_job.pid]:
                                 stochkit_job.status = "Running"
                             else:
-                                # Check if the stats/means.txtis present, that will always be the case for a sucessful job.
-                                if os.path.exists(stochkit_job.output_location+"/result/stats/means.txt"):
+                                # Check if the signature file is present, that will always be the case for a sucessful job.
+                                # for ssa and tau leaping, this is means.txt
+                                # for ode, this is output.txt
+
+                                if stochkit_job.exec_type == 'stochastic':
+                                    file_to_check = stochkit_job.output_location+"/result/stats/means.txt"
+                                else:
+                                    file_to_check = stochkit_job.output_location+"/result/output.txt"
+                                
+                                if os.path.exists(file_to_check):
                                     stochkit_job.status = "Finished"
                                 else:
                                     stochkit_job.status = "Failed"
@@ -326,14 +334,16 @@ class VisualizePage(BaseHandler):
         species_names = self.getSpeciesNames(context)
         if species_names == None:
             result['status'] = False
-            result['msg'] = 'Failed to retrive the species names'
+            result['msg'] = 'Failed to retrieve the species names'
         context['species_names'] = species_names
         
-        trajectory_number = context['trajectory_number']
         species_name = context['species_name']
         if 'plotbuttonmean' in params:
             species_time_series = self.getMeans(context,species_name)
+        elif 'ode_plotbutton' in params:
+            species_time_series = self.getODE(context, species_name)
         elif 'plotbutton' in params:
+            trajectory_number = context['trajectory_number']
             species_time_series = self.getTrajectory(context,trajectory_number,species_name)
         context['species_time_series']=species_time_series
             
@@ -344,6 +354,26 @@ class VisualizePage(BaseHandler):
         try:
             # StochKit labels the output files starting from 0, hence the "-1", since we label from 1 in the UI.
             meanfile = params['job_folder']+'/result/stats/means.txt'
+            file = open(meanfile,'rb')
+            trajectory_data = [row.strip().split('\t') for row in file]
+            
+            species_names = trajectory_data[0]
+            for s in range(len(species_names)):
+                if species_names[s] == species_name:
+                    break
+            species_time_series = []
+            for row in trajectory_data:
+                species_time_series.append([row[0],row[s]]);
+            return species_time_series[1:]
+        except:
+            return None
+    
+    def getODE(self, params, species_name):
+        """ Get the mean values """
+        try:
+            # StochKit labels the output files starting from 0, hence the "-1", since we label from 1 in the UI.
+            meanfile = params['job_folder']+'/result/output.txt'
+            print meanfile
             file = open(meanfile,'rb')
             trajectory_data = [row.strip().split('\t') for row in file]
             
@@ -379,14 +409,20 @@ class VisualizePage(BaseHandler):
         except:
             return None
             
-    def getSpeciesNames(self,params):
+    def getSpeciesNames(self, params):
         """ Get a list with the species names. 
             The result folder have to be populated in advance. """
-        meanfile = params['job_folder']+'/result/stats/means.txt'
-        logging.info(str(meanfile))
+        #meanfile = params['job_folder']+'/result/stats/means.txt'
+        #logging.info(str(meanfile))
         try:
             # Try to grab them from the mean.txt file
-            meanfile = params['job_folder']+'/result/stats/means.txt'
+            print params
+            if params['exec_type'] == 'deterministic':
+                meanfile = params['job_folder'] + '/result/output.txt'
+            else:
+                meanfile = params['job_folder'] + '/result/stats/means.txt'
+            
+            #meanfile = params['job_folder']+'/result/stats/means.txt'
             file = open(meanfile,'rb')
             row = file.readline()
             logging.info(str(row))

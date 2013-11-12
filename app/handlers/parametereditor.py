@@ -19,6 +19,7 @@ class ParameterEditorPage(BaseHandler):
         
     def get(self):
         all_parameters = self.get_all_parameters()
+
         if all_parameters is not None:
             self.render_response('modeleditor/parametereditor.html', **all_parameters)
         else:
@@ -97,6 +98,10 @@ class ParameterEditorPage(BaseHandler):
             # Check if the parameter already exists
             if name in all_parameters:
                 return {'status': False, 'msg': 'Parameter already exists!', 'name': name, 'expression': expression}
+
+            # Check if the user has tried to manually add a Volume parameter
+            if name.lower() == 'volume':
+                return {'status': False, 'msg': 'Model editor does not allow Volume parameter set here, please use the Volume tab above', 'name': name, 'expression': expression}
 
             namespace = OrderedDict()
             for param in all_parameters:

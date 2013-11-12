@@ -11,11 +11,11 @@
 """
 from collections import OrderedDict
 
-class Model():
+class Model(object):
     """ Representation of a well mixed biochemical model. Interfaces to solvers in StochSS
         should attempt to extend Model. """
     
-    def __init__(self,name="",volume=1.0):
+    def __init__(self,name="",volume = None):
         """ Create an empty model. """
         
         # The name that the model is referenced by (should be a String)
@@ -30,8 +30,12 @@ class Model():
         self.listOfSpecies    = OrderedDict()
         self.listOfReactions  = OrderedDict()
         
-        # A well mixed model has an optional volume parameter
+        # A well mixed model has an optional volume parameter. This should be a Parameter
         self.volume = volume;
+
+        # This defines the unit system at work for all numbers in the model
+        #   It should be a logical error to leave this undefined, subclasses should set it
+        self.units = None
         
         # Dict that holds flattended parameters and species for
         # evaluation of expressions in the scope of the model.
@@ -71,6 +75,12 @@ class Model():
          
     def deleteAllSpecies(self):
         self.listOfSpecies.clear()
+
+    def setUnits(self, units):
+        if units.lower() == 'concentration' or units.lower() == 'population':
+            self.units = units.lower()
+        else:
+            raise Exception("units must be either concentration or population (case insensitive)")
 
     def getParameter(self,pname):
         try:
@@ -231,7 +241,7 @@ class Reaction():
                 annotation:                 Description of the reaction (meta)
             
                 massaction True,{False}     is the reaction of mass action type or not?
-                rate                        if mass action, rate is a reference to a paramter instance.
+                rate                        if mass action, rate is a paramter instance.
             
             Raises: ReactionError
             
@@ -305,9 +315,11 @@ class Reaction():
         self.propensity_function = propensity_function
             
     def setType(self,type):
-        if type not in {'mass-action','customized'}:
+        if type.lower() not in {'mass-action','customized'}:
             raise ReactionError("Invalid reaction type.")
-        self.type = type
+        self.type = type.lower()
+
+        self.massaction = False if self.type == 'customized' else True
     
     def addReactant(self,S,stoichiometry):
         if stoichiometry <= 0:

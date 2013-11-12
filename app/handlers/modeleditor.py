@@ -5,6 +5,7 @@ except ImportError:
 from google.appengine.ext import db
 import pickle
 import traceback
+import random
 import logging
 import time
 from google.appengine.api import users
@@ -13,6 +14,8 @@ from stochssapp import BaseHandler
 from stochss.model import *
 from stochss.stochkit import *
 from stochss.examplemodels import *
+
+import webapp2
 
 class ObjectProperty(db.Property):
     """  A db property to store objects. """
@@ -38,7 +41,167 @@ class StochKitModelWrapper(db.Model):
     user_id = db.StringProperty()
     model_name = db.StringProperty()    
     model = ObjectProperty()
+    attributes = ObjectProperty()
+
+class ModelManager():
+    @staticmethod
+    def getModels(handler):
+        models = db.GqlQuery("SELECT * FROM StochKitModelWrapper WHERE user_id = :1", handler.user.email_address).fetch(100000)
+
+        output = []
+
+        for model in models:
+            jsonModel = { "id" : model.key().id(),
+                          "name" : model.model_name }
+            if model.attributes:
+                jsonModel.update(model.attributes)
+            print model.model.units
+            jsonModel["type"] = model.model.units
+            jsonModel["model"] = model.model.serialize()
+
+            #print jsonModel
+
+            output.append(jsonModel)
+
+        return output
+
+    @staticmethod
+    def getModel(handler, model_id):
+        model = StochKitModelWrapper.get_by_id(model_id)
+
+        jsonModel = { "id" : model.key().id(),
+                      "name" : model.model_name }
+        if model.attributes:
+            jsonModel.update(model.attributes)
+        jsonModel["type"] = model.model.units
+        jsonModel["model"] = model.model.serialize()
+            
+        return jsonModel
+
+    @staticmethod
+    def getModelByName(handler, modelName):
+        model = db.GqlQuery("SELECT * FROM StochKitModelWrapper WHERE user_id = :1 AND model_name = :2", handler.user.email_address, modelName).get()
+
+        if model == None:
+            return None
+
+        jsonModel = { "id" : model.key().id(),
+                      "name" : model.model_name }
+        if model.attributes:
+            jsonModel.update(model.attributes)
+        jsonModel["type"] = model.model.units
+        jsonModel["model"] = model.model.serialize()
+            
+        return jsonModel
+
+    @staticmethod
+    def createModel(handler, model):
+        if "name" in model:
+            if ModelManager.getModelByName(handler, model["name"]):
+                return None
+
+        modelWrap = StochKitModelWrapper()
+        if "name" in model:
+            name = model["name"]
+        else:
+            name = "tmpname"
+
+        modelWrap.user_id = handler.user.email_address
+        modelWrap.model_name = name
+        modelWrap.model = StochMLDocument.fromString(model["model"]).toModel(name)
+        modelWrap.model.units = model["type"]
+
+        attributes = {}
+        for key in model:
+            if key != "model" and key != "type" and key != "name":
+                attributes[key] = model[key]
+
+        modelWrap.attributes = attributes
+
+        return modelWrap.put().id()
+
+    @staticmethod
+    def deleteModel(handler, model_id):
+        model = StochKitModelWrapper.get_by_id(model_id)
+        model.delete()
+
+    @staticmethod
+    def updateModel(handler, model):
+        modelWrap = StochKitModelWrapper.get_by_id(model_id)
+        if not hasattr(model, "name"):
+            name = "tmpname"
+        else:
+            name = model["name"]
+
+        modelWrap.user_id = handler.user.email_address
+        modelWrap.model_name = name
+        modelWrap.model = StochMLDocument.fromString(model["model"]).toModel(name)
+        modelWrap.model.units = model["type"]
+
+        attributes = {}
+        for key in model:
+            if key != "model" and key != "type" and key != "name":
+                attributes[key] = model[key]
+
+        modelWrap.attributes = attributes
+
+        return modelWrap.put().id()
+
+class ModelBackboneInterface(BaseHandler):
+    def get(self):
+        req = self.request.path.split('/')[-1]
+    
+        self.response.content_type = 'application/json'
         
+        if req == 'list':
+            models = ModelManager.getModels(self)
+
+            self.response.write(json.dumps(models))
+        else:
+            model = ModelManager.getModel(self, int(req))
+
+            self.response.write(json.dumps(model))
+
+    def post(self):
+        jsonModel = json.loads(self.request.body)
+        modelId = ModelManager.createModel(self, jsonModel)
+      
+      #print 'CREATE', model["id"]
+        
+        self.response.content_type = "application/json"
+        self.response.write(json.dumps(ModelManager.getModel(self, modelId)))
+
+    def put(self):
+        req = request.uri.split('/')[-1]
+
+        modelId = int(req)
+        jsonModel = json.loads(self.request.body)
+        modelId = ModelManager.updateModel(self, jsonModel)
+      
+        print 'UPDATE', req, model["id"]
+
+        self.response.content_type = "application/json"
+        self.response.write(json.dumps(ModelManager.getModel(self, modelId)))
+
+    def delete(self):
+        model_id = request.uri.split('/')[-1]
+      
+        print 'DELETE', str(int(model_id))
+      
+        ModelManager.deleteModel(self, int(model_id))
+      
+        request.setHeader("Content-Type", "application/json")
+        self.response.write(json.dumps([]))
+
+    def authentication_required(self):
+        return True
+
+class ModelConvertPage(BaseHandler):
+    def authentication_required(self):
+        return True
+
+    def get(self):
+        self.render_response('convert.html')
 
 class ModelEditorPage(BaseHandler):
     """
@@ -54,20 +217,38 @@ class ModelEditorPage(BaseHandler):
         #    db_model = db.GqlQuery("SELECT * FROM StochKitModelWrapper WHERE user_id = :1", self.user.user_id()).get()
         #    if db_model is not None:
         #        self.set_session_property('model_edited', db_model.model)
-        
-        if model_edited is not None and model_edited is not "":
+
+        if self.request.get('duplicate'):
+            modelName = self.request.get('duplicate')
+            jsonModel = ModelManager.getModelByName(self, modelName)
+            del jsonModel["id"]
+
+            newName = modelName + '_' + ''.join(random.choice('abcdeABCDE1234567890') for x in range(3))
+            while ModelManager.getModelByName(self, newName) != None:
+                newName = modelName + '_' + ''.join(random.choice('abcdeABCDE1234567890') for x in range(3))
+
+            jsonModel["name"] = newName
+
+            self.response.content_type = "application/json"
+            if ModelManager.createModel(self, jsonModel):
+                self.response.write(json.dumps(newName))
+            else:
+                self.response.write(json.dumps(''))
+
+            return
+        elif model_edited is not None and model_edited is not "":
             result = self.edit_model(model_edited)
-            result = dict(get_all_models(self), **result)
-        
         elif self.request.get('get_model_edited') == "1":
             result = self.get_model_edited()    
             self.response.headers['Content-Type'] = 'application/json'
             self.response.write(json.dumps(result))
             return
-            
         else:
-            result = get_all_models(self)
-        
+          result = {}
+
+        models = get_all_models(self)
+        result.update({ "all_models" : map(lambda x : { "name" : x.name, "units" : x.units }, models) })
+
         self.render_response('modeleditor.html', **result)
 
 
@@ -78,24 +259,25 @@ class ModelEditorPage(BaseHandler):
             result = self.save_model(save_changes)
             self.response.headers['Content-Type'] = 'application/json'
             self.response.write(json.dumps(result))
-            
+            return
         elif self.request.get("delete") == "1":
             result = self.delete_model()
-            result = dict(get_all_models(self), **result)
-            self.render_response('modeleditor.html', **result)            
-            
         else:
             result = self.create_model()
-            result = dict(get_all_models(self), **result)
-            self.render_response('modeleditor.html', **result)
 
+        models = get_all_models(self)
+        result.update({ "all_models" : map(lambda x : { "name" : x.name, "units" : x.units }, models) })
+
+        print "post", result
+
+        self.render_response('modeleditor.html', **result)
 
     def get_model_edited(self):
         """
         Returns the current model that is being edited. This would be called asynchronously each time the modeleditor.html loads.
         """
         model_edited = self.get_session_property('model_edited')        
-        return {'status': True, 'model_edited': '' if model_edited is None else model_edited.name}
+        return {'status': True, 'model_edited': model_edited }
               
               
     def delete_model(self):
@@ -111,12 +293,15 @@ class ModelEditorPage(BaseHandler):
                 self.session['model_edited'] = None                
             
             db_model = db.GqlQuery("SELECT * FROM StochKitModelWrapper WHERE user_id = :1 AND model_name = :2", self.user.email_address, name).get()
+
             if db_model is None:
                 return {'status': False, 'msg': 'The datastore does not have any such entry.'}
             
             db_model.delete()
             all_models = self.get_session_property('all_models')
-            all_models.pop(all_models.index(name))
+
+            #if all_models:
+            #  all_models.pop(all_models.index(name))
             
             self.set_session_property('all_models', all_models)
             
@@ -177,19 +362,22 @@ class ModelEditorPage(BaseHandler):
         try:
             # If the user tries to edit another model before saving all the changes, show a message.
             is_model_saved = self.get_session_property('is_model_saved')
+
             if is_model_saved is not None and not is_model_saved:
                 model_edited = self.get_session_property('model_edited')
                 # It is okay if the currently edited model is the same as the newly chosen one.
                 if(model_edited.name == name):
-                    return {'status': True, 'model_edited': name}
+                    return { 'status': True, 'model_edited': model_edited, 'model_has_volume': bool(model_edited.volume)}
               
                 logging.debug('old_model: ' + self.get_session_property('model_edited').name)
                 return {'status': False, 'save_msg': 'Please save your changes first!', 'is_saved': False, 'model_edited': name}
             
             db_model = db.GqlQuery("SELECT * FROM StochKitModelWrapper WHERE user_id = :1 AND model_name = :2", self.user.email_address, name).get()
             self.set_session_property('model_edited', db_model.model)
+            self.set_session_property('is_model_saved', True)
 
-            return {'status': True, 'model_edited': name}
+            print str(db_model.model.volume)
+            return {'status': True, 'model_edited': db_model.model, 'model_has_volume': bool(db_model.model.volume), 'is_model_saved' : True }
         except Exception, e:
             logging.error("model::edit_model - Editing the model failed with error: %s", e)
             traceback.print_exc()
@@ -207,12 +395,22 @@ class ModelEditorPage(BaseHandler):
             A dict that indicates the status of this call.
         """
         name = self.request.get('name').strip()
+        units = self.request.get('exec_type').strip().lower()
         if not name:
           return {'status': False, 'msg': 'Model name is missing.'}
 
+        if not units:
+          return {'status': False, 'msg': 'Units are missing.'}
+
         model = StochKitModel(name)
         try:
+          model.setUnits(units)
+
+#<<<<<<< HEAD
+#          user_id = self.user.user_id()
+#=======
           user_id = self.user.email_address
+#>>>>>>> upstream/auth
           logging.debug("user_id " + user_id)  
           
           #db_model = StochKitModelWrapper.get_by_key_name(key_name)
@@ -366,7 +564,7 @@ class ModelEditorExportToStochkit2(BaseHandler):
         model = self.get_session_property('model_edited')
         if model is None:
             result = {'status': False, 'msg': 'You have not selected any model to export.'}
-            result = dict(get_all_models(self), **result)
+            result = dict(get_all_model_names(self), **result)
             self.render_response('modeleditor.html', **result)
             return
         try:
@@ -378,7 +576,7 @@ class ModelEditorExportToStochkit2(BaseHandler):
             logging.error('Error in exporting to StochML. %s', e)
             traceback.print_exc()
             result = {'status': False, 'msg': 'There was an error while exporting to StochML.'}
-            result = dict(get_all_models(self), **result)
+            result = dict(get_all_model_names(self), **result)
             self.render_response('modeleditor.html', **result)
 
 
@@ -405,7 +603,7 @@ def add_model_to_cache(obj, new_model_name):
 
 
 
-def get_all_models(handler):
+def get_all_model_names(handler):
     """
       Retrieves all models from the cache. If the cache is not already populated, db_models the datastore, populate the cache and then return it.
     """
@@ -423,7 +621,22 @@ def get_all_models(handler):
         return {'status': True, 'all_models': all_models}
 
     except Exception, e:
-        logging.error("model::get_all_models - Error retrieving all the models: %s", e)
+        logging.error("model::get_all_model_names - Error retrieving all the models: %s", e)
+        traceback.print_exc()
+        return {'status': False, 'msg': 'There was an error while getting all the models.'}
+        
+def get_all_models(handler):
+    """
+      Retrieves all models from the cache. If the cache is not already populated, db_models the datastore, populate the cache and then return it.
+    """
+    try:
+        db_models = db.GqlQuery("SELECT * FROM StochKitModelWrapper WHERE user_id = :1", handler.user.email_address)
+        all_models = [row.model for row in db_models]
+        
+        return all_models
+
+    except Exception, e:
+        logging.error("model::get_all_model - Error retrieving all the models: %s", e)
         traceback.print_exc()
         return {'status': False, 'msg': 'There was an error while getting all the models.'}
         

@@ -60,15 +60,159 @@ class StochKitJobWrapper(db.Model):
     name = db.StringProperty()
     # The type if the job {'local', 'cloud'}
     type =  db.StringProperty()
+    attributes = ObjectProperty()
     stochkit_job = ObjectProperty()
 
     stdout = db.StringProperty()
     stderr = db.StringProperty()
 
+class JobManager():
+    @staticmethod
+    def getJobs(handler):
+        jobs = db.GqlQuery("SELECT * FROM StochKitJobWrapper WHERE user_id = :1", handler.user.email_address).fetch(100000)
+
+        output = []
+
+        for job in jobs:
+            jsonJob = { "id" : job.key().id(),
+                        "name" : job.name,
+                        "stdout" : job.stdout,
+                        "stderr" : job.stderr,
+                        # These are things contained in the stochkit_job object
+                        "type" : job.stochkit_job.type,
+                        "status" : job.stochkit_job.status,
+                        "output_location" : job.stochkit_job.output_location,
+                        "output_url" : job.stochkit_job.output_url,
+                        "final_time" : job.stochkit_job.final_time,
+                        "increment" : job.stochkit_job.increment,
+                        "realizations" : job.stochkit_job.realizations,
+                        "exec_type" : job.stochkit_job.exec_type,
+                        "store_only_mean" : job.stochkit_job.store_only_mean,
+                        "label_column_names" : job.stochkit_job.label_column_names,
+                        "create_histogram_data" : job.stochkit_job.create_histogram_data,
+                        "epsilon" : job.stochkit_job.epsilon,
+                        "threshold" : job.stochkit_job.threshold,
+                        "pid" : job.stochkit_job.pid,
+                        "result" : job.stochkit_job.result }
+
+            if job.attributes:
+                jsonJob.update(job.attributes)
+
+            output.append(jsonJob)
+
+        return output
+
+    @staticmethod
+    def getJob(handler, job_id):
+        job = StochKitJobWrapper.get_by_id(job_id)
+
+        jsonJob = { "id" : job.key().id(),
+                    "name" : job.name,
+                    "stdout" : job.stdout,
+                    "stderr" : job.stderr,
+                    # These are things contained in the stochkit_job object
+                    "type" : job.stochkit_job.type,
+                    "status" : job.stochkit_job.status,
+                    "output_location" : job.stochkit_job.output_location,
+                    "output_url" : job.stochkit_job.output_url,
+                    "final_time" : job.stochkit_job.final_time,
+                    "increment" : job.stochkit_job.increment,
+                    "realizations" : job.stochkit_job.realizations,
+                    "exec_type" : job.stochkit_job.exec_type,
+                    "store_only_mean" : job.stochkit_job.store_only_mean,
+                    "label_column_names" : job.stochkit_job.label_column_names,
+                    "create_histogram_data" : job.stochkit_job.create_histogram_data,
+                    "epsilon" : job.stochkit_job.epsilon,
+                    "threshold" : job.stochkit_job.threshold,
+                    "pid" : job.stochkit_job.pid,
+                    "result" : job.stochkit_job.result}
+        
+        if job.attributes:
+            jsonJob.update(job.attributes)
+            
+        return jsonJob
+
+    @staticmethod
+    def createJob(handler, job):
+        jobWrap = StochKitJobWrapper()
+        jobWrap.user_id = handler.user.email_address
+        jobWrap.attributes = job
+        jobWrap.put()
+        
+        jsonJob = { "id" : jobWrap.key().id() }
+        if job.attributes:
+            jsonJob.update(job)
+
+        return jsonJob
+
+    @staticmethod
+    def deleteJob(handler, job_id):
+        job = StochKitJobWrapper.get_by_id(job_id)
+        job.delete()
+
+    @staticmethod
+    def updateJob(handler, job):
+        jobWrap = StochKitJobWrapper.get_by_id(job_id)
+        jobWrap.user_id = handler.user.email_address
+        jobWrap.attributes = job
+        jobWrap.put()
+        
+        jsonJob = { "id" : jobWrap.key().id() }
+        if job.attributes:
+            jsonJob.update(job)
+
+        return jsonJob
+
+class JobBackboneInterface(BaseHandler):
+  def get(self):
+    req = self.request.path.split('/')[-1]
+    
+    self.response.content_type = 'application/json'
+    
+    if req == 'list':
+        jobs = JobManager.getJobs(self)
+
+        self.response.write(json.dumps(jobs))
+    else:
+        job = JobManager.getJob(self, int(req))
+
+        self.response.write(json.dumps(job))
+
+  def post(self):
+      jsonJob = json.loads(self.request.body)
+      job = JobManager.createJob(self, jsonJob)
+      
+      #print 'CREATE', job["id"]
+      
+      self.response.content_type = "application/json"
+      self.response.write(json.dumps(job))
+
+  def put(self):
+      req = request.uri.split('/')[-1]
+
+      jobId = int(req)
+      jsonJob = json.loads(self.request.body)
+      job = JobManager.updateJob(self, jsonJob)
+      
+      print 'UPDATE', req, job["id"]
+
+      self.response.content_type = "application/json"
+      self.response.write(json.dumps(job))
+
+  def delete(self):
+      job_id = request.uri.split('/')[-1]
+      
+      print 'DELETE', str(int(job_id))
+      
+      JobManager.deleteJob(self, int(job_id))
+      
+      request.setHeader("Content-Type", "application/json")
+      self.response.write(json.dumps([]))
+
 class StochKitJob(Job):
     """ Model for a StochKit job. Contains all the parameters associated with the call. """
     
-    def __init__(self,name=None, final_time=None, increment=None, realizations=1,algorithm='ssa',store_only_mean=False, label_column_names=True,create_histogram_data=False, seed=None, epsilon=0.1,threshold=10, output_url = None):
+    def __init__(self,name=None, final_time=None, increment=None, realizations=1, exec_type="stochastic",store_only_mean=False, label_column_names=True,create_histogram_data=False, seed=None, epsilon=0.1,threshold=10, output_url = None):
         """ fdsgfhsj """
         
         # Type of the job {'Local','Cloud'}
@@ -86,7 +230,7 @@ class StochKitJob(Job):
         self.final_time = final_time
         self.increment = increment
         self.realizations = realizations
-        self.algorithm = algorithm
+        self.exec_type = exec_type
         
         self.store_only_mean = store_only_mean
         self.label_column_names = label_column_names
@@ -144,27 +288,35 @@ class NewStochkitEnsemblePage(BaseHandler):
         
     def get(self):
         model_to_simulate=self.get_session_property('model_to_simulate')
-        
-        # Make sure that the model is present in the datastore
-        if model_to_simulate is not None:
-            model_db = db.GqlQuery("SELECT * FROM StochKitModelWrapper WHERE user_id = :1 AND model_name = :2", self.user.email_address,model_to_simulate).get()
-            if model_db == None:
-                self.set_session_property('model_to_simulate',None)
-                model_to_simulate = None
 
         # If model_to_simulate has not been set using the simulation manager main page,
         # we attempt to set it to the currently edited model
-        else:
+        if model_to_simulate is None:
             model_edited = self.get_session_property('model_edited')
             if model_edited is not None and model_edited is not "":
                 model_to_simulate = model_edited.name
                 self.set_session_property('model_to_simulate',model_to_simulate)
+
+        model_units = ''
+
+        # Make sure that the model is present in the datastore
+        #    Figure out what kind of model it is too (concentration or populatio)
+        if model_to_simulate is not None:
+            model_db = db.GqlQuery("SELECT * FROM StochKitModelWrapper WHERE user_id = :1 AND model_name = :2", self.user.email_address, model_to_simulate).get()
+
+            model_units = model_db.model.units
+
+            if model_db == None:
+                self.set_session_property('model_to_simulate', None)
+                model_to_simulate = None
     
         # If we have not managed to identify a model to simulate, we redirect to
         # a page where the user can select a model
         if model_to_simulate is None:
             self.redirect("/simulate")
-        context = {'model_to_simulate':model_to_simulate}
+
+        context = { 'model_to_simulate': model_to_simulate, 'model_units' : model_units }
+
         self.render_response('simulate/newstochkitensemblepage.html',**context)
 
     def post(self):
@@ -181,7 +333,21 @@ class NewStochkitEnsemblePage(BaseHandler):
         else:
             result={'status':False,'msg':'There was an error processing your request.'}
 
-        context = {'model_to_simulate':self.get_session_property('model_to_simulate')}
+        
+        model_to_simulate = self.get_session_property('model_to_simulate')
+        
+        # Make sure that the model is present in the datastore
+        #    Figure out what kind of model it is too (concentration or populatio)
+        if model_to_simulate is not None:
+            model_db = db.GqlQuery("SELECT * FROM StochKitModelWrapper WHERE user_id = :1 AND model_name = :2", self.user.email_address, model_to_simulate).get()
+
+            model_units = model_db.model.units
+
+            if model_db == None:
+                self.set_session_property('model_to_simulate', None)
+                model_to_simulate = None
+
+        context = {'model_to_simulate' : model_to_simulate, 'model_units' : model_units }
         self.render_response('simulate/newstochkitensemblepage.html',**dict(context,**result))
 
     def runCloud(self):
@@ -215,10 +381,32 @@ class NewStochkitEnsemblePage(BaseHandler):
         
             #the parameter dictionary to be passed to the backend
             param = {}
-    
+
+            # Execute as concentration or population?
+            exec_type = params['exec_type']
+
+            if not (exec_type == "deterministic" or exec_type == "stochastic"):
+                result = {
+                     'status' : False, 'msg' : 'exec_type must be concentration or population. Try refreshing page, or e-mail developers'
+                      }
+                return result
+
+            if model.units.lower() == 'concentration' and exec_type.lower() == 'stochastic':
+                result = { 'status' : False, 'msg' : 'GUI Error: Concentration models cannot be executed Stochastically. Try leaving and returning to this page' }
+                return result
+
+            executable = exec_type.lower()
             document = model.serialize()
+
+            if executable == 'deterministic' and model.units.lower() == 'population':
+                model = StochMLDocument.fromString(document).toModel()
+
+                for reaction in model.getAllReactions():
+                    if reaction.massaction:
+                        if len(reaction.reactants) == 1 and reaction.reactants[0][1] == 2:
+                            reaction.rate.setExpression(reaction.rate.expression + ' / 2')
+
             params['document']=str(document)
-            print 'model serialized'
             filepath = ""
             params['file'] = filepath
             ensemblename = params['job_name']
@@ -226,8 +414,6 @@ class NewStochkitEnsemblePage(BaseHandler):
             realizations = params['realizations']
             increment = params['increment']
             seed = params['seed']
-            # Algorithm, SSA or Tau-leaping?
-            executable = params['algorithm']
 
             # Assemble the argument list
             args = ''
@@ -235,27 +421,37 @@ class NewStochkitEnsemblePage(BaseHandler):
             args+=str(time)
             num_output_points = str(int(float(time)/float(increment)))
             args+=' -i ' + str(num_output_points)
-            args+=' --realizations '
-            args+=str(realizations)
+            path = os.path.dirname(__file__)
+
+            # Algorithm, SSA or Tau-leaping?
+            if executable != 'deterministic':
+                executable = params['algorithm']
+
+                args+=' --realizations '
+                args+=str(realizations)
             
-            # We keep all the trajectories by default. The user can select to only store means and variance
-            # through the advanced options.
-            if not "only-moments" in params:
-                args+=' --keep-trajectories'
+                # We keep all the trajectories by default. The user can select to only store means and variance
+                # through the advanced options.
+                if not "only-moments" in params:
+                    args+=' --keep-trajectories'
             
-            # Columns need to be labeled for visulatization page to work.  
-            args+=' --label'
-            
-            if "keep-histograms" in params:
-                args+=' --keep-histograms'
+                if "keep-histograms" in params:
+                    args+=' --keep-histograms'
                         
-            args+=' --seed '
-            args+=str(seed)
+                args+=' --seed '
+                args+=str(seed)
+            else:
+                executable = "{0}/../../ode/stochkit_ode.py".format(path)
+
+            print executable
+    
+            # Columns need to be labeled for visulatization page to work.  
+            args += ' --label'
         
             cmd = executable+' '+args
         
             # Create a StochKitJob instance
-            stochkit_job = StochKitJob(name=ensemblename, final_time=time, realizations=realizations,increment=increment,seed=seed,algorithm=executable)
+            stochkit_job = StochKitJob(name=ensemblename, final_time=time, realizations=realizations,increment=increment,seed=seed,exec_type=exec_type)
         
             params['paramstring'] = cmd
 
@@ -264,7 +460,7 @@ class NewStochkitEnsemblePage(BaseHandler):
         
             # Call backendservices and execute StochKit
             service = backendservices()
-            res,taskid = service.executeTask(params)
+            res, taskid = service.executeTask(params)
             
             if res == None:
                 result = {'status':False,'msg':'Cloud execution failed. '}
@@ -379,57 +575,84 @@ class NewStochkitEnsemblePage(BaseHandler):
             #the parameter dictionary to be passed to the backend
             param = {}
             
-            # Write a temporary StochKit2 input file.
+            # Execute as concentration or population?
+            exec_type = params['exec_type']
+
+            if not (exec_type == "deterministic" or exec_type == "stochastic"):
+                result = {
+                    'status' : False, 'msg' : 'exec_type must be concentration or population. Try refreshing page, or e-mail developers'
+                    }
+                return result
+
+            if model.units.lower() == 'concentration' and exec_type.lower() == 'stochastic':
+                result = { 'status' : False, 'msg' : 'GUI Error: Concentration models cannot be executed Stochastically. Try leaving and returning to this page' }
+                return result
+
+
+            executable = exec_type.lower()
             document = model.serialize()
-            params['document'] = str(document)
+
+            if executable == 'deterministic' and model.units.lower() == 'population':
+                model = StochMLDocument.fromString(document).toModel(model.name)
+
+                for reactionN in model.getAllReactions():
+                    reaction = model.getAllReactions()[reactionN]
+                    print reaction
+                    if reaction.massaction:
+                        print "woooo"
+                        if len(reaction.reactants) == 1 and reaction.reactants.values()[0] == 2:
+                            print "converted"
+                            reaction.marate.setExpression(reaction.marate.expression + ' / 2')
+
+            document = model.serialize()
+
+            params['document']=str(document)
+            print 'model serialized'
+            filepath = ""
+            params['file'] = filepath
             ensemblename = params['job_name']
             time = params['time']
             realizations = params['realizations']
             increment = params['increment']
             seed = params['seed']
-            # Algorithm, SSA or Tau-leaping?
-                
-            STOCHKIT_HOME = ""
-            env_variables = self.user_data.env_variables
-            if env_variables is not None:
-                env_variables = json.loads(env_variables)
-                try:
-                    STOCHKIT_HOME = env_variables['STOCHKIT_HOME']
-                    os.environ['STOCHKIT_HOME']=STOCHKIT_HOME
-                except:
-                    pass
-            executable = STOCHKIT_HOME+'/' +params['algorithm']
-    
+
             # Assemble the argument list
             args = ''
-            #args+='--model '
-            #args+=filepath
-            #args+=' --out-dir '+outdir
             args+=' -t '
             args+=str(time)
             num_output_points = str(int(float(time)/float(increment)))
             args+=' -i ' + str(num_output_points)
-            args+=' --realizations '
-            args+=str(realizations)
+            path = os.path.dirname(__file__)
+
+            # Algorithm, SSA or Tau-leaping?
+            if executable != 'deterministic':
+                executable = params['algorithm']
+
+                args+=' --realizations '
+                args+=str(realizations)
             
-            # We keep all the trajectories by default. The user can select to only store means and variance
-            # through the advanced options.
-            if not "only-moments" in params:
-                args+=' --keep-trajectories'
+                # We keep all the trajectories by default. The user can select to only store means and variance
+                # through the advanced options.
+                if not "only-moments" in params:
+                    args+=' --keep-trajectories'
             
-            # For the visualizaton page to work, columns must be labeled with species names.
-            args+=' --label'
-            
-            if "keep-histograms" in params:
-                args+=' --keep-histograms'
-            
-            args+=' --seed '
-            args+=str(seed)
+                if "keep-histograms" in params:
+                    args+=' --keep-histograms'
+                        
+                args+=' --seed '
+                args+=str(seed)
+            else:
+                executable = "{0}/../../ode/stochkit_ode.py".format(path)
+
+            print executable
+
+            # Columns need to be labeled for visulatization page to work.  
+            args += ' --label'
         
             cmd = executable+' '+args
         
             # Create a StochKitJob instance
-            stochkit_job = StochKitJob(name=ensemblename, final_time=time, realizations=realizations,increment=increment,seed=seed,algorithm=executable)
+            stochkit_job = StochKitJob(name=ensemblename, final_time=time, realizations=realizations,increment=increment,seed=seed, exec_type = exec_type)
         
             # Create the argument string
             params['paramstring'] = cmd
@@ -464,7 +687,7 @@ class NewStochkitEnsemblePage(BaseHandler):
             result = {'status':True,'msg':'Job submitted sucessfully'}
             
         except Exception,e:
-            result = {'status':False,'msg':'Local execution failed: '+str(e)}
+            raise e
+        #result = {'status':False,'msg':'Local execution failed: '+str(e)}
                 
         return result
-
