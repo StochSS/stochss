@@ -1,6 +1,7 @@
 import time
 import os
 import boto.ec2
+from boto.ec2.cloudwatch import MetricAlarm
 import webbrowser
 import urllib2
 
@@ -137,10 +138,31 @@ def launch_ec2_instance(instance_id, security_group):
     return instance
 
 instance = launch_ec2_instance(preferred_instance_id, sg)
+
+def make_sleepy(instance_id):
+      ec2 = boto.connect_cloudwatch(aws_access_key,aws_secret_key)
+      region = "us-east-1"
+      terminate_arn = 'arn:aws:automate:{0}:ec2:terminate'.format(region)
+      alarm_name = 'ec2_shutdown_sleepy_{0}'.format(instance_id)
+   
+      # define our alarm to terminate the instance if it gets sleepy
+      # i.e. if CPU utilisation is less than 10% for 1 x 4 hr intervals    
+      sleepy_alarm = MetricAlarm(
+          name=alarm_name, namespace='AWS/EC2',
+          metric='CPUUtilization', statistic='Average',
+          comparison='<', threshold='10',
+          period='3600', evaluation_periods=4,
+          alarm_actions=[terminate_arn],
+          dimensions={'InstanceId':instance_id})
+      ec2.create_alarm(sleepy_alarm)
+
+make_sleepy(instance.id)
+
 params_to_write = {
     "EC2_Instance_ID": instance.id
 }
 write_to_config_file(params_to_write)
+
 stochss_url = "http://" + str(instance.public_dns_name) + ":8080/"
 while True:
     try:
