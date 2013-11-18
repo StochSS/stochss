@@ -1,5 +1,4 @@
-import time
-import os
+import os, stat, time
 import boto.ec2
 from boto.ec2.cloudwatch import MetricAlarm
 import webbrowser
