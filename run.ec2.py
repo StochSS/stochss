@@ -209,7 +209,9 @@ while True:
         break
     except:
         time.sleep(5)
-webbrowser.open_new(stochss_url)
+open_browser = raw_input("Do you want to launch StochSS in your default browser now? (y/n): ")
+if open_browser.lower() == "y":
+    webbrowser.open_new(stochss_url)
 print "============================================================================"
 print "EC2 instance launched! You can now access StochSS at {0}".format(stochss_url)
 print "Note: it may take another minute or so before the above URL actually works. Please be patient."
