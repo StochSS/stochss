@@ -73,7 +73,7 @@ class CredentialsPage(BaseHandler):
             try:
                 service = backendservices()
                 credentials = self.user_data.getCredentials()
-                stopped = service.stopMachines({"infrastructure":"ec2", "credentials":self.user_data.getCredentials()})
+                stopped = service.stopMachines({"infrastructure":"ec2", "credentials":self.user_data.getCredentials()},True) #True means blocking, ie wait for success (its pretty quick)
                 if not stopped:
                     raise
                 result = {'status': True, 'msg': 'Sucessfully terminated all running VMs.'}
@@ -217,7 +217,7 @@ class CredentialsPage(BaseHandler):
     def delete_vms():
         db_user = db.GqlQuery("SELECT * FROM StochKitModelWrapper WHERE user_id = :1", user_id).get()
         db_user.user = valid_username
-        result =  backendservice.stopMachines(db_user.user)       
+        result =  backendservice.stopMachines(db_user.user,True) #True means blocking, ie wait for success
 
 
 class LocalSettingsPage(BaseHandler):

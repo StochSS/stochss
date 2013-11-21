@@ -218,8 +218,10 @@ class InfrastructureManager:
     utils.log('Generated reservation id {0} for this request.'.format(
       reservation_id))
     if self.blocking:
+      utils.log('Running spawn_vms in blocking mode')
       self.__spawn_vms(agent, num_vms, parameters, reservation_id)
     else:
+      utils.log('Running spawn_vms in non-blocking mode')
       thread.start_new_thread(self.__spawn_vms,
         (agent, num_vms, parameters, reservation_id))
     utils.log('Successfully started request {0}.'.format(reservation_id))

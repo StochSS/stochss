@@ -200,7 +200,7 @@ class backendservices():
                 logging.error("deleteTaskLocal : couldn't kill process. error: %s", str(e))
         logging.info("deleteTaskLocal : exiting method")        
     
-    def startMachines(self, params):
+    def startMachines(self, params, block=False):
         '''
         This method instantiates ec2 instances
         '''
@@ -212,7 +212,7 @@ class backendservices():
 	    #we can do a terminate all based on keyname prefix
 	    if not keyname.startswith(backendservices.KEYPREFIX):
 		params['keyname'] = backendservices.KEYPREFIX+keyname
-            i = InfrastructureManager(blocking=True)
+            i = InfrastructureManager(blocking=block)
             res = i.run_instances(params,[])
             logging.info("startMachines : exiting method with result : %s", str(res))
             return res
@@ -220,14 +220,14 @@ class backendservices():
             logging.error("startMachines : exiting method with error : %s", str(e))
             return None
         
-    def stopMachines(self, params):
+    def stopMachines(self, params, block=False):
         '''
         This method would terminate all the  instances associated with the account
 	that have a keyname prefixed with stochss (all instances created by the backend service)
 	params must contain credentials key/value
         '''
         try:
-            i = InfrastructureManager(blocking=True)
+            i = InfrastructureManager(blocking=block)
             res = i.terminate_instances(params,backendservices.KEYPREFIX)
             return True
         except Exception, e:
@@ -337,7 +337,7 @@ if __name__ == "__main__":
 
     print 'cjk params: '+str(params)
     if obj.validateCredentials(params) :
-        res = obj.startMachines(params)
+        res = obj.startMachines(params,True)
         if res is None :
             raise TypeError("Error, startMachines failed!")
 
@@ -345,7 +345,7 @@ if __name__ == "__main__":
         obj.describeMachines(params)
 
         #this terminates instances associated with this users creds and KEYPREFIX keyname prefix
-        obj.stopMachines(params)
+        #obj.stopMachines(params,True)
 	#comment the line above to avoid stopping machines (ie to test tasking)
 
 
