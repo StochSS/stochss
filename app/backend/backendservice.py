@@ -16,8 +16,13 @@ class backendservices():
     It should be passed the agent creds
     ''' 
         
-    tablename = "stochss"
-    def backendservices(self):
+    #Class Constants
+    TABLENAME = 'stochss'
+    KEYPREFIX = 'stochss'
+    INFRA_EC2 = 'ec2'
+    INFRA_CLUSTER = 'cluster'
+
+    def __init__(self):
         '''
         constructor to set the path of various libraries
         ''' 
@@ -25,7 +30,6 @@ class backendservices():
         sys.path.append(os.path.join(os.path.dirname(__file__), 'lib/celery'))
         sys.path.append(os.path.join(os.path.dirname(__file__), 
                                      '/Library/Python/2.7/site-packages/amqp'))
-        createtable(self.tablename)
             
     def executeTask(self,params):
         '''
@@ -40,7 +44,7 @@ class backendservices():
                            taskid)
             timenow = datetime.now() 
             data = {'status':"pending","start_time":timenow.strftime('%Y-%m-%d %H:%M:%S'), 'Message':"Task sent to Cloud"}
-            updateEntry(taskid, data, self.tablename)
+            updateEntry(taskid, data, backendservices.TABLENAME)
             tmp = task.delay(taskid, params)
             logging.debug("executeTask :  result of task : %s", str(tmp))
             return tmp,taskid
@@ -159,7 +163,7 @@ class backendservices():
         os.environ["AWS_SECRET_ACCESS_KEY"] = params['AWS_SECRET_ACCESS_KEY']
         result = {}
         try:
-                result = describetask(params['taskids'], self.tablename)
+                result = describetask(params['taskids'], backendservices.TABLENAME)
         except Exception, e:
             logging.error("describeTask : exiting with error : %s", str(e))
             return None
@@ -176,7 +180,7 @@ class backendservices():
         try:
             for taskid in taskids:
                 removeTask(taskid) #this removes task from celery queue
-                removetask(self.tablename,taskid) #this removes task information from DB. ToDo: change the name of method
+                removetask(backendservices.TABLENAME,taskid) #this removes task information from DB. ToDo: change the name of method
             logging.info("deleteTasks: All tasks removed")
         except Exception, e:
             logging.error("deleteTasks : exiting with error : %s", str(e))
@@ -201,14 +205,17 @@ class backendservices():
         This method instantiates ec2 instances
         '''
 
-        #this will basically start an instance in ec2
-        # add call from the infrastructure manager here
         logging.info("startMachines : inside method with params : %s", str(params))
         try:
+            keyname = params['keyname']
+	    #make sure that any keynames we use are prefixed with stochss so that
+	    #we can do a terminate all based on keyname prefix
+	    if not keyname.startswith(backendservices.KEYPREFIX):
+		params['keyname'] = backendservices.KEYPREFIX+keyname
             i = InfrastructureManager(blocking=True)
-            res = i.run_instances(params,params)
-            return res
+            res = i.run_instances(params,[])
             logging.info("startMachines : exiting method with result : %s", str(res))
+            return res
         except Exception, e:
             logging.error("startMachines : exiting method with error : %s", str(e))
             return None
@@ -216,16 +223,12 @@ class backendservices():
     def stopMachines(self, params):
         '''
         This method would terminate all the  instances associated with the account
-        It expects the following two fields in the  parameter argument
-        params ={"infrastructure":"ec2",
-             'credentials':{"EC2_ACCESS_KEY":"______________", 
-              "EC2_SECRET_KEY":"__________"},
-                  }
+	that have a keyname prefixed with stochss (all instances created by the backend service)
+	params must contain credentials key/value
         '''
         try:
             i = InfrastructureManager(blocking=True)
-            res = i.terminate_instances(params)
-            print str(res)
+            res = i.terminate_instances(params,backendservices.KEYPREFIX)
             return True
         except Exception, e:
             logging.error("Terminate machine failed with error : %s", str(e))
@@ -240,8 +243,7 @@ class backendservices():
         logging.info("describeMachines : inside method with params : %s", str(params))
         try:
             i = InfrastructureManager()
-            secret =[]
-            res = i.describe_instances(params, secret)
+            res = i.describe_instances(params, [], backendservices.KEYPREFIX)
             logging.info("describeMachines : exiting method with result : %s", str(res))
             return res
         except Exception, e:
@@ -253,6 +255,20 @@ class backendservices():
         '''
         This method verifies the validity of ec2 credentials
         '''
+	if params['infrastructure'] is None :
+            logging.error("validateCredentials: infrastructure param not set")
+	    return False
+	creds = params['credentials']
+	if creds is None :
+            logging.error("validateCredentials: credentials param not set")
+	    return False
+	if creds['EC2_ACCESS_KEY'] is None :
+            logging.error("validateCredentials: credentials EC2_ACCESS_KEY not set")
+	    return False
+	if creds['EC2_SECRET_KEY'] is None :
+            logging.error("validateCredentials: credentials EC2_ACCESS_KEY not set")
+	    return False
+
         logging.info("validateCredentials: inside method with params : %s", str(params))
         try:
             i = InfrastructureManager()
@@ -290,38 +306,59 @@ class backendservices():
             return False
         
 if __name__ == "__main__":
-    pass
+    logging.basicConfig(filename='testoutput.log',filemode='w',level=logging.DEBUG)
+    access_key = 'AKIAJIRKOUOGF57CSHAA'
+    secret_key = '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'
+    infra = backendservices.INFRA_EC2
+
+    #infra = str(raw_input("Please enter which infrastructure to use (ec2,ec2R,euca): ")).strip()
+    #access_key = raw_input("Please enter your cloud access key: ")
+    #secret_key = raw_input("Please enter your cloud secret key: ")
+    while not (infra == backendservices.INFRA_EC2 or infra == backendservices.CLUSTER) :
+        print "Unrecognized infrastructure entry."
+        infra = raw_input("Please enter which infrastructure to use (ec2,ec2R,euca): ")
+
+
     obj = backendservices()
-    PARAM_CREDENTIALS = 'credentials'
-    PARAM_GROUP = 'group'
-    PARAM_IMAGE_ID = 'image_id'
-    PARAM_INSTANCE_TYPE = 'instance_type'
-    PARAM_KEYNAME = 'keyname'
-    credentials = {"EC2_ACCESS_KEY":"KIAJWILGFLOFVDRDRCQ", "EC2_SECRET_KEY":"vnEvY4vFpmaPsPNTB80H8IsNqIkWGTMys/95VWaJ"}
-    params ={"infrastructure":"ec2",
-             "num_vms":1, 
-             'group':'stochss19', 
-             'image_id':'ami-11bad678', 
-             'instance_type':'t1.micro',
-             'keyname':'stochssnew32', 
-             'email':['anand.bdk@gmail.com'],
-             'credentials':{"EC2_ACCESS_KEY":"AKIAJWILGFLOFVDRDRCQ", "EC2_SECRET_KEY":"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"},
-             #'credentials':{"EC2_ACCESS_KEY":"sadsdsad", "EC2_SECRET_KEY":"/95VWaJ"},
-             'use_spot_instances':False}
-    #test  = obj.validateCredentials(params)
-    #print test
-    #print str(obj.startMachines(params))
-    print obj.stopMachines(params)
-    #val = obj.describeMachines(params)
-    pids = [12680,12681,12682, 18526]
-    #res  = obj.checkTaskStatusLocal(pids)
-    pids = [18511,18519,19200]
-    #obj.deleteTaskLocal(pids)
-    #print str(res)
-    #obj.fetchOutput("2f3d86eb-9231-407d-bfd9-19010695e6a3","https://s3.amazonaws.com/78d7d1dc-0dfe-48e8-95ae-eec20d0ca346/output/2f3d86eb-9231-407d-bfd9-19010695e6a3.tar")
-    #param = {'file':"/Users/RaceLab/StochKit2.0.6/models/examples/dimer_decay.xml",'paramstring':"--force -t 10 -r 1000"}
-    #res = obj.executeTaskLocal(param)
-    #print str(res)
-    #obj.startMachines(params)
-    #obj.describeMachines(params)
-    
+    params ={
+        'credentials':{'EC2_ACCESS_KEY':access_key, 'EC2_SECRET_KEY':secret_key},
+    }
+    params['infrastructure'] = infra
+    params['num_vms'] = 1
+    params['group'] = 'stochss'
+    params['instance_type'] = 't1.micro'
+    #stochss will prefix whatever keyname you give here: stochss_stochssnew32
+    params['keyname'] = 'cjknew32'
+    params['use_spot_instances'] = False
+    if infra == backendservices.INFRA_EC2 :
+        params['image_id'] = 'ami-11bad678'
+    else :
+        raise TypeError("Error, unexpected infrastructure type: "+infra)
+
+    print 'cjk params: '+str(params)
+    if obj.validateCredentials(params) :
+        res = obj.startMachines(params)
+        if res is None :
+            raise TypeError("Error, startMachines failed!")
+
+        reservationID = res['reservation_id']
+        obj.describeMachines(params)
+
+        #this terminates instances associated with this users creds and KEYPREFIX keyname prefix
+        obj.stopMachines(params)
+	#comment the line above to avoid stopping machines (ie to test tasking)
+
+
+	#Some tests for tasks - this came from Anand's code originally (requires updating)
+        #createtable(backendservices.TABLENAME)
+    	#pids = [12680,12681,12682,18526]
+    	#res  = obj.checkTaskStatusLocal(pids)
+    	#pids = [18511,18519,19200]
+    	#obj.deleteTaskLocal(pids)
+    	#print str(res)
+    	#obj.fetchOutput("2f3d86eb-9231-407d-bfd9-19010695e6a3","https://s3.amazonaws.com/78d7d1dc-0dfe-48e8-95ae-eec20d0ca346/output/2f3d86eb-9231-407d-bfd9-19010695e6a3.tar")
+    	#param = {'file':"/Users/RaceLab/StochKit2.0.6/models/examples/dimer_decay.xml",'paramstring':"--force -t 10 -r 1000"}
+    	#res = obj.executeTaskLocal(param)
+    	#print str(res)
+        #obj.stopMachines(params)
+ 

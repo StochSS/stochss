@@ -1,6 +1,6 @@
 
 from backend.agents.base_agent import BaseAgent, AgentConfigurationException, AgentRuntimeException
-import sys,os
+import sys,os,traceback
 sys.path.append(os.path.join(os.path.dirname(__file__), '../../lib/boto'))
 sys.path.append(os.path.join(os.path.dirname(__file__), '../'))
 print sys.path
@@ -165,7 +165,7 @@ class EC2Agent(BaseAgent):
         private_ips.append(i.private_dns_name)
     return public_ips, private_ips, instance_ids
 
-  def describe_instances(self, parameters):
+  def describe_instances(self, parameters, prefix=''):
     """
     Retrieves the list of running instances that have been instantiated using a
     particular EC2 keyname. The target keyname is read from the input parameter
@@ -183,12 +183,13 @@ class EC2Agent(BaseAgent):
     instanceList = []
     instances = [i for r in reservations for i in r.instances]
     for i in instances:
-        instance = dict()
-        instance["id"] = i.id
-        instance["public_ip"] = i.public_dns_name
-        instance["private_ip"] = i.private_dns_name
-        instance["state"]= i.state
-        instanceList.append(instance)
+	if i.key_name.startswith(prefix):
+            instance = dict()
+            instance["id"] = i.id
+            instance["public_ip"] = i.public_dns_name
+            instance["private_ip"] = i.private_dns_name
+            instance["state"]= i.state
+            instanceList.append(instance)
     return instanceList
 
 
@@ -348,7 +349,7 @@ class EC2Agent(BaseAgent):
       else:
         self.handle_failure('Error while starting VMs: ' + exception.message)
 
-  def terminate_instances(self, parameters):
+  def terminate_instances(self, parameters, prefix=''):
     """
     Stop one of more EC2 instances using. The input instance IDs are
     fetched from the 'instance_ids' parameters in the input map. (Also
@@ -362,7 +363,8 @@ class EC2Agent(BaseAgent):
     reservations = conn.get_all_instances()
     instances = [i for r in reservations for i in r.instances]
     for i in instances:
-        instance_ids.append(i.id)
+	if i.key_name.startswith(prefix):
+            instance_ids.append(i.id)
     terminated_instances = conn.terminate_instances(instance_ids)
     for instance in terminated_instances:
       utils.log('Instance {0} was terminated'.format(instance.id))
@@ -385,11 +387,11 @@ class EC2Agent(BaseAgent):
 
   def validate_Credentials(self, credentials):
       try:
-          conn = boto.connect_ec2(str(credentials['EC2_ACCESS_KEY']),
-      str(credentials['EC2_SECRET_KEY']))
+          conn = boto.connect_ec2(str(credentials['EC2_ACCESS_KEY']), str(credentials['EC2_SECRET_KEY']))
           conn.get_all_instances()
           return True
       except EC2ResponseError:
+          traceback.print_exc()
           return False
 
   def handle_failure(self, msg):

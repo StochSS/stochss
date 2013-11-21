@@ -11,9 +11,8 @@ import random
 import string
 from stochssapp import BaseHandler
 from backend.backendservice import *
-
+from backend.tasks import createtable
 from google.appengine.ext import db
-
 import time
 
 class CredentialsPage(BaseHandler):
@@ -104,14 +103,13 @@ class CredentialsPage(BaseHandler):
                 result = {'status': True, 'credentials_msg': ' Credentials saved successfully! The EC2 keys have been validated.'}
                 # See if the amazon db table is intitalized
                 if not self.user_data.isTable():
-                    from backend.tasks import createtable
                     db_credentials = self.user_data.getCredentials()
                     # Set the environmental variables
                     os.environ["AWS_ACCESS_KEY_ID"] = credentials['EC2_ACCESS_KEY']
                     os.environ["AWS_SECRET_ACCESS_KEY"] = credentials['EC2_SECRET_KEY']
 
                     try:
-                        createtable("stochss")
+                        createtable(backendservices.TABLENAME)
                         self.user_data.is_amazon_db_table=True
                     except Exception,e:
                         pass
