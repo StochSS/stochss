@@ -279,8 +279,8 @@ stochkit.PrettyPrint.Reaction = function(reaction) {
     expressionString += '=>'
     
     for(var j = 0; j < products.length; j++) {
-        var s = reactants.eq(j).attr('stoichiometry');
-        var id = reactants.eq(j).attr('id');
+        var s = products.eq(j).attr('stoichiometry');
+        var id = products.eq(j).attr('id');
 
         if(s == '1') {
             expressionString += id;
