@@ -57,7 +57,10 @@ else
     tmpdir=$(mktemp -d /tmp/tmp.XXXXXX)
     mv "$STOCHKIT_HOME" "$tmpdir/"
     cd "$tmpdir/$STOCHKIT_VERSION"
-    ./install.sh 1>stdout.log 2>stderr.log
+    STOCHKIT_HOME_R=$STOCHKIT_HOME
+    export STOCHKIT_HOME="$(pwd -P)"
+    ./install.sh 1>"$STOCHSS_HOME/stdout.log" 2>"$STOCHSS_HOME/stderr.log"
+    export STOCHKIT_HOME=$STOCHKIT_HOME_R
     cd $wd
     mv "$tmpdir/$STOCHKIT_VERSION" "$STOCHKIT_HOME"
     rm -r "$tmpdir"
