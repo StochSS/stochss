@@ -162,7 +162,7 @@ class StatusPage(BaseHandler):
                                 else:
                                     # The state gives more fine-grained results, like if the job is being re-run, but
                                     #  we don't bother the users with this info, we just tell them that it is still running.  
-                                    stochkit_job.status == 'Running'
+                                    stochkit_job.status = 'Running'
                     
                     except Exception,e:
                         result = {'status':False,'msg':'Could not determine the status of the jobs.'+str(e)}
