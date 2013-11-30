@@ -49,9 +49,14 @@ else
     echo " * This process will take at least 5 minutes to complete, please be patient *"
     wd=`pwd`
     cd "$STOCHKIT_PREFIX"
-    tar -xf "$STOCHKIT_VERSION.tgz"
-    cd "$STOCHKIT_HOME"
-    ./install.sh 1>stdout.log 2>stderr.log
+    tar -xzf "$STOCHKIT_VERSION.tgz"
+    tmpdir=$(mktemp -d /tmp/tmp.XXXXXX)
+    mv "$STOCHKIT_HOME" "$tmpdir/"
+    cd "$tmpdir/$STOCHKIT_VERSION"
+    STOCHKIT_HOME_R=$STOCHKIT_HOME
+    export STOCHKIT_HOME="$(pwd -P)"
+    ./install.sh 1>"$STOCHSS_HOME/stdout.log" 2>"$STOCHSS_HOME/stderr.log"
+    export STOCHKIT_HOME=$STOCHKIT_HOME_R
     cd $wd
 
 # Test that StochKit was installed successfully by running it on a sample model

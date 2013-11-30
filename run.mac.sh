@@ -66,12 +66,16 @@ else
     echo " Stdout available at $STOCHSS_HOME/stdout.log and <br />"
     echo " Stderr available at $STOCHSS_HOME/stderr.log<br />"
     echo "<font color=\"blue\"><h3>This process will take at least 5 minutes to complete. Please be patient.</h3></font>"
+    STOCHKIT_HOME_R=$STOCHKIT_HOME
+    export STOCHKIT_HOME="$(pwd -P)"
     ./install.sh 1>"$STOCHSS_HOME/stdout.log" 2>"$STOCHSS_HOME/stderr.log"
+    export STOCHKIT_HOME=$STOCHKIT_HOME_R
     cd $wd
     mv "$tmpdir/$STOCHKIT_VERSION" "$STOCHKIT_HOME"
 
 # Test that StochKit was installed successfully by running it on a sample model
-    if "$STOCHKIT_HOME/ssa" -m "$STOCHKIT_HOME/models/examples/dimer_decay.xml" -r 1 -t 1 -i 1 >& /dev/null; then
+
+    if "$STOCHKIT_HOME/ssa" -m "$STOCHKIT_HOME/models/examples/dimer_decay.xml" -r 1 -t 1 -i 1 --out-dir "$rundir" >& /dev/null; then
 	echo "Success!<br \>"
     else
         echo "<font color=red>"
