@@ -44,8 +44,8 @@ else
     fi
 
     echo "Building StochKit"
-    echo " Logging stdout in $STOCHKIT_HOME/stdout.log and "
-    echo " stderr in $STOCHKIT_HOME/stderr.log "
+    echo " Logging stdout in $STOCHSS_HOME/stdout.log and "
+    echo " stderr in $STOCHSS_HOME/stderr.log "
     echo " * This process will take at least 5 minutes to complete, please be patient *"
     wd=`pwd`
     cd "$STOCHKIT_PREFIX"
@@ -58,6 +58,8 @@ else
     ./install.sh 1>"$STOCHSS_HOME/stdout.log" 2>"$STOCHSS_HOME/stderr.log"
     export STOCHKIT_HOME=$STOCHKIT_HOME_R
     cd $wd
+    mv "$tmpdir/$STOCHKIT_VERSION" "$STOCHKIT_HOME"
+    rm -rf "$tmpdir"
 
 # Test that StochKit was installed successfully by running it on a sample model
     if "$STOCHKIT_HOME/ssa" -m "$STOCHKIT_HOME/models/examples/dimer_decay.xml" -r 1 -t 1 -i 1 >& /dev/null; then

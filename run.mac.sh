@@ -72,6 +72,7 @@ else
     export STOCHKIT_HOME=$STOCHKIT_HOME_R
     cd $wd
     mv "$tmpdir/$STOCHKIT_VERSION" "$STOCHKIT_HOME"
+    rm -rf "$tmpdir"
 
 # Test that StochKit was installed successfully by running it on a sample model
 
