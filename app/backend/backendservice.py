@@ -90,7 +90,7 @@ class backendservices():
             logging.debug("executeTaskLocal : Spawning StochKit Task. String : %s",
                            stochkit_exec_str)
             
-            p = subprocess.Popen(stochkit_exec_str, shell=True, stdin=subprocess.PIPE)
+            p = subprocess.Popen(stochkit_exec_str.split(), stdin=subprocess.PIPE)
 
             #logging.debug("executeTaskLocal: the result of task {0} or error {1} ".format(output,error))
             pid = p.pid
@@ -120,7 +120,7 @@ class backendservices():
         try:
             for pid in pids:
                 try:
-                    os.getpgid(pid)
+                    os.kill(pid, 0)
                     res[pid] = True
                 except Exception,e:
                     res[pid] = False
@@ -191,7 +191,7 @@ class backendservices():
         for pid in pids:
             try:
                 logging.error("KILL TASK {0}".format(pid))
-                os.kill(pid, signal.SIGINT)
+                os.kill(pid, signal.SIGTERM)
             except Exception, e:
                 logging.error("deleteTaskLocal : couldn't kill process. error: %s", str(e))
         logging.info("deleteTaskLocal : exiting method")        

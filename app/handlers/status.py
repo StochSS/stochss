@@ -50,6 +50,10 @@ class StatusPage(BaseHandler):
                 try:
                     if stochkit_job.resource == 'Local':
                         service.deleteTaskLocal([stochkit_job.pid])
+                        status = service.checkTaskStatusLocal([stochkit_job.pid]).values()[0]
+
+                        if status:
+                            raise Exception("")
                     else:
                         service.deleteTasks([stochkit_job.pid])
                     isdeleted_backend = True
