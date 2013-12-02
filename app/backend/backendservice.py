@@ -51,7 +51,7 @@ class backendservices():
             tmp = task.delay(taskid, params)  #calls task(taskid,params)
 
             logging.debug("executeTask :  result of task : %s", str(tmp))
-            return tmp,taskid
+            return tmp.id, taskid
         except Exception, e:
             logging.error("executeTask : error - %s", str(e))
     
@@ -179,10 +179,9 @@ class backendservices():
         '''
         logging.info("deleteTasks : inside method with taskids : %s", taskids)
         try:
-            for taskid in taskids:
-                removeTask(taskid) #this removes task from celery queue
-                removetask(backendservices.TABLENAME,taskid) #this removes task information from DB. ToDo: change the name of method
-                logging.info('deleteTasks: taskid {0} from table'.format(taskid))
+            for taskid_pair in taskids:
+                removeTask(taskid_pair[0]) #this removes task from celery queue
+                removetask(backendservices.TABLENAME,taskid_pair[1]) #this removes task information from DB. ToDo: change the name of method
             logging.info("deleteTasks: All tasks removed")
         except Exception, e:
             logging.error("deleteTasks : exiting with error : %s", str(e))
