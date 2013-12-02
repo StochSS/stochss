@@ -194,12 +194,23 @@ Convert.ReactionVerify = Backbone.View.extend(
 
                     //Count number of reactions
                     //The model very well could lie about being mass action, we gotta check
+                    var reactants = reaction.find('Reactants').children();
                     var reactantCount = reaction.find('Reactants').children().length;
                     var stoichiometries = reaction.find('Reactants').children().map( function(idex, item) { return $( item ).attr('stoichiometry'); } );
                     var reactantParticleCount = 0;
 
-                    for(var j = 0; j < stoichiometries.length; j++) {
-                        reactantParticleCount += Number(stoichiometries[j]);
+                    var allTheSame = true;
+                    var last = null;
+                    
+                    for(var j = 0; j < reactants.length; j++) {
+                        thisId = reactants.eq(j).attr('id');
+                        if(last != null && last != thisId)
+                        {
+                            allTheSame = false;
+                        }
+                        
+                        reactantParticleCount += Number(reactants.eq(j).attr('stoichiometry'));
+                        last = thisId;
                     }
 
                     var prettyReaction = stochkit.PrettyPrint.Reaction(reaction);
@@ -222,8 +233,11 @@ Convert.ReactionVerify = Backbone.View.extend(
                             result.prop('color', 'green');
                             result.text('Successful, Mass Action');
                         } else if((reactantCount == 1 || reactantCount == 2) && reactantParticleCount == 2) {
-                            propensity.text(prettyReaction.propensity + '/' + vol);
-                            
+                            if(allTheSame == true && reactantParticleCount == 2) {
+                                propensity.text(prettyReaction.propensity + '*2/' + vol);
+                            } else {
+                                propensity.text(prettyReaction.propensity + '/' + vol);
+                            }
                             result.prop('color', 'green');
                             result.text('Successful, Mass Action');
                         } else {
@@ -336,7 +350,7 @@ var run = function()
                             thisId = reactants.eq(j).attr('id');
                             if(last != null && last != thisId)
                             {
-                                allTheSame == false;
+                                allTheSame = false;
                             }
 
                             reactantParticleCount += Number(reactants.eq(j).attr('stoichiometry'));
@@ -348,6 +362,9 @@ var run = function()
                             if(reactantParticleCount == 2 && allTheSame) {
                                 reacObj = newModel.getReaction(name);
                                 newModel.setReaction(name, reacObj.reactants, reacObj.products, reacObj.prop + ' * 2 / ' + vol, true);
+                            } else if(reactantParticleCount == 2 && !allTheSame) {
+                                reacObj = newModel.getReaction(name);
+                                newModel.setReaction(name, reacObj.reactants, reacObj.products, reacObj.prop + ' / ' + vol, true);
                             }
                         }
                     }
