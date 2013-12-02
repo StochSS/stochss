@@ -307,17 +307,14 @@ class backendservices():
         
 if __name__ == "__main__":
     logging.basicConfig(filename='testoutput.log',filemode='w',level=logging.DEBUG)
-    access_key = 'AKIAJIRKOUOGF57CSHAA'
-    secret_key = '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'
+    try:
+       access_key = os.environ["EC2_ACCESS_KEY"]
+       secret_key = os.environ["EC2_SECRET_KEY"]
+    except KeyError:
+       logging.error("main: Environment variables EC2_ACCESS_KEY and EC2_SECRET_KEY not set, cannot continue")
+       sys.exit(1)
+
     infra = backendservices.INFRA_EC2
-
-    #infra = str(raw_input("Please enter which infrastructure to use (ec2,ec2R,euca): ")).strip()
-    #access_key = raw_input("Please enter your cloud access key: ")
-    #secret_key = raw_input("Please enter your cloud secret key: ")
-    while not (infra == backendservices.INFRA_EC2 or infra == backendservices.CLUSTER) :
-        print "Unrecognized infrastructure entry."
-        infra = raw_input("Please enter which infrastructure to use (ec2,ec2R,euca): ")
-
 
     obj = backendservices()
     params ={
@@ -335,7 +332,11 @@ if __name__ == "__main__":
     else :
         raise TypeError("Error, unexpected infrastructure type: "+infra)
 
-    print 'cjk params: '+str(params)
+    print 'valid creds? '+str(obj.validateCredentials(params))
+    print 'for params: '+str(params)
+    print 'Exiting main... remove this if you would like to continue testing'
+    sys.exit(0)
+
     if obj.validateCredentials(params) :
         res = obj.startMachines(params,True)
         if res is None :
@@ -345,20 +346,19 @@ if __name__ == "__main__":
         obj.describeMachines(params)
 
         #this terminates instances associated with this users creds and KEYPREFIX keyname prefix
-        #obj.stopMachines(params,True)
-	#comment the line above to avoid stopping machines (ie to test tasking)
+        obj.stopMachines(params)
 
+        credentials = params['credentials']
+        os.environ["AWS_ACCESS_KEY_ID"] = credentials['EC2_ACCESS_KEY']
+        os.environ["AWS_SECRET_ACCESS_KEY"] = credentials['EC2_SECRET_KEY']
+        print 'access key: '+os.environ["AWS_ACCESS_KEY_ID"]
 
-	#Some tests for tasks - this came from Anand's code originally (requires updating)
-        #createtable(backendservices.TABLENAME)
-    	#pids = [12680,12681,12682,18526]
-    	#res  = obj.checkTaskStatusLocal(pids)
-    	#pids = [18511,18519,19200]
-    	#obj.deleteTaskLocal(pids)
-    	#print str(res)
-    	#obj.fetchOutput("2f3d86eb-9231-407d-bfd9-19010695e6a3","https://s3.amazonaws.com/78d7d1dc-0dfe-48e8-95ae-eec20d0ca346/output/2f3d86eb-9231-407d-bfd9-19010695e6a3.tar")
-    	#param = {'file':"/Users/RaceLab/StochKit2.0.6/models/examples/dimer_decay.xml",'paramstring':"--force -t 10 -r 1000"}
-    	#res = obj.executeTaskLocal(param)
-    	#print str(res)
-        #obj.stopMachines(params)
- 
+	print 'Exiting main... the following tests have not been updated.'
+	#comment out stopMachines above if you wish to test remote task execution
+        sys.exit(0)
+        createtable(backendservices.TABLENAME)
+        taskargs = {}
+        #dimer_decay.xml must be in this local dir
+        taskargs['paramstring'] = 'ssa -m dimer_decay.xml -t 10 -i 10 -r 10000 --force'
+
+        obj.executeTaskLocal(taskargs)
