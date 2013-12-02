@@ -13,7 +13,7 @@ import uuid,traceback
 THOME = '/home/ubuntu'
 STOCHKIT_DIR = '/home/ubuntu/StochKit'
 
-celery = Celery('tasks',CELERY_RESULT_BACKEND='amqp', BROKER_URL='sqs://')
+celery = Celery('tasks')
 celery.config_from_object('celeryconfig')
 import logging, subprocess
 import boto.dynamodb
@@ -127,10 +127,11 @@ def removeTask(task_id):
     this method revokes scheduled tasks as well as the tasks in progress
     '''
     try:
+        print "removeTask: with task_id: {0}".format(task_id)
         from celery.task.control import revoke
-        revoke(task_id,terminate=True)
+        revoke(task_id)#,terminate=True, signal="SIGKILL")
     except Exception,e:
-        print "task cannot be removed/deleted. Error : ".format(str(e))
+        print "task {0} cannot be removed/deleted. Error : {1}".format(task_id, str(e))
         
 #def describeTask():
 #    i = celery.control.inspect()
