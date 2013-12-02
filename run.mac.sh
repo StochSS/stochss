@@ -12,8 +12,8 @@ MY_PATH="`( cd \"$MY_PATH\" && pwd )`"  # absolutized and normalized
 STOCHSS_HOME=$MY_PATH
 STOCHSS_HOME="`( cd \"$STOCHSS_HOME\" && pwd )`" 
 
-STOCHKIT_VERSION=StochKit2.0.8
-STOCHKIT_PREFIX="$STOCHSS_HOME"
+STOCHKIT_VERSION=StochKit2.0.10
+STOCHKIT_PREFIX=$STOCHSS_HOME
 export STOCHKIT_HOME="$STOCHKIT_PREFIX/$STOCHKIT_VERSION"
 export STOCHKIT_ODE="$STOCHSS_HOME/ode"
 
@@ -70,13 +70,17 @@ else
     echo " Stdout available at $STOCHSS_HOME/stdout.log and <br />"
     echo " Stderr available at $STOCHSS_HOME/stderr.log<br />"
     echo "<font color=\"blue\"><h3>This process will take at least 5 minutes to complete. Please be patient.</h3></font>"
+    STOCHKIT_HOME_R=$STOCHKIT_HOME
+    export STOCHKIT_HOME="$(pwd -P)"
     ./install.sh 1>"$STOCHSS_HOME/stdout.log" 2>"$STOCHSS_HOME/stderr.log"
+    export STOCHKIT_HOME=$STOCHKIT_HOME_R
     cd $wd
     mv "$tmpdir/$STOCHKIT_VERSION" "$STOCHKIT_HOME"
 
     rm -r "$rundir"
 # Test that StochKit was installed successfully by running it on a sample model
-    if "$STOCHKIT_HOME/ssa" -m "$STOCHKIT_HOME/models/examples/dimer_decay.xml" -r 1 -t 1 -i 1 --outdir "$rundir" >& /dev/null; then
+
+    if "$STOCHKIT_HOME/ssa" -m "$STOCHKIT_HOME/models/examples/dimer_decay.xml" -r 1 -t 1 -i 1 --out-dir "$rundir" >& /dev/null; then
 	echo "Success!<br \>"
     else
         echo "<font color=red>"

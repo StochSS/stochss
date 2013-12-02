@@ -12,8 +12,8 @@ Convert.VolumeChoose = Backbone.View.extend(
 </tr>');
 
             this.table = this.$el.find( 'tbody' )
-            
             this.volume = this.$el.find( '.volume' )
+            this.msgbox = this.$el.find( '.msgbox' )
 
             this.render();
         },
@@ -59,9 +59,21 @@ Convert.VolumeChoose = Backbone.View.extend(
 
             this.volume.val(vol);
 
-            this.volume.on('keyup', _.debounce(_.partial(function(model) {
+            this.volume.on('keyup', _.debounce(_.partial(function(model, msgbox, volume) {
                 model.trigger('volumeChange');
-            }, this.model), 400 ));
+                
+                number = Number(volume.val());
+
+                if(isNaN(number) || !isFinite(number))
+                {
+                    msgbox.text('This is not a valid number (parsed as: ' + number.toString() + ')')
+                }
+                else
+                {
+                    msgbox.text('')
+                }
+
+            }, this.model, this.msgbox, this.volume), 400 ));
 
             this.volume.forceNumeric();
 

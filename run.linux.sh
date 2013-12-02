@@ -21,8 +21,8 @@ if [ "$(echo $STOCHSS_HOME | grep " ")" != "" ]; then
     exit -1
 fi
 
-STOCHKIT_VERSION=StochKit2.0.8
-STOCHKIT_PREFIX="$STOCHSS_HOME"
+STOCHKIT_VERSION=StochKit2.0.10
+STOCHKIT_PREFIX=$STOCHSS_HOME
 export STOCHKIT_HOME="$STOCHKIT_PREFIX/$STOCHKIT_VERSION"
 export STOCHKIT_ODE="$STOCHSS_HOME/ode"
 
@@ -57,7 +57,10 @@ else
     tmpdir=$(mktemp -d /tmp/tmp.XXXXXX)
     mv "$STOCHKIT_HOME" "$tmpdir/"
     cd "$tmpdir/$STOCHKIT_VERSION"
-    ./install.sh 1>stdout.log 2>stderr.log
+    STOCHKIT_HOME_R=$STOCHKIT_HOME
+    export STOCHKIT_HOME="$(pwd -P)"
+    ./install.sh 1>"$STOCHSS_HOME/stdout.log" 2>"$STOCHSS_HOME/stderr.log"
+    export STOCHKIT_HOME=$STOCHKIT_HOME_R
     cd $wd
     mv "$tmpdir/$STOCHKIT_VERSION" "$STOCHKIT_HOME"
     rm -r "$tmpdir"

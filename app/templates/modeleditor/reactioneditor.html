@@ -114,29 +114,31 @@
 							{% for key, value in all_reactions.items() %}
 							<tr>
 								<td>
-								<input type="text" name="{{loop.index}}-name" value="{{key}}" style="width: 100px;" class="update_box">
+								  <input type="text" name="{{loop.index}}-name" value="{{key}}" style="width: 100px;" class="update_box">
 								</td>
 								<td>
-								<input type="text" name="{{loop.index}}-reactants" value="{{all_reactants[key]}}" style="width: 100px;" class="update_box auto_complete">
+								  <input type="text" name="{{loop.index}}-reactants" value="{{all_reactants[key]}}" style="width: 100px;" class="update_box auto_complete">
 								</td>
 								<td>
-								<input type="text" name="{{loop.index}}-products" value="{{all_products[key]}}" style="width: 100px;" class="update_box auto_complete">
+								  <input type="text" name="{{loop.index}}-products" value="{{all_products[key]}}" style="width: 100px;" class="update_box auto_complete">
 								</td>
 								<td>
-                                                                {% if value.massaction %}
-								{{value.marate.name}}
-                                                                {% else %}
-                                                                --
-                                                                {% endif %}
+                                                                  {% if value.massaction %}
+								  {{value.marate.name}}
+                                                                  {% else %}
+                                                                  --
+                                                                  {% endif %}
 								</td>
 								<td>
-                                                                {% if value.massaction %}
-                                                                --
-                                                                {% else %}
+                                                                  {% if value.massaction %}
+                                                                  --
+                                                                  {% else %}
 								<input type="text" name="{{loop.index}}-propensity_function" value = "{{value.propensity_function}}" style="width: 150px;" class="update_box">
                                                                 {% endif %}
 								</td>
-								<td><a href="javascript:void(0)" onclick="javascript:deleteElement('{{key}}')">Delete</a></td>
+								<td>
+                                                                  <a href="javascript:void(0)" onclick="javascript:deleteElement('{{key}}')">Delete</a>
+                                                                </td>
 							</tr>
 		
 							{% endfor %}
@@ -257,7 +259,8 @@ if(myTarget.style.display == 'none'){
 			{ "sSortDataType": "dom-text" },			
 			{ "sSortDataType": "dom-text", "bSearchable": false },
 			{ "sSortDataType": "dom-text", "bSearchable": false },
-			{ "sSortDataType": "dom-text", "bSearchable": false },
+			{ "sSortDataType": "dom-text", "bSearchable": false, "bSortable": false },
+			{ "sSortDataType": "dom-text", "bSearchable": false, "bSortable": false },			
 			{ "sSortDataType": "dom-text", "bSearchable": false, "bSortable": false }			
 		]
 		});
