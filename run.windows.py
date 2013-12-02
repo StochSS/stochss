@@ -1,8 +1,15 @@
 import time
+import os
 import boto.ec2
 
-aws_access_key = raw_input("Please enter your AWS access key:")
-aws_secret_key = raw_input("Please enter your AWS secret key:")
+if 'AWS_ACCESS_KEY' in os.environ:
+    aws_access_key = os.environ['AWS_ACCESS_KEY']
+else:
+    aws_access_key = raw_input("Please enter your AWS access key:")
+if 'AWS_SECRET_KEY' in os.environ:
+    aws_secret_key = os.environ['AWS_SECRET_KEY']
+else:
+    aws_secret_key = raw_input("Please enter your AWS secret key:")
 preferred_instance_id = raw_input("Please enter the instance ID of the EC2 instance you wish to launch (just hit return to launch a brand new instance):")
 # key_name = raw_input("Please enter the name of the file containing your key-pair:")
 
