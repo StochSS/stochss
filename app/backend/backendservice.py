@@ -56,7 +56,7 @@ class backendservices():
         This method spawns a stochkit process. It doesn't wait for the process to finish. The status of the
         process can be tracked using the pid and the output directory returned by this method. 
         
-        @param  params['file'] = the absolute path of the xml file 
+        @param  params['document'] = the contents of the xml file 
         @param  params['paramstring'] = the parameter to be passed to the stochkit execution
         'STOCHKIT_HOME' = this is the environment variable which has the path of the stochkit executable
         @return: 
@@ -69,7 +69,6 @@ class backendservices():
                          str(params))
             res = {}
             
-            #xmlfilepath = params['file']
             paramstr =  params['paramstring']
             uuidstr = str(uuid.uuid4())
             res['uuid'] = uuidstr
@@ -88,7 +87,7 @@ class backendservices():
             res['stderr'] = os.path.abspath('output/' + uuidstr + '/stderr')
             
             # The following executiong string is of the form :
-            # stochkit_exec_str = "~/StochKit2.0.6/ssa -m ~/output/%s/dimer_decay.xml -t 20 -i 10 -r 1000" % (uuidstr)
+            # stochkit_exec_str = "ssa -m ~/output/%s/dimer_decay.xml -t 20 -i 10 -r 1000" % (uuidstr)
             stochkit_exec_str = "{backenddir}/wrapper.py {stdout} {stderr} {0} --model {1} --out-dir output/{2}/result ".format(paramstr,xmlfilepath,uuidstr, stdout = res['stdout'], stderr = res['stderr'], backenddir = os.path.abspath(os.path.dirname(__file__)))
             print stochkit_exec_str
             logging.info("STOCHKIT_EXEX_STR: "+stochkit_exec_str)
@@ -342,23 +341,29 @@ if __name__ == "__main__":
         if res is None :
             raise TypeError("Error, startMachines failed!")
 
-        reservationID = res['reservation_id']
+	#this is only used for cloud task deployment, this verifies that it can be created with creds
+        credentials = params['credentials']
+        os.environ["AWS_ACCESS_KEY_ID"] = credentials['EC2_ACCESS_KEY']
+        os.environ["AWS_SECRET_ACCESS_KEY"] = credentials['EC2_SECRET_KEY']
+        print 'access key: '+os.environ["AWS_ACCESS_KEY_ID"]
+        createtable(backendservices.TABLENAME)
+
+	print 'describeMachines outputs to the testoutput.log file'
         obj.describeMachines(params)
 
         #this terminates instances associated with this users creds and KEYPREFIX keyname prefix
         obj.stopMachines(params)
 
-        credentials = params['credentials']
-        os.environ["AWS_ACCESS_KEY_ID"] = credentials['EC2_ACCESS_KEY']
-        os.environ["AWS_SECRET_ACCESS_KEY"] = credentials['EC2_SECRET_KEY']
-        print 'access key: '+os.environ["AWS_ACCESS_KEY_ID"]
-
-	print 'Exiting main... the following tests have not been updated.'
 	#comment out stopMachines above if you wish to test remote task execution
+	print 'Exiting main... the following tests have not been updated.'
         sys.exit(0)
-        createtable(backendservices.TABLENAME)
-        taskargs = {}
-        #dimer_decay.xml must be in this local dir
-        taskargs['paramstring'] = 'ssa -m dimer_decay.xml -t 10 -i 10 -r 10000 --force'
 
+        #NOTE: dimer_decay.xml must be in this local dir
+	xmlfile = open('dimer_decay.xml','r')
+	doc = xmlfile.read()
+	xmlfile.close()
+
+        taskargs = {}
+        taskargs['paramstring'] = 'ssa -t 100 -i 1000 -r 10 --keep-trajectories --seed 706370 --label'
+        taskargs['document'] = doc
         obj.executeTaskLocal(taskargs)
