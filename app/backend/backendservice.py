@@ -336,7 +336,7 @@ if __name__ == "__main__":
     params['keyname'] = 'cjknew32'
     params['use_spot_instances'] = False
     if infra == backendservices.INFRA_EC2 :
-        params['image_id'] = 'ami-11bad678'
+        params['image_id'] = 'ami-25280a4c'
     else :
         raise TypeError("Error, unexpected infrastructure type: "+infra)
 
@@ -346,9 +346,9 @@ if __name__ == "__main__":
     #sys.exit(0)
 
     if obj.validateCredentials(params) :
-        #res = obj.startMachines(params,True)
-        #if res is None :
-            #raise TypeError("Error, startMachines failed!")
+        res = obj.startMachines(params,True)
+        if res is None :
+            raise TypeError("Error, startMachines failed!")
 
 	#this is only used for cloud task deployment, this verifies that it can be created with creds
         credentials = params['credentials']
@@ -361,13 +361,10 @@ if __name__ == "__main__":
         obj.describeMachines(params)
 
         #this terminates instances associated with this users creds and KEYPREFIX keyname prefix
-        #obj.stopMachines(params)
+	print 'stopMachines outputs to the testoutput.log file'
+        print 'output from stopMachines: {0}'.format(str(obj.stopMachines(params)))
 
-
-	#print 'Exiting main... the following tests have not been updated.'
-        #sys.exit(0)
-
-
+	#Test that local tasks execute and can be deleted
         #NOTE: dimer_decay.xml must be in this local dir
 	xmlfile = open('dimer_decay.xml','r')
 	doc = xmlfile.read()
@@ -375,8 +372,8 @@ if __name__ == "__main__":
 
         taskargs = {}
 	pids = []
-	for i in range(4):
-            taskargs['paramstring'] = 'ssa -t 100 -i 1000 -r 10000 --keep-trajectories --seed 706370 --label'
+	for i in range(1):
+            taskargs['paramstring'] = 'ssa -t 100 -i 1000 -r 1000 --keep-trajectories --seed 706370 --label'
             taskargs['document'] = doc
             res = obj.executeTaskLocal(taskargs)
 	    if res is not None:
