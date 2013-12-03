@@ -5,7 +5,7 @@ All the input validation is performed in this class.
 '''
 from infrastructure_manager import InfrastructureManager
 import threading
-import os, subprocess, signal, uuid, sys
+import os, subprocess, signal, uuid, sys, time
 import logging
 from datetime import datetime
 from tasks import *
@@ -180,6 +180,7 @@ class backendservices():
             for taskid in taskids:
                 removeTask(taskid) #this removes task from celery queue
                 removetask(backendservices.TABLENAME,taskid) #this removes task information from DB. ToDo: change the name of method
+                logging.info('deleteTasks: taskid {0} from table'.format(taskid))
             logging.info("deleteTasks: All tasks removed")
         except Exception, e:
             logging.error("deleteTasks : exiting with error : %s", str(e))
@@ -305,6 +306,14 @@ class backendservices():
             return False
         
 if __name__ == "__main__":
+
+    '''Note that these must be set for this function to work properly:
+        export STOCHSS_HOME=/path/to/stochss/git/dir/stochss
+        export PYTHONPATH=${STOCHSS_HOME}:.:..
+        export PATH=${PATH}:${STOCHSS_HOME}/StochKit
+        export DYLD_LIBRARY_PATH=${STOCHSS_HOME}/StochKit/libs/boost_1_53_0/stage/lib
+    '''
+
     logging.basicConfig(filename='testoutput.log',filemode='w',level=logging.DEBUG)
     try:
        access_key = os.environ["EC2_ACCESS_KEY"]
@@ -333,13 +342,13 @@ if __name__ == "__main__":
 
     print 'valid creds? '+str(obj.validateCredentials(params))
     print 'for params: '+str(params)
-    print 'Exiting main... remove this if you would like to continue testing'
-    sys.exit(0)
+    #print 'Exiting main... remove this if you would like to continue testing'
+    #sys.exit(0)
 
     if obj.validateCredentials(params) :
-        res = obj.startMachines(params,True)
-        if res is None :
-            raise TypeError("Error, startMachines failed!")
+        #res = obj.startMachines(params,True)
+        #if res is None :
+            #raise TypeError("Error, startMachines failed!")
 
 	#this is only used for cloud task deployment, this verifies that it can be created with creds
         credentials = params['credentials']
@@ -352,11 +361,12 @@ if __name__ == "__main__":
         obj.describeMachines(params)
 
         #this terminates instances associated with this users creds and KEYPREFIX keyname prefix
-        obj.stopMachines(params)
+        #obj.stopMachines(params)
 
-	#comment out stopMachines above if you wish to test remote task execution
-	print 'Exiting main... the following tests have not been updated.'
-        sys.exit(0)
+
+	#print 'Exiting main... the following tests have not been updated.'
+        #sys.exit(0)
+
 
         #NOTE: dimer_decay.xml must be in this local dir
 	xmlfile = open('dimer_decay.xml','r')
@@ -364,6 +374,20 @@ if __name__ == "__main__":
 	xmlfile.close()
 
         taskargs = {}
-        taskargs['paramstring'] = 'ssa -t 100 -i 1000 -r 10 --keep-trajectories --seed 706370 --label'
-        taskargs['document'] = doc
-        obj.executeTaskLocal(taskargs)
+	pids = []
+	for i in range(4):
+            taskargs['paramstring'] = 'ssa -t 100 -i 1000 -r 10000 --keep-trajectories --seed 706370 --label'
+            taskargs['document'] = doc
+            res = obj.executeTaskLocal(taskargs)
+	    if res is not None:
+	        print 'results: {0}'.format(str(res))
+	        pids.append(res['pid'])
+	print 'number of pids: {0} {1}'.format(str(len(pids)),str(pids))
+    	res  = obj.checkTaskStatusLocal(pids)
+	if res is not None:
+	    print 'status: {0}'.format(str(res))
+	time.sleep(5) #need to sleep here to allow for process spawn
+	print 'deleting pids: {0}'.format(str(pids))
+	obj.deleteTaskLocal(pids)    
+
+	#comment out stopMachines above if you wish to test remote task execution
