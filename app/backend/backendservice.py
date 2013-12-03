@@ -34,18 +34,22 @@ class backendservices():
     def executeTask(self,params):
         '''
         This method instantiates celery tasks in the cloud.
+	Returns return value from celery async call and the task ID
         '''
         logging.info('inside execute task for cloud : Params - %s', str(params))
         try:
             from tasks import task,updateEntry
+	    #This is a celery task in tasks.py: @celery.task(name='stochss')
+
             taskid = str(uuid.uuid4())
             #create a celery task
-            logging.debug("executeTask : executing task with uuid : %s ",
-                           taskid)
+            logging.debug("executeTask : executing task with uuid : %s ", taskid)
             timenow = datetime.now() 
             data = {'status':"pending","start_time":timenow.strftime('%Y-%m-%d %H:%M:%S'), 'Message':"Task sent to Cloud"}
             updateEntry(taskid, data, backendservices.TABLENAME)
-            tmp = task.delay(taskid, params)
+	    #celery async task execution http://ask.github.io/celery/userguide/executing.html
+            tmp = task.delay(taskid, params)  #calls task(taskid,params)
+
             logging.debug("executeTask :  result of task : %s", str(tmp))
             return tmp,taskid
         except Exception, e:
@@ -134,7 +138,7 @@ class backendservices():
             logging.error("checkTaskStatusLocal: Exiting with error : %s", str(e))
             return None
     
-    def checkTaskStatusCloud(self, ids):
+    def checkTaskStatusCloud(self, pids):
         '''
         checks the status of the pids and returns true if the task is running or else returns false
         pids = [list of pids to check for status]
@@ -155,7 +159,6 @@ class backendservices():
          a dictionary of the form :
          {"taskid":"result:"","state":""} 
         '''
-        logging.info("describeTask : inside method with params : %s", params)
         logging.debug("describeTask : setting environment variables : AWS_ACCESS_KEY_ID - %s", params['AWS_ACCESS_KEY_ID']) 
         os.environ["AWS_ACCESS_KEY_ID"] = params['AWS_ACCESS_KEY_ID']
         logging.debug("describeTask : setting environment variables : AWS_SECRET_ACCESS_KEY - %s", params['AWS_SECRET_ACCESS_KEY'])
@@ -166,7 +169,6 @@ class backendservices():
         except Exception, e:
             logging.error("describeTask : exiting with error : %s", str(e))
             return None
-        logging.info("describeTask : exiting with result : %s", str(result))
         return result
     
     def deleteTasks(self, taskids):
@@ -346,9 +348,10 @@ if __name__ == "__main__":
     #sys.exit(0)
 
     if obj.validateCredentials(params) :
-        res = obj.startMachines(params,True)
-        if res is None :
-            raise TypeError("Error, startMachines failed!")
+	print 'startMachines is commented out -- there better be an instance started! (or uncomment)'
+        #res = obj.startMachines(params,True)
+        #if res is None :
+            #raise TypeError("Error, startMachines failed!")
 
 	#this is only used for cloud task deployment, this verifies that it can be created with creds
         credentials = params['credentials']
@@ -360,31 +363,71 @@ if __name__ == "__main__":
 	print 'describeMachines outputs to the testoutput.log file'
         obj.describeMachines(params)
 
-        #this terminates instances associated with this users creds and KEYPREFIX keyname prefix
-	print 'stopMachines outputs to the testoutput.log file'
-        print 'output from stopMachines: {0}'.format(str(obj.stopMachines(params)))
-
 	#Test that local tasks execute and can be deleted
         #NOTE: dimer_decay.xml must be in this local dir
 	xmlfile = open('dimer_decay.xml','r')
 	doc = xmlfile.read()
 	xmlfile.close()
 
+	############################
+	print 'testing local task execution...'
         taskargs = {}
 	pids = []
-	for i in range(1):
-            taskargs['paramstring'] = 'ssa -t 100 -i 1000 -r 1000 --keep-trajectories --seed 706370 --label'
+	NUMTASKS = 1
+	for i in range(NUMTASKS):
+            taskargs['paramstring'] = 'ssa -t 100 -i 10 -r 10 --keep-trajectories --seed 706370 --label'
             taskargs['document'] = doc
             res = obj.executeTaskLocal(taskargs)
 	    if res is not None:
 	        print 'results: {0}'.format(str(res))
 	        pids.append(res['pid'])
 	print 'number of pids: {0} {1}'.format(str(len(pids)),str(pids))
+
     	res  = obj.checkTaskStatusLocal(pids)
 	if res is not None:
 	    print 'status: {0}'.format(str(res))
+
 	time.sleep(5) #need to sleep here to allow for process spawn
 	print 'deleting pids: {0}'.format(str(pids))
 	obj.deleteTaskLocal(pids)    
 
-	#comment out stopMachines above if you wish to test remote task execution
+	############################
+	print 'testing cloud task execution...'
+        taskargs = {}
+	pids = []
+	taskargs['AWS_ACCESS_KEY_ID'] = credentials['EC2_ACCESS_KEY']
+        taskargs['AWS_SECRET_ACCESS_KEY'] = credentials['EC2_SECRET_KEY']
+	NUMTASKS = 4
+	for i in range(NUMTASKS):
+            taskargs['paramstring'] = 'ssa -t 100 -i 100 -r 100 --keep-trajectories --seed 706370 --label'
+            taskargs['document'] = doc
+    	    taskargs['bucketname'] = 'cjk4321'
+	    res, taskid = obj.executeTask(taskargs)
+  	    pids.append(taskid)
+
+	taskargs['taskids'] = pids
+	done = {}
+	count = NUMTASKS
+	while len(done) < count :
+	    for i in pids:
+                task_status = obj.describeTask(taskargs)
+                job_status = task_status[i]  #may be None
+		if job_status is not None:
+		    print 'task id {0} status: {1}'.format(str(i),job_status['status'])
+		    if job_status['status'] == 'finished':
+		        done[i] = True
+		    elif job_status['status'] == 'active':
+			print '\tDELETING task {0}'.format(str(i))
+			count = count - 1
+			obj.deleteTasks([i])    
+		else :
+		    print 'task id {0} status is None'.format(str(i))
+
+	print '{0} jobs have finished!'.format(len(done))
+
+	############################
+        #this terminates instances associated with this users creds and KEYPREFIX keyname prefix
+	print 'stopMachines outputs to the testoutput.log file'
+	print 'stopMachines is commented out -- be sure to terminate your instances or uncomment!'
+        #res = obj.stopMachines(params)
+        #print 'output from stopMachines: {0}'.format(str(res))

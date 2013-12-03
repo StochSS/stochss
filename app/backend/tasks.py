@@ -10,7 +10,6 @@ print str(sys.path)
 from celery import Celery
 import os
 import uuid,traceback
-print "inside tasks.py file"
 THOME = '/home/ubuntu'
 STOCHKIT_DIR = '/home/ubuntu/StochKit'
 
@@ -19,9 +18,10 @@ celery.config_from_object('celeryconfig')
 import logging, subprocess
 import boto.dynamodb
 from datetime import datetime
-@celery.task(name='stochss')
 
+@celery.task(name='stochss')
 def task(taskid,params):
+  ''' This is the actual work done by a task worker '''
   try:
         
 	global THOME
@@ -160,7 +160,6 @@ def describetask(taskids,tablename):
                 res[taskid] = item
             except Exception,e:
                 res[taskid] = None
-        print "exiting describetask successfully with result : {0}".format(str(res))
         return res
     except Exception,e:
         print "exiting describetask  with error : {0}".format(str(e))
@@ -176,7 +175,6 @@ def removetask(tablename,taskid):
             item = table.get_item(hash_key=taskid)
             item.delete()
             return True
-            print 'exiting removetask successfully'
         else:
             print 'exiting removetask with error : table doesn\'t exists'
             return False
@@ -208,7 +206,6 @@ def createtable(tablename=str()):
 
 def tableexists(dynamo, tablename):
     try:
-        print 'inside tablexists method for tablename = {0}'.format(tablename)
         table = dynamo.get_table(tablename)
         if table == None:
             print "table doesn't exist"
@@ -234,7 +231,6 @@ def updateEntry(taskid=str(), data=dict(), tablename=str()):
         table = dynamo.get_table(tablename)
         item = table.new_item(hash_key=str(taskid),attrs=data)
         item.put()
-        print 'data written to the database'
         return True
     except Exception,e:
         print 'exiting updatedata with error : {0}'.format(str(e))
