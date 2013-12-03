@@ -11,15 +11,22 @@ from celery import Celery
 import os
 import uuid,traceback
 print "inside tasks.py file"
+THOME = '/home/ubuntu'
+STOCHKIT_DIR = '/home/ubuntu/StochKit'
+
 celery = Celery('tasks',CELERY_RESULT_BACKEND='amqp', BROKER_URL='sqs://')
 celery.config_from_object('celeryconfig')
 import logging, subprocess
 import boto.dynamodb
 from datetime import datetime
 @celery.task(name='stochss')
+
 def task(taskid,params):
   try:
         
+	global THOME
+	global STOCHKIT_DIR
+
         print 'task to be executed at remote location'
         print 'inside celery task method'
         data = {'status':'active','message':'Task Executing in cloud'}
@@ -35,35 +42,20 @@ def task(taskid,params):
         res['uuid'] = uuidstr
         create_dir_str = "mkdir -p output/%s/result " % uuidstr
         os.system(create_dir_str)
-        # check if the env variable is set form STOCHKIT_HOME or else use the default location
-        #STOCHKIT_DIR = "/Users/RaceLab/StochKit2.0.6"
-        STOCHKIT_DIR = "/home/ubuntu/StochKit2.0.6/"
-        # AH: THIS DOES NOT WORK, FOR SOME REASON THE VARIABLE IS NOT PICKED UP FROM THE SHELL
-        try:
-            STOCHKIT_DIR = os.environ['STOCHKIT_HOME']
-        except Exception:
-            #ignores if the env variable is not set
-            print "VARIABLE NOT SET!!"
-            pass
 
-        # The following executiong string is of the form : stochkit_exec_str = "~/StochKit2.0.6/ssa -m ~/output/%s/dimer_decay.xml -t 20 -i 10 -r 1000" % (uuidstr)
-        stochkit_exec_str = "{0}/{2} -m {1} --force --out-dir output/{3}/result 2>&1 > /home/ubuntu/sotchkit.log  ".format(STOCHKIT_DIR,xmlfilepath,paramstr,uuidstr)
-        #logging.debug("Spawning StochKit Task. String : ", stochkit_exec_str)
+        # The following executiong string is of the form : stochkit_exec_str = "~/StochKit/ssa -m ~/output/%s/dimer_decay.xml -t 20 -i 10 -r 1000" % (uuidstr)
+        stochkit_exec_str = "{0}/{2} -m {1} --force --out-dir output/{3}/result 2>&1 > {4}/stochkit.log  ".format(STOCHKIT_DIR,xmlfilepath,paramstr,uuidstr,THOME)
         print "======================="
         print " Command to be executed : "
         print stochkit_exec_str
         print "======================="
         print "To test if the command string was correct. Copy the above line and execute in terminal."
-        #p = subprocess.Popen(stochkit_exec_str, shell=False, stdin=subprocess.STDOUT,stdout=subprocess.STDOUT, stderr=subprocess.STDOUT)
-        print ' os.system change visible'
         timestarted = datetime.now()
         os.system(stochkit_exec_str)
         timeended = datetime.now()
-        #pid = p.pid;
         res['pid'] = taskid
         filepath = "output/%s//" % (uuidstr)
         absolute_file_path = os.path.abspath(filepath)
-        #res['relative_output_path']=os.path.relpath(filepath,)
         #copies the XML file to the output direcory
         copy_file_str = "cp  {0} output/{1}".format(xmlfilepath,uuidstr)
         print copy_file_str
@@ -73,7 +65,7 @@ def task(taskid,params):
         print create_tar_output_str
         logging.debug("followig cmd to be executed %s" % (create_tar_output_str))
         bucketname = params['bucketname']
-        copy_to_s3_str = "python /home/ubuntu/sccpy.py output/{0}.tar {1}".format(uuidstr,bucketname)
+        copy_to_s3_str = "python {2}/sccpy.py output/{0}.tar {1}".format(uuidstr,bucketname,THOME)
         data = {'status':'active','message':'Task finished. Generating output.'}
         updateEntry(taskid, data, "stochss")
         os.system(create_tar_output_str)
@@ -158,7 +150,7 @@ All DynamoBD related methods follow next. TODO: move it to a different file
 def describetask(taskids,tablename):
     res = {}
     try:
-        print 'inside describetask method with taskids = {0} and tablename{1}'.format(str(taskids), tablename)
+        print 'inside describetask method with taskids = {0} and tablename {1}'.format(str(taskids), tablename)
         dynamo=boto.connect_dynamodb()
         if not tableexists(dynamo, tablename): return res
         table = dynamo.get_table(tablename)
@@ -234,7 +226,7 @@ def updateEntry(taskid=str(), data=dict(), tablename=str()):
      update the status
     '''
     try:
-        print 'inside update entry method with taskid = {0} and data = {1}'.format(str(taskid), str(data))
+        print 'inside update entry method with taskid = {0} and data = {1}'.format(taskid, str(data))
         dynamo=boto.connect_dynamodb()
         if not tableexists(dynamo, tablename):
             print "invalid table name specified"
@@ -249,13 +241,37 @@ def updateEntry(taskid=str(), data=dict(), tablename=str()):
         return False
     
 if __name__ == "__main__":
-    os.environ["AWS_ACCESS_KEY_ID"] = "AKIAJWILGFLOFVDRDRCQ"
-    os.environ["AWS_SECRET_ACCESS_KEY"] = "vnEvY4vFpmaPsPNTB80H8IsNqIkWGTMys/95VWaJ"
-    #print createtable('stochss')
+
+    '''
+    NOTE: these must be set in your environment:
+    export AWS_SECRET_ACCESS_KEY=XXX
+    export AWS_ACCESS_KEY_ID=YYY
+    '''
+    global THOME
+    global STOCHKIT_DIR
+    os.environ["AWS_ACCESS_KEY_ID"] = os.environ['EC2_ACCESS_KEY']
+    os.environ["AWS_SECRET_ACCESS_KEY"] = os.environ['EC2_SECRET_KEY']
+
+    print createtable('stochss')
     val = {'status':"running", 'message':'done'}
-    #updateEntry('1234-1srf', val, 'testtable1')
-    #print describetask(['1234-1srf', '1234-1sr2'], 'testtable1')
-    #print removetask('testtable1', '1234-1srf')
-    print describetask(['57919b2c-d34f-45cb-a8ff-a98d84a81f09'], "stochss")
+    updateEntry('1234', val, 'stochss')
+    print describetask(['1234', '1234'], 'stochss')
     
+    #this executes a task locally
+    #NOTE: dimer_decay.xml must be in this local dir
+    xmlfile = open('dimer_decay.xml','r')
+    doc = xmlfile.read()
+    xmlfile.close()
+    taskargs = {}
+    taskargs['paramstring'] = 'ssa -t 100 -i 1000 -r 100 --keep-trajectories --seed 706370 --label'
+    taskargs['document'] = doc
+    taskargs['bucketname'] = 'cjk1234'
+
+    THOME=os.getcwd()
+    STOCHKIT_DIR='{0}/../../StochKit'.format(THOME)
+    task('1234',taskargs)
+    print describetask(['1234', '1234'], 'stochss')
+ 
+    print 'BE SURE TO GO TO YOUR AWS ADMIN CONSOLE AND DELETE DYNAMODB TABLES AND S3 BUCKETS'
     
+
