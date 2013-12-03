@@ -1,5 +1,9 @@
 StochSS - Stochastic Simulation Service: Release Notes
 
+1.0.3
+=============================
+- Support for OSX Mavericks
+- Fixed bug that prevented proper termination of local StochKit2 processes.
 
 1.0.2
 =============================
