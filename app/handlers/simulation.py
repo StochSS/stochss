@@ -425,7 +425,7 @@ class NewStochkitEnsemblePage(BaseHandler):
 
             # Algorithm, SSA or Tau-leaping?
             if executable != 'deterministic':
-                executable = params['algorithm']
+                executable = "{0}/../../StochKit/{1}".format(path, params['algorithm'])
 
                 args+=' --realizations '
                 args+=str(realizations)
@@ -626,7 +626,7 @@ class NewStochkitEnsemblePage(BaseHandler):
 
             # Algorithm, SSA or Tau-leaping?
             if executable != 'deterministic':
-                executable = params['algorithm']
+                executable = "{0}/../../StochKit/{1}".format(path, params['algorithm'])
 
                 args+=' --realizations '
                 args+=str(realizations)

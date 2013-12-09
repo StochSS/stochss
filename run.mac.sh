@@ -93,7 +93,7 @@ fi
 echo -n "Testing if StochKit2 ODE built... "
 
 rm -rf "$rundir"
-if "$STOCHKIT_ODE/stochkit_ode.py" -m "$STOCHKIT_HOME/models/examples/dimer_decay.xml" -t 1 -i 1 --out-dir "$rundir"; then
+if "$STOCHKIT_ODE/stochkit_ode.py" -m "$STOCHKIT_ODE/dimer_decay.xml" -t 1 -i 1 --out-dir "$rundir"; then
     echo "Yes"
     echo "ode found in $STOCHKIT_ODE"
 else
@@ -145,7 +145,7 @@ else
 
     rm -r "$rundir"
 # Test that StochKit was installed successfully by running it on a sample model
-    if "$STOCHKIT_ODE/stochkit_ode.py" -m "$STOCHKIT_HOME/models/examples/dimer_decay.xml" -t 1 -i 1 --out-dir "$rundir"; then
+    if "$STOCHKIT_ODE/stochkit_ode.py" -m "$STOCHKIT_ODE/dimer_decay.xml" -t 1 -i 1 --out-dir "$rundir"; then
 	echo "Success!"
     else
 	echo "Failed"
