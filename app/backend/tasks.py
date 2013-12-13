@@ -129,7 +129,9 @@ def removeTask(task_id):
     try:
         print "removeTask: with task_id: {0}".format(task_id)
         from celery.task.control import revoke
-        revoke(task_id)#,terminate=True, signal="SIGKILL")
+        # Celery can't use remote control (which includes revoking tasks) with SQS
+        # http://docs.celeryproject.org/en/latest/getting-started/brokers/sqs.html
+        revoke(task_id)#, terminate=True, signal="SIGTERM")
     except Exception,e:
         print "task {0} cannot be removed/deleted. Error : {1}".format(task_id, str(e))
         
