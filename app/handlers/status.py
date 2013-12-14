@@ -158,8 +158,8 @@ class StatusPage(BaseHandler):
                                     stochkit_job.output_url = job_status['output']
                                     stochkit_job.uuid = job_status['uuid']
                                 
-                                elif job_status['status'] == 'Failed':
-                                    stochkit_job.status == 'Failed'
+                                elif job_status['status'] == 'failed':
+                                    stochkit_job.status = 'Failed'
                                 elif job_status['status'] == 'pending':
                                     stochkit_job.status = 'Pending'
                                 else:
