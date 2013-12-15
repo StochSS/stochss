@@ -53,12 +53,15 @@ class StatusPage(BaseHandler):
                     if stochkit_job.resource == 'Local':
                         service.deleteTaskLocal([stochkit_job.pid])
                     else:
-                        service.deleteTasks([stochkit_job.pid])
+                        db_credentials = self.user_data.getCredentials()
+                        os.environ["AWS_ACCESS_KEY_ID"] = db_credentials['EC2_ACCESS_KEY']
+                        os.environ["AWS_SECRET_ACCESS_KEY"] = db_credentials['EC2_SECRET_KEY']
+                        service.deleteTasks([(stochkit_job.celery_pid,stochkit_job.pid)])
                     isdeleted_backend = True
                 except Exception,e:
                     isdeleted_backend = False
                     result['status']=False
-                    result['msg'] = "Failed to delete task with PID " + str(stochkit_job.pid) + str(e)
+                    result['msg'] = "Failed to delete task with PID " + str(stochkit_job.celery_pid) + str(e)
                         
                 if isdeleted_backend:
                     # Delete all the local files and delete the job from the datastore
@@ -155,8 +158,8 @@ class StatusPage(BaseHandler):
                                     stochkit_job.output_url = job_status['output']
                                     stochkit_job.uuid = job_status['uuid']
                                 
-                                elif job_status['status'] == 'Failed':
-                                    stochkit_job.status == 'Failed'
+                                elif job_status['status'] == 'failed':
+                                    stochkit_job.status = 'Failed'
                                 elif job_status['status'] == 'pending':
                                     stochkit_job.status = 'Pending'
                                 else:

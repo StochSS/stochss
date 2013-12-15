@@ -247,6 +247,8 @@ class StochKitJob(Job):
         status = 'Pending'
         #  Process ID
         self.pid = None
+        # Celery Task ID
+        self.celery_pid = None
     
         # The result dict returned by the cloud submission
         self.result = None
@@ -425,7 +427,7 @@ class NewStochkitEnsemblePage(BaseHandler):
 
             # Algorithm, SSA or Tau-leaping?
             if executable != 'deterministic':
-                executable = "{0}/../../StochKit/{1}".format(path, params['algorithm'])
+                executable = params['algorithm']
 
                 args+=' --realizations '
                 args+=str(realizations)
@@ -441,7 +443,7 @@ class NewStochkitEnsemblePage(BaseHandler):
                 args+=' --seed '
                 args+=str(seed)
             else:
-                executable = "{0}/../../ode/stochkit_ode.py".format(path)
+                executable = "stochkit_ode.py"
 
             print executable
     
@@ -460,17 +462,19 @@ class NewStochkitEnsemblePage(BaseHandler):
         
             # Call backendservices and execute StochKit
             service = backendservices()
-            res, taskid = service.executeTask(params)
+            celery_task_id, taskid = service.executeTask(params)
             
-            if res == None:
+            if celery_task_id == None:
                 result = {'status':False,'msg':'Cloud execution failed. '}
                 return result
         
             stochkit_job.resource = 'Cloud'
             stochkit_job.type = 'StochKit2 Ensemble'
             
-            # The jobs pid is the Celery task id.
+            # The jobs pid is the DB/S3 ID.
             stochkit_job.pid = taskid
+            # The celery_pid is the Celery Task ID.
+            stochkit_job.celery_pid = celery_task_id
             stochkit_job.status = 'Running'
         
             # Create a wrapper to store the Job description in the datastore
