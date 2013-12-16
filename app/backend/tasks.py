@@ -62,6 +62,15 @@ def task(taskid,params):
       os.system(exec_str)
       timeended = datetime.now()
       
+      results = os.listdir("output/{0}/result".format(uuidstr))
+      if 'stats' in results and os.listdir("output/{0}/result/stats".format(uuidstr)) == ['.parallel']:
+          error_message = {
+              'status': 'failed',
+              'message': 'The compute node can not handle a job of this size.'
+          }
+          updateEntry(taskid, error_message, "stochss")
+          return
+      
       res['pid'] = taskid
       filepath = "output/%s//" % (uuidstr)
       absolute_file_path = os.path.abspath(filepath)
