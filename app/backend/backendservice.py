@@ -337,7 +337,7 @@ if __name__ == "__main__":
     params['keyname'] = 'cjknew32'
     params['use_spot_instances'] = False
     if infra == backendservices.INFRA_EC2 :
-        params['image_id'] = 'ami-25280a4c'
+        params['image_id'] = 'ami-851937ec'
     else :
         raise TypeError("Error, unexpected infrastructure type: "+infra)
 

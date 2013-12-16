@@ -401,12 +401,15 @@ class NewStochkitEnsemblePage(BaseHandler):
             document = model.serialize()
 
             if executable == 'deterministic' and model.units.lower() == 'population':
-                model = StochMLDocument.fromString(document).toModel()
+                model = StochMLDocument.fromString(document).toModel(model.name)
 
-                for reaction in model.getAllReactions():
+                for reactionN in model.getAllReactions():
+                    reaction = model.getAllReactions()[reactionN]
                     if reaction.massaction:
-                        if len(reaction.reactants) == 1 and reaction.reactants[0][1] == 2:
-                            reaction.rate.setExpression(reaction.rate.expression + ' / 2')
+                        if len(reaction.reactants) == 1 and reaction.reactants.values()[0] == 2:
+                            reaction.marate.setExpression(reaction.marate.expression + ' / 2')
+            
+            document = model.serialize()
 
             params['document']=str(document)
             filepath = ""
@@ -427,6 +430,7 @@ class NewStochkitEnsemblePage(BaseHandler):
 
             # Algorithm, SSA or Tau-leaping?
             if executable != 'deterministic':
+                params['job_type'] = 'stochkit'
                 executable = params['algorithm']
 
                 args+=' --realizations '
@@ -443,6 +447,7 @@ class NewStochkitEnsemblePage(BaseHandler):
                 args+=' --seed '
                 args+=str(seed)
             else:
+                params['job_type'] = 'stochkit_ode'
                 executable = "stochkit_ode.py"
 
             print executable

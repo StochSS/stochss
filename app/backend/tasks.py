@@ -12,6 +12,7 @@ import os
 import uuid,traceback
 THOME = '/home/ubuntu'
 STOCHKIT_DIR = '/home/ubuntu/StochKit'
+ODE_DIR = '/home/ubuntu/ode'
 
 celery = Celery('tasks')
 celery.config_from_object('celeryconfig')
@@ -24,65 +25,73 @@ def task(taskid,params):
   ''' This is the actual work done by a task worker '''
   try:
         
-	global THOME
-	global STOCHKIT_DIR
+      global THOME
+      global STOCHKIT_DIR
+      global ODE_DIR
 
-        print 'task to be executed at remote location'
-        print 'inside celery task method'
-        data = {'status':'active','message':'Task Executing in cloud'}
-        updateEntry(taskid, data, "stochss")
-        res = {}
-        filename = "{0}.xml".format(taskid)
-        f = open(filename,'w')
-        f.write(params['document'])
-        f.close()
-        xmlfilepath = filename
-        paramstr =  params['paramstring']
-        uuidstr = taskid
-        res['uuid'] = uuidstr
-        create_dir_str = "mkdir -p output/%s/result " % uuidstr
-        os.system(create_dir_str)
+      print 'task to be executed at remote location'
+      print 'inside celery task method'
+      data = {'status':'active','message':'Task Executing in cloud'}
+      updateEntry(taskid, data, "stochss")
+      res = {}
+      filename = "{0}.xml".format(taskid)
+      f = open(filename,'w')
+      f.write(params['document'])
+      f.close()
+      xmlfilepath = filename
+      paramstr =  params['paramstring']
+      uuidstr = taskid
+      res['uuid'] = uuidstr
+      create_dir_str = "mkdir -p output/%s/result " % uuidstr
+      os.system(create_dir_str)
 
-        # The following executiong string is of the form : stochkit_exec_str = "~/StochKit/ssa -m ~/output/%s/dimer_decay.xml -t 20 -i 10 -r 1000" % (uuidstr)
-        stochkit_exec_str = "{0}/{2} -m {1} --force --out-dir output/{3}/result 2>&1 > {4}/stochkit.log  ".format(STOCHKIT_DIR,xmlfilepath,paramstr,uuidstr,THOME)
-        print "======================="
-        print " Command to be executed : "
-        print stochkit_exec_str
-        print "======================="
-        print "To test if the command string was correct. Copy the above line and execute in terminal."
-        timestarted = datetime.now()
-        os.system(stochkit_exec_str)
-        timeended = datetime.now()
-        res['pid'] = taskid
-        filepath = "output/%s//" % (uuidstr)
-        absolute_file_path = os.path.abspath(filepath)
-        #copies the XML file to the output direcory
-        copy_file_str = "cp  {0} output/{1}".format(xmlfilepath,uuidstr)
-        print copy_file_str
-        os.system(copy_file_str)
-        print 'generating tar file'
-        create_tar_output_str = "tar -zcvf output/{0}.tar output/{0}".format(uuidstr)
-        print create_tar_output_str
-        logging.debug("followig cmd to be executed %s" % (create_tar_output_str))
-        bucketname = params['bucketname']
-        copy_to_s3_str = "python {2}/sccpy.py output/{0}.tar {1}".format(uuidstr,bucketname,THOME)
-        data = {'status':'active','message':'Task finished. Generating output.'}
-        updateEntry(taskid, data, "stochss")
-        os.system(create_tar_output_str)
-        print 'copying file to s3 : {0}'.format(copy_to_s3_str)
-        os.system(copy_to_s3_str)
-        print 'removing xml file'
-        removefilestr = "rm {0}".format(xmlfilepath)
-        os.system(removefilestr)
-        removetarstr = "rm output/{0}.tar".format(uuidstr)
-        os.system(removetarstr)
-        removeoutputdirstr = "rm -r output/{0}".format(uuidstr)
-        os.system(removeoutputdirstr)
-        res['output'] = "https://s3.amazonaws.com/{1}/output/{0}.tar".format(taskid,bucketname)
-        res['status'] = "finished"
-        diff = timeended - timestarted
-        res['time_taken'] = "{0} seconds and {1} microseconds ".format(diff.seconds, diff.microseconds)
-        updateEntry(taskid, res, "stochss")
+      job_type = params['job_type']
+      exec_str = ''
+      if job_type == 'stochkit':
+          # The following executiong string is of the form : stochkit_exec_str = "~/StochKit/ssa -m ~/output/%s/dimer_decay.xml -t 20 -i 10 -r 1000" % (uuidstr)
+          exec_str = "{0}/{1} -m {2} --force --out-dir output/{3}/result 2>&1 > {4}/stochkit.log  ".format(STOCHKIT_DIR, paramstr, xmlfilepath, uuidstr, THOME)
+      elif job_type == 'stochkit_ode':
+          exec_str = "{0}/{1} -m {2} --force --out-dir output/{3}/result 2>&1 > {4}/stochkit_ode.log".format(ODE_DIR, paramstr, xmlfilepath, uuidstr, THOME)
+      
+      print "======================="
+      print " Command to be executed : "
+      print exec_str
+      print "======================="
+      print "To test if the command string was correct. Copy the above line and execute in terminal."
+      timestarted = datetime.now()
+      os.system(exec_str)
+      timeended = datetime.now()
+      
+      res['pid'] = taskid
+      filepath = "output/%s//" % (uuidstr)
+      absolute_file_path = os.path.abspath(filepath)
+      #copies the XML file to the output direcory
+      copy_file_str = "cp {0} output/{1}".format(xmlfilepath,uuidstr)
+      print copy_file_str
+      os.system(copy_file_str)
+      print 'generating tar file'
+      create_tar_output_str = "tar -zcvf output/{0}.tar output/{0}".format(uuidstr)
+      print create_tar_output_str
+      logging.debug("followig cmd to be executed %s" % (create_tar_output_str))
+      bucketname = params['bucketname']
+      copy_to_s3_str = "python {2}/sccpy.py output/{0}.tar {1}".format(uuidstr,bucketname,THOME)
+      data = {'status':'active','message':'Task finished. Generating output.'}
+      updateEntry(taskid, data, "stochss")
+      os.system(create_tar_output_str)
+      print 'copying file to s3 : {0}'.format(copy_to_s3_str)
+      os.system(copy_to_s3_str)
+      print 'removing xml file'
+      removefilestr = "rm {0}".format(xmlfilepath)
+      os.system(removefilestr)
+      removetarstr = "rm output/{0}.tar".format(uuidstr)
+      os.system(removetarstr)
+      removeoutputdirstr = "rm -r output/{0}".format(uuidstr)
+      os.system(removeoutputdirstr)
+      res['output'] = "https://s3.amazonaws.com/{1}/output/{0}.tar".format(taskid,bucketname)
+      res['status'] = "finished"
+      diff = timeended - timestarted
+      res['time_taken'] = "{0} seconds and {1} microseconds ".format(diff.seconds, diff.microseconds)
+      updateEntry(taskid, res, "stochss")
   except Exception,e:
         data = {'status':'failed', 'message':str(e)}
         updateEntry(taskid, res, "stochss")
