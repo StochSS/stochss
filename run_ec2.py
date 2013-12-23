@@ -53,8 +53,12 @@ class ConfigFile:
             return result
         except IOError:
             # If we get this error, then the config file doesnt exist
-            self.create_config_file()
-            return [None for i in range(len(variables))]
+            self.create()
+            result = {}
+            for variable in variables:
+                result[variable] = None
+
+            return result
 
     def write(self, params):
         """ Write each param in params to the config file, making sure to overwrite existing entries """
@@ -314,18 +318,21 @@ def start_stochss_server(aws_access_key, aws_secret_key, preferred_instance_id, 
     # Now make sure that the StochSS Server is actually running.
     stochss_url = "http://" + str(instance.public_dns_name) + ":8080/"
     print "============================================================================"
-    print "EC2 instance launched! You can access the StochSS Server at {0}".format(stochss_url)
-    print "Note: it will take another minute or so before the above URL actually works. Please be patient..."
+    print "Starting StochSS Server at {0}-- it will take another minute or so before the URL actually works. Please be patient...".format(stochss_url)
+    #trys = 0
     while True:
         try:
             req = urllib2.urlopen(stochss_url)
+            print "EC2 instance launched!"
             break
         except:
-            time.sleep(5)
+            #trys += 1
+            #print "Try {0}".format(trys)
+            time.sleep(1)
     # OK, its running. Launch it in the default browser?
-    open_browser = raw_input("Do you want to launch StochSS in your default browser now (y/n)? ").lower()
-    if open_browser == "y":
-        webbrowser.open_new(stochss_url)
+    # open_browser = raw_input("Do you want to launch StochSS in your default browser now (y/n)? ").lower()
+    # if open_browser == "y":
+    # webbrowser.open_new(stochss_url)
 
 def stop_stochss_server(aws_access_key, aws_secret_key, ec2_region, instance_id):
     '''

@@ -148,7 +148,7 @@ echo -n "Configuring the app to use $STOCHKIT_ODE for StochKit ODE... "
 ln -s "$STOCHKIT_HOME" StochKit
 
 # Write STOCHKIT_HOME to the appropriate config file
-echo -n "$STOCHKIT_HOME" > "$STOCHSS_HOME/conf/config"
+echo "$STOCHKIT_HOME" > "$STOCHSS_HOME/conf/config"
 echo -n "$STOCHKIT_ODE" >> "$STOCHSS_HOME/conf/config"
 echo "Done!"
 
