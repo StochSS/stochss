@@ -1,7 +1,7 @@
 #! /usr/bin/python
 
 import os, stat, time, sys
-import boto.ec2
+import boto.ec2, boto.ec2.cloudwatch
 from boto.ec2.cloudwatch import MetricAlarm
 import webbrowser
 import urllib2
@@ -143,7 +143,7 @@ class EC2Services:
         return security_group
     
     def make_instance_sleepy(self, instance_id):
-          ec2 = boto.connect_cloudwatch(self.access_key, self.secret_key)
+          ec2 = boto.ec2.cloudwatch.connect_to_region(self.region, aws_access_key_id=self.access_key, aws_secret_access_key=self.secret_key)
           stop_arn = 'arn:aws:automate:{0}:ec2:stop'.format(self.region)
           alarm_name = 'ec2_shutdown_sleepy_{0}'.format(instance_id)
           # define our alarm to stop the instance if it gets sleepy
