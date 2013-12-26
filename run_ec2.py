@@ -239,10 +239,10 @@ def print_usage_and_exit():
     print "Error in command line arguments!"
     print "Expected Usage: ./run_ec2.py [command]"
     print "Accepted Commands:"
-    print "- start"
-    print "- stop"
-    print "- terminate"
-    print "- list"
+    print "- start (creates a new StochSS instance)"
+    print "- stop (saves StochSS data, turns off computers, can be resumed with 'start')"
+    print "- terminate (deletes StochSS data, turns off computers)"
+    #print "- list (list all running StochSS instances in current region)"
     exit(-1)
 
 def start_stochss_server(aws_access_key, aws_secret_key, preferred_instance_id, preferred_ec2_key_pair, ec2_region):
@@ -281,13 +281,16 @@ def start_stochss_server(aws_access_key, aws_secret_key, preferred_instance_id, 
         }
         config_file.write(params_to_write)
     else:
-        print "Using saved EC2 region..."
+        print "Using saved EC2 region, {0}".format(ec2_region)
     # We might need an instance id...
+    # This logic is short-circuited now
     if preferred_instance_id is None:
-        preferred_instance_id = raw_input("Please enter the instance ID of the EC2 instance you wish to launch (just hit return to launch a brand new instance):")
+        preferred_instance_id = ''
+        #raw_input("Please enter the instance ID of the EC2 instance you wish to launch (just hit return to launch a brand new instance):")
         if preferred_instance_id == '':
             # ...unless they want a brand new instance. Then we might need a keypair...
-            decision = raw_input("Do you optionally want to use a key pair when creating this instance (y/n)? ").lower()
+            #decision = raw_input("Do you optionally want to use a key pair when creating this instance (y/n)? ").lower()
+            decision = 'n'
             if decision == 'y':
                 if preferred_ec2_key_pair is None:
                     preferred_ec2_key_pair = raw_input('Please enter the name of the key pair you wish to use:')
@@ -296,7 +299,7 @@ def start_stochss_server(aws_access_key, aws_secret_key, preferred_instance_id, 
                     }
                     config_file.write(params_to_write)
                 else:
-                    print "Using saved EC2 key pair..."
+                    print "Using saved EC2 key pair, {0}".format(preferred_ec2_key_pair)
             else:
                 # ...unless they dont want SSH access.
                 preferred_ec2_key_pair = None
@@ -306,7 +309,7 @@ def start_stochss_server(aws_access_key, aws_secret_key, preferred_instance_id, 
             }
             config_file.write(params_to_write)
     else:
-        print "Using saved EC2 instance ID..."
+        print "Using saved EC2 instance ID, {0}".format(preferred_instance_id)
     # Now we have all the necessary config variables
     ec2_services = EC2Services(ec2_region, aws_access_key, aws_secret_key)
     instance = ec2_services.launch_ec2_instance(preferred_instance_id, preferred_ec2_key_pair)
@@ -318,7 +321,7 @@ def start_stochss_server(aws_access_key, aws_secret_key, preferred_instance_id, 
     # Now make sure that the StochSS Server is actually running.
     stochss_url = "http://" + str(instance.public_dns_name) + ":8080/"
     print "============================================================================"
-    print "Starting StochSS Server at {0}-- it will take another minute or so before the URL actually works. Please be patient...".format(stochss_url)
+    print "Starting StochSS Server at {0} -- it will take another minute or so before the URL actually works. Please be patient...".format(stochss_url)
     #trys = 0
     while True:
         try:
@@ -371,12 +374,12 @@ def stop_stochss_server(aws_access_key, aws_secret_key, ec2_region, instance_id)
         }
         config_file.write(params_to_write)
     else:
-        print "Using saved EC2 region..."
+        print "Using saved EC2 region, {0}".format(ec2_region)
     # And an instance id
     if instance_id is None:
         instance_id = raw_input("Please enter the instance ID of the StochSS Server you wish to stop: ")
     else:
-        print "Using saved EC2 instance ID..."
+        print "Using saved EC2 instance ID, {0}".format(instance_id)
     # Now we have all the necessary config variables
     ec2_services = EC2Services(ec2_region, aws_access_key, aws_secret_key)
     ec2_services.stop_ec2_instance(instance_id)
@@ -392,9 +395,9 @@ def terminate_stochss_server(aws_access_key, aws_secret_key, ec2_region, instanc
         aws_access_key, aws_secret_key = [results[name] for name in variables_to_look_for]
     # Check for the rest of the config variables in the config file
     if None in [ec2_region, instance_id]:
-        variables_to_look_for = [ConfigFile.CF_INSTANCE_ID, ConfigFile.CF_REGION]
+        variables_to_look_for = [ConfigFile.CF_REGION, ConfigFile.CF_INSTANCE_ID]
         results = config_file.read(variables_to_look_for)
-        instance_id, ec2_region = [results[name] for name in variables_to_look_for]
+        [ec2_region, instance_id] = [results[name] for name in variables_to_look_for]
     # Any variables that are still None might need to be retrieved from the user
     # We definitely need the AWS credentials
     if None in [aws_access_key, aws_secret_key]:
@@ -418,12 +421,12 @@ def terminate_stochss_server(aws_access_key, aws_secret_key, ec2_region, instanc
         }
         config_file.write(params_to_write)
     else:
-        print "Using saved EC2 region..."
+        print "Using saved EC2 region, {0}".format(ec2_region)
     # And an instance id
     if instance_id is None:
-        instance_id = raw_input("Please enter the instance ID of the StochSS Server you wish to stop: ")
+        instance_id = raw_input("Please enter the instance ID of the StochSS Server you wish to terminate: ")
     else:
-        print "Using saved EC2 instance ID..."
+        print "Using saved EC2 instance ID, {0}".format(instance_id)
     # Now we have all the necessary config variables
     ec2_services = EC2Services(ec2_region, aws_access_key, aws_secret_key)
     ec2_services.terminate_ec2_instance(instance_id)
@@ -463,7 +466,7 @@ def list_all_stochss_servers(aws_access_key, aws_secret_key, ec2_region):
         }
         config_file.write(params_to_write)
     else:
-        print "Using saved EC2 region..."
+        print "Using saved EC2 region, {0}".format(ec2_region)
     ec2_services = EC2Services(ec2_region, aws_access_key, aws_secret_key)
     instances = ec2_services.retrieve_all_ec2_instances()
     if len(instances) > 0:
@@ -481,6 +484,7 @@ def main(command, is_windows=False):
     # Create the ConfigFile object
     global config_file
     config_file = ConfigFile(".ec2-config")
+    print "Using config file .ec2-config"
     # Respect environment variables over config file if set
     if 'AWS_ACCESS_KEY' in os.environ:
         aws_access_key = os.environ['AWS_ACCESS_KEY']
@@ -494,17 +498,18 @@ def main(command, is_windows=False):
     preferred_ec2_key_pair = None
     ec2_region = None
     # Defaults for Windows users
-    if is_windows:
-        ec2_region = 'us-east-1'
+    #if is_windows:
+    #    ec2_region = 'us-east-1'
+
     # The supported commands
     if command == "start":
         start_stochss_server(aws_access_key, aws_secret_key, preferred_instance_id, preferred_ec2_key_pair, ec2_region)
     elif command == "stop":
         stop_stochss_server(aws_access_key, aws_secret_key, ec2_region, preferred_instance_id)
     elif command == "terminate":
-        terminate_stochss_server(aws_access_key, aws_secret_key, ec2_region, preferred_instance_id)
-    elif command == "list":
-        list_all_stochss_servers(aws_access_key, aws_secret_key, ec2_region)
+        terminate_stochss_server(aws_access_key, aws_secret_key, ec2_region, None)# Always make the user type this in: , preferred_instance_id)
+    #elif command == "list":
+    #    list_all_stochss_servers(aws_access_key, aws_secret_key, ec2_region)
     else:
         print_usage_and_exit()
     # One command at a time
