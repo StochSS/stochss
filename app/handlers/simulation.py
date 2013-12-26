@@ -337,6 +337,9 @@ class NewStochkitEnsemblePage(BaseHandler):
 
         
         model_to_simulate = self.get_session_property('model_to_simulate')
+
+        if result['status']:
+            self.redirect("/status")
         
         # Make sure that the model is present in the datastore
         #    Figure out what kind of model it is too (concentration or populatio)
@@ -457,9 +460,6 @@ class NewStochkitEnsemblePage(BaseHandler):
         
             cmd = executable+' '+args
         
-            # Create a StochKitJob instance
-            stochkit_job = StochKitJob(name=ensemblename, final_time=time, realizations=realizations,increment=increment,seed=seed,exec_type=exec_type)
-        
             params['paramstring'] = cmd
 
             bucketname = self.user_data.getBucketName()
@@ -472,6 +472,9 @@ class NewStochkitEnsemblePage(BaseHandler):
             if celery_task_id == None:
                 result = {'status':False,'msg':'Cloud execution failed. '}
                 return result
+            # Create a StochKitJob instance
+            stochkit_job = StochKitJob(name=ensemblename, final_time=time, realizations=realizations,increment=increment,seed=seed,exec_type=exec_type)
+        
         
             stochkit_job.resource = 'Cloud'
             stochkit_job.type = 'StochKit2 Ensemble'
@@ -509,8 +512,13 @@ class NewStochkitEnsemblePage(BaseHandler):
         par = self.request.POST
         
         # Check the name of the simulation, make sure that no simulation with that name exists in the system
-        name = par['job_name']
-        model = db.GqlQuery("SELECT * FROM StochKitJobWrapper WHERE user_id = :1 AND name = :2", self.user.email_address,name).get()
+        if par['job_name'].strip() == '':
+            result['status'] = False
+            result['msg'] = 'A job must have name'
+
+            return par, result
+
+        model = db.GqlQuery("SELECT * FROM StochKitJobWrapper WHERE user_id = :1 AND name = :2", self.user.email_address,par['job_name']).get()
         if model is not None:
             result['status'] = False
             result['msg'] = 'A job with that name already exists. You need to input a unique name.'
@@ -578,6 +586,8 @@ class NewStochkitEnsemblePage(BaseHandler):
             
             # Check the data from the form for errors
             params,result = self.parseForm()
+
+            print result
             if not result['status']:
                 return result
         
@@ -597,6 +607,7 @@ class NewStochkitEnsemblePage(BaseHandler):
                 result = { 'status' : False, 'msg' : 'GUI Error: Concentration models cannot be executed Stochastically. Try leaving and returning to this page' }
                 return result
 
+            #params['job_name'] = params['job_name'].strip()
 
             executable = exec_type.lower()
             document = model.serialize()
@@ -606,11 +617,8 @@ class NewStochkitEnsemblePage(BaseHandler):
 
                 for reactionN in model.getAllReactions():
                     reaction = model.getAllReactions()[reactionN]
-                    print reaction
                     if reaction.massaction:
-                        print "woooo"
                         if len(reaction.reactants) == 1 and reaction.reactants.values()[0] == 2:
-                            print "converted"
                             reaction.marate.setExpression(reaction.marate.expression + ' / 2')
 
             document = model.serialize()
@@ -660,9 +668,6 @@ class NewStochkitEnsemblePage(BaseHandler):
         
             cmd = executable+' '+args
         
-            # Create a StochKitJob instance
-            stochkit_job = StochKitJob(name=ensemblename, final_time=time, realizations=realizations,increment=increment,seed=seed, exec_type = exec_type)
-        
             # Create the argument string
             params['paramstring'] = cmd
                     
@@ -671,8 +676,11 @@ class NewStochkitEnsemblePage(BaseHandler):
             res = service.executeTaskLocal(params)
             
             if(res == None):
-                result = {'status':False,'msg':'Local execution failed. '}
+                result = {'status':False, 'msg': 'Local execution failed. '}
                 return result
+        
+            # Create a StochKitJob instance
+            stochkit_job = StochKitJob(name=ensemblename, final_time=time, realizations=realizations,increment=increment,seed=seed, exec_type = exec_type)
         
             stochkit_job.resource = 'Local'
             stochkit_job.type = 'StochKit2 Ensemble'
@@ -695,7 +703,7 @@ class NewStochkitEnsemblePage(BaseHandler):
     
             result = {'status':True,'msg':'Job submitted sucessfully'}
             
-        except Exception,e:
+        except None:#Exception,e:
             raise e
         #result = {'status':False,'msg':'Local execution failed: '+str(e)}
                 
