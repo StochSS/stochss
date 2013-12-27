@@ -183,4 +183,6 @@ echo "$STOCHKIT_HOME" > "$STOCHSS_HOME/conf/config"
 echo -n "$STOCHKIT_ODE" >> "$STOCHSS_HOME/conf/config"
 echo "Done!"
 
+export PATH=$PATH:$STOCHKIT_HOME
+
 exec python "$STOCHSS_HOME/launchapp.py" $0
