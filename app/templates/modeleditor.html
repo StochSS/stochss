@@ -186,14 +186,14 @@
 
 		<br/><br />
 		<a href="/modeleditor">Edit another model</a>
-                <hr>
+                <!--hr-->
 
                 <hr />
                 <h3>Actions</h3>
                 <ul>
                   {% if model_edited is defined and model_edited.units == "concentration" %}
 		  <li>
-		    <a href="/modeleditor/converttopopulation?modelName={{model_edited.name}}" TITLE = "Create a List of Reactions">Convert to Population</a>
+		    <a href="#" id="convertToPopulation">Convert to Population</a>
 		  </li>
                   {% endif %}
                   <li>
@@ -230,8 +230,12 @@
 
 <script type="text/javascript">
 $( 'document' ).ready( function() {
-  $( '#duplicateModel' ).click( function() {
+$( '#convertToPopulation' ).click( function() {
+saveChanges(true, '/modeleditor/converttopopulation?modelName={{model_edited.name}}');
+});
+$( '#duplicateModel' ).click( function() {
 {% if model_edited %}
+saveChanges(true);
       $.ajax({ url : encodeURI('/modeleditor?duplicate={{model_edited.name}}&newName=' + $( '#duplicateNewName' ).text()),
             error : function(data) {
               $( '#sidemsg' ).text('Server error creating {{model_edited.name}}_dup');
@@ -281,9 +285,15 @@ $( 'document' ).ready( function() {
     
     var model_edited = {% if model_edited %} "{{model_edited.name | safe}}" {% else %} "" {% endif %}
     
-    function saveChanges(save) {
+    function saveChanges(save, redirect_page) {
     dataString = save ? "save_changes=1" : "save_changes=0";
-    dataString += "&model_edited=" + model_edited + "&redirect_page={{redirect_page | safe}}";
+    dataString += "&model_edited=" + model_edited
+    if(typeof(redirect_page) === "undefined")
+    {
+    dataString += "&redirect_page={{redirect_page | safe}}";
+    } else {
+    dataString += "&redirect_page=" + $.trim(redirect_page);
+    }
     $.ajax({
     type : "POST",
     url : "/modeleditor/save",

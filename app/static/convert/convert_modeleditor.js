@@ -396,7 +396,7 @@ var run = function()
     $( '#reactionVerify' ).append(reactionVerify.render().$el);
 
     // Get the modelId that the GUI injected here. Sigh, the GUI...
-    var modelName = $( '#modelSelect' ).text();
+    var modelName = $.trim($( '#modelSelect' ).text());
 
     // Get the ball rolling
     modelCollection.fetch( { success : function(collection) {

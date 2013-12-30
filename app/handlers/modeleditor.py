@@ -69,6 +69,10 @@ class ModelManager():
     def getModel(handler, model_id):
         model = StochKitModelWrapper.get_by_id(model_id)
 
+        print dict(model.model.listOfReactions)
+        print dict(model.model.listOfSpecies)
+        print dict(model.model.listOfParameters)
+
         jsonModel = { "id" : model.key().id(),
                       "name" : model.model_name }
         if model.attributes:
@@ -244,7 +248,7 @@ class ModelEditorPage(BaseHandler):
             self.response.write(json.dumps(result))
             return
         else:
-          result = {}
+            result = {}
 
         models = get_all_models(self)
         result.update({ "all_models" : map(lambda x : { "name" : x.name, "units" : x.units }, models) })
@@ -257,7 +261,8 @@ class ModelEditorPage(BaseHandler):
         save_changes = self.request.get('save_changes')
         if save_changes is not "":
             result = self.save_model(save_changes)
-            self.response.headers['Content-Type'] = 'application/json'
+            print "result", json.dumps(result)
+            self.response.content_type = 'application/json'
             self.response.write(json.dumps(result))
             return
         elif self.request.get("delete") == "1":
@@ -376,7 +381,6 @@ class ModelEditorPage(BaseHandler):
             self.set_session_property('model_edited', db_model.model)
             self.set_session_property('is_model_saved', True)
 
-            print str(db_model.model.volume)
             return {'status': True, 'model_edited': db_model.model, 'model_has_volume': bool(db_model.model.volume), 'is_model_saved' : True }
         except Exception, e:
             logging.error("model::edit_model - Editing the model failed with error: %s", e)

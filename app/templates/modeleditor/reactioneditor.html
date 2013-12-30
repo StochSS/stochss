@@ -164,25 +164,21 @@
 <!-- Show a list of Species and Parameters in the right sidebar for a visual aid when creating reactions. -->
 {% block customizesidebar %}
 {% if all_species_list %}
-<h4><a data-toggle="collapse" data-target="#all_species_list"> Show species &raquo;</a> </h4>
-<div id="all_species_list" class="in collapse">
-    <ul>
-        {% for key,value in all_species_list.items() %}
-        <li class = "horizontal"><a TITLE="{{all_species_list[key].initial_value}}" style="text-decoration: none;">{{all_species_list[key].name}}</a></li>
-        {% endfor %}
-    </ul>
-</div>
+<h4> Species &raquo; </h4>
+<ul>
+  {% for key,value in all_species_list.items() %}
+    <li class = "horizontal">{{all_species_list[key].name}}</li>
+  {% endfor %}
+</ul>
 {% endif %}
 
 {% if all_parameters_list %}
-<h4><a data-toggle="collapse" data-target="#all_parameters_list"> Show parameters &raquo;</a> </h4>
-<div id="all_parameters_list" class="in collapse">
-    <ul>
-        {% for key,value in all_parameters_list.items() %}
-        <li class = "horizontal"><a  TITLE="{{all_parameters_list[key].value}}" style="text-decoration: none;">{{all_parameters_list[key].name}}</a></li>
-        {% endfor %}
-    </ul>
-</div>
+<h4> Parameters &raquo; </h4>
+<ul>
+  {% for key,value in all_parameters_list.items() %}
+  <li class = "horizontal">{{all_parameters_list[key].name}}</li>
+  {% endfor %}
+</ul>
 {% endif %}
 {% endblock %}
 
