@@ -114,13 +114,13 @@
 							{% for key, value in all_reactions.items() %}
 							<tr>
 								<td>
-								  <input type="text" name="{{loop.index}}-name" value="{{key}}" style="width: 100px;" class="update_box">
+								  {{key}}
 								</td>
 								<td>
-								  <input type="text" name="{{loop.index}}-reactants" value="{{all_reactants[key]}}" style="width: 100px;" class="update_box auto_complete">
+								  {{all_reactants[key]}}
 								</td>
 								<td>
-								  <input type="text" name="{{loop.index}}-products" value="{{all_products[key]}}" style="width: 100px;" class="update_box auto_complete">
+								  {{all_products[key]}}
 								</td>
 								<td>
                                                                   {% if value.massaction %}
@@ -268,8 +268,8 @@ if(myTarget.style.display == 'none'){
 	 */
 	$.fn.dataTableExt.afnSortData['dom-text'] = function(oSettings, iColumn) {
 		var aData = [];
-		$('td:eq(' + iColumn + ') input', oSettings.oApi._fnGetTrNodes(oSettings)).each(function() {
-			aData.push(this.value);
+		$('td:eq(' + iColumn + ')', oSettings.oApi._fnGetTrNodes(oSettings)).each(function() {
+			aData.push( $(this ).text() );
 		});
 		return aData;
 	}

@@ -279,7 +279,7 @@ class Reaction():
         if self.massaction:
             self.type = "mass-action"
             if rate == None:
-                raise ReactionError("Reaction "+self.name +": A mass-action propensity has to have a rate.")
+                raise ReactionError("Reaction : A mass-action propensity has to have a rate.")
             self.marate = rate
             self.createMassAction()
         else:
@@ -298,8 +298,7 @@ class Reaction():
         for r in self.reactants:
             total_stoch+=self.reactants[r]
         if total_stoch>2:
-            raise ReactionError("Reaction: " +self.name + "A mass-action reaction cannot involve more than two species.")
-    
+            raise ReactionError("Reaction: A mass-action reaction cannot involve more than two of one species or one of two species.")
         # Case EmptySet -> Y
         propensity_function = self.marate.name;
              
@@ -323,7 +322,7 @@ class Reaction():
     
     def addReactant(self,S,stoichiometry):
         if stoichiometry <= 0:
-            raise ReactionError("Reaction "+self.name+"Stoichiometry must be a positive integer.")
+            raise ReactionError("Reaction Stoichiometry must be a positive integer.")
         self.reactants[S.name]=stoichiometry
 
     def addProduct(self,S,stoichiometry):

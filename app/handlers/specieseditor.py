@@ -9,7 +9,11 @@ from collections import OrderedDict
 from stochssapp import *
 from stochss.model import *
 
-
+def int_or_float(s):
+    try:
+        return int(s)
+    except ValueError:
+        return float(s)
 
 class SpeciesEditorPage(BaseHandler):
 
@@ -54,6 +58,8 @@ class SpeciesEditorPage(BaseHandler):
         initial_value = self.request.get('initial_value').strip()
 
         errors = self.check_input(name, initial_value)
+
+        initial_value = int_or_float(initial_value)
         if errors is not None:
             errors.update({'name': name, 'initial_value': initial_value})
             return errors
@@ -119,6 +125,11 @@ class SpeciesEditorPage(BaseHandler):
                 int(initial_value)
             except ValueError:
                 return {'status': False, 'msg': 'Initial value for species ' + name + ' is not an integer!'}
+        else:
+            try:
+                float(initial_value)
+            except ValueError:
+                return {'status': False, 'msg': 'Initial value for species ' + name + ' is not a value floating point number!'}
 
         # return None if there are no errors
         return None
@@ -150,7 +161,7 @@ class SpeciesEditorPage(BaseHandler):
 
                 # Add the new entry
                 value.name = new_name
-                value.initial_value = new_initial_value
+                value.initial_value = int_or_float(new_initial_value)
                 new_species_list.append(value)
                 index += 1
 

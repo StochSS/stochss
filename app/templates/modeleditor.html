@@ -373,10 +373,10 @@ saveChanges(true);
     $('#msg').css('color', 'red')
     $('#msg').html(response['msg']).hide().fadeIn(1500, function() {
     });
-    $('#msg').css('display', 'block')
     } else {
-    // Not displaying anything if successfully saved.
-    $('#msg').css('display', 'none')
+    $('#msg').css('color', 'green')
+    $('#msg').html(response['msg']).hide().fadeIn(1500, function() {
+    });
     if (isParameterEditor) {
     updateValues(response)
     }
