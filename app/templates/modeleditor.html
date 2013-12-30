@@ -230,11 +230,11 @@
 
 <script type="text/javascript">
 $( 'document' ).ready( function() {
+{% if model_edited %}
 $( '#convertToPopulation' ).click( function() {
 saveChanges(true, '/modeleditor/converttopopulation?modelName={{model_edited.name}}');
 });
 $( '#duplicateModel' ).click( function() {
-{% if model_edited %}
 saveChanges(true);
       $.ajax({ url : encodeURI('/modeleditor?duplicate={{model_edited.name}}&newName=' + $( '#duplicateNewName' ).text()),
             error : function(data) {
