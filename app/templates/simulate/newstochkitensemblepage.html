@@ -41,9 +41,9 @@
         <br />
         <input type="text" class="input-small" disabled="disabled" value="0">
         &nbsp; to &nbsp;
-        <input type="text" class="input-small" name="time" placeholder="100">
+        <input type="text" class="input-small" name="time" value="100">
         &nbsp; store state every &nbsp;
-        <input type="text" class="input-small" name="increment" placeholder="0.1"> &nbsp; time units.
+        <input type="text" class="input-small" name="increment" value="0.1"> &nbsp; time units.
         
         <span class="stochastic">
           <br />
@@ -90,8 +90,8 @@
             
             <label class="tau-leaping ode">Epsilon
                 <input type="text" class="span3" name="epsilon" value="0.1">
-                <span class="help-block">Set the tolerance (applicable to tau
-                    leaping and ode simulations only). Valid values: must be greater than 0.0 and less than 1.0.</span>
+                <span class="help-block tau-leaping">Set the tolerance. Valid values: must be greater than 0.0 and less than 1.0.</span>
+                <span class="help-block ode">Set the tolerance.</span>
             </label>
         </div> <!-- Advanced settings -->
         

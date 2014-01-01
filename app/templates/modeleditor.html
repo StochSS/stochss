@@ -199,6 +199,10 @@
                   <li>
 		    <a href="#" id="duplicateModel" TITLE = "Duplicate model">Duplicate Model</a>
                   </li>
+                  <li>
+		    <a href="#" id="renameModel" TITLE = "Rename model">Rename Model</a>
+		    <input class="span12" type="text" id="newModelName" placeholder="New name" />
+                  </li>
 
                   <hr />
                   <div id="sidemsg" />
@@ -236,9 +240,9 @@ saveChanges(true, '/modeleditor/converttopopulation?modelName={{model_edited.nam
 });
 $( '#duplicateModel' ).click( function() {
 saveChanges(true);
-      $.ajax({ url : encodeURI('/modeleditor?duplicate={{model_edited.name}}&newName=' + $( '#duplicateNewName' ).text()),
+      $.ajax({ url : encodeURI('/modeleditor?duplicate={{model_edited.name}}'),
             error : function(data) {
-              $( '#sidemsg' ).text('Server error creating {{model_edited.name}}_dup');
+              $( '#sidemsg' ).text('Server error creating duplicate model');
               $( '#sidemsg' ).css('color', 'red');
             },
             success : function(data) {
@@ -252,8 +256,39 @@ saveChanges(true);
                 $( '#sidemsg' ).css('color', 'red');
               }
             }});
-{% endif %}
   });
+$('#newModelName').keydown(function (e){
+    if(e.keyCode == 13){
+        $( '#renameModel' ).trigger('click');
+    }
+})
+$( '#renameModel' ).click( function(event) {
+//saveChanges(true);
+    event.preventDefault();
+
+      $.ajax({ url : encodeURI('/modeleditor?rename={{model_edited.name}}&newName=' + $.trim($( '#newModelName' ).val())),
+            error : function(data) {
+              $( '#sidemsg' ).text('Server error creating ' + $.trim($( '#newModelName' ).val()));
+              $( '#sidemsg' ).css('color', 'red');
+            },
+            success : function(data) {
+              if(data)
+              {
+                $( '#sidemsg' ).text(data.msg);
+                if(data.status == true)
+                {
+                  $( '#sidemsg' ).css('color', 'green');
+                  $(location).attr('href', '/modeleditor?model_edited=' + $.trim($( '#newModelName' ).val()));
+                } else {
+                  $( '#sidemsg' ).css('color', 'red');
+                }
+              } else {
+                $( '#sidemsg' ).text('Failed to rename model');
+                $( '#sidemsg' ).css('color', 'red');
+              }
+           }});
+  })
+{% endif %}
 });
 </script>
 

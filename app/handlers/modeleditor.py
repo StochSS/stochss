@@ -51,6 +51,7 @@ class ModelManager():
         output = []
 
         for model in models:
+            print model.model_name
             jsonModel = { "id" : model.key().id(),
                           "name" : model.model_name }
             if model.attributes:
@@ -131,8 +132,9 @@ class ModelManager():
 
     @staticmethod
     def updateModel(handler, model):
-        modelWrap = StochKitModelWrapper.get_by_id(model_id)
-        if not hasattr(model, "name"):
+        modelWrap = StochKitModelWrapper.get_by_id(model["id"])
+        print model["name"]
+        if "name" not in model:
             name = "tmpname"
         else:
             name = model["name"]
@@ -238,6 +240,26 @@ class ModelEditorPage(BaseHandler):
                 self.response.write(json.dumps(newName))
             else:
                 self.response.write(json.dumps(''))
+
+            return
+        if self.request.get('rename'):
+            modelName = self.request.get('rename')
+            jsonModel = ModelManager.getModelByName(self, modelName)
+
+            newName = self.request.get('newName').strip()
+            print "renaming", modelName, "to", newName
+
+            if ModelManager.getModelByName(self, newName) != None:
+              self.response.write(json.dumps({ "status": False, "msg": "Name {0} already taken".format(newName)}))
+              return
+
+            jsonModel["name"] = newName
+
+            self.response.content_type = "application/json"
+            if ModelManager.updateModel(self, jsonModel):
+                self.response.write(json.dumps({ "status": True, "msg" : 'Successfully renamed model as ' + newName} ))
+            else:
+                self.response.write(json.dumps({ "status": False, "msg" : 'Failed to rename model' }))
 
             return
         elif model_edited is not None and model_edited is not "":
