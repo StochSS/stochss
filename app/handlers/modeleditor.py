@@ -249,13 +249,13 @@ class ModelEditorPage(BaseHandler):
             newName = self.request.get('newName').strip()
             print "renaming", modelName, "to", newName
 
+            self.response.content_type = "application/json"
             if ModelManager.getModelByName(self, newName) != None:
               self.response.write(json.dumps({ "status": False, "msg": "Name {0} already taken".format(newName)}))
               return
 
             jsonModel["name"] = newName
 
-            self.response.content_type = "application/json"
             if ModelManager.updateModel(self, jsonModel):
                 self.response.write(json.dumps({ "status": True, "msg" : 'Successfully renamed model as ' + newName} ))
             else:

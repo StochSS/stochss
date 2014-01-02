@@ -133,10 +133,10 @@
 			</div>						
 		    </div>
 		    <div class="modal-footer">
-			<button class="btn" data-dismiss="modal" aria-hidden="true" onclick="javascript:saveChanges(false)">
+			<button class="btn" data-dismiss="modal" aria-hidden="true" onclick="javascript:saveChanges(false,'')">
 			    Discard
 			</button>
-			<button class="btn btn-primary" data-dismiss="modal" aria-hidden="true" onclick="javascript:saveChanges(true)">
+			<button class="btn btn-primary" data-dismiss="modal" aria-hidden="true" onclick="javascript:saveChanges(true,'')">
 			    Save changes
 			</button>
 		    </div>
@@ -179,7 +179,7 @@
 		    Changes saved
 		</button>
                 { % else % }-->
-		<button id="save_button" class="btn btn-primary" onclick="javascript:saveChanges(true)">
+		<button id="save_button" class="btn btn-primary" onclick="javascript:saveChanges(true,'')">
 		    Save changes
 		</button>
                 <!--{ % endif % }-->
@@ -239,23 +239,24 @@ $( '#convertToPopulation' ).click( function() {
 saveChanges(true, '/modeleditor/converttopopulation?modelName={{model_edited.name}}');
 });
 $( '#duplicateModel' ).click( function() {
-saveChanges(true);
-      $.ajax({ url : encodeURI('/modeleditor?duplicate={{model_edited.name}}'),
-            error : function(data) {
-              $( '#sidemsg' ).text('Server error creating duplicate model');
-              $( '#sidemsg' ).css('color', 'red');
-            },
-            success : function(data) {
-              if($.trim(data).length > 0)
-              {
-                $( '#sidemsg' ).text('Successfully created model as ' + data);
-                $( '#sidemsg' ).css('color', 'green');
-                location.reload(true);
-              } else {
-                $( '#sidemsg' ).text('Failed to create model');
-                $( '#sidemsg' ).css('color', 'red');
-              }
-            }});
+  saveChanges(true, '', function() {
+    $.ajax({ url : encodeURI('/modeleditor?duplicate={{model_edited.name}}'),
+      error : function(data) {
+        $( '#sidemsg' ).text('Server error creating duplicate model');
+        $( '#sidemsg' ).css('color', 'red');
+      },
+      success : function(data) {
+        if($.trim(data).length > 0)
+        {
+          $( '#sidemsg' ).text('Successfully created model as ' + data);
+          $( '#sidemsg' ).css('color', 'green');
+          location.reload(true);
+        } else {
+          $( '#sidemsg' ).text('Failed to create model');
+          $( '#sidemsg' ).css('color', 'red');
+        }
+       }});
+    });
   });
 $('#newModelName').keydown(function (e){
     if(e.keyCode == 13){
@@ -263,30 +264,38 @@ $('#newModelName').keydown(function (e){
     }
 })
 $( '#renameModel' ).click( function(event) {
-//saveChanges(true);
     event.preventDefault();
 
-      $.ajax({ url : encodeURI('/modeleditor?rename={{model_edited.name}}&newName=' + $.trim($( '#newModelName' ).val())),
-            error : function(data) {
-              $( '#sidemsg' ).text('Server error creating ' + $.trim($( '#newModelName' ).val()));
-              $( '#sidemsg' ).css('color', 'red');
-            },
-            success : function(data) {
-              if(data)
-              {
-                $( '#sidemsg' ).text(data.msg);
-                if(data.status == true)
+    if($.trim($( '#newModelName' ).val()).length == 0)
+    {
+      $( '#sidemsg' ).css('color', 'red');
+      $( '#sidemsg' ).text('Enter a non-empty string');
+      return;
+    }
+
+    saveChanges(true, '', function() {
+        $.ajax({ url : encodeURI('/modeleditor?rename={{model_edited.name}}&newName=' + $.trim($( '#newModelName' ).val())),
+              error : function(data) {
+                $( '#sidemsg' ).text('Server error creating ' + $.trim($( '#newModelName' ).val()));
+                $( '#sidemsg' ).css('color', 'red');
+              },
+              success : function(data) {
+                if(data)
                 {
-                  $( '#sidemsg' ).css('color', 'green');
-                  $(location).attr('href', '/modeleditor?model_edited=' + $.trim($( '#newModelName' ).val()));
+                  $( '#sidemsg' ).text(data.msg);
+                  if(data.status == true)
+                  {
+                    $( '#sidemsg' ).css('color', 'green');
+                    $(location).attr('href', '/modeleditor?model_edited=' + $.trim($( '#newModelName' ).val()));
+                  } else {
+                    $( '#sidemsg' ).css('color', 'red');
+                  }
                 } else {
+                  $( '#sidemsg' ).text('Failed to rename model');
                   $( '#sidemsg' ).css('color', 'red');
                 }
-              } else {
-                $( '#sidemsg' ).text('Failed to rename model');
-                $( '#sidemsg' ).css('color', 'red');
-              }
-           }});
+             }});
+      });
   })
 {% endif %}
 });
@@ -320,51 +329,47 @@ $( '#renameModel' ).click( function(event) {
     
     var model_edited = {% if model_edited %} "{{model_edited.name | safe}}" {% else %} "" {% endif %}
     
-    function saveChanges(save, redirect_page) {
+    function saveChanges(save, redirect_page, follow_up) {
     dataString = save ? "save_changes=1" : "save_changes=0";
     dataString += "&model_edited=" + model_edited
-    if(typeof(redirect_page) === "undefined")
+
+    if(typeof(follow_up) === "undefined")
+    {
+      follow_up = function() {};
+    }
+
+    if(redirect_page.length === 0)
     {
     dataString += "&redirect_page={{redirect_page | safe}}";
     } else {
     dataString += "&redirect_page=" + $.trim(redirect_page);
     }
+
     $.ajax({
-    type : "POST",
-    url : "/modeleditor/save",
-    data : dataString,
-    dataType : 'json',
-    success : function(response) {
-    // Redirect without printing any messages if redirect_page is defined.
-    if (response['redirect_page'] != undefined){
-    $(location).attr('href', response['redirect_page']);
-    }
-    var status = response['status']
-    button = $('#save_button');
-    if (!status) {
-    $('#msg').css('color', 'red')
-    /*if(button.hasClass('btn-success'))
-     {
-      button.removeClass('btn-success');
-      button.addClass('btn-danger');
-      button.text('Save changes');
-     }*/
-    } else {					
-     $('#msg').css('color', 'green')
-     /*if(button.hasClass('btn-danger'))
-     {
-      button.removeClass('btn-danger');
-      button.addClass('btn-success');
-      button.text('Changes saved');
-     }*/
-    }
-    $('#msg').css('display', 'block')
-    $('#msg').html(response['msg']).hide().fadeIn(1500, function() {
-    });
-    },
-    error : function(response) {
-    alert('Sorry! There was an error while updating.')
-    }
+      type : "POST",
+      url : "/modeleditor/save",
+      data : dataString,
+      dataType : 'json',
+      success : function(response) {
+        // Redirect without printing any messages if redirect_page is defined.
+        if (response['redirect_page'] != undefined){
+          $(location).attr('href', response['redirect_page']);
+        }
+        var status = response['status']
+        button = $('#save_button');
+        if (!status) {
+          $('#msg').css('color', 'red')
+        } else {					
+          $('#msg').css('color', 'green')
+          follow_up();
+        }
+        $('#msg').css('display', 'block')
+        $('#msg').html(response['msg']).hide().fadeIn(1500, function() {});
+      },
+      error : function(response) {
+        $('#msg').html(' Internal server error ');
+        $('#msg').css('color', 'red')
+      }
     });
     return false;
     }
