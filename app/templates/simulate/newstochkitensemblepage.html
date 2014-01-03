@@ -19,7 +19,7 @@
         Units: <h3>{% if model_units == "concentration" %}Concentration{% else %}Population{% endif %}</h3>
         <hr />
         <label>Name:</label>
-        <input type="text" class="span3" name="job_name" value="">
+        <input type="text" class="span3" name="job_name" value="{{ job_name }}">
         
         <span class="help-block">The name that will be used to reference the ensemble.</span>
         <!--<h3>Required Parameters</h3>-->
@@ -41,14 +41,14 @@
         <br />
         <input type="text" class="input-small" disabled="disabled" value="0">
         &nbsp; to &nbsp;
-        <input type="text" class="input-small" name="time" value="100">
+        <input type="text" class="input-small" name="time" value="{{ time }}">
         &nbsp; store state every &nbsp;
-        <input type="text" class="input-small" name="increment" value="0.1"> &nbsp; time units.
+        <input type="text" class="input-small" name="increment" value="{{ increment }}"> &nbsp; time units.
         
         <span class="stochastic">
           <br />
           <label>Realizations</label>
-          <input type="text" class="span3" name="realizations" value="1">
+          <input type="text" class="span3" name="realizations" value="{{ realizations }}">
           <span class="help-block">Number of realizations in this ensemble.</span>
         </span>
         <br />
@@ -63,8 +63,13 @@
         <div id="advanced-settings" class="collapse">
             <div class="stochastic">
                 Algorithm<br />
+                {% if algorithm == "ssa" %}
                 SSA <input id="ssa" type="radio" name="algorithm" value="ssa" checked><br />
                 Tau-leaping <input id="tau-leaping" style="padding-left: 100px;" type="radio" name="algorithm" value="tau_leaping">
+                {% else %}
+                    SSA <input id="ssa" type="radio" name="algorithm" value="ssa"><br />
+                    Tau-leaping <input id="tau-leaping" style="padding-left: 100px;" type="radio" name="algorithm" value="tau_leaping" checked>
+                {% endif %}
               </div>
 
             <!--<div class="control-group">
@@ -79,17 +84,17 @@
             </div>-->
             
             <label class="tau-leaping ssa">Seed
-                <input type="text" class="span3" name="seed">
+                <input type="text" class="span3" name="seed" value="{{ seed }}">
                 <span class="help-block">Seed the random number generator (leave empty for a random seed).</span>
             </label>
             
             <label class="tau-leaping">Threshold
-                <input type="text" class="span3" name="threshold" value="10">
+                <input type="text" class="span3" name="threshold" value="{{ threshold }}">
                 <span class="help-block">Set the threshold (minimum number of reactions per leap before switching to SSA) for tau leaping.</span>
             </label>
             
             <label class="tau-leaping ode">Epsilon
-                <input type="text" class="span3" name="epsilon" value="0.1">
+                <input type="text" class="span3" name="epsilon" value="{{ epsilon }} ">
                 <span class="help-block tau-leaping">Set the tolerance. Valid values: must be greater than 0.0 and less than 1.0.</span>
                 <span class="help-block ode">Set the tolerance.</span>
             </label>

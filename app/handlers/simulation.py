@@ -317,9 +317,10 @@ class NewStochkitEnsemblePage(BaseHandler):
         if model_to_simulate is None:
             self.redirect("/simulate")
 
-        context = { 'model_to_simulate': model_to_simulate, 'model_units' : model_units }
+        form_default_values = {'job_name':"",'realizations':1,'time':100,'increment':0.1,'algorithm':"ssa",'threshold':100,'epsilon':0.1}
+        context = { 'model_to_simulate': model_to_simulate, 'model_units' : model_units}
 
-        self.render_response('simulate/newstochkitensemblepage.html',**context)
+        self.render_response('simulate/newstochkitensemblepage.html',**dict(context,**form_default_values))
 
     def post(self):
         """ Assemble the input to StochKit2 and submit the job (locally or via cloud). """
@@ -354,6 +355,93 @@ class NewStochkitEnsemblePage(BaseHandler):
 
         context = {'model_to_simulate' : model_to_simulate, 'model_units' : model_units }
         self.render_response('simulate/newstochkitensemblepage.html',**dict(context,**result))
+
+    def parseForm(self):
+        """
+            Parses the StochKit2 Ensemble job submission form.
+            Returns a tuple of dicts (params, result) where params contain
+            the StochKit job parameters and result contains the status and a sucess or error message.
+            
+            """
+        params = {}
+        result = {}
+        result['status']=True
+        result['msg']=''
+        
+        par = self.request.POST
+        
+        # Check the name of the simulation, make sure that no simulation with that name exists in the system
+        if par['job_name'].strip() == '':
+            result['status'] = False
+            result['msg'] = 'A job must have name'
+
+            return par, dict(result,**par)
+        
+        model = db.GqlQuery("SELECT * FROM StochKitJobWrapper WHERE user_id = :1 AND name = :2", self.user.email_address,par['job_name']).get()
+        if model is not None:
+            result['status'] = False
+            result['msg'] = 'A job with that name already exists. You need to input a unique name.'
+            return par, dict(result,**par)
+
+        # Make sure that the simulation time is a numeric value greater than 0
+        try:
+            endtime = float(par['time'])
+            assert endtime > 0.0
+        except:
+            result['status'] = False
+            result['msg'] =  result['msg']+'\nThe simulation end time must be a positive number greater than zero'
+            return par, dict(result,**par)
+
+        # Make sure that the increment is a positive number
+        try:
+            increment = float(par['increment'])
+            assert increment > 0.0
+        except:
+            result['status'] = False
+            result['msg'] =  result['msg']+'\nThe output sampling times must be positive numbers greater than zero.'
+            return par, dict(result,**par)
+
+        
+        # Make sure that the number of realizations is an integer value greater than or equal to 1
+        try:
+            realizations = int(par['realizations'])
+            assert realizations >=1
+        except:
+            result['status'] = False
+            result['msg'] =  result['msg']+'\nThe number of realizations must be positive integer greater than zero.'
+            return par, dict(result,**par)
+        
+        # Check the seed, needs to be a numeric value
+        try:
+            if par['seed']=="":
+                # Bootstrap StochKit RNG with a random int
+                seed = random.randrange(0,1000000)
+                logging.info('SEED: '+str(seed))
+                par['seed'] = str(seed)
+            else:
+                seed = float(par['seed'])
+            assert seed >= 0
+        except Exception,e:
+            result['status'] = False
+            result['msg'] =  result['msg']+'\nThe seed must be a positive number.' + str(e)
+            return par, dict(result,**par)
+
+        
+        # Check epsilon, needs to be a numeric value between 0 and one
+        try:
+            epsilon = float(par['epsilon'])
+            assert epsilon > 0.0 and epsilon < 1.0
+        except:
+            result['status'] = False
+            result['msg'] =  result['msg']+'\n Epsilon must be a number in (0,1)'
+            return par, dict(result,**par)
+
+        
+        # TODO: Check with Sheng what numbers are valid for the threshold
+        
+        # Append the current form values so that they are remembered on the page
+        result = dict(result,**par)
+        return par,result
 
     def runCloud(self):
         
@@ -497,81 +585,7 @@ class NewStochkitEnsemblePage(BaseHandler):
             result = {'status':False,'msg':'Cloud execution failed: '+str(e)}       
         return result
         
-    def parseForm(self):
-        """ 
-            Parses the StochKit2 Ensemble job submission form.
-            Returns a tuple of dicts (params, result) where params contain
-            the StochKit job parameters and result contains the status and a sucess or error message.
-            
-        """
-        params = {}
-        result = {}
-        result['status']=True
-        result['msg']=''
-        
-        par = self.request.POST
-        
-        # Check the name of the simulation, make sure that no simulation with that name exists in the system
-        if par['job_name'].strip() == '':
-            result['status'] = False
-            result['msg'] = 'A job must have name'
-
-            return par, result
-
-        model = db.GqlQuery("SELECT * FROM StochKitJobWrapper WHERE user_id = :1 AND name = :2", self.user.email_address,par['job_name']).get()
-        if model is not None:
-            result['status'] = False
-            result['msg'] = 'A job with that name already exists. You need to input a unique name.'
-        
-        # Make sure that the simulation time is a numeric value greater than 0
-        try:
-            endtime = float(par['time'])
-            assert endtime > 0.0
-        except:
-            result['status'] = False
-            result['msg'] =  result['msg']+'\nThe simulation end time must be a positive number greater than zero'
-        
-        # Make sure that the increment is a positive number
-        try:
-            increment = float(par['increment'])
-            assert increment > 0.0
-        except:
-            result['status'] = False
-            result['msg'] =  result['msg']+'\nThe output sampling times must be positive numbers greater than zero.'
-        
-        # Make sure that the number of relalizations is an integer value greater than or equal to 1
-        try:
-           realizations = int(par['realizations'])
-           assert realizations >=1
-        except:
-            result['status'] = False
-            result['msg'] =  result['msg']+'\nThe number of realizations must be positive integer greater than zero.'
-                
-        # Check the seed, needs to be a numeric value
-        try:
-            if par['seed']=="":
-                # Bootstrap StochKit RNG with a random int
-                seed = random.randrange(0,1000000)
-                logging.info('SEED: '+str(seed))
-                par['seed'] = str(seed)
-            else:
-                seed = float(par['seed'])
-            assert seed >= 0
-        except Exception,e:
-            result['status'] = False
-            result['msg'] =  result['msg']+'\nThe seed must be a positive number.' + str(e)
-
-        # Check epsilon, needs to be a numeric value between 0 and one
-        try:
-            epsilon = float(par['epsilon'])
-            assert epsilon > 0.0 and epsilon < 1.0
-        except:
-            result['status'] = False
-            result['msg'] =  result['msg']+'\n Epsilon must be a number in (0,1)'
-
-        # TODO: Check with Sheng what numbers are valid for the threshold
-
-        return par,result
+  
     
     def runStochKitLocal(self):
         """ Submit a local StochKit job """
