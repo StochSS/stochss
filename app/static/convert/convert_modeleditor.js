@@ -227,7 +227,7 @@ Convert.ReactionVerify = Backbone.View.extend(
                     if(type.toLowerCase() == 'mass-action')
                     {
                         expression.text(prettyReaction.expression);
-                        if(reactantCount == 1 && reactantParticleCount == 1) {
+                        if((reactantCount == 1 && reactantParticleCount == 1) || reactantCount == 0) {
                             propensity.text(prettyReaction.propensity);
 
                             result.prop('color', 'green');
@@ -359,12 +359,19 @@ var run = function()
 
                         if(type.toLowerCase() == 'mass-action')
                         {
+			    var newname = ""
+                            var reacObj = newModel.getReaction(name);
+			    do
+			    {
+				newname = reacObj.prop + '_' + randString(3);
+			    } while(newModel.getParameter(newname) != null);
+
                             if(reactantParticleCount == 2 && allTheSame) {
-                                reacObj = newModel.getReaction(name);
-                                newModel.setReaction(name, reacObj.reactants, reacObj.products, reacObj.prop + ' * 2 / ' + vol, true);
+				newModel.addParameter(newname, reacObj.prop + ' * 2 / ' + vol);
+				newModel.setReaction(name, reacObj.reactants, reacObj.products, newname, true);
                             } else if(reactantParticleCount == 2 && !allTheSame) {
-                                reacObj = newModel.getReaction(name);
-                                newModel.setReaction(name, reacObj.reactants, reacObj.products, reacObj.prop + ' / ' + vol, true);
+				newModel.addParameter(newname, reacObj.prop + ' / ' + vol);
+				newModel.setReaction(name, reacObj.reactants, reacObj.products, newname, true);
                             }
                         }
                     }

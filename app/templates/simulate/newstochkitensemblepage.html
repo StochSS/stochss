@@ -54,13 +54,13 @@
         <br />
         
         <!-- Optional parameters to the SSA and Tau-leaping solvers. -->
-        <h3>
+        <h3 class="advanced-settings">
           <a data-toggle="collapse" data-target="#advanced-settings">
             Advanced settings&raquo;
           </a>
         </h3>
         
-        <div id="advanced-settings" class="collapse">
+        <div id="advanced-settings" class="collapse advanced-settings">
             <div class="stochastic">
                 Algorithm<br />
                 {% if algorithm == "ssa" %}
@@ -93,10 +93,9 @@
                 <span class="help-block">Set the threshold (minimum number of reactions per leap before switching to SSA) for tau leaping.</span>
             </label>
             
-            <label class="tau-leaping ode">Epsilon
-                <input type="text" class="span3" name="epsilon" value="{{ epsilon }} ">
+            <label class="tau-leaping">Epsilon
+                <input type="text" class="span3" name="epsilon" value="{{ epsilon }}">
                 <span class="help-block tau-leaping">Set the tolerance. Valid values: must be greater than 0.0 and less than 1.0.</span>
-                <span class="help-block ode">Set the tolerance.</span>
             </label>
         </div> <!-- Advanced settings -->
         
@@ -142,11 +141,13 @@
     var handle_type = function() {
     if( $( "#deterministic" )[0].checked )
     {
+    $( ".advanced-settings" ).hide();
     $( ".stochastic" ).hide()
     $( ".tau-leaping" ).hide()
     $( ".ssa" ).hide()
     $( ".ode" ).show()
     } else {
+    $( ".advanced-settings" ).show();
     $( ".ode" ).hide()
     handle_algo();
     $( ".stochastic" ).show()

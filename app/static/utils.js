@@ -35,6 +35,17 @@ jQuery.fn.forceNumeric = function () {
     });
 };
 
+//Stolen from http://stackoverflow.com/questions/1349404/generate-a-string-of-5-random-characters-in-javascript
+var randString = function(len) {
+    var text = "";
+    var possible = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789";
+    
+    for( var i=0; i < len; i++ )
+        text += possible.charAt(Math.floor(Math.random() * possible.length));
+    
+    return text;
+}
+
 var __templates = 0;
 var loadTemplate = function(selectorName, path) {
     __templates++;
