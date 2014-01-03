@@ -151,7 +151,7 @@ class AdminPage(BaseHandler):
 
     def _delete_user(self, email):
         """ Delete existing user """
-        users = User.query(ndb.GenericProperty('email_address') == user_dict['email_address']).fetch()
+        users = User.query(ndb.GenericProperty('email_address') == email).fetch()
         if users:
-            users[0].delete()
+            users[0].key.delete()
         return True

@@ -105,12 +105,13 @@ class AuthHandler(BaseHandler, SimpleAuthHandler):
             if user:
                 logging.info('Existing user logging in with new provider')
                 should_update_user = True
-                user.auth_ids.append(auth_id)                
+                user.auth_ids.append(auth_id)
             else:
                 pending_user_list = PendingUsersList.shared_list()
                 if pending_user_list.is_user_approved(_attrs['email_address']):
                     logging.info('Creating a brand new user') 
                     ok, user = self.auth.store.user_model.create_user(auth_id, **_attrs)
+                    pending_user_list.remove_user_from_approved_list(_attrs['email_address'])
                 else:
                     logging.info('User {0} is not approved'.format(_attrs['email_address']))
                     pending_user_list.add_user_to_approval_waitlist(_attrs['email_address'])
