@@ -161,8 +161,24 @@ stochkit.Model = Backbone.Model.extend( {
         this.trigger('change', 'reactions');
     },
 
+    getParameter: function(name, value) {
+        var parameter = this.ParametersList.children().has('Id:contains(' +  name + ')');
+
+	if(parameter.length == 0)
+	{
+	    return null;
+	}
+
+	return { name : parameter.find('Id').text(), value : parameter.find('Expression').text()};
+    },
+
     getReaction: function(name) {
         var reaction = this.ReactionsList.children().has('Id:contains(' +  name + ')');
+
+	if(reaction.length == 0)
+	{
+	    return null;
+	}
 
         var name = reaction.find('Id').text();
         var reactants = _.map(reaction.find('Reactants').children(), function(x) {
@@ -275,9 +291,14 @@ stochkit.PrettyPrint.Reaction = function(reaction) {
             expressionString += '+';
         }
     }
+
+    if(expressionString == '')
+    {
+	expressionString += "null";
+    }
     
     expressionString += '=>'
-    
+
     for(var j = 0; j < products.length; j++) {
         var s = products.eq(j).attr('stoichiometry');
         var id = products.eq(j).attr('id');

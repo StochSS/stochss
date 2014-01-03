@@ -48,10 +48,14 @@
         <table>
             <tr>
                 <td></td>
-                <th style="font-size: 16px;">Copy number of {{species_name}}</th>
+                <th style="font-size: 16px;">{{species_name}}</th>
             </tr>
             <tr>
+              {% if exec_type == 'stochastic' %}
                 <td style="font-size: 14px; font-weight:bold; -webkit-transform: rotate(-90deg); -moz-transform: rotate(-90deg);"> Molecule count </td>
+              {% else %}
+                <td style="font-size: 14px; font-weight:bold; -webkit-transform: rotate(-90deg); -moz-transform: rotate(-90deg);"> Concentration </td>
+              {% endif  %}
                 <td><div id="placeholder" style="width:800px;height:400px;"/></td>
             </tr>
             <tr>
