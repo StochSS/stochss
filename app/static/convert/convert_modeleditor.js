@@ -227,7 +227,12 @@ Convert.ReactionVerify = Backbone.View.extend(
                     if(type.toLowerCase() == 'mass-action')
                     {
                         expression.text(prettyReaction.expression);
-                        if((reactantCount == 1 && reactantParticleCount == 1) || reactantCount == 0) {
+			if(reactantCount == 0) {
+                            propensity.text(prettyReaction.propensity + '*' + vol);
+
+                            result.prop('color', 'green');
+                            result.text('Successful, Mass Action');
+                        } else if(reactantCount == 1 && reactantParticleCount == 1) {
                             propensity.text(prettyReaction.propensity);
 
                             result.prop('color', 'green');
@@ -339,6 +344,7 @@ var run = function()
 
                         //Count number of reactions
                         var reactants = reaction.find('Reactants').children();
+                        var products = reaction.find('Products').children();
                         var reactantCount = reaction.find('Reactants').children().length;
                         var stoichiometries = reaction.find('Reactants').children().map( function(idx, item) { return $( item ).attr('stoichiometry'); } );
                         var reactantParticleCount = 0;
@@ -369,10 +375,17 @@ var run = function()
                             if(reactantParticleCount == 2 && allTheSame) {
 				newModel.addParameter(newname, reacObj.prop + ' * 2 / ' + vol);
 				newModel.setReaction(name, reacObj.reactants, reacObj.products, newname, true);
-                            } else if(reactantParticleCount == 2 && !allTheSame) {
+                            }
+			    else if(reactantParticleCount == 2 && !allTheSame)
+			    {
 				newModel.addParameter(newname, reacObj.prop + ' / ' + vol);
 				newModel.setReaction(name, reacObj.reactants, reacObj.products, newname, true);
                             }
+			    else if(reactantParticleCount == 0)
+			    {
+				newModel.addParameter(newname, reacObj.prop + ' * ' + vol);
+				newModel.setReaction(name, reacObj.reactants, reacObj.products, newname, true);
+			    }
                         }
                     }
 
