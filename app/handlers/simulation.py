@@ -332,7 +332,10 @@ class NewStochkitEnsemblePage(BaseHandler):
         if 'run_local' in params:
             result=self.runStochKitLocal()
         elif 'run_cloud' in params:
-            result=self.runCloud()
+            if self.user_data.valid_credentials and self.isOneOrMoreComputeNodesRunning(self.user_data.getCredentials()):
+                result=self.runCloud()
+            else:
+                result = { 'status': False, 'msg': 'You must have at least one active compute node to run in the cloud.' }
         else:
             result={'status':False,'msg':'There was an error processing your request.'}
 
@@ -355,6 +358,28 @@ class NewStochkitEnsemblePage(BaseHandler):
 
         context = {'model_to_simulate' : model_to_simulate, 'model_units' : model_units }
         self.render_response('simulate/newstochkitensemblepage.html',**dict(context,**result))
+
+    def isOneOrMoreComputeNodesRunning(self, credentials):
+        '''
+        Checks for the existence of running compute nodes. Only need one running compute node
+        to be able to run a job in the cloud.
+        '''
+        try:
+            service = backendservices()
+            params = {
+                "infrastructure": "ec2",
+                "credentials": credentials
+            }
+            all_vms = service.describeMachines(params)
+            if all_vms == None:
+                return False
+            # Just need one running vm
+            for vm in all_vms:
+                if vm != None and vm['state'] == 'running':
+                    return True
+            return False
+        except:
+            return False
 
     def parseForm(self):
         """

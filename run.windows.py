@@ -42,10 +42,11 @@ class ConfigFile:
             result = {}
             for line in config_file:
                 # Config file entries should be in the form name=value, one per line
-                line_segments = line.lower().split('=')
-                if line_segments[0] in variables:
-                    result[line_segments[0]] = line_segments[1].strip()
-                    temp_variables.remove(line_segments[0])
+                line_segments = line.split('=')
+                config_var = line_segments[0].lower()
+                if config_var in variables:
+                    result[config_var] = line_segments[1].strip()
+                    temp_variables.remove(config_var)
             for variable in temp_variables:
                 # Only variables left are those that werent found
                 result[variable] = None
@@ -487,11 +488,11 @@ def main(command, is_windows=False):
     config_file = ConfigFile(".ec2-config")
     print "Using config file .ec2-config"
     # Respect environment variables over config file if set
-    if 'AWS_ACCESS_KEY' in os.environ:
+    if 'AWS_ACCESS_KEY' in os.environ and os.environ['AWS_ACCESS_KEY'] != '':
         aws_access_key = os.environ['AWS_ACCESS_KEY']
     else:
         aws_access_key = None
-    if 'AWS_SECRET_KEY' in os.environ:
+    if 'AWS_SECRET_KEY' in os.environ and os.environ['AWS_SECRET_KEY'] != '':
         aws_secret_key = os.environ['AWS_SECRET_KEY']
     else:
         aws_secret_key = None
