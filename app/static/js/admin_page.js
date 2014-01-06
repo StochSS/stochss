@@ -71,12 +71,21 @@ $('.table-action-button').on('click', function(e) {
         success: function(response) {
             var tableBody = clickedButton.closest('tbody');            
             if (response["success"]) {
-                tableRow.remove();
-                if (action == "approve") {
+                if (action == "approve1") {
+                    tableRow.remove();
+                    if (tableBody.find("tr").length == 0) {
+                        tableBody.closest("table").replaceWith('<p class="empty-table-message">There are no users currently awaiting approval.</p>');
+                    }
                     appendRowToApprovedUserTable(email);
+                } else if (action == "approve") {
+                    appendRowToApprovedUserTable(email);
+                } else if (action == "delete") {
+                    tableRow.remove();
+                } else if (action == "revoke") {
+                    tableRow.remove();
                 }
             } else {
-                alert('There was an error while processing the action for ' + email + ' .');
+                alert('There was an error while processing the action for ' + email + '.');
             }
         },
         error: function(response) {
