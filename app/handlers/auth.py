@@ -115,7 +115,9 @@ class AuthHandler(BaseHandler, SimpleAuthHandler):
                 else:
                     logging.info('User {0} is not approved'.format(_attrs['email_address']))
                     pending_user_list.add_user_to_approval_waitlist(_attrs['email_address'])
-                    return self.redirect('/login')
+                    context = { 'unauthorizedError': True }
+                    return self.render_response('login.html', **context)
+                    #return self.redirect('/login')
 
         if should_update_user:
             user.populate(**_attrs)
