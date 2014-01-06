@@ -112,7 +112,7 @@ class AdminPage(BaseHandler):
         """
         action = self.request.get('action')
         email = self.request.get('email')
-        
+        failure_message = ''
         if action in ['approve', 'approve1']:
             result = self._approve_user(email, action == 'approve1')
         elif action == 'deny':
@@ -121,6 +121,8 @@ class AdminPage(BaseHandler):
             result = self._revoke_user(email)
         elif action == 'delete':
             result = self._delete_user(email)
+            if not result:
+                failure_message = "You can't delete the admin user!"
         else:
             return
         
@@ -128,6 +130,8 @@ class AdminPage(BaseHandler):
             'email': email,
             'success': result
         }
+        if failure_message is not '':
+            json_result['message'] = failure_message
         self.response.write(json.dumps(json_result))
         return
     
@@ -153,5 +157,9 @@ class AdminPage(BaseHandler):
         """ Delete existing user """
         users = User.query(ndb.GenericProperty('email_address') == email).fetch()
         if users:
-            users[0].key.delete()
+            user = users[0]
+            if user.is_admin_user():
+                return False
+            # Delete from db
+            user.key.delete()
         return True

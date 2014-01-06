@@ -85,7 +85,11 @@ $('.table-action-button').on('click', function(e) {
                     tableRow.remove();
                 }
             } else {
-                alert('There was an error while processing the action for ' + email + '.');
+                if (response["message"]) {
+                    alert(response["message"]);
+                } else {
+                    alert('There was an error while processing the action for ' + email + '.');
+                }
             }
         },
         error: function(response) {

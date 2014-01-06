@@ -223,7 +223,7 @@ class User(WebApp2User):
         Determine if this user is an admin by checking for the is_admin property
         - this is an expando model and is_admin property is added dynamically only for admins
         """
-        if "is_admin" in self._properties:
+        if "is_admin" in self._properties and self.is_admin == 'YES':
             return True
         return False
         
