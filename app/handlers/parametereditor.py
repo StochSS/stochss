@@ -8,7 +8,7 @@ from collections import OrderedDict
 from Queue import Queue
 import __future__
 
-from stochssapp import BaseHandler
+from stochssapp import *
 from stochss.model import *
 
 
@@ -53,7 +53,7 @@ class ParameterEditorPage(BaseHandler):
         Get all the parameters belonging to the currently edited model.
         This model must be in cache.
         """
-        model = self.get_session_property('model_edited')
+        model = self.get_model_edited()
         if model is None:
             return None
 
@@ -65,12 +65,11 @@ class ParameterEditorPage(BaseHandler):
         """        
         name = self.request.get('toDelete')
         try:
-            model = self.get_session_property('model_edited')
+            model = self.get_model_edited()
             model.deleteParameter(name)
 
             # Update the cache
-            self.set_session_property('model_edited', model)
-            self.set_session_property('is_model_saved', False)
+            self.set_model_edited(model)
             return {'status': True, 'msg': 'Parameter ' + name + ' deleted successfully!'}
         except Exception, e:
             logging.error("parameter::delete_parameter: Parameter deletion failed with error %s", e)
@@ -88,7 +87,7 @@ class ParameterEditorPage(BaseHandler):
             return error
 
         try:
-            model = self.get_session_property('model_edited')
+            model = self.get_model_edited()
 
             if model is None:
                 return {'status': False, 'msg': 'You have not selected any model to edit.'}
@@ -98,10 +97,6 @@ class ParameterEditorPage(BaseHandler):
             # Check if the parameter already exists
             if name in all_parameters:
                 return {'status': False, 'msg': 'Parameter already exists!', 'name': name, 'expression': expression}
-
-            # Check if the user has tried to manually add a Volume parameter
-            if name.lower() == 'volume':
-                return {'status': False, 'msg': 'Model editor does not allow Volume parameter set here, please use the Volume tab above', 'name': name, 'expression': expression}
 
             namespace = OrderedDict()
             for param in all_parameters:
@@ -119,8 +114,7 @@ class ParameterEditorPage(BaseHandler):
             model.addParameter(parameter)
 
             # Update the cache
-            self.set_session_property('model_edited', model)
-            self.set_session_property('is_model_saved', False)
+            self.set_model_edited(model)
             return {'status': True, 'msg': 'Parameter added successfully!'}
         except Exception, e:
             logging.error("parameter::create_parameter: Parameter creation failed with error %s", e)
@@ -147,7 +141,7 @@ class ParameterEditorPage(BaseHandler):
         Update the parameters with new values.
         """
         try:
-            model = self.get_session_property('model_edited')
+            model = self.get_model_edited()
             all_parameters = model.getAllParameters()
 
             # Add the updated values afresh. i.e. The old values will be erased.
@@ -221,8 +215,7 @@ class ParameterEditorPage(BaseHandler):
             # Add the modified parameter list back to the model
             model.addParameter(new_parameter_list)
             # Update the cache
-            self.set_session_property('model_edited', model)
-            self.set_session_property('is_model_saved', False)
+            self.set_model_edited(model)
             return {'status': True, 'msg': 'Parameter updated successfully!', 'new_parameter_values': new_parameter_values}
         
         except Exception, e:
@@ -249,6 +242,25 @@ class ParameterEditorPage(BaseHandler):
             logging.debug('Expression %s for parameter %s added to queue', eval_parameter.expression, eval_parameter.name)
             return False
 
+    def get_model_edited(self):
+        model_edited = self.get_session_property('model_edited')
+
+        if model_edited == None:
+            return None
+
+        db_model = db.GqlQuery("SELECT * FROM StochKitModelWrapper WHERE user_id = :1 AND model_name = :2", self.user.email_address, model_edited.name).get()
+
+        return db_model.model
+
+    def set_model_edited(self, model):
+        db_model = db.GqlQuery("SELECT * FROM StochKitModelWrapper WHERE user_id = :1 AND model_name = :2", self.user.email_address, model.name).get()
+        db_model.model = model
+        db_model.put()
+        # TODO: This is a hack to make it unlikely that the db transaction has not completed
+        # before we re-render the page (which would cause an error). We need some real solution for this...
+        time.sleep(0.5)
+
+        self.set_session_property('model_edited', model)
 
 class EvalParameter:
     """
