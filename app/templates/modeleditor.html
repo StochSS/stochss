@@ -14,9 +14,10 @@
 <div class="span9">
     <div class="row-fluid">
 	<div class"span9">
+	    {% block modeleditorcontent %}
 	    <div class="menubar">
 		<ul class="nav nav-tabs">
-		    <li>
+		    <li class="active">
 			<a href="/modeleditor" TITLE = "Define the name of your model">Models</a>
 		    </li>
 		    <!-- <li><a href="/modeleditor/overview">Overview</a></li> -->
@@ -63,7 +64,6 @@
 	    </div>
 	    <!--/ul-->
 
-	    {% block modeleditorcontent %}
 	    <div class="span9">
 		<div class="well well-large">
 		    <form method="post" action="/modeleditor" name="create_model">
@@ -89,7 +89,8 @@
 		    {% endif %}
 		    {% endif %}											
 		    <hr/>
-		    <div id="msg" style="display:none"></div>					          <br />
+		    <div id="msg"></div>
+		    <br />
 		    {% if all_models %}
 		    <div>
 			<h3><a style="text-decoration: None">Models</a></h3>
@@ -129,7 +130,7 @@
 	    {% endblock %}
 	    
 	    <!-- Modal for deletion. -->
-	    <div id="deleteModal" class="modal hide fade" tabindex="-1" role="dialog" aria-labelledby="myModalLabel" aria-hidden="true">
+	    <div id="deleteModal" class="modal hide" tabindex="-1" role="dialog" aria-labelledby="myModalLabel" aria-hidden="true">
 		<div class="modal-header">
 		    <h3>Delete?</h3>
 		</div>
@@ -323,7 +324,7 @@ $( '#renameModel' ).click( function(event) {
           follow_up();
         }
         $('#msg').css('display', 'block')
-        $('#msg').html(response['msg']).hide().fadeIn(1500, function() {});
+        $('#msg').html(response['msg']);
       },
       error : function(response) {
         $('#msg').html(' Internal server error ');
@@ -351,7 +352,7 @@ $( '#renameModel' ).click( function(event) {
     $('.update_box').keyup(function(event) {		
     delay(function() {
     update()
-    }, 1000);
+    }, 400);
     });
 
     
@@ -370,12 +371,10 @@ $( '#renameModel' ).click( function(event) {
     $(".create_msg").html('')
     if (!status) {
     $('#msg').css('color', 'red')
-    $('#msg').html(response['msg']).hide().fadeIn(1500, function() {
-    });
+    $('#msg').html(response['msg']);
     } else {
     $('#msg').css('color', 'green')
-    $('#msg').html(response['msg']).hide().fadeIn(1500, function() {
-    });
+    $('#msg').html(response['msg']);
     if (isParameterEditor) {
     updateValues(response)
     }
@@ -383,8 +382,7 @@ $( '#renameModel' ).click( function(event) {
     },
     error : function(response) {
     $('#msg').css('color', 'red')
-    $('#msg').html('Sorry! There was an error processing your request.').hide().fadeIn(1500, function() {
-    });
+    $('#msg').html('Sorry! There was an error processing your request.');
     $('#msg').css('display', 'block')
     }
     });

@@ -2,83 +2,132 @@
 {% block title%}Species Editor{% endblock %}
 {% block modeleditorcontent %}
 
+<div class="menubar">
+    <ul class="nav nav-tabs">
+        <li>
+            <a href="/modeleditor" TITLE = "Define the name of your model">Models</a>
+        </li>
+        <!-- <li><a href="/modeleditor/overview">Overview</a></li> -->
+        <li>
+            <a href="/modeleditor/specieseditor" TITLE = "Create a List of reacants">Species</a>
+        </li>
+        <li class="active">
+            <a href="/modeleditor/parametereditor" TITLE = "Create a List of Parameters">Parameters</a>
+        </li>
+        <li>
+            <a href="/modeleditor/reactioneditor" TITLE = "Create a List of Reactions">Reactions</a>
+        </li>
+        <li class="dropdown">
+            <!--<a class="dropdown-toggle" data-toggle="dropdown">Geometry<b class="caret"></b></a> -->
+            <ul class="dropdown-menu">
+	        <!-- <a href="/modeleditor/geometry/editgeometry"> <i class="icon-pencil"></i>Geometry editor</a> -->
+	        <a href="/#" TITLE = "Define the Geometry">Compartment</a>
+	        <!-- <a href="/#">Import mesh...</a> -->
+            </ul>
+        </li>
+
+        <!-- <li><a href="/modeleditor/codeeditor">Editor</a></li> -->
+        <li class="dropdown">
+            <a class="dropdown-toggle" data-toggle="dropdown" TITLE = "Import from File/ Load Existing Library">Import<b class="caret"></b></a>
+            <ul class="dropdown-menu">
+	        <a href="/modeleditor/import/fromfile">From file..</a>
+	        <a href="/modeleditor/import/examplelibrary">Example Library...</a>
+	        <!-- <a href="/modeleditor/import/biomodels">BioModels database...</a>-->
+            </ul>
+        </li>
+        
+        <!-- <li><a href="/modeleditor/codeeditor">Editor</a></li> -->
+        {% if model_edited is defined and model_edited.units == "population" %}
+        <li class="dropdown">
+            <a class="dropdown-toggle" data-toggle="dropdown" TITLE = "Export File To Stochkit">Export<b class="caret"></b></a>
+            <ul class="dropdown-menu">
+	        <a href="/modeleditor/export/tostochkit2">To StochML (StochKit2) ...</a>
+	        <!-- <a href="/modeleditor/export/tosbml">To SBML ...</a> -->
+            </ul>
+        </li>
+        {% endif %}
+    </ul>
+
+</div>
+<!--/ul-->
+
 <div class="span9">
 
-	<div class="row-fluid">
+    <div class="row-fluid">
 
-		<div class="well">
-			<form method="post" action="/modeleditor/parametereditor">
-				<h3><a data-toggle="collapse" data-target="#optional" default> Create new parameter </a>&raquo; </h3>
-				<br/>
-				<div id="optional" class="in collapse" style="height:auto">
-					<div style="float: left; padding-right: 10px">
-						<label>Name</label>
-						<input type="text" name="name" style="width: 160px" value="{{ name }}" TITLE = "Define the Name of the Parameters" class="update_box auto_complete">
-					</div>
-					<div>
-						<label><a data-toggle="modal" href="#help_modal1" style="text-decoration: none;">Expression <i class="icon-question-sign"></i></a>
+        <div class="well">
+            <form method="post" action="/modeleditor/parametereditor">
+	        <h3><a data-toggle="collapse" data-target="#optional" default> Create new parameter </a>&raquo; </h3>
+	        <br/>
+	        <div id="optional" class="in collapse" style="height:auto">
+	            <div style="float: left; padding-right: 10px">
+	                <label>Name</label>
+	                <input type="text" name="name" style="width: 160px" value="{{ name }}" TITLE = "Define the Name of the Parameters" class="update_box auto_complete">
+	            </div>
+	            <div>
+	                <label><a data-toggle="modal" href="#help_modal1" style="text-decoration: none;">Expression <i class="icon-question-sign"></i></a>
                             {% set help_modal_id = "help_modal1" %}
                             {% set help_modal_title = "Parameter expression" %}
                             {% set help_modal_message = "A parameter can be defined as a scalar, numeric value, or through simple arithmetic expressions (+, - , * , /) that involves other already defined parameters. The expression must be evaluable in the namespace that consists of all parameter names. This means that at least one parameter must have a scalar value." %}
                             {% include "help_modal.html" %} 
                             {{help_modal|safe}}
-</label>
-						<input type="text" class="span3" name="expression" value="{{ expression }}" TITLE = "Insert an Integer">
-                           
-					</div>
-					<div style="clear: both"></div>
-					<button type="submit" class="btn btn-primary" style="float: right;">
-						Add parameter
-					</button>
-				</div>
-			</form>
-			{% if msg %}
-			{% if status == False %}
-			<span style="color: red" class="create_msg">{{msg}}</span>
-			{% else %}
-			<span style="color: green" class="create_msg">{{msg}}</span>
-			{% endif %}
-			{% endif %}
-			<hr/>
-			<div id="msg" style="display:none"></div>
-			<br />
-			{% if all_parameters %}
-			<h3><a data-toggle="collapse" data-target="#species_list" default> Parameters </a>&raquo; </h3><br/>
-			<div id="species_list" class="in collapse" style="height: auto">
-				<form id="update_form" method="post" action="/modeleditor/parametereditor">
-					<table cellpadding="0" cellspacing="0" border="0" class="table table-striped table-bordered" id="dataTable">
-						<thead>
-							<tr>
-								<th>Name </th><th>Expression </th><th>Value</th><th>&nbsp;</th>
-							</tr>
-						</thead>
-						<tbody>
-							{% for key, value in all_parameters.items() %}
-							<tr>
-								<td>
-								<input type="text" name="{{loop.index}}-name" value="{{key}}" style="width: 100px;" class="update_box">
-								</td>
-								<td>
-								<input type="text" name="{{loop.index}}-expression" value="{{value.expression}}" style="width: 100px;" class="update_box">
-								</td>
-								<td>
-								<input type="text" name="{{loop.index}}-value" value = "{{'%.2e'| format(value.value|float)}}" style="width: 150px;" readonly="readonly">
-								</td>
-								<td><a href="javascript:void(0)" onclick="javascript:deleteElement('{{key}}')">Delete</a></td>
-							</tr>
-							{% endfor %}
-						</tbody>
-					</table>					
-				</form>
-			</div>
-			{% endif %}
-			<form id="deleteForm" method="post" action="/modeleditor/parametereditor">
-				<input type="hidden" name="toDelete" />
-				<input type="hidden" name="delete" value="1"/>
-			</form>			
-		</div>
+                        </label>
+	                <input type="text" class="span3" name="expression" value="{{ expression }}" TITLE = "Insert an Integer">
+                        
+	            </div>
+	            <div style="clear: both"></div>
+	            <button type="submit" class="btn btn-primary" style="float: right;">
+	                Add parameter
+	            </button>
+	        </div>
+            </form>
+            {% if msg %}
+            {% if status == False %}
+            <span style="color: red" class="create_msg">{{msg}}</span>
+            {% else %}
+	    <span style="color: green" class="create_msg">{{msg}}</span>
+	    {% endif %}
+	    {% endif %}
+	    <hr/>
+	    <div id="msg"></div>
+	    <br />
+	    {% if all_parameters %}
+	    <h3><a data-toggle="collapse" data-target="#species_list" default> Parameters </a>&raquo; </h3><br/>
+	    <div id="species_list" class="in collapse" style="height: auto">
+		<form id="update_form" method="post" action="/modeleditor/parametereditor">
+		    <table cellpadding="0" cellspacing="0" border="0" class="table table-striped table-bordered" id="dataTable">
+			<thead>
+			    <tr>
+				<th>Name </th><th>Expression </th><th>Value</th><th>&nbsp;</th>
+			    </tr>
+			</thead>
+			<tbody>
+			    {% for key, value in all_parameters.items() %}
+			    <tr>
+				<td>
+				    <input type="text" name="{{loop.index}}-name" value="{{key}}" style="width: 100px;" class="update_box">
+				</td>
+				<td>
+				    <input type="text" name="{{loop.index}}-expression" value="{{value.expression}}" style="width: 100px;" class="update_box">
+				</td>
+				<td>
+				    <input type="text" name="{{loop.index}}-value" value = "{{'%.2e'| format(value.value|float)}}" style="width: 150px;" readonly="readonly">
+				</td>
+				<td><a href="javascript:void(0)" onclick="javascript:deleteElement('{{key}}')">Delete</a></td>
+			    </tr>
+			    {% endfor %}
+			</tbody>
+		    </table>					
+		</form>
+	    </div>
+	    {% endif %}
+	    <form id="deleteForm" method="post" action="/modeleditor/parametereditor">
+		<input type="hidden" name="toDelete" />
+		<input type="hidden" name="delete" value="1"/>
+	    </form>			
 	</div>
-	<!--/row-->
+    </div>
+    <!--/row-->
 </div>
 <!--/span9-->
 
