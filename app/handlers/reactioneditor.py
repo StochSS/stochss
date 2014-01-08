@@ -8,7 +8,7 @@ import logging
 import traceback
 import __future__
 
-from stochssapp import BaseHandler
+from stochssapp import *
 from stochss.model import *
 
 def int_or_float(s):
@@ -59,7 +59,7 @@ class ReactionEditorPage(BaseHandler):
         Get all the reactants belonging to the currently edited model.
         This model must be in cache.
         """
-        model = self.get_session_property('model_edited')
+        model = self.get_model_edited()
         if model is None:
             return None
 
@@ -81,12 +81,11 @@ class ReactionEditorPage(BaseHandler):
         Delete the given reaction from the current model.
         """        
         try:
-            model = self.get_session_property('model_edited')
+            model = self.get_model_edited()
             model.deleteReaction(name)
 
             # Update the cache
-            self.set_session_property('model_edited', model)
-            self.set_session_property('is_model_saved', False)
+            self.set_model_edited(model)
             return {'status': True, 'msg': 'Reaction ' + name + ' deleted successfully.'}
         except Exception, e:
             logging.error("reaction::delete_reaction: Reaction deletion failed with error %s", e)
@@ -97,7 +96,7 @@ class ReactionEditorPage(BaseHandler):
         """ Create a new reaction. """
         
         # Grab the currently edited model
-        model = self.get_session_property('model_edited')
+        model = self.get_model_edited()
         if model is None:
             return {'status': False, 'msg': 'You have not selected any model to edit.'}
         
@@ -201,8 +200,7 @@ class ReactionEditorPage(BaseHandler):
             model.addReaction(reaction)
 
             # Update the cache
-            self.set_session_property('model_edited', model)
-            self.set_session_property('is_model_saved', False)
+            self.set_model_edited(model)
 
             return {'status': True, 'msg': 'Reaction added successfully.'}
         except Exception, e:
@@ -286,7 +284,7 @@ class ReactionEditorPage(BaseHandler):
         Update the reactions with new values.
         """
         try:
-            model = self.get_session_property('model_edited')
+            model = self.get_model_edited()
             all_reactions = model.getAllReactions()
             all_species = model.getAllSpecies()
             all_parameters = model.getAllParameters()
@@ -361,12 +359,32 @@ class ReactionEditorPage(BaseHandler):
             # Add the modified reactions back to the model
             model.addReaction(new_reactions)
             # Update the cache
-            self.set_session_property('model_edited', model)
-            self.set_session_property('is_model_saved', False)
+            
+            self.set_model_edited(model)
             logging.debug('Reactions updated successfully!')
             return {'status': True, 'msg': 'Reactions updated successfully.'}
         except Exception, e:
             logging.error("reaction::update_reaction: Updating of reactions failed with error %s", e)
             traceback.print_exc()
             return {'status': False, 'msg': 'There was an error while updating the reaction.'+str(e)}
+
+    def get_model_edited(self):
+        model_edited = self.get_session_property('model_edited')
+
+        if model_edited == None:
+            return None
+
+        db_model = db.GqlQuery("SELECT * FROM StochKitModelWrapper WHERE user_id = :1 AND model_name = :2", self.user.email_address, model_edited.name).get()
+
+        return db_model.model
+
+    def set_model_edited(self, model):
+        db_model = db.GqlQuery("SELECT * FROM StochKitModelWrapper WHERE user_id = :1 AND model_name = :2", self.user.email_address, model.name).get()
+        db_model.model = model
+        db_model.put()
+        # TODO: This is a hack to make it unlikely that the db transaction has not completed
+        # before we re-render the page (which would cause an error). We need some real solution for this...
+        time.sleep(0.5)
+
+        self.set_session_property('model_edited', model)
 

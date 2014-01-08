@@ -343,11 +343,21 @@ class VisualizePage(BaseHandler):
         species_name = context['species_name']
         if 'plotbuttonmean' in params:
             species_time_series = self.getMeans(context,species_name)
+
+            if species_time_series == None:
+              result = { "status" : False, "msg" : "Could not find mean values" }
         elif 'ode_plotbutton' in params:
             species_time_series = self.getODE(context, species_name)
+
+            if species_time_series == None:
+              result = { "status" : False, "msg" : "Could not find time series for ode" }
         elif 'plotbutton' in params:
             trajectory_number = context['trajectory_number']
             species_time_series = self.getTrajectory(context,trajectory_number,species_name)
+
+            if species_time_series == None:
+              result = { "status" : False, "msg" : "Could not find trajectory {0}".format(trajectory_number) }
+
         context['species_time_series']=species_time_series
             
         self.render_response('visualizepage.html',**dict(result,**context))
@@ -376,7 +386,6 @@ class VisualizePage(BaseHandler):
         try:
             # StochKit labels the output files starting from 0, hence the "-1", since we label from 1 in the UI.
             meanfile = params['job_folder']+'/result/output.txt'
-            print meanfile
             file = open(meanfile,'rb')
             trajectory_data = [row.strip().split('\t') for row in file]
             

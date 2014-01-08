@@ -121,27 +121,6 @@
 		    {% endif %}					
 		</div>
 	    </div>
-	    <!-- Modal for saving changes. -->
-	    <div id="myModal" class="modal hide fade" tabindex="-1" role="dialog" aria-labelledby="myModalLabel" aria-hidden="true">
-		<div class="modal-header">					
-		    <h3 id="myModalLabel">Save Changes?</h3>
-		</div>
-		<form method="post" action="/modeleditor/save" name="save_form">
-		    <div class="modal-body">
-			<div>
-			    You have not saved the recent changes that were done to the current model.
-			</div>						
-		    </div>
-		    <div class="modal-footer">
-			<button class="btn" data-dismiss="modal" aria-hidden="true" onclick="javascript:saveChanges(false,'')">
-			    Discard
-			</button>
-			<button class="btn btn-primary" data-dismiss="modal" aria-hidden="true" onclick="javascript:saveChanges(true,'')">
-			    Save changes
-			</button>
-		    </div>
-		</form>
-	    </div>
 	    
 	    <form id="deleteForm" method="post" action="/modeleditor/delete">
 		<input type="hidden" name="toDelete" />
@@ -174,17 +153,7 @@
 		{% if model_edited %}
 
 		<label><h2>{{model_edited.name}}</h2></label>
-                <!--{ % if is_model_saved % }
-		<button id="save_button" class="btn btn-success" onclick="javascript:saveChanges(true)">
-		    Changes saved
-		</button>
-                { % else % }-->
-		<button id="save_button" class="btn btn-primary" onclick="javascript:saveChanges(true,'')">
-		    Save changes
-		</button>
-                <!--{ % endif % }-->
 
-		<br/><br />
 		<a href="/modeleditor">Edit another model</a>
                 <!--hr-->
 
@@ -236,27 +205,28 @@
 $( 'document' ).ready( function() {
 {% if model_edited %}
 $( '#convertToPopulation' ).click( function() {
-saveChanges(true, '/modeleditor/converttopopulation?modelName={{model_edited.name}}');
+//saveChanges(true, );
+$(location).attr('href', '/modeleditor/converttopopulation?modelName={{model_edited.name}}');
 });
 $( '#duplicateModel' ).click( function() {
-  saveChanges(true, '', function() {
-    $.ajax({ url : encodeURI('/modeleditor?duplicate={{model_edited.name}}'),
-      error : function(data) {
-        $( '#sidemsg' ).text('Server error creating duplicate model');
+  //saveChanges(true, '')
+
+  $.ajax({ url : encodeURI('/modeleditor?duplicate={{model_edited.name}}'),
+    error : function(data) {
+      $( '#sidemsg' ).text('Server error creating duplicate model');
+      $( '#sidemsg' ).css('color', 'red');
+    },
+    success : function(data) {
+      if($.trim(data).length > 0)
+      {
+        $( '#sidemsg' ).text('Successfully created model as ' + data);
+        $( '#sidemsg' ).css('color', 'green');
+        location.reload(true);
+      } else {
+        $( '#sidemsg' ).text('Failed to create model');
         $( '#sidemsg' ).css('color', 'red');
-      },
-      success : function(data) {
-        if($.trim(data).length > 0)
-        {
-          $( '#sidemsg' ).text('Successfully created model as ' + data);
-          $( '#sidemsg' ).css('color', 'green');
-          location.reload(true);
-        } else {
-          $( '#sidemsg' ).text('Failed to create model');
-          $( '#sidemsg' ).css('color', 'red');
-        }
-       }});
-    });
+      }
+    }});
   });
 $('#newModelName').keydown(function (e){
     if(e.keyCode == 13){
@@ -273,45 +243,34 @@ $( '#renameModel' ).click( function(event) {
       return;
     }
 
-    saveChanges(true, '', function() {
-        $.ajax({ url : encodeURI('/modeleditor?rename={{model_edited.name}}&newName=' + $.trim($( '#newModelName' ).val())),
-              error : function(data) {
-                $( '#sidemsg' ).text('Server error creating ' + $.trim($( '#newModelName' ).val()));
-                $( '#sidemsg' ).css('color', 'red');
-              },
-              success : function(data) {
-                if(data)
-                {
-                  $( '#sidemsg' ).text(data.msg);
-                  if(data.status == true)
-                  {
-                    $( '#sidemsg' ).css('color', 'green');
-                    $(location).attr('href', '/modeleditor?model_edited=' + $.trim($( '#newModelName' ).val()));
-                  } else {
-                    $( '#sidemsg' ).css('color', 'red');
-                  }
-                } else {
-                  $( '#sidemsg' ).text('Failed to rename model');
-                  $( '#sidemsg' ).css('color', 'red');
-                }
-             }});
-      });
+    $.ajax({ url : encodeURI('/modeleditor?rename={{model_edited.name}}&newName=' + $.trim($( '#newModelName' ).val())),
+      error : function(data) {
+        $( '#sidemsg' ).text('Server error creating ' + $.trim($( '#newModelName' ).val()));
+        $( '#sidemsg' ).css('color', 'red');
+      },
+      success : function(data) {
+        if(data)
+        {
+          $( '#sidemsg' ).text(data.msg);
+          if(data.status == true)
+          {
+            $( '#sidemsg' ).css('color', 'green');
+            $(location).attr('href', '/modeleditor?model_edited=' + $.trim($( '#newModelName' ).val()));
+          } else {
+            $( '#sidemsg' ).css('color', 'red');
+          }
+        } else {
+          $( '#sidemsg' ).text('Failed to rename model');
+          $( '#sidemsg' ).css('color', 'red');
+        }
+      }});
   })
 {% endif %}
 });
 </script>
 
 {% block innerjscontent %}
-<script type="text/javascript">
-    {% if is_saved == False %}
-    var options = {
-    keyboard : false,
-    backdrop : 'static',
-    show : true
-    }
-    $('#myModal').modal(options)
-    {% endif %}
-    
+<script type="text/javascript">    
     var oTable;
     $(document).ready(function() {
     oTable = $('#dataTable').dataTable({
@@ -326,7 +285,6 @@ $( '#renameModel' ).click( function(event) {
 {% endblock %}
 
 <script type="text/javascript">
-    
     var model_edited = {% if model_edited %} "{{model_edited.name | safe}}" {% else %} "" {% endif %}
     
     function saveChanges(save, redirect_page, follow_up) {
@@ -348,6 +306,7 @@ $( '#renameModel' ).click( function(event) {
     $.ajax({
       type : "POST",
       url : "/modeleditor/save",
+      async : false,
       data : dataString,
       dataType : 'json',
       success : function(response) {

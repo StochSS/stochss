@@ -33,6 +33,7 @@ class SpeciesEditorPage(BaseHandler):
         # First, check to see if it's an update request and then route it to the appropriate function.
         if self.request.get('update') == "1":
             result = self.update_species()
+            print result
             self.response.headers['Content-Type'] = 'application/json'
             self.response.write(json.dumps(result))
             
@@ -64,7 +65,7 @@ class SpeciesEditorPage(BaseHandler):
             errors.update({'name': name, 'initial_value': initial_value})
             return errors
         try:
-            model = self.get_session_property('model_edited')
+            model = self.get_model_edited()
 
             if model is None:
                 return {'status': False, 'msg': 'You have not selected any model to edit.'}
@@ -77,8 +78,7 @@ class SpeciesEditorPage(BaseHandler):
             model.addSpecies(species)
 
             # Update the cache
-            self.set_session_property('model_edited', model)
-            self.set_session_property('is_model_saved', False)
+            self.set_model_edited(model)
             return {'status': True, 'msg': 'Species added successfully!'}
         except Exception, e:
             logging.error("species::create_species: Species creation failed with error %s", e)
@@ -91,12 +91,11 @@ class SpeciesEditorPage(BaseHandler):
         """
         name = self.request.get('toDelete')        
         try:
-            model = self.get_session_property('model_edited')
+            model = self.get_model_edited()
             model.deleteSpecies(name)
 
             # Update the cache
-            self.set_session_property('model_edited', model)
-            self.set_session_property('is_model_saved', False)
+            self.set_model_edited(model)
             return {'status': True, 'msg': 'Species ' + name + ' deleted successfully!'}
         except Exception, e:
             logging.error("species::delete_species: Species deletion failed with error %s", e)
@@ -108,7 +107,7 @@ class SpeciesEditorPage(BaseHandler):
         """
         Check to see if the input for species creation/updation is valid
         """
-        model = self.get_session_property('model_edited')
+        model = self.get_model_edited()
         
         if model is None:
             return {'status': False, 'msg': 'You have not selected any model to edit.'}
@@ -139,7 +138,7 @@ class SpeciesEditorPage(BaseHandler):
         Update the species with new values.
         """
         try:
-            model = self.get_session_property('model_edited')
+            model = self.get_model_edited()
             all_species = model.getAllSpecies()
 
             # Add the updated values afresh. i.e. The old values are erased.
@@ -170,8 +169,7 @@ class SpeciesEditorPage(BaseHandler):
             # Add the modified species back to the model
             model.addSpecies(new_species_list)
             # Update the cache
-            self.set_session_property('model_edited', model)
-            self.set_session_property('is_model_saved', False)
+            self.set_model_edited(model)
             return {'status': True, 'msg': 'Species updated successfully!'}
         except Exception, e:
             logging.error("species::update_species: Updating of Species failed with error %s", e)
@@ -183,8 +181,27 @@ class SpeciesEditorPage(BaseHandler):
         Get all the species belonging to the currently edited model.
         This model must be in cache.
         """
-        model = self.get_session_property('model_edited')
+        model = self.get_model_edited()
         if model is None:
             return None
         return {'all_species': model.getAllSpecies()}
 
+    def get_model_edited(self):
+        model_edited = self.get_session_property('model_edited')
+
+        if model_edited == None:
+            return None
+
+        db_model = db.GqlQuery("SELECT * FROM StochKitModelWrapper WHERE user_id = :1 AND model_name = :2", self.user.email_address, model_edited.name).get()
+
+        return db_model.model
+
+    def set_model_edited(self, model):
+        db_model = db.GqlQuery("SELECT * FROM StochKitModelWrapper WHERE user_id = :1 AND model_name = :2", self.user.email_address, model.name).get()
+        db_model.model = model
+        db_model.put()
+        # TODO: This is a hack to make it unlikely that the db transaction has not completed
+        # before we re-render the page (which would cause an error). We need some real solution for this...
+        time.sleep(0.5)
+
+        self.set_session_property('model_edited', model)
