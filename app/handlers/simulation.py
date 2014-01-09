@@ -69,7 +69,7 @@ class StochKitJobWrapper(db.Model):
 class JobManager():
     @staticmethod
     def getJobs(handler):
-        jobs = db.GqlQuery("SELECT * FROM StochKitJobWrapper WHERE user_id = :1", handler.user.email_address).fetch(100000)
+        jobs = db.GqlQuery("SELECT * FROM StochKitJobWrapper WHERE user_id = :1", handler.user.user_id()).fetch(100000)
 
         output = []
 
@@ -135,7 +135,7 @@ class JobManager():
     @staticmethod
     def createJob(handler, job):
         jobWrap = StochKitJobWrapper()
-        jobWrap.user_id = handler.user.email_address
+        jobWrap.user_id = handler.user.user_id()
         jobWrap.attributes = job
         jobWrap.put()
         
@@ -153,7 +153,7 @@ class JobManager():
     @staticmethod
     def updateJob(handler, job):
         jobWrap = StochKitJobWrapper.get_by_id(job_id)
-        jobWrap.user_id = handler.user.email_address
+        jobWrap.user_id = handler.user.user_id()
         jobWrap.attributes = job
         jobWrap.put()
         
@@ -256,15 +256,11 @@ class StochKitJob(Job):
         
 
 class SimulatePage(BaseHandler):
-    """ Render a page that lists the available models. """
-    
-    def authentication_required(self):
-        return True
-        
+    """ Render a page that lists the available models. """    
     def get(self):
 
         # Query the datastore
-        all_models_q = db.GqlQuery("SELECT * FROM StochKitModelWrapper WHERE user_id = :1", self.user.email_address)
+        all_models_q = db.GqlQuery("SELECT * FROM StochKitModelWrapper WHERE user_id = :1", self.user.user_id())
         all_models=[]
         for q in all_models_q.run():
             all_models.append(q)
@@ -283,11 +279,7 @@ class SimulatePage(BaseHandler):
 
 
 class NewStochkitEnsemblePage(BaseHandler):
-    """ Page with a form to configure a well mixed stochastic (StochKit2) simulation job.  """
-    
-    def authentication_required(self):
-        return True
-        
+    """ Page with a form to configure a well mixed stochastic (StochKit2) simulation job.  """        
     def get(self):
         model_to_simulate=self.get_session_property('model_to_simulate')
 
@@ -304,7 +296,7 @@ class NewStochkitEnsemblePage(BaseHandler):
         # Make sure that the model is present in the datastore
         #    Figure out what kind of model it is too (concentration or populatio)
         if model_to_simulate is not None:
-            model_db = db.GqlQuery("SELECT * FROM StochKitModelWrapper WHERE user_id = :1 AND model_name = :2", self.user.email_address, model_to_simulate).get()
+            model_db = db.GqlQuery("SELECT * FROM StochKitModelWrapper WHERE user_id = :1 AND model_name = :2", self.user.user_id(), model_to_simulate).get()
 
             model_units = model_db.model.units
 
@@ -348,7 +340,7 @@ class NewStochkitEnsemblePage(BaseHandler):
         # Make sure that the model is present in the datastore
         #    Figure out what kind of model it is too (concentration or populatio)
         if model_to_simulate is not None:
-            model_db = db.GqlQuery("SELECT * FROM StochKitModelWrapper WHERE user_id = :1 AND model_name = :2", self.user.email_address, model_to_simulate).get()
+            model_db = db.GqlQuery("SELECT * FROM StochKitModelWrapper WHERE user_id = :1 AND model_name = :2", self.user.user_id(), model_to_simulate).get()
 
             model_units = model_db.model.units
 
@@ -402,7 +394,7 @@ class NewStochkitEnsemblePage(BaseHandler):
 
             return par, dict(result,**par)
         
-        model = db.GqlQuery("SELECT * FROM StochKitJobWrapper WHERE user_id = :1 AND name = :2", self.user.email_address,par['job_name']).get()
+        model = db.GqlQuery("SELECT * FROM StochKitJobWrapper WHERE user_id = :1 AND name = :2", self.user.user_id(),par['job_name']).get()
         if model is not None:
             result['status'] = False
             result['msg'] = 'A job with that name already exists. You need to input a unique name.'
@@ -474,7 +466,7 @@ class NewStochkitEnsemblePage(BaseHandler):
             # Get the model that is currently in scope for simulation via the session property 'model_to_simulate'
             try:
                 model_to_simulate=self.get_session_property('model_to_simulate')
-                db_model = db.GqlQuery("SELECT * FROM StochKitModelWrapper WHERE user_id = :1 AND model_name = :2", self.user.email_address,model_to_simulate).get()
+                db_model = db.GqlQuery("SELECT * FROM StochKitModelWrapper WHERE user_id = :1 AND model_name = :2", self.user.user_id(),model_to_simulate).get()
                 model = db_model.model
             except:
                 return {'status':False,'msg':'Failed to retrive the model to simulate.'}
@@ -600,7 +592,7 @@ class NewStochkitEnsemblePage(BaseHandler):
         
             # Create a wrapper to store the Job description in the datastore
             stochkit_job_db = StochKitJobWrapper()
-            stochkit_job_db.user_id = self.user.email_address
+            stochkit_job_db.user_id = self.user.user_id()
             stochkit_job_db.name = stochkit_job.name
             stochkit_job_db.stochkit_job = stochkit_job
             stochkit_job_db.put()
@@ -618,7 +610,7 @@ class NewStochkitEnsemblePage(BaseHandler):
             # Get the model that is currently in scope for simulation via the session property 'model_to_simulate'
             try:
                 model_to_simulate=self.get_session_property('model_to_simulate')
-                db_model = db.GqlQuery("SELECT * FROM StochKitModelWrapper WHERE user_id = :1 AND model_name = :2", self.user.email_address,model_to_simulate).get()
+                db_model = db.GqlQuery("SELECT * FROM StochKitModelWrapper WHERE user_id = :1 AND model_name = :2", self.user.user_id(),model_to_simulate).get()
                 model = db_model.model
             except:
                 return {'status':False,'msg':'Failed to retrive the model to simulate.'}
@@ -733,7 +725,7 @@ class NewStochkitEnsemblePage(BaseHandler):
             
             # Create a wrapper to store the Job description in the datastore
             stochkit_job_db = StochKitJobWrapper()
-            stochkit_job_db.user_id = self.user.email_address
+            stochkit_job_db.user_id = self.user.user_id()
             stochkit_job_db.name = stochkit_job.name
             stochkit_job_db.stochkit_job = stochkit_job
             stochkit_job_db.stdout = stochkit_job.stdout

@@ -17,9 +17,6 @@ def int_or_float(s):
 
 class SpeciesEditorPage(BaseHandler):
 
-    def authentication_required(self):
-        return True
-        
     def get(self):
         all_species = self.get_all_species()
 
@@ -192,12 +189,12 @@ class SpeciesEditorPage(BaseHandler):
         if model_edited == None:
             return None
 
-        db_model = db.GqlQuery("SELECT * FROM StochKitModelWrapper WHERE user_id = :1 AND model_name = :2", self.user.email_address, model_edited.name).get()
+        db_model = db.GqlQuery("SELECT * FROM StochKitModelWrapper WHERE user_id = :1 AND model_name = :2", self.user.user_id(), model_edited.name).get()
 
         return db_model.model
 
     def set_model_edited(self, model):
-        db_model = db.GqlQuery("SELECT * FROM StochKitModelWrapper WHERE user_id = :1 AND model_name = :2", self.user.email_address, model.name).get()
+        db_model = db.GqlQuery("SELECT * FROM StochKitModelWrapper WHERE user_id = :1 AND model_name = :2", self.user.user_id(), model.name).get()
         db_model.model = model
         db_model.put()
         # TODO: This is a hack to make it unlikely that the db transaction has not completed

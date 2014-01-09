@@ -19,11 +19,7 @@ from backend.backendservice import backendservices
 
 class StatusPage(BaseHandler):
     """ The main handler for the Job Status Page. Displays status messages for the jobs, options to delete/kill jobs and
-        options to view the Job metadata and Job results. """
-    
-    def authentication_required(self):
-        return True
-        
+        options to view the Job metadata and Job results. """        
     def get(self):
         context = self.getContext()
         self.render_response('status.html', **context)
@@ -43,7 +39,7 @@ class StatusPage(BaseHandler):
             result = {}
             for job_name in jobs_to_delete:
                 try:
-                    job = db.GqlQuery("SELECT * FROM StochKitJobWrapper WHERE user_id = :1 AND name = :2", self.user.email_address,job_name).get()
+                    job = db.GqlQuery("SELECT * FROM StochKitJobWrapper WHERE user_id = :1 AND name = :2", self.user.user_id(),job_name).get()
                     stochkit_job = job.stochkit_job
                 except Exception,e:
                     result = {'status':False,'msg':"Could not retrieve the jobs"+job_name+ " from the datastore."}
@@ -101,7 +97,7 @@ class StatusPage(BaseHandler):
         result = {}
         service = backendservices()
         # Grab references to all the user's StochKitJobs in the system
-        all_stochkit_jobs = db.GqlQuery("SELECT * FROM StochKitJobWrapper WHERE user_id = :1", self.user.email_address)
+        all_stochkit_jobs = db.GqlQuery("SELECT * FROM StochKitJobWrapper WHERE user_id = :1", self.user.user_id())
         if all_stochkit_jobs == None:
             context['no_jobs'] = 'There are no jobs in the system.'
         else:
@@ -195,9 +191,6 @@ class StatusPage(BaseHandler):
 
 
 class JobOutPutPage(BaseHandler):
-    
-    def authentication_required(self):
-        return True
 
     def get(self):
         context,result = self.getContext()
@@ -214,7 +207,7 @@ class JobOutPutPage(BaseHandler):
             # Grab the Job from the datastore
             job_name = context['job_name']
             try:
-                job = db.GqlQuery("SELECT * FROM StochKitJobWrapper WHERE user_id = :1 AND name = :2", self.user.email_address,job_name).get()
+                job = db.GqlQuery("SELECT * FROM StochKitJobWrapper WHERE user_id = :1 AND name = :2", self.user.user_id(),job_name).get()
                 stochkit_job = job.stochkit_job
                 context['stochkit_job']=stochkit_job
             except Exception,e:
@@ -270,7 +263,7 @@ class JobOutPutPage(BaseHandler):
         
         # Grab the Job from the datastore
         try:
-            job = db.GqlQuery("SELECT * FROM StochKitJobWrapper WHERE user_id = :1 AND name = :2", self.user.email_address,job_name).get()
+            job = db.GqlQuery("SELECT * FROM StochKitJobWrapper WHERE user_id = :1 AND name = :2", self.user.user_id(),job_name).get()
             stochkit_job = job.stochkit_job
             context['stochkit_job']=stochkit_job
         except Exception,e:
@@ -300,11 +293,7 @@ class JobOutPutPage(BaseHandler):
         return context,result
 
 class VisualizePage(BaseHandler):
-    """ Basic Visualization """
-
-    def authentication_required(self):
-        return True
-        
+    """ Basic Visualization """        
     def get(self):
         
         result = {}

@@ -46,7 +46,7 @@ class StochKitModelWrapper(db.Model):
 class ModelManager():
     @staticmethod
     def getModels(handler):
-        models = db.GqlQuery("SELECT * FROM StochKitModelWrapper WHERE user_id = :1", handler.user.email_address).fetch(100000)
+        models = db.GqlQuery("SELECT * FROM StochKitModelWrapper WHERE user_id = :1", handler.user.user_id()).fetch(100000)
 
         output = []
 
@@ -85,7 +85,7 @@ class ModelManager():
 
     @staticmethod
     def getModelByName(handler, modelName):
-        model = db.GqlQuery("SELECT * FROM StochKitModelWrapper WHERE user_id = :1 AND model_name = :2", handler.user.email_address, modelName).get()
+        model = db.GqlQuery("SELECT * FROM StochKitModelWrapper WHERE user_id = :1 AND model_name = :2", handler.user.user_id(), modelName).get()
 
         if model == None:
             return None
@@ -111,7 +111,7 @@ class ModelManager():
         else:
             name = "tmpname"
 
-        modelWrap.user_id = handler.user.email_address
+        modelWrap.user_id = handler.user.user_id()
         modelWrap.model_name = name
         modelWrap.model = StochMLDocument.fromString(model["model"]).toModel(name)
         modelWrap.model.units = model["type"]
@@ -139,7 +139,7 @@ class ModelManager():
         else:
             name = model["name"]
 
-        modelWrap.user_id = handler.user.email_address
+        modelWrap.user_id = handler.user.user_id()
         modelWrap.model_name = name
         modelWrap.model = StochMLDocument.fromString(model["model"]).toModel(name)
         modelWrap.model.units = model["type"]
@@ -199,12 +199,7 @@ class ModelBackboneInterface(BaseHandler):
         request.setHeader("Content-Type", "application/json")
         self.response.write(json.dumps([]))
 
-    def authentication_required(self):
-        return True
-
 class ModelConvertPage(BaseHandler):
-    def authentication_required(self):
-        return True
 
     def get(self):
         self.render_response('convert.html')
@@ -212,10 +207,7 @@ class ModelConvertPage(BaseHandler):
 class ModelEditorPage(BaseHandler):
     """
         
-    """
-    def authentication_required(self):
-        return True
-        
+    """        
     def get(self):
         model_edited = self.request.get('model_edited')
         # If no model is currently edited, just grab one from the datastore as default
@@ -319,7 +311,7 @@ class ModelEditorPage(BaseHandler):
             if model_edited is not None and model_edited.name == name:
                 self.session['model_edited'] = None                
             
-            db_model = db.GqlQuery("SELECT * FROM StochKitModelWrapper WHERE user_id = :1 AND model_name = :2", self.user.email_address, name).get()
+            db_model = db.GqlQuery("SELECT * FROM StochKitModelWrapper WHERE user_id = :1 AND model_name = :2", self.user.user_id(), name).get()
 
             if db_model is None:
                 return {'status': False, 'msg': 'The datastore does not have any such entry.'}
@@ -345,7 +337,7 @@ class ModelEditorPage(BaseHandler):
           Save the changes that were made to the current model.
         """
         try:
-            user_id = self.user.email_address
+            user_id = self.user.user_id()
             model = self.get_session_property('model_edited')
             if model is None:
                 return {'status': False, 'msg': 'Model not found in cache!'}
@@ -399,7 +391,7 @@ class ModelEditorPage(BaseHandler):
                 logging.debug('old_model: ' + self.get_session_property('model_edited').name)
                 return {'status': False, 'save_msg': 'Please save your changes first!', 'is_saved': False, 'model_edited': name}
             
-            db_model = db.GqlQuery("SELECT * FROM StochKitModelWrapper WHERE user_id = :1 AND model_name = :2", self.user.email_address, name).get()
+            db_model = db.GqlQuery("SELECT * FROM StochKitModelWrapper WHERE user_id = :1 AND model_name = :2", self.user.user_id(), name).get()
             self.set_session_property('model_edited', db_model.model)
             self.set_session_property('is_model_saved', True)
 
@@ -435,7 +427,7 @@ class ModelEditorPage(BaseHandler):
 #<<<<<<< HEAD
 #          user_id = self.user.user_id()
 #=======
-          user_id = self.user.email_address
+          user_id = self.user.user_id()
 #>>>>>>> upstream/auth
           logging.debug("user_id " + user_id)  
           
@@ -467,9 +459,6 @@ class ModelEditorPage(BaseHandler):
       
 
 class ModelEditorImportFromFilePage(BaseHandler):
-
-    def authentication_required(self):
-        return True
         
     def get(self):
         self.render_response('modeleditor/importmodelfile.html')        
@@ -497,9 +486,6 @@ class ModelEditorImportFromFilePage(BaseHandler):
         return do_import(self, name)        
 
 class ModelEditorImportFromLibrary(BaseHandler):
-    
-    def authentication_required(self):
-        return True
         
     def get(self):
         example_library = self.get_library()
@@ -531,7 +517,7 @@ def do_import(handler, name, from_file = True, model_class=""):
         Helper function to import models from file / library.
         """
     try:
-        user_id = handler.user.email_address
+        user_id = handler.user.user_id()
         db_model = db.GqlQuery("SELECT * FROM StochKitModelWrapper WHERE user_id = :1 AND model_name = :2", user_id, name).get()
         
         if db_model is not None:
@@ -583,9 +569,6 @@ def do_import(handler, name, from_file = True, model_class=""):
 
 class ModelEditorExportToStochkit2(BaseHandler):
 
-    def authentication_required(self):
-        return True
-        
     def get(self):
         model = self.get_session_property('model_edited')
         if model is None:
@@ -635,10 +618,10 @@ def get_all_model_names(handler):
     """
     try:
         all_models = handler.get_session_property('all_models')
-        logging.debug("handler.user.email_address " + handler.user.email_address)
+        logging.debug("handler.user.user_id() " + handler.user.user_id())
         logging.debug("all_models " + str(all_models))
         if all_models is None:
-            db_models = db.GqlQuery("SELECT * FROM StochKitModelWrapper WHERE user_id = :1", handler.user.email_address)
+            db_models = db.GqlQuery("SELECT * FROM StochKitModelWrapper WHERE user_id = :1", handler.user.user_id())
             logging.debug("here")
             if db_models is not None:
                 all_models = [row.model_name for row in db_models]
@@ -656,7 +639,7 @@ def get_all_models(handler):
       Retrieves all models from the cache. If the cache is not already populated, db_models the datastore, populate the cache and then return it.
     """
     try:
-        db_models = db.GqlQuery("SELECT * FROM StochKitModelWrapper WHERE user_id = :1", handler.user.email_address)
+        db_models = db.GqlQuery("SELECT * FROM StochKitModelWrapper WHERE user_id = :1", handler.user.user_id())
         all_models = [row.model for row in db_models]
         
         return all_models
