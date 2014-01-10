@@ -237,6 +237,13 @@ $('#newModelName').keydown(function (e){
 $( '#renameModel' ).click( function(event) {
     event.preventDefault();
 
+    if(/^[a-zA-Z0-9 \-_]+$/.test($( '#newModelName' ).val()))
+    {
+      $( '#sidemsg' ).css('color', 'red');
+      $( '#sidemsg' ).text('Model name must be alphanumeric characters, underscores, hyphens, and spaces only');
+      return;
+    }
+
     if($.trim($( '#newModelName' ).val()).length == 0)
     {
       $( '#sidemsg' ).css('color', 'red');

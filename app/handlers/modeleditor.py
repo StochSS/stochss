@@ -250,10 +250,6 @@ class ModelEditorPage(BaseHandler):
 
             self.response.headers['Content-Type'] = 'application/json'
 
-            if not re.match('^[a-zA-Z0-9_ \-]+$', newName):
-                self.response.write(json.dumps({'status': False, 'msg': 'Model name must be alphanumeric characters, underscores, hyphens, and spaces only'}))
-                return
-
             self.response.content_type = "application/json"
             if ModelManager.getModelByName(self, newName) != None:
                 self.response.write(json.dumps({ "status": False, "msg": "Name {0} already taken".format(newName)}))
