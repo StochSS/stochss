@@ -4,6 +4,7 @@ except ImportError:
   from django.utils import simplejson as json
 
 import traceback
+import re
 from collections import OrderedDict
 
 from stochssapp import *
@@ -56,6 +57,10 @@ class SpeciesEditorPage(BaseHandler):
         Create a new species for the current model.
         """
         name = self.request.get('name').strip()
+
+        if not re.match('^[a-zA-Z0-9_ \-]+$', name):
+          return {'status': False, 'msg': 'Species name must be alphanumeric characters, underscores, hyphens, and spaces only'}
+
         initial_value = self.request.get('initial_value').strip()
 
         errors = self.check_input(name, initial_value)

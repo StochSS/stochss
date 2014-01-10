@@ -246,13 +246,18 @@ class ModelEditorPage(BaseHandler):
             modelName = self.request.get('rename')
             jsonModel = ModelManager.getModelByName(self, modelName)
 
-            newName = self.request.get('newName').strip()
-            print "renaming", modelName, "to", newName
+            newName = self.request.get('newName').strip(' \t')
+
+            self.response.headers['Content-Type'] = 'application/json'
+
+            if not re.match('^[a-zA-Z0-9_ \-]+$', newName):
+                self.response.write(json.dumps({'status': False, 'msg': 'Model name must be alphanumeric characters, underscores, hyphens, and spaces only'}))
+                return
 
             self.response.content_type = "application/json"
             if ModelManager.getModelByName(self, newName) != None:
-              self.response.write(json.dumps({ "status": False, "msg": "Name {0} already taken".format(newName)}))
-              return
+                self.response.write(json.dumps({ "status": False, "msg": "Name {0} already taken".format(newName)}))
+                return
 
             jsonModel["name"] = newName
 
@@ -421,6 +426,10 @@ class ModelEditorPage(BaseHandler):
             A dict that indicates the status of this call.
         """
         name = self.request.get('name').strip()
+
+        if not re.match('^[a-zA-Z0-9_ \-]+$', name):
+          return {'status': False, 'msg': 'Model name must be alphanumeric characters, underscores, hyphens, and spaces only'}
+
         units = self.request.get('exec_type').strip().lower()
         if not name:
           return {'status': False, 'msg': 'Model name is missing.'}
@@ -432,11 +441,8 @@ class ModelEditorPage(BaseHandler):
         try:
           model.setUnits(units)
 
-#<<<<<<< HEAD
-#          user_id = self.user.user_id()
-#=======
           user_id = self.user.email_address
-#>>>>>>> upstream/auth
+
           logging.debug("user_id " + user_id)  
           
           #db_model = StochKitModelWrapper.get_by_key_name(key_name)
