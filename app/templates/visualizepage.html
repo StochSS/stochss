@@ -9,17 +9,17 @@
     <hr>
     <div class="well well-large">
         <form id="select_species" action="/output/visualize?job_folder={{job_folder}}&exec_type={{exec_type}}" method="post">
-        <label>Species:</label>
+            <label>Species:</label>
             <select name="species_name" default="{{species_name}}">
-            {% if species_names %}
-            {% for name in species_names %}
+                {% if species_names %}
+                {% for name in species_names %}
                 {% if name == species_name %}
-                    <option value="{{name}}" selected>{{name}}</option>
+                <option value="{{name}}" selected>{{name}}</option>
                 {% else %}
-                    <option value="{{name}}">{{name}}</option>
+                <option value="{{name}}">{{name}}</option>
                 {% endif %}
-            {% endfor %}
-            {% endif %}
+                {% endfor %}
+                {% endif %}
             </select>
             <input type="hidden" name="job_folder" value="{{job_folder}}"></input>
             {% if exec_type == 'stochastic' %}
@@ -27,8 +27,8 @@
             <input type="text" name="trajectory_number" value="{{trajectory_number}}"></input>
             <span class="help-block">Input a single trajectory number that you want to visualize.</span>
             <br />
-            <input type="submit" name="plotbutton" class="btn btn-primary btn-large" value="Plot realization">
-            <input type="submit" name="plotbuttonmean" class="btn btn-primary btn-large" value="Plot mean">
+            <input type="submit" name="plotbutton" class="btn btn-primary btn-large" value="Plot realization" />
+            <input type="submit" name="plotbuttonmean" class="btn btn-primary btn-large" value="Plot mean" />
             {% else %}
             <br />
             <input type="submit" name="ode_plotbutton" class="btn btn-primary btn-large" value="Plot">
@@ -36,11 +36,17 @@
 
             <input id="plotbutton" class="btn btn-primary btn-large" onClick="$.plot($('#placeholder'),[{{species_time_series}}],{});" value="test" type="hidden">
 
-                    
+            
         </form>
         
 
     </div>
+
+    {% if status == False %}
+    <span style="color: red" class="create_msg">{{msg}}</span>
+    {% else %}
+    <span style="color: green" class="create_msg">{{msg}}</span>
+
     <div>
         
         {% if species_name %}
@@ -51,33 +57,23 @@
                 <th style="font-size: 16px;">{{species_name}}</th>
             </tr>
             <tr>
-              {% if exec_type == 'stochastic' %}
+                {% if exec_type == 'stochastic' %}
                 <td style="font-size: 14px; font-weight:bold; -webkit-transform: rotate(-90deg); -moz-transform: rotate(-90deg);"> Molecule count </td>
-              {% else %}
+                {% else %}
                 <td style="font-size: 14px; font-weight:bold; -webkit-transform: rotate(-90deg); -moz-transform: rotate(-90deg);"> Concentration </td>
-              {% endif  %}
+                {% endif  %}
                 <td><div id="placeholder" style="width:800px;height:400px;"/></td>
             </tr>
             <tr>
                 <td></td>
                 <th style="font-size: 14px;"> Time </th>
             </tr>
-         </table>
+        </table>
         {% endif %}
     </div>
+    {% endif %}
 
 </div>
-
-
-{% if msg %}
-{% if status == False %}
-<span style="color: red" class="create_msg">{{msg}}</span>
-{% else %}
-<span style="color: green" class="create_msg">{{msg}}</span>
-{% endif %}
-{% endif %}
-
-</div><!--/span-->
 
 {% endblock %}
 
@@ -85,13 +81,13 @@
 {% block jscontent %}
 <script type="text/javascript">
     $(document).ready(function() {
-        $('#plotbutton').trigger('click');
+    $('#plotbutton').trigger('click');
     });
 </script>
 
 <script type="text/javascript">
     function saveImage() {
-        
+    
     };
 </script>
 

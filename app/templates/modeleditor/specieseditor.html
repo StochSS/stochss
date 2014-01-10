@@ -3,6 +3,55 @@
 
 {% block modeleditorcontent %}
 
+<div class="menubar">
+    <ul class="nav nav-tabs">
+	<li>
+	    <a href="/modeleditor" TITLE = "Define the name of your model">Models</a>
+	</li>
+	<!-- <li><a href="/modeleditor/overview">Overview</a></li> -->
+	<li class="active">
+	    <a href="/modeleditor/specieseditor" TITLE = "Create a List of reacants">Species</a>
+	</li>
+        <li>
+	    <a href="/modeleditor/parametereditor" TITLE = "Create a List of Parameters">Parameters</a>
+	</li>
+	<li>
+	    <a href="/modeleditor/reactioneditor" TITLE = "Create a List of Reactions">Reactions</a>
+	</li>
+	<li class="dropdown">
+	    <!--<a class="dropdown-toggle" data-toggle="dropdown">Geometry<b class="caret"></b></a> -->
+	    <ul class="dropdown-menu">
+		<!-- <a href="/modeleditor/geometry/editgeometry"> <i class="icon-pencil"></i>Geometry editor</a> -->
+		<a href="/#" TITLE = "Define the Geometry">Compartment</a>
+		<!-- <a href="/#">Import mesh...</a> -->
+	    </ul>
+	</li>
+
+	<!-- <li><a href="/modeleditor/codeeditor">Editor</a></li> -->
+	<li class="dropdown">
+	    <a class="dropdown-toggle" data-toggle="dropdown" TITLE = "Import from File/ Load Existing Library">Import<b class="caret"></b></a>
+	    <ul class="dropdown-menu">
+		<a href="/modeleditor/import/fromfile">From file..</a>
+		<a href="/modeleditor/import/examplelibrary">Example Library...</a>
+		<!-- <a href="/modeleditor/import/biomodels">BioModels database...</a>-->
+	    </ul>
+	</li>
+        
+        <!-- <li><a href="/modeleditor/codeeditor">Editor</a></li> -->
+        {% if model_edited is defined and model_edited.units == "population" %}
+	<li class="dropdown">
+	    <a class="dropdown-toggle" data-toggle="dropdown" TITLE = "Export File To Stochkit">Export<b class="caret"></b></a>
+	    <ul class="dropdown-menu">
+		<a href="/modeleditor/export/tostochkit2">To StochML (StochKit2) ...</a>
+		<!-- <a href="/modeleditor/export/tosbml">To SBML ...</a> -->
+	    </ul>
+	</li>
+        {% endif %}
+    </ul>
+
+</div>
+<!--/ul-->
+
 <div class="span9">
     <div class="row-fluid">
 	<div class="well well-large">
@@ -12,14 +61,11 @@
 		<div id="optional" class="in collapse" style="height:auto">
 		    <div style="float: left; padding-right: 10px">
 			<label>Name</label>
-			<input type="text" name="name" style="width: 160px" value="{{ name }}" TITLE = "Give a Name to the Reactant" >
+			<input type="text" name="name" style="width: 160px" TITLE = "Give a Name to the Reactant" >
 		    </div>
 		    <div>
 			<label>Initial value</label>
-                        {% if not initial_value %}
-                        {% set initial_value = "0" %}
-                        {% endif %}
-			<input type="text" class="span3" name="initial_value" value="{{ initial_value }}" TITLE = "Insert an Integer">
+			<input type="text" class="span3" name="initial_value" TITLE = "Insert an Integer">
 		    </div>
 		    <div style="clear: both"></div>
 		    <button type="submit" class="btn btn-primary" style="float: right;">
@@ -39,7 +85,7 @@
 	    {% endif %}
 	    {% endif %}
 	    <hr/>
-	    <div id="msg" style="display:none"></div>
+	    <div id="msg"></div>
 	    <br />
 	    {% if all_species %}
 	    <h3><a data-toggle="collapse" data-target="#species_list" default>Species </a>&raquo; </h3><br/>
