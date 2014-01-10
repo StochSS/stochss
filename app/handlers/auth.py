@@ -30,7 +30,10 @@ class LoginPage(BaseHandler):
                 'name': 'Local Access',
                 'email_address': 'do-not-use@stochss.local'
             }
-            ok, user = self.auth.store.user_model.create_user(auth_id, **_attrs)
+            user = self.auth.store.user_model.get_by_auth_id(auth_id)
+            if user is None:
+                ok, user = self.auth.store.user_model.create_user(auth_id, **_attrs)
+
             self.auth.set_session(self.auth.store.user_to_dict(user))
             self.redirect('/')
 

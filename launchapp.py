@@ -123,8 +123,13 @@ signal.signal(signal.SIGFPE, clean_up_and_exit)
 serverUp = False
 for tryy in range(0, 20):
     try:
-        req = urllib2.urlopen("http://localhost:8080/")
-    except:
+        req = urllib2.urlopen("http://localhost:8080/login")
+    except urllib2.HTTPError as e:
+        req = None
+        if e.code == 302 and e.reason.endswith('Found'):
+            serverUp = True
+            break
+    except Exception:
         req = None
 
     if req:
