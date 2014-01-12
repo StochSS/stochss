@@ -33,6 +33,7 @@
                 <thead>
                     <tr>
                         <th><input type="checkbox" onClick="toggle(this)"/></th><th>Job name </th>
+                        <th>Start Date (Y-M-D, H-M-S)</th>
                         <th>Status</th>
                         
                         <th></th>
@@ -46,6 +47,9 @@
                             <span>{{job.name}}</span>
                         </td>
                         <td>
+                          {{job.startDate}}
+                        </td>
+                        <td>
                             {% if job.status == "Running" or job.status == "Finished" %}
                               <span style="color: green" class="create_msg">{{job.status}}</span>
                             {% endif %}
@@ -55,7 +59,7 @@
                             {% if job.status == "Failed" or job.status == "Unknown" %}
                               <span style="color: red" class="create_msg">{{job.status}}</span>
                             {% endif %}
-
+                        </td>
                         <td>
                             {% if job.status == "Finished" %}
                               <a href="/output?job_name={{job.name}}">View results</a>

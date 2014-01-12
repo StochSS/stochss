@@ -21,6 +21,8 @@ from stochssapp import ObjectProperty
 
 from backend.backendservice import backendservices
 
+import datetime
+
 import os, shutil
 import random
 
@@ -62,6 +64,7 @@ class StochKitJobWrapper(db.Model):
     type =  db.StringProperty()
     attributes = ObjectProperty()
     stochkit_job = ObjectProperty()
+    startDate = db.StringProperty()
 
     stdout = db.StringProperty()
     stderr = db.StringProperty()
@@ -600,6 +603,7 @@ class NewStochkitEnsemblePage(BaseHandler):
         
             # Create a wrapper to store the Job description in the datastore
             stochkit_job_db = StochKitJobWrapper()
+            stochkit_job_db.startDate = datetime.datetime.utcnow().strftime("%Y-%m-%d-%H-%M-%S")
             stochkit_job_db.user_id = self.user.email_address
             stochkit_job_db.name = stochkit_job.name
             stochkit_job_db.stochkit_job = stochkit_job
@@ -734,6 +738,7 @@ class NewStochkitEnsemblePage(BaseHandler):
             # Create a wrapper to store the Job description in the datastore
             stochkit_job_db = StochKitJobWrapper()
             stochkit_job_db.user_id = self.user.email_address
+            stochkit_job_db.startDate = datetime.datetime.utcnow().strftime("%Y-%m-%d-%H-%M-%S")
             stochkit_job_db.name = stochkit_job.name
             stochkit_job_db.stochkit_job = stochkit_job
             stochkit_job_db.stdout = stochkit_job.stdout
