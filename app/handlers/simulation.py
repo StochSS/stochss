@@ -212,7 +212,7 @@ class JobBackboneInterface(BaseHandler):
 class StochKitJob(Job):
     """ Model for a StochKit job. Contains all the parameters associated with the call. """
     
-    def __init__(self,name=None, final_time=None, increment=None, realizations=1, exec_type="stochastic",store_only_mean=False, label_column_names=True,create_histogram_data=False, seed=None, epsilon=0.1,threshold=10, output_url = None):
+    def __init__(self,name=None, final_time=None, increment=None, realizations=1, exec_type="stochastic",store_only_mean=False, label_column_names=True,create_histogram_data=False, seed=None, epsilon=0.1,threshold = 10, output_url = None, units = None):
         """ fdsgfhsj """
         
         # Type of the job {'Local','Cloud'}
@@ -231,6 +231,7 @@ class StochKitJob(Job):
         self.increment = increment
         self.realizations = realizations
         self.exec_type = exec_type
+        self.units = units
         
         self.store_only_mean = store_only_mean
         self.label_column_names = label_column_names
@@ -586,7 +587,7 @@ class NewStochkitEnsemblePage(BaseHandler):
                 result = {'status':False,'msg':'Cloud execution failed. '}
                 return result
             # Create a StochKitJob instance
-            stochkit_job = StochKitJob(name=ensemblename, final_time=time, realizations=realizations,increment=increment,seed=seed,exec_type=exec_type)
+            stochkit_job = StochKitJob(name = ensemblename, final_time = time, realizations = realizations, increment = increment, seed = seed, exec_type = exec_type, units = model.units.lower())
         
         
             stochkit_job.resource = 'Cloud'
@@ -719,7 +720,7 @@ class NewStochkitEnsemblePage(BaseHandler):
                 return result
         
             # Create a StochKitJob instance
-            stochkit_job = StochKitJob(name=ensemblename, final_time=time, realizations=realizations,increment=increment,seed=seed, exec_type = exec_type)
+            stochkit_job = StochKitJob(name = ensemblename, final_time = time, realizations = realizations, increment = increment, seed = seed, exec_type = exec_type, units = model.units.lower())
         
             stochkit_job.resource = 'Local'
             stochkit_job.type = 'StochKit2 Ensemble'
