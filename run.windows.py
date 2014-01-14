@@ -1,6 +1,6 @@
 #! /usr/bin/python
 
-import os, stat, time, sys
+import os, stat, time, sys, uuid
 sys.path.append(os.path.join(os.path.dirname(os.path.abspath(__file__)), 'app/lib/boto'))
 import boto.ec2, boto.ec2.cloudwatch
 from boto.ec2.cloudwatch import MetricAlarm
@@ -128,6 +128,13 @@ class EC2Services:
             aws_access_key_id=self.access_key,
             aws_secret_access_key=self.secret_key
         )
+    
+    def generate_keypair(self, keypair_name, key_dir=os.path.dirname(__file__)):
+        key = self.conn.create_key_pair(keypair_name)
+        key_dir = os.path.abspath(key_dir)
+        if not os.path.isdir(key_dir):
+            os.mkdir(key_dir, 0700)
+        key.save(key_dir)
     
     def find_or_create_security_group(self):
         print "Checking security groups..."
@@ -348,8 +355,17 @@ def start_stochss_server(aws_access_key, aws_secret_key, preferred_instance_id, 
                 ConfigFile.CF_INSTANCE_ID: preferred_instance_id
             }
             config_file.write(params_to_write)
+    #
+    if preferred_ec2_key_pair in ['', None]:
+        # We just create a keypair because we will need it to generate the secret key...
+        preferred_ec2_key_pair = 'windows-stochss-key-pair-{0}'.format(ec2_region)
+        ec2_services.generate_keypair(preferred_ec2_key_pair)
+        # Write the name of the key pair to the config file
+        params_to_write = {
+            ConfigFile.CF_KEY_PAIR: preferred_ec2_key_pair
+        }
+        config_file.write(params_to_write)
     # Now we have all the necessary config variables
-    ec2_services = EC2Services(ec2_region, aws_access_key, aws_secret_key)
     instance = ec2_services.launch_ec2_instance(preferred_instance_id, preferred_ec2_key_pair)
     print "EC2 instance launched at {0}!".format(instance.public_dns_name)
     # Write this instance id to the config file in case its a brand new instance
@@ -371,8 +387,18 @@ def start_stochss_server(aws_access_key, aws_secret_key, preferred_instance_id, 
             #trys += 1
             #print "Try {0}".format(trys)
             time.sleep(1)
-    # OK, its running. Launch it in the default browser.
-    webbrowser.open_new(stochss_url)
+    # Get a secret key now for remote access
+    admin_key = uuid.uuid4()
+    ssh_key = os.path.dirname(__file__) + '/' + preferred_ec2_key_pair + '.pem'
+    create_admin_key_string = "ssh -o 'StrictHostKeyChecking no' -i {0} ubuntu@{1} 'python ~/generate_admin_key.py {2} > temp_output.log'".format(ssh_key, instance.public_dns_name, admin_key)
+    print create_admin_key_string
+    os.system(create_admin_key_string)
+    # Now we have created the secret key, just need to use it to access the website
+    print "{0}login?secret_key={1}".format(stochss_url, admin_key)
+    # OK, its running. Launch it in the default browser?
+    # open_browser = raw_input("Do you want to launch StochSS in your default browser now (y/n)? ").lower()
+    # if open_browser == "y":
+    # webbrowser.open_new(stochss_url)
 
 def stop_stochss_server(aws_access_key, aws_secret_key, ec2_region, instance_id):
     '''
