@@ -18,14 +18,10 @@ import time
 class CredentialsPage(BaseHandler):
     """
     """
-    def authentication_required(self):
-        return True
-        
     def get(self):
         try:
-            # User id is a numeric value.
-            #TODO: is user id really a numeric value?
-            user_id = self.user.email_address
+            # User id is a string
+            user_id = self.user.user_id()
             if user_id is None:
                 raise InvalidUserException
         except Exception, e:
@@ -40,9 +36,8 @@ class CredentialsPage(BaseHandler):
         params = self.request.POST
         
         try:
-            # User id is a numeric value.
-            #TODO: is user id really a numeric value?
-            user_id = self.user.email_address
+            # User id is a string
+            user_id = self.user.user_id()
             if user_id is None:
                 raise InvalidUserException
         except Exception, e:
@@ -222,9 +217,6 @@ class CredentialsPage(BaseHandler):
 
 class LocalSettingsPage(BaseHandler):
     """ Set paths for local plugin software. """
-    def authentication_required(self):
-        return True
-        
     def get(self):
         """ """
         env_variables = self.user_data.env_variables
