@@ -8,7 +8,7 @@
     <h2>Visualize results</h2>
     <hr>
     <div class="well well-large">
-        <form id="select_species" action="/output/visualize?job_folder={{job_folder}}&exec_type={{exec_type}}" method="post">
+        <form id="select_species" action="/output/visualize?job_folder={{job_folder}}&exec_type={{exec_type}}&units={{units}}" method="post">
             <label>Species:</label>
             <select name="species_name" default="{{species_name}}">
                 {% if species_names %}
@@ -57,7 +57,7 @@
                 <th style="font-size: 16px;">{{species_name}}</th>
             </tr>
             <tr>
-                {% if exec_type == 'stochastic' %}
+                {% if units == 'population' %}
                 <td style="font-size: 14px; font-weight:bold; -webkit-transform: rotate(-90deg); -moz-transform: rotate(-90deg);"> Molecule count </td>
                 {% else %}
                 <td style="font-size: 14px; font-weight:bold; -webkit-transform: rotate(-90deg); -moz-transform: rotate(-90deg);"> Concentration </td>
