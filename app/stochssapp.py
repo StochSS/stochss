@@ -231,6 +231,7 @@ from handlers.credentials import *
 from handlers.converttopopulation import *
 from handlers.updates import *
 from handlers.status import *
+from handlers.auth import SecretKeyHandler
 
 # Handler to serve static files
 class StaticFileHandler(BaseHandler):
@@ -256,6 +257,16 @@ class StaticFileHandler(BaseHandler):
 if 'lib' not in sys.path:
     sys.path[0:0] = ['lib']
 
+<<<<<<< HEAD
+=======
+r1=Route('/login', handler='handlers.auth.LoginPage', name='login')
+r2=Route('/profile', handler='handlers.auth.ProfilePage', name='profile')
+r3=Route('/admin', handler='handlers.admin.AdminPage', name='admin')
+r4=Route('/logout', handler='handlers.auth.LogoutPage', name='logout')
+r5=Route('/auth/<provider>', handler='handlers.auth.AuthHandler:_simple_auth', name='auth_login')
+r6=Route('/auth/<provider>/callback', handler='handlers.auth.AuthHandler:_auth_callback', name='auth_callback')
+
+>>>>>>> add a new endpoint for secret key creation that only accepts connections from localhost, change the login page logic to check for secret key presence in query string if the connection is not from localhost, disconnect all of the oauth stuff and add a new logout handler
 app = webapp2.WSGIApplication([
                                ('/', MainPage),
                                ('/models/list.*', ModelBackboneInterface),
@@ -280,11 +291,24 @@ app = webapp2.WSGIApplication([
                                ('/credentials',CredentialsPage),
                                ('/localsettings',LocalSettingsPage),
                                ('/updates',UpdatesPage),
+<<<<<<< HEAD
                                ('/signout', Signout),
                               ],
                               config=config,
                               debug=True
                              ) 
+=======
+                               ('/secret_key', SecretKeyHandler),
+                               r1,
+                               r2,
+                               r3,
+                               r4,
+                               # r5,
+                               # r6,
+                               ],
+                                config=config,
+                                debug=True) 
+>>>>>>> add a new endpoint for secret key creation that only accepts connections from localhost, change the login page logic to check for secret key presence in query string if the connection is not from localhost, disconnect all of the oauth stuff and add a new logout handler
 
 
 
