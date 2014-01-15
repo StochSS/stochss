@@ -111,9 +111,9 @@ class StatusPage(BaseHandler):
             all_jobs = []
             status = {}
 
-            jobs = all_stochkit_jobs.run()
+            jobs = list(all_stochkit_jobs.run())
 
-            jobs = sorted(list(jobs), key = lambda x : (datetime.datetime.strptime(x.startDate, '%Y-%m-%d-%H-%M-%S') if hasattr(x, 'startDate') else -1), reverse = True)
+            jobs = sorted(jobs, key = lambda x : (datetime.datetime.strptime(x.startDate, '%Y-%m-%d-%H-%M-%S') if hasattr(x, 'startDate') else -1), reverse = True)
 
             for job in jobs:
                 # Get the job id
