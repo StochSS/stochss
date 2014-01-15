@@ -172,7 +172,7 @@ class CredentialsPage(BaseHandler):
                 else:
                     context['active_vms'] = True
                 
-        #context = dict(context, **credentials)
+        context = dict(context, **credentials)
         context = dict(result, **context)
         return context
     
