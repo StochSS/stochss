@@ -61,11 +61,7 @@
                               <a href="/output?job_name={{job.name}}">View results</a>
                             {% else %}
                               {% if job.status == "Failed" %}
-                                {% if job.resource == "Local" %}
-                                  <a href="/output?job_name={{job.name}}&debug=true">Get Debugging Info</a>
-                                {% else %}
-                                  <span style="color: red" class="create_msg">Debug info only on local</span>
-                                {% endif %}
+                                <a href="/output?job_name={{job.name}}&debug=true">Get Debugging Info</a>
                               {% endif %}
                              {% endif %}
                         </td>

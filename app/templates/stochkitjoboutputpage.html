@@ -43,6 +43,11 @@
             <div class="well">
                 <h3> Debug Info </h3>
                 <hr>
+                This is the message of the exception that was raised.
+                <hr>
+                <h5>Exception</h5>
+                <pre>{{exception_message}}</pre>
+                <hr>
                 These are the standard streams from the Stochkit executable used to run the job
                 <hr>
                 <h5>Stdout</h5>
@@ -74,7 +79,7 @@
                 <!--<input type="submit" class="btn btn-primary btn-large dropdown-toggle" value="Export"></a> -->
                 <!-- We show the "Fetch remote" button if the job is a Cloud job and the local data is not present -->
                
-                {% if stochkit_job.resource == "Cloud" and not local_data %}
+                {% if stochkit_job.resource == "Cloud" and not (local_data or debug) %}
                     <button type="submit" class="btn btn-primary btn-large"><i class="icon-download-alt"></i> Fetch Remote</button>
                     <input type="hidden" name="fetch_remote" value="fetch_remote">
                     <input type="hidden" name="job_name" value="{{job_name}}">
