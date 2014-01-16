@@ -44,14 +44,16 @@ def task(taskid,params):
       res['uuid'] = uuidstr
       create_dir_str = "mkdir -p output/%s/result " % uuidstr
       os.system(create_dir_str)
+      stdout = "output/%s/stdout.log" % uuidstr
+      stderr = "output/%s/stderr.log" % uuidstr
 
       job_type = params['job_type']
       exec_str = ''
       if job_type == 'stochkit':
           # The following executiong string is of the form : stochkit_exec_str = "~/StochKit/ssa -m ~/output/%s/dimer_decay.xml -t 20 -i 10 -r 1000" % (uuidstr)
-          exec_str = "{0}/{1} -m {2} --force --out-dir output/{3}/result 2>&1 > {4}/stochkit.log  ".format(STOCHKIT_DIR, paramstr, xmlfilepath, uuidstr, THOME)
+          exec_str = "{0}/{1} -m {2} --force --out-dir output/{3}/result 2>{4} > {5}".format(STOCHKIT_DIR, paramstr, xmlfilepath, uuidstr, stderr, stdout)
       elif job_type == 'stochkit_ode':
-          exec_str = "{0}/{1} -m {2} --force --out-dir output/{3}/result 2>&1 > {4}/stochkit_ode.log".format(ODE_DIR, paramstr, xmlfilepath, uuidstr, THOME)
+          exec_str = "{0}/{1} -m {2} --force --out-dir output/{3}/result 2>{4} > {5}".format(ODE_DIR, paramstr, xmlfilepath, uuidstr, stderr, stdout)
       
       print "======================="
       print " Command to be executed : "
@@ -102,11 +104,34 @@ def task(taskid,params):
       res['time_taken'] = "{0} seconds and {1} microseconds ".format(diff.seconds, diff.microseconds)
       updateEntry(taskid, res, "stochss")
   except Exception,e:
-        data = {'status':'failed', 'message':str(e)}
-        updateEntry(taskid, res, "stochss")
-        print str(e)
-        raise e
-        #return None 
+      expected_output_dir = "output/%s" % uuidstr
+      # First check for existence of output directory
+      if os.path.isdir(expected_output_dir):
+          # If the output directory was created, what about stdout.log and stderr.log?
+          if os.path.exists("{0}/stdout.log".format(expected_output_dir)) or os.path.exists("{0}/stderr.log".format(expected_output_dir)):
+              # Then we should store this in S3 for debugging purposes
+              create_tar_output_str = "tar -zcvf {0}.tar {0}".format(expected_output_dir)
+              os.system(create_tar_output_str)
+              bucketname = params['bucketname']
+              copy_to_s3_str = "python {0}/sccpy.py {1}.tar {2}".format(THOME, expected_output_dir, bucketname)
+              os.system(copy_to_s3_str)
+              # Now clean up
+              remove_output_str = "rm {0}.tar {0}".format(expected_output_dir)
+              os.system(remove_output_str)
+              # Update the DB entry
+              res['output'] = "https://s3.amazonaws.com/{0}/{1}.tar".format(bucketname, expected_output_dir)
+              res['status'] = 'failed'
+              res['message'] = str(e)
+              updateEntry(taskid, res, "stochss")
+          else:
+              # Nothing to do here besides send the exception
+              data = {'status':'failed', 'message':str(e)}
+              updateEntry(taskid, data, "stochss")
+      else:
+          # Again, just send exception
+          data = {'status':'failed', 'message':str(e)}
+          updateEntry(taskid, data, "stochss")
+      raise e
   return res
 
 
