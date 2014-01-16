@@ -50,14 +50,24 @@
 		    </li>
                     
                     <!-- <li><a href="/modeleditor/codeeditor">Editor</a></li> -->
-                    {% if model_edited is defined and model_edited.units == "population" %}
+                    {% if model_edited is defined %}
+                    {% if model_edited.units == "population" %} 
 		    <li class="dropdown">
 			<a class="dropdown-toggle" data-toggle="dropdown" TITLE = "Export File To Stochkit">Export<b class="caret"></b></a>
 			<ul class="dropdown-menu">
-			    <a href="/modeleditor/export/tostochkit2">To StochML (StochKit2) ...</a>
+			    <a href="/modeleditor/export/tostochkit2">To XML (StochKit2 compat.)</a>
 			    <!-- <a href="/modeleditor/export/tosbml">To SBML ...</a> -->
 			</ul>
 		    </li>
+                    {% else %}
+		    <li class="dropdown">
+			<a class="dropdown-toggle" data-toggle="dropdown" TITLE = "Export File To XML">Export<b class="caret"></b></a>
+			<ul class="dropdown-menu">
+			    <a href="/modeleditor/export/tostochkit2">To XML</a>
+			    <!-- <a href="/modeleditor/export/tosbml">To SBML ...</a> -->
+			</ul>
+		    </li>
+                    {% endif %}
                     {% endif %}
 		</ul>
 
