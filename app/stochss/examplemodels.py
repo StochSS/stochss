@@ -70,7 +70,7 @@ def lotkavolterra_oscillating(model_name=""):
     
     return model
 
-def lotkavolterra_steadystate(model_name=""):
+def lotkavolterra_equilibrium(model_name=""):
     """ 
         Dimerdecay. Tests basic functionality and support for the 
         'mass-action' propensity function flag. 
