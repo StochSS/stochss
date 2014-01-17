@@ -156,6 +156,14 @@ class StatusPage(BaseHandler):
                                 
                                 elif job_status['status'] == 'failed':
                                     stochkit_job.status = 'Failed'
+                                    stochkit_job.exception_message = job_status['message']
+                                    # Might not have a uuid or output if an exception was raised early on or if there is just no output available
+                                    try:
+                                        stochkit_job.uuid = job_status['uuid']
+                                        stochkit_job.output_url = job_status['output']
+                                    except KeyError:
+                                        pass
+                                    
                                 elif job_status['status'] == 'pending':
                                     stochkit_job.status = 'Pending'
                                 else:
@@ -213,29 +221,8 @@ class JobOutPutPage(BaseHandler):
             except Exception,e:
                 result = {'status':False,'msg':"Could not retreive the jobs" +job_name+ " from the datastore."}
 
-            try:
-                
-                # Grab the remote files
-                service = backendservices()
-                service.fetchOutput(stochkit_job.pid,stochkit_job.output_url)
-                
-                # Unpack it to its local output location
-                os.system('tar -xf' +stochkit_job.uuid+'.tar')
-                stochkit_job.output_location = os.path.abspath(os.path.dirname(__file__))+'/../output/'+stochkit_job.uuid
-                stochkit_job.output_location = os.path.abspath(stochkit_job.output_location)
-                
-                # Clean up
-                os.remove(stochkit_job.uuid+'.tar')
-                
-                # Save the updated status
-                job.put()
-                
-                result['status']=True
-                result['msg'] = "Sucessfully fetched the remote output files."
-                
-            except Exception,e:
-                result['status']=False
-                result['msg'] = "Failed to fetch the remote files."
+            fetch_output_result = self.fetchCloudOutput(job)
+            result.update(fetch_output_result)
                     
             # Check if the results and stats folders are present locally
             if os.path.exists(stochkit_job.output_location+"/result"):
@@ -277,20 +264,65 @@ class JobOutPutPage(BaseHandler):
           if os.path.exists(stochkit_job.output_location+"/result/stats"):
             context['local_statistics']=True
         else:
-          # If in debug mode, show the stdout and stderr along with jobinfo
+          logging.info('Viewing job output in debug mode...')
+          # If in debug mode, show the stdout and stderr along with jobinfo and exception message if it exists
+          if stochkit_job.exception_message != '':
+            context['exception_message'] = stochkit_job.exception_message
           if os.path.exists(stochkit_job.output_location):
             stdoutf = open(context['stochkit_job'].stdout, 'r')
             context['stdout'] = stdoutf.read()
             stdoutf.close()
-
             stderrf = open(context['stochkit_job'].stderr, 'r')
             context['stderr'] = stderrf.read()
             stderrf.close()
           else:
             # Should never get here
-            pass
-            
+            # But if we do, its likely because this was a cloud job and still need to grab the output from S3
+            logging.info('No job output exists yet...')
+            if stochkit_job.resource == 'Cloud' and stochkit_job.output_url is not None:
+                logging.info('Fetching remote files from S3...')
+                fetch_output_result = self.fetchCloudOutput(job)
+                # Now, if the output was grabbed successfully, we can put stdout and stderr in the context
+                if os.path.exists(stochkit_job.output_location):
+                  logging.info('Placing stdout and stderr in the context...')
+                  stdoutf = open(context['stochkit_job'].stdout, 'r')
+                  context['stdout'] = stdoutf.read()
+                  stdoutf.close()
+                  stderrf = open(context['stochkit_job'].stderr, 'r')
+                  context['stderr'] = stderrf.read()
+                  stderrf.close()
+        
         return context,result
+    
+    def fetchCloudOutput(self, stochkit_job_wrapper):
+        '''
+        '''
+        try:
+            result = {}
+            stochkit_job = stochkit_job_wrapper.stochkit_job
+            # Grab the remote files
+            service = backendservices()
+            service.fetchOutput(stochkit_job.pid, stochkit_job.output_url)
+            
+            # Unpack it to its local output location
+            os.system('tar -xf' +stochkit_job.uuid+'.tar')
+            stochkit_job.output_location = os.path.abspath(os.path.dirname(__file__))+'/../output/'+stochkit_job.uuid
+            stochkit_job.output_location = os.path.abspath(stochkit_job.output_location)
+            
+            # Clean up
+            os.remove(stochkit_job.uuid+'.tar')
+            
+            # Save the updated status
+            stochkit_job_wrapper.put()
+            
+            result['status']=True
+            result['msg'] = "Sucessfully fetched the remote output files."
+            
+        except Exception,e:
+            logging.info('************************************* {0}'.format(e))
+            result['status']=False
+            result['msg'] = "Failed to fetch the remote files."
+        return result
 
 class VisualizePage(BaseHandler):
     """ Basic Visualization """        

@@ -224,6 +224,8 @@ class StochKitJob(Job):
         # URL to the result (valid after a sucessful execution)
         self.output_location = ""
         self.output_url = output_url
+        # In case of failure
+        self.exception_message = ""
         
         # Input parameters
         self.name = name
@@ -590,6 +592,9 @@ class NewStochkitEnsemblePage(BaseHandler):
             # The celery_pid is the Celery Task ID.
             stochkit_job.celery_pid = celery_task_id
             stochkit_job.status = 'Running'
+            stochkit_job.output_location = 'output/%s' % taskid
+            stochkit_job.stdout = stochkit_job.output_location + '/stdout.log'
+            stochkit_job.stderr = stochkit_job.output_location + '/stderr.log'
         
             # Create a wrapper to store the Job description in the datastore
             stochkit_job_db = StochKitJobWrapper()
