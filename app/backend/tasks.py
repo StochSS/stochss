@@ -34,16 +34,16 @@ def task(taskid,params):
       data = {'status':'active','message':'Task Executing in cloud'}
       updateEntry(taskid, data, "stochss")
       res = {}
-      filename = "{0}.xml".format(taskid)
-      f = open(filename,'w')
-      f.write(params['document'])
-      f.close()
-      xmlfilepath = filename
       paramstr =  params['paramstring']
       uuidstr = taskid
       res['uuid'] = uuidstr
       create_dir_str = "mkdir -p output/%s/result " % uuidstr
       os.system(create_dir_str)
+      filename = "output/{0}/{0}.xml".format(uuidstr)
+      f = open(filename,'w')
+      f.write(params['document'])
+      f.close()
+      xmlfilepath = filename
       stdout = "output/%s/stdout.log" % uuidstr
       stderr = "output/%s/stderr.log" % uuidstr
 
@@ -66,20 +66,11 @@ def task(taskid,params):
       
       results = os.listdir("output/{0}/result".format(uuidstr))
       if 'stats' in results and os.listdir("output/{0}/result/stats".format(uuidstr)) == ['.parallel']:
-          error_message = {
-              'status': 'failed',
-              'message': 'The compute node can not handle a job of this size.'
-          }
-          updateEntry(taskid, error_message, "stochss")
-          return
+          raise Exception("The compute node can not handle a job of this size.")
       
       res['pid'] = taskid
       filepath = "output/%s//" % (uuidstr)
       absolute_file_path = os.path.abspath(filepath)
-      #copies the XML file to the output direcory
-      copy_file_str = "cp {0} output/{1}".format(xmlfilepath,uuidstr)
-      print copy_file_str
-      os.system(copy_file_str)
       print 'generating tar file'
       create_tar_output_str = "tar -zcvf output/{0}.tar output/{0}".format(uuidstr)
       print create_tar_output_str
@@ -107,28 +98,22 @@ def task(taskid,params):
       expected_output_dir = "output/%s" % uuidstr
       # First check for existence of output directory
       if os.path.isdir(expected_output_dir):
-          # If the output directory was created, what about stdout.log and stderr.log?
-          if os.path.exists("{0}/stdout.log".format(expected_output_dir)) or os.path.exists("{0}/stderr.log".format(expected_output_dir)):
-              # Then we should store this in S3 for debugging purposes
-              create_tar_output_str = "tar -zcvf {0}.tar {0}".format(expected_output_dir)
-              os.system(create_tar_output_str)
-              bucketname = params['bucketname']
-              copy_to_s3_str = "python {0}/sccpy.py {1}.tar {2}".format(THOME, expected_output_dir, bucketname)
-              os.system(copy_to_s3_str)
-              # Now clean up
-              remove_output_str = "rm {0}.tar {0}".format(expected_output_dir)
-              os.system(remove_output_str)
-              # Update the DB entry
-              res['output'] = "https://s3.amazonaws.com/{0}/{1}.tar".format(bucketname, expected_output_dir)
-              res['status'] = 'failed'
-              res['message'] = str(e)
-              updateEntry(taskid, res, "stochss")
-          else:
-              # Nothing to do here besides send the exception
-              data = {'status':'failed', 'message':str(e)}
-              updateEntry(taskid, data, "stochss")
+          # Then we should store this in S3 for debugging purposes
+          create_tar_output_str = "tar -zcvf {0}.tar {0}".format(expected_output_dir)
+          os.system(create_tar_output_str)
+          bucketname = params['bucketname']
+          copy_to_s3_str = "python {0}/sccpy.py {1}.tar {2}".format(THOME, expected_output_dir, bucketname)
+          os.system(copy_to_s3_str)
+          # Now clean up
+          remove_output_str = "rm {0}.tar {0}".format(expected_output_dir)
+          os.system(remove_output_str)
+          # Update the DB entry
+          res['output'] = "https://s3.amazonaws.com/{0}/{1}.tar".format(bucketname, expected_output_dir)
+          res['status'] = 'failed'
+          res['message'] = str(e)
+          updateEntry(taskid, res, "stochss")
       else:
-          # Again, just send exception
+          # Nothing to do here besides send the exception
           data = {'status':'failed', 'message':str(e)}
           updateEntry(taskid, data, "stochss")
       raise e
