@@ -178,7 +178,7 @@ class StatusPage(BaseHandler):
                 all_jobs.append({ "name" : stochkit_job.name,
                                   "status" : stochkit_job.status,
                                   "resource" : stochkit_job.resource,
-                                  "startDate" : datetime.datetime.strptime(job.startDate, '%Y-%m-%d-%H-%M-%S').strftime('%Y-%m-%d, %H-%M-%S')})
+                                  "startDate" : datetime.datetime.strptime(job.startDate, '%Y-%m-%d-%H-%M-%S').strftime('%Y-%m-%d, %H:%M:%S') if hasattr(job, 'startDate') else '-'})
                 # Save changes to the status
                 job.put()
                 
