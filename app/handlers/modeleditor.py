@@ -502,7 +502,7 @@ class ModelEditorImportFromLibrary(BaseHandler):
     
     def get_library(self):
         # For now, it is hard-coded here.
-        return ['dimerdecay', 'MichaelisMenten']
+        return ['dimerdecay', 'lotkavolterra_oscillating', 'lotkavolterra_steadystate', 'MichaelisMenten']
                 
     def import_model(self):
         name = self.request.get('name').strip()
@@ -530,6 +530,10 @@ def do_import(handler, name, from_file = True, model_class=""):
         else:
             if model_class == 'dimerdecay':
                 model = dimerdecay(name)
+            if model_class == 'lotkavolterra_oscillating':
+                model = lotkavolterra_oscillating(name)
+            if model_class == 'lotkavolterra_steadystate':
+                model = lotkavolterra_steadystate(name)
             elif model_class == 'MichaelisMenten':
                 model = MichaelisMenten(name)
             else:

@@ -106,14 +106,14 @@ class StochMLDocument():
         # Description
         md = cls()
         
-        d = etree.Element('Description')
+        d = etree.Element('Description') 
+
+        #
+        if model.units.lower() == "concentration":
+            d.set('units', model.units.lower())
+
         d.text = model.annotation
         md.document.append(d)
-
-        if model.units.lower() == "concentration":
-            units = etree.Element('Units')
-            units.text = model.units
-            md.document.append(units)
         
         # Number of Reactions
         nr = etree.Element('NumberOfReactions')
@@ -186,6 +186,15 @@ class StochMLDocument():
         # Set annotiation
         ann = root.find('Description')
         if ann is not None:
+            units = ann.get('units').strip().lower()
+
+            if units == "concentration":
+                model.units = "concentration"
+            elif units == "population":
+                model.units = "population"
+            else: # Default 
+                model.units = "population"
+
             if ann.text is None:
                 model.annotation = ""
             else:
