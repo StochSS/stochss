@@ -40,7 +40,7 @@ jQuery.fn.forceAlphanumeric = function () {
         $(this).keypress(function (e) {
             var key = e.which || e.keyCode;
 
-            if(!(/^[a-zA-Z0-9_ \-]+$/.test($(this).val() + String.fromCharCode(key))))
+            if(!(/^[a-zA-Z0-9_\-]+$/.test($(this).val() + String.fromCharCode(key))))
             {
                 console.log($(this).val() + String.fromCharCode(key));
                 console.log("false");

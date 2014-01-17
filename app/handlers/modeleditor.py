@@ -423,7 +423,7 @@ class ModelEditorPage(BaseHandler):
         """
         name = self.request.get('name').strip()
 
-        if not re.match('^[a-zA-Z0-9_ \-]+$', name):
+        if not re.match('^[a-zA-Z0-9_\-]+$', name):
           return {'status': False, 'msg': 'Model name must be alphanumeric characters, underscores, hyphens, and spaces only'}
 
         units = self.request.get('exec_type').strip().lower()

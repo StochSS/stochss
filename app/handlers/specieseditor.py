@@ -58,7 +58,7 @@ class SpeciesEditorPage(BaseHandler):
         """
         name = self.request.get('name').strip()
 
-        if not re.match('^[a-zA-Z0-9_ \-]+$', name):
+        if not re.match('^[a-zA-Z0-9_\-]+$', name):
           return {'status': False, 'msg': 'Species name must be alphanumeric characters, underscores, hyphens, and spaces only'}
 
         initial_value = self.request.get('initial_value').strip()

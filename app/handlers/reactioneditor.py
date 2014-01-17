@@ -107,7 +107,7 @@ class ReactionEditorPage(BaseHandler):
         # Get the names of the reaction, the reactants and the products
         name = self.request.get('name').strip()
 
-        if not re.match('^[a-zA-Z0-9_ \-]+$', name):
+        if not re.match('^[a-zA-Z0-9_\-]+$', name):
           return {'status': False, 'msg': 'Reaction name must be alphanumeric characters, underscores, hyphens, and spaces only'}
 
         reactants = self.request.get('reactants').strip()

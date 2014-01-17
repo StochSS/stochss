@@ -81,7 +81,7 @@ class ParameterEditorPage(BaseHandler):
     def create_parameter(self):
         name = self.request.get('name').strip()
 
-        if not re.match('^[a-zA-Z0-9_ \-]+$', name):
+        if not re.match('^[a-zA-Z0-9_\-]+$', name):
           return {'status': False, 'msg': 'Parameter name must be alphanumeric characters, underscores, hyphens, and spaces only'}
 
         expression = self.request.get('expression').strip()
