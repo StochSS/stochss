@@ -43,13 +43,11 @@
             <div class="well">
                 <h3> Debug Info </h3>
                 <hr>
-                This is the message of the exception that was raised.
-                <hr>
-                <h5>Exception</h5>
+                {% if stochkit_job.resource == "Cloud" %}
+                <h5>Cloud Exception</h5>
                 <pre>{{exception_message}}</pre>
                 <hr>
-                These are the standard streams from the Stochkit executable used to run the job
-                <hr>
+                {% endif %}
                 <h5>Stdout</h5>
                 <pre>{{stdout}}</pre>
                 <h5>Stderr</h5>
