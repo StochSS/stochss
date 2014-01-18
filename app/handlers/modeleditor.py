@@ -530,9 +530,9 @@ def do_import(handler, name, from_file = True, model_class=""):
         else:
             if model_class == 'dimerdecay':
                 model = dimerdecay(name)
-            if model_class == 'lotkavolterra_oscillating':
+            elif model_class == 'lotkavolterra_oscillating':
                 model = lotkavolterra_oscillating(name)
-            if model_class == 'lotkavolterra_equilibrium':
+            elif model_class == 'lotkavolterra_equilibrium':
                 model = lotkavolterra_equilibrium(name)
             elif model_class == 'MichaelisMenten':
                 model = MichaelisMenten(name)
@@ -564,9 +564,10 @@ def do_import(handler, name, from_file = True, model_class=""):
         handler.set_session_property('model_edited', model)
             
     except Exception, e:
-        logging.error("model::import_model failed with error %s", e)
-        traceback.print_exc()
-        return {'status': False, 'msg': 'Model could not be imported.'}
+        #logging.error("model::import_model failed with error %s", e)
+        #traceback.print_exc()
+        raise
+        #return {'status': False, 'msg': 'Model could not be imported.'}
 
     return {'status': True, 'msg': 'Model imported successfully.'}
 

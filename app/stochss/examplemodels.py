@@ -43,7 +43,7 @@ def lotkavolterra_oscillating(model_name=""):
         'mass-action' propensity function flag. 
     """
     if model_name == "":
-        model_name = "dimerdecay"
+        model_name = "lotkavolterra_oscillating"
     model = StochKitModel(name=model_name);
 
     model.units = "concentration"
@@ -76,7 +76,7 @@ def lotkavolterra_equilibrium(model_name=""):
         'mass-action' propensity function flag. 
     """
     if model_name == "":
-        model_name = "dimerdecay"
+        model_name = "lotkavolterra_equilibrium"
     model = StochKitModel(name=model_name);
 
     model.units = "concentration"
