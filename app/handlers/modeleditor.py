@@ -200,7 +200,9 @@ class ModelBackboneInterface(BaseHandler):
         self.response.write(json.dumps([]))
 
 class ModelConvertPage(BaseHandler):
-
+    def authentication_required(self):
+        return True
+    
     def get(self):
         self.render_response('convert.html')
 
@@ -208,6 +210,9 @@ class ModelEditorPage(BaseHandler):
     """
         
     """        
+    def authentication_required(self):
+        return True
+    
     def get(self):
         model_edited = self.request.get('model_edited')
         # If no model is currently edited, just grab one from the datastore as default
@@ -460,6 +465,9 @@ class ModelEditorPage(BaseHandler):
       
 
 class ModelEditorImportFromFilePage(BaseHandler):
+    
+    def authentication_required(self):
+        return True
         
     def get(self):
         self.render_response('modeleditor/importmodelfile.html')        
@@ -488,6 +496,9 @@ class ModelEditorImportFromFilePage(BaseHandler):
 
 class ModelEditorImportFromLibrary(BaseHandler):
         
+    def authentication_required(self):
+        return True
+    
     def get(self):
         example_library = self.get_library()
         self.render_response('modeleditor/importfromlibrary.html', **{'example_library': example_library})
@@ -575,6 +586,9 @@ def do_import(handler, name, from_file = True, model_class=""):
 
 class ModelEditorExportToStochkit2(BaseHandler):
 
+    def authentication_required(self):
+        return True
+    
     def get(self):
         model = self.get_session_property('model_edited')
         if model is None:
