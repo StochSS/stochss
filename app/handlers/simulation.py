@@ -584,7 +584,7 @@ class NewStochkitEnsemblePage(BaseHandler):
                 result = {'status':False,'msg':'Cloud execution failed. '}
                 return result
             # Create a StochKitJob instance
-            stochkit_job = StochKitJob(name = ensemblename, final_time = time, realizations = realizations, increment = increment, seed = seed, exec_type = exec_type, units = model.units.lower())
+            stochkit_job = StochKitJob(name = ensemblename, final_time = stime, realizations = realizations, increment = increment, seed = seed, exec_type = exec_type, units = model.units.lower())
         
         
             stochkit_job.resource = 'Cloud'
