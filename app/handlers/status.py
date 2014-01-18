@@ -115,7 +115,9 @@ class StatusPage(BaseHandler):
 
             jobs = sorted(jobs, key = lambda x : (datetime.datetime.strptime(x.startDate, '%Y-%m-%d-%H-%M-%S') if hasattr(x, 'startDate') else -1), reverse = True)
 
-            for job in jobs:
+            for number, job in enumerate(jobs):
+                number = len(jobs) - number
+
                 # Get the job id
                 stochkit_job = job.stochkit_job
                 
@@ -178,7 +180,7 @@ class StatusPage(BaseHandler):
                 all_jobs.append({ "name" : stochkit_job.name,
                                   "status" : stochkit_job.status,
                                   "resource" : stochkit_job.resource,
-                                  "startDate" : datetime.datetime.strptime(job.startDate, '%Y-%m-%d-%H-%M-%S').strftime('%Y-%m-%d, %H:%M') if hasattr(job, 'startDate') else '-'})
+                                  "number" : number})
                 # Save changes to the status
                 job.put()
                 

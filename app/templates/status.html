@@ -32,8 +32,9 @@
             <table cellpadding="0" cellspacing="0" border="0" class="table table-striped table-bordered" id="dataTable">
                 <thead>
                     <tr>
-                        <th><input type="checkbox" onClick="toggle(this)"/></th><th>Job name </th>
-                        <th>Start Date (Y-M-D, H-M -- UTC)</th>
+                        <th><input type="checkbox" onClick="toggle(this)"/></th>
+                        <th>Job Number</th>
+                        <th>Job name </th>
                         <th>Status</th>
                         
                         <th></th>
@@ -44,10 +45,10 @@
                     <tr>
                         <td><input type="checkbox" name="select_job" value="{{job.name}}"> </td>
                         <td>
-                            <span>{{job.name}}</span>
+                            <span>{{job.number}}</span>
                         </td>
                         <td>
-                          {{job.startDate}}
+                            <span>{{job.name}}</span>
                         </td>
                         <td>
                             {% if job.status == "Running" or job.status == "Finished" %}
