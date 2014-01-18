@@ -429,7 +429,7 @@ class ModelEditorPage(BaseHandler):
         try:
           model.setUnits(units)
 
-          user_id = self.user.email_address
+          user_id = self.user.user_id()
           logging.debug("user_id " + user_id)  
           
           #db_model = StochKitModelWrapper.get_by_key_name(key_name)

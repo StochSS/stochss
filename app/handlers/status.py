@@ -98,7 +98,7 @@ class StatusPage(BaseHandler):
         result = {}
         service = backendservices()
         # Grab references to all the user's StochKitJobs in the system
-        all_stochkit_jobs = db.GqlQuery("SELECT * FROM StochKitJobWrapper WHERE user_id = :1", self.user.email_address)
+        all_stochkit_jobs = db.GqlQuery("SELECT * FROM StochKitJobWrapper WHERE user_id = :1", self.user.user_id())
         if all_stochkit_jobs == None:
             context['no_jobs'] = 'There are no jobs in the system.'
         else:
@@ -108,7 +108,7 @@ class StatusPage(BaseHandler):
 
             jobs = list(all_stochkit_jobs.run())
 
-            jobs = sorted(jobs, key = lambda x : (datetime.datetime.strptime(x.startDate, '%Y-%m-%d-%H-%M-%S') if hasattr(x, 'startDate') else -1), reverse = True)
+            jobs = sorted(jobs, key = lambda x : (datetime.datetime.strptime(x.startDate, '%Y-%m-%d-%H-%M-%S') if hasattr(x, 'startDate') and x.startDate != None else ''), reverse = True)
 
             for number, job in enumerate(jobs):
                 number = len(jobs) - number

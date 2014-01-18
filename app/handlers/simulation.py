@@ -602,7 +602,7 @@ class NewStochkitEnsemblePage(BaseHandler):
             # Create a wrapper to store the Job description in the datastore
             stochkit_job_db = StochKitJobWrapper()
             stochkit_job_db.startDate = time.strftime("%Y-%m-%d-%H-%M-%S")
-            stochkit_job_db.user_id = self.user.email_address
+            stochkit_job_db.user_id = self.user.user_id()
             stochkit_job_db.name = stochkit_job.name
             stochkit_job_db.stochkit_job = stochkit_job
             stochkit_job_db.put()
@@ -721,7 +721,7 @@ class NewStochkitEnsemblePage(BaseHandler):
                 return result
         
             # Create a StochKitJob instance
-            stochkit_job = StochKitJob(name = ensemblename, final_time = time, realizations = realizations, increment = increment, seed = seed, exec_type = exec_type, units = model.units.lower())
+            stochkit_job = StochKitJob(name = ensemblename, final_time = stime, realizations = realizations, increment = increment, seed = seed, exec_type = exec_type, units = model.units.lower())
         
             stochkit_job.resource = 'Local'
             stochkit_job.type = 'StochKit2 Ensemble'
@@ -735,7 +735,7 @@ class NewStochkitEnsemblePage(BaseHandler):
             
             # Create a wrapper to store the Job description in the datastore
             stochkit_job_db = StochKitJobWrapper()
-            stochkit_job_db.user_id = self.user.email_address
+            stochkit_job_db.user_id = self.user.user_id()
             stochkit_job_db.startDate = time.strftime("%Y-%m-%d-%H-%M-%S")
             stochkit_job_db.name = stochkit_job.name
             stochkit_job_db.stochkit_job = stochkit_job
