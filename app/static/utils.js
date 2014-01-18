@@ -1,6 +1,6 @@
 jQuery.fn.forceNumeric = function () {
     return this.each(function () {
-        $(this).keyup(function (e) {
+        $(this).keypress(function (e) {
             var key = e.which || e.keyCode;
 
             if(key == 32)
@@ -30,6 +30,24 @@ jQuery.fn.forceNumeric = function () {
                 return false;
             }
 
+            return true;
+        });
+    });
+};
+
+jQuery.fn.forceAlphanumeric = function () {
+    return this.each(function () {
+        $(this).keypress(function (e) {
+            var key = e.which || e.keyCode;
+
+            if(!(/^[a-zA-Z0-9_\-]+$/.test($(this).val() + String.fromCharCode(key))))
+            {
+                console.log($(this).val() + String.fromCharCode(key));
+                console.log("false");
+                return false;
+            }
+
+            console.log("true");
             return true;
         });
     });

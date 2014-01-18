@@ -8,6 +8,8 @@ from collections import OrderedDict
 from Queue import Queue
 import __future__
 
+import re
+
 from stochssapp import *
 from stochss.model import *
 
@@ -75,6 +77,10 @@ class ParameterEditorPage(BaseHandler):
 
     def create_parameter(self):
         name = self.request.get('name').strip()
+
+        if not re.match('^[a-zA-Z0-9_\-]+$', name):
+          return {'status': False, 'msg': 'Parameter name must be alphanumeric characters, underscores, hyphens, and spaces only'}
+
         expression = self.request.get('expression').strip()
 
         error = self.check_input(name, expression)

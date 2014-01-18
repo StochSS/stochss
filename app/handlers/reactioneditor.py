@@ -8,6 +8,8 @@ import logging
 import traceback
 import __future__
 
+import re
+
 from stochssapp import *
 from stochss.model import *
 
@@ -94,12 +96,17 @@ class ReactionEditorPage(BaseHandler):
         
         # Grab the currently edited model
         model = self.get_model_edited()
+
         if model is None:
             return {'status': False, 'msg': 'You have not selected any model to edit.'}
         
         
         # Get the names of the reaction, the reactants and the products
         name = self.request.get('name').strip()
+
+        if not re.match('^[a-zA-Z0-9_\-]+$', name):
+          return {'status': False, 'msg': 'Reaction name must be alphanumeric characters, underscores, hyphens, and spaces only'}
+
         reactants = self.request.get('reactants').strip()
         products = self.request.get('products').strip()
         
@@ -172,8 +179,8 @@ class ReactionEditorPage(BaseHandler):
                 try:
                     rtemp = Reaction(name="foo", reactants=reactants, products=products, massaction=True,rate=ma_rate_parameter)
                     propensity_function = rtemp.propensity_function
-                except Exception,re:
-                    return {'status': False, 'msg': re}
+                except Exception,ret:
+                    return {'status': False, 'msg': ret}
 
             try:
                 print propensity_function, name, namespace

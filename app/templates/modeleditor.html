@@ -81,7 +81,7 @@
 			<br/>
 			<div id="optional" class="in collapse" style="height:auto">
 			    <label>Name</label>
-			    <input type="text" class="span3" id="Formula" name="name" value="{{ name }}" class="update_box auto_complete">
+			    <input type="text" class="span3" id="name" name="name" value="{{ name }}" class="update_box auto_complete">
 
                             <label>Units</label>
                             <input type="radio" name="exec_type" value="concentration"> Concentration <br />
@@ -210,7 +210,7 @@
 {% endblock %}
 {% block jscontent %}
 <script src="/static/js/jquery.dataTables.min.js"></script>
-<script src="/static/js/jquery-ui-1.9.1.custom.min.js"></script>
+<script src="/static/utils.js"></script>
 
 <script type="text/javascript">
 $( 'document' ).ready( function() {
@@ -246,6 +246,13 @@ $('#newModelName').keydown(function (e){
 })
 $( '#renameModel' ).click( function(event) {
     event.preventDefault();
+
+    if(/^[a-zA-Z0-9\-_]+$/.test($( '#newModelName' ).val()))
+    {
+      $( '#sidemsg' ).css('color', 'red');
+      $( '#sidemsg' ).text('Model name must be alphanumeric characters, underscores, hyphens, and spaces only');
+      return;
+    }
 
     if($.trim($( '#newModelName' ).val()).length == 0)
     {

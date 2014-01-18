@@ -11,6 +11,7 @@ import time
 import shutil
 import os
 import subprocess
+import datetime
 
 from google.appengine.ext import db
 
@@ -97,16 +98,21 @@ class StatusPage(BaseHandler):
         result = {}
         service = backendservices()
         # Grab references to all the user's StochKitJobs in the system
-        all_stochkit_jobs = db.GqlQuery("SELECT * FROM StochKitJobWrapper WHERE user_id = :1", self.user.user_id())
+        all_stochkit_jobs = db.GqlQuery("SELECT * FROM StochKitJobWrapper WHERE user_id = :1", self.user.email_address)
         if all_stochkit_jobs == None:
             context['no_jobs'] = 'There are no jobs in the system.'
         else:
             # We want to display the name of the job and the status of the Job.
             all_jobs = []
             status = {}
-            
-            for job in all_stochkit_jobs.run():
-                
+
+            jobs = list(all_stochkit_jobs.run())
+
+            jobs = sorted(jobs, key = lambda x : (datetime.datetime.strptime(x.startDate, '%Y-%m-%d-%H-%M-%S') if hasattr(x, 'startDate') else -1), reverse = True)
+
+            for number, job in enumerate(jobs):
+                number = len(jobs) - number
+
                 # Get the job id
                 stochkit_job = job.stochkit_job
                 
@@ -172,9 +178,12 @@ class StatusPage(BaseHandler):
                                     stochkit_job.status = 'Running'
                     
                     except Exception,e:
-                        result = {'status':False,'msg':'Could not determine the status of the jobs.'+str(e)}
-                
-                all_jobs.append(stochkit_job)
+                        result = {'status':False,'msg':'Could not determine the status of the jobs.'+str(e)}                
+
+                all_jobs.append({ "name" : stochkit_job.name,
+                                  "status" : stochkit_job.status,
+                                  "resource" : stochkit_job.resource,
+                                  "number" : number})
                 # Save changes to the status
                 job.put()
                 

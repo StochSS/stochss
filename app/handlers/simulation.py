@@ -21,6 +21,8 @@ from stochssapp import ObjectProperty
 
 from backend.backendservice import backendservices
 
+import time
+
 import os, shutil
 import random
 
@@ -62,6 +64,7 @@ class StochKitJobWrapper(db.Model):
     type =  db.StringProperty()
     attributes = ObjectProperty()
     stochkit_job = ObjectProperty()
+    startDate = db.StringProperty()
 
     stdout = db.StringProperty()
     stderr = db.StringProperty()
@@ -526,7 +529,7 @@ class NewStochkitEnsemblePage(BaseHandler):
             filepath = ""
             params['file'] = filepath
             ensemblename = params['job_name']
-            time = params['time']
+            stime = params['time']
             realizations = params['realizations']
             increment = params['increment']
             seed = params['seed']
@@ -534,8 +537,8 @@ class NewStochkitEnsemblePage(BaseHandler):
             # Assemble the argument list
             args = ''
             args+=' -t '
-            args+=str(time)
-            num_output_points = str(int(float(time)/float(increment)))
+            args+=str(stime)
+            num_output_points = str(int(float(stime)/float(increment)))
             args+=' -i ' + str(num_output_points)
             path = os.path.dirname(__file__)
 
@@ -598,7 +601,8 @@ class NewStochkitEnsemblePage(BaseHandler):
         
             # Create a wrapper to store the Job description in the datastore
             stochkit_job_db = StochKitJobWrapper()
-            stochkit_job_db.user_id = self.user.user_id()
+            stochkit_job_db.startDate = time.strftime("%Y-%m-%d-%H-%M-%S")
+            stochkit_job_db.user_id = self.user.email_address
             stochkit_job_db.name = stochkit_job.name
             stochkit_job_db.stochkit_job = stochkit_job
             stochkit_job_db.put()
@@ -665,7 +669,7 @@ class NewStochkitEnsemblePage(BaseHandler):
             filepath = ""
             params['file'] = filepath
             ensemblename = params['job_name']
-            time = params['time']
+            stime = params['time']
             realizations = params['realizations']
             increment = params['increment']
             seed = params['seed']
@@ -673,8 +677,8 @@ class NewStochkitEnsemblePage(BaseHandler):
             # Assemble the argument list
             args = ''
             args+=' -t '
-            args+=str(time)
-            num_output_points = str(int(float(time)/float(increment)))
+            args+=str(stime)
+            num_output_points = str(int(float(stime)/float(increment)))
             args+=' -i ' + str(num_output_points)
             path = os.path.dirname(__file__)
 
@@ -731,7 +735,8 @@ class NewStochkitEnsemblePage(BaseHandler):
             
             # Create a wrapper to store the Job description in the datastore
             stochkit_job_db = StochKitJobWrapper()
-            stochkit_job_db.user_id = self.user.user_id()
+            stochkit_job_db.user_id = self.user.email_address
+            stochkit_job_db.startDate = time.strftime("%Y-%m-%d-%H-%M-%S")
             stochkit_job_db.name = stochkit_job.name
             stochkit_job_db.stochkit_job = stochkit_job
             stochkit_job_db.stdout = stochkit_job.stdout
