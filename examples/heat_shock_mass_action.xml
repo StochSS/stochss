@@ -1,0 +1,1050 @@
+<Model>
+  <Description>HeatShockDup1</Description>
+  <NumberOfReactions>61</NumberOfReactions>
+  <NumberOfSpecies>28</NumberOfSpecies>
+  <ParametersList>
+    <Parameter>
+      <Id>C1</Id>
+      <Expression>2.540000</Expression>
+    </Parameter>
+    <Parameter>
+      <Id>C2</Id>
+      <Expression>1.000000</Expression>
+    </Parameter>
+    <Parameter>
+      <Id>C3</Id>
+      <Expression>0.254000</Expression>
+    </Parameter>
+    <Parameter>
+      <Id>C4</Id>
+      <Expression>1.000000</Expression>
+    </Parameter>
+    <Parameter>
+      <Id>C5</Id>
+      <Expression>0.025400</Expression>
+    </Parameter>
+    <Parameter>
+      <Id>C6</Id>
+      <Expression>10.000000</Expression>
+    </Parameter>
+    <Parameter>
+      <Id>C7</Id>
+      <Expression>254.000000</Expression>
+    </Parameter>
+    <Parameter>
+      <Id>C8</Id>
+      <Expression>10000.000000</Expression>
+    </Parameter>
+    <Parameter>
+      <Id>C9</Id>
+      <Expression>0.000254</Expression>
+    </Parameter>
+    <Parameter>
+      <Id>C10</Id>
+      <Expression>0.010000</Expression>
+    </Parameter>
+    <Parameter>
+      <Id>C11</Id>
+      <Expression>0.000254</Expression>
+    </Parameter>
+    <Parameter>
+      <Id>C12</Id>
+      <Expression>1.000000</Expression>
+    </Parameter>
+    <Parameter>
+      <Id>C13</Id>
+      <Expression>0.000254</Expression>
+    </Parameter>
+    <Parameter>
+      <Id>C14</Id>
+      <Expression>1.000000</Expression>
+    </Parameter>
+    <Parameter>
+      <Id>C15</Id>
+      <Expression>2.540000</Expression>
+    </Parameter>
+    <Parameter>
+      <Id>C16</Id>
+      <Expression>1.000000</Expression>
+    </Parameter>
+    <Parameter>
+      <Id>C17</Id>
+      <Expression>2540.000000</Expression>
+    </Parameter>
+    <Parameter>
+      <Id>C18</Id>
+      <Expression>1000.000000</Expression>
+    </Parameter>
+    <Parameter>
+      <Id>C19</Id>
+      <Expression>0.025400</Expression>
+    </Parameter>
+    <Parameter>
+      <Id>C20</Id>
+      <Expression>1.000000</Expression>
+    </Parameter>
+    <Parameter>
+      <Id>C21</Id>
+      <Expression>6.620000</Expression>
+    </Parameter>
+    <Parameter>
+      <Id>C22</Id>
+      <Expression>0.500000</Expression>
+    </Parameter>
+    <Parameter>
+      <Id>C23</Id>
+      <Expression>20.000000</Expression>
+    </Parameter>
+    <Parameter>
+      <Id>C24</Id>
+      <Expression>0.030000</Expression>
+    </Parameter>
+    <Parameter>
+      <Id>C25</Id>
+      <Expression>0.030000</Expression>
+    </Parameter>
+    <Parameter>
+      <Id>C26</Id>
+      <Expression>0.030000</Expression>
+    </Parameter>
+    <Parameter>
+      <Id>C27</Id>
+      <Expression>0.030000</Expression>
+    </Parameter>
+    <Parameter>
+      <Id>C28</Id>
+      <Expression>0.030000</Expression>
+    </Parameter>
+    <Parameter>
+      <Id>C29</Id>
+      <Expression>1.670000</Expression>
+    </Parameter>
+    <Parameter>
+      <Id>C30</Id>
+      <Expression>0.500000</Expression>
+    </Parameter>
+    <Parameter>
+      <Id>C31</Id>
+      <Expression>20.000000</Expression>
+    </Parameter>
+    <Parameter>
+      <Id>C32</Id>
+      <Expression>0.030000</Expression>
+    </Parameter>
+    <Parameter>
+      <Id>C33</Id>
+      <Expression>0.030000</Expression>
+    </Parameter>
+    <Parameter>
+      <Id>C34</Id>
+      <Expression>0.006250</Expression>
+    </Parameter>
+    <Parameter>
+      <Id>C35</Id>
+      <Expression>0.500000</Expression>
+    </Parameter>
+    <Parameter>
+      <Id>C36</Id>
+      <Expression>7.000000</Expression>
+    </Parameter>
+    <Parameter>
+      <Id>C37</Id>
+      <Expression>0.030000</Expression>
+    </Parameter>
+    <Parameter>
+      <Id>C38</Id>
+      <Expression>3.000000</Expression>
+    </Parameter>
+    <Parameter>
+      <Id>C39</Id>
+      <Expression>0.700000</Expression>
+    </Parameter>
+    <Parameter>
+      <Id>C40</Id>
+      <Expression>0.500000</Expression>
+    </Parameter>
+    <Parameter>
+      <Id>C41</Id>
+      <Expression>1.000000</Expression>
+    </Parameter>
+    <Parameter>
+      <Id>C42</Id>
+      <Expression>0.500000</Expression>
+    </Parameter>
+    <Parameter>
+      <Id>C43</Id>
+      <Expression>20.000000</Expression>
+    </Parameter>
+    <Parameter>
+      <Id>C44</Id>
+      <Expression>0.030000</Expression>
+    </Parameter>
+    <Parameter>
+      <Id>C45</Id>
+      <Expression>0.030000</Expression>
+    </Parameter>
+    <Parameter>
+      <Id>C46</Id>
+      <Expression>2.540000</Expression>
+    </Parameter>
+    <Parameter>
+      <Id>C47</Id>
+      <Expression>10000.000000</Expression>
+    </Parameter>
+    <Parameter>
+      <Id>C48</Id>
+      <Expression>0.433330</Expression>
+    </Parameter>
+    <Parameter>
+      <Id>C49</Id>
+      <Expression>0.500000</Expression>
+    </Parameter>
+    <Parameter>
+      <Id>C50</Id>
+      <Expression>20.000000</Expression>
+    </Parameter>
+    <Parameter>
+      <Id>C51</Id>
+      <Expression>0.030000</Expression>
+    </Parameter>
+    <Parameter>
+      <Id>C52</Id>
+      <Expression>0.030000</Expression>
+    </Parameter>
+    <Parameter>
+      <Id>C53</Id>
+      <Expression>2.540000</Expression>
+    </Parameter>
+    <Parameter>
+      <Id>C54</Id>
+      <Expression>10000.000000</Expression>
+    </Parameter>
+    <Parameter>
+      <Id>C55</Id>
+      <Expression>0.030000</Expression>
+    </Parameter>
+    <Parameter>
+      <Id>C56</Id>
+      <Expression>0.030000</Expression>
+    </Parameter>
+    <Parameter>
+      <Id>C57</Id>
+      <Expression>0.030000</Expression>
+    </Parameter>
+    <Parameter>
+      <Id>C58</Id>
+      <Expression>0.030000</Expression>
+    </Parameter>
+    <Parameter>
+      <Id>C59</Id>
+      <Expression>0.030000</Expression>
+    </Parameter>
+    <Parameter>
+      <Id>C60</Id>
+      <Expression>0.030000</Expression>
+    </Parameter>
+    <Parameter>
+      <Id>C61</Id>
+      <Expression>0.030000</Expression>
+    </Parameter>
+  </ParametersList>
+  <ReactionsList>
+    <Reaction>
+      <Id>Reaction1</Id>
+      <Type>mass-action</Type>
+      <Rate>C1</Rate>
+      <Reactants>
+        <SpeciesReference id="S1" stoichiometry="1.000000"/>
+        <SpeciesReference id="S2" stoichiometry="1.000000"/>
+      </Reactants>
+      <Products>
+        <SpeciesReference id="S3" stoichiometry="1.000000"/>
+      </Products>
+    </Reaction>
+    <Reaction>
+      <Id>Reaction2</Id>
+      <Type>mass-action</Type>
+      <Rate>C2</Rate>
+      <Reactants>
+        <SpeciesReference id="S3" stoichiometry="1.000000"/>
+      </Reactants>
+      <Products>
+        <SpeciesReference id="S1" stoichiometry="1.000000"/>
+        <SpeciesReference id="S2" stoichiometry="1.000000"/>
+      </Products>
+    </Reaction>
+    <Reaction>
+      <Id>Reaction3</Id>
+      <Type>mass-action</Type>
+      <Rate>C3</Rate>
+      <Reactants>
+        <SpeciesReference id="S4" stoichiometry="1.000000"/>
+        <SpeciesReference id="S1" stoichiometry="1.000000"/>
+      </Reactants>
+      <Products>
+        <SpeciesReference id="S5" stoichiometry="1.000000"/>
+      </Products>
+    </Reaction>
+    <Reaction>
+      <Id>Reaction4</Id>
+      <Type>mass-action</Type>
+      <Rate>C4</Rate>
+      <Reactants>
+        <SpeciesReference id="S5" stoichiometry="1.000000"/>
+      </Reactants>
+      <Products>
+        <SpeciesReference id="S4" stoichiometry="1.000000"/>
+        <SpeciesReference id="S1" stoichiometry="1.000000"/>
+      </Products>
+    </Reaction>
+    <Reaction>
+      <Id>Reaction5</Id>
+      <Type>mass-action</Type>
+      <Rate>C5</Rate>
+      <Reactants>
+        <SpeciesReference id="S1" stoichiometry="1.000000"/>
+        <SpeciesReference id="S6" stoichiometry="1.000000"/>
+      </Reactants>
+      <Products>
+        <SpeciesReference id="S7" stoichiometry="1.000000"/>
+      </Products>
+    </Reaction>
+    <Reaction>
+      <Id>Reaction6</Id>
+      <Type>mass-action</Type>
+      <Rate>C6</Rate>
+      <Reactants>
+        <SpeciesReference id="S7" stoichiometry="1.000000"/>
+      </Reactants>
+      <Products>
+        <SpeciesReference id="S1" stoichiometry="1.000000"/>
+        <SpeciesReference id="S6" stoichiometry="1.000000"/>
+      </Products>
+    </Reaction>
+    <Reaction>
+      <Id>Reaction7</Id>
+      <Type>mass-action</Type>
+      <Rate>C7</Rate>
+      <Reactants>
+        <SpeciesReference id="S4" stoichiometry="1.000000"/>
+        <SpeciesReference id="S14" stoichiometry="1.000000"/>
+      </Reactants>
+      <Products>
+        <SpeciesReference id="S15" stoichiometry="1.000000"/>
+      </Products>
+    </Reaction>
+    <Reaction>
+      <Id>Reaction8</Id>
+      <Type>mass-action</Type>
+      <Rate>C8</Rate>
+      <Reactants>
+        <SpeciesReference id="S15" stoichiometry="1.000000"/>
+      </Reactants>
+      <Products>
+        <SpeciesReference id="S4" stoichiometry="1.000000"/>
+        <SpeciesReference id="S14" stoichiometry="1.000000"/>
+      </Products>
+    </Reaction>
+    <Reaction>
+      <Id>Reaction9</Id>
+      <Type>mass-action</Type>
+      <Rate>C9</Rate>
+      <Reactants>
+        <SpeciesReference id="S16" stoichiometry="1.000000"/>
+        <SpeciesReference id="S14" stoichiometry="1.000000"/>
+      </Reactants>
+      <Products>
+        <SpeciesReference id="S17" stoichiometry="1.000000"/>
+      </Products>
+    </Reaction>
+    <Reaction>
+      <Id>Reaction10</Id>
+      <Type>mass-action</Type>
+      <Rate>C10</Rate>
+      <Reactants>
+        <SpeciesReference id="S17" stoichiometry="1.000000"/>
+      </Reactants>
+      <Products>
+        <SpeciesReference id="S16" stoichiometry="1.000000"/>
+        <SpeciesReference id="S14" stoichiometry="1.000000"/>
+      </Products>
+    </Reaction>
+    <Reaction>
+      <Id>Reaction11</Id>
+      <Type>mass-action</Type>
+      <Rate>C11</Rate>
+      <Reactants>
+        <SpeciesReference id="S3" stoichiometry="1.000000"/>
+        <SpeciesReference id="S6" stoichiometry="1.000000"/>
+      </Reactants>
+      <Products>
+        <SpeciesReference id="S8" stoichiometry="1.000000"/>
+      </Products>
+    </Reaction>
+    <Reaction>
+      <Id>Reaction12</Id>
+      <Type>mass-action</Type>
+      <Rate>C12</Rate>
+      <Reactants>
+        <SpeciesReference id="S8" stoichiometry="1.000000"/>
+      </Reactants>
+      <Products>
+        <SpeciesReference id="S3" stoichiometry="1.000000"/>
+        <SpeciesReference id="S6" stoichiometry="1.000000"/>
+      </Products>
+    </Reaction>
+    <Reaction>
+      <Id>Reaction13</Id>
+      <Type>mass-action</Type>
+      <Rate>C13</Rate>
+      <Reactants>
+        <SpeciesReference id="S5" stoichiometry="1.000000"/>
+        <SpeciesReference id="S6" stoichiometry="1.000000"/>
+      </Reactants>
+      <Products>
+        <SpeciesReference id="S9" stoichiometry="1.000000"/>
+      </Products>
+    </Reaction>
+    <Reaction>
+      <Id>Reaction14</Id>
+      <Type>mass-action</Type>
+      <Rate>C14</Rate>
+      <Reactants>
+        <SpeciesReference id="S9" stoichiometry="1.000000"/>
+      </Reactants>
+      <Products>
+        <SpeciesReference id="S5" stoichiometry="1.000000"/>
+        <SpeciesReference id="S6" stoichiometry="1.000000"/>
+      </Products>
+    </Reaction>
+    <Reaction>
+      <Id>Reaction15</Id>
+      <Type>mass-action</Type>
+      <Rate>C15</Rate>
+      <Reactants>
+        <SpeciesReference id="S3" stoichiometry="1.000000"/>
+        <SpeciesReference id="S10" stoichiometry="1.000000"/>
+      </Reactants>
+      <Products>
+        <SpeciesReference id="S12" stoichiometry="1.000000"/>
+      </Products>
+    </Reaction>
+    <Reaction>
+      <Id>Reaction16</Id>
+      <Type>mass-action</Type>
+      <Rate>C16</Rate>
+      <Reactants>
+        <SpeciesReference id="S12" stoichiometry="1.000000"/>
+      </Reactants>
+      <Products>
+        <SpeciesReference id="S3" stoichiometry="1.000000"/>
+        <SpeciesReference id="S10" stoichiometry="1.000000"/>
+      </Products>
+    </Reaction>
+    <Reaction>
+      <Id>Reaction17</Id>
+      <Type>mass-action</Type>
+      <Rate>C17</Rate>
+      <Reactants>
+        <SpeciesReference id="S5" stoichiometry="1.000000"/>
+        <SpeciesReference id="S11" stoichiometry="1.000000"/>
+      </Reactants>
+      <Products>
+        <SpeciesReference id="S13" stoichiometry="1.000000"/>
+      </Products>
+    </Reaction>
+    <Reaction>
+      <Id>Reaction18</Id>
+      <Type>mass-action</Type>
+      <Rate>C18</Rate>
+      <Reactants>
+        <SpeciesReference id="S13" stoichiometry="1.000000"/>
+      </Reactants>
+      <Products>
+        <SpeciesReference id="S5" stoichiometry="1.000000"/>
+        <SpeciesReference id="S11" stoichiometry="1.000000"/>
+      </Products>
+    </Reaction>
+    <Reaction>
+      <Id>Reaction19</Id>
+      <Type>mass-action</Type>
+      <Rate>C19</Rate>
+      <Reactants>
+        <SpeciesReference id="S15" stoichiometry="1.000000"/>
+        <SpeciesReference id="S18" stoichiometry="1.000000"/>
+      </Reactants>
+      <Products>
+        <SpeciesReference id="S19" stoichiometry="1.000000"/>
+      </Products>
+    </Reaction>
+    <Reaction>
+      <Id>Reaction20</Id>
+      <Type>mass-action</Type>
+      <Rate>C20</Rate>
+      <Reactants>
+        <SpeciesReference id="S19" stoichiometry="1.000000"/>
+      </Reactants>
+      <Products>
+        <SpeciesReference id="S15" stoichiometry="1.000000"/>
+        <SpeciesReference id="S18" stoichiometry="1.000000"/>
+      </Products>
+    </Reaction>
+    <Reaction>
+      <Id>Reaction21</Id>
+      <Type>mass-action</Type>
+      <Rate>C21</Rate>
+      <Reactants>
+        <SpeciesReference id="S13" stoichiometry="1.000000"/>
+      </Reactants>
+      <Products>
+        <SpeciesReference id="S22" stoichiometry="1.000000"/>
+        <SpeciesReference id="S13" stoichiometry="1.000000"/>
+      </Products>
+    </Reaction>
+    <Reaction>
+      <Id>Reaction22</Id>
+      <Type>mass-action</Type>
+      <Rate>C22</Rate>
+      <Reactants>
+        <SpeciesReference id="S22" stoichiometry="1.000000"/>
+      </Reactants>
+    </Reaction>
+    <Reaction>
+      <Id>Reaction23</Id>
+      <Type>mass-action</Type>
+      <Rate>C23</Rate>
+      <Reactants>
+        <SpeciesReference id="S22" stoichiometry="1.000000"/>
+      </Reactants>
+      <Products>
+        <SpeciesReference id="S14" stoichiometry="1.000000"/>
+        <SpeciesReference id="S22" stoichiometry="1.000000"/>
+      </Products>
+    </Reaction>
+    <Reaction>
+      <Id>Reaction24</Id>
+      <Type>mass-action</Type>
+      <Rate>C24</Rate>
+      <Reactants>
+        <SpeciesReference id="S14" stoichiometry="1.000000"/>
+      </Reactants>
+    </Reaction>
+    <Reaction>
+      <Id>Reaction25</Id>
+      <Type>mass-action</Type>
+      <Rate>C25</Rate>
+      <Reactants>
+        <SpeciesReference id="S17" stoichiometry="1.000000"/>
+      </Reactants>
+      <Products>
+        <SpeciesReference id="S16" stoichiometry="1.000000"/>
+      </Products>
+    </Reaction>
+    <Reaction>
+      <Id>Reaction26</Id>
+      <Type>mass-action</Type>
+      <Rate>C26</Rate>
+      <Reactants>
+        <SpeciesReference id="S15" stoichiometry="1.000000"/>
+      </Reactants>
+      <Products>
+        <SpeciesReference id="S4" stoichiometry="1.000000"/>
+      </Products>
+    </Reaction>
+    <Reaction>
+      <Id>Reaction27</Id>
+      <Type>mass-action</Type>
+      <Rate>C27</Rate>
+      <Reactants>
+        <SpeciesReference id="S19" stoichiometry="1.000000"/>
+      </Reactants>
+      <Products>
+        <SpeciesReference id="S4" stoichiometry="1.000000"/>
+        <SpeciesReference id="S18" stoichiometry="1.000000"/>
+      </Products>
+    </Reaction>
+    <Reaction>
+      <Id>Reaction28</Id>
+      <Type>mass-action</Type>
+      <Rate>C28</Rate>
+      <Reactants>
+        <SpeciesReference id="S28" stoichiometry="1.000000"/>
+      </Reactants>
+      <Products>
+        <SpeciesReference id="S4" stoichiometry="1.000000"/>
+        <SpeciesReference id="S27" stoichiometry="1.000000"/>
+      </Products>
+    </Reaction>
+    <Reaction>
+      <Id>Reaction29</Id>
+      <Type>mass-action</Type>
+      <Rate>C29</Rate>
+      <Reactants>
+        <SpeciesReference id="S13" stoichiometry="1.000000"/>
+      </Reactants>
+      <Products>
+        <SpeciesReference id="S23" stoichiometry="1.000000"/>
+        <SpeciesReference id="S13" stoichiometry="1.000000"/>
+      </Products>
+    </Reaction>
+    <Reaction>
+      <Id>Reaction30</Id>
+      <Type>mass-action</Type>
+      <Rate>C30</Rate>
+      <Reactants>
+        <SpeciesReference id="S23" stoichiometry="1.000000"/>
+      </Reactants>
+    </Reaction>
+    <Reaction>
+      <Id>Reaction31</Id>
+      <Type>mass-action</Type>
+      <Rate>C31</Rate>
+      <Reactants>
+        <SpeciesReference id="S23" stoichiometry="1.000000"/>
+      </Reactants>
+      <Products>
+        <SpeciesReference id="S18" stoichiometry="1.000000"/>
+        <SpeciesReference id="S23" stoichiometry="1.000000"/>
+      </Products>
+    </Reaction>
+    <Reaction>
+      <Id>Reaction32</Id>
+      <Type>mass-action</Type>
+      <Rate>C32</Rate>
+      <Reactants>
+        <SpeciesReference id="S18" stoichiometry="1.000000"/>
+      </Reactants>
+    </Reaction>
+    <Reaction>
+      <Id>Reaction33</Id>
+      <Type>mass-action</Type>
+      <Rate>C33</Rate>
+      <Reactants>
+        <SpeciesReference id="S19" stoichiometry="1.000000"/>
+      </Reactants>
+      <Products>
+        <SpeciesReference id="S15" stoichiometry="1.000000"/>
+      </Products>
+    </Reaction>
+    <Reaction>
+      <Id>Reaction34</Id>
+      <Type>mass-action</Type>
+      <Rate>C34</Rate>
+      <Reactants>
+        <SpeciesReference id="S12" stoichiometry="1.000000"/>
+      </Reactants>
+      <Products>
+        <SpeciesReference id="S25" stoichiometry="1.000000"/>
+        <SpeciesReference id="S12" stoichiometry="1.000000"/>
+      </Products>
+    </Reaction>
+    <Reaction>
+      <Id>Reaction35</Id>
+      <Type>mass-action</Type>
+      <Rate>C35</Rate>
+      <Reactants>
+        <SpeciesReference id="S25" stoichiometry="1.000000"/>
+      </Reactants>
+    </Reaction>
+    <Reaction>
+      <Id>Reaction36</Id>
+      <Type>mass-action</Type>
+      <Rate>C36</Rate>
+      <Reactants>
+        <SpeciesReference id="S25" stoichiometry="1.000000"/>
+      </Reactants>
+      <Products>
+        <SpeciesReference id="S4" stoichiometry="1.000000"/>
+        <SpeciesReference id="S25" stoichiometry="1.000000"/>
+      </Products>
+    </Reaction>
+    <Reaction>
+      <Id>Reaction37</Id>
+      <Type>mass-action</Type>
+      <Rate>C37</Rate>
+      <Reactants>
+        <SpeciesReference id="S4" stoichiometry="1.000000"/>
+      </Reactants>
+    </Reaction>
+    <Reaction>
+      <Id>Reaction38</Id>
+      <Type>mass-action</Type>
+      <Rate>C38</Rate>
+      <Reactants>
+        <SpeciesReference id="S19" stoichiometry="1.000000"/>
+      </Reactants>
+      <Products>
+        <SpeciesReference id="S18" stoichiometry="1.000000"/>
+        <SpeciesReference id="S14" stoichiometry="1.000000"/>
+      </Products>
+    </Reaction>
+    <Reaction>
+      <Id>Reaction39</Id>
+      <Type>mass-action</Type>
+      <Rate>C39</Rate>
+      <Reactants>
+        <SpeciesReference id="S21" stoichiometry="1.000000"/>
+      </Reactants>
+      <Products>
+        <SpeciesReference id="S20" stoichiometry="1.000000"/>
+      </Products>
+    </Reaction>
+    <Reaction>
+      <Id>Reaction40</Id>
+      <Type>mass-action</Type>
+      <Rate>C40</Rate>
+      <Reactants>
+        <SpeciesReference id="S28" stoichiometry="1.000000"/>
+      </Reactants>
+      <Products>
+        <SpeciesReference id="S14" stoichiometry="1.000000"/>
+        <SpeciesReference id="S27" stoichiometry="1.000000"/>
+      </Products>
+    </Reaction>
+    <Reaction>
+      <Id>Reaction41</Id>
+      <Type>mass-action</Type>
+      <Rate>C41</Rate>
+      <Reactants>
+        <SpeciesReference id="S13" stoichiometry="1.000000"/>
+      </Reactants>
+      <Products>
+        <SpeciesReference id="S24" stoichiometry="1.000000"/>
+        <SpeciesReference id="S13" stoichiometry="1.000000"/>
+      </Products>
+    </Reaction>
+    <Reaction>
+      <Id>Reaction42</Id>
+      <Type>mass-action</Type>
+      <Rate>C42</Rate>
+      <Reactants>
+        <SpeciesReference id="S24" stoichiometry="1.000000"/>
+      </Reactants>
+    </Reaction>
+    <Reaction>
+      <Id>Reaction43</Id>
+      <Type>mass-action</Type>
+      <Rate>C43</Rate>
+      <Reactants>
+        <SpeciesReference id="S24" stoichiometry="1.000000"/>
+      </Reactants>
+      <Products>
+        <SpeciesReference id="S20" stoichiometry="1.000000"/>
+        <SpeciesReference id="S24" stoichiometry="1.000000"/>
+      </Products>
+    </Reaction>
+    <Reaction>
+      <Id>Reaction44</Id>
+      <Type>mass-action</Type>
+      <Rate>C44</Rate>
+      <Reactants>
+        <SpeciesReference id="S20" stoichiometry="1.000000"/>
+      </Reactants>
+    </Reaction>
+    <Reaction>
+      <Id>Reaction45</Id>
+      <Type>mass-action</Type>
+      <Rate>C45</Rate>
+      <Reactants>
+        <SpeciesReference id="S21" stoichiometry="1.000000"/>
+      </Reactants>
+      <Products>
+        <SpeciesReference id="S4" stoichiometry="1.000000"/>
+      </Products>
+    </Reaction>
+    <Reaction>
+      <Id>Reaction46</Id>
+      <Type>mass-action</Type>
+      <Rate>C46</Rate>
+      <Reactants>
+        <SpeciesReference id="S4" stoichiometry="1.000000"/>
+        <SpeciesReference id="S20" stoichiometry="1.000000"/>
+      </Reactants>
+      <Products>
+        <SpeciesReference id="S21" stoichiometry="1.000000"/>
+      </Products>
+    </Reaction>
+    <Reaction>
+      <Id>Reaction47</Id>
+      <Type>mass-action</Type>
+      <Rate>C47</Rate>
+      <Reactants>
+        <SpeciesReference id="S21" stoichiometry="1.000000"/>
+      </Reactants>
+      <Products>
+        <SpeciesReference id="S4" stoichiometry="1.000000"/>
+        <SpeciesReference id="S20" stoichiometry="1.000000"/>
+      </Products>
+    </Reaction>
+    <Reaction>
+      <Id>Reaction48</Id>
+      <Type>mass-action</Type>
+      <Rate>C48</Rate>
+      <Reactants>
+        <SpeciesReference id="S13" stoichiometry="1.000000"/>
+      </Reactants>
+      <Products>
+        <SpeciesReference id="S26" stoichiometry="1.000000"/>
+        <SpeciesReference id="S13" stoichiometry="1.000000"/>
+      </Products>
+    </Reaction>
+    <Reaction>
+      <Id>Reaction49</Id>
+      <Type>mass-action</Type>
+      <Rate>C49</Rate>
+      <Reactants>
+        <SpeciesReference id="S26" stoichiometry="1.000000"/>
+      </Reactants>
+    </Reaction>
+    <Reaction>
+      <Id>Reaction50</Id>
+      <Type>mass-action</Type>
+      <Rate>C50</Rate>
+      <Reactants>
+        <SpeciesReference id="S26" stoichiometry="1.000000"/>
+      </Reactants>
+      <Products>
+        <SpeciesReference id="S27" stoichiometry="1.000000"/>
+        <SpeciesReference id="S26" stoichiometry="1.000000"/>
+      </Products>
+    </Reaction>
+    <Reaction>
+      <Id>Reaction51</Id>
+      <Type>mass-action</Type>
+      <Rate>C51</Rate>
+      <Reactants>
+        <SpeciesReference id="S27" stoichiometry="1.000000"/>
+      </Reactants>
+    </Reaction>
+    <Reaction>
+      <Id>Reaction52</Id>
+      <Type>mass-action</Type>
+      <Rate>C52</Rate>
+      <Reactants>
+        <SpeciesReference id="S28" stoichiometry="1.000000"/>
+      </Reactants>
+      <Products>
+        <SpeciesReference id="S15" stoichiometry="1.000000"/>
+      </Products>
+    </Reaction>
+    <Reaction>
+      <Id>Reaction53</Id>
+      <Type>mass-action</Type>
+      <Rate>C53</Rate>
+      <Reactants>
+        <SpeciesReference id="S15" stoichiometry="1.000000"/>
+        <SpeciesReference id="S27" stoichiometry="1.000000"/>
+      </Reactants>
+      <Products>
+        <SpeciesReference id="S28" stoichiometry="1.000000"/>
+      </Products>
+    </Reaction>
+    <Reaction>
+      <Id>Reaction54</Id>
+      <Type>mass-action</Type>
+      <Rate>C54</Rate>
+      <Reactants>
+        <SpeciesReference id="S28" stoichiometry="1.000000"/>
+      </Reactants>
+      <Products>
+        <SpeciesReference id="S15" stoichiometry="1.000000"/>
+        <SpeciesReference id="S27" stoichiometry="1.000000"/>
+      </Products>
+    </Reaction>
+    <Reaction>
+      <Id>Reaction55</Id>
+      <Type>mass-action</Type>
+      <Rate>C55</Rate>
+      <Reactants>
+        <SpeciesReference id="S5" stoichiometry="1.000000"/>
+      </Reactants>
+      <Products>
+        <SpeciesReference id="S1" stoichiometry="1.000000"/>
+      </Products>
+    </Reaction>
+    <Reaction>
+      <Id>Reaction56</Id>
+      <Type>mass-action</Type>
+      <Rate>C56</Rate>
+      <Reactants>
+        <SpeciesReference id="S13" stoichiometry="1.000000"/>
+      </Reactants>
+      <Products>
+        <SpeciesReference id="S1" stoichiometry="1.000000"/>
+        <SpeciesReference id="S11" stoichiometry="1.000000"/>
+      </Products>
+    </Reaction>
+    <Reaction>
+      <Id>Reaction57</Id>
+      <Type>mass-action</Type>
+      <Rate>C57</Rate>
+      <Reactants>
+        <SpeciesReference id="S9" stoichiometry="1.000000"/>
+      </Reactants>
+      <Products>
+        <SpeciesReference id="S7" stoichiometry="1.000000"/>
+      </Products>
+    </Reaction>
+    <Reaction>
+      <Id>Reaction58</Id>
+      <Type>mass-action</Type>
+      <Rate>C58</Rate>
+      <Reactants>
+        <SpeciesReference id="S15" stoichiometry="1.000000"/>
+      </Reactants>
+      <Products>
+        <SpeciesReference id="S14" stoichiometry="1.000000"/>
+      </Products>
+    </Reaction>
+    <Reaction>
+      <Id>Reaction59</Id>
+      <Type>mass-action</Type>
+      <Rate>C59</Rate>
+      <Reactants>
+        <SpeciesReference id="S19" stoichiometry="1.000000"/>
+      </Reactants>
+      <Products>
+        <SpeciesReference id="S14" stoichiometry="1.000000"/>
+        <SpeciesReference id="S18" stoichiometry="1.000000"/>
+      </Products>
+    </Reaction>
+    <Reaction>
+      <Id>Reaction60</Id>
+      <Type>mass-action</Type>
+      <Rate>C60</Rate>
+      <Reactants>
+        <SpeciesReference id="S28" stoichiometry="1.000000"/>
+      </Reactants>
+      <Products>
+        <SpeciesReference id="S14" stoichiometry="1.000000"/>
+        <SpeciesReference id="S27" stoichiometry="1.000000"/>
+      </Products>
+    </Reaction>
+    <Reaction>
+      <Id>Reaction61</Id>
+      <Type>mass-action</Type>
+      <Rate>C61</Rate>
+      <Reactants>
+        <SpeciesReference id="S21" stoichiometry="1.000000"/>
+      </Reactants>
+      <Products>
+        <SpeciesReference id="S20" stoichiometry="1.000000"/>
+      </Products>
+    </Reaction>
+  </ReactionsList>
+  <SpeciesList>
+    <Species>
+      <Id>S1</Id>
+      <InitialPopulation>0.000000</InitialPopulation>
+    </Species>
+    <Species>
+      <Id>S2</Id>
+      <InitialPopulation>0.000000</InitialPopulation>
+    </Species>
+    <Species>
+      <Id>S3</Id>
+      <InitialPopulation>0.000000</InitialPopulation>
+    </Species>
+    <Species>
+      <Id>S4</Id>
+      <InitialPopulation>0.000000</InitialPopulation>
+    </Species>
+    <Species>
+      <Id>S5</Id>
+      <InitialPopulation>1.000000</InitialPopulation>
+    </Species>
+    <Species>
+      <Id>S6</Id>
+      <InitialPopulation>4645670.000000</InitialPopulation>
+    </Species>
+    <Species>
+      <Id>S7</Id>
+      <InitialPopulation>1324.000000</InitialPopulation>
+    </Species>
+    <Species>
+      <Id>S8</Id>
+      <InitialPopulation>80.000000</InitialPopulation>
+    </Species>
+    <Species>
+      <Id>S9</Id>
+      <InitialPopulation>16.000000</InitialPopulation>
+    </Species>
+    <Species>
+      <Id>S10</Id>
+      <InitialPopulation>3413.000000</InitialPopulation>
+    </Species>
+    <Species>
+      <Id>S11</Id>
+      <InitialPopulation>29.000000</InitialPopulation>
+    </Species>
+    <Species>
+      <Id>S12</Id>
+      <InitialPopulation>584.000000</InitialPopulation>
+    </Species>
+    <Species>
+      <Id>S13</Id>
+      <InitialPopulation>1.000000</InitialPopulation>
+    </Species>
+    <Species>
+      <Id>S14</Id>
+      <InitialPopulation>22.000000</InitialPopulation>
+    </Species>
+    <Species>
+      <Id>S15</Id>
+      <InitialPopulation>0.000000</InitialPopulation>
+    </Species>
+    <Species>
+      <Id>S16</Id>
+      <InitialPopulation>171440.000000</InitialPopulation>
+    </Species>
+    <Species>
+      <Id>S17</Id>
+      <InitialPopulation>9150.000000</InitialPopulation>
+    </Species>
+    <Species>
+      <Id>S18</Id>
+      <InitialPopulation>2280.000000</InitialPopulation>
+    </Species>
+    <Species>
+      <Id>S19</Id>
+      <InitialPopulation>6.000000</InitialPopulation>
+    </Species>
+    <Species>
+      <Id>S20</Id>
+      <InitialPopulation>596.000000</InitialPopulation>
+    </Species>
+    <Species>
+      <Id>S21</Id>
+      <InitialPopulation>0.000000</InitialPopulation>
+    </Species>
+    <Species>
+      <Id>S22</Id>
+      <InitialPopulation>13.000000</InitialPopulation>
+    </Species>
+    <Species>
+      <Id>S23</Id>
+      <InitialPopulation>3.000000</InitialPopulation>
+    </Species>
+    <Species>
+      <Id>S24</Id>
+      <InitialPopulation>3.000000</InitialPopulation>
+    </Species>
+    <Species>
+      <Id>S25</Id>
+      <InitialPopulation>7.000000</InitialPopulation>
+    </Species>
+    <Species>
+      <Id>S26</Id>
+      <InitialPopulation>0.000000</InitialPopulation>
+    </Species>
+    <Species>
+      <Id>S27</Id>
+      <InitialPopulation>260.000000</InitialPopulation>
+    </Species>
+    <Species>
+      <Id>S28</Id>
+      <InitialPopulation>0.000000</InitialPopulation>
+    </Species>
+  </SpeciesList>
+</Model>
+
