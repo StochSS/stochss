@@ -79,7 +79,7 @@ if req:
         exit(-1)
 
 h = subprocess.Popen(("python " + path + "/conf/stochss-env.py").split(), stdout = subprocess.PIPE, stderr = subprocess.PIPE)
-h.communicate()
+print h.communicate()
 
 stdout = open('stdout.log', 'w')
 stderr = open('stderr.log', 'w')
@@ -95,6 +95,29 @@ print "Starting admin server at: http://localhost:8000"
 if mac:
     print "<br />"
 sys.stdout.flush()
+
+def clean_up_and_exit(signal, stack):
+    print "Killing webserver proces..."
+    if mac:
+        print "<br /></body></html>"
+    sys.stdout.flush()
+
+    try:
+        h.terminate()
+    except:
+        pass
+
+    if signal == None:
+        exit(0)
+    else:
+        exit(-1)
+
+signal.signal(signal.SIGHUP, clean_up_and_exit)
+signal.signal(signal.SIGINT, clean_up_and_exit)
+signal.signal(signal.SIGQUIT, clean_up_and_exit)
+signal.signal(signal.SIGILL, clean_up_and_exit)
+signal.signal(signal.SIGABRT, clean_up_and_exit)
+signal.signal(signal.SIGFPE, clean_up_and_exit)
 
 # Wait for server to launch
 serverUp = False
@@ -139,30 +162,7 @@ for tryy in range(0, 20):
         print "<br />"
     sys.stdout.flush()
 
-print serverUp
-
-def clean_up_and_exit(signal, stack):
-    print "Killing webserver proces..."
-    if mac:
-        print "<br /></body></html>"
-    sys.stdout.flush()
-
-    try:
-        h.terminate()
-    except:
-        pass
-
-    if signal == None:
-        exit(0)
-    else:
-        exit(-1)
-
-signal.signal(signal.SIGHUP, clean_up_and_exit)
-signal.signal(signal.SIGINT, clean_up_and_exit)
-signal.signal(signal.SIGQUIT, clean_up_and_exit)
-signal.signal(signal.SIGILL, clean_up_and_exit)
-signal.signal(signal.SIGABRT, clean_up_and_exit)
-signal.signal(signal.SIGFPE, clean_up_and_exit)
+###print serverUp
 
 if serverUp:
     # Open web browser
