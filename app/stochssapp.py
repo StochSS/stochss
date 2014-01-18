@@ -222,7 +222,7 @@ class User(WebApp2User):
     The WebApp2User class is an expando model (see https://developers.google.com/appengine/docs/python/datastore/expandoclass),
     so the User class inherits that functionality.
     """
-    def user_id():
+    def user_id(self):
         return self.email_address
     
     def is_admin_user(self):
@@ -331,8 +331,7 @@ app = webapp2.WSGIApplication([
 #                               r6,
                                ],
                                 config=config,
-                                debug=True) 
-
+                                debug=True)
 
 
 logging.getLogger().setLevel(logging.DEBUG)

@@ -387,14 +387,14 @@ def start_stochss_server(aws_access_key, aws_secret_key, preferred_instance_id, 
             #trys += 1
             #print "Try {0}".format(trys)
             time.sleep(1)
-    # Get a secret key now for remote access
-    admin_key = uuid.uuid4()
+    # Get a secret token now for remote access
+    admin_token = uuid.uuid4()
     ssh_key = os.path.dirname(__file__) + '/' + preferred_ec2_key_pair + '.pem'
-    create_admin_key_string = "ssh -o 'StrictHostKeyChecking no' -i {0} ubuntu@{1} 'python ~/generate_admin_key.py {2} > temp_output.log'".format(ssh_key, instance.public_dns_name, admin_key)
-    print create_admin_key_string
-    os.system(create_admin_key_string)
-    # Now we have created the secret key, just need to use it to access the website
-    print "{0}login?secret_key={1}".format(stochss_url, admin_key)
+    create_and_exchange_admin_token = "./exchange_admin_token.py {0} {1} {2} {3}".format(ssh_key, 'ubuntu', instance.public_dns_name, admin_token)
+    os.system(create_and_exchange_admin_token)
+    # Now we have created/exchanged the secret token, just need to use it to access the website
+    stochss_url = "{0}login?secret_key={1}".format(stochss_url, admin_token)
+    print stochss_url
     # OK, its running. Launch it in the default browser?
     # open_browser = raw_input("Do you want to launch StochSS in your default browser now (y/n)? ").lower()
     # if open_browser == "y":

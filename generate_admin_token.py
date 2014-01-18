@@ -1,3 +1,4 @@
+#! /usr/bin/python
 import sys
 import urllib, urllib2
 
@@ -5,7 +6,7 @@ def print_usage_and_exit():
     '''
     '''
     print "Error in command line arguments!"
-    print "Expected Usage: ./script_name_here [secret_key]"
+    print "Expected Usage: ./generate_admin_token.py [secret_key]"
 
 def main(key):
     '''
