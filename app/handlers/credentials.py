@@ -50,6 +50,7 @@ class CredentialsPage(BaseHandler):
             # Save the access and private keys to the datastore
             access_key = params['ec2_access_key']
             secret_key = params['ec2_secret_key']
+
             credentials = {'EC2_ACCESS_KEY':access_key, 'EC2_SECRET_KEY':secret_key}
             result = self.saveCredentials(credentials)
             # TODO: This is a hack to make it unlikely that the db transaction has not completed
@@ -140,7 +141,10 @@ class CredentialsPage(BaseHandler):
             context['vm_names'] = None
             context['valid_credentials']=False
             context['active_vms']=False
+
+            fake_credentials = { 'EC2_ACCESS_KEY': '', 'EC2_SECRET_KEY': '' }
         else:
+            fake_credentials = { 'EC2_ACCESS_KEY': '*' * len(credentials['EC2_ACCESS_KEY']), 'EC2_SECRET_KEY': '*' * len(credentials['EC2_SECRET_KEY']) }
             
             context['valid_credentials'] = True
             all_vms = self.get_all_vms(user_id,credentials)
@@ -167,7 +171,7 @@ class CredentialsPage(BaseHandler):
                 else:
                     context['active_vms'] = True
                 
-        context = dict(context, **credentials)
+        context = dict(context, **fake_credentials)
         context = dict(result, **context)
         return context
     

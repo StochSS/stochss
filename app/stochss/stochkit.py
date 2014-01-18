@@ -106,7 +106,12 @@ class StochMLDocument():
         # Description
         md = cls()
         
-        d = etree.Element('Description')
+        d = etree.Element('Description') 
+
+        #
+        if model.units.lower() == "concentration":
+            d.set('units', model.units.lower())
+
         d.text = model.annotation
         md.document.append(d)
         
@@ -158,7 +163,7 @@ class StochMLDocument():
     def fromString(cls,string):
         """ Intializes the document from an exisiting native StochKit XML file read from disk. """
         root = etree.fromstring(string)
-
+        
         md = cls()
         md.document = root
         return md
@@ -181,10 +186,32 @@ class StochMLDocument():
         # Set annotiation
         ann = root.find('Description')
         if ann is not None:
+            units = ann.get('units')
+
+            if units:
+                units = units.strip().lower()
+
+            if units == "concentration":
+                model.units = "concentration"
+            elif units == "population":
+                model.units = "population"
+            else: # Default 
+                model.units = "population"
+
             if ann.text is None:
                 model.annotation = ""
             else:
                 model.annotation = ann.text
+
+        # Set units
+        units = root.find('Units')
+        if units is not None:
+            if units.text.strip().lower() == "concentration":
+                model.units = "concentration"
+            elif units.text.strip().lower() == "population":
+                model.units = "population"
+            else: # Default 
+                model.units = "population"
     
         # Create parameters
         for px in root.iter('Parameter'):
