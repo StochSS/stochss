@@ -186,7 +186,10 @@ class StochMLDocument():
         # Set annotiation
         ann = root.find('Description')
         if ann is not None:
-            units = ann.get('units').strip().lower()
+            units = ann.get('units')
+
+            if units:
+                units = units.strip().lower()
 
             if units == "concentration":
                 model.units = "concentration"
