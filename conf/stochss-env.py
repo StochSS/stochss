@@ -49,18 +49,6 @@ if STOCHKIT_ODE=='':
       pass
 
 try:
-    AWS_ACCESS_KEY=os.environ['AWS_ACCESS_KEY']
-except:
-    AWS_ACCESS_KEY=''
-    pass
-
-try:
-    AWS_SECRET_KEY=os.environ['AWS_SECRET_KEY']
-except:
-    AWS_SECRET_KEY=''
-    pass
-
-try:
     config_file=os.path.join(os.path.dirname(__file__),'../app/conf/app_config.py')
     fh = open(config_file,'w')
     
@@ -70,10 +58,6 @@ try:
         fh.write("app_config['STOCHKIT_HOME']="+"'"+STOCHKIT_HOME+"'"+os.linesep)
     if STOCHKIT_ODE is not '':
         fh.write("app_config['STOCHKIT_ODE']="+"'"+STOCHKIT_ODE+"'"+os.linesep)
-    if AWS_ACCESS_KEY is not '':
-        fh.write("app_config['AWS_ACCESS_KEY']="+"'"+AWS_ACCESS_KEY+"'"+os.linesep)
-    if AWS_SECRET_KEY is not '':
-        fh.write("app_config['AWS_SECRET_KEY']="+"'"+AWS_SECRET_KEY+"'"+os.linesep)
     
     fh.close()
 except:
