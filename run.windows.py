@@ -110,8 +110,8 @@ class EC2Services:
     
     # Current regions with a StochSS Server machine image
     supported_ec2_regions = {
-        'us-west-2': 'ami-c67014f6',
-        'us-east-1': 'ami-a3e1cfca'
+        'us-west-2': 'ami-da96f7ea',
+        'us-east-1': 'ami-215a6848'
     }
     
     def __init__(self, region, aws_access_key, aws_secret_key):
