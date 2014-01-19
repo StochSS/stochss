@@ -335,9 +335,9 @@ def start_stochss_server(aws_access_key, aws_secret_key, preferred_instance_id, 
             #print "Try {0}".format(trys)
             time.sleep(1)
     # OK, its running. Launch it in the default browser?
-    # open_browser = raw_input("Do you want to launch StochSS in your default browser now (y/n)? ").lower()
-    # if open_browser == "y":
-    # webbrowser.open_new(stochss_url)
+    open_browser = raw_input("Do you want to launch StochSS in your default browser now (y/n)? ").lower()
+    if open_browser == "y":
+        webbrowser.open_new(stochss_url)
 
 def stop_stochss_server(aws_access_key, aws_secret_key, ec2_region, instance_id):
     '''
