@@ -79,7 +79,7 @@ if req:
         exit(-1)
 
 h = subprocess.Popen(("python " + path + "/conf/stochss-env.py").split(), stdout = subprocess.PIPE, stderr = subprocess.PIPE)
-print h.communicate()
+h.communicate()
 
 stdout = open('stdout.log', 'w')
 stderr = open('stderr.log', 'w')
