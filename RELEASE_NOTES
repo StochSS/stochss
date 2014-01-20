@@ -10,7 +10,8 @@ StochSS - Stochastic Simulation Service: Release Notes
 
 1.0.3
 =============================
-- Fixes a bug where model names that contained spaces caused erroneous behavior of some UI elements. 
+- Support for OSX Mavericks
+- Fixed bug that prevented proper termination of local StochKit2 processes.
 
 1.0.2
 =============================

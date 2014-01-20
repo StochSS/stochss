@@ -128,7 +128,7 @@ class backendservices():
         try:
             for pid in pids:
                 try:
-                    os.getpgid(pid)
+                    os.kill(pid, 0)
                     res[pid] = True
                 except Exception,e:
                     res[pid] = False
@@ -196,7 +196,8 @@ class backendservices():
         logging.info("deleteTaskLocal : inside method with pids : %s", pids)
         for pid in pids:
             try:
-                os.kill(pid, signal.SIGINT)
+                logging.error("KILL TASK {0}".format(pid))
+                os.kill(pid, signal.SIGTERM)
             except Exception, e:
                 logging.error("deleteTaskLocal : couldn't kill process. error: %s", str(e))
         logging.info("deleteTaskLocal : exiting method")        

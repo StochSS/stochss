@@ -50,6 +50,10 @@ class StatusPage(BaseHandler):
                 try:
                     if stochkit_job.resource == 'Local':
                         service.deleteTaskLocal([stochkit_job.pid])
+                        status = service.checkTaskStatusLocal([stochkit_job.pid]).values()[0]
+
+                        if status:
+                            raise Exception("")
                     else:
                         db_credentials = self.user_data.getCredentials()
                         os.environ["AWS_ACCESS_KEY_ID"] = db_credentials['EC2_ACCESS_KEY']
