@@ -4,13 +4,13 @@ StochSS - Stochastic Simulation Service: Release Notes
 =============================
 - Support for ODE-based simulations
 - Support for concentration-based models
-- Concentration-to-population conversion tool for mass action models
-- Support for launching StochSS instances in EC2 cloud (for Windows systems)
+- Concentration-to-population conversion tool for mass action kinetic models
+- Support for launching StochSS instances in EC2 cloud (for Mac, Linux and Windows systems)
 - Updated StochKit version 2.0.10
 
 1.0.3
 =============================
-- Fixes a bug where model names that contained spaces caused erraneous behavior of some UI elements. 
+- Fixes a bug where model names that contained spaces caused erroneous behavior of some UI elements. 
 
 1.0.2
 =============================
