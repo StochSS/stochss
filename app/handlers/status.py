@@ -11,6 +11,7 @@ import time
 import shutil
 import os
 import subprocess
+import tempfile
 import datetime
 
 from google.appengine.ext import db
@@ -240,6 +241,37 @@ class JobOutPutPage(BaseHandler):
                 context['local_statistics']=True
                         
             self.render_response('stochkitjoboutputpage.html',**dict(result,**context))
+        elif 'fetch_local' in context:
+            job_name = context['job_name']
+            try:
+                job = db.GqlQuery("SELECT * FROM StochKitJobWrapper WHERE user_id = :1 AND name = :2", self.user.user_id(),job_name).get()
+                stochkit_job = job.stochkit_job
+                context['stochkit_job']=stochkit_job
+            except Exception,e:
+                result = {'status':False,'msg':"Could not find local job " +job_name+ " anywhere."}
+
+            tarballName = job_name + ".tgz"
+
+            path = tempfile.mkdtemp(dir = os.getcwd())
+            os.chdir(path)
+
+            try:
+                h = subprocess.Popen("cp -r {0} {1}".format(stochkit_job.output_location, job_name).split())
+                h.wait()
+                h = subprocess.Popen("tar -czf {0}.tgz {0}".format(job_name).split())
+                h.wait()
+                
+                f = open(tarballName, 'r')
+                
+                self.response.content_type = "application/x-tgz"
+                self.response.write(f.read())
+                
+                f.close()
+            except:
+                os.chdir("../")
+                raise
+
+            os.chdir("../")
             
     def getContext(self):
         

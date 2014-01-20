@@ -75,8 +75,6 @@ Convert.VolumeChoose = Backbone.View.extend(
 
             }, this.model, this.msgbox, this.volume), 400 ));
 
-            this.volume.forceNumeric();
-
             this.listenTo(model, 'volumeChange', this.render);
             this.listenTo(model, 'destroy', this.detach);           
 

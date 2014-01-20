@@ -275,6 +275,7 @@ app = webapp2.WSGIApplication([
                                ('/status',StatusPage),
                                ('/output/visualize',VisualizePage),
                                ('/output',JobOutPutPage),
+                               ('/output/[a-zA-Z0-9-_]*.tgz',JobOutPutPage),
                                ('/output/servestatic',StaticFileHandler),
                                ('/credentials',CredentialsPage),
                                ('/localsettings',LocalSettingsPage),
