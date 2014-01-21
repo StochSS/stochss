@@ -183,7 +183,7 @@ class EC2Agent(BaseAgent):
     instanceList = []
     instances = [i for r in reservations for i in r.instances]
     for i in instances:
-	if i.key_name.startswith(prefix):
+	if i.key_name is not None and i.key_name.startswith(prefix):
             instance = dict()
             instance["id"] = i.id
             instance["public_ip"] = i.public_dns_name
