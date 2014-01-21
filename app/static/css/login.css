@@ -1,0 +1,26 @@
+h4 {
+  margin-bottom: 1em;
+  text-align: center;
+}
+
+button {
+  width: 220px;
+  height: 28px;
+}
+
+@media (min-width:1200px) {
+  form input {
+    margin-left: 1.8em;
+  }
+
+  button {
+    float: right;
+    margin-right: 1.9em;
+  }
+}
+
+@media (min-width: 768px) and (max-width: 940px) {
+  form input {
+    margin-left: 0;
+  }
+}

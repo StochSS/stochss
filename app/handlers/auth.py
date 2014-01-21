@@ -64,7 +64,6 @@ class LoginPage(BaseHandler):
     
     def get(self):
         """ Corresponds to /login """
-        logging.info(str(self.request))
         if self.request.headers['Host'].find('localhost') == -1:
             # Need to log in
             try:
@@ -91,19 +90,21 @@ class LoginPage(BaseHandler):
                     pass
             self.render_response('login.html')
         else:
-            # Shouldn't need to log in
-            # Fake the log in...
-            auth_id = 'default:local'
-            _attrs = {
-                'name': 'Local Access',
-                'email_address': 'do-not-use@stochss.local'
-            }
-            user = self.auth.store.user_model.get_by_auth_id(auth_id)
-            if user is None:
-                ok, user = self.auth.store.user_model.create_user(auth_id, **_attrs)
-
-            self.auth.set_session(self.auth.store.user_to_dict(user))
-            self.redirect('/')
+            # This is one way to allow local access with no login, but it doesnt cover every case
+            # Also, it means there is a separate account for local access that can only see its own models
+            # # Fake the log in...
+            # auth_id = 'default:local'
+            # _attrs = {
+            #     'name': 'Local Access',
+            #     'email_address': 'do-not-use@stochss.local'
+            # }
+            # user = self.auth.store.user_model.get_by_auth_id(auth_id)
+            # if user is None:
+            #     ok, user = self.auth.store.user_model.create_user(auth_id, **_attrs)
+            # 
+            # self.auth.set_session(self.auth.store.user_to_dict(user))
+            # self.redirect('/')
+            self.render_response('login.html')
 
 class LogoutPage(BaseHandler):
     '''
