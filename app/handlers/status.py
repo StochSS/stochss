@@ -50,6 +50,9 @@ class StatusPage(BaseHandler):
                 try:
                     if stochkit_job.resource == 'Local':
                         service.deleteTaskLocal([stochkit_job.pid])
+
+                        time.sleep(0.25)
+
                         status = service.checkTaskStatusLocal([stochkit_job.pid]).values()[0]
 
                         if status:
@@ -64,7 +67,7 @@ class StatusPage(BaseHandler):
                     isdeleted_backend = False
                     result['status']=False
                     result['msg'] = "Failed to delete task with PID " + str(stochkit_job.celery_pid) + str(e)
-                        
+                #        
                 if isdeleted_backend:
                     # Delete all the local files and delete the job from the datastore
                     try:
