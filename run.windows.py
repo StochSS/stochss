@@ -51,7 +51,6 @@ class ConfigFile:
                 # Only variables left are those that werent found
                 result[variable] = None
             config_file.close()
-            print result
             return result
         except IOError:
             # If we get this error, then the config file doesnt exist
