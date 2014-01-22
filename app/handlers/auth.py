@@ -56,6 +56,23 @@ class SecretKeyHandler(BaseHandler):
         SecretKey(key_string=self.request.get('key_string')).put()
         self.response.out.write('Successful secret key creation!')
 
+class UserRegistrationPage(BaseHandler):
+    '''
+    '''
+    def authentication_required(self):
+        return False
+    
+    def get(self):
+        ''' Corresponds to /register '''
+        self.render_response('user_registration.html')
+    
+    def post(self):
+        '''
+        This is where user registration takes place. A user can register only if they have been approved by
+        the admin.
+        '''
+        pass
+
 class LoginPage(BaseHandler):
     """
     """
@@ -90,9 +107,8 @@ class LoginPage(BaseHandler):
                     pass
             self.render_response('login.html')
         else:
-            # This is one way to allow local access with no login, but it doesnt cover every case
-            # Also, it means there is a separate account for local access that can only see its own models
-            # # Fake the log in...
+            # # This is one way to allow local access with no login, but it doesnt cover every case
+            # # Also, it means there is a separate account for local access that can only see its own models
             # auth_id = 'default:local'
             # _attrs = {
             #     'name': 'Local Access',
@@ -106,7 +122,7 @@ class LoginPage(BaseHandler):
             # self.redirect('/')
             self.render_response('login.html')
 
-class LogoutPage(BaseHandler):
+class LogoutHandler(BaseHandler):
     '''
     '''
     def authentication_required(self):

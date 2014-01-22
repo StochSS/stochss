@@ -262,7 +262,8 @@ from handlers.credentials import *
 from handlers.converttopopulation import *
 from handlers.updates import *
 from handlers.status import *
-from handlers.auth import SecretKeyHandler
+from handlers.auth import *
+from handlers.admin import *
 
 # Handler to serve static files
 class StaticFileHandler(BaseHandler):
@@ -291,12 +292,6 @@ class StaticFileHandler(BaseHandler):
 if 'lib' not in sys.path:
     sys.path[0:0] = ['lib']
 
-r1=Route('/login', handler='handlers.auth.LoginPage', name='login')
-r2=Route('/profile', handler='handlers.auth.ProfilePage', name='profile')
-r3=Route('/admin', handler='handlers.admin.AdminPage', name='admin')
-r4=Route('/logout', handler='handlers.auth.LogoutPage', name='logout')
-r5=Route('/auth/<provider>', handler='handlers.auth.AuthHandler:_simple_auth', name='auth_login')
-r6=Route('/auth/<provider>/callback', handler='handlers.auth.AuthHandler:_auth_callback', name='auth_callback')
 
 app = webapp2.WSGIApplication([
                                ('/', MainPage),
@@ -323,12 +318,11 @@ app = webapp2.WSGIApplication([
                                ('/localsettings',LocalSettingsPage),
                                ('/updates',UpdatesPage),
                                ('/secret_key', SecretKeyHandler),
-                               r1,
-                               r2,
-                               r3,
-                               r4,
-#                               r5,
-#                               r6,
+                               ('/register', UserRegistrationPage),
+                               ('/login', LoginPage),
+                               ('/logout', LogoutHandler),
+                               ('/admin', AdminPage),
+                               ('/profile', ProfilePage),
                                ],
                                 config=config,
                                 debug=True)

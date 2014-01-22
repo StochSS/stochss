@@ -1,0 +1,40 @@
+{% extends "login_base.html" %}
+
+{% block csscontent %}<link href="/static/css/user_registration.css" rel="stylesheet">{% endblock %}
+
+{% block content %}
+  <div class="span6 offset3 well">
+    <h4>Please fill in the following information:</h4>
+    <form action="/register" method="post" class="form-horizontal">
+      <fieldset>
+        <div class="control-group">
+          <label class="control-label">Name</label>
+          <div class="controls">
+            <input type="text" name="name" placeholder="">
+          </div>
+        </div>
+        <div class="control-group">
+          <label class="control-label">Email Address</label>
+          <div class="controls">
+            <input id="email-input" type="email" name="email" placeholder="">
+          </div>
+        </div>
+        <div class="control-group">
+          <label class="control-label">Password</label>
+          <div class="controls">
+            <input type="password" name="password" placeholder="">
+          </div>
+        </div>
+        <div class="control-group">
+          <label class="control-label">Password Confirmation</label>
+          <div class="controls">
+            <input type="password" name="password_confirmation" placeholder="">
+          </div>
+        </div>
+        <div class="form-actions">
+          <button type="submit" class="btn btn-primary">Submit</button>
+        </div>
+      </fieldset>
+    </form>    
+  </div>
+{% endblock %}
