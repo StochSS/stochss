@@ -64,12 +64,31 @@ class UserRegistrationPage(BaseHandler):
     
     def get(self):
         ''' Corresponds to /register '''
-        self.render_response('user_registration.html')
+        context = {}
+        try:
+            secret_key = self.request.GET['secret_key']
+        except KeyError:
+            secret_key = None
+        
+        if secret_key is None:
+            # Normal user registration
+            context['create_admin'] = False
+        else:
+            # Attempt to create an admin user
+            # We will just assume the secret key is fine because it was checked by the login page
+            # But it will be checked again before the admin is actually created in the POST
+            context['create_admin'] = True
+            context['secret_key'] = secret_key
+        
+        self.render_response('user_registration.html', **context)
     
     def post(self):
         '''
-        This is where user registration takes place. A user can register only if they have been approved by
-        the admin.
+        This is where user registration takes place, both for regular users as well as admins.
+        An admin registers by presenting a secret token in the query string, which will be sent with the
+        POST data.
+        A user can register only if they have been approved by the admin, i.e. they are in the approved_users
+        list (see admin.py).
         '''
         pass
 
@@ -81,46 +100,35 @@ class LoginPage(BaseHandler):
     
     def get(self):
         """ Corresponds to /login """
-        if self.request.headers['Host'].find('localhost') == -1:
-            # Need to log in
-            try:
-                secret_key = self.request.GET['secret_key']
-            except KeyError:
-                secret_key = None
-            if secret_key is not None:
-                secret_key_attempt = SecretKey(key_string=secret_key)
-                if secret_key_attempt.isEqualToAdminKey():
-                    # Fake the log in...
-                    auth_id = 'default:remote'
-                    _attrs = {
-                        'name': 'Remote Access',
-                        'email_address': 'do-not-use@stochss.remote'
-                    }
-                    user = self.auth.store.user_model.get_by_auth_id(auth_id)
-                    if user is None:
-                        ok, user = self.auth.store.user_model.create_user(auth_id, **_attrs)
-
-                    self.auth.set_session(self.auth.store.user_to_dict(user))
-                    return self.redirect('/')
-                else:
-                    # Unauthorized secret key query string param, just ignore it completely...
-                    pass
-            self.render_response('login.html')
-        else:
-            # # This is one way to allow local access with no login, but it doesnt cover every case
-            # # Also, it means there is a separate account for local access that can only see its own models
-            # auth_id = 'default:local'
-            # _attrs = {
-            #     'name': 'Local Access',
-            #     'email_address': 'do-not-use@stochss.local'
-            # }
-            # user = self.auth.store.user_model.get_by_auth_id(auth_id)
-            # if user is None:
-            #     ok, user = self.auth.store.user_model.create_user(auth_id, **_attrs)
-            # 
-            # self.auth.set_session(self.auth.store.user_to_dict(user))
-            # self.redirect('/')
-            self.render_response('login.html')
+        # Need to log in
+        try:
+            secret_key = self.request.GET['secret_key']
+        except KeyError:
+            secret_key = None
+        
+        if secret_key is not None:
+            secret_key_attempt = SecretKey(key_string=secret_key)
+            if secret_key_attempt.isEqualToAdminKey():
+                return self.redirect('/register?secret_key={0}'.format(secret_key))
+            else:
+                # Unauthorized secret key query string param, just ignore it completely...
+                pass
+        
+        self.render_response('login.html')
+        # # This is one way to allow local access with no login, but it doesnt cover every case
+        # # Also, it means there is a separate account for local access that can only see its own models
+        # if self.request.headers['Host'].find('localhost') != -1:
+        # auth_id = 'default:local'
+        # _attrs = {
+        #     'name': 'Local Access',
+        #     'email_address': 'do-not-use@stochss.local'
+        # }
+        # user = self.auth.store.user_model.get_by_auth_id(auth_id)
+        # if user is None:
+        #     ok, user = self.auth.store.user_model.create_user(auth_id, **_attrs)
+        # 
+        # self.auth.set_session(self.auth.store.user_to_dict(user))
+        # self.redirect('/')
 
 class LogoutHandler(BaseHandler):
     '''

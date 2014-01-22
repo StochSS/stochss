@@ -31,6 +31,9 @@
             <input type="password" name="password_confirmation" placeholder="">
           </div>
         </div>
+        {% if create_admin %}
+          <input type="hidden" name="secret_key" value="{{secret_key}}">
+        {% endif %}
         <div class="form-actions">
           <button type="submit" class="btn btn-primary">Submit</button>
         </div>
