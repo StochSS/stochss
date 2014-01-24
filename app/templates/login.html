@@ -3,10 +3,10 @@
 {% block csscontent %}<link href="/static/css/login.css" rel="stylesheet">{% endblock %}
 
 {% block content %}
-  {% if authError %}
-    <p class="alert">An error occurred with the authentication process. Did you deny access?</p>
-  {% elif unauthorizedError %}
-    <p class="alert alert-danger">You have not been authorized to access StochSS.</p>
+  {% if error_alert %}
+    <p class="alert alert-error">{{alert_message}}</p>
+  {% elif success_alert %}
+    <p class="alert alert-success">{{alert_message}}</p>
   {% endif %}
   
   <div class="span3 offset4 well">

@@ -10,34 +10,35 @@
         <div class="control-group">
           <label class="control-label">Name</label>
           <div class="controls">
-            <input type="text" name="name" placeholder="">
+            <input type="text" name="name" value="{{name}}">
           </div>
         </div>
         <div class="control-group">
           <label class="control-label">Email Address</label>
           <div class="controls">
-            <input id="email-input" type="email" name="email" placeholder="">
+            <input id="email-input" type="email" name="email" value="{{email_address}}">
           </div>
         </div>
         <div class="control-group">
           <label class="control-label">Password</label>
           <div class="controls">
-            <input type="password" name="password" placeholder="">
+            <input id="password" type="password" name="password">
           </div>
         </div>
         <div class="control-group">
           <label class="control-label">Password Confirmation</label>
           <div class="controls">
-            <input type="password" name="password_confirmation" placeholder="">
+            <input id="password_conf" type="password" name="password_confirmation">
           </div>
         </div>
         {% if create_admin %}
           <input type="hidden" name="secret_key" value="{{secret_key}}">
         {% endif %}
         <div class="form-actions">
-          <button type="submit" class="btn btn-primary">Submit</button>
+          <button id="submit-btn" type="submit" class="btn btn-primary">Submit</button>
         </div>
       </fieldset>
     </form>    
   </div>
 {% endblock %}
+{% block jscontent %}<script src="/static/js/user_registration.js"></script>{% endblock %}
