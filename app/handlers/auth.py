@@ -4,6 +4,8 @@ import secrets
 from google.appengine.ext import ndb
 from google.appengine.ext import db
 
+from webapp2_extras.auth import InvalidAuthIdError, InvalidPasswordError
+
 from stochssapp import BaseHandler
 from stochssapp import User
 
@@ -15,6 +17,19 @@ class SecretKey(db.Model):
     '''
     '''
     key_string = db.StringProperty()
+    
+    @classmethod
+    def clear_stored_key(cls):
+        ''' Deletes the secret token currently stored in the DB. '''
+        all_keys = db.GqlQuery("SELECT * FROM SecretKey").get()
+        # slight hack, all_keys might be a list or a SecretKey instance
+        if all_keys is not None:
+            try:
+                list(all_keys)
+                for key in all_keys:
+                    db.delete(key)
+            except:
+                db.delete(all_keys)
     
     def isEqualTo(self, other_key):
         '''
@@ -44,15 +59,7 @@ class SecretKeyHandler(BaseHandler):
         # Dont allow requests from outside connections
         if self.request.headers['Host'].find('localhost') == -1:
             return
-        # We should only have one secret key in the DB
-        all_keys = db.GqlQuery("SELECT * FROM SecretKey").get()
-        if all_keys is not None:
-            try:
-                list(all_keys)
-                for key in all_keys:
-                    db.delete(key)
-            except:
-                db.delete(all_keys)
+        SecretKey.clear_stored_key()
         SecretKey(key_string=self.request.get('key_string')).put()
         self.response.out.write('Successful secret key creation!')
 
@@ -90,7 +97,64 @@ class UserRegistrationPage(BaseHandler):
         A user can register only if they have been approved by the admin, i.e. they are in the approved_users
         list (see admin.py).
         '''
-        pass
+        logging.info(self.request.POST)
+
+        try:
+            secret_key = self.request.POST['secret_key']
+        except KeyError:
+            secret_key = None
+        
+        if secret_key is None:
+            # Normal user registration
+            logging.info('Registering a normal user...')
+            # TODO: Implement this.
+            pass
+        else:
+            # Attempt to create an admin user
+            logging.info('Registering an admin user...')
+            # Check the secret key again
+            secret_key_attempt = SecretKey(key_string=secret_key)
+            if secret_key_attempt.isEqualToAdminKey():
+                # Then we can attempt to create an admin
+                if User.admin_exists():
+                    logging.info("Admin already exists...")
+                    # Delete the token from the DB and redirect to login, only one admin allowed
+                    SecretKey.clear_stored_key()
+                    return self.redirect('/login')
+                else:
+                    # CREATE THE ADMIN ALREADY
+                    unique_properties = ['email_address']
+                    _attrs = {
+                        'email_address': self.request.POST['email'],
+                        'name': self.request.POST['name'],
+                        'password_raw': self.request.POST['password'],
+                        'is_admin': 'YES'
+                    }
+                    success, user = self.auth.store.user_model.create_user(_attrs['email_address'], unique_properties, **_attrs)
+                    
+                    if success:
+                        # Invalidate the token
+                        SecretKey.clear_stored_key()
+                        context = {
+                            'success_alert': True,
+                            'alert_message': 'Account creation successful! You may now log in with your new account.'
+                        }
+                        return self.render_response('login.html', **context)
+                    else:
+                        context = {
+                            'email_address': self.request.POST['email'],
+                            'name': self.request.POST['name'],
+                            'user_registration_failed': True
+                        }
+                        return self.render_response('user_registration.html', **context)
+            
+            else:
+                # Unauthorized secret key
+                context = {
+                    'error_alert': True,
+                    'alert_message': 'Invalid secret token.'
+                }
+                return self.render_response('login.html', **context)
 
 class LoginPage(BaseHandler):
     """
@@ -129,6 +193,24 @@ class LoginPage(BaseHandler):
         # 
         # self.auth.set_session(self.auth.store.user_to_dict(user))
         # self.redirect('/')
+    
+    def post(self):
+        '''
+        Login attempt
+        '''
+        email_address = self.request.POST['email']
+        password = self.request.POST['password']
+        try:
+            user = self.auth.get_user_by_password(email_address, password, remember=True)
+            self.auth.set_session(user)
+            self.redirect('/')
+        except (InvalidAuthIdError, InvalidPasswordError) as e:
+            logging.info('Login failed for user: {0} with exception: {1}'.format(email_address, e))
+            context = {
+                'error_alert': True,
+                'alert_message': 'Email address and password do not match.'
+            }
+            self.render_response('login.html', **context)
 
 class LogoutHandler(BaseHandler):
     '''

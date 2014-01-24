@@ -15,6 +15,7 @@ except ImportError:
 from webapp2_extras import auth
 from webapp2_extras import sessions
 from webapp2_extras import sessions_memcache
+from webapp2_extras import security
 from webapp2 import Route
 
 from webapp2_extras.appengine.auth.models import User as WebApp2User
@@ -222,8 +223,22 @@ class User(WebApp2User):
     The WebApp2User class is an expando model (see https://developers.google.com/appengine/docs/python/datastore/expandoclass),
     so the User class inherits that functionality.
     """
+    @classmethod
+    def admin_exists(cls):
+        '''
+        Returns True if an admin user already exists in the DB, else False.
+        '''
+        admin = User.query().filter(ndb.GenericProperty('is_admin')=='YES').get()
+        return admin is not None
+    
     def user_id(self):
         return self.email_address
+    
+    def set_password(self, raw_password):
+        '''
+        Sets password for current user, stored as a hashed value.
+        '''
+        self.password = security.generate_password_hash(raw_password, length=12)
     
     def is_admin_user(self):
         """
