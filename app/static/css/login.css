@@ -1,6 +1,13 @@
 h4 {
-  margin-bottom: 1em;
   text-align: center;
+}
+
+h4.well-title {
+  margin-bottom: 1.4em;
+}
+
+h4.well-separator {
+  margin-bottom: 1em;
 }
 
 button {

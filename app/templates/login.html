@@ -10,19 +10,43 @@
   {% endif %}
   
   <div class="span3 offset4 well">
-    <h4>Please log in to continue</h4>
+    <h4 class="well-title">Please log in to continue</h4>
     <form action="/login" method="post">
-      <input type="email" name="email" placeholder="email@example.com">
-      <input type="password" name="password" placeholder="password">
-      <button type="submit" class="btn btn-primary">Submit</button>
+      <fieldset>
+        <div class="control-group">
+          <input type="email" name="email" placeholder="email@example.com">
+        </div>
+        <div class="control-group">
+          <input type="password" name="password" placeholder="password">
+        </div>
+        <div class="control-group">
+          <button type="submit" class="btn btn-primary">Submit</button>
+        </div>
+      </fieldset>
+    </form>
+    <h4 class="well-separator">Or</h4>
+    <form action="/register" method="get">
+      <fieldset>
+        <div class="control-group create-account">
+          <button class="btn btn-primary">Create Account</button>
+        </div>
+      </fieldset>
     </form>    
   </div>
   <div class="span3 offset4 well">
-    <h4>Request an account</h4>
+    <h4 class="well-title">Request an account</h4>
     <form action="/login" method="post">
-      <input type="email" name="email" placeholder="email@example.com">
-      <input type="hidden" name="request_account" value="True">
-      <button type="submit" class="btn btn-primary">Submit</button>
+      <fieldset>
+        <div class="control-group">
+          <input type="email" name="email" placeholder="email@example.com">
+        </div>
+        <div class="control-group">
+          <input type="hidden" name="request_account" value="True">
+        </div>
+        <div class="control-group">
+          <button type="submit" class="btn btn-primary">Submit</button>
+        </div>
+      </fieldset>
     </form>
   </div>
   
