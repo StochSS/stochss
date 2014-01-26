@@ -192,8 +192,8 @@
                                                                   {% if value.massaction %}
                                                                   --
                                                                   {% else %}
-								<input type="text" name="{{loop.index}}-propensity_function" value = "{{value.propensity_function}}" style="width: 150px;" class="update_box">
-                                                                {% endif %}
+								  {{value.propensity_function}}
+                                                                  {% endif %}
 								</td>
 								<td>
                                                                   <a href="javascript:void(0)" onclick="javascript:deleteElement('{{key}}')">Delete</a>
