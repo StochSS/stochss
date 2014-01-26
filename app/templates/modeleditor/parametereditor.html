@@ -78,7 +78,7 @@
 	                <label><a data-toggle="modal" href="#help_modal1" style="text-decoration: none;">Expression <i class="icon-question-sign"></i></a>
                             {% set help_modal_id = "help_modal1" %}
                             {% set help_modal_title = "Parameter expression" %}
-                            {% set help_modal_message = "A parameter can be defined as a scalar, numeric value, or through simple arithmetic expressions (+, - , * , /) that involves other already defined parameters. The expression must be evaluable in the namespace that consists of all parameter names. This means that at least one parameter must have a scalar value." %}
+                            {% set help_modal_message = "A parameter can be defined as a scalar, numeric value, or a combination of the four basic arithmetic expressions (+, - , * , /) as well as pow(base, exponent) that involves other already defined parameters. The expression must be evaluable in the namespace that consists of all parameter names. This means that at least one parameter must have a scalar value." %}
                             {% include "help_modal.html" %} 
                             {{help_modal|safe}}
                         </label>
