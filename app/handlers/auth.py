@@ -228,21 +228,51 @@ class LoginPage(BaseHandler):
     
     def post(self):
         '''
-        Login attempt
+        Login attempt or request for account
         '''
         email_address = self.request.POST['email']
-        password = self.request.POST['password']
         try:
-            user = self.auth.get_user_by_password(email_address, password, remember=True)
-            self.auth.set_session(user)
-            self.redirect('/')
-        except (InvalidAuthIdError, InvalidPasswordError) as e:
-            logging.info('Login failed for user: {0} with exception: {1}'.format(email_address, e))
-            context = {
-                'error_alert': True,
-                'alert_message': 'Email address and password do not match.'
-            }
-            self.render_response('login.html', **context)
+            request_account = self.request.POST['request_account']
+        except KeyError:
+            request_account = False
+            
+        if request_account:
+            # Just an email address here, we should first make sure they havent been approved
+            pending_users_list = PendingUsersList.shared_list()
+            if pending_users_list.is_user_approved(email_address):
+                context = {
+                    'approved_user_message': True
+                }
+                return self.render_response('user_registration.html', **context)
+            # Now add to approval waitlist
+            success = pending_users_list.add_user_to_approval_waitlist(email_address)
+            if success:
+                context = {
+                    'success_alert': True,
+                    'alert_message': 'Successfully requested an account!'
+                }
+                return self.render_response('login.html', **context)
+            else:
+                context = {
+                    'error_alert': True,
+                    'alert_message': 'You have already requested an account.'
+                }
+                return self.render_response('login.html', **context)
+        else:
+            # Login attempt, need to grab password too
+            password = self.request.POST['password']
+            try:
+                user = self.auth.get_user_by_password(email_address, password, remember=True)
+                # Success, put user in the session and redirect to home page
+                self.auth.set_session(user)
+                return self.redirect('/')
+            except (InvalidAuthIdError, InvalidPasswordError) as e:
+                logging.info('Login failed for user: {0} with exception: {1}'.format(email_address, e))
+                context = {
+                    'error_alert': True,
+                    'alert_message': 'Email address and password do not match.'
+                }
+                return self.render_response('login.html', **context)
 
 class LogoutHandler(BaseHandler):
     '''

@@ -5,6 +5,8 @@
 {% block content %}
 {% if user_registration_failed %}
   <p class="alert alert-error">Registration failed, please try again.</p>
+{% elif approved_user_message %}
+  <p class="alert alert-success">You have already been approved by the admin to create an account.</p>
 {% endif %}
   <div class="span6 offset3 well">
     <h4>Please fill in the following information:</h4>

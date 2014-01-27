@@ -53,6 +53,11 @@ class PendingUsersList(db.Model):
         return True
     
     def remove_user_from_approval_waitlist(self, user_email):
+        '''
+        Removes the given email address from the approval waitlist.
+        This function is currently only called when the email exists in the waitlist so 
+         theres no checking to do.
+        '''
         self.users_waiting_approval.remove(user_email)
         self.put()
         
