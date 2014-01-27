@@ -3,6 +3,8 @@ try:
 except ImportError:
   from django.utils import simplejson as json
 
+import logging
+
 from google.appengine.ext import ndb
 from google.appengine.ext import db
 
@@ -112,6 +114,7 @@ class AdminPage(BaseHandler):
         """
         action = self.request.get('action')
         email = self.request.get('email')
+        logging.info("Processing admin request to perform action '{0}' with email '{1}'".format(action, email))
         failure_message = ''
         if action in ['approve', 'approve1']:
             result = self._approve_user(email, action == 'approve1')
@@ -162,4 +165,8 @@ class AdminPage(BaseHandler):
                 return False
             # Delete from db
             user.key.delete()
+            # Need to delete the auth_id from the 'unique' model store
+            # see https://code.google.com/p/webapp-improved/source/browse/webapp2_extras/appengine/auth/models.py
+            unique_auth_id = "User.auth_id:{0}".format(email)
+            User.unique_model.delete_multi([unique_auth_id])
         return True

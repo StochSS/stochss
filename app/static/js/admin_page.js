@@ -6,7 +6,7 @@ function appendRowToApprovedUserTable(email) {
     html = '<tr>' + 
             '<td>' + nextRowNumber + '</td>' +
             '<td>' + email + '</td>' +
-            '<td><button class="btn btn-danger">Revoke</button></td>' +
+            '<td><button class="btn btn-danger table-action-button" data-action="revoke">Revoke</button></td>' +
            '</tr>';
    tableBody.append(html);
 }
@@ -42,7 +42,7 @@ $('#grant-access-button').on('click', function(e) {
     });
 });
 
-$('.table-action-button').on('click', function(e) {
+$('table').on('click', '.table-action-button', function(e) {
     e.preventDefault();
     
     var clickedButton = $(this);
