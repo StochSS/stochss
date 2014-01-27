@@ -107,8 +107,41 @@ class UserRegistrationPage(BaseHandler):
         if secret_key is None:
             # Normal user registration
             logging.info('Registering a normal user...')
-            # TODO: Implement this.
-            pass
+            user_email = self.request.POST['email']
+            # Has this user been approved?
+            pending_users_list = PendingUsersList.shared_list()
+            if pending_users_list.is_user_approved(user_email):
+                # Then create the user
+                _attrs = {
+                    'email_address': user_email,
+                    'name': self.request.POST['name'],
+                    'password_raw': self.request.POST['password']
+                }
+                success, user = self.auth.store.user_model.create_user(user_email, **_attrs)
+                
+                if success:
+                    # Remove the user from the approved list now
+                    pending_users_list.remove_user_from_approved_list(user_email)
+                    context = {
+                        'success_alert': True,
+                        'alert_message': 'Account creation successful! You may now log in with your new account.'
+                    }
+                    return self.render_response('login.html', **context)
+                else:
+                    logging.info("Acount registration failed for: {0}".format(user))
+                    context = {
+                        'email_address': self.request.POST['email'],
+                        'name': self.request.POST['name'],
+                        'user_registration_failed': True
+                    }
+                    return self.render_response('user_registration.html', **context)
+            else:
+                # Not approved
+                context = {
+                    'error_alert': True,
+                    'alert_message': 'You need to be approved by the admin before you can register an account.'
+                }
+                return self.render_response('login.html', **context)
         else:
             # Attempt to create an admin user
             logging.info('Registering an admin user...')
@@ -123,14 +156,13 @@ class UserRegistrationPage(BaseHandler):
                     return self.redirect('/login')
                 else:
                     # CREATE THE ADMIN ALREADY
-                    unique_properties = ['email_address']
                     _attrs = {
                         'email_address': self.request.POST['email'],
                         'name': self.request.POST['name'],
                         'password_raw': self.request.POST['password'],
                         'is_admin': 'YES'
                     }
-                    success, user = self.auth.store.user_model.create_user(_attrs['email_address'], unique_properties, **_attrs)
+                    success, user = self.auth.store.user_model.create_user(_attrs['email_address'], **_attrs)
                     
                     if success:
                         # Invalidate the token
