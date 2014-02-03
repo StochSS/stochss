@@ -3,6 +3,12 @@
 {% block csscontent %}<link href="/static/css/account_settings.css" rel="stylesheet">{% endblock %}
 
 {% block content %}
+{% if success_alert is defined %}
+<p class="alert alert-success">{{success_alert}}</p>
+{% endif %}
+{% if error_alert is defined %}
+<p class="alert alert-danger">{{error_alert}}</p>
+{% endif %}
 <div class="span4">
   <h2 id='form-heading'>Account Settings</h2>
   <form action="/account_settings" method="post" class="form-horizontal">

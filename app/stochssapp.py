@@ -234,6 +234,27 @@ class User(WebApp2User):
     def user_id(self):
         return self.email_address
     
+    def change_auth_id(self, auth_id):
+           '''
+           A helper method to change a user's auth id.
+
+           :param auth_id:
+               String representing a unique id for the user (i.e. email address).
+           :returns
+               A boolean that indicates if the auth_id is unique.
+           '''
+           unique = '%s.auth_id:%s' % (self.__class__.__name__, auth_id)
+           ok = self.unique_model.create(unique)
+           if ok:
+               self.auth_ids = [auth_id]
+               # Need to delete the old auth_id from the 'unique' model store
+               # see https://code.google.com/p/webapp-improved/source/browse/webapp2_extras/appengine/auth/models.py
+               unique_auth_id = "%s.auth_id:{0}".format(self.__class__.__name__, self.email_address)
+               User.unique_model.delete_multi([unique_auth_id])
+               return True
+           else:
+               return False
+    
     def set_password(self, raw_password):
         '''
         Sets password for current user, stored as a hashed value.

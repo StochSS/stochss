@@ -5,6 +5,7 @@ from google.appengine.ext import ndb
 from google.appengine.ext import db
 
 from webapp2_extras.auth import InvalidAuthIdError, InvalidPasswordError
+from webapp2_extras import security
 
 from stochssapp import BaseHandler
 from stochssapp import User
@@ -305,6 +306,62 @@ class AccountSettingsPage(BaseHandler):
             'email_address': self.user.email_address
         }
         self.render_response('account_settings.html', **context)
+    
+    def post(self):
+        '''
+        Corresponds to a possible attempt to change some account settings.
+        Possible fields to change:
+        - name
+        - email_address
+        - password
+        '''
+        should_update_user = False
+        new_name = self.request.POST['name']
+        new_email = self.request.POST['email']
+        if self.user.name != new_name:
+            self.user.name = new_name
+            should_update_user = True
+        if self.user.email_address != new_email:
+            if self.user.change_auth_id(new_email):
+                self.user.email_address = new_email
+                should_update_user = True
+            else:
+                context = {
+                    'name': self.user.name,
+                    'email_address': self.user.email_address,
+                    'error_alert': 'A user with that email address already exists.'
+                }
+                return self.render_response('account_settings.html', **context)
+        
+        try:
+            new_password = self.request.POST["password"]
+            current_password = self.request.POST["current_password"]
+        except KeyError:
+            new_password = None
+        
+        if new_password is not None:
+            # Check that correct current password was entered
+            if security.check_password_hash(current_password, self.user.password):
+                # Correct
+                self.user.set_password(new_password)
+                should_update_user = True
+            else:
+                # Incorrect
+                context = {
+                    'name': self.user.name,
+                    'email_address': self.user.email_address,
+                    'error_alert': 'Incorrect password.'
+                }
+                return self.render_response('account_settings.html', **context)
+        
+        if should_update_user:
+            self.user.put()
+            context = {
+                'name': self.user.name,
+                'email_address': self.user.email_address,
+                'success_alert': 'Successfully updated account settings!'
+            }
+            return self.render_response('account_settings.html', **context)
 
 # class AuthHandler(BaseHandler, SimpleAuthHandler):
 #     """ Auth handler for OAuth 2.0, 1.0(a) and OpenID """
