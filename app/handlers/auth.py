@@ -292,15 +292,19 @@ class LogoutHandler(BaseHandler):
         self.auth.unset_session()
         self.redirect('/login')
 
-class ProfilePage(BaseHandler):
+class AccountSettingsPage(BaseHandler):
     """
     """
     def authentication_required(self):
         return True
         
     def get(self):
-        """ Corresponds to /profile """
-        self.render_response('profile.html')
+        """ Corresponds to /account_settings """
+        context = {
+            'name': self.user.name,
+            'email_address': self.user.email_address
+        }
+        self.render_response('account_settings.html', **context)
 
 # class AuthHandler(BaseHandler, SimpleAuthHandler):
 #     """ Auth handler for OAuth 2.0, 1.0(a) and OpenID """

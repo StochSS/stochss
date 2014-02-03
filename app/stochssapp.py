@@ -337,7 +337,7 @@ app = webapp2.WSGIApplication([
                                ('/login', LoginPage),
                                ('/logout', LogoutHandler),
                                ('/admin', AdminPage),
-                               ('/profile', ProfilePage),
+                               ('/account_settings', AccountSettingsPage),
                                ],
                                 config=config,
                                 debug=True)
