@@ -33,7 +33,12 @@
                   <td>{{ loop.index }}</td>
                   <td>{{ user.name }}</td>
                   <td>{{ user.email_address }}</td>
-                  <td><button class="btn btn-danger table-action-button" data-action="delete">Delete</button></td>
+                  <td>
+                    {% if not user.is_admin_user() %}
+                    <button class="btn btn-warning table-action-button" data-action="reset">Reset Password</button>
+                    <button class="btn btn-danger table-action-button" data-action="delete">Delete</button>
+                    {% endif %}
+                  </td>
                 </tr>
                 {% endfor %}
               </tbody>

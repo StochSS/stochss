@@ -3,7 +3,7 @@ try:
 except ImportError:
   from django.utils import simplejson as json
 
-import logging
+import logging, string, random
 
 from google.appengine.ext import ndb
 from google.appengine.ext import db
@@ -100,7 +100,7 @@ class AdminPage(BaseHandler):
     @admin_required
     def get(self):
         """ Corresponds to /admin """
-        users = User.query().fetch(projection=[ndb.GenericProperty('name'), ndb.GenericProperty('email_address')])
+        users = User.query().fetch()
         if len(users) == 0:
             users = None
         pending_users_list = PendingUsersList.shared_list()
@@ -120,6 +120,9 @@ class AdminPage(BaseHandler):
         action = self.request.get('action')
         email = self.request.get('email')
         logging.info("Processing admin request to perform action '{0}' with email '{1}'".format(action, email))
+        json_result = {
+            'email': email
+        }
         failure_message = ''
         if action in ['approve', 'approve1']:
             result = self._approve_user(email, action == 'approve1')
@@ -131,17 +134,17 @@ class AdminPage(BaseHandler):
             result = self._delete_user(email)
             if not result:
                 failure_message = "You can't delete the admin user!"
+        elif action == 'reset':
+            result, password = self._reset_user_password(email)
+            json_result['password'] = password
         else:
-            return
+            json_result['success'] = False
+            return self.response.write(json.dumps(json_result))
         
-        json_result = {
-            'email': email,
-            'success': result
-        }
+        json_result['success'] = result
         if failure_message is not '':
             json_result['message'] = failure_message
-        self.response.write(json.dumps(json_result))
-        return
+        return self.response.write(json.dumps(json_result))
     
     def _approve_user(self, email, awaiting_approval):
         """ Add user to approved users list and remove it from the waiting approval list if necessary """
@@ -175,3 +178,22 @@ class AdminPage(BaseHandler):
             unique_auth_id = "User.auth_id:{0}".format(email)
             User.unique_model.delete_multi([unique_auth_id])
         return True
+    
+    def _reset_user_password(self, email):
+        '''
+        Reset the password of the user with the given email address to a
+         random password that they will be sure to change immediately.
+        Returns a tuple (success, password), where success is a boolean
+         indicating whether or not the operation completed and password is 
+         the new password of the user if success is True.
+        '''
+        user = User.get_by_auth_id(email)
+        # First we have 5 letters (upper/lowercase) or digits
+        random_password = ''.join(random.choice(string.ascii_letters + string.digits) for x in range(5))
+        # Then 2 punctuation chars
+        random_password += ''.join(random.choice(string.punctuation) for x in range(2))
+        # Then 5 more letters or digits
+        random_password += ''.join(random.choice(string.ascii_letters + string.digits) for x in range(5))
+        user.set_password(random_password)
+        user.put()
+        return (True, random_password)

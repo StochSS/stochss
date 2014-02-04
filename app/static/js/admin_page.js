@@ -79,10 +79,10 @@ $('table').on('click', '.table-action-button', function(e) {
                     appendRowToApprovedUserTable(email);
                 } else if (action == "approve") {
                     appendRowToApprovedUserTable(email);
-                } else if (action == "delete") {
+                } else if (action == "delete" || action == "revoke") {
                     tableRow.remove();
-                } else if (action == "revoke") {
-                    tableRow.remove();
+                } else if (action == "reset") {
+                    alert('The user\'s password has been reset to: ' + response["password"]);
                 }
             } else {
                 if (response["message"]) {
