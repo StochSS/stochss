@@ -339,7 +339,7 @@ class AccountSettingsPage(BaseHandler):
         except KeyError:
             new_password = None
         
-        if new_password is not None:
+        if new_password not in [None, '']:
             # Check that correct current password was entered
             if security.check_password_hash(current_password, self.user.password):
                 # Correct

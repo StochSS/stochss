@@ -243,14 +243,14 @@ class User(WebApp2User):
            :returns
                A boolean that indicates if the auth_id is unique.
            '''
-           unique = '%s.auth_id:%s' % (self.__class__.__name__, auth_id)
+           unique = '{0}.auth_id:{1}'.format(self.__class__.__name__, auth_id)
            ok = self.unique_model.create(unique)
            if ok:
-               self.auth_ids = [auth_id]
                # Need to delete the old auth_id from the 'unique' model store
                # see https://code.google.com/p/webapp-improved/source/browse/webapp2_extras/appengine/auth/models.py
-               unique_auth_id = "%s.auth_id:{0}".format(self.__class__.__name__, self.email_address)
+               unique_auth_id = "{0}.auth_id:{1}".format(self.__class__.__name__, self.auth_ids[0])
                User.unique_model.delete_multi([unique_auth_id])
+               self.auth_ids = [auth_id]
                return True
            else:
                return False
