@@ -2,9 +2,8 @@ import boto.ec2
 from time import sleep, strftime
 import os, stat
 
-#AKIAJKKO3ILDCNHT322A
-#pZf2XH5dC3GmMIAUlVsb7jnTD/Dl7Sao1i/69rsE
-
+# Writes all support AWS regions and corresponding AMI IDs to a config file 
+# and set the file permissions to 544
 def writeConfig(aws_regions, ami_ids):
 	config_file = open("ami_ids","w")
 	for i in range(0,len(aws_regions)):
@@ -14,20 +13,16 @@ def writeConfig(aws_regions, ami_ids):
 	config_file.close()
 	os.chmod("ami_ids", stat.S_IRUSR | stat.S_IWUSR | stat.S_IRGRP | stat.S_IROTH)
 
-def getData(file):
-	try:
-		line = file.readline()
-		contents = line.split('=')
-		return contents[1].strip()
-	except IndexError:
-		return None
-
 def main():
+	# If the user has their AWS Access Key stored in an environment variable, grab the data from there
+	# Otherwise, ask them to input their credentials
 	try:
 		aws_access_key = os.environ['AWS_ACCESS_KEY_ID']
 	except KeyError:
 		aws_access_key = raw_input("Please enter your AWS access key: ")
 
+	# If the user has their AWS Secret Key stored in an environment variable, grab the data from there
+	# Otherwise, ask them to input their credentials
 	try:
 		aws_secret_key = os.environ['AWS_SECRET_ACCESS_KEY']
 	except KeyError:
@@ -37,12 +32,16 @@ def main():
 	aws_ami_ids = []
 	new_ami_ids = []
 
+	# If a previous AMI ID config file exists, open it and extract the list of regions
+	# and corresponding AMI IDs
 	try:
 		config_file = open("ami_ids","r")
 		for line in config_file:
 			line_data = line.split('=')
 			aws_regions.append(line_data[0].strip())
 			aws_ami_ids.append(line_data[1].strip())
+	# Otherwise, ask the user to input a set of compatible AWS regions and the IDs 
+	# of the AMIs that need updating
 	except IOError:
 		num_regions = input("Number of AWS regions with StochSS servers: ")
 		for i in range(0,num_regions):
@@ -50,6 +49,7 @@ def main():
 			aws_ami_ids.append(raw_input("Please enter the AMI ID of the Server you wish to update: "))
 		writeConfig(aws_regions,aws_ami_ids)
 
+	# Update the latest Server AMI in every StochSS compatible region
 	for i in range(0,len(aws_regions)):		
 		print "Connecting to " + aws_regions[i]
 		conn = boto.ec2.connect_to_region(
@@ -58,6 +58,7 @@ def main():
 			aws_secret_access_key=aws_secret_key
 		)
 
+		# Bash script used to update the git repo on an instance launced from the latest Server AMI
 		script_file = open('updateami.sh','r')
 		script = script_file.read()
 
@@ -72,14 +73,14 @@ def main():
 		inst = rs.instances[0]
 		while inst.state != 'running':
 			inst.update()
-		# Allow instance time to run startup script
 		print "Running update script..."
-		sleep(60)
+		# Allow instance time to run startup script
+		# TODO: Replace sleep() with a way of detecting when the script has finished executing
+		sleep(120) 
 		print "Update complete"
 
 		month = strftime("%b")
 		day = strftime("%d")
-
 		new_ami_name = "StochSS-Server-" + month + day
 
 		print "Creating AMI of updated instance..."
@@ -105,8 +106,10 @@ def main():
 			inst.update()
 		print "Instance has terminated"
 
+		# Build a list of new AMI IDs representing the updated servers in each region
 		new_ami_ids.append(new_ami_id)
 
+	# Overwrite the current AMI ID config file with the updated AMI IDs
 	writeConfig(aws_regions,new_ami_ids)
 
 if __name__ == "__main__":
