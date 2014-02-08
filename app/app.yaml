@@ -23,3 +23,6 @@ libraries:
   version: latest
 - name: lxml
   version: latest
+
+skip_files:
+- ^(.*/)?\.bak$

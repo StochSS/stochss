@@ -19,6 +19,8 @@ from google.appengine.ext import db
 from stochssapp import BaseHandler
 from backend.backendservice import backendservices
 
+from sensitivity import SensitivityJobWrapper
+
 class StatusPage(BaseHandler):
     """ The main handler for the Job Status Page. Displays status messages for the jobs, options to delete/kill jobs and
         options to view the Job metadata and Job results. """        
@@ -194,8 +196,50 @@ class StatusPage(BaseHandler):
                                   "number" : number})
                 # Save changes to the status
                 job.put()
-                
+        
         context['all_jobs']=all_jobs
+
+        allSensJobs = []
+        # Grab references to all the user's StochKitJobs in the system
+        QallSensJobs = db.GqlQuery("SELECT * FROM SensitivityJobWrapper WHERE userId = :1", self.user.user_id())
+        if QallSensJobs == None:
+            context['no_jobs'] = 'There are no jobs in the system.'
+        else:
+            # We want to display the name of the job and the status of the Job.
+            all_jobs = []
+            status = {}
+
+            jobs = list(QallSensJobs.run())
+
+            jobs = sorted(jobs, key = lambda x : (datetime.datetime.strptime(x.startDate, '%Y-%m-%d-%H-%M-%S') if hasattr(x, 'startDate') and x.startDate != None else ''), reverse = True)
+
+            for number, job in enumerate(jobs):
+                number = len(jobs) - number
+
+                if job.status != "Finished" or job.status != "Failed":
+                    # First, check if the job is still running
+                    res = service.checkTaskStatusLocal([job.pid])
+                    if res[job.pid]:
+                        job.status = "Running"
+                    else:
+                        # Check if the signature file is present, that will always be the case for a sucessful job.
+                        # for ode, this is output.txt
+                        
+                        file_to_check = job.outData + "/output/output.txt"
+                        if os.path.exists(file_to_check):
+                            job.status = "Finished"
+                        else:
+                            job.status = "Failed"
+
+                    # Save changes to the status
+                    job.put()
+                            
+                allSensJobs.append({ "name" : job.jobName,
+                                     "status" : job.status,
+                                     "id" : job.key().id(),
+                                     "number" : number})
+        
+        context['allSensJobs']=allSensJobs
     
         return dict(result,**context)
 

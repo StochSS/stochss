@@ -1,36 +1,34 @@
 {% extends "base.html" %}
 {% block title%}Manage Simulations{% endblock %}
-{% block content %}
 
+{% block content %}
 <div class="span9">
-    
     <div class="row-fluid">
-    
-       <div class"span9">
-            
-        {% block simulatecontent %}
-        <div class="span9">
-            <div class="well">
-            {% if all_models %}
-              <h3> Select model to simulate </h3>
-              </br>
-              <form id="model_simulated" method="post" action="/simulate">
-                  {% for item in all_models %}
-                  <label class="radio">
-                      <input type="radio" name="model_to_simulate" value="{{ item.model.name }}" checked>{{ item.model.name }}</input>
-                      </br>
-                  </label>
-                  {% endfor %}
-                  </br>
-                  <button type="submit" class="btn-primary btn-large">Next&raquo;</button>
-              </form>
-            {% else %}
-               <h2>There are no models in the system</h2> </br>
-                <a style="font-size:18px;" href="/modeleditor"> Create a new model? </a>
-            {% endif %}
+        <div class"span9">
+            {% block simulatecontent %}
+            <div class="span9">
+                <div class="well">
+                    {% if all_models %}
+                    <h3> Select model to simulate </h3>
+                    <br />
+                    <form id="model_simulated" method="post" action="/simulate">
+                        {% for item in all_models %}
+                        <label class="radio">
+                            <input type="radio" name="model_to_simulate" value="{{ item.model.name }}" checked />{{ item.model.name }}
+                            <br />
+                        </label>
+                        {% endfor %}
+                        <br />
+                        <button type="submit" class="btn-primary btn-large">Next&raquo;</button>
+                    </form>
+                    {% else %}
+                    <h2>There are no models in the system</h2><br />
+                    <a style="font-size:18px;" href="/modeleditor"> Create a new model? </a>
+                    {% endif %}
+                </div>
+            </div>
+            {% endblock %}
         </div>
-        {% endblock %}
-        
-        </div>
-     </div> <!--/span9-->
- {% endblock %}
+    </div>
+</div>
+{% endblock %}
