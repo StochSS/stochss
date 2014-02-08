@@ -1,0 +1,66 @@
+{% extends "base.html" %}
+{% block title%}Manage Simulations{% endblock %}
+
+{% block content %}
+<div class="span9">
+    <div class="row-fluid">
+        <div class"span9">
+            <div class="span9">
+                <div class="well">
+                    <h3> Sensitivity analysis </h3>
+                    <br />
+                    <span style="display:none;" id="newJob">
+                        <select id="modelSelect"></select>
+
+                    <br />
+
+                    <table id="selectTable" border=1 width="50%">
+                        <tr>
+                            <th>Parameters</th>
+                            <!--<th>Initial Conditions</th>-->
+                        </tr>
+                        <tr>
+                            <td valign="top">
+                                <table id="parameterContainer">
+                                </table>
+                            </td>
+                            <!--<td valign="top">
+                                <table id="initialConditionContainer">
+                                </table>
+                            </td>-->
+                        </tr>
+                    </table>
+
+                    <br />
+                    Simulation time
+                    <br />
+                    <input type="text" value="0" disabled></input> to <input id="time" value="100" type="text"></input> store state every <input id="dt" type="text" value="0.1"></input> time units.
+                    <br />
+
+                    Simulation name
+                    <br />
+                    <input id="name" type="text"></input>
+                    <br />
+
+                    <button class="btn-primary btn-large runlocal">Run locally</button>
+                    </span>
+
+                    <span style="display:none;" id="jobInfo">
+                        <div id="data" style="width:100%;height:480pt;"></div>
+                    </span>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block jscontent %}
+<script type="text/javascript" src = "/static/js/underscore.js"></script>
+<script type="text/javascript" src = "/static/utils.js"></script>
+<script type="text/javascript" src = "/static/js/backbone.js"></script>
+<script type="text/javascript" src = "/static/model/stochkit.js"></script>
+
+<script type="text/javascript" src = "/static/sensitivity.js"></script>
+<script type="text/javascript" src = "/static/js/purl.js"></script>
+{% endblock %}

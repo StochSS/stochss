@@ -288,12 +288,14 @@ try:
 except:
     pass
 
+from handlers.exportimport import *
 from handlers.specieseditor import *
 from handlers.modeleditor import *
 from handlers.parametereditor import *
 from handlers.volumeeditor import *
 from handlers.reactioneditor import *
 from handlers.simulation import *
+from handlers.sensitivity import *
 from handlers.credentials import *
 from handlers.converttopopulation import *
 from handlers.updates import *
@@ -344,6 +346,8 @@ app = webapp2.WSGIApplication([
                                ('/modeleditor/export/tostochkit2', ModelEditorExportToStochkit2),
                                ('/modeleditor.*', ModelEditorPage),
                                ('/simulate',SimulatePage),
+                               ('/sensitivity',SensitivityPage),
+                               ('/export', ExportPage),
                                ('/simulate/newstochkitensemble',NewStochkitEnsemblePage),
                                ('/status',StatusPage),
                                ('/output/visualize',VisualizePage),
