@@ -20,15 +20,55 @@ from stochss.examplemodels import *
 
 import webapp2
 
+class ExportJobWrapper(db.Model):
+    userId = db.StringProperty()
+    startTime = db.StringProperty()
+    status = db.StringProperty()
+    outData = db.StringProperty()
+
 class ExportPage(BaseHandler):
     def get(self):
 
-        req = self.request.get('action')
+        reqType = self.request.get('action')
 
-        if req == 'backup':
-            [tid, tmpfile] = tempfile.mkstemp(suffix = ".tgz")
+        if reqType == 'size':
+            def get_size(start_path = '.'):
+                # Stolen from http://stackoverflow.com/questions/1392413/calculating-a-directory-size-using-python
+                totalSize = 0
+                for dirpath, dirnames, filenames in os.walk(start_path):
+                    for f in filenames:
+                        fp = os.path.join(dirpath, f)
+                        totalSize += os.path.getsize(fp)
+                return totalSize
+
+            # sizes of models will be trivial
+            totalSize = 0
+
+            jobs = db.GqlQuery("SELECT * FROM StochKitJobWrapper").fetch(100000)
+
+            for job in jobs:
+                stochkit_job = job.stochkit_job
+
+                if stochkit_job.status == "Finished":
+                    if stochkit_job.resource == 'Local':
+                        totalSize += get_size(job.stochkit_job.output_location)
+
+            self.response.headers['Content-Type'] = 'application/json'
+            self.response.write(json.dumps( { "size" : totalSize } ))
+            return
+        elif reqType == 'backup':
+            exportJob = ExportJobWrapper()
+
+            exportJob.userId = self.user.user_id()
+            exportJob.startTime = time.strftime("%Y-%m-%d-%H-%M-%S")
+            exportJob.status = "Running -- Exporting Models"
+            exportJob.outData = ""
+
+            exportJob.put()
+
+            [tid, tmpfile] = tempfile.mkstemp(dir = os.path.abspath(os.path.dirname(__file__)) + '/../static/tmp/', suffix = ".tar")
             tmpdir = tempfile.mkdtemp()
-            tarfb = tarfile.TarFile(fileobj = os.fdopen(tid, 'w:gz'), mode = 'w')
+            tarfb = tarfile.TarFile(fileobj = os.fdopen(tid, 'w'), mode = 'w')
             names = []
 
             try:
@@ -81,6 +121,13 @@ class ExportPage(BaseHandler):
                 jsonModel["model"] = addFile('models/data/{0}.xml'.format(model.model_name), model.model.serialize())
                 addFile('models/{0}.json'.format(model.model_name), json.dumps(jsonModel, sort_keys=True, indent=4, separators=(', ', ': ')))
 
+            #job = ExportJobWrapper.get_by_id(job.key().id())
+
+            exportJob.status = "Running -- Exporting Simulations"
+            exportJob.outData = None
+
+            exportJob.put()
+
             ###jobs
             jobs = db.GqlQuery("SELECT * FROM StochKitJobWrapper").fetch(100000)
 
@@ -117,12 +164,23 @@ class ExportPage(BaseHandler):
                         if job.attributes:
                             jsonJob.update(job.attributes)
 
-                        addFile('stochkitJobs/{0}.json'.format(job.name), json.dumps(jsonJob))
+                        addFile('stochkitJobs/{0}.json'.format(job.name), json.dumps(jsonJob, sort_keys=True, indent=4, separators=(', ', ': ')))
+
 
             tarfb.close()
-            self.response.write(tmpfile)
+
+
+            exportJob.status = "Finished"
+            exportJob.outData = tmpfile.split("/")[-1]
+
+            exportJob.put()
+
+            self.response.headers['Content-Type'] = 'application/json'
+            self.response.write( { "status" : True,
+                                   "msg" : "Job submitted" } )
             return
-        elif req == 'import':
-            pass
-        
-        self.response.write("you suck")
+        elif reqType == 'import':
+            self.response.headers['Content-Type'] = 'application/json'
+            self.response.write( { "status" : False,
+                                   "msg" : "Not implemented yet" })
+            return

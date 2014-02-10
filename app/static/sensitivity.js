@@ -108,6 +108,8 @@ var run = function()
     {
         $( "#jobInfo" ).show();
 
+        //var idstr=String.fromCharCode(Math.floor((Math.random()*25)+65));
+
         $.ajax( { type : "POST",
                   url : "/sensitivity",
                   data : { reqType : "jobInfo",
@@ -130,14 +132,14 @@ var run = function()
                                   {
                                       series.push([data.time[k + 1], data.sensitivities[specie][parameter][k]]);
                                   }
-
+               
                                   flotData.push( { label : "d" + specie + "/d" + parameter,
                                                    data : series } );
+
                               }
                           }
                           
-                          $.plot( "#data", flotData );
-                          //$( "#data" ).text(JSON.stringify(data));
+                          Splot.plot( $( "#data" ), flotData);
                       }
                       else
                       {

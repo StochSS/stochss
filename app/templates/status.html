@@ -125,6 +125,46 @@
                         {% endfor %}
                     </tbody>
                 </table>
+                <br />
+                Export Job:
+                <br />
+                <table cellpadding="0" cellspacing="0" border="0" class="table table-striped table-bordered" id="dataTable">
+                    <thead>
+                        <tr>
+                            <th><input type="checkbox" onClick="toggle(this)"/></th>
+                            <th>Job Number</th>
+                            <th>Export Date</th>
+                            <th>Status</th>
+                            <th></th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for job in allExportJobs %}
+                        <tr>
+                            <td></td>
+                            <td>
+                                <span>{{job.number}}</span>
+                            </td>
+                            <td>
+                                <span>{{job.startTime}}</span>
+                            </td>
+                            <td>
+                                <span>{{job.status}}</span>
+                            </td>
+                            <td>
+                                {% if job.status == "Finished" %}
+                                <a href="/static/tmp/{{job.outData}}">View results</a>
+                                {% else %}
+                                {% if job.status == "Failed" %}
+                                <a href="/static/tmp/{{job.outData}}">Get Debugging Info</a>
+                                {% endif %}
+                                {% endif %}
+                            </td>
+                        </tr>
+                        
+                        {% endfor %}
+                    </tbody>
+                </table>
 
                 <button type="submit" class="btn btn-primary btn-large" name="delete"><i class="icon-ban-circle"></i> Delete Selected</button>
                 <button type="submit" class="btn btn-primary btn-large" name="refresh"><i class="icon-refresh"></i> Refresh</button>
