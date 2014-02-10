@@ -1,6 +1,7 @@
 #! /usr/bin/python
 
 import os, stat, time, sys
+sys.path.append(os.path.join(os.path.dirname(os.path.abspath(__file__)), 'app/lib/boto'))
 import boto.ec2, boto.ec2.cloudwatch
 from boto.ec2.cloudwatch import MetricAlarm
 import webbrowser

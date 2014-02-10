@@ -1,6 +1,7 @@
+import sys, os, stat
+sys.path.append(os.path.join(os.path.dirname(os.path.abspath(__file__)), '../app/lib/boto'))
 import boto.ec2
 from time import sleep, strftime
-import os, stat
 
 # Writes all support AWS regions and corresponding AMI IDs to a config file 
 # and set the file permissions to 544
