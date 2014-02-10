@@ -50,65 +50,75 @@ def main():
 			aws_ami_ids.append(raw_input("Please enter the AMI ID of the Server you wish to update: "))
 		writeConfig(aws_regions,aws_ami_ids)
 
+	print "Connecting to " + aws_regions[0]
+	conn = boto.ec2.connect_to_region(
+		aws_regions[0],
+		aws_access_key_id=aws_access_key,
+		aws_secret_access_key=aws_secret_key
+	)
+
+	# Bash script used to update the git repo on an instance launced from the latest Server AMI
+	script_file = open('updateami.sh','r')
+	script = script_file.read()
+
+	print "Launching " + aws_regions[0] + " server from most recent AMI..."
+	rs = conn.run_instances(
+		aws_ami_ids[0],
+		instance_type='t1.micro',
+		security_groups=['default'],
+		user_data=script
+	)
+
+	inst = rs.instances[0]
+	while inst.state != 'running':
+		inst.update()
+	print "Running update script..."
+	# Allow instance time to run startup script
+	# TODO: Replace sleep() with a way of detecting when the script has finished executing
+	sleep(120) 
+	print "Update complete"
+
+	month = strftime("%b")
+	day = strftime("%d")
+	new_ami_name = "StochSS-Server-" + month + day
+
+	print "Creating AMI of updated instance..."
+	new_ami_id = conn.create_image(inst.id, new_ami_name)
+
+	print "New AMI pending..."
+	new_ami = conn.get_image(new_ami_id)
+	while new_ami.state != 'available':
+		new_ami.update()
+
+	print "New AMI ID: " + new_ami_id
+	print "Making the new AMI Public"
+	conn.modify_image_attribute(
+		new_ami_id, 
+		attribute='launchPermission', 
+		operation='add', 
+		groups='all'
+	)
+
+	print "Shutting down instance..."
+	conn.terminate_instances([inst.id])
+	while inst.state != 'terminated':
+		inst.update()
+	print "Instance has terminated"
+
+	# Build a list of new AMI IDs representing the updated servers in each region
+	new_ami_ids.append(new_ami_id)
+
 	# Update the latest Server AMI in every StochSS compatible region
-	for i in range(0,len(aws_regions)):		
+	for i in range(1,len(aws_regions)):
 		print "Connecting to " + aws_regions[i]
 		conn = boto.ec2.connect_to_region(
 			aws_regions[i],
 			aws_access_key_id=aws_access_key,
 			aws_secret_access_key=aws_secret_key
 		)
-
-		# Bash script used to update the git repo on an instance launced from the latest Server AMI
-		script_file = open('updateami.sh','r')
-		script = script_file.read()
-
-		print "Launching " + aws_regions[i] + " server from most recent AMI..."
-		rs = conn.run_instances(
-			aws_ami_ids[i],
-			instance_type='t1.micro',
-			security_groups=['default'],
-			user_data=script
-		)
-
-		inst = rs.instances[0]
-		while inst.state != 'running':
-			inst.update()
-		print "Running update script..."
-		# Allow instance time to run startup script
-		# TODO: Replace sleep() with a way of detecting when the script has finished executing
-		sleep(120) 
-		print "Update complete"
-
-		month = strftime("%b")
-		day = strftime("%d")
-		new_ami_name = "StochSS-Server-" + month + day
-
-		print "Creating AMI of updated instance..."
-		new_ami_id = conn.create_image(inst.id, new_ami_name)
-
-		print "New AMI pending..."
-		new_ami = conn.get_image(new_ami_id)
-		while new_ami.state != 'available':
-			new_ami.update()
-
-		print "New AMI ID: " + new_ami_id
-		print "Making the new AMI Public"
-		conn.modify_image_attribute(
-			new_ami_id, 
-			attribute='launchPermission', 
-			operation='add', 
-			groups='all'
-		)
-
-		print "Shutting down instance..."
-		conn.terminate_instances([inst.id])
-		while inst.state != 'terminated':
-			inst.update()
-		print "Instance has terminated"
-
-		# Build a list of new AMI IDs representing the updated servers in each region
-		new_ami_ids.append(new_ami_id)
+		print "Copying new AMI to " + aws_regions[i]
+		next_ami_id = conn.copy_image(aws_regions[0],new_ami_id,name=new_ami_name).image_id
+		new_ami_ids.append(next_ami_id)
 
 	# Overwrite the current AMI ID config file with the updated AMI IDs
 	writeConfig(aws_regions,new_ami_ids)
