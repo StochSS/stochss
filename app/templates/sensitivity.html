@@ -10,39 +10,40 @@
                     <h3> Sensitivity analysis </h3>
                     <br />
                     <span style="display:none;" id="newJob">
+                        Model Name: 
                         <select id="modelSelect"></select>
 
-                    <br />
+                        <br />
 
-                    <table id="selectTable" border=1 width="50%">
-                        <tr>
-                            <th>Parameters</th>
-                            <!--<th>Initial Conditions</th>-->
-                        </tr>
-                        <tr>
-                            <td valign="top">
-                                <table id="parameterContainer">
-                                </table>
-                            </td>
-                            <!--<td valign="top">
-                                <table id="initialConditionContainer">
-                                </table>
-                            </td>-->
-                        </tr>
-                    </table>
+                        <table id="selectTable" border=1 width="50%">
+                            <tr>
+                                <th>Parameters</th>
+                                <!--<th>Initial Conditions</th>-->
+                            </tr>
+                            <tr>
+                                <td valign="top">
+                                    <table id="parameterContainer">
+                                    </table>
+                                </td>
+                                <!--<td valign="top">
+                                    <table id="initialConditionContainer">
+                                    </table>
+                                </td>-->
+                            </tr>
+                        </table>
 
-                    <br />
-                    Simulation time
-                    <br />
-                    <input type="text" value="0" disabled></input> to <input id="time" value="100" type="text"></input> store state every <input id="dt" type="text" value="0.1"></input> time units.
-                    <br />
+                        <br />
+                        Simulation time
+                        <br />
+                        <input type="text" value="0" disabled></input> to <input id="time" value="100" type="text"></input> store state every <input id="dt" type="text" value="0.1"></input> time units.
+                        <br />
 
-                    Simulation name
-                    <br />
-                    <input id="name" type="text"></input>
-                    <br />
+                        Simulation name
+                        <br />
+                        <input id="name" type="text"></input>
+                        <br />
 
-                    <button class="btn-primary btn-large runlocal">Run locally</button>
+                        <button class="btn-primary btn-large runlocal">Run locally</button>
                     </span>
 
                     <span style="display:none;" id="jobInfo">
