@@ -6,7 +6,7 @@ from google.appengine.ext import db
 import pickle
 import traceback
 import random
-import tarfile
+import zipfile
 import tempfile
 import logging
 import time
@@ -31,7 +31,9 @@ class ExportPage(BaseHandler):
 
         reqType = self.request.get('action')
 
-        if reqType == 'size':
+        if reqType == 'delJob':
+            pass
+        elif reqType == 'size':
             def get_size(start_path = '.'):
                 # Stolen from http://stackoverflow.com/questions/1392413/calculating-a-directory-size-using-python
                 totalSize = 0
@@ -41,20 +43,22 @@ class ExportPage(BaseHandler):
                         totalSize += os.path.getsize(fp)
                 return totalSize
 
-            # sizes of models will be trivial
+            # sizes of models will be trivial so we ignore them
+            numberOfFiles = 0
             totalSize = 0
 
-            jobs = db.GqlQuery("SELECT * FROM StochKitJobWrapper").fetch(100000)
+            jobs = db.GqlQuery("SELECT * FROM StochKitJobWrapper WHERE user_id = :1", self.user.user_id()).fetch(100000)
 
             for job in jobs:
                 stochkit_job = job.stochkit_job
 
                 if stochkit_job.status == "Finished":
                     if stochkit_job.resource == 'Local':
+                        numberOfFiles += 1
                         totalSize += get_size(job.stochkit_job.output_location)
 
             self.response.headers['Content-Type'] = 'application/json'
-            self.response.write(json.dumps( { "size" : totalSize } ))
+            self.response.write(json.dumps( { "numberOfFiles" : numberOfFiles, "totalSize" : totalSize } ))
             return
         elif reqType == 'backup':
             exportJob = ExportJobWrapper()
@@ -66,9 +70,10 @@ class ExportPage(BaseHandler):
 
             exportJob.put()
 
-            [tid, tmpfile] = tempfile.mkstemp(dir = os.path.abspath(os.path.dirname(__file__)) + '/../static/tmp/', suffix = ".tar")
+            [tid, tmpfile] = tempfile.mkstemp(dir = os.path.abspath(os.path.dirname(__file__)) + '/../static/tmp/', prefix = "backup_", suffix = ".zip")
             tmpdir = tempfile.mkdtemp()
-            tarfb = tarfile.TarFile(fileobj = os.fdopen(tid, 'w'), mode = 'w')
+            zipfbFile = os.fdopen(tid, 'w')
+            zipfb = zipfile.ZipFile(zipfbFile, mode = 'w', allowZip64 = True)
             names = []
 
             try:
@@ -81,7 +86,7 @@ class ExportPage(BaseHandler):
             #def folderExists(folder):
             #    pass
 
-            def addFile(preferredName, buf, isFile = False):
+            def getName(preferredName):
                 basename = tmpfile[:-4].split('/')[-1]
 
                 fileName = '{0}/{1}'.format(basename, preferredName)
@@ -90,22 +95,34 @@ class ExportPage(BaseHandler):
 
                 names.append(fileName)
 
-                if not isFile:
-                    addingFile = tempfile.NamedTemporaryFile(mode = 'w', dir='./')
-
-                    #os.close(addingFile[1])
-
-                    addingFile.write(buf)
-                    addingFile.flush()
-
-                    tarfb.add(addingFile.name, arcname = fileName)
-
-                    addingFile.close()
-                else:
-                    tarfb.add(buf, arcname = fileName)
                 return fileName
 
-            models = db.GqlQuery("SELECT * FROM StochKitModelWrapper").fetch(100000)
+            def addBytes(name, buf):
+                name = getName(name)
+
+                zipfb.writestr(name, buf)
+
+                return name
+
+            def addFile(name, path):
+                name = getName(name)
+
+                zipfb.write(path, name)
+
+                return name
+
+            def addFolder(name, path):
+                name = getName(name)
+
+                for dirpath, dirnames, filenames in os.walk(path):
+                    for f in filenames:
+                        fp = os.path.join(dirpath, f)
+                        rel = os.path.relpath(fp, path)
+                        zipfb.write(fp, os.path.join(name, rel))
+
+                return name
+
+            models = db.GqlQuery("SELECT * FROM StochKitModelWrapper WHERE user_id = :1", self.user.user_id()).fetch(100000)
 
             output = []
 
@@ -118,8 +135,8 @@ class ExportPage(BaseHandler):
 
                 jsonModel["type"] = model.model.units
 
-                jsonModel["model"] = addFile('models/data/{0}.xml'.format(model.model_name), model.model.serialize())
-                addFile('models/{0}.json'.format(model.model_name), json.dumps(jsonModel, sort_keys=True, indent=4, separators=(', ', ': ')))
+                jsonModel["model"] = addBytes('models/data/{0}.xml'.format(model.model_name), model.model.serialize())
+                addBytes('models/{0}.json'.format(model.model_name), json.dumps(jsonModel, sort_keys=True, indent=4, separators=(', ', ': ')))
 
             #job = ExportJobWrapper.get_by_id(job.key().id())
 
@@ -129,7 +146,7 @@ class ExportPage(BaseHandler):
             exportJob.put()
 
             ###jobs
-            jobs = db.GqlQuery("SELECT * FROM StochKitJobWrapper").fetch(100000)
+            jobs = db.GqlQuery("SELECT * FROM StochKitJobWrapper WHERE user_id = :1", self.user.user_id()).fetch(100000)
 
             for job in jobs:
                 stochkit_job = job.stochkit_job
@@ -137,8 +154,7 @@ class ExportPage(BaseHandler):
                 # Only export local, finished jobsx
                 if stochkit_job.status == "Finished":
                     if stochkit_job.resource == 'Local':
-
-                        outputLocation = addFile('stochkitJobs/data/{0}'.format(job.name), job.stochkit_job.output_location, True)
+                        outputLocation = addFolder('stochkitJobs/data/{0}'.format(job.name), job.stochkit_job.output_location)
 
                         jsonJob = { "version" : version,
                                     "name" : job.name,
@@ -164,11 +180,11 @@ class ExportPage(BaseHandler):
                         if job.attributes:
                             jsonJob.update(job.attributes)
 
-                        addFile('stochkitJobs/{0}.json'.format(job.name), json.dumps(jsonJob, sort_keys=True, indent=4, separators=(', ', ': ')))
+                        addBytes('stochkitJobs/{0}.json'.format(job.name), json.dumps(jsonJob, sort_keys=True, indent=4, separators=(', ', ': ')))
 
 
-            tarfb.close()
-
+            zipfb.close()
+            zipfbFile.close()
 
             exportJob.status = "Finished"
             exportJob.outData = tmpfile.split("/")[-1]

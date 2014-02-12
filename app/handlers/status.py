@@ -204,13 +204,13 @@ class StatusPage(BaseHandler):
 
         allSensJobs = []
         # Grab references to all the user's StochKitJobs in the system
-        QallSensJobs = db.GqlQuery("SELECT * FROM SensitivityJobWrapper WHERE userId = :1", self.user.user_id())
-        if QallSensJobs != None:
+        allSensQuery = db.GqlQuery("SELECT * FROM SensitivityJobWrapper WHERE userId = :1", self.user.user_id())
+        if allSensQuery != None:
             # We want to display the name of the job and the status of the Job.
             all_jobs = []
             status = {}
 
-            jobs = list(QallSensJobs.run())
+            jobs = list(allSensQuery.run())
 
             jobs = sorted(jobs, key = lambda x : (datetime.datetime.strptime(x.startDate, '%Y-%m-%d-%H-%M-%S') if hasattr(x, 'startDate') and x.startDate != None else ''), reverse = True)
 
@@ -261,7 +261,8 @@ class StatusPage(BaseHandler):
                 allExportJobs.append({ "startTime" : job.startTime,
                                        "status" : job.status,
                                        "number" : number,
-                                       "outData" : job.outData})
+                                       "outData" : job.outData,
+                                       "id" : job.key().id()})
         
         context['allExportJobs'] = allExportJobs
     
