@@ -112,7 +112,21 @@ class SensitivityPage(BaseHandler):
             else:
                 self.response.headers['Content-Type'] = 'application/json'
                 self.response.write(json.dumps({ "status" : "asdfasdf" }))
-            
+        elif reqType == "delJob":
+            job = SensitivityJobWrapper.get_by_id(int(self.request.get('id')))
+
+            if self.user.user_id() != job.userId:
+                self.response.headers['Content-Type'] = 'application/json'
+                self.response.write(json.dumps(["Not the right user"]))
+                return
+
+            shutil.rmtree(job.outData)
+
+            job.delete()
+            self.response.headers['Content-Type'] = 'application/json'
+            self.response.write(json.dumps({ "status" : True,
+                                             "msg" : "Job deleted"}));
+
         elif reqType == "newJob":
             selections = self.request.get('selections')
         
