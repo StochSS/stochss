@@ -112,11 +112,9 @@ class StatusPage(BaseHandler):
         service = backendservices()
         # Grab references to all the user's StochKitJobs in the system
         all_stochkit_jobs = db.GqlQuery("SELECT * FROM StochKitJobWrapper WHERE user_id = :1", self.user.user_id())
-        if all_stochkit_jobs == None:
-            context['no_jobs'] = 'There are no jobs in the system.'
-        else:
+        all_jobs = []
+        if all_stochkit_jobs != None:
             # We want to display the name of the job and the status of the Job.
-            all_jobs = []
             status = {}
 
             jobs = list(all_stochkit_jobs.run())
