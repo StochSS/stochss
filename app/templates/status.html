@@ -19,7 +19,6 @@
 
 	<div class"span9">
 
-            {% if all_jobs %}
             <h2><a data-toggle="modal" class="show" href="#help_modal1" style="text-decoration: none"> Job Status <i class="icon-question-sign"></i></a>
                 {% set help_modal_id = "help_modal1" %}
                 {% set help_modal_title = "Status" %}
@@ -169,9 +168,6 @@
                 <button type="submit" class="btn btn-primary btn-large" name="delete"><i class="icon-ban-circle"></i> Delete Selected</button>
                 <button type="submit" class="btn btn-primary btn-large" name="refresh"><i class="icon-refresh"></i> Refresh</button>
             </form>
-            {% else %}
-            <h2> There are no Jobs present in the system</h2>
-            {% endif %}
             
             {% if msg %}
             {% if status == False %}
