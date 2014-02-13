@@ -1,6 +1,7 @@
 #! /usr/bin/python
 
 import os, stat, time, sys
+sys.path.append(os.path.join(os.path.dirname(os.path.abspath(__file__)), 'app/lib/boto'))
 import boto.ec2, boto.ec2.cloudwatch
 from boto.ec2.cloudwatch import MetricAlarm
 import webbrowser
@@ -108,10 +109,13 @@ class ConfigFile:
 class EC2Services:
     
     # Current regions with a StochSS Server machine image
-    supported_ec2_regions = {
-        'us-west-2': 'ami-76cbaa46',
-        'us-east-1': 'ami-cdae9ca4'
-    }
+    supported_ec2_regions = { }
+    ami_id_file = open("release-tools/ami_ids","r")
+    for line in ami_id_file:
+        line_data = line.split('=')
+        aws_region = line_data[0].strip()
+        aws_ami_id = line_data[1].strip()
+        supported_ec2_regions[aws_region] = aws_ami_id
     
     def __init__(self, region, aws_access_key, aws_secret_key):
         self.access_key = aws_access_key
