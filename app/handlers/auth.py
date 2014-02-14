@@ -20,16 +20,11 @@ class SecretKey(db.Model):
     
     @classmethod
     def clear_stored_key(cls):
-        ''' Deletes the secret token currently stored in the DB. '''
-        all_keys = db.GqlQuery("SELECT * FROM SecretKey").get()
-        # slight hack, all_keys might be a list or a SecretKey instance
+        ''' Deletes the secret token(s) currently stored in the DB. '''
+        all_keys = cls.all()
         if all_keys is not None:
-            try:
-                list(all_keys)
-                for key in all_keys:
-                    db.delete(key)
-            except:
-                db.delete(all_keys)
+            for key in all_keys:
+                db.delete(key)
     
     def isEqualTo(self, other_key):
         '''
@@ -139,7 +134,7 @@ class UserRegistrationPage(BaseHandler):
                 # Not approved
                 context = {
                     'error_alert': True,
-                    'alert_message': 'You need to be approved by the admin before you can register an account.'
+                    'alert_message': 'You need to be approved by the admin before you can create an account.'
                 }
                 return self.render_response('login.html', **context)
         else:
@@ -204,7 +199,7 @@ class LoginPage(BaseHandler):
         
         if secret_key is not None:
             secret_key_attempt = SecretKey(key_string=secret_key)
-            if secret_key_attempt.isEqualToAdminKey():
+            if secret_key_attempt.isEqualToAdminKey() and not User.admin_exists():
                 return self.redirect('/register?secret_key={0}'.format(secret_key))
             else:
                 # Unauthorized secret key query string param, just ignore it completely...
