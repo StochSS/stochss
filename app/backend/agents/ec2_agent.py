@@ -364,7 +364,7 @@ class EC2Agent(BaseAgent):
     reservations = conn.get_all_instances()
     instances = [i for r in reservations for i in r.instances]
     for i in instances:
-	if i.key_name.startswith(prefix):
+	if i.key_name is not None and i.key_name.startswith(prefix):
             instance_ids.append(i.id)
     terminated_instances = conn.terminate_instances(instance_ids)
     for instance in terminated_instances:
