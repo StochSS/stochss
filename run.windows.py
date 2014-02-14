@@ -107,7 +107,6 @@ class ConfigFile:
             self.create_config_file()
         
 class EC2Services:
-    
     # Current regions with a StochSS Server machine image
     supported_ec2_regions = { }
     ami_id_file = open("release-tools/ami_ids","r")
@@ -143,8 +142,7 @@ class EC2Services:
             security_group = self.conn.create_security_group('stochss', 'StochSS Security Group')
             security_group.authorize('tcp', 80, 80, '0.0.0.0/0')
             security_group.authorize('tcp', 8080, 8080, '0.0.0.0/0')
-            if preferred_ec2_key_pair is not None:
-                security_group.authorize('tcp', 22, 22, '0.0.0.0/0')
+            security_group.authorize('tcp', 22, 22, '0.0.0.0/0')
         return security_group
     
     def make_instance_sleepy(self, instance_id):
@@ -187,30 +185,42 @@ class EC2Services:
     
     def launch_ec2_instance(self, instance_id, key_pair=None):
         security_group = self.find_or_create_security_group()
+        if key_pair is None:
+            # Then use a default key
+            key_pair = 'server-stochss-key-pair-{0}'.format(self.region)
+            # Store it in current directory
+            current_dir = os.path.dirname(os.path.abspath(__file__))
+            if not os.path.exists('{0}/{1}.pem'.format(current_dir, key_pair)):
+                try:
+                    # If it doesnt exist, then create it
+                    ec2_key = self.conn.create_key_pair(key_pair)
+                    ec2_key.save(current_dir)
+                except boto.exception.EC2ResponseError as e:
+                    # Check to see if the exception is just due to fact that key already exists
+                    if e.body.index("'{0}' already exists.".format(key_pair)) < 0:
+                        print "Failed to launch EC2 instance with exception: " + str(e)
+                        exit(-1)
         if instance_id is "":
             print "Launching new EC2 instance now. This may take a moment..."
-            if key_pair is None:
-                reservation = self.conn.run_instances(
-                    EC2Services.supported_ec2_regions[self.region],
-                    instance_type='t1.micro',
-                    security_groups=[security_group]
-                )
-            else:
+            try:
                 reservation = self.conn.run_instances(
                     EC2Services.supported_ec2_regions[self.region],
                     key_name=key_pair,
                     instance_type='t1.micro',
                     security_groups=[security_group]
                 )
+            except boto.exception.EC2ResponseError as e:
+                print "Failed to launch EC2 instance with exception: " + str(e)
+                exit(-1)
             instance = reservation.instances[0]
         else:
             print "Launching EC2 instance from instance ID '{0}'. This may take a moment...".format(instance_id)
             try:
                 instance = self.retrieve_ec2_instance(instance_id)
-                instance.start()
             except boto.exception.EC2ResponseError:
                 print "Invalid instance ID. Are you sure you entered it in correctly?"
                 exit(-1)
+            instance.start()
         # Make sure its actually running before we return
         instance.update()
         while instance.state != 'running':
@@ -242,7 +252,7 @@ class EC2Services:
 
 def print_usage_and_exit():
     print "Error in command line arguments!"
-    print "Expected Usage: ./run_ec2.py [command]"
+    print "Expected Usage: ./run.windows.py [command]"
     print "Accepted Commands:"
     print "- start (creates a new StochSS instance)"
     print "- stop (saves StochSS data, turns off computers, can be resumed with 'start')"
@@ -277,34 +287,49 @@ def start_stochss_server(aws_access_key, aws_secret_key, preferred_instance_id, 
         print "Using default AWS credentials..."
     # We also definitely need the region
     if ec2_region is None:
-        ec2_region = raw_input("Please enter the AWS region where you want to launch StochSS (us-west-2,us-east-1):").lower()
-        if ec2_region not in EC2Services.supported_ec2_regions.keys():
-            print "%s is not supported. Only supported regions are us-west-2 and us-east-1."
+        supported_regions = EC2Services.supported_ec2_regions.keys()
+        ec2_region = raw_input("Please enter the AWS region where you want to launch StochSS {0}: ".format(supported_regions)).lower()
+        if ec2_region not in supported_regions:
+            print "{0} is not supported. Only supported regions are: {1}.".format(ec2_region, supported_regions)
             exit(-1)
         params_to_write = {
             ConfigFile.CF_REGION: ec2_region
         }
         config_file.write(params_to_write)
     else:
-        print "Using saved EC2 region, {0}".format(ec2_region)
+        new_ec2_region = raw_input("Enter the AWS region where you want to launch StochSS or hit return to use {0}: ".format(ec2_region)).lower()
+        if new_ec2_region != '':
+            # Update config file
+            ec2_region = new_ec2_region
+            params_to_write = {
+                ConfigFile.CF_REGION: ec2_region
+            }
+            config_file.write(params_to_write)
     # We might need an instance id...
     # This logic is short-circuited now
     if preferred_instance_id is None:
-        preferred_instance_id = ''
-        #raw_input("Please enter the instance ID of the EC2 instance you wish to launch (just hit return to launch a brand new instance):")
+        preferred_instance_id = raw_input("Please enter the instance ID of the EC2 instance you wish to launch (just hit return to launch a brand new instance): ")
         if preferred_instance_id == '':
             # ...unless they want a brand new instance. Then we might need a keypair...
-            #decision = raw_input("Do you optionally want to use a key pair when creating this instance (y/n)? ").lower()
-            decision = 'n'
+            decision = raw_input("Do you optionally want to use a key pair when creating this instance (y/n)? ").lower()
             if decision == 'y':
                 if preferred_ec2_key_pair is None:
-                    preferred_ec2_key_pair = raw_input('Please enter the name of the key pair you wish to use:')
-                    params_to_write = {
-                        ConfigFile.CF_KEY_PAIR: preferred_ec2_key_pair
-                    }
-                    config_file.write(params_to_write)
+                    preferred_ec2_key_pair = raw_input('Please enter the name of a valid AWS EC2 key pair you wish to use or hit return to cancel: ')
+                    if preferred_ec2_key_pair == '':
+                        preferred_ec2_key_pair = None
+                    else:
+                        params_to_write = {
+                            ConfigFile.CF_KEY_PAIR: preferred_ec2_key_pair
+                        }
+                        config_file.write(params_to_write)
                 else:
-                    print "Using saved EC2 key pair, {0}".format(preferred_ec2_key_pair)
+                    new_ec2_key_pair = raw_input('Enter the name of a valid AWS EC2 key pair or hit return to use {0}: '.format(preferred_ec2_key_pair))
+                    if new_ec2_key_pair != '':
+                        preferred_ec2_key_pair = new_ec2_key_pair
+                        params_to_write = {
+                            ConfigFile.CF_KEY_PAIR: preferred_ec2_key_pair
+                        }
+                        config_file.write(params_to_write)
             else:
                 # ...unless they dont want SSH access.
                 preferred_ec2_key_pair = None
@@ -314,10 +339,19 @@ def start_stochss_server(aws_access_key, aws_secret_key, preferred_instance_id, 
             }
             config_file.write(params_to_write)
     else:
-        print "Using saved EC2 instance ID, {0}".format(preferred_instance_id)
+        new_instance_id = raw_input('Enter an AWS EC2 instance ID that you wish to launch, None to create a new instance, or hit return to use {0}'.format(preferred_instance_id))
+        if new_instance_id == "None":
+            preferred_instance_id = ''
+        elif new_instance_id != '':
+            preferred_instance_id = new_instance_id
+            params_to_write = {
+                ConfigFile.CF_INSTANCE_ID: preferred_instance_id
+            }
+            config_file.write(params_to_write)
     # Now we have all the necessary config variables
     ec2_services = EC2Services(ec2_region, aws_access_key, aws_secret_key)
     instance = ec2_services.launch_ec2_instance(preferred_instance_id, preferred_ec2_key_pair)
+    print "EC2 instance launched at {0}!".format(instance.public_dns_name)
     # Write this instance id to the config file in case its a brand new instance
     params_to_write = {
         "ec2_instance_id": instance.id
@@ -331,7 +365,7 @@ def start_stochss_server(aws_access_key, aws_secret_key, preferred_instance_id, 
     while True:
         try:
             req = urllib2.urlopen(stochss_url)
-            print "EC2 instance launched!"
+            print "Success!"
             break
         except:
             #trys += 1
