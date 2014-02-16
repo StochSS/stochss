@@ -141,9 +141,9 @@ class StatusPage(BaseHandler):
                                 # for ode, this is output.txt
 
                                 if stochkit_job.exec_type == 'stochastic':
-                                    file_to_check = stochkit_job.output_location+"/result/stats/means.txt"
+                                    file_to_check = stochkit_job.output_location+"/output/stats/means.txt"
                                 else:
-                                    file_to_check = stochkit_job.output_location+"/result/output.txt"
+                                    file_to_check = stochkit_job.output_location+"/output/output.txt"
                                 
                                 if os.path.exists(file_to_check):
                                     stochkit_job.status = "Finished"
@@ -191,12 +191,14 @@ class StatusPage(BaseHandler):
                     except Exception,e:
                         result = {'status':False,'msg':'Could not determine the status of the jobs.'+str(e)}                
 
+                # Save changes to the status
+                job.put()
+
                 all_jobs.append({ "name" : stochkit_job.name,
                                   "status" : stochkit_job.status,
                                   "resource" : stochkit_job.resource,
+                                  "id" : job.key().id(),
                                   "number" : number})
-                # Save changes to the status
-                job.put()
         
         context['all_jobs']=all_jobs
 
@@ -204,10 +206,6 @@ class StatusPage(BaseHandler):
         # Grab references to all the user's StochKitJobs in the system
         allSensQuery = db.GqlQuery("SELECT * FROM SensitivityJobWrapper WHERE userId = :1", self.user.user_id())
         if allSensQuery != None:
-            # We want to display the name of the job and the status of the Job.
-            all_jobs = []
-            status = {}
-
             jobs = list(allSensQuery.run())
 
             jobs = sorted(jobs, key = lambda x : (datetime.datetime.strptime(x.startDate, '%Y-%m-%d-%H-%M-%S') if hasattr(x, 'startDate') and x.startDate != None else ''), reverse = True)
@@ -216,21 +214,16 @@ class StatusPage(BaseHandler):
                 number = len(jobs) - number
 
                 if job.status != "Finished" or job.status != "Failed":
-                    # First, check if the job is still running
                     res = service.checkTaskStatusLocal([job.pid])
                     if res[job.pid]:
                         job.status = "Running"
                     else:
-                        # Check if the signature file is present, that will always be the case for a sucessful job.
-                        # for ode, this is output.txt
-                        
                         file_to_check = job.outData + "/output/output.txt"
                         if os.path.exists(file_to_check):
                             job.status = "Finished"
                         else:
                             job.status = "Failed"
 
-                    # Save changes to the status
                     job.put()
                             
                 allSensJobs.append({ "name" : job.jobName,
@@ -241,14 +234,9 @@ class StatusPage(BaseHandler):
         context['allSensJobs']=allSensJobs
 
         allExportJobs = []
-        # Grab references to all the user's StochKitJobs in the system
         exportJobsQuery = db.GqlQuery("SELECT * FROM ExportJobWrapper WHERE userId = :1", self.user.user_id())
 
         if exportJobsQuery != None:
-            # We want to display the name of the job and the status of the Job.
-            all_jobs = []
-            status = {}
-
             jobs = list(exportJobsQuery.run())
 
             jobs = sorted(jobs, key = lambda x : (datetime.datetime.strptime(x.startTime, '%Y-%m-%d-%H-%M-%S') if hasattr(x, 'startTime') and x.startTime != None else ''), reverse = True)
@@ -314,7 +302,7 @@ class JobOutPutPage(BaseHandler):
             # Check if the results and stats folders are present locally
             if os.path.exists(stochkit_job.output_location+"/result"):
                 context['local_data']=True
-            if os.path.exists(stochkit_job.output_location+"/result/stats"):
+            if os.path.exists(stochkit_job.output_location+"/output/stats"):
                 context['local_statistics']=True
                         
             self.render_response('stochkitjoboutputpage.html',**dict(result,**context))
@@ -379,7 +367,7 @@ class JobOutPutPage(BaseHandler):
           # Check if the results and stats folders are present locally
           if os.path.exists(stochkit_job.output_location+"/result"):
             context['local_data']=True
-          if os.path.exists(stochkit_job.output_location+"/result/stats"):
+          if os.path.exists(stochkit_job.output_location+"/output/stats"):
             context['local_statistics']=True
         else:
           logging.info('Viewing job output in debug mode...')
@@ -508,7 +496,7 @@ class VisualizePage(BaseHandler):
         """ Get the mean values """
         try:
             # StochKit labels the output files starting from 0, hence the "-1", since we label from 1 in the UI.
-            meanfile = params['job_folder']+'/result/stats/means.txt'
+            meanfile = params['job_folder']+'/output/stats/means.txt'
             file = open(meanfile,'rb')
             trajectory_data = [row.strip().split('\t') for row in file]
             
@@ -527,7 +515,7 @@ class VisualizePage(BaseHandler):
         """ Get the mean values """
         try:
             # StochKit labels the output files starting from 0, hence the "-1", since we label from 1 in the UI.
-            meanfile = params['job_folder']+'/result/output.txt'
+            meanfile = params['job_folder']+'/output/output.txt'
             file = open(meanfile,'rb')
             trajectory_data = [row.strip().split('\t') for row in file]
             
@@ -548,7 +536,7 @@ class VisualizePage(BaseHandler):
 
         try:
             # StochKit labels the output files starting from 0, hence the "-1", since we label from 1 in the UI.
-            meanfile = params['job_folder']+'/result/trajectories/trajectory'+str(int(trajectory_number)-1)+'.txt'
+            meanfile = params['job_folder']+'/output/trajectories/trajectory'+str(int(trajectory_number)-1)+'.txt'
             file = open(meanfile,'rb')
             trajectory_data = [row.strip().split('\t') for row in file]
             
@@ -566,17 +554,17 @@ class VisualizePage(BaseHandler):
     def getSpeciesNames(self, params):
         """ Get a list with the species names. 
             The result folder have to be populated in advance. """
-        #meanfile = params['job_folder']+'/result/stats/means.txt'
+        #meanfile = params['job_folder']+'/output/stats/means.txt'
         #logging.info(str(meanfile))
         try:
             # Try to grab them from the mean.txt file
             print params
             if params['exec_type'] == 'deterministic':
-                meanfile = params['job_folder'] + '/result/output.txt'
+                meanfile = params['job_folder'] + '/output/output.txt'
             else:
-                meanfile = params['job_folder'] + '/result/stats/means.txt'
+                meanfile = params['job_folder'] + '/output/stats/means.txt'
             
-            #meanfile = params['job_folder']+'/result/stats/means.txt'
+            #meanfile = params['job_folder']+'/output/stats/means.txt'
             file = open(meanfile,'rb')
             row = file.readline()
             logging.info(str(row))

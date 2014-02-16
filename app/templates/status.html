@@ -64,10 +64,10 @@
                             </td>
                             <td>
                                 {% if job.status == "Finished" %}
-                                <a href="/output?job_name={{job.name}}">View results</a>
+                                <a href="/simulate?id={{job.id}}">View results</a>
                                 {% else %}
                                 {% if job.status == "Failed" %}
-                                <a href="/output?job_name={{job.name}}&debug=true">Get Debugging Info</a>
+                                <a href="/simulate?id={{job.id}}">Get Debugging Info</a>
                                 {% endif %}
                                 {% endif %}
                             </td>
