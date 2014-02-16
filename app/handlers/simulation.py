@@ -8,6 +8,7 @@ import tempfile,sys
 from google.appengine.ext import db
 import pickle
 import threading
+import subprocess
 import traceback
 import logging
 from google.appengine.api import users
@@ -264,98 +265,120 @@ class StochKitJob(Job):
 class SimulatePage(BaseHandler):
     """ Render a page that lists the available models. """    
     def get(self):
-
         # Query the datastore
         all_models_q = db.GqlQuery("SELECT * FROM StochKitModelWrapper WHERE user_id = :1", self.user.user_id())
         all_models=[]
         for q in all_models_q.run():
-            all_models.append(q)
+            all_models.append({ "name" : q.model.name,
+                                "id" : q.key().id(),
+                                "units" : q.model.units })
     
         context = {'all_models': all_models}
         self.render_response('simulate.html',**context)
 
     def post(self):
-        
-        model = self.request.get('model_to_simulate')
-        if model == None or model == "":
-            self.redirect('/simulate')
-        else:
-            self.set_session_property('model_to_simulate',model)
-            self.redirect('/simulate/newstochkitensemble')
-
-
-class NewStochkitEnsemblePage(BaseHandler):
-    """ Page with a form to configure a well mixed stochastic (StochKit2) simulation job.  """        
-    def get(self):
-        model_to_simulate=self.get_session_property('model_to_simulate')
-
-        # If model_to_simulate has not been set using the simulation manager main page,
-        # we attempt to set it to the currently edited model
-        if model_to_simulate is None:
-            model_edited = self.get_session_property('model_edited')
-            if model_edited is not None and model_edited is not "":
-                model_to_simulate = model_edited.name
-                self.set_session_property('model_to_simulate',model_to_simulate)
-
-        model_units = ''
-
-        # Make sure that the model is present in the datastore
-        #    Figure out what kind of model it is too (concentration or populatio)
-        if model_to_simulate is not None:
-            model_db = db.GqlQuery("SELECT * FROM StochKitModelWrapper WHERE user_id = :1 AND model_name = :2", self.user.user_id(), model_to_simulate).get()
-
-            model_units = model_db.model.units
-
-            if model_db == None:
-                self.set_session_property('model_to_simulate', None)
-                model_to_simulate = None
-    
-        # If we have not managed to identify a model to simulate, we redirect to
-        # a page where the user can select a model
-        if model_to_simulate is None:
-            self.redirect("/simulate")
-
-        form_default_values = {'job_name':"",'realizations':1,'time':100,'increment':0.1,'algorithm':"ssa",'threshold':100,'epsilon':0.1}
-        context = { 'model_to_simulate': model_to_simulate, 'model_units' : model_units}
-
-        self.render_response('simulate/newstochkitensemblepage.html',**dict(context,**form_default_values))
-
-    def post(self):
         """ Assemble the input to StochKit2 and submit the job (locally or via cloud). """
-        
-        # Params is a dict that constains all response elements of the form
-        params = self.request.POST
-        
-        # Create a stochhkit_job instance
-        if 'run_local' in params:
-            result=self.runStochKitLocal()
-        elif 'run_cloud' in params:
-            if self.user_data.valid_credentials and self.isOneOrMoreComputeNodesRunning(self.user_data.getCredentials()):
-                result=self.runCloud()
+
+        reqType = self.request.get('reqType')
+
+        if reqType == 'jobInfo':
+            job = StochKitJobWrapper.get_by_id(int(self.request.get('id')))
+
+            if self.user.user_id() != job.user_id:
+                self.response.headers['Content-Type'] = 'application/json'
+                self.response.write(json.dumps(["Not the right user"]))
+
+            if job.stochkit_job.status == "Finished":
+                outputdir = job.stochkit_job.output_location
+                # Load all data from file in JSON format
+                if job.stochkit_job.exec_type == 'stochastic':
+                    outfile = '/output/stats/means.txt'
+
+                    vhandle = open(outputdir + outfile, 'r')
+
+                    print outputdir + outfile
+
+                    values = { 'time' : [], 'trajectories' : {} }
+                    columnToList = []
+                    for i, line in enumerate(vhandle):
+                        if i == 0:
+                            names = line.split()
+                            for name in names:
+                                if name == 'time':
+                                    columnToList.append(values['time'])
+                                else:
+                                    values['trajectories'][name] = [] # start a new timeseries for this name
+                                    columnToList.append(values['trajectories'][name]) # Store a reference here for future use
+                        else:
+                            for storage, value in zip(columnToList, map(float, line.split())):
+                                storage.append(value)
+                    vhandle.close()
+                else:
+                    outfile = '/output/output.txt'
+
+                    vhandle = open(outputdir + '/output/output.txt', 'r')
+                    values = { 'time' : [], 'trajectories' : {} }
+                    columnToList = []
+                    for i, line in enumerate(vhandle):
+                        if i == 0:
+                            continue
+                        elif i == 1:
+                            names = line.split()
+                            for name in names:
+                                if name == 'time':
+                                    columnToList.append(values['time'])
+                                else:
+                                    values['trajectories'][name] = [] # start a new timeseries for this name
+                                    columnToList.append(values['trajectories'][name]) # Store a reference here for future use
+                        elif i == 2:
+                            for storage, value in zip(columnToList, map(float, line.split())):
+                                storage.append(value)
+                        elif i == 3:
+                            continue
+                        else:
+                            for storage, value in zip(columnToList, map(float, line.split())):
+                                storage.append(value)
+                    vhandle.close()
+
+                self.response.headers['Content-Type'] = 'application/json'
+                self.response.write(json.dumps({ "status" : "Finished",
+                                                 "values" : values,
+                                                 "job" : JobManager.getJob(self, job.key().id())}))
+            elif job.status == "Failed":
+                self.response.headers['Content-Type'] = 'application/json'
+
+                fstdoutHandle = open(job.stochkit_job.output_location + '/stdout', 'r')
+                stdout = fstdoutHandle.read()
+                fstdoutHandle.close()
+
+                fstderrHandle = open(job.stochkit_job.output_location + '/stderr', 'r')
+                stderr = fstderrHandle.read()
+                fstderrHandle.close()
+
+                self.response.write(json.dumps({ "status" : "Failed",
+                                                 "job" : JobManager.getJob(self, job.key().id()),
+                                                 "stdout" : stdout,
+                                                 "stderr" : stderr}))
             else:
-                result = { 'status': False, 'msg': 'You must have at least one active compute node to run in the cloud.' }
+                self.response.headers['Content-Type'] = 'application/json'
+                self.response.write(json.dumps({ "status" : "asdfasfdfdsa" }))
         else:
-            result={'status':False,'msg':'There was an error processing your request.'}
+            # Params is a dict that constains all response elements of the form
+            params = json.loads(self.request.get('data'))
 
-        
-        model_to_simulate = self.get_session_property('model_to_simulate')
+            # Create a stochhkit_job instance
+            if params['resource'] == "local":
+                result=self.runStochKitLocal(params)
+            elif params['resource'] == 'cloud':
+                if self.user_data.valid_credentials and self.isOneOrMoreComputeNodesRunning(self.user_data.getCredentials()):
+                    result=self.runCloud()
+                else:
+                    result = { 'status': False, 'msg': 'You must have at least one active compute node to run in the cloud.' }
+            else:
+                result={'status':False,'msg':'There was an error processing your request.'}
 
-        if result['status']:
-            self.redirect("/status")
-        
-        # Make sure that the model is present in the datastore
-        #    Figure out what kind of model it is too (concentration or populatio)
-        if model_to_simulate is not None:
-            model_db = db.GqlQuery("SELECT * FROM StochKitModelWrapper WHERE user_id = :1 AND model_name = :2", self.user.user_id(), model_to_simulate).get()
-
-            model_units = model_db.model.units
-
-            if model_db == None:
-                self.set_session_property('model_to_simulate', None)
-                model_to_simulate = None
-
-        context = {'model_to_simulate' : model_to_simulate, 'model_units' : model_units }
-        self.render_response('simulate/newstochkitensemblepage.html',**dict(context,**result))
+            self.response.headers['Content-Type'] = 'application/json'
+            self.response.write(json.dumps(result))
 
     def isOneOrMoreComputeNodesRunning(self, credentials):
         '''
@@ -379,109 +402,14 @@ class NewStochkitEnsemblePage(BaseHandler):
         except:
             return False
 
-    def parseForm(self):
-        """
-            Parses the StochKit2 Ensemble job submission form.
-            Returns a tuple of dicts (params, result) where params contain
-            the StochKit job parameters and result contains the status and a sucess or error message.
-            
-            """
-        params = {}
-        result = {}
-        result['status']=True
-        result['msg']=''
-        
-        par = self.request.POST
-        
-        # Check the name of the simulation, make sure that no simulation with that name exists in the system
-        if par['job_name'].strip() == '':
-            result['status'] = False
-            result['msg'] = 'A job must have name'
-
-            return par, dict(result,**par)
-        
-        model = db.GqlQuery("SELECT * FROM StochKitJobWrapper WHERE user_id = :1 AND name = :2", self.user.user_id(),par['job_name']).get()
-        if model is not None:
-            result['status'] = False
-            result['msg'] = 'A job with that name already exists. You need to input a unique name.'
-            return par, dict(result,**par)
-
-        # Make sure that the simulation time is a numeric value greater than 0
-        try:
-            endtime = float(par['time'])
-            assert endtime > 0.0
-        except:
-            result['status'] = False
-            result['msg'] =  result['msg']+'\nThe simulation end time must be a positive number greater than zero'
-            return par, dict(result,**par)
-
-        # Make sure that the increment is a positive number
-        try:
-            increment = float(par['increment'])
-            assert increment > 0.0
-        except:
-            result['status'] = False
-            result['msg'] =  result['msg']+'\nThe output sampling times must be positive numbers greater than zero.'
-            return par, dict(result,**par)
-
-        
-        # Make sure that the number of realizations is an integer value greater than or equal to 1
-        try:
-            realizations = int(par['realizations'])
-            assert realizations >=1
-        except:
-            result['status'] = False
-            result['msg'] =  result['msg']+'\nThe number of realizations must be positive integer greater than zero.'
-            return par, dict(result,**par)
-        
-        # Check the seed, needs to be a numeric value
-        try:
-            if par['seed']=="":
-                # Bootstrap StochKit RNG with a random int
-                seed = random.randrange(0,1000000)
-                logging.info('SEED: '+str(seed))
-                par['seed'] = str(seed)
-            else:
-                seed = float(par['seed'])
-            assert seed >= 0
-        except Exception,e:
-            result['status'] = False
-            result['msg'] =  result['msg']+'\nThe seed must be a positive number.' + str(e)
-            return par, dict(result,**par)
-
-        
-        # Check epsilon, needs to be a numeric value between 0 and one
-        try:
-            epsilon = float(par['epsilon'])
-            assert epsilon > 0.0 and epsilon < 1.0
-        except:
-            result['status'] = False
-            result['msg'] =  result['msg']+'\n Epsilon must be a number in (0,1)'
-            return par, dict(result,**par)
-
-        
-        # TODO: Check with Sheng what numbers are valid for the threshold
-        
-        # Append the current form values so that they are remembered on the page
-        result = dict(result,**par)
-        return par,result
-
-    def runCloud(self):
+    def runCloud(self, params):
         
         try:
-            # Get the model that is currently in scope for simulation via the session property 'model_to_simulate'
-            try:
-                model_to_simulate=self.get_session_property('model_to_simulate')
-                db_model = db.GqlQuery("SELECT * FROM StochKitModelWrapper WHERE user_id = :1 AND model_name = :2", self.user.user_id(),model_to_simulate).get()
-                model = db_model.model
-            except:
+            model = StochKitModelWrapper.get_by_id(params["id"])
+
+            if not model:
                 return {'status':False,'msg':'Failed to retrive the model to simulate.'}
-            
-            # Check the data from the form for errors
-            params,result = self.parseForm()
-            if not result['status']:
-                return result
-        
+
             db_credentials = self.user_data.getCredentials()
             # Set the environmental variables 
             os.environ["AWS_ACCESS_KEY_ID"] = db_credentials['EC2_ACCESS_KEY']
@@ -614,46 +542,61 @@ class NewStochkitEnsemblePage(BaseHandler):
         
   
     
-    def runStochKitLocal(self):
+    def runStochKitLocal(self, params):
         """ Submit a local StochKit job """
         try:
-            # Get the model that is currently in scope for simulation via the session property 'model_to_simulate'
-            try:
-                model_to_simulate=self.get_session_property('model_to_simulate')
-                db_model = db.GqlQuery("SELECT * FROM StochKitModelWrapper WHERE user_id = :1 AND model_name = :2", self.user.user_id(),model_to_simulate).get()
-                model = db_model.model
-            except:
+            model = StochKitModelWrapper.get_by_id(params["id"])
+
+            if not model:
                 return {'status':False,'msg':'Failed to retrive the model to simulate.'}
-            
-            # Check the data from the form for errors
-            params,result = self.parseForm()
 
-            print result
-            if not result['status']:
-                return result
-        
-            #the parameter dictionary to be passed to the backend
-            param = {}
-            
+            model = model.model
+
             # Execute as concentration or population?
-            exec_type = params['exec_type']
+            execType = params['execType']
 
-            if not (exec_type == "deterministic" or exec_type == "stochastic"):
+            if not (execType == "deterministic" or execType == "stochastic" or execType == "sensitivity"):
                 result = {
-                    'status' : False, 'msg' : 'exec_type must be concentration or population. Try refreshing page, or e-mail developers'
+                    'status' : False, 'msg' : 'exec_type must be deterministic, sensitivity, or stochastic. Try refreshing page, or e-mail developers'
                     }
                 return result
 
-            if model.units.lower() == 'concentration' and exec_type.lower() == 'stochastic':
+            if model.units.lower() == 'concentration' and execType.lower() == 'stochastic':
                 result = { 'status' : False, 'msg' : 'GUI Error: Concentration models cannot be executed Stochastically. Try leaving and returning to this page' }
                 return result
 
-            #params['job_name'] = params['job_name'].strip()
+            executable = execType.lower()
 
-            executable = exec_type.lower()
-            document = model.serialize()
+            # Assemble the argument list
+            args = ''
+            args += ' -t {0} '.format(params['time'])
+            num_output_points = int(float(params['time'])/float(params['increment']))
+            args += ' -i {0} '.format(num_output_points)
+            path = os.path.abspath(os.path.dirname(__file__))
 
+            print params
+
+            # Algorithm, SSA or Tau-leaping?
+            if params['execType'] != 'deterministic':
+                executable = "{0}/../../StochKit/{1}".format(path, params['algorithm'])
+
+                args += ' --realizations {0} '.format(params['realizations'])
+                args+=' --seed {0} '.format(params['seed'])
+            else:
+                executable = "{0}/../../ode/stochkit_ode.py".format(path)
+
+            # Columns need to be labeled for visulatization page to work.  
+            args += ' --label'
+
+            cmd = executable + ' ' + args
+
+            basedir = path + '/../'
+            dataDir = tempfile.mkdtemp(dir = basedir + 'output')
+
+            # Wow, what a hack
             if executable == 'deterministic' and model.units.lower() == 'population':
+                document = model.serialize()
+
                 model = StochMLDocument.fromString(document).toModel(model.name)
 
                 for reactionN in model.getAllReactions():
@@ -662,76 +605,33 @@ class NewStochkitEnsemblePage(BaseHandler):
                         if len(reaction.reactants) == 1 and reaction.reactants.values()[0] == 2:
                             reaction.marate.setExpression(reaction.marate.expression + ' / 2')
 
-            document = model.serialize()
+            modelFileName = '{0}/{1}.xml'.format(dataDir, model.name)
+            fmodelHandle = open(modelFileName, 'w')
+            fmodelHandle.write(model.serialize())
+            fmodelHandle.close()
 
-            params['document']=str(document)
-            print 'model serialized'
-            filepath = ""
-            params['file'] = filepath
-            ensemblename = params['job_name']
-            stime = params['time']
-            realizations = params['realizations']
-            increment = params['increment']
-            seed = params['seed']
+            cmd += ' -m {0} --out-dir {1}/output'.format(modelFileName, dataDir)
 
-            # Assemble the argument list
-            args = ''
-            args+=' -t '
-            args+=str(stime)
-            num_output_points = str(int(float(stime)/float(increment)))
-            args+=' -i ' + str(num_output_points)
-            path = os.path.dirname(__file__)
+            print cmd
 
-            # Algorithm, SSA or Tau-leaping?
-            if executable != 'deterministic':
-                executable = "{0}/../../StochKit/{1}".format(path, params['algorithm'])
+            #ode = "{0}/../../ode/stochkit_ode.py {1}".format(path, args)
+            exstring = '{0}/backend/wrapper.sh {1}/stdout {1}/stderr {2}'.format(basedir, dataDir, cmd)
 
-                args+=' --realizations '
-                args+=str(realizations)
-            
-                # We keep all the trajectories by default. The user can select to only store means and variance
-                # through the advanced options.
-                if not "only-moments" in params:
-                    args+=' --keep-trajectories'
-            
-                if "keep-histograms" in params:
-                    args+=' --keep-histograms'
-                        
-                args+=' --seed '
-                args+=str(seed)
-            else:
-                executable = "{0}/../../ode/stochkit_ode.py".format(path)
+            handle = subprocess.Popen(exstring.split())
 
-            print executable
-
-            # Columns need to be labeled for visulatization page to work.  
-            args += ' --label'
-        
-            cmd = executable+' '+args
-        
-            # Create the argument string
-            params['paramstring'] = cmd
-                    
-            # Call backendservices and execute StochKit
-            service = backendservices()
-            res = service.executeTaskLocal(params)
-            
-            if(res == None):
-                result = {'status':False, 'msg': 'Local execution failed. '}
-                return result
-        
             # Create a StochKitJob instance
-            stochkit_job = StochKitJob(name = ensemblename, final_time = stime, realizations = realizations, increment = increment, seed = seed, exec_type = exec_type, units = model.units.lower())
+            stochkit_job = StochKitJob(name = params['jobName'], final_time = params['time'], realizations = params['realizations'], increment = params['increment'], seed = params['seed'], exec_type = params['execType'], units = model.units.lower())
+            
         
             stochkit_job.resource = 'Local'
             stochkit_job.type = 'StochKit2 Ensemble'
                     
-            stochkit_job.pid = res['pid']
-            stochkit_job.output_location = res['output']
-            stochkit_job.uuid = res['uuid']
+            stochkit_job.pid = handle.pid
+            stochkit_job.output_location = dataDir
+            # stochkit_job.uuid = res['uuid']
             stochkit_job.status = 'Running'
-            stochkit_job.stdout = res['stdout']
-            stochkit_job.stderr = res['stderr']
+            stochkit_job.stdout = '{0}/stdout'.format(dataDir)
+            stochkit_job.stderr = '{0}/stderr'.format(dataDir)
             
             # Create a wrapper to store the Job description in the datastore
             stochkit_job_db = StochKitJobWrapper()

@@ -57,7 +57,7 @@ class ModelManager():
             if model.attributes:
                 jsonModel.update(model.attributes)
             print model.model.units
-            jsonModel["type"] = model.model.units
+            jsonModel["units"] = model.model.units
             jsonModel["model"] = model.model.serialize()
 
             #print jsonModel
@@ -70,15 +70,13 @@ class ModelManager():
     def getModel(handler, model_id):
         model = StochKitModelWrapper.get_by_id(model_id)
 
-        print dict(model.model.listOfReactions)
-        print dict(model.model.listOfSpecies)
-        print dict(model.model.listOfParameters)
-
         jsonModel = { "id" : model.key().id(),
                       "name" : model.model_name }
+
         if model.attributes:
             jsonModel.update(model.attributes)
-        jsonModel["type"] = model.model.units
+
+        jsonModel["units"] = model.model.units
         jsonModel["model"] = model.model.serialize()
             
         return jsonModel
@@ -94,7 +92,7 @@ class ModelManager():
                       "name" : model.model_name }
         if model.attributes:
             jsonModel.update(model.attributes)
-        jsonModel["type"] = model.model.units
+        jsonModel["units"] = model.model.units
         jsonModel["model"] = model.model.serialize()
             
         return jsonModel
@@ -114,11 +112,11 @@ class ModelManager():
         modelWrap.user_id = handler.user.user_id()
         modelWrap.model_name = name
         modelWrap.model = StochMLDocument.fromString(model["model"]).toModel(name)
-        modelWrap.model.units = model["type"]
+        modelWrap.model.units = model["units"]
 
         attributes = {}
         for key in model:
-            if key != "model" and key != "type" and key != "name":
+            if key != "model" and key != "units" and key != "name":
                 attributes[key] = model[key]
 
         modelWrap.attributes = attributes
@@ -142,11 +140,11 @@ class ModelManager():
         modelWrap.user_id = handler.user.user_id()
         modelWrap.model_name = name
         modelWrap.model = StochMLDocument.fromString(model["model"]).toModel(name)
-        modelWrap.model.units = model["type"]
+        modelWrap.model.units = model["units"]
 
         attributes = {}
         for key in model:
-            if key != "model" and key != "type" and key != "name":
+            if key != "model" and key != "units" and key != "name":
                 attributes[key] = model[key]
 
         modelWrap.attributes = attributes
@@ -172,7 +170,7 @@ class ModelBackboneInterface(BaseHandler):
         jsonModel = json.loads(self.request.body)
         modelId = ModelManager.createModel(self, jsonModel)
       
-      #print 'CREATE', model["id"]
+        #print 'CREATE', model["id"]
         
         self.response.content_type = "application/json"
         self.response.write(json.dumps(ModelManager.getModel(self, modelId)))

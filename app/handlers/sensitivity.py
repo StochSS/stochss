@@ -128,29 +128,25 @@ class SensitivityPage(BaseHandler):
                                              "msg" : "Job deleted"}));
 
         elif reqType == "newJob":
-            selections = self.request.get('selections')
-        
-            data = json.loads(selections)
+            data = json.loads(self.request.get('data'))
 
             job = SensitivityJobWrapper()
 
             job.userId = self.user.user_id()
-            job.model = StochKitModelWrapper.get_by_id(int(self.request.get("id")))
+            job.model = StochKitModelWrapper.get_by_id(data["id"])
             job.startTime = time.strftime("%Y-%m-%d-%H-%M-%S")
-            job.jobName = self.request.get("name")
+            job.jobName = data["jobName"]
 
-            runtime = float(self.request.get("time"))
-            dt = float(self.request.get("dt"))
+            runtime = float(data["time"])
+            dt = float(data["increment"])
 
-            job.indata = json.dumps({"selections" : data,
-                                     "time" : runtime,
-                                     "dt" : dt})
+            job.indata = json.dumps(data)
 
             path = os.path.abspath(os.path.dirname(__file__))
 
             parameters = []
-            for parameter in data["pc"]:
-                if data["pc"][parameter]:
+            for parameter in data['selections']["pc"]:
+                if data['selections']["pc"][parameter]:
                     parameters.append(parameter)
 
             basedir = path + '/../'

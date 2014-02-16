@@ -275,7 +275,6 @@ app = webapp2.WSGIApplication([
                                ('/simulate',SimulatePage),
                                ('/sensitivity',SensitivityPage),
                                ('/export', ExportPage),
-                               ('/simulate/newstochkitensemble',NewStochkitEnsemblePage),
                                ('/status',StatusPage),
                                ('/output/visualize',VisualizePage),
                                ('/output',JobOutPutPage),
