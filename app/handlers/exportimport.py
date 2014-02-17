@@ -2,6 +2,7 @@ try:
   import json
 except ImportError:
   from django.utils import simplejson as json
+import jinja2
 from google.appengine.ext import db
 import pickle
 import traceback
@@ -10,6 +11,9 @@ import zipfile
 import tempfile
 import logging
 import time
+import sys
+import simulation
+import modeleditor
 import shutil
 from google.appengine.api import users
 
@@ -19,6 +23,9 @@ from stochss.stochkit import *
 from stochss.examplemodels import *
 
 import webapp2
+
+jinja_environment = jinja2.Environment(autoescape=True,
+                                       loader=(jinja2.FileSystemLoader(os.path.join(os.path.dirname(__file__), '../templates'))))
 
 class ExportJobWrapper(db.Model):
     userId = db.StringProperty()
@@ -133,7 +140,7 @@ class ExportPage(BaseHandler):
                 if model.attributes:
                     jsonModel.update(model.attributes)
 
-                jsonModel["type"] = model.model.units
+                jsonModel["units"] = model.model.units
 
                 jsonModel["model"] = addBytes('models/data/{0}.xml'.format(model.model_name), model.model.serialize())
                 addBytes('models/{0}.json'.format(model.model_name), json.dumps(jsonModel, sort_keys=True, indent=4, separators=(', ', ': ')))
@@ -200,3 +207,188 @@ class ExportPage(BaseHandler):
             self.response.write( { "status" : False,
                                    "msg" : "Not implemented yet" })
             return
+
+
+# -*- coding: utf-8 -*-
+#
+# jQuery File Upload Plugin GAE Python Example 2.1.1
+# https://github.com/blueimp/jQuery-File-Upload
+#
+# Copyright 2011, Sebastian Tschan
+# https://blueimp.net
+#
+# Licensed under the MIT license:
+# http://www.opensource.org/licenses/MIT
+#
+import re
+import urllib
+
+def cleanup(blob_keys):
+    blobstore.delete(blob_keys)
+
+class ImportJobWrapper(db.Model):
+    userId = db.StringProperty()
+    status = db.StringProperty()
+    zipFile = db.StringProperty()
+    headerFile = db.StringProperty()
+
+class ImportPage(BaseHandler):
+
+    def initialize(self, request, response):
+        super(ImportPage, self).initialize(request, response)
+        self.response.headers['Access-Control-Allow-Origin'] = '*'
+        self.response.headers[
+            'Access-Control-Allow-Methods'
+        ] = 'OPTIONS, HEAD, GET, POST, PUT, DELETE'
+        self.response.headers[
+            'Access-Control-Allow-Headers'
+        ] = 'Content-Type, Content-Range, Content-Disposition'
+
+    def get_file_size(self, file):
+        file.seek(0, 2)  # Seek to the end of the file
+        size = file.tell()  # Get the position of EOF
+        file.seek(0)  # Reset the file position to the beginning
+        return size
+
+    def get(self):
+        self.render_response('exportimport.html')
+
+    def post(self):
+        if 'files[]' in self.request.POST:
+            for name, fieldStorage in self.request.POST.items():
+                if type(fieldStorage) is unicode:
+                    continue
+
+                job = ImportJobWrapper()
+
+                filename, suffix = os.path.splitext(fieldStorage.filename)
+                filename = os.path.basename(filename)
+                
+                path = os.path.abspath(os.path.dirname(__file__))
+                [tid, tmpfile] = tempfile.mkstemp(dir = os.path.abspath(os.path.dirname(__file__)) + '/../static/tmp/', prefix = filename + "_", suffix = suffix)
+                job.userId = self.user.user_id()
+                job.status = "Writing file on server"
+                job.zipFile = tmpfile
+
+                job.put()
+
+                fhandle = os.fdopen(tid, 'w')
+                fhandle.write(fieldStorage.value)
+                fhandle.close()
+
+                job.status = "Analyzing file"
+                job.put()
+
+                zipFile = zipfile.ZipFile(fieldStorage.file, 'r')
+
+                headers = { "models" : {}, "stochkitJobs" : {} }
+                for name in zipFile.namelist():
+                    if re.search('^{0}/models/[a-zA-Z0-9\-_]*\.json$'.format(filename), name):
+                        headers['models'][name] = json.loads(zipFile.read(name))
+                    elif re.search('^{0}/stochkitJobs/[a-zA-Z0-9\-_]*\.json$'.format(filename), name):
+                        headers['stochkitJobs'][name] = json.loads(zipFile.read(name))
+                    
+                zipFile.close();
+                
+                job.status = "Finished"
+                [tid, tmpfile] = tempfile.mkstemp(dir = os.path.abspath(os.path.dirname(__file__)) + '/../static/tmp/')
+
+                fhandle = os.fdopen(tid, 'w')
+                fhandle.write(json.dumps(headers))
+                fhandle.close()
+
+                job.headerFile = tmpfile
+                job.put()
+                print job.key().id()
+        else:
+            reqType = self.request.get('reqType')
+
+            if reqType == 'importInfo':
+                # Print [ { id: importJobid,
+                #           zipFile : zipFilename,
+                #           listOfModelJsons,
+                #           listOfJobJsons } ]
+
+                jobs = []
+
+                for job in db.GqlQuery("SELECT * FROM ImportJobWrapper").run():
+                    #job.delete()
+                    #Using os open here cause normal Python open is failing
+                    try:
+                        fdescript = os.open(job.headerFile, os.O_RDONLY)
+                    except:
+                        job.delete()
+                        return
+
+                    contents = ""
+                    while 1:
+                        part = os.read(fdescript, 5000)
+                        if part == '':
+                            break
+
+                        contents += part;
+
+                    headers = json.loads(contents)
+                    os.close(fdescript)
+
+                    jobs.append({ "id" : job.key().id(),
+                                  "zipFile" : os.path.basename(job.zipFile),
+                                  "headers" : headers })
+                    
+                self.response.headers['Content-Type'] = 'application/json'
+                self.response.write(json.dumps(jobs))
+                return
+            elif reqType == 'doImport':
+                state = json.loads(self.request.get('state'))
+
+                job = ImportJobWrapper.get_by_id(state["id"])
+
+                fdescript = os.open(job.zipFile, os.O_RDONLY)
+                fhandle = os.fdopen(fdescript, 'r')
+
+                zhandle = zipfile.ZipFile(fhandle, 'r')
+
+                for name in state['selections']['mc']:
+                    modelj = json.loads(zhandle.read(name))
+                    modelj["model"] = zhandle.read(modelj["model"])
+
+                    modeleditor.ModelManager.createModel(self, modelj)
+
+                for name in state['selections']['sjc']:
+                    jobj = json.loads(zhandle.read(name))
+                    path = os.path.abspath(os.path.dirname(__file__))
+                    
+                    zipPath = jobj["output_location"]
+
+                    outPath = tempfile.mkdtemp(dir = "{0}/../output/".format(path))
+
+                    for name in zhandle.namelist():
+                        if re.search('^{0}.*$'.format(zipPath), name):
+                            relname = os.path.relpath(name, zipPath)
+
+                            if not os.path.exists(os.path.dirname("{0}/{1}".format(outPath, relname))):
+                                os.makedirs(os.path.dirname("{0}/{1}".format(outPath, relname)))
+
+                            print "Writing ", name, " to " , "{0}/{1}".format(outPath, relname)
+
+                            fhandle = open("{0}/{1}".format(outPath, relname), 'w')
+                            fhandle.write(zhandle.read(name))
+                            fhandle.close()
+
+                    jobj["output_location"] = outPath
+
+                    print simulation.JobManager.createJob(self, jobj)
+                    print "stochkitModel", name
+
+                zhandle.close()
+                fhandle.close()
+                
+                # Expect an importJobId
+                # along with a list of model jsons to import
+                # and a list of job jsons to import
+                return
+
+        if 'application/json' in self.request.headers.get('Accept'):
+            self.response.headers['Content-Type'] = 'application/json'
+        self.response.write('a')
+

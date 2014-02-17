@@ -17,8 +17,7 @@ from stochss.model import *
 from stochss.stochkit import *
 
 from stochssapp import BaseHandler
-from stochssapp import StochKitModelWrapper
-from stochssapp import ObjectProperty
+from modeleditor import StochKitModelWrapper, ObjectProperty
 
 from backend.backendservice import backendservices
 
@@ -140,14 +139,17 @@ class JobManager():
     def createJob(handler, job):
         jobWrap = StochKitJobWrapper()
         jobWrap.user_id = handler.user.user_id()
-        jobWrap.attributes = job
-        jobWrap.put()
+        jobWrap.name = job['name']
+        jobWrap.type = job['type']
         
-        jsonJob = { "id" : jobWrap.key().id() }
-        if job.attributes:
-            jsonJob.update(job)
+        jobWrap.stochkit_job = StochKitJob(**job)
 
-        return jsonJob
+        jobWrap.stdout = job['stdout']
+        jobWrap.stderr = job['stderr']
+
+        jobWrap.put()
+
+        return jobWrap.key().id()
 
     @staticmethod
     def deleteJob(handler, job_id):
@@ -216,17 +218,17 @@ class JobBackboneInterface(BaseHandler):
 class StochKitJob(Job):
     """ Model for a StochKit job. Contains all the parameters associated with the call. """
     
-    def __init__(self,name=None, final_time=None, increment=None, realizations=1, exec_type="stochastic",store_only_mean=False, label_column_names=True,create_histogram_data=False, seed=None, epsilon=0.1,threshold = 10, output_url = None, units = None):
+    def __init__(self,name=None, final_time=None, increment=None, realizations=1, exec_type="stochastic",store_only_mean=False, label_column_names=True,create_histogram_data=False, seed=None, epsilon=0.1,threshold = 10, output_url = None, units = None, type = None, status = None, output_location = "", **kwargs):
         """ fdsgfhsj """
         
         # Type of the job {'Local','Cloud'}
-        self.type = None
+        self.type = type
         
         # The status of the job. Valid statuses are 'Running', 'Finished', 'Failed'
-        self.status = None
+        self.status = status
         
         # URL to the result (valid after a sucessful execution)
-        self.output_location = ""
+        self.output_location = output_location
         self.output_url = output_url
         # In case of failure
         self.exception_message = ""
@@ -243,12 +245,10 @@ class StochKitJob(Job):
         self.label_column_names = label_column_names
         self.create_histogram_data = create_histogram_data
         
-        if seed == None:
-            self.seed = int(uuid.uuid())
-        
         self.epsilon = epsilon
         self.threshold = threshold
-         
+        self.resource = "local"
+
     
         # Status of the Job (Running, Pending, Done)
         status = 'Pending'
@@ -278,7 +278,6 @@ class SimulatePage(BaseHandler):
     
         context = {'all_models': all_models}
         self.render_response('simulate.html',**context)
-
     def post(self):
         """ Assemble the input to StochKit2 and submit the job (locally or via cloud). """
 
@@ -296,6 +295,8 @@ class SimulatePage(BaseHandler):
                 # Load all data from file in JSON format
                 if job.stochkit_job.exec_type == 'stochastic':
                     outfile = '/output/stats/means.txt'
+
+                    print "outputdir", outputdir
 
                     vhandle = open(outputdir + outfile, 'r')
 
