@@ -82,7 +82,7 @@ $('table').on('click', '.table-action-button', function(e) {
                 } else if (action == "delete" || action == "revoke") {
                     tableRow.remove();
                 } else if (action == "reset") {
-                    alert('The user\'s password has been reset to: ' + response["password"]);
+                    alert('The user\'s password has been reset to:\n' + response["password"]);
                 }
             } else {
                 if (response["message"]) {

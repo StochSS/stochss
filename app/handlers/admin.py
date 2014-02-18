@@ -43,10 +43,10 @@ class PendingUsersList(db.Model):
     def add_user_to_approval_waitlist(self, user_email):
         """
         Add the given email address to the list of users waiting approval
-         i.e. the users that have tried to log in without first being granted access
-        Returns False if email address already in list, else True
+         as long as the given user_email is not a current user's email.
+        Returns False if email address already in list, else True.
         """
-        if self.users_waiting_approval and (user_email in self.users_waiting_approval):
+        if (self.users_waiting_approval and (user_email in self.users_waiting_approval)) or User.get_by_auth_id(user_email):
             return False
         self.users_waiting_approval.append(user_email)
         self.put()
@@ -166,9 +166,8 @@ class AdminPage(BaseHandler):
 
     def _delete_user(self, email):
         """ Delete existing user """
-        users = User.query(ndb.GenericProperty('email_address') == email).fetch()
-        if users:
-            user = users[0]
+        user = User.get_by_auth_id(email)
+        if user:
             if user.is_admin_user():
                 return False
             # Delete from db
