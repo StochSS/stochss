@@ -26,8 +26,8 @@ button {
   }
 }
 
-@media (min-width: 768px) and (max-width: 940px) {
-  form input {
-    margin-left: 0;
+@media (min-width: 768px) and (max-width: 980px) {
+  .span3 {
+    width: 220px;
   }
 }

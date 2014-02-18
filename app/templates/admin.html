@@ -48,6 +48,7 @@
         
         <div class="tab-pane" id="tab2">
           <div class="well well-large">
+            {% if approved_users %}
             <table class="table table-bordered approved-usr-table">
               <thead>
                 <tr>
@@ -64,7 +65,11 @@
                   <td><button class="btn btn-danger table-action-button" data-action="revoke">Revoke</button></td>
                 </tr>
                 {% endfor %}
+              </tbody>
             </table>
+            {% else %}
+            <p class="empty-table-message">There are no approved users who have not logged in.</p>
+            {% endif %}
           </div>
         </div>
         

@@ -1,9 +1,19 @@
 var form = $('#approve-user-form');
 var emailInput = $('#email-input')[0];
 function appendRowToApprovedUserTable(email) {
-    var tableBody = $('table.approved-usr-table tbody');
+    // First check to see if the empty-table-message is there
+    var approvedUserTab = $('#tab2');
+    if (approvedUserTab.find('p.empty-table-message').length == 1) {
+        // Make the table
+        approvedUserTab.find('div.well').html(
+            '<table class="table table-bordered approved-usr-table">'+
+            '<thead><tr><th>#</th><th>Email</th><th>Actions</th></tr></thead>'+
+            '<tbody></tbody></table>'
+        );
+    }
+    var tableBody = approvedUserTab.find('table.approved-usr-table tbody');
     var nextRowNumber = tableBody.find("tr").length + 1;
-    html = '<tr>' + 
+    var html = '<tr>' + 
             '<td>' + nextRowNumber + '</td>' +
             '<td>' + email + '</td>' +
             '<td><button class="btn btn-danger table-action-button" data-action="revoke">Revoke</button></td>' +
@@ -42,7 +52,7 @@ $('#grant-access-button').on('click', function(e) {
     });
 });
 
-$('table').on('click', '.table-action-button', function(e) {
+$('#admin-table-tabs-div').on('click', 'button.table-action-button', function(e) {
     e.preventDefault();
     
     var clickedButton = $(this);
@@ -77,9 +87,19 @@ $('table').on('click', '.table-action-button', function(e) {
                         tableBody.closest("table").replaceWith('<p class="empty-table-message">There are no users currently awaiting approval.</p>');
                     }
                     appendRowToApprovedUserTable(email);
+                } else if (action == "deny") {
+                    tableRow.remove();
+                    if (tableBody.find("tr").length == 0) {
+                        tableBody.closest("table").replaceWith('<p class="empty-table-message">There are no users currently awaiting approval.</p>');
+                    }
                 } else if (action == "approve") {
                     appendRowToApprovedUserTable(email);
-                } else if (action == "delete" || action == "revoke") {
+                } else if (action == "revoke") {
+                    tableRow.remove();
+                    if (tableBody.find("tr").length == 0) {
+                        tableBody.closest("table").replaceWith('<p class="empty-table-message">There are no approved users who have not logged in.</p>');
+                    }
+                } else if (action == "delete") {
                     tableRow.remove();
                 } else if (action == "reset") {
                     alert('The user\'s password has been reset to:\n' + response["password"]);
