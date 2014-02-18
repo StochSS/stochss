@@ -42,6 +42,7 @@ class StochKitModelWrapper(db.Model):
     model_name = db.StringProperty()    
     model = ObjectProperty()
     attributes = ObjectProperty()
+    is_public = db.BooleanProperty()
 
 class ModelManager():
     @staticmethod
@@ -489,8 +490,8 @@ class ModelEditorImportFromFilePage(BaseHandler):
 class ModelEditorImportFromLibrary(BaseHandler):
         
     def get(self):
-        example_library = self.get_library()
-        self.render_response('modeleditor/importfromlibrary.html', **{'example_library': example_library})
+        public_library = self.get_library()
+        self.render_response('modeleditor/importfromlibrary.html', **{'public_library': public_library})
         
     def post(self):
         result = self.import_model()
@@ -498,20 +499,41 @@ class ModelEditorImportFromLibrary(BaseHandler):
         # The template file may refer to modeleditor.html for some cases.
         if 'template_file' in result:
             template_file = result['template_file']
-        result = dict({'example_library': self.get_library()}, **result)    
+        result = dict({'public_library': self.get_library()}, **result)
         self.render_response(template_file, **result)
     
     def get_library(self):
-        # For now, it is hard-coded here.
-        return ['dimerdecay', 'lotkavolterra_oscillating', 'lotkavolterra_equilibrium', 'MichaelisMenten']
+        self.populate_examples()
+        public_models = db.GqlQuery("SELECT * FROM StochKitModelWrapper WHERE is_public = :1", True).fetch(limit=None)
+        public_model_names = [pm.model_name for pm in public_models]
+        return public_model_names
                 
     def import_model(self):
         name = self.request.get('name').strip()
         if name == "":
             return {'status': False, 'msg': 'Model name is missing.'}
         
-        model_class = self.request.get('model_class')   
-        return do_import(self, name, False, model_class)   
+        model_class = self.request.get('model_class')
+        return do_import(self, name, False, model_class)
+
+    def populate_examples(self):
+        # If the example models are not currently in the datastore, add them
+        example_model = db.GqlQuery("SELECT * FROM StochKitModelWrapper WHERE is_public = :1 AND model_name = :2", True, 'dimerdecay').get()
+        if example_model is None:
+            save_model(dimerdecay(), 'dimerdecay', "", is_public=True)
+
+        example_model = db.GqlQuery("SELECT * FROM StochKitModelWrapper WHERE is_public = :1 AND model_name = :2", True, 'lotkavolterra_oscillating').get()
+        if example_model is None:
+           save_model(lotkavolterra_oscillating(), 'lotkavolterra_oscillating', "", is_public=True)
+
+        example_model = db.GqlQuery("SELECT * FROM StochKitModelWrapper WHERE is_public = :1 AND model_name = :2", True, 'lotkavolterra_equilibrium').get()
+        if example_model is None:
+            save_model(lotkavolterra_equilibrium(), 'lotkavolterra_equilibrium', "", is_public=True)
+        
+        example_model = db.GqlQuery("SELECT * FROM StochKitModelWrapper WHERE is_public = :1 AND model_name = :2", True, 'MichaelisMenten').get()
+        if example_model is None:
+            save_model(MichaelisMenten(), 'MichaelisMenten', "", is_public=True)
+
 
 def do_import(handler, name, from_file = True, model_class=""):
     """
@@ -595,12 +617,38 @@ class ModelEditorExportToStochkit2(BaseHandler):
             self.render_response('modeleditor.html', **result)
 
 
-def save_model(model, model_name, user_id):
+class ModelEditorExportToLibrary(BaseHandler):
+
+    def get(self):
+        model = self.get_session_property('model_edited')
+        print "User ID"
+        print self.user.user_id()
+        if model is None:
+            result = {'status': False, 'msg': 'You have not selected any model to export.'}
+            result = dict(get_all_model_names(self), **result)
+            self.render_response('modeleditor.html', **result)
+            return
+        try:
+            save_model(model,model.name,"",True)
+            result = {'status': True, 'msg': 'Successfully exported model to public library.'}
+            my_models = get_all_models(self)
+            result.update({ "all_models" : map(lambda x : { "name" : x.name, "units" : x.units }, my_models) })
+            self.render_response('modeleditor.html', **result)
+        except Exception, e:
+            logging.error('Error exporting to Public Library. %s', e)
+            traceback.print_exc()
+            result = {'status': False, 'msg': 'There was an error while exporting to Public Library.'}
+            result = dict(get_all_model_names(self), **result)
+            self.render_response('modeleditor.html', **result)
+
+
+def save_model(model, model_name, user_id, is_public=False):
     """ Save model as a new entity. """
     db_model = StochKitModelWrapper()
     db_model.user_id = user_id
     db_model.model = model
     db_model.model_name = model_name
+    db_model.is_public = is_public
     db_model.put()
 
 def add_model_to_cache(obj, new_model_name):
