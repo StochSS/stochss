@@ -197,6 +197,7 @@ class StatusPage(BaseHandler):
                 all_jobs.append({ "name" : stochkit_job.name,
                                   "status" : stochkit_job.status,
                                   "resource" : stochkit_job.resource,
+                                  "execType" : stochkit_job.exec_type,
                                   "id" : job.key().id(),
                                   "number" : number})
         
