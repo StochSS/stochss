@@ -94,16 +94,16 @@ Splot.Plot = Backbone.View.extend(
                 .useInteractiveGuideline(true)  //We want nice looking tooltips and a guideline!
                 .transitionDuration(350)  //how fast do you want the lines to transition?
                 .showLegend(true)       //Show the legend, allowing users to turn on/off line series.
-                .showYAxis(true)        //Show the y-axis
+                //.showYAxis(true)        //Show the y-axis
                 .showXAxis(true)        //Show the x-axis
  
             chart.xAxis     //Chart x-axis settings
                 .axisLabel('Time')
                 .tickFormat(d3.format(',r'));
  
-            chart.yAxis     //Chart y-axis settings
-                .axisLabel('Concentration')
-                .tickFormat(d3.format('.02e'));
+            //chart.yAxis     //Chart y-axis settings
+            //    .axisLabel( this.attributes.ylabel )
+            //    .tickFormat(d3.format('.02e'));
  
             this.svg    //Select the <svg> element you want to render the chart in.   
                 .datum(prunedData)         //Populate the <svg> element with chart data...

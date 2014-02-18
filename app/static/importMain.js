@@ -33,6 +33,11 @@ Import.ArchiveSelect = Backbone.View.extend(
             this.$el.empty();
 
             if(_.has(this, 'data')) {
+                if(this.data.length > 0)
+                {
+                    $( "#archiveSelectDiv" ).show();
+                }
+
                 for(var i = 0; i < this.data.length; i++)
                 {
                     var newOption = $( this.optionTemp( this.data[i]) ).appendTo( this.$el );
@@ -143,13 +148,15 @@ var updateMsg = function(data)
     $( "#msg" ).show();
 };
 
-var run = function()
-{
-    var archiveSelect = new Import.ArchiveSelect();
-    var importTable = new Import.ImportTable();
+var progressbar = _.template('<span><%= name %> :<div class="progress"> \
+<div class="bar" style="width:0%;"> \
+                       </div> \
+</div> \
+</span>');
 
-    importTable.attach(archiveSelect);
+var progressHandle = undefined;
 
+var updateImportInfo = function(archiveSelect) {
     $.ajax( { type : "POST",
               url : "/import",
               data : { reqType : "importInfo" },
@@ -162,24 +169,65 @@ var run = function()
               },
               dataType : 'json'
             });
+}
+
+var run = function()
+{
+    var archiveSelect = new Import.ArchiveSelect();
+    var importTable = new Import.ImportTable();
+
+    importTable.attach(archiveSelect);
+
+    updateImportInfo(archiveSelect);
+
+    updateImportInfo = _.partial( updateImportInfo, archiveSelect );
 
     $('#fileupload').fileupload({
         url: '/import',
         dataType: 'json',
+        send: function (e, data) {
+            names = "";
+
+            for(var i in data.files)
+            {
+                names += data.files[i].name + " ";
+            }
+
+            progressHandle = $( progressbar({ name : names }) ).appendTo( "#progresses" ).find('.bar' );
+        },
         done: function (e, data) {
-            $.each(data.result.files, function (index, file) {
+            $.each(data.result, function (index, file) {
                 console.log(file.name);
             });
+
+            updateImportInfo();
         },
         progressall: function (e, data) {
             var progress = parseInt(data.loaded / data.total * 100, 10);
-            $('#progress .bar').css(
-                'width',
-                progress + '%'
-            );
+            progressHandle.css('width', progress + '%');
+            progressHandle.text(progress + '%');
+        },
+        error : function(data) {
+            console.log('fuck');
         }
     }).prop('disabled', !$.support.fileInput)
         .parent().addClass($.support.fileInput ? undefined : 'disabled');
+
+    $( "#export" ).click( function() {
+        $.ajax( { type : "GET",
+                  url : "/export",
+                  data : { reqType : "backup" },
+                  success : function(data) {
+                      updateMsg(data);
+                      window.location = "/status";
+                  },
+                  error: function(data)
+                  {
+                      console.log("do I get called?");
+                  },
+                  dataType : 'json'
+                });
+    });
 
     $( "#import" ).click( function() {
         $.ajax( { type : "POST",

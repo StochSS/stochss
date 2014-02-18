@@ -78,11 +78,13 @@
         <br />
         <% if(units == "concentration") { %>
         <input id="deterministic" type="radio" name="exec_type" value="deterministic" checked> Deterministic <br />
-        <input id="sensitivity" type="radio" name="exec_type" value="sensitivity" checked> Sensitivity <br />
+        <input id="sensitivity" type="radio" name="exec_type" value="sensitivity"> Deterministic + Sensitivity <br />
         <% } else if (units == "population") { %>
-        <input id="deterministic" type="radio" name="exec_type" value="deterministic"> Deterministic <br />
+        <input id="deterministic" type="radio" name="exec_type" value="deterministic"> Deterministic
+        <br />
         <input id="stochastic" type="radio" name="exec_type" value="stochastic" checked> Stochastic
-        <input id="sensitivity" type="radio" name="exec_type" value="sensitivity" checked> Sensitivity <br />
+        <br />
+        <input id="sensitivity" type="radio" name="exec_type" value="sensitivity"> Deterministic + Sensitivity <br />
         <% } %>
         <hr />
 

@@ -36,7 +36,7 @@ class ExportJobWrapper(db.Model):
 class ExportPage(BaseHandler):
     def get(self):
 
-        reqType = self.request.get('action')
+        reqType = self.request.get('reqType')
 
         if reqType == 'delJob':
             pass
@@ -199,13 +199,13 @@ class ExportPage(BaseHandler):
             exportJob.put()
 
             self.response.headers['Content-Type'] = 'application/json'
-            self.response.write( { "status" : True,
-                                   "msg" : "Job submitted" } )
+            self.response.write( json.dumps({ "status" : True,
+                                              "msg" : "Job submitted" }) )
             return
         elif reqType == 'import':
             self.response.headers['Content-Type'] = 'application/json'
-            self.response.write( { "status" : False,
-                                   "msg" : "Not implemented yet" })
+            self.response.write( json.dumps({ "status" : False,
+                                              "msg" : "Not implemented yet" }) )
             return
 
 
@@ -255,6 +255,7 @@ class ImportPage(BaseHandler):
 
     def post(self):
         if 'files[]' in self.request.POST:
+            files = []
             for name, fieldStorage in self.request.POST.items():
                 if type(fieldStorage) is unicode:
                     continue
@@ -299,7 +300,11 @@ class ImportPage(BaseHandler):
 
                 job.headerFile = tmpfile
                 job.put()
-                print job.key().id()
+
+                files.append( fieldStorage.filename )
+            
+            self.response.headers['Content-Type'] = 'application/json'
+            self.response.write(json.dumps(files))
         else:
             reqType = self.request.get('reqType')
 
@@ -386,9 +391,11 @@ class ImportPage(BaseHandler):
                 # Expect an importJobId
                 # along with a list of model jsons to import
                 # and a list of job jsons to import
+                self.response.headers['Content-Type'] = 'application/json'
+                self.response.write(json.dumps( { "status" : True,
+                                                  "msg" : "Archive imported" }))
+                
                 return
 
-        if 'application/json' in self.request.headers.get('Accept'):
-            self.response.headers['Content-Type'] = 'application/json'
-        self.response.write('a')
+            #if 'application/json' in self.request.headers.get('Accept'):
 

@@ -46,6 +46,19 @@ var run = function()
 
                               }
                           }
+
+                          for(var specie in data.trajectories)
+                          {
+                              series = [];
+                              for(var k = 0; k < data.trajectories[specie].length; k++)
+                              {
+                                  series.push({ x : data.time[k],
+                                                y : data.trajectories[specie][k] });
+                              }
+
+                              plotData.push( { label : specie,
+                                               data : series } );
+                          }
                           
                           Splot.plot( $( "#data" ), plotData);
                       }
