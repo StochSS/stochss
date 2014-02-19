@@ -56,8 +56,8 @@
 			<a class="dropdown-toggle" data-toggle="dropdown" TITLE = "Export File To Stochkit">Export<b class="caret"></b></a>
 			<ul class="dropdown-menu">
           <a href="/modeleditor/export/tostochkit2">To XML (StochKit2 compat.)</a>
-          <a href="/modeleditor/export/publiclibrary">To Public Library...</a>
-			    <!-- <a href="/modeleditor/export/tosbml">To SBML ...</a> -->
+          <a href="#" id="exportToPublicLibrary" TITLE = "Export model to public Library">To Public Library...</a>
+          <!-- <a href="/modeleditor/export/tosbml">To SBML ...</a> -->
 			</ul>
 		    </li>
                     {% else %}
@@ -65,7 +65,7 @@
 			<a class="dropdown-toggle" data-toggle="dropdown" TITLE = "Export File To XML">Export<b class="caret"></b></a>
 			<ul class="dropdown-menu">
 			    <a href="/modeleditor/export/tostochkit2">To XML</a>
-          <a href="/modeleditor/export/publiclibrary">To Public Library...</a>
+          <a href="#" id="exportToPublicLibrary" TITLE = "Export model to public Library">To Public Library...</a>
 			    <!-- <a href="/modeleditor/export/tosbml">To SBML ...</a> -->
 			</ul>
 		    </li>
@@ -285,6 +285,29 @@ $( '#renameModel' ).click( function(event) {
         }
       }});
   })
+$( '#exportToPublicLibrary' ).click( function() {
+  var newName=prompt("Please name this public model","{{model_edited.name}}");
+  if (newName != null) {
+    $.ajax({ url : encodeURI('/modeleditor?export={{model_edited.name}}&newName=' + newName),
+      error : function(data) {
+        $( '#msg' ).text('Server error exporting model');
+        $( '#msg' ).css('color', 'red');
+      },
+      success : function(data) {
+        if($.trim(data) == 'success')
+        {
+          $( '#msg' ).text('Successfully exported model');
+          $( '#msg' ).css('color', 'green');
+        } else if($.trim(data) == 'duplicate') {
+          $( '#msg' ).text('A model with that name already exists in the public library');
+          $( '#msg' ).css('color', 'red');          
+        } else {
+          $( '#msg' ).text('Failed to export model');
+          $( '#msg' ).css('color', 'red');
+        }
+      }
+    });
+  }});
 {% endif %}
 });
 </script>

@@ -269,7 +269,6 @@ app = webapp2.WSGIApplication([
                                ('/modeleditor/import/fromfile', ModelEditorImportFromFilePage),
                                ('/modeleditor/import/publiclibrary', ModelEditorImportFromLibrary),
                                ('/modeleditor/export/tostochkit2', ModelEditorExportToStochkit2),
-                               ('/modeleditor/export/publiclibrary', ModelEditorExportToLibrary),
                                ('/modeleditor.*', ModelEditorPage),
                                ('/simulate',SimulatePage),
                                ('/simulate/newstochkitensemble',NewStochkitEnsemblePage),

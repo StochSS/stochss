@@ -256,6 +256,22 @@ class ModelEditorPage(BaseHandler):
                 self.response.write(json.dumps({ "status": False, "msg" : 'Failed to rename model' }))
 
             return
+        if self.request.get('export'):
+            modelName = self.request.get('export')
+            model = ModelManager.getModelByName(self, modelName)
+
+            newName = self.request.get('newName').strip(' \t')
+            newModel = db.GqlQuery("SELECT * FROM StochKitModelWrapper WHERE is_public = :1 AND model_name = :2", True, newName).get()
+
+            if newModel is None:
+                save_model(model,newName,"",True)
+                self.response.content_type = "application/json"
+                self.response.write(json.dumps('success'))
+            else:
+                self.response.content_type = "application/json"
+                self.response.write(json.dumps('duplicate'))
+            return
+
         elif model_edited is not None and model_edited is not "":
             result = self.edit_model(model_edited)
         elif self.request.get('get_model_edited') == "1":
@@ -494,7 +510,14 @@ class ModelEditorImportFromLibrary(BaseHandler):
         self.render_response('modeleditor/importfromlibrary.html', **{'public_library': public_library})
         
     def post(self):
-        result = self.import_model()
+        if self.request.get("delete") == "1":
+            result = self.delete_model()
+        elif self.request.get("preview") == "1":
+            self.preview_model()
+            return
+        else:
+            result = self.import_model()
+
         template_file = 'modeleditor/importfromlibrary.html'
         # The template file may refer to modeleditor.html for some cases.
         if 'template_file' in result:
@@ -515,6 +538,36 @@ class ModelEditorImportFromLibrary(BaseHandler):
         
         model_class = self.request.get('model_class')
         return do_import(self, name, False, model_class)
+
+    def preview_model(self):
+        name = self.request.get('toPreview')
+        db_model = db.GqlQuery("SELECT * FROM StochKitModelWrapper WHERE is_public = :1 AND model_name = :2", True, name).get()
+        model = db_model.model
+        doc = model.serialize()
+        self.response.headers['Content-Type'] = 'text/xml'
+        self.response.headers['Content-Disposition'] = 'attachment;filename=' + name.encode('utf-8') + '.xml'
+        self.response.write(doc)
+
+    def delete_model(self):
+        name = self.request.get('toDelete')
+        if name == "":
+            return {'status': False, 'msg': 'Name is missing'}
+        elif name == "dimerdecay" or name == "lotkavolterra_oscillating" or name == "lotkavolterra_equilibrium" or name == "MichaelisMenten":
+            return {'status': False, 'msg': 'This is an example model, it cannot be deleted'}
+        
+        try:
+            db_model = db.GqlQuery("SELECT * FROM StochKitModelWrapper WHERE is_public = :1 AND model_name = :2", True, name).get()
+
+            if db_model is None:
+                return {'status': False, 'msg': 'The datastore does not have any such entry.'}
+            
+            db_model.delete()            
+            return {'status': True, 'msg': name + ' deleted successfully.'}
+            
+        except Exception, e:
+            logging.error("model::delete_model - Deleting the model failed with error: %s", e)
+            traceback.print_exc()
+            return {'status': False, 'msg': 'There was an error while deleting the model!'}
 
     def populate_examples(self):
         # If the example models are not currently in the datastore, add them
@@ -613,31 +666,6 @@ class ModelEditorExportToStochkit2(BaseHandler):
             logging.error('Error in exporting to StochML. %s', e)
             traceback.print_exc()
             result = {'status': False, 'msg': 'There was an error while exporting to StochML.'}
-            result = dict(get_all_model_names(self), **result)
-            self.render_response('modeleditor.html', **result)
-
-
-class ModelEditorExportToLibrary(BaseHandler):
-
-    def get(self):
-        model = self.get_session_property('model_edited')
-        print "User ID"
-        print self.user.user_id()
-        if model is None:
-            result = {'status': False, 'msg': 'You have not selected any model to export.'}
-            result = dict(get_all_model_names(self), **result)
-            self.render_response('modeleditor.html', **result)
-            return
-        try:
-            save_model(model,model.name,"",True)
-            result = {'status': True, 'msg': 'Successfully exported model to public library.'}
-            my_models = get_all_models(self)
-            result.update({ "all_models" : map(lambda x : { "name" : x.name, "units" : x.units }, my_models) })
-            self.render_response('modeleditor.html', **result)
-        except Exception, e:
-            logging.error('Error exporting to Public Library. %s', e)
-            traceback.print_exc()
-            result = {'status': False, 'msg': 'There was an error while exporting to Public Library.'}
             result = dict(get_all_model_names(self), **result)
             self.render_response('modeleditor.html', **result)
 
