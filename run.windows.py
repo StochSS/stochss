@@ -205,24 +205,67 @@ class EC2Services:
                     instances += [instance]
         return instances
     
+    def create_default_key_pair(self, key_pair, location):
+        '''
+        Attempts to create an AWS key pair using the default naming scheme enforced:
+         default_key_pair_prefix-aws_region
+        If the key_pair already exists, then we first look for a suitable key pair in the
+         directory specified by the location parameter. If one is not found, we append a
+         UUID onto the default name until we successfully create a valid key pair.
+        Returns the name of the key pair that should be used.
+        '''
+        try:
+            ec2_key = self.conn.create_key_pair(key_pair)
+            ec2_key.save(location)
+        except boto.exception.EC2ResponseError as e:
+            # Check to see if the exception is just due to fact that key already exists
+            if "'{0}' already exists.".format(key_pair) in e.body:
+                # Then the default key exists, but its not on this computer...
+                # Lets first check to see if there are any keys we can use in the current dir
+                available_keys = [filename for filename in os.listdir(location) if filename.startswith(self.default_key_pair_prefix) and self.region in filename]
+                if len(available_keys) > 0:
+                    key_pair = available_keys[0].strip('.pem')
+                else:
+                    # Create a new one with a UUID appended to it
+                    while True:
+                        try:
+                            new_key_pair = '{0}-{1}'.format(key_pair, uuid.uuid4())
+                            ec2_key = self.conn.create_key_pair(new_key_pair)
+                            ec2_key.save(location)
+                        except boto.exception.EC2ResponseError as e:
+                            # We only want to retry if the exception was because the key already exists
+                            if "'{0}' already exists.".format(new_key_pair) in e.body:
+                                continue
+                            else:
+                                raise e
+                        # No exceptions so we created a valid key pair
+                        key_pair = new_key_pair
+                        break
+            else:
+                # Then this failed for a different reason...
+                raise e
+        return key_pair
+    
     def launch_ec2_instance(self, instance_id, key_pair=None):
-        security_group = self.find_or_create_security_group()
-        if key_pair is None:
-            # Then use a default key
-            key_pair = '{0}-{1}'.format(self.default_key_pair_prefix, self.region)
-            # Store it in current directory
-            current_dir = os.path.dirname(os.path.abspath(__file__))
-            if not os.path.exists('{0}/{1}.pem'.format(current_dir, key_pair)):
-                try:
-                    # If it doesnt exist, then create it
-                    ec2_key = self.conn.create_key_pair(key_pair)
-                    ec2_key.save(current_dir)
-                except boto.exception.EC2ResponseError as e:
-                    # Check to see if the exception is just due to fact that key already exists
-                    if e.body.index("'{0}' already exists.".format(key_pair)) < 0:
+        '''
+        Launches an EC2 instance. If instance_id is a blank string then it launches a new instance using
+         the appropriate AMI ID, otherwise it launches the instance specified by the given instance_id.
+        Returns the instance object representing the instance that was launched.
+        '''
+        if instance_id is "":
+            security_group = self.find_or_create_security_group()
+            if key_pair is None:
+                # Then use a default key
+                key_pair = '{0}-{1}'.format(self.default_key_pair_prefix, self.region)
+                # Store it in current directory
+                current_dir = os.path.dirname(os.path.abspath(__file__))
+                if not os.path.exists('{0}/{1}.pem'.format(current_dir, key_pair)):
+                    try:
+                        # If it doesnt exist, then create it
+                        key_pair = self.create_default_key_pair(key_pair, current_dir)
+                    except boto.exception.EC2ResponseError as e:
                         print "Failed to launch EC2 instance with exception: " + str(e)
                         exit(-1)
-        if instance_id is "":
             print "Launching new EC2 instance now. This may take a moment..."
             try:
                 reservation = self.conn.run_instances(
@@ -406,7 +449,7 @@ def start_stochss_server(aws_access_key, aws_secret_key, preferred_instance_id, 
             time.sleep(1)
     if instance.key_name.startswith(EC2Services.default_key_pair_prefix):
         # Then we are using the default key, its in the current dir
-        preferred_ec2_key_pair = os.path.dirname(os.path.abspath(__file__)) + '/{0}-{1}.pem'.format(EC2Services.default_key_pair_prefix, ec2_region)
+        preferred_ec2_key_pair = os.path.dirname(os.path.abspath(__file__)) + '/{0}.pem'.format(instance.key_name)
     else:
         # The user supplied their own key pair and it must have been valid if we got this far,
         # we need to know the path to it.
