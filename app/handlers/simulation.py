@@ -372,7 +372,7 @@ class SimulatePage(BaseHandler):
                 result=self.runStochKitLocal(params)
             elif params['resource'] == 'cloud':
                 if self.user_data.valid_credentials and self.isOneOrMoreComputeNodesRunning(self.user_data.getCredentials()):
-                    result=self.runCloud()
+                    result=self.runCloud(params)
                 else:
                     result = { 'status': False, 'msg': 'You must have at least one active compute node to run in the cloud.' }
             else:
@@ -406,7 +406,7 @@ class SimulatePage(BaseHandler):
     def runCloud(self, params):
         
         try:
-            model = StochKitModelWrapper.get_by_id(params["id"])
+            model = StochKitModelWrapper.get_by_id(params["id"]).model
 
             if not model:
                 return {'status':False,'msg':'Failed to retrive the model to simulate.'}
@@ -428,7 +428,7 @@ class SimulatePage(BaseHandler):
             param = {}
 
             # Execute as concentration or population?
-            exec_type = params['exec_type']
+            exec_type = params['execType']
 
             if not (exec_type == "deterministic" or exec_type == "stochastic"):
                 result = {
@@ -457,7 +457,7 @@ class SimulatePage(BaseHandler):
             params['document']=str(document)
             filepath = ""
             params['file'] = filepath
-            ensemblename = params['job_name']
+            ensemblename = params['jobName']
             stime = params['time']
             realizations = params['realizations']
             increment = params['increment']
