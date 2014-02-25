@@ -265,7 +265,7 @@ class LoginPage(BaseHandler):
                 logging.info('Login failed for user: {0} with exception: {1}'.format(email_address, e))
                 context = {
                     'error_alert': True,
-                    'alert_message': 'Email address and password do not match.'
+                    'alert_message': 'The email or password you entered is incorrect.'
                 }
                 return self.render_response('login.html', **context)
 
