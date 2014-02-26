@@ -9,7 +9,9 @@ def print_usage_and_exit():
 
 def main(ssh_key, username, ip, admin_token):
     create_admin_key_string = "ssh -o 'StrictHostKeyChecking no' -i {0} {1}@{2} 'python ~/stochss/generate_admin_token.py {3} > temp_output.log'".format(ssh_key, username, ip, admin_token)
-    os.system(create_admin_key_string)
+    success = os.system(create_admin_key_string)
+    if success != 0:
+        exit(-1)
     print "Exchange complete."
 
 if __name__ == "__main__":

@@ -217,7 +217,11 @@ class InfrastructureManager:
     self.reservations.put(reservation_id, status_info)
     utils.log('Generated reservation id {0} for this request.'.format(
       reservation_id))
-    if self.blocking:
+    #TODO: We are forcing blocking mode because of how the Google App Engine sandbox environment
+    # joins on all threads before returning a response from a request, which effectively makes non-
+    # blocking mode the same as blocking mode anyways.
+    # (see https://developers.google.com/appengine/docs/python/#Python_The_sandbox)
+    if self.blocking or True:
       utils.log('Running spawn_vms in blocking mode')
       self.__spawn_vms(agent, num_vms, parameters, reservation_id)
     else:
