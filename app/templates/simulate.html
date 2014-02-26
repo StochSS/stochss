@@ -4,32 +4,30 @@
 {% block content %}
 <div class="span9">
     <div class="row-fluid">
-        <div class="span9">
-            <div id="modelSelect" class="span9">
-                <div class="well">
-                    {% if all_models %}
-                    <h3> Select model to simulate </h3>
+        <div id="modelSelect">
+            <div class="well">
+                {% if all_models %}
+                <h3> Select model to simulate </h3>
+                <br />
+                {% for item in all_models %}
+                <label class="radio">
+                    <input type="radio" name="model_to_simulate" value="{{ item.name }} {{ item.id }} {{ item.units }}" checked />{{ item.name }}
                     <br />
-                    {% for item in all_models %}
-                    <label class="radio">
-                        <input type="radio" name="model_to_simulate" value="{{ item.name }} {{ item.id }} {{ item.units }}" checked />{{ item.name }}
-                        <br />
-                    </label>
-                    {% endfor %}
-                    <br />
-                    <button id="next" type="submit" class="btn-primary btn-large">Next&raquo;</button>
-                    {% else %}
-                    <h2>There are no models in the system</h2><br />
-                    <a style="font-size:18px;" href="/modeleditor"> Create a new model? </a>
-                    {% endif %}
-                </div>
+                </label>
+                {% endfor %}
+                <br />
+                <button id="next" type="submit" class="btn-primary btn-large">Next&raquo;</button>
+                {% else %}
+                <h2>There are no models in the system</h2><br />
+                <a style="font-size:18px;" href="/modeleditor"> Create a new model? </a>
+                {% endif %}
             </div>
+        </div>
 
-            <div style="display : none;" id="simulationConf" class="span9">
-            </div>
+        <div style="display : none;" id="simulationConf">
+        </div>
 
-            <div style="display : none;" id="jobInfo" class="span9">
-            </div>
+        <div style="display : none;" id="jobInfo">
         </div>
     </div>
 </div>

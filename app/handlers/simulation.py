@@ -294,7 +294,7 @@ class SimulatePage(BaseHandler):
                 outputdir = job.stochkit_job.output_location
                 # Load all data from file in JSON format
                 if job.stochkit_job.exec_type == 'stochastic':
-                    outfile = '/output/stats/means.txt'
+                    outfile = '/result/stats/means.txt'
 
                     print "outputdir", outputdir
 
@@ -318,9 +318,9 @@ class SimulatePage(BaseHandler):
                                 storage.append(value)
                     vhandle.close()
                 else:
-                    outfile = '/output/output.txt'
+                    outfile = '/result/output.txt'
 
-                    vhandle = open(outputdir + '/output/output.txt', 'r')
+                    vhandle = open(outputdir + '/result/output.txt', 'r')
                     values = { 'time' : [], 'trajectories' : {} }
                     columnToList = []
                     for i, line in enumerate(vhandle):
@@ -614,7 +614,7 @@ class SimulatePage(BaseHandler):
             fmodelHandle.write(model.serialize())
             fmodelHandle.close()
 
-            cmd += ' -m {0} --out-dir {1}/output'.format(modelFileName, dataDir)
+            cmd += ' -m {0} --out-dir {1}/result'.format(modelFileName, dataDir)
 
             print cmd
 
