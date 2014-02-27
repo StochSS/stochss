@@ -1,0 +1,53 @@
+{% extends "base.html" %}
+{% block title %}Account Settings{% endblock %}
+{% block csscontent %}<link href="/static/css/account_settings.css" rel="stylesheet">{% endblock %}
+
+{% block content %}
+{% if success_alert is defined %}
+<p class="alert alert-success">{{success_alert}}</p>
+{% endif %}
+{% if error_alert is defined %}
+<p class="alert alert-danger">{{error_alert}}</p>
+{% endif %}
+<div class="span4">
+  <h2 id='form-heading'>Account Settings</h2>
+  <form action="/account_settings" method="post" class="form-horizontal">
+    <fieldset>
+      <div class="control-group">
+        <label class="control-label">Your Name</label>
+        <div class="controls">
+          <input id="name" type="text" name="name" value="{{name}}">
+        </div>
+      </div>
+      <div class="control-group">
+        <label class="control-label">Your Email Address</label>
+        <div class="controls">
+          <input id="email" type="email" name="email" value="{{email_address}}">
+        </div>
+      </div>
+      <div class="control-group">
+        <label class="control-label">New Password</label>
+        <div class="controls">
+          <input id="password" type="password" name="password">
+        </div>
+      </div>
+      <div class="control-group">
+        <label class="control-label">New Password Confirmation</label>
+        <div class="controls">
+          <input id="password_conf" type="password" name="password_confirmation">
+        </div>
+      </div>
+      <div class="control-group current-pass hidden">
+        <label class="control-label">Current Password</label>
+        <div class="controls">
+          <input type="password" name="current_password">
+        </div>
+      </div>
+      <div class="form-actions">
+        <button id="submit-btn" type="submit" class="btn btn-primary">Save Changes</button>
+      </div>
+    </fieldset>
+  </form>
+</div>
+{% endblock %}
+{% block jscontent %}<script src="/static/js/account_settings.js"></script>{% endblock %}

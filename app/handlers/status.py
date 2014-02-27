@@ -22,6 +22,9 @@ from backend.backendservice import backendservices
 class StatusPage(BaseHandler):
     """ The main handler for the Job Status Page. Displays status messages for the jobs, options to delete/kill jobs and
         options to view the Job metadata and Job results. """        
+    def authentication_required(self):
+        return True
+    
     def get(self):
         context = self.getContext()
         self.render_response('status.html', **context)
@@ -217,6 +220,9 @@ class StatusPage(BaseHandler):
 
 class JobOutPutPage(BaseHandler):
 
+    def authentication_required(self):
+        return True
+    
     def get(self):
         context,result = self.getContext()
         self.render_response('stochkitjoboutputpage.html',**dict(result,**context))
@@ -374,6 +380,9 @@ class JobOutPutPage(BaseHandler):
 
 class VisualizePage(BaseHandler):
     """ Basic Visualization """        
+    def authentication_required(self):
+        return True
+    
     def get(self):
         
         result = {}

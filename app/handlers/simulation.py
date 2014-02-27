@@ -263,6 +263,9 @@ class StochKitJob(Job):
 
 class SimulatePage(BaseHandler):
     """ Render a page that lists the available models. """    
+    def authentication_required(self):
+        return True
+    
     def get(self):
 
         # Query the datastore
@@ -286,6 +289,9 @@ class SimulatePage(BaseHandler):
 
 class NewStochkitEnsemblePage(BaseHandler):
     """ Page with a form to configure a well mixed stochastic (StochKit2) simulation job.  """        
+    def authentication_required(self):
+        return True
+    
     def get(self):
         model_to_simulate=self.get_session_property('model_to_simulate')
 

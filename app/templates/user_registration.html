@@ -1,0 +1,55 @@
+{% extends "login_base.html" %}
+{% block title %}Register{% endblock %}
+{% block csscontent %}<link href="/static/css/user_registration.css" rel="stylesheet">{% endblock %}
+
+{% block content %}
+{% if user_registration_failed %}
+  <p class="alert alert-error">Registration failed, please try again.</p>
+{% elif approved_user_message %}
+  <p class="alert alert-success">You have already been approved by the admin to create an account.</p>
+{% endif %}
+  <div class="span6 offset3 well">
+    <h4>
+    {% if create_admin %}
+      Please fill in the following information to create your admin account:
+    {% else %}
+      Please fill in the following information:
+    {% endif %}
+    </h4>
+    <form action="/register" method="post" class="form-horizontal">
+      <fieldset>
+        <div class="control-group">
+          <label class="control-label">Name</label>
+          <div class="controls">
+            <input id="name" type="text" name="name" value="{{name}}">
+          </div>
+        </div>
+        <div class="control-group">
+          <label class="control-label">Email Address</label>
+          <div class="controls">
+            <input id="email" type="email" name="email" value="{{email_address}}">
+          </div>
+        </div>
+        <div class="control-group">
+          <label class="control-label">Password</label>
+          <div class="controls">
+            <input id="password" type="password" name="password">
+          </div>
+        </div>
+        <div class="control-group">
+          <label class="control-label">Password Confirmation</label>
+          <div class="controls">
+            <input id="password_conf" type="password" name="password_confirmation">
+          </div>
+        </div>
+        {% if create_admin %}
+          <input type="hidden" name="secret_key" value="{{secret_key}}">
+        {% endif %}
+        <div class="form-actions">
+          <button id="submit-btn" type="submit" class="btn btn-primary">Submit</button>
+        </div>
+      </fieldset>
+    </form>    
+  </div>
+{% endblock %}
+{% block jscontent %}<script src="/static/js/user_registration.js"></script>{% endblock %}

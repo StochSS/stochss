@@ -10,6 +10,9 @@ from stochssapp import *
 from stochss.model import *
 
 class ConvertToPopulationPage(BaseHandler):        
+    def authentication_required(self):
+        return True
+    
     def get(self):
         model_edited = self.get_session_property('model_edited')        
 

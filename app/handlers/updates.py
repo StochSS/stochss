@@ -29,6 +29,9 @@ def internet_on():
 
 class UpdatesPage(BaseHandler):
     """ Set paths for local plugin software. """
+    def authentication_required(self):
+        return True
+    
     def get(self):
         """ """
         env_variables = self.user_data.env_variables

@@ -18,6 +18,9 @@ import time
 class CredentialsPage(BaseHandler):
     """
     """
+    def authentication_required(self):
+        return True
+    
     def get(self):
         try:
             # User id is a string
@@ -221,6 +224,9 @@ class CredentialsPage(BaseHandler):
 
 class LocalSettingsPage(BaseHandler):
     """ Set paths for local plugin software. """
+    def authentication_required(self):
+        return True
+    
     def get(self):
         """ """
         env_variables = self.user_data.env_variables

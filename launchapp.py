@@ -8,6 +8,7 @@ import time
 import threading
 import urllib2
 import webbrowser
+import uuid
 
 source_exec = sys.argv[1]
 
@@ -123,8 +124,15 @@ signal.signal(signal.SIGFPE, clean_up_and_exit)
 serverUp = False
 for tryy in range(0, 20):
     try:
-        req = urllib2.urlopen("http://localhost:8080/")
-    except:
+        req = urllib2.urlopen("http://localhost:8080/login")
+    # This was a hack in place to get around issue that arose from allowing
+    #  users accessing the app from localhost to not have to login.
+    # except urllib2.HTTPError as e:
+    #     req = None
+    #     if e.code == 302 and e.reason.endswith('Found'):
+    #         serverUp = True
+    #         break
+    except Exception:
         req = None
 
     if req:
@@ -165,13 +173,18 @@ for tryy in range(0, 20):
 ###print serverUp
 
 if serverUp:
+    # Create an admin token
+    admin_token = uuid.uuid4()
+    generate_admin_token_command = './generate_admin_token.py {0}'.format(admin_token)
+    os.system(generate_admin_token_command)
+    stochss_url = 'http://localhost:8080/login?secret_key={0}'.format(admin_token)
     # Open web browser
 
     if mac:
-        wbrowser = subprocess.Popen('open http://localhost:8080/'.split())
+        wbrowser = subprocess.Popen('open {0}'.format(stochss_url).split())
         wbrowser.communicate()
     else:
-        webbrowser.open_new('http://localhost:8080/')
+        webbrowser.open_new(stochss_url)
 
     if mac:
         print " Stdout available at {0}/stdout.log and <br />".format(path)
@@ -182,7 +195,7 @@ if serverUp:
     sys.stdout.flush()
 
     try:
-        print "Navigate to http://localhost:8080 to access StochSS"
+        print "Navigate to {0} to access StochSS".format(stochss_url)
         if mac:
             print "<br />"
 

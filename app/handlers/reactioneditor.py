@@ -21,6 +21,9 @@ def int_or_float(s):
     
 class ReactionEditorPage(BaseHandler):
             
+    def authentication_required(self):
+        return True
+    
     def get(self):
         all_reactions = self.get_all_reactions()
         if all_reactions is not None:

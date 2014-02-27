@@ -1,1 +1,7 @@
 *.pyc
+app/output
+.ec2-config
+stderr.log
+stdout.log
+.DS_Store
+*.pem
