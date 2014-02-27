@@ -258,7 +258,9 @@ class ModelEditorPage(BaseHandler):
             return
         if self.request.get('export'):
             modelName = self.request.get('export')
-            model = ModelManager.getModelByName(self, modelName)
+            #model = ModelManager.getModelByName(self, modelName)
+            db_model = db.GqlQuery("SELECT * FROM StochKitModelWrapper WHERE user_id = :1 AND model_name = :2", self.user.user_id(), modelName).get()
+            model = db_model.model
 
             newName = self.request.get('newName').strip(' \t')
             newModel = db.GqlQuery("SELECT * FROM StochKitModelWrapper WHERE is_public = :1 AND model_name = :2", True, newName).get()
@@ -529,6 +531,7 @@ class ModelEditorImportFromLibrary(BaseHandler):
         self.populate_examples()
         public_models = db.GqlQuery("SELECT * FROM StochKitModelWrapper WHERE is_public = :1", True).fetch(limit=None)
         public_model_names = [pm.model_name for pm in public_models]
+        public_model_names.sort(key=lambda v: v.upper())
         return public_model_names
                 
     def import_model(self):
