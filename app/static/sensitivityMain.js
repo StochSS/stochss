@@ -13,7 +13,7 @@ var run = function()
 
     if(id)
     {
-        $( "#jobInfo" ).show();
+        var jobInfoTemplate = _.template( $( "#jobInfoTemplate" ).html() );
 
         //var idstr=String.fromCharCode(Math.floor((Math.random()*25)+65));
 
@@ -22,10 +22,37 @@ var run = function()
                   data : { reqType : "jobInfo",
                            id : id },
                   success : function(data) {
-                      console.log(data.status)
+                      //console.log(data.status)
+                      $( "#jobInfo" ).html(jobInfoTemplate( data.job ));
+
                       if(data.status == "Finished")
                       {
                           var plotData = []
+
+                          $( "#access" ).text( "Access local data" );
+                          $( "#access" ).click( function() {
+                              updateMsg( { status : true,
+                                           msg : "Packing up data... (will forward you to file when ready)" } );
+                              $.ajax( { type : "POST",
+                                        url : "/sensitivity",
+                                        data : { reqType : "getLocalData",
+                                                 id : id },
+                                        success : function(data) {
+                                            updateMsg(data);
+                                            
+                                            if(data.status == true)
+                                            {
+                                                window.location = data.url;
+                                            }
+                                        },
+                                        
+                                        error: function(data)
+                                        {
+                                            console.log("do I get called?");
+                                        },
+                                        dataType : 'json'
+                                      });
+                          });
 
                           data = data.values
 

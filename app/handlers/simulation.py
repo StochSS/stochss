@@ -21,6 +21,8 @@ from modeleditor import StochKitModelWrapper, ObjectProperty
 
 from backend.backendservice import backendservices
 
+import exportimport
+
 import time
 
 import os, shutil
@@ -85,11 +87,13 @@ class JobManager():
                         "type" : job.stochkit_job.type,
                         "status" : job.stochkit_job.status,
                         "output_location" : job.stochkit_job.output_location,
+                        "zipFileName" : job.stochkit_job.zipFileName,
                         "output_url" : job.stochkit_job.output_url,
                         "final_time" : job.stochkit_job.final_time,
                         "increment" : job.stochkit_job.increment,
                         "realizations" : job.stochkit_job.realizations,
                         "exec_type" : job.stochkit_job.exec_type,
+                        "resource" : job.stochkit_job.resource,
                         "store_only_mean" : job.stochkit_job.store_only_mean,
                         "label_column_names" : job.stochkit_job.label_column_names,
                         "create_histogram_data" : job.stochkit_job.create_histogram_data,
@@ -117,10 +121,12 @@ class JobManager():
                     "type" : job.stochkit_job.type,
                     "status" : job.stochkit_job.status,
                     "output_location" : job.stochkit_job.output_location,
+                    "zipFileName" : job.stochkit_job.zipFileName,
                     "output_url" : job.stochkit_job.output_url,
                     "final_time" : job.stochkit_job.final_time,
                     "increment" : job.stochkit_job.increment,
                     "realizations" : job.stochkit_job.realizations,
+                    "resource" : job.stochkit_job.resource,
                     "exec_type" : job.stochkit_job.exec_type,
                     "store_only_mean" : job.stochkit_job.store_only_mean,
                     "label_column_names" : job.stochkit_job.label_column_names,
@@ -142,6 +148,7 @@ class JobManager():
         jobWrap.name = job['name']
         jobWrap.type = job['type']
         
+        # This is probably not a good idea...
         jobWrap.stochkit_job = StochKitJob(**job)
 
         jobWrap.stdout = job['stdout']
@@ -218,7 +225,7 @@ class JobBackboneInterface(BaseHandler):
 class StochKitJob(Job):
     """ Model for a StochKit job. Contains all the parameters associated with the call. """
     
-    def __init__(self,name=None, final_time=None, increment=None, realizations=1, exec_type="stochastic",store_only_mean=False, label_column_names=True,create_histogram_data=False, seed=None, epsilon=0.1,threshold = 10, output_url = None, units = None, type = None, status = None, output_location = "", **kwargs):
+    def __init__(self,name=None, final_time=None, increment=None, realizations=1, exec_type="stochastic",store_only_mean=False, label_column_names=True,create_histogram_data=False, seed=None, epsilon=0.1,threshold = 10, output_url = None, units = None, type = None, status = None, output_location = "", zipFileName = None, **kwargs):
         """ fdsgfhsj """
         
         # Type of the job {'Local','Cloud'}
@@ -230,6 +237,7 @@ class StochKitJob(Job):
         # URL to the result (valid after a sucessful execution)
         self.output_location = output_location
         self.output_url = output_url
+        self.zipFileName = zipFileName
         # In case of failure
         self.exception_message = ""
         
@@ -283,6 +291,54 @@ class SimulatePage(BaseHandler):
 
         reqType = self.request.get('reqType')
 
+        if reqType == 'getFromCloud':
+            job = StochKitJobWrapper.get_by_id(int(self.request.get('id')))
+
+            service = backendservices()
+            service.fetchOutput(job.stochkit_job.pid, job.stochkit_job.output_url)
+            
+            stochkit_job = job.stochkit_job
+            # Unpack it to its local output location
+            os.system('tar -xf' +stochkit_job.uuid+'.tar')
+            stochkit_job.output_location = os.path.abspath(os.path.dirname(__file__))+'/../output/'+stochkit_job.uuid
+            stochkit_job.output_location = os.path.abspath(stochkit_job.output_location)
+            
+            # Clean up
+            os.remove(stochkit_job.uuid+'.tar')
+
+            job.stochkit_job.resource = 'local'
+
+            # Save the updated status
+            job.put()
+
+            self.response.headers['Content-Type'] = 'application/json'
+            self.response.write(json.dumps({ 'status' : True,
+                                             'msg' : 'Job downloaded'}))
+            return
+        if reqType == 'getDataLocal':
+            job = StochKitJobWrapper.get_by_id(int(self.request.get('id')))
+            
+            if not job.stochkit_job.zipFileName:
+                szip = exportimport.SuperZip(os.path.abspath(os.path.dirname(__file__) + '/../static/tmp/'), preferredName = job.name + "_")
+                
+                job.stochkit_job.zipFileName = szip.getFileName()
+
+                szip.addStochKitJob(job)
+                
+                szip.close()
+
+                # Save the updated status
+                job.put()
+            
+            
+            relpath = os.path.relpath(job.stochkit_job.zipFileName, os.path.abspath(os.path.dirname(__file__) + '/../'))
+
+            self.response.headers['Content-Type'] = 'application/json'
+            self.response.write(json.dumps({ 'status' : True,
+                                             'msg' : 'Job downloaded',
+                                             'url' : relpath }))
+            return
+            
         if reqType == 'jobInfo':
             job = StochKitJobWrapper.get_by_id(int(self.request.get('id')))
 
@@ -291,64 +347,71 @@ class SimulatePage(BaseHandler):
                 self.response.write(json.dumps(["Not the right user"]))
 
             if job.stochkit_job.status == "Finished":
-                outputdir = job.stochkit_job.output_location
-                # Load all data from file in JSON format
-                if job.stochkit_job.exec_type == 'stochastic':
-                    outfile = '/result/stats/means.txt'
-
-                    print "outputdir", outputdir
-
-                    vhandle = open(outputdir + outfile, 'r')
-
-                    print outputdir + outfile
-
-                    values = { 'time' : [], 'trajectories' : {} }
-                    columnToList = []
-                    for i, line in enumerate(vhandle):
-                        if i == 0:
-                            names = line.split()
-                            for name in names:
-                                if name == 'time':
-                                    columnToList.append(values['time'])
-                                else:
-                                    values['trajectories'][name] = [] # start a new timeseries for this name
-                                    columnToList.append(values['trajectories'][name]) # Store a reference here for future use
-                        else:
-                            for storage, value in zip(columnToList, map(float, line.split())):
-                                storage.append(value)
-                    vhandle.close()
+                if job.stochkit_job.resource == 'Cloud':
+                    self.response.headers['Content-Type'] = 'application/json'
+                    self.response.write(json.dumps({ "status" : "Finished",
+                                                     "values" : [],
+                                                     "job" : JobManager.getJob(self, job.key().id())}))
+                    return
                 else:
-                    outfile = '/result/output.txt'
+                    outputdir = job.stochkit_job.output_location
+                # Load all data from file in JSON format
+                    if job.stochkit_job.exec_type == 'stochastic':
+                        outfile = '/result/stats/means.txt'
+                        
+                        print "outputdir", outputdir
+                        
+                        vhandle = open(outputdir + outfile, 'r')
 
-                    vhandle = open(outputdir + '/result/output.txt', 'r')
-                    values = { 'time' : [], 'trajectories' : {} }
-                    columnToList = []
-                    for i, line in enumerate(vhandle):
-                        if i == 0:
-                            continue
-                        elif i == 1:
-                            names = line.split()
-                            for name in names:
-                                if name == 'time':
-                                    columnToList.append(values['time'])
-                                else:
-                                    values['trajectories'][name] = [] # start a new timeseries for this name
-                                    columnToList.append(values['trajectories'][name]) # Store a reference here for future use
-                        elif i == 2:
-                            for storage, value in zip(columnToList, map(float, line.split())):
-                                storage.append(value)
-                        elif i == 3:
-                            continue
-                        else:
-                            for storage, value in zip(columnToList, map(float, line.split())):
-                                storage.append(value)
-                    vhandle.close()
+                        print outputdir + outfile
+
+                        values = { 'time' : [], 'trajectories' : {} }
+                        columnToList = []
+                        for i, line in enumerate(vhandle):
+                            if i == 0:
+                                names = line.split()
+                                for name in names:
+                                    if name == 'time':
+                                        columnToList.append(values['time'])
+                                    else:
+                                        values['trajectories'][name] = [] # start a new timeseries for this name
+                                        columnToList.append(values['trajectories'][name]) # Store a reference here for future use
+                            else:
+                                for storage, value in zip(columnToList, map(float, line.split())):
+                                    storage.append(value)
+                        vhandle.close()
+                    else:
+                        outfile = '/result/output.txt'
+
+                        vhandle = open(outputdir + '/result/output.txt', 'r')
+                        values = { 'time' : [], 'trajectories' : {} }
+                        columnToList = []
+                        for i, line in enumerate(vhandle):
+                            if i == 0:
+                                continue
+                            elif i == 1:
+                                names = line.split()
+                                for name in names:
+                                    if name == 'time':
+                                        columnToList.append(values['time'])
+                                    else:
+                                        values['trajectories'][name] = [] # start a new timeseries for this name
+                                        columnToList.append(values['trajectories'][name]) # Store a reference here for future use
+                            elif i == 2:
+                                for storage, value in zip(columnToList, map(float, line.split())):
+                                    storage.append(value)
+                            elif i == 3:
+                                continue
+                            else:
+                                for storage, value in zip(columnToList, map(float, line.split())):
+                                    storage.append(value)
+                        vhandle.close()
 
                 self.response.headers['Content-Type'] = 'application/json'
                 self.response.write(json.dumps({ "status" : "Finished",
                                                  "values" : values,
                                                  "job" : JobManager.getJob(self, job.key().id())}))
-            elif job.status == "Failed":
+            elif job.stochkit_job.status == "Failed":
                 self.response.headers['Content-Type'] = 'application/json'
 
                 fstdoutHandle = open(job.stochkit_job.output_location + '/stdout', 'r')
@@ -369,6 +432,14 @@ class SimulatePage(BaseHandler):
         else:
             # Params is a dict that constains all response elements of the form
             params = json.loads(self.request.get('data'))
+
+            self.response.headers['Content-Type'] = 'application/json'
+            job = db.GqlQuery("SELECT * FROM StochKitJobWrapper WHERE user_id = :1 AND name = :2", self.user.user_id(), params["jobName"].strip()).get()
+
+            if job != None:
+                self.response.write(json.dumps({"status" : False,
+                                                "msg" : "Job name must be unique"}))
+                return
 
             # Create a stochhkit_job instance
             if params['resource'] == "local":
@@ -577,8 +648,6 @@ class SimulatePage(BaseHandler):
             num_output_points = int(float(params['time'])/float(params['increment']))
             args += ' -i {0} '.format(num_output_points)
             path = os.path.abspath(os.path.dirname(__file__))
-
-            print params
 
             # Algorithm, SSA or Tau-leaping?
             if params['execType'] != 'deterministic':

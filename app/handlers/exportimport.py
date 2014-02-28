@@ -33,6 +33,208 @@ class ExportJobWrapper(db.Model):
     status = db.StringProperty()
     outData = db.StringProperty()
 
+class SuperZip:
+    def __init__(self, directory = None, zipFileName = None, preferredName = "backup_"):
+        if directory == None and zipfile == None:
+            raise Exception("SuperZip must have either directory or zipFileName defined in constructor")
+
+        if directory:
+            [tid, self.tmpfile] = tempfile.mkstemp(dir = directory, prefix = preferredName, suffix = ".zip")
+            self.zipfbFile = os.fdopen(tid, 'w')
+            self.zipfb = zipfile.ZipFile(self.zipfbFile, mode = 'w', allowZip64 = True)
+            self.names = []
+
+            try:
+                fversion = open(os.path.abspath(os.path.dirname(__file__)) + '/../VERSION', 'r')
+                self.version = fversion.read().strip()
+                fversion.close()
+            except:
+                self.version = "1.1.0"
+            self.fhandle = None
+            self.zhandle = None
+        else:
+            fdescript = os.open(zipFileName, os.O_RDONLY)
+            self.fhandle = os.fdopen(fdescript, 'r')
+
+            self.zhandle = zipfile.ZipFile(fhandle, 'r')
+
+            self.zipfbFile = None
+            self.zipfb = zipfile.ZipFile(zipFileName, mode = 'r', allowZip64 = True)
+
+    def getFileName(self):
+        return self.tmpfile
+
+    def getName(self, preferredName):
+        basename = self.tmpfile[:-4].split('/')[-1]
+        
+        fileName = '{0}/{1}'.format(basename, preferredName)
+        while fileName in self.names:
+            fileName = '{0}/{1}_{2}'.format(basename, preferredName, ''.join(random.choice('abcdefghijklmnopqrztuvwxyz') for x in range(3)))
+
+            self.names.append(fileName)
+
+        return fileName
+
+    def addBytes(self, name, buf):
+        name = self.getName(name)
+        
+        self.zipfb.writestr(name, buf)
+        
+        return name
+    
+    def addFile(self, name, path):
+        name = self.getName(name)
+        
+        self.zipfb.write(path, name)
+        
+        return name
+    
+    def addFolder(self, name, path):
+        name = self.getName(name)
+        
+        for dirpath, dirnames, filenames in os.walk(path):
+            for f in filenames:
+                fp = os.path.join(dirpath, f)
+                rel = os.path.relpath(fp, path)
+                self.zipfb.write(fp, os.path.join(name, rel))
+                
+        return name
+
+    def addStochKitModel(self, model):
+        jsonModel = { "version" : self.version,
+                      "name" : model.model_name,
+                      "user_id" : model.user_id}
+
+        if model.attributes:
+            jsonModel.update(model.attributes)
+            
+        jsonModel["units"] = model.model.units
+
+        jsonModel["model"] = addBytes('models/data/{0}.xml'.format(model.model_name), model.model.serialize())
+        self.addBytes('models/{0}.json'.format(model.model_name), json.dumps(jsonModel, sort_keys=True, indent=4, separators=(', ', ': ')))
+
+    def addStochKitJob(self, job):
+        stochkit_job = job.stochkit_job
+
+        # Only export local, finished jobsx
+        if stochkit_job.status == "Finished":
+            if stochkit_job.resource == 'Local':
+                outputLocation = self.addFolder('stochkitJobs/data/{0}'.format(job.name), job.stochkit_job.output_location)
+
+                jsonJob = { "version" : self.version,
+                            "name" : job.name,
+                            "stdout" : job.stdout,
+                            "stderr" : job.stderr,
+                            # These are things contained in the stochkit_job object
+                            "type" : job.stochkit_job.type,
+                            "status" : job.stochkit_job.status,
+                            "output_location" : outputLocation,
+                            "output_url" : job.stochkit_job.output_url,
+                            "final_time" : job.stochkit_job.final_time,
+                            "increment" : job.stochkit_job.increment,
+                            "realizations" : job.stochkit_job.realizations,
+                            "resource" : job.stochkit_job.resource,
+                            "exec_type" : job.stochkit_job.exec_type,
+                            "store_only_mean" : job.stochkit_job.store_only_mean,
+                            "label_column_names" : job.stochkit_job.label_column_names,
+                            "create_histogram_data" : job.stochkit_job.create_histogram_data,
+                            "epsilon" : job.stochkit_job.epsilon,
+                            "threshold" : job.stochkit_job.threshold,
+                            "pid" : job.stochkit_job.pid,
+                            "result" : job.stochkit_job.result }
+                    
+                if job.attributes:
+                    jsonJob.update(job.attributes)
+
+                self.addBytes('stochkitJobs/{0}.json'.format(job.name), json.dumps(jsonJob, sort_keys=True, indent=4, separators=(', ', ': ')))
+
+    def addSensitivityJob(self, job):
+        outputLocation = self.addFolder('sensitivityJobs/data/{0}'.format(job.jobName), job.outData)
+
+        jsonJob = { "version" : self.version,
+                    "userId" : job.userId,
+                    "jobName" : job.jobName,
+                    "startTime" : job.startTime,
+                    "indata" : json.loads(job.indata),
+                    "outData" : outputLocation,
+                    "status" : job.status }
+                    
+        self.addBytes('sensitivityJobs/{0}.json'.format(job.jobName), json.dumps(jsonJob, sort_keys=True, indent=4, separators=(', ', ': ')))
+
+    def extractStochKitModel(self, path):
+        modelj = json.loads(self.zhandle.read(name))
+        modelj["model"] = self.zhandle.read(modelj["model"])
+
+        return modeleditor.ModelManager.createModel(self, modelj)
+
+    def extractStochKitJob(self, path):
+        jobj = json.loads(self.zhandle.read(name))
+        path = os.path.abspath(os.path.dirname(__file__))
+        
+        zipPath = jobj["output_location"]
+
+        outPath = tempfile.mkdtemp(dir = "{0}/../output/".format(path))
+
+        for name in self.zhandle.namelist():
+            if re.search('^{0}.*$'.format(zipPath), name):
+                relname = os.path.relpath(name, zipPath)
+
+                if not os.path.exists(os.path.dirname("{0}/{1}".format(outPath, relname))):
+                    os.makedirs(os.path.dirname("{0}/{1}".format(outPath, relname)))
+
+                    fhandle = open("{0}/{1}".format(outPath, relname), 'w')
+                    fhandle.write(self.zhandle.read(name))
+                    fhandle.close()
+
+        jobj["output_location"] = outPath
+    
+        return simulation.JobManager.createJob(self, jobj)
+
+    def extractSensitivityJob(self, path):
+        jsonJob = json.loads(self.zhandle.read(name))
+        path = os.path.abspath(os.path.dirname(__file__))
+        
+        zipPath = jsonJob["outData"]
+
+        outPath = tempfile.mkdtemp(dir = "{0}/../output/".format(path))
+
+        for name in self.zhandle.namelist():
+            if re.search('^{0}.*$'.format(zipPath), name):
+                relname = os.path.relpath(name, zipPath)
+
+                if not os.path.exists(os.path.dirname("{0}/{1}".format(outPath, relname))):
+                    os.makedirs(os.path.dirname("{0}/{1}".format(outPath, relname)))
+
+                    fhandle = open("{0}/{1}".format(outPath, relname), 'w')
+                    fhandle.write(self.zhandle.read(name))
+                    fhandle.close()
+
+        job = sensitivity.SensitivityJobWrapper()
+
+        job.userId = jsonJob["userId"]
+        job.jobName = jsonJob["jobName"]
+        job.startTime = jsonJob["startTime"]
+        job.indatajsonJob["indata"]
+        job.outData = outPath
+        job.status = jsonJob["status"]
+
+        job.put()
+
+        return job.key().id()
+
+    def close(self):
+        if self.zipfb:
+            self.zipfb.close()
+
+        if self.zipfbFile:
+            self.zipfbFile.close()
+
+        if self.zhandle:
+            self.zhandle.close()
+        
+        if self.fhandle:
+            self.fhandle.close()
+
 class ExportPage(BaseHandler):
     def get(self):
 
@@ -77,121 +279,27 @@ class ExportPage(BaseHandler):
 
             exportJob.put()
 
-            [tid, tmpfile] = tempfile.mkstemp(dir = os.path.abspath(os.path.dirname(__file__)) + '/../static/tmp/', prefix = "backup_", suffix = ".zip")
-            tmpdir = tempfile.mkdtemp()
-            zipfbFile = os.fdopen(tid, 'w')
-            zipfb = zipfile.ZipFile(zipfbFile, mode = 'w', allowZip64 = True)
-            names = []
+            szip = SuperZip(os.path.abspath(os.path.dirname(__file__)) + '/../static/tmp/')
+            exportJob.outData = szip.getFileName()
 
-            try:
-                fversion = open(os.path.abspath(os.path.dirname(__file__)) + '/../VERSION', 'r')
-                version = fversion.read().strip()
-                fversion.close()
-            except:
-                version = "1.1.0"
-
-            #def folderExists(folder):
-            #    pass
-
-            def getName(preferredName):
-                basename = tmpfile[:-4].split('/')[-1]
-
-                fileName = '{0}/{1}'.format(basename, preferredName)
-                while fileName in names:
-                    fileName = '{0}/{1}_{2}'.format(basename, preferredName, ''.join(random.choice('abcdefghijklmnopqrztuvwxyz') for x in range(3)))
-
-                names.append(fileName)
-
-                return fileName
-
-            def addBytes(name, buf):
-                name = getName(name)
-
-                zipfb.writestr(name, buf)
-
-                return name
-
-            def addFile(name, path):
-                name = getName(name)
-
-                zipfb.write(path, name)
-
-                return name
-
-            def addFolder(name, path):
-                name = getName(name)
-
-                for dirpath, dirnames, filenames in os.walk(path):
-                    for f in filenames:
-                        fp = os.path.join(dirpath, f)
-                        rel = os.path.relpath(fp, path)
-                        zipfb.write(fp, os.path.join(name, rel))
-
-                return name
-
-            models = db.GqlQuery("SELECT * FROM StochKitModelWrapper WHERE user_id = :1", self.user.user_id()).fetch(100000)
-
-            output = []
-
+            models = db.GqlQuery("SELECT * FROM StochKitModelWrapper WHERE user_id = :1", self.user.user_id()).run()
             for model in models:
-                jsonModel = { "version" : version,
-                              "name" : model.model_name,
-                              "user_id" : model.user_id}
-                if model.attributes:
-                    jsonModel.update(model.attributes)
-
-                jsonModel["units"] = model.model.units
-
-                jsonModel["model"] = addBytes('models/data/{0}.xml'.format(model.model_name), model.model.serialize())
-                addBytes('models/{0}.json'.format(model.model_name), json.dumps(jsonModel, sort_keys=True, indent=4, separators=(', ', ': ')))
-
-            #job = ExportJobWrapper.get_by_id(job.key().id())
+                szip.addStochKitModel(model)
 
             exportJob.status = "Running -- Exporting Simulations"
             exportJob.outData = None
-
             exportJob.put()
 
             ###jobs
-            jobs = db.GqlQuery("SELECT * FROM StochKitJobWrapper WHERE user_id = :1", self.user.user_id()).fetch(100000)
-
+            jobs = db.GqlQuery("SELECT * FROM SensitivityJobWrapper WHERE userId = :1", self.user.user_id()).run()
             for job in jobs:
-                stochkit_job = job.stochkit_job
+                szip.addSensitivityJob(job)
 
-                # Only export local, finished jobsx
-                if stochkit_job.status == "Finished":
-                    if stochkit_job.resource == 'Local':
-                        outputLocation = addFolder('stochkitJobs/data/{0}'.format(job.name), job.stochkit_job.output_location)
+            jobs = db.GqlQuery("SELECT * FROM StochKitJobWrapper WHERE user_id = :1", self.user.user_id()).run()
+            for job in jobs:
+                szip.addStochKitJob(job)
 
-                        jsonJob = { "version" : version,
-                                    "name" : job.name,
-                                    "stdout" : job.stdout,
-                                    "stderr" : job.stderr,
-                                    # These are things contained in the stochkit_job object
-                                    "type" : job.stochkit_job.type,
-                                    "status" : job.stochkit_job.status,
-                                    "output_location" : outputLocation,
-                                    "output_url" : job.stochkit_job.output_url,
-                                    "final_time" : job.stochkit_job.final_time,
-                                    "increment" : job.stochkit_job.increment,
-                                    "realizations" : job.stochkit_job.realizations,
-                                    "exec_type" : job.stochkit_job.exec_type,
-                                    "store_only_mean" : job.stochkit_job.store_only_mean,
-                                    "label_column_names" : job.stochkit_job.label_column_names,
-                                    "create_histogram_data" : job.stochkit_job.create_histogram_data,
-                                    "epsilon" : job.stochkit_job.epsilon,
-                                    "threshold" : job.stochkit_job.threshold,
-                                    "pid" : job.stochkit_job.pid,
-                                    "result" : job.stochkit_job.result }
-                    
-                        if job.attributes:
-                            jsonJob.update(job.attributes)
-
-                        addBytes('stochkitJobs/{0}.json'.format(job.name), json.dumps(jsonJob, sort_keys=True, indent=4, separators=(', ', ': ')))
-
-
-            zipfb.close()
-            zipfbFile.close()
+            szip.close()
 
             exportJob.status = "Finished"
             exportJob.outData = tmpfile.split("/")[-1]
@@ -348,46 +456,16 @@ class ImportPage(BaseHandler):
 
                 job = ImportJobWrapper.get_by_id(state["id"])
 
-                fdescript = os.open(job.zipFile, os.O_RDONLY)
-                fhandle = os.fdopen(fdescript, 'r')
-
-                zhandle = zipfile.ZipFile(fhandle, 'r')
+                szip = SuperZip(job.zipFile)
 
                 for name in state['selections']['mc']:
-                    modelj = json.loads(zhandle.read(name))
-                    modelj["model"] = zhandle.read(modelj["model"])
-
-                    modeleditor.ModelManager.createModel(self, modelj)
+                    name = szip.extractStochKitModel(name)
 
                 for name in state['selections']['sjc']:
-                    jobj = json.loads(zhandle.read(name))
-                    path = os.path.abspath(os.path.dirname(__file__))
-                    
-                    zipPath = jobj["output_location"]
+                    name = szip.extractStochKitJob(name)
 
-                    outPath = tempfile.mkdtemp(dir = "{0}/../output/".format(path))
+                szip.close()
 
-                    for name in zhandle.namelist():
-                        if re.search('^{0}.*$'.format(zipPath), name):
-                            relname = os.path.relpath(name, zipPath)
-
-                            if not os.path.exists(os.path.dirname("{0}/{1}".format(outPath, relname))):
-                                os.makedirs(os.path.dirname("{0}/{1}".format(outPath, relname)))
-
-                            print "Writing ", name, " to " , "{0}/{1}".format(outPath, relname)
-
-                            fhandle = open("{0}/{1}".format(outPath, relname), 'w')
-                            fhandle.write(zhandle.read(name))
-                            fhandle.close()
-
-                    jobj["output_location"] = outPath
-
-                    print simulation.JobManager.createJob(self, jobj)
-                    print "stochkitModel", name
-
-                zhandle.close()
-                fhandle.close()
-                
                 # Expect an importJobId
                 # along with a list of model jsons to import
                 # and a list of job jsons to import

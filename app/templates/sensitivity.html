@@ -4,55 +4,51 @@
 {% block content %}
 <div class="span9">
     <div class="row-fluid">
-        <div class"span9">
-            <div class="span9">
-                <div class="well">
-                    <h3> Sensitivity analysis </h3>
-                    <br />
-                    <span style="display:none;" id="newJob">
-                        Model Name: 
-                        <select id="modelSelect"></select>
+        <div class="span9">
+            <div class="well" style="display:none;" id="newJob">
+                <h3> Sensitivity analysis </h3>
+                <br />
+                Model Name: 
+                <select id="modelSelect"></select>
 
-                        <br />
+                <br />
 
-                        <table id="selectTable" border=1 width="50%">
-                            <tr>
-                                <th>Parameters</th>
-                                <!--<th>Initial Conditions</th>-->
-                            </tr>
-                            <tr>
-                                <td valign="top">
-                                    <table id="parameterContainer">
-                                    </table>
-                                </td>
-                                <!--<td valign="top">
-                                    <table id="initialConditionContainer">
-                                    </table>
-                                </td>-->
-                            </tr>
-                        </table>
+                <table id="selectTable" border=1 width="50%">
+                    <tr>
+                        <th>Parameters</th>
+                        <!--<th>Initial Conditions</th>-->
+                    </tr>
+                    <tr>
+                        <td valign="top">
+                            <table id="parameterContainer">
+                            </table>
+                        </td>
+                        <!--<td valign="top">
+                            <table id="initialConditionContainer">
+                            </table>
+                        </td>-->
+                    </tr>
+                </table>
 
-                        <br />
-                        Simulation time
-                        <br />
-                        <input type="text" value="0" disabled></input> to <input id="time" value="100" type="text"></input> store state every <input id="dt" type="text" value="0.1"></input> time units.
-                        <br />
+                <br />
+                Simulation time
+                <br />
+                <input type="text" value="0" disabled></input> to <input id="time" value="100" type="text"></input> store state every <input id="dt" type="text" value="0.1"></input> time units.
+                <br />
 
-                        Simulation name
-                        <br />
-                        <input id="name" type="text"></input>
-                        <br />
+                Simulation name
+                <br />
+                <input id="name" type="text"></input>
+                <br />
 
-                        <button class="btn-primary btn-large runlocal">Run locally</button>
-                    </span>
-
-                    <span style="display:none;" id="jobInfo">
-                        <div id="data"></div>
-                    </span>
-                </div>
+                <button class="btn-primary btn-large runlocal">Run locally</button>
             </div>
+
+            <span id="jobInfo">
+            </span>
         </div>
     </div>
+</div>
 </div>
 {% endblock %}
 
@@ -71,4 +67,30 @@
 <script type="text/javascript" src = "/static/js/nv.d3.js"></script>
 <script type="text/javascript" src = "/static/sensitivity.js"></script>
 <script type="text/javascript" src = "/static/sensitivityMain.js"></script>
+
+<script id="jobInfoTemplate" type="text/template">
+    <h2> Job summary: <span style="COLOR:green;"><%= jobName %></span></h2>
+    <br />
+    <div class="well">                    
+        <h3>Metadata</h3>
+        <p class="thispage">
+            Resource: <%= jobName %>
+            <br />
+        </p>
+    </div>
+
+    <div id="data"></div>
+                        
+    <br />
+
+    <div id="msg"></div>
+    
+    <br />
+    <div class="well">
+      <h3>Output</h3>
+      <br />
+      <button id="access" type="submit" class="btn btn-primary btn-large"><i class="icon-download-alt"></i> Fetch Data from Cloud</button>
+    </div>
+
+</script>
 {% endblock %}

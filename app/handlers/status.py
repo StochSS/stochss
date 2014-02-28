@@ -141,9 +141,9 @@ class StatusPage(BaseHandler):
                                 # for ode, this is output.txt
 
                                 if stochkit_job.exec_type == 'stochastic':
-                                    file_to_check = stochkit_job.output_location+"/output/stats/means.txt"
+                                    file_to_check = stochkit_job.output_location+"/result/stats/means.txt"
                                 else:
-                                    file_to_check = stochkit_job.output_location+"/output/output.txt"
+                                    file_to_check = stochkit_job.output_location+"/result/output.txt"
                                 
                                 if os.path.exists(file_to_check):
                                     stochkit_job.status = "Finished"
@@ -219,7 +219,7 @@ class StatusPage(BaseHandler):
                     if res[job.pid]:
                         job.status = "Running"
                     else:
-                        file_to_check = job.outData + "/output/output.txt"
+                        file_to_check = job.outData + "/result/output.txt"
                         if os.path.exists(file_to_check):
                             job.status = "Finished"
                         else:
@@ -303,7 +303,7 @@ class JobOutPutPage(BaseHandler):
             # Check if the results and stats folders are present locally
             if os.path.exists(stochkit_job.output_location+"/result"):
                 context['local_data']=True
-            if os.path.exists(stochkit_job.output_location+"/output/stats"):
+            if os.path.exists(stochkit_job.output_location+"/result/stats"):
                 context['local_statistics']=True
                         
             self.render_response('stochkitjoboutputpage.html',**dict(result,**context))
@@ -368,7 +368,7 @@ class JobOutPutPage(BaseHandler):
           # Check if the results and stats folders are present locally
           if os.path.exists(stochkit_job.output_location+"/result"):
             context['local_data']=True
-          if os.path.exists(stochkit_job.output_location+"/output/stats"):
+          if os.path.exists(stochkit_job.output_location+"/result/stats"):
             context['local_statistics']=True
         else:
           logging.info('Viewing job output in debug mode...')
@@ -413,7 +413,7 @@ class JobOutPutPage(BaseHandler):
             
             # Unpack it to its local output location
             os.system('tar -xf' +stochkit_job.uuid+'.tar')
-            stochkit_job.output_location = os.path.abspath(os.path.dirname(__file__))+'/../output/'+stochkit_job.uuid
+            stochkit_job.output_location = os.path.abspath(os.path.dirname(__file__))+'/../result/'+stochkit_job.uuid
             stochkit_job.output_location = os.path.abspath(stochkit_job.output_location)
             
             # Clean up
@@ -497,7 +497,7 @@ class VisualizePage(BaseHandler):
         """ Get the mean values """
         try:
             # StochKit labels the output files starting from 0, hence the "-1", since we label from 1 in the UI.
-            meanfile = params['job_folder']+'/output/stats/means.txt'
+            meanfile = params['job_folder']+'/result/stats/means.txt'
             file = open(meanfile,'rb')
             trajectory_data = [row.strip().split('\t') for row in file]
             
@@ -516,7 +516,7 @@ class VisualizePage(BaseHandler):
         """ Get the mean values """
         try:
             # StochKit labels the output files starting from 0, hence the "-1", since we label from 1 in the UI.
-            meanfile = params['job_folder']+'/output/output.txt'
+            meanfile = params['job_folder']+'/result/output.txt'
             file = open(meanfile,'rb')
             trajectory_data = [row.strip().split('\t') for row in file]
             
@@ -537,7 +537,7 @@ class VisualizePage(BaseHandler):
 
         try:
             # StochKit labels the output files starting from 0, hence the "-1", since we label from 1 in the UI.
-            meanfile = params['job_folder']+'/output/trajectories/trajectory'+str(int(trajectory_number)-1)+'.txt'
+            meanfile = params['job_folder']+'/result/trajectories/trajectory'+str(int(trajectory_number)-1)+'.txt'
             file = open(meanfile,'rb')
             trajectory_data = [row.strip().split('\t') for row in file]
             
@@ -555,17 +555,17 @@ class VisualizePage(BaseHandler):
     def getSpeciesNames(self, params):
         """ Get a list with the species names. 
             The result folder have to be populated in advance. """
-        #meanfile = params['job_folder']+'/output/stats/means.txt'
+        #meanfile = params['job_folder']+'/result/stats/means.txt'
         #logging.info(str(meanfile))
         try:
             # Try to grab them from the mean.txt file
             print params
             if params['exec_type'] == 'deterministic':
-                meanfile = params['job_folder'] + '/output/output.txt'
+                meanfile = params['job_folder'] + '/result/output.txt'
             else:
-                meanfile = params['job_folder'] + '/output/stats/means.txt'
+                meanfile = params['job_folder'] + '/result/stats/means.txt'
             
-            #meanfile = params['job_folder']+'/output/stats/means.txt'
+            #meanfile = params['job_folder']+'/result/stats/means.txt'
             file = open(meanfile,'rb')
             row = file.readline()
             logging.info(str(row))

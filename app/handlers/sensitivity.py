@@ -22,6 +22,8 @@ from stochssapp import ObjectProperty
 
 import time
 
+import exportimport
+
 import os, shutil
 import random
 
@@ -42,6 +44,7 @@ class SensitivityJobWrapper(db.Model):
     indata = db.StringProperty()
     outData = db.StringProperty()
     status = db.StringProperty()
+    zipFileName = db.StringProperty()
 
 class SensitivityPage(BaseHandler):
     """ Render a page that lists the available models. """    
@@ -53,6 +56,13 @@ class SensitivityPage(BaseHandler):
 
         if reqType == "jobInfo":
             job = SensitivityJobWrapper.get_by_id(int(self.request.get('id')))
+            
+            jsonJob = { "userId" : job.userId,
+                        "jobName" : job.jobName,
+                        "startTime" : job.startTime,
+                        "indata" : json.loads(job.indata),
+                        "outData" : job.outData,
+                        "status" : job.status }
 
             if self.user.user_id() != job.userId:
                 self.response.headers['Content-Type'] = 'application/json'
@@ -61,7 +71,7 @@ class SensitivityPage(BaseHandler):
             if job.status == "Finished":
                 outputdir = job.outData
                 # Load all data from file in JSON format
-                vhandle = open(outputdir + '/output/output.txt', 'r')
+                vhandle = open(outputdir + '/result/output.txt', 'r')
                 values = { 'time' : [], 'trajectories' : {}, 'sensitivities' : {}}
                 columnToList = []
                 for i, line in enumerate(vhandle):
@@ -94,7 +104,8 @@ class SensitivityPage(BaseHandler):
 
                 self.response.headers['Content-Type'] = 'application/json'
                 self.response.write(json.dumps({ "status" : "Finished",
-                                                 "values" : values}))
+                                                 "values" : values,
+                                                 "job" : jsonJob }))
             elif job.status == "Failed":
                 self.response.headers['Content-Type'] = 'application/json'
 
@@ -108,10 +119,35 @@ class SensitivityPage(BaseHandler):
 
                 self.response.write(json.dumps({ "status" : "Failed",
                                                  "stdout" : stdout,
-                                                 "stderr" : stderr}))
+                                                 "stderr" : stderr,
+                                                 "job" : jsonJob}))
             else:
                 self.response.headers['Content-Type'] = 'application/json'
                 self.response.write(json.dumps({ "status" : "asdfasdf" }))
+        elif reqType == "getLocalData":
+            job = SensitivityJobWrapper.get_by_id(int(self.request.get('id')))
+            
+            if not job.zipFileName:
+                szip = exportimport.SuperZip(os.path.abspath(os.path.dirname(__file__) + '/../static/tmp/'), preferredName = job.jobName + "_")
+                
+                job.zipFileName = szip.getFileName()
+
+                szip.addSensitivityJob(job)
+                
+                szip.close()
+
+                # Save the updated status
+                job.put()
+            
+            
+            relpath = os.path.relpath(job.zipFileName, os.path.abspath(os.path.dirname(__file__) + '/../'))
+
+            self.response.headers['Content-Type'] = 'application/json'
+            self.response.write(json.dumps({ 'status' : True,
+                                             'msg' : 'Job downloaded',
+                                             'url' : relpath }))
+            return
+
         elif reqType == "delJob":
             job = SensitivityJobWrapper.get_by_id(int(self.request.get('id')))
 
@@ -129,6 +165,13 @@ class SensitivityPage(BaseHandler):
 
         elif reqType == "newJob":
             data = json.loads(self.request.get('data'))
+
+            job = db.GqlQuery("SELECT * FROM SensitivityJobWrapper WHERE userId = :1 AND jobName = :2", self.user.user_id(), data["jobName"].strip()).get()
+
+            if job != None:
+                self.response.write(json.dumps({"status" : False,
+                                                "msg" : "Job name must be unique"}))
+                return
 
             job = SensitivityJobWrapper()
 
@@ -161,7 +204,7 @@ class SensitivityPage(BaseHandler):
 
             job.status = "Pending"
 
-            args = "--sensi -m {0} --parameters {1} -t {2} --out-dir {3} -i {4}".format(modelFileName, " ".join(parameters), runtime, dataDir + '/output', int(runtime / dt))
+            args = "--sensi -m {0} --parameters {1} -t {2} --out-dir {3} -i {4}".format(modelFileName, " ".join(parameters), runtime, dataDir + '/result', int(runtime / dt))
 
             ode = "{0}/../../ode/stochkit_ode.py {1}".format(path, args)
             exstring = '{0}/backend/wrapper.sh {1}/stdout {1}/stderr {2}'.format(basedir, dataDir, ode)

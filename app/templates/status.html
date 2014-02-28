@@ -156,7 +156,7 @@
                             </td>
                             <td>
                                 {% if job.status == "Finished" %}
-                                <a href="/static/tmp/{{job.outData}}">View results</a>
+                                <a href="/static/tmp/{{job.outData}}">Download Archive</a>
                                 {% else %}
                                 {% if job.status == "Failed" %}
                                 <a href="/static/tmp/{{job.outData}}">Get Debugging Info</a>

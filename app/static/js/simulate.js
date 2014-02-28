@@ -153,24 +153,79 @@ var run = function()
 
                       if(data.status == "Finished")
                       {
-                          var plotData = []
-
-                          data = data.values
-
-                          for(var specie in data.trajectories)
+                          if(data.job.resource.toLowerCase() == "local")
                           {
-                              var series = [];
+                              var plotData = []
 
-                              for(var i = 0; i < data.trajectories[specie].length; i++)
+                              $( "#access" ).text( "Access local data" );
+                              $( "#access" ).click( function() {
+                                  updateMsg( { status : true,
+                                               msg : "Packing up data... (will forward you to file when ready)" } );
+                                  $.ajax( { type : "POST",
+                                            url : "/simulate",
+                                            data : { reqType : "getDataLocal",
+                                                     id : id },
+                                            success : function(data) {
+                                                updateMsg(data);
+                                                
+                                                if(data.status == true)
+                                                {
+                                                    window.location = data.url;
+                                                }
+                                            },
+                                            
+                                            error: function(data)
+                                            {
+                                                console.log("do I get called?");
+                                            },
+                                            dataType : 'json'
+                                          });
+                              });
+
+                              data = data.values
+
+                              for(var specie in data.trajectories)
                               {
-                                  series.push( { x : data.time[i], y : data.trajectories[specie][i]} );
-                              }
+                                  var series = [];
 
-                              plotData.push( { label : specie,
-                                               data : series } );
+                                  for(var i = 0; i < data.trajectories[specie].length; i++)
+                                  {
+                                      series.push( { x : data.time[i], y : data.trajectories[specie][i]} );
+                                  }
+
+                                  plotData.push( { label : specie,
+                                                   data : series } );
+                              }
+                              
+                              Splot.plot( $( "#plot" ), plotData);
                           }
-                          
-                          Splot.plot( $( "#plot" ), plotData);
+                          else
+                          {
+                              $( "#access" ).click( function() {
+                                  updateMsg( { status : true,
+                                               msg : "Downloading data from cloud... (page will refresh when finished)" } );
+
+                                  $.ajax( { type : "POST",
+                                            url : "/simulate",
+                                            data : { reqType : "getFrom",
+                                                     id : id },
+                                            success : function(data) {
+                                                updateMsg(data);
+
+                                                if(data.status == true)
+                                                {
+                                                    location.reload() ;
+                                                }
+                                            },
+                                            
+                                            error: function(data)
+                                            {
+                                                console.log("do I get called?");
+                                            },
+                                            dataType : 'json'
+                                          });
+                              });
+                          }
                       }
                       else
                       {

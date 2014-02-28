@@ -189,20 +189,14 @@
 
     <br />
 
+    <div id="msg"></div>
+    
+    <br />
+
     <div class="well">
-        <form id="fetchoutputform" action="/output/{{job_name}}.tgz" method="post">
-            <h3>Output</h3>
-            <br />
-            <% if(type == "cloud") { %>
-            <button type="submit" class="btn btn-primary btn-large"><i class="icon-download-alt"></i> Fetch Data from Cloud</button>
-            <input type="hidden" name="fetch_remote" value="fetch_remote">
-            <input type="hidden" name="job_name" value="{{job_name}}">
-            <% } else { %>
-            <button type="submit" class="btn btn-primary btn-large"><i class="icon-download-alt"></i> Access Local Data</button>
-            <input type="hidden" name="fetch_local" value="fetch_local">
-            <input type="hidden" name="job_name" value="{{job_name}}">
-            <% } %>
-        </form>
+      <h3>Output</h3>
+      <br />
+      <button id="access" type="submit" class="btn btn-primary btn-large"><i class="icon-download-alt"></i> Fetch Data from Cloud</button>
     </div>
 </script>
 {% endblock %}

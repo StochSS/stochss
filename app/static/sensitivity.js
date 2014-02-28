@@ -1,5 +1,15 @@
 var Sensitivity = Sensitivity || {}
 
+var updateMsg = function(data)
+{
+    $( "#msg" ).html(data.msg);
+    if(data.status)
+        $( "#msg" ).css('color', 'green');
+    else
+        $( "#msg" ).css('color', 'red');
+    $( "#msg" ).show();
+};
+
 Sensitivity.SelectTable = Backbone.View.extend(
     {
         initialize: function(attributes, options)
