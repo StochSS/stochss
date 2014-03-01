@@ -72,10 +72,16 @@ Import.ImportTable = Backbone.View.extend(
 <td><%= type %></td>\
 </tr>');
 
+	    this.sensitivityTemplate = _.template('<tr>\
+<td><input type="checkbox" /></td>\
+<td><%= jobName %></td>\
+</tr>');
+
             this.mc = this.$el.find( '#modelContainer' );
             this.sjc = this.$el.find( '#stochkitJobContainer' );
+            this.snc = this.$el.find( '#sensitivityJobContainer' );
 
-            this.state = { id : undefined, selections : { mc : {}, sjc : {} } };
+            this.state = { id : undefined, selections : { mc : {}, sjc : {}, snc : {} } };
             
             this.$el.hide();
         },
@@ -93,6 +99,7 @@ Import.ImportTable = Backbone.View.extend(
         {
             this.mc.empty();
             this.sjc.empty();
+            this.snc.empty();
 
             if(typeof data != 'undefined') {
                 this.state.id = data.id;
@@ -121,6 +128,18 @@ Import.ImportTable = Backbone.View.extend(
                     boxparam.find('input').change( _.partial(function(state, id, event) {
                         state[id] = $( event.target ).prop( 'checked' );
                     }, this.state.selections.sjc, name) );
+                }
+
+                for(var name in this.data.headers.sensitivityJobs) {
+                    var job = this.data.headers.sensitivityJobs[name];
+
+                    var html = this.sensitivityTemplate(job);
+
+                    var boxparam = $( html ).appendTo( this.snc );
+
+                    boxparam.find('input').change( _.partial(function(state, id, event) {
+                        state[id] = $( event.target ).prop( 'checked' );
+                    }, this.state.selections.snc, name) );
                 }
             }
 
@@ -208,7 +227,7 @@ var run = function()
             progressHandle.text(progress + '%');
         },
         error : function(data) {
-            console.log('fuck');
+            console.log('error');
         }
     }).prop('disabled', !$.support.fileInput)
         .parent().addClass($.support.fileInput ? undefined : 'disabled');
@@ -216,7 +235,8 @@ var run = function()
     $( "#export" ).click( function() {
         $.ajax( { type : "GET",
                   url : "/export",
-                  data : { reqType : "backup" },
+                  data : { reqType : "backup",
+                           globalOp : $( "#globalOp" ).val() },
                   success : function(data) {
                       updateMsg(data);
                       window.location = "/status";
@@ -233,7 +253,8 @@ var run = function()
         $.ajax( { type : "POST",
                   url : "/import",
                   data : { reqType : "doImport",
-                           state : JSON.stringify(importTable.state)},
+                           state : JSON.stringify(importTable.state),
+                           globalOp : $( "#globalOp" ).val() },
                   success : updateMsg,
                   error: function(data)
                   {
