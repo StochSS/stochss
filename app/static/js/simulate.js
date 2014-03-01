@@ -207,7 +207,7 @@ var run = function()
 
                                   $.ajax( { type : "POST",
                                             url : "/simulate",
-                                            data : { reqType : "getFrom",
+                                            data : { reqType : "getFromCloud",
                                                      id : id },
                                             success : function(data) {
                                                 updateMsg(data);

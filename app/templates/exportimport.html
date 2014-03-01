@@ -7,6 +7,9 @@
         <div class"span9">
             <div class="span9">
                 <div class="well">
+                    {% if isAdminUser %}
+                    <input id="globalOp" type="checkbox"> Operate on all system data (admin only)
+                    {% endif %}
                     <table width="100%">
                         <tr>
                             <td valign="top" width="50%">
@@ -69,6 +72,22 @@
                                                 </table>
                                             </td>
                                         </tr>
+                                        <tr>
+                                            <th>Sensitivity Jobs</th>
+                                        </tr>
+                                        <tr>
+                                            <td valign="top">
+                                                <table width="100%" border="1">
+                                                    <thead>
+                                                        <tr>
+                                                            <th></th><th>Job name</th>
+                                                        </tr>
+                                                    </thead>
+                                                    <tbody id="sensitivityJobContainer">
+                                                    </tbody>
+                                                </table>
+                                            </td>
+                                        </tr>
                                     </table>
                                     <br />
                                     <button class="btn-primary btn-large" id="import">Import</button>
@@ -98,7 +117,7 @@
 <script type="text/javascript" src = "/static/js/jquery.jqplot.js"></script>
 <script type="text/javascript" src = "/static/js/d3.v3.js"></script>
 <script type="text/javascript" src = "/static/js/nv.d3.js"></script>
-<script src="/static/jfu/js/jquery.iframe-transport.js"></script>
-<script src="/static/jfu/js/jquery.fileupload.js"></script>
+<script src="/static/js/jfu/js/jquery.iframe-transport.js"></script>
+<script src="/static/js/jfu/js/jquery.fileupload.js"></script>
 <script type="text/javascript" src = "/static/importMain.js"></script>
 {% endblock %}

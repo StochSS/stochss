@@ -164,11 +164,22 @@ class BaseHandler(webapp2.RequestHandler):
             #dev_appserver.TearDownStubs()
             
     def authentication_required(self):
-        print type(self).__name__
-        raise Exception("Subclass must implement me!")
+        return True
+        #print type(self).__name__
+        #raise Exception("Subclass must implement me!")
         
     def logged_in(self):
-        return self.auth.get_user_by_session() is not None
+        user_dict = self.auth.get_user_by_session()
+
+        if user_dict == None:
+            return None
+
+        self.user = self.auth.store.user_model.get_by_id(user_dict['user_id'])
+
+        if self.user == None:
+            return None
+
+        return user_dict
 			
     def get_session_property(self, key):
         """ Get the value for the given session property. """

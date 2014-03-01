@@ -50,16 +50,10 @@ class SuperZip:
                 fversion.close()
             except:
                 self.version = "1.1.0"
-            self.fhandle = None
-            self.zhandle = None
         else:
             fdescript = os.open(zipFileName, os.O_RDONLY)
-            self.fhandle = os.fdopen(fdescript, 'r')
-
-            self.zhandle = zipfile.ZipFile(fhandle, 'r')
-
-            self.zipfbFile = None
-            self.zipfb = zipfile.ZipFile(zipFileName, mode = 'r', allowZip64 = True)
+            self.zipfbFile = os.fdopen(fdescript, 'r')
+            self.zipfb = zipfile.ZipFile(self.zipfbFile, mode = 'r', allowZip64 = True)
 
     def getFileName(self):
         return self.tmpfile
@@ -110,7 +104,7 @@ class SuperZip:
             
         jsonModel["units"] = model.model.units
 
-        jsonModel["model"] = addBytes('models/data/{0}.xml'.format(model.model_name), model.model.serialize())
+        jsonModel["model"] = self.addBytes('models/data/{0}.xml'.format(model.model_name), model.model.serialize())
         self.addBytes('models/{0}.json'.format(model.model_name), json.dumps(jsonModel, sort_keys=True, indent=4, separators=(', ', ': ')))
 
     def addStochKitJob(self, job):
@@ -123,6 +117,7 @@ class SuperZip:
 
                 jsonJob = { "version" : self.version,
                             "name" : job.name,
+                            "user_id" : job.user_id,
                             "stdout" : job.stdout,
                             "stderr" : job.stderr,
                             # These are things contained in the stochkit_job object
@@ -161,21 +156,27 @@ class SuperZip:
                     
         self.addBytes('sensitivityJobs/{0}.json'.format(job.jobName), json.dumps(jsonJob, sort_keys=True, indent=4, separators=(', ', ': ')))
 
-    def extractStochKitModel(self, path):
-        modelj = json.loads(self.zhandle.read(name))
-        modelj["model"] = self.zhandle.read(modelj["model"])
+    def extractStochKitModel(self, path, userId = None, handler = None):
+        modelj = json.loads(self.zipfb.read(path))
+        modelj["model"] = self.zipfb.read(modelj["model"])
 
-        return modeleditor.ModelManager.createModel(self, modelj)
+        if userId:
+            modelj["user_id"] = userId
 
-    def extractStochKitJob(self, path):
-        jobj = json.loads(self.zhandle.read(name))
+        return modeleditor.ModelManager.createModel(handler, modelj)
+
+    def extractStochKitJob(self, path, userId = None):
+        jobj = json.loads(self.zipfb.read(path))
         path = os.path.abspath(os.path.dirname(__file__))
         
         zipPath = jobj["output_location"]
 
+        if userId:
+            jobj["user_id"] = userId
+
         outPath = tempfile.mkdtemp(dir = "{0}/../output/".format(path))
 
-        for name in self.zhandle.namelist():
+        for name in self.zipfb.namelist():
             if re.search('^{0}.*$'.format(zipPath), name):
                 relname = os.path.relpath(name, zipPath)
 
@@ -183,22 +184,25 @@ class SuperZip:
                     os.makedirs(os.path.dirname("{0}/{1}".format(outPath, relname)))
 
                     fhandle = open("{0}/{1}".format(outPath, relname), 'w')
-                    fhandle.write(self.zhandle.read(name))
+                    fhandle.write(self.zipfb.read(name))
                     fhandle.close()
 
         jobj["output_location"] = outPath
     
-        return simulation.JobManager.createJob(self, jobj)
+        return simulation.JobManager.createJob(handler, jobj)
 
-    def extractSensitivityJob(self, path):
-        jsonJob = json.loads(self.zhandle.read(name))
+    def extractSensitivityJob(self, path, userId = None):
+        jsonJob = json.loads(self.zipfb.read(path))
         path = os.path.abspath(os.path.dirname(__file__))
         
         zipPath = jsonJob["outData"]
 
+        if userId:
+            jsonJob["userId"] = userId
+
         outPath = tempfile.mkdtemp(dir = "{0}/../output/".format(path))
 
-        for name in self.zhandle.namelist():
+        for name in self.zipfb.namelist():
             if re.search('^{0}.*$'.format(zipPath), name):
                 relname = os.path.relpath(name, zipPath)
 
@@ -206,7 +210,7 @@ class SuperZip:
                     os.makedirs(os.path.dirname("{0}/{1}".format(outPath, relname)))
 
                     fhandle = open("{0}/{1}".format(outPath, relname), 'w')
-                    fhandle.write(self.zhandle.read(name))
+                    fhandle.write(self.zipfb.read(name))
                     fhandle.close()
 
         job = sensitivity.SensitivityJobWrapper()
@@ -228,12 +232,6 @@ class SuperZip:
 
         if self.zipfbFile:
             self.zipfbFile.close()
-
-        if self.zhandle:
-            self.zhandle.close()
-        
-        if self.fhandle:
-            self.fhandle.close()
 
 class ExportPage(BaseHandler):
     def get(self):
@@ -271,18 +269,28 @@ class ExportPage(BaseHandler):
             return
         elif reqType == 'backup':
             exportJob = ExportJobWrapper()
+            globalOp = self.request.get('globalOp')
+
+            if globalOp and not self.user.is_admin_user():
+                self.response.headers['Content-Type'] = 'application/json'
+                self.response.write( json.dumps({ "status" : False,
+                                                  "msg" : "Non-admin users cannot export all data" }) )
+                return
 
             exportJob.userId = self.user.user_id()
             exportJob.startTime = time.strftime("%Y-%m-%d-%H-%M-%S")
             exportJob.status = "Running -- Exporting Models"
-            exportJob.outData = ""
+            exportJob.outData = None
 
             exportJob.put()
 
             szip = SuperZip(os.path.abspath(os.path.dirname(__file__)) + '/../static/tmp/')
-            exportJob.outData = szip.getFileName()
 
-            models = db.GqlQuery("SELECT * FROM StochKitModelWrapper WHERE user_id = :1", self.user.user_id()).run()
+            if not globalOp:
+                models = db.GqlQuery("SELECT * FROM StochKitModelWrapper WHERE user_id = :1", self.user.user_id()).run()
+            else:
+                models = db.GqlQuery("SELECT * FROM StochKitModelWrapper").run()
+
             for model in models:
                 szip.addStochKitModel(model)
 
@@ -291,18 +299,26 @@ class ExportPage(BaseHandler):
             exportJob.put()
 
             ###jobs
-            jobs = db.GqlQuery("SELECT * FROM SensitivityJobWrapper WHERE userId = :1", self.user.user_id()).run()
+            if not globalOp:
+                jobs = db.GqlQuery("SELECT * FROM SensitivityJobWrapper WHERE userId = :1", self.user.user_id()).run()
+            else:
+                jobs = db.GqlQuery("SELECT * FROM SensitivityJobWrapper").run()
+
             for job in jobs:
                 szip.addSensitivityJob(job)
 
-            jobs = db.GqlQuery("SELECT * FROM StochKitJobWrapper WHERE user_id = :1", self.user.user_id()).run()
+            if not globalOp:
+                jobs = db.GqlQuery("SELECT * FROM StochKitJobWrapper WHERE user_id = :1", self.user.user_id()).run()
+            else:
+                jobs = db.GqlQuery("SELECT * FROM StochKitJobWrapper").run()
+
             for job in jobs:
                 szip.addStochKitJob(job)
 
             szip.close()
 
             exportJob.status = "Finished"
-            exportJob.outData = tmpfile.split("/")[-1]
+            exportJob.outData = os.path.basename(szip.getFileName())
 
             exportJob.put()
 
@@ -359,7 +375,7 @@ class ImportPage(BaseHandler):
         return size
 
     def get(self):
-        self.render_response('exportimport.html')
+        self.render_response('exportimport.html', isAdminUser = self.user.is_admin_user())
 
     def post(self):
         if 'files[]' in self.request.POST:
@@ -390,13 +406,15 @@ class ImportPage(BaseHandler):
 
                 zipFile = zipfile.ZipFile(fieldStorage.file, 'r')
 
-                headers = { "models" : {}, "stochkitJobs" : {} }
+                headers = { "models" : {}, "stochkitJobs" : {}, "sensitivityJobs" : {} }
                 for name in zipFile.namelist():
                     if re.search('^{0}/models/[a-zA-Z0-9\-_]*\.json$'.format(filename), name):
                         headers['models'][name] = json.loads(zipFile.read(name))
                     elif re.search('^{0}/stochkitJobs/[a-zA-Z0-9\-_]*\.json$'.format(filename), name):
                         headers['stochkitJobs'][name] = json.loads(zipFile.read(name))
-                    
+                    elif re.search('^{0}/sensitivityJobs/[a-zA-Z0-9\-_]*\.json$'.format(filename), name):
+                        headers['sensitivityJobs'][name] = json.loads(zipFile.read(name))
+
                 zipFile.close();
                 
                 job.status = "Finished"
@@ -454,15 +472,31 @@ class ImportPage(BaseHandler):
             elif reqType == 'doImport':
                 state = json.loads(self.request.get('state'))
 
+                globalOp = self.request.get('globalOp')
+
                 job = ImportJobWrapper.get_by_id(state["id"])
 
-                szip = SuperZip(job.zipFile)
+                if globalOp and not self.user.is_admin_user():
+                    self.response.headers['Content-Type'] = 'application/json'
+                    self.response.write( json.dumps({ "status" : False,
+                                                      "msg" : "Non-admin users cannot export all data" }) )
+                    return
+
+                szip = SuperZip(zipFileName = job.zipFile)
+
+                if not globalOp:
+                    userId = self.user.user_id()
+                else:
+                    userId = None
 
                 for name in state['selections']['mc']:
-                    name = szip.extractStochKitModel(name)
+                    name = szip.extractStochKitModel(name, userId)
 
                 for name in state['selections']['sjc']:
-                    name = szip.extractStochKitJob(name)
+                    name = szip.extractStochKitJob(name, userId)
+
+                for name in state['selections']['snc']:
+                    name = szip.extractSensivitiyJob(name, userId)
 
                 szip.close()
 
