@@ -213,20 +213,50 @@ class StatusPage(BaseHandler):
 
             for number, job in enumerate(jobs):
                 number = len(jobs) - number
-
-                if job.status != "Finished" or job.status != "Failed":
-                    res = service.checkTaskStatusLocal([job.pid])
-                    if res[job.pid]:
-                        job.status = "Running"
-                    else:
-                        file_to_check = job.outData + "/result/output.txt"
-                        if os.path.exists(file_to_check):
-                            job.status = "Finished"
+                if job.resource == "local":
+                    if job.status != "Finished" or job.status != "Failed":
+                        res = service.checkTaskStatusLocal([job.pid])
+                        if res[job.pid]:
+                            job.status = "Running"
                         else:
-                            job.status = "Failed"
-
-                    job.put()
-                            
+                            file_to_check = job.outData + "/result/output.txt"
+                            if os.path.exists(file_to_check):
+                                job.status = "Finished"
+                            else:
+                                job.status = "Failed"
+                #
+                elif job.resource == "cloud" and job.status != "Finished":
+                    # Retrive credentials from the datastore
+                    if not self.user_data.valid_credentials:
+                        return {'status':False,'msg':'Could not retrieve the status of job '+stochkit_job.name +'. Invalid credentials.'}
+                    credentials = self.user_data.getCredentials()
+                    # Check the status from backend
+                    taskparams = {'AWS_ACCESS_KEY_ID':credentials['EC2_ACCESS_KEY'],'AWS_SECRET_ACCESS_KEY':credentials['EC2_SECRET_KEY'],'taskids':[job.cloudDatabaseID]}
+                    task_status = service.describeTask(taskparams)
+                    job_status = task_status[job.cloudDatabaseID]
+                    # If it's finished
+                    if job_status['status'] == 'finished':
+                        # Update the job 
+                        job.status = 'Finished'
+                        job.outputURL = job_status['output']
+                    # 
+                    elif job_status['status'] == 'failed':
+                        job.status = 'Failed'
+                        job.exceptionMessage = job_status['message']
+                        # Might not have an output if an exception was raised early on or if there is just no output available
+                        try:
+                            job.outputURL = job_status['output']
+                        except KeyError:
+                            pass
+                    # 
+                    elif job_status['status'] == 'pending':
+                        job.status = 'Pending'
+                    else:
+                        # The state gives more fine-grained results, like if the job is being re-run, but
+                        #  we don't bother the users with this info, we just tell them that it is still running.  
+                        job.status = 'Running'
+                
+                job.put()   
                 allSensJobs.append({ "name" : job.jobName,
                                      "status" : job.status,
                                      "id" : job.key().id(),
@@ -244,7 +274,6 @@ class StatusPage(BaseHandler):
 
             for number, job in enumerate(jobs):
                 number = len(jobs) - number
-                            
                 allExportJobs.append({ "startTime" : job.startTime,
                                        "status" : job.status,
                                        "number" : number,

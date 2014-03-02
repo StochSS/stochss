@@ -20,6 +20,8 @@ from stochssapp import BaseHandler
 from stochssapp import StochKitModelWrapper
 from stochssapp import ObjectProperty
 
+from backend.backendservice import backendservices
+
 import time
 
 import exportimport
@@ -45,6 +47,11 @@ class SensitivityJobWrapper(db.Model):
     outData = db.StringProperty()
     status = db.StringProperty()
     zipFileName = db.StringProperty()
+    resource = db.StringProperty()
+    cloudDatabaseID = db.StringProperty()
+    celeryPID = db.StringProperty()
+    outputURL = db.StringProperty()
+    exceptionMessage = db.StringProperty()
 
 class SensitivityPage(BaseHandler):
     """ Render a page that lists the available models. """    
@@ -69,6 +76,19 @@ class SensitivityPage(BaseHandler):
                 self.response.write(json.dumps(["Not the right user"]))
 
             if job.status == "Finished":
+                if job.resource == "cloud" and job.outData is None:
+                    # Grab the remote files
+                    service = backendservices()
+                    service.fetchOutput(job.cloudDatabaseID, job.outputURL)
+                    # Unpack it to its local output location
+                    os.system('tar -xf {0}.tar'.format(job.cloudDatabaseID))
+                    job.outData = os.path.dirname(os.path.abspath(__file__))+'/../output/'+job.cloudDatabaseID
+                    job.outData = os.path.abspath(job.outData)
+                    jsonJob["outData"] = job.outData
+                    # Clean up
+                    os.remove(job.cloudDatabaseID+'.tar')
+                    # Update the db entry
+                    job.put()
                 outputdir = job.outData
                 # Load all data from file in JSON format
                 vhandle = open(outputdir + '/result/output.txt', 'r')
@@ -172,48 +192,15 @@ class SensitivityPage(BaseHandler):
                 self.response.write(json.dumps({"status" : False,
                                                 "msg" : "Job name must be unique"}))
                 return
-
-            job = SensitivityJobWrapper()
-
-            job.userId = self.user.user_id()
-            job.model = StochKitModelWrapper.get_by_id(data["id"])
-            job.startTime = time.strftime("%Y-%m-%d-%H-%M-%S")
-            job.jobName = data["jobName"]
-
-            runtime = float(data["time"])
-            dt = float(data["increment"])
-
-            job.indata = json.dumps(data)
-
-            path = os.path.abspath(os.path.dirname(__file__))
-
-            parameters = []
-            for parameter in data['selections']["pc"]:
-                if data['selections']["pc"][parameter]:
-                    parameters.append(parameter)
-
-            basedir = path + '/../'
-            dataDir = tempfile.mkdtemp(dir = basedir + 'output')
-
-            job.outData = dataDir
-
-            modelFileName = '{0}/{1}.xml'.format(job.outData, job.model.model_name)
-            fmodelHandle = open(modelFileName, 'w')
-            fmodelHandle.write(job.model.model.serialize())
-            fmodelHandle.close()
-
-            job.status = "Pending"
-
-            args = "--sensi -m {0} --parameters {1} -t {2} --out-dir {3} -i {4}".format(modelFileName, " ".join(parameters), runtime, dataDir + '/result', int(runtime / dt))
-
-            ode = "{0}/../../ode/stochkit_ode.py {1}".format(path, args)
-            exstring = '{0}/backend/wrapper.sh {1}/stdout {1}/stderr {2}'.format(basedir, dataDir, ode)
-
-            handle = subprocess.Popen(exstring.split())
-            job.pid = handle.pid
-
-            job.put()
-
+            # Either local or cloud
+            if data["resource"] == "local":
+                job = self.runLocal(data)
+            elif data["resource"] == "cloud":
+                job = self.runCloud(data)
+            else:
+                return self.response.write(json.dumps({"status" : False,
+                                            "msg" : "Unrecognized resource requested: {0}".format(data.resource)}))
+            
             self.response.write(json.dumps({"status" : True,
                                             "msg" : "Job launched",
                                             "kind" : job.kind(),
@@ -221,3 +208,89 @@ class SensitivityPage(BaseHandler):
         else:
             self.response.write(json.dumps({"status" : False,
                                             "msg" : "No data submitted"}))
+    
+    def runLocal(self, data):
+        '''
+        '''
+        job = SensitivityJobWrapper()
+        job.resource = "local"
+        job.userId = self.user.user_id()
+        job.model = StochKitModelWrapper.get_by_id(data["id"])
+        job.startTime = time.strftime("%Y-%m-%d-%H-%M-%S")
+        job.jobName = data["jobName"]
+
+        runtime = float(data["time"])
+        dt = float(data["increment"])
+
+        job.indata = json.dumps(data)
+
+        path = os.path.abspath(os.path.dirname(__file__))
+
+        parameters = []
+        for parameter in data['selections']["pc"]:
+            if data['selections']["pc"][parameter]:
+                parameters.append(parameter)
+
+        basedir = path + '/../'
+        dataDir = tempfile.mkdtemp(dir = basedir + 'output')
+
+        job.outData = dataDir
+
+        modelFileName = '{0}/{1}.xml'.format(job.outData, job.model.model_name)
+        fmodelHandle = open(modelFileName, 'w')
+        fmodelHandle.write(job.model.model.serialize())
+        fmodelHandle.close()
+
+        job.status = "Pending"
+
+        args = "--sensi -m {0} --parameters {1} -t {2} --out-dir {3} -i {4}".format(modelFileName, " ".join(parameters), runtime, dataDir + '/result', int(runtime / dt))
+
+        ode = "{0}/../../ode/stochkit_ode.py {1}".format(path, args)
+        exstring = '{0}/backend/wrapper.sh {1}/stdout {1}/stderr {2}'.format(basedir, dataDir, ode)
+
+        handle = subprocess.Popen(exstring.split())
+        job.pid = handle.pid
+
+        job.put()
+        return job
+    
+    def runCloud(self, data):
+        '''
+        '''
+        job = SensitivityJobWrapper()
+        job.resource = "cloud"
+        job.userId = self.user.user_id()
+        job.model = StochKitModelWrapper.get_by_id(data["id"])
+        job.startTime = time.strftime("%Y-%m-%d-%H-%M-%S")
+        job.jobName = data["jobName"]
+        job.status = "Pending"
+
+        runtime = float(data["time"])
+        dt = float(data["increment"])
+
+        job.indata = json.dumps(data)
+
+        parameters = []
+        for parameter in data['selections']["pc"]:
+            if data['selections']["pc"][parameter]:
+                parameters.append(parameter)
+        
+        params = {
+            "job_type": "sensitivity",
+            "document": str( job.model.model.serialize() ),
+            "paramstring": "stochkit_ode.py --sensi --parameters {0} -t {1} -i {2}".format( " ".join(parameters), runtime, int(runtime / dt)),
+            "bucketname": self.user_data.getBucketName()
+        }
+        service = backendservices()
+        db_credentials = self.user_data.getCredentials()
+        # Set the environmental variables 
+        os.environ["AWS_ACCESS_KEY_ID"] = db_credentials['EC2_ACCESS_KEY']
+        os.environ["AWS_SECRET_ACCESS_KEY"] = db_credentials['EC2_SECRET_KEY']
+        # Send the task to the backend
+        celery_task_id, task_id = service.executeTask(params)
+        job.cloudDatabaseID = task_id
+        job.celeryPID = celery_task_id
+        job.outData = None
+        job.zipFileName = None
+        job.put()
+        return job
