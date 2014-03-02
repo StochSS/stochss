@@ -256,11 +256,25 @@ var run = function()
     }).prop('disabled', !$.support.fileInput)
         .parent().addClass($.support.fileInput ? undefined : 'disabled');
 
-    $( "#export" ).click( function() {
+    $( "#export" ).click( function(e) {
+        e.preventDefault();
+        // Get all the names of cloud jobs for which the user wants to pull data from S3
+        var cloudJobsToExport = [];
+        var checkboxes = document.getElementsByName('select_job');
+        for (var i = 0; i < checkboxes.length; i++)
+        {
+            if (checkboxes[i].checked) {
+                cloudJobsToExport.push(checkboxes[i].value);
+            }
+        }
+        var ajaxData = {
+            reqType : "backup",
+            globalOp : $( "#globalOp" ).val(),
+            cloudJobs: cloudJobsToExport
+        };
         $.ajax( { type : "POST",
                   url : "/export",
-                  data : { reqType : "backup",
-                           globalOp : $( "#globalOp" ).val() },
+                  data : JSON.stringify(ajaxData),
                   success : function(data) {
                       updateMsg(data);
                       window.location = "/status";

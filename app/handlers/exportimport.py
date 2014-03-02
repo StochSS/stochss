@@ -21,6 +21,7 @@ from stochssapp import BaseHandler
 from stochss.model import *
 from stochss.stochkit import *
 from stochss.examplemodels import *
+from backend.backendservice import backendservices
 
 import webapp2
 
@@ -34,7 +35,8 @@ class ExportJobWrapper(db.Model):
     outData = db.StringProperty()
 
 class SuperZip:
-    def __init__(self, directory = None, zipFileName = None, preferredName = "backup_"):
+    def __init__(self, directory = None, zipFileName = None, preferredName = "backup_", cloudJobsToDownload = []):
+        self.cloudJobsToDownload = cloudJobsToDownload
         if directory == None and zipfile == None:
             raise Exception("SuperZip must have either directory or zipFileName defined in constructor")
 
@@ -110,50 +112,88 @@ class SuperZip:
     def addStochKitJob(self, job):
         stochkit_job = job.stochkit_job
 
-        # Only export local, finished jobsx
+        # Only export finished jobs
         if stochkit_job.status == "Finished":
-            if stochkit_job.resource == 'Local':
-                outputLocation = self.addFolder('stochkitJobs/data/{0}'.format(job.name), job.stochkit_job.output_location)
-
-                jsonJob = { "version" : self.version,
-                            "name" : job.name,
-                            "user_id" : job.user_id,
-                            "stdout" : job.stdout,
-                            "stderr" : job.stderr,
-                            # These are things contained in the stochkit_job object
-                            "type" : job.stochkit_job.type,
-                            "status" : job.stochkit_job.status,
-                            "output_location" : outputLocation,
-                            "output_url" : job.stochkit_job.output_url,
-                            "final_time" : job.stochkit_job.final_time,
-                            "increment" : job.stochkit_job.increment,
-                            "realizations" : job.stochkit_job.realizations,
-                            "resource" : job.stochkit_job.resource,
-                            "exec_type" : job.stochkit_job.exec_type,
-                            "store_only_mean" : job.stochkit_job.store_only_mean,
-                            "label_column_names" : job.stochkit_job.label_column_names,
-                            "create_histogram_data" : job.stochkit_job.create_histogram_data,
-                            "epsilon" : job.stochkit_job.epsilon,
-                            "threshold" : job.stochkit_job.threshold,
-                            "pid" : job.stochkit_job.pid,
-                            "result" : job.stochkit_job.result }
-                    
-                if job.attributes:
-                    jsonJob.update(job.attributes)
-
-                self.addBytes('stochkitJobs/{0}.json'.format(job.name), json.dumps(jsonJob, sort_keys=True, indent=4, separators=(', ', ': ')))
-
+            # These are fields shared among all jobs
+            jsonJob = { "version" : self.version,
+                        "name" : job.name,
+                        "user_id" : job.user_id,
+                        "stdout" : job.stdout,
+                        "stderr" : job.stderr,
+                        # These are things contained in the stochkit_job object
+                        "type" : stochkit_job.type,
+                        "status" : stochkit_job.status,
+                        "final_time" : stochkit_job.final_time,
+                        "increment" : stochkit_job.increment,
+                        "realizations" : stochkit_job.realizations,
+                        "exec_type" : stochkit_job.exec_type,
+                        "store_only_mean" : stochkit_job.store_only_mean,
+                        "label_column_names" : stochkit_job.label_column_names,
+                        "create_histogram_data" : stochkit_job.create_histogram_data,
+                        "epsilon" : stochkit_job.epsilon,
+                        "threshold" : stochkit_job.threshold,
+                        "pid" : stochkit_job.pid,
+                        "result" : stochkit_job.result }
+            # For cloud jobs, we need to include the output_url and possibly grab the results from S3
+            if stochkit_job.resource == 'Cloud':
+                jsonJob["output_url"] = job.stochkit_job.output_url
+                # Only grab S3 data if user wants us to
+                if job.name in self.cloudJobsToDownload:
+                    if stochkit_job.output_location is None or (stochkit_job.output_location is not None and not os.path.exists(stochkit_job.output_location)):
+                        # Grab the output from S3 if we need to
+                        service = backendservices()
+                        service.fetchOutput(stochkit_job.pid, stochkit_job.output_url)
+                        # Unpack it to its local output location
+                        os.system('tar -xf' +stochkit_job.uuid+'.tar')
+                        stochkit_job.output_location = os.path.dirname(os.path.abspath(__file__))+'/../output/'+stochkit_job.uuid
+                        stochkit_job.output_location = os.path.abspath(stochkit_job.output_location)
+                        # Update the DB entry
+                        job.put()
+                        # Clean up
+                        os.remove(stochkit_job.uuid+'.tar')
+                    # Add its data to the zip archive
+                    outputLocation = self.addFolder('stochkitJobs/data/{0}'.format(job.name), stochkit_job.output_location)
+                    jsonJob["output_location"] = outputLocation
+            # For local jobs, we need to include the output location in the zip archive
+            elif stochkit_job.resource == 'Local':
+                outputLocation = self.addFolder('stochkitJobs/data/{0}'.format(job.name), stochkit_job.output_location)
+                jsonJob["output_location"] = outputLocation
+            # Also be sure to include any extra attributes of job
+            if job.attributes:
+                jsonJob.update(job.attributes)
+            # Add the JSON to the zip archive
+            self.addBytes('stochkitJobs/{0}.json'.format(job.name), json.dumps(jsonJob, sort_keys=True, indent=4, separators=(', ', ': ')))
+    
     def addSensitivityJob(self, job):
-        outputLocation = self.addFolder('sensitivityJobs/data/{0}'.format(job.jobName), job.outData)
-
-        jsonJob = { "version" : self.version,
-                    "userId" : job.userId,
-                    "jobName" : job.jobName,
-                    "startTime" : job.startTime,
-                    "indata" : json.loads(job.indata),
-                    "outData" : outputLocation,
-                    "status" : job.status }
-                    
+        if job.status == "Finished":
+            # Shared fields
+            jsonJob = { "version" : self.version,
+                        "userId" : job.userId,
+                        "jobName" : job.jobName,
+                        "startTime" : job.startTime,
+                        "indata" : json.loads(job.indata),
+                        "status" : job.status }
+            if job.resource == "local":
+                outputLocation = self.addFolder('sensitivityJobs/data/{0}'.format(job.jobName), job.outData)
+                jsonJob["outData"] = outputLocation
+            elif job.resource == "cloud":
+                jsonJob["outputURL"] = job.outputURL
+                # Only grab S3 data if user wants us to
+                if job.jobName in self.cloudJobsToDownload:
+                    if job.outData is None or (job.outData is not None and not os.path.exists(job.outData)):
+                        # Grab the output from S3 if we need to
+                        service = backendservices()
+                        service.fetchOutput(job.cloudDatabaseID, job.outputURL)
+                        # Unpack it to its local output location
+                        os.system('tar -xf' +job.cloudDatabaseID+'.tar')
+                        job.outData = os.path.dirname(os.path.abspath(__file__))+'/../output/'+job.cloudDatabaseID
+                        job.outData = os.path.abspath(job.outData)
+                        # Update the DB entry
+                        job.put()
+                        # Clean up
+                        os.remove(job.cloudDatabaseID+'.tar')
+                    outputLocation = self.addFolder('sensitivityJobs/data/{0}'.format(job.jobName), job.outData)
+                    jsonJob["outData"] = outputLocation
         self.addBytes('sensitivityJobs/{0}.json'.format(job.jobName), json.dumps(jsonJob, sort_keys=True, indent=4, separators=(', ', ': ')))
 
     def extractStochKitModel(self, path, userId = None, handler = None):
@@ -235,8 +275,8 @@ class SuperZip:
 
 class ExportPage(BaseHandler):
     def post(self):
-
-        reqType = self.request.get('reqType')
+        request_data = json.loads(self.request.POST.items()[0][0])
+        reqType = request_data["reqType"]
 
         if reqType == 'delJob':
             job = ExportJobWrapper.get_by_id(int(self.request.get('id')))
@@ -276,6 +316,7 @@ class ExportPage(BaseHandler):
             self.response.write(json.dumps( { "numberOfFiles" : numberOfFiles, "totalSize" : totalSize } ))
             return
         elif reqType == 'backup':
+            logging.info('Processing backup export request with cloud jobs: {0}'.format(request_data["cloudJobs"]))
             exportJob = ExportJobWrapper()
             globalOp = self.request.get('globalOp')
 
@@ -292,7 +333,7 @@ class ExportPage(BaseHandler):
 
             exportJob.put()
 
-            szip = SuperZip(os.path.abspath(os.path.dirname(__file__)) + '/../static/tmp/')
+            szip = SuperZip(os.path.abspath(os.path.dirname(__file__)) + '/../static/tmp/', cloudJobsToDownload=request_data["cloudJobs"])
 
             if not globalOp:
                 models = db.GqlQuery("SELECT * FROM StochKitModelWrapper WHERE user_id = :1", self.user.user_id()).run()
@@ -378,7 +419,63 @@ class ImportPage(BaseHandler):
         return size
 
     def get(self):
-        self.render_response('exportimport.html', isAdminUser = self.user.is_admin_user())
+        context = {
+            'isAdminUser': self.user.is_admin_user()
+        }
+        # We can only pull results from S3 if we have valid AWS credentials
+        if self.user_data.valid_credentials:
+            credentials = self.user_data.getCredentials()
+            # Get all the cloud jobs
+            jobs = db.GqlQuery("SELECT * FROM StochKitJobWrapper WHERE user_id = :1", self.user.user_id()).fetch(100000)
+            jobs = [job for job in jobs if job.stochkit_job.resource == "Cloud" and job.stochkit_job.status == "Finished"]
+            # Create the dictionary to pass to backend to check for sizes
+            output_results_to_check = {}
+            for cloud_job in jobs:
+                s3_url_segments = cloud_job.stochkit_job.output_url.split('/')
+                # S3 URLs are in the form https://s3.amazonaws.com/bucket_name/key/name
+                bucket_name = s3_url_segments[3]
+                # key_name is the concatenation of all segments after the bucket_name
+                key_name = '/'.join(s3_url_segments[4:])
+                if bucket_name in output_results_to_check.keys():
+                    output_results_to_check[bucket_name] += [(key_name, cloud_job.name)]
+                else:
+                    output_results_to_check[bucket_name] = [(key_name, cloud_job.name)]
+            # Sensitivity Jobs
+            sensi_jobs = db.GqlQuery("SELECT * FROM SensitivityJobWrapper WHERE userId = :1", self.user.user_id())
+            sensi_jobs = [job for job in sensi_jobs if job.resource == "cloud" and job.status == "Finished"]
+            for cloud_job in sensi_jobs:
+                s3_url_segments = cloud_job.outputURL.split('/')
+                # S3 URLs are in the form https://s3.amazonaws.com/bucket_name/key/name
+                bucket_name = s3_url_segments[3]
+                # key_name is the concatenation of all segments after the bucket_name
+                key_name = '/'.join(s3_url_segments[4:])
+                if bucket_name in output_results_to_check.keys():
+                    output_results_to_check[bucket_name] += [(key_name, cloud_job.jobName)]
+                else:
+                    output_results_to_check[bucket_name] = [(key_name, cloud_job.jobName)]
+            # Get all the job sizes from the backend
+            service = backendservices()
+            job_sizes = service.getSizeOfOutputResults(credentials['EC2_ACCESS_KEY'], credentials['EC2_SECRET_KEY'], output_results_to_check)
+            # Add all of the relevant jobs to the context so they will be rendered on the page
+            context["cloud_jobs"] = []
+            for cloud_job in jobs:
+                job_name = cloud_job.name
+                if job_name in job_sizes.keys():
+                    # These are the relevant jobs
+                    context["cloud_jobs"].append({
+                        'name': job_name,
+                        'exec_type': cloud_job.stochkit_job.exec_type,
+                        'size': '{0} KB'.format(round(float(job_sizes[job_name])/1024, 1))
+                    })
+            for cloud_job in sensi_jobs:
+                job_name = cloud_job.jobName
+                if job_name in job_sizes.keys():
+                    context["cloud_jobs"].append({
+                        'name': job_name,
+                        'exec_type': 'sensitivity',
+                        'size': '{0} KB'.format(round(float(job_sizes[job_name])/1024, 1))
+                    })
+        return self.render_response('exportimport.html', **context)
 
     def post(self):
         if 'files[]' in self.request.POST:
