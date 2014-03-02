@@ -83,15 +83,12 @@ Import.ImportTable = Backbone.View.extend(
 	    this.rowTemplate = _.template('<tr>\
 <td><input type="checkbox" /></td>\
 <td><%= name %></td>\
-<<<<<<< HEAD
 <td><%= exec_type %></td>\
 </tr>');
 
 	    this.sensitivityTemplate = _.template('<tr>\
 <td><input type="checkbox" /></td>\
 <td><%= jobName %></td>\
-=======
-<td><%= type %></td>\
 </tr>');
 
             this.mc = this.$el.find( '#modelContainer' );

@@ -219,11 +219,7 @@ class StatusPage(BaseHandler):
                     if res[job.pid]:
                         job.status = "Running"
                     else:
-<<<<<<< HEAD
                         file_to_check = job.outData + "/result/output.txt"
-=======
-                        file_to_check = job.outData + "/output/output.txt"
->>>>>>> 3af6119b234d957668d46f66180c97ab5081def5
                         if os.path.exists(file_to_check):
                             job.status = "Finished"
                         else:
@@ -252,11 +248,7 @@ class StatusPage(BaseHandler):
                 allExportJobs.append({ "startTime" : job.startTime,
                                        "status" : job.status,
                                        "number" : number,
-<<<<<<< HEAD
                                        "outData" : os.path.basename(job.outData),
-=======
-                                       "outData" : job.outData,
->>>>>>> 3af6119b234d957668d46f66180c97ab5081def5
                                        "id" : job.key().id()})
         
         context['allExportJobs'] = allExportJobs
