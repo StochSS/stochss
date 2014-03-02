@@ -234,12 +234,20 @@ class SuperZip:
             self.zipfbFile.close()
 
 class ExportPage(BaseHandler):
-    def get(self):
+    def post(self):
 
         reqType = self.request.get('reqType')
 
         if reqType == 'delJob':
-            pass
+            job = ExportJobWrapper.get_by_id(int(self.request.get('id')))
+            print job.outData
+            print 'SDFSADFKLJ;F;DASJK;FAJSDKJKF;ASDLJKFLASD;;LJFKASD;AJKLDSF;'
+            os.remove(job.outData)
+            job.delete()
+
+            self.response.headers['Content-Type'] = 'application/json'
+            self.response.write(json.dumps( { "status" : True, "msg" : "Export job deleted" } ))
+            return
         elif reqType == 'size':
             def get_size(start_path = '.'):
                 # Stolen from http://stackoverflow.com/questions/1392413/calculating-a-directory-size-using-python
@@ -318,18 +326,13 @@ class ExportPage(BaseHandler):
             szip.close()
 
             exportJob.status = "Finished"
-            exportJob.outData = os.path.basename(szip.getFileName())
+            exportJob.outData = szip.getFileName()
 
             exportJob.put()
 
             self.response.headers['Content-Type'] = 'application/json'
             self.response.write( json.dumps({ "status" : True,
                                               "msg" : "Job submitted" }) )
-            return
-        elif reqType == 'import':
-            self.response.headers['Content-Type'] = 'application/json'
-            self.response.write( json.dumps({ "status" : False,
-                                              "msg" : "Not implemented yet" }) )
             return
 
 
@@ -507,6 +510,15 @@ class ImportPage(BaseHandler):
                 self.response.write(json.dumps( { "status" : True,
                                                   "msg" : "Archive imported" }))
                 
+                return
+            elif reqType == 'delJob':
+                job = ImportJobWrapper.get_by_id(int(self.request.get('id')))
+                os.remove(job.zipFile)
+                os.remove(job.headerFile)
+                job.delete()
+                
+                self.response.headers['Content-Type'] = 'application/json'
+                self.response.write(json.dumps( { "status" : True, "msg" : "Export job deleted" } ))
                 return
 
             #if 'application/json' in self.request.headers.get('Accept'):

@@ -93,6 +93,7 @@ class JobManager():
                         "increment" : job.stochkit_job.increment,
                         "realizations" : job.stochkit_job.realizations,
                         "exec_type" : job.stochkit_job.exec_type,
+                        "units" : job.stochkit_job.units,
                         "resource" : job.stochkit_job.resource,
                         "store_only_mean" : job.stochkit_job.store_only_mean,
                         "label_column_names" : job.stochkit_job.label_column_names,
@@ -122,6 +123,7 @@ class JobManager():
                     "status" : job.stochkit_job.status,
                     "output_location" : job.stochkit_job.output_location,
                     "zipFileName" : job.stochkit_job.zipFileName,
+                    "units" : job.stochkit_job.units,
                     "output_url" : job.stochkit_job.output_url,
                     "final_time" : job.stochkit_job.final_time,
                     "increment" : job.stochkit_job.increment,
@@ -315,7 +317,7 @@ class SimulatePage(BaseHandler):
             self.response.write(json.dumps({ 'status' : True,
                                              'msg' : 'Job downloaded'}))
             return
-        if reqType == 'getDataLocal':
+        elif reqType == 'getDataLocal':
             job = StochKitJobWrapper.get_by_id(int(self.request.get('id')))
             
             if not job.stochkit_job.zipFileName:
@@ -338,8 +340,50 @@ class SimulatePage(BaseHandler):
                                              'msg' : 'Job downloaded',
                                              'url' : relpath }))
             return
-            
-        if reqType == 'jobInfo':
+        elif reqType == 'delJob':
+            try:
+                job = StochKitJobWrapper.get_by_id(int(self.request.get('id')))
+                stochkit_job = job.stochkit_job
+            except Exception,e:
+                self.response.headers['Content-Type'] = 'application/json'
+                self.response.write(json.dumps({ 'status' : False,
+                                                 'msg' : "Could not retrieve job" + int(self.request.get('id'))+ " from the datastore."}))
+                return
+        
+            # TODO: Call the backend to kill and delete the job and all associated files.
+            try:
+                service = backendservices()
+
+                if stochkit_job.resource == 'Local':
+                    service.deleteTaskLocal([stochkit_job.pid])
+
+                    time.sleep(0.25)
+                    
+                    status = service.checkTaskStatusLocal([stochkit_job.pid]).values()[0]
+                    
+                    if status:
+                        raise Exception("")
+                else:
+                    db_credentials = self.user_data.getCredentials()
+                    os.environ["AWS_ACCESS_KEY_ID"] = db_credentials['EC2_ACCESS_KEY']
+                    os.environ["AWS_SECRET_ACCESS_KEY"] = db_credentials['EC2_SECRET_KEY']
+                    service.deleteTasks([(stochkit_job.celery_pid,stochkit_job.pid)])
+                isdeleted_backend = True
+            except Exception,e:
+                isdeleted_backend = False
+                self.response.headers['Content-Type'] = 'application/json'
+                self.response.write(json.dumps({ 'status' : False,
+                                                 'msg' : "Failed to delete task with PID " + str(stochkit_job.celery_pid) + str(e)}))
+                return
+
+            if isdeleted_backend:
+                try:
+                    if os.path.exists(stochkit_job.output_location):
+                        shutil.rmtree(stochkit_job.output_location)
+                    job.delete()
+                except Exception,e:
+                    result = {'status':False,'msg':"Failed to delete job "+job_name+str(e)}
+        elif reqType == 'jobInfo':
             job = StochKitJobWrapper.get_by_id(int(self.request.get('id')))
 
             if self.user.user_id() != job.user_id:

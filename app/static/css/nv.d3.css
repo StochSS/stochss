@@ -430,16 +430,16 @@ svg .title {
 .nvd3.nv-scatter .nv-groups .nv-point.hover,
 .nvd3 .nv-groups .nv-point.hover {
   stroke-width: 7px;
-  fill-opacity: .95 !important;
+  fill-opacity: .0 !important;
   stroke-opacity: .95 !important;
 }
 
 
 .nvd3 .nv-point-paths path {
   stroke: #aaa;
-  stroke-opacity: 0;
+  stroke-opacity: 0.5;
   fill: #eee;
-  fill-opacity: 0;
+  fill-opacity: 0.5;
 }
 
 

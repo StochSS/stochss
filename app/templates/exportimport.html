@@ -31,24 +31,36 @@
                                     <br />
 
                                     2. Select an archive to import:
-                                    <select id="archiveSelect"></select>
+                                    <table cellpadding="0" cellspacing="0" border="0" class="table table-striped table-bordered">
+                                        <thead>
+                                            <tr>
+                                                <th width="40pt"></th>
+                                                <th width="40pt">Select</th>
+                                                <th>Archive Name</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody id="archiveSelect">
+                                        </tbody>
+                                    </table>
 
                                     <br />
                                     <br />
 
                                     3. Select members of the archive to import:
                                     <table id="importTable" width="100%">
-                                        <tr>
+                                        <tr class="modelContainerTr">
                                             <th>Models</th>
                                         </tr>
-                                        <tr>
+                                        <tr class="modelContainerTr">
                                             <td valign="top">
                                                 <table>
                                                 </table>
-                                                <table width="100%" border="1">
+                                                <table  cellpadding="0" cellspacing="0" border="0" class="table table-striped table-bordered" width="100%">
                                                     <thead>
                                                         <tr>
-                                                            <th></th><th>Model</th><th>Type</th>
+                                                            <th width="40pt">Import</th>
+                                                            <th>Model</th>
+                                                            <th>Type</th>
                                                         </tr>
                                                     </thead>
                                                     <tbody id="modelContainer">
@@ -56,15 +68,17 @@
                                                 </table>
                                             </td>
                                         </tr>
-                                        <tr>
+                                        <tr class="stochkitContainerTr">
                                             <th>Stochkit Jobs</th>
                                         </tr>
-                                        <tr>
+                                        <tr class="stochkitContainerTr">
                                             <td valign="top">
-                                                <table width="100%" border="1">
+                                                <table cellpadding="0" cellspacing="0" border="0" class="table table-striped table-bordered" width="100%">
                                                     <thead>
                                                         <tr>
-                                                            <th></th><th>Job name</th><th>Type</th>
+                                                            <th width="40pt"></th>
+                                                            <th>Job name</th>
+                                                            <th>Type</th>
                                                         </tr>
                                                     </thead>
                                                     <tbody id="stochkitJobContainer">
@@ -72,15 +86,16 @@
                                                 </table>
                                             </td>
                                         </tr>
-                                        <tr>
+                                        <tr class="sensitivityContainerTr">
                                             <th>Sensitivity Jobs</th>
                                         </tr>
-                                        <tr>
+                                        <tr class="sensitivityContainerTr">
                                             <td valign="top">
-                                                <table width="100%" border="1">
+                                                <table width="100%" cellpadding="0" cellspacing="0" border="0" class="table table-striped table-bordered>">
                                                     <thead>
                                                         <tr>
-                                                            <th></th><th>Job name</th>
+                                                            <th width="40pt"></th>
+                                                            <th>Job name</th>
                                                         </tr>
                                                     </thead>
                                                     <tbody id="sensitivityJobContainer">

@@ -248,7 +248,7 @@ class StatusPage(BaseHandler):
                 allExportJobs.append({ "startTime" : job.startTime,
                                        "status" : job.status,
                                        "number" : number,
-                                       "outData" : job.outData,
+                                       "outData" : os.path.basename(job.outData),
                                        "id" : job.key().id()})
         
         context['allExportJobs'] = allExportJobs

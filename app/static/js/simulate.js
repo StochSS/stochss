@@ -182,22 +182,49 @@ var run = function()
                                           });
                               });
 
-                              data = data.values
+                              var totalSpecies = 0;
+                              var totalPts = 1000;
 
-                              for(var specie in data.trajectories)
+                              for(var specie in data.values.trajectories)
+                              {
+                                  totalSpecies += 1;
+                              }
+
+                              for(var specie in data.values.trajectories)
                               {
                                   var series = [];
 
-                                  for(var i = 0; i < data.trajectories[specie].length; i++)
+                                  var pts = data.values.trajectories[specie].length;
+                                  var mult = 1.0;
+
+                                  var ptsPerSpecie = Math.min(pts, Math.floor(totalPts / totalSpecies))
+                                  //interpolate to 500 pts
+                                  if(pts > ptsPerSpecie)
                                   {
-                                      series.push( { x : data.time[i], y : data.trajectories[specie][i]} );
+                                      $( "#interpolateWarning" ).show()
+                                      mult = pts / ptsPerSpecie;
+                                      pts = ptsPerSpecie;
+                                  }
+                                  else
+                                  {
+                                      $( "#interpolateWarning" ).hide()
+                                      mult = 1;
+                                  }
+                                      
+                                  for(var i = 0; i < pts; i++)
+                                  {
+                                      var id = Math.floor(mult * i);
+                                      series.push( { x : data.values.time[id], y : data.values.trajectories[specie][id]} );
                                   }
 
                                   plotData.push( { label : specie,
                                                    data : series } );
                               }
-                              
-                              Splot.plot( $( "#plot" ), plotData);
+
+                              label = data.job.units.charAt(0).toUpperCase() + data.job.units.slice(1)
+
+                              gplot = Splot.plot( $( "#plot" ), plotData, label);
+                              //$( "#plotButton" ).click( gplot.getImage );
                           }
                           else
                           {

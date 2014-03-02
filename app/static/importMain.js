@@ -6,11 +6,13 @@ Import.ArchiveSelect = Backbone.View.extend(
         {
             this.$el = $( "#archiveSelect" );
 
-            this.$el.change( function(event) {
+            /*this.$el.change( function(event) {
                 $( event.target ).find( "option:selected" ).trigger('select');
-            });
+            });*/
 
-	    this.optionTemp = _.template('<option><%= zipFile %></option>');
+	    this.optionTemp = _.template('<tr> \
+<td><a href="javascript:preventDefault();">Delete</a></td><td><input type="radio" name="archive"></td><td><%= zipFile %></td>\
+</tr>');
 
             this.state = { selected : 0 };
             
@@ -42,11 +44,23 @@ Import.ArchiveSelect = Backbone.View.extend(
                 {
                     var newOption = $( this.optionTemp( this.data[i]) ).appendTo( this.$el );
 
-                    newOption.on('select', _.partial( function(data, view) {
+                    newOption.find('input').on('click', _.partial( function(data, view) {
                         view.trigger('select', data);
                     }, this.data[i], this));
+
+                    newOption.find('a').click( _.partial(function(id, event) {
+                        event.preventDefault();
+
+                        $.post("/import?reqType=delJob&id=" + id,
+                               success = function(data)
+                               {
+                                   location.reload();
+                               });
+                    }, this.data[i].id));
                 }
             }
+
+            this.$el.find('input').eq(0).click();
 
             this.$el.show();
 
@@ -69,7 +83,7 @@ Import.ImportTable = Backbone.View.extend(
 	    this.rowTemplate = _.template('<tr>\
 <td><input type="checkbox" /></td>\
 <td><%= name %></td>\
-<td><%= type %></td>\
+<td><%= exec_type %></td>\
 </tr>');
 
 	    this.sensitivityTemplate = _.template('<tr>\
@@ -105,7 +119,9 @@ Import.ImportTable = Backbone.View.extend(
                 this.state.id = data.id;
                 this.data = data;
 
+                $( ".modelContainerTr" ).hide();
                 for(var name in this.data.headers.models) {
+                    $( ".modelContainerTr" ).show();
                     console.log(name)
                     var model = this.data.headers.models[name];
 
@@ -118,7 +134,9 @@ Import.ImportTable = Backbone.View.extend(
                     }, this.state.selections.mc, name) );
                 }
 
+                $( ".stochkitContainerTr" ).hide();
                 for(var name in this.data.headers.stochkitJobs) {
+                    $( ".stochkitContainerTr" ).show();
                     var job = this.data.headers.stochkitJobs[name];
 
                     var html = this.rowTemplate(job);
@@ -130,7 +148,9 @@ Import.ImportTable = Backbone.View.extend(
                     }, this.state.selections.sjc, name) );
                 }
 
+                $( ".sensitivityContainerTr" ).hide();
                 for(var name in this.data.headers.sensitivityJobs) {
+                    $( ".sensitivityContainerTr" ).show();
                     var job = this.data.headers.sensitivityJobs[name];
 
                     var html = this.sensitivityTemplate(job);
@@ -142,6 +162,8 @@ Import.ImportTable = Backbone.View.extend(
                     }, this.state.selections.snc, name) );
                 }
             }
+
+            this.$el.find('input').prop('checked', true);
 
             this.$el.show();
 
@@ -212,19 +234,21 @@ var run = function()
                 names += data.files[i].name + " ";
             }
 
-            progressHandle = $( progressbar({ name : names }) ).appendTo( "#progresses" ).find('.bar' );
+            progressHandle = $( progressbar({ name : names }) ).appendTo( "#progresses" );
         },
         done: function (e, data) {
             $.each(data.result, function (index, file) {
                 console.log(file.name);
             });
 
+            progressHandle.remove();
+
             updateImportInfo();
         },
         progressall: function (e, data) {
             var progress = parseInt(data.loaded / data.total * 100, 10);
-            progressHandle.css('width', progress + '%');
-            progressHandle.text(progress + '%');
+            progressHandle.find('.bar' ).css('width', progress + '%');
+            progressHandle.find('.bar' ).text(progress + '%');
         },
         error : function(data) {
             console.log('error');
@@ -233,7 +257,7 @@ var run = function()
         .parent().addClass($.support.fileInput ? undefined : 'disabled');
 
     $( "#export" ).click( function() {
-        $.ajax( { type : "GET",
+        $.ajax( { type : "POST",
                   url : "/export",
                   data : { reqType : "backup",
                            globalOp : $( "#globalOp" ).val() },

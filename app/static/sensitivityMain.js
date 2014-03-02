@@ -73,21 +73,47 @@ var run = function()
 
                               }
                           }
+                          
+                          var totalSpecies = 0;
+                          var totalPts = 2000;
+                          
+                          for(var specie in data.trajectories)
+                          {
+                              totalSpecies += 1;
+                          }
 
                           for(var specie in data.trajectories)
                           {
-                              series = [];
+                              var series = [];
+
+                              var pts = data.trajectories[specie].length;
+                              var mult = 1.0;
+                              //interpolate to 100 pts
+                              var ptsPerSpecie = Math.min(pts, Math.floor(totalPts / totalSpecies))
+                              if(pts > ptsPerSpecie)
+                              {
+                                  $( "#interpolateWarning" ).show()
+                                  mult = pts / ptsPerSpecie;
+                                  pts = ptsPerSpecie;
+                              }
+                              else
+                              {
+                                  $( "#interpolateWarning" ).hide()
+                                  mult = 1;
+                              }        
+
                               for(var k = 0; k < data.trajectories[specie].length; k++)
                               {
-                                  series.push({ x : data.time[k],
-                                                y : data.trajectories[specie][k] });
+                                  id = Math.round(mult * k);
+                                  series.push({ x : data.time[id],
+                                                y : data.trajectories[specie][id] });
                               }
 
                               plotData.push( { label : specie,
                                                data : series } );
                           }
                           
-                          Splot.plot( $( "#data" ), plotData);
+                          Splot.plot( $( "#data" ), plotData, "");
                       }
                       else
                       {

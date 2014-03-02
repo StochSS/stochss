@@ -86,22 +86,29 @@
         <% } %>
         <hr />
 
-        <table id="selectTable" class="sensitivity" border=1 width="50%">
+        <div class="sensitivity" id="selectTable">
+            Select parameters with which to compute sensitivities:
+            <br />
+            <div id="parameterContainer">
+            </div>
+        </div>
+
+        <!--<table id="selectTable2" class="sensitivity" border=1 width="50%">
             <tr>
                 <th>Parameters</th>
-                <!--<th>Initial Conditions</th>-->
+                <th>Initial Conditions</th>
             </tr>
             <tr>
                 <td valign="top">
                     <table id="parameterContainer">
                     </table>
                 </td>
-                <!--<td valign="top">
+                <td valign="top">
                     <table id="initialConditionContainer">
                     </table>
-                </td>-->
+                </td>
             </tr>
-        </table>
+        </table>-->
 
         <br />
         
@@ -180,10 +187,13 @@
             Resource: <%= type %>
             <br />
             Simulation endtime: <%= final_time %>
+            <!--<button id="plotButton">button</button>-->
             <br />
             Stochkit input file: <a href="/output/servestatic?filename=<%= output_location %>/<%= name %>.xml" class="thispage"> <%= name %>.xml </a>
         </p>
     </div>
+
+    <div id="interpolateWarning" class="alert alert-block alert-info">Note: The lines on this graph have been interpolated to improve rendering performance. There may be errors</div>
 
     <div id="plot"></div>
 
