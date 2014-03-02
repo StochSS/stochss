@@ -692,7 +692,6 @@ class SimulatePage(BaseHandler):
             num_output_points = int(float(params['time'])/float(params['increment']))
             args += ' -i {0} '.format(num_output_points)
             path = os.path.abspath(os.path.dirname(__file__))
-
             # Algorithm, SSA or Tau-leaping?
             if params['execType'] != 'deterministic':
                 executable = "{0}/../../StochKit/{1}".format(path, params['algorithm'])
