@@ -15,7 +15,7 @@ STOCHSS_HOME="`( cd \"$STOCHSS_HOME\" && pwd )`"
 STOCHKIT_VERSION=StochKit2.0.10
 STOCHKIT_PREFIX=$STOCHSS_HOME
 export STOCHKIT_HOME="$STOCHKIT_PREFIX/$STOCHKIT_VERSION"
-ODE_VERSION="ode-1.0.0"
+ODE_VERSION="ode-1.0.1"
 export STOCHKIT_ODE="$STOCHSS_HOME/$ODE_VERSION"
 
 echo "<html>"
@@ -115,10 +115,10 @@ else
     tmpdir=$(mktemp -d /tmp/tmp.XXXXXX)
     tar -xzf "$STOCHKIT_ODE.tgz"
     mv "$STOCHKIT_ODE" "$tmpdir"
-    cd "$tmpdir/$ODE_VERSION/cvode"
-    tar -xzf "cvode-2.7.0.tar.gz"
-    cd "cvode-2.7.0"
-    ./configure --prefix="$PWD/cvode" 1>"$stdout" 2>"$stderr"
+    cd "$tmpdir/$ODE_VERSION/cvodes"
+    tar -xzf "cvodes-2.7.0.tar.gz"
+    cd "cvodes-2.7.0"
+    ./configure --prefix="$PWD/cvodes" 1>"$stdout" 2>"$stderr"
     if [ $? != 0 ]; then
         echo "<font color=red>"
 	echo "Failed<br />"
