@@ -158,6 +158,8 @@ class SuperZip:
             # For local jobs, we need to include the output location in the zip archive
             elif stochkit_job.resource == 'Local':
                 outputLocation = self.addFolder('stochkitJobs/data/{0}'.format(job.name), stochkit_job.output_location)
+                jsonJob["stdout"] = "{0}/stdout".format(outputLocation)
+                jsonJob["stderr"] = "{0}/stderr".format(outputLocation)
                 jsonJob["output_location"] = outputLocation
             # Also be sure to include any extra attributes of job
             if job.attributes:
@@ -229,6 +231,8 @@ class SuperZip:
                     fhandle.close()
 
         jobj["output_location"] = outPath
+        jobj["stdout"] = "{0}/stdout".format(outPath)
+        jobj["stderr"] = "{0}/stderr".format(outPath)
     
         return simulation.JobManager.createJob(handler, jobj)
 
