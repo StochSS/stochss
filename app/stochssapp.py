@@ -353,7 +353,7 @@ app = webapp2.WSGIApplication([
                                ('/modeleditor/volumeeditor', VolumeEditorPage),
                                ('/modeleditor/converttopopulation', ConvertToPopulationPage),
                                ('/modeleditor/import/fromfile', ModelEditorImportFromFilePage),
-                               ('/modeleditor/import/examplelibrary', ModelEditorImportFromLibrary),
+                               ('/modeleditor/import/publiclibrary', ModelEditorImportFromLibrary),
                                ('/modeleditor/export/tostochkit2', ModelEditorExportToStochkit2),
                                ('/modeleditor.*', ModelEditorPage),
                                ('/simulate',SimulatePage),

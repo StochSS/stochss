@@ -42,6 +42,7 @@ class StochKitModelWrapper(db.Model):
     model_name = db.StringProperty()    
     model = ObjectProperty()
     attributes = ObjectProperty()
+    is_public = db.BooleanProperty()
 
 class ModelManager():
     @staticmethod
@@ -258,6 +259,24 @@ class ModelEditorPage(BaseHandler):
                 self.response.write(json.dumps({ "status": False, "msg" : 'Failed to rename model' }))
 
             return
+        if self.request.get('export'):
+            modelName = self.request.get('export')
+            #model = ModelManager.getModelByName(self, modelName)
+            db_model = db.GqlQuery("SELECT * FROM StochKitModelWrapper WHERE user_id = :1 AND model_name = :2", self.user.user_id(), modelName).get()
+            model = db_model.model
+
+            newName = self.request.get('newName').strip(' \t')
+            newModel = db.GqlQuery("SELECT * FROM StochKitModelWrapper WHERE is_public = :1 AND model_name = :2", True, newName).get()
+
+            if newModel is None:
+                save_model(model,newName,"",True)
+                self.response.content_type = "application/json"
+                self.response.write(json.dumps('success'))
+            else:
+                self.response.content_type = "application/json"
+                self.response.write(json.dumps('duplicate'))
+            return
+
         elif model_edited is not None and model_edited is not "":
             result = self.edit_model(model_edited)
         elif self.request.get('get_model_edited') == "1":
@@ -498,29 +517,88 @@ class ModelEditorImportFromLibrary(BaseHandler):
         return True
     
     def get(self):
-        example_library = self.get_library()
-        self.render_response('modeleditor/importfromlibrary.html', **{'example_library': example_library})
+        public_library = self.get_library()
+        self.render_response('modeleditor/importfromlibrary.html', **{'public_library': public_library})
         
     def post(self):
-        result = self.import_model()
+        if self.request.get("delete") == "1":
+            result = self.delete_model()
+        elif self.request.get("preview") == "1":
+            self.preview_model()
+            return
+        else:
+            result = self.import_model()
+
         template_file = 'modeleditor/importfromlibrary.html'
         # The template file may refer to modeleditor.html for some cases.
         if 'template_file' in result:
             template_file = result['template_file']
-        result = dict({'example_library': self.get_library()}, **result)    
+        result = dict({'public_library': self.get_library()}, **result)
         self.render_response(template_file, **result)
     
     def get_library(self):
-        # For now, it is hard-coded here.
-        return ['dimerdecay', 'lotkavolterra_oscillating', 'lotkavolterra_equilibrium', 'MichaelisMenten']
+        self.populate_examples()
+        public_models = db.GqlQuery("SELECT * FROM StochKitModelWrapper WHERE is_public = :1", True).fetch(limit=None)
+        public_model_names = [pm.model_name for pm in public_models]
+        public_model_names.sort(key=lambda v: v.upper())
+        return public_model_names
                 
     def import_model(self):
         name = self.request.get('name').strip()
         if name == "":
             return {'status': False, 'msg': 'Model name is missing.'}
         
-        model_class = self.request.get('model_class')   
-        return do_import(self, name, False, model_class)   
+        model_class = self.request.get('model_class')
+        return do_import(self, name, False, model_class)
+
+    def preview_model(self):
+        name = self.request.get('toPreview')
+        db_model = db.GqlQuery("SELECT * FROM StochKitModelWrapper WHERE is_public = :1 AND model_name = :2", True, name).get()
+        model = db_model.model
+        doc = model.serialize()
+        self.response.headers['Content-Type'] = 'text/xml'
+        self.response.headers['Content-Disposition'] = 'attachment;filename=' + name.encode('utf-8') + '.xml'
+        self.response.write(doc)
+
+    def delete_model(self):
+        name = self.request.get('toDelete')
+        if name == "":
+            return {'status': False, 'msg': 'Name is missing'}
+        elif name == "dimerdecay" or name == "lotkavolterra_oscillating" or name == "lotkavolterra_equilibrium" or name == "MichaelisMenten":
+            return {'status': False, 'msg': 'This is an example model, it cannot be deleted'}
+        
+        try:
+            db_model = db.GqlQuery("SELECT * FROM StochKitModelWrapper WHERE is_public = :1 AND model_name = :2", True, name).get()
+
+            if db_model is None:
+                return {'status': False, 'msg': 'The datastore does not have any such entry.'}
+            
+            db_model.delete()            
+            return {'status': True, 'msg': name + ' deleted successfully.'}
+            
+        except Exception, e:
+            logging.error("model::delete_model - Deleting the model failed with error: %s", e)
+            traceback.print_exc()
+            return {'status': False, 'msg': 'There was an error while deleting the model!'}
+
+    def populate_examples(self):
+        # If the example models are not currently in the datastore, add them
+        example_model = db.GqlQuery("SELECT * FROM StochKitModelWrapper WHERE is_public = :1 AND model_name = :2", True, 'dimerdecay').get()
+        if example_model is None:
+            save_model(dimerdecay(), 'dimerdecay', "", is_public=True)
+
+        example_model = db.GqlQuery("SELECT * FROM StochKitModelWrapper WHERE is_public = :1 AND model_name = :2", True, 'lotkavolterra_oscillating').get()
+        if example_model is None:
+           save_model(lotkavolterra_oscillating(), 'lotkavolterra_oscillating', "", is_public=True)
+
+        example_model = db.GqlQuery("SELECT * FROM StochKitModelWrapper WHERE is_public = :1 AND model_name = :2", True, 'lotkavolterra_equilibrium').get()
+        if example_model is None:
+            save_model(lotkavolterra_equilibrium(), 'lotkavolterra_equilibrium', "", is_public=True)
+        
+        example_model = db.GqlQuery("SELECT * FROM StochKitModelWrapper WHERE is_public = :1 AND model_name = :2", True, 'MichaelisMenten').get()
+        if example_model is None:
+            save_model(MichaelisMenten(), 'MichaelisMenten', "", is_public=True)
+
 
 def do_import(handler, name, from_file = True, model_class=""):
     """
@@ -607,12 +685,13 @@ class ModelEditorExportToStochkit2(BaseHandler):
             self.render_response('modeleditor.html', **result)
 
 
-def save_model(model, model_name, user_id):
+def save_model(model, model_name, user_id, is_public=False):
     """ Save model as a new entity. """
     db_model = StochKitModelWrapper()
     db_model.user_id = user_id
     db_model.model = model
     db_model.model_name = model_name
+    db_model.is_public = is_public
     db_model.put()
 
 def add_model_to_cache(obj, new_model_name):
