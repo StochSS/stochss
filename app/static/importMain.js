@@ -163,7 +163,7 @@ Import.ImportTable = Backbone.View.extend(
                 }
             }
 
-            this.$el.find('input').prop('checked', true);
+            this.$el.find('input').prop('checked', true).trigger('change');
 
             this.$el.show();
 
@@ -257,6 +257,8 @@ var run = function()
         .parent().addClass($.support.fileInput ? undefined : 'disabled');
 
     $( "#export" ).click( function(e) {
+        updateMsg( { status : true,
+                     msg : "Submitting export job..." } );
         e.preventDefault();
         // Get all the names of cloud jobs for which the user wants to pull data from S3
         var cloudJobsToExport = [];
@@ -269,7 +271,7 @@ var run = function()
         }
         var ajaxData = {
             reqType : "backup",
-            globalOp : $( "#globalOp" ).val(),
+            globalOp : $( "#globalOp" ).prop('checked'),
             cloudJobs: cloudJobsToExport
         };
         $.ajax( { type : "POST",
@@ -288,11 +290,14 @@ var run = function()
     });
 
     $( "#import" ).click( function() {
+        updateMsg( { status : true,
+                     msg : "Importing models..." } );
         $.ajax( { type : "POST",
                   url : "/import",
                   data : { reqType : "doImport",
                            state : JSON.stringify(importTable.state),
-                           globalOp : $( "#globalOp" ).val() },
+                           globalOp : $( "#globalOp" ).prop('checked'),
+                           overwriteType : $( "#overwriteType" ).val() },
                   success : updateMsg,
                   error: function(data)
                   {

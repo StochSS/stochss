@@ -18,6 +18,16 @@ if len(sys.argv) == 3:
 
 path = os.path.abspath(os.path.dirname(__file__))
 
+try:
+    os.mkdir('{0}/app/output'.format(path))
+except:
+    pass
+
+try:
+    os.mkdir('{0}/app/static/tmp'.format(path))
+except:
+    pass
+
 if os.path.isfile('app/update'):
     if mac:
         print "<h2>Updating application now</h2><br />"

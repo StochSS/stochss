@@ -17,6 +17,7 @@ import modeleditor
 import shutil
 from google.appengine.api import users
 
+import sensitivity
 from stochssapp import BaseHandler
 from stochss.model import *
 from stochss.stochkit import *
@@ -205,7 +206,7 @@ class SuperZip:
 
         return modeleditor.ModelManager.createModel(handler, modelj)
 
-    def extractStochKitJob(self, path, userId = None):
+    def extractStochKitJob(self, path, userId = None, handler = None):
         jobj = json.loads(self.zipfb.read(path))
         path = os.path.abspath(os.path.dirname(__file__))
         
@@ -231,11 +232,14 @@ class SuperZip:
     
         return simulation.JobManager.createJob(handler, jobj)
 
-    def extractSensitivityJob(self, path, userId = None):
+    def extractSensitivityJob(self, path, userId = None, handler = None):
         jsonJob = json.loads(self.zipfb.read(path))
         path = os.path.abspath(os.path.dirname(__file__))
         
         zipPath = jsonJob["outData"]
+
+
+        job = sensitivity.SensitivityJobWrapper()
 
         if userId:
             jsonJob["userId"] = userId
@@ -253,12 +257,10 @@ class SuperZip:
                     fhandle.write(self.zipfb.read(name))
                     fhandle.close()
 
-        job = sensitivity.SensitivityJobWrapper()
-
         job.userId = jsonJob["userId"]
         job.jobName = jsonJob["jobName"]
         job.startTime = jsonJob["startTime"]
-        job.indatajsonJob["indata"]
+        job.indata = json.dumps(jsonJob["indata"])
         job.outData = outPath
         job.status = jsonJob["status"]
 
@@ -571,8 +573,25 @@ class ImportPage(BaseHandler):
                 return
             elif reqType == 'doImport':
                 state = json.loads(self.request.get('state'))
+                overwriteType = self.request.get('overwriteType')
+
+                job = ImportJobWrapper.get_by_id(state["id"])
+                fdescript = os.open(job.headerFile, os.O_RDONLY)
+                
+                contents = ""
+                while 1:
+                    part = os.read(fdescript, 5000)
+                    if part == '':
+                        break
+
+                    contents += part;
+
+                headers = json.loads(contents)
+                os.close(fdescript)
 
                 globalOp = self.request.get('globalOp')
+
+                globalOp = True if globalOp == 'true' else False
 
                 job = ImportJobWrapper.get_by_id(state["id"])
 
@@ -590,13 +609,65 @@ class ImportPage(BaseHandler):
                     userId = None
 
                 for name in state['selections']['mc']:
-                    name = szip.extractStochKitModel(name, userId)
+                    dbName = headers['models'][name]["name"]
+                    jobs = list(db.GqlQuery("SELECT * FROM StochKitModelWrapper WHERE user_id = :1 AND model_name = :2", self.user.user_id(), dbName).run())
+
+                    if len(jobs) > 0:
+                        otherJob = jobs[0]
+
+                        if overwriteType == 'keepOld':
+                            continue
+                        elif overwriteType == 'overwriteOld':
+                            print 'deleting', dbName, 'hehe'
+                            otherJob.delete()
+                        #elif overwriteType == 'renameOld':
+                        #    i = 1
+                        #    tryName = name + '_' + str(i)
+
+                        #    while len(list(db.GqlQuery("SELECT * FROM StochKitJobWrapper WHERE user_id = :1 AND name", self.user.user_id(), tryName).run())) > 0:
+                        #        i += 1
+                        #        tryName = name + '_' + str(i)
+
+                        #    otherJob.name = tryName
+                        #    otherJob.put()
+                        #elif overwriteType == 'renameNew':
+                        #    i = 1
+                        #    tryName = name + '_' + str(i)
+
+                        #    while len(list(db.GqlQuery("SELECT * FROM StochKitJobWrapper WHERE user_id = :1 AND name", self.user.user_id(), tryName).run())) > 0:
+                        #        i += 1
+                        #        tryName = name + '_' + str(i)
+
+                    szip.extractStochKitModel(name, userId, self)
 
                 for name in state['selections']['sjc']:
-                    name = szip.extractStochKitJob(name, userId)
+                    dbName = headers['stochkitJobs'][name]["name"]
+                    jobs = list(db.GqlQuery("SELECT * FROM StochKitJobWrapper WHERE user_id = :1 AND name = :2", self.user.user_id(), dbName).run())
+
+                    if len(jobs) > 0:
+                        otherJob = jobs[0]
+
+                        if overwriteType == 'keepOld':
+                            continue
+                        elif overwriteType == 'overwriteOld':
+                            print 'deleting', dbName, 'hehe'
+                            otherJob.delete()
+                    szip.extractStochKitJob(name, userId, self)
 
                 for name in state['selections']['snc']:
-                    name = szip.extractSensivitiyJob(name, userId)
+                    dbName = headers['sensitivityJobs'][name]["jobName"]
+                    jobs = list(db.GqlQuery("SELECT * FROM SensitivityJobWrapper WHERE user_id = :1 AND jobName = :2", self.user.user_id(), dbName).run())
+
+                    if len(jobs) > 0:
+                        otherJob = jobs[0]
+
+                        if overwriteType == 'keepOld':
+                            continue
+                        elif overwriteType == 'overwriteOld':
+                            print 'deleting', dbName, 'hehe'
+                            otherJob.delete()
+
+                    szip.extractSensitivityJob(name, userId, self)
 
                 szip.close()
 

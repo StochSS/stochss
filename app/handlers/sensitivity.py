@@ -17,13 +17,12 @@ from stochss.model import *
 from stochss.stochkit import *
 
 from stochssapp import BaseHandler
-from stochssapp import StochKitModelWrapper
-from stochssapp import ObjectProperty
 
 from backend.backendservice import backendservices
 
 import time
 
+import modeleditor
 import exportimport
 
 import os, shutil
@@ -52,6 +51,11 @@ class SensitivityJobWrapper(db.Model):
     celeryPID = db.StringProperty()
     outputURL = db.StringProperty()
     exceptionMessage = db.StringProperty()
+
+    def delete(self):
+        shutil.rmtree(self.outData)
+
+        super(SensitivityJobWrapper, self).delete()
 
 class SensitivityPage(BaseHandler):
     """ Render a page that lists the available models. """    
@@ -176,8 +180,6 @@ class SensitivityPage(BaseHandler):
                 self.response.write(json.dumps(["Not the right user"]))
                 return
 
-            shutil.rmtree(job.outData)
-
             job.delete()
             self.response.headers['Content-Type'] = 'application/json'
             self.response.write(json.dumps({ "status" : True,
@@ -215,7 +217,7 @@ class SensitivityPage(BaseHandler):
         job = SensitivityJobWrapper()
         job.resource = "local"
         job.userId = self.user.user_id()
-        job.model = StochKitModelWrapper.get_by_id(data["id"])
+        job.model = modeleditor.StochKitModelWrapper.get_by_id(data["id"])
         job.startTime = time.strftime("%Y-%m-%d-%H-%M-%S")
         job.jobName = data["jobName"]
 
@@ -260,7 +262,7 @@ class SensitivityPage(BaseHandler):
         job = SensitivityJobWrapper()
         job.resource = "cloud"
         job.userId = self.user.user_id()
-        job.model = StochKitModelWrapper.get_by_id(data["id"])
+        job.model = modeleditor.StochKitModelWrapper.get_by_id(data["id"])
         job.startTime = time.strftime("%Y-%m-%d-%H-%M-%S")
         job.jobName = data["jobName"]
         job.status = "Pending"

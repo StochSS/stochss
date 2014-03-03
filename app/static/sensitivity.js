@@ -94,6 +94,7 @@ Sensitivity.SelectTable = Backbone.View.extend(
                     }, this.state.selections.icc, id) );
                 }*/
 
+                this.$el.find('input').prop('checked', true).trigger('change');
                 this.$el.show();
             }
 

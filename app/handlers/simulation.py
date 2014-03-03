@@ -71,6 +71,33 @@ class StochKitJobWrapper(db.Model):
     stdout = db.StringProperty()
     stderr = db.StringProperty()
 
+    def delete(self):
+        job = self
+        stochkit_job = job.stochkit_job
+        
+        # TODO: Call the backend to kill and delete the job and all associated files.
+        service = backendservices()
+            
+        if stochkit_job.resource == 'Local':
+            service.deleteTaskLocal([stochkit_job.pid])
+            
+            time.sleep(0.25)
+            
+            status = service.checkTaskStatusLocal([stochkit_job.pid]).values()[0]
+            
+            if status:
+                raise Exception("")
+        else:
+            db_credentials = self.user_data.getCredentials()
+            os.environ["AWS_ACCESS_KEY_ID"] = db_credentials['EC2_ACCESS_KEY']
+            os.environ["AWS_SECRET_ACCESS_KEY"] = db_credentials['EC2_SECRET_KEY']
+            service.deleteTasks([(stochkit_job.celery_pid,stochkit_job.pid)])
+
+        if os.path.exists(stochkit_job.output_location):
+            shutil.rmtree(stochkit_job.output_location)
+
+        super(StochKitJobWrapper, self).delete()
+
 class JobManager():
     @staticmethod
     def getJobs(handler):
@@ -113,6 +140,8 @@ class JobManager():
     @staticmethod
     def getJob(handler, job_id):
         job = StochKitJobWrapper.get_by_id(job_id)
+
+        print job.stochkit_job.units
 
         jsonJob = { "id" : job.key().id(),
                     "name" : job.name,
@@ -343,46 +372,27 @@ class SimulatePage(BaseHandler):
         elif reqType == 'delJob':
             try:
                 job = StochKitJobWrapper.get_by_id(int(self.request.get('id')))
-                stochkit_job = job.stochkit_job
-            except Exception,e:
+            except:
                 self.response.headers['Content-Type'] = 'application/json'
                 self.response.write(json.dumps({ 'status' : False,
                                                  'msg' : "Could not retrieve job" + int(self.request.get('id'))+ " from the datastore."}))
                 return
-        
-            # TODO: Call the backend to kill and delete the job and all associated files.
+
+            assert job.user_id == self.user.user_id()
+
             try:
-                service = backendservices()
-
-                if stochkit_job.resource == 'Local':
-                    service.deleteTaskLocal([stochkit_job.pid])
-
-                    time.sleep(0.25)
-                    
-                    status = service.checkTaskStatusLocal([stochkit_job.pid]).values()[0]
-                    
-                    if status:
-                        raise Exception("")
-                else:
-                    db_credentials = self.user_data.getCredentials()
-                    os.environ["AWS_ACCESS_KEY_ID"] = db_credentials['EC2_ACCESS_KEY']
-                    os.environ["AWS_SECRET_ACCESS_KEY"] = db_credentials['EC2_SECRET_KEY']
-                    service.deleteTasks([(stochkit_job.celery_pid,stochkit_job.pid)])
-                isdeleted_backend = True
+                job.delete()
             except Exception,e:
-                isdeleted_backend = False
                 self.response.headers['Content-Type'] = 'application/json'
                 self.response.write(json.dumps({ 'status' : False,
-                                                 'msg' : "Failed to delete task with PID " + str(stochkit_job.celery_pid) + str(e)}))
+                                                 'msg' : "Failed to delete job"}))
                 return
 
-            if isdeleted_backend:
-                try:
-                    if os.path.exists(stochkit_job.output_location):
-                        shutil.rmtree(stochkit_job.output_location)
-                    job.delete()
-                except Exception,e:
-                    result = {'status':False,'msg':"Failed to delete job "+job_name+str(e)}
+            self.response.headers['Content-Type'] = 'application/json'
+            self.response.write(json.dumps({ 'status' : True,
+                                             'msg' : "Job deleted from the datastore."}))
+            return
+
         elif reqType == 'jobInfo':
             job = StochKitJobWrapper.get_by_id(int(self.request.get('id')))
 

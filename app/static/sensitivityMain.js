@@ -25,9 +25,13 @@ var run = function()
                       //console.log(data.status)
                       $( "#jobInfo" ).html(jobInfoTemplate( data.job ));
 
+                      $( "#plotRegion" ).hide();
+
                       if(data.status == "Finished")
                       {
                           var plotData = []
+
+                          $( "#plotRegion" ).show();
 
                           $( "#access" ).text( "Access local data" );
                           $( "#access" ).click( function() {
@@ -117,7 +121,7 @@ var run = function()
                       }
                       else
                       {
-                          $( "#data" ).text('Stdout:' + data.stdout + 'Stderr' + data.stderr);
+                          $( "#error" ).html('<span><h4>Job Failed</h4><br />Stdout:<br /><pre>' + data.stdout + '</pre></span><br /><span>Stderr:<br /><pre>' + data.stderr + '</pre></span>');
                       }
                   },
                   error: function(data)

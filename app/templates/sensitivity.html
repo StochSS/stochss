@@ -45,6 +45,7 @@
             </div>
 
             <span id="jobInfo">
+                Downloading data to browser...
             </span>
         </div>
     </div>
@@ -62,7 +63,6 @@
 <script type="text/javascript" src = "/static/js/purl.js"></script>
 <script type="text/javascript" src = "/static/js/canvas2image.js"></script>
 <script type="text/javascript" src = "/static/js/splot.js"></script>
-<script type="text/javascript" src = "/static/js/jquery.jqplot.js"></script>
 <script type="text/javascript" src = "/static/js/d3.v3.js"></script>
 <script type="text/javascript" src = "/static/js/nv.d3.js"></script>
 <script type="text/javascript" src = "/static/sensitivity.js"></script>
@@ -79,9 +79,13 @@
         </p>
     </div>
 
-    <div id="interpolateWarning" class="alert alert-block alert-info">Note: The lines on this graph have been interpolated to improve rendering performance. There may be errors</div>
+    <div id="plotRegion">
+        <div id="interpolateWarning" class="alert alert-block alert-info">Note: The lines on this graph have been interpolated to improve rendering performance. There may be errors</div>
+        <div id="data">
+        </div>
+    </div>
 
-    <div id="data"></div>
+    <div id="error"></div>
                         
     <br />
 

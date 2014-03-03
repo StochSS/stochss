@@ -15,8 +15,6 @@
 
 <div class="span9">
     <div class="row-fluid">
-        <div class"span9">
-            <div class="span9">
               <div class="tabbable">
                 <ul class="nav nav-tabs">
                   <li class="active"><a href="#tab1" data-toggle="tab">Export</a></li>
@@ -52,9 +50,6 @@
                         </table>
                       {% endif %}
                         <br />
-                        {% if isAdminUser %}
-                        <input id="globalOp" type="checkbox"> Operate on all system data (admin only)
-                        {% endif %}
                         <button class="btn-primary btn-large" id="export">Export</button>
                       </form>
                       <br />
@@ -64,8 +59,10 @@
                   <div class="tab-pane" id="tab2">
                     <div class="well well-large">
                       <h3> Import a Backup Archive </h3>
+                      <br />
 
                       1. Upload an archive:
+                      <br />
                       <br />
                       <input id="fileupload" type="file" name="files[]" multiple>
                       <div id="progresses"></div>
@@ -88,9 +85,21 @@
                           </table>
 
                           <br />
+
+                          3. Verify overwrite behavior: <br />
+                          When importing new data with the same name as old data already in database,
+                          <select id="overwriteType">
+                              <option value="keepOld">keep old data</option>
+                              <option value="overwriteOld">overwrite with new data</option>
+                              <!--<option value="renameOld">rename old data</option>-->
+                              <!--<option value="renameNew">rename new data</option>-->
+                          </select>
+                          .
+
+                          <br />
                           <br />
 
-                          3. Select members of the archive to import:
+                          4. Select members of the archive to import:
                           <table id="importTable" width="100%">
                               <tr class="modelContainerTr">
                                   <th>Models</th>
@@ -151,15 +160,19 @@
                           <br />
                           <button class="btn-primary btn-large" id="import">Import</button>
                       </div>
-                      <br />
-                      <div id="msg"></div>
                     </div>
                   </div>
+                  {% if isAdminUser %}
+                  <br />
+                  <input id="globalOp" type="checkbox"> Operate on all system data (admin only)
+                  <br />
+                  {% endif %}
+                  
+                  <br />
+                  <div id="msg"></div>
                 
                 </div>
               </div>
-            </div>
-        </div>
     </div>
 </div>
 {% endblock %}

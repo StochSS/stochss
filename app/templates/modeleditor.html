@@ -181,7 +181,6 @@
                   </li>
                   <li>
 		    <a href="#" id="renameModel" TITLE = "Rename model">Rename Model</a>
-		    <input class="span12" type="text" id="newModelName" placeholder="New name" />
                   </li>
 
                   <hr />
@@ -239,31 +238,30 @@ $( '#duplicateModel' ).click( function() {
       }
     }});
   });
-$('#newModelName').keydown(function (e){
-    if(e.keyCode == 13){
-        $( '#renameModel' ).trigger('click');
-    }
-})
 $( '#renameModel' ).click( function(event) {
     event.preventDefault();
 
-    if(/^[a-zA-Z0-9\-_]+$/.test($( '#newModelName' ).val()))
+    var newName = prompt("Please enter a new model name", "New name");
+
+    console.log(newName);
+
+    if(!/^[a-zA-Z0-9_]+$/.test(newName))
     {
       $( '#sidemsg' ).css('color', 'red');
-      $( '#sidemsg' ).text('Model name must be alphanumeric characters, underscores, hyphens, and spaces only');
+      $( '#sidemsg' ).text('Model name must be alphanumeric characters, underscores, and spaces only');
       return;
     }
 
-    if($.trim($( '#newModelName' ).val()).length == 0)
+    if($.trim(newName).length == 0)
     {
       $( '#sidemsg' ).css('color', 'red');
       $( '#sidemsg' ).text('Enter a non-empty string');
       return;
     }
 
-    $.ajax({ url : encodeURI('/modeleditor?rename={{model_edited.name}}&newName=' + $.trim($( '#newModelName' ).val())),
+    $.ajax({ url : encodeURI('/modeleditor?rename={{model_edited.name}}&newName=' + $.trim(newName)),
       error : function(data) {
-        $( '#sidemsg' ).text('Server error creating ' + $.trim($( '#newModelName' ).val()));
+        $( '#sidemsg' ).text('Server error creating ' + $.trim(newName));
         $( '#sidemsg' ).css('color', 'red');
       },
       success : function(data) {
@@ -273,7 +271,7 @@ $( '#renameModel' ).click( function(event) {
           if(data.status == true)
           {
             $( '#sidemsg' ).css('color', 'green');
-            $(location).attr('href', '/modeleditor?model_edited=' + $.trim($( '#newModelName' ).val()));
+            $(location).attr('href', '/modeleditor?model_edited=' + $.trim(newName));
           } else {
             $( '#sidemsg' ).css('color', 'red');
           }

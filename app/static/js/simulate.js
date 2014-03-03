@@ -151,11 +151,15 @@ var run = function()
                   success : function(data) {
                       $( "#jobInfo" ).html(jobInfoTemplate( data.job ));
 
+                      $( "#plotRegion" ).hide();
+
                       if(data.status == "Finished")
                       {
                           if(data.job.resource.toLowerCase() == "local")
                           {
                               var plotData = []
+
+                              $( "#plotRegion" ).show();
 
                               $( "#access" ).text( "Access local data" );
                               $( "#access" ).click( function() {
@@ -256,7 +260,7 @@ var run = function()
                       }
                       else
                       {
-                          $( "#plot" ).html('<span />Stdout:<br />' + data.stdout + '</span><br /><span>Stderr:<br />' + data.stderr + '</span>');
+                          $( "#error" ).html('<span><h4>Job Failed</h4><br />Stdout:<br /><pre>' + data.stdout + '</pre></span><br /><span>Stderr:<br /><pre>' + data.stderr + '</pre></span>');
                       }
                   },
                   error: function(data)
@@ -341,6 +345,8 @@ var run = function()
                        handle_type();
 
                        $( "#runLocal" ).click( _.partial(function(selectTable) {
+                           updateMsg( { status: true,
+                                        msg: "Running job locally..." } );
                            var data = checkAndGet(selectTable);
                            
                            if(!data)
@@ -373,6 +379,8 @@ var run = function()
                        }, selectTable));
 
                        $( "#runCloud" ).click( _.partial( function(selectTable) {
+                           updateMsg( { status: true,
+                                        msg: "Running job in cloud..." } );
                            var data = checkAndGet(selectTable);
 
                            if(!data)
