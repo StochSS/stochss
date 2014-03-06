@@ -38,7 +38,6 @@ jinja_environment = jinja2.Environment(autoescape=True,
         
 class SensitivityJobWrapper(db.Model):
     userId = db.StringProperty()
-    model = db.ReferenceProperty()
     pid = db.IntegerProperty()
     startTime = db.StringProperty()
     jobName = db.StringProperty()
@@ -96,7 +95,7 @@ class SensitivityPage(BaseHandler):
                 outputdir = job.outData
                 # Load all data from file in JSON format
                 vhandle = open(outputdir + '/result/output.txt', 'r')
-                values = { 'time' : [], 'trajectories' : {}, 'sensitivities' : {}}
+                values = { 'time' : [], 'trajectories' : {}, 'sensitivities' : {} }
                 columnToList = []
                 for i, line in enumerate(vhandle):
                     if i == 0:
@@ -125,6 +124,8 @@ class SensitivityPage(BaseHandler):
                         for storage, value in zip(columnToList, map(float, line.split())):
                             storage.append(value)
                 vhandle.close()
+
+                
 
                 self.response.headers['Content-Type'] = 'application/json'
                 self.response.write(json.dumps({ "status" : "Finished",

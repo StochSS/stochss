@@ -14,15 +14,22 @@ Splot.Plot = Backbone.View.extend(
             $("<hr />Trajectory select:<br />").appendTo( this.$el );
             this.controlDiv = $( "<div />" ).appendTo( this.$el );
 
-            var checkboxTemplate = _.template("<input type='checkbox' checked /><span>&nbsp;<%= name %>,&nbsp;<span />");
+            var checkboxTemplate = _.template("<input type='checkbox' /><span>&nbsp;<%= name %>,&nbsp;<span />");
 
             this.selected = [];
             this.plot = undefined;
+
+            var initialCheckbox = undefined;
 
             for(var k = 0; k < this.attributes.data.length; k++)
             {
                 var label = this.attributes.data[k].label;
                 var checkbox = $( checkboxTemplate( { name : label } ) ).appendTo( this.controlDiv ).eq(0);
+
+                if(!initialCheckbox)
+                {
+                    initialCheckbox = checkbox;
+                }
 
                 checkbox.change(_.partial(function(plot, storage, key) {
                     storage[key] = $( event.target ).prop('checked');
@@ -32,7 +39,12 @@ Splot.Plot = Backbone.View.extend(
                 this.selected.push( checkbox.prop("checked") );                   
             }
 
-            $( '#plotButton' ).click( _.partial( function(t) { t.getImage(); }, this) );
+            //$( '#plotButton' ).click( _.partial( function(t) { t.getImage(); }, this) );
+
+            if(initialCheckbox)
+            {
+                initialCheckbox.trigger("click");
+            }
 
             this.render();
         },

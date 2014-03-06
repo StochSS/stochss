@@ -18,7 +18,7 @@ import shutil
 from google.appengine.api import users
 
 import sensitivity
-from stochssapp import BaseHandler
+from stochssapp import BaseHandler, User
 from stochss.model import *
 from stochss.stochkit import *
 from stochss.examplemodels import *
@@ -199,20 +199,26 @@ class SuperZip:
                     jsonJob["outData"] = outputLocation
         self.addBytes('sensitivityJobs/{0}.json'.format(job.jobName), json.dumps(jsonJob, sort_keys=True, indent=4, separators=(', ', ': ')))
 
-    def extractStochKitModel(self, path, userId = None, handler = None):
+    def extractStochKitModel(self, path, userId = None, handler = None, rename = None):
         modelj = json.loads(self.zipfb.read(path))
         modelj["model"] = self.zipfb.read(modelj["model"])
 
+        if modelj["user_id"] not in [x.user_id() for x in User.query().fetch()]:
+            modelj["user_id"] = handler.user.user_id()
+
         if userId:
             modelj["user_id"] = userId
+            
+        return modeleditor.ModelManager.createModel(handler, modelj, rename = rename)
 
-        return modeleditor.ModelManager.createModel(handler, modelj)
-
-    def extractStochKitJob(self, path, userId = None, handler = None):
+    def extractStochKitJob(self, path, userId = None, handler = None, rename = None):
         jobj = json.loads(self.zipfb.read(path))
         path = os.path.abspath(os.path.dirname(__file__))
         
         zipPath = jobj["output_location"]
+
+        if jobj["user_id"] not in [x.user_id() for x in User.query().fetch()]:
+            jobj["user_id"] = handler.user.user_id()
 
         if userId:
             jobj["user_id"] = userId
@@ -234,9 +240,9 @@ class SuperZip:
         jobj["stdout"] = "{0}/stdout".format(outPath)
         jobj["stderr"] = "{0}/stderr".format(outPath)
     
-        return simulation.JobManager.createJob(handler, jobj)
+        return simulation.JobManager.createJob(handler, jobj, rename = rename)
 
-    def extractSensitivityJob(self, path, userId = None, handler = None):
+    def extractSensitivityJob(self, path, userId = None, handler = None, rename = None):
         jsonJob = json.loads(self.zipfb.read(path))
         path = os.path.abspath(os.path.dirname(__file__))
         
@@ -244,6 +250,23 @@ class SuperZip:
 
 
         job = sensitivity.SensitivityJobWrapper()
+
+        jobNames = [x.jobName for x in db.Query(sensitivity.SensitivityJobWrapper).filter('userId =', handler.user.user_id()).run()]
+
+        if jsonJob["jobName"] in jobNames:
+            if rename:
+
+                i = 1
+                tryName = '{0}_{1}'.format(jsonJob["jobName"], i)
+
+                while tryName in jobNames:
+                    i = i + 1
+                    tryName = '{0}_{1}'.format(jsonJob["jobName"], i)
+                    
+                jsonJob["jobName"] = tryName
+
+        if jsonJob["userId"] not in [x.user_id() for x in User.query().fetch()]:
+            jsonJob["userId"] = handler.user.user_id()
 
         if userId:
             jsonJob["userId"] = userId
@@ -613,6 +636,7 @@ class ImportPage(BaseHandler):
                     userId = None
 
                 for name in state['selections']['mc']:
+                    rename = False
                     dbName = headers['models'][name]["name"]
                     jobs = list(db.GqlQuery("SELECT * FROM StochKitModelWrapper WHERE user_id = :1 AND model_name = :2", self.user.user_id(), dbName).run())
 
@@ -634,20 +658,19 @@ class ImportPage(BaseHandler):
 
                         #    otherJob.name = tryName
                         #    otherJob.put()
-                        #elif overwriteType == 'renameNew':
-                        #    i = 1
-                        #    tryName = name + '_' + str(i)
+                        elif overwriteType == 'renameNew':
+                            rename = True
 
-                        #    while len(list(db.GqlQuery("SELECT * FROM StochKitJobWrapper WHERE user_id = :1 AND name", self.user.user_id(), tryName).run())) > 0:
-                        #        i += 1
-                        #        tryName = name + '_' + str(i)
-
-                    szip.extractStochKitModel(name, userId, self)
+                    szip.extractStochKitModel(name, userId, self, rename = rename)
 
                 for name in state['selections']['sjc']:
                     dbName = headers['stochkitJobs'][name]["name"]
                     jobs = list(db.GqlQuery("SELECT * FROM StochKitJobWrapper WHERE user_id = :1 AND name = :2", self.user.user_id(), dbName).run())
 
+                    print jobs
+
+                    rename = False
+
                     if len(jobs) > 0:
                         otherJob = jobs[0]
 
@@ -656,11 +679,16 @@ class ImportPage(BaseHandler):
                         elif overwriteType == 'overwriteOld':
                             print 'deleting', dbName, 'hehe'
                             otherJob.delete()
-                    szip.extractStochKitJob(name, userId, self)
+                        elif overwriteType == 'renameNew':
+                            rename = True
+
+                    szip.extractStochKitJob(name, userId, self, rename = rename)
 
                 for name in state['selections']['snc']:
                     dbName = headers['sensitivityJobs'][name]["jobName"]
-                    jobs = list(db.GqlQuery("SELECT * FROM SensitivityJobWrapper WHERE user_id = :1 AND jobName = :2", self.user.user_id(), dbName).run())
+                    jobs = list(db.GqlQuery("SELECT * FROM SensitivityJobWrapper WHERE userId = :1 AND jobName = :2", self.user.user_id(), dbName).run())
+
+                    rename = False
 
                     if len(jobs) > 0:
                         otherJob = jobs[0]
@@ -670,8 +698,10 @@ class ImportPage(BaseHandler):
                         elif overwriteType == 'overwriteOld':
                             print 'deleting', dbName, 'hehe'
                             otherJob.delete()
+                        elif overwriteType == 'renameNew':
+                            rename = True
 
-                    szip.extractSensitivityJob(name, userId, self)
+                    szip.extractSensitivityJob(name, userId, self, rename = rename)
 
                 szip.close()
 

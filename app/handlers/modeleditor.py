@@ -99,12 +99,24 @@ class ModelManager():
         return jsonModel
 
     @staticmethod
-    def createModel(handler, model):
+    def createModel(handler, model, rename = None):
         if "name" in model:
+            tryName = model["name"]
             if ModelManager.getModelByName(handler, model["name"]):
-                return None
+                if not rename:
+                    return None
+                else:
+                    i = 1
+                    tryName = '{0}_{1}'.format(model["name"], i)
+
+                    while ModelManager.getModelByName(handler, tryName):
+                        i = i + 1
+                        tryName = '{0}_{1}'.format(model["name"], i)
 
         modelWrap = StochKitModelWrapper()
+        if rename:
+            model["name"] = tryName
+
         if "name" in model:
             name = model["name"]
         else:

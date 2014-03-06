@@ -74,7 +74,6 @@ var run = function()
                
                                   plotData.push( { label : "d" + specie + "/d" + parameter,
                                                    data : series } );
-
                               }
                           }
                           

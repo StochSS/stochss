@@ -92,7 +92,7 @@
                               <option value="keepOld">keep old data</option>
                               <option value="overwriteOld">overwrite with new data</option>
                               <!--<option value="renameOld">rename old data</option>-->
-                              <!--<option value="renameNew">rename new data</option>-->
+                              <option value="renameNew">rename new data</option>
                           </select>
                           .
 
@@ -162,15 +162,13 @@
                       </div>
                     </div>
                   </div>
+                  <div id="msg"></div>
+                
                   {% if isAdminUser %}
                   <br />
                   <input id="globalOp" type="checkbox"> Operate on all system data (admin only)
                   <br />
                   {% endif %}
-                  
-                  <br />
-                  <div id="msg"></div>
-                
                 </div>
               </div>
     </div>

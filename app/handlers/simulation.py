@@ -173,7 +173,25 @@ class JobManager():
         return jsonJob
 
     @staticmethod
-    def createJob(handler, job):
+    def createJob(handler, job, rename = None):
+        tryName = job["name"]
+
+        jobNames = [x.name for x in db.Query(StochKitJobWrapper).filter('userId =', handler.user.user_id()).run()]
+
+        if job["name"] in jobNames:
+            if not rename:
+                return None
+            else:
+                i = 1
+                tryName = '{0}_{1}'.format(job["name"], i)
+
+                while tryName in jobNames:
+                    i = i + 1
+                    tryName = '{0}_{1}'.format(job["name"], i)
+                    
+        if rename:
+            job["name"] = tryName
+
         jobWrap = StochKitJobWrapper()
         jobWrap.user_id = handler.user.user_id()
         jobWrap.name = job['name']
