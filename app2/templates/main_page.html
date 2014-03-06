@@ -1,0 +1,77 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <title>StochSS: Export Old Data</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <link href="//netdna.bootstrapcdn.com/bootstrap/3.1.1/css/bootstrap.min.css" rel="stylesheet">
+  <link rel="stylesheet" href="/static/main_page.css">
+</head>
+<body style="margin-top: 5em;">
+  <nav class="navbar navbar-fixed-top" id="main-nav">
+    <div class="container-fluid">
+      <div class="navbar-header">
+        <!-- <button type="button" class="navbar-toggle" data-toggle="collapse" data-target="#navbar-collapse">
+          <span class="sr-only">Toggle navigation</span>
+          <span class="icon-bar"></span>
+          <span class="icon-bar"></span>
+          <span class="icon-bar"></span>
+        </button> -->
+        <a class="navbar-brand" href="/">StochSS</a>
+      </div>
+    </div>
+  </nav>
+  <!-- Script to check/unckeck all checkboxes -->
+  <script language="JavaScript">
+    function toggle(source) {
+      checkboxes = document.getElementsByName('select_model');
+      for (var i=0, n=checkboxes.length; i<n; i++) {
+        checkboxes[i].checked = source.checked;
+      }
+    }
+  </script>
+  <h3> Export Current StochSS Data to a Zip Archive </h3>
+  <div class="row-fluid">
+    <div class="col-md-6">
+      <div class="well well-large">
+        <form action="/" method="post">
+          <legend>Select the Models You Want to Export</legend>
+          <fieldset>
+          {% if all_models|length != 0 %}
+            <div class="form-group">
+              <table cellpadding="0" cellspacing="0" border="0" class="table table-striped table-bordered">
+                <thead>
+                  <tr>
+                    <th><input type="checkbox" onClick="toggleModels(this)"/></th>
+                    <th>Model name</th>
+                    <th>Units</th>
+                  </tr>
+                </thead>
+                <tbody>
+                {% for model in all_models %}
+                  <tr>
+                    <td><input type="checkbox" name="select_model" value="{{model.model_name}}"> </td>
+                    <td><span>{{model.model_name}}</span></td>
+                    <td><span>{{model.model.units}}</span></td>
+                  </tr>
+                {% endfor %}
+                </tbody>
+              </table>
+            </div>
+            <button class="btn btn-primary btn-large" id="export">Export</button>
+            <p class='text-success ajax-success-msg'></p>
+          {% else %}
+            <p class='text-danger'>There are no models to export.</p>
+          {% endif %}
+          </fieldset>
+        </form>
+        <br />
+      </div>
+    </div>
+  </div>
+  
+  <script src="http://code.jquery.com/jquery-1.11.0.min.js"></script>
+  <script src="//netdna.bootstrapcdn.com/bootstrap/3.1.1/js/bootstrap.min.js"></script>
+  <script src="/static/main_page.js"></script>
+</body>
+</html>
