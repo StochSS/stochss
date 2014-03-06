@@ -1,6 +1,6 @@
 #! /usr/bin/python
 
-import os, stat, time, sys
+import os, stat, time, sys, uuid
 sys.path.append(os.path.join(os.path.dirname(os.path.abspath(__file__)), 'app/lib/boto'))
 import boto.ec2, boto.ec2.cloudwatch
 from boto.ec2.cloudwatch import MetricAlarm
@@ -107,6 +107,9 @@ class ConfigFile:
             self.create_config_file()
         
 class EC2Services:
+    # Name of default key pair used when one isn't given. The AWS region
+    # where the key is registered will be appended to this prefix.
+    default_key_pair_prefix = 'server-stochss-key-pair'
     # Current regions with a StochSS Server machine image
     supported_ec2_regions = { }
     ami_id_file = open("release-tools/ami_ids","r")
@@ -129,6 +132,13 @@ class EC2Services:
             aws_secret_access_key=self.secret_key
         )
     
+    def generate_keypair(self, keypair_name, key_dir=os.path.dirname(__file__)):
+        key = self.conn.create_key_pair(keypair_name)
+        key_dir = os.path.abspath(key_dir)
+        if not os.path.isdir(key_dir):
+            os.mkdir(key_dir, 0700)
+        key.save(key_dir)
+    
     def find_or_create_security_group(self):
         print "Checking security groups..."
         security_group = None
@@ -136,12 +146,24 @@ class EC2Services:
             if sg.name == 'stochss':
                 print "StochSS security group found, using that."
                 security_group = sg
+                # Make sure it has SSH and HTTPS ports open
+                found_ssh = False
+                found_https = False
+                for rule in security_group.rules:
+                    if rule.ip_protocol == 'tcp' and rule.from_port == '22':
+                        found_ssh = True
+                    elif rule.ip_protocol == 'tcp' and rule.from_port == '443':
+                        found_https = True
+                # If not, then add them
+                if not found_ssh:
+                    security_group.authorize('tcp', 22, 22, '0.0.0.0/0')
+                if not found_https:
+                    security_group.authorize('tcp', 443, 443, '0.0.0.0/0')
                 break
         if security_group is None:
             print "No StochSS security group found, creating one."
             security_group = self.conn.create_security_group('stochss', 'StochSS Security Group')
-            security_group.authorize('tcp', 80, 80, '0.0.0.0/0')
-            security_group.authorize('tcp', 8080, 8080, '0.0.0.0/0')
+            security_group.authorize('tcp', 443, 443, '0.0.0.0/0')
             security_group.authorize('tcp', 22, 22, '0.0.0.0/0')
         return security_group
     
@@ -171,36 +193,92 @@ class EC2Services:
             print "Invalid instance ID. Are you sure you entered it in correctly?"
             exit(-1)
     
-    def retrieve_all_ec2_instances(self):
+    def retrieve_all_ec2_instances(self, server_only=True, ec2connection_to_use=None):
         '''
         Retrieve all of the EC2 instances associated with the StochSS Server AMI for this region.
+        If server_only is True, only the EC2 instances which were started with a StochSS Server AMI
+         will be retrieved.
+        If ec2connection_to_use is not None, then it will be used to retrieve the instances.
         '''
         instances = []
-        instance_reservations = self.conn.get_all_instances()
+        instance_reservations = ec2connection_to_use.get_all_instances() if ec2connection_to_use is not None else self.conn.get_all_instances()
         for instance_reservation in instance_reservations:
             for instance in instance_reservation.instances:
-                if instance.state != "terminated" and instance.image_id == EC2Services.supported_ec2_regions[self.region]:
-                    instances += [instance]
+                if instance.state != "terminated":
+                    if server_only and instance.image_id == EC2Services.supported_ec2_regions[self.region]:
+                        instances += [instance]
+                    elif not server_only:
+                        instances += [instance]
         return instances
     
+    def create_default_key_pair(self, key_pair, location):
+        '''
+        Attempts to create an AWS key pair using the default naming scheme enforced:
+         default_key_pair_prefix-aws_region
+        If the key_pair already exists, then we first look for a suitable key pair in the
+         directory specified by the location parameter. If one is not found, we append a
+         UUID onto the default name until we successfully create a valid key pair.
+        Returns the name of the key pair that should be used.
+        '''
+        try:
+            ec2_key = self.conn.create_key_pair(key_pair)
+            ec2_key.save(location)
+        except boto.exception.EC2ResponseError as e:
+            # Check to see if the exception is just due to fact that key already exists
+            if "'{0}' already exists.".format(key_pair) in e.body:
+                # Then the default key exists, but its not on this computer...
+                # Lets first check to see if there are any keys we can use in the current dir
+                available_keys = [filename for filename in os.listdir(location) if filename.startswith(self.default_key_pair_prefix) and self.region in filename]
+                if len(available_keys) > 0:
+                    key_pair = available_keys[0].strip('.pem')
+                else:
+                    # Create a new one with a UUID appended to it
+                    while True:
+                        try:
+                            new_key_pair = '{0}-{1}'.format(key_pair, uuid.uuid4())
+                            ec2_key = self.conn.create_key_pair(new_key_pair)
+                            ec2_key.save(location)
+                        except boto.exception.EC2ResponseError as e:
+                            # We only want to retry if the exception was because the key already exists
+                            if "'{0}' already exists.".format(new_key_pair) in e.body:
+                                continue
+                            else:
+                                raise e
+                        # No exceptions so we created a valid key pair
+                        key_pair = new_key_pair
+                        break
+            else:
+                # Then this failed for a different reason...
+                raise e
+        return key_pair
+    
+    def get_key_pair_name_for_ec2_instance(self, instance_id):
+        '''
+        Returns the name of the key pair used to launch the EC2 instance specified by instance_id.
+        '''
+        instance = self.retrieve_ec2_instance(instance_id)
+        return instance.key_name
+    
     def launch_ec2_instance(self, instance_id, key_pair=None):
-        security_group = self.find_or_create_security_group()
-        if key_pair is None:
-            # Then use a default key
-            key_pair = 'server-stochss-key-pair-{0}'.format(self.region)
-            # Store it in current directory
-            current_dir = os.path.dirname(os.path.abspath(__file__))
-            if not os.path.exists('{0}/{1}.pem'.format(current_dir, key_pair)):
-                try:
-                    # If it doesnt exist, then create it
-                    ec2_key = self.conn.create_key_pair(key_pair)
-                    ec2_key.save(current_dir)
-                except boto.exception.EC2ResponseError as e:
-                    # Check to see if the exception is just due to fact that key already exists
-                    if e.body.index("'{0}' already exists.".format(key_pair)) < 0:
+        '''
+        Launches an EC2 instance. If instance_id is a blank string then it launches a new instance using
+         the appropriate AMI ID, otherwise it launches the instance specified by the given instance_id.
+        Returns the instance object representing the instance that was launched.
+        '''
+        if instance_id is "":
+            security_group = self.find_or_create_security_group()
+            if key_pair is None:
+                # Then use a default key
+                key_pair = '{0}-{1}'.format(self.default_key_pair_prefix, self.region)
+                # Store it in current directory
+                current_dir = os.path.dirname(os.path.abspath(__file__))
+                if not os.path.exists('{0}/{1}.pem'.format(current_dir, key_pair)):
+                    try:
+                        # If it doesnt exist, then create it
+                        key_pair = self.create_default_key_pair(key_pair, current_dir)
+                    except boto.exception.EC2ResponseError as e:
                         print "Failed to launch EC2 instance with exception: " + str(e)
                         exit(-1)
-        if instance_id is "":
             print "Launching new EC2 instance now. This may take a moment..."
             try:
                 reservation = self.conn.run_instances(
@@ -249,6 +327,34 @@ class EC2Services:
             time.sleep(5)
             instance.update()
         print "EC2 instance terminated!"
+    
+    def terminate_ec2_compute_nodes(self, key_prefix="stochss"):
+        '''
+        This will terminate all of the EC2 instances that were started with key pairs with a
+         prefix of key_prefix. This method is intended to be used to terminate all EC2 compute
+         nodes when a StochSS server is shut down or terminated.
+        '''
+        # Compute nodes are only launched in us-east-1...
+        if self.region != 'us-east-1':
+            conn = boto.ec2.connect_to_region(
+                'us-east-1',
+                aws_access_key_id=self.access_key,
+                aws_secret_access_key=self.secret_key
+            )
+        else:
+            conn = self.conn
+        instances = [instance for instance in self.retrieve_all_ec2_instances(server_only=False, ec2connection_to_use=conn) if instance.key_name.startswith(key_prefix)]
+        total = len(instances)
+        if total > 0:
+            print "Terminating {0} compute node(s)...".format(total)
+            for instance in instances:
+                instance.terminate()
+                instance.update()
+                while instance.state != 'terminated':
+                    time.sleep(5)
+                    instance.update()
+                total -= 1
+                print "{0} compute nodes left to terminate...".format(total)
 
 def print_usage_and_exit():
     print "Error in command line arguments!"
@@ -286,8 +392,8 @@ def start_stochss_server(aws_access_key, aws_secret_key, preferred_instance_id, 
     else:
         print "Using default AWS credentials..."
     # We also definitely need the region
+    supported_regions = EC2Services.supported_ec2_regions.keys()
     if ec2_region is None:
-        supported_regions = EC2Services.supported_ec2_regions.keys()
         ec2_region = raw_input("Please enter the AWS region where you want to launch StochSS {0}: ".format(supported_regions)).lower()
         if ec2_region not in supported_regions:
             print "{0} is not supported. Only supported regions are: {1}.".format(ec2_region, supported_regions)
@@ -299,12 +405,26 @@ def start_stochss_server(aws_access_key, aws_secret_key, preferred_instance_id, 
     else:
         new_ec2_region = raw_input("Enter the AWS region where you want to launch StochSS or hit return to use {0}: ".format(ec2_region)).lower()
         if new_ec2_region != '':
-            # Update config file
-            ec2_region = new_ec2_region
-            params_to_write = {
-                ConfigFile.CF_REGION: ec2_region
-            }
-            config_file.write(params_to_write)
+            # Make sure it's supported
+            if new_ec2_region not in supported_regions:
+                print "{0} is not supported. Only supported regions are: {1}.".format(new_ec2_region, supported_regions)
+                exit(-1)
+            # If it actually is a new region then...
+            if new_ec2_region != ec2_region:
+                # ...we need to make sure we invalidate the saved key-pair and instance ID
+                preferred_instance_id = None
+                preferred_ec2_key_pair = None
+                # Update config file
+                config_file.remove([ConfigFile.CF_KEY_PAIR, ConfigFile.CF_INSTANCE_ID])
+                ec2_region = new_ec2_region
+                params_to_write = {
+                    ConfigFile.CF_REGION: ec2_region
+                }
+                config_file.write(params_to_write)
+    # Now we have the region and AWS credentials...
+    ec2_services = EC2Services(ec2_region, aws_access_key, aws_secret_key)
+    # path_to_key_pair should only be None if we are using the default key
+    path_to_key_pair = None
     # We might need an instance id...
     # This logic is short-circuited now
     if preferred_instance_id is None:
@@ -334,22 +454,35 @@ def start_stochss_server(aws_access_key, aws_secret_key, preferred_instance_id, 
                 # ...unless they dont want SSH access.
                 preferred_ec2_key_pair = None
         else:
+            # Ok they want a specific instance...what is the key pair to use?
+            preferred_ec2_key_pair = ec2_services.get_key_pair_name_for_ec2_instance(preferred_instance_id)
             params_to_write = {
                 ConfigFile.CF_INSTANCE_ID: preferred_instance_id
             }
             config_file.write(params_to_write)
     else:
-        new_instance_id = raw_input('Enter an AWS EC2 instance ID that you wish to launch, None to create a new instance, or hit return to use {0}'.format(preferred_instance_id))
+        new_instance_id = raw_input('Enter an AWS EC2 instance ID that you wish to launch, None to create a new instance, or hit return to use {0}: '.format(preferred_instance_id))
         if new_instance_id == "None":
             preferred_instance_id = ''
+            preferred_ec2_key_pair = None
         elif new_instance_id != '':
             preferred_instance_id = new_instance_id
+            preferred_ec2_key_pair = ec2_services.get_key_pair_name_for_ec2_instance(preferred_instance_id)
             params_to_write = {
                 ConfigFile.CF_INSTANCE_ID: preferred_instance_id
             }
             config_file.write(params_to_write)
-    # Now we have all the necessary config variables
-    ec2_services = EC2Services(ec2_region, aws_access_key, aws_secret_key)
+    # If they specified a key pair, we need to make sure we can find it in the filesystem
+    if preferred_ec2_key_pair is not None:
+        # If its the default key, just set it to None
+        if preferred_ec2_key_pair.startswith(EC2Services.default_key_pair_prefix):
+            preferred_ec2_key_pair = None
+        else:
+            path_to_key_pair = raw_input('Please enter the full path to the AWS key pair you specified ({0}): '.format(preferred_ec2_key_pair))
+            while not os.path.exists(path_to_key_pair):
+                print "Couldn't find the specified key pair at: {0}".format(path_to_key_pair)
+                path_to_key_pair = raw_input('Please enter the full path to the AWS key pair you specified ({0}): '.format(preferred_ec2_key_pair))
+    # Now we have all the necessary config variables to launch
     instance = ec2_services.launch_ec2_instance(preferred_instance_id, preferred_ec2_key_pair)
     print "EC2 instance launched at {0}!".format(instance.public_dns_name)
     # Write this instance id to the config file in case its a brand new instance
@@ -358,7 +491,7 @@ def start_stochss_server(aws_access_key, aws_secret_key, preferred_instance_id, 
     }
     config_file.write(params_to_write)
     # Now make sure that the StochSS Server is actually running.
-    stochss_url = "http://" + str(instance.public_dns_name) + ":8080/"
+    stochss_url = "https://" + str(instance.public_dns_name)
     print "============================================================================"
     print "Starting StochSS Server at {0} -- it will take another minute or so before the URL actually works. Please be patient...".format(stochss_url)
     #trys = 0
@@ -371,7 +504,33 @@ def start_stochss_server(aws_access_key, aws_secret_key, preferred_instance_id, 
             #trys += 1
             #print "Try {0}".format(trys)
             time.sleep(1)
-    # OK, its running. Launch it in the default browser.
+    if instance.key_name.startswith(EC2Services.default_key_pair_prefix):
+        # Then we are using the default key, its in the current dir
+        preferred_ec2_key_pair = os.path.dirname(os.path.abspath(__file__)) + '/{0}.pem'.format(instance.key_name)
+    else:
+        # The user supplied their own key pair and it must have been valid if we got this far,
+        # we need to know the path to it.
+        if path_to_key_pair is None:
+            # We want to avoid this at all possible costs, but in case something slips through the cracks
+            path_to_key_pair = raw_input('Please enter the full path to the AWS key pair you specified ({0}): '.format(preferred_ec2_key_pair))
+            while not os.path.exists(path_to_key_pair):
+                
+                print "Couldn't find the specified key pair at: {0}\nPress Control+C to cancel this process and terminate the instance".format(path_to_key_pair)
+                path_to_key_pair = raw_input('Please enter the full path to the AWS key pair you specified ({0}): '.format(preferred_ec2_key_pair))
+        preferred_ec2_key_pair = path_to_key_pair
+    # Get a secret token now for remote access
+    admin_token = uuid.uuid4()
+    create_and_exchange_admin_token = "./exchange_admin_token.py {0} {1} {2} {3}".format(preferred_ec2_key_pair, 'ubuntu', instance.public_dns_name, admin_token)
+    success = os.system(create_and_exchange_admin_token)
+    # Print out command if it fails
+    if success != 0:
+        print "Admin token exchange failed. Try running the following command yourself:\n\n\t{0}\n\n".format(create_and_exchange_admin_token)
+    # Now we have created/exchanged the secret token, just need to use it to access the website
+    stochss_url = "{0}/login?secret_key={1}".format(stochss_url, admin_token)
+    print stochss_url
+    # OK, its running. Launch it in the default browser?
+    # open_browser = raw_input("Do you want to launch StochSS in your default browser now (y/n)? ").lower()
+    # if open_browser == "y":
     webbrowser.open_new(stochss_url)
 
 def stop_stochss_server(aws_access_key, aws_secret_key, ec2_region, instance_id):
@@ -468,6 +627,7 @@ def terminate_stochss_server(aws_access_key, aws_secret_key, ec2_region, instanc
     ec2_services = EC2Services(ec2_region, aws_access_key, aws_secret_key)
     ec2_services.terminate_ec2_instance(instance_id)
     config_file.remove(ConfigFile.CF_INSTANCE_ID)
+    ec2_services.terminate_ec2_compute_nodes()
 
 def list_all_stochss_servers(aws_access_key, aws_secret_key, ec2_region):
     # Check for AWS credentials in config file if needed

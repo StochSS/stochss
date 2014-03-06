@@ -1,0 +1,33 @@
+h4 {
+  text-align: center;
+}
+
+h4.well-title {
+  margin-bottom: 1.4em;
+}
+
+h4.well-separator {
+  margin-bottom: 1em;
+}
+
+button {
+  width: 220px;
+  height: 28px;
+}
+
+@media (min-width:1200px) {
+  form input {
+    margin-left: 1.8em;
+  }
+
+  button {
+    float: right;
+    margin-right: 1.9em;
+  }
+}
+
+@media (min-width: 768px) and (max-width: 980px) {
+  .span3 {
+    width: 220px;
+  }
+}

@@ -18,6 +18,9 @@ def int_or_float(s):
 
 class SpeciesEditorPage(BaseHandler):
 
+    def authentication_required(self):
+        return True
+    
     def get(self):
         all_species = self.get_all_species()
 

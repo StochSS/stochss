@@ -1,0 +1,14 @@
+h4 {
+  margin-bottom: 1em;
+}
+
+button {
+  width: 220px;
+  height: 28px;
+}
+
+@media (min-width: 768px) and (max-width: 980px) {
+  .span6 {
+    width: 460px;
+  }
+}
