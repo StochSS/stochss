@@ -1,5 +1,4 @@
 $('#password').on('keydown', function(e) {
-  console.log(e.keyCode);
   var newPasswordInput = $(this);
   var currentPasswordDiv = $('div.current-pass');
   
