@@ -6,7 +6,7 @@ from google.appengine.ext import db
 import pickle
 import zipfile, tempfile
 import sys, time, random
-import simulation, modeleditor
+import modeleditor
 import shutil
 
 from stochss.model import *

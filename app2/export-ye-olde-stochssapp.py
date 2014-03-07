@@ -11,9 +11,8 @@ except ImportError:
 jinja_environment = jinja2.Environment(autoescape=True,
                                        loader=(jinja2.FileSystemLoader(os.path.join(os.path.dirname(__file__), 'templates')))) 
 
-# Redeclare all of the StochSS Models
+# Import all of the StochSS Models
 from handlers.modeleditor import *
-from handlers.simulation import *
 from handlers.exportimport import *
 
 class MainPage(webapp2.RequestHandler):
