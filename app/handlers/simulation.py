@@ -351,12 +351,10 @@ class SimulatePage(BaseHandler):
             os.system('tar -xf' +stochkit_job.uuid+'.tar')
             stochkit_job.output_location = os.path.abspath(os.path.dirname(__file__))+'/../output/'+stochkit_job.uuid
             stochkit_job.output_location = os.path.abspath(stochkit_job.output_location)
-            
+            stochkit_job.stdout = stochkit_job.output_location + '/stdout.log'
+            stochkit_job.stderr = stochkit_job.output_location + '/stderr.log'
             # Clean up
             os.remove(stochkit_job.uuid+'.tar')
-
-            job.stochkit_job.resource = 'local'
-
             # Save the updated status
             job.put()
 
@@ -421,7 +419,7 @@ class SimulatePage(BaseHandler):
                 self.response.write(json.dumps(["Not the right user"]))
 
             if job.stochkit_job.status == "Finished":
-                if job.stochkit_job.resource == 'Cloud':
+                if job.stochkit_job.resource == 'Cloud' and job.stochkit_job.output_location is None:
                     self.response.headers['Content-Type'] = 'application/json'
                     self.response.write(json.dumps({ "status" : "Finished",
                                                      "values" : [],
@@ -672,9 +670,10 @@ class SimulatePage(BaseHandler):
             # The celery_pid is the Celery Task ID.
             stochkit_job.celery_pid = celery_task_id
             stochkit_job.status = 'Running'
-            stochkit_job.output_location = 'output/%s' % taskid
-            stochkit_job.stdout = stochkit_job.output_location + '/stdout.log'
-            stochkit_job.stderr = stochkit_job.output_location + '/stderr.log'
+            stochkit_job.output_location = None
+            # stochkit_job.output_location = 'output/%s' % taskid
+            # stochkit_job.stdout = stochkit_job.output_location + '/stdout.log'
+            # stochkit_job.stderr = stochkit_job.output_location + '/stderr.log'
         
             # Create a wrapper to store the Job description in the datastore
             stochkit_job_db = StochKitJobWrapper()
