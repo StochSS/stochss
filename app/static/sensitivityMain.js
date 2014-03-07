@@ -59,31 +59,69 @@ var run = function()
                           });
 
                           data = data.values
+                          
+                          var totalSpecies = 0;
+                          var totalPts = 2000;
+
+                          var minimums = {};
+
+                          for(var specie in data.trajectories)
+                          {
+                              totalSpecies += 1;
+
+                              minimums[specie] = undefined;
+
+                              for(var k = 0; k < data.trajectories[specie].length; k++)
+                              {
+                                  if(data.trajectories[specie][k] > 0.0)
+                                  {
+                                      if(minimums[specie] != undefined)
+                                      {
+                                          minimums[specie] = Math.min(minimums[specie], data.trajectories[specie][k]);
+                                      }
+                                      else
+                                      {
+                                          minimums[specie] = data.trajectories[specie][k];
+                                      }
+                                  }
+                              }
+
+                              console.log(minimums)
+                          }
 
                           for(var specie in data.sensitivities)
                           {
                               for(var parameter in data.sensitivities[specie])
                               {
                                   var series = [];
+                                  
+                                  var pts = data.trajectories[specie].length;
+                                  var mult = 1.0;
+                                  //interpolate to 100 pts
+                                  var ptsPerSpecie = Math.min(pts, Math.floor(totalPts / totalSpecies))
+                                  if(pts > ptsPerSpecie)
+                                  {
+                                      $( "#interpolateWarning" ).show()
+                                      mult = pts / ptsPerSpecie;
+                                      pts = ptsPerSpecie;
+                                  }
+                                  else
+                                  {
+                                      $( "#interpolateWarning" ).hide()
+                                      mult = 1;
+                                  }
 
                                   for(var k = 0; k < data.sensitivities[specie][parameter].length; k++)
                                   {
-                                      series.push({ x : data.time[k + 1],
-                                                    y : data.sensitivities[specie][parameter][k]});
+                                      id = Math.round(mult * k);
+                                      series.push({ x : data.time[id + 1],
+                                                    y : data.sensitivities[specie][parameter][k] * data.parameters[parameter] / (data.trajectories[specie][id + 1] + minimums[specie] * 1e-5)});
                                   }
                
                                   plotData.push( { label : "d" + specie + "/d" + parameter,
                                                    data : series } );
 
                               }
-                          }
-                          
-                          var totalSpecies = 0;
-                          var totalPts = 2000;
-                          
-                          for(var specie in data.trajectories)
-                          {
-                              totalSpecies += 1;
                           }
 
                           for(var specie in data.trajectories)

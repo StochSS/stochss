@@ -96,18 +96,29 @@ class SensitivityPage(BaseHandler):
                 outputdir = job.outData
                 # Load all data from file in JSON format
                 vhandle = open(outputdir + '/result/output.txt', 'r')
-                values = { 'time' : [], 'trajectories' : {}, 'sensitivities' : {}}
+                values = { 'time' : [], 'trajectories' : {}, 'sensitivities' : {}, 'parameters' : {}}
+                parameters = []
                 columnToList = []
                 for i, line in enumerate(vhandle):
                     if i == 0:
                         continue
                     elif i == 1:
                         names = line.split()
+
+                        parameterNames = []
+
+                        for name in names:
+                            if ':' in name:
+                                specie, parameter = name.split(':')
+                                if parameter not in parameterNames:
+                                    parameterNames.append(parameter)
+                        
                         for name in names:
                             if name == 'time':
                                 columnToList.append(values['time'])
                             elif ':' in name:
                                 specie, parameter = name.split(':')
+
                                 if specie not in values['sensitivities']:
                                     values['sensitivities'][specie] = {}
 
@@ -117,14 +128,18 @@ class SensitivityPage(BaseHandler):
                                 values['trajectories'][name] = [] # start a new timeseries for this name
                                 columnToList.append(values['trajectories'][name]) # Store a reference here for future use
                     elif i == 2:
+                        parameters = map(float, line.split())
+                    elif i == 3:
                         for storage, value in zip(columnToList, map(float, line.split())):
                             storage.append(value)
-                    elif i == 3:
+                    elif i == 4:
                         continue
                     else:
                         for storage, value in zip(columnToList, map(float, line.split())):
                             storage.append(value)
                 vhandle.close()
+
+                values['parameters'] = dict(zip(parameterNames, parameters))
 
                 self.response.headers['Content-Type'] = 'application/json'
                 self.response.write(json.dumps({ "status" : "Finished",
