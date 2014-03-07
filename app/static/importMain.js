@@ -261,18 +261,27 @@ var run = function()
                      msg : "Submitting export job..." } );
         e.preventDefault();
         // Get all the names of cloud jobs for which the user wants to pull data from S3
-        var cloudJobsToExport = [];
-        var checkboxes = document.getElementsByName('select_job');
+        var stochKitJobsToExport = [];
+        var checkboxes = document.getElementsByName('select_stochkit_job');
         for (var i = 0; i < checkboxes.length; i++)
         {
             if (checkboxes[i].checked) {
-                cloudJobsToExport.push(checkboxes[i].value);
+                stochKitJobsToExport.push(checkboxes[i].value);
+            }
+        }
+        var sensitivityJobsToExport = [];
+        checkboxes = document.getElementsByName('select_sensitivity_job');
+        for (var i = 0; i < checkboxes.length; i++)
+        {
+            if (checkboxes[i].checked) {
+                sensitivityJobsToExport.push(checkboxes[i].value);
             }
         }
         var ajaxData = {
             reqType : "backup",
             globalOp : $( "#globalOp" ).prop('checked'),
-            cloudJobs: cloudJobsToExport
+            stochKitJobs: stochKitJobsToExport,
+            sensitivityJobs: sensitivityJobsToExport
         };
         $.ajax( { type : "POST",
                   url : "/export",
