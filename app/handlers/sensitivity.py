@@ -97,7 +97,7 @@ class SensitivityPage(BaseHandler):
                 # Load all data from file in JSON format
                 vhandle = open(outputdir + '/result/output.txt', 'r')
                 values = { 'time' : [], 'trajectories' : {}, 'sensitivities' : {}, 'parameters' : {}}
-                parameterValues = []
+                parameters = []
                 columnToList = []
                 for i, line in enumerate(vhandle):
                     if i == 0:
@@ -129,9 +129,6 @@ class SensitivityPage(BaseHandler):
                                 columnToList.append(values['trajectories'][name]) # Store a reference here for future use
                     elif i == 2:
                         parameters = map(float, line.split())
-
-                        if parameter not in values['parameters']:
-                            values['parameters'][parameter] = {}
                     elif i == 3:
                         for storage, value in zip(columnToList, map(float, line.split())):
                             storage.append(value)
@@ -142,7 +139,7 @@ class SensitivityPage(BaseHandler):
                             storage.append(value)
                 vhandle.close()
 
-                values['parameters'] = dict(zip(parameterNames, parameterValues))
+                values['parameters'] = dict(zip(parameterNames, parameters))
 
                 self.response.headers['Content-Type'] = 'application/json'
                 self.response.write(json.dumps({ "status" : "Finished",

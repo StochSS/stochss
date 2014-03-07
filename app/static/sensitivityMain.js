@@ -69,7 +69,24 @@ var run = function()
                           {
                               totalSpecies += 1;
 
-                              minimums[specie] = Math.min.apply(null, data.trajectories[specie]);
+                              minimums[specie] = undefined;
+
+                              for(var k = 0; k < data.trajectories[specie].length; k++)
+                              {
+                                  if(data.trajectories[specie][k] > 0.0)
+                                  {
+                                      if(minimums[specie] != undefined)
+                                      {
+                                          minimums[specie] = Math.min(minimums[specie], data.trajectories[specie][k]);
+                                      }
+                                      else
+                                      {
+                                          minimums[specie] = data.trajectories[specie][k];
+                                      }
+                                  }
+                              }
+
+                              console.log(minimums)
                           }
 
                           for(var specie in data.sensitivities)
