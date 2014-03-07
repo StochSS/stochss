@@ -148,7 +148,7 @@ var run = function()
                   url : "/simulate",
                   data : { reqType : "jobInfo",
                            id : id },
-                  success : function(data) {
+                  success : _.partial(function(id, data) {
                       $( "#jobInfo" ).html(jobInfoTemplate( data.job ));
 
                       $( "#plotRegion" ).hide();
@@ -162,7 +162,7 @@ var run = function()
                               $( "#plotRegion" ).show();
 
                               $( "#access" ).text( "Access local data" );
-                              $( "#access" ).click( function() {
+                              $( "#access" ).click( _.partial(function(id) {
                                   updateMsg( { status : true,
                                                msg : "Packing up data... (will forward you to file when ready)" } );
                                   $.ajax( { type : "POST",
@@ -184,7 +184,7 @@ var run = function()
                                             },
                                             dataType : 'json'
                                           });
-                              });
+                              }, id));
 
                               var totalSpecies = 0;
                               var totalPts = 1000;
@@ -232,7 +232,7 @@ var run = function()
                           }
                           else
                           {
-                              $( "#access" ).click( function() {
+                              $( "#access" ).click( _.partial(function(id) {
                                   updateMsg( { status : true,
                                                msg : "Downloading data from cloud... (page will refresh when finished)" } );
 
@@ -255,14 +255,14 @@ var run = function()
                                             },
                                             dataType : 'json'
                                           });
-                              });
+                              }, id));
                           }
                       }
                       else
                       {
                           $( "#error" ).html('<span><h4>Job Failed</h4><br />Stdout:<br /><pre>' + data.stdout + '</pre></span><br /><span>Stderr:<br /><pre>' + data.stderr + '</pre></span>');
                       }
-                  },
+                  }, id),
                   error: function(data)
                   {
                       console.log("do I get called?");
