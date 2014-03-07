@@ -366,6 +366,8 @@ class SimulatePage(BaseHandler):
             return
         elif reqType == 'getDataLocal':
             job = StochKitJobWrapper.get_by_id(int(self.request.get('id')))
+
+            print int(self.request.get('id'))
             
             if not job.stochkit_job.zipFileName:
                 szip = exportimport.SuperZip(os.path.abspath(os.path.dirname(__file__) + '/../static/tmp/'), preferredName = job.name + "_")
