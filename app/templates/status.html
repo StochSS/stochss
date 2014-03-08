@@ -5,95 +5,212 @@
 <!-- Script to check/unckeck all checkboxes -->
 <script language="JavaScript">
     function toggle(source) {
-        checkboxes = document.getElementsByName('select_job');
-        for(var i=0, n=checkboxes.length;i<n;i++) {
-            checkboxes[i].checked = source.checked;
-        }
-    }
-    </script>
+    checkboxes = document.getElementsByName('select_job');
+    for(var i=0, n=checkboxes.length;i<n;i++) {
+                                              checkboxes[i].checked = source.checked;
+                                              }
+                                              }
+                                              </script>
 <!--    -->
 
- <div class="span9">
-
-	<div class="row-fluid">
-
-		<div class"span9">
-
-{% if all_jobs %}
-<h2><a data-toggle="modal" class="show" href="#help_modal1" style="text-decoration: none"> Job Status <i class="icon-question-sign"></i></a>
-    {% set help_modal_id = "help_modal1" %}
-    {% set help_modal_title = "Status" %}
-    {% set help_modal_message = "A local job can have status 'Running', 'Finished' or 'Failed'. A Cloud job can in addition have status 'Pending'. A pending job is one that has not yet been assigned a compute node by the task queue system. This can be either because all nodes are busy, or because no nodes have been launched yet. In the latter case, launching nodes will cause the job to start running. " %}
-    {% include "help_modal.html" %}
-    {{help_modal|safe}}
-</h2>
+<div class="span9">
+    <div class="row-fluid">
+	<div class"span9">
+            <h2><a data-toggle="modal" class="show" href="#help_modal1" style="text-decoration: none"> Job Status <i class="icon-question-sign"></i></a>
+                {% set help_modal_id = "help_modal1" %}
+                {% set help_modal_title = "Status" %}
+                {% set help_modal_message = "A local job can have status 'Running', 'Finished' or 'Failed'. A Cloud job can in addition have status 'Pending'. A pending job is one that has not yet been assigned a compute node by the task queue system. This can be either because all nodes are busy, or because no nodes have been launched yet. In the latter case, launching nodes will cause the job to start running. " %}
+                {% include "help_modal.html" %}
+                {{help_modal|safe}}
+            </h2>
             </br>
             <form class ="well form" action="/status" method="post">
-            <table cellpadding="0" cellspacing="0" border="0" class="table table-striped table-bordered" id="dataTable">
-                <thead>
-                    <tr>
-                        <th><input type="checkbox" onClick="toggle(this)"/></th>
-                        <th>Job Number</th>
-                        <th>Job name </th>
-                        <th>Status</th>
+                {% if all_jobs %}
+                Deterministic/Stochastic Simulations:
+                <br />
+                <table cellpadding="0" cellspacing="0" border="0" class="table table-striped table-bordered" id="dataTable">
+                    <thead>
+                        <tr>
+                            <th width="40pt"></th>
+                            <th width="40pt">Job #</th>
+                            <th>Job name </th>
+                            <th>Job type </th>
+                            <th width="200pt">Status</th>
+                            
+                            <th width="200pt"></th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for job in all_jobs %}
+                        <tr>
+                            <td><a href="javascript:deleteJob('/simulate?reqType=delJob&id={{job.id}}');" onclick="">Delete</a></td>
+                            <td>
+                                <span>{{job.number}}</span>
+                            </td>
+                            <td>
+                                <span>{{job.name}}</span>
+                            </td>
+                            <td>
+                                <span>{{job.execType}}</span>
+                            </td>
+                            <td>
+                                {% if job.status == "Running" or job.status == "Finished" %}
+                                <span style="color: green" class="create_msg">{{job.status}}</span>
+                                {% endif %}
+                                {% if job.status == "Pending" %}
+                                <span style="color: orange" class="create_msg">{{job.status}}</span>
+                                {% endif %}
+                                {% if job.status == "Failed" or job.status == "Unknown" %}
+                                <span style="color: red" class="create_msg">{{job.status}}</span>
+                                {% endif %}
+                            </td>
+                            <td>
+                                {% if job.status == "Finished" %}
+                                <a href="/simulate?id={{job.id}}">View results</a>
+                                {% else %}
+                                {% if job.status == "Failed" %}
+                                <a href="/simulate?id={{job.id}}">Get Debugging Info</a>
+                                {% endif %}
+                                {% endif %}
+                            </td>
+                        </tr>
                         
-                        <th></th>
-                    </tr>
-                </thead>
-                <tbody>
-                    {% for job in all_jobs %}
-                    <tr>
-                        <td><input type="checkbox" name="select_job" value="{{job.name}}"> </td>
-                        <td>
-                            <span>{{job.number}}</span>
-                        </td>
-                        <td>
-                            <span>{{job.name}}</span>
-                        </td>
-                        <td>
-                            {% if job.status == "Running" or job.status == "Finished" %}
-                              <span style="color: green" class="create_msg">{{job.status}}</span>
-                            {% endif %}
-                            {% if job.status == "Pending" %}
-                              <span style="color: orange" class="create_msg">{{job.status}}</span>
-                            {% endif %}
-                            {% if job.status == "Failed" or job.status == "Unknown" %}
-                              <span style="color: red" class="create_msg">{{job.status}}</span>
-                            {% endif %}
-                        </td>
-                        <td>
-                            {% if job.status == "Finished" %}
-                              <a href="/output?job_name={{job.name}}">View results</a>
-                            {% else %}
-                              {% if job.status == "Failed" %}
-                                <a href="/output?job_name={{job.name}}&debug=true">Get Debugging Info</a>
-                              {% endif %}
-                             {% endif %}
-                        </td>
-                    </tr>
-                    
-                    {% endfor %}
-                </tbody>
-            </table>
+                        {% endfor %}
+                    </tbody>
+                </table>
+                <br />
+                {% endif %}
+                {% if allSensJobs %}
+                Deterministic + Sensitivity Analysis:
+                <br />
+                <table cellpadding="0" cellspacing="0" border="0" class="table table-striped table-bordered" id="dataTable">
+                    <thead>
+                        <tr>
+                            <th width="40pt"></th>
+                            <th width="40pt">Job #</th>
+                            <th>Job name </th>
+                            <th width="200pt">Status</th>
+                            <th width="200pt"></th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for job in allSensJobs %}
+                        <tr>
+                            <td><a href="javascript:deleteJob('/sensitivity?reqType=delJob&id={{job.id}}');">Delete</a></td>
+                            <td>
+                                <span>{{job.number}}</span>
+                            </td>
+                            <td>
+                                <span>{{job.name}}</span>
+                            </td>
+                            <td>
+                                {% if job.status == "Running" or job.status == "Finished" %}
+                                <span style="color: green" class="create_msg">{{job.status}}</span>
+                                {% endif %}
+                                {% if job.status == "Pending" %}
+                                <span style="color: orange" class="create_msg">{{job.status}}</span>
+                                {% endif %}
+                                {% if job.status == "Failed" or job.status == "Unknown" %}
+                                <span style="color: red" class="create_msg">{{job.status}}</span>
+                                {% endif %}
+                            </td>
+                            <td>
+                                {% if job.status == "Finished" %}
+                                <a href="/sensitivity?id={{job.id}}">View results</a>
+                                {% else %}
+                                {% if job.status == "Failed" %}
+                                <a href="/sensitivity?id={{job.id}}">Get Debugging Info</a>
+                                {% endif %}
+                                {% endif %}
+                            </td>
+                        </tr>
+                        
+                        {% endfor %}
+                    </tbody>
+                </table>
+                <br />
+                {% endif %}
+                {% if allExportJobs %}
+                Export Job:
+                <br />
+                <table cellpadding="0" cellspacing="0" border="0" class="table table-striped table-bordered" id="dataTable">
+                    <thead>
+                        <tr>
+                            <th width="40pt"></th>
+                            <th width="40pt">Job #</th>
+                            <th>Export Date</th>
+                            <th width="200pt">Status</th>
+                            <th width="200pt"></th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for job in allExportJobs %}
+                        <tr>
+                            <td><a href="javascript:deleteJob('/export?reqType=delJob&id={{job.id}}');">Delete</a></td>
+                            <td>
+                                <span>{{job.number}}</span>
+                            </td>
+                            <td>
+                                <span>{{job.startTime}}</span>
+                            </td>
+                            <td>
+                                {% if job.status == "Running" or job.status == "Finished" %}
+                                <span style="color: green" class="create_msg">{{job.status}}</span>
+                               
+                                {% endif %}
+                                {% if job.status == "Pending" %}
+                                <span style="color: orange" class="create_msg">{{job.status}}</span>
+                                {% endif %}
+                                {% if job.status == "Failed" or job.status == "Unknown" %}
+                                <span style="color: red" class="create_msg">{{job.status}}</span>
+                                {% endif %}
+                            </td>
+                            <td>
+                                {% if job.status == "Finished" %}
+                                <a href="/static/tmp/{{job.outData}}">Download Archive</a>
+                                {% else %}
+                                {% if job.status == "Failed" %}
+                                <a href="/static/tmp/{{job.outData}}">Get Debugging Info</a>
+                                {% endif %}
+                                {% endif %}
+                            </td>
+                        </tr>
+                        
+                        {% endfor %}
+                    </tbody>
+                </table>
+                {% endif %}
 
-<button type="submit" class="btn btn-primary btn-large" name="delete"><i class="icon-ban-circle"></i> Delete Selected</button>
-<button type="submit" class="btn btn-primary btn-large" name="refresh"><i class="icon-refresh"></i> Refresh</button>
-</form>
-{% else %}
-<h2> There are no Jobs present in the system</h2>
-{% endif %}
+                {% if not (allExportJobs or allSensJobs or all_jobs) %}
+                No jobs in system<br /><br />
+                {% endif %}
+                <button type="submit" class="btn btn-primary btn-large" name="refresh"><i class="icon-refresh"></i> Refresh</button>
+            </form>
             
-{% if msg %}
-{% if status == False %}
-<span style="color: red" class="create_msg">{{msg}}</span>
-{% else %}
-<span style="color: green" class="create_msg">{{msg}}</span>
-{% endif %}
-{% endif %}
-                    
-					
+            {% if msg %}
+            {% if status == False %}
+            <span style="color: red" class="create_msg">{{msg}}</span>
+            {% else %}
+            <span style="color: green" class="create_msg">{{msg}}</span>
+            {% endif %}
+            {% endif %}
+            
+	    
+        </div>
+    </div>
 </div>
-</div>
-</div>
+
+<script>
+function deleteJob(path)
+{
+$.post(path,
+success = function(data)
+{
+location.reload();
+});
+
+return false;
+}
+</script>
 
 {% endblock %}

@@ -164,11 +164,22 @@ class BaseHandler(webapp2.RequestHandler):
             #dev_appserver.TearDownStubs()
             
     def authentication_required(self):
-        print type(self).__name__
-        raise Exception("Subclass must implement me!")
+        return True
+        #print type(self).__name__
+        #raise Exception("Subclass must implement me!")
         
     def logged_in(self):
-        return self.auth.get_user_by_session() is not None
+        user_dict = self.auth.get_user_by_session()
+
+        if user_dict == None:
+            return None
+
+        self.user = self.auth.store.user_model.get_by_id(user_dict['user_id'])
+
+        if self.user == None:
+            return None
+
+        return user_dict
 			
     def get_session_property(self, key):
         """ Get the value for the given session property. """
@@ -288,12 +299,14 @@ try:
 except:
     pass
 
+from handlers.exportimport import *
 from handlers.specieseditor import *
 from handlers.modeleditor import *
 from handlers.parametereditor import *
 from handlers.volumeeditor import *
 from handlers.reactioneditor import *
 from handlers.simulation import *
+from handlers.sensitivity import *
 from handlers.credentials import *
 from handlers.converttopopulation import *
 from handlers.updates import *
@@ -340,11 +353,13 @@ app = webapp2.WSGIApplication([
                                ('/modeleditor/volumeeditor', VolumeEditorPage),
                                ('/modeleditor/converttopopulation', ConvertToPopulationPage),
                                ('/modeleditor/import/fromfile', ModelEditorImportFromFilePage),
-                               ('/modeleditor/import/examplelibrary', ModelEditorImportFromLibrary),
+                               ('/modeleditor/import/publiclibrary', ModelEditorImportFromLibrary),
                                ('/modeleditor/export/tostochkit2', ModelEditorExportToStochkit2),
                                ('/modeleditor.*', ModelEditorPage),
                                ('/simulate',SimulatePage),
-                               ('/simulate/newstochkitensemble',NewStochkitEnsemblePage),
+                               ('/sensitivity',SensitivityPage),
+                               ('/export', ExportPage),
+                               ('/import', ImportPage),
                                ('/status',StatusPage),
                                ('/output/visualize',VisualizePage),
                                ('/output',JobOutPutPage),
