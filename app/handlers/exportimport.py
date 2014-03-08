@@ -36,8 +36,9 @@ class ExportJobWrapper(db.Model):
     outData = db.StringProperty()
 
 class SuperZip:
-    def __init__(self, directory = None, zipFileName = None, preferredName = "backup_", cloudJobsToDownload = []):
-        self.cloudJobsToDownload = cloudJobsToDownload
+    def __init__(self, directory = None, zipFileName = None, preferredName = "backup_", stochKitJobsToDownload = [], sensitivityJobsToDownload = []):
+        self.stochKitJobsToDownload = stochKitJobsToDownload
+        self.sensitivityJobsToDownload = sensitivityJobsToDownload
         if directory == None and zipfile == None:
             raise Exception("SuperZip must have either directory or zipFileName defined in constructor")
 
@@ -110,9 +111,10 @@ class SuperZip:
         jsonModel["model"] = self.addBytes('models/data/{0}.xml'.format(model.model_name), model.model.serialize())
         self.addBytes('models/{0}.json'.format(model.model_name), json.dumps(jsonModel, sort_keys=True, indent=4, separators=(', ', ': ')))
 
-    def addStochKitJob(self, job):
+    def addStochKitJob(self, job, globalOp = False):
         stochkit_job = job.stochkit_job
 
+        print "hahaahahahahha", stochkit_job.resource
         # Only export finished jobs
         if stochkit_job.status == "Finished":
             # These are fields shared among all jobs
@@ -139,7 +141,8 @@ class SuperZip:
             if stochkit_job.resource == 'Cloud':
                 jsonJob["output_url"] = job.stochkit_job.output_url
                 # Only grab S3 data if user wants us to
-                if job.name in self.cloudJobsToDownload:
+                print 'globalOP', globalOp
+                if (job.name in self.stochKitJobsToDownload) or globalOp:
                     if stochkit_job.output_location is None or (stochkit_job.output_location is not None and not os.path.exists(stochkit_job.output_location)):
                         # Grab the output from S3 if we need to
                         service = backendservices()
@@ -167,7 +170,7 @@ class SuperZip:
             # Add the JSON to the zip archive
             self.addBytes('stochkitJobs/{0}.json'.format(job.name), json.dumps(jsonJob, sort_keys=True, indent=4, separators=(', ', ': ')))
     
-    def addSensitivityJob(self, job):
+    def addSensitivityJob(self, job, globalOp = False):
         if job.status == "Finished":
             # Shared fields
             jsonJob = { "version" : self.version,
@@ -182,7 +185,7 @@ class SuperZip:
             elif job.resource == "cloud":
                 jsonJob["outputURL"] = job.outputURL
                 # Only grab S3 data if user wants us to
-                if job.jobName in self.cloudJobsToDownload:
+                if (job.jobName in self.sensitivityJobsToDownload) or globalOp:
                     if job.outData is None or (job.outData is not None and not os.path.exists(job.outData)):
                         # Grab the output from S3 if we need to
                         service = backendservices()
@@ -197,7 +200,7 @@ class SuperZip:
                         os.remove(job.cloudDatabaseID+'.tar')
                     outputLocation = self.addFolder('sensitivityJobs/data/{0}'.format(job.jobName), job.outData)
                     jsonJob["outData"] = outputLocation
-        self.addBytes('sensitivityJobs/{0}.json'.format(job.jobName), json.dumps(jsonJob, sort_keys=True, indent=4, separators=(', ', ': ')))
+            self.addBytes('sensitivityJobs/{0}.json'.format(job.jobName), json.dumps(jsonJob, sort_keys=True, indent=4, separators=(', ', ': ')))
 
     def extractStochKitModel(self, path, userId = None, handler = None, rename = None):
         modelj = json.loads(self.zipfb.read(path))
@@ -345,9 +348,20 @@ class ExportPage(BaseHandler):
             self.response.write(json.dumps( { "numberOfFiles" : numberOfFiles, "totalSize" : totalSize } ))
             return
         elif reqType == 'backup':
-            logging.info('Processing backup export request with cloud jobs: {0}'.format(request_data["cloudJobs"]))
+            if "sensitivityJobs" in request_data:
+                selected_sensitivity_jobs = request_data["sensitivityJobs"]
+            else:
+                selected_sensitivity_jobs = []
+            if "stochKitJobs" in request_data:
+                selected_stochkit_jobs = request_data["stochKitJobs"]
+            else:
+                selected_stochkit_jobs = []
+            logging.info('Processing backup export request with stochkit jobs: {0} sensitivity jobs: {1}'.format(selected_stochkit_jobs, selected_sensitivity_jobs))
             exportJob = ExportJobWrapper()
-            globalOp = self.request.get('globalOp')
+            if "globalOp" in request_data:
+                globalOp = request_data["globalOp"]
+            else:
+                globalOp = False
 
             if globalOp and not self.user.is_admin_user():
                 self.response.headers['Content-Type'] = 'application/json'
@@ -362,7 +376,11 @@ class ExportPage(BaseHandler):
 
             exportJob.put()
 
-            szip = SuperZip(os.path.abspath(os.path.dirname(__file__)) + '/../static/tmp/', cloudJobsToDownload=request_data["cloudJobs"])
+            szip = SuperZip(
+                os.path.abspath(os.path.dirname(__file__)) + '/../static/tmp/',
+                stochKitJobsToDownload=selected_stochkit_jobs,
+                sensitivityJobsToDownload=selected_sensitivity_jobs
+            )
 
             if not globalOp:
                 models = db.GqlQuery("SELECT * FROM StochKitModelWrapper WHERE user_id = :1", self.user.user_id()).run()
@@ -383,7 +401,7 @@ class ExportPage(BaseHandler):
                 jobs = db.GqlQuery("SELECT * FROM SensitivityJobWrapper").run()
 
             for job in jobs:
-                szip.addSensitivityJob(job)
+                szip.addSensitivityJob(job, globalOp)
 
             if not globalOp:
                 jobs = db.GqlQuery("SELECT * FROM StochKitJobWrapper WHERE user_id = :1", self.user.user_id()).run()
@@ -391,7 +409,7 @@ class ExportPage(BaseHandler):
                 jobs = db.GqlQuery("SELECT * FROM StochKitJobWrapper").run()
 
             for job in jobs:
-                szip.addStochKitJob(job)
+                szip.addStochKitJob(job, globalOp)
 
             szip.close()
 
@@ -455,11 +473,11 @@ class ImportPage(BaseHandler):
         if self.user_data.valid_credentials:
             credentials = self.user_data.getCredentials()
             # Get all the cloud jobs
-            jobs = db.GqlQuery("SELECT * FROM StochKitJobWrapper WHERE user_id = :1", self.user.user_id()).fetch(100000)
-            jobs = [job for job in jobs if job.stochkit_job.resource == "Cloud" and job.stochkit_job.status == "Finished"]
+            stochkit_jobs = db.GqlQuery("SELECT * FROM StochKitJobWrapper WHERE user_id = :1", self.user.user_id()).fetch(100000)
+            stochkit_jobs = [job for job in stochkit_jobs if job.stochkit_job.resource == "Cloud" and job.stochkit_job.status == "Finished"]
             # Create the dictionary to pass to backend to check for sizes
             output_results_to_check = {}
-            for cloud_job in jobs:
+            for cloud_job in stochkit_jobs:
                 s3_url_segments = cloud_job.stochkit_job.output_url.split('/')
                 # S3 URLs are in the form https://s3.amazonaws.com/bucket_name/key/name
                 bucket_name = s3_url_segments[3]
@@ -486,12 +504,13 @@ class ImportPage(BaseHandler):
             service = backendservices()
             job_sizes = service.getSizeOfOutputResults(credentials['EC2_ACCESS_KEY'], credentials['EC2_SECRET_KEY'], output_results_to_check)
             # Add all of the relevant jobs to the context so they will be rendered on the page
-            context["cloud_jobs"] = []
-            for cloud_job in jobs:
+            context["stochkit_jobs"] = []
+            context["sensitivity_jobs"] = []
+            for cloud_job in stochkit_jobs:
                 job_name = cloud_job.name
                 if job_name in job_sizes.keys():
                     # These are the relevant jobs
-                    context["cloud_jobs"].append({
+                    context["stochkit_jobs"].append({
                         'name': job_name,
                         'exec_type': cloud_job.stochkit_job.exec_type,
                         'size': '{0} KB'.format(round(float(job_sizes[job_name])/1024, 1))
@@ -499,9 +518,9 @@ class ImportPage(BaseHandler):
             for cloud_job in sensi_jobs:
                 job_name = cloud_job.jobName
                 if job_name in job_sizes.keys():
-                    context["cloud_jobs"].append({
+                    context["sensitivity_jobs"].append({
                         'name': job_name,
-                        'exec_type': 'sensitivity',
+                        'exec_type': 'sensitivity_jobs',
                         'size': '{0} KB'.format(round(float(job_sizes[job_name])/1024, 1))
                     })
         return self.render_response('exportimport.html', **context)

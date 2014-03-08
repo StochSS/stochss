@@ -280,6 +280,7 @@ class StatusPage(BaseHandler):
 
             for number, job in enumerate(jobs):
                 number = len(jobs) - number
+                print job.outData
                 allExportJobs.append({ "startTime" : job.startTime,
                                        "status" : job.status,
                                        "number" : number,

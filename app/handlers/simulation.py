@@ -71,24 +71,25 @@ class StochKitJobWrapper(db.Model):
     stdout = db.StringProperty()
     stderr = db.StringProperty()
 
-    def delete(self):
+    def delete(self, handler):
         job = self
         stochkit_job = job.stochkit_job
         
         # TODO: Call the backend to kill and delete the job and all associated files.
         service = backendservices()
-            
+
+        if job.stochkit_job.zipFileName:
+            if os.path.exists(job.stochkit_job.zipFileName):
+                os.remove(job.stochkit_job.zipFileName)
+
         if stochkit_job.resource == 'Local':
             service.deleteTaskLocal([stochkit_job.pid])
             
             time.sleep(0.25)
             
             status = service.checkTaskStatusLocal([stochkit_job.pid]).values()[0]
-            
-            if status:
-                raise Exception("")
         else:
-            db_credentials = self.user_data.getCredentials()
+            db_credentials = handler.user_data.getCredentials()
             os.environ["AWS_ACCESS_KEY_ID"] = db_credentials['EC2_ACCESS_KEY']
             os.environ["AWS_SECRET_ACCESS_KEY"] = db_credentials['EC2_SECRET_KEY']
             service.deleteTasks([(stochkit_job.celery_pid,stochkit_job.pid)])
@@ -351,12 +352,10 @@ class SimulatePage(BaseHandler):
             os.system('tar -xf' +stochkit_job.uuid+'.tar')
             stochkit_job.output_location = os.path.abspath(os.path.dirname(__file__))+'/../output/'+stochkit_job.uuid
             stochkit_job.output_location = os.path.abspath(stochkit_job.output_location)
-            
+            stochkit_job.stdout = stochkit_job.output_location + '/stdout.log'
+            stochkit_job.stderr = stochkit_job.output_location + '/stderr.log'
             # Clean up
             os.remove(stochkit_job.uuid+'.tar')
-
-            job.stochkit_job.resource = 'local'
-
             # Save the updated status
             job.put()
 
@@ -374,7 +373,7 @@ class SimulatePage(BaseHandler):
                 
                 job.stochkit_job.zipFileName = szip.getFileName()
 
-                szip.addStochKitJob(job)
+                szip.addStochKitJob(job, True)
                 
                 szip.close()
 
@@ -400,13 +399,13 @@ class SimulatePage(BaseHandler):
 
             assert job.user_id == self.user.user_id()
 
-            try:
-                job.delete()
-            except Exception,e:
-                self.response.headers['Content-Type'] = 'application/json'
-                self.response.write(json.dumps({ 'status' : False,
-                                                 'msg' : "Failed to delete job"}))
-                return
+            #try:
+            job.delete(self)
+            #except Exception,e:
+            #    self.response.headers['Content-Type'] = 'application/json'
+            #    self.response.write(json.dumps({ 'status' : False,
+            #                                     'msg' : "Failed to delete job"}))
+            #    return
 
             self.response.headers['Content-Type'] = 'application/json'
             self.response.write(json.dumps({ 'status' : True,
@@ -421,7 +420,7 @@ class SimulatePage(BaseHandler):
                 self.response.write(json.dumps(["Not the right user"]))
 
             if job.stochkit_job.status == "Finished":
-                if job.stochkit_job.resource == 'Cloud':
+                if job.stochkit_job.resource == 'Cloud' and job.stochkit_job.output_location is None:
                     self.response.headers['Content-Type'] = 'application/json'
                     self.response.write(json.dumps({ "status" : "Finished",
                                                      "values" : [],
@@ -472,9 +471,11 @@ class SimulatePage(BaseHandler):
                                         values['trajectories'][name] = [] # start a new timeseries for this name
                                         columnToList.append(values['trajectories'][name]) # Store a reference here for future use
                             elif i == 2:
+                                continue
+                            elif i == 3:
                                 for storage, value in zip(columnToList, map(float, line.split())):
                                     storage.append(value)
-                            elif i == 3:
+                            elif i == 4:
                                 continue
                             else:
                                 for storage, value in zip(columnToList, map(float, line.split())):
@@ -672,9 +673,10 @@ class SimulatePage(BaseHandler):
             # The celery_pid is the Celery Task ID.
             stochkit_job.celery_pid = celery_task_id
             stochkit_job.status = 'Running'
-            stochkit_job.output_location = 'output/%s' % taskid
-            stochkit_job.stdout = stochkit_job.output_location + '/stdout.log'
-            stochkit_job.stderr = stochkit_job.output_location + '/stderr.log'
+            stochkit_job.output_location = None
+            # stochkit_job.output_location = 'output/%s' % taskid
+            # stochkit_job.stdout = stochkit_job.output_location + '/stdout.log'
+            # stochkit_job.stderr = stochkit_job.output_location + '/stderr.log'
         
             # Create a wrapper to store the Job description in the datastore
             stochkit_job_db = StochKitJobWrapper()

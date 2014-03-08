@@ -29,72 +29,134 @@ var run = function()
 
                       if(data.status == "Finished")
                       {
-                          var plotData = []
-
-                          $( "#plotRegion" ).show();
-
-                          $( "#access" ).text( "Access local data" );
-                          $( "#access" ).click( _.partial(function(id) {
-                              updateMsg( { status : true,
-                                           msg : "Packing up data... (will forward you to file when ready)" } );
-                              $.ajax( { type : "POST",
-                                        url : "/sensitivity",
-                                        data : { reqType : "getLocalData",
-                                                 id : id },
-                                        success : function(data) {
-                                            updateMsg(data);
-                                            
-                                            if(data.status == true)
-                                            {
-                                                window.location = data.url;
-                                            }
-                                        },
-                                        
-                                        error: function(data)
-                                        {
-                                            console.log("do I get called?");
-                                        },
-                                        dataType : 'json'
-                                      });
-                          }, id));
-
-                          data = data.values
-                          
-                          var totalSpecies = 0;
-                          var totalPts = 2000;
-
-                          var minimums = {};
-
-                          for(var specie in data.trajectories)
+                          console.log(data);
+                          if (data.job.resource == "cloud" && data.job.outData == null)
                           {
-                              totalSpecies += 1;
+                              $( "#access" ).click( _.partial(function(id) {
+                                  updateMsg( { status : true,
+                                               msg : "Downloading data from cloud... (page will refresh when finished)" } );
 
-                              minimums[specie] = undefined;
+                                  $.ajax( { type : "POST",
+                                            url : "/sensitivity",
+                                            data : { reqType : "getFromCloud",
+                                                     id : id },
+                                            success : function(data) {
+                                                updateMsg(data);
 
-                              for(var k = 0; k < data.trajectories[specie].length; k++)
+                                                if(data.status == true)
+                                                {
+                                                    location.reload() ;
+                                                }
+                                            },
+                                            
+                                            error: function(data)
+                                            {
+                                                console.log("do I get called?");
+                                            },
+                                            dataType : 'json'
+                                          });
+                              }, id));
+                          }
+                          else
+                          {
+                              var plotData = []
+
+                              $( "#plotRegion" ).show();
+
+                              $( "#access" ).text( "Access local data" );
+                              $( "#access" ).click( _.partial(function(id) {
+                                  updateMsg( { status : true,
+                                               msg : "Packing up data... (will forward you to file when ready)" } );
+                                  $.ajax( { type : "POST",
+                                            url : "/sensitivity",
+                                            data : { reqType : "getLocalData",
+                                                     id : id },
+                                            success : function(data) {
+                                                updateMsg(data);
+                                            
+                                                if(data.status == true)
+                                                {
+                                                    window.location = data.url;
+                                                }
+                                            },
+                                        
+                                            error: function(data)
+                                            {
+                                                console.log("do I get called?");
+                                            },
+                                            dataType : 'json'
+                                          });
+                              }, id));
+
+                              data = data.values
+                          
+                              var totalSpecies = 0;
+                              var totalPts = 2000;
+
+                              var minimums = {};
+
+                              for(var specie in data.trajectories)
                               {
-                                  if(data.trajectories[specie][k] > 0.0)
+                                  totalSpecies += 1;
+
+                                  minimums[specie] = undefined;
+
+                                  for(var k = 0; k < data.trajectories[specie].length; k++)
                                   {
-                                      if(minimums[specie] != undefined)
+                                      if(data.trajectories[specie][k] > 0.0)
                                       {
-                                          minimums[specie] = Math.min(minimums[specie], data.trajectories[specie][k]);
+                                          if(minimums[specie] != undefined)
+                                          {
+                                              minimums[specie] = Math.min(minimums[specie], data.trajectories[specie][k]);
+                                          }
+                                          else
+                                          {
+                                              minimums[specie] = data.trajectories[specie][k];
+                                          }
+                                      }
+                                  }
+
+                                  console.log(minimums)
+                              }
+
+                              for(var specie in data.sensitivities)
+                              {
+                                  for(var parameter in data.sensitivities[specie])
+                                  {
+                                      var series = [];
+                                  
+                                      var pts = data.trajectories[specie].length;
+                                      var mult = 1.0;
+                                      //interpolate to 100 pts
+                                      var ptsPerSpecie = Math.min(pts, Math.floor(totalPts / totalSpecies))
+                                      if(pts > ptsPerSpecie)
+                                      {
+                                          $( "#interpolateWarning" ).show()
+                                          mult = pts / ptsPerSpecie;
+                                          pts = ptsPerSpecie;
                                       }
                                       else
                                       {
-                                          minimums[specie] = data.trajectories[specie][k];
+                                          $( "#interpolateWarning" ).hide()
+                                          mult = 1;
                                       }
+
+                                      for(var k = 0; k < data.sensitivities[specie][parameter].length; k++)
+                                      {
+                                          id = Math.round(mult * k);
+                                          series.push({ x : data.time[id + 1],
+                                                        y : data.sensitivities[specie][parameter][k] * data.parameters[parameter] / (data.trajectories[specie][id + 1] + minimums[specie] * 1e-5)});
+                                      }
+               
+                                      plotData.push( { label : "d" + specie + "/d" + parameter,
+                                                       data : series } );
                                   }
                               }
 
-                              console.log(minimums)
-                          }
-
-                          for(var specie in data.sensitivities)
-                          {
-                              for(var parameter in data.sensitivities[specie])
+                              for(var specie in data.trajectories)
                               {
                                   var series = [];
-                                  
+
                                   var pts = data.trajectories[specie].length;
                                   var mult = 1.0;
                                   //interpolate to 100 pts
@@ -109,52 +171,21 @@ var run = function()
                                   {
                                       $( "#interpolateWarning" ).hide()
                                       mult = 1;
-                                  }
+                                  }        
 
-                                  for(var k = 0; k < data.sensitivities[specie][parameter].length; k++)
+                                  for(var k = 0; k < data.trajectories[specie].length; k++)
                                   {
                                       id = Math.round(mult * k);
-                                      series.push({ x : data.time[id + 1],
-                                                    y : data.sensitivities[specie][parameter][k] * data.parameters[parameter] / (data.trajectories[specie][id + 1] + minimums[specie] * 1e-5)});
+                                      series.push({ x : data.time[id],
+                                                    y : data.trajectories[specie][id] });
                                   }
-               
-                                  plotData.push( { label : "d" + specie + "/d" + parameter,
+
+                                  plotData.push( { label : specie,
                                                    data : series } );
                               }
-                          }
-
-                          for(var specie in data.trajectories)
-                          {
-                              var series = [];
-
-                              var pts = data.trajectories[specie].length;
-                              var mult = 1.0;
-                              //interpolate to 100 pts
-                              var ptsPerSpecie = Math.min(pts, Math.floor(totalPts / totalSpecies))
-                              if(pts > ptsPerSpecie)
-                              {
-                                  $( "#interpolateWarning" ).show()
-                                  mult = pts / ptsPerSpecie;
-                                  pts = ptsPerSpecie;
-                              }
-                              else
-                              {
-                                  $( "#interpolateWarning" ).hide()
-                                  mult = 1;
-                              }        
-
-                              for(var k = 0; k < data.trajectories[specie].length; k++)
-                              {
-                                  id = Math.round(mult * k);
-                                  series.push({ x : data.time[id],
-                                                y : data.trajectories[specie][id] });
-                              }
-
-                              plotData.push( { label : specie,
-                                               data : series } );
-                          }
                           
-                          Splot.plot( $( "#data" ), plotData, "");
+                              Splot.plot( $( "#data" ), plotData, "");
+                          }
                       }
                       else
                       {

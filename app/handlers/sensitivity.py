@@ -52,7 +52,13 @@ class SensitivityJobWrapper(db.Model):
     exceptionMessage = db.StringProperty()
 
     def delete(self):
-        shutil.rmtree(self.outData)
+        if self.outData:
+            if os.path.exists(self.outData):
+                shutil.rmtree(self.outData)
+
+        if self.zipFileName:
+            if os.path.exists(self.zipFileName):
+                os.remove(self.zipFileName)
 
         super(SensitivityJobWrapper, self).delete()
 
@@ -72,7 +78,8 @@ class SensitivityPage(BaseHandler):
                         "startTime" : job.startTime,
                         "indata" : json.loads(job.indata),
                         "outData" : job.outData,
-                        "status" : job.status }
+                        "status" : job.status,
+                        "resource" : job.resource }
 
             if self.user.user_id() != job.userId:
                 self.response.headers['Content-Type'] = 'application/json'
@@ -80,18 +87,12 @@ class SensitivityPage(BaseHandler):
 
             if job.status == "Finished":
                 if job.resource == "cloud" and job.outData is None:
-                    # Grab the remote files
-                    service = backendservices()
-                    service.fetchOutput(job.cloudDatabaseID, job.outputURL)
-                    # Unpack it to its local output location
-                    os.system('tar -xf {0}.tar'.format(job.cloudDatabaseID))
-                    job.outData = os.path.dirname(os.path.abspath(__file__))+'/../output/'+job.cloudDatabaseID
-                    job.outData = os.path.abspath(job.outData)
-                    jsonJob["outData"] = job.outData
-                    # Clean up
-                    os.remove(job.cloudDatabaseID+'.tar')
-                    # Update the db entry
-                    job.put()
+                    # Let the user decide if they want to download it
+                    self.response.headers['Content-Type'] = 'application/json'
+                    self.response.write(json.dumps({ "status" : "Finished",
+                                                     "values" : [],
+                                                     "job" : jsonJob}))
+                    return
                 outputdir = job.outData
                 # Load all data from file in JSON format
                 vhandle = open(outputdir + '/result/output.txt', 'r')
@@ -162,6 +163,25 @@ class SensitivityPage(BaseHandler):
             else:
                 self.response.headers['Content-Type'] = 'application/json'
                 self.response.write(json.dumps({ "status" : "asdfasdf" }))
+        elif reqType == "getFromCloud":
+            job = SensitivityJobWrapper.get_by_id(int(self.request.get('id')))
+
+            service = backendservices()
+            service.fetchOutput(job.cloudDatabaseID, job.outputURL)
+            # Unpack it to its local output location
+            os.system('tar -xf' +job.cloudDatabaseID+'.tar')
+            job.outData = os.path.dirname(os.path.abspath(__file__))+'/../output/'+job.cloudDatabaseID
+            job.outData = os.path.abspath(job.outData)
+            # jsonJob["outData"] = job.outData
+            # Clean up
+            os.remove(job.cloudDatabaseID+'.tar')
+            # Update the db entry
+            job.put()
+            
+            self.response.headers['Content-Type'] = 'application/json'
+            self.response.write(json.dumps({ 'status' : True,
+                                             'msg' : 'Job downloaded'}))
+            return
         elif reqType == "getLocalData":
             job = SensitivityJobWrapper.get_by_id(int(self.request.get('id')))
             
@@ -170,7 +190,7 @@ class SensitivityPage(BaseHandler):
                 
                 job.zipFileName = szip.getFileName()
 
-                szip.addSensitivityJob(job)
+                szip.addSensitivityJob(job, True)
                 
                 szip.close()
 
