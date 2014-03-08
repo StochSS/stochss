@@ -111,9 +111,10 @@ class SuperZip:
         jsonModel["model"] = self.addBytes('models/data/{0}.xml'.format(model.model_name), model.model.serialize())
         self.addBytes('models/{0}.json'.format(model.model_name), json.dumps(jsonModel, sort_keys=True, indent=4, separators=(', ', ': ')))
 
-    def addStochKitJob(self, job):
+    def addStochKitJob(self, job, globalOp = False):
         stochkit_job = job.stochkit_job
 
+        print "hahaahahahahha", stochkit_job.resource
         # Only export finished jobs
         if stochkit_job.status == "Finished":
             # These are fields shared among all jobs
@@ -140,7 +141,8 @@ class SuperZip:
             if stochkit_job.resource == 'Cloud':
                 jsonJob["output_url"] = job.stochkit_job.output_url
                 # Only grab S3 data if user wants us to
-                if job.name in self.stochKitJobsToDownload:
+                print 'globalOP', globalOp
+                if (job.name in self.stochKitJobsToDownload) or globalOp:
                     if stochkit_job.output_location is None or (stochkit_job.output_location is not None and not os.path.exists(stochkit_job.output_location)):
                         # Grab the output from S3 if we need to
                         service = backendservices()
@@ -168,7 +170,7 @@ class SuperZip:
             # Add the JSON to the zip archive
             self.addBytes('stochkitJobs/{0}.json'.format(job.name), json.dumps(jsonJob, sort_keys=True, indent=4, separators=(', ', ': ')))
     
-    def addSensitivityJob(self, job):
+    def addSensitivityJob(self, job, globalOp = False):
         if job.status == "Finished":
             # Shared fields
             jsonJob = { "version" : self.version,
@@ -183,7 +185,7 @@ class SuperZip:
             elif job.resource == "cloud":
                 jsonJob["outputURL"] = job.outputURL
                 # Only grab S3 data if user wants us to
-                if job.jobName in self.sensitivityJobsToDownload:
+                if (job.jobName in self.sensitivityJobsToDownload) or globalOp:
                     if job.outData is None or (job.outData is not None and not os.path.exists(job.outData)):
                         # Grab the output from S3 if we need to
                         service = backendservices()
@@ -198,7 +200,7 @@ class SuperZip:
                         os.remove(job.cloudDatabaseID+'.tar')
                     outputLocation = self.addFolder('sensitivityJobs/data/{0}'.format(job.jobName), job.outData)
                     jsonJob["outData"] = outputLocation
-        self.addBytes('sensitivityJobs/{0}.json'.format(job.jobName), json.dumps(jsonJob, sort_keys=True, indent=4, separators=(', ', ': ')))
+            self.addBytes('sensitivityJobs/{0}.json'.format(job.jobName), json.dumps(jsonJob, sort_keys=True, indent=4, separators=(', ', ': ')))
 
     def extractStochKitModel(self, path, userId = None, handler = None, rename = None):
         modelj = json.loads(self.zipfb.read(path))
@@ -356,7 +358,10 @@ class ExportPage(BaseHandler):
                 selected_stochkit_jobs = []
             logging.info('Processing backup export request with stochkit jobs: {0} sensitivity jobs: {1}'.format(selected_stochkit_jobs, selected_sensitivity_jobs))
             exportJob = ExportJobWrapper()
-            globalOp = self.request.get('globalOp')
+            if "globalOp" in request_data:
+                globalOp = request_data["globalOp"]
+            else:
+                globalOp = False
 
             if globalOp and not self.user.is_admin_user():
                 self.response.headers['Content-Type'] = 'application/json'
@@ -396,7 +401,7 @@ class ExportPage(BaseHandler):
                 jobs = db.GqlQuery("SELECT * FROM SensitivityJobWrapper").run()
 
             for job in jobs:
-                szip.addSensitivityJob(job)
+                szip.addSensitivityJob(job, globalOp)
 
             if not globalOp:
                 jobs = db.GqlQuery("SELECT * FROM StochKitJobWrapper WHERE user_id = :1", self.user.user_id()).run()
@@ -404,7 +409,7 @@ class ExportPage(BaseHandler):
                 jobs = db.GqlQuery("SELECT * FROM StochKitJobWrapper").run()
 
             for job in jobs:
-                szip.addStochKitJob(job)
+                szip.addStochKitJob(job, globalOp)
 
             szip.close()
 

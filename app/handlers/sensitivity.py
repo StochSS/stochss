@@ -52,7 +52,13 @@ class SensitivityJobWrapper(db.Model):
     exceptionMessage = db.StringProperty()
 
     def delete(self):
-        shutil.rmtree(self.outData)
+        if self.outData:
+            if os.path.exists(self.outData):
+                shutil.rmtree(self.outData)
+
+        if self.zipFileName:
+            if os.path.exists(self.zipFileName):
+                os.remove(self.zipFileName)
 
         super(SensitivityJobWrapper, self).delete()
 
@@ -184,7 +190,7 @@ class SensitivityPage(BaseHandler):
                 
                 job.zipFileName = szip.getFileName()
 
-                szip.addSensitivityJob(job)
+                szip.addSensitivityJob(job, True)
                 
                 szip.close()
 
