@@ -26,7 +26,7 @@ Splot.Plot = Backbone.View.extend(
                 var label = this.attributes.data[k].label;
                 var checkbox = $( checkboxTemplate( { name : label } ) ).appendTo( this.controlDiv ).eq(0);
 
-                if(!initialCheckbox)
+                if(!initialCheckbox && !label.match('/'))
                 {
                     initialCheckbox = checkbox;
                 }
