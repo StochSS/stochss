@@ -611,6 +611,21 @@ class ModelEditorImportFromLibrary(BaseHandler):
         if example_model is None:
             save_model(MichaelisMenten(), 'MichaelisMenten', "", is_public=True)
 
+        example_model = db.GqlQuery("SELECT * FROM StochKitModelWrapper WHERE is_public = :1 AND model_name = :2", True, 'schlogl').get()
+        if example_model is None:
+            save_model(get_model_from_file('schlogl',open('examples/schlogl.xml')), 'schlogl', "", is_public=True)
+
+
+def get_model_from_file(name, file):
+    doc = StochMLDocument.fromFile(file)
+    model = doc.toModel(name)
+    
+    try:
+        model.resolveParameters()
+    except:
+        raise ModelError("Could not resolve model parameters.")
+       
+    return model
 
 def do_import(handler, name, from_file = True, model_class=""):
     """
