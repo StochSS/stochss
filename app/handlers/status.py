@@ -19,6 +19,8 @@ from google.appengine.ext import db
 from stochssapp import BaseHandler
 from backend.backendservice import backendservices
 
+import sensitivity
+
 class StatusPage(BaseHandler):
     """ The main handler for the Job Status Page. Displays status messages for the jobs, options to delete/kill jobs and
         options to view the Job metadata and Job results. """        
@@ -110,16 +112,14 @@ class StatusPage(BaseHandler):
         service = backendservices()
         # Grab references to all the user's StochKitJobs in the system
         all_stochkit_jobs = db.GqlQuery("SELECT * FROM StochKitJobWrapper WHERE user_id = :1", self.user.user_id())
-        if all_stochkit_jobs == None:
-            context['no_jobs'] = 'There are no jobs in the system.'
-        else:
+        all_jobs = []
+        if all_stochkit_jobs != None:
             # We want to display the name of the job and the status of the Job.
-            all_jobs = []
             status = {}
 
             jobs = list(all_stochkit_jobs.run())
 
-            jobs = sorted(jobs, key = lambda x : (datetime.datetime.strptime(x.startDate, '%Y-%m-%d-%H-%M-%S') if hasattr(x, 'startDate') and x.startDate != None else ''), reverse = True)
+            jobs = sorted(jobs, key = lambda x : (datetime.datetime.strptime(x.startDate, '%Y-%m-%d-%H-%M-%S') if hasattr(x, 'startDate') and x.startDate != None else datetime.datetime.now()), reverse = True)
 
             for number, job in enumerate(jobs):
                 number = len(jobs) - number
@@ -191,14 +191,103 @@ class StatusPage(BaseHandler):
                     except Exception,e:
                         result = {'status':False,'msg':'Could not determine the status of the jobs.'+str(e)}                
 
+                # Save changes to the status
+                job.put()
+
                 all_jobs.append({ "name" : stochkit_job.name,
                                   "status" : stochkit_job.status,
                                   "resource" : stochkit_job.resource,
+                                  "execType" : stochkit_job.exec_type,
+                                  "id" : job.key().id(),
                                   "number" : number})
-                # Save changes to the status
-                job.put()
-                
+        
         context['all_jobs']=all_jobs
+
+        allSensJobs = []
+        # Grab references to all the user's StochKitJobs in the system
+        #allSensQuery = db.GqlQuery("SELECT * FROM SensitivityJobWrapper WHERE userId = :1", self.user.user_id())
+
+        allSensQuery = sensitivity.SensitivityJobWrapper.all().filter('userId =', self.user.user_id())
+
+        if allSensQuery != None:
+            jobs = list(allSensQuery.run())
+
+            print [x.key().id() for x in jobs]
+
+            jobs = sorted(jobs, key = lambda x : (datetime.datetime.strptime(x.startTime, '%Y-%m-%d-%H-%M-%S') if hasattr(x, 'startTime') and x.startTime != None else ''), reverse = True)
+
+            for number, job in enumerate(jobs):
+                print job.key().id()
+                number = len(jobs) - number
+                if job.resource == "local":
+                    if job.status != "Finished" or job.status != "Failed":
+                        res = service.checkTaskStatusLocal([job.pid])
+                        if res[job.pid]:
+                            job.status = "Running"
+                        else:
+                            file_to_check = job.outData + "/result/output.txt"
+                            if os.path.exists(file_to_check):
+                                job.status = "Finished"
+                            else:
+                                job.status = "Failed"
+                #
+                elif job.resource == "cloud" and job.status != "Finished":
+                    # Retrive credentials from the datastore
+                    if not self.user_data.valid_credentials:
+                        return {'status':False,'msg':'Could not retrieve the status of job '+stochkit_job.name +'. Invalid credentials.'}
+                    credentials = self.user_data.getCredentials()
+                    # Check the status from backend
+                    taskparams = {'AWS_ACCESS_KEY_ID':credentials['EC2_ACCESS_KEY'],'AWS_SECRET_ACCESS_KEY':credentials['EC2_SECRET_KEY'],'taskids':[job.cloudDatabaseID]}
+                    task_status = service.describeTask(taskparams)
+                    job_status = task_status[job.cloudDatabaseID]
+                    # If it's finished
+                    if job_status['status'] == 'finished':
+                        # Update the job 
+                        job.status = 'Finished'
+                        job.outputURL = job_status['output']
+                    # 
+                    elif job_status['status'] == 'failed':
+                        job.status = 'Failed'
+                        job.exceptionMessage = job_status['message']
+                        # Might not have an output if an exception was raised early on or if there is just no output available
+                        try:
+                            job.outputURL = job_status['output']
+                        except KeyError:
+                            pass
+                    # 
+                    elif job_status['status'] == 'pending':
+                        job.status = 'Pending'
+                    else:
+                        # The state gives more fine-grained results, like if the job is being re-run, but
+                        #  we don't bother the users with this info, we just tell them that it is still running.  
+                        job.status = 'Running'
+                
+                job.put()   
+                allSensJobs.append({ "name" : job.jobName,
+                                     "status" : job.status,
+                                     "id" : job.key().id(),
+                                     "number" : number})
+        
+        context['allSensJobs']=allSensJobs
+
+        allExportJobs = []
+        exportJobsQuery = db.GqlQuery("SELECT * FROM ExportJobWrapper WHERE userId = :1", self.user.user_id())
+
+        if exportJobsQuery != None:
+            jobs = list(exportJobsQuery.run())
+
+            jobs = sorted(jobs, key = lambda x : (datetime.datetime.strptime(x.startTime, '%Y-%m-%d-%H-%M-%S') if hasattr(x, 'startTime') and x.startTime != None else ''), reverse = True)
+
+            for number, job in enumerate(jobs):
+                number = len(jobs) - number
+                print job.outData
+                allExportJobs.append({ "startTime" : job.startTime,
+                                       "status" : job.status,
+                                       "number" : number,
+                                       "outData" : os.path.basename(job.outData),
+                                       "id" : job.key().id()})
+        
+        context['allExportJobs'] = allExportJobs
     
         return dict(result,**context)
 
@@ -502,7 +591,7 @@ class VisualizePage(BaseHandler):
     def getSpeciesNames(self, params):
         """ Get a list with the species names. 
             The result folder have to be populated in advance. """
-        #meanfile = params['job_folder']+'/result/stats/means.txt'
+        #meanfile = params['job_folder']+'/output/stats/means.txt'
         #logging.info(str(meanfile))
         try:
             # Try to grab them from the mean.txt file
@@ -512,7 +601,7 @@ class VisualizePage(BaseHandler):
             else:
                 meanfile = params['job_folder'] + '/result/stats/means.txt'
             
-            #meanfile = params['job_folder']+'/result/stats/means.txt'
+            #meanfile = params['job_folder']+'/output/stats/means.txt'
             file = open(meanfile,'rb')
             row = file.readline()
             logging.info(str(row))

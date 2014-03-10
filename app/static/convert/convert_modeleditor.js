@@ -8,7 +8,7 @@ Convert.VolumeChoose = Backbone.View.extend(
 
 	    this.rowTemplate = _.template('<tr>\
 <td><a class="select" href="#"><%= model.attributes.name %> (Model <%= model.attributes.id %>)</a></td>\
-<td><%= model.type %></td>\
+<td><%= model.units %></td>\
 </tr>');
 
             this.table = this.$el.find( 'tbody' )
@@ -326,10 +326,10 @@ var run = function()
                 if(_.has(this, 'model'))
                 {
                     name = this.$el.find(' .modelName ').val();
-                    var newModel = new stochkit.Model({name : name, type : "population"});
+                    var newModel = new stochkit.Model({name : name, units : "population"});
                     newModel.fromModel(this.model);
 
-                    newModel.attributes.type = "population";
+                    newModel.attributes.units = "population";
                     newModel.attributes.name = name;
 
                     var reactions = newModel.ReactionsList.children();

@@ -9,6 +9,7 @@ import os, subprocess, signal, uuid, sys, time
 import logging
 from datetime import datetime
 from tasks import *
+from boto.s3.connection import S3Connection
 
 class backendservices():
     ''' 
@@ -214,6 +215,9 @@ class backendservices():
 	    #we can do a terminate all based on keyname prefix
 	    if not keyname.startswith(backendservices.KEYPREFIX):
 		params['keyname'] = backendservices.KEYPREFIX+keyname
+            # NOTE: We are forcing blocking mode within the InfrastructureManager class
+            # for the launching of VMs because of how GAE joins on all threads before
+            # returning a response from a request.
             i = InfrastructureManager(blocking=block)
             res = i.run_instances(params,[])
             logging.info("startMachines : exiting method with result : %s", str(res))
@@ -280,6 +284,49 @@ class backendservices():
             logging.error("validateCredentials: exiting with error : %s", str(e))
             return False
     
+    
+    def getSizeOfOutputResults(self, aws_access_key, aws_secret_key, output_buckets):
+        '''
+        This method checks the size of the output results stored in S3 for all of the buckets and keys
+         specified in output_buckets.
+        @param aws_access_key
+         The AWS access key of the user whose output is being examined.
+        @param aws_secret_key
+         The AWS secret key of the user whose output is being examined.
+        @param output_buckets
+         A dictionary whose keys are bucket names and whose values are lists of (key name, job name) pairs.
+        @return
+         A dictionary whose keys are job names and whose values are output sizes of those jobs.
+         The output size is either the size specified in bytes or None if no output was found.
+        '''
+        try:
+            logging.info("getSizeOfOutputResults: inside method with output_buckets: {0}".format(output_buckets))
+            # Connect to S3
+            conn = S3Connection(aws_access_key, aws_secret_key)
+            # Output is a dictionary
+            result = {}
+            for bucket_name in output_buckets:
+                # Try to get the bucket
+                try:
+                    bucket = conn.get_bucket(bucket_name)
+                except boto.exception.S3ResponseError:
+                    # If the bucket doesn't exist, neither do any of the keys
+                    for key_name, job_name in output_buckets[bucket_name]:
+                        result[job_name] = None
+                else:
+                    # Ok the bucket exists, now for the keys
+                    for key_name, job_name in output_buckets[bucket_name]:
+                        key = bucket.get_key(key_name)
+                        if key is None:
+                            # No output exists for this key
+                            result[job_name] = None
+                        else:
+                            # Output exists for this key
+                            result[job_name] = key.size
+            return result
+        except Exception, e:
+            logging.error("getSizeOfOutputResults: unable to get size with exception: {0}".format(e))
+            return None
     
     def fetchOutput(self, taskid, outputurl):
         '''

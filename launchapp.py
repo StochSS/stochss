@@ -18,6 +18,16 @@ if len(sys.argv) == 3:
 
 path = os.path.abspath(os.path.dirname(__file__))
 
+try:
+    os.mkdir('{0}/app/output'.format(path))
+except:
+    pass
+
+try:
+    os.mkdir('{0}/app/static/tmp'.format(path))
+except:
+    pass
+
 if os.path.isfile('app/update'):
     if mac:
         print "<h2>Updating application now</h2><br />"
@@ -88,7 +98,7 @@ stderr = open('stderr.log', 'w')
 # Deploy the app on localhost
 #print path
 def startserver():
-    h = subprocess.Popen(("python " + path + "/sdk/python/dev_appserver.py --host=0.0.0.0 --datastore_path={0}/mydatastore --skip_sdk_update_check YES --datastore_consistency_policy=consistent app".format(path)).split(), stdout = stdout, stderr = stderr)
+    h = subprocess.Popen(("python " + path + "/sdk/python/dev_appserver.py --host=localhost --datastore_path={0}/mydatastore --skip_sdk_update_check YES --datastore_consistency_policy=consistent app".format(path)).split(), stdout = stdout, stderr = stderr)
 
 startserver()
 
