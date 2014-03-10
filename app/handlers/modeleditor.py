@@ -710,8 +710,6 @@ class ModelEditorExportToStochkit2(BaseHandler):
 
 def save_model(model, model_name, user_id, is_public=False):
     """ Save model as a new entity. """
-    print model
-    print model_name
     db_model = StochKitModelWrapper()
     db_model.user_id = user_id
     db_model.model = model
