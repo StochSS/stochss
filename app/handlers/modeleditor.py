@@ -615,6 +615,10 @@ class ModelEditorImportFromLibrary(BaseHandler):
         if example_model is None:
             save_model(get_model_from_file('schlogl',open('examples/schlogl.xml')), 'schlogl', "", is_public=True)
 
+        example_model = db.GqlQuery("SELECT * FROM StochKitModelWrapper WHERE is_public = :1 AND model_name = :2", True, 'heat_shock_mass_action').get()
+        if example_model is None:
+            save_model(get_model_from_file('heat_shock_mass_action',open('examples/heat_shock_mass_action.xml')), 'heat_shock_mass_action', "", is_public=True)
+
 
 def get_model_from_file(name, file):
     doc = StochMLDocument.fromFile(file)
@@ -643,16 +647,8 @@ def do_import(handler, name, from_file = True, model_class=""):
             model = doc.toModel(name)
         
         else:
-            if model_class == 'dimerdecay':
-                model = dimerdecay(name)
-            elif model_class == 'lotkavolterra_oscillating':
-                model = lotkavolterra_oscillating(name)
-            elif model_class == 'lotkavolterra_equilibrium':
-                model = lotkavolterra_equilibrium(name)
-            elif model_class == 'MichaelisMenten':
-                model = MichaelisMenten(name)
-            else:
-                return {'status': False, 'msg': 'Invalid model class'}
+            db_model = db.GqlQuery("SELECT * FROM StochKitModelWrapper WHERE is_public = :1 AND model_name = :2", True, model_class).get()
+            model = db_model.model
 
         # For the model to display and function properly in the UI, we need to make sure that all
         # the parameters have been resolved to scalar values.
@@ -714,6 +710,8 @@ class ModelEditorExportToStochkit2(BaseHandler):
 
 def save_model(model, model_name, user_id, is_public=False):
     """ Save model as a new entity. """
+    print model
+    print model_name
     db_model = StochKitModelWrapper()
     db_model.user_id = user_id
     db_model.model = model
