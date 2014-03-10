@@ -8,11 +8,11 @@ Splot.Plot = Backbone.View.extend(
 
             this.$el = this.attributes.selector;
 
+            $("<hr />Trajectory select:<br />").appendTo( this.$el );
+            this.controlDiv = $( "<div />" ).appendTo( this.$el );
             this.renderDiv = $( "<div />" ).appendTo( this.$el );
             this.hiddenDiv = $( "<div />" ).appendTo( this.$el );
             //this.flotDiv = $( "<div />" ).appendTo( this.$el );
-            $("<hr />Trajectory select:<br />").appendTo( this.$el );
-            this.controlDiv = $( "<div />" ).appendTo( this.$el );
 
             var checkboxTemplate = _.template("<input type='checkbox' /><span>&nbsp;<%= name %>,&nbsp;<span />");
 
