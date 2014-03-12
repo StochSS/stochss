@@ -649,6 +649,7 @@ def do_import(handler, name, from_file = True, model_class=""):
         else:
             db_model = db.GqlQuery("SELECT * FROM StochKitModelWrapper WHERE is_public = :1 AND model_name = :2", True, model_class).get()
             model = db_model.model
+            model.name = name
 
         # For the model to display and function properly in the UI, we need to make sure that all
         # the parameters have been resolved to scalar values.
