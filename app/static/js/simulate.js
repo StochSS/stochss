@@ -124,11 +124,11 @@ var checkAndGet = function(selectTable)
 
 var updateMsg = function(data)
 {
-    $( "#msg" ).html(data.msg);
+    $( "#msg" ).text(data.msg);
     if(data.status)
-        $( "#msg" ).css('color', 'green');
+        $( "#msg" ).prop('class', 'alert alert-success');
     else
-        $( "#msg" ).css('color', 'red');
+        $( "#msg" ).prop('class', 'alert alert-error');
     $( "#msg" ).show();
 };
 

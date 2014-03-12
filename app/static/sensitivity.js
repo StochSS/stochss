@@ -4,9 +4,9 @@ var updateMsg = function(data)
 {
     $( "#msg" ).html(data.msg);
     if(data.status)
-        $( "#msg" ).css('color', 'green');
+        $( "#msg" ).prop('class', 'alert alert-success');
     else
-        $( "#msg" ).css('color', 'red');
+        $( "#msg" ).prop('class', 'alert alert-error');
     $( "#msg" ).show();
 };
 

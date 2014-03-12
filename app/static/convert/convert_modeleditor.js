@@ -399,8 +399,8 @@ var run = function()
                     }
                     
                     modelCollection.add(newModel);
-                    newModel.save({}, { success: _.partial(function(elem) { elem.html('<font color="green">Model successfully created</font>'); }, this.$el.find( '#msg' )),
-                                        error: _.partial(function(elem) { elem.html('<font color="red">Failed</font>'); }, this.$el.find( '#msg' )) });
+                    newModel.save({}, { success: _.partial(function(elem) { elem.prop('class', 'alert alert-success'); elem.text('Model successfully created, navigate to Models page to edit'); }, this.$el.find( '#msg' )),
+                                        error: _.partial(function(elem) { elem.prop('class', 'alert alert-error'); elem.text('Failed'); }, this.$el.find( '#msg' )) });
                 }
             }
         });
