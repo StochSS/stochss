@@ -430,29 +430,54 @@ class SimulatePage(BaseHandler):
                     outputdir = job.stochkit_job.output_location
                 # Load all data from file in JSON format
                     if job.stochkit_job.exec_type == 'stochastic':
-                        outfile = '/result/stats/means.txt'
+                        tid = self.request.get('tid')
                         
-                        print "outputdir", outputdir
+                        if tid != '' and tid != 'mean':
+                            outfile = '/result/trajectories/trajectory{0}.txt'.format(tid)
+                            
+                            vhandle = open(outputdir + outfile, 'r')
+                            
+                            print outputdir + outfile
+                            
+                            values = { 'time' : [], 'trajectories' : {} }
+                            columnToList = []
+                            for i, line in enumerate(vhandle):
+                                if i == 0:
+                                    names = line.split()
+                                    for name in names:
+                                        if name == 'time':
+                                            columnToList.append(values['time'])
+                                        else:
+                                            values['trajectories'][name] = [] # start a new timeseries for this name
+                                            columnToList.append(values['trajectories'][name]) # Store a reference here for future use
+                                else:
+                                    for storage, value in zip(columnToList, map(float, line.split())):
+                                        storage.append(value)
+                            vhandle.close()
+                        else:
+                            outfile = '/result/stats/means.txt'
                         
-                        vhandle = open(outputdir + outfile, 'r')
+                            print "outputdir", outputdir
+                            
+                            vhandle = open(outputdir + outfile, 'r')
 
-                        print outputdir + outfile
+                            print outputdir + outfile
 
-                        values = { 'time' : [], 'trajectories' : {} }
-                        columnToList = []
-                        for i, line in enumerate(vhandle):
-                            if i == 0:
-                                names = line.split()
-                                for name in names:
-                                    if name == 'time':
-                                        columnToList.append(values['time'])
-                                    else:
-                                        values['trajectories'][name] = [] # start a new timeseries for this name
-                                        columnToList.append(values['trajectories'][name]) # Store a reference here for future use
-                            else:
-                                for storage, value in zip(columnToList, map(float, line.split())):
-                                    storage.append(value)
-                        vhandle.close()
+                            values = { 'time' : [], 'trajectories' : {} }
+                            columnToList = []
+                            for i, line in enumerate(vhandle):
+                                if i == 0:
+                                    names = line.split()
+                                    for name in names:
+                                        if name == 'time':
+                                            columnToList.append(values['time'])
+                                        else:
+                                            values['trajectories'][name] = [] # start a new timeseries for this name
+                                            columnToList.append(values['trajectories'][name]) # Store a reference here for future use
+                                else:
+                                    for storage, value in zip(columnToList, map(float, line.split())):
+                                        storage.append(value)
+                            vhandle.close()
                     else:
                         outfile = '/result/output.txt'
 
@@ -729,7 +754,7 @@ class SimulatePage(BaseHandler):
                 executable = "{0}/../../StochKit/{1}".format(path, params['algorithm'])
 
                 args += ' --realizations {0} '.format(params['realizations'])
-                args+=' --seed {0} '.format(params['seed'])
+                args+=' --keep-trajectories --seed {0} '.format(params['seed'])
             else:
                 executable = "{0}/../../ode/stochkit_ode.py".format(path)
 

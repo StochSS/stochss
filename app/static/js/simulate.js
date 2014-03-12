@@ -135,6 +135,12 @@ var updateMsg = function(data)
 var run = function()
 {
     var id = $.url().param("id");
+    var tid = $.url().param("tid");
+
+    if(typeof tid === undefined)
+    {
+        tid = 'mean';
+    }
 
     if(id)
     {
@@ -147,7 +153,8 @@ var run = function()
         $.ajax( { type : "POST",
                   url : "/simulate",
                   data : { reqType : "jobInfo",
-                           id : id },
+                           id : id,
+                           tid : tid},
                   success : _.partial(function(id, data) {
                       $( "#jobInfo" ).html(jobInfoTemplate( data.job ));
 
@@ -158,6 +165,22 @@ var run = function()
                           if(data.job.output_location != null)
                           {
                               var plotData = []
+
+                              var selectTemplate = _.template("<option value='<%= name %>'>trajectory <%= name %></option>");
+
+                              for(var i = 0; i < data.job.realizations; i++)
+                              {
+                                  $( selectTemplate( { name : i } ) ).appendTo( $( "#trajectorySelect" ))
+                              }
+
+                              $( "#trajectorySelect" ).val( tid );
+
+                              $( "#trajectorySelect" ).change( _.partial(function(id) {
+                                  //var text = $(this).text();
+                                  //var hiddenForm = $('<form class="hidden-form" action="something.php" method="post" style="display: none;"><textarea name="id">' + id + '</textarea><textarea name="tid">' + tid + '</textarea></form>').appendTo('body');
+                                  //hiddenForm.submit();
+                                  window.location = window.location.pathname + "?id=" + id + "&tid=" + $(this).val();
+                              }, id));
 
                               $( "#plotRegion" ).show();
 
