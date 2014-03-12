@@ -183,7 +183,7 @@ var run = function()
                                   plotData.push( { label : specie,
                                                    data : series } );
                               }
-                          
+                              
                               Splot.plot( $( "#data" ), plotData, "");
                           }
                       }
