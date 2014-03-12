@@ -576,7 +576,7 @@ class ModelEditorImportFromLibrary(BaseHandler):
         name = self.request.get('toDelete')
         if name == "":
             return {'status': False, 'msg': 'Name is missing'}
-        elif name == "dimerdecay" or name == "lotkavolterra_oscillating" or name == "lotkavolterra_equilibrium" or name == "MichaelisMenten":
+        elif name == "dimerdecay" or name == "lotkavolterra_oscillating" or name == "lotkavolterra_equilibrium" or name == "MichaelisMenten" or name == "schlogl" or name == "heat_shock_mass_action" :
             return {'status': False, 'msg': 'This is an example model, it cannot be deleted'}
         
         try:
