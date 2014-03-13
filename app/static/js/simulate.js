@@ -124,11 +124,11 @@ var checkAndGet = function(selectTable)
 
 var updateMsg = function(data)
 {
-    $( "#msg" ).html(data.msg);
+    $( "#msg" ).text(data.msg);
     if(data.status)
-        $( "#msg" ).css('color', 'green');
+        $( "#msg" ).prop('class', 'alert alert-success');
     else
-        $( "#msg" ).css('color', 'red');
+        $( "#msg" ).prop('class', 'alert alert-error');
     $( "#msg" ).show();
 };
 
@@ -284,6 +284,39 @@ var run = function()
                       else
                       {
                           $( "#error" ).html('<span><h4>Job Failed</h4><br />Stdout:<br /><pre>' + data.stdout + '</pre></span><br /><span>Stderr:<br /><pre>' + data.stderr + '</pre></span>');
+
+                          if(data.job.output_location != null)
+                          {                          
+                              $( "#access" ).text( "Access input data for debugging" );
+                              $( "#access" ).click( _.partial(function(id) {
+                                  updateMsg( { status : true,
+                                               msg : "Packing up data... (will forward you to file when ready)" } );
+                                  $.ajax( { type : "POST",
+                                            url : "/simulate",
+                                            data : { reqType : "getDataLocal",
+                                                     id : id },
+                                            success : function(data) {
+                                                updateMsg(data);
+                                                
+                                                if(data.status == true)
+                                                {
+                                                    window.location = data.url;
+                                                }
+                                            },
+                                            
+                                            error: function(data)
+                                            {
+                                                console.log("do I get called?");
+                                            },
+                                            dataType : 'json'
+                                          });
+                              }, id));
+                          }
+                          else
+                          {
+                              $( "#access" ).text( "No input data available for debugging" );
+                              $( "#access" ).prop("disabled",true);
+                          }
                       }
                   }, id),
                   error: function(data)

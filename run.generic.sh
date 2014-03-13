@@ -49,8 +49,8 @@ else
     fi
 
     echo "Building StochKit"
-    echo " Logging stdout in $STOCHKIT_HOME/stdout.log and "
-    echo " stderr in $STOCHKIT_HOME/stderr.log "
+    echo " Logging stdout in $STOCHSS_HOME/stdout.log and "
+    echo " stderr in $STOCHSS_HOME/stderr.log "
     echo " * This process will take at least 5 minutes to complete, please be patient *"
     wd=`pwd`
     cd "$STOCHKIT_PREFIX"

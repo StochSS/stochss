@@ -307,13 +307,15 @@ class SuperZip:
 
 class ExportPage(BaseHandler):
     def post(self):
-        request_data = json.loads(self.request.POST.items()[0][0])
-        reqType = request_data["reqType"]
+        try:
+            request_data = json.loads(self.request.POST.items()[0][0])
+            reqType = request_data["reqType"]
+        except:
+            reqType = self.request.get('reqType')
+            pass
 
         if reqType == 'delJob':
             job = ExportJobWrapper.get_by_id(int(self.request.get('id')))
-            print job.outData
-            print 'SDFSADFKLJ;F;DASJK;FAJSDKJKF;ASDLJKFLASD;;LJFKASD;AJKLDSF;'
             os.remove(job.outData)
             job.delete()
 

@@ -93,30 +93,9 @@ var run = function()
                               var totalSpecies = 0;
                               var totalPts = 2000;
 
-                              var minimums = {};
-
                               for(var specie in data.trajectories)
                               {
                                   totalSpecies += 1;
-
-                                  minimums[specie] = undefined;
-
-                                  for(var k = 0; k < data.trajectories[specie].length; k++)
-                                  {
-                                      if(data.trajectories[specie][k] > 0.0)
-                                      {
-                                          if(minimums[specie] != undefined)
-                                          {
-                                              minimums[specie] = Math.min(minimums[specie], data.trajectories[specie][k]);
-                                          }
-                                          else
-                                          {
-                                              minimums[specie] = data.trajectories[specie][k];
-                                          }
-                                      }
-                                  }
-
-                                  console.log(minimums)
                               }
 
                               for(var specie in data.sensitivities)
@@ -145,7 +124,7 @@ var run = function()
                                       {
                                           id = Math.round(mult * k);
                                           series.push({ x : data.time[id + 1],
-                                                        y : data.sensitivities[specie][parameter][k] * data.parameters[parameter] / (data.trajectories[specie][id + 1] + minimums[specie] * 1e-5)});
+                                                        y : data.sensitivities[specie][parameter][k]});
                                       }
                
                                       plotData.push( { label : "d" + specie + "/d" + parameter,
@@ -183,13 +162,46 @@ var run = function()
                                   plotData.push( { label : specie,
                                                    data : series } );
                               }
-                          
+                              
                               Splot.plot( $( "#data" ), plotData, "");
                           }
                       }
                       else
                       {
                           $( "#error" ).html('<span><h4>Job Failed</h4><br />Stdout:<br /><pre>' + data.stdout + '</pre></span><br /><span>Stderr:<br /><pre>' + data.stderr + '</pre></span>');
+
+                          if (data.job.outData != null)
+                          {                          
+                              $( "#access" ).text( "Access input data for debugging" );
+                              $( "#access" ).click( _.partial(function(id) {
+                                  updateMsg( { status : true,
+                                               msg : "Packing up data... (will forward you to file when ready)" } );
+                                  $.ajax( { type : "POST",
+                                            url : "/sensitivity",
+                                            data : { reqType : "getLocalData",
+                                                     id : id },
+                                            success : function(data) {
+                                                updateMsg(data);
+                                                
+                                                if(data.status == true)
+                                                {
+                                                    window.location = data.url;
+                                                }
+                                            },
+                                            
+                                            error: function(data)
+                                            {
+                                                console.log("do I get called?");
+                                            },
+                                            dataType : 'json'
+                                          });
+                              }, id));
+                          }
+                          else
+                          {
+                              $( "#access" ).text( "No input data available for debugging" );
+                              $( "#access" ).prop("disabled",true);
+                          }
                       }
                   }, id),
                   error: function(data)
