@@ -41,7 +41,7 @@ class SensitivityJobWrapper(db.Model):
     pid = db.IntegerProperty()
     startTime = db.StringProperty()
     jobName = db.StringProperty()
-    indata = db.StringProperty()
+    indata = db.TextProperty()
     outData = db.StringProperty()
     status = db.StringProperty()
     zipFileName = db.StringProperty()
