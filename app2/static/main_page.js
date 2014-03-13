@@ -22,7 +22,8 @@ $('#export').on('click', function(e) {
             button.innerHTML = "Export";
             button.disabled = false;
             if (response["status"]) {
-                $('.ajax-success-msg').text("Successfully exported models to zip archive: " + response["zipLocation"]);
+                $('.ajax-success-msg').text("Successfully exported models to zip archive");
+                window.location = response["zipLocation"]
             } else {
                 alert(response["msg"]);
             }
