@@ -76,19 +76,22 @@ Import.ImportTable = Backbone.View.extend(
 
 	    this.modelRowTemplate = _.template('<tr>\
 <td><input type="checkbox" /></td>\
-<td><%= name %></td>\
-<td><%= units %></td>\
+<td><%= model.name %></td>\
+<td><%= model.units %></td>\
+<td style="color: <%= color %>";><%= version %></td>\
 </tr>');
 
 	    this.rowTemplate = _.template('<tr>\
 <td><input type="checkbox" /></td>\
-<td><%= name %></td>\
-<td><%= exec_type %></td>\
+<td><%= job.name %></td>\
+<td><%= job.exec_type %></td>\
+<td style="color: <%= color %>";><%= version %></td>\
 </tr>');
 
 	    this.sensitivityTemplate = _.template('<tr>\
 <td><input type="checkbox" /></td>\
-<td><%= jobName %></td>\
+<td><%= job.jobName %></td>\
+<td style="color: <%= color %>";><%= version %></td>\
 </tr>');
 
             this.mc = this.$el.find( '#modelContainer' );
@@ -118,6 +121,7 @@ Import.ImportTable = Backbone.View.extend(
             if(typeof data != 'undefined') {
                 this.state.id = data.id;
                 this.data = data;
+                this.version = this.data.version;
 
                 $( ".modelContainerTr" ).hide();
                 for(var name in this.data.headers.models) {
@@ -125,7 +129,17 @@ Import.ImportTable = Backbone.View.extend(
                     console.log(name)
                     var model = this.data.headers.models[name];
 
-                    var html = this.modelRowTemplate(model);
+                    var color = "red";
+                    var version = model.version + " (newer than current StochSS)";
+                    if(versionCompare(this.version, model.version) >= 0)
+                    {
+                        color = "green";
+                        version = model.version;
+                    }
+
+                    var html = this.modelRowTemplate( { model : model,
+                                                        color : color,
+                                                        version : version});
 
                     var boxparam = $( html ).appendTo( this.mc );
 
@@ -139,7 +153,17 @@ Import.ImportTable = Backbone.View.extend(
                     $( ".stochkitContainerTr" ).show();
                     var job = this.data.headers.stochkitJobs[name];
 
-                    var html = this.rowTemplate(job);
+                    var color = "red";
+                    var version = job.version + " (newer than current StochSS)";
+                    if(versionCompare(this.version, job.version) >= 0)
+                    {
+                        color = "green";
+                        version = job.version;
+                    }
+
+                    var html = this.rowTemplate( { job : job,
+                                                   color : color,
+                                                   version : version});
 
                     var boxparam = $( html ).appendTo( this.sjc );
 
@@ -153,7 +177,17 @@ Import.ImportTable = Backbone.View.extend(
                     $( ".sensitivityContainerTr" ).show();
                     var job = this.data.headers.sensitivityJobs[name];
 
-                    var html = this.sensitivityTemplate(job);
+                    var color = "red";
+                    var version = job.version + " (newer than current StochSS)";
+                    if(versionCompare(this.version, job.version) >= 0)
+                    {
+                        color = "green";
+                        version = job.version;
+                    }
+
+                    var html = this.sensitivityTemplate( { job : job,
+                                                           color : color,
+                                                           version : version});
 
                     var boxparam = $( html ).appendTo( this.snc );
 
@@ -251,7 +285,8 @@ var run = function()
             progressHandle.find('.bar' ).text(progress + '%');
         },
         error : function(data) {
-            console.log('error');
+            updateMsg( { status : false,
+                         msg : "Server error uploading file" } );
         }
     }).prop('disabled', !$.support.fileInput)
         .parent().addClass($.support.fileInput ? undefined : 'disabled');
@@ -292,7 +327,8 @@ var run = function()
                   },
                   error: function(data)
                   {
-                      console.log("do I get called?");
+            updateMsg( { status : false,
+                         msg : "Server error exporting file" } );
                   },
                   dataType : 'json'
                 });
@@ -310,7 +346,8 @@ var run = function()
                   success : updateMsg,
                   error: function(data)
                   {
-                      console.log("do I get called?");
+                      updateMsg( { status : false,
+                                   msg : "Server error importing file" } );
                   },
                   dataType : 'json'
                 });

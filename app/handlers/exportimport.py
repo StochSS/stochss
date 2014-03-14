@@ -426,7 +426,8 @@ class ExportPage(BaseHandler):
                                               "msg" : "Job submitted" }) )
             return
 
-
+# A lot of this code taken from:
+#
 # -*- coding: utf-8 -*-
 #
 # jQuery File Upload Plugin GAE Python Example 2.1.1
