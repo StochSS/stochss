@@ -35,6 +35,10 @@ class ExportJobWrapper(db.Model):
     status = db.StringProperty()
     outData = db.StringProperty()
 
+    def delete(self):
+      os.remove(this.outData)
+      super(ExportJobWrapper, self).delete()
+
 class SuperZip:
     def __init__(self, directory = None, zipFileName = None, preferredName = "backup_", stochKitJobsToDownload = [], sensitivityJobsToDownload = []):
         self.stochKitJobsToDownload = stochKitJobsToDownload
@@ -314,7 +318,6 @@ class ExportPage(BaseHandler):
             job = ExportJobWrapper.get_by_id(int(self.request.get('id')))
             print job.outData
             print 'SDFSADFKLJ;F;DASJK;FAJSDKJKF;ASDLJKFLASD;;LJFKASD;AJKLDSF;'
-            os.remove(job.outData)
             job.delete()
 
             self.response.headers['Content-Type'] = 'application/json'
@@ -438,14 +441,16 @@ class ExportPage(BaseHandler):
 import re
 import urllib
 
-def cleanup(blob_keys):
-    blobstore.delete(blob_keys)
-
 class ImportJobWrapper(db.Model):
     userId = db.StringProperty()
     status = db.StringProperty()
     zipFile = db.StringProperty()
     headerFile = db.StringProperty()
+
+    def delete(self):
+      os.remove(this.zipFile)
+      os.remove(this.headerFile)
+      super(ImportJobWrapper, self).delete()
 
 class ImportPage(BaseHandler):
 
@@ -564,7 +569,7 @@ class ImportPage(BaseHandler):
                         headers['sensitivityJobs'][name] = json.loads(zipFile.read(name))
 
                 zipFile.close();
-                
+
                 job.status = "Finished"
                 [tid, tmpfile] = tempfile.mkstemp(dir = os.path.abspath(os.path.dirname(__file__)) + '/../static/tmp/')
 
@@ -610,9 +615,17 @@ class ImportPage(BaseHandler):
                     headers = json.loads(contents)
                     os.close(fdescript)
 
+                    try:
+                      fversion = open(os.path.abspath(os.path.dirname(__file__)) + '/../VERSION', 'r')
+                      version = fversion.read().strip()
+                      fversion.close()
+                    except:
+                      version = "1.1.0"
+
                     jobs.append({ "id" : job.key().id(),
                                   "zipFile" : os.path.basename(job.zipFile),
-                                  "headers" : headers })
+                                  "headers" : headers,
+                                  "version" : version })
                     
                 self.response.headers['Content-Type'] = 'application/json'
                 self.response.write(json.dumps(jobs))
