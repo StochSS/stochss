@@ -10,7 +10,16 @@
   {% endif %}
   
   <div class="span3 offset4 well">
-    <h4 class="well-title">Please log in to continue</h4>
+    <h4 class="well-title">
+      <a data-toggle="modal" href="#login_modal">
+        Please log in to continue <i class="icon-question-sign"></i>
+      </a>
+    </h4>
+    {% set help_modal_id = "login_modal" %}
+    {% set help_modal_title = "Logging In" %}
+    {% set help_modal_message = "Before you can create an account, you need to be approved by the administrator. Once you have been approved, you can create your account and immediately log in below." %}
+    {% include "help_modal.html" %}
+    {{help_modal|safe}}
     <form action="/login" method="post">
       <fieldset>
         <div class="control-group">
@@ -34,7 +43,16 @@
     </form>    
   </div>
   <div class="span3 offset4 well">
-    <h4 class="well-title">Request an account</h4>
+    <h4 class="well-title">
+      <a data-toggle="modal" href="#request_modal">
+        Request an account <i class="icon-question-sign"></i>
+      </a>
+     </h4>
+    {% set help_modal_id = "request_modal" %}
+    {% set help_modal_title = "Requesting an Account" %}
+    {% set help_modal_message = "You can use the form below to request an account. The request will be sent to the administrator and, if you are approved, you can create an account and log in." %}
+    {% include "help_modal.html" %}
+    {{help_modal|safe}}
     <form action="/login" method="post">
       <fieldset>
         <div class="control-group">
