@@ -203,7 +203,8 @@ var run = function()
                                             
                                             error: function(data)
                                             {
-                                                console.log("do I get called?");
+                                                updateMsg( { status : false,
+                                                             msg : "Server error pulling data from cloud" } );
                                             },
                                             dataType : 'json'
                                           });
@@ -241,7 +242,7 @@ var run = function()
                                   for(var i = 0; i < pts; i++)
                                   {
                                       var id = Math.floor(mult * i);
-                                      series.push( { x : data.values.time[id], y : data.values.trajectories[specie][id]} );
+                                      series.push( { x : data.values.time[id + 1], y : data.values.trajectories[specie][id]} );
                                   }
 
                                   plotData.push( { label : specie,
@@ -274,7 +275,8 @@ var run = function()
                                             
                                             error: function(data)
                                             {
-                                                console.log("do I get called?");
+                                                updateMsg( { status : false,
+                                                             msg : "Server error pulling data from cloud" } );
                                             },
                                             dataType : 'json'
                                           });
@@ -288,7 +290,8 @@ var run = function()
                   }, id),
                   error: function(data)
                   {
-                      console.log("do I get called?");
+                      updateMsg( { status : false,
+                                   msg : "Server error accessing job info" } );
                   },
                   dataType : 'json'
                 });

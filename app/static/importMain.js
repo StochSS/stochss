@@ -126,7 +126,6 @@ Import.ImportTable = Backbone.View.extend(
                 $( ".modelContainerTr" ).hide();
                 for(var name in this.data.headers.models) {
                     $( ".modelContainerTr" ).show();
-                    console.log(name)
                     var model = this.data.headers.models[name];
 
                     var color = "red";
@@ -240,7 +239,8 @@ var updateImportInfo = function(archiveSelect) {
               }, archiveSelect),
               error: function(data)
               {
-                  console.log("do I get called?");
+                  updateMsg( { status : false,
+                               msg : "Server error uploading file" } );
               },
               dataType : 'json'
             });
@@ -271,10 +271,6 @@ var run = function()
             progressHandle = $( progressbar({ name : names }) ).appendTo( "#progresses" );
         },
         done: function (e, data) {
-            $.each(data.result, function (index, file) {
-                console.log(file.name);
-            });
-
             progressHandle.remove();
 
             updateImportInfo();

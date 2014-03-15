@@ -126,7 +126,7 @@ var run = function()
                                       {
                                           id = Math.round(mult * k);
                                           series.push({ x : data.time[id + 1],
-                                                        y : data.sensitivities[specie][parameter][k] });
+                                                        y : data.sensitivities[specie][parameter][id] });
                                       }
                
                                       plotData.push( { label : "d" + specie + "/d" + parameter,
@@ -157,7 +157,7 @@ var run = function()
                                   for(var k = 0; k < data.trajectories[specie].length; k++)
                                   {
                                       id = Math.round(mult * k);
-                                      series.push({ x : data.time[id],
+                                      series.push({ x : data.time[id + 1],
                                                     y : data.trajectories[specie][id] });
                                   }
 
@@ -175,7 +175,8 @@ var run = function()
                   }, id),
                   error: function(data)
                   {
-                      console.log("do I get called?");
+                      updateMsg( { status : false,
+                                   msg : "Server error accessing sensitivity job info" } );
                   },
                   dataType : 'json'
                 });
@@ -239,6 +240,7 @@ var run = function()
                                       name : $( "#name" ).val()},
                              success : function(data) {
                                  console.log(data);
+                                 //updateMsg( data );
                              },
                              dataType : 'json'
                            });

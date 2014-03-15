@@ -73,6 +73,11 @@ Sensitivity.SelectTable = Backbone.View.extend(
 
                     var boxparam = $( html ).appendTo( this.pc );
 
+                    if((i + 1) % 20 == 0)
+                    {
+                        $( "<br>" ).appendTo(this.pc);
+                    }
+
                     boxparam.find('input').change( _.partial(function(state, id, event) {
                         state[id] = $( event.target ).prop( 'checked' );
                     }, this.state.selections.pc, id) );
