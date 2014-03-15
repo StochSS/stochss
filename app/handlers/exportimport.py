@@ -657,6 +657,9 @@ class ImportPage(BaseHandler):
                     userId = None
 
                 for name in state['selections']['mc']:
+                    if not state['selections']['mc'][name]:
+                        continue
+
                     rename = False
                     dbName = headers['models'][name]["name"]
                     jobs = list(db.GqlQuery("SELECT * FROM StochKitModelWrapper WHERE user_id = :1 AND model_name = :2", self.user.user_id(), dbName).run())
@@ -685,6 +688,9 @@ class ImportPage(BaseHandler):
                     szip.extractStochKitModel(name, userId, self, rename = rename)
 
                 for name in state['selections']['sjc']:
+                    if not state['selections']['sjc'][name]:
+                        continue
+
                     dbName = headers['stochkitJobs'][name]["name"]
                     jobs = list(db.GqlQuery("SELECT * FROM StochKitJobWrapper WHERE user_id = :1 AND name = :2", self.user.user_id(), dbName).run())
 
@@ -699,13 +705,16 @@ class ImportPage(BaseHandler):
                             continue
                         elif overwriteType == 'overwriteOld':
                             print 'deleting', dbName, 'hehe'
-                            otherJob.delete()
+                            otherJob.delete(self)
                         elif overwriteType == 'renameNew':
                             rename = True
 
                     szip.extractStochKitJob(name, userId, self, rename = rename)
 
                 for name in state['selections']['snc']:
+                    if not state['selections']['snc'][name]:
+                        continue
+
                     dbName = headers['sensitivityJobs'][name]["jobName"]
                     jobs = list(db.GqlQuery("SELECT * FROM SensitivityJobWrapper WHERE userId = :1 AND jobName = :2", self.user.user_id(), dbName).run())
 

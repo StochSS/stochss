@@ -111,6 +111,8 @@ Import.ImportTable = Backbone.View.extend(
 
         render: function(data)
         {
+            this.state = { id : undefined, selections : { mc : {}, sjc : {}, snc : {} } };
+
             this.mc.empty();
             this.sjc.empty();
             this.snc.empty();
