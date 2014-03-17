@@ -506,7 +506,7 @@ def start_stochss_server(aws_access_key, aws_secret_key, preferred_instance_id, 
             time.sleep(1)
     if instance.key_name.startswith(EC2Services.default_key_pair_prefix):
         # Then we are using the default key, its in the current dir
-        preferred_ec2_key_pair = os.path.dirname(os.path.abspath(__file__)) + '/{0}.pem'.format(instance.key_name)
+        preferred_ec2_key_pair = os.path.join( os.path.dirname(os.path.abspath(__file__)), '{0}.pem'.format(instance.key_name) )
     else:
         # The user supplied their own key pair and it must have been valid if we got this far,
         # we need to know the path to it.
@@ -520,7 +520,7 @@ def start_stochss_server(aws_access_key, aws_secret_key, preferred_instance_id, 
         preferred_ec2_key_pair = path_to_key_pair
     # Get a secret token now for remote access
     admin_token = uuid.uuid4()
-    create_and_exchange_admin_token = "./exchange_admin_token.py {0} {1} {2} {3}".format(preferred_ec2_key_pair, 'ubuntu', instance.public_dns_name, admin_token)
+    create_and_exchange_admin_token = "python exchange_admin_token.py {0} {1} {2} {3}".format(preferred_ec2_key_pair, 'ubuntu', instance.public_dns_name, admin_token)
     success = os.system(create_and_exchange_admin_token)
     # Print out command if it fails
     if success != 0:

@@ -4,9 +4,9 @@ var updateMsg = function(data)
 {
     $( "#msg" ).html(data.msg);
     if(data.status)
-        $( "#msg" ).css('color', 'green');
+        $( "#msg" ).prop('class', 'alert alert-success');
     else
-        $( "#msg" ).css('color', 'red');
+        $( "#msg" ).prop('class', 'alert alert-error');
     $( "#msg" ).show();
 };
 
@@ -64,6 +64,8 @@ Sensitivity.SelectTable = Backbone.View.extend(
             if(_.has(this, 'model')) {
                 var parameters = this.model.ParametersList.children();
 
+                var firstBoxParam = '';
+
                 for(var i = 0; i < parameters.length; i++) {
                     var parameter = parameters.eq(i);
 
@@ -76,6 +78,10 @@ Sensitivity.SelectTable = Backbone.View.extend(
                     if((i + 1) % 20 == 0)
                     {
                         $( "<br>" ).appendTo(this.pc);
+                    }
+                    if(firstBoxParam == '')
+                    {
+                        firstBoxParam = boxparam.find('input');
                     }
 
                     boxparam.find('input').change( _.partial(function(state, id, event) {
@@ -99,7 +105,10 @@ Sensitivity.SelectTable = Backbone.View.extend(
                     }, this.state.selections.icc, id) );
                 }*/
 
-                this.$el.find('input').prop('checked', true).trigger('change');
+                if(firstBoxParam != '')
+                {
+                    firstBoxParam.prop('checked', true).trigger('change');
+                }
                 this.$el.show();
             }
 

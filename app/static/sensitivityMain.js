@@ -164,13 +164,46 @@ var run = function()
                                   plotData.push( { label : specie,
                                                    data : series } );
                               }
-                          
+                              
                               Splot.plot( $( "#data" ), plotData, "");
                           }
                       }
                       else
                       {
                           $( "#error" ).html('<span><h4>Job Failed</h4><br />Stdout:<br /><pre>' + data.stdout + '</pre></span><br /><span>Stderr:<br /><pre>' + data.stderr + '</pre></span>');
+
+                          if (data.job.outData != null)
+                          {                          
+                              $( "#access" ).text( "Access input data for debugging" );
+                              $( "#access" ).click( _.partial(function(id) {
+                                  updateMsg( { status : true,
+                                               msg : "Packing up data... (will forward you to file when ready)" } );
+                                  $.ajax( { type : "POST",
+                                            url : "/sensitivity",
+                                            data : { reqType : "getLocalData",
+                                                     id : id },
+                                            success : function(data) {
+                                                updateMsg(data);
+                                                
+                                                if(data.status == true)
+                                                {
+                                                    window.location = data.url;
+                                                }
+                                            },
+                                            
+                                            error: function(data)
+                                            {
+                                                console.log("do I get called?");
+                                            },
+                                            dataType : 'json'
+                                          });
+                              }, id));
+                          }
+                          else
+                          {
+                              $( "#access" ).text( "No input data available for debugging" );
+                              $( "#access" ).prop("disabled",true);
+                          }
                       }
                   }, id),
                   error: function(data)

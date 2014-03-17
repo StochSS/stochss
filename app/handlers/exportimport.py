@@ -36,8 +36,11 @@ class ExportJobWrapper(db.Model):
     outData = db.StringProperty()
 
     def delete(self):
-      os.remove(this.outData)
-      super(ExportJobWrapper, self).delete()
+        try:
+            os.remove(self.outData)
+        except OSError as e:
+            sys.stderr.write("ExportJobWrapper.delete(): {0}\n".format(e))
+        super(ExportJobWrapper, self).delete()
 
 class SuperZip:
     def __init__(self, directory = None, zipFileName = None, preferredName = "backup_", stochKitJobsToDownload = [], sensitivityJobsToDownload = []):
@@ -311,13 +314,15 @@ class SuperZip:
 
 class ExportPage(BaseHandler):
     def post(self):
-        request_data = json.loads(self.request.POST.items()[0][0])
-        reqType = request_data["reqType"]
+        try:
+            request_data = json.loads(self.request.POST.items()[0][0])
+            reqType = request_data["reqType"]
+        except:
+            reqType = self.request.get('reqType')
+            pass
 
         if reqType == 'delJob':
             job = ExportJobWrapper.get_by_id(int(self.request.get('id')))
-            print job.outData
-            print 'SDFSADFKLJ;F;DASJK;FAJSDKJKF;ASDLJKFLASD;;LJFKASD;AJKLDSF;'
             job.delete()
 
             self.response.headers['Content-Type'] = 'application/json'
@@ -449,9 +454,15 @@ class ImportJobWrapper(db.Model):
     headerFile = db.StringProperty()
 
     def delete(self):
-      os.remove(this.zipFile)
-      os.remove(this.headerFile)
-      super(ImportJobWrapper, self).delete()
+        try:
+            os.remove(self.zipFile)
+        except OSError as e:
+            sys.stderr.write("ImportJobWrapper.delete(): {0}\n".format(e))
+        try:
+            os.remove(self.headerFile)
+        except OSError as e:
+            sys.stderr.write("ImportJobWrapper.delete(): {0}\n".format(e))
+        super(ImportJobWrapper, self).delete()
 
 class ImportPage(BaseHandler):
 
@@ -669,6 +680,9 @@ class ImportPage(BaseHandler):
                     userId = None
 
                 for name in state['selections']['mc']:
+                    if not state['selections']['mc'][name]:
+                        continue
+
                     rename = False
                     dbName = headers['models'][name]["name"]
                     jobs = list(db.GqlQuery("SELECT * FROM StochKitModelWrapper WHERE user_id = :1 AND model_name = :2", self.user.user_id(), dbName).run())
@@ -697,6 +711,9 @@ class ImportPage(BaseHandler):
                     szip.extractStochKitModel(name, userId, self, rename = rename)
 
                 for name in state['selections']['sjc']:
+                    if not state['selections']['sjc'][name]:
+                        continue
+
                     dbName = headers['stochkitJobs'][name]["name"]
                     jobs = list(db.GqlQuery("SELECT * FROM StochKitJobWrapper WHERE user_id = :1 AND name = :2", self.user.user_id(), dbName).run())
 
@@ -711,13 +728,16 @@ class ImportPage(BaseHandler):
                             continue
                         elif overwriteType == 'overwriteOld':
                             print 'deleting', dbName, 'hehe'
-                            otherJob.delete()
+                            otherJob.delete(self)
                         elif overwriteType == 'renameNew':
                             rename = True
 
                     szip.extractStochKitJob(name, userId, self, rename = rename)
 
                 for name in state['selections']['snc']:
+                    if not state['selections']['snc'][name]:
+                        continue
+
                     dbName = headers['sensitivityJobs'][name]["jobName"]
                     jobs = list(db.GqlQuery("SELECT * FROM SensitivityJobWrapper WHERE userId = :1 AND jobName = :2", self.user.user_id(), dbName).run())
 
@@ -748,8 +768,6 @@ class ImportPage(BaseHandler):
                 return
             elif reqType == 'delJob':
                 job = ImportJobWrapper.get_by_id(int(self.request.get('id')))
-                os.remove(job.zipFile)
-                os.remove(job.headerFile)
                 job.delete()
                 
                 self.response.headers['Content-Type'] = 'application/json'

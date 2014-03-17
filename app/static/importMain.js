@@ -114,6 +114,8 @@ Import.ImportTable = Backbone.View.extend(
 
         render: function(data)
         {
+            this.state = { id : undefined, selections : { mc : {}, sjc : {}, snc : {} } };
+
             this.mc.empty();
             this.sjc.empty();
             this.snc.empty();
@@ -216,9 +218,9 @@ var updateMsg = function(data)
 {
     $( "#msg" ).html(data.msg);
     if(data.status)
-        $( "#msg" ).css('color', 'green');
+        $( "#msg" ).prop('class', 'alert alert-success');
     else
-        $( "#msg" ).css('color', 'red');
+        $( "#msg" ).prop('class', 'alert alert-error');
     $( "#msg" ).show();
 };
 

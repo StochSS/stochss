@@ -192,6 +192,9 @@ class LoginPage(BaseHandler):
     
     def get(self):
         """ Corresponds to /login """
+        # Make sure user isn't logged in already
+        if self.logged_in():
+            return self.redirect("/")
         # Need to log in
         try:
             secret_key = self.request.GET['secret_key']

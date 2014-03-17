@@ -15,6 +15,8 @@ jinja_environment = jinja2.Environment(autoescape=True,
 from handlers.modeleditor import *
 from handlers.exportimport import *
 
+path = os.path.abspath(os.path.dirname(__file__))
+
 class MainPage(webapp2.RequestHandler):
     '''
     '''
@@ -33,13 +35,13 @@ class MainPage(webapp2.RequestHandler):
         selected_models = request_data['modelsToExport']
         # Create a zip archive
         if len(selected_models) > 0:
-            szip = SuperZip(os.path.abspath(os.path.dirname(__file__)) + '/../app/static/tmp/')
+            szip = SuperZip(os.path.abspath(os.path.dirname(__file__)) + '/../app2/static/tmp/')
             for model in selected_models:
                 model = db.GqlQuery("SELECT * FROM StochKitModelWrapper WHERE model_name = :1", model).get()
                 szip.addStochKitModel(model)
             szip.close()
             context["status"] = True
-            context["zipLocation"] = szip.getFileName()
+            context["zipLocation"] = os.path.relpath(szip.getFileName(), path)
         else:
             context["status"] = False
             context["msg"] = "There were no selected models."
