@@ -74,7 +74,7 @@
 	        <div id="optional" class="in collapse" style="height:auto">
 	            <div style="float: left; padding-right: 10px">
 	                <label>Name</label>
-	                <input type="text" name="name" style="width: 160px" value="{{ name }}" TITLE = "Define the Name of the Parameters" class="update_box auto_complete">
+	                <input type="text" name="name" style="width: 160px" value="{{ name }}" TITLE = "Define the Name of the Parameters">
 	            </div>
 	            <div>
 	                <label><a data-toggle="modal" href="#help_modal1" style="text-decoration: none;">Expression <i class="icon-question-sign"></i></a>
@@ -92,7 +92,7 @@
 	                Add parameter
 	            </button>
 	        </div>
-            </form>
+            </form><div id="msg">
             {% if msg %}
             {% if status == False %}
             <span class="alert alert-error create_msg">{{msg}}</span>
@@ -100,8 +100,8 @@
 	    <span class="alert alert-success create_msg">{{msg}}</span>
 	    {% endif %}
 	    {% endif %}
+	    </div>
 	    <hr/>
-	    <div id="msg"></div>
 	    <br />
 	    {% if all_parameters %}
 	    <h3><a data-toggle="collapse" data-target="#species_list" default> Parameters </a>&raquo; </h3><br/>
