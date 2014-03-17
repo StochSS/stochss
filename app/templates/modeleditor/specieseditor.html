@@ -87,11 +87,11 @@
 	    </form>
 	    {% if msg %}
 	    {% if status == False %}
-	    <div style="color: red" class="create_msg">
+	    <div class="alert alert-error create_msg">
 		{{msg}}
 	    </div>
 	    {% else %}
-	    <div style="color: green" class="create_msg">
+	    <div class="alert alert-success create_msg">
 		{{msg}}
 	    </div>
 	    {% endif %}

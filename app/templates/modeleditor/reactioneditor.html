@@ -140,9 +140,9 @@
 				</div>
 				{% if msg %}
 				{% if status == False %}
-				<span style="color: red" class="create_msg">{{msg}}</span>
+				<span class="alert alert-error create_msg">{{msg}}</span>
 				{% else %}
-				<span style="color: green" class="create_msg">{{msg}}</span>
+				<span class="alert alert-success create_msg">{{msg}}</span>
 				{% endif %}
 				{% endif %}
 			</form>

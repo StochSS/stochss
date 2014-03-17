@@ -361,7 +361,7 @@ $( '#exportToPublicLibrary' ).click( function() {
         if (!status) {
           $( "#msg" ).prop('class', 'alert alert-error');
         } else {					
-          $( "#sidemsg" ).prop('class', 'alert alert-success');
+          $( "#msg" ).prop('class', 'alert alert-success');
           follow_up();
         }
         $('#msg').css('display', 'block')
@@ -414,7 +414,7 @@ $( '#exportToPublicLibrary' ).click( function() {
       $( "#msg" ).prop('class', 'alert alert-error');
       $('#msg').html(response['msg']);
     } else {
-      $( "#sidemsg" ).prop('class', 'alert alert-success');
+      $( "#msg" ).prop('class', 'alert alert-success');
       $('#msg').html(response['msg']);
 
       if (isParameterEditor) {
