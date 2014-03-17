@@ -32,7 +32,7 @@
 	    <a class="dropdown-toggle" data-toggle="dropdown" TITLE = "Import from File/ Load Existing Library">Import<b class="caret"></b></a>
 	    <ul class="dropdown-menu">
 		<a href="/modeleditor/import/fromfile">From file..</a>
-		<a href="/modeleditor/import/examplelibrary">Example Library...</a>
+		<a href="/modeleditor/import/publiclibrary">Public Library...</a>
 		<!-- <a href="/modeleditor/import/biomodels">BioModels database...</a>-->
 	    </ul>
 	</li>
@@ -44,6 +44,7 @@
 	    <a class="dropdown-toggle" data-toggle="dropdown" TITLE = "Export File To Stochkit">Export<b class="caret"></b></a>
 	    <ul class="dropdown-menu">
 		<a href="/modeleditor/export/tostochkit2">To XML (StochKit2 compat.)</a>
+	    <a href="#" id="exportToPublicLibrary" TITLE = "Export model to public Library">To Public Library...</a>
 		<!-- <a href="/modeleditor/export/tosbml">To SBML ...</a> -->
 	    </ul>
 	</li>
@@ -52,6 +53,7 @@
 	    <a class="dropdown-toggle" data-toggle="dropdown" TITLE = "Export File To XML">Export<b class="caret"></b></a>
 	    <ul class="dropdown-menu">
 		<a href="/modeleditor/export/tostochkit2">To XML</a>
+        <a href="#" id="exportToPublicLibrary" TITLE = "Export model to public Library">To Public Library...</a>
 		<!-- <a href="/modeleditor/export/tosbml">To SBML ...</a> -->
 	    </ul>
 	</li>
@@ -83,19 +85,20 @@
 		    </button>
 		</div>
 	    </form>
+        <div id="msg">
 	    {% if msg %}
 	    {% if status == False %}
-	    <div style="color: red" class="create_msg">
+	    <div class="alert alert-error create_msg">
 		{{msg}}
 	    </div>
 	    {% else %}
-	    <div style="color: green" class="create_msg">
+	    <div class="alert alert-success create_msg">
 		{{msg}}
 	    </div>
 	    {% endif %}
 	    {% endif %}
+	    </div>
 	    <hr/>
-	    <div id="msg"></div>
 	    <br />
 	    {% if all_species %}
 	    <h3><a data-toggle="collapse" data-target="#species_list" default>Species </a>&raquo; </h3><br/>

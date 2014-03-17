@@ -18,6 +18,9 @@ def int_or_float(s):
 
 class SpeciesEditorPage(BaseHandler):
 
+    def authentication_required(self):
+        return True
+    
     def get(self):
         all_species = self.get_all_species()
 
@@ -31,7 +34,6 @@ class SpeciesEditorPage(BaseHandler):
         # First, check to see if it's an update request and then route it to the appropriate function.
         if self.request.get('update') == "1":
             result = self.update_species()
-            print result
             self.response.headers['Content-Type'] = 'application/json'
             self.response.write(json.dumps(result))
             
@@ -62,12 +64,13 @@ class SpeciesEditorPage(BaseHandler):
 
         errors = self.check_input(name, initial_value)
 
-        initial_value = int_or_float(initial_value)
         if errors is not None:
             errors.update({'name': name, 'initial_value': initial_value})
             return errors
         try:
             model = self.get_model_edited()
+
+            initial_value = int_or_float(initial_value)
 
             if model is None:
                 return {'status': False, 'msg': 'You have not selected any model to edit.'}
@@ -119,7 +122,7 @@ class SpeciesEditorPage(BaseHandler):
 
         if not initial_value:
                 return {'status': False, 'msg': 'Initial value for species ' + name + ' is missing!'}
-        
+
         # the initial_value must be an integer.        
         if model.units == "population":
             try:
@@ -156,6 +159,7 @@ class SpeciesEditorPage(BaseHandler):
                 logging.debug('new_initial_value: ' + new_initial_value)
                 # Check to see if there are any error in the input value
                 error = self.check_input(new_name, new_initial_value)
+
                 if error is not None:
                     logging.error('error: ' + str(error))
                     return error

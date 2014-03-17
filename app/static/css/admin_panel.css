@@ -1,0 +1,22 @@
+#approve-user-form legend {
+    font-weight: bold;
+    font-size: 35px;
+}
+
+#approve-user-form #email-input {
+    display: block;
+}
+
+#authorized-usr-heading {
+    font-size: 35px;
+}
+
+table {
+    background-color: white;
+    margin-top: 20px;
+}
+
+.empty-table-message {
+    font-size: 20px;
+    margin: 0;
+}

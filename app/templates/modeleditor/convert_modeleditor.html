@@ -31,7 +31,7 @@
 	    <a class="dropdown-toggle" data-toggle="dropdown" TITLE = "Import from File/ Load Existing Library">Import<b class="caret"></b></a>
 	    <ul class="dropdown-menu">
 		<a href="/modeleditor/import/fromfile">From file..</a>
-		<a href="/modeleditor/import/examplelibrary">Example Library...</a>
+		<a href="/modeleditor/import/publiclibrary">Public Library...</a>
 		<!-- <a href="/modeleditor/import/biomodels">BioModels database...</a>-->
 	    </ul>
 	</li>
@@ -43,6 +43,7 @@
 	    <a class="dropdown-toggle" data-toggle="dropdown" TITLE = "Export File To Stochkit">Export<b class="caret"></b></a>
 	    <ul class="dropdown-menu">
 		<a href="/modeleditor/export/tostochkit2">To XML (StochKit2 compat.)</a>
+    <a href="/modeleditor/export/publiclibrary">To Public Library...</a>
 		<!-- <a href="/modeleditor/export/tosbml">To SBML ...</a> -->
 	    </ul>
 	</li>
@@ -51,6 +52,7 @@
 	    <a class="dropdown-toggle" data-toggle="dropdown" TITLE = "Export File To XML">Export<b class="caret"></b></a>
 	    <ul class="dropdown-menu">
 		<a href="/modeleditor/export/tostochkit2">To XML</a>
+    <a href="/modeleditor/export/publiclibrary">To Public Library...</a>
 		<!-- <a href="/modeleditor/export/tosbml">To SBML ...</a> -->
 	    </ul>
 	</li>
@@ -148,11 +150,10 @@
           <div id="createModel">
             <h3>3. Create new model:</h3>
             Name:<br />
-            <input type="text" style="width: 200px;" class="modelName id update_box auto_complete" /><br /><br />
+            <input type="text" style="width: 200px;" class="modelName id update_box auto_complete" /><br />
             <button class="createModel btn btn-primary" style="float: right;">Create Model</button>
-            <br />
-            <br />
-            <div id="msg" />
+
+            <div id="msg"></div>
           </div>
 	</div>
     </div>

@@ -8,7 +8,7 @@ Convert.VolumeChoose = Backbone.View.extend(
 
 	    this.rowTemplate = _.template('<tr>\
 <td><a class="select" href="#"><%= model.attributes.name %> (Model <%= model.attributes.id %>)</a></td>\
-<td><%= model.type %></td>\
+<td><%= model.units %></td>\
 </tr>');
 
             this.table = this.$el.find( 'tbody' )
@@ -326,10 +326,10 @@ var run = function()
                 if(_.has(this, 'model'))
                 {
                     name = this.$el.find(' .modelName ').val();
-                    var newModel = new stochkit.Model({name : name, type : "population"});
+                    var newModel = new stochkit.Model({name : name, units : "population"});
                     newModel.fromModel(this.model);
 
-                    newModel.attributes.type = "population";
+                    newModel.attributes.units = "population";
                     newModel.attributes.name = name;
 
                     var reactions = newModel.ReactionsList.children();
@@ -399,8 +399,8 @@ var run = function()
                     }
                     
                     modelCollection.add(newModel);
-                    newModel.save({}, { success: _.partial(function(elem) { elem.html('<font color="green">Model successfully created</font>'); }, this.$el.find( '#msg' )),
-                                        error: _.partial(function(elem) { elem.html('<font color="red">Failed</font>'); }, this.$el.find( '#msg' )) });
+                    newModel.save({}, { success: _.partial(function(elem) { elem.prop('class', 'alert alert-success'); elem.text('Model successfully created, navigate to Models page to edit'); }, this.$el.find( '#msg' )),
+                                        error: _.partial(function(elem) { elem.prop('class', 'alert alert-error'); elem.text('Failed'); }, this.$el.find( '#msg' )) });
                 }
             }
         });

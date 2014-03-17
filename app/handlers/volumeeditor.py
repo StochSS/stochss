@@ -13,6 +13,9 @@ from stochss.model import *
 
 class VolumeEditorPage(BaseHandler):
 
+    def authentication_required(self):
+        return True
+    
     def get(self):
         """
         Get all the parameters belonging to the currently edited model.

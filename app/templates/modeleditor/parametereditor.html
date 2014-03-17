@@ -31,7 +31,7 @@
 	    <a class="dropdown-toggle" data-toggle="dropdown" TITLE = "Import from File/ Load Existing Library">Import<b class="caret"></b></a>
 	    <ul class="dropdown-menu">
 		<a href="/modeleditor/import/fromfile">From file..</a>
-		<a href="/modeleditor/import/examplelibrary">Example Library...</a>
+		<a href="/modeleditor/import/publiclibrary">Public Library...</a>
 		<!-- <a href="/modeleditor/import/biomodels">BioModels database...</a>-->
 	    </ul>
 	</li>
@@ -43,6 +43,7 @@
 	    <a class="dropdown-toggle" data-toggle="dropdown" TITLE = "Export File To Stochkit">Export<b class="caret"></b></a>
 	    <ul class="dropdown-menu">
 		<a href="/modeleditor/export/tostochkit2">To XML (StochKit2 compat.)</a>
+        <a href="#" id="exportToPublicLibrary" TITLE = "Export model to public Library">To Public Library...</a>
 		<!-- <a href="/modeleditor/export/tosbml">To SBML ...</a> -->
 	    </ul>
 	</li>
@@ -51,6 +52,7 @@
 	    <a class="dropdown-toggle" data-toggle="dropdown" TITLE = "Export File To XML">Export<b class="caret"></b></a>
 	    <ul class="dropdown-menu">
 		<a href="/modeleditor/export/tostochkit2">To XML</a>
+        <a href="#" id="exportToPublicLibrary" TITLE = "Export model to public Library">To Public Library...</a>
 		<!-- <a href="/modeleditor/export/tosbml">To SBML ...</a> -->
 	    </ul>
 	</li>
@@ -72,13 +74,13 @@
 	        <div id="optional" class="in collapse" style="height:auto">
 	            <div style="float: left; padding-right: 10px">
 	                <label>Name</label>
-	                <input type="text" name="name" style="width: 160px" value="{{ name }}" TITLE = "Define the Name of the Parameters" class="update_box auto_complete">
+	                <input type="text" name="name" style="width: 160px" value="{{ name }}" TITLE = "Define the Name of the Parameters">
 	            </div>
 	            <div>
 	                <label><a data-toggle="modal" href="#help_modal1" style="text-decoration: none;">Expression <i class="icon-question-sign"></i></a>
                             {% set help_modal_id = "help_modal1" %}
                             {% set help_modal_title = "Parameter expression" %}
-                            {% set help_modal_message = "A parameter can be defined as a scalar, numeric value, or through simple arithmetic expressions (+, - , * , /) that involves other already defined parameters. The expression must be evaluable in the namespace that consists of all parameter names. This means that at least one parameter must have a scalar value." %}
+                            {% set help_modal_message = "A parameter can be defined as a scalar, numeric value, or a combination of the four basic arithmetic expressions (+, - , * , /) as well as pow(base, exponent) that involves other already defined parameters. The expression must be evaluable in the namespace that consists of all parameter names. This means that at least one parameter must have a scalar value." %}
                             {% include "help_modal.html" %} 
                             {{help_modal|safe}}
                         </label>
@@ -90,16 +92,16 @@
 	                Add parameter
 	            </button>
 	        </div>
-            </form>
+            </form><div id="msg">
             {% if msg %}
             {% if status == False %}
-            <span style="color: red" class="create_msg">{{msg}}</span>
+            <span class="alert alert-error create_msg">{{msg}}</span>
             {% else %}
-	    <span style="color: green" class="create_msg">{{msg}}</span>
+	    <span class="alert alert-success create_msg">{{msg}}</span>
 	    {% endif %}
 	    {% endif %}
+	    </div>
 	    <hr/>
-	    <div id="msg"></div>
 	    <br />
 	    {% if all_parameters %}
 	    <h3><a data-toggle="collapse" data-target="#species_list" default> Parameters </a>&raquo; </h3><br/>

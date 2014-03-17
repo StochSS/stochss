@@ -18,6 +18,9 @@ import time
 class CredentialsPage(BaseHandler):
     """
     """
+    def authentication_required(self):
+        return True
+    
     def get(self):
         try:
             # User id is a string
@@ -198,7 +201,7 @@ class CredentialsPage(BaseHandler):
         params ={"infrastructure":"ec2",
              "num_vms":number_of_vms, 
              'group':group_random_name, 
-             'image_id':'ami-930734fa',
+             'image_id':'ami-a77679ce',
              'instance_type':'t1.micro',
              'keyname':group_random_name, 
              'email':[user_id],
@@ -221,6 +224,9 @@ class CredentialsPage(BaseHandler):
 
 class LocalSettingsPage(BaseHandler):
     """ Set paths for local plugin software. """
+    def authentication_required(self):
+        return True
+    
     def get(self):
         """ """
         env_variables = self.user_data.env_variables

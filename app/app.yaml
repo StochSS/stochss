@@ -15,11 +15,12 @@ handlers:
 
 - url: /.*
   script: stochssapp.app
-  login: required
-  auth_fail_action: redirect
 
 libraries:
 - name: jinja2
   version: latest
 - name: lxml
   version: latest
+
+skip_files:
+- ^(.*/)?\.bak$

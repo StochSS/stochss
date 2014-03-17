@@ -22,7 +22,7 @@
 		    </li>
 		    <!-- <li><a href="/modeleditor/overview">Overview</a></li> -->
 		    <li>
-			<a href="/modeleditor/specieseditor" TITLE = "Create a List of reacants">Species</a>
+			<a href="/modeleditor/specieseditor" TITLE = "Create a List of Reactants">Species</a>
 		    </li>
                     <li>
 			<a href="/modeleditor/parametereditor" TITLE = "Create a List of Parameters">Parameters</a>
@@ -44,7 +44,7 @@
 			<a class="dropdown-toggle" data-toggle="dropdown" TITLE = "Import from File/ Load Existing Library">Import<b class="caret"></b></a>
 			<ul class="dropdown-menu">
 			    <a href="/modeleditor/import/fromfile">From file..</a>
-			    <a href="/modeleditor/import/examplelibrary">Example Library...</a>
+			    <a href="/modeleditor/import/publiclibrary">From Public Library...</a>
 			    <!-- <a href="/modeleditor/import/biomodels">BioModels database...</a>-->
 			</ul>
 		    </li>
@@ -55,8 +55,9 @@
 		    <li class="dropdown">
 			<a class="dropdown-toggle" data-toggle="dropdown" TITLE = "Export File To Stochkit">Export<b class="caret"></b></a>
 			<ul class="dropdown-menu">
-			    <a href="/modeleditor/export/tostochkit2">To XML (StochKit2 compat.)</a>
-			    <!-- <a href="/modeleditor/export/tosbml">To SBML ...</a> -->
+          <a href="/modeleditor/export/tostochkit2">To XML (StochKit2 compat.)</a>
+          <a href="#" id="exportToPublicLibrary" TITLE = "Export model to public Library">To Public Library...</a>
+          <!-- <a href="/modeleditor/export/tosbml">To SBML ...</a> -->
 			</ul>
 		    </li>
                     {% else %}
@@ -64,6 +65,7 @@
 			<a class="dropdown-toggle" data-toggle="dropdown" TITLE = "Export File To XML">Export<b class="caret"></b></a>
 			<ul class="dropdown-menu">
 			    <a href="/modeleditor/export/tostochkit2">To XML</a>
+          <a href="#" id="exportToPublicLibrary" TITLE = "Export model to public Library">To Public Library...</a>
 			    <!-- <a href="/modeleditor/export/tosbml">To SBML ...</a> -->
 			</ul>
 		    </li>
@@ -93,13 +95,14 @@
 		    </form>
 		    {% if msg %}
 		    {% if status == False %}
-		    <span style="color: red">{{msg}}</span>
+		    <span class="alert alert-error">{{msg}}</span>
 		    {% else %}
-		    <span style="color: green">{{msg}}</span>
+		    <span class="alert alert-success">{{msg}}</span>
 		    {% endif %}
 		    {% endif %}											
 		    <hr/>
 		    <div id="msg"></div>
+
 		    <br />
 		    {% if all_models %}
 		    <div>
@@ -181,7 +184,6 @@
                   </li>
                   <li>
 		    <a href="#" id="renameModel" TITLE = "Rename model">Rename Model</a>
-		    <input class="span12" type="text" id="newModelName" placeholder="New name" />
                   </li>
 
                   <hr />
@@ -225,46 +227,45 @@ $( '#duplicateModel' ).click( function() {
   $.ajax({ url : encodeURI('/modeleditor?duplicate={{model_edited.name}}'),
     error : function(data) {
       $( '#sidemsg' ).text('Server error creating duplicate model');
-      $( '#sidemsg' ).css('color', 'red');
+        $( "#sidemsg" ).prop('class', 'alert alert-error');
     },
     success : function(data) {
       if($.trim(data).length > 0)
       {
         $( '#sidemsg' ).text('Successfully created model as ' + data);
-        $( '#sidemsg' ).css('color', 'green');
+        $( "#sidemsg" ).prop('class', 'alert alert-success');
         location.reload(true);
       } else {
         $( '#sidemsg' ).text('Failed to create model');
-        $( '#sidemsg' ).css('color', 'red');
+        $( "#sidemsg" ).prop('class', 'alert alert-error');
       }
     }});
   });
-$('#newModelName').keydown(function (e){
-    if(e.keyCode == 13){
-        $( '#renameModel' ).trigger('click');
-    }
-})
 $( '#renameModel' ).click( function(event) {
     event.preventDefault();
 
-    if(/^[a-zA-Z0-9\-_]+$/.test($( '#newModelName' ).val()))
+    var newName = prompt("Please enter a new model name", "New name");
+
+    console.log(newName);
+
+    if(!/^[a-zA-Z0-9_]+$/.test(newName))
     {
-      $( '#sidemsg' ).css('color', 'red');
-      $( '#sidemsg' ).text('Model name must be alphanumeric characters, underscores, hyphens, and spaces only');
+      $( "#sidemsg" ).prop('class', 'alert alert-error');
+      $( '#sidemsg' ).text('Model name must be alphanumeric characters, underscores, and spaces only');
       return;
     }
 
-    if($.trim($( '#newModelName' ).val()).length == 0)
+    if($.trim(newName).length == 0)
     {
-      $( '#sidemsg' ).css('color', 'red');
+      $( "#sidemsg" ).prop('class', 'alert alert-error');
       $( '#sidemsg' ).text('Enter a non-empty string');
       return;
     }
 
-    $.ajax({ url : encodeURI('/modeleditor?rename={{model_edited.name}}&newName=' + $.trim($( '#newModelName' ).val())),
+    $.ajax({ url : encodeURI('/modeleditor?rename={{model_edited.name}}&newName=' + $.trim(newName)),
       error : function(data) {
-        $( '#sidemsg' ).text('Server error creating ' + $.trim($( '#newModelName' ).val()));
-        $( '#sidemsg' ).css('color', 'red');
+        $( '#sidemsg' ).text('Server error creating ' + $.trim(newName));
+        $( "#sidemsg" ).prop('class', 'alert alert-error');
       },
       success : function(data) {
         if(data)
@@ -272,17 +273,40 @@ $( '#renameModel' ).click( function(event) {
           $( '#sidemsg' ).text(data.msg);
           if(data.status == true)
           {
-            $( '#sidemsg' ).css('color', 'green');
-            $(location).attr('href', '/modeleditor?model_edited=' + $.trim($( '#newModelName' ).val()));
+            $( "#sidemsg" ).prop('class', 'alert alert-success');
+            $(location).attr('href', '/modeleditor?model_edited=' + $.trim(newName));
           } else {
-            $( '#sidemsg' ).css('color', 'red');
+            $( "#sidemsg" ).prop('class', 'alert alert-error');
           }
         } else {
           $( '#sidemsg' ).text('Failed to rename model');
-          $( '#sidemsg' ).css('color', 'red');
+          $( "#sidemsg" ).prop('class', 'alert alert-error');
         }
       }});
   })
+$( '#exportToPublicLibrary' ).click( function() {
+  var newName=prompt("Please name this public model","{{model_edited.name}}");
+  if (newName != null) {
+    $.ajax({ url : encodeURI('/modeleditor?export={{model_edited.name}}&newName=' + newName),
+      error : function(data) {
+        $( '#msg' ).text('Server error exporting model');
+        $( "#msg" ).prop('class', 'alert alert-error');
+      },
+      success : function(data) {
+        if($.trim(data) == 'success')
+        {
+          $( '#msg' ).text('Successfully exported model');
+          $( "#msg" ).prop('class', 'alert alert-success');
+        } else if($.trim(data) == 'duplicate') {
+          $( '#msg' ).text('A model with that name already exists in the public library');
+          $( "#msg" ).prop('class', 'alert alert-error');
+        } else {
+          $( '#msg' ).text('Failed to export model');
+          $( "#msg" ).prop('class', 'alert alert-error');
+        }
+      }
+    });
+  }});
 {% endif %}
 });
 </script>
@@ -335,9 +359,9 @@ $( '#renameModel' ).click( function(event) {
         var status = response['status']
         button = $('#save_button');
         if (!status) {
-          $('#msg').css('color', 'red')
+          $( "#msg" ).prop('class', 'alert alert-error');
         } else {					
-          $('#msg').css('color', 'green')
+          $( "#msg" ).prop('class', 'alert alert-success');
           follow_up();
         }
         $('#msg').css('display', 'block')
@@ -345,7 +369,7 @@ $( '#renameModel' ).click( function(event) {
       },
       error : function(response) {
         $('#msg').html(' Internal server error ');
-        $('#msg').css('color', 'red')
+        $( "#msg" ).prop('class', 'alert alert-error');
       }
     });
     return false;
@@ -387,18 +411,19 @@ $( '#renameModel' ).click( function(event) {
     var status = response['status']
     $(".create_msg").html('')
     if (!status) {
-    $('#msg').css('color', 'red')
-    $('#msg').html(response['msg']);
+      $( "#msg" ).prop('class', 'alert alert-error');
+      $('#msg').html(response['msg']);
     } else {
-    $('#msg').css('color', 'green')
-    $('#msg').html(response['msg']);
-    if (isParameterEditor) {
-    updateValues(response)
-    }
+      $( "#msg" ).prop('class', 'alert alert-success');
+      $('#msg').html(response['msg']);
+
+      if (isParameterEditor) {
+        updateValues(response)
+      }
     }
     },
     error : function(response) {
-    $('#msg').css('color', 'red')
+    $( "#msg" ).prop('class', 'alert alert-error');
     $('#msg').html('Sorry! There was an error processing your request.');
     $('#msg').css('display', 'block')
     }

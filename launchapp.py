@@ -8,6 +8,7 @@ import time
 import threading
 import urllib2
 import webbrowser
+import uuid
 
 source_exec = sys.argv[1]
 
@@ -16,6 +17,16 @@ if len(sys.argv) == 3:
     mac = True
 
 path = os.path.abspath(os.path.dirname(__file__))
+
+try:
+    os.mkdir('{0}/app/output'.format(path))
+except:
+    pass
+
+try:
+    os.mkdir('{0}/app/static/tmp'.format(path))
+except:
+    pass
 
 if os.path.isfile('app/update'):
     if mac:
@@ -87,7 +98,7 @@ stderr = open('stderr.log', 'w')
 # Deploy the app on localhost
 #print path
 def startserver():
-    h = subprocess.Popen(("python " + path + "/sdk/python/dev_appserver.py --host=0.0.0.0 --datastore_path={0}/mydatastore --skip_sdk_update_check YES --datastore_consistency_policy=consistent app".format(path)).split(), stdout = stdout, stderr = stderr)
+    h = subprocess.Popen(("python " + path + "/sdk/python/dev_appserver.py --host=localhost --datastore_path={0}/mydatastore --skip_sdk_update_check YES --datastore_consistency_policy=consistent app".format(path)).split(), stdout = stdout, stderr = stderr)
 
 startserver()
 
@@ -123,8 +134,15 @@ signal.signal(signal.SIGFPE, clean_up_and_exit)
 serverUp = False
 for tryy in range(0, 20):
     try:
-        req = urllib2.urlopen("http://localhost:8080/")
-    except:
+        req = urllib2.urlopen("http://localhost:8080/login")
+    # This was a hack in place to get around issue that arose from allowing
+    #  users accessing the app from localhost to not have to login.
+    # except urllib2.HTTPError as e:
+    #     req = None
+    #     if e.code == 302 and e.reason.endswith('Found'):
+    #         serverUp = True
+    #         break
+    except Exception:
         req = None
 
     if req:
@@ -165,13 +183,18 @@ for tryy in range(0, 20):
 ###print serverUp
 
 if serverUp:
+    # Create an admin token
+    admin_token = uuid.uuid4()
+    generate_admin_token_command = './generate_admin_token.py {0}'.format(admin_token)
+    os.system(generate_admin_token_command)
+    stochss_url = 'http://localhost:8080/login?secret_key={0}'.format(admin_token)
     # Open web browser
 
     if mac:
-        wbrowser = subprocess.Popen('open http://localhost:8080/'.split())
+        wbrowser = subprocess.Popen('open {0}'.format(stochss_url).split())
         wbrowser.communicate()
     else:
-        webbrowser.open_new('http://localhost:8080/')
+        webbrowser.open_new(stochss_url)
 
     if mac:
         print " Stdout available at {0}/stdout.log and <br />".format(path)
@@ -182,7 +205,7 @@ if serverUp:
     sys.stdout.flush()
 
     try:
-        print "Navigate to http://localhost:8080 to access StochSS"
+        print "Navigate to {0} to access StochSS".format(stochss_url)
         if mac:
             print "<br />"
 
