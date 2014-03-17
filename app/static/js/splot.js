@@ -14,7 +14,7 @@ Splot.Plot = Backbone.View.extend(
             this.hiddenDiv = $( "<div />" ).appendTo( this.$el );
             //this.flotDiv = $( "<div />" ).appendTo( this.$el );
 
-            var checkboxTemplate = _.template("<input type='checkbox' /><span>&nbsp;<%= name %>,&nbsp;<span />");
+            var checkboxTemplate = _.template("<input type='checkbox' /><span>&nbsp;<%= name %>&nbsp;<span />");
 
             this.selected = [];
             this.plot = undefined;
@@ -24,11 +24,16 @@ Splot.Plot = Backbone.View.extend(
             for(var k = 0; k < this.attributes.data.length; k++)
             {
                 var label = this.attributes.data[k].label;
-                var checkbox = $( checkboxTemplate( { name : label } ) ).appendTo( this.controlDiv ).eq(0);
+                var checkbox = $( checkboxTemplate( { name : label + ((k == this.attributes.data.length - 1) ? '' : ', ') } ) ).appendTo( this.controlDiv ).eq(0);
 
                 if(!initialCheckbox && !label.match('/'))
                 {
                     initialCheckbox = checkbox;
+                }
+
+                if((k + 1) % 20 == 0)
+                {
+                    $( "<br>" ).appendTo(this.pc);
                 }
 
                 checkbox.change(_.partial(function(plot, storage, key) {

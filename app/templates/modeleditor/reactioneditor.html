@@ -138,13 +138,15 @@
 					</button>
 
 				</div>
+			    <div id="msg">
 				{% if msg %}
 				{% if status == False %}
-				<span style="color: red" class="create_msg">{{msg}}</span>
+				<span class="alert alert-error create_msg">{{msg}}</span>
 				{% else %}
-				<span style="color: green" class="create_msg">{{msg}}</span>
+				<span class="alert alert-success create_msg">{{msg}}</span>
 				{% endif %}
 				{% endif %}
+                </div>
 			</form>
 
             <hr/>
@@ -159,7 +161,6 @@
             
             {% if all_reactions %}
 
-			<div id="msg"></div>
 			<br />
             <h3><a data-toggle="collapse" data-target="#species_list" default> Reactions </a>&raquo; </h3>
 			<br/>
