@@ -576,7 +576,7 @@ class ModelEditorImportFromLibrary(BaseHandler):
         name = self.request.get('toDelete')
         if name == "":
             return {'status': False, 'msg': 'Name is missing'}
-        elif name == "dimerdecay" or name == "lotkavolterra_oscillating" or name == "lotkavolterra_equilibrium" or name == "MichaelisMenten":
+        elif name == "dimerdecay" or name == "lotkavolterra_oscillating" or name == "lotkavolterra_equilibrium" or name == "MichaelisMenten" or name == "schlogl" or name == "heat_shock_mass_action" :
             return {'status': False, 'msg': 'This is an example model, it cannot be deleted'}
         
         try:
@@ -611,6 +611,25 @@ class ModelEditorImportFromLibrary(BaseHandler):
         if example_model is None:
             save_model(MichaelisMenten(), 'MichaelisMenten', "", is_public=True)
 
+        example_model = db.GqlQuery("SELECT * FROM StochKitModelWrapper WHERE is_public = :1 AND model_name = :2", True, 'schlogl').get()
+        if example_model is None:
+            save_model(get_model_from_file('schlogl',open('examples/schlogl.xml')), 'schlogl', "", is_public=True)
+
+        example_model = db.GqlQuery("SELECT * FROM StochKitModelWrapper WHERE is_public = :1 AND model_name = :2", True, 'heat_shock_mass_action').get()
+        if example_model is None:
+            save_model(get_model_from_file('heat_shock_mass_action',open('examples/heat_shock_mass_action.xml')), 'heat_shock_mass_action', "", is_public=True)
+
+
+def get_model_from_file(name, file):
+    doc = StochMLDocument.fromFile(file)
+    model = doc.toModel(name)
+    
+    try:
+        model.resolveParameters()
+    except:
+        raise ModelError("Could not resolve model parameters.")
+       
+    return model
 
 def do_import(handler, name, from_file = True, model_class=""):
     """
@@ -628,16 +647,9 @@ def do_import(handler, name, from_file = True, model_class=""):
             model = doc.toModel(name)
         
         else:
-            if model_class == 'dimerdecay':
-                model = dimerdecay(name)
-            elif model_class == 'lotkavolterra_oscillating':
-                model = lotkavolterra_oscillating(name)
-            elif model_class == 'lotkavolterra_equilibrium':
-                model = lotkavolterra_equilibrium(name)
-            elif model_class == 'MichaelisMenten':
-                model = MichaelisMenten(name)
-            else:
-                return {'status': False, 'msg': 'Invalid model class'}
+            db_model = db.GqlQuery("SELECT * FROM StochKitModelWrapper WHERE is_public = :1 AND model_name = :2", True, model_class).get()
+            model = db_model.model
+            model.name = name
 
         # For the model to display and function properly in the UI, we need to make sure that all
         # the parameters have been resolved to scalar values.
