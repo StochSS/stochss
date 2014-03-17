@@ -242,14 +242,21 @@ var run = function()
                                   for(var i = 0; i < pts; i++)
                                   {
                                       var id = Math.floor(mult * i);
-                                      series.push( { x : data.values.time[id + 1], y : data.values.trajectories[specie][id]} );
+                                      series.push( { x : data.values.time[id], y : data.values.trajectories[specie][id]} );
                                   }
 
                                   plotData.push( { label : specie,
                                                    data : series } );
                               }
 
-                              label = data.job.units.charAt(0).toUpperCase() + data.job.units.slice(1)
+                              if(typeof(data.job.units) == undefined)
+                              {
+                                  label = "";
+                              }
+                              else
+                              {
+                                  label = data.job.units.charAt(0).toUpperCase() + data.job.units.slice(1);
+                              }
 
                               gplot = Splot.plot( $( "#plot" ), plotData, label);
                               //$( "#plotButton" ).click( gplot.getImage );
