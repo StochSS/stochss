@@ -85,6 +85,7 @@
 		    </button>
 		</div>
 	    </form>
+        <div id="msg">
 	    {% if msg %}
 	    {% if status == False %}
 	    <div class="alert alert-error create_msg">
@@ -96,8 +97,8 @@
 	    </div>
 	    {% endif %}
 	    {% endif %}
+	    </div>
 	    <hr/>
-	    <div id="msg"></div>
 	    <br />
 	    {% if all_species %}
 	    <h3><a data-toggle="collapse" data-target="#species_list" default>Species </a>&raquo; </h3><br/>
