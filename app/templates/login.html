@@ -17,7 +17,7 @@
     </h4>
     {% set help_modal_id = "login_modal" %}
     {% set help_modal_title = "Logging In" %}
-    {% set help_modal_message = "Before you can create an account, you need to be approved by the administrator. Once you have been approved, you can create your account and immediately log in below." %}
+    {% set help_modal_message = "To access StochSS you need to have an account. To create an account, you must request access (below) and be approved by the administrator. Once you have been approved, you can create your account and immediately log in below." %}
     {% include "help_modal.html" %}
     {{help_modal|safe}}
     <form action="/login" method="post">
