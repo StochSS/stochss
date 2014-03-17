@@ -18,11 +18,6 @@ db = os.path.abspath(sys.argv[1])
 
 path = os.path.abspath(os.path.dirname(__file__))
 
-try:
-    os.mkdir(os.path.join(path, 'app2/static/tmp'))
-except:
-    pass
-
 mac = False
 # Let's search for mydatastore!
 if not os.path.exists(os.path.join(db, 'mydatastore')):
@@ -54,6 +49,11 @@ if not os.path.exists(devAppServer):
     else:
         devAppServer = os.path.join(path, 'StochSSserver.app/Contents/Resources/sdk/python/dev_appserver.py')
 
+try:
+    os.mkdir('{0}/../../app2/static/tmp'.format(os.path.dirname(devAppServer)))
+except:
+    pass
+
 print "--- Running Export Server ---"
 
 req = None
@@ -71,10 +71,10 @@ if req:
 # Deploy the app on localhost
 #print path
 
-stdout = open('stdout.log', 'w')
-stderr = open('stderr.log', 'w')
+stdout = open('{0}/stdout.log'.format(path), 'w')
+stderr = open('{0}/stderr.log'.format(path), 'w')
 
-h = subprocess.Popen(("python {0} --host=localhost --datastore_path={1}/mydatastore --skip_sdk_update_check YES --datastore_consistency_policy=consistent app2".format(devAppServer, db)).split(), stdout = stdout, stderr = stderr)
+h = subprocess.Popen(("python {0} --host=localhost --datastore_path={1}/mydatastore --skip_sdk_update_check YES --datastore_consistency_policy=consistent {2}/../../app2".format(devAppServer, db, os.path.dirname(devAppServer))).split(), stdout = stdout, stderr = stderr)
 
 print "Starting admin server at: http://localhost:8000"
 sys.stdout.flush()

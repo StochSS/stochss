@@ -35,6 +35,13 @@ class ExportJobWrapper(db.Model):
     status = db.StringProperty()
     outData = db.StringProperty()
 
+    def delete(self):
+        try:
+            os.remove(self.outData)
+        except OSError as e:
+            sys.stderr.write("ExportJobWrapper.delete(): {0}\n".format(e))
+        super(ExportJobWrapper, self).delete()
+
 class SuperZip:
     def __init__(self, directory = None, zipFileName = None, preferredName = "backup_", stochKitJobsToDownload = [], sensitivityJobsToDownload = []):
         self.stochKitJobsToDownload = stochKitJobsToDownload
@@ -316,7 +323,6 @@ class ExportPage(BaseHandler):
 
         if reqType == 'delJob':
             job = ExportJobWrapper.get_by_id(int(self.request.get('id')))
-            os.remove(job.outData)
             job.delete()
 
             self.response.headers['Content-Type'] = 'application/json'
@@ -425,7 +431,8 @@ class ExportPage(BaseHandler):
                                               "msg" : "Job submitted" }) )
             return
 
-
+# A lot of this code taken from:
+#
 # -*- coding: utf-8 -*-
 #
 # jQuery File Upload Plugin GAE Python Example 2.1.1
@@ -440,14 +447,22 @@ class ExportPage(BaseHandler):
 import re
 import urllib
 
-def cleanup(blob_keys):
-    blobstore.delete(blob_keys)
-
 class ImportJobWrapper(db.Model):
     userId = db.StringProperty()
     status = db.StringProperty()
     zipFile = db.StringProperty()
     headerFile = db.StringProperty()
+
+    def delete(self):
+        try:
+            os.remove(self.zipFile)
+        except OSError as e:
+            sys.stderr.write("ImportJobWrapper.delete(): {0}\n".format(e))
+        try:
+            os.remove(self.headerFile)
+        except OSError as e:
+            sys.stderr.write("ImportJobWrapper.delete(): {0}\n".format(e))
+        super(ImportJobWrapper, self).delete()
 
 class ImportPage(BaseHandler):
 
@@ -566,7 +581,7 @@ class ImportPage(BaseHandler):
                         headers['sensitivityJobs'][name] = json.loads(zipFile.read(name))
 
                 zipFile.close();
-                
+
                 job.status = "Finished"
                 [tid, tmpfile] = tempfile.mkstemp(dir = os.path.abspath(os.path.dirname(__file__)) + '/../static/tmp/')
 
@@ -612,9 +627,17 @@ class ImportPage(BaseHandler):
                     headers = json.loads(contents)
                     os.close(fdescript)
 
+                    try:
+                      fversion = open(os.path.abspath(os.path.dirname(__file__)) + '/../VERSION', 'r')
+                      version = fversion.read().strip()
+                      fversion.close()
+                    except:
+                      version = "1.1.0"
+
                     jobs.append({ "id" : job.key().id(),
                                   "zipFile" : os.path.basename(job.zipFile),
-                                  "headers" : headers })
+                                  "headers" : headers,
+                                  "version" : version })
                     
                 self.response.headers['Content-Type'] = 'application/json'
                 self.response.write(json.dumps(jobs))
@@ -657,6 +680,9 @@ class ImportPage(BaseHandler):
                     userId = None
 
                 for name in state['selections']['mc']:
+                    if not state['selections']['mc'][name]:
+                        continue
+
                     rename = False
                     dbName = headers['models'][name]["name"]
                     jobs = list(db.GqlQuery("SELECT * FROM StochKitModelWrapper WHERE user_id = :1 AND model_name = :2", self.user.user_id(), dbName).run())
@@ -685,6 +711,9 @@ class ImportPage(BaseHandler):
                     szip.extractStochKitModel(name, userId, self, rename = rename)
 
                 for name in state['selections']['sjc']:
+                    if not state['selections']['sjc'][name]:
+                        continue
+
                     dbName = headers['stochkitJobs'][name]["name"]
                     jobs = list(db.GqlQuery("SELECT * FROM StochKitJobWrapper WHERE user_id = :1 AND name = :2", self.user.user_id(), dbName).run())
 
@@ -699,13 +728,16 @@ class ImportPage(BaseHandler):
                             continue
                         elif overwriteType == 'overwriteOld':
                             print 'deleting', dbName, 'hehe'
-                            otherJob.delete()
+                            otherJob.delete(self)
                         elif overwriteType == 'renameNew':
                             rename = True
 
                     szip.extractStochKitJob(name, userId, self, rename = rename)
 
                 for name in state['selections']['snc']:
+                    if not state['selections']['snc'][name]:
+                        continue
+
                     dbName = headers['sensitivityJobs'][name]["jobName"]
                     jobs = list(db.GqlQuery("SELECT * FROM SensitivityJobWrapper WHERE userId = :1 AND jobName = :2", self.user.user_id(), dbName).run())
 
@@ -736,8 +768,6 @@ class ImportPage(BaseHandler):
                 return
             elif reqType == 'delJob':
                 job = ImportJobWrapper.get_by_id(int(self.request.get('id')))
-                os.remove(job.zipFile)
-                os.remove(job.headerFile)
                 job.delete()
                 
                 self.response.headers['Content-Type'] = 'application/json'

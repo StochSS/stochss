@@ -75,6 +75,10 @@ Sensitivity.SelectTable = Backbone.View.extend(
 
                     var boxparam = $( html ).appendTo( this.pc );
 
+                    if((i + 1) % 20 == 0)
+                    {
+                        $( "<br>" ).appendTo(this.pc);
+                    }
                     if(firstBoxParam == '')
                     {
                         firstBoxParam = boxparam.find('input');
