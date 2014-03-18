@@ -16,6 +16,7 @@ var checkAndGet = function(selectTable)
     {
         updateMsg( { status : false,
                      msg : "Job name must be letters (a-z and A-Z), underscores, and numbers only, and start with a letter or an underscore" } );
+        return false;
     }
 
     var execType = $( "input:radio[name=exec_type]:checked" ).val();
@@ -249,7 +250,7 @@ var run = function()
                                                    data : series } );
                               }
 
-                              if(typeof(data.job.units) == undefined)
+                              if(!data.job.units)
                               {
                                   label = "";
                               }
