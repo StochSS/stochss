@@ -80,13 +80,6 @@
                                             </tbody>
                                         </table>
                                     </div>
-                                    {% if isAdminUser %}
-                                    <div class="control-group">
-                                        <label class="checkbox">
-                                            <input id="globalOp" type="checkbox">Operate on all system data (admin only)
-                                        </label>
-                                    </div>
-                                    {% endif %}
                                     {% endif %}
                                     <div class="form-actions">
                                         <button class="btn-primary btn-large" id="export">Export</button>
@@ -200,9 +193,13 @@
                                 </table>
                                 <br />
                                 <button class="btn-primary btn-large" id="import">Import</button>
-                            </div>
+                            </div>			    
                         </div>
                     </div>
+
+                    {% if isAdminUser %}
+                    <input id="globalOp" type="checkbox">Operate on all system data (admin only)
+                    {% endif %}
                     <div id="msg"></div>
                 </div>
             </div>

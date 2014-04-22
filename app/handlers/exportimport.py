@@ -121,7 +121,6 @@ class SuperZip:
     def addStochKitJob(self, job, globalOp = False):
         stochkit_job = job.stochkit_job
 
-        print "hahaahahahahha", stochkit_job.resource
         # Only export finished jobs
         if stochkit_job.status == "Finished":
             # These are fields shared among all jobs
@@ -135,6 +134,7 @@ class SuperZip:
                         "status" : stochkit_job.status,
                         "final_time" : stochkit_job.final_time,
                         "increment" : stochkit_job.increment,
+                        "units" : job.stochkit_job.units,
                         "realizations" : stochkit_job.realizations,
                         "exec_type" : stochkit_job.exec_type,
                         "store_only_mean" : stochkit_job.store_only_mean,
@@ -236,15 +236,15 @@ class SuperZip:
         outPath = tempfile.mkdtemp(dir = "{0}/../output/".format(path))
 
         for name in self.zipfb.namelist():
-            if re.search('^{0}.*$'.format(zipPath), name):
+            if re.search('^{0}/.*$'.format(zipPath), name):
                 relname = os.path.relpath(name, zipPath)
 
                 if not os.path.exists(os.path.dirname("{0}/{1}".format(outPath, relname))):
                     os.makedirs(os.path.dirname("{0}/{1}".format(outPath, relname)))
 
-                    fhandle = open("{0}/{1}".format(outPath, relname), 'w')
-                    fhandle.write(self.zipfb.read(name))
-                    fhandle.close()
+                fhandle = open("{0}/{1}".format(outPath, relname), 'w')
+                fhandle.write(self.zipfb.read(name))
+                fhandle.close()
 
         jobj["output_location"] = outPath
         jobj["stdout"] = "{0}/stdout".format(outPath)
@@ -284,15 +284,15 @@ class SuperZip:
         outPath = tempfile.mkdtemp(dir = "{0}/../output/".format(path))
 
         for name in self.zipfb.namelist():
-            if re.search('^{0}.*$'.format(zipPath), name):
+            if re.search('^{0}/.*$'.format(zipPath), name):
                 relname = os.path.relpath(name, zipPath)
 
                 if not os.path.exists(os.path.dirname("{0}/{1}".format(outPath, relname))):
                     os.makedirs(os.path.dirname("{0}/{1}".format(outPath, relname)))
 
-                    fhandle = open("{0}/{1}".format(outPath, relname), 'w')
-                    fhandle.write(self.zipfb.read(name))
-                    fhandle.close()
+                fhandle = open("{0}/{1}".format(outPath, relname), 'w')
+                fhandle.write(self.zipfb.read(name))
+                fhandle.close()
 
         job.userId = jsonJob["userId"]
         job.jobName = jsonJob["jobName"]
@@ -717,17 +717,16 @@ class ImportPage(BaseHandler):
                     dbName = headers['stochkitJobs'][name]["name"]
                     jobs = list(db.GqlQuery("SELECT * FROM StochKitJobWrapper WHERE user_id = :1 AND name = :2", self.user.user_id(), dbName).run())
 
-                    print jobs
-
                     rename = False
 
                     if len(jobs) > 0:
                         otherJob = jobs[0]
 
+                        print otherJob.name
+
                         if overwriteType == 'keepOld':
                             continue
                         elif overwriteType == 'overwriteOld':
-                            print 'deleting', dbName, 'hehe'
                             otherJob.delete(self)
                         elif overwriteType == 'renameNew':
                             rename = True
@@ -749,7 +748,6 @@ class ImportPage(BaseHandler):
                         if overwriteType == 'keepOld':
                             continue
                         elif overwriteType == 'overwriteOld':
-                            print 'deleting', dbName, 'hehe'
                             otherJob.delete()
                         elif overwriteType == 'renameNew':
                             rename = True

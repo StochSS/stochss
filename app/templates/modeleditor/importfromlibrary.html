@@ -5,14 +5,6 @@
 	<div class="well well-large">
 		<form id="update_form" method="post" action="/modeleditor/import/publiclibrary">
 			<input type="hidden" name="name" />
-			{% if msg %}
-			{% if status == False %}
-			<span style="color: red" class="create_msg">{{msg}}</span>
-			{% else %}
-			<span style="color: green" class="create_msg">{{msg}}</span>
-			{% endif %}
-			{% endif %}
-			<div id="msg" style="display:none"></div>
 			{% if public_library %}
 			<h3><a data-toggle="collapse" data-target="#public_library" default> Public Library</a>&raquo; </h3>
 			<br/>			
@@ -38,6 +30,17 @@
 				<input type="hidden" name="model_class" />
 
 			</div>
+                        <br />
+
+			{% if msg %}
+			{% if status == False %}
+			<span class="alert alert-error create_msg">{{msg}}</span>
+			{% else %}
+			<span class="alert alert-success create_msg">{{msg}}</span>
+			{% endif %}
+			{% endif %}
+			<div id="msg" style="display:none"></div>
+
 			{% endif %}
 		</form>
 

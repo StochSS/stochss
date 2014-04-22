@@ -36,7 +36,7 @@ Splot.Plot = Backbone.View.extend(
                     $( "<br>" ).appendTo(this.pc);
                 }
 
-                checkbox.change(_.partial(function(plot, storage, key) {
+                checkbox.change(_.partial(function(plot, storage, key, event) {
                     storage[key] = $( event.target ).prop('checked');
                     plot.render();
                 }, this, this.selected, this.selected.length));

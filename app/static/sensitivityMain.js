@@ -157,7 +157,7 @@ var run = function()
                                   for(var k = 0; k < data.trajectories[specie].length; k++)
                                   {
                                       id = Math.round(mult * k);
-                                      series.push({ x : data.time[id + 1],
+                                      series.push({ x : data.time[id],
                                                     y : data.trajectories[specie][id] });
                                   }
 

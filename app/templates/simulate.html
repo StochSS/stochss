@@ -4,7 +4,7 @@
 {% block content %}
 <div class="span9">
     <div class="row-fluid">
-        <div id="modelSelect">
+        <div style="display : none;" id="modelSelect">
             <div class="well">
                 {% if all_models %}
                 <h3> Select model to simulate </h3>
@@ -27,7 +27,7 @@
         <div style="display : none;" id="simulationConf">
         </div>
 
-        <div style="display : none;" id="jobInfo">
+        <div id="jobInfo">
             Downloading data to browser...
         </div>
     </div>
@@ -140,7 +140,7 @@
             <div class="stochastic">
                 Algorithm<br />
                 SSA <input id="ssa" type="radio" name="algorithm" value="ssa" checked><br />
-                Tau-leaping <input id="tau-leaping" style="padding-left: 100px;" type="radio" name="algorithm" value="tauLeaping">
+                Tau-leaping <input id="tau-leaping" style="padding-left: 100px;" type="radio" name="algorithm" value="tau_leaping">
             </div>
 
             <label class="tau-leaping ssa">Seed

@@ -16,6 +16,7 @@ var checkAndGet = function(selectTable)
     {
         updateMsg( { status : false,
                      msg : "Job name must be letters (a-z and A-Z), underscores, and numbers only, and start with a letter or an underscore" } );
+        return false;
     }
 
     var execType = $( "input:radio[name=exec_type]:checked" ).val();
@@ -242,14 +243,21 @@ var run = function()
                                   for(var i = 0; i < pts; i++)
                                   {
                                       var id = Math.floor(mult * i);
-                                      series.push( { x : data.values.time[id + 1], y : data.values.trajectories[specie][id]} );
+                                      series.push( { x : data.values.time[id], y : data.values.trajectories[specie][id]} );
                                   }
 
                                   plotData.push( { label : specie,
                                                    data : series } );
                               }
 
-                              label = data.job.units.charAt(0).toUpperCase() + data.job.units.slice(1)
+                              if(!data.job.units)
+                              {
+                                  label = "";
+                              }
+                              else
+                              {
+                                  label = data.job.units.charAt(0).toUpperCase() + data.job.units.slice(1);
+                              }
 
                               gplot = Splot.plot( $( "#plot" ), plotData, label);
                               //$( "#plotButton" ).click( gplot.getImage );
