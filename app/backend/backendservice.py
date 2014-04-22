@@ -6,10 +6,12 @@ All the input validation is performed in this class.
 from infrastructure_manager import InfrastructureManager
 import threading
 import os, subprocess, signal, uuid, sys, time
-import logging
+import logging, traceback
 from datetime import datetime
 from tasks import *
 from boto.s3.connection import S3Connection
+from celery.task.control import inspect
+import celery
 
 class backendservices():
     ''' 
@@ -38,23 +40,86 @@ class backendservices():
 	Returns return value from celery async call and the task ID
         '''
         logging.info('inside execute task for cloud : Params - %s', str(params))
+        result = {}
         try:
             from tasks import task,updateEntry
 	    #This is a celery task in tasks.py: @celery.task(name='stochss')
 
             taskid = str(uuid.uuid4())
+            result["db_id"] = taskid
             #create a celery task
-            logging.debug("executeTask : executing task with uuid : %s ", taskid)
+            logging.info("executeTask : executing task with uuid : %s ", taskid)
             timenow = datetime.now() 
-            data = {'status':"pending","start_time":timenow.strftime('%Y-%m-%d %H:%M:%S'), 'Message':"Task sent to Cloud"}
+            data = {
+                'status': "pending",
+                "start_time": timenow.strftime('%Y-%m-%d %H:%M:%S'),
+                'Message': "Task sent to Cloud"
+            }
             updateEntry(taskid, data, backendservices.TABLENAME)
-	    #celery async task execution http://ask.github.io/celery/userguide/executing.html
-            tmp = task.delay(taskid, params)  #calls task(taskid,params)
+            tmp = None
+            if params["job_type"] == "mcem2":
+                # We should start all of the instances related to this job with the same key, so
+                # that they can all be terminated at the same time easily.
+                key_prefix = ""
+                if "key_prefix" in params:
+                    key_prefix = params["key_prefix"]
+                    if not key_prefix.startswith(self.KEYPREFIX):
+                      key_prefix = self.KEYPREFIX + key_prefix
+                else:
+                    key_prefix = self.KEYPREFIX
+                random_name = "{0}-slave-{1}".format(
+                    key_prefix,
+                    taskid
+                )
+                # Return the key name as well so that this set of machines can be terminated together
+                # by the user.
+                result["key_name"] = random_name
+                requested_cores = params["cores"]
+                params["paramstring"] += " --cores {0}".format(requested_cores)
+                # The master task can run on any node...
+                #TODO: master task might need to run on node with at least 2 cores...
+                # launch_params["instance_type"] = "c3.large"
+                # launch_params["num_vms"] = 1
+                # We need to start up enough workers for the slave tasks. The workers
+                # also all need to be consuming from a separate queue so that we have
+                # full access to them.
+                launch_params = {
+                    "infrastructure": self.INFRA_EC2,
+                    "credentials": params["credentials"],
+                    "num_vms": requested_cores,
+                    "group": random_name, 
+                    "image_id": "ami-b1a5bed8",
+                    "instance_type": "t1.micro",
+                    "keyname": random_name,
+                    "use_spot_instances": False,
+                    "queue": taskid
+                }
+                #NOTE: We are forcing blocking mode in the InfrastructureManager due to GAE, but
+                # the slaves don't really need to be started in blocking mode.
+                print "Launching slaves..."
+                launch_result = self.startMachines(launch_params)
+                if not launch_result["success"]:
+                    logging.info("executeTask : failed to start enough slave machines for mcem2 job")
+                    return
+                print "Done."
+                params["queue"] = taskid
+                tmp = master_task.delay(taskid, params)
+                result["celery_pid"] = tmp.id
+            else:
+                #celery async task execution http://ask.github.io/celery/userguide/executing.html
+                tmp = task.delay(taskid, params)  #calls task(taskid,params)
+                result["celery_pid"] = tmp.id
 
-            logging.debug("executeTask :  result of task : %s", str(tmp))
-            return tmp.id, taskid
+            logging.info("executeTask :  result of task : %s", str(tmp))
+            result["success"] = True
+            return result
         except Exception, e:
             logging.error("executeTask : error - %s", str(e))
+            return {
+                "success": False,
+                "exception": str(e),
+                "traceback": traceback.format_exc()
+            }
     
     def executeTaskLocal(self, params):
         '''
@@ -201,7 +266,33 @@ class backendservices():
                 os.kill(pid, signal.SIGTERM)
             except Exception, e:
                 logging.error("deleteTaskLocal : couldn't kill process. error: %s", str(e))
-        logging.info("deleteTaskLocal : exiting method")        
+        logging.info("deleteTaskLocal : exiting method")
+    
+    def isOneOrMoreComputeNodesRunning(self, params):# credentials):
+        '''
+        Checks for the existence of running compute nodes. Only need one running compute node
+        to be able to run a job in the cloud.
+        '''
+        credentials = params["credentials"]
+        key_prefix = self.KEYPREFIX
+        if "key_prefix" in params:
+            key_prefix = params["key_prefix"]
+        try:
+            params = {
+                "infrastructure": self.INFRA_EC2,
+                "credentials": credentials,
+                "key_prefix": key_prefix
+            }
+            all_vms = self.describeMachines(params)
+            if all_vms == None:
+                return False
+            # Just need one running vm
+            for vm in all_vms:
+                if vm != None and vm['state'] == 'running':
+                    return True
+            return False
+        except:
+            return False
     
     def startMachines(self, params, block=False):
         '''
@@ -210,20 +301,76 @@ class backendservices():
 
         logging.info("startMachines : inside method with params : %s", str(params))
         try:
-            keyname = params['keyname']
-	    #make sure that any keynames we use are prefixed with stochss so that
-	    #we can do a terminate all based on keyname prefix
-	    if not keyname.startswith(backendservices.KEYPREFIX):
-		params['keyname'] = backendservices.KEYPREFIX+keyname
+            #make sure that any keynames we use are prefixed with stochss so that
+            #we can do a terminate all based on keyname prefix
+            key_name = params["keyname"]
+            if not key_name.startswith(self.KEYPREFIX):
+                params['keyname'] = self.KEYPREFIX + key_name
             # NOTE: We are forcing blocking mode within the InfrastructureManager class
             # for the launching of VMs because of how GAE joins on all threads before
             # returning a response from a request.
             i = InfrastructureManager(blocking=block)
-            res = i.run_instances(params,[])
+            res = {}
+            # NOTE: We need to make sure that the RabbitMQ server is running if any compute
+            # nodes are running as we are using the AMQP broker option for Celery.
+            compute_check_params = {
+                "credentials": params["credentials"],
+                "key_prefix": params["key_prefix"]
+            }
+            if self.isOneOrMoreComputeNodesRunning(compute_check_params):
+                res = i.run_instances(params,[])
+            else:
+                queue_head_ami = "ami-f75a409e"
+                # Need to start the queue head (RabbitMQ)
+                params["queue_head"] = True
+                vms_requested = int(params["num_vms"])
+                requested_image_id = params["image_id"]
+                requested_key_name = params["keyname"]
+                # Only want one queue head, and it must have its own key so
+                # it can be differentiated if necessary
+                params["num_vms"] = 1
+                params["image_id"] = queue_head_ami
+                params["keyname"] = requested_key_name+'-queuehead'
+                res = i.run_instances(params,[])
+                #NOTE: This relies on the InfrastructureManager being run in blocking mode...
+                queue_head_ip = res["vm_info"]["public_ips"][0]
+                self.__update_celery_config_with_queue_head_ip(queue_head_ip)
+                #TODO: See TODO in __update_celery_config_with_queue_head_ip
+                #      Basically broker will always be unreachable in GAE in this
+                #      scenario...
+                # Need to make sure that the queue is actually reachable because
+                # we don't want the user to try to submit a task and have it
+                # timeout because the broker server isn't up yet.
+                # sleep_time = 5
+                # total_wait_time = 60
+                # total_tries = total_wait_time / sleep_time
+                # current_try = 0
+                # print "About to check broker at:", celery.current_app.conf['BROKER_URL']
+                # while True:
+                #     try:
+                #         insp = inspect().stats()
+                #     except IOError as e:
+                #         current_try += 1
+                #         print "Broker down, try: {0}, exception: {1}".format(current_try, e)
+                #         if current_try >= total_tries:
+                #             print "Broker unreachable for {0} seconds. Fatal error.".format(total_wait_time)
+                #             return
+                #         time.sleep(sleep_time)
+                #         continue
+                #     print "Broker up"
+                #     break
+                params["image_id"] = requested_image_id
+                params["keyname"] = requested_key_name
+                params["queue_head"] = False
+                if vms_requested > 1:
+                    params["num_vms"] = vms_requested - 1
+                    res = i.run_instances(params,[])
+                params["num_vms"] = vms_requested
             logging.info("startMachines : exiting method with result : %s", str(res))
             return res
         except Exception, e:
             logging.error("startMachines : exiting method with error : %s", str(e))
+            print "startMachines : exiting method with error : %s", str(e)
             return None
         
     def stopMachines(self, params, block=False):
@@ -232,9 +379,15 @@ class backendservices():
 	that have a keyname prefixed with stochss (all instances created by the backend service)
 	params must contain credentials key/value
         '''
+        key_prefix = self.KEYPREFIX
+        if "key_prefix" in params and not params["key_prefix"].startswith(key_prefix):
+            key_prefix += params["key_prefix"]
+        elif "key_prefix" in params: #and params["key_prefix"].startswith(key_prefix)
+            key_prefix = params["key_prefix"]
         try:
+            logging.info("Stopping compute nodes with key_prefix: {0}".format(key_prefix))
             i = InfrastructureManager(blocking=block)
-            res = i.terminate_instances(params,backendservices.KEYPREFIX)
+            res = i.terminate_instances(params,key_prefix)
             return True
         except Exception, e:
             logging.error("Terminate machine failed with error : %s", str(e))
@@ -247,9 +400,16 @@ class backendservices():
         # add calls to the infrastructure manager for getting details of
         # machines
         logging.info("describeMachines : inside method with params : %s", str(params))
+        key_prefix = ""
+        if "key_prefix" in params:
+            key_prefix = params["key_prefix"]
+            if not key_prefix.startswith(self.KEYPREFIX):
+                key_prefix = self.KEYPREFIX + key_prefix
+        else:
+            key_prefix = self.KEYPREFIX
         try:
             i = InfrastructureManager()
-            res = i.describe_instances(params, [], backendservices.KEYPREFIX)
+            res = i.describe_instances(params, [], key_prefix)
             logging.info("describeMachines : exiting method with result : %s", str(res))
             return res
         except Exception, e:
@@ -353,7 +513,28 @@ class backendservices():
         except Exception, e:
             logging.error("fetchOutput : exiting with error : %s", str(e))
             return False
-        
+    
+    def __update_celery_config_with_queue_head_ip(self, queue_head_ip):
+        # Write queue_head_ip to file on the appropriate line
+        celery_config_filename = os.path.join(
+            os.path.dirname(os.path.abspath(__file__)),
+            "celeryconfig.py"
+        )
+        celery_config_lines = []
+        with open(celery_config_filename, 'r') as celery_config_file:
+            celery_config_lines = celery_config_file.readlines()
+        with open(celery_config_filename, 'w') as celery_config_file:
+            for line in celery_config_lines:
+                if line.strip().startswith('BROKER_URL'):
+                    celery_config_file.write('BROKER_URL = "amqp://stochss:ucsb@{0}:5672/"\n'.format(queue_head_ip))
+                else:
+                    celery_config_file.write(line)
+        # Now update the actual Celery app....
+        #TODO: Doesnt seem to work in GAE until next request comes in to server
+        my_celery = CelerySingleton()
+        my_celery.configure()
+
+
 if __name__ == "__main__":
 
     '''Note that these must be set for this function to work properly:
@@ -368,16 +549,116 @@ if __name__ == "__main__":
        access_key = os.environ["EC2_ACCESS_KEY"]
        secret_key = os.environ["EC2_SECRET_KEY"]
     except KeyError:
-       logging.error("main: Environment variables EC2_ACCESS_KEY and EC2_SECRET_KEY not set, cannot continue")
+       print "main: Environment variables EC2_ACCESS_KEY and EC2_SECRET_KEY not set, cannot continue"
        sys.exit(1)
 
-    infra = backendservices.INFRA_EC2
+    os.environ["AWS_ACCESS_KEY_ID"] = access_key
+    os.environ["AWS_SECRET_ACCESS_KEY"] = secret_key
 
+    # infra = backendservices.INFRA_EC2
     obj = backendservices()
-    params ={
-        'credentials':{'EC2_ACCESS_KEY':access_key, 'EC2_SECRET_KEY':secret_key},
+    credentials = {
+      'EC2_ACCESS_KEY': access_key,
+      'EC2_SECRET_KEY': secret_key
     }
-    params['infrastructure'] = infra
+    compute_check_params = {
+        "credentials": credentials
+    }
+    started_queue_head = False
+    queue_key = None
+    if obj.isOneOrMoreComputeNodesRunning(compute_check_params):
+        print "Assuming you already have a queue head up and running..."
+    else:
+        started_queue_head = True
+        print "Launching queue head / master worker..."
+        keypair_name = obj.KEYPREFIX+"-ch-stochoptim-testing"
+        launch_params = {
+            "infrastructure": obj.INFRA_EC2,
+            "credentials": credentials,
+            "num_vms": 1,
+            "group": keypair_name,
+            "image_id": "ami-b1a5bed8",
+            "instance_type": "t1.micro",
+            "key_prefix": keypair_name,
+            "keyname": keypair_name,
+            "use_spot_instances": False
+        }
+        launch_result = obj.startMachines(launch_params, block=True)
+        if not launch_result["success"]:
+            print "Failed to start master machine..."
+            sys.exit(1)
+        queue_key = launch_result[""]
+        print "Done."
+    
+    file_dir_path = os.path.dirname(os.path.abspath(__file__))
+    path_to_model_file = os.path.join(file_dir_path, "../../../stochoptim/inst/extdata/birth_death_MAImodel.R")
+    path_to_model_data_file = os.path.join(file_dir_path, "../../../../Downloads/birth_death_MAdata.txt")
+    params = {
+        'credentials':{'EC2_ACCESS_KEY':access_key, 'EC2_SECRET_KEY':secret_key},
+        "key_prefix": keypair_name,
+        "job_type": "mcem2",
+        "cores": 1,
+        "model_file": open(path_to_model_file, 'r').read(),
+        "model_data": open(path_to_model_data_file, 'r').read(),
+        "bucketname": "chstochoptim",
+        "paramstring": "exec/mcem2.r --steps CEU --seed 1 --K.ce 1000 --K.em 100 --K.lik 10000 --K.cov 10000 --rho 0.01 --perturb 0.25 --alpha 0.25 --beta 0.25 --gamma 0.25 --k 3 --pcutoff 0.05 --qcutoff 0.005 --numIter 10 --numConverge 1"
+    }
+    print "\nCalling executeTask now..."
+    result = obj.executeTask(params)
+    if result["success"]:
+        print "Succeeded..."
+        key_name = result["key_name"]
+        task_id = result["db_id"]
+        describe_task_params = {
+            "AWS_ACCESS_KEY_ID": access_key,
+            "AWS_SECRET_ACCESS_KEY": secret_key,
+            "taskids": [task_id]
+        }
+        print "\nCalling describeTask..."
+        desc_result = obj.describeTask(describe_task_params)[task_id]
+        while desc_result["status"] != "finished":
+            if "output" in desc_result:
+                print "[{0}] [{1}] [{2}] [{3}]".format(
+                    desc_result["taskid"],
+                    desc_result["status"],
+                    desc_result["message"],
+                    desc_result["output"]
+                )
+            elif "message" in desc_result:
+                print "[{0}] [{1}] [{2}]".format(
+                    desc_result["taskid"],
+                    desc_result["status"],
+                    desc_result["message"]
+                )
+            else:
+                print "[{0}] [{1}]".format(
+                    desc_result["taskid"],
+                    desc_result["status"]
+                )
+            time.sleep(20)
+            print "\nCalling describeTask..."
+            desc_result = obj.describeTask(describe_task_params)[task_id]
+        print "Finished..."
+        print desc_result["output"]
+        terminate_params = {
+            "credentials": {
+                "EC2_ACCESS_KEY": access_key,
+                "EC2_SECRET_KEY": secret_key
+            },
+            "key_prefix": keypair_name
+        }
+        print "\nStopping all VMs..."
+        if obj.stopMachines(terminate_params):
+            print "Stopped all machines!"
+        else:
+            print "Failed to stop machines..."
+    else:
+        print "Failed..."
+        print result["exception"]
+        print result["traceback"]
+    
+    #NOTE: Uncomment this for normal testing routine.
+"""    params['infrastructure'] = infra
     params['num_vms'] = 1
     params['group'] = 'stochss'
     params['instance_type'] = 't1.micro'
@@ -449,7 +730,9 @@ if __name__ == "__main__":
             taskargs['paramstring'] = 'ssa -t 100 -i 100 -r 100 --keep-trajectories --seed 706370 --label'
             taskargs['document'] = doc
     	    taskargs['bucketname'] = 'cjk4321'
-	    res, taskid = obj.executeTask(taskargs)
+        cloud_result = obj.executeTask(taskargs)
+        res = cloud_result["celery_pid"]
+        taskid = cloud_result["db_id"]
   	    pids.append(taskid)
 
 	taskargs['taskids'] = pids
@@ -478,3 +761,4 @@ if __name__ == "__main__":
 	print 'stopMachines is commented out -- be sure to terminate your instances or uncomment!'
         #res = obj.stopMachines(params)
         #print 'output from stopMachines: {0}'.format(str(res))
+"""
