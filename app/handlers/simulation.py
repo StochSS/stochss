@@ -540,12 +540,18 @@ class SimulatePage(BaseHandler):
                 self.response.write(json.dumps({"status" : False,
                                                 "msg" : "Job name must be unique"}))
                 return
-
+            
+            backend_services = backendservices()
+            compute_check_params = {
+                "infrastructure": "ec2",
+                "credentials": self.user_data.getCredentials(),
+                "key_prefix": self.user.user_id()
+            }
             # Create a stochhkit_job instance
             if params['resource'] == "local":
                 result=self.runStochKitLocal(params)
             elif params['resource'] == 'cloud':
-                if self.user_data.valid_credentials and self.isOneOrMoreComputeNodesRunning(self.user_data.getCredentials()):
+                if self.user_data.valid_credentials and backend_services.isOneOrMoreComputeNodesRunning(compute_check_params):
                     result=self.runCloud(params)
                 else:
                     result = { 'status': False, 'msg': 'You must have at least one active compute node to run in the cloud.' }
@@ -554,29 +560,7 @@ class SimulatePage(BaseHandler):
 
             self.response.headers['Content-Type'] = 'application/json'
             self.response.write(json.dumps(result))
-
-    def isOneOrMoreComputeNodesRunning(self, credentials):
-        '''
-        Checks for the existence of running compute nodes. Only need one running compute node
-        to be able to run a job in the cloud.
-        '''
-        try:
-            service = backendservices()
-            params = {
-                "infrastructure": "ec2",
-                "credentials": credentials
-            }
-            all_vms = service.describeMachines(params)
-            if all_vms == None:
-                return False
-            # Just need one running vm
-            for vm in all_vms:
-                if vm != None and vm['state'] == 'running':
-                    return True
-            return False
-        except:
-            return False
-
+    
     def runCloud(self, params):
         
         try:
@@ -681,15 +665,19 @@ class SimulatePage(BaseHandler):
         
             # Call backendservices and execute StochKit
             service = backendservices()
-            celery_task_id, taskid = service.executeTask(params)
-            
-            if celery_task_id == None:
-                result = {'status':False,'msg':'Cloud execution failed. '}
+            cloud_result = service.executeTask(params)
+            if not cloud_result["success"]:
+                e = cloud_result["exception"]
+                result = {
+                    'status': False,
+                    'msg': 'Cloud execution failed: '+str(e)
+                }
                 return result
+            
+            celery_task_id = cloud_result["celery_pid"]
+            taskid = cloud_result["db_id"]
             # Create a StochKitJob instance
             stochkit_job = StochKitJob(name = ensemblename, final_time = stime, realizations = realizations, increment = increment, seed = seed, exec_type = exec_type, units = model.units.lower())
-        
-        
             stochkit_job.resource = 'Cloud'
             stochkit_job.type = 'StochKit2 Ensemble'
             
