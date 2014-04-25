@@ -73,6 +73,11 @@
                                 {% endif %}
                                 {% endif %}
                             </td>
+                            <td>
+                                {% if job.status == "Finished" %}
+                                <a href="/cba?id={{job.id}}">Cost Analysis</a>
+                                {% endif %}
+                            </td>
                         </tr>
                         
                         {% endfor %}
@@ -121,6 +126,11 @@
                                 {% if job.status == "Failed" %}
                                 <a href="/sensitivity?id={{job.id}}">Get Debugging Info</a>
                                 {% endif %}
+                                {% endif %}
+                            </td>
+                            <td>
+                                {% if job.status == "Finished" %}
+                                <a href="/cba?id={{job.id}}">Cost Analysis</a>
                                 {% endif %}
                             </td>
                         </tr>
