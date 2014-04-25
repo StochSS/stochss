@@ -20,6 +20,8 @@ import logging, subprocess
 import boto.dynamodb
 from datetime import datetime
 
+import s3_helper
+
 @celery.task(name='stochss')
 def task(taskid,params):
   ''' This is the actual work done by a task worker '''
@@ -54,6 +56,11 @@ def task(taskid,params):
           exec_str = "{0}/{1} -m {2} --force --out-dir output/{3}/result 2>{4} > {5}".format(STOCHKIT_DIR, paramstr, xmlfilepath, uuidstr, stderr, stdout)
       elif job_type == 'stochkit_ode' or job_type == 'sensitivity':
           exec_str = "{0}/{1} -m {2} --force --out-dir output/{3}/result 2>{4} > {5}".format(ODE_DIR, paramstr, xmlfilepath, uuidstr, stderr, stdout)
+
+      print "-----------------"
+      print paramstr
+      print xmlfilepath
+      print uuidstr
       
       print "======================="
       print " Command to be executed : "
@@ -63,6 +70,7 @@ def task(taskid,params):
       timestarted = datetime.now()
       os.system(exec_str)
       timeended = datetime.now()
+      diff = timeended - timestarted
       
       results = os.listdir("output/{0}/result".format(uuidstr))
       if 'stats' in results and os.listdir("output/{0}/result/stats".format(uuidstr)) == ['.parallel']:
@@ -76,12 +84,22 @@ def task(taskid,params):
       print create_tar_output_str
       logging.debug("followig cmd to be executed %s" % (create_tar_output_str))
       bucketname = params['bucketname']
-      copy_to_s3_str = "python {2}/sccpy.py output/{0}.tar {1}".format(uuidstr,bucketname,THOME)
+#      copy_to_s3_str = "python {2}/sccpy.py output/{0}.tar {1}".format(uuidstr,bucketname,THOME)
       data = {'status':'active','message':'Task finished. Generating output.'}
       updateEntry(taskid, data, "stochss")
       os.system(create_tar_output_str)
-      print 'copying file to s3 : {0}'.format(copy_to_s3_str)
-      os.system(copy_to_s3_str)
+#      print 'copying file to s3 : {0}'.format(copy_to_s3_str)
+#      os.system(copy_to_s3_str)
+      
+      s3_filename = "output/" + uuidstr + ".tar"
+
+      s3_helper.upload_file(bucketname,s3_filename)
+#      s3_helper.add_metadata(bucketname,s3_filename,"meta1","success")
+      s3_helper.add_ec2_metadata(bucketname,s3_filename)
+      s3_helper.add_timestamp(bucketname,s3_filename,timestarted)
+      s3_helper.add_running_time(bucketname,s3_filename,diff.total_seconds())
+      s3_helper.add_filesize(bucketname,s3_filename)
+
       print 'removing xml file'
       removefilestr = "rm {0}".format(xmlfilepath)
       os.system(removefilestr)
@@ -91,7 +109,6 @@ def task(taskid,params):
       os.system(removeoutputdirstr)
       res['output'] = "https://s3.amazonaws.com/{1}/output/{0}.tar".format(taskid,bucketname)
       res['status'] = "finished"
-      diff = timeended - timestarted
       res['time_taken'] = "{0} seconds and {1} microseconds ".format(diff.seconds, diff.microseconds)
       updateEntry(taskid, res, "stochss")
   except Exception,e:
@@ -102,8 +119,8 @@ def task(taskid,params):
           create_tar_output_str = "tar -zcvf {0}.tar {0}".format(expected_output_dir)
           os.system(create_tar_output_str)
           bucketname = params['bucketname']
-          copy_to_s3_str = "python {0}/sccpy.py {1}.tar {2}".format(THOME, expected_output_dir, bucketname)
-          os.system(copy_to_s3_str)
+#          copy_to_s3_str = "python {0}/sccpy.py {1}.tar {2}".format(THOME, expected_output_dir, bucketname)
+#          os.system(copy_to_s3_str)
           # Now clean up
           remove_output_str = "rm {0}.tar {0}".format(expected_output_dir)
           os.system(remove_output_str)
