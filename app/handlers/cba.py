@@ -1,28 +1,11 @@
-try:
-  import json
-except ImportError:
-  from django.utils import simplejson as json
-
-from collections import OrderedDict
-import logging
-import traceback
-import __future__
-import time
-import shutil
-import os
-import subprocess
-import tempfile
-import datetime
-
-from google.appengine.ext import db
-
 from stochssapp import BaseHandler
-from backend.backendservice import backendservices
-
 from simulation import StochKitJobWrapper
 from sensitivity import SensitivityJobWrapper
+import backend.s3_helper
 
-import sensitivity
+EC2_RATES = {
+    't1.micro' : 0.02
+}
 
 class CostAnalysisPage(BaseHandler):
     """ The main handler for the Cost Analysis Status Page. Displays cost information about completed jobs."""        
@@ -44,9 +27,10 @@ class CostAnalysisPage(BaseHandler):
             with info to display on the page. 
         """
         context = {}
-        service = backendservices()
 
         job_id = int(self.request.get('id'))
+        context['job_id'] = job_id
+
         job = StochKitJobWrapper.get_by_id(job_id)
 
         if job is None:
@@ -55,8 +39,28 @@ class CostAnalysisPage(BaseHandler):
         else:
             context['filename'] = "output/" + job.pid + ".tar"
 
-        bucketname = self.user_data.getBucketName()
-        context['job_id'] = job_id
-        context['bucketname'] = bucketname
         context['jobname'] = job.jobName
+        context['bucketname'] = self.user_data.getBucketName()
+
+        credentials = self.user_data.getCredentials()
+
+        tags = backend.s3_helper.get_all_metadata_from_file(context['bucketname'],
+                                                            context['filename'],
+                                                            credentials['EC2_ACCESS_KEY'],
+                                                            credentials['EC2_SECRET_KEY'])
+#        tags = {}
+#        tags['running-time'] = '4.52134'
+#        tags['size'] = '217088'
+#        tags['instance-type'] = 't1.micro'
+
+        context['running_time'] = tags['running-time']
+        context['size'] = tags['size']
+        context['instance_type'] = tags['instance-type']
+
+        compute_cost = float(tags['running-time']) * EC2_RATES[tags['instance-type']] / 3600
+        storage_cost = int(tags['size']) * (0.03/30) / (1024*1024*1024)
+
+        context['compute_cost'] = "%0.2f" % compute_cost
+        context['storage_cost'] = "%0.2f" % storage_cost
+
         return context

@@ -1,10 +1,15 @@
 import boto
 import urllib
 from boto.s3.key import Key
+from boto.s3.connection import S3Connection
 from datetime import datetime
 
-def get_bucket(bucketname):
-	conn = boto.connect_s3()
+def get_bucket(bucketname, aws_access_key='', aws_secret_key=''):
+	try:
+		conn = boto.connect_s3()
+	except Exception:
+		conn = S3Connection(aws_access_key, aws_secret_key)
+
 	if conn.lookup(bucketname):
 		bucket = conn.get_bucket(bucketname)
 	else:
@@ -58,8 +63,8 @@ def add_filesize(bucketname, filename):
 	k.metadata.update({'size':k.size})
 	k.copy(k.bucket.name, k.name, k.metadata, preserve_acl=True)
 
-def get_all_metadata_from_file(bucketname, filename):
-	bucket = get_bucket(bucketname)
+def get_all_metadata_from_file(bucketname, filename, aws_access_key='', aws_secret_key=''):
+	bucket = get_bucket(bucketname,aws_access_key,aws_secret_key)
 	k = bucket.get_key(filename)
 	return k.metadata
 
