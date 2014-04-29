@@ -305,6 +305,7 @@ from handlers.modeleditor import *
 from handlers.parametereditor import *
 from handlers.volumeeditor import *
 from handlers.reactioneditor import *
+from handlers.stochoptim import *
 from handlers.simulation import *
 from handlers.sensitivity import *
 from handlers.credentials import *
@@ -358,6 +359,7 @@ app = webapp2.WSGIApplication([
                                ('/modeleditor.*', ModelEditorPage),
                                ('/simulate',SimulatePage),
                                ('/sensitivity',SensitivityPage),
+                               ('/stochoptim', StochOptimPage),
                                ('/export', ExportPage),
                                ('/import', ImportPage),
                                ('/status',StatusPage),

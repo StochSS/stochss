@@ -48,7 +48,7 @@ var checkAndGet = function(selectTable)
     if(!/^[0-9]+$/.test(realizations))
     {
         updateMsg( { status : false,
-                     msg : "Seed must be an integer" } );
+                     msg : "Realizations must be an integer" } );
         return false;
     }
 
