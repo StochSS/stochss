@@ -314,6 +314,7 @@ from handlers.updates import *
 from handlers.status import *
 from handlers.auth import *
 from handlers.admin import *
+import handlers.fileserver
 
 # Handler to serve static files
 class StaticFileHandler(BaseHandler):
@@ -360,6 +361,10 @@ app = webapp2.WSGIApplication([
                                ('/simulate',SimulatePage),
                                ('/sensitivity',SensitivityPage),
                                ('/stochoptim', StochOptimPage),
+                               webapp2.Route('/FileServer/backbone/<key>', handler = handlers.fileserver.BackboneFileServerInterface, name = 'backbonefs'),
+                               webapp2.Route('/FileServer/backbone/<key>/<fileID>', handler = handlers.fileserver.BackboneFileServerInterface, name = 'backbonefs'),
+                               webapp2.Route('/FileServer/large/<key>/<fileID>/<filename>', handler = handlers.fileserver.LargeFileServerInterface, name = 'fs'),
+                               webapp2.Route('/FileServer/large/<key>', handler = handlers.fileserver.LargeFileServerInterface, name = 'fs'),
                                ('/export', ExportPage),
                                ('/import', ImportPage),
                                ('/status',StatusPage),
