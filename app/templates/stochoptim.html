@@ -22,6 +22,7 @@
 <script type="text/javascript" src = "/static/js/purl.js"></script>
 <script src="/static/js/jfu/js/jquery.iframe-transport.js"></script>
 <script src="/static/js/jfu/js/jquery.fileupload.js"></script>
+<script type="text/javascript" src = "/static/js/fileserver.js"></script>
 <script type="text/javascript" src = "/static/js/stochoptim.js"></script>
 
 <script id="modelSelectTemplate" type="text/template">
@@ -46,6 +47,10 @@
     </div>
 </script>
 
+<!--<script id="csvSelectTemplate" type="text/template">
+    
+</script>-->
+
 <script id="simulationConfTemplate" type="text/template">
     <div class="well well-large">
         <h2>
@@ -59,11 +64,11 @@
             
         </h2>
 
-        Model Name: <h2><%= attributes.name %></h2>
-        Units: <h3><%= attributes.units %></h3>
+        Model Name: <h2><%= model.attributes.name %></h2>
+        Units: <h3><%= model.attributes.units %></h3>
         <hr />
         <label>Name:</label>
-        <input type="text" class="span3" id="jobName" value="<%= attributes.name %>_job" />
+        <input type="text" class="span3" id="jobName" value="<%= model.attributes.name %>_job" />
         
         <span class="help-block">This name will be used to reference the estimation.</span>
         <br />
@@ -71,7 +76,7 @@
         <!--List of valid datafiles to include-->
         <br />
 
-        <div id="csvSelectDiv" style="display: none;">
+        <div id="csvSelectDiv">
             1. Select csv file with trajectories:
             <br />
             <br />
@@ -81,6 +86,7 @@
 
             <div id="msg"></div>
 
+            <% if(typeof csvFiles != 'undefined') { %>
             <div id="csvSeeDiv" style="display: none;">
                 <br />
 
@@ -107,17 +113,12 @@
                 4. Select members of the archive to import:
                 
                 <br />
-
-            <div id="msg"></div>
+                
+                <div id="msg"></div>
                 <button class="btn-primary btn-large" id="import">Import</button>
             </div>			    
-
-            <br />
-            
-            <form action="/export" method="post">
-                <fieldset>
-                </fieldset>
-            </form>
+            <% } %>
+           
         </div>
 
         <h3 class="advanced-settings">
