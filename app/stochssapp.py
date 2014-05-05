@@ -361,10 +361,16 @@ app = webapp2.WSGIApplication([
                                ('/simulate',SimulatePage),
                                ('/sensitivity',SensitivityPage),
                                ('/stochoptim', StochOptimPage),
+                               # This route is for listing all files
                                webapp2.Route('/FileServer/backbone/<key>', handler = handlers.fileserver.BackboneFileServerInterface, name = 'backbonefs'),
+                               # This route is for interacting with single files
                                webapp2.Route('/FileServer/backbone/<key>/<fileID>', handler = handlers.fileserver.BackboneFileServerInterface, name = 'backbonefs'),
+                               # This route is for downloading the full file
                                webapp2.Route('/FileServer/large/<key>/<fileID>/<filename>', handler = handlers.fileserver.LargeFileServerInterface, name = 'fs'),
+                               # This route is for file uploads
                                webapp2.Route('/FileServer/large/<key>', handler = handlers.fileserver.LargeFileServerInterface, name = 'fs'),
+                               # This route is for downloading only a few bytes
+                               webapp2.Route('/FileServer/large/<key>/<fileID>/<numberBytes>/<filename>', handler = handlers.fileserver.LargeFileServerInterface, name = 'fs'),
                                ('/export', ExportPage),
                                ('/import', ImportPage),
                                ('/status',StatusPage),
