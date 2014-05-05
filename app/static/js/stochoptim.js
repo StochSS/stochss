@@ -21,64 +21,54 @@ var checkAndGet = function(selectTable)
 
     var execType = $( "input:radio[name=exec_type]:checked" ).val();
 
-    var crossEntropyStep = $( "#crossEntropyStep" ).prop('checked');
-    var emStep = $( "#emStep" ).prop('checked');
-    var uncertaintyStep = $( "#uncertaintyStep" ).prop('checked');
+    var crossEntropyStep = $( "#crossEntropyStep" ).prop('checked') ? 1 : 0;
+    var emStep = $( "#emStep" ).prop('checked')? 1 : 0;
+    var uncertaintyStep = $( "#uncertaintyStep" ).prop('checked')? 1 : 0;
 
-    var seed = $( "#seed" ).val();
+    var seed = parseFloat($( "#seed" ).val());
 
-    if(!/^[0-9]+$/.test(seed))
+    if(seed % 1 != 0)
     {
         updateMsg( { status : false,
                      msg : "Seed must be an integer" } );
         return false;
     }
 
-    seed = parseInt(seed);
+    var Kce = parseFloat($( "#Kce" ).val());
 
-    var Kce = $( "#Kce" ).val();
-
-    if(!/^[0-9]+$/.test(Kce))
+    if(Kce % 1 != 0)
     {
         updateMsg( { status : false,
                      msg : "Kce must be an integer" } );
         return false;
     }
 
-    Kce = parseInt(Kce);
+    var Kem = parseFloat($( "#Kem" ).val());
 
-    var Kem = $( "#Kem" ).val();
-
-    if(!/^[0-9]+$/.test(Kem))
+    if(Kem % 1 != 0)
     {
         updateMsg( { status : false,
                      msg : "Kem must be an integer" } );
         return false;
     }
 
-    Kem = parseInt(Kem);
+    var Klik = parseFloat($( "#Klik" ).val());
 
-    var Klik = $( "#Klik" ).val();
-
-    if(!/^[0-9]+$/.test(Klik))
+    if(Klik % 1 != 0)
     {
         updateMsg( { status : false,
                      msg : "Klik must be an integer" } );
         return false;
     }
 
-    Klik = parseInt(Klik);
+    var Kcov = parseFloat($( "#Kcov" ).val());
 
-    var Kcov = $( "#Kcov" ).val();
-
-    if(!/^[0-9]+$/.test(Kcov))
+    if(Kcov % 1 != 0)
     {
         updateMsg( { status : false,
                      msg : "Kcov must be an integer" } );
         return false;
     }
-
-    Kcov = parseInt(Kcov);
 
     var rho = $( "#rho" ).val();
     rho = parseFloat(rho);
@@ -95,16 +85,14 @@ var checkAndGet = function(selectTable)
     var gamma = $( "#gamma" ).val();
     gamma = parseFloat(gamma);
 
-    var k = $( "#k" ).val();
+    var k = parseFloat($( "#k" ).val());
 
-    if(!/^[0-9]+$/.test(k))
+    if(k % 1 != 0)
     {
         updateMsg( { status : false,
                      msg : "k must be an integer" } );
         return false;
     }
-
-    k = parseInt(k);
 
     var pcutoff = $( "#pcutoff" ).val();
     pcutoff = parseFloat(pcutoff);
@@ -112,27 +100,27 @@ var checkAndGet = function(selectTable)
     var qcutoff = $( "#qcutoff" ).val();
     qcutoff = parseFloat(qcutoff);
 
-    var numIter = $( "#numIter" ).val();
+    var numIter = parseFloat($( "#numIter" ).val());
 
-    if(!/^[0-9]+$/.test(numIter))
+    if(numIter % 1 != 0)
     {
         updateMsg( { status : false,
                      msg : "numIter must be an integer" } );
         return false;
     }
 
-    numIter = parseInt(numIter);
+    numIter = numIter;
 
-    var numConverge = $( "#numConverge" ).val();
+    var numConverge = parseFloat($( "#numConverge" ).val());
 
-    if(!/^[0-9]+$/.test(numConverge))
+    if(numConverge % 1 != 0)
     {
         updateMsg( { status : false,
                      msg : "numConverge must be an integer" } );
         return false;
     }
 
-    numConverge = parseInt(numConverge);
+    numConverge = numConverge;
 
     return { jobName : jobName,
              crossEntropyStep : crossEntropyStep,
@@ -145,7 +133,7 @@ var checkAndGet = function(selectTable)
              Kcov : Kcov,
              rho : rho,
              perturb : perturb,
-             apha : alpha,
+             alpha : alpha,
              beta : beta,
              gamma : gamma,
              k : k,
@@ -341,31 +329,38 @@ StochOptim.Controller = Backbone.View.extend(
                 {
                     var csvSelect = $( this.el ).find('#csvSelect');
 
+                    // Draw all the available CSVFiles in the CSV Select box
                     for(var i = 0; i < this.csvFiles.models.length; i++)
                     {
 
 	                this.optionTemp = _.template('<tr> \
-<td><a href="javascript:preventDefault();">Delete</a></td><td><input type="radio" name="archive"></td><td><%= attributes.name %></td>\
+<td><a href="javascript:preventDefault();">Delete</a></td><td><input type="radio" name="archive"></td><td><%= attributes.path %></td>\
 </tr>');
 
                         var newOption = $( this.optionTemp( this.csvFiles.models[i]) ).appendTo( csvSelect );
 
-                        // When the csvFiles gets selected, an event files on this object! (with the appropriate csvFile as the ag)
-                        newOption.find('input').on('click', _.partial( function(data, view) {
-                            view.trigger('select', data);
-                        }, this.csvFiles.models[i], this));
+                        // When the csvFiles gets selected, fill the preview box with a preview of the first x bytes of the file
+                        newOption.find('input').on('click', _.bind(_.partial( function(data) {
+                            this.selectedData = data;
+                            $.ajax( { url: '/FileServer/large/stochoptimdata/' + data.attributes.id + '/500/file.txt',
+                                     success : _.bind( function(data) {
+                                         $(this.el ).find('#preview').html(data);
+                                     }, this) });
+                        }, this.csvFiles.models[i]), this));
 
-                        // When the delete button gets clicked, a delete msg is sent
-                        newOption.find('a').click( _.partial(function(data, event) {
+                        // When the delete button gets clicked, use the backbone service to destroy the file
+                        newOption.find('a').click( _.bind(_.partial(function(data, event) {
                             data.destroy(); // After the file is deleted, we should post up a msg
                             event.preventDefault();
-                        }, this.csvFiles.models[i]));
+                            this.render();
+                        }, this.csvFiles.models[i]), this));
                     }
 
+                    // When a user uploads a file, draw a status bar, and after the upload is finished request the refreshes
                     $( this.el ).find('#fileupload').fileupload({
                         url: '/FileServer/large/' + 'stochoptimdata',
                         dataType: 'json',
-                        send: function (e, data) {
+                        send: _.bind(function (e, data) {
                             names = "";
                             
                             for(var i in data.files)
@@ -379,16 +374,22 @@ StochOptim.Controller = Backbone.View.extend(
 </div> \
 </span>');
 
-                            progressHandle = $( progressbar({ name : names }) ).appendTo( "#progresses" );
-                        },
-                        done: function (e, data) {
-                            progressHandle.remove();
-                        },
-                        progressall: function (e, data) {
+                            progressHandle = $( this.el ).find( '#progresses' );
+
+                            progressHandle.empty();
+                            $( progressbar({ name : names }) ).appendTo( progressHandle );
+                        }, this),
+
+                        done: _.bind(function (e, data) {
+                            this.csvFiles.fetch( { success : _.bind(this.render, this) } );
+                        }, this),
+
+                        progressall: _.bind(function (e, data) {
                             var progress = parseInt(data.loaded / data.total * 100, 10);
-                            progressHandle.find('.bar' ).css('width', progress + '%');
-                            progressHandle.find('.bar' ).text(progress + '%');
-                        },
+                            $( this.el ).find( '#progresses' ).find( '.bar' ).css('width', progress + '%');
+                            $( this.el ).find( '#progresses' ).find( '.bar' ).text(progress + '%');
+                        }, this),
+
                         error : function(data) {
                             updateMsg( { status : false,
                                          msg : "Server error uploading file" } );
@@ -399,6 +400,32 @@ StochOptim.Controller = Backbone.View.extend(
                     // Have something selected
                     csvSelect.find('input').eq(0).click();
                 }
+
+                $( "#runLocal" ).click( _.bind(function() {
+                    updateMsg( { status: true,
+                                 msg: "Running job locally..." } );
+
+                    var data = checkAndGet();
+                    
+                    if(!data)
+                        return;
+                    
+                    data.dataID = this.selectedData.attributes.id;
+                    data.resource = "local";
+                    
+                    var url = "/stochoptim";
+                    
+                    $.post( url = url,
+                            data = { reqType : "newJob",
+                                     data : JSON.stringify(data) }, //Watch closely...
+                            success = function(data)
+                            {
+                                updateMsg(data);
+                                if(data.status)
+                                    window.location = '/status';
+                            },
+                            dataType = "json" );
+                }, this));
             }
             else if(this.stage == this.RESULTSVIEW)
             {
