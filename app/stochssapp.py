@@ -305,7 +305,7 @@ from handlers.modeleditor import *
 from handlers.parametereditor import *
 from handlers.volumeeditor import *
 from handlers.reactioneditor import *
-from handlers.stochoptim import *
+import handlers.stochoptim
 from handlers.simulation import *
 from handlers.sensitivity import *
 from handlers.credentials import *
@@ -360,7 +360,9 @@ app = webapp2.WSGIApplication([
                                ('/modeleditor.*', ModelEditorPage),
                                ('/simulate',SimulatePage),
                                ('/sensitivity',SensitivityPage),
-                               ('/stochoptim', StochOptimPage),
+                               ('/stochoptim', handlers.stochoptim.StochOptimPage),
+                               webapp2.Route('/stochoptim/<queryType>/<jobID>', handler = handlers.stochoptim.StochOptimVisualization),
+                               ## Fileserver handlers
                                # This route is for listing all files
                                webapp2.Route('/FileServer/backbone/<key>', handler = handlers.fileserver.BackboneFileServerInterface, name = 'backbonefs'),
                                # This route is for interacting with single files

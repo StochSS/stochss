@@ -288,6 +288,33 @@ class StatusPage(BaseHandler):
                                        "id" : job.key().id()})
         
         context['allExportJobs'] = allExportJobs
+
+        allParameterJobs = []
+        allParameterJobsQuery = db.GqlQuery("SELECT * FROM StochOptimJobWrapper WHERE userId = :1", self.user.user_id())
+
+        if allParameterJobsQuery != None:
+            jobs = list(allParameterJobsQuery.run())
+
+            jobs = sorted(jobs, key = lambda x : (datetime.datetime.strptime(x.startTime, '%Y-%m-%d-%H-%M-%S') if hasattr(x, 'startTime') and x.startTime != None else ''), reverse = True)
+
+            for number, job in enumerate(jobs):
+                number = len(jobs) - number
+                
+                # First, check if the job is still running
+                res = service.checkTaskStatusLocal([job.pid])
+                if res[job.pid]:
+                    job.status = "Running"
+                else:
+                    job.status = "Finished"
+
+                job.put()
+
+                allParameterJobs.append({ "status" : job.status,
+                                       "name" : job.jobName,
+                                       "number" : number,
+                                       "id" : job.key().id()})
+        
+        context['allParameterJobs'] = allParameterJobs
     
         return dict(result,**context)
 

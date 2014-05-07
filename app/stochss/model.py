@@ -237,7 +237,7 @@ class Reaction():
                 parameters:                 a list of parameter instances
                 propensity_function:         string with the expression for the reaction's propensity
                 reactants:                  List of (species,stoiciometry) tuples
-                product:                    List of (species,stoiciometry) tuples
+                products:                    List of (species,stoiciometry) tuples
                 annotation:                 Description of the reaction (meta)
             
                 massaction True,{False}     is the reaction of mass action type or not?
