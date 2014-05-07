@@ -81,7 +81,7 @@
                 <br />
                 {% endif %}
                 {% if allSensJobs %}
-                Deterministic + Sensitivity Analysis:
+                Deterministic + Sensitivity Analysis Simulations:
                 <br />
                 <table cellpadding="0" cellspacing="0" border="0" class="table table-striped table-bordered" id="dataTable">
                     <thead>
@@ -131,7 +131,7 @@
                 <br />
                 {% endif %}
                 {% if allExportJobs %}
-                Export Job:
+                Export Jobs:
                 <br />
                 <table cellpadding="0" cellspacing="0" border="0" class="table table-striped table-bordered" id="dataTable">
                     <thead>
@@ -181,7 +181,62 @@
                 </table>
                 {% endif %}
 
-                {% if not (allExportJobs or allSensJobs or all_jobs) %}
+                {% if allParameterJobs %}
+                Parameter Estimation Jobs:
+                <br />
+                <table cellpadding="0" cellspacing="0" border="0" class="table table-striped table-bordered" id="dataTable">
+                    <thead>
+                        <tr>
+                            <th width="40pt"></th>
+                            <th width="40pt">Job #</th>
+                            <th>Job name</th>
+                            <th width="200pt">Status</th>
+                            <th width="200pt"></th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for job in allParameterJobs %}
+                        <tr>
+                            <td><a href="javascript:void(0)" onclick="deleteJob('/stochoptim?reqType=delJob&id={{job.id}}');">Delete</a></td>
+                            <td>
+                                <span>{{job.number}}</span>
+                            </td>
+                            <td>
+                                <span>{{job.name}}</span>
+                            </td>
+                            <td>
+                                {% if job.status|lower == "running" or job.status|lower == "finished" %}
+                                <span style="color: green" class="create_msg">{{job.status}}</span>
+                               
+                                {% endif %}
+                                {% if job.status|lower == "pending" %}
+                                <span style="color: orange" class="create_msg">{{job.status}}</span>
+                                {% endif %}
+                                {% if job.status|lower == "failed" or job.status|lower == "unknown" %}
+                                <span style="color: red" class="create_msg">{{job.status}}</span>
+                                {% endif %}
+                            </td>
+                            <td>
+                                {% if job.status|lower == "running" or job.status|lower == "finished" %}
+                                <a href="/stochoptim/debug/{{job.id}}">View Progress</a>
+                                {% else %}
+                                {% if job.status|lower == "finished" %}
+                                <a href="/stochoptim/results/{{job.id}}">Access results</a>
+                                {% else %}
+                                {% if job.status|lower == "failed" %}
+                                <a href="/stochoptim/debug/{{job.id}}">Get Debugging Info</a>
+                                {% endif %}
+                                {% endif %}
+                                {% endif %}
+                            </td>
+                        </tr>
+                        
+                        {% endfor %}
+                    </tbody>
+                </table>
+                {% endif %}
+
+                {% if not (allParameterJobs or allExportJobs or allSensJobs or all_jobs) %}
                 No jobs in system<br /><br />
                 {% endif %}
                 <button type="submit" class="btn btn-primary btn-large" name="refresh"><i class="icon-refresh"></i> Refresh</button>

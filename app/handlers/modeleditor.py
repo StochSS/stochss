@@ -46,7 +46,7 @@ class StochKitModelWrapper(db.Model):
 
 class ModelManager():
     @staticmethod
-    def getModels(handler):
+    def getModels(handler, modelAsString = True):
         models = db.GqlQuery("SELECT * FROM StochKitModelWrapper WHERE user_id = :1", handler.user.user_id()).fetch(100000)
 
         output = []
@@ -59,7 +59,10 @@ class ModelManager():
                 jsonModel.update(model.attributes)
             print model.model.units
             jsonModel["units"] = model.model.units
-            jsonModel["model"] = model.model.serialize()
+            if modelAsString:
+                jsonModel["model"] = model.model.serialize()
+            else:
+                jsonModel["model"] = model.model
 
             #print jsonModel
 
@@ -68,7 +71,7 @@ class ModelManager():
         return output
 
     @staticmethod
-    def getModel(handler, model_id):
+    def getModel(handler, model_id, modelAsString = True):
         model = StochKitModelWrapper.get_by_id(model_id)
 
         jsonModel = { "id" : model.key().id(),
@@ -78,7 +81,10 @@ class ModelManager():
             jsonModel.update(model.attributes)
 
         jsonModel["units"] = model.model.units
-        jsonModel["model"] = model.model.serialize()
+        if modelAsString:
+            jsonModel["model"] = model.model.serialize()
+        else:
+            jsonModel["model"] = model.model
             
         return jsonModel
 

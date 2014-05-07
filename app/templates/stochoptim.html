@@ -33,8 +33,8 @@
             <br />
             <% for(var model in models) { %>
             <label class="radio">
-                <input type="radio" name="model_to_simulate" value="<%= models[model].attributes.id %>" checked /><%= models[model].attributes.name %>
-                <br />
+                <input type="radio" name="model_to_simulate" value="<%= models[model].attributes.id %>" checked /><%= models[model].attributes.name %> 
+               <br />
             </label>
             <% } %>
             <br />
@@ -76,17 +76,17 @@
         <!--List of valid datafiles to include-->
         <br />
 
-        <div class="row" id="csvSelectDiv">
+        <div id="csvSelectDiv">
             <div>1. Upload any necessary trajectories in CSV format:</div>
-            <div class="span4"><input id="fileupload" type="file" name="files[]" multiple></div>
-            <div class="span4" id="progresses"></div>
+            <input id="fileupload" type="file" name="files[]" multiple><br />
+            <div id="progresses"></div>
             <!-- The global progress bar -->
 
             <div id="msg"></div>
+            <br />
 
             <% if(typeof csvFiles != 'undefined' && csvFiles.models.length > 0) { %>
             <div id="csvSeeDiv">
-                <br />
 
                 <div>2. Select desired CSV trajectory file:</div>
                 <table cellpadding="0" cellspacing="0" border="0" class="table table-striped table-bordered">
@@ -107,7 +107,7 @@
             <% } %>
         </div>
 
-        <div class="row">
+        <div>
             <h3 class="advanced-settings">
                 <a data-toggle="collapse" data-target="#advanced-settings">
                     Advanced settings&raquo;
@@ -125,9 +125,9 @@
                     <tr class="optional">
                         <td>
                             Steps
-                            Cross Entropy: <input id = "cross_entropy_step" type = "checkbox" checked /><br />
-                            EM: <input id = "em_step" type = "checkbox" checked /><br />
-                            Uncertainty: <input id = "uncertainty_step" type = "checkbox" checked /><br />
+                            Cross Entropy: <input id = "crossEntropyStep" type = "checkbox" checked /><br />
+                            EM: <input id = "emStep" type = "checkbox" checked /><br />
+                            Uncertainty: <input id = "uncertaintyStep" type = "checkbox" checked /><br />
                         </td>
                     </tr>
                     <tr class="optional">

@@ -411,6 +411,7 @@ StochOptim.Controller = Backbone.View.extend(
                         return;
                     
                     data.dataID = this.selectedData.attributes.id;
+                    data.modelID = this.model.attributes.id;
                     data.resource = "local";
                     
                     var url = "/stochoptim";
