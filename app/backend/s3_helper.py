@@ -16,12 +16,17 @@ def get_bucket(bucketname, aws_access_key='', aws_secret_key=''):
 		bucket = conn.create_bucket(bucketname, location=boto.s3.connection.Location.DEFAULT)
 	return bucket
 
-def upload_file(bucketname, filename):
+def upload_file(bucketname, filepath, filename):
 	bucket = get_bucket(bucketname)
 	k = Key(bucket)
 	k.key = filename
-	k.set_contents_from_filename(filename)
-	k.set_acl('public-read-write')
+	k.set_contents_from_filename(filepath)
+
+def create_file(bucketname, filename, contents):
+	bucket = get_bucket(bucketname)
+	k = Key(bucket)
+	k.key = filename
+	k.set_contents_from_string(contents)
 
 def add_metadata(bucketname, filename, key, value):
 	bucket = get_bucket(bucketname)
@@ -68,13 +73,34 @@ def get_all_metadata_from_file(bucketname, filename, aws_access_key='', aws_secr
 	k = bucket.get_key(filename)
 	return k.metadata
 
-def get_metadata_from_file(bucketname, filename, key):
-	bucket = get_bucket(bucketname)
+def get_metadata_from_file(bucketname, filename, key, aws_access_key='', aws_secret_key=''):
+	bucket = get_bucket(bucketname,aws_access_key,aws_secret_key)
 	k = bucket.get_key(filename)
 	return k.get_metadata(key)
+
+def get_contents_from_file(bucketname, filename, aws_access_key='', aws_secret_key=''):
+	bucket = get_bucket(bucketname,aws_access_key,aws_secret_key)
+	k = bucket.get_key(filename)
+	return k.get_contents_as_string()
+
+def get_contents_from_file(key):
+	return key.get_contents_as_string()
+
+def get_all_files(bucketname, filename, aws_access_key='', aws_secret_key=''):
+	bucket = get_bucket(bucketname,aws_access_key,aws_secret_key)
+	return bucket.get_all_keys(prefix=filename)
 
 def get_filesize(bucketname, filename):
 	return int(get_metadata_from_file(bucketname,filename,'size'))
 
 def get_running_time(bucketname, filename):
 	return float(get_metadata_from_file(bucketname,filename,'running-time'))
+
+def save_exec_str(filename, exec_str, files):
+	ami_id = urllib.urlopen("http://169.254.169.254/latest/meta-data/ami-id").read()
+
+	create_file("gdouglas.cs.ucsb.edu.research_bucket", filename + "/execute", exec_str)
+	add_metadata("gdouglas.cs.ucsb.edu.research_bucket", filename + "/execute","ami-id",ami_id)
+
+	for f in files:
+		create_file("gdouglas.cs.ucsb.edu.research_bucket", filename + "/" + f, files[f])

@@ -5,18 +5,32 @@
 <div class="span9">
     <div class="row-fluid">
 	<div class"span9">
-            <h2>Cost Analysis for {{jobname}}</h2>
+            <h2>Cost Analysis</h2>
             </br>
-
-            Bucket Name: {{bucketname}}<br/>
-            File Name: {{filename}}<br/><br/>
-
-            Running Time: {{running_time}} seconds<br/>
-            Dataset Size: {{size}} bytes<br/><br/>
+            Machine Type: {{instance_type}}<br/>
+            Running Time: {{running_time}}<br/>
+            Dataset Size: {{size}}<br/><br/>
 
             Estimated Cost to Compute: ${{compute_cost}}<br/>
-            Estimated Cost to Store in S3: ${{storage_cost}} / day<br/><br/>
+            <table>
+                <tr>
+                    <td>Estimated Cost to Store in S3:</td>
+                    <td>${{storage_cost_month}} / month</td>
+                </tr>
+                    <td></td>
+                    <td>${{storage_cost_day}} / day</td>
+                </tr>
+            </table>     
+            <br/><br/>
 
+            <h2>Provenance Info</h2>
+            <br/>
+            AMI-ID: {{ami_id}}<br/><br/>
+            Execute String: {{exec_str}}<br/><br/>
+            Input Files: 
+            {% for f in input_files %}
+                {{f}}: {{input_files[f]}}<br/>
+            {% endfor %}
         </div>
     </div>
 </div>

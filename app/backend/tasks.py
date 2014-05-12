@@ -39,23 +39,25 @@ def task(taskid,params):
       paramstr =  params['paramstring']
       uuidstr = taskid
       res['uuid'] = uuidstr
-      create_dir_str = "mkdir -p output/%s/result " % uuidstr
+      create_dir_str = "mkdir -p /mnt/output/result "
       os.system(create_dir_str)
-      filename = "output/{0}/{0}.xml".format(uuidstr)
+      filename = "/mnt/input/{0}.xml".format(uuidstr)
       f = open(filename,'w')
       f.write(params['document'])
       f.close()
       xmlfilepath = filename
-      stdout = "output/%s/stdout.log" % uuidstr
-      stderr = "output/%s/stderr.log" % uuidstr
+      stdout = "/mnt/output/stdout.log"
+      stderr = "/mnt/output/stderr.log"
 
       job_type = params['job_type']
       exec_str = ''
       if job_type == 'stochkit':
           # The following executiong string is of the form : stochkit_exec_str = "~/StochKit/ssa -m ~/output/%s/dimer_decay.xml -t 20 -i 10 -r 1000" % (uuidstr)
-          exec_str = "{0}/{1} -m {2} --force --out-dir output/{3}/result 2>{4} > {5}".format(STOCHKIT_DIR, paramstr, xmlfilepath, uuidstr, stderr, stdout)
+          exec_str = "{0}/{1} -m {2} --force".format(STOCHKIT_DIR, paramstr, xmlfilepath)
       elif job_type == 'stochkit_ode' or job_type == 'sensitivity':
-          exec_str = "{0}/{1} -m {2} --force --out-dir output/{3}/result 2>{4} > {5}".format(ODE_DIR, paramstr, xmlfilepath, uuidstr, stderr, stdout)
+          exec_str = "{0}/{1} -m {2} --force".format(ODE_DIR, paramstr, xmlfilepath)
+
+      exec_str_out = exec_str + "--out-dir /mnt/output/result 2>{0} > {1}".format(stderr, stdout)
 
       print "-----------------"
       print paramstr
@@ -64,23 +66,23 @@ def task(taskid,params):
       
       print "======================="
       print " Command to be executed : "
-      print exec_str
+      print exec_str_out
       print "======================="
       print "To test if the command string was correct. Copy the above line and execute in terminal."
       timestarted = datetime.now()
-      os.system(exec_str)
+      os.system(exec_str_out)
       timeended = datetime.now()
       diff = timeended - timestarted
       
-      results = os.listdir("output/{0}/result".format(uuidstr))
-      if 'stats' in results and os.listdir("output/{0}/result/stats".format(uuidstr)) == ['.parallel']:
+      results = os.listdir("/mnt/output/result")
+      if 'stats' in results and os.listdir("/mnt/output/result/stats") == ['.parallel']:
           raise Exception("The compute node can not handle a job of this size.")
       
       res['pid'] = taskid
-      filepath = "output/%s//" % (uuidstr)
+      filepath = "/mnt/output/"
       absolute_file_path = os.path.abspath(filepath)
       print 'generating tar file'
-      create_tar_output_str = "tar -zcvf output/{0}.tar output/{0}".format(uuidstr)
+      create_tar_output_str = "tar -zcvf /mnt/{0}.tar /mnt/output/".format(uuidstr)
       print create_tar_output_str
       logging.debug("followig cmd to be executed %s" % (create_tar_output_str))
       bucketname = params['bucketname']
@@ -91,28 +93,32 @@ def task(taskid,params):
 #      print 'copying file to s3 : {0}'.format(copy_to_s3_str)
 #      os.system(copy_to_s3_str)
       
-      s3_filename = "output/" + uuidstr + ".tar"
+      s3_filename = uuidstr + ".tar"
+      s3_filepath = "/mnt/" + s3_filename
 
-      s3_helper.upload_file(bucketname,s3_filename)
+      s3_helper.upload_file(bucketname,s3_filepath,s3_filename)
 #      s3_helper.add_metadata(bucketname,s3_filename,"meta1","success")
       s3_helper.add_ec2_metadata(bucketname,s3_filename)
       s3_helper.add_timestamp(bucketname,s3_filename,timestarted)
       s3_helper.add_running_time(bucketname,s3_filename,diff.total_seconds())
       s3_helper.add_filesize(bucketname,s3_filename)
 
+      files = {"{0}.xml".format(uuidstr) : params['document']}
+      s3_helper.save_exec_str(uuidstr, exec_str, files)
+
       print 'removing xml file'
       removefilestr = "rm {0}".format(xmlfilepath)
-      os.system(removefilestr)
-      removetarstr = "rm output/{0}.tar".format(uuidstr)
-      os.system(removetarstr)
-      removeoutputdirstr = "rm -r output/{0}".format(uuidstr)
-      os.system(removeoutputdirstr)
+#      os.system(removefilestr)
+      removetarstr = "rm /mnt/{0}.tar".format(uuidstr)
+#      os.system(removetarstr)
+      removeoutputdirstr = "rm -r /mnt/output/"
+#      os.system(removeoutputdirstr)
       res['output'] = "https://s3.amazonaws.com/{1}/output/{0}.tar".format(taskid,bucketname)
       res['status'] = "finished"
       res['time_taken'] = "{0} seconds and {1} microseconds ".format(diff.seconds, diff.microseconds)
       updateEntry(taskid, res, "stochss")
   except Exception,e:
-      expected_output_dir = "output/%s" % uuidstr
+      expected_output_dir = "/mnt/output"
       # First check for existence of output directory
       if os.path.isdir(expected_output_dir):
           # Then we should store this in S3 for debugging purposes
@@ -123,7 +129,7 @@ def task(taskid,params):
 #          os.system(copy_to_s3_str)
           # Now clean up
           remove_output_str = "rm {0}.tar {0}".format(expected_output_dir)
-          os.system(remove_output_str)
+#          os.system(remove_output_str)
           # Update the DB entry
           res['output'] = "https://s3.amazonaws.com/{0}/{1}.tar".format(bucketname, expected_output_dir)
           res['status'] = 'failed'
