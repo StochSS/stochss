@@ -17,12 +17,11 @@ class CostAnalysisPage(BaseHandler):
     
     def get(self):
         context = self.getContext()
-        self.render_response('cba.html', **context)
+        self.render_response('costanalysis.html', **context)
         
     def post(self):        
-        params = self.request.POST        
         context = self.getContext()
-        self.render_response('cba.html', **context)
+        self.render_response('costanalysis.html', **context)
 
     def getContext(self):
         """ 
@@ -91,33 +90,5 @@ class CostAnalysisPage(BaseHandler):
         context['storage_cost_month'] = "%0.3f" % storage_cost
         context['storage_cost_day'] = "%0.3f" % (storage_cost / 30)
 
-        prov_keys = backend.s3_helper.get_all_files("gdouglas.cs.ucsb.edu.research_bucket",
-                                                    filename,
-                                                    credentials['EC2_ACCESS_KEY'],
-                                                    credentials['EC2_SECRET_KEY'])
-        prov_files = {}
-        for key in prov_keys:
-            if key.name.endswith('execute'):
-                exec_str = backend.s3_helper.get_contents_from_file(key)
-                ami_id = backend.s3_helper.get_metadata_from_file("gdouglas.cs.ucsb.edu.research_bucket",
-                                                                  filename + "/execute",
-                                                                  'ami-id',
-                                                                  credentials['EC2_ACCESS_KEY'],
-                                                                  credentials['EC2_SECRET_KEY'])
-            else:
-                prov_files[key.name] = backend.s3_helper.get_contents_from_file(key)
-
-#        prov_info = backend.s3_helper.get_all_metadata_from_file("gdouglas.cs.ucsb.edu.research_bucket",
- #                                                                filename + "/execute",
-  #                                                               credentials['EC2_ACCESS_KEY'],
-   #                                                              credentials['EC2_SECRET_KEY'])
-
-    #    exec_str  = backend.s3_helper.get_all_metadata_from_file("gdouglas.cs.ucsb.edu.research_bucket",
-     #                                                            filename + "/execute",
-      #                                                           credentials['EC2_ACCESS_KEY'],
-       #                                                          credentials['EC2_SECRET_KEY'])
-        context['ami_id'] = ami_id
-        context['exec_str'] = exec_str
-        context['input_files'] = prov_files
-
         return context
+        

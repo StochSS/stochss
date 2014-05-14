@@ -311,7 +311,8 @@ from handlers.credentials import *
 from handlers.converttopopulation import *
 from handlers.updates import *
 from handlers.status import *
-from handlers.cba import *
+from handlers.costanalysis import *
+from handlers.datareproduction import *
 from handlers.auth import *
 from handlers.admin import *
 
@@ -362,7 +363,9 @@ app = webapp2.WSGIApplication([
                                ('/export', ExportPage),
                                ('/import', ImportPage),
                                ('/status',StatusPage),
-                               ('/cba',CostAnalysisPage),
+                               ('/costanalysis',CostAnalysisPage),
+                               ('/reproduce',DataReproductionPage),
+                               ('/rerun',RerunJobPage),
                                ('/output/visualize',VisualizePage),
                                ('/output',JobOutPutPage),
                                ('/output/[a-zA-Z0-9-_]*.tgz',JobOutPutPage),

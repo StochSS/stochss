@@ -6,6 +6,7 @@ sys.path.append(os.path.join(os.path.dirname(__file__), '../lib/amqp'))
 sys.path.append(os.path.join(os.path.dirname(__file__), '../lib/billiard'))
 sys.path.append(os.path.join(os.path.dirname(__file__), '../lib/anyjson'))
 sys.path.append(os.path.join(os.path.dirname(__file__), '../lib/pytz'))
+sys.path.append(os.path.join(os.path.dirname(__file__), '../lib/cloudtracker'))
 print str(sys.path)
 from celery import Celery
 import os
@@ -20,6 +21,8 @@ import logging, subprocess
 import boto.dynamodb
 from datetime import datetime
 
+import cloudtracker
+
 import s3_helper
 
 @celery.task(name='stochss')
@@ -30,6 +33,8 @@ def task(taskid,params):
       global THOME
       global STOCHKIT_DIR
       global ODE_DIR
+
+      cloudtracker.setup_provenance(taskid)
 
       print 'task to be executed at remote location'
       print 'inside celery task method'
@@ -56,6 +61,8 @@ def task(taskid,params):
           exec_str = "{0}/{1} -m {2} --force".format(STOCHKIT_DIR, paramstr, xmlfilepath)
       elif job_type == 'stochkit_ode' or job_type == 'sensitivity':
           exec_str = "{0}/{1} -m {2} --force".format(ODE_DIR, paramstr, xmlfilepath)
+
+      cloudtracker.trap_executable(taskid,exec_str)
 
       exec_str_out = exec_str + "--out-dir /mnt/output/result 2>{0} > {1}".format(stderr, stdout)
 
@@ -93,18 +100,18 @@ def task(taskid,params):
 #      print 'copying file to s3 : {0}'.format(copy_to_s3_str)
 #      os.system(copy_to_s3_str)
       
-      s3_filename = uuidstr + ".tar"
-      s3_filepath = "/mnt/" + s3_filename
+      #s3_filename = uuidstr + ".tar"
+     # s3_filepath = "/mnt/" + s3_filename
 
-      s3_helper.upload_file(bucketname,s3_filepath,s3_filename)
+    #  s3_helper.upload_file(bucketname,s3_filepath,s3_filename)
 #      s3_helper.add_metadata(bucketname,s3_filename,"meta1","success")
-      s3_helper.add_ec2_metadata(bucketname,s3_filename)
-      s3_helper.add_timestamp(bucketname,s3_filename,timestarted)
-      s3_helper.add_running_time(bucketname,s3_filename,diff.total_seconds())
-      s3_helper.add_filesize(bucketname,s3_filename)
+   #   s3_helper.add_ec2_metadata(bucketname,s3_filename)
+  #    s3_helper.add_timestamp(bucketname,s3_filename,timestarted)
+ #     s3_helper.add_running_time(bucketname,s3_filename,diff.total_seconds())
+#      s3_helper.add_filesize(bucketname,s3_filename)
 
-      files = {"{0}.xml".format(uuidstr) : params['document']}
-      s3_helper.save_exec_str(uuidstr, exec_str, files)
+#      files = {"{0}.xml".format(uuidstr) : params['document']}
+#      s3_helper.save_exec_str(uuidstr, exec_str, files)
 
       print 'removing xml file'
       removefilestr = "rm {0}".format(xmlfilepath)
@@ -118,6 +125,7 @@ def task(taskid,params):
       res['time_taken'] = "{0} seconds and {1} microseconds ".format(diff.seconds, diff.microseconds)
       updateEntry(taskid, res, "stochss")
   except Exception,e:
+      print e
       expected_output_dir = "/mnt/output"
       # First check for existence of output directory
       if os.path.isdir(expected_output_dir):
