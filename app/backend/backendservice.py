@@ -22,6 +22,7 @@ class backendservices():
     #Class Constants
     TABLENAME = 'stochss'
     KEYPREFIX = 'stochss'
+    QUEUEHEAD_KEY_TAG = 'queuehead'
     INFRA_EC2 = 'ec2'
     INFRA_CLUSTER = 'cluster'
 
@@ -55,57 +56,150 @@ class backendservices():
                 "start_time": timenow.strftime('%Y-%m-%d %H:%M:%S'),
                 'Message': "Task sent to Cloud"
             }
-            updateEntry(taskid, data, backendservices.TABLENAME)
+            
             tmp = None
             if params["job_type"] == "mcem2":
-                # We should start all of the instances related to this job with the same key, so
-                # that they can all be terminated at the same time easily.
-                key_prefix = ""
-                if "key_prefix" in params:
-                    key_prefix = params["key_prefix"]
-                    if not key_prefix.startswith(self.KEYPREFIX):
-                      key_prefix = self.KEYPREFIX + key_prefix
-                else:
-                    key_prefix = self.KEYPREFIX
-                random_name = "{0}-slave-{1}".format(
-                    key_prefix,
-                    taskid
-                )
-                # Return the key name as well so that this set of machines can be terminated together
-                # by the user.
-                result["key_name"] = random_name
+                queue_name = taskid
+                result["queue"] = queue_name
+                data["queue"] = queue_name
+                # How many cores?
                 requested_cores = params["cores"]
                 params["paramstring"] += " --cores {0}".format(requested_cores)
+                
+                ##################################################################################################################
                 # The master task can run on any node...
                 #TODO: master task might need to run on node with at least 2 cores...
                 # launch_params["instance_type"] = "c3.large"
                 # launch_params["num_vms"] = 1
-                # We need to start up enough workers for the slave tasks. The workers
-                # also all need to be consuming from a separate queue so that we have
-                # full access to them.
-                launch_params = {
-                    "infrastructure": self.INFRA_EC2,
-                    "credentials": params["credentials"],
-                    "num_vms": requested_cores,
-                    "group": random_name, 
-                    "image_id": "ami-b1a5bed8",
-                    "instance_type": "t1.micro",
-                    "keyname": random_name,
-                    "use_spot_instances": False,
-                    "queue": taskid
-                }
-                #NOTE: We are forcing blocking mode in the InfrastructureManager due to GAE, but
-                # the slaves don't really need to be started in blocking mode.
-                print "Launching slaves..."
-                launch_result = self.startMachines(launch_params)
-                if not launch_result["success"]:
-                    logging.info("executeTask : failed to start enough slave machines for mcem2 job")
-                    return
-                print "Done."
-                params["queue"] = taskid
+                ##################################################################################################################
+                
+                
+                celery_info = CelerySingleton().app.control.inspect()
+                # How many active workers are there?
+                active_workers = celery_info.active()
+                # We will keep around a dictionary of the available workers, where
+                # the key will be the workers name and the value will be how many
+                # cores that worker has (i.e. how many tasks they can execute 
+                # concurrently).
+                available_workers = {}
+                if active_workers:
+                    for worker_name in active_workers:
+                        # active_workers[worker_name] will be a list of dictionaries representing
+                        # tasks that the worker is currently executing, so if it doesn't exist
+                        # then the worker isn't busy
+                        if not active_workers[worker_name]:
+                            available_workers[worker_name] = celery_info.stats()[worker_name]['pool']['max-concurrency']
+                print "All available workers:", available_workers
+                # We assume that at least one worker is already consuming from the main queue
+                # so we just need to find that one worker and remove it from the list, since
+                # we need one worker on the main queue for the master task.
+                done = False
+                for worker_name in available_workers:
+                    worker_queues = celery_info.active_queues()[worker_name]
+                    for queue in worker_queues:
+                        if queue["name"] == "celery":
+                            available_workers.pop(worker_name)
+                            done = True
+                            break
+                    if done:
+                        break
+                print "Using workers:", available_workers
+                # Now loop through available workers and see if we have enough free to meet
+                # requested core count.
+                worker_names = []
+                unmatched_cores = requested_cores
+                if available_workers:
+                    for worker_name in available_workers:
+                        # We need to find out what the concurrency of the worker is.
+                        worker_cores = available_workers[worker_name]
+                        # Subtract this from our running count and save the workers name
+                        unmatched_cores -= worker_cores
+                        worker_names.append(worker_name)
+                        if unmatched_cores <= 0:
+                            # Then we have enough
+                            break
+                # Did we get enough?
+                if unmatched_cores <= 0:
+                    print "Found enough idle cores to meet requested core count of {0}".format(requested_cores)
+                    # We have enough, re-route active workers to the new queue
+                    logging.info("Rerouting workers: {0} to queue: {1}".format(worker_names, queue_name))
+                    print "Rerouting workers: {0} to queue: {1}".format(worker_names, queue_name)
+                    rerouteWorkers(worker_names, queue_name)
+                else:
+                    print "Didn't find enough idle cores to meet requested core count of {0}. Still need {1} more.".format(
+                        requested_cores,
+                        unmatched_cores
+                    )
+                    # need to start up workers for the difference, i.e. avail_requested_diff
+                    # First, re-route active workers to the new queue
+                    if worker_names:
+                        print "Rerouting workers: {0} to queue: {1}".format(worker_names, queue_name)
+                        rerouteWorkers(worker_names, queue_name)
+                    # Now lets just start up a t1.micro worker for each needed core
+                    # (should really be c3.large for actual executions)
+                    print "Still need {0} cores.".format(unmatched_cores)
+                    instance_type = ''
+                    if "instance_type" in params:
+                        instance_type = params["instance_type"]
+                    else:
+                        instance_type = 't1.micro'#'c3.large'
+                    if instance_type == 'c3.large':
+                        if unmatched_cores % 2 == 1:
+                            unmatched_cores += 1
+                        unmatched_cores = unmatched_cores/2
+                    # We should start all of the instances related to this job with the same key, so
+                    # that they can all be terminated at the same time easily if needed.
+                    key_prefix = params["key_prefix"]
+                    if not key_prefix.startswith(self.KEYPREFIX):
+                        key_prefix = self.KEYPREFIX + key_prefix
+                    random_name = "{0}-{1}".format(
+                        key_prefix,
+                        taskid
+                    )
+                    result["key_prefix"] = random_name
+                    launch_params = {
+                        "infrastructure": self.INFRA_EC2,
+                        "credentials": params["credentials"],
+                        "num_vms": unmatched_cores,
+                        "group": random_name, 
+                        "image_id": "ami-b8a249d0",
+                        "instance_type": instance_type,
+                        "key_prefix": key_prefix,
+                        "keyname": random_name,
+                        "use_spot_instances": False,
+                        "queue": queue_name
+                    }
+                    #NOTE: We are forcing blocking mode in the InfrastructureManager due to GAE, but
+                    # the slaves don't really need to be started in blocking mode.
+                    print "Launching {0} slaves...".format(unmatched_cores)
+                    launch_result = self.startMachines(launch_params)
+                    if launch_result["state"] == "failed":
+                        logging.info(
+                            "executeTask : failed to start enough slave machines for mcem2 job, reason: {0}".format(launch_result["reason"])
+                        )
+                        result["success"] = False
+                        result["reason"] = launch_result["reason"]
+                        return result
+                    print "Done."
+                # Update DB entry just before sending to worker
+                updateEntry(taskid, data, backendservices.TABLENAME)
+                params["queue"] = queue_name
                 tmp = master_task.delay(taskid, params)
+                #TODO: This should really be done as a background_thread as soon as the task is sent
+                #      to a worker, but this would require an update to GAE SDK.
+                # call the poll task process
+                poll_task_path = os.path.join(
+                    os.path.dirname(os.path.abspath(__file__)),
+                    "poll_task.py"
+                )
+                os.system("python {0} {1} {2} > poll_task_{1}.log 2>&1".format(
+                    poll_task_path,
+                    tmp.id,
+                    queue_name
+                ))
                 result["celery_pid"] = tmp.id
             else:
+                updateEntry(taskid, data, backendservices.TABLENAME)
                 #celery async task execution http://ask.github.io/celery/userguide/executing.html
                 tmp = task.delay(taskid, params)  #calls task(taskid,params)
                 result["celery_pid"] = tmp.id
@@ -231,7 +325,7 @@ class backendservices():
         os.environ["AWS_SECRET_ACCESS_KEY"] = params['AWS_SECRET_ACCESS_KEY']
         result = {}
         try:
-                result = describetask(params['taskids'], backendservices.TABLENAME)
+            result = describetask(params['taskids'], backendservices.TABLENAME)
         except Exception, e:
             logging.error("describeTask : exiting with error : %s", str(e))
             return None
@@ -294,6 +388,30 @@ class backendservices():
         except:
             return False
     
+    def isQueueHeadRunning(self, params):
+        '''
+        '''
+        credentials = params["credentials"]
+        key_prefix = self.KEYPREFIX
+        if "key_prefix" in params:
+            key_prefix = params["key_prefix"]
+        try:
+            params = {
+                "infrastructure": self.INFRA_EC2,
+                "credentials": credentials,
+                "key_prefix": key_prefix
+            }
+            all_vms = self.describeMachines(params)
+            if all_vms == None:
+                return False
+            # Just need one running vm with the QUEUEHEAD_KEY_TAG in the name of the keypair
+            for vm in all_vms:
+                if vm != None and vm['state'] == 'running' and vm['key_name'].find(self.QUEUEHEAD_KEY_TAG) != -1:
+                    return True
+            return False
+        except:
+            return False
+    
     def startMachines(self, params, block=False):
         '''
         This method instantiates ec2 instances
@@ -317,10 +435,10 @@ class backendservices():
                 "credentials": params["credentials"],
                 "key_prefix": params["key_prefix"]
             }
-            if self.isOneOrMoreComputeNodesRunning(compute_check_params):
+            if self.isQueueHeadRunning(compute_check_params):
                 res = i.run_instances(params,[])
             else:
-                queue_head_ami = "ami-f75a409e"
+                queue_head_ami = "ami-3ea04b56"
                 # Need to start the queue head (RabbitMQ)
                 params["queue_head"] = True
                 vms_requested = int(params["num_vms"])
@@ -330,17 +448,17 @@ class backendservices():
                 # it can be differentiated if necessary
                 params["num_vms"] = 1
                 params["image_id"] = queue_head_ami
-                params["keyname"] = requested_key_name+'-queuehead'
+                params["keyname"] = requested_key_name+'-'+self.QUEUEHEAD_KEY_TAG
                 res = i.run_instances(params,[])
                 #NOTE: This relies on the InfrastructureManager being run in blocking mode...
                 queue_head_ip = res["vm_info"]["public_ips"][0]
                 self.__update_celery_config_with_queue_head_ip(queue_head_ip)
                 #TODO: See TODO in __update_celery_config_with_queue_head_ip
-                #      Basically broker will always be unreachable in GAE in this
+                #      Basically broker will always be unreachable in this
                 #      scenario...
-                # Need to make sure that the queue is actually reachable because
-                # we don't want the user to try to submit a task and have it
-                # timeout because the broker server isn't up yet.
+                # # Need to make sure that the queue is actually reachable because
+                # # we don't want the user to try to submit a task and have it
+                # # timeout because the broker server isn't up yet.
                 # sleep_time = 5
                 # total_wait_time = 60
                 # total_tries = total_wait_time / sleep_time
@@ -369,8 +487,8 @@ class backendservices():
             logging.info("startMachines : exiting method with result : %s", str(res))
             return res
         except Exception, e:
-            logging.error("startMachines : exiting method with error : %s", str(e))
-            print "startMachines : exiting method with error : %s", str(e)
+            logging.error("startMachines : exiting method with error : {0}".format(str(e)))
+            print "startMachines : exiting method with error :", str(e)
             return None
         
     def stopMachines(self, params, block=False):
@@ -566,19 +684,19 @@ if __name__ == "__main__":
     }
     started_queue_head = False
     queue_key = None
-    if obj.isOneOrMoreComputeNodesRunning(compute_check_params):
+    keypair_name = obj.KEYPREFIX+"-ch-stochoptim-testing"
+    if obj.isQueueHeadRunning(compute_check_params):
         print "Assuming you already have a queue head up and running..."
     else:
         started_queue_head = True
         print "Launching queue head / master worker..."
-        keypair_name = obj.KEYPREFIX+"-ch-stochoptim-testing"
         launch_params = {
             "infrastructure": obj.INFRA_EC2,
             "credentials": credentials,
             "num_vms": 1,
             "group": keypair_name,
-            "image_id": "ami-b1a5bed8",
-            "instance_type": "t1.micro",
+            "image_id": "ami-b8a249d0",
+            "instance_type": 't1.micro',#"c3.large",
             "key_prefix": keypair_name,
             "keyname": keypair_name,
             "use_spot_instances": False
@@ -587,27 +705,47 @@ if __name__ == "__main__":
         if not launch_result["success"]:
             print "Failed to start master machine..."
             sys.exit(1)
-        queue_key = launch_result[""]
         print "Done."
     
     file_dir_path = os.path.dirname(os.path.abspath(__file__))
-    path_to_model_file = os.path.join(file_dir_path, "../../../stochoptim/inst/extdata/birth_death_MAImodel.R")
-    path_to_model_data_file = os.path.join(file_dir_path, "../../../../Downloads/birth_death_MAdata.txt")
+    path_to_model_file = os.path.join(file_dir_path, "../../../stochoptim/inst/extdata/birth_death_REMAImodel.R")
+    # path_to_model_file = os.path.join(file_dir_path, "../../../stochoptim/inst/extdata/birth_death_MAImodel.R")
+    path_to_model_data_file = os.path.join(file_dir_path, "../../../stochoptim/inst/extdata/birth_death_REdata0.txt")
+    # path_to_model_data_file = os.path.join(file_dir_path, "../../../../Downloads/birth_death_MAdata.RData")
+    path_to_final_data_file = os.path.join(file_dir_path, "../../../stochoptim/inst/extdata/birth_death_REdata.txt")
     params = {
         'credentials':{'EC2_ACCESS_KEY':access_key, 'EC2_SECRET_KEY':secret_key},
         "key_prefix": keypair_name,
         "job_type": "mcem2",
-        "cores": 1,
+        "cores": 4,
         "model_file": open(path_to_model_file, 'r').read(),
-        "model_data": open(path_to_model_data_file, 'r').read(),
+        "model_data": {
+            "extension": "txt",
+            "content": open(path_to_model_data_file, 'r').read()
+        },
+        "final_data": {
+            "extension": "txt",
+            "content": open(path_to_final_data_file, 'r').read()
+        },
         "bucketname": "chstochoptim",
-        "paramstring": "exec/mcem2.r --steps CEU --seed 1 --K.ce 1000 --K.em 100 --K.lik 10000 --K.cov 10000 --rho 0.01 --perturb 0.25 --alpha 0.25 --beta 0.25 --gamma 0.25 --k 3 --pcutoff 0.05 --qcutoff 0.005 --numIter 10 --numConverge 1"
+        "paramstring": "exec/cedwssa.r --K.ce 1e5 --K.prob 1e6"
     }
     print "\nCalling executeTask now..."
     result = obj.executeTask(params)
     if result["success"]:
         print "Succeeded..."
-        key_name = result["key_name"]
+        celery_id = result["celery_pid"]
+        queue_name = result["queue"]
+        # call the poll task process
+        poll_task_path = os.path.join(
+            os.path.dirname(os.path.abspath(__file__)),
+            "poll_task.py"
+        )
+        os.system("python {0} {1} {2} > poll_task_{1}.log 2>&1".format(
+            poll_task_path,
+            celery_id,
+            queue_name
+        ))
         task_id = result["db_id"]
         describe_task_params = {
             "AWS_ACCESS_KEY_ID": access_key,
@@ -635,16 +773,14 @@ if __name__ == "__main__":
                     desc_result["taskid"],
                     desc_result["status"]
                 )
-            time.sleep(20)
+            time.sleep(60)
             print "\nCalling describeTask..."
             desc_result = obj.describeTask(describe_task_params)[task_id]
         print "Finished..."
         print desc_result["output"]
         terminate_params = {
-            "credentials": {
-                "EC2_ACCESS_KEY": access_key,
-                "EC2_SECRET_KEY": secret_key
-            },
+            "infrastructure": obj.INFRA_EC2,
+            "credentials": credentials,
             "key_prefix": keypair_name
         }
         print "\nStopping all VMs..."
@@ -654,8 +790,11 @@ if __name__ == "__main__":
             print "Failed to stop machines..."
     else:
         print "Failed..."
-        print result["exception"]
-        print result["traceback"]
+        if "exception" in result:
+            print result["exception"]
+            print result["traceback"]
+        else:
+            print result["reason"]
     
     #NOTE: Uncomment this for normal testing routine.
 """    params['infrastructure'] = infra

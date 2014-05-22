@@ -18,6 +18,7 @@ MCEM2_DIR = '/home/ubuntu/stochoptim'
 
 import logging, subprocess
 import boto.dynamodb
+from boto.exception import S3ResponseError
 from datetime import datetime
 from multiprocessing import Process
 import tempfile, time
@@ -65,13 +66,15 @@ def poll_commands(queue_name):
         print "Polling process: checking for done token..."
         with open(commands_file, 'r') as commands:
             all_commands = [c.strip() for c in commands.readlines()]
-            last_line = all_commands[-1]
+            if all_commands:
+                last_line = all_commands[-1]
         # We need to wait until all commmands are there
         while last_line != done_token:
             time.sleep(5)
             with open(commands_file, 'r') as commands:
                 all_commands = [c.strip() for c in commands.readlines()]
-                last_line = all_commands[-1]
+                if all_commands:
+                    last_line = all_commands[-1]
         print "Polling process: found done token, re-constructing commands..."
         # Ok we have all the commands now.
         all_commands.remove(done_token)
@@ -123,25 +126,35 @@ def poll_commands(queue_name):
         slave_group = group(
             slave_task.s(slave_params).set(queue=queue_name) for slave_params in all_slave_params
         )()
-        print "Poll process: waiting on results from slaves", queue_name
+        print "Polling process: waiting on results from slaves", queue_name
         # all_results will be a list of dictionaries, each with one or two
         # (file name, file content) key-value pairs
         all_results = slave_group.get()
         # Now remove the commands file and wait until all slave_tasks are done
-        os.system("rm -rf {0}".format(commands_file))
+        os.remove(commands_file)
         # Need to write them all to files now
         for result in all_results:
             for key in result:
-                with open(key, 'w') as file_handle:
+                fileint, file_name = tempfile.mkstemp(suffix=".RData")
+                os.close(fileint)
+                with open(file_name, 'w') as file_handle:
                     file_handle.write(result[key])
+                print_size_string = "ls -lh {0}".format(file_name)
+                print print_size_string
+                os.system(print_size_string)
+                mv_string = "mv {0} {1}".format(file_name, key)
+                print mv_string
+                os.system(mv_string)
+                # with open(key, 'w') as file_handle:
+                #     file_handle.write(result[key])
         # Now we loop back to the start since the actual master executable just polls the
         # file-system and should have all the files it needs now.
-        print "Poll process: done writing output files"
+        print "Polling process: done writing output files"
 
 def update_s3_bucket(task_id, bucket_name, output_dir):
     print "S3 update process just started..."
-    # Wait 30 seconds initially for some output to build up
-    time.sleep(30)
+    # Wait 60 seconds initially for some output to build up
+    time.sleep(60)
     while True:
         tar_output_str = "tar -zcf {0}.tar {0}".format(output_dir)
         print "S3 update", tar_output_str
@@ -152,12 +165,49 @@ def update_s3_bucket(task_id, bucket_name, output_dir):
         data = {
             'uuid': task_id,
             'status': 'active',
-            'message': 'Executing in the cloud.',
+            'message': 'Task executing in the cloud.',
             'output': "https://s3.amazonaws.com/{0}/{1}.tar".format(bucket_name, output_dir)
         }
         updateEntry(task_id, data, "stochss")
-        # Update the output in S3 every 30 seconds...
-        time.sleep(30)
+        # Update the output in S3 every 60 seconds...
+        time.sleep(60)
+
+def handle_task_success(task_id, data, s3_data, bucket_name):
+    tar_output_str = "tar -zcf {0}.tar {0}".format(s3_data)
+    print tar_output_str
+    os.system(tar_output_str)
+    copy_to_s3_str = "python {0}/sccpy.py {1}.tar {2}".format(THOME, s3_data, bucket_name)
+    print copy_to_s3_str
+    return_code = os.system(copy_to_s3_str)
+    if return_code != 0:
+        print "S3 update conflict, waiting 60 seconds for retry..."
+        sleep(60)
+        return_code = os.system(copy_to_s3_str)
+    print "Return code after S3 retry is {0}".format(return_code)
+    cleanup_string = "rm -rf {0} {0}".format(s3_data)
+    print cleanup_string
+    os.system(cleanup_string)
+    data['output'] = "https://s3.amazonaws.com/{0}/{1}.tar".format(bucket_name, s3_data)
+    updateEntry(task_id, data, "stochss")
+
+def handle_task_failure(task_id, data, s3_data=None, bucket_name=None):
+    if s3_data and bucket_name:
+        tar_output_str = "tar -zcf {0}.tar {0}".format(s3_data)
+        print tar_output_str
+        os.system(tar_output_str)
+        copy_to_s3_str = "python {0}/sccpy.py {1}.tar {2}".format(THOME, s3_data, bucket_name)
+        print copy_to_s3_str
+        return_code = os.system(copy_to_s3_str)
+        if return_code != 0:
+            print "S3 update conflict, waiting 60 seconds for retry..."
+            sleep(60)
+            return_code = os.system(copy_to_s3_str)
+        print "Return code after S3 retry is {0}".format(return_code)
+        cleanup_string = "rm -rf {0} {0}".format(s3_data)
+        print cleanup_string
+        os.system(cleanup_string)
+        data['output'] = "https://s3.amazonaws.com/{0}/{1}.tar".format(bucket_name, s3_data)
+    updateEntry(task_id, data, "stochss")
 
 @celery.task(name='tasks.master_task')
 def master_task(task_id, params):
@@ -167,9 +217,10 @@ def master_task(task_id, params):
     global MCEM2_DIR
     try:
         print "Master task starting execution..."
+        start_time = datetime.now()
         data = {
             'status': 'active',
-            'message': 'Task Executing in cloud'
+            'message': 'Task executing in the cloud.'
         }
         updateEntry(task_id, data, "stochss")
         result = {
@@ -185,10 +236,20 @@ def master_task(task_id, params):
         f = open(model_file_name, 'w')
         f.write(params['model_file'])
         f.close()
-        model_data_file_name = "{0}/model-data-{1}.txt".format(output_dir, task_id)
+        # This file can have different extensions...
+        model_data_dict = params['model_data']
+        model_data_file_name = "{0}/model-data-{1}.{2}".format(output_dir, task_id, model_data_dict["extension"])
         f = open(model_data_file_name, 'w')
-        f.write(params['model_data'])
+        f.write(model_data_dict['content'])
         f.close()
+        # This argument is optional (?)
+        final_data_file_name = None
+        if 'final_data' in params:
+            final_data_dict = params['final_data']
+            final_data_file_name = "{0}/final-data-{1}.{2}".format(output_dir, task_id, final_data_dict["extension"])
+            f = open(final_data_file_name, 'w')
+            f.write(final_data_dict['content'])
+            f.close()
         # Start up a new process to poll commands.txt
         poll_process = Process(
             target=poll_commands,
@@ -208,11 +269,16 @@ def master_task(task_id, params):
             model_file_name,
             model_data_file_name
         )
+        if final_data_file_name:
+            exec_str += " --finalData {0}".format(final_data_file_name)
+        
         stdout = "{0}/stdout".format(output_dir)
         stderr = "{0}/stderr".format(output_dir)
         print "Master: about to call {0}".format(exec_str)
+        execution_time = 0
         with open(stdout, 'w') as stdout_fh:
             with open(stderr, 'w') as stderr_fh:
+                execution_start = datetime.now()
                 p = subprocess.Popen(
                     shlex.split(exec_str),
                     stdout=stdout_fh,
@@ -220,30 +286,37 @@ def master_task(task_id, params):
                 )
                 poll_process.start()
                 update_process.start()
-                p.communicate()
+                stdout, stderr = p.communicate()
+                execution_time = (datetime.now() - execution_start).total_seconds()
+                print "Should be empty:", stdout
+                print "Should be empty:", stderr
+                print "Return code:", p.returncode
         # Done
+        print "Master: finished execution of executable"
         poll_process.terminate()
         update_process.terminate()
-        # Just send final output to S3
-        tar_output_str = "tar -zcf {0}.tar {0}".format(output_dir)
-        print tar_output_str
-        os.system(tar_output_str)
-        copy_to_s3_str = "python {0}/sccpy.py {1}.tar {2}".format(THOME, output_dir, bucket_name)
-        print copy_to_s3_str
-        os.system(copy_to_s3_str)
+        if p.returncode != 0:
+            data = {
+                'status': 'failed',
+                'message': 'The executable failed with an exit status of {0}.'.format(p.returncode)
+            }
+            handle_task_failure(task_id, data, output_dir, bucket_name)
+            return
+        # Else just send final output to S3
         data = {
             'status': 'finished',
             'uuid': task_id,
-            'output': "https://s3.amazonaws.com/{0}/{1}.tar".format(bucket_name, output_dir)
+            'total_time': (datetime.now() - start_time).total_seconds(),
+            'execution_time': execution_time
         }
-        updateEntry(task_id, data, "stochss")
+        handle_task_success(task_id, data, output_dir, bucket_name)
     except Exception, e:
         data = {
             'status':'failed',
             'message': str(e),
             'traceback': traceback.format_exc()
         }
-        updateEntry(task_id, data, "stochss")
+        handle_task_failure(task_id, data)
 
 @celery.task(name='tasks.slave_task')
 def slave_task(params):
@@ -280,11 +353,13 @@ def slave_task(params):
         elif segment == "--output":
             output_files["output"] = [command_segments[index+1]]
             fileint, file_name = tempfile.mkstemp(suffix=".RData")
+            os.close(fileint)
             command_segments[index+1] = file_name
             output_files["output"].append(file_name)
         elif segment == "--stats":
             output_files["stats"] = [command_segments[index+1]]
             fileint, file_name = tempfile.mkstemp(suffix=".RData")
+            os.close(fileint)
             command_segments[index+1] = file_name
             output_files["stats"].append(file_name)
     # Now command_segments is the correct execution string, just need to join it.
@@ -296,28 +371,57 @@ def slave_task(params):
         stderr=subprocess.PIPE
     )
     stdout, stderr = p.communicate()
+    # Clean up the input files first
+    delete_input_string = "rm -f {0}".format(" ".join(input_files))
+    print delete_input_string
+    os.system(delete_input_string)
     # Need to send the output files back to the master now, so send them back
     # in a dictionary, where the key is the absolute file path that the master
     # is expecting and the value is the contents of the file.
     result = {}
     if "stats" in output_files:
+        # Get the output
         master_output_file = output_files["output"][0]
         slave_output_file = output_files["output"][1]
         with open(slave_output_file, 'r') as file_handle:
             result[master_output_file] = file_handle.read()
+        print_size_string = "ls -lh {0}".format(slave_output_file)
+        print print_size_string
+        os.system(print_size_string)
+        # Clean up
+        delete_file_string = "rm -f {0}".format(slave_output_file)
+        print delete_file_string
+        os.system(delete_file_string)
+        # Get the output
         master_stats_file = output_files["stats"][0]
         slave_stats_file = output_files["stats"][1]
         with open(slave_stats_file, 'r') as file_handle:
             result[master_stats_file] = file_handle.read()
+        print_size_string = "ls -lh {0}".format(slave_stats_file)
+        print print_size_string
+        os.system(print_size_string)
+        # Clean up
+        delete_file_string = "rm -f {0}".format(slave_stats_file)
+        print delete_file_string
+        os.system(delete_file_string)
     else:
+        # Get the output
         master_output_file = output_files["output"][0]
         slave_output_file = output_files["output"][1]
         with open(slave_output_file, 'r') as file_handle:
             result[master_output_file] = file_handle.read()
+        print_size_string = "ls -lh {0}".format(slave_output_file)
+        print print_size_string
+        os.system(print_size_string)
+        # Clean up
+        delete_file_string = "rm -f {0}".format(slave_output_file)
+        print delete_file_string
+        os.system(delete_file_string)
     return result
 
 def with_temp_file(file_names):
     fileint, file_name = tempfile.mkstemp(suffix=".RData")
+    os.close(fileint)
     file_names.append(file_name)
     with open(file_name, 'w') as file_handle:
         yield file_handle
@@ -464,7 +568,33 @@ def removeTask(task_id):
         revoke(task_id)#, terminate=True, signal="SIGTERM")
     except Exception,e:
         print "task {0} cannot be removed/deleted. Error : {1}".format(task_id, str(e))
-        
+
+def rerouteWorkers(worker_names, to_queue, from_queue="celery"):
+    '''
+    Changes all workers specified by worker_names to stop consuming from the
+    from_queue and start consuming from the to_queue.
+    By default, the from_queue is the main default queue created that all workers
+    consume from initially.
+    '''
+    app = CelerySingleton().app
+    app.control.cancel_consumer(from_queue, reply=True, destination=worker_names)
+    app.control.add_consumer(to_queue, reply=True, destination=worker_names)
+
+def workersConsumingFromQueue(from_queue):
+    '''
+    Returns a list of the names of all workers that are consuming from the
+    from_queue, or an empty list if no workers are consuming from the queue.
+    '''
+    worker_names = []
+    app = CelerySingleton().app
+    all_worker_assignments = app.control.inspect().active_queues()
+    for worker_name in all_worker_assignments:
+        worker_queues = all_worker_assignments[worker_name]
+        for queue in worker_queues:
+            if queue["name"] == from_queue:
+                worker_names.append(worker_name)
+    return worker_names
+
 #def describeTask():
 #    i = celery.control.inspect()
 #    print type(i)

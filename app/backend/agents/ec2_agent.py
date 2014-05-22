@@ -190,6 +190,7 @@ class EC2Agent(BaseAgent):
         instance["public_ip"] = i.public_dns_name
         instance["private_ip"] = i.private_dns_name
         instance["state"]= i.state
+        instance["key_name"] = i.key_name
         instanceList.append(instance)
     return instanceList
 
@@ -294,15 +295,17 @@ class EC2Agent(BaseAgent):
         for line in lines[1:]:
           userstr += "echo '{0}' >> /home/ubuntu/celeryconfig.py\n".format(line)
     # Even the queue head gets a celery worker
+    # NOTE: We only need to use the -n argument to celery command if we are starting
+    #       multiple workers on the same machine. Instead, we are starting one worker
+    #       per machine and letting that one worker execute one task per core, using
+    #       the configuration in celeryconfig.py to ensure that Celery detects the 
+    #       number of cores and enforces this desired behavior.
     if self.PARAM_WORKER_QUEUE in parameters:
-      userstr+="nohup celery -A tasks worker --autoreload --loglevel=info -Q {0} -n {1} --workdir /home/ubuntu > /home/ubuntu/nohup.log 2>&1 & \n".format(
-          parameters[self.PARAM_WORKER_QUEUE],
-          str(uuid.uuid4())
+      userstr+="nohup celery -A tasks worker --autoreload --loglevel=info -Q {0} --workdir /home/ubuntu > /home/ubuntu/nohup.log 2>&1 & \n".format(
+          parameters[self.PARAM_WORKER_QUEUE]
       )
     else:
-      userstr+="nohup celery -A tasks worker --autoreload --loglevel=info -n {0} --workdir /home/ubuntu > /home/ubuntu/nohup.log 2>&1 & \n".format(
-        str(uuid.uuid4())
-      )
+      userstr+="nohup celery -A tasks worker --autoreload --loglevel=info --workdir /home/ubuntu > /home/ubuntu/nohup.log 2>&1 & \n"
     f.write(userstr)
     f.close()
     start_time = datetime.datetime.now()
