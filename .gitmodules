@@ -20,9 +20,6 @@
 [submodule "app/lib/billiard"]
 	path = app/lib/billiard
 	url = git://github.com/celery/billiard.git
-[submodule "app/lib/anyjson"]
-	path = app/lib/anyjson
-	url = git://github.com/glance-/anyjson.git
 [submodule "app/static/js/flot"]
 	path = app/static/js/flot
 	url = https://github.com/flot/flot
