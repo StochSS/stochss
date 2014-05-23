@@ -154,72 +154,6 @@ var updateMsg = function(data)
 };
 
 var StochOptim = StochOptim || {}
-var Import = Import || {}
-
-Import.ArchiveSelect = Backbone.View.extend(
-    {
-        initialize: function(options)
-        {
-            this.$el = $( "#archiveSelect" );
-
-            /*this.$el.change( function(event) {
-                $( event.target ).find( "option:selected" ).trigger('select');
-            });*/
-
-
-            this.state = { selected : 0 };
-            
-            this.$el.hide();
-        },
-
-        attach: function(data)
-        {
-            this.data = data;
-
-            this.state = { selected : 0 };
-
-            this.render();
-
-            this.trigger('select', data[0]);
-        },
-
-        render: function()
-        {
-            this.$el.empty();
-
-            if(_.has(this, 'data')) {
-                if(this.data.length > 0)
-                {
-                    $( "#archiveSelectDiv" ).show();
-                }
-
-                for(var i = 0; i < this.data.length; i++)
-                {
-                    var newOption = $( this.optionTemp( this.data[i]) ).appendTo( this.$el );
-
-                    newOption.find('input').on('click', _.partial( function(data, view) {
-                        view.trigger('select', data);
-                    }, this.data[i], this));
-
-                    newOption.find('a').click( _.partial(function(id, event) {
-                        event.preventDefault();
-
-                        $.post("/import?reqType=delJob&id=" + id,
-                               success = function(data)
-                               {
-                                   location.reload();
-                               });
-                    }, this.data[i].id));
-                }
-            }
-
-            this.$el.find('input').eq(0).click();
-
-            this.$el.show();
-
-            return this;
-        }
-    });
 
 StochOptim.Controller = Backbone.View.extend(
     {
@@ -250,7 +184,7 @@ StochOptim.Controller = Backbone.View.extend(
             // We gotta fetch this as well!
             this.csvFiles = undefined;
 
-            this.on('select', _.bind(this.select, this) );
+            //this.on('select', _.bind(this.select, this) );
 
             // Draw a screen so folks have something to see
             this.render();
@@ -268,11 +202,12 @@ StochOptim.Controller = Backbone.View.extend(
         },
         
         // This event gets fired when the user selects a csv data file
-        select : function(data)
+        selectPreview : function(data)
         {
-            var preview = $( '#csvSeeDiv' ).find( '#preview' );
+            var preview = $( this.el ).find( '#preview' );
 
-            preview.html( data.attributes.preview );
+            TablePlot.plot(preview, data, data, 'text');
+            //preview.html( data.attributes.preview );
         },
 
         buttonClicked : function()
@@ -343,9 +278,7 @@ StochOptim.Controller = Backbone.View.extend(
                         newOption.find('input').on('click', _.bind(_.partial( function(data) {
                             this.selectedData = data;
                             $.ajax( { url: '/FileServer/large/stochoptimdata/' + data.attributes.id + '/500/file.txt',
-                                     success : _.bind( function(data) {
-                                         $(this.el ).find('#preview').html(data);
-                                     }, this) });
+                                     success : _.bind( this.selectPreview, this) });
                         }, this.csvFiles.models[i]), this));
 
                         // When the delete button gets clicked, use the backbone service to destroy the file

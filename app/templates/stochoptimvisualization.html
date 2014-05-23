@@ -1,0 +1,29 @@
+{% extends "base.html" %}
+{% block title%}Manage Simulations{% endblock %}
+{% block csscontent %}{% endblock %}
+{% block content %}
+
+<div class="span9">
+    <div class="row-fluid">
+        <div id="stochoptim">
+        </div>
+
+        <div id="stdout" style="display : none;">{{ stdout }}</div>
+        <div id="stderr" style="display : none;">{{ stderr }}</div>
+    </div>
+</div>
+{% endblock %}
+
+{% block jscontent %}
+<script type="text/javascript" src = "/static/js/underscore.js"></script>
+<script type="text/javascript" src = "/static/utils.js"></script>
+<script type="text/javascript" src = "/static/js/backbone.js"></script>
+<script type="text/javascript" src = "/static/model/stochkit.js"></script>
+<link rel="stylesheet" href="/static/css/nv.d3.css">
+
+<script type="text/javascript" src = "/static/js/purl.js"></script>
+<script src="/static/js/jfu/js/jquery.iframe-transport.js"></script>
+<script src="/static/js/jfu/js/jquery.fileupload.js"></script>
+<script type="text/javascript" src = "/static/js/fileserver.js"></script>
+<!--<script type="text/javascript" src = "/static/js/stochoptim.js"></script>-->
+{% endblock %}
