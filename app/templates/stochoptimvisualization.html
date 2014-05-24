@@ -5,11 +5,39 @@
 
 <div class="span9">
     <div class="row-fluid">
+        <h2> Job summary: <span style="COLOR:green;">{{ name }}</span></h2>
+        <br />
+        <div class="well">                    
+            <h3>Metadata</h3>
+            <p class="thispage">
+                Resource: THIS NEEDS FILLED IN <!--<%= type %>-->
+                <br />
+                Simulation status: <%= status %> -- SHOULD CHANGE OTHER JOB TYPES TO HAVE CONSISTENT OUTPUT
+                <br />
+                Stochkit model: <a href="/modeleditor?model_edited=<%= name %>" class="thispage"> <%= name %> </a>
+            </p>
+        </div>
+
         <div id="stochoptim">
+        </div>
+
+        <div id="msg">
+        </div>
+
+        <div class="well">
+            <h3>Output</h3>
+            <br />
+            <button id="access" type="submit" class="btn btn-primary btn-large"><i class="icon-download-alt"></i> Fetch Data</button>
+            <br />
+            <br />
+            Create model from current parameter estimations: <br />
+            <button id="create" type="submit" class="btn btn-primary btn-large"> Create Model</button>
+            <input type="text" class="span3" id="name" value="{{ name }}_model" />
         </div>
 
         <div id="stdout" style="display : none;">{{ stdout }}</div>
         <div id="stderr" style="display : none;">{{ stderr }}</div>
+        <div id="nameToIndex" style="display : none;"> {{ nameToIndex }}</div>
     </div>
 </div>
 {% endblock %}
@@ -22,8 +50,11 @@
 <link rel="stylesheet" href="/static/css/nv.d3.css">
 
 <script type="text/javascript" src = "/static/js/purl.js"></script>
+<script type="text/javascript" src = "/static/js/d3.v3.js"></script>
+<script type="text/javascript" src = "/static/js/nv.d3.js"></script>
+<script type="text/javascript" src = "/static/js/tablePlot.js"></script>
 <script src="/static/js/jfu/js/jquery.iframe-transport.js"></script>
 <script src="/static/js/jfu/js/jquery.fileupload.js"></script>
 <script type="text/javascript" src = "/static/js/fileserver.js"></script>
-<!--<script type="text/javascript" src = "/static/js/stochoptim.js"></script>-->
+<script type="text/javascript" src = "/static/js/stochoptimvisualize.js"></script>
 {% endblock %}

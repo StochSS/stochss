@@ -40,12 +40,12 @@ TablePlot.TablePlot = Backbone.View.extend(
 
             var checkboxTemplate = _.template("<input type='checkbox' value='<%= val %>'/><span>&nbsp;<%= name %>&nbsp;<span />");
 
-            this.errorCheckbox = $( checkboxTemplate( { name : "Show error bars",
+            /*this.errorCheckbox = $( checkboxTemplate( { name : "Show error bars",
                                                         val : 0 } ) ).appendTo( this.controlDiv ).eq(0);
 
             this.errorCheckbox.change( _.partial(function(tablePlot) {
                 tablePlot.showErrorBars($( this ).prop('checked'));
-            }, this));
+            }, this));*/
 
             $( "<br>" ).appendTo( this.controlDiv );
 
@@ -162,6 +162,8 @@ TablePlot.TablePlot = Backbone.View.extend(
                     return output;
                 }
 
+                this.xLabel = this.data[0].label;
+
                 for(var i = 1; i < this.data.length; i++)
                 {
                     if(this.selected[i])
@@ -191,7 +193,7 @@ TablePlot.TablePlot = Backbone.View.extend(
                     .showXAxis(true)//Show the x-axis
                 
                 chart.xAxis     //Chart x-axis settings
-                    .axisLabel('Time')
+                    .axisLabel(this.xLabel)
                     .tickFormat(d3.format(',r'));
                 
                 chart.yAxis     //Chart y-axis settings
@@ -314,7 +316,7 @@ TablePlot.plot = function( selector, data, rawData, displayType )
 
     data = dataInterpolated;
 
-    var plot = new TablePlot.TablePlot( { selector : selector, data : data, textData : textData, displayType : displayType, interpolated : interpolated } );
+    var plot = new TablePlot.TablePlot( { selector : selector, data : data, textData : rawData, displayType : displayType, interpolated : interpolated } );
 
     return plot;
 }

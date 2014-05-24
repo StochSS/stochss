@@ -65,8 +65,10 @@ class StochOptimModel(stochss.model.Model):
         msgs.append("Reactions must be mass-action. Reactions [{0}] are not".format(", ".join(nonMassActionReactions)))
 
         return success, msgs
-
-    def serialize(self, activate = None):
+    
+    # Even though this second argument seems weird, it's necessary to interpret the output
+    # of the program correctly
+    def serialize(self, activate = None, returnParameterToIndexMap = False):
         species = self.listOfSpecies.items()
         reactions = self.listOfReactions.items()
         parameters = self.listOfParameters.items()
@@ -125,14 +127,19 @@ class StochOptimModel(stochss.model.Model):
 
         print os.linesep.join([rnu, pnu, snames, rnames, rparms, rknames, rconstant, rkind])
 
-        return os.linesep.join([rnu, pnu, snames, rnames, rparms, rknames, rconstant, rkind])
+        if returnParameterToIndexMap:
+            return os.linesep.join([rnu, pnu, snames, rnames, rparms, rknames, rconstant, rkind]), parameterNameToIndex
+        else:
+            return os.linesep.join([rnu, pnu, snames, rnames, rparms, rknames, rconstant, rkind])
 
 class StochOptimJobWrapper(db.Model):
     userId = db.StringProperty()
     pid = db.IntegerProperty()
     startTime = db.StringProperty()
     jobName = db.StringProperty()
+    modelName = db.StringProperty()
     indata = db.TextProperty()
+    nameToIndex = db.TextProperty()
     outData = db.StringProperty()
     status = db.StringProperty()
 
@@ -214,13 +221,16 @@ class StochOptimPage(BaseHandler):
         job.jobName = data["jobName"]
         job.indata = json.dumps(data)
         job.outData = dataDir
+        job.modelName = model["name"]
 
         job.status = "Running"
 
         # Convert model and write to file
         model_file_file = tempfile.mktemp(prefix = 'modelFile', suffix = '.R', dir = dataDir)
         mff = open(model_file_file, 'w')
-        mff.write(berniemodel.serialize())
+        stringModel, nameToIndex = berniemodel.serialize(None, True)
+        job.nameToIndex = json.dumps(nameToIndex)
+        mff.write(stringModel)
         mff.close()
         data["model_file_file"] = model_file_file
 
@@ -260,7 +270,7 @@ class StochOptimVisualization(BaseHandler):
     
     def get(self, queryType, jobID):
 
-        output ={}
+        output = {}
 
         jobID = int(jobID)
 
@@ -288,5 +298,53 @@ class StochOptimVisualization(BaseHandler):
                     output["stderr"] = "(empty)"
             except:
                 output["stderr"] = "No errors available yet"
+
+        output["nameToIndex"] = optimization.nameToIndex
+        output["status"] = optimization.status
+        output["name"] = optimization.modelName
             
         self.render_response('stochoptimvisualization.html', **output)
+
+    def post(self, queryType, jobID):
+        job = StochOptimJobWrapper.get_by_id(int(jobID))
+
+        data = json.loads(self.request.get('data'));
+
+        print data
+        print "================================================="
+        parameters = data["parameters"]
+        modelName = job.modelName
+        proposedName = data["proposedName"]
+        
+        model = ModelManager.getModelByName(self, modelName, modelAsString = False);
+
+        print proposedName
+
+        if ModelManager.getModelByName(self, proposedName):
+            self.response.write(json.dumps({"status" : False,
+                                            "msg" : "Model name must be unique"}))
+            return
+
+        if not model:
+            self.response.write(json.dumps({"status" : False,
+                                            "msg" : "Model '{0}' does not exist anymore. Possibly deleted".format(modelName) }))
+            return
+            
+        print model
+
+        model["name"] = proposedName
+
+        for parameter in parameters:
+            model["model"].getParameter(parameter).value = parameters[parameter]
+            model["model"].getParameter(parameter).expression = parameters[parameter]
+
+        if ModelManager.createModel(self, model, modelAsString = False):
+            self.response.write(json.dumps({"status" : True,
+                                            "msg" : "Model created",
+                                            "url" : "/modeleditor?model_edited={0}".format(proposedName) }))
+            return
+        else:
+            self.response.write(json.dumps({"status" : False,
+                                            "msg" : "Model failed to be created, check logs"}))
+            return
+

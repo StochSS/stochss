@@ -89,7 +89,7 @@ class ModelManager():
         return jsonModel
 
     @staticmethod
-    def getModelByName(handler, modelName):
+    def getModelByName(handler, modelName, modelAsString = True):
         model = db.GqlQuery("SELECT * FROM StochKitModelWrapper WHERE user_id = :1 AND model_name = :2", handler.user.user_id(), modelName).get()
 
         if model == None:
@@ -100,12 +100,15 @@ class ModelManager():
         if model.attributes:
             jsonModel.update(model.attributes)
         jsonModel["units"] = model.model.units
-        jsonModel["model"] = model.model.serialize()
+        if modelAsString == True:
+            jsonModel["model"] = model.model.serialize()
+        else:
+            jsonModel["model"] = model.model
             
         return jsonModel
 
     @staticmethod
-    def createModel(handler, model, rename = None):
+    def createModel(handler, model, modelAsString = True, rename = None):
         if "name" in model:
             tryName = model["name"]
             if ModelManager.getModelByName(handler, model["name"]):
@@ -130,7 +133,11 @@ class ModelManager():
 
         modelWrap.user_id = handler.user.user_id()
         modelWrap.model_name = name
-        modelWrap.model = StochMLDocument.fromString(model["model"]).toModel(name)
+        if modelAsString:
+            modelWrap.model = StochMLDocument.fromString(model["model"]).toModel(name)
+        else:
+            model["model"].name = model["name"]
+            modelWrap.model = model["model"]
         modelWrap.model.units = model["units"]
 
         attributes = {}
