@@ -144,7 +144,16 @@ StochOptimVisualize.Controller = Backbone.View.extend(
                 this.textData += rows[rowIndex].join("\t") + "\n";
             }*/
 
-            TablePlot.plot(this.$el, dataLists, this.stdout, 'graphic');
+            textData = 'Stdout : ' + this.stdout + '\n' + '\n' + 'Stderr: ' + this.stderr + '\n'
+
+            if(this.stderr.trim() != '(empty)' || this.stdout.length > 0)
+            {
+                TablePlot.plot(this.$el, dataLists, textData, 'graphic');
+            }
+            else
+            {
+                TablePlot.plot(this.$el, dataLists, textData, 'text');
+            }
 
             $( "#create" ).click( _.bind(function() {
                 updateMsg( { status : true,
