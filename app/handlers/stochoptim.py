@@ -14,6 +14,7 @@ import shlex
 import subprocess
 import tempfile
 import time
+import logging
 
 def int_or_float(s):
     try:
@@ -142,6 +143,11 @@ class StochOptimJobWrapper(db.Model):
     nameToIndex = db.TextProperty()
     outData = db.StringProperty()
     status = db.StringProperty()
+    
+    resource = db.StringProperty()
+    outputURL = db.StringProperty()
+    cloudDatabaseID = db.StringProperty()
+    celeryPID = db.StringProperty()
 
     def delete(self):
         service = backend.backendservice.backendservices()
@@ -149,16 +155,25 @@ class StochOptimJobWrapper(db.Model):
         service.deleteTaskLocal([self.pid])
 
         super(StochOptimJobWrapper, self).delete()
+    
+    def mark_final_cloud_data(self):
+        flag_file = os.path.join(self.outData, ".final-cloud")
+        os.system("touch {0}".format(flag_file))
+    
+    def has_final_cloud_data(self):
+        flag_file = os.path.join(self.outData, ".final-cloud")
+        return os.path.exists(flag_file)
 
 class StochOptimPage(BaseHandler):
     def authentication_required(self):
         return True
     
     def get(self):
-        self.render_response('stochoptim.html')            
+        self.render_response('stochoptim.html')
 
     def post(self):
         reqType = self.request.get('reqType')
+        data = json.loads(self.request.get('data'))
         self.response.content_type = 'application/json'
 
         if reqType == 'newJob':
@@ -171,9 +186,20 @@ class StochOptimPage(BaseHandler):
                                                 "msg" : "Job name must be unique"}))
                 return
 
-            # This function takes full responsibility for writing responses out to the world. This is probably a bad design mechanism
-            self.runLocal(data)
-            return
+            if data["resource"] == "local":
+                # This function takes full responsibility for writing responses out to the world. This is probably a bad design mechanism
+                self.runLocal(data)
+                return
+            else:
+                result = self.runCloud(data)
+                logging.info("Run cloud finished with result: {0}, generating JSON response".format(result))
+                if not result["success"]:
+                    return self.response.write(json.dumps({"status" : False,
+                                                    "msg" : result["msg"] }))
+                else:
+                    return self.response.write(json.dumps({"status" : True,
+                                        "msg" : "Job launched",
+                                        "id" : result["job"].key().id()}))
         elif reqType == 'delJob':
             jobID = json.loads(self.request.get('id'))
 
@@ -222,6 +248,7 @@ class StochOptimPage(BaseHandler):
         job.indata = json.dumps(data)
         job.outData = dataDir
         job.modelName = model["name"]
+        job.resource = "local"
 
         job.status = "Running"
 
@@ -260,10 +287,82 @@ class StochOptimPage(BaseHandler):
         job.pid = handle.pid
 
         job.put()
-
+        
         self.response.write(json.dumps({"status" : True,
                                         "msg" : "Job launched",
                                         "id" : job.key().id()}))
+    
+    def runCloud(self, data):
+        '''
+        '''
+        model = ModelManager.getModel(self, data["modelID"], modelAsString = False)
+        berniemodel = StochOptimModel()
+        success, msgs = berniemodel.fromStochKitModel(model["model"])
+        print "success", success
+        result = {
+            "success": success
+        }
+        if not success:
+            result["msg"] = os.linesep.join(msgs)
+            return result
+
+        path = os.path.abspath(os.path.dirname(__file__))
+
+        basedir = path + '/../'
+        dataDir = tempfile.mkdtemp(dir = basedir + 'output')
+
+        job = StochOptimJobWrapper()
+        job.userId = self.user.user_id()
+        job.startTime = time.strftime("%Y-%m-%d-%H-%M-%S")
+        job.jobName = data["jobName"]
+        job.indata = json.dumps(data)
+        job.outData = dataDir
+        job.status = "Pending"
+        job.resource = "cloud"
+
+        data["exec"] = "'bash'"
+
+        data["steps"] = ("C" if data["crossEntropyStep"] else "") + ("E" if data["emStep"] else "") + ("U" if data["uncertaintyStep"] else "")
+
+        data["cores"] = 4
+        data["options"] = ""
+
+        cmd = "exec/mcem2.r --steps {steps} --seed {seed} --K.ce {Kce} --K.em {Kem} --K.lik {Klik} --K.cov {Kcov} --rho {rho} --perturb {perturb} --alpha {alpha} --beta {beta} --gamma {gamma} --k {k} --pcutoff {pcutoff} --qcutoff {qcutoff} --numIter {numIter} --numConverge {numConverge} --command {exec}".format(**data)
+        stringModel, nameToIndex = berniemodel.serialize(None, True)
+        job.nameToIndex = json.dumps(nameToIndex)
+        jFileData = fileserver.FileManager.getFile(self, data["dataID"], noFile = False)
+        cloud_params = {
+            "job_type": "mcem2",
+            "cores": data["cores"],
+            "paramstring": cmd,
+            "model_file": stringModel,
+            "model_data": {
+                "content": jFileData["data"],
+                "extension": "txt"
+            },
+            "key_prefix": self.user.user_id(),
+            "credentials": self.user_data.getCredentials(),
+            "bucketname": self.user_data.getBucketName()
+        }
+        # Set the environmental variables 
+        os.environ["AWS_ACCESS_KEY_ID"] = self.user_data.getCredentials()['EC2_ACCESS_KEY']
+        os.environ["AWS_SECRET_ACCESS_KEY"] = self.user_data.getCredentials()['EC2_SECRET_KEY']
+        service = backend.backendservice.backendservices()
+        cloud_result = service.executeTask(cloud_params)
+        if not cloud_result["success"]:
+            result = {
+                "success": False,
+                "msg": cloud_result["reason"]
+            }
+            return result
+        
+        job.cloudDatabaseID = cloud_result["db_id"]
+        job.celeryPID = cloud_result["celery_pid"]
+        # job.pid = handle.pid
+        job.put()
+        result["job"] = job
+        return result
+        
 
 class StochOptimVisualization(BaseHandler):
     def authentication_required(self):
@@ -276,6 +375,31 @@ class StochOptimVisualization(BaseHandler):
         jobID = int(jobID)
 
         optimization = StochOptimJobWrapper.get_by_id(jobID)
+        # Might need to download the cloud data
+        if optimization.resource == "cloud":
+            if optimization.status == "finished":
+                if optimization.has_final_cloud_data():
+                    # Nothing to do here
+                    pass
+                else:
+                    # Download the final data and mark it finished
+                    cloud_result = self.__fetch_cloud_output(optimization)
+                    if cloud_result["status"]:
+                        optimization.mark_final_cloud_data()
+                    else:
+                        logging.info("Failed to download final output data of {0} with reason {1}".format(
+                            optimization.jobName,
+                            cloud_result["msg"]
+                        ))
+            else:
+                # Just assume we need to re-download the data...
+                cloud_result = self.__fetch_cloud_output(optimization)
+                if not cloud_result["status"]:
+                    #TODO: Display message to user?
+                    logging.info("Failed to download output data of {0} with reason {1}".format(
+                        optimization.jobName,
+                        cloud_result["msg"]
+                    ))
 
         try:
             fd = os.open("{0}/stdout".format(optimization.outData), os.O_RDONLY)
@@ -348,4 +472,29 @@ class StochOptimVisualization(BaseHandler):
             self.response.write(json.dumps({"status" : False,
                                             "msg" : "Model failed to be created, check logs"}))
             return
+    
+    def __fetch_cloud_output(self, job_wrapper):
+        '''
+        '''
+        try:
+            result = {}
+            # Grab the remote files
+            service = backend.backendservice.backendservices()
+            service.fetchOutput(job_wrapper.cloudDatabaseID, job_wrapper.outputURL)
+            # Unpack it to its local output location...
+            os.system('tar -xf' +job_wrapper.cloudDatabaseID+'.tar')
+            job_wrapper.outData = os.path.abspath(
+                os.path.dirname(os.path.abspath(__file__))+'/../output/'+job_wrapper.cloudDatabaseID
+            )
+            # Clean up
+            os.remove(job_wrapper.cloudDatabaseID+'.tar')
+            # Save the updated status
+            job_wrapper.put()
+            result['status']=True
+            result['msg'] = "Sucessfully fetched the remote output files."
+        except Exception,e:
+            logging.info('************************************* {0}'.format(e))
+            result['status']=False
+            result['msg'] = "Failed to fetch the remote files."
+        return result
 

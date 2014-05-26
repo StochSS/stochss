@@ -5,7 +5,7 @@ All the input validation is performed in this class.
 '''
 from infrastructure_manager import InfrastructureManager
 import threading
-import os, subprocess, signal, uuid, sys, time
+import os, subprocess, shlex, signal, uuid, sys, time
 import logging, traceback
 from datetime import datetime
 from tasks import *
@@ -89,7 +89,7 @@ class backendservices():
                         # then the worker isn't busy
                         if not active_workers[worker_name]:
                             available_workers[worker_name] = celery_info.stats()[worker_name]['pool']['max-concurrency']
-                print "All available workers:", available_workers
+                logging.info("All available workers:".format(available_workers))
                 # We assume that at least one worker is already consuming from the main queue
                 # so we just need to find that one worker and remove it from the list, since
                 # we need one worker on the main queue for the master task.
@@ -103,7 +103,7 @@ class backendservices():
                             break
                     if done:
                         break
-                print "Using workers:", available_workers
+                logging.info("Using workers:".format(available_workers))
                 # Now loop through available workers and see if we have enough free to meet
                 # requested core count.
                 worker_names = []
@@ -120,24 +120,25 @@ class backendservices():
                             break
                 # Did we get enough?
                 if unmatched_cores <= 0:
-                    print "Found enough idle cores to meet requested core count of {0}".format(requested_cores)
+                    logging.info("Found enough idle cores to meet requested core count of {0}".format(requested_cores))
                     # We have enough, re-route active workers to the new queue
                     logging.info("Rerouting workers: {0} to queue: {1}".format(worker_names, queue_name))
-                    print "Rerouting workers: {0} to queue: {1}".format(worker_names, queue_name)
                     rerouteWorkers(worker_names, queue_name)
                 else:
-                    print "Didn't find enough idle cores to meet requested core count of {0}. Still need {1} more.".format(
+                    logging.info("Didn't find enough idle cores to meet requested core count of {0}. Still need {1} more.".format(
                         requested_cores,
                         unmatched_cores
-                    )
+                    ))
                     # need to start up workers for the difference, i.e. avail_requested_diff
                     # First, re-route active workers to the new queue
                     if worker_names:
-                        print "Rerouting workers: {0} to queue: {1}".format(worker_names, queue_name)
+                        logging.info("Rerouting workers: {0} to queue: {1}".format(worker_names, queue_name))
                         rerouteWorkers(worker_names, queue_name)
                     # Now lets just start up a t1.micro worker for each needed core
                     # (should really be c3.large for actual executions)
-                    print "Still need {0} cores.".format(unmatched_cores)
+                    logging.info("Still need {0} cores.".format(unmatched_cores))
+                    #TODO: Do we really want to start machines here? Or just return an error and
+                    #      tell user to go start enough machines?
                     instance_type = ''
                     if "instance_type" in params:
                         instance_type = params["instance_type"]
@@ -171,7 +172,7 @@ class backendservices():
                     }
                     #NOTE: We are forcing blocking mode in the InfrastructureManager due to GAE, but
                     # the slaves don't really need to be started in blocking mode.
-                    print "Launching {0} slaves...".format(unmatched_cores)
+                    logging.info("Launching {0} slaves...".format(unmatched_cores))
                     launch_result = self.startMachines(launch_params)
                     if launch_result["state"] == "failed":
                         logging.info(
@@ -180,7 +181,7 @@ class backendservices():
                         result["success"] = False
                         result["reason"] = launch_result["reason"]
                         return result
-                    print "Done."
+                    logging.info("Done.")
                 # Update DB entry just before sending to worker
                 updateEntry(taskid, data, backendservices.TABLENAME)
                 params["queue"] = queue_name
@@ -192,11 +193,13 @@ class backendservices():
                     os.path.dirname(os.path.abspath(__file__)),
                     "poll_task.py"
                 )
-                os.system("python {0} {1} {2} > poll_task_{1}.log 2>&1".format(
+                logging.info("Task sent to cloud with celery id {0}...".format(tmp.id))
+                poll_task_string = "python {0} {1} {2} > poll_task_{1}.log 2>&1".format(
                     poll_task_path,
                     tmp.id,
                     queue_name
-                ))
+                )
+                p = subprocess.Popen(shlex.split(poll_task_string))
                 result["celery_pid"] = tmp.id
             else:
                 updateEntry(taskid, data, backendservices.TABLENAME)
