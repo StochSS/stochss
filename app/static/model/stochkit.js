@@ -167,6 +167,24 @@ stochkit.Model = Backbone.Model.extend( {
         this.trigger('change', 'reactions');
     },
 
+    getParameters: function() {
+        var parameters = this.ParametersList.children();
+
+	if(parameters.length == 0)
+	{
+	    return null;
+	}
+
+        out = [];
+
+        parameters.each(function()
+        {
+            out.push({ name : $( this ).find('Id').text(), value : $( this ).find('Expression').text()});
+        });
+
+	return out;
+    },
+
     getParameter: function(name, value) {
         var parameter = this.ParametersList.children().has('Id:contains(' +  name + ')');
 

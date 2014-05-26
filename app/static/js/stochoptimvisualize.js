@@ -47,6 +47,7 @@ StochOptimVisualize.Controller = Backbone.View.extend(
             this.stderr = $('#stderr').text();
             this.stdout = $('#stdout').text();
             var nameToIndex = $.parseJSON($( '#nameToIndex' ).text());
+            var activate = $.parseJSON($( '#activate' ).text());
             var indexToName = {}
 
             for(var name in nameToIndex)
@@ -63,7 +64,7 @@ StochOptimVisualize.Controller = Backbone.View.extend(
             {
                 var line = fileSplit[lineIndex];
 
-                if(line.match(/:/g))
+                if(line.match(/iteration:/g))
                 {
                     var lineSplit = line.split(/,/g);
                     this.data["globalIteration"].push(this.data["globalIteration"].length);
@@ -75,9 +76,12 @@ StochOptimVisualize.Controller = Backbone.View.extend(
 
                         for(var idx in indexToName)
                         {
-                            this.dataKeys.push(indexToName[idx]);
+                            if(activate[indexToName[idx]])
+                            {
+                                this.dataKeys.push(indexToName[idx]);
 
-                            this.data[indexToName[idx]] = [];
+                                this.data[indexToName[idx]] = [];
+                            }
                         }
                     }
 
@@ -99,8 +103,11 @@ StochOptimVisualize.Controller = Backbone.View.extend(
 
                             for(var valIndex in valSplit)
                             {
-                                this.data[indexToName[valIndex]].push(parseFloat(valSplit[valIndex].trim()));
-                                this.parameters[indexToName[valIndex]] = parseFloat(valSplit[valIndex].trim());
+                                if(activate[indexToName[valIndex]])
+                                {
+                                    this.data[indexToName[valIndex]].push(parseFloat(valSplit[valIndex].trim()));
+                                    this.parameters[indexToName[valIndex]] = parseFloat(valSplit[valIndex].trim());
+                                }
                             }
                         }
                         else
@@ -144,7 +151,7 @@ StochOptimVisualize.Controller = Backbone.View.extend(
                 this.textData += rows[rowIndex].join("\t") + "\n";
             }*/
 
-            textData = 'Stdout : ' + this.stdout + '\n' + '\n' + 'Stderr: ' + this.stderr + '\n'
+            textData = '<b>Stdout:</b> \n' + this.stdout + '\n' + '\n' + '<b>Stderr:</b> \n' + this.stderr + '\n'
 
             if(this.stderr.trim() != '(empty)' || this.stdout.length > 0)
             {
@@ -176,6 +183,32 @@ StochOptimVisualize.Controller = Backbone.View.extend(
                           error: function(data)
                           {
                               updateMsg({ status : false, msg : "Server error when creating new model, check logs" });
+                          },
+                          dataType : 'json'
+                        });
+            }, this));
+            
+            $( "#access" ).text( "Access local data" );
+            $( "#access" ).click( _.bind(function() {
+                updateMsg( { status : true,
+                             msg : "Packing up data... (will forward you to file when ready)" } );
+                $.ajax( { type : "POST",
+                          url : "/stochoptim",
+                          data : { reqType : "getDataLocal",
+                                   id : this.jobID },
+                          success : function(data) {
+                              updateMsg(data);
+                              
+                              if(data.status == true)
+                              {
+                                  window.location = data.url;
+                              }
+                          },
+                          
+                          error: function(data)
+                          {
+                              updateMsg( { status : false,
+                                           msg : "Server error pulling data from cloud" } );
                           },
                           dataType : 'json'
                         });

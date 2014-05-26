@@ -260,6 +260,42 @@ StochOptim.Controller = Backbone.View.extend(
 
                 $( this.el ).html( simulationConfTemplate( { model : this.model, csvFiles : this.csvFiles } ) );
 
+                var checkboxTemplate = _.template("<input type='checkbox' value='<%= name %>'/><span>&nbsp;<%= name %>&nbsp;<span />");
+
+                var parameters = this.model.getParameters();
+
+                var initialCheckbox = undefined;
+
+                this.activate = {}
+
+                this.activateDiv = $( "#activate" );
+
+                for(var p in parameters)
+                {
+                    this.activate[parameters[p].name] = false;
+                    
+                    var checkbox = $( checkboxTemplate( { name : parameters[p].name } ) ).appendTo( this.activateDiv ).eq(0);
+
+                    if(!initialCheckbox)
+                    {
+                        initialCheckbox = checkbox;
+                    }
+
+                    if((p + 1) % 20 == 0)
+                    {
+                        $( "<br>" ).appendTo(this.activateDiv);
+                    }
+                    
+                    checkbox.change(_.partial(function(controller, checkbox, name) {
+                        controller.activate[name] = checkbox.prop('checked');
+                    }, this, checkbox, parameters[p].name));
+                }
+
+                if(initialCheckbox)
+                {
+                    initialCheckbox.trigger("click");
+                }
+
                 if(typeof this.csvFiles != 'undefined')
                 {
                     var csvSelect = $( this.el ).find('#csvSelect');
@@ -346,6 +382,7 @@ StochOptim.Controller = Backbone.View.extend(
                     data.dataID = this.selectedData.attributes.id;
                     data.modelID = this.model.attributes.id;
                     data.resource = "local";
+                    data.activate = this.activate;
                     
                     var url = "/stochoptim";
                     
@@ -373,6 +410,7 @@ StochOptim.Controller = Backbone.View.extend(
                     data.dataID = this.selectedData.attributes.id;
                     data.modelID = this.model.attributes.id;
                     data.resource = "cloud";
+                    data.activate = this.activate;
                     
                     var url = "/stochoptim";
                     

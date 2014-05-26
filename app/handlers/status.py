@@ -280,7 +280,7 @@ class StatusPage(BaseHandler):
 
             for number, job in enumerate(jobs):
                 number = len(jobs) - number
-                print job.outData
+                print 'hi', job.outData
                 allExportJobs.append({ "startTime" : job.startTime,
                                        "status" : job.status,
                                        "number" : number,
@@ -298,11 +298,12 @@ class StatusPage(BaseHandler):
             jobs = sorted(jobs, key = lambda x : (datetime.datetime.strptime(x.startTime, '%Y-%m-%d-%H-%M-%S') if hasattr(x, 'startTime') and x.startTime != None else ''), reverse = True)
 
             for number, job in enumerate(jobs):
+                print number, job.pid
                 number = len(jobs) - number
-                if job.resource == "local":
+                if job.resource == "local" or not job.resource:
                     # First, check if the job is still running
                     res = service.checkTaskStatusLocal([job.pid])
-                    if res[job.pid]:
+                    if res[job.pid] and job.pid:
                         job.status = "Running"
                     else:
                         job.status = "Finished"

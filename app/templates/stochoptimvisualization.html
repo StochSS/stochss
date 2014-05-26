@@ -5,16 +5,16 @@
 
 <div class="span9">
     <div class="row-fluid">
-        <h2> Job summary: <span style="COLOR:green;">{{ name }}</span></h2>
+        <h2> Job summary: <span style="COLOR:green;">{{ jobName }}</span></h2>
         <br />
         <div class="well">                    
             <h3>Metadata</h3>
             <p class="thispage">
-                Resource: THIS NEEDS FILLED IN <!--<%= type %>-->
+                Resource: {{ resource }}
                 <br />
-                Simulation status: <%= status %> -- SHOULD CHANGE OTHER JOB TYPES TO HAVE CONSISTENT OUTPUT
+                Simulation status: {{ status }}
                 <br />
-                Stochkit model: <a href="/modeleditor?model_edited=<%= name %>" class="thispage"> <%= name %> </a>
+                Stochkit model: <a href="/modeleditor?model_edited={{ modelName }}" class="thispage"> {{ modelName }} </a>
             </p>
         </div>
 
@@ -32,12 +32,13 @@
             <br />
             Create model from current parameter estimations: <br />
             <button id="create" type="submit" class="btn btn-primary btn-large"> Create Model</button>
-            <input type="text" class="span3" id="name" value="{{ name }}_model" />
+            <input type="text" class="span3" id="name" value="{{ modelName }}_model" />
         </div>
 
         <div id="stdout" style="display : none;">{{ stdout }}</div>
         <div id="stderr" style="display : none;">{{ stderr }}</div>
         <div id="nameToIndex" style="display : none;"> {{ nameToIndex }}</div>
+        <div id="activate" style="display : none;"> {{ activate }}</div>
     </div>
 </div>
 {% endblock %}

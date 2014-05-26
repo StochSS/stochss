@@ -162,7 +162,14 @@ TablePlot.TablePlot = Backbone.View.extend(
                     return output;
                 }
 
-                this.xLabel = this.data[0].label;
+                if(this.data.length > 0)
+                {
+                    this.xLabel = this.data[0].label;
+                }
+                else
+                {
+                    this.xLabel = ""
+                }
 
                 for(var i = 1; i < this.data.length; i++)
                 {

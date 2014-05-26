@@ -18,6 +18,7 @@ import shutil
 from google.appengine.api import users
 
 import sensitivity
+import stochoptim
 from stochssapp import BaseHandler, User
 from stochss.model import *
 from stochss.stochkit import *
@@ -38,7 +39,7 @@ class ExportJobWrapper(db.Model):
     def delete(self):
         try:
             os.remove(self.outData)
-        except OSError as e:
+        except Exception as e:
             sys.stderr.write("ExportJobWrapper.delete(): {0}\n".format(e))
         super(ExportJobWrapper, self).delete()
 
@@ -176,6 +177,26 @@ class SuperZip:
                 jsonJob.update(job.attributes)
             # Add the JSON to the zip archive
             self.addBytes('stochkitJobs/{0}.json'.format(job.name), json.dumps(jsonJob, sort_keys=True, indent=4, separators=(', ', ': ')))
+
+    def addStochOptimJob(self, job, globalOp = False):
+        jsonJob = { "version" : self.version,
+                    "userId" : job.userId,
+                    "pid" : job.pid,
+                    "startTime" : job.startTime,
+                    "jobName" : job.jobName,
+                    "modelName" : job.modelName,
+                    "indata" : json.loads(job.indata),
+                    "nameToIndex" : json.loads(job.nameToIndex),
+                    "outData" : job.outData,
+                    "status" : job.status }
+
+        outputLocation = self.addFolder('stochOptimJobs/data/{0}'.format(job.jobName), job.outData)
+        jsonJob["outData"] = outputLocation
+
+        jsonJob["stdout"] = "{0}/stdout".format(outputLocation)
+        jsonJob["stderr"] = "{0}/stderr".format(outputLocation)
+
+        self.addBytes('stochOptimJobs/{0}.json'.format(job.jobName), json.dumps(jsonJob, sort_keys=True, indent=4, separators=(', ', ': ')))
     
     def addSensitivityJob(self, job, globalOp = False):
         if job.status == "Finished":
@@ -224,7 +245,9 @@ class SuperZip:
     def extractStochKitJob(self, path, userId = None, handler = None, rename = None):
         jobj = json.loads(self.zipfb.read(path))
         path = os.path.abspath(os.path.dirname(__file__))
-        
+
+        print "Rename: ", rename
+
         zipPath = jobj["output_location"]
 
         if jobj["user_id"] not in [x.user_id() for x in User.query().fetch()]:
@@ -251,6 +274,63 @@ class SuperZip:
         jobj["stderr"] = "{0}/stderr".format(outPath)
     
         return simulation.JobManager.createJob(handler, jobj, rename = rename)
+
+    def extractStochOptimJob(self, path, userId = None, handler = None, rename = None):
+        jsonJob = json.loads(self.zipfb.read(path))
+        path = os.path.abspath(os.path.dirname(__file__))
+        
+        zipPath = jsonJob["outData"]
+
+
+        job = stochoptim.StochOptimJobWrapper()
+
+        jobNames = [x.jobName for x in db.Query(stochoptim.StochOptimJobWrapper).filter('userId =', handler.user.user_id()).run()]
+
+        print jobNames
+
+        if jsonJob["jobName"] in jobNames:
+            if rename:
+
+                i = 1
+                tryName = '{0}_{1}'.format(jsonJob["jobName"], i)
+
+                while tryName in jobNames:
+                    i = i + 1
+                    tryName = '{0}_{1}'.format(jsonJob["jobName"], i)
+                    
+                jsonJob["jobName"] = tryName
+
+        if jsonJob["userId"] not in [x.user_id() for x in User.query().fetch()]:
+            jsonJob["userId"] = handler.user.user_id()
+
+        if userId:
+            jsonJob["userId"] = userId
+
+        outPath = tempfile.mkdtemp(dir = "{0}/../output/".format(path))
+
+        for name in self.zipfb.namelist():
+            if re.search('^{0}/.*$'.format(zipPath), name):
+                relname = os.path.relpath(name, zipPath)
+
+                if not os.path.exists(os.path.dirname("{0}/{1}".format(outPath, relname))):
+                    os.makedirs(os.path.dirname("{0}/{1}".format(outPath, relname)))
+
+                fhandle = open("{0}/{1}".format(outPath, relname), 'w')
+                fhandle.write(self.zipfb.read(name))
+                fhandle.close()
+
+        job.userId = jsonJob["userId"]
+        job.jobName = jsonJob["jobName"]
+        job.startTime = jsonJob["startTime"]
+        job.modelName = jsonJob["modelName"]
+        job.indata = json.dumps(jsonJob["indata"])
+        job.nameToIndex = json.dumps(jsonJob["nameToIndex"])
+        job.outData = outPath
+        job.status = jsonJob["status"]
+
+        job.put()
+
+        return job.key().id()
 
     def extractSensitivityJob(self, path, userId = None, handler = None, rename = None):
         jsonJob = json.loads(self.zipfb.read(path))
@@ -356,16 +436,25 @@ class ExportPage(BaseHandler):
             self.response.write(json.dumps( { "numberOfFiles" : numberOfFiles, "totalSize" : totalSize } ))
             return
         elif reqType == 'backup':
+            if "stochOptimJobs" in request_data:
+                selected_stochoptim_jobs = request_data["stochOptimJobs"]
+            else:
+                selected_stochoptim_jobs = []
+
             if "sensitivityJobs" in request_data:
                 selected_sensitivity_jobs = request_data["sensitivityJobs"]
             else:
                 selected_sensitivity_jobs = []
+
             if "stochKitJobs" in request_data:
                 selected_stochkit_jobs = request_data["stochKitJobs"]
             else:
                 selected_stochkit_jobs = []
+
             logging.info('Processing backup export request with stochkit jobs: {0} sensitivity jobs: {1}'.format(selected_stochkit_jobs, selected_sensitivity_jobs))
+
             exportJob = ExportJobWrapper()
+
             if "globalOp" in request_data:
                 globalOp = request_data["globalOp"]
             else:
@@ -404,6 +493,14 @@ class ExportPage(BaseHandler):
 
             ###jobs
             if not globalOp:
+                jobs = db.GqlQuery("SELECT * FROM StochOptimJobWrapper WHERE userId = :1", self.user.user_id()).run()
+            else:
+                jobs = db.GqlQuery("SELECT * FROM StochOptimJobWrapper").run()
+
+            for job in jobs:
+                szip.addStochOptimJob(job, globalOp)
+
+            if not globalOp:
                 jobs = db.GqlQuery("SELECT * FROM SensitivityJobWrapper WHERE userId = :1", self.user.user_id()).run()
             else:
                 jobs = db.GqlQuery("SELECT * FROM SensitivityJobWrapper").run()
@@ -423,6 +520,8 @@ class ExportPage(BaseHandler):
 
             exportJob.status = "Finished"
             exportJob.outData = szip.getFileName()
+
+            print "exportJob outData", exportJob.outData
 
             exportJob.put()
 
@@ -456,11 +555,11 @@ class ImportJobWrapper(db.Model):
     def delete(self):
         try:
             os.remove(self.zipFile)
-        except OSError as e:
+        except Exception as e:
             sys.stderr.write("ImportJobWrapper.delete(): {0}\n".format(e))
         try:
             os.remove(self.headerFile)
-        except OSError as e:
+        except Exception as e:
             sys.stderr.write("ImportJobWrapper.delete(): {0}\n".format(e))
         super(ImportJobWrapper, self).delete()
 
@@ -571,7 +670,7 @@ class ImportPage(BaseHandler):
 
                 zipFile = zipfile.ZipFile(fieldStorage.file, 'r')
 
-                headers = { "models" : {}, "stochkitJobs" : {}, "sensitivityJobs" : {} }
+                headers = { "models" : {}, "stochkitJobs" : {}, "stochOptimJobs" : {}, "sensitivityJobs" : {} }
                 for name in zipFile.namelist():
                     if re.search('^{0}/models/[a-zA-Z0-9\-_]*\.json$'.format(filename), name):
                         headers['models'][name] = json.loads(zipFile.read(name))
@@ -579,6 +678,10 @@ class ImportPage(BaseHandler):
                         headers['stochkitJobs'][name] = json.loads(zipFile.read(name))
                     elif re.search('^{0}/sensitivityJobs/[a-zA-Z0-9\-_]*\.json$'.format(filename), name):
                         headers['sensitivityJobs'][name] = json.loads(zipFile.read(name))
+                    elif re.search('^{0}/stochOptimJobs/[a-zA-Z0-9\-_]*\.json$'.format(filename), name):
+                        headers['stochOptimJobs'][name] = json.loads(zipFile.read(name))
+
+                print headers['stochOptimJobs']
 
                 zipFile.close();
 
@@ -608,7 +711,6 @@ class ImportPage(BaseHandler):
                 jobs = []
 
                 for job in db.GqlQuery("SELECT * FROM ImportJobWrapper").run():
-                    #job.delete()
                     #Using os open here cause normal Python open is failing
                     try:
                         fdescript = os.open(job.headerFile, os.O_RDONLY)
@@ -753,6 +855,27 @@ class ImportPage(BaseHandler):
                             rename = True
 
                     szip.extractSensitivityJob(name, userId, self, rename = rename)
+
+                for name in state['selections']['soc']:
+                    if not state['selections']['soc'][name]:
+                        continue
+
+                    dbName = headers['stochOptimJobs'][name]["jobName"]
+                    jobs = list(db.GqlQuery("SELECT * FROM StochOptimJobWrapper WHERE userId = :1 AND jobName = :2", self.user.user_id(), dbName).run())
+
+                    rename = False
+
+                    if len(jobs) > 0:
+                        otherJob = jobs[0]
+
+                        if overwriteType == 'keepOld':
+                            continue
+                        elif overwriteType == 'overwriteOld':
+                            otherJob.delete()
+                        elif overwriteType == 'renameNew':
+                            rename = True
+
+                    szip.extractStochOptimJob(name, userId, self, rename = rename)
 
                 szip.close()
 

@@ -177,7 +177,9 @@ class JobManager():
     def createJob(handler, job, rename = None):
         tryName = job["name"]
 
-        jobNames = [x.name for x in db.Query(StochKitJobWrapper).filter('userId =', handler.user.user_id()).run()]
+        jobNames = [x.name for x in db.Query(StochKitJobWrapper).filter('user_id =', handler.user.user_id()).run()]
+
+
 
         if job["name"] in jobNames:
             if not rename:

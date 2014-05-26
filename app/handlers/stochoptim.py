@@ -1,6 +1,7 @@
 from stochssapp import BaseHandler
 from modeleditor import ModelManager
 import stochss
+import exportimport
 import backend.backendservice
 
 from google.appengine.ext import db
@@ -143,6 +144,7 @@ class StochOptimJobWrapper(db.Model):
     nameToIndex = db.TextProperty()
     outData = db.StringProperty()
     status = db.StringProperty()
+    zipFileName = db.StringProperty()
     
     resource = db.StringProperty()
     outputURL = db.StringProperty()
@@ -152,6 +154,10 @@ class StochOptimJobWrapper(db.Model):
     def delete(self):
         service = backend.backendservice.backendservices()
         
+        if self.zipFileName:
+            if os.path.exists(self.zipFileName):
+                os.remove(self.zipFileName)
+
         service.deleteTaskLocal([self.pid])
 
         super(StochOptimJobWrapper, self).delete()
@@ -173,7 +179,6 @@ class StochOptimPage(BaseHandler):
 
     def post(self):
         reqType = self.request.get('reqType')
-        data = json.loads(self.request.get('data'))
         self.response.content_type = 'application/json'
 
         if reqType == 'newJob':
@@ -213,6 +218,33 @@ class StochOptimPage(BaseHandler):
                 self.response.write(json.dumps({"status" : False,
                                                 "msg" : "No permissions to delete this job (this should never happen)"}))
                 return
+        elif reqType == 'getDataLocal':
+            jobID = json.loads(self.request.get('id'))
+
+            jobID = int(jobID)
+
+            job = StochOptimJobWrapper.get_by_id(jobID)
+
+            if not job.zipFileName:
+                szip = exportimport.SuperZip(os.path.abspath(os.path.dirname(__file__) + '/../static/tmp/'), preferredName = job.jobName + "_")
+                
+                job.zipFileName = szip.getFileName()
+
+                szip.addStochOptimJob(job, True)
+                
+                szip.close()
+
+                # Save the updated status
+                job.put()
+            
+            relpath = '/' + os.path.relpath(job.zipFileName, os.path.abspath(os.path.dirname(__file__) + '/../'))
+
+            self.response.headers['Content-Type'] = 'application/json'
+            self.response.write(json.dumps({ 'status' : True,
+                                             'msg' : 'Job downloaded',
+                                             'url' : relpath }))
+            return
+
 
         self.response.write(json.dumps({ 'status' : True,
                                          'msg' : 'Job downloaded'}))
@@ -226,8 +258,6 @@ class StochOptimPage(BaseHandler):
 
         success, msgs = berniemodel.fromStochKitModel(model["model"])
 
-        print "success", success
-
         if not success:
             self.response.content_type = 'application/json'
             self.response.write(json.dumps({"status" : False,
@@ -238,8 +268,6 @@ class StochOptimPage(BaseHandler):
 
         basedir = path + '/../'
         dataDir = tempfile.mkdtemp(dir = basedir + 'output')
-
-        print dataDir
 
         job = StochOptimJobWrapper()
         job.userId = self.user.user_id()
@@ -255,7 +283,7 @@ class StochOptimPage(BaseHandler):
         # Convert model and write to file
         model_file_file = tempfile.mktemp(prefix = 'modelFile', suffix = '.R', dir = dataDir)
         mff = open(model_file_file, 'w')
-        stringModel, nameToIndex = berniemodel.serialize(None, True)
+        stringModel, nameToIndex = berniemodel.serialize(data["activate"], True)
         job.nameToIndex = json.dumps(nameToIndex)
         mff.write(stringModel)
         mff.close()
@@ -298,7 +326,6 @@ class StochOptimPage(BaseHandler):
         model = ModelManager.getModel(self, data["modelID"], modelAsString = False)
         berniemodel = StochOptimModel()
         success, msgs = berniemodel.fromStochKitModel(model["model"])
-        print "success", success
         result = {
             "success": success
         }
@@ -328,7 +355,7 @@ class StochOptimPage(BaseHandler):
         data["options"] = ""
 
         cmd = "exec/mcem2.r --steps {steps} --seed {seed} --K.ce {Kce} --K.em {Kem} --K.lik {Klik} --K.cov {Kcov} --rho {rho} --perturb {perturb} --alpha {alpha} --beta {beta} --gamma {gamma} --k {k} --pcutoff {pcutoff} --qcutoff {qcutoff} --numIter {numIter} --numConverge {numConverge} --command {exec}".format(**data)
-        stringModel, nameToIndex = berniemodel.serialize(None, True)
+        stringModel, nameToIndex = berniemodel.serialize(data["activate"], True)
         job.nameToIndex = json.dumps(nameToIndex)
         jFileData = fileserver.FileManager.getFile(self, data["dataID"], noFile = False)
         cloud_params = {
@@ -424,9 +451,15 @@ class StochOptimVisualization(BaseHandler):
             except:
                 output["stderr"] = "No errors available yet"
 
+        print optimization.nameToIndex
+        print optimization.indata
+
         output["nameToIndex"] = optimization.nameToIndex
         output["status"] = optimization.status
-        output["name"] = optimization.modelName
+        output["jobName"] = optimization.jobName
+        output["modelName"] = optimization.modelName
+        output["resource"] = optimization.resource
+        output["activate"] = json.dumps(json.loads(optimization.indata)["activate"])
             
         self.render_response('stochoptimvisualization.html', **output)
 
@@ -435,8 +468,8 @@ class StochOptimVisualization(BaseHandler):
 
         data = json.loads(self.request.get('data'));
 
-        print data
-        print "================================================="
+        #print data
+        #print "================================================="
         parameters = data["parameters"]
         modelName = job.modelName
         proposedName = data["proposedName"]
