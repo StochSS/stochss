@@ -360,6 +360,36 @@ StochOptim.Controller = Backbone.View.extend(
                             },
                             dataType = "json" );
                 }, this));
+                
+                $( "#runCloud" ).click( _.bind(function() {
+                    updateMsg( { status: true,
+                                 msg: "Running job in the cloud..." } );
+
+                    var data = checkAndGet();
+                    
+                    if(!data)
+                        return;
+                    
+                    data.dataID = this.selectedData.attributes.id;
+                    data.modelID = this.model.attributes.id;
+                    data.resource = "cloud";
+                    
+                    var url = "/stochoptim";
+                    
+                    $.post(url = url,
+                        data = {
+                            reqType : "newJob",
+                            data : JSON.stringify(data)
+                        },
+                        success = function(data)
+                        {
+                            updateMsg(data);
+                            if (data.status)
+                                window.location = '/status';
+                        },
+                        dataType = "json"
+                    );
+                }, this));
             }
             else if(this.stage == this.RESULTSVIEW)
             {
