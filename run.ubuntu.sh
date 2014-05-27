@@ -105,7 +105,6 @@ fi
 
 echo -n "Testing if Stochoptim built... "
 
-rundir=$(mktemp -d /tmp/tmp.XXXXXX)
 rm -r "$rundir" >& /dev/null
 
 if "$STOCHOPTIM/exec/mcem2.r" --model "$STOCHOPTIM/inst/extdata/birth_death_MAmodel.R" --data "$STOCHOPTIM/birth_death_MAdata.txt" --steps "" --seed 1 --cores 1 --K.ce 1000 --K.em 100 --K.lik 10000 --K.cov 10000 --rho 0.01 --perturb 0.25 --alpha 0.25 --beta 0.25 --gamma 0.25 --k 3 --pcutoff 0.05 --qcutoff 0.005 --numIter 10 --numConverge 1 --command 'bash' >& /dev/null; then
@@ -220,9 +219,9 @@ echo "Configuring the app to use $STOCHKIT_HOME for StochKit... "
 echo "Configuring the app to use $STOCHKIT_ODE for StochKit ODE... "
 echo "Configuring the app to use $STOCHOPTIM for Stochoptim... "
 
-ln -s "$STOCHOPTIM" stochoptim
-ln -s "$STOCHKIT_ODE" ode
-ln -s "$STOCHKIT_HOME" StochKit
+ln -s "$STOCHOPTIM" stochoptim >& /dev/null
+ln -s "$STOCHKIT_ODE" ode >& /dev/null
+ln -s "$STOCHKIT_HOME" StochKit >& /dev/null
 
 # Write STOCHKIT_HOME to the appropriate config file
 echo "$STOCHKIT_HOME" > "$STOCHSS_HOME/conf/config"

@@ -17,6 +17,8 @@ STOCHKIT_PREFIX=$STOCHSS_HOME
 export STOCHKIT_HOME="$STOCHKIT_PREFIX/$STOCHKIT_VERSION"
 ODE_VERSION="ode-1.0.1"
 export STOCHKIT_ODE="$STOCHSS_HOME/$ODE_VERSION"
+STOCHOPTIM_VERSION="stochoptim-0.5-1"
+export STOCHOPTIM="$STOCHSS_HOME/$STOCHOPTIM_VERSION"
 
 echo "<html>"
 echo "<body>"
@@ -87,6 +89,48 @@ else
         echo "<font color=red>"
 	echo "Failed<br \>"
 	echo "$STOCHKIT_VERSION failed to install. Consult logs above for errors, and the StochKit documentation for help on building StochKit for your platform. Rename successful build folder to $STOCHKIT_HOME<br \></font>"
+	exit -1
+    fi
+fi
+
+echo -n "Testing if Stochoptim built... "
+
+rm -r "$rundir" >& /dev/null
+
+if "$STOCHOPTIM/exec/mcem2.r" --model "$STOCHOPTIM/inst/extdata/birth_death_MAmodel.R" --data "$STOCHOPTIM/birth_death_MAdata.txt" --steps "" --seed 1 --cores 1 --K.ce 1000 --K.em 100 --K.lik 10000 --K.cov 10000 --rho 0.01 --perturb 0.25 --alpha 0.25 --beta 0.25 --gamma 0.25 --k 3 --pcutoff 0.05 --qcutoff 0.005 --numIter 10 --numConverge 1 --command 'bash' >& /dev/null; then
+    echo "Yes <br />"
+    echo "$STOCHOPTIM_VERSION found in $STOCHOPTIM <br />"
+else
+    echo "No <br />"
+
+    echo "Installing in $STOCHSS_HOME/$STOCHOPTIM_VERSION <br />"
+
+    echo "Cleaning up anything already there... <br />"
+    rm -rf "$STOCHOPTIM"
+
+    echo "Building StochOptim <br />"
+    echo " Logging stdout in $STOCHSS_HOME/stdout.log and <br />"
+    echo " stderr in $STOCHSS_HOME/stderr.log <br />"
+    echo " <font color=\"blue\"><h3>This process will take at least 5 minutes to complete, please be patient</h3></font>"
+
+    tar -xzf "$STOCHOPTIM.tgz"
+    mkdir "$STOCHOPTIM/library"
+
+    wd=`pwd`
+
+    echo install.packages\(\"optparse\", \""$STOCHOPTIM/library"\", \"http://cran.us.r-project.org\"\) > "$STOCHOPTIM/install_packages.R"
+    echo install.packages\(\""$STOCHOPTIM"\", \""$STOCHOPTIM/library"\", NULL, type = \"source\"\) >> "$STOCHOPTIM/install_packages.R"
+
+    Rscript "$STOCHOPTIM/install_packages.R"
+
+    export R_LIBS="$STOCHOPTIM/library"
+
+# Test that StochKit was installed successfully by running it on a sample model
+    if "$STOCHOPTIM/exec/mcem2.r" --model "$STOCHOPTIM/inst/extdata/birth_death_MAmodel.R" --data "$STOCHOPTIM/birth_death_MAdata.txt" --steps "" --seed 1 --cores 1 --K.ce 1000 --K.em 100 --K.lik 10000 --K.cov 10000 --rho 0.01 --perturb 0.25 --alpha 0.25 --beta 0.25 --gamma 0.25 --k 3 --pcutoff 0.05 --qcutoff 0.005 --numIter 10 --numConverge 1 --command 'bash' >& /dev/null; then
+	echo "Success!<br />"
+    else
+	echo "Failed<br />"
+	echo "$STOCHOPTIM failed to install. Consult logs above for errors<br />"
 	exit -1
     fi
 fi
@@ -173,13 +217,17 @@ rm -r "$rundir"
 
 echo "Configuring the app to use $STOCHKIT_HOME for StochKit... <br />"
 echo "Configuring the app to use $STOCHKIT_ODE for StochKit ODE... <br />"
+echo "Configuring the app to use $STOCHOPTIM for Stochoptim... <br />"
 
-ln -s "$STOCHKIT_ODE" ode
-ln -s "$STOCHKIT_HOME" StochKit
+ln -s "$STOCHKIT_ODE" ode >& /dev/null
+ln -s "$STOCHKIT_HOME" StochKit >& /dev/null
+ln -s "$STOCHOPTIM" stochoptim >& /dev/null
 
 # Write STOCHKIT_HOME to the appropriate config file
 echo "$STOCHKIT_HOME" > "$STOCHSS_HOME/conf/config"
 echo -n "$STOCHKIT_ODE" >> "$STOCHSS_HOME/conf/config"
 echo "Done!"
+
+export R_LIB="$STOCHSS_HOME/stochoptim/library"
 
 exec python "$STOCHSS_HOME/launchapp.py" 1 $0
