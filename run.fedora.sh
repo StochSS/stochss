@@ -26,6 +26,7 @@ ODE_VERSION="ode-1.0.1"
 export STOCHKIT_ODE="$STOCHSS_HOME/$ODE_VERSION"
 STOCHOPTIM_VERSION="stochoptim-0.5-1"
 export STOCHOPTIM="$STOCHSS_HOME/$STOCHOPTIM_VERSION"
+export R_LIBS="$STOCHSS_HOME/stochoptim/library"
 
 # Check that the dependencies are satisfied
 echo -n "Are dependencies satisfied?... "
@@ -233,7 +234,5 @@ echo "$STOCHKIT_HOME" > "$STOCHSS_HOME/conf/config"
 echo -n "$STOCHKIT_ODE" >> "$STOCHSS_HOME/conf/config"
 echo -n "$STOCHOPTIM" >> "$STOCHSS_HOME/conf/config"
 echo "Done!"
-
-export R_LIB="$STOCHSS_HOME/stochoptim/library"
 
 exec python "$STOCHSS_HOME/launchapp.py" $0
