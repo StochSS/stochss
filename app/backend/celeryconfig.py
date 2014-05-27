@@ -1,6 +1,6 @@
 # localhost should get changed to be the hostname of the 
 # head node unless its on the same physical machine
-BROKER_URL = "amqp://stochss:ucsb@ec2-54-83-122-245.compute-1.amazonaws.com:5672/"
+BROKER_URL = "amqp://stochss:ucsb@ec2-54-211-21-226.compute-1.amazonaws.com:5672/"
 CELERY_RESULT_BACKEND = "amqp://"
 CELERY_TASK_SERIALIZER = "pickle"
 CELERY_RESULT_SERIALIZER = "pickle"
