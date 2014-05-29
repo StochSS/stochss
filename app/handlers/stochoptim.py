@@ -71,9 +71,17 @@ class StochOptimModel(stochss.model.Model):
     # Even though this second argument seems weird, it's necessary to interpret the output
     # of the program correctly
     def serialize(self, activate = None, returnParameterToIndexMap = False):
+        initialConditionsLine1 = ['Time', 'Rep', 'Weight']
+        initialConditionsLine2 = ['0', '1', '1']
+
         species = self.listOfSpecies.items()
         reactions = self.listOfReactions.items()
         parameters = self.listOfParameters.items()
+
+        initialConditionsLine1.extend([name for name, specie in species])
+        initialConditionsLine2.extend([repr(specie.initial_value) for name, specie in species])
+
+        initialConditionsText = os.linesep.join(["\t".join(initialConditionsLine1), "\t".join(initialConditionsLine2)])
 
         reactionMatrix = []
         productMatrix = []
@@ -130,9 +138,9 @@ class StochOptimModel(stochss.model.Model):
         print os.linesep.join([rnu, pnu, snames, rnames, rparms, rknames, rconstant, rkind])
 
         if returnParameterToIndexMap:
-            return os.linesep.join([rnu, pnu, snames, rnames, rparms, rknames, rconstant, rkind]), parameterNameToIndex
+            return initialConditionsText, os.linesep.join([rnu, pnu, snames, rnames, rparms, rknames, rconstant, rkind]), parameterNameToIndex
         else:
-            return os.linesep.join([rnu, pnu, snames, rnames, rparms, rknames, rconstant, rkind])
+            return initialConditionsText, os.linesep.join([rnu, pnu, snames, rnames, rparms, rknames, rconstant, rkind])
 
 class StochOptimJobWrapper(db.Model):
     userId = db.StringProperty()
@@ -283,18 +291,28 @@ class StochOptimPage(BaseHandler):
         # Convert model and write to file
         model_file_file = tempfile.mktemp(prefix = 'modelFile', suffix = '.R', dir = dataDir)
         mff = open(model_file_file, 'w')
-        stringModel, nameToIndex = berniemodel.serialize(data["activate"], True)
+        initialConditionsText, stringModel, nameToIndex = berniemodel.serialize(data["activate"], True)
         job.nameToIndex = json.dumps(nameToIndex)
         mff.write(stringModel)
         mff.close()
         data["model_file_file"] = model_file_file
 
-        model_data_file = tempfile.mktemp(prefix = 'initialDataFile', suffix = '.txt', dir = dataDir)
+        model_data_file = tempfile.mktemp(prefix = 'dataFile', suffix = '.txt', dir = dataDir)
         mdf = open(model_data_file, 'w')
         jFileData = fileserver.FileManager.getFile(self, data["dataID"], noFile = False)
-        mdf.write(jFileData["data"])
+        lines = jFileData["data"].split("\n")
+        line1 = lines[1].split("\t")
+        if int(line1[0].strip()) == 0:
+            lines.pop(1)
+        mdf.write("\n".join(lines))
         mdf.close()
         data["model_data_file"] = model_data_file
+
+        model_initial_data_file = tempfile.mktemp(prefix = 'dataFile', suffix = '.txt', dir = dataDir)
+        midf = open(model_initial_data_file, 'w')
+        midf.write(initialConditionsText)
+        midf.close()
+        data["model_initial_data_file"] = model_initial_data_file
 
         data["exec"] = "'bash'"
 
@@ -304,7 +322,7 @@ class StochOptimPage(BaseHandler):
         data["options"] = ""
         data["path"] = path
 
-        cmd = "{path}/../../stochoptim/exec/mcem2.r --model {model_file_file} --data {model_data_file} --steps {steps} --seed {seed} --cores {cores} --K.ce {Kce} --K.em {Kem} --K.lik {Klik} --K.cov {Kcov} --rho {rho} --perturb {perturb} --alpha {alpha} --beta {beta} --gamma {gamma} --k {k} --pcutoff {pcutoff} --qcutoff {qcutoff} --numIter {numIter} --numConverge {numConverge} --command {exec}".format(**data)
+        cmd = "{path}/../../stochoptim/exec/mcem2.r --model {model_file_file} --data {model_initial_data_file} --finalData {model_data_file} --steps {steps} --seed {seed} --cores {cores} --K.ce {Kce} --K.em {Kem} --K.lik {Klik} --K.cov {Kcov} --rho {rho} --perturb {perturb} --alpha {alpha} --beta {beta} --gamma {gamma} --k {k} --pcutoff {pcutoff} --qcutoff {qcutoff} --numIter {numIter} --numConverge {numConverge} --command {exec}".format(**data)
 
         exstring = '{0}/backend/wrapper.sh {1}/stdout {1}/stderr {2}'.format(basedir, dataDir, cmd)
 

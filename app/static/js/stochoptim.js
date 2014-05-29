@@ -206,6 +206,14 @@ StochOptim.Controller = Backbone.View.extend(
         {
             var preview = $( this.el ).find( '#preview' );
 
+            csv = $.csv.toArrays(data, { separator : '\t' });
+
+            if(csv[1][0] == 0)
+            {
+                updateMsg( { status : false,
+                             msg : 'Timepoint zero specified in input file. This will be overwritten by initial conditions in model' } );
+            }
+
             TablePlot.plot(preview, data, data, 'text');
             //preview.html( data.attributes.preview );
         },
