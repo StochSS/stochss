@@ -64,7 +64,7 @@ TablePlot.TablePlot = Backbone.View.extend(
 
             this.selected.push(false);
 
-            for(var k = 1; k < this.data.length; k++)
+            for(var k = 0; k < this.data.length; k++)
             {
                 var label = this.data[k].label;
                 var checkbox = $( checkboxTemplate( { name : label + ((k == this.attributes.data.length - 1) ? '' : ', '),
@@ -171,23 +171,40 @@ TablePlot.TablePlot = Backbone.View.extend(
                     this.xLabel = ""
                 }
 
-                for(var i = 1; i < this.data.length; i++)
+                var errorBars = [];
+
+                for(var i = 0; i < this.data.length; i++)
                 {
                     if(this.selected[i])
                     {
+                        var values = undefined;
+
+                        if(this.data[i].hasXY)
+                        {
+                            values = this.data[i].data;
+                        }
+                        else
+                        {
+                            values = _.map(zipNoNaN(this.data[0].data, this.data[i].data),
+                                           function(x) { return { x : x[0], y : x[1] }; } )
+                        }
+
                         //labels.push( this.attributes.data[i].label );
                         prunedData.push( { key : this.data[i].label,
-                                           values : _.map(zipNoNaN(this.data[0].data, this.data[i].data),
-                                                          function(x) { return { x : x[0], y : x[1] }; } ) } );
-
-                        if(this.showErrorBarsV && typeof this.data[i].upperBound != 'undefined' && typeof this.data[i].lowerBound != 'undefined')
+                                           values : values } );
+                        //this.showErrorBarsV && 
+                        /*if(typeof this.data[i].upperBound != 'undefined' && typeof this.data[i].lowerBound != 'undefined')
                         {
-                            prunedData.push( { key : this.data[i].label + " upper bound",
-                                               values : zipNoNaN(this.data[0].data, this.data[i].upperBound) } );
+                            errorBars.push(prunedData.length - 1);
+                            
+                            prunedData.push( { key : this.data[i].label + " upper",
+                                               values : _.map(zipNoNaN(this.data[0].data, this.data[i].upperBound),
+                                                              function(x) { return { x : x[0], y : x[1] }; } ) } );
 
-                            prunedData.push( { key : this.data[i].label + " lower bound",
-                                               values : zipNoNaN(this.data[0].data, this.data[i].lowerBound) } );
-                        }
+                            prunedData.push( { key : this.data[i].label + " lower",
+                                               values : _.map(zipNoNaN(this.data[0].data, this.data[i].lowerBound),
+                                                              function(x) { return { x : x[0], y : x[1] }; } ) } );
+                        }*/
                     }
                 }
                 
@@ -207,9 +224,21 @@ TablePlot.TablePlot = Backbone.View.extend(
                     .axisLabel( this.attributes.ylabel )
                     .tickFormat(d3.format('.2e'));
                 
-                this.svg    //Select the <svg> element you want to render the chart in.   
+                var chart = this.svg    //Select the <svg> element you want to render the chart in.   
                     .datum(prunedData)         //Populate the <svg> element with chart data...
                     .call(chart);
+
+                /*for(var i in errorBars)
+                {
+                    console.log(i);
+                    var color = chart.select('.nv-series-' + i).style("fill");
+                    chart.select('.nv-series-' + (i + 1))
+                        .style("stroke-dasharray", ("3, 3"))
+                        .style("fill", color);
+                    chart.select('.nv-series-' + (i + 2))
+                        .style("stroke-dasharray", ("3, 3"))
+                        .style("fill", color);
+                }*/
             }
         }
     }
@@ -276,7 +305,7 @@ TablePlot.plot = function( selector, data, rawData, displayType )
     
     for(var i = 0; i < data.length; i++)
     {
-        dataInterpolated.push({ data : [], upperBound : undefined, lowerBound : undefined, label : data[i].label} )
+        dataInterpolated.push({ data : [], upperBound : undefined, lowerBound : undefined, label : data[i].label, hasXY : data[i].hasXY} )
 
         if(typeof data[i].upperBound != 'undefined')
         {
@@ -316,7 +345,7 @@ TablePlot.plot = function( selector, data, rawData, displayType )
 
             if(typeof data[i].lowerBound != 'undefined')
             {
-                dataInterpolated[i].upperBound.push(data[i].lowerBound[id]);
+                dataInterpolated[i].lowerBound.push(data[i].lowerBound[id]);
             }
         }
     }

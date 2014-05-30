@@ -1,3 +1,30 @@
+var mean = function(array)
+{
+    var sum = 0;
+
+    for(var a in array)
+    {
+        sum += array[a];
+    }
+
+    return sum / array.length;
+}
+
+var variance = function(array)
+{
+    var meanVal = mean(array);
+
+    var sum = 0;
+
+    for(var a in array)
+    {
+        var d = array[a] - meanVal;
+
+        sum += d * d;
+    }
+
+    return sum / array.length;
+}
 
 $( document ).ready( function() {
     //loadTemplate("speciesEditorTemplate", "/model/speciesEditor.html");
@@ -182,7 +209,8 @@ StochOptim.Controller = Backbone.View.extend(
             this.model = undefined;
 
             // We gotta fetch this as well!
-            this.csvFiles = undefined;
+            this.initialDataFiles = undefined;
+            this.trajectoriesFiles = undefined;
 
             //this.on('select', _.bind(this.select, this) );
 
@@ -193,28 +221,90 @@ StochOptim.Controller = Backbone.View.extend(
             this.models = new stochkit.ModelCollection();
 
             // Go get the csvFiles we have hosted
-            this.csvFiles = new fileserver.FileList( [], { key : 'stochoptimdata' } );
+            this.initialDataFiles = new fileserver.FileList( [], { key : 'stochOptimInitialData' } );
+            this.trajectoriesFiles = new fileserver.FileList( [], { key : 'stochOptimTrajectories' } );
 
             // When finished, queue up another render
             this.models.fetch( { success : _.bind(this.render, this) } );
 
-            this.csvFiles.fetch( { success : _.bind(this.render, this) } );
+            this.initialDataFiles.fetch( { success : _.bind(this.render, this) } );
+            this.trajectoriesFiles.fetch( { success : _.bind(this.render, this) } );
         },
         
         // This event gets fired when the user selects a csv data file
-        selectPreview : function(data)
+        initialDataSelectPreview : function(data)
         {
-            var preview = $( this.el ).find( '#preview' );
+            var preview = $( this.el ).find( '#initialDataPreview' );
 
             csv = $.csv.toArrays(data, { separator : '\t' });
 
-            if(csv[1][0] == 0)
+            preview.html(data);
+            
+            //TablePlot.plot(preview, data, data, 'text');
+            //preview.html( data.attributes.preview );
+        },
+        
+        // This event gets fired when the user selects a csv data file
+        trajectoriesSelectPreview : function(rawText)
+        {
+            var preview = $( this.el ).find( '#trajectoriesPreview' );
+
+            csv = $.csv.toArrays(rawText, { separator : '\t' });
+
+            if(parseFloat(csv[1][0]) == 0)
             {
                 updateMsg( { status : false,
                              msg : 'Timepoint zero specified in input file. This will be overwritten by initial conditions in model' } );
             }
 
-            TablePlot.plot(preview, data, data, 'text');
+            var species = csv[0].slice(3, csv[0].length);
+
+            var reps = _.uniq( _.map(csv.slice(1, csv.length), function(value, key) { return value[1]; } ) );
+            var times = _.uniq( _.map(csv.slice(1, csv.length), function(value, key) { return value[0]; } ) );
+
+            // Data will be a 2D map of arrays of { x, y } objects
+            var data = {}
+
+            for(var r in reps)
+            {
+                var rep = reps[r];
+
+                data[rep] = {}
+                for(var s in species)
+                {
+                    data[rep][s] = [];
+                }
+            }
+
+            for(var i in csv)
+            {
+                if(i == 0)
+                    continue;
+
+                for(var j in csv[i])
+                {
+                    if(j < 3)
+                        continue;
+
+                    data[csv[i][1]][j - 3].push({ x : parseFloat(csv[i][0]), y : parseFloat(csv[i][j]) })
+                }
+            }
+
+            var dataLists = [];
+            
+            for(var r in reps)
+            {
+                var rep = reps[r];
+
+                for(var s in data[rep])
+                {
+                    var specie = species[s];
+
+                    dataLists.push({ label : species + ' (' + rep + ')', data : data[rep][s], upperBound : undefined, lowerBound : undefined, hasXY : true });
+                }
+            }
+
+            TablePlot.plot(preview, dataLists, rawText, 'text');
             //preview.html( data.attributes.preview );
         },
 
@@ -266,7 +356,7 @@ StochOptim.Controller = Backbone.View.extend(
 
                 var simulationConfTemplate = _.template( $( "#simulationConfTemplate" ).html() );
 
-                $( this.el ).html( simulationConfTemplate( { model : this.model, csvFiles : this.csvFiles } ) );
+                $( this.el ).html( simulationConfTemplate( { model : this.model, initialData : (typeof this.initialDataFiles != 'undefined' && this.initialDataFiles.models.length > 0), trajectories : (typeof this.trajectoriesFiles != 'undefined' && this.trajectoriesFiles.models.length > 0) } ) );
 
                 var checkboxTemplate = _.template("<input type='checkbox' value='<%= name %>'/><span>&nbsp;<%= name %>&nbsp;<span />");
 
@@ -304,38 +394,38 @@ StochOptim.Controller = Backbone.View.extend(
                     initialCheckbox.trigger("click");
                 }
 
-                if(typeof this.csvFiles != 'undefined')
+                if(typeof this.initialDataFiles != 'undefined')
                 {
-                    var csvSelect = $( this.el ).find('#csvSelect');
+                    var select = $( this.el ).find('#initialDataSelect');
 
                     // Draw all the available CSVFiles in the CSV Select box
-                    for(var i = 0; i < this.csvFiles.models.length; i++)
+                    for(var i = 0; i < this.initialDataFiles.models.length; i++)
                     {
 
 	                this.optionTemp = _.template('<tr> \
-<td><a href="javascript:preventDefault();">Delete</a></td><td><input type="radio" name="archive"></td><td><%= attributes.path %></td>\
+<td><a href="javascript:preventDefault();">Delete</a></td><td><input type="radio" name="initialDataFiles"></td><td><%= attributes.path %></td>\
 </tr>');
 
-                        var newOption = $( this.optionTemp( this.csvFiles.models[i]) ).appendTo( csvSelect );
+                        var newOption = $( this.optionTemp( this.initialDataFiles.models[i]) ).appendTo( select );
 
-                        // When the csvFiles gets selected, fill the preview box with a preview of the first x bytes of the file
-                        newOption.find('input').on('click', _.bind(_.partial( function(data) {
-                            this.selectedData = data;
-                            $.ajax( { url: '/FileServer/large/stochoptimdata/' + data.attributes.id + '/500/file.txt',
-                                     success : _.bind( this.selectPreview, this) });
-                        }, this.csvFiles.models[i]), this));
+                        // When the initialDataFiles gets selected, fill the preview box with a preview of the first x bytes of the file
+                        newOption.find('input').on('click', _.partial( function(controller, initialData) {
+                            controller.selectedInitialData = initialData;
+                            $.ajax( { url: '/FileServer/large/stochOptimInitialData/' + initialData.attributes.id + '/2048/file.txt',
+                                      success : _.bind( controller.initialDataSelectPreview, controller) });
+                        }, this, this.initialDataFiles.models[i]));
 
                         // When the delete button gets clicked, use the backbone service to destroy the file
-                        newOption.find('a').click( _.bind(_.partial(function(data, event) {
+                        newOption.find('a').click( _.partial(function(controller, data, event) {
                             data.destroy(); // After the file is deleted, we should post up a msg
                             event.preventDefault();
-                            this.render();
-                        }, this.csvFiles.models[i]), this));
+                            controller.render();
+                        }, this, this.initialDataFiles.models[i]));
                     }
 
                     // When a user uploads a file, draw a status bar, and after the upload is finished request the refreshes
-                    $( this.el ).find('#fileupload').fileupload({
-                        url: '/FileServer/large/' + 'stochoptimdata',
+                    $( this.el ).find('#initialDataUpload').fileupload({
+                        url: '/FileServer/large/' + 'stochOptimInitialData',
                         dataType: 'json',
                         send: _.bind(function (e, data) {
                             names = "";
@@ -358,7 +448,7 @@ StochOptim.Controller = Backbone.View.extend(
                         }, this),
 
                         done: _.bind(function (e, data) {
-                            this.csvFiles.fetch( { success : _.bind(this.render, this) } );
+                            this.initialDataFiles.fetch( { success : _.bind(this.render, this) } );
                         }, this),
 
                         progressall: _.bind(function (e, data) {
@@ -375,7 +465,82 @@ StochOptim.Controller = Backbone.View.extend(
                         .parent().addClass($.support.fileInput ? undefined : 'disabled');
 
                     // Have something selected
-                    csvSelect.find('input').eq(0).click();
+                    select.find('input').eq(0).click();
+                }
+
+
+                if(typeof this.trajectoriesFiles != 'undefined')
+                {
+                    var select = $( this.el ).find('#trajectoriesSelect');
+
+                    // Draw all the available CSVFiles in the CSV Select box
+                    for(var i = 0; i < this.trajectoriesFiles.models.length; i++)
+                    {
+
+	                this.optionTemp = _.template('<tr> \
+<td><a href="javascript:preventDefault();">Delete</a></td><td><input type="radio" name="trajectoriesFiles"></td><td><%= attributes.path %></td>\
+</tr>');
+
+                        var newOption = $( this.optionTemp( this.trajectoriesFiles.models[i]) ).appendTo( select );
+
+                        // When the initialDataFiles gets selected, fill the preview box with a preview of the first x bytes of the file
+                        newOption.find('input').on('click', _.partial( function(controller, trajectories) {
+                            controller.selectedTrajectories = trajectories;
+                            $.ajax( { url: '/FileServer/large/stochOptimTrajectories/' + trajectories.attributes.id + '/2048/file.txt',
+                                      success : _.bind( controller.trajectoriesSelectPreview, controller) });
+                        }, this, this.trajectoriesFiles.models[i]));
+
+                        // When the delete button gets clicked, use the backbone service to destroy the file
+                        newOption.find('a').click( _.partial(function(controller, data, event) {
+                            data.destroy(); // After the file is deleted, we should post up a msg
+                            event.preventDefault();
+                            controller.render();
+                        }, this, this.trajectoriesFiles.models[i]));
+                    }
+
+                    // When a user uploads a file, draw a status bar, and after the upload is finished request the refreshes
+                    $( this.el ).find('#fileupload').fileupload({
+                        url: '/FileServer/large/' + 'stochOptimTrajectories',
+                        dataType: 'json',
+                        send: _.bind(function (e, data) {
+                            names = "";
+                            
+                            for(var i in data.files)
+                            {
+                                names += data.files[i].name + " ";
+                            }
+                            
+                            var progressbar = _.template('<span><%= name %> :<div class="progress"> \
+<div class="bar" style="width:0%;"> \
+</div> \
+</div> \
+</span>');
+
+                            progressHandle = $( this.el ).find( '#progresses' );
+
+                            progressHandle.empty();
+                            $( progressbar({ name : names }) ).appendTo( progressHandle );
+                        }, this),
+
+                        done: _.bind(function (e, data) {
+                            this.trajectoriesFiles.fetch( { success : _.bind(this.render, this) } );
+                        }, this),
+
+                        progressall: _.bind(function (e, data) {
+                            var progress = parseInt(data.loaded / data.total * 100, 10);
+                            $( this.el ).find( '#progresses' ).find( '.bar' ).css('width', progress + '%');
+                            $( this.el ).find( '#progresses' ).find( '.bar' ).text(progress + '%');
+                        }, this),
+
+                        error : function(data) {
+                            updateMsg( { status : false,
+                                         msg : "Server error uploading file" } );
+                        }
+                    }).prop('disabled', !$.support.fileInput)
+                        .parent().addClass($.support.fileInput ? undefined : 'disabled');
+
+                    // Have something selected
+                    select.find('input').eq(0).click();
                 }
 
                 $( "#runLocal" ).click( _.bind(function() {
@@ -387,7 +552,8 @@ StochOptim.Controller = Backbone.View.extend(
                     if(!data)
                         return;
                     
-                    data.dataID = this.selectedData.attributes.id;
+                    data.trajectoriesID = this.selectedTrajectories.attributes.id;
+                    data.initialDataID = this.selectedInitialData.attributes.id;
                     data.modelID = this.model.attributes.id;
                     data.resource = "local";
                     data.activate = this.activate;
@@ -415,7 +581,8 @@ StochOptim.Controller = Backbone.View.extend(
                     if(!data)
                         return;
                     
-                    data.dataID = this.selectedData.attributes.id;
+                    data.trajectoriesID = this.selectedTrajectories.attributes.id;
+                    data.initialDataID = this.selectedInitialData.attributes.id;
                     data.modelID = this.model.attributes.id;
                     data.resource = "cloud";
                     data.activate = this.activate;

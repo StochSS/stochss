@@ -85,7 +85,9 @@
         <!--List of valid datafiles to include-->
 
         <div id="csvSelectDiv">
-            <div>1. Upload any necessary trajectories in CSV format:</div>
+            <div>1. Upload initial conditions data in tab seperated format:</div>
+            <input id="initialDataUpload" type="file" name="files[]" multiple><br />
+            <div>2. Upload final data trajectories in tab separated format:</div>
             <input id="fileupload" type="file" name="files[]" multiple><br />
             <div id="progresses"></div>
             <!-- The global progress bar -->
@@ -93,25 +95,47 @@
             <div id="msg"></div>
             <br />
 
-            <% if(typeof csvFiles != 'undefined' && csvFiles.models.length > 0) { %>
-            <div id="csvSeeDiv">
+            <% if(initialData) { %>
+            <div>3. Select desired initial conditions data file:</div>
+            <table cellpadding="0" cellspacing="0" border="0" class="table table-striped table-bordered">
+                <thead>
+                    <tr>
+                        <th width="40pt"></th>
+                        <th width="40pt">Select</th>
+                        <th>Archive Name</th>
+                    </tr>
+                </thead>
+                <tbody id="initialDataSelect">
+                </tbody>
+            </table>
+            <% } %>
 
-                <div>2. Select desired CSV trajectory file:</div>
-                <table cellpadding="0" cellspacing="0" border="0" class="table table-striped table-bordered">
-                    <thead>
-                        <tr>
-                            <th width="40pt"></th>
-                            <th width="40pt">Select</th>
-                            <th>Archive Name</th>
-                        </tr>
-                    </thead>
-                    <tbody id="csvSelect">
-                    </tbody>
-                </table>
+            <% if(trajectories) { %>
+            <div>4. Select desired trajectories data file:</div>
+            <table cellpadding="0" cellspacing="0" border="0" class="table table-striped table-bordered">
+                <thead>
+                    <tr>
+                        <th width="40pt"></th>
+                        <th width="40pt">Select</th>
+                        <th>Archive Name</th>
+                    </tr>
+                </thead>
+                <tbody id="trajectoriesSelect">
+                </tbody>
+            </table>
+            <% } %>
 
-                <div>3. CSV Preview:</div>
-                <div class="panel panel-primary"><pre id="preview"></pre></div>
-            </div>			    
+            <% if(initialData || trajectories) { %>
+            <div>5. CSV Preview:</div>
+            <div class="panel panel-primary">
+                <% if(initialData) { %>
+                <pre id="initialDataPreview"></pre>
+                <% } %>
+
+                <% if(trajectories) { %>
+                <pre id="trajectoriesPreview"></pre>
+                <% } %>
+            </div>
             <% } %>
         </div>
 

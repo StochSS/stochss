@@ -138,9 +138,9 @@ class StochOptimModel(stochss.model.Model):
         print os.linesep.join([rnu, pnu, snames, rnames, rparms, rknames, rconstant, rkind])
 
         if returnParameterToIndexMap:
-            return initialConditionsText, os.linesep.join([rnu, pnu, snames, rnames, rparms, rknames, rconstant, rkind]), parameterNameToIndex
+            return os.linesep.join([rnu, pnu, snames, rnames, rparms, rknames, rconstant, rkind]), parameterNameToIndex
         else:
-            return initialConditionsText, os.linesep.join([rnu, pnu, snames, rnames, rparms, rknames, rconstant, rkind])
+            return os.linesep.join([rnu, pnu, snames, rnames, rparms, rknames, rconstant, rkind])
 
 class StochOptimJobWrapper(db.Model):
     userId = db.StringProperty()
@@ -291,7 +291,7 @@ class StochOptimPage(BaseHandler):
         # Convert model and write to file
         model_file_file = tempfile.mktemp(prefix = 'modelFile', suffix = '.R', dir = dataDir)
         mff = open(model_file_file, 'w')
-        initialConditionsText, stringModel, nameToIndex = berniemodel.serialize(data["activate"], True)
+        stringModel, nameToIndex = berniemodel.serialize(data["activate"], True)
         job.nameToIndex = json.dumps(nameToIndex)
         mff.write(stringModel)
         mff.close()
@@ -299,18 +299,15 @@ class StochOptimPage(BaseHandler):
 
         model_data_file = tempfile.mktemp(prefix = 'dataFile', suffix = '.txt', dir = dataDir)
         mdf = open(model_data_file, 'w')
-        jFileData = fileserver.FileManager.getFile(self, data["dataID"], noFile = False)
-        lines = jFileData["data"].split("\n")
-        line1 = lines[1].split("\t")
-        if int(line1[0].strip()) == 0:
-            lines.pop(1)
-        mdf.write("\n".join(lines))
+        jFileData = fileserver.FileManager.getFile(self, data["trajectoriesID"], noFile = False)
+        mdf.write(jFileData["data"])
         mdf.close()
         data["model_data_file"] = model_data_file
 
         model_initial_data_file = tempfile.mktemp(prefix = 'dataFile', suffix = '.txt', dir = dataDir)
         midf = open(model_initial_data_file, 'w')
-        midf.write(initialConditionsText)
+        iFileData = fileserver.FileManager.getFile(self, data["initialDataID"], noFile = False)
+        midf.write(iFileData["data"])
         midf.close()
         data["model_initial_data_file"] = model_initial_data_file
 
@@ -375,7 +372,8 @@ class StochOptimPage(BaseHandler):
         cmd = "exec/mcem2.r --steps {steps} --seed {seed} --K.ce {Kce} --K.em {Kem} --K.lik {Klik} --K.cov {Kcov} --rho {rho} --perturb {perturb} --alpha {alpha} --beta {beta} --gamma {gamma} --k {k} --pcutoff {pcutoff} --qcutoff {qcutoff} --numIter {numIter} --numConverge {numConverge} --command {exec}".format(**data)
         stringModel, nameToIndex = berniemodel.serialize(data["activate"], True)
         job.nameToIndex = json.dumps(nameToIndex)
-        jFileData = fileserver.FileManager.getFile(self, data["dataID"], noFile = False)
+        jFileData = fileserver.FileManager.getFile(self, data["trajectoriesID"], noFile = False)
+        iFileData = fileserver.FileManager.getFile(self, data["initialDataID"], noFile = False)
         cloud_params = {
             "job_type": "mcem2",
             "cores": data["cores"],
@@ -383,6 +381,10 @@ class StochOptimPage(BaseHandler):
             "model_file": stringModel,
             "model_data": {
                 "content": jFileData["data"],
+                "extension": "txt"
+            },
+            "model_initial_data": {
+                "content": iFileData["data"],
                 "extension": "txt"
             },
             "key_prefix": self.user.user_id(),
