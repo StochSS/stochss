@@ -204,15 +204,31 @@ class StochOptimPage(BaseHandler):
                 self.runLocal(data)
                 return
             else:
-                result = self.runCloud(data)
-                logging.info("Run cloud finished with result: {0}, generating JSON response".format(result))
-                if not result["success"]:
-                    return self.response.write(json.dumps({"status" : False,
-                                                    "msg" : result["msg"] }))
+                backend_services = backend.backendservice.backendservices()
+                compute_check_params = {
+                    "infrastructure": "ec2",
+                    "credentials": self.user_data.getCredentials(),
+                    "key_prefix": self.user.user_id()
+                }
+                if self.user_data.valid_credentials and backend_services.isOneOrMoreComputeNodesRunning(compute_check_params):
+                    result = self.runCloud(data)
+                    logging.info("Run cloud finished with result: {0}, generating JSON response".format(result))
+                    if not result["success"]:
+                        return self.response.write(json.dumps({
+                            "status": False,
+                            "msg": result["msg"]
+                        }))
+                    else:
+                        return self.response.write(json.dumps({
+                            "status": True,
+                            "msg": "Job launched",
+                            "id": result["job"].key().id()
+                        }))
                 else:
-                    return self.response.write(json.dumps({"status" : True,
-                                        "msg" : "Job launched",
-                                        "id" : result["job"].key().id()}))
+                    return self.response.write(json.dumps({
+                        'status': False,
+                        'msg': 'You must have at least one active compute node to run in the cloud.'
+                    }))
         elif reqType == 'delJob':
             jobID = json.loads(self.request.get('id'))
 
@@ -370,21 +386,24 @@ class StochOptimPage(BaseHandler):
         data["options"] = ""
 
         cmd = "exec/mcem2.r --steps {steps} --seed {seed} --K.ce {Kce} --K.em {Kem} --K.lik {Klik} --K.cov {Kcov} --rho {rho} --perturb {perturb} --alpha {alpha} --beta {beta} --gamma {gamma} --k {k} --pcutoff {pcutoff} --qcutoff {qcutoff} --numIter {numIter} --numConverge {numConverge} --command {exec}".format(**data)
+        # cmd = "exec/mcem2.r --K.ce 1000 --K.em 100 --rho .01 --pcutoff .05"
         stringModel, nameToIndex = berniemodel.serialize(data["activate"], True)
         job.nameToIndex = json.dumps(nameToIndex)
+
         jFileData = fileserver.FileManager.getFile(self, data["trajectoriesID"], noFile = False)
         iFileData = fileserver.FileManager.getFile(self, data["initialDataID"], noFile = False)
+
         cloud_params = {
             "job_type": "mcem2",
             "cores": data["cores"],
             "paramstring": cmd,
             "model_file": stringModel,
             "model_data": {
-                "content": jFileData["data"],
+                "content": iFileData["data"],
                 "extension": "txt"
             },
-            "model_initial_data": {
-                "content": iFileData["data"],
+            "final_data": {
+                "content": jFileData["data"],
                 "extension": "txt"
             },
             "key_prefix": self.user.user_id(),
@@ -424,7 +443,7 @@ class StochOptimVisualization(BaseHandler):
         optimization = StochOptimJobWrapper.get_by_id(jobID)
         # Might need to download the cloud data
         if optimization.resource == "cloud":
-            if optimization.status == "finished":
+            if optimization.status == "Finished":
                 if optimization.has_final_cloud_data():
                     # Nothing to do here
                     pass

@@ -103,7 +103,7 @@ class backendservices():
                             break
                     if done:
                         break
-                logging.info("Using workers:".format(available_workers))
+                logging.info("Choosing from workers:".format(available_workers))
                 # Now loop through available workers and see if we have enough free to meet
                 # requested core count.
                 worker_names = []
@@ -119,69 +119,22 @@ class backendservices():
                             # Then we have enough
                             break
                 # Did we get enough?
-                if unmatched_cores <= 0:
+                if unmatched_cores > 0:
+                    # Nope...
+                    return {
+                        "success": False,
+                        "reason": "Didn't find enough idle cores to meet requested core count of {0}. Still need {1} more.".format(
+                            requested_cores,
+                            unmatched_cores
+                        )
+                    }
+                # if unmatched_cores <= 0:
+                else:
                     logging.info("Found enough idle cores to meet requested core count of {0}".format(requested_cores))
                     # We have enough, re-route active workers to the new queue
                     logging.info("Rerouting workers: {0} to queue: {1}".format(worker_names, queue_name))
                     rerouteWorkers(worker_names, queue_name)
-                else:
-                    logging.info("Didn't find enough idle cores to meet requested core count of {0}. Still need {1} more.".format(
-                        requested_cores,
-                        unmatched_cores
-                    ))
-                    # need to start up workers for the difference, i.e. avail_requested_diff
-                    # First, re-route active workers to the new queue
-                    if worker_names:
-                        logging.info("Rerouting workers: {0} to queue: {1}".format(worker_names, queue_name))
-                        rerouteWorkers(worker_names, queue_name)
-                    # Now lets just start up a t1.micro worker for each needed core
-                    # (should really be c3.large for actual executions)
-                    logging.info("Still need {0} cores.".format(unmatched_cores))
-                    #TODO: Do we really want to start machines here? Or just return an error and
-                    #      tell user to go start enough machines?
-                    instance_type = ''
-                    if "instance_type" in params:
-                        instance_type = params["instance_type"]
-                    else:
-                        instance_type = 't1.micro'#'c3.large'
-                    if instance_type == 'c3.large':
-                        if unmatched_cores % 2 == 1:
-                            unmatched_cores += 1
-                        unmatched_cores = unmatched_cores/2
-                    # We should start all of the instances related to this job with the same key, so
-                    # that they can all be terminated at the same time easily if needed.
-                    key_prefix = params["key_prefix"]
-                    if not key_prefix.startswith(self.KEYPREFIX):
-                        key_prefix = self.KEYPREFIX + key_prefix
-                    random_name = "{0}-{1}".format(
-                        key_prefix,
-                        taskid
-                    )
-                    result["key_prefix"] = random_name
-                    launch_params = {
-                        "infrastructure": self.INFRA_EC2,
-                        "credentials": params["credentials"],
-                        "num_vms": unmatched_cores,
-                        "group": random_name, 
-                        "image_id": "ami-b8a249d0",
-                        "instance_type": instance_type,
-                        "key_prefix": key_prefix,
-                        "keyname": random_name,
-                        "use_spot_instances": False,
-                        "queue": queue_name
-                    }
-                    #NOTE: We are forcing blocking mode in the InfrastructureManager due to GAE, but
-                    # the slaves don't really need to be started in blocking mode.
-                    logging.info("Launching {0} slaves...".format(unmatched_cores))
-                    launch_result = self.startMachines(launch_params)
-                    if launch_result["state"] == "failed":
-                        logging.info(
-                            "executeTask : failed to start enough slave machines for mcem2 job, reason: {0}".format(launch_result["reason"])
-                        )
-                        result["success"] = False
-                        result["reason"] = launch_result["reason"]
-                        return result
-                    logging.info("Done.")
+                
                 # Update DB entry just before sending to worker
                 updateEntry(taskid, data, backendservices.TABLENAME)
                 params["queue"] = queue_name
@@ -214,6 +167,7 @@ class backendservices():
             logging.error("executeTask : error - %s", str(e))
             return {
                 "success": False,
+                "reason": str(e),
                 "exception": str(e),
                 "traceback": traceback.format_exc()
             }
