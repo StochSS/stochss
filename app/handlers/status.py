@@ -343,7 +343,7 @@ class StatusPage(BaseHandler):
                         job.status = 'Running'
                         try:
                             job.outputURL = job_status['output']
-                            logging.info("Running job with S3 output: {0}".format(job.outputURL))
+                            logging.info("Found running stochoptim job with S3 output: {0}".format(job.outputURL))
                         except KeyError:
                             pass
 

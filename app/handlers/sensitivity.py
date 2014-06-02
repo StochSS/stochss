@@ -232,7 +232,19 @@ class SensitivityPage(BaseHandler):
             if data["resource"] == "local":
                 job = self.runLocal(data)
             elif data["resource"] == "cloud":
-                job = self.runCloud(data)
+                backend_services = backendservices()
+                compute_check_params = {
+                    "infrastructure": "ec2",
+                    "credentials": self.user_data.getCredentials(),
+                    "key_prefix": self.user.user_id()
+                }
+                if self.user_data.valid_credentials and backend_services.isOneOrMoreComputeNodesRunning(compute_check_params):
+                    job = self.runCloud(data)
+                else:
+                    return self.response.write(json.dumps({
+                        "status": False,
+                        "msg": "You must have at least one active compute node to run in the cloud."
+                    }))
             else:
                 return self.response.write(json.dumps({"status" : False,
                                             "msg" : "Unrecognized resource requested: {0}".format(data.resource)}))

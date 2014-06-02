@@ -44,9 +44,10 @@ class ExportJobWrapper(db.Model):
         super(ExportJobWrapper, self).delete()
 
 class SuperZip:
-    def __init__(self, directory = None, zipFileName = None, preferredName = "backup_", stochKitJobsToDownload = [], sensitivityJobsToDownload = []):
+    def __init__(self, directory = None, zipFileName = None, preferredName = "backup_", stochKitJobsToDownload = [], sensitivityJobsToDownload = [], stochOptimJobsToDownload = []):
         self.stochKitJobsToDownload = stochKitJobsToDownload
         self.sensitivityJobsToDownload = sensitivityJobsToDownload
+        self.stochOptimJobsToDownload = stochOptimJobsToDownload
         if directory == None and zipfile == None:
             raise Exception("SuperZip must have either directory or zipFileName defined in constructor")
 
@@ -189,9 +190,30 @@ class SuperZip:
                     "nameToIndex" : json.loads(job.nameToIndex),
                     "outData" : job.outData,
                     "status" : job.status }
-
-        outputLocation = self.addFolder('stochOptimJobs/data/{0}'.format(job.jobName), job.outData)
-        jsonJob["outData"] = outputLocation
+        
+        # For cloud jobs, we need to include the output_url and possibly grab the results from S3
+        if job.resource == 'cloud':
+            jsonJob["output_url"] = job.outputURL
+            # Only grab S3 data if user wants us to
+            if (job.jobName in self.stochKitJobsToDownload) or globalOp:
+                # Do we need to download it?
+                if job.outData is None or (job.outData is not None and not os.path.exists(job.outData)):
+                    # Grab the output from S3
+                    service = backendservices()
+                    service.fetchOutput(job.pid, job.outputURL)
+                    # Unpack it to its local output location
+                    os.system("tar -xf {0}.tar".format(job.pid))
+                    # And update the db entry
+                    job.outData = os.path.abspath(os.path.join(
+                        os.path.dirname(os.path.abspath(__file__)),
+                        "../output/{0}".format(job.pid)
+                    ))
+                    job.put()
+                    os.remove("{0}.tar".format(job.pid))
+        # Only add the folder if it actually exists
+        if job.outData is not None and os.path.exists(job.outData):
+            outputLocation = self.addFolder('stochOptimJobs/data/{0}'.format(job.jobName), job.outData)
+            jsonJob["outData"] = outputLocation
 
         jsonJob["stdout"] = "{0}/stdout".format(outputLocation)
         jsonJob["stderr"] = "{0}/stderr".format(outputLocation)
@@ -476,7 +498,8 @@ class ExportPage(BaseHandler):
             szip = SuperZip(
                 os.path.abspath(os.path.dirname(__file__)) + '/../static/tmp/',
                 stochKitJobsToDownload=selected_stochkit_jobs,
-                sensitivityJobsToDownload=selected_sensitivity_jobs
+                sensitivityJobsToDownload=selected_sensitivity_jobs,
+                stochOptimJobsToDownload=selected_stochoptim_jobs
             )
 
             if not globalOp:
@@ -599,7 +622,7 @@ class ImportPage(BaseHandler):
                 bucket_name = s3_url_segments[3]
                 # key_name is the concatenation of all segments after the bucket_name
                 key_name = '/'.join(s3_url_segments[4:])
-                if bucket_name in output_results_to_check.keys():
+                if bucket_name in output_results_to_check:
                     output_results_to_check[bucket_name] += [(key_name, cloud_job.name)]
                 else:
                     output_results_to_check[bucket_name] = [(key_name, cloud_job.name)]
@@ -612,7 +635,27 @@ class ImportPage(BaseHandler):
                 bucket_name = s3_url_segments[3]
                 # key_name is the concatenation of all segments after the bucket_name
                 key_name = '/'.join(s3_url_segments[4:])
-                if bucket_name in output_results_to_check.keys():
+                if bucket_name in output_results_to_check:
+                    output_results_to_check[bucket_name] += [(key_name, cloud_job.jobName)]
+                else:
+                    output_results_to_check[bucket_name] = [(key_name, cloud_job.jobName)]
+            # StochOptim Jobs
+            stochoptim_jobs_query = stochoptim.StochOptimJobWrapper.all()
+            stochoptim_jobs_query.filter("userId =", self.user.user_id())
+            stochoptim_jobs_query.filter("resource =", "cloud")
+            stochoptim_jobs_query.filter("status =", "Finished")
+            stochoptim_jobs = []
+            for cloud_job in stochoptim_jobs_query.run():
+                if cloud_job.outputURL is None:
+                    print vars(cloud_job)
+                    continue
+                stochoptim_jobs.append(cloud_job)
+                s3_url_segments = cloud_job.outputURL.split('/')
+                # S3 URLs are in the form https://s3.amazonaws.com/bucket_name/key/name
+                bucket_name = s3_url_segments[3]
+                # key_name is the concatenation of all segments after the bucket_name
+                key_name = '/'.join(s3_url_segments[4:])
+                if bucket_name in output_results_to_check:
                     output_results_to_check[bucket_name] += [(key_name, cloud_job.jobName)]
                 else:
                     output_results_to_check[bucket_name] = [(key_name, cloud_job.jobName)]
@@ -622,9 +665,10 @@ class ImportPage(BaseHandler):
             # Add all of the relevant jobs to the context so they will be rendered on the page
             context["stochkit_jobs"] = []
             context["sensitivity_jobs"] = []
+            context["stochoptim_jobs"] = []
             for cloud_job in stochkit_jobs:
                 job_name = cloud_job.name
-                if job_name in job_sizes.keys():
+                if job_name in job_sizes:
                     # These are the relevant jobs
                     context["stochkit_jobs"].append({
                         'name': job_name,
@@ -633,10 +677,18 @@ class ImportPage(BaseHandler):
                     })
             for cloud_job in sensi_jobs:
                 job_name = cloud_job.jobName
-                if job_name in job_sizes.keys():
+                if job_name in job_sizes:
                     context["sensitivity_jobs"].append({
                         'name': job_name,
                         'exec_type': 'sensitivity_jobs',
+                        'size': '{0} KB'.format(round(float(job_sizes[job_name])/1024, 1))
+                    })
+            for cloud_job in stochoptim_jobs:
+                job_name = cloud_job.jobName
+                if job_name in job_sizes:
+                    context["stochoptim_jobs"].append({
+                        'name': job_name,
+                        'exec_type': 'mcem2',
                         'size': '{0} KB'.format(round(float(job_sizes[job_name])/1024, 1))
                     })
         return self.render_response('exportimport.html', **context)
