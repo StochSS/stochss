@@ -75,10 +75,6 @@ class ModelManager():
     def getModel(handler, model_id, modelAsString = True):
         model = StochKitModelWrapper.get_by_id(int(model_id))
 
-        model = db.GqlQuery("SELECT * FROM StochKitModelWrapper WHERE user_id = :1 AND model_name = :2", handler.user.user_id(), "birth_death_10_1_model").get()
-
-        print model.key().id(), model_id
-
         jsonModel = { "name" : model.model_name }
 
         if model.attributes:
