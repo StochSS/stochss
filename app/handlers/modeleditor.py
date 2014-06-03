@@ -53,10 +53,11 @@ class ModelManager():
 
         for model in models:
             print model.model_name
-            jsonModel = { "id" : model.key().id(),
-                          "name" : model.model_name }
+            jsonModel = { "name" : model.model_name }
             if model.attributes:
                 jsonModel.update(model.attributes)
+            jsonModel["id"] = model.key().id()
+                          
             print model.model.units
             jsonModel["units"] = model.model.units
             if modelAsString:
@@ -72,14 +73,19 @@ class ModelManager():
 
     @staticmethod
     def getModel(handler, model_id, modelAsString = True):
-        model = StochKitModelWrapper.get_by_id(model_id)
+        model = StochKitModelWrapper.get_by_id(int(model_id))
 
-        jsonModel = { "id" : model.key().id(),
-                      "name" : model.model_name }
+        model = db.GqlQuery("SELECT * FROM StochKitModelWrapper WHERE user_id = :1 AND model_name = :2", handler.user.user_id(), "birth_death_10_1_model").get()
+
+        print model.key().id(), model_id
+
+        jsonModel = { "name" : model.model_name }
 
         if model.attributes:
             jsonModel.update(model.attributes)
 
+        jsonModel["id"] = model.key().id()
+                      
         jsonModel["units"] = model.model.units
         if modelAsString:
             jsonModel["model"] = model.model.serialize()

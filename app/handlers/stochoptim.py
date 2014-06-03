@@ -515,8 +515,6 @@ class StochOptimVisualization(BaseHandler):
         
         model = ModelManager.getModelByName(self, modelName, modelAsString = False);
 
-        print proposedName
-
         if ModelManager.getModelByName(self, proposedName):
             self.response.write(json.dumps({"status" : False,
                                             "msg" : "Model name must be unique"}))
@@ -526,14 +524,12 @@ class StochOptimVisualization(BaseHandler):
             self.response.write(json.dumps({"status" : False,
                                             "msg" : "Model '{0}' does not exist anymore. Possibly deleted".format(modelName) }))
             return
-            
-        print model
 
         model["name"] = proposedName
 
         for parameter in parameters:
             model["model"].getParameter(parameter).value = parameters[parameter]
-            model["model"].getParameter(parameter).expression = parameters[parameter]
+            model["model"].getParameter(parameter).expression = str(parameters[parameter])
 
         if ModelManager.createModel(self, model, modelAsString = False):
             self.response.write(json.dumps({"status" : True,
