@@ -37,7 +37,7 @@
             <br />
             <% for(var model in models) { %>
             <label class="radio">
-                <input type="radio" name="model_to_simulate" value="<%= models[model].attributes.id %>" checked <%= (models[model].attributes.units == 'concentration') ? 'disabled' : '' %>/><%= models[model].attributes.name %> <%= (models[model].attributes.units == 'concentration') ? '<span style="float: right; color : red;"> Concentration models incompatible with parameter estimation code</span>' : '' %>
+                <input type="radio" name="model_to_simulate" value="<%= models[model].attributes.id %>" checked <%= (models[model].attributes.units == 'concentration') ? 'disabled' : '' %>/><%= models[model].attributes.name %> <%= (models[model].attributes.units == 'concentration') ? '<span style="color : red;">&nbsp;&#45;&#45; Concentration models incompatible with parameter estimation code</span>' : '' %>
                 <br />
             </label>
             <% } %>

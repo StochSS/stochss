@@ -464,8 +464,8 @@ class ModelEditorPage(BaseHandler):
         """
         name = self.request.get('name').strip()
 
-        if not re.match('^[a-zA-Z0-9_\-]+$', name):
-          return {'status': False, 'msg': 'Model name must be alphanumeric characters, underscores, hyphens, and spaces only'}
+        if not re.match('^[a-zA-Z0-9_]+$', name):
+          return {'status': False, 'msg': 'Model name must be alphanumeric characters and underscores only'}
 
         units = self.request.get('exec_type').strip().lower()
         if not name:
@@ -526,6 +526,10 @@ class ModelEditorImportFromFilePage(BaseHandler):
         
     def import_model(self):
         name = self.request.get('name').strip()
+
+        if not re.match('^[a-zA-Z0-9_]+$', name):
+            return {'status': False, 'msg': 'Model name must be alphanumeric characters and underscores only'}
+
         if not name:
             return {'status': False, 'msg': 'Model name is missing.'}
         
@@ -572,6 +576,10 @@ class ModelEditorImportFromLibrary(BaseHandler):
                 
     def import_model(self):
         name = self.request.get('name').strip()
+
+        if not re.match('^[a-zA-Z0-9_]+$', name):
+            return {'status': False, 'msg': 'Model name must be alphanumeric characters and underscores only'}
+
         if name == "":
             return {'status': False, 'msg': 'Model name is missing.'}
         
