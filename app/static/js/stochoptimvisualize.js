@@ -60,6 +60,18 @@ StochOptimVisualize.Controller = Backbone.View.extend(
             this.parameters = {};
 
             var fileSplit = this.stdout.split(/\r\n|\r|\n/g);
+            var globalIteration = 0;
+                    
+            for(var idx in indexToName)
+            {
+                if(activate[indexToName[idx]])
+                {
+                    this.dataKeys.push(indexToName[idx]);
+                    
+                    this.data[indexToName[idx]] = [];
+                }
+            }
+
             for(var lineIndex in fileSplit)
             {
                 var line = fileSplit[lineIndex];
@@ -67,23 +79,6 @@ StochOptimVisualize.Controller = Backbone.View.extend(
                 if(line.match(/iteration:/g))
                 {
                     var lineSplit = line.split(/,/g);
-                    this.data["globalIteration"].push(this.data["globalIteration"].length);
-                    
-                    //On first iteration, there are some standard keys that need to exist
-                    if(this.data["globalIteration"].length == 1)
-                    {
-                        this.dataKeys.push("globalIteration");
-
-                        for(var idx in indexToName)
-                        {
-                            if(activate[indexToName[idx]])
-                            {
-                                this.dataKeys.push(indexToName[idx]);
-
-                                this.data[indexToName[idx]] = [];
-                            }
-                        }
-                    }
 
                     for(var pairIndex in lineSplit)
                     {
@@ -98,36 +93,36 @@ StochOptimVisualize.Controller = Backbone.View.extend(
                         if(key == 'parameters')
                         {
                             val = keyval[1].trim();
-
+                            
                             valSplit = val.split(" ");
 
                             for(var valIndex in valSplit)
                             {
                                 if(activate[indexToName[valIndex]])
                                 {
-                                    this.data[indexToName[valIndex]].push(parseFloat(valSplit[valIndex].trim()));
+                                    this.data[indexToName[valIndex]].push({ x : globalIteration, y : parseFloat(valSplit[valIndex].trim())});
+                                    // We need to catch the latest parameters here so that we can supply the
+                                    //    ability to create a model from the current parameter set
                                     this.parameters[indexToName[valIndex]] = parseFloat(valSplit[valIndex].trim());
                                 }
                             }
                         }
-                        else
+                        else if(_.indexOf(['seed', 'trajectories', 'iteration'], key) < 0) 
                         {                   
                             if(!(key in this.data))
                             {
                                 console.log(key);
                                 this.dataKeys.push(key);
                                 this.data[key] = []
-                                for(var i = 0; i < this.data["globalIteration"].length - 1; i++)
-                                {
-                                    this.data[key].push(NaN);
-                                }
                             }
 
                             val = parseFloat(keyval[1].trim());
                             
-                            this.data[key].push(val);
+                            this.data[key].push({ x : globalIteration, y : val });
                         }
                     }
+
+                    globalIteration += 1;
                 }
             }
 
@@ -142,7 +137,8 @@ StochOptimVisualize.Controller = Backbone.View.extend(
                 dataLists.push( { label : this.dataKeys[key],
                                   data : this.data[this.dataKeys[key]],
                                   lowerBound : undefined,
-                                  upperBound : undefined } );
+                                  upperBound : undefined,
+                                  hasXY : true } );
             }
 
             /*var rows = _.zip.apply(this, dataLists);
@@ -153,14 +149,7 @@ StochOptimVisualize.Controller = Backbone.View.extend(
 
             textData = '<b>Stdout:</b> \n' + this.stdout + '\n' + '\n' + '<b>Stderr:</b> \n' + this.stderr + '\n'
 
-            if(this.stderr.trim() != '(empty)' || this.stdout.length > 0)
-            {
-                TablePlot.plot(this.$el, dataLists, textData, 'graphic');
-            }
-            else
-            {
-                TablePlot.plot(this.$el, dataLists, textData, 'text');
-            }
+            TablePlot.plot(this.$el, dataLists, textData, 'text', xlabel = 'Iteration #');
 
             $( "#create" ).click( _.bind(function() {
                 updateMsg( { status : true,

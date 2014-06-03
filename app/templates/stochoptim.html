@@ -37,7 +37,7 @@
             <br />
             <% for(var model in models) { %>
             <label class="radio">
-                <input type="radio" name="model_to_simulate" value="<%= models[model].attributes.id %>" checked /><%= models[model].attributes.name %> 
+                <input type="radio" name="model_to_simulate" value="<%= models[model].attributes.id %>" checked <%= (models[model].attributes.units == 'concentration') ? 'disabled' : '' %>/><%= models[model].attributes.name %> <%= (models[model].attributes.units == 'concentration') ? '<span style="float: right; color : red;"> Concentration models incompatible with parameter estimation code</span>' : '' %>
                 <br />
             </label>
             <% } %>
@@ -60,11 +60,11 @@
         <h2>
             <a data-toggle="modal" href="#help_modal1" style="text-decoration: none">Run Parameter Estimation <i class="icon-question-sign"></i> </a>
             
-            <!--{% set help_modal_id = "help_modal1" %}
-                {% set help_modal_title = "Stochoptim" %}
-                {% set help_modal_message = "The StochOptim parameter estimation tool attemps to combine A) existing time series trajectory data with B) a model to estimate the parameters of that model. In this implementation, the model must be mass action." %}
-                {% include "help_modal.html" %}
-                {{help_modal|safe}}-->
+            {% set help_modal_id = "help_modal1" %}
+            {% set help_modal_title = "Stochoptim" %}
+            {% set help_modal_message = "The StochOptim parameter estimation tool attemps to combine A) existing time series trajectory data with B) a model to estimate the parameters of that model. In this implementation, the model must be mass action." %}
+            {% include "help_modal.html" %}
+            {{help_modal|safe}}
             
         </h2>
 

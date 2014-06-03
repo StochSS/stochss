@@ -162,15 +162,6 @@ TablePlot.TablePlot = Backbone.View.extend(
                     return output;
                 }
 
-                if(this.data.length > 0)
-                {
-                    this.xLabel = this.data[0].label;
-                }
-                else
-                {
-                    this.xLabel = ""
-                }
-
                 var errorBars = [];
 
                 for(var i = 0; i < this.data.length; i++)
@@ -217,7 +208,7 @@ TablePlot.TablePlot = Backbone.View.extend(
                     .showXAxis(true)//Show the x-axis
                 
                 chart.xAxis     //Chart x-axis settings
-                    .axisLabel(this.xLabel)
+                    .axisLabel(this.attributes.xlabel)
                     .tickFormat(d3.format(',r'));
                 
                 chart.yAxis     //Chart y-axis settings
@@ -267,7 +258,7 @@ TablePlot.TablePlot = Backbone.View.extend(
           *ALL THE ARRAYS OF ALL x, y0, y1, y2, ... NEED TO BE THE SAME LENGTH*
   */
 
-TablePlot.plot = function( selector, data, rawData, displayType )
+TablePlot.plot = function( selector, data, rawData, displayType, xlabel )
 {
     // If this is true, then data is CSV input, and will be converted to the format above!
 
@@ -352,7 +343,7 @@ TablePlot.plot = function( selector, data, rawData, displayType )
 
     data = dataInterpolated;
 
-    var plot = new TablePlot.TablePlot( { selector : selector, data : data, textData : rawData, displayType : displayType, interpolated : interpolated } );
+    var plot = new TablePlot.TablePlot( { selector : selector, data : data, textData : rawData, displayType : displayType, interpolated : interpolated, xlabel : xlabel } );
 
     return plot;
 }
