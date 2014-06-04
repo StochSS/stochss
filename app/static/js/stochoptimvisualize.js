@@ -44,8 +44,10 @@ StochOptimVisualize.Controller = Backbone.View.extend(
             this.attributes = attributes;
 
             this.jobID = parseInt($.url().attr('path').split('/').pop());
-            this.stderr = $('#stderr').text();
-            this.stdout = $('#stdout').text();
+            this.stderr = $('#stderr').text().trim();
+            this.stdout = $('#stdout').text().trim();
+            this.status = $('#status').text().trim();
+
             var nameToIndex = $.parseJSON($( '#nameToIndex' ).text());
             var activate = $.parseJSON($( '#activate' ).text());
             var indexToName = {}
@@ -55,7 +57,7 @@ StochOptimVisualize.Controller = Backbone.View.extend(
                 indexToName[nameToIndex[name]] = name;
             }
 
-            this.data = {globalIteration : []};
+            this.data = { globalIteration : [] };
             this.dataKeys = [];
             this.parameters = {};
 
@@ -71,6 +73,8 @@ StochOptimVisualize.Controller = Backbone.View.extend(
                     this.data[indexToName[idx]] = [];
                 }
             }
+
+            this.stage = 0;
 
             for(var lineIndex in fileSplit)
             {
@@ -111,6 +115,21 @@ StochOptimVisualize.Controller = Backbone.View.extend(
                         {                   
                             if(!(key in this.data))
                             {
+                                if('probability' == key)
+                                {
+                                    this.stage = 1;
+                                }
+
+                                if('lower bound' == key)
+                                {
+                                    this.stage = 2;
+                                }
+
+                                if('condition number' == key)
+                                {
+                                    this.stage = 3;
+                                }
+
                                 console.log(key);
                                 this.dataKeys.push(key);
                                 this.data[key] = []
@@ -125,6 +144,21 @@ StochOptimVisualize.Controller = Backbone.View.extend(
                     globalIteration += 1;
                 }
             }
+
+            var textClass = 'alert-success';
+
+            if(this.status == 'Finished')
+            {
+                this.stage = 4;
+            }
+
+            if(this.status == 'Failed')
+            {
+                this.stage = 5;
+                textClass = 'alert-error';
+            }
+
+            $( '.stage' + this.stage ).css('text-decoration', 'underline').addClass(textClass);
 
             this.textData = "";
 

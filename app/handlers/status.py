@@ -303,10 +303,21 @@ class StatusPage(BaseHandler):
                 if job.resource == "local" or not job.resource:
                     # First, check if the job is still running
                     res = service.checkTaskStatusLocal([job.pid])
+                    print job.pid, res[job.pid], job.jobName
                     if res[job.pid] and job.pid:
                         job.status = "Running"
                     else:
-                        job.status = "Finished"
+                        fd = os.open("{0}/stderr".format(job.outData), os.O_RDONLY)
+                        f = os.fdopen(fd)
+                        stderr = f.read().strip()
+                        f.close()
+
+                        if len(stderr) == 0:
+                            job.status = "Finished"
+                        else:
+                            job.status = "Failed"
+
+                #    asd
                 elif job.resource == "cloud" and job.status != "Finished":
                     # Retrive credentials from the datastore
                     if not self.user_data.valid_credentials:

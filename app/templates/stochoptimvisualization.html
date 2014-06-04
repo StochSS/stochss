@@ -18,6 +18,17 @@
             </p>
         </div>
 
+        <center>
+            <font size="3">
+                <span class="stageometer stage0">Initializing</span> --
+                <span class="stageometer stage1">Stage 1</span> --
+                <span class="stageometer stage2">Stage 2</span> --
+                <span class="stageometer stage3">Stage 3</span> --
+                <span class="stageometer stage4">Finished</span> --
+                <span class="stageometer stage5">Failed</span>
+            </font>
+        </center>
+
         <div id="stochoptim">
         </div>
 
@@ -38,6 +49,7 @@
         <div id="stderr" style="display : none;">{{ stderr }}</div>
         <div id="nameToIndex" style="display : none;"> {{ nameToIndex }}</div>
         <div id="activate" style="display : none;"> {{ activate }}</div>
+        <div id="status" style="display : none;"> {{ status }}</div>
     </div>
 </div>
 {% endblock %}

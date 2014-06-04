@@ -427,6 +427,7 @@ class StochOptimPage(BaseHandler):
         # job.pid = handle.pid
         job.put()
         result["job"] = job
+        result["id"] = job.key().id()
         return result
         
 
@@ -474,7 +475,10 @@ class StochOptimVisualization(BaseHandler):
             f.close()
 
             if len(output["stdout"]) == 0:
-                output["stdout"] = "(empty)"
+                if optimization.status == 'Running':
+                    output["stdout"] = "(Job running, no output available yet)"
+                else:
+                    output["stdout"] = "(empty)"
         except:
             output["stdout"] = "No output available yet"
 
@@ -490,8 +494,8 @@ class StochOptimVisualization(BaseHandler):
             except:
                 output["stderr"] = "No errors available yet"
 
-        print optimization.nameToIndex
-        print optimization.indata
+#        print optimization.nameToIndex
+#        print optimization.indata
 
         output["nameToIndex"] = optimization.nameToIndex
         output["status"] = optimization.status
