@@ -11,6 +11,7 @@ import fileserver
 import json
 import os
 import re
+import signal
 import shlex
 import subprocess
 import tempfile
@@ -166,7 +167,8 @@ class StochOptimJobWrapper(db.Model):
             if os.path.exists(self.zipFileName):
                 os.remove(self.zipFileName)
 
-        service.deleteTaskLocal([self.pid])
+        os.killpg(self.pid, signal.SIGTERM)
+        #service.deleteTaskLocal([self.pid])
 
         super(StochOptimJobWrapper, self).delete()
     
@@ -341,8 +343,8 @@ class StochOptimPage(BaseHandler):
 
         print exstring
 
-        handle = subprocess.Popen(shlex.split(exstring))
-
+        handle = subprocess.Popen(exstring, shell=True, preexec_fn=os.setsid)
+        
         job.pid = handle.pid
 
         job.put()

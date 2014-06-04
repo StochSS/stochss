@@ -307,10 +307,13 @@ class StatusPage(BaseHandler):
                     if res[job.pid] and job.pid:
                         job.status = "Running"
                     else:
-                        fd = os.open("{0}/stderr".format(job.outData), os.O_RDONLY)
-                        f = os.fdopen(fd)
-                        stderr = f.read().strip()
-                        f.close()
+                        try:
+                            fd = os.open("{0}/stderr".format(job.outData), os.O_RDONLY)
+                            f = os.fdopen(fd)
+                            stderr = f.read().strip()
+                            f.close()
+                        except:
+                            stderr = '1'
 
                         if len(stderr) == 0:
                             job.status = "Finished"
