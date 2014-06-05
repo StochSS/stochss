@@ -91,7 +91,7 @@ stochkit.Model = Backbone.Model.extend( {
         this.fromXML(data.model);
         
         // Why would I do this next line? It seems like I'm really screwing up the input data
-        delete data.model;
+        //delete data.model;
 
         return data;
     },

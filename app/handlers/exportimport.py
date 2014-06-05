@@ -134,6 +134,7 @@ class SuperZip:
                         # These are things contained in the stochkit_job object
                         "type" : stochkit_job.type,
                         "status" : stochkit_job.status,
+                        "modelName" : job.modelName,
                         "final_time" : stochkit_job.final_time,
                         "increment" : stochkit_job.increment,
                         "units" : job.stochkit_job.units,
@@ -226,6 +227,7 @@ class SuperZip:
             jsonJob = { "version" : self.version,
                         "userId" : job.userId,
                         "jobName" : job.jobName,
+                        "modelName" : job.modelName,
                         "startTime" : job.startTime,
                         "indata" : json.loads(job.indata),
                         "status" : job.status }
@@ -400,6 +402,7 @@ class SuperZip:
         job.jobName = jsonJob["jobName"]
         job.startTime = jsonJob["startTime"]
         job.indata = json.dumps(jsonJob["indata"])
+        job.modelName = jsonJob["modelName"]
         job.outData = outPath
         job.status = jsonJob["status"]
 

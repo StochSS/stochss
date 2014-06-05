@@ -62,6 +62,7 @@ class StochKitJobWrapper(db.Model):
     # A reference to the user that owns this job
     user_id =  db.StringProperty()
     name = db.StringProperty()
+    modelName = db.StringProperty()
     # The type if the job {'local', 'cloud'}
     type =  db.StringProperty()
     attributes = ObjectProperty()
@@ -114,6 +115,7 @@ class JobManager():
                         # These are things contained in the stochkit_job object
                         "type" : job.stochkit_job.type,
                         "status" : job.stochkit_job.status,
+                        "modelName" : job.modelName,
                         "output_location" : job.stochkit_job.output_location,
                         "zipFileName" : job.stochkit_job.zipFileName,
                         "output_url" : job.stochkit_job.output_url,
@@ -151,6 +153,7 @@ class JobManager():
                     # These are things contained in the stochkit_job object
                     "type" : job.stochkit_job.type,
                     "status" : job.stochkit_job.status,
+                    "modelName" : job.modelName,
                     "output_location" : job.stochkit_job.output_location,
                     "zipFileName" : job.stochkit_job.zipFileName,
                     "units" : job.stochkit_job.units,
@@ -200,6 +203,7 @@ class JobManager():
         jobWrap.name = job['name']
         jobWrap.type = job['type']
         
+        jobWrap.modelName = job['modelName']
         # This is probably not a good idea...
         jobWrap.stochkit_job = StochKitJob(**job)
 
@@ -438,8 +442,6 @@ class SimulatePage(BaseHandler):
                             outfile = '/result/trajectories/trajectory{0}.txt'.format(tid)
                             
                             vhandle = open(outputdir + outfile, 'r')
-                            
-                            print outputdir + outfile
                             
                             values = { 'time' : [], 'trajectories' : {} }
                             columnToList = []
@@ -699,6 +701,7 @@ class SimulatePage(BaseHandler):
             stochkit_job_db.user_id = self.user.user_id()
             stochkit_job_db.name = stochkit_job.name
             stochkit_job_db.stochkit_job = stochkit_job
+            stochkit_job_db.modelName = model.name
             stochkit_job_db.put()
             result = {'status':True,'msg':'Job submitted sucessfully.'}
                 
@@ -804,6 +807,7 @@ class SimulatePage(BaseHandler):
             stochkit_job_db.stochkit_job = stochkit_job
             stochkit_job_db.stdout = stochkit_job.stdout
             stochkit_job_db.stderr = stochkit_job.stderr
+            stochkit_job_db.modelName = model.name
             stochkit_job_db.put()
     
             result = {'status':True,'msg':'Job submitted sucessfully'}

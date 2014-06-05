@@ -185,12 +185,16 @@
     <div class="well">                    
         <h3>Metadata</h3>
         <p class="thispage">
-            Resource: <%= type %>
+            Resource: <%= resource %>
             <br />
-            Simulation endtime: <%= final_time %>
-            <!--<button id="plotButton">button</button>-->
+            Simulation status: <%= status %>
             <br />
-            Stochkit input file: <a href="/output/servestatic?filename=<%= output_location %>/<%= name %>.xml" class="thispage"> <%= name %>.xml </a>
+            Stochkit model: <a href="/modeleditor?model_edited=<%= modelName %>" class="thispage"> <%= modelName %> </a>
+            <!--Resource: <%= type %>
+                    <br />
+                    Simulation endtime: <%= final_time %>
+                    <br />
+                    Stochkit input file: <a href="/output/servestatic?filename=<%= output_location %>/<%= name %>.xml" class="thispage"> <%= name %>.xml </a>-->
         </p>
     </div>
 

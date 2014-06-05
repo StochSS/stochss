@@ -41,6 +41,7 @@ class SensitivityJobWrapper(db.Model):
     pid = db.IntegerProperty()
     startTime = db.StringProperty()
     jobName = db.StringProperty()
+    modelName = db.StringProperty()
     indata = db.TextProperty()
     outData = db.StringProperty()
     status = db.StringProperty()
@@ -79,7 +80,8 @@ class SensitivityPage(BaseHandler):
                         "indata" : json.loads(job.indata),
                         "outData" : job.outData,
                         "status" : job.status,
-                        "resource" : job.resource }
+                        "resource" : job.resource,
+                        "modelName" : job.modelName }
 
             if self.user.user_id() != job.userId:
                 self.response.headers['Content-Type'] = 'application/json'
@@ -263,10 +265,11 @@ class SensitivityPage(BaseHandler):
         job = SensitivityJobWrapper()
         job.resource = "local"
         job.userId = self.user.user_id()
-        job.model = modeleditor.StochKitModelWrapper.get_by_id(data["id"])
+        model = modeleditor.StochKitModelWrapper.get_by_id(data["id"])
         job.startTime = time.strftime("%Y-%m-%d-%H-%M-%S")
         job.jobName = data["jobName"]
-
+        job.modelName = model.model_name
+        
         runtime = float(data["time"])
         dt = float(data["increment"])
 
@@ -284,9 +287,9 @@ class SensitivityPage(BaseHandler):
 
         job.outData = dataDir
 
-        modelFileName = '{0}/{1}.xml'.format(job.outData, job.model.model_name)
+        modelFileName = '{0}/{1}.xml'.format(job.outData, model.model_name)
         fmodelHandle = open(modelFileName, 'w')
-        fmodelHandle.write(job.model.model.serialize())
+        fmodelHandle.write(model.model.serialize())
         fmodelHandle.close()
 
         job.status = "Pending"
@@ -308,10 +311,11 @@ class SensitivityPage(BaseHandler):
         job = SensitivityJobWrapper()
         job.resource = "cloud"
         job.userId = self.user.user_id()
-        job.model = modeleditor.StochKitModelWrapper.get_by_id(data["id"])
+        model = modeleditor.StochKitModelWrapper.get_by_id(data["id"])
         job.startTime = time.strftime("%Y-%m-%d-%H-%M-%S")
         job.jobName = data["jobName"]
         job.status = "Pending"
+        job.modelName = model.model_name
 
         runtime = float(data["time"])
         dt = float(data["increment"])
@@ -325,7 +329,7 @@ class SensitivityPage(BaseHandler):
         
         params = {
             "job_type": "sensitivity",
-            "document": str( job.model.model.serialize() ),
+            "document": str( model.model.serialize() ),
             "paramstring": "stochkit_ode.py --sensi --parameters {0} -t {1} -i {2}".format( " ".join(parameters), runtime, int(runtime / dt)),
             "bucketname": self.user_data.getBucketName()
         }
