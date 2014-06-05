@@ -54,7 +54,8 @@ class StochOptimModel(stochss.model.Model):
                 exprParameters.append(pname)
 
             #self.listOfParameters[pname].evaluate()
-        msgs.append("Parameters [{0}] are expressed in terms of other variables. The sensitivity will be computed as if this is not true, and the parameters are simply real values, not functions of other parameters".format(", ".join(exprParameters)))
+        if(len(exprParameters) > 0):
+            msgs.append(" * Parameter(s) [{0}] are expressed in terms of other variables (not valid for StochOptim)".format(", ".join(exprParameters)))
 
         success = True
         # Reactions
@@ -65,7 +66,8 @@ class StochOptimModel(stochss.model.Model):
                 nonMassActionReactions.append(rname)
                 success = False
 
-        msgs.append("Reactions must be mass-action. Reactions [{0}] are not".format(", ".join(nonMassActionReactions)))
+        if(len(nonMassActionReactions) > 0):
+            msgs.append(" * Reaction(s) [{0}] are not mass-action".format(", ".join(nonMassActionReactions)))
 
         return success, msgs
     
@@ -287,7 +289,7 @@ class StochOptimPage(BaseHandler):
         if not success:
             self.response.content_type = 'application/json'
             self.response.write(json.dumps({"status" : False,
-                                            "msg" : os.linesep.join(msgs) }))
+                                            "msg" : msgs }))
             return
 
         path = os.path.abspath(os.path.dirname(__file__))
@@ -333,7 +335,13 @@ class StochOptimPage(BaseHandler):
 
         data["steps"] = ("C" if data["crossEntropyStep"] else "") + ("E" if data["emStep"] else "") + ("U" if data["uncertaintyStep"] else "")
 
-        data["cores"] = 1
+        try:
+            import multiprocessing
+
+            data["cores"] = multiprocessing.cpu_count()
+        except:
+            data["cores"] = 1
+
         data["options"] = ""
         data["path"] = path
 

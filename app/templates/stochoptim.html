@@ -33,7 +33,7 @@
     <div id="modelSelect">
         <div class="well">
             <% if(typeof models != 'undefined' ) { %>
-            <h3> Select model to simulate </h3>
+            <h3> Select model to analyze </h3>
             <br />
             <% for(var model in models) { %>
             <label class="radio">
@@ -177,7 +177,7 @@
                     <tr class="optional">
                         <td>
                             Kem -- Initial number of MCEM trajectories to simulate<br />
-                            <input id= "Kem" type="number" value="100" /><br />
+                            <input id= "Kem" type="number" value="10" /><br />
                         </td>
                     </tr>
                     <tr class="optional">
@@ -200,7 +200,7 @@
                     </tr>
                     <tr class="optional">
                         <td>
-                            perturb -- Maximal fraction of uniform parameter perturbation:<br />
+                            perturb -- Maximal fraction of uniform parameter perturbation to use in modified cross-entropy method:<br />
                             <input id="perturb" type="number" value=".25" /><br />
                         </td>
                     </tr>
@@ -231,7 +231,7 @@
                     <tr class="optional">
                         <td>
                             pcutoff -- Modified cross-entropy method convergence cutoff for mean probability of model trajectory hitting all data points:<br />
-                            <input id="pcutoff" type="number" value=".05" /><br />
+                            <input id="pcutoff" type="number" value=".0001" /><br />
                         </td>
                     </tr>
                     <tr class="optional">
@@ -242,7 +242,7 @@
                     </tr>
                     <tr class="optional">
                         <td>
-                            numIter -- Maximum number of uncertainty quantification iterations to run:<br />
+                            numIter -- Modified cross-entropy method initial number of iterations to run:<br />
                             <input id="numIter" type="number" step="1" value="10" /><br />
                         </td>
                     </tr>

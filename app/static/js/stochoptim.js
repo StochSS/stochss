@@ -188,7 +188,14 @@ var updateMsg = function(data, msg)
         return;
     }
 
-    $( msg ).text(data.msg);
+    var text = data.msg;
+
+    if(typeof text != 'string')
+    {
+        text = text.join('<br>')
+    }
+
+    $( msg ).html(text);
     if(data.status)
         $( msg ).prop('class', 'alert alert-success');
     else
