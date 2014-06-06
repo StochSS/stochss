@@ -599,7 +599,7 @@ class ModelEditorImportFromLibrary(BaseHandler):
         name = self.request.get('toDelete')
         if name == "":
             return {'status': False, 'msg': 'Name is missing'}
-        elif name == "dimerdecay" or name == "lotkavolterra_oscillating" or name == "lotkavolterra_equilibrium" or name == "MichaelisMenten" or name == "schlogl" or name == "heat_shock_mass_action" :
+        elif name == "dimerdecay" or name == 'birth_death' or name == "lotkavolterra_oscillating" or name == "lotkavolterra_equilibrium" or name == "MichaelisMenten" or name == "schlogl" or name == "heat_shock_mass_action" :
             return {'status': False, 'msg': 'This is an example model, it cannot be deleted'}
         
         try:
@@ -621,6 +621,10 @@ class ModelEditorImportFromLibrary(BaseHandler):
         example_model = db.GqlQuery("SELECT * FROM StochKitModelWrapper WHERE is_public = :1 AND model_name = :2", True, 'dimerdecay').get()
         if example_model is None:
             save_model(dimerdecay(), 'dimerdecay', "", is_public=True)
+
+        example_model = db.GqlQuery("SELECT * FROM StochKitModelWrapper WHERE is_public = :1 AND model_name = :2", True, 'birth_death').get()
+        if example_model is None:
+            save_model(birthdeath(), 'birth_death', "", is_public=True)
 
         example_model = db.GqlQuery("SELECT * FROM StochKitModelWrapper WHERE is_public = :1 AND model_name = :2", True, 'lotkavolterra_oscillating').get()
         if example_model is None:
