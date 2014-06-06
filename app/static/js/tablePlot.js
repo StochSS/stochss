@@ -20,6 +20,17 @@ TablePlot.TablePlot = Backbone.View.extend(
                 this.displayType = 'graphic';
             }
 
+            var storage = sessionStorage.getItem( $.url().attr('path') + 'displayType' );
+
+            if(storage == null)
+            {
+                sessionStorage.setItem( $.url().attr('path') + 'displayType' , this.displayType );
+            }
+            else
+            {
+                this.displayType = storage;
+            }
+
             if(this.interpolated)
             {
                 $("<div id='interpolateWarning' class='alert alert-block alert-info'>Note: The lines on this graph have been downsampled and interpolated to improve rendering performance.</div>").appendTo( this.$el );
@@ -52,8 +63,6 @@ TablePlot.TablePlot = Backbone.View.extend(
             this.selected = [];
             this.plot = undefined;
 
-            var initialCheckbox = undefined;
-
             //<select id="trajectorySelect">
             //<option value="mean">the mean</option>
             //</select>
@@ -62,18 +71,13 @@ TablePlot.TablePlot = Backbone.View.extend(
                 tablePlot.selectX(parseInt($( this ).val()));
             }, this));*/
 
-            this.selected.push(false);
+            var checkboxes = [];
 
             for(var k = 0; k < this.data.length; k++)
             {
                 var label = this.data[k].label;
                 var checkbox = $( checkboxTemplate( { name : label + ((k == this.attributes.data.length - 1) ? '' : ', '),
                                                       val : k } ) ).appendTo( this.controlDiv ).eq(0);
-
-                if(!initialCheckbox && !label.match('/'))
-                {
-                    initialCheckbox = checkbox;
-                }
 
                 if((k + 1) % 20 == 0)
                 {
@@ -84,17 +88,36 @@ TablePlot.TablePlot = Backbone.View.extend(
                     tablePlot.showTrajectory(parseInt($( this ).val()), $( this ).prop('checked'));
                 }, this));
 
-                this.selected.push( checkbox.prop("checked") );                   
+                this.selected.push( checkbox.prop("checked") );
+
+                checkboxes.push(checkbox);
+            }
+
+            var storage = sessionStorage.getItem( $.url().attr('path') );
+
+            if(storage == null)
+            {
+                sessionStorage.setItem( $.url().attr('path'), JSON.stringify( this.selected ) );
+
+                checkboxes[0].trigger("click");
+            }
+            else
+            {
+                var selected = $.parseJSON(storage);
+
+                for(var s in selected)
+                {
+                    if(selected[s])
+                    {
+                        checkboxes[s].trigger("click");
+                    }
+                }
             }
 
             //$( '#plotButton' ).click( _.partial( function(t) { t.getImage(); }, this) );
 
             // This will also trigger the render!
             // I don't think it makes sense that initialCheckbox would not be defined ever ~~
-            if(initialCheckbox)
-            {
-                initialCheckbox.trigger("click");
-            }
 
             this.render();
         },
@@ -102,6 +125,8 @@ TablePlot.TablePlot = Backbone.View.extend(
         changeDisplayType : function(displayType)
         {
             this.displayType = displayType;
+
+            sessionStorage.setItem( $.url().attr('path') + 'displayType' , this.displayType );
 
             this.render();
         },
@@ -121,6 +146,8 @@ TablePlot.TablePlot = Backbone.View.extend(
         showTrajectory : function(id, show)
         {
             this.selected[id] = show;
+
+            sessionStorage.setItem( $.url().attr('path'), JSON.stringify( this.selected ) );
 
             this.render();
         },

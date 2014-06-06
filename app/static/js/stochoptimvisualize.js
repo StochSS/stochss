@@ -29,27 +29,14 @@ StochOptimVisualize.Controller = Backbone.View.extend(
         SIMULATIONCONFIGURE : 2,
         RESULTSVIEW : 3,
 
-        initialize : function(attributes)
+        prepData : function()
         {
-            // This is basically the entry function for this file!
-            // 
-            // Need to: Read in stdout and stderr from invisible divs on page (written there by server)
-            // If no error, show pretty output, if error, show raw output
-            // 
-            // Have option for user to create new model out of discovered parameters on page
-            // Have option for user to download copy of the raw data
-            //
-            //
+            var stderr = this.attributes.data.stderr;// $('#stderr').text().trim();
+            var stdout = this.attributes.data.stdout;// $('#stdout').text().trim();
+            var status = this.attributes.data.status;// $('#status').text().trim();
 
-            this.attributes = attributes;
-
-            this.jobID = parseInt($.url().attr('path').split('/').pop());
-            this.stderr = $('#stderr').text().trim();
-            this.stdout = $('#stdout').text().trim();
-            this.status = $('#status').text().trim();
-
-            var nameToIndex = $.parseJSON($( '#nameToIndex' ).text());
-            var activate = $.parseJSON($( '#activate' ).text());
+            var nameToIndex = this.attributes.data.nameToIndex;// $.parseJSON($( '#nameToIndex' ).text());
+            var activate = this.attributes.data.activate;// $.parseJSON($( '#activate' ).text());
             var indexToName = {}
 
             for(var name in nameToIndex)
@@ -57,23 +44,24 @@ StochOptimVisualize.Controller = Backbone.View.extend(
                 indexToName[nameToIndex[name]] = name;
             }
 
-            this.data = { globalIteration : [] };
-            this.dataKeys = [];
+            var data = { globalIteration : [] };
+            var dataKeys = [];
+            // This is kinda an output of this? Maybe?
             this.parameters = {};
 
-            var fileSplit = this.stdout.split(/\r\n|\r|\n/g);
+            var fileSplit = stdout.split(/\r\n|\r|\n/g);
             var globalIteration = 0;
                     
             for(var idx in indexToName)
             {
                 if(activate[indexToName[idx]])
                 {
-                    this.dataKeys.push(indexToName[idx]);
+                    dataKeys.push(indexToName[idx]);
                     
-                    this.data[indexToName[idx]] = [];
+                    data[indexToName[idx]] = [];
                 }
             }
-
+            //Morekidnaoutput
             this.stage = 0;
 
             for(var lineIndex in fileSplit)
@@ -104,7 +92,7 @@ StochOptimVisualize.Controller = Backbone.View.extend(
                             {
                                 if(activate[indexToName[valIndex]])
                                 {
-                                    this.data[indexToName[valIndex]].push({ x : globalIteration, y : parseFloat(valSplit[valIndex].trim())});
+                                    data[indexToName[valIndex]].push({ x : globalIteration, y : parseFloat(valSplit[valIndex].trim())});
                                     // We need to catch the latest parameters here so that we can supply the
                                     //    ability to create a model from the current parameter set
                                     this.parameters[indexToName[valIndex]] = parseFloat(valSplit[valIndex].trim());
@@ -113,7 +101,7 @@ StochOptimVisualize.Controller = Backbone.View.extend(
                         }
                         else if(_.indexOf(['seed', 'trajectories', 'iteration'], key) < 0) 
                         {                   
-                            if(!(key in this.data))
+                            if(!(key in data))
                             {
                                 if('probability' == key)
                                 {
@@ -131,13 +119,13 @@ StochOptimVisualize.Controller = Backbone.View.extend(
                                 }
 
                                 console.log(key);
-                                this.dataKeys.push(key);
-                                this.data[key] = []
+                                dataKeys.push(key);
+                                data[key] = []
                             }
 
                             val = parseFloat(keyval[1].trim());
                             
-                            this.data[key].push({ x : globalIteration, y : val });
+                            data[key].push({ x : globalIteration, y : val });
                         }
                     }
 
@@ -147,12 +135,12 @@ StochOptimVisualize.Controller = Backbone.View.extend(
 
             var textClass = 'alert-success';
 
-            if(this.status == 'Finished')
+            if(status == 'Finished')
             {
                 this.stage = 4;
             }
 
-            if(this.status == 'Failed')
+            if(status == 'Failed')
             {
                 this.stage = 5;
                 textClass = 'alert-error';
@@ -160,16 +148,16 @@ StochOptimVisualize.Controller = Backbone.View.extend(
 
             $( '.stage' + this.stage ).css('text-decoration', 'underline').addClass(textClass);
 
-            this.textData = "";
+            textData = "";
 
-            this.textData += this.dataKeys.join("\t") + "\n";
+            textData += dataKeys.join("\t") + "\n";
 
             var dataLists = [];
 
-            for(var key in this.dataKeys)
+            for(var key in dataKeys)
             {
-                dataLists.push( { label : this.dataKeys[key],
-                                  data : this.data[this.dataKeys[key]],
+                dataLists.push( { label : dataKeys[key],
+                                  data : data[dataKeys[key]],
                                   lowerBound : undefined,
                                   upperBound : undefined,
                                   hasXY : true } );
@@ -180,10 +168,50 @@ StochOptimVisualize.Controller = Backbone.View.extend(
             {
                 this.textData += rows[rowIndex].join("\t") + "\n";
             }*/
+            
+            textData = '<b>Stdout:</b> \n' + stdout + '\n' + '\n' + '<b>Stderr:</b> \n' + stderr + '\n'
 
-            textData = '<b>Stdout:</b> \n' + this.stdout + '\n' + '\n' + '<b>Stderr:</b> \n' + this.stderr + '\n'
+            return { dataLists : dataLists,
+                     textData : textData }
+        },
 
-            TablePlot.plot(this.$el, dataLists, textData, 'text', xlabel = 'Iteration #');
+        initialize : function(attributes)
+        {
+            // This is basically the entry function for this file!
+            // 
+            // Need to: Read in stdout and stderr from invisible divs on page (written there by server)
+            // If no error, show pretty output, if error, show raw output
+            // 
+            // Have option for user to create new model out of discovered parameters on page
+            // Have option for user to download copy of the raw data
+            //
+            //
+
+            this.$el = $( '#stochoptim' );
+
+            this.attributes = attributes;
+
+            this.jobID = parseInt($.url().attr('path').split('/').pop());
+
+            var pData = this.prepData();
+
+            this.tablePlot = TablePlot.plot(this.$el, pData.dataLists, pData.textData, 'text', xlabel = 'Iteration #');
+
+            $( "#refresh" ).click( _.bind(function() {
+                location.reload();
+                /*updateMsg( { status : true,
+                             msg : "Refreshing data..." } );
+                $.get('/stochoptim/debug/' + jobID.trim(),
+                      "",
+                      _.bind(function(data) {
+                      this.attributes.data = data;
+
+                          var pData = this.prepData();
+
+                          this.tablePlot.update(pData.dataLists, pData.textData);
+                      }, this),
+                      dataType = 'json');*/
+            }, this) );
 
             $( "#create" ).click( _.bind(function() {
                 updateMsg( { status : true,
@@ -249,5 +277,14 @@ StochOptimVisualize.Controller = Backbone.View.extend(
 
 var run = function()
 {
-    var cont = new StochOptimVisualize.Controller();
+    var jobID = $( '#jobID' ).text();
+
+    $.get('/stochoptim/debug/' + jobID.trim(),
+          "",
+          function(data) {
+              $( '#stochOptimVisualization' ).html( _.template( $( '#modelSelectTemplate' ).html(), data ) );
+
+              var cont = new StochOptimVisualize.Controller( { data : data } );
+          },
+         dataType = 'json');
 }

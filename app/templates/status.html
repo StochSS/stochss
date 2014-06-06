@@ -218,13 +218,13 @@
                             </td>
                             <td>
                                 {% if job.status|lower == "running" or job.status|lower == "finished" %}
-                                <a href="/stochoptim/debug/{{job.id}}">View Progress</a>
+                                <a href="/stochoptim/{{job.id}}">View Progress</a>
                                 {% else %}
                                 {% if job.status|lower == "finished" %}
                                 <a href="/stochoptim/results/{{job.id}}">Access results</a>
                                 {% else %}
                                 {% if job.status|lower == "failed" %}
-                                <a href="/stochoptim/debug/{{job.id}}">Get Debugging Info</a>
+                                <a href="/stochoptim/{{job.id}}">Get Debugging Info</a>
                                 {% endif %}
                                 {% endif %}
                                 {% endif %}

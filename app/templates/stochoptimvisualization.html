@@ -5,51 +5,8 @@
 
 <div class="span9">
     <div class="row-fluid">
-        <h2> Job summary: <span style="COLOR:green;">{{ jobName }}</span></h2>
-        <br />
-        <div class="well">                    
-            <h3>Metadata</h3>
-            <p class="thispage">
-                Resource: {{ resource }}
-                <br />
-                Simulation status: {{ status }}
-                <br />
-                Stochkit model: <a href="/modeleditor?model_edited={{ modelName }}" class="thispage"> {{ modelName }} </a>
-            </p>
-        </div>
-
-        <center>
-            <font size="3">
-                <span class="stageometer stage0">Initializing</span> --
-                <span class="stageometer stage1">Stage 1</span> --
-                <span class="stageometer stage2">Stage 2</span> --
-                <span class="stageometer stage3">Stage 3</span> --
-                <span class="stageometer stage4">Finished</span> --
-                <span class="stageometer stage5">Failed</span>
-            </font>
-        </center>
-
-        <div id="stochoptim">
-        </div>
-
-        <div id="msg">
-        </div>
-
-        <div class="well">
-            <h3>Output</h3>
-            <br />
-            <button id="access" type="submit" class="btn btn-primary btn-large"><i class="icon-download-alt"></i> Fetch Copy of Current Data</button>
-            <br />
-            <br />
-            <button id="create" type="submit" class="btn btn-primary btn-large"> Create Model from Current Estimates</button>
-            <input type="text" class="span3" id="name" value="{{ modelName }}_model" />
-        </div>
-
-        <div id="stdout" style="display : none;">{{ stdout }}</div>
-        <div id="stderr" style="display : none;">{{ stderr }}</div>
-        <div id="nameToIndex" style="display : none;"> {{ nameToIndex }}</div>
-        <div id="activate" style="display : none;"> {{ activate }}</div>
-        <div id="status" style="display : none;"> {{ status }}</div>
+        <div id="stochOptimVisualization">Downloading data to browser...</div>
+        <div id="jobID" style="display : none;"> {{ jobID }}</div>
     </div>
 </div>
 {% endblock %}
@@ -69,4 +26,57 @@
 <script src="/static/js/jfu/js/jquery.fileupload.js"></script>
 <script type="text/javascript" src = "/static/js/fileserver.js"></script>
 <script type="text/javascript" src = "/static/js/stochoptimvisualize.js"></script>
+
+<script id="modelSelectTemplate" type="text/template">
+    <h2> Job summary: <span style="COLOR:green;"><%= jobName %></span></h2>
+    <br />
+    <div class="well">                    
+        <h3>Metadata</h3>
+        <p class="thispage">
+            Resource: <%= resource %>
+            <br />
+            Simulation status: <%= status %>
+            <br />
+            Stochkit model: <a href="/modeleditor?model_edited=<%= modelName %>" class="thispage"> <%= modelName %> </a>
+        </p>
+    </div>
+
+    <center>
+        <font size="3">
+            <span class="stageometer stage0">Initializing</span> --
+            <span class="stageometer stage1">Stage 1</span> --
+            <span class="stageometer stage2">Stage 2</span> --
+            <span class="stageometer stage3">Stage 3</span> --
+            <span class="stageometer stage4">Finished</span> --
+            <span class="stageometer stage5">Failed</span>
+        </font>
+    </center>
+
+    <div id="stochoptim">
+    </div>
+
+    <div id="msg">
+    </div>
+
+    <br />
+    <button id="refresh" type="submit" class="btn btn-primary btn-large">Refresh</button>
+    <br />
+    <br />
+
+    <div class="well">
+        <h3>Output</h3>
+        <br />
+        <button id="access" type="submit" class="btn btn-primary btn-large"><i class="icon-download-alt"></i> Fetch Copy of Current Data</button>
+        <br />
+        <br />
+        <button id="create" type="submit" class="btn btn-primary btn-large"> Create Model from Current Estimates</button>
+        <input type="text" class="span3" id="name" value="<%= modelName %>_model" />
+    </div>
+
+    <!--<div id="stdout" style="display : none;"> stdout </div>
+        <div id="stderr" style="display : none;"> stderr </div>
+        <div id="nameToIndex" style="display : none;">  nameToIndex </div>
+        <div id="activate" style="display : none;">  activate </div>
+        <div id="status" style="display : none;">  status </div>-->
+</script>
 {% endblock %}

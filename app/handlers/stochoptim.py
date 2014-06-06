@@ -349,8 +349,6 @@ class StochOptimPage(BaseHandler):
 
         exstring = '{0}/backend/wrapper.sh {1}/stdout {1}/stderr {2}'.format(basedir, dataDir, cmd)
 
-        print exstring
-
         handle = subprocess.Popen(exstring, shell=True, preexec_fn=os.setsid)
         
         job.pid = handle.pid
@@ -445,11 +443,17 @@ class StochOptimVisualization(BaseHandler):
     def authentication_required(self):
         return True
     
-    def get(self, queryType, jobID):
+    def get(self, queryType = None, jobID = None):
 
-        output = {}
+        print 'queryType ', queryType, ' jobID ', jobID
 
         jobID = int(jobID)
+
+        output = { "jobID" : jobID }
+
+        if queryType == None:
+            self.render_response('stochoptimvisualization.html', **output)
+            return
 
         optimization = StochOptimJobWrapper.get_by_id(jobID)
         # Might need to download the cloud data
@@ -483,14 +487,14 @@ class StochOptimVisualization(BaseHandler):
             f = os.fdopen(fd)
             output["stdout"] = f.read().strip()
             f.close()
-
-            if len(output["stdout"]) == 0:
-                if optimization.status == 'Running':
-                    output["stdout"] = "(Job running, no output available yet)"
-                else:
-                    output["stdout"] = "(empty)"
         except:
-            output["stdout"] = "No output available yet"
+            output["stdout"] = ""
+
+        if len(output["stdout"]) == 0:
+            if optimization.status == 'Running':
+                output["stdout"] = "(Job running, no output available yet)"
+            else:
+                output["stdout"] = "(empty)"
 
         if queryType.lower() == "debug":
             try:
@@ -498,11 +502,11 @@ class StochOptimVisualization(BaseHandler):
                 f = os.fdopen(fd)
                 output["stderr"] = f.read().strip()
                 f.close()
-
-                if len(output["stderr"]) == 0:
-                    output["stderr"] = "(empty)"
             except:
-                output["stderr"] = "No errors available yet"
+                output["stderr"] = ""
+
+            if len(output["stderr"]) == 0:
+                output["stderr"] = "(empty)"
 
 #        print optimization.nameToIndex
 #        print optimization.indata
@@ -514,7 +518,8 @@ class StochOptimVisualization(BaseHandler):
         output["resource"] = optimization.resource
         output["activate"] = json.dumps(json.loads(optimization.indata)["activate"])
             
-        self.render_response('stochoptimvisualization.html', **output)
+        self.response.write(json.dumps(output))
+        return
 
     def post(self, queryType, jobID):
         job = StochOptimJobWrapper.get_by_id(int(jobID))
