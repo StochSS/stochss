@@ -169,7 +169,12 @@ class StochOptimJobWrapper(db.Model):
             if os.path.exists(self.zipFileName):
                 os.remove(self.zipFileName)
 
-        os.killpg(self.pid, signal.SIGTERM)
+        if self.status == "Running":
+            if self.resource.lower() == "local":
+                try:
+                    os.killpg(self.pid, signal.SIGTERM)
+                except:
+                    pass
         #service.deleteTaskLocal([self.pid])
 
         super(StochOptimJobWrapper, self).delete()
@@ -382,6 +387,7 @@ class StochOptimPage(BaseHandler):
         job.startTime = time.strftime("%Y-%m-%d-%H-%M-%S")
         job.jobName = data["jobName"]
         job.indata = json.dumps(data)
+        job.modelName = model["name"]
         job.outData = dataDir
         job.status = "Pending"
         job.resource = "cloud"

@@ -455,7 +455,7 @@ StochOptim.Controller = Backbone.View.extend(
                                 updateMsg(data);
                                 if(data.status)
                                 {
-                                    window.location = '/stochoptim/debug/' + String(data.id);
+                                    window.location = '/stochoptim/' + String(data.id);
                                 }
                             },
                             dataType = "json" );
@@ -488,7 +488,7 @@ StochOptim.Controller = Backbone.View.extend(
                             updateMsg(data);
                             if (data.status)
                             {
-                                window.location = '/stochoptim/debug/' + String(data.id);
+                                window.location = '/stochoptim/' + String(data.id);
                             }
                         },
                         dataType = "json"
