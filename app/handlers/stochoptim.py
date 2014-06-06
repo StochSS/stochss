@@ -517,13 +517,14 @@ class StochOptimVisualization(BaseHandler):
 #        print optimization.nameToIndex
 #        print optimization.indata
 
-        output["nameToIndex"] = optimization.nameToIndex
+        output["nameToIndex"] = json.loads(optimization.nameToIndex)
         output["status"] = optimization.status
         output["jobName"] = optimization.jobName
         output["modelName"] = optimization.modelName
         output["resource"] = optimization.resource
-        output["activate"] = json.dumps(json.loads(optimization.indata)["activate"])
+        output["activate"] = json.loads(optimization.indata)["activate"]
             
+        self.response.content_type = 'application/json'
         self.response.write(json.dumps(output))
         return
 
