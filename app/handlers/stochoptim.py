@@ -169,15 +169,19 @@ class StochOptimJobWrapper(db.Model):
             if os.path.exists(self.zipFileName):
                 os.remove(self.zipFileName)
 
+        self.stop()
+        #service.deleteTaskLocal([self.pid])
+
+        super(StochOptimJobWrapper, self).delete()
+
+    def stop(self):
         if self.status == "Running":
             if self.resource.lower() == "local":
                 try:
                     os.killpg(self.pid, signal.SIGTERM)
                 except:
                     pass
-        #service.deleteTaskLocal([self.pid])
-
-        super(StochOptimJobWrapper, self).delete()
+        
     
     def mark_final_cloud_data(self):
         flag_file = os.path.join(self.outData, ".final-cloud")
@@ -238,6 +242,19 @@ class StochOptimPage(BaseHandler):
                         'status': False,
                         'msg': 'You must have at least one active compute node to run in the cloud.'
                     }))
+        elif reqType == 'stopJob':
+            jobID = json.loads(self.request.get('id'))
+
+            jobID = int(jobID)
+
+            job = StochOptimJobWrapper.get_by_id(jobID)
+
+            if job.userId == self.user.user_id():
+                job.stop()
+            else:
+                self.response.write(json.dumps({"status" : False,
+                                                "msg" : "No permissions to delete this job (this should never happen)"}))
+                return
         elif reqType == 'delJob':
             jobID = json.loads(self.request.get('id'))
 

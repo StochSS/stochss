@@ -197,7 +197,13 @@
                     <tbody>
                         {% for job in allParameterJobs %}
                         <tr>
-                            <td><a href="javascript:void(0)" onclick="deleteJob('/stochoptim?reqType=delJob&id={{job.id}}');">Delete</a></td>
+                            <td>
+                                {% if job.status|lower == "finished" or job.status|lower == "failed" %}
+                                <a href="javascript:void(0)" onclick="deleteJob('/stochoptim?reqType=delJob&id={{job.id}}');">Delete</a>
+                                {% else %}
+                                <a href="javascript:void(0)" onclick="deleteJob('/stochoptim?reqType=stopJob&id={{job.id}}');">Stop</a>
+                                {% endif %}
+                            </td>
                             <td>
                                 <span>{{job.number}}</span>
                             </td>
