@@ -95,48 +95,48 @@
             <div id="csvMsg"></div>
             <br />
 
-            <% if(initialData) { %>
-            <div>3. Select desired initial conditions data file:</div>
-            <table cellpadding="0" cellspacing="0" border="0" class="table table-striped table-bordered">
-                <thead>
-                    <tr>
-                        <th width="40pt"></th>
-                        <th width="40pt">Select</th>
-                        <th>Archive Name</th>
-                    </tr>
-                </thead>
-                <tbody id="initialDataSelect">
-                </tbody>
-            </table>
-            <% } %>
-
-            <% if(trajectories) { %>
-            <div>4. Select desired trajectories data file:</div>
-            <table cellpadding="0" cellspacing="0" border="0" class="table table-striped table-bordered">
-                <thead>
-                    <tr>
-                        <th width="40pt"></th>
-                        <th width="40pt">Select</th>
-                        <th>Archive Name</th>
-                    </tr>
-                </thead>
-                <tbody id="trajectoriesSelect">
-                </tbody>
-            </table>
-            <% } %>
-
-            <% if(initialData || trajectories) { %>
-            <div>5. CSV Preview:</div>
-            <div class="panel panel-primary">
-                <% if(initialData) { %>
-                <pre id="initialDataPreview"></pre>
-                <% } %>
-
-                <% if(trajectories) { %>
-                <pre id="trajectoriesPreview"></pre>
-                <% } %>
+            <div class="initialData">
+                <div>3. Select desired initial conditions data file:</div>
+                <table cellpadding="0" cellspacing="0" border="0" class="table table-striped table-bordered">
+                    <thead>
+                        <tr>
+                            <th width="40pt"></th>
+                            <th width="40pt">Select</th>
+                            <th>Archive Name</th>
+                        </tr>
+                    </thead>
+                    <tbody id="initialDataSelect">
+                    </tbody>
+                </table>
             </div>
-            <% } %>
+
+            <div class="trajectories">
+                <div>4. Select desired trajectories data file:</div>
+                <table cellpadding="0" cellspacing="0" border="0" class="table table-striped table-bordered">
+                    <thead>
+                        <tr>
+                            <th width="40pt"></th>
+                            <th width="40pt">Select</th>
+                            <th>Archive Name</th>
+                        </tr>
+                    </thead>
+                    <tbody id="trajectoriesSelect">
+                    </tbody>
+                </table>
+            </div>
+
+            <div class="initialData trajectories">
+                <div>5. CSV Preview:</div>
+                <div class="panel panel-primary">
+                    <div class="initialData">
+                        <pre id="initialDataPreview"></pre>
+                    </div>
+                    
+                    <div class="trajectories">
+                        <pre id="trajectoriesPreview"></pre>
+                    </div>
+                </div>
+            </div>
         </div>
 
         <div>

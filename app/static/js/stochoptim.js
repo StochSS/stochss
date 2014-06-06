@@ -247,6 +247,9 @@ StochOptim.Controller = Backbone.View.extend(
             this.initialDataFiles = new fileserver.FileList( [], { key : 'stochOptimInitialData' } );
             this.trajectoriesFiles = new fileserver.FileList( [], { key : 'stochOptimTrajectories' } );
 
+            $( '.initialData' ).hide();
+            $( '.trajectories' ).hide();
+
             // When finished, queue up another render
             this.models.fetch( { success : _.bind(this.render, this) } );
 
@@ -502,8 +505,11 @@ StochOptim.Controller = Backbone.View.extend(
 
         renderFiles : function()
         {
+            $( '.initialData' ).hide();
+            $( '.trajectories' ).hide();
+
             $( this.el ).find('#progresses').empty();
-                    
+            
             if(typeof this.initialDataFiles != 'undefined')
             {
                 var select = $( this.el ).find('#initialDataSelect');
@@ -513,148 +519,151 @@ StochOptim.Controller = Backbone.View.extend(
                 // Draw all the available CSVFiles in the CSV Select box
                 for(var i = 0; i < this.initialDataFiles.models.length; i++)
                 {
+                    $( '.initialData' ).show();
+
 	            this.optionTemp = _.template('<tr> \
 <td><a href="javascript:preventDefault();">Delete</a></td><td><input type="radio" name="initialDataFiles"></td><td><%= attributes.path %></td>\
 </tr>');
                     
                     var newOption = $( this.optionTemp( this.initialDataFiles.models[i]) ).appendTo( select );
 
-                        // When the initialDataFiles gets selected, fill the preview box with a preview of the first x bytes of the file
-                        newOption.find('input').on('click', _.partial( function(controller, initialData) {
-                            controller.selectedInitialData = initialData;
-                            $.ajax( { url: '/FileServer/large/stochOptimInitialData/' + initialData.attributes.id + '/2048/file.txt',
-                                      success : _.bind( controller.initialDataSelectPreview, controller) });
-                        }, this, this.initialDataFiles.models[i]));
+                    // When the initialDataFiles gets selected, fill the preview box with a preview of the first x bytes of the file
+                    newOption.find('input').on('click', _.partial( function(controller, initialData) {
+                        controller.selectedInitialData = initialData;
+                        $.ajax( { url: '/FileServer/large/stochOptimInitialData/' + initialData.attributes.id + '/2048/file.txt',
+                                  success : _.bind( controller.initialDataSelectPreview, controller) });
+                    }, this, this.initialDataFiles.models[i]));
 
-                        // When the delete button gets clicked, use the backbone service to destroy the file
-                        newOption.find('a').click( _.partial(function(controller, data, event) {
-                            data.destroy(); // After the file is deleted, we should post up a msg
-                            event.preventDefault();
-                            controller.renderFiles();
-                        }, this, this.initialDataFiles.models[i]));
-                    }
+                    // When the delete button gets clicked, use the backbone service to destroy the file
+                    newOption.find('a').click( _.partial(function(controller, data, event) {
+                        data.destroy(); // After the file is deleted, we should post up a msg
+                        event.preventDefault();
+                        controller.renderFiles();
+                    }, this, this.initialDataFiles.models[i]));
+                }
 
-                    // When a user uploads a file, draw a status bar, and after the upload is finished request the refreshes
-                    $( this.el ).find('#initialDataUpload').fileupload({
-                        url: '/FileServer/large/' + 'stochOptimInitialData',
-                        dataType: 'json',
-                        send: _.bind(function (e, data) {
-                            names = "";
-                            
-                            for(var i in data.files)
-                            {
-                                names += data.files[i].name + " ";
-                            }
-                            
-                            var progressbar = _.template('<span><%= name %> :<div class="progress"> \
+                // When a user uploads a file, draw a status bar, and after the upload is finished request the refreshes
+                $( this.el ).find('#initialDataUpload').fileupload({
+                    url: '/FileServer/large/' + 'stochOptimInitialData',
+                    dataType: 'json',
+                    send: _.bind(function (e, data) {
+                        names = "";
+                        
+                        for(var i in data.files)
+                        {
+                            names += data.files[i].name + " ";
+                        }
+                        
+                        var progressbar = _.template('<span><%= name %> :<div class="progress"> \
 <div class="bar" style="width:0%;"> \
 </div> \
 </div> \
 </span>');
 
-                            progressHandle = $( this.el ).find( '#progresses' );
+                        progressHandle = $( this.el ).find( '#progresses' );
 
-                            progressHandle.empty();
-                            $( progressbar({ name : names }) ).appendTo( progressHandle );
-                        }, this),
+                        progressHandle.empty();
+                        $( progressbar({ name : names }) ).appendTo( progressHandle );
+                    }, this),
 
-                        done: _.bind(function (e, data) {
-                            this.initialDataFiles.fetch( { success : _.bind(this.renderFiles, this) } );
-                        }, this),
+                    done: _.bind(function (e, data) {
+                        this.initialDataFiles.fetch( { success : _.bind(this.renderFiles, this) } );
+                    }, this),
 
-                        progressall: _.bind(function (e, data) {
-                            var progress = parseInt(data.loaded / data.total * 100, 10);
-                            $( this.el ).find( '#progresses' ).find( '.bar' ).css('width', progress + '%');
-                            $( this.el ).find( '#progresses' ).find( '.bar' ).text(progress + '%');
-                        }, this),
+                    progressall: _.bind(function (e, data) {
+                        var progress = parseInt(data.loaded / data.total * 100, 10);
+                        $( this.el ).find( '#progresses' ).find( '.bar' ).css('width', progress + '%');
+                        $( this.el ).find( '#progresses' ).find( '.bar' ).text(progress + '%');
+                    }, this),
 
-                        error : function(data) {
-                            updateMsg( { status : false,
-                                         msg : "Server error uploading file" }, "#csvMsg" );
-                        }
-                    }).prop('disabled', !$.support.fileInput)
-                        .parent().addClass($.support.fileInput ? undefined : 'disabled');
+                    error : function(data) {
+                        updateMsg( { status : false,
+                                     msg : "Server error uploading file" }, "#csvMsg" );
+                    }
+                }).prop('disabled', !$.support.fileInput)
+                    .parent().addClass($.support.fileInput ? undefined : 'disabled');
 
-                    // Have something selected
-                    select.find('input').eq(0).click();
-                }
+                // Have something selected
+                select.find('input').eq(0).click();
+            }
 
 
-                if(typeof this.trajectoriesFiles != 'undefined')
+            if(typeof this.trajectoriesFiles != 'undefined')
+            {
+                var select = $( this.el ).find('#trajectoriesSelect');
+
+                select.empty();
+
+                // Draw all the available CSVFiles in the CSV Select box
+                for(var i = 0; i < this.trajectoriesFiles.models.length; i++)
                 {
-                    var select = $( this.el ).find('#trajectoriesSelect');
+                    $( '.trajectories' ).show();
 
-                    select.empty();
-
-                    // Draw all the available CSVFiles in the CSV Select box
-                    for(var i = 0; i < this.trajectoriesFiles.models.length; i++)
-                    {
-
-	                this.optionTemp = _.template('<tr> \
+	            this.optionTemp = _.template('<tr> \
 <td><a href="javascript:preventDefault();">Delete</a></td><td><input type="radio" name="trajectoriesFiles"></td><td><%= attributes.path %></td>\
 </tr>');
 
-                        var newOption = $( this.optionTemp( this.trajectoriesFiles.models[i]) ).appendTo( select );
+                    var newOption = $( this.optionTemp( this.trajectoriesFiles.models[i]) ).appendTo( select );
 
-                        // When the initialDataFiles gets selected, fill the preview box with a preview of the first x bytes of the file
-                        newOption.find('input').on('click', _.partial( function(controller, trajectories) {
-                            controller.selectedTrajectories = trajectories;
-                            $.ajax( { url: '/FileServer/large/stochOptimTrajectories/' + trajectories.attributes.id + '/2048/file.txt',
-                                      success : _.bind( controller.trajectoriesSelectPreview, controller) });
-                        }, this, this.trajectoriesFiles.models[i]));
+                    // When the initialDataFiles gets selected, fill the preview box with a preview of the first x bytes of the file
+                    newOption.find('input').on('click', _.partial( function(controller, trajectories) {
+                        controller.selectedTrajectories = trajectories;
+                        $.ajax( { url: '/FileServer/large/stochOptimTrajectories/' + trajectories.attributes.id + '/2048/file.txt',
+                                  success : _.bind( controller.trajectoriesSelectPreview, controller) });
+                    }, this, this.trajectoriesFiles.models[i]));
 
-                        // When the delete button gets clicked, use the backbone service to destroy the file
-                        newOption.find('a').click( _.partial(function(controller, data, event) {
-                            data.destroy(); // After the file is deleted, we should post up a msg
-                            event.preventDefault();
-                            controller.renderFiles();
-                        }, this, this.trajectoriesFiles.models[i]));
-                    }
+                    // When the delete button gets clicked, use the backbone service to destroy the file
+                    newOption.find('a').click( _.partial(function(controller, data, event) {
+                        data.destroy(); // After the file is deleted, we should post up a msg
+                        event.preventDefault();
+                        controller.renderFiles();
+                    }, this, this.trajectoriesFiles.models[i]));
+                }
 
-                    // When a user uploads a file, draw a status bar, and after the upload is finished request the refreshes
-                    $( this.el ).find('#fileupload').fileupload({
-                        url: '/FileServer/large/' + 'stochOptimTrajectories',
-                        dataType: 'json',
-                        send: _.bind(function (e, data) {
-                            names = "";
-                            
-                            for(var i in data.files)
-                            {
-                                names += data.files[i].name + " ";
-                            }
-                            
-                            var progressbar = _.template('<span><%= name %> :<div class="progress"> \
+                // When a user uploads a file, draw a status bar, and after the upload is finished request the refreshes
+                $( this.el ).find('#fileupload').fileupload({
+                    url: '/FileServer/large/' + 'stochOptimTrajectories',
+                    dataType: 'json',
+                    send: _.bind(function (e, data) {
+                        names = "";
+                        
+                        for(var i in data.files)
+                        {
+                            names += data.files[i].name + " ";
+                        }
+                        
+                        var progressbar = _.template('<span><%= name %> :<div class="progress"> \
 <div class="bar" style="width:0%;"> \
 </div> \
 </div> \
 </span>');
 
-                            progressHandle = $( this.el ).find( '#progresses' );
+                        progressHandle = $( this.el ).find( '#progresses' );
 
-                            progressHandle.empty();
-                            $( progressbar({ name : names }) ).appendTo( progressHandle );
-                        }, this),
+                        progressHandle.empty();
+                        $( progressbar({ name : names }) ).appendTo( progressHandle );
+                    }, this),
 
-                        done: _.bind(function (e, data) {
-                            this.trajectoriesFiles.fetch( { success : _.bind(this.renderFiles, this) } );
-                        }, this),
+                    done: _.bind(function (e, data) {
+                        this.trajectoriesFiles.fetch( { success : _.bind(this.renderFiles, this) } );
+                    }, this),
 
-                        progressall: _.bind(function (e, data) {
-                            var progress = parseInt(data.loaded / data.total * 100, 10);
-                            $( this.el ).find( '#progresses' ).find( '.bar' ).css('width', progress + '%');
-                            $( this.el ).find( '#progresses' ).find( '.bar' ).text(progress + '%');
-                        }, this),
+                    progressall: _.bind(function (e, data) {
+                        var progress = parseInt(data.loaded / data.total * 100, 10);
+                        $( this.el ).find( '#progresses' ).find( '.bar' ).css('width', progress + '%');
+                        $( this.el ).find( '#progresses' ).find( '.bar' ).text(progress + '%');
+                    }, this),
 
-                        error : function(data) {
-                            updateMsg( { status : false,
-                                         msg : "Server error uploading file" }, "#csvMsg" );
-                        }
-                    }).prop('disabled', !$.support.fileInput)
-                        .parent().addClass($.support.fileInput ? undefined : 'disabled');
+                    error : function(data) {
+                        updateMsg( { status : false,
+                                     msg : "Server error uploading file" }, "#csvMsg" );
+                    }
+                }).prop('disabled', !$.support.fileInput)
+                    .parent().addClass($.support.fileInput ? undefined : 'disabled');
 
-                    // Have something selected
-                    select.find('input').eq(0).click();
-                }
+                // Have something selected
+                select.find('input').eq(0).click();
+            }
         }
     }
 );
