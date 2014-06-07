@@ -727,13 +727,13 @@ class ImportPage(BaseHandler):
 
                 headers = { "models" : {}, "stochkitJobs" : {}, "stochOptimJobs" : {}, "sensitivityJobs" : {} }
                 for name in zipFile.namelist():
-                    if re.search('^{0}/models/[a-zA-Z0-9\-_]*\.json$'.format(filename), name):
+                    if re.search('models/[a-zA-Z0-9\-_]*\.json$'.format(filename), name):
                         headers['models'][name] = json.loads(zipFile.read(name))
-                    elif re.search('^{0}/stochkitJobs/[a-zA-Z0-9\-_]*\.json$'.format(filename), name):
+                    elif re.search('stochkitJobs/[a-zA-Z0-9\-_]*\.json$'.format(filename), name):
                         headers['stochkitJobs'][name] = json.loads(zipFile.read(name))
-                    elif re.search('^{0}/sensitivityJobs/[a-zA-Z0-9\-_]*\.json$'.format(filename), name):
+                    elif re.search('sensitivityJobs/[a-zA-Z0-9\-_]*\.json$'.format(filename), name):
                         headers['sensitivityJobs'][name] = json.loads(zipFile.read(name))
-                    elif re.search('^{0}/stochOptimJobs/[a-zA-Z0-9\-_]*\.json$'.format(filename), name):
+                    elif re.search('stochOptimJobs/[a-zA-Z0-9\-_]*\.json$'.format(filename), name):
                         headers['stochOptimJobs'][name] = json.loads(zipFile.read(name))
 
                 print headers['stochOptimJobs']
