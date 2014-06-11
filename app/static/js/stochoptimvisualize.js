@@ -119,7 +119,7 @@ StochOptimVisualize.Controller = Backbone.View.extend(
                                 }
 
                                 console.log(key);
-                                dataKeys.push(key);
+                                //dataKeys.push(key);
                                 data[key] = []
                             }
 
@@ -131,6 +131,28 @@ StochOptimVisualize.Controller = Backbone.View.extend(
 
                     globalIteration += 1;
                 }
+            }
+
+            var parameterNames = [];
+
+            for(var name in nameToIndex)
+            {
+                parameterNames.push(name);
+            }
+
+            // Remove all data keys that are not parameters
+            var remove = [];
+            for(var key in data)
+            {
+                if(_.indexOf(parameterNames, key) < 0)
+                {
+                    remove.push(key);
+                }
+            }
+
+            for(var i in remove)
+            {
+                delete data[remove[i]];
             }
 
             var textClass = 'alert-success';
