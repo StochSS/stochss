@@ -73,12 +73,13 @@ class SuperZip:
 
     def getName(self, preferredName):
         basename = self.tmpfile[:-4].split('/')[-1]
-        
+
         fileName = '{0}/{1}'.format(basename, preferredName)
         while fileName in self.names:
-            fileName = '{0}/{1}_{2}'.format(basename, preferredName, ''.join(random.choice('abcdefghijklmnopqrztuvwxyz') for x in range(3)))
+            prefBase, ext = os.path.splitext(preferredName)
+            fileName = '{0}/{1}_{2}{3}'.format(basename, prefBase, ''.join(random.choice('abcdefghijklmnopqrztuvwxyz') for x in range(3)), ext)
 
-            self.names.append(fileName)
+        self.names.append(fileName)
 
         return fileName
 
@@ -110,7 +111,12 @@ class SuperZip:
     def addStochKitModel(self, model):
         jsonModel = { "version" : self.version,
                       "name" : model.model_name,
-                      "user_id" : model.user_id}
+                      "user_id" : model.user_id }
+
+        if model.user_id == "":
+            return
+
+        #print "adding model", model.model_name, "user_id", model.user_id
 
         if model.attributes:
             jsonModel.update(model.attributes)
@@ -151,7 +157,7 @@ class SuperZip:
             if stochkit_job.resource == 'Cloud':
                 jsonJob["output_url"] = job.stochkit_job.output_url
                 # Only grab S3 data if user wants us to
-                print 'globalOP', globalOp
+                #print 'globalOP', globalOp
                 if (job.name in self.stochKitJobsToDownload) or globalOp:
                     if stochkit_job.output_location is None or (stochkit_job.output_location is not None and not os.path.exists(stochkit_job.output_location)):
                         # Grab the output from S3 if we need to
@@ -258,19 +264,27 @@ class SuperZip:
         modelj = json.loads(self.zipfb.read(path))
         modelj["model"] = self.zipfb.read(modelj["model"])
 
+        #print "IMPORTING JOB USER ID IS: ", userId, jobj["user_id"], [x.user_id() for x in User.query().fetch()], jobj["user_id"] in [x.user_id() for x in User.query().fetch()]
+
+        #print "importing ", modelj["model_name"], modelj["user_id"]
+
         if modelj["user_id"] not in [x.user_id() for x in User.query().fetch()]:
             modelj["user_id"] = handler.user.user_id()
 
         if userId:
             modelj["user_id"] = userId
             
-        return modeleditor.ModelManager.createModel(handler, modelj, rename = rename)
+        res = modeleditor.ModelManager.createModel(handler, modelj, rename = rename)
+
+        #print "create model result ", res
+
+        return res
 
     def extractStochKitJob(self, path, userId = None, handler = None, rename = None):
         jobj = json.loads(self.zipfb.read(path))
         path = os.path.abspath(os.path.dirname(__file__))
 
-        print "Rename: ", rename
+        #print "Rename: ", rename
 
         zipPath = jobj["output_location"]
 
@@ -310,7 +324,7 @@ class SuperZip:
 
         jobNames = [x.jobName for x in db.Query(stochoptim.StochOptimJobWrapper).filter('userId =', handler.user.user_id()).run()]
 
-        print jobNames
+        #print jobNames
 
         if jsonJob["jobName"] in jobNames:
             if rename:
@@ -547,7 +561,7 @@ class ExportPage(BaseHandler):
             exportJob.status = "Finished"
             exportJob.outData = szip.getFileName()
 
-            print "exportJob outData", exportJob.outData
+            #print "exportJob outData", exportJob.outData
 
             exportJob.put()
 
@@ -650,7 +664,7 @@ class ImportPage(BaseHandler):
             stochoptim_jobs = []
             for cloud_job in stochoptim_jobs_query.run():
                 if cloud_job.outputURL is None:
-                    print vars(cloud_job)
+                    #print vars(cloud_job)
                     continue
                 stochoptim_jobs.append(cloud_job)
                 s3_url_segments = cloud_job.outputURL.split('/')
@@ -736,7 +750,7 @@ class ImportPage(BaseHandler):
                     elif re.search('stochOptimJobs/[a-zA-Z0-9\-_]*\.json$'.format(filename), name):
                         headers['stochOptimJobs'][name] = json.loads(zipFile.read(name))
 
-                print headers['stochOptimJobs']
+                #print headers['stochOptimJobs']
 
                 zipFile.close();
 
@@ -765,7 +779,7 @@ class ImportPage(BaseHandler):
 
                 jobs = []
 
-                for job in db.GqlQuery("SELECT * FROM ImportJobWrapper").run():
+                for job in db.GqlQuery("SELECT * FROM ImportJobWrapper WHERE userId = :1", self.user.user_id()).run():
                     #Using os open here cause normal Python open is failing
                     try:
                         fdescript = os.open(job.headerFile, os.O_RDONLY)
@@ -836,13 +850,23 @@ class ImportPage(BaseHandler):
                 else:
                     userId = None
 
+                validUsers = [x.user_id() for x in User.query().fetch()]
+
                 for name in state['selections']['mc']:
                     if not state['selections']['mc'][name]:
                         continue
 
+                    if userId == None:
+                        userID = headers['models'][name]["user_id"]
+
+                        if userID not in validUsers:
+                            userID = userId
+                    else:
+                        userID = userId
+
                     rename = False
                     dbName = headers['models'][name]["name"]
-                    jobs = list(db.GqlQuery("SELECT * FROM StochKitModelWrapper WHERE user_id = :1 AND model_name = :2", self.user.user_id(), dbName).run())
+                    jobs = list(db.GqlQuery("SELECT * FROM StochKitModelWrapper WHERE user_id = :1 AND model_name = :2", userID, dbName).run())
 
                     if len(jobs) > 0:
                         otherJob = jobs[0]
@@ -850,7 +874,7 @@ class ImportPage(BaseHandler):
                         if overwriteType == 'keepOld':
                             continue
                         elif overwriteType == 'overwriteOld':
-                            print 'deleting', dbName, 'hehe'
+                            #print 'deleting', dbName, 'hehe'
                             otherJob.delete()
                         #elif overwriteType == 'renameOld':
                         #    i = 1
@@ -864,22 +888,33 @@ class ImportPage(BaseHandler):
                         #    otherJob.put()
                         elif overwriteType == 'renameNew':
                             rename = True
-
+                            
+                    #print "importing ", name
                     szip.extractStochKitModel(name, userId, self, rename = rename)
+
+                #print "globalOp", userId
 
                 for name in state['selections']['sjc']:
                     if not state['selections']['sjc'][name]:
                         continue
 
+                    if userId == None:
+                        userID = headers['stochkitJobs'][name]["user_id"]
+
+                        if userID not in validUsers:
+                            userID = userId
+                    else:
+                        userID = userId
+
                     dbName = headers['stochkitJobs'][name]["name"]
-                    jobs = list(db.GqlQuery("SELECT * FROM StochKitJobWrapper WHERE user_id = :1 AND name = :2", self.user.user_id(), dbName).run())
+                    jobs = list(db.GqlQuery("SELECT * FROM StochKitJobWrapper WHERE user_id = :1 AND name = :2", userID, dbName).run())
 
                     rename = False
 
                     if len(jobs) > 0:
                         otherJob = jobs[0]
 
-                        print otherJob.name
+                        #print otherJob.name
 
                         if overwriteType == 'keepOld':
                             continue
@@ -894,8 +929,16 @@ class ImportPage(BaseHandler):
                     if not state['selections']['snc'][name]:
                         continue
 
+                    if userId == None:
+                        userID = headers['sensitivityJobs'][name]["userId"]
+
+                        if userID not in validUsers:
+                            userID = userId
+                    else:
+                        userID = userId
+
                     dbName = headers['sensitivityJobs'][name]["jobName"]
-                    jobs = list(db.GqlQuery("SELECT * FROM SensitivityJobWrapper WHERE userId = :1 AND jobName = :2", self.user.user_id(), dbName).run())
+                    jobs = list(db.GqlQuery("SELECT * FROM SensitivityJobWrapper WHERE userId = :1 AND jobName = :2", userID, dbName).run())
 
                     rename = False
 
@@ -915,8 +958,16 @@ class ImportPage(BaseHandler):
                     if not state['selections']['soc'][name]:
                         continue
 
+                    if userId == None:
+                        userID = headers['stochOptimJobs'][name]["userId"]
+
+                        if userID not in validUsers:
+                            userID = userId
+                    else:
+                        userID = userId
+
                     dbName = headers['stochOptimJobs'][name]["jobName"]
-                    jobs = list(db.GqlQuery("SELECT * FROM StochOptimJobWrapper WHERE userId = :1 AND jobName = :2", self.user.user_id(), dbName).run())
+                    jobs = list(db.GqlQuery("SELECT * FROM StochOptimJobWrapper WHERE userId = :1 AND jobName = :2", userID, dbName).run())
 
                     rename = False
 

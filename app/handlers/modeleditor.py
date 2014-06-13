@@ -111,16 +111,24 @@ class ModelManager():
 
     @staticmethod
     def createModel(handler, model, modelAsString = True, rename = None):
+
+        userID = None
+
+        if 'user_id' in model:
+            userID = model['user_id']
+        else:
+            userID = handler.user.user_id()
+
         if "name" in model:
             tryName = model["name"]
-            if ModelManager.getModelByName(handler, model["name"]):
+            if model["name"] in [x.model_name for x in db.Query(StochKitModelWrapper).filter('user_id =', userID).run()]:
                 if not rename:
                     return None
                 else:
                     i = 1
                     tryName = '{0}_{1}'.format(model["name"], i)
 
-                    while ModelManager.getModelByName(handler, tryName):
+                    while tryName in [x.model_name for x in db.Query(StochKitModelWrapper).filter('user_id =', userID).run()]:
                         i = i + 1
                         tryName = '{0}_{1}'.format(model["name"], i)
 
@@ -133,7 +141,6 @@ class ModelManager():
         else:
             name = "tmpname"
 
-        modelWrap.user_id = handler.user.user_id()
         modelWrap.model_name = name
         if modelAsString:
             modelWrap.model = StochMLDocument.fromString(model["model"]).toModel(name)
@@ -149,6 +156,7 @@ class ModelManager():
 
         modelWrap.attributes = attributes
 
+        modelWrap.user_id = userID
         return modelWrap.put().id()
 
     @staticmethod
