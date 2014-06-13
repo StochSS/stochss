@@ -447,6 +447,21 @@ StochOptim.Controller = Backbone.View.extend(
                     data.modelID = this.model.attributes.id;
                     data.resource = "local";
                     data.activate = this.activate;
+
+                    atLeastOneActiveParameter = false;
+
+                    for(var i in this.activate)
+                    {
+                        atLeastOneActiveParameter = atLeastOneActiveParameter || this.activate[i];
+                    }
+
+                    if(!atLeastOneActiveParameter)
+                    {
+                        updateMsg( { status : false,
+                                     msg : "At least one parameter must be selected for estimation" } );
+
+                        return;
+                    }
                     
                     var url = "/stochoptim";
                     

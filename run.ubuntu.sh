@@ -108,7 +108,7 @@ echo -n "Testing if Stochoptim built... "
 
 rm -r "$rundir" >& /dev/null
 
-if "$STOCHOPTIM/exec/mcem2.r" --model "$STOCHOPTIM/inst/extdata/birth_death_MAmodel.R" --data "$STOCHOPTIM/birth_death_MAdata.txt" --steps "" --seed 1 --cores 1 --K.ce 1000 --K.em 100 --K.lik 10000 --K.cov 10000 --rho 0.01 --perturb 0.25 --alpha 0.25 --beta 0.25 --gamma 0.25 --k 3 --pcutoff 0.05 --qcutoff 0.005 --numIter 10 --numConverge 1 --command 'bash' >& /dev/null; then
+if Rscript --vanilla "$STOCHOPTIM/exec/mcem2.r" --model "$STOCHOPTIM/inst/extdata/birth_death_MAmodel.R" --data "$STOCHOPTIM/birth_death_MAdata.txt" --steps "" --seed 1 --cores 1 --K.ce 1000 --K.em 100 --K.lik 10000 --K.cov 10000 --rho 0.01 --perturb 0.25 --alpha 0.25 --beta 0.25 --gamma 0.25 --k 3 --pcutoff 0.05 --qcutoff 0.005 --numIter 10 --numConverge 1 --command 'bash' >& /dev/null; then
     echo "Yes"
     echo "$STOCHOPTIM_VERSION found in $STOCHOPTIM"
 else
@@ -137,7 +137,7 @@ else
     export R_LIBS="$STOCHOPTIM/library"
 
 # Test that StochKit was installed successfully by running it on a sample model
-    if "$STOCHOPTIM/exec/mcem2.r" --model "$STOCHOPTIM/inst/extdata/birth_death_MAmodel.R" --data "$STOCHOPTIM/birth_death_MAdata.txt" --steps "" --seed 1 --cores 1 --K.ce 1000 --K.em 100 --K.lik 10000 --K.cov 10000 --rho 0.01 --perturb 0.25 --alpha 0.25 --beta 0.25 --gamma 0.25 --k 3 --pcutoff 0.05 --qcutoff 0.005 --numIter 10 --numConverge 1 --command 'bash' >& /dev/null; then
+    if Rscript --vanilla "$STOCHOPTIM/exec/mcem2.r" --model "$STOCHOPTIM/inst/extdata/birth_death_MAmodel.R" --data "$STOCHOPTIM/birth_death_MAdata.txt" --steps "" --seed 1 --cores 1 --K.ce 1000 --K.em 100 --K.lik 10000 --K.cov 10000 --rho 0.01 --perturb 0.25 --alpha 0.25 --beta 0.25 --gamma 0.25 --k 3 --pcutoff 0.05 --qcutoff 0.005 --numIter 10 --numConverge 1 --command 'bash' >& /dev/null; then
 	echo "Success!"
     else
 	echo "Failed"
