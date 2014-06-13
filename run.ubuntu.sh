@@ -58,7 +58,7 @@ fi
 echo -n "Testing if StochKit2 built... "
 
 rundir=$(mktemp -d /tmp/tmp.XXXXXX)
-rm -r "$rundir"
+rm -r "$rundir" >& /dev/null
 
 if "$STOCHKIT_HOME/ssa" -m "$STOCHKIT_HOME/models/examples/dimer_decay.xml" -r 1 -t 1 -i 1 --out-dir "$rundir" >& /dev/null; then
     echo "Yes"
@@ -92,7 +92,7 @@ else
     export STOCHKIT_HOME=$STOCHKIT_HOME_R
     cd $wd
     mv "$tmpdir/$STOCHKIT_VERSION" "$STOCHKIT_HOME"
-    rm -r "$tmpdir"
+    rm -r "$tmpdir" >& /dev/null
 
 # Test that StochKit was installed successfully by running it on a sample model
     if "$STOCHKIT_HOME/ssa" -m "$STOCHKIT_HOME/models/examples/dimer_decay.xml" -r 1 -t 1 -i 1 --out-dir "$rundir" >& /dev/null; then
@@ -214,7 +214,7 @@ else
     fi
 fi
 
-rm -r "$rundir"
+rm -r "$rundir" >& /dev/null
 
 echo "Configuring the app to use $STOCHKIT_HOME for StochKit... "
 echo "Configuring the app to use $STOCHKIT_ODE for StochKit ODE... "
