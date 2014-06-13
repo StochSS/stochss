@@ -117,7 +117,7 @@ else
     echo "Installing in $STOCHSS_HOME/$STOCHOPTIM_VERSION"
 
     echo "Cleaning up anything already there..."
-    rm -rf "$STOCHOPTIM"
+    rm -rf "$STOCHOPTIM" >& /dev/null
 
     echo "Building StochOptim"
     echo " Logging stdout in $STOCHSS_HOME/stdout.log and "
@@ -132,7 +132,7 @@ else
     echo install.packages\(\"optparse\", \""$STOCHOPTIM/library"\", \"http://cran.us.r-project.org\", INSTALL_opts = \"--no-multiarch\"\) > "$STOCHOPTIM/install_packages.R"
     echo install.packages\(\""$STOCHOPTIM"\", \""$STOCHOPTIM/library"\", NULL, type = \"source\", INSTALL_opts = \"--no-multiarch\"\) >> "$STOCHOPTIM/install_packages.R"
 
-    Rscript "$STOCHOPTIM/install_packages.R"
+    Rscript "$STOCHOPTIM/install_packages.R" 1> "$STOCHSS_HOME/stdout.log" 2>"$STOCHSS_HOME/stderr.log"
 
     export R_LIBS="$STOCHOPTIM/library"
 
@@ -157,7 +157,7 @@ else
     echo "Installing in $STOCHSS_HOME/$ODE_VERSION"
 
     echo "Cleaning up anything already there..."
-    rm -rf "$STOCHSS_HOME/ode"
+    rm -rf "$STOCHSS_HOME/ode" >& /dev/null
 
     stdout="$STOCHSS_HOME/stdout.log"
     stderr="$STOCHSS_HOME/stderr.log"
