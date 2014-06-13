@@ -353,7 +353,7 @@ class StochOptimPage(BaseHandler):
         midf.close()
         data["model_initial_data_file"] = model_initial_data_file
 
-        data["exec"] = "bash\ &"
+        data["exec"] = "\"bash&\""
 
         data["steps"] = ("C" if data["crossEntropyStep"] else "") + ("E" if data["emStep"] else "") + ("U" if data["uncertaintyStep"] else "")
 
