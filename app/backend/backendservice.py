@@ -25,6 +25,9 @@ class backendservices():
     QUEUEHEAD_KEY_TAG = 'queuehead'
     INFRA_EC2 = 'ec2'
     INFRA_CLUSTER = 'cluster'
+    WORKER_AMIS = {
+        INFRA_EC2: 'ami-f0d42898'
+    }
 
     def __init__(self):
         '''
@@ -45,6 +48,33 @@ class backendservices():
         try:
             from tasks import task,updateEntry
 	    #This is a celery task in tasks.py: @celery.task(name='stochss')
+            
+            # Need to make sure that the queue is actually reachable because
+            # we don't want the user to try to submit a task and have it
+            # timeout because the broker server isn't up yet.
+            sleep_time = 5
+            total_wait_time = 15
+            total_tries = total_wait_time / sleep_time
+            current_try = 0
+            logging.info("About to check broker at: {0}".format(celery.current_app.conf['BROKER_URL']))
+            while True:
+                try:
+                    insp = inspect().stats()
+                except IOError as e:
+                    current_try += 1
+                    logging.info("Broker down, try: {0}, exception: {1}".format(current_try, e))
+                    if current_try >= total_tries:
+                        logging.info("Broker unreachable for {0} seconds.".format(total_wait_time))
+                        return {
+                            "success": False,
+                            "reason": "Cloud instances unavailable. Please wait a minute for their initialization to complete.",
+                            "exception": str(e),
+                            "traceback": traceback.format_exc()
+                        }
+                    time.sleep(sleep_time)
+                    continue
+                logging.info("Broker up")
+                break
 
             taskid = str(uuid.uuid4())
             result["db_id"] = taskid
@@ -63,8 +93,9 @@ class backendservices():
                 result["queue"] = queue_name
                 data["queue"] = queue_name
                 # How many cores?
-                requested_cores = params["cores"]
-                params["paramstring"] += " --cores {0}".format(requested_cores)
+                requested_cores = -1
+                if "cores" in params:
+                    requested_cores = int(params["cores"])
                 
                 ##################################################################################################################
                 # The master task can run on any node...
@@ -72,7 +103,6 @@ class backendservices():
                 # launch_params["instance_type"] = "c3.large"
                 # launch_params["num_vms"] = 1
                 ##################################################################################################################
-                
                 
                 celery_info = CelerySingleton().app.control.inspect()
                 # How many active workers are there?
@@ -82,6 +112,7 @@ class backendservices():
                 # cores that worker has (i.e. how many tasks they can execute 
                 # concurrently).
                 available_workers = {}
+                core_count = 0
                 if active_workers:
                     for worker_name in active_workers:
                         # active_workers[worker_name] will be a list of dictionaries representing
@@ -89,6 +120,7 @@ class backendservices():
                         # then the worker isn't busy
                         if not active_workers[worker_name]:
                             available_workers[worker_name] = celery_info.stats()[worker_name]['pool']['max-concurrency']
+                            core_count += int(available_workers[worker_name])
                 logging.info("All available workers:".format(available_workers))
                 # We assume that at least one worker is already consuming from the main queue
                 # so we just need to find that one worker and remove it from the list, since
@@ -98,38 +130,57 @@ class backendservices():
                     worker_queues = celery_info.active_queues()[worker_name]
                     for queue in worker_queues:
                         if queue["name"] == "celery":
-                            available_workers.pop(worker_name)
+                            popped_cores = int(available_workers.pop(worker_name))
                             done = True
+                            core_count -= popped_cores
                             break
                     if done:
                         break
-                logging.info("Choosing from workers:".format(available_workers))
-                # Now loop through available workers and see if we have enough free to meet
-                # requested core count.
-                worker_names = []
-                unmatched_cores = requested_cores
-                if available_workers:
-                    for worker_name in available_workers:
-                        # We need to find out what the concurrency of the worker is.
-                        worker_cores = available_workers[worker_name]
-                        # Subtract this from our running count and save the workers name
-                        unmatched_cores -= worker_cores
-                        worker_names.append(worker_name)
-                        if unmatched_cores <= 0:
-                            # Then we have enough
-                            break
-                # Did we get enough?
-                if unmatched_cores > 0:
-                    # Nope...
+                if core_count <= 0:
+                    # Then theres only one worker available
                     return {
                         "success": False,
-                        "reason": "Didn't find enough idle cores to meet requested core count of {0}. Still need {1} more.".format(
-                            requested_cores,
-                            unmatched_cores
-                        )
+                        "reason": "You need to have at least two workers in order to run a parameter estimation job in the cloud."
                     }
-                # if unmatched_cores <= 0:
+                logging.info("Found {0} cores that can be used as slaves on the following workers: {1}".format(
+                    core_count,
+                    available_workers
+                ))
+                if requested_cores == -1:
+                    params["paramstring"] += " --cores {0}".format(core_count)
+                    # Now just use all available cores since the user didn't request
+                    # a specific amount, i.e. re-route active workers to the new queue
+                    worker_names = []
+                    for worker_name in available_workers:
+                        worker_names.append(worker_name)
+                    logging.info("Rerouting all available workers: {0} to queue: {1}".format(worker_names, queue_name))
+                    rerouteWorkers(worker_names, queue_name)
                 else:
+                    params["paramstring"] += " --cores {0}".format(requested_cores)
+                    # Now loop through available workers and see if we have enough free to meet
+                    # requested core count.
+                    worker_names = []
+                    unmatched_cores = requested_cores
+                    if available_workers:
+                        for worker_name in available_workers:
+                            # We need to find out what the concurrency of the worker is.
+                            worker_cores = available_workers[worker_name]
+                            # Subtract this from our running count and save the workers name
+                            unmatched_cores -= worker_cores
+                            worker_names.append(worker_name)
+                            if unmatched_cores <= 0:
+                                # Then we have enough
+                                break
+                    # Did we get enough?
+                    if unmatched_cores > 0:
+                        # Nope...
+                        return {
+                            "success": False,
+                            "reason": "Didn't find enough idle cores to meet requested core count of {0}. Still need {1} more.".format(
+                                requested_cores,
+                                unmatched_cores
+                            )
+                        }
                     logging.info("Found enough idle cores to meet requested core count of {0}".format(requested_cores))
                     # We have enough, re-route active workers to the new queue
                     logging.info("Rerouting workers: {0} to queue: {1}".format(worker_names, queue_name))
@@ -288,6 +339,29 @@ class backendservices():
             return None
         return result
     
+    def stopTasks(self, params):
+        '''
+        @param id_pairs: a list of (database_id, task_id) pairs, each representing
+                          a task to be stopped
+        '''
+        credentials = params['credentials']
+        id_pairs = params['ids']
+        # First we need to stop the workers from working on the tasks
+        db_ids = []
+        for id_pair in id_pairs:
+            task_id = id_pair[0]
+            database_id = id_pair[1]
+            logging.info("stopTasks calling removeTask('{0}')".format(task_id))
+            removeTask(task_id)
+            db_ids.append(database_id)
+        # Then we need to return the final description of the tasks
+        describe_params = {
+            'AWS_ACCESS_KEY_ID': credentials['AWS_ACCESS_KEY_ID'],
+            'AWS_SECRET_ACCESS_KEY': credentials['AWS_SECRET_ACCESS_KEY'],
+            'taskids': db_ids
+        }
+        return self.describeTask(describe_params)
+    
     def deleteTasks(self, taskids):
         '''
         @param taskid:the list of taskids to be removed 
@@ -395,46 +469,18 @@ class backendservices():
             if self.isQueueHeadRunning(compute_check_params):
                 res = i.run_instances(params,[])
             else:
-                queue_head_ami = "ami-3ea04b56"
                 # Need to start the queue head (RabbitMQ)
                 params["queue_head"] = True
                 vms_requested = int(params["num_vms"])
-                requested_image_id = params["image_id"]
                 requested_key_name = params["keyname"]
                 # Only want one queue head, and it must have its own key so
                 # it can be differentiated if necessary
                 params["num_vms"] = 1
-                params["image_id"] = queue_head_ami
                 params["keyname"] = requested_key_name+'-'+self.QUEUEHEAD_KEY_TAG
                 res = i.run_instances(params,[])
                 #NOTE: This relies on the InfrastructureManager being run in blocking mode...
                 queue_head_ip = res["vm_info"]["public_ips"][0]
                 self.__update_celery_config_with_queue_head_ip(queue_head_ip)
-                #TODO: See TODO in __update_celery_config_with_queue_head_ip
-                #      Basically broker will always be unreachable in this
-                #      scenario...
-                # # Need to make sure that the queue is actually reachable because
-                # # we don't want the user to try to submit a task and have it
-                # # timeout because the broker server isn't up yet.
-                # sleep_time = 5
-                # total_wait_time = 60
-                # total_tries = total_wait_time / sleep_time
-                # current_try = 0
-                # print "About to check broker at:", celery.current_app.conf['BROKER_URL']
-                # while True:
-                #     try:
-                #         insp = inspect().stats()
-                #     except IOError as e:
-                #         current_try += 1
-                #         print "Broker down, try: {0}, exception: {1}".format(current_try, e)
-                #         if current_try >= total_tries:
-                #             print "Broker unreachable for {0} seconds. Fatal error.".format(total_wait_time)
-                #             return
-                #         time.sleep(sleep_time)
-                #         continue
-                #     print "Broker up"
-                #     break
-                params["image_id"] = requested_image_id
                 params["keyname"] = requested_key_name
                 params["queue_head"] = False
                 if vms_requested > 1:
@@ -652,7 +698,7 @@ if __name__ == "__main__":
             "credentials": credentials,
             "num_vms": 1,
             "group": keypair_name,
-            "image_id": "ami-b8a249d0",
+            "image_id": obj.WORKER_AMIS[obj.INFRA_EC2],#"ami-b8a249d0",
             "instance_type": 't1.micro',#"c3.large",
             "key_prefix": keypair_name,
             "keyname": keypair_name,
@@ -663,7 +709,29 @@ if __name__ == "__main__":
             print "Failed to start master machine..."
             sys.exit(1)
         print "Done."
-    
+    # We need to start our own workers first.
+    cores_to_use = 4
+    print "Launching {0} slave worker(s)...".format(cores_to_use)
+    launch_params = {
+        "infrastructure": obj.INFRA_EC2,
+        "credentials": credentials,
+        "num_vms": cores_to_use,
+        "group": keypair_name,
+        "image_id": obj.WORKER_AMIS[obj.INFRA_EC2],#"ami-b8a249d0",
+        "instance_type": 't1.micro',#"c3.large",
+        "key_prefix": keypair_name,
+        "keyname": keypair_name,
+        "use_spot_instances": False
+    }
+    # Slaves dont need to be started in blocking mode, although
+    # blocking mode is being forced inside the InfrastructureManager
+    # currently.
+    launch_result = obj.startMachines(launch_params, block=False)
+    if not launch_result["success"]:
+        print "Failed to start slave worker(s)..."
+        sys.exit(1)
+    print "Done."
+    # Then we can execute the task.
     file_dir_path = os.path.dirname(os.path.abspath(__file__))
     path_to_model_file = os.path.join(file_dir_path, "../../../stochoptim/inst/extdata/birth_death_REMAImodel.R")
     # path_to_model_file = os.path.join(file_dir_path, "../../../stochoptim/inst/extdata/birth_death_MAImodel.R")
@@ -674,7 +742,7 @@ if __name__ == "__main__":
         'credentials':{'EC2_ACCESS_KEY':access_key, 'EC2_SECRET_KEY':secret_key},
         "key_prefix": keypair_name,
         "job_type": "mcem2",
-        "cores": 4,
+        "cores": cores_to_use,
         "model_file": open(path_to_model_file, 'r').read(),
         "model_data": {
             "extension": "txt",

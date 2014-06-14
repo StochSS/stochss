@@ -22,6 +22,7 @@ from boto.exception import S3ResponseError
 from datetime import datetime
 from multiprocessing import Process
 import tempfile, time
+import signal
 
 class CelerySingleton(object):
     """
@@ -286,6 +287,23 @@ def master_task(task_id, params):
                 )
                 poll_process.start()
                 update_process.start()
+                # Handler that should catch the first SIGTERM signal and then kill
+                # off all subprocesses
+                def handler(signum, frame, *args):
+                    print 'Caught signal:', signum
+                    # try to kill subprocesses off...
+                    try:
+                        p.terminate()
+                        poll_process.terminate()
+                        update_process.terminate()
+                    except Exception as e:
+                        print '******************************************************************'
+                        print "Exception:", e
+                        print traceback.format_exc()
+                        print '******************************************************************'
+                # Register the handler with SIGTERM signal
+                signal.signal(signal.SIGTERM, handler)
+                # Wait on program execution...
                 stdout, stderr = p.communicate()
                 execution_time = (datetime.now() - execution_start).total_seconds()
                 print "Should be empty:", stdout
@@ -295,7 +313,10 @@ def master_task(task_id, params):
         print "Master: finished execution of executable"
         poll_process.terminate()
         update_process.terminate()
-        if p.returncode != 0:
+        # 0 means success
+        # -15 means SIGTERM, i.e. it was explicitly terminated, most likely
+        # by the signal handler defined just above
+        if p.returncode not in [0, -15]:
             data = {
                 'status': 'failed',
                 'message': 'The executable failed with an exit status of {0}.'.format(p.returncode)
@@ -565,7 +586,7 @@ def removeTask(task_id):
         from celery.task.control import revoke
         # Celery can't use remote control (which includes revoking tasks) with SQS
         # http://docs.celeryproject.org/en/latest/getting-started/brokers/sqs.html
-        revoke(task_id)#, terminate=True, signal="SIGTERM")
+        revoke(task_id, terminate=True, signal="SIGTERM")
     except Exception,e:
         print "task {0} cannot be removed/deleted. Error : {1}".format(task_id, str(e))
 
