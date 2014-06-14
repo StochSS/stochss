@@ -174,14 +174,35 @@ class StochOptimJobWrapper(db.Model):
 
         super(StochOptimJobWrapper, self).delete()
 
-    def stop(self):
+    def stop(self, credentials=None):
         if self.status == "Running":
             if self.resource.lower() == "local":
                 try:
                     os.killpg(self.pid, signal.SIGTERM)
                 except:
                     pass
-        
+            elif self.resource.lower() == "cloud":
+                service = backend.backendservice.backendservices()
+                stop_params = {
+                    'credentials': credentials,
+                    'ids': [(self.celeryPID, self.cloudDatabaseID)]
+                }
+                result = service.stopTasks(stop_params)
+                if result and result[self.cloudDatabaseID]:
+                    final_cloud_result = result[self.cloudDatabaseID]
+                    try:
+                        self.outputURL = final_cloud_result['output']
+                    except KeyError:
+                        pass
+                    self.status = "Finished"
+                    self.put()
+                    return True
+                else:
+                    # Something went wrong
+                    print '**************************************************************************************'
+                    print result
+                    print '**************************************************************************************'
+                    return False
     
     def mark_final_cloud_data(self):
         flag_file = os.path.join(self.outData, ".final-cloud")
@@ -250,7 +271,24 @@ class StochOptimPage(BaseHandler):
             job = StochOptimJobWrapper.get_by_id(jobID)
 
             if job.userId == self.user.user_id():
-                job.stop()
+                if job.resource.lower() == "cloud":
+                    if not self.user_data.valid_credentials:
+                        return self.response.write(json.dumps({
+                            'status': False,
+                            'msg': 'Could not stop the job '+stochkit_job.name +'. Invalid credentials.'
+                        }))
+                    credentials = self.user_data.getCredentials()
+                    success = job.stop(credentials={
+                        'AWS_ACCESS_KEY_ID': credentials['EC2_ACCESS_KEY'],
+                        'AWS_SECRET_ACCESS_KEY': credentials['EC2_SECRET_KEY']
+                    })
+                    if not success:
+                        return self.response.write(json.dumps({
+                            'status': False,
+                            'msg': 'Could not stop the job '+stochkit_job.name +'. Unexpected error.'
+                        }))
+                else:
+                    job.stop()
             else:
                 self.response.write(json.dumps({"status" : False,
                                                 "msg" : "No permissions to delete this job (this should never happen)"}))
@@ -415,7 +453,7 @@ class StochOptimPage(BaseHandler):
 
         data["steps"] = ("C" if data["crossEntropyStep"] else "") + ("E" if data["emStep"] else "") + ("U" if data["uncertaintyStep"] else "")
 
-        data["cores"] = 4
+        # data["cores"] = 4
         data["options"] = ""
 
         cmd = "exec/mcem2.r --steps {steps} --seed {seed} --K.ce {Kce} --K.em {Kem} --K.lik {Klik} --K.cov {Kcov} --rho {rho} --perturb {perturb} --alpha {alpha} --beta {beta} --gamma {gamma} --k {k} --pcutoff {pcutoff} --qcutoff {qcutoff} --numIter {numIter} --numConverge {numConverge} --command {exec}".format(**data)
@@ -428,7 +466,7 @@ class StochOptimPage(BaseHandler):
 
         cloud_params = {
             "job_type": "mcem2",
-            "cores": data["cores"],
+            # "cores": data["cores"],
             "paramstring": cmd,
             "model_file": stringModel,
             "model_data": {
@@ -453,6 +491,11 @@ class StochOptimPage(BaseHandler):
                 "success": False,
                 "msg": cloud_result["reason"]
             }
+            try:
+                result["exception"] = cloud_result["exception"]
+                result["traceback"] = cloud_result["traceback"]
+            except KeyError:
+                pass
             return result
         
         job.cloudDatabaseID = cloud_result["db_id"]
