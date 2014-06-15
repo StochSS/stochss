@@ -293,6 +293,8 @@ class SuperZip:
                 fhandle.write(self.zipfb.read(name))
                 fhandle.close()
 
+        jobj["modelName"] = jobj["modelName"] if "modelName" in jobj else None
+
         jobj["output_location"] = outPath
         jobj["stdout"] = "{0}/stdout".format(outPath)
         jobj["stderr"] = "{0}/stderr".format(outPath)
@@ -346,7 +348,7 @@ class SuperZip:
         job.userId = jsonJob["userId"]
         job.jobName = jsonJob["jobName"]
         job.startTime = jsonJob["startTime"]
-        job.modelName = jsonJob["modelName"]
+        job.modelName = jsonJob["modelName"] if "modelName" in jsonJob else None
         job.indata = json.dumps(jsonJob["indata"])
         job.nameToIndex = json.dumps(jsonJob["nameToIndex"])
         job.outData = outPath
@@ -402,7 +404,7 @@ class SuperZip:
         job.jobName = jsonJob["jobName"]
         job.startTime = jsonJob["startTime"]
         job.indata = json.dumps(jsonJob["indata"])
-        job.modelName = jsonJob["modelName"]
+        job.modelName = jsonJob["modelName"] if "modelName" in jsonJob else None
         job.outData = outPath
         job.status = jsonJob["status"]
 
