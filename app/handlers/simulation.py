@@ -180,9 +180,14 @@ class JobManager():
     def createJob(handler, job, rename = None):
         tryName = job["name"]
 
-        jobNames = [x.name for x in db.Query(StochKitJobWrapper).filter('user_id =', handler.user.user_id()).run()]
+        userID = None
 
+        if 'user_id' in job:
+            userID = job['user_id']
+        else:
+            userID = handler.user.user_id()
 
+        jobNames = [x.name for x in db.Query(StochKitJobWrapper).filter('user_id =', userID).run()]
 
         if job["name"] in jobNames:
             if not rename:
@@ -199,7 +204,7 @@ class JobManager():
             job["name"] = tryName
 
         jobWrap = StochKitJobWrapper()
-        jobWrap.user_id = handler.user.user_id()
+        jobWrap.user_id = userID
         jobWrap.name = job['name']
         jobWrap.type = job['type']
         

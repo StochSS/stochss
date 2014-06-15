@@ -33,7 +33,7 @@ export R_LIBS="$STOCHSS_HOME/stochoptim/library"
 echo -n "Testing if StochKit2 built... "
 
 rundir=$(mktemp -d /tmp/tmp.XXXXXX)
-rm -r "$rundir"
+rm -r "$rundir" >& /dev/null
 
 if "$STOCHKIT_HOME/ssa" -m "$STOCHKIT_HOME/models/examples/dimer_decay.xml" -r 1 -t 1 -i 1 --out-dir "$rundir" >& /dev/null; then
     echo "Yes"
@@ -67,9 +67,9 @@ else
     export STOCHKIT_HOME=$STOCHKIT_HOME_R
     cd $wd
     mv "$tmpdir/$STOCHKIT_VERSION" "$STOCHKIT_HOME"
-    rm -r "$tmpdir"
+    rm -r "$tmpdir" >& /dev/null
 
-    rm -r "$rundir"
+    rm -r "$rundir" >& /dev/null
 # Test that StochKit was installed successfully by running it on a sample model
     if "$STOCHKIT_HOME/ssa" -m "$STOCHKIT_HOME/models/examples/dimer_decay.xml" -r 1 -t 1 -i 1 --out-dir "$rundir" >& /dev/null; then
 	echo "Success!"
@@ -93,7 +93,7 @@ else
     echo "Installing in $STOCHSS_HOME/$STOCHOPTIM_VERSION"
 
     echo "Cleaning up anything already there..."
-    rm -rf "$STOCHOPTIM"
+    rm -rf "$STOCHOPTIM" >& /dev/null
 
     echo "Building StochOptim"
     echo " Logging stdout in $STOCHSS_HOME/stdout.log and "
@@ -108,7 +108,7 @@ else
     echo install.packages\(\"optparse\", \""$STOCHOPTIM/library"\", \"http://cran.us.r-project.org\", INSTALL_opts = \"--no-multiarch\"\) > "$STOCHOPTIM/install_packages.R"
     echo install.packages\(\""$STOCHOPTIM"\", \""$STOCHOPTIM/library"\", NULL, type = \"source\", INSTALL_opts = \"--no-multiarch\"\) >> "$STOCHOPTIM/install_packages.R"
 
-    Rscript "$STOCHOPTIM/install_packages.R"
+    Rscript "$STOCHOPTIM/install_packages.R" 1> "$STOCHSS_HOME/stdout.log" 2>"$STOCHSS_HOME/stderr.log"
 
     export R_LIBS="$STOCHOPTIM/library"
 
@@ -124,7 +124,7 @@ fi
 
 echo -n "Testing if StochKit2 ODE built... "
 
-rm -r "$rundir"
+rm -r "$rundir" >& /dev/null
 if "$STOCHKIT_ODE/ode" -m "$STOCHKIT_HOME/models/examples/dimer_decay.xml" -t 1 -i 1 --out-dir "$rundir" >& /dev/null; then
     echo "Yes"
     echo "ode found in $STOCHKIT_ODE"
@@ -134,7 +134,7 @@ else
     echo "Installing in $STOCHSS_HOME/$ODE_VERSION"
 
     echo "Cleaning up anything already there..."
-    rm -rf "$STOCHSS_HOME/ode"
+    rm -rf "$STOCHSS_HOME/ode" >& /dev/null
 
     stdout="$STOCHSS_HOME/stdout.log"
     stderr="$STOCHSS_HOME/stderr.log"
@@ -191,7 +191,7 @@ else
     fi
 fi
 
-rm -r "$rundir"
+rm -r "$rundir" >& /dev/null
 
 echo "Configuring the app to use $STOCHKIT_HOME for StochKit... "
 echo "Configuring the app to use $STOCHKIT_ODE for StochKit ODE... "
