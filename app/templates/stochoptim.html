@@ -32,7 +32,7 @@
 <script id="modelSelectTemplate" type="text/template">
     <div id="modelSelect">
         <div class="well">
-            <% if(typeof models != 'undefined' ) { %>
+            <% if(typeof models != 'undefined' && models.length > 0) { %>
             <h3> Select model to analyze </h3>
             <br />
             <% for(var model in models) { %>
