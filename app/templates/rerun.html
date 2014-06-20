@@ -5,15 +5,7 @@
 <div class="span9">
     <div class="row-fluid">
     	<div class"span9">
-            <h2>Provenance Information</h2>
-            </br>
-            Machine Type: {{instance_type}}<br/><br/>
-            AMI-ID: {{ami_id}}<br/><br/>
-            Execute String: {{exec_str}}<br/><br/>
-            Input Files: 
-            {% for f in input_files %}
-                {{f}}: {{input_files[f]}}<br/>
-            {% endfor %}
+            <h2>Replaying job {{uuid}}</h2>
         </div>
     </div>
 </div>

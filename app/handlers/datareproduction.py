@@ -5,7 +5,7 @@ import datetime
 from google.appengine.ext import db
 from stochssapp import BaseHandler
 import sensitivity
-import cloudtracker
+from cloudtracker import CloudTracker
 
 class DataReproductionPage(BaseHandler):
     """ The main handler for the Data Reproduction Page."""        
@@ -92,9 +92,14 @@ class RerunJobPage(BaseHandler):
     def get(self):
         uuid = self.request.get('id')
         credentials = self.user_data.getCredentials()
-        cloudtracker.run(uuid, credentials['EC2_ACCESS_KEY'], credentials['EC2_SECRET_KEY'])
 
-        context = self.getContext()
+        try:
+            ct = CloudTracker()
+            ct.run(uuid, credentials['EC2_ACCESS_KEY'], credentials['EC2_SECRET_KEY'])
+        except Exception,e:
+            print e
+
+        context = {'uuid' : uuid}
         self.render_response('rerun.html', **context)
         
     def post(self):        

@@ -20,10 +20,7 @@ celery.config_from_object('celeryconfig')
 import logging, subprocess
 import boto.dynamodb
 from datetime import datetime
-
-import cloudtracker
-
-import s3_helper
+from cloudtracker import CloudTracker
 
 @celery.task(name='stochss')
 def task(taskid,params):
@@ -34,7 +31,11 @@ def task(taskid,params):
       global STOCHKIT_DIR
       global ODE_DIR
 
-      cloudtracker.setup_provenance(taskid)
+      try:
+        ct = CloudTracker(taskid)
+        ct.init_tracking()
+      except Exception:
+        print "Error initializing tracking"
 
       print 'task to be executed at remote location'
       print 'inside celery task method'
@@ -44,100 +45,83 @@ def task(taskid,params):
       paramstr =  params['paramstring']
       uuidstr = taskid
       res['uuid'] = uuidstr
-      create_dir_str = "mkdir -p /mnt/output/result "
-      os.system(create_dir_str)
-      filename = "/mnt/input/{0}.xml".format(uuidstr)
+      filename = "/home/ubuntu/output/{0}.xml".format(uuidstr)
       f = open(filename,'w')
       f.write(params['document'])
       f.close()
       xmlfilepath = filename
-      stdout = "/mnt/output/stdout.log"
-      stderr = "/mnt/output/stderr.log"
+      stdout = "/home/ubuntu/output/stdout.log"
+      stderr = "/home/ubuntu/output/stderr.log"
 
       job_type = params['job_type']
       exec_str = ''
       if job_type == 'stochkit':
           # The following executiong string is of the form : stochkit_exec_str = "~/StochKit/ssa -m ~/output/%s/dimer_decay.xml -t 20 -i 10 -r 1000" % (uuidstr)
-          exec_str = "{0}/{1} -m {2} --force".format(STOCHKIT_DIR, paramstr, xmlfilepath)
+          exec_str = "{0}/{1} -m {2} --force --out-dir /home/ubuntu/output/result".format(STOCHKIT_DIR, paramstr, xmlfilepath)
       elif job_type == 'stochkit_ode' or job_type == 'sensitivity':
-          exec_str = "{0}/{1} -m {2} --force".format(ODE_DIR, paramstr, xmlfilepath)
-
-      cloudtracker.trap_executable(taskid,exec_str)
-
-      exec_str_out = exec_str + "--out-dir /mnt/output/result 2>{0} > {1}".format(stderr, stdout)
-
-      print "-----------------"
-      print paramstr
-      print xmlfilepath
-      print uuidstr
+          exec_str = "{0}/{1} -m {2} --force --out-dir /home/ubuntu/output/result".format(ODE_DIR, paramstr, xmlfilepath)
       
+      exec_str_out = exec_str + "2>{0} > {1}".format(stderr, stdout)
+
       print "======================="
       print " Command to be executed : "
       print exec_str_out
       print "======================="
       print "To test if the command string was correct. Copy the above line and execute in terminal."
+
+      try:
+        ct.track_input(exec_str)
+      except Exception:
+        print "CloudTracker Error: track_input(" + exec_str + ")"
+
       timestarted = datetime.now()
       os.system(exec_str_out)
       timeended = datetime.now()
-      diff = timeended - timestarted
+
+      try:
+        ct.track_output("/home/ubuntu/output/")
+      except Exception,e:
+        print "CloudTracker Error: track_output(/home/ubuntu/output)"
+        print e
       
-      results = os.listdir("/mnt/output/result")
-      if 'stats' in results and os.listdir("/mnt/output/result/stats") == ['.parallel']:
+      results = os.listdir("output/result")
+      if 'stats' in results and os.listdir("output/result/stats") == ['.parallel']:
           raise Exception("The compute node can not handle a job of this size.")
       
       res['pid'] = taskid
-      filepath = "/mnt/output/"
+      filepath = "output/"
       absolute_file_path = os.path.abspath(filepath)
       print 'generating tar file'
-      create_tar_output_str = "tar -zcvf /mnt/{0}.tar /mnt/output/".format(uuidstr)
+      create_tar_output_str = "tar -zcvf {0}.tar output/"
       print create_tar_output_str
       logging.debug("followig cmd to be executed %s" % (create_tar_output_str))
       bucketname = params['bucketname']
-#      copy_to_s3_str = "python {2}/sccpy.py output/{0}.tar {1}".format(uuidstr,bucketname,THOME)
+      copy_to_s3_str = "python {2}/sccpy.py {0}.tar {1}".format(uuidstr,bucketname,THOME)
       data = {'status':'active','message':'Task finished. Generating output.'}
       updateEntry(taskid, data, "stochss")
       os.system(create_tar_output_str)
-#      print 'copying file to s3 : {0}'.format(copy_to_s3_str)
-#      os.system(copy_to_s3_str)
-      
-      #s3_filename = uuidstr + ".tar"
-     # s3_filepath = "/mnt/" + s3_filename
-
-    #  s3_helper.upload_file(bucketname,s3_filepath,s3_filename)
-#      s3_helper.add_metadata(bucketname,s3_filename,"meta1","success")
-   #   s3_helper.add_ec2_metadata(bucketname,s3_filename)
-  #    s3_helper.add_timestamp(bucketname,s3_filename,timestarted)
- #     s3_helper.add_running_time(bucketname,s3_filename,diff.total_seconds())
-#      s3_helper.add_filesize(bucketname,s3_filename)
-
-#      files = {"{0}.xml".format(uuidstr) : params['document']}
-#      s3_helper.save_exec_str(uuidstr, exec_str, files)
-
-      print 'removing xml file'
-      removefilestr = "rm {0}".format(xmlfilepath)
-#      os.system(removefilestr)
-      removetarstr = "rm /mnt/{0}.tar".format(uuidstr)
-#      os.system(removetarstr)
-      removeoutputdirstr = "rm -r /mnt/output/"
-#      os.system(removeoutputdirstr)
+      print 'copying file to s3 : {0}'.format(copy_to_s3_str)
+      os.system(copy_to_s3_str)
+      removeoutputdirstr = "rm /home/ubuntu/output/*"
+      os.system(removeoutputdirstr)
       res['output'] = "https://s3.amazonaws.com/{1}/output/{0}.tar".format(taskid,bucketname)
       res['status'] = "finished"
+      diff = timeended - timestarted
       res['time_taken'] = "{0} seconds and {1} microseconds ".format(diff.seconds, diff.microseconds)
       updateEntry(taskid, res, "stochss")
   except Exception,e:
-      print e
-      expected_output_dir = "/mnt/output"
+      expected_output_dir = "output/%s" % uuidstr
       # First check for existence of output directory
       if os.path.isdir(expected_output_dir):
           # Then we should store this in S3 for debugging purposes
           create_tar_output_str = "tar -zcvf {0}.tar {0}".format(expected_output_dir)
           os.system(create_tar_output_str)
           bucketname = params['bucketname']
-#          copy_to_s3_str = "python {0}/sccpy.py {1}.tar {2}".format(THOME, expected_output_dir, bucketname)
-#          os.system(copy_to_s3_str)
+          copy_to_s3_str = "python {0}/sccpy.py {1}.tar {2}".format(THOME, expected_output_dir, bucketname)
+          os.system(copy_to_s3_str)
           # Now clean up
           remove_output_str = "rm {0}.tar {0}".format(expected_output_dir)
-#          os.system(remove_output_str)
+          os.system(remove_output_str)
           # Update the DB entry
           res['output'] = "https://s3.amazonaws.com/{0}/{1}.tar".format(bucketname, expected_output_dir)
           res['status'] = 'failed'
