@@ -29,6 +29,7 @@ class DataReproductionPage(BaseHandler):
                                                         credentials['EC2_ACCESS_KEY'],
                                                         credentials['EC2_SECRET_KEY'])
     
+            # If there is no provenance data for this job, report an error to the user
             if not prov_keys:
                 context = self.getContext()
                 result = {'status':False,'msg':"The job with this ID does not exist or cannot be reproduced."}
@@ -95,6 +96,7 @@ class RerunJobPage(BaseHandler):
 
         try:
             ct = CloudTracker()
+            # Set up CloudTracker with user credentials to rerun the job with the specified UUID
             ct.run(uuid, credentials['EC2_ACCESS_KEY'], credentials['EC2_SECRET_KEY'])
         except Exception,e:
             print e

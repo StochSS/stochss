@@ -32,6 +32,7 @@ def task(taskid,params):
       global ODE_DIR
 
       try:
+        # Initialize cloudtracker with the task's UUID
         ct = CloudTracker(taskid)
         ct.init_tracking()
       except Exception:
@@ -69,6 +70,7 @@ def task(taskid,params):
       print "======================="
       print "To test if the command string was correct. Copy the above line and execute in terminal."
 
+      # Supply CloudTracker with the execution string to be tracked
       try:
         ct.track_input(exec_str)
       except Exception:
@@ -78,6 +80,7 @@ def task(taskid,params):
       os.system(exec_str_out)
       timeended = datetime.now()
 
+      # Supply CloudTracker with the location of the output directory
       try:
         ct.track_output("/home/ubuntu/output/")
       except Exception,e:
