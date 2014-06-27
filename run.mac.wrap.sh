@@ -1,2 +1,2 @@
 #!/usr/bin/env bash
-exec ./run.generic.html.sh
+exec bash --login run.generic.html.sh
