@@ -24,10 +24,10 @@ stochkit.Model = Backbone.Model.extend( {
             this.SpeciesList = XML( '<SpeciesList />' ).appendTo(this.dom);
             this.ReactionsList = XML( '<ReactionsList />' ).appendTo(this.dom);
 
-            if(_.has(attributes, 'model'))
-            {
-                this.parse(attributes);
-            }
+            //if(_.has(attributes, 'model'))
+            //{
+            //    this.parse(attributes);
+            //}
         }
     },
 
@@ -81,7 +81,7 @@ stochkit.Model = Backbone.Model.extend( {
 
     toJSON : function()
     {
-        var ret = _.extend({ "model" : this.toXML() }, this.attributes);
+        var ret = _.extend({ "model" : this.toXML() }, _.omit( this.attributes, "model" ));
 
         return ret;
     },
