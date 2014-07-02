@@ -97,8 +97,9 @@ Import.ImportTable = Backbone.View.extend(
             this.mc = this.$el.find( '#modelContainer' );
             this.sjc = this.$el.find( '#stochkitJobContainer' );
             this.snc = this.$el.find( '#sensitivityJobContainer' );
+            this.soc = this.$el.find( '#stochOptimJobContainer' );
 
-            this.state = { id : undefined, selections : { mc : {}, sjc : {}, snc : {} } };
+            this.state = { id : undefined, selections : { mc : {}, soc : {}, sjc : {}, snc : {} } };
             
             this.$el.hide();
         },
@@ -114,8 +115,9 @@ Import.ImportTable = Backbone.View.extend(
 
         render: function(data)
         {
-            this.state = { id : undefined, selections : { mc : {}, sjc : {}, snc : {} } };
+            this.state = { id : undefined, selections : { mc : {}, sjc : {}, soc : {}, snc : {} } };
 
+            this.soc.empty();
             this.mc.empty();
             this.sjc.empty();
             this.snc.empty();
@@ -171,6 +173,30 @@ Import.ImportTable = Backbone.View.extend(
                     boxparam.find('input').change( _.partial(function(state, id, event) {
                         state[id] = $( event.target ).prop( 'checked' );
                     }, this.state.selections.sjc, name) );
+                }
+
+                $( ".stochOptimContainerTr" ).hide();
+                for(var name in this.data.headers.stochOptimJobs) {
+                    $( ".stochOptimContainerTr" ).show();
+                    var job = this.data.headers.stochOptimJobs[name];
+
+                    var color = "red";
+                    var version = job.version + " (newer than current StochSS)";
+                    if(versionCompare(this.version, job.version) >= 0)
+                    {
+                        color = "green";
+                        version = job.version;
+                    }
+
+                    var html = this.sensitivityTemplate( { job : job,
+                                                           color : color,
+                                                           version : version});
+
+                    var boxparam = $( html ).appendTo( this.soc );
+
+                    boxparam.find('input').change( _.partial(function(state, id, event) {
+                        state[id] = $( event.target ).prop( 'checked' );
+                    }, this.state.selections.soc, name) );
                 }
 
                 $( ".sensitivityContainerTr" ).hide();

@@ -74,8 +74,11 @@
     <div class="well">                    
         <h3>Metadata</h3>
         <p class="thispage">
-            Resource: <%= jobName %>
+            Resource: <%= resource %>
             <br />
+            Simulation status: <%= status %>
+            <br />
+            Stochkit model: <a href="/modeleditor?model_edited=<%= modelName %>" class="thispage"> <%= modelName %> </a>
         </p>
     </div>
 
