@@ -48,7 +48,7 @@ var checkAndGet = function(selectTable)
     if(!/^[0-9]+$/.test(realizations))
     {
         updateMsg( { status : false,
-                     msg : "Seed must be an integer" } );
+                     msg : "Number of realizations must be an integer" } );
         return false;
     }
 
@@ -57,10 +57,10 @@ var checkAndGet = function(selectTable)
     var algorithm = $( "input:radio[name=algorithm]:checked" ).val();
     var seed = $( "#seed" ).val();
 
-    if(!/^[0-9]+$/.test(seed))
+    if(!/^[0-9]+$/.test(seed) && seed.trim() != "-1")
     {
         updateMsg( { status : false,
-                     msg : "Seed must be an integer" } );
+                     msg : "Seed must be an integer (or -1 for random seed)" } );
         return false;
     }
 

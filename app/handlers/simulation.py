@@ -660,9 +660,10 @@ class SimulatePage(BaseHandler):
             
                 if "keep-histograms" in params:
                     args+=' --keep-histograms'
-                        
-                args+=' --seed '
-                args+=str(seed)
+                
+                if int(seed) >= 0:
+                    args+=' --seed '
+                    args+=str(seed)
             else:
                 params['job_type'] = 'stochkit_ode'
                 executable = "stochkit_ode.py"
@@ -754,7 +755,9 @@ class SimulatePage(BaseHandler):
                 executable = "{0}/../../StochKit/{1}".format(path, params['algorithm'])
 
                 args += ' --realizations {0} '.format(params['realizations'])
-                args+=' --keep-trajectories --seed {0} '.format(params['seed'])
+                args += ' --keep-trajectories '
+                if int(params['seed']) >= 0:
+                    args += '--seed {0} '.format(params['seed'])
             else:
                 executable = "{0}/../../ode/stochkit_ode.py".format(path)
 
