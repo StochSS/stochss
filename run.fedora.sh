@@ -24,6 +24,9 @@ STOCHKIT_PREFIX=$STOCHSS_HOME
 export STOCHKIT_HOME="$STOCHKIT_PREFIX/$STOCHKIT_VERSION"
 ODE_VERSION="ode-1.0.1"
 export STOCHKIT_ODE="$STOCHSS_HOME/$ODE_VERSION"
+STOCHOPTIM_VERSION="stochoptim-0.5-1"
+export STOCHOPTIM="$STOCHSS_HOME/$STOCHOPTIM_VERSION"
+export R_LIBS="$STOCHSS_HOME/stochoptim/library"
 
 # Check that the dependencies are satisfied
 echo -n "Are dependencies satisfied?... "
@@ -32,7 +35,7 @@ echo -n "Are dependencies satisfied?... "
 # install dependencies
 PKG_MNGR=""
 
-packages=$(yum list installed | grep '^gcc.\|^gcc-c++.\|^make.\|^libxml2-devel.\|^curl.\|^git.' | wc -l)
+packages=$(yum list installed | grep '^gcc.\|^gcc-c++.\|^make.\|^libxml2-devel.\|^curl.\|^git.\|^R.\|^gsl.' | wc -l)
 if [ "$packages" != '6' ]; then
     echo "No"
     read -p "Do you want me to try to use sudo to install missing package(s) (libxml2-devel make gcc-c++ gcc curl git)? (y/n): " answer
@@ -44,8 +47,8 @@ if [ "$packages" != '6' ]; then
     answer=$(echo $answer | tr '[A-Z]' '[a-z]')
 
     if [ "$answer" == 'y' ] || [ "$answer" == 'yes' ]; then
-        echo "Running 'sudo yum install libxml2-devel gcc make gcc-c++ curl git'"
-        sudo yum install libxml2-devel make gcc-c++ curl git
+        echo "Running 'sudo yum install libxml2-devel gcc make gcc-c++ curl git R gsl'"
+        sudo yum install libxml2-devel make gcc-c++ curl git R gsl
     
         if [ $? != 0 ]; then
             exit -1
@@ -58,7 +61,7 @@ fi
 echo -n "Testing if StochKit2 built... "
 
 rundir=$(mktemp -d /tmp/tmp.XXXXXX)
-rm -r "$rundir"
+rm -r "$rundir" >& /dev/null
 
 if "$STOCHKIT_HOME/ssa" -m "$STOCHKIT_HOME/models/examples/dimer_decay.xml" -r 1 -t 1 -i 1 --out-dir "$rundir" >& /dev/null; then
     echo "Yes"
@@ -69,7 +72,7 @@ else
     echo "Installing in $STOCHSS_HOME/$STOCHKIT_VERSION"
 
     echo "Cleaning up anything already there..."
-    rm -rf "$STOCHKIT_PREFIX/$STOCHKIT_VERSION"
+    rm -rf "$STOCHKIT_PREFIX/$STOCHKIT_VERSION" >& /dev/null
 
     if [ ! -e "$STOCHKIT_PREFIX/$STOCHKIT_VERSION.tgz" ]; then
 	echo "Downloading $STOCHKIT_VERSION..."
@@ -92,9 +95,9 @@ else
     export STOCHKIT_HOME=$STOCHKIT_HOME_R
     cd $wd
     mv "$tmpdir/$STOCHKIT_VERSION" "$STOCHKIT_HOME"
-    rm -r "$tmpdir"
+    rm -r "$tmpdir" >& /dev/null
 
-    rm -r "$rundir"
+    rm -r "$rundir" >& /dev/null
 # Test that StochKit was installed successfully by running it on a sample model
     if "$STOCHKIT_HOME/ssa" -m "$STOCHKIT_HOME/models/examples/dimer_decay.xml" -r 1 -t 1 -i 1 --out-dir "$rundir" >& /dev/null; then
 	echo "Success!"
@@ -105,9 +108,51 @@ else
     fi
 fi
 
+echo -n "Testing if Stochoptim built... "
+
+rm -r "$rundir" >& /dev/null
+
+if Rscript --vanilla "$STOCHOPTIM/exec/mcem2.r" --model "$STOCHOPTIM/inst/extdata/birth_death_MAmodel.R" --data "$STOCHOPTIM/birth_death_MAdata.txt" --steps "" --seed 1 --cores 1 --K.ce 1000 --K.em 100 --K.lik 10000 --K.cov 10000 --rho 0.01 --perturb 0.25 --alpha 0.25 --beta 0.25 --gamma 0.25 --k 3 --pcutoff 0.05 --qcutoff 0.005 --numIter 10 --numConverge 1 --command 'bash' >& /dev/null; then
+    echo "Yes"
+    echo "$STOCHOPTIM_VERSION found in $STOCHOPTIM"
+else
+    echo "No"
+
+    echo "Installing in $STOCHSS_HOME/$STOCHOPTIM_VERSION"
+
+    echo "Cleaning up anything already there..."
+    rm -rf "$STOCHOPTIM" >& /dev/null
+
+    echo "Building StochOptim"
+    echo " Logging stdout in $STOCHSS_HOME/stdout.log and "
+    echo " stderr in $STOCHSS_HOME/stderr.log "
+    echo " * This process will take at least 5 minutes to complete, please be patient *"
+
+    tar -xzf "$STOCHOPTIM.tgz"
+    mkdir "$STOCHOPTIM/library"
+
+    wd=`pwd`
+
+    echo install.packages\(\"optparse\", \""$STOCHOPTIM/library"\", \"http://cran.us.r-project.org\", INSTALL_opts = \"--no-multiarch\"\) > "$STOCHOPTIM/install_packages.R"
+    echo install.packages\(\""$STOCHOPTIM"\", \""$STOCHOPTIM/library"\", NULL, type = \"source\", INSTALL_opts = \"--no-multiarch\"\) >> "$STOCHOPTIM/install_packages.R"
+
+    Rscript "$STOCHOPTIM/install_packages.R" 1> "$STOCHSS_HOME/stdout.log" 2>"$STOCHSS_HOME/stderr.log"
+
+    export R_LIBS="$STOCHOPTIM/library"
+
+# Test that StochKit was installed successfully by running it on a sample model
+    if Rscript --vanilla "$STOCHOPTIM/exec/mcem2.r" --model "$STOCHOPTIM/inst/extdata/birth_death_MAmodel.R" --data "$STOCHOPTIM/birth_death_MAdata.txt" --steps "" --seed 1 --cores 1 --K.ce 1000 --K.em 100 --K.lik 10000 --K.cov 10000 --rho 0.01 --perturb 0.25 --alpha 0.25 --beta 0.25 --gamma 0.25 --k 3 --pcutoff 0.05 --qcutoff 0.005 --numIter 10 --numConverge 1 --command 'bash' >& /dev/null; then
+	echo "Success!"
+    else
+	echo "Failed"
+	echo "$STOCHOPTIM failed to install. Consult logs above for errors"	
+	exit -1
+    fi
+fi
+
 echo -n "Testing if StochKit2 ODE built... "
 
-rm -r "$rundir"
+rm -r "$rundir" >& /dev/null
 if "$STOCHKIT_ODE/ode" -m "$STOCHKIT_HOME/models/examples/dimer_decay.xml" -t 1 -i 1 --out-dir "$rundir" >& /dev/null; then
     echo "Yes"
     echo "ode found in $STOCHKIT_ODE"
@@ -117,7 +162,7 @@ else
     echo "Installing in $STOCHSS_HOME/$ODE_VERSION"
 
     echo "Cleaning up anything already there..."
-    rm -rf "$STOCHSS_HOME/ode"
+    rm -rf "$STOCHSS_HOME/ode" >& /dev/null
 
     stdout="$STOCHSS_HOME/stdout.log"
     stderr="$STOCHSS_HOME/stderr.log"
@@ -174,17 +219,20 @@ else
     fi
 fi
 
-rm -r "$rundir"
+rm -r "$rundir" >& /dev/null
 
 echo "Configuring the app to use $STOCHKIT_HOME for StochKit... "
 echo "Configuring the app to use $STOCHKIT_ODE for StochKit ODE... "
+echo "Configuring the app to use $STOCHOPTIM for Stochoptim... "
 
 ln -s "$STOCHKIT_ODE" ode
 ln -s "$STOCHKIT_HOME" StochKit
+ln -s "$STOCHOPTIM" stochoptim >& /dev/null
 
 # Write STOCHKIT_HOME to the appropriate config file
 echo "$STOCHKIT_HOME" > "$STOCHSS_HOME/conf/config"
 echo -n "$STOCHKIT_ODE" >> "$STOCHSS_HOME/conf/config"
+echo -n "$STOCHOPTIM" >> "$STOCHSS_HOME/conf/config"
 echo "Done!"
 
 exec python "$STOCHSS_HOME/launchapp.py" $0

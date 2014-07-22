@@ -397,6 +397,8 @@ var run = function()
 
                         newModel.setSpecies(name, Math.round(Number(expr) * vol));
                     }
+
+                    //newModel.toJSON();
                     
                     modelCollection.add(newModel);
                     newModel.save({}, { success: _.partial(function(elem) { elem.prop('class', 'alert alert-success'); elem.text('Model successfully created, navigate to Models page to edit'); }, this.$el.find( '#msg' )),

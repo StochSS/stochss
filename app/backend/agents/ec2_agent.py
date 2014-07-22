@@ -1,5 +1,4 @@
-
-from backend.agents.base_agent import BaseAgent, AgentConfigurationException, AgentRuntimeException
+from base_agent import BaseAgent, AgentConfigurationException, AgentRuntimeException
 import sys,os,traceback
 sys.path.append(os.path.join(os.path.dirname(__file__), '../../lib/boto'))
 sys.path.append(os.path.join(os.path.dirname(__file__), '../'))
@@ -10,7 +9,7 @@ import datetime
 import os
 import time,uuid
 from boto.ec2.cloudwatch import MetricAlarm
-from backend.utils import utils
+from utils import utils
 from uuid import uuid4
 import logging
 
@@ -44,6 +43,8 @@ class EC2Agent(BaseAgent):
   PARAM_INSTANCE_IDS = 'instance_ids'
   PARAM_SPOT = 'use_spot_instances'
   PARAM_SPOT_PRICE = 'max_spot_price'
+  PARAM_WORKER_QUEUE = 'queue'
+  PARAM_QUEUE_HEAD = 'queue_head'
 
   REQUIRED_EC2_RUN_INSTANCES_PARAMS = (
     PARAM_CREDENTIALS,
@@ -183,13 +184,14 @@ class EC2Agent(BaseAgent):
     instanceList = []
     instances = [i for r in reservations for i in r.instances]
     for i in instances:
-	if i.key_name is not None and i.key_name.startswith(prefix):
-            instance = dict()
-            instance["id"] = i.id
-            instance["public_ip"] = i.public_dns_name
-            instance["private_ip"] = i.private_dns_name
-            instance["state"]= i.state
-            instanceList.append(instance)
+      if i.key_name is not None and i.key_name.startswith(prefix):
+        instance = dict()
+        instance["id"] = i.id
+        instance["public_ip"] = i.public_dns_name
+        instance["private_ip"] = i.private_dns_name
+        instance["state"]= i.state
+        instance["key_name"] = i.key_name
+        instanceList.append(instance)
     return instanceList
 
 
@@ -263,7 +265,47 @@ class EC2Agent(BaseAgent):
     userstr+='echo export STOCHKIT_ODE={0} >> /home/ubuntu/.bashrc\n'.format("/home/ubuntu/ode/")
     userstr+='source ~/.bashrc \n'
     userstr+='source /home/ubuntu/.bashrc \n'
-    userstr+="nohup celery -A tasks worker --autoreload --loglevel=info -n {0} --workdir /home/ubuntu > /home/ubuntu/nohup.log 2>&1 & \n".format(str(uuid.uuid4()))
+    # Workers need an alarm...
+    skip_alarm = False
+    if self.PARAM_QUEUE_HEAD in parameters and parameters[self.PARAM_QUEUE_HEAD]:
+      # ...but the queue head doesnt
+      skip_alarm = True
+      # Queue head, needs to have at least two cores
+      insufficient_cores = ['t1.micro', 'm1.small', 'm1.medium', 'm3.medium']
+      if instance_type in insufficient_cores:
+        instance_type = 'c3.large'
+      # Create the user that we want to use to connect to the broker
+      # and configure its permissions on the default vhost.
+      userstr += "rabbitmqctl add_user stochss ucsb\n"
+      userstr += 'rabbitmqctl set_permissions -p / stochss ".*" ".*" ".*"\n'
+      # userstr += "rabbitmq-server -detached\n"
+    else:
+      # Update celery config file...it should have the correct IP
+      # of the Queue head node, which should already be running.
+      celery_config_filename = os.path.join(
+        os.path.dirname(os.path.abspath(__file__)),
+        "../celeryconfig.py"
+      )
+      # Pass it line by line so theres no weird formatting errors from 
+      # trying to echo a multi-line file directly on the command line
+      with open(celery_config_filename, 'r') as celery_config_file:
+        lines = celery_config_file.readlines()
+        # Make sure we overwrite the file with our first write
+        userstr += "echo '{0}' > /home/ubuntu/celeryconfig.py\n".format(lines[0])
+        for line in lines[1:]:
+          userstr += "echo '{0}' >> /home/ubuntu/celeryconfig.py\n".format(line)
+    # Even the queue head gets a celery worker
+    # NOTE: We only need to use the -n argument to celery command if we are starting
+    #       multiple workers on the same machine. Instead, we are starting one worker
+    #       per machine and letting that one worker execute one task per core, using
+    #       the configuration in celeryconfig.py to ensure that Celery detects the 
+    #       number of cores and enforces this desired behavior.
+    if self.PARAM_WORKER_QUEUE in parameters:
+      userstr+="nohup celery -A tasks worker --autoreload --loglevel=info -Q {0} --workdir /home/ubuntu > /home/ubuntu/nohup.log 2>&1 & \n".format(
+          parameters[self.PARAM_WORKER_QUEUE]
+      )
+    else:
+      userstr+="nohup celery -A tasks worker --autoreload --loglevel=info --workdir /home/ubuntu > /home/ubuntu/nohup.log 2>&1 & \n"
     f.write(userstr)
     f.close()
     start_time = datetime.datetime.now()
@@ -340,10 +382,10 @@ class EC2Agent(BaseAgent):
       else:
         utils.log('TIMING: It took {0} seconds to spawn {1} ' \
                   'regular instances'.format(total_time.seconds, count))
-        
-        utils.log('Creating Alarms for the instances')
-        for machineid in instance_ids:
-            self.make_sleepy(parameters, machineid)   
+        if not skip_alarm:
+          utils.log('Creating Alarms for the instances')
+          for machineid in instance_ids:
+              self.make_sleepy(parameters, machineid)   
       return instance_ids, public_ips, private_ips
     except EC2ResponseError as exception:
       self.handle_failure('EC2 response error while starting VMs: ' +

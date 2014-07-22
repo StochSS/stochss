@@ -280,7 +280,7 @@ class StatusPage(BaseHandler):
 
             for number, job in enumerate(jobs):
                 number = len(jobs) - number
-                print job.outData
+                print 'hi', job.outData
                 allExportJobs.append({ "startTime" : job.startTime,
                                        "status" : job.status,
                                        "number" : number,
@@ -288,6 +288,87 @@ class StatusPage(BaseHandler):
                                        "id" : job.key().id()})
         
         context['allExportJobs'] = allExportJobs
+
+        allParameterJobs = []
+        allParameterJobsQuery = db.GqlQuery("SELECT * FROM StochOptimJobWrapper WHERE userId = :1", self.user.user_id())
+
+        if allParameterJobsQuery != None:
+            jobs = list(allParameterJobsQuery.run())
+
+            jobs = sorted(jobs, key = lambda x : (datetime.datetime.strptime(x.startTime, '%Y-%m-%d-%H-%M-%S') if hasattr(x, 'startTime') and x.startTime != None else ''), reverse = True)
+
+            for number, job in enumerate(jobs):
+                print number, job.pid
+                number = len(jobs) - number
+                if job.resource == "local" or not job.resource:
+                    # First, check if the job is still running
+                    res = service.checkTaskStatusLocal([job.pid])
+                    print job.pid, res[job.pid], job.jobName
+                    if res[job.pid] and job.pid:
+                        job.status = "Running"
+                    else:
+                        try:
+                            fd = os.open("{0}/stderr".format(job.outData), os.O_RDONLY)
+                            f = os.fdopen(fd)
+                            stderr = f.read().strip()
+                            f.close()
+                        except:
+                            stderr = '1'
+
+                        if len(stderr) == 0:
+                            job.status = "Finished"
+                        else:
+                            job.status = "Failed"
+
+                #    asd
+                elif job.resource == "cloud" and job.status != "Finished":
+                    # Retrive credentials from the datastore
+                    if not self.user_data.valid_credentials:
+                        return {'status':False,'msg':'Could not retrieve the status of job '+stochkit_job.name +'. Invalid credentials.'}
+                    credentials = self.user_data.getCredentials()
+                    # Check the status from backend
+                    taskparams = {
+                        'AWS_ACCESS_KEY_ID': credentials['EC2_ACCESS_KEY'],
+                        'AWS_SECRET_ACCESS_KEY': credentials['EC2_SECRET_KEY'],
+                        'taskids': [job.cloudDatabaseID]
+                    }
+                    task_status = service.describeTask(taskparams)
+                    job_status = task_status[job.cloudDatabaseID]
+                    # If it's finished
+                    if job_status['status'] == 'finished':
+                        # Update the job 
+                        job.status = 'Finished'
+                        job.outputURL = job_status['output']
+                    # 
+                    elif job_status['status'] == 'failed':
+                        job.status = 'Failed'
+                        job.exceptionMessage = job_status['message']
+                        # Might not have an output if an exception was raised early on or if there is just no output available
+                        try:
+                            job.outputURL = job_status['output']
+                        except KeyError:
+                            pass
+                    # 
+                    elif job_status['status'] == 'pending':
+                        job.status = 'Pending'
+                    else:
+                        # The state gives more fine-grained results, like if the job is being re-run, but
+                        #  we don't bother the users with this info, we just tell them that it is still running.  
+                        job.status = 'Running'
+                        try:
+                            job.outputURL = job_status['output']
+                            logging.info("Found running stochoptim job with S3 output: {0}".format(job.outputURL))
+                        except KeyError:
+                            pass
+
+                job.put()
+
+                allParameterJobs.append({ "status" : job.status,
+                                       "name" : job.jobName,
+                                       "number" : number,
+                                       "id" : job.key().id()})
+        
+        context['allParameterJobs'] = allParameterJobs
     
         return dict(result,**context)
 

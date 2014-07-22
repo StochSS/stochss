@@ -62,6 +62,7 @@ class StochKitJobWrapper(db.Model):
     # A reference to the user that owns this job
     user_id =  db.StringProperty()
     name = db.StringProperty()
+    modelName = db.StringProperty()
     # The type if the job {'local', 'cloud'}
     type =  db.StringProperty()
     attributes = ObjectProperty()
@@ -114,6 +115,7 @@ class JobManager():
                         # These are things contained in the stochkit_job object
                         "type" : job.stochkit_job.type,
                         "status" : job.stochkit_job.status,
+                        "modelName" : job.modelName,
                         "output_location" : job.stochkit_job.output_location,
                         "zipFileName" : job.stochkit_job.zipFileName,
                         "output_url" : job.stochkit_job.output_url,
@@ -151,6 +153,7 @@ class JobManager():
                     # These are things contained in the stochkit_job object
                     "type" : job.stochkit_job.type,
                     "status" : job.stochkit_job.status,
+                    "modelName" : job.modelName,
                     "output_location" : job.stochkit_job.output_location,
                     "zipFileName" : job.stochkit_job.zipFileName,
                     "units" : job.stochkit_job.units,
@@ -177,7 +180,14 @@ class JobManager():
     def createJob(handler, job, rename = None):
         tryName = job["name"]
 
-        jobNames = [x.name for x in db.Query(StochKitJobWrapper).filter('userId =', handler.user.user_id()).run()]
+        userID = None
+
+        if 'user_id' in job:
+            userID = job['user_id']
+        else:
+            userID = handler.user.user_id()
+
+        jobNames = [x.name for x in db.Query(StochKitJobWrapper).filter('user_id =', userID).run()]
 
         if job["name"] in jobNames:
             if not rename:
@@ -194,10 +204,11 @@ class JobManager():
             job["name"] = tryName
 
         jobWrap = StochKitJobWrapper()
-        jobWrap.user_id = handler.user.user_id()
+        jobWrap.user_id = userID
         jobWrap.name = job['name']
         jobWrap.type = job['type']
         
+        jobWrap.modelName = job['modelName']
         # This is probably not a good idea...
         jobWrap.stochkit_job = StochKitJob(**job)
 
@@ -437,8 +448,6 @@ class SimulatePage(BaseHandler):
                             
                             vhandle = open(outputdir + outfile, 'r')
                             
-                            print outputdir + outfile
-                            
                             values = { 'time' : [], 'trajectories' : {} }
                             columnToList = []
                             for i, line in enumerate(vhandle):
@@ -540,12 +549,18 @@ class SimulatePage(BaseHandler):
                 self.response.write(json.dumps({"status" : False,
                                                 "msg" : "Job name must be unique"}))
                 return
-
+            
+            backend_services = backendservices()
+            compute_check_params = {
+                "infrastructure": "ec2",
+                "credentials": self.user_data.getCredentials(),
+                "key_prefix": self.user.user_id()
+            }
             # Create a stochhkit_job instance
             if params['resource'] == "local":
                 result=self.runStochKitLocal(params)
             elif params['resource'] == 'cloud':
-                if self.user_data.valid_credentials and self.isOneOrMoreComputeNodesRunning(self.user_data.getCredentials()):
+                if self.user_data.valid_credentials and backend_services.isOneOrMoreComputeNodesRunning(compute_check_params):
                     result=self.runCloud(params)
                 else:
                     result = { 'status': False, 'msg': 'You must have at least one active compute node to run in the cloud.' }
@@ -554,29 +569,7 @@ class SimulatePage(BaseHandler):
 
             self.response.headers['Content-Type'] = 'application/json'
             self.response.write(json.dumps(result))
-
-    def isOneOrMoreComputeNodesRunning(self, credentials):
-        '''
-        Checks for the existence of running compute nodes. Only need one running compute node
-        to be able to run a job in the cloud.
-        '''
-        try:
-            service = backendservices()
-            params = {
-                "infrastructure": "ec2",
-                "credentials": credentials
-            }
-            all_vms = service.describeMachines(params)
-            if all_vms == None:
-                return False
-            # Just need one running vm
-            for vm in all_vms:
-                if vm != None and vm['state'] == 'running':
-                    return True
-            return False
-        except:
-            return False
-
+    
     def runCloud(self, params):
         
         try:
@@ -682,15 +675,19 @@ class SimulatePage(BaseHandler):
         
             # Call backendservices and execute StochKit
             service = backendservices()
-            celery_task_id, taskid = service.executeTask(params)
-            
-            if celery_task_id == None:
-                result = {'status':False,'msg':'Cloud execution failed. '}
+            cloud_result = service.executeTask(params)
+            if not cloud_result["success"]:
+                e = cloud_result["exception"]
+                result = {
+                    'status': False,
+                    'msg': 'Cloud execution failed: '+str(e)
+                }
                 return result
+            
+            celery_task_id = cloud_result["celery_pid"]
+            taskid = cloud_result["db_id"]
             # Create a StochKitJob instance
             stochkit_job = StochKitJob(name = ensemblename, final_time = stime, realizations = realizations, increment = increment, seed = seed, exec_type = exec_type, units = model.units.lower())
-        
-        
             stochkit_job.resource = 'Cloud'
             stochkit_job.type = 'StochKit2 Ensemble'
             
@@ -710,6 +707,7 @@ class SimulatePage(BaseHandler):
             stochkit_job_db.user_id = self.user.user_id()
             stochkit_job_db.name = stochkit_job.name
             stochkit_job_db.stochkit_job = stochkit_job
+            stochkit_job_db.modelName = model.name
             stochkit_job_db.put()
             result = {'status':True,'msg':'Job submitted sucessfully.'}
                 
@@ -817,6 +815,7 @@ class SimulatePage(BaseHandler):
             stochkit_job_db.stochkit_job = stochkit_job
             stochkit_job_db.stdout = stochkit_job.stdout
             stochkit_job_db.stderr = stochkit_job.stderr
+            stochkit_job_db.modelName = model.name
             stochkit_job_db.put()
     
             result = {'status':True,'msg':'Job submitted sucessfully'}

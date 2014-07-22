@@ -5,7 +5,7 @@ from boto.s3.lifecycle import Lifecycle, Expiration
 # AWS ACCESS DETAILS
 class s3Agent():
     def uploadfile(self, file, bucketname):
-        try :
+        try:
             uploadfile = file
             bucketname = bucketname
             lifecycle = Lifecycle()
@@ -25,7 +25,9 @@ class s3Agent():
             k.set_contents_from_filename(uploadfile, cb=self.percent_cb, num_cb=10)
             k.set_acl('public-read-write')
         except Exception,e:
-            print 'falied {0}'.format(str(e))
+            sys.stdout.write("S3Agent failed with exception:\n{0}".format(str(e)))
+            sys.stdout.flush()
+            raise e
 
 
     def percent_cb(self,complete, total):
