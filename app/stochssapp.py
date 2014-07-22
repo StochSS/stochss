@@ -305,6 +305,7 @@ from handlers.modeleditor import *
 from handlers.parametereditor import *
 from handlers.volumeeditor import *
 from handlers.reactioneditor import *
+import handlers.stochoptim
 from handlers.simulation import *
 from handlers.sensitivity import *
 from handlers.credentials import *
@@ -313,6 +314,7 @@ from handlers.updates import *
 from handlers.status import *
 from handlers.auth import *
 from handlers.admin import *
+import handlers.fileserver
 
 # Handler to serve static files
 class StaticFileHandler(BaseHandler):
@@ -358,6 +360,20 @@ app = webapp2.WSGIApplication([
                                ('/modeleditor.*', ModelEditorPage),
                                ('/simulate',SimulatePage),
                                ('/sensitivity',SensitivityPage),
+                               ('/stochoptim', handlers.stochoptim.StochOptimPage),
+                               webapp2.Route('/stochoptim/<jobID>', handler = handlers.stochoptim.StochOptimVisualization),#/<queryType>
+                               webapp2.Route('/stochoptim/<queryType>/<jobID>', handler = handlers.stochoptim.StochOptimVisualization),
+                               ## Fileserver handlers
+                               # This route is for listing all files
+                               webapp2.Route('/FileServer/backbone/<key>', handler = handlers.fileserver.BackboneFileServerInterface, name = 'backbonefs'),
+                               # This route is for interacting with single files
+                               webapp2.Route('/FileServer/backbone/<key>/<fileID>', handler = handlers.fileserver.BackboneFileServerInterface, name = 'backbonefs'),
+                               # This route is for downloading the full file
+                               webapp2.Route('/FileServer/large/<key>/<fileID>/<filename>', handler = handlers.fileserver.LargeFileServerInterface, name = 'fs'),
+                               # This route is for file uploads
+                               webapp2.Route('/FileServer/large/<key>', handler = handlers.fileserver.LargeFileServerInterface, name = 'fs'),
+                               # This route is for downloading only a few bytes
+                               webapp2.Route('/FileServer/large/<key>/<fileID>/<numberBytes>/<filename>', handler = handlers.fileserver.LargeFileServerInterface, name = 'fs'),
                                ('/export', ExportPage),
                                ('/import', ImportPage),
                                ('/status',StatusPage),

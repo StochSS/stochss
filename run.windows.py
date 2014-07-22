@@ -431,7 +431,11 @@ def start_stochss_server(aws_access_key, aws_secret_key, preferred_instance_id, 
         preferred_instance_id = raw_input("Please enter the instance ID of the EC2 instance you wish to launch (just hit return to launch a brand new instance): ")
         if preferred_instance_id == '':
             # ...unless they want a brand new instance. Then we might need a keypair...
-            decision = raw_input("Do you optionally want to use a key pair when creating this instance (y/n)? ").lower()
+            decision = raw_input("Do you optionally want to use a key pair when creating this instance (y/N/?)? ").lower()
+            while decision == '?':
+                print "In order to gain command line access to an EC2 instance, you need to use a valid AWS SSH key pair when launching the instance."
+                print "If you choose not to specify your own key pair, a default key pair will be created and used automatically."
+                decision = raw_input("Do you optionally want to use a key pair when creating this instance (y/N/?)? ").lower()
             if decision == 'y':
                 if preferred_ec2_key_pair is None:
                     preferred_ec2_key_pair = raw_input('Please enter the name of a valid AWS EC2 key pair you wish to use or hit return to cancel: ')

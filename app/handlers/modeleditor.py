@@ -46,20 +46,24 @@ class StochKitModelWrapper(db.Model):
 
 class ModelManager():
     @staticmethod
-    def getModels(handler):
+    def getModels(handler, modelAsString = True):
         models = db.GqlQuery("SELECT * FROM StochKitModelWrapper WHERE user_id = :1", handler.user.user_id()).fetch(100000)
 
         output = []
 
         for model in models:
             print model.model_name
-            jsonModel = { "id" : model.key().id(),
-                          "name" : model.model_name }
+            jsonModel = { "name" : model.model_name }
             if model.attributes:
                 jsonModel.update(model.attributes)
+            jsonModel["id"] = model.key().id()
+                          
             print model.model.units
             jsonModel["units"] = model.model.units
-            jsonModel["model"] = model.model.serialize()
+            if modelAsString:
+                jsonModel["model"] = model.model.serialize()
+            else:
+                jsonModel["model"] = model.model
 
             #print jsonModel
 
@@ -68,22 +72,26 @@ class ModelManager():
         return output
 
     @staticmethod
-    def getModel(handler, model_id):
-        model = StochKitModelWrapper.get_by_id(model_id)
+    def getModel(handler, model_id, modelAsString = True):
+        model = StochKitModelWrapper.get_by_id(int(model_id))
 
-        jsonModel = { "id" : model.key().id(),
-                      "name" : model.model_name }
+        jsonModel = { "name" : model.model_name }
 
         if model.attributes:
             jsonModel.update(model.attributes)
 
+        jsonModel["id"] = model.key().id()
+                      
         jsonModel["units"] = model.model.units
-        jsonModel["model"] = model.model.serialize()
+        if modelAsString:
+            jsonModel["model"] = model.model.serialize()
+        else:
+            jsonModel["model"] = model.model
             
         return jsonModel
 
     @staticmethod
-    def getModelByName(handler, modelName):
+    def getModelByName(handler, modelName, modelAsString = True):
         model = db.GqlQuery("SELECT * FROM StochKitModelWrapper WHERE user_id = :1 AND model_name = :2", handler.user.user_id(), modelName).get()
 
         if model == None:
@@ -94,22 +102,33 @@ class ModelManager():
         if model.attributes:
             jsonModel.update(model.attributes)
         jsonModel["units"] = model.model.units
-        jsonModel["model"] = model.model.serialize()
+        if modelAsString == True:
+            jsonModel["model"] = model.model.serialize()
+        else:
+            jsonModel["model"] = model.model
             
         return jsonModel
 
     @staticmethod
-    def createModel(handler, model, rename = None):
+    def createModel(handler, model, modelAsString = True, rename = None):
+
+        userID = None
+
+        if 'user_id' in model:
+            userID = model['user_id']
+        else:
+            userID = handler.user.user_id()
+
         if "name" in model:
             tryName = model["name"]
-            if ModelManager.getModelByName(handler, model["name"]):
+            if model["name"] in [x.model_name for x in db.Query(StochKitModelWrapper).filter('user_id =', userID).run()]:
                 if not rename:
                     return None
                 else:
                     i = 1
                     tryName = '{0}_{1}'.format(model["name"], i)
 
-                    while ModelManager.getModelByName(handler, tryName):
+                    while tryName in [x.model_name for x in db.Query(StochKitModelWrapper).filter('user_id =', userID).run()]:
                         i = i + 1
                         tryName = '{0}_{1}'.format(model["name"], i)
 
@@ -122,9 +141,12 @@ class ModelManager():
         else:
             name = "tmpname"
 
-        modelWrap.user_id = handler.user.user_id()
         modelWrap.model_name = name
-        modelWrap.model = StochMLDocument.fromString(model["model"]).toModel(name)
+        if modelAsString:
+            modelWrap.model = StochMLDocument.fromString(model["model"]).toModel(name)
+        else:
+            model["model"].name = model["name"]
+            modelWrap.model = model["model"]
         modelWrap.model.units = model["units"]
 
         attributes = {}
@@ -134,6 +156,7 @@ class ModelManager():
 
         modelWrap.attributes = attributes
 
+        modelWrap.user_id = userID
         return modelWrap.put().id()
 
     @staticmethod
@@ -449,8 +472,8 @@ class ModelEditorPage(BaseHandler):
         """
         name = self.request.get('name').strip()
 
-        if not re.match('^[a-zA-Z0-9_\-]+$', name):
-          return {'status': False, 'msg': 'Model name must be alphanumeric characters, underscores, hyphens, and spaces only'}
+        if not re.match('^[a-zA-Z0-9_]+$', name):
+          return {'status': False, 'msg': 'Model name must be alphanumeric characters and underscores only'}
 
         units = self.request.get('exec_type').strip().lower()
         if not name:
@@ -511,6 +534,10 @@ class ModelEditorImportFromFilePage(BaseHandler):
         
     def import_model(self):
         name = self.request.get('name').strip()
+
+        if not re.match('^[a-zA-Z0-9_]+$', name):
+            return {'status': False, 'msg': 'Model name must be alphanumeric characters and underscores only'}
+
         if not name:
             return {'status': False, 'msg': 'Model name is missing.'}
         
@@ -557,6 +584,10 @@ class ModelEditorImportFromLibrary(BaseHandler):
                 
     def import_model(self):
         name = self.request.get('name').strip()
+
+        if not re.match('^[a-zA-Z0-9_]+$', name):
+            return {'status': False, 'msg': 'Model name must be alphanumeric characters and underscores only'}
+
         if name == "":
             return {'status': False, 'msg': 'Model name is missing.'}
         
@@ -576,7 +607,7 @@ class ModelEditorImportFromLibrary(BaseHandler):
         name = self.request.get('toDelete')
         if name == "":
             return {'status': False, 'msg': 'Name is missing'}
-        elif name == "dimerdecay" or name == "lotkavolterra_oscillating" or name == "lotkavolterra_equilibrium" or name == "MichaelisMenten" or name == "schlogl" or name == "heat_shock_mass_action" :
+        elif name == "dimerdecay" or name == 'birth_death' or name == "lotkavolterra_oscillating" or name == "lotkavolterra_equilibrium" or name == "MichaelisMenten" or name == "schlogl" or name == "heat_shock_mass_action" :
             return {'status': False, 'msg': 'This is an example model, it cannot be deleted'}
         
         try:
@@ -598,6 +629,10 @@ class ModelEditorImportFromLibrary(BaseHandler):
         example_model = db.GqlQuery("SELECT * FROM StochKitModelWrapper WHERE is_public = :1 AND model_name = :2", True, 'dimerdecay').get()
         if example_model is None:
             save_model(dimerdecay(), 'dimerdecay', "", is_public=True)
+
+        example_model = db.GqlQuery("SELECT * FROM StochKitModelWrapper WHERE is_public = :1 AND model_name = :2", True, 'birth_death').get()
+        if example_model is None:
+            save_model(birthdeath(), 'birth_death', "", is_public=True)
 
         example_model = db.GqlQuery("SELECT * FROM StochKitModelWrapper WHERE is_public = :1 AND model_name = :2", True, 'lotkavolterra_oscillating').get()
         if example_model is None:

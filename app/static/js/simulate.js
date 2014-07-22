@@ -48,7 +48,7 @@ var checkAndGet = function(selectTable)
     if(!/^[0-9]+$/.test(realizations))
     {
         updateMsg( { status : false,
-                     msg : "Seed must be an integer" } );
+                     msg : "Realizations must be an integer" } );
         return false;
     }
 
@@ -167,21 +167,30 @@ var run = function()
                           {
                               var plotData = []
 
-                              var selectTemplate = _.template("<option value='<%= name %>'>trajectory <%= name %></option>");
-
-                              for(var i = 0; i < data.job.realizations; i++)
+                              if(data.job.exec_type == "stochastic")
                               {
-                                  $( selectTemplate( { name : i } ) ).appendTo( $( "#trajectorySelect" ))
+                                  $( '#trajectorySelectHide' ).show();
+
+                                  var selectTemplate = _.template("<option value='<%= name %>'>trajectory <%= name %></option>");
+                                  
+                                  for(var i = 0; i < data.job.realizations; i++)
+                                  {
+                                      $( selectTemplate( { name : i } ) ).appendTo( $( "#trajectorySelect" ))
+                                  }
+                                  
+                                  $( "#trajectorySelect" ).val( tid );
+                                  
+                                  $( "#trajectorySelect" ).change( _.partial(function(id) {
+                                      //var text = $(this).text();
+                                      //var hiddenForm = $('<form class="hidden-form" action="something.php" method="post" style="display: none;"><textarea name="id">' + id + '</textarea><textarea name="tid">' + tid + '</textarea></form>').appendTo('body');
+                                      //hiddenForm.submit();
+                                      window.location = window.location.pathname + "?id=" + id + "&tid=" + $(this).val();
+                                  }, id));
                               }
-
-                              $( "#trajectorySelect" ).val( tid );
-
-                              $( "#trajectorySelect" ).change( _.partial(function(id) {
-                                  //var text = $(this).text();
-                                  //var hiddenForm = $('<form class="hidden-form" action="something.php" method="post" style="display: none;"><textarea name="id">' + id + '</textarea><textarea name="tid">' + tid + '</textarea></form>').appendTo('body');
-                                  //hiddenForm.submit();
-                                  window.location = window.location.pathname + "?id=" + id + "&tid=" + $(this).val();
-                              }, id));
+                              else
+                              {
+                                  $( '#trajectorySelectHide' ).hide();
+                              }
 
                               $( "#plotRegion" ).show();
 
