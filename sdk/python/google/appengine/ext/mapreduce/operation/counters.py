@@ -36,7 +36,10 @@
 __all__ = ['Increment']
 
 
+
 from google.appengine.ext.mapreduce.operation import base
+
+
 
 
 class Increment(base.Operation):
@@ -58,4 +61,4 @@ class Increment(base.Operation):
     Args:
       context: mapreduce context as context.Context.
     """
-    context.counters.increment(self.counter_name, self.delta)
+    context._counters.increment(self.counter_name, self.delta)

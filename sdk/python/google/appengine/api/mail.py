@@ -178,6 +178,7 @@ EXTENSION_BLACKLIST = [
 
 
 HEADER_WHITELIST = frozenset([
+    'Auto-Submitted',
     'In-Reply-To',
     'List-Id',
     'List-Unsubscribe',
@@ -346,9 +347,12 @@ def _attachment_sequence(attachments):
     else returns attachments as is.
   """
   if len(attachments) == 2 and isinstance(attachments[0], basestring):
-    return attachments,
-  return attachments
-
+    attachments = attachments,
+  for attachment in attachments:
+    if isinstance(attachment, Attachment):
+      yield attachment
+    else:
+      yield Attachment(*attachment)
 
 def _parse_mime_message(mime_message):
   """Helper function converts a mime_message in to email.Message.Message.
@@ -459,6 +463,35 @@ def _GetMimeType(file_name):
   return mime_type
 
 
+def _GuessCharset(text):
+  """Guess the charset of a text.
+
+  Args:
+    text: a string (str) that is either a us-ascii string or a unicode that was
+        encoded in utf-8.
+  Returns:
+    Charset needed by the string, either 'us-ascii' or 'utf-8'.
+  """
+  try:
+    text.decode('us-ascii')
+    return 'us-ascii'
+  except UnicodeDecodeError:
+    return 'utf-8'
+
+
+def _I18nHeader(text):
+  """Creates a header properly encoded even with unicode content.
+
+  Args:
+    text: a string (str) that is either a us-ascii string or a unicode that was
+        encoded in utf-8.
+  Returns:
+    email.header.Header
+  """
+  charset = _GuessCharset(text)
+  return email.header.Header(text, charset, maxlinelen=1e3000)
+
+
 def mail_message_to_mime_message(protocol_message):
   """Generate a MIMEMultitype message from protocol buffer.
 
@@ -480,10 +513,13 @@ def mail_message_to_mime_message(protocol_message):
   """
   parts = []
   if protocol_message.has_textbody():
-    parts.append(MIMEText.MIMEText(protocol_message.textbody()))
+    parts.append(MIMEText.MIMEText(
+        protocol_message.textbody(),
+        _charset=_GuessCharset(protocol_message.textbody())))
   if protocol_message.has_htmlbody():
-    parts.append(MIMEText.MIMEText(protocol_message.htmlbody(),
-                                   _subtype='html'))
+    parts.append(MIMEText.MIMEText(
+        protocol_message.htmlbody(), _subtype='html',
+        _charset=_GuessCharset(protocol_message.htmlbody())))
 
   if len(parts) == 1:
 
@@ -503,22 +539,24 @@ def mail_message_to_mime_message(protocol_message):
                                'attachment',
                                filename=attachment.filename())
     mime_attachment.set_payload(attachment.data())
+    if attachment.has_contentid():
+      mime_attachment['content-id'] = attachment.contentid()
     result.attach(mime_attachment)
 
 
   if protocol_message.to_size():
-    result['To'] = ', '.join(protocol_message.to_list())
+    result['To'] = _I18nHeader(', '.join(protocol_message.to_list()))
   if protocol_message.cc_size():
-    result['Cc'] = ', '.join(protocol_message.cc_list())
+    result['Cc'] = _I18nHeader(', '.join(protocol_message.cc_list()))
   if protocol_message.bcc_size():
-    result['Bcc'] = ', '.join(protocol_message.bcc_list())
+    result['Bcc'] = _I18nHeader(', '.join(protocol_message.bcc_list()))
 
-  result['From'] = protocol_message.sender()
-  result['Reply-To'] = protocol_message.replyto()
-  result['Subject'] = protocol_message.subject()
+  result['From'] = _I18nHeader(protocol_message.sender())
+  result['Reply-To'] = _I18nHeader(protocol_message.replyto())
+  result['Subject'] = _I18nHeader(protocol_message.subject())
 
   for header in protocol_message.header_list():
-    result[header.name()] = header.value()
+    result[header.name()] = _I18nHeader(header.value())
 
   return result
 
@@ -576,10 +614,137 @@ def _decode_address_list_field(address_list):
     return map(_decode_and_join_header, address_list)
 
 
+
+def wrapping(wrapped):
+
+
+
+
+  def wrapping_wrapper(wrapper):
+    try:
+      wrapper.__wrapped__ = wrapped
+      wrapper.__name__ = wrapped.__name__
+      wrapper.__doc__ = wrapped.__doc__
+      wrapper.__dict__.update(wrapped.__dict__)
+    except Exception:
+      pass
+    return wrapper
+  return wrapping_wrapper
+
+
+
+def _positional(max_pos_args):
+  """A decorator to declare that only the first N arguments may be positional.
+
+  Note that for methods, n includes 'self'.
+  """
+  def positional_decorator(wrapped):
+    @wrapping(wrapped)
+    def positional_wrapper(*args, **kwds):
+      if len(args) > max_pos_args:
+        plural_s = ''
+        if max_pos_args != 1:
+          plural_s = 's'
+        raise TypeError(
+            '%s() takes at most %d positional argument%s (%d given)' %
+            (wrapped.__name__, max_pos_args, plural_s, len(args)))
+      return wrapped(*args, **kwds)
+    return positional_wrapper
+  return positional_decorator
+
+
+class Attachment(object):
+  """Attachment object.
+
+  An Attachment object is largely interchangeable with a (filename, payload)
+  tuple.
+
+  Note that the behavior is a bit asymmetric with respect to unpacking and
+  equality comparison. An Attachment object without a content ID will be
+  equivalent to a (filename, payload) tuple. An Attachment with a content ID
+  will unpack to a (filename, payload) tuple, but will compare unequally to
+  that tuple.
+
+  Thus, the following comparison will succeed:
+
+      attachment = mail.Attachment('foo.jpg', 'data')
+      filename, payload = attachment
+      attachment == filename, payload
+
+  ...while the following will fail:
+
+      attachment = mail.Attachment('foo.jpg', 'data', content_id='<foo>')
+      filename, payload = attachment
+      attachment == filename, payload
+
+   The following comparison will pass though:
+
+      attachment = mail.Attachment('foo.jpg', 'data', content_id='<foo>')
+      attachment == (attachment.filename,
+                     attachment.payload,
+                     attachment.content_id)
+
+  Attributes:
+    filename: The name of the attachment.
+    payload: The attachment data.
+    content_id: Optional. The content-id for this attachment. Keyword-only.
+  """
+
+  @_positional(3)
+  def __init__(self, filename, payload, content_id=None):
+    """Constructor.
+
+    Arguments:
+      filename: The name of the attachment
+      payload: The attachment data.
+      content_id: Optional. The content-id for this attachment.
+    """
+    self.filename = filename
+    self.payload = payload
+    self.content_id = content_id
+
+  def __eq__(self, other):
+    self_tuple = (self.filename, self.payload, self.content_id)
+    if isinstance(other, Attachment):
+      other_tuple = (other.filename, other.payload, other.content_id)
+
+
+    elif not hasattr(other, '__len__'):
+      return NotImplemented
+    elif len(other) == 2:
+      other_tuple = other + (None,)
+    elif len(other) == 3:
+      other_tuple = other
+    else:
+      return NotImplemented
+    return self_tuple == other_tuple
+
+  def __hash__(self):
+    if self.content_id:
+      return hash((self.filename, self.payload, self.content_id))
+    else:
+      return hash((self.filename, self.payload))
+
+  def __ne__(self, other):
+    return not self == other
+
+  def __iter__(self):
+    return iter((self.filename, self.payload))
+
+  def __getitem__(self, i):
+    return tuple(iter(self))[i]
+
+  def __contains__(self, val):
+    return val in (self.filename, self.payload)
+
+  def __len__(self):
+    return 2
+
+
 class EncodedPayload(object):
   """Wrapper for a payload that contains encoding information.
 
-  When an email is recieved, it is usually encoded using a certain
+  When an email is received, it is usually encoded using a certain
   character set, and then possibly further encoded using a transfer
   encoding in that character set.  Most of the times, it is possible
   to decode the encoded payload as is, however, in the case where it
@@ -618,7 +783,7 @@ class EncodedPayload(object):
     payload = self.payload
 
 
-    if self.encoding and self.encoding.lower() != '7bit':
+    if self.encoding and self.encoding.lower() not in ('7bit', '8bit'):
       try:
         payload = payload.decode(self.encoding)
       except LookupError:
@@ -653,6 +818,10 @@ class EncodedPayload(object):
               self.encoding == other.encoding)
     else:
       return NotImplemented
+
+  def __hash__(self):
+    """Hash an EncodedPayload."""
+    return hash((self.payload, self.charset, self.encoding))
 
   def copy_to(self, mime_message):
     """Copy contents to MIME message payload.
@@ -821,16 +990,16 @@ class _EmailMessageBase(object):
       found_body = True
 
     if hasattr(self, 'attachments'):
-      for file_name, data in _attachment_sequence(self.attachments):
+      for attachment in _attachment_sequence(self.attachments):
 
 
-        _GetMimeType(file_name)
+        _GetMimeType(attachment.filename)
 
 
 
 
-        if isinstance(data, EncodedPayload):
-          data.decode()
+        if isinstance(attachment.payload, EncodedPayload):
+          attachment.payload.decode()
 
 
   def CheckInitialized(self):
@@ -890,12 +1059,14 @@ class _EmailMessageBase(object):
       message.set_htmlbody(_to_str(html))
 
     if hasattr(self, 'attachments'):
-      for file_name, data in _attachment_sequence(self.attachments):
-        if isinstance(data, EncodedPayload):
-          data = data.decode()
-        attachment = message.add_attachment()
-        attachment.set_filename(_to_str(file_name))
-        attachment.set_data(_to_str(data))
+      for attachment in _attachment_sequence(self.attachments):
+        if isinstance(attachment.payload, EncodedPayload):
+          attachment.payload = attachment.payload.decode()
+        protoattachment = message.add_attachment()
+        protoattachment.set_filename(_to_str(attachment.filename))
+        protoattachment.set_data(_to_str(attachment.payload))
+        if attachment.content_id:
+          protoattachment.set_contentid(attachment.content_id)
     return message
 
   def to_mime_message(self):
@@ -948,10 +1119,9 @@ class _EmailMessageBase(object):
     self.send(*args, **kwds)
 
   def _check_attachment(self, attachment):
-    file_name, data = attachment
 
-    if not (isinstance(file_name, basestring) or
-            isinstance(data, basestring)):
+    if not (isinstance(attachment.filename, basestring) or
+            isinstance(attachment.payload, basestring)):
       raise TypeError()
 
   def _check_attachments(self, attachments):
@@ -967,11 +1137,9 @@ class _EmailMessageBase(object):
     Raises:
       TypeError if values are not string type.
     """
-    if len(attachments) == 2 and isinstance(attachments[0], basestring):
-      self._check_attachment(attachments)
-    else:
-      for attachment in attachments:
-        self._check_attachment(attachment)
+    attachments = _attachment_sequence(attachments)
+    for attachment in attachments:
+      self._check_attachment(attachment)
 
   def __setattr__(self, attr, value):
     """Property setting access control.
@@ -1051,17 +1219,24 @@ class _EmailMessageBase(object):
                                   mime_message.get_charset()),
                                  mime_message['content-transfer-encoding'])
 
+        if 'content-id' in mime_message:
+          attachment = Attachment(filename,
+                                  payload,
+                                  content_id=mime_message['content-id'])
+        else:
+          attachment = Attachment(filename, payload)
+
         if filename:
 
           try:
             attachments = self.attachments
           except AttributeError:
-            self.attachments = [(filename, payload)]
+            self.attachments = [attachment]
           else:
             if isinstance(attachments[0], basestring):
               self.attachments = [attachments]
               attachments = self.attachments
-            attachments.append((filename, payload))
+            attachments.append(attachment)
         else:
           self._add_body(mime_message.get_content_type(), payload)
 
