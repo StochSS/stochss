@@ -11,10 +11,11 @@ from celery import Celery, group
 import celeryconfig
 import os, subprocess, shlex
 import uuid,traceback
-THOME = '/home/ubuntu'
-STOCHKIT_DIR = '/home/ubuntu/StochKit'
-ODE_DIR = '/home/ubuntu/ode'
-MCEM2_DIR = '/home/ubuntu/stochoptim'
+
+#THOME = '/Users/ckrintz/RESEARCH/stochss/stochss'
+#STOCHKIT_DIR = '/Users/ckrintz/RESEARCH/stochss/stochss/StochKit'
+#ODE_DIR = '/Users/ckrintz/RESEARCH/stochss/stochss/ode'
+#MCEM2_DIR = '/Users/ckrintz/RESEARCH/stochss/stochss/stochoptim'
 
 import logging, subprocess
 import boto.dynamodb
@@ -501,7 +502,7 @@ def task(taskid,params):
       print 'generating tar file'
       create_tar_output_str = "tar -zcvf output/{0}.tar output/{0}".format(uuidstr)
       print create_tar_output_str
-      logging.debug("followig cmd to be executed %s" % (create_tar_output_str))
+      logging.debug("following cmd to be executed %s" % (create_tar_output_str))
       bucketname = params['bucketname']
       copy_to_s3_str = "python {2}/sccpy.py output/{0}.tar {1}".format(uuidstr,bucketname,THOME)
       data = {'status':'active','message':'Task finished. Generating output.'}
@@ -582,7 +583,7 @@ def removeTask(task_id):
     this method revokes scheduled tasks as well as the tasks in progress
     '''
     try:
-        print "removeTask: with task_id: {0}".format(task_id)
+        print "removeTask: with task_id: {0}".format(str(task_id))
         from celery.task.control import revoke
         # Celery can't use remote control (which includes revoking tasks) with SQS
         # http://docs.celeryproject.org/en/latest/getting-started/brokers/sqs.html

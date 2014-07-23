@@ -438,6 +438,7 @@ class EC2Agent(BaseAgent):
           conn.get_all_instances()
           return True
       except EC2ResponseError:
+          print '\nIn validate_Credentials'
           traceback.print_exc()
           return False
 
