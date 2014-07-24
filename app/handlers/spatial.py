@@ -232,7 +232,7 @@ class SpatialPage(BaseHandler):
         species_subdomain_assigments = json_model_refs["spatial"]["species_subdomain_assigments"]  #e.g. {'S1':[1,2,3]}
         species_diffusion_coefficients = json_model_refs["spatial"]["species_diffusion_coefficients"] #e.g. {'S1':0.5}
         
-            #TODO:  if we get a 'mesh_subdomain_filename' read it in and use model.set_subdomain_vector() to set the subdomain
+        #TODO:  if we get a 'mesh_subdomain_filename' read it in and use model.set_subdomain_vector() to set the subdomain
         
         
         simulation_end_time = data['time']
