@@ -18,27 +18,150 @@ import tempfile
 import time
 import logging
 
-class SpatialJobWrapper(db.Model):
-    # These are all the attributes of a job we use for local storage
+def int_or_float(s):
+    try:
+        return int(s)
+    except ValueError:
+        return float(s)
+
+class StochOptimModel(stochss.model.Model):
+    def __init__(self, *args, **kwargs):
+        super(StochOptimModel, self).__init__(*args, **kwargs)
+
+        self.units = "population"
+
+    # This function returns a succes integer and a list of error strings which can be passed on to the user
+    def fromStochKitModel(self, model):
+        msgs = []
+
+        if model.units.lower() == "concentration":
+            msgs.append("StochOptimModel cannot be based on a concentration model")
+            return False, msgs
+
+        self.annotation = model.annotation
+        
+        # Species
+        # Any species can be converted to StochOptim format
+        self.listOfSpecies = copy.deepcopy(model.listOfSpecies)
+                
+        # Parameters
+        # Any parameter can be converted to StochOptim format
+        self.listOfParameters = copy.deepcopy(model.listOfParameters)
+
+        exprParameters = []
+        for pname in self.listOfParameters:
+            if hasattr(self.listOfParameters[pname], 'expression'):
+                exprParameters.append(pname)
+
+            #self.listOfParameters[pname].evaluate()
+        if(len(exprParameters) > 0):
+            msgs.append(" * Parameter(s) [{0}] are expressed in terms of other variables (not valid for StochOptim)".format(", ".join(exprParameters)))
+
+        success = True
+        # Reactions
+        self.listOfReactions = copy.deepcopy(model.listOfReactions)
+        nonMassActionReactions = []
+        for rname in self.listOfReactions:
+            if self.listOfReactions[rname].massaction == False:
+                nonMassActionReactions.append(rname)
+                success = False
+
+        if(len(nonMassActionReactions) > 0):
+            msgs.append(" * Reaction(s) [{0}] are not mass-action".format(", ".join(nonMassActionReactions)))
+
+        return success, msgs
+    
+    # Even though this second argument seems weird, it's necessary to interpret the output
+    # of the program correctly
+    def serialize(self, activate = None, returnParameterToIndexMap = False):
+        initialConditionsLine1 = ['Time', 'Rep', 'Weight']
+        initialConditionsLine2 = ['0', '1', '1']
+
+        species = self.listOfSpecies.items()
+        reactions = self.listOfReactions.items()
+        parameters = self.listOfParameters.items()
+
+        initialConditionsLine1.extend([name for name, specie in species])
+        initialConditionsLine2.extend([repr(specie.initial_value) for name, specie in species])
+
+        initialConditionsText = os.linesep.join(["\t".join(initialConditionsLine1), "\t".join(initialConditionsLine2)])
+
+        reactionMatrix = []
+        productMatrix = []
+        for s in species:
+            reactionMatrix.append(len(reactions) * [0])
+            productMatrix.append(len(reactions) * [0])
+        
+        for j, (rname, reaction) in enumerate(reactions):
+            reactants = dict(reaction.reactants)
+            products = dict(reaction.products)
+            for i, (sname, specie) in enumerate(species):
+                if sname in reactants:
+                    reactionMatrix[i][j] = reactants[sname]
+
+                if sname in products:
+                    productMatrix[i][j] = products[sname]
+
+        rnu = "r.nu <- rbind("
+
+        for i, row in enumerate(reactionMatrix):
+            rnu += "c({0})".format(", ".join([repr(x) for x in row]))
+            if i < len(reactionMatrix) - 1:
+                rnu += ", "
+                
+        rnu += ")"
+
+        pnu = "p.nu <- rbind("
+
+        for i, row in enumerate(productMatrix):
+            pnu += "c({0})".format(", ".join([repr(x) for x in row]))
+            if i < len(productMatrix) - 1:
+                pnu += ", "
+                
+        pnu += ")"
+
+        snames = "s.names <- c({0})".format(", ".join(["\"{0}\"".format(name) for name, specie in species]))
+        rnames = "r.names <- c({0})".format(", ".join(["\"{0}\"".format(name) for name, reaction in reactions]))
+
+        rparms = "r.parms <- c({0})".format(", ".join([repr(parameter.value) for name, parameter in parameters]))
+        rknames = "rk.names <- c({0})".format(", ".join(["\"{0}\"".format(name) for name, reaction in parameters]))
+        
+        if activate:
+            rconstant = "r.constant <- c({0})".format(", ".join([("FALSE" if activate[name] else "TRUE") for name, parameter in parameters]))
+        else:
+            rconstant = "r.constant <- c({0})".format(", ".join(["FALSE" for name, parameter in parameters]))
+        
+        parameterNameToIndex = {}
+
+        for i, (name, parameter) in enumerate(parameters):
+            parameterNameToIndex[name] = i
+
+        rkind = "rk.ind <- c({0})".format(", ".join([repr(parameterNameToIndex[reaction.marate.name] + 1) for name, reaction in reactions]))
+
+        print os.linesep.join([rnu, pnu, snames, rnames, rparms, rknames, rconstant, rkind])
+
+        if returnParameterToIndexMap:
+            return os.linesep.join([rnu, pnu, snames, rnames, rparms, rknames, rconstant, rkind]), parameterNameToIndex
+        else:
+            return os.linesep.join([rnu, pnu, snames, rnames, rparms, rknames, rconstant, rkind])
+
+class StochOptimJobWrapper(db.Model):
     userId = db.StringProperty()
     pid = db.IntegerProperty()
     startTime = db.StringProperty()
     jobName = db.StringProperty()
-    modelName = db.StringProperty() # This is a reference to the model. I should probably use a modelId instead. I'm not sure why I store it as a name
-    indata = db.TextProperty() # This is a dump of the json data sent from the html/js that was used to start the job. We save it
-    outData = db.StringProperty() # THis is a path to the output data on the filesystem
+    modelName = db.StringProperty()
+    indata = db.TextProperty()
+    nameToIndex = db.TextProperty()
+    outData = db.StringProperty()
     status = db.StringProperty()
     zipFileName = db.StringProperty()
     
-    # These are the cloud attributes Chris adds
     resource = db.StringProperty()
     outputURL = db.StringProperty()
     cloudDatabaseID = db.StringProperty()
     celeryPID = db.StringProperty()
 
-    # More attributes can obvs. be added
-
-    # The delete operator here is a little fancy. When the item gets deleted from the GOogle db, we need to go clean up files stored locally and remotely
     def delete(self):
         service = backend.backendservice.backendservices()
         
@@ -47,12 +170,10 @@ class SpatialJobWrapper(db.Model):
                 os.remove(self.zipFileName)
 
         self.stop()
-        
         #service.deleteTaskLocal([self.pid])
 
         super(StochOptimJobWrapper, self).delete()
 
-    # Stop the job!
     def stop(self, credentials=None):
         if self.status == "Running":
             if self.resource.lower() == "local":
@@ -91,8 +212,7 @@ class SpatialJobWrapper(db.Model):
         flag_file = os.path.join(self.outData, ".final-cloud")
         return os.path.exists(flag_file)
 
-class SpatialPage(BaseHandler):
-    # This tells the big server that a user must be logged in to view this page
+class StochOptimPage(BaseHandler):
     def authentication_required(self):
         return True
     
@@ -114,7 +234,7 @@ class SpatialPage(BaseHandler):
                 return
 
             if data["resource"] == "local":
-                # This function (runLocal) takes full responsibility for writing responses out to the world. This is probably a bad design mechanism
+                # This function takes full responsibility for writing responses out to the world. This is probably a bad design mechanism
                 self.runLocal(data)
                 return
             else:
@@ -220,34 +340,17 @@ class SpatialPage(BaseHandler):
     def runLocal(self, data):
         '''
         '''
-        json_model_refs = ModelManager.getModel(self, data["modelID"], modelAsString = False)
-        
-        stochkit_model_obj = json_model_refs["model"]
-        mesh_filename = json_model_refs["spatial"]["mesh_filename"]
-        if "mesh_subdomain_filename" in json_model_refs["spatial"]:
-            mesh_subdomain_filename = json_model_refs["spatial"]["mesh_subdomain_filename"]  # this can be optional
-        else:
-            mesh_subdomain_filename = None
-        reaction_subdomain_assigments = json_model_refs["spatial"]["reaction_subdomain_assigments"]  #e.g. {'R1':[1,2,3]}
-        species_subdomain_assigments = json_model_refs["spatial"]["species_subdomain_assigments"]  #e.g. {'S1':[1,2,3]}
-        species_diffusion_coefficients = json_model_refs["spatial"]["species_diffusion_coefficients"] #e.g. {'S1':0.5}
-        
-            #TODO:  if we get a 'mesh_subdomain_filename' read it in and use model.set_subdomain_vector() to set the subdomain
-        
-        
-        simulation_end_time = data['time']
-        simulation_time_increment = data['increment']
-        simulation_algorithm = data['algorithm']
-        simulation_realizations = data['realizations']
-        simulation_seed = data['seed']
-        
-        
-        #### Construct the PyURDME object from the Stockkit model and mesh
-        #### and other
-        
-        
+        model = ModelManager.getModel(self, data["modelID"], modelAsString = False)
 
-        #####
+        berniemodel = StochOptimModel()
+
+        success, msgs = berniemodel.fromStochKitModel(model["model"])
+
+        if not success:
+            self.response.content_type = 'application/json'
+            self.response.write(json.dumps({"status" : False,
+                                            "msg" : msgs }))
+            return
 
         path = os.path.abspath(os.path.dirname(__file__))
 
@@ -318,11 +421,9 @@ class SpatialPage(BaseHandler):
                                         "msg" : "Job launched",
                                         "id" : job.key().id()}))
     
-    # This takes in the unserialized JSON object data and runs a model!
     def runCloud(self, data):
         '''
         '''
-        # Load the model up from the db
         model = ModelManager.getModel(self, data["modelID"], modelAsString = False)
         berniemodel = StochOptimModel()
         success, msgs = berniemodel.fromStochKitModel(model["model"])
@@ -333,13 +434,11 @@ class SpatialPage(BaseHandler):
             result["msg"] = os.linesep.join(msgs)
             return result
 
-        # Figure out where in the filesystem we need to store output
         path = os.path.abspath(os.path.dirname(__file__))
 
         basedir = path + '/../'
         dataDir = tempfile.mkdtemp(dir = basedir + 'output')
 
-        # Create a db object to track the running job
         job = StochOptimJobWrapper()
         job.userId = self.user.user_id()
         job.startTime = time.strftime("%Y-%m-%d-%H-%M-%S")
@@ -350,7 +449,6 @@ class SpatialPage(BaseHandler):
         job.status = "Pending"
         job.resource = "cloud"
 
-        # Put together the command line stuff to actually execute the job
         data["exec"] = "'bash'"
 
         data["steps"] = ("C" if data["crossEntropyStep"] else "") + ("E" if data["emStep"] else "") + ("U" if data["uncertaintyStep"] else "")
@@ -399,8 +497,7 @@ class SpatialPage(BaseHandler):
             except KeyError:
                 pass
             return result
-
-        # Update the db object a little and return
+        
         job.cloudDatabaseID = cloud_result["db_id"]
         job.celeryPID = cloud_result["celery_pid"]
         # job.pid = handle.pid
@@ -408,3 +505,152 @@ class SpatialPage(BaseHandler):
         result["job"] = job
         result["id"] = job.key().id()
         return result
+        
+
+class StochOptimVisualization(BaseHandler):
+    def authentication_required(self):
+        return True
+    
+    def get(self, queryType = None, jobID = None):
+
+        print 'queryType ', queryType, ' jobID ', jobID
+
+        jobID = int(jobID)
+
+        output = { "jobID" : jobID }
+
+        if queryType == None:
+            self.render_response('stochoptimvisualization.html', **output)
+            return
+
+        optimization = StochOptimJobWrapper.get_by_id(jobID)
+        # Might need to download the cloud data
+        if optimization.resource == "cloud":
+            if optimization.status == "Finished":
+                if optimization.has_final_cloud_data():
+                    # Nothing to do here
+                    pass
+                else:
+                    # Download the final data and mark it finished
+                    cloud_result = self.__fetch_cloud_output(optimization)
+                    if cloud_result["status"]:
+                        optimization.mark_final_cloud_data()
+                    else:
+                        logging.info("Failed to download final output data of {0} with reason {1}".format(
+                            optimization.jobName,
+                            cloud_result["msg"]
+                        ))
+            else:
+                # Just assume we need to re-download the data...
+                cloud_result = self.__fetch_cloud_output(optimization)
+                if not cloud_result["status"]:
+                    #TODO: Display message to user?
+                    logging.info("Failed to download output data of {0} with reason {1}".format(
+                        optimization.jobName,
+                        cloud_result["msg"]
+                    ))
+
+        try:
+            fd = os.open("{0}/stdout".format(optimization.outData), os.O_RDONLY)
+            f = os.fdopen(fd)
+            output["stdout"] = f.read().strip()
+            f.close()
+        except:
+            output["stdout"] = ""
+
+        if len(output["stdout"]) == 0:
+            if optimization.status == 'Running':
+                output["stdout"] = "(Job running, no output available yet)"
+            else:
+                output["stdout"] = "(empty)"
+
+        if queryType.lower() == "debug":
+            try:
+                fd = os.open("{0}/stderr".format(optimization.outData), os.O_RDONLY)
+                f = os.fdopen(fd)
+                output["stderr"] = f.read().strip()
+                f.close()
+            except:
+                output["stderr"] = ""
+
+            if len(output["stderr"]) == 0:
+                output["stderr"] = "(empty)"
+
+#        print optimization.nameToIndex
+#        print optimization.indata
+
+        output["nameToIndex"] = json.loads(optimization.nameToIndex)
+        output["status"] = optimization.status
+        output["jobName"] = optimization.jobName
+        output["modelName"] = optimization.modelName
+        output["resource"] = optimization.resource
+        output["activate"] = json.loads(optimization.indata)["activate"]
+            
+        self.response.content_type = 'application/json'
+        self.response.write(json.dumps(output))
+        return
+
+    def post(self, queryType, jobID):
+        job = StochOptimJobWrapper.get_by_id(int(jobID))
+
+        data = json.loads(self.request.get('data'));
+
+        #print data
+        #print "================================================="
+        parameters = data["parameters"]
+        modelName = job.modelName
+        proposedName = data["proposedName"]
+        
+        model = ModelManager.getModelByName(self, modelName, modelAsString = False);
+
+        if ModelManager.getModelByName(self, proposedName):
+            self.response.write(json.dumps({"status" : False,
+                                            "msg" : "Model name must be unique"}))
+            return
+
+        if not model:
+            self.response.write(json.dumps({"status" : False,
+                                            "msg" : "Model '{0}' does not exist anymore. Possibly deleted".format(modelName) }))
+            return
+
+        model["name"] = proposedName
+
+        for parameter in parameters:
+            model["model"].getParameter(parameter).value = parameters[parameter]
+            model["model"].getParameter(parameter).expression = str(parameters[parameter])
+
+        if ModelManager.createModel(self, model, modelAsString = False):
+            self.response.write(json.dumps({"status" : True,
+                                            "msg" : "Model created",
+                                            "url" : "/modeleditor?model_edited={0}".format(proposedName) }))
+            return
+        else:
+            self.response.write(json.dumps({"status" : False,
+                                            "msg" : "Model failed to be created, check logs"}))
+            return
+    
+    def __fetch_cloud_output(self, job_wrapper):
+        '''
+        '''
+        try:
+            result = {}
+            # Grab the remote files
+            service = backend.backendservice.backendservices()
+            service.fetchOutput(job_wrapper.cloudDatabaseID, job_wrapper.outputURL)
+            # Unpack it to its local output location...
+            os.system('tar -xf' +job_wrapper.cloudDatabaseID+'.tar')
+            job_wrapper.outData = os.path.abspath(
+                os.path.dirname(os.path.abspath(__file__))+'/../output/'+job_wrapper.cloudDatabaseID
+            )
+            # Clean up
+            os.remove(job_wrapper.cloudDatabaseID+'.tar')
+            # Save the updated status
+            job_wrapper.put()
+            result['status']=True
+            result['msg'] = "Sucessfully fetched the remote output files."
+        except Exception,e:
+            logging.info('************************************* {0}'.format(e))
+            result['status']=False
+            result['msg'] = "Failed to fetch the remote files."
+        return result
+

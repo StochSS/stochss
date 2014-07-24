@@ -23,6 +23,11 @@ stochkit.Model = Backbone.Model.extend( {
             this.ParametersList = XML( '<ParametersList />' ).appendTo(this.dom);
             this.SpeciesList = XML( '<SpeciesList />' ).appendTo(this.dom);
             this.ReactionsList = XML( '<ReactionsList />' ).appendTo(this.dom);
+
+            //if(_.has(attributes, 'model'))
+            //{
+            //    this.parse(attributes);
+            //}
         }
     },
 
@@ -76,7 +81,7 @@ stochkit.Model = Backbone.Model.extend( {
 
     toJSON : function()
     {
-        var ret = _.extend({ "model" : this.toXML() }, this.attributes);
+        var ret = _.extend({ "model" : this.toXML() }, _.omit( this.attributes, "model" ));
 
         return ret;
     },
@@ -84,8 +89,9 @@ stochkit.Model = Backbone.Model.extend( {
     parse : function(data, options)
     {
         this.fromXML(data.model);
-
-        delete data.model;
+        
+        // Why would I do this next line? It seems like I'm really screwing up the input data
+        //delete data.model;
 
         return data;
     },
@@ -159,6 +165,24 @@ stochkit.Model = Backbone.Model.extend( {
         this.updateCounts();
 
         this.trigger('change', 'reactions');
+    },
+
+    getParameters: function() {
+        var parameters = this.ParametersList.children();
+
+	if(parameters.length == 0)
+	{
+	    return null;
+	}
+
+        out = [];
+
+        parameters.each(function()
+        {
+            out.push({ name : $( this ).find('Id').text(), value : $( this ).find('Expression').text()});
+        });
+
+	return out;
     },
 
     getParameter: function(name, value) {
@@ -338,7 +362,15 @@ stochkit.PrettyPrint.Reaction = function(reaction) {
     return prettyReaction;
 };
 
+// Initializing one of these gets you access to the full models
 stochkit.ModelCollection = Backbone.Collection.extend( {
     url: "/models/list",
     model: stochkit.Model
 });
+
+// Initializing these gets you access to the models - the actual model xml file. All you get are
+//   the things 
+//stochkit.ModelInfoCollection = Backbone.Collection.extend( {
+//    url: "/models/info",
+//    model: stochkit.Model
+//});

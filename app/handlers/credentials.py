@@ -72,7 +72,12 @@ class CredentialsPage(BaseHandler):
             try:
                 service = backendservices()
                 credentials = self.user_data.getCredentials()
-                stopped = service.stopMachines({"infrastructure":"ec2", "credentials":self.user_data.getCredentials()},True) #True means blocking, ie wait for success (its pretty quick)
+                terminate_params = {
+                  "infrastructure": "ec2",
+                  "credentials": self.user_data.getCredentials(),
+                  "key_prefix": user_id
+                }
+                stopped = service.stopMachines(terminate_params,True) #True means blocking, ie wait for success (its pretty quick)
                 if not stopped:
                     raise
                 result = {'status': True, 'msg': 'Sucessfully terminated all running VMs.'}
@@ -196,13 +201,14 @@ class CredentialsPage(BaseHandler):
                 return None
                     
     def start_vms(self, user_id, credentials, number_of_vms=None):
-        
-        group_random_name = user_id +"-"+''.join(random.choice(string.ascii_uppercase + string.digits) for x in range(6))
+        key_prefix = user_id
+        group_random_name = key_prefix +"-"+''.join(random.choice(string.ascii_uppercase + string.digits) for x in range(6))
         params ={"infrastructure":"ec2",
              "num_vms":number_of_vms, 
              'group':group_random_name, 
-             'image_id':'ami-a77679ce',
+             'image_id':'ami-f0d42898',
              'instance_type':'t1.micro',
+             'key_prefix':key_prefix,
              'keyname':group_random_name, 
              'email':[user_id],
              'credentials':credentials,

@@ -366,6 +366,7 @@ class StochMLDocument():
         idElement.text = P.name
         e.append(idElement)
         expressionElement = etree.Element('Expression')
+        print P.value
         expressionElement.text = str(P.value)
         e.append(expressionElement)
         return e

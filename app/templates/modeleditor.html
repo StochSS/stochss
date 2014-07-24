@@ -251,7 +251,7 @@ $( '#renameModel' ).click( function(event) {
     if(!/^[a-zA-Z0-9_]+$/.test(newName))
     {
       $( "#sidemsg" ).prop('class', 'alert alert-error');
-      $( '#sidemsg' ).text('Model name must be alphanumeric characters, underscores, and spaces only');
+      $( '#sidemsg' ).text('Model name must be alphanumeric characters, and underscores only');
       return;
     }
 
