@@ -22,10 +22,24 @@ class SpeciesEditorPage(BaseHandler):
         return True
     
     def get(self):
-        all_species = self.get_all_species()
+        model_edited = self.get_session_property('model_edited')
+
+        if model_edited == None:
+            self.render_response('modeleditor/specieseditor.html')
+            return
+
+        row = db.GqlQuery("SELECT * FROM StochKitModelWrapper WHERE user_id = :1 AND model_name = :2", self.user.user_id(), model_edited.name).get()
+
+        if row is None:
+            self.render_response('modeleditor/specieseditor.html')
+            return
+
+        all_species = row.model.getAllSpecies()
+
+        data = {'all_species': row.model.getAllSpecies(), "name" : row.model.name, "units" : row.model.units, "isSpatial" : row.isSpatial, "spatial" : row.spatial }
 
         if all_species is not None:
-            self.render_response('modeleditor/specieseditor.html', **all_species)
+            self.render_response('modeleditor/specieseditor.html', **data)
         else:
             self.render_response('modeleditor/specieseditor.html')
 
@@ -55,20 +69,37 @@ class SpeciesEditorPage(BaseHandler):
         """
         Create a new species for the current model.
         """
+        model_edited = self.get_session_property('model_edited')
+
+        if model_edited == None:
+            self.render_response('modeleditor/specieseditor.html')
+            return
+
+        row = db.GqlQuery("SELECT * FROM StochKitModelWrapper WHERE user_id = :1 AND model_name = :2", self.user.user_id(), model_edited.name).get()
+
+        if row is None:
+            self.render_response('modeleditor/specieseditor.html')
+            return
+
         name = self.request.get('name').strip()
 
         if not re.match('^[a-zA-Z0-9_\-]+$', name):
           return {'status': False, 'msg': 'Species name must be alphanumeric characters, underscores, hyphens, and spaces only'}
 
-        initial_value = self.request.get('initial_value').strip()
+        if row.isSpatial:
+            diffusion_coefficient = self.request.get('diffusion_coefficient').strip()
+            initial_value = 0
+        else:
+            initial_value = self.request.get('initial_value').strip()
+            diffusion_coefficient = 0
 
-        errors = self.check_input(name, initial_value)
+        errors = self.check_input(name, initial_value, diffusion_coefficient, row.isSpatial)
 
         if errors is not None:
             errors.update({'name': name, 'initial_value': initial_value})
             return errors
         try:
-            model = self.get_model_edited()
+            model = row.model
 
             initial_value = int_or_float(initial_value)
 
@@ -81,6 +112,14 @@ class SpeciesEditorPage(BaseHandler):
 
             species = Species(name, initial_value)
             model.addSpecies(species)
+
+            if 'species_diffusion_coefficients' not in row.spatial:
+                row.spatial['species_diffusion_coefficients'] = {}
+
+            row.spatial['species_diffusion_coefficients'][name] = diffusion_coefficient
+
+            row.model = model
+            row.put()
 
             # Update the cache
             self.set_model_edited(model)
@@ -96,11 +135,24 @@ class SpeciesEditorPage(BaseHandler):
         """
         name = self.request.get('toDelete')        
         try:
-            model = self.get_model_edited()
-            model.deleteSpecies(name)
+            model_edited = self.get_session_property('model_edited')
 
-            # Update the cache
-            self.set_model_edited(model)
+            if model_edited == None:
+                self.render_response('modeleditor/specieseditor.html')
+                return
+
+            row = db.GqlQuery("SELECT * FROM StochKitModelWrapper WHERE user_id = :1 AND model_name = :2", self.user.user_id(), model_edited.name).get()
+
+            if row is None:
+                self.render_response('modeleditor/specieseditor.html')
+                return
+
+            row.model.deleteSpecies(name)
+
+            del row.spatial['species_diffusion_coefficients'][name]
+
+            row.put()
+
             return {'status': True, 'msg': 'Species ' + name + ' deleted successfully!'}
         except Exception, e:
             logging.error("species::delete_species: Species deletion failed with error %s", e)
@@ -108,11 +160,13 @@ class SpeciesEditorPage(BaseHandler):
             return {'status': False, 'msg': 'Species deletion failed'}
 
         
-    def check_input(self, name, initial_value):
+    def check_input(self, name, initial_value, diffusion_coefficient, isSpatial):
         """
         Check to see if the input for species creation/updation is valid
         """
         model = self.get_model_edited()
+
+        print 'woops', name, initial_value, diffusion_coefficient, isSpatial
         
         if model is None:
             return {'status': False, 'msg': 'You have not selected any model to edit.'}
@@ -120,8 +174,17 @@ class SpeciesEditorPage(BaseHandler):
         if not name:
             return {'status': False, 'msg': 'Species name is missing!'}
 
-        if not initial_value:
+        if initial_value == None:
                 return {'status': False, 'msg': 'Initial value for species ' + name + ' is missing!'}
+
+        if diffusion_coefficient == None:
+                return {'status': False, 'msg': 'Diffusion coefficient for species ' + name + ' is missing!'}
+
+        if initial_value < 0:
+                return {'status': False, 'msg': 'Initial value for species ' + name + ' is less than zero!'}
+
+        if diffusion_coefficient < 0:
+                return {'status': False, 'msg': 'Diffusion coefficient for species ' + name + ' is less than zero!'}
 
         # the initial_value must be an integer.        
         if model.units == "population":
@@ -133,7 +196,12 @@ class SpeciesEditorPage(BaseHandler):
             try:
                 float(initial_value)
             except ValueError:
-                return {'status': False, 'msg': 'Initial value for species ' + name + ' is not a value floating point number!'}
+                return {'status': False, 'msg': 'Initial value for species ' + name + ' is not a valid floating point number!'}
+
+        try:
+            float(diffusion_coefficient)
+        except ValueError:
+            return {'status': False, 'msg': 'Diffusion coefficient for species ' + name + ' is not a valid floating point number!'}
 
         # return None if there are no errors
         return None
@@ -143,7 +211,20 @@ class SpeciesEditorPage(BaseHandler):
         Update the species with new values.
         """
         try:
-            model = self.get_model_edited()
+            model_edited = self.get_session_property('model_edited')
+
+            if model_edited == None:
+                self.render_response('modeleditor/specieseditor.html')
+                return
+
+            row = db.GqlQuery("SELECT * FROM StochKitModelWrapper WHERE user_id = :1 AND model_name = :2", self.user.user_id(), model_edited.name).get()
+
+            if row is None:
+                self.render_response('modeleditor/specieseditor.html')
+                return
+
+            model = row.model
+
             all_species = model.getAllSpecies()
 
             # Add the updated values afresh. i.e. The old values are erased.
@@ -152,13 +233,30 @@ class SpeciesEditorPage(BaseHandler):
             index = 1
             for key, value in all_species.items():
                 # This param will have the name of the species.
-                new_name = self.request.get(str(index) + "-name").strip()
+                new_name = self.request.get(key + "-name").strip()
+
+                # If name changed, change all the indexing
+                if new_name != key:
+                    row.spatial['species_diffusion_coefficients'][new_name] = row.spatial['species_diffusion_coefficients'][key]
+
+                    del row.spatial['species_diffusion_coefficients'][key]
+
+                    row.spatial['species_subdomain_assignments'][new_name] = row.spatial['species_subdomain_assignments'][key]
+
+                    del row.spatial['species_subdomain_assignments'][key]
+
                 # The param will have the initial value associated with that key (species name).
-                new_initial_value = self.request.get(str(index) + "-initial_value").strip()
+                if row.isSpatial:
+                    new_initial_value = 0
+                    new_diffusion_coefficient = float(self.request.get(key + "-diffusion_constant").strip())
+                else:
+                    new_initial_value = self.request.get(key + "-initial_value").strip()
+                    new_diffusion_coefficient = 0
+
                 logging.debug('new_name: ' + new_name)
-                logging.debug('new_initial_value: ' + new_initial_value)
+                logging.debug('new_initial_value: ' + str(new_initial_value))
                 # Check to see if there are any error in the input value
-                error = self.check_input(new_name, new_initial_value)
+                error = self.check_input(new_name, new_initial_value, new_diffusion_coefficient, row.isSpatial)
 
                 if error is not None:
                     logging.error('error: ' + str(error))
@@ -167,6 +265,7 @@ class SpeciesEditorPage(BaseHandler):
                 # Add the new entry
                 value.name = new_name
                 value.initial_value = int_or_float(new_initial_value)
+                row.spatial['species_diffusion_coefficients'][new_name] = new_diffusion_coefficient
                 new_species_list.append(value)
                 index += 1
 
@@ -175,7 +274,11 @@ class SpeciesEditorPage(BaseHandler):
             # Add the modified species back to the model
             model.addSpecies(new_species_list)
             # Update the cache
-            self.set_model_edited(model)
+
+            row.model = model
+            row.put()
+            
+            #self.set_model_edited(model)
             return {'status': True, 'msg': 'Species updated successfully!'}
         except Exception, e:
             logging.error("species::update_species: Updating of Species failed with error %s", e)

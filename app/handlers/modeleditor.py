@@ -41,7 +41,12 @@ class StochKitModelWrapper(db.Model):
     user_id = db.StringProperty()
     model_name = db.StringProperty()    
     model = ObjectProperty()
-    attributes = ObjectProperty()
+    isSpatial = db.BooleanProperty()
+    spatial = ObjectProperty()
+    # This object will look like:
+    # { spatialMeshId : id for Fileserver object of mesh
+    #   speciesSubdomains : map of species ids to lists of subdomains they are involved in
+    #   
     is_public = db.BooleanProperty()
 
 class ModelManager():
@@ -54,8 +59,8 @@ class ModelManager():
         for model in models:
             print model.model_name
             jsonModel = { "name" : model.model_name }
-            if model.attributes:
-                jsonModel.update(model.attributes)
+            #if model.attributes:
+            #    jsonModel.update(model.attributes)
             jsonModel["id"] = model.key().id()
                           
             print model.model.units
@@ -77,8 +82,8 @@ class ModelManager():
 
         jsonModel = { "name" : model.model_name }
 
-        if model.attributes:
-            jsonModel.update(model.attributes)
+        #if model.attributes:
+        #    jsonModel.update(model.attributes)
 
         jsonModel["id"] = model.key().id()
                       
@@ -99,8 +104,8 @@ class ModelManager():
 
         jsonModel = { "id" : model.key().id(),
                       "name" : model.model_name }
-        if model.attributes:
-            jsonModel.update(model.attributes)
+        #if model.attributes:
+        #    jsonModel.update(model.attributes)
         jsonModel["units"] = model.model.units
         if modelAsString == True:
             jsonModel["model"] = model.model.serialize()
@@ -322,8 +327,11 @@ class ModelEditorPage(BaseHandler):
         else:
             result = {}
 
-        models = get_all_models(self)
-        result.update({ "all_models" : map(lambda x : { "name" : x.name, "units" : x.units }, models) })
+        db_models = db.GqlQuery("SELECT * FROM StochKitModelWrapper WHERE user_id = :1", self.user.user_id())
+        
+        all_models = [{ "name" : row.model.name, "units" : row.model.units, "isSpatial" : row.isSpatial, "spatial" : row.spatial } for row in db_models]
+        
+        result.update({ "all_models" : all_models })
 
         self.render_response('modeleditor.html', **result)
 
@@ -342,8 +350,11 @@ class ModelEditorPage(BaseHandler):
         else:
             result = self.create_model()
 
-        models = get_all_models(self)
-        result.update({ "all_models" : map(lambda x : { "name" : x.name, "units" : x.units }, models) })
+        db_models = db.GqlQuery("SELECT * FROM StochKitModelWrapper WHERE user_id = :1", self.user.user_id())
+        
+        all_models = [{ "name" : row.model.name, "units" : row.model.units, "isSpatial" : row.isSpatial, "spatial" : row.spatial } for row in db_models]
+        
+        result.update({ "all_models" : all_models })
 
         print "post", result
 
@@ -482,6 +493,8 @@ class ModelEditorPage(BaseHandler):
         if not units:
           return {'status': False, 'msg': 'Units are missing.'}
 
+        isSpatial = bool(self.request.get('spatial_type').strip().lower())
+
         model = StochKitModel(name)
         try:
           model.setUnits(units)
@@ -495,7 +508,7 @@ class ModelEditorPage(BaseHandler):
           if db_model is not None:
               return {'status': False, 'msg': 'A Model already exists by that name.', 'name': name}
           
-          save_model(model, name, user_id)
+          save_model(model, name, user_id, isSpatial)
           
           # Also add the model name to cache.
           add_model_to_cache(self, name)
@@ -744,12 +757,14 @@ class ModelEditorExportToStochkit2(BaseHandler):
             self.render_response('modeleditor.html', **result)
 
 
-def save_model(model, model_name, user_id, is_public=False):
+def save_model(model, model_name, user_id, isSpatial, is_public=False):
     """ Save model as a new entity. """
     db_model = StochKitModelWrapper()
     db_model.user_id = user_id
     db_model.model = model
     db_model.model_name = model_name
+    db_model.isSpatial = isSpatial
+    db_model.spatial = {}
     db_model.is_public = is_public
     db_model.put()
 
@@ -799,7 +814,6 @@ def get_all_models(handler):
         all_models = [row.model for row in db_models]
         
         return all_models
-
     except Exception, e:
         logging.error("model::get_all_model - Error retrieving all the models: %s", e)
         traceback.print_exc()

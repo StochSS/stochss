@@ -22,7 +22,10 @@
 		    </li>
 		    <!-- <li><a href="/modeleditor/overview">Overview</a></li> -->
 		    <li>
-			<a href="/modeleditor/specieseditor" TITLE = "Create a List of Reactants">Species</a>
+			<a href="/modeleditor/mesheditor" TITLE = "Add a mesh">Mesh</a>
+		    </li>
+		    <li>
+			<a href="/modeleditor/specieseditor" TITLE = "Create a List of Species">Species</a>
 		    </li>
                     <li>
 			<a href="/modeleditor/parametereditor" TITLE = "Create a List of Parameters">Parameters</a>
@@ -86,8 +89,14 @@
 			    <input type="text" class="span3" id="name" name="name" value="{{ name }}" class="update_box auto_complete">
 
                             <label>Units</label>
-                            <input type="radio" name="exec_type" value="concentration"> Concentration <br />
-                            <input type="radio" name="exec_type" value="population" checked> Population <br />
+                            <input type="radio" name="exec_type" value="concentration" class="concentration"> Concentration <br />
+                            <input type="radio" name="exec_type" value="population" class="population" checked> Population <br />
+                            
+                            <br />
+
+                            <label>Type</label>
+                            <input type="radio" name="spatial_type" value="true" class="spatial"> Spatial <br />
+                            <input type="radio" name="spatial_type" value="" class="nonspatial" checked> Non-spatial <br />
 			    <button type="submit" class="btn btn-primary btn-large" style="float: right;">
 				Create model
 			    </button>
@@ -118,6 +127,7 @@
 			    <thead>
 				<th>Model</th>
                                 <th>Units</th>
+                                <th>Spatial</th>
 				<th>&nbsp;</th>
 			    </thead>
 			    <tbody>
@@ -125,6 +135,7 @@
 				<tr>
 				    <td><a href="/modeleditor?model_edited={{ item.name }}">{{ item.name }}</a></td>
 				    <td>{{ item.units }}</td>
+				    <td>{% if item.isSpatial %}True{% else %}False{% endif %}</td>
 				    <td><a href="javascript:void(0)" onclick="javascript:deleteElement('{{item.name}}')">Delete</a></td>
 				</tr>
 				{% endfor %}
@@ -205,7 +216,7 @@
     </div>
     <!--/span9-->
 
-</div>
+</Div>
 <!--/row-->
 
 <!--/span9-->
@@ -216,11 +227,40 @@
 
 <script type="text/javascript">
 $( 'document' ).ready( function() {
+
+var execTypeButtons = $( 'input[name="exec_type"]' );
+var spatialTypeButtons = $( 'input[name="spatial_type"]' );
+var populationButtonState = execTypeButtons.filter('.population').prop('checked');
+
+//Depending on what spatial radio button is clicked, change things
+spatialTypeButtons.on('click', function(event) {
+  if(spatialTypeButtons.filter('.spatial').prop('checked') == true)
+  {
+    if(execTypeButtons.filter('.concentration').prop('disabled') == false)
+    {
+      populationButtonState = execTypeButtons.filter('.population').prop('checked');
+    }
+
+    execTypeButtons.filter('.population').trigger('click');
+    execTypeButtons.filter('.concentration').prop('disabled', true);
+  }
+  else
+  {
+    execTypeButtons.filter('.concentration').prop('disabled', false);
+
+    if(!populationButtonState)
+    {
+      execTypeButtons.filter('.concentration').trigger('click');
+    }
+  }
+});
+
 {% if model_edited %}
 $( '#convertToPopulation' ).click( function() {
 //saveChanges(true, );
 $(location).attr('href', '/modeleditor/converttopopulation?modelName={{model_edited.name}}');
 });
+
 $( '#duplicateModel' ).click( function() {
   //saveChanges(true, '')
 
@@ -241,6 +281,7 @@ $( '#duplicateModel' ).click( function() {
       }
     }});
   });
+
 $( '#renameModel' ).click( function(event) {
     event.preventDefault();
 
@@ -284,6 +325,7 @@ $( '#renameModel' ).click( function(event) {
         }
       }});
   })
+
 $( '#exportToPublicLibrary' ).click( function() {
   var newName=prompt("Please name this public model","{{model_edited.name}}");
   if (newName != null) {
