@@ -134,6 +134,7 @@ available to an app, it is clamped.
 
 
 
+from google.appengine.api import appinfo
 from google.appengine.api import validation
 from google.appengine.api import yaml_builder
 from google.appengine.api import yaml_listener
@@ -144,18 +145,17 @@ from google.appengine.api.taskqueue import taskqueue_service_pb
 _NAME_REGEX = r'^[A-Za-z0-9-]{0,499}$'
 _RATE_REGEX = r'^(0|[0-9]+(\.[0-9]*)?/[smhd])'
 _TOTAL_STORAGE_LIMIT_REGEX = r'^([0-9]+(\.[0-9]*)?[BKMGT]?)'
-_TASK_AGE_LIMIT_REGEX = r'^([0-9]+(\.[0-9]*(e-?[0-9]+))?[smhd])'
 _MODE_REGEX = r'(pull)|(push)'
 
 
 
 
-SERVER_ID_RE_STRING = r'(?!-)[a-z\d\-]{1,63}'
+MODULE_ID_RE_STRING = r'(?!-)[a-z\d\-]{1,63}'
 
 
-SERVER_VERSION_RE_STRING = r'(?!-)[a-z\d\-]{1,100}'
-_VERSION_REGEX = r'^(?:(?:(%s):)?)(%s)$' % (SERVER_ID_RE_STRING,
-                                            SERVER_VERSION_RE_STRING)
+MODULE_VERSION_RE_STRING = r'(?!-)[a-z\d\-]{1,100}'
+_VERSION_REGEX = r'^(?:(?:(%s):)?)(%s)$' % (MODULE_ID_RE_STRING,
+                                            MODULE_VERSION_RE_STRING)
 
 QUEUE = 'queue'
 
@@ -189,7 +189,7 @@ class RetryParameters(validation.Validated):
   """Retry parameters for a single task queue."""
   ATTRIBUTES = {
       TASK_RETRY_LIMIT: validation.Optional(validation.TYPE_INT),
-      TASK_AGE_LIMIT: validation.Optional(_TASK_AGE_LIMIT_REGEX),
+      TASK_AGE_LIMIT: validation.Optional(validation.TimeValue()),
       MIN_BACKOFF_SECONDS: validation.Optional(validation.TYPE_FLOAT),
       MAX_BACKOFF_SECONDS: validation.Optional(validation.TYPE_FLOAT),
       MAX_DOUBLINGS: validation.Optional(validation.TYPE_INT),
@@ -223,6 +223,7 @@ class QueueEntry(validation.Validated):
 class QueueInfoExternal(validation.Validated):
   """QueueInfoExternal describes all queue entries for an application."""
   ATTRIBUTES = {
+      appinfo.APPLICATION: validation.Optional(appinfo.APPLICATION_RE_STRING),
       TOTAL_STORAGE_LIMIT: validation.Optional(_TOTAL_STORAGE_LIMIT_REGEX),
       QUEUE: validation.Optional(validation.Repeated(QueueEntry)),
   }

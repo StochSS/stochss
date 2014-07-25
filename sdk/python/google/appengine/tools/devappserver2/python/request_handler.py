@@ -22,7 +22,6 @@ module is the sandboxed version.
 
 
 import cStringIO
-import httplib
 import os
 import sys
 import traceback
@@ -33,6 +32,7 @@ import google
 
 from google.appengine.api import api_base_pb
 from google.appengine.api import apiproxy_stub_map
+from google.appengine.api import appinfo
 from google.appengine.api.logservice import log_service_pb
 from google.appengine.api.logservice import logservice
 from google.appengine.ext.remote_api import remote_api_stub
@@ -40,9 +40,62 @@ from google.appengine.runtime import background
 from google.appengine.runtime import request_environment
 from google.appengine.runtime import runtime
 from google.appengine.runtime import shutdown
+from google.appengine.tools.devappserver2 import environ_utils
 from google.appengine.tools.devappserver2 import http_runtime_constants
 from google.appengine.tools.devappserver2.python import request_state
 
+
+# Copied from httplib; done so we don't have to import httplib which breaks
+# our httplib "forwarder" as the environment variable that controls which
+# implementation we get is not yet set.
+
+httplib_responses = {
+    100: 'Continue',
+    101: 'Switching Protocols',
+
+    200: 'OK',
+    201: 'Created',
+    202: 'Accepted',
+    203: 'Non-Authoritative Information',
+    204: 'No Content',
+    205: 'Reset Content',
+    206: 'Partial Content',
+
+    300: 'Multiple Choices',
+    301: 'Moved Permanently',
+    302: 'Found',
+    303: 'See Other',
+    304: 'Not Modified',
+    305: 'Use Proxy',
+    306: '(Unused)',
+    307: 'Temporary Redirect',
+
+    400: 'Bad Request',
+    401: 'Unauthorized',
+    402: 'Payment Required',
+    403: 'Forbidden',
+    404: 'Not Found',
+    405: 'Method Not Allowed',
+    406: 'Not Acceptable',
+    407: 'Proxy Authentication Required',
+    408: 'Request Timeout',
+    409: 'Conflict',
+    410: 'Gone',
+    411: 'Length Required',
+    412: 'Precondition Failed',
+    413: 'Request Entity Too Large',
+    414: 'Request-URI Too Long',
+    415: 'Unsupported Media Type',
+    416: 'Requested Range Not Satisfiable',
+    417: 'Expectation Failed',
+
+    500: 'Internal Server Error',
+    501: 'Not Implemented',
+    502: 'Bad Gateway',
+    503: 'Service Unavailable',
+    504: 'Gateway Timeout',
+    505: 'HTTP Version Not Supported',
+}
 
 class RequestHandler(object):
   """A WSGI application that forwards requests to a user-provided app."""
@@ -51,13 +104,20 @@ class RequestHandler(object):
 
   def __init__(self, config):
     self.config = config
+    if appinfo.MODULE_SEPARATOR not in config.version_id:
+      module_id = appinfo.DEFAULT_MODULE
+      version_id = config.version_id
+    else:
+      module_id, version_id = config.version_id.split(appinfo.MODULE_SEPARATOR)
+
     self.environ_template = {
         'APPLICATION_ID': config.app_id,
-        'CURRENT_VERSION_ID': config.version_id,
+        'CURRENT_MODULE_ID': module_id,
+        'CURRENT_VERSION_ID': version_id,
         'DATACENTER': config.datacenter.encode('ascii'),
         'INSTANCE_ID': config.instance_id.encode('ascii'),
         'APPENGINE_RUNTIME': 'python27',
-        'AUTH_DOMAIN': 'gmail.com',
+        'AUTH_DOMAIN': config.auth_domain.encode('ascii'),
         'HTTPS': 'off',
         'SCRIPT_NAME': '',
         'SERVER_SOFTWARE': http_runtime_constants.SERVER_SOFTWARE,
@@ -89,7 +149,7 @@ class RequestHandler(object):
     self._flush_logs(response.get('logs', []))
     if error == 0:
       response_code = response.get('response_code', 200)
-      status = '%d %s' % (response_code, httplib.responses.get(
+      status = '%d %s' % (response_code, httplib_responses.get(
           response_code, 'Unknown Status Code'))
       start_response(status, response.get('headers', []))
       return [response.get('body', '')]
@@ -147,6 +207,11 @@ class RequestHandler(object):
       environ.update(runtime.CgiDictFromParsedUrl(url))
       sys.stdout = results_io
       try:
+        try:
+          __import__('appengine_config', self._command_globals)
+        except ImportError as e:
+          if 'appengine_config' not in e.message:
+            raise
         compiled_code = compile(code, '<string>', 'exec')
         exec(compiled_code, self._command_globals)
       except:
@@ -171,7 +236,7 @@ class RequestHandler(object):
       A dict containing the environ representing an HTTP request.
     """
     user_environ = self.environ_template.copy()
-    self.copy_headers(environ, user_environ)
+    environ_utils.propagate_environs(environ, user_environ)
     user_environ['REQUEST_METHOD'] = environ.get('REQUEST_METHOD', 'GET')
     content_type = environ.get('CONTENT_TYPE')
     if content_type:
@@ -180,27 +245,6 @@ class RequestHandler(object):
     if content_length:
       user_environ['HTTP_CONTENT_LENGTH'] = content_length
     return user_environ
-
-  def copy_headers(self, source_environ, dest_environ):
-    """Copy headers from source_environ to dest_environ.
-
-    This extracts headers that represent environ values and propagates all
-    other headers which are not used for internal implementation details or
-    headers that are stripped.
-
-    Args:
-      source_environ: The source environ dict.
-      dest_environ: The environ dict to populate.
-    """
-    for env in http_runtime_constants.ENVIRONS_TO_PROPAGATE:
-      value = source_environ.get(
-          http_runtime_constants.INTERNAL_ENVIRON_PREFIX + env, None)
-      if value is not None:
-        dest_environ[env] = value
-    for name, value in source_environ.items():
-      if (name.startswith('HTTP_') and
-          not name.startswith(http_runtime_constants.INTERNAL_ENVIRON_PREFIX)):
-        dest_environ[name] = value
 
   def _flush_logs(self, logs):
     """Flushes logs using the LogService API.

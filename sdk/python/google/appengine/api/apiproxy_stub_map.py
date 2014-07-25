@@ -289,6 +289,14 @@ class APIProxyStubMap(object):
     """
     return self.__stub_map.get(service, self.__default_stub)
 
+  def _CopyStubMap(self):
+    """Get a copy of the stub map. For testing only.
+
+    Returns:
+      Get a shallow copy of the stub map.
+    """
+    return dict(self.__stub_map)
+
   def MakeSyncCall(self, service, call, request, response):
     """The APIProxy entry point.
 
@@ -671,8 +679,8 @@ class UserRPC(object):
 
 
 
-        err.rpc._RPC__exception = None
-        err.rpc._RPC__traceback = None
+        err.rpc._exception = None
+        err.rpc._traceback = None
     finally:
       cls.__local.may_interrupt_wait = False
     finished, runnning = cls.__check_one(rpcs)

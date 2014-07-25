@@ -27,14 +27,13 @@ import types
 
 import google
 
-import protorpc
-
 from google.appengine import dist
 from google.appengine.api import app_logging
 from google.appengine.api.logservice import logservice
 from google.appengine import dist27 as dist27
 from google.appengine.ext.remote_api import remote_api_stub
 from google.appengine.runtime import request_environment
+from google.appengine.tools.devappserver2.python import pdb_sandbox
 from google.appengine.tools.devappserver2.python import request_state
 from google.appengine.tools.devappserver2.python import stubs
 
@@ -42,19 +41,21 @@ from google.appengine.tools.devappserver2.python import stubs
 CODING_MAGIC_COMMENT_RE = re.compile('coding[:=]\s*([-\w.]+)')
 DEFAULT_ENCODING = 'ascii'
 
-_C_MODULES = frozenset(['numpy', 'Crypto', 'lxml', 'PIL'])
+_C_MODULES = frozenset(['cv', 'Crypto', 'lxml', 'numpy', 'PIL'])
 
 NAME_TO_CMODULE_WHITELIST_REGEX = {
+    'cv': re.compile(r'cv(\..*)?$'),
+    'lxml': re.compile(r'lxml(\..*)?$'),
     'numpy': re.compile(r'numpy(\..*)?$'),
     'pycrypto': re.compile(r'Crypto(\..*)?$'),
-    'lxml': re.compile(r'lxml(\..*)?$'),
     'PIL': re.compile(r'(PIL(\..*)?|_imaging|_imagingft|_imagingmath)$'),
+    'ssl': re.compile(r'_ssl$'),
 }
 
 # Maps App Engine third-party library names to the Python package name for
 # libraries whose names differ from the package names.
 _THIRD_PARTY_LIBRARY_NAME_OVERRIDES = {
-    'pycrypto': 'Crypto'
+    'pycrypto': 'Crypto',
 }
 
 # The location of third-party libraries will be different for the packaged SDK.
@@ -111,7 +112,8 @@ def enable_sandbox(config):
     config: The runtime_config_pb2.Config to use to configure the sandbox.
   """
 
-  modules = [os, traceback, google, protorpc]
+  devnull = open(os.path.devnull)
+  modules = [os, traceback, google]
   c_module = _find_shared_object_c_module()
   if c_module:
     modules.append(c_module)
@@ -147,7 +149,6 @@ def enable_sandbox(config):
 #  sys.meta_path = [
 #      StubModuleImportHook(),
 #      ModuleOverrideImportHook(_MODULE_OVERRIDE_POLICIES),
-#      BuiltinImportHook(),
 #      CModuleImportHook(enabled_library_regexes),
 #      path_override_hook,
 #      PyCryptoRandomImportHook,
@@ -172,6 +173,9 @@ def enable_sandbox(config):
   request_environment.PatchOsEnviron(sandboxed_os)
   os.__dict__.update(sandboxed_os.__dict__)
   _init_logging(config.stderr_log_level)
+  pdb_sandbox.install(config)
+  sys.stdin = devnull
+  sys.stdout = sys.stderr
 
 
 def _find_shared_object_c_module():
@@ -261,8 +265,15 @@ def _enable_libraries(libraries):
   library_pattern = os.path.join(os.path.dirname(
       os.path.dirname(google.__file__)), _THIRD_PARTY_LIBRARY_FORMAT_STRING)
   for library in libraries:
+    # Encode the library name/version to convert the Python type
+    # from unicode to str so that Python doesn't try to decode
+    # library pattern from str to unicode (which can cause problems
+    # when the SDK has non-ASCII data in the directory). Encode as
+    # ASCII should be safe as we control library info and are not
+    # likely to have non-ASCII names/versions.
     library_dir = os.path.abspath(
-        library_pattern % {'name': library.name, 'version': library.version})
+        library_pattern % {'name': library.name.encode('ascii'),
+                           'version': library.version.encode('ascii')})
     library_dirs.append(library_dir)
   return library_dirs
 
@@ -286,7 +297,7 @@ class BaseImportHook(object):
     Returns:
       A tuple (source_file, path_name, description, loader) where:
         source_file: An open file or None.
-        path_name: A str containing the the path to the module.
+        path_name: A str containing the path to the module.
         description: A description tuple like the one imp.find_module returns.
         loader: A PEP 302 compatible path hook. If this is not None, then the
             other elements will be None.
@@ -767,7 +778,7 @@ _WHITE_LIST_C_MODULES = [
     'exceptions',
     '_fileio',
     '_functools',
-    'fcntl',
+    'future_builtins',
     'gc',
     '_hashlib',
     '_heapq',
@@ -807,26 +818,8 @@ _WHITE_LIST_C_MODULES = [
 ]
 
 
-class BuiltinImportHook(object):
-  """An import hook implementing a builtin whitelist.
-
-  BuiltinImportHook implements the PEP 302 finder protocol where it returns
-  itself as a loader for any builtin module that isn't whitelisted. The loader
-  implementation always raises ImportError.
-  """
-
-  def find_module(self, fullname, unused_path=None):
-    if (fullname in sys.builtin_module_names and
-        fullname not in _WHITE_LIST_C_MODULES):
-      return self
-    return None
-
-  def load_module(self, fullname):
-    raise ImportError('No module named %s' % fullname)
-
-
 class CModuleImportHook(object):
-  """An import hook implementing a C module whitelist.
+  """An import hook implementing a C module (builtin or extensions) whitelist.
 
   CModuleImportHook implements the PEP 302 finder protocol where it returns
   itself as a loader for any builtin module that isn't whitelisted or part of an
@@ -837,21 +830,23 @@ class CModuleImportHook(object):
   def __init__(self, enabled_regexes):
     self._enabled_regexes = enabled_regexes
 
-  def find_module(self, fullname, path=None):
-    if fullname in _WHITE_LIST_C_MODULES:
-      return None
-    if any(regex.match(fullname) for regex in self._enabled_regexes):
-      return None
+  @staticmethod
+  def _module_type(fullname, path):
     _, _, submodule_name = fullname.rpartition('.')
     try:
-      result = imp.find_module(submodule_name, path)
+      f, _, description = imp.find_module(submodule_name, path)
+      _, _, file_type = description
     except ImportError:
       return None
-    f, _, description = result
-    _, _, file_type = description
-    if isinstance(f, file):
+    if f:
       f.close()
-    if file_type == imp.C_EXTENSION:
+    return file_type
+
+  def find_module(self, fullname, path=None):
+    if (fullname in _WHITE_LIST_C_MODULES or
+        any(regex.match(fullname) for regex in self._enabled_regexes)):
+      return None
+    if self._module_type(fullname, path) in [imp.C_EXTENSION, imp.C_BUILTIN]:
       return self
     return None
 

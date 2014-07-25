@@ -29,6 +29,7 @@ send real email via SMTP or sendmail."""
 
 
 
+from email import encoders
 from email import MIMEBase
 from email import MIMEMultipart
 from email import MIMEText
@@ -48,15 +49,14 @@ MAX_REQUEST_SIZE = 32 << 20
 class MailServiceStub(apiproxy_stub.APIProxyStub):
   """Python only mail service stub.
 
-  This stub does not actually attempt to send email.  instead it merely logs
-  a description of the email to the developers console.
-
   Args:
     host: Host of SMTP server to use.  Blank disables sending SMTP.
     port: Port of SMTP server to use.
     user: User to log in to SMTP server as.
     password: Password for SMTP server user.
   """
+
+  THREADSAFE = True
 
   def __init__(self,
                host=None,
@@ -65,17 +65,20 @@ class MailServiceStub(apiproxy_stub.APIProxyStub):
                password='',
                enable_sendmail=False,
                show_mail_body=False,
-               service_name='mail'):
+               service_name='mail',
+               allow_tls=False):
     """Constructor.
 
     Args:
       host: Host of SMTP mail server.
-      post: Port of SMTP mail server.
+      port: Port of SMTP mail server.
       user: Sending user of SMTP mail.
       password: SMTP password.
       enable_sendmail: Whether sendmail enabled or not.
       show_mail_body: Whether to show mail body in log.
       service_name: Service name expected for all calls.
+      allow_tls: Allow TLS support. If True, use TLS provided the server
+        announces support in the EHLO response. If False, do not use TLS.
     """
     super(MailServiceStub, self).__init__(service_name,
                                           max_request_size=MAX_REQUEST_SIZE)
@@ -85,6 +88,7 @@ class MailServiceStub(apiproxy_stub.APIProxyStub):
     self._smtp_password = password
     self._enable_sendmail = enable_sendmail
     self._show_mail_body = show_mail_body
+    self._allow_tls = allow_tls
 
     self._cached_messages = []
 
@@ -195,10 +199,16 @@ class MailServiceStub(apiproxy_stub.APIProxyStub):
       mime_message: MimeMessage to send.  Create using ToMIMEMessage.
       smtp_lib: Class of SMTP library.  Used for dependency injection.
     """
-
     smtp = smtp_lib()
     try:
       smtp.connect(self._smtp_host, self._smtp_port)
+
+      smtp.ehlo_or_helo_if_needed()
+      if self._allow_tls and smtp.has_extn('STARTTLS'):
+        smtp.starttls()
+
+
+        smtp.ehlo()
       if self._smtp_user:
         smtp.login(self._smtp_user, self._smtp_password)
 
@@ -228,7 +238,7 @@ class MailServiceStub(apiproxy_stub.APIProxyStub):
       for to in ('To', 'Cc', 'Bcc'):
         if mime_message[to]:
           tos.extend("'%s'" % addr.strip().replace("'", r"'\''")
-                     for addr in mime_message[to].split(','))
+                     for addr in unicode(mime_message[to]).split(','))
 
       command = '%s %s' % (sendmail_command, ' '.join(tos))
 
@@ -284,6 +294,7 @@ class MailServiceStub(apiproxy_stub.APIProxyStub):
     import email
 
     mime_message = mail.MailMessageToMIMEMessage(request)
+    _Base64EncodeAttachments(mime_message)
     if self._smtp_host:
 
       self._SendSMTP(mime_message, smtp_lib)
@@ -318,3 +329,15 @@ class MailServiceStub(apiproxy_stub.APIProxyStub):
       log('Both SMTP and sendmail are enabled.  Ignoring sendmail.')
 
   _Dynamic_SendToAdmins = _SendToAdmins
+
+
+def _Base64EncodeAttachments(mime_message):
+  """Base64 encode all individual attachments that are not text.
+
+  Args:
+    mime_message: MimeMessage to process.
+  """
+  for item in mime_message.get_payload():
+    if (item.get_content_maintype() not in ['multipart', 'text'] and
+        'Content-Transfer-Encoding' not in item):
+      encoders.encode_base64(item)

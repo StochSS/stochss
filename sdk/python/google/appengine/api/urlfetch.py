@@ -194,7 +194,7 @@ def _is_fetching_self(url, method):
       "PATH_INFO" not in os.environ):
     return False
 
-  scheme, host_port, path, query, fragment = urlparse.urlsplit(url)
+  _, host_port, path, _, _ = urlparse.urlsplit(url)
 
   if host_port == os.environ['HTTP_HOST']:
     current_path = urllib2.unquote(os.environ['PATH_INFO'])
@@ -278,8 +278,15 @@ def make_fetch_call(rpc, url, payload=None, method=GET, headers={},
   The first argument is a UserRPC instance.  See urlfetch.fetch for a
   thorough description of remaining arguments.
 
+  Raises:
+    InvalidMethodError: if requested method is not in _VALID_METHODS
+    ResponseTooLargeError: if the response payload is too large
+    InvalidURLError: if there are issues with the content/size of the
+      requested URL
+
   Returns:
     The rpc object passed into the function.
+
   """
 
   assert rpc.service == 'urlfetch', repr(rpc.service)
@@ -350,9 +357,9 @@ def _get_fetch_result(rpc):
     rpc: A UserRPC object.
 
   Raises:
-    InvalidURLError if the url was invalid.
-    DownloadError if there was a problem fetching the url.
-    ResponseTooLargeError if the response was either truncated (and
+    InvalidURLError: if the url was invalid.
+    DownloadError: if there was a problem fetching the url.
+    ResponseTooLargeError: if the response was either truncated (and
       allow_truncated=False was passed to make_fetch_call()), or if it
       was too big for us to download.
 
@@ -366,6 +373,9 @@ def _get_fetch_result(rpc):
 
   try:
     rpc.check_success()
+  except apiproxy_errors.RequestTooLargeError, err:
+    raise InvalidURLError(
+        'Request body too large fetching URL: ' + url)
   except apiproxy_errors.ApplicationError, err:
     error_detail = ''
     if err.error_detail:
