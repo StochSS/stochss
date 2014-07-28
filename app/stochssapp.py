@@ -306,6 +306,7 @@ from handlers.parametereditor import *
 from handlers.volumeeditor import *
 from handlers.reactioneditor import *
 import handlers.stochoptim
+import handlers.mesheditor
 from handlers.simulation import *
 from handlers.sensitivity import *
 from handlers.credentials import *
@@ -350,6 +351,7 @@ app = webapp2.WSGIApplication([
                                ('/stochkit/list.*', JobBackboneInterface),
                                ('/convert', ModelConvertPage),
                                ('/modeleditor/specieseditor', SpeciesEditorPage),
+                               ('/modeleditor/mesheditor', handlers.mesheditor.MeshEditorPage),
                                ('/modeleditor/reactioneditor', ReactionEditorPage),
                                ('/modeleditor/parametereditor', ParameterEditorPage),
                                ('/modeleditor/volumeeditor', VolumeEditorPage),

@@ -117,6 +117,7 @@ class FileWrapper(db.Model):
 
         if asString:
             return json.dumps({ "id" : self.key().id(),
+                                "storePath" : self.storePath,
                                 "pathKey" : self.pathKey,
                                 "path" : self.path,
                                 "owner" : self.owner,
@@ -124,6 +125,7 @@ class FileWrapper(db.Model):
                                 "data" : data })
         else:
             return { "id" : self.key().id(),
+                     "storePath" : self.storePath,
                      "pathKey" : self.pathKey,
                      "path" : self.path,
                      "owner" : self.owner,
