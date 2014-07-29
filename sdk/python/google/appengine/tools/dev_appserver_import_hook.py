@@ -509,7 +509,8 @@ class FakeFile(file):
                                                  normcase=normcase,
                                                  py27_optional=py27_optional)
       FakeFile._availability_cache[logical_filename] = result
-    return result
+    return True
+#result
 
   @staticmethod
   def _IsFileAccessibleNoCache(logical_filename, normcase=os.path.normcase,

@@ -153,8 +153,8 @@ def enable_sandbox(config):
 #      PyCryptoRandomImportHook,
 #      PathRestrictingImportHook(enabled_library_regexes)
 #      ]
-  sys.path_importer_cache = {}
-  sys.path = python_lib_paths[:]
+  #sys.path_importer_cache = {}
+  sys.path.extend(python_lib_paths[:])
 
   thread = __import__('thread')
   __import__('%s.threading' % dist27.__name__)
