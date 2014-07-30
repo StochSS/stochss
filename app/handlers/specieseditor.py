@@ -22,8 +22,11 @@ class SpeciesEditorPage(BaseHandler):
         return True
     
     def get(self):
+        # There are two types of requests that will come to this page:
+        #    Regular user attemps to load a page
+        #    And ajax requests to get the speciesSubdomainAssignments for a given model
+        # Both request types need the model loaded up tho
         model_edited = self.get_session_property('model_edited')
-
         if model_edited == None:
             self.render_response('modeleditor/specieseditor.html')
             return
@@ -34,35 +37,93 @@ class SpeciesEditorPage(BaseHandler):
             self.render_response('modeleditor/specieseditor.html')
             return
 
-        all_species = row.model.getAllSpecies()
+        if self.request.get('reqType') == 'speciesSubdomainAssignments':
+            # Looks like a speciesSubdomainAssignments request
+            self.response.content_type = 'application/json'
 
-        data = {'all_species': row.model.getAllSpecies(), "name" : row.model.name, "units" : row.model.units, "isSpatial" : row.isSpatial, "spatial" : row.spatial }
-
-        if all_species is not None:
-            self.render_response('modeleditor/specieseditor.html', **data)
+            if 'species_subdomain_assignments' in row.spatial:
+                speciesSubdomainAssignments = row.spatial['species_subdomain_assignments']
+            else:
+                speciesSubdomainAssignments = None
+            
+            self.response.write( json.dumps( { 'subdomains' : row.spatial['subdomains'],
+                                               'speciesSubdomainAssignments' : speciesSubdomainAssignments } ) )
         else:
-            self.render_response('modeleditor/specieseditor.html')
+            # Looks like a user request
+            all_species = row.model.getAllSpecies()
 
+            data = {'all_species': row.model.getAllSpecies(), "name" : row.model.name, "units" : row.model.units, "isSpatial" : row.isSpatial, "spatial" : row.spatial }
+
+            if all_species is not None:
+                self.render_response('modeleditor/specieseditor.html', **data)
+            else:
+                self.render_response('modeleditor/specieseditor.html')
 
     def post(self):
-        # First, check to see if it's an update request and then route it to the appropriate function.
-        if self.request.get('update') == "1":
-            result = self.update_species()
-            self.response.headers['Content-Type'] = 'application/json'
-            self.response.write(json.dumps(result))
+        # There are two types of requests that could be made to this server
+        #    1. Old style form posts from the original StochSS code which handles species name/initial value/diffusion constant changes
+        #    2. and jquery requests from the new js that handles (in spatial models) changes to the species/subdomain mapping
+        
+        model_edited = self.get_session_property('model_edited')
+        if model_edited == None:
+            self.render_response('modeleditor/specieseditor.html')
+            return
+
+        row = db.GqlQuery("SELECT * FROM StochKitModelWrapper WHERE user_id = :1 AND model_name = :2", self.user.user_id(), model_edited.name).get()
+
+        if row is None:
+            self.render_response('modeleditor/specieseditor.html')
+            return
+
+        if self.request.get('reqType') == 'setSpeciesSubdomainAssignment':
+            # Looks like a speciesSubdomainAssignments request
+            self.response.content_type = 'application/json'
+
+            data = json.loads( self.request.get('data') );
+
+            speciesId = data['speciesId']
+            subdomainId = data['subdomainId']
+            value = data['value']
+
+            selectedSubdomains = row.spatial['species_subdomain_assignments'][speciesId]
+
+            if value:
+                if subdomainId not in selectedSubdomains:
+                    selectedSubdomains.append(subdomainId)
+            else:
+                if subdomainId in selectedSubdomains:
+                    selectedSubdomains.remove(subdomainId)
+
+            row.spatial['species_subdomain_assignments'][speciesId] = selectedSubdomains
+
+            row.put()
             
-        elif self.request.get('delete') == "1":
-            result = self.delete_species()
-            all_species = self.get_all_species()
-            if all_species is not None:
-                result = dict(result, **all_species)
-            self.render_response('modeleditor/specieseditor.html', **result)
-                
+            self.response.write( json.dumps( { "status" : True,
+                                               "msg" : "Species {0} subdomain assignment updated".format(speciesId) } ) )
         else:
-            result = self.create_species()
-            all_species = self.get_all_species()
-            if all_species is not None:
-                result = dict(result, **all_species)
+            # First, check to see if it's an update request and then route it to the appropriate function. Update requests return JSON! The other requests return html pages!
+            if self.request.get('update') == "1":
+                result = self.update_species()
+                self.response.headers['Content-Type'] = 'application/json'
+                self.response.write(json.dumps(result))
+                return
+            
+            elif self.request.get('delete') == "1":
+                result = self.delete_species()
+                all_species = self.get_all_species()
+                if all_species is not None:
+                    result = dict(result, **all_species)
+            else:
+                result = self.create_species()
+                all_species = self.get_all_species()
+                if all_species is not None:
+                    result = dict(result, **all_species)
+
+            # Now that species updated need to get a new copy of the model            
+            model_edited = self.get_session_property('model_edited')
+            row = db.GqlQuery("SELECT * FROM StochKitModelWrapper WHERE user_id = :1 AND model_name = :2", self.user.user_id(), model_edited.name).get()
+
+            result.update({"name" : row.model.name, "units" : row.model.units, "isSpatial" : row.isSpatial, "spatial" : row.spatial })
             self.render_response('modeleditor/specieseditor.html', **result)
 
     def create_species(self):
@@ -113,10 +174,8 @@ class SpeciesEditorPage(BaseHandler):
             species = Species(name, initial_value)
             model.addSpecies(species)
 
-            if 'species_diffusion_coefficients' not in row.spatial:
-                row.spatial['species_diffusion_coefficients'] = {}
-
             row.spatial['species_diffusion_coefficients'][name] = diffusion_coefficient
+            row.spatial['species_subdomain_assignments'][name] = []
 
             row.model = model
             row.put()
@@ -150,6 +209,7 @@ class SpeciesEditorPage(BaseHandler):
             row.model.deleteSpecies(name)
 
             del row.spatial['species_diffusion_coefficients'][name]
+            del row.spatial['species_subdomain_assignments'][name]
 
             row.put()
 
@@ -166,8 +226,6 @@ class SpeciesEditorPage(BaseHandler):
         """
         model = self.get_model_edited()
 
-        print 'woops', name, initial_value, diffusion_coefficient, isSpatial
-        
         if model is None:
             return {'status': False, 'msg': 'You have not selected any model to edit.'}
 
@@ -227,6 +285,9 @@ class SpeciesEditorPage(BaseHandler):
 
             all_species = model.getAllSpecies()
 
+            oldkey = None
+            newKey = None
+
             # Add the updated values afresh. i.e. The old values are erased.
             new_species_list = []
 
@@ -237,6 +298,9 @@ class SpeciesEditorPage(BaseHandler):
 
                 # If name changed, change all the indexing
                 if new_name != key:
+                    oldKey = key
+                    newKey = new_name
+
                     row.spatial['species_diffusion_coefficients'][new_name] = row.spatial['species_diffusion_coefficients'][key]
 
                     del row.spatial['species_diffusion_coefficients'][key]
@@ -277,9 +341,9 @@ class SpeciesEditorPage(BaseHandler):
 
             row.model = model
             row.put()
-            
+
             #self.set_model_edited(model)
-            return {'status': True, 'msg': 'Species updated successfully!'}
+            return {'status': True, 'msg': 'Species updated successfully!', 'key' : oldKey, 'newKey' : newKey}
         except Exception, e:
             logging.error("species::update_species: Updating of Species failed with error %s", e)
             traceback.print_exc()

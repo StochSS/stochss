@@ -91,9 +91,11 @@ class FileWrapper(db.Model):
         self.path = data["path"]
         self.owner = data["owner"]
         self.perm = data["perm"]
+
+        baseName, ext = os.path.splitext(data["path"])
         
         path = os.path.abspath(os.path.dirname(__file__))
-        [tid, tmpfile] = tempfile.mkstemp(dir = os.path.abspath(os.path.dirname(__file__)) + '/../static/tmp/')
+        [tid, tmpfile] = tempfile.mkstemp(dir = os.path.abspath(os.path.dirname(__file__)) + '/../static/tmp/', suffix = ext)
 
         self.storePath = tmpfile
 
@@ -168,6 +170,7 @@ class FileManager():
     @staticmethod
     def deleteFile(handler, fileID):
         ffile = FileWrapper.get_by_id(fileID)
+        print "deleting {0}".format(fileID)
         ffile.delete()
 
     @staticmethod

@@ -441,6 +441,7 @@ $( '#exportToPublicLibrary' ).click( function() {
     
     /**
     * The ajax call for form submit
+    * This function call needs to trigger any necessary redraws on the page
     */
     function update() {
     var sData = $('input', oTable.fnGetHiddenNodes()).serialize() + "&update=1";
@@ -452,6 +453,7 @@ $( '#exportToPublicLibrary' ).click( function() {
     success : function(response) {
     var status = response['status']
     $(".create_msg").html('')
+    $( 'body' ).trigger( 'asdf' );
     if (!status) {
       $( "#msg" ).prop('class', 'alert alert-error');
       $('#msg').html(response['msg']);
@@ -461,6 +463,12 @@ $( '#exportToPublicLibrary' ).click( function() {
 
       if (isParameterEditor) {
         updateValues(response)
+      }
+
+      if (isSpeciesEditor) {
+        $( '[name=' + response['key'] + '-name]' ).prop( 'name', response['newKey'] + '-name' );
+        $( '[name=' + response['key'] + '-diffusion_constant]' ).prop( 'name', response['newKey'] + '-diffusion_constant' );
+        $( '[name=' + response['key'] + '-initial_value]' ).prop( 'name', response['newKey'] + '-initial_value' );
       }
     }
     },
