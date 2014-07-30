@@ -17,8 +17,9 @@ from stochss.examplemodels import *
 
 import webapp2
 
-import pyurdme
-pyurdme.URDMEMesh.read_dolfin_mesh("mesh.xml")
+from Scientific import N
+#import dolfin
+#pyurdme.URDMEMesh.read_dolfin_mesh("mesh.xml")
 
 class ObjectProperty(db.Property):
     """  A db property to store objects. """
