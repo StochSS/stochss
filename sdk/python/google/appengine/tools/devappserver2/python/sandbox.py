@@ -138,7 +138,7 @@ def enable_sandbox(config):
   __builtin__.file = stubs.FakeFile
   __builtin__.open = stubs.FakeFile
   types.FileType = stubs.FakeFile
-  sys.platform = 'linux3'
+  #sys.platform = 'linux3' # This was originally uncommented in the original Google SDK. I do not know why it was linux3 instead of linux2. Had some library issues with Ubuntu 12.04 and the line 'from Scientific import N'
   enabled_library_regexes = [
       NAME_TO_CMODULE_WHITELIST_REGEX[lib.name] for lib in config.libraries
       if lib.name in NAME_TO_CMODULE_WHITELIST_REGEX]
