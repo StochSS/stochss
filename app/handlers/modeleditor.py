@@ -17,6 +17,12 @@ from stochss.examplemodels import *
 
 import webapp2
 
+#from Scientific import N
+import pyurdme
+
+baseDir = os.path.dirname(os.path.realpath(__file__))
+pyurdme.URDMEMesh.read_dolfin_mesh("{0}/../../mesh.xml".format(baseDir))
+
 class ObjectProperty(db.Property):
     """  A db property to store objects. """
 
