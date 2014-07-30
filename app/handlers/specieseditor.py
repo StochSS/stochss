@@ -48,6 +48,7 @@ class SpeciesEditorPage(BaseHandler):
             
             self.response.write( json.dumps( { 'subdomains' : row.spatial['subdomains'],
                                                'speciesSubdomainAssignments' : speciesSubdomainAssignments } ) )
+            return
         else:
             # Looks like a user request
             all_species = row.model.getAllSpecies()
@@ -100,6 +101,7 @@ class SpeciesEditorPage(BaseHandler):
             
             self.response.write( json.dumps( { "status" : True,
                                                "msg" : "Species {0} subdomain assignment updated".format(speciesId) } ) )
+            return
         else:
             # First, check to see if it's an update request and then route it to the appropriate function. Update requests return JSON! The other requests return html pages!
             if self.request.get('update') == "1":
