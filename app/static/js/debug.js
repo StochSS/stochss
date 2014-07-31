@@ -1,5 +1,5 @@
 // Function taken from http://stackoverflow.com/questions/690781/debugging-scripts-added-via-jquery-getscript-function -- Allows us to load scripts in a way that can be debugged
-var loadScript = function (path, callback) {
+/*var loadScript = function (path, callback) {
     var result = $.Deferred(),
     script = document.createElement("script");
     script.async = "async";
@@ -28,6 +28,6 @@ function loadOrdered(files, callback) {
 	      );
 }
 
-loadOrdered(['/static/custom/three.js', '/static/custom/OrbitControls.js', '/static/custom/render.js']);
+loadOrdered(['/static/js/three.js', '/static/js/OrbitControls.js']);
 
-CUSTOMLOADED = true;
+CUSTOMLOADED = true;*/
