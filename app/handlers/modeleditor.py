@@ -1,3 +1,4 @@
+import logging
 try:
   import json
 except ImportError:
@@ -5,8 +6,8 @@ except ImportError:
 from google.appengine.ext import db
 import pickle
 import traceback
+import re
 import random
-import logging
 import time
 from google.appengine.api import users
 

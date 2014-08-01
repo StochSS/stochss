@@ -31,13 +31,13 @@ class ReactionEditorPage(BaseHandler):
         # Both request types need the model loaded up tho
         model_edited = self.get_session_property('model_edited')
         if model_edited == None:
-            self.render_response('modeleditor/reactionseditor.html')
+            self.render_response('modeleditor/reactioneditor.html')
             return
 
         row = db.GqlQuery("SELECT * FROM StochKitModelWrapper WHERE user_id = :1 AND model_name = :2", self.user.user_id(), model_edited.name).get()
 
         if row is None:
-            self.render_response('modeleditor/reactionseditor.html')
+            self.render_response('modeleditor/reactioneditor.html')
             return
 
 
