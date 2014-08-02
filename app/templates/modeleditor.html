@@ -22,9 +22,6 @@
 		    </li>
 		    <!-- <li><a href="/modeleditor/overview">Overview</a></li> -->
 		    <li>
-			<a href="/modeleditor/mesheditor" TITLE = "Add a mesh">Mesh</a>
-		    </li>
-		    <li>
 			<a href="/modeleditor/specieseditor" TITLE = "Create a List of Species">Species</a>
 		    </li>
                     <li>
@@ -33,6 +30,11 @@
 		    <li>
 			<a href="/modeleditor/reactioneditor" TITLE = "Create a List of Reactions">Reactions</a>
 		    </li>
+                    {% if isSpatial %}
+		    <li>
+			<a href="/modeleditor/mesheditor" TITLE = "Add a mesh">Mesh</a>
+		    </li>
+                    {% endif %}
 		    <li class="dropdown">
 			<!--<a class="dropdown-toggle" data-toggle="dropdown">Geometry<b class="caret"></b></a> -->
 			<ul class="dropdown-menu">

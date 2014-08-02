@@ -44,7 +44,7 @@ MeshEditor.Controller = Backbone.View.extend(
             this.attributes = attributes;
 
             // We gotta fetch this as well!
-            this.processedMeshFiles = undefined;
+            this.meshInfo = undefined;
 
             // Draw a screen so folks have something to see
             this.render();
@@ -64,7 +64,7 @@ MeshEditor.Controller = Backbone.View.extend(
             $.ajax( { url : '/modeleditor/mesheditor',
                       type : 'GET',
                       reqType : 'json',
-                      data : { 'reqType' : 'getMeshes' },
+                      data : { 'reqType' : 'getMeshInfo' },
                       success : _.bind(this.render, this) } );
         },
         
@@ -123,8 +123,6 @@ MeshEditor.Controller = Backbone.View.extend(
         
         render : function(data)
         {
-            $( '.meshTable' ).hide();
-
             $( this.el ).find('#progresses').empty();
             
             if(typeof data != 'undefined')
@@ -134,104 +132,157 @@ MeshEditor.Controller = Backbone.View.extend(
 
             if(typeof this.data != 'undefined')
             {
+                // Build the reactions subdomains selection table
+                var reactionsSubdomainTableHeader = $( "#reactionsSubdomainsTableHeader" );
+                var reactionsSubdomainTableBody = $( "#reactionsSubdomainsTableBody" );
+
+                // It's possible the page does not have these elements, so check before we try
+                //    to do anything with them
+                if(reactionsSubdomainTableHeader.length > 0)
+                {
+                    reactionsSubdomainTableHeader.empty();
+                    reactionsSubdomainTableBody.empty();
+
+                    var subdomains = this.data['subdomains'];
+                    var reactionsSubdomainAssignments = this.data['reactionsSubdomainAssignments'];
+                    
+                    $( "<th></th>" ).appendTo( reactionsSubdomainsTableHeader );
+
+                    //Insert the col. header elements (the subdomain columns)
+                    for(var subdomainId in subdomains)
+                    {
+                        $( "<th>" + subdomainId + "</th>" ).appendTo( reactionsSubdomainsTableHeader );
+                    }
+
+                    //Insert a row for every reactions
+                    for(var reactionId in reactionsSubdomainAssignments)
+                    {
+                        var row = $( "<tr></tr>" ).appendTo( reactionsSubdomainsTableBody );
+
+                        $( "<td>" + reactionId + "</td>" ).appendTo( row );
+
+                        for(var subdomainIndex in subdomains)
+                        {
+                            var subdomainId = subdomains[subdomainIndex]
+
+                            var checked = false;
+
+                            if(_.indexOf(reactionsSubdomainAssignments[reactionId], subdomainId) >= 0)
+                            {
+                                checked = true;
+                            }
+
+                            var checkbox = $( "<td><input type=\"checkbox\"></td>" ).appendTo( row ).find(' input ');
+
+                            checkbox.prop('checked', checked);
+
+                            checkbox.on('click', _.bind(_.partial(this.setReactionsSubdomainAssignment, reactionId, subdomainId), this));
+                        }
+                    }
+                }
+
+                // Build the species subdomains selection table
+                var speciesSubdomainTableHeader = $( "#speciesSubdomainsTableHeader" );
+                var speciesSubdomainTableBody = $( "#speciesSubdomainsTableBody" );
+
+                // It's possible the page does not have these elements, so check before we try
+                //    to do anything with them
+                if(speciesSubdomainTableHeader.length > 0)
+                {
+                    var subdomains = this.data['subdomains'];
+                    var speciesSubdomainAssignments = this.data['speciesSubdomainAssignments'];
+
+                    speciesSubdomainTableHeader.empty();
+                    speciesSubdomainTableBody.empty();
+
+                    $( "<th></th>" ).appendTo( speciesSubdomainTableHeader );
+
+                    //Insert the col. header elements (the subdomain columns)
+                    for(var subdomainId in subdomains)
+                    {
+                        $( "<th>" + subdomainId + "</th>" ).appendTo( speciesSubdomainTableHeader );
+                    }
+
+                    //Insert a row for every species
+                    for(var speciesId in speciesSubdomainAssignments)
+                    {
+                        var row = $( "<tr></tr>" ).appendTo( speciesSubdomainTableBody );
+
+                        $( "<td>" + speciesId + "</td>" ).appendTo( row );
+
+                        for(var subdomainIndex in subdomains)
+                        {
+                            var subdomainId = subdomains[subdomainIndex]
+
+                            var checked = false;
+
+                            if(_.indexOf(speciesSubdomainAssignments[speciesId], subdomainId) >= 0)
+                            {
+                                checked = true;
+                            }
+
+                            var checkbox = $( "<td><input type=\"checkbox\"></td>" ).appendTo( row ).find(' input ');
+
+                            checkbox.prop('checked', checked)
+
+                            checkbox.on('click', _.bind(_.partial(this.setSpeciesSubdomainAssignment, speciesId, subdomainId), this));
+                        }
+                    }
+                }
+
+                
                 $( '.meshTable' ).show();
 
                 var meshTableBody = $( this.el ).find('#meshTableBody');
 
                 meshTableBody.empty();
 
-                if(this.data.length == 0)
-                {
-                    var dom = $( "#meshPreview" ).empty();
+                var exampleMeshes = data['meshes'];
 
-                    dom.text('No mesh uploaded');
-                }
-
-                // Draw all the available CSVFiles in the CSV Select box
-                for(var i = 0; i < this.data.length; i++)
+                // Draw all the available examples meshes in the selection table
+                for(var i = 0; i < exampleMeshes.length; i++)
                 {
 	            this.optionTemp = _.template('<tr> \
-<td><input type="radio" name="processedMeshFiles"></td><td><%= path %></td><td><a href="javascript:preventDefault();">Delete</a></td>\
+<td><input type="radio" name="processedMeshFiles"></td><td><%= path %></td>\
 </tr>');
                     
-                    var newOption = $( this.optionTemp( this.data[i]) ).appendTo( meshTableBody );
+                    var newOption = $( this.optionTemp( exampleMeshes[i]) ).appendTo( meshTableBody );
 
                     // When the initialDataFiles gets selected, fill the preview box with a preview of the mesh
                     newOption.find('input').on('click', _.bind(_.partial( function(data) {
                         //this.mesh = mesh;
                         $.ajax( { url: '/FileServer/large/processedMeshFiles/' + data.processedMeshId + '/file.dat',
                                   success : _.bind( this.meshDataPreview, this) });
-                    }, this.data[i]), this));
-
-                    // When the delete button gets clicked, use the backbone service to destroy the file
-                    newOption.find('a').click( _.bind(_.partial(function(data, event) {
-                        $.ajax( { url : '/modeleditor/mesheditor',
-                                  data :  { reqType : 'delete',
-                                            id : data['meshWrapperId']},
-                                  dataType : 'json',
-                                  type : 'POST',
-                                  success : _.bind(function(data) {
-                                      updateMsg( data );
-                                      this.refreshData();
-                                  }, this) } )
-
-                        event.preventDefault();
-                        this.render();
-                    }, this.data[i]), this));
+                    }, exampleMeshes[i]), this));
                 }
-
-                // When a user uploads a file, draw a status bar, and after the upload is finished request the refreshes
-                $( this.el ).find('#meshDataUpload').fileupload({
-                    url: '/FileServer/large/' + 'meshFiles',
-                    dataType: 'json',
-                    send: _.bind(function (e, data) {
-                        names = "";
-                        
-                        for(var i in data.files)
-                        {
-                            names += data.files[i].name + " ";
-                        }
-                        
-                        var progressbar = _.template('<span><%= name %> :<div class="progress"> \
-<div class="bar" style="width:0%;"> \
-</div> \
-</div> \
-</span>');
-
-                        progressHandle = $( this.el ).find( '#progresses' );
-
-                        progressHandle.empty();
-                        $( progressbar({ name : names }) ).appendTo( progressHandle );
-                    }, this),
-
-                    done: _.bind(function (e, data) {
-                        //Make ajax call to process new mesh files
-                        updateMsg( { status : true, msg : 'Processing uploaded data file' } );
-                        $.ajax( { url : '/modeleditor/mesheditor?reqType=process',
-                                  dataType : 'json',
-                                  type : 'POST',
-                                  success : _.bind(function(data) {
-                                      updateMsg( data );
-                                      this.refreshData();
-                                  }, this) } )
-                    }, this),
-
-                    progressall: _.bind(function (e, data) {
-                        var progress = parseInt(data.loaded / data.total * 100, 10);
-                        $( this.el ).find( '#progresses' ).find( '.bar' ).css('width', progress + '%');
-                        $( this.el ).find( '#progresses' ).find( '.bar' ).text(progress + '%');
-                    }, this),
-
-                    error : function(data) {
-                        updateMsg( { status : false,
-                                     msg : "Server error uploading file" }, "#csvMsg" );
-                    }
-                }).prop('disabled', !$.support.fileInput)
-                    .parent().addClass($.support.fileInput ? undefined : 'disabled');
 
                 // Have something selected
                 meshTableBody.find('input').eq(0).click();
             }
+        },
+
+        setSpeciesSubdomainAssignment : function(speciesId, subdomainId, event)
+        {
+            $.ajax( { url : '/modeleditor/specieseditor',
+                      type : 'POST',
+                      data : { reqType : 'setSpeciesSubdomainAssignment',
+                               data : JSON.stringify( { speciesId : speciesId, // I encode this object as JSON to keep the variable types encoded properly (Bools, ints, strings) and just cause I do it a lot elsewhere
+                                                        subdomainId : subdomainId,
+                                                        value : $( event.target ).prop('checked') } ) },
+                      dataType : 'json',
+                      success : updateMsg } );
+        },
+
+        setReactionsSubdomainAssignment : function(reactionId, subdomainId, event)
+        {
+            $.ajax( { url : '/modeleditor/reactioneditor',
+                      type : 'POST',
+                      data : { reqType : 'setReactionSubdomainAssignment',
+                               data : JSON.stringify( { reactionId : reactionId, // I encode this object as JSON to keep the variable types encoded properly (Bools, ints, strings) and just cause I do it a lot elsewhere
+                                                        subdomainId : subdomainId,
+                                                        value : $( event.target ).prop('checked') } ) },
+                      dataType : 'json',
+                      success : updateMsg } );
         }
     }
 );

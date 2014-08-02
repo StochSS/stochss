@@ -15,8 +15,9 @@ from stochss.model import *
 
 class MeshWrapper(db.Model):
     userId = db.StringProperty()
-    meshFileId = db.IntegerProperty()
+    path = db.StringProperty()
     processedMeshId = db.IntegerProperty()
+
     
 def int_or_float(s):
     try:
@@ -30,25 +31,61 @@ class MeshEditorPage(BaseHandler):
         return True
     
     def get(self):
+        if True == True:
+            base = os.path.dirname(os.path.realpath(__file__)) + '../static/spatial/'
+            files = set([ 'coli_with_membrane_mesh.xml',
+                          'cylinder_mesh.xml',
+                          'unit_cube_with_membrane_mesh.xml',
+                          'unit_sphere_with_membrane_mesh.xml' ])
+            
+            converted = set()
+            for wrapper in db.GqlQuery("SELECT * FROM MeshWrapper").run():
+                converted.add(wrapper.path)
+
+            for fileName in files - converted:
+                meshDb = MeshWrapper()
+                
+                path = os.path.dirname(os.path.realpath(__file__))
+                handle = subprocess.Popen(shlex.split('{0}/processMesh.py {1}'.format(path, os.path.join(base, fileName))), stdout = subprocess.PIPE, stderr = subprocess.PIPE)
+                stdout, stderr = handle.communicate()
+
+                processedMeshFileId = fileserver.FileManager.createFile(self, "processedMeshFiles", fileName, stdout, 777)
+                
+                meshDb.userId = self.user.user_id()
+                meshDb.path = fileName
+                meshDb.processedMeshId = int(processedMeshFileId)
+        
+                meshDb.put()
+            
+                #return
+
         reqType = self.request.get('reqType')
-        if reqType == "getMeshes":
+        if reqType == "getMeshInfo":
             self.response.content_type = 'application/json'
+            model_edited = self.get_session_property('model_edited')
+
+            if model_edited == None:
+                self.render_response('modeleditor/mesheditor.html')
+                return
+
+            row = db.GqlQuery("SELECT * FROM StochKitModelWrapper WHERE user_id = :1 AND model_name = :2", self.user.user_id(), model_edited.name).get()
+
+            if row is None:
+                self.render_response('modeleditor/mesheditor.html')
+                return
 
             meshWrappers = []
-            for row in db.GqlQuery("SELECT * FROM MeshWrapper WHERE userId = :1", self.user.user_id()).run():
-                #row.delete()
-                #continue
-                mesh = fileserver.FileManager.getFile(self, row.meshFileId, noFile = True)
-                
-                meshWrappers.append( { "path" : mesh["path"],
-                                       "meshWrapperId" : row.key().id(),
-                                       "meshFileId" : row.meshFileId,
-                                       "processedMeshId" : row.processedMeshId } )
+            for wrapperRow in db.GqlQuery("SELECT * FROM MeshWrapper").run():
+                meshWrappers.append( { "path" : wrapperRow.path,
+                                       "meshWrapperId" : wrapperRow.key().id(),
+                                       "processedMeshId" : wrapperRow.processedMeshId } )
 
-                print row.processedMeshId
-                print meshWrappers[-1]
+            data = { 'meshes' : meshWrappers,
+                     'subdomains' : row.spatial['subdomains'],
+                     'reactionsSubdomainAssignments' : row.spatial['species_subdomain_assignments'],
+                     'speciesSubdomainAssignments' : row.spatial['reactions_subdomain_assignments'] }
 
-            self.response.write( json.dumps( meshWrappers ) )
+            self.response.write( json.dumps( data ) )
             return
         else:
             model_edited = self.get_session_property('model_edited')
@@ -64,7 +101,7 @@ class MeshEditorPage(BaseHandler):
                 return
 
             all_species = row.model.getAllSpecies()
-
+            
             data = { "name" : row.model.name, "units" : row.model.units, "isSpatial" : row.isSpatial, "spatial" : row.spatial }
             
             if all_species is not None:
@@ -78,69 +115,6 @@ class MeshEditorPage(BaseHandler):
         reqType = self.request.get('reqType')
         self.response.content_type = 'application/json'
 
-        if reqType == "process":
-          #processedMeshFiles
-          #meshFiles
-          meshFiles = fileserver.FileManager.getFiles(self, "meshFiles")
-          processedMeshFiles = fileserver.FileManager.getFiles(self, "processedMeshFiles")
+        raise "shouldn't ever get here"
 
-          converted = set()
-          for wrapper in db.GqlQuery("SELECT * FROM MeshWrapper WHERE user_id = :1", self.user.user_id()).run():
-              converted.add(converted.meshFileId)
-
-          allFiles = set()
-          for f in meshFiles:
-              allFiles.add(f["id"])
-
-          #for f in meshFiles + processedMeshFiles:
-          #    fileserver.FileManager.deleteFile(self, f["id"])
-          #return
-
-          for meshId in allFiles - converted:
-              meshDb = MeshWrapper()
-
-              meshFile = fileserver.FileManager.getFile(self, meshId, noFile = True)
-              #fileserver.FileManager.deleteFile(self, meshFiles[i]["id"])
-
-              #mesh = pyurdme.URDMEMesh.read_dolfin_mesh(meshFile["storePath"])
-
-              path = os.path.dirname(os.path.realpath(__file__))
-              handle = subprocess.Popen(shlex.split('{0}/processMesh.py {1}'.format(path, meshFile["storePath"])), stdout = subprocess.PIPE, stderr = subprocess.PIPE)
-              stdout, stderr = handle.communicate()
-
-              processedMeshFileId = fileserver.FileManager.createFile(self, "processedMeshFiles", meshFile["path"], stdout, meshFile["perm"])
-
-              meshDb.userId = self.user.user_id()
-              meshDb.meshFileId = meshFile["id"]
-              meshDb.processedMeshId = int(processedMeshFileId)
-
-              print meshDb.processedMeshId, processedMeshFileId
-
-              meshDb.put()
-
-          self.response.write( json.dumps( { "status" : True,
-                                             "msg" : "Files processed" } ) )
-        elif reqType == 'delete':
-            meshWrapperId = int(self.request.get('id'))
-
-            print "mesh", meshWrapperId
-
-            meshWrapper = MeshWrapper.get_by_id(meshWrapperId)
-
-            try:
-                fileserver.FileManager.deleteFile(self, meshWrapper.meshFileId)
-            except Exception as e:
-                pass
-
-            try:
-                fileserver.FileManager.deleteFile(self, meshWrapper.processedMeshId)
-            except:
-                pass
-
-            meshWrapper.delete()
-
-            self.response.write( json.dumps( { "status" : True,
-                                               "msg" : "Mesh deleted" } ) )
-
-        else:
-            return
+        return

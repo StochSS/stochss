@@ -21,11 +21,6 @@
 			<a href="/modeleditor" TITLE = "Create or select your model">Models</a>
 		    </li>
 		    <!-- <li><a href="/modeleditor/overview">Overview</a></li> -->
-                    {% if isSpatial %}
-		    <li class="active">
-			<a href="/modeleditor/mesheditor" TITLE = "Add a mesh">Mesh</a>
-		    </li>
-                    {% endif %}
 		    <li>
 			<a href="/modeleditor/specieseditor" TITLE = "Create a List of Species">Species</a>
 		    </li>
@@ -35,7 +30,11 @@
 		    <li>
 			<a href="/modeleditor/reactioneditor" TITLE = "Create a List of Reactions">Reactions</a>
 		    </li>
-
+                    {% if isSpatial %}
+		    <li class="active">
+			<a href="/modeleditor/mesheditor" TITLE = "Add a mesh">Mesh</a>
+		    </li>
+                    {% endif %}
 		    <!-- <li><a href="/modeleditor/codeeditor">Editor</a></li> -->
 		    <li class="dropdown">
 			<a class="dropdown-toggle" data-toggle="dropdown" TITLE = "Import from File/ Load Existing Library">Import<b class="caret"></b></a>
@@ -79,20 +78,19 @@
 		    <br/>
 
                     <div class="row">
-                        <div id="uploadMeshDiv" class="span5">
-                            <div>Upload labeled mesh file:</div>
+                        <!--<div id="uploadMeshDiv" class="span5">
+                            <div>Upload mesh file:</div>
                             <input id="meshDataUpload" type="file" name="files[]" multiple><br />
                             <div id="progresses"></div>
                             
                             <div id="meshMsg"></div>
                             <br />
-                        </div>
-
-                        <div class="span4">
+                        </div>-->
+                        <center>
                             <div id="meshPreview">
-                                <center>Loading mesh data...</center>
+                                Loading mesh data...
                             </div>
-                        </div>
+                        </center>
                     </div>
 
                     <hr />
@@ -101,11 +99,32 @@
 		        <thead>
                             <th>Select</th>
 		            <th>Mesh Name</th>
-		            <th>&nbsp;</th>
 		        </thead>
 		        <tbody id="meshTableBody">
 		        </tbody>
 	            </table>
+
+                    <hr />
+
+                    <table cellpadding="0" cellspacing="0" border="0" class="table table-striped table-bordered">
+			<thead>
+			    <tr id="speciesSubdomainsTableHeader">
+			    </tr>
+			</thead>
+			<tbody id="speciesSubdomainsTableBody">
+			</tbody>
+		    </table>
+
+                    <hr />
+                    
+                    <table cellpadding="0" cellspacing="0" border="0" class="table table-striped table-bordered">
+		        <thead>
+			    <tr id="reactionsSubdomainsTableHeader">
+			    </tr>
+		        </thead>
+		        <tbody id="reactionsSubdomainsTableBody">
+		        </tbody>
+		    </table>
                 </div>
             </div>
     
