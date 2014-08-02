@@ -12,12 +12,12 @@ import sys
 
 from stochssapp import *
 from stochss.model import *
+#import modeleditor.ObjectProperty
 
 class MeshWrapper(db.Model):
     userId = db.StringProperty()
     path = db.StringProperty()
     processedMeshId = db.IntegerProperty()
-
     
 def int_or_float(s):
     try:
@@ -32,7 +32,7 @@ class MeshEditorPage(BaseHandler):
     
     def get(self):
         if True == True:
-            base = os.path.dirname(os.path.realpath(__file__)) + '../static/spatial/'
+            base = os.path.dirname(os.path.realpath(__file__)) + '/../static/spatial/'
             files = set([ 'coli_with_membrane_mesh.xml',
                           'cylinder_mesh.xml',
                           'unit_cube_with_membrane_mesh.xml',
@@ -40,6 +40,7 @@ class MeshEditorPage(BaseHandler):
             
             converted = set()
             for wrapper in db.GqlQuery("SELECT * FROM MeshWrapper").run():
+                #wrapper.delete()
                 converted.add(wrapper.path)
 
             for fileName in files - converted:
@@ -48,6 +49,8 @@ class MeshEditorPage(BaseHandler):
                 path = os.path.dirname(os.path.realpath(__file__))
                 handle = subprocess.Popen(shlex.split('{0}/processMesh.py {1}'.format(path, os.path.join(base, fileName))), stdout = subprocess.PIPE, stderr = subprocess.PIPE)
                 stdout, stderr = handle.communicate()
+
+                #print stdout, stderr
 
                 processedMeshFileId = fileserver.FileManager.createFile(self, "processedMeshFiles", fileName, stdout, 777)
                 
@@ -79,6 +82,8 @@ class MeshEditorPage(BaseHandler):
                 meshWrappers.append( { "path" : wrapperRow.path,
                                        "meshWrapperId" : wrapperRow.key().id(),
                                        "processedMeshId" : wrapperRow.processedMeshId } )
+
+            print row.spatial['species_subdomain_assignments']
 
             data = { 'meshes' : meshWrappers,
                      'subdomains' : row.spatial['subdomains'],
