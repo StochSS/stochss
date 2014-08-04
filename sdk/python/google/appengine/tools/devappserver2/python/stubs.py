@@ -67,10 +67,10 @@ def fake_open(filename, flags, mode=0777, _os_open=os.open):
   """Fake version of os.open."""
   # A copy of os.open is saved in _os_open so it can still be used after os.open
   # is replaced with this stub.
-  #if flags & (os.O_RDWR | os.O_CREAT | os.O_WRONLY):
-  #  raise OSError(errno.EROFS, 'Read-only file system', filename)
-  #if not FakeFile.is_file_accessible(filename):
-  #  raise OSError(errno.ENOENT, 'No such file or directory', filename)
+#  if flags & (os.O_RDWR | os.O_CREAT | os.O_WRONLY):
+#    raise OSError(errno.EROFS, 'Read-only file system', filename)
+#  elif not FakeFile.is_file_accessible(filename):
+#    raise OSError(errno.ENOENT, 'No such file or directory', filename)
   return _os_open(filename, flags, mode)
 
 
@@ -92,7 +92,7 @@ def fake_get_platform():
 class FakeFile(file):
   """File sub-class that enforces the restrictions of production."""
 
-  ALLOWED_MODES = frozenset(['r', 'rb', 'U', 'rU', 'w','w+'])
+  ALLOWED_MODES = frozenset(['r', 'rb', 'U', 'rU', 'w', 'w+'])
 
   # Individual files that are allowed to be accessed.
   ALLOWED_FILES = set(os.path.normcase(filename)

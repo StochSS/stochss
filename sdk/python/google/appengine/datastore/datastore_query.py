@@ -1477,13 +1477,15 @@ class Cursor(_BaseComponent):
 
   def reversed(self):
     """Creates a cursor for use in a query with a reversed sort order."""
-    for pos in self.__compiled_cursor.position_list():
+    if self.__compiled_cursor.has_position():
+      pos = self.__compiled_cursor.position()
       if pos.has_start_key():
         raise datastore_errors.BadRequestError('Cursor cannot be reversed.')
 
     rev_pb = datastore_pb.CompiledCursor()
     rev_pb.CopyFrom(self.__compiled_cursor)
-    for pos in rev_pb.position_list():
+    if rev_pb.has_position():
+      pos = rev_pb.position()
       pos.set_start_inclusive(not pos.start_inclusive())
     return Cursor(_cursor_pb=rev_pb)
 
@@ -1604,7 +1606,8 @@ class Cursor(_BaseComponent):
 
     query_options = QueryOptions(
         start_cursor=self, offset=offset, limit=0, produce_cursors=True)
-    return query.run(conn, query_options).next_batch(0).cursor(0)
+    return query.run(conn, query_options).next_batch(
+        Batcher.AT_LEAST_OFFSET).cursor(0)
 
   def _to_pb(self):
     """Returns the internal only pb representation."""
@@ -1958,14 +1961,13 @@ class Query(_BaseQuery):
       if self._group_by:
         extra = set(projection) - set(self._group_by)
         if extra:
-          raise datastore_errors.BadQueryError(
+          raise datastore_errors.BadRequestError(
               'projections includes properties not in the group_by argument: %s'
               % extra)
       pb.property_name_list().extend(projection)
     elif self._group_by:
-      raise datastore_errors.BadQueryError(
+      raise datastore_errors.BadRequestError(
           'cannot specify group_by without a projection')
-
 
     if QueryOptions.produce_cursors(query_options, conn.config):
       pb.set_compile(True)
@@ -2321,6 +2323,8 @@ class Batch(object):
   offset or results needed). The Batcher class hides these limitations.
   """
 
+  __skipped_cursor = None
+
   @classmethod
   @datastore_rpc._positional(5)
   def create_async(cls, query, query_options, conn, req,
@@ -2421,20 +2425,29 @@ class Batch(object):
     return self._batch_shared.compiled_query
 
   def cursor(self, index):
-    """Gets the cursor that points to the result at the given index.
+    """Gets the cursor that points just after the result at index - 1.
 
     The index is relative to first result in .results. Since start_cursor
-    points to the position before the first skipped result and the end_cursor
-    points to the position after the last result, the range of indexes this
-    function supports is limited to [-skipped_results, len(results)].
+    points to the position before the first skipped result, the range of
+    indexes this function supports is limited to
+    [-skipped_results, len(results)].
+
+    For example, using start_cursor=batch.cursor(i) and
+    end_cursor=batch.cursor(j) will return the results found in
+    batch.results[i:j]. Note that any result added in the range (i-1, j]
+    will appear in the new query's results.
+
+    Warning: Any index in the range (-skipped_results, 0) may cause
+    continuation to miss or duplicate results if outside a transaction.
 
     Args:
       index: An int, the index relative to the first result before which the
         cursor should point.
 
     Returns:
-      A Cursor that points just before the result at the given index which if
-      used as a start_cursor will cause the first result to result[index].
+      A Cursor that points to a position just after the result index - 1,
+      which if used as a start_cursor will cause the first result to be
+      batch.result[index].
     """
     if not isinstance(index, (int, long)):
       raise datastore_errors.BadArgumentError(
@@ -2444,11 +2457,21 @@ class Batch(object):
           'index argument must be in the inclusive range [%d, %d]' %
           (-self._skipped_results, len(self.__results)))
 
-    if index == len(self.__results):
-      return self.__end_cursor
-    elif index == -self._skipped_results:
+    if index == -self._skipped_results:
       return self.__start_cursor
+    elif (index == 0 and
+          self.__skipped_cursor):
+      return Cursor(_cursor_pb=self.__skipped_cursor)
+    elif index > 0 and self.__result_cursors:
+      return Cursor(_cursor_pb=self.__result_cursors[index - 1])
+
+    elif index == len(self.__results):
+      return self.__end_cursor
     else:
+
+
+
+
       return self.__start_cursor.advance(index + self._skipped_results,
                                          self._batch_shared.query,
                                          self._batch_shared.conn)
@@ -2472,8 +2495,7 @@ class Batch(object):
     req = self._to_pb(fetch_options)
 
     config = self._batch_shared.query_options.merge(fetch_options)
-    return next_batch._make_query_result_rpc_call(
-        'Next', config, req)
+    return next_batch._make_query_result_rpc_call('Next', config, req)
 
   def _to_pb(self, fetch_options=None):
     req = datastore_pb.NextRequest()
@@ -2501,7 +2523,10 @@ class Batch(object):
     self.__datastore_cursor = next_batch.__datastore_cursor
     next_batch.__datastore_cursor = None
     self.__more_results = next_batch.__more_results
+    if not self.__results:
+      self.__skipped_cursor = next_batch.__skipped_cursor
     self.__results.extend(next_batch.__results)
+    self.__result_cursors.extend(next_batch.__result_cursors)
     self.__end_cursor = next_batch.__end_cursor
     self._skipped_results += next_batch._skipped_results
 
@@ -2516,9 +2541,9 @@ class Batch(object):
     Returns:
       A UserRPC object that can be used to fetch the result of the RPC.
     """
-    return self._batch_shared.conn.make_rpc_call(config, name, req,
-                                                 datastore_pb.QueryResult(),
-                                                 self.__query_result_hook)
+    return self._batch_shared.conn._make_rpc_call(config, name, req,
+                                                  datastore_pb.QueryResult(),
+                                                  self.__query_result_hook)
 
   _need_index_header = 'The suggested index for this query is:'
 
@@ -2546,6 +2571,10 @@ class Batch(object):
 
     self._batch_shared.process_query_result_if_first(query_result)
 
+    if query_result.has_skipped_results_compiled_cursor():
+      self.__skipped_cursor = query_result.skipped_results_compiled_cursor()
+
+    self.__result_cursors = list(query_result.result_compiled_cursor_list())
     self.__end_cursor = Cursor._from_query_result(query_result)
     self._skipped_results = query_result.skipped_results()
 
@@ -2807,12 +2836,17 @@ class Batcher(object):
           batch_size = needed_results
         else:
           batch_size = None
-        next_batch = batch.next_batch(FetchOptions(
+
+        self.__next_batch = batch.next_batch_async(FetchOptions(
             offset=max(0, self.__initial_offset - self.__skipped_results),
             batch_size=batch_size))
+        next_batch = self.__next_batch.get_result()
+        self.__next_batch = None
         self.__skipped_results += next_batch.skipped_results
         needed_results = max(0, needed_results - len(next_batch.results))
         batch._extend(next_batch)
+
+
 
 
 
@@ -2842,6 +2876,10 @@ class ResultsIterator(object):
   points just after the last result returned by the iterator.
   """
 
+  __current_batch = None
+  __current_pos = 0
+  __last_cursor = None
+
   def __init__(self, batcher):
     """Constructor.
 
@@ -2852,10 +2890,7 @@ class ResultsIterator(object):
       raise datastore_errors.BadArgumentError(
           'batcher argument should be datastore_query.Batcher (%r)' %
           (batcher,))
-
     self.__batcher = batcher
-    self.__current_batch = None
-    self.__current_pos = 0
 
   def index_list(self):
     """Returns the list of indexes used to perform the query.
@@ -2864,12 +2899,18 @@ class ResultsIterator(object):
     return self._ensure_current_batch().index_list
 
   def cursor(self):
-    """Returns a cursor that points just after the last result returned."""
-    return self._ensure_current_batch().cursor(self.__current_pos)
+    """Returns a cursor that points just after the last result returned.
+
+    If next() throws an exception, this function returns the end_cursor from
+    the last successful batch or throws the same exception if no batch was
+    successful.
+    """
+    return (self.__last_cursor or
+            self._ensure_current_batch().cursor(self.__current_pos))
 
   def _ensure_current_batch(self):
     if not self.__current_batch:
-      self.__current_batch = self.__batcher.next()
+      self.__current_batch = self.__batcher.next_batch(Batcher.AT_LEAST_OFFSET)
       self.__current_pos = 0
     return self.__current_batch
 
@@ -2878,10 +2919,7 @@ class ResultsIterator(object):
 
     Internal only do not use.
     """
-    if not self.__current_batch:
-      self.__current_batch = self.__batcher.next()
-      self.__current_pos = 0
-    return self.__current_batch._compiled_query()
+    return self._ensure_current_batch()._compiled_query()
 
 
   def next(self):
@@ -2889,12 +2927,16 @@ class ResultsIterator(object):
     while (not self.__current_batch or
         self.__current_pos >= len(self.__current_batch.results)):
 
-      next_batch = self.__batcher.next()
-      if not next_batch:
+      try:
 
 
-        raise StopIteration
 
+        next_batch = self.__batcher.next_batch(Batcher.AT_LEAST_OFFSET)
+      except:
+
+        if self.__current_batch:
+          self.__last_cursor = self.__current_batch.end_cursor
+        raise
       self.__current_pos = 0
       self.__current_batch = next_batch
 

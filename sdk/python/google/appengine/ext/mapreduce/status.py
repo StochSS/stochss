@@ -34,6 +34,7 @@
 
 
 import os
+import pkgutil
 import time
 
 from google.appengine.api import validation
@@ -42,6 +43,7 @@ from google.appengine.api import yaml_errors
 from google.appengine.api import yaml_listener
 from google.appengine.api import yaml_object
 from google.appengine.ext import db
+from google.appengine.ext import webapp
 from google.appengine.ext.mapreduce import base_handler
 from google.appengine.ext.mapreduce import errors
 from google.appengine.ext.mapreduce import model
@@ -273,16 +275,17 @@ def get_mapreduce_yaml(parse=parse_mapreduce_yaml):
     mr_yaml_file.close()
 
 
-class ResourceHandler(base_handler.BaseHandler):
+class ResourceHandler(webapp.RequestHandler):
   """Handler for static resources."""
 
   _RESOURCE_MAP = {
-    "status": ("overview.html", "text/html"),
-    "detail": ("detail.html", "text/html"),
-    "base.css": ("base.css", "text/css"),
-    "jquery.js": ("jquery-1.6.1.min.js", "text/javascript"),
-    "jquery-json.js": ("jquery.json-2.2.min.js", "text/javascript"),
-    "status.js": ("status.js", "text/javascript"),
+      "status": ("overview.html", "text/html"),
+      "detail": ("detail.html", "text/html"),
+      "base.css": ("base.css", "text/css"),
+      "jquery.js": ("jquery-1.6.1.min.js", "text/javascript"),
+      "jquery-json.js": ("jquery.json-2.2.min.js", "text/javascript"),
+      "jquery-url.js": ("jquery.url.js", "text/javascript"),
+      "status.js": ("status.js", "text/javascript"),
   }
 
   def get(self, relative):
@@ -295,7 +298,11 @@ class ResourceHandler(base_handler.BaseHandler):
     path = os.path.join(os.path.dirname(__file__), "static", real_path)
     self.response.headers["Cache-Control"] = "public; max-age=300"
     self.response.headers["Content-Type"] = content_type
-    self.response.out.write(open(path).read())
+    try:
+      data = pkgutil.get_data(__name__, "static/" + real_path)
+    except AttributeError:
+      data = None
+    self.response.out.write(data or open(path).read())
 
 
 class ListConfigsHandler(base_handler.GetJsonHandler):
@@ -370,13 +377,12 @@ class GetJobDetailHandler(base_handler.GetJsonHandler):
 
 
         "chart_url": job.chart_url,
+        "chart_width": job.chart_width,
     })
     self.json_response["result_status"] = job.result_status
 
-    shards_list = model.ShardState.find_by_mapreduce_state(job)
     all_shards = []
-    shards_list.sort(key=lambda x: x.shard_number)
-    for shard in shards_list:
+    for shard in model.ShardState.find_all_by_mapreduce_state(job):
       out = {
           "active": shard.active,
           "result_status": shard.result_status,
@@ -389,4 +395,5 @@ class GetJobDetailHandler(base_handler.GetJsonHandler):
       }
       out.update(shard.counters_map.to_json())
       all_shards.append(out)
+    all_shards.sort(key=lambda x: x["shard_number"])
     self.json_response["shards"] = all_shards

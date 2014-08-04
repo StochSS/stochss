@@ -33,10 +33,21 @@ def send_wsgi_error_response(message, start_response, cors_handler=None):
                             start_response, cors_handler=cors_handler)
 
 
+def send_wsgi_rejected_response(rejection_error, start_response,
+                                cors_handler=None):
+  body = rejection_error.to_json()
+  return send_wsgi_response('400', [('Content-Type', 'application/json')], body,
+                            start_response, cors_handler=cors_handler)
+
+
 def send_wsgi_redirect_response(redirect_location, start_response,
                                 cors_handler=None):
   return send_wsgi_response('302', [('Location', redirect_location)], '',
                             start_response, cors_handler=cors_handler)
+
+
+def send_wsgi_no_content_response(start_response, cors_handler=None):
+  return send_wsgi_response('204', [], '', start_response, cors_handler)
 
 
 def send_wsgi_response(status, headers, content, start_response,

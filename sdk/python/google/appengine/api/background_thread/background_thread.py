@@ -72,7 +72,7 @@ def start_new_background_thread(target, args, kwargs=None):
   Returns:
     The thread ID of the background thread.
   """
-
+  
   if kwargs is None:
     kwargs = {}
   request = system_service_pb.StartBackgroundRequestRequest()
