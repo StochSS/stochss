@@ -9,10 +9,13 @@ from collections import OrderedDict
 import fileserver
 import shlex
 import sys
+import pyurdme
 
 from stochssapp import *
 from stochss.model import *
 #import modeleditor.ObjectProperty
+
+#right here
 
 class MeshWrapper(db.Model):
     userId = db.StringProperty()
@@ -40,15 +43,17 @@ class MeshEditorPage(BaseHandler):
             
             converted = set()
             for wrapper in db.GqlQuery("SELECT * FROM MeshWrapper").run():
-                #wrapper.delete()
-                converted.add(wrapper.path)
+                wrapper.delete()
+                #converted.add(wrapper.path)
 
             for fileName in files - converted:
                 meshDb = MeshWrapper()
                 
-                path = os.path.dirname(os.path.realpath(__file__))
-                handle = subprocess.Popen(shlex.split('{0}/processMesh.py {1}'.format(path, os.path.join(base, fileName))), stdout = subprocess.PIPE, stderr = subprocess.PIPE)
-                stdout, stderr = handle.communicate()
+                #path = os.path.dirname(os.path.realpath(__file__))
+                #handle = subprocess.Popen(shlex.split('{0}/processMesh.py {1}'.format(path, os.path.join(base, fileName))), stdout = subprocess.PIPE, stderr = subprocess.PIPE)
+                #stdout, stderr = handle.communicate()
+
+                stdout = pyurdme.URDMEMesh.read_dolfin_mesh(os.path.join(base, fileName)).export_to_three_js()
 
                 #print stdout, stderr
 
