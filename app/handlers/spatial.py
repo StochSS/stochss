@@ -220,7 +220,7 @@ class SpatialPage(BaseHandler):
     def runLocal(self, data):
         '''
         '''
-        json_model_refs = ModelManager.getModel(self, data["modelID"], modelAsString = False)
+        json_model_refs = ModelManager.getModel(self, data["id"], modelAsString = False) # data["id"] is the model id of the selected model I think
         
         stochkit_model_obj = json_model_refs["model"]
         mesh_filename = json_model_refs["spatial"]["mesh_filename"]

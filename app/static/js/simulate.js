@@ -486,6 +486,10 @@ var run = function()
                            {
                                url = "/sensitivity";
                            }
+                           else if(data.execType == "spatial")
+                           {
+                               url = "/spatial";
+                           }
                            else
                            {
                                url = "/simulate";
