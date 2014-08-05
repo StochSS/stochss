@@ -157,6 +157,9 @@ class FileManager():
     def getFile(handler, fileID, noFile = True, asString = False, numberBytes = None):
         ffile = FileWrapper.get_by_id(fileID)
 
+        if ffile is None:
+            raise IOError("File id {0} not found in fileserver".format(fileID))
+
         return ffile.toJSON(noFile = noFile, asString = asString, numberBytes = numberBytes)
    
     @staticmethod
@@ -170,12 +173,18 @@ class FileManager():
     @staticmethod
     def deleteFile(handler, fileID):
         ffile = FileWrapper.get_by_id(fileID)
-        print "deleting {0}".format(fileID)
+
+        if ffile is None:
+            raise IOError("File id {0} not found in fileserver".format(fileID))
+
         ffile.delete()
 
     @staticmethod
     def updateFile(handler, fileID, jsonObject):
         ffile = FileWrapper.get_by_id(fileID)
+
+        if ffile is None:
+            raise IOError("File id {0} not found in fileserver".format(fileID))
         
         ffile.fromJSON(jsonObject)
 

@@ -226,6 +226,19 @@ class SpatialPage(BaseHandler):
         mesh_filename = json_model_refs["spatial"]["mesh_filename"]
         if "mesh_subdomain_filename" in json_model_refs["spatial"]:
             mesh_subdomain_filename = json_model_refs["spatial"]["mesh_subdomain_filename"]  # this can be optional
+
+            meshWrapperDb = mesheditor.MeshWrapper.get_by_id(json_model_refs["spatial"]["mesh_wrapper_id"])
+
+            meshFileObj = fileserver.FileManager.getFile(self, meshWrapperDb.meshFileId)
+            subdomainFileObj = fileserver.FileManager.getFile(self, meshWrapperDb.subdomainFileId)
+
+            fhandle = open(meshFileObj["storePath"], 'r')
+            fhandle.read()
+            fhandle.close()
+
+            fhandle = open(subdomainFileObj["storePath"], 'r')
+            fhandle.read()
+            fhandle.close()
         else:
             mesh_subdomain_filename = None
         reaction_subdomain_assigments = json_model_refs["spatial"]["reaction_subdomain_assigments"]  #e.g. {'R1':[1,2,3]}

@@ -766,7 +766,7 @@ def save_model(model, model_name, user_id, isSpatial, is_public=False):
     db_model.model_name = model_name
     db_model.isSpatial = isSpatial
     db_model.spatial = { 'subdomains' : [],
-                         'meshWrapperId' : None,
+                         'mesh_wrapper_id' : None,
                          'species_diffusion_coefficients' : {} ,
                          'species_subdomain_assignments' : {} ,
                          'reactions_subdomain_assignments' : {} }
