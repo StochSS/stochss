@@ -248,17 +248,39 @@ MeshEditor.Controller = Backbone.View.extend(
                     
                     var newOption = $( this.optionTemp( exampleMeshes[i]) ).appendTo( meshTableBody );
 
+                    if(data['meshWrapperId'] == exampleMeshes[i].meshWrapperId)
+                    {
+                        newOption.find('input').click();
+
+                        $.ajax( { url: '/FileServer/large/processedMeshFiles/' + exampleMeshes[i].processedMeshFileId + '/file.dat',
+                                  success : _.bind( this.meshDataPreview, this) });
+                    }
                     // When the initialDataFiles gets selected, fill the preview box with a preview of the mesh
                     newOption.find('input').on('click', _.bind(_.partial( function(data) {
                         //this.mesh = mesh;
-                        $.ajax( { url: '/FileServer/large/processedMeshFiles/' + data.processedMeshId + '/file.dat',
+                        this.setMeshSelect(data.meshWrapperId);
+
+                        $.ajax( { url: '/FileServer/large/processedMeshFiles/' + data.processedMeshFileId + '/file.dat',
                                   success : _.bind( this.meshDataPreview, this) });
                     }, exampleMeshes[i]), this));
                 }
 
                 // Have something selected
-                meshTableBody.find('input').eq(0).click();
+                //meshTableBody.find('input').eq(0).click();
             }
+        },
+
+        // The three following functions are all responsible for pinging the main server when something changes
+        //    I encode all the data as JSON to keep the variable types encoded properly (Bools, ints, strings) and just cause I do it a lot elsewhere
+
+        setMeshSelect : function(meshWrapperId)
+        {
+            $.ajax( { url : '/modeleditor/mesheditor',
+                      type : 'POST',
+                      data : { reqType : 'setMesh',
+                               data : JSON.stringify( { meshWrapperId : meshWrapperId } ) },
+                      dataType : 'json',
+                      success : _.bind(this.render, this) } );
         },
 
         setSpeciesSubdomainAssignment : function(speciesId, subdomainId, event)
@@ -266,7 +288,7 @@ MeshEditor.Controller = Backbone.View.extend(
             $.ajax( { url : '/modeleditor/specieseditor',
                       type : 'POST',
                       data : { reqType : 'setSpeciesSubdomainAssignment',
-                               data : JSON.stringify( { speciesId : speciesId, // I encode this object as JSON to keep the variable types encoded properly (Bools, ints, strings) and just cause I do it a lot elsewhere
+                               data : JSON.stringify( { speciesId : speciesId,
                                                         subdomainId : subdomainId,
                                                         value : $( event.target ).prop('checked') } ) },
                       dataType : 'json',
