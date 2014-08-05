@@ -73,6 +73,9 @@ class ModelManager():
 
             #print jsonModel
 
+            jsonModel["isSpatial"] = model.isSpatial
+            jsonModel["spatial"] = model.spatial
+
             output.append(jsonModel)
 
         return output
@@ -93,6 +96,9 @@ class ModelManager():
             jsonModel["model"] = model.model.serialize()
         else:
             jsonModel["model"] = model.model
+
+        jsonModel["isSpatial"] = model.isSpatial
+        jsonModel["spatial"] = model.spatial
             
         return jsonModel
 
@@ -113,11 +119,15 @@ class ModelManager():
         else:
             jsonModel["model"] = model.model
             
+        jsonModel["isSpatial"] = model.isSpatial
+        jsonModel["spatial"] = model.spatial
+
         return jsonModel
 
     @staticmethod
     def createModel(handler, model, modelAsString = True, rename = None):
-
+        raise Exception("This isn't working cause the spatial bit isn't implemented right")
+    
         userID = None
 
         if 'user_id' in model:
@@ -172,6 +182,8 @@ class ModelManager():
 
     @staticmethod
     def updateModel(handler, model):
+        raise Exception("This isn't working cause the spatial bit isn't implemented right 2")
+
         modelWrap = StochKitModelWrapper.get_by_id(model["id"])
         print model["name"]
         if "name" not in model:

@@ -84,6 +84,10 @@
         <input id="stochastic" type="radio" name="exec_type" value="stochastic" checked> Stochastic
         <br />
         <input id="sensitivity" type="radio" name="exec_type" value="sensitivity"> Deterministic + Sensitivity <br />
+        <% if(isSpatial) { %>
+        <br />
+        <input id="spatial" type="radio" name="exec_type" value="spatial"> Spatial <br />
+        <% } %>
         <% } %>
         <hr />
 

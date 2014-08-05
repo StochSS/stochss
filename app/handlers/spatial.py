@@ -250,9 +250,10 @@ class SpatialPage(BaseHandler):
         
         simulation_end_time = data['time']
         simulation_time_increment = data['increment']
-        simulation_algorithm = data['algorithm']
+        simulation_algorithm = data['algorithm'] # Don't trust this! I haven't implemented the algorithm selection for this yet
+        simulation_exec_type = data['exec_type'] # This should contain 'spatial' -- Not that you really need it, only spatial requests will be routed here 
         simulation_realizations = data['realizations']
-        simulation_seed = data['seed']
+        simulation_seed = data['seed'] # If this is set to -1, it means choose a seed at random! (Whatever that means)
         
         
         #### Construct the PyURDME object from the Stockkit model and mesh

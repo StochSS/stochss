@@ -365,7 +365,8 @@ var run = function()
                        var units = data.units;
 
                        $( "#simulationConf" ).html(simTemplate({ name : name,
-                                                                 units : units }));
+                                                                 units : units,
+                                                                 isSpatial : data.isSpatial }));
 
                        var selectTable = new Sensitivity.SelectTable();
                        
@@ -402,6 +403,14 @@ var run = function()
                                handle_algo();
                                $( ".stochastic" ).show()
                            }
+                           else if( $( "#spatial" )[0].checked )
+                           {
+                               $( ".advanced-settings" ).show();
+                               $( ".sensitivity" ).hide();
+                               $( ".ode" ).hide()
+                               handle_algo();
+                               $( ".stochastic" ).show()
+                           }
                        };
                        
                        var handle_algo = function() {
@@ -415,7 +424,7 @@ var run = function()
                            }
                        };
 
-                       $( "#sensitivity, #stochastic, #deterministic" ).change(handle_type);
+                       $( "#sensitivity, #stochastic, #deterministic, #spatial" ).change(handle_type);
                        $( "#ssa, #tau-leaping" ).change(handle_algo);
 
                        handle_type();
@@ -436,6 +445,10 @@ var run = function()
                            if(data.execType == "sensitivity")
                            {
                                url = "/sensitivity";
+                           }
+                           else if(data.execType == "spatial")
+                           {
+                               url = "/spatial";
                            }
                            else
                            {
