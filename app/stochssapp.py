@@ -316,6 +316,7 @@ from handlers.status import *
 from handlers.auth import *
 from handlers.admin import *
 import handlers.fileserver
+import handlers.spatial
 
 # Handler to serve static files
 class StaticFileHandler(BaseHandler):
@@ -362,6 +363,7 @@ app = webapp2.WSGIApplication([
                                ('/modeleditor.*', ModelEditorPage),
                                ('/simulate',SimulatePage),
                                ('/sensitivity',SensitivityPage),
+                               ('/spatial',handlers.spatial.SpatialPage),
                                ('/stochoptim', handlers.stochoptim.StochOptimPage),
                                webapp2.Route('/stochoptim/<jobID>', handler = handlers.stochoptim.StochOptimVisualization),#/<queryType>
                                webapp2.Route('/stochoptim/<queryType>/<jobID>', handler = handlers.stochoptim.StochOptimVisualization),
