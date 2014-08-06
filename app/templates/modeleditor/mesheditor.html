@@ -149,35 +149,30 @@
 		        <tbody id="reactionsSubdomainsTableBody">
 		        </tbody>
 		    </table>
+
+                    4. Select initial conditions for the model
+                    <br>
+                    <br>
+
+                    <table cellpadding="0" cellspacing="0" border="0" class="table table-striped table-bordered" id="reactionsSubdomainsTable">
+		        <thead>
+                            <tr>
+                                <th style="width : 1pt;">Delete</th>
+                                <th colspan="1">Type</th>
+                                <th>Subdomain</th>
+                                <th></th>
+                            </tr>
+			    <tr id="reactionsSubdomainsTableHeader">
+			    </tr>
+		        </thead>
+		        <tbody id="reactionsSubdomainsTableBody">
+		        </tbody>
+		    </table>
                 </div>
             </div>
     
-	    <form id="deleteForm" method="post" action="/modeleditor/delete">
-		<input type="hidden" name="toDelete" />
-		<input type="hidden" name="delete" value="1"/>
-	    </form>
 	    {% endblock %}
 	    
-	    <!-- Modal for deletion. -->
-	    <div id="deleteModal" class="modal hide" tabindex="-1" role="dialog" aria-labelledby="myModalLabel" aria-hidden="true">
-		<div class="modal-header">
-		    <h3>Delete?</h3>
-		</div>
-
-		<div class="modal-body">
-		    <div>
-			Are you sure you want to delete the selected element?
-		    </div>
-		</div>
-		<div class="modal-footer">
-		    <button class="btn btn-primary" data-dismiss="modal" aria-hidden="true" onclick="javascript:confirmDelete()">
-			Yes
-		    </button>
-		    <button class="btn" data-dismiss="modal" aria-hidden="true" onclick="javascript:void(0)">
-			No
-		    </button>
-		</div>				
-	    </div>
 	    
 	    <div class="span2">
 		{% if model_edited %}
