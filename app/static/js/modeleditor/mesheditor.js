@@ -74,16 +74,17 @@ MeshEditor.Controller = Backbone.View.extend(
             var dom = $( "#meshPreview" ).empty();
             var scene = new THREE.Scene();
             var width = dom.width();//
-            var height = width;
+            var height = 0.75 * width;
             var camera = new THREE.PerspectiveCamera( 75, window.innerWidth / window.innerHeight, 0.1, 1000 );
             var renderer = new THREE.WebGLRenderer();
             renderer.setSize( width, height);
+            renderer.setClearColor( 0xffffff, 1);
             
             var rendererDom = $( renderer.domElement ).appendTo(dom);
             
             var loader = new THREE.JSONLoader();
             function load_geometry(model){
-                var material = new THREE.MeshLambertMaterial({color: "blue", wireframe:true});
+                var material = new THREE.MeshLambertMaterial({color: "back", wireframe:true});
 	        
                 material.side = THREE.DoubleSide;
                 mesh = new THREE.Mesh(model.geometry,material);
@@ -98,13 +99,13 @@ MeshEditor.Controller = Backbone.View.extend(
             // var controls = new THREE.OrbitControls( camera );
             //controls.addEventListener( 'change', render );
 
-            camera.position.z = 1;
+            camera.position.z = 1.5;
             
             
             // add subtle blue ambient lighting
-            var ambientLight = new THREE.AmbientLight(0x000044);
+            var ambientLight = new THREE.AmbientLight(0x000000);
             scene.add(ambientLight);
-            hemiLight = new THREE.HemisphereLight( 0x0000ff, 0x00ff00, 0.6 );
+            hemiLight = new THREE.HemisphereLight( 0x000000, 0x00ff00, 0.6 );
             scene.add(hemiLight);
 
             // directional lighting
@@ -133,8 +134,10 @@ MeshEditor.Controller = Backbone.View.extend(
             if(typeof this.data != 'undefined')
             {
                 // Build the reactions subdomains selection table
+                var reactionsSubdomainTableTitle = $( "#reactionsSubdomainsTableTitle" );
                 var reactionsSubdomainTableHeader = $( "#reactionsSubdomainsTableHeader" );
                 var reactionsSubdomainTableBody = $( "#reactionsSubdomainsTableBody" );
+                var reactionsSubdomainTable = $( "#reactionsSubdomainsTable" );
 
                 // It's possible the page does not have these elements, so check before we try
                 //    to do anything with them
@@ -153,6 +156,9 @@ MeshEditor.Controller = Backbone.View.extend(
                     {
                         $( "<th>" + subdomainId + "</th>" ).appendTo( reactionsSubdomainsTableHeader );
                     }
+
+                    //Set the width of the table title appropriatelike
+                    reactionsSubdomainTableTitle.prop('colspan', subdomains.length + 1);
 
                     //Insert a row for every reactions
                     for(var reactionId in reactionsSubdomainAssignments)
@@ -179,11 +185,15 @@ MeshEditor.Controller = Backbone.View.extend(
                             checkbox.on('click', _.bind(_.partial(this.setReactionsSubdomainAssignment, reactionId, subdomainId), this));
                         }
                     }
+
+                    reactionsSubdomainTable.dataTable();
                 }
 
                 // Build the species subdomains selection table
+                var speciesSubdomainTableTitle = $( "#speciesSubdomainsTableTitle" );
                 var speciesSubdomainTableHeader = $( "#speciesSubdomainsTableHeader" );
                 var speciesSubdomainTableBody = $( "#speciesSubdomainsTableBody" );
+                var speciesSubdomainTable = $( "#speciesSubdomainsTable" );
 
                 // It's possible the page does not have these elements, so check before we try
                 //    to do anything with them
@@ -202,6 +212,9 @@ MeshEditor.Controller = Backbone.View.extend(
                     {
                         $( "<th>" + subdomainId + "</th>" ).appendTo( speciesSubdomainTableHeader );
                     }
+
+                    //Set the width of the table title appropriatelike
+                    speciesSubdomainTableTitle.prop('colspan', subdomains.length + 1);
 
                     //Insert a row for every species
                     for(var speciesId in speciesSubdomainAssignments)
@@ -228,9 +241,11 @@ MeshEditor.Controller = Backbone.View.extend(
                             checkbox.on('click', _.bind(_.partial(this.setSpeciesSubdomainAssignment, speciesId, subdomainId), this));
                         }
                     }
+
+                    speciesSubdomainTable.dataTable();
                 }
 
-                
+                $( '#meshTable' ).dataTable();
                 $( '.meshTable' ).show();
 
                 var meshTableBody = $( this.el ).find('#meshTableBody');
@@ -243,7 +258,7 @@ MeshEditor.Controller = Backbone.View.extend(
                 for(var i = 0; i < exampleMeshes.length; i++)
                 {
 	            this.optionTemp = _.template('<tr> \
-<td><input type="radio" name="processedMeshFiles"></td><td><%= path %></td>\
+<td><input type="radio" name="processedMeshFiles"></td><td><%= path %></td><td></td>\
 </tr>');
                     
                     var newOption = $( this.optionTemp( exampleMeshes[i]) ).appendTo( meshTableBody );
