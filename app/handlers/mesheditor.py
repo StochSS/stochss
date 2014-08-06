@@ -20,10 +20,21 @@ from stochss.model import *
 
 class MeshWrapper(db.Model):
     userId = db.StringProperty()
-    path = db.StringProperty()
+    name = db.StringProperty()
+    description = db.TextProperty()
     meshFileId = db.IntegerProperty()
     processedMeshFileId = db.IntegerProperty()
     subdomainsFileId = db.IntegerProperty()
+
+    def toJSON(self):
+        return { "userId" : self.userId,
+                 "name" : self.name,
+                 "description" : self.description,
+                 "meshFileId" : self.meshFileId,
+                 "processedMeshFileId" : self.processedMeshFileId,
+                 "subdomainsFileId" : self.subdomainsFileId,
+                 "id" : self.key().id() }
+
     
 def int_or_float(s):
     try:
@@ -39,17 +50,22 @@ class MeshEditorPage(BaseHandler):
     def get(self):
         if True == True:
             base = os.path.dirname(os.path.realpath(__file__)) + '/../static/spatial/'
-            files = set([ 'coli_with_membrane_mesh.xml',
-                          'cylinder_mesh.xml',
-                          'unit_cube_with_membrane_mesh.xml',
-                          'unit_sphere_with_membrane_mesh.xml' ])
+            files = [ 'coli_with_membrane_mesh.xml',
+                      'cylinder_mesh.xml',
+                      'unit_cube_with_membrane_mesh.xml',
+                      'unit_sphere_with_membrane_mesh.xml' ]
+
+            descriptions = { 'coli_with_membrane_mesh.xml' : 'Here\'s some rockin\' information about this model1',
+                             'cylinder_mesh.xml' : 'Here\'s some rockin\' information about this model0',
+                             'unit_cube_with_membrane_mesh.xml' : 'Here\'s some rockin\' information about this model2',
+                             'unit_sphere_with_membrane_mesh.xml' : 'Here\'s some rockin\' information about this model4' }
             
             converted = set()
             for wrapper in db.GqlQuery("SELECT * FROM MeshWrapper").run():
                 #wrapper.delete()
-                converted.add(wrapper.path)
+                converted.add(wrapper.name + '.xml')
 
-            for fileName in files - converted:
+            for fileName in set(files) - converted:
                 meshDb = MeshWrapper()
                 
                 #path = os.path.dirname(os.path.realpath(__file__))
@@ -71,7 +87,8 @@ class MeshEditorPage(BaseHandler):
                 processedMeshFileId = fileserver.FileManager.createFile(self, "processedMeshFiles", fileName, threejs, 777)
                 
                 meshDb.userId = self.user.user_id()
-                meshDb.path = fileName
+                meshDb.name = baseName
+                meshDb.description = descriptions[fileName]
                 meshDb.meshFileId = int(meshFileId)
                 meshDb.processedMeshFileId = int(processedMeshFileId)
                 meshDb.subdomainsFileId = int(subdomainsFileId)
@@ -97,12 +114,10 @@ class MeshEditorPage(BaseHandler):
 
             meshWrappers = []
             for wrapperRow in db.GqlQuery("SELECT * FROM MeshWrapper").run():
-                meshWrappers.append( { "path" : wrapperRow.path,
-                                       "meshWrapperId" : wrapperRow.key().id(),
-                                       "processedMeshFileId" : wrapperRow.processedMeshFileId } )
+                meshWrappers.append( wrapperRow.toJSON() )
 
             data = { 'meshes' : meshWrappers,
-                     'meshWrapperId' : row.spatial['meshWrapperId'],
+                     'meshWrapperId' : row.spatial['mesh_wrapper_id'],
                      'subdomains' : row.spatial['subdomains'],
                      'reactionsSubdomainAssignments' : row.spatial['reactions_subdomain_assignments'],
                      'speciesSubdomainAssignments' : row.spatial['species_subdomain_assignments'] }
@@ -179,7 +194,7 @@ class MeshEditorPage(BaseHandler):
             sdHandle.close()
 
             row.spatial['subdomains'] = list(newSubdomains)
-            row.spatial['meshWrapperId'] = meshWrapperId
+            row.spatial['mesh_wrapper_id'] = meshWrapperId
 
             for speciesId in row.spatial['species_subdomain_assignments']:
                 selectedSubdomains = row.spatial['species_subdomain_assignments'][speciesId]
@@ -199,12 +214,10 @@ class MeshEditorPage(BaseHandler):
             
             meshWrappers = []
             for wrapperRow in db.GqlQuery("SELECT * FROM MeshWrapper").run():
-                meshWrappers.append( { "path" : wrapperRow.path,
-                                       "meshWrapperId" : wrapperRow.key().id(),
-                                       "processedMeshFileId" : wrapperRow.processedMeshFileId } )
+                meshWrappers.append( wrapperRow.toJSON() )
 
             data = { 'meshes' : meshWrappers,
-                     'meshWrapperId' : row.spatial['meshWrapperId'],
+                     'meshWrapperId' : row.spatial['mesh_wrapper_id'],
                      'subdomains' : row.spatial['subdomains'],
                      'reactionsSubdomainAssignments' : row.spatial['reactions_subdomain_assignments'],
                      'speciesSubdomainAssignments' : row.spatial['species_subdomain_assignments'] }

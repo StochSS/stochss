@@ -185,8 +185,8 @@ MeshEditor.Controller = Backbone.View.extend(
                             checkbox.on('click', _.bind(_.partial(this.setReactionsSubdomainAssignment, reactionId, subdomainId), this));
                         }
                     }
-
-                    reactionsSubdomainTable.dataTable();
+                    
+                    //reactionsSubdomainTable.dataTable();
                 }
 
                 // Build the species subdomains selection table
@@ -242,10 +242,10 @@ MeshEditor.Controller = Backbone.View.extend(
                         }
                     }
 
-                    speciesSubdomainTable.dataTable();
+                    //speciesSubdomainTable.dataTable();
                 }
 
-                $( '#meshTable' ).dataTable();
+                //$( '#meshTable' ).dataTable();
                 $( '.meshTable' ).show();
 
                 var meshTableBody = $( this.el ).find('#meshTableBody');
@@ -257,13 +257,15 @@ MeshEditor.Controller = Backbone.View.extend(
                 // Draw all the available examples meshes in the selection table
                 for(var i = 0; i < exampleMeshes.length; i++)
                 {
+                    //this.descriptionTemp = _.template('')
+
 	            this.optionTemp = _.template('<tr> \
-<td><input type="radio" name="processedMeshFiles"></td><td><%= path %></td><td></td>\
+<td><input type="radio" name="processedMeshFiles"></td><td><%= name %></td><td><a data-toggle=\"modal\" href=\"#descriptionModal" + exampleMeshes[i].id + "\" style=\"text-decoration: none;\">Description <i class=\"icon-question-sign\"></i></a></td>\
 </tr>');
-                    
+                        ""                 
                     var newOption = $( this.optionTemp( exampleMeshes[i]) ).appendTo( meshTableBody );
 
-                    if(data['meshWrapperId'] == exampleMeshes[i].meshWrapperId)
+                    if(data['meshWrapperId'] == exampleMeshes[i].id)
                     {
                         newOption.find('input').click();
 
@@ -273,15 +275,18 @@ MeshEditor.Controller = Backbone.View.extend(
                     // When the initialDataFiles gets selected, fill the preview box with a preview of the mesh
                     newOption.find('input').on('click', _.bind(_.partial( function(data) {
                         //this.mesh = mesh;
-                        this.setMeshSelect(data.meshWrapperId);
+                        this.setMeshSelect(data.id);
 
                         $.ajax( { url: '/FileServer/large/processedMeshFiles/' + data.processedMeshFileId + '/file.dat',
                                   success : _.bind( this.meshDataPreview, this) });
                     }, exampleMeshes[i]), this));
                 }
 
-                // Have something selected
-                //meshTableBody.find('input').eq(0).click();
+                if(!data['meshWrapperId'])
+                {
+                    // Have something selected
+                    meshTableBody.find('input').eq(0).click();
+                }
             }
         },
 
