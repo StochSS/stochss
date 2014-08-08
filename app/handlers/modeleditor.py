@@ -781,7 +781,8 @@ def save_model(model, model_name, user_id, isSpatial, is_public=False):
                          'mesh_wrapper_id' : None,
                          'species_diffusion_coefficients' : {} ,
                          'species_subdomain_assignments' : {} ,
-                         'reactions_subdomain_assignments' : {} }
+                         'reactions_subdomain_assignments' : {},
+                         'initial_conditions' : {} }
     db_model.is_public = is_public
     db_model.put()
 

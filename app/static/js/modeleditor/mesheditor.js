@@ -6,6 +6,21 @@ $( document ).ready( function() {
     waitForTemplates(run);
 });
 
+var getNewMemberName = function(dict, baseName)
+{
+    var i = 0;
+
+    var tmpName = baseName + i.toString();
+
+    while(_.has(dict, tmpName))
+    {
+        i += 1;
+        tmpName = baseName + i.toString();
+    }
+
+    return tmpName;
+};
+
 var updateMsg = function(data, msg)
 {
     if(typeof msg == 'undefined')
@@ -121,7 +136,404 @@ MeshEditor.Controller = Backbone.View.extend(
             }
             render();
         },
+
+        drawInitialConditionsDom : function()
+        {
+            $( "#initialConditionsTableBody" ).empty();
+
+            /*var data = { initialConditions : { ic0 : { type : "place", x : 5.0, y : 10.0, z : 1.0, count : 5000 },
+                                               ic1 : { type : "scatter", subdomain : 1, count : 100 },
+                                               ic2 : { type : "distribute", subdomain : 2, count : 100 } },
+                         species : ['S1', 'S2'] };*/
+
+            // Build the header for reaction/species selection table
+            var element = $( "<th>" ).appendTo( this.$el.find( ".reactionSubdomainSelectTableHeader" ) );
+
+            // Add in a row for every initial condition
+            for(var initialConditionKey in this.data.initialConditions)
+            {
+                this.addInitialConditionDom(initialConditionKey);
+            }
+
+            // Add a new initial condition when this button gets pressed
+            $( '.addInitialConditionsButton' ).on('click', _.bind(this.handleAddInitialConditionButtonPress, this));
+        },
         
+        handleAddInitialConditionButtonPress : function(event)
+        {
+            var icName = getNewMemberName(this.data.initialConditions, 'ic');
+
+            var species = _.keys(this.data.speciesSubdomainAssignments);
+
+            if(species.length > 0)
+            {
+                this.data.initialConditions[icName] = { type : "place", species : species[0], x : 0.0, y : 0.0, z : 0.0, count : 0 };
+
+                this.addInitialConditionDom(icName);
+            }
+            else
+            {
+                updateMsg( { status : false, msg : "Model must have a species to have initial conditions!" } );
+            }
+        },
+
+        addInitialConditionDom : function(initialConditionKey)
+        {
+            var data = this.data;
+
+            var initialConditionsTableBodyTemplate = "<tr> \
+<td> \
+<button type=\"button\" class=\"btn btn-default btn-lg delete\"> \
+<i class=\"icon-remove\"></i> \
+</button> \
+</td> \
+<td><select class=\"type input-small\"></select></td> \
+<td><select class=\"species input-small\"></select></td> \
+<td class=\"custom\"></td> \
+</tr>";
+
+            var possibleTypes = ["place", "scatter", "distribute"];
+
+            var row = $( initialConditionsTableBodyTemplate ).appendTo( this.$el.find( "#initialConditionsTableBody" ) );
+
+            var typeSelect = row.find( '.type' );
+            var speciesSelect = row.find( '.species' );
+            var custom = row.find( '.custom' );
+            var deleteButton = row.find('.delete');
+
+            // Event handle for delete
+            deleteButton.on('click', _.bind(_.partial(function(initialConditionKey, doms, event) {
+                delete this.data.initialConditions[initialConditionKey];
+                
+                for(var i in doms)
+                {
+                    doms[i].remove();
+                }
+
+                $.ajax( { url : '/modeleditor/mesheditor',
+                          type : 'POST',
+                          data : { reqType : 'setInitialConditions',
+                                   data : JSON.stringify( { initialConditions : this.data['initialConditions'] } ) },
+                          dataType : 'json',
+                          success : function() { updateMsg( true, "Initial condition deleted" ); } } );
+            }, initialConditionKey, [typeSelect, speciesSelect, custom, row]), this));
+
+            for(var i in possibleTypes)
+            {
+                var option = $( '<option value="' + possibleTypes[i] + '">' + possibleTypes[i] + '</option>' ).appendTo( typeSelect );
+
+                if(data.initialConditions[initialConditionKey].type == possibleTypes[i])
+                {
+                    option.prop('selected', true);
+                }
+            }
+            
+            typeSelect.on('change', _.bind(_.partial(this.handleInitialConditionsTypeChange, initialConditionKey), this));
+
+            var species = _.keys(this.data.speciesSubdomainAssignments);
+
+            // Write in species in drop down menu
+            for(var i in species)
+            {
+                var specie = species[i];
+
+                var option = $( '<option value="' + specie + '">' + specie + '</option>' ).appendTo( speciesSelect );
+
+                if(data.initialConditions[initialConditionKey].species == specie)
+                {
+                    option.prop('selected', true);
+                }
+            }
+            
+            speciesSelect.on('change', _.bind(_.partial(this.handleInitialConditionsSpeciesChange, initialConditionKey), this));
+
+            // Write in the custom stuff
+            if(data.initialConditions[initialConditionKey].type == "place")
+            {
+                var extraOptionsTemplate = '<table class="table"> \
+<thead> \
+<tr> \
+<td>Count</td><td>X</td><td>Y</td><td>Z</td> \
+</tr> \
+</thead> \
+<tbody> \
+<tr> \
+<td> \
+<input class="count input-small" val="0" /> \
+</td> \
+<td> \
+<input class="x input-small" val="0" /> \
+</td> \
+<td> \
+<input class="y input-small" val="0" /> \
+</td> \
+<td> \
+<input class="z input-small" val="0" /> \
+</td> \
+</tr> \
+</tbody> \
+</table>';
+
+                custom.html( extraOptionsTemplate );
+
+                var xBox = custom.find( '.x' );
+                var yBox = custom.find( '.y' );
+                var zBox = custom.find( '.z' );
+
+                xBox.val(data.initialConditions[initialConditionKey].x);
+                yBox.val(data.initialConditions[initialConditionKey].y);
+                zBox.val(data.initialConditions[initialConditionKey].z);
+
+                var countBox = custom.find( '.count' );
+
+                countBox.val(data.initialConditions[initialConditionKey].count);
+
+                custom.find( '.x, .y, .z, .count' ).on('change', _.bind(_.partial(this.handlePlaceValuesChange, initialConditionKey), this));
+            }
+            else if(data.initialConditions[initialConditionKey].type == "scatter")
+            {
+                var extraOptionsTemplate = '<table class="table"> \
+<thead> \
+<tr> \
+<td> \
+Subdomain \
+</td> \
+<td> \
+Count \
+</td> \
+</tr> \
+</thead> \
+<tbody> \
+<tr> \
+<td> \
+<select class="subdomain input-small" /> \
+</td> \
+<td> \
+<input class="count input-small" val="0" /> \
+</td> \
+</tr> \
+</tbody> \
+</table>';
+
+                custom.html(extraOptionsTemplate);
+
+                var subdomainSelect = custom.find( '.subdomain' );
+                var countBox = custom.find( '.count' );
+
+                for(var i in data.subdomains)
+                {
+                    var subdomainCheckboxTemplate = '<option val="' + data.subdomains[i] + '">' + data.subdomains[i] + '</option>';
+                    
+                    var menuItem = $( subdomainCheckboxTemplate ).appendTo( subdomainSelect );
+                    
+                    if(data.initialConditions[initialConditionKey].subdomain == data.subdomains[i])
+                    {
+                        menuItem.prop('selected', true);
+                    }
+                }
+                
+                countBox.val(data.initialConditions[initialConditionKey].count);
+
+                subdomainSelect.on('change', _.bind(_.partial(this.handleScatterSubdomainSelectChange, initialConditionKey), this));
+                countBox.on('change', _.bind(_.partial(this.handleScatterCountChange, initialConditionKey), this));
+            }
+            else if(data.initialConditions[initialConditionKey].type == "distribute")
+            {
+                //ic2 : { type : "population", subdomain : 2, population : 100 }
+                var extraOptionsTemplate = '<table class="table"> \
+<thead> \
+<tr> \
+<td> \
+Subdomain \
+</td> \
+<td> \
+Count in each voxel \
+</td> \
+</tr> \
+</thead> \
+<tbody> \
+<tr> \
+<td> \
+<select class="subdomain input-small" /> \
+</td> \
+<td> \
+<input class="count input-small" val="0" /> \
+</td> \
+</tr> \
+</tbody> \
+</table>';
+
+                custom.html(extraOptionsTemplate);
+
+                var subdomainSelect = custom.find( '.subdomain' );
+                var countBox = custom.find( '.count' );
+
+                for(var i in data.subdomains)
+                {
+                    var subdomainCheckboxTemplate = '<option val="' + data.subdomains[i] + '">' + data.subdomains[i] + '</option>';
+                    
+                    var menuItem = $( subdomainCheckboxTemplate ).appendTo( subdomainSelect );
+                    
+                    if(data.initialConditions[initialConditionKey].subdomain == data.subdomains[i])
+                    {
+                        menuItem.prop('selected', true);
+                    }
+                }
+                
+                countBox.val(data.initialConditions[initialConditionKey].count);
+
+                subdomainSelect.on('change', _.bind(_.partial(this.handleDistributeSubdomainSelectChange, initialConditionKey), this));
+                countBox.on('change', _.bind(_.partial(this.handleDistributeCountChange, initialConditionKey), this));
+            }
+        },
+
+        handleInitialConditionsTypeChange : function(initialConditionsKey, event)
+        {
+            var val = $( event.target ).val().trim();
+
+            // If somehow these are the same do nothing
+            if(this.data.initialConditions[initialConditionsKey].type == val)
+            {
+                return;
+            }
+
+            this.data.initialConditions[initialConditionsKey].type = val;
+
+            // Clear out the old type settings (saving count -- cause that is in all initial conditions)
+            var count = this.data.initialConditions[initialConditionsKey].count;
+
+            // Insert default new ones
+            if(val == 'place')
+            {
+                var species = this.data.initialConditions[initialConditionsKey]['species'];
+                this.data.initialConditions[initialConditionsKey] = { species : species,
+                                                                      type : 'place',
+                                                                      x : 0.0,
+                                                                      y : 0.0,
+                                                                      z : 0.0,
+                                                                      count : count };
+            }
+            else // scatter and distribute use the same variables
+            {
+                var subdomain = undefined;
+
+                if(_.has(this.data.initialConditions[initialConditionsKey], 'subdomain'))
+                {
+                    subdomain = this.data.initialConditions[initialConditionsKey]['subdomain'];
+                }
+                
+                if(typeof subdomain === 'undefined')
+                {
+                    subdomain = this.data.subdomains[0];
+                }
+
+                var species = this.data.initialConditions[initialConditionsKey]['species'];
+                this.data.initialConditions[initialConditionsKey] = { species : species,
+                                                                      subdomain : subdomain,
+                                                                      type : val,
+                                                                      count : count };
+            }
+            
+            $.ajax( { url : '/modeleditor/mesheditor',
+                      type : 'POST',
+                      data : { reqType : 'setInitialConditions',
+                               data : JSON.stringify( { initialConditions : this.data['initialConditions'] } ) },
+                      dataType : 'json',
+                      success : _.bind(_.partial(function(returnData) {
+                          // Redraw
+                          this.drawInitialConditionsDom();
+                          updateMsg(returnData);
+                      }), this) } );
+        },
+
+        handleInitialConditionsSpeciesChange : function(initialConditionsKey, event)
+        {
+            var val = $( event.target ).val().trim();
+            
+            this.data.initialConditions[initialConditionsKey].species = val;
+
+            $.ajax( { url : '/modeleditor/mesheditor',
+                      type : 'POST',
+                      data : { reqType : 'setInitialConditions',
+                               data : JSON.stringify( { initialConditions : this.data['initialConditions'] } ) },
+                      dataType : 'json',
+                      success : updateMsg } );
+        },
+
+        handlePlaceValuesChange : function(initialConditionsKey, event)
+        {
+            var val = $( event.target ).val().trim();
+            var name = $( event.target ).prop('class');
+
+            this.data.initialConditions[initialConditionsKey][name] = val;
+
+            $.ajax( { url : '/modeleditor/mesheditor',
+                      type : 'POST',
+                      data : { reqType : 'setInitialConditions',
+                               data : JSON.stringify( { initialConditions : this.data['initialConditions'] } ) },
+                      dataType : 'json',
+                      success : updateMsg } );
+        },
+
+        handleScatterSubdomainSelectChange : function(initialConditionsKey, event)
+        {
+            var val = $( event.target ).val().trim();
+
+            this.data.initialConditions[initialConditionsKey].subdomain = val;
+
+            $.ajax( { url : '/modeleditor/mesheditor',
+                      type : 'POST',
+                      data : { reqType : 'setInitialConditions',
+                               data : JSON.stringify( { initialConditions : this.data['initialConditions'] } ) },
+                      dataType : 'json',
+                      success : updateMsg } );
+
+        },
+
+        handleScatterCountChange : function(initialConditionsKey, event)
+        {
+            var val = $( event.target ).val().trim();
+
+            this.data.initialConditions[initialConditionsKey].count = val;
+
+            $.ajax( { url : '/modeleditor/mesheditor',
+                      type : 'POST',
+                      data : { reqType : 'setInitialConditions',
+                               data : JSON.stringify( { initialConditions : this.data['initialConditions'] } ) },
+                      dataType : 'json',
+                      success : updateMsg } );
+
+        },
+
+        handleDistributeSubdomainSelectChange : function(initialConditionsKey, event)
+        {
+            var val = $( event.target ).val().trim();
+
+            this.data.initialConditions[initialConditionsKey].subdomain = val;
+
+            $.ajax( { url : '/modeleditor/mesheditor',
+                      type : 'POST',
+                      data : { reqType : 'setInitialConditions',
+                               data : JSON.stringify( { initialConditions : this.data['initialConditions'] } ) },
+                      dataType : 'json',
+                      success : updateMsg } );
+
+        },
+
+        handleDistributeCountChange : function(initialConditionsKey, event)
+        {
+            var val = $( event.target ).val().trim();
+
+            this.data.initialConditions[initialConditionsKey].count = val;
+
+            $.ajax( { url : '/modeleditor/mesheditor',
+                      type : 'POST',
+                      data : { reqType : 'setInitialConditions',
+                               data : JSON.stringify( { initialConditions : this.data['initialConditions'] } ) },
+                      dataType : 'json',
+                      success : updateMsg } );
+        },
+
         render : function(data)
         {
             $( this.el ).find('#progresses').empty();
@@ -133,6 +545,9 @@ MeshEditor.Controller = Backbone.View.extend(
 
             if(typeof this.data != 'undefined')
             {
+                //Add initial conditions dom!!
+                this.drawInitialConditionsDom();
+
                 // Build the reactions subdomains selection table
                 var reactionsSubdomainTableTitle = $( "#reactionsSubdomainsTableTitle" );
                 var reactionsSubdomainTableHeader = $( "#reactionsSubdomainsTableHeader" );

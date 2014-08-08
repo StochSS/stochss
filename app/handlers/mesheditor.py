@@ -119,6 +119,7 @@ class MeshEditorPage(BaseHandler):
             data = { 'meshes' : meshWrappers,
                      'meshWrapperId' : row.spatial['mesh_wrapper_id'],
                      'subdomains' : row.spatial['subdomains'],
+                     'initialConditions' : row.spatial['initial_conditions'],
                      'reactionsSubdomainAssignments' : row.spatial['reactions_subdomain_assignments'],
                      'speciesSubdomainAssignments' : row.spatial['species_subdomain_assignments'] }
 
@@ -219,8 +220,21 @@ class MeshEditorPage(BaseHandler):
             data = { 'meshes' : meshWrappers,
                      'meshWrapperId' : row.spatial['mesh_wrapper_id'],
                      'subdomains' : row.spatial['subdomains'],
+                     'initialConditions' : row.spatial['initial_conditions'],
                      'reactionsSubdomainAssignments' : row.spatial['reactions_subdomain_assignments'],
                      'speciesSubdomainAssignments' : row.spatial['species_subdomain_assignments'] }
 
             self.response.write(json.dumps( data ))
+            return
+        elif self.request.get('reqType') == 'setInitialConditions':
+            data = json.loads( self.request.get('data') );
+
+            row.spatial['initial_conditions'] = data['initialConditions']
+
+            print data['initialConditions']
+            print row.spatial['initial_conditions']
+
+            row.put()
+
+            self.response.write( json.dumps({ "status" : True, "msg" : "Initial conditions updated"}) )
             return
