@@ -18,6 +18,9 @@ import tempfile
 import time
 import logging
 
+import pyurdme
+import pickle
+
 class SpatialJobWrapper(db.Model):
     # These are all the attributes of a job we use for local storage
     userId = db.StringProperty()
@@ -50,7 +53,7 @@ class SpatialJobWrapper(db.Model):
         
         #service.deleteTaskLocal([self.pid])
 
-        super(StochOptimJobWrapper, self).delete()
+        super(SpatialJobWrapper, self).delete()
 
     # Stop the job!
     def stop(self, credentials=None):
@@ -97,7 +100,16 @@ class SpatialPage(BaseHandler):
         return True
     
     def get(self):
-        self.render_response('stochoptim.html')
+        # Query the datastore
+        all_models_q = db.GqlQuery("SELECT * FROM SpatialJobWrapper WHERE user_id = :1", self.user.user_id())
+        all_models=[]
+        for q in all_models_q.run():
+            all_models.append({ "name" : q.model.name,
+                                "id" : q.key().id(),
+                                "units" : q.model.units })
+    
+        context = {'all_models': all_models}
+        self.render_response('simulate.html',**context)
 
     def post(self):
         reqType = self.request.get('reqType')
@@ -106,7 +118,7 @@ class SpatialPage(BaseHandler):
         if reqType == 'newJob':
             data = json.loads(self.request.get('data'))
 
-            job = db.GqlQuery("SELECT * FROM StochOptimJobWrapper WHERE userId = :1 AND jobName = :2", self.user.user_id(), data["jobName"].strip()).get()
+            job = db.GqlQuery("SELECT * FROM SpatialJobWrapper WHERE userId = :1 AND jobName = :2", self.user.user_id(), data["jobName"].strip()).get()
 
             if job != None:
                 self.response.write(json.dumps({"status" : False,
@@ -148,7 +160,7 @@ class SpatialPage(BaseHandler):
 
             jobID = int(jobID)
 
-            job = StochOptimJobWrapper.get_by_id(jobID)
+            job = SpatialJobWrapper.get_by_id(jobID)
 
             if job.userId == self.user.user_id():
                 if job.resource.lower() == "cloud":
@@ -178,7 +190,7 @@ class SpatialPage(BaseHandler):
 
             jobID = int(jobID)
 
-            job = StochOptimJobWrapper.get_by_id(jobID)
+            job = SpatialJobWrapper.get_by_id(jobID)
 
             if job.userId == self.user.user_id():
                 job.delete()
@@ -191,14 +203,14 @@ class SpatialPage(BaseHandler):
 
             jobID = int(jobID)
 
-            job = StochOptimJobWrapper.get_by_id(jobID)
+            job = SpatialJobWrapper.get_by_id(jobID)
 
             if not job.zipFileName:
                 szip = exportimport.SuperZip(os.path.abspath(os.path.dirname(__file__) + '/../static/tmp/'), preferredName = job.jobName + "_")
                 
                 job.zipFileName = szip.getFileName()
 
-                szip.addStochOptimJob(job, True)
+                szip.addSpatialJob(job, True)
                 
                 szip.close()
 
@@ -218,34 +230,33 @@ class SpatialPage(BaseHandler):
                                          'msg' : 'Job downloaded'}))
     
     def runLocal(self, data):
-        '''
-        '''
+        ''' Run a PyURDME run using local compute recources. '''
+        
         json_model_refs = ModelManager.getModel(self, data["id"], modelAsString = False) # data["id"] is the model id of the selected model I think
         
         stochkit_model_obj = json_model_refs["model"]
-        mesh_filename = json_model_refs["spatial"]["mesh_filename"]
-        if "mesh_subdomain_filename" in json_model_refs["spatial"]:
-            mesh_subdomain_filename = json_model_refs["spatial"]["mesh_subdomain_filename"]  # this can be optional
+        meshWrapperDb = mesheditor.MeshWrapper.get_by_id(json_model_refs["spatial"]["mesh_wrapper_id"])
 
-            meshWrapperDb = mesheditor.MeshWrapper.get_by_id(json_model_refs["spatial"]["mesh_wrapper_id"])
-
+        try:
             meshFileObj = fileserver.FileManager.getFile(self, meshWrapperDb.meshFileId)
+            mesh_filename = meshFileObj["storePath"]
+        except IOError as e: 
+            #blowup here, need a mesh
+            self.response.write(json.dumps({"status" : False,
+                                            "msg" : "No Mesh file given"}))
+            return
+            #TODO: if we get advanced options, we don't need a mesh
+
+        try:    
             subdomainFileObj = fileserver.FileManager.getFile(self, meshWrapperDb.subdomainFileId)
-
-            fhandle = open(meshFileObj["storePath"], 'r')
-            fhandle.read()
-            fhandle.close()
-
-            fhandle = open(subdomainFileObj["storePath"], 'r')
-            fhandle.read()
-            fhandle.close()
-        else:
+            mesh_subdomain_filename = subdomainFileObj["storePath"]
+        except IOError as e:
             mesh_subdomain_filename = None
+
         reaction_subdomain_assigments = json_model_refs["spatial"]["reaction_subdomain_assigments"]  #e.g. {'R1':[1,2,3]}
         species_subdomain_assigments = json_model_refs["spatial"]["species_subdomain_assigments"]  #e.g. {'S1':[1,2,3]}
         species_diffusion_coefficients = json_model_refs["spatial"]["species_diffusion_coefficients"] #e.g. {'S1':0.5}
-        
-        #TODO:  if we get a 'mesh_subdomain_filename' read it in and use model.set_subdomain_vector() to set the subdomain
+        initial_conditions = json_model_refs["spatial"]["initial_conditions"] #e.g.  { ic0 : { type : "place", species : "S0",  x : 5.0, y : 10.0, z : 1.0, count : 5000 }, ic1 : { type : "scatter",species : "S0", subdomain : 1, count : 100 }, ic2 : { type : "distribute",species : "S0", subdomain : 2, count : 100 } }
         
         
         simulation_end_time = data['time']
@@ -255,11 +266,55 @@ class SpatialPage(BaseHandler):
         simulation_realizations = data['realizations']
         simulation_seed = data['seed'] # If this is set to -1, it means choose a seed at random! (Whatever that means)
         
-        
-        #### Construct the PyURDME object from the Stockkit model and mesh
-        #### and other
-        
-        
+
+        #### Construct the PyURDME object from the Stockkit model and mesh and other inputs
+        # model
+        pymodel = pyurdme.URDMEModel(name=stochkit_model_obj.name)
+        # mesh
+        pymodel.mesh = pyurdme.URDMEMesh.read_dolfin_mesh(mesh_filename)
+        # timespan
+        pymodel.timespan(range(0,simulation_end_time, simulation_time_increment))
+        # subdomains
+        if mesh_subdomain_filename is not None:
+            #if we get a 'mesh_subdomain_filename' read it in and use model.set_subdomain_vector() to set the subdomain
+            try:
+                with open(mesh_subdomain_filename) as fd:
+                    input_sd = numpy.zeros(len(pymodel.mesh.coordinates()))
+                    for line in fd:
+                        ndx, val = line.split(',', 2)
+                        input_sd[int(ndx)] = int(val)
+                    pymodel.set_subdomain_vector(input_sd)
+            except IOError as e:
+                self.response.write(json.dumps({"status" : False,
+                                                "msg" : "Mesh subdomain file specified, but file not found: {0}".format(e)}))
+                return
+        # species
+        for s in stochkit_model_obj.listOfSpecies:
+            pymodel.add_species(pyurdme.Species(name=s, diffusion_constant=species_diffusion_coefficients[s]))
+        # species subdomain restriction
+        for s, sd_list in species_subdomain_assigments.iteritems():
+            pymodel.restrict(s, sd_list)
+        # parameters
+        pymodel.listOfParameters = stochkit_model_obj.listOfParameters
+        # reactions
+        pymodel.listOfReactions = stochkit_model_obj.listOfReactions
+        # reaction subdomain restrictions
+        for r in reaction_subdomain_assigments:
+            pymodel.listOfReactions[r].restrict_to = reaction_subdomain_assigments[r]
+        # Initial Conditions
+        # initial_conditions = json_model_refs["spatial"]["initial_conditions"] #e.g.  { ic0 : { type : "place", species : "S0",  x : 5.0, y : 10.0, z : 1.0, count : 5000 }, ic1 : { type : "scatter",species : "S0", subdomain : 1, count : 100 }, ic2 : { type : "distribute",species : "S0", subdomain : 2, count : 100 } }
+        for ic_name, ic in initial_conditions:
+            if ic['type'] == "place":
+                pymodel.self.set_initial_condition_place_near({ic['species']:ic['count']}, point=[ic['x'],ic['y'],ic['z']])
+            elif ic['type'] == "scatter":
+                pymodel.set_initial_condition_scatter({ic['species']:ic['count']},subdomains=[ic['subdomain']])
+            elif ic['type'] == "distribute":
+                pymodel.set_initial_condition_distribute_uniformly({ic['species']:ic['count']},subdomains=[ic['subdomain']])
+            else:
+                self.response.write(json.dumps({"status" : False,
+                                                "msg" : "Unknown initial condition type {0}".format(ic['type'])}))
+                return
+
 
         #####
 
@@ -268,7 +323,7 @@ class SpatialPage(BaseHandler):
         basedir = path + '/../'
         dataDir = tempfile.mkdtemp(dir = basedir + 'output')
 
-        job = StochOptimJobWrapper()
+        job = SpatialJobWrapper()
         job.userId = self.user.user_id()
         job.startTime = time.strftime("%Y-%m-%d-%H-%M-%S")
         job.jobName = data["jobName"]
@@ -279,49 +334,17 @@ class SpatialPage(BaseHandler):
 
         job.status = "Running"
 
-        # Convert model and write to file
-        model_file_file = tempfile.mktemp(prefix = 'modelFile', suffix = '.R', dir = dataDir)
-        mff = open(model_file_file, 'w')
-        stringModel, nameToIndex = berniemodel.serialize(data["activate"], True)
-        job.nameToIndex = json.dumps(nameToIndex)
-        mff.write(stringModel)
-        mff.close()
-        data["model_file_file"] = model_file_file
+        model_file_pkl = "{0}/model_file.pkl".format(dataDir)
+        result_dir = "{0}/results/".format(dataDir)
+        os.mkdirs(result_dir)
 
-        model_data_file = tempfile.mktemp(prefix = 'dataFile', suffix = '.txt', dir = dataDir)
-        mdf = open(model_data_file, 'w')
-        jFileData = fileserver.FileManager.getFile(self, data["trajectoriesID"], noFile = False)
-        mdf.write(jFileData["data"])
-        mdf.close()
-        data["model_data_file"] = model_data_file
+        # searilize the model and write it to a file in the data dir
+        with open(model_file_pkl, 'w') as fd:
+            pickle.dump(fd)
 
-        model_initial_data_file = tempfile.mktemp(prefix = 'dataFile', suffix = '.txt', dir = dataDir)
-        midf = open(model_initial_data_file, 'w')
-        iFileData = fileserver.FileManager.getFile(self, data["initialDataID"], noFile = False)
-        midf.write(iFileData["data"])
-        midf.close()
-        data["model_initial_data_file"] = model_initial_data_file
-
-        data["exec"] = "\"bash&\""
-
-        data["steps"] = ("C" if data["crossEntropyStep"] else "") + ("E" if data["emStep"] else "") + ("U" if data["uncertaintyStep"] else "")
-
-        try:
-            import multiprocessing
-
-            data["cores"] = multiprocessing.cpu_count()
-        except:
-            data["cores"] = 1
-
-        data["options"] = ""
-        data["path"] = path
-
-        cmd = "Rscript --vanilla {path}/../../stochoptim/exec/mcem2.r --model {model_file_file} --data {model_initial_data_file} --finalData {model_data_file} --steps {steps} --seed {seed} --cores {cores} --K.ce {Kce} --K.em {Kem} --K.lik {Klik} --K.cov {Kcov} --rho {rho} --perturb {perturb} --alpha {alpha} --beta {beta} --gamma {gamma} --k {k} --pcutoff {pcutoff} --qcutoff {qcutoff} --numIter {numIter} --numConverge {numConverge} --command {exec}".format(**data)
-
+        cmd = "{0}/../../pyurdme/wrapper.py {1} {2} {3} {4} {5}".format(path, model_file_pkl, result_dir, simulation_algorithm, simulation_realizations, simulation_seed)
         print cmd
-
         exstring = '{0}/backend/wrapper.sh {1}/stdout {1}/stderr {2}'.format(basedir, dataDir, cmd)
-
         handle = subprocess.Popen(exstring, shell=True, preexec_fn=os.setsid)
         
         job.pid = handle.pid
