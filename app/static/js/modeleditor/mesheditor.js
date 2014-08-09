@@ -156,7 +156,7 @@ MeshEditor.Controller = Backbone.View.extend(
             }
 
             // Add a new initial condition when this button gets pressed
-            $( '.addInitialConditionsButton' ).on('click', _.bind(this.handleAddInitialConditionButtonPress, this));
+            $( '.addInitialConditionsButton' ).off('click').on('click', _.bind(function(event) { console.log('a'); this.handleAddInitialConditionButtonPress(event); }, this));
         },
         
         handleAddInitialConditionButtonPress : function(event)
@@ -168,6 +168,13 @@ MeshEditor.Controller = Backbone.View.extend(
             if(species.length > 0)
             {
                 this.data.initialConditions[icName] = { type : "place", species : species[0], x : 0.0, y : 0.0, z : 0.0, count : 0 };
+
+                $.ajax( { url : '/modeleditor/mesheditor',
+                          type : 'POST',
+                          data : { reqType : 'setInitialConditions',
+                                   data : JSON.stringify( { initialConditions : this.data['initialConditions'] } ) },
+                          dataType : 'json',
+                          success : updateMsg } );
 
                 this.addInitialConditionDom(icName);
             }
@@ -288,7 +295,10 @@ MeshEditor.Controller = Backbone.View.extend(
 
                 countBox.val(data.initialConditions[initialConditionKey].count);
 
-                custom.find( '.x, .y, .z, .count' ).on('change', _.bind(_.partial(this.handlePlaceValuesChange, initialConditionKey), this));
+                xBox.on('change', _.bind(_.partial(this.handlePlaceValuesChange, 'x', initialConditionKey), this));
+                yBox.on('change', _.bind(_.partial(this.handlePlaceValuesChange, 'y', initialConditionKey), this));
+                zBox.on('change', _.bind(_.partial(this.handlePlaceValuesChange, 'z', initialConditionKey), this));
+                countBox.on('change', _.bind(_.partial(this.handlePlaceValuesChange, 'count', initialConditionKey), this));
             }
             else if(data.initialConditions[initialConditionKey].type == "scatter")
             {
@@ -460,10 +470,9 @@ Count in each voxel \
                       success : updateMsg } );
         },
 
-        handlePlaceValuesChange : function(initialConditionsKey, event)
+        handlePlaceValuesChange : function(name, initialConditionsKey, event)
         {
             var val = $( event.target ).val().trim();
-            var name = $( event.target ).prop('class');
 
             this.data.initialConditions[initialConditionsKey][name] = val;
 
