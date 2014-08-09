@@ -4,6 +4,8 @@ import stochss
 import exportimport
 import backend.backendservice
 
+import mesheditor
+
 from google.appengine.ext import db
 
 import copy
@@ -248,13 +250,13 @@ class SpatialPage(BaseHandler):
             #TODO: if we get advanced options, we don't need a mesh
 
         try:    
-            subdomainFileObj = fileserver.FileManager.getFile(self, meshWrapperDb.subdomainFileId)
+            subdomainFileObj = fileserver.FileManager.getFile(self, meshWrapperDb.subdomainsFileId)
             mesh_subdomain_filename = subdomainFileObj["storePath"]
         except IOError as e:
             mesh_subdomain_filename = None
 
-        reaction_subdomain_assigments = json_model_refs["spatial"]["reaction_subdomain_assigments"]  #e.g. {'R1':[1,2,3]}
-        species_subdomain_assigments = json_model_refs["spatial"]["species_subdomain_assigments"]  #e.g. {'S1':[1,2,3]}
+        reaction_subdomain_assigments = json_model_refs["spatial"]["reactions_subdomain_assignments"]  #e.g. {'R1':[1,2,3]}
+        species_subdomain_assigments = json_model_refs["spatial"]["species_subdomain_assignments"]  #e.g. {'S1':[1,2,3]}
         species_diffusion_coefficients = json_model_refs["spatial"]["species_diffusion_coefficients"] #e.g. {'S1':0.5}
         initial_conditions = json_model_refs["spatial"]["initial_conditions"] #e.g.  { ic0 : { type : "place", species : "S0",  x : 5.0, y : 10.0, z : 1.0, count : 5000 }, ic1 : { type : "scatter",species : "S0", subdomain : 1, count : 100 }, ic2 : { type : "distribute",species : "S0", subdomain : 2, count : 100 } }
         
@@ -262,7 +264,7 @@ class SpatialPage(BaseHandler):
         simulation_end_time = data['time']
         simulation_time_increment = data['increment']
         simulation_algorithm = data['algorithm'] # Don't trust this! I haven't implemented the algorithm selection for this yet
-        simulation_exec_type = data['exec_type'] # This should contain 'spatial' -- Not that you really need it, only spatial requests will be routed here 
+        simulation_exec_type = data['execType'] # This should contain 'spatial' -- Not that you really need it, only spatial requests will be routed here 
         simulation_realizations = data['realizations']
         simulation_seed = data['seed'] # If this is set to -1, it means choose a seed at random! (Whatever that means)
         
