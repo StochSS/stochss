@@ -251,7 +251,7 @@ class JobBackboneInterface(BaseHandler):
         job = JobManager.getJob(self, int(req))
 
         self.response.write(json.dumps(job))
-
+        
   def post(self):
       jsonJob = json.loads(self.request.body)
       job = JobManager.createJob(self, jsonJob)
@@ -343,7 +343,8 @@ class SimulatePage(BaseHandler):
         for q in all_models_q.run():
             all_models.append({ "name" : q.model.name,
                                 "id" : q.key().id(),
-                                "units" : q.model.units })
+                                "units" : q.model.units,
+                                "isSpatial" : q.isSpatial })
     
         context = {'all_models': all_models}
         self.render_response('simulate.html',**context)

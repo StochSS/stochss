@@ -377,7 +377,7 @@ var run = function()
                        selectTable.attach(model);
 
                        var handle_type = function() {
-                           if( $( "#deterministic" )[0].checked )
+                           if( $( "#deterministic" ).eq(0).prop('checked') )
                            {
                                $( ".advanced-settings" ).hide();
                                $( ".stochastic" ).hide();
@@ -386,7 +386,7 @@ var run = function()
                                $( ".sensitivity" ).hide();
                                $( ".ode" ).show();
                            }
-                           else if($( "#sensitivity" )[0].checked)
+                           else if($( "#sensitivity" ).eq(0).prop('checked') )
                            {
                                $( ".advanced-settings" ).hide();
                                $( ".stochastic" ).hide();
@@ -395,7 +395,7 @@ var run = function()
                                $( ".ode" ).hide();
                                $( ".sensitivity" ).show();
                            }
-                           else if( $( "#stochastic" )[0].checked )
+                           else if( $( "#stochastic" ).eq(0).prop('checked') )
                            {
                                $( ".advanced-settings" ).show();
                                $( ".sensitivity" ).hide();
@@ -403,18 +403,21 @@ var run = function()
                                handle_algo();
                                $( ".stochastic" ).show()
                            }
-                           else if( $( "#spatial" )[0].checked )
+                           else if( $( "#spatial" ).eq(0).prop('checked') )
                            {
                                $( ".advanced-settings" ).show();
                                $( ".sensitivity" ).hide();
                                $( ".ode" ).hide()
-                               handle_algo();
-                               $( ".stochastic" ).show()
+                               $( ".stochastic" ).hide()
+                               $( ".tau-leaping" ).hide();
+                               $( ".ssa" ).hide();
+                               //handle_algo();
+                               $( ".spatial" ).show()
                            }
                        };
                        
                        var handle_algo = function() {
-                           if( $( "#tau-leaping" )[0].checked )
+                           if( $( "#tau-leaping" ).eq(0).prop('checked') )
                            {
                                $( ".ssa" ).hide()
                                $( ".tau-leaping" ).show()

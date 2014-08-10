@@ -9,12 +9,34 @@
                 {% if all_models %}
                 <h3> Select model to simulate </h3>
                 <br />
+                <table class="table">
+                  <thead>
+                    <tr>
+                      <th></th>
+                      <th>Name</th>
+                      <th>Units</th>
+                      <th>Spatial</th>
+                    </tr>
+                  </thead>
                 {% for item in all_models %}
-                <label class="radio">
-                    <input type="radio" name="model_to_simulate" value="{{ item.name }} {{ item.id }} {{ item.units }}" checked />{{ item.name }}
-                    <br />
-                </label>
+                  <tbody>
+                    <tr>
+                      <td>
+                        <input type="radio" name="model_to_simulate" value="{{ item.name }} {{ item.id }} {{ item.units }}" checked />
+                      </td>
+                      <td>
+                        {{ item.name }}
+                      </td>
+                      <td>
+                        {{ item.units }}
+                      </td>
+                      <td>
+                        {{ item.isSpatial }}
+                      </td>
+                    </tr>
+                  </tbody>
                 {% endfor %}
+                </table>
                 <br />
                 <button id="next" type="submit" class="btn-primary btn-large">Next&raquo;</button>
                 {% else %}
@@ -54,6 +76,7 @@
 
 <script id="simulationConfTemplate" type="text/template">
     <div class="well well-large">
+        <% if(!isSpatial) { %>
         <h2> <a data-toggle="modal" href="#help_modal1" style="text-decoration: none">New StochKit2 Ensemble <i class="icon-question-sign"></i> </a>
             
             {% set help_modal_id = "help_modal1" %}
@@ -63,18 +86,29 @@
             {{help_modal|safe}}
             
         </h2>
+        <% } else { %> 
+        <h2> <a data-toggle="modal" href="#help_modal2" style="text-decoration: none">New PyURDME Ensemble <i class="icon-question-sign"></i> </a>
+            
+            {% set help_modal_id = "help_modal2" %}
+            {% set help_modal_title = "PyURDME Ensemble" %}
+            {% set help_modal_message = "A PyURDME Ensemble is a collection of trajectories, or realizations, of a given spatial model. Since the model is stochastic, each trajectory represents an independent sample of the model for the given parameters." %}
+            {% include "help_modal.html" %}
+            {{help_modal|safe}}
+        </h2>
+        <% } %>
 
         Model Name: <h2><%= name %></h2>
         Units: <h3><%= units %></h3>
+        Type: <h3><% if(isSpatial) { %>Spatial<% } else { %>Well-mixed<% } %></h3>
         <hr />
         <label>Name:</label>
         <input type="text" class="span3" id="jobName" value="<%= name %>_job" />
         
         <span class="help-block">This name will be used to reference the ensemble.</span>
         <br />
-        <br />
         Simulation type
         <br />
+        <% if(!isSpatial) { %>
         <% if(units == "concentration") { %>
         <input id="deterministic" type="radio" name="exec_type" value="deterministic" checked> Deterministic <br />
         <input id="sensitivity" type="radio" name="exec_type" value="sensitivity"> Deterministic + Sensitivity <br />
@@ -84,10 +118,9 @@
         <input id="stochastic" type="radio" name="exec_type" value="stochastic" checked> Stochastic
         <br />
         <input id="sensitivity" type="radio" name="exec_type" value="sensitivity"> Deterministic + Sensitivity <br />
-        <% if(isSpatial) { %>
-        <br />
-        <input id="spatial" type="radio" name="exec_type" value="spatial"> Spatial <br />
         <% } %>
+        <% } else { %>
+        <input id="spatial" type="radio" name="exec_type" value="spatial" checked> Spatial <br />
         <% } %>
         <hr />
 
@@ -125,7 +158,7 @@
         &nbsp; store state every &nbsp;
         <input type="text" class="input-small" id="increment" value="0.1"> &nbsp; time units.
         
-        <span class="stochastic">
+        <span class="stochastic spatial">
             <br />
             <label>Realizations</label>
             <input type="text" class="span3" id="realizations" value="10">
@@ -141,13 +174,20 @@
         </h3>
         
         <div id="advanced-settings" class="collapse advanced-settings">
-            <div class="stochastic">
+            <div class="stochastic spatial">
                 Algorithm<br />
+                <% if(!isSpatial) { %>
                 SSA <input id="ssa" type="radio" name="algorithm" value="ssa" checked><br />
                 Tau-leaping <input id="tau-leaping" style="padding-left: 100px;" type="radio" name="algorithm" value="tau_leaping">
+                <% } else { %>
+                Brian-algo <input id="brian" type="radio" name="algorithm" value="brian" checked><br />
+                Andreas-algo <input id="andreas" style="padding-left: 100px;" type="radio" name="algorithm" value="andreas">
+                <% } %>
             </div>
 
-            <label class="tau-leaping ssa">Seed
+            <br>
+
+            <label class="tau-leaping ssa spatial">Seed
                 <input type="text" class="span3" id="seed" value="-1">
                 <span class="help-block">Seed the random number generator (set to -1 for a random seed).</span>
             </label>
