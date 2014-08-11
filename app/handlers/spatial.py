@@ -274,8 +274,10 @@ class SpatialPage(BaseHandler):
             ##################
             print "model.name: ",stochkit_model_obj.name
             #mesh_filename = '/Users/brian/Desktop/research/stochss/app/static/spatial/unit_cube_with_membrane_mesh.xml'
+            #mesh_filename = '/Users/brian/Desktop/research/stochss/app/static/spatial/tmpOTmC0d.xml'
             print "mesh_filename: ",mesh_filename
             print "initial_conditions: ",initial_conditions
+            print "PATH: ",os.getenv('PATH')
             ##################
 
             #### Construct the PyURDME object from the Stockkit model and mesh and other inputs
@@ -301,7 +303,7 @@ class SpatialPage(BaseHandler):
                     return
             # species
             for s in stochkit_model_obj.listOfSpecies:
-                pymodel.add_species(pyurdme.Species(name=s, diffusion_constant=species_diffusion_coefficients[s]))
+                pymodel.add_species(pyurdme.Species(name=s, diffusion_constant=float(species_diffusion_coefficients[s])))
             # species subdomain restriction
             for s, sd_list in species_subdomain_assigments.iteritems():
                 pymodel.restrict(s, sd_list)
@@ -315,12 +317,13 @@ class SpatialPage(BaseHandler):
             # Initial Conditions
             # initial_conditions = json_model_refs["spatial"]["initial_conditions"] #e.g.  { ic0 : { type : "place", species : "S0",  x : 5.0, y : 10.0, z : 1.0, count : 5000 }, ic1 : { type : "scatter",species : "S0", subdomain : 1, count : 100 }, ic2 : { type : "distribute",species : "S0", subdomain : 2, count : 100 } }
             for ic_name, ic in initial_conditions.iteritems():
+                spec = pymodel.listOfSpecies[ic['species']]
                 if ic['type'] == "place":
-                    pymodel.self.set_initial_condition_place_near({ic['species']:ic['count']}, point=[ic['x'],ic['y'],ic['z']])
+                    pymodel.self.set_initial_condition_place_near({spec:ic['count']}, point=[ic['x'],ic['y'],ic['z']])
                 elif ic['type'] == "scatter":
-                    pymodel.set_initial_condition_scatter({ic['species']:ic['count']},subdomains=[ic['subdomain']])
+                    pymodel.set_initial_condition_scatter({spec:ic['count']},subdomains=[ic['subdomain']])
                 elif ic['type'] == "distribute":
-                    pymodel.set_initial_condition_distribute_uniformly({ic['species']:ic['count']},subdomains=[ic['subdomain']])
+                    pymodel.set_initial_condition_distribute_uniformly({spec:ic['count']},subdomains=[ic['subdomain']])
                 else:
                     self.response.write(json.dumps({"status" : False,
                                                     "msg" : "Unknown initial condition type {0}".format(ic['type'])}))
@@ -340,18 +343,18 @@ class SpatialPage(BaseHandler):
             job.jobName = data["jobName"]
             job.indata = json.dumps(data)
             job.outData = dataDir
-            job.modelName = model["name"]
+            job.modelName = stochkit_model_obj.name
             job.resource = "local"
 
             job.status = "Running"
 
             model_file_pkl = "{0}/model_file.pkl".format(dataDir)
             result_dir = "{0}/results/".format(dataDir)
-            os.mkdirs(result_dir)
+            os.makedirs(result_dir)
 
             # searilize the model and write it to a file in the data dir
             with open(model_file_pkl, 'w') as fd:
-                pickle.dump(fd)
+                pickle.dump(pymodel, fd)
 
             cmd = "{0}/../../pyurdme/wrapper.py {1} {2} {3} {4} {5}".format(path, model_file_pkl, result_dir, simulation_algorithm, simulation_realizations, simulation_seed)
             print cmd

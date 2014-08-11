@@ -176,7 +176,7 @@ def enable_sandbox(config):
   _init_logging(config.stderr_log_level)
   pdb_sandbox.install(config)
   #sys.stdin = devnull
-  #sys.stdout = sys.stderr
+  sys.stdout = sys.stderr
 
 
 def _find_shared_object_c_module():
