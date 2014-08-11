@@ -18,6 +18,7 @@
 
 
 
+import base64
 import json
 import logging
 import re
@@ -27,9 +28,7 @@ from google.appengine.tools.devappserver2.endpoints import discovery_service
 
 
 # Internal constants
-_API_REST_PATH_FORMAT = '{!name}/{!version}/%s'
-_PATH_VARIABLE_PATTERN = r'[a-zA-Z_][a-zA-Z_\d]*'
-_RESERVED_PATH_VARIABLE_PATTERN = r'!' + _PATH_VARIABLE_PATTERN
+_PATH_VARIABLE_PATTERN = r'[a-zA-Z_][a-zA-Z_.\d]*'
 _PATH_VALUE_PATTERN = r'[^:/?#\[\]{}]*'
 
 
@@ -39,8 +38,38 @@ class ApiConfigManager(object):
   def __init__(self):
     self._rpc_method_dict = {}
     self._rest_methods = []
-    self.configs = {}
+    self._configs = {}
     self._config_lock = threading.Lock()
+
+  @property
+  def configs(self):
+    """Return a dict with the current configuration mappings.
+
+    Returns:
+      A dict with the current configuration mappings.
+    """
+    with self._config_lock:
+      return self._configs.copy()
+
+  def _convert_https_to_http(self, config):
+    """Switch the URLs in one API configuration to use HTTP instead of HTTPS.
+
+    When doing local development in the dev server, any requests to the API
+    need to use HTTP rather than HTTPS.  This converts the API configuration
+    to use HTTP.  With this change, client libraries that use the API
+    configuration will now be able to communicate with the local server.
+
+    This modifies the given dictionary in place.
+
+    Args:
+      config: A dict with the JSON configuration for an API.
+    """
+    if 'adapter' in config and 'bns' in config['adapter']:
+      bns_adapter = config['adapter']['bns']
+      if bns_adapter.startswith('https://'):
+        config['adapter']['bns'] = bns_adapter.replace('https', 'http', 1)
+    if 'root' in config and config['root'].startswith('https://'):
+      config['root'] = config['root'].replace('https', 'http', 1)
 
   def parse_api_config_response(self, body):
     """Parses a json api config and registers methods for dispatch.
@@ -69,15 +98,17 @@ class ApiConfigManager(object):
                           api_config_json)
           else:
             lookup_key = config.get('name', ''), config.get('version', '')
-            self.configs[lookup_key] = config
+            self._convert_https_to_http(config)
+            self._configs[lookup_key] = config
 
-        for config in self.configs.itervalues():
+        for config in self._configs.itervalues():
+          name = config.get('name', '')
           version = config.get('version', '')
           sorted_methods = self._get_sorted_methods(config.get('methods', {}))
 
           for method_name, method in sorted_methods:
             self._save_rpc_method(method_name, version, method)
-            self._save_rest_method(method_name, version, method)
+            self._save_rest_method(method_name, name, version, method)
 
   def _get_sorted_methods(self, methods):
     """Get a copy of 'methods' sorted the way they would be on the live server.
@@ -153,6 +184,22 @@ class ApiConfigManager(object):
 
     return sorted(methods.items(), _sorted_methods_comparison)
 
+  @staticmethod
+  def _get_path_params(match):
+    """Gets path parameters from a regular expression match.
+
+    Args:
+      match: A regular expression Match object for a path.
+
+    Returns:
+      A dictionary containing the variable names converted from base64.
+    """
+    result = {}
+    for var_name, value in match.groupdict().iteritems():
+      actual_var_name = ApiConfigManager._from_safe_path_param_name(var_name)
+      result[actual_var_name] = value
+    return result
+
   def lookup_rpc_method(self, method_name, version):
     """Lookup the JsonRPC method at call time.
 
@@ -191,9 +238,8 @@ class ApiConfigManager(object):
       for compiled_path_pattern, unused_path, methods in self._rest_methods:
         match = compiled_path_pattern.match(path)
         if match:
-          params = match.groupdict()
-          version = match.group(2)
-          method_key = (http_method.lower(), version)
+          params = self._get_path_params(match)
+          method_key = http_method.lower()
           method_name, method = methods.get(method_key, (None, None))
           if method:
             break
@@ -205,22 +251,63 @@ class ApiConfigManager(object):
     return method_name, method, params
 
   def _add_discovery_config(self):
+    """Add the Discovery configuration to our list of configs.
+
+    This should only be called with self._config_lock.  The code here assumes
+    the lock is held.
+    """
     lookup_key = (discovery_service.DiscoveryService.API_CONFIG['name'],
                   discovery_service.DiscoveryService.API_CONFIG['version'])
-    self.configs[lookup_key] = discovery_service.DiscoveryService.API_CONFIG
+    self._configs[lookup_key] = discovery_service.DiscoveryService.API_CONFIG
+
+  @staticmethod
+  def _to_safe_path_param_name(matched_parameter):
+    """Creates a safe string to be used as a regex group name.
+
+    Only alphanumeric characters and underscore are allowed in variable name
+    tokens, and numeric are not allowed as the first character.
+
+    We cast the matched_parameter to base32 (since the alphabet is safe),
+    strip the padding (= not safe) and prepend with _, since we know a token
+    can begin with underscore.
+
+    Args:
+      matched_parameter: A string containing the parameter matched from the URL
+        template.
+
+    Returns:
+      A string that's safe to be used as a regex group name.
+    """
+    return '_' + base64.b32encode(matched_parameter).rstrip('=')
+
+  @staticmethod
+  def _from_safe_path_param_name(safe_parameter):
+    """Takes a safe regex group name and converts it back to the original value.
+
+    Only alphanumeric characters and underscore are allowed in variable name
+    tokens, and numeric are not allowed as the first character.
+
+    The safe_parameter is a base32 representation of the actual value.
+
+    Args:
+      safe_parameter: A string that was generated by _to_safe_path_param_name.
+
+    Returns:
+      A string, the parameter matched from the URL template.
+    """
+    assert safe_parameter.startswith('_')
+    safe_parameter_as_base32 = safe_parameter[1:]
+
+    padding_length = - len(safe_parameter_as_base32) % 8
+    padding = '=' * padding_length
+    return base64.b32decode(safe_parameter_as_base32 + padding)
 
   @staticmethod
   def _compile_path_pattern(pattern):
     r"""Generates a compiled regex pattern for a path pattern.
 
-    e.g. '/{!name}/{!version}/notes/{id}'
-    returns re.compile(r'/([^:/?#\[\]{}]*)'
-                       r'/([^:/?#\[\]{}]*)'
-                       r'/notes/(?P<id>[^:/?#\[\]{}]*)')
-    Note in this example that !name and !version are reserved variable names
-    used to match the API name and version that should not be migrated into the
-    method argument namespace.  As such they are not named in the regex, so
-    groupdict() excludes them.
+    e.g. '/MyApi/v1/notes/{id}'
+    returns re.compile(r'/MyApi/v1/notes/(?P<id>[^:/?#\[\]{}]*)')
 
     Args:
       pattern: A string, the parameterized path pattern to be checked.
@@ -229,24 +316,14 @@ class ApiConfigManager(object):
       A compiled regex object to match this path pattern.
     """
 
-    def replace_reserved_variable(match):
-      """Replaces a {!variable} with a regex to match it not by name.
-
-      Args:
-        match: A regex match object, the matching regex group as sent by
-          re.sub().
-
-      Returns:
-        A string regex to match the variable by name, if the full pattern was
-        matched.
-      """
-      if match.lastindex > 1:
-        return '%s(%s)' % (match.group(1), _PATH_VALUE_PATTERN)
-      return match.group(0)
-
     def replace_variable(match):
       """Replaces a {variable} with a regex to match it by name.
 
+      Changes the string corresponding to the variable name to the base32
+      representation of the string, prepended by an underscore. This is
+      necessary because we can have message variable names in URL patterns
+      (e.g. via {x.y}) but the character '.' can't be in a regex group name.
+
       Args:
         match: A regex match object, the matching regex group as sent by
           re.sub().
@@ -256,15 +333,11 @@ class ApiConfigManager(object):
         matched.
       """
       if match.lastindex > 1:
-        return '%s(?P<%s>%s)' % (match.group(1), match.group(2),
+        var_name = ApiConfigManager._to_safe_path_param_name(match.group(2))
+        return '%s(?P<%s>%s)' % (match.group(1), var_name,
                                  _PATH_VALUE_PATTERN)
       return match.group(0)
 
-    # Replace !name and !version with regexes, but only allow replacement
-    # of two reserved variables (re.sub argument 'count') to prevent
-    # substituting e.g. {!name}/{!version}/myapi/{id}/{!othervar}
-    pattern = re.sub('(/|^){(%s)}(?=/|$)' % _RESERVED_PATH_VARIABLE_PATTERN,
-                     replace_reserved_variable, pattern, 2)
     pattern = re.sub('(/|^){(%s)}(?=/|$)' % _PATH_VARIABLE_PATTERN,
                      replace_variable, pattern)
     return re.compile(pattern + '/?$')
@@ -282,7 +355,7 @@ class ApiConfigManager(object):
     """
     self._rpc_method_dict[(method_name, version)] = method
 
-  def _save_rest_method(self, method_name, version, method):
+  def _save_rest_method(self, method_name, api_name, version, method):
     """Store Rest api methods in a list for lookup at call time.
 
     The list is self._rest_methods, a list of tuples:
@@ -291,7 +364,7 @@ class ApiConfigManager(object):
       <compiled_path> is a compiled regex to match against the incoming URL
       <path_pattern> is a string representing the original path pattern,
         checked on insertion to prevent duplicates.     -and-
-      <method_dict> is a dict (httpMethod, apiVersion) => (method_name, method)
+      <method_dict> is a dict of httpMethod => (method_name, method)
 
     This structure is a bit complex, it supports use in two contexts:
       Creation time:
@@ -302,28 +375,28 @@ class ApiConfigManager(object):
           comparison as it is not documented as being stable for this use.
         - Need to store the method that will be mapped at calltime.
         - Different methods may have the same path but different http method.
-          and/or API versions.
       Call time:
         - Quickly scan through the list attempting .match(path) on each
           compiled regex to find the path that matches.
-        - When a path is matched, look up the API version and method from the
-          request and get the method name and method config for the matching
+        - When a path is matched, look up the API method from the request
+          and get the method name and method config for the matching
           API method and method name.
 
     Args:
       method_name: A string containing the name of the API method.
+      api_name: A string containing the name of the API.
       version: A string containing the version of the API.
       method: A dict containing the method descriptor (as in the api config
         file).
     """
-    path_pattern = _API_REST_PATH_FORMAT % method.get('path', '')
+    path_pattern = '/'.join((api_name, version, method.get('path', '')))
     http_method = method.get('httpMethod', '').lower()
     for _, path, methods in self._rest_methods:
       if path == path_pattern:
-        methods[(http_method, version)] = method_name, method
+        methods[http_method] = method_name, method
         break
     else:
       self._rest_methods.append(
           (self._compile_path_pattern(path_pattern),
            path_pattern,
-           {(http_method, version): (method_name, method)}))
+           {http_method: (method_name, method)}))

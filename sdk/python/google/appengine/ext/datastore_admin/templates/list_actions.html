@@ -1,9 +1,22 @@
 {% extends "base.html" %}
 {% block body %}
   <h2>Datastore Admin of {{hosting_app_id}}</h2>
+  {% if run_as_a_service %}
+    <div class="ae-message ae-rounded-sml">
+      Backup/Restore running as a service.
+      <a href="{{datastore_admin_home}}?service=T">Disable</a>
+    </div>
+  {% else %}
+    {% if offer_service %}
+      <div class="ae-message ae-rounded-sml">
+        This application may run backup/restore as a service.
+        <a href="{{datastore_admin_home}}?run_as_a_service=True">Enable</a>
+      </div>
+    {% endif %}
+  {% endif %}
   {% if error %}
   <div class="ae-errorbox">
-    {{ error }}
+    {{ error|escape }}
   </div>
   {% endif %}
   <div class="ae-table-caption">
@@ -21,7 +34,7 @@
             Entity statistics unavailable.
           {% endif %}
           <a target="_blank"
-             href="http://developers.google.com/appengine/kb/adminconsole.html#datastore_stats">
+             href="https://developers.google.com/appengine/docs/adminconsole/datastorestats">
             <img class="ae-help-icon" src="{{ base_path }}/static/img/help.gif"
               height="14" width="14" alt="help">
           </a>
@@ -32,11 +45,13 @@
   </div>
   {% if kind_stats %}
   <form action="{{ base_path }}/" method="post">
-    {% if has_namespace %}
-    <input type="hidden" name="namespace" value="{{ namespace|escape}}">
+    {% if run_as_a_service %}
+      <input type="hidden" name="run_as_a_service" value="{{ run_as_a_service|escape }}">
     {% endif %}
-    <input type="hidden" name="app_id" value="{{ app_id }}">
-    <input type="hidden" name="cancel_url" value="{{ cancel_url }}">
+    {% if has_namespace %}
+    <input type="hidden" name="namespace" value="{{ namespace|escape }}">
+    {% endif %}
+    <input type="hidden" name="app_id" value="{{ app_id|escape }}">
     <table id="kinds" class="ae-table ae-table-striped">
       <thead>
         <tr>
@@ -67,9 +82,17 @@
               <td class="id" style="color: #666667;">Stats not available</td>
               <td class="id" style="color: #666667;">Stats not available</td>
               <td class="id" style="color: #666667;">Stats not available</td>
+              <td class="id" style="color: #666667;">Stats not available</td>
             {% endif %}
           </tr>
         {% endfor %}
+        {% if more_kinds %}
+          <tr>
+            <td colspan="6" class="cbc">
+              Not all kinds could be displayed, possibly because there were too many. To back up a kind that does not appear in this list, use a <a href="https://developers.google.com/appengine/articles/scheduled_backups" target="_blank">scheduled backup</a>.
+            </td>
+          </tr>
+        {% endif %}
       </tbody>
       <tfoot>
         <tr>
@@ -110,8 +133,10 @@
       </div>
     </div>
     <form action="{{ base_path }}/" method="post">
-      <input type="hidden" name="app_id" value="{{ app_id }}">
-      <input type="hidden" name="cancel_url" value="{{ cancel_url }}">
+      {% if run_as_a_service %}
+        <input type="hidden" name="run_as_a_service" value="{{ run_as_a_service|escape }}">
+      {% endif %}
+      <input type="hidden" name="app_id" value="{{ app_id|escape }}">
       <table id="pending_backups" class="ae-table ae-table-striped">
         <thead>
           <tr>
@@ -159,8 +184,10 @@
   </div>
   {% if backups %}
     <form action="{{ base_path }}/" method="post">
-      <input type="hidden" name="app_id" value="{{ app_id }}">
-      <input type="hidden" name="cancel_url" value="{{ cancel_url }}">
+      {% if run_as_a_service %}
+        <input type="hidden" name="run_as_a_service" value="{{ run_as_a_service|escape }}">
+      {% endif %}
+      <input type="hidden" name="app_id" value="{{ app_id|escape }}">
       <table id="backups" class="ae-table ae-table-striped">
         <thead>
           <tr>
@@ -202,7 +229,9 @@
   {% endif %}
   <div class="ae-table-caption">
     <form action="{{ base_path }}/" method="post" >
-      <input type="hidden" name="cancel_url" value="{{ cancel_url }}">
+      {% if run_as_a_service %}
+        <input type="hidden" name="run_as_a_service" value="{{ run_as_a_service|escape }}">
+      {% endif %}
       <input type="submit" name="action" value="Import Backup Information" title="Import Backup Information or restore from Google Cloud Storage"/>
       <input type="text" name="gs_handle" value="" size="50" title="Google Cloud Storage path of a backup info file or a bucket name"/>
     </form>

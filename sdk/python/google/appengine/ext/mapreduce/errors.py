@@ -43,20 +43,8 @@ __all__ = [
     "MultipleDocumentsInMrYaml",
     "NotEnoughArgumentsError",
     "RetrySliceError",
-    "SHARD_RETRY_ERRORS",
     "ShuffleServiceError",
-    ]
-
-from google.appengine.api import files
-
-
-
-SHARD_RETRY_ERRORS = [
-    files.ApiTemporaryUnavailableError,
-    files.ExistenceError,
-    files.FileTemporaryUnavailableError,
-    files.FinalizationError,
-    files.UnknownError,
+    "InvalidRecordError",
     ]
 
 
@@ -110,3 +98,7 @@ class RetrySliceError(Error):
   The job will be failed if the slice can't progress before maximum
   number of retries.
   """
+
+
+class InvalidRecordError(Error):
+  """Raised when invalid record encountered."""

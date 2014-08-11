@@ -186,7 +186,7 @@ stochkit.Model = Backbone.Model.extend( {
     },
 
     getParameter: function(name, value) {
-        var parameter = this.ParametersList.children().has('Id:contains(' +  name + ')');
+        var parameter = this.ParametersList.children().filter( function() { return $( this ).find('Id').text() == name; } );
 
 	if(parameter.length == 0)
 	{
@@ -197,7 +197,7 @@ stochkit.Model = Backbone.Model.extend( {
     },
 
     getReaction: function(name) {
-        var reaction = this.ReactionsList.children().has('Id:contains(' +  name + ')');
+        var reaction = this.ReactionsList.children().filter( function() { return $( this ).find('Id').text() == name; } );
 
 	if(reaction.length == 0)
 	{
@@ -243,7 +243,7 @@ stochkit.Model = Backbone.Model.extend( {
     },
     
     removeSpecies: function(name) {
-        var species = this.SpeciesList.children().has( 'Id:contains(' + name + ')' );
+        var species = this.SpeciesList.children().filter( function() { return $( this ).find('Id').text() == name; } );
 
         if(species.length == 0)
         {
@@ -258,7 +258,7 @@ stochkit.Model = Backbone.Model.extend( {
     },
 
     removeParameter: function(name) {
-        var parameter = this.ParametersList.children().has( 'Id:contains(' + name + ')' );
+        var parameter = this.ParametersList.children().filter( function() { return $( this ).find('Id').text() == name; } );
 
         if(parameter.length == 0)
         {
@@ -271,7 +271,7 @@ stochkit.Model = Backbone.Model.extend( {
     },
 
     removeReaction: function(name) {
-        var reaction = this.ReactionsList.children().has( 'Id:contains(' + name + ')' );
+        var reaction = this.ReactionsList.children().filter( function() { return $( this ).find('Id').text() == name; } );
 
         if(reaction.length == 0)
         {

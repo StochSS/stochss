@@ -58,6 +58,7 @@ indexes:
 
 import itertools
 
+from google.appengine.api import appinfo
 from google.appengine.api import datastore_types
 from google.appengine.api import validation
 from google.appengine.api import yaml_errors
@@ -68,6 +69,9 @@ from google.appengine.datastore import entity_pb
 
 class Property(validation.Validated):
   """Representation for an individual property of an index.
+
+  This class must be kept in sync with
+  java/com/google/apphosting/utils/config/IndexYamlReader.java.
 
   Attributes:
     name: Name of attribute to sort by.
@@ -108,6 +112,7 @@ class IndexDefinitions(validation.Validated):
   """
 
   ATTRIBUTES = {
+      appinfo.APPLICATION: validation.Optional(appinfo.APPLICATION_RE_STRING),
       'indexes': validation.Optional(validation.Repeated(Index)),
       }
 

@@ -28,23 +28,36 @@
 
 
 
-
-
-"""Base handler class for all mapreduce handlers.
-"""
+"""Base handler class for all mapreduce handlers."""
 
 
 
+
+
+
+import httplib
 import logging
-import simplejson
 
 import google
+import simplejson
+
 try:
-  from appengine_pipeline.src import pipeline
+  from google.appengine.ext.mapreduce import pipeline_base
 except ImportError:
-  pipeline = None
+  pipeline_base = None
+try:
+
+  from google.appengine.ext import cloudstorage
+  if hasattr(cloudstorage, "_STUB"):
+    cloudstorage = None
+except ImportError:
+  cloudstorage = None
+
 from google.appengine.ext import webapp
 from google.appengine.ext.mapreduce import errors
+from google.appengine.ext.mapreduce import json_util
+from google.appengine.ext.mapreduce import model
+from google.appengine.ext.mapreduce import parameters
 
 
 class Error(Exception):
@@ -55,45 +68,120 @@ class BadRequestPathError(Error):
   """The request path for the handler is invalid."""
 
 
-class BaseHandler(webapp.RequestHandler):
-  """Base class for all mapreduce handlers."""
-
-  def base_path(self):
-    """Base path for all mapreduce-related urls."""
-    path = self.request.path
-    return path[:path.rfind("/")]
-
-
-class TaskQueueHandler(BaseHandler):
+class TaskQueueHandler(webapp.RequestHandler):
   """Base class for handlers intended to be run only from the task queue.
 
-  Sub-classes should implement the 'handle' method.
+  Sub-classes should implement
+  1. the 'handle' method for all POST request.
+  2. '_preprocess' method for decoding or validations before handle.
+  3. '_drop_gracefully' method if _preprocess fails and the task has to
+     be dropped.
+
+  In Python27 runtime, webapp2 will automatically replace webapp.
   """
 
-  def post(self):
+  _DEFAULT_USER_AGENT = "App Engine Python MR"
+
+  def __init__(self, *args, **kwargs):
+
+
+
+
+
+    self._preprocess_success = False
+    super(TaskQueueHandler, self).__init__(*args, **kwargs)
+    if cloudstorage:
+      cloudstorage.set_default_retry_params(
+          cloudstorage.RetryParams(
+              min_retries=5,
+              max_retries=10,
+              urlfetch_timeout=parameters._GCS_URLFETCH_TIMEOUT_SEC,
+              save_access_token=True,
+              _user_agent=self._DEFAULT_USER_AGENT))
+
+  def initialize(self, request, response):
+    """Initialize.
+
+    1. call webapp init.
+    2. check request is indeed from taskqueue.
+    3. check the task has not been retried too many times.
+    4. run handler specific processing logic.
+    5. run error handling logic if precessing failed.
+
+    Args:
+      request: a webapp.Request instance.
+      response: a webapp.Response instance.
+    """
+    super(TaskQueueHandler, self).initialize(request, response)
+
+
     if "X-AppEngine-QueueName" not in self.request.headers:
       logging.error(self.request.headers)
       logging.error("Task queue handler received non-task queue request")
       self.response.set_status(
           403, message="Task queue handler received non-task queue request")
       return
-    self._setup()
-    self.handle()
 
-  def _setup(self):
-    """Called before handle method to set up handler."""
-    pass
+
+    if self.task_retry_count() + 1 > parameters.config.TASK_MAX_ATTEMPTS:
+      logging.error(
+          "Task %s has been attempted %s times. Dropping it permanently.",
+          self.request.headers["X-AppEngine-TaskName"],
+          self.task_retry_count() + 1)
+      self._drop_gracefully()
+      return
+
+    try:
+      self._preprocess()
+      self._preprocess_success = True
+
+    except:
+      self._preprocess_success = False
+      logging.error(
+          "Preprocess task %s failed. Dropping it permanently.",
+          self.request.headers["X-AppEngine-TaskName"])
+      self._drop_gracefully()
+
+  def post(self):
+    if self._preprocess_success:
+      self.handle()
 
   def handle(self):
     """To be implemented by subclasses."""
     raise NotImplementedError()
 
+  def _preprocess(self):
+    """Preprocess.
+
+    This method is called after webapp initialization code has been run
+    successfully. It can thus access self.request, self.response and so on.
+    """
+    pass
+
+  def _drop_gracefully(self):
+    """Drop task gracefully.
+
+    When preprocess failed, this method is called before the task is dropped.
+    """
+    pass
+
   def task_retry_count(self):
     """Number of times this task has been retried."""
     return int(self.request.headers.get("X-AppEngine-TaskExecutionCount", 0))
 
+  def retry_task(self):
+    """Ask taskqueue to retry this task.
 
-class JsonHandler(BaseHandler):
+    Even though raising an exception can cause a task retry, it
+    will flood logs with highly visible ERROR logs. Handlers should uses
+    this method to perform controlled task retries. Only raise exceptions
+    for those deserve ERROR log entries.
+    """
+    self.response.set_status(httplib.SERVICE_UNAVAILABLE, "Retry task")
+    self.response.clear()
+
+
+class JsonHandler(webapp.RequestHandler):
   """Base class for JSON handlers for user interface.
 
   Sub-classes should implement the 'handle' method. They should put their
@@ -104,7 +192,7 @@ class JsonHandler(BaseHandler):
 
   def __init__(self, *args):
     """Initializer."""
-    super(BaseHandler, self).__init__(*args)
+    super(JsonHandler, self).__init__(*args)
     self.json_response = {}
 
   def base_path(self):
@@ -112,6 +200,12 @@ class JsonHandler(BaseHandler):
 
     JSON handlers are mapped to /base_path/command/command_name thus they
     require special treatment.
+
+    Raises:
+      BadRequestPathError: if the path does not end with "/command".
+
+    Returns:
+      The base path.
     """
     path = self.request.path
     base_path = path[:path.rfind("/")]
@@ -121,6 +215,7 @@ class JsonHandler(BaseHandler):
     return base_path[:base_path.rfind("/")]
 
   def _handle_wrapper(self):
+    """The helper method for handling JSON Post and Get requests."""
     if self.request.headers.get("X-Requested-With") != "XMLHttpRequest":
       logging.error("Got JSON request with no X-Requested-With header")
       self.response.set_status(
@@ -144,8 +239,9 @@ class JsonHandler(BaseHandler):
 
     self.response.headers["Content-Type"] = "text/javascript"
     try:
-      output = simplejson.dumps(self.json_response)
-    except:
+      output = simplejson.dumps(self.json_response, cls=json_util.JsonEncoder)
+
+    except Exception, e:
       logging.exception("Could not serialize to JSON")
       self.response.set_status(500, message="Could not serialize to JSON")
       return
@@ -171,21 +267,34 @@ class GetJsonHandler(JsonHandler):
     self._handle_wrapper()
 
 
+class HugeTaskHandler(TaskQueueHandler):
+  """Base handler for processing HugeTasks."""
 
-_DEFAULT_BASE_PATH = "/_ah/mapreduce"
-_DEFAULT_PIPELINE_BASE_PATH = _DEFAULT_BASE_PATH + "/pipeline"
+  class _RequestWrapper(object):
+    """Container of a request and associated parameters."""
+
+    def __init__(self, request):
+      self._request = request
+      self._params = model.HugeTask.decode_payload(request)
+
+    def get(self, name, default=""):
+      return self._params.get(name, default)
+
+    def set(self, name, value):
+      self._params[name] = value
+
+    def __getattr__(self, name):
+      return getattr(self._request, name)
+
+  def __init__(self, *args, **kwargs):
+    super(HugeTaskHandler, self).__init__(*args, **kwargs)
+
+  def _preprocess(self):
+    self.request = self._RequestWrapper(self.request)
 
 
-if pipeline:
-  class PipelineBase(pipeline.Pipeline):
-    """Base class for all pipelines within mapreduce framework.
+if pipeline_base:
 
-    Rewrites base path to use pipeline library bundled with mapreduce.
-    """
-
-    def start(self, **kwargs):
-      if "base_path" not in kwargs:
-        kwargs["base_path"] = _DEFAULT_PIPELINE_BASE_PATH
-      return pipeline.Pipeline.start(self, **kwargs)
+  PipelineBase = pipeline_base.PipelineBase
 else:
   PipelineBase = None

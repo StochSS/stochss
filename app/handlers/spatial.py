@@ -35,7 +35,7 @@ class SpatialJobWrapper(db.Model):
     indata = db.TextProperty() # This is a dump of the json data sent from the html/js that was used to start the job. We save it
     outData = db.StringProperty() # THis is a path to the output data on the filesystem
     status = db.StringProperty()
-    zipFileName = db.StringProperty()
+    zipFileName = db.StringProperty() # This is a temporary file that the server uses to store a zipped up copy of the output
     
     # These are the cloud attributes Chris adds
     resource = db.StringProperty()
@@ -44,7 +44,6 @@ class SpatialJobWrapper(db.Model):
     celeryPID = db.StringProperty()
 
     # More attributes can obvs. be added
-
     # The delete operator here is a little fancy. When the item gets deleted from the GOogle db, we need to go clean up files stored locally and remotely
     def delete(self):
         service = backend.backendservice.backendservices()
