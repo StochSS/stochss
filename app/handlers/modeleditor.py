@@ -322,7 +322,7 @@ class ModelEditorPage(BaseHandler):
             newModel = db.GqlQuery("SELECT * FROM StochKitModelWrapper WHERE is_public = :1 AND model_name = :2", True, newName).get()
 
             if newModel is None:
-                save_model(model,newName,"",True)
+                save_model(model, newName, "", is_public = True)
                 self.response.content_type = "application/json"
                 self.response.write(json.dumps('success'))
             else:
@@ -654,31 +654,31 @@ class ModelEditorImportFromLibrary(BaseHandler):
         # If the example models are not currently in the datastore, add them
         example_model = db.GqlQuery("SELECT * FROM StochKitModelWrapper WHERE is_public = :1 AND model_name = :2", True, 'dimerdecay').get()
         if example_model is None:
-            save_model(dimerdecay(), 'dimerdecay', "", is_public=True)
+            save_model(dimerdecay(), 'dimerdecay', "", isSpatial = False, is_public=True)
 
         example_model = db.GqlQuery("SELECT * FROM StochKitModelWrapper WHERE is_public = :1 AND model_name = :2", True, 'birth_death').get()
         if example_model is None:
-            save_model(birthdeath(), 'birth_death', "", is_public=True)
+            save_model(birthdeath(), 'birth_death', "", isSpatial = False, is_public=True)
 
         example_model = db.GqlQuery("SELECT * FROM StochKitModelWrapper WHERE is_public = :1 AND model_name = :2", True, 'lotkavolterra_oscillating').get()
         if example_model is None:
-           save_model(lotkavolterra_oscillating(), 'lotkavolterra_oscillating', "", is_public=True)
+           save_model(lotkavolterra_oscillating(), 'lotkavolterra_oscillating', "", isSpatial = False, is_public=True)
 
         example_model = db.GqlQuery("SELECT * FROM StochKitModelWrapper WHERE is_public = :1 AND model_name = :2", True, 'lotkavolterra_equilibrium').get()
         if example_model is None:
-            save_model(lotkavolterra_equilibrium(), 'lotkavolterra_equilibrium', "", is_public=True)
+            save_model(lotkavolterra_equilibrium(), 'lotkavolterra_equilibrium', "", isSpatial = False, is_public=True)
         
         example_model = db.GqlQuery("SELECT * FROM StochKitModelWrapper WHERE is_public = :1 AND model_name = :2", True, 'MichaelisMenten').get()
         if example_model is None:
-            save_model(MichaelisMenten(), 'MichaelisMenten', "", is_public=True)
+            save_model(MichaelisMenten(), 'MichaelisMenten', "", isSpatial = False, is_public=True)
 
         example_model = db.GqlQuery("SELECT * FROM StochKitModelWrapper WHERE is_public = :1 AND model_name = :2", True, 'schlogl').get()
         if example_model is None:
-            save_model(get_model_from_file('schlogl',open('examples/schlogl.xml')), 'schlogl', "", is_public=True)
+            save_model(get_model_from_file('schlogl',open('examples/schlogl.xml')), 'schlogl', "", isSpatial = False, is_public=True)
 
         example_model = db.GqlQuery("SELECT * FROM StochKitModelWrapper WHERE is_public = :1 AND model_name = :2", True, 'heat_shock_mass_action').get()
         if example_model is None:
-            save_model(get_model_from_file('heat_shock_mass_action',open('examples/heat_shock_mass_action.xml')), 'heat_shock_mass_action', "", is_public=True)
+            save_model(get_model_from_file('heat_shock_mass_action',open('examples/heat_shock_mass_action.xml')), 'heat_shock_mass_action', "", isSpatial = False, is_public=True)
 
 
 def get_model_from_file(name, file):
@@ -717,12 +717,12 @@ def do_import(handler, name, from_file = True, model_class=""):
         try:
             model.resolveParameters()
         # Save the model so the resolved parameter values are persisted
-        #save_model(model, name, user_id)
+        #save_model(model, name, user_id, isSpatial = False)
         except:
             raise ModelError("Could not resolve model parameters.")
     
         # Save the model to the datastore.
-        save_model(model, name, user_id)
+        save_model(model, name, user_id, isSpatial = False)
         
         # Add this model to cache
         add_model_to_cache(handler, name)
