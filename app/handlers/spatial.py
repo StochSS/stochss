@@ -284,7 +284,7 @@ class SpatialPage(BaseHandler):
             # model
             pymodel = pyurdme.URDMEModel(name=stochkit_model_obj.name)
             # mesh
-            pymodel.mesh = pyurdme.URDMEMesh.read_dolfin_mesh(mesh_filename)
+            pymodel.mesh = pyurdme.URDMEMesh.read_dolfin_mesh(str(mesh_filename))
             # timespan
             pymodel.timespan(numpy.arange(0,simulation_end_time, simulation_time_increment))
             # subdomains
