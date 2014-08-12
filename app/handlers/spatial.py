@@ -103,16 +103,56 @@ class SpatialPage(BaseHandler):
         return True
     
     def get(self):
-        # Query the datastore
-        all_models_q = db.GqlQuery("SELECT * FROM SpatialJobWrapper WHERE user_id = :1", self.user.user_id())
-        all_models=[]
-        for q in all_models_q.run():
-            all_models.append({ "name" : q.model.name,
-                                "id" : q.key().id(),
-                                "units" : q.model.units })
+        reqType = self.request.get('reqType')
+
+        if reqType == 'getJobInfo':
+            job = SpatialJobWrapper.get_by_id(int(self.request.get('id')))
+
+            if self.user.user_id() != job.userId:
+                self.response.headers['Content-Type'] = 'application/json'
+                self.response.write({ "status" : False, "msg" : "Not the right user" })
+
+            fstdoutHandle = open(job.outData + '/stdout', 'r')
+            stdout = fstdoutHandle.read()
+            fstdoutHandle.close()
+            
+            fstderrHandle = open(job.outData + '/stderr', 'r')
+            stderr = fstderrHandle.read()
+            fstderrHandle.close()
+            
+            self.response.headers['Content-Type'] = 'application/json'
+            self.response.write(json.dumps({ "id" : int(self.request.get('id')),
+                                             "status" : job.status,
+                                             "resource" : job.resource,
+                                             "modelName" : job.modelName,
+                                             "name" : job.jobName,
+                                             "stdout" : stdout,
+                                             "stderr" : stderr,
+                                             "indata" : json.loads(job.indata) }))
+            return
+        elif reqType == 'timeData':
+            job = SpatialJobWrapper.get_by_id(int(self.request.get('id')))
+
+            data = json.loads(self.request.get('data'))
+
+            trajectory = data["trajectory"]
+            timeIdx = data["timeIdx"]
+
+            with open(job.outData + '/results/result{0}'.format(trajectory)) as fd:
+                result = pickle.load(fd)
     
-        context = {'all_models': all_models}
-        self.render_response('simulate.html',**context)
+                species = result.model.get_species_map().keys()
+
+                threeJS = {}
+                print "exporting ", timeIdx
+                for specie in species:
+                    threeJS[specie] = result.export_to_three_js(specie, timeIdx)
+                    
+            self.response.content_type = 'application/json'
+            self.response.write(json.dumps( threeJS ))
+            return
+
+        self.render_response('spatial.html')
 
     def post(self):
         reqType = self.request.get('reqType')

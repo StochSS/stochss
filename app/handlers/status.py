@@ -212,12 +212,9 @@ class StatusPage(BaseHandler):
         if allSensQuery != None:
             jobs = list(allSensQuery.run())
 
-            print [x.key().id() for x in jobs]
-
             jobs = sorted(jobs, key = lambda x : (datetime.datetime.strptime(x.startTime, '%Y-%m-%d-%H-%M-%S') if hasattr(x, 'startTime') and x.startTime != None else ''), reverse = True)
 
             for number, job in enumerate(jobs):
-                print job.key().id()
                 number = len(jobs) - number
                 if job.resource == "local":
                     if job.status != "Finished" or job.status != "Failed":
@@ -280,7 +277,6 @@ class StatusPage(BaseHandler):
 
             for number, job in enumerate(jobs):
                 number = len(jobs) - number
-                print 'hi', job.outData
                 allExportJobs.append({ "startTime" : job.startTime,
                                        "status" : job.status,
                                        "number" : number,
@@ -298,12 +294,10 @@ class StatusPage(BaseHandler):
             jobs = sorted(jobs, key = lambda x : (datetime.datetime.strptime(x.startTime, '%Y-%m-%d-%H-%M-%S') if hasattr(x, 'startTime') and x.startTime != None else ''), reverse = True)
 
             for number, job in enumerate(jobs):
-                print number, job.pid
                 number = len(jobs) - number
                 if job.resource == "local" or not job.resource:
                     # First, check if the job is still running
                     res = service.checkTaskStatusLocal([job.pid])
-                    print job.pid, res[job.pid], job.jobName
                     if res[job.pid] and job.pid:
                         job.status = "Running"
                     else:
@@ -369,6 +363,44 @@ class StatusPage(BaseHandler):
                                        "id" : job.key().id()})
         
         context['allParameterJobs'] = allParameterJobs
+
+        allSpatialJobs = []
+        allSpatialJobsQuery = db.GqlQuery("SELECT * FROM SpatialJobWrapper WHERE userId = :1", self.user.user_id())
+
+        if allSpatialJobsQuery != None:
+            jobs = list(allSpatialJobsQuery.run())
+
+            jobs = sorted(jobs, key = lambda x : (datetime.datetime.strptime(x.startTime, '%Y-%m-%d-%H-%M-%S') if hasattr(x, 'startTime') and x.startTime != None else ''), reverse = True)
+
+            for number, job in enumerate(jobs):
+                number = len(jobs) - number
+                if job.resource == "local" or not job.resource:
+                    # First, check if the job is still running
+                    res = service.checkTaskStatusLocal([job.pid])
+                    if res[job.pid] and job.pid:
+                        job.status = "Running"
+                    else:
+                        try:
+                            fd = os.open("{0}/stderr".format(job.outData), os.O_RDONLY)
+                            f = os.fdopen(fd)
+                            stderr = f.read().strip()
+                            f.close()
+                        except:
+                            stderr = '1'
+
+                        if len(stderr) == 0:
+                            job.status = "Finished"
+                        else:
+                            job.status = "Failed"
+
+                job.put()
+
+                allSpatialJobs.append({ "status" : job.status,
+                                        "name" : job.jobName,
+                                        "number" : number,
+                                        "id" : job.key().id()})
+        
+        context['allSpatialJobs'] = allSpatialJobs
     
         return dict(result,**context)
 
@@ -676,7 +708,6 @@ class VisualizePage(BaseHandler):
         #logging.info(str(meanfile))
         try:
             # Try to grab them from the mean.txt file
-            print params
             if params['exec_type'] == 'deterministic':
                 meanfile = params['job_folder'] + '/result/output.txt'
             else:
