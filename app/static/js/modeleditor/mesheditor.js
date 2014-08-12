@@ -99,7 +99,8 @@ MeshEditor.Controller = Backbone.View.extend(
             
             var loader = new THREE.JSONLoader();
             function load_geometry(model){
-                var material = new THREE.MeshLambertMaterial({color: "back", wireframe:true});
+                var material=new THREE.MeshBasicMaterial( { vertexColors: THREE.VertexColors, wireframe:true,transparent:false,opacity: 1} );
+                //var material = new THREE.MeshLambertMaterial({color: "back", wireframe:true});
 	        
                 material.side = THREE.DoubleSide;
                 mesh = new THREE.Mesh(model.geometry,material);
@@ -107,7 +108,7 @@ MeshEditor.Controller = Backbone.View.extend(
             }
 
 
-            var model = loader.parse($.parseJSON(pyurdmeMeshJsonData));
+            var model = loader.parse(pyurdmeMeshJsonData);
             load_geometry(model);
 
             var controls = new THREE.OrbitControls( camera, renderer.domElement );
@@ -554,6 +555,29 @@ Count in each voxel \
 
             if(typeof this.data != 'undefined')
             {
+                //Draw the subdomain selector stuff and hook up event handlers
+                this.selectedSubdomains = {};
+
+                $( '#subdomainSelect' ).empty();
+
+                for(var i in this.data.subdomains)
+                {
+                    var checkbox = $( '<div><input type="checkbox">Subdomain ' + this.data.subdomains[i] + '</div>' ).appendTo(  $( '#subdomainSelect' ) ).find( 'input' );
+
+                    this.selectedSubdomains[this.data.subdomains[i]] = false;
+
+                    checkbox.change(_.bind(_.partial(function(subdomain, event) {
+                        this.selectedSubdomains[subdomain] = $( event.target ).prop('checked');
+
+                        $.ajax( { type : 'POST',
+                                  url: '/modeleditor/mesheditor',//'/FileServer/large/processedMeshFiles/' + exampleMeshes[i].processedMeshFileId + '/file.dat'
+                                  data: { reqType : 'getMesh',
+                                          data : JSON.stringify( { id : this.data['meshWrapperId'],
+                                                                   selectedSubdomains : this.selectedSubdomains } ) },
+                                  success : _.bind( this.meshDataPreview, this) });
+                    }, this.data.subdomains[i]), this));
+                }
+
                 //Add initial conditions dom!!
                 this.drawInitialConditionsDom();
 
@@ -694,7 +718,11 @@ Count in each voxel \
                     {
                         newOption.find('input').click();
 
-                        $.ajax( { url: '/FileServer/large/processedMeshFiles/' + exampleMeshes[i].processedMeshFileId + '/file.dat',
+                        $.ajax( { type : 'POST',
+                                  url: '/modeleditor/mesheditor',//'/FileServer/large/processedMeshFiles/' + exampleMeshes[i].processedMeshFileId + '/file.dat'
+                                  data: { reqType : 'getMesh',
+                                          data : JSON.stringify( { id : exampleMeshes[i].id,
+                                                                   selectedSubdomains : this.selectedSubdomains } ) },
                                   success : _.bind( this.meshDataPreview, this) });
                     }
                     // When the initialDataFiles gets selected, fill the preview box with a preview of the mesh
@@ -702,7 +730,11 @@ Count in each voxel \
                         //this.mesh = mesh;
                         this.setMeshSelect(data.id);
 
-                        $.ajax( { url: '/FileServer/large/processedMeshFiles/' + data.processedMeshFileId + '/file.dat',
+                        $.ajax( { type : 'POST',
+                                  url: '/modeleditor/mesheditor',//'/FileServer/large/processedMeshFiles/' + exampleMeshes[i].processedMeshFileId + '/file.dat'
+                                  data: { reqType : 'getMesh',
+                                          data: JSON.stringify( { id : exampleMeshes[i].id,
+                                                                  selectedSubdomains : this.selectedSubdomains } ) },
                                   success : _.bind( this.meshDataPreview, this) });
                     }, exampleMeshes[i]), this));
                 }

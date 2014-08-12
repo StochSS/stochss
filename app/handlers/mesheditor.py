@@ -10,6 +10,8 @@ import fileserver
 import shlex
 import sys
 import pyurdme
+import tempfile
+import shutil
 
 from stochssapp import *
 from stochss.model import *
@@ -226,6 +228,50 @@ class MeshEditorPage(BaseHandler):
 
             self.response.write(json.dumps( data ))
             return
+        elif self.request.get('reqType') == 'getMesh':
+            data = json.loads( self.request.get('data') );
+
+            meshWrapperDb = MeshWrapper.get_by_id(data['id'])
+            meshFileObj = fileserver.FileManager.getFile(self, meshWrapperDb.meshFileId)
+            meshFileName = meshFileObj["storePath"]
+
+            subdomainFileObj = fileserver.FileManager.getFile(self, meshWrapperDb.subdomainsFileId)
+            meshSubdomainFileName = subdomainFileObj["storePath"]
+
+            subdomains = []
+            fhandle = open(meshSubdomainFileName, 'r')
+            #print fhandle.read()
+            for line in fhandle.read().split():
+                #print line
+                v, s = line.strip().split(',')
+
+                v = int(v)
+                s = int(float(s))
+
+                subdomains.append((v, s))
+            fhandle.close()
+
+
+            subdomains = [y for x, y in sorted(subdomains, key = lambda x : x[0])]
+
+            #print data['selectedSubdomains']
+
+            colors = []
+            for subdomain in subdomains:
+                if data['selectedSubdomains'][str(subdomain)]:
+                    colors.append('red')
+                else:
+                    colors.append('black')
+
+            #for subdomain in data['subdomains']:
+            #    colors[subdomain] = 'black'
+
+            threejs = pyurdme.URDMEMesh.read_dolfin_mesh(str(meshFileName)).export_to_three_js(colors = colors)#_subdomains_to_threejs(subdomains = colors)
+
+            self.response.write( threejs )
+            return
+            
+
         elif self.request.get('reqType') == 'setInitialConditions':
             data = json.loads( self.request.get('data') );
 
