@@ -292,7 +292,7 @@ class backendservices():
         returns a dictionary as {"pid1":"status", "pid2":"status", "pid3":"status"}
         '''
         res = {}
-        logging.info("checkTaskStatusLocal : inside with params %s", str(pids))
+        logging.info("checkTaskStatusLocal : inside with params {0}".format(pids))
         try:
             for pid in pids:
                 try:
@@ -300,10 +300,10 @@ class backendservices():
                     res[pid] = True
                 except Exception,e:
                     res[pid] = False
-            logging.info("checkTaskStatusLocal : exiting with result : %s", str(res))
+            logging.info("checkTaskStatusLocal : exiting with result : {0}".format(res))
             return res
         except Exception as e:
-            logging.error("checkTaskStatusLocal: Exiting with error : %s", str(e))
+            logging.error("checkTaskStatusLocal: Exiting with error : {0}".format(e))
             return None
     
     def checkTaskStatusCloud(self, pids):

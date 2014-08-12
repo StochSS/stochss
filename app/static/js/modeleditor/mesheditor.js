@@ -576,9 +576,9 @@ Count in each voxel \
                     $( "<th></th>" ).appendTo( reactionsSubdomainsTableHeader );
 
                     //Insert the col. header elements (the subdomain columns)
-                    for(var subdomainId in subdomains)
+                    for(var subdomainIdx in subdomains)
                     {
-                        $( "<th>" + subdomainId + "</th>" ).appendTo( reactionsSubdomainsTableHeader );
+                        $( "<th>" + subdomains[subdomainIdx] + "</th>" ).appendTo( reactionsSubdomainsTableHeader );
                     }
 
                     //Set the width of the table title appropriatelike
@@ -632,9 +632,9 @@ Count in each voxel \
                     $( "<th></th>" ).appendTo( speciesSubdomainTableHeader );
 
                     //Insert the col. header elements (the subdomain columns)
-                    for(var subdomainId in subdomains)
+                    for(var subdomainIdx in subdomains)
                     {
-                        $( "<th>" + subdomainId + "</th>" ).appendTo( speciesSubdomainTableHeader );
+                        $( "<th>" + subdomains[subdomainIdx] + "</th>" ).appendTo( speciesSubdomainTableHeader );
                     }
 
                     //Set the width of the table title appropriatelike
@@ -643,6 +643,7 @@ Count in each voxel \
                     //Insert a row for every species
                     for(var speciesId in speciesSubdomainAssignments)
                     {
+                        
                         var row = $( "<tr></tr>" ).appendTo( speciesSubdomainTableBody );
 
                         $( "<td>" + speciesId + "</td>" ).appendTo( row );

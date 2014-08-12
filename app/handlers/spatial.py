@@ -348,9 +348,14 @@ class SpatialPage(BaseHandler):
             for s, sd_list in species_subdomain_assigments.iteritems():
                 pymodel.restrict(s, sd_list)
             # parameters
-            pymodel.listOfParameters = stochkit_model_obj.listOfParameters
+            for p_name, p in stochkit_model_obj.listOfParameters.iteritems():
+                pymodel.add_parameter(pyurdme.Parameter(name=p_name, expression=p.expression))
             # reactions
-            pymodel.listOfReactions = stochkit_model_obj.listOfReactions
+            for r_name, r in stochkit_model_obj.listOfReactions.iteritems():
+                if r.massaction:
+                    pymodel.add_reaction(pyurdme.Reaction(name=r_name, reactants=r.reactants, products=r.products, rate=r.marate, massaction=True))
+                else:
+                    pymodel.add_reaction(pyurdme.Reaction(name=r_name, reactants=r.reactants, products=r.products, propensity_function=r.propensity_function))
             # reaction subdomain restrictions
             for r in reaction_subdomain_assigments:
                 pymodel.listOfReactions[r].restrict_to = reaction_subdomain_assigments[r]
