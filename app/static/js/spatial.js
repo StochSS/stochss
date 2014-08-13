@@ -172,7 +172,7 @@ Spatial.Controller = Backbone.View.extend(
                 //Set up slider
                 var slider = $( '#timeSelect' );
 
-                slider.prop('max', this.jobInfo.indata.time - this.jobInfo.indata.increment);
+                slider.prop('max', this.jobInfo.indata.time);
                 slider.prop('step', this.jobInfo.indata.increment);
 
                 //Set up species select

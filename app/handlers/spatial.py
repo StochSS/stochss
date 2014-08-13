@@ -271,110 +271,114 @@ class SpatialPage(BaseHandler):
 
         self.response.write(json.dumps({ 'status' : True,
                                          'msg' : 'Job downloaded'}))
-    
+   
+    def construct_pyurdme_model(self, data):
+        '''
+        '''
+        json_model_refs = ModelManager.getModel(self, data["id"], modelAsString = False) # data["id"] is the model id of the selected model I think
+        
+        stochkit_model_obj = json_model_refs["model"]
+        #print 'json_model_refs["spatial"]["mesh_wrapper_id"]:', json_model_refs["spatial"]["mesh_wrapper_id"]
+        meshWrapperDb = mesheditor.MeshWrapper.get_by_id(json_model_refs["spatial"]["mesh_wrapper_id"])
+
+        try:
+            meshFileObj = fileserver.FileManager.getFile(self, meshWrapperDb.meshFileId)
+            mesh_filename = meshFileObj["storePath"]
+        except IOError as e: 
+            #blowup here, need a mesh
+            #self.response.write(json.dumps({"status" : False,
+            #                                "msg" : "No Mesh file given"}))
+            #return
+            raise Exception("No Mesh file given")
+            #TODO: if we get advanced options, we don't need a mesh
+
+        try:    
+            subdomainFileObj = fileserver.FileManager.getFile(self, meshWrapperDb.subdomainsFileId)
+            mesh_subdomain_filename = subdomainFileObj["storePath"]
+        except IOError as e:
+            mesh_subdomain_filename = None
+
+        reaction_subdomain_assigments = json_model_refs["spatial"]["reactions_subdomain_assignments"]  #e.g. {'R1':[1,2,3]}
+        species_subdomain_assigments = json_model_refs["spatial"]["species_subdomain_assignments"]  #e.g. {'S1':[1,2,3]}
+        species_diffusion_coefficients = json_model_refs["spatial"]["species_diffusion_coefficients"] #e.g. {'S1':0.5}
+        initial_conditions = json_model_refs["spatial"]["initial_conditions"] #e.g.  { ic0 : { type : "place", species : "S0",  x : 5.0, y : 10.0, z : 1.0, count : 5000 }, ic1 : { type : "scatter",species : "S0", subdomain : 1, count : 100 }, ic2 : { type : "distribute",species : "S0", subdomain : 2, count : 100 } }
+        
+        
+        simulation_end_time = data['time']
+        simulation_time_increment = data['increment']
+        simulation_algorithm = data['algorithm'] # Don't trust this! I haven't implemented the algorithm selection for this yet
+        simulation_exec_type = data['execType'] # This should contain 'spatial' -- Not that you really need it, only spatial requests will be routed here 
+        simulation_realizations = data['realizations']
+        simulation_seed = data['seed'] # If this is set to -1, it means choose a seed at random! (Whatever that means)
+        
+        #### Construct the PyURDME object from the Stockkit model and mesh and other inputs
+        # model
+        pymodel = pyurdme.URDMEModel(name=stochkit_model_obj.name)
+        # mesh
+        pymodel.mesh = pyurdme.URDMEMesh.read_dolfin_mesh(str(mesh_filename))
+        # timespan
+        pymodel.timespan(numpy.arange(0,simulation_end_time+simulation_time_increment, simulation_time_increment))
+        # subdomains
+        if mesh_subdomain_filename is not None:
+            #if we get a 'mesh_subdomain_filename' read it in and use model.set_subdomain_vector() to set the subdomain
+            try:
+                with open(mesh_subdomain_filename) as fd:
+                    input_sd = numpy.zeros(len(pymodel.mesh.coordinates()))
+                    for line in fd:
+                        ndx, val = line.split(',', 2)
+                        input_sd[int(ndx)] = int(float((val.strip())))
+                    pymodel.set_subdomain_vector(input_sd)
+            except IOError as e:
+                #self.response.write(json.dumps({"status" : False,
+                #                                "msg" : "Mesh subdomain file specified, but file not found: {0}".format(e)}))
+                #return
+                raise Exception("Mesh subdomain file specified, but file not found: {0}".format(e))
+        # species
+        for s in stochkit_model_obj.listOfSpecies:
+            pymodel.add_species(pyurdme.Species(name=s, diffusion_constant=float(species_diffusion_coefficients[s])))
+        # species subdomain restriction
+        for s, sd_list in species_subdomain_assigments.iteritems():
+            spec = pymodel.listOfSpecies[s]
+            pymodel.restrict(spec, sd_list)
+        # parameters
+        for p_name, p in stochkit_model_obj.listOfParameters.iteritems():
+            pymodel.add_parameter(pyurdme.Parameter(name=p_name, expression=p.expression))
+        # reactions
+        for r_name, r in stochkit_model_obj.listOfReactions.iteritems():
+            if r.massaction:
+                pymodel.add_reaction(pyurdme.Reaction(name=r_name, reactants=r.reactants, products=r.products, rate=r.marate, massaction=True))
+            else:
+                pymodel.add_reaction(pyurdme.Reaction(name=r_name, reactants=r.reactants, products=r.products, propensity_function=r.propensity_function))
+        # reaction subdomain restrictions
+        for r in reaction_subdomain_assigments:
+            pymodel.listOfReactions[r].restrict_to = reaction_subdomain_assigments[r]
+        # Initial Conditions
+        # initial_conditions = json_model_refs["spatial"]["initial_conditions"] #e.g.  { ic0 : { type : "place", species : "S0",  x : 5.0, y : 10.0, z : 1.0, count : 5000 }, ic1 : { type : "scatter",species : "S0", subdomain : 1, count : 100 }, ic2 : { type : "distribute",species : "S0", subdomain : 2, count : 100 } }
+        for ic_name, ic in initial_conditions.iteritems():
+            spec = pymodel.listOfSpecies[ic['species']]
+            if ic['type'] == "place":
+                pymodel.self.set_initial_condition_place_near({spec:int(ic['count'])}, point=[float(ic['x']),float(ic['y']),float(ic['z'])])
+            elif ic['type'] == "scatter":
+                pymodel.set_initial_condition_scatter({spec:int(ic['count'])},subdomains=[int(ic['subdomain'])])
+            elif ic['type'] == "distribute":
+                pymodel.set_initial_condition_distribute_uniformly({spec:int(ic['count'])},subdomains=[int(ic['subdomain'])])
+            else:
+                #self.response.write(json.dumps({"status" : False,
+                #                                "msg" : "Unknown initial condition type {0}".format(ic['type'])}))
+                #return
+                raise Exception("Unknown initial condition type {0}".format(ic['type']))
+
+        return pymodel
+
     def runLocal(self, data):
         ''' Run a PyURDME run using local compute recources. '''
         try:
-            json_model_refs = ModelManager.getModel(self, data["id"], modelAsString = False) # data["id"] is the model id of the selected model I think
-            
-            stochkit_model_obj = json_model_refs["model"]
-            print 'json_model_refs["spatial"]["mesh_wrapper_id"]:', json_model_refs["spatial"]["mesh_wrapper_id"]
-            meshWrapperDb = mesheditor.MeshWrapper.get_by_id(json_model_refs["spatial"]["mesh_wrapper_id"])
-
-            try:
-                meshFileObj = fileserver.FileManager.getFile(self, meshWrapperDb.meshFileId)
-                mesh_filename = meshFileObj["storePath"]
-            except IOError as e: 
-                #blowup here, need a mesh
-                self.response.write(json.dumps({"status" : False,
-                                                "msg" : "No Mesh file given"}))
-                return
-                #TODO: if we get advanced options, we don't need a mesh
-
-            try:    
-                subdomainFileObj = fileserver.FileManager.getFile(self, meshWrapperDb.subdomainsFileId)
-                mesh_subdomain_filename = subdomainFileObj["storePath"]
-            except IOError as e:
-                mesh_subdomain_filename = None
-
-            reaction_subdomain_assigments = json_model_refs["spatial"]["reactions_subdomain_assignments"]  #e.g. {'R1':[1,2,3]}
-            species_subdomain_assigments = json_model_refs["spatial"]["species_subdomain_assignments"]  #e.g. {'S1':[1,2,3]}
-            species_diffusion_coefficients = json_model_refs["spatial"]["species_diffusion_coefficients"] #e.g. {'S1':0.5}
-            initial_conditions = json_model_refs["spatial"]["initial_conditions"] #e.g.  { ic0 : { type : "place", species : "S0",  x : 5.0, y : 10.0, z : 1.0, count : 5000 }, ic1 : { type : "scatter",species : "S0", subdomain : 1, count : 100 }, ic2 : { type : "distribute",species : "S0", subdomain : 2, count : 100 } }
-            
-            
-            simulation_end_time = data['time']
-            simulation_time_increment = data['increment']
+            #####
+            pymodel = self.construct_pyurdme_model(data)
+            #####
             simulation_algorithm = data['algorithm'] # Don't trust this! I haven't implemented the algorithm selection for this yet
-            simulation_exec_type = data['execType'] # This should contain 'spatial' -- Not that you really need it, only spatial requests will be routed here 
             simulation_realizations = data['realizations']
             simulation_seed = data['seed'] # If this is set to -1, it means choose a seed at random! (Whatever that means)
-            
-
-            ##################
-            print "model.name: ",stochkit_model_obj.name
-            #mesh_filename = '/Users/brian/Desktop/research/stochss/app/static/spatial/unit_cube_with_membrane_mesh.xml'
-            #mesh_filename = '/Users/brian/Desktop/research/stochss/app/static/spatial/tmpOTmC0d.xml'
-            print "mesh_filename: ",mesh_filename
-            print "initial_conditions: ",initial_conditions
-            print "PATH: ",os.getenv('PATH')
-            ##################
-
-            #### Construct the PyURDME object from the Stockkit model and mesh and other inputs
-            # model
-            pymodel = pyurdme.URDMEModel(name=stochkit_model_obj.name)
-            # mesh
-            pymodel.mesh = pyurdme.URDMEMesh.read_dolfin_mesh(str(mesh_filename))
-            # timespan
-            pymodel.timespan(numpy.arange(0,simulation_end_time, simulation_time_increment))
-            # subdomains
-            if mesh_subdomain_filename is not None:
-                #if we get a 'mesh_subdomain_filename' read it in and use model.set_subdomain_vector() to set the subdomain
-                try:
-                    with open(mesh_subdomain_filename) as fd:
-                        input_sd = numpy.zeros(len(pymodel.mesh.coordinates()))
-                        for line in fd:
-                            ndx, val = line.split(',', 2)
-                            input_sd[int(ndx)] = int(float((val.strip())))
-                        pymodel.set_subdomain_vector(input_sd)
-                except IOError as e:
-                    self.response.write(json.dumps({"status" : False,
-                                                    "msg" : "Mesh subdomain file specified, but file not found: {0}".format(e)}))
-                    return
-            # species
-            for s in stochkit_model_obj.listOfSpecies:
-                pymodel.add_species(pyurdme.Species(name=s, diffusion_constant=float(species_diffusion_coefficients[s])))
-            # species subdomain restriction
-            for s, sd_list in species_subdomain_assigments.iteritems():
-                pymodel.restrict(s, sd_list)
-            # parameters
-            for p_name, p in stochkit_model_obj.listOfParameters.iteritems():
-                pymodel.add_parameter(pyurdme.Parameter(name=p_name, expression=p.expression))
-            # reactions
-            for r_name, r in stochkit_model_obj.listOfReactions.iteritems():
-                if r.massaction:
-                    pymodel.add_reaction(pyurdme.Reaction(name=r_name, reactants=r.reactants, products=r.products, rate=r.marate, massaction=True))
-                else:
-                    pymodel.add_reaction(pyurdme.Reaction(name=r_name, reactants=r.reactants, products=r.products, propensity_function=r.propensity_function))
-            # reaction subdomain restrictions
-            for r in reaction_subdomain_assigments:
-                pymodel.listOfReactions[r].restrict_to = reaction_subdomain_assigments[r]
-            # Initial Conditions
-            # initial_conditions = json_model_refs["spatial"]["initial_conditions"] #e.g.  { ic0 : { type : "place", species : "S0",  x : 5.0, y : 10.0, z : 1.0, count : 5000 }, ic1 : { type : "scatter",species : "S0", subdomain : 1, count : 100 }, ic2 : { type : "distribute",species : "S0", subdomain : 2, count : 100 } }
-            for ic_name, ic in initial_conditions.iteritems():
-                spec = pymodel.listOfSpecies[ic['species']]
-                if ic['type'] == "place":
-                    pymodel.self.set_initial_condition_place_near({spec:ic['count']}, point=[ic['x'],ic['y'],ic['z']])
-                elif ic['type'] == "scatter":
-                    pymodel.set_initial_condition_scatter({spec:ic['count']},subdomains=[ic['subdomain']])
-                elif ic['type'] == "distribute":
-                    pymodel.set_initial_condition_distribute_uniformly({spec:ic['count']},subdomains=[ic['subdomain']])
-                else:
-                    self.response.write(json.dumps({"status" : False,
-                                                    "msg" : "Unknown initial condition type {0}".format(ic['type'])}))
-                    return
-
-
             #####
 
             path = os.path.abspath(os.path.dirname(__file__))
@@ -388,7 +392,7 @@ class SpatialPage(BaseHandler):
             job.jobName = data["jobName"]
             job.indata = json.dumps(data)
             job.outData = dataDir
-            job.modelName = stochkit_model_obj.name
+            job.modelName = pymodel.name
             job.resource = "local"
 
             job.status = "Running"
@@ -416,7 +420,8 @@ class SpatialPage(BaseHandler):
         except Exception as e: 
             traceback.print_exc()
             self.response.write(json.dumps({"status" : False,
-                                            "msg" : "{0}: {1}".format(type(e).__name__, e)}))
+                                            "msg" : "{0}".format(e)}))
+                                            #"msg" : "{0}: {1}".format(type(e).__name__, e)}))
             return
     
     # This takes in the unserialized JSON object data and runs a model!
