@@ -835,7 +835,7 @@ Count in each voxel \
                 if(!data['meshWrapperId'])
                 {
                     // Have something selected
-                    meshTableBody.find('input').eq(0).click();
+                    //meshTableBody.find('input').eq(0).click();
                 }
             }
         },
