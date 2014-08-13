@@ -115,7 +115,9 @@ Spatial.Controller = Backbone.View.extend(
             var slider = $( event.target );
 
             this.timeIdx = Math.round( slider.val() / slider.prop('step') );
-            $( "#meshPreview" ).text("Loading data...");
+            //$( '#timeSelectDisplay' ).text('Time: '+this.timeIdx)
+            $( '#timeSelectDisplay' ).text('Time: ' + slider.val())
+            $( "#meshPreview" ).html("<CENTER><H1>Rendering...</H1></CENTER>");
 
             $.ajax( { type : "GET",
                       url : "/spatial",
