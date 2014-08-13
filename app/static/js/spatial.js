@@ -115,6 +115,7 @@ Spatial.Controller = Backbone.View.extend(
             var slider = $( event.target );
 
             this.timeIdx = Math.round( slider.val() / slider.prop('step') );
+            $( "#meshPreview" ).text("Loading data...");
 
             $.ajax( { type : "GET",
                       url : "/spatial",
@@ -133,7 +134,11 @@ Spatial.Controller = Backbone.View.extend(
 
             this.meshData = data;
 
-            for(var specie in data) {
+            var sortedSpecies = _.keys(data).sort();
+
+            for(var i in sortedSpecies) {
+                var specie = sortedSpecies[i];
+
                 var input = $( '<div><input type="radio" name="speciesSelect" value="' + specie + '">' + specie + '</div>' ).appendTo( $( '#speciesSelect' ) ).find( 'input' );
 
                 // Register event handler
