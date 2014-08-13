@@ -403,7 +403,7 @@ logging.getLogger().setLevel(logging.DEBUG)
 
 if __name__ == '__main__':
     sys.path.append(os.path.join(os.path.dirname(__file__), 'lib'))
-    print sys.path
+    #print sys.path
     import boto
         
     main()

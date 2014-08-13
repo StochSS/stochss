@@ -126,7 +126,9 @@ class ModelManager():
 
     @staticmethod
     def createModel(handler, model, modelAsString = True, rename = None):
-        raise Exception("This isn't working cause the spatial bit isn't implemented right")
+        print "createModel(): rename = {0}".format(rename)
+        print "createModel(): model = {0}".format(model)
+        #raise Exception("This isn't working cause the spatial bit isn't implemented right")
     
         userID = None
 
@@ -157,6 +159,11 @@ class ModelManager():
         else:
             name = "tmpname"
 
+        if 'isSpatial' in model:
+            modelWrap.isSpatial = model['isSpatial']
+        if 'spatial' in model:
+            modelWrap.spatial = model['spatial']
+
         modelWrap.model_name = name
         if modelAsString:
             modelWrap.model = StochMLDocument.fromString(model["model"]).toModel(name)
@@ -173,6 +180,7 @@ class ModelManager():
         modelWrap.attributes = attributes
 
         modelWrap.user_id = userID
+        print "createModel(): modelWrap= {0}".format(modelWrap)
         return modelWrap.put().id()
 
     @staticmethod
@@ -182,7 +190,8 @@ class ModelManager():
 
     @staticmethod
     def updateModel(handler, model):
-        raise Exception("This isn't working cause the spatial bit isn't implemented right 2")
+        print "createModel(): model = {0}".format(model)
+        #raise Exception("This isn't working cause the spatial bit isn't implemented right 2")
 
         modelWrap = StochKitModelWrapper.get_by_id(model["id"])
         print model["name"]
