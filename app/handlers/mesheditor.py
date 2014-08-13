@@ -25,7 +25,6 @@ class MeshWrapper(db.Model):
     name = db.StringProperty()
     description = db.TextProperty()
     meshFileId = db.IntegerProperty()
-    processedMeshFileId = db.IntegerProperty()
     subdomainsFileId = db.IntegerProperty()
 
     def toJSON(self):
@@ -33,7 +32,6 @@ class MeshWrapper(db.Model):
                  "name" : self.name,
                  "description" : self.description,
                  "meshFileId" : self.meshFileId,
-                 "processedMeshFileId" : self.processedMeshFileId,
                  "subdomainsFileId" : self.subdomainsFileId,
                  "id" : self.key().id() }
 
@@ -74,8 +72,6 @@ class MeshEditorPage(BaseHandler):
                 #handle = subprocess.Popen(shlex.split('{0}/processMesh.py {1}'.format(path, os.path.join(base, fileName))), stdout = subprocess.PIPE, stderr = subprocess.PIPE)
                 #stdout, stderr = handle.communicate()
 
-                threejs = pyurdme.URDMEMesh.read_dolfin_mesh(os.path.join(base, fileName)).export_to_three_js()
-
                 # To get the subdomains, there is a .txt file stored along with every .xml
                 baseName, ext = os.path.splitext(fileName)
                 subdomainsFile = open(os.path.join(base, baseName + '.txt'), 'r')
@@ -86,13 +82,10 @@ class MeshEditorPage(BaseHandler):
                 meshFileId = fileserver.FileManager.createFile(self, "meshFiles", fileName, meshFile.read(), 777)
                 meshFile.close()
 
-                processedMeshFileId = fileserver.FileManager.createFile(self, "processedMeshFiles", fileName, threejs, 777)
-                
                 meshDb.userId = self.user.user_id()
                 meshDb.name = baseName
                 meshDb.description = descriptions[fileName]
                 meshDb.meshFileId = int(meshFileId)
-                meshDb.processedMeshFileId = int(processedMeshFileId)
                 meshDb.subdomainsFileId = int(subdomainsFileId)
         
                 meshDb.put()
@@ -177,41 +170,49 @@ class MeshEditorPage(BaseHandler):
 
             meshWrapperId = data['meshWrapperId']
 
-            # Acquire updated subdomains
+            # Acquire updated subdomains (if there are any)
             meshDb = MeshWrapper.get_by_id(meshWrapperId)
 
-            sdFile = fileserver.FileManager.getFile(self, meshDb.subdomainsFileId)
             meshFile = fileserver.FileManager.getFile(self, meshDb.meshFileId)
+            
+            row.spatial['subdomains'] = []
+            if meshDb.subdomainsFileId:
+                sdFile = fileserver.FileManager.getFile(self, meshDb.subdomainsFileId)
+                newSubdomains = set()
 
-            newSubdomains = set()
-
-            sdHandle = open(sdFile['storePath'], 'r')
-            for line in sdHandle:
-                v, l = line.strip().split(',')
+                sdHandle = open(sdFile['storePath'], 'r')
+                for line in sdHandle:
+                    v, l = line.strip().split(',')
                 
-                l = int(float(l))
+                    l = int(float(l))
                 
-                newSubdomains.add(l)
+                    newSubdomains.add(l)
 
-            #print newSubdomains
-            sdHandle.close()
+                sdHandle.close()
 
-            row.spatial['subdomains'] = list(newSubdomains)
+                row.spatial['subdomains'] = list(newSubdomains)
+
+                for speciesId in row.spatial['species_subdomain_assignments']:
+                    selectedSubdomains = row.spatial['species_subdomain_assignments'][speciesId]
+
+                    for subdomain in selectedSubdomains:
+                        if subdomain not in newSubdomains:
+                            selectedSubdomains.remove(subdomain)
+
+                for reactionId in row.spatial['reactions_subdomain_assignments']:
+                    selectedSubdomains = row.spatial['reactions_subdomain_assignments'][reactionId]
+
+                    for subdomain in selectedSubdomains:
+                        if subdomain not in newSubdomains:
+                            selectedSubdomains.remove(subdomain)
+            else:
+                for speciesId in row.spatial['species_subdomain_assignments']:
+                    row.spatial['species_subdomain_assignments'][speciesId] = []
+
+                for reactionId in row.spatial['reactions_subdomain_assignments']:
+                    row.spatial['reactions_subdomain_assignments'][reactionId] = []
+
             row.spatial['mesh_wrapper_id'] = meshWrapperId
-
-            for speciesId in row.spatial['species_subdomain_assignments']:
-                selectedSubdomains = row.spatial['species_subdomain_assignments'][speciesId]
-
-                for subdomain in selectedSubdomains:
-                    if subdomain not in newSubdomains:
-                        selectedSubdomains.remove(subdomain)
-
-            for reactionId in row.spatial['reactions_subdomain_assignments']:
-                selectedSubdomains = row.spatial['reactions_subdomain_assignments'][reactionId]
-
-                for subdomain in selectedSubdomains:
-                    if subdomain not in newSubdomains:
-                        selectedSubdomains.remove(subdomain)
 
             row.put()
             
@@ -235,52 +236,67 @@ class MeshEditorPage(BaseHandler):
             meshFileObj = fileserver.FileManager.getFile(self, meshWrapperDb.meshFileId)
             meshFileName = meshFileObj["storePath"]
 
-            subdomainFileObj = fileserver.FileManager.getFile(self, meshWrapperDb.subdomainsFileId)
-            meshSubdomainFileName = subdomainFileObj["storePath"]
+            colors = None
+            print meshWrapperDb.subdomainsFileId
+            if meshWrapperDb.subdomainsFileId != None:
+                subdomainFileObj = fileserver.FileManager.getFile(self, meshWrapperDb.subdomainsFileId)
+                meshSubdomainFileName = subdomainFileObj["storePath"]
 
-            subdomains = []
-            fhandle = open(meshSubdomainFileName, 'r')
-            #print fhandle.read()
-            for line in fhandle.read().split():
-                #print line
-                v, s = line.strip().split(',')
+                subdomains = []
+                fhandle = open(meshSubdomainFileName, 'r')
+                for line in fhandle.read().split():
+                    v, s = line.strip().split(',')
 
-                v = int(v)
-                s = int(float(s))
+                    v = int(v)
+                    s = int(float(s))
 
-                subdomains.append((v, s))
-            fhandle.close()
+                    subdomains.append((v, s))
+                fhandle.close()
 
+                subdomains = [y for x, y in sorted(subdomains, key = lambda x : x[0])]
 
-            subdomains = [y for x, y in sorted(subdomains, key = lambda x : x[0])]
+                colors = []
+                for subdomain in subdomains:
+                    if data['selectedSubdomains'][str(subdomain)]:
+                        colors.append('red')
+                    else:
+                        colors.append('black')
 
-            #print data['selectedSubdomains']
-
-            colors = []
-            for subdomain in subdomains:
-                if data['selectedSubdomains'][str(subdomain)]:
-                    colors.append('red')
-                else:
-                    colors.append('black')
-
-            #for subdomain in data['subdomains']:
-            #    colors[subdomain] = 'black'
-
-            threejs = pyurdme.URDMEMesh.read_dolfin_mesh(str(meshFileName)).export_to_three_js(colors = colors)#_subdomains_to_threejs(subdomains = colors)
+            if colors:
+                threejs = pyurdme.URDMEMesh.read_dolfin_mesh(str(meshFileName)).export_to_three_js(colors = colors)
+            else:
+                threejs = pyurdme.URDMEMesh.read_dolfin_mesh(str(meshFileName)).export_to_three_js()
 
             self.response.write( threejs )
             return
-            
-
         elif self.request.get('reqType') == 'setInitialConditions':
             data = json.loads( self.request.get('data') );
 
             row.spatial['initial_conditions'] = data['initialConditions']
 
-            print data['initialConditions']
-            print row.spatial['initial_conditions']
+            #print data['initialConditions']
+            #print row.spatial['initial_conditions']
 
             row.put()
 
-            self.response.write( json.dumps({ "status" : True, "msg" : "Initial conditions updated"}) )
+            self.response.write( json.dumps( { "status" : True, "msg" : "Initial conditions updated" } ) )
+            return
+        elif reqType == 'addMeshWrapper':
+            meshDb = MeshWrapper()
+            data = json.loads(self.request.get('data'))
+
+            print data
+
+            meshFile = fileserver.FileManager.getFile(self, data['meshFileId'])
+            basename, ext = os.path.splitext(meshFile['path'])
+            
+            meshDb.userId = self.user.user_id()
+            meshDb.name = basename
+            meshDb.description = ""
+            meshDb.meshFileId = data['meshFileId']
+            meshDb.subdomainsFileId = data['subdomainsFileId'] if 'subdomainsFileId' in data else None
+            
+            meshDb.put()
+            
+            self.response.write( json.dumps({ "status" : True, "msg" : "Mesh wrapper added"}) )
             return

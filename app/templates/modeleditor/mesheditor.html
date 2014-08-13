@@ -119,6 +119,26 @@
 		        </tbody>
 	            </table>
 
+                    <div id="uploadMeshDiv" class="span5">
+                        <div>Select mesh file:</div>
+                        <div>
+                            <input id="meshDataUpload" type="file" name="files[]" multiple><span id="meshDataUploadStatus"></span>
+                        </div>
+                        <div>Select subdomain file:</div>
+                        <div>
+                            <input id="subdomainDataUpload" type="file" name="files[]" multiple><span id="subdomainDataUploadStatus"></span>
+                        </div>
+                        <div>
+
+                          <button id="meshUploadButton" type="button" class="btn btn-default btn-lg" disabled>
+                            <span class="glyphicon glyphicon-plus"></span> Upload PyURDME Mesh
+                          </button>
+                        </div>
+                        
+                        <div id="meshMsg"></div>
+                        <br />
+                    </div>
+                    
                     <br>
                     <br>
 

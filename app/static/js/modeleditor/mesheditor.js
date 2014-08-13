@@ -544,6 +544,80 @@ Count in each voxel \
                       success : updateMsg } );
         },
 
+        handleMeshDataAdd : function(event, data)
+        {
+            if(this.uploaderState.meshFileData)
+            {
+                delete this.uploaderState.meshFileData;
+                delete this.uploaderState.meshSubmitted;
+                delete this.uploaderState.meshFileId;
+            }
+
+            this.uploaderState.meshFileData = data;
+
+            $( "#meshUploadButton" ).prop('disabled', false);
+        },
+
+        handleSubdomainsDataAdd : function(event, data)
+        {
+            if(this.uploaderState.subdomainFileData)
+            {
+                delete this.uploaderState.subdomainsFileData;
+                delete this.uploaderState.subdomainsSubmitted;
+                delete this.uploaderState.subdomainsFileId;
+            }
+
+            this.uploaderState.subdomainsFileData = data;
+        },
+
+        handleMeshUploadButton : function(event)
+        {
+            if(this.uploaderState.meshFileData)
+            {
+                this.uploaderState.meshFileData.submit();
+                this.uploaderState.meshSubmitted = true;
+            }
+
+            if(this.uploaderState.subdomainsFileData)
+            {
+                this.uploaderState.subdomainsFileData.submit();
+                this.uploaderState.subdomainsSubmitted = true;
+            }
+        },
+
+        handleMeshUploadFinish : function(event, data)
+        {
+            this.uploaderState.meshFileId = data.result[0].id;
+
+            this.createMeshWrapper();
+        },
+
+        handleSubdomainsUploadFinish : function(event, data)
+        {
+            this.uploaderState.subdomainsFileId = data.result[0].id;
+
+            this.createMeshWrapper();
+        },
+
+        createMeshWrapper : function()
+        {
+            var data = {};
+
+            if(this.uploaderState.meshSubmitted && this.uploaderState.meshFileId)
+            {
+                data['meshFileId'] = this.uploaderState.meshFileId;
+
+                if(this.uploaderState.subdomainsSubmitted && this.uploaderState.subdomainsFileId)
+                    data['subdomainsFileId'] = this.uploaderState.subdomainsFileId;
+
+                $.ajax( { type : 'POST',
+                          url: '/modeleditor/mesheditor',
+                          data: { reqType : 'addMeshWrapper',
+                                  data : JSON.stringify( data ) },
+                          success : updateMsg });
+            }
+        },
+
         render : function(data)
         {
             $( this.el ).find('#progresses').empty();
@@ -555,6 +629,25 @@ Count in each voxel \
 
             if(typeof this.data != 'undefined')
             {
+                // When a user uploads a file, draw a status bar, and after the upload is finished request the refreshes
+                this.uploaderState = {};
+                
+                $( "#meshUploadButton" ).click(_.bind(this.handleMeshUploadButton, this));
+
+                $( this.el ).find('#meshDataUpload').fileupload({
+                    url: '/FileServer/large/meshFiles',
+                    dataType: 'json',
+                    add : _.bind(this.handleMeshDataAdd, this),
+                    done : _.bind(this.handleMeshUploadFinish, this)
+                });
+
+                $( this.el ).find('#subdomainDataUpload').fileupload({
+                    url: '/FileServer/large/subdomainFiles',
+                    dataType: 'json',
+                    add : _.bind(this.handleSubdomainsDataAdd, this),
+                    done : _.bind(this.handleSubdomainsUploadFinish, this)
+                });
+
                 //Draw the subdomain selector stuff and hook up event handlers
                 this.selectedSubdomains = {};
 
@@ -733,7 +826,7 @@ Count in each voxel \
                         $.ajax( { type : 'POST',
                                   url: '/modeleditor/mesheditor',//'/FileServer/large/processedMeshFiles/' + exampleMeshes[i].processedMeshFileId + '/file.dat'
                                   data: { reqType : 'getMesh',
-                                          data: JSON.stringify( { id : exampleMeshes[i].id,
+                                          data: JSON.stringify( { id : data.id,
                                                                   selectedSubdomains : this.selectedSubdomains } ) },
                                   success : _.bind( this.meshDataPreview, this) });
                     }, exampleMeshes[i]), this));
