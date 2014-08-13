@@ -19,6 +19,8 @@ from google.appengine.api import users
 
 import sensitivity
 import stochoptim
+import mesheditor
+import fileserver
 from stochssapp import BaseHandler, User
 from stochss.model import *
 from stochss.stochkit import *
@@ -116,14 +118,23 @@ class SuperZip:
         if model.user_id == "":
             return
 
-        #print "adding model", model.model_name, "user_id", model.user_id
+        meshWrapperDb = mesheditor.MeshWrapper.get_by_id(model.spatial['mesh_wrapper_id'])
+        meshData = fileserver.FileManager.getFile(self, meshWrapperDb.meshFileId, noFile = False)
+        if meshWrapperDb.subdomainsFileId:
+            subdomainsData = fileserver.FileManager.getFile(self, meshWrapperDb.subdomainsFileId, noFile = False)
 
-        if model.attributes:
-            jsonModel.update(model.attributes)
-            
+        jsonModel["isSpatial"] = model.isSpatial
+        jsonModel["spatial"] = model.spatial
         jsonModel["units"] = model.model.units
-
         jsonModel["model"] = self.addBytes('models/data/{0}.xml'.format(model.model_name), model.model.serialize())
+
+        meshFileName = self.addBytes('models/data/{0}.mesh.xml'.format(model.model_name), meshData['data'])
+        jsonModel["meshFile"] = meshFileName;
+       
+        if meshWrapperDb.subdomainsFileId:
+            subdomainsFileName = self.addBytes('models/data/{0}.subdomains.txt'.format(model.model_name), subdomainsData['data'])
+            jsonModel["subdomainsFile"] = subdomainsFileName;
+
         self.addBytes('models/{0}.json'.format(model.model_name), json.dumps(jsonModel, sort_keys=True, indent=4, separators=(', ', ': ')))
 
     def addStochKitJob(self, job, globalOp = False):
@@ -260,23 +271,74 @@ class SuperZip:
                     jsonJob["outData"] = outputLocation
             self.addBytes('sensitivityJobs/{0}.json'.format(job.jobName), json.dumps(jsonJob, sort_keys=True, indent=4, separators=(', ', ': ')))
 
+    def addSpatialJob(self, job, globalOp = False):
+        pass
+
+    def extractSpatialJob(self, path, userId = None, handler = None, rename = None):
+        jobj = json.loads(self.zipfb.read(path))
+        path = os.path.abspath(os.path.dirname(__file__))
+
+        #print "Rename: ", rename
+
+        zipPath = jobj["output_location"]
+
+        if jobj["user_id"] not in [x.user_id() for x in User.query().fetch()]:
+            jobj["user_id"] = handler.user.user_id()
+
+        if userId:
+            jobj["user_id"] = userId
+
+        outPath = tempfile.mkdtemp(dir = "{0}/../output/".format(path))
+
+        for name in self.zipfb.namelist():
+            if re.search('^{0}/.*$'.format(zipPath), name):
+                relname = os.path.relpath(name, zipPath)
+
+                if not os.path.exists(os.path.dirname("{0}/{1}".format(outPath, relname))):
+                    os.makedirs(os.path.dirname("{0}/{1}".format(outPath, relname)))
+
+                fhandle = open("{0}/{1}".format(outPath, relname), 'w')
+                fhandle.write(self.zipfb.read(name))
+                fhandle.close()
+
+        jobj["modelName"] = jobj["modelName"] if "modelName" in jobj else None
+
+        jobj["output_location"] = outPath
+        jobj["stdout"] = "{0}/stdout".format(outPath)
+        jobj["stderr"] = "{0}/stderr".format(outPath)
+    
+        return simulation.JobManager.createJob(handler, jobj, rename = rename)
+
     def extractStochKitModel(self, path, userId = None, handler = None, rename = None):
         modelj = json.loads(self.zipfb.read(path))
         modelj["model"] = self.zipfb.read(modelj["model"])
-
-        #print "IMPORTING JOB USER ID IS: ", userId, jobj["user_id"], [x.user_id() for x in User.query().fetch()], jobj["user_id"] in [x.user_id() for x in User.query().fetch()]
-
-        #print "importing ", modelj["model_name"], modelj["user_id"]
 
         if modelj["user_id"] not in [x.user_id() for x in User.query().fetch()]:
             modelj["user_id"] = handler.user.user_id()
 
         if userId:
             modelj["user_id"] = userId
+
+        meshFileData = self.zipfb.read(modelj["meshFile"])
+        subdomainsFileData = None
+        if "subdomainsFile" in modelj:
+            subdomainsFileData = self.zipfb.read(modelj["subdomainsFile"])
+
+        meshFileId = fileserver.FileManager.createFile(handler, "meshFiles", os.path.basename(modelj["meshFile"]), meshFileData, 777)
+        subdomainsFileId = fileserver.FileManager.createFile(handler, "subdomainsFiles", os.path.basename(modelj["subdomainsFile"]), subdomainsFileData, 777)
+
+        meshDb = mesheditor.MeshWrapper()
+        meshDb.userId = handler.user.user_id()
+        meshDb.name = os.path.basename(modelj["meshFile"])
+        meshDb.description = ""
+        meshDb.meshFileId = int(meshFileId)
+        meshDb.subdomainsFileId = int(subdomainsFileId)
+        
+        meshDb.put()
+
+        modelj["spatial"]["mesh_wrapper_id"] = meshDb.key().id()
             
         res = modeleditor.ModelManager.createModel(handler, modelj, rename = rename)
-
-        #print "create model result ", res
 
         return res
 

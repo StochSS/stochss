@@ -53,25 +53,19 @@ class StochKitModelWrapper(db.Model):
 class ModelManager():
     @staticmethod
     def getModels(handler, modelAsString = True):
-        models = db.GqlQuery("SELECT * FROM StochKitModelWrapper WHERE user_id = :1", handler.user.user_id()).fetch(100000)
+        models = db.GqlQuery("SELECT * FROM StochKitModelWrapper WHERE user_id = :1", handler.user.user_id()).run()
 
         output = []
 
         for model in models:
-            print model.model_name
             jsonModel = { "name" : model.model_name }
-            #if model.attributes:
-            #    jsonModel.update(model.attributes)
             jsonModel["id"] = model.key().id()
-                          
-            print model.model.units
+
             jsonModel["units"] = model.model.units
             if modelAsString:
                 jsonModel["model"] = model.model.serialize()
             else:
                 jsonModel["model"] = model.model
-
-            #print jsonModel
 
             jsonModel["isSpatial"] = model.isSpatial
             jsonModel["spatial"] = model.spatial
@@ -85,9 +79,6 @@ class ModelManager():
         model = StochKitModelWrapper.get_by_id(int(model_id))
 
         jsonModel = { "name" : model.model_name }
-
-        #if model.attributes:
-        #    jsonModel.update(model.attributes)
 
         jsonModel["id"] = model.key().id()
                       
@@ -111,8 +102,7 @@ class ModelManager():
 
         jsonModel = { "id" : model.key().id(),
                       "name" : model.model_name }
-        #if model.attributes:
-        #    jsonModel.update(model.attributes)
+
         jsonModel["units"] = model.model.units
         if modelAsString == True:
             jsonModel["model"] = model.model.serialize()
@@ -126,8 +116,6 @@ class ModelManager():
 
     @staticmethod
     def createModel(handler, model, modelAsString = True, rename = None):
-        raise Exception("This isn't working cause the spatial bit isn't implemented right")
-    
         userID = None
 
         if 'user_id' in model:
@@ -165,12 +153,8 @@ class ModelManager():
             modelWrap.model = model["model"]
         modelWrap.model.units = model["units"]
 
-        attributes = {}
-        for key in model:
-            if key != "model" and key != "units" and key != "name":
-                attributes[key] = model[key]
-
-        modelWrap.attributes = attributes
+        modelWrap.spatial = model["spatial"]
+        modelWrap.isSpatial = model["isSpatial"]
 
         modelWrap.user_id = userID
         return modelWrap.put().id()
@@ -182,8 +166,6 @@ class ModelManager():
 
     @staticmethod
     def updateModel(handler, model):
-        raise Exception("This isn't working cause the spatial bit isn't implemented right 2")
-
         modelWrap = StochKitModelWrapper.get_by_id(model["id"])
         print model["name"]
         if "name" not in model:
