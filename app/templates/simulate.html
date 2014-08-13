@@ -156,7 +156,7 @@
         &nbsp; to &nbsp;
         <input type="text" class="input-small" id="time" value="100">
         &nbsp; store state every &nbsp;
-        <input type="text" class="input-small" id="increment" value="0.1"> &nbsp; time units.
+        <input type="text" class="input-small" id="increment" value="1.0"> &nbsp; time units.
         
         <span class="stochastic spatial">
             <br />
@@ -175,13 +175,12 @@
         
         <div id="advanced-settings" class="collapse advanced-settings">
             <div class="stochastic spatial">
-                Algorithm<br />
+                <B>Algorithm:</B><br />
                 <% if(!isSpatial) { %>
                 SSA <input id="ssa" type="radio" name="algorithm" value="ssa" checked><br />
                 Tau-leaping <input id="tau-leaping" style="padding-left: 100px;" type="radio" name="algorithm" value="tau_leaping">
                 <% } else { %>
-                Brian-algo <input id="brian" type="radio" name="algorithm" value="brian" checked><br />
-                Andreas-algo <input id="andreas" style="padding-left: 100px;" type="radio" name="algorithm" value="andreas">
+                Next Subvolume Method <input id="nsm" type="radio" name="algorithm" value="nsm" checked><br />
                 <% } %>
             </div>
 

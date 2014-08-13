@@ -329,11 +329,17 @@ class ModelEditorPage(BaseHandler):
             result = {}
 
         db_models = db.GqlQuery("SELECT * FROM StochKitModelWrapper WHERE user_id = :1", self.user.user_id())
-        
-        all_models = [{ "name" : row.model.name, "units" : row.model.units, "isSpatial" : row.isSpatial, "spatial" : row.spatial } for row in db_models]
-        
-        result.update({ "all_models" : all_models })
+        isSpatial = False
+        #all_models = [{ "name" : row.model.name, "units" : row.model.units, "isSpatial" : row.isSpatial, "spatial" : row.spatial } for row in db_models]
+        all_models = []
+        for row in db_models:
+            if model_edited and row.model.name == model_edited:
+                isSpatial = row.isSpatial
+            all_models.append({ "name" : row.model.name, "units" : row.model.units, "isSpatial" : row.isSpatial, "spatial" : row.spatial }) 
 
+        result.update({ "all_models" : all_models, "isSpatial" : isSpatial  })
+
+        print "modeleditor.html {0}".format(result)
         self.render_response('modeleditor.html', **result)
 
 
