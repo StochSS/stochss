@@ -21,6 +21,7 @@
 			<a href="/modeleditor" TITLE = "Create or select your model">Models</a>
 		    </li>
 		    <!-- <li><a href="/modeleditor/overview">Overview</a></li> -->
+            {% if model_edited %}
 		    <li>
 			<a href="/modeleditor/specieseditor" TITLE = "Create a List of Species">Species</a>
 		    </li>
@@ -35,6 +36,7 @@
 			<a href="/modeleditor/mesheditor" TITLE = "Add a mesh">Mesh</a>
 		    </li>
                     {% endif %}
+            {% endif %}
 		    <!-- <li><a href="/modeleditor/codeeditor">Editor</a></li> -->
 		    <li class="dropdown">
 			<a class="dropdown-toggle" data-toggle="dropdown" TITLE = "Import from File/ Load Existing Library">Import<b class="caret"></b></a>
