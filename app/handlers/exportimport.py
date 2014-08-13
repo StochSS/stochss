@@ -21,6 +21,7 @@ import sensitivity
 import stochoptim
 import mesheditor
 import fileserver
+import spatial
 from stochssapp import BaseHandler, User
 from stochss.model import *
 from stochss.stochkit import *
@@ -272,21 +273,57 @@ class SuperZip:
             self.addBytes('sensitivityJobs/{0}.json'.format(job.jobName), json.dumps(jsonJob, sort_keys=True, indent=4, separators=(', ', ': ')))
 
     def addSpatialJob(self, job, globalOp = False):
+        jsonJob = { "version" : self.version,
+                    "userId" : job.userId,
+                    "pid" : job.pid,
+                    "startTime" : job.startTime,
+                    "jobName" : job.jobName,
+                    "modelName" : job.modelName,
+                    "indata" : json.loads(job.indata),
+                    "outData" : job.outData,
+                    "status" : job.status }
+        
+        # Only add the folder if it actually exists
+        if job.outData is not None and os.path.exists(job.outData):
+            outputLocation = self.addFolder('spatialJobs/data/{0}'.format(job.jobName), job.outData)
+            jsonJob["outData"] = outputLocation
+
+        jsonJob["stdout"] = "{0}/stdout".format(outputLocation)
+        jsonJob["stderr"] = "{0}/stderr".format(outputLocation)
+
+        self.addBytes('spatialJobs/{0}.json'.format(job.jobName), json.dumps(jsonJob, sort_keys=True, indent=4, separators=(', ', ': ')))
         pass
 
     def extractSpatialJob(self, path, userId = None, handler = None, rename = None):
-        jobj = json.loads(self.zipfb.read(path))
+        jsonJob = json.loads(self.zipfb.read(path))
         path = os.path.abspath(os.path.dirname(__file__))
+        
+        zipPath = jsonJob["outData"]
 
-        #print "Rename: ", rename
 
-        zipPath = jobj["output_location"]
+        job = spatial.SpatialJobWrapper()
 
-        if jobj["user_id"] not in [x.user_id() for x in User.query().fetch()]:
-            jobj["user_id"] = handler.user.user_id()
+        jobNames = [x.jobName for x in db.Query(spatial.SpatialJobWrapper).filter('userId =', handler.user.user_id()).run()]
+
+        #print jobNames
+
+        if jsonJob["jobName"] in jobNames:
+            if rename:
+
+                i = 1
+                tryName = '{0}_{1}'.format(jsonJob["jobName"], i)
+
+                while tryName in jobNames:
+                    i = i + 1
+                    tryName = '{0}_{1}'.format(jsonJob["jobName"], i)
+                    
+                jsonJob["jobName"] = tryName
+
+        if jsonJob["userId"] not in [x.user_id() for x in User.query().fetch()]:
+            jsonJob["userId"] = handler.user.user_id()
 
         if userId:
-            jobj["user_id"] = userId
+            jsonJob["userId"] = userId
 
         outPath = tempfile.mkdtemp(dir = "{0}/../output/".format(path))
 
@@ -301,13 +338,17 @@ class SuperZip:
                 fhandle.write(self.zipfb.read(name))
                 fhandle.close()
 
-        jobj["modelName"] = jobj["modelName"] if "modelName" in jobj else None
+        job.userId = jsonJob["userId"]
+        job.jobName = jsonJob["jobName"]
+        job.startTime = jsonJob["startTime"]
+        job.modelName = jsonJob["modelName"] if "modelName" in jsonJob else None
+        job.indata = json.dumps(jsonJob["indata"])
+        job.outData = outPath
+        job.status = jsonJob["status"]
 
-        jobj["output_location"] = outPath
-        jobj["stdout"] = "{0}/stdout".format(outPath)
-        jobj["stderr"] = "{0}/stderr".format(outPath)
-    
-        return simulation.JobManager.createJob(handler, jobj, rename = rename)
+        job.put()
+
+        return job.key().id()
 
     def extractStochKitModel(self, path, userId = None, handler = None, rename = None):
         modelj = json.loads(self.zipfb.read(path))
@@ -544,6 +585,11 @@ class ExportPage(BaseHandler):
             else:
                 selected_stochoptim_jobs = []
 
+            if "spatialJobs" in request_data:
+                selected_spatial_jobs = request_data["stochOptimJobs"]
+            else:
+                selected_spatial_jobs = []
+
             if "sensitivityJobs" in request_data:
                 selected_sensitivity_jobs = request_data["sensitivityJobs"]
             else:
@@ -554,7 +600,7 @@ class ExportPage(BaseHandler):
             else:
                 selected_stochkit_jobs = []
 
-            logging.info('Processing backup export request with stochkit jobs: {0} sensitivity jobs: {1}'.format(selected_stochkit_jobs, selected_sensitivity_jobs))
+            #logging.info('Processing backup export request with stochkit jobs: {0} sensitivity jobs: {1}'.format(selected_stochkit_jobs, selected_sensitivity_jobs))
 
             exportJob = ExportJobWrapper()
 
@@ -603,6 +649,14 @@ class ExportPage(BaseHandler):
 
             for job in jobs:
                 szip.addStochOptimJob(job, globalOp)
+
+            if not globalOp:
+                jobs = db.GqlQuery("SELECT * FROM SpatialJobWrapper WHERE userId = :1", self.user.user_id()).run()
+            else:
+                jobs = db.GqlQuery("SELECT * FROM SpatialJobWrapper").run()
+
+            for job in jobs:
+                szip.addSpatialJob(job, globalOp)
 
             if not globalOp:
                 jobs = db.GqlQuery("SELECT * FROM SensitivityJobWrapper WHERE userId = :1", self.user.user_id()).run()
@@ -803,7 +857,7 @@ class ImportPage(BaseHandler):
 
                 zipFile = zipfile.ZipFile(fieldStorage.file, 'r')
 
-                headers = { "models" : {}, "stochkitJobs" : {}, "stochOptimJobs" : {}, "sensitivityJobs" : {} }
+                headers = { "models" : {}, "stochkitJobs" : {}, "stochOptimJobs" : {}, "sensitivityJobs" : {}, "spatialJobs" : {} }
                 for name in zipFile.namelist():
                     if re.search('models/[a-zA-Z0-9\-_]*\.json$'.format(filename), name):
                         headers['models'][name] = json.loads(zipFile.read(name))
@@ -813,6 +867,8 @@ class ImportPage(BaseHandler):
                         headers['sensitivityJobs'][name] = json.loads(zipFile.read(name))
                     elif re.search('stochOptimJobs/[a-zA-Z0-9\-_]*\.json$'.format(filename), name):
                         headers['stochOptimJobs'][name] = json.loads(zipFile.read(name))
+                    elif re.search('spatialJobs/[a-zA-Z0-9\-_]*\.json$'.format(filename), name):
+                        headers['spatialJobs'][name] = json.loads(zipFile.read(name))
 
                 #print headers['stochOptimJobs']
 
@@ -1046,6 +1102,35 @@ class ImportPage(BaseHandler):
                             rename = True
 
                     szip.extractStochOptimJob(name, userId, self, rename = rename)
+
+                for name in state['selections']['spc']:
+                    if not state['selections']['spc'][name]:
+                        continue
+
+                    if userId == None:
+                        userID = headers['spatialJobs'][name]["userId"]
+
+                        if userID not in validUsers:
+                            userID = userId
+                    else:
+                        userID = userId
+
+                    dbName = headers['spatialJobs'][name]["jobName"]
+                    jobs = list(db.GqlQuery("SELECT * FROM SpatialJobWrapper WHERE userId = :1 AND jobName = :2", userID, dbName).run())
+
+                    rename = False
+
+                    if len(jobs) > 0:
+                        otherJob = jobs[0]
+
+                        if overwriteType == 'keepOld':
+                            continue
+                        elif overwriteType == 'overwriteOld':
+                            otherJob.delete()
+                        elif overwriteType == 'renameNew':
+                            rename = True
+
+                    szip.extractSpatialJob(name, userId, self, rename = rename)
 
                 szip.close()
 
