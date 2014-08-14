@@ -26,7 +26,9 @@ class backendservices():
     INFRA_EC2 = 'ec2'
     INFRA_CLUSTER = 'cluster'
     WORKER_AMIS = {
-        INFRA_EC2: 'ami-f0d42898'
+        #INFRA_EC2: 'ami-f0d42898' #oldest first
+        #INFRA_EC2: 'ami-74c21f1c'
+        INFRA_EC2: 'ami-cafb26a2'
     }
 
     def __init__(self):

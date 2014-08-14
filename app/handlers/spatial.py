@@ -65,7 +65,7 @@ class SpatialJobWrapper(db.Model):
         if self.status == "Running":
             if self.resource.lower() == "local":
                 try:
-                    os.killpg(self.pid, signal.SIGTERM)
+                    os.killpg(int(self.pid), signal.SIGTERM)
                 except:
                     pass
             elif self.resource.lower() == "cloud":
@@ -115,12 +115,17 @@ class SpatialPage(BaseHandler):
                 self.response.write({ "status" : False, "msg" : "Not the right user" })
 
             if job.outData is not None:
-                fstdoutHandle = open(job.outData + '/stdout', 'r')
-                stdout = fstdoutHandle.read()
-                fstdoutHandle.close()
-                fstderrHandle = open(job.outData + '/stderr', 'r')
-                stderr = fstderrHandle.read()
-                fstderrHandle.close()
+                try:
+                    fstdoutHandle = open(str(job.outData + '/stdout'), 'r')
+                    stdout = fstdoutHandle.read()
+                    fstdoutHandle.close()
+                    fstderrHandle = open(str(job.outData + '/stderr'), 'r')
+                    stderr = fstderrHandle.read()
+                    fstderrHandle.close()
+                except IOError:
+                    self.response.write({ "status" : False, "msg" : "There was an error running your simulation.  Unable to locate stdout/stderr files." })
+                    return
+                    
             else:
                 stdout = ''
                 stderr = ''
@@ -144,7 +149,7 @@ class SpatialPage(BaseHandler):
             trajectory = data["trajectory"]
             timeIdx = data["timeIdx"]
 
-            with open(job.outData + '/results/result{0}'.format(trajectory)) as fd:
+            with open(str(job.outData + '/results/result{0}'.format(trajectory))) as fd:
                 result = pickle.load(fd)
     
                 species = result.model.get_species_map().keys()
@@ -427,12 +432,12 @@ class SpatialPage(BaseHandler):
             with open(model_file_pkl, 'w') as fd:
                 pickle.dump(pymodel, fd)
 
-            cmd = "{0}/../../pyurdme/wrapper.py {1} {2} {3} {4} {5}".format(path, model_file_pkl, result_dir, simulation_algorithm, simulation_realizations, simulation_seed)
+            cmd = "{0}/../../pyurdme/pyurdme_wrapper.py {1} {2} {3} {4} {5}".format(path, model_file_pkl, result_dir, simulation_algorithm, simulation_realizations, simulation_seed)
             print cmd
             exstring = '{0}/backend/wrapper.sh {1}/stdout {1}/stderr {2}'.format(basedir, dataDir, cmd)
             handle = subprocess.Popen(exstring, shell=True, preexec_fn=os.setsid)
             
-            job.pid = handle.pid
+            job.pid = str(handle.pid)
 
             job.put()
             

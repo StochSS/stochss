@@ -178,7 +178,7 @@ Spatial.Controller = Backbone.View.extend(
                       success : function(data) {
                           updateMsg(data);
                           
-                          this.refreshData();
+                          location.reload();
                       },                      
                       error: function(data)
                       {

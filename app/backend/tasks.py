@@ -474,7 +474,9 @@ def task(taskid,params):
       xmlfilepath = filename
       stdout = "output/%s/stdout.log" % uuidstr
       stderr = "output/%s/stderr.log" % uuidstr
-
+      print "======================="
+      print "params = {0} ".format(params)
+      
       job_type = params['job_type']
       exec_str = ''
       if job_type == 'stochkit':
@@ -483,9 +485,10 @@ def task(taskid,params):
       elif job_type == 'stochkit_ode' or job_type == 'sensitivity':
           exec_str = "{0}/{1} -m {2} --force --out-dir output/{3}/result 2>{4} > {5}".format(ODE_DIR, paramstr, xmlfilepath, uuidstr, stderr, stdout)
       elif job_type == 'spatial':
-          cmd = "{0}/../pyurdme/wrapper.py {1} {2} {3} {4} {5}".format(STOCHKIT_DIR, xmlfilepath, 'output/{0}/result'.format(uuidstr), params['simulation_algorithm'], params['simulation_realizations'], params['simulation_seed'])
+          exec_str = "{0}/pyurdme_wrapper.py {1} {2} {3} {4} {5} 2>{6} > {7}".format(THOME, xmlfilepath, 'output/{0}/result'.format(uuidstr), params['simulation_algorithm'], params['simulation_realizations'], params['simulation_seed'], stderr, stdout)
       
       print "======================="
+      print "here-local"
       print " Command to be executed : "
       print exec_str
       print "======================="
