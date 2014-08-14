@@ -287,7 +287,7 @@ class SpeciesEditorPage(BaseHandler):
 
             all_species = model.getAllSpecies()
 
-            oldkey = None
+            oldKey = None
             newKey = None
 
             # Add the updated values afresh. i.e. The old values are erased.
@@ -345,7 +345,13 @@ class SpeciesEditorPage(BaseHandler):
             row.put()
 
             #self.set_model_edited(model)
-            return {'status': True, 'msg': 'Species updated successfully!', 'key' : oldKey, 'newKey' : newKey}
+            result = {'status': True, 'msg': 'Species updated successfully!'}
+
+            if oldKey:
+                result['key'] = oldKey
+                result['newKey'] = newKey
+
+            return result
         except Exception, e:
             logging.error("species::update_species: Updating of Species failed with error %s", e)
             traceback.print_exc()
