@@ -392,7 +392,44 @@ class StatusPage(BaseHandler):
                             job.status = "Finished"
                         else:
                             job.status = "Failed"
+                elif job.resource == "cloud":
+                            # Retrive credentials from the datastore
+                            if not self.user_data.valid_credentials:
+                                return {'status':False,'msg':'Could not retrieve the status of job '+stochkit_job.name +'. Invalid credentials.'}
+                            credentials = self.user_data.getCredentials()
 
+                            # Check the status on the remote end
+                            taskparams = {'AWS_ACCESS_KEY_ID':credentials['EC2_ACCESS_KEY'],'AWS_SECRET_ACCESS_KEY':credentials['EC2_SECRET_KEY'],'taskids':[job.pid]}
+                            task_status = service.describeTask(taskparams)
+                            job_status = task_status[job.pid]
+                            # It frequently happens that describeTasks return None before the job is finsihed.
+                            if job_status == None:
+                                job.status = "Unknown"
+                            else:
+
+                                if job_status['status'] == 'finished':
+                                    # Update the stochkit job 
+                                    job.status = 'Finished'
+                                    job.output_url = job_status['output']
+                                    job.uuid = job_status['uuid']
+                                
+                                elif job_status['status'] == 'failed':
+                                    job.status = 'Failed'
+                                    job.exception_message = job_status['message']
+                                    # Might not have a uuid or output if an exception was raised early on or if there is just no output available
+                                    try:
+                                        job.uuid = job_status['uuid']
+                                        job.output_url = job_status['output']
+                                    except KeyError:
+                                        pass
+                                    
+                                elif job_status['status'] == 'pending':
+                                    job.status = 'Pending'
+                                else:
+                                    # The state gives more fine-grained results, like if the job is being re-run, but
+                                    #  we don't bother the users with this info, we just tell them that it is still running.  
+                                    job.status = 'Running'
+                                       
                 job.put()
 
                 allSpatialJobs.append({ "status" : job.status,

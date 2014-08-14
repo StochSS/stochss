@@ -28,7 +28,7 @@ import traceback
 class SpatialJobWrapper(db.Model):
     # These are all the attributes of a job we use for local storage
     userId = db.StringProperty()
-    pid = db.IntegerProperty()
+    pid = db.StringProperty()
     startTime = db.StringProperty()
     jobName = db.StringProperty()
     modelName = db.StringProperty() # This is a reference to the model. I should probably use a modelId instead. I'm not sure why I store it as a name
@@ -37,11 +37,13 @@ class SpatialJobWrapper(db.Model):
     status = db.StringProperty()
     zipFileName = db.StringProperty() # This is a temporary file that the server uses to store a zipped up copy of the output
     
-    # These are the cloud attributes Chris adds
+    # These are the cloud attributes
     resource = db.StringProperty()
-    outputURL = db.StringProperty()
+    uuid = db.StringProperty()
+    output_url = db.StringProperty()
     cloudDatabaseID = db.StringProperty()
     celeryPID = db.StringProperty()
+    exception_message = db.StringProperty()
 
     # More attributes can obvs. be added
     # The delete operator here is a little fancy. When the item gets deleted from the GOogle db, we need to go clean up files stored locally and remotely
@@ -112,13 +114,16 @@ class SpatialPage(BaseHandler):
                 self.response.headers['Content-Type'] = 'application/json'
                 self.response.write({ "status" : False, "msg" : "Not the right user" })
 
-            fstdoutHandle = open(job.outData + '/stdout', 'r')
-            stdout = fstdoutHandle.read()
-            fstdoutHandle.close()
-            
-            fstderrHandle = open(job.outData + '/stderr', 'r')
-            stderr = fstderrHandle.read()
-            fstderrHandle.close()
+            if job.outData is not None:
+                fstdoutHandle = open(job.outData + '/stdout', 'r')
+                stdout = fstdoutHandle.read()
+                fstdoutHandle.close()
+                fstderrHandle = open(job.outData + '/stderr', 'r')
+                stderr = fstderrHandle.read()
+                fstderrHandle.close()
+            else:
+                stdout = ''
+                stderr = ''
             
             self.response.headers['Content-Type'] = 'application/json'
             self.response.write(json.dumps({ "id" : int(self.request.get('id')),
@@ -183,17 +188,6 @@ class SpatialPage(BaseHandler):
                 if self.user_data.valid_credentials and backend_services.isOneOrMoreComputeNodesRunning(compute_check_params):
                     result = self.runCloud(data)
                     logging.info("Run cloud finished with result: {0}, generating JSON response".format(result))
-                    if not result["success"]:
-                        return self.response.write(json.dumps({
-                            "status": False,
-                            "msg": result["msg"]
-                        }))
-                    else:
-                        return self.response.write(json.dumps({
-                            "status": True,
-                            "msg": "Job launched",
-                            "id": result["job"].key().id()
-                        }))
                 else:
                     return self.response.write(json.dumps({
                         'status': False,
@@ -243,10 +237,31 @@ class SpatialPage(BaseHandler):
                                                 "msg" : "No permissions to delete this job (this should never happen)"}))
                 return
         elif reqType == 'getDataCloud':
-            #TODO
-            #job.outData =   this needs to be set to the local location of the data,  probably in: os.path.abspath(os.path.dirname(__file__) + '/../output/')
+            try:
+                jobID = json.loads(self.request.get('id'))
+                job = SpatialJobWrapper.get_by_id(int(jobID))
+
+                service = backend.backendservice.backendservices()
+                # Fetch
+                service.fetchOutput(job.pid, job.output_url)
+                # Unpack
+                os.system('tar -xf' +job.uuid+'.tar')
+                # Record location
+                job.outData = os.path.abspath(os.path.dirname(__file__))+'/../output/'+job.uuid
+                # Clean up
+                os.remove(job.uuid+'.tar')
+                # Save the updated status
+                job.put()
+
+                self.response.headers['Content-Type'] = 'application/json'
+                self.response.write(json.dumps({ 'status' : True,
+                                                 'msg' : 'Job downloaded'}))
+                return
+            except Exception as e:
+                traceback.print_exc()
                 self.response.write(json.dumps({"status" : False,
-                                                "msg" : "Not Implimented"}))
+                                                "msg" : "Error: {0}".format(e)}))
+                return
 
         elif reqType == 'getDataLocal':
             jobID = json.loads(self.request.get('id'))
@@ -435,95 +450,64 @@ class SpatialPage(BaseHandler):
     def runCloud(self, data):
         '''
         '''
+        try:
+            db_credentials = self.user_data.getCredentials()
+            # Set the environmental variables 
+            os.environ["AWS_ACCESS_KEY_ID"] = db_credentials['EC2_ACCESS_KEY']
+            os.environ["AWS_SECRET_ACCESS_KEY"] = db_credentials['EC2_SECRET_KEY']
 
-        job.outData = None  # This is where the data should be locally, when we get data from cloud, it must be put here
+            if os.environ["AWS_ACCESS_KEY_ID"] == '':
+                result = {'status':False,'msg':'Access Key not set. Check : Settings > Cloud Computing'}
+                return result
 
-
-
-        ################ Depricated below here
-        # Load the model up from the db
-        model = ModelManager.getModel(self, data["modelID"], modelAsString = False)
-        berniemodel = StochOptimModel()
-        success, msgs = berniemodel.fromStochKitModel(model["model"])
-        result = {
-            "success": success
-        }
-        if not success:
-            result["msg"] = os.linesep.join(msgs)
-            return result
-
-        # Figure out where in the filesystem we need to store output
-        path = os.path.abspath(os.path.dirname(__file__))
-
-        basedir = path + '/../'
-        dataDir = tempfile.mkdtemp(dir = basedir + 'output')
-
-        # Create a db object to track the running job
-        job = StochOptimJobWrapper()
-        job.userId = self.user.user_id()
-        job.startTime = time.strftime("%Y-%m-%d-%H-%M-%S")
-        job.jobName = data["jobName"]
-        job.indata = json.dumps(data)
-        job.modelName = model["name"]
-        job.outData = dataDir
-        job.status = "Pending"
-        job.resource = "cloud"
-
-        # Put together the command line stuff to actually execute the job
-        data["exec"] = "'bash'"
-
-        data["steps"] = ("C" if data["crossEntropyStep"] else "") + ("E" if data["emStep"] else "") + ("U" if data["uncertaintyStep"] else "")
-
-        # data["cores"] = 4
-        data["options"] = ""
-
-        cmd = "exec/mcem2.r --steps {steps} --seed {seed} --K.ce {Kce} --K.em {Kem} --K.lik {Klik} --K.cov {Kcov} --rho {rho} --perturb {perturb} --alpha {alpha} --beta {beta} --gamma {gamma} --k {k} --pcutoff {pcutoff} --qcutoff {qcutoff} --numIter {numIter} --numConverge {numConverge} --command {exec}".format(**data)
-        # cmd = "exec/mcem2.r --K.ce 1000 --K.em 100 --rho .01 --pcutoff .05"
-        stringModel, nameToIndex = berniemodel.serialize(data["activate"], True)
-        job.nameToIndex = json.dumps(nameToIndex)
-
-        jFileData = fileserver.FileManager.getFile(self, data["trajectoriesID"], noFile = False)
-        iFileData = fileserver.FileManager.getFile(self, data["initialDataID"], noFile = False)
-
-        cloud_params = {
-            "job_type": "mcem2",
-            # "cores": data["cores"],
-            "paramstring": cmd,
-            "model_file": stringModel,
-            "model_data": {
-                "content": iFileData["data"],
-                "extension": "txt"
-            },
-            "final_data": {
-                "content": jFileData["data"],
-                "extension": "txt"
-            },
-            "key_prefix": self.user.user_id(),
-            "credentials": self.user_data.getCredentials(),
-            "bucketname": self.user_data.getBucketName()
-        }
-        # Set the environmental variables 
-        os.environ["AWS_ACCESS_KEY_ID"] = self.user_data.getCredentials()['EC2_ACCESS_KEY']
-        os.environ["AWS_SECRET_ACCESS_KEY"] = self.user_data.getCredentials()['EC2_SECRET_KEY']
-        service = backend.backendservice.backendservices()
-        cloud_result = service.executeTask(cloud_params)
-        if not cloud_result["success"]:
-            result = {
-                "success": False,
-                "msg": cloud_result["reason"]
+            if os.environ["AWS_SECRET_ACCESS_KEY"] == '':
+                result = {'status':False,'msg':'Secret Key not set. Check : Settings > Cloud Computing'}
+                return result
+                    ####
+            pymodel = self.construct_pyurdme_model(data)
+            #####
+            cloud_params = {
+                "job_type": "spatial",
+                "simulation_algorithm" : data['algorithm'],
+                "simulation_realizations" : data['realizations'],
+                "simulation_seed" : data['seed'],
+                "bucketname" : self.user_data.getBucketName(),
+                "paramstring" : '',
             }
-            try:
-                result["exception"] = cloud_result["exception"]
-                result["traceback"] = cloud_result["traceback"]
-            except KeyError:
-                pass
-            return result
+            cloud_params['document'] = pickle.dumps(pymodel)
 
-        # Update the db object a little and return
-        job.cloudDatabaseID = cloud_result["db_id"]
-        job.celeryPID = cloud_result["celery_pid"]
-        # job.pid = handle.pid
-        job.put()
-        result["job"] = job
-        result["id"] = job.key().id()
-        return result
+            # Set the environmental variables
+            os.environ["AWS_ACCESS_KEY_ID"] = self.user_data.getCredentials()['EC2_ACCESS_KEY']
+            os.environ["AWS_SECRET_ACCESS_KEY"] = self.user_data.getCredentials()['EC2_SECRET_KEY']
+            service = backend.backendservice.backendservices()
+            cloud_result = service.executeTask(cloud_params)
+            if not cloud_result["success"]:
+                e = cloud_result["exception"]
+                self.response.write(json.dumps({"status" : False,
+                                                "msg" : "Cloud execution failed: {0}".format(e)}))
+                return
+            
+            celery_task_id = cloud_result["celery_pid"]
+            taskid = cloud_result["db_id"]
+
+            job = SpatialJobWrapper()
+            job.type = 'PyURDME Ensemble'
+            job.userId = self.user.user_id()
+            job.startTime = time.strftime("%Y-%m-%d-%H-%M-%S")
+            job.jobName = data["jobName"]
+            job.indata = json.dumps(data)
+            job.outData = None  # This is where the data should be locally, when we get data from cloud, it must be put here
+            job.modelName = pymodel.name
+            job.resource = "cloud"
+            job.pid = taskid
+            job.celery_pid = celery_task_id
+            job.status = "Running"
+            job.put()
+
+        except Exception as e: 
+            traceback.print_exc()
+            self.response.write(json.dumps({"status" : False,
+                                            "msg" : "{0}".format(e)}))
+                                            #"msg" : "{0}: {1}".format(type(e).__name__, e)}))
+            return
+

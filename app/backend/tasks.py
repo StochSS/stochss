@@ -482,6 +482,8 @@ def task(taskid,params):
           exec_str = "{0}/{1} -m {2} --force --out-dir output/{3}/result 2>{4} > {5}".format(STOCHKIT_DIR, paramstr, xmlfilepath, uuidstr, stderr, stdout)
       elif job_type == 'stochkit_ode' or job_type == 'sensitivity':
           exec_str = "{0}/{1} -m {2} --force --out-dir output/{3}/result 2>{4} > {5}".format(ODE_DIR, paramstr, xmlfilepath, uuidstr, stderr, stdout)
+      elif job_type == 'spatial':
+          cmd = "{0}/../pyurdme/wrapper.py {1} {2} {3} {4} {5}".format(STOCHKIT_DIR, xmlfilepath, 'output/{0}/result'.format(uuidstr), params['simulation_algorithm'], params['simulation_realizations'], params['simulation_seed'])
       
       print "======================="
       print " Command to be executed : "
