@@ -242,6 +242,12 @@ class SpatialPage(BaseHandler):
                 self.response.write(json.dumps({"status" : False,
                                                 "msg" : "No permissions to delete this job (this should never happen)"}))
                 return
+        elif reqType == 'getDataCloud':
+            #TODO
+            #job.outData =   this needs to be set to the local location of the data,  probably in: os.path.abspath(os.path.dirname(__file__) + '/../output/')
+                self.response.write(json.dumps({"status" : False,
+                                                "msg" : "Not Implimented"}))
+
         elif reqType == 'getDataLocal':
             jobID = json.loads(self.request.get('id'))
 
@@ -429,6 +435,12 @@ class SpatialPage(BaseHandler):
     def runCloud(self, data):
         '''
         '''
+
+        job.outData = None  # This is where the data should be locally, when we get data from cloud, it must be put here
+
+
+
+        ################ Depricated below here
         # Load the model up from the db
         model = ModelManager.getModel(self, data["modelID"], modelAsString = False)
         berniemodel = StochOptimModel()
