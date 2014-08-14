@@ -166,6 +166,55 @@ Spatial.Controller = Backbone.View.extend(
             this.meshDataPreview(this.meshData[species]);
         },
 
+        handleDownloadDataButton : function(event)
+        {
+            updateMsg( { status : true,
+                         msg : "Downloading data from cloud... (will refresh page when ready)" } );
+
+            $.ajax( { type : "POST",
+                      url : "/spatial",
+                      data : { reqType : "getDataCloud",
+                               id : this.attributes.id },
+                      success : function(data) {
+                          updateMsg(data);
+                          
+                          this.refreshData();
+                      },                      
+                      error: function(data)
+                      {
+                          updateMsg( { status : false,
+                                       msg : "Server error downloading cloud data" } );
+                      },
+                      dataType : 'json'
+                    });
+        },
+
+        handleAccessDataButton : function(event)
+        {
+            updateMsg( { status : true,
+                         msg : "Packing up data... (will forward you to file when ready)" } );
+
+            $.ajax( { type : "POST",
+                      url : "/spatial",
+                      data : { reqType : "getDataLocal",
+                               id : this.attributes.id },
+                      success : function(data) {
+                          updateMsg(data);
+                          
+                          if(data.status == true)
+                          {
+                              window.location = data.url;
+                          }
+                      },                      
+                      error: function(data)
+                      {
+                          updateMsg( { status : false,
+                                       msg : "Server error packaging up job data" } );
+                      },
+                      dataType : 'json'
+                    });
+        },
+
         render : function(data)
         {
             if(typeof data != 'undefined')
@@ -176,6 +225,9 @@ Spatial.Controller = Backbone.View.extend(
 
                 $( "#jobInfo" ).html( jobInfoTemplate(this.jobInfo) )
 
+                if(data['outData'])
+                    $( '#plotRegion' ).show();
+
                 //Set up slider
                 var slider = $( '#timeSelect' );
 
@@ -183,10 +235,22 @@ Spatial.Controller = Backbone.View.extend(
                 slider.val(slider.prop('max'));
                 slider.prop('step', this.jobInfo.indata.increment);
 
-                //Add event handlers
+                //Add event handler to slider
                 slider.on('change', _.throttle(_.bind(this.handleSliderChange, this), 1000));
 
                 slider.trigger('change');
+
+                // Add event handler to access button
+                if(data['resource'] == 'cloud')
+                {
+                    $( "#access" ).text("Fetch Data from Cloud");                    
+                    $( "#access" ).click(_.bind(this.handleDownloadDataButton, this));
+                }
+                else
+                {
+                    $( "#access" ).text("Access Local Data");
+                    $( "#access" ).click(_.bind(this.handleAccessDataButton, this));
+                }
             }
         }
     }
