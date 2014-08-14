@@ -193,18 +193,10 @@ class MeshEditorPage(BaseHandler):
                 row.spatial['subdomains'] = list(newSubdomains)
 
                 for speciesId in row.spatial['species_subdomain_assignments']:
-                    selectedSubdomains = row.spatial['species_subdomain_assignments'][speciesId]
-
-                    for subdomain in selectedSubdomains:
-                        if subdomain not in newSubdomains:
-                            selectedSubdomains.remove(subdomain)
+                    row.spatial['species_subdomain_assignments'][speciesId] = row.spatial['subdomains']
 
                 for reactionId in row.spatial['reactions_subdomain_assignments']:
-                    selectedSubdomains = row.spatial['reactions_subdomain_assignments'][reactionId]
-
-                    for subdomain in selectedSubdomains:
-                        if subdomain not in newSubdomains:
-                            selectedSubdomains.remove(subdomain)
+                    row.spatial['reactions_subdomain_assignments'][reactionId] = row.spatial['subdomains']
             else:
                 for speciesId in row.spatial['species_subdomain_assignments']:
                     row.spatial['species_subdomain_assignments'][speciesId] = []

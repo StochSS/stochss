@@ -125,6 +125,7 @@ class SpatialPage(BaseHandler):
                                              "status" : job.status,
                                              "resource" : job.resource,
                                              "modelName" : job.modelName,
+                                             "outData" : job.outData,
                                              "name" : job.jobName,
                                              "stdout" : stdout,
                                              "stderr" : stderr,
