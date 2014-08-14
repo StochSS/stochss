@@ -225,23 +225,30 @@ Spatial.Controller = Backbone.View.extend(
 
                 $( "#jobInfo" ).html( jobInfoTemplate(this.jobInfo) )
 
-                if(data['outData'])
-                    $( '#plotRegion' ).show();
+                if(data['status'] == 'Finished')
+                {
+                    if(data['outData'])
+                        $( '#plotRegion' ).show();
 
-                //Set up slider
-                var slider = $( '#timeSelect' );
+                    //Set up slider
+                    var slider = $( '#timeSelect' );
 
-                slider.prop('max', this.jobInfo.indata.time);
-                slider.val(slider.prop('max'));
-                slider.prop('step', this.jobInfo.indata.increment);
+                    slider.prop('max', this.jobInfo.indata.time);
+                    slider.val(slider.prop('max'));
+                    slider.prop('step', this.jobInfo.indata.increment);
 
-                //Add event handler to slider
-                slider.on('change', _.throttle(_.bind(this.handleSliderChange, this), 1000));
+                    //Add event handler to slider
+                    slider.on('change', _.throttle(_.bind(this.handleSliderChange, this), 1000));
 
-                slider.trigger('change');
+                    slider.trigger('change');
+                }
+                else
+                {
+                    $( '#error' ).show();
+                }
 
                 // Add event handler to access button
-                if(data['resource'] == 'cloud')
+                if(data['resource'] == 'cloud' && !data['outData'])
                 {
                     $( "#access" ).text("Fetch Data from Cloud");                    
                     $( "#access" ).click(_.bind(this.handleDownloadDataButton, this));
