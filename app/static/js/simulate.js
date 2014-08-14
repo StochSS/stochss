@@ -1,3 +1,19 @@
+function generate_datestr() {
+    var temp = new Date();
+    //var dateStr = padStr(temp.getFullYear()) +
+    var dateStr = padStr(temp.getYear()-100) +
+                  padStr(1 + temp.getMonth()) +
+                  padStr(temp.getDate()) + '_' +
+                  padStr(temp.getHours()) +
+                  padStr(temp.getMinutes()) +
+                  padStr(temp.getSeconds());
+    //console.log(dateStr );
+    return dateStr
+}
+
+function padStr(i) {
+    return (i < 10) ? "0" + i : "" + i;
+}
 
 $( document ).ready( function() {
     //loadTemplate("speciesEditorTemplate", "/model/speciesEditor.html");
@@ -363,10 +379,11 @@ var run = function()
                        //I suck, but these three lines have to come before the rest of this to work...
                        var name = data.name;
                        var units = data.units;
-
+                  
                        $( "#simulationConf" ).html(simTemplate({ name : name,
                                                                  units : units,
-                                                                 isSpatial : data.isSpatial }));
+                                                                 isSpatial : data.isSpatial,
+                                                                 datestr : generate_datestr() }));
 
                        var selectTable = new Sensitivity.SelectTable();
                        

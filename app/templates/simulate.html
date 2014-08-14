@@ -102,7 +102,7 @@
         Type: <h3><% if(isSpatial) { %>Spatial<% } else { %>Well-mixed<% } %></h3>
         <hr />
         <label>Name:</label>
-        <input type="text" class="span3" id="jobName" value="<%= name %>_job" />
+        <input type="text" class="span3" id="jobName" value="<%= name %>_job_<%= datestr %>" />
         
         <span class="help-block">This name will be used to reference the ensemble.</span>
         <br />
