@@ -676,6 +676,7 @@ class SimulatePage(BaseHandler):
         
             # Call backendservices and execute StochKit
             service = backendservices()
+            print "backendservices.executeTask() params = {0}".format(params)
             cloud_result = service.executeTask(params)
             if not cloud_result["success"]:
                 e = cloud_result["exception"]

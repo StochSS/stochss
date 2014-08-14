@@ -47,7 +47,7 @@ class backendservices():
         result = {}
         try:
             from tasks import task,updateEntry
-	    #This is a celery task in tasks.py: @celery.task(name='stochss')
+            #This is a celery task in tasks.py: @celery.task(name='stochss')
             
             # Need to make sure that the queue is actually reachable because
             # we don't want the user to try to submit a task and have it
