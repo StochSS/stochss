@@ -178,7 +178,7 @@ Spatial.Controller = Backbone.View.extend(
                       success : function(data) {
                           updateMsg(data);
                           
-                          this.refreshData();
+                          location.reload();
                       },                      
                       error: function(data)
                       {
@@ -224,8 +224,16 @@ Spatial.Controller = Backbone.View.extend(
                 var jobInfoTemplate = _.template( $( "#jobInfoTemplate" ).html() );
 
                 $( "#jobInfo" ).html( jobInfoTemplate(this.jobInfo) )
-
-                if(data['status'] == 'Finished')
+                
+                if(typeof data.status != 'undefined')
+                {
+                    updateMsg( data );
+                    
+                    if(!data.status)
+                        return;
+                }
+                
+                if(data['jobStatus'] == 'Finished' && data['stderr'].trim() == '')
                 {
                     if(data['outData'])
                         $( '#plotRegion' ).show();
@@ -247,6 +255,7 @@ Spatial.Controller = Backbone.View.extend(
                     $( '#error' ).show();
                 }
 
+                $( "#accessOutput" ).show();
                 // Add event handler to access button
                 if(data['resource'] == 'cloud' && !data['outData'])
                 {

@@ -35,14 +35,21 @@
     <h2> Job summary: <span style="COLOR:green;"><%= name %></span></h2>
     <br />
     <div class="well">                    
+        <table border=0 width='100%' cellpadding=0><tr><td>
         <h3>Metadata</h3>
         <p class="thispage">
             Resource: <%= resource %>
             <br />
-            Simulation status: <%= status %>
+            Simulation status: <%= jobStatus %>
             <br />
             Stochkit model: <a href="/modeleditor?model_edited=<%= modelName %>" class="thispage"> <%= modelName %> </a>
         </p>
+        </td><td align=right><table cellpadding=0><tr><td>
+                            <h4>Mouse Controls:</h3><br />
+                            1.  Rotation -- Left button<br>
+                            2.  Translation -- Right button<br>
+                            3.  Zoom -- Mouse wheel, or left + right button<br>
+        </td></tr></table></td></tr></table>
     </div>
 
     <div id="plotRegion" style="display : none;">
@@ -75,7 +82,7 @@
     <div id="msg"></div>
     <br />
     
-    <div class="well">
+    <div id="accessOutput" class="well" style="display : none;">
         <h3>Output</h3>
         <br />
         <button id="access" type="submit" class="btn btn-primary btn-large"><i class="icon-download-alt"></i> Fetch Data from Cloud</button>

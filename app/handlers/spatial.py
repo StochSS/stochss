@@ -65,7 +65,7 @@ class SpatialJobWrapper(db.Model):
         if self.status == "Running":
             if self.resource.lower() == "local":
                 try:
-                    os.killpg(self.pid, signal.SIGTERM)
+                    os.killpg(int(self.pid), signal.SIGTERM)
                 except:
                     pass
             elif self.resource.lower() == "cloud":
@@ -114,48 +114,64 @@ class SpatialPage(BaseHandler):
                 self.response.headers['Content-Type'] = 'application/json'
                 self.response.write({ "status" : False, "msg" : "Not the right user" })
 
+            result = {}
+            stdout = ''
+            stderr = ''
             if job.outData is not None:
-                fstdoutHandle = open(job.outData + '/stdout', 'r')
-                stdout = fstdoutHandle.read()
-                fstdoutHandle.close()
-                fstderrHandle = open(job.outData + '/stderr', 'r')
-                stderr = fstderrHandle.read()
-                fstderrHandle.close()
-            else:
-                stdout = ''
-                stderr = ''
-            
-            self.response.headers['Content-Type'] = 'application/json'
-            self.response.write(json.dumps({ "id" : int(self.request.get('id')),
-                                             "status" : job.status,
+                print job.outData
+                try:
+                    fstdoutHandle = open(str(job.outData + '/stdout.log'), 'r')
+                    stdout = fstdoutHandle.read()
+                    fstdoutHandle.close()
+                    fstderrHandle = open(str(job.outData + '/stderr.log'), 'r')
+                    stderr = fstderrHandle.read()
+                    fstderrHandle.close()
+                except IOError as e:
+                    traceback.print_exc()
+                    result['status'] = False
+                    result['msg'] = 'Error running the simulation: stdout/stderr outputd missing.'
+
+            result.update({ "id" : int(self.request.get('id')),
+                                "jobStatus" : job.status,
                                              "resource" : job.resource,
                                              "modelName" : job.modelName,
                                              "outData" : job.outData,
                                              "name" : job.jobName,
                                              "stdout" : stdout,
                                              "stderr" : stderr,
-                                             "indata" : json.loads(job.indata) }))
+                                             "indata" : json.loads(job.indata) })
+
+            self.response.headers['Content-Type'] = 'application/json'
+            self.response.write(json.dumps(result))
             return
         elif reqType == 'timeData':
-            job = SpatialJobWrapper.get_by_id(int(self.request.get('id')))
+            try:
+                job = SpatialJobWrapper.get_by_id(int(self.request.get('id')))
 
-            data = json.loads(self.request.get('data'))
+                data = json.loads(self.request.get('data'))
 
-            trajectory = data["trajectory"]
-            timeIdx = data["timeIdx"]
+                trajectory = data["trajectory"]
+                timeIdx = data["timeIdx"]
 
-            with open(job.outData + '/results/result{0}'.format(trajectory)) as fd:
-                result = pickle.load(fd)
-    
-                species = result.model.get_species_map().keys()
+                with open(str(job.outData + '/results/result{0}'.format(trajectory))) as fd:
+                    result = pickle.load(fd)
+        
+                    species = result.model.get_species_map().keys()
 
-                threeJS = {}
-                print "exporting ", timeIdx
-                for specie in species:
-                    threeJS[specie] = result.export_to_three_js(specie, timeIdx)
-                    
-            self.response.content_type = 'application/json'
-            self.response.write(json.dumps( threeJS ))
+                    threeJS = {}
+                    print "exporting ", timeIdx
+                    for specie in species:
+                        threeJS[specie] = result.export_to_three_js(specie, timeIdx)
+                        
+                self.response.content_type = 'application/json'
+                self.response.write(json.dumps( threeJS ))
+            except Exception as e:
+                traceback.print_exc()
+                result = {}
+                result['status'] = False
+                result['msg'] = 'Error: error fetching results {0}'.format(e)
+                self.response.headers['Content-Type'] = 'application/json'
+                self.response.write(json.dumps(result))
             return
 
         self.render_response('spatial.html')
@@ -427,12 +443,12 @@ class SpatialPage(BaseHandler):
             with open(model_file_pkl, 'w') as fd:
                 pickle.dump(pymodel, fd)
 
-            cmd = "{0}/../../pyurdme/wrapper.py {1} {2} {3} {4} {5}".format(path, model_file_pkl, result_dir, simulation_algorithm, simulation_realizations, simulation_seed)
+            cmd = "{0}/../../pyurdme/pyurdme_wrapper.py {1} {2} {3} {4} {5}".format(path, model_file_pkl, result_dir, simulation_algorithm, simulation_realizations, simulation_seed)
             print cmd
-            exstring = '{0}/backend/wrapper.sh {1}/stdout {1}/stderr {2}'.format(basedir, dataDir, cmd)
+            exstring = '{0}/backend/wrapper.sh {1}/stdout.log {1}/stderr.log {2}'.format(basedir, dataDir, cmd)
             handle = subprocess.Popen(exstring, shell=True, preexec_fn=os.setsid)
             
-            job.pid = handle.pid
+            job.pid = str(handle.pid)
 
             job.put()
             
