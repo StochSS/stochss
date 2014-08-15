@@ -474,8 +474,6 @@ def task(taskid,params):
       xmlfilepath = filename
       stdout = "output/%s/stdout.log" % uuidstr
       stderr = "output/%s/stderr.log" % uuidstr
-      print "======================="
-      print "params = {0} ".format(params)
       
       job_type = params['job_type']
       exec_str = ''
@@ -488,7 +486,6 @@ def task(taskid,params):
           exec_str = "{0}/pyurdme_wrapper.py {1} {2} {3} {4} {5} 2>{6} > {7}".format(THOME, xmlfilepath, 'output/{0}/result'.format(uuidstr), params['simulation_algorithm'], params['simulation_realizations'], params['simulation_seed'], stderr, stdout)
       
       print "======================="
-      print "here-local"
       print " Command to be executed : "
       print exec_str
       print "======================="

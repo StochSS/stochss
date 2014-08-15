@@ -40,7 +40,7 @@
         <p class="thispage">
             Resource: <%= resource %>
             <br />
-            Simulation status: <%= status %>
+            Simulation status: <%= jobStatus %>
             <br />
             Stochkit model: <a href="/modeleditor?model_edited=<%= modelName %>" class="thispage"> <%= modelName %> </a>
         </p>
@@ -82,7 +82,7 @@
     <div id="msg"></div>
     <br />
     
-    <div class="well">
+    <div id="accessOutput" class="well" style="display : none;">
         <h3>Output</h3>
         <br />
         <button id="access" type="submit" class="btn btn-primary btn-large"><i class="icon-download-alt"></i> Fetch Data from Cloud</button>

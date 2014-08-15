@@ -300,6 +300,7 @@ class EC2Agent(BaseAgent):
     #       per machine and letting that one worker execute one task per core, using
     #       the configuration in celeryconfig.py to ensure that Celery detects the 
     #       number of cores and enforces this desired behavior.
+    userstr += "export PYTHONPATH=/home/ubuntu/pyurdme/:/home/ubuntu/stochss/app/\n"
     if self.PARAM_WORKER_QUEUE in parameters:
       userstr+="nohup celery -A tasks worker --autoreload --loglevel=info -Q {0} --workdir /home/ubuntu > /home/ubuntu/nohup.log 2>&1 & \n".format(
           parameters[self.PARAM_WORKER_QUEUE]
@@ -308,6 +309,9 @@ class EC2Agent(BaseAgent):
       userstr+="nohup celery -A tasks worker --autoreload --loglevel=info --workdir /home/ubuntu > /home/ubuntu/nohup.log 2>&1 & \n"
     f.write(userstr)
     f.close()
+    print "="*80
+    print userstr
+    print "="*80
     start_time = datetime.datetime.now()
     active_public_ips = []
     active_private_ips = []
