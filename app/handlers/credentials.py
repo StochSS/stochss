@@ -66,8 +66,8 @@ class CredentialsPage(BaseHandler):
         elif 'start' in params:
             number_of_new_vms = params['vm_number']
             result = self.start_vms(user_id, self.user_data.getCredentials(), number_of_new_vms)
-            context['msg'] = 'Processing request...'
-            context['status'] = True
+            result['msg'] = 'Processing request...'
+            result['status'] = True
             context['starting_vms'] = True
             #self.redirect('/credentials')
             self.render_response('credentials.html', **(dict(context, **result)))
