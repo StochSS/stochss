@@ -21,7 +21,7 @@
 			<a href="/modeleditor" TITLE = "Create or select your model">Models</a>
 		    </li>
 		    <!-- <li><a href="/modeleditor/overview">Overview</a></li> -->
-            {% if model_edited %}
+                    {% if model_edited %}
 		    <li>
 			<a href="/modeleditor/specieseditor" TITLE = "Create a List of Species">Species</a>
 		    </li>
@@ -36,7 +36,7 @@
 			<a href="/modeleditor/mesheditor" TITLE = "Add a mesh">Mesh</a>
 		    </li>
                     {% endif %}
-            {% endif %}
+                    {% endif %}
 		    <!-- <li><a href="/modeleditor/codeeditor">Editor</a></li> -->
 		    <li class="dropdown">
 			<a class="dropdown-toggle" data-toggle="dropdown" TITLE = "Import from File/ Load Existing Library">Import<b class="caret"></b></a>
@@ -53,9 +53,9 @@
 		    <li class="dropdown">
 			<a class="dropdown-toggle" data-toggle="dropdown" TITLE = "Export File To Stochkit">Export<b class="caret"></b></a>
 			<ul class="dropdown-menu">
-          <a href="/modeleditor/export/tostochkit2">To XML (StochKit2 compat.)</a>
-          <a href="#" id="exportToPublicLibrary" TITLE = "Export model to public Library">To Public Library...</a>
-          <!-- <a href="/modeleditor/export/tosbml">To SBML ...</a> -->
+                          <a href="/modeleditor/export/tostochkit2">To XML (StochKit2 compat.)</a>
+                          <a href="#" id="exportToPublicLibrary" TITLE = "Export model to public Library">To Public Library...</a>
+                          <!-- <a href="/modeleditor/export/tosbml">To SBML ...</a> -->
 			</ul>
 		    </li>
                     {% else %}
@@ -80,14 +80,6 @@
 		    <br/>
 
                     <div class="row">
-                        <!--<div id="uploadMeshDiv" class="span5">
-                            <div>Upload mesh file:</div>
-                            <input id="meshDataUpload" type="file" name="files[]" multiple><br />
-                            <div id="progresses"></div>
-                            
-                            <div id="meshMsg"></div>
-                            <br />
-                        </div>-->
                         <div id="meshPreview" class="span9">
                             Loading mesh data...
                         </div>
@@ -109,36 +101,60 @@
 
                     <hr />
 
-	            <table cellpadding="0" cellspacing="0" border="0" class="table table-striped table-bordered" id="meshTable">
-		        <thead>
-                            <tr>
-                                <th></th>
-		                <th style="width: 100%">Mesh Name</th>
-                                <th>Description</th>
-                            </tr>
-		        </thead>
-		        <tbody id="meshTableBody">
-		        </tbody>
-	            </table>
+                    <div class="accordion" id="accordion2">
+                        <div class="accordion-group">
+                            <div class="accordion-heading">
+                                <a class="accordion-toggle" data-toggle="collapse" data-parent="#accordion2" href="#collapseOne">
+                                    Mesh Details
+                                </a>
+                            </div>
+                            <div id="collapseOne" class="accordion-body collapse in">
+                                <div class="accordion-inner">
+                                </div>
+                            </div>
+                        </div>
+                        <div class="accordion-group">
+                            <div class="accordion-heading">
+                                <a class="accordion-toggle" data-toggle="collapse" data-parent="#accordion2" href="#collapseTwo">
+                                    Mesh Library (select a mesh here)
+                                </a>
+                            </div>
+                            <div id="collapseTwo" class="accordion-body collapse">
+                                <div class="accordion-inner">
+                                    <div id="uploadMeshDiv" class="span5">
+	                                <table cellpadding="0" cellspacing="0" border="0" class="table table-striped table-bordered" id="meshTable">
+		                            <thead>
+                                                <tr>
+                                                    <th></th>
+		                                    <th>Mesh Name</th>
+                                                    <th style="width: 100%">Description</th>
+                                                </tr>
+		                            </thead>
+		                            <tbody id="meshTableBody">
+		                            </tbody>
+	                                </table>
+                                        
+                                        <div>Select mesh file:</div>
+                                        <div>
+                                            <input id="meshDataUpload" style="color:rgb(245, 245, 245);" type="file" name="files[]" multiple><span id="meshDataUploadStatus"></span>
+                                        </div>
+                                        <div>Select subdomain file:</div>
+                                        <div>
+                                            <input id="subdomainDataUpload" style="color:rgb(245, 245, 245);" type="file" name="files[]" multiple><span id="subdomainDataUploadStatus"></span>
+                                        </div>
+                                        <div>
 
-                    <div id="uploadMeshDiv" class="span5">
-                        <div>Select mesh file:</div>
-                        <div>
-                            <input id="meshDataUpload" type="file" name="files[]" multiple><span id="meshDataUploadStatus"></span>
+                                            <button id="meshUploadButton" type="button" class="btn btn-default btn-lg" disabled>
+                                                <span class="glyphicon glyphicon-plus"></span> Upload PyURDME Mesh
+                                            </button>
+                                        </div>
+                                        
+                                        <div id="meshMsg"></div>
+                                        <br />
+                                    </div>
+                                </div>
+                            </div>
                         </div>
-                        <div>Select subdomain file:</div>
-                        <div>
-                            <input id="subdomainDataUpload" type="file" name="files[]" multiple><span id="subdomainDataUploadStatus"></span>
-                        </div>
-                        <div>
-
-                          <button id="meshUploadButton" type="button" class="btn btn-default btn-lg" disabled>
-                            <span class="glyphicon glyphicon-plus"></span> Upload PyURDME Mesh
-                          </button>
-                        </div>
-                        
-                        <div id="meshMsg"></div>
-                        <br />
                     </div>
                     
                     <br>

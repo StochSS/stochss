@@ -82,21 +82,43 @@ MeshEditor.Controller = Backbone.View.extend(
                       data : { 'reqType' : 'getMeshInfo' },
                       success : _.bind(this.render, this) } );
         },
+
+        renderFrame : function() {
+            this.renderer.render(this.scene, this.camera);
+            requestAnimationFrame(_.bind(this.renderFrame, this));
+            this.controls.update();
+        },
         
-        // This event gets fired when the user selects a csv data file
-        meshDataPreview : function(pyurdmeMeshJsonData)
+        drawMesh : function(pyurdmeMeshJsonData)
         {
-            var dom = $( "#meshPreview" ).empty();
+            if(!this.renderer)
+            {
+                var dom = $( "#meshPreview" ).empty();
+                var width = dom.width();//
+                var height = 0.75 * width;
+                var camera = new THREE.PerspectiveCamera( 75, window.innerWidth / window.innerHeight, 0.1, 1000 );
+                var renderer = new THREE.WebGLRenderer();
+                renderer.setSize( width, height);
+                renderer.setClearColor( 0xffffff, 1);
+            
+                var rendererDom = $( renderer.domElement ).appendTo(dom);
+                
+                var controls = new THREE.OrbitControls( camera, renderer.domElement );
+                // var controls = new THREE.OrbitControls( camera );
+                //controls.addEventListener( 'change', render );
+                
+                camera.position.z = 1.5;
+
+                this.camera = camera;
+                this.renderer = renderer;
+                this.controls = controls;
+            }
+            else
+            {
+                delete this.scene;
+            }
+            
             var scene = new THREE.Scene();
-            var width = dom.width();//
-            var height = 0.75 * width;
-            var camera = new THREE.PerspectiveCamera( 75, window.innerWidth / window.innerHeight, 0.1, 1000 );
-            var renderer = new THREE.WebGLRenderer();
-            renderer.setSize( width, height);
-            renderer.setClearColor( 0xffffff, 1);
-            
-            var rendererDom = $( renderer.domElement ).appendTo(dom);
-            
             var loader = new THREE.JSONLoader();
             function load_geometry(model){
                 var material=new THREE.MeshBasicMaterial( { vertexColors: THREE.VertexColors, wireframe:true,transparent:false,opacity: 1} );
@@ -106,18 +128,10 @@ MeshEditor.Controller = Backbone.View.extend(
                 mesh = new THREE.Mesh(model.geometry,material);
                 scene.add(mesh);
             }
-
-
+            
             var model = loader.parse(pyurdmeMeshJsonData);
+            delete loader;
             load_geometry(model);
-
-            var controls = new THREE.OrbitControls( camera, renderer.domElement );
-            // var controls = new THREE.OrbitControls( camera );
-            //controls.addEventListener( 'change', render );
-
-            camera.position.z = 1.5;
-            
-            
             // add subtle blue ambient lighting
             var ambientLight = new THREE.AmbientLight(0x000000);
             scene.add(ambientLight);
@@ -129,37 +143,11 @@ MeshEditor.Controller = Backbone.View.extend(
             directionalLight.position.set(1, 1, 1).normalize();
             scene.add(directionalLight);
 
+            this.scene = scene;
 
-            function render() {
-                requestAnimationFrame(render);
-                renderer.render(scene, camera);
-                controls.update();
-            }
-            render();
+            this.renderFrame();
         },
 
-        drawInitialConditionsDom : function()
-        {
-            $( "#initialConditionsTableBody" ).empty();
-
-            /*var data = { initialConditions : { ic0 : { type : "place", x : 5.0, y : 10.0, z : 1.0, count : 5000 },
-                                               ic1 : { type : "scatter", subdomain : 1, count : 100 },
-                                               ic2 : { type : "distribute", subdomain : 2, count : 100 } },
-                         species : ['S1', 'S2'] };*/
-
-            // Build the header for reaction/species selection table
-            var element = $( "<th>" ).appendTo( this.$el.find( ".reactionSubdomainSelectTableHeader" ) );
-
-            // Add in a row for every initial condition
-            for(var initialConditionKey in this.data.initialConditions)
-            {
-                this.addInitialConditionDom(initialConditionKey);
-            }
-
-            // Add a new initial condition when this button gets pressed
-            $( '.addInitialConditionsButton' ).off('click').on('click', _.bind(function(event) { console.log('a'); this.handleAddInitialConditionButtonPress(event); }, this));
-        },
-        
         handleAddInitialConditionButtonPress : function(event)
         {
             var icName = getNewMemberName(this.data.initialConditions, 'ic');
@@ -177,7 +165,7 @@ MeshEditor.Controller = Backbone.View.extend(
                           dataType : 'json',
                           success : updateMsg } );
 
-                this.addInitialConditionDom(icName);
+                this.drawInitialCondition(icName);
             }
             else
             {
@@ -185,11 +173,193 @@ MeshEditor.Controller = Backbone.View.extend(
             }
         },
 
-        addInitialConditionDom : function(initialConditionKey)
+        drawInitialConditions : function()
         {
-            var data = this.data;
+            if(!this.initialConditionInitialized)
+            {
+                // Add a new initial condition when this button gets pressed
+                $( '.addInitialConditionsButton' ).on('click', _.bind( this.handleAddInitialConditionButtonPress , this));
 
-            var initialConditionsTableBodyTemplate = "<tr> \
+                this.initialConditionInitialized = true;
+            }
+
+            $( "#initialConditionsTableBody" ).empty();
+
+            // Build the header for reaction/species selection table
+            var element = $( "<th>" ).appendTo( this.$el.find( ".reactionSubdomainSelectTableHeader" ) );
+
+            // Add in a row for every initial condition
+            for(var initialConditionKey in this.data.initialConditions)
+            {
+                this.drawInitialCondition(initialConditionKey);
+            }
+        },
+        
+        handleInitialConditionsTypeChange : function(initialConditionsKey, element, event)
+        {
+            var val = $( event.target ).val().trim();
+
+            // If somehow these are the same do nothing
+            if(this.data.initialConditions[initialConditionsKey].type == val)
+            {
+                return;
+            }
+
+            this.data.initialConditions[initialConditionsKey].type = val;
+
+            // Clear out the old type settings (saving count -- cause that is in all initial conditions)
+            var count = this.data.initialConditions[initialConditionsKey].count;
+
+            // Insert default new ones
+            if(val == 'place')
+            {
+                var species = this.data.initialConditions[initialConditionsKey]['species'];
+                this.data.initialConditions[initialConditionsKey] = { species : species,
+                                                                      type : 'place',
+                                                                      x : 0.0,
+                                                                      y : 0.0,
+                                                                      z : 0.0,
+                                                                      count : count };
+            }
+            else // scatter and distribute use the same variables
+            {
+                var subdomain = undefined;
+
+                if(_.has(this.data.initialConditions[initialConditionsKey], 'subdomain'))
+                {
+                    subdomain = this.data.initialConditions[initialConditionsKey]['subdomain'];
+                }
+                
+                if(typeof subdomain === 'undefined')
+                {
+                    subdomain = this.data.subdomains[0];
+                }
+
+                var species = this.data.initialConditions[initialConditionsKey]['species'];
+                this.data.initialConditions[initialConditionsKey] = { species : species,
+                                                                      subdomain : subdomain,
+                                                                      type : val,
+                                                                      count : count };
+            }
+
+            this.drawInitialCondition(initialConditionsKey, element);
+            
+            $.ajax( { url : '/modeleditor/mesheditor',
+                      type : 'POST',
+                      data : { reqType : 'setInitialConditions',
+                               data : JSON.stringify( { initialConditions : this.data['initialConditions'] } ) },
+                      dataType : 'json',
+                      success : updateMsg} );
+        },
+
+        handleInitialConditionsSpeciesChange : function(initialConditionsKey, event)
+        {
+            var val = $( event.target ).val().trim();
+            
+            this.data.initialConditions[initialConditionsKey].species = val;
+
+            $.ajax( { url : '/modeleditor/mesheditor',
+                      type : 'POST',
+                      data : { reqType : 'setInitialConditions',
+                               data : JSON.stringify( { initialConditions : this.data['initialConditions'] } ) },
+                      dataType : 'json',
+                      success : updateMsg } );
+        },
+
+        handlePlaceValuesChange : function(name, initialConditionsKey, event)
+        {
+            var val = $( event.target ).val().trim();
+
+            this.data.initialConditions[initialConditionsKey][name] = val;
+
+            $.ajax( { url : '/modeleditor/mesheditor',
+                      type : 'POST',
+                      data : { reqType : 'setInitialConditions',
+                               data : JSON.stringify( { initialConditions : this.data['initialConditions'] } ) },
+                      dataType : 'json',
+                      success : updateMsg } );
+        },
+
+        handleScatterSubdomainSelectChange : function(initialConditionsKey, event)
+        {
+            var val = $( event.target ).val().trim();
+
+            this.data.initialConditions[initialConditionsKey].subdomain = val;
+
+            $.ajax( { url : '/modeleditor/mesheditor',
+                      type : 'POST',
+                      data : { reqType : 'setInitialConditions',
+                               data : JSON.stringify( { initialConditions : this.data['initialConditions'] } ) },
+                      dataType : 'json',
+                      success : updateMsg } );
+
+        },
+
+        handleScatterCountChange : function(initialConditionsKey, event)
+        {
+            var val = $( event.target ).val().trim();
+
+            this.data.initialConditions[initialConditionsKey].count = val;
+
+            $.ajax( { url : '/modeleditor/mesheditor',
+                      type : 'POST',
+                      data : { reqType : 'setInitialConditions',
+                               data : JSON.stringify( { initialConditions : this.data['initialConditions'] } ) },
+                      dataType : 'json',
+                      success : updateMsg } );
+
+        },
+
+        handleDistributeSubdomainSelectChange : function(initialConditionsKey, event)
+        {
+            var val = $( event.target ).val().trim();
+
+            this.data.initialConditions[initialConditionsKey].subdomain = val;
+
+            $.ajax( { url : '/modeleditor/mesheditor',
+                      type : 'POST',
+                      data : { reqType : 'setInitialConditions',
+                               data : JSON.stringify( { initialConditions : this.data['initialConditions'] } ) },
+                      dataType : 'json',
+                      success : updateMsg } );
+
+        },
+
+        handleDistributeCountChange : function(initialConditionsKey, event)
+        {
+            var val = $( event.target ).val().trim();
+
+            this.data.initialConditions[initialConditionsKey].count = val;
+
+            $.ajax( { url : '/modeleditor/mesheditor',
+                      type : 'POST',
+                      data : { reqType : 'setInitialConditions',
+                               data : JSON.stringify( { initialConditions : this.data['initialConditions'] } ) },
+                      dataType : 'json',
+                      success : updateMsg } );
+        },
+
+        handleDeleteInitialCondition : function(initialConditionKey, doms, event) {
+            delete this.data.initialConditions[initialConditionKey];
+            
+            for(var i in doms)
+            {
+                doms[i].remove();
+            }
+            
+            $.ajax( { url : '/modeleditor/mesheditor',
+                      type : 'POST',
+                      data : { reqType : 'setInitialConditions',
+                               data : JSON.stringify( { initialConditions : this.data['initialConditions'] } ) },
+                      dataType : 'json',
+                      success : function() { updateMsg( true, "Initial condition deleted" ); } } );
+        },
+
+        drawInitialCondition : function(initialConditionKey, element)
+        {
+            if(!element)
+            {
+                var initialConditionsTableBodyTemplate = "<tr> \
 <td> \
 <button type=\"button\" class=\"btn btn-default btn-lg delete\"> \
 <i class=\"icon-remove\"></i> \
@@ -200,31 +370,20 @@ MeshEditor.Controller = Backbone.View.extend(
 <td class=\"custom\"></td> \
 </tr>";
 
+                element = $( initialConditionsTableBodyTemplate ).appendTo( this.$el.find( "#initialConditionsTableBody" ) );
+            }
+
+            var data = this.data;
+
             var possibleTypes = ["place", "scatter", "distribute"];
 
-            var row = $( initialConditionsTableBodyTemplate ).appendTo( this.$el.find( "#initialConditionsTableBody" ) );
-
-            var typeSelect = row.find( '.type' );
-            var speciesSelect = row.find( '.species' );
-            var custom = row.find( '.custom' );
-            var deleteButton = row.find('.delete');
+            var typeSelect = element.find( '.type' ).empty();
+            var speciesSelect = element.find( '.species' ).empty();
+            var custom = element.find( '.custom' ).empty();
+            var deleteButton = element.find('.delete');
 
             // Event handle for delete
-            deleteButton.on('click', _.bind(_.partial(function(initialConditionKey, doms, event) {
-                delete this.data.initialConditions[initialConditionKey];
-                
-                for(var i in doms)
-                {
-                    doms[i].remove();
-                }
-
-                $.ajax( { url : '/modeleditor/mesheditor',
-                          type : 'POST',
-                          data : { reqType : 'setInitialConditions',
-                                   data : JSON.stringify( { initialConditions : this.data['initialConditions'] } ) },
-                          dataType : 'json',
-                          success : function() { updateMsg( true, "Initial condition deleted" ); } } );
-            }, initialConditionKey, [typeSelect, speciesSelect, custom, row]), this));
+            deleteButton.on('click', _.bind(_.partial(this.handleDeleteInitialCondition, initialConditionKey, [typeSelect, speciesSelect, custom, element]), this));
 
             for(var i in possibleTypes)
             {
@@ -236,7 +395,7 @@ MeshEditor.Controller = Backbone.View.extend(
                 }
             }
             
-            typeSelect.on('change', _.bind(_.partial(this.handleInitialConditionsTypeChange, initialConditionKey), this));
+            typeSelect.on('change', _.bind(_.partial(this.handleInitialConditionsTypeChange, initialConditionKey, element), this));
 
             var species = _.keys(this.data.speciesSubdomainAssignments);
 
@@ -398,152 +557,6 @@ Count in each voxel \
             }
         },
 
-        handleInitialConditionsTypeChange : function(initialConditionsKey, event)
-        {
-            var val = $( event.target ).val().trim();
-
-            // If somehow these are the same do nothing
-            if(this.data.initialConditions[initialConditionsKey].type == val)
-            {
-                return;
-            }
-
-            this.data.initialConditions[initialConditionsKey].type = val;
-
-            // Clear out the old type settings (saving count -- cause that is in all initial conditions)
-            var count = this.data.initialConditions[initialConditionsKey].count;
-
-            // Insert default new ones
-            if(val == 'place')
-            {
-                var species = this.data.initialConditions[initialConditionsKey]['species'];
-                this.data.initialConditions[initialConditionsKey] = { species : species,
-                                                                      type : 'place',
-                                                                      x : 0.0,
-                                                                      y : 0.0,
-                                                                      z : 0.0,
-                                                                      count : count };
-            }
-            else // scatter and distribute use the same variables
-            {
-                var subdomain = undefined;
-
-                if(_.has(this.data.initialConditions[initialConditionsKey], 'subdomain'))
-                {
-                    subdomain = this.data.initialConditions[initialConditionsKey]['subdomain'];
-                }
-                
-                if(typeof subdomain === 'undefined')
-                {
-                    subdomain = this.data.subdomains[0];
-                }
-
-                var species = this.data.initialConditions[initialConditionsKey]['species'];
-                this.data.initialConditions[initialConditionsKey] = { species : species,
-                                                                      subdomain : subdomain,
-                                                                      type : val,
-                                                                      count : count };
-            }
-            
-            $.ajax( { url : '/modeleditor/mesheditor',
-                      type : 'POST',
-                      data : { reqType : 'setInitialConditions',
-                               data : JSON.stringify( { initialConditions : this.data['initialConditions'] } ) },
-                      dataType : 'json',
-                      success : _.bind(_.partial(function(returnData) {
-                          // Redraw
-                          this.drawInitialConditionsDom();
-                          updateMsg(returnData);
-                      }), this) } );
-        },
-
-        handleInitialConditionsSpeciesChange : function(initialConditionsKey, event)
-        {
-            var val = $( event.target ).val().trim();
-            
-            this.data.initialConditions[initialConditionsKey].species = val;
-
-            $.ajax( { url : '/modeleditor/mesheditor',
-                      type : 'POST',
-                      data : { reqType : 'setInitialConditions',
-                               data : JSON.stringify( { initialConditions : this.data['initialConditions'] } ) },
-                      dataType : 'json',
-                      success : updateMsg } );
-        },
-
-        handlePlaceValuesChange : function(name, initialConditionsKey, event)
-        {
-            var val = $( event.target ).val().trim();
-
-            this.data.initialConditions[initialConditionsKey][name] = val;
-
-            $.ajax( { url : '/modeleditor/mesheditor',
-                      type : 'POST',
-                      data : { reqType : 'setInitialConditions',
-                               data : JSON.stringify( { initialConditions : this.data['initialConditions'] } ) },
-                      dataType : 'json',
-                      success : updateMsg } );
-        },
-
-        handleScatterSubdomainSelectChange : function(initialConditionsKey, event)
-        {
-            var val = $( event.target ).val().trim();
-
-            this.data.initialConditions[initialConditionsKey].subdomain = val;
-
-            $.ajax( { url : '/modeleditor/mesheditor',
-                      type : 'POST',
-                      data : { reqType : 'setInitialConditions',
-                               data : JSON.stringify( { initialConditions : this.data['initialConditions'] } ) },
-                      dataType : 'json',
-                      success : updateMsg } );
-
-        },
-
-        handleScatterCountChange : function(initialConditionsKey, event)
-        {
-            var val = $( event.target ).val().trim();
-
-            this.data.initialConditions[initialConditionsKey].count = val;
-
-            $.ajax( { url : '/modeleditor/mesheditor',
-                      type : 'POST',
-                      data : { reqType : 'setInitialConditions',
-                               data : JSON.stringify( { initialConditions : this.data['initialConditions'] } ) },
-                      dataType : 'json',
-                      success : updateMsg } );
-
-        },
-
-        handleDistributeSubdomainSelectChange : function(initialConditionsKey, event)
-        {
-            var val = $( event.target ).val().trim();
-
-            this.data.initialConditions[initialConditionsKey].subdomain = val;
-
-            $.ajax( { url : '/modeleditor/mesheditor',
-                      type : 'POST',
-                      data : { reqType : 'setInitialConditions',
-                               data : JSON.stringify( { initialConditions : this.data['initialConditions'] } ) },
-                      dataType : 'json',
-                      success : updateMsg } );
-
-        },
-
-        handleDistributeCountChange : function(initialConditionsKey, event)
-        {
-            var val = $( event.target ).val().trim();
-
-            this.data.initialConditions[initialConditionsKey].count = val;
-
-            $.ajax( { url : '/modeleditor/mesheditor',
-                      type : 'POST',
-                      data : { reqType : 'setInitialConditions',
-                               data : JSON.stringify( { initialConditions : this.data['initialConditions'] } ) },
-                      dataType : 'json',
-                      success : updateMsg } );
-        },
-
         handleMeshDataAdd : function(event, data)
         {
             if(this.uploaderState.meshFileData)
@@ -618,242 +631,149 @@ Count in each voxel \
             }
         },
 
-        render : function(data)
+        handleMeshSelect : function(meshWrapperId, element)
         {
-            $( this.el ).find('#progresses').empty();
-            
-            if(typeof data != 'undefined')
+            if(this.data.meshWrapperId != meshWrapperId)
             {
-                this.data = data;
+                // Send a message to the server to change the selected mesh
+                //   Server will respond with new data object (that needs passed to render -- everything will get redrawn)
+                $.ajax( { url : '/modeleditor/mesheditor',
+                          type : 'POST',
+                          data : { reqType : 'setMesh',
+                                   data : JSON.stringify( { meshWrapperId : meshWrapperId } ) },
+                          dataType : 'json',
+                          success : _.bind(this.render, this) } );
             }
+    
+            $.ajax( { type : 'POST',
+                      url: '/modeleditor/mesheditor',
+                      data: { reqType : 'getMesh',
+                              data: JSON.stringify( { id : meshWrapperId,
+                                                      selectedSubdomains : [] } ) }, // Initially, no subdomains should be selected, so send empty array
+                      success : _.bind( this.drawMesh, this) });
+        },
 
-            if(typeof this.data != 'undefined')
+        handleMeshDelete : function(meshWrapperId, element)
+        {
+            if(this.data.meshWrapperId != meshWrapperId)
             {
+                $.ajax( { type : 'POST',
+                          url: '/modeleditor/mesheditor',
+                          data: { reqType : 'deleteMesh',
+                                  data: JSON.stringify( { id : meshWrapperId } ) }, // Initially, no subdomains should be selected, so send empty array
+                          success : _.bind( this.drawMesh, this) });
+                
+                element.remove();
+            }
+            else
+            {
+                updateMsg({ status : false, msg : 'Can\'t delete currently selected mesh' });
+            }
+        },
+
+        drawMeshSelect : function()
+        {
+            // Run the one-time things
+            if(!this.meshSelectInitialized)
+            {
+                this.meshSelectInitialized = true;
+
+                $( '.meshTable' ).show();
                 // When a user uploads a file, draw a status bar, and after the upload is finished request the refreshes
                 this.uploaderState = {};
-                
+            
                 $( "#meshUploadButton" ).click(_.bind(this.handleMeshUploadButton, this));
-
+            
                 $( this.el ).find('#meshDataUpload').fileupload({
                     url: '/FileServer/large/meshFiles',
                     dataType: 'json',
                     add : _.bind(this.handleMeshDataAdd, this),
                     done : _.bind(this.handleMeshUploadFinish, this)
                 });
-
+                
                 $( this.el ).find('#subdomainDataUpload').fileupload({
                     url: '/FileServer/large/subdomainFiles',
                     dataType: 'json',
                     add : _.bind(this.handleSubdomainsDataAdd, this),
                     done : _.bind(this.handleSubdomainsUploadFinish, this)
                 });
-
-                //Draw the subdomain selector stuff and hook up event handlers
-                this.selectedSubdomains = {};
-
-                $( '#subdomainSelect' ).empty();
-
-                for(var i in this.data.subdomains)
-                {
-                    var checkbox = $( '<div><input type="checkbox">Subdomain ' + this.data.subdomains[i] + '</div>' ).appendTo(  $( '#subdomainSelect' ) ).find( 'input' );
-
-                    this.selectedSubdomains[this.data.subdomains[i]] = false;
-
-                    checkbox.change(_.bind(_.partial(function(subdomain, event) {
-                        this.selectedSubdomains[subdomain] = $( event.target ).prop('checked');
-
-                        $.ajax( { type : 'POST',
-                                  url: '/modeleditor/mesheditor',//'/FileServer/large/processedMeshFiles/' + exampleMeshes[i].processedMeshFileId + '/file.dat'
-                                  data: { reqType : 'getMesh',
-                                          data : JSON.stringify( { id : this.data['meshWrapperId'],
-                                                                   selectedSubdomains : this.selectedSubdomains } ) },
-                                  success : _.bind( this.meshDataPreview, this) });
-                    }, this.data.subdomains[i]), this));
-                }
-
-                //Add initial conditions dom!!
-                this.drawInitialConditionsDom();
-
-                // Build the reactions subdomains selection table
-                var reactionsSubdomainTableTitle = $( "#reactionsSubdomainsTableTitle" );
-                var reactionsSubdomainTableHeader = $( "#reactionsSubdomainsTableHeader" );
-                var reactionsSubdomainTableBody = $( "#reactionsSubdomainsTableBody" );
-                var reactionsSubdomainTable = $( "#reactionsSubdomainsTable" );
-
-                // It's possible the page does not have these elements, so check before we try
-                //    to do anything with them
-                if(reactionsSubdomainTableHeader.length > 0)
-                {
-                    reactionsSubdomainTableHeader.empty();
-                    reactionsSubdomainTableBody.empty();
-
-                    var subdomains = this.data['subdomains'];
-                    var reactionsSubdomainAssignments = this.data['reactionsSubdomainAssignments'];
-                    
-                    $( "<th></th>" ).appendTo( reactionsSubdomainsTableHeader );
-
-                    //Insert the col. header elements (the subdomain columns)
-                    for(var subdomainIdx in subdomains)
-                    {
-                        $( "<th>" + subdomains[subdomainIdx] + "</th>" ).appendTo( reactionsSubdomainsTableHeader );
-                    }
-
-                    //Set the width of the table title appropriatelike
-                    reactionsSubdomainTableTitle.prop('colspan', subdomains.length + 1);
-
-                    //Insert a row for every reactions
-                    for(var reactionId in reactionsSubdomainAssignments)
-                    {
-                        var row = $( "<tr></tr>" ).appendTo( reactionsSubdomainsTableBody );
-
-                        $( "<td>" + reactionId + "</td>" ).appendTo( row );
-
-                        for(var subdomainIndex in subdomains)
-                        {
-                            var subdomainId = subdomains[subdomainIndex]
-
-                            var checked = false;
-
-                            if(_.indexOf(reactionsSubdomainAssignments[reactionId], subdomainId) >= 0)
-                            {
-                                checked = true;
-                            }
-
-                            var checkbox = $( "<td><input type=\"checkbox\"></td>" ).appendTo( row ).find(' input ');
-
-                            checkbox.prop('checked', checked);
-
-                            checkbox.on('click', _.bind(_.partial(this.setReactionsSubdomainAssignment, reactionId, subdomainId), this));
-                        }
-                    }
-                    
-                    //reactionsSubdomainTable.dataTable();
-                }
-
-                // Build the species subdomains selection table
-                var speciesSubdomainTableTitle = $( "#speciesSubdomainsTableTitle" );
-                var speciesSubdomainTableHeader = $( "#speciesSubdomainsTableHeader" );
-                var speciesSubdomainTableBody = $( "#speciesSubdomainsTableBody" );
-                var speciesSubdomainTable = $( "#speciesSubdomainsTable" );
-
-                // It's possible the page does not have these elements, so check before we try
-                //    to do anything with them
-                if(speciesSubdomainTableHeader.length > 0)
-                {
-                    var subdomains = this.data['subdomains'];
-                    var speciesSubdomainAssignments = this.data['speciesSubdomainAssignments'];
-
-                    speciesSubdomainTableHeader.empty();
-                    speciesSubdomainTableBody.empty();
-
-                    $( "<th></th>" ).appendTo( speciesSubdomainTableHeader );
-
-                    //Insert the col. header elements (the subdomain columns)
-                    for(var subdomainIdx in subdomains)
-                    {
-                        $( "<th>" + subdomains[subdomainIdx] + "</th>" ).appendTo( speciesSubdomainTableHeader );
-                    }
-
-                    //Set the width of the table title appropriatelike
-                    speciesSubdomainTableTitle.prop('colspan', subdomains.length + 1);
-
-                    //Insert a row for every species
-                    for(var speciesId in speciesSubdomainAssignments)
-                    {
-                        
-                        var row = $( "<tr></tr>" ).appendTo( speciesSubdomainTableBody );
-
-                        $( "<td>" + speciesId + "</td>" ).appendTo( row );
-
-                        for(var subdomainIndex in subdomains)
-                        {
-                            var subdomainId = subdomains[subdomainIndex]
-
-                            var checked = false;
-
-                            if(_.indexOf(speciesSubdomainAssignments[speciesId], subdomainId) >= 0)
-                            {
-                                checked = true;
-                            }
-
-                            var checkbox = $( "<td><input type=\"checkbox\"></td>" ).appendTo( row ).find(' input ');
-
-                            checkbox.prop('checked', checked)
-
-                            checkbox.on('click', _.bind(_.partial(this.setSpeciesSubdomainAssignment, speciesId, subdomainId), this));
-                        }
-                    }
-
-                    //speciesSubdomainTable.dataTable();
-                }
-
-                //$( '#meshTable' ).dataTable();
-                $( '.meshTable' ).show();
-
-                var meshTableBody = $( this.el ).find('#meshTableBody');
-
-                meshTableBody.empty();
-
-                var exampleMeshes = data['meshes'];
-
-                // Draw all the available examples meshes in the selection table
-                for(var i = 0; i < exampleMeshes.length; i++)
-                {
-                    //this.descriptionTemp = _.template('')
-
-	            this.optionTemp = _.template('<tr> \
-<td><input type="radio" name="processedMeshFiles"></td><td><%= name %></td><td><a data-toggle=\"modal\" href=\"#descriptionModal" + exampleMeshes[i].id + "\" style=\"text-decoration: none;\">Description <i class=\"icon-question-sign\"></i></a></td>\
+            }
+            
+            var meshTableBody = $( this.el ).find('#meshTableBody');
+            
+            meshTableBody.empty();
+            
+            // Draw all the available examples meshes in the selection table
+            for(var i = 0; i < this.data.meshes.length; i++)
+            {
+	        var optionTemp = _.template('<tr> \
+<td> \
+<button type=\"button\" class=\"btn btn-default btn-lg delete\"> \
+<i class=\"icon-remove\"></i> \
+</button> \
+</td> \
+<td> \
+<input type="radio" name="processedMeshFiles"> \
+</td> \
+<td> \
+<%= name %> \
+</td> \
 </tr>');
-                        ""                 
-                    var newOption = $( this.optionTemp( exampleMeshes[i]) ).appendTo( meshTableBody );
+                ""                 
+                var newOption = $( optionTemp( this.data.meshes[i] ) ).appendTo( meshTableBody );
 
-                    if(data['meshWrapperId'] == exampleMeshes[i].id)
-                    {
-                        newOption.find('input').click();
-
-                        $.ajax( { type : 'POST',
-                                  url: '/modeleditor/mesheditor',//'/FileServer/large/processedMeshFiles/' + exampleMeshes[i].processedMeshFileId + '/file.dat'
-                                  data: { reqType : 'getMesh',
-                                          data : JSON.stringify( { id : exampleMeshes[i].id,
-                                                                   selectedSubdomains : this.selectedSubdomains } ) },
-                                  success : _.bind( this.meshDataPreview, this) });
-                    }
-                    // When the initialDataFiles gets selected, fill the preview box with a preview of the mesh
-                    newOption.find('input').on('click', _.bind(_.partial( function(data) {
-                        //this.mesh = mesh;
-                        this.setMeshSelect(data.id);
-
-                        $.ajax( { type : 'POST',
-                                  url: '/modeleditor/mesheditor',//'/FileServer/large/processedMeshFiles/' + exampleMeshes[i].processedMeshFileId + '/file.dat'
-                                  data: { reqType : 'getMesh',
-                                          data: JSON.stringify( { id : data.id,
-                                                                  selectedSubdomains : this.selectedSubdomains } ) },
-                                  success : _.bind( this.meshDataPreview, this) });
-                    }, exampleMeshes[i]), this));
-                }
-
-                if(!data['meshWrapperId'])
+                newOption.find('input').on('click', _.bind(_.partial( this.handleMeshSelect, this.data.meshes[i].id), this));
+                newOption.find('.delete').on('click', _.bind(_.partial( this.handleMeshDelete, this.data.meshes[i].id, newOption), this));
+                
+                // If there is already a mesh selected, click the option
+                if(this.data.meshWrapperId == this.data.meshes[i].id)
                 {
-                    // Have something selected
-                    //meshTableBody.find('input').eq(0).click();
+                    newOption.find('input').click();
                 }
+            }
+
+        },
+
+        handleSubdomainSelect : function(subdomain, event)
+        {
+            var idx = _.indexOf(this.selectedSubdomains, subdomain);
+            
+            var checked = $( event.target ).prop('checked');
+            
+            if(checked && idx < 0)
+            {
+                this.selectedSubdomains.push(subdomain);
+            }
+            
+            if(!checked && idx >= 0)
+            {
+                this.selectedSubdomains.splice(idx, 1);
+            }
+                    
+            $.ajax( { type : 'POST',
+                      url: '/modeleditor/mesheditor',
+                      data: { reqType : 'getMesh',
+                              data : JSON.stringify( { id : this.data.meshWrapperId,
+                                                       selectedSubdomains : this.selectedSubdomains } ) },
+                      success : _.bind( this.drawMesh, this) });
+        },
+
+        drawSubdomainSelector : function()
+        {
+            //Draw the subdomain selector stuff and hook up event handlers
+            this.selectedSubdomains = [];
+
+            $( '#subdomainSelect' ).empty();
+
+            for(var i in this.data.subdomains)
+            {
+                var checkbox = $( '<div><input type="checkbox">Subdomain ' + this.data.subdomains[i] + '</div>' ).appendTo(  $( '#subdomainSelect' ) ).find( 'input' );
+                
+                checkbox.change(_.bind(_.partial(this.handleSubdomainSelect, this.data.subdomains[i]), this));
             }
         },
 
-        // The three following functions are all responsible for pinging the main server when something changes
-        //    I encode all the data as JSON to keep the variable types encoded properly (Bools, ints, strings) and just cause I do it a lot elsewhere
-
-        setMeshSelect : function(meshWrapperId)
-        {
-            $.ajax( { url : '/modeleditor/mesheditor',
-                      type : 'POST',
-                      data : { reqType : 'setMesh',
-                               data : JSON.stringify( { meshWrapperId : meshWrapperId } ) },
-                      dataType : 'json',
-                      success : _.bind(this.render, this) } );
-        },
-
-        setSpeciesSubdomainAssignment : function(speciesId, subdomainId, event)
+        handleSpeciesSubdomainAssignment : function(speciesId, subdomainId, event)
         {
             $.ajax( { url : '/modeleditor/specieseditor',
                       type : 'POST',
@@ -865,7 +785,67 @@ Count in each voxel \
                       success : updateMsg } );
         },
 
-        setReactionsSubdomainAssignment : function(reactionId, subdomainId, event)
+        drawSpeciesSubdomainAssignments : function()
+        {
+            // Build the species subdomains selection table
+            var speciesSubdomainTableTitle = $( "#speciesSubdomainsTableTitle" );
+            var speciesSubdomainTableHeader = $( "#speciesSubdomainsTableHeader" );
+            var speciesSubdomainTableBody = $( "#speciesSubdomainsTableBody" );
+            var speciesSubdomainTable = $( "#speciesSubdomainsTable" );
+
+            // It's possible the page does not have these elements, so check before we try
+            //    to do anything with them
+            if(speciesSubdomainTableHeader.length > 0)
+            {
+                var subdomains = this.data['subdomains'];
+                var speciesSubdomainAssignments = this.data['speciesSubdomainAssignments'];
+
+                speciesSubdomainTableHeader.empty();
+                speciesSubdomainTableBody.empty();
+
+                $( "<th></th>" ).appendTo( speciesSubdomainTableHeader );
+
+                //Insert the col. header elements (the subdomain columns)
+                for(var subdomainIdx in subdomains)
+                {
+                    $( "<th>" + subdomains[subdomainIdx] + "</th>" ).appendTo( speciesSubdomainTableHeader );
+                }
+
+                //Set the width of the table title appropriatelike
+                speciesSubdomainTableTitle.prop('colspan', subdomains.length + 1);
+
+                //Insert a row for every species
+                for(var speciesId in speciesSubdomainAssignments)
+                {
+                    
+                    var row = $( "<tr></tr>" ).appendTo( speciesSubdomainTableBody );
+
+                    $( "<td>" + speciesId + "</td>" ).appendTo( row );
+
+                    for(var subdomainIndex in subdomains)
+                    {
+                        var subdomainId = subdomains[subdomainIndex]
+
+                        var checked = false;
+
+                        if(_.indexOf(speciesSubdomainAssignments[speciesId], subdomainId) >= 0)
+                        {
+                            checked = true;
+                        }
+
+                        var checkbox = $( "<td><input type=\"checkbox\"></td>" ).appendTo( row ).find(' input ');
+
+                        checkbox.prop('checked', checked)
+
+                        checkbox.on('click', _.bind(_.partial(this.handleSpeciesSubdomainAssignment, speciesId, subdomainId), this));
+                    }
+                }
+
+                //speciesSubdomainTable.dataTable();
+            }
+        },
+
+        handleReactionsSubdomainAssignment : function(reactionId, subdomainId, event)
         {
             $.ajax( { url : '/modeleditor/reactioneditor',
                       type : 'POST',
@@ -875,6 +855,91 @@ Count in each voxel \
                                                         value : $( event.target ).prop('checked') } ) },
                       dataType : 'json',
                       success : updateMsg } );
+        },
+
+        drawReactionsSubdomainAssignments : function()
+        {
+            // Build the reactions subdomains selection table
+            var reactionsSubdomainTableTitle = $( "#reactionsSubdomainsTableTitle" );
+            var reactionsSubdomainTableHeader = $( "#reactionsSubdomainsTableHeader" );
+            var reactionsSubdomainTableBody = $( "#reactionsSubdomainsTableBody" );
+            var reactionsSubdomainTable = $( "#reactionsSubdomainsTable" );
+            
+            // It's possible the page does not have these elements, so check before we try
+            //    to do anything with them
+            if(reactionsSubdomainTableHeader.length > 0)
+            {
+                reactionsSubdomainTableHeader.empty();
+                reactionsSubdomainTableBody.empty();
+                
+                var subdomains = this.data['subdomains'];
+                var reactionsSubdomainAssignments = this.data['reactionsSubdomainAssignments'];
+                
+                $( "<th></th>" ).appendTo( reactionsSubdomainsTableHeader );
+
+                //Insert the col. header elements (the subdomain columns)
+                for(var subdomainIdx in subdomains)
+                {
+                    $( "<th>" + subdomains[subdomainIdx] + "</th>" ).appendTo( reactionsSubdomainsTableHeader );
+                }
+
+                //Set the width of the table title appropriatelike
+                reactionsSubdomainTableTitle.prop('colspan', subdomains.length + 1);
+
+                //Insert a row for every reactions
+                for(var reactionId in reactionsSubdomainAssignments)
+                {
+                    var row = $( "<tr></tr>" ).appendTo( reactionsSubdomainsTableBody );
+
+                    $( "<td>" + reactionId + "</td>" ).appendTo( row );
+
+                    for(var subdomainIndex in subdomains)
+                    {
+                        var subdomainId = subdomains[subdomainIndex]
+
+                        var checked = false;
+
+                        if(_.indexOf(reactionsSubdomainAssignments[reactionId], subdomainId) >= 0)
+                        {
+                            checked = true;
+                        }
+
+                        var checkbox = $( "<td><input type=\"checkbox\"></td>" ).appendTo( row ).find(' input ');
+
+                        checkbox.prop('checked', checked);
+
+                        checkbox.on('click', _.bind(_.partial(this.handleReactionsSubdomainAssignment, reactionId, subdomainId), this));
+                    }
+                }
+                
+                //reactionsSubdomainTable.dataTable();
+            }
+        },
+
+        render : function(data)
+        {
+            if(typeof data != 'undefined')
+            {
+                this.data = data;
+            }
+
+            if(typeof this.data != 'undefined')
+            {
+                // Set up the subdomain selector (for mesh preview)
+                this.drawSubdomainSelector();
+
+                // Set up the mesh selector
+                this.drawMeshSelect();
+
+                //Add initial conditions dom!!
+                this.drawInitialConditions();
+
+                // Set up the species/subdomain assignment thing
+                this.drawSpeciesSubdomainAssignments();
+
+                // Set up the reactions/subdomain assignment thing
+                this.drawReactionsSubdomainAssignments();
+            }
         }
     }
 );

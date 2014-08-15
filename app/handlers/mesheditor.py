@@ -35,6 +35,18 @@ class MeshWrapper(db.Model):
                  "subdomainsFileId" : self.subdomainsFileId,
                  "id" : self.key().id() }
 
+    def delete(self):
+        try:
+            fileserver.FileManager.deleteFile(self, self.meshFileId)
+        except IOError as error:
+            sys.stderr.write('Failed to delete meshFile {0} in meshwrapper destructor\n'.format(self.meshFileId))
+
+        try:
+            fileserver.FileManager.deleteFile(self, self.subdomainsFileId)
+        except IOError as error:
+            sys.stderr.write('Failed to delete subdomainsFile {0} in meshwrapper destructor\n'.format(self.subdomainsFileId))
+
+        super(MeshWrapper, self).delete()
     
 def int_or_float(s):
     try:
@@ -229,7 +241,6 @@ class MeshEditorPage(BaseHandler):
             meshFileName = meshFileObj["storePath"]
 
             colors = None
-            print meshWrapperDb.subdomainsFileId
             if meshWrapperDb.subdomainsFileId != None:
                 subdomainFileObj = fileserver.FileManager.getFile(self, meshWrapperDb.subdomainsFileId)
                 meshSubdomainFileName = subdomainFileObj["storePath"]
@@ -248,8 +259,9 @@ class MeshEditorPage(BaseHandler):
                 subdomains = [y for x, y in sorted(subdomains, key = lambda x : x[0])]
 
                 colors = []
+                print data['selectedSubdomains']
                 for subdomain in subdomains:
-                    if data['selectedSubdomains'][str(subdomain)]:
+                    if subdomain in data['selectedSubdomains']:
                         colors.append('red')
                     else:
                         colors.append('black')
@@ -260,6 +272,14 @@ class MeshEditorPage(BaseHandler):
                 threejs = pyurdme.URDMEMesh.read_dolfin_mesh(str(meshFileName)).export_to_three_js()
 
             self.response.write( threejs )
+            return
+        elif self.request.get('reqType') == 'deleteMesh':
+            data = json.loads( self.request.get('data') );
+            meshWrapperDb = MeshWrapper.get_by_id(data['id'])
+
+            meshWrapperDb.delete()
+
+            self.response.write( { "status" : False, "msg" : "Mesh deleted" })
             return
         elif self.request.get('reqType') == 'setInitialConditions':
             data = json.loads( self.request.get('data') );
