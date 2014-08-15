@@ -38,6 +38,8 @@ class CredentialsPage(BaseHandler):
 
         params = self.request.POST
         
+        print "CredentialsPage.post() params={0}".format(params)
+        
         try:
             # User id is a string
             user_id = self.user.user_id()
@@ -59,13 +61,16 @@ class CredentialsPage(BaseHandler):
             # TODO: This is a hack to make it unlikely that the db transaction has not completed
             # before we re-render the page (which would cause an error). We need some real solution for this...
             time.sleep(0.5)
-            context = self.getContext(user_id)
             self.render_response('credentials.html', **(dict(context, **result)))
 
         elif 'start' in params:
             number_of_new_vms = params['vm_number']
             result = self.start_vms(user_id, self.user_data.getCredentials(), number_of_new_vms)
-            self.redirect('/credentials')
+            context['msg'] = 'Processing request...'
+            context['status'] = True
+            context['starting_vms'] = True
+            #self.redirect('/credentials')
+            self.render_response('credentials.html', **(dict(context, **result)))
 
         elif 'stop' in params:
             # Kill all running VMs.
@@ -220,6 +225,7 @@ class CredentialsPage(BaseHandler):
         db_user = db.GqlQuery("SELECT * FROM StochKitModelWrapper WHERE user_id = :1", user_id).get()
         db_user.user = valid_username
         result =  backendservice.stopMachines(db_user.user,True) #True means blocking, ie wait for success
+
 
 
 class LocalSettingsPage(BaseHandler):

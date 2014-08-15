@@ -14,6 +14,12 @@ from backend.utils import utils
 from uuid import uuid4
 import logging
 
+import httplib
+
+
+
+
+
 __author__ = 'hiranya, anand'
 __email__ = 'hiranya@appscale.com, anand@cs.ucsb.edu'
 
@@ -34,7 +40,7 @@ class EC2Agent(BaseAgent):
   # The amount of time that run_instances waits between each describe-instances
   # request. Setting this value too low can cause Eucalyptus to interpret
   # requests as replay attacks.
-  SLEEP_TIME = 20
+  SLEEP_TIME = 2
 
   PARAM_CREDENTIALS = 'credentials'
   PARAM_GROUP = 'group'
@@ -304,14 +310,22 @@ class EC2Agent(BaseAgent):
       end_time = datetime.datetime.now() + datetime.timedelta(0,
         self.MAX_VM_CREATION_TIME)
       now = datetime.datetime.now()
-
+      
       while now < end_time:
         time_left = (end_time - now).seconds
         utils.log('[{0}] {1} seconds left...'.format(now, time_left))
-        instance_info = self.describe_instances_old(parameters)
+        try:
+            instance_info = self.describe_instances_old(parameters)
+        except httplib.BadStatusLine:
+            utils.log('OK. INSIDE THE CATCH')
+            instance_info = self.describe_instances_old(parameters)
+            
         public_ips = instance_info[0]
         private_ips = instance_info[1]
         instance_ids = instance_info[2]
+        utils.log('PUBLIC_IPS: {0}'.format(public_ips))
+        utils.log('PRIVATE_IPS: {0}'.format(private_ips))
+        utils.log('INSTANCE_IPS: {0}'.format(instance_ids))
         public_ips = utils.diff(public_ips, active_public_ips)
         private_ips = utils.diff(private_ips, active_private_ips)
         instance_ids = utils.diff(instance_ids, active_instances)

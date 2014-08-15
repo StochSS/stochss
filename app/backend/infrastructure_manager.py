@@ -4,6 +4,12 @@ import json
 import thread
 from utils import utils
 from utils.persistent_dictionary import PersistentStoreFactory, PersistentDictionary
+import mybackend
+from google.appengine.api import background_thread, backends, urlfetch
+from google.appengine.api import taskqueue
+import pickle
+import re
+import urllib
 
 __author__ = 'hiranya'
 __email__ = 'hiranya@appscale.com'
@@ -221,13 +227,37 @@ class InfrastructureManager:
     # joins on all threads before returning a response from a request, which effectively makes non-
     # blocking mode the same as blocking mode anyways.
     # (see https://developers.google.com/appengine/docs/python/#Python_The_sandbox)
-    if self.blocking or True:
+    if self.blocking:
       utils.log('Running spawn_vms in blocking mode')
       self.__spawn_vms(agent, num_vms, parameters, reservation_id)
     else:
       utils.log('Running spawn_vms in non-blocking mode')
-      thread.start_new_thread(self.__spawn_vms,
-        (agent, num_vms, parameters, reservation_id))
+#        thread.start_new_thread(__spawn_vms, (infra, agent, num_vms, parameters, reservation_id))
+      backend_url = backends.get_url(mybackend.BACKEND_NAME)
+      # start GAE backends
+      backend_start_url =  backend_url + mybackend.BACKEND_START
+      urlfetch.fetch(backend_start_url)
+          
+      # start backend server manager
+      backend_manager_url =  backend_url + mybackend.BACKEND_MANAGER_R_URL
+      urlfetch.fetch(backend_manager_url)
+          
+      # let backend worker to spawn vms with background thread
+      backend_worker_url = backend_url + mybackend.BACKEND_WORKER_R_URL
+      form_fields = {
+            'op': 'start_vms',
+            'infra': pickle.dumps(self),
+            'agent': pickle.dumps(agent),
+            'num_vms': pickle.dumps(num_vms),
+            'parameters': pickle.dumps(parameters),
+            'reservation_id': pickle.dumps(reservation_id)
+      }
+      from_data = urllib.urlencode(form_fields)
+          
+      result = urlfetch.fetch(url=backend_worker_url,
+                                  method = urlfetch.POST,
+                                  payload = from_data)
+
     utils.log('Successfully started request {0}.'.format(reservation_id))
     return self.__generate_response(True,
       self.REASON_NONE, {'reservation_id': reservation_id})
