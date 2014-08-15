@@ -37,6 +37,35 @@ def dimerdecay(model_name=""):
     
     return model
 
+def birthdeath(model_name=""):
+    """ 
+        Dimerdecay. Tests basic functionality and support for the 
+        'mass-action' propensity function flag. 
+    """
+    if model_name == "":
+        model_name = "birth_death"
+
+    model = StochKitModel(name=model_name);
+
+    # Species
+    S = Species(name="S",initial_value=100);
+ 
+    model.addSpecies([S])
+
+    # Parameters
+    k1 = Parameter(name="k1",expression=3.0)
+    k2 = Parameter(name="k2",expression=0.03)
+    
+    model.addParameter([k1,k2])
+    
+    # Reactions
+    R1 = Reaction(name="R1", products={S:1}, massaction=True, rate=k1)
+    R2 = Reaction(name="R2", reactants={S:1}, massaction=True, rate=k2)
+    
+    model.addReaction([R1,R2])
+    
+    return model
+
 def lotkavolterra_oscillating(model_name=""):
     """ 
         Dimerdecay. Tests basic functionality and support for the 

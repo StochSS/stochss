@@ -1,88 +1,0 @@
-10
-
-dir
-340
-http://googleappengine.googlecode.com/svn/trunk/python/lib/django-1.2/django/contrib
-http://googleappengine.googlecode.com/svn
-
-
-
-2013-03-26T21:48:15.277985Z
-327
-proppy@google.com
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-80f5ef21-4148-0410-bacc-cfb02402ada8
-
-humanize
-dir
-
-gis
-dir
-
-syndication
-dir
-
-redirects
-dir
-
-formtools
-dir
-
-sitemaps
-dir
-
-comments
-dir
-
-sites
-dir
-
-admin
-dir
-
-databrowse
-dir
-
-csrf
-dir
-
-contenttypes
-dir
-
-markup
-dir
-
-auth
-dir
-
-admindocs
-dir
-
-localflavor
-dir
-
-sessions
-dir
-
-flatpages
-dir
-
-webdesign
-dir
-
-messages
-dir
-

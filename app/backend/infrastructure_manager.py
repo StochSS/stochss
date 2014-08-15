@@ -222,14 +222,22 @@ class InfrastructureManager:
     }
     self.reservations.put(reservation_id, status_info)
     utils.log('Generated reservation id {0} for this request.'.format(
-      reservation_id))
+      reservation_id)
+    )
     #TODO: We are forcing blocking mode because of how the Google App Engine sandbox environment
     # joins on all threads before returning a response from a request, which effectively makes non-
     # blocking mode the same as blocking mode anyways.
     # (see https://developers.google.com/appengine/docs/python/#Python_The_sandbox)
     if self.blocking:
       utils.log('Running spawn_vms in blocking mode')
-      self.__spawn_vms(agent, num_vms, parameters, reservation_id)
+      result = self.__spawn_vms(agent, num_vms, parameters, reservation_id)
+      # NOTE: We will only be able to return an IP for the started instances when run in blocking
+      #       mode, but this is needed to update the queue head IP in celeryconfig.py.
+      return result # self.__generate_response(
+      #   True,
+      #   self.REASON_NONE,
+      #   {'reservation_id': reservation_id}.update(result)
+      # )
     else:
       utils.log('Running spawn_vms in non-blocking mode')
 #        thread.start_new_thread(__spawn_vms, (infra, agent, num_vms, parameters, reservation_id))
@@ -330,6 +338,7 @@ class InfrastructureManager:
       status_info['state'] = self.STATE_FAILED
       status_info['reason'] = exception.message
     self.reservations.put(reservation_id, status_info)
+    return status_info
 
 
   def __kill_vms(self, agent, parameters, prefix=''):

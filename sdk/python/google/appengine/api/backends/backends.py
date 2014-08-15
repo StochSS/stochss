@@ -17,7 +17,7 @@
 
 
 
-"""Backends API.
+"""DEPRECATED: Backends API.
 
 This API provides utility methods for working with backends.
 """
@@ -30,11 +30,13 @@ This API provides utility methods for working with backends.
 
 
 
+import logging
 import os
 import re
 
 from google.appengine.api import app_identity
-from google.appengine.api import servers
+from google.appengine.api import modules
+from google.appengine.api import background_thread
 
 class Error(Exception):
   """Base class for exceptions in this module."""
@@ -51,8 +53,18 @@ class InvalidInstanceError(Error):
   pass
 
 
+logging.warning('The Backends API is deprecated and will be removed in a '
+                'future release. Please migrate to the Modules API as soon as '
+                'possible.')
+
+def call_background_thread(target, args, kwargs=None):
+    background_thread.start_new_background_thread(target=self.__spawn_vms, args=[agent, num_vms, parameters, reservation_id])
+
 def get_backend():
-  """Get the name of the backend handling this request.
+  """DEPRECATED: Get the name of the backend handling this request.
+
+  Warning: This API is deprecated and will be removed in a future
+  release. Please migrate to the Modules API as soon as possible.
 
   Returns:
     string: The current backend, or None if this is not a backend.
@@ -61,7 +73,10 @@ def get_backend():
 
 
 def get_instance():
-  """Get the instance number of the backend handling this request.
+  """DEPRECATED: Get the instance number of the backend handling this request.
+
+  Warning: This API is deprecated and will be removed in a future
+  release. Please migrate to the Modules API as soon as possible.
 
   Returns:
     int: The instance, in [0, instances-1], or None if this is not a backend.
@@ -74,7 +89,10 @@ def get_instance():
 
 
 def get_url(backend=None, instance=None, protocol='http'):
-  """Returns a URL pointing to a backend or backend instance.
+  """DEPRECATED: Returns a URL pointing to a backend or backend instance.
+
+  Warning: This API is deprecated and will be removed in a future
+  release. Please migrate to the Modules API as soon as possible.
 
   This method works in both production and development environments.
 
@@ -109,7 +127,10 @@ def get_url(backend=None, instance=None, protocol='http'):
 
 
 def get_hostname(backend=None, instance=None):
-  """Returns the hostname for a backend or backend instance.
+  """DEPRECATED: Returns the hostname for a backend or backend instance.
+
+  Warning: This API is deprecated and will be removed in a future
+  release. Please migrate to the Modules API as soon as possible.
 
   Args:
     backend: The name of the backend. If None, the current backend will be used.
@@ -187,10 +208,10 @@ def _get_dev2_hostname(backend, instance=None):
     The hostname of the backend.
   """
   try:
-    return servers.get_hostname(server=backend, instance=instance)
-  except servers.InvalidServerError:
+    return modules.get_hostname(module=backend, instance=instance)
+  except modules.InvalidModuleError:
     raise InvalidBackendError()
-  except servers.InvalidInstancesError:
+  except modules.InvalidInstancesError:
     raise InvalidInstanceError()
 
 

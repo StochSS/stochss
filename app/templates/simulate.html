@@ -144,8 +144,8 @@
             </div>
 
             <label class="tau-leaping ssa">Seed
-                <input type="text" class="span3" id="seed" value="0">
-                <span class="help-block">Seed the random number generator (leave empty for a random seed).</span>
+                <input type="text" class="span3" id="seed" value="-1">
+                <span class="help-block">Seed the random number generator (set to -1 for a random seed).</span>
             </label>
             
             <label class="tau-leaping">Threshold
@@ -185,20 +185,26 @@
     <div class="well">                    
         <h3>Metadata</h3>
         <p class="thispage">
-            Resource: <%= type %>
+            Resource: <%= resource %>
             <br />
-            Simulation endtime: <%= final_time %>
-            <!--<button id="plotButton">button</button>-->
+            Simulation status: <%= status %>
             <br />
-            Stochkit input file: <a href="/output/servestatic?filename=<%= output_location %>/<%= name %>.xml" class="thispage"> <%= name %>.xml </a>
+            Stochkit model: <a href="/modeleditor?model_edited=<%= modelName %>" class="thispage"> <%= modelName %> </a>
+            <!--Resource: <%= type %>
+                    <br />
+                    Simulation endtime: <%= final_time %>
+                    <br />
+                    Stochkit input file: <a href="/output/servestatic?filename=<%= output_location %>/<%= name %>.xml" class="thispage"> <%= name %>.xml </a>-->
         </p>
     </div>
 
     <div id="plotRegion">
-        Plot
-        <select id="trajectorySelect">
-            <option value="mean">the mean</option>
-        </select>.
+        <div id="trajectorySelectHide">
+            Plot
+            <select id="trajectorySelect">
+                <option value="mean">the mean</option>
+            </select>.
+        </div>
 
         <div id="interpolateWarning" class="alert alert-block alert-info">Note: The lines on this graph have been downsampled and interpolated to improve rendering performance.</div>
         <div id="plot"></div>

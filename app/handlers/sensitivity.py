@@ -41,6 +41,7 @@ class SensitivityJobWrapper(db.Model):
     pid = db.IntegerProperty()
     startTime = db.StringProperty()
     jobName = db.StringProperty()
+    modelName = db.StringProperty()
     indata = db.TextProperty()
     outData = db.StringProperty()
     status = db.StringProperty()
@@ -79,7 +80,8 @@ class SensitivityPage(BaseHandler):
                         "indata" : json.loads(job.indata),
                         "outData" : job.outData,
                         "status" : job.status,
-                        "resource" : job.resource }
+                        "resource" : job.resource,
+                        "modelName" : job.modelName }
 
             if self.user.user_id() != job.userId:
                 self.response.headers['Content-Type'] = 'application/json'
@@ -232,7 +234,19 @@ class SensitivityPage(BaseHandler):
             if data["resource"] == "local":
                 job = self.runLocal(data)
             elif data["resource"] == "cloud":
-                job = self.runCloud(data)
+                backend_services = backendservices()
+                compute_check_params = {
+                    "infrastructure": "ec2",
+                    "credentials": self.user_data.getCredentials(),
+                    "key_prefix": self.user.user_id()
+                }
+                if self.user_data.valid_credentials and backend_services.isOneOrMoreComputeNodesRunning(compute_check_params):
+                    job = self.runCloud(data)
+                else:
+                    return self.response.write(json.dumps({
+                        "status": False,
+                        "msg": "You must have at least one active compute node to run in the cloud."
+                    }))
             else:
                 return self.response.write(json.dumps({"status" : False,
                                             "msg" : "Unrecognized resource requested: {0}".format(data.resource)}))
@@ -251,10 +265,11 @@ class SensitivityPage(BaseHandler):
         job = SensitivityJobWrapper()
         job.resource = "local"
         job.userId = self.user.user_id()
-        job.model = modeleditor.StochKitModelWrapper.get_by_id(data["id"])
+        model = modeleditor.StochKitModelWrapper.get_by_id(data["id"])
         job.startTime = time.strftime("%Y-%m-%d-%H-%M-%S")
         job.jobName = data["jobName"]
-
+        job.modelName = model.model_name
+        
         runtime = float(data["time"])
         dt = float(data["increment"])
 
@@ -272,9 +287,9 @@ class SensitivityPage(BaseHandler):
 
         job.outData = dataDir
 
-        modelFileName = '{0}/{1}.xml'.format(job.outData, job.model.model_name)
+        modelFileName = '{0}/{1}.xml'.format(job.outData, model.model_name)
         fmodelHandle = open(modelFileName, 'w')
-        fmodelHandle.write(job.model.model.serialize())
+        fmodelHandle.write(model.model.serialize())
         fmodelHandle.close()
 
         job.status = "Pending"
@@ -296,10 +311,11 @@ class SensitivityPage(BaseHandler):
         job = SensitivityJobWrapper()
         job.resource = "cloud"
         job.userId = self.user.user_id()
-        job.model = modeleditor.StochKitModelWrapper.get_by_id(data["id"])
+        model = modeleditor.StochKitModelWrapper.get_by_id(data["id"])
         job.startTime = time.strftime("%Y-%m-%d-%H-%M-%S")
         job.jobName = data["jobName"]
         job.status = "Pending"
+        job.modelName = model.model_name
 
         runtime = float(data["time"])
         dt = float(data["increment"])
@@ -313,7 +329,7 @@ class SensitivityPage(BaseHandler):
         
         params = {
             "job_type": "sensitivity",
-            "document": str( job.model.model.serialize() ),
+            "document": str( model.model.serialize() ),
             "paramstring": "stochkit_ode.py --sensi --parameters {0} -t {1} -i {2}".format( " ".join(parameters), runtime, int(runtime / dt)),
             "bucketname": self.user_data.getBucketName()
         }
@@ -323,9 +339,10 @@ class SensitivityPage(BaseHandler):
         os.environ["AWS_ACCESS_KEY_ID"] = db_credentials['EC2_ACCESS_KEY']
         os.environ["AWS_SECRET_ACCESS_KEY"] = db_credentials['EC2_SECRET_KEY']
         # Send the task to the backend
-        celery_task_id, task_id = service.executeTask(params)
-        job.cloudDatabaseID = task_id
-        job.celeryPID = celery_task_id
+        cloud_result = service.executeTask(params)
+        # if not cloud_result["success"]:
+        job.cloudDatabaseID = cloud_result["db_id"]
+        job.celeryPID = cloud_result["celery_pid"]
         job.outData = None
         job.zipFileName = None
         job.put()
