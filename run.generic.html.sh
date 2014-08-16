@@ -123,6 +123,7 @@ function check_spatial_installation {
         echo "FEniCS/Dolfin detected successfully.<br />"
     else
         echo "FEniCS/Dolfin detected successfully not installed, please check installation instructions.<br />"
+        echo "You can download FEniCS from http://fenicsproject.org/<br />"
         return 1 #False
     fi
 
