@@ -381,7 +381,7 @@ class StatusPage(BaseHandler):
                         job.status = "Running"
                     else:
                         try:
-                            fd = os.open("{0}/stderr".format(job.outData), os.O_RDONLY)
+                            fd = os.open("{0}/stderr.log".format(job.outData), os.O_RDONLY)
                             f = os.fdopen(fd)
                             stderr = f.read().strip()
                             f.close()

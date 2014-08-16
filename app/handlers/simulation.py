@@ -95,7 +95,7 @@ class StochKitJobWrapper(db.Model):
             os.environ["AWS_SECRET_ACCESS_KEY"] = db_credentials['EC2_SECRET_KEY']
             service.deleteTasks([(stochkit_job.celery_pid,stochkit_job.pid)])
 
-        if os.path.exists(stochkit_job.output_location):
+        if stochkit_job.output_location is not None and os.path.exists(str(stochkit_job.output_location)):
             shutil.rmtree(stochkit_job.output_location)
 
         super(StochKitJobWrapper, self).delete()
