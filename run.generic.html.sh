@@ -43,6 +43,115 @@ fi
 
 echo "Yes<br />"
 
+#################
+# Check to see if the 'dolfin' python module is installed and active in this terminal.
+function check_dolfin_sub {
+    RET=`python -c "import dolfin" 2>/dev/null`
+    RC=$?
+    if [[ $RC == 0 ]];then
+        return 0 #True
+    fi
+    return 1 #False
+}
+function check_dolfin {
+    if check_dolfin_sub; then
+        return 0 #True
+    else
+        FENICS_MAC_APP_CONF="/Applications/FEniCS.app/Contents/Resources/share/fenics/fenics.conf"
+        if [ -e $FENICS_MAC_APP_CONF ];then
+            echo "FEniCS.app found, sourcing $FENICS_MAC_APP_CONF.<br />"
+            FENICS_CONF_SILENT=1
+            source $FENICS_MAC_APP_CONF
+            if check_dolfin_sub;then
+                return 0 #True
+            fi
+        fi
+    fi
+    return 1 #False
+}
+
+function check_pyurdme_sub {
+    RET=`python -c "import pyurdme" 2>/dev/null`
+    RC=$?
+    if [[ $RC == 0 ]];then
+        return 0 #True
+    fi
+    return 1 #False
+}
+function check_pyurdme {
+    if check_pyurdme_sub; then
+        return 0 #True
+    else
+        PYURDME_CONF="$STOCHSS_HOME/app/lib/pyurdme-stochss/pyurdme_init"
+        if [ -e $PYURDME_CONF ];then
+            echo "PyURDME local install found, sourcing $PYURDME_CONF.<br />"
+            source $PYURDME_CONF
+            if check_pyurdme_sub;then
+                return 0 #True
+            fi
+        fi
+    fi
+    return 1 #False
+}
+
+function download_pyurdme {
+    ZIP_URL="https://github.com/pyurdme/pyurdme/archive/stochss.zip"
+    TMPDIR=$(mktemp -d /tmp/tmp.XXXXXX)
+    ZIP_FILE="$TMPDIR/pyurdme.zip"
+    CMD="curl -o $ZIP_FILE -L $ZIP_URL"
+    echo $CMD
+    eval $CMD
+    if [[ -e "$ZIP_FILE" ]];then
+        cd "$STOCHSS_HOME/app/lib" || return 1
+        pwd
+        CMD="unzip $ZIP_FILE > /dev/null"
+        echo $CMD
+        eval $CMD
+        if [[ $? != 0 ]];then
+            rm $ZIP_FILE
+            return 1 #False
+        fi
+        rm $ZIP_FILE
+        return 0 #True
+    else
+        return 1 #False
+    fi
+}
+
+function check_spatial_installation {
+    if check_dolfin; then
+        echo "FEniCS/Dolfin detected successfully.<br />"
+    else
+        echo "FEniCS/Dolfin detected successfully not installed, please check installation instructions.<br />"
+        return 1 #False
+    fi
+
+    if check_pyurdme; then
+        echo "PyURDME detected successfully.<br />"
+    else
+        echo "PyURDME not installed, attempting local install.<br />"
+        download_pyurdme
+        if check_pyurdme; then
+            echo "PyURDME detected successfully.<br />"
+        else
+            echo "PyURDME not installed, Failing (check if all required python modules are installed).<br />"
+            return 1 #False
+        fi
+    fi
+    return 0 #True
+}
+
+#####################
+
+echo "Check if spatial libraries are installed.<br />"
+if check_spatial_installation;then
+    echo "Spatial libraries installed correctly.<br />"
+else
+    echo "Error checking the spatial libraries.<br />"
+    exit 1
+fi
+#################
+
 echo -n "Testing if StochKit2 built... "
 
 rundir=$(mktemp -d /tmp/tmp.XXXXXX)
