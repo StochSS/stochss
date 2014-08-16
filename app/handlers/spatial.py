@@ -202,13 +202,14 @@ class SpatialPage(BaseHandler):
                     "key_prefix": self.user.user_id()
                 }
                 if self.user_data.valid_credentials and backend_services.isOneOrMoreComputeNodesRunning(compute_check_params):
-                    result = self.runCloud(data)
-                    logging.info("Run cloud finished with result: {0}, generating JSON response".format(result))
+                    self.runCloud(data)
+                    return
                 else:
-                    return self.response.write(json.dumps({
+                    self.response.write(json.dumps({
                         'status': False,
                         'msg': 'You must have at least one active compute node to run in the cloud.'
                     }))
+                    return
         elif reqType == 'stopJob':
             jobID = json.loads(self.request.get('id'))
 
@@ -307,8 +308,8 @@ class SpatialPage(BaseHandler):
             return
 
 
-        self.response.write(json.dumps({ 'status' : True,
-                                         'msg' : 'Job downloaded'}))
+        self.response.write(json.dumps({ 'status' : False,
+                                         'msg' : 'Unknown Error processing request: no handler called'}))
    
     def construct_pyurdme_model(self, data):
         '''
@@ -474,11 +475,11 @@ class SpatialPage(BaseHandler):
 
             if os.environ["AWS_ACCESS_KEY_ID"] == '':
                 result = {'status':False,'msg':'Access Key not set. Check : Settings > Cloud Computing'}
-                return result
+                return self.response.write(json.dumps(result))
 
             if os.environ["AWS_SECRET_ACCESS_KEY"] == '':
                 result = {'status':False,'msg':'Secret Key not set. Check : Settings > Cloud Computing'}
-                return result
+                return self.response.write(json.dumps(result))
                     ####
             pymodel = self.construct_pyurdme_model(data)
             #####
@@ -519,6 +520,11 @@ class SpatialPage(BaseHandler):
             job.celery_pid = celery_task_id
             job.status = "Running"
             job.put()
+
+            self.response.write(json.dumps({"status" : True,
+                                            "msg" : "Job launched",
+                                            "id" : job.key().id()}))
+            return
 
         except Exception as e: 
             traceback.print_exc()
