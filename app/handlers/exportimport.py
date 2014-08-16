@@ -374,6 +374,7 @@ class SuperZip:
         meshDb.description = ""
         meshDb.meshFileId = int(meshFileId)
         meshDb.subdomainsFileId = int(subdomainsFileId)
+        meshDb.ghost = True
         
         meshDb.put()
 

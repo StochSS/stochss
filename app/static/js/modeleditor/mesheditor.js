@@ -23,6 +23,11 @@ var getNewMemberName = function(dict, baseName)
 
 var updateMsg = function(data, msg)
 {
+    if(msg == 'success')
+    {
+        msg = undefined;
+    }
+
     if(typeof msg == 'undefined')
     {
         msg = "#meshMsg";
@@ -566,6 +571,59 @@ Count in each voxel \
                 delete this.uploaderState.meshFileId;
             }
 
+            var textArray = data.files[0].name.split('.');
+
+            var ext = textArray[textArray.length - 1];
+
+            if(ext.toLowerCase() != 'xml')
+            {
+                updateMsg( { status : false,
+                             msg : 'Mesh file must be a .xml' },
+                           '#meshDataUploadStatus');
+                
+                return;
+            }
+
+            $( event.target ).prop('title', data.files[0].name);
+            updateMsg( { status : true,
+                         msg : data.files[0].name + " selected" },
+                       '#meshDataUploadStatus');
+
+            var nameBox = $( '.uploadMeshDiv' ).find('.name');
+
+            var baseName;
+
+            if(nameBox.val().trim() == '')
+            {
+                baseName = data.files[0].name.split('.')[0];
+            }
+            else
+            {
+                baseName = nameBox.val().trim();
+            }
+
+            var newName;
+            var i = 0;
+            
+            var nameUnique = true;
+            do
+            {
+                nameUnique = true;
+                
+                newName = baseName + i;
+                
+                for(var i in this.data.meshes)
+                {
+                    if(this.data.meshes[i].name == newName)
+                    {
+                        nameUnique = false;
+                        break;
+                    }
+                }
+            } while(!nameUnique);
+
+            nameBox.val(newName);
+
             this.uploaderState.meshFileData = data;
 
             $( "#meshUploadButton" ).prop('disabled', false);
@@ -580,6 +638,24 @@ Count in each voxel \
                 delete this.uploaderState.subdomainsFileId;
             }
 
+            var textArray = data.files[0].name.split('.');
+
+            var ext = textArray[textArray.length - 1];
+
+            if(ext.toLowerCase() != 'txt')
+            {
+                updateMsg( { status : false,
+                             msg : 'Subdomain file must be a .txt' },
+                           '#meshDataUploadStatus');
+                
+                return;
+            }
+
+            $( event.target ).prop('title', data.files[0].name);
+            updateMsg( { status : true,
+                         msg : data.files[0].name + " selected" },
+                       '#subdomainDataUploadStatus');
+
             this.uploaderState.subdomainsFileData = data;
         },
 
@@ -589,26 +665,45 @@ Count in each voxel \
             {
                 this.uploaderState.meshFileData.submit();
                 this.uploaderState.meshSubmitted = true;
+
+                updateMsg( { status : true,
+                             msg : 'Uploading mesh...' },
+                           '#meshDataUploadStatus');
             }
 
             if(this.uploaderState.subdomainsFileData)
             {
                 this.uploaderState.subdomainsFileData.submit();
                 this.uploaderState.subdomainsSubmitted = true;
+
+                updateMsg( { status : true,
+                             msg : 'Uploading subdomain...' },
+                           '#subdomainDataUploadStatus');
             }
+
+            this.uploaderState.name = $( '.uploadMeshDiv' ).find( '.name' ).val();
+            this.uploaderState.description = $( '.uploadMeshDiv' ).find( '.descriptionText' ).val();
         },
 
         handleMeshUploadFinish : function(event, data)
         {
             this.uploaderState.meshFileId = data.result[0].id;
 
+            updateMsg( { status : true,
+                         msg : 'Mesh uploaded' },
+                       '#meshDataUploadStatus');
+            
             this.createMeshWrapper();
         },
 
         handleSubdomainsUploadFinish : function(event, data)
         {
             this.uploaderState.subdomainsFileId = data.result[0].id;
-
+                        
+            updateMsg( { status : true,
+                         msg : 'Subdomains uploaded' },
+                       '#subdomainDataUploadStatus');
+            
             this.createMeshWrapper();
         },
 
@@ -616,51 +711,71 @@ Count in each voxel \
         {
             var data = {};
 
-            if(this.uploaderState.meshSubmitted && this.uploaderState.meshFileId)
+            if(this.uploaderState.meshFileId && this.uploaderState.subdomainsFileId)
             {
-                data['meshFileId'] = this.uploaderState.meshFileId;
+                if(this.uploaderState.meshSubmitted && this.uploaderState.meshFileId)
+                {
+                    data['meshFileId'] = this.uploaderState.meshFileId;
+                    data['name'] = this.uploaderState.name;
+                    data['description'] = this.uploaderState.description;
 
-                if(this.uploaderState.subdomainsSubmitted && this.uploaderState.subdomainsFileId)
-                    data['subdomainsFileId'] = this.uploaderState.subdomainsFileId;
+                    if(this.uploaderState.subdomainsSubmitted && this.uploaderState.subdomainsFileId)
+                    {
+                        data['subdomainsFileId'] = this.uploaderState.subdomainsFileId;
+                    }
 
-                $.ajax( { type : 'POST',
-                          url: '/modeleditor/mesheditor',
-                          data: { reqType : 'addMeshWrapper',
-                                  data : JSON.stringify( data ) },
-                          success : updateMsg });
+                    $.ajax( { type : 'POST',
+                              url: '/modeleditor/mesheditor',
+                              data: { reqType : 'addMeshWrapper',
+                                      data : JSON.stringify( data ) },
+                              success : _.bind(this.handleMeshWrapperCreated, this) });
+                }
             }
         },
 
-        handleMeshSelect : function(meshWrapperId, element)
+        handleMeshWrapperCreated : function(data)
         {
-            if(this.data.meshWrapperId != meshWrapperId)
+            this.data.meshes.push(data);
+
+            updateMsg( { status : true,
+                         msg : 'Mesh created'} );
+
+            this.drawMeshSelect();
+        },
+
+        handleMeshSelect : function(mesh)
+        {
+            if(this.data.meshWrapperId != mesh.id)
             {
                 // Send a message to the server to change the selected mesh
                 //   Server will respond with new data object (that needs passed to render -- everything will get redrawn)
                 $.ajax( { url : '/modeleditor/mesheditor',
                           type : 'POST',
                           data : { reqType : 'setMesh',
-                                   data : JSON.stringify( { meshWrapperId : meshWrapperId } ) },
+                                   data : JSON.stringify( { meshWrapperId : mesh.id } ) },
                           dataType : 'json',
                           success : _.bind(this.render, this) } );
             }
+            
+            $( '.meshInfoDiv' ).find( '.name' ).text(mesh.name);
+            $( '.meshInfoDiv, .uploadMeshDiv' ).find( '.description' ).text(mesh.description);
     
             $.ajax( { type : 'POST',
                       url: '/modeleditor/mesheditor',
                       data: { reqType : 'getMesh',
-                              data: JSON.stringify( { id : meshWrapperId,
-                                                      selectedSubdomains : [] } ) }, // Initially, no subdomains should be selected, so send empty array
+                              data : JSON.stringify( { id : mesh.id,
+                                                       selectedSubdomains : [] } ) }, // Initially, no subdomains should be selected, so send empty array
                       success : _.bind( this.drawMesh, this) });
         },
 
-        handleMeshDelete : function(meshWrapperId, element)
+        handleMeshDelete : function(mesh, element)
         {
-            if(this.data.meshWrapperId != meshWrapperId)
+            if(this.data.meshWrapperId != mesh.id)
             {
                 $.ajax( { type : 'POST',
                           url: '/modeleditor/mesheditor',
                           data: { reqType : 'deleteMesh',
-                                  data: JSON.stringify( { id : meshWrapperId } ) }, // Initially, no subdomains should be selected, so send empty array
+                                  data: JSON.stringify( { id : mesh.id } ) }, // Initially, no subdomains should be selected, so send empty array
                           success : _.bind( this.drawMesh, this) });
                 
                 element.remove();
@@ -702,6 +817,8 @@ Count in each voxel \
             var meshTableBody = $( this.el ).find('#meshTableBody');
             
             meshTableBody.empty();
+
+            this.data.meshes = _.sortBy(this.data.meshes, function(data) { return data['name']; } );
             
             // Draw all the available examples meshes in the selection table
             for(var i = 0; i < this.data.meshes.length; i++)
@@ -720,18 +837,23 @@ Count in each voxel \
 </td> \
 </tr>');
                 ""                 
-                var newOption = $( optionTemp( this.data.meshes[i] ) ).appendTo( meshTableBody );
 
-                newOption.find('input').on('click', _.bind(_.partial( this.handleMeshSelect, this.data.meshes[i].id), this));
-                newOption.find('.delete').on('click', _.bind(_.partial( this.handleMeshDelete, this.data.meshes[i].id, newOption), this));
+                //Don't draw ghosts
+                if(this.data.meshes[i].ghost)
+                    continue
+
+                var newOption = $( optionTemp( this.data.meshes[i] ) ).appendTo( meshTableBody );
                 
                 // If there is already a mesh selected, click the option
                 if(this.data.meshWrapperId == this.data.meshes[i].id)
                 {
                     newOption.find('input').click();
                 }
-            }
 
+                newOption.find('input').on('click', _.bind(_.partial( this.handleMeshSelect, this.data.meshes[i]), this));
+                newOption.find('.delete').on('click', _.bind(_.partial( this.handleMeshDelete, this.data.meshes[i], newOption), this));
+            }
+            this.handleMeshSelect( this.data.selectedMesh );
         },
 
         handleSubdomainSelect : function(subdomain, event)

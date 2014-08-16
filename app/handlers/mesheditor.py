@@ -26,6 +26,7 @@ class MeshWrapper(db.Model):
     description = db.TextProperty()
     meshFileId = db.IntegerProperty()
     subdomainsFileId = db.IntegerProperty()
+    ghost = db.BooleanProperty()
 
     def toJSON(self):
         return { "userId" : self.userId,
@@ -33,6 +34,7 @@ class MeshWrapper(db.Model):
                  "description" : self.description,
                  "meshFileId" : self.meshFileId,
                  "subdomainsFileId" : self.subdomainsFileId,
+                 "ghost" : self.ghost,
                  "id" : self.key().id() }
 
     def delete(self):
@@ -123,8 +125,11 @@ class MeshEditorPage(BaseHandler):
             for wrapperRow in db.GqlQuery("SELECT * FROM MeshWrapper").run():
                 meshWrappers.append( wrapperRow.toJSON() )
 
+            selectedMesh = MeshWrapper.get_by_id(row.spatial['mesh_wrapper_id'])
+
             data = { 'meshes' : meshWrappers,
                      'meshWrapperId' : row.spatial['mesh_wrapper_id'],
+                     'selectedMesh' : selectedMesh.toJSON(),
                      'subdomains' : row.spatial['subdomains'],
                      'initialConditions' : row.spatial['initial_conditions'],
                      'reactionsSubdomainAssignments' : row.spatial['reactions_subdomain_assignments'],
@@ -186,7 +191,7 @@ class MeshEditorPage(BaseHandler):
             meshDb = MeshWrapper.get_by_id(meshWrapperId)
 
             meshFile = fileserver.FileManager.getFile(self, meshDb.meshFileId)
-            
+
             row.spatial['subdomains'] = []
             if meshDb.subdomainsFileId:
                 sdFile = fileserver.FileManager.getFile(self, meshDb.subdomainsFileId)
@@ -226,6 +231,7 @@ class MeshEditorPage(BaseHandler):
 
             data = { 'meshes' : meshWrappers,
                      'meshWrapperId' : row.spatial['mesh_wrapper_id'],
+                     'selectedMesh' : meshDb.toJSON(),
                      'subdomains' : row.spatial['subdomains'],
                      'initialConditions' : row.spatial['initial_conditions'],
                      'reactionsSubdomainAssignments' : row.spatial['reactions_subdomain_assignments'],
@@ -297,18 +303,16 @@ class MeshEditorPage(BaseHandler):
             meshDb = MeshWrapper()
             data = json.loads(self.request.get('data'))
 
-            print data
-
             meshFile = fileserver.FileManager.getFile(self, data['meshFileId'])
             basename, ext = os.path.splitext(meshFile['path'])
-            
+
             meshDb.userId = self.user.user_id()
-            meshDb.name = basename
-            meshDb.description = ""
+            meshDb.name = data['name']
+            meshDb.description = data['description']
             meshDb.meshFileId = data['meshFileId']
             meshDb.subdomainsFileId = data['subdomainsFileId'] if 'subdomainsFileId' in data else None
             
             meshDb.put()
             
-            self.response.write( json.dumps({ "status" : True, "msg" : "Mesh wrapper added"}) )
+            self.response.write( json.dumps( meshDb.toJSON() ) )
             return
