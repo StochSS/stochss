@@ -55,6 +55,138 @@ else
     echo "Yes"
 fi
 
+#####################
+# Check to see if the 'dolfin' python module is installed and active in this terminal.
+function check_dolfin {
+    RET=`python -c "import dolfin" 2>/dev/null`
+    RC=$?
+    if [[ $RC == 0 ]];then
+        return 0 #True
+    fi
+    return 1 #False
+}
+
+function check_pyurdme_sub {
+    RET=`python -c "import pyurdme" 2>/dev/null`
+    RC=$?
+    if [[ $RC == 0 ]];then
+        return 0 #True
+    fi
+    return 1 #False
+}
+function check_pyurdme {
+    if check_pyurdme_sub; then
+        return 0 #True
+    else
+        PYURDME_CONF="$STOCHSS_HOME/app/lib/pyurdme-stochss/pyurdme_init"
+        if [ -e $PYURDME_CONF ];then
+            echo "PyURDME local install found, sourcing $PYURDME_CONF"
+            source $PYURDME_CONF
+            if check_pyurdme_sub;then
+                return 0 #True
+            fi
+        fi
+    fi
+    return 1 #False
+}
+
+function download_pyurdme {
+    ZIP_URL="https://github.com/pyurdme/pyurdme/archive/stochss.zip"
+    TMPDIR=$(mktemp -d /tmp/tmp.XXXXXX)
+    ZIP_FILE="$TMPDIR/pyurdme.zip"
+    CMD="curl -o $ZIP_FILE -L $ZIP_URL"
+    echo $CMD
+    eval $CMD
+    if [[ -e "$ZIP_FILE" ]];then
+        cd "$STOCHSS_HOME/app/lib" || return 1
+        pwd
+        CMD="unzip $ZIP_FILE > /dev/null"
+        echo $CMD
+        eval $CMD
+        if [[ $? != 0 ]];then
+            rm $ZIP_FILE
+            return 1 #False
+        fi
+        rm $ZIP_FILE
+        return 0 #True
+    else
+        return 1 #False
+    fi
+}
+
+function install_pyurdme_deps {
+    echo "Need to install the following pacakges: git build-essential python-dev python-setuptools python-matplotlib python-numpy python-scipy python-software-properties cython python-h5py' also 'fenics' from 'ppa:fenics-packages/fenics"
+    read -p "Do you want me to try to use sudo to install required package(s)(y/n): " answer
+
+    if [ $? != 0 ]; then
+        exit -1
+    fi
+
+    if [ "$answer" == 'y' ] || [ "$answer" == 'yes' ]; then
+        echo "Running 'sudo apt-get install git build-essential python-dev python-setuptools python-matplotlib python-numpy python-scipy python-software-properties cython python-h5py' also 'fenics' from 'ppa:fenics-packages/fenics'"
+'"
+        sudo apt-get -y install git
+        sudo apt-get -y install build-essential python-dev
+        sudo apt-get -y install python-setuptools
+        sudo apt-get -y install python-matplotlib python-numpy python-scipy
+        sudo apt-get -y install make
+        sudo apt-get -y install python-software-properties
+        sudo add-apt-repository ppa:fenics-packages/fenics
+        sudo apt-get update
+        sudo apt-get -y install fenics
+        sudo apt-get -y install cython python-h5py
+
+        if [ $? != 0 ]; then
+            exit -1
+        fi
+    fi
+}
+
+function check_spatial_installation_sub {
+    if check_dolfin; then
+        echo "FEniCS/Dolfin detected successfully"
+    else
+        echo "FEniCS/Dolfin detected successfully not installed, please check installation instructions."
+        return 1 #False
+    fi
+
+    if check_pyurdme; then
+        echo "PyURDME detected successfully"
+    else
+        echo "PyURDME not installed, attempting local install"
+        download_pyurdme
+        if check_pyurdme; then
+            echo "PyURDME detected successfully"
+        else
+            echo "PyURDME not installed, Failing (check if all required python modules are installed)."
+            return 1 #False
+        fi
+    fi
+    return 0 #True
+}
+
+
+function check_spatial_installation {
+    if check_spatial_installation_sub; then
+        return 0 #True
+    else
+        install_pyurdme_deps
+        if check_spatial_installation_sub; then
+            return 0 #True
+        fi
+    fi
+    return 1 #False
+}
+#####################
+
+if check_spatial_installation;then
+    echo "Spatial libraries installed correctly"
+else
+    echo "Error checking the spatial libraries"
+    exit 1
+fi
+#####################
+
 echo -n "Testing if StochKit2 built... "
 
 rundir=$(mktemp -d /tmp/tmp.XXXXXX)
