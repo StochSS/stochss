@@ -34,42 +34,50 @@
 <script type="text/template" id="jobInfoTemplate">
     <h2> Job summary: <span style="COLOR:green;"><%= name %></span></h2>
     <br />
-    <div class="well">                    
-        <table border=0 width='100%' cellpadding=0><tr><td>
-        <h3>Metadata</h3>
-        <p class="thispage">
-            Resource: <%= resource %>
-            <br />
-            Simulation status: <%= jobStatus %>
-            <br />
-            Stochkit model: <a href="/modeleditor?model_edited=<%= modelName %>" class="thispage"> <%= modelName %> </a>
-        </p>
-        </td><td align=right><table cellpadding=0><tr><td>
-                            <h4>Mouse Controls:</h3><br />
-                            1.  Rotation -- Left button<br>
-                            2.  Translation -- Right button<br>
-                            3.  Zoom -- Mouse wheel, or left + right button<br>
-        </td></tr></table></td></tr></table>
+    <div class="well">
+        <div class="row">
+            <div class="span8">
+                <h3>Metadata</h3>
+                <p class="thispage">
+                    Resource: <%= resource %>
+                    <br />
+                    Simulation status: <%= jobStatus %>
+                    <br />
+                    Stochkit model: <a href="/modeleditor?model_edited=<%= modelName %>" class="thispage"> <%= modelName %> </a>
+                </p>
+            </div>
+            <div class="span3">
+                <h5>Mouse Controls:</h5><br />
+                <ol>
+                    <li>Rotation -- Left button</li>
+                    <li>Translation -- Right button</li>
+                    <li>Zoom -- Mouse wheel, or left + right button</li>
+                </ol>
+            </div>
+        </div>
     </div>
 
-    <div id="plotRegion" style="display : none;">
-      <div>
-        <TABLE border=0 cellpadding=0 cellspacing=5 width='100%'>
-        <TR><TD valign=top>
-            Time: <input id="timeSelect" type="range" min="0" max="0" step="0" value="0">
-            <span id="timeSelectDisplay"></span>
-        </TD><TD valign=top>
-            <B>Select which species to display:</B>
-            <span id="speciesSelect"></span>
-        </TD></TR>
-        </TABLE>
-      </div>
-      <table border=1 cellpadding=0 cellspacing=0 width='100%'><tr><td>
-      <div id="meshPreview"></div>
-      </td></tr></table>
+    <div id="plotRegion" style="display: none;">
+        <div class="row">
+            <div class="span8">
+                Time: <input id="timeSelect" type="range" min="0" max="0" step="0" value="0">
+                <span id="timeSelectDisplay"></span>
+            </div>
+            <div class="span3">
+                <b>Select which species to display:</b>
+                <span id="speciesSelect"></span>
+            </div>
+        </div>
+        <table width="100%" style="border: 1px solid rgb(221, 221, 221);">
+            <tr>
+                <td>
+                    <div class="span10" id="meshPreview"></div>
+                </td>
+            </tr>
+        </table>
     </div>
 
-    <div id="error" style="display : none;">
+    <div id="error" style="clear:both; display: none;">
         Stdout:<br />
         <pre><%= stdout %></pre>
         
@@ -79,10 +87,10 @@
       
     <br />
       
-    <div id="msg"></div>
+    <div id="msg" style="clear:both; display: none;"></div>
     <br />
     
-    <div id="accessOutput" class="well" style="display : none;">
+    <div id="accessOutput" class="well" style="clear:both; display: none;">
         <h3>Output</h3>
         <br />
         <button id="access" type="submit" class="btn btn-primary btn-large"><i class="icon-download-alt"></i> Fetch Data from Cloud</button>
