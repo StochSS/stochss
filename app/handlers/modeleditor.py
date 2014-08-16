@@ -328,15 +328,23 @@ class ModelEditorPage(BaseHandler):
         else:
             result = {}
 
-        db_models = db.GqlQuery("SELECT * FROM StochKitModelWrapper WHERE user_id = :1", self.user.user_id())
         isSpatial = False
-        if model_edited is None or model_edited == '':
-            model_edited = self.get_session_property('model_edited').name
+
+        db_models = db.GqlQuery("SELECT * FROM StochKitModelWrapper WHERE user_id = :1", self.user.user_id())
+
+        model_edited = self.get_session_property('model_edited')
+        if model_edited == None:
+            isSpatial = False
+        else:
+            row = db.GqlQuery("SELECT * FROM StochKitModelWrapper WHERE user_id = :1 AND model_name = :2", self.user.user_id(), model_edited.name).get()
+
+            if row is None:
+                isSpatial = False
+            else:
+                isSpatial = row.isSpatial
 
         all_models = []
         for row in db_models:
-            if model_edited and row.model.name == model_edited:
-                isSpatial = row.isSpatial
             all_models.append({ "name" : row.model.name, "units" : row.model.units, "isSpatial" : row.isSpatial, "spatial" : row.spatial }) 
 
         result.update({ "all_models" : all_models, "isSpatial" : isSpatial  })
