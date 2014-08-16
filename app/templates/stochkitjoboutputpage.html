@@ -19,8 +19,8 @@
             <h3>Metadata</h3>
                 <p class="thispage">
                 Resource:</t> {{stochkit_job.resource}}
-                </br>
-                Number of trajectories: {{stochkit_job.realizations}}
+                <!--</br>
+                Number of trajectories: stochkit_job.realizations-->
                 </br>
                 Simulation endtime: {{stochkit_job.final_time}}
                 </br>
@@ -34,7 +34,7 @@
             {% if local_data %}
             <div class="well">
                 <h3> Visualization </h3>
-                <span class="thispage"><a href="/output/visualize?job_folder={{stochkit_job.output_location}}" class="thispage"> Plot trajectories</a>
+                <span class="thispage"><a href="/output/visualize?job_folder={{stochkit_job.output_location}}&exec_type={{stochkit_job.exec_type}}&units={{stochkit_job.units}}" class="thispage"> Plot trajectories</a>
                 </br>
                </div>
             {% endif %}
@@ -43,8 +43,11 @@
             <div class="well">
                 <h3> Debug Info </h3>
                 <hr>
-                These are the standard streams from the Stochkit executable used to run the job
+                {% if stochkit_job.resource == "Cloud" %}
+                <h5>Cloud Exception</h5>
+                <pre>{{exception_message}}</pre>
                 <hr>
+                {% endif %}
                 <h5>Stdout</h5>
                 <pre>{{stdout}}</pre>
                 <h5>Stderr</h5>
@@ -55,32 +58,20 @@
             
             
             <div class="well">
-            <form id="fetchoutputform" action="/output" method="post">
-            <h3>Output</h3>
-                </br>
-                <span class="thispage"> Local path: {{stochkit_job.output_location}} </span>
-                <!-- </br>
-                <span> Available locally: True</span> -->
-                </br>
-                <!-- We show the output URL if it is a cloud job -->
-                {% if stochkit_job.resource == "Cloud" %}
-                <span class="thispage">Remote URL: </span><a href="{{stochkit_job.output_url}}" class="thispage">{{stochkit_job.output_url}}</a>
-                {% endif %}
-                </br></br>
-                <!--  We show the export button if the output data is present locally -->
-                {% if local_data %}
-                {% endif %}
-                
-                <!--<input type="submit" class="btn btn-primary btn-large dropdown-toggle" value="Export"></a> -->
-                <!-- We show the "Fetch remote" button if the job is a Cloud job and the local data is not present -->
-               
-                {% if stochkit_job.resource == "Cloud" and not local_data %}
-                    <button type="submit" class="btn btn-primary btn-large"><i class="icon-download-alt"></i> Fetch Remote</button>
+                <form id="fetchoutputform" action="/output/{{job_name}}.tgz" method="post">
+                    <h3>Output</h3>
+                    <br />
+                    {% if stochkit_job.resource == "Cloud" and not (local_data or debug) %}
+                    <button type="submit" class="btn btn-primary btn-large"><i class="icon-download-alt"></i> Fetch Data from Cloud</button>
                     <input type="hidden" name="fetch_remote" value="fetch_remote">
                     <input type="hidden" name="job_name" value="{{job_name}}">
-                {% endif %}
+                    {% else %}
+                    <button type="submit" class="btn btn-primary btn-large"><i class="icon-download-alt"></i> Access Local Data</button>
+                    <input type="hidden" name="fetch_local" value="fetch_local">
+                    <input type="hidden" name="job_name" value="{{job_name}}">
+                    {% endif %}
+                </form>
             </div>
-            </form>
         </div>
 </div>
 

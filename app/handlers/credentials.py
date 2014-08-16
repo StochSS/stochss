@@ -11,18 +11,19 @@ import random
 import string
 from stochssapp import BaseHandler
 from backend.backendservice import *
-
+from backend.tasks import createtable
 from google.appengine.ext import db
-
 import time
 
 class CredentialsPage(BaseHandler):
     """
     """
+    def authentication_required(self):
+        return True
     
     def get(self):
         try:
-            # User id is a numeric value.
+            # User id is a string
             user_id = self.user.user_id()
             if user_id is None:
                 raise InvalidUserException
@@ -38,7 +39,7 @@ class CredentialsPage(BaseHandler):
         params = self.request.POST
         
         try:
-            # User id is a numeric value.
+            # User id is a string
             user_id = self.user.user_id()
             if user_id is None:
                 raise InvalidUserException
@@ -52,6 +53,7 @@ class CredentialsPage(BaseHandler):
             # Save the access and private keys to the datastore
             access_key = params['ec2_access_key']
             secret_key = params['ec2_secret_key']
+
             credentials = {'EC2_ACCESS_KEY':access_key, 'EC2_SECRET_KEY':secret_key}
             result = self.saveCredentials(credentials)
             # TODO: This is a hack to make it unlikely that the db transaction has not completed
@@ -70,7 +72,12 @@ class CredentialsPage(BaseHandler):
             try:
                 service = backendservices()
                 credentials = self.user_data.getCredentials()
-                stopped = service.stopMachines({"infrastructure":"ec2", "credentials":self.user_data.getCredentials()})
+                terminate_params = {
+                  "infrastructure": "ec2",
+                  "credentials": self.user_data.getCredentials(),
+                  "key_prefix": user_id
+                }
+                stopped = service.stopMachines(terminate_params,True) #True means blocking, ie wait for success (its pretty quick)
                 if not stopped:
                     raise
                 result = {'status': True, 'msg': 'Sucessfully terminated all running VMs.'}
@@ -100,14 +107,13 @@ class CredentialsPage(BaseHandler):
                 result = {'status': True, 'credentials_msg': ' Credentials saved successfully! The EC2 keys have been validated.'}
                 # See if the amazon db table is intitalized
                 if not self.user_data.isTable():
-                    from backend.tasks import createtable
                     db_credentials = self.user_data.getCredentials()
                     # Set the environmental variables
                     os.environ["AWS_ACCESS_KEY_ID"] = credentials['EC2_ACCESS_KEY']
                     os.environ["AWS_SECRET_ACCESS_KEY"] = credentials['EC2_SECRET_KEY']
 
                     try:
-                        createtable("stochss")
+                        createtable(backendservices.TABLENAME)
                         self.user_data.is_amazon_db_table=True
                     except Exception,e:
                         pass
@@ -143,7 +149,10 @@ class CredentialsPage(BaseHandler):
             context['vm_names'] = None
             context['valid_credentials']=False
             context['active_vms']=False
+
+            fake_credentials = { 'EC2_ACCESS_KEY': '', 'EC2_SECRET_KEY': '' }
         else:
+            fake_credentials = { 'EC2_ACCESS_KEY': '*' * len(credentials['EC2_ACCESS_KEY']), 'EC2_SECRET_KEY': '*' * len(credentials['EC2_SECRET_KEY']) }
             
             context['valid_credentials'] = True
             all_vms = self.get_all_vms(user_id,credentials)
@@ -170,7 +179,7 @@ class CredentialsPage(BaseHandler):
                 else:
                     context['active_vms'] = True
                 
-        context = dict(context, **credentials)
+        context = dict(context, **fake_credentials)
         context = dict(result, **context)
         return context
     
@@ -192,13 +201,14 @@ class CredentialsPage(BaseHandler):
                 return None
                     
     def start_vms(self, user_id, credentials, number_of_vms=None):
-        
-        group_random_name = user_id +"-"+''.join(random.choice(string.ascii_uppercase + string.digits) for x in range(6))
+        key_prefix = user_id
+        group_random_name = key_prefix +"-"+''.join(random.choice(string.ascii_uppercase + string.digits) for x in range(6))
         params ={"infrastructure":"ec2",
              "num_vms":number_of_vms, 
              'group':group_random_name, 
-             'image_id':'ami-11bad678', 
+             'image_id':'ami-f0d42898',
              'instance_type':'t1.micro',
+             'key_prefix':key_prefix,
              'keyname':group_random_name, 
              'email':[user_id],
              'credentials':credentials,
@@ -215,12 +225,14 @@ class CredentialsPage(BaseHandler):
     def delete_vms():
         db_user = db.GqlQuery("SELECT * FROM StochKitModelWrapper WHERE user_id = :1", user_id).get()
         db_user.user = valid_username
-        result =  backendservice.stopMachines(db_user.user)       
+        result =  backendservice.stopMachines(db_user.user,True) #True means blocking, ie wait for success
 
 
 class LocalSettingsPage(BaseHandler):
     """ Set paths for local plugin software. """
-
+    def authentication_required(self):
+        return True
+    
     def get(self):
         """ """
         env_variables = self.user_data.env_variables

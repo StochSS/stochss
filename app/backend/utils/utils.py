@@ -80,7 +80,7 @@ def log(msg):
   Args:
     msg  Message to be logged
   """
-  logging.debug(msg)
+  logging.info(msg)
   sys.stdout.flush()
 
 

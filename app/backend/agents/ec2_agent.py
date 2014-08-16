@@ -1,6 +1,5 @@
-
-from backend.agents.base_agent import BaseAgent, AgentConfigurationException, AgentRuntimeException
-import sys,os
+from base_agent import BaseAgent, AgentConfigurationException, AgentRuntimeException
+import sys,os,traceback
 sys.path.append(os.path.join(os.path.dirname(__file__), '../../lib/boto'))
 sys.path.append(os.path.join(os.path.dirname(__file__), '../'))
 print sys.path
@@ -10,7 +9,7 @@ import datetime
 import os
 import time,uuid
 from boto.ec2.cloudwatch import MetricAlarm
-from backend.utils import utils
+from utils import utils
 from uuid import uuid4
 import logging
 
@@ -44,6 +43,8 @@ class EC2Agent(BaseAgent):
   PARAM_INSTANCE_IDS = 'instance_ids'
   PARAM_SPOT = 'use_spot_instances'
   PARAM_SPOT_PRICE = 'max_spot_price'
+  PARAM_WORKER_QUEUE = 'queue'
+  PARAM_QUEUE_HEAD = 'queue_head'
 
   REQUIRED_EC2_RUN_INSTANCES_PARAMS = (
     PARAM_CREDENTIALS,
@@ -165,7 +166,7 @@ class EC2Agent(BaseAgent):
         private_ips.append(i.private_dns_name)
     return public_ips, private_ips, instance_ids
 
-  def describe_instances(self, parameters):
+  def describe_instances(self, parameters, prefix=''):
     """
     Retrieves the list of running instances that have been instantiated using a
     particular EC2 keyname. The target keyname is read from the input parameter
@@ -183,11 +184,13 @@ class EC2Agent(BaseAgent):
     instanceList = []
     instances = [i for r in reservations for i in r.instances]
     for i in instances:
+      if i.key_name is not None and i.key_name.startswith(prefix):
         instance = dict()
         instance["id"] = i.id
         instance["public_ip"] = i.public_dns_name
         instance["private_ip"] = i.private_dns_name
         instance["state"]= i.state
+        instance["key_name"] = i.key_name
         instanceList.append(instance)
     return instanceList
 
@@ -251,13 +254,58 @@ class EC2Agent(BaseAgent):
     userstr+='export AWS_SECRET_ACCESS_KEY={0}\n'.format( str(credentials['EC2_SECRET_KEY']))
     userstr+='echo export AWS_ACCESS_KEY_ID={0} >> ~/.bashrc\n'.format(str(credentials['EC2_ACCESS_KEY']))
     userstr+='echo export AWS_SECRET_ACCESS_KEY={0} >> ~/.bashrc\n'.format( str(credentials['EC2_SECRET_KEY']))
-    userstr+='echo export STOCHKIT_HOME={0} >> ~/.bashrc\n'.format("/home/ubuntu/StochKit2.0.6/")
+    userstr+='echo export AWS_ACCESS_KEY_ID={0} >> /home/ubuntu/.bashrc\n'.format(str(credentials['EC2_ACCESS_KEY']))   
     userstr+='echo export AWS_SECRET_ACCESS_KEY={0} >> /home/ubuntu/.bashrc\n'.format( str(credentials['EC2_SECRET_KEY']))
-    userstr+='echo export AWS_ACCESS_KEY_ID={0} >> /home/ubuntu/.bashrc\n'.format(str(credentials['EC2_ACCESS_KEY']))
-    userstr+='echo export STOCHKIT_HOME={0} >> /home/ubuntu/.bashrc\n'.format("/home/ubuntu/StochKit2.0.6/")
+
+    userstr+='export STOCHKIT_HOME={0}\n'.format('/home/ubuntu/StochKit/')
+    userstr+='export STOCHKIT_ODE={0}\n'.format('/home/ubuntu/ode/')
+    userstr+='echo export STOCHKIT_HOME={0} >> ~/.bashrc\n'.format("/home/ubuntu/StochKit/")
+    userstr+='echo export STOCHKIT_HOME={0} >> /home/ubuntu/.bashrc\n'.format("/home/ubuntu/StochKit/")
+    userstr+='echo export STOCHKIT_ODE={0} >> ~/.bashrc\n'.format("/home/ubuntu/ode/")
+    userstr+='echo export STOCHKIT_ODE={0} >> /home/ubuntu/.bashrc\n'.format("/home/ubuntu/ode/")
     userstr+='source ~/.bashrc \n'
-    userstr+='source /home/ec2-user/.bashrc \n'
-    userstr+="nohup celery -A tasks worker --autoreload --loglevel=info -n {0} --workdir /home/ubuntu > /home/ubuntu/nohup.log 2>&1 & \n".format(str(uuid.uuid4()))
+    userstr+='source /home/ubuntu/.bashrc \n'
+    # Workers need an alarm...
+    skip_alarm = False
+    if self.PARAM_QUEUE_HEAD in parameters and parameters[self.PARAM_QUEUE_HEAD]:
+      # ...but the queue head doesnt
+      skip_alarm = True
+      # Queue head, needs to have at least two cores
+      insufficient_cores = ['t1.micro', 'm1.small', 'm1.medium', 'm3.medium']
+      if instance_type in insufficient_cores:
+        instance_type = 'c3.large'
+      # Create the user that we want to use to connect to the broker
+      # and configure its permissions on the default vhost.
+      userstr += "rabbitmqctl add_user stochss ucsb\n"
+      userstr += 'rabbitmqctl set_permissions -p / stochss ".*" ".*" ".*"\n'
+      # userstr += "rabbitmq-server -detached\n"
+    else:
+      # Update celery config file...it should have the correct IP
+      # of the Queue head node, which should already be running.
+      celery_config_filename = os.path.join(
+        os.path.dirname(os.path.abspath(__file__)),
+        "../celeryconfig.py"
+      )
+      # Pass it line by line so theres no weird formatting errors from 
+      # trying to echo a multi-line file directly on the command line
+      with open(celery_config_filename, 'r') as celery_config_file:
+        lines = celery_config_file.readlines()
+        # Make sure we overwrite the file with our first write
+        userstr += "echo '{0}' > /home/ubuntu/celeryconfig.py\n".format(lines[0])
+        for line in lines[1:]:
+          userstr += "echo '{0}' >> /home/ubuntu/celeryconfig.py\n".format(line)
+    # Even the queue head gets a celery worker
+    # NOTE: We only need to use the -n argument to celery command if we are starting
+    #       multiple workers on the same machine. Instead, we are starting one worker
+    #       per machine and letting that one worker execute one task per core, using
+    #       the configuration in celeryconfig.py to ensure that Celery detects the 
+    #       number of cores and enforces this desired behavior.
+    if self.PARAM_WORKER_QUEUE in parameters:
+      userstr+="nohup celery -A tasks worker --autoreload --loglevel=info -Q {0} --workdir /home/ubuntu > /home/ubuntu/nohup.log 2>&1 & \n".format(
+          parameters[self.PARAM_WORKER_QUEUE]
+      )
+    else:
+      userstr+="nohup celery -A tasks worker --autoreload --loglevel=info --workdir /home/ubuntu > /home/ubuntu/nohup.log 2>&1 & \n"
     f.write(userstr)
     f.close()
     start_time = datetime.datetime.now()
@@ -334,10 +382,10 @@ class EC2Agent(BaseAgent):
       else:
         utils.log('TIMING: It took {0} seconds to spawn {1} ' \
                   'regular instances'.format(total_time.seconds, count))
-        
-        utils.log('Creating Alarms for the instances')
-        for machineid in instance_ids:
-            self.make_sleepy(parameters, machineid)   
+        if not skip_alarm:
+          utils.log('Creating Alarms for the instances')
+          for machineid in instance_ids:
+              self.make_sleepy(parameters, machineid)   
       return instance_ids, public_ips, private_ips
     except EC2ResponseError as exception:
       self.handle_failure('EC2 response error while starting VMs: ' +
@@ -348,7 +396,7 @@ class EC2Agent(BaseAgent):
       else:
         self.handle_failure('Error while starting VMs: ' + exception.message)
 
-  def terminate_instances(self, parameters):
+  def terminate_instances(self, parameters, prefix=''):
     """
     Stop one of more EC2 instances using. The input instance IDs are
     fetched from the 'instance_ids' parameters in the input map. (Also
@@ -362,7 +410,8 @@ class EC2Agent(BaseAgent):
     reservations = conn.get_all_instances()
     instances = [i for r in reservations for i in r.instances]
     for i in instances:
-        instance_ids.append(i.id)
+	if i.key_name is not None and i.key_name.startswith(prefix):
+            instance_ids.append(i.id)
     terminated_instances = conn.terminate_instances(instance_ids)
     for instance in terminated_instances:
       utils.log('Instance {0} was terminated'.format(instance.id))
@@ -385,11 +434,12 @@ class EC2Agent(BaseAgent):
 
   def validate_Credentials(self, credentials):
       try:
-          conn = boto.connect_ec2(str(credentials['EC2_ACCESS_KEY']),
-      str(credentials['EC2_SECRET_KEY']))
+          conn = boto.connect_ec2(str(credentials['EC2_ACCESS_KEY']), str(credentials['EC2_SECRET_KEY']))
           conn.get_all_instances()
           return True
       except EC2ResponseError:
+          print '\nIn validate_Credentials'
+          traceback.print_exc()
           return False
 
   def handle_failure(self, msg):

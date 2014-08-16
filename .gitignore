@@ -1,41 +1,7 @@
-*.py[cod]
-
-# C extensions
-*.so
-
-# Packages
-*.egg
-*.egg-info
-dist
-build
-eggs
-parts
-bin
-var
-sdist
-develop-eggs
-.installed.cfg
-lib64
-
-# Installer logs
-pip-log.txt
-
-# Unit test / coverage reports
-.coverage
-.tox
-nosetests.xml
-
-# Translations
-*.mo
-
-# Mr Developer
-
-# StochSS output files
-app/output/
-stdout.log
+*.pyc
+app/output
+.ec2-config
 stderr.log
-
-# StochSS temporary config files
-conf/config
-app/userfile
-app/conf/app_config.py
+stdout.log
+.DS_Store
+*.pem

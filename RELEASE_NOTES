@@ -1,18 +1,41 @@
 StochSS - Stochastic Simulation Service: Release Notes
 
+1.3.0
+=============================
+- Added interface to StochOptim stochastic parameter estimation toolbox
+
+1.2.0
+=============================
+- Implement deterministic sensitivity analysis
+- Import/Export of data for backup and recovery
+- New login and user system (required login to use)
+- Enhanced plotting
+
+1.1.0
+=============================
+- Support for ODE-based simulations
+- Support for concentration-based models
+- Concentration-to-population conversion tool for mass action kinetic models
+- Support for launching StochSS instances in EC2 cloud (for Mac, Linux and Windows systems)
+- Updated StochKit version 2.0.10
+
+1.0.3
+=============================
+- Support for OSX Mavericks
+- Fixed bug that prevented proper termination of local StochKit2 processes
 
 1.0.2
 =============================
 - Changes to enable packaging as an .app for OSX. 
-- Removed the iptracker submodule, user downloads are now logged by the webserver.  
+- Removed the iptracker submodule, user downloads are now logged by the webserver
 
 1.0.1
 =============================
-- Updated StochKit version to 2.0.8. 
+- Updated StochKit version to 2.0.8
 
 Version 1.0.0
 =============================
 
-- Initial release. Creation and simulation of well-mixed stochastic models via StochKit2. Execution locally or in VMs in Amazon EC2.     
+- Initial release. Creation and simulation of well-mixed stochastic models via StochKit2. Execution locally or in VMs in Amazon EC2
 
 

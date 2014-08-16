@@ -45,38 +45,29 @@
 </head>
 
   <body>
-
     <div class="navbar navbar-fixed-top">
       <div class="navbar-inner">
         <div class="container-fluid">
-          <a class="btn btn-navbar" data-toggle="collapse" data-target=".nav-collapse">
-            <span class="icon-bar"></span>
-            <span class="icon-bar"></span>
-            <span class="icon-bar"></span>
-          </a>
           <a class="brand" href="/">StochSS</a>
           <div class="btn-group pull-right">
-            {% if user %}
+            <!-- <a class="btn" href="/signout">Sign Out</a> -->
             <a class="btn dropdown-toggle" data-toggle="dropdown" href="#">
-              <i class="icon-user"></i> {{ user.nickname() }}
+              <i class="icon-user"></i> {{ user.name }}
               <span class="caret"></span>
             </a>
             <ul class="dropdown-menu">
-              <li><a href="/profile">Profile</a></li>
+              <li><a href="/account_settings">Account Settings</a></li>
               <li class="divider"></li>
-              <li><a href="/signout">Sign Out</a></li>
+              <li><a href="/logout">Sign Out</a></li>
             </ul>
-            {% else %}
-              <a class="btn" href="/users/login">Login</a>
-            {% endif %}
           </div>
           <div class="nav-collapse">
             <ul class="nav">
               <li class="active"><a href="/">Home</a></li>
               <li><a href="http://www.stochss.org" target="_blank">About</a></li>
-              <li><a href="https://docs.google.com/document/d/1QdbIE0Ja7q4yAK31vmj9SlF51WMPKdKrLwmyDXbUw7c/pub?embedded=true" target="_blank">User Manual</a></li>
+              <li><a href="http://www.stochss.org/?page_id=476" target="_blank">Documentation</a></li>
               <li><a href="mailto:stochss-users@googlegroups.com">Contact</a></li>
-                
+              
             </ul>
           </div><!--/.nav-collapse -->
         </div><!-- container fluid -->
@@ -84,30 +75,27 @@
     </div><!-- navbar fixed -->
 
     <div class="container-fluid">
-      
       <div class="row-fluid">
-          
         <div class="span2">
           <div class="well sidebar-nav">
             <ul class="nav nav-list">
               <li class="nav-header"><i class="icon-beaker"></i>Modelling</li>
-                  <li><a href="/modeleditor" TITLE = "Create/Import models">Model editor</a></li>
-    
+              <li><a href="/modeleditor" TITLE = "Create/Import models">Model editor</a></li>
               <li class="nav-header"><i class="icon-play"></i> Simulation</li>
-                <li><a href="/simulate" TITLE = "Configure and submit simulations">Simulation manager</a></li>
-                <li><a href="/status" TITLE = "Monitor the progress of a simulation">Job Status</a></li>
-
+              <li><a href="/simulate" TITLE = "Configure and submit simulations">Simulation manager</a></li>
+              <li><a href="/stochoptim" TITLE = "Launch a parameter estimation job">Parameter Estimation</a></li>
+              <li><a href="/status" TITLE = "Monitor the progress of a simulation">Job Status</a></li>
               <li class="nav-header"><i class="icon-cog"></i> Settings</li>
-                  <li><a href="/credentials" TITLE = "Set AWS credentials and manage computational resources in the cloud">Cloud computing</a></li>
-                  <li><a href="/localsettings" TITLE = "Configure local plugins">Local plugins</a></li>
-              <li><a href="/updates" TITLE = "Check for available updates">Check For Updates</a></li>
-
-
+              {% if user.is_admin_user() %}
+                  <li><a href="/admin">Admin Panel</a></li>
+              {% endif %}
+              <li><a href="/credentials" TITLE = "Set AWS credentials and manage computational resources in the cloud">Cloud computing</a></li>
+              <li><a href="/import" TITLE = "Manage backup archives">Backup</a></li>
             </ul>
           </div><!--/.well -->
         </div><!--/span2-->
-          {% block content %}
-          {% endblock %}
+        {% block content %}
+        {% endblock %}
       </div><!--/row-->
 
       </hr>
@@ -123,12 +111,11 @@
     ================================================== -->
     <!-- Placed at the end of the document so the pages load faster -->
     <!-- -->
-    <script src="/static/js/jquery-1.8.3.js"></script>
+    <script src="/static/js/jquery-ui-1.10.3/js/jquery-1.9.1.js"></script>
+    <script src="/static/js/jquery-ui-1.10.3/js/jquery-ui-1.10.3.custom.js"></script>
     <script src="/static/js/bootstrap.js"></script>
-    <script src="/static/js/flot/jquery.flot.js"></script>
+    <script src="/static/js/jquery.flot2.js"></script>
     <script src="/static/js/custom.js"></script>
-    <script src="/static/js/custom.js"></script>
-
 
     {% block jscontent %}{% endblock %}
 

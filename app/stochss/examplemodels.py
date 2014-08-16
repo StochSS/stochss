@@ -37,6 +37,100 @@ def dimerdecay(model_name=""):
     
     return model
 
+def birthdeath(model_name=""):
+    """ 
+        Dimerdecay. Tests basic functionality and support for the 
+        'mass-action' propensity function flag. 
+    """
+    if model_name == "":
+        model_name = "birth_death"
+    model = StochKitModel(name=model_name);
+
+    # Species
+    S = Species(name="S",initial_value=100);
+ 
+    model.addSpecies([S])
+
+    # Parameters
+    k1 = Parameter(name="k1",expression=1.0)
+    k2 = Parameter(name="k2",expression=1.0)
+    
+    model.addParameter([k1,k2])
+    
+    # Reactions
+    R1 = Reaction(name="R1", products={S:1}, massaction=True, rate=k1)
+    R2 = Reaction(name="R2", reactants={S:1}, massaction=True, rate=k2)
+    
+    model.addReaction([R1,R2])
+    
+    return model
+
+def lotkavolterra_oscillating(model_name=""):
+    """ 
+        Dimerdecay. Tests basic functionality and support for the 
+        'mass-action' propensity function flag. 
+    """
+    if model_name == "":
+        model_name = "lotkavolterra_oscillating"
+    model = StochKitModel(name=model_name);
+
+    model.units = "concentration"
+
+    # Species
+    R = Species(name="R",initial_value=0.0095);
+    W = Species(name="W",initial_value=0.008);
+ 
+    model.addSpecies([R,W])
+
+    # Parameters
+    k1 = Parameter(name="k1",expression=0.004)
+    k2 = Parameter(name="k2",expression=0.5)
+    k3 = Parameter(name="k3",expression=0.0045)
+    
+    model.addParameter([k1,k2,k3])
+    
+    # Reactions
+    R1 = Reaction(name="R1",reactants={R:1},products={R:2},massaction=True,rate=k1)
+    R2 = Reaction(name="R2",reactants={R:1,W:1},products={W:2},massaction=True,rate=k2)
+    R3 = Reaction(name="R3",reactants={W:1},massaction=True,rate=k3)
+    
+    model.addReaction([R1,R2,R3])
+    
+    return model
+
+def lotkavolterra_equilibrium(model_name=""):
+    """ 
+        Dimerdecay. Tests basic functionality and support for the 
+        'mass-action' propensity function flag. 
+    """
+    if model_name == "":
+        model_name = "lotkavolterra_equilibrium"
+    model = StochKitModel(name=model_name);
+
+    model.units = "concentration"
+
+    # Species
+    R = Species(name="R",initial_value=0.009);
+    W = Species(name="W",initial_value=0.008);
+ 
+    model.addSpecies([R,W])
+
+    # Parameters
+    k1 = Parameter(name="k1",expression=0.004)
+    k2 = Parameter(name="k2",expression=0.5)
+    k3 = Parameter(name="k3",expression=0.0045)
+    
+    model.addParameter([k1,k2,k3])
+    
+    # Reactions
+    R1 = Reaction(name="R1",reactants={R:1},products={R:2},massaction=True,rate=k1)
+    R2 = Reaction(name="R2",reactants={R:1,W:1},products={W:2},massaction=True,rate=k2)
+    R3 = Reaction(name="R3",reactants={W:1},massaction=True,rate=k3)
+    
+    model.addReaction([R1,R2,R3])
+    
+    return model
+
 def MichaelisMenten(model_name=""):
     """ 
         A simple Michaelis-Menten model. Tests parameters defined as a function of other parameters,

@@ -1,47 +1,227 @@
 {% extends "base.html" %}
 {% block title%}Manage Simulations{% endblock %}
+
 {% block content %}
-
 <div class="span9">
-    
     <div class="row-fluid">
-    
-       <div class"span9">
-            
-    </div class="menubar">
-       <ul class="nav nav-tabs">
-           <li class="dropdown"><a class="dropdown-toggle" data-toggle="dropdown">Solvers<b class="caret"></b></a>
-               <ul class="dropdown-menu">
-                   <a href="/simulate/newstochkitensemble">Well mixed stochastic</a>
-                </ul>
-           </li>
-
-        </ul>
-    </div> <!--/ul-->
-    
-        {% block simulatecontent %}
-        <div class="span9">
+        <div style="display : none;" id="modelSelect">
             <div class="well">
-            {% if all_models %}
-              <h3> Select model to simulate </h3>
-              </br>
-              <form id="model_simulated" method="post" action="/simulate">
-                  {% for item in all_models %}
-                  <label class="radio">
-                      <input type="radio" name="model_to_simulate" value={{ item.model.name }} checked>{{ item.model.name }}</input>
-                      </br>
-                  </label>
-                  {% endfor %}
-                  </br>
-                  <button type="submit" class="btn-primary btn-large">Next&raquo;</button>
-              </form>
-            {% else %}
-               <h2>There are no models in the system</h2> </br>
+                {% if all_models %}
+                <h3> Select model to simulate </h3>
+                <br />
+                {% for item in all_models %}
+                <label class="radio">
+                    <input type="radio" name="model_to_simulate" value="{{ item.name }} {{ item.id }} {{ item.units }}" checked />{{ item.name }}
+                    <br />
+                </label>
+                {% endfor %}
+                <br />
+                <button id="next" type="submit" class="btn-primary btn-large">Next&raquo;</button>
+                {% else %}
+                <h2>There are no models in the system</h2><br />
                 <a style="font-size:18px;" href="/modeleditor"> Create a new model? </a>
-            {% endif %}
+                {% endif %}
+            </div>
         </div>
-        {% endblock %}
+
+        <div style="display : none;" id="simulationConf">
+        </div>
+
+        <div id="jobInfo">
+            Downloading data to browser...
+        </div>
+    </div>
+</div>
+
+
+{% endblock %}
+
+{% block jscontent %}
+<script type="text/javascript" src = "/static/js/underscore.js"></script>
+<script type="text/javascript" src = "/static/utils.js"></script>
+<script type="text/javascript" src = "/static/js/backbone.js"></script>
+<script type="text/javascript" src = "/static/model/stochkit.js"></script>
+<link rel="stylesheet" href="/static/css/nv.d3.css">
+
+<script type="text/javascript" src = "/static/js/purl.js"></script>
+<script type="text/javascript" src = "/static/js/canvas2image.js"></script>
+<script type="text/javascript" src = "/static/js/splot.js"></script>
+<script type="text/javascript" src = "/static/js/d3.v3.js"></script>
+<script type="text/javascript" src = "/static/js/nv.d3.js"></script>
+<script type="text/javascript" src = "/static/sensitivity.js"></script>
+<script type="text/javascript" src = "/static/model/stochkit.js"></script>
+<script type="text/javascript" src = "/static/js/simulate.js"></script>
+
+<script id="simulationConfTemplate" type="text/template">
+    <div class="well well-large">
+        <h2> <a data-toggle="modal" href="#help_modal1" style="text-decoration: none">New StochKit2 Ensemble <i class="icon-question-sign"></i> </a>
+            
+            {% set help_modal_id = "help_modal1" %}
+            {% set help_modal_title = "StochKit2 Ensemble" %}
+            {% set help_modal_message = "A StochKit2 Ensemble is a collection of trajectories, or realizations, of a given model. Since the model is stochastic, each trajectory represents an independent sample of the model for the given parameters." %}
+            {% include "help_modal.html" %}
+            {{help_modal|safe}}
+            
+        </h2>
+
+        Model Name: <h2><%= name %></h2>
+        Units: <h3><%= units %></h3>
+        <hr />
+        <label>Name:</label>
+        <input type="text" class="span3" id="jobName" value="<%= name %>_job" />
         
+        <span class="help-block">This name will be used to reference the ensemble.</span>
+        <br />
+        <br />
+        Simulation type
+        <br />
+        <% if(units == "concentration") { %>
+        <input id="deterministic" type="radio" name="exec_type" value="deterministic" checked> Deterministic <br />
+        <input id="sensitivity" type="radio" name="exec_type" value="sensitivity"> Deterministic + Sensitivity <br />
+        <% } else if (units == "population") { %>
+        <input id="deterministic" type="radio" name="exec_type" value="deterministic"> Deterministic
+        <br />
+        <input id="stochastic" type="radio" name="exec_type" value="stochastic" checked> Stochastic
+        <br />
+        <input id="sensitivity" type="radio" name="exec_type" value="sensitivity"> Deterministic + Sensitivity <br />
+        <% } %>
+        <hr />
+
+        <div class="sensitivity" id="selectTable">
+            Select parameters with which to compute sensitivities:
+            <br />
+            <div id="parameterContainer">
+            </div>
         </div>
-     </div> <!--/span9-->
- {% endblock %}
+
+        <!--<table id="selectTable2" class="sensitivity" border=1 width="50%">
+            <tr>
+                <th>Parameters</th>
+                <th>Initial Conditions</th>
+            </tr>
+            <tr>
+                <td valign="top">
+                    <table id="parameterContainer">
+                    </table>
+                </td>
+                <td valign="top">
+                    <table id="initialConditionContainer">
+                    </table>
+                </td>
+            </tr>
+        </table>-->
+
+        <br />
+        
+        Simulation time
+        <br />
+        <input type="text" class="input-small" disabled="disabled" value="0">
+        &nbsp; to &nbsp;
+        <input type="text" class="input-small" id="time" value="100">
+        &nbsp; store state every &nbsp;
+        <input type="text" class="input-small" id="increment" value="0.1"> &nbsp; time units.
+        
+        <span class="stochastic">
+            <br />
+            <label>Realizations</label>
+            <input type="text" class="span3" id="realizations" value="10">
+            <span class="help-block">Number of realizations in this ensemble.</span>
+        </span>
+        <br />
+        
+        <!-- Optional parameters to the SSA and Tau-leaping solvers. -->
+        <h3 class="advanced-settings">
+            <a data-toggle="collapse" data-target="#advanced-settings">
+                Advanced settings&raquo;
+            </a>
+        </h3>
+        
+        <div id="advanced-settings" class="collapse advanced-settings">
+            <div class="stochastic">
+                Algorithm<br />
+                SSA <input id="ssa" type="radio" name="algorithm" value="ssa" checked><br />
+                Tau-leaping <input id="tau-leaping" style="padding-left: 100px;" type="radio" name="algorithm" value="tau_leaping">
+            </div>
+
+            <label class="tau-leaping ssa">Seed
+                <input type="text" class="span3" id="seed" value="0">
+                <span class="help-block">Seed the random number generator (leave empty for a random seed).</span>
+            </label>
+            
+            <label class="tau-leaping">Threshold
+                <input type="text" class="span3" id="threshold" value="10">
+                <span class="help-block">Set the threshold (minimum number of reactions per leap before switching to SSA) for tau leaping.</span>
+            </label>
+            
+            <label class="tau-leaping">Epsilon
+                <input type="text" class="span3" id="epsilon" value="0.01">
+                <span class="help-block tau-leaping">Set the tolerance. Valid values: must be greater than 0.0 and less than 1.0.</span>
+            </label>
+        </div> <!-- Advanced settings -->
+        
+        <!-- Display status messages -->
+        <br>
+        <span id="msg"></span>
+        <br>
+        <br>
+
+        <button id="runLocal" type="submit" class="btn btn-primary btn-large"><i class="icon-laptop"></i> Run Locally </button>
+        <button id="runCloud" type="submit" class="btn btn-primary btn-large"><i class="icon-cloud"></i> Run via Cloud</button>
+        
+        <!-- Prevent Submission on pressing enter -->
+        <!--<script>
+            document.getElementById('submit_stochkit_ensemble').addEventListener('keypress', function(event) {
+            if (event.keyCode == 13) {
+            event.preventDefault();
+            }
+            });
+            </script>-->
+    </div>
+</script>
+
+<script type="text/template" id="jobInfoTemplate">
+    <h2> Job summary: <span style="COLOR:green;"><%= name %></span></h2>
+    <br />
+    <div class="well">                    
+        <h3>Metadata</h3>
+        <p class="thispage">
+            Resource: <%= resource %>
+            <br />
+            Simulation status: <%= status %>
+            <br />
+            Stochkit model: <a href="/modeleditor?model_edited=<%= modelName %>" class="thispage"> <%= modelName %> </a>
+            <!--Resource: <%= type %>
+                    <br />
+                    Simulation endtime: <%= final_time %>
+                    <br />
+                    Stochkit input file: <a href="/output/servestatic?filename=<%= output_location %>/<%= name %>.xml" class="thispage"> <%= name %>.xml </a>-->
+        </p>
+    </div>
+
+    <div id="plotRegion">
+        <div id="trajectorySelectHide">
+            Plot
+            <select id="trajectorySelect">
+                <option value="mean">the mean</option>
+            </select>.
+        </div>
+
+        <div id="interpolateWarning" class="alert alert-block alert-info">Note: The lines on this graph have been downsampled and interpolated to improve rendering performance.</div>
+        <div id="plot"></div>
+    </div>
+
+    <div id="error">
+    </div>
+      
+    <br />
+      
+    <div id="msg"></div>
+    <br />
+    
+    <div class="well">
+        <h3>Output</h3>
+        <br />
+        <button id="access" type="submit" class="btn btn-primary btn-large"><i class="icon-download-alt"></i> Fetch Data from Cloud</button>
+    </div>
+</script>
+{% endblock %}

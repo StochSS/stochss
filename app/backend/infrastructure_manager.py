@@ -38,6 +38,7 @@ class InfrastructureManager:
   PARAM_RESERVATION_ID = 'reservation_id'
   PARAM_INFRASTRUCTURE = 'infrastructure'
   PARAM_NUM_VMS = 'num_vms'
+  PARAM_KEYNAME = 'keyname'
 
   # States a particular VM deployment could be in
   STATE_PENDING = 'pending'
@@ -86,7 +87,7 @@ class InfrastructureManager:
     else:
       self.reservations = PersistentDictionary()
 
-  def describe_instances(self, parameters, secret):
+  def describe_instances(self, parameters, secret, prefix=''):
     """
     Query the InfrastructureManager instance for details regarding
     a set of virtual machines spawned in the past. This method accepts
@@ -139,7 +140,7 @@ class InfrastructureManager:
     result = []
     infrastructure = parameters[self.PARAM_INFRASTRUCTURE]
     agent = self.agent_factory.create_agent(infrastructure)
-    return agent.describe_instances(parameters)
+    return agent.describe_instances(parameters,prefix)
     
 #    reservation_id = parameters[self.PARAM_RESERVATION_ID]
 #    if self.reservations.has_key(reservation_id):
@@ -168,7 +169,7 @@ class InfrastructureManager:
                   'num_vms' and any other cloud platform specific
                   parameters. Alternatively one may provide a valid
                   JSON string instead of a dictionary object.
-      secret      A previously established secret
+      secret      A previously established secret (currently not used)
 
     Returns:
       If the secret is valid and all the required parameters are available in
@@ -201,6 +202,11 @@ class InfrastructureManager:
     except AgentConfigurationException as exception:
       return self.__generate_response(False, exception.message)
 
+    keyname = parameters[self.PARAM_KEYNAME]
+    if keyname is None :
+      utils.log('Invalid keyname: '+keyname)
+      return self.__generate_response(False, self.REASON_BAD_ARGUMENTS)
+
     reservation_id = utils.get_random_alphanumeric()
     status_info = {
       'success': True,
@@ -210,17 +216,31 @@ class InfrastructureManager:
     }
     self.reservations.put(reservation_id, status_info)
     utils.log('Generated reservation id {0} for this request.'.format(
-      reservation_id))
-    if self.blocking:
-      self.__spawn_vms(agent, num_vms, parameters, reservation_id)
+      reservation_id)
+    )
+    #TODO: We are forcing blocking mode because of how the Google App Engine sandbox environment
+    # joins on all threads before returning a response from a request, which effectively makes non-
+    # blocking mode the same as blocking mode anyways.
+    # (see https://developers.google.com/appengine/docs/python/#Python_The_sandbox)
+    if self.blocking or True:
+      utils.log('Running spawn_vms in blocking mode')
+      result = self.__spawn_vms(agent, num_vms, parameters, reservation_id)
+      # NOTE: We will only be able to return an IP for the started instances when run in blocking
+      #       mode, but this is needed to update the queue head IP in celeryconfig.py.
+      return result # self.__generate_response(
+      #   True,
+      #   self.REASON_NONE,
+      #   {'reservation_id': reservation_id}.update(result)
+      # )
     else:
+      utils.log('Running spawn_vms in non-blocking mode')
       thread.start_new_thread(self.__spawn_vms,
         (agent, num_vms, parameters, reservation_id))
     utils.log('Successfully started request {0}.'.format(reservation_id))
     return self.__generate_response(True,
       self.REASON_NONE, {'reservation_id': reservation_id})
 
-  def terminate_instances(self, parameters):
+  def terminate_instances(self, parameters,prefix=''):
     """
     Terminate a group of virtual machines using the provided parameters.
     The input parameter map must contain an 'infrastructure' parameter which
@@ -254,9 +274,9 @@ class InfrastructureManager:
     infrastructure = parameters[self.PARAM_INFRASTRUCTURE]
     agent = self.agent_factory.create_agent(infrastructure)
     if self.blocking:
-      self.__kill_vms(agent, parameters)
+      self.__kill_vms(agent, parameters, prefix)
     else:
-      thread.start_new_thread(self.__kill_vms, (agent, parameters))
+      thread.start_new_thread(self.__kill_vms, (agent, parameters, prefix))
     return self.__generate_response(True, self.REASON_NONE)
 
   def __spawn_vms(self, agent, num_vms, parameters, reservation_id):
@@ -288,9 +308,10 @@ class InfrastructureManager:
       status_info['state'] = self.STATE_FAILED
       status_info['reason'] = exception.message
     self.reservations.put(reservation_id, status_info)
+    return status_info
 
 
-  def __kill_vms(self, agent, parameters):
+  def __kill_vms(self, agent, parameters, prefix=''):
     """
     Private method for stopping a set of VMs
 
@@ -298,7 +319,7 @@ class InfrastructureManager:
       agent       Infrastructure agent in charge of current operation
       parameters  A dictionary of parameters
     """
-    agent.terminate_instances(parameters)
+    agent.terminate_instances(parameters, prefix)
 
   def __generate_response(self, status, msg, extra=None):
     """

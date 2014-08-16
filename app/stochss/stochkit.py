@@ -34,8 +34,11 @@
     
 """
 
+import copy
 from model import *
 from collections import OrderedDict
+
+import math
 
 try:
     import lxml.etree as etree
@@ -62,13 +65,16 @@ except:
 
 class StochKitModel(Model):
     """ StochKitModel extends a well mixed model with StochKit specific serialization. """
+    def __init__(self, *args, **kwargs):
+        super(StochKitModel, self).__init__(*args, **kwargs)
+
+        self.units = "population"
 
     def serialize(self):
         """ Serializes a Model object to valid StochML. """
         self.resolveParameters()
         doc = StochMLDocument().fromModel(self)
         return doc.toString()
-
 
 class StochMLDocument():
     """ Serializiation and deserialization of a StochKitModel to/from 
@@ -100,7 +106,12 @@ class StochMLDocument():
         # Description
         md = cls()
         
-        d = etree.Element('Description')
+        d = etree.Element('Description') 
+
+        #
+        if model.units.lower() == "concentration":
+            d.set('units', model.units.lower())
+
         d.text = model.annotation
         md.document.append(d)
         
@@ -124,6 +135,10 @@ class StochMLDocument():
         params = etree.Element('ParametersList')
         for pname in model.listOfParameters:
             params.append(md.ParametertoElement(model.listOfParameters[pname]))
+
+        #if model.volume != None and model.units == "population":
+        #    params.append(md.ParametertoElement(model.volume))
+
         md.document.append(params)
         
         # Reactions
@@ -143,7 +158,16 @@ class StochMLDocument():
         md = cls()
         md.document = root
         return md
-    
+
+    @classmethod
+    def fromString(cls,string):
+        """ Intializes the document from an exisiting native StochKit XML file read from disk. """
+        root = etree.fromstring(string)
+        
+        md = cls()
+        md.document = root
+        return md
+
     def toModel(self,name):
         """ Instantiates a StochKitModel object from a StochMLDocument. """
         
@@ -162,19 +186,44 @@ class StochMLDocument():
         # Set annotiation
         ann = root.find('Description')
         if ann is not None:
+            units = ann.get('units')
+
+            if units:
+                units = units.strip().lower()
+
+            if units == "concentration":
+                model.units = "concentration"
+            elif units == "population":
+                model.units = "population"
+            else: # Default 
+                model.units = "population"
+
             if ann.text is None:
                 model.annotation = ""
             else:
                 model.annotation = ann.text
+
+        # Set units
+        units = root.find('Units')
+        if units is not None:
+            if units.text.strip().lower() == "concentration":
+                model.units = "concentration"
+            elif units.text.strip().lower() == "population":
+                model.units = "population"
+            else: # Default 
+                model.units = "population"
     
         # Create parameters
         for px in root.iter('Parameter'):
             name = px.find('Id').text
             expr = px.find('Expression').text
-            p = Parameter(name,expression=expr)
-            # Try to evaluate the expression in the empty namespace (if the expr is a scalar value)
-            p.evaluate()
-            model.addParameter(p)
+            if name.lower() == 'volume':
+                model.volume = Parameter(name, expression = expr)
+            else:
+                p = Parameter(name,expression=expr)
+                # Try to evaluate the expression in the empty namespace (if the expr is a scalar value)
+                p.evaluate()
+                model.addParameter(p)
         
         # Create species
         for spec in root.iter('Species'):
@@ -197,7 +246,6 @@ class StochMLDocument():
         
         # Create reactions
         for reac in root.iter('Reaction'):
-            
             try:
                 name = reac.find('Id').text
             except:
@@ -318,6 +366,7 @@ class StochMLDocument():
         idElement.text = P.name
         e.append(idElement)
         expressionElement = etree.Element('Expression')
+        print P.value
         expressionElement.text = str(P.value)
         e.append(expressionElement)
         return e
@@ -353,13 +402,13 @@ class StochMLDocument():
             except:
                 pass
 
-        elif R.type=='customized':
-            try:
-                functionElement = etree.Element('PropensityFunction')
-                functionElement.text = R.propensity_function
-                e.append(functionElement)
-            except:
-                pass
+        else:
+            #try:
+            functionElement = etree.Element('PropensityFunction')
+            functionElement.text = R.propensity_function
+            e.append(functionElement)
+            #except:
+            #    pass
 
         reactants = etree.Element('Reactants')
 

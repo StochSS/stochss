@@ -8,10 +8,21 @@ import logging
 import traceback
 import __future__
 
-from stochssapp import BaseHandler
+import re
+
+from stochssapp import *
 from stochss.model import *
 
+def int_or_float(s):
+    try:
+        return int(s)
+    except ValueError:
+        return float(s)
+    
 class ReactionEditorPage(BaseHandler):
+            
+    def authentication_required(self):
+        return True
     
     def get(self):
         all_reactions = self.get_all_reactions()
@@ -50,7 +61,7 @@ class ReactionEditorPage(BaseHandler):
         Get all the reactants belonging to the currently edited model.
         This model must be in cache.
         """
-        model = self.get_session_property('model_edited')
+        model = self.get_model_edited()
         if model is None:
             return None
 
@@ -72,12 +83,11 @@ class ReactionEditorPage(BaseHandler):
         Delete the given reaction from the current model.
         """        
         try:
-            model = self.get_session_property('model_edited')
+            model = self.get_model_edited()
             model.deleteReaction(name)
 
             # Update the cache
-            self.set_session_property('model_edited', model)
-            self.set_session_property('is_model_saved', False)
+            self.set_model_edited(model)
             return {'status': True, 'msg': 'Reaction ' + name + ' deleted successfully.'}
         except Exception, e:
             logging.error("reaction::delete_reaction: Reaction deletion failed with error %s", e)
@@ -88,13 +98,18 @@ class ReactionEditorPage(BaseHandler):
         """ Create a new reaction. """
         
         # Grab the currently edited model
-        model = self.get_session_property('model_edited')
+        model = self.get_model_edited()
+
         if model is None:
             return {'status': False, 'msg': 'You have not selected any model to edit.'}
         
         
         # Get the names of the reaction, the reactants and the products
         name = self.request.get('name').strip()
+
+        if not re.match('^[a-zA-Z0-9_\-]+$', name):
+          return {'status': False, 'msg': 'Reaction name must be alphanumeric characters, underscores, hyphens, and spaces only'}
+
         reactants = self.request.get('reactants').strip()
         products = self.request.get('products').strip()
         
@@ -154,12 +169,12 @@ class ReactionEditorPage(BaseHandler):
             # The propensity functions should be evaluable in that namespace.
             namespace = OrderedDict()
             all_parameters = model.getAllParameters()
-    
+
             for param in all_species:
-                namespace[param] = all_species[param].initial_value
+                namespace[param] = int_or_float(all_species[param].initial_value)
 
             for param in all_parameters:
-                namespace[param] = all_parameters[param].value
+                namespace[param] = int_or_float(all_parameters[param].value)
 
             # If we are processing a mass-action reaction, we generate a temporary reaction here in
             # order to compile the propensity function for error checking below.
@@ -167,10 +182,11 @@ class ReactionEditorPage(BaseHandler):
                 try:
                     rtemp = Reaction(name="foo", reactants=reactants, products=products, massaction=True,rate=ma_rate_parameter)
                     propensity_function = rtemp.propensity_function
-                except Exception,re:
-                    return {'status': False, 'msg': re}
+                except Exception,ret:
+                    return {'status': False, 'msg': ret}
 
             try:
+                print propensity_function, name, namespace
                 value = eval(compile(propensity_function, '<string>', 'eval', __future__.division.compiler_flag), namespace)
                 logging.debug("value after evaluation: " + str(value))
             except Exception, e:
@@ -191,8 +207,7 @@ class ReactionEditorPage(BaseHandler):
             model.addReaction(reaction)
 
             # Update the cache
-            self.set_session_property('model_edited', model)
-            self.set_session_property('is_model_saved', False)
+            self.set_model_edited(model)
 
             return {'status': True, 'msg': 'Reaction added successfully.'}
         except Exception, e:
@@ -276,7 +291,7 @@ class ReactionEditorPage(BaseHandler):
         Update the reactions with new values.
         """
         try:
-            model = self.get_session_property('model_edited')
+            model = self.get_model_edited()
             all_reactions = model.getAllReactions()
             all_species = model.getAllSpecies()
             all_parameters = model.getAllParameters()
@@ -288,10 +303,10 @@ class ReactionEditorPage(BaseHandler):
             namespace = OrderedDict()
 
             for spec in all_species:
-                namespace[spec] = all_species[spec].initial_value
+                namespace[spec] = int_or_float(all_species[spec].initial_value)
 
             for param in all_parameters:
-                namespace[param] = all_parameters[param].value
+                namespace[param] = int_or_float(all_parameters[param].value)
                 
             index = 1
             for key, value in all_reactions.items():
@@ -351,12 +366,32 @@ class ReactionEditorPage(BaseHandler):
             # Add the modified reactions back to the model
             model.addReaction(new_reactions)
             # Update the cache
-            self.set_session_property('model_edited', model)
-            self.set_session_property('is_model_saved', False)
+            
+            self.set_model_edited(model)
             logging.debug('Reactions updated successfully!')
             return {'status': True, 'msg': 'Reactions updated successfully.'}
         except Exception, e:
             logging.error("reaction::update_reaction: Updating of reactions failed with error %s", e)
             traceback.print_exc()
             return {'status': False, 'msg': 'There was an error while updating the reaction.'+str(e)}
+
+    def get_model_edited(self):
+        model_edited = self.get_session_property('model_edited')
+
+        if model_edited == None:
+            return None
+
+        db_model = db.GqlQuery("SELECT * FROM StochKitModelWrapper WHERE user_id = :1 AND model_name = :2", self.user.user_id(), model_edited.name).get()
+
+        return db_model.model
+
+    def set_model_edited(self, model):
+        db_model = db.GqlQuery("SELECT * FROM StochKitModelWrapper WHERE user_id = :1 AND model_name = :2", self.user.user_id(), model.name).get()
+        db_model.model = model
+        db_model.put()
+        # TODO: This is a hack to make it unlikely that the db transaction has not completed
+        # before we re-render the page (which would cause an error). We need some real solution for this...
+        time.sleep(0.5)
+
+        self.set_session_property('model_edited', model)
 
