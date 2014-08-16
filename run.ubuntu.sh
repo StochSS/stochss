@@ -115,16 +115,16 @@ function download_pyurdme {
 }
 
 function install_pyurdme_deps {
-    echo "Need to install the following pacakges: git build-essential python-dev python-setuptools python-matplotlib python-numpy python-scipy python-software-properties cython python-h5py' also 'fenics' from 'ppa:fenics-packages/fenics"
-    read -p "Do you want me to try to use sudo to install required package(s)(y/n): " answer
+    echo "We need to add the the following ppa: 'ppa:fenics-packages/fenics"
+    echo "And install the following packages: git build-essential python-dev python-setuptools python-matplotlib python-numpy python-scipy python-software-properties cython python-h5py fenics "
+    read -p "Do you want me to try to use sudo to install required package(s) (y/n): " answer
 
     if [ $? != 0 ]; then
         exit -1
     fi
 
     if [ "$answer" == 'y' ] || [ "$answer" == 'yes' ]; then
-        echo "Running 'sudo apt-get install git build-essential python-dev python-setuptools python-matplotlib python-numpy python-scipy python-software-properties cython python-h5py' also 'fenics' from 'ppa:fenics-packages/fenics'"
-'"
+        echo "Running 'sudo apt-get install ..."
         sudo apt-get -y install git
         sudo apt-get -y install build-essential python-dev
         sudo apt-get -y install python-setuptools
