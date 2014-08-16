@@ -194,6 +194,11 @@
 		    <a href="#" id="convertToPopulation">Convert to Population</a>
 		  </li>
                   {% endif %}
+                  {% if model_edited is defined and model_edited.units == "population" and not isSpatial %}
+		  <li>
+		    <a href="#" id="convertModelToSpatial">Convert to Spatial</a>
+		  </li>
+                  {% endif %}
                   <li>
 		    <a href="#" id="duplicateModel" TITLE = "Duplicate model">Duplicate Model</a>
                   </li>
@@ -279,6 +284,25 @@ $( '#duplicateModel' ).click( function() {
         $( '#sidemsg' ).text('Successfully created model as ' + data);
         $( "#sidemsg" ).prop('class', 'alert alert-success');
         location.reload(true);
+      } else {
+        $( '#sidemsg' ).text('Failed to create model');
+        $( "#sidemsg" ).prop('class', 'alert alert-error');
+      }
+    }});
+  });
+
+$( '#convertModelToSpatial' ).click( function() {
+  $.ajax({ url : encodeURI('/modeleditor?convertModelToSpatial={{model_edited.name}}'),
+    error : function(data) {
+        $( '#sidemsg' ).text('Server error making model spatial');
+        $( "#sidemsg" ).prop('class', 'alert alert-error');
+    },
+    success : function(data) {
+      if($.trim(data).length > 0)
+      {
+        $( '#sidemsg' ).text('Successfully created model as ' + data);
+        $( "#sidemsg" ).prop('class', 'alert alert-success');
+        $(location).attr('href', '/modeleditor?model_edited=' + data);
       } else {
         $( '#sidemsg' ).text('Failed to create model');
         $( "#sidemsg" ).prop('class', 'alert alert-error');

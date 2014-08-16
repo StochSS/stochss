@@ -261,7 +261,26 @@ class ModelEditorPage(BaseHandler):
         #    if db_model is not None:
         #        self.set_session_property('model_edited', db_model.model)
 
-        if self.request.get('duplicate'):
+        if self.request.get('convertModelToSpatial'):
+            modelName = self.request.get('convertModelToSpatial')
+            jsonModel = ModelManager.getModelByName(self, modelName)
+            del jsonModel["id"]
+
+            newName = modelName + '_spatial_' + ''.join(random.choice('abcdeABCDE1234567890') for x in range(3))
+            while ModelManager.getModelByName(self, newName) != None:
+                newName = modelName + '_' + ''.join(random.choice('abcdeABCDE1234567890') for x in range(3))
+
+            jsonModel["name"] = newName
+            jsonModel['isSpatial'] = True
+
+            self.response.content_type = "application/json"
+            if ModelManager.createModel(self, jsonModel):
+                self.response.write(json.dumps(newName))
+            else:
+                self.response.write(json.dumps(''))
+
+            return
+        elif self.request.get('duplicate'):
             modelName = self.request.get('duplicate')
             jsonModel = ModelManager.getModelByName(self, modelName)
             del jsonModel["id"]
@@ -279,7 +298,7 @@ class ModelEditorPage(BaseHandler):
                 self.response.write(json.dumps(''))
 
             return
-        if self.request.get('rename'):
+        elif self.request.get('rename'):
             modelName = self.request.get('rename')
             jsonModel = ModelManager.getModelByName(self, modelName)
 
@@ -300,7 +319,7 @@ class ModelEditorPage(BaseHandler):
                 self.response.write(json.dumps({ "status": False, "msg" : 'Failed to rename model' }))
 
             return
-        if self.request.get('export'):
+        elif self.request.get('export'):
             modelName = self.request.get('export')
             #model = ModelManager.getModelByName(self, modelName)
             db_model = db.GqlQuery("SELECT * FROM StochKitModelWrapper WHERE user_id = :1 AND model_name = :2", self.user.user_id(), modelName).get()

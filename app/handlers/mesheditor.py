@@ -125,11 +125,15 @@ class MeshEditorPage(BaseHandler):
             for wrapperRow in db.GqlQuery("SELECT * FROM MeshWrapper").run():
                 meshWrappers.append( wrapperRow.toJSON() )
 
-            selectedMesh = MeshWrapper.get_by_id(row.spatial['mesh_wrapper_id'])
+            if row.spatial['mesh_wrapper_id']:
+                selectedMesh = MeshWrapper.get_by_id(row.spatial['mesh_wrapper_id'])
+                selectedMeshJSON = selectedMesh.toJSON()
+            else:
+                selectedMeshJSON = None
 
             data = { 'meshes' : meshWrappers,
                      'meshWrapperId' : row.spatial['mesh_wrapper_id'],
-                     'selectedMesh' : selectedMesh.toJSON(),
+                     'selectedMesh' : selectedMeshJSON,
                      'subdomains' : row.spatial['subdomains'],
                      'initialConditions' : row.spatial['initial_conditions'],
                      'reactionsSubdomainAssignments' : row.spatial['reactions_subdomain_assignments'],
@@ -209,11 +213,14 @@ class MeshEditorPage(BaseHandler):
 
                 row.spatial['subdomains'] = list(newSubdomains)
 
-                for speciesId in row.spatial['species_subdomain_assignments']:
-                    row.spatial['species_subdomain_assignments'][speciesId] = row.spatial['subdomains']
+                row.spatial['species_subdomain_assignments'] = {}
+                row.spatial['reactions_subdomain_assignments'] = {}
 
-                for reactionId in row.spatial['reactions_subdomain_assignments']:
-                    row.spatial['reactions_subdomain_assignments'][reactionId] = row.spatial['subdomains']
+                for speciesId in row.model.listOfSpecies.keys():
+                    row.spatial['species_subdomain_assignments'][speciesId] = list(newSubdomains)
+
+                for reactionId in row.model.listOfSpecies.keys():
+                    row.spatial['reactions_subdomain_assignments'][reactionId] = list(newSubdomains)
             else:
                 for speciesId in row.spatial['species_subdomain_assignments']:
                     row.spatial['species_subdomain_assignments'][speciesId] = []

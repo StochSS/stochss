@@ -757,6 +757,7 @@ Count in each voxel \
                           success : _.bind(this.render, this) } );
             }
             
+            $( '.mesh' ).show();
             $( '.meshInfoDiv' ).find( '.name' ).text(mesh.name);
             $( '.meshInfoDiv, .uploadMeshDiv' ).find( '.description' ).text(mesh.description);
     
@@ -853,7 +854,15 @@ Count in each voxel \
                 newOption.find('input').on('click', _.bind(_.partial( this.handleMeshSelect, this.data.meshes[i]), this));
                 newOption.find('.delete').on('click', _.bind(_.partial( this.handleMeshDelete, this.data.meshes[i], newOption), this));
             }
-            this.handleMeshSelect( this.data.selectedMesh );
+
+            if( this.data.selectedMesh )
+            {
+                this.handleMeshSelect( this.data.selectedMesh );
+            }
+            else
+            {
+                $( '.meshLibrary' ).click();
+            }
         },
 
         handleSubdomainSelect : function(subdomain, event)
