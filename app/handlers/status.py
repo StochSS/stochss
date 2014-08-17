@@ -406,12 +406,25 @@ class StatusPage(BaseHandler):
                             if job_status == None:
                                 job.status = "Unknown"
                             else:
-
                                 if job_status['status'] == 'finished':
-                                    # Update the stochkit job 
-                                    job.status = 'Finished'
+                                    # Update the spatial job 
                                     job.output_url = job_status['output']
                                     job.uuid = job_status['uuid']
+                                    if job.outData is None:
+                                        job.status = 'Finished'
+                                    else:
+                                        try:
+                                            fd = os.open("{0}/stderr.log".format(job.outData), os.O_RDONLY)
+                                            f = os.fdopen(fd)
+                                            stderr = f.read().strip()
+                                            f.close()
+                                        except:
+                                            stderr = '1'
+
+                                        if len(stderr) == 0:
+                                            job.status = "Finished"
+                                        else:
+                                            job.status = "Failed"
                                 
                                 elif job_status['status'] == 'failed':
                                     job.status = 'Failed'
