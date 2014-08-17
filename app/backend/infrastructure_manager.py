@@ -4,7 +4,7 @@ import json
 import thread
 from utils import utils
 from utils.persistent_dictionary import PersistentStoreFactory, PersistentDictionary
-import mybackend
+import backend_handler
 from google.appengine.api import background_thread, backends, urlfetch
 from google.appengine.api import taskqueue
 import pickle
@@ -241,17 +241,17 @@ class InfrastructureManager:
     else:
       utils.log('Running spawn_vms in non-blocking mode')
 #        thread.start_new_thread(__spawn_vms, (infra, agent, num_vms, parameters, reservation_id))
-      backend_url = backends.get_url(mybackend.BACKEND_NAME)
+      backend_url = backends.get_url(backend_handler.BACKEND_NAME)
       # start GAE backends
-      backend_start_url =  backend_url + mybackend.BACKEND_START
+      backend_start_url =  backend_url + backend_handler.BACKEND_START
       urlfetch.fetch(backend_start_url)
           
       # start backend server manager
-      backend_manager_url =  backend_url + mybackend.BACKEND_MANAGER_R_URL
+      backend_manager_url =  backend_url + backend_handler.BACKEND_MANAGER_R_URL
       urlfetch.fetch(backend_manager_url)
           
       # let backend worker to spawn vms with background thread
-      backend_worker_url = backend_url + mybackend.BACKEND_WORKER_R_URL
+      backend_worker_url = backend_url + backend_handler.BACKEND_WORKER_R_URL
       form_fields = {
             'op': 'start_vms',
             'infra': pickle.dumps(self),
