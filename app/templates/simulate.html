@@ -18,8 +18,8 @@
                       <th>Spatial</th>
                     </tr>
                   </thead>
-                {% for item in all_models %}
                   <tbody>
+                {% for item in all_models %}
                     <tr>
                       <td>
                         <input type="radio" name="model_to_simulate" value="{{ item.name }} {{ item.id }} {{ item.units }}" checked />
@@ -34,8 +34,8 @@
                         {{ item.isSpatial }}
                       </td>
                     </tr>
+                    {% endfor %}
                   </tbody>
-                {% endfor %}
                 </table>
                 <br />
                 <button id="next" type="submit" class="btn-primary btn-large">Next&raquo;</button>

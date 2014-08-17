@@ -971,8 +971,6 @@ Count in each voxel \
                         checkbox.on('click', _.bind(_.partial(this.handleSpeciesSubdomainAssignment, speciesId, subdomainId), this));
                     }
                 }
-
-                //speciesSubdomainTable.dataTable();
             }
         },
 
@@ -1042,8 +1040,6 @@ Count in each voxel \
                         checkbox.on('click', _.bind(_.partial(this.handleReactionsSubdomainAssignment, reactionId, subdomainId), this));
                     }
                 }
-                
-                //reactionsSubdomainTable.dataTable();
             }
         },
 
