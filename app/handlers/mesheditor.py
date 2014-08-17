@@ -219,7 +219,7 @@ class MeshEditorPage(BaseHandler):
                 for speciesId in row.model.listOfSpecies.keys():
                     row.spatial['species_subdomain_assignments'][speciesId] = list(newSubdomains)
 
-                for reactionId in row.model.listOfSpecies.keys():
+                for reactionId in row.model.listOfReactions.keys():
                     row.spatial['reactions_subdomain_assignments'][reactionId] = list(newSubdomains)
             else:
                 for speciesId in row.spatial['species_subdomain_assignments']:
