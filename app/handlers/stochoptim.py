@@ -329,13 +329,13 @@ class StochOptimPage(BaseHandler):
 
             self.response.headers['Content-Type'] = 'application/json'
             self.response.write(json.dumps({ 'status' : True,
-                                             'msg' : 'Job downloaded',
+                                             'msg' : 'Job prepared',
                                              'url' : relpath }))
             return
 
 
         self.response.write(json.dumps({ 'status' : True,
-                                         'msg' : 'Job downloaded'}))
+                                         'msg' : 'Success'}))
     
     def runLocal(self, data):
         '''

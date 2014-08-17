@@ -17,6 +17,7 @@ from stochss.stochkit import *
 from stochss.examplemodels import *
 
 import webapp2
+import exportimport
 
 class ObjectProperty(db.Property):
     """  A db property to store objects. """
@@ -44,11 +45,19 @@ class StochKitModelWrapper(db.Model):
     model = ObjectProperty()
     isSpatial = db.BooleanProperty()
     spatial = ObjectProperty()
+    zipFileName = db.StringProperty()
     # This object will look like:
     # { spatialMeshId : id for Fileserver object of mesh
     #   speciesSubdomains : map of species ids to lists of subdomains they are involved in
     #   
     is_public = db.BooleanProperty()
+
+    def delete(self):
+        if self.zipFileName:
+            if os.path.exists(self.zipFileName):
+                os.remove(self.zipFileName)
+
+        super(StochKitModelWrapper, self).delete()
 
 class ModelManager():
     @staticmethod
@@ -132,6 +141,9 @@ class ModelManager():
                                  'species_subdomain_assignments' : {} ,
                                  'reactions_subdomain_assignments' : {},
                                  'initial_conditions' : {} }
+
+        if 'is_public' not in model:
+            model['is_public'] = False
 
         if 'user_id' in model:
             userID = model['user_id']
@@ -315,6 +327,30 @@ class ModelEditorPage(BaseHandler):
             else:
                 self.response.write(json.dumps(''))
 
+            return
+        elif self.request.get('exportToZip'):
+            model_edited = self.get_session_property('model_edited')
+
+            model = db.GqlQuery("SELECT * FROM StochKitModelWrapper WHERE user_id = :1 AND model_name = :2", self.user.user_id(), model_edited.name).get()
+
+            if not model.zipFileName:
+                szip = exportimport.SuperZip(os.path.abspath(os.path.dirname(__file__) + '/../static/tmp/'), preferredName = model.model_name + "_")
+                
+                model.zipFileName = szip.getFileName()
+
+                szip.addStochKitModel(model)
+                
+                szip.close()
+
+                # Save the updated status
+                model.put()
+            
+            relpath = '/' + os.path.relpath(model.zipFileName, os.path.abspath(os.path.dirname(__file__) + '/../'))
+
+            self.response.headers['Content-Type'] = 'application/json'
+            self.response.write(json.dumps({ 'status' : True,
+                                             'msg' : 'Model prepared',
+                                             'url' : relpath }))
             return
         elif self.request.get('rename'):
             modelName = self.request.get('rename')

@@ -402,5 +402,12 @@ var run = function()
                   dataType : 'json'
                 });
     });
+
+    var tab = $.url().param("tab");
+
+    if(tab)
+    {
+        $( "#tab2Link" ).click();
+    }
 }
 

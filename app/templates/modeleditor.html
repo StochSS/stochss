@@ -50,7 +50,10 @@
 		    <li class="dropdown">
 			<a class="dropdown-toggle" data-toggle="dropdown" TITLE = "Import from File/ Load Existing Library">Import<b class="caret"></b></a>
 			<ul class="dropdown-menu">
-			    <a href="/modeleditor/import/fromfile">From file..</a>
+                            {% if not isSpatial%} 
+			    <a href="/modeleditor/import/fromfile">From XML...</a>
+                            {% endif %}
+			    <a href="/import?tab=1">From StochSS .zip...</a>
 			    <a href="/modeleditor/import/publiclibrary">From Public Library...</a>
 			    <!-- <a href="/modeleditor/import/biomodels">BioModels database...</a>-->
 			</ul>
@@ -78,9 +81,9 @@
 		    </li>
                     {% elif isSpatial %}
 		    <li class="dropdown">
-			<a class="dropdown-toggle" data-toggle="dropdown" TITLE = "Export File To XML">Export<b class="caret"></b></a>
+			<a class="dropdown-toggle" data-toggle="dropdown">Export<b class="caret"></b></a>
 			<ul class="dropdown-menu">
-			    <a href="#">To StochSS .zip (TODO)</a>
+			    <a id="exportToZip" href="#">To StochSS .zip</a>
                             <a href="#" id="exportToPublicLibrary" TITLE = "Export model to public Library">To Public Library...</a>
 			    <!-- <a href="/modeleditor/export/tosbml">To SBML ...</a> -->
 			</ul>
@@ -386,6 +389,27 @@ $( '#exportToPublicLibrary' ).click( function() {
       }
     });
   }});
+
+$( '#exportToZip' ).click( function() {
+    $.ajax({ url : encodeURI('/modeleditor?exportToZip=1'),
+      error : function(data) {
+        $( '#msg' ).text('Server error exporting model');
+        $( "#msg" ).prop('class', 'alert alert-error');
+      },
+      success : function(data) {
+        if(data['status'])
+        {
+          $( '#msg' ).text('Successfully exported model');
+          $( "#msg" ).prop('class', 'alert alert-success');
+
+          window.location = data.url;
+        } else {
+          $( '#msg' ).text('Failed to export model');
+          $( "#msg" ).prop('class', 'alert alert-error');
+        }
+      }
+    });
+});
 {% endif %}
 });
 </script>
