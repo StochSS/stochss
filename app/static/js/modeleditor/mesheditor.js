@@ -422,24 +422,25 @@ MeshEditor.Controller = Backbone.View.extend(
             // Write in the custom stuff
             if(data.initialConditions[initialConditionKey].type == "place")
             {
-                var extraOptionsTemplate = '<table class="table"> \
-<thead> \
-<tr> \
-<td>Count</td><td>X</td><td>Y</td><td>Z</td> \
-</tr> \
-</thead> \
+                var extraOptionsTemplate = '<table style="width: 1pt;" class="table"> \
 <tbody> \
 <tr> \
-<td> \
+<td style="width: 1pt;">Count</td><td> \
 <input class="count input-small" val="0" /> \
 </td> \
-<td> \
+</tr> \
+<tr> \
+<td>X</td><td> \
 <input class="x input-small" val="0" /> \
 </td> \
-<td> \
+</tr> \
+<tr> \
+<td>Y</td><td> \
 <input class="y input-small" val="0" /> \
 </td> \
-<td> \
+</tr> \
+<tr> \
+<td>Z</td><td> \
 <input class="z input-small" val="0" /> \
 </td> \
 </tr> \
@@ -467,21 +468,19 @@ MeshEditor.Controller = Backbone.View.extend(
             }
             else if(data.initialConditions[initialConditionKey].type == "scatter")
             {
-                var extraOptionsTemplate = '<table class="table"> \
-<thead> \
-<tr> \
+                var extraOptionsTemplate = '<table style="width: 1pt;" class="table"> \
+<tbody> \
+<tr style="width: 1pt;"> \
 <td> \
 Subdomain \
 </td> \
 <td> \
-Count \
+<select class="subdomain input-small" /> \
 </td> \
 </tr> \
-</thead> \
-<tbody> \
 <tr> \
 <td> \
-<select class="subdomain input-small" /> \
+Count \
 </td> \
 <td> \
 <input class="count input-small" val="0" /> \
@@ -515,21 +514,19 @@ Count \
             else if(data.initialConditions[initialConditionKey].type == "distribute")
             {
                 //ic2 : { type : "population", subdomain : 2, population : 100 }
-                var extraOptionsTemplate = '<table class="table"> \
-<thead> \
-<tr> \
+                var extraOptionsTemplate = '<table style="width: 1pt;" class="table"> \
+<tbody> \
+<tr style="width: 1pt;"> \
 <td> \
 Subdomain \
 </td> \
 <td> \
-Count in each voxel \
+<select class="subdomain input-small" /> \
 </td> \
 </tr> \
-</thead> \
-<tbody> \
 <tr> \
 <td> \
-<select class="subdomain input-small" /> \
+Count in each voxel \
 </td> \
 <td> \
 <input class="count input-small" val="0" /> \
