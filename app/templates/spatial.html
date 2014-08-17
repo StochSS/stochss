@@ -59,22 +59,33 @@
 
     <div id="plotRegion" style="display: none;">
         <div class="row">
-            <div class="span8">
+            <div class="span5">
                 Time: <input id="timeSelect" type="range" min="0" max="0" step="0" value="0">
                 <span id="timeSelectDisplay"></span>
+            </div>
+            <div class="span3">
+                Select Trajectory: <select id="trajectorySelect"></select>
             </div>
             <div class="span3">
                 <b>Select which species to display:</b>
                 <span id="speciesSelect"></span>
             </div>
         </div>
-        <table width="100%" style="border: 1px solid rgb(221, 221, 221);">
-            <tr>
-                <td>
-                    <div class="span10" id="meshPreview"></div>
-                </td>
-            </tr>
-        </table>
+        <div class="row">
+            <table class="span10" style="border: 1px solid rgb(221, 221, 221);">
+                <tr>
+                    <td>
+                        <div id="meshPreview"></div>
+                    </td>
+                </tr>
+            </table>
+            
+            <div class="span1">
+                <div id="maxVal"></div>
+                <div><img src="/static/img/cmap.png"></div>
+                <div id="minVal"></div>
+            </div>
+        </div>
     </div>
 
     <div id="error" style="clear:both; display: none;">

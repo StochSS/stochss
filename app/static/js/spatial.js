@@ -37,6 +37,7 @@ Spatial.Controller = Backbone.View.extend(
             // These are our control states
             this.timeIdx = 0;
             this.selectedSpecies = undefined;
+            this.trajectory = 0;
 
             // Draw a screen so folks have something to see
             this.render();
@@ -57,8 +58,14 @@ Spatial.Controller = Backbone.View.extend(
         },
         
         // This event gets fired when the user selects a csv data file
-        meshDataPreview : function(pyurdmeMeshJsonData)
+        meshDataPreview : function(data)
         {
+            this.minVal = data['min'].toExponential(3);
+            this.maxVal = data['max'].toExponential(3);
+
+            $( "#minVal" ).text(this.minVal);
+            $( "#maxVal" ).text(this.maxVal);
+
             var dom = $( "#meshPreview" ).empty();
             var scene = new THREE.Scene();
             var width = dom.width();
@@ -80,7 +87,7 @@ Spatial.Controller = Backbone.View.extend(
             }
 
 
-            var model = loader.parse($.parseJSON(pyurdmeMeshJsonData));
+            var model = loader.parse(data['mesh']);
             load_geometry(model);
 
             var controls = new THREE.OrbitControls( camera, renderer.domElement );
@@ -110,23 +117,29 @@ Spatial.Controller = Backbone.View.extend(
             render();
         },
 
-        handleSliderChange : function(event)
+        acquireNewData : function()
         {
-            var slider = $( event.target );
-
-            this.timeIdx = Math.round( slider.val() / slider.prop('step') );
-            //$( '#timeSelectDisplay' ).text('Time: '+this.timeIdx)
-            $( '#timeSelectDisplay' ).text('Time: ' + slider.val())
             $( "#meshPreview" ).html("<CENTER><H1>Rendering...</H1></CENTER>");
 
             $.ajax( { type : "GET",
                       url : "/spatial",
                       data : { reqType : "timeData",
                                id : this.attributes.id,
-                               data : JSON.stringify( { trajectory : 0,
+                               data : JSON.stringify( { trajectory : this.trajectory,
                                                         timeIdx : this.timeIdx } )},
                       success : _.bind(this.handleMeshDataUpdate, this)
                     });
+        },
+
+        handleSliderChange : function(event)
+        {
+            var slider = $( event.target );
+
+            $( '#timeSelectDisplay' ).text('Time: ' + slider.val())
+
+            this.timeIdx = Math.round( slider.val() / slider.prop('step') );
+
+            this.acquireNewData();
         },
 
         handleMeshDataUpdate : function(data)
@@ -215,6 +228,13 @@ Spatial.Controller = Backbone.View.extend(
                     });
         },
 
+        handleTrajectorySelectChange : function(event)
+        {
+            this.trajectory = Number( $( event.target ).val() );
+
+            this.acquireNewData();
+        },
+
         render : function(data)
         {
             if(typeof data != 'undefined')
@@ -237,6 +257,14 @@ Spatial.Controller = Backbone.View.extend(
                 {
                     if(data['outData'])
                         $( '#plotRegion' ).show();
+                    //Set up trajectory select
+                    trajectorySelect = $("#trajectorySelect");
+                    for(var i = 0; i < this.jobInfo.indata.realizations; i++)
+                    {
+                        $( '<option value="' + i + '">Trajectory ' + i + '</option>' ).appendTo( trajectorySelect );
+                    }
+
+                    trajectorySelect.on('change', _.bind(this.handleTrajectorySelectChange, this));
 
                     //Set up slider
                     var slider = $( '#timeSelect' );
