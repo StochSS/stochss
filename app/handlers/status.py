@@ -370,18 +370,17 @@ class StatusPage(BaseHandler):
         if allSpatialJobsQuery != None:
             jobs = list(allSpatialJobsQuery.run())
 
-            cloud_task_status = {}
-            for job in jobs:
-                if job.resource == "cloud":
-                    cloud_task_status[job.pid] = None
-            # Retrive credentials from the datastore
-            if not self.user_data.valid_credentials:
-                return {'status':False,'msg':'Could not retrieve the status of any spatial jobs. Invalid credentials.'}
-            credentials = self.user_data.getCredentials()
+            task_status = {}
+            if self.user_data.valid_credentials:
+                cloud_task_status = {}
+                for job in jobs:
+                    if job.resource == "cloud":
+                        cloud_task_status[job.pid] = None
+                credentials = self.user_data.getCredentials()
 
-            # Check the status on the remote end
-            taskparams = {'AWS_ACCESS_KEY_ID':credentials['EC2_ACCESS_KEY'],'AWS_SECRET_ACCESS_KEY':credentials['EC2_SECRET_KEY'],'taskids':cloud_task_status.keys()}
-            task_status = service.describeTask(taskparams)
+                # Check the status on the remote end
+                taskparams = {'AWS_ACCESS_KEY_ID':credentials['EC2_ACCESS_KEY'],'AWS_SECRET_ACCESS_KEY':credentials['EC2_SECRET_KEY'],'taskids':cloud_task_status.keys()}
+                task_status = service.describeTask(taskparams)
 
             jobs = sorted(jobs, key = lambda x : (datetime.datetime.strptime(x.startTime, '%Y-%m-%d-%H-%M-%S') if hasattr(x, 'startTime') and x.startTime != None else ''), reverse = True)
 
@@ -406,7 +405,10 @@ class StatusPage(BaseHandler):
                         else:
                             job.status = "Failed"
                 elif job.resource == "cloud":
-                            job_status = task_status[job.pid]
+                            if job.pid in task_status:
+                                job_status = task_status[job.pid]
+                            else:
+                                job_status = None
                             # It frequently happens that describeTasks return None before the job is finsihed.
                             if job_status == None:
                                 job.status = "Unknown"
