@@ -357,7 +357,6 @@ class ModelEditorPage(BaseHandler):
         db_models = db.GqlQuery("SELECT * FROM StochKitModelWrapper WHERE user_id = :1", self.user.user_id())
 
         model_edited = self.get_session_property('model_edited')
-        print model_edited
         if model_edited == None:
             isSpatial = False
         else:
