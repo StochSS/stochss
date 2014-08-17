@@ -124,6 +124,15 @@ class ModelManager():
     def createModel(handler, model, modelAsString = True, rename = None):
         userID = None
 
+        if 'isSpatial' not in model:
+            model['isSpatial'] = False
+            model['spatial'] = { 'subdomains' : [],
+                                 'mesh_wrapper_id' : None,
+                                 'species_diffusion_coefficients' : {} ,
+                                 'species_subdomain_assignments' : {} ,
+                                 'reactions_subdomain_assignments' : {},
+                                 'initial_conditions' : {} }
+
         if 'user_id' in model:
             userID = model['user_id']
         else:
@@ -190,6 +199,8 @@ class ModelManager():
         modelWrap.model_name = name
         modelWrap.model = StochMLDocument.fromString(model["model"]).toModel(name)
         modelWrap.model.units = model["units"]
+        modelWrap.spatial = model["spatial"]
+        modelWrap.isSpatial = model["isSpatial"]
         modelWrap.is_public = model["is_public"]
 
         return modelWrap.put().id()
@@ -273,6 +284,12 @@ class ModelEditorPage(BaseHandler):
 
             jsonModel["name"] = newName
             jsonModel['isSpatial'] = True
+            jsonModel['spatial'] = { 'subdomains' : [],
+                                     'mesh_wrapper_id' : None,
+                                     'species_diffusion_coefficients' : {} ,
+                                     'species_subdomain_assignments' : {} ,
+                                     'reactions_subdomain_assignments' : {},
+                                     'initial_conditions' : {} }
 
             self.response.content_type = "application/json"
             if ModelManager.createModel(self, jsonModel):

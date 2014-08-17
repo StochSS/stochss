@@ -360,25 +360,30 @@ class SuperZip:
         if userId:
             modelj["user_id"] = userId
 
-        meshFileData = self.zipfb.read(modelj["meshFile"])
-        subdomainsFileData = None
-        if "subdomainsFile" in modelj:
-            subdomainsFileData = self.zipfb.read(modelj["subdomainsFile"])
+        if "meshFile" in modelj:
+            meshFileData = self.zipfb.read(modelj["meshFile"])
 
-        meshFileId = fileserver.FileManager.createFile(handler, "meshFiles", os.path.basename(modelj["meshFile"]), meshFileData, 777)
-        subdomainsFileId = fileserver.FileManager.createFile(handler, "subdomainsFiles", os.path.basename(modelj["subdomainsFile"]), subdomainsFileData, 777)
+            subdomainsFileData = None
+            if "subdomainsFile" in modelj:
+                subdomainsFileData = self.zipfb.read(modelj["subdomainsFile"])
 
-        meshDb = mesheditor.MeshWrapper()
-        meshDb.userId = handler.user.user_id()
-        meshDb.name = os.path.basename(modelj["meshFile"])
-        meshDb.description = ""
-        meshDb.meshFileId = int(meshFileId)
-        meshDb.subdomainsFileId = int(subdomainsFileId)
-        meshDb.ghost = True
+            meshFileId = fileserver.FileManager.createFile(handler, "meshFiles", os.path.basename(modelj["meshFile"]), meshFileData, 777)
+
+            if 'subdomainsFile' in modelj:
+                subdomainsFileId = fileserver.FileManager.createFile(handler, "subdomainsFiles", os.path.basename(modelj["subdomainsFile"]), subdomainsFileData, 777)
+                
+            meshDb = mesheditor.MeshWrapper()
+            meshDb.userId = handler.user.user_id()
+            meshDb.name = os.path.basename(modelj["meshFile"])
+            meshDb.description = ""
+            meshDb.meshFileId = int(meshFileId)
+            meshDb.subdomainsFileId = int(subdomainsFileId)
+            meshDb.ghost = True
         
-        meshDb.put()
+            meshDb.put()
 
-        modelj["spatial"]["mesh_wrapper_id"] = meshDb.key().id()
+            modelj["spatial"]["mesh_wrapper_id"] = meshDb.key().id()
+            modelj["isSpatial"] = True
             
         res = modeleditor.ModelManager.createModel(handler, modelj, rename = rename)
 
