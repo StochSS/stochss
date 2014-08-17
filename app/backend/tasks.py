@@ -8,7 +8,13 @@ sys.path.append(os.path.join(os.path.dirname(__file__), '../lib/anyjson'))
 sys.path.append(os.path.join(os.path.dirname(__file__), '../lib/pytz'))
 print str(sys.path)
 from celery import Celery, group
-import celeryconfig
+try:
+    import celeryconfig
+except ImportError:
+    with open('{0}/celeryconfig.py'.format(os.path.dirname(__file__)), 'w') as fd:
+        pass
+    import celeryconfig
+    
 import os, subprocess, shlex
 import uuid,traceback
 
