@@ -269,6 +269,9 @@
 </script>
 
 <script type="text/javascript">
+{% if all_parameters_list | length == 0 %}
+    $( "#massAction" ).click();
+{% endif %}
     
     var species = {{all_species | safe}}
 
