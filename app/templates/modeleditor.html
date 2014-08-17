@@ -58,7 +58,7 @@
                     
                     <!-- <li><a href="/modeleditor/codeeditor">Editor</a></li> -->
                     {% if model_edited is defined %}
-                    {% if model_edited.units == "population" %} 
+                    {% if model_edited.units == "population" and not isSpatial%} 
 		    <li class="dropdown">
 			<a class="dropdown-toggle" data-toggle="dropdown" TITLE = "Export File To Stochkit">Export<b class="caret"></b></a>
 			<ul class="dropdown-menu">
@@ -67,12 +67,21 @@
           <!-- <a href="/modeleditor/export/tosbml">To SBML ...</a> -->
 			</ul>
 		    </li>
-                    {% else %}
+                    {% elif not isSpatial %}
 		    <li class="dropdown">
 			<a class="dropdown-toggle" data-toggle="dropdown" TITLE = "Export File To XML">Export<b class="caret"></b></a>
 			<ul class="dropdown-menu">
 			    <a href="/modeleditor/export/tostochkit2">To XML</a>
           <a href="#" id="exportToPublicLibrary" TITLE = "Export model to public Library">To Public Library...</a>
+			    <!-- <a href="/modeleditor/export/tosbml">To SBML ...</a> -->
+			</ul>
+		    </li>
+                    {% elif isSpatial %}
+		    <li class="dropdown">
+			<a class="dropdown-toggle" data-toggle="dropdown" TITLE = "Export File To XML">Export<b class="caret"></b></a>
+			<ul class="dropdown-menu">
+			    <a href="#">To StochSS .zip (TODO)</a>
+                            <a href="#" id="exportToPublicLibrary" TITLE = "Export model to public Library">To Public Library...</a>
 			    <!-- <a href="/modeleditor/export/tosbml">To SBML ...</a> -->
 			</ul>
 		    </li>
@@ -194,6 +203,11 @@
 		    <a href="#" id="convertToPopulation">Convert to Population</a>
 		  </li>
                   {% endif %}
+                  {% if model_edited is defined and model_edited.units == "population" and not isSpatial %}
+		  <li>
+		    <a href="#" id="convertModelToSpatial">Convert to Spatial</a>
+		  </li>
+                  {% endif %}
                   <li>
 		    <a href="#" id="duplicateModel" TITLE = "Duplicate model">Duplicate Model</a>
                   </li>
@@ -279,6 +293,25 @@ $( '#duplicateModel' ).click( function() {
         $( '#sidemsg' ).text('Successfully created model as ' + data);
         $( "#sidemsg" ).prop('class', 'alert alert-success');
         location.reload(true);
+      } else {
+        $( '#sidemsg' ).text('Failed to create model');
+        $( "#sidemsg" ).prop('class', 'alert alert-error');
+      }
+    }});
+  });
+
+$( '#convertModelToSpatial' ).click( function() {
+  $.ajax({ url : encodeURI('/modeleditor?convertModelToSpatial={{model_edited.name}}'),
+    error : function(data) {
+        $( '#sidemsg' ).text('Server error making model spatial');
+        $( "#sidemsg" ).prop('class', 'alert alert-error');
+    },
+    success : function(data) {
+      if($.trim(data).length > 0)
+      {
+        $( '#sidemsg' ).text('Successfully created model as ' + data);
+        $( "#sidemsg" ).prop('class', 'alert alert-success');
+        $(location).attr('href', '/modeleditor?model_edited=' + data);
       } else {
         $( '#sidemsg' ).text('Failed to create model');
         $( "#sidemsg" ).prop('class', 'alert alert-error');

@@ -69,6 +69,7 @@ class ModelManager():
 
             jsonModel["isSpatial"] = model.isSpatial
             jsonModel["spatial"] = model.spatial
+            jsonModel["is_public"] = model.is_public
 
             output.append(jsonModel)
 
@@ -90,12 +91,16 @@ class ModelManager():
 
         jsonModel["isSpatial"] = model.isSpatial
         jsonModel["spatial"] = model.spatial
+        jsonModel["is_public"] = model.is_public
             
         return jsonModel
 
     @staticmethod
-    def getModelByName(handler, modelName, modelAsString = True):
-        model = db.GqlQuery("SELECT * FROM StochKitModelWrapper WHERE user_id = :1 AND model_name = :2", handler.user.user_id(), modelName).get()
+    def getModelByName(handler, modelName, modelAsString = True, user_id = None):
+        if not user_id:
+            user_id = handler.user.user_id()
+
+        model = db.GqlQuery("SELECT * FROM StochKitModelWrapper WHERE user_id = :1 AND model_name = :2", user_id, modelName).get()
 
         if model == None:
             return None
@@ -111,6 +116,7 @@ class ModelManager():
             
         jsonModel["isSpatial"] = model.isSpatial
         jsonModel["spatial"] = model.spatial
+        jsonModel["is_public"] = model.is_public
 
         return jsonModel
 
@@ -160,6 +166,7 @@ class ModelManager():
 
         modelWrap.spatial = model["spatial"]
         modelWrap.isSpatial = model["isSpatial"]
+        modelWrap.is_public = model["is_public"]
 
         modelWrap.user_id = userID
         print "createModel(): modelWrap= {0}".format(modelWrap)
@@ -183,13 +190,7 @@ class ModelManager():
         modelWrap.model_name = name
         modelWrap.model = StochMLDocument.fromString(model["model"]).toModel(name)
         modelWrap.model.units = model["units"]
-
-        attributes = {}
-        for key in model:
-            if key != "model" and key != "units" and key != "name":
-                attributes[key] = model[key]
-
-        modelWrap.attributes = attributes
+        modelWrap.is_public = model["is_public"]
 
         return modelWrap.put().id()
 
@@ -261,7 +262,26 @@ class ModelEditorPage(BaseHandler):
         #    if db_model is not None:
         #        self.set_session_property('model_edited', db_model.model)
 
-        if self.request.get('duplicate'):
+        if self.request.get('convertModelToSpatial'):
+            modelName = self.request.get('convertModelToSpatial')
+            jsonModel = ModelManager.getModelByName(self, modelName)
+            del jsonModel["id"]
+
+            newName = modelName + '_spatial_' + ''.join(random.choice('abcdeABCDE1234567890') for x in range(3))
+            while ModelManager.getModelByName(self, newName) != None:
+                newName = modelName + '_' + ''.join(random.choice('abcdeABCDE1234567890') for x in range(3))
+
+            jsonModel["name"] = newName
+            jsonModel['isSpatial'] = True
+
+            self.response.content_type = "application/json"
+            if ModelManager.createModel(self, jsonModel):
+                self.response.write(json.dumps(newName))
+            else:
+                self.response.write(json.dumps(''))
+
+            return
+        elif self.request.get('duplicate'):
             modelName = self.request.get('duplicate')
             jsonModel = ModelManager.getModelByName(self, modelName)
             del jsonModel["id"]
@@ -279,7 +299,7 @@ class ModelEditorPage(BaseHandler):
                 self.response.write(json.dumps(''))
 
             return
-        if self.request.get('rename'):
+        elif self.request.get('rename'):
             modelName = self.request.get('rename')
             jsonModel = ModelManager.getModelByName(self, modelName)
 
@@ -300,17 +320,21 @@ class ModelEditorPage(BaseHandler):
                 self.response.write(json.dumps({ "status": False, "msg" : 'Failed to rename model' }))
 
             return
-        if self.request.get('export'):
+        elif self.request.get('export'):
             modelName = self.request.get('export')
             #model = ModelManager.getModelByName(self, modelName)
-            db_model = db.GqlQuery("SELECT * FROM StochKitModelWrapper WHERE user_id = :1 AND model_name = :2", self.user.user_id(), modelName).get()
-            model = db_model.model
+            jsonModel = ModelManager.getModelByName(self, modelName)
+            del jsonModel["id"]
 
             newName = self.request.get('newName').strip(' \t')
-            newModel = db.GqlQuery("SELECT * FROM StochKitModelWrapper WHERE is_public = :1 AND model_name = :2", True, newName).get()
 
-            if newModel is None:
-                save_model(model, newName, "", is_public = True)
+            jsonModel["user_id"] = ''
+            jsonModel["name"] = newName
+            jsonModel["is_public"] = True
+
+            if ModelManager.getModelByName(self, newName) is None:
+                ModelManager.createModel(self, jsonModel)
+                #save_model(model, newName, "", isSpatial = False, is_public = True)
                 self.response.content_type = "application/json"
                 self.response.write(json.dumps('success'))
             else:
@@ -328,17 +352,23 @@ class ModelEditorPage(BaseHandler):
         else:
             result = {}
 
-        db_models = db.GqlQuery("SELECT * FROM StochKitModelWrapper WHERE user_id = :1", self.user.user_id())
         isSpatial = False
-        if model_edited is None or model_edited == '':
-            tmp = self.get_session_property('model_edited')
-            if tmp is not None:
-                model_edited = tmp.name
+
+        db_models = db.GqlQuery("SELECT * FROM StochKitModelWrapper WHERE user_id = :1", self.user.user_id())
+
+        model_edited = self.get_session_property('model_edited')
+        if model_edited == None:
+            isSpatial = False
+        else:
+            row = db.GqlQuery("SELECT * FROM StochKitModelWrapper WHERE user_id = :1 AND model_name = :2", self.user.user_id(), model_edited.name).get()
+
+            if row is None:
+                isSpatial = False
+            else:
+                isSpatial = row.isSpatial
 
         all_models = []
         for row in db_models:
-            if model_edited and row.model.name == model_edited:
-                isSpatial = row.isSpatial
             all_models.append({ "name" : row.model.name, "units" : row.model.units, "isSpatial" : row.isSpatial, "spatial" : row.spatial }) 
 
         result.update({ "all_models" : all_models, "isSpatial" : isSpatial  })
@@ -704,23 +734,40 @@ def do_import(handler, name, from_file = True, model_class=""):
             doc = StochMLDocument.fromFile(handler.request.POST['model_file'].file)
             model = doc.toModel(name)
         
-        else:
-            db_model = db.GqlQuery("SELECT * FROM StochKitModelWrapper WHERE is_public = :1 AND model_name = :2", True, model_class).get()
-            model = db_model.model
-            model.name = name
+            #newName = self.request.get('newName').strip(' \t')
 
-        # For the model to display and function properly in the UI, we need to make sure that all
-        # the parameters have been resolved to scalar values.
-        try:
-            model.resolveParameters()
-        # Save the model so the resolved parameter values are persisted
+            # For the model to display and function properly in the UI, we need to make sure that all
+            # the parameters have been resolved to scalar values.
+            try:
+                model.resolveParameters()
+                # Save the model so the resolved parameter values are persisted
         #save_model(model, name, user_id, isSpatial = False)
-        except:
-            raise ModelError("Could not resolve model parameters.")
-    
-        # Save the model to the datastore.
-        save_model(model, name, user_id, isSpatial = False)
-        
+            except:
+                raise ModelError("Could not resolve model parameters.")
+            
+            # Save the model to the datastore.
+            save_model(model, name, user_id, isSpatial = model.isSpatial)
+        else:
+            model = db.GqlQuery("SELECT * FROM StochKitModelWrapper WHERE is_public = :1 AND model_name = :2", True, model_class).get()
+
+            jsonModel = { "name" : name }
+
+            jsonModel["units"] = model.model.units
+            jsonModel["model"] = model.model.serialize()
+
+            print model.isSpatial
+            print model.spatial
+
+            jsonModel["isSpatial"] = model.isSpatial
+            jsonModel["spatial"] = model.spatial
+
+            jsonModel["user_id"] = handler.user.user_id()
+            jsonModel["is_public"] = False
+
+            ModelManager.createModel(handler, jsonModel)
+
+            model = model.model
+
         # Add this model to cache
         add_model_to_cache(handler, name)
         

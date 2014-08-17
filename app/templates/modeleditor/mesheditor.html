@@ -79,32 +79,16 @@
 		    <h3><a style="text-decoration: None"> Spatial Information </a></h3>
 		    <br/>
 
-                    <div class="row">
-                        <div style="border: 1px solid rgb(221, 221, 221);" id="meshPreview" class="span9">
-                            Loading mesh data...
-                        </div>
-                        <div class="span2">
-                            <h5>Mouse Controls:</h5><br />
-                            <ol>
-                                <li>Rotation -- Left button</li>
-                                <li>Translation -- Right button</li>
-                                <li>Zoom -- Mouse wheel, or left + right button</li>
-                            </ol>
-                        </div>
-                    </div>
-                    
-                    <div>
-                      Select subdomains below to visualize them in mesh:
-                    </div>
-                    <div id="subdomainSelect">
-                    </div>
+                    <div>1. Set diffusion constants of species on the <a href="/modeleditor/mesheditor">species page</a></div>
+                    <br />
 
-                    <hr />
+                    <div>2. Select mesh on which species will diffuse and react</div>
+                    <br />
 
                     <div class="accordion" id="accordion2">
                         <div class="accordion-group">
                             <div class="accordion-heading">
-                                <a class="accordion-toggle" data-toggle="collapse" data-parent="#accordion2" href="#collapseOne">
+                                <a class="accordion-toggle meshDetails" data-toggle="collapse" data-parent="#accordion2" href="#collapseOne">
                                     Mesh Details
                                 </a>
                             </div>
@@ -119,7 +103,7 @@
                         </div>
                         <div class="accordion-group">
                             <div class="accordion-heading">
-                                <a class="accordion-toggle" data-toggle="collapse" data-parent="#accordion2" href="#collapseTwo">
+                                <a class="accordion-toggle meshLibrary" data-toggle="collapse" data-parent="#accordion2" href="#collapseTwo">
                                     Mesh Library (select another mesh here)
                                 </a>
                             </div>
@@ -185,11 +169,34 @@
                             </div>
                         </div>
                     </div>
+
+                    <br />
                     
+                    <div class="mesh" style="display : none;">
+                    <div class="row">
+                        <div style="border: 1px solid rgb(221, 221, 221);" id="meshPreview" class="span9">
+                            Loading mesh data...
+                        </div>
+                        <div class="span2">
+                            <h5>Mouse Controls:</h5><br />
+                            <ol>
+                                <li>Rotation -- Left button</li>
+                                <li>Translation -- Right button</li>
+                                <li>Zoom -- Mouse wheel, or left + right button</li>
+                            </ol>
+                        </div>
+                    </div>
+                    
+                    <div>
+                      Select subdomains below to visualize them in mesh:
+                    </div>
+                    <div id="subdomainSelect">
+                    </div>
+
                     <br>
                     <br>
 
-                    2. Select which species should diffuse in each subdomain
+                    3. Select which species should diffuse in each subdomain
                     <br>
                     <br>
 
@@ -206,7 +213,7 @@
 			</tbody>
 		    </table>
 
-                    3. Select which reactions should be enabled in each subdomain
+                    4. Select which reactions should be enabled in each subdomain
                     <br>
                     <br>
 
@@ -223,7 +230,7 @@
 		        </tbody>
 		    </table>
 
-                    4. Select initial conditions for the model
+                    5. Select initial conditions for the model
                     <br>
                     <br>
 
@@ -243,6 +250,7 @@
                     <button type="button" class="btn btn-default btn-lg addInitialConditionsButton">
                         <span class="glyphicon glyphicon-plus"></span> Add Initial Condition
                     </button>
+                    </div>
                 </div>
             </div>
     
