@@ -65,11 +65,16 @@ class CredentialsPage(BaseHandler):
 
         elif 'start' in params:
             number_of_new_vms = params['vm_number']
-            result = self.start_vms(user_id, self.user_data.getCredentials(), number_of_new_vms)
-            result['msg'] = 'Processing request...'
-            result['status'] = True
-            context['starting_vms'] = True
-            #self.redirect('/credentials')
+            if int(number_of_new_vms) > 20:
+                result = {'status': 'False' , 'msg': 'Number of new vms should be no more than 20.'}
+            elif int(number_of_new_vms) <= 0:
+                result = {'status': 'False' , 'msg': 'Number of new vms should be at least 1.'}
+            else:
+                result = self.start_vms(user_id, self.user_data.getCredentials(), number_of_new_vms)
+                result['msg'] = 'Processing request...'
+                result['status'] = True
+                context['starting_vms'] = True
+            
             self.render_response('credentials.html', **(dict(context, **result)))
 
         elif 'stop' in params:
