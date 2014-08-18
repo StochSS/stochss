@@ -1,3 +1,19 @@
+function generate_datestr() {
+    var temp = new Date();
+    //var dateStr = padStr(temp.getFullYear()) +
+    var dateStr = padStr(temp.getYear()-100) +
+                  padStr(1 + temp.getMonth()) +
+                  padStr(temp.getDate()) + '_' +
+                  padStr(temp.getHours()) +
+                  padStr(temp.getMinutes()) +
+                  padStr(temp.getSeconds());
+    //console.log(dateStr );
+    return dateStr
+}
+
+function padStr(i) {
+    return (i < 10) ? "0" + i : "" + i;
+}
 
 $( document ).ready( function() {
     //loadTemplate("speciesEditorTemplate", "/model/speciesEditor.html");
@@ -363,9 +379,11 @@ var run = function()
                        //I suck, but these three lines have to come before the rest of this to work...
                        var name = data.name;
                        var units = data.units;
-
+                  
                        $( "#simulationConf" ).html(simTemplate({ name : name,
-                                                                 units : units }));
+                                                                 units : units,
+                                                                 isSpatial : data.isSpatial,
+                                                                 datestr : generate_datestr() }));
 
                        var selectTable = new Sensitivity.SelectTable();
                        
@@ -376,7 +394,7 @@ var run = function()
                        selectTable.attach(model);
 
                        var handle_type = function() {
-                           if( $( "#deterministic" )[0].checked )
+                           if( $( "#deterministic" ).eq(0).prop('checked') )
                            {
                                $( ".advanced-settings" ).hide();
                                $( ".stochastic" ).hide();
@@ -385,7 +403,7 @@ var run = function()
                                $( ".sensitivity" ).hide();
                                $( ".ode" ).show();
                            }
-                           else if($( "#sensitivity" )[0].checked)
+                           else if($( "#sensitivity" ).eq(0).prop('checked') )
                            {
                                $( ".advanced-settings" ).hide();
                                $( ".stochastic" ).hide();
@@ -394,7 +412,7 @@ var run = function()
                                $( ".ode" ).hide();
                                $( ".sensitivity" ).show();
                            }
-                           else if( $( "#stochastic" )[0].checked )
+                           else if( $( "#stochastic" ).eq(0).prop('checked') )
                            {
                                $( ".advanced-settings" ).show();
                                $( ".sensitivity" ).hide();
@@ -402,10 +420,21 @@ var run = function()
                                handle_algo();
                                $( ".stochastic" ).show()
                            }
+                           else if( $( "#spatial" ).eq(0).prop('checked') )
+                           {
+                               $( ".advanced-settings" ).show();
+                               $( ".sensitivity" ).hide();
+                               $( ".ode" ).hide()
+                               $( ".stochastic" ).hide()
+                               $( ".tau-leaping" ).hide();
+                               $( ".ssa" ).hide();
+                               //handle_algo();
+                               $( ".spatial" ).show()
+                           }
                        };
                        
                        var handle_algo = function() {
-                           if( $( "#tau-leaping" )[0].checked )
+                           if( $( "#tau-leaping" ).eq(0).prop('checked') )
                            {
                                $( ".ssa" ).hide()
                                $( ".tau-leaping" ).show()
@@ -415,7 +444,7 @@ var run = function()
                            }
                        };
 
-                       $( "#sensitivity, #stochastic, #deterministic" ).change(handle_type);
+                       $( "#sensitivity, #stochastic, #deterministic, #spatial" ).change(handle_type);
                        $( "#ssa, #tau-leaping" ).change(handle_algo);
 
                        handle_type();
@@ -436,6 +465,10 @@ var run = function()
                            if(data.execType == "sensitivity")
                            {
                                url = "/sensitivity";
+                           }
+                           else if(data.execType == "spatial")
+                           {
+                               url = "/spatial";
                            }
                            else
                            {
@@ -472,6 +505,10 @@ var run = function()
                            if(data.execType == "sensitivity")
                            {
                                url = "/sensitivity";
+                           }
+                           else if(data.execType == "spatial")
+                           {
+                               url = "/spatial";
                            }
                            else
                            {

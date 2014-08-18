@@ -306,6 +306,7 @@ from handlers.parametereditor import *
 from handlers.volumeeditor import *
 from handlers.reactioneditor import *
 import handlers.stochoptim
+import handlers.mesheditor
 from handlers.simulation import *
 from handlers.sensitivity import *
 from handlers.credentials import *
@@ -315,6 +316,7 @@ from handlers.status import *
 from handlers.auth import *
 from handlers.admin import *
 import handlers.fileserver
+import handlers.spatial
 
 # Handler to serve static files
 class StaticFileHandler(BaseHandler):
@@ -350,6 +352,7 @@ app = webapp2.WSGIApplication([
                                ('/stochkit/list.*', JobBackboneInterface),
                                ('/convert', ModelConvertPage),
                                ('/modeleditor/specieseditor', SpeciesEditorPage),
+                               ('/modeleditor/mesheditor', handlers.mesheditor.MeshEditorPage),
                                ('/modeleditor/reactioneditor', ReactionEditorPage),
                                ('/modeleditor/parametereditor', ParameterEditorPage),
                                ('/modeleditor/volumeeditor', VolumeEditorPage),
@@ -360,6 +363,7 @@ app = webapp2.WSGIApplication([
                                ('/modeleditor.*', ModelEditorPage),
                                ('/simulate',SimulatePage),
                                ('/sensitivity',SensitivityPage),
+                               ('/spatial',handlers.spatial.SpatialPage),
                                ('/stochoptim', handlers.stochoptim.StochOptimPage),
                                webapp2.Route('/stochoptim/<jobID>', handler = handlers.stochoptim.StochOptimVisualization),#/<queryType>
                                webapp2.Route('/stochoptim/<queryType>/<jobID>', handler = handlers.stochoptim.StochOptimVisualization),
@@ -399,7 +403,7 @@ logging.getLogger().setLevel(logging.DEBUG)
 
 if __name__ == '__main__':
     sys.path.append(os.path.join(os.path.dirname(__file__), 'lib'))
-    print sys.path
+    #print sys.path
     import boto
         
     main()

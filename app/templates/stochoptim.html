@@ -35,12 +35,39 @@
             <% if(typeof models != 'undefined' && models.length > 0) { %>
             <h3> Select model to analyze </h3>
             <br />
-            <% for(var model in models) { %>
-            <label class="radio">
-                <input type="radio" name="model_to_simulate" value="<%= models[model].attributes.id %>" checked <%= (models[model].attributes.units == 'concentration') ? 'disabled' : '' %>/><%= models[model].attributes.name %> <%= (models[model].attributes.units == 'concentration') ? '<span style="color : red;">&nbsp;&#45;&#45; Concentration models incompatible with parameter estimation code</span>' : '' %>
-                <br />
-            </label>
-            <% } %>
+            <table class="table">
+                <thead>
+                    <tr>
+                        <th></th>
+                        <th>Name</th>
+                        <th>Units</th>
+                        <th>Spatial</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <% for(var model in models) { %>
+                    <tr>
+                        <td>
+                            <input type="radio" name="model_to_simulate" value="<%= models[model].attributes.id %>" <%= (models[model].attributes.units == 'concentration' || models[model].attributes.isSpatial) ? 'disabled' : 'checked' %>/> <%= (models[model].attributes.units == 'concentration') ? '<span style="color : red;">&nbsp;&#45;&#45; Concentration models incompatible with parameter estimation code</span>' : '' %>
+                        </td>
+                        <td>
+                            <%= models[model].attributes.name %>
+                        </td>
+                        <td>
+                            <%= models[model].attributes.units %>
+                        </td>
+                        <td>
+                            <% if(models[model].attributes.isSpatial) { %>
+                            True
+                            <% } else { %>
+                            False
+                            <% } %>
+                        </td>
+                    </tr>
+                    <% } %>
+                </tbody>
+            </table>
+
             <br />
             <button id="next" type="submit" class="btn-primary btn-large">Next&raquo;</button>
             <% } else { %>

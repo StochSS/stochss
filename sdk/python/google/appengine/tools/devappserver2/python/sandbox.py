@@ -128,19 +128,20 @@ def enable_sandbox(config):
     if not _should_keep_module(name):
       _removed_modules.append(sys.modules[name])
       del sys.modules[name]
+
   path_override_hook = PathOverrideImportHook(
       set(_THIRD_PARTY_LIBRARY_NAME_OVERRIDES.get(lib.name, lib.name)
           for lib in config.libraries).intersection(_C_MODULES))
   python_lib_paths.extend(path_override_hook.extra_sys_paths)
-  stubs.FakeFile.set_allowed_paths(config.application_root,
-                                   python_lib_paths[1:] +
-                                   path_override_hook.extra_accessible_paths)
-  stubs.FakeFile.set_skip_files(config.skip_files)
-  stubs.FakeFile.set_static_files(config.static_files)
-  __builtin__.file = stubs.FakeFile
-  __builtin__.open = stubs.FakeFile
-  types.FileType = stubs.FakeFile
-  sys.platform = 'linux3'
+  #stubs.FakeFile.set_allowed_paths(config.application_root,
+  #                                 python_lib_paths[1:] +
+  #                                 path_override_hook.extra_accessible_paths)
+  #stubs.FakeFile.set_skip_files(config.skip_files)
+  #stubs.FakeFile.set_static_files(config.static_files)
+  #__builtin__.file = stubs.FakeFile
+  #__builtin__.open = stubs.FakeFile
+  #types.FileType = stubs.FakeFile
+  #sys.platform = 'linux3' # This was originally uncommented in the original Google SDK. I do not know why it was linux3 instead of linux2. Had some library issues with Ubuntu 12.04 and the line 'from Scientific import N'
   enabled_library_regexes = [
       NAME_TO_CMODULE_WHITELIST_REGEX[lib.name] for lib in config.libraries
       if lib.name in NAME_TO_CMODULE_WHITELIST_REGEX]
@@ -154,8 +155,8 @@ def enable_sandbox(config):
 #      PyCryptoRandomImportHook,
 #      PathRestrictingImportHook(enabled_library_regexes)
 #      ]
-  sys.path_importer_cache = {}
-  sys.path = python_lib_paths[:]
+  #sys.path_importer_cache = {}
+  sys.path.extend(python_lib_paths[:])
 
   thread = __import__('thread')
   __import__('%s.threading' % dist27.__name__)
@@ -169,12 +170,12 @@ def enable_sandbox(config):
   threading._start_new_thread = thread.start_new_thread
 
   os.chdir(config.application_root)
-  sandboxed_os = __import__('os')
-  request_environment.PatchOsEnviron(sandboxed_os)
-  os.__dict__.update(sandboxed_os.__dict__)
+  #sandboxed_os = __import__('os')
+  #request_environment.PatchOsEnviron(sandboxed_os)
+  #os.__dict__.update(sandboxed_os.__dict__)
   _init_logging(config.stderr_log_level)
   pdb_sandbox.install(config)
-  sys.stdin = devnull
+  #sys.stdin = devnull
   sys.stdout = sys.stderr
 
 

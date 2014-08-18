@@ -17,11 +17,11 @@
 	    {% block modeleditorcontent %}
 	    <div class="menubar">
 		<ul class="nav nav-tabs">
-		    <li class="active">
-			<a href="/modeleditor" TITLE = "Define the name of your model">Models</a>
+		    <li>
+			<a href="/modeleditor" TITLE = "Create or select your model">Models</a>
 		    </li>
 		    <!-- <li><a href="/modeleditor/overview">Overview</a></li> -->
-            {% if model_edited %}
+                    {% if model_edited %}
 		    <li>
 			<a href="/modeleditor/specieseditor" TITLE = "Create a List of Species">Species</a>
 		    </li>
@@ -32,28 +32,16 @@
 			<a href="/modeleditor/reactioneditor" TITLE = "Create a List of Reactions">Reactions</a>
 		    </li>
                     {% if isSpatial %}
-		    <li>
+		    <li class="active">
 			<a href="/modeleditor/mesheditor" TITLE = "Add a mesh">Mesh</a>
 		    </li>
                     {% endif %}
-            {% endif %}
-		    <li class="dropdown">
-			<!--<a class="dropdown-toggle" data-toggle="dropdown">Geometry<b class="caret"></b></a> -->
-			<ul class="dropdown-menu">
-			    <!-- <a href="/modeleditor/geometry/editgeometry"> <i class="icon-pencil"></i>Geometry editor</a> -->
-			    <a href="/#" TITLE = "Define the Geometry">Compartment</a>
-			    <!-- <a href="/#">Import mesh...</a> -->
-			</ul>
-		    </li>
-
+                    {% endif %}
 		    <!-- <li><a href="/modeleditor/codeeditor">Editor</a></li> -->
 		    <li class="dropdown">
 			<a class="dropdown-toggle" data-toggle="dropdown" TITLE = "Import from File/ Load Existing Library">Import<b class="caret"></b></a>
 			<ul class="dropdown-menu">
-                            {% if not isSpatial%} 
-			    <a href="/modeleditor/import/fromfile">From XML...</a>
-                            {% endif %}
-			    <a href="/import?tab=1">From StochSS .zip...</a>
+			    <a href="/modeleditor/import/fromfile">From file..</a>
 			    <a href="/modeleditor/import/publiclibrary">From Public Library...</a>
 			    <!-- <a href="/modeleditor/import/biomodels">BioModels database...</a>-->
 			</ul>
@@ -61,29 +49,20 @@
                     
                     <!-- <li><a href="/modeleditor/codeeditor">Editor</a></li> -->
                     {% if model_edited is defined %}
-                    {% if model_edited.units == "population" and not isSpatial%} 
+                    {% if model_edited.units == "population" %} 
 		    <li class="dropdown">
 			<a class="dropdown-toggle" data-toggle="dropdown" TITLE = "Export File To Stochkit">Export<b class="caret"></b></a>
 			<ul class="dropdown-menu">
-          <a href="/modeleditor/export/tostochkit2">To XML (StochKit2 compat.)</a>
-          <a href="#" id="exportToPublicLibrary" TITLE = "Export model to public Library">To Public Library...</a>
-          <!-- <a href="/modeleditor/export/tosbml">To SBML ...</a> -->
+                          <a href="/modeleditor/export/tostochkit2">To XML (StochKit2 compat.)</a>
+                          <a href="#" id="exportToPublicLibrary" TITLE = "Export model to public Library">To Public Library...</a>
+                          <!-- <a href="/modeleditor/export/tosbml">To SBML ...</a> -->
 			</ul>
 		    </li>
-                    {% elif not isSpatial %}
+                    {% else %}
 		    <li class="dropdown">
 			<a class="dropdown-toggle" data-toggle="dropdown" TITLE = "Export File To XML">Export<b class="caret"></b></a>
 			<ul class="dropdown-menu">
 			    <a href="/modeleditor/export/tostochkit2">To XML</a>
-          <a href="#" id="exportToPublicLibrary" TITLE = "Export model to public Library">To Public Library...</a>
-			    <!-- <a href="/modeleditor/export/tosbml">To SBML ...</a> -->
-			</ul>
-		    </li>
-                    {% elif isSpatial %}
-		    <li class="dropdown">
-			<a class="dropdown-toggle" data-toggle="dropdown">Export<b class="caret"></b></a>
-			<ul class="dropdown-menu">
-			    <a id="exportToZip" href="#">To StochSS .zip</a>
                             <a href="#" id="exportToPublicLibrary" TITLE = "Export model to public Library">To Public Library...</a>
 			    <!-- <a href="/modeleditor/export/tosbml">To SBML ...</a> -->
 			</ul>
@@ -96,99 +75,187 @@
 	    <!--/ul-->
 
 	    <div class="span9">
-		<div class="well well-large">
-		    <form method="post" action="/modeleditor" name="create_model">
-			<h3><a style="text-decoration: None"> Create new model </a></h3>
-			<br/>
-			<div id="optional" class="in collapse" style="height:auto">
-			    <label>Name</label>
-			    <input type="text" class="span3" id="name" name="name" value="{{ name }}" class="update_box auto_complete">
+		<div id="meshEditorDiv" class="well well-large">
+		    <h3><a style="text-decoration: None"> Spatial Information </a></h3>
+		    <br/>
 
-                            <label>Units</label>
-                            <input type="radio" name="exec_type" value="concentration" class="concentration"> Concentration <br />
-                            <input type="radio" name="exec_type" value="population" class="population" checked> Population <br />
-                            
-                            <br />
+                    <div>1. Set diffusion constants of species on the <a href="/modeleditor/mesheditor">species page</a></div>
+                    <br />
 
-                            <label>Type</label>
-                            <input type="radio" name="spatial_type" value="true" class="spatial"> Spatial <br />
-                            <input type="radio" name="spatial_type" value="" class="nonspatial" checked> Non-spatial <br />
-			    <button type="submit" class="btn btn-primary btn-large" style="float: right;">
-				Create model
-			    </button>
-			</div>
-		    </form>
-		    {% if msg %}
-		    {% if status == False %}
-		    <span class="alert alert-error">{{msg}}</span>
-		    {% else %}
-		    <span class="alert alert-success">{{msg}}</span>
-		    {% endif %}
-		    {% endif %}											
-		    <hr/>
-		    <div id="msg"></div>
+                    <div>2. Select mesh on which species will diffuse and react</div>
+                    <br />
 
-		    <br />
-		    {% if all_models %}
-		    <div>
-			<h3><a style="text-decoration: None">Models</a></h3>
-		    </div>
-		    <div id="model_list" class="in collapse" style="height: auto">
-			<br/>
-			<div>
-			    <h4>Select a model to edit</h4>
-			</div>
-			<br/>
-			<table cellpadding="0" cellspacing="0" border="0" class="table table-striped table-bordered" id="dataTable">
-			    <thead>
-				<th>Model</th>
-                                <th>Units</th>
-                                <th>Spatial</th>
-				<th>&nbsp;</th>
-			    </thead>
-			    <tbody>
-				{% for item in all_models %}
-				<tr>
-				    <td><a href="/modeleditor?model_edited={{ item.name }}">{{ item.name }}</a></td>
-				    <td>{{ item.units }}</td>
-				    <td>{% if item.isSpatial %}True{% else %}False{% endif %}</td>
-				    <td><a href="javascript:void(0)" onclick="javascript:deleteElement('{{item.name}}')">Delete</a></td>
-				</tr>
-				{% endfor %}
-			    </tbody>
-			</table>
-		    </div>
+                    <div class="accordion" id="accordion2">
+                        <div class="accordion-group">
+                            <div class="accordion-heading">
+                                <a class="accordion-toggle meshDetails" data-toggle="collapse" data-parent="#accordion2" href="#collapseOne">
+                                    Mesh Details
+                                </a>
+                            </div>
+                            <div id="collapseOne" class="accordion-body collapse in meshInfoDiv">
+                                <div class="accordion-inner">
+                                    <h3>Mesh Name:</h3>
+                                    <div class="name"></div>
+                                    <h3>Description:</h3>
+                                    <div class="description"></div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="accordion-group">
+                            <div class="accordion-heading">
+                                <a class="accordion-toggle meshLibrary" data-toggle="collapse" data-parent="#accordion2" href="#collapseTwo">
+                                    Mesh Library (select another mesh here)
+                                </a>
+                            </div>
+                            <div id="collapseTwo" class="accordion-body collapse uploadMeshDiv">
+                                <div class="accordion-inner">
+                                    <div class="row">
+                                        <div class="span8">
+	                                    <table cellpadding="0" cellspacing="0" border="0" class="table table-striped table-bordered" id="meshTable">
+		                                <thead>
+                                                    <tr>
+                                                        <th>Delete</th>
+		                                        <th>Select</th>
+                                                        <th style="width: 100%">Mesh Name</th>
+                                                    </tr>
+		                                </thead>
+		                                <tbody id="meshTableBody">
+		                                </tbody>
+	                                    </table>
+                                        </div>
+                                        <div class="span3">
+                                            <h4>Description:</h4>
+                                            <div class="description">
+                                            </div>
+                                        </div>
+                                    </div>
+                                    
+                                    <div id="meshMsg"></div>
+                                    <br />
 
-		    {% endif %}					
-		</div>
-	    </div>
-	    
-	    <form id="deleteForm" method="post" action="/modeleditor/delete">
-		<input type="hidden" name="toDelete" />
-		<input type="hidden" name="delete" value="1"/>
-	    </form>
+                                    <div class="row">
+                                        <div class="span3">
+                                            <div>Select mesh file:</div>
+                                            <div>
+                                                <input id="meshDataUpload" style="color:rgb(245, 245, 245);" type="file" name="files[]" multiple>
+                                            </div>
+                                            <div id="meshDataUploadStatus">
+                                            </div>
+                                            <div>Select subdomain file:</div>
+                                            <div>
+                                                <input id="subdomainDataUpload" style="color:rgb(245, 245, 245);" type="file" name="files[]" multiple>
+                                            </div>
+                                            <div id="subdomainDataUploadStatus">
+                                            </div>
+                                        </div>
+                                        <div class="span6">
+                                            <div>
+                                                Model name:<br>
+                                                <input type="text" class="name">
+                                            </div>
+                                            <div>
+                                                Model description:<br>
+                                                <textarea class="form-control descriptionText" rows="3"></textarea>
+                                            </div>
+                                        </div>
+                                    </div>
+                                                
+                                    <br />
+                                    <button id="meshUploadButton" type="button" class="btn btn-default btn-lg" disabled>
+                                        <span class="glyphicon glyphicon-plus"></span> Upload PyURDME Mesh
+                                    </button>
+                                    <br />
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <br />
+                    
+                    <div class="mesh" style="display : none;">
+                    <div class="row">
+                        <div style="border: 1px solid rgb(221, 221, 221);" id="meshPreview" class="span9">
+                            Loading mesh data...
+                        </div>
+                        <div class="span2">
+                            <h5>Mouse Controls:</h5><br />
+                            <ol>
+                                <li>Rotation -- Left button</li>
+                                <li>Translation -- Right button</li>
+                                <li>Zoom -- Mouse wheel, or left + right button</li>
+                            </ol>
+                        </div>
+                    </div>
+                    
+                    <div>
+                      Select subdomains below to visualize them in mesh:
+                    </div>
+                    <div id="subdomainSelect">
+                    </div>
+
+                    <br>
+                    <br>
+
+                    3. Select which species should diffuse in each subdomain
+                    <br>
+                    <br>
+
+                    <table cellpadding="0" cellspacing="0" border="0" class="table table-striped table-bordered" id="speciesSubdomainsTable">
+			<thead>
+                            <tr>
+                                <td style="width : 1pt;">Species</td>
+                                <td id="speciesSubdomainsTableTitle" colspan="1"><center>Subdomains</center></td>
+                            </tr>
+			    <tr id="speciesSubdomainsTableHeader">
+			    </tr>
+			</thead>
+			<tbody id="speciesSubdomainsTableBody">
+			</tbody>
+		    </table>
+
+                    4. Select which reactions should be enabled in each subdomain
+                    <br>
+                    <br>
+
+                    <table cellpadding="0" cellspacing="0" border="0" class="table table-striped table-bordered" id="reactionsSubdomainsTable">
+		        <thead>
+                            <tr>
+                                <td style="width : 1pt;">Reaction</td>
+                                <td id="reactionsSubdomainsTableTitle" colspan="1"><center>Subdomains</center></td>
+                            </tr>
+			    <tr id="reactionsSubdomainsTableHeader">
+			    </tr>
+		        </thead>
+		        <tbody id="reactionsSubdomainsTableBody">
+		        </tbody>
+		    </table>
+
+                    5. Select initial conditions for the model
+                    <br>
+                    <br>
+
+                    <table cellpadding="0" cellspacing="0" border="0" class="table table-striped table-bordered">
+		        <thead>
+			    <tr>
+                                <th style="width : 1pt;">Delete</th>
+                                <th>Initial Conditions Type</th>
+                                <th>Species</th>
+                                <th style="width : 100%">Custom</th>
+			    </tr>
+		        </thead>
+		        <tbody id="initialConditionsTableBody">
+		        </tbody>
+		    </table>
+
+                    <button type="button" class="btn btn-default btn-lg addInitialConditionsButton">
+                        <span class="glyphicon glyphicon-plus"></span> Add Initial Condition
+                    </button>
+                    </div>
+                </div>
+            </div>
+    
 	    {% endblock %}
 	    
-	    <!-- Modal for deletion. -->
-	    <div id="deleteModal" class="modal hide" tabindex="-1" role="dialog" aria-labelledby="myModalLabel" aria-hidden="true">
-		<div class="modal-header">
-		    <h3>Delete?</h3>
-		</div>
-
-		<div class="modal-body">
-		    <div>
-			Are you sure you want to delete the selected element?
-		    </div>
-		</div>
-		<div class="modal-footer">
-		    <button class="btn btn-primary" data-dismiss="modal" aria-hidden="true" onclick="javascript:confirmDelete()">
-			Yes
-		    </button>
-		    <button class="btn" data-dismiss="modal" aria-hidden="true" onclick="javascript:void(0)">
-			No
-		    </button>
-		</div>				
-	    </div>
 	    
 	    <div class="span2">
 		{% if model_edited %}
@@ -204,11 +271,6 @@
                   {% if model_edited is defined and model_edited.units == "concentration" %}
 		  <li>
 		    <a href="#" id="convertToPopulation">Convert to Population</a>
-		  </li>
-                  {% endif %}
-                  {% if model_edited is defined and model_edited.units == "population" and not isSpatial %}
-		  <li>
-		    <a href="#" id="convertModelToSpatial">Convert to Spatial</a>
 		  </li>
                   {% endif %}
                   <li>
@@ -244,37 +306,23 @@
 {% endblock %}
 {% block jscontent %}
 <script src="/static/js/jquery.dataTables.min.js"></script>
+
 <script src="/static/utils.js"></script>
+<script type="text/javascript" src = "/static/js/underscore.js"></script>
+<script type="text/javascript" src = "/static/js/backbone.js"></script>
+
+<script src="/static/js/jfu/js/jquery.iframe-transport.js"></script>
+<script src="/static/js/jfu/js/jquery.fileupload.js"></script>
+
+<script type="text/javascript" src = "/static/js/debug.js"></script>
+<script type="text/javascript" src = "/static/js/three.js"></script>
+<script type="text/javascript" src = "/static/js/OrbitControls.js"></script>
+
+<script src="/static/js/fileserver.js"></script>
+<script src="/static/js/modeleditor/mesheditor.js"></script>
 
 <script type="text/javascript">
 $( 'document' ).ready( function() {
-
-var execTypeButtons = $( 'input[name="exec_type"]' );
-var spatialTypeButtons = $( 'input[name="spatial_type"]' );
-var populationButtonState = execTypeButtons.filter('.population').prop('checked');
-
-//Depending on what spatial radio button is clicked, change things
-spatialTypeButtons.on('click', function(event) {
-  if(spatialTypeButtons.filter('.spatial').prop('checked') == true)
-  {
-    if(execTypeButtons.filter('.concentration').prop('disabled') == false)
-    {
-      populationButtonState = execTypeButtons.filter('.population').prop('checked');
-    }
-
-    execTypeButtons.filter('.population').trigger('click');
-    execTypeButtons.filter('.concentration').prop('disabled', true);
-  }
-  else
-  {
-    execTypeButtons.filter('.concentration').prop('disabled', false);
-
-    if(!populationButtonState)
-    {
-      execTypeButtons.filter('.concentration').trigger('click');
-    }
-  }
-});
 
 {% if model_edited %}
 $( '#convertToPopulation' ).click( function() {
@@ -296,25 +344,6 @@ $( '#duplicateModel' ).click( function() {
         $( '#sidemsg' ).text('Successfully created model as ' + data);
         $( "#sidemsg" ).prop('class', 'alert alert-success');
         location.reload(true);
-      } else {
-        $( '#sidemsg' ).text('Failed to create model');
-        $( "#sidemsg" ).prop('class', 'alert alert-error');
-      }
-    }});
-  });
-
-$( '#convertModelToSpatial' ).click( function() {
-  $.ajax({ url : encodeURI('/modeleditor?convertModelToSpatial={{model_edited.name}}'),
-    error : function(data) {
-        $( '#sidemsg' ).text('Server error making model spatial');
-        $( "#sidemsg" ).prop('class', 'alert alert-error');
-    },
-    success : function(data) {
-      if($.trim(data).length > 0)
-      {
-        $( '#sidemsg' ).text('Successfully created model as ' + data);
-        $( "#sidemsg" ).prop('class', 'alert alert-success');
-        $(location).attr('href', '/modeleditor?model_edited=' + data);
       } else {
         $( '#sidemsg' ).text('Failed to create model');
         $( "#sidemsg" ).prop('class', 'alert alert-error');
@@ -389,27 +418,6 @@ $( '#exportToPublicLibrary' ).click( function() {
       }
     });
   }});
-
-$( '#exportToZip' ).click( function() {
-    $.ajax({ url : encodeURI('/modeleditor?exportToZip=1'),
-      error : function(data) {
-        $( '#msg' ).text('Server error exporting model');
-        $( "#msg" ).prop('class', 'alert alert-error');
-      },
-      success : function(data) {
-        if(data['status'])
-        {
-          $( '#msg' ).text('Successfully exported model');
-          $( "#msg" ).prop('class', 'alert alert-success');
-
-          window.location = data.url;
-        } else {
-          $( '#msg' ).text('Failed to export model');
-          $( "#msg" ).prop('class', 'alert alert-error');
-        }
-      }
-    });
-});
 {% endif %}
 });
 </script>
@@ -502,7 +510,6 @@ $( '#exportToZip' ).click( function() {
     
     /**
     * The ajax call for form submit
-    * This function call needs to trigger any necessary redraws on the page
     */
     function update() {
     var sData = $('input', oTable.fnGetHiddenNodes()).serialize() + "&update=1";
@@ -514,7 +521,6 @@ $( '#exportToZip' ).click( function() {
     success : function(response) {
     var status = response['status']
     $(".create_msg").html('')
-    $( 'body' ).trigger( 'asdf' );
     if (!status) {
       $( "#msg" ).prop('class', 'alert alert-error');
       $('#msg').html(response['msg']);
@@ -524,12 +530,6 @@ $( '#exportToZip' ).click( function() {
 
       if (isParameterEditor) {
         updateValues(response)
-      }
-
-      if (isSpeciesEditor) {
-        $( '[name=' + response['key'] + '-name]' ).prop( 'name', response['newKey'] + '-name' );
-        $( '[name=' + response['key'] + '-diffusion_constant]' ).prop( 'name', response['newKey'] + '-diffusion_constant' );
-        $( '[name=' + response['key'] + '-initial_value]' ).prop( 'name', response['newKey'] + '-initial_value' );
       }
     }
     },
@@ -574,3 +574,4 @@ $( '#exportToZip' ).click( function() {
 
 </script>
 {% endblock %}
+<

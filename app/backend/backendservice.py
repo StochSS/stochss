@@ -26,7 +26,11 @@ class backendservices():
     INFRA_EC2 = 'ec2'
     INFRA_CLUSTER = 'cluster'
     WORKER_AMIS = {
-        INFRA_EC2: 'ami-f0d42898'
+        #INFRA_EC2: 'ami-f0d42898' #oldest first
+        #INFRA_EC2: 'ami-74c21f1c'
+        #INFRA_EC2: 'ami-cafb26a2'
+        #INFRA_EC2: 'ami-f4ee339c'
+        INFRA_EC2: 'ami-244e924c'
     }
 
     def __init__(self):
@@ -47,7 +51,7 @@ class backendservices():
         result = {}
         try:
             from tasks import task,updateEntry
-	    #This is a celery task in tasks.py: @celery.task(name='stochss')
+            #This is a celery task in tasks.py: @celery.task(name='stochss')
             
             # Need to make sure that the queue is actually reachable because
             # we don't want the user to try to submit a task and have it
@@ -292,7 +296,7 @@ class backendservices():
         returns a dictionary as {"pid1":"status", "pid2":"status", "pid3":"status"}
         '''
         res = {}
-        logging.info("checkTaskStatusLocal : inside with params %s", str(pids))
+        logging.info("checkTaskStatusLocal : inside with params {0}".format(pids))
         try:
             for pid in pids:
                 try:
@@ -300,10 +304,10 @@ class backendservices():
                     res[pid] = True
                 except Exception,e:
                     res[pid] = False
-            logging.info("checkTaskStatusLocal : exiting with result : %s", str(res))
+            logging.info("checkTaskStatusLocal : exiting with result : {0}".format(res))
             return res
         except Exception as e:
-            logging.error("checkTaskStatusLocal: Exiting with error : %s", str(e))
+            logging.error("checkTaskStatusLocal: Exiting with error : {0}".format(e))
             return None
     
     def checkTaskStatusCloud(self, pids):
@@ -371,6 +375,7 @@ class backendservices():
         logging.info("deleteTasks : inside method with taskids : %s", taskids)
         try:
             for taskid_pair in taskids:
+                print 'deleteTasks: removing task {0}'.format(str(taskid_pair))
                 removeTask(taskid_pair[0]) #this removes task from celery queue
                 removetask(backendservices.TABLENAME,taskid_pair[1]) #this removes task information from DB. ToDo: change the name of method
             logging.info("deleteTasks: All tasks removed")
@@ -452,9 +457,17 @@ class backendservices():
         try:
             #make sure that any keynames we use are prefixed with stochss so that
             #we can do a terminate all based on keyname prefix
+            if "key_prefix" in params:
+                key_prefix = params["key_prefix"]
+                if not key_prefix.startswith(self.KEYPREFIX):
+                    key_prefix = self.KEYPREFIX + key_prefix
+            else:
+                key_prefix = self.KEYPREFIX
+
             key_name = params["keyname"]
-            if not key_name.startswith(self.KEYPREFIX):
-                params['keyname'] = self.KEYPREFIX + key_name
+            if not key_name.startswith(key_prefix):
+                params['keyname'] = key_prefix + key_name
+
             # NOTE: We are forcing blocking mode within the InfrastructureManager class
             # for the launching of VMs because of how GAE joins on all threads before
             # returning a response from a request.
@@ -464,10 +477,14 @@ class backendservices():
             # nodes are running as we are using the AMQP broker option for Celery.
             compute_check_params = {
                 "credentials": params["credentials"],
-                "key_prefix": params["key_prefix"]
+                "key_prefix": key_prefix
             }
             if self.isQueueHeadRunning(compute_check_params):
+		#Queue head is running so start as many vms as requested
                 res = i.run_instances(params,[])
+                self.copyCeleryConfigToInstance(res, params)
+                # start celery via ssh
+                self.startCeleryViaSSH(res, params)
             else:
                 # Need to start the queue head (RabbitMQ)
                 params["queue_head"] = True
@@ -478,21 +495,120 @@ class backendservices():
                 params["num_vms"] = 1
                 params["keyname"] = requested_key_name+'-'+self.QUEUEHEAD_KEY_TAG
                 res = i.run_instances(params,[])
+
                 #NOTE: This relies on the InfrastructureManager being run in blocking mode...
                 queue_head_ip = res["vm_info"]["public_ips"][0]
                 self.__update_celery_config_with_queue_head_ip(queue_head_ip)
+                self.copyCeleryConfigToInstance(res, params)
+                # start celery via ssh
+                self.startCeleryViaSSH(res, params)
+
                 params["keyname"] = requested_key_name
                 params["queue_head"] = False
                 if vms_requested > 1:
+                    #subtract 1 since we can use the queue head as a worker
                     params["num_vms"] = vms_requested - 1
                     res = i.run_instances(params,[])
+                    self.copyCeleryConfigToInstance(res, params)
+                    # start celery via ssh
+                    self.startCeleryViaSSH(res, params)
+
                 params["num_vms"] = vms_requested
+
             logging.info("startMachines : exiting method with result : %s", str(res))
             return res
         except Exception, e:
+            traceback.print_exc()
             logging.error("startMachines : exiting method with error : {0}".format(str(e)))
             print "startMachines : exiting method with error :", str(e)
             return None
+
+    def copyCeleryConfigToInstance(self, reservation, params):
+##      # Update celery config file...it should have the correct IP
+##      # of the Queue head node, which should already be running.
+##      celery_config_filename = os.path.join(
+##        os.path.dirname(os.path.abspath(__file__)),
+##        "../celeryconfig.py"
+##      )
+##      # Pass it line by line so theres no weird formatting errors from 
+##      # trying to echo a multi-line file directly on the command line
+##      with open(celery_config_filename, 'r') as celery_config_file:
+##        lines = celery_config_file.readlines()
+##        # Make sure we overwrite the file with our first write
+##        userstr += "echo '{0}' > /home/ubuntu/celeryconfig.py\n".format(lines[0])
+##        for line in lines[1:]:
+##          userstr += "echo '{0}' >> /home/ubuntu/celeryconfig.py\n".format(line)
+        #print "reservation={0}".format(reservation)
+        #print "params={0}".format(params)
+        keyfile = "{0}/../{1}.key".format(os.path.dirname(__file__),params['keyname'])
+        #logging.debug("keyfile = {0}".format(keyfile))
+        if not os.path.exists(keyfile):
+            raise Exception("ssh keyfile file not found: {0}".format(keyfile))
+        celery_config_filename = "{0}/{1}".format(os.path.dirname(__file__),"/celeryconfig.py")
+        if not os.path.exists(celery_config_filename):
+            raise Exception("celery config file not found: {0}".format(celery_config_filename))
+        for ip in reservation['vm_info']['public_ips']:
+            self.waitforSSHconnection(keyfile, ip)
+            cmd = "scp -o 'StrictHostKeyChecking no' -i {0} {1} ubuntu@{2}:celeryconfig.py".format(keyfile, celery_config_filename, ip)
+            logging.info(cmd)
+            success = os.system(cmd)
+            if success == 0:
+                logging.info("scp success: {0} transfered to {1}".format(celery_config_filename, ip))
+            else:
+                raise Exception("scp failure: {0} not transfered to {1}".format(celery_config_filename, ip))
+
+    def waitforSSHconnection(self, keyfile, ip):
+        SSH_RETRY_COUNT = 30
+        SSH_RETRY_WAIT = 3
+        for _ in range(0, SSH_RETRY_COUNT):
+            cmd = "ssh -o 'StrictHostKeyChecking no' -i {0} ubuntu@{1} \"pwd\"".format(keyfile, ip)
+            logging.info(cmd)
+            success = os.system(cmd)
+            if success == 0:
+                logging.info("ssh connected to {0}".format(ip))
+                return True
+            else:
+                logging.info("ssh not connected to {0}, sleeping {1}".format(ip, SSH_RETRY_WAIT))
+                time.sleep(SSH_RETRY_WAIT)
+        raise Exception("Timeout waiting to connect to node via SSH")
+        
+
+    def startCeleryViaSSH(self, reservation, params):
+##    # Even the queue head gets a celery worker
+##    # NOTE: We only need to use the -n argument to celery command if we are starting
+##    #       multiple workers on the same machine. Instead, we are starting one worker
+##    #       per machine and letting that one worker execute one task per core, using
+##    #       the configuration in celeryconfig.py to ensure that Celery detects the 
+##    #       number of cores and enforces this desired behavior.
+##    userstr += "export PYTHONPATH=/home/ubuntu/pyurdme/:/home/ubuntu/stochss/app/\n"
+##    if self.PARAM_WORKER_QUEUE in parameters:
+##      start_celery_str = "celery -A tasks worker --autoreload --loglevel=info -Q {0} --workdir /home/ubuntu > /home/ubuntu/celery.log 2>&1 & \n".format(parameters[self.PARAM_WORKER_QUEUE])
+##    else:
+##      start_celery_str = "celery -A tasks worker --autoreload --loglevel=info --workdir /home/ubuntu > /home/ubuntu/celery.log 2>&1"
+##    #userstr+="sudo -u ubuntu screen -d -m bash -c '{0}'\n".format(start_celery_str)  # PyURDME must be run inside a 'screen' terminal as part of the FEniCS code depends on the ability to write to the processe's terminal, screen provides this terminal.
+##    userstr+="screen -d -m bash -c '{0}'\n".format(start_celery_str)  # PyURDME must be run inside a 'screen' terminal as part of the FEniCS code depends on the ability to write to the process' terminal, screen provides this terminal.
+        credentials = params['credentials']
+        python_path = "source /home/ubuntu/.bashrc;export PYTHONPATH=/home/ubuntu/pyurdme/:/home/ubuntu/stochss/app/;"
+        python_path+='export AWS_ACCESS_KEY_ID={0};'.format(str(credentials['EC2_ACCESS_KEY']))
+        python_path+='export AWS_SECRET_ACCESS_KEY={0};'.format( str(credentials['EC2_SECRET_KEY']))
+        start_celery_str = "celery -A tasks worker --autoreload --loglevel=info --workdir /home/ubuntu > /home/ubuntu/celery.log 2>&1"
+        # PyURDME must be run inside a 'screen' terminal as part of the FEniCS code depends on the ability to write to the process' terminal, screen provides this terminal.
+        celerycmd = "sudo screen -d -m bash -c '{1}{0}'\n".format(start_celery_str,python_path)
+        #print "reservation={0}".format(reservation)
+        #print "params={0}".format(params)
+        keyfile = "{0}/../{1}.key".format(os.path.dirname(__file__),params['keyname'])
+        #logging.info("keyfile = {0}".format(keyfile))
+        if not os.path.exists(keyfile):
+            raise Exception("ssh keyfile file not found: {0}".format(keyfile))
+        for ip in reservation['vm_info']['public_ips']:
+            self.waitforSSHconnection(keyfile, ip)
+            cmd = "ssh -o 'StrictHostKeyChecking no' -i {0} ubuntu@{1} \"{2}\"".format(keyfile, ip, celerycmd)
+            logging.info(cmd)
+            success = os.system(cmd)
+            if success == 0:
+                logging.info("celery started on {0}".format(ip))
+            else:
+                raise Exception("Failure to start celery on {0}".format(ip))
         
     def stopMachines(self, params, block=False):
         '''
@@ -503,7 +619,7 @@ class backendservices():
         key_prefix = self.KEYPREFIX
         if "key_prefix" in params and not params["key_prefix"].startswith(key_prefix):
             key_prefix += params["key_prefix"]
-        elif "key_prefix" in params: #and params["key_prefix"].startswith(key_prefix)
+        elif "key_prefix" in params: 
             key_prefix = params["key_prefix"]
         try:
             logging.info("Stopping compute nodes with key_prefix: {0}".format(key_prefix))
@@ -520,7 +636,7 @@ class backendservices():
         '''
         # add calls to the infrastructure manager for getting details of
         # machines
-        logging.info("describeMachines : inside method with params : %s", str(params))
+        #logging.info("describeMachines : inside method with params : %s", str(params))
         key_prefix = ""
         if "key_prefix" in params:
             key_prefix = params["key_prefix"]
@@ -641,8 +757,12 @@ class backendservices():
             os.path.dirname(os.path.abspath(__file__)),
             "celeryconfig.py"
         )
+        celery_template_filename = os.path.join(
+            os.path.dirname(os.path.abspath(__file__)),
+            "celeryconfig.py.template"
+        )
         celery_config_lines = []
-        with open(celery_config_filename, 'r') as celery_config_file:
+        with open(celery_template_filename, 'r') as celery_config_file:
             celery_config_lines = celery_config_file.readlines()
         with open(celery_config_filename, 'w') as celery_config_file:
             for line in celery_config_lines:
@@ -656,68 +776,55 @@ class backendservices():
         my_celery.configure()
 
 
-if __name__ == "__main__":
+################## tests #############################
+class bcolors:
+    HEADER = '\033[95m'
+    OKBLUE = '\033[94m'
+    OKGREEN = '\033[92m'
+    WARNING = '\033[93m' #yellow
+    FAIL = '\033[91m'
+    ENDC = '\033[0m'
 
-    '''Note that these must be set for this function to work properly:
-        export STOCHSS_HOME=/path/to/stochss/git/dir/stochss
-        export PYTHONPATH=${STOCHSS_HOME}:.:..
-        export PATH=${PATH}:${STOCHSS_HOME}/StochKit
-        export DYLD_LIBRARY_PATH=${STOCHSS_HOME}/StochKit/libs/boost_1_53_0/stage/lib
+##########################################
+##########################################
+def teststochoptim(backend,compute_check_params):
     '''
-
-    logging.basicConfig(filename='testoutput.log',filemode='w',level=logging.DEBUG)
-    try:
-       access_key = os.environ["EC2_ACCESS_KEY"]
-       secret_key = os.environ["EC2_SECRET_KEY"]
-    except KeyError:
-       print "main: Environment variables EC2_ACCESS_KEY and EC2_SECRET_KEY not set, cannot continue"
-       sys.exit(1)
-
-    os.environ["AWS_ACCESS_KEY_ID"] = access_key
-    os.environ["AWS_SECRET_ACCESS_KEY"] = secret_key
-
-    # infra = backendservices.INFRA_EC2
-    obj = backendservices()
-    credentials = {
-      'EC2_ACCESS_KEY': access_key,
-      'EC2_SECRET_KEY': secret_key
-    }
-    compute_check_params = {
-        "credentials": credentials
-    }
+    This tests a stochoptim job using a local run and a cloud run
+    '''
     started_queue_head = False
     queue_key = None
-    keypair_name = obj.KEYPREFIX+"-ch-stochoptim-testing"
-    if obj.isQueueHeadRunning(compute_check_params):
+    keypair_name = backend.KEYPREFIX+"-ch-stochoptim-testing"
+    if backend.isQueueHeadRunning(compute_check_params):
         print "Assuming you already have a queue head up and running..."
     else:
         started_queue_head = True
         print "Launching queue head / master worker..."
         launch_params = {
-            "infrastructure": obj.INFRA_EC2,
+            "infrastructure": backend.INFRA_EC2,
             "credentials": credentials,
             "num_vms": 1,
             "group": keypair_name,
-            "image_id": obj.WORKER_AMIS[obj.INFRA_EC2],#"ami-b8a249d0",
+            "image_id": backend.WORKER_AMIS[backend.INFRA_EC2],
             "instance_type": 't1.micro',#"c3.large",
             "key_prefix": keypair_name,
             "keyname": keypair_name,
             "use_spot_instances": False
         }
-        launch_result = obj.startMachines(launch_params, block=True)
+        launch_result = backend.startMachines(launch_params, block=True)
         if not launch_result["success"]:
             print "Failed to start master machine..."
             sys.exit(1)
-        print "Done."
+        print "Done. Sleeping 2 mins while machines initialize (status checks)"
+        time.sleep(120)
     # We need to start our own workers first.
     cores_to_use = 4
     print "Launching {0} slave worker(s)...".format(cores_to_use)
     launch_params = {
-        "infrastructure": obj.INFRA_EC2,
+        "infrastructure": backend.INFRA_EC2,
         "credentials": credentials,
         "num_vms": cores_to_use,
         "group": keypair_name,
-        "image_id": obj.WORKER_AMIS[obj.INFRA_EC2],#"ami-b8a249d0",
+        "image_id": backend.WORKER_AMIS[backend.INFRA_EC2],
         "instance_type": 't1.micro',#"c3.large",
         "key_prefix": keypair_name,
         "keyname": keypair_name,
@@ -726,18 +833,23 @@ if __name__ == "__main__":
     # Slaves dont need to be started in blocking mode, although
     # blocking mode is being forced inside the InfrastructureManager
     # currently.
-    launch_result = obj.startMachines(launch_params, block=False)
-    if not launch_result["success"]:
-        print "Failed to start slave worker(s)..."
-        sys.exit(1)
-    print "Done."
+    #comment this block out if you already have 4 workers started 
+    #from a previous test
+    #cjklaunch_result = backend.startMachines(launch_params, block=False)
+    #cjkif not launch_result["success"]:
+        #cjkprint "Failed to start slave worker(s)..."
+        #cjksys.exit(1)
+    #cjkprint "Done2. Sleeping 2 mins while machines initialize (status checks)"
+    #cjktime.sleep(120)
+
+    print 'all nodes needed have been launched'
+    sys.stdout.flush()
+
     # Then we can execute the task.
     file_dir_path = os.path.dirname(os.path.abspath(__file__))
-    path_to_model_file = os.path.join(file_dir_path, "../../../stochoptim/inst/extdata/birth_death_REMAImodel.R")
-    # path_to_model_file = os.path.join(file_dir_path, "../../../stochoptim/inst/extdata/birth_death_MAImodel.R")
-    path_to_model_data_file = os.path.join(file_dir_path, "../../../stochoptim/inst/extdata/birth_death_REdata0.txt")
-    # path_to_model_data_file = os.path.join(file_dir_path, "../../../../Downloads/birth_death_MAdata.RData")
-    path_to_final_data_file = os.path.join(file_dir_path, "../../../stochoptim/inst/extdata/birth_death_REdata.txt")
+    path_to_model_file = os.path.join(file_dir_path, "../../stochoptim/inst/extdata/birth_death_REMAImodel.R")
+    path_to_model_data_file = os.path.join(file_dir_path, "../../stochoptim/inst/extdata/birth_death_REdata0.txt")
+    path_to_final_data_file = os.path.join(file_dir_path, "../../stochoptim/inst/extdata/birth_death_REdata.txt")
     params = {
         'credentials':{'EC2_ACCESS_KEY':access_key, 'EC2_SECRET_KEY':secret_key},
         "key_prefix": keypair_name,
@@ -752,11 +864,12 @@ if __name__ == "__main__":
             "extension": "txt",
             "content": open(path_to_final_data_file, 'r').read()
         },
-        "bucketname": "chstochoptim",
+        "bucketname": "cjktestingstochoptim",
         "paramstring": "exec/cedwssa.r --K.ce 1e5 --K.prob 1e6"
     }
     print "\nCalling executeTask now..."
-    result = obj.executeTask(params)
+    sys.stdout.flush()
+    result = backend.executeTask(params)
     if result["success"]:
         print "Succeeded..."
         celery_id = result["celery_pid"]
@@ -778,7 +891,7 @@ if __name__ == "__main__":
             "taskids": [task_id]
         }
         print "\nCalling describeTask..."
-        desc_result = obj.describeTask(describe_task_params)[task_id]
+        desc_result = backend.describeTask(describe_task_params)[task_id]
         while desc_result["status"] != "finished":
             if "output" in desc_result:
                 print "[{0}] [{1}] [{2}] [{3}]".format(
@@ -800,16 +913,16 @@ if __name__ == "__main__":
                 )
             time.sleep(60)
             print "\nCalling describeTask..."
-            desc_result = obj.describeTask(describe_task_params)[task_id]
+            desc_result = backend.describeTask(describe_task_params)[task_id]
         print "Finished..."
         print desc_result["output"]
         terminate_params = {
-            "infrastructure": obj.INFRA_EC2,
+            "infrastructure": backend.INFRA_EC2,
             "credentials": credentials,
             "key_prefix": keypair_name
         }
         print "\nStopping all VMs..."
-        if obj.stopMachines(terminate_params):
+        if backend.stopMachines(terminate_params):
             print "Stopped all machines!"
         else:
             print "Failed to stop machines..."
@@ -820,40 +933,40 @@ if __name__ == "__main__":
             print result["traceback"]
         else:
             print result["reason"]
-    
-    #NOTE: Uncomment this for normal testing routine.
-"""    params['infrastructure'] = infra
-    params['num_vms'] = 1
-    params['group'] = 'stochss'
-    params['instance_type'] = 't1.micro'
-    #stochss will prefix whatever keyname you give here: stochss_stochssnew32
-    params['keyname'] = 'cjknew32'
-    params['use_spot_instances'] = False
-    if infra == backendservices.INFRA_EC2 :
-        params['image_id'] = 'ami-851937ec'
-    else :
-        raise TypeError("Error, unexpected infrastructure type: "+infra)
 
-    print 'valid creds? '+str(obj.validateCredentials(params))
-    print 'for params: '+str(params)
-    #print 'Exiting main... remove this if you would like to continue testing'
-    #sys.exit(0)
+##########################################
+##########################################
+def teststochss(backend,params):
+    '''
+    This tests a stochkit job using a local run (2 tasks)
+    and a cloud run (2 tasks)
+    It can also test describe* and start/stop Machines
+    '''
 
-    if obj.validateCredentials(params) :
-	print 'startMachines is commented out -- there better be an instance started! (or uncomment)'
-        #res = obj.startMachines(params,True)
-        #if res is None :
+    if backend.validateCredentials(params) :
+	print bcolors.FAIL + \
+            'startMachines is commented out, make sure you have one+ started!'\
+            + bcolors.ENDC
+	#or uncomment this next block and comment out the print above
+        #res = backend.startMachines(params)
+        #if res is None or not res['success'] :
             #raise TypeError("Error, startMachines failed!")
+        #print bcolors.OKGREEN + 'startMachines succeeded ' + \
+            #str(res) +  bcolors.ENDC
+        #print 'started VMs, sleeping for a couple minutes to allow for initialization'
+        #for aws status checks
+        #time.sleep(120)
 
-	#this is only used for cloud task deployment, this verifies that it can be created with creds
+	print 'describeMachines outputs to the testoutput.log file'
+        backend.describeMachines(params)
+
+	#this is only used for cloud task deployment, this verifies that table 
+        #can be created with creds
         credentials = params['credentials']
         os.environ["AWS_ACCESS_KEY_ID"] = credentials['EC2_ACCESS_KEY']
         os.environ["AWS_SECRET_ACCESS_KEY"] = credentials['EC2_SECRET_KEY']
         print 'access key: '+os.environ["AWS_ACCESS_KEY_ID"]
         createtable(backendservices.TABLENAME)
-
-	print 'describeMachines outputs to the testoutput.log file'
-        obj.describeMachines(params)
 
 	#Test that local tasks execute and can be deleted
         #NOTE: dimer_decay.xml must be in this local dir
@@ -865,64 +978,175 @@ if __name__ == "__main__":
 	print 'testing local task execution...'
         taskargs = {}
 	pids = []
-	NUMTASKS = 1
+	NUMTASKS = 2
 	for i in range(NUMTASKS):
             taskargs['paramstring'] = 'ssa -t 100 -i 10 -r 10 --keep-trajectories --seed 706370 --label'
             taskargs['document'] = doc
-            res = obj.executeTaskLocal(taskargs)
+
+            #options for job_type are stochkit (ssa), stochkit-ode (ode), 
+            #and mcem2 (for paramsweep/stochoptim)
+            taskargs['job_type'] = 'stochkit'
+
+            res = backend.executeTaskLocal(taskargs)
 	    if res is not None:
-	        print 'results: {0}'.format(str(res))
+	        print 'task {0} local results: {1}'.format(str(i),str(res))
 	        pids.append(res['pid'])
+                print
 	print 'number of pids: {0} {1}'.format(str(len(pids)),str(pids))
 
-    	res  = obj.checkTaskStatusLocal(pids)
+    	res  = backend.checkTaskStatusLocal(pids)
 	if res is not None:
 	    print 'status: {0}'.format(str(res))
 
 	time.sleep(5) #need to sleep here to allow for process spawn
 	print 'deleting pids: {0}'.format(str(pids))
-	obj.deleteTaskLocal(pids)    
+	backend.deleteTaskLocal(pids)    
 
 	############################
-	print 'testing cloud task execution...'
+	print '\ntesting cloud task execution...'
         taskargs = {}
 	pids = []
 	taskargs['AWS_ACCESS_KEY_ID'] = credentials['EC2_ACCESS_KEY']
         taskargs['AWS_SECRET_ACCESS_KEY'] = credentials['EC2_SECRET_KEY']
-	NUMTASKS = 4
+	NUMTASKS = 2
 	for i in range(NUMTASKS):
             taskargs['paramstring'] = 'ssa -t 100 -i 100 -r 100 --keep-trajectories --seed 706370 --label'
             taskargs['document'] = doc
-    	    taskargs['bucketname'] = 'cjk4321'
-        cloud_result = obj.executeTask(taskargs)
-        res = cloud_result["celery_pid"]
-        taskid = cloud_result["db_id"]
+            #make this unique across all names/users in S3!
+            #bug in stochss: if the bucketname is aleady in s3, 
+            #tasks run but never update their results in s3 (silent failur)
+    	    taskargs['bucketname'] = 'stochsstestbucket2'
+
+            #options for job_type are stochkit (ssa), stochkit-ode (ode), 
+            #and mcem2 (for paramsweep/stochoptim)
+            taskargs['job_type'] = 'stochkit'
+
+            #sometimes it takes awhile for machine to be ready
+            #if this fails with connection refused
+            #and you just started a VM recently, then leave the VM up and
+            #retry (comment out startMachine above)
+            cloud_result = backend.executeTask(taskargs)
+            print bcolors.OKGREEN + 'cloud_result on executeTask: ' + \
+                str(cloud_result) +  bcolors.ENDC
+            if not cloud_result['success']:
+                print bcolors.FAIL + 'executeTask failed!' + bcolors.ENDC
+                sys.exit(1)
+
+            res = cloud_result['celery_pid']
+            taskid = cloud_result['db_id']
   	    pids.append(taskid)
 
+        #check each task's status
 	taskargs['taskids'] = pids
 	done = {}
 	count = NUMTASKS
 	while len(done) < count :
 	    for i in pids:
-                task_status = obj.describeTask(taskargs)
+                task_status = backend.describeTask(taskargs)
                 job_status = task_status[i]  #may be None
 		if job_status is not None:
 		    print 'task id {0} status: {1}'.format(str(i),job_status['status'])
 		    if job_status['status'] == 'finished':
+        		print 'cloud job {0} is finished, output: '.format(str(i))
+        		print job_status['output']
 		        done[i] = True
-		    elif job_status['status'] == 'active':
-			print '\tDELETING task {0}'.format(str(i))
-			count = count - 1
-			obj.deleteTasks([i])    
+
+                    #don't kill off tasks, wait for them to finish
+                    #this code hasn't been tested in awhile
+		    #elif job_status['status'] == 'active':
+			#print '\tDELETING task {0}'.format(str(i))
+			#count = count - 1
+			#backend.deleteTasks([i])    
 		else :
 		    print 'task id {0} status is None'.format(str(i))
 
-	print '{0} jobs have finished!'.format(len(done))
+	print '{0} jobs have finished!\n'.format(len(done))
 
 	############################
         #this terminates instances associated with this users creds and KEYPREFIX keyname prefix
 	print 'stopMachines outputs to the testoutput.log file'
-	print 'stopMachines is commented out -- be sure to terminate your instances or uncomment!'
-        #res = obj.stopMachines(params)
-        #print 'output from stopMachines: {0}'.format(str(res))
-"""
+	#print 'stopMachines is commented out -- be sure to terminate your instances or uncomment!'
+        if backend.stopMachines(params):
+            print 'Stopped all machines!'
+        else:
+            print 'Failed to stop machines...'
+
+        backend.describeMachines(params)
+
+##########################################
+##########################################
+
+if __name__ == "__main__":
+
+    '''Note that these must be set for this function to work properly:
+        export STOCHSS_HOME=/path/to/stochss/git/dir/stochss
+        export PYTHONPATH=${STOCHSS_HOME}:.:..
+        export PATH=${PATH}:${STOCHSS_HOME}/StochKit
+    '''
+
+    logging.basicConfig(filename='testoutput.log',filemode='w',level=logging.DEBUG)
+    try:
+       access_key = os.environ["AWS_ACCESS_KEY"]
+       secret_key = os.environ["AWS_SECRET_KEY"]
+    except KeyError:
+       print "main: Environment variables EC2_ACCESS_KEY and EC2_SECRET_KEY not set, cannot continue"
+       sys.exit(1)
+
+    os.environ["AWS_ACCESS_KEY_ID"] = access_key
+    os.environ["AWS_SECRET_ACCESS_KEY"] = secret_key
+
+    # infra = backendservices.INFRA_EC2
+    backend = backendservices()
+    credentials = {
+      'EC2_ACCESS_KEY': access_key,
+      'EC2_SECRET_KEY': secret_key
+    }
+    compute_check_params = {
+        "infrastructure": backend.INFRA_EC2,
+        "credentials": credentials
+    }
+    print bcolors.OKGREEN + 'is Q running? ' + \
+        str(backend.isQueueHeadRunning(compute_check_params)) + \
+        bcolors.ENDC
+    print bcolors.OKGREEN + 'valid creds? ' + \
+        str(backend.validateCredentials(compute_check_params)) + \
+        bcolors.ENDC
+    #comment this next line out to run the next test
+    #sys.exit(1)
+
+    ##### run this part to test stochoptim (parameter estimation code) #####
+    #NOTE: Uncomment this to test stochkit2 job run
+    params = {}
+    params['credentials'] = credentials
+    params['infrastructure'] = backend.INFRA_EC2
+    params['num_vms'] = 1
+    params['group'] = 'stochss' 
+
+    #this is used for workers.  its overridden for head node in
+    #agents/ec2_agent.py to be c3.large b/c we need more resources there
+    #head node is also used as a worker node
+    params['instance_type'] = 't1.micro'
+    #stochss will prefix whatever keyname you give here: stochss_
+    params['keyname'] = 'testkey'
+    params['use_spot_instances'] = False
+    if params['infrastructure'] == backendservices.INFRA_EC2 :
+        params['image_id'] = backend.WORKER_AMIS[backend.INFRA_EC2]
+    else :
+        raise TypeError("Error, unexpected infrastructure type: "+params['infrastructure'])
+
+    print 'valid creds? '+str(backend.validateCredentials(params))
+    print 'for params: '+str(params)
+
+    #print 'Exiting main... remove this if you would like to continue testing'
+    #sys.exit(0)
+
+    print 'Running StochKit Tests'
+    #teststochss(backend,params)
+
+'''
+    print 'Running StochOptim Tests'
+    sys.stdout.flush()
+    #I haven't gotten this to work for me yet, but have run out of time
+    #trying to investigate.  Pushing this to Mengyuan's task list - Chandra 7/23/14
+    teststochoptim(backend,compute_check_params)
+'''
