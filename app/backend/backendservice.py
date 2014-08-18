@@ -757,8 +757,12 @@ class backendservices():
             os.path.dirname(os.path.abspath(__file__)),
             "celeryconfig.py"
         )
+        celery_template_filename = os.path.join(
+            os.path.dirname(os.path.abspath(__file__)),
+            "celeryconfig.py.template"
+        )
         celery_config_lines = []
-        with open(celery_config_filename, 'r') as celery_config_file:
+        with open(celery_template_filename, 'r') as celery_config_file:
             celery_config_lines = celery_config_file.readlines()
         with open(celery_config_filename, 'w') as celery_config_file:
             for line in celery_config_lines:
