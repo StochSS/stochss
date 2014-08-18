@@ -2,7 +2,7 @@ from base_agent import BaseAgent, AgentConfigurationException, AgentRuntimeExcep
 import sys,os,traceback
 sys.path.append(os.path.join(os.path.dirname(__file__), '../../lib/boto'))
 sys.path.append(os.path.join(os.path.dirname(__file__), '../'))
-print sys.path
+#print sys.path
 import boto
 from boto.exception import EC2ResponseError
 import datetime
@@ -279,34 +279,34 @@ class EC2Agent(BaseAgent):
       userstr += "rabbitmqctl add_user stochss ucsb\n"
       userstr += 'rabbitmqctl set_permissions -p / stochss ".*" ".*" ".*"\n'
       # userstr += "rabbitmq-server -detached\n"
-    else:
-      # Update celery config file...it should have the correct IP
-      # of the Queue head node, which should already be running.
-      celery_config_filename = os.path.join(
-        os.path.dirname(os.path.abspath(__file__)),
-        "../celeryconfig.py"
-      )
-      # Pass it line by line so theres no weird formatting errors from 
-      # trying to echo a multi-line file directly on the command line
-      with open(celery_config_filename, 'r') as celery_config_file:
-        lines = celery_config_file.readlines()
-        # Make sure we overwrite the file with our first write
-        userstr += "echo '{0}' > /home/ubuntu/celeryconfig.py\n".format(lines[0])
-        for line in lines[1:]:
-          userstr += "echo '{0}' >> /home/ubuntu/celeryconfig.py\n".format(line)
-    # Even the queue head gets a celery worker
-    # NOTE: We only need to use the -n argument to celery command if we are starting
-    #       multiple workers on the same machine. Instead, we are starting one worker
-    #       per machine and letting that one worker execute one task per core, using
-    #       the configuration in celeryconfig.py to ensure that Celery detects the 
-    #       number of cores and enforces this desired behavior.
-    userstr += "export PYTHONPATH=/home/ubuntu/pyurdme/:/home/ubuntu/stochss/app/\n"
-    if self.PARAM_WORKER_QUEUE in parameters:
-      start_celery_str = "celery -A tasks worker --autoreload --loglevel=info -Q {0} --workdir /home/ubuntu > /home/ubuntu/celery.log 2>&1 & \n".format(parameters[self.PARAM_WORKER_QUEUE])
-    else:
-      start_celery_str = "celery -A tasks worker --autoreload --loglevel=info --workdir /home/ubuntu > /home/ubuntu/celery.log 2>&1"
-    #userstr+="sudo -u ubuntu screen -d -m bash -c '{0}'\n".format(start_celery_str)  # PyURDME must be run inside a 'screen' terminal as part of the FEniCS code depends on the ability to write to the processe's terminal, screen provides this terminal.
-    userstr+="screen -d -m bash -c '{0}'\n".format(start_celery_str)  # PyURDME must be run inside a 'screen' terminal as part of the FEniCS code depends on the ability to write to the process' terminal, screen provides this terminal.
+##    else:
+##      # Update celery config file...it should have the correct IP
+##      # of the Queue head node, which should already be running.
+##      celery_config_filename = os.path.join(
+##        os.path.dirname(os.path.abspath(__file__)),
+##        "../celeryconfig.py"
+##      )
+##      # Pass it line by line so theres no weird formatting errors from 
+##      # trying to echo a multi-line file directly on the command line
+##      with open(celery_config_filename, 'r') as celery_config_file:
+##        lines = celery_config_file.readlines()
+##        # Make sure we overwrite the file with our first write
+##        userstr += "echo '{0}' > /home/ubuntu/celeryconfig.py\n".format(lines[0])
+##        for line in lines[1:]:
+##          userstr += "echo '{0}' >> /home/ubuntu/celeryconfig.py\n".format(line)
+##    # Even the queue head gets a celery worker
+##    # NOTE: We only need to use the -n argument to celery command if we are starting
+##    #       multiple workers on the same machine. Instead, we are starting one worker
+##    #       per machine and letting that one worker execute one task per core, using
+##    #       the configuration in celeryconfig.py to ensure that Celery detects the 
+##    #       number of cores and enforces this desired behavior.
+##    userstr += "export PYTHONPATH=/home/ubuntu/pyurdme/:/home/ubuntu/stochss/app/\n"
+##    if self.PARAM_WORKER_QUEUE in parameters:
+##      start_celery_str = "celery -A tasks worker --autoreload --loglevel=info -Q {0} --workdir /home/ubuntu > /home/ubuntu/celery.log 2>&1 & \n".format(parameters[self.PARAM_WORKER_QUEUE])
+##    else:
+##      start_celery_str = "celery -A tasks worker --autoreload --loglevel=info --workdir /home/ubuntu > /home/ubuntu/celery.log 2>&1"
+##    #userstr+="sudo -u ubuntu screen -d -m bash -c '{0}'\n".format(start_celery_str)  # PyURDME must be run inside a 'screen' terminal as part of the FEniCS code depends on the ability to write to the processe's terminal, screen provides this terminal.
+##    userstr+="screen -d -m bash -c '{0}'\n".format(start_celery_str)  # PyURDME must be run inside a 'screen' terminal as part of the FEniCS code depends on the ability to write to the process' terminal, screen provides this terminal.
     f.write(userstr)
     f.close()
     start_time = datetime.datetime.now()

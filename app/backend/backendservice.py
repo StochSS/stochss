@@ -29,7 +29,8 @@ class backendservices():
         #INFRA_EC2: 'ami-f0d42898' #oldest first
         #INFRA_EC2: 'ami-74c21f1c'
         #INFRA_EC2: 'ami-cafb26a2'
-        INFRA_EC2: 'ami-f4ee339c'
+        #INFRA_EC2: 'ami-f4ee339c'
+        INFRA_EC2: 'ami-244e924c'
     }
 
     def __init__(self):
@@ -481,6 +482,9 @@ class backendservices():
             if self.isQueueHeadRunning(compute_check_params):
 		#Queue head is running so start as many vms as requested
                 res = i.run_instances(params,[])
+                self.copyCeleryConfigToInstance(res, params)
+                # start celery via ssh
+                self.startCeleryViaSSH(res, params)
             else:
                 # Need to start the queue head (RabbitMQ)
                 params["queue_head"] = True
@@ -495,21 +499,116 @@ class backendservices():
                 #NOTE: This relies on the InfrastructureManager being run in blocking mode...
                 queue_head_ip = res["vm_info"]["public_ips"][0]
                 self.__update_celery_config_with_queue_head_ip(queue_head_ip)
+                self.copyCeleryConfigToInstance(res, params)
+                # start celery via ssh
+                self.startCeleryViaSSH(res, params)
+
                 params["keyname"] = requested_key_name
                 params["queue_head"] = False
                 if vms_requested > 1:
-		    #subtract 1 since we can use the queue head as a worker
+                    #subtract 1 since we can use the queue head as a worker
                     params["num_vms"] = vms_requested - 1
                     res = i.run_instances(params,[])
+                    self.copyCeleryConfigToInstance(res, params)
+                    # start celery via ssh
+                    self.startCeleryViaSSH(res, params)
 
                 params["num_vms"] = vms_requested
 
             logging.info("startMachines : exiting method with result : %s", str(res))
             return res
         except Exception, e:
+            traceback.print_exc()
             logging.error("startMachines : exiting method with error : {0}".format(str(e)))
             print "startMachines : exiting method with error :", str(e)
             return None
+
+    def copyCeleryConfigToInstance(self, reservation, params):
+##      # Update celery config file...it should have the correct IP
+##      # of the Queue head node, which should already be running.
+##      celery_config_filename = os.path.join(
+##        os.path.dirname(os.path.abspath(__file__)),
+##        "../celeryconfig.py"
+##      )
+##      # Pass it line by line so theres no weird formatting errors from 
+##      # trying to echo a multi-line file directly on the command line
+##      with open(celery_config_filename, 'r') as celery_config_file:
+##        lines = celery_config_file.readlines()
+##        # Make sure we overwrite the file with our first write
+##        userstr += "echo '{0}' > /home/ubuntu/celeryconfig.py\n".format(lines[0])
+##        for line in lines[1:]:
+##          userstr += "echo '{0}' >> /home/ubuntu/celeryconfig.py\n".format(line)
+        #print "reservation={0}".format(reservation)
+        #print "params={0}".format(params)
+        keyfile = "{0}/../{1}.key".format(os.path.dirname(__file__),params['keyname'])
+        #logging.debug("keyfile = {0}".format(keyfile))
+        if not os.path.exists(keyfile):
+            raise Exception("ssh keyfile file not found: {0}".format(keyfile))
+        celery_config_filename = "{0}/{1}".format(os.path.dirname(__file__),"/celeryconfig.py")
+        if not os.path.exists(celery_config_filename):
+            raise Exception("celery config file not found: {0}".format(celery_config_filename))
+        for ip in reservation['vm_info']['public_ips']:
+            self.waitforSSHconnection(keyfile, ip)
+            cmd = "scp -o 'StrictHostKeyChecking no' -i {0} {1} ubuntu@{2}:celeryconfig.py".format(keyfile, celery_config_filename, ip)
+            logging.info(cmd)
+            success = os.system(cmd)
+            if success == 0:
+                logging.info("scp success: {0} transfered to {1}".format(celery_config_filename, ip))
+            else:
+                raise Exception("scp failure: {0} not transfered to {1}".format(celery_config_filename, ip))
+
+    def waitforSSHconnection(self, keyfile, ip):
+        SSH_RETRY_COUNT = 30
+        SSH_RETRY_WAIT = 3
+        for _ in range(0, SSH_RETRY_COUNT):
+            cmd = "ssh -o 'StrictHostKeyChecking no' -i {0} ubuntu@{1} \"pwd\"".format(keyfile, ip)
+            logging.info(cmd)
+            success = os.system(cmd)
+            if success == 0:
+                logging.info("ssh connected to {0}".format(ip))
+                return True
+            else:
+                logging.info("ssh not connected to {0}, sleeping {1}".format(ip, SSH_RETRY_WAIT))
+                time.sleep(SSH_RETRY_WAIT)
+        raise Exception("Timeout waiting to connect to node via SSH")
+        
+
+    def startCeleryViaSSH(self, reservation, params):
+##    # Even the queue head gets a celery worker
+##    # NOTE: We only need to use the -n argument to celery command if we are starting
+##    #       multiple workers on the same machine. Instead, we are starting one worker
+##    #       per machine and letting that one worker execute one task per core, using
+##    #       the configuration in celeryconfig.py to ensure that Celery detects the 
+##    #       number of cores and enforces this desired behavior.
+##    userstr += "export PYTHONPATH=/home/ubuntu/pyurdme/:/home/ubuntu/stochss/app/\n"
+##    if self.PARAM_WORKER_QUEUE in parameters:
+##      start_celery_str = "celery -A tasks worker --autoreload --loglevel=info -Q {0} --workdir /home/ubuntu > /home/ubuntu/celery.log 2>&1 & \n".format(parameters[self.PARAM_WORKER_QUEUE])
+##    else:
+##      start_celery_str = "celery -A tasks worker --autoreload --loglevel=info --workdir /home/ubuntu > /home/ubuntu/celery.log 2>&1"
+##    #userstr+="sudo -u ubuntu screen -d -m bash -c '{0}'\n".format(start_celery_str)  # PyURDME must be run inside a 'screen' terminal as part of the FEniCS code depends on the ability to write to the processe's terminal, screen provides this terminal.
+##    userstr+="screen -d -m bash -c '{0}'\n".format(start_celery_str)  # PyURDME must be run inside a 'screen' terminal as part of the FEniCS code depends on the ability to write to the process' terminal, screen provides this terminal.
+        credentials = params['credentials']
+        python_path = "source /home/ubuntu/.bashrc;export PYTHONPATH=/home/ubuntu/pyurdme/:/home/ubuntu/stochss/app/;"
+        python_path+='export AWS_ACCESS_KEY_ID={0};'.format(str(credentials['EC2_ACCESS_KEY']))
+        python_path+='export AWS_SECRET_ACCESS_KEY={0};'.format( str(credentials['EC2_SECRET_KEY']))
+        start_celery_str = "celery -A tasks worker --autoreload --loglevel=info --workdir /home/ubuntu > /home/ubuntu/celery.log 2>&1"
+        # PyURDME must be run inside a 'screen' terminal as part of the FEniCS code depends on the ability to write to the process' terminal, screen provides this terminal.
+        celerycmd = "sudo screen -d -m bash -c '{1}{0}'\n".format(start_celery_str,python_path)
+        #print "reservation={0}".format(reservation)
+        #print "params={0}".format(params)
+        keyfile = "{0}/../{1}.key".format(os.path.dirname(__file__),params['keyname'])
+        #logging.info("keyfile = {0}".format(keyfile))
+        if not os.path.exists(keyfile):
+            raise Exception("ssh keyfile file not found: {0}".format(keyfile))
+        for ip in reservation['vm_info']['public_ips']:
+            self.waitforSSHconnection(keyfile, ip)
+            cmd = "ssh -o 'StrictHostKeyChecking no' -i {0} ubuntu@{1} \"{2}\"".format(keyfile, ip, celerycmd)
+            logging.info(cmd)
+            success = os.system(cmd)
+            if success == 0:
+                logging.info("celery started on {0}".format(ip))
+            else:
+                raise Exception("Failure to start celery on {0}".format(ip))
         
     def stopMachines(self, params, block=False):
         '''
@@ -537,7 +636,7 @@ class backendservices():
         '''
         # add calls to the infrastructure manager for getting details of
         # machines
-        logging.info("describeMachines : inside method with params : %s", str(params))
+        #logging.info("describeMachines : inside method with params : %s", str(params))
         key_prefix = ""
         if "key_prefix" in params:
             key_prefix = params["key_prefix"]
