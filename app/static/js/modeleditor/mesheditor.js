@@ -784,6 +784,26 @@ Count in each voxel \
             }
         },
 
+        handleMeshNameChange : function(newOption, i, event)
+        {
+            var selected = newOption.find('.meshSelect').prop('checked');
+            var newName = $( event.target ).val().trim();
+
+            if(selected)
+            {
+                $( '.meshInfoDiv' ).find( '.name' ).text(newName);
+            }
+
+            $.ajax( { type : 'POST',
+                      url: '/modeleditor/mesheditor',
+                      data: { reqType : 'setName',
+                              data: JSON.stringify( { id : this.data.meshes[i].id,
+                                                      newName : newName } ) },
+                      success : updateMsg });
+
+            this.data.meshes[i].name = newName;
+        },
+
         drawMeshSelect : function()
         {
             // Run the one-time things
@@ -828,10 +848,10 @@ Count in each voxel \
 </button> \
 </td> \
 <td> \
-<input type="radio" name="processedMeshFiles"> \
+<input class="meshSelect" type="radio" name="processedMeshFiles"> \
 </td> \
 <td> \
-<%= name %> \
+<input class="meshName" type="text" value="<%= name %>"> \
 </td> \
 </tr>');
                 ""                 
@@ -841,14 +861,15 @@ Count in each voxel \
                     continue
 
                 var newOption = $( optionTemp( this.data.meshes[i] ) ).appendTo( meshTableBody );
-                
+
                 // If there is already a mesh selected, click the option
                 if(this.data.meshWrapperId == this.data.meshes[i].id)
                 {
-                    newOption.find('input').click();
+                    newOption.find('.meshSelect').click();
                 }
 
-                newOption.find('input').on('click', _.bind(_.partial( this.handleMeshSelect, this.data.meshes[i]), this));
+                newOption.find('.meshName').on('change', _.bind(_.partial( this.handleMeshNameChange, newOption, i ), this));                
+                newOption.find('.meshSelect').on('click', _.bind(_.partial( this.handleMeshSelect, this.data.meshes[i]), this));
                 newOption.find('.delete').on('click', _.bind(_.partial( this.handleMeshDelete, this.data.meshes[i], newOption), this));
             }
 

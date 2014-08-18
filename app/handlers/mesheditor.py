@@ -246,6 +246,23 @@ class MeshEditorPage(BaseHandler):
 
             self.response.write(json.dumps( data ))
             return
+        if self.request.get('reqType') == 'setName':
+            # Looks like a speciesSubdomainAssignments request
+            self.response.content_type = 'application/json'
+
+            data = json.loads( self.request.get('data') );
+
+            meshWrapperId = data['id']
+
+            meshDb = MeshWrapper.get_by_id(meshWrapperId)
+
+            meshDb.name = data['newName']
+
+            meshDb.put()
+            
+            self.response.write(json.dumps( { "statu" : True,
+                                              "msg" : 'Name updated' } ))
+            return
         elif self.request.get('reqType') == 'getMesh':
             data = json.loads( self.request.get('data') );
 
