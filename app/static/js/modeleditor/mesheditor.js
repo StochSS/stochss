@@ -708,19 +708,19 @@ Count in each voxel \
         {
             var data = {};
 
-            if(this.uploaderState.meshFileId && this.uploaderState.subdomainsFileId)
+            if(this.uploaderState.meshSubmitted && this.uploaderState.meshFileId)
             {
-                if(this.uploaderState.meshSubmitted && this.uploaderState.meshFileId)
+                data['meshFileId'] = this.uploaderState.meshFileId;
+                data['name'] = this.uploaderState.name;
+                data['description'] = this.uploaderState.description;
+
+                if(this.uploaderState.subdomainsSubmitted && this.uploaderState.subdomainsFileId)
                 {
-                    data['meshFileId'] = this.uploaderState.meshFileId;
-                    data['name'] = this.uploaderState.name;
-                    data['description'] = this.uploaderState.description;
+                    data['subdomainsFileId'] = this.uploaderState.subdomainsFileId;
+                }
 
-                    if(this.uploaderState.subdomainsSubmitted && this.uploaderState.subdomainsFileId)
-                    {
-                        data['subdomainsFileId'] = this.uploaderState.subdomainsFileId;
-                    }
-
+                if(!this.uploaderState.subdomainsSubmitted || (this.uploaderState.meshFileId && this.uploaderState.subdomainsFileId))
+                {
                     $.ajax( { type : 'POST',
                               url: '/modeleditor/mesheditor',
                               data: { reqType : 'addMeshWrapper',
