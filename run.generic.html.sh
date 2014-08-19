@@ -95,26 +95,126 @@ function check_pyurdme {
 }
 
 function download_pyurdme {
-    ZIP_URL="https://github.com/pyurdme/pyurdme/archive/stochss.zip"
-    TMPDIR=$(mktemp -d /tmp/tmp.XXXXXX)
-    ZIP_FILE="$TMPDIR/pyurdme.zip"
-    CMD="curl -o $ZIP_FILE -L $ZIP_URL"
-    echo $CMD
-    eval $CMD
-    if [[ -e "$ZIP_FILE" ]];then
-        cd "$STOCHSS_HOME/app/lib" || return 1
-        pwd
-        CMD="unzip $ZIP_FILE > /dev/null"
-        echo $CMD
-        eval $CMD
-        if [[ $? != 0 ]];then
-            rm $ZIP_FILE
-            return 1 #False
-        fi
-        rm $ZIP_FILE
+    DIRECTORY="$STOCHSS_HOME/app/lib/pyurdme-stochss"
+    if [ -d "$DIRECTORY" ]; then
+        echo "$DIRECTORY found, pyurdme already downloaded locally (remove directory to re-download)"
         return 0 #True
     else
+        ZIP_URL="https://github.com/pyurdme/pyurdme/archive/stochss.zip"
+        TMPDIR=$(mktemp -d /tmp/tmp.XXXXXX)
+        ZIP_FILE="$TMPDIR/pyurdme.zip"
+        CMD="curl -o $ZIP_FILE -L $ZIP_URL"
+        echo $CMD
+        eval $CMD
+        if [[ -e "$ZIP_FILE" ]];then
+            cd "$STOCHSS_HOME/app/lib" || return 1
+            pwd
+            CMD="unzip $ZIP_FILE > /dev/null"
+            echo $CMD
+            eval $CMD
+            if [[ $? != 0 ]];then
+                rm $ZIP_FILE
+                return 1 #False
+            fi
+            rm $ZIP_FILE
+            return 0 #True
+        else
+            return 1 #False
+        fi
+    fi
+}
+
+function check_numpy_scipy {
+    RET=`python -c "import numpy" 2>/dev/null`
+    RC=$?
+    if [[ $RC != 0 ]];then
         return 1 #False
+    fi
+    RET=`python -c "import scipy" 2>/dev/null`
+    RC=$?
+    if [[ $RC != 0 ]];then
+        return 1 #False
+    fi
+    return 0 #True
+}
+
+function install_numpy_scipy {
+    #echo "We need to install the python packages: numpy, scipy and matplotlib from http://fonnesbeck.github.io/ScipySuperpack/ "
+    echo "We need to install the python packages: numpy, scipy and matplotlib from pip repository. "
+    read -p "Do you want me to try to use sudo to install required packages [you may be prompted for the admin password] (y/n): " answer
+
+    if [ $? != 0 ]; then
+        exit -1
+    fi
+
+    if [ "$answer" == 'y' ] || [ "$answer" == 'yes' ]; then
+        #CMD="curl -o install_superpack.sh https://raw.githubusercontent.com/fonnesbeck/ScipySuperpack/master/install_superpack.sh"
+        #echo $CMD
+        #eval $CMD
+        #CMD="sh install_superpack.sh"
+        #echo $CMD
+        #eval $CMD
+        CMD="sudo pip install numpy scipy matplotlib"
+        echo $CMD
+        eval $CMD
+    else
+        exit -1
+    fi
+}
+
+function check_h5py {
+    RET=`python -c "import h5py" 2>/dev/null`
+    RC=$?
+    if [[ $RC != 0 ]];then
+        return 1 #False
+    fi
+    return 0 #True
+}
+
+function install_h5py {
+    echo "We need to install the python package: h5py from the python pip package manager."
+    read -p "Do you want me to try to use sudo to install required package [you may be prompted for the admin password] (y/n): " answer
+
+    if [ $? != 0 ]; then
+        exit -1
+    fi
+
+    if [ "$answer" == 'y' ] || [ "$answer" == 'yes' ]; then
+        CMD="sudo pip install h5py"
+        echo $CMD
+        eval $CMD
+    else
+        exit -1
+    fi
+}
+
+function check_pip {
+    if which pip > /dev/null;then
+        echo "pip is installed on your system, using it"
+        return 0 #True
+    else
+        echo "pip is not installed on your system"
+        return 1 #False
+    fi
+}
+
+function install_pip {
+    echo "We need to install python pip from https://bootstrap.pypa.io/get-pip.py"
+    read -p "Do you want me to try to use sudo to install required packages [you may be prompted for the admin password] (y/n): " answer
+
+    if [ $? != 0 ]; then
+        exit -1
+    fi
+
+    if [ "$answer" == 'y' ] || [ "$answer" == 'yes' ]; then
+        CMD="curl -o get-pip.py https://bootstrap.pypa.io/get-pip.py"
+        echo $CMD
+        eval $CMD
+        CMD="sudo python get-pip.py"
+        echo $CMD
+        eval $CMD
+    else
+        exit -1
     fi
 }
 
@@ -122,9 +222,44 @@ function check_spatial_installation {
     if check_dolfin; then
         echo "FEniCS/Dolfin detected successfully.<br />"
     else
-        echo "FEniCS/Dolfin detected successfully not installed, please check installation instructions.<br />"
+        echo "FEniCS/Dolfin not installed, please check installation instructions.<br />"
         echo "You can download FEniCS from http://fenicsproject.org/<br />"
         return 1 #False
+    fi
+
+    if check_numpy_scipy; then
+        echo "Numpy and Scipy detected successfully.<br />"
+    else
+        echo "Numpy and Scipy not installed, attempting install<br />"
+        if check_pip;then
+            echo ""
+        else
+            install_pip
+        fi
+        install_numpy_scipy 
+        if check_numpy_scipy; then
+            echo "Numpy and Scipy detected successfully.<br />"
+        else
+            echo "Numpy and Scipy not installed, Failing<br />"
+            return 1 #False
+        fi
+    fi
+
+    if check_h5py;then
+        echo "H5py detected sucessfully.<br />"
+    else
+        if check_pip;then
+            echo ""
+        else
+            install_pip
+        fi
+        install_h5py
+        if check_h5py;then
+            echo "H5py detected sucessfully.<br />"
+        else
+            echo "H5py not installed, Failing<br />"
+            return 1 #False
+        fi
     fi
 
     if check_pyurdme; then
