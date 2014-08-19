@@ -37,6 +37,7 @@ class CredentialsPage(BaseHandler):
     def post(self):
 
         params = self.request.POST
+        print "CredentialsPage.post param={0}".format(params)
         
         try:
             # User id is a string
@@ -65,6 +66,7 @@ class CredentialsPage(BaseHandler):
         elif 'start' in params:
             number_of_new_vms = params['vm_number']
             result = self.start_vms(user_id, self.user_data.getCredentials(), number_of_new_vms)
+            time.sleep(10)
             self.redirect('/credentials')
 
         elif 'stop' in params:
