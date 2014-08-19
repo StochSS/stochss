@@ -160,14 +160,19 @@ class SpatialPage(BaseHandler):
                     species = result.model.get_species_map().keys()
 
                     threeJS = {}
-                    print "exporting ", timeIdx
+                    #print "exporting ", timeIdx
 
                     
                     for specie in species:
-                        vals = result.get_species(specie, timeIdx, concentration=True)
+                        concVals = result.get_species(specie, timeIdx, concentration=True)
+                        popVals = result.get_species(specie, timeIdx, concentration=False)
+
+                        minIdx = numpy.argmin(concVals)
+                        maxIdx = numpy.argmax(concVals)
+
                         threeJS[specie] = { "mesh" : json.loads(result.export_to_three_js(specie, timeIdx)),
-                                            "max" : max(vals),
-                                            "min" : min(vals) }
+                                            "max" : popVals[maxIdx],
+                                            "min" : popVals[minIdx] }
                         
                 self.response.content_type = 'application/json'
                 self.response.write(json.dumps( threeJS ))
