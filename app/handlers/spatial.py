@@ -29,6 +29,7 @@ class SpatialJobWrapper(db.Model):
     # These are all the attributes of a job we use for local storage
     userId = db.StringProperty()
     pid = db.IntegerProperty()
+    cloud_id = db.StringProperty()
     startTime = db.StringProperty()
     jobName = db.StringProperty()
     modelName = db.StringProperty() # This is a reference to the model. I should probably use a modelId instead. I'm not sure why I store it as a name
@@ -265,7 +266,7 @@ class SpatialPage(BaseHandler):
 
                 service = backend.backendservice.backendservices()
                 # Fetch
-                service.fetchOutput(job.pid, job.output_url)
+                service.fetchOutput(job.cloud_id, job.output_url)
                 # Unpack
                 os.system('tar -xf' +job.uuid+'.tar')
                 # Record location
@@ -521,7 +522,7 @@ class SpatialPage(BaseHandler):
             job.outData = None  # This is where the data should be locally, when we get data from cloud, it must be put here
             job.modelName = pymodel.name
             job.resource = "cloud"
-            job.pid = taskid
+            job.cloud_id = taskid
             job.celery_pid = celery_task_id
             job.status = "Running"
             job.put()
