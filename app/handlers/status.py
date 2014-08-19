@@ -375,7 +375,7 @@ class StatusPage(BaseHandler):
                 cloud_task_status = {}
                 for job in jobs:
                     if job.resource == "cloud":
-                        cloud_task_status[job.pid] = None
+                        cloud_task_status[job.cloud_id] = None
                 credentials = self.user_data.getCredentials()
 
                 # Check the status on the remote end
@@ -405,8 +405,8 @@ class StatusPage(BaseHandler):
                         else:
                             job.status = "Failed"
                 elif job.resource == "cloud":
-                            if job.pid in task_status:
-                                job_status = task_status[job.pid]
+                            if job.cloud_id in task_status:
+                                job_status = task_status[job.cloud_id]
                             else:
                                 job_status = None
                             # It frequently happens that describeTasks return None before the job is finsihed.
