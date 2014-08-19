@@ -28,7 +28,7 @@ import traceback
 class SpatialJobWrapper(db.Model):
     # These are all the attributes of a job we use for local storage
     userId = db.StringProperty()
-    pid = db.StringProperty()
+    pid = db.IntegerProperty()
     startTime = db.StringProperty()
     jobName = db.StringProperty()
     modelName = db.StringProperty() # This is a reference to the model. I should probably use a modelId instead. I'm not sure why I store it as a name
@@ -454,7 +454,7 @@ class SpatialPage(BaseHandler):
             exstring = '{0}/backend/wrapper.sh {1}/stdout.log {1}/stderr.log {2}'.format(basedir, dataDir, cmd)
             handle = subprocess.Popen(exstring, shell=True, preexec_fn=os.setsid)
             
-            job.pid = str(handle.pid)
+            job.pid = int(handle.pid)
 
             job.put()
             
