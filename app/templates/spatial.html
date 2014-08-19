@@ -58,18 +58,21 @@
     </div>
 
     <div id="plotRegion" style="display: none;">
-        <div class="row">
-            <div class="span5">
-                Time: <input id="timeSelect" type="range" min="0" max="0" step="0" value="0">
-                <span id="timeSelectDisplay"></span>
-            </div>
-            <div class="span3">
-                Select Trajectory: <select id="trajectorySelect"></select>
-            </div>
-            <div class="span3">
-                <b>Select which species to display:</b>
-                <span id="speciesSelect"></span>
-            </div>
+        <table width="100%">
+            <tr>
+                <td>
+                    Time: <input id="timeSelect" type="range" min="0" max="0" step="0" value="0">
+                    <span id="timeSelectDisplay"></span>
+                </td>
+                <td>
+                    Select Trajectory: <select id="trajectorySelect"></select>
+                </td>
+                <td>
+                    <b>Select which species to display:</b><br />
+                    <span id="speciesSelect"></span>
+                </td>
+            </tr>
+        </table>
         </div>
         <div class="row">
             <table class="span10" style="border: 1px solid rgb(221, 221, 221);">
