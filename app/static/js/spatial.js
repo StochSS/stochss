@@ -154,7 +154,7 @@ Spatial.Controller = Backbone.View.extend(
             for(var i in sortedSpecies) {
                 var specie = sortedSpecies[i];
 
-                var input = $( '<div><input type="radio" name="speciesSelect" value="' + specie + '">' + specie + '</div>' ).appendTo( $( '#speciesSelect' ) ).find( 'input' );
+                var input = $( '<div><input type="radio" name="speciesSelect" value="' + specie + '"> ' + specie + '</div>' ).appendTo( $( '#speciesSelect' ) ).find( 'input' );
 
                 // Register event handler
                 input.click(_.bind(this.handleSpeciesSelect, this));
