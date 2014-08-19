@@ -110,9 +110,9 @@ class BackendWorker(webapp2.RequestHandler):
                     #res = i.run_instances(params,[])
                     res = self.spawn_vms( infra, agent, num_vms, parameters, reservation_id)
 
-                    service.copyCeleryConfigToInstance(res, parameters)
-                    # start celery via ssh
-                    service.startCeleryViaSSH(res, parameters)
+#                    service.copyCeleryConfigToInstance(res, parameters)
+#                    # start celery via ssh
+#                    service.startCeleryViaSSH(res, parameters)
 
                 parameters["num_vms"] = vms_requested
 

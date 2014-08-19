@@ -285,33 +285,33 @@ class EC2Agent(BaseAgent):
       userstr += "rabbitmqctl add_user stochss ucsb\n"
       userstr += 'rabbitmqctl set_permissions -p / stochss ".*" ".*" ".*"\n'
       # userstr += "rabbitmq-server -detached\n"
-    else:
-      # Update celery config file...it should have the correct IP
-      # of the Queue head node, which should already be running.
-      celery_config_filename = os.path.join(
-        os.path.dirname(os.path.abspath(__file__)),
-        "../celeryconfig.py"
-      )
-      # Pass it line by line so theres no weird formatting errors from 
-      # trying to echo a multi-line file directly on the command line
-      with open(celery_config_filename, 'r') as celery_config_file:
-        lines = celery_config_file.readlines()
-        # Make sure we overwrite the file with our first write
-        userstr += "echo '{0}' > /home/ubuntu/celeryconfig.py\n".format(lines[0])
-        for line in lines[1:]:
-          userstr += "echo '{0}' >> /home/ubuntu/celeryconfig.py\n".format(line)
-    # Even the queue head gets a celery worker
-    # NOTE: We only need to use the -n argument to celery command if we are starting
-    #       multiple workers on the same machine. Instead, we are starting one worker
-    #       per machine and letting that one worker execute one task per core, using
-    #       the configuration in celeryconfig.py to ensure that Celery detects the 
-    #       number of cores and enforces this desired behavior.
-    if self.PARAM_WORKER_QUEUE in parameters:
-      userstr+="nohup celery -A tasks worker --autoreload --loglevel=info -Q {0} --workdir /home/ubuntu > /home/ubuntu/nohup.log 2>&1 & \n".format(
-          parameters[self.PARAM_WORKER_QUEUE]
-      )
-    else:
-      userstr+="nohup celery -A tasks worker --autoreload --loglevel=info --workdir /home/ubuntu > /home/ubuntu/nohup.log 2>&1 & \n"
+#    else:
+#      # Update celery config file...it should have the correct IP
+#      # of the Queue head node, which should already be running.
+#      celery_config_filename = os.path.join(
+#        os.path.dirname(os.path.abspath(__file__)),
+#        "../celeryconfig.py"
+#      )
+#      # Pass it line by line so theres no weird formatting errors from 
+#      # trying to echo a multi-line file directly on the command line
+#      with open(celery_config_filename, 'r') as celery_config_file:
+#        lines = celery_config_file.readlines()
+#        # Make sure we overwrite the file with our first write
+#        userstr += "echo '{0}' > /home/ubuntu/celeryconfig.py\n".format(lines[0])
+#        for line in lines[1:]:
+#          userstr += "echo '{0}' >> /home/ubuntu/celeryconfig.py\n".format(line)
+#    # Even the queue head gets a celery worker
+#    # NOTE: We only need to use the -n argument to celery command if we are starting
+#    #       multiple workers on the same machine. Instead, we are starting one worker
+#    #       per machine and letting that one worker execute one task per core, using
+#    #       the configuration in celeryconfig.py to ensure that Celery detects the 
+#    #       number of cores and enforces this desired behavior.
+#    if self.PARAM_WORKER_QUEUE in parameters:
+#      userstr+="nohup celery -A tasks worker --autoreload --loglevel=info -Q {0} --workdir /home/ubuntu > /home/ubuntu/nohup.log 2>&1 & \n".format(
+#          parameters[self.PARAM_WORKER_QUEUE]
+#      )
+#    else:
+#      userstr+="nohup celery -A tasks worker --autoreload --loglevel=info --workdir /home/ubuntu > /home/ubuntu/nohup.log 2>&1 & \n"
     f.write(userstr)
     f.close()
     start_time = datetime.datetime.now()
