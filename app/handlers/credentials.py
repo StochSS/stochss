@@ -37,7 +37,6 @@ class CredentialsPage(BaseHandler):
     def post(self):
 
         params = self.request.POST
-        print "CredentialsPage.post param={0}".format(params)
         
         try:
             # User id is a string
@@ -195,8 +194,11 @@ class CredentialsPage(BaseHandler):
         else:
             try:
                 service = backendservices()
-                params ={"infrastructure":"ec2",
-                     'credentials':credentials}          
+                params = {
+                    "infrastructure": service.INFRA_EC2,
+                    "credentials": credentials,
+                    "key_prefix": service.KEYPREFIX + user_id
+                }
                 result = service.describeMachines(params)
                 return result
             except:
