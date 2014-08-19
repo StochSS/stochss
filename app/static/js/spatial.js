@@ -176,6 +176,8 @@ Spatial.Controller = Backbone.View.extend(
         {
             var species = $( event.target ).val();
 
+            this.selectedSpecies = species;
+
             this.meshDataPreview(this.meshData[species]);
         },
 
