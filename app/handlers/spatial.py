@@ -118,8 +118,8 @@ class SpatialPage(BaseHandler):
             result = {}
             stdout = ''
             stderr = ''
+            complete = ''
             if job.outData is not None:
-                print job.outData
                 try:
                     fstdoutHandle = open(str(job.outData + '/stdout.log'), 'r')
                     stdout = fstdoutHandle.read()
@@ -127,20 +127,23 @@ class SpatialPage(BaseHandler):
                     fstderrHandle = open(str(job.outData + '/stderr.log'), 'r')
                     stderr = fstderrHandle.read()
                     fstderrHandle.close()
+                    if os.path.exists("{0}/results/complete".format(job.outData)):
+                        complete = 'yes'
                 except IOError as e:
                     traceback.print_exc()
                     result['status'] = False
-                    result['msg'] = 'Error running the simulation: stdout/stderr outputd missing.'
+                    result['msg'] = 'Error running the simulation: stdout/stderr outputs missing.'
 
-            result.update({ "id" : int(self.request.get('id')),
-                                "jobStatus" : job.status,
-                                             "resource" : job.resource,
-                                             "modelName" : job.modelName,
-                                             "outData" : job.outData,
-                                             "name" : job.jobName,
-                                             "stdout" : stdout,
-                                             "stderr" : stderr,
-                                             "indata" : json.loads(job.indata) })
+            result.update({"id" : int(self.request.get('id')),
+                           "jobStatus" : job.status,
+                           "complete" : complete,
+                           "resource" : job.resource,
+                           "modelName" : job.modelName,
+                           "outData" : job.outData,
+                           "name" : job.jobName,
+                           "stdout" : stdout,
+                           "stderr" : stderr,
+                           "indata" : json.loads(job.indata) })
 
             self.response.headers['Content-Type'] = 'application/json'
             self.response.write(json.dumps(result))

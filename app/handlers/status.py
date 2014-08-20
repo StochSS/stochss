@@ -392,15 +392,7 @@ class StatusPage(BaseHandler):
                     if res[job.pid] and job.pid:
                         job.status = "Running"
                     else:
-                        try:
-                            fd = os.open("{0}/stderr.log".format(job.outData), os.O_RDONLY)
-                            f = os.fdopen(fd)
-                            stderr = f.read().strip()
-                            f.close()
-                        except:
-                            stderr = '1'
-
-                        if len(stderr) == 0:
+                        if os.path.exists("{0}/results/complete".format(job.outData)):
                             job.status = "Finished"
                         else:
                             job.status = "Failed"
@@ -420,15 +412,7 @@ class StatusPage(BaseHandler):
                                     if job.outData is None:
                                         job.status = 'Finished'
                                     else:
-                                        try:
-                                            fd = os.open("{0}/stderr.log".format(job.outData), os.O_RDONLY)
-                                            f = os.fdopen(fd)
-                                            stderr = f.read().strip()
-                                            f.close()
-                                        except:
-                                            stderr = '1'
-
-                                        if len(stderr) == 0:
+                                        if os.path.exists("{0}/results/complete".format(job.outData)):
                                             job.status = "Finished"
                                         else:
                                             job.status = "Failed"

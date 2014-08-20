@@ -154,6 +154,7 @@ function install_numpy_scipy {
         #CMD="sh install_superpack.sh"
         #echo $CMD
         #eval $CMD
+        export ARCHFLAGS=-Wno-error=unused-command-line-argument-hard-error-in-future
         CMD="sudo pip install numpy scipy matplotlib"
         echo $CMD
         eval $CMD
@@ -180,6 +181,7 @@ function install_h5py {
     fi
 
     if [ "$answer" == 'y' ] || [ "$answer" == 'yes' ]; then
+        export ARCHFLAGS=-Wno-error=unused-command-line-argument-hard-error-in-future
         CMD="sudo pip install h5py"
         echo $CMD
         eval $CMD
@@ -246,7 +248,7 @@ function check_spatial_installation {
     fi
 
     if check_h5py;then
-        echo "H5py detected sucessfully.<br />"
+        echo "H5py detected successfully.<br />"
     else
         if check_pip;then
             echo ""
@@ -255,7 +257,7 @@ function check_spatial_installation {
         fi
         install_h5py
         if check_h5py;then
-            echo "H5py detected sucessfully.<br />"
+            echo "H5py detected successfully.<br />"
         else
             echo "H5py not installed, Failing<br />"
             return 1 #False
