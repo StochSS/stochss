@@ -41,4 +41,9 @@ if isinstance(results, list):
 else:
     with open('{0}/result{1}'.format(output_dir,0),'w') as fd:
         pickle.dump(results, fd)
+cfile = "{0}/complete".format(output_dir)
+print "writing completion file '{0}'".format(cfile)
+with open(cfile,'w') as fd:
+    fd.write('1')
 print "done"
+
