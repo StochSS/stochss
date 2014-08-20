@@ -26,11 +26,7 @@ class backendservices():
     INFRA_EC2 = 'ec2'
     INFRA_CLUSTER = 'cluster'
     WORKER_AMIS = {
-        #INFRA_EC2: 'ami-f0d42898' #oldest first
-        #INFRA_EC2: 'ami-74c21f1c'
-        #INFRA_EC2: 'ami-cafb26a2'
-        #INFRA_EC2: 'ami-f4ee339c'
-        INFRA_EC2: 'ami-244e924c'
+        INFRA_EC2: 'ami-14af717c'
     }
 
     def __init__(self):
@@ -47,7 +43,7 @@ class backendservices():
         This method instantiates celery tasks in the cloud.
 	Returns return value from celery async call and the task ID
         '''
-        logging.info('inside execute task for cloud : Params - %s', str(params))
+        #logging.info('inside execute task for cloud : Params - %s', str(params))
         result = {}
         try:
             from tasks import task,updateEntry
