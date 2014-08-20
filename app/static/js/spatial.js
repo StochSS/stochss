@@ -60,8 +60,16 @@ Spatial.Controller = Backbone.View.extend(
         // This event gets fired when the user selects a csv data file
         meshDataPreview : function(data)
         {
-            this.minVal = data['min'].toExponential(3);
-            this.maxVal = data['max'].toExponential(3);
+            if(String(data['min']).length > 5 || String(data['max']).length > 5)
+            {
+                this.minVal = data['min'].toExponential(3);
+                this.maxVal = data['max'].toExponential(3);
+            }
+            else
+            {
+                this.minVal = String(data['min']);
+                this.maxVal = String(data['max']);
+            }
 
             $( "#minVal" ).text(this.minVal);
             $( "#maxVal" ).text(this.maxVal);
