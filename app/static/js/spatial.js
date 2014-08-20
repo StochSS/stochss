@@ -263,7 +263,7 @@ Spatial.Controller = Backbone.View.extend(
                         return;
                 }
                 
-                if(data['jobStatus'] == 'Finished' && data['stderr'].trim() == '')
+                if(data['jobStatus'] == 'Finished' && data['complete'] == 'yes')
                 {
                     if(data['outData'])
                         $( '#plotRegion' ).show();
