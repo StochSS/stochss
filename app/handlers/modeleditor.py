@@ -799,7 +799,7 @@ def do_import(handler, name, from_file = True, model_class=""):
                 raise ModelError("Could not resolve model parameters.")
             
             # Save the model to the datastore.
-            save_model(model, name, user_id, isSpatial = model.isSpatial)
+            save_model(model, name, user_id, isSpatial = False)
         else:
             model = db.GqlQuery("SELECT * FROM StochKitModelWrapper WHERE is_public = :1 AND model_name = :2", True, model_class).get()
 
