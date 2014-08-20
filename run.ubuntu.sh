@@ -1,13 +1,11 @@
 #!/bin/bash
 
-# Attempt to install StochKit 2.0.8
+# Attempt to install StochKit 2.0.10
 #
-# Install it in the user's home folder by default, to override
+# Install it in the user's home folder by default
 #
 #
 
-
-#read -p "Select a directory to use as StochSS home (leave blank to use current directory): " MY_PATH
 
 MY_PATH="`dirname \"$0\"`"              # relative
 MY_PATH="`( cd \"$MY_PATH\" && pwd )`"  # absolutized and normalized
@@ -33,20 +31,19 @@ fi
 # Check that the dependencies are satisfied
 echo -n "Are dependencies satisfied?... "
 
-count=$(dpkg-query -l gcc g++ make libxml2-dev curl git r-base-core libgsl0-dev | grep '^[a-z]i' | wc -l)
-
-if [ $count != 8 ]; then
-    echo "No"
-    read -p "Do you want me to try to use sudo to install required package(s) (make, gcc, g++, libxml2-dev, curl, git, r-base-core, libgsl0-dev)? (y/n): " answer
+count=$(dpkg-query -l gcc g++ make libxml2-dev curl git r-base-core libgsl0-dev build-essential python-dev python-setuptools cython | grep '^[a-z]i' | wc -l)
+if [ $count != 12 ]; then
+    echo "No [$count/12]"
+    read -p "Do you want me to try to use sudo to install required package(s) (make, gcc, g++, libxml2-dev, curl, git, r-base-core, libgsl0-dev build-essential python-dev python-setuptools cython)? (y/n): " answer
 
     if [ $? != 0 ]; then
         exit -1
     fi
 
     if [ "$answer" == 'y' ] || [ "$answer" == 'yes' ]; then
-        echo "Running 'sudo apt-get install make gcc g++ libxml2-dev curl git r-base-core libgsl0-dev'"
-        sudo apt-get install make gcc g++ libxml2-dev curl git r-base-core libgsl0-dev
-
+        CMD="sudo apt-get install make gcc g++ libxml2-dev curl git r-base-core libgsl0-dev build-essential python-dev python-setuptools cython"
+        echo "Running '$CMD'"
+        eval $CMD
         if [ $? != 0 ]; then
             exit -1
         fi
@@ -56,15 +53,6 @@ else
 fi
 
 #####################
-# Check to see if the 'dolfin' python module is installed and active in this terminal.
-function check_dolfin {
-    RET=`python -c "import dolfin" 2>/dev/null`
-    RC=$?
-    if [[ $RC == 0 ]];then
-        return 0 #True
-    fi
-    return 1 #False
-}
 
 function check_pyurdme_sub {
     RET=`python -c "import pyurdme" 2>/dev/null`
@@ -114,39 +102,94 @@ function download_pyurdme {
     fi
 }
 
-function install_pyurdme_deps {
-    echo "We need to add the the following ppa: 'ppa:fenics-packages/fenics"
-    echo "And install the following packages: git build-essential python-dev python-setuptools python-matplotlib python-numpy python-scipy python-software-properties cython python-h5py fenics "
+function check_lib {
+    if [ -z "$1" ];then
+        return 1 #False
+    fi
+    echo "Checking for $1"
+    RET=`python -c "import $1" 2>/dev/null`
+    RC=$?
+    if [[ $RC == 0 ]];then
+        echo "$1 detected successfully"
+        return 0 #True
+    fi
+    echo "$1 not found"
+    return 1 #False
+}
+function install_lib {
+    if [ -z "$1" ];then
+        return 1 #False
+    fi
+    echo "We need install the following packages: $1"
     read -p "Do you want me to try to use sudo to install required package(s) (y/n): " answer
-
     if [ $? != 0 ]; then
         exit -1
     fi
+    if [ "$answer" == 'y' ] || [ "$answer" == 'yes' ]; then
+        CMD="sudo apt-get -y install $1"
+        echo $CMD
+        eval $CMD
+        if [ $? != 0 ]; then
+            exit -1
+        fi
+        echo "$1 installed successfully"
+    else
+        echo "Exiting"
+        exit -1
+    fi
+}
 
+function check_and_install_deps {
+    if ! check_lib "h5py";then
+        install_lib "python-h5py"
+    fi
+    if ! check_lib "numpy";then
+        install_lib "python-numpy"
+    fi
+    if ! check_lib "scipy";then
+        install_lib "python-scipy"
+    fi
+    if ! check_lib "matplotlib";then
+        install_lib "python-matplotlib"
+    fi
+}
+
+function check_dolfin {
+    RET=`python -c "import dolfin" 2>/dev/null`
+    RC=$?
+    if [[ $RC == 0 ]];then
+        return 0 #True
+    fi
+    return 1 #False
+}
+function install_dolfin {
+    echo "We need to add the the following ppa: 'ppa:fenics-packages/fenics"
+    echo "And install the following packages: python-software-properties fenics "
+    read -p "Do you want me to try to use sudo to install required package(s) (y/n): " answer
+    if [ $? != 0 ]; then
+        exit -1
+    fi
     if [ "$answer" == 'y' ] || [ "$answer" == 'yes' ]; then
         echo "Running 'sudo apt-get install ..."
-        sudo apt-get -y install git
-        sudo apt-get -y install build-essential python-dev
-        sudo apt-get -y install python-setuptools
-        sudo apt-get -y install python-matplotlib python-numpy python-scipy
-        sudo apt-get -y install make
         sudo apt-get -y install python-software-properties
         sudo add-apt-repository ppa:fenics-packages/fenics
         sudo apt-get update
         sudo apt-get -y install fenics
-        sudo apt-get -y install cython python-h5py
-
+        return 0 # True
         if [ $? != 0 ]; then
             exit -1
         fi
+    else
+        exit -1
     fi
 }
 
 function check_spatial_installation_sub {
+    check_and_install_deps
     if check_dolfin; then
         echo "FEniCS/Dolfin detected successfully"
     else
-        echo "FEniCS/Dolfin detected successfully not installed, please check installation instructions."
+        echo "FEniCS/Dolfin detected successfully not installed "
         return 1 #False
     fi
 
