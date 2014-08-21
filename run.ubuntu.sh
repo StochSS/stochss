@@ -41,7 +41,7 @@ if [ $count != 12 ]; then
     fi
 
     if [ "$answer" == 'y' ] || [ "$answer" == 'yes' ]; then
-        CMD="sudo apt-get install make gcc g++ libxml2-dev curl git r-base-core libgsl0-dev build-essential python-dev python-setuptools cython"
+        CMD="sudo apt-get -y install make gcc g++ libxml2-dev curl git r-base-core libgsl0-dev build-essential python-dev python-setuptools cython"
         echo "Running '$CMD'"
         eval $CMD
         if [ $? != 0 ]; then
@@ -184,15 +184,22 @@ function install_dolfin {
     fi
 }
 
-function check_spatial_installation_sub {
+function check_spatial_installation {
     check_and_install_deps
+    echo "Checking for FEniCS/Dolfin"
     if check_dolfin; then
         echo "FEniCS/Dolfin detected successfully"
     else
-        echo "FEniCS/Dolfin detected successfully not installed "
-        return 1 #False
+        install_dolfin
+        if check_dolfin; then
+            echo "FEniCS/Dolfin detected successfully"
+        else
+            echo "FEniCS/Dolfin not installed"
+            return 1 #False
+        fi
     fi
 
+    echo "Checking for PyURDME"
     if check_pyurdme; then
         echo "PyURDME detected successfully"
     else
@@ -208,18 +215,6 @@ function check_spatial_installation_sub {
     return 0 #True
 }
 
-
-function check_spatial_installation {
-    if check_spatial_installation_sub; then
-        return 0 #True
-    else
-        install_pyurdme_deps
-        if check_spatial_installation_sub; then
-            return 0 #True
-        fi
-    fi
-    return 1 #False
-}
 #####################
 
 if check_spatial_installation;then
@@ -283,7 +278,14 @@ echo -n "Testing if Stochoptim built... "
 
 rm -r "$rundir" >& /dev/null
 
-if Rscript --vanilla "$STOCHOPTIM/exec/mcem2.r" --model "$STOCHOPTIM/inst/extdata/birth_death_MAmodel.R" --data "$STOCHOPTIM/birth_death_MAdata.txt" --steps "" --seed 1 --cores 1 --K.ce 1000 --K.em 100 --K.lik 10000 --K.cov 10000 --rho 0.01 --perturb 0.25 --alpha 0.25 --beta 0.25 --gamma 0.25 --k 3 --pcutoff 0.05 --qcutoff 0.005 --numIter 10 --numConverge 1 --command 'bash' >& /dev/null; then
+function check_if_StochOptim_Installed {
+   CMD="Rscript --vanilla \"$STOCHOPTIM/exec/mcem2.r\" --model \"$STOCHOPTIM/inst/extdata/birth_death_MAmodel.R\" --data \"$STOCHOPTIM/birth_death_MAdata.txt\" --steps \"\" --seed 1 --cores 1 --K.ce 1000 --K.em 100 --K.lik 10000 --K.cov 10000 --rho 0.01 --perturb 0.25 --alpha 0.25 --beta 0.25 --gamma 0.25 --k 3 --pcutoff 0.05 --qcutoff 0.005 --numIter 10 --numConverge 1 --command 'bash' >& /dev/null"
+   echo $CMD
+   eval $CMD
+   return $?
+}
+
+if check_if_StochOptim_Installed; then
     echo "Yes"
     echo "$STOCHOPTIM_VERSION found in $STOCHOPTIM"
 else
@@ -312,7 +314,7 @@ else
     export R_LIBS="$STOCHOPTIM/library"
 
 # Test that StochKit was installed successfully by running it on a sample model
-    if Rscript --vanilla "$STOCHOPTIM/exec/mcem2.r" --model "$STOCHOPTIM/inst/extdata/birth_death_MAmodel.R" --data "$STOCHOPTIM/birth_death_MAdata.txt" --steps "" --seed 1 --cores 1 --K.ce 1000 --K.em 100 --K.lik 10000 --K.cov 10000 --rho 0.01 --perturb 0.25 --alpha 0.25 --beta 0.25 --gamma 0.25 --k 3 --pcutoff 0.05 --qcutoff 0.005 --numIter 10 --numConverge 1 --command 'bash' >& /dev/null; then
+    if check_if_StochOptim_Installed; then
 	echo "Success!"
     else
 	echo "Failed"
