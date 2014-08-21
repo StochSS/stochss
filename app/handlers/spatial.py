@@ -48,14 +48,14 @@ class SpatialJobWrapper(db.Model):
 
     # More attributes can obvs. be added
     # The delete operator here is a little fancy. When the item gets deleted from the GOogle db, we need to go clean up files stored locally and remotely
-    def delete(self):
+    def delete(self, credentials=None):
         service = backend.backendservice.backendservices()
         
         if self.zipFileName:
             if os.path.exists(self.zipFileName):
                 os.remove(self.zipFileName)
 
-        self.stop()
+        self.stop(credentials=credentials)
         
         #service.deleteTaskLocal([self.pid])
 
@@ -119,7 +119,9 @@ class SpatialPage(BaseHandler):
             stdout = ''
             stderr = ''
             complete = ''
-            if job.outData is not None:
+            if job.outData is None:
+                complete = 'yes'
+            else:
                 try:
                     fstdoutHandle = open(str(job.outData + '/stdout.log'), 'r')
                     stdout = fstdoutHandle.read()
@@ -262,7 +264,11 @@ class SpatialPage(BaseHandler):
             job = SpatialJobWrapper.get_by_id(jobID)
 
             if job.userId == self.user.user_id():
-                job.delete()
+                credentials = self.user_data.getCredentials()
+                job.delete(credentials={
+                        'AWS_ACCESS_KEY_ID': credentials['EC2_ACCESS_KEY'],
+                        'AWS_SECRET_ACCESS_KEY': credentials['EC2_SECRET_KEY']
+                    })
             else:
                 self.response.write(json.dumps({"status" : False,
                                                 "msg" : "No permissions to delete this job (this should never happen)"}))

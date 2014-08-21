@@ -18,7 +18,7 @@ ODE_VERSION="ode-1.0.1"
 export STOCHKIT_ODE="$STOCHSS_HOME/$ODE_VERSION"
 STOCHOPTIM_VERSION="stochoptim-0.5-1"
 export STOCHOPTIM="$STOCHSS_HOME/$STOCHOPTIM_VERSION"
-export R_LIBS="$STOCHSS_HOME/stochoptim/library"
+export R_LIBS="$STOCHOPTIM/library"
 
 echo "<html>"
 echo "<body>"
@@ -152,7 +152,7 @@ function install_lib {
     fi
 
     if [ "$answer" == 'y' ] || [ "$answer" == 'yes' ]; then
-        export ARCHFLAGS=-Wno-error=unused-command-line-argument-hard-error-in-future
+        export ARCHFLAGS='-Wno-error=unused-command-line-argument-hard-error-in-future'
         CMD="sudo pip install $1"
         echo $CMD
         eval $CMD
@@ -165,7 +165,7 @@ function check_and_install_dependencies {
     deps=("numpy" "scipy" "matplotlib" "h5py")
     for dep in "${deps[@]}"
     do
-        echo "Checking for $dep"
+        echo "Checking for $dep<br />"
         if check_for_lib "$dep";then
             echo "$dep detected successfully.<br />"
         else
@@ -183,10 +183,10 @@ function check_and_install_dependencies {
 
 function check_pip {
     if which pip > /dev/null;then
-        echo "pip is installed on your system, using it"
+        echo "pip is installed on your system, using it<br />"
         return 0 #True
     else
-        echo "pip is not installed on your system"
+        echo "pip is not installed on your system<br />"
         return 1 #False
     fi
 }
@@ -307,7 +307,17 @@ echo -n "Testing if Stochoptim built... "
 
 rm -r "$rundir" >& /dev/null
 
-if Rscript --vanilla "$STOCHOPTIM/exec/mcem2.r" --model "$STOCHOPTIM/inst/extdata/birth_death_MAmodel.R" --data "$STOCHOPTIM/birth_death_MAdata.txt" --steps "" --seed 1 --cores 1 --K.ce 1000 --K.em 100 --K.lik 10000 --K.cov 10000 --rho 0.01 --perturb 0.25 --alpha 0.25 --beta 0.25 --gamma 0.25 --k 3 --pcutoff 0.05 --qcutoff 0.005 --numIter 10 --numConverge 1 --command 'bash' >& /dev/null; then
+
+function check_if_StochOptim_Installed {
+    export R_LIBS="$STOCHOPTIM/library"
+    CMD="Rscript --vanilla \"$STOCHOPTIM/exec/mcem2.r\" --model \"$STOCHOPTIM/inst/extdata/birth_death_MAmodel.R\" --data \"$STOCHOPTIM/birth_death_MAdata.txt\" --steps \"\" --seed 1 --cores 1 --K.ce 1000 --K.em 100 --K.lik 10000 --K.cov 10000 --rho 0.01 --perturb 0.25 --alpha 0.25 --beta 0.25 --gamma 0.25 --k 3 --pcutoff 0.05 --qcutoff 0.005 --numIter 10 --numConverge 1 --command 'bash' >& /dev/null"
+    #echo $CMD
+    eval $CMD
+    RET=$?
+    return "$RET"
+}
+
+if check_if_StochOptim_Installed; then
     echo "Yes <br />"
     echo "$STOCHOPTIM_VERSION found in $STOCHOPTIM <br />"
 else
@@ -323,8 +333,19 @@ else
     echo " stderr in $STOCHSS_HOME/stderr.log <br />"
     echo " <font color=\"blue\"><h3>This process will take at least 5 minutes to complete, please be patient</h3></font>"
 
+    
     tar -xzf "$STOCHOPTIM.tgz"
+    RET=$?
+    if [[ $RET != 0 ]] ;then
+        echo "Failed to: tar -xzf \"$STOCHOPTIM.tgz\", exiting"
+        exit -1
+    fi
     mkdir "$STOCHOPTIM/library"
+    RET=$?
+    if [[ $RET != 0 ]] ;then
+        echo "Failed to: mkdir \"$STOCHOPTIM/library\", exiting"
+        exit -1
+    fi
 
     wd=`pwd`
 
@@ -335,13 +356,13 @@ else
 
     export R_LIBS="$STOCHOPTIM/library"
 
-# Test that StochKit was installed successfully by running it on a sample model
-    if Rscript --vanilla "$STOCHOPTIM/exec/mcem2.r" --model "$STOCHOPTIM/inst/extdata/birth_death_MAmodel.R" --data "$STOCHOPTIM/birth_death_MAdata.txt" --steps "" --seed 1 --cores 1 --K.ce 1000 --K.em 100 --K.lik 10000 --K.cov 10000 --rho 0.01 --perturb 0.25 --alpha 0.25 --beta 0.25 --gamma 0.25 --k 3 --pcutoff 0.05 --qcutoff 0.005 --numIter 10 --numConverge 1 --command 'bash' >& /dev/null; then
-	echo "Success!<br />"
+    # Test that StochKit was installed successfully by running it on a sample model
+    if check_if_StochOptim_Installed; then
+    	echo "Success!<br />"
     else
-	echo "Failed<br />"
-	echo "$STOCHOPTIM failed to install. Consult logs above for errors<br />"
-	exit -1
+	    echo "Failed<br />"
+	    echo "$STOCHOPTIM failed to install. Consult logs above for errors<br />"
+	    exit -1
     fi
 fi
 
