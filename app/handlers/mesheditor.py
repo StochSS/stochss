@@ -69,6 +69,11 @@ class MeshEditorPage(BaseHandler):
                       'unit_cube_with_membrane_mesh.xml',
                       'unit_sphere_with_membrane_mesh.xml' ]
 
+            names = { 'coli_with_membrane_mesh.xml' : 'Here\'s some rockin\' information about this model1',
+                             'cylinder_mesh.xml' : 'Here\'s some rockin\' information about this model0',
+                             'unit_cube_with_membrane_mesh.xml' : 'Here\'s some rockin\' information about this model2',
+                             'unit_sphere_with_membrane_mesh.xml' : 'Here\'s some rockin\' info' }
+
             descriptions = { 'coli_with_membrane_mesh.xml' : 'Here\'s some rockin\' information about this model1',
                              'cylinder_mesh.xml' : 'Here\'s some rockin\' information about this model0',
                              'unit_cube_with_membrane_mesh.xml' : 'Here\'s some rockin\' information about this model2',
@@ -97,7 +102,7 @@ class MeshEditorPage(BaseHandler):
                 meshFile.close()
 
                 meshDb.userId = self.user.user_id()
-                meshDb.name = baseName
+                meshDb.name = names[fileName]
                 meshDb.description = descriptions[fileName]
                 meshDb.meshFileId = int(meshFileId)
                 meshDb.subdomainsFileId = int(subdomainsFileId)
