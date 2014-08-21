@@ -445,9 +445,15 @@ class ModelEditorPage(BaseHandler):
 
         db_models = db.GqlQuery("SELECT * FROM StochKitModelWrapper WHERE user_id = :1", self.user.user_id())
         
-        all_models = [{ "name" : row.model.name, "units" : row.model.units, "isSpatial" : row.isSpatial, "spatial" : row.spatial } for row in db_models]
+        all_models = []
+        isSpatial = False
+        model_edited = self.get_session_property('model_edited')
+        for row in db_models:
+            if model_edited is not None and model_edited.name == row.model.name:
+                isSpatial = row.isSpatial
+            all_models.append({ "name" : row.model.name, "units" : row.model.units, "isSpatial" : row.isSpatial, "spatial" : row.spatial }) 
         
-        result.update({ "all_models" : all_models })
+        result.update({ "all_models" : all_models, "isSpatial" : isSpatial   })
 
         print "post", result
 
