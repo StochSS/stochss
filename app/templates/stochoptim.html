@@ -42,13 +42,14 @@
                         <th>Name</th>
                         <th>Units</th>
                         <th>Spatial</th>
+                        <th>Message</th>
                     </tr>
                 </thead>
                 <tbody>
                     <% for(var model in models) { %>
                     <tr>
                         <td>
-                            <input type="radio" name="model_to_simulate" value="<%= models[model].attributes.id %>" <%= (models[model].attributes.units == 'concentration' || models[model].attributes.isSpatial) ? 'disabled' : 'checked' %>/> <%= (models[model].attributes.units == 'concentration') ? '<span style="color : red;">&nbsp;&#45;&#45; Concentration models incompatible with parameter estimation code</span>' : '' %>
+                            <input type="radio" name="model_to_simulate" value="<%= models[model].attributes.id %>" <%= (models[model].attributes.units == 'concentration' || models[model].attributes.isSpatial) ? 'disabled' : 'checked' %>/>
                         </td>
                         <td>
                             <%= models[model].attributes.name %>
@@ -63,13 +64,18 @@
                             False
                             <% } %>
                         </td>
+                        <td>
+                          <%= (models[model].attributes.units == 'population' && !models[model].attributes.isSpatial) ?  '<span style="color : green;">Model compatible with Stochoptim </span>' : '' %>
+                          <%= (models[model].attributes.units == 'concentration') ? '<span style="color : red;">StochOptim does not work with concentration models </span>' : '' %>
+                          <%= (models[model].attributes.isSpatial) ? '<span style="color : red;">StochOptim does not work with spatial models </span>' : '' %>
+                        </td>
                     </tr>
                     <% } %>
                 </tbody>
             </table>
 
             <br />
-            <button id="next" type="submit" class="btn-primary btn-large">Next&raquo;</button>
+            <button id="next" type="submit" class="btn-primary btn-large" disabled>Next&raquo;</button>
             <% } else { %>
             <h2>There are no models in the system</h2><br />
             <a style="font-size:18px;" href="/modeleditor"> Create a new model? </a>

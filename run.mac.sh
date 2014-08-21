@@ -212,17 +212,17 @@ function install_pip {
 }
 
 function check_spatial_installation {
+    if check_and_install_dependencies;then
+        echo "All spatial dependencies detected"
+    else
+        return 1 #False
+    fi
+
     if check_dolfin; then
         echo "FEniCS/Dolfin detected successfully.<br />"
     else
         echo "FEniCS/Dolfin not installed, please check installation instructions.<br />"
         echo "You can download FEniCS from http://fenicsproject.org/<br />"
-        return 1 #False
-    fi
-
-    if check_and_install_dependencies;then
-        echo "All spatial dependencies detected"
-    else
         return 1 #False
     fi
 

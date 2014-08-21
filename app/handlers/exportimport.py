@@ -119,22 +119,22 @@ class SuperZip:
         if model.user_id == "":
             return
 
-        meshWrapperDb = mesheditor.MeshWrapper.get_by_id(model.spatial['mesh_wrapper_id'])
-        meshData = fileserver.FileManager.getFile(self, meshWrapperDb.meshFileId, noFile = False)
-        if meshWrapperDb.subdomainsFileId:
-            subdomainsData = fileserver.FileManager.getFile(self, meshWrapperDb.subdomainsFileId, noFile = False)
+        if model.isSpatial:
+            jsonModel["isSpatial"] = model.isSpatial
 
-        jsonModel["isSpatial"] = model.isSpatial
-        jsonModel["spatial"] = model.spatial
+            meshWrapperDb = mesheditor.MeshWrapper.get_by_id(model.spatial['mesh_wrapper_id'])
+            meshData = fileserver.FileManager.getFile(self, meshWrapperDb.meshFileId, noFile = False)
+            meshFileName = self.addBytes('models/data/{0}.mesh.xml'.format(model.model_name), meshData['data'])
+            jsonModel["meshFile"] = meshFileName;
+            if meshWrapperDb.subdomainsFileId:
+                subdomainsData = fileserver.FileManager.getFile(self, meshWrapperDb.subdomainsFileId, noFile = False)
+                subdomainsFileName = self.addBytes('models/data/{0}.subdomains.txt'.format(model.model_name), subdomainsData['data'])
+                jsonModel["subdomainsFile"] = subdomainsFileName;
+
+            jsonModel["spatial"] = model.spatial
+
         jsonModel["units"] = model.model.units
         jsonModel["model"] = self.addBytes('models/data/{0}.xml'.format(model.model_name), model.model.serialize())
-
-        meshFileName = self.addBytes('models/data/{0}.mesh.xml'.format(model.model_name), meshData['data'])
-        jsonModel["meshFile"] = meshFileName;
-       
-        if meshWrapperDb.subdomainsFileId:
-            subdomainsFileName = self.addBytes('models/data/{0}.subdomains.txt'.format(model.model_name), subdomainsData['data'])
-            jsonModel["subdomainsFile"] = subdomainsFileName;
 
         self.addBytes('models/{0}.json'.format(model.model_name), json.dumps(jsonModel, sort_keys=True, indent=4, separators=(', ', ': ')))
 
@@ -288,8 +288,8 @@ class SuperZip:
             outputLocation = self.addFolder('spatialJobs/data/{0}'.format(job.jobName), job.outData)
             jsonJob["outData"] = outputLocation
 
-        jsonJob["stdout"] = "{0}/stdout".format(outputLocation)
-        jsonJob["stderr"] = "{0}/stderr".format(outputLocation)
+            jsonJob["stdout"] = "{0}/stdout".format(outputLocation)
+            jsonJob["stderr"] = "{0}/stderr".format(outputLocation)
 
         self.addBytes('spatialJobs/{0}.json'.format(job.jobName), json.dumps(jsonJob, sort_keys=True, indent=4, separators=(', ', ': ')))
         pass
