@@ -277,6 +277,11 @@ else
     wd=`pwd`
     cd "$STOCHKIT_PREFIX"
     tar -xzf "$STOCHKIT_VERSION.tgz"
+    RET=$?
+    if [[ $RET != 0 ]] ;then
+        echo "Failed to: tar -xzf \"$STOCHKIT_VERSION.tgz\", exiting"
+        exit -1
+    fi
     tmpdir=$(mktemp -d /tmp/tmp.XXXXXX)
     mv "$STOCHKIT_HOME" "$tmpdir/"
     cd "$tmpdir/$STOCHKIT_VERSION"
@@ -389,6 +394,11 @@ else
     wd=`pwd`
     tmpdir=$(mktemp -d /tmp/tmp.XXXXXX)
     tar -xzf "$STOCHKIT_ODE.tgz"
+    RET=$?
+    if [[ $RET != 0 ]] ;then
+        echo "Failed to: tar -xzf \"$STOCHKIT_ODE.tgz\", exiting"
+        exit -1
+    fi
     mv "$STOCHKIT_ODE" "$tmpdir"
     cd "$tmpdir/$ODE_VERSION/cvodes"
     tar -xzf "cvodes-2.7.0.tar.gz"
