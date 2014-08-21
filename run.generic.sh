@@ -56,7 +56,7 @@ ODE_VERSION="ode-1.0.1"
 export STOCHKIT_ODE="$STOCHSS_HOME/$ODE_VERSION"
 STOCHOPTIM_VERSION="stochoptim-0.5-1"
 export STOCHOPTIM="$STOCHSS_HOME/$STOCHOPTIM_VERSION"
-export R_LIBS="$STOCHSS_HOME/stochoptim/library"
+export R_LIBS="$STOCHOPTIM/library"
 
 echo -n "Testing if StochKit2 built... "
 
@@ -112,7 +112,16 @@ echo -n "Testing if Stochoptim built... "
 
 rm -r "$rundir" >& /dev/null
 
-if Rscript --vanilla "$STOCHOPTIM/exec/mcem2.r" --model "$STOCHOPTIM/inst/extdata/birth_death_MAmodel.R" --data "$STOCHOPTIM/birth_death_MAdata.txt" --steps "" --seed 1 --cores 1 --K.ce 1000 --K.em 100 --K.lik 10000 --K.cov 10000 --rho 0.01 --perturb 0.25 --alpha 0.25 --beta 0.25 --gamma 0.25 --k 3 --pcutoff 0.05 --qcutoff 0.005 --numIter 10 --numConverge 1 --command 'bash' >& /dev/null; then
+function check_if_StochOptim_Installed {
+    export R_LIBS="$STOCHOPTIM/library"
+    CMD="Rscript --vanilla \"$STOCHOPTIM/exec/mcem2.r\" --model \"$STOCHOPTIM/inst/extdata/birth_death_MAmodel.R\" --data \"$STOCHOPTIM/birth_death_MAdata.txt\" --steps \"\" --seed 1 --cores 1 --K.ce 1000 --K.em 100 --K.lik 10000 --K.cov 10000 --rho 0.01 --perturb 0.25 --alpha 0.25 --beta 0.25 --gamma 0.25 --k 3 --pcutoff 0.05 --qcutoff 0.005 --numIter 10 --numConverge 1 --command 'bash' >& /dev/null"
+    #echo $CMD
+    eval $CMD
+    RET=$?
+    return "$RET"
+}
+
+if check_if_StochOptim_Installed; then
     echo "Yes"
     echo "$STOCHOPTIM_VERSION found in $STOCHOPTIM"
 else
@@ -129,7 +138,17 @@ else
     echo " * This process will take at least 5 minutes to complete, please be patient *"
 
     tar -xzf "$STOCHOPTIM.tgz"
+    RET=$?
+    if [[ $RET != 0 ]] ;then
+        echo "Failed to: tar -xzf \"$STOCHOPTIM.tgz\", exiting"
+        exit -1
+    fi
     mkdir "$STOCHOPTIM/library"
+    RET=$?
+    if [[ $RET != 0 ]] ;then
+        echo "Failed to: mkdir \"$STOCHOPTIM/library\", exiting"
+        exit -1
+    fi
 
     wd=`pwd`
 
@@ -140,13 +159,13 @@ else
 
     export R_LIBS="$STOCHOPTIM/library"
 
-# Test that StochKit was installed successfully by running it on a sample model
-    if Rscript --vanilla "$STOCHOPTIM/exec/mcem2.r" --model "$STOCHOPTIM/inst/extdata/birth_death_MAmodel.R" --data "$STOCHOPTIM/birth_death_MAdata.txt" --steps "" --seed 1 --cores 1 --K.ce 1000 --K.em 100 --K.lik 10000 --K.cov 10000 --rho 0.01 --perturb 0.25 --alpha 0.25 --beta 0.25 --gamma 0.25 --k 3 --pcutoff 0.05 --qcutoff 0.005 --numIter 10 --numConverge 1 --command 'bash' >& /dev/null; then
-	echo "Success!"
+    # Test that StochOptim was installed successfully by running it on a sample model
+    if check_if_StochOptim_Installed; then
+	    echo "Success!"
     else
-	echo "Failed"
-	echo "$STOCHOPTIM failed to install. Consult logs above for errors"	
-	exit -1
+	    echo "Failed"
+	    echo "$STOCHOPTIM failed to install. Consult logs above for errors"	
+	    exit -1
     fi
 fi
 
