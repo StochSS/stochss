@@ -119,7 +119,9 @@ class SpatialPage(BaseHandler):
             stdout = ''
             stderr = ''
             complete = ''
-            if job.outData is not None:
+            if job.outData is None:
+                complete = 'yes'
+            else:
                 try:
                     fstdoutHandle = open(str(job.outData + '/stdout.log'), 'r')
                     stdout = fstdoutHandle.read()
