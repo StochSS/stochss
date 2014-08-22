@@ -31,17 +31,17 @@ fi
 # Check that the dependencies are satisfied
 echo -n "Are dependencies satisfied?... "
 
-count=$(dpkg-query -l gcc g++ make libxml2-dev curl git r-base-core libgsl0-dev build-essential python-dev python-setuptools cython | grep '^[a-z]i' | wc -l)
+count=$(dpkg-query -l gcc gcc-multilib g++ make libxml2-dev curl git r-base-core libgsl0-dev build-essential python-dev python-setuptools cython | grep '^[a-z]i' | wc -l)
 if [ $count != 12 ]; then
     echo "No [$count/12]"
-    read -p "Do you want me to try to use sudo to install required package(s) (make, gcc, g++, libxml2-dev, curl, git, r-base-core, libgsl0-dev build-essential python-dev python-setuptools cython)? (y/n): " answer
+    read -p "Do you want me to try to use sudo to install required package(s) (make, gcc-multilib, gcc, g++, libxml2-dev, curl, git, r-base-core, libgsl0-dev, build-essential, python-dev, python-setuptools, cython)? (y/n): " answer
 
     if [ $? != 0 ]; then
         exit -1
     fi
 
     if [ "$answer" == 'y' ] || [ "$answer" == 'yes' ]; then
-        CMD="sudo apt-get -y install make gcc g++ libxml2-dev curl git r-base-core libgsl0-dev build-essential python-dev python-setuptools cython"
+        CMD="sudo apt-get -y install make gcc-multilib gcc g++ libxml2-dev curl git r-base-core libgsl0-dev build-essential python-dev python-setuptools cython"
         echo "Running '$CMD'"
         eval $CMD
         if [ $? != 0 ]; then
