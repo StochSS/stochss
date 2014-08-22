@@ -252,6 +252,27 @@ else
 fi
 #################
 
+function retry_command {
+    if [ -z "$1" ];then
+        return 1 #False
+    fi
+
+    for i in `seq 1 3`;
+    do
+        echo "$1"
+        eval "$1"
+        RET=$?
+        if [[ $RET != 0 ]] ;then
+            echo "Failed to execute: \"$1\""
+        else
+            return 0 # True
+        fi
+    done
+
+    echo "Failed to execute: \"$1\", Exiting"
+    exit -1
+}
+
 echo -n "Testing if StochKit2 built... "
 
 rundir=$(mktemp -d /tmp/tmp.XXXXXX)
@@ -276,12 +297,7 @@ else
     echo "Building StochKit<br />"
     wd=`pwd`
     cd "$STOCHKIT_PREFIX"
-    tar -xzf "$STOCHKIT_VERSION.tgz"
-    RET=$?
-    if [[ $RET != 0 ]] ;then
-        echo "Failed to: tar -xzf \"$STOCHKIT_VERSION.tgz\", exiting"
-        exit -1
-    fi
+    retry_command "tar -xzf \"$STOCHKIT_VERSION.tgz\""
     tmpdir=$(mktemp -d /tmp/tmp.XXXXXX)
     mv "$STOCHKIT_HOME" "$tmpdir/"
     cd "$tmpdir/$STOCHKIT_VERSION"
@@ -339,12 +355,7 @@ else
     echo " <font color=\"blue\"><h3>This process will take at least 5 minutes to complete, please be patient</h3></font>"
 
     
-    tar -xzf "$STOCHOPTIM.tgz"
-    RET=$?
-    if [[ $RET != 0 ]] ;then
-        echo "Failed to: tar -xzf \"$STOCHOPTIM.tgz\", exiting"
-        exit -1
-    fi
+    retry_command "tar -xzf \"$STOCHOPTIM.tgz\""
     mkdir "$STOCHOPTIM/library"
     RET=$?
     if [[ $RET != 0 ]] ;then
@@ -393,15 +404,10 @@ else
     echo "<font color=\"blue\"><h3>This process should take about a minute to complete, please be patient</h3></font><br />"
     wd=`pwd`
     tmpdir=$(mktemp -d /tmp/tmp.XXXXXX)
-    tar -xzf "$STOCHKIT_ODE.tgz"
-    RET=$?
-    if [[ $RET != 0 ]] ;then
-        echo "Failed to: tar -xzf \"$STOCHKIT_ODE.tgz\", exiting"
-        exit -1
-    fi
+    retry_command "tar -xzf \"$STOCHKIT_ODE.tgz\""
     mv "$STOCHKIT_ODE" "$tmpdir"
     cd "$tmpdir/$ODE_VERSION/cvodes"
-    tar -xzf "cvodes-2.7.0.tar.gz"
+    retry_command "tar -xzf \"cvodes-2.7.0.tar.gz\""
     cd "cvodes-2.7.0"
     ./configure --prefix="$PWD/cvodes" 1>"$stdout" 2>"$stderr"
     if [ $? != 0 ]; then
