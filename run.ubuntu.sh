@@ -32,13 +32,14 @@ fi
 echo -n "Are dependencies satisfied?... "
 
 PKGS="gcc g++ make libxml2-dev curl git r-base-core libgsl0-dev build-essential python-dev python-setuptools cython"
-if [ getconf LONG_BIT != 64]; then
+if [ `getconf LONG_BIT` != 64 ]; then
     PKGS="gcc-multilib $PKGS"
 fi
 
+number_of_pkgs=`echo $PKGS | wc -w`
 count=$(dpkg-query -l $PKGS | grep '^[a-z]i' | wc -l)
-if [ $count != 12 ]; then
-    echo "No [$count/12]"
+if [ $count != $number_of_pkgs ]; then
+    echo "No $count of $number_of_pkgs packages installed"
     read -p "Do you want me to try to use sudo to install required package(s) ($PKGS)? (y/n): " answer
 
     if [ $? != 0 ]; then
