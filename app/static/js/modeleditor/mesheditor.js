@@ -162,7 +162,7 @@ MeshEditor.Controller = Backbone.View.extend(
 
             if(species.length > 0)
             {
-                this.data.initialConditions[icName] = { type : "place", species : species[0], x : 0.0, y : 0.0, z : 0.0, count : 0 };
+                this.data.initialConditions[icName] = { type : "scatter", subdomain : this.data.subdomains[0], species : species[0], count : 0 };
 
                 $.ajax( { url : '/modeleditor/mesheditor',
                           type : 'POST',
@@ -371,7 +371,7 @@ MeshEditor.Controller = Backbone.View.extend(
 <i class=\"icon-remove\"></i> \
 </button> \
 </td> \
-<td><select class=\"type input-small\"></select></td> \
+<td><select class=\"type\"></select></td> \
 <td><select class=\"species input-small\"></select></td> \
 <td class=\"custom\"></td> \
 </tr>";
@@ -381,7 +381,11 @@ MeshEditor.Controller = Backbone.View.extend(
 
             var data = this.data;
 
-            var possibleTypes = ["place", "scatter", "distribute"];
+            var possibleTypes = ["scatter", "place", "distribute"];
+
+            var possibleNames = { scatter : "Scatter",
+                                  place : "Place",
+                                  distribute : "Distribute Uniformly" };
 
             var typeSelect = element.find( '.type' ).empty();
             var speciesSelect = element.find( '.species' ).empty();
@@ -393,7 +397,7 @@ MeshEditor.Controller = Backbone.View.extend(
 
             for(var i in possibleTypes)
             {
-                var option = $( '<option value="' + possibleTypes[i] + '">' + possibleTypes[i] + '</option>' ).appendTo( typeSelect );
+                var option = $( '<option value="' + possibleTypes[i] + '">' + possibleNames[possibleTypes[i]] + '</option>' ).appendTo( typeSelect );
 
                 if(data.initialConditions[initialConditionKey].type == possibleTypes[i])
                 {
