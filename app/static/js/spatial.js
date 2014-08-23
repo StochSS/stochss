@@ -78,7 +78,7 @@ Spatial.Controller = Backbone.View.extend(
             var scene = new THREE.Scene();
             var width = dom.width();
             var height = 0.75 * width;
-            var camera = new THREE.PerspectiveCamera( 75, window.innerWidth / window.innerHeight, 0.1, 1000 );
+            var camera = new THREE.PerspectiveCamera( 75, 4.0 / 3.0, 0.1, 1000 );
             var renderer = new THREE.WebGLRenderer();
             renderer.setSize( width, height);
             renderer.setClearColor( 0xffffff, 1);

@@ -47,10 +47,11 @@ class ExportJobWrapper(db.Model):
         super(ExportJobWrapper, self).delete()
 
 class SuperZip:
-    def __init__(self, directory = None, zipFileName = None, preferredName = "backup_", stochKitJobsToDownload = [], sensitivityJobsToDownload = [], stochOptimJobsToDownload = []):
+    def __init__(self, directory = None, zipFileName = None, preferredName = "backup_", stochKitJobsToDownload = [], sensitivityJobsToDownload = [], stochOptimJobsToDownload = [], spatialJobsToDownload = []):
         self.stochKitJobsToDownload = stochKitJobsToDownload
         self.sensitivityJobsToDownload = sensitivityJobsToDownload
         self.stochOptimJobsToDownload = stochOptimJobsToDownload
+        self.spatialJobsToDownload = spatialJobsToDownload
         if directory == None and zipfile == None:
             raise Exception("SuperZip must have either directory or zipFileName defined in constructor")
 
@@ -281,8 +282,33 @@ class SuperZip:
                     "modelName" : job.modelName,
                     "indata" : json.loads(job.indata),
                     "outData" : job.outData,
+                    "resource" : job.resource,
+                    "uuid" : job.uuid,
+                    "output_url" : job.output_url,
+                    "cloudDatabaseID" : job.cloudDatabaseID,
+                    "celeryPID" : job.celeryPID,
+                    "exception_message" : job.exception_message,
                     "status" : job.status }
         
+        if job.resource == "cloud":
+            jsonJob["output_url"] = job.output_url
+            # Only grab S3 data if user wants us to
+            if (job.jobName in self.spatialJobsToDownload) or globalOp:
+                if job.outData is None or (job.outData is not None and not os.path.exists(job.outData)):
+                    print "wooooo"
+                    # Grab the output from S3 if we need to
+                    service = backendservices()
+                    # Fetch
+                    service.fetchOutput(job.cloud_id, job.output_url)
+                    # Unpack
+                    os.system('tar -xf' +job.uuid+'.tar')
+                    # Record location
+                    job.outData = os.path.abspath(os.path.dirname(__file__))+'/../output/'+job.uuid
+                    # Save the updated status
+                    job.put()
+                    # Clean up
+                    os.remove(job.uuid+'.tar')
+
         # Only add the folder if it actually exists
         if job.outData is not None and os.path.exists(job.outData):
             outputLocation = self.addFolder('spatialJobs/data/{0}'.format(job.jobName), job.outData)
@@ -345,6 +371,17 @@ class SuperZip:
         job.indata = json.dumps(jsonJob["indata"])
         job.outData = outPath
         job.status = jsonJob["status"]
+
+        if 'uuid' in jsonJob:
+            job.uuid = jsonJob["uuid"]
+        if 'output_url' in jsonJob:
+            job.output_url = jsonJob["output_url"]
+        if 'cloudDatabaseID' in jsonJob:
+            job.cloudDatabaseID = jsonJob["cloudDatabaseID"]
+        if 'celeryPID' in jsonJob:
+            job.celeryPID = jsonJob["celeryPID"]
+        if 'exception_message' in jsonJob:
+            job.exception_message = jsonJob["exception_message"]
 
         job.put()
 
@@ -592,7 +629,7 @@ class ExportPage(BaseHandler):
                 selected_stochoptim_jobs = []
 
             if "spatialJobs" in request_data:
-                selected_spatial_jobs = request_data["stochOptimJobs"]
+                selected_spatial_jobs = request_data["spatialJobs"]
             else:
                 selected_spatial_jobs = []
 
@@ -628,11 +665,13 @@ class ExportPage(BaseHandler):
 
             exportJob.put()
 
+            print "hey cracka", selected_spatial_jobs
             szip = SuperZip(
                 os.path.abspath(os.path.dirname(__file__)) + '/../static/tmp/',
                 stochKitJobsToDownload=selected_stochkit_jobs,
                 sensitivityJobsToDownload=selected_sensitivity_jobs,
-                stochOptimJobsToDownload=selected_stochoptim_jobs
+                stochOptimJobsToDownload=selected_stochoptim_jobs,
+                spatialJobsToDownload=selected_spatial_jobs
             )
 
             if not globalOp:
@@ -800,6 +839,28 @@ class ImportPage(BaseHandler):
                     output_results_to_check[bucket_name] += [(key_name, cloud_job.jobName)]
                 else:
                     output_results_to_check[bucket_name] = [(key_name, cloud_job.jobName)]
+
+            # Spatial Jobs
+            spatial_jobs_query = spatial.SpatialJobWrapper.all()
+            spatial_jobs_query.filter("userId =", self.user.user_id())
+            spatial_jobs_query.filter("resource =", "cloud")
+            spatial_jobs_query.filter("status =", "Finished")
+            spatial_jobs = []
+            for cloud_job in spatial_jobs_query.run():
+                if cloud_job.output_url is None:
+                    #print vars(cloud_job)
+                    continue
+                spatial_jobs.append(cloud_job)
+                s3_url_segments = cloud_job.output_url.split('/')
+                # S3 URLs are in the form https://s3.amazonaws.com/bucket_name/key/name
+                bucket_name = s3_url_segments[3]
+                # key_name is the concatenation of all segments after the bucket_name
+                key_name = '/'.join(s3_url_segments[4:])
+                if bucket_name in output_results_to_check:
+                    output_results_to_check[bucket_name] += [(key_name, cloud_job.jobName)]
+                else:
+                    output_results_to_check[bucket_name] = [(key_name, cloud_job.jobName)]
+
             # Get all the job sizes from the backend
             service = backendservices()
             job_sizes = service.getSizeOfOutputResults(credentials['EC2_ACCESS_KEY'], credentials['EC2_SECRET_KEY'], output_results_to_check)
@@ -807,6 +868,7 @@ class ImportPage(BaseHandler):
             context["stochkit_jobs"] = []
             context["sensitivity_jobs"] = []
             context["stochoptim_jobs"] = []
+            context["spatial_jobs"] = []
             for cloud_job in stochkit_jobs:
                 job_name = cloud_job.name
                 if job_name in job_sizes:
@@ -830,6 +892,14 @@ class ImportPage(BaseHandler):
                     context["stochoptim_jobs"].append({
                         'name': job_name,
                         'exec_type': 'mcem2',
+                        'size': '{0} KB'.format(round(float(job_sizes[job_name])/1024, 1))
+                    })
+            for cloud_job in spatial_jobs:
+                job_name = cloud_job.jobName
+                if job_name in job_sizes:
+                    context["spatial_jobs"].append({
+                        'name': job_name,
+                        'exec_type': 'spatial',
                         'size': '{0} KB'.format(round(float(job_sizes[job_name])/1024, 1))
                     })
         return self.render_response('exportimport.html', **context)

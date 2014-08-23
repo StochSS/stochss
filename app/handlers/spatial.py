@@ -416,7 +416,7 @@ class SpatialPage(BaseHandler):
         for ic_name, ic in initial_conditions.iteritems():
             spec = pymodel.listOfSpecies[ic['species']]
             if ic['type'] == "place":
-                pymodel.self.set_initial_condition_place_near({spec:int(ic['count'])}, point=[float(ic['x']),float(ic['y']),float(ic['z'])])
+                pymodel.set_initial_condition_place_near({spec:int(ic['count'])}, point=[float(ic['x']),float(ic['y']),float(ic['z'])])
             elif ic['type'] == "scatter":
                 pymodel.set_initial_condition_scatter({spec:int(ic['count'])},subdomains=[int(ic['subdomain'])])
             elif ic['type'] == "distribute":

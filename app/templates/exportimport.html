@@ -11,6 +11,12 @@
       checkboxes[i].checked = source.checked;
     }
   }
+  function toggleSpatialJobs(source) {
+    var checkboxes = document.getElementsByName('select_spatial_job');
+    for (var i=0, n=checkboxes.length; i<n; i++) {
+      checkboxes[i].checked = source.checked;
+    }
+  }
   function toggleSensitivityJobs(source) {
     var checkboxes = document.getElementsByName('select_sensitivity_job');
     for (var i=0, n=checkboxes.length; i<n; i++) {
@@ -96,6 +102,29 @@
                                                 {% for job in stochoptim_jobs %}
                                                 <tr>
                                                     <td><input type="checkbox" name="select_sensitivity_job" value="{{job.name}}"> </td>
+                                                    <td><span>{{job.name}}</span></td>
+                                                    <td><span>{{job.size}}</span></td>
+                                                </tr>
+                                                {% endfor %}
+                                            </tbody>
+                                        </table>
+                                    </div>
+                                    {% endif %}
+                                    {% if spatial_jobs %}
+                                    <div class="control-group">
+                                        <label class="control-label" for="spatial-jobs-table">Cloud Spatial Jobs:</label>
+                                        <table cellpadding="0" cellspacing="0" border="0" class="table table-striped table-bordered" id='spatial-jobs-table'>
+                                            <thead>
+                                                <tr>
+                                                    <th><input type="checkbox" onClick="toggleSpatialJobs(this)"/></th>
+                                                    <th>Job name </th>
+                                                    <th>Output size </th>
+                                                </tr>
+                                            </thead>
+                                            <tbody>
+                                                {% for job in spatial_jobs %}
+                                                <tr>
+                                                    <td><input type="checkbox" name="select_spatial_job" value="{{job.name}}"> </td>
                                                     <td><span>{{job.name}}</span></td>
                                                     <td><span>{{job.size}}</span></td>
                                                 </tr>
