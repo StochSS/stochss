@@ -17,6 +17,12 @@
       checkboxes[i].checked = source.checked;
     }
   }
+  function toggleStochOptimJobs(source) {
+    var checkboxes = document.getElementsByName('select_stochoptim_job');
+    for (var i=0, n=checkboxes.length; i<n; i++) {
+      checkboxes[i].checked = source.checked;
+    }
+  }
   function toggleSensitivityJobs(source) {
     var checkboxes = document.getElementsByName('select_sensitivity_job');
     for (var i=0, n=checkboxes.length; i<n; i++) {
@@ -93,7 +99,7 @@
                                         <table cellpadding="0" cellspacing="0" border="0" class="table table-striped table-bordered" id='sensitivity-jobs-table'>
                                             <thead>
                                                 <tr>
-                                                    <th><input type="checkbox" onClick="toggleSensitivityJobs(this)"/></th>
+                                                    <th><input type="checkbox" onClick="toggleStochOptimJobs(this)"/></th>
                                                     <th>Job name </th>
                                                     <th>Output size </th>
                                                 </tr>
@@ -101,7 +107,7 @@
                                             <tbody>
                                                 {% for job in stochoptim_jobs %}
                                                 <tr>
-                                                    <td><input type="checkbox" name="select_sensitivity_job" value="{{job.name}}"> </td>
+                                                    <td><input type="checkbox" name="select_stochoptim_job" value="{{job.name}}"> </td>
                                                     <td><span>{{job.name}}</span></td>
                                                     <td><span>{{job.size}}</span></td>
                                                 </tr>

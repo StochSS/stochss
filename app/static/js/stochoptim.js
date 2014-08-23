@@ -377,17 +377,17 @@ StochOptim.Controller = Backbone.View.extend(
                 if(typeof this.models != 'undefined')
                 {
                     data = this.models.models;
-
-                    for(var i in data)
-                    {
-                        if(!(data[i].attributes.units == 'concentration' || data[i].attributes.isSpatial))
-                        {
-                            $( "#next" ).prop('disabled', false);
-                        }
-                    }
                 } 
 
                 $( this.el ).html( modelSelectTemplate( { models : data } ) );
+
+                for(var i in data)
+                {
+                    if(!(data[i].attributes.units == 'concentration' || data[i].attributes.isSpatial))
+                    {
+                        $( "#next" ).prop('disabled', false);
+                    }
+                }
 
                 // Set event handler on the next button
 

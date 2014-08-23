@@ -202,7 +202,7 @@ var run = function()
                           else
                           {
                               $( "#access" ).text( "No input data available for debugging" );
-                              $( "#access" ).prop("disabled",true);
+                              $( "#access" ).prop("disabled", true);
                           }
                       }
                   }, id),

@@ -215,28 +215,32 @@ class SuperZip:
         if job.resource == 'cloud':
             jsonJob["output_url"] = job.outputURL
             # Only grab S3 data if user wants us to
-            if (job.jobName in self.stochKitJobsToDownload) or globalOp:
-                # Do we need to download it?
-                if job.outData is None or (job.outData is not None and not os.path.exists(job.outData)):
-                    # Grab the output from S3
-                    service = backendservices()
-                    service.fetchOutput(job.pid, job.outputURL)
-                    # Unpack it to its local output location
-                    os.system("tar -xf {0}.tar".format(job.pid))
-                    # And update the db entry
-                    job.outData = os.path.abspath(os.path.join(
-                        os.path.dirname(os.path.abspath(__file__)),
-                        "../output/{0}".format(job.pid)
-                    ))
-                    job.put()
-                    os.remove("{0}.tar".format(job.pid))
+            if (job.jobName in self.stochOptimJobsToDownload) or globalOp:
+                # Grab the remote files
+                print "Doing the right thing!!!!!!!!!!!!!!!!!", job.jobName, self.stochOptimJobsToDownload
+                service = backendservices()
+                service.fetchOutput(job.cloudDatabaseID, job.outputURL)
+                # Unpack it to its local output location...
+                
+                os.system('tar -xf' +job.cloudDatabaseID+'.tar')
+                job.outData = os.path.abspath(
+                    os.path.dirname(os.path.abspath(__file__))+'/../output/'+job.cloudDatabaseID
+                    )
+
+                print job.cloudDatabaseID+'.tar'
+                print job.outData
+                # Clean up
+                #os.remove(job.cloudDatabaseID+'.tar')
+                # Save the updated status
+                job.put()
+
         # Only add the folder if it actually exists
         if job.outData is not None and os.path.exists(job.outData):
             outputLocation = self.addFolder('stochOptimJobs/data/{0}'.format(job.jobName), job.outData)
             jsonJob["outData"] = outputLocation
 
-        jsonJob["stdout"] = "{0}/stdout".format(outputLocation)
-        jsonJob["stderr"] = "{0}/stderr".format(outputLocation)
+            jsonJob["stdout"] = "{0}/stdout".format(outputLocation)
+            jsonJob["stderr"] = "{0}/stderr".format(outputLocation)
 
         self.addBytes('stochOptimJobs/{0}.json'.format(job.jobName), json.dumps(jsonJob, sort_keys=True, indent=4, separators=(', ', ': ')))
     
@@ -295,7 +299,6 @@ class SuperZip:
             # Only grab S3 data if user wants us to
             if (job.jobName in self.spatialJobsToDownload) or globalOp:
                 if job.outData is None or (job.outData is not None and not os.path.exists(job.outData)):
-                    print "wooooo"
                     # Grab the output from S3 if we need to
                     service = backendservices()
                     # Fetch
@@ -665,7 +668,7 @@ class ExportPage(BaseHandler):
 
             exportJob.put()
 
-            print "hey cracka", selected_spatial_jobs
+            print "hey cracka", selected_stochoptim_jobs
             szip = SuperZip(
                 os.path.abspath(os.path.dirname(__file__)) + '/../static/tmp/',
                 stochKitJobsToDownload=selected_stochkit_jobs,
