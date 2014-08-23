@@ -126,32 +126,50 @@ MeshEditor.Controller = Backbone.View.extend(
             
             var scene = new THREE.Scene();
             var loader = new THREE.JSONLoader();
-            function load_geometry(model){
-                var material=new THREE.MeshBasicMaterial( { vertexColors: THREE.VertexColors, wireframe:true,transparent:false,opacity: 1} );
-                //var material = new THREE.MeshLambertMaterial({color: "back", wireframe:true});
-	        
-                material.side = THREE.DoubleSide;
-                mesh = new THREE.Mesh(model.geometry,material);
-                scene.add(mesh);
-            }
             
             var model = loader.parse(pyurdmeMeshJsonData);
+
+            var material;
+            if(this.data.subdomains.length > 1)
+            {
+                material = new THREE.MeshBasicMaterial( { vertexColors: THREE.VertexColors, wireframe:true } );
+            }
+            else
+            {
+                if(this.selectedSubdomains.length == 0)
+                {
+                    material = new THREE.MeshBasicMaterial({color: "back", wireframe:true });
+                }
+                else
+                {
+                    material = new THREE.MeshBasicMaterial({color: "red", wireframe:true });
+                }
+            }
+	    
+            material.side = THREE.DoubleSide;
+            mesh = new THREE.Mesh(model.geometry, material);
+            scene.add(mesh);
+
             delete loader;
-            load_geometry(model);
+            delete material;
             // add subtle blue ambient lighting
             var ambientLight = new THREE.AmbientLight(0x000000);
             scene.add(ambientLight);
-            hemiLight = new THREE.HemisphereLight( 0x000000, 0x00ff00, 0.6 );
+            hemiLight = new THREE.HemisphereLight( 0x000000, 0x000000, 0.6 );
             scene.add(hemiLight);
 
             // directional lighting
-            var directionalLight = new THREE.DirectionalLight(0xffffff);
+            var directionalLight = new THREE.DirectionalLight(0x000000);
             directionalLight.position.set(1, 1, 1).normalize();
             scene.add(directionalLight);
 
             this.scene = scene;
 
-            this.renderFrame();
+            if(!this.rendererInitialized)
+            {
+                this.renderFrame();
+                this.rendererInitialized = true;
+            }
         },
 
         handleAddInitialConditionButtonPress : function(event)
@@ -769,11 +787,17 @@ Count in each voxel \
                               data : JSON.stringify( { id : mesh.id,
                                                        selectedSubdomains : [] } ) }, // Initially, no subdomains should be selected, so send empty array
                       success : _.bind( this.drawMesh, this) });
+
+            
+            if(!$( '.meshInfoDiv' ).hasClass('in'))
+            {
+                $( '.meshDetails' ).click();
+            }
         },
 
         handleMeshDelete : function(mesh, element)
         {
-            if(this.data.meshWrapperId != mesh.id)
+            if(this.data.meshWrapperId != mesh.id && !mesh.undeletable)
             {
                 $.ajax( { type : 'POST',
                           url: '/modeleditor/mesheditor',
@@ -785,7 +809,14 @@ Count in each voxel \
             }
             else
             {
-                updateMsg({ status : false, msg : 'Can\'t delete currently selected mesh' });
+                if(mesh.undeletable)
+                {
+                    updateMsg({ status : false, msg : 'Can\'t delete the system default meshes' });
+                }
+                else
+                {
+                    updateMsg({ status : false, msg : 'Can\'t delete currently selected mesh' });
+                }
             }
         },
 
@@ -848,15 +879,22 @@ Count in each voxel \
             {
 	        var optionTemp = _.template('<tr> \
 <td> \
+<% if(!undeletable) { %> \
 <button type=\"button\" class=\"btn btn-default btn-lg delete\"> \
 <i class=\"icon-remove\"></i> \
 </button> \
+<% } else { %> \
+<% } %> \
 </td> \
 <td> \
 <input class="meshSelect" type="radio" name="processedMeshFiles"> \
 </td> \
 <td> \
+<% if(!undeletable) { %> \
 <input class="meshName" type="text" value="<%= name %>"> \
+<% } else { %> \
+<%= name %> \
+<% } %> \
 </td> \
 </tr>');
                 ""                 
@@ -873,7 +911,11 @@ Count in each voxel \
                     newOption.find('.meshSelect').click();
                 }
 
-                newOption.find('.meshName').on('change', _.bind(_.partial( this.handleMeshNameChange, newOption, i ), this));                
+                if(!this.data.meshes[i].undeletable)
+                {
+                    newOption.find('.meshName').on('change', _.bind(_.partial( this.handleMeshNameChange, newOption, i ), this));                
+                }
+
                 newOption.find('.meshSelect').on('click', _.bind(_.partial( this.handleMeshSelect, this.data.meshes[i]), this));
                 newOption.find('.delete').on('click', _.bind(_.partial( this.handleMeshDelete, this.data.meshes[i], newOption), this));
             }

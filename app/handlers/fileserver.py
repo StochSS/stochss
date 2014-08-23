@@ -172,6 +172,9 @@ class FileManager():
 
     @staticmethod
     def deleteFile(handler, fileID):
+        if fileID is None:
+            return
+
         ffile = FileWrapper.get_by_id(fileID)
 
         if ffile is None:

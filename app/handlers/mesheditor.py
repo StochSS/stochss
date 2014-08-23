@@ -27,6 +27,7 @@ class MeshWrapper(db.Model):
     meshFileId = db.IntegerProperty()
     subdomainsFileId = db.IntegerProperty()
     ghost = db.BooleanProperty()
+    undeletable = db.BooleanProperty()
 
     def toJSON(self):
         return { "userId" : self.userId,
@@ -35,6 +36,7 @@ class MeshWrapper(db.Model):
                  "meshFileId" : self.meshFileId,
                  "subdomainsFileId" : self.subdomainsFileId,
                  "ghost" : self.ghost,
+                 "undeletable" : self.undeletable,
                  "id" : self.key().id() }
 
     def delete(self):
@@ -69,10 +71,10 @@ class MeshEditorPage(BaseHandler):
                       'unit_cube_with_membrane_mesh.xml',
                       'unit_sphere_with_membrane_mesh.xml' ]
 
-            names = { 'coli_with_membrane_mesh.xml' : 'Here\'s some rockin\' information about this model1',
-                             'cylinder_mesh.xml' : 'Here\'s some rockin\' information about this model0',
-                             'unit_cube_with_membrane_mesh.xml' : 'Here\'s some rockin\' information about this model2',
-                             'unit_sphere_with_membrane_mesh.xml' : 'Here\'s some rockin\' info' }
+            namesToFilenames = { 'E-coli with membrane' : 'coli_with_membrane_mesh.xml',
+                                 'Cylinder' : 'cylinder_mesh.xml',
+                                 'Unit cube' : 'unit_cube_with_membrane_mesh.xml',
+                                 'Unit sphere' : 'unit_sphere_with_membrane_mesh.xml' }
 
             descriptions = { 'coli_with_membrane_mesh.xml' : 'Here\'s some rockin\' information about this model1',
                              'cylinder_mesh.xml' : 'Here\'s some rockin\' information about this model0',
@@ -80,17 +82,14 @@ class MeshEditorPage(BaseHandler):
                              'unit_sphere_with_membrane_mesh.xml' : 'Here\'s some rockin\' information about this model4' }
             
             converted = set()
-            for wrapper in db.GqlQuery("SELECT * FROM MeshWrapper").run():
-                #wrapper.delete()
-                converted.add(wrapper.name + '.xml')
+            for wrapper in db.GqlQuery("SELECT * FROM MeshWrapper WHERE userId = :1", self.user.user_id()).run():
+                converted.add(wrapper.name)
 
-            for fileName in set(files) - converted:
+            for name in set(namesToFilenames.keys()) - converted:
+                fileName = namesToFilenames[name]
+
                 meshDb = MeshWrapper()
                 
-                #path = os.path.dirname(os.path.realpath(__file__))
-                #handle = subprocess.Popen(shlex.split('{0}/processMesh.py {1}'.format(path, os.path.join(base, fileName))), stdout = subprocess.PIPE, stderr = subprocess.PIPE)
-                #stdout, stderr = handle.communicate()
-
                 # To get the subdomains, there is a .txt file stored along with every .xml
                 baseName, ext = os.path.splitext(fileName)
                 subdomainsFile = open(os.path.join(base, baseName + '.txt'), 'r')
@@ -102,10 +101,11 @@ class MeshEditorPage(BaseHandler):
                 meshFile.close()
 
                 meshDb.userId = self.user.user_id()
-                meshDb.name = names[fileName]
+                meshDb.name = name
                 meshDb.description = descriptions[fileName]
                 meshDb.meshFileId = int(meshFileId)
                 meshDb.subdomainsFileId = int(subdomainsFileId)
+                meshDb.undeletable = True
         
                 meshDb.put()
             
@@ -130,10 +130,12 @@ class MeshEditorPage(BaseHandler):
             for wrapperRow in db.GqlQuery("SELECT * FROM MeshWrapper").run():
                 meshWrappers.append( wrapperRow.toJSON() )
 
-            if row.spatial['mesh_wrapper_id']:
+            # Try to get selected mesh
+            try:
                 selectedMesh = MeshWrapper.get_by_id(row.spatial['mesh_wrapper_id'])
                 selectedMeshJSON = selectedMesh.toJSON()
-            else:
+            # If anything goes wrong (mesh deleted, no mesh on model), return None
+            except:
                 selectedMeshJSON = None
 
             data = { 'meshes' : meshWrappers,
@@ -227,11 +229,15 @@ class MeshEditorPage(BaseHandler):
                 for reactionId in row.model.listOfReactions.keys():
                     row.spatial['reactions_subdomain_assignments'][reactionId] = list(newSubdomains)
             else:
+                row.spatial['subdomains'] = [1]
+
                 for speciesId in row.spatial['species_subdomain_assignments']:
-                    row.spatial['species_subdomain_assignments'][speciesId] = []
+                    row.spatial['species_subdomain_assignments'][speciesId] = [1]
 
                 for reactionId in row.spatial['reactions_subdomain_assignments']:
-                    row.spatial['reactions_subdomain_assignments'][reactionId] = []
+                    row.spatial['reactions_subdomain_assignments'][reactionId] = [1]
+
+                row.spatial['initial_conditions'] = {}
 
             row.spatial['mesh_wrapper_id'] = meshWrapperId
 
@@ -340,7 +346,9 @@ class MeshEditorPage(BaseHandler):
             meshDb.description = data['description']
             meshDb.meshFileId = data['meshFileId']
             meshDb.subdomainsFileId = data['subdomainsFileId'] if 'subdomainsFileId' in data else None
-            
+            meshDb.ghost = False
+            meshDb.undeletable = False
+
             meshDb.put()
             
             self.response.write( json.dumps( meshDb.toJSON() ) )
