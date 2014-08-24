@@ -96,6 +96,28 @@ MeshEditor.Controller = Backbone.View.extend(
         
         drawMesh : function(pyurdmeMeshJsonData)
         {
+            if (!window.WebGLRenderingContext) {
+                // Browser has no idea what WebGL is. Suggest they
+                // get a new browser by presenting the user with link to
+                // http://get.webgl.org
+                $( "#meshPreview" ).html('<center><h2 style="color: red;">WebGL Not Supported</h2><br /> \
+<ul><li>Download an updated Firefox or Chromium to use StochSS (both come with WebGL support)</li></ul></center>');
+                return;
+            }
+
+            var canvas = document.createElement('canvas');
+            gl = canvas.getContext("webgl");
+            delete canvas;
+            if (!gl) {
+                // Browser could not initialize WebGL. User probably needs to
+                // update their drivers or get a new browser. Present a link to
+                // http://get.webgl.org/troubleshooting
+                $( "#meshPreview" ).html('<center><h2 style="color: red;">WebGL Disabled</h2><br /> \
+<ul><li>In Safari and certain older browsers, this must be enabled manually</li> \
+<li>Enable WebGL, or try using StochSS in an up to date Chrome or Firefox browser</li></ul></center>');
+                return;  
+            }
+
             if(!this.renderer)
             {
                 var dom = $( "#meshPreview" ).empty();

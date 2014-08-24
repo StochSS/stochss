@@ -217,7 +217,6 @@ class SuperZip:
             # Only grab S3 data if user wants us to
             if (job.jobName in self.stochOptimJobsToDownload) or globalOp:
                 # Grab the remote files
-                print "Doing the right thing!!!!!!!!!!!!!!!!!", job.jobName, self.stochOptimJobsToDownload
                 service = backendservices()
                 service.fetchOutput(job.cloudDatabaseID, job.outputURL)
                 # Unpack it to its local output location...
@@ -227,10 +226,8 @@ class SuperZip:
                     os.path.dirname(os.path.abspath(__file__))+'/../output/'+job.cloudDatabaseID
                     )
 
-                print job.cloudDatabaseID+'.tar'
-                print job.outData
                 # Clean up
-                #os.remove(job.cloudDatabaseID+'.tar')
+                os.remove(job.cloudDatabaseID+'.tar')
                 # Save the updated status
                 job.put()
 
@@ -668,7 +665,6 @@ class ExportPage(BaseHandler):
 
             exportJob.put()
 
-            print "hey cracka", selected_stochoptim_jobs
             szip = SuperZip(
                 os.path.abspath(os.path.dirname(__file__)) + '/../static/tmp/',
                 stochKitJobsToDownload=selected_stochkit_jobs,
@@ -726,8 +722,6 @@ class ExportPage(BaseHandler):
 
             exportJob.status = "Finished"
             exportJob.outData = szip.getFileName()
-
-            #print "exportJob outData", exportJob.outData
 
             exportJob.put()
 
