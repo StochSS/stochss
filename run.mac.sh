@@ -106,6 +106,7 @@ function download_pyurdme {
         echo $CMD
         eval $CMD
         if [[ -e "$ZIP_FILE" ]];then
+            wd=`pwd`
             cd "$STOCHSS_HOME/app/lib" || return 1
             pwd
             CMD="unzip $ZIP_FILE > /dev/null"
@@ -113,9 +114,11 @@ function download_pyurdme {
             eval $CMD
             if [[ $? != 0 ]];then
                 rm $ZIP_FILE
+                cd $wd
                 return 1 #False
             fi
             rm $ZIP_FILE
+            cd $wd
             return 0 #True
         else
             return 1 #False
