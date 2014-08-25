@@ -811,10 +811,10 @@ Count in each voxel \
                       success : _.bind( this.drawMesh, this) });
 
             
-            if(!$( '.meshInfoDiv' ).hasClass('in'))
-            {
-                $( '.meshDetails' ).click();
-            }
+            //if(!$( '.meshInfoDiv' ).hasClass('in'))
+            //{
+            //    $( '.meshDetails' ).click();
+            //}
         },
 
         handleMeshDelete : function(mesh, element)
