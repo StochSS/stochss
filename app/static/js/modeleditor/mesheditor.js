@@ -21,19 +21,11 @@ var getNewMemberName = function(dict, baseName)
     return tmpName;
 };
 
-var updateMsg = function(data, msg)
+var updateMsg = function(msg, data)
 {
-    if(msg == 'success')
-    {
-        msg = undefined;
-    }
+    $( msg ).html('');
 
-    if(typeof msg == 'undefined')
-    {
-        msg = "#meshMsg";
-    }
-
-    if(!_.has(data, 'status'))
+    if(!data || !_.has(data, 'status'))
     {
         $( msg ).text('').prop('class', '');
 
@@ -47,6 +39,7 @@ var updateMsg = function(data, msg)
         $( msg ).prop('class', 'alert alert-success');
     else
         $( msg ).prop('class', 'alert alert-error');
+
     $( msg ).show();
 };
 
@@ -194,6 +187,11 @@ MeshEditor.Controller = Backbone.View.extend(
             }
         },
 
+        updateInitialConditionMsg : function(data)
+        {
+            updateMsg( '#initialConditionMsg', data );
+        },
+
         handleAddInitialConditionButtonPress : function(event)
         {
             var icName = getNewMemberName(this.data.initialConditions, 'ic');
@@ -209,13 +207,13 @@ MeshEditor.Controller = Backbone.View.extend(
                           data : { reqType : 'setInitialConditions',
                                    data : JSON.stringify( { initialConditions : this.data['initialConditions'] } ) },
                           dataType : 'json',
-                          success : updateMsg } );
+                          success : this.updateInitialConditionMsg } );
 
                 this.drawInitialCondition(icName);
             }
             else
             {
-                updateMsg( { status : false, msg : "Model must have a species to have initial conditions!" } );
+                this.updateInitialConditionMsg( { status : false, msg : "Model must have a species to have initial conditions!" } );
             }
         },
 
@@ -295,7 +293,7 @@ MeshEditor.Controller = Backbone.View.extend(
                       data : { reqType : 'setInitialConditions',
                                data : JSON.stringify( { initialConditions : this.data['initialConditions'] } ) },
                       dataType : 'json',
-                      success : updateMsg} );
+                      success : this.updateInitialConditionMsg} );
         },
 
         handleInitialConditionsSpeciesChange : function(initialConditionsKey, event)
@@ -309,7 +307,7 @@ MeshEditor.Controller = Backbone.View.extend(
                       data : { reqType : 'setInitialConditions',
                                data : JSON.stringify( { initialConditions : this.data['initialConditions'] } ) },
                       dataType : 'json',
-                      success : updateMsg } );
+                      success : this.updateInitialConditionMsg } );
         },
 
         handlePlaceValuesChange : function(name, initialConditionsKey, event)
@@ -323,7 +321,7 @@ MeshEditor.Controller = Backbone.View.extend(
                       data : { reqType : 'setInitialConditions',
                                data : JSON.stringify( { initialConditions : this.data['initialConditions'] } ) },
                       dataType : 'json',
-                      success : updateMsg } );
+                      success : this.updateInitialConditionMsg } );
         },
 
         handleScatterSubdomainSelectChange : function(initialConditionsKey, event)
@@ -337,7 +335,7 @@ MeshEditor.Controller = Backbone.View.extend(
                       data : { reqType : 'setInitialConditions',
                                data : JSON.stringify( { initialConditions : this.data['initialConditions'] } ) },
                       dataType : 'json',
-                      success : updateMsg } );
+                      success : this.updateInitialConditionMsg } );
 
         },
 
@@ -352,7 +350,7 @@ MeshEditor.Controller = Backbone.View.extend(
                       data : { reqType : 'setInitialConditions',
                                data : JSON.stringify( { initialConditions : this.data['initialConditions'] } ) },
                       dataType : 'json',
-                      success : updateMsg } );
+                      success : this.updateInitialConditionMsg } );
 
         },
 
@@ -367,7 +365,7 @@ MeshEditor.Controller = Backbone.View.extend(
                       data : { reqType : 'setInitialConditions',
                                data : JSON.stringify( { initialConditions : this.data['initialConditions'] } ) },
                       dataType : 'json',
-                      success : updateMsg } );
+                      success : this.updateInitialConditionMsg } );
 
         },
 
@@ -382,7 +380,7 @@ MeshEditor.Controller = Backbone.View.extend(
                       data : { reqType : 'setInitialConditions',
                                data : JSON.stringify( { initialConditions : this.data['initialConditions'] } ) },
                       dataType : 'json',
-                      success : updateMsg } );
+                      success : this.updateInitialConditionMsg } );
         },
 
         handleDeleteInitialCondition : function(initialConditionKey, doms, event) {
@@ -398,7 +396,7 @@ MeshEditor.Controller = Backbone.View.extend(
                       data : { reqType : 'setInitialConditions',
                                data : JSON.stringify( { initialConditions : this.data['initialConditions'] } ) },
                       dataType : 'json',
-                      success : function() { updateMsg( true, "Initial condition deleted" ); } } );
+                      success : _.partial(this.updateInitialConditionMsg, { status : true, msg : "Initial condition deleted" } ) } );
         },
 
         drawInitialCondition : function(initialConditionKey, element)
@@ -604,6 +602,11 @@ Count in each voxel \
             }
         },
 
+        updateMeshMsg : function(data)
+        {
+            updateMsg( '#meshMsg', data );
+        },
+
         handleMeshDataAdd : function(event, data)
         {
             if(this.uploaderState.meshFileData)
@@ -619,17 +622,17 @@ Count in each voxel \
 
             if(ext.toLowerCase() != 'xml')
             {
-                updateMsg( { status : false,
-                             msg : 'Mesh file must be a .xml' },
-                           '#meshDataUploadStatus');
+                updateMsg( '#meshDataUploadStatus',
+                           { status : false,
+                             msg : 'Mesh file must be a .xml' });
                 
                 return;
             }
 
             $( event.target ).prop('title', data.files[0].name);
-            updateMsg( { status : true,
-                         msg : data.files[0].name + " selected" },
-                       '#meshDataUploadStatus');
+            //updateMsg( '#meshDataUploadStatus',
+            //           { status : true,
+            //             msg : data.files[0].name + " selected" } );
 
             var nameBox = $( '.uploadMeshDiv' ).find('.name');
 
@@ -654,14 +657,19 @@ Count in each voxel \
                 
                 newName = baseName + i;
                 
-                for(var i in this.data.meshes)
+                for(var ii in this.data.meshes)
                 {
-                    if(this.data.meshes[i].name == newName)
+                    if(this.data.meshes[ii])
                     {
-                        nameUnique = false;
-                        break;
+                        if(this.data.meshes[ii].name == newName)
+                        {
+                            nameUnique = false;
+                            break;
+                        }
                     }
                 }
+
+                i = i + 1;
             } while(!nameUnique);
 
             nameBox.val(newName);
@@ -686,17 +694,17 @@ Count in each voxel \
 
             if(ext.toLowerCase() != 'txt')
             {
-                updateMsg( { status : false,
-                             msg : 'Subdomain file must be a .txt' },
-                           '#meshDataUploadStatus');
+                updateMsg( '#subdomainDataUploadStatus',
+                           { status : false,
+                             msg : 'Subdomain file must be a .txt' } );
                 
                 return;
             }
 
-            $( event.target ).prop('title', data.files[0].name);
-            updateMsg( { status : true,
-                         msg : data.files[0].name + " selected" },
-                       '#subdomainDataUploadStatus');
+            //$( event.target ).prop('title', data.files[0].name);
+            //updateMsg( '#subdomainDataUploadStatus',
+            //           { status : true,
+            //             msg : data.files[0].name + " selected" } );
 
             this.uploaderState.subdomainsFileData = data;
         },
@@ -708,9 +716,9 @@ Count in each voxel \
                 this.uploaderState.meshFileData.submit();
                 this.uploaderState.meshSubmitted = true;
 
-                updateMsg( { status : true,
-                             msg : 'Uploading mesh...' },
-                           '#meshDataUploadStatus');
+                updateMsg( '#meshDataUploadStatus',
+                           { status : true,
+                             msg : 'Uploading mesh...' } );
             }
 
             if(this.uploaderState.subdomainsFileData)
@@ -718,9 +726,9 @@ Count in each voxel \
                 this.uploaderState.subdomainsFileData.submit();
                 this.uploaderState.subdomainsSubmitted = true;
 
-                updateMsg( { status : true,
-                             msg : 'Uploading subdomain...' },
-                           '#subdomainDataUploadStatus');
+                updateMsg( '#subdomainDataUploadStatus',
+                           { status : true,
+                             msg : 'Uploading subdomain...' } );
             }
 
             this.uploaderState.name = $( '.uploadMeshDiv' ).find( '.name' ).val();
@@ -731,9 +739,9 @@ Count in each voxel \
         {
             this.uploaderState.meshFileId = data.result[0].id;
 
-            updateMsg( { status : true,
-                         msg : 'Mesh uploaded' },
-                       '#meshDataUploadStatus');
+            updateMsg( '#meshDataUploadStatus',
+                       { status : true,
+                         msg : 'Mesh uploaded' } );
             
             this.createMeshWrapper();
         },
@@ -742,9 +750,9 @@ Count in each voxel \
         {
             this.uploaderState.subdomainsFileId = data.result[0].id;
                         
-            updateMsg( { status : true,
-                         msg : 'Subdomains uploaded' },
-                       '#subdomainDataUploadStatus');
+            updateMsg( '#subdomainDataUploadStatus',
+                       { status : true,
+                         msg : 'Subdomains uploaded' } );
             
             this.createMeshWrapper();
         },
@@ -777,10 +785,20 @@ Count in each voxel \
 
         handleMeshWrapperCreated : function(data)
         {
+            this.uploaderState = {};
+
             this.data.meshes.push(data);
 
-            updateMsg( { status : true,
-                         msg : 'Mesh created'} );
+            updateMsg( '#subdomainDataUploadStatus' );
+            updateMsg( '#meshDataUploadStatus' );
+
+            this.updateMeshMsg( { status : true,
+                                  msg : 'Mesh created, click \'Select a Mesh\' to choose a new one'} );
+
+            $( '.uploadMeshDiv' ).find( '.name' ).val('');
+            $( '.uploadMeshDiv' ).find( '.descriptionText' ).val('');
+
+            $( '#meshForm' )[0].reset();
 
             this.drawMeshSelect();
         },
@@ -810,22 +828,21 @@ Count in each voxel \
                                                        selectedSubdomains : [] } ) }, // Initially, no subdomains should be selected, so send empty array
                       success : _.bind( this.drawMesh, this) });
 
-            
-            //if(!$( '.meshInfoDiv' ).hasClass('in'))
-            //{
-            //    $( '.meshDetails' ).click();
-            //}
         },
 
-        handleMeshDelete : function(mesh, element)
+        handleMeshDelete : function(index, element)
         {
+            var mesh = this.data.meshes[index];
+
             if(this.data.meshWrapperId != mesh.id && !mesh.undeletable)
             {
                 $.ajax( { type : 'POST',
                           url: '/modeleditor/mesheditor',
                           data: { reqType : 'deleteMesh',
                                   data: JSON.stringify( { id : mesh.id } ) }, // Initially, no subdomains should be selected, so send empty array
-                          success : _.bind( this.drawMesh, this) });
+                          success : this.updateMeshMsg });
+
+                delete this.data.meshes[index];
                 
                 element.remove();
             }
@@ -833,11 +850,11 @@ Count in each voxel \
             {
                 if(mesh.undeletable)
                 {
-                    updateMsg({ status : false, msg : 'Can\'t delete the system default meshes' });
+                    this.updateMeshMsg({ status : false, msg : 'Can\'t delete the system default meshes' });
                 }
                 else
                 {
-                    updateMsg({ status : false, msg : 'Can\'t delete currently selected mesh' });
+                    this.updateMeshMsg({ status : false, msg : 'Can\'t delete currently selected mesh' });
                 }
             }
         },
@@ -857,9 +874,17 @@ Count in each voxel \
                       data: { reqType : 'setName',
                               data: JSON.stringify( { id : this.data.meshes[i].id,
                                                       newName : newName } ) },
-                      success : updateMsg });
+                      success : this.updateMeshMsg });
 
             this.data.meshes[i].name = newName;
+        },
+
+        handleResetFormButton : function()
+        {
+            updateMsg( '#subdomainDataUploadStatus' );
+            updateMsg( '#meshDataUploadStatus' );
+
+            $( "#meshForm" )[0].reset();
         },
 
         drawMeshSelect : function()
@@ -868,6 +893,12 @@ Count in each voxel \
             if(!this.meshSelectInitialized)
             {
                 this.meshSelectInitialized = true;
+
+                $( '#resetFormButton' ).click( this.handleResetFormButton );
+
+                $( '#selectButton' ).click(function() {
+                    $( '.meshDetails' ).click();
+                });
 
                 $( '.meshTable' ).show();
                 // When a user uploads a file, draw a status bar, and after the upload is finished request the refreshes
@@ -878,6 +909,7 @@ Count in each voxel \
                 $( this.el ).find('#meshDataUpload').fileupload({
                     url: '/FileServer/large/meshFiles',
                     dataType: 'json',
+                    replaceFileInput : false,
                     add : _.bind(this.handleMeshDataAdd, this),
                     done : _.bind(this.handleMeshUploadFinish, this)
                 });
@@ -885,6 +917,7 @@ Count in each voxel \
                 $( this.el ).find('#subdomainDataUpload').fileupload({
                     url: '/FileServer/large/subdomainFiles',
                     dataType: 'json',
+                    replaceFileInput : false,
                     add : _.bind(this.handleSubdomainsDataAdd, this),
                     done : _.bind(this.handleSubdomainsUploadFinish, this)
                 });
@@ -899,6 +932,11 @@ Count in each voxel \
             // Draw all the available examples meshes in the selection table
             for(var i = 0; i < this.data.meshes.length; i++)
             {
+                if(!this.data.meshes[i])
+                {
+                    continue;
+                }
+
 	        var optionTemp = _.template('<tr> \
 <td> \
 <% if(!undeletable) { %> \
@@ -939,7 +977,7 @@ Count in each voxel \
                 }
 
                 newOption.find('.meshSelect').on('click', _.bind(_.partial( this.handleMeshSelect, this.data.meshes[i]), this));
-                newOption.find('.delete').on('click', _.bind(_.partial( this.handleMeshDelete, this.data.meshes[i], newOption), this));
+                newOption.find('.delete').on('click', _.bind(_.partial( this.handleMeshDelete, i, newOption), this));
             }
 
             if( this.data.selectedMesh )
@@ -991,6 +1029,11 @@ Count in each voxel \
             }
         },
 
+        updateSpeciesMsg : function(data)
+        {
+            updateMsg( '#speciesMsg', data );
+        },
+
         handleSpeciesSubdomainAssignment : function(speciesId, subdomainId, event)
         {
             $.ajax( { url : '/modeleditor/specieseditor',
@@ -1000,7 +1043,7 @@ Count in each voxel \
                                                         subdomainId : subdomainId,
                                                         value : $( event.target ).prop('checked') } ) },
                       dataType : 'json',
-                      success : updateMsg } );
+                      success : this.updateSpeciesMsg } );
         },
 
         drawSpeciesSubdomainAssignments : function()
@@ -1061,6 +1104,11 @@ Count in each voxel \
             }
         },
 
+        updateReactionMsg : function(data)
+        {
+            updateMsg( '#reactionMsg', data );
+        },
+
         handleReactionsSubdomainAssignment : function(reactionId, subdomainId, event)
         {
             $.ajax( { url : '/modeleditor/reactioneditor',
@@ -1070,7 +1118,7 @@ Count in each voxel \
                                                         subdomainId : subdomainId,
                                                         value : $( event.target ).prop('checked') } ) },
                       dataType : 'json',
-                      success : updateMsg } );
+                      success : this.updateReactionMsg } );
         },
 
         drawReactionsSubdomainAssignments : function()
