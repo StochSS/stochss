@@ -71,15 +71,15 @@ class MeshEditorPage(BaseHandler):
                       'unit_cube_with_membrane_mesh.xml',
                       'unit_sphere_with_membrane_mesh.xml' ]
 
+            descriptions = { 'coli_with_membrane_mesh.xml' : 'Mesh for simulation of the E. coli or similar rod-shaped bacteria.',
+                              'cylinder_mesh.xml' : 'Mesh for simulations in a cylindrical domain.',
+                              'unit_cube_with_membrane_mesh.xml' : 'Simulations on a unit cube domain.',
+                              'unit_sphere_with_membrane_mesh.xml' : 'Simulations on a unit sphere domain.' }
+
             namesToFilenames = { 'E-coli with membrane' : 'coli_with_membrane_mesh.xml',
                                  'Cylinder' : 'cylinder_mesh.xml',
                                  'Unit cube' : 'unit_cube_with_membrane_mesh.xml',
                                  'Unit sphere' : 'unit_sphere_with_membrane_mesh.xml' }
-
-            descriptions = { 'coli_with_membrane_mesh.xml' : 'Here\'s some rockin\' information about this model1',
-                             'cylinder_mesh.xml' : 'Here\'s some rockin\' information about this model0',
-                             'unit_cube_with_membrane_mesh.xml' : 'Here\'s some rockin\' information about this model2',
-                             'unit_sphere_with_membrane_mesh.xml' : 'Here\'s some rockin\' information about this model4' }
             
             converted = set()
             for wrapper in db.GqlQuery("SELECT * FROM MeshWrapper WHERE userId = :1", self.user.user_id()).run():
