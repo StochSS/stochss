@@ -84,6 +84,7 @@
 
                     <div>2. Select mesh on which species will diffuse and react</div>
                     <br />
+                    <div id="meshMsg"></div>
 
                     <div class="accordion" id="accordion2">
                         <div class="accordion-group">
@@ -104,10 +105,10 @@
                         <div class="accordion-group">
                             <div class="accordion-heading">
                                 <a class="accordion-toggle meshLibrary" data-toggle="collapse" data-parent="#accordion2" href="#collapseTwo">
-                                    Mesh Library (select another mesh here)
+                                    Select a Mesh
                                 </a>
                             </div>
-                            <div id="collapseTwo" class="accordion-body collapse uploadMeshDiv">
+                            <div id="collapseTwo" class="accordion-body collapse">
                                 <div class="accordion-inner">
                                     <div class="row">
                                         <div class="span8">
@@ -130,40 +131,57 @@
                                         </div>
                                     </div>
                                     
-                                    <div id="meshMsg"></div>
-                                    <br />
+		                    <button id="selectButton" class="btn btn-primary">
+			                Done
+		                    </button>
+                                    <br>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="accordion-group">
+                            <div class="accordion-heading">
+                                <a class="accordion-toggle meshUpload" data-toggle="collapse" data-parent="#accordion2" href="#collapseThree">
+                                    Upload a Mesh
+                                </a>
+                            </div>
+                            <div id="collapseThree" class="accordion-body collapse uploadMeshDiv">
+                                <div class="accordion-inner">
+                                    <form id="meshForm">
+                                        <div class="row">
+                                            <div class="span5">
+                                                <div>Select mesh file:</div>
+                                                <div>
+                                                    <input id="meshDataUpload" type="file" name="files[]" multiple>
+                                                </div>
+                                                <div id="meshDataUploadStatus">
+                                                </div>
+                                                <div>Select subdomain file:</div>
+                                                <div>
+                                                    <input id="subdomainDataUpload" type="file" name="files[]" multiple>
+                                                </div>
+                                                <div id="subdomainDataUploadStatus">
+                                                </div>
+                                            </div>
+                                            <div class="span6">
+                                                <div>
+                                                    Model name:<br>
+                                                    <input type="text" class="name">
+                                                </div>
+                                                <div>
+                                                    Model description:<br>
+                                                    <textarea class="form-control descriptionText" rows="3"></textarea>
+                                                </div>
+                                            </div>
+                                        </div>
+                                        <br />
+                                        <button id="meshUploadButton" type="button" class="btn btn-primary btn-lg">
+                                            <span class="icon-plus"></span> Upload PyURDME Mesh
+                                        </button>
 
-                                    <div class="row">
-                                        <div class="span3">
-                                            <div>Select mesh file:</div>
-                                            <div>
-                                                <input id="meshDataUpload" style="color:rgb(245, 245, 245);" type="file" name="files[]" multiple>
-                                            </div>
-                                            <div id="meshDataUploadStatus">
-                                            </div>
-                                            <div>Select subdomain file:</div>
-                                            <div>
-                                                <input id="subdomainDataUpload" style="color:rgb(245, 245, 245);" type="file" name="files[]" multiple>
-                                            </div>
-                                            <div id="subdomainDataUploadStatus">
-                                            </div>
-                                        </div>
-                                        <div class="span6">
-                                            <div>
-                                                Model name:<br>
-                                                <input type="text" class="name">
-                                            </div>
-                                            <div>
-                                                Model description:<br>
-                                                <textarea class="form-control descriptionText" rows="3"></textarea>
-                                            </div>
-                                        </div>
-                                    </div>
-                                                
-                                    <br />
-                                    <button id="meshUploadButton" type="button" class="btn btn-default btn-lg" disabled>
-                                        <span class="glyphicon glyphicon-plus"></span> Upload PyURDME Mesh
-                                    </button>
+                                        <button id="resetFormButton" type="button" class="btn btn-primary btn-lg">
+                                            <span class="icon-remove"></span> Reset
+                                        </button>
+                                    </form>
                                     <br />
                                 </div>
                             </div>
@@ -198,6 +216,7 @@
 
                     3. Select which species should diffuse in each subdomain
                     <br>
+                    <div id="speciesMsg"></div>
                     <br>
 
                     <table cellpadding="0" cellspacing="0" border="0" class="table table-striped table-bordered" id="speciesSubdomainsTable">
@@ -215,6 +234,7 @@
 
                     4. Select which reactions should be enabled in each subdomain
                     <br>
+                    <div id="reactionMsg"></div>
                     <br>
 
                     <table cellpadding="0" cellspacing="0" border="0" class="table table-striped table-bordered" id="reactionsSubdomainsTable">
@@ -230,9 +250,9 @@
 		        </tbody>
 		    </table>
 
-                    5. Select initial conditions for the model
+                    <div>5. Select initial conditions for the model</div>
                     <br>
-                    <br>
+                    <div id="initialConditionMsg"></div>
 
                     <table cellpadding="0" cellspacing="0" border="0" class="table table-striped table-bordered">
 		        <thead>
@@ -247,7 +267,7 @@
 		        </tbody>
 		    </table>
 
-                    <button type="button" class="btn btn-default btn-lg addInitialConditionsButton">
+                    <button type="button" class="btn btn-primary btn-lg addInitialConditionsButton">
                         <span class="glyphicon glyphicon-plus"></span> Add Initial Condition
                     </button>
                     </div>
