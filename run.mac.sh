@@ -184,6 +184,19 @@ function check_and_install_dependencies {
     return 0 #True
 }
 
+function check_spatial_dependencies {
+    deps=("numpy" "scipy" "matplotlib" "h5py")
+    for dep in "${deps[@]}"
+    do
+        echo "Checking for $dep<br />"
+        if check_for_lib "$dep";then
+            echo "$dep detected successfully.<br />"
+        else
+            return 1 #False
+        fi
+    done
+    return 0 #True
+}
 function check_pip {
     if which pip > /dev/null;then
         echo "pip is installed on your system, using it<br />"
@@ -214,11 +227,21 @@ function install_pip {
     fi
 }
 
+function install_dependencies_via_applescript {
+    /usr/bin/env osascript run_mac_install.scpt
+}
+
 function check_spatial_installation {
-    if check_and_install_dependencies;then
-        echo "All spatial dependencies detected"
+    if check_spatial_dependencies; then
+        echo "All spatial dependencies detected.<br />"
     else
-        return 1 #False
+        install_dependencies_via_applescript
+        if check_spatial_dependencies; then
+            echo "All spatial dependencies detected.<br />"
+        else
+            echo "Error: dependencies not installed, exiting.<br />"
+            return 1 #False
+        fi
     fi
 
     if check_dolfin; then
