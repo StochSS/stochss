@@ -5,11 +5,13 @@ import thread
 from utils import utils
 from utils.persistent_dictionary import PersistentStoreFactory, PersistentDictionary
 import backend_handler
-from google.appengine.api import background_thread, backends, urlfetch
+from google.appengine.api import background_thread, modules, urlfetch
 from google.appengine.api import taskqueue
 import pickle
 import re
 import urllib
+import logging
+import os
 
 __author__ = 'hiranya'
 __email__ = 'hiranya@appscale.com'
@@ -224,10 +226,7 @@ class InfrastructureManager:
     utils.log('Generated reservation id {0} for this request.'.format(
       reservation_id)
     )
-    #TODO: We are forcing blocking mode because of how the Google App Engine sandbox environment
-    # joins on all threads before returning a response from a request, which effectively makes non-
-    # blocking mode the same as blocking mode anyways.
-    # (see https://developers.google.com/appengine/docs/python/#Python_The_sandbox)
+    
     if self.blocking:
       utils.log('Running spawn_vms in blocking mode')
       result = self.__spawn_vms(agent, num_vms, parameters, reservation_id)
@@ -240,19 +239,21 @@ class InfrastructureManager:
       # )
     else:
       utils.log('Running spawn_vms in non-blocking mode')
-#        thread.start_new_thread(__spawn_vms, (infra, agent, num_vms, parameters, reservation_id))
-      backend_url = backends.get_url(backend_handler.BACKEND_NAME)
+      #thread.start_new_thread(__spawn_vms, (infra, agent, num_vms, parameters, reservation_id))
+      #logging.error('hostname: '.format(backends.get_hostname(backend_handler.BACKEND_NAME)))
+      backend_url = 'http://%s' % modules.get_hostname(backend_handler.BACKEND_NAME)#backends.get_url(backend_handler.BACKEND_NAME)
+      logging.info('backend_url: {0}'.format(backend_url))
       # start GAE backends
       backend_start_url =  backend_url + backend_handler.BACKEND_START
       urlfetch.fetch(backend_start_url)
           
       # start backend server manager
-      backend_manager_url =  backend_url + backend_handler.BACKEND_MANAGER_R_URL
-      urlfetch.fetch(backend_manager_url)
+#       backend_manager_url =  backend_url + backend_handler.BACKEND_MANAGER_R_URL
+#       urlfetch.fetch(backend_manager_url)
           
       # let backend worker to spawn vms with background thread
       backend_worker_url = backend_url + backend_handler.BACKEND_WORKER_R_URL
-      form_fields = {
+      from_fields = {
             'op': 'start_vms',
             'infra': pickle.dumps(self),
             'agent': pickle.dumps(agent),
@@ -260,15 +261,17 @@ class InfrastructureManager:
             'parameters': pickle.dumps(parameters),
             'reservation_id': pickle.dumps(reservation_id)
       }
-      from_data = urllib.urlencode(form_fields)
-          
-      result = urlfetch.fetch(url=backend_worker_url,
-                                  method = urlfetch.POST,
-                                  payload = from_data)
-
-    utils.log('Successfully started request {0}.'.format(reservation_id))
-    return self.__generate_response(True,
-      self.REASON_NONE, {'reservation_id': reservation_id})
+#       from_data = urllib.urlencode(from_fields)
+#            
+#       result = urlfetch.fetch(url=backend_worker_url,
+#                                 method = urlfetch.POST,
+#                                 payload = from_data)
+      os.environ['HTTP_HOST'] = "127.0.0.1:8080"
+      taskqueue.add(url='/backend/queue', params=from_fields, method='GET')
+      
+    utils.log('Successfully sent request to backend server, reservation_id: {0}.'.format(reservation_id))
+#     return self.__generate_response(True,
+#       self.REASON_NONE, {'reservation_id': reservation_id})
 
   def terminate_instances(self, parameters,prefix=''):
     """

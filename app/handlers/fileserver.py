@@ -91,9 +91,11 @@ class FileWrapper(db.Model):
         self.path = data["path"]
         self.owner = data["owner"]
         self.perm = data["perm"]
+
+        baseName, ext = os.path.splitext(data["path"])
         
         path = os.path.abspath(os.path.dirname(__file__))
-        [tid, tmpfile] = tempfile.mkstemp(dir = os.path.abspath(os.path.dirname(__file__)) + '/../static/tmp/')
+        [tid, tmpfile] = tempfile.mkstemp(dir = os.path.abspath(os.path.dirname(__file__)) + '/../static/tmp/', suffix = ext)
 
         self.storePath = tmpfile
 
@@ -117,6 +119,7 @@ class FileWrapper(db.Model):
 
         if asString:
             return json.dumps({ "id" : self.key().id(),
+                                "storePath" : self.storePath,
                                 "pathKey" : self.pathKey,
                                 "path" : self.path,
                                 "owner" : self.owner,
@@ -124,6 +127,7 @@ class FileWrapper(db.Model):
                                 "data" : data })
         else:
             return { "id" : self.key().id(),
+                     "storePath" : self.storePath,
                      "pathKey" : self.pathKey,
                      "path" : self.path,
                      "owner" : self.owner,
@@ -153,6 +157,9 @@ class FileManager():
     def getFile(handler, fileID, noFile = True, asString = False, numberBytes = None):
         ffile = FileWrapper.get_by_id(fileID)
 
+        if ffile is None:
+            raise IOError("File id {0} not found in fileserver".format(fileID))
+
         return ffile.toJSON(noFile = noFile, asString = asString, numberBytes = numberBytes)
    
     @staticmethod
@@ -166,11 +173,18 @@ class FileManager():
     @staticmethod
     def deleteFile(handler, fileID):
         ffile = FileWrapper.get_by_id(fileID)
+
+        if ffile is None:
+            raise IOError("File id {0} not found in fileserver".format(fileID))
+
         ffile.delete()
 
     @staticmethod
     def updateFile(handler, fileID, jsonObject):
         ffile = FileWrapper.get_by_id(fileID)
+
+        if ffile is None:
+            raise IOError("File id {0} not found in fileserver".format(fileID))
         
         ffile.fromJSON(jsonObject)
 

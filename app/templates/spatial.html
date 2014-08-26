@@ -1,0 +1,115 @@
+{% extends "base.html" %}
+{% block title%}Spatial Simulation Status{% endblock %}
+
+{% block content %}
+<div class="span9">
+    <div class="row-fluid">
+        <div id="jobInfo">
+            Downloading data to browser...
+        </div>
+    </div>
+</div>
+
+
+{% endblock %}
+
+{% block jscontent %}
+<script type="text/javascript" src = "/static/js/underscore.js"></script>
+<script type="text/javascript" src = "/static/utils.js"></script>
+<script type="text/javascript" src = "/static/js/backbone.js"></script>
+<script type="text/javascript" src = "/static/model/stochkit.js"></script>
+<link rel="stylesheet" href="/static/css/nv.d3.css">
+
+<script type="text/javascript" src = "/static/js/purl.js"></script>
+<script type="text/javascript" src = "/static/js/canvas2image.js"></script>
+<script type="text/javascript" src = "/static/js/splot.js"></script>
+<script type="text/javascript" src = "/static/js/d3.v3.js"></script>
+<script type="text/javascript" src = "/static/js/nv.d3.js"></script>
+<script type="text/javascript" src = "/static/js/sensitivity.js"></script>
+<script type="text/javascript" src = "/static/model/stochkit.js"></script>
+<script type="text/javascript" src = "/static/js/three.js"></script>
+<script type="text/javascript" src = "/static/js/OrbitControls.js"></script>
+<script type="text/javascript" src = "/static/js/spatial.js"></script>
+
+<script type="text/template" id="jobInfoTemplate">
+    <h2> Job summary: <span style="COLOR:green;"><%= name %></span></h2>
+    <br />
+    <div class="well">
+        <div class="row">
+            <div class="span8">
+                <h3>Metadata</h3>
+                <p class="thispage">
+                    Resource: <%= resource %>
+                    <br />
+                    Simulation status: <%= jobStatus %>
+                    <br />
+                    Stochkit model: <a href="/modeleditor?model_edited=<%= modelName %>" class="thispage"> <%= modelName %> </a>
+                </p>
+            </div>
+            <div class="span3">
+                <h5>Mouse Controls:</h5><br />
+                <ol>
+                    <li>Rotation -- Left button</li>
+                    <li>Translation -- Right button</li>
+                    <li>Zoom -- Mouse wheel, or left + right button</li>
+                </ol>
+            </div>
+        </div>
+    </div>
+
+    <div id="plotRegion" style="display: none;">
+        <table width="100%">
+            <tr>
+                <td valign=top>
+                    Select <span id="timeSelectDisplay"></span><br />
+                    <input id="timeSelect" type="range" min="0" max="0" step="0" value="0">
+                </td>
+                <td valign=top>
+                    Select Trajectory:<br />
+                    <select  id="trajectorySelect"></select>
+                </td>
+                <td valign=top>
+                    Select species:<br />
+                    <span id="speciesSelect"></span>
+                </td>
+            </tr>
+        </table>
+        <div class="row">
+            <table class="span10" style="border: 1px solid rgb(221, 221, 221);">
+                <tr>
+                    <td>
+                        <div id="meshPreview"></div>
+                    </td>
+                </tr>
+            </table>
+            
+            <div class="span1">
+                <div>Maximum voxel population:</div>
+                <div id="maxVal"></div>
+                <div><img src="/static/img/cmap.png"></div>
+                <div>Minimum voxel population:</div>
+                <div id="minVal"></div>
+            </div>
+        </div>
+    </div>
+
+    <div id="error" style="clear:both; display: none;">
+        Stdout:<br />
+        <pre><%= stdout %></pre>
+        
+        Stderr:<br />
+        <pre><%= stderr %></pre>
+    </div>
+      
+    <br />
+      
+    <div id="msg" style="clear:both; display: none;"></div>
+    <br />
+    
+    <div id="accessOutput" class="well" style="clear:both; display: none;">
+        <h3>Output</h3>
+        <br />
+        <button id="access" type="submit" class="btn btn-primary btn-large"><i class="icon-download-alt"></i> Fetch Data from Cloud</button>
+    </div>
+</script>
+{% endblock %}

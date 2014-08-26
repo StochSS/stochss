@@ -21,8 +21,9 @@
 			<a href="/modeleditor" TITLE = "Define the name of your model">Models</a>
 		    </li>
 		    <!-- <li><a href="/modeleditor/overview">Overview</a></li> -->
+            {% if model_edited %}
 		    <li>
-			<a href="/modeleditor/specieseditor" TITLE = "Create a List of Reactants">Species</a>
+			<a href="/modeleditor/specieseditor" TITLE = "Create a List of Species">Species</a>
 		    </li>
                     <li>
 			<a href="/modeleditor/parametereditor" TITLE = "Create a List of Parameters">Parameters</a>
@@ -30,6 +31,12 @@
 		    <li>
 			<a href="/modeleditor/reactioneditor" TITLE = "Create a List of Reactions">Reactions</a>
 		    </li>
+                    {% if isSpatial %}
+		    <li>
+			<a href="/modeleditor/mesheditor" TITLE = "Add a mesh">Mesh</a>
+		    </li>
+                    {% endif %}
+            {% endif %}
 		    <li class="dropdown">
 			<!--<a class="dropdown-toggle" data-toggle="dropdown">Geometry<b class="caret"></b></a> -->
 			<ul class="dropdown-menu">
@@ -43,7 +50,10 @@
 		    <li class="dropdown">
 			<a class="dropdown-toggle" data-toggle="dropdown" TITLE = "Import from File/ Load Existing Library">Import<b class="caret"></b></a>
 			<ul class="dropdown-menu">
-			    <a href="/modeleditor/import/fromfile">From file..</a>
+                            {% if not isSpatial%} 
+			    <a href="/modeleditor/import/fromfile">From XML...</a>
+                            {% endif %}
+			    <a href="/import?tab=1">From StochSS .zip...</a>
 			    <a href="/modeleditor/import/publiclibrary">From Public Library...</a>
 			    <!-- <a href="/modeleditor/import/biomodels">BioModels database...</a>-->
 			</ul>
@@ -51,7 +61,7 @@
                     
                     <!-- <li><a href="/modeleditor/codeeditor">Editor</a></li> -->
                     {% if model_edited is defined %}
-                    {% if model_edited.units == "population" %} 
+                    {% if model_edited.units == "population" and not isSpatial%} 
 		    <li class="dropdown">
 			<a class="dropdown-toggle" data-toggle="dropdown" TITLE = "Export File To Stochkit">Export<b class="caret"></b></a>
 			<ul class="dropdown-menu">
@@ -60,12 +70,21 @@
           <!-- <a href="/modeleditor/export/tosbml">To SBML ...</a> -->
 			</ul>
 		    </li>
-                    {% else %}
+                    {% elif not isSpatial %}
 		    <li class="dropdown">
 			<a class="dropdown-toggle" data-toggle="dropdown" TITLE = "Export File To XML">Export<b class="caret"></b></a>
 			<ul class="dropdown-menu">
 			    <a href="/modeleditor/export/tostochkit2">To XML</a>
           <a href="#" id="exportToPublicLibrary" TITLE = "Export model to public Library">To Public Library...</a>
+			    <!-- <a href="/modeleditor/export/tosbml">To SBML ...</a> -->
+			</ul>
+		    </li>
+                    {% elif isSpatial %}
+		    <li class="dropdown">
+			<a class="dropdown-toggle" data-toggle="dropdown">Export<b class="caret"></b></a>
+			<ul class="dropdown-menu">
+			    <a id="exportToZip" href="#">To StochSS .zip</a>
+                            <a href="#" id="exportToPublicLibrary" TITLE = "Export model to public Library">To Public Library...</a>
 			    <!-- <a href="/modeleditor/export/tosbml">To SBML ...</a> -->
 			</ul>
 		    </li>
@@ -86,8 +105,14 @@
 			    <input type="text" class="span3" id="name" name="name" value="{{ name }}" class="update_box auto_complete">
 
                             <label>Units</label>
-                            <input type="radio" name="exec_type" value="concentration"> Concentration <br />
-                            <input type="radio" name="exec_type" value="population" checked> Population <br />
+                            <input type="radio" name="exec_type" value="concentration" class="concentration"> Concentration <br />
+                            <input type="radio" name="exec_type" value="population" class="population" checked> Population <br />
+                            
+                            <br />
+
+                            <label>Type</label>
+                            <input type="radio" name="spatial_type" value="true" class="spatial"> Spatial <br />
+                            <input type="radio" name="spatial_type" value="" class="nonspatial" checked> Non-spatial <br />
 			    <button type="submit" class="btn btn-primary btn-large" style="float: right;">
 				Create model
 			    </button>
@@ -118,6 +143,7 @@
 			    <thead>
 				<th>Model</th>
                                 <th>Units</th>
+                                <th>Spatial</th>
 				<th>&nbsp;</th>
 			    </thead>
 			    <tbody>
@@ -125,6 +151,7 @@
 				<tr>
 				    <td><a href="/modeleditor?model_edited={{ item.name }}">{{ item.name }}</a></td>
 				    <td>{{ item.units }}</td>
+				    <td>{% if item.isSpatial %}True{% else %}False{% endif %}</td>
 				    <td><a href="javascript:void(0)" onclick="javascript:deleteElement('{{item.name}}')">Delete</a></td>
 				</tr>
 				{% endfor %}
@@ -179,6 +206,11 @@
 		    <a href="#" id="convertToPopulation">Convert to Population</a>
 		  </li>
                   {% endif %}
+                  {% if model_edited is defined and model_edited.units == "population" and not isSpatial %}
+		  <li>
+		    <a href="#" id="convertModelToSpatial">Convert to Spatial</a>
+		  </li>
+                  {% endif %}
                   <li>
 		    <a href="#" id="duplicateModel" TITLE = "Duplicate model">Duplicate Model</a>
                   </li>
@@ -205,7 +237,7 @@
     </div>
     <!--/span9-->
 
-</div>
+</Div>
 <!--/row-->
 
 <!--/span9-->
@@ -216,11 +248,40 @@
 
 <script type="text/javascript">
 $( 'document' ).ready( function() {
+
+var execTypeButtons = $( 'input[name="exec_type"]' );
+var spatialTypeButtons = $( 'input[name="spatial_type"]' );
+var populationButtonState = execTypeButtons.filter('.population').prop('checked');
+
+//Depending on what spatial radio button is clicked, change things
+spatialTypeButtons.on('click', function(event) {
+  if(spatialTypeButtons.filter('.spatial').prop('checked') == true)
+  {
+    if(execTypeButtons.filter('.concentration').prop('disabled') == false)
+    {
+      populationButtonState = execTypeButtons.filter('.population').prop('checked');
+    }
+
+    execTypeButtons.filter('.population').trigger('click');
+    execTypeButtons.filter('.concentration').prop('disabled', true);
+  }
+  else
+  {
+    execTypeButtons.filter('.concentration').prop('disabled', false);
+
+    if(!populationButtonState)
+    {
+      execTypeButtons.filter('.concentration').trigger('click');
+    }
+  }
+});
+
 {% if model_edited %}
 $( '#convertToPopulation' ).click( function() {
 //saveChanges(true, );
 $(location).attr('href', '/modeleditor/converttopopulation?modelName={{model_edited.name}}');
 });
+
 $( '#duplicateModel' ).click( function() {
   //saveChanges(true, '')
 
@@ -241,6 +302,26 @@ $( '#duplicateModel' ).click( function() {
       }
     }});
   });
+
+$( '#convertModelToSpatial' ).click( function() {
+  $.ajax({ url : encodeURI('/modeleditor?convertModelToSpatial={{model_edited.name}}'),
+    error : function(data) {
+        $( '#sidemsg' ).text('Server error making model spatial');
+        $( "#sidemsg" ).prop('class', 'alert alert-error');
+    },
+    success : function(data) {
+      if($.trim(data).length > 0)
+      {
+        $( '#sidemsg' ).text('Successfully created model as ' + data);
+        $( "#sidemsg" ).prop('class', 'alert alert-success');
+        $(location).attr('href', '/modeleditor?model_edited=' + data);
+      } else {
+        $( '#sidemsg' ).text('Failed to create model');
+        $( "#sidemsg" ).prop('class', 'alert alert-error');
+      }
+    }});
+  });
+
 $( '#renameModel' ).click( function(event) {
     event.preventDefault();
 
@@ -284,6 +365,7 @@ $( '#renameModel' ).click( function(event) {
         }
       }});
   })
+
 $( '#exportToPublicLibrary' ).click( function() {
   var newName=prompt("Please name this public model","{{model_edited.name}}");
   if (newName != null) {
@@ -307,6 +389,27 @@ $( '#exportToPublicLibrary' ).click( function() {
       }
     });
   }});
+
+$( '#exportToZip' ).click( function() {
+    $.ajax({ url : encodeURI('/modeleditor?exportToZip=1'),
+      error : function(data) {
+        $( '#msg' ).text('Server error exporting model');
+        $( "#msg" ).prop('class', 'alert alert-error');
+      },
+      success : function(data) {
+        if(data['status'])
+        {
+          $( '#msg' ).text('Successfully exported model');
+          $( "#msg" ).prop('class', 'alert alert-success');
+
+          window.location = data.url;
+        } else {
+          $( '#msg' ).text('Failed to export model');
+          $( "#msg" ).prop('class', 'alert alert-error');
+        }
+      }
+    });
+});
 {% endif %}
 });
 </script>
@@ -399,6 +502,7 @@ $( '#exportToPublicLibrary' ).click( function() {
     
     /**
     * The ajax call for form submit
+    * This function call needs to trigger any necessary redraws on the page
     */
     function update() {
     var sData = $('input', oTable.fnGetHiddenNodes()).serialize() + "&update=1";
@@ -410,6 +514,7 @@ $( '#exportToPublicLibrary' ).click( function() {
     success : function(response) {
     var status = response['status']
     $(".create_msg").html('')
+    $( 'body' ).trigger( 'asdf' );
     if (!status) {
       $( "#msg" ).prop('class', 'alert alert-error');
       $('#msg').html(response['msg']);
@@ -419,6 +524,12 @@ $( '#exportToPublicLibrary' ).click( function() {
 
       if (isParameterEditor) {
         updateValues(response)
+      }
+
+      if (isSpeciesEditor) {
+        $( '[name=' + response['key'] + '-name]' ).prop( 'name', response['newKey'] + '-name' );
+        $( '[name=' + response['key'] + '-diffusion_constant]' ).prop( 'name', response['newKey'] + '-diffusion_constant' );
+        $( '[name=' + response['key'] + '-initial_value]' ).prop( 'name', response['newKey'] + '-initial_value' );
       }
     }
     },

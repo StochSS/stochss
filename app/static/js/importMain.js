@@ -98,8 +98,9 @@ Import.ImportTable = Backbone.View.extend(
             this.sjc = this.$el.find( '#stochkitJobContainer' );
             this.snc = this.$el.find( '#sensitivityJobContainer' );
             this.soc = this.$el.find( '#stochOptimJobContainer' );
+            this.spc = this.$el.find( '#spatialJobContainer' );
 
-            this.state = { id : undefined, selections : { mc : {}, soc : {}, sjc : {}, snc : {} } };
+            this.state = { id : undefined, selections : { mc : {}, soc : {}, spc : {}, sjc : {}, snc : {} } };
             
             this.$el.hide();
         },
@@ -115,9 +116,10 @@ Import.ImportTable = Backbone.View.extend(
 
         render: function(data)
         {
-            this.state = { id : undefined, selections : { mc : {}, sjc : {}, soc : {}, snc : {} } };
+            this.state = { id : undefined, selections : { mc : {}, soc : {}, spc : {}, sjc : {}, snc : {} } };
 
             this.soc.empty();
+            this.spc.empty();
             this.mc.empty();
             this.sjc.empty();
             this.snc.empty();
@@ -197,6 +199,30 @@ Import.ImportTable = Backbone.View.extend(
                     boxparam.find('input').change( _.partial(function(state, id, event) {
                         state[id] = $( event.target ).prop( 'checked' );
                     }, this.state.selections.soc, name) );
+                }
+
+                $( ".spatialContainerTr" ).hide();
+                for(var name in this.data.headers.spatialJobs) {
+                    $( ".spatialContainerTr" ).show();
+                    var job = this.data.headers.spatialJobs[name];
+
+                    var color = "red";
+                    var version = job.version + " (newer than current StochSS)";
+                    if(versionCompare(this.version, job.version) >= 0)
+                    {
+                        color = "green";
+                        version = job.version;
+                    }
+
+                    var html = this.sensitivityTemplate( { job : job,
+                                                           color : color,
+                                                           version : version});
+
+                    var boxparam = $( html ).appendTo( this.spc );
+
+                    boxparam.find('input').change( _.partial(function(state, id, event) {
+                        state[id] = $( event.target ).prop( 'checked' );
+                    }, this.state.selections.spc, name) );
                 }
 
                 $( ".sensitivityContainerTr" ).hide();
@@ -376,5 +402,12 @@ var run = function()
                   dataType : 'json'
                 });
     });
+
+    var tab = $.url().param("tab");
+
+    if(tab)
+    {
+        $( "#tab2Link" ).click();
+    }
 }
 

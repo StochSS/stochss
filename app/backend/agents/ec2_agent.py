@@ -2,7 +2,7 @@ from base_agent import BaseAgent, AgentConfigurationException, AgentRuntimeExcep
 import sys,os,traceback
 sys.path.append(os.path.join(os.path.dirname(__file__), '../../lib/boto'))
 sys.path.append(os.path.join(os.path.dirname(__file__), '../'))
-print sys.path
+#print sys.path
 import boto
 from boto.exception import EC2ResponseError
 import datetime
@@ -14,6 +14,7 @@ from uuid import uuid4
 import logging
 
 import httplib
+import backend.backendservice
 
 
 
@@ -111,6 +112,7 @@ class EC2Agent(BaseAgent):
           break
 
       if not group_exists:
+        time.sleep(2)
         utils.log('Creating security group: ' + group)
         newgroup = conn.create_security_group(group, 'stochSS security group')
         newgroup.authorize('tcp', 22, 22, '0.0.0.0/0')
@@ -223,7 +225,7 @@ class EC2Agent(BaseAgent):
         ec2.create_alarm(sleepy_alarm)
 
 
-  def run_instances(self, count, parameters, security_configured):
+  def run_instances(self, parameters):
     """
     Spawns the specified number of EC2 instances using the parameters
     provided. This method is blocking in that it waits until the
@@ -233,7 +235,6 @@ class EC2Agent(BaseAgent):
     class)
 
     Args:
-      count               No. of VMs to spawned
       parameters          A dictionary of parameters. This must contain 'keyname',
                           'group', 'image_id' and 'instance_type' parameters.
       security_configured Uses this boolean value as an heuristic to
@@ -247,6 +248,7 @@ class EC2Agent(BaseAgent):
     keyname = parameters[self.PARAM_KEYNAME]
     group = parameters[self.PARAM_GROUP]
     spot = parameters[self.PARAM_SPOT]
+    count = parameters["num_vms"]
 
     utils.log('[{0}] [{1}] [{2}] [{3}] [ec2] [{4}] [{5}]'.format(count,
       image_id, instance_type, keyname, group, spot))
@@ -279,7 +281,7 @@ class EC2Agent(BaseAgent):
       # Queue head, needs to have at least two cores
       insufficient_cores = ['t1.micro', 'm1.small', 'm1.medium', 'm3.medium']
       if instance_type in insufficient_cores:
-        instance_type = 'c3.large'
+        instance_type = 't1.micro'
       # Create the user that we want to use to connect to the broker
       # and configure its permissions on the default vhost.
       userstr += "rabbitmqctl add_user stochss ucsb\n"
@@ -313,102 +315,210 @@ class EC2Agent(BaseAgent):
 #    else:
 #      userstr+="nohup celery -A tasks worker --autoreload --loglevel=info --workdir /home/ubuntu > /home/ubuntu/nohup.log 2>&1 & \n"
     f.write(userstr)
-    f.close()
-    start_time = datetime.datetime.now()
-    active_public_ips = []
-    active_private_ips = []
-    active_instances = []
-
-    try:
-      attempts = 1
-      while True:
-        instance_info = self.describe_instances_old(parameters)
-        active_public_ips = instance_info[0]
-        active_private_ips = instance_info[1]
-        active_instances = instance_info[2]
-
-        # If security has been configured on this agent just now,
-        # that's an indication that this is a fresh cloud deployment.
-        # As such it's not expected to have any running VMs.
-        if len(active_instances) > 0 or security_configured:
-          break
-        elif attempts == self.DESCRIBE_INSTANCES_RETRY_COUNT:
-          self.handle_failure('Failed to invoke describe_instances')
-        attempts += 1
-
-      conn = self.open_connection(parameters)
-      if spot == 'True':
+    f.close()   
+    
+    conn = self.open_connection(parameters)
+    if spot == 'True':
         price = parameters[self.PARAM_SPOT_PRICE]
         conn.request_spot_instances(str(price), image_id, key_name=keyname,
           security_groups=[group], instance_type=instance_type, count=count, user_data = userstr)
-      else:
+    else:
         conn.run_instances(image_id, count, count, key_name=keyname,
           security_groups=[group], instance_type=instance_type, user_data=userstr)
+        
+    return
+    
+    
+    
+    
+    
+    
+    
+#     start_time = datetime.datetime.now()
+#     active_public_ips = []
+#     active_private_ips = []
+#     active_instances = []
+# 
+#     try:
+#       attempts = 1
+#       while True:
+#         instance_info = self.describe_instances_old(parameters)
+#         active_public_ips = instance_info[0]
+#         active_private_ips = instance_info[1]
+#         active_instances = instance_info[2]
+# 
+#         # If security has been configured on this agent just now,
+#         # that's an indication that this is a fresh cloud deployment.
+#         # As such it's not expected to have any running VMs.
+#         if len(active_instances) > 0 or security_configured:
+#           break
+#         elif attempts == self.DESCRIBE_INSTANCES_RETRY_COUNT:
+#           self.handle_failure('Failed to invoke describe_instances')
+#         attempts += 1
+# 
+#       conn = self.open_connection(parameters)
+#       if spot == 'True':
+#         price = parameters[self.PARAM_SPOT_PRICE]
+#         conn.request_spot_instances(str(price), image_id, key_name=keyname,
+#           security_groups=[group], instance_type=instance_type, count=count, user_data = userstr)
+#       else:
+#         conn.run_instances(image_id, count, count, key_name=keyname,
+#           security_groups=[group], instance_type=instance_type, user_data=userstr)
+# 
+#       instance_ids = []
+#       public_ips = []
+#       private_ips = []
+#       #utils.sleep(10)
+#       end_time = datetime.datetime.now() + datetime.timedelta(0,
+#         self.MAX_VM_CREATION_TIME)
+#       now = datetime.datetime.now()
+#       
+# #       while now < end_time:
+# #         time_left = (end_time - now).seconds
+# #         utils.log('[{0}] {1} seconds left...'.format(now, time_left))
+# #         active_public_ips, active_private_ips, active_instances = self.describe_instances_old(parameters)
+# #               
+# #           
+# #         public_ips = utils.diff(public_ips, active_public_ips)
+# #         private_ips = utils.diff(private_ips, active_private_ips)
+# #         instance_ids = utils.diff(instance_ids, active_instances)
+# #         utils.log('public_ips: {0}'.format(public_ips))
+# #         if count == len(public_ips):
+# #             break
+# #         time.sleep(self.SLEEP_TIME)
+# #         now = datetime.datetime.now()
+#       time.sleep(10)
+#       public_ips, private_ips, instance_ids = self.describe_instances_old(parameters)
+#       
+#       if not public_ips:
+#         self.handle_failure('No public IPs were able to be procured '
+#                             'within the time limit')
+# 
+#       if len(public_ips) != count:
+#         for index in range(0, len(public_ips)):
+#           if public_ips[index] == '0.0.0.0':
+#             instance_to_term = instance_ids[index]
+#             utils.log('Instance {0} failed to get a public IP address and' \
+#                       ' is being terminated'.format(instance_to_term))
+#             conn.terminate_instances([instance_to_term])
+# 
+#       end_time = datetime.datetime.now()
+#       total_time = end_time - start_time
+#       if spot:
+#         utils.log('TIMING: It took {0} seconds to spawn {1} spot ' \
+#                   'instances'.format(total_time.seconds, count))
+#       else:
+#         utils.log('TIMING: It took {0} seconds to spawn {1} ' \
+#                   'regular instances'.format(total_time.seconds, count))
+#         if not skip_alarm:
+#           utils.log('Creating Alarms for the instances')
+#           for machineid in instance_ids:
+#               self.make_sleepy(parameters, machineid)  
+#               
+# #               
+# #       service = backendservices()
+# #       service.update_celery_config_with_queue_head_ip(public_ips[0])
+# #       res['state'] = 'running'
+# #       res['vm_info'] = {
+# #             'public_ips': public_ips,
+# #             'private_ips': private_ips,
+# #             'instance_ids': instance_ids
+# #       }
+# #                 
+# #       self.copyCeleryConfigToInstance(res, parameters)
+# #       self.startCeleryViaSSH(res, parameters)
+#       
+#       return instance_ids, public_ips, private_ips
+#     except EC2ResponseError as exception:
+#       self.handle_failure('EC2 response error while starting VMs: ' +
+#                           exception.error_message)
+#     except Exception as exception:
+#       if isinstance(exception, AgentRuntimeException):
+#         raise exception
+#       else:
+#         self.handle_failure('Error while starting VMs: ' + exception.message)
 
-      instance_ids = []
-      public_ips = []
-      private_ips = []
-      utils.sleep(10)
-      end_time = datetime.datetime.now() + datetime.timedelta(0,
-        self.MAX_VM_CREATION_TIME)
-      now = datetime.datetime.now()
-      
-      while now < end_time:
-        time_left = (end_time - now).seconds
-        utils.log('[{0}] {1} seconds left...'.format(now, time_left))
-        try:
-            instance_info = self.describe_instances_old(parameters)
-        except httplib.BadStatusLine:
-            utils.log('OK. INSIDE THE CATCH')
-            instance_info = self.describe_instances_old(parameters)
-            
-        public_ips = instance_info[0]
-        private_ips = instance_info[1]
-        instance_ids = instance_info[2]
-        utils.log('PUBLIC_IPS: {0}'.format(public_ips))
-        utils.log('PRIVATE_IPS: {0}'.format(private_ips))
-        utils.log('INSTANCE_IPS: {0}'.format(instance_ids))
-        public_ips = utils.diff(public_ips, active_public_ips)
-        private_ips = utils.diff(private_ips, active_private_ips)
-        instance_ids = utils.diff(instance_ids, active_instances)
-        if count == len(public_ips):
-          break
-        time.sleep(self.SLEEP_TIME)
-        now = datetime.datetime.now()
-
-      if not public_ips:
-        self.handle_failure('No public IPs were able to be procured '
-                            'within the time limit')
-
-      if len(public_ips) != count:
-        for index in range(0, len(public_ips)):
-          if public_ips[index] == '0.0.0.0':
-            instance_to_term = instance_ids[index]
-            utils.log('Instance {0} failed to get a public IP address and' \
-                      ' is being terminated'.format(instance_to_term))
-            conn.terminate_instances([instance_to_term])
-
-      end_time = datetime.datetime.now()
-      total_time = end_time - start_time
-      if spot:
-        utils.log('TIMING: It took {0} seconds to spawn {1} spot ' \
-                  'instances'.format(total_time.seconds, count))
-      else:
-        utils.log('TIMING: It took {0} seconds to spawn {1} ' \
-                  'regular instances'.format(total_time.seconds, count))
-        if not skip_alarm:
-          utils.log('Creating Alarms for the instances')
-          for machineid in instance_ids:
-              self.make_sleepy(parameters, machineid)   
-      return instance_ids, public_ips, private_ips
-    except EC2ResponseError as exception:
-      self.handle_failure('EC2 response error while starting VMs: ' +
-                          exception.error_message)
-    except Exception as exception:
-      if isinstance(exception, AgentRuntimeException):
-        raise exception
-      else:
-        self.handle_failure('Error while starting VMs: ' + exception.message)
+#   def check_instances_status(self, parameters, security_configured):
+#       
+#     start_time = datetime.datetime.now()
+#     active_public_ips = []
+#     active_private_ips = []
+#     active_instances = []
+# 
+# 
+# 
+#     instance_ids = []
+#     public_ips = []
+#     private_ips = []
+#       #utils.sleep(10)
+#     end_time = datetime.datetime.now() + datetime.timedelta(0,
+#         self.MAX_VM_CREATION_TIME)
+#     now = datetime.datetime.now()
+#       
+#     while now < end_time:
+#       time_left = (end_time - now).seconds
+#       utils.log('[{0}] {1} seconds left...'.format(now, time_left))
+#       active_public_ips, active_private_ips, active_instances = self.describe_instances_old(parameters)
+#                
+#            
+#       public_ips = utils.diff(public_ips, active_public_ips)
+#       private_ips = utils.diff(private_ips, active_private_ips)
+#       instance_ids = utils.diff(instance_ids, active_instances)
+#       utils.log('public_ips: {0}'.format(public_ips))
+#       if count == len(public_ips):
+#           break
+#       time.sleep(self.SLEEP_TIME)
+#       now = datetime.datetime.now()
+#       time.sleep(10)
+#       public_ips, private_ips, instance_ids = self.describe_instances_old(parameters)
+#       
+#       if not public_ips:
+#         self.handle_failure('No public IPs were able to be procured '
+#                             'within the time limit')
+# 
+#       if len(public_ips) != count:
+#         for index in range(0, len(public_ips)):
+#           if public_ips[index] == '0.0.0.0':
+#             instance_to_term = instance_ids[index]
+#             utils.log('Instance {0} failed to get a public IP address and' \
+#                       ' is being terminated'.format(instance_to_term))
+#             conn.terminate_instances([instance_to_term])
+# 
+#       end_time = datetime.datetime.now()
+#       total_time = end_time - start_time
+#       if spot:
+#         utils.log('TIMING: It took {0} seconds to spawn {1} spot ' \
+#                   'instances'.format(total_time.seconds, count))
+#       else:
+#         utils.log('TIMING: It took {0} seconds to spawn {1} ' \
+#                   'regular instances'.format(total_time.seconds, count))
+#         if not skip_alarm:
+#           utils.log('Creating Alarms for the instances')
+#           for machineid in instance_ids:
+#               self.make_sleepy(parameters, machineid)  
+#               
+# #               
+# #       service = backendservices()
+# #       service.update_celery_config_with_queue_head_ip(public_ips[0])
+# #       res['state'] = 'running'
+# #       res['vm_info'] = {
+# #             'public_ips': public_ips,
+# #             'private_ips': private_ips,
+# #             'instance_ids': instance_ids
+# #       }
+# #                 
+# #       self.copyCeleryConfigToInstance(res, parameters)
+# #       self.startCeleryViaSSH(res, parameters)
+#       
+#       return instance_ids, public_ips, private_ips
+#     except EC2ResponseError as exception:
+#       self.handle_failure('EC2 response error while starting VMs: ' +
+#                           exception.error_message)
+#     except Exception as exception:
+#       if isinstance(exception, AgentRuntimeException):
+#         raise exception
+#       else:
+#         self.handle_failure('Error while starting VMs: ' + exception.message)
 
   def terminate_instances(self, parameters, prefix=''):
     """
@@ -452,6 +562,7 @@ class EC2Agent(BaseAgent):
           conn.get_all_instances()
           return True
       except EC2ResponseError:
+          print '\nIn validate_Credentials'
           traceback.print_exc()
           return False
 

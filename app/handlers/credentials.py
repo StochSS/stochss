@@ -203,8 +203,11 @@ class CredentialsPage(BaseHandler):
         else:
             try:
                 service = backendservices()
-                params ={"infrastructure":"ec2",
-                     'credentials':credentials}          
+                params = {
+                    "infrastructure": service.INFRA_EC2,
+                    "credentials": credentials,
+                    "key_prefix": service.KEYPREFIX + user_id
+                }
                 result = service.describeMachines(params)
                 return result
             except:
@@ -216,21 +219,24 @@ class CredentialsPage(BaseHandler):
         params ={"infrastructure":"ec2",
              "num_vms":number_of_vms, 
              'group':group_random_name, 
-             'image_id':'ami-f0d42898',
+             'image_id':'ami-0836e860',
              'instance_type':'t1.micro',
-             'key_prefix':key_prefix,
+             'key_prefix':key_prefix, #key_prefix = user_id
              'keyname':group_random_name, 
              'email':[user_id],
              'credentials':credentials,
              'use_spot_instances':False}
         service = backendservices()
-        res = service.startMachines(params)
-        if res != None and res['success']==True:
-            result = {'status':'Success' , 'msg': 'Sucessfully requested '+ str(number_of_vms) + ' Virtual Machines.'}
-        else:
-            result = {'status': 'False' , 'msg': 'Request to start the machines failed. Please contact the administrator.'}
-
+        service.startMachines(params)
+        result = {'status':'Success' , 'msg': 'Sucessfully requested '+ str(number_of_vms) + ' Virtual Machines.'}
         return result
+#         res = service.startMachines(params)
+#         if res != None and res['success']==True:
+#             result = {'status':'Success' , 'msg': 'Sucessfully requested '+ str(number_of_vms) + ' Virtual Machines.'}
+#         else:
+#             result = {'status': 'False' , 'msg': 'Request to start the machines failed. Please contact the administrator.'}
+#  
+#         return result
     
     def delete_vms():
         db_user = db.GqlQuery("SELECT * FROM StochKitModelWrapper WHERE user_id = :1", user_id).get()
