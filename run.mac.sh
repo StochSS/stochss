@@ -11,7 +11,7 @@ MY_PATH="`( cd \"$MY_PATH\" && pwd )`"  # absolutized and normalized
 STOCHSS_HOME=$MY_PATH
 STOCHSS_HOME="`( cd \"$STOCHSS_HOME\" && pwd )`" 
 
-STOCHKIT_VERSION=StochKit2.0.10
+STOCHKIT_VERSION=StochKit2.0.11
 STOCHKIT_PREFIX=$STOCHSS_HOME
 export STOCHKIT_HOME="$STOCHKIT_PREFIX/$STOCHKIT_VERSION"
 ODE_VERSION="ode-1.0.1"
@@ -317,7 +317,8 @@ else
 
     if [ ! -e "$STOCHKIT_PREFIX/$STOCHKIT_VERSION.tgz" ]; then
 	echo "Downloading $STOCHKIT_VERSION..."
-	curl -o "$STOCHKIT_PREFIX/$STOCHKIT_VERSION.tgz" -L "http://sourceforge.net/projects/stochkit/files/StochKit2/$STOCHKIT_VERSION/$STOCHKIT_VERSION.tgz"
+	#curl -o "$STOCHKIT_PREFIX/$STOCHKIT_VERSION.tgz" -L "http://sourceforge.net/projects/stochkit/files/StochKit2/$STOCHKIT_VERSION/$STOCHKIT_VERSION.tgz"
+	curl -o "$STOCHKIT_PREFIX/$STOCHKIT_VERSION.tgz" -L "https://www.dropbox.com/s/ubbj4xhf44mya49/StochKit2.0.11.tgz?dl=0"
     fi
 
     echo "Building StochKit<br />"
