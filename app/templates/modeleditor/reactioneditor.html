@@ -118,7 +118,7 @@
                     
                     <input id="massAction" type="checkbox" onclick="javascript:toggleField('propensity');javascript:toggleField('propensity_label');javascript:toggleField('mass-action');" name='is_mass_action'> <a data-toggle="modal" href="#help_modal3" style="text-decoration: none"> Mass Action <i class="icon-question-sign"></i></a></input>
                     {% set help_modal_id = "help_modal3" %}
-                    {% set help_modal_title = "Mass Action reaction" %}
+                    {% set help_modal_title = "Mass Action Reaction" %}
                     {% set help_modal_message = "By selecting the Mass Action checkbox, you will be presented with the option to choose a rate constant for the reaction. The propensity function will be automatically created assuming mass action kinetics when you click the 'Add reaction' button. For this option, only zeroth (EmptySet -> A), first (A->B) and second order (A+B->C) reactions are supported. If you use the StochKit2 solvers, specifying reactions as mass action can have a performance advantage, since models with only mass action reactions does not have to be compiled prior to simulations, which reduces the start-up time of the solver. "%}
                     {% include "help_modal.html" %}
                     {{help_modal|safe}}
