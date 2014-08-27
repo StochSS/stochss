@@ -98,7 +98,7 @@ else
     if [ ! -e "$STOCHKIT_PREFIX/$STOCHKIT_VERSION.tgz" ]; then
 	echo "Downloading $STOCHKIT_VERSION..."
 	#curl -o "$STOCHKIT_PREFIX/$STOCHKIT_VERSION.tgz" -L "http://sourceforge.net/projects/stochkit/files/StochKit2/$STOCHKIT_VERSION/$STOCHKIT_VERSION.tgz"
-	curl -o "$STOCHKIT_PREFIX/$STOCHKIT_VERSION.tgz" -L "https://www.dropbox.com/s/ubbj4xhf44mya49/StochKit2.0.11.tgz?dl=0"
+	curl -o "$STOCHKIT_PREFIX/$STOCHKIT_VERSION.tgz" -L "http://sourceforge.net/projects/stochkit/files/StochKit2/StochKit2.0.11/StochKit2.0.11.tgz/download"
     fi
 
     echo "Building StochKit"

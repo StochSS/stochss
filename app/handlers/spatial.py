@@ -176,9 +176,9 @@ class SpatialPage(BaseHandler):
                         maxIdx = numpy.argmax(concVals)
 
                         threeJS[specie] = { "mesh" : json.loads(result.export_to_three_js(specie, timeIdx)),
-                                            "max" : popVals[maxIdx],
-                                            "min" : popVals[minIdx] }
-                        
+                                            "max" : int(popVals[maxIdx]),
+                                            "min" : int(popVals[minIdx]) }
+
                 self.response.content_type = 'application/json'
                 self.response.write(json.dumps( threeJS ))
             except Exception as e:
