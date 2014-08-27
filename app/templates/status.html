@@ -325,11 +325,16 @@
 <script>
 function deleteJob(path)
 {
-$.post(path,
-success = function(data)
-{
-location.reload();
-});
+$.ajax({ url : path,
+    type : 'POST',
+    success : function(data)
+    {
+        location.reload();
+    },
+    error : function(data)
+    {
+        location.reload();
+    }});
 
 return false;
 }

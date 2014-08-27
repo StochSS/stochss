@@ -228,6 +228,7 @@ function install_pip {
 }
 
 function install_dependencies_via_applescript {
+    echo "Installing missing dependencies with Applescript. This will take a few minutes.<br />"
     /usr/bin/env osascript run_mac_install.scpt
 }
 
