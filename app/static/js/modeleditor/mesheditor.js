@@ -94,7 +94,8 @@ MeshEditor.Controller = Backbone.View.extend(
                 // get a new browser by presenting the user with link to
                 // http://get.webgl.org
                 $( "#meshPreview" ).html('<center><h2 style="color: red;">WebGL Not Supported</h2><br /> \
-<ul><li>Download an updated Firefox or Chromium to use StochSS (both come with WebGL support)</li></ul></center>');
+<ul><li>Download an updated Firefox or Chromium to use StochSS (both come with WebGL support)</li> \
+<li>It may be necessary to update system video drivers to make this work</li></ul></center>');
                 return;
             }
 
@@ -107,7 +108,9 @@ MeshEditor.Controller = Backbone.View.extend(
                 // http://get.webgl.org/troubleshooting
                 $( "#meshPreview" ).html('<center><h2 style="color: red;">WebGL Disabled</h2><br /> \
 <ul><li>In Safari and certain older browsers, this must be enabled manually</li> \
-<li>Enable WebGL, or try using StochSS in an up to date Chrome or Firefox browser</li></ul></center>');
+<li>Browsers can also throw this error when they detect old or incompatible video drivers</li> \
+<li>Enable WebGL, or try using StochSS in an up to date Chrome or Firefox browser</li> \
+</ul></center>');
                 return;  
             }
 
@@ -179,6 +182,8 @@ MeshEditor.Controller = Backbone.View.extend(
             scene.add(directionalLight);
 
             this.scene = scene;
+
+            $( "#meshPreviewMsg" ).hide();
 
             if(!this.rendererInitialized)
             {
@@ -821,6 +826,8 @@ Count in each voxel \
             $( '.meshInfoDiv' ).find( '.name' ).text(mesh.name);
             $( '.meshInfoDiv, .uploadMeshDiv' ).find( '.description' ).text(mesh.description);
     
+            $( "#meshPreviewMsg" ).show();
+
             $.ajax( { type : 'POST',
                       url: '/modeleditor/mesheditor',
                       data: { reqType : 'getMesh',
@@ -1005,6 +1012,8 @@ Count in each voxel \
             {
                 this.selectedSubdomains.splice(idx, 1);
             }
+
+            $( "#meshPreviewMsg" ).show();
                     
             $.ajax( { type : 'POST',
                       url: '/modeleditor/mesheditor',
