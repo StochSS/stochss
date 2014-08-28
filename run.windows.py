@@ -168,19 +168,20 @@ class EC2Services:
         return security_group
     
     def make_instance_sleepy(self, instance_id):
-          ec2 = boto.ec2.cloudwatch.connect_to_region(self.region, aws_access_key_id=self.access_key, aws_secret_access_key=self.secret_key)
-          stop_arn = 'arn:aws:automate:{0}:ec2:stop'.format(self.region)
-          alarm_name = 'ec2_shutdown_sleepy_{0}'.format(instance_id)
-          # define our alarm to stop the instance if it gets sleepy
-          # i.e. if CPU utilization is less than 10% for 1 x 4 hr intervals    
-          sleepy_alarm = MetricAlarm(
-              name=alarm_name, namespace='AWS/EC2',
-              metric='CPUUtilization', statistic='Average',
-              comparison='<', threshold='10',
-              period='3600', evaluation_periods=4,
-              alarm_actions=[stop_arn],
-              dimensions={'InstanceId':instance_id})
-          ec2.create_alarm(sleepy_alarm)
+        print "Setting alarm to stop instance after 4 hours of idle cpu."
+        ec2 = boto.ec2.cloudwatch.connect_to_region(self.region, aws_access_key_id=self.access_key, aws_secret_access_key=self.secret_key)
+        stop_arn = 'arn:aws:automate:{0}:ec2:stop'.format(self.region)
+        alarm_name = 'ec2_shutdown_sleepy_{0}'.format(instance_id)
+        # define our alarm to stop the instance if it gets sleepy
+        # i.e. if CPU utilization is less than 10% for 1 x 4 hr intervals
+        sleepy_alarm = MetricAlarm(
+            name=alarm_name, namespace='AWS/EC2',
+            metric='CPUUtilization', statistic='Average',
+            comparison='<', threshold='10',
+            period='3600', evaluation_periods=4,
+            alarm_actions=[stop_arn],
+            dimensions={'InstanceId':instance_id})
+        ec2.create_alarm(sleepy_alarm)
     
     def retrieve_ec2_instance(self, instance_id):
         try:
@@ -259,7 +260,7 @@ class EC2Services:
         instance = self.retrieve_ec2_instance(instance_id)
         return instance.key_name
     
-    def launch_ec2_instance(self, instance_id, key_pair=None):
+    def launch_ec2_instance(self, instance_id, key_pair=None, keyfile=None):
         '''
         Launches an EC2 instance. If instance_id is a blank string then it launches a new instance using
          the appropriate AMI ID, otherwise it launches the instance specified by the given instance_id.
@@ -272,10 +273,15 @@ class EC2Services:
                 key_pair = '{0}-{1}'.format(self.default_key_pair_prefix, self.region)
                 # Store it in current directory
                 current_dir = os.path.dirname(os.path.abspath(__file__))
-                if not os.path.exists('{0}/{1}.pem'.format(current_dir, key_pair)):
+                keyfile = '{0}/{1}.pem'.format(current_dir, key_pair)
+                if os.path.exists(keyfile):
+                    print "Using keyfile {0}".format(keyfile)
+                else:
                     try:
                         # If it doesnt exist, then create it
                         key_pair = self.create_default_key_pair(key_pair, current_dir)
+                        keyfile = '{0}/{1}.pem'.format(current_dir, key_pair)
+                        print "Created keyfile {0}".format(keyfile)
                     except boto.exception.EC2ResponseError as e:
                         print "Failed to launch EC2 instance with exception: " + str(e)
                         exit(-1)
@@ -304,10 +310,47 @@ class EC2Services:
         while instance.state != 'running':
             time.sleep(5)
             instance.update()
+            print "Instance '{0}' has state '{1}'".format(instance.id, instance.state)
         # Dont forget to add the alarm
         self.make_instance_sleepy(instance.id)
+        # Start StochSS on the instance
+        self.start_stochss_via_ssh(keyfile, instance.public_dns_name)
+        # We are done
         return instance
-    
+        
+    def wait_for_ssh_connection(self, keyfile, ip):
+        SSH_RETRY_COUNT = 30
+        SSH_RETRY_WAIT = 3
+        for _ in range(0, SSH_RETRY_COUNT):
+            cmd = "ssh -o 'StrictHostKeyChecking no' -i {0} ubuntu@{1} \"pwd\"".format(keyfile, ip)
+            #print cmd
+            success = os.system(cmd)
+            if success == 0:
+                print "Connected to '{0}'".format(ip)
+                return True
+            else:
+                print "'{0}' not available yet, sleeping {1}s".format(ip, SSH_RETRY_WAIT)
+                time.sleep(SSH_RETRY_WAIT)
+        raise Exception("Timeout waiting to connect to node via SSH")
+
+    def start_stochss_via_ssh(self, keyfile, ip):
+        python_path = "export PYTHONPATH=/home/ubuntu/stochss/app/lib/pyurdme-stochss/:/home/ubuntu/stochss/app/;"
+        start_celery_str = "cd /home/ubuntu/stochss;./run.ubuntu.sh"
+        # PyURDME must be run inside a 'screen' terminal as part of the FEniCS code depends on the ability to write to the process' terminal, screen provides this terminal.
+        startcmd = "screen -d -m bash -c '{1}{0}'\n".format(start_celery_str,python_path)
+        
+        print "Attempting to start StochSS on '{0}'".format(ip)
+        if not os.path.exists(keyfile):
+            raise Exception("ssh keyfile file not found: {0}".format(keyfile))
+        self.wait_for_ssh_connection(keyfile, ip)
+        cmd = "ssh -o 'StrictHostKeyChecking no' -i {0} ubuntu@{1} \"{2}\"".format(keyfile, ip, startcmd)
+        #print cmd
+        success = os.system(cmd)
+        if success == 0:
+            print "StochSS started on {0}".format(ip)
+        else:
+            raise Exception("Failure to start StochSS on {0}".format(ip))
+ 
     def stop_ec2_instance(self, instance_id):
         instance = self.retrieve_ec2_instance(instance_id)
         print "Stopping EC2 instance. This will take a minute..."
@@ -465,7 +508,7 @@ def start_stochss_server(aws_access_key, aws_secret_key, preferred_instance_id, 
             }
             config_file.write(params_to_write)
     else:
-        new_instance_id = raw_input('Enter an AWS EC2 instance ID that you wish to launch, None to create a new instance, or hit return to use {0}: '.format(preferred_instance_id))
+        new_instance_id = raw_input("Enter an AWS EC2 instance ID that you wish to launch, 'None' to create a new instance, or hit return to use {0}: ".format(preferred_instance_id))
         if new_instance_id == "None":
             preferred_instance_id = ''
             preferred_ec2_key_pair = None
@@ -487,7 +530,7 @@ def start_stochss_server(aws_access_key, aws_secret_key, preferred_instance_id, 
                 print "Couldn't find the specified key pair at: {0}".format(path_to_key_pair)
                 path_to_key_pair = raw_input('Please enter the full path to the AWS key pair you specified ({0}): '.format(preferred_ec2_key_pair))
     # Now we have all the necessary config variables to launch
-    instance = ec2_services.launch_ec2_instance(preferred_instance_id, preferred_ec2_key_pair)
+    instance = ec2_services.launch_ec2_instance(preferred_instance_id, preferred_ec2_key_pair, keyfile=path_to_key_pair)
     print "EC2 instance launched at {0}!".format(instance.public_dns_name)
     # Write this instance id to the config file in case its a brand new instance
     params_to_write = {
