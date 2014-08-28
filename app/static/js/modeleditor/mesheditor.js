@@ -810,6 +810,9 @@ Count in each voxel \
 
         handleMeshSelect : function(mesh)
         {
+            this.updateMeshMsg( { status : true,
+                                  msg : '\'' + mesh.name + '\' selected' } );
+
             if(this.data.meshWrapperId != mesh.id)
             {
                 // Send a message to the server to change the selected mesh
@@ -824,7 +827,7 @@ Count in each voxel \
             
             $( '.mesh' ).show();
             $( '.meshInfoDiv' ).find( '.name' ).text(mesh.name);
-            $( '.meshInfoDiv, .uploadMeshDiv' ).find( '.description' ).text(mesh.description);
+            $( '.meshInfoDiv, .meshSelectDescriptionDiv' ).find( '.description' ).text(mesh.description);
     
             $( "#meshPreviewMsg" ).show();
 
@@ -841,6 +844,9 @@ Count in each voxel \
         {
             var mesh = this.data.meshes[index];
 
+            this.updateMeshMsg( { status : true,
+                                  msg : '\'' + mesh.name + '\' deleted' } );
+            
             if(this.data.meshWrapperId != mesh.id && !mesh.undeletable)
             {
                 $.ajax( { type : 'POST',
