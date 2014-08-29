@@ -266,6 +266,15 @@ class EC2Services:
          the appropriate AMI ID, otherwise it launches the instance specified by the given instance_id.
         Returns the instance object representing the instance that was launched.
         '''
+        if instance_id is not "":
+            print "Launching EC2 instance from instance ID '{0}'. This may take a moment...".format(instance_id)
+            try:
+                instance = self.retrieve_ec2_instance(instance_id)
+                instance.start()
+            except boto.exception.EC2ResponseError:
+                print "Instance ID '{0}' is not resumeable, starting a new instance.".format(instance_id)
+                instance_id = ""
+
         if instance_id is "":
             security_group = self.find_or_create_security_group()
             if key_pair is None:
@@ -297,14 +306,7 @@ class EC2Services:
                 print "Failed to launch EC2 instance with exception: " + str(e)
                 exit(-1)
             instance = reservation.instances[0]
-        else:
-            print "Launching EC2 instance from instance ID '{0}'. This may take a moment...".format(instance_id)
-            try:
-                instance = self.retrieve_ec2_instance(instance_id)
-            except boto.exception.EC2ResponseError:
-                print "Invalid instance ID. Are you sure you entered it in correctly?"
-                exit(-1)
-            instance.start()
+            
         # Make sure its actually running before we return
         instance.update()
         while instance.state != 'running':
@@ -322,7 +324,7 @@ class EC2Services:
         SSH_RETRY_COUNT = 30
         SSH_RETRY_WAIT = 3
         for _ in range(0, SSH_RETRY_COUNT):
-            cmd = "ssh -o 'StrictHostKeyChecking no' -i {0} ubuntu@{1} \"pwd\"".format(keyfile, ip)
+            cmd = "ssh -o 'ConnectTimeout=5' -o 'StrictHostKeyChecking no' -i {0} ubuntu@{1} \"true\"".format(keyfile, ip)
             #print cmd
             success = os.system(cmd)
             if success == 0:
