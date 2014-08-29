@@ -67,6 +67,7 @@ from google.appengine.api.xmpp import xmpp_service_stub
 from google.appengine.api import datastore_file_stub
 from google.appengine.datastore import datastore_sqlite_stub
 from google.appengine.datastore import datastore_stub_util
+from google.appengine.datastore import datastore_v4_stub
 
 from google.appengine.api import apiproxy_stub_map
 from google.appengine.ext.remote_api import remote_api_pb
@@ -233,6 +234,8 @@ class APIServer(SocketServer.ThreadingMixIn, BaseHTTPServer.HTTPServer):
 def _SetupStubs(
     app_id,
     application_root,
+    appidentity_email_address,
+    appidentity_private_key_path,
     trusted,
     blobstore_path,
     use_sqlite,
@@ -248,12 +251,14 @@ def _SetupStubs(
     mail_smtp_password,
     mail_enable_sendmail,
     mail_show_mail_body,
+    mail_allow_tls,
     matcher_prospective_search_path,
     taskqueue_auto_run_tasks,
     taskqueue_task_retry_seconds,
     taskqueue_default_http_server,
     user_login_url,
-    user_logout_url):
+    user_logout_url,
+    default_gcs_bucket_name):
   """Configures the APIs hosted by this server.
 
   Args:
@@ -293,6 +298,7 @@ def _SetupStubs(
         sending e-mails. This argument is ignored if mail_smtp_host is not None.
     mail_show_mail_body: A bool indicating whether the body of sent e-mails
         should be written to the logs.
+    mail_allow_tls: A bool indicating whether to allow TLS support.
     matcher_prospective_search_path: The path to the file that should be used to
         save prospective search subscriptions.
     taskqueue_auto_run_tasks: A bool indicating whether taskqueue tasks should
@@ -304,6 +310,7 @@ def _SetupStubs(
     user_login_url: A str containing the url that should be used for user login.
     user_logout_url: A str containing the url that should be used for user
         logout.
+    default_gcs_bucket_name: A str overriding the usual default bucket name.
   """
 
 
@@ -314,9 +321,13 @@ def _SetupStubs(
 
 
 
+  tmp_app_identity_stub = app_identity_stub.AppIdentityServiceStub.Create(
+      email_address=appidentity_email_address,
+      private_key_path=appidentity_private_key_path)
+  if default_gcs_bucket_name is not None:
+    tmp_app_identity_stub.SetDefaultGcsBucketName(default_gcs_bucket_name)
   apiproxy_stub_map.apiproxy.RegisterStub(
-      'app_identity_service',
-      app_identity_stub.AppIdentityServiceStub())
+      'app_identity_service', tmp_app_identity_stub)
 
   blob_storage = file_blob_storage.FileBlobStorage(blobstore_path, app_id)
   apiproxy_stub_map.apiproxy.RegisterStub(
@@ -363,6 +374,10 @@ def _SetupStubs(
       'datastore_v3', datastore)
 
   apiproxy_stub_map.apiproxy.RegisterStub(
+      'datastore_v4',
+      datastore_v4_stub.DatastoreV4Stub(app_id))
+
+  apiproxy_stub_map.apiproxy.RegisterStub(
       'file',
       file_service_stub.FileServiceStub(blob_storage))
 
@@ -394,7 +409,8 @@ def _SetupStubs(
                                 mail_smtp_user,
                                 mail_smtp_password,
                                 enable_sendmail=mail_enable_sendmail,
-                                show_mail_body=mail_show_mail_body))
+                                show_mail_body=mail_show_mail_body,
+                                allow_tls=mail_allow_tls))
 
   apiproxy_stub_map.apiproxy.RegisterStub(
       'memcache',
@@ -472,6 +488,8 @@ def ParseCommandArguments(args):
                       action=boolean_action.BooleanAction,
                       const=True,
                       default=False)
+  parser.add_argument('--appidentity_email_address', default=None)
+  parser.add_argument('--appidentity_private_key_path', default=None)
   parser.add_argument('--application_root', default=None)
   parser.add_argument('--application_host', default='localhost')
   parser.add_argument('--application_port', default=None)
@@ -521,6 +539,10 @@ def ParseCommandArguments(args):
                       action=boolean_action.BooleanAction,
                       const=True,
                       default=False)
+  parser.add_argument('--smtp_allow_tls',
+                      action=boolean_action.BooleanAction,
+                      const=True,
+                      default=False)
 
 
   parser.add_argument('--prospective_search_path', default=None)
@@ -558,6 +580,8 @@ class APIServerProcess(object):
                port,
                app_id,
                script=None,
+               appidentity_email_address=None,
+               appidentity_private_key_path=None,
                application_host=None,
                application_port=None,
                application_root=None,
@@ -577,9 +601,11 @@ class APIServerProcess(object):
                smtp_password=None,
                smtp_port=None,
                smtp_user=None,
+               smtp_allow_tls=None,
                task_retry_seconds=None,
                trusted=None,
-               use_sqlite=None):
+               use_sqlite=None,
+               default_gcs_bucket_name=None):
     """Configures the APIs hosted by this server.
 
     Args:
@@ -592,6 +618,8 @@ class APIServerProcess(object):
       script: The name of the script that should be used, along with the
           executable argument, to run the API Server e.g. "api_server.py".
           If None then the executable is run without a script argument.
+      appidentity_email_address: Email address for service account substitute.
+      appidentity_private_key_path: Private key for service account substitute.
       application_host: The name of the host where the development application
           server is running e.g. "localhost".
       application_port: The port where the application server is running e.g.
@@ -633,11 +661,13 @@ class APIServerProcess(object):
       smtp_user: The username to use when authenticating with the
           SMTP server. This value may be None if smtp_host is also None or if
           the SMTP server does not require authentication.
+      smtp_allow_tls: A bool indicating whether to enable TLS.
       task_retry_seconds: An int representing the number of seconds to
           wait before a retrying a failed taskqueue task.
       trusted: A bool indicating if privileged APIs should be made available.
       use_sqlite: A bool indicating whether DatastoreSqliteStub or
           DatastoreFileStub should be used.
+      default_gcs_bucket_name: A str overriding the normal default bucket name.
     """
     self._process = None
     self._host = host
@@ -648,6 +678,8 @@ class APIServerProcess(object):
       self._args = [executable]
     self._BindArgument('--api_host', host)
     self._BindArgument('--api_port', port)
+    self._BindArgument('--appidentity_email_address', appidentity_email_address)
+    self._BindArgument('--appidentity_private_key_path', appidentity_private_key_path)
     self._BindArgument('--application_host', application_host)
     self._BindArgument('--application_port', application_port)
     self._BindArgument('--application_root', application_root)
@@ -668,9 +700,11 @@ class APIServerProcess(object):
     self._BindArgument('--smtp_password', smtp_password)
     self._BindArgument('--smtp_port', smtp_port)
     self._BindArgument('--smtp_user', smtp_user)
+    self._BindArgument('--smtp_allow_tls', smtp_allow_tls)
     self._BindArgument('--task_retry_seconds', task_retry_seconds)
     self._BindArgument('--trusted', trusted)
     self._BindArgument('--use_sqlite', use_sqlite)
+    self._BindArgument('--default_gcs_bucket_name', default_gcs_bucket_name)
 
   @property
   def url(self):
@@ -836,9 +870,14 @@ def main():
   else:
     application_address = None
 
+  if not hasattr(args, 'default_gcs_bucket_name'):
+    args.default_gcs_bucket_name = None
+
   request_info._local_dispatcher = ApiServerDispatcher()
   _SetupStubs(app_id=args.application,
               application_root=args.application_root,
+              appidentity_email_address=args.appidentity_email_address,
+              appidentity_private_key_path=args.appidentity_private_key_path,
               trusted=args.trusted,
               blobstore_path=args.blobstore_path,
               datastore_path=args.datastore_path,
@@ -854,12 +893,14 @@ def main():
               mail_smtp_password=args.smtp_password,
               mail_enable_sendmail=args.enable_sendmail,
               mail_show_mail_body=args.show_mail_body,
+              mail_allow_tls=args.smtp_allow_tls,
               matcher_prospective_search_path=args.prospective_search_path,
               taskqueue_auto_run_tasks=args.enable_task_running,
               taskqueue_task_retry_seconds=args.task_retry_seconds,
               taskqueue_default_http_server=application_address,
               user_login_url=args.user_login_url,
-              user_logout_url=args.user_logout_url)
+              user_logout_url=args.user_logout_url,
+              default_gcs_bucket_name=args.default_gcs_bucket_name)
   server = APIServer((args.api_host, args.api_port), args.application)
   try:
     server.serve_forever()

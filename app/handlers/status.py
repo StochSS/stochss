@@ -212,12 +212,9 @@ class StatusPage(BaseHandler):
         if allSensQuery != None:
             jobs = list(allSensQuery.run())
 
-            print [x.key().id() for x in jobs]
-
             jobs = sorted(jobs, key = lambda x : (datetime.datetime.strptime(x.startTime, '%Y-%m-%d-%H-%M-%S') if hasattr(x, 'startTime') and x.startTime != None else ''), reverse = True)
 
             for number, job in enumerate(jobs):
-                print job.key().id()
                 number = len(jobs) - number
                 if job.resource == "local":
                     if job.status != "Finished" or job.status != "Failed":
@@ -280,11 +277,10 @@ class StatusPage(BaseHandler):
 
             for number, job in enumerate(jobs):
                 number = len(jobs) - number
-                print 'hi', job.outData
                 allExportJobs.append({ "startTime" : job.startTime,
                                        "status" : job.status,
                                        "number" : number,
-                                       "outData" : os.path.basename(job.outData),
+                                       "outData" : os.path.basename(job.outData if job.outData else ""),
                                        "id" : job.key().id()})
         
         context['allExportJobs'] = allExportJobs
@@ -298,12 +294,10 @@ class StatusPage(BaseHandler):
             jobs = sorted(jobs, key = lambda x : (datetime.datetime.strptime(x.startTime, '%Y-%m-%d-%H-%M-%S') if hasattr(x, 'startTime') and x.startTime != None else ''), reverse = True)
 
             for number, job in enumerate(jobs):
-                print number, job.pid
                 number = len(jobs) - number
                 if job.resource == "local" or not job.resource:
                     # First, check if the job is still running
                     res = service.checkTaskStatusLocal([job.pid])
-                    print job.pid, res[job.pid], job.jobName
                     if res[job.pid] and job.pid:
                         job.status = "Running"
                     else:
@@ -369,6 +363,85 @@ class StatusPage(BaseHandler):
                                        "id" : job.key().id()})
         
         context['allParameterJobs'] = allParameterJobs
+
+        allSpatialJobs = []
+        allSpatialJobsQuery = db.GqlQuery("SELECT * FROM SpatialJobWrapper WHERE userId = :1", self.user.user_id())
+
+        if allSpatialJobsQuery != None:
+            jobs = list(allSpatialJobsQuery.run())
+
+            task_status = {}
+            if self.user_data.valid_credentials:
+                cloud_task_status = {}
+                for job in jobs:
+                    if job.resource == "cloud":
+                        cloud_task_status[job.cloud_id] = None
+                credentials = self.user_data.getCredentials()
+
+                # Check the status on the remote end
+                taskparams = {'AWS_ACCESS_KEY_ID':credentials['EC2_ACCESS_KEY'],'AWS_SECRET_ACCESS_KEY':credentials['EC2_SECRET_KEY'],'taskids':cloud_task_status.keys()}
+                task_status = service.describeTask(taskparams)
+
+            jobs = sorted(jobs, key = lambda x : (datetime.datetime.strptime(x.startTime, '%Y-%m-%d-%H-%M-%S') if hasattr(x, 'startTime') and x.startTime != None else ''), reverse = True)
+
+            for number, job in enumerate(jobs):
+                number = len(jobs) - number
+                if job.resource == "local" or not job.resource:
+                    # First, check if the job is still running
+                    res = service.checkTaskStatusLocal([job.pid])
+                    if res[job.pid] and job.pid:
+                        job.status = "Running"
+                    else:
+                        if os.path.exists("{0}/results/complete".format(job.outData)):
+                            job.status = "Finished"
+                        else:
+                            job.status = "Failed"
+                elif job.resource == "cloud":
+                            if job.cloud_id in task_status:
+                                job_status = task_status[job.cloud_id]
+                            else:
+                                job_status = None
+                            # It frequently happens that describeTasks return None before the job is finsihed.
+                            if job_status == None:
+                                job.status = "Unknown"
+                            else:
+                                if job_status['status'] == 'finished':
+                                    # Update the spatial job 
+                                    job.output_url = job_status['output']
+                                    job.uuid = job_status['uuid']
+                                    if job.outData is None:
+                                        job.status = 'Finished'
+                                    else:
+                                        if os.path.exists("{0}/results/complete".format(job.outData)):
+                                            job.status = "Finished"
+                                        else:
+                                            job.status = "Failed"
+                                
+                                elif job_status['status'] == 'failed':
+                                    job.status = 'Failed'
+                                    job.exception_message = job_status['message']
+                                    # Might not have a uuid or output if an exception was raised early on or if there is just no output available
+                                    try:
+                                        job.uuid = job_status['uuid']
+                                        job.output_url = job_status['output']
+                                    except KeyError:
+                                        pass
+                                    
+                                elif job_status['status'] == 'pending':
+                                    job.status = 'Pending'
+                                else:
+                                    # The state gives more fine-grained results, like if the job is being re-run, but
+                                    #  we don't bother the users with this info, we just tell them that it is still running.  
+                                    job.status = 'Running'
+                                       
+                job.put()
+
+                allSpatialJobs.append({ "status" : job.status,
+                                        "name" : job.jobName,
+                                        "number" : number,
+                                        "id" : job.key().id()})
+        
+        context['allSpatialJobs'] = allSpatialJobs
     
         return dict(result,**context)
 
@@ -676,7 +749,6 @@ class VisualizePage(BaseHandler):
         #logging.info(str(meanfile))
         try:
             # Try to grab them from the mean.txt file
-            print params
             if params['exec_type'] == 'deterministic':
                 meanfile = params['job_folder'] + '/result/output.txt'
             else:

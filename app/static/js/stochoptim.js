@@ -1,3 +1,20 @@
+function generate_datestr() {
+    var temp = new Date();
+    //var dateStr = padStr(temp.getFullYear()) +
+    var dateStr = padStr(temp.getYear()-100) +
+                  padStr(1 + temp.getMonth()) +
+                  padStr(temp.getDate()) + '_' +
+                  padStr(temp.getHours()) +
+                  padStr(temp.getMinutes()) +
+                  padStr(temp.getSeconds());
+    //console.log(dateStr );
+    return dateStr
+}
+
+function padStr(i) {
+    return (i < 10) ? "0" + i : "" + i;
+}
+
 var mean = function(array)
 {
     var sum = 0;
@@ -381,6 +398,14 @@ StochOptim.Controller = Backbone.View.extend(
 
                 $( this.el ).html( modelSelectTemplate( { models : data } ) );
 
+                for(var i in data)
+                {
+                    if(!(data[i].attributes.units == 'concentration' || data[i].attributes.isSpatial))
+                    {
+                        $( "#next" ).prop('disabled', false);
+                    }
+                }
+
                 // Set event handler on the next button
 
                 this.nextButton = $( this.el ).find( "#next" )
@@ -393,7 +418,10 @@ StochOptim.Controller = Backbone.View.extend(
 
                 var simulationConfTemplate = _.template( $( "#simulationConfTemplate" ).html() );
 
-                $( this.el ).html( simulationConfTemplate( { model : this.model, initialData : (typeof this.initialDataFiles != 'undefined' && this.initialDataFiles.models.length > 0), trajectories : (typeof this.trajectoriesFiles != 'undefined' && this.trajectoriesFiles.models.length > 0) } ) );
+                $( this.el ).html( simulationConfTemplate( { model : this.model,
+                                                             initialData : (typeof this.initialDataFiles != 'undefined' && this.initialDataFiles.models.length > 0),
+                                                             trajectories : (typeof this.trajectoriesFiles != 'undefined' && this.trajectoriesFiles.models.length > 0),
+                                                             datestr : generate_datestr() } ) );
 
                 var checkboxTemplate = _.template("<input type='checkbox' value='<%= name %>'/><span>&nbsp;<%= name %>&nbsp;<span />");
 

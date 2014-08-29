@@ -1,343 +1,0 @@
-10
-
-dir
-340
-http://googleappengine.googlecode.com/svn/trunk/python/lib/django-1.4/tests/regressiontests
-http://googleappengine.googlecode.com/svn
-
-
-
-2013-03-26T21:48:15.277985Z
-327
-proppy@google.com
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-80f5ef21-4148-0410-bacc-cfb02402ada8
-
-defer_regress
-dir
-
-admin_filters
-dir
-
-bulk_create
-dir
-
-custom_managers_regress
-dir
-
-null_fk_ordering
-dir
-
-text
-dir
-
-db_typecasts
-dir
-
-m2m_regress
-dir
-
-null_fk
-dir
-
-get_or_create_regress
-dir
-
-signing
-dir
-
-test_utils
-dir
-
-string_lookup
-dir
-
-dates
-dir
-
-model_permalink
-dir
-
-cache
-dir
-
-model_inheritance_regress
-dir
-
-admin_views
-dir
-
-special_headers
-dir
-
-defaultfilters
-dir
-
-admin_widgets
-dir
-
-bug639
-dir
-
-multiple_database
-dir
-
-aggregation_regress
-dir
-
-admin_ordering
-dir
-
-createsuperuser
-dir
-
-admin_util
-dir
-
-select_related_onetoone
-dir
-
-servers
-dir
-
-delete_regress
-dir
-
-views
-dir
-
-conditional_processing
-dir
-
-dispatch
-dir
-
-bug8245
-dir
-
-model_forms_regress
-dir
-
-many_to_one_regress
-dir
-
-admin_validation
-dir
-
-file_storage
-dir
-
-file_uploads
-dir
-
-null_queries
-dir
-
-test_client_regress
-dir
-
-signed_cookies_tests
-dir
-
-test_runner
-dir
-
-logging_tests
-dir
-
-queryset_pickle
-dir
-
-requests
-dir
-
-expressions_regress
-dir
-
-app_loading
-dir
-
-one_to_one_regress
-dir
-
-generic_inline_admin
-dir
-
-comment_tests
-dir
-
-syndication
-dir
-
-m2m_through_regress
-dir
-
-managers_regress
-dir
-
-admin_custom_urls
-dir
-
-admin_changelist
-dir
-
-model_regress
-dir
-
-signals_regress
-dir
-
-staticfiles_tests
-dir
-
-builtin_server
-dir
-
-datatypes
-dir
-
-locale
-dir
-
-handlers
-dir
-
-transactions_regress
-dir
-
-localflavor
-dir
-
-decorators
-dir
-
-context_processors
-dir
-
-modeladmin
-dir
-
-max_lengths
-dir
-
-admin_inlines
-dir
-
-inspectdb
-dir
-
-model_formsets_regress
-dir
-
-reverse_single_related
-dir
-
-extra_regress
-dir
-
-middleware
-dir
-
-middleware_exceptions
-dir
-
-i18n
-dir
-
-csrf_tests
-dir
-
-settings_tests
-dir
-
-admin_registration
-dir
-
-mail
-dir
-
-pagination_regress
-dir
-
-version
-dir
-
-model_fields
-dir
-
-generic_relations_regress
-dir
-
-serializers_regress
-dir
-
-forms
-dir
-
-generic_views
-dir
-
-templates
-dir
-
-admin_scripts
-dir
-
-utils
-dir
-
-introspection
-dir
-
-inline_formsets
-dir
-
-initial_sql_regress
-dir
-
-fixtures_regress
-dir
-
-httpwrappers
-dir
-
-custom_columns_regress
-dir
-
-sites_framework
-dir
-
-bash_completion
-dir
-
-model_inheritance_select_related
-dir
-
-wsgi
-dir
-
-select_related_regress
-dir
-
-backends
-dir
-
-queries
-dir
-
-urlpatterns_reverse
-dir
-

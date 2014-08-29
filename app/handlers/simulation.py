@@ -95,7 +95,7 @@ class StochKitJobWrapper(db.Model):
             os.environ["AWS_SECRET_ACCESS_KEY"] = db_credentials['EC2_SECRET_KEY']
             service.deleteTasks([(stochkit_job.celery_pid,stochkit_job.pid)])
 
-        if os.path.exists(stochkit_job.output_location):
+        if stochkit_job.output_location is not None and os.path.exists(str(stochkit_job.output_location)):
             shutil.rmtree(stochkit_job.output_location)
 
         super(StochKitJobWrapper, self).delete()
@@ -251,7 +251,7 @@ class JobBackboneInterface(BaseHandler):
         job = JobManager.getJob(self, int(req))
 
         self.response.write(json.dumps(job))
-
+        
   def post(self):
       jsonJob = json.loads(self.request.body)
       job = JobManager.createJob(self, jsonJob)
@@ -343,7 +343,8 @@ class SimulatePage(BaseHandler):
         for q in all_models_q.run():
             all_models.append({ "name" : q.model.name,
                                 "id" : q.key().id(),
-                                "units" : q.model.units })
+                                "units" : q.model.units,
+                                "isSpatial" : q.isSpatial })
     
         context = {'all_models': all_models}
         self.render_response('simulate.html',**context)
@@ -653,9 +654,10 @@ class SimulatePage(BaseHandler):
             
                 if "keep-histograms" in params:
                     args+=' --keep-histograms'
-                        
-                args+=' --seed '
-                args+=str(seed)
+                
+                if int(seed) >= 0:
+                    args+=' --seed '
+                    args+=str(seed)
             else:
                 params['job_type'] = 'stochkit_ode'
                 executable = "stochkit_ode.py"
@@ -674,6 +676,7 @@ class SimulatePage(BaseHandler):
         
             # Call backendservices and execute StochKit
             service = backendservices()
+            print "backendservices.executeTask() params = {0}".format(params)
             cloud_result = service.executeTask(params)
             if not cloud_result["success"]:
                 e = cloud_result["exception"]
@@ -752,7 +755,9 @@ class SimulatePage(BaseHandler):
                 executable = "{0}/../../StochKit/{1}".format(path, params['algorithm'])
 
                 args += ' --realizations {0} '.format(params['realizations'])
-                args+=' --keep-trajectories --seed {0} '.format(params['seed'])
+                args += ' --keep-trajectories '
+                if int(params['seed']) >= 0:
+                    args += '--seed {0} '.format(params['seed'])
             else:
                 executable = "{0}/../../ode/stochkit_ode.py".format(path)
 

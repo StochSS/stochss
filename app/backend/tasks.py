@@ -6,16 +6,23 @@ sys.path.append(os.path.join(os.path.dirname(__file__), '../lib/amqp'))
 sys.path.append(os.path.join(os.path.dirname(__file__), '../lib/billiard'))
 sys.path.append(os.path.join(os.path.dirname(__file__), '../lib/anyjson'))
 sys.path.append(os.path.join(os.path.dirname(__file__), '../lib/pytz'))
-print str(sys.path)
+#print str(sys.path)
 from celery import Celery, group
-import celeryconfig
+try:
+    import celeryconfig
+except ImportError:
+    with open('{0}/celeryconfig.py.template'.format(os.path.dirname(__file__)), 'r') as fdr:
+        with open('{0}/celeryconfig.py'.format(os.path.dirname(__file__)), 'w') as fdw:
+            fdw.write(fdr.read())
+    import celeryconfig
+     
 import os, subprocess, shlex
 import uuid,traceback
 
-#THOME = '/Users/ckrintz/RESEARCH/stochss/stochss'
-#STOCHKIT_DIR = '/Users/ckrintz/RESEARCH/stochss/stochss/StochKit'
-#ODE_DIR = '/Users/ckrintz/RESEARCH/stochss/stochss/ode'
-#MCEM2_DIR = '/Users/ckrintz/RESEARCH/stochss/stochss/stochoptim'
+THOME = '/home/ubuntu'
+STOCHKIT_DIR = '/home/ubuntu/StochKit'
+ODE_DIR = '/home/ubuntu/ode'
+MCEM2_DIR = '/home/ubuntu/stochoptim'
 
 import logging, subprocess
 import boto.dynamodb
@@ -465,6 +472,10 @@ def task(taskid,params):
       paramstr =  params['paramstring']
       uuidstr = taskid
       res['uuid'] = uuidstr
+      job_type = params['job_type']
+      if job_type == 'spatial':
+        create_dir_str = "mkdir -p output/%s/results " % uuidstr
+        os.system(create_dir_str)
       create_dir_str = "mkdir -p output/%s/result " % uuidstr
       os.system(create_dir_str)
       filename = "output/{0}/{0}.xml".format(uuidstr)
@@ -475,17 +486,21 @@ def task(taskid,params):
       stdout = "output/%s/stdout.log" % uuidstr
       stderr = "output/%s/stderr.log" % uuidstr
 
-      job_type = params['job_type']
       exec_str = ''
       if job_type == 'stochkit':
           # The following executiong string is of the form : stochkit_exec_str = "~/StochKit/ssa -m ~/output/%s/dimer_decay.xml -t 20 -i 10 -r 1000" % (uuidstr)
           exec_str = "{0}/{1} -m {2} --force --out-dir output/{3}/result 2>{4} > {5}".format(STOCHKIT_DIR, paramstr, xmlfilepath, uuidstr, stderr, stdout)
       elif job_type == 'stochkit_ode' or job_type == 'sensitivity':
           exec_str = "{0}/{1} -m {2} --force --out-dir output/{3}/result 2>{4} > {5}".format(ODE_DIR, paramstr, xmlfilepath, uuidstr, stderr, stdout)
+      elif job_type == 'spatial':
+	  cmd = "chown -R ubuntu output/{0}".format(uuidstr)
+	  print cmd
+	  os.system(cmd)
+          exec_str = "sudo -E -u ubuntu {0}/pyurdme_wrapper.py {1} {2} {3} {4} {5} 2>{6} > {7}".format(THOME, xmlfilepath, 'output/{0}/results'.format(uuidstr), params['simulation_algorithm'], params['simulation_realizations'], params['simulation_seed'], stderr, stdout)
       
       print "======================="
       print " Command to be executed : "
-      print exec_str
+      print "{0}".format(exec_str)
       print "======================="
       print "To test if the command string was correct. Copy the above line and execute in terminal."
       timestarted = datetime.now()

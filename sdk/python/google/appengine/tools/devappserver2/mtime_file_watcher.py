@@ -20,9 +20,14 @@ import os
 import threading
 import warnings
 
+from google.appengine.tools.devappserver2 import watcher_common
+
 
 class MtimeFileWatcher(object):
   """Monitors a directory tree for changes using mtime polling."""
+
+  # TODO: evaluate whether we can directly support multiple directories.
+  SUPPORTS_MULTIPLE_DIRECTORIES = False
 
   def __init__(self, directory):
     self._directory = directory
@@ -76,6 +81,8 @@ class MtimeFileWatcher(object):
     num_files = 0
     for dirname, dirnames, filenames in os.walk(self._directory,
                                                 followlinks=True):
+      watcher_common.remove_ignored_dirs(dirnames)
+      filenames = [f for f in filenames if not watcher_common.ignore_file(f)]
       for filename in filenames + dirnames:
         if num_files == 10000:
           warnings.warn(

@@ -9,8 +9,8 @@
     :license: Apache Sotware License, see LICENSE for details.
 """
 import time
-# AH. Modifying the SDK to import ndb from the framework if it is not on the path.
-# This is known bug that was fixed in the 2.5 version of the SDK. 
+
+#from ndb import model
 try:
     from ndb import model
 except:

@@ -65,6 +65,7 @@ class CredentialsPage(BaseHandler):
         elif 'start' in params:
             number_of_new_vms = params['vm_number']
             result = self.start_vms(user_id, self.user_data.getCredentials(), number_of_new_vms)
+            time.sleep(10)
             self.redirect('/credentials')
 
         elif 'stop' in params:
@@ -193,8 +194,11 @@ class CredentialsPage(BaseHandler):
         else:
             try:
                 service = backendservices()
-                params ={"infrastructure":"ec2",
-                     'credentials':credentials}          
+                params = {
+                    "infrastructure": service.INFRA_EC2,
+                    "credentials": credentials,
+                    "key_prefix": service.KEYPREFIX + user_id
+                }
                 result = service.describeMachines(params)
                 return result
             except:
@@ -206,8 +210,8 @@ class CredentialsPage(BaseHandler):
         params ={"infrastructure":"ec2",
              "num_vms":number_of_vms, 
              'group':group_random_name, 
-             'image_id':'ami-f0d42898',
-             'instance_type':'t1.micro',
+             'image_id':'ami-18b91c70',
+             'instance_type':'m1.small',
              'key_prefix':key_prefix,
              'keyname':group_random_name, 
              'email':[user_id],
