@@ -19,6 +19,7 @@ import subprocess
 import tempfile
 import time
 import logging
+import numbers
 
 import pyurdme
 import pickle
@@ -365,9 +366,6 @@ class SpatialPage(BaseHandler):
         for species in stochkit_model_obj.listOfSpecies:
             if species not in species_diffusion_coefficients:
                 raise Exception("Species '{0}' does not have a diffusion coefficient set. Please do that on Species tab in Model Editor".format(species))
-
-            if not isinstance(species_diffusion_coefficients[species], numbers.Number):
-                raise Exception("Species '{0}' diffusion coefficient is not a number".format(species))
         
         simulation_end_time = data['time']
         simulation_time_increment = data['increment']

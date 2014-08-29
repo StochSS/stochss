@@ -766,6 +766,21 @@ class ModelEditorImportFromLibrary(BaseHandler):
         if example_model is None:
             save_model(get_model_from_file('heat_shock_mass_action',open('examples/heat_shock_mass_action.xml')), 'heat_shock_mass_action', "", isSpatial = False, is_public=True)
 
+        example_model = db.GqlQuery("SELECT * FROM StochKitModelWrapper WHERE is_public = :1 AND model_name = :2", True, 'simple_diffusion').get()
+        if example_model is None:
+            szip = exportimport.SuperZip(zipFileName = os.path.abspath(os.path.dirname(__file__)) + '/../static/spatial/SimpleDiffusion.zip')
+            #print szip.zipfb.namelist()
+            mid = szip.extractStochKitModel('SimpleDiffusion/models/SimpleDiffusion.json', self.user.user_id(), self, rename = True)
+            example_model = StochKitModelWrapper.get_by_id(mid)
+            example_model.is_public = True
+            example_model.user_id = ""
+            example_model.model_name = 'simple_diffusion'
+            example_model.put()
+
+            #save_model(get_model_from_file('heat_shock_mass_action',open('examples/heat_shock_mass_action.xml')), 'heat_shock_mass_action', "", isSpatial = False, is_public=True)
+
+
+
 
 def get_model_from_file(name, file):
     doc = StochMLDocument.fromFile(file)
@@ -813,9 +828,6 @@ def do_import(handler, name, from_file = True, model_class=""):
 
             jsonModel["units"] = model.model.units
             jsonModel["model"] = model.model.serialize()
-
-            print model.isSpatial
-            print model.spatial
 
             jsonModel["isSpatial"] = model.isSpatial
             jsonModel["spatial"] = model.spatial

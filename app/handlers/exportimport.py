@@ -323,7 +323,7 @@ class SuperZip:
     def extractSpatialJob(self, path, userId = None, handler = None, rename = None):
         jsonJob = json.loads(self.zipfb.read(path))
         path = os.path.abspath(os.path.dirname(__file__))
-        
+
         zipPath = jsonJob["outData"]
 
 
@@ -423,7 +423,6 @@ class SuperZip:
             modelj["isSpatial"] = True
             
         res = modeleditor.ModelManager.createModel(handler, modelj, rename = rename)
-
         return res
 
     def extractStochKitJob(self, path, userId = None, handler = None, rename = None):
@@ -523,7 +522,6 @@ class SuperZip:
         path = os.path.abspath(os.path.dirname(__file__))
         
         zipPath = jsonJob["outData"]
-
 
         job = sensitivity.SensitivityJobWrapper()
 
