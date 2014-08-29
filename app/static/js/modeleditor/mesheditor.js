@@ -1000,6 +1000,9 @@ Count in each voxel \
             else
             {
                 $( '.meshLibrary' ).click();
+                
+                this.updateMeshMsg( { status : true,
+                                      msg : "Select one of the meshes below to see the rest of spatial options" } );
             }
         },
 

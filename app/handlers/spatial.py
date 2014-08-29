@@ -361,7 +361,13 @@ class SpatialPage(BaseHandler):
         species_subdomain_assigments = json_model_refs["spatial"]["species_subdomain_assignments"]  #e.g. {'S1':[1,2,3]}
         species_diffusion_coefficients = json_model_refs["spatial"]["species_diffusion_coefficients"] #e.g. {'S1':0.5}
         initial_conditions = json_model_refs["spatial"]["initial_conditions"] #e.g.  { ic0 : { type : "place", species : "S0",  x : 5.0, y : 10.0, z : 1.0, count : 5000 }, ic1 : { type : "scatter",species : "S0", subdomain : 1, count : 100 }, ic2 : { type : "distribute",species : "S0", subdomain : 2, count : 100 } }
-        
+
+        for species in stochkit_model_obj.listOfSpecies:
+            if species not in species_diffusion_coefficients:
+                raise Exception("Species '{0}' does not have a diffusion coefficient set. Please do that on Species tab in Model Editor".format(species))
+
+            if not isinstance(species_diffusion_coefficients[species], numbers.Number):
+                raise Exception("Species '{0}' diffusion coefficient is not a number".format(species))
         
         simulation_end_time = data['time']
         simulation_time_increment = data['increment']
@@ -404,6 +410,10 @@ class SpatialPage(BaseHandler):
             pymodel.add_parameter(pyurdme.Parameter(name=p_name, expression=p.expression))
         # reactions
         for r_name, r in stochkit_model_obj.listOfReactions.iteritems():
+            print "="*80
+            print r.__dict__
+            cow = pyurdme.Reaction(name=r_name, reactants=r.reactants, products=r.products, rate=r.marate, massaction=True)
+            print cow.__dict__
             if r.massaction:
                 pymodel.add_reaction(pyurdme.Reaction(name=r_name, reactants=r.reactants, products=r.products, rate=r.marate, massaction=True))
             else:
