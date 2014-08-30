@@ -70,7 +70,7 @@ class CredentialsPage(BaseHandler):
             elif int(number_of_new_vms) <= 0:
                 result = {'status': 'False' , 'msg': 'Number of new vms should be at least 1.'}
             else:
-                result = self.start_vms(user_id, self.user_data.getCredentials(), number_of_new_vms)
+                result = self.start_vms(user_id, self.user_data.getCredentials(), int(number_of_new_vms))
                 result['msg'] = 'Processing request...'
                 result['status'] = True
                 context['starting_vms'] = True

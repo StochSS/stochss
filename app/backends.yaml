@@ -1,11 +1,11 @@
 backends:
 - name: backendthread
   class: B1
-  instances: 2
+  instances: 3
   options: public
 
 - name: backendqueue
   class: B1
   instances: 1
-  options: dynamic,public
+  options: public
   

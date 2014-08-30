@@ -112,9 +112,11 @@ class EC2Agent(BaseAgent):
           break
 
       if not group_exists:
-        time.sleep(2)
         utils.log('Creating security group: ' + group)
         newgroup = conn.create_security_group(group, 'stochSS security group')
+        # wait for some time before security group is all set
+        for x in (0, 10):
+            continue
         newgroup.authorize('tcp', 22, 22, '0.0.0.0/0')
         newgroup.authorize('tcp', 5672, 5672, '0.0.0.0/0')
         newgroup.authorize('tcp', 6379, 6379, '0.0.0.0/0')
@@ -172,6 +174,7 @@ class EC2Agent(BaseAgent):
         instance_ids.append(i.id)
         public_ips.append(i.public_dns_name)
         private_ips.append(i.private_dns_name)
+
     return public_ips, private_ips, instance_ids
 
   def describe_instances(self, parameters, prefix=''):
@@ -540,6 +543,19 @@ class EC2Agent(BaseAgent):
     for instance in terminated_instances:
       utils.log('Instance {0} was terminated'.format(instance.id))
 
+  
+  def terminate_some_instances(self, parameters, instance_ids):
+    """
+    Stop the specific EC2 instances using.
+
+    Args:
+      parameters      A dictionary of parameters
+      instance_ids    The list of instance ids that is going to be terminated
+    """  
+    conn = self.open_connection(parameters)
+    terminated_instances = conn.terminate_instances(instance_ids)
+    for instance in terminated_instances:
+      utils.log('Instance {0} was terminated'.format(instance.id))
 
   def open_connection(self, parameters):
     """

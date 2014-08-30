@@ -12,16 +12,19 @@ import logging
 import backendservice
 import thread
 from tasks import *
+from subprocess import Popen, PIPE, STDOUT
 
 __author__ = 'mengyuan'
 __email__ = 'gmy.melissa@gmail.com'
 
 
 BACKEND_NAME = 'backendthread'
+BACKEND_URL = 'http://%s' % modules.get_hostname(BACKEND_NAME)
 
-BACKEND_START = '/_ah/start'
-BACKEND_WORKER_R_URL = '/backend/worker'
-BACKEND_MANAGER_R_URL = '/backend/manager'
+BACKEND_START = BACKEND_URL+'/_ah/start'
+BACKEND_BACKGROUND = BACKEND_URL+'/_ah/background'
+BACKEND_WORKER_R_URL = BACKEND_URL+'/backend/worker'
+BACKEND_MANAGER_R_URL = BACKEND_URL+'/backend/manager'
 
 
 
@@ -45,70 +48,143 @@ class BackendWorker(webapp2.RequestHandler):
             utils.log('About to start vms.')
             
             id = background_thread.start_new_background_thread(self.spawn_vms, [infra, agent, num_vms, parameters, reservation_id])
-            utils.log('Already started a background thread, id: {0}.'.format(id))
+            utils.log('Started a background thread to spwan vms, id: {0}.'.format(id))
+            return
 #            utils.log('Already started a background thread.')
         elif op == 'vms_ready':
             logging.info('Vms are ready.')
-            
+           
             status_info = infra.reservations.get(reservation_id)
+            
+            if len(status_info['vm_info']['public_ips']) == 0:
+                raise Exception("Error: no instance is connectable.")
+                return
             # if running queue head just now, modify parameters and run the left nodes
             if parameters["queue_head"] == True:  
                 queue_head_ip = status_info['vm_info']['public_ips'][0]
                 utils.log('queue_head_ip: {0}'.format(queue_head_ip))
-                                 
+                # celery configuration needs to be updated with the queue head ip                 
                 self.update_celery_config_with_queue_head_ip(queue_head_ip)
                 
                 # if total number of vms is 1, finish copy and start celery
                 if num_vms == 1:
-                    self.copyCeleryConfigToInstance(status_info, parameters)
-                    self.startCeleryViaSSH(status_info, parameters)
+                    #wait for the vms to be configured                
+                    id = background_thread.start_new_background_thread(self.copyCeleryConfigToInstance, [status_info, parameters])
+                    utils.log('Started a background thread to copy celery configuration, id: {0}.'.format(id))
+                    return
                 # else start left vms
                 else:
                     service = backendservice.backendservices()
                     parameters["keyname"] = parameters["keyname"].replace('-'+service.QUEUEHEAD_KEY_TAG, '')
                     parameters["queue_head"] = False
                     parameters["num_vms"] = num_vms - 1
-                
-                    background_thread.start_new_background_thread(self.spawn_vms, [infra, agent, num_vms, parameters, reservation_id])           
-            
+                 
+                    id = background_thread.start_new_background_thread(self.spawn_vms, [infra, agent, num_vms, parameters, reservation_id])           
+                    utils.log('Started a background thread to spwan vms, id: {0}.'.format(id))
+                    return
             else:
-                self.copyCeleryConfigToInstance(status_info, parameters)
-                self.startCeleryViaSSH(status_info, parameters)   
+                id = background_thread.start_new_background_thread(self.copyCeleryConfigToInstance, [status_info, parameters])
+                utils.log('Started a background thread to copy celery configuration, id: {0}.'.format(id))
+                return
+        
+        
 
     def poll_instances_status(self, infra, agent, num_vms, parameters, reservation_id):
         utils.log('Start polling task.')
-        while True:
+        POLL_COUNT = 10
+        POLL_WAIT = 5
+        for x in range(0, POLL_COUNT):
+            # get the ips and ids of this keyname
             public_ips, private_ips, instance_ids = agent.describe_instances_old(parameters)
             
             # if we get the requested number of vms (the requested number will be 1 if this is queue head),
             # update reservation information and send a message to the backend server
             if parameters["num_vms"] == len(public_ips):
-                 status_info = infra.reservations.get(reservation_id)
-                 status_info['state'] = infra.STATE_RUNNING
-                 status_info['vm_info'] = {
-                    'public_ips': public_ips,
-                    'private_ips': private_ips,
-                    'instance_ids': instance_ids
-                }
-                 infra.reservations.put(reservation_id, status_info)
-                 
-                 # report that vms are ready
-                 from_fields = {
-                    'op': 'vms_ready',
-                    'infra': pickle.dumps(infra),
-                    'agent': pickle.dumps(agent),
-                    'num_vms': pickle.dumps(num_vms),
-                    'parameters': pickle.dumps(parameters),
-                    'reservation_id': pickle.dumps(reservation_id)
-                 }
-                 from_data = urllib.urlencode(from_fields)
-                 urlfetch.fetch(url= 'http://%s' % modules.get_hostname(BACKEND_NAME)+BACKEND_WORKER_R_URL,
-                               method = urlfetch.POST,
-                               payload = from_data)
+                 id = background_thread.start_new_background_thread(self.verify_instances_vis_ssh, [infra, agent, num_vms, parameters, reservation_id, public_ips, private_ips, instance_ids])
+                 utils.log('Started a background thread to verify instances via ssh, id: {0}.'.format(id))
                  return;
-             
-            time.sleep(3)
-            utils.log('polling task: sleep 3 seconds...')
+            else: 
+                time.sleep(POLL_WAIT)
+                utils.log('polling task: sleep 5 seconds...')
+       
+        # TODO: how to get the ips that cannot be detected running
+        logging.info('Error: Cannot get all running vms.')
+        return
+            
+    def verify_instances_vis_ssh(self, infra, agent, num_vms, parameters, reservation_id,  public_ips, private_ips, instance_ids):
+        utils.log('{0} nodes are running. Now trying to verify ssh connectable.'.format(parameters["num_vms"]))
+                                
+        status_info = infra.reservations.get(reservation_id)
+                 
+        keyfile = "{0}/../{1}.key".format(os.path.dirname(__file__),parameters['keyname'])
+        if not os.path.exists(keyfile):
+            raise Exception("ssh keyfile file not found: {0}".format(keyfile))
+                  
+        connected_public_ips = []
+        connected_private_ips = []
+        connected_instance_ids = []
+                  
+        for (pub_ip, pri_ip, ins_id) in zip(public_ips, private_ips, instance_ids):
+                 
+            logging.info('connecting to {0}...'.format(pub_ip))              
+            success = self.waitforSSHconnection(keyfile, pub_ip)
+                          
+            if success == True:
+                connected_public_ips.append(pub_ip)
+                connected_private_ips.append(pri_ip)
+                connected_instance_ids.append(ins_id)
+                              
+                try:
+                    public_ips.remove(pub_ip)
+                    private_ips.remove(pri_ip)
+                    instance_ids.remove(ins_id)
+                except:
+                    raise Exception("Errors in removing connected ip from unconnected list.")
+                              
+                  
+        # if there are some vms not able to be connected via ssh, 
+        # just shut them down explicitly            
+        if len(public_ips) != 0:
+            logging.info('Time out on ssh to {0} instances. They will be terminated.'.format(public_ips.amount()))
+ 
+            try:
+                agent.terminate_some_instances(parameters, instance_ids)
+            except:
+                raise Exception("Errors in terminating instances that cannot be connected via ssh.")        
+                             
+                             
+                 
+        status_info['state'] = infra.STATE_RUNNING
+        # if there are instances already running in this reservation, 
+        # specifically, if queue head has just been started in the same reservation,
+        # just append the following ips
+        if status_info['vm_info'] is not None:
+            if status_info['vm_info']['public_ips'] is not None:
+                connected_public_ips = connected_public_ips.extend(status_info['vm_info']['public_ips'])
+                connected_private_ips = connected_private_ips.extend(status_info['vm_info']['private_ips'])
+                connected_instance_ids = connected_instance_ids.extend(status_info['vm_info']['instance_ids'])
+                        
+        status_info['vm_info'] = {
+            'public_ips': connected_public_ips,
+            'private_ips': connected_public_ips,
+            'instance_ids': connected_public_ips
+        }
+        infra.reservations.put(reservation_id, status_info)
+                 
+        # report that vms are ready
+        from_fields = {
+            'op': 'vms_ready',
+            'infra': pickle.dumps(infra),
+            'agent': pickle.dumps(agent),
+            'num_vms': pickle.dumps(num_vms),
+            'parameters': pickle.dumps(parameters),
+            'reservation_id': pickle.dumps(reservation_id)
+        }
+        from_data = urllib.urlencode(from_fields)
+        urlfetch.fetch(url= BACKEND_WORKER_R_URL,
+                       method = urlfetch.POST,
+                       payload = from_data)
+        return
         
     def spawn_vms(self, infra, agent, num_vms, parameters, reservation_id):       
         """
@@ -139,10 +215,10 @@ class BackendWorker(webapp2.RequestHandler):
                 parameters["num_vms"] = 1
                 parameters["keyname"] = requested_key_name+'-'+service.QUEUEHEAD_KEY_TAG
             
-            
             security_configured = agent.configure_instance_security(parameters)
             background_thread.start_new_background_thread(self.poll_instances_status, [infra, agent, num_vms, parameters, reservation_id])
             agent.run_instances(parameters)
+            return
         
         except AgentRuntimeException as exception:
             logging.exception(exception)
@@ -182,6 +258,7 @@ class BackendWorker(webapp2.RequestHandler):
 
         #print "reservation={0}".format(reservation)
         #print "params={0}".format(params)
+        time.sleep(1)
         keyfile = "{0}/../{1}.key".format(os.path.dirname(__file__),params['keyname'])
         #logging.debug("keyfile = {0}".format(keyfile))
         if not os.path.exists(keyfile):
@@ -191,31 +268,68 @@ class BackendWorker(webapp2.RequestHandler):
         if not os.path.exists(celery_config_filename):
             raise Exception("celery config file not found: {0}".format(celery_config_filename))
         
+        
+        credentials = params['credentials']
+        python_path = "source /home/ubuntu/.bashrc;export PYTHONPATH=/home/ubuntu/pyurdme/:/home/ubuntu/stochss/app/;"
+        python_path+='export AWS_ACCESS_KEY_ID={0};'.format(str(credentials['EC2_ACCESS_KEY']))
+        python_path+='export AWS_SECRET_ACCESS_KEY={0};'.format( str(credentials['EC2_SECRET_KEY']))
+        start_celery_str = "celery -A tasks worker --autoreload --loglevel=info --workdir /home/ubuntu > /home/ubuntu/celery.log 2>&1"
+        # PyURDME must be run inside a 'screen' terminal as part of the FEniCS code depends on the ability to write to the process' terminal, screen provides this terminal.
+        celerycmd = "sudo screen -d -m bash -c '{1}{0}'\n".format(start_celery_str,python_path)
+        
         for ip in reservation['vm_info']['public_ips']:
-            self.waitforSSHconnection(keyfile, ip)
+            #self.waitforSSHconnection(keyfile, ip)
             cmd = "scp -o 'StrictHostKeyChecking no' -i {0} {1} ubuntu@{2}:celeryconfig.py".format(keyfile, celery_config_filename, ip)
             logging.info(cmd)
             success = os.system(cmd)
             if success == 0:
-                logging.info("scp success: {0} transfered to {1}".format(celery_config_filename, ip))
+                logging.info("scp success!")
+                logging.info(" {0} transfered to {1}".format(celery_config_filename, ip))
             else:
                 raise Exception("scp failure: {0} not transfered to {1}".format(celery_config_filename, ip))
-
-    def waitforSSHconnection(self, keyfile, ip):
-        SSH_RETRY_COUNT = 30
-        SSH_RETRY_WAIT = 3
-        for _ in range(0, SSH_RETRY_COUNT):
-            cmd = "ssh -o 'StrictHostKeyChecking no' -i {0} ubuntu@{1} \"pwd\"".format(keyfile, ip)
+            
+            
+            cmd = "ssh -o 'StrictHostKeyChecking no' -i {0} ubuntu@{1} \"{2}\"".format(keyfile, ip, celerycmd)
             logging.info(cmd)
             success = os.system(cmd)
             if success == 0:
+                logging.info("celery started! ")
+                logging.info("host ip: {0}".format(ip))
+            else:
+                raise Exception("Failure to start celery on {0}".format(ip))
+
+    def waitforSSHconnection(self, keyfile, ip):
+        
+#         cmd = "ssh -o StrictHostKeyChecking=no -i {0} ubuntu@{1} \"pwd\"".format(keyfile, ip)
+#         logging.info(cmd)
+#          
+#         success = os.system(cmd)
+#         if success == 0:
+#             logging.info("ssh connected to {0}".format(ip))
+#             return True
+#         else:
+#             logging.info("ssh not connected to {0}".format(ip))
+#             return False
+            #time.sleep(SSH_RETRY_WAIT)
+                
+        SSH_RETRY_COUNT = 5
+        SSH_RETRY_WAIT = 3
+        for x in range(0, SSH_RETRY_COUNT):
+            cmd = "ssh -o 'StrictHostKeyChecking no' -i {0} ubuntu@{1} \"pwd\"".format(keyfile, ip)
+            logging.info(cmd) 
+            #success = os.system(cmd)
+            p = Popen(cmd, shell=True, stdin=PIPE, stdout=PIPE, stderr=STDOUT, close_fds=True)
+            output = p.stdout.read()
+            if output.startswith('Warning:'):
                 logging.info("ssh connected to {0}".format(ip))
                 return True
             else:
                 logging.info("ssh not connected to {0}, sleeping {1}".format(ip, SSH_RETRY_WAIT))
                 time.sleep(SSH_RETRY_WAIT)
-                
-        raise Exception("Timeout waiting to connect to node via SSH")
+                  
+#         raise Exception("Timeout waiting to connect to node via SSH")
+        logging.info('Timeout waiting to connect to node via SSH.')
+        return False
     
     
     def startCeleryViaSSH(self, reservation, params):
@@ -276,11 +390,12 @@ class BackendQueue(webapp2.RequestHandler):
             'reservation_id': pickle.dumps(reservation_id)
             }
             from_data = urllib.urlencode(form_fields)
-          
-            backend_url = 'http://%s' % modules.get_hostname(BACKEND_NAME)#backends.get_url(backend_handler.BACKEND_NAME)
-     
-            backend_worker_url = backend_url + BACKEND_WORKER_R_URL
-            result = urlfetch.fetch(url=backend_worker_url,
+            
+            #backends.get_url(backend_handler.BACKEND_NAME)
+            
+            urlfetch.fetch(BACKEND_START)
+            
+            result = urlfetch.fetch(url=BACKEND_WORKER_R_URL,
                                 method = urlfetch.POST,
                                 payload = from_data)
         

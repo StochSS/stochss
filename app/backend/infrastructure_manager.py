@@ -244,8 +244,8 @@ class InfrastructureManager:
       backend_url = 'http://%s' % modules.get_hostname(backend_handler.BACKEND_NAME)#backends.get_url(backend_handler.BACKEND_NAME)
       logging.info('backend_url: {0}'.format(backend_url))
       # start GAE backends
-      backend_start_url =  backend_url + backend_handler.BACKEND_START
-      urlfetch.fetch(backend_start_url)
+#     backend_start_url =  backend_url + backend_handler.BACKEND_START
+#     urlfetch.fetch(backend_start_url)
           
       # start backend server manager
 #       backend_manager_url =  backend_url + backend_handler.BACKEND_MANAGER_R_URL
@@ -262,12 +262,13 @@ class InfrastructureManager:
             'reservation_id': pickle.dumps(reservation_id)
       }
 #       from_data = urllib.urlencode(from_fields)
-#            
-#       result = urlfetch.fetch(url=backend_worker_url,
-#                                 method = urlfetch.POST,
-#                                 payload = from_data)
-      os.environ['HTTP_HOST'] = "127.0.0.1:8080"
-      taskqueue.add(url='/backend/queue', params=from_fields, method='GET')
+#       
+#       rpc = urlfetch.create_rpc()    
+#       urlfetch.make_fetch_call(rpc=rpc, url=backend_worker_url,
+#                                method = urlfetch.POST,
+#                                payload = from_data)
+    os.environ['HTTP_HOST'] = "127.0.0.1:8080"
+    taskqueue.add(url='/backend/queue', params=from_fields, method='GET')
       
     utils.log('Successfully sent request to backend server, reservation_id: {0}.'.format(reservation_id))
 #     return self.__generate_response(True,
