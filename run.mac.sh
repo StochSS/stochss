@@ -11,7 +11,7 @@ MY_PATH="`( cd \"$MY_PATH\" && pwd )`"  # absolutized and normalized
 STOCHSS_HOME=$MY_PATH
 STOCHSS_HOME="`( cd \"$STOCHSS_HOME\" && pwd )`" 
 
-STOCHKIT_VERSION=StochKit2.0.10
+STOCHKIT_VERSION=StochKit2.0.11
 STOCHKIT_PREFIX=$STOCHSS_HOME
 export STOCHKIT_HOME="$STOCHKIT_PREFIX/$STOCHKIT_VERSION"
 ODE_VERSION="ode-1.0.1"
@@ -106,6 +106,7 @@ function download_pyurdme {
         echo $CMD
         eval $CMD
         if [[ -e "$ZIP_FILE" ]];then
+            wd=`pwd`
             cd "$STOCHSS_HOME/app/lib" || return 1
             pwd
             CMD="unzip $ZIP_FILE > /dev/null"
@@ -113,9 +114,11 @@ function download_pyurdme {
             eval $CMD
             if [[ $? != 0 ]];then
                 rm $ZIP_FILE
+                cd $wd
                 return 1 #False
             fi
             rm $ZIP_FILE
+            cd $wd
             return 0 #True
         else
             return 1 #False
@@ -181,6 +184,19 @@ function check_and_install_dependencies {
     return 0 #True
 }
 
+function check_spatial_dependencies {
+    deps=("numpy" "scipy" "matplotlib" "h5py")
+    for dep in "${deps[@]}"
+    do
+        echo "Checking for $dep<br />"
+        if check_for_lib "$dep";then
+            echo "$dep detected successfully.<br />"
+        else
+            return 1 #False
+        fi
+    done
+    return 0 #True
+}
 function check_pip {
     if which pip > /dev/null;then
         echo "pip is installed on your system, using it<br />"
@@ -211,11 +227,22 @@ function install_pip {
     fi
 }
 
+function install_dependencies_via_applescript {
+    echo "Installing missing dependencies with Applescript. This will take a few minutes.<br />"
+    /usr/bin/env osascript run_mac_install.scpt
+}
+
 function check_spatial_installation {
-    if check_and_install_dependencies;then
-        echo "All spatial dependencies detected"
+    if check_spatial_dependencies; then
+        echo "All spatial dependencies detected.<br />"
     else
-        return 1 #False
+        install_dependencies_via_applescript
+        if check_spatial_dependencies; then
+            echo "All spatial dependencies detected.<br />"
+        else
+            echo "Error: dependencies not installed, exiting.<br />"
+            return 1 #False
+        fi
     fi
 
     if check_dolfin; then
@@ -252,6 +279,27 @@ else
 fi
 #################
 
+function retry_command {
+    if [ -z "$1" ];then
+        return 1 #False
+    fi
+
+    for i in `seq 1 3`;
+    do
+        echo "$1"
+        eval "$1"
+        RET=$?
+        if [[ $RET != 0 ]] ;then
+            echo "Failed to execute: \"$1\""
+        else
+            return 0 # True
+        fi
+    done
+
+    echo "Failed to execute: \"$1\", Exiting"
+    exit -1
+}
+
 echo -n "Testing if StochKit2 built... "
 
 rundir=$(mktemp -d /tmp/tmp.XXXXXX)
@@ -270,13 +318,14 @@ else
 
     if [ ! -e "$STOCHKIT_PREFIX/$STOCHKIT_VERSION.tgz" ]; then
 	echo "Downloading $STOCHKIT_VERSION..."
-	curl -o "$STOCHKIT_PREFIX/$STOCHKIT_VERSION.tgz" -L "http://sourceforge.net/projects/stochkit/files/StochKit2/$STOCHKIT_VERSION/$STOCHKIT_VERSION.tgz"
+	#curl -o "$STOCHKIT_PREFIX/$STOCHKIT_VERSION.tgz" -L "http://sourceforge.net/projects/stochkit/files/StochKit2/$STOCHKIT_VERSION/$STOCHKIT_VERSION.tgz"
+	curl -o "$STOCHKIT_PREFIX/$STOCHKIT_VERSION.tgz" -L "http://sourceforge.net/projects/stochkit/files/StochKit2/StochKit2.0.11/StochKit2.0.11.tgz/download"
     fi
 
     echo "Building StochKit<br />"
     wd=`pwd`
     cd "$STOCHKIT_PREFIX"
-    tar -xzf "$STOCHKIT_VERSION.tgz"
+    retry_command "tar -xzf \"$STOCHKIT_VERSION.tgz\""
     tmpdir=$(mktemp -d /tmp/tmp.XXXXXX)
     mv "$STOCHKIT_HOME" "$tmpdir/"
     cd "$tmpdir/$STOCHKIT_VERSION"
@@ -334,12 +383,7 @@ else
     echo " <font color=\"blue\"><h3>This process will take at least 5 minutes to complete, please be patient</h3></font>"
 
     
-    tar -xzf "$STOCHOPTIM.tgz"
-    RET=$?
-    if [[ $RET != 0 ]] ;then
-        echo "Failed to: tar -xzf \"$STOCHOPTIM.tgz\", exiting"
-        exit -1
-    fi
+    retry_command "tar -xzf \"$STOCHOPTIM.tgz\""
     mkdir "$STOCHOPTIM/library"
     RET=$?
     if [[ $RET != 0 ]] ;then
@@ -388,10 +432,10 @@ else
     echo "<font color=\"blue\"><h3>This process should take about a minute to complete, please be patient</h3></font><br />"
     wd=`pwd`
     tmpdir=$(mktemp -d /tmp/tmp.XXXXXX)
-    tar -xzf "$STOCHKIT_ODE.tgz"
+    retry_command "tar -xzf \"$STOCHKIT_ODE.tgz\""
     mv "$STOCHKIT_ODE" "$tmpdir"
     cd "$tmpdir/$ODE_VERSION/cvodes"
-    tar -xzf "cvodes-2.7.0.tar.gz"
+    retry_command "tar -xzf \"cvodes-2.7.0.tar.gz\""
     cd "cvodes-2.7.0"
     ./configure --prefix="$PWD/cvodes" 1>"$stdout" 2>"$stderr"
     if [ $? != 0 ]; then

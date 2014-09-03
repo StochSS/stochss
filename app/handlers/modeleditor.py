@@ -445,9 +445,15 @@ class ModelEditorPage(BaseHandler):
 
         db_models = db.GqlQuery("SELECT * FROM StochKitModelWrapper WHERE user_id = :1", self.user.user_id())
         
-        all_models = [{ "name" : row.model.name, "units" : row.model.units, "isSpatial" : row.isSpatial, "spatial" : row.spatial } for row in db_models]
+        all_models = []
+        isSpatial = False
+        model_edited = self.get_session_property('model_edited')
+        for row in db_models:
+            if model_edited is not None and model_edited.name == row.model.name:
+                isSpatial = row.isSpatial
+            all_models.append({ "name" : row.model.name, "units" : row.model.units, "isSpatial" : row.isSpatial, "spatial" : row.spatial }) 
         
-        result.update({ "all_models" : all_models })
+        result.update({ "all_models" : all_models, "isSpatial" : isSpatial   })
 
         print "post", result
 
@@ -760,6 +766,21 @@ class ModelEditorImportFromLibrary(BaseHandler):
         if example_model is None:
             save_model(get_model_from_file('heat_shock_mass_action',open('examples/heat_shock_mass_action.xml')), 'heat_shock_mass_action', "", isSpatial = False, is_public=True)
 
+        example_model = db.GqlQuery("SELECT * FROM StochKitModelWrapper WHERE is_public = :1 AND model_name = :2", True, 'simple_diffusion').get()
+        if example_model is None:
+            szip = exportimport.SuperZip(zipFileName = os.path.abspath(os.path.dirname(__file__)) + '/../static/spatial/SimpleDiffusion.zip')
+            #print szip.zipfb.namelist()
+            mid = szip.extractStochKitModel('SimpleDiffusion/models/SimpleDiffusion.json', self.user.user_id(), self, rename = True)
+            example_model = StochKitModelWrapper.get_by_id(mid)
+            example_model.is_public = True
+            example_model.user_id = ""
+            example_model.model_name = 'simple_diffusion'
+            example_model.put()
+
+            #save_model(get_model_from_file('heat_shock_mass_action',open('examples/heat_shock_mass_action.xml')), 'heat_shock_mass_action', "", isSpatial = False, is_public=True)
+
+
+
 
 def get_model_from_file(name, file):
     doc = StochMLDocument.fromFile(file)
@@ -799,17 +820,16 @@ def do_import(handler, name, from_file = True, model_class=""):
                 raise ModelError("Could not resolve model parameters.")
             
             # Save the model to the datastore.
+            model.name = name
             save_model(model, name, user_id, isSpatial = False)
         else:
             model = db.GqlQuery("SELECT * FROM StochKitModelWrapper WHERE is_public = :1 AND model_name = :2", True, model_class).get()
 
             jsonModel = { "name" : name }
 
+            model.model.name = name
             jsonModel["units"] = model.model.units
             jsonModel["model"] = model.model.serialize()
-
-            print model.isSpatial
-            print model.spatial
 
             jsonModel["isSpatial"] = model.isSpatial
             jsonModel["spatial"] = model.spatial

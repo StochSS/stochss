@@ -56,6 +56,12 @@ Spatial.Controller = Backbone.View.extend(
                                'id' : this.attributes.id },
                       success : _.bind(this.render, this) } );
         },
+
+        renderFrame : function() {
+            this.renderer.render(this.scene, this.camera);
+            requestAnimationFrame(_.bind(this.renderFrame, this));
+            this.controls.update();
+        },
         
         // This event gets fired when the user selects a csv data file
         meshDataPreview : function(data)
@@ -74,37 +80,72 @@ Spatial.Controller = Backbone.View.extend(
             $( "#minVal" ).text(this.minVal);
             $( "#maxVal" ).text(this.maxVal);
 
-            var dom = $( "#meshPreview" ).empty();
-            var scene = new THREE.Scene();
-            var width = dom.width();
-            var height = 0.75 * width;
-            var camera = new THREE.PerspectiveCamera( 75, window.innerWidth / window.innerHeight, 0.1, 1000 );
-            var renderer = new THREE.WebGLRenderer();
-            renderer.setSize( width, height);
-            renderer.setClearColor( 0xffffff, 1);
-            
-            var rendererDom = $( renderer.domElement ).appendTo(dom);
-            
-            var loader = new THREE.JSONLoader();
-            function load_geometry(model){
-                var material = new THREE.MeshBasicMaterial({vertexColors: THREE.VertexColors, wireframe:false});
-	        
-                material.side = THREE.DoubleSide;
-                mesh = new THREE.Mesh(model.geometry,material);
-                scene.add(mesh);
+            if (!window.WebGLRenderingContext) {
+                // Browser has no idea what WebGL is. Suggest they
+                // get a new browser by presenting the user with link to
+                // http://get.webgl.org
+                $( "#meshPreview" ).html('<center><h2 style="color: red;">WebGL Not Supported</h2><br /> \
+<ul><li>Download an updated Firefox or Chromium to use StochSS (both come with WebGL support)</li> \
+<li>It may be necessary to update system video drivers to make this work</li></ul></center>');
+                return;
             }
 
+            var canvas = document.createElement('canvas');
+            gl = canvas.getContext("webgl");
+            delete canvas;
+            if (!gl) {
+                // Browser could not initialize WebGL. User probably needs to
+                // update their drivers or get a new browser. Present a link to
+                // http://get.webgl.org/troubleshooting
+                $( "#meshPreview" ).html('<center><h2 style="color: red;">WebGL Disabled</h2><br /> \
+<ul><li>In Safari and certain older browsers, this must be enabled manually</li> \
+<li>Browsers can also throw this error when they detect old or incompatible video drivers</li> \
+<li>Enable WebGL, or try using StochSS in an up to date Chrome or Firefox browser</li> \
+</ul></center>');
+                return;  
+            }
 
+            if(!this.renderer)
+            {
+                var dom = $( "#meshPreview" ).empty();
+                var scene = new THREE.Scene();
+                var width = dom.width();
+                var height = 0.75 * width;
+                var camera = new THREE.PerspectiveCamera( 75, 4.0 / 3.0, 0.1, 1000 );
+                var renderer = new THREE.WebGLRenderer();
+                renderer.setSize( width, height);
+                renderer.setClearColor( 0xffffff, 1);
+                
+                var rendererDom = $( renderer.domElement ).appendTo(dom);
+                
+                var controls = new THREE.OrbitControls( camera, renderer.domElement );
+                // var controls = new THREE.OrbitControls( camera );
+                //controls.addEventListener( 'change', render );
+                
+                camera.position.z = 1.5;
+
+                this.camera = camera;
+                this.renderer = renderer;
+                this.controls = controls;
+            }
+            else
+            {
+                delete this.scene;
+            }
+
+            var scene = new THREE.Scene();
+            var loader = new THREE.JSONLoader();
+            
             var model = loader.parse(data['mesh']);
-            load_geometry(model);
 
-            var controls = new THREE.OrbitControls( camera, renderer.domElement );
-            // var controls = new THREE.OrbitControls( camera );
-            //controls.addEventListener( 'change', render );
+            var material = new THREE.MeshBasicMaterial( { vertexColors: THREE.VertexColors, wireframe:false } );
+	    
+            material.side = THREE.DoubleSide;
+            mesh = new THREE.Mesh(model.geometry, material);
+            scene.add(mesh);
 
-            camera.position.z = 1.5;
-            
-            
+            delete loader;
+            delete material;            
             // add subtle blue ambient lighting
             var ambientLight = new THREE.AmbientLight(0x000000);
             scene.add(ambientLight);
@@ -116,18 +157,22 @@ Spatial.Controller = Backbone.View.extend(
             directionalLight.position.set(1, 1, 1).normalize();
             scene.add(directionalLight);
 
+            this.scene = scene;
 
-            function render() {
-                requestAnimationFrame(render);
-                renderer.render(scene, camera);
-                controls.update();
+            $( "#meshPreviewMsg" ).hide();
+            //$( "#meshPreview" ).show();
+
+            if(!this.rendererInitialized)
+            {
+                this.renderFrame();
+                this.rendererInitialized = true;
             }
-            render();
         },
 
         acquireNewData : function()
         {
-            $( "#meshPreview" ).html("<CENTER><H1>Rendering...</H1></CENTER>");
+            //$( "#meshPreview" ).hide();
+            $( "#meshPreviewMsg" ).show();
 
             $.ajax( { type : "GET",
                       url : "/spatial",

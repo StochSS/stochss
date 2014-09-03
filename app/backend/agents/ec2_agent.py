@@ -279,8 +279,8 @@ class EC2Agent(BaseAgent):
     # Workers need an alarm...
     skip_alarm = False
     if self.PARAM_QUEUE_HEAD in parameters and parameters[self.PARAM_QUEUE_HEAD]:
-      # ...but the queue head doesnt
-      skip_alarm = True
+      ## # ...but the queue head doesnt
+      ## skip_alarm = True  # All Nodes should have the auto-shutoff feature
       # Queue head, needs to have at least two cores
       insufficient_cores = ['t1.micro', 'm1.small', 'm1.medium', 'm3.medium']
       if instance_type in insufficient_cores:

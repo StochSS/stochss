@@ -362,11 +362,29 @@ var run = function()
                 sensitivityJobsToExport.push(checkboxes[i].value);
             }
         }
+        var stochOptimJobsToExport = [];
+        checkboxes = document.getElementsByName('select_stochoptim_job');
+        for (var i = 0; i < checkboxes.length; i++)
+        {
+            if (checkboxes[i].checked) {
+                stochOptimJobsToExport.push(checkboxes[i].value);
+            }
+        }
+        var spatialJobsToExport = [];
+        checkboxes = document.getElementsByName('select_spatial_job');
+        for (var i = 0; i < checkboxes.length; i++)
+        {
+            if (checkboxes[i].checked) {
+                spatialJobsToExport.push(checkboxes[i].value);
+            }
+        }
         var ajaxData = {
             reqType : "backup",
             globalOp : $( "#globalOp" ).prop('checked'),
             stochKitJobs: stochKitJobsToExport,
-            sensitivityJobs: sensitivityJobsToExport
+            sensitivityJobs: sensitivityJobsToExport,
+            spatialJobs: spatialJobsToExport,
+            stochOptimJobs : stochOptimJobsToExport
         };
         $.ajax( { type : "POST",
                   url : "/export",

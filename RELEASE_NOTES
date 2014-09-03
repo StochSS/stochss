@@ -1,8 +1,16 @@
 StochSS - Stochastic Simulation Service: Release Notes
 
+1.4.0
+=============================
+- Integration of PyURDME: Spatial stochastic simulation on complex
+  geometries using tetrahedral meshes.  
+- Advanced visualization of mesh geometries and spatial simulation
+  results via WebGL.
+
 1.3.0
 =============================
 - Added interface to StochOptim stochastic parameter estimation toolbox
+- real-time visualization of parameter value convergence 
 
 1.2.0
 =============================

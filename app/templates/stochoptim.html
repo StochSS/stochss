@@ -77,8 +77,8 @@
             <br />
             <button id="next" type="submit" class="btn-primary btn-large" disabled>Next&raquo;</button>
             <% } else { %>
-            <h2>There are no models in the system</h2><br />
-            <a style="font-size:18px;" href="/modeleditor"> Create a new model? </a>
+            <h2>There are no models in the system.</h2><br />
+            <a style="font-size:18px;" href="/modeleditor"> Create a new model </a>
             <% } %>
         </div>
     </div>
@@ -105,7 +105,7 @@
         Units: <h3><%= model.attributes.units %></h3>
         <hr />
         <label>Name:</label>
-        <input type="text" class="span3" id="jobName" value="<%= model.attributes.name %>_job" />
+        <input type="text" class="span3" id="jobName" value="<%= model.attributes.name %>_job_<%= datestr %>" />
         
         <span class="help-block">This name will be used to reference the estimation.</span>
         <br />

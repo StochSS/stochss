@@ -1,6 +1,6 @@
 #!/bin/bash
 
-# Attempt to install StochKit 2.0.8
+# Attempt to install StochKit 2.0.11
 #
 # Install it in the user's home folder by default, to override
 #
@@ -42,6 +42,27 @@ function check_spatial_installation {
 
 #####################
 
+function retry_command {
+    if [ -z "$1" ];then
+        return 1 #False
+    fi
+
+    for i in `seq 1 3`;
+    do
+        echo "$1"
+        eval "$1"
+        RET=$?
+        if [[ $RET != 0 ]] ;then
+            echo "Failed to execute: \"$1\""
+        else
+            return 0 # True
+        fi
+    done
+
+    echo "Failed to execute: \"$1\", Exiting"
+    exit -1
+}
+
 if check_spatial_installation;then
     echo "Spatial libraries installed correctly"
 else
@@ -49,7 +70,7 @@ else
     exit 1
 fi
 
-STOCHKIT_VERSION=StochKit2.0.10
+STOCHKIT_VERSION=StochKit2.0.11
 STOCHKIT_PREFIX=$STOCHSS_HOME
 export STOCHKIT_HOME="$STOCHKIT_PREFIX/$STOCHKIT_VERSION"
 ODE_VERSION="ode-1.0.1"
@@ -76,7 +97,8 @@ else
 
     if [ ! -e "$STOCHKIT_PREFIX/$STOCHKIT_VERSION.tgz" ]; then
 	echo "Downloading $STOCHKIT_VERSION..."
-	curl -o "$STOCHKIT_PREFIX/$STOCHKIT_VERSION.tgz" -L "http://sourceforge.net/projects/stochkit/files/StochKit2/$STOCHKIT_VERSION/$STOCHKIT_VERSION.tgz"
+	#curl -o "$STOCHKIT_PREFIX/$STOCHKIT_VERSION.tgz" -L "http://sourceforge.net/projects/stochkit/files/StochKit2/$STOCHKIT_VERSION/$STOCHKIT_VERSION.tgz"
+	curl -o "$STOCHKIT_PREFIX/$STOCHKIT_VERSION.tgz" -L "http://sourceforge.net/projects/stochkit/files/StochKit2/StochKit2.0.11/StochKit2.0.11.tgz/download"
     fi
 
     echo "Building StochKit"
@@ -85,7 +107,7 @@ else
     echo " * This process will take at least 5 minutes to complete, please be patient *"
     wd=`pwd`
     cd "$STOCHKIT_PREFIX"
-    tar -xzf "$STOCHKIT_VERSION.tgz"
+    retry_command "tar -xzf \"$STOCHKIT_VERSION.tgz\""
     tmpdir=$(mktemp -d /tmp/tmp.XXXXXX)
     mv "$STOCHKIT_HOME" "$tmpdir/"
     cd "$tmpdir/$STOCHKIT_VERSION"
@@ -137,12 +159,7 @@ else
     echo " stderr in $STOCHSS_HOME/stderr.log "
     echo " * This process will take at least 5 minutes to complete, please be patient *"
 
-    tar -xzf "$STOCHOPTIM.tgz"
-    RET=$?
-    if [[ $RET != 0 ]] ;then
-        echo "Failed to: tar -xzf \"$STOCHOPTIM.tgz\", exiting"
-        exit -1
-    fi
+    retry_command "tar -xzf \"$STOCHOPTIM.tgz\""
     mkdir "$STOCHOPTIM/library"
     RET=$?
     if [[ $RET != 0 ]] ;then
@@ -191,10 +208,10 @@ else
     echo " * This process should take about a minute to complete, please be patient *"
     wd=`pwd`
     tmpdir=$(mktemp -d /tmp/tmp.XXXXXX)
-    tar -xzf "$STOCHKIT_ODE.tgz"
+    retry_command "tar -xzf \"$STOCHKIT_ODE.tgz\""
     mv "$STOCHKIT_ODE" "$tmpdir"
     cd "$tmpdir/$ODE_VERSION/cvodes"
-    tar -xzf "cvodes-2.7.0.tar.gz"
+    retry_command "tar -xzf \"cvodes-2.7.0.tar.gz\""
     cd "cvodes-2.7.0"
     ./configure --prefix="$PWD/cvodes" 1>"$stdout" 2>"$stderr"
     if [ $? != 0 ]; then
