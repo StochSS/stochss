@@ -5,6 +5,7 @@ import thread
 from utils import utils
 from utils.persistent_dictionary import PersistentStoreFactory, PersistentDictionary
 import backend_handler
+from backend_handler import VMStateModel
 from google.appengine.api import background_thread, modules, urlfetch
 from google.appengine.api import taskqueue
 import pickle
@@ -223,6 +224,9 @@ class InfrastructureManager:
       'vm_info': None
     }
     self.reservations.put(reservation_id, status_info)
+    # update db with reservation ids
+    VMStateModel.update_res_ids(parameters, parameters[VMStateModel.IDS], reservation_id)
+    
     utils.log('Generated reservation id {0} for this request.'.format(
       reservation_id)
     )
@@ -233,10 +237,7 @@ class InfrastructureManager:
       # NOTE: We will only be able to return an IP for the started instances when run in blocking
       #       mode, but this is needed to update the queue head IP in celeryconfig.py.
       return result # self.__generate_response(
-      #   True,
-      #   self.REASON_NONE,
-      #   {'reservation_id': reservation_id}.update(result)
-      # )
+
     else:
       utils.log('Running spawn_vms in non-blocking mode')
       #thread.start_new_thread(__spawn_vms, (infra, agent, num_vms, parameters, reservation_id))
@@ -312,6 +313,7 @@ class InfrastructureManager:
     else:
       thread.start_new_thread(self.__kill_vms, (agent, parameters, prefix))
     return self.__generate_response(True, self.REASON_NONE)
+
 
   def __spawn_vms(self, agent, num_vms, parameters, reservation_id):
     """

@@ -1,7 +1,7 @@
 backends:
 - name: backendthread
   class: B1
-  instances: 3
+  instances: 1
   options: public
 
 - name: backendqueue

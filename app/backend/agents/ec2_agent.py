@@ -149,7 +149,7 @@ class EC2Agent(BaseAgent):
       if not utils.has_parameter(param, parameters):
         raise AgentConfigurationException('no ' + param)
 
-  def describe_instances_old(self, parameters):
+  def describe_instances_running(self, parameters):
     """
     Retrieves the list of running instances that have been instantiated using a
     particular EC2 keyname. The target keyname is read from the input parameter
@@ -177,9 +177,30 @@ class EC2Agent(BaseAgent):
 
     return public_ips, private_ips, instance_ids
 
+  def describe_instances_launched(self, parameters):
+    """
+    Retrieves the list of instances that have been launched in this reservation.
+    The target keyname is read from the input parameter
+    map. (Also see documentation for the BaseAgent class)
+
+    Args:
+      parameters  A dictionary containing the 'keyname' parameter
+
+    Returns:
+      a list of instance ids.
+    """
+    conn = self.open_connection(parameters)
+    reservations = conn.get_all_instances()
+    instance_ids = []
+    instances = [i for r in reservations for i in r.instances]
+    for i in instances:
+      if i.key_name == parameters[self.PARAM_KEYNAME]:
+        instance_ids.append(i.id)
+    return instance_ids
+
   def describe_instances(self, parameters, prefix=''):
     """
-    Retrieves the list of running instances that have been instantiated using a
+    Retrieves the list of instances that have been instantiated using a
     particular EC2 keyname. The target keyname is read from the input parameter
     map. (Also see documentation for the BaseAgent class)
 
@@ -187,8 +208,7 @@ class EC2Agent(BaseAgent):
       parameters  A dictionary containing the 'keyname' parameter
 
     Returns:
-      A tuple of the form (public_ips, private_ips, instances) where each
-      member is a list.
+      A list of instances
     """
     conn = self.open_connection(parameters)
     reservations = conn.get_all_instances()
@@ -329,7 +349,7 @@ class EC2Agent(BaseAgent):
         conn.run_instances(image_id, count, count, key_name=keyname,
           security_groups=[group], instance_type=instance_type, user_data=userstr)
         
-    return
+    return 
     
     
     

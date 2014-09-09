@@ -71,8 +71,8 @@ class CredentialsPage(BaseHandler):
                 result = {'status': 'False' , 'msg': 'Number of new vms should be at least 1.'}
             else:
                 result = self.start_vms(user_id, self.user_data.getCredentials(), int(number_of_new_vms))
-                result['msg'] = 'Processing request...'
-                result['status'] = True
+#                 result['msg'] = 'Processing request...'
+#                 result['status'] = True
                 context['starting_vms'] = True
             
             self.render_response('credentials.html', **(dict(context, **result)))
@@ -147,6 +147,7 @@ class CredentialsPage(BaseHandler):
         service = backendservices()
         params = {}
         credentials =  self.user_data.getCredentials()
+        logging.info('CREDENTIALS: {0}'.format(credentials))
         params['credentials'] = credentials
         params["infrastructure"] = "ec2"
         
@@ -165,26 +166,34 @@ class CredentialsPage(BaseHandler):
             fake_credentials = { 'EC2_ACCESS_KEY': '*' * len(credentials['EC2_ACCESS_KEY']), 'EC2_SECRET_KEY': '*' * len(credentials['EC2_SECRET_KEY']) }
             
             context['valid_credentials'] = True
-            all_vms = self.get_all_vms(user_id,credentials)
+            all_vms = self.get_all_vms(user_id,params)
             if all_vms == None:
                 result = {'status':False,'vm_status':False,'vm_status_msg':'Could not determine the status of the VMs.'}
                 context = {'vm_names':all_vms}
             else:
+                number_creating = 0
                 number_pending = 0
-                number_running = 0;
+                number_running = 0
+                number_failed = 0
                 for vm in all_vms:
-                    if vm != None and vm['state']=='pending': number_pending = number_pending + 1
+                    if vm != None and vm['state']=='creating': number_creating = number_creating + 1
+                    elif vm != None and vm['state']=='pending': number_pending = number_pending + 1
                     elif vm != None and vm['state']=='running': number_running = number_running + 1
+                    elif vm != None and vm['state']=='failed': number_failed = number_failed + 1
                 number_of_vms = len(all_vms)
+                print "number creating = " + str(number_creating)
                 print "number pending = " + str(number_pending)
                 print "number running = " + str(number_running)
+                print "number failed = " + str(number_failed)
                 context['number_of_vms'] = number_of_vms
                 context['vm_names'] = all_vms
+                context['number_creating'] = number_creating
                 context['number_pending'] = number_pending
                 context['number_running'] = number_running
+                context['number_failed'] = number_failed
                 result['status']= True
                 result['credentials_msg'] = 'The EC2 keys have been validated.'
-                if number_running+number_pending == 0:
+                if number_running+number_pending+number_creating+number_failed == 0:
                     context['active_vms'] = False
                 else:
                     context['active_vms'] = True
@@ -193,22 +202,21 @@ class CredentialsPage(BaseHandler):
         context = dict(result, **context)
         return context
     
-    def get_all_vms(self,user_id,credentials):
+    def get_all_vms(self,user_id,params):
         """
             
         """
-        #valid_username = self.get_session_property('username')
         if user_id is None or user_id is "":
             return None
         else:
             try:
                 service = backendservices()
-                params = {
-                    "infrastructure": service.INFRA_EC2,
-                    "credentials": credentials,
-                    "key_prefix": service.KEYPREFIX + user_id
-                }
-                result = service.describeMachines(params)
+#                 params = {
+#                     "infrastructure": service.INFRA_EC2,
+#                     "credentials": credentials,
+#                     "key_prefix": service.KEYPREFIX + user_id
+#                 }
+                result = service.describeMachinesFromDB(params)
                 return result
             except:
                 return None
@@ -227,8 +235,11 @@ class CredentialsPage(BaseHandler):
              'credentials':credentials,
              'use_spot_instances':False}
         service = backendservices()
-        service.startMachines(params)
-        result = {'status':'Success' , 'msg': 'Sucessfully requested '+ str(number_of_vms) + ' Virtual Machines.'}
+        res, msg = service.startMachines(params)
+        if res == True:
+            result = {'status':'Success' , 'msg': 'Sucessfully requested '+ str(number_of_vms) + ' Virtual Machines. Processing request...'}
+        else:
+            result = {'status':'Failure' , 'msg': msg}
         return result
 #         res = service.startMachines(params)
 #         if res != None and res['success']==True:
