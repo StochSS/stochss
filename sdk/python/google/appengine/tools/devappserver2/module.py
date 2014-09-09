@@ -91,7 +91,7 @@ _REQUEST_LOGGING_BLACKLIST_RE = re.compile(
 # user-specified handlers.
 _EMPTY_MATCH = re.match('', '')
 _DUMMY_URLMAP = appinfo.URLMap(script='/')
-_SHUTDOWN_TIMEOUT = 30
+_SHUTDOWN_TIMEOUT = 60
 
 _MAX_UPLOAD_MEGABYTES = 4096
 _MAX_UPLOAD_BYTES = _MAX_UPLOAD_MEGABYTES * 1024 * 1024
@@ -711,6 +711,7 @@ class Module(object):
         return self._no_handler_for_request(environ, wrapped_start_response,
                                             request_id)
       except StandardError, e:
+        logging.info('WOOOOOOOOOPS! HTTP 500 ERROR OCCURS!!!')
         logging.exception('Request to %r failed', path_info)
         wrapped_start_response('500 Internal Server Error', [], e)
         return []
@@ -1411,7 +1412,7 @@ class ManualScalingModule(Module):
   """A pool of instances that is manually-scaled."""
 
   _DEFAULT_MANUAL_SCALING = appinfo.ManualScaling(instances='1')
-  _MAX_REQUEST_WAIT_TIME = 10
+  _MAX_REQUEST_WAIT_TIME = 120
 
   @classmethod
   def _populate_default_manual_scaling(cls, manual_scaling):
@@ -1896,7 +1897,7 @@ class BasicScalingModule(Module):
 
   _DEFAULT_BASIC_SCALING = appinfo.BasicScaling(max_instances='1',
                                                 idle_timeout='15m')
-  _MAX_REQUEST_WAIT_TIME = 10
+  _MAX_REQUEST_WAIT_TIME = 120
 
   @staticmethod
   def _parse_idle_timeout(timing):
@@ -2363,7 +2364,7 @@ class InteractiveCommandModule(Module):
   This module manages a single Instance which is started lazily.
   """
 
-  _MAX_REQUEST_WAIT_TIME = 15
+  _MAX_REQUEST_WAIT_TIME = 120
 
   def __init__(self,
                module_configuration,
