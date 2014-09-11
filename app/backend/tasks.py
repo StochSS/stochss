@@ -1,11 +1,14 @@
 import sys,os,logging
 sys.path.append(os.path.join(os.path.dirname(__file__), '../lib/celery'))
+sys.path.append(os.path.join(os.path.dirname(__file__), '../lib/boto'))
 sys.path.append(os.path.join(os.path.dirname(__file__), '../lib/kombu'))
 sys.path.append(os.path.join(os.path.dirname(__file__), '../'))
+sys.path.append(os.path.join(os.path.dirname(__file__), '/'))
 sys.path.append(os.path.join(os.path.dirname(__file__), '../lib/amqp'))
 sys.path.append(os.path.join(os.path.dirname(__file__), '../lib/billiard'))
 sys.path.append(os.path.join(os.path.dirname(__file__), '../lib/anyjson'))
 sys.path.append(os.path.join(os.path.dirname(__file__), '../lib/pytz'))
+
 #print str(sys.path)
 from celery import Celery, group
 try:
@@ -47,7 +50,7 @@ class CelerySingleton(object):
     
     def configure(self):
         reload(celeryconfig)
-        self.app.config_from_object('celeryconfig')
+#         self.app.config_from_object('celeryconfig')
 
 celery_config = CelerySingleton()
 celery_config.configure()

@@ -14,7 +14,6 @@ from uuid import uuid4
 import logging
 
 import httplib
-import backend.backendservice
 
 
 

@@ -213,24 +213,23 @@ class BackendWorker(webapp2.RequestHandler):
     KEYPREFIX = 'stochss'
     QUEUEHEAD_KEY_TAG = 'queuehead'
     
-    def post(self):
+    def post(self, op, infra, agent, num_vms, parameters, reservation_id):
         utils.log('BackendWorker starts to get the request from remote.')
-        op = self.request.get('op')
-        
-        req_infra = self.request.POST.get('infra')
-        infra = pickle.loads(str(req_infra))
-        req_agent = self.request.POST.get('agent')
-        agent = pickle.loads(str(req_agent))
-        req_num_vms = self.request.POST.get('num_vms')
-        num_vms = pickle.loads(str(req_num_vms))
-        req_parameters = self.request.POST.get('parameters')
-        parameters = pickle.loads(str(req_parameters))
-        req_reservation_id = self.request.POST.get('reservation_id')
-        reservation_id = pickle.loads(str(req_reservation_id))
+#         op = self.request.get('op')
+#         
+#         req_infra = self.request.POST.get('infra')
+#         infra = pickle.loads(str(req_infra))
+#         req_agent = self.request.POST.get('agent')
+#         agent = pickle.loads(str(req_agent))
+#         req_num_vms = self.request.POST.get('num_vms')
+#         num_vms = pickle.loads(str(req_num_vms))
+#         req_parameters = self.request.POST.get('parameters')
+#         parameters = pickle.loads(str(req_parameters))
+#         req_reservation_id = self.request.POST.get('reservation_id')
+#         reservation_id = pickle.loads(str(req_reservation_id))
         
         if op == 'start_vms':
             utils.log('About to start vms.')
-            self.response.set_status(200, message="Success")
 #             id = background_thread.start_new_background_thread(self.spawn_vms, [infra, agent, num_vms, parameters, reservation_id])
 #             utils.log('Started a background thread to spwan vms, id: {0}.'.format(id))
             self.spawn_vms(infra, agent, num_vms, parameters, reservation_id)
@@ -238,7 +237,6 @@ class BackendWorker(webapp2.RequestHandler):
         
         elif op == 'vms_ready':
             logging.info('Vms are ready.')
-            self.response.set_status(200, message="Success")
             
             status_info = infra.reservations.get(reservation_id)
             
@@ -282,7 +280,6 @@ class BackendWorker(webapp2.RequestHandler):
             
         elif op == 'queuehead_configured':
             logging.info('Queue head have already run and been configured.')
-            self.response.set_status(200, message="Success")
             
             if "queue_head" in parameters and parameters["queue_head"] == True: 
                 # if total number of vms we want is 1, then it's done
@@ -314,7 +311,6 @@ class BackendWorker(webapp2.RequestHandler):
 
     def poll_instances_status(self, infra, agent, num_vms, parameters, reservation_id):
         utils.log('Start polling task.')
-        self.response.set_status(200, message="Success")
         
         ins_ids= agent.describe_instances_launched(parameters)
         
@@ -332,8 +328,10 @@ class BackendWorker(webapp2.RequestHandler):
             if parameters["num_vms"] == len(public_ips):
                 # update db with new public ips and private ips
                 VMStateModel.update_ips(parameters, instance_ids, public_ips, private_ips, parameters["keyname"])
-                id = background_thread.start_new_background_thread(self.verify_instances_vis_ssh, [infra, agent, num_vms, parameters, reservation_id, public_ips, private_ips, instance_ids])
-                utils.log('Started a background thread to verify instances via ssh, id: {0}.'.format(id))
+#                 id = background_thread.start_new_background_thread(self.verify_instances_vis_ssh, [infra, agent, num_vms, parameters, reservation_id, public_ips, private_ips, instance_ids])
+#                 utils.log('Started a background thread to verify instances via ssh, id: {0}.'.format(id))
+
+                self.verify_instances_vis_ssh(infra, agent, num_vms, parameters, reservation_id, public_ips, private_ips, instance_ids)
                 return;
             else: 
                 time.sleep(POLL_WAIT)
@@ -356,8 +354,7 @@ class BackendWorker(webapp2.RequestHandler):
         return
             
     def verify_instances_vis_ssh(self, infra, agent, num_vms, parameters, reservation_id,  public_ips, private_ips, instance_ids):
-        utils.log('{0} nodes are running. Now trying to verify ssh connectable.'.format(parameters["num_vms"]))
-        self.response.set_status(200, message="Success")    
+        utils.log('{0} nodes are running. Now trying to verify ssh connectable.'.format(parameters["num_vms"]))    
                            
         status_info = infra.reservations.get(reservation_id)
                  
@@ -420,18 +417,19 @@ class BackendWorker(webapp2.RequestHandler):
         infra.reservations.put(reservation_id, status_info)
                  
         # report that vms are ready
-        from_fields = {
-            'op': 'vms_ready',
-            'infra': pickle.dumps(infra),
-            'agent': pickle.dumps(agent),
-            'num_vms': pickle.dumps(num_vms),
-            'parameters': pickle.dumps(parameters),
-            'reservation_id': pickle.dumps(reservation_id)
-        }
-        from_data = urllib.urlencode(from_fields)
-        urlfetch.fetch(url= BACKEND_WORKER_R_URL,
-                       method = urlfetch.POST,
-                       payload = from_data)
+#         from_fields = {
+#             'op': 'vms_ready',
+#             'infra': pickle.dumps(infra),
+#             'agent': pickle.dumps(agent),
+#             'num_vms': pickle.dumps(num_vms),
+#             'parameters': pickle.dumps(parameters),
+#             'reservation_id': pickle.dumps(reservation_id)
+#         }
+#         from_data = urllib.urlencode(from_fields)
+#         urlfetch.fetch(url= BACKEND_WORKER_R_URL,
+#                        method = urlfetch.POST,
+#                        payload = from_data)
+        self.post('vms_ready', infra, agent, num_vms, parameters, reservation_id)
         return
         
     def spawn_vms(self, infra, agent, num_vms, parameters, reservation_id):       
@@ -444,7 +442,6 @@ class BackendWorker(webapp2.RequestHandler):
         parameters      A dictionary of parameters
         reservation_id  Reservation ID of the current run request
         """
-        self.response.set_status(200, message="Success")
         
         try:
             # NOTE: We need to make sure that the RabbitMQ server is running if any compute
@@ -515,7 +512,6 @@ class BackendWorker(webapp2.RequestHandler):
 
         #print "reservation={0}".format(reservation)
         #print "params={0}".format(params)
-        self.response.set_status(200, message="Success")
         
         reservation = infra.reservations.get(reservation_id)
         
@@ -563,18 +559,19 @@ class BackendWorker(webapp2.RequestHandler):
                 VMStateModel.set_state(params, [ins_id], VMStateModel.STATE_FAILED, VMStateModel.DESCRI_FAIL_TO_COFIGURE_CELERY)
                 raise Exception("Failure to start celery on {0}".format(ip))
         
-        from_fields = {
-            'op': 'queuehead_configured',
-            'infra': pickle.dumps(infra),
-            'agent': pickle.dumps(agent),
-            'num_vms': pickle.dumps(num_vms),
-            'parameters': pickle.dumps(params),
-            'reservation_id': pickle.dumps(reservation_id)
-        }
-        from_data = urllib.urlencode(from_fields)
-        urlfetch.fetch(url= BACKEND_WORKER_R_URL,
-                       method = urlfetch.POST,
-                       payload = from_data)
+#         from_fields = {
+#             'op': 'queuehead_configured',
+#             'infra': pickle.dumps(infra),
+#             'agent': pickle.dumps(agent),
+#             'num_vms': pickle.dumps(num_vms),
+#             'parameters': pickle.dumps(params),
+#             'reservation_id': pickle.dumps(reservation_id)
+#         }
+#         from_data = urllib.urlencode(from_fields)
+#         urlfetch.fetch(url= BACKEND_WORKER_R_URL,
+#                        method = urlfetch.POST,
+#                        payload = from_data)
+        self.post('queuehead_configured', infra, agent, num_vms, params, reservation_id)
         return
         
 
@@ -592,7 +589,7 @@ class BackendWorker(webapp2.RequestHandler):
 #             return False
             #time.sleep(SSH_RETRY_WAIT)
         
-        self.response.set_status(200, message="Success")       
+     
         SSH_RETRY_COUNT = 8
         SSH_RETRY_WAIT = 3
                 
@@ -621,7 +618,6 @@ class BackendWorker(webapp2.RequestHandler):
         #       per machine and letting that one worker execute one task per core, using
         #       the configuration in celeryconfig.py to ensure that Celery detects the
         #       number of cores and enforces this desired behavior.
-        self.response.set_status(200, message="Success")
         
         credentials = params['credentials']
         python_path = "source /home/ubuntu/.bashrc;export PYTHONPATH=/home/ubuntu/pyurdme/:/home/ubuntu/stochss/app/;"
