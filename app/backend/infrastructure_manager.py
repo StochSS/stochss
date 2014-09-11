@@ -270,9 +270,8 @@ class InfrastructureManager:
 #                                payload = from_data)
     os.environ['HTTP_HOST'] = "127.0.0.1:8080"
     
-#     taskqueue.add(url='/backend/queue', params=from_fields, method='GET')
-    worker = backend_handler.BackendWorker()
-    worker.post('start_vms', self, agent, num_vms, parameters, reservation_id)
+    taskqueue.add(url='/backend/queue', params=from_fields, method='GET')
+
       
     utils.log('Successfully sent request to backend server, reservation_id: {0}.'.format(reservation_id))
 #     return self.__generate_response(True,

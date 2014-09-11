@@ -681,24 +681,26 @@ class BackendQueue(webapp2.RequestHandler):
             req_reservation_id = self.request.get('reservation_id')
             reservation_id = pickle.loads(str(req_reservation_id))
             
-            form_fields = {
-            'op': 'start_vms',
-            'infra': pickle.dumps(infra),
-            'agent': pickle.dumps(agent),
-            'num_vms': pickle.dumps(num_vms),
-            'parameters': pickle.dumps(parameters),
-            'reservation_id': pickle.dumps(reservation_id)
-            }
-            from_data = urllib.urlencode(form_fields)
-            
-            #backends.get_url(backend_handler.BACKEND_NAME)
-            
-            urlfetch.fetch(BACKEND_START)
-#             urlfetch.set_default_fetch_deadline(60)
-            
-            result = urlfetch.fetch(url=BACKEND_WORKER_R_URL,
-                                method = urlfetch.POST,
-                                payload = from_data)
+#             form_fields = {
+#             'op': 'start_vms',
+#             'infra': pickle.dumps(infra),
+#             'agent': pickle.dumps(agent),
+#             'num_vms': pickle.dumps(num_vms),
+#             'parameters': pickle.dumps(parameters),
+#             'reservation_id': pickle.dumps(reservation_id)
+#             }
+#             from_data = urllib.urlencode(form_fields)
+#             
+#             #backends.get_url(backend_handler.BACKEND_NAME)
+#             
+#             urlfetch.fetch(BACKEND_START)
+# #             urlfetch.set_default_fetch_deadline(60)
+#             
+#             result = urlfetch.fetch(url=BACKEND_WORKER_R_URL,
+#                                 method = urlfetch.POST,
+#                                 payload = from_data)
+            worker = BackendWorker()
+            worker.post('start_vms', infra, agent, num_vms, parameters, reservation_id)
         
 app = webapp2.WSGIApplication([('/backend/worker', BackendWorker), 
                                ('/backend/queue', BackendQueue)],
