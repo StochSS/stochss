@@ -623,9 +623,13 @@ class Module(object):
       def wrapped_start_response(status, response_headers, exc_info=None):
         response_headers.append(('Server',
                                  http_runtime_constants.SERVER_SOFTWARE))
+        
         if should_log_request:
           headers = wsgiref.headers.Headers(response_headers)
           status_code = int(status.split(' ', 1)[0])
+          if status_code == 500:
+              import traceback
+              traceback.print_stack()
           content_length = int(headers.get('Content-Length', 0))
           logservice.end_request(request_id, status_code, content_length)
           logging.info('%(module_name)s: '

@@ -250,26 +250,59 @@ class BackendWorker(webapp2.RequestHandler):
                 # celery configuration needs to be updated with the queue head ip                 
                 self.update_celery_config_with_queue_head_ip(queue_head_ip)
                 
+                # copy celery config to queue head
+                id = background_thread.start_new_background_thread(self.copyCeleryConfigToInstance, [infra, agent, num_vms, parameters, reservation_id])
+                utils.log('Started a background thread to copy celery configuration to queue head, id: {0}.'.format(id))
+                return
+                
                 # if total number of vms is 1, finish copy and start celery
+#                 if num_vms == 1:
+#                     #wait for the vms to be configured                
+#                     id = background_thread.start_new_background_thread(self.copyCeleryConfigToInstance, [agent, status_info, parameters])
+#                     utils.log('Started a background thread to copy celery configuration, id: {0}.'.format(id))
+#                     return
+#                 # else start left vms
+#                 else:
+#                     parameters["keyname"] = parameters["keyname"].replace('-'+self.QUEUEHEAD_KEY_TAG, '')
+#                     parameters["queue_head"] = False
+#                     parameters["num_vms"] = num_vms - 1
+#                      
+#                     logging.info('KEYNAME: {0}'.format(parameters["keyname"]))
+#                     id = background_thread.start_new_background_thread(self.spawn_vms, [infra, agent, num_vms, parameters, reservation_id])           
+#                     utils.log('Started a background thread to spwan vms, id: {0}.'.format(id))
+#                     return
+            else:
+                id = background_thread.start_new_background_thread(self.copyCeleryConfigToInstance, [infra, agent, num_vms, parameters, reservation_id])
+                utils.log('Started a background thread to copy celery configuration, id: {0}.'.format(id))
+                return
+            
+        elif op == 'queuehead_configured':
+            logging.info('Queue head have already run and been configured.')
+            
+            if "queue_head" in parameters and parameters["queue_head"] == True: 
+                # if total number of vms we want is 1, then it's done
                 if num_vms == 1:
-                    #wait for the vms to be configured                
-                    id = background_thread.start_new_background_thread(self.copyCeleryConfigToInstance, [status_info, parameters])
-                    utils.log('Started a background thread to copy celery configuration, id: {0}.'.format(id))
-                    return
-                # else start left vms
+                    return;
+                # or we need to copy celery to the other nodes
                 else:
+                    # remove queuehead info
+                    status_info = infra.reservations.get(reservation_id)
+                    status_info['vm_info'] = {
+                        'public_ips': None,
+                        'private_ips': None,
+                        'instance_ids': None
+                    }
+                    infra.reservations.put(reservation_id, status_info)
                     parameters["keyname"] = parameters["keyname"].replace('-'+self.QUEUEHEAD_KEY_TAG, '')
                     parameters["queue_head"] = False
                     parameters["num_vms"] = num_vms - 1
-                    
+                     
                     logging.info('KEYNAME: {0}'.format(parameters["keyname"]))
+                    
                     id = background_thread.start_new_background_thread(self.spawn_vms, [infra, agent, num_vms, parameters, reservation_id])           
                     utils.log('Started a background thread to spwan vms, id: {0}.'.format(id))
                     return
-            else:
-                id = background_thread.start_new_background_thread(self.copyCeleryConfigToInstance, [status_info, parameters])
-                utils.log('Started a background thread to copy celery configuration, id: {0}.'.format(id))
-                return
+            
         
         
 
@@ -462,7 +495,7 @@ class BackendWorker(webapp2.RequestHandler):
         my_celery = CelerySingleton()
         my_celery.configure()
 
-    def copyCeleryConfigToInstance(self, agent, reservation, params):
+    def copyCeleryConfigToInstance(self, infra, agent, num_vms, params, reservation_id):
         # Update celery config file...it should have the correct IP
         # of the Queue head node, which should already be running.
         # Pass it line by line so theres no weird formatting errors from
@@ -470,7 +503,8 @@ class BackendWorker(webapp2.RequestHandler):
 
         #print "reservation={0}".format(reservation)
         #print "params={0}".format(params)
-        time.sleep(1)
+        reservation = infra.reservations.get(reservation_id)
+        
         keyfile = "{0}/../{1}.key".format(os.path.dirname(__file__),params['keyname'])
         #logging.debug("keyfile = {0}".format(keyfile))
         if not os.path.exists(keyfile):
@@ -491,6 +525,7 @@ class BackendWorker(webapp2.RequestHandler):
         
         for ip, ins_id in zip(reservation['vm_info']['public_ips'], reservation['vm_info']['instance_ids']):
             #self.waitforSSHconnection(keyfile, ip)
+            
             cmd = "scp -o 'StrictHostKeyChecking no' -i {0} {1} ubuntu@{2}:celeryconfig.py".format(keyfile, celery_config_filename, ip)
             logging.info(cmd)
             success = os.system(cmd)
@@ -513,6 +548,21 @@ class BackendWorker(webapp2.RequestHandler):
                 agent.terminate_some_instances(params, [ins_id])
                 VMStateModel.set_state(params, [ins_id], VMStateModel.STATE_FAILED, VMStateModel.DESCRI_FAIL_TO_COFIGURE_CELERY)
                 raise Exception("Failure to start celery on {0}".format(ip))
+        
+        from_fields = {
+            'op': 'queuehead_configured',
+            'infra': pickle.dumps(infra),
+            'agent': pickle.dumps(agent),
+            'num_vms': pickle.dumps(num_vms),
+            'parameters': pickle.dumps(params),
+            'reservation_id': pickle.dumps(reservation_id)
+        }
+        from_data = urllib.urlencode(from_fields)
+        urlfetch.fetch(url= BACKEND_WORKER_R_URL,
+                       method = urlfetch.POST,
+                       payload = from_data)
+        return
+        
 
     def waitforSSHconnection(self, keyfile, ip):
         
