@@ -230,14 +230,16 @@ class BackendWorker(webapp2.RequestHandler):
         
         if op == 'start_vms':
             utils.log('About to start vms.')
-            
-            id = background_thread.start_new_background_thread(self.spawn_vms, [infra, agent, num_vms, parameters, reservation_id])
-            utils.log('Started a background thread to spwan vms, id: {0}.'.format(id))
+            self.response.set_status(200, message="Success")
+#             id = background_thread.start_new_background_thread(self.spawn_vms, [infra, agent, num_vms, parameters, reservation_id])
+#             utils.log('Started a background thread to spwan vms, id: {0}.'.format(id))
+            self.spawn_vms(infra, agent, num_vms, parameters, reservation_id)
             return
         
         elif op == 'vms_ready':
             logging.info('Vms are ready.')
-           
+            self.response.set_status(200, message="Success")
+            
             status_info = infra.reservations.get(reservation_id)
             
             if status_info['vm_info']['public_ips'] is None or len(status_info['vm_info']['public_ips']) == 0:
@@ -251,8 +253,9 @@ class BackendWorker(webapp2.RequestHandler):
                 self.update_celery_config_with_queue_head_ip(queue_head_ip)
                 
                 # copy celery config to queue head
-                id = background_thread.start_new_background_thread(self.copyCeleryConfigToInstance, [infra, agent, num_vms, parameters, reservation_id])
-                utils.log('Started a background thread to copy celery configuration to queue head, id: {0}.'.format(id))
+#                 id = background_thread.start_new_background_thread(self.copyCeleryConfigToInstance, [infra, agent, num_vms, parameters, reservation_id])
+#                 utils.log('Started a background thread to copy celery configuration to queue head, id: {0}.'.format(id))
+                self.copyCeleryConfigToInstance(infra, agent, num_vms, parameters, reservation_id)
                 return
                 
                 # if total number of vms is 1, finish copy and start celery
@@ -272,12 +275,14 @@ class BackendWorker(webapp2.RequestHandler):
 #                     utils.log('Started a background thread to spwan vms, id: {0}.'.format(id))
 #                     return
             else:
-                id = background_thread.start_new_background_thread(self.copyCeleryConfigToInstance, [infra, agent, num_vms, parameters, reservation_id])
-                utils.log('Started a background thread to copy celery configuration, id: {0}.'.format(id))
+#                 id = background_thread.start_new_background_thread(self.copyCeleryConfigToInstance, [infra, agent, num_vms, parameters, reservation_id])
+#                 utils.log('Started a background thread to copy celery configuration, id: {0}.'.format(id))
+                self.copyCeleryConfigToInstance(infra, agent, num_vms, parameters, reservation_id)
                 return
             
         elif op == 'queuehead_configured':
             logging.info('Queue head have already run and been configured.')
+            self.response.set_status(200, message="Success")
             
             if "queue_head" in parameters and parameters["queue_head"] == True: 
                 # if total number of vms we want is 1, then it's done
@@ -299,8 +304,9 @@ class BackendWorker(webapp2.RequestHandler):
                      
                     logging.info('KEYNAME: {0}'.format(parameters["keyname"]))
                     
-                    id = background_thread.start_new_background_thread(self.spawn_vms, [infra, agent, num_vms, parameters, reservation_id])           
-                    utils.log('Started a background thread to spwan vms, id: {0}.'.format(id))
+#                     id = background_thread.start_new_background_thread(self.spawn_vms, [infra, agent, num_vms, parameters, reservation_id])           
+#                     utils.log('Started a background thread to spwan vms, id: {0}.'.format(id))
+                    self.spawn_vms(infra, agent, num_vms, parameters, reservation_id)
                     return
             
         
@@ -308,6 +314,7 @@ class BackendWorker(webapp2.RequestHandler):
 
     def poll_instances_status(self, infra, agent, num_vms, parameters, reservation_id):
         utils.log('Start polling task.')
+        self.response.set_status(200, message="Success")
         
         ins_ids= agent.describe_instances_launched(parameters)
         
@@ -343,13 +350,15 @@ class BackendWorker(webapp2.RequestHandler):
         # update db with failure information
         VMStateModel.set_state(parameters, terminate_ins_ids, VMStateModel.STATE_FAILED, VMStateModel.DESCRI_FAIL_TO_RUN)
                    
-        id = background_thread.start_new_background_thread(self.verify_instances_vis_ssh, [infra, agent, num_vms, parameters, reservation_id, public_ips, private_ips, instance_ids])
-        utils.log('Started a background thread to verify instances that has run via ssh, id: {0}.'.format(id))
+#         id = background_thread.start_new_background_thread(self.verify_instances_vis_ssh, [infra, agent, num_vms, parameters, reservation_id, public_ips, private_ips, instance_ids])
+#         utils.log('Started a background thread to verify instances that has run via ssh, id: {0}.'.format(id))
+        self.verify_instances_vis_ssh(infra, agent, num_vms, parameters, reservation_id, public_ips, private_ips, instance_ids)
         return
             
     def verify_instances_vis_ssh(self, infra, agent, num_vms, parameters, reservation_id,  public_ips, private_ips, instance_ids):
         utils.log('{0} nodes are running. Now trying to verify ssh connectable.'.format(parameters["num_vms"]))
-                                
+        self.response.set_status(200, message="Success")    
+                           
         status_info = infra.reservations.get(reservation_id)
                  
         keyfile = "{0}/../{1}.key".format(os.path.dirname(__file__),parameters['keyname'])
@@ -435,6 +444,8 @@ class BackendWorker(webapp2.RequestHandler):
         parameters      A dictionary of parameters
         reservation_id  Reservation ID of the current run request
         """
+        self.response.set_status(200, message="Success")
+        
         try:
             # NOTE: We need to make sure that the RabbitMQ server is running if any compute
             # nodes are running as we are using the AMQP broker option for Celery.
@@ -461,8 +472,9 @@ class BackendWorker(webapp2.RequestHandler):
             except:
                 raise Exception('Errors in running instances in agent.')
             
-            id = background_thread.start_new_background_thread(self.poll_instances_status, [infra, agent, num_vms, parameters, reservation_id])
-            utils.log('Started a background thread to poll the status of starting vms, id: {0}.'.format(id))
+#             id = background_thread.start_new_background_thread(self.poll_instances_status, [infra, agent, num_vms, parameters, reservation_id])
+#             utils.log('Started a background thread to poll the status of starting vms, id: {0}.'.format(id))
+            self.poll_instances_status(infra, agent, num_vms, parameters, reservation_id)
             return
         
         except AgentRuntimeException as exception:
@@ -503,6 +515,8 @@ class BackendWorker(webapp2.RequestHandler):
 
         #print "reservation={0}".format(reservation)
         #print "params={0}".format(params)
+        self.response.set_status(200, message="Success")
+        
         reservation = infra.reservations.get(reservation_id)
         
         keyfile = "{0}/../{1}.key".format(os.path.dirname(__file__),params['keyname'])
@@ -578,7 +592,7 @@ class BackendWorker(webapp2.RequestHandler):
 #             return False
             #time.sleep(SSH_RETRY_WAIT)
         
-                
+        self.response.set_status(200, message="Success")       
         SSH_RETRY_COUNT = 8
         SSH_RETRY_WAIT = 3
                 
@@ -607,7 +621,8 @@ class BackendWorker(webapp2.RequestHandler):
         #       per machine and letting that one worker execute one task per core, using
         #       the configuration in celeryconfig.py to ensure that Celery detects the
         #       number of cores and enforces this desired behavior.
-
+        self.response.set_status(200, message="Success")
+        
         credentials = params['credentials']
         python_path = "source /home/ubuntu/.bashrc;export PYTHONPATH=/home/ubuntu/pyurdme/:/home/ubuntu/stochss/app/;"
         python_path+='export AWS_ACCESS_KEY_ID={0};'.format(str(credentials['EC2_ACCESS_KEY']))
@@ -683,6 +698,7 @@ class BackendQueue(webapp2.RequestHandler):
             #backends.get_url(backend_handler.BACKEND_NAME)
             
             urlfetch.fetch(BACKEND_START)
+#             urlfetch.set_default_fetch_deadline(60)
             
             result = urlfetch.fetch(url=BACKEND_WORKER_R_URL,
                                 method = urlfetch.POST,

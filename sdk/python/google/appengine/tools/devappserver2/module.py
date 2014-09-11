@@ -627,9 +627,9 @@ class Module(object):
         if should_log_request:
           headers = wsgiref.headers.Headers(response_headers)
           status_code = int(status.split(' ', 1)[0])
-          if status_code == 500:
-              import traceback
-              traceback.print_stack()
+#           if status_code == 500:
+#               import traceback
+#               traceback.print_stack()
           content_length = int(headers.get('Content-Length', 0))
           logservice.end_request(request_id, status_code, content_length)
           logging.info('%(module_name)s: '
