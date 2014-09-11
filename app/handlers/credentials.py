@@ -61,6 +61,7 @@ class CredentialsPage(BaseHandler):
             # TODO: This is a hack to make it unlikely that the db transaction has not completed
             # before we re-render the page (which would cause an error). We need some real solution for this...
             time.sleep(0.5)
+            context = self.getContext(user_id)
             self.render_response('credentials.html', **(dict(context, **result)))
 
         elif 'start' in params:
