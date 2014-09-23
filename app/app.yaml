@@ -13,7 +13,7 @@ handlers:
 - url: /lib/flot
   static_dir: lib/flot
 
-- url: /backend/worker
+- url: /backend/synchronizedb
   script: backend.backend_handler.app
 
 - url: /backend/queue

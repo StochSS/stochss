@@ -10,6 +10,10 @@ import os
 import time
 import logging
 import thread
+import threading
+from threading import Timer
+import datetime 
+import re
 from tasks import CelerySingleton
 from subprocess import Popen, PIPE, STDOUT
 from google.appengine.ext import db
@@ -17,14 +21,16 @@ from google.appengine.ext import db
 __author__ = 'mengyuan'
 __email__ = 'gmy.melissa@gmail.com'
 
+DB_SYN_PATH = os.path.join(os.path.dirname(__file__), '../db_syn')
 
 BACKEND_NAME = 'backendthread'
 BACKEND_URL = 'http://%s' % modules.get_hostname(BACKEND_NAME)
 
 BACKEND_START = BACKEND_URL+'/_ah/start'
 BACKEND_BACKGROUND = BACKEND_URL+'/_ah/background'
-BACKEND_WORKER_R_URL = BACKEND_URL+'/backend/worker'
+BACKEND_SYN_R_URL = BACKEND_URL+'/backend/synchronizedb'
 BACKEND_MANAGER_R_URL = BACKEND_URL+'/backend/manager'
+BACKEND_QUEUE_R_URL = 'http://%s' % modules.get_hostname('backendqueue')+'/backend/queue'
 
 class VMStateModel(db.Model):
     IDS = 'ids'
@@ -40,6 +46,7 @@ class VMStateModel(db.Model):
     DESCRI_FAIL_TO_RUN = 'fail to run the instance'
     DESCRI_TIMEOUT_ON_SSH = 'timeout to connect instance via ssh'
     DESCRI_FAIL_TO_COFIGURE_CELERY = 'fail to celery on the instance'
+    DESCRI_NOT_FOUND = 'not find the instance in cloud infrastructure'
     DESCRI_SUCCESS = 'success'
     
     infra = db.StringProperty()
@@ -174,7 +181,8 @@ class VMStateModel(db.Model):
             
             for ins_id in ins_ids:
                 e = VMStateModel.all().filter('ins_id =', ins_id).filter('infra =', infra).filter('access_key =', access_key).filter('secret_key =', secret_key).get()
-                e.state = state
+                if e.state != VMStateModel.STATE_TERMINATED:
+                    e.state = state
                 if description is not None:
                     e.description = description
                 e.put()            
@@ -208,114 +216,160 @@ class VMStateModel(db.Model):
             return None, None, None
         
         return infra, access_key, secret_key
-
-class BackendWorker(webapp2.RequestHandler):
-    KEYPREFIX = 'stochss'
-    QUEUEHEAD_KEY_TAG = 'queuehead'
     
-    def post(self, op, infra, agent, num_vms, parameters, reservation_id):
-        utils.log('BackendWorker starts to get the request from remote.')
-#         op = self.request.get('op')
-#         
-#         req_infra = self.request.POST.get('infra')
-#         infra = pickle.loads(str(req_infra))
-#         req_agent = self.request.POST.get('agent')
-#         agent = pickle.loads(str(req_agent))
-#         req_num_vms = self.request.POST.get('num_vms')
-#         num_vms = pickle.loads(str(req_num_vms))
-#         req_parameters = self.request.POST.get('parameters')
-#         parameters = pickle.loads(str(req_parameters))
-#         req_reservation_id = self.request.POST.get('reservation_id')
-#         reservation_id = pickle.loads(str(req_reservation_id))
+    @staticmethod
+    def synchronize(agent, credentials):
+        logging.info('Start Synchronizing DB...')        
+        instanceList = agent.describe_instances({'credentials': credentials})
+         
+        entities = VMStateModel.all()
+        entities.filter('infra =', agent.AGENT_NAME).filter('access_key =', credentials['EC2_ACCESS_KEY']).filter('secret_key =', credentials['EC2_SECRET_KEY'])
+        entities.filter('state !=', VMStateModel.STATE_TERMINATED).filter('state !=', VMStateModel.STATE_CREATING)
+         
+        for e in entities:
+            find = False
+            for ins in instanceList:
+                if e.ins_id == ins['id']:
+                    find = True
+                    if e.state == VMStateModel.STATE_PENDING and ins['state'] == VMStateModel.STATE_RUNNING:
+                        break
+                    else:
+                        if ins['state'] == 'shutting-down':
+                            ins['state'] = VMStateModel.STATE_TERMINATED
+                        e.state = ins['state']
+                        e.put()  
+                    break
+             
+            if not find:
+                e.state = VMStateModel.STATE_TERMINATED
+                e.decription = VMStateModel.DESCRI_NOT_FOUND
+                e.put()   
+        logging.info('Finished synchronizing DB!')          
+
+class BackendWorker():
+    
+    KEYPREFIX = 'stochss'
+    QUEUEHEAD_KEY_TAG = 'queuehead'  
+              
+    
+    def spawn_vms(self, infra, agent, num_vms, parameters):       
+        """
+        public method for starting a set of VMs
+
+        Args:
+        agent           Infrastructure agent in charge of current operation
+        num_vms         No. of VMs totally to be spawned
+        parameters      A dictionary of parameters
+        reservation_id  Reservation ID of the current run request
+        """
         
-        if op == 'start_vms':
-            utils.log('About to start vms.')
-#             id = background_thread.start_new_background_thread(self.spawn_vms, [infra, agent, num_vms, parameters, reservation_id])
-#             utils.log('Started a background thread to spwan vms, id: {0}.'.format(id))
-            self.spawn_vms(infra, agent, num_vms, parameters, reservation_id)
-            return
+        try: 
+            ###################################################
+            # step 1: run instance based on queue head or not #
+            ###################################################          
+            if not self.isQueueHeadRunning(agent, parameters):
+                # Queue head is not running, so create a queue head
+                utils.log('About to start a queue head.')
+                
+                parameters["queue_head"] = True
+                requested_key_name = parameters["keyname"]
+                # Only want one queue head, and it must have its own key so
+                # it can be differentiated if necessary
+                parameters["num_vms"] = 1
+                parameters["keyname"] = requested_key_name+'-'+self.QUEUEHEAD_KEY_TAG
+            
+            # if the queue head is running
+            else:
+                if "queue_head" in parameters and parameters["queue_head"] == True: 
+
+                    parameters["keyname"] = parameters["keyname"].replace('-'+self.QUEUEHEAD_KEY_TAG, '')
+                    parameters["queue_head"] = False
+                    parameters["num_vms"] = num_vms - 1
+                    logging.info('KEYNAME: {0}'.format(parameters["keyname"]))
+            
+            security_configured = agent.configure_instance_security(parameters)
+            try:
+                agent.run_instances(parameters)
+            except:
+                raise Exception('Errors in running instances in agent.')
+                return 
+            
+            ########################################################################
+            # step 2: poll the status of instances, if not running, terminate them #
+            ########################################################################
+            public_ips, private_ips, instance_ids = self.poll_instances_status(infra, agent, num_vms, parameters)
+            if public_ips == None:
+                if not self.isQueueHeadRunning(agent, parameters) and num_vms > 1:
+                    # if last time of spawning queue head failed, spawn another queue head again
+                    num_vms = num_vms - 1
+                    self.spawn_vms(infra, agent, num_vms, parameters)
+                else:
+                    return
+            
+            ############################################################
+            # step 3: set alarm for the nodes, if it is NOT queue head #
+            ############################################################
+            logging.info('Set shutdown alarm')
+            if "queue_head" not in parameters or parameters["queue_head"] == False:
+                try:
+                    for ins_id in instance_ids:
+                        agent.make_sleepy(parameters, ins_id)
+                        
+                except:
+                    raise Exception('Errors in set alarm for instances.')
+            
+            ########################################################
+            # step 4: verify whether nodes are connectable via ssh #
+            ########################################################
+            connected_public_ips, connected_private_ips, connected_instance_ids = self.verify_instances_vis_ssh(agent, parameters, public_ips, private_ips, instance_ids)      
+            
+            if len(connected_public_ips) == 0:
+                if not self.isQueueHeadRunning(agent, parameters) and num_vms > 1:
+                    # if last time of spawning queue head failed, spawn another queue head again
+                    num_vms = num_vms - 1
+                    self.spawn_vms(infra, agent, num_vms, parameters)
+                else:
+                    return
         
-        elif op == 'vms_ready':
-            logging.info('Vms are ready.')
             
-            status_info = infra.reservations.get(reservation_id)
-            
-            if status_info['vm_info']['public_ips'] is None or len(status_info['vm_info']['public_ips']) == 0:
-                logging.info("Error: no instance is connectable.")
-                return
-            # if running queue head just now, modify parameters and run the left nodes
+            #########################################
+            # step 5: configure celery on each node #
+            #########################################
             if "queue_head" in parameters and parameters["queue_head"] == True:  
-                queue_head_ip = status_info['vm_info']['public_ips'][0]
+                queue_head_ip = connected_public_ips[0]
                 utils.log('queue_head_ip: {0}'.format(queue_head_ip))
                 # celery configuration needs to be updated with the queue head ip                 
                 self.update_celery_config_with_queue_head_ip(queue_head_ip)
                 
-                # copy celery config to queue head
-#                 id = background_thread.start_new_background_thread(self.copyCeleryConfigToInstance, [infra, agent, num_vms, parameters, reservation_id])
-#                 utils.log('Started a background thread to copy celery configuration to queue head, id: {0}.'.format(id))
-                self.copyCeleryConfigToInstance(infra, agent, num_vms, parameters, reservation_id)
-                return
-                
-                # if total number of vms is 1, finish copy and start celery
-#                 if num_vms == 1:
-#                     #wait for the vms to be configured                
-#                     id = background_thread.start_new_background_thread(self.copyCeleryConfigToInstance, [agent, status_info, parameters])
-#                     utils.log('Started a background thread to copy celery configuration, id: {0}.'.format(id))
-#                     return
-#                 # else start left vms
-#                 else:
-#                     parameters["keyname"] = parameters["keyname"].replace('-'+self.QUEUEHEAD_KEY_TAG, '')
-#                     parameters["queue_head"] = False
-#                     parameters["num_vms"] = num_vms - 1
-#                      
-#                     logging.info('KEYNAME: {0}'.format(parameters["keyname"]))
-#                     id = background_thread.start_new_background_thread(self.spawn_vms, [infra, agent, num_vms, parameters, reservation_id])           
-#                     utils.log('Started a background thread to spwan vms, id: {0}.'.format(id))
-#                     return
-            else:
-#                 id = background_thread.start_new_background_thread(self.copyCeleryConfigToInstance, [infra, agent, num_vms, parameters, reservation_id])
-#                 utils.log('Started a background thread to copy celery configuration, id: {0}.'.format(id))
-                self.copyCeleryConfigToInstance(infra, agent, num_vms, parameters, reservation_id)
-                return
-            
-        elif op == 'queuehead_configured':
-            logging.info('Queue head have already run and been configured.')
-            
-            if "queue_head" in parameters and parameters["queue_head"] == True: 
-                # if total number of vms we want is 1, then it's done
-                if num_vms == 1:
-                    return;
-                # or we need to copy celery to the other nodes
-                else:
-                    # remove queuehead info
-                    status_info = infra.reservations.get(reservation_id)
-                    status_info['vm_info'] = {
-                        'public_ips': None,
-                        'private_ips': None,
-                        'instance_ids': None
-                    }
-                    infra.reservations.put(reservation_id, status_info)
-                    parameters["keyname"] = parameters["keyname"].replace('-'+self.QUEUEHEAD_KEY_TAG, '')
-                    parameters["queue_head"] = False
-                    parameters["num_vms"] = num_vms - 1
-                     
-                    logging.info('KEYNAME: {0}'.format(parameters["keyname"]))
-                    
-#                     id = background_thread.start_new_background_thread(self.spawn_vms, [infra, agent, num_vms, parameters, reservation_id])           
-#                     utils.log('Started a background thread to spwan vms, id: {0}.'.format(id))
-                    self.spawn_vms(infra, agent, num_vms, parameters, reservation_id)
-                    return
-            
+            # copy celery configure to nodes.
+            self.copyCeleryConfigToInstance(agent, parameters, connected_public_ips, connected_private_ips, connected_instance_ids)
         
-        
+            
+            #################################################################
+            # step 6: if current node is queue head, may need to spwan the rest #
+            #################################################################
 
-    def poll_instances_status(self, infra, agent, num_vms, parameters, reservation_id):
+            if "queue_head" in parameters and parameters["queue_head"] == True and parameters['num_vms'] < num_vms:
+                self.spawn_vms(infra, agent, num_vms, parameters)
+            else:
+                # else all vms requested are finished spawning. Done!
+                return
+        
+        except Exception as e:
+            logging.exception(e)
+            
+            
+    def poll_instances_status(self, infra, agent, num_vms, parameters):
         utils.log('Start polling task.')
         
         ins_ids= agent.describe_instances_launched(parameters)
         
         # update db with new instance ids and 'pending'  
         VMStateModel.update_ins_ids(parameters, ins_ids)
+        
+        public_ips = None
+        private_ips = None
+        instance_ids = None
          
         POLL_COUNT = 10
         POLL_WAIT = 5
@@ -328,35 +382,34 @@ class BackendWorker(webapp2.RequestHandler):
             if parameters["num_vms"] == len(public_ips):
                 # update db with new public ips and private ips
                 VMStateModel.update_ips(parameters, instance_ids, public_ips, private_ips, parameters["keyname"])
-#                 id = background_thread.start_new_background_thread(self.verify_instances_vis_ssh, [infra, agent, num_vms, parameters, reservation_id, public_ips, private_ips, instance_ids])
-#                 utils.log('Started a background thread to verify instances via ssh, id: {0}.'.format(id))
+                break
+                
+            else:
+                if x < POLL_COUNT - 1:  
+                    time.sleep(POLL_WAIT)
+                    utils.log('polling task: sleep 5 seconds...')
+                else:
+                    VMStateModel.update_ips(parameters, instance_ids, public_ips, private_ips, parameters["keyname"])
+                    
+                    logging.info('Polling timeout. About to terminate some instances:')
+                    terminate_ins_ids = []
+                    for ins_id in ins_ids:
+                        if ins_id not in instance_ids:
+                            logging.info('instance {0}'.format(ins_id))
+                            terminate_ins_ids.append(ins_id)
+                    # terminate timeout instances        
+                    agent.terminate_some_instances(parameters, terminate_ins_ids)
+                    # update db with failure information
+                    VMStateModel.set_state(parameters, terminate_ins_ids, VMStateModel.STATE_FAILED, VMStateModel.DESCRI_FAIL_TO_RUN)
+                    
+        return public_ips, private_ips, instance_ids
 
-                self.verify_instances_vis_ssh(infra, agent, num_vms, parameters, reservation_id, public_ips, private_ips, instance_ids)
-                return;
-            else: 
-                time.sleep(POLL_WAIT)
-                utils.log('polling task: sleep 5 seconds...')
         
-        logging.info('Polling timeout. About to terminate some instances:')
-        terminate_ins_ids = []
-        for ins_id in ins_ids:
-            if ins_id not in instance_ids:
-                logging.info('instance {0}'.format(ins_id))
-                terminate_ins_ids.append(ins_id)
-        # terminate timeout instances        
-        agent.terminate_some_instances(parameters, terminate_ins_ids)
-        # update db with failure information
-        VMStateModel.set_state(parameters, terminate_ins_ids, VMStateModel.STATE_FAILED, VMStateModel.DESCRI_FAIL_TO_RUN)
-                   
-#         id = background_thread.start_new_background_thread(self.verify_instances_vis_ssh, [infra, agent, num_vms, parameters, reservation_id, public_ips, private_ips, instance_ids])
-#         utils.log('Started a background thread to verify instances that has run via ssh, id: {0}.'.format(id))
-        self.verify_instances_vis_ssh(infra, agent, num_vms, parameters, reservation_id, public_ips, private_ips, instance_ids)
-        return
             
-    def verify_instances_vis_ssh(self, infra, agent, num_vms, parameters, reservation_id,  public_ips, private_ips, instance_ids):
+    def verify_instances_vis_ssh(self, agent, parameters, public_ips, private_ips, instance_ids):
         utils.log('{0} nodes are running. Now trying to verify ssh connectable.'.format(parameters["num_vms"]))    
                            
-        status_info = infra.reservations.get(reservation_id)
+#         status_info = infra.reservations.get(reservation_id)
                  
         keyfile = "{0}/../{1}.key".format(os.path.dirname(__file__),parameters['keyname'])
         if not os.path.exists(keyfile):
@@ -395,90 +448,11 @@ class BackendWorker(webapp2.RequestHandler):
                              
         public_ips = None
         private_ips = None
-        instance_ids = None                     
-                 
-#         status_info['state'] = infra.STATE_RUNNING
+        instance_ids = None  
         
-        # if there are instances already running in this reservation, 
-        # specifically, if queue head has just been started in the same reservation,
-        # just append the following ips
-        if status_info['vm_info'] is not None:
-            if status_info['vm_info']['public_ips'] is not None:
-                connected_public_ips.extend(status_info['vm_info']['public_ips'])
-                connected_private_ips.extend(status_info['vm_info']['private_ips'])
-                connected_instance_ids.extend(status_info['vm_info']['instance_ids'])
-                logging.info('PUBLIC LENGTH {0}'.format(len(connected_public_ips)))
-                        
-        status_info['vm_info'] = {
-            'public_ips': connected_public_ips,
-            'private_ips': connected_private_ips,
-            'instance_ids': connected_instance_ids
-        }
-        infra.reservations.put(reservation_id, status_info)
-                 
-        # report that vms are ready
-#         from_fields = {
-#             'op': 'vms_ready',
-#             'infra': pickle.dumps(infra),
-#             'agent': pickle.dumps(agent),
-#             'num_vms': pickle.dumps(num_vms),
-#             'parameters': pickle.dumps(parameters),
-#             'reservation_id': pickle.dumps(reservation_id)
-#         }
-#         from_data = urllib.urlencode(from_fields)
-#         urlfetch.fetch(url= BACKEND_WORKER_R_URL,
-#                        method = urlfetch.POST,
-#                        payload = from_data)
-        self.post('vms_ready', infra, agent, num_vms, parameters, reservation_id)
-        return
-        
-    def spawn_vms(self, infra, agent, num_vms, parameters, reservation_id):       
-        """
-        public method for starting a set of VMs
+        return connected_public_ips, connected_private_ips, connected_instance_ids                              
 
-        Args:
-        agent           Infrastructure agent in charge of current operation
-        num_vms         No. of VMs totally to be spawned
-        parameters      A dictionary of parameters
-        reservation_id  Reservation ID of the current run request
-        """
-        
-        try:
-            # NOTE: We need to make sure that the RabbitMQ server is running if any compute
-            # nodes are running as we are using the AMQP broker option for Celery.
-#             compute_check_params = {
-#                 "credentials": parameters["credentials"],
-#                 "key_prefix": parameters["key_prefix"]
-#             }
-            
-            if not self.isQueueHeadRunning(agent, parameters):
-                # Queue head is not running, so create a queue head
-                utils.log('About to start a queue head.')
-                
-                parameters["queue_head"] = True
-                vms_requested = int(parameters["num_vms"])
-                requested_key_name = parameters["keyname"]
-                # Only want one queue head, and it must have its own key so
-                # it can be differentiated if necessary
-                parameters["num_vms"] = 1
-                parameters["keyname"] = requested_key_name+'-'+self.QUEUEHEAD_KEY_TAG
-            
-            security_configured = agent.configure_instance_security(parameters)
-            try:
-                agent.run_instances(parameters)
-            except:
-                raise Exception('Errors in running instances in agent.')
-            
-#             id = background_thread.start_new_background_thread(self.poll_instances_status, [infra, agent, num_vms, parameters, reservation_id])
-#             utils.log('Started a background thread to poll the status of starting vms, id: {0}.'.format(id))
-            self.poll_instances_status(infra, agent, num_vms, parameters, reservation_id)
-            return
-        
-        except AgentRuntimeException as exception:
-            logging.exception(exception)
-#             res['state'] = infra.STATE_FAILED
-#             res['reason'] = exception.message
-#             infra.reservations.put(reservation_id, res)              
+                   
 
     def update_celery_config_with_queue_head_ip(self, queue_head_ip):
         # Write queue_head_ip to file on the appropriate line
@@ -504,7 +478,7 @@ class BackendWorker(webapp2.RequestHandler):
         my_celery = CelerySingleton()
         my_celery.configure()
 
-    def copyCeleryConfigToInstance(self, infra, agent, num_vms, params, reservation_id):
+    def copyCeleryConfigToInstance(self, agent, params, public_ips, private_ips, instance_ids):
         # Update celery config file...it should have the correct IP
         # of the Queue head node, which should already be running.
         # Pass it line by line so theres no weird formatting errors from
@@ -512,8 +486,6 @@ class BackendWorker(webapp2.RequestHandler):
 
         #print "reservation={0}".format(reservation)
         #print "params={0}".format(params)
-        
-        reservation = infra.reservations.get(reservation_id)
         
         keyfile = "{0}/../{1}.key".format(os.path.dirname(__file__),params['keyname'])
         #logging.debug("keyfile = {0}".format(keyfile))
@@ -533,7 +505,7 @@ class BackendWorker(webapp2.RequestHandler):
         # PyURDME must be run inside a 'screen' terminal as part of the FEniCS code depends on the ability to write to the process' terminal, screen provides this terminal.
         celerycmd = "sudo screen -d -m bash -c '{1}{0}'\n".format(start_celery_str,python_path)
         
-        for ip, ins_id in zip(reservation['vm_info']['public_ips'], reservation['vm_info']['instance_ids']):
+        for ip, ins_id in zip(public_ips, instance_ids):
             #self.waitforSSHconnection(keyfile, ip)
             
             cmd = "scp -o 'StrictHostKeyChecking no' -i {0} {1} ubuntu@{2}:celeryconfig.py".format(keyfile, celery_config_filename, ip)
@@ -559,36 +531,10 @@ class BackendWorker(webapp2.RequestHandler):
                 VMStateModel.set_state(params, [ins_id], VMStateModel.STATE_FAILED, VMStateModel.DESCRI_FAIL_TO_COFIGURE_CELERY)
                 raise Exception("Failure to start celery on {0}".format(ip))
         
-#         from_fields = {
-#             'op': 'queuehead_configured',
-#             'infra': pickle.dumps(infra),
-#             'agent': pickle.dumps(agent),
-#             'num_vms': pickle.dumps(num_vms),
-#             'parameters': pickle.dumps(params),
-#             'reservation_id': pickle.dumps(reservation_id)
-#         }
-#         from_data = urllib.urlencode(from_fields)
-#         urlfetch.fetch(url= BACKEND_WORKER_R_URL,
-#                        method = urlfetch.POST,
-#                        payload = from_data)
-        self.post('queuehead_configured', infra, agent, num_vms, params, reservation_id)
         return
         
 
     def waitforSSHconnection(self, keyfile, ip):
-        
-#         cmd = "ssh -o StrictHostKeyChecking=no -i {0} ubuntu@{1} \"pwd\"".format(keyfile, ip)
-#         logging.info(cmd)
-#          
-#         success = os.system(cmd)
-#         if success == 0:
-#             logging.info("ssh connected to {0}".format(ip))
-#             return True
-#         else:
-#             logging.info("ssh not connected to {0}".format(ip))
-#             return False
-            #time.sleep(SSH_RETRY_WAIT)
-        
      
         SSH_RETRY_COUNT = 8
         SSH_RETRY_WAIT = 3
@@ -664,12 +610,66 @@ class BackendWorker(webapp2.RequestHandler):
         except Exception as e:
             logging.error('Error in testing queuehead running. {0}'.format(e))
             return False
+
+
+        
+class SynchronizeDB(webapp2.RequestHandler):
+    PAUSE = 60
+    
+    def post(self):
+        req_agent = self.request.get('agent')
+        self.agent = pickle.loads(str(req_agent))
+        req_parameters = self.request.get('parameters')
+        self.parameters = pickle.loads(str(req_parameters))
+        
+        self.is_start = False
+        
+        id = background_thread.start_new_background_thread(self.begin, [])
+        logging.info('Started a background thread to synchronize db. id: {0}'.format(id))
+        return
+    
+    def begin(self):
+        try:
+            self.credentials = self.parameters['credentials']
+        except:
+            raise Exception('Error: credentials not set properly!')
+        
+        if not self.is_start:
+            self._run()
+          
+    def _start(self):
+        if not self.is_start:
+            self.timer = Timer(SynchronizeDB.PAUSE, self._run).start()
+            self.is_start = True
+            
+    def _run(self):
+        self.is_start = False
+        VMStateModel.synchronize(self.agent, self.credentials)
+        self._write_time()
+        self._start()       
+    
+    def _write_time(self):
+        try:
+            now = datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+            logging.info('Write datetime of synchronization to db_syn: {0}'.format(now))
+            file = open(DB_SYN_PATH, "w")
+            file.write(now)
+            file.close()
+        except Exception as e:
+            logging.error('Error: have errors in write date time to db_syn. {0}'.format(e))
+    
+#     @staticmethod
+#     def stop():
+#         SynchronizeDB.TIMER.cancel()
+#         SynchronizeDB.SYNCHRONIZE_DB = False
         
 class BackendQueue(webapp2.RequestHandler):
+    
+    
     def get(self):
         op = self.request.get('op')
         if op == 'start_vms':
-            utils.log('Inside backend queue.')
+            utils.log('Backend queue got the request to start vms.')
             req_infra = self.request.get('infra')
             infra = pickle.loads(str(req_infra))
             req_agent = self.request.get('agent')
@@ -678,30 +678,48 @@ class BackendQueue(webapp2.RequestHandler):
             num_vms = pickle.loads(str(req_num_vms))
             req_parameters = self.request.get('parameters')
             parameters = pickle.loads(str(req_parameters))
-            req_reservation_id = self.request.get('reservation_id')
-            reservation_id = pickle.loads(str(req_reservation_id))
             
-#             form_fields = {
-#             'op': 'start_vms',
-#             'infra': pickle.dumps(infra),
-#             'agent': pickle.dumps(agent),
-#             'num_vms': pickle.dumps(num_vms),
-#             'parameters': pickle.dumps(parameters),
-#             'reservation_id': pickle.dumps(reservation_id)
-#             }
-#             from_data = urllib.urlencode(form_fields)
-#             
-#             #backends.get_url(backend_handler.BACKEND_NAME)
-#             
-#             urlfetch.fetch(BACKEND_START)
-# #             urlfetch.set_default_fetch_deadline(60)
-#             
-#             result = urlfetch.fetch(url=BACKEND_WORKER_R_URL,
-#                                 method = urlfetch.POST,
-#                                 payload = from_data)
+
             worker = BackendWorker()
-            worker.post('start_vms', infra, agent, num_vms, parameters, reservation_id)
+            worker.spawn_vms(infra, agent, num_vms, parameters)
+            utils.log('Backend queue finished starting vms.')
+            
+        elif op == 'start_db_syn':
+            utils.log('Backend queue got the request to start syn db.')
+            
+            last_time = None
+            try: 
+                file = open(DB_SYN_PATH)
+                line = file.readline()
+                date_string = re.match(r'\d{4}-\d{2}-\d{2}\s\d{2}:\d{2}:\d{2}', line).group(0)
+                last_time = datetime.datetime.strptime(date_string, '%Y-%m-%d %H:%M:%S')               
+            except Exception as e:
+                logging.error('Error: have errors in opening db_syn file. {0}'.format(e))
+                return
+                       
+            if last_time is None:
+                raise Exception('Error: cannot read last synchronization infromation of db!')
+                return
+                    
+            else:
+                now = datetime.datetime.now()
+                gap = now - last_time
+                logging.info('Time now: {0}'.format(now))
+                logging.info('Time last synchronization: {0}'.format(last_time))
+                logging.info('Time in between: {0}'.format(gap.seconds))
+                if gap.seconds < SynchronizeDB.PAUSE+1:
+                    utils.log('Less than {0} seconds to synchronize db.'.format(SynchronizeDB.PAUSE))
+                    return
+                    
+                logging.info('Start synchronize db every {0} seconds.'.format(SynchronizeDB.PAUSE))
+             
+                urlfetch.fetch(url=BACKEND_SYN_R_URL,
+                               method = urlfetch.POST,
+                               payload = urllib.urlencode(self.request.GET))
+            
+
+            
         
-app = webapp2.WSGIApplication([('/backend/worker', BackendWorker), 
+app = webapp2.WSGIApplication([('/backend/synchronizedb', SynchronizeDB), 
                                ('/backend/queue', BackendQueue)],
                               debug=True)

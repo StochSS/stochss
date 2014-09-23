@@ -242,8 +242,8 @@ class InfrastructureManager:
       utils.log('Running spawn_vms in non-blocking mode')
       #thread.start_new_thread(__spawn_vms, (infra, agent, num_vms, parameters, reservation_id))
       #logging.error('hostname: '.format(backends.get_hostname(backend_handler.BACKEND_NAME)))
-      backend_url = 'http://%s' % modules.get_hostname(backend_handler.BACKEND_NAME)#backends.get_url(backend_handler.BACKEND_NAME)
-      logging.info('backend_url: {0}'.format(backend_url))
+#       backend_url = 'http://%s' % modules.get_hostname(backend_handler.BACKEND_NAME)#backends.get_url(backend_handler.BACKEND_NAME)
+#       logging.info('backend_url: {0}'.format(backend_url))
       # start GAE backends
 #     backend_start_url =  backend_url + backend_handler.BACKEND_START
 #     urlfetch.fetch(backend_start_url)
@@ -253,14 +253,13 @@ class InfrastructureManager:
 #       urlfetch.fetch(backend_manager_url)
           
       # let backend worker to spawn vms with background thread
-      backend_worker_url = backend_url + backend_handler.BACKEND_WORKER_R_URL
+#       backend_worker_url = backend_url + backend_handler.BACKEND_WORKER_R_URL
       from_fields = {
             'op': 'start_vms',
             'infra': pickle.dumps(self),
             'agent': pickle.dumps(agent),
             'num_vms': pickle.dumps(num_vms),
             'parameters': pickle.dumps(parameters),
-            'reservation_id': pickle.dumps(reservation_id)
       }
 #       from_data = urllib.urlencode(from_fields)
 #       
@@ -268,7 +267,7 @@ class InfrastructureManager:
 #       urlfetch.make_fetch_call(rpc=rpc, url=backend_worker_url,
 #                                method = urlfetch.POST,
 #                                payload = from_data)
-    os.environ['HTTP_HOST'] = "127.0.0.1:8080"
+#     os.environ['HTTP_HOST'] = "127.0.0.1:8080"
     
     taskqueue.add(url='/backend/queue', params=from_fields, method='GET')
 
@@ -277,6 +276,17 @@ class InfrastructureManager:
 #     return self.__generate_response(True,
 #       self.REASON_NONE, {'reservation_id': reservation_id})
 
+
+  def synchronize_db(self, params):
+    infrastructure = params[self.PARAM_INFRASTRUCTURE]
+    agent = self.agent_factory.create_agent(infrastructure)
+    from_fields = {
+            'op': 'start_db_syn',
+            'agent': pickle.dumps(agent),
+            'parameters': pickle.dumps(params),
+    }
+    taskqueue.add(url='/backend/queue', params=from_fields, method='GET')
+      
   def terminate_instances(self, parameters,prefix=''):
     """
     Terminate a group of virtual machines using the provided parameters.

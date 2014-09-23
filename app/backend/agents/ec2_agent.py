@@ -40,7 +40,7 @@ class EC2Agent(BaseAgent):
   # request. Setting this value too low can cause Eucalyptus to interpret
   # requests as replay attacks.
   SLEEP_TIME = 2
-
+  AGENT_NAME = 'ec2'
   PARAM_CREDENTIALS = 'credentials'
   PARAM_GROUP = 'group'
   PARAM_IMAGE_ID = 'image_id'
@@ -244,7 +244,7 @@ class EC2Agent(BaseAgent):
             alarm_actions=[terminate_arn],
             dimensions={'InstanceId':instance_id})
         # create the alarm.. Zzzz!
-        ec2.create_alarm(sleepy_alarm)
+        ec2.put_metric_alarm(sleepy_alarm)
 
 
   def run_instances(self, parameters):
@@ -296,20 +296,22 @@ class EC2Agent(BaseAgent):
     userstr+='source ~/.bashrc \n'
     userstr+='source /home/ubuntu/.bashrc \n'
     # Workers need an alarm...
-    skip_alarm = False
     if self.PARAM_QUEUE_HEAD in parameters and parameters[self.PARAM_QUEUE_HEAD]:
-      ## # ...but the queue head doesnt
-      ## skip_alarm = True  # All Nodes should have the auto-shutoff feature
-      # Queue head, needs to have at least two cores
-      insufficient_cores = ['t1.micro', 'm1.small', 'm1.medium', 'm3.medium']
-      if instance_type in insufficient_cores:
-        instance_type = 't1.micro'
-      # Create the user that we want to use to connect to the broker
-      # and configure its permissions on the default vhost.
-      userstr += "rabbitmqctl add_user stochss ucsb\n"
-      userstr += 'rabbitmqctl set_permissions -p / stochss ".*" ".*" ".*"\n'
-      # userstr += "rabbitmq-server -detached\n"
-#    else:
+        ## # ...but the queue head doesnt
+        ## skip_alarm = True  # All Nodes should have the auto-shutoff feature
+        # Queue head, needs to have at least two cores
+        instance_type = 'c3.large'
+        utils.log('This is queue head, instance type has been changed to {0}.'.format(instance_type))
+        # Create the user that we want to use to connect to the broker
+        # and configure its permissions on the default vhost.
+        userstr += "rabbitmqctl add_user stochss ucsb\n"
+        userstr += 'rabbitmqctl set_permissions -p / stochss ".*" ".*" ".*"\n'
+        # userstr += "rabbitmq-server -detached\n"
+          
+    else:
+        insufficient_cores = ['t1.micro', 'm1.small', 'm1.medium', 'm3.medium']
+        if instance_type not in insufficient_cores:
+            instance_type = 't1.micro'
 #      # Update celery config file...it should have the correct IP
 #      # of the Queue head node, which should already be running.
 #      celery_config_filename = os.path.join(

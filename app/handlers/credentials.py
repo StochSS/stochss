@@ -47,9 +47,9 @@ class CredentialsPage(BaseHandler):
                 raise InvalidUserException
         except Exception, e:
             raise InvalidUserException('Cannot determine the current user. '+str(e))
-    
-        # Get the context of the page
-        context = self.getContext(user_id)
+        
+            
+        
 
         if 'save' in params:
             # Save the access and private keys to the datastore
@@ -65,6 +65,7 @@ class CredentialsPage(BaseHandler):
             self.render_response('credentials.html', **(dict(context, **result)))
 
         elif 'start' in params:
+            context = self.getContext(user_id)
             number_of_new_vms = params['vm_number']
             if int(number_of_new_vms) > 20:
                 result = {'status': 'False' , 'msg': 'Number of new vms should be no more than 20.'}
@@ -102,6 +103,7 @@ class CredentialsPage(BaseHandler):
             self.redirect('/credentials')
         else:
             result = {'status': False, 'msg': 'There was an error processing the request'}
+            context = self.getContext(user_id)
             self.render_response('credentials.html', **(dict(context, **result)))
 
     def saveCredentials(self, credentials):
@@ -145,10 +147,9 @@ class CredentialsPage(BaseHandler):
 
     def getContext(self,user_id):
         
-        service = backendservices()
         params = {}
         credentials =  self.user_data.getCredentials()
-        logging.info('CREDENTIALS: {0}'.format(credentials))
+#         logging.info('CREDENTIALS: {0}'.format(credentials))
         params['credentials'] = credentials
         params["infrastructure"] = "ec2"
         

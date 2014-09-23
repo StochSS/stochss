@@ -569,6 +569,8 @@ class backendservices():
             return None
     
     def describeMachinesFromDB(self, params):
+        i = InfrastructureManager()
+        i.synchronize_db(params)
         all_vms = VMStateModel.get_all(params)
         return all_vms
         
