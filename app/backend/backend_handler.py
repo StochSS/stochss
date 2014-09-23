@@ -614,7 +614,7 @@ class BackendWorker():
 
         
 class SynchronizeDB(webapp2.RequestHandler):
-    PAUSE = 60
+    PAUSE = 180
     
     def post(self):
         req_agent = self.request.get('agent')
@@ -687,35 +687,9 @@ class BackendQueue(webapp2.RequestHandler):
         elif op == 'start_db_syn':
             utils.log('Backend queue got the request to start syn db.')
             
-            last_time = None
-            try: 
-                file = open(DB_SYN_PATH)
-                line = file.readline()
-                date_string = re.match(r'\d{4}-\d{2}-\d{2}\s\d{2}:\d{2}:\d{2}', line).group(0)
-                last_time = datetime.datetime.strptime(date_string, '%Y-%m-%d %H:%M:%S')               
-            except Exception as e:
-                logging.error('Error: have errors in opening db_syn file. {0}'.format(e))
-                return
-                       
-            if last_time is None:
-                raise Exception('Error: cannot read last synchronization infromation of db!')
-                return
-                    
-            else:
-                now = datetime.datetime.now()
-                gap = now - last_time
-                logging.info('Time now: {0}'.format(now))
-                logging.info('Time last synchronization: {0}'.format(last_time))
-                logging.info('Time in between: {0}'.format(gap.seconds))
-                if gap.seconds < SynchronizeDB.PAUSE+1:
-                    utils.log('Less than {0} seconds to synchronize db.'.format(SynchronizeDB.PAUSE))
-                    return
-                    
-                logging.info('Start synchronize db every {0} seconds.'.format(SynchronizeDB.PAUSE))
-             
-                urlfetch.fetch(url=BACKEND_SYN_R_URL,
-                               method = urlfetch.POST,
-                               payload = urllib.urlencode(self.request.GET))
+            urlfetch.fetch(url=BACKEND_SYN_R_URL,
+                           method = urlfetch.POST,
+                           payload = urllib.urlencode(self.request.GET))
             
 
             

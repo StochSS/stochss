@@ -13,6 +13,7 @@ import re
 import urllib
 import logging
 import os
+import datetime
 
 __author__ = 'hiranya'
 __email__ = 'hiranya@appscale.com'
@@ -278,14 +279,40 @@ class InfrastructureManager:
 
 
   def synchronize_db(self, params):
-    infrastructure = params[self.PARAM_INFRASTRUCTURE]
-    agent = self.agent_factory.create_agent(infrastructure)
-    from_fields = {
-            'op': 'start_db_syn',
-            'agent': pickle.dumps(agent),
-            'parameters': pickle.dumps(params),
-    }
-    taskqueue.add(url='/backend/queue', params=from_fields, method='GET')
+    last_time = None
+    try: 
+        file = open(backend_handler.DB_SYN_PATH)
+        line = file.readline()
+        date_string = re.match(r'\d{4}-\d{2}-\d{2}\s\d{2}:\d{2}:\d{2}', line).group(0)
+        last_time = datetime.datetime.strptime(date_string, '%Y-%m-%d %H:%M:%S')               
+    except Exception as e:
+        logging.error('Error: have errors in opening db_syn file. {0}'.format(e))
+        return
+                       
+    if last_time is None:
+        raise Exception('Error: cannot read last synchronization infromation of db!')
+        return
+    else:
+        now = datetime.datetime.now()
+        gap = now - last_time
+        logging.info('Time now: {0}'.format(now))
+        logging.info('Time last synchronization: {0}'.format(last_time))
+        logging.info('Time in between: {0}'.format(gap.seconds))
+        if gap.seconds < backend_handler.SynchronizeDB.PAUSE+1:
+            utils.log('Less than {0} seconds to synchronize db.'.format(backend_handler.SynchronizeDB.PAUSE))
+            return
+                    
+        logging.info('Start synchronize db every {0} seconds.'.format(backend_handler.SynchronizeDB.PAUSE))
+        infrastructure = params[self.PARAM_INFRASTRUCTURE]
+        agent = self.agent_factory.create_agent(infrastructure)
+        from_fields = {
+                       'op': 'start_db_syn',
+                       'agent': pickle.dumps(agent),
+                       'parameters': pickle.dumps(params),
+                       }
+        taskqueue.add(url='/backend/queue', params=from_fields, method='GET')
+    
+    
       
   def terminate_instances(self, parameters,prefix=''):
     """
