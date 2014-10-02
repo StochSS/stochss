@@ -481,10 +481,14 @@ class backendservices():
                 return False, 'Either infrastracture or credetials is none.'
             # 3. create exact number of entities in db for this launch, and set the status to 'creating'
             ids = []
-            num_vms = params['num_vms']
             
-            for x in range(0, num_vms):
-                logging.info('CREATING: {0}'.format(x+1))
+            num = 0
+            for vm in params['vms']:
+                logging.info('vm: {0}, num: {1}'.format(vm['instance_type'], vm['num_vms']))
+                num += vm['num_vms']
+                
+            for _ in range(0, num):
+                
                 vm_status = VMStateModel(state = VMStateModel.STATE_CREATING, infra = infra, access_key = access_key, secret_key = secret_key)
                 vm_status.put()         
                 ids.append(vm_status.key().id())
@@ -492,7 +496,7 @@ class backendservices():
             params[VMStateModel.IDS] = ids
             
             
-            i.run_instances(params,[])
+            res = i.run_instances(params,[])
             #res = i.run_instances(params,[])
 #            else:
 #                # Need to start the queue head (RabbitMQ)

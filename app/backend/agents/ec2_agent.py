@@ -45,6 +45,7 @@ class EC2Agent(BaseAgent):
   PARAM_GROUP = 'group'
   PARAM_IMAGE_ID = 'image_id'
   PARAM_INSTANCE_TYPE = 'instance_type'
+  PARAM_VMS = 'vms'
   PARAM_KEYNAME = 'keyname'
   PARAM_INSTANCE_IDS = 'instance_ids'
   PARAM_SPOT = 'use_spot_instances'
@@ -56,7 +57,7 @@ class EC2Agent(BaseAgent):
     PARAM_CREDENTIALS,
     PARAM_GROUP,
     PARAM_IMAGE_ID,
-    PARAM_INSTANCE_TYPE,
+    PARAM_VMS,
     PARAM_KEYNAME,
     PARAM_SPOT
   )
@@ -145,6 +146,7 @@ class EC2Agent(BaseAgent):
       required_params = self.REQUIRED_EC2_TERMINATE_INSTANCES_PARAMS
 
     for param in required_params:
+      
       if not utils.has_parameter(param, parameters):
         raise AgentConfigurationException('no ' + param)
 
@@ -158,12 +160,13 @@ class EC2Agent(BaseAgent):
       parameters  A dictionary containing the 'keyname' parameter
 
     Returns:
-      A tuple of the form (public_ips, private_ips, instances) where each
+      A tuple of the form (public_ips, private_ips, instances, instance_types) where each
       member is a list.
     """
     instance_ids = []
     public_ips = []
     private_ips = []
+    instance_types = []
 
     conn = self.open_connection(parameters)
     reservations = conn.get_all_instances()
@@ -173,8 +176,10 @@ class EC2Agent(BaseAgent):
         instance_ids.append(i.id)
         public_ips.append(i.public_dns_name)
         private_ips.append(i.private_dns_name)
+        instance_types.append(i.instance_type)
+        
 
-    return public_ips, private_ips, instance_ids
+    return public_ips, private_ips, instance_ids, instance_types
 
   def describe_instances_launched(self, parameters):
     """
@@ -186,11 +191,12 @@ class EC2Agent(BaseAgent):
       parameters  A dictionary containing the 'keyname' parameter
 
     Returns:
-      a list of instance ids.
+      instance_ids    a list of instance ids.
     """
     conn = self.open_connection(parameters)
     reservations = conn.get_all_instances()
     instance_ids = []
+    
     instances = [i for r in reservations for i in r.instances]
     for i in instances:
       if i.key_name == parameters[self.PARAM_KEYNAME]:
@@ -300,8 +306,15 @@ class EC2Agent(BaseAgent):
         ## # ...but the queue head doesnt
         ## skip_alarm = True  # All Nodes should have the auto-shutoff feature
         # Queue head, needs to have at least two cores
-        instance_type = 'c3.large'
-        utils.log('This is queue head, instance type has been changed to {0}.'.format(instance_type))
+        
+        # define what type of queue head is needed here
+        if "instance_type" not in parameters or parameters["instance_type"] == '' or parameters["instance_type"] != 'c3.large' and parameters["instance_type"] != 'c3.xlarge':
+            # find one that fit for queue head
+            instance_type = 'c3.large'
+            utils.log('This is queue head, instance type has been changed to {0}.'.format(instance_type))
+        else:
+            instance_type = parameters["instance_type"]
+            utils.log('This is queue head, instance type is {0}.'.format(instance_type))
         # Create the user that we want to use to connect to the broker
         # and configure its permissions on the default vhost.
         userstr += "rabbitmqctl add_user stochss ucsb\n"
@@ -309,9 +322,13 @@ class EC2Agent(BaseAgent):
         # userstr += "rabbitmq-server -detached\n"
           
     else:
-        insufficient_cores = ['t1.micro', 'm1.small', 'm1.medium', 'm3.medium']
-        if instance_type not in insufficient_cores:
+#         insufficient_cores = ['t1.micro', 'm1.small', 'm1.medium', 'm3.medium']
+#         if instance_type not in insufficient_cores:
+#             instance_type = 't1.micro'
+        if "instance_type" not in parameters or parameters["instance_type"] == '':
             instance_type = 't1.micro'
+        else:
+            instance_type = parameters["instance_type"]
 #      # Update celery config file...it should have the correct IP
 #      # of the Queue head node, which should already be running.
 #      celery_config_filename = os.path.join(

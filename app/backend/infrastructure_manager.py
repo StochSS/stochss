@@ -47,7 +47,7 @@ class InfrastructureManager:
   # Parameters required by InfrastructureManager
   PARAM_RESERVATION_ID = 'reservation_id'
   PARAM_INFRASTRUCTURE = 'infrastructure'
-  PARAM_NUM_VMS = 'num_vms'
+  PARAM_VMS = 'vms'
   PARAM_KEYNAME = 'keyname'
 
   # States a particular VM deployment could be in
@@ -62,7 +62,6 @@ class InfrastructureManager:
   # A list of parameters required to initiate a VM deployment process
   RUN_INSTANCES_REQUIRED_PARAMS = (
     PARAM_INFRASTRUCTURE,
-    PARAM_NUM_VMS
   )
 
   # A list of parameters required to initiate a VM termination process
@@ -197,13 +196,14 @@ class InfrastructureManager:
 
     utils.log('Request parameters are {0}'.format(parameters))
     for param in self.RUN_INSTANCES_REQUIRED_PARAMS:
+      logging.info('param: {0}'.format(param))
       if not utils.has_parameter(param, parameters):
         return self.__generate_response(False, 'no ' + param)
 
-    num_vms = int(parameters[self.PARAM_NUM_VMS])
-    if num_vms <= 0:
-      utils.log('Invalid VM count: {0}'.format(num_vms))
-      return self.__generate_response(False, self.REASON_BAD_VM_COUNT)
+#     num_vms = int(parameters[self.PARAM_NUM_VMS])
+#     if num_vms <= 0:
+#       utils.log('Invalid VM count: {0}'.format(num_vms))
+#       return self.__generate_response(False, self.REASON_BAD_VM_COUNT)
 
     infrastructure = parameters[self.PARAM_INFRASTRUCTURE]
     agent = self.agent_factory.create_agent(infrastructure)
@@ -218,13 +218,13 @@ class InfrastructureManager:
       return self.__generate_response(False, self.REASON_BAD_ARGUMENTS)
 
     reservation_id = utils.get_random_alphanumeric()
-    status_info = {
-      'success': True,
-      'reason': 'received run request',
-      'state': self.STATE_PENDING,
-      'vm_info': None
-    }
-    self.reservations.put(reservation_id, status_info)
+#     status_info = {
+#       'success': True,
+#       'reason': 'received run request',
+#       'state': self.STATE_PENDING,
+#       'vm_info': None
+#     }
+#     self.reservations.put(reservation_id, status_info)
     # update db with reservation ids
     VMStateModel.update_res_ids(parameters, parameters[VMStateModel.IDS], reservation_id)
     
@@ -234,7 +234,7 @@ class InfrastructureManager:
     
     if self.blocking:
       utils.log('Running spawn_vms in blocking mode')
-      result = self.__spawn_vms(agent, num_vms, parameters, reservation_id)
+      result = self.__spawn_vms(agent, len(parameters['vms']), parameters, reservation_id)
       # NOTE: We will only be able to return an IP for the started instances when run in blocking
       #       mode, but this is needed to update the queue head IP in celeryconfig.py.
       return result # self.__generate_response(
@@ -259,7 +259,6 @@ class InfrastructureManager:
             'op': 'start_vms',
             'infra': pickle.dumps(self),
             'agent': pickle.dumps(agent),
-            'num_vms': pickle.dumps(num_vms),
             'parameters': pickle.dumps(parameters),
       }
 #       from_data = urllib.urlencode(from_fields)
@@ -276,7 +275,7 @@ class InfrastructureManager:
     utils.log('Successfully sent request to backend server, reservation_id: {0}.'.format(reservation_id))
 #     return self.__generate_response(True,
 #       self.REASON_NONE, {'reservation_id': reservation_id})
-
+    return self.__generate_response(True, 'Succeed in sending request to backend server.')
 
   def synchronize_db(self, params):
     last_time = None

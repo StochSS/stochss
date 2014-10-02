@@ -52,6 +52,7 @@ class VMStateModel(db.Model):
     infra = db.StringProperty()
     access_key = db.StringProperty()
     secret_key = db.StringProperty()
+    ins_type = db.StringProperty()
     res_id = db.StringProperty()
     ins_id = db.StringProperty()
     pub_ip = db.StringProperty()
@@ -155,7 +156,7 @@ class VMStateModel(db.Model):
             logging.error("Error in updating instance ids in db! {0}".format(e))
     
     @staticmethod          
-    def update_ips(params, ins_ids, pub_ips, pri_ips, local_key):
+    def update_ips(params, ins_ids, pub_ips, pri_ips, ins_types, local_key):
         try:
             infra, access_key, secret_key = VMStateModel.validate_credentials(params)
             if infra is None:
@@ -163,10 +164,11 @@ class VMStateModel(db.Model):
             
             if local_key is None:
                 raise Exception('Error: Cannot find local key!')
-            for (ins_id, pub_ip, pri_ip) in zip(ins_ids, pub_ips, pri_ips):
+            for (ins_id, pub_ip, pri_ip, ins_type) in zip(ins_ids, pub_ips, pri_ips, ins_types):
                 e = VMStateModel.all().filter('ins_id =', ins_id).filter('infra =', infra).filter('access_key =', access_key).filter('secret_key =', secret_key).get()
                 e.pub_ip = pub_ip
                 e.pri_ip = pri_ip
+                e.ins_type = ins_type
                 e.local_key = local_key
                 e.put()
         except Exception as e:
@@ -249,34 +251,59 @@ class VMStateModel(db.Model):
 class BackendWorker():
     
     KEYPREFIX = 'stochss'
-    QUEUEHEAD_KEY_TAG = 'queuehead'  
+    QUEUEHEAD_KEY_TAG = 'queuehead'
+    
+    INS_TYPES = ["t1.micro", "m1.small", "m3.medium", "m3.large", "c3.large", "c3.xlarge"];  
               
     
-    def spawn_vms(self, infra, agent, num_vms, parameters):       
+    def spawn_vms(self, infra, agent, parameters):       
         """
         public method for starting a set of VMs
 
         Args:
+        infra           infrastructure that is needed to be call
         agent           Infrastructure agent in charge of current operation
-        num_vms         No. of VMs totally to be spawned
         parameters      A dictionary of parameters
-        reservation_id  Reservation ID of the current run request
         """
-        
+        if not parameters["vms"]:
+            logging.info("No vms are waiting for spawned.")
+            return
+            
         try: 
             ###################################################
             # step 1: run instance based on queue head or not #
-            ###################################################          
+            ###################################################
+            
+            num_vms = 0
+                        
             if not self.isQueueHeadRunning(agent, parameters):
                 # Queue head is not running, so create a queue head
                 utils.log('About to start a queue head.')
                 
                 parameters["queue_head"] = True
                 requested_key_name = parameters["keyname"]
+                
+                # get the largest instance_type and let it to be queue head
+                vms = parameters["vms"]
+                vm = vms[len(vms)-1]
+                
+                parameters["instance_type"] = vm["instance_type"]
+                parameters["num_vms"] = 1
+                num_vms = 1
+                vm["num_vms"] = vm["num_vms"] - 1
+                
+                if vm["num_vms"] == 0:
+                    vms.remove(vm)
+                
                 # Only want one queue head, and it must have its own key so
                 # it can be differentiated if necessary
-                parameters["num_vms"] = 1
                 parameters["keyname"] = requested_key_name+'-'+self.QUEUEHEAD_KEY_TAG
+                
+                security_configured = agent.configure_instance_security(parameters)
+                try:
+                    agent.run_instances(parameters)
+                except:
+                    raise Exception('Errors in running instances in agent.')
             
             # if the queue head is running
             else:
@@ -284,25 +311,29 @@ class BackendWorker():
 
                     parameters["keyname"] = parameters["keyname"].replace('-'+self.QUEUEHEAD_KEY_TAG, '')
                     parameters["queue_head"] = False
-                    parameters["num_vms"] = num_vms - 1
                     logging.info('KEYNAME: {0}'.format(parameters["keyname"]))
-            
-            security_configured = agent.configure_instance_security(parameters)
-            try:
-                agent.run_instances(parameters)
-            except:
-                raise Exception('Errors in running instances in agent.')
-                return 
+                    
+                    security_configured = agent.configure_instance_security(parameters)
+                    
+                    for vm in parameters["vms"]:          
+                        parameters["instance_type"] = vm["instance_type"]
+                        parameters["num_vms"] = vm["num_vms"]
+                        num_vms += vm["num_vms"]
+                        try:
+                            agent.run_instances(parameters)
+                        except:
+                            raise Exception('Errors in running instances in agent.')
+                        
+             
             
             ########################################################################
             # step 2: poll the status of instances, if not running, terminate them #
             ########################################################################
             public_ips, private_ips, instance_ids = self.poll_instances_status(infra, agent, num_vms, parameters)
             if public_ips == None:
-                if not self.isQueueHeadRunning(agent, parameters) and num_vms > 1:
+                if not self.isQueueHeadRunning(agent, parameters):
                     # if last time of spawning queue head failed, spawn another queue head again
-                    num_vms = num_vms - 1
-                    self.spawn_vms(infra, agent, num_vms, parameters)
+                    self.spawn_vms(infra, agent, parameters)
                 else:
                     return
             
@@ -324,10 +355,9 @@ class BackendWorker():
             connected_public_ips, connected_private_ips, connected_instance_ids = self.verify_instances_vis_ssh(agent, parameters, public_ips, private_ips, instance_ids)      
             
             if len(connected_public_ips) == 0:
-                if not self.isQueueHeadRunning(agent, parameters) and num_vms > 1:
+                if not self.isQueueHeadRunning(agent, parameters):
                     # if last time of spawning queue head failed, spawn another queue head again
-                    num_vms = num_vms - 1
-                    self.spawn_vms(infra, agent, num_vms, parameters)
+                    self.spawn_vms(infra, agent, parameters)
                 else:
                     return
         
@@ -349,8 +379,8 @@ class BackendWorker():
             # step 6: if current node is queue head, may need to spwan the rest #
             #################################################################
 
-            if "queue_head" in parameters and parameters["queue_head"] == True and parameters['num_vms'] < num_vms:
-                self.spawn_vms(infra, agent, num_vms, parameters)
+            if "queue_head" in parameters and parameters["queue_head"] == True:
+                self.spawn_vms(infra, agent, parameters)
             else:
                 # else all vms requested are finished spawning. Done!
                 return
@@ -363,7 +393,6 @@ class BackendWorker():
         utils.log('Start polling task.')
         
         ins_ids= agent.describe_instances_launched(parameters)
-        
         # update db with new instance ids and 'pending'  
         VMStateModel.update_ins_ids(parameters, ins_ids)
         
@@ -375,13 +404,13 @@ class BackendWorker():
         POLL_WAIT = 5
         for x in range(0, POLL_COUNT):
             # get the ips and ids of this keyname
-            public_ips, private_ips, instance_ids = agent.describe_instances_running(parameters)
+            public_ips, private_ips, instance_ids, instance_types = agent.describe_instances_running(parameters)
             
             # if we get the requested number of vms (the requested number will be 1 if this is queue head),
             # update reservation information and send a message to the backend server
-            if parameters["num_vms"] == len(public_ips):
+            if num_vms == len(public_ips):
                 # update db with new public ips and private ips
-                VMStateModel.update_ips(parameters, instance_ids, public_ips, private_ips, parameters["keyname"])
+                VMStateModel.update_ips(parameters, instance_ids, public_ips, private_ips, instance_types, parameters["keyname"])
                 break
                 
             else:
@@ -674,14 +703,12 @@ class BackendQueue(webapp2.RequestHandler):
             infra = pickle.loads(str(req_infra))
             req_agent = self.request.get('agent')
             agent = pickle.loads(str(req_agent))
-            req_num_vms = self.request.get('num_vms')
-            num_vms = pickle.loads(str(req_num_vms))
             req_parameters = self.request.get('parameters')
             parameters = pickle.loads(str(req_parameters))
             
 
             worker = BackendWorker()
-            worker.spawn_vms(infra, agent, num_vms, parameters)
+            worker.spawn_vms(infra, agent, parameters)
             utils.log('Backend queue finished starting vms.')
             
         elif op == 'start_db_syn':

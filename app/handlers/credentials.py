@@ -18,6 +18,8 @@ import time
 class CredentialsPage(BaseHandler):
     """
     """
+    INS_TYPES = ["t1.micro", "m1.small", "m3.medium", "m3.large", "c3.large", "c3.xlarge"];
+    
     def authentication_required(self):
         return True
     
@@ -66,15 +68,33 @@ class CredentialsPage(BaseHandler):
 
         elif 'start' in params:
             context = self.getContext(user_id)
-            number_of_new_vms = params['vm_number']
-            if int(number_of_new_vms) > 20:
-                result = {'status': 'False' , 'msg': 'Number of new vms should be no more than 20.'}
-            elif int(number_of_new_vms) <= 0:
-                result = {'status': 'False' , 'msg': 'Number of new vms should be at least 1.'}
-            else:
-                result = self.start_vms(user_id, self.user_data.getCredentials(), int(number_of_new_vms))
-#                 result['msg'] = 'Processing request...'
-#                 result['status'] = True
+            all_numbers_correct = True;
+            
+                
+            vms = []
+            for type in self.INS_TYPES:
+                num_type = 'num_'+type
+                
+                if num_type in params and params[num_type] != '':
+                    if int(params[num_type]) > 20:
+                        result = {'status': 'False' , 'msg': 'Number of new vms should be no more than 20.'}
+                        all_numbers_correct = False
+                        break;
+                    elif int(params[num_type]) <= 0:
+                        result = {'status': 'False' , 'msg': 'Number of new vms should be at least 1.'}
+                        all_numbers_correct = False
+                        break;
+                    else:
+                        vms.append({"instance_type": type, "num_vms": int(params[num_type])})
+            
+#             if not self.isQueueHeadRunning():
+#                 if params['num_c3.large'] == '' and params['num_c3.xlarge'] == '':
+#                     result = {'status': 'False' , 'msg': 'There should be at least one instance that are larger than or equal to c3.large.'}
+#                     all_numbers_correct = False  
+                   
+            if all_numbers_correct :
+            
+                result = self.start_vms(user_id, self.user_data.getCredentials(), vms)
                 context['starting_vms'] = True
             
             self.render_response('credentials.html', **(dict(context, **result)))
@@ -102,7 +122,7 @@ class CredentialsPage(BaseHandler):
         elif 'refresh' in params:
             self.redirect('/credentials')
         else:
-            result = {'status': False, 'msg': 'There was an error processing the request'}
+            result = {'status': True, 'msg': ''}
             context = self.getContext(user_id)
             self.render_response('credentials.html', **(dict(context, **result)))
 
@@ -223,14 +243,15 @@ class CredentialsPage(BaseHandler):
             except:
                 return None
                     
-    def start_vms(self, user_id, credentials, number_of_vms=None):
+    def start_vms(self, user_id, credentials, vms_info):
         key_prefix = user_id
         group_random_name = key_prefix +"-"+''.join(random.choice(string.ascii_uppercase + string.digits) for x in range(6))
+        
+                
         params ={"infrastructure":"ec2",
-             "num_vms":number_of_vms, 
+             "vms":vms_info, 
              'group':group_random_name, 
              'image_id':'ami-0836e860',
-             'instance_type':'t1.micro',
              'key_prefix':key_prefix, #key_prefix = user_id
              'keyname':group_random_name, 
              'email':[user_id],
@@ -239,9 +260,9 @@ class CredentialsPage(BaseHandler):
         service = backendservices()
         res, msg = service.startMachines(params)
         if res == True:
-            result = {'status':'Success' , 'msg': 'Sucessfully requested '+ str(number_of_vms) + ' Virtual Machines. Processing request...'}
+            result = {'status':'Success' , 'msg': 'Sucessfully requested starting virtual machines. Processing request...'}
         else:
-            result = {'status':'Failure' , 'msg': msg}
+            result = {'status':'Failure' , 'msg': ""}
         return result
 #         res = service.startMachines(params)
 #         if res != None and res['success']==True:
