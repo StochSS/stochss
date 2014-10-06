@@ -1,0 +1,5 @@
+queue:
+- name: backendqueue
+  rate: 1/s
+  target: backendqueue
+  bucket_size: 5

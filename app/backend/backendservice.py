@@ -12,6 +12,9 @@ from tasks import *
 from boto.s3.connection import S3Connection
 from celery.task.control import inspect
 import celery
+from backend_handler import VMStateModel
+
+
 
 class backendservices():
     ''' 
@@ -28,6 +31,7 @@ class backendservices():
     WORKER_AMIS = {
         INFRA_EC2: 'ami-18b91c70'
     }
+    VMSTATUS_IDS = 'ids'
 
     def __init__(self):
         '''
@@ -419,30 +423,7 @@ class backendservices():
             return False
         except:
             return False
-    
-    def isQueueHeadRunning(self, params):
-        '''
-        '''
-        credentials = params["credentials"]
-        key_prefix = self.KEYPREFIX
-        if "key_prefix" in params:
-            key_prefix = params["key_prefix"]
-        try:
-            params = {
-                "infrastructure": self.INFRA_EC2,
-                "credentials": credentials,
-                "key_prefix": key_prefix
-            }
-            all_vms = self.describeMachines(params)
-            if all_vms == None:
-                return False
-            # Just need one running vm with the QUEUEHEAD_KEY_TAG in the name of the keypair
-            for vm in all_vms:
-                if vm != None and vm['state'] == 'running' and vm['key_name'].find(self.QUEUEHEAD_KEY_TAG) != -1:
-                    return True
-            return False
-        except:
-            return False
+
     
     def startMachines(self, params, block=False):
         '''
@@ -469,142 +450,81 @@ class backendservices():
             # returning a response from a request.
             i = InfrastructureManager(blocking=block)
             res = {}
-            # NOTE: We need to make sure that the RabbitMQ server is running if any compute
-            # nodes are running as we are using the AMQP broker option for Celery.
-            compute_check_params = {
-                "credentials": params["credentials"],
-                "key_prefix": key_prefix
-            }
-            if self.isQueueHeadRunning(compute_check_params):
-		#Queue head is running so start as many vms as requested
-                res = i.run_instances(params,[])
-                self.copyCeleryConfigToInstance(res, params)
-                # start celery via ssh
-                self.startCeleryViaSSH(res, params)
+            
+            # 1. change the status of 'failed' in the previous launch in db to 'terminated' 
+
+            ins_ids = VMStateModel.terminate_not_active(params)
+            
+            # 2. get credentials
+            infra = None
+            access_key = None
+            secret_key = None
+            if 'infrastructure' in params:
+                infra = params['infrastructure']
             else:
-                # Need to start the queue head (RabbitMQ)
-                params["queue_head"] = True
-                vms_requested = int(params["num_vms"])
-                requested_key_name = params["keyname"]
-                # Only want one queue head, and it must have its own key so
-                # it can be differentiated if necessary
-                params["num_vms"] = 1
-                params["keyname"] = requested_key_name+'-'+self.QUEUEHEAD_KEY_TAG
-                res = i.run_instances(params,[])
-
-                #NOTE: This relies on the InfrastructureManager being run in blocking mode...
-                queue_head_ip = res["vm_info"]["public_ips"][0]
-                self.__update_celery_config_with_queue_head_ip(queue_head_ip)
-                self.copyCeleryConfigToInstance(res, params)
-                # start celery via ssh
-                self.startCeleryViaSSH(res, params)
-
-                params["keyname"] = requested_key_name
-                params["queue_head"] = False
-                if vms_requested > 1:
-                    #subtract 1 since we can use the queue head as a worker
-                    params["num_vms"] = vms_requested - 1
-                    res = i.run_instances(params,[])
-                    self.copyCeleryConfigToInstance(res, params)
-                    # start celery via ssh
-                    self.startCeleryViaSSH(res, params)
-
-                params["num_vms"] = vms_requested
-
+                raise Exception('VMStateModel ERROR: Infrastructure is not decided.')
+                return False, 'Infrastructure is not decided.'
+             
+            if 'credentials' in params:
+                if 'EC2_ACCESS_KEY' in params['credentials'] and 'EC2_SECRET_KEY' in params['credentials']:
+                    access_key = params['credentials']['EC2_ACCESS_KEY']
+                    secret_key = params['credentials']['EC2_SECRET_KEY']
+                else:
+                    raise Exception('VMStateModel ERROR: Cannot get access key or secret.')
+                    return False, 'Cannot get access key or secret of the current infrastructure.'
+            else:
+                raise Exception('VMStateModel ERROR: No credentials are provided.')
+                return False, 'No credentials are provided.'
+            
+            if infra is None or access_key is None or secret_key is None:
+                raise Exception('VMStateModel ERROR: Either infrastracture or credetials is none.')
+                return False, 'Either infrastracture or credetials is none.'
+            # 3. create exact number of entities in db for this launch, and set the status to 'creating'
+            ids = []
+            
+            num = 0
+            for vm in params['vms']:
+                logging.info('vm: {0}, num: {1}'.format(vm['instance_type'], vm['num_vms']))
+                num += vm['num_vms']
+                
+            for _ in range(0, num):
+                
+                vm_status = VMStateModel(state = VMStateModel.STATE_CREATING, infra = infra, access_key = access_key, secret_key = secret_key)
+                vm_status.put()         
+                ids.append(vm_status.key().id())
+            
+            params[VMStateModel.IDS] = ids
+            
+            
+            res = i.run_instances(params,[])
+            #res = i.run_instances(params,[])
+#            else:
+#                # Need to start the queue head (RabbitMQ)
+#                params["queue_head"] = True
+#                vms_requested = int(params["num_vms"])
+#                requested_key_name = params["keyname"]
+#                # Only want one queue head, and it must have its own key so
+#                # it can be differentiated if necessary
+#                params["num_vms"] = 1
+#                params["keyname"] = requested_key_name+'-'+self.QUEUEHEAD_KEY_TAG
+#                res = i.run_instances(params,[])
+#                #NOTE: This relies on the InfrastructureManager being run in blocking mode...
+#                queue_head_ip = res["vm_info"]["public_ips"][0]
+#                self.__update_celery_config_with_queue_head_ip(queue_head_ip)
+#                params["keyname"] = requested_key_name
+#                params["queue_head"] = False
+#                if vms_requested > 1:
+#                    params["num_vms"] = vms_requested - 1
+#                    res = i.run_instances(params,[])
+#                params["num_vms"] = vms_requested
             logging.info("startMachines : exiting method with result : %s", str(res))
-            return res
+            return True, None
         except Exception, e:
             traceback.print_exc()
             logging.error("startMachines : exiting method with error : {0}".format(str(e)))
             print "startMachines : exiting method with error :", str(e)
-            return None
-
-    def copyCeleryConfigToInstance(self, reservation, params):
-##      # Update celery config file...it should have the correct IP
-##      # of the Queue head node, which should already be running.
-##      celery_config_filename = os.path.join(
-##        os.path.dirname(os.path.abspath(__file__)),
-##        "../celeryconfig.py"
-##      )
-##      # Pass it line by line so theres no weird formatting errors from 
-##      # trying to echo a multi-line file directly on the command line
-##      with open(celery_config_filename, 'r') as celery_config_file:
-##        lines = celery_config_file.readlines()
-##        # Make sure we overwrite the file with our first write
-##        userstr += "echo '{0}' > /home/ubuntu/celeryconfig.py\n".format(lines[0])
-##        for line in lines[1:]:
-##          userstr += "echo '{0}' >> /home/ubuntu/celeryconfig.py\n".format(line)
-        #print "reservation={0}".format(reservation)
-        #print "params={0}".format(params)
-        keyfile = "{0}/../{1}.key".format(os.path.dirname(__file__),params['keyname'])
-        #logging.debug("keyfile = {0}".format(keyfile))
-        if not os.path.exists(keyfile):
-            raise Exception("ssh keyfile file not found: {0}".format(keyfile))
-        celery_config_filename = "{0}/{1}".format(os.path.dirname(__file__),"/celeryconfig.py")
-        if not os.path.exists(celery_config_filename):
-            raise Exception("celery config file not found: {0}".format(celery_config_filename))
-        for ip in reservation['vm_info']['public_ips']:
-            self.waitforSSHconnection(keyfile, ip)
-            cmd = "scp -o 'StrictHostKeyChecking no' -i {0} {1} ubuntu@{2}:celeryconfig.py".format(keyfile, celery_config_filename, ip)
-            logging.info(cmd)
-            success = os.system(cmd)
-            if success == 0:
-                logging.info("scp success: {0} transfered to {1}".format(celery_config_filename, ip))
-            else:
-                raise Exception("scp failure: {0} not transfered to {1}".format(celery_config_filename, ip))
-
-    def waitforSSHconnection(self, keyfile, ip):
-        SSH_RETRY_COUNT = 30
-        SSH_RETRY_WAIT = 3
-        for _ in range(0, SSH_RETRY_COUNT):
-            cmd = "ssh -o 'StrictHostKeyChecking no' -i {0} ubuntu@{1} \"pwd\"".format(keyfile, ip)
-            logging.info(cmd)
-            success = os.system(cmd)
-            if success == 0:
-                logging.info("ssh connected to {0}".format(ip))
-                return True
-            else:
-                logging.info("ssh not connected to {0}, sleeping {1}".format(ip, SSH_RETRY_WAIT))
-                time.sleep(SSH_RETRY_WAIT)
-        raise Exception("Timeout waiting to connect to node via SSH")
-        
-
-    def startCeleryViaSSH(self, reservation, params):
-##    # Even the queue head gets a celery worker
-##    # NOTE: We only need to use the -n argument to celery command if we are starting
-##    #       multiple workers on the same machine. Instead, we are starting one worker
-##    #       per machine and letting that one worker execute one task per core, using
-##    #       the configuration in celeryconfig.py to ensure that Celery detects the 
-##    #       number of cores and enforces this desired behavior.
-##    userstr += "export PYTHONPATH=/home/ubuntu/pyurdme/:/home/ubuntu/stochss/app/\n"
-##    if self.PARAM_WORKER_QUEUE in parameters:
-##      start_celery_str = "celery -A tasks worker --autoreload --loglevel=info -Q {0} --workdir /home/ubuntu > /home/ubuntu/celery.log 2>&1 & \n".format(parameters[self.PARAM_WORKER_QUEUE])
-##    else:
-##      start_celery_str = "celery -A tasks worker --autoreload --loglevel=info --workdir /home/ubuntu > /home/ubuntu/celery.log 2>&1"
-##    #userstr+="sudo -u ubuntu screen -d -m bash -c '{0}'\n".format(start_celery_str)  # PyURDME must be run inside a 'screen' terminal as part of the FEniCS code depends on the ability to write to the processe's terminal, screen provides this terminal.
-##    userstr+="screen -d -m bash -c '{0}'\n".format(start_celery_str)  # PyURDME must be run inside a 'screen' terminal as part of the FEniCS code depends on the ability to write to the process' terminal, screen provides this terminal.
-        credentials = params['credentials']
-        python_path = "source /home/ubuntu/.bashrc;export PYTHONPATH=/home/ubuntu/pyurdme/:/home/ubuntu/stochss/app/;"
-        python_path+='export AWS_ACCESS_KEY_ID={0};'.format(str(credentials['EC2_ACCESS_KEY']))
-        python_path+='export AWS_SECRET_ACCESS_KEY={0};'.format( str(credentials['EC2_SECRET_KEY']))
-        start_celery_str = "celery -A tasks worker --autoreload --loglevel=info --workdir /home/ubuntu > /home/ubuntu/celery.log 2>&1"
-        # PyURDME must be run inside a 'screen' terminal as part of the FEniCS code depends on the ability to write to the process' terminal, screen provides this terminal.
-        celerycmd = "sudo screen -d -m bash -c '{1}{0}'\n".format(start_celery_str,python_path)
-        #print "reservation={0}".format(reservation)
-        #print "params={0}".format(params)
-        keyfile = "{0}/../{1}.key".format(os.path.dirname(__file__),params['keyname'])
-        #logging.info("keyfile = {0}".format(keyfile))
-        if not os.path.exists(keyfile):
-            raise Exception("ssh keyfile file not found: {0}".format(keyfile))
-        for ip in reservation['vm_info']['public_ips']:
-            self.waitforSSHconnection(keyfile, ip)
-            cmd = "ssh -o 'StrictHostKeyChecking no' -i {0} ubuntu@{1} \"{2}\"".format(keyfile, ip, celerycmd)
-            logging.info(cmd)
-            success = os.system(cmd)
-            if success == 0:
-                logging.info("celery started on {0}".format(ip))
-            else:
-                raise Exception("Failure to start celery on {0}".format(ip))
+            return False, 'Errors occur in starting machines.'
+ 
         
     def stopMachines(self, params, block=False):
         '''
@@ -621,6 +541,8 @@ class backendservices():
             logging.info("Stopping compute nodes with key_prefix: {0}".format(key_prefix))
             i = InfrastructureManager(blocking=block)
             res = i.terminate_instances(params,key_prefix)
+            # update db
+            VMStateModel.terminate_all(params)
             return True
         except Exception, e:
             logging.error("Terminate machine failed with error : %s", str(e))
@@ -640,6 +562,7 @@ class backendservices():
                 key_prefix = self.KEYPREFIX + key_prefix
         else:
             key_prefix = self.KEYPREFIX
+        params["key_prefix"] = key_prefix
         try:
             i = InfrastructureManager()
             res = i.describe_instances(params, [], key_prefix)
@@ -649,7 +572,12 @@ class backendservices():
             logging.error("describeMachines : exiting method with error : %s", str(e))
             return None
     
-    
+    def describeMachinesFromDB(self, params):
+        i = InfrastructureManager()
+        i.synchronize_db(params)
+        all_vms = VMStateModel.get_all(params)
+        return all_vms
+        
     def validateCredentials(self, params):
         '''
         This method verifies the validity of ec2 credentials
@@ -746,30 +674,6 @@ class backendservices():
         except Exception, e:
             logging.error("fetchOutput : exiting with error : %s", str(e))
             return False
-    
-    def __update_celery_config_with_queue_head_ip(self, queue_head_ip):
-        # Write queue_head_ip to file on the appropriate line
-        celery_config_filename = os.path.join(
-            os.path.dirname(os.path.abspath(__file__)),
-            "celeryconfig.py"
-        )
-        celery_template_filename = os.path.join(
-            os.path.dirname(os.path.abspath(__file__)),
-            "celeryconfig.py.template"
-        )
-        celery_config_lines = []
-        with open(celery_template_filename, 'r') as celery_config_file:
-            celery_config_lines = celery_config_file.readlines()
-        with open(celery_config_filename, 'w') as celery_config_file:
-            for line in celery_config_lines:
-                if line.strip().startswith('BROKER_URL'):
-                    celery_config_file.write('BROKER_URL = "amqp://stochss:ucsb@{0}:5672/"\n'.format(queue_head_ip))
-                else:
-                    celery_config_file.write(line)
-        # Now update the actual Celery app....
-        #TODO: Doesnt seem to work in GAE until next request comes in to server
-        my_celery = CelerySingleton()
-        my_celery.configure()
 
 
 ################## tests #############################

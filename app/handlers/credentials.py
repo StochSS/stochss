@@ -18,6 +18,8 @@ import time
 class CredentialsPage(BaseHandler):
     """
     """
+    INS_TYPES = ["t1.micro", "m1.small", "m3.medium", "m3.large", "c3.large", "c3.xlarge"];
+    
     def authentication_required(self):
         return True
     
@@ -38,6 +40,8 @@ class CredentialsPage(BaseHandler):
 
         params = self.request.POST
         
+        print "CredentialsPage.post() params={0}".format(params)
+        
         try:
             # User id is a string
             user_id = self.user.user_id()
@@ -45,9 +49,9 @@ class CredentialsPage(BaseHandler):
                 raise InvalidUserException
         except Exception, e:
             raise InvalidUserException('Cannot determine the current user. '+str(e))
-    
-        # Get the context of the page
-        context = self.getContext(user_id)
+        
+            
+        
 
         if 'save' in params:
             # Save the access and private keys to the datastore
@@ -63,10 +67,37 @@ class CredentialsPage(BaseHandler):
             self.render_response('credentials.html', **(dict(context, **result)))
 
         elif 'start' in params:
-            number_of_new_vms = params['vm_number']
-            result = self.start_vms(user_id, self.user_data.getCredentials(), number_of_new_vms)
-            time.sleep(10)
-            self.redirect('/credentials')
+            context = self.getContext(user_id)
+            all_numbers_correct = True;
+            
+                
+            vms = []
+            for type in self.INS_TYPES:
+                num_type = 'num_'+type
+                
+                if num_type in params and params[num_type] != '':
+                    if int(params[num_type]) > 20:
+                        result = {'status': 'False' , 'msg': 'Number of new vms should be no more than 20.'}
+                        all_numbers_correct = False
+                        break;
+                    elif int(params[num_type]) <= 0:
+                        result = {'status': 'False' , 'msg': 'Number of new vms should be at least 1.'}
+                        all_numbers_correct = False
+                        break;
+                    else:
+                        vms.append({"instance_type": type, "num_vms": int(params[num_type])})
+            
+#             if not self.isQueueHeadRunning():
+#                 if params['num_c3.large'] == '' and params['num_c3.xlarge'] == '':
+#                     result = {'status': 'False' , 'msg': 'There should be at least one instance that are larger than or equal to c3.large.'}
+#                     all_numbers_correct = False  
+                   
+            if all_numbers_correct :
+            
+                result = self.start_vms(user_id, self.user_data.getCredentials(), vms)
+                context['starting_vms'] = True
+            
+            self.render_response('credentials.html', **(dict(context, **result)))
 
         elif 'stop' in params:
             # Kill all running VMs.
@@ -91,7 +122,8 @@ class CredentialsPage(BaseHandler):
         elif 'refresh' in params:
             self.redirect('/credentials')
         else:
-            result = {'status': False, 'msg': 'There was an error processing the request'}
+            result = {'status': True, 'msg': ''}
+            context = self.getContext(user_id)
             self.render_response('credentials.html', **(dict(context, **result)))
 
     def saveCredentials(self, credentials):
@@ -135,9 +167,9 @@ class CredentialsPage(BaseHandler):
 
     def getContext(self,user_id):
         
-        service = backendservices()
         params = {}
         credentials =  self.user_data.getCredentials()
+#         logging.info('CREDENTIALS: {0}'.format(credentials))
         params['credentials'] = credentials
         params["infrastructure"] = "ec2"
         
@@ -156,26 +188,34 @@ class CredentialsPage(BaseHandler):
             fake_credentials = { 'EC2_ACCESS_KEY': '*' * len(credentials['EC2_ACCESS_KEY']), 'EC2_SECRET_KEY': '*' * len(credentials['EC2_SECRET_KEY']) }
             
             context['valid_credentials'] = True
-            all_vms = self.get_all_vms(user_id,credentials)
+            all_vms = self.get_all_vms(user_id,params)
             if all_vms == None:
                 result = {'status':False,'vm_status':False,'vm_status_msg':'Could not determine the status of the VMs.'}
                 context = {'vm_names':all_vms}
             else:
+                number_creating = 0
                 number_pending = 0
-                number_running = 0;
+                number_running = 0
+                number_failed = 0
                 for vm in all_vms:
-                    if vm != None and vm['state']=='pending': number_pending = number_pending + 1
+                    if vm != None and vm['state']=='creating': number_creating = number_creating + 1
+                    elif vm != None and vm['state']=='pending': number_pending = number_pending + 1
                     elif vm != None and vm['state']=='running': number_running = number_running + 1
+                    elif vm != None and vm['state']=='failed': number_failed = number_failed + 1
                 number_of_vms = len(all_vms)
+                print "number creating = " + str(number_creating)
                 print "number pending = " + str(number_pending)
                 print "number running = " + str(number_running)
+                print "number failed = " + str(number_failed)
                 context['number_of_vms'] = number_of_vms
                 context['vm_names'] = all_vms
+                context['number_creating'] = number_creating
                 context['number_pending'] = number_pending
                 context['number_running'] = number_running
+                context['number_failed'] = number_failed
                 result['status']= True
                 result['credentials_msg'] = 'The EC2 keys have been validated.'
-                if number_running+number_pending == 0:
+                if number_running+number_pending+number_creating+number_failed == 0:
                     context['active_vms'] = False
                 else:
                     context['active_vms'] = True
@@ -184,52 +224,59 @@ class CredentialsPage(BaseHandler):
         context = dict(result, **context)
         return context
     
-    def get_all_vms(self,user_id,credentials):
+    def get_all_vms(self,user_id,params):
         """
             
         """
-        #valid_username = self.get_session_property('username')
         if user_id is None or user_id is "":
             return None
         else:
             try:
                 service = backendservices()
-                params = {
-                    "infrastructure": service.INFRA_EC2,
-                    "credentials": credentials,
-                    "key_prefix": service.KEYPREFIX + user_id
-                }
-                result = service.describeMachines(params)
+#                 params = {
+#                     "infrastructure": service.INFRA_EC2,
+#                     "credentials": credentials,
+#                     "key_prefix": service.KEYPREFIX + user_id
+#                 }
+                result = service.describeMachinesFromDB(params)
                 return result
             except:
                 return None
                     
-    def start_vms(self, user_id, credentials, number_of_vms=None):
+    def start_vms(self, user_id, credentials, vms_info):
         key_prefix = user_id
         group_random_name = key_prefix +"-"+''.join(random.choice(string.ascii_uppercase + string.digits) for x in range(6))
+        
+                
         params ={"infrastructure":"ec2",
-             "num_vms":number_of_vms, 
+             "vms":vms_info, 
              'group':group_random_name, 
-             'image_id':'ami-18b91c70',
-             'instance_type':'m1.small',
-             'key_prefix':key_prefix,
+             'image_id':'ami-0836e860',
+             'key_prefix':key_prefix, #key_prefix = user_id
              'keyname':group_random_name, 
              'email':[user_id],
              'credentials':credentials,
              'use_spot_instances':False}
         service = backendservices()
-        res = service.startMachines(params)
-        if res != None and res['success']==True:
-            result = {'status':'Success' , 'msg': 'Sucessfully requested '+ str(number_of_vms) + ' Virtual Machines.'}
+        res, msg = service.startMachines(params)
+        if res == True:
+            result = {'status':'Success' , 'msg': 'Sucessfully requested starting virtual machines. Processing request...'}
         else:
-            result = {'status': 'False' , 'msg': 'Request to start the machines failed. Please contact the administrator.'}
-
+            result = {'status':'Failure' , 'msg': ""}
         return result
+#         res = service.startMachines(params)
+#         if res != None and res['success']==True:
+#             result = {'status':'Success' , 'msg': 'Sucessfully requested '+ str(number_of_vms) + ' Virtual Machines.'}
+#         else:
+#             result = {'status': 'False' , 'msg': 'Request to start the machines failed. Please contact the administrator.'}
+#  
+#         return result
     
     def delete_vms():
         db_user = db.GqlQuery("SELECT * FROM StochKitModelWrapper WHERE user_id = :1", user_id).get()
         db_user.user = valid_username
         result =  backendservice.stopMachines(db_user.user,True) #True means blocking, ie wait for success
+
 
 
 class LocalSettingsPage(BaseHandler):
