@@ -200,11 +200,6 @@ class InfrastructureManager:
       if not utils.has_parameter(param, parameters):
         return self.__generate_response(False, 'no ' + param)
 
-#     num_vms = int(parameters[self.PARAM_NUM_VMS])
-#     if num_vms <= 0:
-#       utils.log('Invalid VM count: {0}'.format(num_vms))
-#       return self.__generate_response(False, self.REASON_BAD_VM_COUNT)
-
     infrastructure = parameters[self.PARAM_INFRASTRUCTURE]
     agent = self.agent_factory.create_agent(infrastructure)
     try:
@@ -241,25 +236,14 @@ class InfrastructureManager:
 
     else:
       utils.log('Running spawn_vms in non-blocking mode')
-      #thread.start_new_thread(__spawn_vms, (infra, agent, num_vms, parameters, reservation_id))
-      #logging.error('hostname: '.format(backends.get_hostname(backend_handler.BACKEND_NAME)))
-#       backend_url = 'http://%s' % modules.get_hostname(backend_handler.BACKEND_NAME)#backends.get_url(backend_handler.BACKEND_NAME)
-#       logging.info('backend_url: {0}'.format(backend_url))
-      # start GAE backends
-#     backend_start_url =  backend_url + backend_handler.BACKEND_START
-#     urlfetch.fetch(backend_start_url)
-          
-      # start backend server manager
-#       backend_manager_url =  backend_url + backend_handler.BACKEND_MANAGER_R_URL
-#       urlfetch.fetch(backend_manager_url)
-          
-      # let backend worker to spawn vms with background thread
-#       backend_worker_url = backend_url + backend_handler.BACKEND_WORKER_R_URL
+      
+      # send the spawn vms task to backend server
       from_fields = {
             'op': 'start_vms',
             'infra': pickle.dumps(self),
             'agent': pickle.dumps(agent),
             'parameters': pickle.dumps(parameters),
+            'reservation_id': pickle.dumps(reservation_id)
       }
 #       from_data = urllib.urlencode(from_fields)
 #       
