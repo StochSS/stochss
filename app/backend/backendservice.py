@@ -10,8 +10,8 @@ import logging, traceback
 from datetime import datetime
 from tasks import *
 from boto.s3.connection import S3Connection
-from celery.task.control import inspect
 import celery
+from celery.task.control import inspect
 from backend_handler import VMStateModel
 
 
@@ -50,6 +50,7 @@ class backendservices():
         #logging.info('inside execute task for cloud : Params - %s', str(params))
         result = {}
         try:
+            import tasks
             from tasks import task,updateEntry
             #This is a celery task in tasks.py: @celery.task(name='stochss')
             
@@ -212,14 +213,15 @@ class backendservices():
             else:
                 updateEntry(taskid, data, backendservices.TABLENAME)
                 #celery async task execution http://ask.github.io/celery/userguide/executing.html
-                tmp = task.delay(taskid, params)  #calls task(taskid,params)
-                result["celery_pid"] = tmp.id
+                tmp = tasks.task(taskid, params)  #calls task(taskid,params)
+#                 result["celery_pid"] = tmp.id
 
             logging.info("executeTask :  result of task : %s", str(tmp))
             result["success"] = True
             return result
         except Exception, e:
             logging.error("executeTask : error - %s", str(e))
+            traceback.print_exc()
             return {
                 "success": False,
                 "reason": str(e),

@@ -379,19 +379,19 @@ class BackendWorker():
                 if "queue_head" in parameters and parameters["queue_head"] == True: 
 
                     parameters["keyname"] = parameters["keyname"].replace('-'+self.QUEUEHEAD_KEY_TAG, '')
-                    parameters["queue_head"] = False
                     logging.info('KEYNAME: {0}'.format(parameters["keyname"]))
+                
+                parameters["queue_head"] = False   
+                security_configured = agent.configure_instance_security(parameters)
                     
-                    security_configured = agent.configure_instance_security(parameters)
-                    
-                    for vm in parameters["vms"]:          
-                        parameters["instance_type"] = vm["instance_type"]
-                        parameters["num_vms"] = vm["num_vms"]
-                        num_vms += vm["num_vms"]
-                        try:
-                            agent.run_instances(parameters)
-                        except:
-                            raise Exception('Errors in running instances in agent.')
+                for vm in parameters["vms"]:          
+                    parameters["instance_type"] = vm["instance_type"]
+                    parameters["num_vms"] = vm["num_vms"]
+                    num_vms += vm["num_vms"]
+                    try:
+                        agent.run_instances(parameters)
+                    except:
+                        raise Exception('Errors in running instances in agent.')
                         
              
             
@@ -501,7 +501,7 @@ class BackendWorker():
                     time.sleep(POLL_WAIT)
                     utils.log('polling task: sleep 5 seconds...')
                 else:
-                    VMStateModel.update_ips(parameters, instance_ids, public_ips, private_ips, parameters["keyname"])
+                    VMStateModel.update_ips(parameters, instance_ids, public_ips, private_ips, instance_types, parameters["keyname"])
                     
                     logging.info('Polling timeout. About to terminate some instances:')
                     terminate_ins_ids = []
