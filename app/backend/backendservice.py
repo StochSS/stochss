@@ -213,8 +213,8 @@ class backendservices():
             else:
                 updateEntry(taskid, data, backendservices.TABLENAME)
                 #celery async task execution http://ask.github.io/celery/userguide/executing.html
-                tmp = tasks.task(taskid, params)  #calls task(taskid,params)
-#                 result["celery_pid"] = tmp.id
+                tmp = tasks.task.delay(taskid, params)  #calls task(taskid,params)
+                result["celery_pid"] = tmp.id
 
             logging.info("executeTask :  result of task : %s", str(tmp))
             result["success"] = True

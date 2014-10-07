@@ -50,7 +50,7 @@ class CelerySingleton(object):
     
     def configure(self):
         reload(celeryconfig)
-#         self.app.config_from_object('celeryconfig')
+        self.app.config_from_object('celeryconfig')
 
 celery_config = CelerySingleton()
 celery_config.configure()
@@ -496,9 +496,9 @@ def task(taskid,params):
       elif job_type == 'stochkit_ode' or job_type == 'sensitivity':
           exec_str = "{0}/{1} -m {2} --force --out-dir output/{3}/result 2>{4} > {5}".format(ODE_DIR, paramstr, xmlfilepath, uuidstr, stderr, stdout)
       elif job_type == 'spatial':
-	  cmd = "chown -R ubuntu output/{0}".format(uuidstr)
-	  print cmd
-	  os.system(cmd)
+          cmd = "chown -R ubuntu output/{0}".format(uuidstr)
+          print cmd
+          os.system(cmd)
           exec_str = "sudo -E -u ubuntu {0}/pyurdme_wrapper.py {1} {2} {3} {4} {5} 2>{6} > {7}".format(THOME, xmlfilepath, 'output/{0}/results'.format(uuidstr), params['simulation_algorithm'], params['simulation_realizations'], params['simulation_seed'], stderr, stdout)
       
       print "======================="
