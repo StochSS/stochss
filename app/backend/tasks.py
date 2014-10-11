@@ -470,8 +470,8 @@ def task(taskid,params):
 
       try:
         # Initialize cloudtracker with the task's UUID
-        ct = CloudTracker(taskid)
-        ct.init_tracking('ami-0836e860', 'stochss-'+params['user_id'])
+        ct = CloudTracker(taskid, 'stochss-'+(params['access_key'].lower()))
+        ct.init_tracking('ami-0836e860')
       except Exception:
         print "Error initializing tracking"
 

@@ -594,7 +594,8 @@ class SimulatePage(BaseHandler):
         
             #the parameter dictionary to be passed to the backend
             param = {}
-
+            params['access_key'] = os.environ["AWS_ACCESS_KEY_ID"]
+            params['secret_key'] = os.environ['AWS_SECRET_ACCESS_KEY']
             # Execute as concentration or population?
             exec_type = params['execType']
 

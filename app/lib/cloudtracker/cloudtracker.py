@@ -162,11 +162,11 @@ class CloudTracker:
 	''' Launches a new EC2 instance with the provided security credentials provided '''
 	''' Gathers provenance information from storage based on provided uuid '''
 	''' Uses user data script to download input files to the instance and run the same executable with identical input parameters '''
-	def run(self, uuid, access_key, secret_key):
+	def run(self, access_key, secret_key):
 
-		print "running job with uuid " + str(uuid)
+		print "running job with uuid " + self.uuid
 		# Retrieve manifest file from S3 bucket
-		manifest = get_file(self.bucketname, str(uuid) + "/manifest", access_key, secret_key).get_contents_as_string()
+		manifest = get_file(self.bucketname, self.uuid + "/manifest", access_key, secret_key).get_contents_as_string()
 		params, inputs = parse_manifest(manifest.strip())
 
 		# Connect to EC2
@@ -179,9 +179,9 @@ class CloudTracker:
 
 		# Get a list of input files from the S3 bucket
 
-		files = get_all_files(self.bucketname, str(uuid) + "/files", access_key, secret_key)
+		files = get_all_files(self.bucketname, self.uuid + "/files", access_key, secret_key)
 		# Create user data script 
-		script = generate_launch_script(str(uuid), self.bucketname, params, inputs, files)
+		script = generate_launch_script(self.uuid, self.bucketname, params, inputs, files)
 		print script
 
 		# Launch new EC2 instance with user data script
@@ -189,7 +189,6 @@ class CloudTracker:
 		rs = conn.run_instances(
 			params['ami_id'],
 			instance_type=params['instance_type'],
-			security_groups=['default-ssh'],
 			user_data=script
 		)
 

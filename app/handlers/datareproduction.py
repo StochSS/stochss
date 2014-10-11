@@ -7,6 +7,7 @@ from stochssapp import BaseHandler
 import sensitivity
 from cloudtracker import CloudTracker
 import s3_helper
+import logging
 
 DEFAULT_BUCKET_NAME = ''
 
@@ -27,7 +28,7 @@ class DataReproductionPage(BaseHandler):
             job_uuid = params['id_box']
 
             credentials = self.user_data.getCredentials()
-            prov_keys = s3_helper.get_all_files("stochss-"+self.user.user_id(),
+            prov_keys = s3_helper.get_all_files("stochss-"+(credentials['EC2_ACCESS_KEY'].lower()),
                                                         job_uuid,
                                                         credentials['EC2_ACCESS_KEY'],
                                                         credentials['EC2_SECRET_KEY'])
@@ -38,6 +39,7 @@ class DataReproductionPage(BaseHandler):
                 result = {'status':False,'msg':"The job with this ID does not exist or cannot be reproduced."}
                 self.render_response('reproduce.html', **dict(result,**context))
             else:
+                logging.info('redirect to rerun page.')
                 self.redirect(str('rerun?id=' + job_uuid))
         else:
             context = self.getContext()
@@ -98,18 +100,19 @@ class RerunJobPage(BaseHandler):
         credentials = self.user_data.getCredentials()
 
         try:
-            ct = CloudTracker()
+            logging.info('start to rerun the job {0}'.format(str(uuid)))
+            ct = CloudTracker(str(uuid), 'stochss-'+credentials['EC2_ACCESS_KEY'].lower())
             # Set up CloudTracker with user credentials to rerun the job with the specified UUID
-            ct.run(uuid, credentials['EC2_ACCESS_KEY'], credentials['EC2_SECRET_KEY'])
+            ct.run(credentials['EC2_ACCESS_KEY'], credentials['EC2_SECRET_KEY'])
         except Exception,e:
             print e
 
         context = {'uuid' : uuid}
         self.render_response('rerun.html', **context)
         
-    def post(self):        
-        context = self.getContext()
-        self.render_response('rerun.html', **context)
+#     def post(self):        
+#         context = self.getContext()
+#         self.render_response('rerun.html', **context)
 
     def getContext(self):
         context = {}

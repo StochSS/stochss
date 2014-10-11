@@ -5,6 +5,7 @@ import urllib
 from boto.s3.key import Key
 from boto.s3.connection import S3Connection
 from datetime import datetime
+import logging
 
 ################################
 ### Currently used functions ###
@@ -13,18 +14,18 @@ from datetime import datetime
 ''' Retrieve bucket from bucketname, with optional credentials '''
 def get_bucket(bucketname, aws_access_key='', aws_secret_key=''):
 	# Try connecting without credentials, i.e. credentials are already saves as env variables
-	try:
-		conn = boto.connect_s3()
-	# Otherwise supply credentials
-	except Exception:
-		conn = S3Connection(aws_access_key, aws_secret_key)
-
+# 	try:
+# 		conn = boto.connect_s3()		
+# 	# Otherwise supply credentials
+# 	except Exception as e:
+# 		logging.error(e)
+	conn = S3Connection(aws_access_key, aws_secret_key)
 	# If the bucket exists, return the existing bucket
 	if conn.lookup(bucketname):
 		bucket = conn.get_bucket(bucketname)
 	# Otherwise, create a new bucket and return it
 	else:
-		bucket = conn.create_bucket(bucketname, location=boto.s3.connection.Location.DEFAULT)
+		bucket = conn.create_bucket(bucketname)
 	return bucket
 
 ''' Add a new file to the specified bucket with the specified filename, 
