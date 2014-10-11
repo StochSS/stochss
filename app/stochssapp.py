@@ -313,6 +313,7 @@ from handlers.credentials import *
 from handlers.converttopopulation import *
 from handlers.updates import *
 from handlers.status import *
+from handlers.datareproduction import *
 from handlers.auth import *
 from handlers.admin import *
 import handlers.fileserver
@@ -381,6 +382,8 @@ app = webapp2.WSGIApplication([
                                ('/export', ExportPage),
                                ('/import', ImportPage),
                                ('/status',StatusPage),
+                               ('/reproduce',DataReproductionPage),
+                               ('/rerun',RerunJobPage),
                                ('/output/visualize',VisualizePage),
                                ('/output',JobOutPutPage),
                                ('/output/[a-zA-Z0-9-_]*.tgz',JobOutPutPage),

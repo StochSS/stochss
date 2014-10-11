@@ -672,7 +672,9 @@ class SimulatePage(BaseHandler):
             params['paramstring'] = cmd
 
             bucketname = self.user_data.getBucketName()
-            params['bucketname'] = bucketname         
+            params['bucketname'] = bucketname  
+            
+            params['user_id'] = self.user.user_id()       
         
             # Call backendservices and execute StochKit
             service = backendservices()
