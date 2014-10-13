@@ -104,8 +104,10 @@ def get_output_size(path):
 ''' CloudTracker class definition '''
 class CloudTracker:
 	''' Assigns a job uuid to this instance of CloudTracker'''
-	def __init__(self, tracking_number, bucketname):
-		print "Initialized CloudTracker instance with uuid " + tracking_number
+	def __init__(self, access_key, secret_key, tracking_number, bucketname):
+		print "Initialized CloudTracker instance with uuid " + tracking_number + ", bucketname " + bucketname
+		self.access_key = access_key
+		self.secret_key = secret_key
 		self.uuid = tracking_number
 		self.bucketname = bucketname
 
@@ -122,7 +124,7 @@ class CloudTracker:
 		manifest = generate_manifest(data)
 		print "Manifest : " + manifest
 		# Adds manifest file to S3 with contents from the manifest variable
-		create_file(self.bucketname, self.uuid + "/manifest", manifest)
+		create_file(self.access_key, self.secret_key, self.bucketname, self.uuid + "/manifest", manifest)
 
 	''' Parses exec_str for an executable name, input parameters, and input files'''
 	''' Executable name and input parameters are stored in the manifest file '''
@@ -162,24 +164,24 @@ class CloudTracker:
 	''' Launches a new EC2 instance with the provided security credentials provided '''
 	''' Gathers provenance information from storage based on provided uuid '''
 	''' Uses user data script to download input files to the instance and run the same executable with identical input parameters '''
-	def run(self, access_key, secret_key):
+	def run(self):
 
 		print "running job with uuid " + self.uuid
 		# Retrieve manifest file from S3 bucket
-		manifest = get_file(self.bucketname, self.uuid + "/manifest", access_key, secret_key).get_contents_as_string()
+		manifest = get_file(self.bucketname, self.uuid + "/manifest", self.access_key, self.secret_key).get_contents_as_string()
 		params, inputs = parse_manifest(manifest.strip())
 
 		# Connect to EC2
 		print "Connecting to " + params['region']
 		conn = boto.ec2.connect_to_region(
 			params['region'],
-			aws_access_key_id=access_key,
-			aws_secret_access_key=secret_key
+			aws_access_key_id=self.access_key,
+			aws_secret_access_key=self.secret_key
 		)
 
 		# Get a list of input files from the S3 bucket
 
-		files = get_all_files(self.bucketname, self.uuid + "/files", access_key, secret_key)
+		files = get_all_files(self.bucketname, self.uuid + "/files", self.access_key, self.secret_key)
 		# Create user data script 
 		script = generate_launch_script(self.uuid, self.bucketname, params, inputs, files)
 		print script

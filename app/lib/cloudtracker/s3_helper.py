@@ -14,12 +14,12 @@ import logging
 ''' Retrieve bucket from bucketname, with optional credentials '''
 def get_bucket(bucketname, aws_access_key='', aws_secret_key=''):
 	# Try connecting without credentials, i.e. credentials are already saves as env variables
-# 	try:
-# 		conn = boto.connect_s3()		
-# 	# Otherwise supply credentials
-# 	except Exception as e:
-# 		logging.error(e)
-	conn = S3Connection(aws_access_key, aws_secret_key)
+	try:
+		conn = boto.connect_s3()		
+	# Otherwise supply credentials
+	except Exception as e:
+		logging.error(e)
+		conn = S3Connection(aws_access_key, aws_secret_key)
 	# If the bucket exists, return the existing bucket
 	if conn.lookup(bucketname):
 		bucket = conn.get_bucket(bucketname)
@@ -38,8 +38,8 @@ def upload_file(bucketname, filepath, filename):
 
 ''' Add a new file to the specified bucket with the specified filename, 
     setting its content from the supplied contents string '''
-def create_file(bucketname, filename, contents):
-	bucket = get_bucket(bucketname)
+def create_file(access_key, secret_key, bucketname, filename, contents):
+	bucket = get_bucket(bucketname, access_key, secret_key)
 	k = Key(bucket)
 	k.key = filename
 	k.set_contents_from_string(contents)
