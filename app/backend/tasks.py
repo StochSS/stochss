@@ -1,11 +1,14 @@
 import sys,os,logging
 sys.path.append(os.path.join(os.path.dirname(__file__), '../lib/celery'))
+sys.path.append(os.path.join(os.path.dirname(__file__), '../lib/boto'))
 sys.path.append(os.path.join(os.path.dirname(__file__), '../lib/kombu'))
 sys.path.append(os.path.join(os.path.dirname(__file__), '../'))
+sys.path.append(os.path.join(os.path.dirname(__file__), '/'))
 sys.path.append(os.path.join(os.path.dirname(__file__), '../lib/amqp'))
 sys.path.append(os.path.join(os.path.dirname(__file__), '../lib/billiard'))
 sys.path.append(os.path.join(os.path.dirname(__file__), '../lib/anyjson'))
 sys.path.append(os.path.join(os.path.dirname(__file__), '../lib/pytz'))
+sys.path.append(os.path.join(os.path.dirname(__file__), '../lib/cloudtracker'))
 #print str(sys.path)
 from celery import Celery, group
 try:
@@ -31,6 +34,7 @@ from datetime import datetime
 from multiprocessing import Process
 import tempfile, time
 import signal
+from cloudtracker import CloudTracker 
 
 class CelerySingleton(object):
     """
@@ -464,6 +468,13 @@ def task(taskid,params):
       global STOCHKIT_DIR
       global ODE_DIR
 
+      try:
+        # Initialize cloudtracker with the task's UUID
+        ct = CloudTracker(taskid, 'stochss-'+(params['access_key'].lower()))
+        ct.init_tracking('ami-0836e860')
+      except Exception:
+        print "Error initializing tracking"
+
       print 'task to be executed at remote location'
       print 'inside celery task method'
       data = {'status':'active','message':'Task Executing in cloud'}
@@ -479,58 +490,77 @@ def task(taskid,params):
       create_dir_str = "mkdir -p output/%s/result " % uuidstr
       os.system(create_dir_str)
       filename = "output/{0}/{0}.xml".format(uuidstr)
+      
+      #filename = "/home/ubuntu/output/{0}.xml".format(uuidstr)
+
       f = open(filename,'w')
       f.write(params['document'])
       f.close()
       xmlfilepath = filename
-      stdout = "output/%s/stdout.log" % uuidstr
-      stderr = "output/%s/stderr.log" % uuidstr
+      stdout = "/home/ubuntu/output/stdout.log"
+      stderr = "/home/ubuntu/output/stderr.log"
 
       exec_str = ''
       if job_type == 'stochkit':
           # The following executiong string is of the form : stochkit_exec_str = "~/StochKit/ssa -m ~/output/%s/dimer_decay.xml -t 20 -i 10 -r 1000" % (uuidstr)
-          exec_str = "{0}/{1} -m {2} --force --out-dir output/{3}/result 2>{4} > {5}".format(STOCHKIT_DIR, paramstr, xmlfilepath, uuidstr, stderr, stdout)
+          exec_str = "{0}/{1} -m {2} --force --out-dir /home/ubuntu/output/result".format(STOCHKIT_DIR, paramstr, xmlfilepath)
       elif job_type == 'stochkit_ode' or job_type == 'sensitivity':
           exec_str = "{0}/{1} -m {2} --force --out-dir output/{3}/result 2>{4} > {5}".format(ODE_DIR, paramstr, xmlfilepath, uuidstr, stderr, stdout)
       elif job_type == 'spatial':
-	  cmd = "chown -R ubuntu output/{0}".format(uuidstr)
-	  print cmd
-	  os.system(cmd)
+          cmd = "chown -R ubuntu output/{0}".format(uuidstr)
+          print cmd
+          os.system(cmd)
           exec_str = "sudo -E -u ubuntu {0}/pyurdme_wrapper.py {1} {2} {3} {4} {5} 2>{6} > {7}".format(THOME, xmlfilepath, 'output/{0}/results'.format(uuidstr), params['simulation_algorithm'], params['simulation_realizations'], params['simulation_seed'], stderr, stdout)
+
+          #exec_str = "{0}/{1} -m {2} --force --out-dir /home/ubuntu/output/result".format(ODE_DIR, paramstr, xmlfilepath)
+
       
+      exec_str_out = exec_str + "2>{0} > {1}".format(stderr, stdout)
+
       print "======================="
       print " Command to be executed : "
       print "{0}".format(exec_str)
+
+      #print exec_str_out
       print "======================="
       print "To test if the command string was correct. Copy the above line and execute in terminal."
+
+      # Supply CloudTracker with the execution string to be tracked
+      try:
+        ct.track_input(exec_str)
+      except Exception:
+        print "CloudTracker Error: track_input(" + exec_str + ")"
+
       timestarted = datetime.now()
-      os.system(exec_str)
+      os.system(exec_str_out)
       timeended = datetime.now()
+
+      # Supply CloudTracker with the location of the output directory
+      try:
+        ct.track_output("/home/ubuntu/output/")
+      except Exception,e:
+        print "CloudTracker Error: track_output(/home/ubuntu/output)"
+        print e
       
-      results = os.listdir("output/{0}/result".format(uuidstr))
-      if 'stats' in results and os.listdir("output/{0}/result/stats".format(uuidstr)) == ['.parallel']:
+      results = os.listdir("output/result")
+      if 'stats' in results and os.listdir("output/result/stats") == ['.parallel']:
           raise Exception("The compute node can not handle a job of this size.")
       
       res['pid'] = taskid
-      filepath = "output/%s//" % (uuidstr)
+      filepath = "output/"
       absolute_file_path = os.path.abspath(filepath)
       print 'generating tar file'
-      create_tar_output_str = "tar -zcvf output/{0}.tar output/{0}".format(uuidstr)
+      create_tar_output_str = "tar -zcvf {0}.tar output/"
       print create_tar_output_str
       logging.debug("following cmd to be executed %s" % (create_tar_output_str))
       bucketname = params['bucketname']
-      copy_to_s3_str = "python {2}/sccpy.py output/{0}.tar {1}".format(uuidstr,bucketname,THOME)
+      copy_to_s3_str = "python {2}/sccpy.py {0}.tar {1}".format(uuidstr,bucketname,THOME)
       data = {'status':'active','message':'Task finished. Generating output.'}
       updateEntry(taskid, data, "stochss")
       os.system(create_tar_output_str)
       print 'copying file to s3 : {0}'.format(copy_to_s3_str)
       os.system(copy_to_s3_str)
-      print 'removing xml file'
-      removefilestr = "rm {0}".format(xmlfilepath)
-      os.system(removefilestr)
-      removetarstr = "rm output/{0}.tar".format(uuidstr)
-      os.system(removetarstr)
-      removeoutputdirstr = "rm -r output/{0}".format(uuidstr)
+      removeoutputdirstr = "rm /home/ubuntu/output/*"
       os.system(removeoutputdirstr)
       res['output'] = "https://s3.amazonaws.com/{1}/output/{0}.tar".format(taskid,bucketname)
       res['status'] = "finished"

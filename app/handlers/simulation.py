@@ -594,7 +594,8 @@ class SimulatePage(BaseHandler):
         
             #the parameter dictionary to be passed to the backend
             param = {}
-
+            params['access_key'] = os.environ["AWS_ACCESS_KEY_ID"]
+            params['secret_key'] = os.environ['AWS_SECRET_ACCESS_KEY']
             # Execute as concentration or population?
             exec_type = params['execType']
 
@@ -672,7 +673,9 @@ class SimulatePage(BaseHandler):
             params['paramstring'] = cmd
 
             bucketname = self.user_data.getBucketName()
-            params['bucketname'] = bucketname         
+            params['bucketname'] = bucketname  
+            
+            params['user_id'] = self.user.user_id()       
         
             # Call backendservices and execute StochKit
             service = backendservices()
