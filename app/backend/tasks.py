@@ -11,6 +11,7 @@ sys.path.append(os.path.join(os.path.dirname(__file__), '../lib/pytz'))
 sys.path.append(os.path.join(os.path.dirname(__file__), '../lib/cloudtracker'))
 #print str(sys.path)
 from celery import Celery, group
+
 try:
     import celeryconfig
 except ImportError:
