@@ -33,9 +33,13 @@ $('#users').on('click', 'button.table-action-button', function(e) {
                 if (action == "approve1") {
                     clickedButton.data('action', 'revoke');
                     clickedButton.text('Revoke Permissions');
+                    clickedButton.removeClass('btn-success');
+                    clickedButton.addClass('btn-danger');
                 } else if (action == "revoke") {
                     clickedButton.data('action', 'approve1');
                     clickedButton.text('Activate Account');
+                    clickedButton.removeClass('btn-danger');
+                    clickedButton.addClass('btn-success');
                 } else if (action == "delete") {
                     tableRow.remove();
                 } else if (action == "reset") {
