@@ -339,7 +339,10 @@ class SpatialPage(BaseHandler):
         
         stochkit_model_obj = json_model_refs["model"]
         #print 'json_model_refs["spatial"]["mesh_wrapper_id"]:', json_model_refs["spatial"]["mesh_wrapper_id"]
-        meshWrapperDb = mesheditor.MeshWrapper.get_by_id(json_model_refs["spatial"]["mesh_wrapper_id"])
+        try:
+            meshWrapperDb = mesheditor.MeshWrapper.get_by_id(json_model_refs["spatial"]["mesh_wrapper_id"])
+        except Exception as e:
+            raise Exception("No Mesh file set. Choose one in the Mesh tab of the Model Editor")
 
         try:
             meshFileObj = fileserver.FileManager.getFile(self, meshWrapperDb.meshFileId)
@@ -349,7 +352,7 @@ class SpatialPage(BaseHandler):
             #self.response.write(json.dumps({"status" : False,
             #                                "msg" : "No Mesh file given"}))
             #return
-            raise Exception("No Mesh file given")
+            raise Exception("Mesh file inaccessible. Try another mesh")
             #TODO: if we get advanced options, we don't need a mesh
 
         try:    
@@ -365,7 +368,7 @@ class SpatialPage(BaseHandler):
 
         for species in stochkit_model_obj.listOfSpecies:
             if species not in species_diffusion_coefficients:
-                raise Exception("Species '{0}' does not have a diffusion coefficient set. Please do that on Species tab in Model Editor".format(species))
+                raise Exception("Species '{0}' does not have a diffusion coefficient set. Please do that in the Species tab of the Model Editor".format(species))
         
         simulation_end_time = data['time']
         simulation_time_increment = data['increment']
@@ -396,6 +399,7 @@ class SpatialPage(BaseHandler):
                 #                                "msg" : "Mesh subdomain file specified, but file not found: {0}".format(e)}))
                 #return
                 raise Exception("Mesh subdomain file specified, but file not found: {0}".format(e))
+            
         # species
         for s in stochkit_model_obj.listOfSpecies:
             pymodel.add_species(pyurdme.Species(name=s, diffusion_constant=float(species_diffusion_coefficients[s])))
@@ -484,7 +488,7 @@ class SpatialPage(BaseHandler):
             self.response.write(json.dumps({"status" : True,
                                             "msg" : "Job launched",
                                             "id" : job.key().id()}))
-        except Exception as e: 
+        except Exception as e:
             traceback.print_exc()
             self.response.write(json.dumps({"status" : False,
                                             "msg" : "{0}".format(e)}))
