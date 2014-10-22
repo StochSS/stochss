@@ -1,7 +1,6 @@
 import boto.ec2
 import os, sys
 from s3_helper import *
-
 ####################
 # Helper functions #
 ####################
@@ -50,17 +49,17 @@ def parse_executable(exec_str):
 def parse_manifest(manifest):
 	lines = manifest.split('\n')
 	params = {}
-	inputs = {}
+	last_key = ''
 	for l in lines:
-		tokens = l.split(' : ')
-		# Indicates the start of an input parameter
-		if tokens[0].startswith('-'):
-			inputs[tokens[0]] = tokens[1]
-		# Otherwise, it is some other piece of provenance information
+		if l.find(":") != -1:
+			tokens = l.split(' : ', 1)
+			# Indicates the start of an input parameter
+			last_key = tokens[0]
+			params[last_key] = tokens[1]
 		else:
-			params[tokens[0]] = tokens[1]
+			params[last_key] += l
 
-	return params, inputs
+	return params
 
 ''' Helper function to generate a user-data script for CloudInit '''
 ''' The script is a bash scrip that must download the input files from S3 and run the executable with inputs '''
@@ -112,41 +111,25 @@ class CloudTracker:
 		self.bucketname = bucketname
 
 	''' Gathers EC2 metadata and stores it in a manifest file in a new S3 directory'''
-	def init_tracking(self, ami_id, instance_type='c3.large', region='us-east-1'):
-		print "Initializing tracking..."
-		# s3_helper functions
-# 		ami_id = get_ami_id()
-# 		instance_type = get_instance_type()
-# 		region = get_region()
-		data = { "ami_id" : ami_id, 
-		         "instance_type" : instance_type,
-		         "region" : region}
-		manifest = generate_manifest(data)
-		print "Manifest : " + manifest
-		# Adds manifest file to S3 with contents from the manifest variable
-		create_file(self.access_key, self.secret_key, self.bucketname, self.uuid + "/manifest", manifest)
+	def if_tracking(self):
+		print "if need tracking?"	
+		if if_file_exist(self.bucketname, self.uuid + "/manifest", self.access_key, self.secret_key):
+			return False
+		else:
+			return True
 
 	''' Parses exec_str for an executable name, input parameters, and input files'''
 	''' Executable name and input parameters are stored in the manifest file '''
 	''' Input files are stored alongside the manifest file in a subfolder called files/ '''
-	def track_input(self, exec_str):
+	def track_input(self, params):
 		print "Tracking inputs..."
-		executable, inputs, files = parse_executable(exec_str)
-		data = { "executable" : executable }
-		manifest = generate_manifest(data)
+		manifest = generate_manifest(params)
 		print manifest
-		# Updates the manifest file
-		add_to_file(self.bucketname, self.uuid + "/manifest", manifest)
-		manifest = generate_manifest(inputs)
-		print manifest
-		# Updates the manifest file
-		add_to_file(self.bucketname, self.uuid + "/manifest", manifest)
-		print files
-		# Upload input files alongside to S3 bucket alongisde the manifest in a subfolder called files/
-		for f in files:
-			upload_file(self.bucketname, f, self.uuid + "/files/" + f.strip('/'))
-		# Save the current time for calculating total execution time later
+		# create the manifest file
+		create_file(self.bucketname, self.uuid + "/manifest", manifest, self.access_key, self.secret_key)
+		
 		self.timer = datetime.now()
+		
 
 	''' Store execution time, output dataset size, and location of output directory to the manifest file'''
 	def track_output(self, output_dir):
@@ -159,44 +142,18 @@ class CloudTracker:
 		manifest = generate_manifest(data)
 		print manifest
 		# Updates the manifest file
-		add_to_file(self.bucketname, self.uuid + "/manifest", manifest)
+		add_to_file(self.bucketname, self.uuid + "/manifest", manifest, self.access_key, self.secret_key)
 
 	''' Launches a new EC2 instance with the provided security credentials provided '''
 	''' Gathers provenance information from storage based on provided uuid '''
 	''' Uses user data script to download input files to the instance and run the same executable with identical input parameters '''
-	def run(self):
+	def get_input(self):
 
 		print "running job with uuid " + self.uuid
 		# Retrieve manifest file from S3 bucket
 		manifest = get_file(self.bucketname, self.uuid + "/manifest", self.access_key, self.secret_key).get_contents_as_string()
-		params, inputs = parse_manifest(manifest.strip())
+		params = parse_manifest(manifest.strip())
+		print params
 
-		# Connect to EC2
-		print "Connecting to " + params['region']
-		conn = boto.ec2.connect_to_region(
-			params['region'],
-			aws_access_key_id=self.access_key,
-			aws_secret_access_key=self.secret_key
-		)
+		return params
 
-		# Get a list of input files from the S3 bucket
-
-		files = get_all_files(self.bucketname, self.uuid + "/files", self.access_key, self.secret_key)
-		# Create user data script 
-		script = generate_launch_script(self.uuid, self.bucketname, params, inputs, files)
-		print script
-
-		# Launch new EC2 instance with user data script
-		print "Launching worker from AMI: " + params['ami_id']
-		rs = conn.run_instances(
-			params['ami_id'],
-			instance_type=params['instance_type'],
-			user_data=script
-		)
-
-		# Wait until the EC2 instance status changes to running
-		inst = rs.instances[0]
-		while inst.state != 'running':
-			inst.update()
-
-		print "Finished"

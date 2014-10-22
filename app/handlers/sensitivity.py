@@ -339,9 +339,11 @@ class SensitivityPage(BaseHandler):
         os.environ["AWS_ACCESS_KEY_ID"] = db_credentials['EC2_ACCESS_KEY']
         os.environ["AWS_SECRET_ACCESS_KEY"] = db_credentials['EC2_SECRET_KEY']
         # Send the task to the backend
-        cloud_result = service.executeTask(params)
+        cloud_result = service.executeTask(params, db_credentials['EC2_ACCESS_KEY'], db_credentials['EC2_SECRET_KEY'])
         # if not cloud_result["success"]:
+        logging.info("db_id: ".format(cloud_result["db_id"]))
         job.cloudDatabaseID = cloud_result["db_id"]
+        logging.info("celery_pid: ".format(cloud_result["celery_pid"]))
         job.celeryPID = cloud_result["celery_pid"]
         job.outData = None
         job.zipFileName = None

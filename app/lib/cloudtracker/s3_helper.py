@@ -13,13 +13,11 @@ import logging
 
 ''' Retrieve bucket from bucketname, with optional credentials '''
 def get_bucket(bucketname, aws_access_key='', aws_secret_key=''):
-	# Try connecting without credentials, i.e. credentials are already saves as env variables
-	try:
-		conn = boto.connect_s3()		
-	# Otherwise supply credentials
-	except Exception as e:
-		logging.error(e)
+ 	try:
+# 		conn = boto.connect_s3()		
 		conn = S3Connection(aws_access_key, aws_secret_key)
+	except Exception:
+		raise Exception('Cannot get bucket from S3.')
 	# If the bucket exists, return the existing bucket
 	if conn.lookup(bucketname):
 		bucket = conn.get_bucket(bucketname)
@@ -28,31 +26,41 @@ def get_bucket(bucketname, aws_access_key='', aws_secret_key=''):
 		bucket = conn.create_bucket(bucketname)
 	return bucket
 
+def if_file_exist(bucketname, filename, aws_access_key='', aws_secret_key=''):
+	bucket = get_bucket(bucketname, aws_access_key, aws_secret_key)
+	k = Key(bucket, filename)
+	if k.exists():
+		logging.info('no')
+		return True
+	else:
+		logging.info('yes')
+		return False	
+
 ''' Add a new file to the specified bucket with the specified filename, 
     setting its content from the file at the specified filepath '''
-def upload_file(bucketname, filepath, filename):
-	bucket = get_bucket(bucketname)
+def upload_file(bucketname, filepath, filename, aws_access_key='', aws_secret_key=''):
+	bucket = get_bucket(bucketname, aws_access_key, aws_secret_key)
 	k = Key(bucket)
 	k.key = filename
 	k.set_contents_from_filename(filepath)
 
 ''' Add a new file to the specified bucket with the specified filename, 
     setting its content from the supplied contents string '''
-def create_file(access_key, secret_key, bucketname, filename, contents):
-	bucket = get_bucket(bucketname, access_key, secret_key)
+def create_file(bucketname, filename, contents, aws_access_key='', aws_secret_key=''):
+	bucket = get_bucket(bucketname, aws_access_key, aws_secret_key)
 	k = Key(bucket)
 	k.key = filename
 	k.set_contents_from_string(contents)
 
 ''' Append current contents of the specified file with content from the specified string '''
-def add_to_file(bucketname, filename, contents):
-	bucket = get_bucket(bucketname)
+def add_to_file(bucketname, filename, contents, aws_access_key='', aws_secret_key=''):
+	bucket = get_bucket(bucketname, aws_access_key, aws_secret_key)
 	k = bucket.get_key(filename)
 	k.set_contents_from_string(k.get_contents_as_string() + contents)
 
 ''' Add the key-value pair as metadata on the specified filen '''
-def add_metadata(bucketname, filename, key, value):
-	bucket = get_bucket(bucketname)
+def add_metadata(bucketname, filename, key, value, aws_access_key='', aws_secret_key=''):
+	bucket = get_bucket(bucketname, aws_access_key, aws_secret_key)
 	k = bucket.get_key(filename)
 	k.metadata.update({key:value})
 	k.copy(k.bucket.name, k.name, k.metadata, preserve_acl=True)
@@ -80,6 +88,7 @@ def get_contents_from_file(bucketname, filename, aws_access_key='', aws_secret_k
 
 ''' Retrieve all files from the bucket prefixed by the supplied filename '''
 def get_all_files(bucketname, filename, aws_access_key='', aws_secret_key=''):
+	logging.info('inside get_all_files')
 	bucket = get_bucket(bucketname,aws_access_key,aws_secret_key)
 	return bucket.get_all_keys(prefix=filename)
 
@@ -95,8 +104,8 @@ def get_file(bucketname, filename, aws_access_key='', aws_secret_key=''):
 
 ''' Specific helper function to query EC2 metadata service and tag the specified file with
     metadata based on the EC2 metadata '''
-def add_ec2_metadata(bucketname, filename):
-	bucket = get_bucket(bucketname)
+def add_ec2_metadata(bucketname, filename, aws_access_key='', aws_secret_key=''):
+	bucket = get_bucket(bucketname, aws_access_key, aws_secret_key)
 	k = bucket.get_key(filename)
 
 	ami_id = urllib.urlopen("http://169.254.169.254/latest/meta-data/ami-id").read()
@@ -111,23 +120,23 @@ def add_ec2_metadata(bucketname, filename):
 	k.copy(k.bucket.name, k.name, k.metadata, preserve_acl=True)
 
 ''' Helper function to add running time as metadata on a specified file '''
-def add_running_time(bucketname, filename, time):
+def add_running_time(bucketname, filename, time, aws_access_key='', aws_secret_key=''):
 	bucket = get_bucket(bucketname)
 	k = bucket.get_key(filename)
 	k.metadata.update({'running-time':time})
 	k.copy(k.bucket.name, k.name, k.metadata, preserve_acl=True)
 
 ''' Helper function to add a timestamp as metadata on a specified file '''
-def add_timestamp(bucketname, filename, time):
-	bucket = get_bucket(bucketname)
+def add_timestamp(bucketname, filename, time, aws_access_key='', aws_secret_key=''):
+	bucket = get_bucket(bucketname,aws_access_key,aws_secret_key)
 	k = bucket.get_key(filename)
 	timestamp = "%s %.2d:%.2d"%(str(time.date()),time.hour,time.minute)
 	k.metadata.update({'timestamp':timestamp})
 	k.copy(k.bucket.name, k.name, k.metadata, preserve_acl=True)
 
 ''' Helper function to add filesize as metadata on a specified file '''
-def add_filesize(bucketname, filename):
-	bucket = get_bucket(bucketname)
+def add_filesize(bucketname, filename, aws_access_key='', aws_secret_key=''):
+	bucket = get_bucket(bucketname,aws_access_key,aws_secret_key)
 	k = bucket.get_key(filename)
 	k.metadata.update({'size':k.size})
 	k.copy(k.bucket.name, k.name, k.metadata, preserve_acl=True)
@@ -145,9 +154,9 @@ def get_metadata_from_file(bucketname, filename, key, aws_access_key='', aws_sec
 	return k.get_metadata(key)
 
 ''' Retrieve the filesize information for the specified file from its metadata'''
-def get_filesize(bucketname, filename):
-	return int(get_metadata_from_file(bucketname,filename,'size'))
+def get_filesize(bucketname, filename, aws_access_key='', aws_secret_key=''):
+	return int(get_metadata_from_file(bucketname,filename,'size', aws_access_key, aws_secret_key))
 
 ''' Retrieve the running time information for the specified file from its metadata'''
-def get_running_time(bucketname, filename):
-	return float(get_metadata_from_file(bucketname,filename,'running-time'))
+def get_running_time(bucketname, filename, aws_access_key='', aws_secret_key=''):
+	return float(get_metadata_from_file(bucketname,filename,'running-time', aws_access_key, aws_secret_key))

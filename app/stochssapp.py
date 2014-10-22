@@ -383,7 +383,6 @@ app = webapp2.WSGIApplication([
                                ('/import', ImportPage),
                                ('/status',StatusPage),
                                ('/reproduce',DataReproductionPage),
-                               ('/rerun',RerunJobPage),
                                ('/output/visualize',VisualizePage),
                                ('/output',JobOutPutPage),
                                ('/output/[a-zA-Z0-9-_]*.tgz',JobOutPutPage),

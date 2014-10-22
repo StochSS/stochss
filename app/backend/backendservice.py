@@ -42,7 +42,7 @@ class backendservices():
         sys.path.append(os.path.join(os.path.dirname(__file__), 
                                      '/Library/Python/2.7/site-packages/amqp'))
             
-    def executeTask(self,params):
+    def executeTask(self,params, access_key, secret_key):
         '''
         This method instantiates celery tasks in the cloud.
 	Returns return value from celery async call and the task ID
@@ -213,7 +213,7 @@ class backendservices():
             else:
                 updateEntry(taskid, data, backendservices.TABLENAME)
                 #celery async task execution http://ask.github.io/celery/userguide/executing.html
-                tmp = tasks.task.delay(taskid, params)  #calls task(taskid,params)
+                tmp = tasks.task.delay(taskid, params, access_key, secret_key)  #calls task(taskid,params,access_key,secret_key)
 #                 logging.info('RESULT OF TASK: {0}'.format(tmp.get()))
                 
                 result["celery_pid"] = tmp.id

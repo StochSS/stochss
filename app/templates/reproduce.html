@@ -8,18 +8,22 @@
             <h2>Data Reproduction</h2>
             </br>
 
-            <form class ="well form" action="/reproduce" method="post">
+            <!--<form class ="well form" action="/reproduce" method="post">
                 <h3>Reproduce Job Results</h3><br/>
                 {% if status == False %}
                     <span style="color: red" class="create_msg">{{msg}}</span></br></br>
                 {% endif %}
                 Enter Job UUID: <input type="text" name="id_box">
                 <button type="submit" class="btn btn-primary btn-large" name="reproduce">Reproduce</button>
-            </form> 
-
+            </form>
+            
             {% if r_id %}
                 Reproducing {{r_id}}<br/>
-            {% endif %}
+            {% endif %}-->
+            <span id="msg"></span>
+            </br>
+            </br>
+            
         <div class="well">
             <h3>My Finished Jobs</h3><br/>
             {% if all_jobs %}
@@ -40,10 +44,11 @@
                                     <span>{{job.name}}</span>
                                 </td>
                                 <td>
-                                    <span>{{job.id}}</span>
+                                    <span>{{job.uuid}}</span>
                                 </td>
                                 <td>
-                                    <a href="/rerun?id={{job.id}}">Reproduce Results</a>
+                                    <a href="javascript:void(0)" onclick="rerun('/reproduce?job_type=stoch_job&name={{job.name}}');">Reproduce Results</a>
+                                    <!--<a href="/rerun?name={{job.name}}">Reproduce Results</a>-->
                                 </td>
                             </tr>
                         {% endfor %}
@@ -69,10 +74,10 @@
                                     <span>{{job.name}}</span>
                                 </td>
                                 <td>
-                                    <span>{{job.id}}</span>
+                                    <span>{{job.uuid}}</span>
                                 </td>
                                 <td>
-                                    <a href="/rerun?id={{job.id}}">Reproduce Results</a>
+                                    <a href="/rerun?name={{job.name}}">Reproduce Results</a>
                                 </td>
                             </tr>
                         {% endfor %}
@@ -90,4 +95,11 @@
     </div>
 </div>
 
+{% endblock %}
+
+{% block jscontent %}
+<script type="text/javascript" src = "/static/js/underscore.js"></script>
+<script type="text/javascript" src = "/static/utils.js"></script>
+<script type="text/javascript" src = "/static/js/backbone.js"></script>
+<script type="text/javascript" src = "/static/js/reproduce.js"></script>
 {% endblock %}

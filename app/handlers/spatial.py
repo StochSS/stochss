@@ -525,7 +525,7 @@ class SpatialPage(BaseHandler):
             os.environ["AWS_ACCESS_KEY_ID"] = self.user_data.getCredentials()['EC2_ACCESS_KEY']
             os.environ["AWS_SECRET_ACCESS_KEY"] = self.user_data.getCredentials()['EC2_SECRET_KEY']
             service = backend.backendservice.backendservices()
-            cloud_result = service.executeTask(cloud_params)
+            cloud_result = service.executeTask(cloud_params, os.environ["AWS_ACCESS_KEY_ID"], os.environ["AWS_SECRET_ACCESS_KEY"])
             if not cloud_result["success"]:
                 e = cloud_result["exception"]
                 self.response.write(json.dumps({"status" : False,

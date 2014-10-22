@@ -9,6 +9,7 @@ sys.path.append(os.path.join(os.path.dirname(__file__), '../lib/billiard'))
 sys.path.append(os.path.join(os.path.dirname(__file__), '../lib/anyjson'))
 sys.path.append(os.path.join(os.path.dirname(__file__), '../lib/pytz'))
 sys.path.append(os.path.join(os.path.dirname(__file__), '../lib/cloudtracker'))
+
 #print str(sys.path)
 from celery import Celery, group
 
@@ -461,18 +462,33 @@ def with_temp_file(file_names):
         yield file_handle
 
 @celery.task(name='stochss')
-def task(taskid,params):
-  ''' This is the actual work done by a task worker '''
+def task(taskid,params, access_key, secret_key):
+  ''' 
+  This is the actual work done by a task worker 
+  
+  params    should contain at least 'bucketname'
+  
+  
+  '''
+    
   try:
-        
+      
+      
       global THOME
       global STOCHKIT_DIR
       global ODE_DIR
       
+      bucketname = params['bucketname']
+      if_tracking = False
       try:
         # Initialize cloudtracker with the task's UUID
-        ct = CloudTracker(params['access_key'], params['secret_key'], taskid, 'stochss-'+(params['access_key'].lower()))
-        ct.init_tracking('ami-0836e860')
+        ct = CloudTracker(access_key, secret_key, taskid, bucketname)
+        if_tracking = ct.if_tracking()
+        
+        logging.info('This is the first time to execute the job? '.format(if_tracking))
+        if if_tracking:
+            ct.track_input(params)
+        
       except Exception:
         print "Error initializing tracking"
 
@@ -499,27 +515,24 @@ def task(taskid,params):
       stderr = "output/%s/stderr.log" % uuidstr
 
 
-      res['pid'] = taskid
-      filepath = "output/%s//" % (uuidstr)
-      absolute_file_path = os.path.abspath(filepath)
+      
       
       exec_str = ''
       if job_type == 'stochkit':
           # The following executiong string is of the form : stochkit_exec_str = "~/StochKit/ssa -m ~/output/%s/dimer_decay.xml -t 20 -i 10 -r 1000" % (uuidstr)
           exec_str = "{0}/{1} -m {2} --force --out-dir output/{3}/result 2>{4} > {5}".format(STOCHKIT_DIR, paramstr, xmlfilepath, uuidstr, stderr, stdout)
       elif job_type == 'stochkit_ode' or job_type == 'sensitivity':
+          logging.info('SENSITIVITY JOB!!!')
           exec_str = "{0}/{1} -m {2} --force --out-dir output/{3}/result 2>{4} > {5}".format(ODE_DIR, paramstr, xmlfilepath, uuidstr, stderr, stdout)
       elif job_type == 'spatial':
           cmd = "chown -R ubuntu output/{0}".format(uuidstr)
           print cmd
           os.system(cmd)
           exec_str = "sudo -E -u ubuntu {0}/pyurdme_wrapper.py {1} {2} {3} {4} {5} 2>{6} > {7}".format(THOME, xmlfilepath, 'output/{0}/results'.format(uuidstr), params['simulation_algorithm'], params['simulation_realizations'], params['simulation_seed'], stderr, stdout)
+     
       
-      try:
-        ct.track_input(exec_str)
-      except Exception,e:
-        print "CloudTracker Error: track_input"
-        print e
+      
+      
       
       print "======================="
       print " Command to be executed : "
@@ -532,22 +545,15 @@ def task(taskid,params):
       
       results = os.listdir("output/{0}/result".format(uuidstr))
       if 'stats' in results and os.listdir("output/{0}/result/stats".format(uuidstr)) == ['.parallel']:
-          raise Exception("The compute node can not handle a job of this size.")
+          raise Exception("The compute node can not handle a job of this size.")     
       
-      try:
-        ct.track_output(absolute_file_path)
-      except Exception,e:
-        print "CloudTracker Error: track_output"
-        print e
-      
-      
-      
-        
+      res['pid'] = taskid
+      filepath = "output/%s//" % (uuidstr)
+      absolute_file_path = os.path.abspath(filepath)  
       print 'generating tar file'
       create_tar_output_str = "tar -zcvf output/{0}.tar output/{0}".format(uuidstr)
       print create_tar_output_str
-      logging.debug("following cmd to be executed %s" % (create_tar_output_str))
-      bucketname = params['bucketname']
+      
       copy_to_s3_str = "python {2}/sccpy.py output/{0}.tar {1}".format(uuidstr,bucketname,THOME)
       data = {'status':'active','message':'Task finished. Generating output.'}
       updateEntry(taskid, data, "stochss")
@@ -566,6 +572,15 @@ def task(taskid,params):
       diff = timeended - timestarted
       res['time_taken'] = "{0} seconds and {1} microseconds ".format(diff.seconds, diff.microseconds)
       updateEntry(taskid, res, "stochss")
+      
+        
+      try:
+          if if_tracking:
+              ct.track_output(absolute_file_path)
+      except Exception,e:
+        print "CloudTracker Error: track_output"
+        print e
+      
   except Exception,e:
       expected_output_dir = "output/%s" % uuidstr
       # First check for existence of output directory
