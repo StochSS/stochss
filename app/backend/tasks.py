@@ -36,6 +36,7 @@ from datetime import datetime
 from multiprocessing import Process
 import tempfile, time
 import signal
+import pickle
 from cloudtracker import CloudTracker 
 
 class CelerySingleton(object):
@@ -53,7 +54,7 @@ class CelerySingleton(object):
     
     def configure(self):
         reload(celeryconfig)
-        self.app.config_from_object('celeryconfig')
+        self.app.config_from_object(celeryconfig)
 
 celery_config = CelerySingleton()
 celery_config.configure()
@@ -506,6 +507,7 @@ def task(taskid,params, access_key, secret_key):
         os.system(create_dir_str)
       create_dir_str = "mkdir -p output/%s/result " % uuidstr
       os.system(create_dir_str)
+
       filename = "output/{0}/{0}.xml".format(uuidstr)
       f = open(filename,'w')
       f.write(params['document'])
@@ -550,10 +552,17 @@ def task(taskid,params, access_key, secret_key):
       res['pid'] = taskid
       filepath = "output/%s//" % (uuidstr)
       absolute_file_path = os.path.abspath(filepath)  
+      
+      try:
+          if if_tracking:
+              ct.track_output(absolute_file_path)
+      except Exception,e:
+        print "CloudTracker Error: track_output"
+        print e
+        
       print 'generating tar file'
       create_tar_output_str = "tar -zcvf output/{0}.tar output/{0}".format(uuidstr)
-      print create_tar_output_str
-      
+      print create_tar_output_str      
       copy_to_s3_str = "python {2}/sccpy.py output/{0}.tar {1}".format(uuidstr,bucketname,THOME)
       data = {'status':'active','message':'Task finished. Generating output.'}
       updateEntry(taskid, data, "stochss")
@@ -572,15 +581,7 @@ def task(taskid,params, access_key, secret_key):
       diff = timeended - timestarted
       res['time_taken'] = "{0} seconds and {1} microseconds ".format(diff.seconds, diff.microseconds)
       updateEntry(taskid, res, "stochss")
-      
-        
-      try:
-          if if_tracking:
-              ct.track_output(absolute_file_path)
-      except Exception,e:
-        print "CloudTracker Error: track_output"
-        print e
-      
+
   except Exception,e:
       expected_output_dir = "output/%s" % uuidstr
       # First check for existence of output directory

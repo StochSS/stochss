@@ -5,12 +5,6 @@ from s3_helper import *
 # Helper functions #
 ####################
 
-''' Helper function to turn a dictionary into a newline-separated string '''
-def generate_manifest(metadata):
-	manifest = ""
-	for k in metadata:
-		manifest = manifest + k + " : " + str(metadata[k]) + "\n"
-	return manifest
 
 ''' Helper function to parse an execution string for an executable name, input parameters, and files '''
 def parse_executable(exec_str):
@@ -45,22 +39,6 @@ def parse_executable(exec_str):
 
 	return executable, inputs, files
 
-''' Helper function to extract the job inputs and other provenance information from a manifest file '''
-def parse_manifest(manifest):
-	lines = manifest.split('\n')
-	params = {}
-	last_key = ''
-	for l in lines:
-		if l.find(":") != -1:
-			tokens = l.split(' : ', 1)
-			# Indicates the start of an input parameter
-			last_key = tokens[0]
-			params[last_key] = tokens[1]
-		else:
-			params[last_key] += l
-
-	return params
-
 ''' Helper function to generate a user-data script for CloudInit '''
 ''' The script is a bash scrip that must download the input files from S3 and run the executable with inputs '''
 def generate_launch_script(uuid, bucketname, params, inputs, files):
@@ -81,6 +59,7 @@ def generate_launch_script(uuid, bucketname, params, inputs, files):
 
 ''' Sum the file sizes of every regular file in the output directory '''
 def get_output_size(path):
+	
 	if not path.endswith('/'):
 		path += '/'
 
@@ -123,10 +102,8 @@ class CloudTracker:
 	''' Input files are stored alongside the manifest file in a subfolder called files/ '''
 	def track_input(self, params):
 		print "Tracking inputs..."
-		manifest = generate_manifest(params)
-		print manifest
 		# create the manifest file
-		create_file(self.bucketname, self.uuid + "/manifest", manifest, self.access_key, self.secret_key)
+		create_file(self.bucketname, self.uuid + "/manifest", params, self.access_key, self.secret_key)
 		
 		self.timer = datetime.now()
 		
@@ -139,10 +116,8 @@ class CloudTracker:
 		# Calculate the total size of the job output
 		output_size = get_output_size(output_dir)
 		data = { "output_dir" : output_dir, "exec_time" : exec_time, "output_size" : output_size }
-		manifest = generate_manifest(data)
-		print manifest
 		# Updates the manifest file
-		add_to_file(self.bucketname, self.uuid + "/manifest", manifest, self.access_key, self.secret_key)
+		add_to_file(self.bucketname, self.uuid + "/manifest", data, self.access_key, self.secret_key)
 
 	''' Launches a new EC2 instance with the provided security credentials provided '''
 	''' Gathers provenance information from storage based on provided uuid '''
@@ -151,8 +126,7 @@ class CloudTracker:
 
 		print "running job with uuid " + self.uuid
 		# Retrieve manifest file from S3 bucket
-		manifest = get_file(self.bucketname, self.uuid + "/manifest", self.access_key, self.secret_key).get_contents_as_string()
-		params = parse_manifest(manifest.strip())
+		params = get_metadata(self.bucketname, self.uuid + "/manifest", self.access_key, self.secret_key)
 		print params
 
 		return params

@@ -6,6 +6,14 @@ from boto.s3.key import Key
 from boto.s3.connection import S3Connection
 from datetime import datetime
 import logging
+import pickle
+
+
+def generate_manifest(metadata):
+	return pickle.dumps(metadata)
+
+def parse_manifest(manifest):
+	return pickle.loads(manifest)
 
 ################################
 ### Currently used functions ###
@@ -46,17 +54,21 @@ def upload_file(bucketname, filepath, filename, aws_access_key='', aws_secret_ke
 
 ''' Add a new file to the specified bucket with the specified filename, 
     setting its content from the supplied contents string '''
-def create_file(bucketname, filename, contents, aws_access_key='', aws_secret_key=''):
+def create_file(bucketname, filename, params, aws_access_key='', aws_secret_key=''):
 	bucket = get_bucket(bucketname, aws_access_key, aws_secret_key)
 	k = Key(bucket)
 	k.key = filename
+	contents = generate_manifest(params)
 	k.set_contents_from_string(contents)
 
 ''' Append current contents of the specified file with content from the specified string '''
-def add_to_file(bucketname, filename, contents, aws_access_key='', aws_secret_key=''):
+def add_to_file(bucketname, filename, params, aws_access_key='', aws_secret_key=''):
 	bucket = get_bucket(bucketname, aws_access_key, aws_secret_key)
 	k = bucket.get_key(filename)
-	k.set_contents_from_string(k.get_contents_as_string() + contents)
+	old_contents = parse_manifest(k.get_contents_as_string())
+	old_contents.update(params)
+	contents = generate_manifest(old_contents)
+	k.set_contents_from_string(contents)
 
 ''' Add the key-value pair as metadata on the specified filen '''
 def add_metadata(bucketname, filename, key, value, aws_access_key='', aws_secret_key=''):
@@ -96,6 +108,11 @@ def get_all_files(bucketname, filename, aws_access_key='', aws_secret_key=''):
 def get_file(bucketname, filename, aws_access_key='', aws_secret_key=''):
 	bucket = get_bucket(bucketname,aws_access_key,aws_secret_key)
 	return bucket.get_key(filename)
+
+def get_metadata(bucketname, filename, aws_access_key='', aws_secret_key=''):
+	file = get_file(bucketname, filename, aws_access_key, aws_secret_key).get_contents_as_string()
+	params = parse_manifest(file.strip())
+	return params
 
 
 #########################

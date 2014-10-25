@@ -510,6 +510,7 @@ class SpatialPage(BaseHandler):
                 return self.response.write(json.dumps(result))
                     ####
             pymodel = self.construct_pyurdme_model(data)
+            #logging.info('DATA: {0}'.format(data))
             #####
             cloud_params = {
                 "job_type": "spatial",
@@ -520,7 +521,7 @@ class SpatialPage(BaseHandler):
                 "paramstring" : '',
             }
             cloud_params['document'] = pickle.dumps(pymodel)
-
+            #logging.info('PYURDME: {0}'.format(cloud_params['document']))
             # Set the environmental variables
             os.environ["AWS_ACCESS_KEY_ID"] = self.user_data.getCredentials()['EC2_ACCESS_KEY']
             os.environ["AWS_SECRET_ACCESS_KEY"] = self.user_data.getCredentials()['EC2_SECRET_KEY']
@@ -545,7 +546,7 @@ class SpatialPage(BaseHandler):
             job.modelName = pymodel.name
             job.resource = "cloud"
             job.cloud_id = taskid
-            job.celery_pid = celery_task_id
+            job.celeryPID = celery_task_id
             job.status = "Running"
             job.put()
 

@@ -6,9 +6,11 @@ import datetime
 from google.appengine.ext import db
 from stochssapp import BaseHandler
 import sensitivity
+import spatial
 from cloudtracker import CloudTracker
 import logging
 from backend import tasks
+from backend import backendservice
 
 DEFAULT_BUCKET_NAME = ''
 
@@ -23,44 +25,58 @@ class DataReproductionPage(BaseHandler):
         
     def post(self):
         
-        job_type = self.request.get('job_type')
+        self.response.content_type = 'application/json'
+        backend_services = backendservice.backendservices()
         
-        if job_type == 'stoch_job':
-            job_name = self.request.get('name')
+        compute_check_params = {
+                    "infrastructure": "ec2",
+                    "credentials": self.user_data.getCredentials(),
+                    "key_prefix": self.user.user_id()
+        }
+        if not self.user_data.valid_credentials or not backend_services.isOneOrMoreComputeNodesRunning(compute_check_params):
+            self.response.write(json.dumps({
+                    'status': False,
+                    'msg': 'You must have at least one active compute node to run in the cloud.'
+            }))
+            return
+        
+        job_type = self.request.get('job_type')
+        job_name = self.request.get('name')
 
-            logging.info('job name: '.format(job_name))
-            credentials = self.user_data.getCredentials()
-            
+        logging.info('job name: '.format(job_name))
+        credentials = self.user_data.getCredentials()
+        os.environ["AWS_ACCESS_KEY_ID"] = credentials['EC2_ACCESS_KEY']
+        os.environ["AWS_SECRET_ACCESS_KEY"] = credentials['EC2_SECRET_KEY']
+        access_key = credentials['EC2_ACCESS_KEY']
+        secret_key = credentials['EC2_SECRET_KEY']
+          
+        
+        if job_type == 'stochkit':
+              
             job = db.GqlQuery("SELECT * FROM StochKitJobWrapper WHERE user_id = :1 AND name = :2", self.user.user_id(),job_name).get()       
             uuid = job.stochkit_job.pid
             
         
             try:        
-                time = datetime.datetime.now()
-                os.environ["AWS_ACCESS_KEY_ID"] = credentials['EC2_ACCESS_KEY']
-                os.environ["AWS_SECRET_ACCESS_KEY"] = credentials['EC2_SECRET_KEY']
-                access_key = credentials['EC2_ACCESS_KEY']
-                secret_key = credentials['EC2_SECRET_KEY']
+                logging.info('start to rerun the job {0}'.format(str(uuid)))
+                # Set up CloudTracker with user credentials and specified UUID to rerun the job
                 ct = CloudTracker(access_key, secret_key, str(uuid), self.user_data.getBucketName())
-                
-                #if need_tracking, it means that there is no provenace.    
                 has_prov = not ct.if_tracking() 
                 # If there is no provenance data for this job, report an error to the user
                 if not has_prov:
                     result = {'status':False,'msg':"The job with this ID does not exist or cannot be reproduced."}
+                    self.response.content_type = 'application/json'    
+                    self.response.write(json.dumps(result))
                     return
                 
-                logging.info('start to rerun the job {0}'.format(str(uuid)))
-                # Set up CloudTracker with user credentials and specified UUID to rerun the job
                 params = ct.get_input()
-            
-                tmp = tasks.task.delay(uuid, params, access_key, secret_key)  #calls task(taskid,params,access_key,secret_key)
-                celery_task_id = tmp.id
-                logging.info("executeTask :  result of task : %s", str(tmp.id))
+                logging.info("OUT_PUT SIZE: {0}".format(params['output_size']))
+                
+                time = datetime.datetime.now()
+                celery_task = tasks.task.delay(uuid, params, access_key, secret_key)  #calls task(taskid,params,access_key,secret_key)
                       
-                job.stochkit_job.pid = uuid
                 # The celery_pid is the Celery Task ID.
-                job.stochkit_job.celery_pid = celery_task_id
+                job.stochkit_job.celery_pid = celery_task.id
                 job.stochkit_job.status = 'Running'
                 job.stochkit_job.output_location = None
             
@@ -73,10 +89,74 @@ class DataReproductionPage(BaseHandler):
             except Exception,e:
                 result = {'status':False,'msg':'Cloud execution failed: '+str(e)}
             
-            self.response.content_type = 'application/json'    
+                
             self.response.write(json.dumps(result))
             return
         
+        elif job_type == 'sensitivity':
+            job = sensitivity.SensitivityJobWrapper.all().filter('userId =', self.user.user_id()).filter('jobName =', job_name).get()
+            uuid = job.cloudDatabaseID
+            
+            try:
+                ct = CloudTracker(access_key, secret_key, str(uuid), self.user_data.getBucketName())
+                has_prov = not ct.if_tracking() 
+                # If there is no provenance data for this job, report an error to the user
+                if not has_prov:
+                    result = {'status':False,'msg':"The job with this ID does not exist or cannot be reproduced."}
+                    self.response.content_type = 'application/json'    
+                    self.response.write(json.dumps(result))
+                    return
+                
+                params = ct.get_input()
+                
+                time = datetime.datetime.now()
+                celery_task = tasks.task.delay(uuid, params, access_key, secret_key)  #calls task(taskid,params,access_key,secret_key)
+                
+                job.status = "Running"    
+                job.celeryPID = celery_task.id
+                job.startTime = time.strftime("%Y-%m-%d-%H-%M-%S")
+                job.put()
+                result = {'status':True,'msg':'Job rerun submitted sucessfully.'}
+            
+            except Exception,e:
+                result = {'status':False,'msg':'Cloud execution failed: '+str(e)}
+            
+                
+            self.response.write(json.dumps(result))
+            return  
+        
+        elif job_type == 'spatial':
+            job = spatial.SpatialJobWrapper.all().filter('userId =', self.user.user_id()).filter('jobName =', job_name).get()
+            uuid = job.cloud_id  
+            
+            try:
+                ct = CloudTracker(access_key, secret_key, str(uuid), self.user_data.getBucketName())
+                has_prov = not ct.if_tracking() 
+                # If there is no provenance data for this job, report an error to the user
+                if not has_prov:
+                    result = {'status':False,'msg':"The job with this ID does not exist or cannot be reproduced."}
+                    self.response.content_type = 'application/json'    
+                    self.response.write(json.dumps(result))
+                    return
+                
+                params = ct.get_input()
+                
+                time = datetime.datetime.now()
+                celery_task = tasks.task.delay(uuid, params, access_key, secret_key)  #calls task(taskid,params,access_key,secret_key)
+                
+                job.status = "Running"    
+                job.celeryPID = celery_task.id
+                job.startTime = time.strftime("%Y-%m-%d-%H-%M-%S")
+                job.put()
+                result = {'status':True,'msg':'Job rerun submitted sucessfully.'}
+            
+            except Exception,e:
+                result = {'status':False,'msg':'Cloud execution failed: '+str(e)}
+            
+                
+            self.response.write(json.dumps(result))
+            return
+            
         else:
             context = self.getContext()
             self.render_response('reproduce.html', **context)
@@ -120,10 +200,25 @@ class DataReproductionPage(BaseHandler):
                 number = len(jobs) - number
                 if job.status == "Finished":
                     allSensJobs.append({ "name" : job.jobName,
-                                         "id" : job.cloudDatabaseID})
+                                         "uuid" : job.cloudDatabaseID})
         
         context['allSensJobs']=allSensJobs
-    
+        
+        allSpatialJobs = []
+        allSpatialQuery = spatial.SpatialJobWrapper.all().filter('userId =', self.user.user_id())
+        
+        if allSpatialQuery != None:
+            jobs = list(allSpatialQuery.run())
+            jobs = sorted(jobs, key = lambda x : (datetime.datetime.strptime(x.startTime, '%Y-%m-%d-%H-%M-%S') if hasattr(x, 'startTime') and x.startTime != None else ''), reverse = True)
+            
+            for number, job in enumerate(jobs):
+                number = len(jobs) - number
+                if job.status == "Finished":
+                    allSpatialJobs.append({ "name" : job.jobName,
+                                            "uuid" : job.cloud_id})
+        
+        context['allSpatialJobs']=allSpatialJobs
+
         return dict(result,**context)
 
         
