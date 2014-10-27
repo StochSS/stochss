@@ -39,6 +39,9 @@ class PendingUsersList(db.Model):
         if self.approved_users and (user_email in self.approved_users):
             return True
         return False
+
+    def user_exists(self, user_email):
+        return bool(User.get_by_auth_id(user_email))
     
     def add_user_to_approval_waitlist(self, user_email):
         """
@@ -46,8 +49,10 @@ class PendingUsersList(db.Model):
          as long as the given user_email is not a current user's email.
         Returns False if email address already in list, else True.
         """
-        if (self.users_waiting_approval and (user_email in self.users_waiting_approval)) or User.get_by_auth_id(user_email):
+        if (self.users_waiting_approval and (user_email in self.users_waiting_approval)):
+            print "FALSE"
             return False
+
         self.users_waiting_approval.append(user_email)
         self.put()
         return True
@@ -107,7 +112,6 @@ class AdminPage(BaseHandler):
 
         context = {
             'active_users': users,
-            'approved_users': pending_users_list.approved_users,
             'users_waiting_approval': pending_users_list.users_waiting_approval
         }
         self.render_response('admin.html', **context)
@@ -125,9 +129,7 @@ class AdminPage(BaseHandler):
         }
         failure_message = ''
         if action in ['approve', 'approve1']:
-            result = self._approve_user(email, action == 'approve1')
-        elif action == 'deny':
-            result = self._deny_user(email)
+            result = self._approve_user(email, True)
         elif action == 'revoke':
             result = self._revoke_user(email)
         elif action == 'delete':
@@ -151,17 +153,12 @@ class AdminPage(BaseHandler):
         pending_users_list = PendingUsersList.shared_list()
         success = pending_users_list.approve_user(email, awaiting_approval)
         return success
-    
-    def _deny_user(self, email):
-        """ Remove user from waiting approval list """
-        pending_users_list = PendingUsersList.shared_list()
-        pending_users_list.remove_user_from_approval_waitlist(email)
-        return True
         
     def _revoke_user(self, email):
         """ Remove user from approved users list """
         pending_users_list = PendingUsersList.shared_list()
         pending_users_list.remove_user_from_approved_list(email)
+        pending_users_list.add_user_to_approval_waitlist(email)
         return True
 
     def _delete_user(self, email):
