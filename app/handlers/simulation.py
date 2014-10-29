@@ -8,6 +8,7 @@ import tempfile,sys
 from google.appengine.ext import db
 import pickle
 import threading
+import random
 import subprocess
 import traceback
 import logging
@@ -654,6 +655,11 @@ class SimulatePage(BaseHandler):
             stime = params['time']
             realizations = params['realizations']
             increment = params['increment']
+
+            if int(params['seed']) < 0:
+                random.seed()
+                params['seed'] = random.randint(0, 2147483647)
+
             seed = params['seed']
 
             # Assemble the argument list
@@ -680,9 +686,8 @@ class SimulatePage(BaseHandler):
                 if "keep-histograms" in params:
                     args+=' --keep-histograms'
                 
-                if int(seed) >= 0:
-                    args+=' --seed '
-                    args+=str(seed)
+                args+=' --seed '
+                args+=str(seed)
             else:
                 params['job_type'] = 'stochkit_ode'
                 executable = "stochkit_ode.py"
@@ -787,8 +792,12 @@ class SimulatePage(BaseHandler):
 
                 args += ' --realizations {0} '.format(params['realizations'])
                 args += ' --keep-trajectories '
-                if int(params['seed']) >= 0:
-                    args += '--seed {0} '.format(params['seed'])
+
+                if int(params['seed']) < 0:
+                    random.seed()
+                    params['seed'] = random.randint(0, 2147483647)
+
+                args += '--seed {0} '.format(params['seed'])
             else:
                 executable = "{0}/../../ode/stochkit_ode.py".format(path)
 
