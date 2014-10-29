@@ -38,11 +38,23 @@ def if_file_exist(bucketname, filename, aws_access_key='', aws_secret_key=''):
 	bucket = get_bucket(bucketname, aws_access_key, aws_secret_key)
 	k = Key(bucket, filename)
 	if k.exists():
-		logging.info('no')
 		return True
 	else:
-		logging.info('yes')
-		return False	
+		return False
+	
+def delete_file(bucketname, filename, aws_access_key='', aws_secret_key=''):
+	if not if_file_exist(bucketname, filename, aws_access_key, aws_secret_key):
+		return 
+	bucket = get_bucket(bucketname, aws_access_key, aws_secret_key)
+	k = Key(bucket)
+	k.key = filename
+	bucket.delete_key(k)
+	
+def delete_folder(bucketname, filepath, aws_access_key='', aws_secret_key=''):
+	bucket = get_bucket(bucketname, aws_access_key, aws_secret_key)
+	logging.info(bucket)
+	for key in bucket.list(prefix=filepath):
+		key.delete()
 
 ''' Add a new file to the specified bucket with the specified filename, 
     setting its content from the file at the specified filepath '''

@@ -20,6 +20,8 @@ from stochssapp import BaseHandler
 from modeleditor import StochKitModelWrapper, ObjectProperty
 
 from backend.backendservice import backendservices
+sys.path.append(os.path.join(os.path.dirname(__file__), '../lib/cloudtracker'))
+from s3_helper import *
 
 import exportimport
 
@@ -68,9 +70,12 @@ class StochKitJobWrapper(db.Model):
     attributes = ObjectProperty()
     stochkit_job = ObjectProperty()
     startDate = db.StringProperty()
+    output_stored = db.StringProperty()
 
     stdout = db.StringProperty()
     stderr = db.StringProperty()
+    
+    cloud_id = db.StringProperty()
 
     def delete(self, handler):
         job = self
@@ -82,8 +87,14 @@ class StochKitJobWrapper(db.Model):
         if job.stochkit_job.zipFileName:
             if os.path.exists(job.stochkit_job.zipFileName):
                 os.remove(job.stochkit_job.zipFileName)
+        
+#         #delete the ouput results of execution locally, if exists.       
+#         if stochkit_job.output_location:
+#             if os.path.exists(stochkit_job.output_location):
+#                 shutil.rmtree(stochkit_job.output_location)
 
         if stochkit_job.resource == 'Local':
+            output_path = os.path.join(os.path.dirname(__file__), '../output/joblib/boto')
             service.deleteTaskLocal([stochkit_job.pid])
             
             time.sleep(0.25)
@@ -94,6 +105,20 @@ class StochKitJobWrapper(db.Model):
             os.environ["AWS_ACCESS_KEY_ID"] = db_credentials['EC2_ACCESS_KEY']
             os.environ["AWS_SECRET_ACCESS_KEY"] = db_credentials['EC2_SECRET_KEY']
             service.deleteTasks([(stochkit_job.celery_pid,stochkit_job.pid)])
+            
+            try:
+                user_data = db.GqlQuery("SELECT * FROM UserData WHERE ec2_access_key = :1 AND ec2_secret_key = :2", db_credentials['EC2_ACCESS_KEY'], db_credentials['EC2_SECRET_KEY']).get()
+                
+                bucketname = user_data.S3_bucket_name
+                logging.info(bucketname)
+                #delete the folder that contains the replay sources
+                delete_folder(bucketname, stochkit_job.pid, db_credentials['EC2_ACCESS_KEY'], db_credentials['EC2_SECRET_KEY'])
+                logging.info('delete the rerun source folder {1} in bucket {0}'.format(bucketname, stochkit_job.pid))
+                #delete the output tar file
+                delete_file(bucketname, 'output/'+stochkit_job.pid+'.tar', db_credentials['EC2_ACCESS_KEY'], db_credentials['EC2_SECRET_KEY'])
+                logging.info('delete the output tar file output/{1}.tar in bucket {0}'.format(bucketname, stochkit_job.pid))
+            except:
+                raise Exception('fail to delete cloud output or rerun sources.')
 
         if stochkit_job.output_location is not None and os.path.exists(str(stochkit_job.output_location)):
             shutil.rmtree(stochkit_job.output_location)
@@ -714,6 +739,8 @@ class SimulatePage(BaseHandler):
             stochkit_job_db.name = stochkit_job.name
             stochkit_job_db.stochkit_job = stochkit_job
             stochkit_job_db.modelName = model.name
+            stochkit_job_db.output_stored = 'True'
+            stochkit_job_db.cloud_id = taskid
             stochkit_job_db.put()
             result = {'status':True,'msg':'Job submitted sucessfully.'}
                 

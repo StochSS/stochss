@@ -4,6 +4,7 @@ import stochss
 import exportimport
 import backend.backendservice
 
+
 import mesheditor
 
 from google.appengine.ext import db
@@ -11,7 +12,7 @@ from google.appengine.ext import db
 import copy
 import fileserver
 import json
-import os
+import os, sys
 import re
 import signal
 import shlex
@@ -25,6 +26,9 @@ import pyurdme
 import pickle
 import numpy
 import traceback
+import shutil
+sys.path.append(os.path.join(os.path.dirname(__file__), '../lib/cloudtracker'))
+from s3_helper import *
 
 class SpatialJobWrapper(db.Model):
     # These are all the attributes of a job we use for local storage
@@ -46,6 +50,7 @@ class SpatialJobWrapper(db.Model):
     cloudDatabaseID = db.StringProperty()
     celeryPID = db.StringProperty()
     exception_message = db.StringProperty()
+    output_stored = db.StringProperty()
 
     # More attributes can obvs. be added
     # The delete operator here is a little fancy. When the item gets deleted from the GOogle db, we need to go clean up files stored locally and remotely
@@ -56,11 +61,30 @@ class SpatialJobWrapper(db.Model):
             if os.path.exists(self.zipFileName):
                 os.remove(self.zipFileName)
 
-        self.stop(credentials=credentials)
-        
+        self.stop(credentials=credentials)        
         #service.deleteTaskLocal([self.pid])
-
         super(SpatialJobWrapper, self).delete()
+        
+        #delete the local output
+        output_path = os.path.join(os.path.dirname(__file__), '../output/')
+        if os.path.exists(str(output_path)+self.uuid):
+            shutil.rmtree(str(output_path)+self.uuid)
+        
+        if self.resource.lower() == "cloud":
+            try:
+                user_data = db.GqlQuery("SELECT * FROM UserData WHERE ec2_access_key = :1 AND ec2_secret_key = :2", credentials['AWS_ACCESS_KEY_ID'], credentials['AWS_SECRET_ACCESS_KEY']).get()
+                
+                bucketname = user_data.S3_bucket_name
+                logging.info(bucketname)
+                #delete the folder that contains the replay sources
+                delete_folder(bucketname, self.cloud_id, credentials['AWS_ACCESS_KEY_ID'], credentials['AWS_SECRET_ACCESS_KEY'])
+                logging.info('delete the rerun source folder {1} in bucket {0}'.format(bucketname, self.cloud_id))
+                #delete the output tar file
+                delete_file(bucketname, 'output/'+self.cloud_id+'.tar', credentials['AWS_ACCESS_KEY_ID'], credentials['AWS_SECRET_ACCESS_KEY'])
+                logging.info('delete the output tar file output/{1}.tar in bucket {0}'.format(bucketname, self.cloud_id))
+            except:
+                raise Exception('fail to delete cloud output or rerun sources.')  
+        
 
     # Stop the job!
     def stop(self, credentials=None):
@@ -548,6 +572,7 @@ class SpatialPage(BaseHandler):
             job.cloud_id = taskid
             job.celeryPID = celery_task_id
             job.status = "Running"
+            job.output_stored = "True"
             job.put()
 
             self.response.write(json.dumps({"status" : True,

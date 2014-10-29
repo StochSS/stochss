@@ -51,6 +51,7 @@ class SensitivityJobWrapper(db.Model):
     celeryPID = db.StringProperty()
     outputURL = db.StringProperty()
     exceptionMessage = db.StringProperty()
+    output_stored = db.StringProperty()
 
     def delete(self):
         if self.outData:
@@ -241,7 +242,12 @@ class SensitivityPage(BaseHandler):
                     "key_prefix": self.user.user_id()
                 }
                 if self.user_data.valid_credentials and backend_services.isOneOrMoreComputeNodesRunning(compute_check_params):
-                    job = self.runCloud(data)
+                    job, cloud_result = self.runCloud(data)
+                    if not job:
+                         e = cloud_result["exception"]
+                         self.response.write(json.dumps({"status" : False,
+                                            "msg" : 'Cloud execution failed: '+str(e)}))
+                         return
                 else:
                     return self.response.write(json.dumps({
                         "status": False,
@@ -341,9 +347,13 @@ class SensitivityPage(BaseHandler):
         # Send the task to the backend
         cloud_result = service.executeTask(params, db_credentials['EC2_ACCESS_KEY'], db_credentials['EC2_SECRET_KEY'])
         # if not cloud_result["success"]:
+        if not cloud_result["success"]:
+            return None, cloud_result
+            
         job.cloudDatabaseID = cloud_result["db_id"]
         job.celeryPID = cloud_result["celery_pid"]
         job.outData = None
         job.zipFileName = None
+        job.output_stored = 'True'
         job.put()
-        return job
+        return job, None

@@ -195,9 +195,11 @@ class StatusPage(BaseHandler):
                 job.put()
 
                 all_jobs.append({ "name" : stochkit_job.name,
+                                  "uuid": job.cloud_id, 
                                   "status" : stochkit_job.status,
                                   "resource" : stochkit_job.resource,
                                   "execType" : stochkit_job.exec_type,
+                                  "output_stored": job.output_stored,
                                   "id" : job.key().id(),
                                   "number" : number})
         
@@ -261,6 +263,9 @@ class StatusPage(BaseHandler):
                 
                 job.put()   
                 allSensJobs.append({ "name" : job.jobName,
+                                     "uuid" : job.cloudDatabaseID,
+                                     "output_stored": job.output_stored,
+                                     "resource": job.resource,
                                      "status" : job.status,
                                      "id" : job.key().id(),
                                      "number" : number})
@@ -438,6 +443,9 @@ class StatusPage(BaseHandler):
 
                 allSpatialJobs.append({ "status" : job.status,
                                         "name" : job.jobName,
+                                        "uuid" : job.cloud_id,
+                                        "output_stored": job.output_stored,
+                                        "resource": job.resource,
                                         "number" : number,
                                         "id" : job.key().id()})
         

@@ -24,6 +24,10 @@
                 {{help_modal|safe}}
             </h2>
             </br>
+            
+            <span id="msg"></span>
+            </br>
+            </br>
             <form class ="well form" action="/status" method="post">
                 {% if all_jobs %}
                 Deterministic/Stochastic Simulations:
@@ -34,10 +38,11 @@
                             <th width="40pt"></th>
                             <th width="40pt">Job #</th>
                             <th>Job name </th>
-                            <th>Job type </th>
-                            <th width="200pt">Status</th>
+                        
+                            <th width="100pt">Status</th>
                             
-                            <th width="200pt"></th>
+                            <th width="150pt">Result</th>
+                            <th width="150pt">Reproduce</th>
                         </tr>
                     </thead>
                     <tbody>
@@ -57,9 +62,6 @@
                                 <span>{{job.name}}</span>
                             </td>
                             <td>
-                                <span>{{job.execType}}</span>
-                            </td>
-                            <td>
                                 {% if job.status == "Running" or job.status == "Finished" %}
                                 <span style="color: green" class="create_msg">{{job.status}}</span>
                                 {% endif %}
@@ -72,12 +74,30 @@
                             </td>
                             <td>
                                 {% if job.status == "Finished" %}
+                                {% if job.resource == "local" or job.output_stored == "True"%}
                                 <a href="/simulate?id={{job.id}}">View results</a>
-                                {% else %}
-                                {% if job.status == "Failed" %}
+                                {% endif %}
+                                {% elif job.status == "Failed"%}
+                                {% if job.resource == "local" or job.output_stored == "True"%}
                                 <a href="/simulate?id={{job.id}}">Get Debugging Info</a>
                                 {% endif %}
                                 {% endif %}
+                            </td>
+                            
+                            <td>
+                                {% if job.resource == "Cloud" %}
+                                {% if job.status == "Finished" or job.status == "Failed"%}
+                                {% if job.output_stored == "True" %}
+                                <a href="javascript:void(0)" onclick="rerun('/reproduce?req_type=delOutput&job_type=stochkit&uuid={{job.uuid}}', 'delete');">Delete output</a>
+                                {% else %}
+                                <a href="javascript:void(0)" onclick="rerun('/reproduce?req_type=rerun&job_type=stochkit&uuid={{job.uuid}}', 'rerun');">Reproduce Results</a>
+                                {% endif%}
+                                {% endif%}
+                                {% else %}
+                                <span style="color: green" class="create_msg">(local)</span>
+                                {% endif%}
+                                
+                                
                             </td>
                         </tr>
                         
@@ -95,8 +115,10 @@
                             <th width="40pt"></th>
                             <th width="40pt">Job #</th>
                             <th>Job name </th>
-                            <th width="200pt">Status</th>                            
-                            <th width="200pt"></th>
+                            <th width="100pt">Status</th>
+                            
+                            <th width="150pt">Result</th>
+                            <th width="150pt">Reproduce</th>
                         </tr>
                     </thead>
                     <tbody>
@@ -128,12 +150,29 @@
                             </td>
                             <td>
                                 {% if job.status == "Finished" %}
+                                {% if job.resource == "local" or job.output_stored == "True"%}
                                 <a href="/spatial?id={{job.id}}">View results</a>
-                                {% else %}
-                                {% if job.status == "Failed" %}
+                                {% endif %}
+                                {% elif job.status == "Failed"%}
+                                {% if job.resource == "local" or job.output_stored == "True"%}
                                 <a href="/spatial?id={{job.id}}">Get Debugging Info</a>
                                 {% endif %}
                                 {% endif %}
+                            </td>
+                            <td>
+                                {% if job.resource == "cloud" %}
+                                {% if job.status == "Finished" or job.status == "Failed"%}
+                                {% if job.output_stored == "True" %}
+                                <a href="javascript:void(0)" onclick="rerun('/reproduce?req_type=delOutput&job_type=spatial&uuid={{job.uuid}}', 'delete');">Delete output</a>
+                                {% else %}
+                                <a href="javascript:void(0)" onclick="rerun('/reproduce?req_type=rerun&job_type=spatial&uuid={{job.uuid}}', 'rerun');">Reproduce Results</a>
+                                {% endif%}
+                                {% endif%}
+                                {% else %}
+                                <span style="color: green" class="create_msg">(local)</span>
+                                {% endif%}
+                                
+                                
                             </td>
                         </tr>
                         {% endfor %}
@@ -150,8 +189,11 @@
                             <th width="40pt"></th>
                             <th width="40pt">Job #</th>
                             <th>Job name </th>
-                            <th width="200pt">Status</th>
-                            <th width="200pt"></th>
+                            
+                            <th width="100pt">Status</th>
+                            
+                            <th width="150pt">Result</th>
+                            <th width="150pt">Reproduce</th>
                         </tr>
                     </thead>
                     <tbody>
@@ -177,13 +219,29 @@
                             </td>
                             <td>
                                 {% if job.status == "Finished" %}
+                                {% if job.resource == "local" or job.output_stored == "True"%}
                                 <a href="/sensitivity?id={{job.id}}">View results</a>
-                                {% else %}
-                                {% if job.status == "Failed" %}
+                                {% endif %}
+                                {% elif job.status == "Failed"%}
+                                {% if job.resource == "local" or job.output_stored == "True"%}
                                 <a href="/sensitivity?id={{job.id}}">Get Debugging Info</a>
                                 {% endif %}
                                 {% endif %}
                             </td>
+                            <td>
+                                {% if job.resource == "cloud" %}
+                                {% if job.status == "Finished" or job.status == "Failed"%}
+                                {% if job.output_stored == "True" %}
+                                <a href="javascript:void(0)" onclick="rerun('/reproduce?req_type=delOutput&job_type=sensitivity&uuid={{job.uuid}}', 'delete');">Delete output</a>
+                                {% else %}
+                                <a href="javascript:void(0)" onclick="rerun('/reproduce?req_type=rerun&job_type=sensitivity&uuid={{job.uuid}}', 'rerun');">Reproduce Results</a>
+                                {% endif%}
+                                {% endif%}
+                                {% else %}
+                                <span style="color: green" class="create_msg">(local)</span>
+                                {% endif%}
+                            </td>
+                            
                         </tr>
                         
                         {% endfor %}
@@ -296,6 +354,7 @@
                                 {% endif %}
                                 {% endif %}
                             </td>
+                            
                         </tr>
                         
                         {% endfor %}
@@ -325,6 +384,9 @@
 <script>
 function deleteJob(path)
 {
+    msg = "Deleting the job...";
+    updateMsg( { status: true,
+              msg: msg } );
 $.ajax({ url : path,
     type : 'POST',
     success : function(data)
@@ -338,6 +400,45 @@ $.ajax({ url : path,
 
 return false;
 }
+
+var updateMsg = function(data)
+{
+    $( "#msg" ).text(data.msg);
+    if(data.status)
+    $( "#msg" ).prop('class', 'alert alert-success');
+    else
+    $( "#msg" ).prop('class', 'alert alert-error');
+    $( "#msg" ).show();
+};
+
+function rerun(path, type)
+{
+    if (type == "delete"){
+        msg = "Deleting output in cloud...";
+    }else if(type == "rerun"){
+        msg = "Rerunning job in cloud...";
+    }else{
+        msg = "Unknown requested type.";
+    }
+    updateMsg( { status: true,
+              msg: msg } );
+              
+              $.ajax({ url : path,
+                     type : 'POST',
+                     success : function(data)
+                     {
+                     updateMsg(data);
+                     if(data.status)
+                     window.location = '/status';
+                     },
+                     error : function(data)
+                     {
+                     location.reload();
+                     }});
+                     
+                     return false;
+}
+
 </script>
 
 {% endblock %}
