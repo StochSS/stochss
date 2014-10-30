@@ -485,7 +485,6 @@ class backendservices():
                 return False, 'Either infrastracture or credetials is none.'
             # 3. create exact number of entities in db for this launch, and set the status to 'creating'
             ids = []
-            
             num = 0
             for vm in params['vms']:
                 logging.info('vm: {0}, num: {1}'.format(vm['instance_type'], vm['num_vms']))
@@ -527,7 +526,7 @@ class backendservices():
             traceback.print_exc()
             logging.error("startMachines : exiting method with error : {0}".format(str(e)))
             print "startMachines : exiting method with error :", str(e)
-            return False, 'Errors occur in starting machines.'
+            return False, 'Errors occur in starting machines:'+str(e)
  
         
     def stopMachines(self, params, block=False):

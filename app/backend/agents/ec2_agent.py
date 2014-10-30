@@ -66,6 +66,12 @@ class EC2Agent(BaseAgent):
     PARAM_CREDENTIALS,
     PARAM_INSTANCE_IDS
   )
+  
+  HEAD_NODE_TYPES = [
+    'c3.large',
+    'c3.xlarge',
+    'c3.2xlarge'
+]
 
   DESCRIBE_INSTANCES_RETRY_COUNT = 3
 
@@ -308,7 +314,7 @@ class EC2Agent(BaseAgent):
         # Queue head, needs to have at least two cores
         
         # define what type of queue head is needed here
-        if "instance_type" not in parameters or parameters["instance_type"] == '' or parameters["instance_type"] != 'c3.large' and parameters["instance_type"] != 'c3.xlarge':
+        if "instance_type" not in parameters or parameters["instance_type"] == '' or parameters["instance_type"] not in self.HEAD_NODE_TYPES:
             # find one that fit for queue head
             instance_type = 'c3.large'
             utils.log('This is queue head, instance type has been changed to {0}.'.format(instance_type))

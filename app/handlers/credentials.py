@@ -18,7 +18,8 @@ import time
 class CredentialsPage(BaseHandler):
     """
     """
-    INS_TYPES = ["t1.micro", "m1.small", "m3.medium", "m3.large", "c3.large", "c3.xlarge"];
+    INS_TYPES = ["t1.micro", "m1.small", "m3.medium", "m3.large", "c3.large", "c3.xlarge"]
+    HEAD_NODE_TYPES = ["c3.large", "c3.xlarge"]
     
     def authentication_required(self):
         return True
@@ -68,35 +69,41 @@ class CredentialsPage(BaseHandler):
 
         elif 'start' in params:
             context = self.getContext(user_id)
-            all_numbers_correct = True;
+            vms = []           
+            all_numbers_correct = True       
             
-                
-            vms = []
-            for type in self.INS_TYPES:
-                num_type = 'num_'+type
-                
-                if num_type in params and params[num_type] != '':
-                    if int(params[num_type]) > 20:
-                        result = {'status': 'False' , 'msg': 'Number of new vms should be no more than 20.'}
-                        all_numbers_correct = False
-                        break;
-                    elif int(params[num_type]) <= 0:
-                        result = {'status': 'False' , 'msg': 'Number of new vms should be at least 1.'}
-                        all_numbers_correct = False
-                        break;
-                    else:
-                        vms.append({"instance_type": type, "num_vms": int(params[num_type])})
-            
-#             if not self.isQueueHeadRunning():
-#                 if params['num_c3.large'] == '' and params['num_c3.xlarge'] == '':
-#                     result = {'status': 'False' , 'msg': 'There should be at least one instance that are larger than or equal to c3.large.'}
-#                     all_numbers_correct = False  
-                   
-            if all_numbers_correct :
-            
+            if 'compute_power' in params:   
+                if params['compute_power'] == 'small':
+                    vms.append({"instance_type": 'c3.large', "num_vms": 1})
+                elif params['compute_power'] == 'medium':
+                    vms.append({"instance_type": 'c3.xlarge', "num_vms": 1})
+                elif params['compute_power'] == 'large':
+                    vms.append({"instance_type": 'c3.2xlarge', "num_vms": 1})
+                else:
+                    result = {'status': 'Failure' , 'msg': 'Unknown instance type.'}
+                    all_numbers_correct = False
+            else:
+                for type in self.INS_TYPES:
+                    num_type = 'num_'+type
+                 
+                    if num_type in params and params[num_type] != '':
+                        if int(params[num_type]) > 20:
+                            result = {'status': 'Failure' , 'msg': 'Number of new vms should be no more than 20.'}
+                            all_numbers_correct = False
+                            break;
+                        elif int(params[num_type]) <= 0:
+                            result = {'status': 'Failure' , 'msg': 'Number of new vms should be at least 1.'}
+                            all_numbers_correct = False
+                            break;
+                        else:
+                            vms.append({"instance_type": type, "num_vms": int(params[num_type])})                   
+
+            if all_numbers_correct:    
                 result = self.start_vms(user_id, self.user_data.getCredentials(), vms)
                 context['starting_vms'] = True
-            
+            else:
+                context['starting_vms'] = False
+                
             self.render_response('credentials.html', **(dict(context, **result)))
 
         elif 'stop' in params:
@@ -258,24 +265,25 @@ class CredentialsPage(BaseHandler):
              'credentials':credentials,
              'use_spot_instances':False}
         service = backendservices()
+        
+        has_head_node = False
+        if not service.isOneOrMoreComputeNodesRunning(params):
+            for vm in vms_info:
+                if vm['instance_type'] in self.HEAD_NODE_TYPES and vm['num_vms'] > 0:
+                    has_head_node = True
+                    break
+        else:
+            has_head_node = True
+        
+        if not has_head_node:
+            return {'status':'Failure' , 'msg': "At least one head node needs to be launched."} 
+           
         res, msg = service.startMachines(params)
         if res == True:
             result = {'status':'Success' , 'msg': 'Sucessfully requested starting virtual machines. Processing request...'}
         else:
-            result = {'status':'Failure' , 'msg': ""}
+            result = {'status':'Failure' , 'msg': msg}
         return result
-#         res = service.startMachines(params)
-#         if res != None and res['success']==True:
-#             result = {'status':'Success' , 'msg': 'Sucessfully requested '+ str(number_of_vms) + ' Virtual Machines.'}
-#         else:
-#             result = {'status': 'False' , 'msg': 'Request to start the machines failed. Please contact the administrator.'}
-#  
-#         return result
-    
-    def delete_vms():
-        db_user = db.GqlQuery("SELECT * FROM StochKitModelWrapper WHERE user_id = :1", user_id).get()
-        db_user.user = valid_username
-        result =  backendservice.stopMachines(db_user.user,True) #True means blocking, ie wait for success
 
 
 

@@ -414,13 +414,14 @@ class StatusPage(BaseHandler):
                                     # Update the spatial job 
                                     job.output_url = job_status['output']
                                     job.uuid = job_status['uuid']
-                                    if job.outData is None:
-                                        job.status = 'Finished'
-                                    else:
-                                        if os.path.exists("{0}/results/complete".format(job.outData)):
-                                            job.status = "Finished"
-                                        else:
-                                            job.status = "Failed"
+                                    job.status = 'Finished'
+#                                     if job.outData is None:
+#                                         job.status = 'Finished'
+#                                     else:
+#                                         if os.path.exists("{0}/results/complete".format(job.outData)):
+#                                             job.status = "Finished"
+#                                         else:
+#                                             job.status = "Failed"
                                 
                                 elif job_status['status'] == 'failed':
                                     job.status = 'Failed'
