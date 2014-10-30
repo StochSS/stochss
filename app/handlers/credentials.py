@@ -74,15 +74,19 @@ class CredentialsPage(BaseHandler):
             
             if 'compute_power' in params:   
                 if params['compute_power'] == 'small':
-                    vms.append({"instance_type": 'c3.large', "num_vms": 1})
+                     head_node = {"instance_type": 'c3.large', "num_vms": 1}
                 elif params['compute_power'] == 'medium':
-                    vms.append({"instance_type": 'c3.xlarge', "num_vms": 1})
+                     head_node = {"instance_type": 'c3.xlarge', "num_vms": 1}
                 elif params['compute_power'] == 'large':
-                    vms.append({"instance_type": 'c3.2xlarge', "num_vms": 1})
+                     head_node = {"instance_type": 'c3.2xlarge', "num_vms": 1}
                 else:
                     result = {'status': 'Failure' , 'msg': 'Unknown instance type.'}
                     all_numbers_correct = False
             else:
+                head_node = None
+                if 'head_node' in params:
+                    head_node = {"instance_type": params['head_node'].replace('radio_', ''), "num_vms": 1}
+                    
                 for type in self.INS_TYPES:
                     num_type = 'num_'+type
                  
@@ -99,7 +103,7 @@ class CredentialsPage(BaseHandler):
                             vms.append({"instance_type": type, "num_vms": int(params[num_type])})                   
 
             if all_numbers_correct:    
-                result = self.start_vms(user_id, self.user_data.getCredentials(), vms)
+                result = self.start_vms(user_id, self.user_data.getCredentials(), head_node, vms)
                 context['starting_vms'] = True
             else:
                 context['starting_vms'] = False
@@ -226,6 +230,11 @@ class CredentialsPage(BaseHandler):
                     context['active_vms'] = False
                 else:
                     context['active_vms'] = True
+                    
+                if number_running == 0:
+                    context['running_vms'] = False
+                else:
+                    context['running_vms'] = True
                 
         context = dict(context, **fake_credentials)
         context = dict(result, **context)
@@ -250,14 +259,14 @@ class CredentialsPage(BaseHandler):
             except:
                 return None
                     
-    def start_vms(self, user_id, credentials, vms_info):
+    def start_vms(self, user_id, credentials, head_node, vms_info):
         key_prefix = user_id
         group_random_name = key_prefix +"-"+''.join(random.choice(string.ascii_uppercase + string.digits) for x in range(6))
         
                 
         params ={"infrastructure":"ec2",
-             "vms":vms_info, 
              'group':group_random_name, 
+             'vms': vms_info,
              'image_id':'ami-22d8584a',
              'key_prefix':key_prefix, #key_prefix = user_id
              'keyname':group_random_name, 
@@ -266,18 +275,15 @@ class CredentialsPage(BaseHandler):
              'use_spot_instances':False}
         service = backendservices()
         
-        has_head_node = False
         if not service.isOneOrMoreComputeNodesRunning(params):
-            for vm in vms_info:
-                if vm['instance_type'] in self.HEAD_NODE_TYPES and vm['num_vms'] > 0:
-                    has_head_node = True
-                    break
-        else:
-            has_head_node = True
-        
-        if not has_head_node:
-            return {'status':'Failure' , 'msg': "At least one head node needs to be launched."} 
-           
+            if head_node is None:
+                return {'status':'Failure' , 'msg': "At least one head node needs to be launched."} 
+            else:
+                params['head_node'] = head_node
+                
+        elif head_node:
+            params['vms'] = [head_node]
+                      
         res, msg = service.startMachines(params)
         if res == True:
             result = {'status':'Success' , 'msg': 'Sucessfully requested starting virtual machines. Processing request...'}

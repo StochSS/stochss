@@ -314,12 +314,13 @@ class EC2Agent(BaseAgent):
         # Queue head, needs to have at least two cores
         
         # define what type of queue head is needed here
-        if "instance_type" not in parameters or parameters["instance_type"] == '' or parameters["instance_type"] not in self.HEAD_NODE_TYPES:
+        if "head_node" not in parameters:
             # find one that fit for queue head
             instance_type = 'c3.large'
             utils.log('This is queue head, instance type has been changed to {0}.'.format(instance_type))
         else:
-            instance_type = parameters["instance_type"]
+            head_node = parameters["head_node"]
+            instance_type = head_node["instance_type"]
             utils.log('This is queue head, instance type is {0}.'.format(instance_type))
         # Create the user that we want to use to connect to the broker
         # and configure its permissions on the default vhost.

@@ -486,9 +486,12 @@ class backendservices():
             # 3. create exact number of entities in db for this launch, and set the status to 'creating'
             ids = []
             num = 0
-            for vm in params['vms']:
-                logging.info('vm: {0}, num: {1}'.format(vm['instance_type'], vm['num_vms']))
-                num += vm['num_vms']
+            if 'vms' in params:
+                for vm in params['vms']:
+                    logging.info('vm: {0}, num: {1}'.format(vm['instance_type'], vm['num_vms']))
+                    num += vm['num_vms']
+            if 'head_node' in params:
+                num += 1
                 
             for _ in range(0, num):
                 

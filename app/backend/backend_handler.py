@@ -334,7 +334,7 @@ class BackendWorker():
         parameters      A dictionary of parameters
         reservation_id  the reservation id for the instances that are going to be spawned
         """
-        if not parameters["vms"]:
+        if not parameters["vms"] and 'head_node' not in parameters:
             logging.info("No vms are waiting for spawned.")
             return
             
@@ -347,22 +347,26 @@ class BackendWorker():
                         
             if not self.__is_queue_head_running(agent, parameters):
                 # Queue head is not running, so create a queue head
+                if 'head_node' not in parameters:
+                    logging.info("Head node is needed.")
+                    return
+                
                 utils.log('About to start a queue head.')
                 
                 parameters["queue_head"] = True
                 requested_key_name = parameters["keyname"]
                 
                 # get the largest instance_type and let it to be queue head
-                vms = parameters["vms"]
-                vm = vms[len(vms)-1]
-                
-                parameters["instance_type"] = vm["instance_type"]
+#                 vms = parameters["vms"]
+#                 vm = vms[len(vms)-1]
+                head_node = parameters['head_node']                
+                parameters["instance_type"] = head_node["instance_type"]
                 parameters["num_vms"] = 1
                 num_vms = 1
-                vm["num_vms"] = vm["num_vms"] - 1
-                
-                if vm["num_vms"] == 0:
-                    vms.remove(vm)
+#                 vm["num_vms"] = vm["num_vms"] - 1
+#                 
+#                 if vm["num_vms"] == 0:
+#                     vms.remove(vm)
                 
                 # Only want one queue head, and it must have its own key so
                 # it can be differentiated if necessary
@@ -371,9 +375,10 @@ class BackendWorker():
                 security_configured = agent.configure_instance_security(parameters)
                 try:
                     agent.run_instances(parameters)
-                except:
-                    raise Exception('Errors in running instances in agent.')
-            
+                except Exception as e:
+                    raise Exception('Errors in running instances in agent: '+str(e))
+                
+                del parameters['head_node']
             # if the queue head is running
             else:
                 if "queue_head" in parameters and parameters["queue_head"] == True: 
