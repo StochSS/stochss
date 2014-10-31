@@ -37,7 +37,8 @@
                         <tr>
                             <th width="40pt"></th>
                             <th width="40pt">Job #</th>
-                            <th>Job name </th>
+                            <th width="200pt">Job name </th>
+                            <th width="100pt">Resource </th>
                         
                             <th width="100pt">Status</th>
                             
@@ -62,6 +63,13 @@
                                 <span>{{job.name}}</span>
                             </td>
                             <td>
+                                {% if job.resource == "Local" %}
+                                <span>local</span>
+                                {% else %}
+                                <span>cloud</span>
+                                {% endif %}
+                            </td>
+                            <td>
                                 {% if job.status == "Running" or job.status == "Finished" %}
                                 <span style="color: green" class="create_msg">{{job.status}}</span>
                                 {% endif %}
@@ -74,11 +82,11 @@
                             </td>
                             <td>
                                 {% if job.status == "Finished" %}
-                                {% if job.resource == "local" or job.output_stored == "True"%}
+                                {% if job.resource == "Local" or job.output_stored == "True"%}
                                 <a href="/simulate?id={{job.id}}">View results</a>
                                 {% endif %}
                                 {% elif job.status == "Failed"%}
-                                {% if job.resource == "local" or job.output_stored == "True"%}
+                                {% if job.resource == "Local" or job.output_stored == "True"%}
                                 <a href="/simulate?id={{job.id}}">Get Debugging Info</a>
                                 {% endif %}
                                 {% endif %}
@@ -94,7 +102,7 @@
                                 {% endif%}
                                 {% endif%}
                                 {% else %}
-                                <span style="color: green" class="create_msg">(local)</span>
+                                <span style="color: black" class="create_msg">N/A</span>
                                 {% endif%}
                                 
                                 
@@ -114,7 +122,8 @@
                         <tr>
                             <th width="40pt"></th>
                             <th width="40pt">Job #</th>
-                            <th>Job name </th>
+                            <th width="200pt">Job name </th>
+                            <th width="100pt">Resource </th>
                             <th width="100pt">Status</th>
                             
                             <th width="150pt">Result</th>
@@ -136,6 +145,13 @@
                             </td>
                             <td>
                                 <span>{{job.name}}</span>
+                            </td>
+                            <td>
+                                {% if job.resource == "local" %}
+                                <span>local</span>
+                                {% else %}
+                                <span>cloud</span>
+                                {% endif %}
                             </td>
                             <td>
                                 {% if job.status == "Running" or job.status == "Finished" %}
@@ -169,7 +185,7 @@
                                 {% endif%}
                                 {% endif%}
                                 {% else %}
-                                <span style="color: green" class="create_msg">(local)</span>
+                                <span style="color: black" class="create_msg">N/A</span>
                                 {% endif%}
                                 
                                 
@@ -188,8 +204,8 @@
                         <tr>
                             <th width="40pt"></th>
                             <th width="40pt">Job #</th>
-                            <th>Job name </th>
-                            
+                            <th width="200pt">Job name </th>
+                            <th width="100pt">Resource </th>
                             <th width="100pt">Status</th>
                             
                             <th width="150pt">Result</th>
@@ -205,6 +221,13 @@
                             </td>
                             <td>
                                 <span>{{job.name}}</span>
+                            </td>
+                            <td>
+                                {% if job.resource == "local" %}
+                                <span>local</span>
+                                {% else %}
+                                <span>cloud</span>
+                                {% endif %}
                             </td>
                             <td>
                                 {% if job.status == "Running" or job.status == "Finished" %}
@@ -238,7 +261,7 @@
                                 {% endif%}
                                 {% endif%}
                                 {% else %}
-                                <span style="color: green" class="create_msg">(local)</span>
+                                <span style="color: black" class="create_msg">N/A</span>
                                 {% endif%}
                             </td>
                             
@@ -308,7 +331,8 @@
                         <tr>
                             <th width="40pt"></th>
                             <th width="40pt">Job #</th>
-                            <th>Job name</th>
+                            <th width="200pt">Job name </th>
+                            <th width="100pt">Resource </th>
                             <th width="200pt">Status</th>
                             <th width="200pt"></th>
                         </tr>
@@ -328,6 +352,13 @@
                             </td>
                             <td>
                                 <span>{{job.name}}</span>
+                            </td>
+                            <td>
+                                {% if job.resource == "local" %}
+                                <span>local</span>
+                                {% else %}
+                                <span>cloud</span>
+                                {% endif %}
                             </td>
                             <td>
                                 {% if job.status|lower == "running" or job.status|lower == "finished" %}

@@ -8,6 +8,7 @@ import backend_handler
 from backend_handler import VMStateModel
 from google.appengine.api import background_thread, modules, urlfetch
 from google.appengine.api import taskqueue
+from google.appengine.ext import db
 import pickle
 import re
 import urllib
@@ -263,11 +264,17 @@ class InfrastructureManager:
 
   def synchronize_db(self, params):
     last_time = None
+    set_gap_large = False
     try: 
-        file = open(backend_handler.DB_SYN_PATH)
-        line = file.readline()
-        date_string = re.match(r'\d{4}-\d{2}-\d{2}\s\d{2}:\d{2}:\d{2}', line).group(0)
-        last_time = datetime.datetime.strptime(date_string, '%Y-%m-%d %H:%M:%S')               
+        e = db.GqlQuery("SELECT * FROM VMStateSyn").get()
+        if e:
+            last_time = e.last_syn
+        else:
+            last_time = datetime.datetime.now() - datetime.timedelta(1)
+#         file = open(backend_handler.DB_SYN_PATH)
+#         line = file.readline()
+#         date_string = re.match(r'\d{4}-\d{2}-\d{2}\s\d{2}:\d{2}:\d{2}', line).group(0)
+#         last_time = datetime.datetime.strptime(date_string, '%Y-%m-%d %H:%M:%S')               
     except Exception as e:
         logging.error('Error: have errors in opening db_syn file. {0}'.format(e))
         return
@@ -277,11 +284,12 @@ class InfrastructureManager:
         return
     else:
         now = datetime.datetime.now()
-        gap = now - last_time
+        delta = now - last_time
+        gap = delta.total_seconds()
         logging.info('Time now: {0}'.format(now))
         logging.info('Time last synchronization: {0}'.format(last_time))
-        logging.info('Time in between: {0}'.format(gap.seconds))
-        if gap.seconds < backend_handler.SynchronizeDB.PAUSE+1:
+        logging.info('Time in between: {0}'.format(gap))
+        if gap < backend_handler.SynchronizeDB.PAUSE+1:
             utils.log('Less than {0} seconds to synchronize db.'.format(backend_handler.SynchronizeDB.PAUSE))
             return
                     

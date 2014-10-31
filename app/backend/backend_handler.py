@@ -32,6 +32,9 @@ BACKEND_SYN_R_URL = BACKEND_URL+'/backend/synchronizedb'
 BACKEND_MANAGER_R_URL = BACKEND_URL+'/backend/manager'
 BACKEND_QUEUE_R_URL = 'http://%s' % modules.get_hostname('backendqueue')+'/backend/queue'
 
+class VMStateSyn(db.Model):
+    last_syn = db.DateTimeProperty()
+
 class VMStateModel(db.Model):
     IDS = 'ids'
     EC2_ACCESS_KEY = 'EC2_ACCESS_KEY'
@@ -817,11 +820,17 @@ class SynchronizeDB(webapp2.RequestHandler):
     
     def _write_time(self):
         try:
-            now = datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+            now = datetime.datetime.now()
             logging.info('Write datetime of synchronization to db_syn: {0}'.format(now))
-            file = open(DB_SYN_PATH, "w")
-            file.write(now)
-            file.close()
+            syn = VMStateSyn.all()  
+            if syn.count() == 0:
+                e = VMStateSyn(last_syn = now)
+                e.put()
+            else:
+                e = db.GqlQuery("SELECT * FROM VMStateSyn").get()
+                e.last_syn = now
+                e.put()
+                
         except Exception as e:
             logging.error('Error: have errors in write date time to db_syn. {0}'.format(e))
     

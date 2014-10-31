@@ -364,6 +364,7 @@ class StatusPage(BaseHandler):
 
                 allParameterJobs.append({ "status" : job.status,
                                        "name" : job.jobName,
+                                       "resource": job.resource,
                                        "number" : number,
                                        "id" : job.key().id()})
         
