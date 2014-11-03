@@ -53,10 +53,12 @@ class DataReproductionPage(BaseHandler):
                 elif job_type == 'sensitivity':
                     job = sensitivity.SensitivityJobWrapper.all().filter('userId =', self.user.user_id()).filter('cloudDatabaseID =', uuid).get()
                     job.output_stored = 'False'
+                    job.outData = None
                     job.put()
                 elif job_type == 'spatial':
                     job = spatial.SpatialJobWrapper.all().filter('userId =', self.user.user_id()).filter('cloud_id =', uuid).get()  
                     job.output_stored = 'False'
+                    job.outData = None
                     job.put()   
                 
                 # delete the local output if any
