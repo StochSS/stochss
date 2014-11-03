@@ -127,7 +127,7 @@ class CloudTracker:
 		print "running job with uuid " + self.uuid
 		# Retrieve manifest file from S3 bucket
 		params = get_metadata(self.bucketname, self.uuid + "/manifest", self.access_key, self.secret_key)
-		print params
+# 		print params
 
 		return params
 

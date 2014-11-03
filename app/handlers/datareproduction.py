@@ -158,6 +158,7 @@ class DataReproductionPage(BaseHandler):
                     job.status = "Running"    
                     job.celeryPID = celery_task.id
                     job.startTime = time.strftime("%Y-%m-%d-%H-%M-%S")
+                    job.output_stored = 'True'
                     job.put()
                     result = {'status':True,'msg':'Job rerun submitted sucessfully.'}
             
@@ -189,6 +190,7 @@ class DataReproductionPage(BaseHandler):
                     job.status = "Running"    
                     job.celeryPID = celery_task.id
                     job.startTime = time.strftime("%Y-%m-%d-%H-%M-%S")
+                    job.output_stored = 'True'
                     job.put()
                     result = {'status':True,'msg':'Job rerun submitted sucessfully.'}
             
@@ -206,63 +208,5 @@ class DataReproductionPage(BaseHandler):
             self.response.write(json.dumps({'status': False, 'msg': 'Unknown requested type.'}))
 
 
-#     def getContext(self):
-#         """ 
-#             Get all the jobs that exist in the system and assemble a dict
-#             with info to display on the page. 
-#         """
-#         context = {}
-#         result = {}
-#         # Grab references to all the user's StochKitJobs in the system
-#         all_stochkit_jobs = db.GqlQuery("SELECT * FROM StochKitJobWrapper WHERE user_id = :1", self.user.user_id())
-#         all_jobs = []
-#         if all_stochkit_jobs != None:
-#             jobs = list(all_stochkit_jobs.run())
-#             jobs = sorted(jobs, key = lambda x : (datetime.datetime.strptime(x.startDate, '%Y-%m-%d-%H-%M-%S') if hasattr(x, 'startDate') and x.startDate != None else datetime.datetime.now()), reverse = True)
-#             for number, job in enumerate(jobs):
-#                 number = len(jobs) - number
-# 
-#                 # Get the job id
-#                 stochkit_job = job.stochkit_job
-#                 
-#                 # Query the backend for the status of the job, but only if the current status is not Finished
-#                 if stochkit_job.status == "Finished":
-#                     all_jobs.append({ "id": job.key().id(),
-#                                       "name" : stochkit_job.name,
-#                                       "uuid" : stochkit_job.pid})
-#         
-#         context['all_jobs']=all_jobs
-# 
-#         allSensJobs = []
-#         allSensQuery = sensitivity.SensitivityJobWrapper.all().filter('userId =', self.user.user_id())
-# 
-#         if allSensQuery != None:
-#             jobs = list(allSensQuery.run())
-#             jobs = sorted(jobs, key = lambda x : (datetime.datetime.strptime(x.startTime, '%Y-%m-%d-%H-%M-%S') if hasattr(x, 'startTime') and x.startTime != None else ''), reverse = True)
-# 
-#             for number, job in enumerate(jobs):
-#                 number = len(jobs) - number
-#                 if job.status == "Finished":
-#                     allSensJobs.append({ "name" : job.jobName,
-#                                          "uuid" : job.cloudDatabaseID})
-#         
-#         context['allSensJobs']=allSensJobs
-#         
-#         allSpatialJobs = []
-#         allSpatialQuery = spatial.SpatialJobWrapper.all().filter('userId =', self.user.user_id())
-#         
-#         if allSpatialQuery != None:
-#             jobs = list(allSpatialQuery.run())
-#             jobs = sorted(jobs, key = lambda x : (datetime.datetime.strptime(x.startTime, '%Y-%m-%d-%H-%M-%S') if hasattr(x, 'startTime') and x.startTime != None else ''), reverse = True)
-#             
-#             for number, job in enumerate(jobs):
-#                 number = len(jobs) - number
-#                 if job.status == "Finished":
-#                     allSpatialJobs.append({ "name" : job.jobName,
-#                                             "uuid" : job.cloud_id})
-#         
-#         context['allSpatialJobs']=allSpatialJobs
-# 
-#         return dict(result,**context)
 
         
