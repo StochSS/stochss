@@ -20,6 +20,7 @@ import tempfile
 import time
 import logging
 import numbers
+import random
 
 import pyurdme
 import pickle
@@ -449,7 +450,13 @@ class SpatialPage(BaseHandler):
             #####
             simulation_algorithm = data['algorithm'] # Don't trust this! I haven't implemented the algorithm selection for this yet
             simulation_realizations = data['realizations']
-            simulation_seed = data['seed'] # If this is set to -1, it means choose a seed at random! (Whatever that means)
+
+            # If the seed is negative, this means choose a seed >= 0 randomly
+            if int(data['seed']) < 0:
+                random.seed()
+                data['seed'] = random.randint(0, 2147483647)
+
+            simulation_seed = data['seed']
             #####
 
             path = os.path.abspath(os.path.dirname(__file__))
@@ -500,6 +507,11 @@ class SpatialPage(BaseHandler):
         '''
         '''
         try:
+            # If the seed is negative, this means choose a seed >= 0 randomly
+            if int(data['seed']) < 0:
+                random.seed()
+                data['seed'] = random.randint(0, 2147483647)
+
             db_credentials = self.user_data.getCredentials()
             # Set the environmental variables 
             os.environ["AWS_ACCESS_KEY_ID"] = db_credentials['EC2_ACCESS_KEY']
@@ -515,6 +527,7 @@ class SpatialPage(BaseHandler):
                     ####
             pymodel = self.construct_pyurdme_model(data)
             #####
+
             cloud_params = {
                 "job_type": "spatial",
                 "simulation_algorithm" : data['algorithm'],
