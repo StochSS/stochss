@@ -1,11 +1,14 @@
 import sys,os,logging
 sys.path.append(os.path.join(os.path.dirname(__file__), '../lib/celery'))
+sys.path.append(os.path.join(os.path.dirname(__file__), '../lib/boto'))
 sys.path.append(os.path.join(os.path.dirname(__file__), '../lib/kombu'))
 sys.path.append(os.path.join(os.path.dirname(__file__), '../'))
+sys.path.append(os.path.join(os.path.dirname(__file__), '/'))
 sys.path.append(os.path.join(os.path.dirname(__file__), '../lib/amqp'))
 sys.path.append(os.path.join(os.path.dirname(__file__), '../lib/billiard'))
 sys.path.append(os.path.join(os.path.dirname(__file__), '../lib/anyjson'))
 sys.path.append(os.path.join(os.path.dirname(__file__), '../lib/pytz'))
+
 #print str(sys.path)
 from celery import Celery, group
 try:
@@ -493,9 +496,9 @@ def task(taskid,params):
       elif job_type == 'stochkit_ode' or job_type == 'sensitivity':
           exec_str = "{0}/{1} -m {2} --force --out-dir output/{3}/result 2>{4} > {5}".format(ODE_DIR, paramstr, xmlfilepath, uuidstr, stderr, stdout)
       elif job_type == 'spatial':
-	  cmd = "chown -R ubuntu output/{0}".format(uuidstr)
-	  print cmd
-	  os.system(cmd)
+          cmd = "chown -R ubuntu output/{0}".format(uuidstr)
+          print cmd
+          os.system(cmd)
           exec_str = "sudo -E -u ubuntu {0}/pyurdme_wrapper.py {1} {2} {3} {4} {5} 2>{6} > {7}".format(THOME, xmlfilepath, 'output/{0}/results'.format(uuidstr), params['simulation_algorithm'], params['simulation_realizations'], params['simulation_seed'], stderr, stdout)
       
       print "======================="

@@ -70,7 +70,7 @@ REDIRECT_STATUSES = frozenset([
 
 
 
-_API_CALL_DEADLINE = 5.0
+_API_CALL_DEADLINE = 100.0
 
 
 
