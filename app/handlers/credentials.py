@@ -74,11 +74,11 @@ class CredentialsPage(BaseHandler):
             
             if 'compute_power' in params:   
                 if params['compute_power'] == 'small':
-                     head_node = {"instance_type": 'c3.large', "num_vms": 1}
-                elif params['compute_power'] == 'medium':
-                     head_node = {"instance_type": 'c3.xlarge', "num_vms": 1}
-                elif params['compute_power'] == 'large':
-                     head_node = {"instance_type": 'c3.2xlarge', "num_vms": 1}
+                     head_node = {"instance_type": 't1.micro', "num_vms": 1}
+#                 elif params['compute_power'] == 'medium':
+#                      head_node = {"instance_type": 'c3.xlarge', "num_vms": 1}
+#                 elif params['compute_power'] == 'large':
+#                      head_node = {"instance_type": 'c3.2xlarge', "num_vms": 1}
                 else:
                     result = {'status': 'Failure' , 'msg': 'Unknown instance type.'}
                     all_numbers_correct = False
