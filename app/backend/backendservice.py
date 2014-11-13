@@ -12,6 +12,7 @@ from tasks import *
 from boto.s3.connection import S3Connection
 import celery
 from celery.task.control import inspect
+import backend_handler
 from backend_handler import VMStateModel
 
 
@@ -42,7 +43,7 @@ class backendservices():
         sys.path.append(os.path.join(os.path.dirname(__file__), 
                                      '/Library/Python/2.7/site-packages/amqp'))
             
-    def executeTask(self,params, access_key, secret_key):
+    def executeTask(self, params, access_key, secret_key, instance_type=None):
         '''
         This method instantiates celery tasks in the cloud.
 	Returns return value from celery async call and the task ID
@@ -212,8 +213,17 @@ class backendservices():
                 result["celery_pid"] = tmp.id
             else:
                 updateEntry(taskid, data, backendservices.TABLENAME)
+                if instance_type:
+                    queue_ins_name = "_"+instance_type.replace(".", "")
+                else:
+                    queue_ins_name = ""
+                
+                celery_queue_name = backend_handler.CELERY_QUEUE_EC2+""+queue_ins_name
+                celery_routing_key = backend_handler.CELERY_ROUTING_KEY_EC2+""+queue_ins_name
+                logging.info('Deliver the task to celery queue: {0}, routing key: {1}'.format(celery_queue_name, celery_routing_key))
                 #celery async task execution http://ask.github.io/celery/userguide/executing.html
-                tmp = tasks.task.delay(taskid, params, access_key, secret_key)  #calls task(taskid,params,access_key,secret_key)
+                tmp = tasks.task.apply_async(args=[taskid, params, access_key, secret_key], queue=celery_queue_name, routing_key=celery_routing_key)
+                #delay(taskid, params, access_key, secret_key)  #calls task(taskid,params,access_key,secret_key)
 #                 logging.info('RESULT OF TASK: {0}'.format(tmp.get()))
                 
                 result["celery_pid"] = tmp.id

@@ -71,7 +71,7 @@ class EC2Agent(BaseAgent):
     'c3.large',
     'c3.xlarge',
     'c3.2xlarge'
-]
+  ]
 
   DESCRIBE_INSTANCES_RETRY_COUNT = 3
 

@@ -21,8 +21,6 @@ from google.appengine.ext import db
 __author__ = 'mengyuan'
 __email__ = 'gmy.melissa@gmail.com'
 
-DB_SYN_PATH = os.path.join(os.path.dirname(__file__), '../db_syn')
-
 BACKEND_NAME = 'backendthread'
 BACKEND_URL = 'http://%s' % modules.get_hostname(BACKEND_NAME)
 
@@ -31,7 +29,13 @@ BACKEND_BACKGROUND = BACKEND_URL+'/_ah/background'
 BACKEND_SYN_R_URL = BACKEND_URL+'/backend/synchronizedb'
 BACKEND_MANAGER_R_URL = BACKEND_URL+'/backend/manager'
 BACKEND_QUEUE_R_URL = 'http://%s' % modules.get_hostname('backendqueue')+'/backend/queue'
-
+  
+INS_TYPES_EC2 = ["t1.micro", "m1.small", "m3.medium", "m3.large", "c3.large", "c3.xlarge"]
+  
+CELERY_EXCHANGE_EC2 = 'exchange_stochss_ec2'
+CELERY_QUEUE_EC2 = 'queue_stochss_ec2'
+CELERY_ROUTING_KEY_EC2 = 'routing_key_stochss_ec2'
+                       
 class VMStateSyn(db.Model):
     last_syn = db.DateTimeProperty()
 
@@ -95,7 +99,24 @@ class VMStateModel(db.Model):
         except Exception as e:
             logging.error("Error in getting all vms from db! {0}".format(e))
             return None
+    
+    @staticmethod
+    def get_instance_type(params, ins_id):
+        try:
+            infra, access_key, secret_key = VMStateModel.validate_credentials(params)
+            if infra is None:
+                return None
+            
+            entities = VMStateModel.all()
+            entities.filter('infra =', infra).filter('access_key =', access_key).filter('secret_key =', secret_key)
+            entities.filter('ins_id ==', ins_id)
+            
+            e = entities.get()
+            return e.ins_type
         
+        except Exception as e:
+            logging.error("Error in getting the instance type of instance {0} from db! {1}".format(ins_id, e))
+            return None   
     @staticmethod
     def terminate_not_active(params):
         '''
@@ -323,8 +344,6 @@ class BackendWorker():
     
     KEYPREFIX = 'stochss'
     QUEUEHEAD_KEY_TAG = 'queuehead'
-    
-    INS_TYPES = ["t1.micro", "m1.small", "m3.medium", "m3.large", "c3.large", "c3.xlarge"];  
               
     
     def spawn_vms(self, infra, agent, parameters, reservation_id):       
@@ -614,7 +633,7 @@ class BackendWorker():
         # Now update the actual Celery app....
         #TODO: Doesnt seem to work in GAE until next request comes in to server
         my_celery = CelerySingleton()
-        my_celery.configure()
+#         my_celery.configure()
 
     def __copy_celery_config_to_instance(self, agent, params, public_ips, instance_ids):
         '''
@@ -650,9 +669,14 @@ class BackendWorker():
         python_path = "source /home/ubuntu/.bashrc;export PYTHONPATH=/home/ubuntu/pyurdme/:/home/ubuntu/:/home/ubuntu/stochss/app/;"
         python_path+='export AWS_ACCESS_KEY_ID={0};'.format(str(credentials['EC2_ACCESS_KEY']))
         python_path+='export AWS_SECRET_ACCESS_KEY={0};'.format( str(credentials['EC2_SECRET_KEY']))
-        start_celery_str = "celery -A tasks worker --autoreload --loglevel=info --workdir /home/ubuntu > /home/ubuntu/celery.log 2>&1"
+        #start_celery_str = "celery -A tasks worker --autoreload --loglevel=info --workdir /home/ubuntu > /home/ubuntu/celery.log 2>&1"
         # PyURDME must be run inside a 'screen' terminal as part of the FEniCS code depends on the ability to write to the process' terminal, screen provides this terminal.
-        celerycmd = "sudo screen -d -m bash -c '{1}{0}'\n".format(start_celery_str,python_path)
+        #celerycmd = "sudo screen -d -m bash -c '{1}{0}'\n".format(start_celery_str,python_path)
+        
+        celery = CelerySingleton()
+        celery.add_queue(CELERY_QUEUE_EC2, 
+                         CELERY_EXCHANGE_EC2, 
+                         CELERY_ROUTING_KEY_EC2)
         
         for ip, ins_id in zip(public_ips, instance_ids):
             #self.__wait_for_ssh_connection(keyfile, ip)
@@ -666,7 +690,13 @@ class BackendWorker():
             else:
                 raise Exception("scp failure: {0} not transfered to {1}".format(celery_config_filename, ip))
             
+            ins_type = VMStateModel.get_instance_type(params, ins_id)
+            celery_queue_name = CELERY_QUEUE_EC2+"_"+ins_type.replace('.', '')
+            celery_routing_key = CELERY_ROUTING_KEY_EC2+"_"+ins_type.replace('.', '')
             
+            start_celery_str = "celery -A tasks worker -Q "+CELERY_QUEUE_EC2+", "+celery_queue_name+" --autoreload --loglevel=info --workdir /home/ubuntu > /home/ubuntu/celery.log 2>&1"
+            celerycmd = "sudo screen -d -m bash -c '{1}{0}'\n".format(start_celery_str,python_path)
+
             cmd = "ssh -o 'StrictHostKeyChecking no' -i {0} ubuntu@{1} \"{2}\"".format(keyfile, ip, celerycmd)
             logging.info(cmd)
             success = os.system(cmd)
@@ -675,6 +705,12 @@ class BackendWorker():
                 VMStateModel.set_state(params, [ins_id], VMStateModel.STATE_RUNNING, VMStateModel.DESCRI_SUCCESS)
                 logging.info("celery started! ")
                 logging.info("host ip: {0}".format(ip))
+                
+                celery = CelerySingleton()
+                celery.add_queue(celery_queue_name, 
+                                 CELERY_EXCHANGE_EC2, 
+                                 celery_routing_key)
+                
             else:
                 agent.terminate_some_instances(params, [ins_id])
                 VMStateModel.set_state(params, [ins_id], VMStateModel.STATE_FAILED, VMStateModel.DESCRI_FAIL_TO_COFIGURE_CELERY)
