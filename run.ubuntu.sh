@@ -69,16 +69,12 @@ function check_pyurdme_sub {
     return 1 #False
 }
 function check_pyurdme {
-    if check_pyurdme_sub; then
-        return 0 #True
-    else
-        PYURDME_CONF="$STOCHSS_HOME/app/lib/pyurdme-stochss/pyurdme_init"
-        if [ -e $PYURDME_CONF ];then
-            echo "PyURDME local install found, sourcing $PYURDME_CONF"
-            source $PYURDME_CONF
-            if check_pyurdme_sub;then
-                return 0 #True
-            fi
+    PYURDME_CONF="$STOCHSS_HOME/app/lib/pyurdme-stochss/pyurdme_init"
+    if [ -e $PYURDME_CONF ];then
+        echo "PyURDME local install found, sourcing $PYURDME_CONF"
+        source $PYURDME_CONF
+        if check_pyurdme_sub;then
+            return 0 #True
         fi
     fi
     return 1 #False
