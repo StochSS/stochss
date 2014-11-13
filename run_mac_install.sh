@@ -28,7 +28,12 @@ function install_lib {
         return 1 #False
     fi
     export ARCHFLAGS='-Wno-error=unused-command-line-argument-hard-error-in-future'
-    CMD="sudo pip install $1"
+    if [ "$1" = "h5py" ]; then
+        pkg="$1==2.4.0b1"
+    else
+        pkg="$1"
+    fi
+    CMD="sudo pip install $pkg"
     echo $CMD >> run_mac_install.log
     eval $CMD
 }
