@@ -309,10 +309,10 @@ class AmiCreator:
                                                groups='all')
 
   def __stop_instance(self):
-    print '============================='
-    print 'Stopping launched instance...'
-    print '============================='
-    self.ec2_connection.stop_instances(instance_ids=[self.instance_id])
+    print '================================'
+    print 'Terminating launched instance...'
+    print '================================'
+    self.ec2_connection.terminate_instances(instance_ids=[self.instance_id])
     print 'Done.'
 
   def __run_remote_command(self, command):
@@ -322,8 +322,8 @@ class AmiCreator:
     shell_cmd.run()
 
 if __name__ == '__main__':
-  ami_config_filename = 'stochss_ami_config.json'
-  with open(ami_config_filename) as fin:
+  ami_config_file_path = os.path.join(os.path.dirname(__file__), 'stochss_ami_config.json')
+  with open(ami_config_file_path) as fin:
     contents = fin.read()
 
   options = json.loads(contents)
