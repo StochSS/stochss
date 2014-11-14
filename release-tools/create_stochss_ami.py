@@ -270,6 +270,7 @@ class AmiCreator:
     self.__run_remote_command(command)
 
   def run_tests(self):
+    # TODO: Add tests for the various job types
     pass
 
   def __cleanup_instance(self):
