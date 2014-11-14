@@ -152,7 +152,12 @@ function install_lib {
 
     if [ "$answer" == 'y' ] || [ "$answer" == 'yes' ]; then
         export ARCHFLAGS='-Wno-error=unused-command-line-argument-hard-error-in-future'
-        CMD="sudo pip install $1"
+	if [ "$1" = "h5py" ]; then
+            pkg="$1==2.4.0b1"
+	else
+            pkg="$1"
+	fi
+	CMD="sudo pip install $pkg"
         echo $CMD
         eval $CMD
     else
@@ -376,7 +381,7 @@ else
     echo "Building StochOptim <br />"
     echo " Logging stdout in $STOCHSS_HOME/stdout.log and <br />"
     echo " stderr in $STOCHSS_HOME/stderr.log <br />"
-    echo " <font color=\"blue\"><h3>This process will take at least 5 minutes to complete, please be patient</h3></font>"
+    echo " <font color=\"blue\"><h3>This process will take at least 5 minutes to complete. Please be patient</h3></font>"
 
     
     retry_command "tar -xzf \"$STOCHOPTIM.tgz\""
@@ -425,7 +430,7 @@ else
     echo "Building StochKit ODE<br />"
     echo " Logging stdout in $STOCHSS_HOME/stdout.log and <br />"
     echo " stderr in $STOCHSS_HOME/stderr.log <br />"
-    echo "<font color=\"blue\"><h3>This process should take about a minute to complete, please be patient</h3></font><br />"
+    echo "<font color=\"blue\"><h3>This process should take about a minute to complete. Please be patient</h3></font><br />"
     wd=`pwd`
     tmpdir=$(mktemp -d /tmp/tmp.XXXXXX)
     retry_command "tar -xzf \"$STOCHKIT_ODE.tgz\""
