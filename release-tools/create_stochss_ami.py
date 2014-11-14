@@ -94,7 +94,7 @@ class AmiCreator:
     self.run_tests()
     self.__cleanup_instance()
     self.make_image()
-    self.__stop_instance()
+    self.__terminate_instance()
 
   def __create_ec2_connection(self):
     if os.environ.has_key('AWS_ACCESS_KEY'):
@@ -308,7 +308,8 @@ class AmiCreator:
                                                operation='add',
                                                groups='all')
 
-  def __stop_instance(self):
+
+  def __terminate_instance(self):
     print '================================'
     print 'Terminating launched instance...'
     print '================================'
