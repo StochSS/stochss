@@ -51,24 +51,28 @@ class CelerySingleton(object):
         if not cls._instance:
             cls._instance = object.__new__(cls)
             cls._instance.app = Celery('tasks')
-            cls.__configure(cls._instance)
+            #cls.__configure(cls._instance)
         return cls._instance
     
-    def __configure(self):
+    def configure(self):
         reload(celeryconfig)
-        self.app.config_from_object(celeryconfig)
+        self.app.config_from_object('celeryconfig')
         
-    def add_queue(self, queue_name, exchange_name, routing_key):
-        exchange = Exchange(exchange_name, type='direct')
-        if not self.app.conf.CELERY_QUEUES:
-            logging.info('No celery queue is currently existing.Creating CELERY_QUEUES')
-            self.app.conf.CELERY_QUEUES = ()
-        if Queue(queue_name, exchange, routing_key) not in self.app.conf.CELERY_QUEUES:
-            logging.info('{0} queue is not existing.Creating it.'.format(queue_name))
-            self.app.conf.CELERY_QUEUES += (Queue(queue_name, exchange, routing_key),)
+    def printCeleryQueue(self):
+        print self.app.conf.BROKER_URL
+        print self.app.conf.CELERY_QUEUES
+        
+#     def add_queue(self, queue_name, exchange_name, routing_key):
+#         exchange = Exchange(exchange_name, type='direct')
+#         if not self.app.conf.CELERY_QUEUES:
+#             logging.info('No celery queue is currently existing.Creating CELERY_QUEUES')
+#             self.app.conf.CELERY_QUEUES = ()
+#         if Queue(queue_name, exchange, routing_key) not in self.app.conf.CELERY_QUEUES:
+#             logging.info('{0} queue is not existing.Creating it.'.format(queue_name))
+#             self.app.conf.CELERY_QUEUES += (Queue(queue_name, exchange, routing_key),)
 
 celery_config = CelerySingleton()
-# celery_config.configure()
+celery_config.configure()
 celery = celery_config.app
 
 def poll_commands(queue_name):

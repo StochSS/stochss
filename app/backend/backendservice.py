@@ -218,14 +218,18 @@ class backendservices():
                 else:
                     queue_ins_name = ""
                 
-                celery_queue_name = backend_handler.CELERY_QUEUE_EC2+""+queue_ins_name
-                celery_routing_key = backend_handler.CELERY_ROUTING_KEY_EC2+""+queue_ins_name
-                logging.info('Deliver the task to celery queue: {0}, routing key: {1}'.format(celery_queue_name, celery_routing_key))
+#                 celery_config = tasks.CelerySingleton()
+#                 celery_config.configure()
+#                 celery_config.printCeleryQueue()
+                celery_queue_name = backend_handler.CELERY_QUEUE_EC2+""+"_t1micro"
+                celery_exchange = backend_handler.CELERY_EXCHANGE_EC2
+                celery_routing_key = backend_handler.CELERY_ROUTING_KEY_EC2+""+"_t1micro"
+                logging.info('Deliver the task to the queue: {0}, routing key: {1}'.format(celery_queue_name, celery_routing_key))
                 #celery async task execution http://ask.github.io/celery/userguide/executing.html
                 tmp = tasks.task.apply_async(args=[taskid, params, access_key, secret_key], queue=celery_queue_name, routing_key=celery_routing_key)
                 #delay(taskid, params, access_key, secret_key)  #calls task(taskid,params,access_key,secret_key)
 #                 logging.info('RESULT OF TASK: {0}'.format(tmp.get()))
-                
+                print tmp.ready()
                 result["celery_pid"] = tmp.id
 
             logging.info("executeTask :  result of task : %s", str(tmp.id))
