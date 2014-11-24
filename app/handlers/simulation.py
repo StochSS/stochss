@@ -711,7 +711,7 @@ class SimulatePage(BaseHandler):
             access_key = os.environ["AWS_ACCESS_KEY_ID"]
             secret_key = os.environ['AWS_SECRET_ACCESS_KEY']
             print "backendservices.executeTask() params = {0}".format(params)
-            cloud_result = service.executeTask(params, access_key, secret_key)
+            cloud_result = service.executeTask(params, "ec2", access_key, secret_key)
             if not cloud_result["success"]:
                 e = cloud_result["exception"]
                 result = {

@@ -20,4 +20,4 @@ CELERYD_PREFETCH_MULTIPLIER = 1
 # CELERY_ACKS_LATE = True
 from kombu import Queue, Exchange
 exchange = Exchange('default', type = 'direct')
-CELERY_QUEUES = (Queue('default', exchange, routing_key = 'default'))
+CELERY_QUEUES = (Queue('default', exchange, routing_key = 'default'),)

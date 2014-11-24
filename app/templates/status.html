@@ -3,7 +3,7 @@
 {% block content %}
 
 <!-- Script to check/unckeck all checkboxes -->
-<script language="JavaScript">
+<script language="">
     function toggle(source) {
     checkboxes = document.getElementsByName('select_job');
     for(var i=0, n=checkboxes.length;i<n;i++) {
@@ -37,13 +37,15 @@
                         <tr>
                             <th width="40pt"></th>
                             <th width="40pt">Job #</th>
-                            <th width="200pt">Job name </th>
-                            <th width="100pt">Resource </th>
+                            <th>Job name </th>
+                            <th width="50pt">Resource </th>
                         
                             <th width="100pt">Status</th>
                             
-                            <th width="150pt">Result</th>
-                            <th width="150pt">Reproduce</th>
+                            <th width="100pt">Result</th>
+                            <th width="100pt">Reproduce</th>
+                            <th width="150pt">Cost Analysis</th>
+                            
                         </tr>
                     </thead>
                     <tbody>
@@ -106,6 +108,9 @@
                                 {% endif%}
                                 
                                 
+                            </td>
+                            <td>
+                            	<a href="/cost_analysis?id={{job.id}}">Analyze</a>
                             </td>
                         </tr>
                         

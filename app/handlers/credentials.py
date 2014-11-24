@@ -14,6 +14,7 @@ from backend.backendservice import *
 from backend.tasks import createtable
 from google.appengine.ext import db
 import time
+from backend import pricing
 
 class CredentialsPage(BaseHandler):
     """
@@ -32,7 +33,7 @@ class CredentialsPage(BaseHandler):
                 raise InvalidUserException
         except Exception, e:
             raise InvalidUserException('Cannot determine the current user. '+str(e))
-
+        
         context = self.getContext(user_id)
         self.render_response('credentials.html', **context)
 

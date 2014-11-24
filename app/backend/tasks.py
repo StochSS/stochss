@@ -478,7 +478,7 @@ def with_temp_file(file_names):
         yield file_handle
 
 @celery.task(name='stochss')
-def task(taskid,params, access_key, secret_key):
+def task(taskid, params, access_key, secret_key, task_prefix=""):
   ''' 
   This is the actual work done by a task worker 
   
@@ -494,11 +494,15 @@ def task(taskid,params, access_key, secret_key):
       global STOCHKIT_DIR
       global ODE_DIR
       
+      res = {}
+      uuidstr = taskid
+      res['uuid'] = uuidstr
+      
       bucketname = params['bucketname']
       if_tracking = False
       try:
         # Initialize cloudtracker with the task's UUID
-        ct = CloudTracker(access_key, secret_key, taskid, bucketname)
+        ct = CloudTracker(access_key, secret_key, uuidstr, bucketname)
         if_tracking = ct.if_tracking()
         
         logging.info('This is the first time to execute the job? '.format(if_tracking))
@@ -511,11 +515,13 @@ def task(taskid,params, access_key, secret_key):
       logging.info('task to be executed at remote location')
       print 'inside celery task method'
       data = {'status':'active','message':'Task Executing in cloud'}
-      updateEntry(taskid, data, "stochss")
-      res = {}
+      
+      # will have prefix for cost-anaylsis job
+      taskid = task_prefix + taskid
+      
+      updateEntry(taskid, data, params["dynamo_table"])
       paramstr =  params['paramstring']
-      uuidstr = taskid
-      res['uuid'] = uuidstr
+      
       job_type = params['job_type']
       if job_type == 'spatial':
         create_dir_str = "mkdir -p output/%s/results " % uuidstr
@@ -564,7 +570,6 @@ def task(taskid,params, access_key, secret_key):
       if 'stats' in results and os.listdir("output/{0}/result/stats".format(uuidstr)) == ['.parallel']:
           raise Exception("The compute node can not handle a job of this size.")     
       
-      res['pid'] = taskid
       filepath = "output/%s//" % (uuidstr)
       absolute_file_path = os.path.abspath(filepath)  
       
@@ -574,13 +579,14 @@ def task(taskid,params, access_key, secret_key):
       except Exception,e:
         print "CloudTracker Error: track_output"
         print e
-        
+          
+      
       print 'generating tar file'
       create_tar_output_str = "tar -zcvf output/{0}.tar output/{0}".format(uuidstr)
       print create_tar_output_str      
       copy_to_s3_str = "python {2}/sccpy.py output/{0}.tar {1}".format(uuidstr,bucketname,THOME)
       data = {'status':'active','message':'Task finished. Generating output.'}
-      updateEntry(taskid, data, "stochss")
+      updateEntry(taskid, data, params["dynamo_table"])
       os.system(create_tar_output_str)
       print 'copying file to s3 : {0}'.format(copy_to_s3_str)
       os.system(copy_to_s3_str)
@@ -591,11 +597,17 @@ def task(taskid,params, access_key, secret_key):
       os.system(removetarstr)
       removeoutputdirstr = "rm -r output/{0}".format(uuidstr)
       os.system(removeoutputdirstr)
-      res['output'] = "https://s3.amazonaws.com/{1}/output/{0}.tar".format(taskid,bucketname)
-      res['status'] = "finished"
       diff = timeended - timestarted
-      res['time_taken'] = "{0} seconds and {1} microseconds ".format(diff.seconds, diff.microseconds)
-      updateEntry(taskid, res, "stochss")
+      # if there is some task prefix, meaning that it is cost replay, 
+      # update the table another way
+      res['status'] = "finished"
+      if task_prefix != "":
+          res['time_taken'] = "{0} seconds".format(diff.total_seconds())
+      else: 
+          res['pid'] = uuidstr
+          res['output'] = "https://s3.amazonaws.com/{1}/output/{0}.tar".format(uuidstr,bucketname)  
+          res['time_taken'] = "{0} seconds and {1} microseconds ".format(diff.seconds, diff.microseconds)
+      updateEntry(taskid, res, params["dynamo_table"])
 
   except Exception,e:
       expected_output_dir = "output/%s" % uuidstr

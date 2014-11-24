@@ -43,7 +43,7 @@ class backendservices():
         sys.path.append(os.path.join(os.path.dirname(__file__), 
                                      '/Library/Python/2.7/site-packages/amqp'))
             
-    def executeTask(self, params, access_key, secret_key, instance_type=None):
+    def executeTask(self, params, agent, access_key, secret_key, instance_type=None, cost_replay=False):
         '''
         This method instantiates celery tasks in the cloud.
 	Returns return value from celery async call and the task ID
@@ -212,21 +212,32 @@ class backendservices():
                 p = subprocess.Popen(shlex.split(poll_task_string))
                 result["celery_pid"] = tmp.id
             else:
-                updateEntry(taskid, data, backendservices.TABLENAME)
                 if instance_type:
                     queue_ins_name = "_"+instance_type.replace(".", "")
                 else:
                     queue_ins_name = ""
                 
-#                 celery_config = tasks.CelerySingleton()
-#                 celery_config.configure()
-#                 celery_config.printCeleryQueue()
-                celery_queue_name = backend_handler.CELERY_QUEUE_EC2+""+"_t1micro"
+                celery_config = tasks.CelerySingleton()
+                celery_config.configure()
+                celery_config.printCeleryQueue()
+                celery_queue_name = backend_handler.CELERY_QUEUE_EC2+""+queue_ins_name
                 celery_exchange = backend_handler.CELERY_EXCHANGE_EC2
-                celery_routing_key = backend_handler.CELERY_ROUTING_KEY_EC2+""+"_t1micro"
+                celery_routing_key = backend_handler.CELERY_ROUTING_KEY_EC2+""+queue_ins_name
                 logging.info('Deliver the task to the queue: {0}, routing key: {1}'.format(celery_queue_name, celery_routing_key))
                 #celery async task execution http://ask.github.io/celery/userguide/executing.html
-                tmp = tasks.task.apply_async(args=[taskid, params, access_key, secret_key], queue=celery_queue_name, routing_key=celery_routing_key)
+                
+                # if this is the cost analysis replay then update the stochss-cost-analysis table
+                if cost_replay:
+                    params["dynamo_table"] = "stochss-cost-analysis"
+                    data["agent"] = agent
+                    data["instance_type"] = instance_type
+                    taskid_prefix = agent+"_"+instance_type+"_"
+                    updateEntry(taskid_prefix+taskid, data, params["dynamo_table"])
+                    tmp = tasks.task.apply_async(args=[taskid, params, access_key, secret_key, taskid_prefix], queue=celery_queue_name, routing_key=celery_routing_key)
+                else:
+                    params["dynamo_table"] = backendservices.TABLENAME
+                    updateEntry(taskid, data, params["dynamo_table"])
+                    tmp = tasks.task.apply_async(args=[taskid, params, access_key, secret_key], queue=celery_queue_name, routing_key=celery_routing_key)
                 #delay(taskid, params, access_key, secret_key)  #calls task(taskid,params,access_key,secret_key)
 #                 logging.info('RESULT OF TASK: {0}'.format(tmp.get()))
                 print tmp.ready()

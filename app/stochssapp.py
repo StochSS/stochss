@@ -310,6 +310,7 @@ import handlers.mesheditor
 from handlers.simulation import *
 from handlers.sensitivity import *
 from handlers.credentials import *
+from handlers.cost_analysis import *
 from handlers.converttopopulation import *
 from handlers.updates import *
 from handlers.status import *
@@ -318,6 +319,7 @@ from handlers.auth import *
 from handlers.admin import *
 import handlers.fileserver
 import handlers.spatial
+from backend import pricing
 
 # Handler to serve static files
 class StaticFileHandler(BaseHandler):
@@ -388,6 +390,7 @@ app = webapp2.WSGIApplication([
                                ('/output/[a-zA-Z0-9-_]*.tgz',JobOutPutPage),
                                ('/output/servestatic',StaticFileHandler),
                                ('/credentials',CredentialsPage),
+                               ('/cost_analysis',CostAnalysisPage),
                                ('/localsettings',LocalSettingsPage),
                                ('/updates',UpdatesPage),
                                ('/secret_key', SecretKeyHandler),
@@ -402,6 +405,7 @@ app = webapp2.WSGIApplication([
 
 
 logging.getLogger().setLevel(logging.DEBUG)
+pricing.initialize_price_model()
 
 if __name__ == '__main__':
     sys.path.append(os.path.join(os.path.dirname(__file__), 'lib'))

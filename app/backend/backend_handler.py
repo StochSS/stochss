@@ -736,9 +736,7 @@ class BackendWorker():
         # get all intstance types and configure the celeryconfig.py locally
         instance_types = VMStateModel.get_running_instance_type(params)
         self.__config_celery_queues(CELERY_EXCHANGE_EC2, CELERY_QUEUE_EC2, CELERY_ROUTING_KEY_EC2, instance_types)
-        # reload the celery configuration
-        my_celery = CelerySingleton()
-        my_celery.configure()
+        
         
     def __config_celery_queues(self, exchange_name, queue_name, routing_key, ins_types):
         exchange = "exchange = Exchange('"+exchange_name+"', type = 'direct')"
@@ -753,16 +751,29 @@ class BackendWorker():
         celery_config_filename = os.path.join(
             os.path.dirname(os.path.abspath(__file__)),
             "celeryconfig.py"
-        )    
-        tempFile = open(celery_config_filename, 'r+' )
-        for line in fileinput.input(celery_config_filename):
-            if line.strip().startswith('exchange'):
-                tempFile.write(exchange+"\n")
+        )
+        
+        f = open(celery_config_filename, 'r' )
+        lines = f.readlines()
+        f.close()
+        
+        f = open(celery_config_filename, 'w' )
+        clear_following = False
+        for line in lines:
+            if clear_following:
+                f.write("")
+            elif line.strip().startswith('exchange'):
+                f.write(exchange+"\n")
             elif line.strip().startswith('CELERY_QUEUES'):
-                tempFile.write(CELERY_QUEUES+"\n")
+                f.write(CELERY_QUEUES+"\n")
+                clear_following = True
             else:
-                tempFile.write(line)
-        tempFile.close()
+                f.write(line)
+        f.close()
+        
+        # reload the celery configuration
+        my_celery = CelerySingleton()
+        my_celery.configure()
         
 
     def __wait_for_ssh_connection(self, keyfile, ip):
