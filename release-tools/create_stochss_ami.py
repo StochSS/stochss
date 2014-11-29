@@ -66,6 +66,9 @@ class AmiCreator:
     self.python_packages = options['python_packages']
     self.git_repo = options['git_repo']
 
+    print 'GIT REPO: {0}'.format(self.git_repo['url'])
+    print 'BRANCH: {0}'.format(self.git_repo['branch'])
+
     self.ec2_connection = self.__create_ec2_connection()
 
     self.key_name = "test_stochss_kp_{0}".format(self.uuid)
@@ -97,13 +100,13 @@ class AmiCreator:
     self.__terminate_instance()
 
   def __create_ec2_connection(self):
-    if os.environ.has_key('AWS_ACCESS_KEY'):
-      aws_access_key = os.environ['AWS_ACCESS_KEY']
+    if os.environ.has_key('AWS_ACCESS_KEY_ID'):
+      aws_access_key = os.environ['AWS_ACCESS_KEY_ID']
     else:
       aws_access_key = raw_input("Please enter your AWS access key: ")
 
-    if os.environ.has_key('AWS_SECRET_KEY'):
-      aws_secret_key = os.environ['AWS_SECRET_KEY']
+    if os.environ.has_key('AWS_SECRET_ACCESS_KEY'):
+      aws_secret_key = os.environ['AWS_SECRET_ACCESS_KEY']
     else:
       aws_secret_key = raw_input("Please enter your AWS secret key: ")
 
@@ -113,9 +116,12 @@ class AmiCreator:
 
   def __launch_instance(self):
     key_pair = self.ec2_connection.create_key_pair(self.key_name)
-    key_pair.save('.')
 
-    self.key_file = str(os.path.join(os.path.dirname(os.path.abspath(__file__)), "{0}.pem".format(self.key_name)))
+    current_dir = os.path.dirname(os.path.abspath(__file__))
+    key_pair.save(current_dir)
+
+    self.key_file = os.path.join(current_dir, "{0}.pem".format(self.key_name))
+
     if os.path.exists(self.key_file):
       print 'Downloaded key file: ', self.key_file
     else:
