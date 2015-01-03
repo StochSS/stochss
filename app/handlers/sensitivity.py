@@ -61,6 +61,8 @@ class SensitivityJobWrapper(db.Model):
         if self.zipFileName:
             if os.path.exists(self.zipFileName):
                 os.remove(self.zipFileName)
+                
+            
 
         super(SensitivityJobWrapper, self).delete()
 
@@ -345,7 +347,7 @@ class SensitivityPage(BaseHandler):
         os.environ["AWS_ACCESS_KEY_ID"] = db_credentials['EC2_ACCESS_KEY']
         os.environ["AWS_SECRET_ACCESS_KEY"] = db_credentials['EC2_SECRET_KEY']
         # Send the task to the backend
-        cloud_result = service.executeTask(params, db_credentials['EC2_ACCESS_KEY'], db_credentials['EC2_SECRET_KEY'])
+        cloud_result = service.executeTask(params, "ec2", db_credentials['EC2_ACCESS_KEY'], db_credentials['EC2_SECRET_KEY'])
         # if not cloud_result["success"]:
         if not cloud_result["success"]:
             return None, cloud_result

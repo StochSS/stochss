@@ -43,8 +43,8 @@
                             <th width="100pt">Status</th>
                             
                             <th width="100pt">Result</th>
-                            <th width="100pt">Reproduce</th>
-                            <th width="150pt">Cost Analysis</th>
+                            <th width="150pt">Reproduce</th>
+                            <th width="100pt">Cost Analysis</th>
                             
                         </tr>
                     </thead>
@@ -110,7 +110,7 @@
                                 
                             </td>
                             <td>
-                            	<a href="/cost_analysis?id={{job.id}}">Analyze</a>
+                            	<a href="/cost_analysis?uuid={{job.uuid}}&name={{job.name}}">Analyze</a>
                             </td>
                         </tr>
                         
@@ -127,12 +127,14 @@
                         <tr>
                             <th width="40pt"></th>
                             <th width="40pt">Job #</th>
-                            <th width="200pt">Job name </th>
-                            <th width="100pt">Resource </th>
+                            <th>Job name </th>
+                            <th width="50pt">Resource </th>
+                        
                             <th width="100pt">Status</th>
                             
-                            <th width="150pt">Result</th>
+                            <th width="100pt">Result</th>
                             <th width="150pt">Reproduce</th>
+                            <th width="100pt">Cost Analysis</th>
                         </tr>
                     </thead>
                     <tbody>
@@ -195,6 +197,9 @@
                                 
                                 
                             </td>
+                            <td>
+                            	<a href="/cost_analysis?uuid={{job.uuid}}&name={{job.name}}">Analyze</a>
+                            </td>
                         </tr>
                         {% endfor %}
                     </tbody>
@@ -209,12 +214,14 @@
                         <tr>
                             <th width="40pt"></th>
                             <th width="40pt">Job #</th>
-                            <th width="200pt">Job name </th>
-                            <th width="100pt">Resource </th>
+                            <th>Job name </th>
+                            <th width="50pt">Resource </th>
+                        
                             <th width="100pt">Status</th>
                             
-                            <th width="150pt">Result</th>
+                            <th width="100pt">Result</th>
                             <th width="150pt">Reproduce</th>
+                            <th width="100pt">Cost Analysis</th>
                         </tr>
                     </thead>
                     <tbody>
@@ -268,6 +275,9 @@
                                 {% else %}
                                 <span style="color: black" class="create_msg">N/A</span>
                                 {% endif%}
+                            </td>
+                            <td>
+                            	<a href="/cost_analysis?uuid={{job.uuid}}&name={{job.name}}">Analyze</a>
                             </td>
                             
                         </tr>

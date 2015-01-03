@@ -12,7 +12,7 @@ import s3_helper
 import logging
 import shutil
 from backend import tasks
-from backend import backendservice
+from backend.backendservice import backendservices
 
 DEFAULT_BUCKET_NAME = ''
 
@@ -76,14 +76,14 @@ class DataReproductionPage(BaseHandler):
         
         elif req_type == 'rerun':
         
-            backend_services = backendservice.backendservices()
+            service = backendservices()
         
             compute_check_params = {
                     "infrastructure": "ec2",
                     "credentials": self.user_data.getCredentials(),
                     "key_prefix": self.user.user_id()
             }
-            if not self.user_data.valid_credentials or not backend_services.isOneOrMoreComputeNodesRunning(compute_check_params):
+            if not self.user_data.valid_credentials or not service.isOneOrMoreComputeNodesRunning(compute_check_params):
                 self.response.write(json.dumps({
                     'status': False,
                     'msg': 'You must have at least one active compute node to run in the cloud.'
@@ -94,7 +94,8 @@ class DataReproductionPage(BaseHandler):
             uuid = self.request.get('uuid')
 
             logging.info('job uuid: '.format(uuid))
-        
+            
+            
           
         
             if job_type == 'stochkit':
@@ -118,10 +119,17 @@ class DataReproductionPage(BaseHandler):
                     logging.info("OUT_PUT SIZE: {0}".format(params['output_size']))
                 
                     time = datetime.datetime.now()
-                    celery_task = tasks.task.delay(uuid, params, access_key, secret_key)  #calls task(taskid,params,access_key,secret_key)
-                      
+                    cloud_result = service.executeTask(params, "ec2", access_key, secret_key, uuid)  #calls task(taskid,params,access_key,secret_key)
+                    
+                    if not cloud_result["success"]:
+                        e = cloud_result["exception"]
+                        result = {
+                                  'status': False,
+                                  'msg': 'Cloud execution failed: '+str(e)
+                                 }
+                        return result 
                     # The celery_pid is the Celery Task ID.
-                    job.stochkit_job.celery_pid = celery_task.id
+                    job.stochkit_job.celery_pid = cloud_result["celery_pid"]
                     job.stochkit_job.status = 'Running'
                     job.stochkit_job.output_location = None
                     job.output_stored = 'True'
@@ -155,10 +163,19 @@ class DataReproductionPage(BaseHandler):
                     params = ct.get_input()
                 
                     time = datetime.datetime.now()
-                    celery_task = tasks.task.delay(uuid, params, access_key, secret_key)  #calls task(taskid,params,access_key,secret_key)
-                
+                    cloud_result = service.executeTask(params, "ec2", access_key, secret_key, uuid)  #calls task(taskid,params,access_key,secret_key)
+                    
+                    if not cloud_result["success"]:
+                        e = cloud_result["exception"]
+                        result = {
+                                  'status': False,
+                                  'msg': 'Cloud execution failed: '+str(e)
+                                 }
+                        return result 
+                    
+                    # The celery_pid is the Celery Task ID.
                     job.status = "Running"    
-                    job.celeryPID = celery_task.id
+                    job.celeryPID = cloud_result["celery_pid"]
                     job.startTime = time.strftime("%Y-%m-%d-%H-%M-%S")
                     job.output_stored = 'True'
                     job.put()
@@ -187,10 +204,18 @@ class DataReproductionPage(BaseHandler):
                     params = ct.get_input()
                 
                     time = datetime.datetime.now()
-                    celery_task = tasks.task.delay(uuid, params, access_key, secret_key)  #calls task(taskid,params,access_key,secret_key)
-                
+                    cloud_result = service.executeTask(params, "ec2", access_key, secret_key, uuid)  #calls task(taskid,params,access_key,secret_key)
+                    
+                    if not cloud_result["success"]:
+                        e = cloud_result["exception"]
+                        result = {
+                                  'status': False,
+                                  'msg': 'Cloud execution failed: '+str(e)
+                                 }
+                        return result 
+                    
                     job.status = "Running"    
-                    job.celeryPID = celery_task.id
+                    job.celeryPID = cloud_result["celery_pid"]
                     job.startTime = time.strftime("%Y-%m-%d-%H-%M-%S")
                     job.output_stored = 'True'
                     job.put()

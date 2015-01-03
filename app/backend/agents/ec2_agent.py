@@ -233,6 +233,7 @@ class EC2Agent(BaseAgent):
         instance["private_ip"] = i.private_dns_name
         instance["state"]= i.state
         instance["key_name"] = i.key_name
+        instance["instance_type"] = i.instance_type
         instanceList.append(instance)
     return instanceList
 

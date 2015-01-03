@@ -28,6 +28,8 @@ import pickle
 import numpy
 import traceback
 import shutil
+import boto
+from boto.dynamodb import condition
 sys.path.append(os.path.join(os.path.dirname(__file__), '../lib/cloudtracker'))
 from s3_helper import *
 
@@ -83,6 +85,14 @@ class SpatialJobWrapper(db.Model):
                 #delete the output tar file
                 delete_file(bucketname, 'output/'+self.cloud_id+'.tar', credentials['AWS_ACCESS_KEY_ID'], credentials['AWS_SECRET_ACCESS_KEY'])
                 logging.info('delete the output tar file output/{1}.tar in bucket {0}'.format(bucketname, self.cloud_id))
+                
+                #delete dynamodb entries
+                dynamo=boto.connect_dynamodb(aws_access_key_id=os.environ["AWS_ACCESS_KEY_ID"], aws_secret_access_key=os.environ["AWS_SECRET_ACCESS_KEY"])
+                table = dynamo.get_table("stochss_cost_analysis")
+                results = table.scan(scan_filter={'uuid' :condition.EQ(self.cloud_id)})
+                for result in results:
+                    result.delete()
+                    
             except:
                 raise Exception('fail to delete cloud output or rerun sources.')  
         
@@ -567,7 +577,7 @@ class SpatialPage(BaseHandler):
             os.environ["AWS_ACCESS_KEY_ID"] = self.user_data.getCredentials()['EC2_ACCESS_KEY']
             os.environ["AWS_SECRET_ACCESS_KEY"] = self.user_data.getCredentials()['EC2_SECRET_KEY']
             service = backend.backendservice.backendservices()
-            cloud_result = service.executeTask(cloud_params, os.environ["AWS_ACCESS_KEY_ID"], os.environ["AWS_SECRET_ACCESS_KEY"])
+            cloud_result = service.executeTask(cloud_params, "ec2", os.environ["AWS_ACCESS_KEY_ID"], os.environ["AWS_SECRET_ACCESS_KEY"])
             if not cloud_result["success"]:
                 e = cloud_result["exception"]
                 self.response.write(json.dumps({"status" : False,

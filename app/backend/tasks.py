@@ -496,8 +496,7 @@ def task(taskid, params, access_key, secret_key, task_prefix=""):
       
       res = {}
       uuidstr = taskid
-      res['uuid'] = uuidstr
-      
+       
       bucketname = params['bucketname']
       if_tracking = False
       try:
@@ -580,33 +579,36 @@ def task(taskid, params, access_key, secret_key, task_prefix=""):
         print "CloudTracker Error: track_output"
         print e
           
-      
-      print 'generating tar file'
-      create_tar_output_str = "tar -zcvf output/{0}.tar output/{0}".format(uuidstr)
-      print create_tar_output_str      
-      copy_to_s3_str = "python {2}/sccpy.py output/{0}.tar {1}".format(uuidstr,bucketname,THOME)
       data = {'status':'active','message':'Task finished. Generating output.'}
       updateEntry(taskid, data, params["dynamo_table"])
-      os.system(create_tar_output_str)
-      print 'copying file to s3 : {0}'.format(copy_to_s3_str)
-      os.system(copy_to_s3_str)
-      print 'removing xml file'
-      removefilestr = "rm {0}".format(xmlfilepath)
-      os.system(removefilestr)
-      removetarstr = "rm output/{0}.tar".format(uuidstr)
-      os.system(removetarstr)
-      removeoutputdirstr = "rm -r output/{0}".format(uuidstr)
-      os.system(removeoutputdirstr)
       diff = timeended - timestarted
-      # if there is some task prefix, meaning that it is cost replay, 
-      # update the table another way
-      res['status'] = "finished"
+      
       if task_prefix != "":
+          res['status'] = "finished"
           res['time_taken'] = "{0} seconds".format(diff.total_seconds())
-      else: 
+      else:   
+          print 'generating tar file'
+          create_tar_output_str = "tar -zcvf output/{0}.tar output/{0}".format(uuidstr)
+          print create_tar_output_str      
+          copy_to_s3_str = "python {2}/sccpy.py output/{0}.tar {1}".format(uuidstr,bucketname,THOME)     
+          os.system(create_tar_output_str)
+          print 'copying file to s3 : {0}'.format(copy_to_s3_str)
+          os.system(copy_to_s3_str)
+          print 'removing xml file'
+          removefilestr = "rm {0}".format(xmlfilepath)
+          os.system(removefilestr)
+          removetarstr = "rm output/{0}.tar".format(uuidstr)
+          os.system(removetarstr)
+          removeoutputdirstr = "rm -r output/{0}".format(uuidstr)
+          os.system(removeoutputdirstr)
+      
+          # if there is some task prefix, meaning that it is cost replay, 
+          # update the table another way
+          res['status'] = "finished" 
           res['pid'] = uuidstr
           res['output'] = "https://s3.amazonaws.com/{1}/output/{0}.tar".format(uuidstr,bucketname)  
           res['time_taken'] = "{0} seconds and {1} microseconds ".format(diff.seconds, diff.microseconds)
+      
       updateEntry(taskid, res, params["dynamo_table"])
 
   except Exception,e:
@@ -741,7 +743,7 @@ def describetask(taskids,tablename):
 def removetask(tablename,taskid):
     print 'inside removetask method with tablename = {0} and taskid = {1}'.format(tablename, taskid)
     try:
-        dynamo=boto.connect_dynamodb()
+        dynamo=boto.connect_dynamodb()#boto.dynamodb.connect_to_region('us-east-1')
         if tableexists(dynamo, tablename):
             table = dynamo.get_table(tablename)
             item = table.get_item(hash_key=taskid)
@@ -762,7 +764,7 @@ def createtable(tablename=str()):
         print 'default table name picked as stochss'
     try:
         print 'connecting to dynamodb'
-        dynamo=boto.connect_dynamodb()
+        dynamo=boto.connect_dynamodb()#boto.dynamodb.connect_to_region('us-east-1')
         #check if table already exisits
         print 'checking if table {0} exists'.format(tablename)
         if not tableexists(dynamo,tablename):
@@ -798,11 +800,17 @@ def updateEntry(taskid=str(), data=dict(), tablename=str()):
         print 'inside update entry method with taskid = {0} and data = {1}'.format(taskid, str(data))
         dynamo=boto.connect_dynamodb()
         if not tableexists(dynamo, tablename):
-            print "invalid table name specified"
-            return False
+            createtable(tablename)
+#             print "invalid table name specified"
+#             return False
         table = dynamo.get_table(tablename)
-        item = table.new_item(hash_key=str(taskid),attrs=data)
-        item.put()
+        if table.has_item(hash_key=str(taskid)):
+            item = table.get_item(hash_key=str(taskid))
+            item.update(data)
+            item.put()
+        else:
+            item = table.new_item(hash_key=str(taskid),attrs=data)
+            item.put()
         return True
     except Exception,e:
         print 'exiting updatedata with error : {0}'.format(str(e))

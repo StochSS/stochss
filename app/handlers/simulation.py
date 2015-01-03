@@ -12,6 +12,8 @@ import random
 import subprocess
 import traceback
 import logging
+import boto
+from boto.dynamodb import condition
 from google.appengine.api import users
 
 from stochss.model import *
@@ -118,6 +120,14 @@ class StochKitJobWrapper(db.Model):
                 #delete the output tar file
                 delete_file(bucketname, 'output/'+stochkit_job.pid+'.tar', db_credentials['EC2_ACCESS_KEY'], db_credentials['EC2_SECRET_KEY'])
                 logging.info('delete the output tar file output/{1}.tar in bucket {0}'.format(bucketname, stochkit_job.pid))
+                
+                #delete dynamodb entries
+                dynamo=boto.connect_dynamodb(aws_access_key_id=os.environ["AWS_ACCESS_KEY_ID"], aws_secret_access_key=os.environ["AWS_SECRET_ACCESS_KEY"])
+                table = dynamo.get_table("stochss_cost_analysis")
+                results = table.scan(scan_filter={'uuid' :condition.EQ(stochkit_job.pid)})
+                for result in results:
+                    result.delete()
+                
             except:
                 raise Exception('fail to delete cloud output or rerun sources.')
 
@@ -438,7 +448,9 @@ class SimulatePage(BaseHandler):
             assert job.user_id == self.user.user_id()
 
             #try:
+            # delete the db entry
             job.delete(self)
+            
             #except Exception,e:
             #    self.response.headers['Content-Type'] = 'application/json'
             #    self.response.write(json.dumps({ 'status' : False,

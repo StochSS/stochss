@@ -43,7 +43,7 @@ class backendservices():
         sys.path.append(os.path.join(os.path.dirname(__file__), 
                                      '/Library/Python/2.7/site-packages/amqp'))
             
-    def executeTask(self, params, agent, access_key, secret_key, instance_type=None, cost_replay=False):
+    def executeTask(self, params, agent, access_key, secret_key, taskid=None, instance_type=None, cost_replay=False):
         '''
         This method instantiates celery tasks in the cloud.
 	Returns return value from celery async call and the task ID
@@ -81,8 +81,11 @@ class backendservices():
                     continue
                 logging.info("Broker up")
                 break
-
-            taskid = str(uuid.uuid4())
+            
+            # if there is no taskid explicit, create one the first run
+            if not taskid:
+                taskid = str(uuid.uuid4())
+                
             result["db_id"] = taskid
             #create a celery task
             logging.info("executeTask : executing task with uuid : %s ", taskid)
@@ -90,7 +93,8 @@ class backendservices():
             data = {
                 'status': "pending",
                 "start_time": timenow.strftime('%Y-%m-%d %H:%M:%S'),
-                'Message': "Task sent to Cloud"
+                'Message': "Task sent to Cloud",
+                'uuid': taskid
             }
             
             tmp = None
@@ -228,9 +232,21 @@ class backendservices():
                 
                 # if this is the cost analysis replay then update the stochss-cost-analysis table
                 if cost_replay:
-                    params["dynamo_table"] = "stochss-cost-analysis"
-                    data["agent"] = agent
-                    data["instance_type"] = instance_type
+                    params["dynamo_table"] = "stochss_cost_analysis"
+                    data={}
+                    data['status'] = "pending"
+                    data['start_time'] = timenow.strftime('%Y-%m-%d %H:%M:%S')
+                    data['message'] = "Task sent to Cloud"
+                    data['agent'] = agent
+                    data['instance_type'] = instance_type
+                    data['uuid'] = taskid
+#                     data = {
+#                             'status': "pending",
+#                             'start_time': timenow.strftime('%Y-%m-%d %H:%M:%S'),
+#                             'Message': "Task sent to Cloud",
+#                             'agent': agent,
+#                             'instance_type': instance_type
+#                     }
                     taskid_prefix = agent+"_"+instance_type+"_"
                     updateEntry(taskid_prefix+taskid, data, params["dynamo_table"])
                     tmp = tasks.task.apply_async(args=[taskid, params, access_key, secret_key, taskid_prefix], queue=celery_queue_name, routing_key=celery_routing_key)
@@ -427,9 +443,10 @@ class backendservices():
                 logging.error("deleteTaskLocal : couldn't kill process. error: %s", str(e))
         logging.info("deleteTaskLocal : exiting method")
     
-    def isOneOrMoreComputeNodesRunning(self, params):# credentials):
+        
+    def isOneOrMoreComputeNodesRunning(self, params, ins_type=None):# credentials):
         '''
-        Checks for the existence of running compute nodes. Only need one running compute node
+        Checks for the existence of running compute nodes. Only need one of running compute node
         to be able to run a job in the cloud.
         '''
         credentials = params["credentials"]
@@ -446,13 +463,17 @@ class backendservices():
             if all_vms == None:
                 return False
             # Just need one running vm
-            for vm in all_vms:
-                if vm != None and vm['state'] == 'running':
-                    return True
+            if ins_type:
+                for vm in all_vms:
+                    if vm != None and vm['state'] == 'running' and vm['instance_type'] == ins_type:
+                        return True
+            else:
+                for vm in all_vms:
+                    if vm != None and vm['state'] == 'running':
+                        return True
             return False
         except:
             return False
-
     
     def startMachines(self, params, block=False):
         '''
