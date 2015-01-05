@@ -11,10 +11,10 @@ import random
 import string
 from stochssapp import BaseHandler
 from backend.backendservice import *
-from backend.tasks import createtable
 from google.appengine.ext import db
 import time
 from backend import pricing
+from backend.databases.dynamo_db import DynamoDB
 
 class CredentialsPage(BaseHandler):
     """
@@ -138,7 +138,7 @@ class CredentialsPage(BaseHandler):
             context = self.getContext(user_id)
             self.render_response('credentials.html', **(dict(context, **result)))
 
-    def saveCredentials(self, credentials):
+    def saveCredentials(self, credentials, database=DynamoDB()):
         """ Save the Credentials to the datastore. """
         try:
             service = backendservices()
@@ -158,7 +158,7 @@ class CredentialsPage(BaseHandler):
                     os.environ["AWS_SECRET_ACCESS_KEY"] = credentials['EC2_SECRET_KEY']
 
                     try:
-                        createtable(backendservices.TABLENAME)
+                        database.createtable(backendservices.TABLENAME)
                         self.user_data.is_amazon_db_table=True
                     except Exception,e:
                         pass
@@ -268,7 +268,7 @@ class CredentialsPage(BaseHandler):
         params ={"infrastructure":"ec2",
              'group':group_random_name, 
              'vms': vms_info,
-             'image_id':'ami-6454cd0c',
+             'image_id':'ami-6cd9ad04',
              'key_prefix':key_prefix, #key_prefix = user_id
              'keyname':group_random_name, 
              'email':[user_id],

@@ -14,6 +14,7 @@ import celery
 from celery.task.control import inspect
 import backend_handler
 from backend_handler import VMStateModel
+from databases.dynamo_db import DynamoDB
 
 
 
@@ -43,7 +44,7 @@ class backendservices():
         sys.path.append(os.path.join(os.path.dirname(__file__), 
                                      '/Library/Python/2.7/site-packages/amqp'))
             
-    def executeTask(self, params, agent, access_key, secret_key, taskid=None, instance_type=None, cost_replay=False):
+    def executeTask(self, params, agent, access_key, secret_key, taskid=None, instance_type=None, cost_replay=False, database=DynamoDB()):
         '''
         This method instantiates celery tasks in the cloud.
 	Returns return value from celery async call and the task ID
@@ -52,7 +53,7 @@ class backendservices():
         result = {}
         try:
             import tasks
-            from tasks import task,updateEntry
+            from tasks import task
             #This is a celery task in tasks.py: @celery.task(name='stochss')
             
             # Need to make sure that the queue is actually reachable because
@@ -197,9 +198,9 @@ class backendservices():
                     rerouteWorkers(worker_names, queue_name)
                 
                 # Update DB entry just before sending to worker
-                updateEntry(taskid, data, backendservices.TABLENAME)
+                database.updateEntry(taskid, data, backendservices.TABLENAME)
                 params["queue"] = queue_name
-                tmp = master_task.delay(taskid, params)
+                tmp = master_task.delay(taskid, params, DynamoDB())
                 #TODO: This should really be done as a background_thread as soon as the task is sent
                 #      to a worker, but this would require an update to GAE SDK.
                 # call the poll task process
@@ -232,7 +233,7 @@ class backendservices():
                 
                 # if this is the cost analysis replay then update the stochss-cost-analysis table
                 if cost_replay:
-                    params["dynamo_table"] = "stochss_cost_analysis"
+                    params["db_table"] = "stochss_cost_analysis"
                     data={}
                     data['status'] = "pending"
                     data['start_time'] = timenow.strftime('%Y-%m-%d %H:%M:%S')
@@ -248,12 +249,12 @@ class backendservices():
 #                             'instance_type': instance_type
 #                     }
                     taskid_prefix = agent+"_"+instance_type+"_"
-                    updateEntry(taskid_prefix+taskid, data, params["dynamo_table"])
-                    tmp = tasks.task.apply_async(args=[taskid, params, access_key, secret_key, taskid_prefix], queue=celery_queue_name, routing_key=celery_routing_key)
+                    database.updateEntry(taskid_prefix+taskid, data, params["dynamo_table"])
+                    tmp = tasks.task.apply_async(args=[taskid, params, database, access_key, secret_key, taskid_prefix], queue=celery_queue_name, routing_key=celery_routing_key)
                 else:
-                    params["dynamo_table"] = backendservices.TABLENAME
-                    updateEntry(taskid, data, params["dynamo_table"])
-                    tmp = tasks.task.apply_async(args=[taskid, params, access_key, secret_key], queue=celery_queue_name, routing_key=celery_routing_key)
+                    params["db_table"] = backendservices.TABLENAME
+                    database.updateEntry(taskid, data, params["db_table"])
+                    tmp = tasks.task.apply_async(args=[taskid, params, database, access_key, secret_key], queue=celery_queue_name, routing_key=celery_routing_key)
                 #delay(taskid, params, access_key, secret_key)  #calls task(taskid,params,access_key,secret_key)
 #                 logging.info('RESULT OF TASK: {0}'.format(tmp.get()))
                 print tmp.ready()
@@ -366,7 +367,7 @@ class backendservices():
         return res
     
     
-    def describeTask(self, params):
+    def describeTask(self, params, database=DynamoDB()):
         '''
         @param params: A dictionary with the following fields
          "AWS_ACCESS_KEY_ID" : AWS access key
@@ -382,7 +383,7 @@ class backendservices():
         os.environ["AWS_SECRET_ACCESS_KEY"] = params['AWS_SECRET_ACCESS_KEY']
         result = {}
         try:
-            result = describetask(params['taskids'], backendservices.TABLENAME)
+            result = database.describetask(params['taskids'], backendservices.TABLENAME)
         except Exception, e:
             logging.error("describeTask : exiting with error : %s", str(e))
             return None
@@ -411,7 +412,7 @@ class backendservices():
         }
         return self.describeTask(describe_params)
     
-    def deleteTasks(self, taskids):
+    def deleteTasks(self, taskids, database=DynamoDB()):
         '''
         @param taskid:the list of taskids to be removed 
         this method revokes scheduled tasks as well as the tasks in progress. It 
@@ -422,7 +423,7 @@ class backendservices():
             for taskid_pair in taskids:
                 print 'deleteTasks: removing task {0}'.format(str(taskid_pair))
                 removeTask(taskid_pair[0]) #this removes task from celery queue
-                removetask(backendservices.TABLENAME,taskid_pair[1]) #this removes task information from DB. ToDo: change the name of method
+                database.removetask(backendservices.TABLENAME,taskid_pair[1]) #this removes task information from DB. ToDo: change the name of method
             logging.info("deleteTasks: All tasks removed")
         except Exception, e:
             logging.error("deleteTasks : exiting with error : %s", str(e))
@@ -888,7 +889,7 @@ def teststochoptim(backend,compute_check_params):
 
 ##########################################
 ##########################################
-def teststochss(backend,params):
+def teststochss(backend,params,database=DynamoDB()):
     '''
     This tests a stochkit job using a local run (2 tasks)
     and a cloud run (2 tasks)
@@ -918,7 +919,7 @@ def teststochss(backend,params):
         os.environ["AWS_ACCESS_KEY_ID"] = credentials['EC2_ACCESS_KEY']
         os.environ["AWS_SECRET_ACCESS_KEY"] = credentials['EC2_SECRET_KEY']
         print 'access key: '+os.environ["AWS_ACCESS_KEY_ID"]
-        createtable(backendservices.TABLENAME)
+        database.createtable(backendservices.TABLENAME)
 
 	#Test that local tasks execute and can be deleted
         #NOTE: dimer_decay.xml must be in this local dir

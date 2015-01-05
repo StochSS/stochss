@@ -115,7 +115,7 @@
     	
     	<% if (resource =="cloud"){ %>
     		<% if(output_stored == "True"){ %>
-    		<button class="btn btn-primary btn-large" onclick="rerun('/reproduce?req_type=delOutput&job_type=spatial&uuid=<%= pid %>', 'delete', '/spatial?id=<%=id%>');"> Delete Output</button>
+    		<button class="btn btn-primary btn-large" onclick="rerun('/reproduce?req_type=delOutput&job_type=spatial&uuid=<%= uuid %>', 'delete', '/spatial?id=<%=id%>');"> Delete Output</button>
     		<% }else{ %>
     		<p>No output stored.</p>
     		<% } %>		
