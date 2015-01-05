@@ -67,6 +67,7 @@
 <script type="text/javascript" src = "/static/js/nv.d3.js"></script>
 <script type="text/javascript" src = "/static/js/sensitivity.js"></script>
 <script type="text/javascript" src = "/static/js/sensitivityMain.js"></script>
+<script type="text/javascript" src="static/js/status.js"></script>
 
 <script id="jobInfoTemplate" type="text/template">
     <h2> Job summary: <span style="COLOR:green;"><%= jobName %></span></h2>
@@ -89,16 +90,47 @@
     </div>
 
     <div id="error"></div>
-                        
-    <br />
 
     <div id="msg"></div>
     
-    <br />
     <div class="well">
-      <h3>Output</h3>
-      <br />
-      <button id="access" type="submit" class="btn btn-primary btn-large"><i class="icon-download-alt"></i> Fetch Output Data</button>
+        <h3>Output</h3>
+        <br />    
+        <% if (resource =="local" || output_stored == "True"){ %>
+     		<button id="access" type="submit" class="btn btn-primary btn-large"><i class="icon-download-alt"></i> Fetch Output Data</button>
+    	<% } %>
+    	
+    	<% if (resource =="cloud"){ %>
+    		<% if(output_stored == "True"){ %>
+    		<button class="btn btn-primary btn-large" onclick="rerun('/reproduce?req_type=delOutput&job_type=sensitivity&uuid=<%= uuid %>', 'delete', '/sensitivity?id=<%=id%>');"> Delete Output</button>
+    		<% }else{ %>
+    		<p>No output stored.</p>
+    		<% } %>		
+    	<% } %>
+    </div>
+    
+    <div class="well">
+        <h3>Reproduction and Cost Analysis</h3>
+        <br />
+    	<% if (resource =="cloud"){ %>
+    		<% if(output_stored != "True"){ %>
+    		<select id="instance_type">
+				<option name="instance_type" value="t1.micro" selected>t1.micro</option>
+				<option name="instance_type" value="m1.small">m1.small</option>
+				<option name="instance_type" value="m3.medium">m3.medium</option>
+				<option name="instance_type" value="m3.large">m3.large</option>
+				<option name="instance_type" value="c3.large">c3.large</option>
+				<option name="instance_type" value="c3.xlarge">c3.xlarge</option>
+			</select>
+			</br>
+			<button class="btn btn-primary btn-large" onclick="rerun('/reproduce?req_type=rerun&job_type=sensitivity&uuid=<%= uuid %>', 'rerun', '/status');"> Reproduce Results</button>    		
+    		<% } %>
+    		
+    		<button class="btn btn-primary btn-large" onclick="location.href = '/cost_analysis?uuid=<%= uuid %>&name=<%= jobName %>';"> Cost Analysis</button>
+
+		<% }else{ %>
+    		<p>Local job. No reprduction and cost analysis available</p>
+    	<% } %>    	
     </div>
 
 </script>

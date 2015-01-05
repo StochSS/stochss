@@ -152,6 +152,7 @@ class JobManager():
                         "type" : job.stochkit_job.type,
                         "status" : job.stochkit_job.status,
                         "modelName" : job.modelName,
+                        "output_stored": job.output_stored,
                         "output_location" : job.stochkit_job.output_location,
                         "zipFileName" : job.stochkit_job.zipFileName,
                         "output_url" : job.stochkit_job.output_url,
@@ -190,6 +191,7 @@ class JobManager():
                     "type" : job.stochkit_job.type,
                     "status" : job.stochkit_job.status,
                     "modelName" : job.modelName,
+                    "output_stored": job.output_stored,
                     "output_location" : job.stochkit_job.output_location,
                     "zipFileName" : job.stochkit_job.zipFileName,
                     "units" : job.stochkit_job.units,
@@ -250,6 +252,7 @@ class JobManager():
 
         jobWrap.stdout = job['stdout']
         jobWrap.stderr = job['stderr']
+        jobWrap.output_stored = job['output_stored']
 
         jobWrap.put()
 

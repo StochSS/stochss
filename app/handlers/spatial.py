@@ -179,6 +179,8 @@ class SpatialPage(BaseHandler):
                            "modelName" : job.modelName,
                            "outData" : job.outData,
                            "name" : job.jobName,
+                           "uuid": job.cloud_id,
+                           "output_stored": job.output_stored,
                            "stdout" : stdout,
                            "stderr" : stderr,
                            "indata" : json.loads(job.indata) })

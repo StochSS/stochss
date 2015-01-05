@@ -404,8 +404,8 @@ app = webapp2.WSGIApplication([
                                 debug=True)
 
 
-logging.getLogger().setLevel(logging.DEBUG)
-pricing.initialize_price_model()
+#logging.getLogger().setLevel(logging.DEBUG)
+#pricing.initialize_price_model()
 
 if __name__ == '__main__':
     sys.path.append(os.path.join(os.path.dirname(__file__), 'lib'))

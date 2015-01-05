@@ -83,17 +83,19 @@ class DataReproductionPage(BaseHandler):
                     "credentials": self.user_data.getCredentials(),
                     "key_prefix": self.user.user_id()
             }
-            if not self.user_data.valid_credentials or not service.isOneOrMoreComputeNodesRunning(compute_check_params):
-                self.response.write(json.dumps({
-                    'status': False,
-                    'msg': 'You must have at least one active compute node to run in the cloud.'
-                }))
-                return
         
             job_type = self.request.get('job_type')
             uuid = self.request.get('uuid')
+            instance_type = self.request.get('instance_type')
 
             logging.info('job uuid: '.format(uuid))
+            
+            if not self.user_data.valid_credentials or not service.isOneOrMoreComputeNodesRunning(compute_check_params, instance_type):
+                self.response.write(json.dumps({
+                    'status': False,
+                    'msg': 'There is no '+instance_type+' node running.'
+                }))
+                return
             
             
           
@@ -119,7 +121,7 @@ class DataReproductionPage(BaseHandler):
                     logging.info("OUT_PUT SIZE: {0}".format(params['output_size']))
                 
                     time = datetime.datetime.now()
-                    cloud_result = service.executeTask(params, "ec2", access_key, secret_key, uuid)  #calls task(taskid,params,access_key,secret_key)
+                    cloud_result = service.executeTask(params, "ec2", access_key, secret_key, uuid, instance_type)  #calls task(taskid,params,access_key,secret_key)
                     
                     if not cloud_result["success"]:
                         e = cloud_result["exception"]

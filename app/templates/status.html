@@ -41,11 +41,12 @@
                             <th width="50pt">Resource </th>
                         
                             <th width="100pt">Status</th>
+                            <th width="220pt">Result Analysis and Reproduction</th>
                             
-                            <th width="100pt">Result</th>
+                            <!--
                             <th width="150pt">Reproduce</th>
                             <th width="100pt">Cost Analysis</th>
-                            
+                            -->
                         </tr>
                     </thead>
                     <tbody>
@@ -66,9 +67,9 @@
                             </td>
                             <td>
                                 {% if job.resource == "Local" %}
-                                <span>local</span>
+                                <span>Local</span>
                                 {% else %}
-                                <span>cloud</span>
+                                <span>Cloud</span>
                                 {% endif %}
                             </td>
                             <td>
@@ -84,16 +85,16 @@
                             </td>
                             <td>
                                 {% if job.status == "Finished" %}
-                                {% if job.resource == "Local" or job.output_stored == "True"%}
-                                <a href="/simulate?id={{job.id}}">View results</a>
-                                {% endif %}
+                                
+                                	<a href="/simulate?id={{job.id}}">View</a>
+                                
                                 {% elif job.status == "Failed"%}
-                                {% if job.resource == "Local" or job.output_stored == "True"%}
-                                <a href="/simulate?id={{job.id}}">Get Debugging Info</a>
-                                {% endif %}
+                          
+                                	<a href="/simulate?id={{job.id}}">Get Debugging Info</a>
+                                
                                 {% endif %}
                             </td>
-                            
+                            <!--
                             <td>
                                 {% if job.resource == "Cloud" %}
                                 {% if job.status == "Finished" or job.status == "Failed"%}
@@ -112,6 +113,7 @@
                             <td>
                             	<a href="/cost_analysis?uuid={{job.uuid}}&name={{job.name}}">Analyze</a>
                             </td>
+                            -->
                         </tr>
                         
                         {% endfor %}
@@ -132,9 +134,11 @@
                         
                             <th width="100pt">Status</th>
                             
-                            <th width="100pt">Result</th>
+                            <th width="220pt">Result Analysis and Reproduction</th>
+                            <!--
                             <th width="150pt">Reproduce</th>
                             <th width="100pt">Cost Analysis</th>
+                            -->
                         </tr>
                     </thead>
                     <tbody>
@@ -155,9 +159,9 @@
                             </td>
                             <td>
                                 {% if job.resource == "local" %}
-                                <span>local</span>
+                                <span>Local</span>
                                 {% else %}
-                                <span>cloud</span>
+                                <span>Cloud</span>
                                 {% endif %}
                             </td>
                             <td>
@@ -173,15 +177,16 @@
                             </td>
                             <td>
                                 {% if job.status == "Finished" %}
-                                {% if job.resource == "local" or job.output_stored == "True"%}
-                                <a href="/spatial?id={{job.id}}">View results</a>
-                                {% endif %}
+                                
+                                <a href="/spatial?id={{job.id}}">View</a>
+                               
                                 {% elif job.status == "Failed"%}
-                                {% if job.resource == "local" or job.output_stored == "True"%}
+                                
                                 <a href="/spatial?id={{job.id}}">Get Debugging Info</a>
-                                {% endif %}
+                            
                                 {% endif %}
                             </td>
+                            <!--
                             <td>
                                 {% if job.resource == "cloud" %}
                                 {% if job.status == "Finished" or job.status == "Failed"%}
@@ -200,6 +205,7 @@
                             <td>
                             	<a href="/cost_analysis?uuid={{job.uuid}}&name={{job.name}}">Analyze</a>
                             </td>
+                            -->
                         </tr>
                         {% endfor %}
                     </tbody>
@@ -219,9 +225,11 @@
                         
                             <th width="100pt">Status</th>
                             
-                            <th width="100pt">Result</th>
+                            <th width="220pt">Result Analysis and Reproduction</th>
+                            <!--
                             <th width="150pt">Reproduce</th>
                             <th width="100pt">Cost Analysis</th>
+                            -->
                         </tr>
                     </thead>
                     <tbody>
@@ -236,9 +244,9 @@
                             </td>
                             <td>
                                 {% if job.resource == "local" %}
-                                <span>local</span>
+                                <span>Local</span>
                                 {% else %}
-                                <span>cloud</span>
+                                <span>Cloud</span>
                                 {% endif %}
                             </td>
                             <td>
@@ -254,15 +262,16 @@
                             </td>
                             <td>
                                 {% if job.status == "Finished" %}
-                                {% if job.resource == "local" or job.output_stored == "True"%}
-                                <a href="/sensitivity?id={{job.id}}">View results</a>
-                                {% endif %}
+                                
+                                <a href="/sensitivity?id={{job.id}}">View</a>
+                                
                                 {% elif job.status == "Failed"%}
-                                {% if job.resource == "local" or job.output_stored == "True"%}
+                                
                                 <a href="/sensitivity?id={{job.id}}">Get Debugging Info</a>
-                                {% endif %}
+                                
                                 {% endif %}
                             </td>
+                            <!--
                             <td>
                                 {% if job.resource == "cloud" %}
                                 {% if job.status == "Finished" or job.status == "Failed"%}
@@ -279,7 +288,7 @@
                             <td>
                             	<a href="/cost_analysis?uuid={{job.uuid}}&name={{job.name}}">Analyze</a>
                             </td>
-                            
+                            -->
                         </tr>
                         
                         {% endfor %}
@@ -370,9 +379,9 @@
                             </td>
                             <td>
                                 {% if job.resource == "local" %}
-                                <span>local</span>
+                                <span>Local</span>
                                 {% else %}
-                                <span>cloud</span>
+                                <span>Cloud</span>
                                 {% endif %}
                             </td>
                             <td>

@@ -77,15 +77,18 @@ class SensitivityPage(BaseHandler):
         if reqType == "jobInfo":
             job = SensitivityJobWrapper.get_by_id(int(self.request.get('id')))
             
-            jsonJob = { "userId" : job.userId,
+            jsonJob = { "id": int(self.request.get('id')),
+                        "userId" : job.userId,
                         "jobName" : job.jobName,
                         "startTime" : job.startTime,
                         "indata" : json.loads(job.indata),
                         "outData" : job.outData,
                         "status" : job.status,
                         "resource" : job.resource,
+                        "uuid": job.cloudDatabaseID,
+                        "output_stored": job.output_stored,
                         "modelName" : job.modelName }
-
+            
             if self.user.user_id() != job.userId:
                 self.response.headers['Content-Type'] = 'application/json'
                 self.response.write(json.dumps(["Not the right user"]))
