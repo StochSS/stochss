@@ -224,6 +224,10 @@
 </script>
 
 <script type="text/template" id="jobInfoTemplate">
+	<ol class="breadcrumb">
+  		<li><a href="/status">Job Status</a></li>
+  		<li class="active"><%= name %></a></li>
+	</ol>
     <h2> Job summary: <span style="COLOR:green;"><%= name %></span></h2>
     <br />
     <div class="well">                    
@@ -293,7 +297,7 @@
 			 <button class="btn btn-primary btn-large" onclick="rerun('/reproduce?req_type=rerun&job_type=stochkit&uuid=<%= pid %>', 'rerun', '/status');"> Reproduce Results</button>
     		 <% } %>
     		 
-    		 <button class="btn btn-primary btn-large" onclick="location.href = '/cost_analysis?uuid=<%= pid %>&name=<%= name %>';"> Cost Analysis</button>
+    		 <button class="btn btn-primary btn-large" onclick="location.href = '/cost_analysis?job_type=stochkit&id=<%= id %>';"> Cost Analysis</button>
     		
     	<% } else{ %>
     		<p>Local job. No reprduction and cost analysis available</p>

@@ -70,6 +70,10 @@
 <script type="text/javascript" src="static/js/status.js"></script>
 
 <script id="jobInfoTemplate" type="text/template">
+	<ol class="breadcrumb">
+  		<li><a href="/status">Job Status</a></li>
+  		<li class="active"><%= jobName %></a></li>
+	</ol>
     <h2> Job summary: <span style="COLOR:green;"><%= jobName %></span></h2>
     <br />
     <div class="well">                    
@@ -126,7 +130,7 @@
 			<button class="btn btn-primary btn-large" onclick="rerun('/reproduce?req_type=rerun&job_type=sensitivity&uuid=<%= uuid %>', 'rerun', '/status');"> Reproduce Results</button>    		
     		<% } %>
     		
-    		<button class="btn btn-primary btn-large" onclick="location.href = '/cost_analysis?uuid=<%= uuid %>&name=<%= jobName %>';"> Cost Analysis</button>
+    		<button class="btn btn-primary btn-large" onclick="location.href = '/cost_analysis?job_type=sensitivity&id=<%= id %>';"> Cost Analysis</button>
 
 		<% }else{ %>
     		<p>Local job. No reprduction and cost analysis available</p>
