@@ -473,7 +473,7 @@ class SimulatePage(BaseHandler):
                 self.response.write(json.dumps(["Not the right user"]))
 
             if job.stochkit_job.status == "Finished":
-                if job.stochkit_job.resource == 'Cloud' and job.stochkit_job.output_location is None:
+                if job.stochkit_job.resource == 'Cloud' and job.output_stored == 'False' or job.stochkit_job.resource == 'Cloud' and job.stochkit_job.output_location is None:
                     self.response.headers['Content-Type'] = 'application/json'
                     self.response.write(json.dumps({ "status" : "Finished",
                                                      "values" : [],

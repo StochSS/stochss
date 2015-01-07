@@ -249,7 +249,7 @@ class backendservices():
 #                             'instance_type': instance_type
 #                     }
                     taskid_prefix = agent+"_"+instance_type+"_"
-                    database.updateEntry(taskid_prefix+taskid, data, params["dynamo_table"])
+                    database.updateEntry(taskid_prefix+taskid, data, params["db_table"])
                     tmp = tasks.task.apply_async(args=[taskid, params, database, access_key, secret_key, taskid_prefix], queue=celery_queue_name, routing_key=celery_routing_key)
                 else:
                     params["db_table"] = backendservices.TABLENAME
