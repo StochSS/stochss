@@ -93,6 +93,7 @@ class VMStateModel(db.Model):
             for e in entities:
                 dict = {
                         "ins_id": e.ins_id,
+                        "instance_type": e.ins_type,
                         "state": e.state,
                         "discription": e.description 
                         }      
@@ -460,12 +461,15 @@ class BackendWorker():
             # step 3: set alarm for the nodes, if it is NOT queue head #
             ############################################################
             logging.info('Set shutdown alarm')
-            if "queue_head" not in parameters or parameters["queue_head"] == False:
-                try:
+            
+            try:
+                if "queue_head" not in parameters or parameters["queue_head"] == False:
                     for ins_id in instance_ids:
                         agent.make_sleepy(parameters, ins_id)
+                else:
+                    agent.make_sleepy(parameters, instance_ids[0], '7200')
                         
-                except:
+            except:
                     raise Exception('Errors in set alarm for instances.')
             
             ########################################################

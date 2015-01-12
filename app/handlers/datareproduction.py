@@ -93,7 +93,7 @@ class DataReproductionPage(BaseHandler):
             if not self.user_data.valid_credentials or not service.isOneOrMoreComputeNodesRunning(compute_check_params, instance_type):
                 self.response.write(json.dumps({
                     'status': False,
-                    'msg': 'There is no '+instance_type+' node running.'
+                    'msg': 'There is no '+instance_type+' node running. *Launch one node? '
                 }))
                 return
             

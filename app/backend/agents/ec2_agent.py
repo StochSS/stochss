@@ -238,7 +238,7 @@ class EC2Agent(BaseAgent):
     return instanceList
 
 
-  def make_sleepy(self,parameters, instance_id):
+  def make_sleepy(self,parameters, instance_id, period='3600'):
       
         print "Making instance", instance_id, "sleepy..."
         credentials = parameters[self.PARAM_CREDENTIALS]
@@ -253,7 +253,7 @@ class EC2Agent(BaseAgent):
             name=alarm_name, namespace='AWS/EC2',
             metric='CPUUtilization', statistic='Average',
             comparison='<', threshold='10',
-            period='3600', evaluation_periods=4,
+            period=period, evaluation_periods=4,
             alarm_actions=[terminate_arn],
             dimensions={'InstanceId':instance_id})
         # create the alarm.. Zzzz!

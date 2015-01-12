@@ -209,10 +209,17 @@ class CredentialsPage(BaseHandler):
                 number_pending = 0
                 number_running = 0
                 number_failed = 0
+                running_instances={}
                 for vm in all_vms:
                     if vm != None and vm['state']=='creating': number_creating = number_creating + 1
                     elif vm != None and vm['state']=='pending': number_pending = number_pending + 1
-                    elif vm != None and vm['state']=='running': number_running = number_running + 1
+                    elif vm != None and vm['state']=='running': 
+                        number_running = number_running + 1
+                        instance_type = vm['instance_type']
+                        if instance_type not in running_instances:
+                            running_instances[instance_type] = 1
+                        else:
+                            running_instances[instance_type] = running_instances[instance_type] + 1
                     elif vm != None and vm['state']=='failed': number_failed = number_failed + 1
                 number_of_vms = len(all_vms)
                 print "number creating = " + str(number_creating)
@@ -225,6 +232,7 @@ class CredentialsPage(BaseHandler):
                 context['number_pending'] = number_pending
                 context['number_running'] = number_running
                 context['number_failed'] = number_failed
+                context['running_instances'] = running_instances
                 result['status']= True
                 result['credentials_msg'] = 'The EC2 keys have been validated.'
                 if number_running+number_pending+number_creating+number_failed == 0:
