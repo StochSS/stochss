@@ -693,7 +693,7 @@ class BackendWorker():
         
         
         credentials = params['credentials']
-        python_path = "source /home/ubuntu/.bashrc;export PYTHONPATH=/home/ubuntu/pyurdme/:/home/ubuntu/:/home/ubuntu/stochss/app/;"
+        python_path = "source /home/ubuntu/.bashrc;export PYTHONPATH=/home/ubuntu/pyurdme/:/home/ubuntu/:/home/ubuntu/stochss/app/:/home/ubuntu/stochss/app/lib/cloudtracker;"
         python_path+='export AWS_ACCESS_KEY_ID={0};'.format(str(credentials['EC2_ACCESS_KEY']))
         python_path+='export AWS_SECRET_ACCESS_KEY={0};'.format( str(credentials['EC2_SECRET_KEY']))
         #start_celery_str = "celery -A tasks worker --autoreload --loglevel=info --workdir /home/ubuntu > /home/ubuntu/celery.log 2>&1"
@@ -720,7 +720,7 @@ class BackendWorker():
                 raise Exception("scp failure: {0} not transfered to {1}".format(celery_config_filename, ip))
             
             
-            start_celery_str = "celery -A tasks worker -Q "+CELERY_QUEUE_EC2+","+CELERY_QUEUE_EC2+"_"+ins_type.replace(".", "")+" --autoreload --loglevel=info --workdir /home/ubuntu > /home/ubuntu/celery.log 2>&1"
+            start_celery_str = "celery -A tasks worker -Q "+CELERY_QUEUE_EC2+","+CELERY_QUEUE_EC2+"_"+ins_type.replace(".", "")+" --autoreload --loglevel=debug --workdir /home/ubuntu > /home/ubuntu/celery.log 2>&1"
             celerycmd = "sudo screen -d -m bash -c '{1}{0}'\n".format(start_celery_str,python_path)
 
             cmd = "ssh -o 'StrictHostKeyChecking no' -i {0} ubuntu@{1} \"{2}\"".format(keyfile, ip, celerycmd)
