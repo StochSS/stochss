@@ -301,7 +301,7 @@ except:
 
 from handlers.exportimport import *
 from handlers.specieseditor import *
-from handlers.modeleditor import *
+import handlers.modeleditor
 from handlers.parametereditor import *
 from handlers.volumeeditor import *
 from handlers.reactioneditor import *
@@ -348,19 +348,20 @@ if 'lib' not in sys.path:
 
 app = webapp2.WSGIApplication([
                                ('/', MainPage),
-                               ('/models/list.*', ModelBackboneInterface),
+                               ('/models.*', handlers.modeleditor.ModelBackboneInterface),
+                               ('/models/list.*', handlers.modeleditor.ModelBackboneInterface),
                                ('/stochkit/list.*', JobBackboneInterface),
-                               ('/convert', ModelConvertPage),
+                               #('/convert', ModelConvertPage),
                                ('/modeleditor/specieseditor', SpeciesEditorPage),
                                ('/modeleditor/mesheditor', handlers.mesheditor.MeshEditorPage),
                                ('/modeleditor/reactioneditor', ReactionEditorPage),
                                ('/modeleditor/parametereditor', ParameterEditorPage),
                                ('/modeleditor/volumeeditor', VolumeEditorPage),
-                               ('/modeleditor/converttopopulation', ConvertToPopulationPage),
-                               ('/modeleditor/import/fromfile', ModelEditorImportFromFilePage),
-                               ('/modeleditor/import/publiclibrary', ModelEditorImportFromLibrary),
-                               ('/modeleditor/export/tostochkit2', ModelEditorExportToStochkit2),
-                               ('/modeleditor.*', ModelEditorPage),
+                               #('/modeleditor/converttopopulation', ConvertToPopulationPage),
+                               #('/modeleditor/import/fromfile', ModelEditorImportFromFilePage),
+                               #('/modeleditor/import/publiclibrary', ModelEditorImportFromLibrary),
+                               #('/modeleditor/export/tostochkit2', ModelEditorExportToStochkit2),
+                               ('/modeleditor.*', handlers.modeleditor.ModelEditorPage),
                                ('/simulate',SimulatePage),
                                ('/sensitivity',SensitivityPage),
                                ('/spatial',handlers.spatial.SpatialPage),
