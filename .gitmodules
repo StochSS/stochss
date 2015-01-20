@@ -26,3 +26,6 @@
 [submodule "app/lib/pytz"]
 	path = app/lib/pytz
 	url = git://github.com/newvem/pytz.git
+[submodule "app/static/modelEditor"]
+	path = app/static/modelEditor
+	url = https://github.com/bbbales2/modelEditor.git
