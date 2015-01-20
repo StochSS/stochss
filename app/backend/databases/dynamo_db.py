@@ -5,6 +5,7 @@ Created on Dec 11, 2014
 '''
 import boto.dynamodb
 from base_db import BaseDB
+from boto.dynamodb import condition
 
 class DynamoDB(BaseDB):
     """
@@ -69,8 +70,9 @@ class DynamoDB(BaseDB):
 
     def tableexists(self, dynamo, tablename):
         try:
-            table = dynamo.get_table(tablename)
-            if table == None:
+            tables = dynamo.list_tables()
+            
+            if tablename not in tables:
                 print "table doesn't exist"
                 return False
             else:
@@ -78,6 +80,20 @@ class DynamoDB(BaseDB):
         except Exception,e:
             print str(e)
             return False
+    
+    def getEntry(self, attribute_name=str(), attribute_value=str(), table_name=str()):
+        try:
+            dynamo=boto.connect_dynamodb()
+            if not self.tableexists(dynamo, table_name):
+                self.createtable(table_name)
+        
+            table = dynamo.get_table(table_name)
+            results = table.scan(scan_filter={attribute_name :condition.EQ(attribute_value)})
+            return results
+        except Exception,e:
+            print str(e)
+            return None
+            
 
     def updateEntry(self, taskid=str(), data=dict(), tablename=str()):
         '''

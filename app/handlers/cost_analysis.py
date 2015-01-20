@@ -6,7 +6,6 @@ except ImportError:
 import os
 from google.appengine.ext import db
 import boto
-from boto.dynamodb import condition
 from pylab import figure, axes, pie, title
 from matplotlib.backends.backend_agg import FigureCanvasAgg
 from backend import backendservice
@@ -14,17 +13,28 @@ from backend.pricing import Price
 from cloudtracker import CloudTracker
 import simulation, spatial, sensitivity
 import logging
+from backend.databases.dynamo_db import DynamoDB
 
 from stochssapp import BaseHandler
 
 ALL_INSTANCE_TYPES = ['t1.micro', 'm1.small', 'm3.medium', 'm3.large', 'c3.large', 'c3.xlarge']
 
 def get_all_jobs_time_cost(uuid, access_key, secret_key):
-    dynamo=boto.connect_dynamodb(aws_access_key_id=access_key, aws_secret_access_key=secret_key)
-    table = dynamo.get_table("stochss_cost_analysis")
-    results = table.scan(scan_filter={'uuid' :condition.EQ(uuid)})
+    
+#     dynamo=boto.connect_dynamodb(aws_access_key_id=access_key, aws_secret_access_key=secret_key)
+#     tables = dynamo.list_tables()
+#     if "stochss_cost_analysis" in tables:
+#         table = dynamo.get_table("stochss_cost_analysis")
+#         results = table.scan(scan_filter={'uuid' :condition.EQ(uuid)})
+#     else:
+#         results = {}
+    database = DynamoDB()
+    results = database.getEntry('uuid', uuid, "stochss_cost_analysis")
              
     jobs = []
+    if results is None:
+        return jobs
+    
     for result in results:
         job = {}
         job['agent'] = result['agent']
