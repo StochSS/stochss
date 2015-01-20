@@ -1,0 +1,21 @@
+{% extends "base.html" %}
+{% block title%}Manage Models{% endblock %}
+{% block content %}
+{% block csscontent %}
+<link href="/static/css/jquery-ui-1.9.1.custom.min.css" rel="stylesheet">
+<link href="/static/css/panelHack.css" rel="stylesheet">
+<link href="/static/js/modelEditor/app.css" rel="stylesheet">
+{% endblock %}
+
+<div class="span9">
+  <div id="modelSelect"></div>
+</div>
+
+{% endblock %}
+{% block jscontent %}
+<script type="text/javascript" src = "/static/js/underscore.js"></script>
+<!--<script type="text/javascript" src = "/static/utils.js"></script>-->
+<script type="text/javascript" src = "/static/js/backbone.js"></script>
+<script type="text/javascript" src = "/static/js/purl.js"></script>
+<script type="text/javascript" src = "/static/js/modelEditor/app.bundle.js"></script>
+{% endblock %}
