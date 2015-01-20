@@ -1,0 +1,50 @@
+{
+  "name": "model-editor",
+  "author": "Ben Bales",
+  "version": "0.0.0",
+  "main": "server.js",
+  "dependencies": {
+    "ampersand-collection": "^1.4.0",
+    "ampersand-dom": "^1.2.1",
+    "ampersand-form-view": "git+https://github.com/bbbales2/ampersand-form-view.git",
+    "ampersand-input-view": "^2.0.0",
+    "ampersand-model": "^4.0.0",
+    "ampersand-rest-collection": "^2.0.0",
+    "ampersand-router": "^1.0.1",
+    "ampersand-select-view": "^2.2.1",
+    "ampersand-state": "^4.4.4",
+    "ampersand-view": "^7.0.1",
+    "ampersand-view-switcher": "^1.0.2",
+    "andlog": "^1.0.0",
+    "async": "^0.9.0",
+    "clientconfig": "^1.0.0",
+    "domify": "^1.3.0",
+    "domready": "^1.0.5",
+    "favicon-setter": "^0.1.1",
+    "getconfig": "^1.0.0",
+    "hapi": "^6.0.2",
+    "jquery": "^2.1.3",
+    "katex": "^0.1.1",
+    "moonboots_hapi": "^2.4.0",
+    "stylizer": "^1.0.0",
+    "templatizer": "^1.0.0",
+    "underscore": "^1.7.0",
+    "xmldom": "^0.1.19"
+  },
+  "devDependencies": {
+    "browserify": "^8.0.3",
+    "watchify": "^2.2.1"
+  },
+  "jshintConfig": {
+    "asi": false,
+    "browser": true,
+    "curly": false,
+    "expr": true,
+    "indent": 4,
+    "loopfunc": true,
+    "node": true,
+    "trailing": true,
+    "undef": true,
+    "white": true
+  }
+}

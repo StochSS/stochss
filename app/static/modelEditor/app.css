@@ -1,0 +1,19 @@
+.isVisible {
+    display : none;
+}
+
+.message, .message p {
+    display : inline;
+}
+
+.form-input {
+    autocomplete : false;
+}
+
+input {
+    margin-bottom : 0px;
+}
+
+select {
+    margin-bottom : 0px;
+}
