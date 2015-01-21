@@ -19,7 +19,6 @@
 <script type="text/javascript" src = "/static/js/backbone.js"></script>
 <script type="text/javascript" src = "/static/model/stochkit.js"></script>
 <link rel="stylesheet" href="/static/css/nv.d3.css">
-
 <script type="text/javascript" src = "/static/js/purl.js"></script>
 <script type="text/javascript" src = "/static/js/canvas2image.js"></script>
 <script type="text/javascript" src = "/static/js/splot.js"></script>
@@ -27,9 +26,13 @@
 <script type="text/javascript" src = "/static/js/nv.d3.js"></script>
 <script type="text/javascript" src = "/static/js/sensitivity.js"></script>
 <script type="text/javascript" src = "/static/model/stochkit.js"></script>
+<script type="text/javascript" src = "/static/js/typeface-0.15.js"></script>
 <script type="text/javascript" src = "/static/js/three.js"></script>
+<script type="text/javascript" src = "/static/js/helvetiker_regular.typeface.js"></script>
 <script type="text/javascript" src = "/static/js/OrbitControls.js"></script>
+<script type="text/javascript" src="/static/js/dat.gui.min.js"></script>
 <script type="text/javascript" src = "/static/js/spatial.js"></script>
+
 
 <script type="text/template" id="jobInfoTemplate">
     <h2> Job summary: <span style="COLOR:green;"><%= name %></span></h2>
@@ -79,11 +82,15 @@
                 <tr>
                     <td>
                         <div id="meshPreviewMsg"><CENTER><H1>Loading...</H1></CENTER></div>
+                        <div id="dat-gui" style="float: right; "></div>
                         <div id="meshPreview"></div>
+                        <div id="inset" style="position: absolute; top: 1000px; left: 266px;"></div>
                     </td>
                 </tr>
             </table>
-            
+             
+
+
             <div class="span1">
                 <div>Maximum voxel population:</div>
                 <div id="maxVal"></div>
@@ -92,6 +99,7 @@
                 <div id="minVal"></div>
             </div>
         </div>
+
     </div>
 
     <div id="error" style="clear:both; display: none;">
@@ -110,7 +118,7 @@
     <div id="accessOutput" class="well" style="clear:both; display: none;">
         <h3>Output</h3>
         <br />
-        <button id="access" type="submit" class="btn btn-primary btn-large"><i class="icon-download-alt"></i> Fetch Data from Cloud</button>
+        <button id="access2" type="submit" class="zoomin btn btn-primary">p</button>
     </div>
 </script>
 {% endblock %}

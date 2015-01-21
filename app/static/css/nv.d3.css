@@ -10,6 +10,15 @@
   overflow: hidden;
 }
 
+
+.dg .property-name {
+cursor: default;
+float: left;
+clear: left;
+width: 40%;
+overflow: hidden;
+text-overflow: ellipsis;
+}
 /********************
   Box shadow and border radius styling
 */
