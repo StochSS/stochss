@@ -28,33 +28,37 @@ def get_all_jobs_time_cost(uuid, access_key, secret_key):
 #         results = table.scan(scan_filter={'uuid' :condition.EQ(uuid)})
 #     else:
 #         results = {}
-    database = DynamoDB()
+    database = DynamoDB(access_key, secret_key)
     results = database.getEntry('uuid', uuid, "stochss_cost_analysis")
              
     jobs = []
     if results is None:
         return jobs
     
-    for result in results:
-        job = {}
-        job['agent'] = result['agent']
-        job['instance_type'] = result['instance_type']
-        job['status'] = result['status']
-        if 'time_taken' not in result:
-            time = 0
-        else:
-            time = result['time_taken']
-            if time:
-                time = time.partition(' ')[0]#seconds
-            else:
+    try:
+        for result in results:
+            job = {}
+            job['agent'] = result['agent']
+            job['instance_type'] = result['instance_type']
+            job['status'] = result['status']
+            if 'time_taken' not in result:
                 time = 0
+            else:
+                time = result['time_taken']
+                if time:
+                    time = time.partition(' ')[0]#seconds
+                else:
+                    time = 0
                 
-        job['time'] = str(float(time)/60.00)
-        job['cost'] = str(Price.COST_TABLE_PER_HOUR['ec2'][job['instance_type']] * float(time)/3600.00)
+            job['time'] = str(float(time)/60.00)
+            job['cost'] = str(Price.COST_TABLE_PER_HOUR['ec2'][job['instance_type']] * float(time)/3600.00)
             
-        logging.info('agent: '+job['agent']+', instance_type: '+job['instance_type']+', time: '+job['time']+', cost: '+job['cost'])
-        jobs.append(job)
-    return jobs
+            logging.info('agent: '+job['agent']+', instance_type: '+job['instance_type']+', time: '+job['time']+', cost: '+job['cost'])
+            jobs.append(job)
+        return jobs
+    except Exception, e:
+        logging.error("{0}".format(e))
+        return {}
     
 def get_best_instance_type(uuid, access_key, secret_key):
     jobs = get_all_jobs_time_cost(uuid, access_key, secret_key)

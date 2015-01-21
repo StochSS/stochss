@@ -15,6 +15,7 @@ from google.appengine.ext import db
 import time
 from backend import pricing
 from backend.databases.dynamo_db import DynamoDB
+import os
 
 class CredentialsPage(BaseHandler):
     """
@@ -138,7 +139,7 @@ class CredentialsPage(BaseHandler):
             context = self.getContext(user_id)
             self.render_response('credentials.html', **(dict(context, **result)))
 
-    def saveCredentials(self, credentials, database=DynamoDB()):
+    def saveCredentials(self, credentials, database=None):
         """ Save the Credentials to the datastore. """
         try:
             service = backendservices()
@@ -158,6 +159,9 @@ class CredentialsPage(BaseHandler):
                     os.environ["AWS_SECRET_ACCESS_KEY"] = credentials['EC2_SECRET_KEY']
 
                     try:
+                        if not database:
+                            database = DynamoDB(os.environ["AWS_ACCESS_KEY_ID"], os.environ["AWS_SECRET_ACCESS_KEY"])
+                            
                         database.createtable(backendservices.TABLENAME)
                         self.user_data.is_amazon_db_table=True
                     except Exception,e:

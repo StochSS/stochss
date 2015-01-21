@@ -44,12 +44,15 @@ class backendservices():
         sys.path.append(os.path.join(os.path.dirname(__file__), 
                                      '/Library/Python/2.7/site-packages/amqp'))
             
-    def executeTask(self, params, agent, access_key, secret_key, taskid=None, instance_type=None, cost_replay=False, database=DynamoDB()):
+    def executeTask(self, params, agent, access_key, secret_key, taskid=None, instance_type=None, cost_replay=False, database=None):
         '''
         This method instantiates celery tasks in the cloud.
 	Returns return value from celery async call and the task ID
         '''
         #logging.info('inside execute task for cloud : Params - %s', str(params))
+        if not database:
+            database = DynamoDB(access_key, secret_key)
+            
         result = {}
         try:
             import tasks
@@ -200,7 +203,7 @@ class backendservices():
                 # Update DB entry just before sending to worker
                 database.updateEntry(taskid, data, backendservices.TABLENAME)
                 params["queue"] = queue_name
-                tmp = master_task.delay(taskid, params, DynamoDB())
+                tmp = master_task.delay(taskid, params, database)
                 #TODO: This should really be done as a background_thread as soon as the task is sent
                 #      to a worker, but this would require an update to GAE SDK.
                 # call the poll task process
@@ -368,7 +371,7 @@ class backendservices():
         return res
     
     
-    def describeTask(self, params, database=DynamoDB()):
+    def describeTask(self, params, database=None):
         '''
         @param params: A dictionary with the following fields
          "AWS_ACCESS_KEY_ID" : AWS access key
@@ -378,10 +381,13 @@ class backendservices():
          a dictionary of the form :
          {"taskid":"result:"","state":""} 
         '''
+        
         logging.debug("describeTask : setting environment variables : AWS_ACCESS_KEY_ID - %s", params['AWS_ACCESS_KEY_ID']) 
         os.environ["AWS_ACCESS_KEY_ID"] = params['AWS_ACCESS_KEY_ID']
         logging.debug("describeTask : setting environment variables : AWS_SECRET_ACCESS_KEY - %s", params['AWS_SECRET_ACCESS_KEY'])
         os.environ["AWS_SECRET_ACCESS_KEY"] = params['AWS_SECRET_ACCESS_KEY']
+        if not database:
+            database = DynamoDB(params['AWS_ACCESS_KEY_ID'], params['AWS_SECRET_ACCESS_KEY'])
         result = {}
         try:
             result = database.describetask(params['taskids'], backendservices.TABLENAME)
@@ -413,12 +419,15 @@ class backendservices():
         }
         return self.describeTask(describe_params)
     
-    def deleteTasks(self, taskids, database=DynamoDB()):
+    def deleteTasks(self, taskids, database=None):
         '''
         @param taskid:the list of taskids to be removed 
         this method revokes scheduled tasks as well as the tasks in progress. It 
         also removes task from the database. It ignores the taskids which are not active.
         '''
+        if not database:
+            database = DynamoDB(os.environ["AWS_ACCESS_KEY_ID"], os.environ["AWS_SECRET_ACCESS_KEY"])
+            
         logging.info("deleteTasks : inside method with taskids : %s", taskids)
         try:
             for taskid_pair in taskids:
@@ -890,13 +899,15 @@ def teststochoptim(backend,compute_check_params):
 
 ##########################################
 ##########################################
-def teststochss(backend,params,database=DynamoDB()):
+def teststochss(backend,params,database=None):
     '''
     This tests a stochkit job using a local run (2 tasks)
     and a cloud run (2 tasks)
     It can also test describe* and start/stop Machines
     '''
-
+    if not database:
+            database = DynamoDB(os.environ["AWS_ACCESS_KEY_ID"], os.environ["AWS_SECRET_ACCESS_KEY"])
+            
     if backend.validateCredentials(params) :
 	print bcolors.FAIL + \
             'startMachines is commented out, make sure you have one+ started!'\

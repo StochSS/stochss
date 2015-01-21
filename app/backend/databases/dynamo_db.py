@@ -11,12 +11,20 @@ class DynamoDB(BaseDB):
     """
     All DynamoBD related methods follow next. TODO: move it to a different file
     """
+    
+    def __init__(self, access_key, secret_key):
+        try:
+            self.access_key = access_key
+            self.secret_key = secret_key
+        except Exception,e:
+            print "exiting initialization of DynamoDB  with error : {0}".format(str(e))
+            print str(e)
 
     def describetask(self, taskids,tablename):
         res = {}
         try:
             print 'inside describetask method with taskids = {0} and tablename {1}'.format(str(taskids), tablename)
-            dynamo=boto.connect_dynamodb()
+            dynamo=boto.connect_dynamodb(aws_access_key_id=self.access_key, aws_secret_access_key=self.secret_key)
             if not self.tableexists(dynamo, tablename): return res
             table = dynamo.get_table(tablename)
             for taskid in taskids:
@@ -34,7 +42,7 @@ class DynamoDB(BaseDB):
     def removetask(self, tablename,taskid):
         print 'inside removetask method with tablename = {0} and taskid = {1}'.format(tablename, taskid)
         try:
-            dynamo=boto.connect_dynamodb()#boto.dynamodb.connect_to_region('us-east-1')
+            dynamo=boto.connect_dynamodb(aws_access_key_id=self.access_key, aws_secret_access_key=self.secret_key)#boto.dynamodb.connect_to_region('us-east-1')
             if self.tableexists(dynamo, tablename):
                 table = dynamo.get_table(tablename)
                 item = table.get_item(hash_key=taskid)
@@ -54,7 +62,7 @@ class DynamoDB(BaseDB):
             print 'default table name picked as stochss'
         try:
             print 'connecting to dynamodb'
-            dynamo=boto.connect_dynamodb()#boto.dynamodb.connect_to_region('us-east-1')
+            dynamo=boto.connect_dynamodb(aws_access_key_id=self.access_key, aws_secret_access_key=self.secret_key)#boto.dynamodb.connect_to_region('us-east-1')
             #check if table already exisits
             print 'checking if table {0} exists'.format(tablename)
             if not self.tableexists(dynamo,tablename):
@@ -83,7 +91,7 @@ class DynamoDB(BaseDB):
     
     def getEntry(self, attribute_name=str(), attribute_value=str(), table_name=str()):
         try:
-            dynamo=boto.connect_dynamodb()
+            dynamo=boto.connect_dynamodb(aws_access_key_id=self.access_key, aws_secret_access_key=self.secret_key)
             if not self.tableexists(dynamo, table_name):
                 self.createtable(table_name)
         
@@ -103,7 +111,7 @@ class DynamoDB(BaseDB):
         '''
         try:
             print 'inside update entry method with taskid = {0} and data = {1}'.format(taskid, str(data))
-            dynamo=boto.connect_dynamodb()
+            dynamo=boto.connect_dynamodb(aws_access_key_id=self.access_key, aws_secret_access_key=self.secret_key)
             if not self.tableexists(dynamo, tablename):
                 self.createtable(tablename)
 #             print "invalid table name specified"

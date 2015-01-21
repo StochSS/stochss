@@ -384,8 +384,10 @@ class SimulatePage(BaseHandler):
                                 "id" : q.key().id(),
                                 "units" : q.model.units,
                                 "isSpatial" : q.isSpatial })
-    
         context = {'all_models': all_models}
+        
+        
+        
         self.render_response('simulate.html',**context)
     def post(self):
         """ Assemble the input to StochKit2 and submit the job (locally or via cloud). """
