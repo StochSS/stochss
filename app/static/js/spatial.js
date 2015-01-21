@@ -69,44 +69,43 @@ Spatial.Controller = Backbone.View.extend(
         
         addGui : function() {
 
-                        var gui = new dat.GUI({
+                var gui = new dat.GUI({
                     height : 5 * 32 - 1,
                     autoPlace: false
                 });
 
             var gui_func = {
-                globalController : this,
-                    zoomin :  function() {
-                     this.globalController.controls.dollyOut();
-                      },
+                    globalController : this,
+                    zoomin :  function() { this.globalController.controls.dollyOut();},
                     zoomout : function() { this.globalController.controls.dollyIn(); },
-                    reset : function() { 
-                        this.globalController.controls.reset();
+                    panleft: function(){ this.globalController.controls.panLeft(1); },
+                    panright: function(){ this.globalController.controls.panLeft(-1); },
+                    rotateUp: function(){ this.globalController.controls.rotateUp(0.5); },
+                    rotateLeft: function(){ this.globalController.controls.rotateLeft(1);},
+                    rotateRight: function(){ this.globalController.controls.rotateLeft(-1);},
+                    rotateDown: function(){ this.globalController.controls.rotateUp(-1);},
+                    reset: function() {this.globalController.controls.reset();this.globalController.camera.position.z = 1.5;},
+                    zoomin: function(){this.globalController.controls.dollyOut();},
+                    zoomout: function() { this.globalController.controls.dollyIn(); },   
+                    };
 
-                        this.globalController.camera.position.z = 1.5;
-                    },
-                    panLeft: function(){
-                        this.globalController.controls.panLeft(1);
-                    },
-                    panUp: function(){
-                        this.globalController.controls.panUp(1);
-                    },
-                    rotateLeft: function(){
-                        this.globalController.controls.rotateLeft(1);
-                    },
-                    rotateRight: function(){
-                        this.globalController.controls.rotateUp(1);
-                    }
-                };
+            var zoom = gui.addFolder('Zoom');
+            zoom.add(gui_func, 'zoomin');
+            zoom.add(gui_func, 'zoomout');
 
-            gui.add(gui_func, 'zoomin');
-            gui.add(gui_func, 'zoomout');
+            var pan = gui.addFolder('Pan..');
+            pan.add(gui_func, 'panleft');
+            pan.add(gui_func, 'panright');
+
+            var rotate = gui.addFolder('Rotate..');
+            rotate.add(gui_func, 'rotateUp');
+            rotate.add(gui_func, 'rotateDown');
+            rotate.add(gui_func, 'rotateLeft');
+            rotate.add(gui_func, 'rotateRight');
+
             gui.add(gui_func, 'reset');
-            gui.add(gui_func, 'panLeft');
-            gui.add(gui_func, 'panUp');
-            gui.add(gui_func, 'rotateLeft');
-            gui.add(gui_func, 'rotateRight');
-            var guiContainer = $( '#dat-gui' ).empty();
+
+            var guiContainer = $( '#dat-gui-container' ).empty();
             testtest = $( gui.domElement ).appendTo( guiContainer);
             testtest.css('display : block');
         },
@@ -140,8 +139,8 @@ Spatial.Controller = Backbone.View.extend(
             var dom2 = $( '#inset' ).empty();
 
             // renderer
-            var renderer2 = new THREE.WebGLRenderer();
-            renderer2.setClearColor( 0xffffff, 0 );
+            var renderer2 = new THREE.WebGLRenderer({ alpha: true });
+            renderer2.setClearColor( 0x000000, 0 ); 
             $( renderer2.domElement ).appendTo(dom2);
 
             this.renderer2 = renderer2;
@@ -191,6 +190,53 @@ Spatial.Controller = Backbone.View.extend(
             this.camera2.lookAt( this.scene2.position );
         },
 
+
+        /*addControls: function(){
+            var controlContainer = $( '#controls' ).empty();
+            var buttonText = ["Pan Left","Pan Right","br","Rotate Up","br","Rotate Left","Rotate Right","br","Rotate Down","br", "Reset", "br", "Zoom In", "Zoom Out"];   
+            
+            var utility = [
+                function(){ console.log("click"); this.globalController.controls.panLeft(1); },
+                function(){ this.globalController.controls.panLeft(-1); },
+                function(){},
+                function(){ this.globalController.controls.rotateUp(1); },
+                function(){},
+                function(){ this.globalController.controls.rotateLeft(1);},
+                function(){ this.globalController.controls.rotateLeft(-1);},
+                function(){},
+                function(){ this.globalController.controls.rotateUp(-1);},
+                function(){},
+                function() {this.globalController.controls.reset();this.globalController.camera.position.z = 1.5;},
+                function(){}, 
+                function(){this.globalController.controls.dollyOut();},
+                function() { this.globalController.controls.dollyIn(); },          
+            ];
+
+            for (i = 0; i < buttonText.length; i++) {
+            
+            if(buttonText[i] == "br")
+            {
+                var linebreak = document.createElement("br");
+                $('#controls').append(linebreak);
+            }
+            else
+                {
+                    this.addButtons(buttonText[i], utility[i]);
+                }  
+            
+            }
+
+
+        },
+
+        addButtons: function(text, func){
+            var newButton = document.createElement('button');
+            var newText = document.createTextNode(text); 
+            newButton.appendChild(newText);
+            newButton.onClick = func;
+            $('#controls').append(newButton);
+
+        },*/
 
         // This event gets fired when the user selects a csv data file
         meshDataPreview : function(data)
