@@ -275,7 +275,7 @@ else
     echo "Building StochKit"
     echo " Logging stdout in $STOCHSS_HOME/stdout.log and "
     echo " stderr in $STOCHSS_HOME/stderr.log "
-    echo " * This process will take at least 5 minutes to complete, please be patient *"
+    echo " * This process will take at least 5 minutes to complete. Please be patient *"
     wd=`pwd`
     cd "$STOCHKIT_PREFIX"
     retry_command "tar -xzf \"$STOCHKIT_VERSION.tgz\""
@@ -326,7 +326,7 @@ else
     echo "Building StochOptim"
     echo " Logging stdout in $STOCHSS_HOME/stdout.log and "
     echo " stderr in $STOCHSS_HOME/stderr.log "
-    echo " * This process will take at least 5 minutes to complete, please be patient *"
+    echo " * This process will take at least 5 minutes to complete. Please be patient *"
 
     echo `pwd`
     echo `pwd`
@@ -375,7 +375,7 @@ else
     echo "Building StochKit ODE"
     echo " Logging stdout in $STOCHSS_HOME/stdout.log and "
     echo " stderr in $STOCHSS_HOME/stderr.log "
-    echo " * This process should take about a minute to complete, please be patient *"
+    echo " * This process should take about a minute to complete. Please be patient *"
     wd=`pwd`
     tmpdir=$(mktemp -d /tmp/tmp.XXXXXX)
     retry_command "tar -xzf \"$STOCHKIT_ODE.tgz\""
