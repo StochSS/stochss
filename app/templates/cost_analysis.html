@@ -242,7 +242,8 @@ function costrun(path, uuid, name, instance_type)
              success : function(data){
                      updateMsg(data);
                      if(data.status)
-                     window.location = '/cost_analysis?job_type='+job_type+'&id='+id;
+                     location.reload();
+                     //window.location = '/cost_analysis?job_type='+job_type+'&id='+id;
              },
              error : function(data){
                      location.reload();
