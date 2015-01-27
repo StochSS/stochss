@@ -14,7 +14,7 @@ STOCHSS_HOME="`( cd \"$STOCHSS_HOME\" && pwd )`"
 STOCHKIT_VERSION=StochKit2.0.11
 STOCHKIT_PREFIX=$STOCHSS_HOME
 export STOCHKIT_HOME="$STOCHKIT_PREFIX/$STOCHKIT_VERSION"
-ODE_VERSION="ode-1.0.1"
+ODE_VERSION="ode-1.0.2"
 export STOCHKIT_ODE="$STOCHSS_HOME/$ODE_VERSION"
 STOCHOPTIM_VERSION="stochoptim-0.5-1"
 export STOCHOPTIM="$STOCHSS_HOME/$STOCHOPTIM_VERSION"
@@ -78,16 +78,12 @@ function check_pyurdme_sub {
     return 1 #False
 }
 function check_pyurdme {
-    if check_pyurdme_sub; then
-        return 0 #True
-    else
-        PYURDME_CONF="$STOCHSS_HOME/app/lib/pyurdme-stochss/pyurdme_init"
-        if [ -e $PYURDME_CONF ];then
-            echo "PyURDME local install found, sourcing $PYURDME_CONF.<br />"
-            source $PYURDME_CONF
-            if check_pyurdme_sub;then
-                return 0 #True
-            fi
+    PYURDME_CONF="$STOCHSS_HOME/app/lib/pyurdme-stochss/pyurdme_init"
+    if [ -e $PYURDME_CONF ];then
+        echo "PyURDME local install found, sourcing $PYURDME_CONF.<br />"
+        source $PYURDME_CONF
+        if check_pyurdme_sub;then
+            return 0 #True
         fi
     fi
     return 1 #False
@@ -156,7 +152,12 @@ function install_lib {
 
     if [ "$answer" == 'y' ] || [ "$answer" == 'yes' ]; then
         export ARCHFLAGS='-Wno-error=unused-command-line-argument-hard-error-in-future'
-        CMD="sudo pip install $1"
+	if [ "$1" = "h5py" ]; then
+            pkg="$1==2.4.0b1"
+	else
+            pkg="$1"
+	fi
+	CMD="sudo pip install $pkg"
         echo $CMD
         eval $CMD
     else
@@ -380,7 +381,7 @@ else
     echo "Building StochOptim <br />"
     echo " Logging stdout in $STOCHSS_HOME/stdout.log and <br />"
     echo " stderr in $STOCHSS_HOME/stderr.log <br />"
-    echo " <font color=\"blue\"><h3>This process will take at least 5 minutes to complete, please be patient</h3></font>"
+    echo " <font color=\"blue\"><h3>This process will take at least 5 minutes to complete. Please be patient</h3></font>"
 
     
     retry_command "tar -xzf \"$STOCHOPTIM.tgz\""
@@ -429,7 +430,7 @@ else
     echo "Building StochKit ODE<br />"
     echo " Logging stdout in $STOCHSS_HOME/stdout.log and <br />"
     echo " stderr in $STOCHSS_HOME/stderr.log <br />"
-    echo "<font color=\"blue\"><h3>This process should take about a minute to complete, please be patient</h3></font><br />"
+    echo "<font color=\"blue\"><h3>This process should take about a minute to complete. Please be patient</h3></font><br />"
     wd=`pwd`
     tmpdir=$(mktemp -d /tmp/tmp.XXXXXX)
     retry_command "tar -xzf \"$STOCHKIT_ODE.tgz\""

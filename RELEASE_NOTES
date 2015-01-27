@@ -1,5 +1,9 @@
 StochSS - Stochastic Simulation Service: Release Notes
 
+1.4.1
+=============================
+- Bugfix release
+
 1.4.0
 =============================
 - Integration of PyURDME: Spatial stochastic simulation on complex
