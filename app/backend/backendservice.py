@@ -31,7 +31,7 @@ class backendservices():
     INFRA_EC2 = 'ec2'
     INFRA_CLUSTER = 'cluster'
     WORKER_AMIS = {
-        INFRA_EC2: 'ami-20236448'
+        INFRA_EC2: 'ami-082e6960'
     }
     VMSTATUS_IDS = 'ids'
 
