@@ -73,6 +73,8 @@ Spatial.Controller = Backbone.View.extend(
             $( '#zoomMinus_btn' ).click( _.bind(function() { this.controls.dollyIn();}, this) );
             $( '#panLeft_btn' ).click( _.bind(function() { this.controls.panLeft(-0.1);}, this) );
             $( '#panRight_btn' ).click( _.bind(function() { this.controls.panLeft(0.1);}, this) );
+            $( '#panUp_btn' ).click( _.bind(function() { this.controls.panUp(-0.1);}, this) );
+            $( '#panDown_btn' ).click( _.bind(function() { this.controls.panUp(0.1);}, this) );
 
             $( '#rotateUp_btn' ).click( _.bind(function() { this.controls.rotateUp(0.5);}, this) );
             $( '#rotateDown_btn' ).click( _.bind(function() { this.controls.rotateUp(-0.5);}, this) );
@@ -150,11 +152,23 @@ Spatial.Controller = Backbone.View.extend(
         addAxes : function(){
             var dom2 = $( '#inset' ).empty();
 
-            $('#inset').css("position","absolute top: "+this.d_width+"px; left: "+this.d_height/3+"px"); 
+                /*var width = dom2.width(); 
+                var height = 0.75 * width; */
+                //var camera = new THREE.PerspectiveCamera( 75, 4.0 / 3.0, 0.1, 1000 );
+                
+
+            // camera
+            var camera2 = new THREE.OrthographicCamera( -1, 1, 1, -1, 1, 1000);
+            this.camera2 = camera2; 
+
+
+            //$('#inset').css("position","absolute top: "+this.d_width/3+"px; left: "+this.d_height/3+"px"); 
 
             // renderer
             var renderer2 = new THREE.WebGLRenderer({ alpha: true });
             renderer2.setClearColor( 0x000000, 0 ); 
+            console.log("Width: ",this.d_width);
+            renderer2.setSize( this.d_width/5, this.d_width/5);
             $( renderer2.domElement ).appendTo(dom2);
 
             this.renderer2 = renderer2;
@@ -164,7 +178,7 @@ Spatial.Controller = Backbone.View.extend(
             this.scene2 = scene2;
 
             // axes
-            var dir = new THREE.Vector3( 1, 0, 0 );
+            var dir = new THREE.Vector3( 1.0, 0.0, 0.0 );
             var origin = new THREE.Vector3( 0, 0, 0 ); 
             var length = 1; 
             var hex = 0xff0000; 
@@ -190,11 +204,6 @@ Spatial.Controller = Backbone.View.extend(
             this.createText('Z', 0.5,-0.4,0.9);
             scene2.add( zaxis );
 
-            // camera
-            width = 2
-            height = 2
-            var camera2 = new THREE.OrthographicCamera( width / - 2, width / 2, height / 2, height / - 2, 1, 1000);
-            this.camera2 = camera2; 
 
         },
 

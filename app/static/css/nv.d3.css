@@ -9,8 +9,37 @@
   padding: 0;
   overflow: hidden;
 } 
-        
 
+
+#dat-gui-container{
+  display:none; 
+  border-style: solid; 
+  color: white;
+  background-color: black;
+  height: 35px;
+}
+
+
+.button-container{
+  float:left;
+  padding-top: 5px;
+    padding-right: 5px;
+    padding-bottom: 5px;
+    padding-left: 5px;
+        border-style: solid;
+    border-color: gray;
+}
+
+
+.button-container-left{
+  padding-left: 172px;
+}
+
+.button-container-right{
+  padding-right: 174px;
+    padding-bottom: 2.8px;
+    padding-top: 4px;
+}
 /********************
   Box shadow and border radius styling
 */
