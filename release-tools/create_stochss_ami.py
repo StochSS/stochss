@@ -100,7 +100,7 @@ class AmiCreator:
             print 'stderr_log_filename: {0}'.format(stderr_log_filename)
             self.stderr_log = open(stderr_log_filename, 'w')
 
-        self.is_old_ami = True
+        self.is_old_ami = False
         self.verbose = options["verbose"] if "verbose" in options.keys() else False
 
     def run(self):
@@ -172,9 +172,9 @@ class AmiCreator:
         new_security_group = self.ec2_connection.create_security_group(name=security_group_name,
                                                                        description='StochSS AMI Creation')
 
-        new_security_group.authorize('tcp', 22,    22,    '0.0.0.0/0')
-        new_security_group.authorize('tcp', 5672,  5672,  '0.0.0.0/0')
-        new_security_group.authorize('tcp', 6379,  6379,  '0.0.0.0/0')
+        new_security_group.authorize('tcp', 22, 22, '0.0.0.0/0')
+        new_security_group.authorize('tcp', 5672, 5672, '0.0.0.0/0')
+        new_security_group.authorize('tcp', 6379, 6379, '0.0.0.0/0')
         new_security_group.authorize('tcp', 11211, 11211, '0.0.0.0/0')
         new_security_group.authorize('tcp', 55672, 55672, '0.0.0.0/0')
 
@@ -235,14 +235,14 @@ class AmiCreator:
             tmp_log_stderr_file = tempfile.TemporaryFile()
 
             remote_cmd = get_remote_command(user=self.instance_user, ip=self.instance_ip, key_file=self.key_file,
-                                                command="echo Instance {0} with ip {1} is up!".format(self.instance_id,
-                                                                                                      self.instance_ip))
+                                            command="echo Instance {0} with ip {1} is up!".format(self.instance_id,
+                                                                                                  self.instance_ip))
             shell_cmd = ShellCommand(remote_cmd, stdout=tmp_log_stdout_file, stderr=tmp_log_stderr_file)
             shell_cmd.run(timeout=5, silent=True)
 
             if self.verbose:
                 tmp_log_stderr_file.seek(0)
-                print >>2, tmp_log_stderr_file.read()
+                print >> 2, tmp_log_stderr_file.read()
 
             tmp_log_stderr_file.close()
 
@@ -393,7 +393,7 @@ class AmiCreator:
             return False
 
     def __check_fenics_installation(self):
-        #TODO: check FeniCS installation
+        # TODO: check FeniCS installation
         pass
 
     def __check_python_packages_installation(self):
