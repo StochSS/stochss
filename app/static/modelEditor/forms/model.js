@@ -4,10 +4,11 @@ var View = require('ampersand-view');
 var ParameterCollectionFormView = require('./parameter-collection');
 var SpecieCollectionFormView = require('./specie-collection');
 var ReactionCollectionFormView = require('./reaction-collection');
+var MeshCollectionFormView = require('./mesh-collection');
 var ModelConvert = require('../convertToPopulation/model');
 
 module.exports = View.extend({
-    template: "<div><h3>Edit Model</h3><div data-hook='editor'>Model type: <span data-hook='type'></span><hr /><div data-hook='specie'></div><hr /><div data-hook='parameter'></div><hr /><div data-hook='reaction'></div></div><div data-hook='convertToPopulation'></div><button data-hook='convertToPopulationButton'>Convert To Population</button></div>",
+    template: $( '.modelEditorTemplate' ).text(),
     // Gotta have a few of these functions just so this works as a form view
     // This gets called when things update
     props: {
@@ -55,9 +56,11 @@ module.exports = View.extend({
             $( this.el ).find( '[data-hook="editor"]' ).show()
         }
     },
-    initialize: function()
+    initialize: function(attr)
     {
         this.state = this.model.units;
+
+        this.meshCollection = attr.meshCollection;
     },
     render: function()
     {
@@ -95,6 +98,12 @@ module.exports = View.extend({
                 parent: this,
                 el: $( '<div>' ).appendTo( this.el.querySelector("[data-hook='reaction']") )[0],
                 collection: model.reactions
+            }),
+            new MeshCollectionFormView({
+                parent: this,
+                el: $( '<div>' ).appendTo( this.el.querySelector("[data-hook='mesh']") )[0],
+                model: this.model,
+                collection: this.meshCollection
             }),
             this.modelConverter
         ];

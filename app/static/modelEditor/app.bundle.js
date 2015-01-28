@@ -1,4 +1,4 @@
-(function e(t,n,r){function s(o,u){if(!n[o]){if(!t[o]){var a=typeof require=="function"&&require;if(!u&&a)return a(o,!0);if(i)return i(o,!0);var f=new Error("Cannot find module '"+o+"'");throw f.code="MODULE_NOT_FOUND",f}var l=n[o]={exports:{}};t[o][0].call(l.exports,function(e){var n=t[o][1][e];return s(n?n:e)},l,l.exports,e,t,n,r)}return n[o].exports}var i=typeof require=="function"&&require;for(var o=0;o<r.length;o++)s(r[o]);return s})({"/home/bbales2/stochssModel/app/lib/modelEditor/app.js":[function(require,module,exports){
+(function e(t,n,r){function s(o,u){if(!n[o]){if(!t[o]){var a=typeof require=="function"&&require;if(!u&&a)return a(o,!0);if(i)return i(o,!0);var f=new Error("Cannot find module '"+o+"'");throw f.code="MODULE_NOT_FOUND",f}var l=n[o]={exports:{}};t[o][0].call(l.exports,function(e){var n=t[o][1][e];return s(n?n:e)},l,l.exports,e,t,n,r)}return n[o].exports}var i=typeof require=="function"&&require;for(var o=0;o<r.length;o++)s(r[o]);return s})({"/home/bbales2/stochssModel/app/static/modelEditor/app.js":[function(require,module,exports){
 /*global app, me, $*/
 var $ = require('jquery');
 var _ = require('underscore');
@@ -14,6 +14,9 @@ var ModelEditorView = require('./forms/model');
 var ModelSelectView = require('./select/model-collection');
 var Model = require('./models/model');
 var domReady = require('domready');
+var Mesh = require('./models/mesh');
+var MeshCollection = require('./models/mesh-collection');
+var MeshSelectView = require('./forms/mesh-collection');
 
 /*var model2 = new Model({ name : "amodel",
                     units : "population",
@@ -46,6 +49,8 @@ var PrimaryView = View.extend({
     initialize: function(attr, options)
     {
         View.prototype.initialize.call(this, attr, options);
+
+        this.meshCollection = attr.meshCollection;
     },
     selectModel: function()
     {
@@ -60,10 +65,11 @@ var PrimaryView = View.extend({
             }
             
             this.modelEditor = new ModelEditorView( {
-                    el : $( '<div>' ).appendTo( this.queryByHook('editor') )[0],
-                    model : this.modelSelector.selected,
-                    parent : this
-                } )
+                el : $( '<div>' ).appendTo( this.queryByHook('editor') )[0],
+                model : this.modelSelector.selected,
+                meshCollection : this.meshCollection,
+                parent : this
+            } );
             
             this.listenTo(this.modelSelector.selected, 'remove', _.bind(this.modelDeleted, this));
             this.registerSubview(this.modelEditor);
@@ -86,13 +92,14 @@ var PrimaryView = View.extend({
 
         this.modelSelector = this.renderSubview(
             new ModelSelectView( {
-                collection : this.collection
+                collection : this.collection,
+                meshCollection : this.meshCollection
             } ), $( '<div>' ).appendTo( this.queryByHook('selector') )[0]
         );
 
         this.selectModel();
         this.modelSelector.on('change:selected', _.bind(this.selectModel, this));
-        
+
         return this;
     }
 });
@@ -102,30 +109,37 @@ ModelCollection = AmpersandCollection.extend( {
     model: Model
 });
 
+MeshCollection = AmpersandCollection.extend( {
+    url: "/meshes",
+    model: Mesh
+});
+
 var modelCollection = new ModelCollection();
+var meshCollection = new MeshCollection();
+
+var modelDownloaded = false; var meshDownloaded = false;
 
 modelCollection.fetch({
     success : function(modelCollection, response, options)
     {
-        if(modelCollection.models.length < 0)
-        {
-            modelCollection.add(model);
-
-            model.save(null, {
-                success : function(model, response, options)
-                {
-                    module.exports.blastoff();
-                    //console.log(model);
-                }
-            });
-        }
-        else
+        modelDownloaded = true;
+        if(meshDownloaded)
         {
             module.exports.blastoff();
         }
     }
 });
 
+meshCollection.fetch({
+    success : function(meshCollection, response, options)
+    {
+        meshDownloaded = true;
+        if(modelDownloaded)
+        {
+            module.exports.blastoff();
+        }
+    }
+});
 
 module.exports = {
     blastoff: function () {
@@ -137,15 +151,23 @@ module.exports = {
             div = document.body;
 
         domReady(function () {
-            var modelSelectView = new PrimaryView( { el: div, collection : modelCollection } );
+            for(var i = 0; i < modelCollection.models.length; i++)
+            {
+                modelCollection.models[i].setupMesh(meshCollection);
+            }
+
+            var modelSelectView = new PrimaryView( { el: div, collection : modelCollection, meshCollection : meshCollection } );
 
             modelSelectView.render();
+            //var meshSelectView = new MeshSelectView( { el: div, collection : meshCollection } );
+
+            //meshSelectView.render();
         });
     }
 };
 
 
-},{"./forms/model":"/home/bbales2/stochssModel/app/lib/modelEditor/forms/model.js","./models/model":"/home/bbales2/stochssModel/app/lib/modelEditor/models/model.js","./select/model-collection":"/home/bbales2/stochssModel/app/lib/modelEditor/select/model-collection.js","ampersand-model":"/home/bbales2/stochssModel/app/lib/modelEditor/node_modules/ampersand-model/ampersand-model.js","ampersand-rest-collection":"/home/bbales2/stochssModel/app/lib/modelEditor/node_modules/ampersand-rest-collection/ampersand-rest-collection.js","ampersand-view":"/home/bbales2/stochssModel/app/lib/modelEditor/node_modules/ampersand-view/ampersand-view.js","andlog":"/home/bbales2/stochssModel/app/lib/modelEditor/node_modules/andlog/andlog.js","clientconfig":"/home/bbales2/stochssModel/app/lib/modelEditor/node_modules/clientconfig/clientconfig.js","domready":"/home/bbales2/stochssModel/app/lib/modelEditor/node_modules/domready/ready.js","jquery":"/home/bbales2/stochssModel/app/lib/modelEditor/node_modules/jquery/dist/jquery.js","underscore":"/home/bbales2/stochssModel/app/lib/modelEditor/node_modules/underscore/underscore.js"}],"/home/bbales2/stochssModel/app/lib/modelEditor/convertToPopulation/model.js":[function(require,module,exports){
+},{"./forms/mesh-collection":"/home/bbales2/stochssModel/app/static/modelEditor/forms/mesh-collection.js","./forms/model":"/home/bbales2/stochssModel/app/static/modelEditor/forms/model.js","./models/mesh":"/home/bbales2/stochssModel/app/static/modelEditor/models/mesh.js","./models/mesh-collection":"/home/bbales2/stochssModel/app/static/modelEditor/models/mesh-collection.js","./models/model":"/home/bbales2/stochssModel/app/static/modelEditor/models/model.js","./select/model-collection":"/home/bbales2/stochssModel/app/static/modelEditor/select/model-collection.js","ampersand-model":"/home/bbales2/stochssModel/app/static/modelEditor/node_modules/ampersand-model/ampersand-model.js","ampersand-rest-collection":"/home/bbales2/stochssModel/app/static/modelEditor/node_modules/ampersand-rest-collection/ampersand-rest-collection.js","ampersand-view":"/home/bbales2/stochssModel/app/static/modelEditor/node_modules/ampersand-view/ampersand-view.js","andlog":"/home/bbales2/stochssModel/app/static/modelEditor/node_modules/andlog/andlog.js","clientconfig":"/home/bbales2/stochssModel/app/static/modelEditor/node_modules/clientconfig/clientconfig.js","domready":"/home/bbales2/stochssModel/app/static/modelEditor/node_modules/domready/ready.js","jquery":"/home/bbales2/stochssModel/app/static/modelEditor/node_modules/jquery/dist/jquery.js","underscore":"/home/bbales2/stochssModel/app/static/modelEditor/node_modules/underscore/underscore.js"}],"/home/bbales2/stochssModel/app/static/modelEditor/convertToPopulation/model.js":[function(require,module,exports){
 var _ = require('underscore');
 var $ = require('jquery');
 var View = require('ampersand-view');
@@ -261,7 +283,7 @@ module.exports = View.extend({
     }
 });
 
-},{"../forms/tests":"/home/bbales2/stochssModel/app/lib/modelEditor/forms/tests.js","./parameter-collection":"/home/bbales2/stochssModel/app/lib/modelEditor/convertToPopulation/parameter-collection.js","./reaction":"/home/bbales2/stochssModel/app/lib/modelEditor/convertToPopulation/reaction.js","./reaction-collection":"/home/bbales2/stochssModel/app/lib/modelEditor/convertToPopulation/reaction-collection.js","./specie-collection":"/home/bbales2/stochssModel/app/lib/modelEditor/convertToPopulation/specie-collection.js","ampersand-input-view":"/home/bbales2/stochssModel/app/lib/modelEditor/node_modules/ampersand-input-view/ampersand-input-view.js","ampersand-view":"/home/bbales2/stochssModel/app/lib/modelEditor/node_modules/ampersand-view/ampersand-view.js","jquery":"/home/bbales2/stochssModel/app/lib/modelEditor/node_modules/jquery/dist/jquery.js","underscore":"/home/bbales2/stochssModel/app/lib/modelEditor/node_modules/underscore/underscore.js"}],"/home/bbales2/stochssModel/app/lib/modelEditor/convertToPopulation/parameter-collection.js":[function(require,module,exports){
+},{"../forms/tests":"/home/bbales2/stochssModel/app/static/modelEditor/forms/tests.js","./parameter-collection":"/home/bbales2/stochssModel/app/static/modelEditor/convertToPopulation/parameter-collection.js","./reaction":"/home/bbales2/stochssModel/app/static/modelEditor/convertToPopulation/reaction.js","./reaction-collection":"/home/bbales2/stochssModel/app/static/modelEditor/convertToPopulation/reaction-collection.js","./specie-collection":"/home/bbales2/stochssModel/app/static/modelEditor/convertToPopulation/specie-collection.js","ampersand-input-view":"/home/bbales2/stochssModel/app/static/modelEditor/node_modules/ampersand-input-view/ampersand-input-view.js","ampersand-view":"/home/bbales2/stochssModel/app/static/modelEditor/node_modules/ampersand-view/ampersand-view.js","jquery":"/home/bbales2/stochssModel/app/static/modelEditor/node_modules/jquery/dist/jquery.js","underscore":"/home/bbales2/stochssModel/app/static/modelEditor/node_modules/underscore/underscore.js"}],"/home/bbales2/stochssModel/app/static/modelEditor/convertToPopulation/parameter-collection.js":[function(require,module,exports){
 var $ = require('jquery');
 var View = require('ampersand-view');
 var ParameterView = require('./parameter');
@@ -279,7 +301,7 @@ var ParameterCollectionFormView = View.extend({
 });
 
 module.exports = ParameterCollectionFormView
-},{"./parameter":"/home/bbales2/stochssModel/app/lib/modelEditor/convertToPopulation/parameter.js","ampersand-view":"/home/bbales2/stochssModel/app/lib/modelEditor/node_modules/ampersand-view/ampersand-view.js","jquery":"/home/bbales2/stochssModel/app/lib/modelEditor/node_modules/jquery/dist/jquery.js"}],"/home/bbales2/stochssModel/app/lib/modelEditor/convertToPopulation/parameter.js":[function(require,module,exports){
+},{"./parameter":"/home/bbales2/stochssModel/app/static/modelEditor/convertToPopulation/parameter.js","ampersand-view":"/home/bbales2/stochssModel/app/static/modelEditor/node_modules/ampersand-view/ampersand-view.js","jquery":"/home/bbales2/stochssModel/app/static/modelEditor/node_modules/jquery/dist/jquery.js"}],"/home/bbales2/stochssModel/app/static/modelEditor/convertToPopulation/parameter.js":[function(require,module,exports){
 var _ = require('underscore');
 var $ = require('jquery');
 var View = require('ampersand-view');
@@ -300,7 +322,7 @@ module.exports = View.extend({
     }
 });
 
-},{"ampersand-view":"/home/bbales2/stochssModel/app/lib/modelEditor/node_modules/ampersand-view/ampersand-view.js","jquery":"/home/bbales2/stochssModel/app/lib/modelEditor/node_modules/jquery/dist/jquery.js","underscore":"/home/bbales2/stochssModel/app/lib/modelEditor/node_modules/underscore/underscore.js"}],"/home/bbales2/stochssModel/app/lib/modelEditor/convertToPopulation/reaction-collection.js":[function(require,module,exports){
+},{"ampersand-view":"/home/bbales2/stochssModel/app/static/modelEditor/node_modules/ampersand-view/ampersand-view.js","jquery":"/home/bbales2/stochssModel/app/static/modelEditor/node_modules/jquery/dist/jquery.js","underscore":"/home/bbales2/stochssModel/app/static/modelEditor/node_modules/underscore/underscore.js"}],"/home/bbales2/stochssModel/app/static/modelEditor/convertToPopulation/reaction-collection.js":[function(require,module,exports){
 var $ = require('jquery');
 var View = require('ampersand-view');
 var ReactionView = require('./reaction');
@@ -318,7 +340,7 @@ var ReactionCollectionView = View.extend({
 });
 
 module.exports = ReactionCollectionView
-},{"./reaction":"/home/bbales2/stochssModel/app/lib/modelEditor/convertToPopulation/reaction.js","ampersand-view":"/home/bbales2/stochssModel/app/lib/modelEditor/node_modules/ampersand-view/ampersand-view.js","jquery":"/home/bbales2/stochssModel/app/lib/modelEditor/node_modules/jquery/dist/jquery.js"}],"/home/bbales2/stochssModel/app/lib/modelEditor/convertToPopulation/reaction.js":[function(require,module,exports){
+},{"./reaction":"/home/bbales2/stochssModel/app/static/modelEditor/convertToPopulation/reaction.js","ampersand-view":"/home/bbales2/stochssModel/app/static/modelEditor/node_modules/ampersand-view/ampersand-view.js","jquery":"/home/bbales2/stochssModel/app/static/modelEditor/node_modules/jquery/dist/jquery.js"}],"/home/bbales2/stochssModel/app/static/modelEditor/convertToPopulation/reaction.js":[function(require,module,exports){
 var _ = require('underscore');
 var $ = require('jquery');
 var View = require('ampersand-view');
@@ -462,7 +484,7 @@ ReactionView.computeConversionFactor = function(reaction, volume)
 };
 
 module.exports = ReactionView;
-},{"ampersand-view":"/home/bbales2/stochssModel/app/lib/modelEditor/node_modules/ampersand-view/ampersand-view.js","jquery":"/home/bbales2/stochssModel/app/lib/modelEditor/node_modules/jquery/dist/jquery.js","katex":"/home/bbales2/stochssModel/app/lib/modelEditor/node_modules/katex/katex.js","underscore":"/home/bbales2/stochssModel/app/lib/modelEditor/node_modules/underscore/underscore.js"}],"/home/bbales2/stochssModel/app/lib/modelEditor/convertToPopulation/specie-collection.js":[function(require,module,exports){
+},{"ampersand-view":"/home/bbales2/stochssModel/app/static/modelEditor/node_modules/ampersand-view/ampersand-view.js","jquery":"/home/bbales2/stochssModel/app/static/modelEditor/node_modules/jquery/dist/jquery.js","katex":"/home/bbales2/stochssModel/app/static/modelEditor/node_modules/katex/katex.js","underscore":"/home/bbales2/stochssModel/app/static/modelEditor/node_modules/underscore/underscore.js"}],"/home/bbales2/stochssModel/app/static/modelEditor/convertToPopulation/specie-collection.js":[function(require,module,exports){
 var $ = require('jquery');
 var View = require('ampersand-view');
 var SpecieView = require('./specie');
@@ -480,7 +502,7 @@ var SpecieCollectionView = View.extend({
 });
 
 module.exports = SpecieCollectionView
-},{"./specie":"/home/bbales2/stochssModel/app/lib/modelEditor/convertToPopulation/specie.js","ampersand-view":"/home/bbales2/stochssModel/app/lib/modelEditor/node_modules/ampersand-view/ampersand-view.js","jquery":"/home/bbales2/stochssModel/app/lib/modelEditor/node_modules/jquery/dist/jquery.js"}],"/home/bbales2/stochssModel/app/lib/modelEditor/convertToPopulation/specie.js":[function(require,module,exports){
+},{"./specie":"/home/bbales2/stochssModel/app/static/modelEditor/convertToPopulation/specie.js","ampersand-view":"/home/bbales2/stochssModel/app/static/modelEditor/node_modules/ampersand-view/ampersand-view.js","jquery":"/home/bbales2/stochssModel/app/static/modelEditor/node_modules/jquery/dist/jquery.js"}],"/home/bbales2/stochssModel/app/static/modelEditor/convertToPopulation/specie.js":[function(require,module,exports){
 var _ = require('underscore');
 var $ = require('jquery');
 var View = require('ampersand-view');
@@ -510,17 +532,348 @@ module.exports = View.extend({
     }
 });
 
-},{"ampersand-view":"/home/bbales2/stochssModel/app/lib/modelEditor/node_modules/ampersand-view/ampersand-view.js","jquery":"/home/bbales2/stochssModel/app/lib/modelEditor/node_modules/jquery/dist/jquery.js","underscore":"/home/bbales2/stochssModel/app/lib/modelEditor/node_modules/underscore/underscore.js"}],"/home/bbales2/stochssModel/app/lib/modelEditor/forms/model.js":[function(require,module,exports){
+},{"ampersand-view":"/home/bbales2/stochssModel/app/static/modelEditor/node_modules/ampersand-view/ampersand-view.js","jquery":"/home/bbales2/stochssModel/app/static/modelEditor/node_modules/jquery/dist/jquery.js","underscore":"/home/bbales2/stochssModel/app/static/modelEditor/node_modules/underscore/underscore.js"}],"/home/bbales2/stochssModel/app/static/modelEditor/forms/mesh-collection.js":[function(require,module,exports){
+var _ = require('underscore');
+var $ = require('jquery');
+var AmpersandView = require('ampersand-view');
+var MeshSelectView = require('./mesh');
+var Mesh = require('../models/mesh');
+var FileUpload = require('blueimp-file-upload');
+
+var Tests = require('../forms/tests.js');
+
+var updateMsg = function(el, data)
+{
+    el.text( data.msg );
+};
+
+var AddNewMeshForm = AmpersandView.extend({
+    template : $( '.meshCollectionAddTemplate' ).text(),
+    initialize: function(attr, options) {
+        AmpersandView.prototype.initialize.apply(this, arguments);
+
+        this.collection = options.collection;
+    },
+    events: {
+        "click .meshUploadButton" : "handleMeshUploadButton"
+    },
+    render: function()
+    {
+        AmpersandView.prototype.render.apply(this, arguments);
+
+        this.uploaderState = {};
+        
+        $( this.el ).find('#meshDataUpload').fileupload({
+            url: '/FileServer/large/meshFiles',
+            dataType: 'json',
+            replaceFileInput : false,
+            add : _.bind(this.handleMeshDataAdd, this),
+            done : _.bind(this.handleMeshUploadFinish, this)
+        });
+        
+        $( this.el ).find('#subdomainDataUpload').fileupload({
+            url: '/FileServer/large/subdomainFiles',
+            dataType: 'json',
+            replaceFileInput : false,
+            add : _.bind(this.handleSubdomainsDataAdd, this),
+            done : _.bind(this.handleSubdomainsUploadFinish, this)
+        });
+    },
+    handleMeshUploadButton : function(event)
+    {
+        if(this.uploaderState.meshFileData)
+        {
+            this.uploaderState.meshFileData.submit();
+            this.uploaderState.meshSubmitted = true;
+            
+            updateMsg( $( this.el ).find('#meshDataUploadStatus'),
+                       { status : true,
+                         msg : 'Uploading mesh...' } );
+        }
+        
+        if(this.uploaderState.subdomainsFileData)
+        {
+            this.uploaderState.subdomainsFileData.submit();
+            this.uploaderState.subdomainsSubmitted = true;
+            
+            updateMsg( $( this.el ).find('#subdomainDataUploadStatus'),
+                       { status : true,
+                         msg : 'Uploading subdomain...' } );
+        }
+        
+        this.uploaderState.name = $( this.el ).find( '.uploadMeshDiv' ).find( '.name' ).val();
+        this.uploaderState.description = $( this.el ).find( '.uploadMeshDiv' ).find( '.descriptionText' ).val();
+    },
+    handleMeshDataAdd : function(event, data)
+    {
+        if(this.uploaderState.meshFileData)
+        {
+            delete this.uploaderState.meshFileData;
+            delete this.uploaderState.meshSubmitted;
+            delete this.uploaderState.meshFileId;
+        }
+
+        var textArray = data.files[0].name.split('.');
+
+        var ext = textArray[textArray.length - 1];
+
+        if(ext.toLowerCase() != 'xml')
+        {
+            updateMsg( $( this.el ).find( '#meshDataUploadStatus' ),
+                       { status : false,
+                         msg : 'Mesh file must be a .xml' });
+            
+            return;
+        }
+
+        $( event.target ).prop('title', data.files[0].name);
+
+        var nameBox = $( '.uploadMeshDiv' ).find('.name');
+
+        var baseName;
+
+        if(nameBox.val().trim() == '')
+        {
+            baseName = data.files[0].name.split('.')[0];
+        }
+        else
+        {
+            baseName = nameBox.val().trim();
+        }
+
+        var newName;
+        var i = 0;
+        
+        var nameUnique = true;
+        do
+        {
+            nameUnique = true;
+            
+            newName = baseName + i;
+            
+            for(var ii in this.data.meshes)
+            {
+                if(this.data.meshes[ii])
+                {
+                    if(this.data.meshes[ii].name == newName)
+                    {
+                        nameUnique = false;
+                        break;
+                    }
+                }
+            }
+
+            i = i + 1;
+        } while(!nameUnique);
+
+        nameBox.val(newName);
+
+        this.uploaderState.meshFileData = data;
+
+        $( this.el ).find( "#meshUploadButton" ).prop('disabled', false);
+    },
+    handleSubdomainsDataAdd : function(event, data)
+    {
+        if(this.uploaderState.subdomainFileData)
+        {
+            delete this.uploaderState.subdomainsFileData;
+            delete this.uploaderState.subdomainsSubmitted;
+            delete this.uploaderState.subdomainsFileId;
+        }
+
+        var textArray = data.files[0].name.split('.');
+
+        var ext = textArray[textArray.length - 1];
+
+        if(ext.toLowerCase() != 'txt')
+        {
+            updateMsg( $( this.el ).find( '#subdomainDataUploadStatus' ),
+                       { status : false,
+                         msg : 'Subdomain file must be a .txt' } );
+            
+            return;
+        }
+
+        this.uploaderState.subdomainsFileData = data;
+    },
+    handleMeshUploadFinish : function(event, data)
+    {
+        this.uploaderState.meshFileId = data.result[0].id;
+
+        updateMsg( $( this.el ).find( '#meshDataUploadStatus' ),
+                   { status : true,
+                     msg : 'Mesh uploaded' } );
+        
+        this.createMeshWrapper();
+    },
+
+    handleSubdomainsUploadFinish : function(event, data)
+    {
+        this.uploaderState.subdomainsFileId = data.result[0].id;
+        
+        updateMsg( $( this.el ).find( '#subdomainDataUploadStatus' ),
+                   { status : true,
+                     msg : 'Subdomains uploaded' } );
+        
+        this.createMeshWrapper();
+    },
+
+    createMeshWrapper : function()
+    {
+        var data = {};
+        
+        if(this.uploaderState.meshSubmitted && this.uploaderState.meshFileId)
+        {
+            data['meshFileId'] = this.uploaderState.meshFileId;
+            data['name'] = this.uploaderState.name;
+            data['description'] = this.uploaderState.description;
+
+            if(this.uploaderState.subdomainsSubmitted && this.uploaderState.subdomainsFileId)
+            {
+                data['subdomainsFileId'] = this.uploaderState.subdomainsFileId;
+            }
+
+            if(!this.uploaderState.subdomainsSubmitted || (this.uploaderState.meshFileId && this.uploaderState.subdomainsFileId))
+            {
+                $.ajax( { type : 'POST',
+                          url: '/modeleditor/mesheditor',
+                          data: { reqType : 'addMeshWrapper',
+                                  data : JSON.stringify( data ) },
+                          success : _.bind(this.handleMeshWrapperCreated, this) });
+            }
+        }
+    }
+});
+
+var MeshCollectionSelectView = AmpersandView.extend({
+    template: $( '.meshCollectionTemplate' ).text(),
+    props: {
+        selected : 'object'
+    },
+    initialize: function(attr, options)
+    {
+        AmpersandView.prototype.initialize.call(this, attr, options);
+
+        this.selected = this.model.mesh;
+
+        if(typeof(this.selected) == 'undefined')
+        {
+            this.selected = this.collection.at(0);
+        }
+    },
+    selectModel: function(model)
+    {
+        this.selected = model;
+
+        this.model.mesh = this.selected;
+
+        $( this.el ).find( '.description' ).text( this.selected.description );
+    },
+    render: function()
+    {
+        AmpersandView.prototype.render.apply(this, arguments);
+
+        this.renderCollection(this.collection, MeshSelectView, this.el.querySelector('[data-hook=meshTable]'));
+
+        // Select the currently selected model
+        var inputs = $( this.el ).find('input');
+        for(var i = 0; i < inputs.length; i++)
+        {
+            if(this.selected == this.collection.models[i])
+            {
+                $( inputs.get(i) ).prop('checked', true);
+            }
+        }
+
+        this.selectModel( this.selected );
+
+        //this.fields.forEach( function(field) { $( field.el ).find('input').val(''); } );
+        this.addForm = new AddNewMeshForm(
+            {
+                el : this.el.querySelector('[data-hook=addMeshForm]')
+            },
+            {
+                collection : this.collection
+            }
+        );
+
+        this.addForm.render();
+        
+        return this;
+    }
+});
+
+module.exports = MeshCollectionSelectView
+
+},{"../forms/tests.js":"/home/bbales2/stochssModel/app/static/modelEditor/forms/tests.js","../models/mesh":"/home/bbales2/stochssModel/app/static/modelEditor/models/mesh.js","./mesh":"/home/bbales2/stochssModel/app/static/modelEditor/forms/mesh.js","ampersand-view":"/home/bbales2/stochssModel/app/static/modelEditor/node_modules/ampersand-view/ampersand-view.js","blueimp-file-upload":"/home/bbales2/stochssModel/app/static/modelEditor/node_modules/blueimp-file-upload/js/jquery.fileupload.js","jquery":"/home/bbales2/stochssModel/app/static/modelEditor/node_modules/jquery/dist/jquery.js","underscore":"/home/bbales2/stochssModel/app/static/modelEditor/node_modules/underscore/underscore.js"}],"/home/bbales2/stochssModel/app/static/modelEditor/forms/mesh.js":[function(require,module,exports){
+var _ = require('underscore');
+var $ = require('jquery');
+var View = require('ampersand-view');
+module.exports = View.extend({
+    template: '<tr> \
+  <td> \
+    <button type="button" class="btn btn-default" data-hook="delete"> \
+      x \
+    </button> \
+  </td> \
+  <td> \
+    <input type="radio" name="mesh" /> \
+  </td> \
+  <td data-hook="name"> \
+  </td> \
+</tr>',
+    // Gotta have a few of these functions just so this works as a form view
+    // This gets called when things update
+    bindings: {
+        'model.name' : {
+            type : 'text',
+            hook: 'name'
+        },
+        'model.description' : {
+            type : 'text',
+            hook: 'description'
+        },
+        'model.deletable' : {
+            type : 'toggle',
+            hook: 'delete'
+        }
+    },
+    events: {
+        "click input" : "selectSelf",
+        "click button" : "removeModel"
+    },
+    selectSelf: function()
+    {
+        // There is a CollectionView parent here that must be navigated
+        this.parent.parent.selectModel(this.model);
+    },
+    removeModel: function()
+    {
+        //this.model.collection.remove(this.model);
+        this.model.destroy();
+    },
+    render: function()
+    {
+        View.prototype.render.apply(this, arguments);
+
+        var model = this.model;
+
+        return this;
+    }
+});
+
+},{"ampersand-view":"/home/bbales2/stochssModel/app/static/modelEditor/node_modules/ampersand-view/ampersand-view.js","jquery":"/home/bbales2/stochssModel/app/static/modelEditor/node_modules/jquery/dist/jquery.js","underscore":"/home/bbales2/stochssModel/app/static/modelEditor/node_modules/underscore/underscore.js"}],"/home/bbales2/stochssModel/app/static/modelEditor/forms/model.js":[function(require,module,exports){
 var _ = require('underscore');
 var $ = require('jquery');
 var View = require('ampersand-view');
 var ParameterCollectionFormView = require('./parameter-collection');
 var SpecieCollectionFormView = require('./specie-collection');
 var ReactionCollectionFormView = require('./reaction-collection');
+var MeshCollectionFormView = require('./mesh-collection');
 var ModelConvert = require('../convertToPopulation/model');
 
 module.exports = View.extend({
-    template: "<div><h3>Edit Model</h3><div data-hook='editor'>Model type: <span data-hook='type'></span><hr /><div data-hook='specie'></div><hr /><div data-hook='parameter'></div><hr /><div data-hook='reaction'></div></div><div data-hook='convertToPopulation'></div><button data-hook='convertToPopulationButton'>Convert To Population</button></div>",
+    template: $( '.modelEditorTemplate' ).text(),
     // Gotta have a few of these functions just so this works as a form view
     // This gets called when things update
     props: {
@@ -568,9 +921,11 @@ module.exports = View.extend({
             $( this.el ).find( '[data-hook="editor"]' ).show()
         }
     },
-    initialize: function()
+    initialize: function(attr)
     {
         this.state = this.model.units;
+
+        this.meshCollection = attr.meshCollection;
     },
     render: function()
     {
@@ -609,6 +964,12 @@ module.exports = View.extend({
                 el: $( '<div>' ).appendTo( this.el.querySelector("[data-hook='reaction']") )[0],
                 collection: model.reactions
             }),
+            new MeshCollectionFormView({
+                parent: this,
+                el: $( '<div>' ).appendTo( this.el.querySelector("[data-hook='mesh']") )[0],
+                model: this.model,
+                collection: this.meshCollection
+            }),
             this.modelConverter
         ];
 
@@ -627,7 +988,7 @@ module.exports = View.extend({
     }
 });
 
-},{"../convertToPopulation/model":"/home/bbales2/stochssModel/app/lib/modelEditor/convertToPopulation/model.js","./parameter-collection":"/home/bbales2/stochssModel/app/lib/modelEditor/forms/parameter-collection.js","./reaction-collection":"/home/bbales2/stochssModel/app/lib/modelEditor/forms/reaction-collection.js","./specie-collection":"/home/bbales2/stochssModel/app/lib/modelEditor/forms/specie-collection.js","ampersand-view":"/home/bbales2/stochssModel/app/lib/modelEditor/node_modules/ampersand-view/ampersand-view.js","jquery":"/home/bbales2/stochssModel/app/lib/modelEditor/node_modules/jquery/dist/jquery.js","underscore":"/home/bbales2/stochssModel/app/lib/modelEditor/node_modules/underscore/underscore.js"}],"/home/bbales2/stochssModel/app/lib/modelEditor/forms/modifying-input-view.js":[function(require,module,exports){
+},{"../convertToPopulation/model":"/home/bbales2/stochssModel/app/static/modelEditor/convertToPopulation/model.js","./mesh-collection":"/home/bbales2/stochssModel/app/static/modelEditor/forms/mesh-collection.js","./parameter-collection":"/home/bbales2/stochssModel/app/static/modelEditor/forms/parameter-collection.js","./reaction-collection":"/home/bbales2/stochssModel/app/static/modelEditor/forms/reaction-collection.js","./specie-collection":"/home/bbales2/stochssModel/app/static/modelEditor/forms/specie-collection.js","ampersand-view":"/home/bbales2/stochssModel/app/static/modelEditor/node_modules/ampersand-view/ampersand-view.js","jquery":"/home/bbales2/stochssModel/app/static/modelEditor/node_modules/jquery/dist/jquery.js","underscore":"/home/bbales2/stochssModel/app/static/modelEditor/node_modules/underscore/underscore.js"}],"/home/bbales2/stochssModel/app/static/modelEditor/forms/modifying-input-view.js":[function(require,module,exports){
 var $ = require('jquery');
 var _ = require('underscore');
 var InputView = require('ampersand-input-view');
@@ -655,7 +1016,7 @@ ModifyingInputView = InputView.extend({
 });
 
 module.exports = ModifyingInputView
-},{"ampersand-input-view":"/home/bbales2/stochssModel/app/lib/modelEditor/node_modules/ampersand-input-view/ampersand-input-view.js","jquery":"/home/bbales2/stochssModel/app/lib/modelEditor/node_modules/jquery/dist/jquery.js","underscore":"/home/bbales2/stochssModel/app/lib/modelEditor/node_modules/underscore/underscore.js"}],"/home/bbales2/stochssModel/app/lib/modelEditor/forms/modifying-number-input-view.js":[function(require,module,exports){
+},{"ampersand-input-view":"/home/bbales2/stochssModel/app/static/modelEditor/node_modules/ampersand-input-view/ampersand-input-view.js","jquery":"/home/bbales2/stochssModel/app/static/modelEditor/node_modules/jquery/dist/jquery.js","underscore":"/home/bbales2/stochssModel/app/static/modelEditor/node_modules/underscore/underscore.js"}],"/home/bbales2/stochssModel/app/static/modelEditor/forms/modifying-number-input-view.js":[function(require,module,exports){
 var $ = require('jquery');
 var _ = require('underscore');
 var ModifyingInputView = require('./modifying-input-view');
@@ -669,7 +1030,7 @@ ModifyingNumberInputView = ModifyingInputView.extend({
 });
 
 module.exports = ModifyingNumberInputView
-},{"./modifying-input-view":"/home/bbales2/stochssModel/app/lib/modelEditor/forms/modifying-input-view.js","jquery":"/home/bbales2/stochssModel/app/lib/modelEditor/node_modules/jquery/dist/jquery.js","underscore":"/home/bbales2/stochssModel/app/lib/modelEditor/node_modules/underscore/underscore.js"}],"/home/bbales2/stochssModel/app/lib/modelEditor/forms/modifying-select-view.js":[function(require,module,exports){
+},{"./modifying-input-view":"/home/bbales2/stochssModel/app/static/modelEditor/forms/modifying-input-view.js","jquery":"/home/bbales2/stochssModel/app/static/modelEditor/node_modules/jquery/dist/jquery.js","underscore":"/home/bbales2/stochssModel/app/static/modelEditor/node_modules/underscore/underscore.js"}],"/home/bbales2/stochssModel/app/static/modelEditor/forms/modifying-select-view.js":[function(require,module,exports){
 var $ = require('jquery');
 var _ = require('underscore');
 var SelectView = require('ampersand-select-view');
@@ -689,7 +1050,7 @@ var ModifyingSelectView = _.extend(SelectView, {
 });
 
 module.exports = ModifyingSelectView
-},{"ampersand-select-view":"/home/bbales2/stochssModel/app/lib/modelEditor/node_modules/ampersand-select-view/ampersand-select-view.js","jquery":"/home/bbales2/stochssModel/app/lib/modelEditor/node_modules/jquery/dist/jquery.js","underscore":"/home/bbales2/stochssModel/app/lib/modelEditor/node_modules/underscore/underscore.js"}],"/home/bbales2/stochssModel/app/lib/modelEditor/forms/parameter-collection.js":[function(require,module,exports){
+},{"ampersand-select-view":"/home/bbales2/stochssModel/app/static/modelEditor/node_modules/ampersand-select-view/ampersand-select-view.js","jquery":"/home/bbales2/stochssModel/app/static/modelEditor/node_modules/jquery/dist/jquery.js","underscore":"/home/bbales2/stochssModel/app/static/modelEditor/node_modules/underscore/underscore.js"}],"/home/bbales2/stochssModel/app/static/modelEditor/forms/parameter-collection.js":[function(require,module,exports){
 var $ = require('jquery');
 var AmpersandView = require('ampersand-view');
 var AmpersandFormView = require('ampersand-form-view');
@@ -774,7 +1135,7 @@ var ParameterCollectionFormView = AmpersandView.extend({
 });
 
 module.exports = ParameterCollectionFormView
-},{"./parameter":"/home/bbales2/stochssModel/app/lib/modelEditor/forms/parameter.js","./tests":"/home/bbales2/stochssModel/app/lib/modelEditor/forms/tests.js","ampersand-form-view":"/home/bbales2/stochssModel/app/lib/modelEditor/node_modules/ampersand-form-view/ampersand-form-view.js","ampersand-input-view":"/home/bbales2/stochssModel/app/lib/modelEditor/node_modules/ampersand-input-view/ampersand-input-view.js","ampersand-view":"/home/bbales2/stochssModel/app/lib/modelEditor/node_modules/ampersand-view/ampersand-view.js","jquery":"/home/bbales2/stochssModel/app/lib/modelEditor/node_modules/jquery/dist/jquery.js"}],"/home/bbales2/stochssModel/app/lib/modelEditor/forms/parameter.js":[function(require,module,exports){
+},{"./parameter":"/home/bbales2/stochssModel/app/static/modelEditor/forms/parameter.js","./tests":"/home/bbales2/stochssModel/app/static/modelEditor/forms/tests.js","ampersand-form-view":"/home/bbales2/stochssModel/app/static/modelEditor/node_modules/ampersand-form-view/ampersand-form-view.js","ampersand-input-view":"/home/bbales2/stochssModel/app/static/modelEditor/node_modules/ampersand-input-view/ampersand-input-view.js","ampersand-view":"/home/bbales2/stochssModel/app/static/modelEditor/node_modules/ampersand-view/ampersand-view.js","jquery":"/home/bbales2/stochssModel/app/static/modelEditor/node_modules/jquery/dist/jquery.js"}],"/home/bbales2/stochssModel/app/static/modelEditor/forms/parameter.js":[function(require,module,exports){
 var _ = require('underscore');
 var $ = require('jquery');
 var View = require('ampersand-view');
@@ -838,7 +1199,7 @@ module.exports = View.extend({
     }
 });
 
-},{"./modifying-input-view":"/home/bbales2/stochssModel/app/lib/modelEditor/forms/modifying-input-view.js","./modifying-number-input-view":"/home/bbales2/stochssModel/app/lib/modelEditor/forms/modifying-number-input-view.js","./tests":"/home/bbales2/stochssModel/app/lib/modelEditor/forms/tests.js","ampersand-view":"/home/bbales2/stochssModel/app/lib/modelEditor/node_modules/ampersand-view/ampersand-view.js","jquery":"/home/bbales2/stochssModel/app/lib/modelEditor/node_modules/jquery/dist/jquery.js","underscore":"/home/bbales2/stochssModel/app/lib/modelEditor/node_modules/underscore/underscore.js"}],"/home/bbales2/stochssModel/app/lib/modelEditor/forms/reaction-collection.js":[function(require,module,exports){
+},{"./modifying-input-view":"/home/bbales2/stochssModel/app/static/modelEditor/forms/modifying-input-view.js","./modifying-number-input-view":"/home/bbales2/stochssModel/app/static/modelEditor/forms/modifying-number-input-view.js","./tests":"/home/bbales2/stochssModel/app/static/modelEditor/forms/tests.js","ampersand-view":"/home/bbales2/stochssModel/app/static/modelEditor/node_modules/ampersand-view/ampersand-view.js","jquery":"/home/bbales2/stochssModel/app/static/modelEditor/node_modules/jquery/dist/jquery.js","underscore":"/home/bbales2/stochssModel/app/static/modelEditor/node_modules/underscore/underscore.js"}],"/home/bbales2/stochssModel/app/static/modelEditor/forms/reaction-collection.js":[function(require,module,exports){
 var $ = require('jquery');
 var AmpersandView = require('ampersand-view');
 var AmpersandFormView = require('ampersand-form-view');
@@ -849,11 +1210,13 @@ var ReactionFormView = require('./reaction');
 var Tests = require('./tests');
 var AddNewReactionForm = AmpersandFormView.extend({
     submitCallback: function (obj) {
+        var validSubdomains = this.baseModel.mesh.uniqueSubdomains.map( function(model) { return model.name; } );
+
         if(obj.type == 'massaction')
         {
-            this.collection.addMassActionReaction(obj.name, obj.parameter, [], []);
+            this.collection.addMassActionReaction(obj.name, obj.parameter, [], [], validSubdomains);
         } else {
-            this.collection.addCustomReaction(obj.name, obj.equation, [], []);
+            this.collection.addCustomReaction(obj.name, obj.equation, [], [], validSubdomains);
         }
     },
     validCallback: function (valid) {
@@ -933,13 +1296,41 @@ var AddNewReactionForm = AmpersandFormView.extend({
 });
 
 var ReactionCollectionFormView = AmpersandView.extend({
-    template: "<div><h4>Reactions editor</h4><table><thead><th><button style='visibility:hidden'>x</button></th><th width='218px'>Name</th><th width='218px'>Parameter</th><th width='218px'>Rate</th></thead></table><div data-hook='reactionTable'></div><h4>Add Reaction</h4><form data-hook='addReactionForm'></form></div>",
     initialize: function(attr, options)
     {
         AmpersandView.prototype.initialize.call(this, attr, options);
     },
     render: function()
     {
+        this.baseModel = this.collection.parent;
+
+        if(this.baseModel.isSpatial)
+        {
+            this.template = "<div>\
+  <h4>Reactions editor</h4>\
+  <table data-hook='reactionTable'>\
+    <thead>\
+      <th></th><th>Name</th><th>Type</th><th>Parameter</th><th>Custom Propensity</th><th>Subdomains</th><th>Latex</th><th></th>\
+    </thead>\
+  </table>\
+  <h4>Add Reaction</h4>\
+  <form data-hook='addReactionForm'></form>\
+</div>";
+        }
+        else
+        {
+            this.template = "<div>\
+  <h4>Reactions editor</h4>\
+  <table data-hook='reactionTable'>\
+    <thead>\
+      <th></th><th>Name</th><th>Type</th><th>Parameter</th><th>Custom Propensity</th><th>Latex</th><th></th>\
+    </thead>\
+  </table>\
+  <h4>Add Reaction</h4>\
+  <form data-hook='addReactionForm'></form>\
+</div>";
+        }
+
         AmpersandView.prototype.render.apply(this, arguments);
 
         this.renderCollection(this.collection, ReactionFormView, this.el.querySelector('[data-hook=reactionTable]'));
@@ -958,36 +1349,20 @@ var ReactionCollectionFormView = AmpersandView.extend({
 });
 
 module.exports = ReactionCollectionFormView
-},{"./reaction":"/home/bbales2/stochssModel/app/lib/modelEditor/forms/reaction.js","./tests":"/home/bbales2/stochssModel/app/lib/modelEditor/forms/tests.js","ampersand-form-view":"/home/bbales2/stochssModel/app/lib/modelEditor/node_modules/ampersand-form-view/ampersand-form-view.js","ampersand-input-view":"/home/bbales2/stochssModel/app/lib/modelEditor/node_modules/ampersand-input-view/ampersand-input-view.js","ampersand-select-view":"/home/bbales2/stochssModel/app/lib/modelEditor/node_modules/ampersand-select-view/ampersand-select-view.js","ampersand-view":"/home/bbales2/stochssModel/app/lib/modelEditor/node_modules/ampersand-view/ampersand-view.js","jquery":"/home/bbales2/stochssModel/app/lib/modelEditor/node_modules/jquery/dist/jquery.js"}],"/home/bbales2/stochssModel/app/lib/modelEditor/forms/reaction.js":[function(require,module,exports){
+},{"./reaction":"/home/bbales2/stochssModel/app/static/modelEditor/forms/reaction.js","./tests":"/home/bbales2/stochssModel/app/static/modelEditor/forms/tests.js","ampersand-form-view":"/home/bbales2/stochssModel/app/static/modelEditor/node_modules/ampersand-form-view/ampersand-form-view.js","ampersand-input-view":"/home/bbales2/stochssModel/app/static/modelEditor/node_modules/ampersand-input-view/ampersand-input-view.js","ampersand-select-view":"/home/bbales2/stochssModel/app/static/modelEditor/node_modules/ampersand-select-view/ampersand-select-view.js","ampersand-view":"/home/bbales2/stochssModel/app/static/modelEditor/node_modules/ampersand-view/ampersand-view.js","jquery":"/home/bbales2/stochssModel/app/static/modelEditor/node_modules/jquery/dist/jquery.js"}],"/home/bbales2/stochssModel/app/static/modelEditor/forms/reaction.js":[function(require,module,exports){
 var _ = require('underscore');
 var $ = require('jquery');
 var View = require('ampersand-view');
 var ModifyingInputView = require('./modifying-input-view')
 var ModifyingNumberInputView = require('./modifying-number-input-view')
 var StoichSpecieCollectionFormView = require('./stoich-specie-collection');
+var SubdomainFormView = require('./subdomain');
 var SelectView = require('ampersand-select-view');
 
 var katex = require('katex')
 
 var Tests = require('./tests');
 module.exports = View.extend({
-    template: "<div>\
-<div data-hook='basic'>\
-  <button data-hook='remove'>x</button>\
-  <span data-hook='name'></span> \
-  <span data-hook='typeSelect'></span> \
-  <span data-hook='parameter'></span> \
-  <span data-hook='equation'></span> \
-  <span data-hook='latex'></span> \
-  <button data-hook='edit'>Edit</button>\
-</div>\
-<table width='100%' data-hook='advanced'>\
-  <tr> \
-    <td><h4>Reactants</h4><div data-hook='reactants'></div></td>\
-    <td><h4>Products</h4><div data-hook='products'></div></td>\
-  </tr>\
-</table>\
-</div>",
     // Gotta have a few of these functions just so this works as a form view
     // This gets called when things update
     update: function(obj)
@@ -997,6 +1372,43 @@ module.exports = View.extend({
             this.model.type = obj.value;
         } else if(obj.name == 'parameter') {
             this.model.rate = obj.value;
+        } else if(obj.name == 'subdomains') {
+            if(obj.value.checked)
+            {
+                this.model.subdomains = _.union(this.model.subdomains, [obj.value.model.name]);
+            }
+            else
+            {
+                this.model.subdomains = _.difference(this.model.subdomains, [obj.value.model.name]);
+            }
+        }
+    },
+    renderSubdomains: function()
+    {
+        if(this.subdomainsView)
+        {
+            this.subdomainsView.remove();
+        }
+
+        this.subdomainsView = this.renderCollection(this.baseModel.mesh.uniqueSubdomains, SubdomainFormView, this.queryByHook('subdomains') );
+
+        this.updateSelected();
+    },
+    updateSelected : function()
+    {
+        // We do two things in here: #1 make sure all members of this.model.subdomains are valid subdomains and #2 check the checkboxes in the collection that are selected
+        var validSubdomains = this.collection.each( function(model) { return model.name; } );
+
+        this.subdomains = _.filter(this.subdomains, function(value) { return _.contains(validSubdomains, value); })
+
+        // Select the currently selected model
+        var inputs = $( this.queryByHook('subdomains') ).find('input');
+        for(var i = 0; i < inputs.length; i++)
+        {
+            if(_.contains(this.subdomains, this.baseModel.mesh.uniqueSubdomains.models[i].name))
+            {
+                $( inputs.get(i) ).prop('checked', true);
+            }
         }
     },
     // On any change of anything, redraw the Latex
@@ -1056,17 +1468,67 @@ module.exports = View.extend({
             type: 'switch',
             cases: {
                 'massaction' : '[data-hook="parameter"]',
-                'custom' : '[data-hook="equation"]'
+                'custom' : '[data-hook="custom"]'
             }
         }
     },
     render: function()
     {
+        this.baseModel = this.model.collection.parent;
+
+        if(this.baseModel.isSpatial)
+        {
+            this.template = "<tbody>\
+  <tr data-hook='basic'>\
+    <td><button data-hook='remove'>x</button></td>\
+    <td><span data-hook='name'></span></td> \
+    <td><span data-hook='typeSelect'></span></td> \
+    <td><span data-hook='parameter'></span></td> \
+    <td><span data-hook='custom'></span></td> \
+    <td><span data-hook='subdomains'></span></td> \
+    <td><span data-hook='latex'></span></td> \
+    <td><button data-hook='edit'>Edit</button></td>\
+  </tr>\
+  <tr> \
+    <td colspan='7'> \
+      <table width='100%' data-hook='advanced'>\
+        <tr> \
+          <td><h4>Reactants</h4><div data-hook='reactants'></div></td>\
+          <td><h4>Products</h4><div data-hook='products'></div></td>\
+        </tr>\
+      </table>\
+    </td>\
+  </tr>\
+</tbody>";
+        }
+        else
+        {
+            this.template = "<tbody>\
+  <tr data-hook='basic'>\
+    <td><button data-hook='remove'>x</button></td>\
+    <td><span data-hook='name'></span></td> \
+    <td><span data-hook='typeSelect'></span></td> \
+    <td><span data-hook='parameter'></span></td> \
+    <td><span data-hook='custom'></span></td> \
+    <td><span data-hook='latex'></span></td> \
+    <td><button data-hook='edit'>Edit</button></td>\
+  </tr>\
+  <tr> \
+    <td colspan='7'> \
+      <table width='100%' data-hook='advanced'>\
+        <tr> \
+          <td><h4>Reactants</h4><div data-hook='reactants'></div></td>\
+          <td><h4>Products</h4><div data-hook='products'></div></td>\
+        </tr>\
+      </table>\
+    </td>\
+  </tr>\
+</tbody>";
+        }
+
         View.prototype.render.apply(this, arguments);
 
         $( this.queryByHook('advanced') ).hide();
-
-        this.baseModel = this.model.collection.parent;
 
         this.listenTo(this.model, 'change', _.bind(this.redrawLatex, this));
         this.listenTo(this.model.reactants, 'add remove change', _.bind(this.redrawLatex, this));
@@ -1075,7 +1537,7 @@ module.exports = View.extend({
         this.renderSubview(
             new ModifyingInputView({
                 template: '<span><span data-hook="label"></span><input><span data-hook="message-container"><span data-hook="message-text"></span></span></span>',
-                label: 'Name',
+                label: '',
                 name: 'name',
                 value: this.model.name,
                 required: false,
@@ -1086,8 +1548,8 @@ module.exports = View.extend({
 
         this.renderSubview(
             new SelectView({
-                template: '<span><span data-hook="label"></span><select></select><span data-hook="message-container"><span data-hook="message-text"></span></span></span>',
-                label: 'Type',
+                template: '<span><select></select><span data-hook="message-container"><span data-hook="message-text"></span></span></span>',
+                label: '',
                 name: 'type',
                 value: this.model.type,
                 options: [['massaction', 'Mass action'], ['custom', 'Custom']],
@@ -1096,8 +1558,8 @@ module.exports = View.extend({
 
         this.renderSubview(
             new SelectView({
-                template: '<span><span data-hook="label"></span><select></select><span data-hook="message-container"><span data-hook="message-text"></span></span></span>',
-                label: 'Parameter',
+                template: '<span><select></select><span data-hook="message-container"><span data-hook="message-text"></span></span></span>',
+                label: '',
                 name: 'parameter',
                 value: this.model.rate,
                 options: this.baseModel.parameters,
@@ -1110,14 +1572,23 @@ module.exports = View.extend({
         this.renderSubview(
             new ModifyingInputView({
                 template: '<span><span data-hook="label"></span><input><span data-hook="message-container"><span data-hook="message-text"></span></span></span>',
-                label: 'Equation',
+                label: '',
                 name: 'equation',
                 value: this.model.equation,
                 required: false,
                 placeholder: '',
                 model : this.model,
                 tests: []
-            }), this.el.querySelector("[data-hook='equation']"));
+            }), this.el.querySelector("[data-hook='custom']"));
+
+        if(this.baseModel.isSpatial)
+        {
+            this.renderSubdomains();
+
+            this.listenToAndRun(this.baseModel, 'change:mesh', _.bind(this.renderSubdomains, this));
+        }
+        
+        this.listenToAndRun(this.baseModel.mesh.uniqueSubdomains, 'add remove change', this.updateSelected);
 
         this.renderSubview(
             new StoichSpecieCollectionFormView({
@@ -1129,14 +1600,11 @@ module.exports = View.extend({
                 collection: this.model.products
             }), this.el.querySelector("[data-hook='products']"));
         
-        //Hide all the labels!
-        $( this.queryByHook('basic') ).find('[data-hook="label"]').hide();
-        
         return this;
     }
 });
 
-},{"./modifying-input-view":"/home/bbales2/stochssModel/app/lib/modelEditor/forms/modifying-input-view.js","./modifying-number-input-view":"/home/bbales2/stochssModel/app/lib/modelEditor/forms/modifying-number-input-view.js","./stoich-specie-collection":"/home/bbales2/stochssModel/app/lib/modelEditor/forms/stoich-specie-collection.js","./tests":"/home/bbales2/stochssModel/app/lib/modelEditor/forms/tests.js","ampersand-select-view":"/home/bbales2/stochssModel/app/lib/modelEditor/node_modules/ampersand-select-view/ampersand-select-view.js","ampersand-view":"/home/bbales2/stochssModel/app/lib/modelEditor/node_modules/ampersand-view/ampersand-view.js","jquery":"/home/bbales2/stochssModel/app/lib/modelEditor/node_modules/jquery/dist/jquery.js","katex":"/home/bbales2/stochssModel/app/lib/modelEditor/node_modules/katex/katex.js","underscore":"/home/bbales2/stochssModel/app/lib/modelEditor/node_modules/underscore/underscore.js"}],"/home/bbales2/stochssModel/app/lib/modelEditor/forms/specie-collection.js":[function(require,module,exports){
+},{"./modifying-input-view":"/home/bbales2/stochssModel/app/static/modelEditor/forms/modifying-input-view.js","./modifying-number-input-view":"/home/bbales2/stochssModel/app/static/modelEditor/forms/modifying-number-input-view.js","./stoich-specie-collection":"/home/bbales2/stochssModel/app/static/modelEditor/forms/stoich-specie-collection.js","./subdomain":"/home/bbales2/stochssModel/app/static/modelEditor/forms/subdomain.js","./tests":"/home/bbales2/stochssModel/app/static/modelEditor/forms/tests.js","ampersand-select-view":"/home/bbales2/stochssModel/app/static/modelEditor/node_modules/ampersand-select-view/ampersand-select-view.js","ampersand-view":"/home/bbales2/stochssModel/app/static/modelEditor/node_modules/ampersand-view/ampersand-view.js","jquery":"/home/bbales2/stochssModel/app/static/modelEditor/node_modules/jquery/dist/jquery.js","katex":"/home/bbales2/stochssModel/app/static/modelEditor/node_modules/katex/katex.js","underscore":"/home/bbales2/stochssModel/app/static/modelEditor/node_modules/underscore/underscore.js"}],"/home/bbales2/stochssModel/app/static/modelEditor/forms/specie-collection.js":[function(require,module,exports){
 var $ = require('jquery');
 var AmpersandView = require('ampersand-view');
 var AmpersandFormView = require('ampersand-form-view');
@@ -1146,7 +1614,16 @@ var SpecieFormView = require('./specie');
 var Tests = require('./tests');
 var AddNewSpecieForm = AmpersandFormView.extend({
     submitCallback: function (obj) {
-        this.collection.addSpecie(obj.name, Number(obj.initialCondition));
+        var validSubdomains = this.baseModel.mesh.uniqueSubdomains.map( function(model) { return model.name; } );
+
+        if(this.baseModel.isSpatial)
+        {
+            this.collection.addSpecie(obj.name, 0, Number(obj.diffusion), validSubdomains);
+        }
+        else
+        {
+            this.collection.addSpecie(obj.name, Number(obj.initialCondition), 0, validSubdomains);
+        }
 
         this.fields.forEach( function(field) { $( field.el ).find('input').val(''); } );
     },
@@ -1165,6 +1642,8 @@ var AddNewSpecieForm = AmpersandFormView.extend({
     initialize: function(attr, options) {
         this.collection = options.collection;
 
+        this.baseModel = this.collection.parent;
+
         this.fields = [
             new InputView({
                 label: 'Name',
@@ -1173,17 +1652,31 @@ var AddNewSpecieForm = AmpersandFormView.extend({
                 required: true,
                 placeholder: 'NewSpecies',
                 tests: [].concat(Tests.naming(this.collection))
-            }),
-            new InputView({
+            })
+        ];
+
+        if(this.baseModel.isSpatial)
+        {
+            this.fields.push(new InputView({
+                label: 'Diffusion',
+                name: 'diffusion',
+                value: '0',
+                required: true,
+                placeholder: '0',
+                tests: [].concat(Tests.positive())
+            }));
+        }
+        else
+        {
+            this.fields.push(new InputView({
                 label: 'Initial Condition',
                 name: 'initialCondition',
                 value: '0',
                 required: true,
                 placeholder: '0',
                 tests: [].concat(Tests.nonzero(), Tests.units(this.collection.parent))
-            })
-        ];
-
+            }));
+        }
     },
     render: function()
     {
@@ -1208,13 +1701,21 @@ var AddNewSpecieForm = AmpersandFormView.extend({
 new TestForm();*/
 
 var SpecieCollectionFormView = AmpersandView.extend({
-    template: "<div><h4>Species editor</h4><table><thead><th></th><th>Name</th><th>Initial Condition</th></thead><tbody data-hook='speciesTable'></tbody></table>Add Specie: <form data-hook='addSpeciesForm'></form></div>",
     initialize: function(attr, options)
     {
         AmpersandView.prototype.initialize.call(this, attr, options);
     },
     render: function()
     {
+        if(this.collection.parent.isSpatial)
+        {
+            this.template = "<div><h4>Species editor</h4><table><thead><th></th><th>Name</th><th>Diffusion</th><th>Subdomains</th></thead><tbody data-hook='speciesTable'></tbody></table>Add Specie: <form data-hook='addSpeciesForm'></form></div>";
+        }
+        else
+        {
+            this.template = "<div><h4>Species editor</h4><table><thead><th></th><th>Name</th><th>Initial Condition</th></thead><tbody data-hook='speciesTable'></tbody></table>Add Specie: <form data-hook='addSpeciesForm'></form></div>";
+        }
+
         AmpersandView.prototype.render.apply(this, arguments);
 
         //new TestForm();
@@ -1235,16 +1736,16 @@ var SpecieCollectionFormView = AmpersandView.extend({
 });
 
 module.exports = SpecieCollectionFormView
-},{"./specie":"/home/bbales2/stochssModel/app/lib/modelEditor/forms/specie.js","./tests":"/home/bbales2/stochssModel/app/lib/modelEditor/forms/tests.js","ampersand-form-view":"/home/bbales2/stochssModel/app/lib/modelEditor/node_modules/ampersand-form-view/ampersand-form-view.js","ampersand-input-view":"/home/bbales2/stochssModel/app/lib/modelEditor/node_modules/ampersand-input-view/ampersand-input-view.js","ampersand-view":"/home/bbales2/stochssModel/app/lib/modelEditor/node_modules/ampersand-view/ampersand-view.js","jquery":"/home/bbales2/stochssModel/app/lib/modelEditor/node_modules/jquery/dist/jquery.js"}],"/home/bbales2/stochssModel/app/lib/modelEditor/forms/specie.js":[function(require,module,exports){
+},{"./specie":"/home/bbales2/stochssModel/app/static/modelEditor/forms/specie.js","./tests":"/home/bbales2/stochssModel/app/static/modelEditor/forms/tests.js","ampersand-form-view":"/home/bbales2/stochssModel/app/static/modelEditor/node_modules/ampersand-form-view/ampersand-form-view.js","ampersand-input-view":"/home/bbales2/stochssModel/app/static/modelEditor/node_modules/ampersand-input-view/ampersand-input-view.js","ampersand-view":"/home/bbales2/stochssModel/app/static/modelEditor/node_modules/ampersand-view/ampersand-view.js","jquery":"/home/bbales2/stochssModel/app/static/modelEditor/node_modules/jquery/dist/jquery.js"}],"/home/bbales2/stochssModel/app/static/modelEditor/forms/specie.js":[function(require,module,exports){
 var _ = require('underscore');
 var $ = require('jquery');
 var View = require('ampersand-view');
-var ModifyingInputView = require('./modifying-input-view')
-var ModifyingNumberInputView = require('./modifying-number-input-view')
+var ModifyingInputView = require('./modifying-input-view');
+var ModifyingNumberInputView = require('./modifying-number-input-view');
+var SubdomainFormView = require('./subdomain');
 
 var Tests = require('./tests');
 module.exports = View.extend({
-    template: "<tr><td><button data-hook='delete'>x</button></td><td data-hook='name'></td><td data-hook='initialCondition'></td></tr>",
     // Gotta have a few of these functions just so this works as a form view
     // This gets called when things update
     update: function()
@@ -1264,14 +1765,72 @@ module.exports = View.extend({
             name: 'disabled'
         }
     },
+    initialize : function()
+    {
+        View.prototype.initialize.apply(this, arguments);
+        
+        this.baseModel = this.model.collection.parent;
+    },
+    // This will get called by the SubdomainFormView children when a subdomain gets selected/deselected
+    update : function(obj)
+    {
+        var subdomain = obj.value.model;
+        var checked = obj.value.checked;
+        // If we're already in the right state do nothing
+        if(checked)
+        {
+            this.model.subdomains = _.union(this.model.subdomains, [subdomain.name]);
+        }
+        else
+        {
+            this.model.subdomains = _.difference(this.model.subdomains, [subdomain.name]);
+        }
+    },
+    updateSelected : function()
+    {
+        // We do two things in here: #1 make sure all members of this.model.subdomains are valid subdomains and #2 check the checkboxes in the collection that are selected
+        var validSubdomains = this.collection.each( function(model) { return model.name; } );
+
+        this.model.subdomains = _.union(this.model.subdomains, validSubdomains)
+
+        // Select the currently selected model
+        var inputs = $( this.queryByHook('subdomains') ).find('input');
+        for(var i = 0; i < inputs.length; i++)
+        {
+            if(_.contains(this.model.subdomains, this.baseModel.mesh.uniqueSubdomains.models[i].name))
+            {
+                $( inputs.get(i) ).prop('checked', true);
+            }
+        }
+    },
+    renderSubdomains: function()
+    {
+        if(this.subdomainsView)
+        {
+            this.subdomainsView.remove();
+        }
+
+        this.subdomainsView = this.renderCollection(this.baseModel.mesh.uniqueSubdomains, SubdomainFormView, this.queryByHook('subdomains'));
+
+        this.updateSelected();
+    },
     render: function()
     {
+        if(this.baseModel.isSpatial)
+        {
+            this.template = "<tr><td><button data-hook='delete'>x</button></td><td data-hook='name'></td><td data-hook='diffusion'></td><td data-hook='subdomains'></td></tr>";
+        }
+        else
+        {
+            this.template = "<tr><td><button data-hook='delete'>x</button></td><td data-hook='name'></td><td data-hook='initialCondition'></td></tr>";
+        }
+
         View.prototype.render.apply(this, arguments);
 
         this.renderSubview(
             new ModifyingInputView({
                 template: '<span><span data-hook="label"></span><input><span data-hook="message-container"><span data-hook="message-text"></span></span></span>',
-                label: 'Name',
+                label: '',
                 name: 'name',
                 value: this.model.name,
                 required: false,
@@ -1280,26 +1839,44 @@ module.exports = View.extend({
                 tests: [].concat(Tests.naming(this.model.collection, this.model))
             }), this.el.querySelector("[data-hook='name']"));
 
-        this.renderSubview(
-            new ModifyingNumberInputView({
-                template: '<span><span data-hook="label"></span><input><span data-hook="message-container"><span data-hook="message-text"></span></span></span>',
-                label: 'Initial Condition',
-                name: 'initialCondition',
-                value: this.model.initialCondition,
-                required: false,
-                placeholder: 'Initial Condition',
-                model : this.model,
-                tests: [].concat(Tests.nonzero(), Tests.units(this.model.collection.parent))
-            }), this.el.querySelector("[data-hook='initialCondition']"));
+        if(this.baseModel.isSpatial)
+        {
+            this.renderSubview(
+                new ModifyingNumberInputView({
+                    template: '<span><span data-hook="label"></span><input><span data-hook="message-container"><span data-hook="message-text"></span></span></span>',
+                    label: '',
+                    name: 'diffusion',
+                    value: this.model.diffusion,
+                    required: true,
+                    placeholder: 'Diffusion Constant',
+                    model : this.model,
+                    tests: [].concat(Tests.positive())
+                }), this.el.querySelector("[data-hook='diffusion']"));
 
-        //Hide all the labels!
-        $( this.el ).find('[data-hook="label"]').hide();
+            this.renderSubdomains();
+
+            this.listenToAndRun(this.baseModel, 'change:mesh', _.bind(this.renderSubdomains, this));
+        }
+        else
+        {
+            this.renderSubview(
+                new ModifyingNumberInputView({
+                    template: '<span><span data-hook="label"></span><input><span data-hook="message-container"><span data-hook="message-text"></span></span></span>',
+                    label: 'Initial Condition',
+                    name: 'initialCondition',
+                    value: this.model.initialCondition,
+                    required: false,
+                    placeholder: 'Initial Condition',
+                    model : this.model,
+                    tests: [].concat(Tests.nonzero(), Tests.units(this.model.collection.parent))
+                }), this.el.querySelector("[data-hook='initialCondition']"));
+        }
 
         return this;
     }
 });
 
-},{"./modifying-input-view":"/home/bbales2/stochssModel/app/lib/modelEditor/forms/modifying-input-view.js","./modifying-number-input-view":"/home/bbales2/stochssModel/app/lib/modelEditor/forms/modifying-number-input-view.js","./tests":"/home/bbales2/stochssModel/app/lib/modelEditor/forms/tests.js","ampersand-view":"/home/bbales2/stochssModel/app/lib/modelEditor/node_modules/ampersand-view/ampersand-view.js","jquery":"/home/bbales2/stochssModel/app/lib/modelEditor/node_modules/jquery/dist/jquery.js","underscore":"/home/bbales2/stochssModel/app/lib/modelEditor/node_modules/underscore/underscore.js"}],"/home/bbales2/stochssModel/app/lib/modelEditor/forms/stoich-specie-collection.js":[function(require,module,exports){
+},{"./modifying-input-view":"/home/bbales2/stochssModel/app/static/modelEditor/forms/modifying-input-view.js","./modifying-number-input-view":"/home/bbales2/stochssModel/app/static/modelEditor/forms/modifying-number-input-view.js","./subdomain":"/home/bbales2/stochssModel/app/static/modelEditor/forms/subdomain.js","./tests":"/home/bbales2/stochssModel/app/static/modelEditor/forms/tests.js","ampersand-view":"/home/bbales2/stochssModel/app/static/modelEditor/node_modules/ampersand-view/ampersand-view.js","jquery":"/home/bbales2/stochssModel/app/static/modelEditor/node_modules/jquery/dist/jquery.js","underscore":"/home/bbales2/stochssModel/app/static/modelEditor/node_modules/underscore/underscore.js"}],"/home/bbales2/stochssModel/app/static/modelEditor/forms/stoich-specie-collection.js":[function(require,module,exports){
 var $ = require('jquery');
 var AmpersandView = require('ampersand-view');
 var AmpersandFormView = require('ampersand-form-view');
@@ -1385,7 +1962,7 @@ var StoichSpecieCollectionFormView = AmpersandView.extend({
 });
 
 module.exports = StoichSpecieCollectionFormView
-},{"./stoich-specie":"/home/bbales2/stochssModel/app/lib/modelEditor/forms/stoich-specie.js","./tests":"/home/bbales2/stochssModel/app/lib/modelEditor/forms/tests.js","ampersand-form-view":"/home/bbales2/stochssModel/app/lib/modelEditor/node_modules/ampersand-form-view/ampersand-form-view.js","ampersand-input-view":"/home/bbales2/stochssModel/app/lib/modelEditor/node_modules/ampersand-input-view/ampersand-input-view.js","ampersand-select-view":"/home/bbales2/stochssModel/app/lib/modelEditor/node_modules/ampersand-select-view/ampersand-select-view.js","ampersand-view":"/home/bbales2/stochssModel/app/lib/modelEditor/node_modules/ampersand-view/ampersand-view.js","jquery":"/home/bbales2/stochssModel/app/lib/modelEditor/node_modules/jquery/dist/jquery.js"}],"/home/bbales2/stochssModel/app/lib/modelEditor/forms/stoich-specie.js":[function(require,module,exports){
+},{"./stoich-specie":"/home/bbales2/stochssModel/app/static/modelEditor/forms/stoich-specie.js","./tests":"/home/bbales2/stochssModel/app/static/modelEditor/forms/tests.js","ampersand-form-view":"/home/bbales2/stochssModel/app/static/modelEditor/node_modules/ampersand-form-view/ampersand-form-view.js","ampersand-input-view":"/home/bbales2/stochssModel/app/static/modelEditor/node_modules/ampersand-input-view/ampersand-input-view.js","ampersand-select-view":"/home/bbales2/stochssModel/app/static/modelEditor/node_modules/ampersand-select-view/ampersand-select-view.js","ampersand-view":"/home/bbales2/stochssModel/app/static/modelEditor/node_modules/ampersand-view/ampersand-view.js","jquery":"/home/bbales2/stochssModel/app/static/modelEditor/node_modules/jquery/dist/jquery.js"}],"/home/bbales2/stochssModel/app/static/modelEditor/forms/stoich-specie.js":[function(require,module,exports){
 var _ = require('underscore');
 var $ = require('jquery');
 var View = require('ampersand-view');
@@ -1450,7 +2027,46 @@ module.exports = View.extend({
     }
 });
 
-},{"./modifying-number-input-view":"/home/bbales2/stochssModel/app/lib/modelEditor/forms/modifying-number-input-view.js","./modifying-select-view":"/home/bbales2/stochssModel/app/lib/modelEditor/forms/modifying-select-view.js","./tests":"/home/bbales2/stochssModel/app/lib/modelEditor/forms/tests.js","ampersand-view":"/home/bbales2/stochssModel/app/lib/modelEditor/node_modules/ampersand-view/ampersand-view.js","jquery":"/home/bbales2/stochssModel/app/lib/modelEditor/node_modules/jquery/dist/jquery.js","underscore":"/home/bbales2/stochssModel/app/lib/modelEditor/node_modules/underscore/underscore.js"}],"/home/bbales2/stochssModel/app/lib/modelEditor/forms/tests.js":[function(require,module,exports){
+},{"./modifying-number-input-view":"/home/bbales2/stochssModel/app/static/modelEditor/forms/modifying-number-input-view.js","./modifying-select-view":"/home/bbales2/stochssModel/app/static/modelEditor/forms/modifying-select-view.js","./tests":"/home/bbales2/stochssModel/app/static/modelEditor/forms/tests.js","ampersand-view":"/home/bbales2/stochssModel/app/static/modelEditor/node_modules/ampersand-view/ampersand-view.js","jquery":"/home/bbales2/stochssModel/app/static/modelEditor/node_modules/jquery/dist/jquery.js","underscore":"/home/bbales2/stochssModel/app/static/modelEditor/node_modules/underscore/underscore.js"}],"/home/bbales2/stochssModel/app/static/modelEditor/forms/subdomain.js":[function(require,module,exports){
+var _ = require('underscore');
+var $ = require('jquery');
+var View = require('ampersand-view');
+var CheckboxView = require('ampersand-checkbox-view');
+
+var Tests = require('./tests');
+module.exports = View.extend({
+    template: "<span data-hook='checkbox'></span>",
+    update: function(element)
+    {
+        this.parent.parent.update({ name : 'subdomains', value : { model : this.model, checked : element.value }} );
+    },
+    initialize : function(attr)
+    {
+        View.prototype.initialize.apply(this, arguments);
+
+        this.specie = attr.specie;
+    },
+    render: function()
+    {
+        View.prototype.render.apply(this, arguments);
+
+        var checked = _.contains(this.parent.parent.model.subdomains, this.model.name);
+
+        this.renderSubview(
+            new CheckboxView({
+                name: 'checked',
+                template: '<span><span data-hook="label"></span><input type="checkbox"><span data-hook="message-container"><span data-hook="message-text"></span></span></span>&nbsp;',
+                label: this.model.name,
+                value: checked,
+                required: false,
+                parent: this
+            }), this.queryByHook('checkbox'));
+
+        return this;
+    }
+});
+
+},{"./tests":"/home/bbales2/stochssModel/app/static/modelEditor/forms/tests.js","ampersand-checkbox-view":"/home/bbales2/stochssModel/app/static/modelEditor/node_modules/ampersand-checkbox-view/ampersand-checkbox-view.js","ampersand-view":"/home/bbales2/stochssModel/app/static/modelEditor/node_modules/ampersand-view/ampersand-view.js","jquery":"/home/bbales2/stochssModel/app/static/modelEditor/node_modules/jquery/dist/jquery.js","underscore":"/home/bbales2/stochssModel/app/static/modelEditor/node_modules/underscore/underscore.js"}],"/home/bbales2/stochssModel/app/static/modelEditor/forms/tests.js":[function(require,module,exports){
 var _ = require('underscore');
 
 module.exports = {
@@ -1474,11 +2090,29 @@ module.exports = {
             }
         ];
     },
+    isNumber : function()
+    {
+        return function(value) {
+            if(!(value < 0 || value > 0 || value == 0))
+            {
+                return "Entry must be a number";
+            }
+        }
+    },
+    positive : function()
+    {
+        return function(value) {
+            if(value < 0)
+            {
+                return "Number must be positive";
+            }
+        }
+    },
     nonzero : function() {
         return function(value) {
             if(value < 0.0)
             {
-                return "Initial condition must be greater than 0";
+                return "Number must be greater than 0";
             }
         }
     },
@@ -1502,7 +2136,54 @@ module.exports = {
         }
     }
 };
-},{"underscore":"/home/bbales2/stochssModel/app/lib/modelEditor/node_modules/underscore/underscore.js"}],"/home/bbales2/stochssModel/app/lib/modelEditor/models/model.js":[function(require,module,exports){
+},{"underscore":"/home/bbales2/stochssModel/app/static/modelEditor/node_modules/underscore/underscore.js"}],"/home/bbales2/stochssModel/app/static/modelEditor/models/mesh-collection.js":[function(require,module,exports){
+var AmpCollection = require('ampersand-collection');
+var Mesh = require('./mesh');
+
+module.exports = AmpCollection.extend({
+    model: Mesh
+});
+
+},{"./mesh":"/home/bbales2/stochssModel/app/static/modelEditor/models/mesh.js","ampersand-collection":"/home/bbales2/stochssModel/app/static/modelEditor/node_modules/ampersand-collection/ampersand-collection.js"}],"/home/bbales2/stochssModel/app/static/modelEditor/models/mesh.js":[function(require,module,exports){
+var _ = require('underscore');
+var Model = require('ampersand-model');
+var SubdomainCollection = require('./subdomain-collection');
+
+module.exports = Model.extend({
+    props: {
+        name : 'string',
+        description : 'string',
+        meshFileId : 'number',
+        subdomains : 'object',
+        uniqueSubdomains : 'object',
+        undeletable : 'boolean'
+    },
+    derived: {
+        deletable : {
+            deps : [ 'undeletable' ],
+            fn : function ()
+            {
+                return !this.undeletable;
+            }
+        }
+    },
+    parse: function(attr) {
+        this.uniqueSubdomains = new SubdomainCollection();
+
+        this.id = attr.id;
+
+        for(var i = 0; i < attr.uniqueSubdomains.length; i++)
+        {
+            this.uniqueSubdomains.add({ name : attr.uniqueSubdomains[i] });
+        }
+
+        delete attr.uniqueSubdomains;
+
+        return attr;
+    }
+});
+
+},{"./subdomain-collection":"/home/bbales2/stochssModel/app/static/modelEditor/models/subdomain-collection.js","ampersand-model":"/home/bbales2/stochssModel/app/static/modelEditor/node_modules/ampersand-model/ampersand-model.js","underscore":"/home/bbales2/stochssModel/app/static/modelEditor/node_modules/underscore/underscore.js"}],"/home/bbales2/stochssModel/app/static/modelEditor/models/model.js":[function(require,module,exports){
 var _ = require('underscore');
 var AmpersandModel = require('ampersand-model');
 var SpecieCollection = require('./specie-collection');
@@ -1517,7 +2198,9 @@ var Model = AmpersandModel.extend({
         isSpatial: 'boolean',
         species: 'object',//SpecieCollection,
         reactions: 'object',//ReactionCollection,
-        parameters: 'object'//ParameterCollection
+        parameters: 'object',//ParameterCollection
+        mesh: 'object',
+        initialConditions : 'object'
     },
     initialize: function(attrs, options) {
         this.parse(attrs);
@@ -1530,8 +2213,18 @@ var Model = AmpersandModel.extend({
         this.listenTo(this.reactions, 'add remove change', _.bind(this.saveModel, this));
         this.listenTo(this.species, 'add remove change', _.bind(this.saveModel, this));
         this.listenTo(this.parameters, 'add remove change', _.bind(this.saveModel, this));
-        this.on('change:name change:units change:type change:isSpatial', _.bind(this.saveModel, this));
+
+        this.on('change:name change:units change:type change:isSpatial change:mesh', _.bind(this.saveModel, this));
         // this will run if the name changes
+    },
+    setupMesh: function(meshCollection) {
+        for(var i = 0; i < meshCollection.models.length; i++)
+        {
+            if(this.meshId == meshCollection.models[i].id)
+            {
+                this.mesh = meshCollection.models[i];
+            }
+        }
     },
     computeType: function() {
         var massAction = true;
@@ -1590,11 +2283,16 @@ var Model = AmpersandModel.extend({
             this.reactions.parent = this;
         }
 
+        if(attr.spatial)
+        {
+            this.meshId = attr.spatial.mesh_wrapper_id;
+        }
+
         if(species && this.species.length == 0)
         {
             for(var i = 0; i < species.length; i++)
             {
-                speciesByName[species[i].name] = this.species.addSpecie(species[i].name, species[i].initialCondition);
+                speciesByName[species[i].name] = this.species.addSpecie(species[i].name, species[i].initialCondition, attr.spatial.species_diffusion_coefficients[species[i].name], attr.spatial.species_subdomain_assignments[species[i].name]);
             }
         }
 
@@ -1620,9 +2318,9 @@ var Model = AmpersandModel.extend({
                 
                 if(reaction.type == 'massaction')
                 {
-                    this.reactions.addMassActionReaction(reaction.name, parametersByName[reaction.rate], reactants, products);
+                    this.reactions.addMassActionReaction(reaction.name, parametersByName[reaction.rate], reactants, products, attr.spatial.reactions_subdomain_assignments[reactions[i].name]);
                 } else {
-                    this.reactions.addCustomReaction(reaction.name, reaction.rate, reactants, products);
+                    this.reactions.addCustomReaction(reaction.name, reaction.rate, reactants, products, attr.spatial.reactions_subdomain_assignments[reactions[i].name]);
                 }
             }
         }
@@ -1661,7 +2359,6 @@ var Model = AmpersandModel.extend({
         obj.parameters = this.parameters.map(function(parameter) { return { name : parameter.name, value : parameter.value } });
 
         obj.reactions = [];
-
         
         for(var i = 0; i < this.reactions.models.length; i++)
         {
@@ -1684,6 +2381,25 @@ var Model = AmpersandModel.extend({
             obj.reactions.push(reactionOut);
         }
 
+        obj.spatial = {};
+        obj.spatial.mesh_wrapper_id = this.mesh.id;
+        obj.spatial.subdomains = this.mesh.uniqueSubdomainList;
+        obj.spatial.species_diffusion_coefficients = {};
+        obj.spatial.species_subdomain_assignments = {};
+        for(var i = 0; i < this.species.models.length; i++)
+        {
+            obj.spatial.species_diffusion_coefficients[this.species.models[i].name] = this.species.models[i].diffusion;
+            obj.spatial.species_subdomain_assignments[this.species.models[i].name] = this.species.models[i].subdomains;
+        }
+
+        obj.spatial.reactions_subdomain_assignments = {};
+        for(var i = 0; i < this.reactions.models.length; i++)
+        {
+            obj.spatial.reactions_subdomain_assignments[this.reactions.models[i].name] = this.reactions.models[i].subdomains;
+        }
+
+        obj.spatial.initial_conditions = {};
+
         return obj;
     }
 });
@@ -1696,7 +2412,7 @@ Model.buildFromJSON = function(json, model)
 
 module.exports = Model;
 
-},{"./parameter-collection":"/home/bbales2/stochssModel/app/lib/modelEditor/models/parameter-collection.js","./reaction-collection":"/home/bbales2/stochssModel/app/lib/modelEditor/models/reaction-collection.js","./specie-collection":"/home/bbales2/stochssModel/app/lib/modelEditor/models/specie-collection.js","ampersand-model":"/home/bbales2/stochssModel/app/lib/modelEditor/node_modules/ampersand-model/ampersand-model.js","underscore":"/home/bbales2/stochssModel/app/lib/modelEditor/node_modules/underscore/underscore.js"}],"/home/bbales2/stochssModel/app/lib/modelEditor/models/parameter-collection.js":[function(require,module,exports){
+},{"./parameter-collection":"/home/bbales2/stochssModel/app/static/modelEditor/models/parameter-collection.js","./reaction-collection":"/home/bbales2/stochssModel/app/static/modelEditor/models/reaction-collection.js","./specie-collection":"/home/bbales2/stochssModel/app/static/modelEditor/models/specie-collection.js","ampersand-model":"/home/bbales2/stochssModel/app/static/modelEditor/node_modules/ampersand-model/ampersand-model.js","underscore":"/home/bbales2/stochssModel/app/static/modelEditor/node_modules/underscore/underscore.js"}],"/home/bbales2/stochssModel/app/static/modelEditor/models/parameter-collection.js":[function(require,module,exports){
 // parameter Collection - parameter-collection.js
 var AmpCollection = require('ampersand-collection');
 var parameter = require('./parameter');
@@ -1714,7 +2430,7 @@ module.exports = AmpCollection.extend({
         return this.add({ name : name, value : value });
     }
 });
-},{"./parameter":"/home/bbales2/stochssModel/app/lib/modelEditor/models/parameter.js","ampersand-collection":"/home/bbales2/stochssModel/app/lib/modelEditor/node_modules/ampersand-collection/ampersand-collection.js"}],"/home/bbales2/stochssModel/app/lib/modelEditor/models/parameter.js":[function(require,module,exports){
+},{"./parameter":"/home/bbales2/stochssModel/app/static/modelEditor/models/parameter.js","ampersand-collection":"/home/bbales2/stochssModel/app/static/modelEditor/node_modules/ampersand-collection/ampersand-collection.js"}],"/home/bbales2/stochssModel/app/static/modelEditor/models/parameter.js":[function(require,module,exports){
 // parameter Model - parameter.js
 var _ = require('underscore');
 var AmpModel = require('ampersand-model');
@@ -1747,49 +2463,37 @@ module.exports = AmpModel.extend({
         );
     }
 });
-},{"ampersand-model":"/home/bbales2/stochssModel/app/lib/modelEditor/node_modules/ampersand-model/ampersand-model.js","underscore":"/home/bbales2/stochssModel/app/lib/modelEditor/node_modules/underscore/underscore.js"}],"/home/bbales2/stochssModel/app/lib/modelEditor/models/reaction-collection.js":[function(require,module,exports){
+},{"ampersand-model":"/home/bbales2/stochssModel/app/static/modelEditor/node_modules/ampersand-model/ampersand-model.js","underscore":"/home/bbales2/stochssModel/app/static/modelEditor/node_modules/underscore/underscore.js"}],"/home/bbales2/stochssModel/app/static/modelEditor/models/reaction-collection.js":[function(require,module,exports){
 var AmpCollection = require('ampersand-collection');
 var Reaction = require('./reaction');
 
 module.exports = AmpCollection.extend({
     model: Reaction,
-    addMassActionReaction: function(name, rate, reactants, products) {
-
+    addMassActionReaction: function(name, rate, reactants, products, subdomains) {
         var unique = this.models.every(function(model) { return model["name"] != name });
         
         // If the new Species name is not unique, return false
         if(!unique)
             return undefined;
         
-        var reaction = this.add({ name : name, equation : '', type : 'massaction', rate : rate }, { reactants : reactants, products : products });
-
-        //Look at the HACK ALERT in addCustomReaction
-        //this.parent.species.trigger('stoich-specie-change');
+        var reaction = this.add({ name : name, equation : '', type : 'massaction', rate : rate, subdomains : subdomains }, { reactants : reactants, products : products });
         
         return reaction;
     },
-    addCustomReaction: function(name, equation, reactants, products) {
+    addCustomReaction: function(name, equation, reactants, products, subdomains) {
         var unique = this.models.every(function(model) { return model["name"] != name });
         
         // If the new Species name is not unique, return false
         if(!unique)
             return undefined;
         
-        var reaction = this.add({ name : name, equation : equation, type : 'custom', rate : undefined }, { reactants : reactants, products : products });
-
-        //HACK ALERT:
-        // After the reaction is added, send a stoich-specie-change event to make sure the inUse variables are up to date
-        // inUse requires that species know about all stoich-species in the app
-        // This requires the stoich-species to actually be in the reaction reactants/products
-        // But they send their update events on creation, not after being added
-        // So we have to send another event. If this makes any sense.
-        //this.parent.species.trigger('stoich-specie-change');
+        var reaction = this.add({ name : name, equation : equation, type : 'custom', rate : undefined, subdomains : subdomains }, { reactants : reactants, products : products });
         
         return reaction;
     }
 });
 
-},{"./reaction":"/home/bbales2/stochssModel/app/lib/modelEditor/models/reaction.js","ampersand-collection":"/home/bbales2/stochssModel/app/lib/modelEditor/node_modules/ampersand-collection/ampersand-collection.js"}],"/home/bbales2/stochssModel/app/lib/modelEditor/models/reaction.js":[function(require,module,exports){
+},{"./reaction":"/home/bbales2/stochssModel/app/static/modelEditor/models/reaction.js","ampersand-collection":"/home/bbales2/stochssModel/app/static/modelEditor/node_modules/ampersand-collection/ampersand-collection.js"}],"/home/bbales2/stochssModel/app/static/modelEditor/models/reaction.js":[function(require,module,exports){
 var _ = require('underscore');
 var State = require('ampersand-state');
 var StoichSpecie = require('./stoich-specie');
@@ -1801,7 +2505,12 @@ var Reaction = State.extend({
         name : 'string',
         equation : 'string',
         type : 'string',
-        rate : 'object'
+        rate : 'object',
+        subdomains :
+        {
+            type : 'object',
+            default : function() { return []; }
+        },
     },
     collections: {
         reactants: StoichSpecieCollection,
@@ -1838,24 +2547,24 @@ var Reaction = State.extend({
 
 module.exports = Reaction;
 
-},{"./parameter":"/home/bbales2/stochssModel/app/lib/modelEditor/models/parameter.js","./stoich-specie":"/home/bbales2/stochssModel/app/lib/modelEditor/models/stoich-specie.js","./stoich-specie-collection":"/home/bbales2/stochssModel/app/lib/modelEditor/models/stoich-specie-collection.js","ampersand-state":"/home/bbales2/stochssModel/app/lib/modelEditor/node_modules/ampersand-state/ampersand-state.js","underscore":"/home/bbales2/stochssModel/app/lib/modelEditor/node_modules/underscore/underscore.js"}],"/home/bbales2/stochssModel/app/lib/modelEditor/models/specie-collection.js":[function(require,module,exports){
+},{"./parameter":"/home/bbales2/stochssModel/app/static/modelEditor/models/parameter.js","./stoich-specie":"/home/bbales2/stochssModel/app/static/modelEditor/models/stoich-specie.js","./stoich-specie-collection":"/home/bbales2/stochssModel/app/static/modelEditor/models/stoich-specie-collection.js","ampersand-state":"/home/bbales2/stochssModel/app/static/modelEditor/node_modules/ampersand-state/ampersand-state.js","underscore":"/home/bbales2/stochssModel/app/static/modelEditor/node_modules/underscore/underscore.js"}],"/home/bbales2/stochssModel/app/static/modelEditor/models/specie-collection.js":[function(require,module,exports){
 // specie Collection - specie-collection.js
 var AmpCollection = require('ampersand-collection');
 var specie = require('./specie');
 
 module.exports = AmpCollection.extend({
     model: specie,
-    addSpecie: function(name, initialCondition) {
+    addSpecie: function(name, initialCondition, diffusion, subdomains) {
         var unique = this.models.every(function(model) { return model["name"] != name });
 
         // If the new Species name is not unique, return false
         if(!unique)
             return undefined;
 
-        return this.add({ name : name, initialCondition : initialCondition });
+        return this.add({ name : name, initialCondition : initialCondition, diffusion : diffusion, subdomains : subdomains });
     }
 });
-},{"./specie":"/home/bbales2/stochssModel/app/lib/modelEditor/models/specie.js","ampersand-collection":"/home/bbales2/stochssModel/app/lib/modelEditor/node_modules/ampersand-collection/ampersand-collection.js"}],"/home/bbales2/stochssModel/app/lib/modelEditor/models/specie.js":[function(require,module,exports){
+},{"./specie":"/home/bbales2/stochssModel/app/static/modelEditor/models/specie.js","ampersand-collection":"/home/bbales2/stochssModel/app/static/modelEditor/node_modules/ampersand-collection/ampersand-collection.js"}],"/home/bbales2/stochssModel/app/static/modelEditor/models/specie.js":[function(require,module,exports){
 // specie Model - specie.js
 var _ = require('underscore');
 var AmpModel = require('ampersand-model');
@@ -1865,6 +2574,16 @@ module.exports = AmpModel.extend({
     props: {
         name: ['string'],
         initialCondition: ['number'],
+        diffusion :
+        {
+            type : 'number',
+            default : 0.0
+        },
+        subdomains : 
+        {
+            type : 'object',
+            default : function() { return []; }
+        },
         inUse: ['boolean']
     },
     initialize: function()
@@ -1892,7 +2611,7 @@ module.exports = AmpModel.extend({
         );
     }
 });
-},{"ampersand-model":"/home/bbales2/stochssModel/app/lib/modelEditor/node_modules/ampersand-model/ampersand-model.js","underscore":"/home/bbales2/stochssModel/app/lib/modelEditor/node_modules/underscore/underscore.js"}],"/home/bbales2/stochssModel/app/lib/modelEditor/models/stoich-specie-collection.js":[function(require,module,exports){
+},{"ampersand-model":"/home/bbales2/stochssModel/app/static/modelEditor/node_modules/ampersand-model/ampersand-model.js","underscore":"/home/bbales2/stochssModel/app/static/modelEditor/node_modules/underscore/underscore.js"}],"/home/bbales2/stochssModel/app/static/modelEditor/models/stoich-specie-collection.js":[function(require,module,exports){
 var AmpCollection = require('ampersand-collection');
 var StoichSpecie = require('./stoich-specie');
 
@@ -1914,7 +2633,7 @@ module.exports = AmpCollection.extend({
     }
 });
 
-},{"./stoich-specie":"/home/bbales2/stochssModel/app/lib/modelEditor/models/stoich-specie.js","ampersand-collection":"/home/bbales2/stochssModel/app/lib/modelEditor/node_modules/ampersand-collection/ampersand-collection.js"}],"/home/bbales2/stochssModel/app/lib/modelEditor/models/stoich-specie.js":[function(require,module,exports){
+},{"./stoich-specie":"/home/bbales2/stochssModel/app/static/modelEditor/models/stoich-specie.js","ampersand-collection":"/home/bbales2/stochssModel/app/static/modelEditor/node_modules/ampersand-collection/ampersand-collection.js"}],"/home/bbales2/stochssModel/app/static/modelEditor/models/stoich-specie.js":[function(require,module,exports){
 var _ = require('underscore');
 var State = require('ampersand-state');
 var Specie = require('./specie');
@@ -1936,7 +2655,242 @@ var StoichSpecie = State.extend({
 
 module.exports = StoichSpecie;
 
-},{"./specie":"/home/bbales2/stochssModel/app/lib/modelEditor/models/specie.js","ampersand-state":"/home/bbales2/stochssModel/app/lib/modelEditor/node_modules/ampersand-state/ampersand-state.js","underscore":"/home/bbales2/stochssModel/app/lib/modelEditor/node_modules/underscore/underscore.js"}],"/home/bbales2/stochssModel/app/lib/modelEditor/node_modules/ampersand-collection/ampersand-collection.js":[function(require,module,exports){
+},{"./specie":"/home/bbales2/stochssModel/app/static/modelEditor/models/specie.js","ampersand-state":"/home/bbales2/stochssModel/app/static/modelEditor/node_modules/ampersand-state/ampersand-state.js","underscore":"/home/bbales2/stochssModel/app/static/modelEditor/node_modules/underscore/underscore.js"}],"/home/bbales2/stochssModel/app/static/modelEditor/models/subdomain-collection.js":[function(require,module,exports){
+var AmpCollection = require('ampersand-collection');
+var Subdomain = require('./subdomain');
+
+module.exports = AmpCollection.extend({
+    model: Subdomain
+});
+
+},{"./subdomain":"/home/bbales2/stochssModel/app/static/modelEditor/models/subdomain.js","ampersand-collection":"/home/bbales2/stochssModel/app/static/modelEditor/node_modules/ampersand-collection/ampersand-collection.js"}],"/home/bbales2/stochssModel/app/static/modelEditor/models/subdomain.js":[function(require,module,exports){
+var _ = require('underscore');
+var State = require('ampersand-state');
+
+module.exports = State.extend({
+    props: {
+        name : 'number'
+    }
+});
+
+
+},{"ampersand-state":"/home/bbales2/stochssModel/app/static/modelEditor/node_modules/ampersand-state/ampersand-state.js","underscore":"/home/bbales2/stochssModel/app/static/modelEditor/node_modules/underscore/underscore.js"}],"/home/bbales2/stochssModel/app/static/modelEditor/node_modules/ampersand-checkbox-view/ampersand-checkbox-view.js":[function(require,module,exports){
+;if (typeof window !== "undefined") {  window.ampersand = window.ampersand || {};  window.ampersand["ampersand-checkbox-view"] = window.ampersand["ampersand-checkbox-view"] || [];  window.ampersand["ampersand-checkbox-view"].push("2.0.2");}
+var domify = require('domify');
+var dom = require('ampersand-dom');
+
+
+// can be overwritten by anything with:
+// <input>, <label> and the same `data-hook` attributes
+var template = [
+    '<label class="checkbox">',
+        '<input type="checkbox"><span data-hook="label"></span>',
+        '<div data-hook="message-container" class="message message-below message-error">',
+            '<p data-hook="message-text"></p>',
+        '</div>',
+    '</label>'
+].join('');
+
+
+function CheckboxView(opts) {
+    if (!opts || !opts.name) throw new Error('must pass in a name');
+
+    // settings
+    this.name = opts.name;
+    this.value = (opts.value === true) || false;
+    this.el = opts.el;
+    this.template = opts.template || template;
+    this.label = opts.label || opts.name;
+    this.required = (typeof opts.required === 'boolean') ? opts.required : false;
+    this.validClass = opts.validClass || 'input-valid';
+    this.invalidClass = opts.invalidClass || 'input-invalid';
+    this.requiredMessage = opts.requiredMessage || 'This box must be checked.';
+    this.parent = opts.parent;
+
+    // render right away
+    this.render();
+
+    // bind event handlers
+    this.handleInputEvent = this.handleInputEvent.bind(this);
+
+    // add our event handlers
+    this.input.addEventListener('change', this.handleInputEvent, false);
+
+    if (opts.value) this.setValue(true);
+
+    this.test();
+}
+
+// remove and destroy element
+CheckboxView.prototype.remove = function () {
+    this.input.removeEventListener('change', this.handleInputEvent, false);
+    var parent = this.el.parentNode;
+    if (parent) parent.removeChild(this.el);
+};
+
+// very `manual` render to avoid dependencies
+CheckboxView.prototype.render = function () {
+    // only allow this to be called once
+    if (this.rendered) return;
+    var newDom = domify(this.template);
+    var parent = this.el && this.el.parentNode;
+    if (parent) parent.replaceChild(newDom, this.el);
+    this.el = newDom;
+    this.input = this.el.querySelector('input');
+    this.labelEl = this.el.querySelector('[data-hook~=label]');
+    this.messageContainer = this.el.querySelector('[data-hook~=message-container]');
+    this.messageEl = this.el.querySelector('[data-hook~=message-text]');
+    this.setMessage(this.message);
+    this.input.checked = !!this.value;
+    this.input.name = this.name;
+    this.labelEl.textContent = this.label;
+    this.rendered = true;
+};
+
+// handle input events and show appropriate errors
+CheckboxView.prototype.handleInputEvent = function () {
+    // track whether user has edited directly
+    if (document.activeElement === this.input) this.directlyEdited = true;
+    this.value = this.input.checked;
+    this.test();
+    if (this.parent) this.parent.update(this);
+};
+
+// set the error message if exists
+// hides the message container entirely otherwise
+CheckboxView.prototype.setMessage = function (message) {
+    var input = this.input;
+    this.message = message;
+    // there is an error
+    if (message && this.shouldValidate) {
+        this.messageContainer.style.display = 'block';
+        this.messageEl.textContent = message;
+        dom.addClass(input, this.invalidClass);
+        dom.removeClass(input, this.validClass);
+    } else {
+        this.messageContainer.style.display = 'none';
+        if (this.shouldValidate && this.editedDirectly) {
+            dom.addClass(input, this.validClass);
+            dom.removeClass(input, this.invalidClass);
+        }
+    }
+};
+
+CheckboxView.prototype.setValue = function (value) {
+    this.input.checked = !!value;
+    this.handleInputEvent();
+};
+
+CheckboxView.prototype.beforeSubmit = function () {
+    this.shouldValidate = true;
+    this.handleInputEvent();
+};
+
+CheckboxView.prototype.test = function () {
+    var valid = !this.required || this.value;
+    if (valid) this.shouldValidate = true;
+    this.valid = valid;
+    if (this.shouldValidate && !valid) {
+        this.setMessage(this.requiredMessage);
+    } else {
+        this.setMessage('');
+    }
+    return valid;
+};
+
+
+module.exports = CheckboxView;
+
+},{"ampersand-dom":"/home/bbales2/stochssModel/app/static/modelEditor/node_modules/ampersand-dom/ampersand-dom.js","domify":"/home/bbales2/stochssModel/app/static/modelEditor/node_modules/ampersand-checkbox-view/node_modules/domify/index.js"}],"/home/bbales2/stochssModel/app/static/modelEditor/node_modules/ampersand-checkbox-view/node_modules/domify/index.js":[function(require,module,exports){
+
+/**
+ * Expose `parse`.
+ */
+
+module.exports = parse;
+
+/**
+ * Wrap map from jquery.
+ */
+
+var map = {
+  legend: [1, '<fieldset>', '</fieldset>'],
+  tr: [2, '<table><tbody>', '</tbody></table>'],
+  col: [2, '<table><tbody></tbody><colgroup>', '</colgroup></table>'],
+  _default: [0, '', '']
+};
+
+map.td =
+map.th = [3, '<table><tbody><tr>', '</tr></tbody></table>'];
+
+map.option =
+map.optgroup = [1, '<select multiple="multiple">', '</select>'];
+
+map.thead =
+map.tbody =
+map.colgroup =
+map.caption =
+map.tfoot = [1, '<table>', '</table>'];
+
+map.text =
+map.circle =
+map.ellipse =
+map.line =
+map.path =
+map.polygon =
+map.polyline =
+map.rect = [1, '<svg xmlns="http://www.w3.org/2000/svg" version="1.1">','</svg>'];
+
+/**
+ * Parse `html` and return the children.
+ *
+ * @param {String} html
+ * @return {Array}
+ * @api private
+ */
+
+function parse(html) {
+  if ('string' != typeof html) throw new TypeError('String expected');
+  
+  // tag name
+  var m = /<([\w:]+)/.exec(html);
+  if (!m) return document.createTextNode(html);
+
+  html = html.replace(/^\s+|\s+$/g, ''); // Remove leading/trailing whitespace
+
+  var tag = m[1];
+
+  // body support
+  if (tag == 'body') {
+    var el = document.createElement('html');
+    el.innerHTML = html;
+    return el.removeChild(el.lastChild);
+  }
+
+  // wrap map
+  var wrap = map[tag] || map._default;
+  var depth = wrap[0];
+  var prefix = wrap[1];
+  var suffix = wrap[2];
+  var el = document.createElement('div');
+  el.innerHTML = prefix + html + suffix;
+  while (depth--) el = el.lastChild;
+
+  // one element
+  if (el.firstChild == el.lastChild) {
+    return el.removeChild(el.firstChild);
+  }
+
+  // several elements
+  var fragment = document.createDocumentFragment();
+  while (el.firstChild) {
+    fragment.appendChild(el.removeChild(el.firstChild));
+  }
+
+  return fragment;
+}
+
+},{}],"/home/bbales2/stochssModel/app/static/modelEditor/node_modules/ampersand-collection/ampersand-collection.js":[function(require,module,exports){
 var BackboneEvents = require('backbone-events-standalone');
 var classExtend = require('ampersand-class-extend');
 var isArray = require('is-array');
@@ -2289,7 +3243,7 @@ Collection.extend = classExtend;
 
 module.exports = Collection;
 
-},{"ampersand-class-extend":"/home/bbales2/stochssModel/app/lib/modelEditor/node_modules/ampersand-collection/node_modules/ampersand-class-extend/ampersand-class-extend.js","backbone-events-standalone":"/home/bbales2/stochssModel/app/lib/modelEditor/node_modules/ampersand-collection/node_modules/backbone-events-standalone/index.js","extend-object":"/home/bbales2/stochssModel/app/lib/modelEditor/node_modules/ampersand-collection/node_modules/extend-object/extend-object.js","is-array":"/home/bbales2/stochssModel/app/lib/modelEditor/node_modules/ampersand-collection/node_modules/is-array/index.js"}],"/home/bbales2/stochssModel/app/lib/modelEditor/node_modules/ampersand-collection/node_modules/ampersand-class-extend/ampersand-class-extend.js":[function(require,module,exports){
+},{"ampersand-class-extend":"/home/bbales2/stochssModel/app/static/modelEditor/node_modules/ampersand-collection/node_modules/ampersand-class-extend/ampersand-class-extend.js","backbone-events-standalone":"/home/bbales2/stochssModel/app/static/modelEditor/node_modules/ampersand-collection/node_modules/backbone-events-standalone/index.js","extend-object":"/home/bbales2/stochssModel/app/static/modelEditor/node_modules/ampersand-collection/node_modules/extend-object/extend-object.js","is-array":"/home/bbales2/stochssModel/app/static/modelEditor/node_modules/ampersand-collection/node_modules/is-array/index.js"}],"/home/bbales2/stochssModel/app/static/modelEditor/node_modules/ampersand-collection/node_modules/ampersand-class-extend/ampersand-class-extend.js":[function(require,module,exports){
 var objectExtend = require('extend-object');
 
 
@@ -2339,7 +3293,7 @@ var extend = function(protoProps) {
 // Expose the extend function
 module.exports = extend;
 
-},{"extend-object":"/home/bbales2/stochssModel/app/lib/modelEditor/node_modules/ampersand-collection/node_modules/extend-object/extend-object.js"}],"/home/bbales2/stochssModel/app/lib/modelEditor/node_modules/ampersand-collection/node_modules/backbone-events-standalone/backbone-events-standalone.js":[function(require,module,exports){
+},{"extend-object":"/home/bbales2/stochssModel/app/static/modelEditor/node_modules/ampersand-collection/node_modules/extend-object/extend-object.js"}],"/home/bbales2/stochssModel/app/static/modelEditor/node_modules/ampersand-collection/node_modules/backbone-events-standalone/backbone-events-standalone.js":[function(require,module,exports){
 /**
  * Standalone extraction of Backbone.Events, no external dependency required.
  * Degrades nicely when Backone/underscore are already available in the current
@@ -2607,10 +3561,10 @@ module.exports = extend;
   }
 })(this);
 
-},{}],"/home/bbales2/stochssModel/app/lib/modelEditor/node_modules/ampersand-collection/node_modules/backbone-events-standalone/index.js":[function(require,module,exports){
+},{}],"/home/bbales2/stochssModel/app/static/modelEditor/node_modules/ampersand-collection/node_modules/backbone-events-standalone/index.js":[function(require,module,exports){
 module.exports = require('./backbone-events-standalone');
 
-},{"./backbone-events-standalone":"/home/bbales2/stochssModel/app/lib/modelEditor/node_modules/ampersand-collection/node_modules/backbone-events-standalone/backbone-events-standalone.js"}],"/home/bbales2/stochssModel/app/lib/modelEditor/node_modules/ampersand-collection/node_modules/extend-object/extend-object.js":[function(require,module,exports){
+},{"./backbone-events-standalone":"/home/bbales2/stochssModel/app/static/modelEditor/node_modules/ampersand-collection/node_modules/backbone-events-standalone/backbone-events-standalone.js"}],"/home/bbales2/stochssModel/app/static/modelEditor/node_modules/ampersand-collection/node_modules/extend-object/extend-object.js":[function(require,module,exports){
 var arr = [];
 var each = arr.forEach;
 var slice = arr.slice;
@@ -2627,7 +3581,7 @@ module.exports = function(obj) {
     return obj;
 };
 
-},{}],"/home/bbales2/stochssModel/app/lib/modelEditor/node_modules/ampersand-collection/node_modules/is-array/index.js":[function(require,module,exports){
+},{}],"/home/bbales2/stochssModel/app/static/modelEditor/node_modules/ampersand-collection/node_modules/is-array/index.js":[function(require,module,exports){
 
 /**
  * isArray
@@ -2662,7 +3616,7 @@ module.exports = isArray || function (val) {
   return !! val && '[object Array]' == str.call(val);
 };
 
-},{}],"/home/bbales2/stochssModel/app/lib/modelEditor/node_modules/ampersand-dom/ampersand-dom.js":[function(require,module,exports){
+},{}],"/home/bbales2/stochssModel/app/static/modelEditor/node_modules/ampersand-dom/ampersand-dom.js":[function(require,module,exports){
 ;if (typeof window !== "undefined") {  window.ampersand = window.ampersand || {};  window.ampersand["ampersand-dom"] = window.ampersand["ampersand-dom"] || [];  window.ampersand["ampersand-dom"].push("1.2.7");}
 var dom = module.exports = {
     text: function (el, val) {
@@ -2782,7 +3736,7 @@ function hide (el) {
     el.style.display = 'none';
 }
 
-},{}],"/home/bbales2/stochssModel/app/lib/modelEditor/node_modules/ampersand-form-view/ampersand-form-view.js":[function(require,module,exports){
+},{}],"/home/bbales2/stochssModel/app/static/modelEditor/node_modules/ampersand-form-view/ampersand-form-view.js":[function(require,module,exports){
 ;if (typeof window !== "undefined") {  window.ampersand = window.ampersand || {};  window.ampersand["ampersand-form-view"] = window.ampersand["ampersand-form-view"] || [];  window.ampersand["ampersand-form-view"].push("2.2.0");}
 var BBEvents = require('backbone-events-standalone');
 var extend = require('extend-object');
@@ -2946,11 +3900,11 @@ FormView.extend = function (obj) {
 
 module.exports = FormView;
 
-},{"backbone-events-standalone":"/home/bbales2/stochssModel/app/lib/modelEditor/node_modules/ampersand-form-view/node_modules/backbone-events-standalone/index.js","extend-object":"/home/bbales2/stochssModel/app/lib/modelEditor/node_modules/ampersand-form-view/node_modules/extend-object/extend-object.js"}],"/home/bbales2/stochssModel/app/lib/modelEditor/node_modules/ampersand-form-view/node_modules/backbone-events-standalone/index.js":[function(require,module,exports){
-module.exports=require("/home/bbales2/stochssModel/app/lib/modelEditor/node_modules/ampersand-collection/node_modules/backbone-events-standalone/index.js")
-},{"/home/bbales2/stochssModel/app/lib/modelEditor/node_modules/ampersand-collection/node_modules/backbone-events-standalone/index.js":"/home/bbales2/stochssModel/app/lib/modelEditor/node_modules/ampersand-collection/node_modules/backbone-events-standalone/index.js"}],"/home/bbales2/stochssModel/app/lib/modelEditor/node_modules/ampersand-form-view/node_modules/extend-object/extend-object.js":[function(require,module,exports){
-module.exports=require("/home/bbales2/stochssModel/app/lib/modelEditor/node_modules/ampersand-collection/node_modules/extend-object/extend-object.js")
-},{"/home/bbales2/stochssModel/app/lib/modelEditor/node_modules/ampersand-collection/node_modules/extend-object/extend-object.js":"/home/bbales2/stochssModel/app/lib/modelEditor/node_modules/ampersand-collection/node_modules/extend-object/extend-object.js"}],"/home/bbales2/stochssModel/app/lib/modelEditor/node_modules/ampersand-input-view/ampersand-input-view.js":[function(require,module,exports){
+},{"backbone-events-standalone":"/home/bbales2/stochssModel/app/static/modelEditor/node_modules/ampersand-form-view/node_modules/backbone-events-standalone/index.js","extend-object":"/home/bbales2/stochssModel/app/static/modelEditor/node_modules/ampersand-form-view/node_modules/extend-object/extend-object.js"}],"/home/bbales2/stochssModel/app/static/modelEditor/node_modules/ampersand-form-view/node_modules/backbone-events-standalone/index.js":[function(require,module,exports){
+module.exports=require("/home/bbales2/stochssModel/app/static/modelEditor/node_modules/ampersand-collection/node_modules/backbone-events-standalone/index.js")
+},{"/home/bbales2/stochssModel/app/static/modelEditor/node_modules/ampersand-collection/node_modules/backbone-events-standalone/index.js":"/home/bbales2/stochssModel/app/static/modelEditor/node_modules/ampersand-collection/node_modules/backbone-events-standalone/index.js"}],"/home/bbales2/stochssModel/app/static/modelEditor/node_modules/ampersand-form-view/node_modules/extend-object/extend-object.js":[function(require,module,exports){
+module.exports=require("/home/bbales2/stochssModel/app/static/modelEditor/node_modules/ampersand-collection/node_modules/extend-object/extend-object.js")
+},{"/home/bbales2/stochssModel/app/static/modelEditor/node_modules/ampersand-collection/node_modules/extend-object/extend-object.js":"/home/bbales2/stochssModel/app/static/modelEditor/node_modules/ampersand-collection/node_modules/extend-object/extend-object.js"}],"/home/bbales2/stochssModel/app/static/modelEditor/node_modules/ampersand-input-view/ampersand-input-view.js":[function(require,module,exports){
 var View = require('ampersand-view');
 
 
@@ -3149,7 +4103,7 @@ module.exports = View.extend({
     }
 });
 
-},{"ampersand-view":"/home/bbales2/stochssModel/app/lib/modelEditor/node_modules/ampersand-view/ampersand-view.js"}],"/home/bbales2/stochssModel/app/lib/modelEditor/node_modules/ampersand-model/ampersand-model.js":[function(require,module,exports){
+},{"ampersand-view":"/home/bbales2/stochssModel/app/static/modelEditor/node_modules/ampersand-view/ampersand-view.js"}],"/home/bbales2/stochssModel/app/static/modelEditor/node_modules/ampersand-model/ampersand-model.js":[function(require,module,exports){
 ;if (typeof window !== "undefined") {  window.ampersand = window.ampersand || {};  window.ampersand["ampersand-model"] = window.ampersand["ampersand-model"] || [];  window.ampersand["ampersand-model"].push("4.0.3");}
 var State = require('ampersand-state');
 var _ = require('underscore');
@@ -3283,7 +4237,7 @@ var wrapError = function (model, options) {
 
 module.exports = Model;
 
-},{"ampersand-state":"/home/bbales2/stochssModel/app/lib/modelEditor/node_modules/ampersand-state/ampersand-state.js","ampersand-sync":"/home/bbales2/stochssModel/app/lib/modelEditor/node_modules/ampersand-model/node_modules/ampersand-sync/ampersand-sync.js","underscore":"/home/bbales2/stochssModel/app/lib/modelEditor/node_modules/underscore/underscore.js"}],"/home/bbales2/stochssModel/app/lib/modelEditor/node_modules/ampersand-model/node_modules/ampersand-sync/ampersand-sync.js":[function(require,module,exports){
+},{"ampersand-state":"/home/bbales2/stochssModel/app/static/modelEditor/node_modules/ampersand-state/ampersand-state.js","ampersand-sync":"/home/bbales2/stochssModel/app/static/modelEditor/node_modules/ampersand-model/node_modules/ampersand-sync/ampersand-sync.js","underscore":"/home/bbales2/stochssModel/app/static/modelEditor/node_modules/underscore/underscore.js"}],"/home/bbales2/stochssModel/app/static/modelEditor/node_modules/ampersand-model/node_modules/ampersand-sync/ampersand-sync.js":[function(require,module,exports){
 var _ = require('underscore');
 var xhr = require('xhr');
 var qs = require('qs');
@@ -3404,10 +4358,10 @@ var methodMap = {
     'read':   'GET'
 };
 
-},{"qs":"/home/bbales2/stochssModel/app/lib/modelEditor/node_modules/ampersand-model/node_modules/ampersand-sync/node_modules/qs/index.js","underscore":"/home/bbales2/stochssModel/app/lib/modelEditor/node_modules/ampersand-model/node_modules/ampersand-sync/node_modules/underscore/underscore.js","xhr":"/home/bbales2/stochssModel/app/lib/modelEditor/node_modules/ampersand-model/node_modules/ampersand-sync/node_modules/xhr/index.js"}],"/home/bbales2/stochssModel/app/lib/modelEditor/node_modules/ampersand-model/node_modules/ampersand-sync/node_modules/qs/index.js":[function(require,module,exports){
+},{"qs":"/home/bbales2/stochssModel/app/static/modelEditor/node_modules/ampersand-model/node_modules/ampersand-sync/node_modules/qs/index.js","underscore":"/home/bbales2/stochssModel/app/static/modelEditor/node_modules/ampersand-model/node_modules/ampersand-sync/node_modules/underscore/underscore.js","xhr":"/home/bbales2/stochssModel/app/static/modelEditor/node_modules/ampersand-model/node_modules/ampersand-sync/node_modules/xhr/index.js"}],"/home/bbales2/stochssModel/app/static/modelEditor/node_modules/ampersand-model/node_modules/ampersand-sync/node_modules/qs/index.js":[function(require,module,exports){
 module.exports = require('./lib');
 
-},{"./lib":"/home/bbales2/stochssModel/app/lib/modelEditor/node_modules/ampersand-model/node_modules/ampersand-sync/node_modules/qs/lib/index.js"}],"/home/bbales2/stochssModel/app/lib/modelEditor/node_modules/ampersand-model/node_modules/ampersand-sync/node_modules/qs/lib/index.js":[function(require,module,exports){
+},{"./lib":"/home/bbales2/stochssModel/app/static/modelEditor/node_modules/ampersand-model/node_modules/ampersand-sync/node_modules/qs/lib/index.js"}],"/home/bbales2/stochssModel/app/static/modelEditor/node_modules/ampersand-model/node_modules/ampersand-sync/node_modules/qs/lib/index.js":[function(require,module,exports){
 // Load modules
 
 var Stringify = require('./stringify');
@@ -3424,7 +4378,7 @@ module.exports = {
     parse: Parse
 };
 
-},{"./parse":"/home/bbales2/stochssModel/app/lib/modelEditor/node_modules/ampersand-model/node_modules/ampersand-sync/node_modules/qs/lib/parse.js","./stringify":"/home/bbales2/stochssModel/app/lib/modelEditor/node_modules/ampersand-model/node_modules/ampersand-sync/node_modules/qs/lib/stringify.js"}],"/home/bbales2/stochssModel/app/lib/modelEditor/node_modules/ampersand-model/node_modules/ampersand-sync/node_modules/qs/lib/parse.js":[function(require,module,exports){
+},{"./parse":"/home/bbales2/stochssModel/app/static/modelEditor/node_modules/ampersand-model/node_modules/ampersand-sync/node_modules/qs/lib/parse.js","./stringify":"/home/bbales2/stochssModel/app/static/modelEditor/node_modules/ampersand-model/node_modules/ampersand-sync/node_modules/qs/lib/stringify.js"}],"/home/bbales2/stochssModel/app/static/modelEditor/node_modules/ampersand-model/node_modules/ampersand-sync/node_modules/qs/lib/parse.js":[function(require,module,exports){
 // Load modules
 
 var Utils = require('./utils');
@@ -3581,7 +4535,7 @@ module.exports = function (str, depth, delimiter) {
     return Utils.compact(obj);
 };
 
-},{"./utils":"/home/bbales2/stochssModel/app/lib/modelEditor/node_modules/ampersand-model/node_modules/ampersand-sync/node_modules/qs/lib/utils.js"}],"/home/bbales2/stochssModel/app/lib/modelEditor/node_modules/ampersand-model/node_modules/ampersand-sync/node_modules/qs/lib/stringify.js":[function(require,module,exports){
+},{"./utils":"/home/bbales2/stochssModel/app/static/modelEditor/node_modules/ampersand-model/node_modules/ampersand-sync/node_modules/qs/lib/utils.js"}],"/home/bbales2/stochssModel/app/static/modelEditor/node_modules/ampersand-model/node_modules/ampersand-sync/node_modules/qs/lib/stringify.js":[function(require,module,exports){
 (function (Buffer){
 // Load modules
 
@@ -3640,7 +4594,7 @@ module.exports = function (obj, delimiter) {
 };
 
 }).call(this,require("buffer").Buffer)
-},{"buffer":"/home/bbales2/stochssModel/app/lib/modelEditor/node_modules/watchify/node_modules/browserify/node_modules/buffer/index.js"}],"/home/bbales2/stochssModel/app/lib/modelEditor/node_modules/ampersand-model/node_modules/ampersand-sync/node_modules/qs/lib/utils.js":[function(require,module,exports){
+},{"buffer":"/home/bbales2/stochssModel/app/static/modelEditor/node_modules/watchify/node_modules/browserify/node_modules/buffer/index.js"}],"/home/bbales2/stochssModel/app/static/modelEditor/node_modules/ampersand-model/node_modules/ampersand-sync/node_modules/qs/lib/utils.js":[function(require,module,exports){
 (function (Buffer){
 // Load modules
 
@@ -3777,7 +4731,7 @@ exports.compact = function (obj) {
 };
 
 }).call(this,require("buffer").Buffer)
-},{"buffer":"/home/bbales2/stochssModel/app/lib/modelEditor/node_modules/watchify/node_modules/browserify/node_modules/buffer/index.js"}],"/home/bbales2/stochssModel/app/lib/modelEditor/node_modules/ampersand-model/node_modules/ampersand-sync/node_modules/underscore/underscore.js":[function(require,module,exports){
+},{"buffer":"/home/bbales2/stochssModel/app/static/modelEditor/node_modules/watchify/node_modules/browserify/node_modules/buffer/index.js"}],"/home/bbales2/stochssModel/app/static/modelEditor/node_modules/ampersand-model/node_modules/ampersand-sync/node_modules/underscore/underscore.js":[function(require,module,exports){
 //     Underscore.js 1.6.0
 //     http://underscorejs.org
 //     (c) 2009-2014 Jeremy Ashkenas, DocumentCloud and Investigative Reporters & Editors
@@ -5122,7 +6076,7 @@ exports.compact = function (obj) {
   }
 }).call(this);
 
-},{}],"/home/bbales2/stochssModel/app/lib/modelEditor/node_modules/ampersand-model/node_modules/ampersand-sync/node_modules/xhr/index.js":[function(require,module,exports){
+},{}],"/home/bbales2/stochssModel/app/static/modelEditor/node_modules/ampersand-model/node_modules/ampersand-sync/node_modules/xhr/index.js":[function(require,module,exports){
 var window = require("global/window")
 var once = require("once")
 var parseHeaders = require('parse-headers')
@@ -5301,7 +6255,7 @@ function createXHR(options, callback) {
 
 function noop() {}
 
-},{"global/window":"/home/bbales2/stochssModel/app/lib/modelEditor/node_modules/ampersand-model/node_modules/ampersand-sync/node_modules/xhr/node_modules/global/window.js","once":"/home/bbales2/stochssModel/app/lib/modelEditor/node_modules/ampersand-model/node_modules/ampersand-sync/node_modules/xhr/node_modules/once/once.js","parse-headers":"/home/bbales2/stochssModel/app/lib/modelEditor/node_modules/ampersand-model/node_modules/ampersand-sync/node_modules/xhr/node_modules/parse-headers/parse-headers.js"}],"/home/bbales2/stochssModel/app/lib/modelEditor/node_modules/ampersand-model/node_modules/ampersand-sync/node_modules/xhr/node_modules/global/window.js":[function(require,module,exports){
+},{"global/window":"/home/bbales2/stochssModel/app/static/modelEditor/node_modules/ampersand-model/node_modules/ampersand-sync/node_modules/xhr/node_modules/global/window.js","once":"/home/bbales2/stochssModel/app/static/modelEditor/node_modules/ampersand-model/node_modules/ampersand-sync/node_modules/xhr/node_modules/once/once.js","parse-headers":"/home/bbales2/stochssModel/app/static/modelEditor/node_modules/ampersand-model/node_modules/ampersand-sync/node_modules/xhr/node_modules/parse-headers/parse-headers.js"}],"/home/bbales2/stochssModel/app/static/modelEditor/node_modules/ampersand-model/node_modules/ampersand-sync/node_modules/xhr/node_modules/global/window.js":[function(require,module,exports){
 (function (global){
 if (typeof window !== "undefined") {
     module.exports = window;
@@ -5314,7 +6268,7 @@ if (typeof window !== "undefined") {
 }
 
 }).call(this,typeof global !== "undefined" ? global : typeof self !== "undefined" ? self : typeof window !== "undefined" ? window : {})
-},{}],"/home/bbales2/stochssModel/app/lib/modelEditor/node_modules/ampersand-model/node_modules/ampersand-sync/node_modules/xhr/node_modules/once/once.js":[function(require,module,exports){
+},{}],"/home/bbales2/stochssModel/app/static/modelEditor/node_modules/ampersand-model/node_modules/ampersand-sync/node_modules/xhr/node_modules/once/once.js":[function(require,module,exports){
 module.exports = once
 
 once.proto = once(function () {
@@ -5335,7 +6289,7 @@ function once (fn) {
   }
 }
 
-},{}],"/home/bbales2/stochssModel/app/lib/modelEditor/node_modules/ampersand-model/node_modules/ampersand-sync/node_modules/xhr/node_modules/parse-headers/node_modules/for-each/index.js":[function(require,module,exports){
+},{}],"/home/bbales2/stochssModel/app/static/modelEditor/node_modules/ampersand-model/node_modules/ampersand-sync/node_modules/xhr/node_modules/parse-headers/node_modules/for-each/index.js":[function(require,module,exports){
 var isFunction = require('is-function')
 
 module.exports = forEach
@@ -5383,7 +6337,7 @@ function forEachObject(object, iterator, context) {
     }
 }
 
-},{"is-function":"/home/bbales2/stochssModel/app/lib/modelEditor/node_modules/ampersand-model/node_modules/ampersand-sync/node_modules/xhr/node_modules/parse-headers/node_modules/for-each/node_modules/is-function/index.js"}],"/home/bbales2/stochssModel/app/lib/modelEditor/node_modules/ampersand-model/node_modules/ampersand-sync/node_modules/xhr/node_modules/parse-headers/node_modules/for-each/node_modules/is-function/index.js":[function(require,module,exports){
+},{"is-function":"/home/bbales2/stochssModel/app/static/modelEditor/node_modules/ampersand-model/node_modules/ampersand-sync/node_modules/xhr/node_modules/parse-headers/node_modules/for-each/node_modules/is-function/index.js"}],"/home/bbales2/stochssModel/app/static/modelEditor/node_modules/ampersand-model/node_modules/ampersand-sync/node_modules/xhr/node_modules/parse-headers/node_modules/for-each/node_modules/is-function/index.js":[function(require,module,exports){
 module.exports = isFunction
 
 var toString = Object.prototype.toString
@@ -5400,7 +6354,7 @@ function isFunction (fn) {
       fn === window.prompt))
 };
 
-},{}],"/home/bbales2/stochssModel/app/lib/modelEditor/node_modules/ampersand-model/node_modules/ampersand-sync/node_modules/xhr/node_modules/parse-headers/node_modules/trim/index.js":[function(require,module,exports){
+},{}],"/home/bbales2/stochssModel/app/static/modelEditor/node_modules/ampersand-model/node_modules/ampersand-sync/node_modules/xhr/node_modules/parse-headers/node_modules/trim/index.js":[function(require,module,exports){
 
 exports = module.exports = trim;
 
@@ -5416,7 +6370,7 @@ exports.right = function(str){
   return str.replace(/\s*$/, '');
 };
 
-},{}],"/home/bbales2/stochssModel/app/lib/modelEditor/node_modules/ampersand-model/node_modules/ampersand-sync/node_modules/xhr/node_modules/parse-headers/parse-headers.js":[function(require,module,exports){
+},{}],"/home/bbales2/stochssModel/app/static/modelEditor/node_modules/ampersand-model/node_modules/ampersand-sync/node_modules/xhr/node_modules/parse-headers/parse-headers.js":[function(require,module,exports){
 var trim = require('trim')
   , forEach = require('for-each')
   , isArray = function(arg) {
@@ -5448,7 +6402,7 @@ module.exports = function (headers) {
 
   return result
 }
-},{"for-each":"/home/bbales2/stochssModel/app/lib/modelEditor/node_modules/ampersand-model/node_modules/ampersand-sync/node_modules/xhr/node_modules/parse-headers/node_modules/for-each/index.js","trim":"/home/bbales2/stochssModel/app/lib/modelEditor/node_modules/ampersand-model/node_modules/ampersand-sync/node_modules/xhr/node_modules/parse-headers/node_modules/trim/index.js"}],"/home/bbales2/stochssModel/app/lib/modelEditor/node_modules/ampersand-rest-collection/ampersand-rest-collection.js":[function(require,module,exports){
+},{"for-each":"/home/bbales2/stochssModel/app/static/modelEditor/node_modules/ampersand-model/node_modules/ampersand-sync/node_modules/xhr/node_modules/parse-headers/node_modules/for-each/index.js","trim":"/home/bbales2/stochssModel/app/static/modelEditor/node_modules/ampersand-model/node_modules/ampersand-sync/node_modules/xhr/node_modules/parse-headers/node_modules/trim/index.js"}],"/home/bbales2/stochssModel/app/static/modelEditor/node_modules/ampersand-rest-collection/ampersand-rest-collection.js":[function(require,module,exports){
 ;if (typeof window !== "undefined") {  window.ampersand = window.ampersand || {};  window.ampersand["ampersand-rest-collection"] = window.ampersand["ampersand-rest-collection"] || [];  window.ampersand["ampersand-rest-collection"].push("2.0.4");}
 var Collection = require('ampersand-collection');
 var underscoreMixin = require('ampersand-collection-underscore-mixin');
@@ -5457,7 +6411,7 @@ var restMixins = require('ampersand-collection-rest-mixin');
 
 module.exports = Collection.extend(underscoreMixin, restMixins);
 
-},{"ampersand-collection":"/home/bbales2/stochssModel/app/lib/modelEditor/node_modules/ampersand-collection/ampersand-collection.js","ampersand-collection-rest-mixin":"/home/bbales2/stochssModel/app/lib/modelEditor/node_modules/ampersand-rest-collection/node_modules/ampersand-collection-rest-mixin/ampersand-collection-rest-mixin.js","ampersand-collection-underscore-mixin":"/home/bbales2/stochssModel/app/lib/modelEditor/node_modules/ampersand-rest-collection/node_modules/ampersand-collection-underscore-mixin/ampersand-collection-underscore-mixin.js"}],"/home/bbales2/stochssModel/app/lib/modelEditor/node_modules/ampersand-rest-collection/node_modules/ampersand-collection-rest-mixin/ampersand-collection-rest-mixin.js":[function(require,module,exports){
+},{"ampersand-collection":"/home/bbales2/stochssModel/app/static/modelEditor/node_modules/ampersand-collection/ampersand-collection.js","ampersand-collection-rest-mixin":"/home/bbales2/stochssModel/app/static/modelEditor/node_modules/ampersand-rest-collection/node_modules/ampersand-collection-rest-mixin/ampersand-collection-rest-mixin.js","ampersand-collection-underscore-mixin":"/home/bbales2/stochssModel/app/static/modelEditor/node_modules/ampersand-rest-collection/node_modules/ampersand-collection-underscore-mixin/ampersand-collection-underscore-mixin.js"}],"/home/bbales2/stochssModel/app/static/modelEditor/node_modules/ampersand-rest-collection/node_modules/ampersand-collection-rest-mixin/ampersand-collection-rest-mixin.js":[function(require,module,exports){
 ;if (typeof window !== "undefined") {  window.ampersand = window.ampersand || {};  window.ampersand["ampersand-collection-rest-mixin"] = window.ampersand["ampersand-collection-rest-mixin"] || [];  window.ampersand["ampersand-collection-rest-mixin"].push("3.0.1");}
 var sync = require('ampersand-sync');
 var extend = require('extend-object');
@@ -5559,11 +6513,11 @@ module.exports = {
     }
 };
 
-},{"ampersand-sync":"/home/bbales2/stochssModel/app/lib/modelEditor/node_modules/ampersand-rest-collection/node_modules/ampersand-collection-rest-mixin/node_modules/ampersand-sync/ampersand-sync.js","extend-object":"/home/bbales2/stochssModel/app/lib/modelEditor/node_modules/ampersand-rest-collection/node_modules/ampersand-collection-rest-mixin/node_modules/extend-object/extend-object.js"}],"/home/bbales2/stochssModel/app/lib/modelEditor/node_modules/ampersand-rest-collection/node_modules/ampersand-collection-rest-mixin/node_modules/ampersand-sync/ampersand-sync.js":[function(require,module,exports){
-module.exports=require("/home/bbales2/stochssModel/app/lib/modelEditor/node_modules/ampersand-model/node_modules/ampersand-sync/ampersand-sync.js")
-},{"/home/bbales2/stochssModel/app/lib/modelEditor/node_modules/ampersand-model/node_modules/ampersand-sync/ampersand-sync.js":"/home/bbales2/stochssModel/app/lib/modelEditor/node_modules/ampersand-model/node_modules/ampersand-sync/ampersand-sync.js"}],"/home/bbales2/stochssModel/app/lib/modelEditor/node_modules/ampersand-rest-collection/node_modules/ampersand-collection-rest-mixin/node_modules/extend-object/extend-object.js":[function(require,module,exports){
-module.exports=require("/home/bbales2/stochssModel/app/lib/modelEditor/node_modules/ampersand-form-view/node_modules/extend-object/extend-object.js")
-},{"/home/bbales2/stochssModel/app/lib/modelEditor/node_modules/ampersand-form-view/node_modules/extend-object/extend-object.js":"/home/bbales2/stochssModel/app/lib/modelEditor/node_modules/ampersand-form-view/node_modules/extend-object/extend-object.js"}],"/home/bbales2/stochssModel/app/lib/modelEditor/node_modules/ampersand-rest-collection/node_modules/ampersand-collection-underscore-mixin/ampersand-collection-underscore-mixin.js":[function(require,module,exports){
+},{"ampersand-sync":"/home/bbales2/stochssModel/app/static/modelEditor/node_modules/ampersand-rest-collection/node_modules/ampersand-collection-rest-mixin/node_modules/ampersand-sync/ampersand-sync.js","extend-object":"/home/bbales2/stochssModel/app/static/modelEditor/node_modules/ampersand-rest-collection/node_modules/ampersand-collection-rest-mixin/node_modules/extend-object/extend-object.js"}],"/home/bbales2/stochssModel/app/static/modelEditor/node_modules/ampersand-rest-collection/node_modules/ampersand-collection-rest-mixin/node_modules/ampersand-sync/ampersand-sync.js":[function(require,module,exports){
+module.exports=require("/home/bbales2/stochssModel/app/static/modelEditor/node_modules/ampersand-model/node_modules/ampersand-sync/ampersand-sync.js")
+},{"/home/bbales2/stochssModel/app/static/modelEditor/node_modules/ampersand-model/node_modules/ampersand-sync/ampersand-sync.js":"/home/bbales2/stochssModel/app/static/modelEditor/node_modules/ampersand-model/node_modules/ampersand-sync/ampersand-sync.js"}],"/home/bbales2/stochssModel/app/static/modelEditor/node_modules/ampersand-rest-collection/node_modules/ampersand-collection-rest-mixin/node_modules/extend-object/extend-object.js":[function(require,module,exports){
+module.exports=require("/home/bbales2/stochssModel/app/static/modelEditor/node_modules/ampersand-form-view/node_modules/extend-object/extend-object.js")
+},{"/home/bbales2/stochssModel/app/static/modelEditor/node_modules/ampersand-form-view/node_modules/extend-object/extend-object.js":"/home/bbales2/stochssModel/app/static/modelEditor/node_modules/ampersand-form-view/node_modules/extend-object/extend-object.js"}],"/home/bbales2/stochssModel/app/static/modelEditor/node_modules/ampersand-rest-collection/node_modules/ampersand-collection-underscore-mixin/ampersand-collection-underscore-mixin.js":[function(require,module,exports){
 ;if (typeof window !== "undefined") {  window.ampersand = window.ampersand || {};  window.ampersand["ampersand-collection-underscore-mixin"] = window.ampersand["ampersand-collection-underscore-mixin"] || [];  window.ampersand["ampersand-collection-underscore-mixin"].push("1.0.3");}
 var _ = require('underscore');
 var slice = [].slice;
@@ -5630,7 +6584,7 @@ mixins.pluck = function (attr) {
 
 module.exports = mixins;
 
-},{"underscore":"/home/bbales2/stochssModel/app/lib/modelEditor/node_modules/underscore/underscore.js"}],"/home/bbales2/stochssModel/app/lib/modelEditor/node_modules/ampersand-select-view/ampersand-select-view.js":[function(require,module,exports){
+},{"underscore":"/home/bbales2/stochssModel/app/static/modelEditor/node_modules/underscore/underscore.js"}],"/home/bbales2/stochssModel/app/static/modelEditor/node_modules/ampersand-select-view/ampersand-select-view.js":[function(require,module,exports){
 ;if (typeof window !== "undefined") {  window.ampersand = window.ampersand || {};  window.ampersand["ampersand-select-view"] = window.ampersand["ampersand-select-view"] || [];  window.ampersand["ampersand-select-view"].push("2.3.0");}
 var domify = require('domify');
 var dom = require('ampersand-dom');
@@ -5921,7 +6875,7 @@ function createOption (value, text) {
 
 module.exports = SelectView;
 
-},{"ampersand-dom":"/home/bbales2/stochssModel/app/lib/modelEditor/node_modules/ampersand-dom/ampersand-dom.js","domify":"/home/bbales2/stochssModel/app/lib/modelEditor/node_modules/domify/index.js","matches-selector":"/home/bbales2/stochssModel/app/lib/modelEditor/node_modules/ampersand-select-view/node_modules/matches-selector/index.js"}],"/home/bbales2/stochssModel/app/lib/modelEditor/node_modules/ampersand-select-view/node_modules/matches-selector/index.js":[function(require,module,exports){
+},{"ampersand-dom":"/home/bbales2/stochssModel/app/static/modelEditor/node_modules/ampersand-dom/ampersand-dom.js","domify":"/home/bbales2/stochssModel/app/static/modelEditor/node_modules/domify/index.js","matches-selector":"/home/bbales2/stochssModel/app/static/modelEditor/node_modules/ampersand-select-view/node_modules/matches-selector/index.js"}],"/home/bbales2/stochssModel/app/static/modelEditor/node_modules/ampersand-select-view/node_modules/matches-selector/index.js":[function(require,module,exports){
 'use strict';
 
 var proto = Element.prototype;
@@ -5951,7 +6905,7 @@ function match(el, selector) {
   }
   return false;
 }
-},{}],"/home/bbales2/stochssModel/app/lib/modelEditor/node_modules/ampersand-state/ampersand-state.js":[function(require,module,exports){
+},{}],"/home/bbales2/stochssModel/app/static/modelEditor/node_modules/ampersand-state/ampersand-state.js":[function(require,module,exports){
 ;if (typeof window !== "undefined") {  window.ampersand = window.ampersand || {};  window.ampersand["ampersand-state"] = window.ampersand["ampersand-state"] || [];  window.ampersand["ampersand-state"].push("4.4.4");}
 var _ = require('underscore');
 var BBEvents = require('backbone-events-standalone');
@@ -6727,7 +7681,7 @@ Base.extend = extend;
 // Our main exports
 module.exports = Base;
 
-},{"array-next":"/home/bbales2/stochssModel/app/lib/modelEditor/node_modules/ampersand-state/node_modules/array-next/array-next.js","backbone-events-standalone":"/home/bbales2/stochssModel/app/lib/modelEditor/node_modules/ampersand-state/node_modules/backbone-events-standalone/index.js","key-tree-store":"/home/bbales2/stochssModel/app/lib/modelEditor/node_modules/ampersand-state/node_modules/key-tree-store/key-tree-store.js","underscore":"/home/bbales2/stochssModel/app/lib/modelEditor/node_modules/underscore/underscore.js"}],"/home/bbales2/stochssModel/app/lib/modelEditor/node_modules/ampersand-state/node_modules/array-next/array-next.js":[function(require,module,exports){
+},{"array-next":"/home/bbales2/stochssModel/app/static/modelEditor/node_modules/ampersand-state/node_modules/array-next/array-next.js","backbone-events-standalone":"/home/bbales2/stochssModel/app/static/modelEditor/node_modules/ampersand-state/node_modules/backbone-events-standalone/index.js","key-tree-store":"/home/bbales2/stochssModel/app/static/modelEditor/node_modules/ampersand-state/node_modules/key-tree-store/key-tree-store.js","underscore":"/home/bbales2/stochssModel/app/static/modelEditor/node_modules/underscore/underscore.js"}],"/home/bbales2/stochssModel/app/static/modelEditor/node_modules/ampersand-state/node_modules/array-next/array-next.js":[function(require,module,exports){
 module.exports = function arrayNext(array, currentItem) {
     var len = array.length;
     var newIndex = array.indexOf(currentItem) + 1;
@@ -6735,9 +7689,9 @@ module.exports = function arrayNext(array, currentItem) {
     return array[newIndex];
 };
 
-},{}],"/home/bbales2/stochssModel/app/lib/modelEditor/node_modules/ampersand-state/node_modules/backbone-events-standalone/index.js":[function(require,module,exports){
-module.exports=require("/home/bbales2/stochssModel/app/lib/modelEditor/node_modules/ampersand-form-view/node_modules/backbone-events-standalone/index.js")
-},{"/home/bbales2/stochssModel/app/lib/modelEditor/node_modules/ampersand-form-view/node_modules/backbone-events-standalone/index.js":"/home/bbales2/stochssModel/app/lib/modelEditor/node_modules/ampersand-form-view/node_modules/backbone-events-standalone/index.js"}],"/home/bbales2/stochssModel/app/lib/modelEditor/node_modules/ampersand-state/node_modules/key-tree-store/key-tree-store.js":[function(require,module,exports){
+},{}],"/home/bbales2/stochssModel/app/static/modelEditor/node_modules/ampersand-state/node_modules/backbone-events-standalone/index.js":[function(require,module,exports){
+module.exports=require("/home/bbales2/stochssModel/app/static/modelEditor/node_modules/ampersand-form-view/node_modules/backbone-events-standalone/index.js")
+},{"/home/bbales2/stochssModel/app/static/modelEditor/node_modules/ampersand-form-view/node_modules/backbone-events-standalone/index.js":"/home/bbales2/stochssModel/app/static/modelEditor/node_modules/ampersand-form-view/node_modules/backbone-events-standalone/index.js"}],"/home/bbales2/stochssModel/app/static/modelEditor/node_modules/ampersand-state/node_modules/key-tree-store/key-tree-store.js":[function(require,module,exports){
 function KeyTreeStore() {
     this.storage = {};
 }
@@ -6778,7 +7732,7 @@ KeyTreeStore.prototype.get = function (keypath) {
 
 module.exports = KeyTreeStore;
 
-},{}],"/home/bbales2/stochssModel/app/lib/modelEditor/node_modules/ampersand-view/ampersand-view.js":[function(require,module,exports){
+},{}],"/home/bbales2/stochssModel/app/static/modelEditor/node_modules/ampersand-view/ampersand-view.js":[function(require,module,exports){
 ;if (typeof window !== "undefined") {  window.ampersand = window.ampersand || {};  window.ampersand["ampersand-view"] = window.ampersand["ampersand-view"] || [];  window.ampersand["ampersand-view"].push("7.2.0");}
 var State = require('ampersand-state');
 var CollectionView = require('ampersand-collection-view');
@@ -7148,7 +8102,7 @@ _.extend(View.prototype, {
 View.extend = BaseState.extend;
 module.exports = View;
 
-},{"ampersand-collection-view":"/home/bbales2/stochssModel/app/lib/modelEditor/node_modules/ampersand-view/node_modules/ampersand-collection-view/ampersand-collection-view.js","ampersand-dom-bindings":"/home/bbales2/stochssModel/app/lib/modelEditor/node_modules/ampersand-view/node_modules/ampersand-dom-bindings/ampersand-dom-bindings.js","ampersand-state":"/home/bbales2/stochssModel/app/lib/modelEditor/node_modules/ampersand-state/ampersand-state.js","domify":"/home/bbales2/stochssModel/app/lib/modelEditor/node_modules/domify/index.js","events-mixin":"/home/bbales2/stochssModel/app/lib/modelEditor/node_modules/ampersand-view/node_modules/events-mixin/index.js","get-object-path":"/home/bbales2/stochssModel/app/lib/modelEditor/node_modules/ampersand-view/node_modules/get-object-path/index.js","matches-selector":"/home/bbales2/stochssModel/app/lib/modelEditor/node_modules/ampersand-view/node_modules/matches-selector/index.js","underscore":"/home/bbales2/stochssModel/app/lib/modelEditor/node_modules/ampersand-view/node_modules/underscore/underscore.js"}],"/home/bbales2/stochssModel/app/lib/modelEditor/node_modules/ampersand-view/node_modules/ampersand-collection-view/ampersand-collection-view.js":[function(require,module,exports){
+},{"ampersand-collection-view":"/home/bbales2/stochssModel/app/static/modelEditor/node_modules/ampersand-view/node_modules/ampersand-collection-view/ampersand-collection-view.js","ampersand-dom-bindings":"/home/bbales2/stochssModel/app/static/modelEditor/node_modules/ampersand-view/node_modules/ampersand-dom-bindings/ampersand-dom-bindings.js","ampersand-state":"/home/bbales2/stochssModel/app/static/modelEditor/node_modules/ampersand-state/ampersand-state.js","domify":"/home/bbales2/stochssModel/app/static/modelEditor/node_modules/domify/index.js","events-mixin":"/home/bbales2/stochssModel/app/static/modelEditor/node_modules/ampersand-view/node_modules/events-mixin/index.js","get-object-path":"/home/bbales2/stochssModel/app/static/modelEditor/node_modules/ampersand-view/node_modules/get-object-path/index.js","matches-selector":"/home/bbales2/stochssModel/app/static/modelEditor/node_modules/ampersand-view/node_modules/matches-selector/index.js","underscore":"/home/bbales2/stochssModel/app/static/modelEditor/node_modules/ampersand-view/node_modules/underscore/underscore.js"}],"/home/bbales2/stochssModel/app/static/modelEditor/node_modules/ampersand-view/node_modules/ampersand-collection-view/ampersand-collection-view.js":[function(require,module,exports){
 ;if (typeof window !== "undefined") {  window.ampersand = window.ampersand || {};  window.ampersand["ampersand-collection-view"] = window.ampersand["ampersand-collection-view"] || [];  window.ampersand["ampersand-collection-view"].push("1.2.0");}
 var _ = require('underscore');
 var BBEvents = require('backbone-events-standalone');
@@ -7309,13 +8263,11 @@ CollectionView.extend = ampExtend;
 
 module.exports = CollectionView;
 
-},{"ampersand-class-extend":"/home/bbales2/stochssModel/app/lib/modelEditor/node_modules/ampersand-view/node_modules/ampersand-collection-view/node_modules/ampersand-class-extend/ampersand-class-extend.js","backbone-events-standalone":"/home/bbales2/stochssModel/app/lib/modelEditor/node_modules/ampersand-view/node_modules/ampersand-collection-view/node_modules/backbone-events-standalone/index.js","underscore":"/home/bbales2/stochssModel/app/lib/modelEditor/node_modules/ampersand-view/node_modules/ampersand-collection-view/node_modules/underscore/underscore.js"}],"/home/bbales2/stochssModel/app/lib/modelEditor/node_modules/ampersand-view/node_modules/ampersand-collection-view/node_modules/ampersand-class-extend/ampersand-class-extend.js":[function(require,module,exports){
-module.exports=require("/home/bbales2/stochssModel/app/lib/modelEditor/node_modules/ampersand-collection/node_modules/ampersand-class-extend/ampersand-class-extend.js")
-},{"/home/bbales2/stochssModel/app/lib/modelEditor/node_modules/ampersand-collection/node_modules/ampersand-class-extend/ampersand-class-extend.js":"/home/bbales2/stochssModel/app/lib/modelEditor/node_modules/ampersand-collection/node_modules/ampersand-class-extend/ampersand-class-extend.js"}],"/home/bbales2/stochssModel/app/lib/modelEditor/node_modules/ampersand-view/node_modules/ampersand-collection-view/node_modules/backbone-events-standalone/index.js":[function(require,module,exports){
-module.exports=require("/home/bbales2/stochssModel/app/lib/modelEditor/node_modules/ampersand-state/node_modules/backbone-events-standalone/index.js")
-},{"/home/bbales2/stochssModel/app/lib/modelEditor/node_modules/ampersand-state/node_modules/backbone-events-standalone/index.js":"/home/bbales2/stochssModel/app/lib/modelEditor/node_modules/ampersand-state/node_modules/backbone-events-standalone/index.js"}],"/home/bbales2/stochssModel/app/lib/modelEditor/node_modules/ampersand-view/node_modules/ampersand-collection-view/node_modules/underscore/underscore.js":[function(require,module,exports){
-module.exports=require("/home/bbales2/stochssModel/app/lib/modelEditor/node_modules/ampersand-model/node_modules/ampersand-sync/node_modules/underscore/underscore.js")
-},{"/home/bbales2/stochssModel/app/lib/modelEditor/node_modules/ampersand-model/node_modules/ampersand-sync/node_modules/underscore/underscore.js":"/home/bbales2/stochssModel/app/lib/modelEditor/node_modules/ampersand-model/node_modules/ampersand-sync/node_modules/underscore/underscore.js"}],"/home/bbales2/stochssModel/app/lib/modelEditor/node_modules/ampersand-view/node_modules/ampersand-dom-bindings/ampersand-dom-bindings.js":[function(require,module,exports){
+},{"ampersand-class-extend":"/home/bbales2/stochssModel/app/static/modelEditor/node_modules/ampersand-view/node_modules/ampersand-collection-view/node_modules/ampersand-class-extend/ampersand-class-extend.js","backbone-events-standalone":"/home/bbales2/stochssModel/app/static/modelEditor/node_modules/ampersand-view/node_modules/ampersand-collection-view/node_modules/backbone-events-standalone/index.js","underscore":"/home/bbales2/stochssModel/app/static/modelEditor/node_modules/ampersand-view/node_modules/underscore/underscore.js"}],"/home/bbales2/stochssModel/app/static/modelEditor/node_modules/ampersand-view/node_modules/ampersand-collection-view/node_modules/ampersand-class-extend/ampersand-class-extend.js":[function(require,module,exports){
+module.exports=require("/home/bbales2/stochssModel/app/static/modelEditor/node_modules/ampersand-collection/node_modules/ampersand-class-extend/ampersand-class-extend.js")
+},{"/home/bbales2/stochssModel/app/static/modelEditor/node_modules/ampersand-collection/node_modules/ampersand-class-extend/ampersand-class-extend.js":"/home/bbales2/stochssModel/app/static/modelEditor/node_modules/ampersand-collection/node_modules/ampersand-class-extend/ampersand-class-extend.js"}],"/home/bbales2/stochssModel/app/static/modelEditor/node_modules/ampersand-view/node_modules/ampersand-collection-view/node_modules/backbone-events-standalone/index.js":[function(require,module,exports){
+module.exports=require("/home/bbales2/stochssModel/app/static/modelEditor/node_modules/ampersand-state/node_modules/backbone-events-standalone/index.js")
+},{"/home/bbales2/stochssModel/app/static/modelEditor/node_modules/ampersand-state/node_modules/backbone-events-standalone/index.js":"/home/bbales2/stochssModel/app/static/modelEditor/node_modules/ampersand-state/node_modules/backbone-events-standalone/index.js"}],"/home/bbales2/stochssModel/app/static/modelEditor/node_modules/ampersand-view/node_modules/ampersand-dom-bindings/ampersand-dom-bindings.js":[function(require,module,exports){
 ;if (typeof window !== "undefined") {  window.ampersand = window.ampersand || {};  window.ampersand["ampersand-dom-bindings"] = window.ampersand["ampersand-dom-bindings"] || [];  window.ampersand["ampersand-dom-bindings"].push("3.3.3");}
 var Store = require('key-tree-store');
 var dom = require('ampersand-dom');
@@ -7509,7 +8461,7 @@ function getBindingFunc(binding, context) {
     }
 }
 
-},{"ampersand-dom":"/home/bbales2/stochssModel/app/lib/modelEditor/node_modules/ampersand-dom/ampersand-dom.js","key-tree-store":"/home/bbales2/stochssModel/app/lib/modelEditor/node_modules/ampersand-view/node_modules/ampersand-dom-bindings/node_modules/key-tree-store/key-tree-store.js","matches-selector":"/home/bbales2/stochssModel/app/lib/modelEditor/node_modules/ampersand-view/node_modules/matches-selector/index.js"}],"/home/bbales2/stochssModel/app/lib/modelEditor/node_modules/ampersand-view/node_modules/ampersand-dom-bindings/node_modules/key-tree-store/key-tree-store.js":[function(require,module,exports){
+},{"ampersand-dom":"/home/bbales2/stochssModel/app/static/modelEditor/node_modules/ampersand-dom/ampersand-dom.js","key-tree-store":"/home/bbales2/stochssModel/app/static/modelEditor/node_modules/ampersand-view/node_modules/ampersand-dom-bindings/node_modules/key-tree-store/key-tree-store.js","matches-selector":"/home/bbales2/stochssModel/app/static/modelEditor/node_modules/ampersand-view/node_modules/matches-selector/index.js"}],"/home/bbales2/stochssModel/app/static/modelEditor/node_modules/ampersand-view/node_modules/ampersand-dom-bindings/node_modules/key-tree-store/key-tree-store.js":[function(require,module,exports){
 var slice = Array.prototype.slice;
 
 // our constructor
@@ -7591,7 +8543,7 @@ KeyTreeStore.prototype.run = function (keypath, context) {
 
 module.exports = KeyTreeStore;
 
-},{}],"/home/bbales2/stochssModel/app/lib/modelEditor/node_modules/ampersand-view/node_modules/events-mixin/index.js":[function(require,module,exports){
+},{}],"/home/bbales2/stochssModel/app/static/modelEditor/node_modules/ampersand-view/node_modules/events-mixin/index.js":[function(require,module,exports){
 
 /**
  * Module dependencies.
@@ -7771,7 +8723,7 @@ function parse(event) {
   }
 }
 
-},{"component-event":"/home/bbales2/stochssModel/app/lib/modelEditor/node_modules/ampersand-view/node_modules/events-mixin/node_modules/component-event/index.js","delegate-events":"/home/bbales2/stochssModel/app/lib/modelEditor/node_modules/ampersand-view/node_modules/events-mixin/node_modules/delegate-events/index.js"}],"/home/bbales2/stochssModel/app/lib/modelEditor/node_modules/ampersand-view/node_modules/events-mixin/node_modules/component-event/index.js":[function(require,module,exports){
+},{"component-event":"/home/bbales2/stochssModel/app/static/modelEditor/node_modules/ampersand-view/node_modules/events-mixin/node_modules/component-event/index.js","delegate-events":"/home/bbales2/stochssModel/app/static/modelEditor/node_modules/ampersand-view/node_modules/events-mixin/node_modules/delegate-events/index.js"}],"/home/bbales2/stochssModel/app/static/modelEditor/node_modules/ampersand-view/node_modules/events-mixin/node_modules/component-event/index.js":[function(require,module,exports){
 var bind = window.addEventListener ? 'addEventListener' : 'attachEvent',
     unbind = window.removeEventListener ? 'removeEventListener' : 'detachEvent',
     prefix = bind !== 'addEventListener' ? 'on' : '';
@@ -7807,7 +8759,7 @@ exports.unbind = function(el, type, fn, capture){
   el[unbind](prefix + type, fn, capture || false);
   return fn;
 };
-},{}],"/home/bbales2/stochssModel/app/lib/modelEditor/node_modules/ampersand-view/node_modules/events-mixin/node_modules/delegate-events/index.js":[function(require,module,exports){
+},{}],"/home/bbales2/stochssModel/app/static/modelEditor/node_modules/ampersand-view/node_modules/events-mixin/node_modules/delegate-events/index.js":[function(require,module,exports){
 /**
  * Module dependencies.
  */
@@ -7859,7 +8811,7 @@ exports.unbind = function(el, type, fn, capture){
   event.unbind(el, type, fn, capture);
 };
 
-},{"closest":"/home/bbales2/stochssModel/app/lib/modelEditor/node_modules/ampersand-view/node_modules/events-mixin/node_modules/delegate-events/node_modules/closest/index.js","event":"/home/bbales2/stochssModel/app/lib/modelEditor/node_modules/ampersand-view/node_modules/events-mixin/node_modules/component-event/index.js"}],"/home/bbales2/stochssModel/app/lib/modelEditor/node_modules/ampersand-view/node_modules/events-mixin/node_modules/delegate-events/node_modules/closest/index.js":[function(require,module,exports){
+},{"closest":"/home/bbales2/stochssModel/app/static/modelEditor/node_modules/ampersand-view/node_modules/events-mixin/node_modules/delegate-events/node_modules/closest/index.js","event":"/home/bbales2/stochssModel/app/static/modelEditor/node_modules/ampersand-view/node_modules/events-mixin/node_modules/component-event/index.js"}],"/home/bbales2/stochssModel/app/static/modelEditor/node_modules/ampersand-view/node_modules/events-mixin/node_modules/delegate-events/node_modules/closest/index.js":[function(require,module,exports){
 var matches = require('matches-selector')
 
 module.exports = function (element, selector, checkYoSelf) {
@@ -7871,7 +8823,7 @@ module.exports = function (element, selector, checkYoSelf) {
   }
 }
 
-},{"matches-selector":"/home/bbales2/stochssModel/app/lib/modelEditor/node_modules/ampersand-view/node_modules/events-mixin/node_modules/delegate-events/node_modules/closest/node_modules/matches-selector/index.js"}],"/home/bbales2/stochssModel/app/lib/modelEditor/node_modules/ampersand-view/node_modules/events-mixin/node_modules/delegate-events/node_modules/closest/node_modules/matches-selector/index.js":[function(require,module,exports){
+},{"matches-selector":"/home/bbales2/stochssModel/app/static/modelEditor/node_modules/ampersand-view/node_modules/events-mixin/node_modules/delegate-events/node_modules/closest/node_modules/matches-selector/index.js"}],"/home/bbales2/stochssModel/app/static/modelEditor/node_modules/ampersand-view/node_modules/events-mixin/node_modules/delegate-events/node_modules/closest/node_modules/matches-selector/index.js":[function(require,module,exports){
 
 /**
  * Element prototype.
@@ -7912,7 +8864,7 @@ function match(el, selector) {
   }
   return false;
 }
-},{}],"/home/bbales2/stochssModel/app/lib/modelEditor/node_modules/ampersand-view/node_modules/get-object-path/index.js":[function(require,module,exports){
+},{}],"/home/bbales2/stochssModel/app/static/modelEditor/node_modules/ampersand-view/node_modules/get-object-path/index.js":[function(require,module,exports){
 module.exports = get;
 
 function get (context, path) {
@@ -7935,11 +8887,11 @@ function get (context, path) {
   return result;
 }
 
-},{}],"/home/bbales2/stochssModel/app/lib/modelEditor/node_modules/ampersand-view/node_modules/matches-selector/index.js":[function(require,module,exports){
-module.exports=require("/home/bbales2/stochssModel/app/lib/modelEditor/node_modules/ampersand-select-view/node_modules/matches-selector/index.js")
-},{"/home/bbales2/stochssModel/app/lib/modelEditor/node_modules/ampersand-select-view/node_modules/matches-selector/index.js":"/home/bbales2/stochssModel/app/lib/modelEditor/node_modules/ampersand-select-view/node_modules/matches-selector/index.js"}],"/home/bbales2/stochssModel/app/lib/modelEditor/node_modules/ampersand-view/node_modules/underscore/underscore.js":[function(require,module,exports){
-module.exports=require("/home/bbales2/stochssModel/app/lib/modelEditor/node_modules/ampersand-view/node_modules/ampersand-collection-view/node_modules/underscore/underscore.js")
-},{"/home/bbales2/stochssModel/app/lib/modelEditor/node_modules/ampersand-view/node_modules/ampersand-collection-view/node_modules/underscore/underscore.js":"/home/bbales2/stochssModel/app/lib/modelEditor/node_modules/ampersand-view/node_modules/ampersand-collection-view/node_modules/underscore/underscore.js"}],"/home/bbales2/stochssModel/app/lib/modelEditor/node_modules/andlog/andlog.js":[function(require,module,exports){
+},{}],"/home/bbales2/stochssModel/app/static/modelEditor/node_modules/ampersand-view/node_modules/matches-selector/index.js":[function(require,module,exports){
+module.exports=require("/home/bbales2/stochssModel/app/static/modelEditor/node_modules/ampersand-select-view/node_modules/matches-selector/index.js")
+},{"/home/bbales2/stochssModel/app/static/modelEditor/node_modules/ampersand-select-view/node_modules/matches-selector/index.js":"/home/bbales2/stochssModel/app/static/modelEditor/node_modules/ampersand-select-view/node_modules/matches-selector/index.js"}],"/home/bbales2/stochssModel/app/static/modelEditor/node_modules/ampersand-view/node_modules/underscore/underscore.js":[function(require,module,exports){
+module.exports=require("/home/bbales2/stochssModel/app/static/modelEditor/node_modules/ampersand-model/node_modules/ampersand-sync/node_modules/underscore/underscore.js")
+},{"/home/bbales2/stochssModel/app/static/modelEditor/node_modules/ampersand-model/node_modules/ampersand-sync/node_modules/underscore/underscore.js":"/home/bbales2/stochssModel/app/static/modelEditor/node_modules/ampersand-model/node_modules/ampersand-sync/node_modules/underscore/underscore.js"}],"/home/bbales2/stochssModel/app/static/modelEditor/node_modules/andlog/andlog.js":[function(require,module,exports){
 // follow @HenrikJoreteg and @andyet if you like this ;)
 (function () {
     var inNode = typeof window === 'undefined',
@@ -7970,7 +8922,2040 @@ module.exports=require("/home/bbales2/stochssModel/app/lib/modelEditor/node_modu
     }
 })();
 
-},{}],"/home/bbales2/stochssModel/app/lib/modelEditor/node_modules/clientconfig/clientconfig.js":[function(require,module,exports){
+},{}],"/home/bbales2/stochssModel/app/static/modelEditor/node_modules/blueimp-file-upload/js/jquery.fileupload.js":[function(require,module,exports){
+/*
+ * jQuery File Upload Plugin 5.42.2
+ * https://github.com/blueimp/jQuery-File-Upload
+ *
+ * Copyright 2010, Sebastian Tschan
+ * https://blueimp.net
+ *
+ * Licensed under the MIT license:
+ * http://www.opensource.org/licenses/MIT
+ */
+
+/* jshint nomen:false */
+/* global define, require, window, document, location, Blob, FormData */
+
+(function (factory) {
+    'use strict';
+    if (typeof define === 'function' && define.amd) {
+        // Register as an anonymous AMD module:
+        define([
+            'jquery',
+            'jquery.ui.widget'
+        ], factory);
+    } else if (typeof exports === 'object') {
+        // Node/CommonJS:
+        factory(
+            require('jquery'),
+            require('./vendor/jquery.ui.widget')
+        );
+    } else {
+        // Browser globals:
+        factory(window.jQuery);
+    }
+}(function ($) {
+    'use strict';
+
+    // Detect file input support, based on
+    // http://viljamis.com/blog/2012/file-upload-support-on-mobile/
+    $.support.fileInput = !(new RegExp(
+        // Handle devices which give false positives for the feature detection:
+        '(Android (1\\.[0156]|2\\.[01]))' +
+            '|(Windows Phone (OS 7|8\\.0))|(XBLWP)|(ZuneWP)|(WPDesktop)' +
+            '|(w(eb)?OSBrowser)|(webOS)' +
+            '|(Kindle/(1\\.0|2\\.[05]|3\\.0))'
+    ).test(window.navigator.userAgent) ||
+        // Feature detection for all other devices:
+        $('<input type="file">').prop('disabled'));
+
+    // The FileReader API is not actually used, but works as feature detection,
+    // as some Safari versions (5?) support XHR file uploads via the FormData API,
+    // but not non-multipart XHR file uploads.
+    // window.XMLHttpRequestUpload is not available on IE10, so we check for
+    // window.ProgressEvent instead to detect XHR2 file upload capability:
+    $.support.xhrFileUpload = !!(window.ProgressEvent && window.FileReader);
+    $.support.xhrFormDataFileUpload = !!window.FormData;
+
+    // Detect support for Blob slicing (required for chunked uploads):
+    $.support.blobSlice = window.Blob && (Blob.prototype.slice ||
+        Blob.prototype.webkitSlice || Blob.prototype.mozSlice);
+
+    // Helper function to create drag handlers for dragover/dragenter/dragleave:
+    function getDragHandler(type) {
+        var isDragOver = type === 'dragover';
+        return function (e) {
+            e.dataTransfer = e.originalEvent && e.originalEvent.dataTransfer;
+            var dataTransfer = e.dataTransfer;
+            if (dataTransfer && $.inArray('Files', dataTransfer.types) !== -1 &&
+                    this._trigger(
+                        type,
+                        $.Event(type, {delegatedEvent: e})
+                    ) !== false) {
+                e.preventDefault();
+                if (isDragOver) {
+                    dataTransfer.dropEffect = 'copy';
+                }
+            }
+        };
+    }
+
+    // The fileupload widget listens for change events on file input fields defined
+    // via fileInput setting and paste or drop events of the given dropZone.
+    // In addition to the default jQuery Widget methods, the fileupload widget
+    // exposes the "add" and "send" methods, to add or directly send files using
+    // the fileupload API.
+    // By default, files added via file input selection, paste, drag & drop or
+    // "add" method are uploaded immediately, but it is possible to override
+    // the "add" callback option to queue file uploads.
+    $.widget('blueimp.fileupload', {
+
+        options: {
+            // The drop target element(s), by the default the complete document.
+            // Set to null to disable drag & drop support:
+            dropZone: $(document),
+            // The paste target element(s), by the default undefined.
+            // Set to a DOM node or jQuery object to enable file pasting:
+            pasteZone: undefined,
+            // The file input field(s), that are listened to for change events.
+            // If undefined, it is set to the file input fields inside
+            // of the widget element on plugin initialization.
+            // Set to null to disable the change listener.
+            fileInput: undefined,
+            // By default, the file input field is replaced with a clone after
+            // each input field change event. This is required for iframe transport
+            // queues and allows change events to be fired for the same file
+            // selection, but can be disabled by setting the following option to false:
+            replaceFileInput: true,
+            // The parameter name for the file form data (the request argument name).
+            // If undefined or empty, the name property of the file input field is
+            // used, or "files[]" if the file input name property is also empty,
+            // can be a string or an array of strings:
+            paramName: undefined,
+            // By default, each file of a selection is uploaded using an individual
+            // request for XHR type uploads. Set to false to upload file
+            // selections in one request each:
+            singleFileUploads: true,
+            // To limit the number of files uploaded with one XHR request,
+            // set the following option to an integer greater than 0:
+            limitMultiFileUploads: undefined,
+            // The following option limits the number of files uploaded with one
+            // XHR request to keep the request size under or equal to the defined
+            // limit in bytes:
+            limitMultiFileUploadSize: undefined,
+            // Multipart file uploads add a number of bytes to each uploaded file,
+            // therefore the following option adds an overhead for each file used
+            // in the limitMultiFileUploadSize configuration:
+            limitMultiFileUploadSizeOverhead: 512,
+            // Set the following option to true to issue all file upload requests
+            // in a sequential order:
+            sequentialUploads: false,
+            // To limit the number of concurrent uploads,
+            // set the following option to an integer greater than 0:
+            limitConcurrentUploads: undefined,
+            // Set the following option to true to force iframe transport uploads:
+            forceIframeTransport: false,
+            // Set the following option to the location of a redirect url on the
+            // origin server, for cross-domain iframe transport uploads:
+            redirect: undefined,
+            // The parameter name for the redirect url, sent as part of the form
+            // data and set to 'redirect' if this option is empty:
+            redirectParamName: undefined,
+            // Set the following option to the location of a postMessage window,
+            // to enable postMessage transport uploads:
+            postMessage: undefined,
+            // By default, XHR file uploads are sent as multipart/form-data.
+            // The iframe transport is always using multipart/form-data.
+            // Set to false to enable non-multipart XHR uploads:
+            multipart: true,
+            // To upload large files in smaller chunks, set the following option
+            // to a preferred maximum chunk size. If set to 0, null or undefined,
+            // or the browser does not support the required Blob API, files will
+            // be uploaded as a whole.
+            maxChunkSize: undefined,
+            // When a non-multipart upload or a chunked multipart upload has been
+            // aborted, this option can be used to resume the upload by setting
+            // it to the size of the already uploaded bytes. This option is most
+            // useful when modifying the options object inside of the "add" or
+            // "send" callbacks, as the options are cloned for each file upload.
+            uploadedBytes: undefined,
+            // By default, failed (abort or error) file uploads are removed from the
+            // global progress calculation. Set the following option to false to
+            // prevent recalculating the global progress data:
+            recalculateProgress: true,
+            // Interval in milliseconds to calculate and trigger progress events:
+            progressInterval: 100,
+            // Interval in milliseconds to calculate progress bitrate:
+            bitrateInterval: 500,
+            // By default, uploads are started automatically when adding files:
+            autoUpload: true,
+
+            // Error and info messages:
+            messages: {
+                uploadedBytes: 'Uploaded bytes exceed file size'
+            },
+
+            // Translation function, gets the message key to be translated
+            // and an object with context specific data as arguments:
+            i18n: function (message, context) {
+                message = this.messages[message] || message.toString();
+                if (context) {
+                    $.each(context, function (key, value) {
+                        message = message.replace('{' + key + '}', value);
+                    });
+                }
+                return message;
+            },
+
+            // Additional form data to be sent along with the file uploads can be set
+            // using this option, which accepts an array of objects with name and
+            // value properties, a function returning such an array, a FormData
+            // object (for XHR file uploads), or a simple object.
+            // The form of the first fileInput is given as parameter to the function:
+            formData: function (form) {
+                return form.serializeArray();
+            },
+
+            // The add callback is invoked as soon as files are added to the fileupload
+            // widget (via file input selection, drag & drop, paste or add API call).
+            // If the singleFileUploads option is enabled, this callback will be
+            // called once for each file in the selection for XHR file uploads, else
+            // once for each file selection.
+            //
+            // The upload starts when the submit method is invoked on the data parameter.
+            // The data object contains a files property holding the added files
+            // and allows you to override plugin options as well as define ajax settings.
+            //
+            // Listeners for this callback can also be bound the following way:
+            // .bind('fileuploadadd', func);
+            //
+            // data.submit() returns a Promise object and allows to attach additional
+            // handlers using jQuery's Deferred callbacks:
+            // data.submit().done(func).fail(func).always(func);
+            add: function (e, data) {
+                if (e.isDefaultPrevented()) {
+                    return false;
+                }
+                if (data.autoUpload || (data.autoUpload !== false &&
+                        $(this).fileupload('option', 'autoUpload'))) {
+                    data.process().done(function () {
+                        data.submit();
+                    });
+                }
+            },
+
+            // Other callbacks:
+
+            // Callback for the submit event of each file upload:
+            // submit: function (e, data) {}, // .bind('fileuploadsubmit', func);
+
+            // Callback for the start of each file upload request:
+            // send: function (e, data) {}, // .bind('fileuploadsend', func);
+
+            // Callback for successful uploads:
+            // done: function (e, data) {}, // .bind('fileuploaddone', func);
+
+            // Callback for failed (abort or error) uploads:
+            // fail: function (e, data) {}, // .bind('fileuploadfail', func);
+
+            // Callback for completed (success, abort or error) requests:
+            // always: function (e, data) {}, // .bind('fileuploadalways', func);
+
+            // Callback for upload progress events:
+            // progress: function (e, data) {}, // .bind('fileuploadprogress', func);
+
+            // Callback for global upload progress events:
+            // progressall: function (e, data) {}, // .bind('fileuploadprogressall', func);
+
+            // Callback for uploads start, equivalent to the global ajaxStart event:
+            // start: function (e) {}, // .bind('fileuploadstart', func);
+
+            // Callback for uploads stop, equivalent to the global ajaxStop event:
+            // stop: function (e) {}, // .bind('fileuploadstop', func);
+
+            // Callback for change events of the fileInput(s):
+            // change: function (e, data) {}, // .bind('fileuploadchange', func);
+
+            // Callback for paste events to the pasteZone(s):
+            // paste: function (e, data) {}, // .bind('fileuploadpaste', func);
+
+            // Callback for drop events of the dropZone(s):
+            // drop: function (e, data) {}, // .bind('fileuploaddrop', func);
+
+            // Callback for dragover events of the dropZone(s):
+            // dragover: function (e) {}, // .bind('fileuploaddragover', func);
+
+            // Callback for the start of each chunk upload request:
+            // chunksend: function (e, data) {}, // .bind('fileuploadchunksend', func);
+
+            // Callback for successful chunk uploads:
+            // chunkdone: function (e, data) {}, // .bind('fileuploadchunkdone', func);
+
+            // Callback for failed (abort or error) chunk uploads:
+            // chunkfail: function (e, data) {}, // .bind('fileuploadchunkfail', func);
+
+            // Callback for completed (success, abort or error) chunk upload requests:
+            // chunkalways: function (e, data) {}, // .bind('fileuploadchunkalways', func);
+
+            // The plugin options are used as settings object for the ajax calls.
+            // The following are jQuery ajax settings required for the file uploads:
+            processData: false,
+            contentType: false,
+            cache: false
+        },
+
+        // A list of options that require reinitializing event listeners and/or
+        // special initialization code:
+        _specialOptions: [
+            'fileInput',
+            'dropZone',
+            'pasteZone',
+            'multipart',
+            'forceIframeTransport'
+        ],
+
+        _blobSlice: $.support.blobSlice && function () {
+            var slice = this.slice || this.webkitSlice || this.mozSlice;
+            return slice.apply(this, arguments);
+        },
+
+        _BitrateTimer: function () {
+            this.timestamp = ((Date.now) ? Date.now() : (new Date()).getTime());
+            this.loaded = 0;
+            this.bitrate = 0;
+            this.getBitrate = function (now, loaded, interval) {
+                var timeDiff = now - this.timestamp;
+                if (!this.bitrate || !interval || timeDiff > interval) {
+                    this.bitrate = (loaded - this.loaded) * (1000 / timeDiff) * 8;
+                    this.loaded = loaded;
+                    this.timestamp = now;
+                }
+                return this.bitrate;
+            };
+        },
+
+        _isXHRUpload: function (options) {
+            return !options.forceIframeTransport &&
+                ((!options.multipart && $.support.xhrFileUpload) ||
+                $.support.xhrFormDataFileUpload);
+        },
+
+        _getFormData: function (options) {
+            var formData;
+            if ($.type(options.formData) === 'function') {
+                return options.formData(options.form);
+            }
+            if ($.isArray(options.formData)) {
+                return options.formData;
+            }
+            if ($.type(options.formData) === 'object') {
+                formData = [];
+                $.each(options.formData, function (name, value) {
+                    formData.push({name: name, value: value});
+                });
+                return formData;
+            }
+            return [];
+        },
+
+        _getTotal: function (files) {
+            var total = 0;
+            $.each(files, function (index, file) {
+                total += file.size || 1;
+            });
+            return total;
+        },
+
+        _initProgressObject: function (obj) {
+            var progress = {
+                loaded: 0,
+                total: 0,
+                bitrate: 0
+            };
+            if (obj._progress) {
+                $.extend(obj._progress, progress);
+            } else {
+                obj._progress = progress;
+            }
+        },
+
+        _initResponseObject: function (obj) {
+            var prop;
+            if (obj._response) {
+                for (prop in obj._response) {
+                    if (obj._response.hasOwnProperty(prop)) {
+                        delete obj._response[prop];
+                    }
+                }
+            } else {
+                obj._response = {};
+            }
+        },
+
+        _onProgress: function (e, data) {
+            if (e.lengthComputable) {
+                var now = ((Date.now) ? Date.now() : (new Date()).getTime()),
+                    loaded;
+                if (data._time && data.progressInterval &&
+                        (now - data._time < data.progressInterval) &&
+                        e.loaded !== e.total) {
+                    return;
+                }
+                data._time = now;
+                loaded = Math.floor(
+                    e.loaded / e.total * (data.chunkSize || data._progress.total)
+                ) + (data.uploadedBytes || 0);
+                // Add the difference from the previously loaded state
+                // to the global loaded counter:
+                this._progress.loaded += (loaded - data._progress.loaded);
+                this._progress.bitrate = this._bitrateTimer.getBitrate(
+                    now,
+                    this._progress.loaded,
+                    data.bitrateInterval
+                );
+                data._progress.loaded = data.loaded = loaded;
+                data._progress.bitrate = data.bitrate = data._bitrateTimer.getBitrate(
+                    now,
+                    loaded,
+                    data.bitrateInterval
+                );
+                // Trigger a custom progress event with a total data property set
+                // to the file size(s) of the current upload and a loaded data
+                // property calculated accordingly:
+                this._trigger(
+                    'progress',
+                    $.Event('progress', {delegatedEvent: e}),
+                    data
+                );
+                // Trigger a global progress event for all current file uploads,
+                // including ajax calls queued for sequential file uploads:
+                this._trigger(
+                    'progressall',
+                    $.Event('progressall', {delegatedEvent: e}),
+                    this._progress
+                );
+            }
+        },
+
+        _initProgressListener: function (options) {
+            var that = this,
+                xhr = options.xhr ? options.xhr() : $.ajaxSettings.xhr();
+            // Accesss to the native XHR object is required to add event listeners
+            // for the upload progress event:
+            if (xhr.upload) {
+                $(xhr.upload).bind('progress', function (e) {
+                    var oe = e.originalEvent;
+                    // Make sure the progress event properties get copied over:
+                    e.lengthComputable = oe.lengthComputable;
+                    e.loaded = oe.loaded;
+                    e.total = oe.total;
+                    that._onProgress(e, options);
+                });
+                options.xhr = function () {
+                    return xhr;
+                };
+            }
+        },
+
+        _isInstanceOf: function (type, obj) {
+            // Cross-frame instanceof check
+            return Object.prototype.toString.call(obj) === '[object ' + type + ']';
+        },
+
+        _initXHRData: function (options) {
+            var that = this,
+                formData,
+                file = options.files[0],
+                // Ignore non-multipart setting if not supported:
+                multipart = options.multipart || !$.support.xhrFileUpload,
+                paramName = $.type(options.paramName) === 'array' ?
+                    options.paramName[0] : options.paramName;
+            options.headers = $.extend({}, options.headers);
+            if (options.contentRange) {
+                options.headers['Content-Range'] = options.contentRange;
+            }
+            if (!multipart || options.blob || !this._isInstanceOf('File', file)) {
+                options.headers['Content-Disposition'] = 'attachment; filename="' +
+                    encodeURI(file.name) + '"';
+            }
+            if (!multipart) {
+                options.contentType = file.type || 'application/octet-stream';
+                options.data = options.blob || file;
+            } else if ($.support.xhrFormDataFileUpload) {
+                if (options.postMessage) {
+                    // window.postMessage does not allow sending FormData
+                    // objects, so we just add the File/Blob objects to
+                    // the formData array and let the postMessage window
+                    // create the FormData object out of this array:
+                    formData = this._getFormData(options);
+                    if (options.blob) {
+                        formData.push({
+                            name: paramName,
+                            value: options.blob
+                        });
+                    } else {
+                        $.each(options.files, function (index, file) {
+                            formData.push({
+                                name: ($.type(options.paramName) === 'array' &&
+                                    options.paramName[index]) || paramName,
+                                value: file
+                            });
+                        });
+                    }
+                } else {
+                    if (that._isInstanceOf('FormData', options.formData)) {
+                        formData = options.formData;
+                    } else {
+                        formData = new FormData();
+                        $.each(this._getFormData(options), function (index, field) {
+                            formData.append(field.name, field.value);
+                        });
+                    }
+                    if (options.blob) {
+                        formData.append(paramName, options.blob, file.name);
+                    } else {
+                        $.each(options.files, function (index, file) {
+                            // This check allows the tests to run with
+                            // dummy objects:
+                            if (that._isInstanceOf('File', file) ||
+                                    that._isInstanceOf('Blob', file)) {
+                                formData.append(
+                                    ($.type(options.paramName) === 'array' &&
+                                        options.paramName[index]) || paramName,
+                                    file,
+                                    file.uploadName || file.name
+                                );
+                            }
+                        });
+                    }
+                }
+                options.data = formData;
+            }
+            // Blob reference is not needed anymore, free memory:
+            options.blob = null;
+        },
+
+        _initIframeSettings: function (options) {
+            var targetHost = $('<a></a>').prop('href', options.url).prop('host');
+            // Setting the dataType to iframe enables the iframe transport:
+            options.dataType = 'iframe ' + (options.dataType || '');
+            // The iframe transport accepts a serialized array as form data:
+            options.formData = this._getFormData(options);
+            // Add redirect url to form data on cross-domain uploads:
+            if (options.redirect && targetHost && targetHost !== location.host) {
+                options.formData.push({
+                    name: options.redirectParamName || 'redirect',
+                    value: options.redirect
+                });
+            }
+        },
+
+        _initDataSettings: function (options) {
+            if (this._isXHRUpload(options)) {
+                if (!this._chunkedUpload(options, true)) {
+                    if (!options.data) {
+                        this._initXHRData(options);
+                    }
+                    this._initProgressListener(options);
+                }
+                if (options.postMessage) {
+                    // Setting the dataType to postmessage enables the
+                    // postMessage transport:
+                    options.dataType = 'postmessage ' + (options.dataType || '');
+                }
+            } else {
+                this._initIframeSettings(options);
+            }
+        },
+
+        _getParamName: function (options) {
+            var fileInput = $(options.fileInput),
+                paramName = options.paramName;
+            if (!paramName) {
+                paramName = [];
+                fileInput.each(function () {
+                    var input = $(this),
+                        name = input.prop('name') || 'files[]',
+                        i = (input.prop('files') || [1]).length;
+                    while (i) {
+                        paramName.push(name);
+                        i -= 1;
+                    }
+                });
+                if (!paramName.length) {
+                    paramName = [fileInput.prop('name') || 'files[]'];
+                }
+            } else if (!$.isArray(paramName)) {
+                paramName = [paramName];
+            }
+            return paramName;
+        },
+
+        _initFormSettings: function (options) {
+            // Retrieve missing options from the input field and the
+            // associated form, if available:
+            if (!options.form || !options.form.length) {
+                options.form = $(options.fileInput.prop('form'));
+                // If the given file input doesn't have an associated form,
+                // use the default widget file input's form:
+                if (!options.form.length) {
+                    options.form = $(this.options.fileInput.prop('form'));
+                }
+            }
+            options.paramName = this._getParamName(options);
+            if (!options.url) {
+                options.url = options.form.prop('action') || location.href;
+            }
+            // The HTTP request method must be "POST" or "PUT":
+            options.type = (options.type ||
+                ($.type(options.form.prop('method')) === 'string' &&
+                    options.form.prop('method')) || ''
+                ).toUpperCase();
+            if (options.type !== 'POST' && options.type !== 'PUT' &&
+                    options.type !== 'PATCH') {
+                options.type = 'POST';
+            }
+            if (!options.formAcceptCharset) {
+                options.formAcceptCharset = options.form.attr('accept-charset');
+            }
+        },
+
+        _getAJAXSettings: function (data) {
+            var options = $.extend({}, this.options, data);
+            this._initFormSettings(options);
+            this._initDataSettings(options);
+            return options;
+        },
+
+        // jQuery 1.6 doesn't provide .state(),
+        // while jQuery 1.8+ removed .isRejected() and .isResolved():
+        _getDeferredState: function (deferred) {
+            if (deferred.state) {
+                return deferred.state();
+            }
+            if (deferred.isResolved()) {
+                return 'resolved';
+            }
+            if (deferred.isRejected()) {
+                return 'rejected';
+            }
+            return 'pending';
+        },
+
+        // Maps jqXHR callbacks to the equivalent
+        // methods of the given Promise object:
+        _enhancePromise: function (promise) {
+            promise.success = promise.done;
+            promise.error = promise.fail;
+            promise.complete = promise.always;
+            return promise;
+        },
+
+        // Creates and returns a Promise object enhanced with
+        // the jqXHR methods abort, success, error and complete:
+        _getXHRPromise: function (resolveOrReject, context, args) {
+            var dfd = $.Deferred(),
+                promise = dfd.promise();
+            context = context || this.options.context || promise;
+            if (resolveOrReject === true) {
+                dfd.resolveWith(context, args);
+            } else if (resolveOrReject === false) {
+                dfd.rejectWith(context, args);
+            }
+            promise.abort = dfd.promise;
+            return this._enhancePromise(promise);
+        },
+
+        // Adds convenience methods to the data callback argument:
+        _addConvenienceMethods: function (e, data) {
+            var that = this,
+                getPromise = function (args) {
+                    return $.Deferred().resolveWith(that, args).promise();
+                };
+            data.process = function (resolveFunc, rejectFunc) {
+                if (resolveFunc || rejectFunc) {
+                    data._processQueue = this._processQueue =
+                        (this._processQueue || getPromise([this])).pipe(
+                            function () {
+                                if (data.errorThrown) {
+                                    return $.Deferred()
+                                        .rejectWith(that, [data]).promise();
+                                }
+                                return getPromise(arguments);
+                            }
+                        ).pipe(resolveFunc, rejectFunc);
+                }
+                return this._processQueue || getPromise([this]);
+            };
+            data.submit = function () {
+                if (this.state() !== 'pending') {
+                    data.jqXHR = this.jqXHR =
+                        (that._trigger(
+                            'submit',
+                            $.Event('submit', {delegatedEvent: e}),
+                            this
+                        ) !== false) && that._onSend(e, this);
+                }
+                return this.jqXHR || that._getXHRPromise();
+            };
+            data.abort = function () {
+                if (this.jqXHR) {
+                    return this.jqXHR.abort();
+                }
+                this.errorThrown = 'abort';
+                that._trigger('fail', null, this);
+                return that._getXHRPromise(false);
+            };
+            data.state = function () {
+                if (this.jqXHR) {
+                    return that._getDeferredState(this.jqXHR);
+                }
+                if (this._processQueue) {
+                    return that._getDeferredState(this._processQueue);
+                }
+            };
+            data.processing = function () {
+                return !this.jqXHR && this._processQueue && that
+                    ._getDeferredState(this._processQueue) === 'pending';
+            };
+            data.progress = function () {
+                return this._progress;
+            };
+            data.response = function () {
+                return this._response;
+            };
+        },
+
+        // Parses the Range header from the server response
+        // and returns the uploaded bytes:
+        _getUploadedBytes: function (jqXHR) {
+            var range = jqXHR.getResponseHeader('Range'),
+                parts = range && range.split('-'),
+                upperBytesPos = parts && parts.length > 1 &&
+                    parseInt(parts[1], 10);
+            return upperBytesPos && upperBytesPos + 1;
+        },
+
+        // Uploads a file in multiple, sequential requests
+        // by splitting the file up in multiple blob chunks.
+        // If the second parameter is true, only tests if the file
+        // should be uploaded in chunks, but does not invoke any
+        // upload requests:
+        _chunkedUpload: function (options, testOnly) {
+            options.uploadedBytes = options.uploadedBytes || 0;
+            var that = this,
+                file = options.files[0],
+                fs = file.size,
+                ub = options.uploadedBytes,
+                mcs = options.maxChunkSize || fs,
+                slice = this._blobSlice,
+                dfd = $.Deferred(),
+                promise = dfd.promise(),
+                jqXHR,
+                upload;
+            if (!(this._isXHRUpload(options) && slice && (ub || mcs < fs)) ||
+                    options.data) {
+                return false;
+            }
+            if (testOnly) {
+                return true;
+            }
+            if (ub >= fs) {
+                file.error = options.i18n('uploadedBytes');
+                return this._getXHRPromise(
+                    false,
+                    options.context,
+                    [null, 'error', file.error]
+                );
+            }
+            // The chunk upload method:
+            upload = function () {
+                // Clone the options object for each chunk upload:
+                var o = $.extend({}, options),
+                    currentLoaded = o._progress.loaded;
+                o.blob = slice.call(
+                    file,
+                    ub,
+                    ub + mcs,
+                    file.type
+                );
+                // Store the current chunk size, as the blob itself
+                // will be dereferenced after data processing:
+                o.chunkSize = o.blob.size;
+                // Expose the chunk bytes position range:
+                o.contentRange = 'bytes ' + ub + '-' +
+                    (ub + o.chunkSize - 1) + '/' + fs;
+                // Process the upload data (the blob and potential form data):
+                that._initXHRData(o);
+                // Add progress listeners for this chunk upload:
+                that._initProgressListener(o);
+                jqXHR = ((that._trigger('chunksend', null, o) !== false && $.ajax(o)) ||
+                        that._getXHRPromise(false, o.context))
+                    .done(function (result, textStatus, jqXHR) {
+                        ub = that._getUploadedBytes(jqXHR) ||
+                            (ub + o.chunkSize);
+                        // Create a progress event if no final progress event
+                        // with loaded equaling total has been triggered
+                        // for this chunk:
+                        if (currentLoaded + o.chunkSize - o._progress.loaded) {
+                            that._onProgress($.Event('progress', {
+                                lengthComputable: true,
+                                loaded: ub - o.uploadedBytes,
+                                total: ub - o.uploadedBytes
+                            }), o);
+                        }
+                        options.uploadedBytes = o.uploadedBytes = ub;
+                        o.result = result;
+                        o.textStatus = textStatus;
+                        o.jqXHR = jqXHR;
+                        that._trigger('chunkdone', null, o);
+                        that._trigger('chunkalways', null, o);
+                        if (ub < fs) {
+                            // File upload not yet complete,
+                            // continue with the next chunk:
+                            upload();
+                        } else {
+                            dfd.resolveWith(
+                                o.context,
+                                [result, textStatus, jqXHR]
+                            );
+                        }
+                    })
+                    .fail(function (jqXHR, textStatus, errorThrown) {
+                        o.jqXHR = jqXHR;
+                        o.textStatus = textStatus;
+                        o.errorThrown = errorThrown;
+                        that._trigger('chunkfail', null, o);
+                        that._trigger('chunkalways', null, o);
+                        dfd.rejectWith(
+                            o.context,
+                            [jqXHR, textStatus, errorThrown]
+                        );
+                    });
+            };
+            this._enhancePromise(promise);
+            promise.abort = function () {
+                return jqXHR.abort();
+            };
+            upload();
+            return promise;
+        },
+
+        _beforeSend: function (e, data) {
+            if (this._active === 0) {
+                // the start callback is triggered when an upload starts
+                // and no other uploads are currently running,
+                // equivalent to the global ajaxStart event:
+                this._trigger('start');
+                // Set timer for global bitrate progress calculation:
+                this._bitrateTimer = new this._BitrateTimer();
+                // Reset the global progress values:
+                this._progress.loaded = this._progress.total = 0;
+                this._progress.bitrate = 0;
+            }
+            // Make sure the container objects for the .response() and
+            // .progress() methods on the data object are available
+            // and reset to their initial state:
+            this._initResponseObject(data);
+            this._initProgressObject(data);
+            data._progress.loaded = data.loaded = data.uploadedBytes || 0;
+            data._progress.total = data.total = this._getTotal(data.files) || 1;
+            data._progress.bitrate = data.bitrate = 0;
+            this._active += 1;
+            // Initialize the global progress values:
+            this._progress.loaded += data.loaded;
+            this._progress.total += data.total;
+        },
+
+        _onDone: function (result, textStatus, jqXHR, options) {
+            var total = options._progress.total,
+                response = options._response;
+            if (options._progress.loaded < total) {
+                // Create a progress event if no final progress event
+                // with loaded equaling total has been triggered:
+                this._onProgress($.Event('progress', {
+                    lengthComputable: true,
+                    loaded: total,
+                    total: total
+                }), options);
+            }
+            response.result = options.result = result;
+            response.textStatus = options.textStatus = textStatus;
+            response.jqXHR = options.jqXHR = jqXHR;
+            this._trigger('done', null, options);
+        },
+
+        _onFail: function (jqXHR, textStatus, errorThrown, options) {
+            var response = options._response;
+            if (options.recalculateProgress) {
+                // Remove the failed (error or abort) file upload from
+                // the global progress calculation:
+                this._progress.loaded -= options._progress.loaded;
+                this._progress.total -= options._progress.total;
+            }
+            response.jqXHR = options.jqXHR = jqXHR;
+            response.textStatus = options.textStatus = textStatus;
+            response.errorThrown = options.errorThrown = errorThrown;
+            this._trigger('fail', null, options);
+        },
+
+        _onAlways: function (jqXHRorResult, textStatus, jqXHRorError, options) {
+            // jqXHRorResult, textStatus and jqXHRorError are added to the
+            // options object via done and fail callbacks
+            this._trigger('always', null, options);
+        },
+
+        _onSend: function (e, data) {
+            if (!data.submit) {
+                this._addConvenienceMethods(e, data);
+            }
+            var that = this,
+                jqXHR,
+                aborted,
+                slot,
+                pipe,
+                options = that._getAJAXSettings(data),
+                send = function () {
+                    that._sending += 1;
+                    // Set timer for bitrate progress calculation:
+                    options._bitrateTimer = new that._BitrateTimer();
+                    jqXHR = jqXHR || (
+                        ((aborted || that._trigger(
+                            'send',
+                            $.Event('send', {delegatedEvent: e}),
+                            options
+                        ) === false) &&
+                        that._getXHRPromise(false, options.context, aborted)) ||
+                        that._chunkedUpload(options) || $.ajax(options)
+                    ).done(function (result, textStatus, jqXHR) {
+                        that._onDone(result, textStatus, jqXHR, options);
+                    }).fail(function (jqXHR, textStatus, errorThrown) {
+                        that._onFail(jqXHR, textStatus, errorThrown, options);
+                    }).always(function (jqXHRorResult, textStatus, jqXHRorError) {
+                        that._onAlways(
+                            jqXHRorResult,
+                            textStatus,
+                            jqXHRorError,
+                            options
+                        );
+                        that._sending -= 1;
+                        that._active -= 1;
+                        if (options.limitConcurrentUploads &&
+                                options.limitConcurrentUploads > that._sending) {
+                            // Start the next queued upload,
+                            // that has not been aborted:
+                            var nextSlot = that._slots.shift();
+                            while (nextSlot) {
+                                if (that._getDeferredState(nextSlot) === 'pending') {
+                                    nextSlot.resolve();
+                                    break;
+                                }
+                                nextSlot = that._slots.shift();
+                            }
+                        }
+                        if (that._active === 0) {
+                            // The stop callback is triggered when all uploads have
+                            // been completed, equivalent to the global ajaxStop event:
+                            that._trigger('stop');
+                        }
+                    });
+                    return jqXHR;
+                };
+            this._beforeSend(e, options);
+            if (this.options.sequentialUploads ||
+                    (this.options.limitConcurrentUploads &&
+                    this.options.limitConcurrentUploads <= this._sending)) {
+                if (this.options.limitConcurrentUploads > 1) {
+                    slot = $.Deferred();
+                    this._slots.push(slot);
+                    pipe = slot.pipe(send);
+                } else {
+                    this._sequence = this._sequence.pipe(send, send);
+                    pipe = this._sequence;
+                }
+                // Return the piped Promise object, enhanced with an abort method,
+                // which is delegated to the jqXHR object of the current upload,
+                // and jqXHR callbacks mapped to the equivalent Promise methods:
+                pipe.abort = function () {
+                    aborted = [undefined, 'abort', 'abort'];
+                    if (!jqXHR) {
+                        if (slot) {
+                            slot.rejectWith(options.context, aborted);
+                        }
+                        return send();
+                    }
+                    return jqXHR.abort();
+                };
+                return this._enhancePromise(pipe);
+            }
+            return send();
+        },
+
+        _onAdd: function (e, data) {
+            var that = this,
+                result = true,
+                options = $.extend({}, this.options, data),
+                files = data.files,
+                filesLength = files.length,
+                limit = options.limitMultiFileUploads,
+                limitSize = options.limitMultiFileUploadSize,
+                overhead = options.limitMultiFileUploadSizeOverhead,
+                batchSize = 0,
+                paramName = this._getParamName(options),
+                paramNameSet,
+                paramNameSlice,
+                fileSet,
+                i,
+                j = 0;
+            if (limitSize && (!filesLength || files[0].size === undefined)) {
+                limitSize = undefined;
+            }
+            if (!(options.singleFileUploads || limit || limitSize) ||
+                    !this._isXHRUpload(options)) {
+                fileSet = [files];
+                paramNameSet = [paramName];
+            } else if (!(options.singleFileUploads || limitSize) && limit) {
+                fileSet = [];
+                paramNameSet = [];
+                for (i = 0; i < filesLength; i += limit) {
+                    fileSet.push(files.slice(i, i + limit));
+                    paramNameSlice = paramName.slice(i, i + limit);
+                    if (!paramNameSlice.length) {
+                        paramNameSlice = paramName;
+                    }
+                    paramNameSet.push(paramNameSlice);
+                }
+            } else if (!options.singleFileUploads && limitSize) {
+                fileSet = [];
+                paramNameSet = [];
+                for (i = 0; i < filesLength; i = i + 1) {
+                    batchSize += files[i].size + overhead;
+                    if (i + 1 === filesLength ||
+                            ((batchSize + files[i + 1].size + overhead) > limitSize) ||
+                            (limit && i + 1 - j >= limit)) {
+                        fileSet.push(files.slice(j, i + 1));
+                        paramNameSlice = paramName.slice(j, i + 1);
+                        if (!paramNameSlice.length) {
+                            paramNameSlice = paramName;
+                        }
+                        paramNameSet.push(paramNameSlice);
+                        j = i + 1;
+                        batchSize = 0;
+                    }
+                }
+            } else {
+                paramNameSet = paramName;
+            }
+            data.originalFiles = files;
+            $.each(fileSet || files, function (index, element) {
+                var newData = $.extend({}, data);
+                newData.files = fileSet ? element : [element];
+                newData.paramName = paramNameSet[index];
+                that._initResponseObject(newData);
+                that._initProgressObject(newData);
+                that._addConvenienceMethods(e, newData);
+                result = that._trigger(
+                    'add',
+                    $.Event('add', {delegatedEvent: e}),
+                    newData
+                );
+                return result;
+            });
+            return result;
+        },
+
+        _replaceFileInput: function (data) {
+            var input = data.fileInput,
+                inputClone = input.clone(true);
+            // Add a reference for the new cloned file input to the data argument:
+            data.fileInputClone = inputClone;
+            $('<form></form>').append(inputClone)[0].reset();
+            // Detaching allows to insert the fileInput on another form
+            // without loosing the file input value:
+            input.after(inputClone).detach();
+            // Avoid memory leaks with the detached file input:
+            $.cleanData(input.unbind('remove'));
+            // Replace the original file input element in the fileInput
+            // elements set with the clone, which has been copied including
+            // event handlers:
+            this.options.fileInput = this.options.fileInput.map(function (i, el) {
+                if (el === input[0]) {
+                    return inputClone[0];
+                }
+                return el;
+            });
+            // If the widget has been initialized on the file input itself,
+            // override this.element with the file input clone:
+            if (input[0] === this.element[0]) {
+                this.element = inputClone;
+            }
+        },
+
+        _handleFileTreeEntry: function (entry, path) {
+            var that = this,
+                dfd = $.Deferred(),
+                errorHandler = function (e) {
+                    if (e && !e.entry) {
+                        e.entry = entry;
+                    }
+                    // Since $.when returns immediately if one
+                    // Deferred is rejected, we use resolve instead.
+                    // This allows valid files and invalid items
+                    // to be returned together in one set:
+                    dfd.resolve([e]);
+                },
+                successHandler = function (entries) {
+                    that._handleFileTreeEntries(
+                        entries,
+                        path + entry.name + '/'
+                    ).done(function (files) {
+                        dfd.resolve(files);
+                    }).fail(errorHandler);
+                },
+                readEntries = function () {
+                    dirReader.readEntries(function (results) {
+                        if (!results.length) {
+                            successHandler(entries);
+                        } else {
+                            entries = entries.concat(results);
+                            readEntries();
+                        }
+                    }, errorHandler);
+                },
+                dirReader, entries = [];
+            path = path || '';
+            if (entry.isFile) {
+                if (entry._file) {
+                    // Workaround for Chrome bug #149735
+                    entry._file.relativePath = path;
+                    dfd.resolve(entry._file);
+                } else {
+                    entry.file(function (file) {
+                        file.relativePath = path;
+                        dfd.resolve(file);
+                    }, errorHandler);
+                }
+            } else if (entry.isDirectory) {
+                dirReader = entry.createReader();
+                readEntries();
+            } else {
+                // Return an empy list for file system items
+                // other than files or directories:
+                dfd.resolve([]);
+            }
+            return dfd.promise();
+        },
+
+        _handleFileTreeEntries: function (entries, path) {
+            var that = this;
+            return $.when.apply(
+                $,
+                $.map(entries, function (entry) {
+                    return that._handleFileTreeEntry(entry, path);
+                })
+            ).pipe(function () {
+                return Array.prototype.concat.apply(
+                    [],
+                    arguments
+                );
+            });
+        },
+
+        _getDroppedFiles: function (dataTransfer) {
+            dataTransfer = dataTransfer || {};
+            var items = dataTransfer.items;
+            if (items && items.length && (items[0].webkitGetAsEntry ||
+                    items[0].getAsEntry)) {
+                return this._handleFileTreeEntries(
+                    $.map(items, function (item) {
+                        var entry;
+                        if (item.webkitGetAsEntry) {
+                            entry = item.webkitGetAsEntry();
+                            if (entry) {
+                                // Workaround for Chrome bug #149735:
+                                entry._file = item.getAsFile();
+                            }
+                            return entry;
+                        }
+                        return item.getAsEntry();
+                    })
+                );
+            }
+            return $.Deferred().resolve(
+                $.makeArray(dataTransfer.files)
+            ).promise();
+        },
+
+        _getSingleFileInputFiles: function (fileInput) {
+            fileInput = $(fileInput);
+            var entries = fileInput.prop('webkitEntries') ||
+                    fileInput.prop('entries'),
+                files,
+                value;
+            if (entries && entries.length) {
+                return this._handleFileTreeEntries(entries);
+            }
+            files = $.makeArray(fileInput.prop('files'));
+            if (!files.length) {
+                value = fileInput.prop('value');
+                if (!value) {
+                    return $.Deferred().resolve([]).promise();
+                }
+                // If the files property is not available, the browser does not
+                // support the File API and we add a pseudo File object with
+                // the input value as name with path information removed:
+                files = [{name: value.replace(/^.*\\/, '')}];
+            } else if (files[0].name === undefined && files[0].fileName) {
+                // File normalization for Safari 4 and Firefox 3:
+                $.each(files, function (index, file) {
+                    file.name = file.fileName;
+                    file.size = file.fileSize;
+                });
+            }
+            return $.Deferred().resolve(files).promise();
+        },
+
+        _getFileInputFiles: function (fileInput) {
+            if (!(fileInput instanceof $) || fileInput.length === 1) {
+                return this._getSingleFileInputFiles(fileInput);
+            }
+            return $.when.apply(
+                $,
+                $.map(fileInput, this._getSingleFileInputFiles)
+            ).pipe(function () {
+                return Array.prototype.concat.apply(
+                    [],
+                    arguments
+                );
+            });
+        },
+
+        _onChange: function (e) {
+            var that = this,
+                data = {
+                    fileInput: $(e.target),
+                    form: $(e.target.form)
+                };
+            this._getFileInputFiles(data.fileInput).always(function (files) {
+                data.files = files;
+                if (that.options.replaceFileInput) {
+                    that._replaceFileInput(data);
+                }
+                if (that._trigger(
+                        'change',
+                        $.Event('change', {delegatedEvent: e}),
+                        data
+                    ) !== false) {
+                    that._onAdd(e, data);
+                }
+            });
+        },
+
+        _onPaste: function (e) {
+            var items = e.originalEvent && e.originalEvent.clipboardData &&
+                    e.originalEvent.clipboardData.items,
+                data = {files: []};
+            if (items && items.length) {
+                $.each(items, function (index, item) {
+                    var file = item.getAsFile && item.getAsFile();
+                    if (file) {
+                        data.files.push(file);
+                    }
+                });
+                if (this._trigger(
+                        'paste',
+                        $.Event('paste', {delegatedEvent: e}),
+                        data
+                    ) !== false) {
+                    this._onAdd(e, data);
+                }
+            }
+        },
+
+        _onDrop: function (e) {
+            e.dataTransfer = e.originalEvent && e.originalEvent.dataTransfer;
+            var that = this,
+                dataTransfer = e.dataTransfer,
+                data = {};
+            if (dataTransfer && dataTransfer.files && dataTransfer.files.length) {
+                e.preventDefault();
+                this._getDroppedFiles(dataTransfer).always(function (files) {
+                    data.files = files;
+                    if (that._trigger(
+                            'drop',
+                            $.Event('drop', {delegatedEvent: e}),
+                            data
+                        ) !== false) {
+                        that._onAdd(e, data);
+                    }
+                });
+            }
+        },
+
+        _onDragOver: getDragHandler('dragover'),
+
+        _onDragEnter: getDragHandler('dragenter'),
+
+        _onDragLeave: getDragHandler('dragleave'),
+
+        _initEventHandlers: function () {
+            if (this._isXHRUpload(this.options)) {
+                this._on(this.options.dropZone, {
+                    dragover: this._onDragOver,
+                    drop: this._onDrop,
+                    // event.preventDefault() on dragenter is required for IE10+:
+                    dragenter: this._onDragEnter,
+                    // dragleave is not required, but added for completeness:
+                    dragleave: this._onDragLeave
+                });
+                this._on(this.options.pasteZone, {
+                    paste: this._onPaste
+                });
+            }
+            if ($.support.fileInput) {
+                this._on(this.options.fileInput, {
+                    change: this._onChange
+                });
+            }
+        },
+
+        _destroyEventHandlers: function () {
+            this._off(this.options.dropZone, 'dragenter dragleave dragover drop');
+            this._off(this.options.pasteZone, 'paste');
+            this._off(this.options.fileInput, 'change');
+        },
+
+        _setOption: function (key, value) {
+            var reinit = $.inArray(key, this._specialOptions) !== -1;
+            if (reinit) {
+                this._destroyEventHandlers();
+            }
+            this._super(key, value);
+            if (reinit) {
+                this._initSpecialOptions();
+                this._initEventHandlers();
+            }
+        },
+
+        _initSpecialOptions: function () {
+            var options = this.options;
+            if (options.fileInput === undefined) {
+                options.fileInput = this.element.is('input[type="file"]') ?
+                        this.element : this.element.find('input[type="file"]');
+            } else if (!(options.fileInput instanceof $)) {
+                options.fileInput = $(options.fileInput);
+            }
+            if (!(options.dropZone instanceof $)) {
+                options.dropZone = $(options.dropZone);
+            }
+            if (!(options.pasteZone instanceof $)) {
+                options.pasteZone = $(options.pasteZone);
+            }
+        },
+
+        _getRegExp: function (str) {
+            var parts = str.split('/'),
+                modifiers = parts.pop();
+            parts.shift();
+            return new RegExp(parts.join('/'), modifiers);
+        },
+
+        _isRegExpOption: function (key, value) {
+            return key !== 'url' && $.type(value) === 'string' &&
+                /^\/.*\/[igm]{0,3}$/.test(value);
+        },
+
+        _initDataAttributes: function () {
+            var that = this,
+                options = this.options,
+                clone = $(this.element[0].cloneNode(false)),
+                data = clone.data();
+            // Avoid memory leaks:
+            clone.remove();
+            // Initialize options set via HTML5 data-attributes:
+            $.each(
+                data,
+                function (key, value) {
+                    var dataAttributeName = 'data-' +
+                        // Convert camelCase to hyphen-ated key:
+                        key.replace(/([a-z])([A-Z])/g, '$1-$2').toLowerCase();
+                    if (clone.attr(dataAttributeName)) {
+                        if (that._isRegExpOption(key, value)) {
+                            value = that._getRegExp(value);
+                        }
+                        options[key] = value;
+                    }
+                }
+            );
+        },
+
+        _create: function () {
+            this._initDataAttributes();
+            this._initSpecialOptions();
+            this._slots = [];
+            this._sequence = this._getXHRPromise(true);
+            this._sending = this._active = 0;
+            this._initProgressObject(this);
+            this._initEventHandlers();
+        },
+
+        // This method is exposed to the widget API and allows to query
+        // the number of active uploads:
+        active: function () {
+            return this._active;
+        },
+
+        // This method is exposed to the widget API and allows to query
+        // the widget upload progress.
+        // It returns an object with loaded, total and bitrate properties
+        // for the running uploads:
+        progress: function () {
+            return this._progress;
+        },
+
+        // This method is exposed to the widget API and allows adding files
+        // using the fileupload API. The data parameter accepts an object which
+        // must have a files property and can contain additional options:
+        // .fileupload('add', {files: filesList});
+        add: function (data) {
+            var that = this;
+            if (!data || this.options.disabled) {
+                return;
+            }
+            if (data.fileInput && !data.files) {
+                this._getFileInputFiles(data.fileInput).always(function (files) {
+                    data.files = files;
+                    that._onAdd(null, data);
+                });
+            } else {
+                data.files = $.makeArray(data.files);
+                this._onAdd(null, data);
+            }
+        },
+
+        // This method is exposed to the widget API and allows sending files
+        // using the fileupload API. The data parameter accepts an object which
+        // must have a files or fileInput property and can contain additional options:
+        // .fileupload('send', {files: filesList});
+        // The method returns a Promise object for the file upload call.
+        send: function (data) {
+            if (data && !this.options.disabled) {
+                if (data.fileInput && !data.files) {
+                    var that = this,
+                        dfd = $.Deferred(),
+                        promise = dfd.promise(),
+                        jqXHR,
+                        aborted;
+                    promise.abort = function () {
+                        aborted = true;
+                        if (jqXHR) {
+                            return jqXHR.abort();
+                        }
+                        dfd.reject(null, 'abort', 'abort');
+                        return promise;
+                    };
+                    this._getFileInputFiles(data.fileInput).always(
+                        function (files) {
+                            if (aborted) {
+                                return;
+                            }
+                            if (!files.length) {
+                                dfd.reject();
+                                return;
+                            }
+                            data.files = files;
+                            jqXHR = that._onSend(null, data);
+                            jqXHR.then(
+                                function (result, textStatus, jqXHR) {
+                                    dfd.resolve(result, textStatus, jqXHR);
+                                },
+                                function (jqXHR, textStatus, errorThrown) {
+                                    dfd.reject(jqXHR, textStatus, errorThrown);
+                                }
+                            );
+                        }
+                    );
+                    return this._enhancePromise(promise);
+                }
+                data.files = $.makeArray(data.files);
+                if (data.files.length) {
+                    return this._onSend(null, data);
+                }
+            }
+            return this._getXHRPromise(false, data && data.context);
+        }
+
+    });
+
+}));
+
+},{"./vendor/jquery.ui.widget":"/home/bbales2/stochssModel/app/static/modelEditor/node_modules/blueimp-file-upload/js/vendor/jquery.ui.widget.js","jquery":"/home/bbales2/stochssModel/app/static/modelEditor/node_modules/jquery/dist/jquery.js"}],"/home/bbales2/stochssModel/app/static/modelEditor/node_modules/blueimp-file-upload/js/vendor/jquery.ui.widget.js":[function(require,module,exports){
+/*! jQuery UI - v1.11.1+CommonJS - 2014-09-17
+* http://jqueryui.com
+* Includes: widget.js
+* Copyright 2014 jQuery Foundation and other contributors; Licensed MIT */
+
+(function( factory ) {
+	if ( typeof define === "function" && define.amd ) {
+
+		// AMD. Register as an anonymous module.
+		define([ "jquery" ], factory );
+
+	} else if (typeof exports === "object") {
+		// Node/CommonJS:
+		factory(require("jquery"));
+
+	} else {
+
+		// Browser globals
+		factory( jQuery );
+	}
+}(function( $ ) {
+/*!
+ * jQuery UI Widget 1.11.1
+ * http://jqueryui.com
+ *
+ * Copyright 2014 jQuery Foundation and other contributors
+ * Released under the MIT license.
+ * http://jquery.org/license
+ *
+ * http://api.jqueryui.com/jQuery.widget/
+ */
+
+
+var widget_uuid = 0,
+	widget_slice = Array.prototype.slice;
+
+$.cleanData = (function( orig ) {
+	return function( elems ) {
+		var events, elem, i;
+		for ( i = 0; (elem = elems[i]) != null; i++ ) {
+			try {
+
+				// Only trigger remove when necessary to save time
+				events = $._data( elem, "events" );
+				if ( events && events.remove ) {
+					$( elem ).triggerHandler( "remove" );
+				}
+
+			// http://bugs.jquery.com/ticket/8235
+			} catch( e ) {}
+		}
+		orig( elems );
+	};
+})( $.cleanData );
+
+$.widget = function( name, base, prototype ) {
+	var fullName, existingConstructor, constructor, basePrototype,
+		// proxiedPrototype allows the provided prototype to remain unmodified
+		// so that it can be used as a mixin for multiple widgets (#8876)
+		proxiedPrototype = {},
+		namespace = name.split( "." )[ 0 ];
+
+	name = name.split( "." )[ 1 ];
+	fullName = namespace + "-" + name;
+
+	if ( !prototype ) {
+		prototype = base;
+		base = $.Widget;
+	}
+
+	// create selector for plugin
+	$.expr[ ":" ][ fullName.toLowerCase() ] = function( elem ) {
+		return !!$.data( elem, fullName );
+	};
+
+	$[ namespace ] = $[ namespace ] || {};
+	existingConstructor = $[ namespace ][ name ];
+	constructor = $[ namespace ][ name ] = function( options, element ) {
+		// allow instantiation without "new" keyword
+		if ( !this._createWidget ) {
+			return new constructor( options, element );
+		}
+
+		// allow instantiation without initializing for simple inheritance
+		// must use "new" keyword (the code above always passes args)
+		if ( arguments.length ) {
+			this._createWidget( options, element );
+		}
+	};
+	// extend with the existing constructor to carry over any static properties
+	$.extend( constructor, existingConstructor, {
+		version: prototype.version,
+		// copy the object used to create the prototype in case we need to
+		// redefine the widget later
+		_proto: $.extend( {}, prototype ),
+		// track widgets that inherit from this widget in case this widget is
+		// redefined after a widget inherits from it
+		_childConstructors: []
+	});
+
+	basePrototype = new base();
+	// we need to make the options hash a property directly on the new instance
+	// otherwise we'll modify the options hash on the prototype that we're
+	// inheriting from
+	basePrototype.options = $.widget.extend( {}, basePrototype.options );
+	$.each( prototype, function( prop, value ) {
+		if ( !$.isFunction( value ) ) {
+			proxiedPrototype[ prop ] = value;
+			return;
+		}
+		proxiedPrototype[ prop ] = (function() {
+			var _super = function() {
+					return base.prototype[ prop ].apply( this, arguments );
+				},
+				_superApply = function( args ) {
+					return base.prototype[ prop ].apply( this, args );
+				};
+			return function() {
+				var __super = this._super,
+					__superApply = this._superApply,
+					returnValue;
+
+				this._super = _super;
+				this._superApply = _superApply;
+
+				returnValue = value.apply( this, arguments );
+
+				this._super = __super;
+				this._superApply = __superApply;
+
+				return returnValue;
+			};
+		})();
+	});
+	constructor.prototype = $.widget.extend( basePrototype, {
+		// TODO: remove support for widgetEventPrefix
+		// always use the name + a colon as the prefix, e.g., draggable:start
+		// don't prefix for widgets that aren't DOM-based
+		widgetEventPrefix: existingConstructor ? (basePrototype.widgetEventPrefix || name) : name
+	}, proxiedPrototype, {
+		constructor: constructor,
+		namespace: namespace,
+		widgetName: name,
+		widgetFullName: fullName
+	});
+
+	// If this widget is being redefined then we need to find all widgets that
+	// are inheriting from it and redefine all of them so that they inherit from
+	// the new version of this widget. We're essentially trying to replace one
+	// level in the prototype chain.
+	if ( existingConstructor ) {
+		$.each( existingConstructor._childConstructors, function( i, child ) {
+			var childPrototype = child.prototype;
+
+			// redefine the child widget using the same prototype that was
+			// originally used, but inherit from the new version of the base
+			$.widget( childPrototype.namespace + "." + childPrototype.widgetName, constructor, child._proto );
+		});
+		// remove the list of existing child constructors from the old constructor
+		// so the old child constructors can be garbage collected
+		delete existingConstructor._childConstructors;
+	} else {
+		base._childConstructors.push( constructor );
+	}
+
+	$.widget.bridge( name, constructor );
+
+	return constructor;
+};
+
+$.widget.extend = function( target ) {
+	var input = widget_slice.call( arguments, 1 ),
+		inputIndex = 0,
+		inputLength = input.length,
+		key,
+		value;
+	for ( ; inputIndex < inputLength; inputIndex++ ) {
+		for ( key in input[ inputIndex ] ) {
+			value = input[ inputIndex ][ key ];
+			if ( input[ inputIndex ].hasOwnProperty( key ) && value !== undefined ) {
+				// Clone objects
+				if ( $.isPlainObject( value ) ) {
+					target[ key ] = $.isPlainObject( target[ key ] ) ?
+						$.widget.extend( {}, target[ key ], value ) :
+						// Don't extend strings, arrays, etc. with objects
+						$.widget.extend( {}, value );
+				// Copy everything else by reference
+				} else {
+					target[ key ] = value;
+				}
+			}
+		}
+	}
+	return target;
+};
+
+$.widget.bridge = function( name, object ) {
+	var fullName = object.prototype.widgetFullName || name;
+	$.fn[ name ] = function( options ) {
+		var isMethodCall = typeof options === "string",
+			args = widget_slice.call( arguments, 1 ),
+			returnValue = this;
+
+		// allow multiple hashes to be passed on init
+		options = !isMethodCall && args.length ?
+			$.widget.extend.apply( null, [ options ].concat(args) ) :
+			options;
+
+		if ( isMethodCall ) {
+			this.each(function() {
+				var methodValue,
+					instance = $.data( this, fullName );
+				if ( options === "instance" ) {
+					returnValue = instance;
+					return false;
+				}
+				if ( !instance ) {
+					return $.error( "cannot call methods on " + name + " prior to initialization; " +
+						"attempted to call method '" + options + "'" );
+				}
+				if ( !$.isFunction( instance[options] ) || options.charAt( 0 ) === "_" ) {
+					return $.error( "no such method '" + options + "' for " + name + " widget instance" );
+				}
+				methodValue = instance[ options ].apply( instance, args );
+				if ( methodValue !== instance && methodValue !== undefined ) {
+					returnValue = methodValue && methodValue.jquery ?
+						returnValue.pushStack( methodValue.get() ) :
+						methodValue;
+					return false;
+				}
+			});
+		} else {
+			this.each(function() {
+				var instance = $.data( this, fullName );
+				if ( instance ) {
+					instance.option( options || {} );
+					if ( instance._init ) {
+						instance._init();
+					}
+				} else {
+					$.data( this, fullName, new object( options, this ) );
+				}
+			});
+		}
+
+		return returnValue;
+	};
+};
+
+$.Widget = function( /* options, element */ ) {};
+$.Widget._childConstructors = [];
+
+$.Widget.prototype = {
+	widgetName: "widget",
+	widgetEventPrefix: "",
+	defaultElement: "<div>",
+	options: {
+		disabled: false,
+
+		// callbacks
+		create: null
+	},
+	_createWidget: function( options, element ) {
+		element = $( element || this.defaultElement || this )[ 0 ];
+		this.element = $( element );
+		this.uuid = widget_uuid++;
+		this.eventNamespace = "." + this.widgetName + this.uuid;
+		this.options = $.widget.extend( {},
+			this.options,
+			this._getCreateOptions(),
+			options );
+
+		this.bindings = $();
+		this.hoverable = $();
+		this.focusable = $();
+
+		if ( element !== this ) {
+			$.data( element, this.widgetFullName, this );
+			this._on( true, this.element, {
+				remove: function( event ) {
+					if ( event.target === element ) {
+						this.destroy();
+					}
+				}
+			});
+			this.document = $( element.style ?
+				// element within the document
+				element.ownerDocument :
+				// element is window or document
+				element.document || element );
+			this.window = $( this.document[0].defaultView || this.document[0].parentWindow );
+		}
+
+		this._create();
+		this._trigger( "create", null, this._getCreateEventData() );
+		this._init();
+	},
+	_getCreateOptions: $.noop,
+	_getCreateEventData: $.noop,
+	_create: $.noop,
+	_init: $.noop,
+
+	destroy: function() {
+		this._destroy();
+		// we can probably remove the unbind calls in 2.0
+		// all event bindings should go through this._on()
+		this.element
+			.unbind( this.eventNamespace )
+			.removeData( this.widgetFullName )
+			// support: jquery <1.6.3
+			// http://bugs.jquery.com/ticket/9413
+			.removeData( $.camelCase( this.widgetFullName ) );
+		this.widget()
+			.unbind( this.eventNamespace )
+			.removeAttr( "aria-disabled" )
+			.removeClass(
+				this.widgetFullName + "-disabled " +
+				"ui-state-disabled" );
+
+		// clean up events and states
+		this.bindings.unbind( this.eventNamespace );
+		this.hoverable.removeClass( "ui-state-hover" );
+		this.focusable.removeClass( "ui-state-focus" );
+	},
+	_destroy: $.noop,
+
+	widget: function() {
+		return this.element;
+	},
+
+	option: function( key, value ) {
+		var options = key,
+			parts,
+			curOption,
+			i;
+
+		if ( arguments.length === 0 ) {
+			// don't return a reference to the internal hash
+			return $.widget.extend( {}, this.options );
+		}
+
+		if ( typeof key === "string" ) {
+			// handle nested keys, e.g., "foo.bar" => { foo: { bar: ___ } }
+			options = {};
+			parts = key.split( "." );
+			key = parts.shift();
+			if ( parts.length ) {
+				curOption = options[ key ] = $.widget.extend( {}, this.options[ key ] );
+				for ( i = 0; i < parts.length - 1; i++ ) {
+					curOption[ parts[ i ] ] = curOption[ parts[ i ] ] || {};
+					curOption = curOption[ parts[ i ] ];
+				}
+				key = parts.pop();
+				if ( arguments.length === 1 ) {
+					return curOption[ key ] === undefined ? null : curOption[ key ];
+				}
+				curOption[ key ] = value;
+			} else {
+				if ( arguments.length === 1 ) {
+					return this.options[ key ] === undefined ? null : this.options[ key ];
+				}
+				options[ key ] = value;
+			}
+		}
+
+		this._setOptions( options );
+
+		return this;
+	},
+	_setOptions: function( options ) {
+		var key;
+
+		for ( key in options ) {
+			this._setOption( key, options[ key ] );
+		}
+
+		return this;
+	},
+	_setOption: function( key, value ) {
+		this.options[ key ] = value;
+
+		if ( key === "disabled" ) {
+			this.widget()
+				.toggleClass( this.widgetFullName + "-disabled", !!value );
+
+			// If the widget is becoming disabled, then nothing is interactive
+			if ( value ) {
+				this.hoverable.removeClass( "ui-state-hover" );
+				this.focusable.removeClass( "ui-state-focus" );
+			}
+		}
+
+		return this;
+	},
+
+	enable: function() {
+		return this._setOptions({ disabled: false });
+	},
+	disable: function() {
+		return this._setOptions({ disabled: true });
+	},
+
+	_on: function( suppressDisabledCheck, element, handlers ) {
+		var delegateElement,
+			instance = this;
+
+		// no suppressDisabledCheck flag, shuffle arguments
+		if ( typeof suppressDisabledCheck !== "boolean" ) {
+			handlers = element;
+			element = suppressDisabledCheck;
+			suppressDisabledCheck = false;
+		}
+
+		// no element argument, shuffle and use this.element
+		if ( !handlers ) {
+			handlers = element;
+			element = this.element;
+			delegateElement = this.widget();
+		} else {
+			element = delegateElement = $( element );
+			this.bindings = this.bindings.add( element );
+		}
+
+		$.each( handlers, function( event, handler ) {
+			function handlerProxy() {
+				// allow widgets to customize the disabled handling
+				// - disabled as an array instead of boolean
+				// - disabled class as method for disabling individual parts
+				if ( !suppressDisabledCheck &&
+						( instance.options.disabled === true ||
+							$( this ).hasClass( "ui-state-disabled" ) ) ) {
+					return;
+				}
+				return ( typeof handler === "string" ? instance[ handler ] : handler )
+					.apply( instance, arguments );
+			}
+
+			// copy the guid so direct unbinding works
+			if ( typeof handler !== "string" ) {
+				handlerProxy.guid = handler.guid =
+					handler.guid || handlerProxy.guid || $.guid++;
+			}
+
+			var match = event.match( /^([\w:-]*)\s*(.*)$/ ),
+				eventName = match[1] + instance.eventNamespace,
+				selector = match[2];
+			if ( selector ) {
+				delegateElement.delegate( selector, eventName, handlerProxy );
+			} else {
+				element.bind( eventName, handlerProxy );
+			}
+		});
+	},
+
+	_off: function( element, eventName ) {
+		eventName = (eventName || "").split( " " ).join( this.eventNamespace + " " ) + this.eventNamespace;
+		element.unbind( eventName ).undelegate( eventName );
+	},
+
+	_delay: function( handler, delay ) {
+		function handlerProxy() {
+			return ( typeof handler === "string" ? instance[ handler ] : handler )
+				.apply( instance, arguments );
+		}
+		var instance = this;
+		return setTimeout( handlerProxy, delay || 0 );
+	},
+
+	_hoverable: function( element ) {
+		this.hoverable = this.hoverable.add( element );
+		this._on( element, {
+			mouseenter: function( event ) {
+				$( event.currentTarget ).addClass( "ui-state-hover" );
+			},
+			mouseleave: function( event ) {
+				$( event.currentTarget ).removeClass( "ui-state-hover" );
+			}
+		});
+	},
+
+	_focusable: function( element ) {
+		this.focusable = this.focusable.add( element );
+		this._on( element, {
+			focusin: function( event ) {
+				$( event.currentTarget ).addClass( "ui-state-focus" );
+			},
+			focusout: function( event ) {
+				$( event.currentTarget ).removeClass( "ui-state-focus" );
+			}
+		});
+	},
+
+	_trigger: function( type, event, data ) {
+		var prop, orig,
+			callback = this.options[ type ];
+
+		data = data || {};
+		event = $.Event( event );
+		event.type = ( type === this.widgetEventPrefix ?
+			type :
+			this.widgetEventPrefix + type ).toLowerCase();
+		// the original event may come from any element
+		// so we need to reset the target on the new event
+		event.target = this.element[ 0 ];
+
+		// copy original event properties over to the new event
+		orig = event.originalEvent;
+		if ( orig ) {
+			for ( prop in orig ) {
+				if ( !( prop in event ) ) {
+					event[ prop ] = orig[ prop ];
+				}
+			}
+		}
+
+		this.element.trigger( event, data );
+		return !( $.isFunction( callback ) &&
+			callback.apply( this.element[0], [ event ].concat( data ) ) === false ||
+			event.isDefaultPrevented() );
+	}
+};
+
+$.each( { show: "fadeIn", hide: "fadeOut" }, function( method, defaultEffect ) {
+	$.Widget.prototype[ "_" + method ] = function( element, options, callback ) {
+		if ( typeof options === "string" ) {
+			options = { effect: options };
+		}
+		var hasOptions,
+			effectName = !options ?
+				method :
+				options === true || typeof options === "number" ?
+					defaultEffect :
+					options.effect || defaultEffect;
+		options = options || {};
+		if ( typeof options === "number" ) {
+			options = { duration: options };
+		}
+		hasOptions = !$.isEmptyObject( options );
+		options.complete = callback;
+		if ( options.delay ) {
+			element.delay( options.delay );
+		}
+		if ( hasOptions && $.effects && $.effects.effect[ effectName ] ) {
+			element[ method ]( options );
+		} else if ( effectName !== method && element[ effectName ] ) {
+			element[ effectName ]( options.duration, options.easing, callback );
+		} else {
+			element.queue(function( next ) {
+				$( this )[ method ]();
+				if ( callback ) {
+					callback.call( element[ 0 ] );
+				}
+				next();
+			});
+		}
+	};
+});
+
+var widget = $.widget;
+
+
+
+}));
+
+},{"jquery":"/home/bbales2/stochssModel/app/static/modelEditor/node_modules/jquery/dist/jquery.js"}],"/home/bbales2/stochssModel/app/static/modelEditor/node_modules/clientconfig/clientconfig.js":[function(require,module,exports){
 var cookies = require('cookie-getter'),
     config = cookies('config') || {};
 
@@ -7985,7 +10970,7 @@ document.cookie = 'config=;expires=Thu, 01 Jan 1970 00:00:00 GMT';
 // export it
 module.exports = config;
 
-},{"cookie-getter":"/home/bbales2/stochssModel/app/lib/modelEditor/node_modules/clientconfig/node_modules/cookie-getter/cookie-getter.js"}],"/home/bbales2/stochssModel/app/lib/modelEditor/node_modules/clientconfig/node_modules/cookie-getter/cookie-getter.js":[function(require,module,exports){
+},{"cookie-getter":"/home/bbales2/stochssModel/app/static/modelEditor/node_modules/clientconfig/node_modules/cookie-getter/cookie-getter.js"}],"/home/bbales2/stochssModel/app/static/modelEditor/node_modules/clientconfig/node_modules/cookie-getter/cookie-getter.js":[function(require,module,exports){
 // simple commonJS cookie reader, best perf according to http://jsperf.com/cookie-parsing
 module.exports = function (name) {
     var cookie = document.cookie,
@@ -7997,7 +10982,7 @@ module.exports = function (name) {
     return (res.charAt(0) === '{') ? JSON.parse(res) : res;
 };
 
-},{}],"/home/bbales2/stochssModel/app/lib/modelEditor/node_modules/domify/index.js":[function(require,module,exports){
+},{}],"/home/bbales2/stochssModel/app/static/modelEditor/node_modules/domify/index.js":[function(require,module,exports){
 
 /**
  * Expose `parse`.
@@ -8106,7 +11091,7 @@ function parse(html, doc) {
   return fragment;
 }
 
-},{}],"/home/bbales2/stochssModel/app/lib/modelEditor/node_modules/domready/ready.js":[function(require,module,exports){
+},{}],"/home/bbales2/stochssModel/app/static/modelEditor/node_modules/domready/ready.js":[function(require,module,exports){
 /*!
   * domready (c) Dustin Diaz 2014 - License MIT
   */
@@ -8138,7 +11123,7 @@ function parse(html, doc) {
 
 });
 
-},{}],"/home/bbales2/stochssModel/app/lib/modelEditor/node_modules/jquery/dist/jquery.js":[function(require,module,exports){
+},{}],"/home/bbales2/stochssModel/app/static/modelEditor/node_modules/jquery/dist/jquery.js":[function(require,module,exports){
 /*!
  * jQuery JavaScript Library v2.1.3
  * http://jquery.com/
@@ -17345,7 +20330,7 @@ return jQuery;
 
 }));
 
-},{}],"/home/bbales2/stochssModel/app/lib/modelEditor/node_modules/katex/katex.js":[function(require,module,exports){
+},{}],"/home/bbales2/stochssModel/app/static/modelEditor/node_modules/katex/katex.js":[function(require,module,exports){
 /**
  * This is the main entry point for KaTeX. Here, we expose functions for
  * rendering expressions either to DOM nodes or to markup strings.
@@ -17401,7 +20386,7 @@ module.exports = {
     ParseError: ParseError
 };
 
-},{"./src/ParseError":"/home/bbales2/stochssModel/app/lib/modelEditor/node_modules/katex/src/ParseError.js","./src/buildTree":"/home/bbales2/stochssModel/app/lib/modelEditor/node_modules/katex/src/buildTree.js","./src/parseTree":"/home/bbales2/stochssModel/app/lib/modelEditor/node_modules/katex/src/parseTree.js","./src/utils":"/home/bbales2/stochssModel/app/lib/modelEditor/node_modules/katex/src/utils.js"}],"/home/bbales2/stochssModel/app/lib/modelEditor/node_modules/katex/src/Lexer.js":[function(require,module,exports){
+},{"./src/ParseError":"/home/bbales2/stochssModel/app/static/modelEditor/node_modules/katex/src/ParseError.js","./src/buildTree":"/home/bbales2/stochssModel/app/static/modelEditor/node_modules/katex/src/buildTree.js","./src/parseTree":"/home/bbales2/stochssModel/app/static/modelEditor/node_modules/katex/src/parseTree.js","./src/utils":"/home/bbales2/stochssModel/app/static/modelEditor/node_modules/katex/src/utils.js"}],"/home/bbales2/stochssModel/app/static/modelEditor/node_modules/katex/src/Lexer.js":[function(require,module,exports){
 /**
  * The Lexer class handles tokenizing the input in various ways. Since our
  * parser expects us to be able to backtrack, the lexer allows lexing from any
@@ -17593,7 +20578,7 @@ Lexer.prototype.lex = function(pos, mode) {
 
 module.exports = Lexer;
 
-},{"./ParseError":"/home/bbales2/stochssModel/app/lib/modelEditor/node_modules/katex/src/ParseError.js"}],"/home/bbales2/stochssModel/app/lib/modelEditor/node_modules/katex/src/Options.js":[function(require,module,exports){
+},{"./ParseError":"/home/bbales2/stochssModel/app/static/modelEditor/node_modules/katex/src/ParseError.js"}],"/home/bbales2/stochssModel/app/static/modelEditor/node_modules/katex/src/Options.js":[function(require,module,exports){
 /**
  * This file contains information about the options that the Parser carries
  * around with it while parsing. Data is held in an `Options` object, and when
@@ -17680,7 +20665,7 @@ Options.prototype.getColor = function() {
 
 module.exports = Options;
 
-},{}],"/home/bbales2/stochssModel/app/lib/modelEditor/node_modules/katex/src/ParseError.js":[function(require,module,exports){
+},{}],"/home/bbales2/stochssModel/app/static/modelEditor/node_modules/katex/src/ParseError.js":[function(require,module,exports){
 /**
  * This is the ParseError class, which is the main error thrown by KaTeX
  * functions when something has gone wrong. This is used to distinguish internal
@@ -17722,7 +20707,7 @@ ParseError.prototype.__proto__ = Error.prototype;
 
 module.exports = ParseError;
 
-},{}],"/home/bbales2/stochssModel/app/lib/modelEditor/node_modules/katex/src/Parser.js":[function(require,module,exports){
+},{}],"/home/bbales2/stochssModel/app/static/modelEditor/node_modules/katex/src/Parser.js":[function(require,module,exports){
 var functions = require("./functions");
 var Lexer = require("./Lexer");
 var symbols = require("./symbols");
@@ -18363,7 +21348,7 @@ Parser.prototype.parseSymbol = function(pos, mode) {
 
 module.exports = Parser;
 
-},{"./Lexer":"/home/bbales2/stochssModel/app/lib/modelEditor/node_modules/katex/src/Lexer.js","./ParseError":"/home/bbales2/stochssModel/app/lib/modelEditor/node_modules/katex/src/ParseError.js","./functions":"/home/bbales2/stochssModel/app/lib/modelEditor/node_modules/katex/src/functions.js","./symbols":"/home/bbales2/stochssModel/app/lib/modelEditor/node_modules/katex/src/symbols.js","./utils":"/home/bbales2/stochssModel/app/lib/modelEditor/node_modules/katex/src/utils.js"}],"/home/bbales2/stochssModel/app/lib/modelEditor/node_modules/katex/src/Style.js":[function(require,module,exports){
+},{"./Lexer":"/home/bbales2/stochssModel/app/static/modelEditor/node_modules/katex/src/Lexer.js","./ParseError":"/home/bbales2/stochssModel/app/static/modelEditor/node_modules/katex/src/ParseError.js","./functions":"/home/bbales2/stochssModel/app/static/modelEditor/node_modules/katex/src/functions.js","./symbols":"/home/bbales2/stochssModel/app/static/modelEditor/node_modules/katex/src/symbols.js","./utils":"/home/bbales2/stochssModel/app/static/modelEditor/node_modules/katex/src/utils.js"}],"/home/bbales2/stochssModel/app/static/modelEditor/node_modules/katex/src/Style.js":[function(require,module,exports){
 /**
  * This file contains information and classes for the various kinds of styles
  * used in TeX. It provides a generic `Style` class, which holds information
@@ -18491,7 +21476,7 @@ module.exports = {
     SCRIPTSCRIPT: styles[SS]
 };
 
-},{}],"/home/bbales2/stochssModel/app/lib/modelEditor/node_modules/katex/src/buildCommon.js":[function(require,module,exports){
+},{}],"/home/bbales2/stochssModel/app/static/modelEditor/node_modules/katex/src/buildCommon.js":[function(require,module,exports){
 /**
  * This module contains general functions that can be used for building
  * different kinds of domTree nodes in a consistent manner.
@@ -18764,7 +21749,7 @@ module.exports = {
     makeVList: makeVList
 };
 
-},{"./domTree":"/home/bbales2/stochssModel/app/lib/modelEditor/node_modules/katex/src/domTree.js","./fontMetrics":"/home/bbales2/stochssModel/app/lib/modelEditor/node_modules/katex/src/fontMetrics.js","./symbols":"/home/bbales2/stochssModel/app/lib/modelEditor/node_modules/katex/src/symbols.js"}],"/home/bbales2/stochssModel/app/lib/modelEditor/node_modules/katex/src/buildTree.js":[function(require,module,exports){
+},{"./domTree":"/home/bbales2/stochssModel/app/static/modelEditor/node_modules/katex/src/domTree.js","./fontMetrics":"/home/bbales2/stochssModel/app/static/modelEditor/node_modules/katex/src/fontMetrics.js","./symbols":"/home/bbales2/stochssModel/app/static/modelEditor/node_modules/katex/src/symbols.js"}],"/home/bbales2/stochssModel/app/static/modelEditor/node_modules/katex/src/buildTree.js":[function(require,module,exports){
 /**
  * This file does the main work of building a domTree structure from a parse
  * tree. The entry point is the `buildTree` function, which takes a parse tree.
@@ -19933,7 +22918,7 @@ var buildTree = function(tree) {
 
 module.exports = buildTree;
 
-},{"./Options":"/home/bbales2/stochssModel/app/lib/modelEditor/node_modules/katex/src/Options.js","./ParseError":"/home/bbales2/stochssModel/app/lib/modelEditor/node_modules/katex/src/ParseError.js","./Style":"/home/bbales2/stochssModel/app/lib/modelEditor/node_modules/katex/src/Style.js","./buildCommon":"/home/bbales2/stochssModel/app/lib/modelEditor/node_modules/katex/src/buildCommon.js","./delimiter":"/home/bbales2/stochssModel/app/lib/modelEditor/node_modules/katex/src/delimiter.js","./domTree":"/home/bbales2/stochssModel/app/lib/modelEditor/node_modules/katex/src/domTree.js","./fontMetrics":"/home/bbales2/stochssModel/app/lib/modelEditor/node_modules/katex/src/fontMetrics.js","./utils":"/home/bbales2/stochssModel/app/lib/modelEditor/node_modules/katex/src/utils.js"}],"/home/bbales2/stochssModel/app/lib/modelEditor/node_modules/katex/src/delimiter.js":[function(require,module,exports){
+},{"./Options":"/home/bbales2/stochssModel/app/static/modelEditor/node_modules/katex/src/Options.js","./ParseError":"/home/bbales2/stochssModel/app/static/modelEditor/node_modules/katex/src/ParseError.js","./Style":"/home/bbales2/stochssModel/app/static/modelEditor/node_modules/katex/src/Style.js","./buildCommon":"/home/bbales2/stochssModel/app/static/modelEditor/node_modules/katex/src/buildCommon.js","./delimiter":"/home/bbales2/stochssModel/app/static/modelEditor/node_modules/katex/src/delimiter.js","./domTree":"/home/bbales2/stochssModel/app/static/modelEditor/node_modules/katex/src/domTree.js","./fontMetrics":"/home/bbales2/stochssModel/app/static/modelEditor/node_modules/katex/src/fontMetrics.js","./utils":"/home/bbales2/stochssModel/app/static/modelEditor/node_modules/katex/src/utils.js"}],"/home/bbales2/stochssModel/app/static/modelEditor/node_modules/katex/src/delimiter.js":[function(require,module,exports){
 /**
  * This file deals with creating delimiters of various sizes. The TeXbook
  * discusses these routines on page 441-442, in the "Another subroutine sets box
@@ -20476,7 +23461,7 @@ module.exports = {
     leftRightDelim: makeLeftRightDelim
 };
 
-},{"./ParseError":"/home/bbales2/stochssModel/app/lib/modelEditor/node_modules/katex/src/ParseError.js","./Style":"/home/bbales2/stochssModel/app/lib/modelEditor/node_modules/katex/src/Style.js","./buildCommon":"/home/bbales2/stochssModel/app/lib/modelEditor/node_modules/katex/src/buildCommon.js","./fontMetrics":"/home/bbales2/stochssModel/app/lib/modelEditor/node_modules/katex/src/fontMetrics.js","./symbols":"/home/bbales2/stochssModel/app/lib/modelEditor/node_modules/katex/src/symbols.js","./utils":"/home/bbales2/stochssModel/app/lib/modelEditor/node_modules/katex/src/utils.js"}],"/home/bbales2/stochssModel/app/lib/modelEditor/node_modules/katex/src/domTree.js":[function(require,module,exports){
+},{"./ParseError":"/home/bbales2/stochssModel/app/static/modelEditor/node_modules/katex/src/ParseError.js","./Style":"/home/bbales2/stochssModel/app/static/modelEditor/node_modules/katex/src/Style.js","./buildCommon":"/home/bbales2/stochssModel/app/static/modelEditor/node_modules/katex/src/buildCommon.js","./fontMetrics":"/home/bbales2/stochssModel/app/static/modelEditor/node_modules/katex/src/fontMetrics.js","./symbols":"/home/bbales2/stochssModel/app/static/modelEditor/node_modules/katex/src/symbols.js","./utils":"/home/bbales2/stochssModel/app/static/modelEditor/node_modules/katex/src/utils.js"}],"/home/bbales2/stochssModel/app/static/modelEditor/node_modules/katex/src/domTree.js":[function(require,module,exports){
 /**
  * These objects store the data about the DOM nodes we create, as well as some
  * extra data. They can then be transformed into real DOM nodes with the toNode
@@ -20719,7 +23704,7 @@ module.exports = {
     symbolNode: symbolNode
 };
 
-},{"./utils":"/home/bbales2/stochssModel/app/lib/modelEditor/node_modules/katex/src/utils.js"}],"/home/bbales2/stochssModel/app/lib/modelEditor/node_modules/katex/src/fontMetrics.js":[function(require,module,exports){
+},{"./utils":"/home/bbales2/stochssModel/app/static/modelEditor/node_modules/katex/src/utils.js"}],"/home/bbales2/stochssModel/app/static/modelEditor/node_modules/katex/src/fontMetrics.js":[function(require,module,exports){
 /* jshint unused:false */
 
 var Style = require("./Style");
@@ -20850,7 +23835,7 @@ module.exports = {
     getCharacterMetrics: getCharacterMetrics
 };
 
-},{"./Style":"/home/bbales2/stochssModel/app/lib/modelEditor/node_modules/katex/src/Style.js"}],"/home/bbales2/stochssModel/app/lib/modelEditor/node_modules/katex/src/functions.js":[function(require,module,exports){
+},{"./Style":"/home/bbales2/stochssModel/app/static/modelEditor/node_modules/katex/src/Style.js"}],"/home/bbales2/stochssModel/app/static/modelEditor/node_modules/katex/src/functions.js":[function(require,module,exports){
 var utils = require("./utils");
 var ParseError = require("./ParseError");
 
@@ -21391,7 +24376,7 @@ module.exports = {
     getGreediness: getGreediness
 };
 
-},{"./ParseError":"/home/bbales2/stochssModel/app/lib/modelEditor/node_modules/katex/src/ParseError.js","./utils":"/home/bbales2/stochssModel/app/lib/modelEditor/node_modules/katex/src/utils.js"}],"/home/bbales2/stochssModel/app/lib/modelEditor/node_modules/katex/src/parseTree.js":[function(require,module,exports){
+},{"./ParseError":"/home/bbales2/stochssModel/app/static/modelEditor/node_modules/katex/src/ParseError.js","./utils":"/home/bbales2/stochssModel/app/static/modelEditor/node_modules/katex/src/utils.js"}],"/home/bbales2/stochssModel/app/static/modelEditor/node_modules/katex/src/parseTree.js":[function(require,module,exports){
 /**
  * Provides a single function for parsing an expression using a Parser
  * TODO(emily): Remove this
@@ -21410,7 +24395,7 @@ var parseTree = function(toParse) {
 
 module.exports = parseTree;
 
-},{"./Parser":"/home/bbales2/stochssModel/app/lib/modelEditor/node_modules/katex/src/Parser.js"}],"/home/bbales2/stochssModel/app/lib/modelEditor/node_modules/katex/src/symbols.js":[function(require,module,exports){
+},{"./Parser":"/home/bbales2/stochssModel/app/static/modelEditor/node_modules/katex/src/Parser.js"}],"/home/bbales2/stochssModel/app/static/modelEditor/node_modules/katex/src/symbols.js":[function(require,module,exports){
 /**
  * This file holds a list of all no-argument functions and single-character
  * symbols (like 'a' or ';').
@@ -22418,7 +25403,7 @@ for (var i = 0; i < letters.length; i++) {
 
 module.exports = symbols;
 
-},{}],"/home/bbales2/stochssModel/app/lib/modelEditor/node_modules/katex/src/utils.js":[function(require,module,exports){
+},{}],"/home/bbales2/stochssModel/app/static/modelEditor/node_modules/katex/src/utils.js":[function(require,module,exports){
 /**
  * This file contains a list of utility functions which are useful in other
  * files.
@@ -22517,7 +25502,7 @@ module.exports = {
     clearNode: clearNode
 };
 
-},{}],"/home/bbales2/stochssModel/app/lib/modelEditor/node_modules/underscore/underscore.js":[function(require,module,exports){
+},{}],"/home/bbales2/stochssModel/app/static/modelEditor/node_modules/underscore/underscore.js":[function(require,module,exports){
 //     Underscore.js 1.7.0
 //     http://underscorejs.org
 //     (c) 2009-2014 Jeremy Ashkenas, DocumentCloud and Investigative Reporters & Editors
@@ -23934,7 +26919,7 @@ module.exports = {
   }
 }.call(this));
 
-},{}],"/home/bbales2/stochssModel/app/lib/modelEditor/node_modules/watchify/node_modules/browserify/node_modules/buffer/index.js":[function(require,module,exports){
+},{}],"/home/bbales2/stochssModel/app/static/modelEditor/node_modules/watchify/node_modules/browserify/node_modules/buffer/index.js":[function(require,module,exports){
 /*!
  * The buffer module from node.js, for the browser.
  *
@@ -25252,7 +28237,7 @@ function decodeUtf8Char (str) {
   }
 }
 
-},{"base64-js":"/home/bbales2/stochssModel/app/lib/modelEditor/node_modules/watchify/node_modules/browserify/node_modules/buffer/node_modules/base64-js/lib/b64.js","ieee754":"/home/bbales2/stochssModel/app/lib/modelEditor/node_modules/watchify/node_modules/browserify/node_modules/buffer/node_modules/ieee754/index.js","is-array":"/home/bbales2/stochssModel/app/lib/modelEditor/node_modules/watchify/node_modules/browserify/node_modules/buffer/node_modules/is-array/index.js"}],"/home/bbales2/stochssModel/app/lib/modelEditor/node_modules/watchify/node_modules/browserify/node_modules/buffer/node_modules/base64-js/lib/b64.js":[function(require,module,exports){
+},{"base64-js":"/home/bbales2/stochssModel/app/static/modelEditor/node_modules/watchify/node_modules/browserify/node_modules/buffer/node_modules/base64-js/lib/b64.js","ieee754":"/home/bbales2/stochssModel/app/static/modelEditor/node_modules/watchify/node_modules/browserify/node_modules/buffer/node_modules/ieee754/index.js","is-array":"/home/bbales2/stochssModel/app/static/modelEditor/node_modules/watchify/node_modules/browserify/node_modules/buffer/node_modules/is-array/index.js"}],"/home/bbales2/stochssModel/app/static/modelEditor/node_modules/watchify/node_modules/browserify/node_modules/buffer/node_modules/base64-js/lib/b64.js":[function(require,module,exports){
 var lookup = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/';
 
 ;(function (exports) {
@@ -25378,7 +28363,7 @@ var lookup = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/';
 	exports.fromByteArray = uint8ToBase64
 }(typeof exports === 'undefined' ? (this.base64js = {}) : exports))
 
-},{}],"/home/bbales2/stochssModel/app/lib/modelEditor/node_modules/watchify/node_modules/browserify/node_modules/buffer/node_modules/ieee754/index.js":[function(require,module,exports){
+},{}],"/home/bbales2/stochssModel/app/static/modelEditor/node_modules/watchify/node_modules/browserify/node_modules/buffer/node_modules/ieee754/index.js":[function(require,module,exports){
 exports.read = function(buffer, offset, isLE, mLen, nBytes) {
   var e, m,
       eLen = nBytes * 8 - mLen - 1,
@@ -25464,9 +28449,9 @@ exports.write = function(buffer, value, offset, isLE, mLen, nBytes) {
   buffer[offset + i - d] |= s * 128;
 };
 
-},{}],"/home/bbales2/stochssModel/app/lib/modelEditor/node_modules/watchify/node_modules/browserify/node_modules/buffer/node_modules/is-array/index.js":[function(require,module,exports){
-module.exports=require("/home/bbales2/stochssModel/app/lib/modelEditor/node_modules/ampersand-collection/node_modules/is-array/index.js")
-},{"/home/bbales2/stochssModel/app/lib/modelEditor/node_modules/ampersand-collection/node_modules/is-array/index.js":"/home/bbales2/stochssModel/app/lib/modelEditor/node_modules/ampersand-collection/node_modules/is-array/index.js"}],"/home/bbales2/stochssModel/app/lib/modelEditor/select/model-collection.js":[function(require,module,exports){
+},{}],"/home/bbales2/stochssModel/app/static/modelEditor/node_modules/watchify/node_modules/browserify/node_modules/buffer/node_modules/is-array/index.js":[function(require,module,exports){
+module.exports=require("/home/bbales2/stochssModel/app/static/modelEditor/node_modules/ampersand-collection/node_modules/is-array/index.js")
+},{"/home/bbales2/stochssModel/app/static/modelEditor/node_modules/ampersand-collection/node_modules/is-array/index.js":"/home/bbales2/stochssModel/app/static/modelEditor/node_modules/ampersand-collection/node_modules/is-array/index.js"}],"/home/bbales2/stochssModel/app/static/modelEditor/select/model-collection.js":[function(require,module,exports){
 var _ = require('underscore');
 var $ = require('jquery');
 var AmpersandView = require('ampersand-view');
@@ -25482,7 +28467,8 @@ var AddNewModelForm = AmpersandFormView.extend({
         var model = new Model({ name : obj.name,
                                 units : obj.units,
                                 type : 'massaction',
-                                isSpatial : false });
+                                isSpatial : true,
+                                mesh : this.meshCollection.at(0) });
 
         this.collection.add(model).save();
     },
@@ -25494,7 +28480,8 @@ var AddNewModelForm = AmpersandFormView.extend({
         }
     },
     initialize: function(attr, options) {
-        this.collection = options.collection;
+        this.collection = attr.collection;
+        this.meshCollection = attr.meshCollection;
 
         this.fields = [
             new InputView({
@@ -25511,7 +28498,7 @@ var AddNewModelForm = AmpersandFormView.extend({
                 value: 'population',
                 options: [['concentration', 'Concentration'], ['population', 'Population']],
                 required: true,
-            }),
+            })
         ];
     },
     render: function()
@@ -25532,6 +28519,8 @@ var ModelCollectionSelectView = AmpersandView.extend({
     initialize: function(attr, options)
     {
         AmpersandView.prototype.initialize.call(this, attr, options);
+
+        this.meshCollection = attr.meshCollection;
 
         this.selected = this.collection.at(0);
     },
@@ -25558,9 +28547,8 @@ var ModelCollectionSelectView = AmpersandView.extend({
         //this.fields.forEach( function(field) { $( field.el ).find('input').val(''); } );
         this.addForm = new AddNewModelForm(
             {
-                el : this.el.querySelector('[data-hook=addModelForm]')
-            },
-            {
+                el : this.el.querySelector('[data-hook=addModelForm]'),
+                meshCollection : this.meshCollection,
                 collection : this.collection
             }
         );
@@ -25571,7 +28559,7 @@ var ModelCollectionSelectView = AmpersandView.extend({
 
 module.exports = ModelCollectionSelectView
 
-},{"../forms/tests.js":"/home/bbales2/stochssModel/app/lib/modelEditor/forms/tests.js","../models/model":"/home/bbales2/stochssModel/app/lib/modelEditor/models/model.js","./model":"/home/bbales2/stochssModel/app/lib/modelEditor/select/model.js","ampersand-form-view":"/home/bbales2/stochssModel/app/lib/modelEditor/node_modules/ampersand-form-view/ampersand-form-view.js","ampersand-input-view":"/home/bbales2/stochssModel/app/lib/modelEditor/node_modules/ampersand-input-view/ampersand-input-view.js","ampersand-select-view":"/home/bbales2/stochssModel/app/lib/modelEditor/node_modules/ampersand-select-view/ampersand-select-view.js","ampersand-view":"/home/bbales2/stochssModel/app/lib/modelEditor/node_modules/ampersand-view/ampersand-view.js","jquery":"/home/bbales2/stochssModel/app/lib/modelEditor/node_modules/jquery/dist/jquery.js","underscore":"/home/bbales2/stochssModel/app/lib/modelEditor/node_modules/underscore/underscore.js"}],"/home/bbales2/stochssModel/app/lib/modelEditor/select/model.js":[function(require,module,exports){
+},{"../forms/tests.js":"/home/bbales2/stochssModel/app/static/modelEditor/forms/tests.js","../models/model":"/home/bbales2/stochssModel/app/static/modelEditor/models/model.js","./model":"/home/bbales2/stochssModel/app/static/modelEditor/select/model.js","ampersand-form-view":"/home/bbales2/stochssModel/app/static/modelEditor/node_modules/ampersand-form-view/ampersand-form-view.js","ampersand-input-view":"/home/bbales2/stochssModel/app/static/modelEditor/node_modules/ampersand-input-view/ampersand-input-view.js","ampersand-select-view":"/home/bbales2/stochssModel/app/static/modelEditor/node_modules/ampersand-select-view/ampersand-select-view.js","ampersand-view":"/home/bbales2/stochssModel/app/static/modelEditor/node_modules/ampersand-view/ampersand-view.js","jquery":"/home/bbales2/stochssModel/app/static/modelEditor/node_modules/jquery/dist/jquery.js","underscore":"/home/bbales2/stochssModel/app/static/modelEditor/node_modules/underscore/underscore.js"}],"/home/bbales2/stochssModel/app/static/modelEditor/select/model.js":[function(require,module,exports){
 var _ = require('underscore');
 var $ = require('jquery');
 var View = require('ampersand-view');
@@ -25628,4 +28616,4 @@ module.exports = View.extend({
     }
 });
 
-},{"ampersand-view":"/home/bbales2/stochssModel/app/lib/modelEditor/node_modules/ampersand-view/ampersand-view.js","jquery":"/home/bbales2/stochssModel/app/lib/modelEditor/node_modules/jquery/dist/jquery.js","underscore":"/home/bbales2/stochssModel/app/lib/modelEditor/node_modules/underscore/underscore.js"}]},{},["/home/bbales2/stochssModel/app/lib/modelEditor/app.js"]);
+},{"ampersand-view":"/home/bbales2/stochssModel/app/static/modelEditor/node_modules/ampersand-view/ampersand-view.js","jquery":"/home/bbales2/stochssModel/app/static/modelEditor/node_modules/jquery/dist/jquery.js","underscore":"/home/bbales2/stochssModel/app/static/modelEditor/node_modules/underscore/underscore.js"}]},{},["/home/bbales2/stochssModel/app/static/modelEditor/app.js"]);

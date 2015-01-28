@@ -12,7 +12,9 @@ var Model = AmpersandModel.extend({
         isSpatial: 'boolean',
         species: 'object',//SpecieCollection,
         reactions: 'object',//ReactionCollection,
-        parameters: 'object'//ParameterCollection
+        parameters: 'object',//ParameterCollection
+        mesh: 'object',
+        initialConditions : 'object'
     },
     initialize: function(attrs, options) {
         this.parse(attrs);
@@ -25,8 +27,18 @@ var Model = AmpersandModel.extend({
         this.listenTo(this.reactions, 'add remove change', _.bind(this.saveModel, this));
         this.listenTo(this.species, 'add remove change', _.bind(this.saveModel, this));
         this.listenTo(this.parameters, 'add remove change', _.bind(this.saveModel, this));
-        this.on('change:name change:units change:type change:isSpatial', _.bind(this.saveModel, this));
+
+        this.on('change:name change:units change:type change:isSpatial change:mesh', _.bind(this.saveModel, this));
         // this will run if the name changes
+    },
+    setupMesh: function(meshCollection) {
+        for(var i = 0; i < meshCollection.models.length; i++)
+        {
+            if(this.meshId == meshCollection.models[i].id)
+            {
+                this.mesh = meshCollection.models[i];
+            }
+        }
     },
     computeType: function() {
         var massAction = true;
@@ -85,11 +97,16 @@ var Model = AmpersandModel.extend({
             this.reactions.parent = this;
         }
 
+        if(attr.spatial)
+        {
+            this.meshId = attr.spatial.mesh_wrapper_id;
+        }
+
         if(species && this.species.length == 0)
         {
             for(var i = 0; i < species.length; i++)
             {
-                speciesByName[species[i].name] = this.species.addSpecie(species[i].name, species[i].initialCondition);
+                speciesByName[species[i].name] = this.species.addSpecie(species[i].name, species[i].initialCondition, attr.spatial.species_diffusion_coefficients[species[i].name], attr.spatial.species_subdomain_assignments[species[i].name]);
             }
         }
 
@@ -115,9 +132,9 @@ var Model = AmpersandModel.extend({
                 
                 if(reaction.type == 'massaction')
                 {
-                    this.reactions.addMassActionReaction(reaction.name, parametersByName[reaction.rate], reactants, products);
+                    this.reactions.addMassActionReaction(reaction.name, parametersByName[reaction.rate], reactants, products, attr.spatial.reactions_subdomain_assignments[reactions[i].name]);
                 } else {
-                    this.reactions.addCustomReaction(reaction.name, reaction.rate, reactants, products);
+                    this.reactions.addCustomReaction(reaction.name, reaction.rate, reactants, products, attr.spatial.reactions_subdomain_assignments[reactions[i].name]);
                 }
             }
         }
@@ -156,7 +173,6 @@ var Model = AmpersandModel.extend({
         obj.parameters = this.parameters.map(function(parameter) { return { name : parameter.name, value : parameter.value } });
 
         obj.reactions = [];
-
         
         for(var i = 0; i < this.reactions.models.length; i++)
         {
@@ -178,6 +194,25 @@ var Model = AmpersandModel.extend({
 
             obj.reactions.push(reactionOut);
         }
+
+        obj.spatial = {};
+        obj.spatial.mesh_wrapper_id = this.mesh.id;
+        obj.spatial.subdomains = this.mesh.uniqueSubdomainList;
+        obj.spatial.species_diffusion_coefficients = {};
+        obj.spatial.species_subdomain_assignments = {};
+        for(var i = 0; i < this.species.models.length; i++)
+        {
+            obj.spatial.species_diffusion_coefficients[this.species.models[i].name] = this.species.models[i].diffusion;
+            obj.spatial.species_subdomain_assignments[this.species.models[i].name] = this.species.models[i].subdomains;
+        }
+
+        obj.spatial.reactions_subdomain_assignments = {};
+        for(var i = 0; i < this.reactions.models.length; i++)
+        {
+            obj.spatial.reactions_subdomain_assignments[this.reactions.models[i].name] = this.reactions.models[i].subdomains;
+        }
+
+        obj.spatial.initial_conditions = {};
 
         return obj;
     }

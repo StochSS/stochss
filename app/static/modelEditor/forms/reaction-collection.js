@@ -8,11 +8,13 @@ var ReactionFormView = require('./reaction');
 var Tests = require('./tests');
 var AddNewReactionForm = AmpersandFormView.extend({
     submitCallback: function (obj) {
+        var validSubdomains = this.baseModel.mesh.uniqueSubdomains.map( function(model) { return model.name; } );
+
         if(obj.type == 'massaction')
         {
-            this.collection.addMassActionReaction(obj.name, obj.parameter, [], []);
+            this.collection.addMassActionReaction(obj.name, obj.parameter, [], [], validSubdomains);
         } else {
-            this.collection.addCustomReaction(obj.name, obj.equation, [], []);
+            this.collection.addCustomReaction(obj.name, obj.equation, [], [], validSubdomains);
         }
     },
     validCallback: function (valid) {
@@ -92,13 +94,41 @@ var AddNewReactionForm = AmpersandFormView.extend({
 });
 
 var ReactionCollectionFormView = AmpersandView.extend({
-    template: "<div><h4>Reactions editor</h4><table><thead><th><button style='visibility:hidden'>x</button></th><th width='218px'>Name</th><th width='218px'>Parameter</th><th width='218px'>Rate</th></thead></table><div data-hook='reactionTable'></div><h4>Add Reaction</h4><form data-hook='addReactionForm'></form></div>",
     initialize: function(attr, options)
     {
         AmpersandView.prototype.initialize.call(this, attr, options);
     },
     render: function()
     {
+        this.baseModel = this.collection.parent;
+
+        if(this.baseModel.isSpatial)
+        {
+            this.template = "<div>\
+  <h4>Reactions editor</h4>\
+  <table data-hook='reactionTable'>\
+    <thead>\
+      <th></th><th>Name</th><th>Type</th><th>Parameter</th><th>Custom Propensity</th><th>Subdomains</th><th>Latex</th><th></th>\
+    </thead>\
+  </table>\
+  <h4>Add Reaction</h4>\
+  <form data-hook='addReactionForm'></form>\
+</div>";
+        }
+        else
+        {
+            this.template = "<div>\
+  <h4>Reactions editor</h4>\
+  <table data-hook='reactionTable'>\
+    <thead>\
+      <th></th><th>Name</th><th>Type</th><th>Parameter</th><th>Custom Propensity</th><th>Latex</th><th></th>\
+    </thead>\
+  </table>\
+  <h4>Add Reaction</h4>\
+  <form data-hook='addReactionForm'></form>\
+</div>";
+        }
+
         AmpersandView.prototype.render.apply(this, arguments);
 
         this.renderCollection(this.collection, ReactionFormView, this.el.querySelector('[data-hook=reactionTable]'));

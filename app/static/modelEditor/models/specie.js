@@ -7,6 +7,16 @@ module.exports = AmpModel.extend({
     props: {
         name: ['string'],
         initialCondition: ['number'],
+        diffusion :
+        {
+            type : 'number',
+            default : 0.0
+        },
+        subdomains : 
+        {
+            type : 'object',
+            default : function() { return []; }
+        },
         inUse: ['boolean']
     },
     initialize: function()

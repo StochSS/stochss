@@ -21,11 +21,29 @@ module.exports = {
             }
         ];
     },
+    isNumber : function()
+    {
+        return function(value) {
+            if(!(value < 0 || value > 0 || value == 0))
+            {
+                return "Entry must be a number";
+            }
+        }
+    },
+    positive : function()
+    {
+        return function(value) {
+            if(value < 0)
+            {
+                return "Number must be positive";
+            }
+        }
+    },
     nonzero : function() {
         return function(value) {
             if(value < 0.0)
             {
-                return "Initial condition must be greater than 0";
+                return "Number must be greater than 0";
             }
         }
     },

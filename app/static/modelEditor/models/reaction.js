@@ -9,7 +9,12 @@ var Reaction = State.extend({
         name : 'string',
         equation : 'string',
         type : 'string',
-        rate : 'object'
+        rate : 'object',
+        subdomains :
+        {
+            type : 'object',
+            default : function() { return []; }
+        },
     },
     collections: {
         reactants: StoichSpecieCollection,

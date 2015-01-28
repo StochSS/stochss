@@ -13,7 +13,8 @@ var AddNewModelForm = AmpersandFormView.extend({
         var model = new Model({ name : obj.name,
                                 units : obj.units,
                                 type : 'massaction',
-                                isSpatial : false });
+                                isSpatial : true,
+                                mesh : this.meshCollection.at(0) });
 
         this.collection.add(model).save();
     },
@@ -25,7 +26,8 @@ var AddNewModelForm = AmpersandFormView.extend({
         }
     },
     initialize: function(attr, options) {
-        this.collection = options.collection;
+        this.collection = attr.collection;
+        this.meshCollection = attr.meshCollection;
 
         this.fields = [
             new InputView({
@@ -42,7 +44,7 @@ var AddNewModelForm = AmpersandFormView.extend({
                 value: 'population',
                 options: [['concentration', 'Concentration'], ['population', 'Population']],
                 required: true,
-            }),
+            })
         ];
     },
     render: function()
@@ -63,6 +65,8 @@ var ModelCollectionSelectView = AmpersandView.extend({
     initialize: function(attr, options)
     {
         AmpersandView.prototype.initialize.call(this, attr, options);
+
+        this.meshCollection = attr.meshCollection;
 
         this.selected = this.collection.at(0);
     },
@@ -89,9 +93,8 @@ var ModelCollectionSelectView = AmpersandView.extend({
         //this.fields.forEach( function(field) { $( field.el ).find('input').val(''); } );
         this.addForm = new AddNewModelForm(
             {
-                el : this.el.querySelector('[data-hook=addModelForm]')
-            },
-            {
+                el : this.el.querySelector('[data-hook=addModelForm]'),
+                meshCollection : this.meshCollection,
                 collection : this.collection
             }
         );

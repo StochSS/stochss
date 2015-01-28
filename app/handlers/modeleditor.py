@@ -4,6 +4,7 @@ try:
 except ImportError:
   from django.utils import simplejson as json
 from google.appengine.ext import db
+
 import pickle
 import traceback
 import re
@@ -11,32 +12,14 @@ import random
 import time
 from google.appengine.api import users
 
-from stochssapp import BaseHandler
+from stochssapp import BaseHandler, ObjectProperty
 
 import stochss.stochkit
 import stochss.model
-
-from stochss.examplemodels import *
+import mesheditor
 
 import webapp2
 import exportimport
-
-class ObjectProperty(db.Property):
-    """  A db property to store objects. """
-
-    def get_value_for_datastore(self, model_instance):
-        result = super(ObjectProperty, self).get_value_for_datastore(model_instance)
-        result = pickle.dumps(result)
-        return db.Blob(result)
-
-    def make_value_from_datastore(self, value):
-        if value is None:
-            return None
-        return pickle.loads(value)
-
-    def empty(self, value):
-        return value is None
-
 
 class StochKitModelWrapper(db.Model):
     """
@@ -338,6 +321,8 @@ class ModelEditorPage(BaseHandler):
         return True
     
     def get(self):
+        mesheditor.setupMeshes(self)
+
         #f = open('/home/bbales2/stochss/test/modelEditor/client/index.html')
         #self.response.out.write(f.read())
         #f.close()

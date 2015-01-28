@@ -7,7 +7,16 @@ var SpecieFormView = require('./specie');
 var Tests = require('./tests');
 var AddNewSpecieForm = AmpersandFormView.extend({
     submitCallback: function (obj) {
-        this.collection.addSpecie(obj.name, Number(obj.initialCondition));
+        var validSubdomains = this.baseModel.mesh.uniqueSubdomains.map( function(model) { return model.name; } );
+
+        if(this.baseModel.isSpatial)
+        {
+            this.collection.addSpecie(obj.name, 0, Number(obj.diffusion), validSubdomains);
+        }
+        else
+        {
+            this.collection.addSpecie(obj.name, Number(obj.initialCondition), 0, validSubdomains);
+        }
 
         this.fields.forEach( function(field) { $( field.el ).find('input').val(''); } );
     },
@@ -26,6 +35,8 @@ var AddNewSpecieForm = AmpersandFormView.extend({
     initialize: function(attr, options) {
         this.collection = options.collection;
 
+        this.baseModel = this.collection.parent;
+
         this.fields = [
             new InputView({
                 label: 'Name',
@@ -34,17 +45,31 @@ var AddNewSpecieForm = AmpersandFormView.extend({
                 required: true,
                 placeholder: 'NewSpecies',
                 tests: [].concat(Tests.naming(this.collection))
-            }),
-            new InputView({
+            })
+        ];
+
+        if(this.baseModel.isSpatial)
+        {
+            this.fields.push(new InputView({
+                label: 'Diffusion',
+                name: 'diffusion',
+                value: '0',
+                required: true,
+                placeholder: '0',
+                tests: [].concat(Tests.positive())
+            }));
+        }
+        else
+        {
+            this.fields.push(new InputView({
                 label: 'Initial Condition',
                 name: 'initialCondition',
                 value: '0',
                 required: true,
                 placeholder: '0',
                 tests: [].concat(Tests.nonzero(), Tests.units(this.collection.parent))
-            })
-        ];
-
+            }));
+        }
     },
     render: function()
     {
@@ -69,13 +94,21 @@ var AddNewSpecieForm = AmpersandFormView.extend({
 new TestForm();*/
 
 var SpecieCollectionFormView = AmpersandView.extend({
-    template: "<div><h4>Species editor</h4><table><thead><th></th><th>Name</th><th>Initial Condition</th></thead><tbody data-hook='speciesTable'></tbody></table>Add Specie: <form data-hook='addSpeciesForm'></form></div>",
     initialize: function(attr, options)
     {
         AmpersandView.prototype.initialize.call(this, attr, options);
     },
     render: function()
     {
+        if(this.collection.parent.isSpatial)
+        {
+            this.template = "<div><h4>Species editor</h4><table><thead><th></th><th>Name</th><th>Diffusion</th><th>Subdomains</th></thead><tbody data-hook='speciesTable'></tbody></table>Add Specie: <form data-hook='addSpeciesForm'></form></div>";
+        }
+        else
+        {
+            this.template = "<div><h4>Species editor</h4><table><thead><th></th><th>Name</th><th>Initial Condition</th></thead><tbody data-hook='speciesTable'></tbody></table>Add Specie: <form data-hook='addSpeciesForm'></form></div>";
+        }
+
         AmpersandView.prototype.render.apply(this, arguments);
 
         //new TestForm();

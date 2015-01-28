@@ -13,6 +13,9 @@ var ModelEditorView = require('./forms/model');
 var ModelSelectView = require('./select/model-collection');
 var Model = require('./models/model');
 var domReady = require('domready');
+var Mesh = require('./models/mesh');
+var MeshCollection = require('./models/mesh-collection');
+var MeshSelectView = require('./forms/mesh-collection');
 
 /*var model2 = new Model({ name : "amodel",
                     units : "population",
@@ -45,6 +48,8 @@ var PrimaryView = View.extend({
     initialize: function(attr, options)
     {
         View.prototype.initialize.call(this, attr, options);
+
+        this.meshCollection = attr.meshCollection;
     },
     selectModel: function()
     {
@@ -59,10 +64,11 @@ var PrimaryView = View.extend({
             }
             
             this.modelEditor = new ModelEditorView( {
-                    el : $( '<div>' ).appendTo( this.queryByHook('editor') )[0],
-                    model : this.modelSelector.selected,
-                    parent : this
-                } )
+                el : $( '<div>' ).appendTo( this.queryByHook('editor') )[0],
+                model : this.modelSelector.selected,
+                meshCollection : this.meshCollection,
+                parent : this
+            } );
             
             this.listenTo(this.modelSelector.selected, 'remove', _.bind(this.modelDeleted, this));
             this.registerSubview(this.modelEditor);
@@ -85,13 +91,14 @@ var PrimaryView = View.extend({
 
         this.modelSelector = this.renderSubview(
             new ModelSelectView( {
-                collection : this.collection
+                collection : this.collection,
+                meshCollection : this.meshCollection
             } ), $( '<div>' ).appendTo( this.queryByHook('selector') )[0]
         );
 
         this.selectModel();
         this.modelSelector.on('change:selected', _.bind(this.selectModel, this));
-        
+
         return this;
     }
 });
@@ -101,30 +108,37 @@ ModelCollection = AmpersandCollection.extend( {
     model: Model
 });
 
+MeshCollection = AmpersandCollection.extend( {
+    url: "/meshes",
+    model: Mesh
+});
+
 var modelCollection = new ModelCollection();
+var meshCollection = new MeshCollection();
+
+var modelDownloaded = false; var meshDownloaded = false;
 
 modelCollection.fetch({
     success : function(modelCollection, response, options)
     {
-        if(modelCollection.models.length < 0)
-        {
-            modelCollection.add(model);
-
-            model.save(null, {
-                success : function(model, response, options)
-                {
-                    module.exports.blastoff();
-                    //console.log(model);
-                }
-            });
-        }
-        else
+        modelDownloaded = true;
+        if(meshDownloaded)
         {
             module.exports.blastoff();
         }
     }
 });
 
+meshCollection.fetch({
+    success : function(meshCollection, response, options)
+    {
+        meshDownloaded = true;
+        if(modelDownloaded)
+        {
+            module.exports.blastoff();
+        }
+    }
+});
 
 module.exports = {
     blastoff: function () {
@@ -136,9 +150,17 @@ module.exports = {
             div = document.body;
 
         domReady(function () {
-            var modelSelectView = new PrimaryView( { el: div, collection : modelCollection } );
+            for(var i = 0; i < modelCollection.models.length; i++)
+            {
+                modelCollection.models[i].setupMesh(meshCollection);
+            }
+
+            var modelSelectView = new PrimaryView( { el: div, collection : modelCollection, meshCollection : meshCollection } );
 
             modelSelectView.render();
+            //var meshSelectView = new MeshSelectView( { el: div, collection : meshCollection } );
+
+            //meshSelectView.render();
         });
     }
 };
