@@ -11,14 +11,13 @@
 } 
 
 
-#dat-gui-container{
+#container{
   display:none; 
   border-style: solid; 
   color: white;
   background-color: black;
   height: 35px;
 }
-
 
 .button-container{
   float:left;
@@ -29,7 +28,6 @@
         border-style: solid;
     border-color: gray;
 }
-
 
 .button-container-left{
   padding-left: 172px;

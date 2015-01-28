@@ -68,7 +68,7 @@ Spatial.Controller = Backbone.View.extend(
 
         
         addGui : function() {
-            $(" #dat-gui-container").show();
+            $(" #container").show();
             $( '#zoomPlus_btn' ).click( _.bind(function() { this.controls.dollyOut();}, this) );
             $( '#zoomMinus_btn' ).click( _.bind(function() { this.controls.dollyIn();}, this) );
             $( '#panLeft_btn' ).click( _.bind(function() { this.controls.panLeft(-0.1);}, this) );
@@ -81,47 +81,6 @@ Spatial.Controller = Backbone.View.extend(
             $( '#rotateRight_btn' ).click( _.bind(function() { this.controls.rotateLeft(0.5);}, this) );
             $( '#rotateLeft_btn' ).click( _.bind(function() { this.controls.rotateLeft(-0.5);}, this) );
             $( '#reset_btn' ).click( _.bind(function() { this.controls.reset();this.camera.position.z = 1.5; }, this) ); 
-            /* var gui = new dat.GUI({
-                    height : 5 * 32 - 1,
-                    autoPlace: false
-                });
-
-            var gui_func = {
-                    globalController : this,
-                    zoomin :  function() { this.globalController.controls.dollyOut();},
-                    zoomout : function() { this.globalController.controls.dollyIn(); },
-                    /*panleft: function(){ this.globalController.controls.panLeft(1); },
-                    panright: function(){ this.globalController.controls.panLeft(-1); },
-                    rotateUp: function(){ this.globalController.controls.rotateUp(0.5); },
-                    rotateLeft: function(){ this.globalController.controls.rotateLeft(1);},
-                    rotateRight: function(){ this.globalController.controls.rotateLeft(-1);},
-                    rotateDown: function(){ this.globalController.controls.rotateUp(-1);},
-                    reset: function() {this.globalController.controls.reset();this.globalController.camera.position.z = 1.5;},  
-                    };
-
-            gui.add(gui_func, 'zoomin');
-            gui.add(gui_func, 'zoomout');
-
-            /*var pan = gui.addFolder('Pan..');
-            pan.add(gui_func, 'panleft');
-            pan.add(gui_func, 'panright');
-
-            var rotate = gui.addFolder('Rotate..');
-            rotate.add(gui_func, 'rotateUp');
-            rotate.add(gui_func, 'rotateDown');
-            rotate.add(gui_func, 'rotateLeft');
-            rotate.add(gui_func, 'rotateRight');
-
-            gui.add(gui_func, 'reset');
-
-            var guiContainer = $( '#dat-gui-container' ).empty();
-            testtest = $( gui.domElement ).appendTo( guiContainer);
-            testtest.css('display : block');
-
-            var elements = $(".property-name"); //.first().html('<center><i class="icon-arrow-up"></i>');
-            var text = ['<i class="icon-plus-sign"></i>','<i class="icon-minus-sign"></i>']//'Pan Left','Pan Right','Rotate Up','Rotate Left','Rotate Right','Rotate Down','Reset'];
-            for(var i = 0; i < elements.length; i++)
-                elements.*/
          },
 
 
@@ -151,18 +110,9 @@ Spatial.Controller = Backbone.View.extend(
 
         addAxes : function(){
             var dom2 = $( '#inset' ).empty();
-
-                /*var width = dom2.width(); 
-                var height = 0.75 * width; */
-                //var camera = new THREE.PerspectiveCamera( 75, 4.0 / 3.0, 0.1, 1000 );
-                
-
             // camera
             var camera2 = new THREE.OrthographicCamera( -1, 1, 1, -1, 1, 1000);
             this.camera2 = camera2; 
-
-
-            //$('#inset').css("position","absolute top: "+this.d_width/3+"px; left: "+this.d_height/3+"px"); 
 
             // renderer
             var renderer2 = new THREE.WebGLRenderer({ alpha: true });
@@ -209,65 +159,11 @@ Spatial.Controller = Backbone.View.extend(
 
 
         updateWorldCamera: function(){
-            /*this.camera2.up = this.camera.up; 
-            this.camera2.position.copy( this.camera.position );
-            this.camera2.position.sub( this.controls.target ); 
-            this.camera2.lookAt( this.scene2.position );
-            this.camera2.position.set( this.camera.position.x, this.camera.position.y, this.camera.position.z );
-            this.camera2.lookAt( this.controls.target );*/
-            
             this.camera2.position.subVectors( this.camera.position, this.controls.target );
             this.camera2.position.setLength( 1.8 );
             this.camera2.lookAt( this.scene2.position );
         },
 
-
-        /*addControls: function(){
-            var controlContainer = $( '#controls' ).empty();
-            var buttonText = ["Pan Left","Pan Right","br","Rotate Up","br","Rotate Left","Rotate Right","br","Rotate Down","br", "Reset", "br", "Zoom In", "Zoom Out"];   
-            
-            var utility = [
-                function(){ console.log("click"); this.globalController.controls.panLeft(1); },
-                function(){ this.globalController.controls.panLeft(-1); },
-                function(){},
-                function(){ this.globalController.controls.rotateUp(1); },
-                function(){},
-                function(){ this.globalController.controls.rotateLeft(1);},
-                function(){ this.globalController.controls.rotateLeft(-1);},
-                function(){},
-                function(){ this.globalController.controls.rotateUp(-1);},
-                function(){},
-                function() {this.globalController.controls.reset();this.globalController.camera.position.z = 1.5;},
-                function(){}, 
-                function(){this.globalController.controls.dollyOut();},
-                function() { this.globalController.controls.dollyIn(); },          
-            ];
-
-            for (i = 0; i < buttonText.length; i++) {
-            
-            if(buttonText[i] == "br")
-            {
-                var linebreak = document.createElement("br");
-                $('#controls').append(linebreak);
-            }
-            else
-                {
-                    this.addButtons(buttonText[i], utility[i]);
-                }  
-            
-            }
-
-
-        },
-
-        addButtons: function(text, func){
-            var newButton = document.createElement('button');
-            var newText = document.createTextNode(text); 
-            newButton.appendChild(newText);
-            newButton.onClick = func;
-            $('#controls').append(newButton);
-
-        },*/
 
         // This event gets fired when the user selects a csv data file
         meshDataPreview : function(data)
@@ -383,9 +279,6 @@ Spatial.Controller = Backbone.View.extend(
             }
 
             console.log("Width: "+width+" Height:"+height);
-
-
-
 
         },
 
