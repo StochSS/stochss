@@ -20,6 +20,7 @@ import tempfile
 import time
 import logging
 import numbers
+import random
 
 import pyurdme
 import pickle
@@ -339,7 +340,10 @@ class SpatialPage(BaseHandler):
         
         stochkit_model_obj = json_model_refs["model"]
         #print 'json_model_refs["spatial"]["mesh_wrapper_id"]:', json_model_refs["spatial"]["mesh_wrapper_id"]
-        meshWrapperDb = mesheditor.MeshWrapper.get_by_id(json_model_refs["spatial"]["mesh_wrapper_id"])
+        try:
+            meshWrapperDb = mesheditor.MeshWrapper.get_by_id(json_model_refs["spatial"]["mesh_wrapper_id"])
+        except Exception as e:
+            raise Exception("No Mesh file set. Choose one in the Mesh tab of the Model Editor")
 
         try:
             meshFileObj = fileserver.FileManager.getFile(self, meshWrapperDb.meshFileId)
@@ -349,7 +353,7 @@ class SpatialPage(BaseHandler):
             #self.response.write(json.dumps({"status" : False,
             #                                "msg" : "No Mesh file given"}))
             #return
-            raise Exception("No Mesh file given")
+            raise Exception("Mesh file inaccessible. Try another mesh")
             #TODO: if we get advanced options, we don't need a mesh
 
         try:    
@@ -365,7 +369,7 @@ class SpatialPage(BaseHandler):
 
         for species in stochkit_model_obj.listOfSpecies:
             if species not in species_diffusion_coefficients:
-                raise Exception("Species '{0}' does not have a diffusion coefficient set. Please do that on Species tab in Model Editor".format(species))
+                raise Exception("Species '{0}' does not have a diffusion coefficient set. Please do that in the Species tab of the Model Editor".format(species))
         
         simulation_end_time = data['time']
         simulation_time_increment = data['increment']
@@ -396,6 +400,7 @@ class SpatialPage(BaseHandler):
                 #                                "msg" : "Mesh subdomain file specified, but file not found: {0}".format(e)}))
                 #return
                 raise Exception("Mesh subdomain file specified, but file not found: {0}".format(e))
+            
         # species
         for s in stochkit_model_obj.listOfSpecies:
             pymodel.add_species(pyurdme.Species(name=s, diffusion_constant=float(species_diffusion_coefficients[s])))
@@ -445,7 +450,13 @@ class SpatialPage(BaseHandler):
             #####
             simulation_algorithm = data['algorithm'] # Don't trust this! I haven't implemented the algorithm selection for this yet
             simulation_realizations = data['realizations']
-            simulation_seed = data['seed'] # If this is set to -1, it means choose a seed at random! (Whatever that means)
+
+            # If the seed is negative, this means choose a seed >= 0 randomly
+            if int(data['seed']) < 0:
+                random.seed()
+                data['seed'] = random.randint(0, 2147483647)
+
+            simulation_seed = data['seed']
             #####
 
             path = os.path.abspath(os.path.dirname(__file__))
@@ -484,7 +495,7 @@ class SpatialPage(BaseHandler):
             self.response.write(json.dumps({"status" : True,
                                             "msg" : "Job launched",
                                             "id" : job.key().id()}))
-        except Exception as e: 
+        except Exception as e:
             traceback.print_exc()
             self.response.write(json.dumps({"status" : False,
                                             "msg" : "{0}".format(e)}))
@@ -496,6 +507,11 @@ class SpatialPage(BaseHandler):
         '''
         '''
         try:
+            # If the seed is negative, this means choose a seed >= 0 randomly
+            if int(data['seed']) < 0:
+                random.seed()
+                data['seed'] = random.randint(0, 2147483647)
+
             db_credentials = self.user_data.getCredentials()
             # Set the environmental variables 
             os.environ["AWS_ACCESS_KEY_ID"] = db_credentials['EC2_ACCESS_KEY']
@@ -511,6 +527,7 @@ class SpatialPage(BaseHandler):
                     ####
             pymodel = self.construct_pyurdme_model(data)
             #####
+
             cloud_params = {
                 "job_type": "spatial",
                 "simulation_algorithm" : data['algorithm'],

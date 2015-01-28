@@ -42,28 +42,5 @@
       </fieldset>
     </form>    
   </div>
-  <div class="span3 offset4 well">
-    <h4 class="well-title">
-      <a data-toggle="modal" href="#request_modal">
-        Request an account <i class="icon-question-sign"></i>
-      </a>
-     </h4>
-    {% set help_modal_id = "request_modal" %}
-    {% set help_modal_title = "Requesting an Account" %}
-    {% set help_modal_message = "You can use the form below to request an account. The request will be sent to the administrator and, if you are approved, you can create an account and log in." %}
-    {% include "help_modal.html" %}
-    {{help_modal|safe}}
-    <form action="/login" method="post">
-      <fieldset>
-        <div class="control-group">
-          <input type="email" name="email" placeholder="email@example.com">
-        </div>
-        <input type="hidden" name="request_account" value="True">
-        <div class="control-group">
-          <button type="submit" class="btn btn-primary">Submit</button>
-        </div>
-      </fieldset>
-    </form>
-  </div>
   
 {% endblock %}
