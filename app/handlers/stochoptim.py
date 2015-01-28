@@ -642,7 +642,7 @@ class StochOptimVisualization(BaseHandler):
             # Save the updated status
             job_wrapper.put()
             result['status']=True
-            result['msg'] = "Sucessfully fetched the remote output files."
+            result['msg'] = "Successfully fetched the remote output files."
         except Exception,e:
             logging.info('************************************* {0}'.format(e))
             result['status']=False

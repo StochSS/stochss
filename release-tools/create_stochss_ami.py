@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 
 __author__ = 'Dibyendu Nath'
-__email__ = 'dev.nath.cs@gmail.com'
+__email__ = 'dnath@cs.ucsb.edu'
 
 import sys
 import os
@@ -11,327 +11,470 @@ import uuid
 import json
 import threading
 import subprocess
+import tempfile
+import traceback
+import pprint
+
 
 def get_remote_command(user, ip, key_file, command):
-  return 'ssh -o UserKnownHostsFile=/dev/null -o StrictHostKeyChecking=no -i {0} {1}@{2} "{3}"'.format(key_file, user,
-                                                                                                       ip, command)
+    return 'ssh -o UserKnownHostsFile=/dev/null -o StrictHostKeyChecking=no -i {0} {1}@{2} "{3}"'.format(key_file, user,
+                                                                                                         ip, command)
+
+
 class ShellCommand(object):
-  def __init__(self, cmd, stdin=sys.stdin, stdout=sys.stdout, stderr=sys.stderr, verbose=False):
-    self.cmd = cmd
-    self.stdin = stdin
-    self.stdout = stdout
-    self.stderr = stderr
-    self.process = None
-    self.verbose = verbose
+    def __init__(self, cmd, stdin=sys.stdin, stdout=sys.stdout, stderr=sys.stderr, verbose=False):
+        self.cmd = cmd
+        self.stdin = stdin
+        self.stdout = stdout
+        self.stderr = stderr
+        self.process = None
+        self.verbose = verbose
 
-  def run(self, timeout=None, silent=False):
-    def target():
-      if self.verbose: print 'Running... $', self.cmd
-      self.process = subprocess.Popen(self.cmd,
-                                      stdin=self.stdin,
-                                      stdout=self.stdout,
-                                      stderr=self.stderr,
-                                      shell=True)
-      self.process.communicate()
-      if self.verbose: print 'End of cmd $', self.cmd
+    def run(self, timeout=None, silent=False):
+        def target():
+            if self.verbose: print 'Running... $', self.cmd
+            self.process = subprocess.Popen(self.cmd,
+                                            stdin=self.stdin,
+                                            stdout=self.stdout,
+                                            stderr=self.stderr,
+                                            shell=True)
+            self.process.communicate()
+            if self.verbose: print 'End of cmd $', self.cmd
 
-    thread = threading.Thread(target=target)
-    thread.start()
+        thread = threading.Thread(target=target)
+        thread.start()
 
-    if timeout is not None:
-      thread.join(timeout)
-      if thread.is_alive():
-        if silent is False:  print 'Terminating process...'
-        self.process.terminate()
-        thread.join()
-        if silent is False:  print 'Process return code =', self.process.returncode
-    else:
-      thread.join()
+        if timeout is not None:
+            thread.join(timeout)
+            if thread.is_alive():
+                if silent is False:  print 'Terminating process...'
+                self.process.terminate()
+                thread.join()
+                if silent is False:  print 'Process return code =', self.process.returncode
+        else:
+            thread.join()
+
 
 class AmiCreator:
-  INVALID_INSTANCE_TYPES = ['t1.micro', 'm1.small', 'm1.medium', 'm3.medium']
+    INVALID_INSTANCE_TYPES = ['t1.micro', 'm1.small', 'm1.medium', 'm3.medium']
 
-  def __init__(self, options):
-    self.uuid = uuid.uuid4()
-    self.base_ami_id = options['base_ami_id']
-    self.aws_region = options['aws_region']
+    def __init__(self, options):
+        self.uuid = uuid.uuid4()
+        self.base_ami_id = options['base_ami_id']
+        self.aws_region = options['aws_region']
 
-    if options['instance_type'] in AmiCreator.INVALID_INSTANCE_TYPES:
-      print 'Instance type "{0}" is not sufficient to create StochSS AMI! Exiting.'.format(options['instance_type'])
-      sys.exit(1)
+        if options['instance_type'] in AmiCreator.INVALID_INSTANCE_TYPES:
+            print 'Instance type "{0}" is not sufficient to create StochSS AMI! Exiting.'.format(
+                options['instance_type'])
+            sys.exit(1)
 
-    self.instance_type = options['instance_type']
+        self.instance_type = options['instance_type']
 
-    self.dependencies = options['dependencies']
-    self.python_packages = options['python_packages']
-    self.git_repo = options['git_repo']
+        self.dependencies = options['dependencies']
+        self.python_packages = options['python_packages']
+        self.git_repo = options['git_repo']
 
-    print 'GIT REPO: {0}'.format(self.git_repo['url'])
-    print 'BRANCH: {0}'.format(self.git_repo['branch'])
+        print 'GIT REPO: {0}'.format(self.git_repo['url'])
+        print 'BRANCH: {0}'.format(self.git_repo['branch'])
 
-    self.ec2_connection = self.__create_ec2_connection()
+        self.ec2_connection = self.__create_ec2_connection()
 
-    self.key_name = "test_stochss_kp_{0}".format(self.uuid)
-    self.key_file = None
-    self.security_groups = None
-    self.instance_ip = None
-    self.instance_id = None
-    self.instance_user = options['instance_user']
+        self.key_name = "test_stochss_kp_{0}".format(self.uuid)
+        self.key_file = None
+        self.security_groups = None
+        self.instance_ip = None
+        self.instance_id = None
+        self.instance_user = options['instance_user']
 
-    self.is_old_ami = True
+        if "log" in options.keys():
+            self.log_type = options["log"]["type"]
+        else:
+            self.log_type = "screen"
 
-  def run(self):
-    self.__launch_instance()
+        if self.log_type == "file":
+            stdout_log_filename = os.path.join(os.path.dirname(os.path.abspath(__file__)), options["log"]["stdout"])
+            print 'stdout_log_filename: {0}'.format(stdout_log_filename)
+            self.stdout_log = open(stdout_log_filename, 'w')
 
-    self.__update_instance()
-    self.__install_dependecies()
-    self.__update_fenics()
-    self.__reboot_instance()
-    self.__install_python_packages()
-    self.__download_stochss_repo()
-    self.__compile_stochss()
+            stderr_log_filename = os.path.join(os.path.dirname(os.path.abspath(__file__)), options["log"]["stderr"])
+            print 'stderr_log_filename: {0}'.format(stderr_log_filename)
+            self.stderr_log = open(stderr_log_filename, 'w')
 
-    if self.is_old_ami:
-      self.__extra_steps_for_old_amis()
+        self.is_old_ami = True
+        self.verbose = options["verbose"] if "verbose" in options.keys() else False
 
-    self.run_tests()
-    self.__cleanup_instance()
-    self.make_image()
-    self.__terminate_instance()
+    def run(self):
+        try:
+            self.__launch_instance()
 
-  def __create_ec2_connection(self):
-    if os.environ.has_key('AWS_ACCESS_KEY_ID'):
-      aws_access_key = os.environ['AWS_ACCESS_KEY_ID']
-    else:
-      aws_access_key = raw_input("Please enter your AWS access key: ")
+            self.__update_instance()
+            self.__install_dependencies()
+            if self.__check_dependency_installation() == False:
+                raise Exception("Dependency Installation failed!")
 
-    if os.environ.has_key('AWS_SECRET_ACCESS_KEY'):
-      aws_secret_key = os.environ['AWS_SECRET_ACCESS_KEY']
-    else:
-      aws_secret_key = raw_input("Please enter your AWS secret key: ")
+            self.__update_fenics()
+            self.__check_fenics_installation()
 
-    return boto.ec2.connect_to_region(region_name=self.aws_region,
-                                      aws_access_key_id=aws_access_key,
-                                      aws_secret_access_key=aws_secret_key)
+            self.__reboot_instance()
 
-  def __launch_instance(self):
-    key_pair = self.ec2_connection.create_key_pair(self.key_name)
+            self.__install_python_packages()
+            if self.__check_python_packages_installation() == False:
+                raise Exception("Python Package Installation failed!")
 
-    current_dir = os.path.dirname(os.path.abspath(__file__))
-    key_pair.save(current_dir)
+            self.__download_stochss_repo()
+            self.__compile_stochss()
 
-    self.key_file = os.path.join(current_dir, "{0}.pem".format(self.key_name))
+            if self.is_old_ami:
+                self.__extra_steps_for_old_amis()
 
-    if os.path.exists(self.key_file):
-      print 'Downloaded key file: ', self.key_file
-    else:
-      print "Key file: {0} doesn't exist! Exiting.".format(self.key_file)
-      sys.exit(1)
+            self.run_tests()
+            self.__cleanup_instance()
 
-    security_group_name = "test_stochss_sg_{0}".format(self.uuid)
-    new_security_group = self.ec2_connection.create_security_group(name=security_group_name,
-                                                                   description='StochSS AMI Creation')
+            self.make_image()
 
-    new_security_group.authorize('tcp', 22,     22,     '0.0.0.0/0')
-    new_security_group.authorize('tcp', 5672,   5672,   '0.0.0.0/0')
-    new_security_group.authorize('tcp', 6379,   6379,   '0.0.0.0/0')
-    new_security_group.authorize('tcp', 11211,  11211,  '0.0.0.0/0')
-    new_security_group.authorize('tcp', 55672,  55672,  '0.0.0.0/0')
+        except:
+            traceback.print_exc()
 
-    print "Security group {0} successfully created with appropriate permissions.".format(new_security_group.name)
+        finally:
+            self.__terminate_instance()
+            self.__cleanup()
 
-    self.security_groups = [new_security_group.name]
+    def __create_ec2_connection(self):
+        if os.environ.has_key('AWS_ACCESS_KEY_ID'):
+            aws_access_key = os.environ['AWS_ACCESS_KEY_ID']
+        else:
+            aws_access_key = raw_input("Please enter your AWS access key: ")
 
-    print 'Trying to launch instance... [this might take a while]'
-    reservation = self.ec2_connection.run_instances(image_id=self.base_ami_id,
-                                                    key_name=self.key_name,
-                                                    instance_type=self.instance_type,
-                                                    security_groups=self.security_groups)
+        if os.environ.has_key('AWS_SECRET_ACCESS_KEY'):
+            aws_secret_key = os.environ['AWS_SECRET_ACCESS_KEY']
+        else:
+            aws_secret_key = raw_input("Please enter your AWS secret key: ")
 
-    instance = reservation.instances[0]
+        return boto.ec2.connect_to_region(region_name=self.aws_region,
+                                          aws_access_key_id=aws_access_key,
+                                          aws_secret_access_key=aws_secret_key)
 
-    while instance.update() != "running":
-      time.sleep(5)
+    def __launch_instance(self):
+        key_pair = self.ec2_connection.create_key_pair(self.key_name)
 
-    self.instance_ip = instance.ip_address
-    self.instance_id = instance.id
+        current_dir = os.path.dirname(os.path.abspath(__file__))
+        key_pair.save(current_dir)
 
-    self.__wait_until_successful_ssh()
+        self.key_file = os.path.join(current_dir, "{0}.pem".format(self.key_name))
 
-    print 'Instance successfully running - ip: {0}, id: {1}, base_ami_id = {2}'.format(self.instance_ip,
-                                                                                       self.instance_id,
-                                                                                       self.base_ami_id)
+        if os.path.exists(self.key_file):
+            print 'Downloaded key file: ', self.key_file
+        else:
+            print "Key file: {0} doesn't exist! Exiting.".format(self.key_file)
+            sys.exit(1)
 
-  def __update_instance(self):
-    print '===================='
-    print 'Updating instance...'
-    print '===================='
-    command = ';'.join(['sudo apt-get update',
-                        'sudo apt-get -y upgrade',
-                        'sudo apt-get -y dist-upgrade'])
-    self.__run_remote_command(command)
+        security_group_name = "test_stochss_sg_{0}".format(self.uuid)
+        new_security_group = self.ec2_connection.create_security_group(name=security_group_name,
+                                                                       description='StochSS AMI Creation')
 
-  def __install_dependecies(self):
-    print '=========================='
-    print 'Installing dependencies...'
-    print '=========================='
-    command = "sudo apt-get -y install {0}".format(' '.join(self.dependencies))
-    self.__run_remote_command(command)
+        new_security_group.authorize('tcp', 22,    22,    '0.0.0.0/0')
+        new_security_group.authorize('tcp', 5672,  5672,  '0.0.0.0/0')
+        new_security_group.authorize('tcp', 6379,  6379,  '0.0.0.0/0')
+        new_security_group.authorize('tcp', 11211, 11211, '0.0.0.0/0')
+        new_security_group.authorize('tcp', 55672, 55672, '0.0.0.0/0')
 
-  def __update_fenics(self):
-    print '=========================='
-    print 'Updating FeniCS...'
-    print '=========================='
-    command = ';'.join(['sudo add-apt-repository -y ppa:fenics-packages/fenics',
-                        'sudo apt-get -y update',
-                        'sudo apt-get -y install fenics',
-                        'sudo apt-get -y dist-upgrade'])
-    self.__run_remote_command(command)
+        print "Security group {0} successfully created with appropriate permissions.".format(new_security_group.name)
 
-  def __wait_until_successful_ssh(self):
-    # TODO: Find better method to see if an EC2 instance has rebooted and is running
-    while (True):
-      time.sleep(5)
-      tmp_log_filename = 'tmp.log'
-      if os.path.exists(tmp_log_filename):  os.remove(tmp_log_filename)
+        self.security_groups = [new_security_group.name]
 
-      with open(tmp_log_filename, 'w') as log:
+        print 'Trying to launch instance... [this might take a while]'
+        reservation = self.ec2_connection.run_instances(image_id=self.base_ami_id,
+                                                        key_name=self.key_name,
+                                                        instance_type=self.instance_type,
+                                                        security_groups=self.security_groups)
+
+        instance = reservation.instances[0]
+
+        while instance.update() != "running":
+            time.sleep(5)
+
+        self.instance_ip = instance.ip_address
+        self.instance_id = instance.id
+
+        self.__wait_until_successful_ssh()
+
+        print 'Instance successfully running - ip: {0}, id: {1}, base_ami_id = {2}'.format(self.instance_ip,
+                                                                                           self.instance_id,
+                                                                                           self.base_ami_id)
+
+    def __update_instance(self):
+        header = 'Updating instance...'
+        print '===================='
+        print header
+        command = ';'.join(['sudo apt-get -y update',
+                            'sudo apt-get -y upgrade',
+                            'sudo apt-get -y dist-upgrade'])
+        self.__run_remote_command(command=command, log_header=header)
+
+    def __install_dependencies(self):
+        header = 'Installing dependencies...'
+        print '=========================='
+        print header
+        command = "sudo apt-get -y install {0}".format(' '.join(self.dependencies))
+        self.__run_remote_command(command=command, log_header=header)
+
+    def __update_fenics(self):
+        header = 'Updating FeniCS...'
+        print '=========================='
+        print header
+        command = ';'.join(['sudo add-apt-repository -y ppa:fenics-packages/fenics',
+                            'sudo apt-get -y update',
+                            'sudo apt-get -y install fenics',
+                            'sudo apt-get -y dist-upgrade'])
+        self.__run_remote_command(command=command, log_header=header)
+
+    def __wait_until_successful_ssh(self):
+        while (True):
+            time.sleep(5)
+            tmp_log_stdout_file = tempfile.TemporaryFile()
+            tmp_log_stderr_file = tempfile.TemporaryFile()
+
+            remote_cmd = get_remote_command(user=self.instance_user, ip=self.instance_ip, key_file=self.key_file,
+                                                command="echo Instance {0} with ip {1} is up!".format(self.instance_id,
+                                                                                                      self.instance_ip))
+            shell_cmd = ShellCommand(remote_cmd, stdout=tmp_log_stdout_file, stderr=tmp_log_stderr_file)
+            shell_cmd.run(timeout=5, silent=True)
+
+            if self.verbose:
+                tmp_log_stderr_file.seek(0)
+                print >>2, tmp_log_stderr_file.read()
+
+            tmp_log_stderr_file.close()
+
+            tmp_log_stdout_file.seek(0)
+            output = tmp_log_stdout_file.read().strip()
+            tmp_log_stdout_file.close()
+
+            if output == "Instance {0} with ip {1} is up!".format(self.instance_id, self.instance_ip):
+                print output
+                break
+
+    def __reboot_instance(self):
+        print '================================'
+        print 'Rebooting Instance {0}...'.format(self.instance_id)
+        self.ec2_connection.reboot_instances(instance_ids=[self.instance_id])
+        self.__wait_until_successful_ssh()
+
+
+    def __install_python_packages(self):
+        header = 'Installing Python Packages...'
+        print '============================='
+        print header
+
+        commands = []
+        for package in self.python_packages:
+            if package.has_key('version'):
+                commands.append('sudo pip uninstall -y {0}'.format(package['name']))
+                commands.append('sudo pip install {0}=={1}'.format(package['name'], package['version']))
+            else:
+                commands.append('sudo pip install {0}'.format(package['name']))
+
+        command = ';'.join(commands)
+        self.__run_remote_command(command=command, log_header=header)
+
+
+    def __download_stochss_repo(self):
+        header = 'Downloading StochSS...'
+        print '=========================='
+        print header
+        commands = ['rm -rf stochss',
+                    'git clone --recursive {0}'.format(self.git_repo['url'])]
+
+        if self.git_repo.has_key('branch'):
+            commands.append('cd stochss')
+            commands.append('git checkout {0}'.format(self.git_repo['branch']))
+
+        command = ';'.join(commands)
+        self.__run_remote_command(command=command, log_header=header)
+
+    def __compile_stochss(self):
+        header = 'Compiling StochSS...'
+        print '===================='
+        print header
+        commands = ['cd stochss',
+                    "sed -i '\|launchapp|d' run.ubuntu.sh",
+                    './run.ubuntu.sh']
+        command = ';'.join(commands)
+        self.__run_remote_command(command=command, log_header=header)
+
+    def __extra_steps_for_old_amis(self):
+        header = 'Extra Steps for Old AMIs'
+        print '========================'
+        print header
+        commands = ['ln -s stochss/ode ode',
+                    'ln -s stochss/StochKit StochKit',
+                    'ln -s stochss/stochoptim stochoptim',
+                    'ln -s stochss/pyurdme/pyurdme_wrapper.py pyurdme_wrapper.py',
+                    'ln -s stochss/app/lib/pyurdme-stochss pyurdme',
+                    'ln -s stochss/app/backend/sccpy.py sccpy.py',
+                    'ln -s stochss/app/backend/tasks.py tasks.py',
+                    "sed -i.bak $'s/import pyurdme/import sys\\\\\\nsys.path.append(\\'\/home\/ubuntu\/pyurdme\\')\\\\\\nsys.path.append(\\'\/home\/ubuntu\/stochss\/app\\')\\\\\\nimport pyurdme/g' pyurdme_wrapper.py"]
+
+        command = ';'.join(commands)
+        self.__run_remote_command(command=command, log_header=header)
+
+    def run_tests(self):
+        # TODO: Add tests for the various job types
+        pass
+
+    def __cleanup_instance(self):
+        header = 'Cleaning up crumbs...'
+        print '====================='
+        print header
+        commands = ['sudo rm -f /etc/ssh/ssh_host_*',
+                    'sudo rm -f ~/.ssh/authorized_keys',
+                    'sudo rm -f ~/.bash_history']
+
+        command = ';'.join(commands)
+        self.__run_remote_command(command=command, log_header=header)
+
+    def make_image(self):
+        print '============='
+        print 'Making AMI...'
+        date_string = time.strftime("%Y%b%d-%H%M%S")
+        new_ami_name = "StochSS-Server-{0}".format(date_string)
+
+        print "Creating AMI '{0}' from instance {1}...".format(new_ami_name, self.instance_id)
+        new_ami_id = self.ec2_connection.create_image(self.instance_id, new_ami_name)
+
+        print "New AMI pending..."
+        new_ami = self.ec2_connection.get_image(new_ami_id)
+
+        while new_ami.state != 'available':
+            time.sleep(5)
+            new_ami.update()
+
+        print "New AMI ID: " + new_ami_id
+        print "Making the new AMI Public..."
+        self.ec2_connection.modify_image_attribute(new_ami_id,
+                                                   attribute='launchPermission',
+                                                   operation='add',
+                                                   groups='all')
+
+
+    def __terminate_instance(self):
+        print '================================'
+        print 'Terminating launched instance...'
+        self.ec2_connection.terminate_instances(instance_ids=[self.instance_id])
+        print 'Done.'
+
+    def __check_dependency_installation(self):
+        header = 'Checking dependencies...'
+        print '=========================='
+        print header
+        expected_dependency_list_string = ' '.join(self.dependencies)
+        command = "dpkg-query -W -f='\${Package}\\n' " + expected_dependency_list_string
+
+        tmp_log_files = {
+            "stdout": tempfile.TemporaryFile(),
+            "stderr": tempfile.TemporaryFile()
+        }
+
+        self.__run_remote_command(command=command, log_files=tmp_log_files, silent=True)
+        tmp_log_files["stdout"].seek(0)
+
+        dependency_list_string = tmp_log_files["stdout"].read().strip()
+
+        tmp_log_files["stdout"].close()
+        tmp_log_files["stderr"].close()
+
+        if sorted(dependency_list_string.split('\n')) == sorted(self.dependencies):
+            print 'All dependencies are installed!'
+            return True
+
+        else:
+            print 'Some dependencies are missing ...'
+            print 'List of installed dependencies: \n{0}\n'.format(dependency_list_string)
+            return False
+
+    def __check_fenics_installation(self):
+        #TODO: check FeniCS installation
+        pass
+
+    def __check_python_packages_installation(self):
+        header = 'Checking python packages installation...'
+        print '=========================='
+        print header
+        command = "pip freeze"
+
+        tmp_log_files = {
+            "stdout": tempfile.TemporaryFile(),
+            "stderr": tempfile.TemporaryFile()
+        }
+
+        self.__run_remote_command(command=command, log_files=tmp_log_files, silent=True)
+        tmp_log_files["stdout"].seek(0)
+
+        installed_python_packages = {}
+        packages = map(lambda x: x.split('=='), tmp_log_files["stdout"].read().split('\n'))
+        for package in packages:
+            installed_python_packages[package[0].lower()] = package[1] if len(package) == 2 else ""
+
+        tmp_log_files["stdout"].close()
+        tmp_log_files["stderr"].close()
+
+        is_successful = True
+        for package in self.python_packages:
+            if package["name"].lower() not in installed_python_packages.keys():
+                is_successful = False
+                break
+            if "version" in package.keys() and package["version"] != installed_python_packages[package["name"]]:
+                is_successful = False
+                break
+
+        if is_successful:
+            print 'All python packages are installed!'
+            return True
+
+        else:
+            print 'Some python packages are missing ...'
+            print 'List of installed python packages: \n{0}'.format(pprint.pformat(installed_python_packages))
+            return False
+
+    def __run_remote_command(self, command, log_header=None, log_files=None, silent=False):
         remote_cmd = get_remote_command(user=self.instance_user, ip=self.instance_ip, key_file=self.key_file,
-                                        command="echo Instance {0} with ip {1} is up!".format(self.instance_id,
-                                                                                              self.instance_ip))
-        shell_cmd = ShellCommand(remote_cmd, stdout=log)
-        shell_cmd.run(timeout=5, silent=True)
+                                        command=command)
+        if silent == False:
+            print remote_cmd
 
-      with open(tmp_log_filename) as log:
-        output = log.read().strip()
+        if log_files != None:
+            if log_header != None:
+                log_files["stdout"].write("LOG_HEADER: {0}\n".format(log_header))
+                log_files["stderr"].write("LOG_HEADER: {0}\n".format(log_header))
+                log_files["stdout"].flush()
+                log_files["stderr"].flush()
+            shell_cmd = ShellCommand(remote_cmd, stdout=log_files["stdout"], stderr=log_files["stderr"])
 
-      if output == "Instance {0} with ip {1} is up!".format(self.instance_id, self.instance_ip):
-        os.remove(tmp_log_filename)
-        print output
-        break
+        elif self.log_type == "file":
+            if log_header != None:
+                self.stdout_log.write("LOG_HEADER: {0}\n".format(log_header))
+                self.stderr_log.write("LOG_HEADER: {0}\n".format(log_header))
+                self.stdout_log.flush()
+                self.stderr_log.flush()
+            shell_cmd = ShellCommand(remote_cmd, stdout=self.stdout_log, stderr=self.stderr_log)
 
-  def __reboot_instance(self):
-    print '================================'
-    print 'Rebooting Instance {0}...'.format(self.instance_id)
-    print '================================'
-    self.ec2_connection.reboot_instances(instance_ids=[self.instance_id])
-    self.__wait_until_successful_ssh()
+        else:
+            shell_cmd = ShellCommand(remote_cmd)
 
+        shell_cmd.run()
 
-  def __install_python_packages(self):
-    print '============================='
-    print 'Installing Python Packages...'
-    print '============================='
+    def __cleanup(self):
+        if self.log_type == "file":
+            self.stdout_log.close()
+            self.stderr_log.close()
 
-    commands = []
-    for package in self.python_packages:
-      if package.has_key('version'):
-        commands.append('sudo pip uninstall -y {0}'.format(package['name']))
-        commands.append('sudo pip install {0}=={1}'.format(package['name'], package['version']))
-      else:
-        commands.append('sudo pip install {0}'.format(package['name']))
+        os.remove(self.key_file)
 
-    command = ';'.join(commands)
-    self.__run_remote_command(command)
-
-
-  def __download_stochss_repo(self):
-    print '=========================='
-    print 'Downloading StochSS...'
-    print '=========================='
-    commands = ['rm -rf stochss',
-                'git clone --recursive {0}'.format(self.git_repo['url'])]
-
-    if self.git_repo.has_key('branch'):
-      commands.append('cd stochss')
-      commands.append('git checkout {0}'.format(self.git_repo['branch']))
-
-    command = ';'.join(commands)
-    self.__run_remote_command(command)
-
-  def __compile_stochss(self):
-    print '===================='
-    print 'Compiling StochSS...'
-    print '===================='
-    commands = ['cd stochss',
-                "sed -i '\|launchapp|d' run.ubuntu.sh",
-                './run.ubuntu.sh']
-    command = ';'.join(commands)
-    self.__run_remote_command(command)
-
-  def __extra_steps_for_old_amis(self):
-    print '========================'
-    print 'Extra Steps for Old AMIs'
-    print '========================'
-    commands = ['ln -s stochss/ode ode',
-                'ln -s stochss/StochKit StochKit',
-                'ln -s stochss/stochoptim stochoptim',
-                'ln -s stochss/pyurdme/pyurdme_wrapper.py pyurdme_wrapper.py',
-                'ln -s stochss/app/lib/pyurdme-stochss pyurdme',
-                'ln -s stochss/app/backend/sccpy.py sccpy.py',
-                'ln -s stochss/app/backend/tasks.py tasks.py',
-                "sed -i.bak $'s/import pyurdme/import sys\\\\\\nsys.path.append(\\'\/home\/ubuntu\/pyurdme\\')\\\\\\nsys.path.append(\\'\/home\/ubuntu\/stochss\/app\\')\\\\\\nimport pyurdme/g' pyurdme_wrapper.py" ]
-
-    command = ';'.join(commands)
-    self.__run_remote_command(command)
-
-  def run_tests(self):
-    # TODO: Add tests for the various job types
-    pass
-
-  def __cleanup_instance(self):
-    print '====================='
-    print 'Cleaning up crumbs...'
-    print '====================='
-    commands = ['sudo rm -f /etc/ssh/ssh_host_*',
-                'sudo rm -f ~/.ssh/authorized_keys',
-                'sudo rm -f ~/.bash_history']
-
-    command = ';'.join(commands)
-    self.__run_remote_command(command)
-
-  def make_image(self):
-    print '============='
-    print 'Making AMI...'
-    print '============='
-    date_string = time.strftime("%y%b%d-%H%M%S")
-    new_ami_name = "StochSS-Server-" + date_string
-
-    print "Creating AMI '{0}' from instance {1}...".format(new_ami_name, self.instance_id)
-    new_ami_id = self.ec2_connection.create_image(self.instance_id, new_ami_name)
-
-    print "New AMI pending..."
-    new_ami = self.ec2_connection.get_image(new_ami_id)
-
-    while new_ami.state != 'available':
-      time.sleep(5)
-      new_ami.update()
-
-    print "New AMI ID: " + new_ami_id
-    print "Making the new AMI Public..."
-    self.ec2_connection.modify_image_attribute(new_ami_id,
-                                               attribute='launchPermission',
-                                               operation='add',
-                                               groups='all')
-
-
-  def __terminate_instance(self):
-    print '================================'
-    print 'Terminating launched instance...'
-    print '================================'
-    self.ec2_connection.terminate_instances(instance_ids=[self.instance_id])
-    print 'Done.'
-
-  def __run_remote_command(self, command):
-    remote_cmd = get_remote_command(user=self.instance_user, ip=self.instance_ip, key_file=self.key_file,
-                                    command=command)
-    shell_cmd = ShellCommand(remote_cmd)
-    shell_cmd.run()
 
 if __name__ == '__main__':
-  ami_config_file_path = os.path.join(os.path.dirname(__file__), 'stochss_ami_config.json')
-  with open(ami_config_file_path) as fin:
-    contents = fin.read()
+    ami_config_file_path = os.path.join(os.path.dirname(__file__), 'stochss_ami_config.json')
+    with open(ami_config_file_path) as fin:
+        contents = fin.read()
 
-  options = json.loads(contents)
-  AmiCreator(options).run()
+    options = json.loads(contents)
+    AmiCreator(options).run()

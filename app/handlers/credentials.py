@@ -125,7 +125,7 @@ class CredentialsPage(BaseHandler):
                 stopped = service.stopMachines(terminate_params,True) #True means blocking, ie wait for success (its pretty quick)
                 if not stopped:
                     raise
-                result = {'status': True, 'msg': 'Sucessfully terminated all running VMs.'}
+                result = {'status': True, 'msg': 'Successfully terminated all running VMs.'}
             except Exception,e:
                 result = {'status': False, 'msg': 'Failed to terminate the VMs. Please check their status in the EC2 managment consol available from your Amazon account.'}
             finally:
@@ -280,7 +280,7 @@ class CredentialsPage(BaseHandler):
         params ={"infrastructure":"ec2",
              'group':group_random_name, 
              'vms': vms_info,
-             'image_id': 'ami-f0631a98',
+             'image_id': 'ami-c6cc88ae',
              'key_prefix':key_prefix, #key_prefix = user_id
              'keyname':group_random_name, 
              'email':[user_id],
@@ -299,7 +299,7 @@ class CredentialsPage(BaseHandler):
                       
         res, msg = service.startMachines(params)
         if res == True:
-            result = {'status':'Success' , 'msg': 'Sucessfully requested starting virtual machines. Processing request...'}
+            result = {'status':'Success' , 'msg': 'Successfully requested starting virtual machines. Processing request...'}
         else:
             result = {'status':'Failure' , 'msg': msg}
         return result
