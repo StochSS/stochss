@@ -533,9 +533,12 @@ class SimulatePage(BaseHandler):
                             vhandle.close()
                     else:
                         outfile = '/result/output.txt'
-
-                        vhandle = open(outputdir + '/result/output.txt', 'r')
                         values = { 'time' : [], 'trajectories' : {} }
+                        
+                        #if not os.path.isfile(outputdir + outfile):
+                            
+                        vhandle = open(outputdir + outfile, 'r')
+                                       
                         columnToList = []
                         for i, line in enumerate(vhandle):
                             if i == 0:
