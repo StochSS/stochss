@@ -68,10 +68,11 @@ Spatial.Controller = Backbone.View.extend(
 
         
         addGui : function() {
+            $(" #dat-gui-container").show();
             $( '#zoomPlus_btn' ).click( _.bind(function() { this.controls.dollyOut();}, this) );
             $( '#zoomMinus_btn' ).click( _.bind(function() { this.controls.dollyIn();}, this) );
-            $( '#panLeft_btn' ).click( _.bind(function() { this.controls.panLeft(1);}, this) );
-            $( '#panRight_btn' ).click( _.bind(function() { this.controls.panLeft(-1);}, this) );
+            $( '#panLeft_btn' ).click( _.bind(function() { this.controls.panLeft(-0.1);}, this) );
+            $( '#panRight_btn' ).click( _.bind(function() { this.controls.panLeft(0.1);}, this) );
 
             $( '#rotateUp_btn' ).click( _.bind(function() { this.controls.rotateUp(0.5);}, this) );
             $( '#rotateDown_btn' ).click( _.bind(function() { this.controls.rotateUp(-0.5);}, this) );
