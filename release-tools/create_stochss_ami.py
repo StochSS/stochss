@@ -337,7 +337,7 @@ class AmiCreator:
         print '============='
         print 'Making AMI...'
         date_string = time.strftime("%Y%b%d-%H%M%S")
-        new_ami_name = "StochSS-Server-{0}".format(date_string)
+        new_ami_name = "StochSS-Node-{0}".format(date_string)
 
         print "Creating AMI '{0}' from instance {1}...".format(new_ami_name, self.instance_id)
         new_ami_id = self.ec2_connection.create_image(self.instance_id, new_ami_name)

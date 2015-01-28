@@ -543,7 +543,7 @@ def task(taskid, params, database, access_key, secret_key, task_prefix=""):
           cmd = "chown -R ubuntu output/{0}".format(uuidstr)
           print cmd
           os.system(cmd)
-          exec_str = "sudo -E -u ubuntu {0}/pyurdme_wrapper.py {1} {2} {3} {4} {5} 2>{6} > {7}".format(TaskConfig.STOCHSS_HOME, xmlfilepath, 'output/{0}/results'.format(uuidstr), params['simulation_algorithm'], params['simulation_realizations'], params['simulation_seed'], stderr, stdout)
+          exec_str = "sudo -E -u ubuntu {0} {1} {2} {3} {4} {5} 2>{6} > {7}".format(TaskConfig.PYURDME_WRAPPER_PATH, xmlfilepath, 'output/{0}/results'.format(uuidstr), params['simulation_algorithm'], params['simulation_realizations'], params['simulation_seed'], stderr, stdout)
      
       
       
