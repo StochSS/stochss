@@ -6,6 +6,7 @@ var SpecieCollectionFormView = require('./specie-collection');
 var ReactionCollectionFormView = require('./reaction-collection');
 var MeshCollectionFormView = require('./mesh-collection');
 var ModelConvert = require('../convertToPopulation/model');
+var MeshView = require('./mesh3d');
 
 module.exports = View.extend({
     template: $( '.modelEditorTemplate' ).text(),
@@ -102,6 +103,12 @@ module.exports = View.extend({
             new MeshCollectionFormView({
                 parent: this,
                 el: $( '<div>' ).appendTo( this.el.querySelector("[data-hook='mesh']") )[0],
+                model: this.model,
+                collection: this.meshCollection
+            }),
+            new MeshView({
+                parent: this,
+                el: $( '<div>' ).appendTo( this.el.querySelector("[data-hook='mesh3d']") )[0],
                 model: this.model,
                 collection: this.meshCollection
             }),

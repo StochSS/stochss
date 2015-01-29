@@ -62,7 +62,7 @@ class MeshManager():
 
         for meshDb in meshes:
             #meshDb.delete()
-            output.append(meshDb.toJSON(reduced = True))
+            output.append(meshDb.toJSON(reduced = False))
 
         return output
 
@@ -132,6 +132,21 @@ class MeshBackboneInterface(BaseHandler):
             meshes = MeshManager.getMeshes(self)
 
             self.response.write(json.dumps(meshes))
+        elif req[-2] == 'threeJsMesh':
+            meshFileObj = fileserver.FileManager.getFile(self, int(req[-1]))
+            meshFileName = meshFileObj["storePath"]
+
+            #colors = []
+            #print data['selectedSubdomains']
+            #for subdomain in subdomains:
+            #    if subdomain in data['selectedSubdomains']:
+            #        colors.append('red')
+            #    else:
+            #        colors.append('black')
+                    
+            threejs = pyurdme.URDMEMesh.read_dolfin_mesh(str(meshFileName)).export_to_three_js()
+
+            self.response.write( threejs )
         else:
             mesh = MeshManager.getMesh(self, int(req[-1]))
 
@@ -338,44 +353,6 @@ def setupMeshes(handler):
                                                   "msg" : 'Name updated' } ))
                 return
             elif self.request.get('reqType') == 'getMesh':
-                data = json.loads( self.request.get('data') );
-
-                meshWrapperDb = MeshWrapper.get_by_id(data['id'])
-                meshFileObj = fileserver.FileManager.getFile(self, meshWrapperDb.meshFileId)
-                meshFileName = meshFileObj["storePath"]
-
-                colors = None
-                if meshWrapperDb.subdomainsFileId != None:
-                    subdomainFileObj = fileserver.FileManager.getFile(self, meshWrapperDb.subdomainsFileId)
-                    meshSubdomainFileName = subdomainFileObj["storePath"]
-
-                    subdomains = []
-                    fhandle = open(meshSubdomainFileName, 'r')
-                    for line in fhandle.read().split():
-                        v, s = line.strip().split(',')
-
-                        v = int(v)
-                        s = int(float(s))
-
-                        subdomains.append((v, s))
-                    fhandle.close()
-
-                    subdomains = [y for x, y in sorted(subdomains, key = lambda x : x[0])]
-
-                    colors = []
-                    print data['selectedSubdomains']
-                    for subdomain in subdomains:
-                        if subdomain in data['selectedSubdomains']:
-                            colors.append('red')
-                        else:
-                            colors.append('black')
-
-                if colors:
-                    threejs = pyurdme.URDMEMesh.read_dolfin_mesh(str(meshFileName)).export_to_three_js(colors = colors)
-                else:
-                    threejs = pyurdme.URDMEMesh.read_dolfin_mesh(str(meshFileName)).export_to_three_js()
-
-                self.response.write( threejs )
                 return
             elif self.request.get('reqType') == 'deleteMesh':
                 data = json.loads( self.request.get('data') );

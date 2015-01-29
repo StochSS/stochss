@@ -7,6 +7,7 @@ module.exports = Model.extend({
         name : 'string',
         description : 'string',
         meshFileId : 'number',
+        threeJsMesh : 'object',
         subdomains : 'object',
         uniqueSubdomains : 'object',
         undeletable : 'boolean'
@@ -33,5 +34,18 @@ module.exports = Model.extend({
         delete attr.uniqueSubdomains;
 
         return attr;
+    },
+    downloadMesh: function(callback)
+    {
+        $.ajax({ type : "GET",
+                 url : "meshes/threeJsMesh/" + this.meshFileId,
+                 success : _.bind(_.partial(this.processMesh, callback), this),
+                 dataType : 'json'});
+    },
+    processMesh: function(callback, data)
+    {
+        this.threeJsMesh = data;
+
+        callback(this);
     }
 });
