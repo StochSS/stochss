@@ -693,7 +693,7 @@ class BackendWorker():
         
         
         credentials = params['credentials']
-        python_path = "source /home/ubuntu/.bashrc;export PYTHONPATH=/home/ubuntu/stochss:/home/ubuntu/stochss/pyurdme:/home/ubuntu/stochss/app:/home/ubuntu/stochss/app/backend:/home/ubuntu/stochss/app/lib/cloudtracker;"
+        python_path = "source /home/ubuntu/.bashrc;export PYTHONPATH=/home/ubuntu:/home/ubuntu/pyurdme:/home/ubuntu/stochss/app:/home/ubuntu/stochss/app/backend:/home/ubuntu/stochss/app/lib/cloudtracker;"
         python_path+='export AWS_ACCESS_KEY_ID={0};'.format(str(credentials['EC2_ACCESS_KEY']))
         python_path+='export AWS_SECRET_ACCESS_KEY={0};'.format( str(credentials['EC2_SECRET_KEY']))
         #start_celery_str = "celery -A tasks worker --autoreload --loglevel=info --workdir /home/ubuntu > /home/ubuntu/celery.log 2>&1"
