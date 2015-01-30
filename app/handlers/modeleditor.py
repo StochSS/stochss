@@ -144,7 +144,7 @@ class ModelManager():
                                  'species_diffusion_coefficients' : {} ,
                                  'species_subdomain_assignments' : {} ,
                                  'reactions_subdomain_assignments' : {},
-                                 'initial_conditions' : {} }
+                                 'initial_conditions' : [] }
 
         if 'is_public' not in model:
             model['is_public'] = False
@@ -221,7 +221,7 @@ class ModelManager():
                                      'species_diffusion_coefficients' : {} ,
                                      'species_subdomain_assignments' : {} ,
                                      'reactions_subdomain_assignments' : {},
-                                     'initial_conditions' : {} }
+                                     'initial_conditions' : [] }
 
             # This seems insane
             if 'user_id' in jsonModel:

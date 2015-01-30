@@ -3,6 +3,7 @@ var AmpersandModel = require('ampersand-model');
 var SpecieCollection = require('./specie-collection');
 var ReactionCollection = require('./reaction-collection');
 var ParameterCollection = require('./parameter-collection');
+var InitialConditionCollection = require('./initial-condition-collection');
 
 var Model = AmpersandModel.extend({
     props: {
@@ -27,6 +28,7 @@ var Model = AmpersandModel.extend({
         this.listenTo(this.reactions, 'add remove change', _.bind(this.saveModel, this));
         this.listenTo(this.species, 'add remove change', _.bind(this.saveModel, this));
         this.listenTo(this.parameters, 'add remove change', _.bind(this.saveModel, this));
+        this.listenTo(this.initialConditions, 'add remove change', _.bind(this.saveModel, this));
 
         this.on('change:name change:units change:type change:isSpatial change:mesh', _.bind(this.saveModel, this));
         // this will run if the name changes
@@ -39,6 +41,34 @@ var Model = AmpersandModel.extend({
                 this.mesh = meshCollection.models[i];
             }
         }
+
+        var speciesByName = {};
+        var subdomainsByName = {};
+
+        for(var i = 0; i < this.species.models.length; i++)
+        {
+            speciesByName[this.species.models[i].name] = this.species.models[i];
+        }
+
+        for(var i = 0; i < this.mesh.uniqueSubdomains.models.length; i++)
+        {
+            subdomainsByName[this.mesh.uniqueSubdomains.models[i].name] = this.mesh.uniqueSubdomains.models[i];
+        }
+
+        for(var i = 0; i < this.unprocessedInitialConditions.length; i++)
+        {
+            var initialCondition = this.unprocessedInitialConditions[i];
+            
+            this.initialConditions.add({ type : initialCondition.type,
+                                         count : initialCondition.count,
+                                         specie : speciesByName[initialCondition.species],
+                                         X : initialCondition.x,
+                                         Y : initialCondition.y,
+                                         Z : initialCondition.z,
+                                         subdomain : subdomainsByName[initialCondition.subdomain] });
+        }
+
+        //delete this.unprocessedInitialConditions;
     },
     computeType: function() {
         var massAction = true;
@@ -96,10 +126,18 @@ var Model = AmpersandModel.extend({
             this.reactions = new ReactionCollection();
             this.reactions.parent = this;
         }
+        
+        if(!this.initialConditions || this.initialConditions == attr.initialConditions)
+        {
+            this.initialConditions = new InitialConditionCollection();
+            this.initialConditions.parent = this;
+        }
 
         if(attr.spatial)
         {
             this.meshId = attr.spatial.mesh_wrapper_id;
+
+            this.unprocessedInitialConditions = attr.spatial.initial_conditions;
         }
 
         if(species && this.species.length == 0)
@@ -212,7 +250,21 @@ var Model = AmpersandModel.extend({
             obj.spatial.reactions_subdomain_assignments[this.reactions.models[i].name] = this.reactions.models[i].subdomains;
         }
 
-        obj.spatial.initial_conditions = {};
+        obj.spatial.initial_conditions = [];
+        for(var i = 0; i < this.initialConditions.models.length; i++)
+        {
+            var initialCondition = this.initialConditions.models[i];
+
+            var ic = { type : initialCondition.type,
+                       count : initialCondition.count,
+                       species : initialCondition.specie.name,
+                       x : initialCondition.X,
+                       y : initialCondition.Y,
+                       z : initialCondition.Z,
+                       subdomain : initialCondition.subdomain.name };
+
+            obj.spatial.initial_conditions.push(ic);
+        }
 
         return obj;
     }

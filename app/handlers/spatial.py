@@ -421,7 +421,7 @@ class SpatialPage(BaseHandler):
             pymodel.listOfReactions[r].restrict_to = reaction_subdomain_assigments[r]
         # Initial Conditions
         # initial_conditions = json_model_refs["spatial"]["initial_conditions"] #e.g.  { ic0 : { type : "place", species : "S0",  x : 5.0, y : 10.0, z : 1.0, count : 5000 }, ic1 : { type : "scatter",species : "S0", subdomain : 1, count : 100 }, ic2 : { type : "distribute",species : "S0", subdomain : 2, count : 100 } }
-        for ic_name, ic in initial_conditions.iteritems():
+        for ic in initial_conditions:
             spec = pymodel.listOfSpecies[ic['species']]
             if ic['type'] == "place":
                 pymodel.set_initial_condition_place_near({spec:int(ic['count'])}, point=[float(ic['x']),float(ic['y']),float(ic['z'])])

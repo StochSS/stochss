@@ -532,7 +532,280 @@ module.exports = View.extend({
     }
 });
 
-},{"ampersand-view":"/home/bbales2/stochssModel/app/static/modelEditor/node_modules/ampersand-view/ampersand-view.js","jquery":"/home/bbales2/stochssModel/app/static/modelEditor/node_modules/jquery/dist/jquery.js","underscore":"/home/bbales2/stochssModel/app/static/modelEditor/node_modules/underscore/underscore.js"}],"/home/bbales2/stochssModel/app/static/modelEditor/forms/mesh-collection.js":[function(require,module,exports){
+},{"ampersand-view":"/home/bbales2/stochssModel/app/static/modelEditor/node_modules/ampersand-view/ampersand-view.js","jquery":"/home/bbales2/stochssModel/app/static/modelEditor/node_modules/jquery/dist/jquery.js","underscore":"/home/bbales2/stochssModel/app/static/modelEditor/node_modules/underscore/underscore.js"}],"/home/bbales2/stochssModel/app/static/modelEditor/forms/initial-condition-collection.js":[function(require,module,exports){
+var $ = require('jquery');
+var AmpersandView = require('ampersand-view');
+var AmpersandFormView = require('ampersand-form-view');
+var InputView = require('ampersand-input-view');
+var SelectView = require('ampersand-select-view');
+var InitialConditionFormView = require('./initial-condition');
+
+var Tests = require('./tests');
+var AddNewInitialConditionForm = AmpersandFormView.extend({
+    submitCallback: function (obj) {
+        if(obj.type == 'scatter')
+        {
+            this.collection.addScatterInitialCondition(this.baseModel.species.at(0), 0, this.baseModel.mesh.uniqueSubdomains.at(0));
+        }
+        else if(obj.type == 'place')
+        {
+            this.collection.addPlaceInitialCondition(this.baseModel.species.at(0), 0, 0, 0, 0);
+        }
+        else if(obj.type == 'distribute')
+        {
+            this.collection.addDistributeUniformlyInitialCondition(this.baseModel.species.at(0), 0, this.baseModel.mesh.uniqueSubdomains.at(0));
+        }
+    },
+    initialize: function(attr, options) {
+        this.collection = options.collection;
+
+        this.baseModel = this.collection.parent;
+
+        this.fields = [
+            new SelectView({
+                label: 'Type: ',
+                name: 'type',
+                value: 'scatter',
+                options: [['scatter', 'Scatter'], ['place', 'Place'], ['distribute', 'Distribute Uniformly']],
+                required: true,
+            })
+        ];
+
+    },
+    render: function()
+    {
+        AmpersandFormView.prototype.render.apply(this, arguments);
+
+        this.button = $('<input type="submit" value="Add"/>').appendTo( $( this.el ) );
+    }
+});
+
+var InitialConditionCollectionFormView = AmpersandView.extend({
+    template : "<div>\
+  <h4>Initial Conditions editor</h4>\
+  <table data-hook='initialConditionsTable'>\
+    <thead>\
+      <th></th><th>Type</th><th>Specie</th><th>Details</th>\
+    </thead>\
+  </table>\
+  <h4>Add Reaction</h4>\
+  <form data-hook='addInitialConditionForm'></form>\
+</div>",
+
+    initialize: function(attr, options)
+    {
+        AmpersandView.prototype.initialize.call(this, attr, options);
+    },
+    render: function()
+    {
+        this.baseModel = this.collection.parent;
+
+        AmpersandView.prototype.render.apply(this, arguments);
+
+        this.renderCollection(this.collection, InitialConditionFormView, this.el.querySelector('[data-hook=initialConditionsTable]'));
+
+        this.addForm = new AddNewInitialConditionForm(
+            { 
+                el : this.el.querySelector('[data-hook=addInitialConditionForm]')
+            },
+            {
+                collection : this.collection
+            }
+        );
+
+        //this.addForm.render();
+
+        return this;
+    }
+});
+
+module.exports = InitialConditionCollectionFormView
+},{"./initial-condition":"/home/bbales2/stochssModel/app/static/modelEditor/forms/initial-condition.js","./tests":"/home/bbales2/stochssModel/app/static/modelEditor/forms/tests.js","ampersand-form-view":"/home/bbales2/stochssModel/app/static/modelEditor/node_modules/ampersand-form-view/ampersand-form-view.js","ampersand-input-view":"/home/bbales2/stochssModel/app/static/modelEditor/node_modules/ampersand-input-view/ampersand-input-view.js","ampersand-select-view":"/home/bbales2/stochssModel/app/static/modelEditor/node_modules/ampersand-select-view/ampersand-select-view.js","ampersand-view":"/home/bbales2/stochssModel/app/static/modelEditor/node_modules/ampersand-view/ampersand-view.js","jquery":"/home/bbales2/stochssModel/app/static/modelEditor/node_modules/jquery/dist/jquery.js"}],"/home/bbales2/stochssModel/app/static/modelEditor/forms/initial-condition.js":[function(require,module,exports){
+var _ = require('underscore');
+var $ = require('jquery');
+var View = require('ampersand-view');
+var ModifyingInputView = require('./modifying-input-view');
+var ModifyingNumberInputView = require('./modifying-number-input-view');
+var SelectView = require('ampersand-select-view');
+var ModifyingSelectView = require('./modifying-select-view');
+var SubdomainFormView = require('./subdomain');
+
+var Tests = require('./tests');
+module.exports = View.extend({
+    template : "<tr> \
+  <td> \
+    <button data-hook='delete'>x</button> \
+  </td> \
+  <td data-hook='typeSelect'></td> \
+  <td data-hook='specie'></td> \
+  <td data-hook='details'> \
+    <table> \
+      <tr> \
+        <td>Count</td><td><div data-hook='count'></div></td> \
+      </tr> \
+      <tbody data-hook='xyz'> \
+        <tr><td>X</td><td><div data-hook='X'></div></td></tr> \
+        <tr><td>Y</td><td><div data-hook='Y'></div></td></tr> \
+        <tr><td>Z</td><td><div data-hook='Z'></div></td></tr> \
+      </tbody> \
+      <tbody data-hook='subdomainTbody'> \
+        <tr><td>Subdomain</td><td><div data-hook='subdomain'></div></td></tr> \
+      </tbody> \
+    </table> \
+  </td> \
+</tr>",
+    // Gotta have a few of these functions just so this works as a form view
+    // This gets called when things update
+    update: function(obj)
+    {
+        if(obj.name == 'type')
+        {
+            this.model.type = obj.value;
+        } else if(obj.name == 'specie') {
+            this.model.specie = obj.value;
+        } else if(obj.name == 'subdomain') {
+            this.model.subdomain = obj.value;
+        }
+    },
+    removeThis: function()
+    {
+        this.model.collection.remove(this.model);
+    },
+    events: {
+        'click [data-hook="delete"]': 'removeThis'
+    },
+    derived: {
+        subdomainOrXYZ : {
+            deps : ['model.type'],
+            fn : function() {
+                if(this.model.type == 'scatter' || this.model.type == 'distribute')
+                {
+                    return 'subdomain';
+                }
+                else
+                {
+                    return 'xyz';
+                }
+            }
+        }
+    },
+    bindings: {
+        'subdomainOrXYZ' : {
+            type: 'switch',
+            cases : {
+                'subdomain' : '[data-hook="subdomainTbody"]',
+                'xyz' : '[data-hook="xyz"]',
+            }
+        }
+    },
+    initialize : function()
+    {
+        View.prototype.initialize.apply(this, arguments);
+    },
+    renderSubdomainSelector: function()
+    {
+        if(this.subdomainSelector)
+        {
+            this.subdomainSelector.remove();
+        }
+
+        this.renderSubview(
+            new SelectView({
+                template: '<span><select></select><span data-hook="message-container"><span data-hook="message-text"></span></span></span>',
+                label: '',
+                name: 'subdomain',
+                value: this.model.subdomain,
+                options: this.baseModel.mesh.uniqueSubdomains,
+                required: false,
+                idAttribute: 'cid',
+                textAttribute: 'name',
+                yieldModel: true
+            }), this.el.querySelector('[data-hook="subdomain"]'));
+    },
+    render: function()
+    {
+        View.prototype.render.apply(this, arguments);
+
+        this.baseModel = this.collection.parent;
+
+        this.renderSubview(
+            new SelectView({
+                template: '<span><select></select><span data-hook="message-container"><span data-hook="message-text"></span></span></span>',
+                label: '',
+                name: 'type',
+                value: this.model.type,
+                options: [['scatter', 'Scatter'], ['place', 'Place'], ['distribute', 'Distribute Uniformly']],
+                required: true,
+            }), this.el.querySelector("[data-hook='typeSelect']"));
+
+        this.renderSubview(
+            new ModifyingNumberInputView({
+                template: '<span><span data-hook="label"></span><input><span data-hook="message-container"><span data-hook="message-text"></span></span></span>',
+                label: '',
+                name: 'count',
+                value: this.model.count,
+                required: false,
+                placeholder: 'Count',
+                model : this.model,
+                tests: [].concat(Tests.positive(), Tests.integer())
+            }), this.el.querySelector("[data-hook='count']"));
+
+        this.renderSubview(
+            new ModifyingNumberInputView({
+                template: '<span><span data-hook="label"></span><input><span data-hook="message-container"><span data-hook="message-text"></span></span></span>',
+                label: '',
+                name: 'X',
+                value: this.model.X,
+                required: true,
+                placeholder: 'X',
+                model : this.model,
+                tests: [].concat(Tests.isNumber())
+            }), this.el.querySelector("[data-hook='X']"));
+
+        this.renderSubview(
+            new ModifyingNumberInputView({
+                template: '<span><span data-hook="label"></span><input><span data-hook="message-container"><span data-hook="message-text"></span></span></span>',
+                label: '',
+                name: 'Y',
+                value: this.model.Y,
+                required: true,
+                placeholder: 'Y',
+                model : this.model,
+                tests: [].concat(Tests.isNumber())
+            }), this.el.querySelector("[data-hook='Y']"));
+
+        this.renderSubview(
+            new ModifyingNumberInputView({
+                template: '<span><span data-hook="label"></span><input><span data-hook="message-container"><span data-hook="message-text"></span></span></span>',
+                label: '',
+                name: 'Z',
+                value: this.model.Z,
+                required: true,
+                placeholder: 'Z',
+                model : this.model,
+                tests: [].concat(Tests.isNumber())
+            }), this.el.querySelector("[data-hook='Z']"));
+
+        this.renderSubview(
+            new ModifyingSelectView({
+                template: '<span><select></select><span data-hook="message-container"><span data-hook="message-text"></span></span></span>',
+                label: '',
+                name: 'specie',
+                value: this.model.specie,
+                options: this.baseModel.species,
+                required: true,
+                idAttribute: 'cid',
+                textAttribute: 'name',
+                yieldModel: true
+            }), this.el.querySelector("[data-hook='specie']"));
+
+        this.listenToAndRun(this.model, 'change:mesh', _.bind(this.renderSubdomainSelector, this));
+
+        return this;
+    }
+});
+
+},{"./modifying-input-view":"/home/bbales2/stochssModel/app/static/modelEditor/forms/modifying-input-view.js","./modifying-number-input-view":"/home/bbales2/stochssModel/app/static/modelEditor/forms/modifying-number-input-view.js","./modifying-select-view":"/home/bbales2/stochssModel/app/static/modelEditor/forms/modifying-select-view.js","./subdomain":"/home/bbales2/stochssModel/app/static/modelEditor/forms/subdomain.js","./tests":"/home/bbales2/stochssModel/app/static/modelEditor/forms/tests.js","ampersand-select-view":"/home/bbales2/stochssModel/app/static/modelEditor/node_modules/ampersand-select-view/ampersand-select-view.js","ampersand-view":"/home/bbales2/stochssModel/app/static/modelEditor/node_modules/ampersand-view/ampersand-view.js","jquery":"/home/bbales2/stochssModel/app/static/modelEditor/node_modules/jquery/dist/jquery.js","underscore":"/home/bbales2/stochssModel/app/static/modelEditor/node_modules/underscore/underscore.js"}],"/home/bbales2/stochssModel/app/static/modelEditor/forms/mesh-collection.js":[function(require,module,exports){
 var _ = require('underscore');
 var $ = require('jquery');
 var AmpersandView = require('ampersand-view');
@@ -1062,6 +1335,7 @@ var ParameterCollectionFormView = require('./parameter-collection');
 var SpecieCollectionFormView = require('./specie-collection');
 var ReactionCollectionFormView = require('./reaction-collection');
 var MeshCollectionFormView = require('./mesh-collection');
+var InitialConditionsFormView = require('./initial-condition-collection');
 var ModelConvert = require('../convertToPopulation/model');
 var MeshView = require('./mesh3d');
 
@@ -1157,6 +1431,11 @@ module.exports = View.extend({
                 el: $( '<div>' ).appendTo( this.el.querySelector("[data-hook='reaction']") )[0],
                 collection: model.reactions
             }),
+            new InitialConditionsFormView({
+                parent: this,
+                el: $( '<div>' ).appendTo( this.el.querySelector("[data-hook='initialConditions']") )[0],
+                collection: this.model.initialConditions
+            }),
             new MeshCollectionFormView({
                 parent: this,
                 el: $( '<div>' ).appendTo( this.el.querySelector("[data-hook='mesh']") )[0],
@@ -1187,7 +1466,7 @@ module.exports = View.extend({
     }
 });
 
-},{"../convertToPopulation/model":"/home/bbales2/stochssModel/app/static/modelEditor/convertToPopulation/model.js","./mesh-collection":"/home/bbales2/stochssModel/app/static/modelEditor/forms/mesh-collection.js","./mesh3d":"/home/bbales2/stochssModel/app/static/modelEditor/forms/mesh3d.js","./parameter-collection":"/home/bbales2/stochssModel/app/static/modelEditor/forms/parameter-collection.js","./reaction-collection":"/home/bbales2/stochssModel/app/static/modelEditor/forms/reaction-collection.js","./specie-collection":"/home/bbales2/stochssModel/app/static/modelEditor/forms/specie-collection.js","ampersand-view":"/home/bbales2/stochssModel/app/static/modelEditor/node_modules/ampersand-view/ampersand-view.js","jquery":"/home/bbales2/stochssModel/app/static/modelEditor/node_modules/jquery/dist/jquery.js","underscore":"/home/bbales2/stochssModel/app/static/modelEditor/node_modules/underscore/underscore.js"}],"/home/bbales2/stochssModel/app/static/modelEditor/forms/modifying-input-view.js":[function(require,module,exports){
+},{"../convertToPopulation/model":"/home/bbales2/stochssModel/app/static/modelEditor/convertToPopulation/model.js","./initial-condition-collection":"/home/bbales2/stochssModel/app/static/modelEditor/forms/initial-condition-collection.js","./mesh-collection":"/home/bbales2/stochssModel/app/static/modelEditor/forms/mesh-collection.js","./mesh3d":"/home/bbales2/stochssModel/app/static/modelEditor/forms/mesh3d.js","./parameter-collection":"/home/bbales2/stochssModel/app/static/modelEditor/forms/parameter-collection.js","./reaction-collection":"/home/bbales2/stochssModel/app/static/modelEditor/forms/reaction-collection.js","./specie-collection":"/home/bbales2/stochssModel/app/static/modelEditor/forms/specie-collection.js","ampersand-view":"/home/bbales2/stochssModel/app/static/modelEditor/node_modules/ampersand-view/ampersand-view.js","jquery":"/home/bbales2/stochssModel/app/static/modelEditor/node_modules/jquery/dist/jquery.js","underscore":"/home/bbales2/stochssModel/app/static/modelEditor/node_modules/underscore/underscore.js"}],"/home/bbales2/stochssModel/app/static/modelEditor/forms/modifying-input-view.js":[function(require,module,exports){
 var $ = require('jquery');
 var _ = require('underscore');
 var InputView = require('ampersand-input-view');
@@ -2335,7 +2614,43 @@ module.exports = {
         }
     }
 };
-},{"underscore":"/home/bbales2/stochssModel/app/static/modelEditor/node_modules/underscore/underscore.js"}],"/home/bbales2/stochssModel/app/static/modelEditor/models/mesh-collection.js":[function(require,module,exports){
+},{"underscore":"/home/bbales2/stochssModel/app/static/modelEditor/node_modules/underscore/underscore.js"}],"/home/bbales2/stochssModel/app/static/modelEditor/models/initial-condition-collection.js":[function(require,module,exports){
+var AmpCollection = require('ampersand-collection');
+var InitialCondition = require('./initial-condition');
+
+module.exports = AmpCollection.extend({
+    model: InitialCondition,
+    addScatterInitialCondition: function(specie, count, subdomain) {
+        return this.add({ specie : specie, type : 'scatter', subdomain : subdomain, count : count, X : 0, Y : 0, Z : 0 });
+    },
+    addPlaceInitialCondition: function(specie, count, X, Y, Z) {
+        var subdomain = this.parent.mesh.uniqueSubdomains.at(0);
+
+        return this.add({ specie : specie, type : 'place', count : count, subdomain : subdomain, X : X, Y : Y, Z : Z });
+    },
+    addDistributeUniformlyInitialCondition: function(specie, count, subdomain) {
+        return this.add({ specie : specie, type : 'distribute', subdomain : subdomain, count : count, X : 0, Y : 0, Z : 0 });
+    }
+});
+
+},{"./initial-condition":"/home/bbales2/stochssModel/app/static/modelEditor/models/initial-condition.js","ampersand-collection":"/home/bbales2/stochssModel/app/static/modelEditor/node_modules/ampersand-collection/ampersand-collection.js"}],"/home/bbales2/stochssModel/app/static/modelEditor/models/initial-condition.js":[function(require,module,exports){
+var _ = require('underscore');
+var State = require('ampersand-state');
+
+module.exports = State.extend({
+    props: {
+        type : 'string',
+        specie : 'object',
+        count : 'number',
+        subdomain : 'object',
+        X : 'number',
+        Y : 'number',
+        Z : 'number'
+    }
+});
+
+
+},{"ampersand-state":"/home/bbales2/stochssModel/app/static/modelEditor/node_modules/ampersand-state/ampersand-state.js","underscore":"/home/bbales2/stochssModel/app/static/modelEditor/node_modules/underscore/underscore.js"}],"/home/bbales2/stochssModel/app/static/modelEditor/models/mesh-collection.js":[function(require,module,exports){
 var AmpCollection = require('ampersand-collection');
 var Mesh = require('./mesh');
 
@@ -2402,6 +2717,7 @@ var AmpersandModel = require('ampersand-model');
 var SpecieCollection = require('./specie-collection');
 var ReactionCollection = require('./reaction-collection');
 var ParameterCollection = require('./parameter-collection');
+var InitialConditionCollection = require('./initial-condition-collection');
 
 var Model = AmpersandModel.extend({
     props: {
@@ -2426,6 +2742,7 @@ var Model = AmpersandModel.extend({
         this.listenTo(this.reactions, 'add remove change', _.bind(this.saveModel, this));
         this.listenTo(this.species, 'add remove change', _.bind(this.saveModel, this));
         this.listenTo(this.parameters, 'add remove change', _.bind(this.saveModel, this));
+        this.listenTo(this.initialConditions, 'add remove change', _.bind(this.saveModel, this));
 
         this.on('change:name change:units change:type change:isSpatial change:mesh', _.bind(this.saveModel, this));
         // this will run if the name changes
@@ -2438,6 +2755,34 @@ var Model = AmpersandModel.extend({
                 this.mesh = meshCollection.models[i];
             }
         }
+
+        var speciesByName = {};
+        var subdomainsByName = {};
+
+        for(var i = 0; i < this.species.models.length; i++)
+        {
+            speciesByName[this.species.models[i].name] = this.species.models[i];
+        }
+
+        for(var i = 0; i < this.mesh.uniqueSubdomains.models.length; i++)
+        {
+            subdomainsByName[this.mesh.uniqueSubdomains.models[i].name] = this.mesh.uniqueSubdomains.models[i];
+        }
+
+        for(var i = 0; i < this.unprocessedInitialConditions.length; i++)
+        {
+            var initialCondition = this.unprocessedInitialConditions[i];
+            
+            this.initialConditions.add({ type : initialCondition.type,
+                                         count : initialCondition.count,
+                                         specie : speciesByName[initialCondition.species],
+                                         X : initialCondition.x,
+                                         Y : initialCondition.y,
+                                         Z : initialCondition.z,
+                                         subdomain : subdomainsByName[initialCondition.subdomain] });
+        }
+
+        //delete this.unprocessedInitialConditions;
     },
     computeType: function() {
         var massAction = true;
@@ -2495,10 +2840,18 @@ var Model = AmpersandModel.extend({
             this.reactions = new ReactionCollection();
             this.reactions.parent = this;
         }
+        
+        if(!this.initialConditions || this.initialConditions == attr.initialConditions)
+        {
+            this.initialConditions = new InitialConditionCollection();
+            this.initialConditions.parent = this;
+        }
 
         if(attr.spatial)
         {
             this.meshId = attr.spatial.mesh_wrapper_id;
+
+            this.unprocessedInitialConditions = attr.spatial.initial_conditions;
         }
 
         if(species && this.species.length == 0)
@@ -2611,7 +2964,21 @@ var Model = AmpersandModel.extend({
             obj.spatial.reactions_subdomain_assignments[this.reactions.models[i].name] = this.reactions.models[i].subdomains;
         }
 
-        obj.spatial.initial_conditions = {};
+        obj.spatial.initial_conditions = [];
+        for(var i = 0; i < this.initialConditions.models.length; i++)
+        {
+            var initialCondition = this.initialConditions.models[i];
+
+            var ic = { type : initialCondition.type,
+                       count : initialCondition.count,
+                       species : initialCondition.specie.name,
+                       x : initialCondition.X,
+                       y : initialCondition.Y,
+                       z : initialCondition.Z,
+                       subdomain : initialCondition.subdomain.name };
+
+            obj.spatial.initial_conditions.push(ic);
+        }
 
         return obj;
     }
@@ -2625,7 +2992,7 @@ Model.buildFromJSON = function(json, model)
 
 module.exports = Model;
 
-},{"./parameter-collection":"/home/bbales2/stochssModel/app/static/modelEditor/models/parameter-collection.js","./reaction-collection":"/home/bbales2/stochssModel/app/static/modelEditor/models/reaction-collection.js","./specie-collection":"/home/bbales2/stochssModel/app/static/modelEditor/models/specie-collection.js","ampersand-model":"/home/bbales2/stochssModel/app/static/modelEditor/node_modules/ampersand-model/ampersand-model.js","underscore":"/home/bbales2/stochssModel/app/static/modelEditor/node_modules/underscore/underscore.js"}],"/home/bbales2/stochssModel/app/static/modelEditor/models/parameter-collection.js":[function(require,module,exports){
+},{"./initial-condition-collection":"/home/bbales2/stochssModel/app/static/modelEditor/models/initial-condition-collection.js","./parameter-collection":"/home/bbales2/stochssModel/app/static/modelEditor/models/parameter-collection.js","./reaction-collection":"/home/bbales2/stochssModel/app/static/modelEditor/models/reaction-collection.js","./specie-collection":"/home/bbales2/stochssModel/app/static/modelEditor/models/specie-collection.js","ampersand-model":"/home/bbales2/stochssModel/app/static/modelEditor/node_modules/ampersand-model/ampersand-model.js","underscore":"/home/bbales2/stochssModel/app/static/modelEditor/node_modules/underscore/underscore.js"}],"/home/bbales2/stochssModel/app/static/modelEditor/models/parameter-collection.js":[function(require,module,exports){
 // parameter Collection - parameter-collection.js
 var AmpCollection = require('ampersand-collection');
 var parameter = require('./parameter');

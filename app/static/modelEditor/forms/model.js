@@ -5,6 +5,7 @@ var ParameterCollectionFormView = require('./parameter-collection');
 var SpecieCollectionFormView = require('./specie-collection');
 var ReactionCollectionFormView = require('./reaction-collection');
 var MeshCollectionFormView = require('./mesh-collection');
+var InitialConditionsFormView = require('./initial-condition-collection');
 var ModelConvert = require('../convertToPopulation/model');
 var MeshView = require('./mesh3d');
 
@@ -99,6 +100,11 @@ module.exports = View.extend({
                 parent: this,
                 el: $( '<div>' ).appendTo( this.el.querySelector("[data-hook='reaction']") )[0],
                 collection: model.reactions
+            }),
+            new InitialConditionsFormView({
+                parent: this,
+                el: $( '<div>' ).appendTo( this.el.querySelector("[data-hook='initialConditions']") )[0],
+                collection: this.model.initialConditions
             }),
             new MeshCollectionFormView({
                 parent: this,

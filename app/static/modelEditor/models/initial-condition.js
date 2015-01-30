@@ -5,7 +5,7 @@ module.exports = State.extend({
     props: {
         type : 'string',
         specie : 'object',
-        count : 'string',
+        count : 'number',
         subdomain : 'object',
         X : 'number',
         Y : 'number',
