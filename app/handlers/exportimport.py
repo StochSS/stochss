@@ -860,34 +860,50 @@ class ImportPage(BaseHandler):
                 job_name = cloud_job.name
                 if job_name in job_sizes:
                     # These are the relevant jobs
+                    if job_sizes[job_name] is None:
+                        continue
+                    else:
+                        size = float(job_sizes[job_name])
                     context["stochkit_jobs"].append({
                         'name': job_name,
                         'exec_type': cloud_job.stochkit_job.exec_type,
-                        'size': '{0} KB'.format(round(float(job_sizes[job_name])/1024, 1))
+                        'size': '{0} KB'.format(round(size/1024, 1))
                     })
             for cloud_job in sensi_jobs:
                 job_name = cloud_job.jobName
                 if job_name in job_sizes:
+                    if job_sizes[job_name] is None:
+                        continue
+                    else:
+                        size = float(job_sizes[job_name])
                     context["sensitivity_jobs"].append({
                         'name': job_name,
                         'exec_type': 'sensitivity_jobs',
-                        'size': '{0} KB'.format(round(float(job_sizes[job_name])/1024, 1))
+                        'size': '{0} KB'.format(round(size/1024, 1))
                     })
             for cloud_job in stochoptim_jobs:
                 job_name = cloud_job.jobName
                 if job_name in job_sizes:
+                    if job_sizes[job_name] is None:
+                        continue
+                    else:
+                        size = float(job_sizes[job_name])
                     context["stochoptim_jobs"].append({
                         'name': job_name,
                         'exec_type': 'mcem2',
-                        'size': '{0} KB'.format(round(float(job_sizes[job_name])/1024, 1))
+                        'size': '{0} KB'.format(round(size/1024, 1))
                     })
             for cloud_job in spatial_jobs:
                 job_name = cloud_job.jobName
                 if job_name in job_sizes:
+                    if job_sizes[job_name] is None:
+                        continue
+                    else:
+                        size = float(job_sizes[job_name])
                     context["spatial_jobs"].append({
                         'name': job_name,
                         'exec_type': 'spatial',
-                        'size': '{0} KB'.format(round(float(job_sizes[job_name])/1024, 1))
+                        'size': '{0} KB'.format(round(size/1024, 1))
                     })
         return self.render_response('exportimport.html', **context)
 
