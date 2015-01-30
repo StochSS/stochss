@@ -252,7 +252,8 @@ class JobManager():
 
         jobWrap.stdout = job['stdout']
         jobWrap.stderr = job['stderr']
-        jobWrap.output_stored = job['output_stored']
+        if 'output_stored' in job:
+            jobWrap.output_stored = job['output_stored']
 
         jobWrap.put()
 
@@ -355,7 +356,7 @@ class StochKitJob(Job):
         
         self.epsilon = epsilon
         self.threshold = threshold
-        self.resource = "local"
+        self.resource = "Local"
 
     
         # Status of the Job (Running, Pending, Done)
@@ -533,9 +534,12 @@ class SimulatePage(BaseHandler):
                             vhandle.close()
                     else:
                         outfile = '/result/output.txt'
-
-                        vhandle = open(outputdir + '/result/output.txt', 'r')
                         values = { 'time' : [], 'trajectories' : {} }
+
+                        #if not os.path.isfile(outputdir + outfile):
+                            
+                        vhandle = open(outputdir + outfile, 'r')
+                                       
                         columnToList = []
                         for i, line in enumerate(vhandle):
                             if i == 0:
