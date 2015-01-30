@@ -14,6 +14,8 @@ import subprocess
 import tempfile
 import traceback
 import pprint
+import argparse
+import glob
 
 
 def get_remote_command(user, ip, key_file, command):
@@ -55,15 +57,16 @@ class ShellCommand(object):
             thread.join()
 
 
-class AmiCreator:
+class AmiManager:
     INVALID_INSTANCE_TYPES = ['t1.micro', 'm1.small', 'm1.medium', 'm3.medium']
+    NUM_TRIALS = 3
 
     def __init__(self, options):
         self.uuid = uuid.uuid4()
         self.base_ami_id = options['base_ami_id']
         self.aws_region = options['aws_region']
 
-        if options['instance_type'] in AmiCreator.INVALID_INSTANCE_TYPES:
+        if options['instance_type'] in AmiManager.INVALID_INSTANCE_TYPES:
             print 'Instance type "{0}" is not sufficient to create StochSS AMI! Exiting.'.format(
                 options['instance_type'])
             sys.exit(1)
@@ -77,7 +80,7 @@ class AmiCreator:
         print 'GIT REPO: {0}'.format(self.git_repo['url'])
         print 'BRANCH: {0}'.format(self.git_repo['branch'])
 
-        self.ec2_connection = self.__create_ec2_connection()
+        self.ec2_connection = self.create_ec2_connection(aws_region=self.aws_region)
 
         self.key_name = "test_stochss_kp_{0}".format(self.uuid)
         self.key_file = None
@@ -107,19 +110,44 @@ class AmiCreator:
         try:
             self.__launch_instance()
 
-            self.__update_instance()
-            self.__install_dependencies()
-            if self.__check_dependency_installation() == False:
-                raise Exception("Dependency Installation failed!")
+            tries = self.NUM_TRIALS
+            while True:
+                print "====================[Trial #{0}]======================".format(self.NUM_TRIALS - tries + 1)
+                self.__update_instance()
+                self.__install_dependencies()
+                is_successful = self.__check_dependency_installation()
+
+                if is_successful:
+                    print "Trial #{0} of linux dependency installation successful!".format(self.NUM_TRIALS - tries + 1)
+                    break
+                else:
+                    if tries == 0:
+                        raise Exception("Dependency Installation failed after {0} tries!".format(self.NUM_TRIALS))
+
+                tries -= 1
 
             self.__update_fenics()
             self.__check_fenics_installation()
 
             self.__reboot_instance()
 
-            self.__install_python_packages()
-            if self.__check_python_packages_installation() == False:
-                raise Exception("Python Package Installation failed!")
+            self.__update_fenics()
+            self.__check_fenics_installation()
+
+            tries = self.NUM_TRIALS
+            while True:
+                print "====================[Trial #{0}]======================".format(self.NUM_TRIALS - tries + 1)
+                self.__install_python_packages()
+                is_successful = self.__check_python_packages_installation()
+
+                if is_successful:
+                    print "Trial #{0} of python package installation successful!".format(self.NUM_TRIALS - tries + 1)
+                    break
+                else:
+                    if tries == 0:
+                        raise Exception("Python Package Installation failed after {0} tries!".format(self.NUM_TRIALS))
+
+                tries -= 1
 
             self.__download_stochss_repo()
             self.__compile_stochss()
@@ -139,7 +167,8 @@ class AmiCreator:
             self.__terminate_instance()
             self.__cleanup()
 
-    def __create_ec2_connection(self):
+    @staticmethod
+    def create_ec2_connection(aws_region):
         if os.environ.has_key('AWS_ACCESS_KEY_ID'):
             aws_access_key = os.environ['AWS_ACCESS_KEY_ID']
         else:
@@ -150,7 +179,7 @@ class AmiCreator:
         else:
             aws_secret_key = raw_input("Please enter your AWS secret key: ")
 
-        return boto.ec2.connect_to_region(region_name=self.aws_region,
+        return boto.ec2.connect_to_region(region_name=aws_region,
                                           aws_access_key_id=aws_access_key,
                                           aws_secret_access_key=aws_secret_key)
 
@@ -204,7 +233,7 @@ class AmiCreator:
 
     def __update_instance(self):
         header = 'Updating instance...'
-        print '===================='
+        print '=================================================='
         print header
         command = ';'.join(['sudo apt-get -y update',
                             'sudo apt-get -y upgrade',
@@ -213,14 +242,14 @@ class AmiCreator:
 
     def __install_dependencies(self):
         header = 'Installing dependencies...'
-        print '=========================='
+        print '=================================================='
         print header
         command = "sudo apt-get -y install {0}".format(' '.join(self.dependencies))
         self.__run_remote_command(command=command, log_header=header)
 
     def __update_fenics(self):
         header = 'Updating FeniCS...'
-        print '=========================='
+        print '=================================================='
         print header
         command = ';'.join(['sudo add-apt-repository -y ppa:fenics-packages/fenics',
                             'sudo apt-get -y update',
@@ -255,7 +284,7 @@ class AmiCreator:
                 break
 
     def __reboot_instance(self):
-        print '================================'
+        print '=================================================='
         print 'Rebooting Instance {0}...'.format(self.instance_id)
         self.ec2_connection.reboot_instances(instance_ids=[self.instance_id])
         self.__wait_until_successful_ssh()
@@ -263,7 +292,7 @@ class AmiCreator:
 
     def __install_python_packages(self):
         header = 'Installing Python Packages...'
-        print '============================='
+        print '=================================================='
         print header
 
         commands = []
@@ -280,7 +309,7 @@ class AmiCreator:
 
     def __download_stochss_repo(self):
         header = 'Downloading StochSS...'
-        print '=========================='
+        print '=================================================='
         print header
         commands = ['rm -rf stochss',
                     'git clone --recursive {0}'.format(self.git_repo['url'])]
@@ -294,7 +323,7 @@ class AmiCreator:
 
     def __compile_stochss(self):
         header = 'Compiling StochSS...'
-        print '===================='
+        print '=================================================='
         print header
         commands = ['cd stochss',
                     "sed -i '\|launchapp|d' run.ubuntu.sh",
@@ -304,7 +333,7 @@ class AmiCreator:
 
     def __extra_steps_for_old_amis(self):
         header = 'Extra Steps for Old AMIs'
-        print '========================'
+        print '=================================================='
         print header
         commands = ['ln -s stochss/ode ode',
                     'ln -s stochss/StochKit StochKit',
@@ -324,7 +353,7 @@ class AmiCreator:
 
     def __cleanup_instance(self):
         header = 'Cleaning up crumbs...'
-        print '====================='
+        print '=================================================='
         print header
         commands = ['sudo rm -f /etc/ssh/ssh_host_*',
                     'sudo rm -f ~/.ssh/authorized_keys',
@@ -334,7 +363,7 @@ class AmiCreator:
         self.__run_remote_command(command=command, log_header=header)
 
     def make_image(self):
-        print '============='
+        print '=================================================='
         print 'Making AMI...'
         date_string = time.strftime("%Y%b%d-%H%M%S")
         new_ami_name = "StochSS-Node-{0}".format(date_string)
@@ -358,14 +387,14 @@ class AmiCreator:
 
 
     def __terminate_instance(self):
-        print '================================'
+        print '=================================================='
         print 'Terminating launched instance...'
         self.ec2_connection.terminate_instances(instance_ids=[self.instance_id])
         print 'Done.'
 
     def __check_dependency_installation(self):
         header = 'Checking dependencies...'
-        print '=========================='
+        print '=================================================='
         print header
         expected_dependency_list_string = ' '.join(self.dependencies)
         command = "dpkg-query -W -f='\${Package}\\n' " + expected_dependency_list_string
@@ -398,7 +427,7 @@ class AmiCreator:
 
     def __check_python_packages_installation(self):
         header = 'Checking python packages installation...'
-        print '=========================='
+        print '=================================================='
         print header
         command = "pip freeze"
 
@@ -439,7 +468,7 @@ class AmiCreator:
     def __run_remote_command(self, command, log_header=None, log_files=None, silent=False):
         remote_cmd = get_remote_command(user=self.instance_user, ip=self.instance_ip, key_file=self.key_file,
                                         command=command)
-        if silent == False:
+        if silent == False and self.verbose == True:
             print remote_cmd
 
         if log_files != None:
@@ -471,10 +500,48 @@ class AmiCreator:
         os.remove(self.key_file)
 
 
-if __name__ == '__main__':
-    ami_config_file_path = os.path.join(os.path.dirname(__file__), 'stochss_ami_config.json')
-    with open(ami_config_file_path) as fin:
-        contents = fin.read()
+def cleanup_local_files():
+    for file in glob.glob(os.path.join(os.path.dirname(os.path.abspath(__file__)), '*.log')):
+        os.remove(file)
+    for file in glob.glob(os.path.join(os.path.dirname(os.path.abspath(__file__)), 'test_stochss_kp_*.pem')):
+        os.remove(file)
 
-    options = json.loads(contents)
-    AmiCreator(options).run()
+
+if __name__ == '__main__':
+    parser = argparse.ArgumentParser()
+    parser.add_argument('-s', '--settings', help="Configuration Settings File (stochss_ami_config.json by default)",
+                        action="store", dest="config_file",
+                        default=os.path.join(os.path.dirname(__file__), "stochss_ami_config.json"))
+    parser.add_argument('-c', '--cleanup', help="Cleanup Local files", action="store_true", default=False)
+    parser.add_argument('-v', '--verbose', help="Verbose output", action="store_true")
+    parser.add_argument('-d', '--delete', help="Delete existing AMI with associated snapshot", action="store",
+                        dest="ami_id")
+    parser.add_argument('-b', '--branch', help="StochSS Git branch name (overridden)", action="store",
+                        dest="git_branch")
+
+    args = parser.parse_args(sys.argv[1:])
+
+    if args.cleanup:
+        print 'Cleaning up local debris...'
+        cleanup_local_files()
+
+    elif args.ami_id != None:
+        print 'Deleting AMI {0}...'.format(args.ami_id)
+        ec2_conn = AmiManager.create_ec2_connection(aws_region='us-east-1')
+        ec2_conn.deregister_image(args.ami_id, delete_snapshot=True)
+
+    else:
+        print 'config file =', args.config_file
+        with open(args.config_file) as fin:
+            contents = fin.read()
+
+        options = json.loads(contents)
+
+        if args.git_branch != None:
+            options["git_repo"]["branch"] = args.git_branch
+
+        if args.verbose != None:
+            options['verbose'] = args.verbose
+
+        AmiManager(options).run()
+
