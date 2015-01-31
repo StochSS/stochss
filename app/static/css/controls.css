@@ -1,29 +1,24 @@
 #container{
-  display:none; 
   border-style: solid; 
   color: white;
-  background-color: black;
-  height: 41px;
+  padding: 5px;
+  background-color : grey;
 }
 
 .button-container{
-  float:left;
-  padding-top: 5px;
-  padding-right: 5px;
-  padding-bottom: 5px;
-  padding-left: 5px;
-  border-style: solid;
-  border-color: gray;
+    display: inline-block;
+    padding: 2px;
+    border-style: solid;
+    border-color: black;
+    border-width: 1px;
 }
 
 .button {
-  height : 25px;
+    height : 25px;
 }
 
 .button-container-left{
-  padding-left: 12px;
 }
 
 .button-container-right{
-  padding-right: 37px;
 }
