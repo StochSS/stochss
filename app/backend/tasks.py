@@ -650,7 +650,7 @@ All DynamoBD related methods follow next. TODO: move it to a different file
 def describetask(taskids,tablename):
     res = {}
     try:
-        print 'inside describetask method with taskids = {0} and tablename {1}'.format(str(taskids), tablename)
+        logging.info('inside describetask method with taskids = {0} and tablename {1}'.format(str(taskids), tablename))
         dynamo=boto.connect_dynamodb()
         if not tableexists(dynamo, tablename): return res
         table = dynamo.get_table(tablename)
