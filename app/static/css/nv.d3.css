@@ -10,15 +10,12 @@
   overflow: hidden;
 } 
 
-
 #container{
   display:none; 
   border-style: solid; 
   color: gray;
   background-color: black;
-  height: 35px;
 }
-
 
 /********************
   Box shadow and border radius styling

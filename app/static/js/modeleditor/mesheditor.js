@@ -83,107 +83,9 @@ MeshEditor.Controller = Backbone.View.extend(
 
         renderFrame : function() {
             this.renderer.render(this.scene, this.camera);
-            this.updateWorldCamera();
-            this.renderer2.render(this.scene2, this.camera2);
             requestAnimationFrame(_.bind(this.renderFrame, this));
             this.controls.update();
         },
-
-        addGui : function() {
-            $(" #container").show();
-            $( '#zoomPlus_btn' ).click( _.bind(function() { this.controls.dollyOut();}, this) );
-            $( '#zoomMinus_btn' ).click( _.bind(function() { this.controls.dollyIn();}, this) );
-            $( '#panLeft_btn' ).click( _.bind(function() { this.controls.panLeft(-0.1);}, this) );
-            $( '#panRight_btn' ).click( _.bind(function() { this.controls.panLeft(0.1);}, this) );
-            $( '#panUp_btn' ).click( _.bind(function() { this.controls.panUp(-0.1);}, this) );
-            $( '#panDown_btn' ).click( _.bind(function() { this.controls.panUp(0.1);}, this) );
-
-            $( '#rotateUp_btn' ).click( _.bind(function() { this.controls.rotateUp(0.5);}, this) );
-            $( '#rotateDown_btn' ).click( _.bind(function() { this.controls.rotateUp(-0.5);}, this) );
-            $( '#rotateRight_btn' ).click( _.bind(function() { this.controls.rotateLeft(0.5);}, this) );
-            $( '#rotateLeft_btn' ).click( _.bind(function() { this.controls.rotateLeft(-0.5);}, this) );
-            $( '#reset_btn' ).click( _.bind(function() { this.controls.reset();this.camera.position.z = 1.5; }, this) ); 
-         },
-        
-                createText : function(letter, x, y, z){
-
-            // create a canvas element
-            var canvas1 = document.createElement('canvas');
-            var context1 = canvas1.getContext('2d');
-            context1.font = "Bold 20px Arial";
-            context1.fillStyle = "rgba(0,0,0,0.95)";
-            context1.fillText(letter, 20, 20);
-            
-            // canvas contents will be used for a texture
-            var texture1 = new THREE.Texture(canvas1) 
-            texture1.needsUpdate = true;
-              
-            var material1 = new THREE.MeshBasicMaterial( {map: texture1, side:THREE.DoubleSide } );
-            material1.transparent = true;
-
-            var mesh1 = new THREE.Mesh(
-                new THREE.PlaneGeometry(1, 1),
-                material1
-              );
-            mesh1.position.set(x, y, z);
-            this.scene2.add( mesh1 );
-        },
-
-        addAxes : function(){
-            var dom2 = $( '#inset' ).empty();
-            // camera
-            var camera2 = new THREE.OrthographicCamera( -1, 1, 1, -1, 1, 1000);
-            this.camera2 = camera2; 
-
-            // renderer
-            var renderer2 = new THREE.WebGLRenderer({ alpha: true });
-            //renderer2.setClearColor( 0x000000, 0 ); 
-            console.log("Width: ",this.d_width);
-            renderer2.setSize( this.d_width/5, this.d_width/5);
-            $( renderer2.domElement ).appendTo(dom2);
-
-            this.renderer2 = renderer2;
-
-            // scene
-            var scene2 = new THREE.Scene();
-            this.scene2 = scene2;
-
-            // axes
-            var dir = new THREE.Vector3( 1.0, 0.0, 0.0 );
-            var origin = new THREE.Vector3( 0, 0, 0 ); 
-            var length = 1; 
-            var hex = 0xff0000; 
-            var xaxis = new THREE.ArrowHelper( dir, origin, length, hex );
-            this.createText('X',1.25, -0.3, 0);
-            scene2.add( xaxis );
-
-
-            dir = new THREE.Vector3( 0, 1.0, 0 );
-            origin = new THREE.Vector3( 0, 0, 0 ); 
-            length = 1; 
-            hex = 0x0000ff; 
-            yaxis = new THREE.ArrowHelper( dir, origin, length, hex );
-            this.createText('Y', 0.5,0.5,0);            
-            scene2.add( yaxis );
-
-
-            dir = new THREE.Vector3( 0, 0, 1.0 );
-            origin = new THREE.Vector3( 0, 0, 0 ); 
-            length = 1; 
-            hex = 0x00ff00; 
-            zaxis = new THREE.ArrowHelper( dir, origin, length, hex );
-            this.createText('Z', 0.5,-0.4,0.9);
-            scene2.add( zaxis );
-
-
-        },
-        
-        updateWorldCamera: function(){
-            this.camera2.position.subVectors( this.camera.position, this.controls.target );
-            this.camera2.position.setLength( 1.8 );
-            this.camera2.lookAt( this.scene2.position );
-        },
-
         drawMesh : function(pyurdmeMeshJsonData)
         {
             if (!window.WebGLRenderingContext) {
@@ -279,12 +181,6 @@ MeshEditor.Controller = Backbone.View.extend(
             scene.add(directionalLight);
 
             this.scene = scene;
-
-            // Adding gui
-            this.addGui();
-
-            // Adding Axes
-            this.addAxes();
 
             $( "#meshPreviewMsg" ).hide();
 

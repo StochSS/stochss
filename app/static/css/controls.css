@@ -3,7 +3,7 @@
   border-style: solid; 
   color: white;
   background-color: black;
-  height: 35px;
+  height: 41px;
 }
 
 .button-container{
@@ -16,12 +16,14 @@
   border-color: gray;
 }
 
+.button {
+  height : 25px;
+}
+
 .button-container-left{
   padding-left: 12px;
 }
 
 .button-container-right{
   padding-right: 37px;
-    padding-bottom: 2.8px;
-    padding-top: 3.8px;
 }
