@@ -17,8 +17,7 @@
     height : 25px;
 }
 
-.button-container-left{
-}
-
-.button-container-right{
+#inset {
+    position: absolute;
+    z-index: 1;
 }
