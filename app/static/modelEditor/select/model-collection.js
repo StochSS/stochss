@@ -78,7 +78,18 @@ var AddNewModelForm = AmpersandFormView.extend({
 var ModelCollectionSelectView = AmpersandView.extend({
     template: $( '.modelSelectorTemplate' ).text(),
     props: {
-        selected : 'object'
+        selected : 'object',
+        hasModels : 'boolean'
+    },
+    bindings : {
+        'hasModels' : {
+            type : 'toggle',
+            hook : 'modelTable'
+        }
+    },
+    updateHasModels: function()
+    {
+        this.hasModels = this.collection.models.length > 0;
     },
     initialize: function(attr, options)
     {
@@ -87,6 +98,8 @@ var ModelCollectionSelectView = AmpersandView.extend({
         this.meshCollection = attr.meshCollection;
 
         this.selected = this.collection.at(0);
+
+        this.listenToAndRun(this.collection, 'add remove change', _.bind(this.updateHasModels, this))
     },
     selectModel: function(model)
     {
@@ -96,7 +109,7 @@ var ModelCollectionSelectView = AmpersandView.extend({
     {
         AmpersandView.prototype.render.apply(this, arguments);
 
-        this.renderCollection(this.collection, ModelSelectView, this.el.querySelector('[data-hook=modelTable]'));
+        this.renderCollection(this.collection, ModelSelectView, this.el.querySelector('[data-hook=modelTBody]'));
 
         $( '[data-hook="duplicateLink"]' ).click( _.bind( function() {
             this.selected.trigger('duplicateLink');

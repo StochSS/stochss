@@ -57,16 +57,32 @@ var AddNewParameterForm = AmpersandFormView.extend({
 });
 
 var ParameterCollectionFormView = AmpersandView.extend({
-    template: "<div><h4>Parameters editor</h4><table class='table table-bordered'><thead><th></th><th>Name</th><th>Value</th></thead><tbody data-hook='parametersTable'></tbody></table>Add Parameter: <form data-hook='addParametersForm'></form></div>",
+    template: "<div><table data-hook='parametersTable' class='table table-bordered'><thead><th></th><th>Name</th><th>Value</th></thead><tbody data-hook='parametersTBody'></tbody></table>Add Parameter: <form data-hook='addParametersForm'></form></div>",
     initialize: function(attr, options)
     {
         AmpersandView.prototype.initialize.call(this, attr, options);
+
+        this.listenToAndRun(this.collection, 'add remove change', _.bind(this.updateHasModels, this))
+    },
+    props: {
+        selected : 'object',
+        hasModels : 'boolean'
+    },
+    bindings : {
+        'hasModels' : {
+            type : 'toggle',
+            hook : 'parametersTable'
+        }
+    },
+    updateHasModels: function()
+    {
+        this.hasModels = this.collection.models.length > 0;
     },
     render: function()
     {
         AmpersandView.prototype.render.apply(this, arguments);
 
-        this.renderCollection(this.collection, ParameterFormView, this.el.querySelector('[data-hook=parametersTable]'));
+        this.renderCollection(this.collection, ParameterFormView, this.el.querySelector('[data-hook=parametersTBody]'));
 
         this.addForm = new AddNewParameterForm(
             { 

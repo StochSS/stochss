@@ -47,7 +47,6 @@ var AddNewInitialConditionForm = AmpersandFormView.extend({
 
 var InitialConditionCollectionFormView = AmpersandView.extend({
     template : "<div>\
-  <h4>Initial Conditions editor</h4>\
   <table data-hook='initialConditionsTable'>\
     <thead>\
       <th></th><th>Type</th><th>Specie</th><th>Details</th>\
@@ -60,6 +59,21 @@ var InitialConditionCollectionFormView = AmpersandView.extend({
     initialize: function(attr, options)
     {
         AmpersandView.prototype.initialize.call(this, attr, options);
+
+        this.listenToAndRun(this.collection, 'add remove change', _.bind(this.updateHasModels, this))
+    },
+    props : {
+        hasModels : 'boolean'
+    },
+    bindings : {
+        'hasModels' : {
+            type : 'toggle',
+            hook : 'initialConditionsTable'
+        }
+    },
+    updateHasModels: function()
+    {
+        this.hasModels = this.collection.models.length > 0;
     },
     render: function()
     {

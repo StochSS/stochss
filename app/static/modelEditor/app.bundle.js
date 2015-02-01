@@ -560,7 +560,6 @@ var AddNewInitialConditionForm = AmpersandFormView.extend({
 
 var InitialConditionCollectionFormView = AmpersandView.extend({
     template : "<div>\
-  <h4>Initial Conditions editor</h4>\
   <table data-hook='initialConditionsTable'>\
     <thead>\
       <th></th><th>Type</th><th>Specie</th><th>Details</th>\
@@ -573,6 +572,21 @@ var InitialConditionCollectionFormView = AmpersandView.extend({
     initialize: function(attr, options)
     {
         AmpersandView.prototype.initialize.call(this, attr, options);
+
+        this.listenToAndRun(this.collection, 'add remove change', _.bind(this.updateHasModels, this))
+    },
+    props : {
+        hasModels : 'boolean'
+    },
+    bindings : {
+        'hasModels' : {
+            type : 'toggle',
+            hook : 'initialConditionsTable'
+        }
+    },
+    updateHasModels: function()
+    {
+        this.hasModels = this.collection.models.length > 0;
     },
     render: function()
     {
@@ -1670,16 +1684,32 @@ var AddNewParameterForm = AmpersandFormView.extend({
 });
 
 var ParameterCollectionFormView = AmpersandView.extend({
-    template: "<div><h4>Parameters editor</h4><table class='table table-bordered'><thead><th></th><th>Name</th><th>Value</th></thead><tbody data-hook='parametersTable'></tbody></table>Add Parameter: <form data-hook='addParametersForm'></form></div>",
+    template: "<div><table data-hook='parametersTable' class='table table-bordered'><thead><th></th><th>Name</th><th>Value</th></thead><tbody data-hook='parametersTBody'></tbody></table>Add Parameter: <form data-hook='addParametersForm'></form></div>",
     initialize: function(attr, options)
     {
         AmpersandView.prototype.initialize.call(this, attr, options);
+
+        this.listenToAndRun(this.collection, 'add remove change', _.bind(this.updateHasModels, this))
+    },
+    props: {
+        selected : 'object',
+        hasModels : 'boolean'
+    },
+    bindings : {
+        'hasModels' : {
+            type : 'toggle',
+            hook : 'parametersTable'
+        }
+    },
+    updateHasModels: function()
+    {
+        this.hasModels = this.collection.models.length > 0;
     },
     render: function()
     {
         AmpersandView.prototype.render.apply(this, arguments);
 
-        this.renderCollection(this.collection, ParameterFormView, this.el.querySelector('[data-hook=parametersTable]'));
+        this.renderCollection(this.collection, ParameterFormView, this.el.querySelector('[data-hook=parametersTBody]'));
 
         this.addForm = new AddNewParameterForm(
             { 
@@ -1859,6 +1889,22 @@ var ReactionCollectionFormView = AmpersandView.extend({
     initialize: function(attr, options)
     {
         AmpersandView.prototype.initialize.call(this, attr, options);
+
+        this.listenToAndRun(this.collection, 'add remove change', _.bind(this.updateHasModels, this))
+    },
+    props: {
+        selected : 'object',
+        hasModels : 'boolean'
+    },
+    bindings : {
+        'hasModels' : {
+            type : 'toggle',
+            hook : 'reactionsTable'
+        }
+    },
+    updateHasModels: function()
+    {
+        this.hasModels = this.collection.models.length > 0;
     },
     render: function()
     {
@@ -1867,8 +1913,7 @@ var ReactionCollectionFormView = AmpersandView.extend({
         if(this.baseModel.isSpatial)
         {
             this.template = "<div>\
-  <h4>Reactions editor</h4>\
-  <table data-hook='reactionTable'>\
+  <table data-hook='reactionsTable'>\
     <thead>\
       <th></th><th>Name</th><th>Type</th><th>Parameter</th><th>Custom Propensity</th><th>Subdomains</th><th>Latex</th><th></th>\
     </thead>\
@@ -1880,8 +1925,7 @@ var ReactionCollectionFormView = AmpersandView.extend({
         else
         {
             this.template = "<div>\
-  <h4>Reactions editor</h4>\
-  <table data-hook='reactionTable'>\
+  <table data-hook='reactionsTable'>\
     <thead>\
       <th></th><th>Name</th><th>Type</th><th>Parameter</th><th>Custom Propensity</th><th>Latex</th><th></th>\
     </thead>\
@@ -1893,7 +1937,7 @@ var ReactionCollectionFormView = AmpersandView.extend({
 
         AmpersandView.prototype.render.apply(this, arguments);
 
-        this.renderCollection(this.collection, ReactionFormView, this.el.querySelector('[data-hook=reactionTable]'));
+        this.renderCollection(this.collection, ReactionFormView, this.el.querySelector('[data-hook=reactionsTable]'));
 
         this.addForm = new AddNewReactionForm(
             { 
@@ -2284,11 +2328,11 @@ var SpecieCollectionFormView = AmpersandView.extend({
     {
         if(this.collection.parent.isSpatial)
         {
-            this.template = "<div><h4>Species editor</h4><table data-hook='speciesTable'><thead><th></th><th>Name</th><th>Diffusion</th><th>Subdomains</th></thead><tbody data-hook='speciesTBody'></tbody></table>Add Specie: <form data-hook='addSpeciesForm'></form></div>";
+            this.template = "<div><table data-hook='speciesTable'><thead><th></th><th>Name</th><th>Diffusion</th><th>Subdomains</th></thead><tbody data-hook='speciesTBody'></tbody></table>Add Specie: <form data-hook='addSpeciesForm'></form></div>";
         }
         else
         {
-            this.template = "<div><h4>Species editor</h4><table><thead><th></th><th>Name</th><th>Initial Condition</th></thead><tbody data-hook='speciesTBody'></tbody></table>Add Specie: <form data-hook='addSpeciesForm'></form></div>";
+            this.template = "<div><table data-hook='speciesTable'><thead><th></th><th>Name</th><th>Initial Condition</th></thead><tbody data-hook='speciesTBody'></tbody></table>Add Specie: <form data-hook='addSpeciesForm'></form></div>";
         }
 
         AmpersandView.prototype.render.apply(this, arguments);
@@ -64654,7 +64698,18 @@ var AddNewModelForm = AmpersandFormView.extend({
 var ModelCollectionSelectView = AmpersandView.extend({
     template: $( '.modelSelectorTemplate' ).text(),
     props: {
-        selected : 'object'
+        selected : 'object',
+        hasModels : 'boolean'
+    },
+    bindings : {
+        'hasModels' : {
+            type : 'toggle',
+            hook : 'modelTable'
+        }
+    },
+    updateHasModels: function()
+    {
+        this.hasModels = this.collection.models.length > 0;
     },
     initialize: function(attr, options)
     {
@@ -64663,6 +64718,8 @@ var ModelCollectionSelectView = AmpersandView.extend({
         this.meshCollection = attr.meshCollection;
 
         this.selected = this.collection.at(0);
+
+        this.listenToAndRun(this.collection, 'add remove change', _.bind(this.updateHasModels, this))
     },
     selectModel: function(model)
     {
@@ -64672,7 +64729,7 @@ var ModelCollectionSelectView = AmpersandView.extend({
     {
         AmpersandView.prototype.render.apply(this, arguments);
 
-        this.renderCollection(this.collection, ModelSelectView, this.el.querySelector('[data-hook=modelTable]'));
+        this.renderCollection(this.collection, ModelSelectView, this.el.querySelector('[data-hook=modelTBody]'));
 
         $( '[data-hook="duplicateLink"]' ).click( _.bind( function() {
             this.selected.trigger('duplicateLink');

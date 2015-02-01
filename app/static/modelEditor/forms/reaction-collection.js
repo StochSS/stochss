@@ -97,6 +97,22 @@ var ReactionCollectionFormView = AmpersandView.extend({
     initialize: function(attr, options)
     {
         AmpersandView.prototype.initialize.call(this, attr, options);
+
+        this.listenToAndRun(this.collection, 'add remove change', _.bind(this.updateHasModels, this))
+    },
+    props: {
+        selected : 'object',
+        hasModels : 'boolean'
+    },
+    bindings : {
+        'hasModels' : {
+            type : 'toggle',
+            hook : 'reactionsTable'
+        }
+    },
+    updateHasModels: function()
+    {
+        this.hasModels = this.collection.models.length > 0;
     },
     render: function()
     {
@@ -105,8 +121,7 @@ var ReactionCollectionFormView = AmpersandView.extend({
         if(this.baseModel.isSpatial)
         {
             this.template = "<div>\
-  <h4>Reactions editor</h4>\
-  <table data-hook='reactionTable'>\
+  <table data-hook='reactionsTable'>\
     <thead>\
       <th></th><th>Name</th><th>Type</th><th>Parameter</th><th>Custom Propensity</th><th>Subdomains</th><th>Latex</th><th></th>\
     </thead>\
@@ -118,8 +133,7 @@ var ReactionCollectionFormView = AmpersandView.extend({
         else
         {
             this.template = "<div>\
-  <h4>Reactions editor</h4>\
-  <table data-hook='reactionTable'>\
+  <table data-hook='reactionsTable'>\
     <thead>\
       <th></th><th>Name</th><th>Type</th><th>Parameter</th><th>Custom Propensity</th><th>Latex</th><th></th>\
     </thead>\
@@ -131,7 +145,7 @@ var ReactionCollectionFormView = AmpersandView.extend({
 
         AmpersandView.prototype.render.apply(this, arguments);
 
-        this.renderCollection(this.collection, ReactionFormView, this.el.querySelector('[data-hook=reactionTable]'));
+        this.renderCollection(this.collection, ReactionFormView, this.el.querySelector('[data-hook=reactionsTable]'));
 
         this.addForm = new AddNewReactionForm(
             { 

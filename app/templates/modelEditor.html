@@ -39,11 +39,11 @@
             </div>
             <div id="collapseSelector" class="accordion-body collapse in">
                 <div class="accordion-inner">
-                    <table class='table table-bordered'>
+                    <table data-hook='modelTable' class='table table-bordered'>
                         <thead>
                             <th></th><th>Name</th><th>Type</th><th>Delete</th>
                         </thead>
-                        <tbody data-hook='modelTable'></tbody>
+                        <tbody data-hook='modelTBody'></tbody>
                     </table>
                     <h3>Add Model</h3>
                     <form data-hook='addModelForm'></form>
@@ -128,13 +128,12 @@
 
 <script class="meshCollectionTemplate" type="text/template">
     <div>
-        <h3>Select Mesh</h3>
         <div class="accordion" id="accordion2">
             <div class="accordion-group">
                 <div class="accordion-heading">
-                    <a class="accordion-toggle meshLibrary" data-toggle="collapse" data-parent="#accordion2" href="#collapseTwo">
+                    <h4><a class="accordion-toggle meshLibrary" data-toggle="collapse" data-parent="#accordion2" href="#collapseTwo">
                         Select a Mesh
-                    </a>
+                    </a></h4>
                 </div>
                 <div id="collapseTwo" class="accordion-body collapse in">
                     <div class="accordion-inner">
@@ -159,9 +158,9 @@
 
             <div class="accordion-group">
                 <div class="accordion-heading">
-                    <a class="accordion-toggle meshUpload" data-toggle="collapse" data-parent="#accordion2" href="#collapseThree">
-                        Upload a Mesh
-                    </a>
+                    <h4><a class="accordion-toggle meshUpload" data-toggle="collapse" data-parent="#accordion2" href="#collapseThree">
+                            Upload a Mesh
+                    </a></h4>
                 </div>
                 <div id="collapseThree" class="accordion-body collapse uploadMeshDiv">
                     <div data-hook="addMeshForm"></div>
