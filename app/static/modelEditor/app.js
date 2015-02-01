@@ -130,6 +130,7 @@ module.exports = {
             for(var i = 0; i < modelCollection.models.length; i++)
             {
                 modelCollection.models[i].setupMesh(meshCollection);
+                modelCollection.models[i].saveState = 'saved';
             }
 
             var modelSelectView = new PrimaryView( { el: div, collection : modelCollection, meshCollection : meshCollection } );

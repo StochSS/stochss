@@ -15,7 +15,8 @@ var Model = AmpersandModel.extend({
         reactions: 'object',//ReactionCollection,
         parameters: 'object',//ParameterCollection
         mesh: 'object',
-        initialConditions : 'object'
+        initialConditions : 'object',
+        saveState : 'string'
     },
     initialize: function(attrs, options) {
         this.parse(attrs);
@@ -89,13 +90,37 @@ var Model = AmpersandModel.extend({
             this.type = 'custom';
         }
     },
-    saveModel: _.debounce(
+    saveModel: function()
+    {
+        if(this.saveState != 'saving')
+            this.saveState = 'saving';
+
+        console.log('how the he;;');
+        this.actuallySaveModel();
+    },
+    actuallySaveModel: _.debounce(
         function()
         {
             if(this.collection && this.collection.url)
-                this.save();
+            {
+                console.log('hihi');
+                this.save(undefined, { success : _.bind(this.modelSaved, this), error : _.bind(this.modelSaveFailed, this) } );
+            }
+            else
+            {
+            }
         }
         , 500),
+    modelSaved: function()
+    {
+        if(this.saveState != 'saved')
+            this.saveState = 'saved';
+    },
+    modelSaveFailed: function()
+    {
+        if(this.saveState != 'failed')
+            this.saveState = 'failed';
+    },
     parse: function(attr)
     {
         var speciesByName = {};

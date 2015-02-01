@@ -21,3 +21,10 @@ input {
 select {
     margin-bottom : 0px;
 }
+
+[data-hook=saveMessage] {
+    position: fixed;
+    font-size: large;
+    bottom: 50px;
+    right: 50px;
+}

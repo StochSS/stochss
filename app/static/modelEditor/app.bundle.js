@@ -131,6 +131,7 @@ module.exports = {
             for(var i = 0; i < modelCollection.models.length; i++)
             {
                 modelCollection.models[i].setupMesh(meshCollection);
+                modelCollection.models[i].saveState = 'saved';
             }
 
             var modelSelectView = new PrimaryView( { el: div, collection : modelCollection, meshCollection : meshCollection } );
@@ -1328,6 +1329,28 @@ module.exports = View.extend({
     events : {
         "click [data-hook='convertToPopulationButton']" : "convertToPopulation"
     },
+    updateSaveMessage: function()
+    {
+        var saveMessageDom = $( this.queryByHook('saveMessage') );
+
+        if(this.model.saveState == 'saved')
+        {
+            saveMessageDom.removeClass( "alert-error" );
+            saveMessageDom.addClass( "alert-success" );
+            saveMessageDom.text( "Saved" );
+        }
+        else if(this.model.saveState == 'saving')
+        {
+            saveMessageDom.removeClass( "alert-success alert-error" );
+            saveMessageDom.text( "Saving..." );
+        }
+        else if(this.model.saveState == 'failed')
+        {
+            saveMessageDom.removeClass( "alert-success" );
+            saveMessageDom.addClass( "alert-error" );
+            saveMessageDom.text( "Model Save Failed!" );
+        }
+    },
     duplicateModel: function()
     {
         var model = new Model(this.model.toJSON());
@@ -1439,6 +1462,9 @@ module.exports = View.extend({
         }
 
         this.meshCollection = attr.meshCollection;
+
+        this.on('change:state', this.updateVisibility);
+        this.listenTo(this.model, 'change:saveState', _.bind(this.updateSaveMessage, this));
     },
     remove: function()
     {
@@ -1510,8 +1536,13 @@ module.exports = View.extend({
             }
         , this));
 
-        this.on('change:state', this.updateVisibility);
         this.updateVisibility();
+
+        // Just say the model is saved -- this is a white lie, and every model form will set this. It's an issue
+        var saveMessageDom = $( this.queryByHook('saveMessage') );
+        saveMessageDom.removeClass( "alert-error" );
+        saveMessageDom.addClass( "alert-success" );
+        saveMessageDom.text( "Saved" );
 
         return this;
     }
@@ -2780,7 +2811,8 @@ var Model = AmpersandModel.extend({
         reactions: 'object',//ReactionCollection,
         parameters: 'object',//ParameterCollection
         mesh: 'object',
-        initialConditions : 'object'
+        initialConditions : 'object',
+        saveState : 'string'
     },
     initialize: function(attrs, options) {
         this.parse(attrs);
@@ -2854,13 +2886,37 @@ var Model = AmpersandModel.extend({
             this.type = 'custom';
         }
     },
-    saveModel: _.debounce(
+    saveModel: function()
+    {
+        if(this.saveState != 'saving')
+            this.saveState = 'saving';
+
+        console.log('how the he;;');
+        this.actuallySaveModel();
+    },
+    actuallySaveModel: _.debounce(
         function()
         {
             if(this.collection && this.collection.url)
-                this.save();
+            {
+                console.log('hihi');
+                this.save(undefined, { success : _.bind(this.modelSaved, this), error : _.bind(this.modelSaveFailed, this) } );
+            }
+            else
+            {
+            }
         }
         , 500),
+    modelSaved: function()
+    {
+        if(this.saveState != 'saved')
+            this.saveState = 'saved';
+    },
+    modelSaveFailed: function()
+    {
+        if(this.saveState != 'failed')
+            this.saveState = 'failed';
+    },
     parse: function(attr)
     {
         var speciesByName = {};
@@ -8867,8 +8923,8 @@ module.exports = CollectionView;
 },{"ampersand-class-extend":"/home/bbales2/stochssModel/app/static/modelEditor/node_modules/ampersand-view/node_modules/ampersand-collection-view/node_modules/ampersand-class-extend/ampersand-class-extend.js","backbone-events-standalone":"/home/bbales2/stochssModel/app/static/modelEditor/node_modules/ampersand-view/node_modules/ampersand-collection-view/node_modules/backbone-events-standalone/index.js","underscore":"/home/bbales2/stochssModel/app/static/modelEditor/node_modules/ampersand-view/node_modules/underscore/underscore.js"}],"/home/bbales2/stochssModel/app/static/modelEditor/node_modules/ampersand-view/node_modules/ampersand-collection-view/node_modules/ampersand-class-extend/ampersand-class-extend.js":[function(require,module,exports){
 module.exports=require("/home/bbales2/stochssModel/app/static/modelEditor/node_modules/ampersand-collection/node_modules/ampersand-class-extend/ampersand-class-extend.js")
 },{"/home/bbales2/stochssModel/app/static/modelEditor/node_modules/ampersand-collection/node_modules/ampersand-class-extend/ampersand-class-extend.js":"/home/bbales2/stochssModel/app/static/modelEditor/node_modules/ampersand-collection/node_modules/ampersand-class-extend/ampersand-class-extend.js"}],"/home/bbales2/stochssModel/app/static/modelEditor/node_modules/ampersand-view/node_modules/ampersand-collection-view/node_modules/backbone-events-standalone/index.js":[function(require,module,exports){
-module.exports=require("/home/bbales2/stochssModel/app/static/modelEditor/node_modules/ampersand-form-view/node_modules/backbone-events-standalone/index.js")
-},{"/home/bbales2/stochssModel/app/static/modelEditor/node_modules/ampersand-form-view/node_modules/backbone-events-standalone/index.js":"/home/bbales2/stochssModel/app/static/modelEditor/node_modules/ampersand-form-view/node_modules/backbone-events-standalone/index.js"}],"/home/bbales2/stochssModel/app/static/modelEditor/node_modules/ampersand-view/node_modules/ampersand-dom-bindings/ampersand-dom-bindings.js":[function(require,module,exports){
+module.exports=require("/home/bbales2/stochssModel/app/static/modelEditor/node_modules/ampersand-state/node_modules/backbone-events-standalone/index.js")
+},{"/home/bbales2/stochssModel/app/static/modelEditor/node_modules/ampersand-state/node_modules/backbone-events-standalone/index.js":"/home/bbales2/stochssModel/app/static/modelEditor/node_modules/ampersand-state/node_modules/backbone-events-standalone/index.js"}],"/home/bbales2/stochssModel/app/static/modelEditor/node_modules/ampersand-view/node_modules/ampersand-dom-bindings/ampersand-dom-bindings.js":[function(require,module,exports){
 ;if (typeof window !== "undefined") {  window.ampersand = window.ampersand || {};  window.ampersand["ampersand-dom-bindings"] = window.ampersand["ampersand-dom-bindings"] || [];  window.ampersand["ampersand-dom-bindings"].push("3.3.3");}
 var Store = require('key-tree-store');
 var dom = require('ampersand-dom');
