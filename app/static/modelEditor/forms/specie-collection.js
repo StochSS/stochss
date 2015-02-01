@@ -97,23 +97,38 @@ var SpecieCollectionFormView = AmpersandView.extend({
     initialize: function(attr, options)
     {
         AmpersandView.prototype.initialize.call(this, attr, options);
+
+        this.listenToAndRun(this.collection, 'add remove change', _.bind(this.updateHasModels, this))
+    },
+    props : {
+        hasModels : 'boolean'
+    },
+    bindings : {
+        'hasModels' : {
+            type : 'toggle',
+            hook : 'speciesTable'
+        }
+    },
+    updateHasModels: function()
+    {
+        this.hasModels = this.collection.models.length > 0;
     },
     render: function()
     {
         if(this.collection.parent.isSpatial)
         {
-            this.template = "<div><h4>Species editor</h4><table><thead><th></th><th>Name</th><th>Diffusion</th><th>Subdomains</th></thead><tbody data-hook='speciesTable'></tbody></table>Add Specie: <form data-hook='addSpeciesForm'></form></div>";
+            this.template = "<div><h4>Species editor</h4><table data-hook='speciesTable'><thead><th></th><th>Name</th><th>Diffusion</th><th>Subdomains</th></thead><tbody data-hook='speciesTBody'></tbody></table>Add Specie: <form data-hook='addSpeciesForm'></form></div>";
         }
         else
         {
-            this.template = "<div><h4>Species editor</h4><table><thead><th></th><th>Name</th><th>Initial Condition</th></thead><tbody data-hook='speciesTable'></tbody></table>Add Specie: <form data-hook='addSpeciesForm'></form></div>";
+            this.template = "<div><h4>Species editor</h4><table><thead><th></th><th>Name</th><th>Initial Condition</th></thead><tbody data-hook='speciesTBody'></tbody></table>Add Specie: <form data-hook='addSpeciesForm'></form></div>";
         }
 
         AmpersandView.prototype.render.apply(this, arguments);
 
         //new TestForm();
 
-        this.renderCollection(this.collection, SpecieFormView, this.el.querySelector('[data-hook=speciesTable]'));
+        this.renderCollection(this.collection, SpecieFormView, this.el.querySelector('[data-hook=speciesTBody]'));
 
         this.addForm = new AddNewSpecieForm(
             { 

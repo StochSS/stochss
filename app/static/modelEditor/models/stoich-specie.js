@@ -11,8 +11,8 @@ var StoichSpecie = State.extend({
         State.prototype.initialize.apply(this, arguments);
         
         // Whenever we pick a new species, let the species collection know
-        this.on('add remove change:specie', _.bind(function() {
-            this.specie.collection.trigger('stoich-specie-change');
+        this.on('add remove change', _.bind(function(model) {
+            model.specie.collection.trigger('stoich-specie-change');
         }, this) );
     }
 });

@@ -11,7 +11,7 @@ module.exports = AmpCollection.extend({
             return undefined;
         
         var reaction = this.add({ name : name, equation : '', type : 'massaction', rate : rate, subdomains : subdomains }, { reactants : reactants, products : products });
-        
+
         return reaction;
     },
     addCustomReaction: function(name, equation, reactants, products, subdomains) {
@@ -22,7 +22,7 @@ module.exports = AmpCollection.extend({
             return undefined;
         
         var reaction = this.add({ name : name, equation : equation, type : 'custom', rate : undefined, subdomains : subdomains }, { reactants : reactants, products : products });
-        
+
         return reaction;
     }
 });

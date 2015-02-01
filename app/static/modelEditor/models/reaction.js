@@ -26,12 +26,14 @@ var Reaction = State.extend({
     triggerChange: function()
     {
         this.trigger('change');
+        this.collection.parent.species.trigger('stoich-specie-change');
     },
     initialize : function(attrs, options)
     {
         State.prototype.initialize.apply(this, arguments);
 
         this.on('add remove change:rate', _.bind(this.triggerReaction, this) );
+        this.on('add remove', _.bind(this.triggerChange, this));
         //this.triggerReaction();
 
         for(var i = 0; i < options.reactants.length; i++)

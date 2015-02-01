@@ -2264,23 +2264,38 @@ var SpecieCollectionFormView = AmpersandView.extend({
     initialize: function(attr, options)
     {
         AmpersandView.prototype.initialize.call(this, attr, options);
+
+        this.listenToAndRun(this.collection, 'add remove change', _.bind(this.updateHasModels, this))
+    },
+    props : {
+        hasModels : 'boolean'
+    },
+    bindings : {
+        'hasModels' : {
+            type : 'toggle',
+            hook : 'speciesTable'
+        }
+    },
+    updateHasModels: function()
+    {
+        this.hasModels = this.collection.models.length > 0;
     },
     render: function()
     {
         if(this.collection.parent.isSpatial)
         {
-            this.template = "<div><h4>Species editor</h4><table><thead><th></th><th>Name</th><th>Diffusion</th><th>Subdomains</th></thead><tbody data-hook='speciesTable'></tbody></table>Add Specie: <form data-hook='addSpeciesForm'></form></div>";
+            this.template = "<div><h4>Species editor</h4><table data-hook='speciesTable'><thead><th></th><th>Name</th><th>Diffusion</th><th>Subdomains</th></thead><tbody data-hook='speciesTBody'></tbody></table>Add Specie: <form data-hook='addSpeciesForm'></form></div>";
         }
         else
         {
-            this.template = "<div><h4>Species editor</h4><table><thead><th></th><th>Name</th><th>Initial Condition</th></thead><tbody data-hook='speciesTable'></tbody></table>Add Specie: <form data-hook='addSpeciesForm'></form></div>";
+            this.template = "<div><h4>Species editor</h4><table><thead><th></th><th>Name</th><th>Initial Condition</th></thead><tbody data-hook='speciesTBody'></tbody></table>Add Specie: <form data-hook='addSpeciesForm'></form></div>";
         }
 
         AmpersandView.prototype.render.apply(this, arguments);
 
         //new TestForm();
 
-        this.renderCollection(this.collection, SpecieFormView, this.el.querySelector('[data-hook=speciesTable]'));
+        this.renderCollection(this.collection, SpecieFormView, this.el.querySelector('[data-hook=speciesTBody]'));
 
         this.addForm = new AddNewSpecieForm(
             { 
@@ -2539,10 +2554,6 @@ module.exports = View.extend({
         if(element.valid)
             this.model[element.name] = element.value;
     },
-    /*handleRemove: function()
-    {
-        this.baseModel.species.trigger('
-    },*/
     render: function()
     {
         View.prototype.render.apply(this, arguments);
@@ -2891,7 +2902,6 @@ var Model = AmpersandModel.extend({
         if(this.saveState != 'saving')
             this.saveState = 'saving';
 
-        console.log('how the he;;');
         this.actuallySaveModel();
     },
     actuallySaveModel: _.debounce(
@@ -2899,11 +2909,7 @@ var Model = AmpersandModel.extend({
         {
             if(this.collection && this.collection.url)
             {
-                console.log('hihi');
                 this.save(undefined, { success : _.bind(this.modelSaved, this), error : _.bind(this.modelSaveFailed, this) } );
-            }
-            else
-            {
             }
         }
         , 500),
@@ -3164,7 +3170,7 @@ module.exports = AmpCollection.extend({
             return undefined;
         
         var reaction = this.add({ name : name, equation : '', type : 'massaction', rate : rate, subdomains : subdomains }, { reactants : reactants, products : products });
-        
+
         return reaction;
     },
     addCustomReaction: function(name, equation, reactants, products, subdomains) {
@@ -3175,7 +3181,7 @@ module.exports = AmpCollection.extend({
             return undefined;
         
         var reaction = this.add({ name : name, equation : equation, type : 'custom', rate : undefined, subdomains : subdomains }, { reactants : reactants, products : products });
-        
+
         return reaction;
     }
 });
@@ -3209,12 +3215,14 @@ var Reaction = State.extend({
     triggerChange: function()
     {
         this.trigger('change');
+        this.collection.parent.species.trigger('stoich-specie-change');
     },
     initialize : function(attrs, options)
     {
         State.prototype.initialize.apply(this, arguments);
 
         this.on('add remove change:rate', _.bind(this.triggerReaction, this) );
+        this.on('add remove', _.bind(this.triggerChange, this));
         //this.triggerReaction();
 
         for(var i = 0; i < options.reactants.length; i++)
@@ -3334,8 +3342,8 @@ var StoichSpecie = State.extend({
         State.prototype.initialize.apply(this, arguments);
         
         // Whenever we pick a new species, let the species collection know
-        this.on('add remove change:specie', _.bind(function() {
-            this.specie.collection.trigger('stoich-specie-change');
+        this.on('add remove change', _.bind(function(model) {
+            model.specie.collection.trigger('stoich-specie-change');
         }, this) );
     }
 });

@@ -14,10 +14,6 @@ module.exports = View.extend({
         if(element.valid)
             this.model[element.name] = element.value;
     },
-    /*handleRemove: function()
-    {
-        this.baseModel.species.trigger('
-    },*/
     render: function()
     {
         View.prototype.render.apply(this, arguments);

@@ -95,7 +95,6 @@ var Model = AmpersandModel.extend({
         if(this.saveState != 'saving')
             this.saveState = 'saving';
 
-        console.log('how the he;;');
         this.actuallySaveModel();
     },
     actuallySaveModel: _.debounce(
@@ -103,11 +102,7 @@ var Model = AmpersandModel.extend({
         {
             if(this.collection && this.collection.url)
             {
-                console.log('hihi');
                 this.save(undefined, { success : _.bind(this.modelSaved, this), error : _.bind(this.modelSaveFailed, this) } );
-            }
-            else
-            {
             }
         }
         , 500),
