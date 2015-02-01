@@ -103,9 +103,13 @@ class UserRegistrationPage(BaseHandler):
             # Normal user registration
             logging.info('Registering a normal user...')
             user_email = self.request.POST['email']
-            # Has this user been approved?
+
+            # Just an email address here, we should first make sure they havent been approved
             pending_users_list = PendingUsersList.shared_list()
-            if pending_users_list.is_user_approved(user_email):
+
+            # Now add to approval waitlist
+            success = pending_users_list.add_user_to_approval_waitlist(user_email) or pending_users_list.user_exists(user_email)
+            if success:
                 # Then create the user
                 _attrs = {
                     'email_address': user_email,
@@ -115,11 +119,9 @@ class UserRegistrationPage(BaseHandler):
                 success, user = self.auth.store.user_model.create_user(user_email, **_attrs)
                 
                 if success:
-                    # Remove the user from the approved list now
-                    pending_users_list.remove_user_from_approved_list(user_email)
                     context = {
                         'success_alert': True,
-                        'alert_message': 'Account creation successful! You may now log in with your new account.'
+                        'alert_message': 'Account creation successful! Once an admin has approved your account, you can login.'
                     }
                     return self.render_response('login.html', **context)
                 else:
@@ -131,11 +133,9 @@ class UserRegistrationPage(BaseHandler):
                     }
                     return self.render_response('user_registration.html', **context)
             else:
-                # Not approved, add to approval waitlist
-                pending_users_list.add_user_to_approval_waitlist(user_email)
                 context = {
                     'error_alert': True,
-                    'alert_message': 'You need to be approved by the admin before you can create an account.'
+                    'alert_message': 'You have already requested an account.'
                 }
                 return self.render_response('login.html', **context)
         else:
@@ -235,43 +235,40 @@ class LoginPage(BaseHandler):
         except KeyError:
             request_account = False
             
-        if request_account:
-            # Just an email address here, we should first make sure they havent been approved
+        # Login attempt, need to grab password too
+        password = self.request.POST['password']
+        try:
+            user = self.auth.get_user_by_password(email_address, password, remember=True)
+            # Success, put user in the session and redirect to home page
+
+            # Has this user been approved? Or is the user the admin? Login either way
             pending_users_list = PendingUsersList.shared_list()
-            if pending_users_list.is_user_approved(email_address):
-                context = {
-                    'approved_user_message': True
-                }
-                return self.render_response('user_registration.html', **context)
-            # Now add to approval waitlist
-            success = pending_users_list.add_user_to_approval_waitlist(email_address)
-            if success:
-                context = {
-                    'success_alert': True,
-                    'alert_message': 'Successfully requested an account!'
-                }
-                return self.render_response('login.html', **context)
+
+            userdb = User.get_by_id(user["user_id"])
+
+            if hasattr(userdb, 'is_admin'):
+                isAdmin = userdb.is_admin
             else:
-                context = {
-                    'error_alert': True,
-                    'alert_message': 'You have already requested an account.'
-                }
-                return self.render_response('login.html', **context)
-        else:
-            # Login attempt, need to grab password too
-            password = self.request.POST['password']
-            try:
-                user = self.auth.get_user_by_password(email_address, password, remember=True)
-                # Success, put user in the session and redirect to home page
+                isAdmin = False
+
+            if pending_users_list.is_user_approved(email_address) or isAdmin:
                 self.auth.set_session(user)
                 return self.redirect('/')
-            except (InvalidAuthIdError, InvalidPasswordError) as e:
-                logging.info('Login failed for user: {0} with exception: {1}'.format(email_address, e))
+            else:
+                # Not approved, add to approval waitlist
+                pending_users_list.add_user_to_approval_waitlist(email_address)
                 context = {
                     'error_alert': True,
-                    'alert_message': 'The email or password you entered is incorrect.'
-                }
+                    'alert_message': 'You need to be approved by the admin before you can login.'
+                    }
                 return self.render_response('login.html', **context)
+        except (InvalidAuthIdError, InvalidPasswordError) as e:
+            logging.info('Login failed for user: {0} with exception: {1}'.format(email_address, e))
+            context = {
+                'error_alert': True,
+                'alert_message': 'The email or password you entered is incorrect.'
+                }
+            return self.render_response('login.html', **context)
 
 class LogoutHandler(BaseHandler):
     '''
