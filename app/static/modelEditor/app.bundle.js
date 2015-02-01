@@ -18,33 +18,10 @@ var Mesh = require('./models/mesh');
 var MeshCollection = require('./models/mesh-collection');
 var MeshSelectView = require('./forms/mesh-collection');
 
-/*var model2 = new Model({ name : "amodel",
-                    units : "population",
-                    type : "massaction",
-                    isSpatial : false });
-
-var A = model2.species.addSpecie("A", 500);
-var B = model2.species.addSpecie("B", 500);
-//var C = model.species.addSpecie("B", 500);
-
-var k = model2.parameters.addParameter("k", "500");
-var l = model2.parameters.addParameter("k", "500");
-var k2 = model2.parameters.addParameter("k2", "k * k");
-
-//console.log(A.inUse);
-
-//model.species.on('change:stoich-specie', function() { console.log('reactionchanged'); });
-
-model2.reactions.addMassActionReaction('R1', k, [[A, 2]], [[B, 5]]);
-model2.reactions.addMassActionReaction('R2', k2, [[B, 1], [A, 1]], [[B, 5]]);
-//model.reactions.addCustomReaction('R2', 'k * k2', [[A, 2], [B, 2]], [[B, 5]]);
-
-model = new Model(model2.toJSON());*/
-
 var PrimaryView = View.extend({
     template: "<div> \
-<div class='well' data-hook='selector'></div> \
-<div class='well' data-hook='editor'></div> \
+<div data-hook='selector'></div> \
+<div data-hook='editor'></div> \
 </div>",
     initialize: function(attr, options)
     {
@@ -1331,6 +1308,7 @@ module.exports = View.extend({
 var _ = require('underscore');
 var $ = require('jquery');
 var View = require('ampersand-view');
+var Model = require('../models/model');
 var ParameterCollectionFormView = require('./parameter-collection');
 var SpecieCollectionFormView = require('./specie-collection');
 var ReactionCollectionFormView = require('./reaction-collection');
@@ -1347,14 +1325,35 @@ module.exports = View.extend({
         state: 'string',
         selector: 'object'
     },
-    bindings: {
-        'model.type' : {
-            type : 'text',
-            hook : 'type'
-        }
-    },
     events : {
         "click [data-hook='convertToPopulationButton']" : "convertToPopulation"
+    },
+    duplicateModel: function()
+    {
+        var model = new Model(this.model.toJSON());
+
+        var names = this.model.collection.map( function(model) { return model.name; } );
+
+        while(1)
+        {
+            var tmpName = this.model.name + '_' + Math.random().toString(36).substr(2, 3);
+
+            if(!_.contains(names, tmpName))
+            {
+                model.name = tmpName;
+                break;
+            }
+        }
+
+        model.id = undefined;
+
+        
+
+        model.setupMesh(this.model.mesh.collection);
+
+        this.model.collection.add(model);
+
+        model.save();
     },
     convertToPopulation: function()
     {
@@ -1362,46 +1361,98 @@ module.exports = View.extend({
         if(this.state == 'concentration')
         {
             this.state = 'converting';
+
+            this.remove();
+            this.render();
         } else if(this.state == 'converting') {
             this.modelConverter.convertToPopulation();
             // We need to rerender everything if we've decided to convert
-            this.render();
 
             this.state = 'population';
+
+            this.remove();
+            this.render();
+        }
+    },
+    convertToSpatial: function()
+    {
+        if(this.state == 'population')
+        {
+            this.state = 'spatial';
+            this.model.isSpatial = true;
+
+            this.remove();
+            this.render();
         }
     },
     updateVisibility: function()
     {
         if(this.state == 'concentration')
         {
-            $( this.el ).find( '[data-hook="editor"], [data-hook="convertToPopulationButton"]' ).show();
+            $( this.el ).find( '[data-hook="editor"]' ).show();
+            $( '[data-hook="convertToPopulationLink"]' ).show();
             $( this.el ).find( '[data-hook="convertToPopulation"]' ).hide();
+            $( '[data-hook="convertToSpatialLink"]' ).hide();
+            $( this.el ).find( '.spatial' ).hide();
         }
         else if(this.state == 'converting')
         {
-            $( this.el ).find( '[data-hook="convertToPopulation"], [data-hook="convertToPopulationButton"]' ).show();
-            $( this.el ).find( '[data-hook="editor"]' ).hide()
+            $( this.el ).find( '[data-hook="convertToPopulation"]' ).show();
+            $( '[data-hook="convertToPopulationLink"]' ).show();
+            $( this.el ).find( '[data-hook="editor"]' ).hide();
+            $( '[data-hook="convertToPopulationLink"]' ).show()
+            $( '[data-hook="convertToSpatialLink"]' ).hide();
+            $( this.el ).find( '.spatial' ).hide();
         }
         else if(this.state == 'population')
         {
-            $( this.el ).find( '[data-hook="convertToPopulation"], [data-hook="convertToPopulationButton"]' ).hide();
-            $( this.el ).find( '[data-hook="editor"]' ).show()
+            $( this.el ).find( '[data-hook="convertToPopulation"]' ).hide();
+            $( '[data-hook="convertToPopulationLink"]' ).hide();
+            $( this.el ).find( '[data-hook="editor"]' ).show();
+            $( '[data-hook="convertToSpatialLink"]' ).show();
+            $( this.el ).find( '.spatial' ).hide();
+        }
+        else if(this.state == 'spatial')
+        {
+            $( this.el ).find( '[data-hook="convertToPopulation"]' ).hide();
+            $( '[data-hook="convertToPopulationLink"]' ).hide();
+            $( this.el ).find( '[data-hook="editor"]' ).show();
+            $( '[data-hook="convertToSpatialLink"]' ).hide();
+            $( this.el ).find( '.spatial' ).show();
         }
     },
     initialize: function(attr)
     {
-        this.state = this.model.units;
+        // This is weird, but the model must wait for signals that these buttons have been pressed from the model select
+        // THis is because the buttons are shared
+        this.listenTo(this.model, "duplicateLink", _.bind(this.duplicateModel, this));
+        this.listenTo(this.model, "convertToPopulationLink", _.bind(this.convertToPopulation, this));
+        this.listenTo(this.model, "convertToSpatialLink", _.bind(this.convertToSpatial, this));
+
+        if(this.model.isSpatial)
+        {
+            this.state = 'spatial';
+        }
+        else
+        {
+            this.state = this.model.units;
+        }
 
         this.meshCollection = attr.meshCollection;
     },
-    render: function()
+    remove: function()
     {
         if(typeof(this.subViews) != "undefined")
         {
-            this.subViews.forEach( function(view) { view.remove(); } );
+            this.subViews.forEach( function(view) { view.remove(); delete view; } );
             this.subViews = undefined;
         }
 
+        $( this.el ).empty();
+        //View.prototype.remove.apply(this, arguments);
+    },
+    render: function()
+    {
         View.prototype.render.apply(this, arguments);
 
         if(!this.model)
@@ -1414,7 +1465,7 @@ module.exports = View.extend({
             el: $( '<div>' ).appendTo( this.el.querySelector("[data-hook='convertToPopulation']") )[0],
             model: this.model
         });
-
+        
         this.subViews = [
             new SpecieCollectionFormView({
                 parent: this,
@@ -1450,7 +1501,7 @@ module.exports = View.extend({
             }),
             this.modelConverter
         ];
-
+        
         this.subViews.forEach(_.bind(
             function(view)
             {
@@ -1466,7 +1517,7 @@ module.exports = View.extend({
     }
 });
 
-},{"../convertToPopulation/model":"/home/bbales2/stochssModel/app/static/modelEditor/convertToPopulation/model.js","./initial-condition-collection":"/home/bbales2/stochssModel/app/static/modelEditor/forms/initial-condition-collection.js","./mesh-collection":"/home/bbales2/stochssModel/app/static/modelEditor/forms/mesh-collection.js","./mesh3d":"/home/bbales2/stochssModel/app/static/modelEditor/forms/mesh3d.js","./parameter-collection":"/home/bbales2/stochssModel/app/static/modelEditor/forms/parameter-collection.js","./reaction-collection":"/home/bbales2/stochssModel/app/static/modelEditor/forms/reaction-collection.js","./specie-collection":"/home/bbales2/stochssModel/app/static/modelEditor/forms/specie-collection.js","ampersand-view":"/home/bbales2/stochssModel/app/static/modelEditor/node_modules/ampersand-view/ampersand-view.js","jquery":"/home/bbales2/stochssModel/app/static/modelEditor/node_modules/jquery/dist/jquery.js","underscore":"/home/bbales2/stochssModel/app/static/modelEditor/node_modules/underscore/underscore.js"}],"/home/bbales2/stochssModel/app/static/modelEditor/forms/modifying-input-view.js":[function(require,module,exports){
+},{"../convertToPopulation/model":"/home/bbales2/stochssModel/app/static/modelEditor/convertToPopulation/model.js","../models/model":"/home/bbales2/stochssModel/app/static/modelEditor/models/model.js","./initial-condition-collection":"/home/bbales2/stochssModel/app/static/modelEditor/forms/initial-condition-collection.js","./mesh-collection":"/home/bbales2/stochssModel/app/static/modelEditor/forms/mesh-collection.js","./mesh3d":"/home/bbales2/stochssModel/app/static/modelEditor/forms/mesh3d.js","./parameter-collection":"/home/bbales2/stochssModel/app/static/modelEditor/forms/parameter-collection.js","./reaction-collection":"/home/bbales2/stochssModel/app/static/modelEditor/forms/reaction-collection.js","./specie-collection":"/home/bbales2/stochssModel/app/static/modelEditor/forms/specie-collection.js","ampersand-view":"/home/bbales2/stochssModel/app/static/modelEditor/node_modules/ampersand-view/ampersand-view.js","jquery":"/home/bbales2/stochssModel/app/static/modelEditor/node_modules/jquery/dist/jquery.js","underscore":"/home/bbales2/stochssModel/app/static/modelEditor/node_modules/underscore/underscore.js"}],"/home/bbales2/stochssModel/app/static/modelEditor/forms/modifying-input-view.js":[function(require,module,exports){
 var $ = require('jquery');
 var _ = require('underscore');
 var InputView = require('ampersand-input-view');
@@ -2782,7 +2833,7 @@ var Model = AmpersandModel.extend({
                                          subdomain : subdomainsByName[initialCondition.subdomain] });
         }
 
-        //delete this.unprocessedInitialConditions;
+        delete this.unprocessedInitialConditions;
     },
     computeType: function() {
         var massAction = true;
@@ -64467,14 +64518,32 @@ var SelectView = require('ampersand-select-view');
 var InputView = require('ampersand-input-view');
 var ModelSelectView = require('./model');
 var Model = require('../models/model');
+var CheckboxView = require('ampersand-checkbox-view');
 
 var Tests = require('../forms/tests.js');
 var AddNewModelForm = AmpersandFormView.extend({
     submitCallback: function (obj) {
+        var units = '';
+        var isSpatial = false;
+
+        if(obj.units == 'concentration')
+        {
+            units = obj.units;
+        }
+        else if(obj.units == 'population')
+        {
+            units = obj.units
+        }
+        else
+        {
+            units = 'population'
+            isSpatial = true;
+        }   
+
         var model = new Model({ name : obj.name,
-                                units : obj.units,
+                                units : units,
                                 type : 'massaction',
-                                isSpatial : true,
+                                isSpatial : isSpatial,
                                 mesh : this.meshCollection.at(0) });
 
         this.collection.add(model).save();
@@ -64503,7 +64572,7 @@ var AddNewModelForm = AmpersandFormView.extend({
                 label: 'Units',
                 name: 'units',
                 value: 'population',
-                options: [['concentration', 'Concentration'], ['population', 'Population']],
+                options: [['concentration', 'Concentration'], ['population', 'Population'], ['spatialPopulation', 'Spatial Population']],
                 required: true,
             })
         ];
@@ -64519,7 +64588,7 @@ var AddNewModelForm = AmpersandFormView.extend({
 });
 
 var ModelCollectionSelectView = AmpersandView.extend({
-    template: "<div><h3>Select Model</h3><table class='table table-bordered'><thead><th></th><th>Name</th><th>Type</th><th>Delete</th></thead><tbody data-hook='modelTable'></tbody></table><h3>Add Model</h3><form data-hook='addModelForm'></form></div>",
+    template: $( '.modelSelectorTemplate' ).text(),
     props: {
         selected : 'object'
     },
@@ -64540,6 +64609,16 @@ var ModelCollectionSelectView = AmpersandView.extend({
         AmpersandView.prototype.render.apply(this, arguments);
 
         this.renderCollection(this.collection, ModelSelectView, this.el.querySelector('[data-hook=modelTable]'));
+
+        $( '[data-hook="duplicateLink"]' ).click( _.bind( function() {
+            this.selected.trigger('duplicateLink');
+        }, this ) );
+        $( '[data-hook="convertToPopulationLink"]' ).click( _.bind( function() {
+            this.selected.trigger('convertToPopulationLink');
+        }, this ) );
+        $( '[data-hook="convertToSpatialLink"]' ).click( _.bind( function() {
+            this.selected.trigger('convertToSpatialLink');
+        }, this ) );
 
         // Select the currently selected model
         var inputs = $( this.el ).find('input');
@@ -64566,7 +64645,7 @@ var ModelCollectionSelectView = AmpersandView.extend({
 
 module.exports = ModelCollectionSelectView
 
-},{"../forms/tests.js":"/home/bbales2/stochssModel/app/static/modelEditor/forms/tests.js","../models/model":"/home/bbales2/stochssModel/app/static/modelEditor/models/model.js","./model":"/home/bbales2/stochssModel/app/static/modelEditor/select/model.js","ampersand-form-view":"/home/bbales2/stochssModel/app/static/modelEditor/node_modules/ampersand-form-view/ampersand-form-view.js","ampersand-input-view":"/home/bbales2/stochssModel/app/static/modelEditor/node_modules/ampersand-input-view/ampersand-input-view.js","ampersand-select-view":"/home/bbales2/stochssModel/app/static/modelEditor/node_modules/ampersand-select-view/ampersand-select-view.js","ampersand-view":"/home/bbales2/stochssModel/app/static/modelEditor/node_modules/ampersand-view/ampersand-view.js","jquery":"/home/bbales2/stochssModel/app/static/modelEditor/node_modules/jquery/dist/jquery.js","underscore":"/home/bbales2/stochssModel/app/static/modelEditor/node_modules/underscore/underscore.js"}],"/home/bbales2/stochssModel/app/static/modelEditor/select/model.js":[function(require,module,exports){
+},{"../forms/tests.js":"/home/bbales2/stochssModel/app/static/modelEditor/forms/tests.js","../models/model":"/home/bbales2/stochssModel/app/static/modelEditor/models/model.js","./model":"/home/bbales2/stochssModel/app/static/modelEditor/select/model.js","ampersand-checkbox-view":"/home/bbales2/stochssModel/app/static/modelEditor/node_modules/ampersand-checkbox-view/ampersand-checkbox-view.js","ampersand-form-view":"/home/bbales2/stochssModel/app/static/modelEditor/node_modules/ampersand-form-view/ampersand-form-view.js","ampersand-input-view":"/home/bbales2/stochssModel/app/static/modelEditor/node_modules/ampersand-input-view/ampersand-input-view.js","ampersand-select-view":"/home/bbales2/stochssModel/app/static/modelEditor/node_modules/ampersand-select-view/ampersand-select-view.js","ampersand-view":"/home/bbales2/stochssModel/app/static/modelEditor/node_modules/ampersand-view/ampersand-view.js","jquery":"/home/bbales2/stochssModel/app/static/modelEditor/node_modules/jquery/dist/jquery.js","underscore":"/home/bbales2/stochssModel/app/static/modelEditor/node_modules/underscore/underscore.js"}],"/home/bbales2/stochssModel/app/static/modelEditor/select/model.js":[function(require,module,exports){
 var _ = require('underscore');
 var $ = require('jquery');
 var View = require('ampersand-view');

@@ -6,14 +6,32 @@ var SelectView = require('ampersand-select-view');
 var InputView = require('ampersand-input-view');
 var ModelSelectView = require('./model');
 var Model = require('../models/model');
+var CheckboxView = require('ampersand-checkbox-view');
 
 var Tests = require('../forms/tests.js');
 var AddNewModelForm = AmpersandFormView.extend({
     submitCallback: function (obj) {
+        var units = '';
+        var isSpatial = false;
+
+        if(obj.units == 'concentration')
+        {
+            units = obj.units;
+        }
+        else if(obj.units == 'population')
+        {
+            units = obj.units
+        }
+        else
+        {
+            units = 'population'
+            isSpatial = true;
+        }   
+
         var model = new Model({ name : obj.name,
-                                units : obj.units,
+                                units : units,
                                 type : 'massaction',
-                                isSpatial : true,
+                                isSpatial : isSpatial,
                                 mesh : this.meshCollection.at(0) });
 
         this.collection.add(model).save();
@@ -42,7 +60,7 @@ var AddNewModelForm = AmpersandFormView.extend({
                 label: 'Units',
                 name: 'units',
                 value: 'population',
-                options: [['concentration', 'Concentration'], ['population', 'Population']],
+                options: [['concentration', 'Concentration'], ['population', 'Population'], ['spatialPopulation', 'Spatial Population']],
                 required: true,
             })
         ];
@@ -58,7 +76,7 @@ var AddNewModelForm = AmpersandFormView.extend({
 });
 
 var ModelCollectionSelectView = AmpersandView.extend({
-    template: "<div><h3>Select Model</h3><table class='table table-bordered'><thead><th></th><th>Name</th><th>Type</th><th>Delete</th></thead><tbody data-hook='modelTable'></tbody></table><h3>Add Model</h3><form data-hook='addModelForm'></form></div>",
+    template: $( '.modelSelectorTemplate' ).text(),
     props: {
         selected : 'object'
     },
@@ -79,6 +97,16 @@ var ModelCollectionSelectView = AmpersandView.extend({
         AmpersandView.prototype.render.apply(this, arguments);
 
         this.renderCollection(this.collection, ModelSelectView, this.el.querySelector('[data-hook=modelTable]'));
+
+        $( '[data-hook="duplicateLink"]' ).click( _.bind( function() {
+            this.selected.trigger('duplicateLink');
+        }, this ) );
+        $( '[data-hook="convertToPopulationLink"]' ).click( _.bind( function() {
+            this.selected.trigger('convertToPopulationLink');
+        }, this ) );
+        $( '[data-hook="convertToSpatialLink"]' ).click( _.bind( function() {
+            this.selected.trigger('convertToSpatialLink');
+        }, this ) );
 
         // Select the currently selected model
         var inputs = $( this.el ).find('input');

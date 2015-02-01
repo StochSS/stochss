@@ -68,7 +68,7 @@ var Model = AmpersandModel.extend({
                                          subdomain : subdomainsByName[initialCondition.subdomain] });
         }
 
-        //delete this.unprocessedInitialConditions;
+        delete this.unprocessedInitialConditions;
     },
     computeType: function() {
         var massAction = true;

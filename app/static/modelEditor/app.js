@@ -17,33 +17,10 @@ var Mesh = require('./models/mesh');
 var MeshCollection = require('./models/mesh-collection');
 var MeshSelectView = require('./forms/mesh-collection');
 
-/*var model2 = new Model({ name : "amodel",
-                    units : "population",
-                    type : "massaction",
-                    isSpatial : false });
-
-var A = model2.species.addSpecie("A", 500);
-var B = model2.species.addSpecie("B", 500);
-//var C = model.species.addSpecie("B", 500);
-
-var k = model2.parameters.addParameter("k", "500");
-var l = model2.parameters.addParameter("k", "500");
-var k2 = model2.parameters.addParameter("k2", "k * k");
-
-//console.log(A.inUse);
-
-//model.species.on('change:stoich-specie', function() { console.log('reactionchanged'); });
-
-model2.reactions.addMassActionReaction('R1', k, [[A, 2]], [[B, 5]]);
-model2.reactions.addMassActionReaction('R2', k2, [[B, 1], [A, 1]], [[B, 5]]);
-//model.reactions.addCustomReaction('R2', 'k * k2', [[A, 2], [B, 2]], [[B, 5]]);
-
-model = new Model(model2.toJSON());*/
-
 var PrimaryView = View.extend({
     template: "<div> \
-<div class='well' data-hook='selector'></div> \
-<div class='well' data-hook='editor'></div> \
+<div data-hook='selector'></div> \
+<div data-hook='editor'></div> \
 </div>",
     initialize: function(attr, options)
     {

@@ -7,121 +7,211 @@
 <link href="/static/modelEditor/app.css" rel="stylesheet">
 {% endblock %}
 
-<div class="span9 modelEditor">
-  <div id="modelSelect"></div>
+<div class="modelEditor">
+    <div class="span8">
+        <div>
+            <h1>Model Editor</h1>
+            <div class="well">
+                <div id="modelSelect">Loading models...</div>
+            </div>
+        </div>
+    </div>
+
+    <div class="span2 modelRightBar">
+        <div class="well sidebar-nav">
+            <ul class="nav nav-list">
+                <li class="nav-header">Model Actions</li>
+                <li><a data-hook="duplicateLink" href="#">Duplicate Model</a></li>
+                <li><a data-hook="convertToPopulationLink" href="#">Convert to Population</a></li>
+                <li><a data-hook="convertToSpatialLink" href="#">Convert to Spatial</a></li>
+            </ul>
+        </div>
+    </div>
 </div>
 
 {% endblock %}
 {% block jscontent %}
-<script class="modelEditorTemplate" type="text/template">
-  <div>
-    <h3>Edit Model</h3>
-    <div data-hook="editor">
-      Model type: <span data-hook="type"></span><hr />
-      <div data-hook="initialConditions"></div>
-      <hr />
-      <div data-hook="specie"></div>
-      <hr />
-      <div data-hook="parameter"></div>
-      <hr />
-      <div data-hook="reaction"></div>
-      <hr />
-      <div data-hook="mesh"></div>
-      <hr />
-      <div data-hook="mesh3d"></div>
+<script class="modelSelectorTemplate" type="text/template">
+    <div class="selectAccordion">
+        <div class="accordion-group">
+            <div class="accordion-heading">
+                <h2><a class="accordion-toggle" data-toggle="collapse" data-parent="#selectAccordion" href="#collapseSelector">Select Model</a></h2>
+            </div>
+            <div id="collapseSelector" class="accordion-body collapse in">
+                <div class="accordion-inner">
+                    <table class='table table-bordered'>
+                        <thead>
+                            <th></th><th>Name</th><th>Type</th><th>Delete</th>
+                        </thead>
+                        <tbody data-hook='modelTable'></tbody>
+                    </table>
+                    <h3>Add Model</h3>
+                    <form data-hook='addModelForm'></form>
+                </div>
+            </div>
+        </div>
     </div>
-    <div data-hook="convertToPopulation"></div>
-    <button data-hook="convertToPopulationButton">Convert To Population</button>
-  </div>
+</script>
+
+<script class="modelEditorTemplate" type="text/template">
+    <div>
+        <div data-hook="editor">
+            <div class="speciesAccordion">
+                <div class="accordion-group">
+                    <div class="accordion-heading">
+                        <h2><a class="accordion-toggle" data-toggle="collapse" data-parent="#speciesAccordion" href="#collapseSpecies">Species Editor</a></h2>
+                    </div>
+                    <div id="collapseSpecies" class="accordion-body collapse">
+                        <div class="accordion-inner">
+                            <div data-hook="specie"></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="parametersAccordion">
+                <div class="accordion-group">
+                    <div class="accordion-heading">
+                        <h2><a class="accordion-toggle" data-toggle="collapse" data-parent="#parametersAccordion" href="#collapseParameters">Parameters Editor</a></h2>
+                    </div>
+                    <div id="collapseParameters" class="accordion-body collapse">
+                        <div class="accordion-inner">
+                            <div data-hook="parameter"></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="reactionsAccordion">
+                <div class="accordion-group">
+                    <div class="accordion-heading">
+                        <h2><a class="accordion-toggle" data-toggle="collapse" data-parent="#reactionsAccordion" href="#collapseReactions">Reactions Editor</a></h2>
+                    </div>
+                    <div id="collapseReactions" class="accordion-body collapse">
+                        <div class="accordion-inner">
+                            <div data-hook="reaction"></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="spatial">
+                <div class="initialConditionsAccordion">
+                    <div class="accordion-group">
+                        <div class="accordion-heading">
+                            <h2><a class="accordion-toggle" data-toggle="collapse" data-parent="#initialConditionsAccordion" href="#collapseInitialConditions">Initial Conditions Editor</a></h2>
+                        </div>
+                        <div id="collapseInitialConditions" class="accordion-body collapse">
+                            <div class="accordion-inner">
+                                <div data-hook="initialConditions"></div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="mesh3dAccordion">
+                    <div class="accordion-group">
+                        <div class="accordion-heading">
+                            <h2><a class="accordion-toggle" data-toggle="collapse" data-parent="#mesh3dAccordion" href="#collapseMesh3d">Mesh Editor</a></h2>
+                        </div>
+                        <div id="collapseMesh3d" class="accordion-body collapse in">
+                            <div class="accordion-inner">
+                                <div data-hook="mesh"></div>
+                                <hr />
+                                <div data-hook="mesh3d"></div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div data-hook="convertToPopulation"></div>
+    </div>
 </script>
 
 <script class="meshCollectionTemplate" type="text/template">
-  <div>
-    <h3>Select Mesh</h3>
-    <div class="accordion" id="accordion2">
-      <div class="accordion-group">
-        <div class="accordion-heading">
-          <a class="accordion-toggle meshLibrary" data-toggle="collapse" data-parent="#accordion2" href="#collapseTwo">
-            Select a Mesh
-          </a>
-        </div>
-        <div id="collapseTwo" class="accordion-body collapse in">
-          <div class="accordion-inner">
-            <div class="row">
-              <div class="span8">
-                <table cellpadding="0" cellspacing="0" border="0" class="table table-striped table-bordered" id="meshTable">
-                  <thead><tr><th>Delete</th><th>Select</th><th style="width: 100%">Mesh Name</th></tr></thead>
-                  <tbody data-hook="meshTable"></tbody>
-                </table>
-              </div>
-              <div class="span3 meshSelectDescriptionDiv">
-                <h4>Description:</h4>
-                <div class="description">
+    <div>
+        <h3>Select Mesh</h3>
+        <div class="accordion" id="accordion2">
+            <div class="accordion-group">
+                <div class="accordion-heading">
+                    <a class="accordion-toggle meshLibrary" data-toggle="collapse" data-parent="#accordion2" href="#collapseTwo">
+                        Select a Mesh
+                    </a>
                 </div>
-              </div>
+                <div id="collapseTwo" class="accordion-body collapse in">
+                    <div class="accordion-inner">
+                        <div class="row">
+                            <div class="span8">
+                                <table cellpadding="0" cellspacing="0" border="0" class="table table-striped table-bordered" id="meshTable">
+                                    <thead><tr><th>Delete</th><th>Select</th><th style="width: 100%">Mesh Name</th></tr></thead>
+                                    <tbody data-hook="meshTable"></tbody>
+                                </table>
+                            </div>
+                            <div class="span3 meshSelectDescriptionDiv">
+                                <h4>Description:</h4>
+                                <div class="description">
+                                </div>
+                            </div>
+                        </div>
+
+                        <button id="selectButton" class="btn btn-primary">Done</button>
+                    </div>
+                </div>
             </div>
 
-            <button id="selectButton" class="btn btn-primary">Done</button>
-          </div>
+            <div class="accordion-group">
+                <div class="accordion-heading">
+                    <a class="accordion-toggle meshUpload" data-toggle="collapse" data-parent="#accordion2" href="#collapseThree">
+                        Upload a Mesh
+                    </a>
+                </div>
+                <div id="collapseThree" class="accordion-body collapse uploadMeshDiv">
+                    <div data-hook="addMeshForm"></div>
+                </div>
+            </div>
         </div>
-      </div>
-
-      <div class="accordion-group">
-        <div class="accordion-heading">
-          <a class="accordion-toggle meshUpload" data-toggle="collapse" data-parent="#accordion2" href="#collapseThree">
-            Upload a Mesh
-          </a>
-        </div>
-        <div id="collapseThree" class="accordion-body collapse uploadMeshDiv">
-          <div data-hook="addMeshForm"></div>
-        </div>
-      </div>
     </div>
-  </div>
 </script>
 
 <script class="meshCollectionAddTemplate" type="text/template">
-  <div class="accordion-inner">
-    <form id="meshForm">
-      <div>For a guide on the .xml/.txt mesh format used here, look at <a href="http://iguana.cs.ucsb.edu/releases/tutorials/dolfin_notes.pdf">dolfin_notes.pdf</a> (which can also be found in the documentation on the StochSS website).</div><br />
+    <div class="accordion-inner">
+        <form id="meshForm">
+            <div>For a guide on the .xml/.txt mesh format used here, look at <a href="http://iguana.cs.ucsb.edu/releases/tutorials/dolfin_notes.pdf">dolfin_notes.pdf</a> (which can also be found in the documentation on the StochSS website).</div><br />
 
-      <div class="row">
-        <div class="span5">
-          <div>Select mesh file:</div>
-          <div>
-            <input id="meshDataUpload" type="file" name="files[]" multiple>
-          </div>
-          <div id="meshDataUploadStatus">
-          </div>
-          <div>Select subdomain file:</div>
-          <div>
-            <input id="subdomainDataUpload" type="file" name="files[]" multiple>
-          </div>
-          <div id="subdomainDataUploadStatus">
-          </div>
-        </div>
-        <div class="span6">
-          <div>
-            Model name:<br>
-            <input type="text" class="name">
-          </div>
-          <div>
-            Model description:<br>
-            <textarea class="form-control descriptionText" rows="3"></textarea>
-          </div>
-        </div>
-      </div>
-      <br />
-      <button id="meshUploadButton" type="button" class="btn btn-primary btn-lg">
-        <span class="icon-plus"></span> Upload PyURDME Mesh
-      </button>
+            <div class="row">
+                <div class="span5">
+                    <div>Select mesh file:</div>
+                    <div>
+                        <input id="meshDataUpload" type="file" name="files[]" multiple>
+                    </div>
+                    <div id="meshDataUploadStatus">
+                    </div>
+                    <div>Select subdomain file:</div>
+                    <div>
+                        <input id="subdomainDataUpload" type="file" name="files[]" multiple>
+                    </div>
+                    <div id="subdomainDataUploadStatus">
+                    </div>
+                </div>
+                <div class="span6">
+                    <div>
+                        Model name:<br>
+                        <input type="text" class="name">
+                    </div>
+                    <div>
+                        Model description:<br>
+                        <textarea class="form-control descriptionText" rows="3"></textarea>
+                    </div>
+                </div>
+            </div>
+            <br />
+            <button id="meshUploadButton" type="button" class="btn btn-primary btn-lg">
+                <span class="icon-plus"></span> Upload PyURDME Mesh
+            </button>
 
-      <button id="resetFormButton" type="button" class="btn btn-primary btn-lg">
-        <span class="icon-remove"></span> Reset
-      </button>
-    </form>
-    <br />
-  </div>
+            <button id="resetFormButton" type="button" class="btn btn-primary btn-lg">
+                <span class="icon-remove"></span> Reset
+            </button>
+        </form>
+        <br />
+    </div>
 </script>
 
 <script type="text/javascript" src = "/static/js/underscore.js"></script>

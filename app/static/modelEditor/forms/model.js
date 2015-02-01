@@ -1,6 +1,7 @@
 var _ = require('underscore');
 var $ = require('jquery');
 var View = require('ampersand-view');
+var Model = require('../models/model');
 var ParameterCollectionFormView = require('./parameter-collection');
 var SpecieCollectionFormView = require('./specie-collection');
 var ReactionCollectionFormView = require('./reaction-collection');
@@ -17,14 +18,35 @@ module.exports = View.extend({
         state: 'string',
         selector: 'object'
     },
-    bindings: {
-        'model.type' : {
-            type : 'text',
-            hook : 'type'
-        }
-    },
     events : {
         "click [data-hook='convertToPopulationButton']" : "convertToPopulation"
+    },
+    duplicateModel: function()
+    {
+        var model = new Model(this.model.toJSON());
+
+        var names = this.model.collection.map( function(model) { return model.name; } );
+
+        while(1)
+        {
+            var tmpName = this.model.name + '_' + Math.random().toString(36).substr(2, 3);
+
+            if(!_.contains(names, tmpName))
+            {
+                model.name = tmpName;
+                break;
+            }
+        }
+
+        model.id = undefined;
+
+        
+
+        model.setupMesh(this.model.mesh.collection);
+
+        this.model.collection.add(model);
+
+        model.save();
     },
     convertToPopulation: function()
     {
@@ -32,46 +54,98 @@ module.exports = View.extend({
         if(this.state == 'concentration')
         {
             this.state = 'converting';
+
+            this.remove();
+            this.render();
         } else if(this.state == 'converting') {
             this.modelConverter.convertToPopulation();
             // We need to rerender everything if we've decided to convert
-            this.render();
 
             this.state = 'population';
+
+            this.remove();
+            this.render();
+        }
+    },
+    convertToSpatial: function()
+    {
+        if(this.state == 'population')
+        {
+            this.state = 'spatial';
+            this.model.isSpatial = true;
+
+            this.remove();
+            this.render();
         }
     },
     updateVisibility: function()
     {
         if(this.state == 'concentration')
         {
-            $( this.el ).find( '[data-hook="editor"], [data-hook="convertToPopulationButton"]' ).show();
+            $( this.el ).find( '[data-hook="editor"]' ).show();
+            $( '[data-hook="convertToPopulationLink"]' ).show();
             $( this.el ).find( '[data-hook="convertToPopulation"]' ).hide();
+            $( '[data-hook="convertToSpatialLink"]' ).hide();
+            $( this.el ).find( '.spatial' ).hide();
         }
         else if(this.state == 'converting')
         {
-            $( this.el ).find( '[data-hook="convertToPopulation"], [data-hook="convertToPopulationButton"]' ).show();
-            $( this.el ).find( '[data-hook="editor"]' ).hide()
+            $( this.el ).find( '[data-hook="convertToPopulation"]' ).show();
+            $( '[data-hook="convertToPopulationLink"]' ).show();
+            $( this.el ).find( '[data-hook="editor"]' ).hide();
+            $( '[data-hook="convertToPopulationLink"]' ).show()
+            $( '[data-hook="convertToSpatialLink"]' ).hide();
+            $( this.el ).find( '.spatial' ).hide();
         }
         else if(this.state == 'population')
         {
-            $( this.el ).find( '[data-hook="convertToPopulation"], [data-hook="convertToPopulationButton"]' ).hide();
-            $( this.el ).find( '[data-hook="editor"]' ).show()
+            $( this.el ).find( '[data-hook="convertToPopulation"]' ).hide();
+            $( '[data-hook="convertToPopulationLink"]' ).hide();
+            $( this.el ).find( '[data-hook="editor"]' ).show();
+            $( '[data-hook="convertToSpatialLink"]' ).show();
+            $( this.el ).find( '.spatial' ).hide();
+        }
+        else if(this.state == 'spatial')
+        {
+            $( this.el ).find( '[data-hook="convertToPopulation"]' ).hide();
+            $( '[data-hook="convertToPopulationLink"]' ).hide();
+            $( this.el ).find( '[data-hook="editor"]' ).show();
+            $( '[data-hook="convertToSpatialLink"]' ).hide();
+            $( this.el ).find( '.spatial' ).show();
         }
     },
     initialize: function(attr)
     {
-        this.state = this.model.units;
+        // This is weird, but the model must wait for signals that these buttons have been pressed from the model select
+        // THis is because the buttons are shared
+        this.listenTo(this.model, "duplicateLink", _.bind(this.duplicateModel, this));
+        this.listenTo(this.model, "convertToPopulationLink", _.bind(this.convertToPopulation, this));
+        this.listenTo(this.model, "convertToSpatialLink", _.bind(this.convertToSpatial, this));
+
+        if(this.model.isSpatial)
+        {
+            this.state = 'spatial';
+        }
+        else
+        {
+            this.state = this.model.units;
+        }
 
         this.meshCollection = attr.meshCollection;
     },
-    render: function()
+    remove: function()
     {
         if(typeof(this.subViews) != "undefined")
         {
-            this.subViews.forEach( function(view) { view.remove(); } );
+            this.subViews.forEach( function(view) { view.remove(); delete view; } );
             this.subViews = undefined;
         }
 
+        $( this.el ).empty();
+        //View.prototype.remove.apply(this, arguments);
+    },
+    render: function()
+    {
         View.prototype.render.apply(this, arguments);
 
         if(!this.model)
@@ -84,7 +158,7 @@ module.exports = View.extend({
             el: $( '<div>' ).appendTo( this.el.querySelector("[data-hook='convertToPopulation']") )[0],
             model: this.model
         });
-
+        
         this.subViews = [
             new SpecieCollectionFormView({
                 parent: this,
@@ -120,7 +194,7 @@ module.exports = View.extend({
             }),
             this.modelConverter
         ];
-
+        
         this.subViews.forEach(_.bind(
             function(view)
             {

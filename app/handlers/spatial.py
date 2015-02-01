@@ -1,5 +1,5 @@
 from stochssapp import BaseHandler
-from modeleditor import ModelManager
+from modeleditor import ModelManager, StochKitModelWrapper
 import stochss
 import exportimport
 import backend.backendservice
@@ -336,8 +336,8 @@ class SpatialPage(BaseHandler):
         '''
         '''
         json_model_refs = ModelManager.getModel(self, data["id"], modelAsString = False) # data["id"] is the model id of the selected model I think
-        
-        stochkit_model_obj = json_model_refs["model"]
+
+        stochkit_model_obj = StochKitModelWrapper.get_by_id(data["id"]).createStochKitModel()
         #print 'json_model_refs["spatial"]["mesh_wrapper_id"]:', json_model_refs["spatial"]["mesh_wrapper_id"]
         meshWrapperDb = mesheditor.MeshWrapper.get_by_id(json_model_refs["spatial"]["mesh_wrapper_id"])
 
@@ -351,12 +351,6 @@ class SpatialPage(BaseHandler):
             #return
             raise Exception("No Mesh file given")
             #TODO: if we get advanced options, we don't need a mesh
-
-        try:    
-            subdomainFileObj = fileserver.FileManager.getFile(self, meshWrapperDb.subdomainsFileId)
-            mesh_subdomain_filename = subdomainFileObj["storePath"]
-        except IOError as e:
-            mesh_subdomain_filename = None
 
         reaction_subdomain_assigments = json_model_refs["spatial"]["reactions_subdomain_assignments"]  #e.g. {'R1':[1,2,3]}
         species_subdomain_assigments = json_model_refs["spatial"]["species_subdomain_assignments"]  #e.g. {'S1':[1,2,3]}
@@ -382,20 +376,9 @@ class SpatialPage(BaseHandler):
         # timespan
         pymodel.timespan(numpy.arange(0,simulation_end_time+simulation_time_increment, simulation_time_increment))
         # subdomains
-        if mesh_subdomain_filename is not None:
-            #if we get a 'mesh_subdomain_filename' read it in and use model.set_subdomain_vector() to set the subdomain
-            try:
-                with open(mesh_subdomain_filename) as fd:
-                    input_sd = numpy.zeros(len(pymodel.mesh.coordinates()))
-                    for line in fd:
-                        ndx, val = line.split(',', 2)
-                        input_sd[int(ndx)] = int(float((val.strip())))
-                    pymodel.set_subdomain_vector(input_sd)
-            except IOError as e:
-                #self.response.write(json.dumps({"status" : False,
-                #                                "msg" : "Mesh subdomain file specified, but file not found: {0}".format(e)}))
-                #return
-                raise Exception("Mesh subdomain file specified, but file not found: {0}".format(e))
+        if len(meshWrapperDb.subdomains) > 0:
+            pymodel.set_subdomain_vector(numpy.array(meshWrapperDb.subdomains))
+
         # species
         for s in stochkit_model_obj.listOfSpecies:
             pymodel.add_species(pyurdme.Species(name=s, diffusion_constant=float(species_diffusion_coefficients[s])))
