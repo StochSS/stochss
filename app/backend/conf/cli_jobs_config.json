@@ -1,0 +1,78 @@
+{
+    "output_store": {
+        "type" : "amazon_s3",
+        "bucket_name" : "stochss-cli-bucket"
+    },
+    "job_status_db_store": {
+        "type": "amazon_dynamodb",
+        "table_name": "stochss"
+    },
+    "machines": [
+        {
+            "public_ip": "54.165.153.212",
+            "private_ip": "54.165.153.212",
+            "username": "ubuntu",
+            "keyfile": "/Users/kaos/base1/stochss/app/stochssdnath@cs.ucsb.edudnath@cs.ucsb.edu-P2A2SP-queuehead.key",
+            "type": "queue-head"
+        }
+    ],
+    "jobs": [
+        {
+            "job_type": "stochkit",
+            "model_file_path": "/Users/kaos/new1/stochss/examples/dimer_decay.xml",
+            "params": {
+                "job_type": "stochkit",
+                "algorithm": "ssa",
+                "epsilon": 0.01,
+                "execType": "stochastic",
+                "file": "",
+                "increment": 1,
+                "paramstring": "ssa  -t 100 -i 100 --realizations 1 --keep-trajectories --label",
+                "realizations": 1,
+                "seed": -1,
+                "selections": {"icc": {}, "pc": {"c1": true}},
+                "threshold": 10,
+                "time": 100
+            }
+        },
+        {
+            "job_type": "stochkit_ode",
+            "model_file_path": "/Users/kaos/new1/stochss/examples/dimer_decay.xml",
+            "params": {
+                "job_type": "stochkit_ode",
+                "algorithm": "ssa",
+                "epsilon": 0.01,
+                "execType": "stochastic",
+                "file": "",
+                "increment": 1,
+                "paramstring": "stochkit_ode.py  -t 100  -i 100  --label",
+                "realizations": 1,
+                "seed": -1,
+                "selections": {"icc": {}, "pc": {"c1": true}},
+                "threshold": 10,
+                "time": 100
+            }
+        },
+        {
+            "job_type": "sensitivity",
+            "model_file_path": "/Users/kaos/blah/stochss/examples/dimer_decay.xml",
+            "params": {
+                "job_type": "sensitivity",
+                "paramstring": "stochkit_ode.py --sensi --parameters c1 -t 100.0 -i 100"
+            }
+        }
+    ],
+    "old_jobs": [
+        {
+            "job_type": "spatial",
+            "model_file_path": "/Users/kaos/blah/stochss/examples/spatial/simple_diffusion.xml",
+            "params": {
+                "job_type": "spatial",
+                "paramstring": "",
+                "simulation_algorithm": "nsm",
+                "simulation_realizations": 1,
+                "simulation_seed": -1
+            }
+        }
+    ]
+}
