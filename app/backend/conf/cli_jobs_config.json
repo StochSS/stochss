@@ -9,10 +9,10 @@
     },
     "machines": [
         {
-            "public_ip": "54.165.153.212",
-            "private_ip": "54.165.153.212",
+            "public_ip": "54.84.0.205",
+            "private_ip": "54.84.0.205",
             "username": "ubuntu",
-            "keyfile": "/Users/kaos/base1/stochss/app/stochssdnath@cs.ucsb.edudnath@cs.ucsb.edu-P2A2SP-queuehead.key",
+            "keyfile": "/Users/kaos/base1/stochss/app/stochssdnath@cs.ucsb.edudnath@cs.ucsb.edu-ICNQT4-queuehead.key",
             "type": "queue-head"
         }
     ],

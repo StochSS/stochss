@@ -11,7 +11,7 @@ import pprint
 import time
 import uuid
 import datetime
-import tempfile
+import argparse
 import subprocess
 import shlex
 
@@ -23,11 +23,10 @@ import celery
 from celery.task.control import inspect
 
 
-CELERY_EXCHANGE_EC2 = "exchange_stochss_ec2"
-CELERY_QUEUE_EC2 = "queue_stochss_ec2"
-CELERY_ROUTING_KEY_EC2 = "routing_key_stochss_ec2"
+CELERY_EXCHANGE_FLEX = "exchange_stochss_flex"
+CELERY_QUEUE_FLEX = "queue_stochss_flex"
+CELERY_ROUTING_KEY_FLEX = "routing_key_stochss_flex"
 
-TABLENAME = "stochss"
 
 def get_aws_credentials():
     if not os.environ.has_key("AWS_ACCESS_KEY_ID") or not os.environ.has_key("AWS_SECRET_ACCESS_KEY"):
@@ -48,7 +47,7 @@ class InvalidConfigurationError(BaseException):
 class BackendCli:
     SUPPORTED_OUTPUT_STORES = ["amazon_s3"]
     SUPPORTED_JOB_STATUS_DB_STORES = ["amazon_dynamodb"]
-    TABLE_NAME = 'stochss'
+    INSTANCE_TYPE = 'flexvm'
 
     def __init__(self, cli_jobs_config):
         self.machines = cli_jobs_config["machines"]
@@ -72,7 +71,7 @@ class BackendCli:
             self.database = DynamoDB(secret_key=self.aws_credentials["AWS_SECRET_ACCESS_KEY"],
                                      access_key=self.aws_credentials["AWS_ACCESS_KEY_ID"])
         else:
-            self.database = None
+            raise InvalidConfigurationError("Job status database not supported!")
 
 
     def __wait_for_jobs(self, task_id_job_map, task_ids):
@@ -105,11 +104,11 @@ class BackendCli:
             params['bucketname'] = self.output_store_info['bucket_name']
 
             result = self.execute_cloud_task(params=params,
-                                      agent="ec2",
-                                      instance_type="c3.large",
-                                      secret_key=self.aws_credentials["AWS_SECRET_ACCESS_KEY"],
-                                      access_key=self.aws_credentials["AWS_ACCESS_KEY_ID"],
-                                      database=self.database)
+                                             agent="flex",
+                                             instance_type=self.INSTANCE_TYPE,
+                                             secret_key=self.aws_credentials["AWS_SECRET_ACCESS_KEY"],
+                                             access_key=self.aws_credentials["AWS_ACCESS_KEY_ID"],
+                                             database=self.database)
             logging.info("Job #{0} submitted to backend.".format(index))
 
             logging.info("result = \n{0}".format(pprint.pprint(result)))
@@ -124,12 +123,12 @@ class BackendCli:
         return task_id_job_map, task_ids
 
     def execute_cloud_task(self, params, agent, access_key, secret_key,
-                    taskid=None, instance_type=None, cost_replay=False, database=None):
+                           task_id=None, instance_type=None, cost_replay=False, database=None):
         '''
         This method instantiates celery tasks in the cloud.
         Returns return value from celery async call and the task ID
         '''
-        #logging.info('inside execute task for cloud : Params - %s', str(params))
+        # logging.info('inside execute task for cloud : Params - %s', str(params))
         if not database:
             database = DynamoDB(access_key, secret_key)
 
@@ -167,23 +166,23 @@ class BackendCli:
                 break
 
             # if there is no taskid explicit, create one the first run
-            if not taskid:
-                taskid = str(uuid.uuid4())
+            if not task_id:
+                task_id = str(uuid.uuid4())
 
-            result["db_id"] = taskid
+            result["db_id"] = task_id
             #create a celery task
-            logging.info("executeTask : executing task with uuid : %s ", taskid)
+            logging.info("execute_cloud_task : executing task with uuid : %s ", task_id)
             timenow = datetime.now()
             data = {
                 'status': "pending",
                 "start_time": timenow.strftime('%Y-%m-%d %H:%M:%S'),
                 'Message': "Task sent to Cloud",
-                'uuid': taskid
+                'uuid': task_id
             }
 
             tmp = None
             if params["job_type"] == "mcem2":
-                queue_name = taskid
+                queue_name = task_id
                 result["queue"] = queue_name
                 data["queue"] = queue_name
                 # How many cores?
@@ -281,9 +280,9 @@ class BackendCli:
                     rerouteWorkers(worker_names, queue_name)
 
                 # Update DB entry just before sending to worker
-                database.updateEntry(taskid, data, TABLENAME)
+                database.updateEntry(task_id, data, self.job_status_db_store_info['table_name'])
                 params["queue"] = queue_name
-                tmp = master_task.delay(taskid, params, database)
+                tmp = master_task.delay(task_id, params, database)
                 #TODO: This should really be done as a background_thread as soon as the task is sent
                 #      to a worker, but this would require an update to GAE SDK.
                 # call the poll task process
@@ -312,51 +311,32 @@ class BackendCli:
                 celery_config = tasks.CelerySingleton()
                 celery_config.configure()
                 celery_config.printCeleryQueue()
-                celery_queue_name = CELERY_QUEUE_EC2 + "" + queue_ins_name
-                celery_exchange = CELERY_EXCHANGE_EC2
-                celery_routing_key = CELERY_ROUTING_KEY_EC2 + "" + queue_ins_name
+                celery_queue_name = CELERY_QUEUE_FLEX + "" + queue_ins_name
+                celery_exchange = CELERY_EXCHANGE_FLEX
+                celery_routing_key = CELERY_ROUTING_KEY_FLEX + "" + queue_ins_name
                 logging.info('Deliver the task to the queue: {0}, routing key: {1}'.format(celery_queue_name,
                                                                                            celery_routing_key))
                 #celery async task execution http://ask.github.io/celery/userguide/executing.html
 
                 # if this is the cost analysis replay then update the stochss-cost-analysis table
                 if cost_replay:
-                    params["db_table"] = "stochss_cost_analysis"
-                    data = {}
-                    data['status'] = "pending"
-                    data['start_time'] = timenow.strftime('%Y-%m-%d %H:%M:%S')
-                    data['message'] = "Task sent to Cloud"
-                    data['agent'] = agent
-                    data['instance_type'] = instance_type
-                    data['uuid'] = taskid
-                    #                     data = {
-                    #                             'status': "pending",
-                    #                             'start_time': timenow.strftime('%Y-%m-%d %H:%M:%S'),
-                    #                             'Message': "Task sent to Cloud",
-                    #                             'agent': agent,
-                    #                             'instance_type': instance_type
-                    #                     }
-                    taskid_prefix = agent + "_" + instance_type + "_"
-
-                    database.updateEntry(taskid_prefix + taskid, data, params["db_table"])
-                    tmp = tasks.task.apply_async(args=[taskid, params, database, access_key, secret_key, taskid_prefix],
-                                                 queue=celery_queue_name, routing_key=celery_routing_key)
+                    raise NotImplementedError
                 else:
-                    params["db_table"] = TABLENAME
-                    database.updateEntry(taskid, data, params["db_table"])
-                    tmp = tasks.task.apply_async(args=[taskid, params, database, access_key, secret_key],
+                    params["db_table"] = self.job_status_db_store_info['table_name']
+                    database.updateEntry(task_id, data, params["db_table"])
+                    tmp = tasks.task.apply_async(args=[task_id, params, database, access_key, secret_key],
                                                  queue=celery_queue_name, routing_key=celery_routing_key)
                     # delay(taskid, params, access_key, secret_key)  #calls task(taskid,params,access_key,secret_key)
                 #                 logging.info('RESULT OF TASK: {0}'.format(tmp.get()))
                 print tmp.ready()
                 result["celery_pid"] = tmp.id
 
-            logging.info("executeTask :  result of task : %s", str(tmp.id))
+            logging.info("execute_cloud_task:  result of task : %s", str(tmp.id))
             result["success"] = True
             return result
 
         except Exception, e:
-            logging.error("executeTask : error - %s", str(e))
+            logging.error("execute_cloud_task: error - %s", str(e))
             traceback.print_exc()
             return {
                 "success": False,
@@ -367,13 +347,13 @@ class BackendCli:
 
 
     def config_celery_queues(self, exchange_name, queue_name, routing_key, ins_types):
-        exchange = "exchange = Exchange('"+exchange_name+"', type = 'direct')"
+        exchange = "exchange = Exchange('" + exchange_name + "', type = 'direct')"
 
         CELERY_QUEUES = "CELERY_QUEUES = (Queue('" + queue_name + "', exchange, routing_key = '" + routing_key + "'), "
         for ins_type in ins_types:
             celery_queue_name = queue_name + "_" + ins_type.replace(".", "")
             celery_routing_key = routing_key + "_" + ins_type.replace(".", "")
-            CELERY_QUEUES = CELERY_QUEUES + "Queue('"+celery_queue_name + "', exchange, routing_key = '" + celery_routing_key+"'), "
+            CELERY_QUEUES = CELERY_QUEUES + "Queue('" + celery_queue_name + "', exchange, routing_key = '" + celery_routing_key + "'), "
 
         CELERY_QUEUES = CELERY_QUEUES + ")"
 
@@ -388,9 +368,9 @@ class BackendCli:
                 if clear_following:
                     f.write("")
                 elif line.strip().startswith('exchange'):
-                    f.write(exchange+"\n")
+                    f.write(exchange + "\n")
                 elif line.strip().startswith('CELERY_QUEUES'):
-                    f.write(CELERY_QUEUES+"\n")
+                    f.write(CELERY_QUEUES + "\n")
                     clear_following = True
                 else:
                     f.write(line)
@@ -461,7 +441,7 @@ class BackendCli:
         # commands.append(
         # 'echo export AWS_ACCESS_KEY_ID={0} >> ~/.bashrc'.format(self.aws_credentials['AWS_ACCESS_KEY_ID']))
         # commands.append(
-        #     'echo export AWS_SECRET_ACCESS_KEY={0} >> ~/.bashrc'.format(self.aws_credentials['AWS_SECRET_ACCESS_KEY']))
+        # 'echo export AWS_SECRET_ACCESS_KEY={0} >> ~/.bashrc'.format(self.aws_credentials['AWS_SECRET_ACCESS_KEY']))
 
         commands.append(
             'echo export AWS_ACCESS_KEY_ID={0} >> ~/.bashrc'.format(str(self.aws_credentials['AWS_ACCESS_KEY_ID'])))
@@ -502,8 +482,8 @@ class BackendCli:
         celery_config_filename = os.path.join(current_dir, "celeryconfig.py")
         celery_template_filename = os.path.join(current_dir, "..", "celeryconfig.py.template")
 
-        logging.info("celery_config_filename = {0}".format(celery_config_filename))
-        logging.info("celery_template_filename = {0}".format(celery_template_filename))
+        logging.debug("celery_config_filename = {0}".format(celery_config_filename))
+        logging.debug("celery_template_filename = {0}".format(celery_template_filename))
 
         celery_config_lines = []
         with open(celery_template_filename) as celery_config_file:
@@ -518,14 +498,14 @@ class BackendCli:
 
         # Now update the actual Celery app....
         # TODO: Doesnt seem to work in GAE until next request comes in to server
-        my_celery = CelerySingleton()
+        my_celery = tasks.CelerySingleton()
         my_celery.configure()
 
 
     def prepare_machines(self):
         logging.info("prepare_machines: inside method with machine_info : \n%s", pprint.pformat(self.machines))
 
-        instance_types = ['c3.large']
+        instance_types = [self.INSTANCE_TYPE]
 
         queue_head = None
         for machine in self.machines:
@@ -567,7 +547,7 @@ class BackendCli:
                 with open(bash_script_filename, 'w') as file:
                     file.write(command)
 
-                logging.info("script =\n{0}".format(command))
+                logging.debug("script =\n{0}".format(command))
 
                 remote_copy_command = "scp -o UserKnownHostsFile=/dev/null -o StrictHostKeyChecking=no -i {key_file} {bash_script_filename} {user}@{ip}:setup_script.sh".format(
                     key_file=machine["keyfile"],
@@ -582,8 +562,8 @@ class BackendCli:
                     raise Exception("Remote copy command failed on {ip}!".format(ip=machine['public_ip']))
 
                 commands = [
-                            "chmod +x /home/ubuntu/setup_script.sh",
-                            "bash /home/ubuntu/setup_script.sh"
+                    "chmod +x /home/ubuntu/setup_script.sh",
+                    "bash /home/ubuntu/setup_script.sh"
                 ]
                 remote_command = "ssh -o 'UserKnownHostsFile=/dev/null' -o 'StrictHostKeyChecking=no' -i {key_file} {user}@{ip} \"{cmd}\"".format(
                     key_file=machine["keyfile"],
@@ -599,7 +579,7 @@ class BackendCli:
 
             self.__configure_celery(queue_head)
 
-            self.config_celery_queues(CELERY_EXCHANGE_EC2, CELERY_QUEUE_EC2, CELERY_ROUTING_KEY_EC2, instance_types)
+            self.config_celery_queues(CELERY_EXCHANGE_FLEX, CELERY_QUEUE_FLEX, CELERY_ROUTING_KEY_FLEX, instance_types)
 
             return {"success": True}
 
@@ -610,10 +590,8 @@ class BackendCli:
 
 
     def __start_celery_on_machine_via_ssh(self, user, ip, key_file_path):
-        ins_type = 'c3.large'
-        '''
-        sudo export PYTHONPATH=/home/ubuntu:/home/ubuntu/pyurdme:/home/ubuntu/stochss/app:/home/ubuntu/stochss/app/backend:/home/ubuntu/stochss/app/lib/cloudtracker;export AWS_ACCESS_KEY_ID=AKIAJLESBH6UR3N4TJTA;export AWS_SECRET_ACCESS_KEY=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;celery -A tasks worker -Q queue_stochss_ec2,queue_stochss_ec2_c3large --autoreload --loglevel=debug --workdir /home/ubuntu > /home/ubuntu/celery.log 2>&1'
-        '''
+        # sudo export PYTHONPATH=/home/ubuntu:/home/ubuntu/pyurdme:/home/ubuntu/stochss/app:/home/ubuntu/stochss/app/backend:/home/ubuntu/stochss/app/lib/cloudtracker;export AWS_ACCESS_KEY_ID=AKIAJLESBH6UR3N4TJTA;export AWS_SECRET_ACCESS_KEY=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;celery -A tasks worker -Q queue_stochss_flex,queue_stochss_flex_flexvm --autoreload --loglevel=debug --workdir /home/ubuntu > /home/ubuntu/celery.log 2>&1'
+
         commands = []
         commands.append('source /home/ubuntu/.bashrc')
         commands.append(
@@ -621,9 +599,9 @@ class BackendCli:
         commands.append('export AWS_ACCESS_KEY_ID={0}'.format(self.aws_credentials['AWS_ACCESS_KEY_ID']))
         commands.append('export AWS_SECRET_ACCESS_KEY={0}'.format(self.aws_credentials['AWS_SECRET_ACCESS_KEY']))
         commands.append(
-            "celery -A tasks worker -Q "+ CELERY_QUEUE_EC2 + "," \
-                + CELERY_QUEUE_EC2 + "_" + ins_type.replace(".", "") \
-                + " --autoreload --loglevel=debug --workdir /home/ubuntu > /home/ubuntu/celery.log 2>&1")
+            "celery -A tasks worker -Q " + CELERY_QUEUE_FLEX + "," \
+            + CELERY_QUEUE_FLEX + "_" + self.INSTANCE_TYPE.replace(".", "") \
+            + " --autoreload --loglevel=debug --workdir /home/ubuntu > /home/ubuntu/celery.log 2>&1")
 
         # PyURDME must be run inside a 'screen' terminal as part of the FEniCS code depends on the ability to write to
         # the process' terminal, screen provides this terminal.
@@ -655,7 +633,7 @@ class BackendCli:
             raise Exception("ssh keyfile file not found: {0}".format(key_file_path))
 
         celery_config_filename = os.path.join(os.path.dirname(os.path.abspath(__file__)), "celeryconfig.py")
-        logging.info("celery_config_filename = {0}".format(celery_config_filename))
+        logging.debug("celery_config_filename = {0}".format(celery_config_filename))
 
         if not os.path.exists(celery_config_filename):
             raise Exception("celery config file not found: {0}".format(celery_config_filename))
@@ -675,20 +653,32 @@ class BackendCli:
 
 
 if __name__ == "__main__":
-    # logging.basicConfig(filename='testoutput.log', filemode='w', level=logging.DEBUG)
-    logging.basicConfig(level=logging.INFO)
+    parser = argparse.ArgumentParser()
+    parser.add_argument('-s', '--settings', help="Job/Configuration Settings File (../conf/cli_jobs_config.json by default)",
+                        action="store", dest="config_file",
+                        default=os.path.join(os.path.dirname(__file__), "..", "conf", "cli_jobs_config.json"))
+    parser.add_argument('-l', '--loglevel', help="Log level (eg. debug, info, error)",
+                        action="store", dest="log_level",default="info")
 
-    if len(sys.argv) < 2:
-        cli_jobs_config_file = os.path.join(os.path.dirname(os.path.abspath(__file__)), '..', 'conf',
-                                            'cli_jobs_config.json')
-        logging.debug("cli_jobs_config_file = {0}".format(cli_jobs_config_file))
+    args = parser.parse_args(sys.argv[1:])
 
+    log_level = args.log_level.lower()
+    if log_level == 'debug':
+        logging.basicConfig(level=logging.DEBUG)
+    elif log_level == 'info':
+        logging.basicConfig(level=logging.INFO)
+    elif log_level == 'error':
+        logging.basicConfig(level=logging.ERROR)
     else:
-        cli_jobs_config_file = sys.argv[1]
-        if not os.path.exists(cli_jobs_config_file):
-            raise Exception('Invalid cli jobs config file given!')
+        raise Exception('Invalid Log Level = {0}!'.format(args.log_level))
+    # logging.basicConfig(filename='testoutput.log', filemode='w', level=logging.DEBUG)
 
-    with open(cli_jobs_config_file) as file:
+    logging.info("config_file = {0}".format(args.config_file))
+
+    if not os.path.exists(args.config_file):
+        raise Exception("Invalid cli jobs config file '{0}' given!".format(args.config_file))
+
+    with open(args.config_file) as file:
         cli_jobs_config = json.loads(file.read())
 
     cli = BackendCli(cli_jobs_config)
