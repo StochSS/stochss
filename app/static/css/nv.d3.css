@@ -8,7 +8,21 @@
   margin: 0;
   padding: 0;
   overflow: hidden;
-}
+} 
+
+     #dat-gui-container > div{min-height: 28px; height: 28px; width: 100%; } 
+            #dat-gui-container > div > ul  {position: absolute; z-index: 0;}
+            #dat-gui-container > div > ul { display: table-row;  }
+            #dat-gui-container > div > ul > li { display: table-cell; min-width: 190px ;padding-left: 0px;padding-right:1px}
+            #dat-gui-container > div > ul > li.cr { background: none; line-height: normal; vertical-align: top; border-left: 0px !important;border-bottom: 0px}
+            #dat-gui-container > div > ul > li.cr >div { background: #1a1a1a; height: 27px !important;padding-left: 6px;}
+            #dat-gui-container > div > ul > li.cr > div > span.property-name{padding-top: 6px; }
+            #dat-gui-container > div > ul > li.cr.string >div { border-left:4px solid green; }
+            #dat-gui-container > div > ul > li.cr.number >div { border-left:4px solid blue;}
+            #dat-gui-container > div > ul > li.cr.function >div { border-left:4px solid red;}
+            #dat-gui-container > div > ul > li.cr.color >div { border-left:4px solid orange;}
+            #dat-gui-container > div > ul > li.cr.boolean>div { border-left:4px solid purple;}
+            #dat-gui-container .close-button { display:none;}         
 
 /********************
   Box shadow and border radius styling

@@ -59,10 +59,185 @@ Spatial.Controller = Backbone.View.extend(
 
         renderFrame : function() {
             this.renderer.render(this.scene, this.camera);
+            this.updateWorldCamera();
+            this.renderer2.render(this.scene2, this.camera2);
             requestAnimationFrame(_.bind(this.renderFrame, this));
             this.controls.update();
+
         },
+
         
+        addGui : function() {
+
+                var gui = new dat.GUI({
+                    height : 5 * 32 - 1,
+                    autoPlace: false
+                });
+
+            var gui_func = {
+                    globalController : this,
+                    zoomin :  function() { this.globalController.controls.dollyOut();},
+                    zoomout : function() { this.globalController.controls.dollyIn(); },
+                    panleft: function(){ this.globalController.controls.panLeft(1); },
+                    panright: function(){ this.globalController.controls.panLeft(-1); },
+                    rotateUp: function(){ this.globalController.controls.rotateUp(0.5); },
+                    rotateLeft: function(){ this.globalController.controls.rotateLeft(1);},
+                    rotateRight: function(){ this.globalController.controls.rotateLeft(-1);},
+                    rotateDown: function(){ this.globalController.controls.rotateUp(-1);},
+                    reset: function() {this.globalController.controls.reset();this.globalController.camera.position.z = 1.5;},
+                    zoomin: function(){this.globalController.controls.dollyOut();},
+                    zoomout: function() { this.globalController.controls.dollyIn(); },   
+                    };
+
+            var zoom = gui.addFolder('Zoom');
+            zoom.add(gui_func, 'zoomin');
+            zoom.add(gui_func, 'zoomout');
+
+            var pan = gui.addFolder('Pan..');
+            pan.add(gui_func, 'panleft');
+            pan.add(gui_func, 'panright');
+
+            var rotate = gui.addFolder('Rotate..');
+            rotate.add(gui_func, 'rotateUp');
+            rotate.add(gui_func, 'rotateDown');
+            rotate.add(gui_func, 'rotateLeft');
+            rotate.add(gui_func, 'rotateRight');
+
+            gui.add(gui_func, 'reset');
+
+            var guiContainer = $( '#dat-gui-container' ).empty();
+            testtest = $( gui.domElement ).appendTo( guiContainer);
+            testtest.css('display : block');
+        },
+
+
+        createText : function(letter, x, y, z){
+
+            // create a canvas element
+            var canvas1 = document.createElement('canvas');
+            var context1 = canvas1.getContext('2d');
+            context1.font = "Bold 20px Arial";
+            context1.fillStyle = "rgba(0,0,0,0.95)";
+            context1.fillText(letter, 20, 20);
+            
+            // canvas contents will be used for a texture
+            var texture1 = new THREE.Texture(canvas1) 
+            texture1.needsUpdate = true;
+              
+            var material1 = new THREE.MeshBasicMaterial( {map: texture1, side:THREE.DoubleSide } );
+            material1.transparent = true;
+
+            var mesh1 = new THREE.Mesh(
+                new THREE.PlaneGeometry(1, 1),
+                material1
+              );
+            mesh1.position.set(x, y, z);
+            this.scene2.add( mesh1 );
+        },
+
+        addAxes : function(){
+            var dom2 = $( '#inset' ).empty();
+
+            // renderer
+            var renderer2 = new THREE.WebGLRenderer({ alpha: true });
+            renderer2.setClearColor( 0x000000, 0 ); 
+            $( renderer2.domElement ).appendTo(dom2);
+
+            this.renderer2 = renderer2;
+
+            // scene
+            var scene2 = new THREE.Scene();
+            this.scene2 = scene2;
+
+            // axes
+            var dir = new THREE.Vector3( 1, 0, 0 );
+            var origin = new THREE.Vector3( 0, 0, 0 ); 
+            var length = 1; 
+            var hex = 0xff0000; 
+            var xaxis = new THREE.ArrowHelper( dir, origin, length, hex );
+            this.createText('X',1.25, -0.3, 0);
+            scene2.add( xaxis );
+
+
+            dir = new THREE.Vector3( 0, 1.0, 0 );
+            origin = new THREE.Vector3( 0, 0, 0 ); 
+            length = 1; 
+            hex = 0x0000ff; 
+            yaxis = new THREE.ArrowHelper( dir, origin, length, hex );
+            this.createText('Y', 0.5,0.5,0);            
+            scene2.add( yaxis );
+
+
+            dir = new THREE.Vector3( 0, 0, 1.0 );
+            origin = new THREE.Vector3( 0, 0, 0 ); 
+            length = 1; 
+            hex = 0x00ff00; 
+            zaxis = new THREE.ArrowHelper( dir, origin, length, hex );
+            this.createText('Z', 0.5,-0.4,0.9);
+            scene2.add( zaxis );
+
+            // camera
+            var camera2 = new THREE.PerspectiveCamera( 75, 0.4 / 0.3, 0.1, 1000 );
+            this.camera2 = camera2; 
+
+        },
+
+
+        updateWorldCamera: function(){
+            this.camera2.up = this.camera.up; 
+            this.camera2.position.copy( this.camera.position );
+            this.camera2.position.sub( this.controls.target ); 
+            this.camera2.lookAt( this.scene2.position );
+        },
+
+
+        /*addControls: function(){
+            var controlContainer = $( '#controls' ).empty();
+            var buttonText = ["Pan Left","Pan Right","br","Rotate Up","br","Rotate Left","Rotate Right","br","Rotate Down","br", "Reset", "br", "Zoom In", "Zoom Out"];   
+            
+            var utility = [
+                function(){ console.log("click"); this.globalController.controls.panLeft(1); },
+                function(){ this.globalController.controls.panLeft(-1); },
+                function(){},
+                function(){ this.globalController.controls.rotateUp(1); },
+                function(){},
+                function(){ this.globalController.controls.rotateLeft(1);},
+                function(){ this.globalController.controls.rotateLeft(-1);},
+                function(){},
+                function(){ this.globalController.controls.rotateUp(-1);},
+                function(){},
+                function() {this.globalController.controls.reset();this.globalController.camera.position.z = 1.5;},
+                function(){}, 
+                function(){this.globalController.controls.dollyOut();},
+                function() { this.globalController.controls.dollyIn(); },          
+            ];
+
+            for (i = 0; i < buttonText.length; i++) {
+            
+            if(buttonText[i] == "br")
+            {
+                var linebreak = document.createElement("br");
+                $('#controls').append(linebreak);
+            }
+            else
+                {
+                    this.addButtons(buttonText[i], utility[i]);
+                }  
+            
+            }
+
+
+        },
+
+        addButtons: function(text, func){
+            var newButton = document.createElement('button');
+            var newText = document.createTextNode(text); 
+            newButton.appendChild(newText);
+            newButton.onClick = func;
+            $('#controls').append(newButton);
+
+        },*/
+
         // This event gets fired when the user selects a csv data file
         meshDataPreview : function(data)
         {
@@ -85,12 +260,13 @@ Spatial.Controller = Backbone.View.extend(
                 // get a new browser by presenting the user with link to
                 // http://get.webgl.org
                 $( "#meshPreview" ).html('<center><h2 style="color: red;">WebGL Not Supported</h2><br /> \
-<ul><li>Download an updated Firefox or Chromium to use StochSS (both come with WebGL support)</li> \
-<li>It may be necessary to update system video drivers to make this work</li></ul></center>');
+                    <ul><li>Download an updated Firefox or Chromium to use StochSS (both come with WebGL support)</li> \
+                    <li>It may be necessary to update system video drivers to make this work</li></ul></center>');
                 return;
             }
 
             var canvas = document.createElement('canvas');
+
             gl = canvas.getContext("webgl");
             delete canvas;
             if (!gl) {
@@ -98,10 +274,10 @@ Spatial.Controller = Backbone.View.extend(
                 // update their drivers or get a new browser. Present a link to
                 // http://get.webgl.org/troubleshooting
                 $( "#meshPreview" ).html('<center><h2 style="color: red;">WebGL Disabled</h2><br /> \
-<ul><li>In Safari and certain older browsers, this must be enabled manually</li> \
-<li>Browsers can also throw this error when they detect old or incompatible video drivers</li> \
-<li>Enable WebGL, or try using StochSS in an up to date Chrome or Firefox browser</li> \
-</ul></center>');
+                    <ul><li>In Safari and certain older browsers, this must be enabled manually</li> \
+                    <li>Browsers can also throw this error when they detect old or incompatible video drivers</li> \
+                    <li>Enable WebGL, or try using StochSS in an up to date Chrome or Firefox browser</li> \
+                    </ul></center>');
                 return;  
             }
 
@@ -119,14 +295,14 @@ Spatial.Controller = Backbone.View.extend(
                 var rendererDom = $( renderer.domElement ).appendTo(dom);
                 
                 var controls = new THREE.OrbitControls( camera, renderer.domElement );
-                // var controls = new THREE.OrbitControls( camera );
-                //controls.addEventListener( 'change', render );
-                
+
                 camera.position.z = 1.5;
 
                 this.camera = camera;
                 this.renderer = renderer;
                 this.controls = controls;
+
+
             }
             else
             {
@@ -156,10 +332,17 @@ Spatial.Controller = Backbone.View.extend(
             var directionalLight = new THREE.DirectionalLight(0xffffff);
             directionalLight.position.set(1, 1, 1).normalize();
             scene.add(directionalLight);
-
+            
             this.scene = scene;
 
+            // Adding gui
+            this.addGui();
+
+            // Adding Axes
+            this.addAxes();
+
             $( "#meshPreviewMsg" ).hide();
+
             //$( "#meshPreview" ).show();
 
             if(!this.rendererInitialized)
@@ -167,7 +350,14 @@ Spatial.Controller = Backbone.View.extend(
                 this.renderFrame();
                 this.rendererInitialized = true;
             }
+
+
+
+
         },
+
+
+
 
         acquireNewData : function()
         {
@@ -183,6 +373,10 @@ Spatial.Controller = Backbone.View.extend(
                       success : _.bind(this.handleMeshDataUpdate, this)
                     });
         },
+
+
+       
+
 
         handleSliderChange : function(event)
         {
@@ -332,6 +526,8 @@ Spatial.Controller = Backbone.View.extend(
                     slider.on('change', _.throttle(_.bind(this.handleSliderChange, this), 1000));
 
                     slider.trigger('change');
+
+
                 }
                 else
                 {
@@ -342,6 +538,9 @@ Spatial.Controller = Backbone.View.extend(
                 // Add event handler to access button
                 if(data['resource'] == 'cloud' && !data['outData'])
                 {
+
+                    console.log("at finished");
+                    console.log("at resource");
                     $( "#access" ).text("Fetch Data from Cloud");                    
                     $( "#access" ).click(_.bind(this.handleDownloadDataButton, this));
                 }
@@ -358,6 +557,10 @@ Spatial.Controller = Backbone.View.extend(
 var run = function()
 {
     var id = $.url().param("id");
-
     var cont = new Spatial.Controller( { id : id } );
 }
+
+
+
+
+
