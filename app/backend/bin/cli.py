@@ -590,7 +590,7 @@ class BackendCli:
 
 
     def __start_celery_on_machine_via_ssh(self, user, ip, key_file_path):
-        # sudo export PYTHONPATH=/home/ubuntu:/home/ubuntu/pyurdme:/home/ubuntu/stochss/app:/home/ubuntu/stochss/app/backend:/home/ubuntu/stochss/app/lib/cloudtracker;export AWS_ACCESS_KEY_ID=**********;export AWS_SECRET_ACCESS_KEY=********;celery -A tasks worker -Q queue_stochss_flex,queue_stochss_flex_flexvm --autoreload --loglevel=debug --workdir /home/ubuntu > /home/ubuntu/celery.log 2>&1'
+        # sudo export PYTHONPATH=/home/ubuntu:/home/ubuntu/pyurdme:/home/ubuntu/stochss/app:/home/ubuntu/stochss/app/backend:/home/ubuntu/stochss/app/lib/cloudtracker;export AWS_ACCESS_KEY_ID=AKIAJLESBH6UR3N4TJTA;export AWS_SECRET_ACCESS_KEY=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;celery -A tasks worker -Q queue_stochss_flex,queue_stochss_flex_flexvm --autoreload --loglevel=debug --workdir /home/ubuntu > /home/ubuntu/celery.log 2>&1'
 
         commands = []
         commands.append('source /home/ubuntu/.bashrc')
