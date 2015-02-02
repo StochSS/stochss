@@ -709,38 +709,3 @@ def workersConsumingFromQueue(from_queue):
 #    #print str(i.registered())
 #    #print str(i.active())
 #    #print str(i.scheduled())
-
-#     
-# if __name__ == "__main__":
-# 
-#     '''
-#     NOTE: these must be set in your environment:
-#     export AWS_SECRET_ACCESS_KEY=XXX
-#     export AWS_ACCESS_KEY_ID=YYY
-#     '''
-#     os.environ["AWS_ACCESS_KEY_ID"] = os.environ['EC2_ACCESS_KEY']
-#     os.environ["AWS_SECRET_ACCESS_KEY"] = os.environ['EC2_SECRET_KEY']
-# 
-#     print createtable('stochss')
-#     val = {'status':"running", 'message':'done'}
-#     updateEntry('1234', val, 'stochss')
-#     print describetask(['1234', '1234'], 'stochss')
-#     
-#     #this executes a task locally
-#     #NOTE: dimer_decay.xml must be in this local dir
-#     xmlfile = open('dimer_decay.xml','r')
-#     doc = xmlfile.read()
-#     xmlfile.close()
-#     taskargs = {}
-#     taskargs['paramstring'] = 'ssa -t 100 -i 1000 -r 100 --keep-trajectories --seed 706370 --label'
-#     taskargs['document'] = doc
-#     taskargs['bucketname'] = 'cjk1234'
-# 
-#     TaskConfig.STOCHSS_HOME=os.getcwd()
-#     TaskConfig.STOCHKIT_DIR='{0}/../../StochKit'.format(TaskConfig.STOCHSS_HOME)
-#     task('1234',taskargs)
-#     print describetask(['1234', '1234'], 'stochss')
-#  
-#     print 'BE SURE TO GO TO YOUR AWS ADMIN CONSOLE AND DELETE DYNAMODB TABLES AND S3 BUCKETS'
-#     
-

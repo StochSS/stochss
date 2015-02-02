@@ -31,7 +31,7 @@ class backendservices():
     INFRA_EC2 = 'ec2'
     INFRA_CLUSTER = 'cluster'
     WORKER_AMIS = {
-        INFRA_EC2: 'ami-3a2b6c52'
+        INFRA_EC2: 'ami-6e226406'
     }
     VMSTATUS_IDS = 'ids'
 
@@ -47,7 +47,7 @@ class backendservices():
     def executeTask(self, params, agent, access_key, secret_key, taskid=None, instance_type=None, cost_replay=False, database=None):
         '''
         This method instantiates celery tasks in the cloud.
-	Returns return value from celery async call and the task ID
+        Returns return value from celery async call and the task ID
         '''
         #logging.info('inside execute task for cloud : Params - %s', str(params))
         if not database:
@@ -111,16 +111,17 @@ class backendservices():
                 if "cores" in params:
                     requested_cores = int(params["cores"])
                 
-                ##################################################################################################################
+                ################################################################################
                 # The master task can run on any node...
                 #TODO: master task might need to run on node with at least 2 cores...
                 # launch_params["instance_type"] = "c3.large"
                 # launch_params["num_vms"] = 1
-                ##################################################################################################################
+                ################################################################################
                 
                 celery_info = CelerySingleton().app.control.inspect()
                 # How many active workers are there?
                 active_workers = celery_info.active()
+                logging.info("All active workers: {0}".format(active_workers))
                 # We will keep around a dictionary of the available workers, where
                 # the key will be the workers name and the value will be how many
                 # cores that worker has (i.e. how many tasks they can execute 
@@ -135,7 +136,7 @@ class backendservices():
                         if not active_workers[worker_name]:
                             available_workers[worker_name] = celery_info.stats()[worker_name]['pool']['max-concurrency']
                             core_count += int(available_workers[worker_name])
-                logging.info("All available workers:".format(available_workers))
+                logging.info("All available workers: {0}".format(available_workers))
                 # We assume that at least one worker is already consuming from the main queue
                 # so we just need to find that one worker and remove it from the list, since
                 # we need one worker on the main queue for the master task.
@@ -212,12 +213,17 @@ class backendservices():
                     "poll_task.py"
                 )
                 logging.info("Task sent to cloud with celery id {0}...".format(tmp.id))
-                poll_task_string = "python {0} {1} {2} > poll_task_{1}.log 2>&1".format(
+                #poll_task_string = "python {0} {1} {2} > poll_task_{1}.log 2>&1".format(
+                poll_task_string = "python {0} {1} {2}".format(
                     poll_task_path,
                     tmp.id,
                     queue_name
                 )
-                p = subprocess.Popen(shlex.split(poll_task_string))
+                try:
+                    p = subprocess.Popen(shlex.split(poll_task_string))
+                    result["poll_process_pid"] = p.pid
+                except Exception as e:
+                    logging.error("Caught exception {0}".format(e))
                 result["celery_pid"] = tmp.id
             else:
                 if instance_type:
@@ -512,7 +518,7 @@ class backendservices():
             i = InfrastructureManager(blocking=block)
             res = {}
             
-            # 1. change the status of 'failed' in the previous launch in db to 'terminated' 
+            # 1. change the status of 'failed' in the previous launch in db to 'terminated'
 
             ins_ids = VMStateModel.terminate_not_active(params)
             
