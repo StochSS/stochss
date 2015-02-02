@@ -86,7 +86,6 @@ MeshEditor.Controller = Backbone.View.extend(
             requestAnimationFrame(_.bind(this.renderFrame, this));
             this.controls.update();
         },
-        
         drawMesh : function(pyurdmeMeshJsonData)
         {
             if (!window.WebGLRenderingContext) {
@@ -117,8 +116,8 @@ MeshEditor.Controller = Backbone.View.extend(
             if(!this.renderer)
             {
                 var dom = $( "#meshPreview" ).empty();
-                var width = dom.width();//
-                var height = 0.75 * width;
+                var width = dom.width(); this.d_width = width;//
+                var height = 0.75 * width; this.d_height = height;
                 //window.innerWidth / window.innerHeight
                 var camera = new THREE.PerspectiveCamera( 75, 4.0/3.0, 0.1, 1000 );
                 var renderer = new THREE.WebGLRenderer();

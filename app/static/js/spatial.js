@@ -68,47 +68,20 @@ Spatial.Controller = Backbone.View.extend(
 
         
         addGui : function() {
+            $(" #container").show();
+            $( '#zoomPlus_btn' ).click( _.bind(function() { this.controls.dollyOut();}, this) );
+            $( '#zoomMinus_btn' ).click( _.bind(function() { this.controls.dollyIn();}, this) );
+            $( '#panLeft_btn' ).click( _.bind(function() { this.controls.panLeft(-0.1);}, this) );
+            $( '#panRight_btn' ).click( _.bind(function() { this.controls.panLeft(0.1);}, this) );
+            $( '#panUp_btn' ).click( _.bind(function() { this.controls.panUp(-0.1);}, this) );
+            $( '#panDown_btn' ).click( _.bind(function() { this.controls.panUp(0.1);}, this) );
 
-                var gui = new dat.GUI({
-                    height : 5 * 32 - 1,
-                    autoPlace: false
-                });
-
-            var gui_func = {
-                    globalController : this,
-                    zoomin :  function() { this.globalController.controls.dollyOut();},
-                    zoomout : function() { this.globalController.controls.dollyIn(); },
-                    panleft: function(){ this.globalController.controls.panLeft(1); },
-                    panright: function(){ this.globalController.controls.panLeft(-1); },
-                    rotateUp: function(){ this.globalController.controls.rotateUp(0.5); },
-                    rotateLeft: function(){ this.globalController.controls.rotateLeft(1);},
-                    rotateRight: function(){ this.globalController.controls.rotateLeft(-1);},
-                    rotateDown: function(){ this.globalController.controls.rotateUp(-1);},
-                    reset: function() {this.globalController.controls.reset();this.globalController.camera.position.z = 1.5;},
-                    zoomin: function(){this.globalController.controls.dollyOut();},
-                    zoomout: function() { this.globalController.controls.dollyIn(); },   
-                    };
-
-            var zoom = gui.addFolder('Zoom');
-            zoom.add(gui_func, 'zoomin');
-            zoom.add(gui_func, 'zoomout');
-
-            var pan = gui.addFolder('Pan..');
-            pan.add(gui_func, 'panleft');
-            pan.add(gui_func, 'panright');
-
-            var rotate = gui.addFolder('Rotate..');
-            rotate.add(gui_func, 'rotateUp');
-            rotate.add(gui_func, 'rotateDown');
-            rotate.add(gui_func, 'rotateLeft');
-            rotate.add(gui_func, 'rotateRight');
-
-            gui.add(gui_func, 'reset');
-
-            var guiContainer = $( '#dat-gui-container' ).empty();
-            testtest = $( gui.domElement ).appendTo( guiContainer);
-            testtest.css('display : block');
-        },
+            $( '#rotateUp_btn' ).click( _.bind(function() { this.controls.rotateUp(0.5);}, this) );
+            $( '#rotateDown_btn' ).click( _.bind(function() { this.controls.rotateUp(-0.5);}, this) );
+            $( '#rotateRight_btn' ).click( _.bind(function() { this.controls.rotateLeft(0.5);}, this) );
+            $( '#rotateLeft_btn' ).click( _.bind(function() { this.controls.rotateLeft(-0.5);}, this) );
+            $( '#reset_btn' ).click( _.bind(function() { this.controls.reset();this.camera.position.z = 1.5; }, this) ); 
+         },
 
 
         createText : function(letter, x, y, z){
@@ -137,10 +110,15 @@ Spatial.Controller = Backbone.View.extend(
 
         addAxes : function(){
             var dom2 = $( '#inset' ).empty();
+            // camera
+            var camera2 = new THREE.OrthographicCamera( -1, 1, 1, -1, 1, 1000);
+            this.camera2 = camera2; 
 
             // renderer
             var renderer2 = new THREE.WebGLRenderer({ alpha: true });
             renderer2.setClearColor( 0x000000, 0 ); 
+            console.log("Width: ",this.d_width);
+            renderer2.setSize( this.d_width/5, this.d_width/5);
             $( renderer2.domElement ).appendTo(dom2);
 
             this.renderer2 = renderer2;
@@ -150,7 +128,7 @@ Spatial.Controller = Backbone.View.extend(
             this.scene2 = scene2;
 
             // axes
-            var dir = new THREE.Vector3( 1, 0, 0 );
+            var dir = new THREE.Vector3( 1.0, 0.0, 0.0 );
             var origin = new THREE.Vector3( 0, 0, 0 ); 
             var length = 1; 
             var hex = 0xff0000; 
@@ -176,67 +154,16 @@ Spatial.Controller = Backbone.View.extend(
             this.createText('Z', 0.5,-0.4,0.9);
             scene2.add( zaxis );
 
-            // camera
-            var camera2 = new THREE.PerspectiveCamera( 75, 0.4 / 0.3, 0.1, 1000 );
-            this.camera2 = camera2; 
 
         },
 
 
         updateWorldCamera: function(){
-            this.camera2.up = this.camera.up; 
-            this.camera2.position.copy( this.camera.position );
-            this.camera2.position.sub( this.controls.target ); 
+            this.camera2.position.subVectors( this.camera.position, this.controls.target );
+            this.camera2.position.setLength( 1.8 );
             this.camera2.lookAt( this.scene2.position );
         },
 
-
-        /*addControls: function(){
-            var controlContainer = $( '#controls' ).empty();
-            var buttonText = ["Pan Left","Pan Right","br","Rotate Up","br","Rotate Left","Rotate Right","br","Rotate Down","br", "Reset", "br", "Zoom In", "Zoom Out"];   
-            
-            var utility = [
-                function(){ console.log("click"); this.globalController.controls.panLeft(1); },
-                function(){ this.globalController.controls.panLeft(-1); },
-                function(){},
-                function(){ this.globalController.controls.rotateUp(1); },
-                function(){},
-                function(){ this.globalController.controls.rotateLeft(1);},
-                function(){ this.globalController.controls.rotateLeft(-1);},
-                function(){},
-                function(){ this.globalController.controls.rotateUp(-1);},
-                function(){},
-                function() {this.globalController.controls.reset();this.globalController.camera.position.z = 1.5;},
-                function(){}, 
-                function(){this.globalController.controls.dollyOut();},
-                function() { this.globalController.controls.dollyIn(); },          
-            ];
-
-            for (i = 0; i < buttonText.length; i++) {
-            
-            if(buttonText[i] == "br")
-            {
-                var linebreak = document.createElement("br");
-                $('#controls').append(linebreak);
-            }
-            else
-                {
-                    this.addButtons(buttonText[i], utility[i]);
-                }  
-            
-            }
-
-
-        },
-
-        addButtons: function(text, func){
-            var newButton = document.createElement('button');
-            var newText = document.createTextNode(text); 
-            newButton.appendChild(newText);
-            newButton.onClick = func;
-            $('#controls').append(newButton);
-
-        },*/
 
         // This event gets fired when the user selects a csv data file
         meshDataPreview : function(data)
@@ -285,8 +212,8 @@ Spatial.Controller = Backbone.View.extend(
             {
                 var dom = $( "#meshPreview" ).empty();
                 var scene = new THREE.Scene();
-                var width = dom.width();
-                var height = 0.75 * width;
+                var width = dom.width(); this.d_width = width;
+                var height = 0.75 * width; this.d_height = height;
                 var camera = new THREE.PerspectiveCamera( 75, 4.0 / 3.0, 0.1, 1000 );
                 var renderer = new THREE.WebGLRenderer();
                 renderer.setSize( width, height);
@@ -351,8 +278,7 @@ Spatial.Controller = Backbone.View.extend(
                 this.rendererInitialized = true;
             }
 
-
-
+            console.log("Width: "+width+" Height:"+height);
 
         },
 

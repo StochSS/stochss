@@ -19,6 +19,7 @@
 <script type="text/javascript" src = "/static/js/backbone.js"></script>
 <script type="text/javascript" src = "/static/model/stochkit.js"></script>
 <link rel="stylesheet" href="/static/css/nv.d3.css">
+<link rel="stylesheet" href="/static/css/controls.css">
 <script type="text/javascript" src = "/static/js/purl.js"></script>
 <script type="text/javascript" src = "/static/js/canvas2image.js"></script>
 <script type="text/javascript" src = "/static/js/splot.js"></script>
@@ -26,11 +27,8 @@
 <script type="text/javascript" src = "/static/js/nv.d3.js"></script>
 <script type="text/javascript" src = "/static/js/sensitivity.js"></script>
 <script type="text/javascript" src = "/static/model/stochkit.js"></script>
-<script type="text/javascript" src = "/static/js/typeface-0.15.js"></script>
 <script type="text/javascript" src = "/static/js/three.js"></script>
-<script type="text/javascript" src = "/static/js/helvetiker_regular.typeface.js"></script>
 <script type="text/javascript" src = "/static/js/OrbitControls.js"></script>
-<script type="text/javascript" src="/static/js/dat.gui.min.js"></script>
 <script type="text/javascript" src = "/static/js/spatial.js"></script>
 
 
@@ -82,10 +80,39 @@
                 <tr>
                     <td>
                         <div id="meshPreviewMsg"><CENTER><H1>Loading...</H1></CENTER></div>
-                        <div id="controls" style="float: left; "></div>
-                        <div id="dat-gui-container" style="float: center; "></div>
+
+                        <div id="container">
+                            <center>
+                                
+                            <div class="button-container button-container-left" >
+                                <button class="button" id="zoomPlus_btn"><i class="icon-plus"></i></button> 
+                                Zoom
+                                <button class="button" id="zoomMinus_btn"><i class="icon-minus"></i></button> 
+                            </div>
+                            &nbsp; 
+                            <div class="button-container">
+                                <button class="button" id="panLeft_btn"><i class="icon-arrow-left"></i></button> 
+                                <button class="button" id="panUp_btn"><i class="icon-arrow-up"></i></button> 
+                                Pan
+                                <button class="button" id="panDown_btn"><i class="icon-arrow-down"></i></button>
+                                <button class="button" id="panRight_btn"><i class="icon-arrow-right"></i></button>
+                            </div>
+                            &nbsp; 
+                            <div class="button-container">
+                                <button class="button" id="rotateLeft_btn"><i class="icon-arrow-left"></i></button>
+                                <button class="button" id="rotateUp_btn"><i class=" icon-arrow-up"></i></button> 
+                                Rotate
+                                <button class="button" id="rotateDown_btn"><i class="icon-arrow-down"></i></button> 
+                                <button class="button" id="rotateRight_btn"><i class="icon-arrow-right"></i></button> 
+                            </div>
+                            &nbsp; 
+                            <div class="button-container button-container-right">
+                                <button class="button" id="reset_btn">Reset</button>
+                            </div>
+                            </center>
+                        </div>
+                        <div id="inset"></div>
                         <div id="meshPreview"></div>
-                        <div id="inset" style="position: absolute; top: 900px; left: 200px;"></div>
                     </td>
                 </tr>
             </table>
