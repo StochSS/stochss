@@ -1,4 +1,4 @@
-#container{
+[data-hook="container"] {
   border-style: solid; 
   color: white;
   padding: 5px;
@@ -17,7 +17,7 @@
     height : 25px;
 }
 
-#inset {
+[data-hook="inset"] {
     position: absolute;
     z-index: 1;
 }
