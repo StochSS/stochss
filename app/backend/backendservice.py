@@ -47,16 +47,32 @@ class backendservices():
     def executeTask(self, params, agent, access_key, secret_key, taskid=None, instance_type=None, cost_replay=False, database=None):
         '''
         This method instantiates celery tasks in the cloud.
-	Returns return value from celery async call and the task ID
+        Returns return value from celery async call and the task ID
         '''
         #logging.info('inside execute task for cloud : Params - %s', str(params))
+        import tasks
+        from tasks import task
+            
+        if instance_type:
+                queue_ins_name = "_"+instance_type.replace(".", "")
+        else:
+                queue_ins_name = ""
+                
+        celery_config = tasks.CelerySingleton()
+        celery_config.configure()
+        celery_config.printCeleryQueue()
+        celery_queue_name = backend_handler.CELERY_QUEUE_EC2+""+queue_ins_name
+        celery_exchange = backend_handler.CELERY_EXCHANGE_EC2
+        celery_routing_key = backend_handler.CELERY_ROUTING_KEY_EC2+""+queue_ins_name
+        logging.info('Deliver the task to the queue: {0}, routing key: {1}'.format(celery_queue_name, celery_routing_key))
+                
         if not database:
             database = DynamoDB(access_key, secret_key)
             
         result = {}
+        
         try:
-            import tasks
-            from tasks import task
+            
             #This is a celery task in tasks.py: @celery.task(name='stochss')
             
             # Need to make sure that the queue is actually reachable because
@@ -111,16 +127,17 @@ class backendservices():
                 if "cores" in params:
                     requested_cores = int(params["cores"])
                 
-                ##################################################################################################################
+                ################################################################################
                 # The master task can run on any node...
                 #TODO: master task might need to run on node with at least 2 cores...
                 # launch_params["instance_type"] = "c3.large"
                 # launch_params["num_vms"] = 1
-                ##################################################################################################################
+                ################################################################################
                 
                 celery_info = CelerySingleton().app.control.inspect()
                 # How many active workers are there?
                 active_workers = celery_info.active()
+                logging.info("All active workers: {0}".format(active_workers))
                 # We will keep around a dictionary of the available workers, where
                 # the key will be the workers name and the value will be how many
                 # cores that worker has (i.e. how many tasks they can execute 
@@ -135,7 +152,7 @@ class backendservices():
                         if not active_workers[worker_name]:
                             available_workers[worker_name] = celery_info.stats()[worker_name]['pool']['max-concurrency']
                             core_count += int(available_workers[worker_name])
-                logging.info("All available workers:".format(available_workers))
+                logging.info("All available workers: {0}".format(available_workers))
                 # We assume that at least one worker is already consuming from the main queue
                 # so we just need to find that one worker and remove it from the list, since
                 # we need one worker on the main queue for the master task.
@@ -203,7 +220,7 @@ class backendservices():
                 # Update DB entry just before sending to worker
                 database.updateEntry(taskid, data, backendservices.TABLENAME)
                 params["queue"] = queue_name
-                tmp = master_task.delay(taskid, params, database)
+                tmp = master_task.apply_async(args=[taskid, params, database], queue=celery_queue_name, routing_key=celery_routing_key)
                 #TODO: This should really be done as a background_thread as soon as the task is sent
                 #      to a worker, but this would require an update to GAE SDK.
                 # call the poll task process
@@ -212,26 +229,20 @@ class backendservices():
                     "poll_task.py"
                 )
                 logging.info("Task sent to cloud with celery id {0}...".format(tmp.id))
-                poll_task_string = "python {0} {1} {2} > poll_task_{1}.log 2>&1".format(
+                #poll_task_string = "python {0} {1} {2} > poll_task_{1}.log 2>&1".format(
+                poll_task_string = "python {0} {1} {2}".format(
                     poll_task_path,
                     tmp.id,
                     queue_name
                 )
-                p = subprocess.Popen(shlex.split(poll_task_string))
+                try:
+                    p = subprocess.Popen(shlex.split(poll_task_string))
+                    result["poll_process_pid"] = p.pid
+                except Exception as e:
+                    logging.error("Caught exception {0}".format(e))
                 result["celery_pid"] = tmp.id
             else:
-                if instance_type:
-                    queue_ins_name = "_"+instance_type.replace(".", "")
-                else:
-                    queue_ins_name = ""
                 
-                celery_config = tasks.CelerySingleton()
-                celery_config.configure()
-                celery_config.printCeleryQueue()
-                celery_queue_name = backend_handler.CELERY_QUEUE_EC2+""+queue_ins_name
-                celery_exchange = backend_handler.CELERY_EXCHANGE_EC2
-                celery_routing_key = backend_handler.CELERY_ROUTING_KEY_EC2+""+queue_ins_name
-                logging.info('Deliver the task to the queue: {0}, routing key: {1}'.format(celery_queue_name, celery_routing_key))
                 #celery async task execution http://ask.github.io/celery/userguide/executing.html
                 
                 # if this is the cost analysis replay then update the stochss-cost-analysis table
@@ -513,6 +524,10 @@ class backendservices():
             res = {}
             
             # 1. change the status of 'failed' in the previous launch in db to 'terminated' 
+            # NOTE: We need to make sure that the RabbitMQ server is running if any compute
+            # nodes are running as we are using the AMQP broker option for Celery.
+
+
 
             ins_ids = VMStateModel.terminate_not_active(params)
             
