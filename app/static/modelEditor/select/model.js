@@ -65,8 +65,32 @@ module.exports = View.extend({
     },
     removeModel: function()
     {
+        var saveMessageDom = $( '[data-hook="saveMessage"]' );
+
         //this.model.collection.remove(this.model);
-        this.model.destroy();
+        saveMessageDom.removeClass( "alert-success alert-error" );
+        saveMessageDom.text( "Deleting model..." );
+
+        this.model.destroy({
+            success : _.bind(this.modelDeleted, this),
+            error : _.bind(this.modelFailedToDelete, this)
+        });
+    },
+    modelDeleted: function()
+    {
+        var saveMessageDom = $( '[data-hook="saveMessage"]' );
+
+        saveMessageDom.removeClass( "alert-error" );
+        saveMessageDom.addClass( "alert-success" );
+        saveMessageDom.text( "Model deleted" );
+    },
+    modelFailedToDelete: function()
+    {
+        var saveMessageDom = $( '[data-hook="saveMessage"]' );
+
+        saveMessageDom.removeClass( "alert-success" );
+        saveMessageDom.addClass( "alert-error" );
+        saveMessageDom.text( "Model not saved to local library!" );
     },
     render: function()
     {

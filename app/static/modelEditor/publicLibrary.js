@@ -18,7 +18,7 @@ var MeshSelectView = require('./forms/mesh-collection');
 var PrimaryView = View.extend({
     template: "<div> \
 <div data-hook='selector'></div> \
-<button class='btn btn-large'>Copy Model to Library</button> \
+<button data-hook='copyToLibraryButton' class='btn btn-large'>Copy Model to Library</button> \
 </div>",
     initialize: function(attr, options)
     {
@@ -71,7 +71,7 @@ var PrimaryView = View.extend({
 
         saveMessageDom.removeClass( "alert-error" );
         saveMessageDom.addClass( "alert-success" );
-        saveMessageDom.text( "Saved" );
+        saveMessageDom.text( "Saved model to local library" );
     },
     modelNotSaved: function()
     {
@@ -79,7 +79,7 @@ var PrimaryView = View.extend({
 
         saveMessageDom.removeClass( "alert-success" );
         saveMessageDom.addClass( "alert-error" );
-        saveMessageDom.text( "Model Save Failed!" );
+        saveMessageDom.text( "Model not saved to local library!" );
     },
     modelDeleted: function()
     {
@@ -92,7 +92,7 @@ var PrimaryView = View.extend({
         }
     },
     events: {
-        "click button" : "importModel"
+        "click button[data-hook='copyToLibraryButton']" : "importModel"
     },
     render: function()
     {

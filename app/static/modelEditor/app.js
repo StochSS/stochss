@@ -96,7 +96,7 @@ var PrimaryView = View.extend({
 
         saveMessageDom.removeClass( "alert-error" );
         saveMessageDom.addClass( "alert-success" );
-        saveMessageDom.text( "Saved" );
+        saveMessageDom.text( "Saved model to public library" );
     },
     modelNotSaved: function()
     {
@@ -104,7 +104,7 @@ var PrimaryView = View.extend({
 
         saveMessageDom.removeClass( "alert-success" );
         saveMessageDom.addClass( "alert-error" );
-        saveMessageDom.text( "Model Save Failed!" );
+        saveMessageDom.text( "Error! Model not saved to public library!" );
     },
     modelDeleted: function()
     {

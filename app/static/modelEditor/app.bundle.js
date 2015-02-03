@@ -97,7 +97,7 @@ var PrimaryView = View.extend({
 
         saveMessageDom.removeClass( "alert-error" );
         saveMessageDom.addClass( "alert-success" );
-        saveMessageDom.text( "Saved" );
+        saveMessageDom.text( "Saved model to public library" );
     },
     modelNotSaved: function()
     {
@@ -105,7 +105,7 @@ var PrimaryView = View.extend({
 
         saveMessageDom.removeClass( "alert-success" );
         saveMessageDom.addClass( "alert-error" );
-        saveMessageDom.text( "Model Save Failed!" );
+        saveMessageDom.text( "Error! Model not saved to public library!" );
     },
     modelDeleted: function()
     {
@@ -3031,7 +3031,8 @@ var Model = AmpersandModel.extend({
         mesh: 'object',
         initialConditions : 'object',
         is_public: 'boolean',
-        saveState : 'string'
+        saveState : 'string',
+        ownedByMe : 'boolean'
     },
     initialize: function(attrs, options) {
         this.is_public = false;
@@ -3150,6 +3151,7 @@ var Model = AmpersandModel.extend({
 
         this.id = attr.id;
         this.is_public = attr.is_public;
+        this.ownedByMe = attr.ownedByMe;
 
         var species = attr.species;
         var parameters = attr.parameters;
@@ -65018,8 +65020,32 @@ module.exports = View.extend({
     },
     removeModel: function()
     {
+        var saveMessageDom = $( '[data-hook="saveMessage"]' );
+
         //this.model.collection.remove(this.model);
-        this.model.destroy();
+        saveMessageDom.removeClass( "alert-success alert-error" );
+        saveMessageDom.text( "Deleting model..." );
+
+        this.model.destroy({
+            success : _.bind(this.modelDeleted, this),
+            error : _.bind(this.modelFailedToDelete, this)
+        });
+    },
+    modelDeleted: function()
+    {
+        var saveMessageDom = $( '[data-hook="saveMessage"]' );
+
+        saveMessageDom.removeClass( "alert-error" );
+        saveMessageDom.addClass( "alert-success" );
+        saveMessageDom.text( "Model deleted" );
+    },
+    modelFailedToDelete: function()
+    {
+        var saveMessageDom = $( '[data-hook="saveMessage"]' );
+
+        saveMessageDom.removeClass( "alert-success" );
+        saveMessageDom.addClass( "alert-error" );
+        saveMessageDom.text( "Model not saved to local library!" );
     },
     render: function()
     {

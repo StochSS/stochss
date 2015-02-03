@@ -17,7 +17,8 @@ var Model = AmpersandModel.extend({
         mesh: 'object',
         initialConditions : 'object',
         is_public: 'boolean',
-        saveState : 'string'
+        saveState : 'string',
+        ownedByMe : 'boolean'
     },
     initialize: function(attrs, options) {
         this.is_public = false;
@@ -136,6 +137,7 @@ var Model = AmpersandModel.extend({
 
         this.id = attr.id;
         this.is_public = attr.is_public;
+        this.ownedByMe = attr.ownedByMe;
 
         var species = attr.species;
         var parameters = attr.parameters;

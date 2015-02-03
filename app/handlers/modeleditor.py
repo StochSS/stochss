@@ -67,6 +67,18 @@ class StochKitModelWrapper(db.Model):
 
         return sModel
 
+    def toJSON(self):
+      return { "name" : self.name,
+               "id" : self.key().id(),
+               "units" : self.units,
+               "type" : self.type,
+               "species" : self.species,
+               "parameters" : self.parameters,
+               "reactions" : self.reactions,
+               "isSpatial" : self.isSpatial,
+               "spatial" : self.spatial,
+               "is_public" : self.is_public }
+
     @staticmethod
     def createFromStochKitModel(handler, model, public = False):
         species = []
@@ -157,16 +169,8 @@ class ModelManager():
             #    modelDb.delete()
             #    continue
 
-            jsonModel = { "name" : modelDb.name,
-                          "id" : modelDb.key().id(),
-                          "units" : modelDb.units,
-                          "type" : modelDb.type,
-                          "species" : modelDb.species,
-                          "parameters" : modelDb.parameters,
-                          "reactions" : modelDb.reactions,
-                          "isSpatial" : modelDb.isSpatial,
-                          "spatial" : modelDb.spatial,
-                          "is_public" : modelDb.is_public }
+            jsonModel = modelDb.toJSON()
+            jsonModel["ownedByMe"] = modelDb.user_id == handler.user.user_id()
 
             output.append(jsonModel)
 
@@ -179,17 +183,9 @@ class ModelManager():
         if modelDb == None:
             return None
 
-        jsonModel = { "name" : modelDb.name,
-                      "id" : modelDb.key().id(),
-                      "species" : modelDb.species,
-                      "type" : modelDb.type,
-                      "parameters" : modelDb.parameters,
-                      "reactions" : modelDb.reactions,
-                      "units" : modelDb.units,
-                      "isSpatial" : modelDb.isSpatial,
-                      "spatial" : modelDb.spatial,
-                      "is_public" : modelDb.is_public }
-                
+        jsonModel = modelDb.toJSON()
+        jsonModel["ownedByMe"] = modelDb.user_id == handler.user.user_id()
+        
         return jsonModel
 
     @staticmethod
@@ -202,16 +198,8 @@ class ModelManager():
         if model == None:
             return None
 
-        jsonModel = { "name" : modelDb.name,
-                      "id" : modelDb.key().id(),
-                      "species" : modelDb.species,
-                      "type" : modelDb.type,
-                      "parameters" : modelDb.parameters,
-                      "reactions" : modelDb.reactions,
-                      "units" : modelDb.units,
-                      "isSpatial" : modelDb.isSpatial,
-                      "spatial" : modelDb.spatial,
-                      "is_public" : modelDb.is_public }
+        jsonModel = model.toJSON()
+        jsonModel["ownedByMe"] = modelDb.user_id == handler.user.user_id()
                 
         return jsonModel
 
