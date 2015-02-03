@@ -8,7 +8,7 @@ var SelectView = require('ampersand-select-view');
 var Tests = require('./tests');
 var AddNewStoichSpecieForm = AmpersandFormView.extend({
     submitCallback: function (obj) {
-        this.collection.addStoichSpecie(obj.specie, Number(obj.stoichiometry));
+        this.collection.addStoichSpecie(obj.specie, 1);
     },
             // this valid callback gets called (if it exists)
             // when the form first loads and any time the form
@@ -36,15 +36,6 @@ var AddNewStoichSpecieForm = AmpersandFormView.extend({
                 idAttribute: 'cid',
                 textAttribute: 'name',
                 yieldModel: true
-            }),
-            
-            new InputView({
-                label: 'Stoichiometry',
-                name: 'stoichiometry',
-                value: '0',
-                required: true,
-                placeholder: 'Stoichiometry',
-                tests: [].concat(Tests.nonzero(), Tests.integer())
             })];
     },
     render: function()

@@ -2692,7 +2692,7 @@ var SelectView = require('ampersand-select-view');
 var Tests = require('./tests');
 var AddNewStoichSpecieForm = AmpersandFormView.extend({
     submitCallback: function (obj) {
-        this.collection.addStoichSpecie(obj.specie, Number(obj.stoichiometry));
+        this.collection.addStoichSpecie(obj.specie, 1);
     },
             // this valid callback gets called (if it exists)
             // when the form first loads and any time the form
@@ -2720,15 +2720,6 @@ var AddNewStoichSpecieForm = AmpersandFormView.extend({
                 idAttribute: 'cid',
                 textAttribute: 'name',
                 yieldModel: true
-            }),
-            
-            new InputView({
-                label: 'Stoichiometry',
-                name: 'stoichiometry',
-                value: '0',
-                required: true,
-                placeholder: 'Stoichiometry',
-                tests: [].concat(Tests.nonzero(), Tests.integer())
             })];
     },
     render: function()
@@ -2776,7 +2767,7 @@ var ModifyingNumberInputView = require('./modifying-number-input-view')
 
 var Tests = require('./tests');
 module.exports = View.extend({
-    template: "<tr><td data-hook='delete'></td><td data-hook='specie'></td><td data-hook='stoichiometry'></td></tr>",
+    template: "<tr><td><button data-hook='plus'>+</button></td><td><div data-hook='stoichiometry'></div></td><td><button data-hook='minus'>-</button></td><td data-hook='specie'></td><td><button data-hook='delete'>x</button></td></tr>",
     // Gotta have a few of these functions just so this works as a form view
     // This gets called when things update
     update: function(element)
@@ -2784,21 +2775,41 @@ module.exports = View.extend({
         if(element.valid)
             this.model[element.name] = element.value;
     },
+    bindings : {
+        "model.stoichiometry" : {
+            type : 'text',
+            hook : 'stoichiometry'
+        }
+    },
+    events : {
+        "click [data-hook='delete']" : "deleteModel",
+        "click [data-hook='plus']" : "addOne",
+        "click [data-hook='minus']" : "subtractOne"
+    },
+    deleteModel : function()
+    {
+        this.model.collection.remove(this.model);
+    },
+    addOne : function()
+    {
+        this.model.stoichiometry = this.model.stoichiometry + 1;
+    },
+    subtractOne : function()
+    {
+        if(this.model.stoichiometry >= 2)
+            this.model.stoichiometry = this.model.stoichiometry - 1;
+    },
     render: function()
     {
         View.prototype.render.apply(this, arguments);
 
-        var button = $( '<button>x</button>' ).appendTo( $( this.el ).find('[data-hook="delete"]') );
-
         //StoichSpecie -- StoichSpecieCollection -- Reaction -- ReactionCollection -- Model
         this.baseModel = this.model.collection.parent.collection.parent;
-
-        button.click( _.bind(_.partial( this.model.collection.remove, this.model ), this.model.collection) );
 
         this.renderSubview(
             new ModifyingSelectView({
                 template: '<span><span data-hook="label"></span><select></select><span data-hook="message-container"><span data-hook="message-text"></span></span></span>',
-                label: 'Species',
+                label: '',
                 name: 'specie',
                 value: this.model.specie,
                 options: this.baseModel.species,
@@ -2807,22 +2818,6 @@ module.exports = View.extend({
                 textAttribute: 'name',
                 yieldModel: true
             }), this.el.querySelector("[data-hook='specie']"));
-
-        this.renderSubview(
-            new ModifyingNumberInputView({
-                template: '<span><span data-hook="label"></span><input><span data-hook="message-container"><span data-hook="message-text"></span></span></span>',
-                label: 'Stoichiometry',
-                name: 'stoichiometry',
-                value: this.model.stoichiometry,
-                required: false,
-                placeholder: 'Stoichiometry',
-                model : this.model,
-                tests: [].concat(Tests.nonzero(), Tests.integer())
-            }), this.el.querySelector("[data-hook='stoichiometry']"));
-        
-        //Hide all the labels!
-        $( this.el ).find('[data-hook="label"]').hide();
-        $( this.el ).find('input, select').css('width', '100px');
         
         return this;
     }
