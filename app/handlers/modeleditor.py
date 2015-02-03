@@ -6,6 +6,7 @@ except ImportError:
 from google.appengine.ext import db
 
 import pickle
+import os
 import traceback
 import re
 import random
@@ -58,8 +59,9 @@ class StochKitModelWrapper(db.Model):
 
         for reaction in self.reactions:
             reactants = dict([(sModel.getSpecies(reactant['specie']), reactant['stoichiometry']) for reactant in reaction['reactants']])
-            products = dict([(sModel.getSpecies(reactant['specie']), reactant['stoichiometry']) for product in reaction['products']])
 
+            products = dict([(sModel.getSpecies(product['specie']), product['stoichiometry']) for product in reaction['products']])
+            
             if(reaction['type'] == 'massaction'):
                 sModel.addReaction(stochss.model.Reaction(reaction['name'], reactants, products, None, True, sModel.getParameter(reaction['rate']), None))
             else:
@@ -68,16 +70,16 @@ class StochKitModelWrapper(db.Model):
         return sModel
 
     def toJSON(self):
-      return { "name" : self.name,
-               "id" : self.key().id(),
-               "units" : self.units,
-               "type" : self.type,
-               "species" : self.species,
-               "parameters" : self.parameters,
-               "reactions" : self.reactions,
-               "isSpatial" : self.isSpatial,
-               "spatial" : self.spatial,
-               "is_public" : self.is_public }
+        return { "name" : self.name,
+                 "id" : self.key().id(),
+                 "units" : self.units,
+                 "type" : self.type,
+                 "species" : self.species,
+                 "parameters" : self.parameters,
+                 "reactions" : self.reactions,
+                 "isSpatial" : self.isSpatial,
+                 "spatial" : self.spatial,
+                 "is_public" : self.is_public }
 
     @staticmethod
     def createFromStochKitModel(handler, model, public = False):
@@ -127,6 +129,7 @@ class StochKitModelWrapper(db.Model):
 
             outReaction['reactants'] = reactants
             outReaction['products'] = products
+            outReaction['name'] = reaction.name
 
             spatial['reactions_subdomain_assignments'][reaction.name] = meshWrapperDb.uniqueSubdomains
 
@@ -152,7 +155,7 @@ class StochKitModelWrapper(db.Model):
 
 class ModelManager():
     @staticmethod
-    def getModels(handler, modelAsString = True, noXML = False, public = False):
+    def getModels(handler, public = False):
         if public:
             models = db.GqlQuery("SELECT * FROM StochKitModelWrapper WHERE is_public = :1", public).run()
         else:
@@ -177,7 +180,7 @@ class ModelManager():
         return output
 
     @staticmethod
-    def getModel(handler, model_id, modelAsString = True):
+    def getModel(handler, model_id):
         modelDb = StochKitModelWrapper.get_by_id(int(model_id))
 
         if modelDb == None:
@@ -189,7 +192,7 @@ class ModelManager():
         return jsonModel
 
     @staticmethod
-    def getModelByName(handler, modelName, modelAsString = True, user_id = None):
+    def getModelByName(handler, modelName, user_id = None):
         if not user_id:
             user_id = handler.user.user_id()
 
@@ -204,7 +207,7 @@ class ModelManager():
         return jsonModel
 
     @staticmethod
-    def createModel(handler, model, modelAsString = True, rename = None):
+    def createModel(handler, model, rename = None):
         userID = None
 
         # Set up defaults
@@ -340,11 +343,11 @@ class ModelBackboneInterface(BaseHandler):
         self.response.content_type = 'application/json'
         
         if len(req) == 1 or req[-1] == 'list':
-            models = ModelManager.getModels(self, noXML = True)
+            models = ModelManager.getModels(self)
 
             self.response.write(json.dumps(models))
         elif req[-1] == 'names':
-            models = ModelManager.getModels(self, noXML = True)
+            models = ModelManager.getModels(self)
 
             outModels = []
             for model in models:
@@ -405,11 +408,11 @@ class PublicModelBackboneInterface(BaseHandler):
         #print modelDb.key().id(), modelDb.user_id, modelDb.is_public
         
         if len(req) == 1 or req[-1] == 'list':
-            models = ModelManager.getModels(self, noXML = True, public = True)
+            models = ModelManager.getModels(self, public = True)
 
             self.response.write(json.dumps(models))
         elif req[-1] == 'names':
-            models = ModelManager.getModels(self, noXML = True, public = True)
+            models = ModelManager.getModels(self, public = True)
 
             outModels = []
             for model in models:
@@ -464,7 +467,31 @@ class PublicModelPage(BaseHandler):
         return True
     
     def get(self):
+        self.importExamplePublicModels()
         self.render_response('publicLibrary.html')
+
+    def importExamplePublicModels(self):
+        path = os.path.abspath(os.path.dirname(__file__))
+        szip = exportimport.SuperZip(zipFileName = path + "/../../examples/examples.zip")
+
+        toImport = {}
+        for name in szip.zipfb.namelist():
+            if re.search('models/[a-zA-Z0-9\-_]*\.json$', name):
+                toImport[json.loads(szip.zipfb.read(name))['name']] = name
+
+        userId = ""
+        
+        names = [model['name'] for model in ModelManager.getModels(self, public = True)]
+
+        for name in set(toImport.keys()) - set(names):
+            path = toImport[name]
+            print name, names
+            modelDb = szip.extractStochKitModel(path, userId, self, rename = True)
+            modelDb.name = name
+            modelDb.is_public = True
+            modelDb.put()
+
+        szip.close()
 
 class ModelEditorPage(BaseHandler):
     """

@@ -28,6 +28,7 @@ class MeshWrapper(db.Model):
     subdomains = ObjectProperty()
     uniqueSubdomains = ObjectProperty()
     undeletable = db.BooleanProperty()
+    ghost = db.BooleanProperty()
 
     def toJSON(self, reduced = True):
         return { "userId" : self.userId,
@@ -37,6 +38,7 @@ class MeshWrapper(db.Model):
                  "subdomains" : self.subdomains if not reduced else [],
                  "uniqueSubdomains" : self.uniqueSubdomains,
                  "undeletable" : self.undeletable,
+                 "ghost" : self.ghost,
                  "id" : self.key().id() }
 
     def delete(self):
