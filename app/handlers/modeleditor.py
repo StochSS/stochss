@@ -135,10 +135,18 @@ class StochKitModelWrapper(db.Model):
 
             reactions.append(outReaction)
 
+        names = [modelt['name'] for modelt in ModelManager.getModels(handler)]
+
         modelDb = StochKitModelWrapper()
 
+        
+        tmpName = model.name
+        while tmpName in names:
+            tmpName = model.name + '_' + ''.join(random.choice('abcdefghijklmnopqrztuvwxyz') for x in range(3))
+        name = tmpName
+
         modelDb.user_id = handler.user.user_id()
-        modelDb.name = model.name
+        modelDb.name = name
         modelDb.type = modelType
         modelDb.species = species
         modelDb.parameters = parameters
@@ -485,7 +493,6 @@ class PublicModelPage(BaseHandler):
 
         for name in set(toImport.keys()) - set(names):
             path = toImport[name]
-            print name, names
             modelDb = szip.extractStochKitModel(path, userId, self, rename = True)
             modelDb.name = name
             modelDb.is_public = True
@@ -493,14 +500,56 @@ class PublicModelPage(BaseHandler):
 
         szip.close()
 
-class ModelEditorPage(BaseHandler):
-    """
-        
-    """        
+class ImportFromXMLPage(BaseHandler):
     def authentication_required(self):
         return True
     
     def get(self):
+        self.render_response('importFromXML.html')
+
+    def post(self):
+        storage = self.request.POST['datafile']
+
+        name = storage.filename.split('.')[0]
+
+        stochKitModel = stochss.stochkit.StochMLDocument.fromString(storage.file.read()).toModel(name)
+        modelDb = StochKitModelWrapper.createFromStochKitModel(self, stochKitModel)
+
+        self.redirect("/modeleditor")
+
+class ModelEditorPage(BaseHandler):
+    """
+        
+    """
+    def authentication_required(self):
+        return True
+    
+    def get(self):
+        if self.request.get('reqType') == 'exportToZip':
+            modelId = int(self.request.get('id'));
+
+            model = StochKitModelWrapper.get_by_id(modelId)
+
+            if not model.zipFileName:
+                szip = exportimport.SuperZip(os.path.abspath(os.path.dirname(__file__) + '/../static/tmp/'), preferredName = model.name + "_")
+                
+                model.zipFileName = szip.getFileName()
+
+                szip.addStochKitModel(model)
+                
+                szip.close()
+
+                # Save the updated status
+                model.put()
+            
+            relpath = '/' + os.path.relpath(model.zipFileName, os.path.abspath(os.path.dirname(__file__) + '/../'))
+
+            self.response.headers['Content-Type'] = 'application/json'
+            self.response.write(json.dumps({ 'status' : True,
+                                             'msg' : 'Model prepared',
+                                             'url' : relpath }))
+            return
+
         mesheditor.setupMeshes(self)
 
         #f = open('/home/bbales2/stochss/test/modelEditor/client/index.html')

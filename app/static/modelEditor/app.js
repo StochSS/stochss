@@ -29,6 +29,7 @@ var PrimaryView = View.extend({
         this.meshCollection = attr.meshCollection;
 
         $( "[data-hook='exportToPublic']" ).click(_.bind(this.exportModel, this));
+        $( "[data-hook='exportToZip']" ).click(_.bind(this.exportModelAsZip, this));
     },
     selectModel: function()
     {
@@ -115,6 +116,28 @@ var PrimaryView = View.extend({
             
             delete this.modelEditor;
         }
+    },
+    exportModelAsZip: function()
+    {
+        $.ajax( { type : 'GET',
+                  url : '/modeleditor',
+                  data : { reqType : 'exportToZip', id : this.modelSelector.selected.id },
+                  dataType : 'json',
+                  success : _.bind(this.forwardToFile)
+                } )
+    },
+    exportModelAsXML: function()
+    {
+        $.ajax( { type : 'GET',
+                  url : '/modeleditor',
+                  data : { reqType : 'exportToXML', id : this.modelSelector.selected.id },
+                  dataType : 'json',
+                  success : _.bind(this.forwardToFile)
+                } )
+    },
+    forwardToFile: function(data)
+    {
+        window.location = data.url;
     },
     render: function()
     {
