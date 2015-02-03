@@ -103,7 +103,7 @@ class AmiManager:
             print 'stderr_log_filename: {0}'.format(stderr_log_filename)
             self.stderr_log = open(stderr_log_filename, 'w')
 
-        self.is_old_ami = False
+        self.is_old_ami = True
         self.verbose = options["verbose"] if "verbose" in options.keys() else False
 
     def run(self):
