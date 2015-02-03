@@ -16,9 +16,12 @@ var Model = AmpersandModel.extend({
         parameters: 'object',//ParameterCollection
         mesh: 'object',
         initialConditions : 'object',
+        is_public: 'boolean',
         saveState : 'string'
     },
     initialize: function(attrs, options) {
+        this.is_public = false;
+
         this.parse(attrs);
 
         AmpersandModel.prototype.initialize.apply(this, arguments);
@@ -35,12 +38,20 @@ var Model = AmpersandModel.extend({
         // this will run if the name changes
     },
     setupMesh: function(meshCollection) {
-        for(var i = 0; i < meshCollection.models.length; i++)
+        if(this.meshId)
         {
-            if(this.meshId == meshCollection.models[i].id)
+            for(var i = 0; i < meshCollection.models.length; i++)
             {
-                this.mesh = meshCollection.models[i];
+                if(this.meshId == meshCollection.models[i].id)
+                {
+                    this.mesh = meshCollection.models[i];
+                }
             }
+        }
+        else
+        {
+            this.meshId = meshCollection.models.at(0).id;
+            this.mesh = meshCollection.models.at(0);
         }
 
         var speciesByName = {};
@@ -124,6 +135,7 @@ var Model = AmpersandModel.extend({
             return
 
         this.id = attr.id;
+        this.is_public = attr.is_public;
 
         var species = attr.species;
         var parameters = attr.parameters;
@@ -174,7 +186,7 @@ var Model = AmpersandModel.extend({
         {
             for(var i = 0; i < parameters.length; i++)
             {
-                parametersByName[parameters[i].name] = this.parameters.addParameter(parameters[i].name, parameters[i].value);
+                parametersByName[parameters[i].name] = this.parameters.addParameter(parameters[i].name, String(parameters[i].value));
             }
         }
 
@@ -221,7 +233,8 @@ var Model = AmpersandModel.extend({
         var obj = { name : this.name,
                     units : this.units,
                     type : this.type,
-                    isSpatial : this.isSpatial };
+                    isSpatial : this.isSpatial,
+                    is_public : this.is_public };
 
         if( this.id )
             obj.id = this.id;

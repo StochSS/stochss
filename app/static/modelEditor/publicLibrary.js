@@ -4,13 +4,11 @@ var _ = require('underscore');
 var logger = require('andlog');
 var config = require('clientconfig');
 
-//var Router = require('./router');
-//var ConvertModelView = require('./convertToSpatial/model');
 var View = require('ampersand-view');
 var AmpersandModel = require('ampersand-model');
 var AmpersandCollection = require('ampersand-rest-collection');
 var ModelEditorView = require('./forms/model');
-var ModelSelectView = require('./select/model-collection');
+var ModelSelectView = require('./publicLibrary/model-collection');
 var Model = require('./models/model');
 var domReady = require('domready');
 var Mesh = require('./models/mesh');
@@ -20,41 +18,18 @@ var MeshSelectView = require('./forms/mesh-collection');
 var PrimaryView = View.extend({
     template: "<div> \
 <div data-hook='selector'></div> \
-<div data-hook='editor'></div> \
+<button class='btn btn-large'>Copy Model to Library</button> \
 </div>",
     initialize: function(attr, options)
     {
         View.prototype.initialize.call(this, attr, options);
 
-        this.meshCollection = attr.meshCollection;
+        this.collection = attr.collection;
+        this.publicCollection = attr.publicCollection;
 
-        $( "[data-hook='exportToPublic']" ).click(_.bind(this.exportModel, this));
+        this.meshCollection = attr.meshCollection;
     },
-    selectModel: function()
-    {
-        if(this.modelSelector.selected)
-        {
-            if(this.modelEditor)
-            {
-                this.modelEditor.remove()
-                this.stopListening(this.modelSelector.selected);
-                
-                delete this.modelEditor;
-            }
-            
-            this.modelEditor = new ModelEditorView( {
-                el : $( '<div>' ).appendTo( this.queryByHook('editor') )[0],
-                model : this.modelSelector.selected,
-                meshCollection : this.meshCollection,
-                parent : this
-            } );
-            
-            this.listenTo(this.modelSelector.selected, 'remove', _.bind(this.modelDeleted, this));
-            this.registerSubview(this.modelEditor);
-            this.modelEditor.render();
-        }
-    },
-    exportModel : function()
+    importModel: function()
     {
         var saveMessageDom = $( this.queryByHook('saveMessage') );
 
@@ -62,7 +37,7 @@ var PrimaryView = View.extend({
         saveMessageDom.text( "Duplicating model..." );
 
         var models = $.ajax( { type : 'GET',
-                               url : '/publicModels/names',
+                               url : '/models/names',
                                async : false,
                                dataType : 'JSON' } ).responseJSON;
 
@@ -77,12 +52,12 @@ var PrimaryView = View.extend({
         }
 
         model.name = tmpName;
-        model.is_public = true;
+        model.is_public = false;
         model.id = undefined;
 
         model.setupMesh(this.meshCollection);
 
-        publicModelCollection.add(model);
+        this.collection.add(model);
 
         saveMessageDom.text( "Saving model..." );
 
@@ -116,19 +91,19 @@ var PrimaryView = View.extend({
             delete this.modelEditor;
         }
     },
+    events: {
+        "click button" : "importModel"
+    },
     render: function()
     {
         View.prototype.render.apply(this, arguments);
 
         this.modelSelector = this.renderSubview(
             new ModelSelectView( {
-                collection : this.collection,
-                meshCollection : this.meshCollection
+                collection : this.publicCollection,
+                meshCollection : this.meshCollection,
             } ), $( '<div>' ).appendTo( this.queryByHook('selector') )[0]
         );
-
-        this.selectModel();
-        this.modelSelector.on('change:selected', _.bind(this.selectModel, this));
 
         return this;
     }
@@ -192,7 +167,7 @@ module.exports = {
     blastoff: function () {
         var self = window.app = this;
 
-        var div = $( '#modelSelect' )[0];
+        var div = $( '[data-hook="publicModelDiv"]' )[0];
 
         if(!div)
             div = document.body;
@@ -204,12 +179,20 @@ module.exports = {
                 modelCollection.models[i].saveState = 'saved';
             }
 
-            var modelSelectView = new PrimaryView( { el: div, collection : modelCollection, meshCollection : meshCollection } );
+            for(var i = 0; i < publicModelCollection.models.length; i++)
+            {
+                publicModelCollection.models[i].setupMesh(meshCollection);
+                publicModelCollection.models[i].saveState = 'saved';
+            }
+
+            var modelSelectView = new PrimaryView( {
+                el: div,
+                collection : modelCollection,
+                publicCollection : publicModelCollection,
+                meshCollection : meshCollection
+            } );
 
             modelSelectView.render();
-            //var meshSelectView = new MeshSelectView( { el: div, collection : meshCollection } );
-
-            //meshSelectView.render();
         });
     }
 };

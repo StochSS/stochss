@@ -1,222 +1,4 @@
-(function e(t,n,r){function s(o,u){if(!n[o]){if(!t[o]){var a=typeof require=="function"&&require;if(!u&&a)return a(o,!0);if(i)return i(o,!0);var f=new Error("Cannot find module '"+o+"'");throw f.code="MODULE_NOT_FOUND",f}var l=n[o]={exports:{}};t[o][0].call(l.exports,function(e){var n=t[o][1][e];return s(n?n:e)},l,l.exports,e,t,n,r)}return n[o].exports}var i=typeof require=="function"&&require;for(var o=0;o<r.length;o++)s(r[o]);return s})({"/home/bbales2/stochssModel/app/static/modelEditor/app.js":[function(require,module,exports){
-/*global app, me, $*/
-var $ = require('jquery');
-var _ = require('underscore');
-var logger = require('andlog');
-var config = require('clientconfig');
-
-//var Router = require('./router');
-//var ConvertModelView = require('./convertToSpatial/model');
-var View = require('ampersand-view');
-var AmpersandModel = require('ampersand-model');
-var AmpersandCollection = require('ampersand-rest-collection');
-var ModelEditorView = require('./forms/model');
-var ModelSelectView = require('./select/model-collection');
-var Model = require('./models/model');
-var domReady = require('domready');
-var Mesh = require('./models/mesh');
-var MeshCollection = require('./models/mesh-collection');
-var MeshSelectView = require('./forms/mesh-collection');
-
-var PrimaryView = View.extend({
-    template: "<div> \
-<div data-hook='selector'></div> \
-<div data-hook='editor'></div> \
-</div>",
-    initialize: function(attr, options)
-    {
-        View.prototype.initialize.call(this, attr, options);
-
-        this.meshCollection = attr.meshCollection;
-
-        $( "[data-hook='exportToPublic']" ).click(_.bind(this.exportModel, this));
-    },
-    selectModel: function()
-    {
-        if(this.modelSelector.selected)
-        {
-            if(this.modelEditor)
-            {
-                this.modelEditor.remove()
-                this.stopListening(this.modelSelector.selected);
-                
-                delete this.modelEditor;
-            }
-            
-            this.modelEditor = new ModelEditorView( {
-                el : $( '<div>' ).appendTo( this.queryByHook('editor') )[0],
-                model : this.modelSelector.selected,
-                meshCollection : this.meshCollection,
-                parent : this
-            } );
-            
-            this.listenTo(this.modelSelector.selected, 'remove', _.bind(this.modelDeleted, this));
-            this.registerSubview(this.modelEditor);
-            this.modelEditor.render();
-        }
-    },
-    exportModel : function()
-    {
-        var saveMessageDom = $( this.queryByHook('saveMessage') );
-
-        saveMessageDom.removeClass( "alert-success alert-error" );
-        saveMessageDom.text( "Duplicating model..." );
-
-        var models = $.ajax( { type : 'GET',
-                               url : '/publicModels/names',
-                               async : false,
-                               dataType : 'JSON' } ).responseJSON;
-
-        var names = models.map( function(model) { return model.name; } );
-
-        model = new Model(this.modelSelector.selected.toJSON());
-
-        var tmpName = model.name;
-        while(_.contains(names, tmpName))
-        {
-            tmpName = model.name + '_' + Math.random().toString(36).substr(2, 3);
-        }
-
-        model.name = tmpName;
-        model.is_public = true;
-        model.id = undefined;
-
-        model.setupMesh(this.meshCollection);
-
-        publicModelCollection.add(model);
-
-        saveMessageDom.text( "Saving model..." );
-
-        model.save(undefined, {
-            success : _.bind(this.modelSaved, this),
-            error : _.bind(this.modelNotSaved, this)
-        });
-    },
-    modelSaved: function() {
-        var saveMessageDom = $( this.queryByHook('saveMessage') );
-
-        saveMessageDom.removeClass( "alert-error" );
-        saveMessageDom.addClass( "alert-success" );
-        saveMessageDom.text( "Saved" );
-    },
-    modelNotSaved: function()
-    {
-        var saveMessageDom = $( this.queryByHook('saveMessage') );
-
-        saveMessageDom.removeClass( "alert-success" );
-        saveMessageDom.addClass( "alert-error" );
-        saveMessageDom.text( "Model Save Failed!" );
-    },
-    modelDeleted: function()
-    {
-        if(this.modelEditor)
-        {
-            this.modelEditor.remove()
-            this.stopListening(this.modelSelector.selected);
-            
-            delete this.modelEditor;
-        }
-    },
-    render: function()
-    {
-        View.prototype.render.apply(this, arguments);
-
-        this.modelSelector = this.renderSubview(
-            new ModelSelectView( {
-                collection : this.collection,
-                meshCollection : this.meshCollection
-            } ), $( '<div>' ).appendTo( this.queryByHook('selector') )[0]
-        );
-
-        this.selectModel();
-        this.modelSelector.on('change:selected', _.bind(this.selectModel, this));
-
-        return this;
-    }
-});
-
-ModelCollection = AmpersandCollection.extend( {
-    url: "/models",
-    model: Model
-});
-
-PublicModelCollection = AmpersandCollection.extend( {
-    url: "/publicModels",
-    model: Model
-});
-
-MeshCollection = AmpersandCollection.extend( {
-    url: "/meshes",
-    model: Mesh
-});
-
-var publicModelCollection = new PublicModelCollection();
-var modelCollection = new ModelCollection();
-var meshCollection = new MeshCollection();
-
-var modelDownloaded = false; var meshDownloaded = false; var publicModelDownloaded = false;
-
-modelCollection.fetch({
-    success : function(modelCollection, response, options)
-    {
-        modelDownloaded = true;
-        if(meshDownloaded && publicModelDownloaded)
-        {
-            module.exports.blastoff();
-        }
-    }
-});
-
-meshCollection.fetch({
-    success : function(meshCollection, response, options)
-    {
-        meshDownloaded = true;
-        if(modelDownloaded && publicModelDownloaded)
-        {
-            module.exports.blastoff();
-        }
-    }
-});
-
-publicModelCollection.fetch({
-    success : function(publicModelCollection, response, options)
-    {
-        publicModelDownloaded = true;
-        if(meshDownloaded && modelDownloaded)
-        {
-            module.exports.blastoff();
-        }
-    }
-});
-
-module.exports = {
-    blastoff: function () {
-        var self = window.app = this;
-
-        var div = $( '#modelSelect' )[0];
-
-        if(!div)
-            div = document.body;
-
-        domReady(function () {
-            for(var i = 0; i < modelCollection.models.length; i++)
-            {
-                modelCollection.models[i].setupMesh(meshCollection);
-                modelCollection.models[i].saveState = 'saved';
-            }
-
-            var modelSelectView = new PrimaryView( { el: div, collection : modelCollection, meshCollection : meshCollection } );
-
-            modelSelectView.render();
-            //var meshSelectView = new MeshSelectView( { el: div, collection : meshCollection } );
-
-            //meshSelectView.render();
-        });
-    }
-};
-
-
-},{"./forms/mesh-collection":"/home/bbales2/stochssModel/app/static/modelEditor/forms/mesh-collection.js","./forms/model":"/home/bbales2/stochssModel/app/static/modelEditor/forms/model.js","./models/mesh":"/home/bbales2/stochssModel/app/static/modelEditor/models/mesh.js","./models/mesh-collection":"/home/bbales2/stochssModel/app/static/modelEditor/models/mesh-collection.js","./models/model":"/home/bbales2/stochssModel/app/static/modelEditor/models/model.js","./select/model-collection":"/home/bbales2/stochssModel/app/static/modelEditor/select/model-collection.js","ampersand-model":"/home/bbales2/stochssModel/app/static/modelEditor/node_modules/ampersand-model/ampersand-model.js","ampersand-rest-collection":"/home/bbales2/stochssModel/app/static/modelEditor/node_modules/ampersand-rest-collection/ampersand-rest-collection.js","ampersand-view":"/home/bbales2/stochssModel/app/static/modelEditor/node_modules/ampersand-view/ampersand-view.js","andlog":"/home/bbales2/stochssModel/app/static/modelEditor/node_modules/andlog/andlog.js","clientconfig":"/home/bbales2/stochssModel/app/static/modelEditor/node_modules/clientconfig/clientconfig.js","domready":"/home/bbales2/stochssModel/app/static/modelEditor/node_modules/domready/ready.js","jquery":"/home/bbales2/stochssModel/app/static/modelEditor/node_modules/jquery/dist/jquery.js","underscore":"/home/bbales2/stochssModel/app/static/modelEditor/node_modules/underscore/underscore.js"}],"/home/bbales2/stochssModel/app/static/modelEditor/convertToPopulation/model.js":[function(require,module,exports){
+(function e(t,n,r){function s(o,u){if(!n[o]){if(!t[o]){var a=typeof require=="function"&&require;if(!u&&a)return a(o,!0);if(i)return i(o,!0);var f=new Error("Cannot find module '"+o+"'");throw f.code="MODULE_NOT_FOUND",f}var l=n[o]={exports:{}};t[o][0].call(l.exports,function(e){var n=t[o][1][e];return s(n?n:e)},l,l.exports,e,t,n,r)}return n[o].exports}var i=typeof require=="function"&&require;for(var o=0;o<r.length;o++)s(r[o]);return s})({"/home/bbales2/stochssModel/app/static/modelEditor/convertToPopulation/model.js":[function(require,module,exports){
 var _ = require('underscore');
 var $ = require('jquery');
 var View = require('ampersand-view');
@@ -4815,7 +4597,9 @@ FormView.extend = function (obj) {
 
 module.exports = FormView;
 
-},{"backbone-events-standalone":"/home/bbales2/stochssModel/app/static/modelEditor/node_modules/ampersand-form-view/node_modules/backbone-events-standalone/index.js","extend-object":"/home/bbales2/stochssModel/app/static/modelEditor/node_modules/ampersand-form-view/node_modules/extend-object/extend-object.js"}],"/home/bbales2/stochssModel/app/static/modelEditor/node_modules/ampersand-form-view/node_modules/backbone-events-standalone/index.js":[function(require,module,exports){
+},{"backbone-events-standalone":"/home/bbales2/stochssModel/app/static/modelEditor/node_modules/ampersand-form-view/node_modules/backbone-events-standalone/index.js","extend-object":"/home/bbales2/stochssModel/app/static/modelEditor/node_modules/ampersand-form-view/node_modules/extend-object/extend-object.js"}],"/home/bbales2/stochssModel/app/static/modelEditor/node_modules/ampersand-form-view/node_modules/backbone-events-standalone/backbone-events-standalone.js":[function(require,module,exports){
+module.exports=require("/home/bbales2/stochssModel/app/static/modelEditor/node_modules/ampersand-collection/node_modules/backbone-events-standalone/backbone-events-standalone.js")
+},{"/home/bbales2/stochssModel/app/static/modelEditor/node_modules/ampersand-collection/node_modules/backbone-events-standalone/backbone-events-standalone.js":"/home/bbales2/stochssModel/app/static/modelEditor/node_modules/ampersand-collection/node_modules/backbone-events-standalone/backbone-events-standalone.js"}],"/home/bbales2/stochssModel/app/static/modelEditor/node_modules/ampersand-form-view/node_modules/backbone-events-standalone/index.js":[function(require,module,exports){
 module.exports=require("/home/bbales2/stochssModel/app/static/modelEditor/node_modules/ampersand-collection/node_modules/backbone-events-standalone/index.js")
 },{"/home/bbales2/stochssModel/app/static/modelEditor/node_modules/ampersand-collection/node_modules/backbone-events-standalone/index.js":"/home/bbales2/stochssModel/app/static/modelEditor/node_modules/ampersand-collection/node_modules/backbone-events-standalone/index.js"}],"/home/bbales2/stochssModel/app/static/modelEditor/node_modules/ampersand-form-view/node_modules/extend-object/extend-object.js":[function(require,module,exports){
 module.exports=require("/home/bbales2/stochssModel/app/static/modelEditor/node_modules/ampersand-collection/node_modules/extend-object/extend-object.js")
@@ -7430,9 +7214,35 @@ module.exports = {
 
 },{"ampersand-sync":"/home/bbales2/stochssModel/app/static/modelEditor/node_modules/ampersand-rest-collection/node_modules/ampersand-collection-rest-mixin/node_modules/ampersand-sync/ampersand-sync.js","extend-object":"/home/bbales2/stochssModel/app/static/modelEditor/node_modules/ampersand-rest-collection/node_modules/ampersand-collection-rest-mixin/node_modules/extend-object/extend-object.js"}],"/home/bbales2/stochssModel/app/static/modelEditor/node_modules/ampersand-rest-collection/node_modules/ampersand-collection-rest-mixin/node_modules/ampersand-sync/ampersand-sync.js":[function(require,module,exports){
 module.exports=require("/home/bbales2/stochssModel/app/static/modelEditor/node_modules/ampersand-model/node_modules/ampersand-sync/ampersand-sync.js")
-},{"/home/bbales2/stochssModel/app/static/modelEditor/node_modules/ampersand-model/node_modules/ampersand-sync/ampersand-sync.js":"/home/bbales2/stochssModel/app/static/modelEditor/node_modules/ampersand-model/node_modules/ampersand-sync/ampersand-sync.js"}],"/home/bbales2/stochssModel/app/static/modelEditor/node_modules/ampersand-rest-collection/node_modules/ampersand-collection-rest-mixin/node_modules/extend-object/extend-object.js":[function(require,module,exports){
-module.exports=require("/home/bbales2/stochssModel/app/static/modelEditor/node_modules/ampersand-form-view/node_modules/extend-object/extend-object.js")
-},{"/home/bbales2/stochssModel/app/static/modelEditor/node_modules/ampersand-form-view/node_modules/extend-object/extend-object.js":"/home/bbales2/stochssModel/app/static/modelEditor/node_modules/ampersand-form-view/node_modules/extend-object/extend-object.js"}],"/home/bbales2/stochssModel/app/static/modelEditor/node_modules/ampersand-rest-collection/node_modules/ampersand-collection-underscore-mixin/ampersand-collection-underscore-mixin.js":[function(require,module,exports){
+},{"/home/bbales2/stochssModel/app/static/modelEditor/node_modules/ampersand-model/node_modules/ampersand-sync/ampersand-sync.js":"/home/bbales2/stochssModel/app/static/modelEditor/node_modules/ampersand-model/node_modules/ampersand-sync/ampersand-sync.js"}],"/home/bbales2/stochssModel/app/static/modelEditor/node_modules/ampersand-rest-collection/node_modules/ampersand-collection-rest-mixin/node_modules/ampersand-sync/node_modules/qs/index.js":[function(require,module,exports){
+module.exports=require("/home/bbales2/stochssModel/app/static/modelEditor/node_modules/ampersand-model/node_modules/ampersand-sync/node_modules/qs/index.js")
+},{"/home/bbales2/stochssModel/app/static/modelEditor/node_modules/ampersand-model/node_modules/ampersand-sync/node_modules/qs/index.js":"/home/bbales2/stochssModel/app/static/modelEditor/node_modules/ampersand-model/node_modules/ampersand-sync/node_modules/qs/index.js"}],"/home/bbales2/stochssModel/app/static/modelEditor/node_modules/ampersand-rest-collection/node_modules/ampersand-collection-rest-mixin/node_modules/ampersand-sync/node_modules/qs/lib/index.js":[function(require,module,exports){
+module.exports=require("/home/bbales2/stochssModel/app/static/modelEditor/node_modules/ampersand-model/node_modules/ampersand-sync/node_modules/qs/lib/index.js")
+},{"/home/bbales2/stochssModel/app/static/modelEditor/node_modules/ampersand-model/node_modules/ampersand-sync/node_modules/qs/lib/index.js":"/home/bbales2/stochssModel/app/static/modelEditor/node_modules/ampersand-model/node_modules/ampersand-sync/node_modules/qs/lib/index.js"}],"/home/bbales2/stochssModel/app/static/modelEditor/node_modules/ampersand-rest-collection/node_modules/ampersand-collection-rest-mixin/node_modules/ampersand-sync/node_modules/qs/lib/parse.js":[function(require,module,exports){
+module.exports=require("/home/bbales2/stochssModel/app/static/modelEditor/node_modules/ampersand-model/node_modules/ampersand-sync/node_modules/qs/lib/parse.js")
+},{"/home/bbales2/stochssModel/app/static/modelEditor/node_modules/ampersand-model/node_modules/ampersand-sync/node_modules/qs/lib/parse.js":"/home/bbales2/stochssModel/app/static/modelEditor/node_modules/ampersand-model/node_modules/ampersand-sync/node_modules/qs/lib/parse.js"}],"/home/bbales2/stochssModel/app/static/modelEditor/node_modules/ampersand-rest-collection/node_modules/ampersand-collection-rest-mixin/node_modules/ampersand-sync/node_modules/qs/lib/stringify.js":[function(require,module,exports){
+module.exports=require("/home/bbales2/stochssModel/app/static/modelEditor/node_modules/ampersand-model/node_modules/ampersand-sync/node_modules/qs/lib/stringify.js")
+},{"/home/bbales2/stochssModel/app/static/modelEditor/node_modules/ampersand-model/node_modules/ampersand-sync/node_modules/qs/lib/stringify.js":"/home/bbales2/stochssModel/app/static/modelEditor/node_modules/ampersand-model/node_modules/ampersand-sync/node_modules/qs/lib/stringify.js"}],"/home/bbales2/stochssModel/app/static/modelEditor/node_modules/ampersand-rest-collection/node_modules/ampersand-collection-rest-mixin/node_modules/ampersand-sync/node_modules/qs/lib/utils.js":[function(require,module,exports){
+module.exports=require("/home/bbales2/stochssModel/app/static/modelEditor/node_modules/ampersand-model/node_modules/ampersand-sync/node_modules/qs/lib/utils.js")
+},{"/home/bbales2/stochssModel/app/static/modelEditor/node_modules/ampersand-model/node_modules/ampersand-sync/node_modules/qs/lib/utils.js":"/home/bbales2/stochssModel/app/static/modelEditor/node_modules/ampersand-model/node_modules/ampersand-sync/node_modules/qs/lib/utils.js"}],"/home/bbales2/stochssModel/app/static/modelEditor/node_modules/ampersand-rest-collection/node_modules/ampersand-collection-rest-mixin/node_modules/ampersand-sync/node_modules/underscore/underscore.js":[function(require,module,exports){
+module.exports=require("/home/bbales2/stochssModel/app/static/modelEditor/node_modules/ampersand-model/node_modules/ampersand-sync/node_modules/underscore/underscore.js")
+},{"/home/bbales2/stochssModel/app/static/modelEditor/node_modules/ampersand-model/node_modules/ampersand-sync/node_modules/underscore/underscore.js":"/home/bbales2/stochssModel/app/static/modelEditor/node_modules/ampersand-model/node_modules/ampersand-sync/node_modules/underscore/underscore.js"}],"/home/bbales2/stochssModel/app/static/modelEditor/node_modules/ampersand-rest-collection/node_modules/ampersand-collection-rest-mixin/node_modules/ampersand-sync/node_modules/xhr/index.js":[function(require,module,exports){
+module.exports=require("/home/bbales2/stochssModel/app/static/modelEditor/node_modules/ampersand-model/node_modules/ampersand-sync/node_modules/xhr/index.js")
+},{"/home/bbales2/stochssModel/app/static/modelEditor/node_modules/ampersand-model/node_modules/ampersand-sync/node_modules/xhr/index.js":"/home/bbales2/stochssModel/app/static/modelEditor/node_modules/ampersand-model/node_modules/ampersand-sync/node_modules/xhr/index.js"}],"/home/bbales2/stochssModel/app/static/modelEditor/node_modules/ampersand-rest-collection/node_modules/ampersand-collection-rest-mixin/node_modules/ampersand-sync/node_modules/xhr/node_modules/global/window.js":[function(require,module,exports){
+module.exports=require("/home/bbales2/stochssModel/app/static/modelEditor/node_modules/ampersand-model/node_modules/ampersand-sync/node_modules/xhr/node_modules/global/window.js")
+},{"/home/bbales2/stochssModel/app/static/modelEditor/node_modules/ampersand-model/node_modules/ampersand-sync/node_modules/xhr/node_modules/global/window.js":"/home/bbales2/stochssModel/app/static/modelEditor/node_modules/ampersand-model/node_modules/ampersand-sync/node_modules/xhr/node_modules/global/window.js"}],"/home/bbales2/stochssModel/app/static/modelEditor/node_modules/ampersand-rest-collection/node_modules/ampersand-collection-rest-mixin/node_modules/ampersand-sync/node_modules/xhr/node_modules/once/once.js":[function(require,module,exports){
+module.exports=require("/home/bbales2/stochssModel/app/static/modelEditor/node_modules/ampersand-model/node_modules/ampersand-sync/node_modules/xhr/node_modules/once/once.js")
+},{"/home/bbales2/stochssModel/app/static/modelEditor/node_modules/ampersand-model/node_modules/ampersand-sync/node_modules/xhr/node_modules/once/once.js":"/home/bbales2/stochssModel/app/static/modelEditor/node_modules/ampersand-model/node_modules/ampersand-sync/node_modules/xhr/node_modules/once/once.js"}],"/home/bbales2/stochssModel/app/static/modelEditor/node_modules/ampersand-rest-collection/node_modules/ampersand-collection-rest-mixin/node_modules/ampersand-sync/node_modules/xhr/node_modules/parse-headers/node_modules/for-each/index.js":[function(require,module,exports){
+module.exports=require("/home/bbales2/stochssModel/app/static/modelEditor/node_modules/ampersand-model/node_modules/ampersand-sync/node_modules/xhr/node_modules/parse-headers/node_modules/for-each/index.js")
+},{"/home/bbales2/stochssModel/app/static/modelEditor/node_modules/ampersand-model/node_modules/ampersand-sync/node_modules/xhr/node_modules/parse-headers/node_modules/for-each/index.js":"/home/bbales2/stochssModel/app/static/modelEditor/node_modules/ampersand-model/node_modules/ampersand-sync/node_modules/xhr/node_modules/parse-headers/node_modules/for-each/index.js"}],"/home/bbales2/stochssModel/app/static/modelEditor/node_modules/ampersand-rest-collection/node_modules/ampersand-collection-rest-mixin/node_modules/ampersand-sync/node_modules/xhr/node_modules/parse-headers/node_modules/for-each/node_modules/is-function/index.js":[function(require,module,exports){
+module.exports=require("/home/bbales2/stochssModel/app/static/modelEditor/node_modules/ampersand-model/node_modules/ampersand-sync/node_modules/xhr/node_modules/parse-headers/node_modules/for-each/node_modules/is-function/index.js")
+},{"/home/bbales2/stochssModel/app/static/modelEditor/node_modules/ampersand-model/node_modules/ampersand-sync/node_modules/xhr/node_modules/parse-headers/node_modules/for-each/node_modules/is-function/index.js":"/home/bbales2/stochssModel/app/static/modelEditor/node_modules/ampersand-model/node_modules/ampersand-sync/node_modules/xhr/node_modules/parse-headers/node_modules/for-each/node_modules/is-function/index.js"}],"/home/bbales2/stochssModel/app/static/modelEditor/node_modules/ampersand-rest-collection/node_modules/ampersand-collection-rest-mixin/node_modules/ampersand-sync/node_modules/xhr/node_modules/parse-headers/node_modules/trim/index.js":[function(require,module,exports){
+module.exports=require("/home/bbales2/stochssModel/app/static/modelEditor/node_modules/ampersand-model/node_modules/ampersand-sync/node_modules/xhr/node_modules/parse-headers/node_modules/trim/index.js")
+},{"/home/bbales2/stochssModel/app/static/modelEditor/node_modules/ampersand-model/node_modules/ampersand-sync/node_modules/xhr/node_modules/parse-headers/node_modules/trim/index.js":"/home/bbales2/stochssModel/app/static/modelEditor/node_modules/ampersand-model/node_modules/ampersand-sync/node_modules/xhr/node_modules/parse-headers/node_modules/trim/index.js"}],"/home/bbales2/stochssModel/app/static/modelEditor/node_modules/ampersand-rest-collection/node_modules/ampersand-collection-rest-mixin/node_modules/ampersand-sync/node_modules/xhr/node_modules/parse-headers/parse-headers.js":[function(require,module,exports){
+module.exports=require("/home/bbales2/stochssModel/app/static/modelEditor/node_modules/ampersand-model/node_modules/ampersand-sync/node_modules/xhr/node_modules/parse-headers/parse-headers.js")
+},{"/home/bbales2/stochssModel/app/static/modelEditor/node_modules/ampersand-model/node_modules/ampersand-sync/node_modules/xhr/node_modules/parse-headers/parse-headers.js":"/home/bbales2/stochssModel/app/static/modelEditor/node_modules/ampersand-model/node_modules/ampersand-sync/node_modules/xhr/node_modules/parse-headers/parse-headers.js"}],"/home/bbales2/stochssModel/app/static/modelEditor/node_modules/ampersand-rest-collection/node_modules/ampersand-collection-rest-mixin/node_modules/extend-object/extend-object.js":[function(require,module,exports){
+module.exports=require("/home/bbales2/stochssModel/app/static/modelEditor/node_modules/ampersand-collection/node_modules/extend-object/extend-object.js")
+},{"/home/bbales2/stochssModel/app/static/modelEditor/node_modules/ampersand-collection/node_modules/extend-object/extend-object.js":"/home/bbales2/stochssModel/app/static/modelEditor/node_modules/ampersand-collection/node_modules/extend-object/extend-object.js"}],"/home/bbales2/stochssModel/app/static/modelEditor/node_modules/ampersand-rest-collection/node_modules/ampersand-collection-underscore-mixin/ampersand-collection-underscore-mixin.js":[function(require,module,exports){
 ;if (typeof window !== "undefined") {  window.ampersand = window.ampersand || {};  window.ampersand["ampersand-collection-underscore-mixin"] = window.ampersand["ampersand-collection-underscore-mixin"] || [];  window.ampersand["ampersand-collection-underscore-mixin"].push("1.0.3");}
 var _ = require('underscore');
 var slice = [].slice;
@@ -8574,9 +8384,11 @@ module.exports = function arrayNext(array, currentItem) {
     return array[newIndex];
 };
 
-},{}],"/home/bbales2/stochssModel/app/static/modelEditor/node_modules/ampersand-state/node_modules/backbone-events-standalone/index.js":[function(require,module,exports){
-module.exports=require("/home/bbales2/stochssModel/app/static/modelEditor/node_modules/ampersand-form-view/node_modules/backbone-events-standalone/index.js")
-},{"/home/bbales2/stochssModel/app/static/modelEditor/node_modules/ampersand-form-view/node_modules/backbone-events-standalone/index.js":"/home/bbales2/stochssModel/app/static/modelEditor/node_modules/ampersand-form-view/node_modules/backbone-events-standalone/index.js"}],"/home/bbales2/stochssModel/app/static/modelEditor/node_modules/ampersand-state/node_modules/key-tree-store/key-tree-store.js":[function(require,module,exports){
+},{}],"/home/bbales2/stochssModel/app/static/modelEditor/node_modules/ampersand-state/node_modules/backbone-events-standalone/backbone-events-standalone.js":[function(require,module,exports){
+module.exports=require("/home/bbales2/stochssModel/app/static/modelEditor/node_modules/ampersand-collection/node_modules/backbone-events-standalone/backbone-events-standalone.js")
+},{"/home/bbales2/stochssModel/app/static/modelEditor/node_modules/ampersand-collection/node_modules/backbone-events-standalone/backbone-events-standalone.js":"/home/bbales2/stochssModel/app/static/modelEditor/node_modules/ampersand-collection/node_modules/backbone-events-standalone/backbone-events-standalone.js"}],"/home/bbales2/stochssModel/app/static/modelEditor/node_modules/ampersand-state/node_modules/backbone-events-standalone/index.js":[function(require,module,exports){
+module.exports=require("/home/bbales2/stochssModel/app/static/modelEditor/node_modules/ampersand-collection/node_modules/backbone-events-standalone/index.js")
+},{"/home/bbales2/stochssModel/app/static/modelEditor/node_modules/ampersand-collection/node_modules/backbone-events-standalone/index.js":"/home/bbales2/stochssModel/app/static/modelEditor/node_modules/ampersand-collection/node_modules/backbone-events-standalone/index.js"}],"/home/bbales2/stochssModel/app/static/modelEditor/node_modules/ampersand-state/node_modules/key-tree-store/key-tree-store.js":[function(require,module,exports){
 function KeyTreeStore() {
     this.storage = {};
 }
@@ -9150,9 +8962,290 @@ module.exports = CollectionView;
 
 },{"ampersand-class-extend":"/home/bbales2/stochssModel/app/static/modelEditor/node_modules/ampersand-view/node_modules/ampersand-collection-view/node_modules/ampersand-class-extend/ampersand-class-extend.js","backbone-events-standalone":"/home/bbales2/stochssModel/app/static/modelEditor/node_modules/ampersand-view/node_modules/ampersand-collection-view/node_modules/backbone-events-standalone/index.js","underscore":"/home/bbales2/stochssModel/app/static/modelEditor/node_modules/ampersand-view/node_modules/underscore/underscore.js"}],"/home/bbales2/stochssModel/app/static/modelEditor/node_modules/ampersand-view/node_modules/ampersand-collection-view/node_modules/ampersand-class-extend/ampersand-class-extend.js":[function(require,module,exports){
 module.exports=require("/home/bbales2/stochssModel/app/static/modelEditor/node_modules/ampersand-collection/node_modules/ampersand-class-extend/ampersand-class-extend.js")
-},{"/home/bbales2/stochssModel/app/static/modelEditor/node_modules/ampersand-collection/node_modules/ampersand-class-extend/ampersand-class-extend.js":"/home/bbales2/stochssModel/app/static/modelEditor/node_modules/ampersand-collection/node_modules/ampersand-class-extend/ampersand-class-extend.js"}],"/home/bbales2/stochssModel/app/static/modelEditor/node_modules/ampersand-view/node_modules/ampersand-collection-view/node_modules/backbone-events-standalone/index.js":[function(require,module,exports){
-module.exports=require("/home/bbales2/stochssModel/app/static/modelEditor/node_modules/ampersand-state/node_modules/backbone-events-standalone/index.js")
-},{"/home/bbales2/stochssModel/app/static/modelEditor/node_modules/ampersand-state/node_modules/backbone-events-standalone/index.js":"/home/bbales2/stochssModel/app/static/modelEditor/node_modules/ampersand-state/node_modules/backbone-events-standalone/index.js"}],"/home/bbales2/stochssModel/app/static/modelEditor/node_modules/ampersand-view/node_modules/ampersand-dom-bindings/ampersand-dom-bindings.js":[function(require,module,exports){
+},{"/home/bbales2/stochssModel/app/static/modelEditor/node_modules/ampersand-collection/node_modules/ampersand-class-extend/ampersand-class-extend.js":"/home/bbales2/stochssModel/app/static/modelEditor/node_modules/ampersand-collection/node_modules/ampersand-class-extend/ampersand-class-extend.js"}],"/home/bbales2/stochssModel/app/static/modelEditor/node_modules/ampersand-view/node_modules/ampersand-collection-view/node_modules/ampersand-class-extend/node_modules/extend-object/extend-object.js":[function(require,module,exports){
+module.exports=require("/home/bbales2/stochssModel/app/static/modelEditor/node_modules/ampersand-collection/node_modules/extend-object/extend-object.js")
+},{"/home/bbales2/stochssModel/app/static/modelEditor/node_modules/ampersand-collection/node_modules/extend-object/extend-object.js":"/home/bbales2/stochssModel/app/static/modelEditor/node_modules/ampersand-collection/node_modules/extend-object/extend-object.js"}],"/home/bbales2/stochssModel/app/static/modelEditor/node_modules/ampersand-view/node_modules/ampersand-collection-view/node_modules/backbone-events-standalone/backbone-events-standalone.js":[function(require,module,exports){
+/**
+ * Standalone extraction of Backbone.Events, no external dependency required.
+ * Degrades nicely when Backone/underscore are already available in the current
+ * global context.
+ *
+ * Note that docs suggest to use underscore's `_.extend()` method to add Events
+ * support to some given object. A `mixin()` method has been added to the Events
+ * prototype to avoid using underscore for that sole purpose:
+ *
+ *     var myEventEmitter = BackboneEvents.mixin({});
+ *
+ * Or for a function constructor:
+ *
+ *     function MyConstructor(){}
+ *     MyConstructor.prototype.foo = function(){}
+ *     BackboneEvents.mixin(MyConstructor.prototype);
+ *
+ * (c) 2009-2013 Jeremy Ashkenas, DocumentCloud Inc.
+ * (c) 2013 Nicolas Perriault
+ */
+/* global exports:true, define, module */
+(function() {
+  var root = this,
+      breaker = {},
+      nativeForEach = Array.prototype.forEach,
+      hasOwnProperty = Object.prototype.hasOwnProperty,
+      slice = Array.prototype.slice,
+      idCounter = 0;
+
+  // Returns a partial implementation matching the minimal API subset required
+  // by Backbone.Events
+  function miniscore() {
+    return {
+      keys: Object.keys || function (obj) {
+        if (typeof obj !== "object" && typeof obj !== "function" || obj === null) {
+          throw new TypeError("keys() called on a non-object");
+        }
+        var key, keys = [];
+        for (key in obj) {
+          if (obj.hasOwnProperty(key)) {
+            keys[keys.length] = key;
+          }
+        }
+        return keys;
+      },
+
+      uniqueId: function(prefix) {
+        var id = ++idCounter + '';
+        return prefix ? prefix + id : id;
+      },
+
+      has: function(obj, key) {
+        return hasOwnProperty.call(obj, key);
+      },
+
+      each: function(obj, iterator, context) {
+        if (obj == null) return;
+        if (nativeForEach && obj.forEach === nativeForEach) {
+          obj.forEach(iterator, context);
+        } else if (obj.length === +obj.length) {
+          for (var i = 0, l = obj.length; i < l; i++) {
+            if (iterator.call(context, obj[i], i, obj) === breaker) return;
+          }
+        } else {
+          for (var key in obj) {
+            if (this.has(obj, key)) {
+              if (iterator.call(context, obj[key], key, obj) === breaker) return;
+            }
+          }
+        }
+      },
+
+      once: function(func) {
+        var ran = false, memo;
+        return function() {
+          if (ran) return memo;
+          ran = true;
+          memo = func.apply(this, arguments);
+          func = null;
+          return memo;
+        };
+      }
+    };
+  }
+
+  var _ = miniscore(), Events;
+
+  // Backbone.Events
+  // ---------------
+
+  // A module that can be mixed in to *any object* in order to provide it with
+  // custom events. You may bind with `on` or remove with `off` callback
+  // functions to an event; `trigger`-ing an event fires all callbacks in
+  // succession.
+  //
+  //     var object = {};
+  //     _.extend(object, Backbone.Events);
+  //     object.on('expand', function(){ alert('expanded'); });
+  //     object.trigger('expand');
+  //
+  Events = {
+
+    // Bind an event to a `callback` function. Passing `"all"` will bind
+    // the callback to all events fired.
+    on: function(name, callback, context) {
+      if (!eventsApi(this, 'on', name, [callback, context]) || !callback) return this;
+      this._events || (this._events = {});
+      var events = this._events[name] || (this._events[name] = []);
+      events.push({callback: callback, context: context, ctx: context || this});
+      return this;
+    },
+
+    // Bind an event to only be triggered a single time. After the first time
+    // the callback is invoked, it will be removed.
+    once: function(name, callback, context) {
+      if (!eventsApi(this, 'once', name, [callback, context]) || !callback) return this;
+      var self = this;
+      var once = _.once(function() {
+        self.off(name, once);
+        callback.apply(this, arguments);
+      });
+      once._callback = callback;
+      return this.on(name, once, context);
+    },
+
+    // Remove one or many callbacks. If `context` is null, removes all
+    // callbacks with that function. If `callback` is null, removes all
+    // callbacks for the event. If `name` is null, removes all bound
+    // callbacks for all events.
+    off: function(name, callback, context) {
+      var retain, ev, events, names, i, l, j, k;
+      if (!this._events || !eventsApi(this, 'off', name, [callback, context])) return this;
+      if (!name && !callback && !context) {
+        this._events = {};
+        return this;
+      }
+
+      names = name ? [name] : _.keys(this._events);
+      for (i = 0, l = names.length; i < l; i++) {
+        name = names[i];
+        if (events = this._events[name]) {
+          this._events[name] = retain = [];
+          if (callback || context) {
+            for (j = 0, k = events.length; j < k; j++) {
+              ev = events[j];
+              if ((callback && callback !== ev.callback && callback !== ev.callback._callback) ||
+                  (context && context !== ev.context)) {
+                retain.push(ev);
+              }
+            }
+          }
+          if (!retain.length) delete this._events[name];
+        }
+      }
+
+      return this;
+    },
+
+    // Trigger one or many events, firing all bound callbacks. Callbacks are
+    // passed the same arguments as `trigger` is, apart from the event name
+    // (unless you're listening on `"all"`, which will cause your callback to
+    // receive the true name of the event as the first argument).
+    trigger: function(name) {
+      if (!this._events) return this;
+      var args = slice.call(arguments, 1);
+      if (!eventsApi(this, 'trigger', name, args)) return this;
+      var events = this._events[name];
+      var allEvents = this._events.all;
+      if (events) triggerEvents(events, args);
+      if (allEvents) triggerEvents(allEvents, arguments);
+      return this;
+    },
+
+    // Tell this object to stop listening to either specific events ... or
+    // to every object it's currently listening to.
+    stopListening: function(obj, name, callback) {
+      var listeners = this._listeners;
+      if (!listeners) return this;
+      var deleteListener = !name && !callback;
+      if (typeof name === 'object') callback = this;
+      if (obj) (listeners = {})[obj._listenerId] = obj;
+      for (var id in listeners) {
+        listeners[id].off(name, callback, this);
+        if (deleteListener) delete this._listeners[id];
+      }
+      return this;
+    }
+
+  };
+
+  // Regular expression used to split event strings.
+  var eventSplitter = /\s+/;
+
+  // Implement fancy features of the Events API such as multiple event
+  // names `"change blur"` and jQuery-style event maps `{change: action}`
+  // in terms of the existing API.
+  var eventsApi = function(obj, action, name, rest) {
+    if (!name) return true;
+
+    // Handle event maps.
+    if (typeof name === 'object') {
+      for (var key in name) {
+        obj[action].apply(obj, [key, name[key]].concat(rest));
+      }
+      return false;
+    }
+
+    // Handle space separated event names.
+    if (eventSplitter.test(name)) {
+      var names = name.split(eventSplitter);
+      for (var i = 0, l = names.length; i < l; i++) {
+        obj[action].apply(obj, [names[i]].concat(rest));
+      }
+      return false;
+    }
+
+    return true;
+  };
+
+  // A difficult-to-believe, but optimized internal dispatch function for
+  // triggering events. Tries to keep the usual cases speedy (most internal
+  // Backbone events have 3 arguments).
+  var triggerEvents = function(events, args) {
+    var ev, i = -1, l = events.length, a1 = args[0], a2 = args[1], a3 = args[2];
+    switch (args.length) {
+      case 0: while (++i < l) (ev = events[i]).callback.call(ev.ctx); return;
+      case 1: while (++i < l) (ev = events[i]).callback.call(ev.ctx, a1); return;
+      case 2: while (++i < l) (ev = events[i]).callback.call(ev.ctx, a1, a2); return;
+      case 3: while (++i < l) (ev = events[i]).callback.call(ev.ctx, a1, a2, a3); return;
+      default: while (++i < l) (ev = events[i]).callback.apply(ev.ctx, args);
+    }
+  };
+
+  var listenMethods = {listenTo: 'on', listenToOnce: 'once'};
+
+  // Inversion-of-control versions of `on` and `once`. Tell *this* object to
+  // listen to an event in another object ... keeping track of what it's
+  // listening to.
+  _.each(listenMethods, function(implementation, method) {
+    Events[method] = function(obj, name, callback) {
+      var listeners = this._listeners || (this._listeners = {});
+      var id = obj._listenerId || (obj._listenerId = _.uniqueId('l'));
+      listeners[id] = obj;
+      if (typeof name === 'object') callback = this;
+      obj[implementation](name, callback, this);
+      return this;
+    };
+  });
+
+  // Aliases for backwards compatibility.
+  Events.bind   = Events.on;
+  Events.unbind = Events.off;
+
+  // Mixin utility
+  Events.mixin = function(proto) {
+    var exports = ['on', 'once', 'off', 'trigger', 'stopListening', 'listenTo',
+                   'listenToOnce', 'bind', 'unbind'];
+    _.each(exports, function(name) {
+      proto[name] = this[name];
+    }, this);
+    return proto;
+  };
+
+  // Export Events as BackboneEvents depending on current context
+  if (typeof define === "function") {
+    define(function() {
+      return Events;
+    });
+  } else if (typeof exports !== 'undefined') {
+    if (typeof module !== 'undefined' && module.exports) {
+      exports = module.exports = Events;
+    }
+    exports.BackboneEvents = Events;
+  } else {
+    root.BackboneEvents = Events;
+  }
+})(this);
+
+},{}],"/home/bbales2/stochssModel/app/static/modelEditor/node_modules/ampersand-view/node_modules/ampersand-collection-view/node_modules/backbone-events-standalone/index.js":[function(require,module,exports){
+module.exports=require("/home/bbales2/stochssModel/app/static/modelEditor/node_modules/ampersand-collection/node_modules/backbone-events-standalone/index.js")
+},{"/home/bbales2/stochssModel/app/static/modelEditor/node_modules/ampersand-collection/node_modules/backbone-events-standalone/index.js":"/home/bbales2/stochssModel/app/static/modelEditor/node_modules/ampersand-collection/node_modules/backbone-events-standalone/index.js"}],"/home/bbales2/stochssModel/app/static/modelEditor/node_modules/ampersand-view/node_modules/ampersand-dom-bindings/ampersand-dom-bindings.js":[function(require,module,exports){
 ;if (typeof window !== "undefined") {  window.ampersand = window.ampersand || {};  window.ampersand["ampersand-dom-bindings"] = window.ampersand["ampersand-dom-bindings"] || [];  window.ampersand["ampersand-dom-bindings"].push("3.3.3");}
 var Store = require('key-tree-store');
 var dom = require('ampersand-dom');
@@ -64793,7 +64886,208 @@ exports.write = function(buffer, value, offset, isLE, mLen, nBytes) {
 
 },{}],"/home/bbales2/stochssModel/app/static/modelEditor/node_modules/watchify/node_modules/browserify/node_modules/buffer/node_modules/is-array/index.js":[function(require,module,exports){
 module.exports=require("/home/bbales2/stochssModel/app/static/modelEditor/node_modules/ampersand-collection/node_modules/is-array/index.js")
-},{"/home/bbales2/stochssModel/app/static/modelEditor/node_modules/ampersand-collection/node_modules/is-array/index.js":"/home/bbales2/stochssModel/app/static/modelEditor/node_modules/ampersand-collection/node_modules/is-array/index.js"}],"/home/bbales2/stochssModel/app/static/modelEditor/select/model-collection.js":[function(require,module,exports){
+},{"/home/bbales2/stochssModel/app/static/modelEditor/node_modules/ampersand-collection/node_modules/is-array/index.js":"/home/bbales2/stochssModel/app/static/modelEditor/node_modules/ampersand-collection/node_modules/is-array/index.js"}],"/home/bbales2/stochssModel/app/static/modelEditor/publicLibrary.js":[function(require,module,exports){
+/*global app, me, $*/
+var $ = require('jquery');
+var _ = require('underscore');
+var logger = require('andlog');
+var config = require('clientconfig');
+
+var View = require('ampersand-view');
+var AmpersandModel = require('ampersand-model');
+var AmpersandCollection = require('ampersand-rest-collection');
+var ModelEditorView = require('./forms/model');
+var ModelSelectView = require('./publicLibrary/model-collection');
+var Model = require('./models/model');
+var domReady = require('domready');
+var Mesh = require('./models/mesh');
+var MeshCollection = require('./models/mesh-collection');
+var MeshSelectView = require('./forms/mesh-collection');
+
+var PrimaryView = View.extend({
+    template: "<div> \
+<div data-hook='selector'></div> \
+<button class='btn btn-large'>Copy Model to Library</button> \
+</div>",
+    initialize: function(attr, options)
+    {
+        View.prototype.initialize.call(this, attr, options);
+
+        this.collection = attr.collection;
+        this.publicCollection = attr.publicCollection;
+
+        this.meshCollection = attr.meshCollection;
+    },
+    importModel: function()
+    {
+        var saveMessageDom = $( this.queryByHook('saveMessage') );
+
+        saveMessageDom.removeClass( "alert-success alert-error" );
+        saveMessageDom.text( "Duplicating model..." );
+
+        var models = $.ajax( { type : 'GET',
+                               url : '/models/names',
+                               async : false,
+                               dataType : 'JSON' } ).responseJSON;
+
+        var names = models.map( function(model) { return model.name; } );
+
+        model = new Model(this.modelSelector.selected.toJSON());
+
+        var tmpName = model.name;
+        while(_.contains(names, tmpName))
+        {
+            tmpName = model.name + '_' + Math.random().toString(36).substr(2, 3);
+        }
+
+        model.name = tmpName;
+        model.is_public = false;
+        model.id = undefined;
+
+        model.setupMesh(this.meshCollection);
+
+        this.collection.add(model);
+
+        saveMessageDom.text( "Saving model..." );
+
+        model.save(undefined, {
+            success : _.bind(this.modelSaved, this),
+            error : _.bind(this.modelNotSaved, this)
+        });
+    },
+    modelSaved: function() {
+        var saveMessageDom = $( this.queryByHook('saveMessage') );
+
+        saveMessageDom.removeClass( "alert-error" );
+        saveMessageDom.addClass( "alert-success" );
+        saveMessageDom.text( "Saved" );
+    },
+    modelNotSaved: function()
+    {
+        var saveMessageDom = $( this.queryByHook('saveMessage') );
+
+        saveMessageDom.removeClass( "alert-success" );
+        saveMessageDom.addClass( "alert-error" );
+        saveMessageDom.text( "Model Save Failed!" );
+    },
+    modelDeleted: function()
+    {
+        if(this.modelEditor)
+        {
+            this.modelEditor.remove()
+            this.stopListening(this.modelSelector.selected);
+            
+            delete this.modelEditor;
+        }
+    },
+    events: {
+        "click button" : "importModel"
+    },
+    render: function()
+    {
+        View.prototype.render.apply(this, arguments);
+
+        this.modelSelector = this.renderSubview(
+            new ModelSelectView( {
+                collection : this.publicCollection,
+                meshCollection : this.meshCollection,
+            } ), $( '<div>' ).appendTo( this.queryByHook('selector') )[0]
+        );
+
+        return this;
+    }
+});
+
+ModelCollection = AmpersandCollection.extend( {
+    url: "/models",
+    model: Model
+});
+
+PublicModelCollection = AmpersandCollection.extend( {
+    url: "/publicModels",
+    model: Model
+});
+
+MeshCollection = AmpersandCollection.extend( {
+    url: "/meshes",
+    model: Mesh
+});
+
+var publicModelCollection = new PublicModelCollection();
+var modelCollection = new ModelCollection();
+var meshCollection = new MeshCollection();
+
+var modelDownloaded = false; var meshDownloaded = false; var publicModelDownloaded = false;
+
+modelCollection.fetch({
+    success : function(modelCollection, response, options)
+    {
+        modelDownloaded = true;
+        if(meshDownloaded && publicModelDownloaded)
+        {
+            module.exports.blastoff();
+        }
+    }
+});
+
+meshCollection.fetch({
+    success : function(meshCollection, response, options)
+    {
+        meshDownloaded = true;
+        if(modelDownloaded && publicModelDownloaded)
+        {
+            module.exports.blastoff();
+        }
+    }
+});
+
+publicModelCollection.fetch({
+    success : function(publicModelCollection, response, options)
+    {
+        publicModelDownloaded = true;
+        if(meshDownloaded && modelDownloaded)
+        {
+            module.exports.blastoff();
+        }
+    }
+});
+
+module.exports = {
+    blastoff: function () {
+        var self = window.app = this;
+
+        var div = $( '[data-hook="publicModelDiv"]' )[0];
+
+        if(!div)
+            div = document.body;
+
+        domReady(function () {
+            for(var i = 0; i < modelCollection.models.length; i++)
+            {
+                modelCollection.models[i].setupMesh(meshCollection);
+                modelCollection.models[i].saveState = 'saved';
+            }
+
+            for(var i = 0; i < publicModelCollection.models.length; i++)
+            {
+                publicModelCollection.models[i].setupMesh(meshCollection);
+                publicModelCollection.models[i].saveState = 'saved';
+            }
+
+            var modelSelectView = new PrimaryView( {
+                el: div,
+                collection : modelCollection,
+                publicCollection : publicModelCollection,
+                meshCollection : meshCollection
+            } );
+
+            modelSelectView.render();
+        });
+    }
+};
+
+
+},{"./forms/mesh-collection":"/home/bbales2/stochssModel/app/static/modelEditor/forms/mesh-collection.js","./forms/model":"/home/bbales2/stochssModel/app/static/modelEditor/forms/model.js","./models/mesh":"/home/bbales2/stochssModel/app/static/modelEditor/models/mesh.js","./models/mesh-collection":"/home/bbales2/stochssModel/app/static/modelEditor/models/mesh-collection.js","./models/model":"/home/bbales2/stochssModel/app/static/modelEditor/models/model.js","./publicLibrary/model-collection":"/home/bbales2/stochssModel/app/static/modelEditor/publicLibrary/model-collection.js","ampersand-model":"/home/bbales2/stochssModel/app/static/modelEditor/node_modules/ampersand-model/ampersand-model.js","ampersand-rest-collection":"/home/bbales2/stochssModel/app/static/modelEditor/node_modules/ampersand-rest-collection/ampersand-rest-collection.js","ampersand-view":"/home/bbales2/stochssModel/app/static/modelEditor/node_modules/ampersand-view/ampersand-view.js","andlog":"/home/bbales2/stochssModel/app/static/modelEditor/node_modules/andlog/andlog.js","clientconfig":"/home/bbales2/stochssModel/app/static/modelEditor/node_modules/clientconfig/clientconfig.js","domready":"/home/bbales2/stochssModel/app/static/modelEditor/node_modules/domready/ready.js","jquery":"/home/bbales2/stochssModel/app/static/modelEditor/node_modules/jquery/dist/jquery.js","underscore":"/home/bbales2/stochssModel/app/static/modelEditor/node_modules/underscore/underscore.js"}],"/home/bbales2/stochssModel/app/static/modelEditor/publicLibrary/model-collection.js":[function(require,module,exports){
 var _ = require('underscore');
 var $ = require('jquery');
 var AmpersandView = require('ampersand-view');
@@ -64805,71 +65099,6 @@ var Model = require('../models/model');
 var CheckboxView = require('ampersand-checkbox-view');
 
 var Tests = require('../forms/tests.js');
-var AddNewModelForm = AmpersandFormView.extend({
-    submitCallback: function (obj) {
-        var units = '';
-        var isSpatial = false;
-
-        if(obj.units == 'concentration')
-        {
-            units = obj.units;
-        }
-        else if(obj.units == 'population')
-        {
-            units = obj.units
-        }
-        else
-        {
-            units = 'population'
-            isSpatial = true;
-        }   
-
-        var model = new Model({ name : obj.name,
-                                units : units,
-                                type : 'massaction',
-                                isSpatial : isSpatial,
-                                mesh : this.meshCollection.at(0) });
-
-        this.collection.add(model).save();
-    },
-    validCallback: function (valid) {
-        if (valid) {
-            this.button.prop('disabled', false);
-        } else {
-            this.button.prop('disabled', true);
-        }
-    },
-    initialize: function(attr, options) {
-        this.collection = attr.collection;
-        this.meshCollection = attr.meshCollection;
-
-        this.fields = [
-            new InputView({
-                label: 'Name',
-                name: 'name',
-                value: '',
-                required: true,
-                placeholder: 'NewModel',
-                tests: [].concat(Tests.naming(this.collection))
-            }),
-            new SelectView({
-                label: 'Units',
-                name: 'units',
-                value: 'population',
-                options: [['concentration', 'Concentration'], ['population', 'Population'], ['spatialPopulation', 'Spatial Population']],
-                required: true,
-            })
-        ];
-    },
-    render: function()
-    {
-        AmpersandFormView.prototype.render.apply(this, arguments);
-
-        $( this.el ).find('input').prop('autocomplete', 'off');
-
-        this.button = $('<input type="submit" value="Add" />').appendTo( $( this.el ) );
-    }
-});
 
 var ModelCollectionSelectView = AmpersandView.extend({
     template: $( '.modelSelectorTemplate' ).text(),
@@ -64894,11 +65123,6 @@ var ModelCollectionSelectView = AmpersandView.extend({
         this.meshCollection = attr.meshCollection;
 
         this.selected = this.collection.at(0);
-
-        if(attr.noAdd)
-            this.noAdd = attr.noAdd;
-        else
-            this.noAdd = false;
 
         this.listenToAndRun(this.collection, 'add remove change', _.bind(this.updateHasModels, this))
     },
@@ -64931,18 +65155,6 @@ var ModelCollectionSelectView = AmpersandView.extend({
                 $( inputs.get(i) ).prop('checked', true);
             }
         }
-
-        //this.fields.forEach( function(field) { $( field.el ).find('input').val(''); } );
-        if(!this.noAdd)
-        {
-            this.addForm = new AddNewModelForm(
-                {
-                    el : this.el.querySelector('[data-hook=addModelForm]'),
-                    meshCollection : this.meshCollection,
-                    collection : this.collection
-                }
-            );
-        }
         
         return this;
     }
@@ -64950,7 +65162,7 @@ var ModelCollectionSelectView = AmpersandView.extend({
 
 module.exports = ModelCollectionSelectView
 
-},{"../forms/tests.js":"/home/bbales2/stochssModel/app/static/modelEditor/forms/tests.js","../models/model":"/home/bbales2/stochssModel/app/static/modelEditor/models/model.js","./model":"/home/bbales2/stochssModel/app/static/modelEditor/select/model.js","ampersand-checkbox-view":"/home/bbales2/stochssModel/app/static/modelEditor/node_modules/ampersand-checkbox-view/ampersand-checkbox-view.js","ampersand-form-view":"/home/bbales2/stochssModel/app/static/modelEditor/node_modules/ampersand-form-view/ampersand-form-view.js","ampersand-input-view":"/home/bbales2/stochssModel/app/static/modelEditor/node_modules/ampersand-input-view/ampersand-input-view.js","ampersand-select-view":"/home/bbales2/stochssModel/app/static/modelEditor/node_modules/ampersand-select-view/ampersand-select-view.js","ampersand-view":"/home/bbales2/stochssModel/app/static/modelEditor/node_modules/ampersand-view/ampersand-view.js","jquery":"/home/bbales2/stochssModel/app/static/modelEditor/node_modules/jquery/dist/jquery.js","underscore":"/home/bbales2/stochssModel/app/static/modelEditor/node_modules/underscore/underscore.js"}],"/home/bbales2/stochssModel/app/static/modelEditor/select/model.js":[function(require,module,exports){
+},{"../forms/tests.js":"/home/bbales2/stochssModel/app/static/modelEditor/forms/tests.js","../models/model":"/home/bbales2/stochssModel/app/static/modelEditor/models/model.js","./model":"/home/bbales2/stochssModel/app/static/modelEditor/publicLibrary/model.js","ampersand-checkbox-view":"/home/bbales2/stochssModel/app/static/modelEditor/node_modules/ampersand-checkbox-view/ampersand-checkbox-view.js","ampersand-form-view":"/home/bbales2/stochssModel/app/static/modelEditor/node_modules/ampersand-form-view/ampersand-form-view.js","ampersand-input-view":"/home/bbales2/stochssModel/app/static/modelEditor/node_modules/ampersand-input-view/ampersand-input-view.js","ampersand-select-view":"/home/bbales2/stochssModel/app/static/modelEditor/node_modules/ampersand-select-view/ampersand-select-view.js","ampersand-view":"/home/bbales2/stochssModel/app/static/modelEditor/node_modules/ampersand-view/ampersand-view.js","jquery":"/home/bbales2/stochssModel/app/static/modelEditor/node_modules/jquery/dist/jquery.js","underscore":"/home/bbales2/stochssModel/app/static/modelEditor/node_modules/underscore/underscore.js"}],"/home/bbales2/stochssModel/app/static/modelEditor/publicLibrary/model.js":[function(require,module,exports){
 var _ = require('underscore');
 var $ = require('jquery');
 var View = require('ampersand-view');
@@ -64966,15 +65178,14 @@ module.exports = View.extend({
   </td> \
   <td data-hook="type"> \
   </td> \
-  <td> \
-    <button type="button" class="btn btn-default" data-hook="delete"> \
-      x \
-    </button> \
-  </td> \
 </tr>',
     // Gotta have a few of these functions just so this works as a form view
     // This gets called when things update
     bindings: {
+        'model.name' : {
+            type : 'text',
+            hook : 'name'
+        },
         'textType' : {
             type : 'text',
             hook: 'type'
@@ -65009,38 +65220,18 @@ module.exports = View.extend({
     },
     events: {
         "click input" : "selectSelf",
-        "click button" : "removeModel"
     },
     selectSelf: function()
     {
         // There is a CollectionView parent here that must be navigated
         this.parent.parent.selectModel(this.model);
     },
-    removeModel: function()
-    {
-        //this.model.collection.remove(this.model);
-        this.model.destroy();
-    },
     render: function()
     {
         View.prototype.render.apply(this, arguments);
-
-        this.renderSubview(
-            new ModifyingInputView({
-                template: '<span><span data-hook="label"></span><input><span data-hook="message-container"><span data-hook="message-text"></span></span></span>',
-                label: '',
-                name: 'name',
-                value: this.model.name,
-                required: false,
-                placeholder: 'Name',
-                model : this.model,
-                tests: [].concat(Tests.naming(this.model.collection, this.model))
-            }), this.el.querySelector("[data-hook='name']"));
-
-        var model = this.model;
 
         return this;
     }
 });
 
-},{"../forms/tests":"/home/bbales2/stochssModel/app/static/modelEditor/forms/tests.js","ampersand-view":"/home/bbales2/stochssModel/app/static/modelEditor/node_modules/ampersand-view/ampersand-view.js","jquery":"/home/bbales2/stochssModel/app/static/modelEditor/node_modules/jquery/dist/jquery.js","underscore":"/home/bbales2/stochssModel/app/static/modelEditor/node_modules/underscore/underscore.js"}]},{},["/home/bbales2/stochssModel/app/static/modelEditor/app.js"]);
+},{"../forms/tests":"/home/bbales2/stochssModel/app/static/modelEditor/forms/tests.js","ampersand-view":"/home/bbales2/stochssModel/app/static/modelEditor/node_modules/ampersand-view/ampersand-view.js","jquery":"/home/bbales2/stochssModel/app/static/modelEditor/node_modules/jquery/dist/jquery.js","underscore":"/home/bbales2/stochssModel/app/static/modelEditor/node_modules/underscore/underscore.js"}]},{},["/home/bbales2/stochssModel/app/static/modelEditor/publicLibrary.js"]);

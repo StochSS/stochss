@@ -99,6 +99,11 @@ var ModelCollectionSelectView = AmpersandView.extend({
 
         this.selected = this.collection.at(0);
 
+        if(attr.noAdd)
+            this.noAdd = attr.noAdd;
+        else
+            this.noAdd = false;
+
         this.listenToAndRun(this.collection, 'add remove change', _.bind(this.updateHasModels, this))
     },
     selectModel: function(model)
@@ -132,13 +137,16 @@ var ModelCollectionSelectView = AmpersandView.extend({
         }
 
         //this.fields.forEach( function(field) { $( field.el ).find('input').val(''); } );
-        this.addForm = new AddNewModelForm(
-            {
-                el : this.el.querySelector('[data-hook=addModelForm]'),
-                meshCollection : this.meshCollection,
-                collection : this.collection
-            }
-        );
+        if(!this.noAdd)
+        {
+            this.addForm = new AddNewModelForm(
+                {
+                    el : this.el.querySelector('[data-hook=addModelForm]'),
+                    meshCollection : this.meshCollection,
+                    collection : this.collection
+                }
+            );
+        }
         
         return this;
     }

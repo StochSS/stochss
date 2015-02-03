@@ -16,6 +16,7 @@ from stochssapp import BaseHandler, ObjectProperty
 
 import stochss.stochkit
 import stochss.model
+import stochss.examplemodels
 import mesheditor
 
 import webapp2
@@ -47,6 +48,7 @@ class StochKitModelWrapper(db.Model):
     # Create a regular Stochkit model from the JSON formatted one
     def createStochKitModel(self):
         sModel = stochss.stochkit.StochKitModel(self.name)
+        sModel.units = self.units
 
         for specie in self.species:
             sModel.addSpecies(stochss.model.Species(specie['name'], specie['initialCondition']))
@@ -65,15 +67,96 @@ class StochKitModelWrapper(db.Model):
 
         return sModel
 
+    @staticmethod
+    def createFromStochKitModel(handler, model, public = False):
+        species = []
+        parameters = []
+        reactions = []
+
+        meshWrapperDb = db.GqlQuery("SELECT * FROM MeshWrapper WHERE userId = :1", handler.user.user_id()).get()
+
+        spatial = {
+          'initial_conditions' : [],
+          'mesh_wrapper_id' : meshWrapperDb.key().id(),
+          'reactions_subdomain_assignments': {},
+          'species_diffusion_coefficients': {},
+          'species_subdomain_assignments': {}
+          }
+
+        for specieName, specie in model.listOfSpecies.items():
+            species.append({ 'name' : specie.name, 'initialCondition' : specie.initial_value })
+            spatial['species_diffusion_coefficients'][specie.name] = 0.0
+            spatial['species_subdomain_assignments'][specie.name] = meshWrapperDb.uniqueSubdomains
+
+        for parameterName, parameter in model.listOfParameters.items():
+            parameter.evaluate()
+            parameters.append({ 'name' : parameter.name, 'value' : parameter.value })
+
+        modelType = 'massaction'
+        for reactionName, reaction in model.listOfReactions.items():
+            outReaction = {}
+
+            reactants = []
+            products = []
+
+            for reactantName, stoichiometry in reaction.reactants.items():
+                reactants.append({ 'specie' : reactantName, 'stoichiometry' : stoichiometry })
+
+            for productName, stoichiometry in reaction.products.items():
+                products.append({ 'specie' : productName, 'stoichiometry' : stoichiometry })
+                
+            if reaction.massaction == True:
+                outReaction['type'] = 'massaction'
+                outReaction['rate'] = reaction.marate.name
+            else:
+                modelType = 'custom'
+                outReaction['type'] = 'custom'
+                outReaction['equation'] = reaction.propensity_function
+
+            outReaction['reactants'] = reactants
+            outReaction['products'] = products
+
+            spatial['reactions_subdomain_assignments'][reaction.name] = meshWrapperDb.uniqueSubdomains
+
+            reactions.append(outReaction)
+
+        modelDb = StochKitModelWrapper()
+
+        modelDb.user_id = handler.user.user_id()
+        modelDb.name = model.name
+        modelDb.type = modelType
+        modelDb.species = species
+        modelDb.parameters = parameters
+        modelDb.reactions = reactions
+        modelDb.isSpatial = False
+        modelDb.units = model.units
+        modelDb.spatial = spatial
+        modelDb.zipFileName = None
+        modelDb.is_public = public
+
+        modelDb.put()
+
+        return modelDb
+
 class ModelManager():
     @staticmethod
-    def getModels(handler, modelAsString = True, noXML = False):
-        models = db.GqlQuery("SELECT * FROM StochKitModelWrapper WHERE user_id = :1", handler.user.user_id()).run()
+    def getModels(handler, modelAsString = True, noXML = False, public = False):
+        if public:
+            models = db.GqlQuery("SELECT * FROM StochKitModelWrapper WHERE is_public = :1", public).run()
+        else:
+            models = db.GqlQuery("SELECT * FROM StochKitModelWrapper WHERE user_id = :1", handler.user.user_id()).run()
 
         output = []
 
         for modelDb in models:
             #modelDb.delete()
+            if not public and modelDb.is_public:
+                continue
+
+            #if public:
+            #    modelDb.delete()
+            #    continue
+
             jsonModel = { "name" : modelDb.name,
                           "id" : modelDb.key().id(),
                           "units" : modelDb.units,
@@ -202,15 +285,23 @@ class ModelManager():
     @staticmethod
     def deleteModel(handler, model_id):
         model = StochKitModelWrapper.get_by_id(model_id)
+
+        userID = handler.user.user_id()
+
+        if userID != model.user_id:
+            raise "Error accessing model {0} with user id {1} (model owned by {2})".format(model_id, userID, model.user_id)
+
         model.delete()
 
     @staticmethod
     def updateModel(handler, jsonModel):
-
         if "id" in jsonModel:
             modelWrap = StochKitModelWrapper.get_by_id(jsonModel["id"])
 
             userID = handler.user.user_id()
+
+            if userID != modelWrap.user_id:
+                raise "Error accessing model {0} with user id {1} (model owned by {2})".format(jsonModel["id"], userID, modelWrap.user_id)
         else:
             modelWrap = StochKitModelWrapper()
 
@@ -264,6 +355,15 @@ class ModelBackboneInterface(BaseHandler):
             models = ModelManager.getModels(self, noXML = True)
 
             self.response.write(json.dumps(models))
+        elif req[-1] == 'names':
+            models = ModelManager.getModels(self, noXML = True)
+
+            outModels = []
+            for model in models:
+                outModels.append( { "id" : model["id"],
+                                    "name" : model["name"] } )
+
+            self.response.write(json.dumps(outModels))
         else:
             model = ModelManager.getModel(self, int(req[-1]))
 
@@ -306,12 +406,77 @@ class ModelBackboneInterface(BaseHandler):
         self.response.content_type = "application/json"
         self.response.write(json.dumps([]))
 
-class ModelConvertPage(BaseHandler):
+class PublicModelBackboneInterface(BaseHandler):
+    def get(self):
+        req = filter(None, self.request.path.split('/'))
+    
+        self.response.content_type = 'application/json'
+
+        #modelDb = StochKitModelWrapper.createFromStochKitModel(self, stochss.examplemodels.dimerdecay(), True)
+
+        #print modelDb.key().id(), modelDb.user_id, modelDb.is_public
+        
+        if len(req) == 1 or req[-1] == 'list':
+            models = ModelManager.getModels(self, noXML = True, public = True)
+
+            self.response.write(json.dumps(models))
+        elif req[-1] == 'names':
+            models = ModelManager.getModels(self, noXML = True, public = True)
+
+            outModels = []
+            for model in models:
+                outModels.append( { "id" : model["id"],
+                                    "name" : model["name"] } )
+
+            self.response.write(json.dumps(outModels))
+        else:
+            model = ModelManager.getModel(self, int(req[-1]))
+
+            self.response.write(json.dumps(model))
+
+    def post(self):
+        jsonModel = json.loads(self.request.body)
+
+        modelId = ModelManager.updateModel(self, jsonModel)
+        #modelId = ModelManager.createModel(self, jsonModel, rename = True)
+
+        self.response.content_type = "application/json"
+
+        if modelId == None:
+            self.response.set_status(500)
+            self.response.write('')
+        else:
+            self.response.write(json.dumps(ModelManager.getModel(self, modelId)))
+
+    def put(self):
+        req = self.request.uri.split('/')[-1]
+
+        modelId = int(req)
+        jsonModel = json.loads(self.request.body)
+        modelId = ModelManager.updateModel(self, jsonModel)
+
+        self.response.content_type = "application/json"
+
+        if modelId == None:
+            self.response.write('Can\'t find model id ' + req)
+            self.response.set_status(500)
+        else:
+            self.response.write(json.dumps(ModelManager.getModel(self, modelId)))
+
+    def delete(self):
+        model_id = self.request.uri.split('/')[-1]
+      
+        ModelManager.deleteModel(self, int(model_id))
+      
+        self.response.content_type = "application/json"
+        self.response.write(json.dumps([]))
+
+class PublicModelPage(BaseHandler):
     def authentication_required(self):
         return True
     
     def get(self):
-        self.render_response('convert.html')
+        self.render_response('publicLibrary.html')
 
 class ModelEditorPage(BaseHandler):
     """
