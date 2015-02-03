@@ -228,7 +228,9 @@ class StochOptimPage(BaseHandler):
         if reqType == 'newJob':
             data = json.loads(self.request.get('data'))
 
-            job = db.GqlQuery("SELECT * FROM StochOptimJobWrapper WHERE userId = :1 AND jobName = :2", self.user.user_id(), data["jobName"].strip()).get()
+            job = db.GqlQuery("SELECT * FROM StochOptimJobWrapper WHERE userId = :1 AND jobName = :2",
+                              self.user.user_id(),
+                              data["jobName"].strip()).get()
 
             if job != None:
                 self.response.write(json.dumps({"status" : False,
@@ -277,7 +279,7 @@ class StochOptimPage(BaseHandler):
                     try:
                         logging.info("KILL TASK {0}".format(job.pollProcessPID))
                         os.kill(job.pollProcessPID, signal.SIGTERM)
-                    except Exceptoin as e:
+                    except Exception as e:
                         logging.error("StochOptimPage.post.stopJob(): exception during kill process: {0}".format(e))
                     if not self.user_data.valid_credentials:
                         return self.response.write(json.dumps({
