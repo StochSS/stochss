@@ -209,6 +209,12 @@ module.exports = View.extend({
             this.camera = camera;
             this.renderer = renderer;
             this.controls = controls;
+
+            // Adding gui
+            this.addGui();
+            
+            // Adding Axes
+            this.addAxes();
         }
         else
         {
@@ -243,12 +249,6 @@ module.exports = View.extend({
         scene.add(directionalLight);
         
         this.scene = scene;
-
-        // Adding gui
-        this.addGui();
-        
-        // Adding Axes
-        this.addAxes();
 
         this.highLightSubdomains([])
         
