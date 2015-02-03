@@ -28,6 +28,7 @@ THOME = '/home/ubuntu'
 STOCHKIT_DIR = '/home/ubuntu/StochKit'
 ODE_DIR = '/home/ubuntu/ode'
 MCEM2_DIR = '/home/ubuntu/stochoptim'
+STOCHOPTIM_R_LIB_DIR = os.path.join(MCEM2_DIR, 'library')
 
 import logging, subprocess
 import boto.dynamodb
@@ -246,6 +247,7 @@ def master_task(task_id, params, database):
     This task encapsulates the logic behind the new R program.
     '''
     global MCEM2_DIR
+    global STOCHOPTIM_R_LIB_DIR
     try:
         print "Master task starting execution..."
         start_time = datetime.now()
@@ -307,13 +309,19 @@ def master_task(task_id, params, database):
         stderr = "{0}/stderr".format(output_dir)
         print "Master: about to call {0}".format(exec_str)
         execution_time = 0
+
+        environ = os.environ.copy()
+        if not environ.has_key('R_LIBS'):
+            environ['R_LIBS'] = STOCHOPTIM_R_LIB_DIR
+
         with open(stdout, 'w') as stdout_fh:
             with open(stderr, 'w') as stderr_fh:
                 execution_start = datetime.now()
                 p = subprocess.Popen(
                     shlex.split(exec_str),
                     stdout=stdout_fh,
-                    stderr=stderr_fh
+                    stderr=stderr_fh,
+                    env=environ
                 )
                 poll_process.start()
                 update_process.start()
@@ -413,13 +421,19 @@ def slave_task(params):
             os.close(fileint)
             command_segments[index+1] = file_name
             output_files["stats"].append(file_name)
+
+    environ = os.environ.copy()
+    if not environ.has_key('R_LIBS'):
+        environ['R_LIBS'] = STOCHOPTIM_R_LIB_DIR
+
     # Now command_segments is the correct execution string, just need to join it.
     execution_string = " ".join(command_segments)
     print execution_string
     p = subprocess.Popen(
         shlex.split(execution_string),
         stdout=subprocess.PIPE,
-        stderr=subprocess.PIPE
+        stderr=subprocess.PIPE,
+        env=environ
     )
     stdout, stderr = p.communicate()
     # Clean up the input files first

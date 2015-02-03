@@ -306,6 +306,11 @@ class EC2Agent(BaseAgent):
     userstr+='echo export STOCHKIT_HOME={0} >> /home/ubuntu/.bashrc\n'.format("/home/ubuntu/StochKit/")
     userstr+='echo export STOCHKIT_ODE={0} >> ~/.bashrc\n'.format("/home/ubuntu/ode/")
     userstr+='echo export STOCHKIT_ODE={0} >> /home/ubuntu/.bashrc\n'.format("/home/ubuntu/ode/")
+
+    userstr+='export R_LIBS={0}\n'.format('/home/ubuntu/stochoptim/library')
+    userstr+='echo export R_LIBS={0} >> ~/.bashrc\n'.format("/home/ubuntu/stochoptim/library")
+    userstr+='echo export R_LIBS={0} >> /home/ubuntu/.bashrc\n'.format("/home/ubuntu/stochoptim/library")
+
     userstr+='source ~/.bashrc \n'
     userstr+='source /home/ubuntu/.bashrc \n'
     # Workers need an alarm...
