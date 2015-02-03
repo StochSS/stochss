@@ -343,7 +343,7 @@ else
     echo install.packages\(\"optparse\", \""$STOCHOPTIM/library"\", \"http://cran.us.r-project.org\", INSTALL_opts = \"--no-multiarch\"\) > "$STOCHOPTIM/install_packages.R"
     echo install.packages\(\""$STOCHOPTIM"\", \""$STOCHOPTIM/library"\", NULL, type = \"source\", INSTALL_opts = \"--no-multiarch\"\) >> "$STOCHOPTIM/install_packages.R"
 
-    Rscript "$STOCHOPTIM/install_packages.R" 1> "$STOCHSS_HOME/stdout.log" 2>"$STOCHSS_HOME/stderr.log"
+    Rscript "$STOCHOPTIM/install_packages.R" #1> "$STOCHSS_HOME/stdout.log" 2>"$STOCHSS_HOME/stderr.log"
 
     export R_LIBS="$STOCHOPTIM/library"
 
