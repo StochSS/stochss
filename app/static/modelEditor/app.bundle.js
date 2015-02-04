@@ -3507,6 +3507,7 @@ module.exports = AmpModel.extend({
     }
 });
 },{"ampersand-model":"/home/bbales2/stochssModel/app/static/modelEditor/node_modules/ampersand-model/ampersand-model.js","underscore":"/home/bbales2/stochssModel/app/static/modelEditor/node_modules/underscore/underscore.js"}],"/home/bbales2/stochssModel/app/static/modelEditor/models/reaction-collection.js":[function(require,module,exports){
+var _ = require('underscore');
 var AmpCollection = require('ampersand-collection');
 var Reaction = require('./reaction');
 
@@ -3550,7 +3551,7 @@ module.exports = AmpCollection.extend({
     }
 });
 
-},{"./reaction":"/home/bbales2/stochssModel/app/static/modelEditor/models/reaction.js","ampersand-collection":"/home/bbales2/stochssModel/app/static/modelEditor/node_modules/ampersand-collection/ampersand-collection.js"}],"/home/bbales2/stochssModel/app/static/modelEditor/models/reaction.js":[function(require,module,exports){
+},{"./reaction":"/home/bbales2/stochssModel/app/static/modelEditor/models/reaction.js","ampersand-collection":"/home/bbales2/stochssModel/app/static/modelEditor/node_modules/ampersand-collection/ampersand-collection.js","underscore":"/home/bbales2/stochssModel/app/static/modelEditor/node_modules/underscore/underscore.js"}],"/home/bbales2/stochssModel/app/static/modelEditor/models/reaction.js":[function(require,module,exports){
 var _ = require('underscore');
 var State = require('ampersand-state');
 var StoichSpecie = require('./stoich-specie');
@@ -3674,6 +3675,7 @@ module.exports = AmpModel.extend({
     }
 });
 },{"ampersand-model":"/home/bbales2/stochssModel/app/static/modelEditor/node_modules/ampersand-model/ampersand-model.js","underscore":"/home/bbales2/stochssModel/app/static/modelEditor/node_modules/underscore/underscore.js"}],"/home/bbales2/stochssModel/app/static/modelEditor/models/stoich-specie-collection.js":[function(require,module,exports){
+var _ = require('underscore');
 var AmpCollection = require('ampersand-collection');
 var StoichSpecie = require('./stoich-specie');
 
@@ -3707,7 +3709,7 @@ module.exports = AmpCollection.extend({
     }
 });
 
-},{"./stoich-specie":"/home/bbales2/stochssModel/app/static/modelEditor/models/stoich-specie.js","ampersand-collection":"/home/bbales2/stochssModel/app/static/modelEditor/node_modules/ampersand-collection/ampersand-collection.js"}],"/home/bbales2/stochssModel/app/static/modelEditor/models/stoich-specie.js":[function(require,module,exports){
+},{"./stoich-specie":"/home/bbales2/stochssModel/app/static/modelEditor/models/stoich-specie.js","ampersand-collection":"/home/bbales2/stochssModel/app/static/modelEditor/node_modules/ampersand-collection/ampersand-collection.js","underscore":"/home/bbales2/stochssModel/app/static/modelEditor/node_modules/underscore/underscore.js"}],"/home/bbales2/stochssModel/app/static/modelEditor/models/stoich-specie.js":[function(require,module,exports){
 var _ = require('underscore');
 var State = require('ampersand-state');
 var Specie = require('./specie');

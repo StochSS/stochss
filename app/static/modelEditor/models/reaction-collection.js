@@ -1,3 +1,4 @@
+var _ = require('underscore');
 var AmpCollection = require('ampersand-collection');
 var Reaction = require('./reaction');
 
