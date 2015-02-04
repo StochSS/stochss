@@ -32,8 +32,9 @@ var Reaction = State.extend({
     {
         State.prototype.initialize.apply(this, arguments);
 
-        this.on('add remove change:rate', _.bind(this.triggerReaction, this) );
-        this.on('add remove', _.bind(this.triggerChange, this));
+        //add remove 
+        this.on('change:rate', _.bind(this.triggerReaction, this) );
+        //this.on('add remove', _.bind(this.triggerChange, this));
         //this.triggerReaction();
 
         for(var i = 0; i < options.reactants.length; i++)

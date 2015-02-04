@@ -3,6 +3,18 @@ var StoichSpecie = require('./stoich-specie');
 
 module.exports = AmpCollection.extend({
     model: StoichSpecie,
+    initialize: function()
+    {
+        AmpCollection.prototype.initialize.apply(this, arguments);
+
+        this.on('add remove', _.bind(this.triggerChange, this));
+    },
+    triggerChange: function()
+    {
+        this.baseModel = this.parent.collection.parent;
+
+        this.baseModel.species.trigger('stoich-specie-change');
+    },
     addStoichSpecie: function(specie, stoichiometry)
     {
         var stoichSpecie = new StoichSpecie({ specie : specie,

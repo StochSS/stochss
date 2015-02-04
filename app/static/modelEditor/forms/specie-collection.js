@@ -3,6 +3,7 @@ var AmpersandView = require('ampersand-view');
 var AmpersandFormView = require('ampersand-form-view');
 var InputView = require('ampersand-input-view');
 var SpecieFormView = require('./specie');
+var SubCollection = require('ampersand-subcollection');
 
 var Tests = require('./tests');
 var AddNewSpecieForm = AmpersandFormView.extend({
@@ -99,6 +100,33 @@ var SpecieCollectionFormView = AmpersandView.extend({
         AmpersandView.prototype.initialize.call(this, attr, options);
 
         this.listenToAndRun(this.collection, 'add remove change', _.bind(this.updateHasModels, this))
+
+        this.subCollection = new SubCollection(this.collection, { limit : 10, offset : 0 });
+
+        this.offset = 0;
+    },
+    setSelectRange : function(index) {
+        this.subCollection.configure( { limit : 10, offset : index } );
+
+        $( this.queryByHook('position') ).text( ' [ ' + index + ' / ' + this.collection.models.length + ' ] ' );
+    },
+    shift10Plus : function()
+    {
+        if(this.offset + 10 < this.collection.models.length)
+            this.offset = this.offset + 10;
+
+        this.setSelectRange(this.offset);
+    },
+    shift10Minus : function()
+    {
+        if(this.offset - 10 >= 0)
+            this.offset = this.offset - 10;
+
+        this.setSelectRange(this.offset);
+    },
+    events : {
+        "click [data-hook='next']" : "shift10Plus",
+        "click [data-hook='previous']" : "shift10Minus"
     },
     props : {
         hasModels : 'boolean'
@@ -117,18 +145,18 @@ var SpecieCollectionFormView = AmpersandView.extend({
     {
         if(this.collection.parent.isSpatial)
         {
-            this.template = "<div><table data-hook='speciesTable'><thead><th></th><th>Name</th><th>Diffusion</th><th>Subdomains</th></thead><tbody data-hook='speciesTBody'></tbody></table>Add Specie: <form data-hook='addSpeciesForm'></form></div>";
+            this.template = "<div><table data-hook='speciesTable'><thead><th></th><th>Name</th><th>Diffusion</th><th>Subdomains</th></thead><tbody data-hook='speciesTBody'></tbody></table><div><button data-hook='previous'>Previous 10</button><span data-hook='position'></span><button data-hook='next'>Next 10</button></div>Add Specie: <form data-hook='addSpeciesForm'></form></div>";
         }
         else
         {
-            this.template = "<div><table data-hook='speciesTable'><thead><th></th><th>Name</th><th>Initial Condition</th></thead><tbody data-hook='speciesTBody'></tbody></table>Add Specie: <form data-hook='addSpeciesForm'></form></div>";
+            this.template = "<div><table data-hook='speciesTable'><thead><th></th><th>Name</th><th>Initial Condition</th></thead><tbody data-hook='speciesTBody'></tbody></table><div><button data-hook='previous'>Previous 10</button><span data-hook='position'></span><button data-hook='next'>Next 10</button></div>Add Specie: <form data-hook='addSpeciesForm'></form></div>";
         }
 
         AmpersandView.prototype.render.apply(this, arguments);
 
-        //new TestForm();
+        this.setSelectRange(0);
 
-        this.renderCollection(this.collection, SpecieFormView, this.el.querySelector('[data-hook=speciesTBody]'));
+        this.renderCollection(this.subCollection, SpecieFormView, this.el.querySelector('[data-hook=speciesTBody]'));
 
         this.addForm = new AddNewSpecieForm(
             { 

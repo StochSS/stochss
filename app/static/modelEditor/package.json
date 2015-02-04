@@ -15,6 +15,7 @@
     "ampersand-router": "^1.0.1",
     "ampersand-select-view": "git+https://github.com/bbbales2/ampersand-select-view.git",
     "ampersand-state": "^4.4.4",
+    "ampersand-subcollection": "^2.0.1",
     "ampersand-view": "^7.0.1",
     "ampersand-view-switcher": "^1.0.2",
     "andlog": "^1.0.0",

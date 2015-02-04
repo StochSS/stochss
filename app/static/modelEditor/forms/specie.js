@@ -50,7 +50,7 @@ module.exports = View.extend({
     updateSelected : function()
     {
         // We do two things in here: #1 make sure all members of this.model.subdomains are valid subdomains and #2 check the checkboxes in the collection that are selected
-        var validSubdomains = this.collection.each( function(model) { return model.name; } );
+        var validSubdomains = this.baseModel.mesh.uniqueSubdomains.map( function(model) { return model.name; } );
 
         this.model.subdomains = _.union(this.model.subdomains, validSubdomains)
 

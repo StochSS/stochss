@@ -55,6 +55,16 @@ var Model = AmpersandModel.extend({
             this.mesh = meshCollection.models.at(0);
         }
 
+        for(var i = 0; i < this.species.models.length; i++)
+        {
+            this.species.models[i].setupValidation();
+        }
+
+        for(var i = 0; i < this.parameters.models.length; i++)
+        {
+            this.parameters.models[i].setupValidation();
+        }
+
         var speciesByName = {};
         var subdomainsByName = {};
 

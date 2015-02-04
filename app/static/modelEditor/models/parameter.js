@@ -10,10 +10,12 @@ module.exports = AmpModel.extend({
     initialize: function()
     {
         AmpModel.prototype.initialize.apply(this, arguments);
-
+    },
+    setupValidation: function()
+    {
         //Listen for messages from reaction objects
         this.listenTo(this.collection, 'reaction-rate-change', _.bind(this.updateInUse, this))
-
+        
         this.updateInUse();
     },
     updateInUse: function()

@@ -4,6 +4,7 @@ var AmpersandFormView = require('ampersand-form-view');
 var InputView = require('ampersand-input-view');
 var SelectView = require('ampersand-select-view');
 var ReactionFormView = require('./reaction');
+var SubCollection = require('ampersand-subcollection');
 
 var Tests = require('./tests');
 var AddNewReactionForm = AmpersandFormView.extend({
@@ -99,6 +100,33 @@ var ReactionCollectionFormView = AmpersandView.extend({
         AmpersandView.prototype.initialize.call(this, attr, options);
 
         this.listenToAndRun(this.collection, 'add remove change', _.bind(this.updateHasModels, this))
+
+        this.subCollection = new SubCollection(this.collection, { limit : 10, offset : 0 });
+
+        this.offset = 0;
+    },
+    setSelectRange : function(index) {
+        this.subCollection.configure( { limit : 10, offset : index } );
+
+        $( this.queryByHook('position') ).text( ' [ ' + index + ' / ' + this.collection.models.length + ' ] ' );
+    },
+    shift10Plus : function()
+    {
+        if(this.offset + 10 < this.collection.models.length)
+            this.offset = this.offset + 10;
+
+        this.setSelectRange(this.offset);
+    },
+    shift10Minus : function()
+    {
+        if(this.offset - 10 >= 0)
+            this.offset = this.offset - 10;
+
+        this.setSelectRange(this.offset);
+    },
+    events : {
+        "click [data-hook='next']" : "shift10Plus",
+        "click [data-hook='previous']" : "shift10Minus"
     },
     props: {
         selected : 'object',
@@ -126,6 +154,11 @@ var ReactionCollectionFormView = AmpersandView.extend({
       <th></th><th>Name</th><th>Type</th><th>Parameter</th><th>Custom Propensity</th><th>Subdomains</th><th>Latex</th><th></th>\
     </thead>\
   </table>\
+  <div>\
+    <button data-hook='previous'>Previous 10</button>\
+    <span data-hook='position'></span>\
+    <button data-hook='next'>Next 10</button>\
+  </div>\
   <h4>Add Reaction</h4>\
   <form data-hook='addReactionForm'></form>\
 </div>";
@@ -138,6 +171,11 @@ var ReactionCollectionFormView = AmpersandView.extend({
       <th></th><th>Name</th><th>Type</th><th>Parameter</th><th>Custom Propensity</th><th>Latex</th><th></th>\
     </thead>\
   </table>\
+  <div>\
+    <button data-hook='previous'>Previous 10</button>\
+    <span data-hook='position'></span>\
+    <button data-hook='next'>Next 10</button>\
+  </div>\
   <h4>Add Reaction</h4>\
   <form data-hook='addReactionForm'></form>\
 </div>";
@@ -145,7 +183,9 @@ var ReactionCollectionFormView = AmpersandView.extend({
 
         AmpersandView.prototype.render.apply(this, arguments);
 
-        this.renderCollection(this.collection, ReactionFormView, this.el.querySelector('[data-hook=reactionsTable]'));
+        this.setSelectRange(0);
+
+        this.renderCollection(this.subCollection, ReactionFormView, this.el.querySelector('[data-hook=reactionsTable]'));
 
         this.addForm = new AddNewReactionForm(
             { 

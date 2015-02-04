@@ -3,6 +3,20 @@ var Reaction = require('./reaction');
 
 module.exports = AmpCollection.extend({
     model: Reaction,
+    initialize: function()
+    {
+        AmpCollection.prototype.initialize.apply(this, arguments);
+
+        this.on('add remove', _.bind(this.triggerChange, this));
+    },
+    triggerChange: function()
+    {
+        this.baseModel = this.parent;
+
+        this.baseModel.parameters.trigger('reaction-rate-change');
+        this.baseModel.species.trigger('stoich-specie-change');
+        this.trigger('change');
+    },
     addMassActionReaction: function(name, rate, reactants, products, subdomains) {
         var unique = this.models.every(function(model) { return model["name"] != name });
         

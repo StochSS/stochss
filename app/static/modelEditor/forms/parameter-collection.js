@@ -3,6 +3,7 @@ var AmpersandView = require('ampersand-view');
 var AmpersandFormView = require('ampersand-form-view');
 var InputView = require('ampersand-input-view');
 var ParameterFormView = require('./parameter');
+var SubCollection = require('ampersand-subcollection');
 
 var Tests = require('./tests');
 var AddNewParameterForm = AmpersandFormView.extend({
@@ -57,12 +58,39 @@ var AddNewParameterForm = AmpersandFormView.extend({
 });
 
 var ParameterCollectionFormView = AmpersandView.extend({
-    template: "<div><table data-hook='parametersTable' class='table table-bordered'><thead><th></th><th>Name</th><th>Value</th></thead><tbody data-hook='parametersTBody'></tbody></table>Add Parameter: <form data-hook='addParametersForm'></form></div>",
+    template: "<div><table data-hook='parametersTable' class='table table-bordered'><thead><th></th><th>Name</th><th>Value</th></thead><tbody data-hook='parametersTBody'></tbody></table><div><button data-hook='previous'>Previous 10</button><span data-hook='position'></span><button data-hook='next'>Next 10</button></div>Add Parameter: <form data-hook='addParametersForm'></form></div>",
     initialize: function(attr, options)
     {
         AmpersandView.prototype.initialize.call(this, attr, options);
 
         this.listenToAndRun(this.collection, 'add remove change', _.bind(this.updateHasModels, this))
+
+        this.subCollection = new SubCollection(this.collection, { limit : 10, offset : 0 });
+
+        this.offset = 0;
+    },
+    setSelectRange : function(index) {
+        this.subCollection.configure( { limit : 10, offset : index } );
+
+        $( this.queryByHook('position') ).text( ' [ ' + index + ' / ' + this.collection.models.length + ' ] ' );
+    },
+    shift10Plus : function()
+    {
+        if(this.offset + 10 < this.collection.models.length)
+            this.offset = this.offset + 10;
+
+        this.setSelectRange(this.offset);
+    },
+    shift10Minus : function()
+    {
+        if(this.offset - 10 >= 0)
+            this.offset = this.offset - 10;
+
+        this.setSelectRange(this.offset);
+    },
+    events : {
+        "click [data-hook='next']" : "shift10Plus",
+        "click [data-hook='previous']" : "shift10Minus"
     },
     props: {
         selected : 'object',
@@ -82,7 +110,9 @@ var ParameterCollectionFormView = AmpersandView.extend({
     {
         AmpersandView.prototype.render.apply(this, arguments);
 
-        this.renderCollection(this.collection, ParameterFormView, this.el.querySelector('[data-hook=parametersTBody]'));
+        this.setSelectRange(this.offset);
+
+        this.renderCollection(this.subCollection, ParameterFormView, this.el.querySelector('[data-hook=parametersTBody]'));
 
         this.addForm = new AddNewParameterForm(
             { 
