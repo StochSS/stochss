@@ -990,18 +990,28 @@ var SubdomainFormView = require('./subdomain');
 
 module.exports = View.extend({
     template: $( ".mesh3dTemplate" ).text(),
+    remove: function() {
+        this.removing = true;
+
+        delete this.camera;
+        delete this.renderer;
+        delete this.controls;
+        
+        View.prototype.remove.apply(this, arguments);
+    },
     updateWorldCamera: function(){
         this.camera2.position.subVectors( this.camera.position, this.controls.target );
         this.camera2.position.setLength( 1.8 );
         this.camera2.lookAt( this.scene2.position );
     },
     renderFrame : function() {
+        if(typeof(this.renderer) == "undefined")
+            return
         this.renderer.render(this.scene, this.camera);
         this.updateWorldCamera();
         this.renderer2.render(this.scene2, this.camera2);
         requestAnimationFrame(_.bind(this.renderFrame, this));
         this.controls.update();
-        
     },
     update : function(obj) {
         var subdomain = obj.value.model;
@@ -1095,7 +1105,6 @@ module.exports = View.extend({
 
     addAxes : function(){
         var dom2 = $( this.queryByHook('inset') ).empty();
-        // camera
         var camera2 = new THREE.OrthographicCamera( -1, 1, 1, -1, 1, 1000);
         this.camera2 = camera2; 
         
@@ -1115,29 +1124,40 @@ module.exports = View.extend({
         // axes
         var dir = new THREE.Vector3( 1.0, 0.0, 0.0 );
         var origin = new THREE.Vector3( 0, 0, 0 ); 
-        var length = 1; 
         var hex = 0xff0000; 
-        var xaxis = new THREE.ArrowHelper( dir, origin, length, hex );
+        var material = new THREE.LineBasicMaterial({ color: hex });
+        var geometry = new THREE.Geometry();
+        geometry.vertices.push( origin, dir );
+        var line = new THREE.Line( geometry, material );
+        //var coneGeometry = new THREE.CylinderGeometry( 0, 0.5, 1, 5, 1 );
+        //coneGeometry.applyMatrix( new THREE.Matrix4().makeTranslation( 1.0, 0.0, 0 ) );
+        //var cone = new THREE.Mesh( coneGeometry, new THREE.MeshBasicMaterial( { color: color } ) );
+         //   this.cone.matrixAutoUpdate = false;
+         //   this.add( this.cone );
         this.createText('X',1.25, -0.3, 0);
-        scene2.add( xaxis );
+        this.scene2.add( line );
         
         
         dir = new THREE.Vector3( 0, 1.0, 0 );
         origin = new THREE.Vector3( 0, 0, 0 ); 
-        length = 1; 
         hex = 0x0000ff; 
-        yaxis = new THREE.ArrowHelper( dir, origin, length, hex );
+        material = new THREE.LineBasicMaterial({ color: hex });
+        geometry = new THREE.Geometry();
+        geometry.vertices.push( origin, dir );
+        line = new THREE.Line( geometry, material );
         this.createText('Y', 0.5,0.5,0);            
-        scene2.add( yaxis );
+        scene2.add( line );
         
         
         dir = new THREE.Vector3( 0, 0, 1.0 );
         origin = new THREE.Vector3( 0, 0, 0 ); 
-        length = 1; 
         hex = 0x00ff00; 
-        zaxis = new THREE.ArrowHelper( dir, origin, length, hex );
+        material = new THREE.LineBasicMaterial({ color: hex });
+        geometry = new THREE.Geometry();
+        geometry.vertices.push( origin, dir );
+        line = new THREE.Line( geometry, material );
         this.createText('Z', 0.5,-0.4,0.9);
-        scene2.add( zaxis );
+        scene2.add( line );
     },
 
     meshDataPreview : function()
@@ -1214,7 +1234,7 @@ module.exports = View.extend({
         material.side = THREE.DoubleSide;
         mesh = new THREE.Mesh(model.geometry, material);
         scene.add(mesh);
-        
+
         this.mesh = mesh;
         
         delete loader;
