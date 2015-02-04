@@ -35,13 +35,13 @@ from cloudtracker import CloudTracker
 from kombu import Exchange, Queue
 
 class TaskConfig:
-    STOCHSS_HOME = '/home/ubuntu/stochss'
+    STOCHSS_HOME = os.path.join('home', 'ubuntu', 'stochss')
     STOCHKIT_DIR = os.path.join(STOCHSS_HOME, 'StochKit')
     ODE_DIR = os.path.join(STOCHSS_HOME, 'ode')
-    MCEM2_DIR = os.path.join(STOCHSS_HOME, 'stochoptim')
+    STOCHOPTIM_DIR = os.path.join(STOCHSS_HOME, 'stochoptim')
     SCCPY_PATH = os.path.join(STOCHSS_HOME, 'app', 'backend', 'bin', 'sccpy.py')
     PYURDME_WRAPPER_PATH = os.path.join(STOCHSS_HOME, 'pyurdme', 'pyurdme_wrapper.py')
-    STOCHOPTIM_R_LIB_DIR = os.path.join(MCEM2_DIR, 'library')
+    STOCHOPTIM_R_LIB_DIR = os.path.join(STOCHOPTIM_DIR, 'library')
 
 class CelerySingleton(object):
     """
@@ -297,7 +297,7 @@ def master_task(task_id, params, database):
         )
         # Construct execution string and call it
         exec_str = "{0}/{1} --model {2} --data {3}".format(
-            TaskConfig.MCEM2_DIR,
+            TaskConfig.STOCHOPTIM_DIR,
             params["paramstring"],
             model_file_name,
             model_data_file_name
