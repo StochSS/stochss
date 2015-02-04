@@ -4,6 +4,17 @@ import json
 import thread
 from utils import utils
 from utils.persistent_dictionary import PersistentStoreFactory, PersistentDictionary
+import backend_handler
+from backend_handler import VMStateModel
+from google.appengine.api import background_thread, modules, urlfetch
+from google.appengine.api import taskqueue
+from google.appengine.ext import db
+import pickle
+import re
+import urllib
+import logging
+import os
+import datetime
 
 __author__ = 'hiranya'
 __email__ = 'hiranya@appscale.com'
@@ -37,7 +48,7 @@ class InfrastructureManager:
   # Parameters required by InfrastructureManager
   PARAM_RESERVATION_ID = 'reservation_id'
   PARAM_INFRASTRUCTURE = 'infrastructure'
-  PARAM_NUM_VMS = 'num_vms'
+  PARAM_VMS = 'vms'
   PARAM_KEYNAME = 'keyname'
 
   # States a particular VM deployment could be in
@@ -52,7 +63,6 @@ class InfrastructureManager:
   # A list of parameters required to initiate a VM deployment process
   RUN_INSTANCES_REQUIRED_PARAMS = (
     PARAM_INFRASTRUCTURE,
-    PARAM_NUM_VMS
   )
 
   # A list of parameters required to initiate a VM termination process
@@ -187,13 +197,9 @@ class InfrastructureManager:
 
     utils.log('Request parameters are {0}'.format(parameters))
     for param in self.RUN_INSTANCES_REQUIRED_PARAMS:
+      logging.info('param: {0}'.format(param))
       if not utils.has_parameter(param, parameters):
         return self.__generate_response(False, 'no ' + param)
-
-    num_vms = int(parameters[self.PARAM_NUM_VMS])
-    if num_vms <= 0:
-      utils.log('Invalid VM count: {0}'.format(num_vms))
-      return self.__generate_response(False, self.REASON_BAD_VM_COUNT)
 
     infrastructure = parameters[self.PARAM_INFRASTRUCTURE]
     agent = self.agent_factory.create_agent(infrastructure)
@@ -208,38 +214,97 @@ class InfrastructureManager:
       return self.__generate_response(False, self.REASON_BAD_ARGUMENTS)
 
     reservation_id = utils.get_random_alphanumeric()
-    status_info = {
-      'success': True,
-      'reason': 'received run request',
-      'state': self.STATE_PENDING,
-      'vm_info': None
-    }
-    self.reservations.put(reservation_id, status_info)
+#     status_info = {
+#       'success': True,
+#       'reason': 'received run request',
+#       'state': self.STATE_PENDING,
+#       'vm_info': None
+#     }
+#     self.reservations.put(reservation_id, status_info)
+    # update db with reservation ids
+    VMStateModel.update_res_ids(parameters, parameters[VMStateModel.IDS], reservation_id)
+    
     utils.log('Generated reservation id {0} for this request.'.format(
       reservation_id)
     )
-    #TODO: We are forcing blocking mode because of how the Google App Engine sandbox environment
-    # joins on all threads before returning a response from a request, which effectively makes non-
-    # blocking mode the same as blocking mode anyways.
-    # (see https://developers.google.com/appengine/docs/python/#Python_The_sandbox)
-    if self.blocking or True:
+    
+    if self.blocking:
       utils.log('Running spawn_vms in blocking mode')
-      result = self.__spawn_vms(agent, num_vms, parameters, reservation_id)
+      result = self.__spawn_vms(agent, len(parameters['vms']), parameters, reservation_id)
       # NOTE: We will only be able to return an IP for the started instances when run in blocking
       #       mode, but this is needed to update the queue head IP in celeryconfig.py.
       return result # self.__generate_response(
-      #   True,
-      #   self.REASON_NONE,
-      #   {'reservation_id': reservation_id}.update(result)
-      # )
+
     else:
       utils.log('Running spawn_vms in non-blocking mode')
-      thread.start_new_thread(self.__spawn_vms,
-        (agent, num_vms, parameters, reservation_id))
-    utils.log('Successfully started request {0}.'.format(reservation_id))
-    return self.__generate_response(True,
-      self.REASON_NONE, {'reservation_id': reservation_id})
+      
+      # send the spawn vms task to backend server
+      from_fields = {
+            'op': 'start_vms',
+            'infra': pickle.dumps(self),
+            'agent': pickle.dumps(agent),
+            'parameters': pickle.dumps(parameters),
+            'reservation_id': pickle.dumps(reservation_id)
+      }
+#       from_data = urllib.urlencode(from_fields)
+#       
+#       rpc = urlfetch.create_rpc()    
+#       urlfetch.make_fetch_call(rpc=rpc, url=backend_worker_url,
+#                                method = urlfetch.POST,
+#                                payload = from_data)
+#     os.environ['HTTP_HOST'] = "127.0.0.1:8080"
+    
+    taskqueue.add(url='/backend/queue', params=from_fields, method='GET')
 
+      
+    utils.log('Successfully sent request to backend server, reservation_id: {0}.'.format(reservation_id))
+#     return self.__generate_response(True,
+#       self.REASON_NONE, {'reservation_id': reservation_id})
+    return self.__generate_response(True, 'Succeed in sending request to backend server.')
+
+  def synchronize_db(self, params):
+    last_time = None
+    set_gap_large = False
+    try: 
+        e = db.GqlQuery("SELECT * FROM VMStateSyn").get()
+        if e:
+            last_time = e.last_syn
+        else:
+            last_time = datetime.datetime.now() - datetime.timedelta(1)
+#         file = open(backend_handler.DB_SYN_PATH)
+#         line = file.readline()
+#         date_string = re.match(r'\d{4}-\d{2}-\d{2}\s\d{2}:\d{2}:\d{2}', line).group(0)
+#         last_time = datetime.datetime.strptime(date_string, '%Y-%m-%d %H:%M:%S')               
+    except Exception as e:
+        logging.error('Error: have errors in opening db_syn file. {0}'.format(e))
+        return
+                       
+    if last_time is None:
+        raise Exception('Error: cannot read last synchronization infromation of db!')
+        return
+    else:
+        now = datetime.datetime.now()
+        delta = now - last_time
+        gap = delta.total_seconds()
+        logging.info('Time now: {0}'.format(now))
+        logging.info('Time last synchronization: {0}'.format(last_time))
+        logging.info('Time in between: {0}'.format(gap))
+        if gap < backend_handler.SynchronizeDB.PAUSE+1:
+            utils.log('Less than {0} seconds to synchronize db.'.format(backend_handler.SynchronizeDB.PAUSE))
+            return
+                    
+        logging.info('Start synchronize db every {0} seconds.'.format(backend_handler.SynchronizeDB.PAUSE))
+        infrastructure = params[self.PARAM_INFRASTRUCTURE]
+        agent = self.agent_factory.create_agent(infrastructure)
+        from_fields = {
+                       'op': 'start_db_syn',
+                       'agent': pickle.dumps(agent),
+                       'parameters': pickle.dumps(params),
+                       }
+        taskqueue.add(url='/backend/queue', params=from_fields, method='GET')
+    
+    
+      
   def terminate_instances(self, parameters,prefix=''):
     """
     Terminate a group of virtual machines using the provided parameters.
@@ -278,6 +343,7 @@ class InfrastructureManager:
     else:
       thread.start_new_thread(self.__kill_vms, (agent, parameters, prefix))
     return self.__generate_response(True, self.REASON_NONE)
+
 
   def __spawn_vms(self, agent, num_vms, parameters, reservation_id):
     """

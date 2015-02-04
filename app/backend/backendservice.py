@@ -10,8 +10,13 @@ import logging, traceback
 from datetime import datetime
 from tasks import *
 from boto.s3.connection import S3Connection
-from celery.task.control import inspect
 import celery
+from celery.task.control import inspect
+import backend_handler
+from backend_handler import VMStateModel
+from databases.dynamo_db import DynamoDB
+
+
 
 class backendservices():
     ''' 
@@ -26,8 +31,9 @@ class backendservices():
     INFRA_EC2 = 'ec2'
     INFRA_CLUSTER = 'cluster'
     WORKER_AMIS = {
-        INFRA_EC2: 'ami-929812fa'
+        INFRA_EC2: 'ami-f28bc89a'
     }
+    VMSTATUS_IDS = 'ids'
 
     def __init__(self):
         '''
@@ -38,15 +44,35 @@ class backendservices():
         sys.path.append(os.path.join(os.path.dirname(__file__), 
                                      '/Library/Python/2.7/site-packages/amqp'))
             
-    def executeTask(self,params):
+    def executeTask(self, params, agent, access_key, secret_key, taskid=None, instance_type=None, cost_replay=False, database=None):
         '''
         This method instantiates celery tasks in the cloud.
         Returns return value from celery async call and the task ID
         '''
         #logging.info('inside execute task for cloud : Params - %s', str(params))
+        import tasks
+        from tasks import task
+            
+        if instance_type:
+                queue_ins_name = "_"+instance_type.replace(".", "")
+        else:
+                queue_ins_name = ""
+                
+        celery_config = tasks.CelerySingleton()
+        celery_config.configure()
+        celery_config.printCeleryQueue()
+        celery_queue_name = backend_handler.CELERY_QUEUE_EC2+""+queue_ins_name
+        celery_exchange = backend_handler.CELERY_EXCHANGE_EC2
+        celery_routing_key = backend_handler.CELERY_ROUTING_KEY_EC2+""+queue_ins_name
+        logging.info('Deliver the task to the queue: {0}, routing key: {1}'.format(celery_queue_name, celery_routing_key))
+                
+        if not database:
+            database = DynamoDB(access_key, secret_key)
+            
         result = {}
+        
         try:
-            from tasks import task,updateEntry
+            
             #This is a celery task in tasks.py: @celery.task(name='stochss')
             
             # Need to make sure that the queue is actually reachable because
@@ -75,8 +101,11 @@ class backendservices():
                     continue
                 logging.info("Broker up")
                 break
-
-            taskid = str(uuid.uuid4())
+            
+            # if there is no taskid explicit, create one the first run
+            if not taskid:
+                taskid = str(uuid.uuid4())
+                
             result["db_id"] = taskid
             #create a celery task
             logging.info("executeTask : executing task with uuid : %s ", taskid)
@@ -84,7 +113,8 @@ class backendservices():
             data = {
                 'status': "pending",
                 "start_time": timenow.strftime('%Y-%m-%d %H:%M:%S'),
-                'Message': "Task sent to Cloud"
+                'Message': "Task sent to Cloud",
+                'uuid': taskid
             }
             
             tmp = None
@@ -188,9 +218,9 @@ class backendservices():
                     rerouteWorkers(worker_names, queue_name)
                 
                 # Update DB entry just before sending to worker
-                updateEntry(taskid, data, backendservices.TABLENAME)
+                database.updateEntry(taskid, data, backendservices.TABLENAME)
                 params["queue"] = queue_name
-                tmp = master_task.delay(taskid, params)
+                tmp = master_task.apply_async(args=[taskid, params, database], queue=celery_queue_name, routing_key=celery_routing_key)
                 #TODO: This should really be done as a background_thread as soon as the task is sent
                 #      to a worker, but this would require an update to GAE SDK.
                 # call the poll task process
@@ -212,16 +242,45 @@ class backendservices():
                     logging.error("Caught exception {0}".format(e))
                 result["celery_pid"] = tmp.id
             else:
-                updateEntry(taskid, data, backendservices.TABLENAME)
+                
                 #celery async task execution http://ask.github.io/celery/userguide/executing.html
-                tmp = task.delay(taskid, params)  #calls task(taskid,params)
+                
+                # if this is the cost analysis replay then update the stochss-cost-analysis table
+                if cost_replay:
+                    params["db_table"] = "stochss_cost_analysis"
+                    data={}
+                    data['status'] = "pending"
+                    data['start_time'] = timenow.strftime('%Y-%m-%d %H:%M:%S')
+                    data['message'] = "Task sent to Cloud"
+                    data['agent'] = agent
+                    data['instance_type'] = instance_type
+                    data['uuid'] = taskid
+#                     data = {
+#                             'status': "pending",
+#                             'start_time': timenow.strftime('%Y-%m-%d %H:%M:%S'),
+#                             'Message': "Task sent to Cloud",
+#                             'agent': agent,
+#                             'instance_type': instance_type
+#                     }
+                    taskid_prefix = agent+"_"+instance_type+"_"
+                    
+                    database.updateEntry(taskid_prefix+taskid, data, params["db_table"])
+                    tmp = tasks.task.apply_async(args=[taskid, params, database, access_key, secret_key, taskid_prefix], queue=celery_queue_name, routing_key=celery_routing_key)
+                else:
+                    params["db_table"] = backendservices.TABLENAME
+                    database.updateEntry(taskid, data, params["db_table"])
+                    tmp = tasks.task.apply_async(args=[taskid, params, database, access_key, secret_key], queue=celery_queue_name, routing_key=celery_routing_key)
+                #delay(taskid, params, access_key, secret_key)  #calls task(taskid,params,access_key,secret_key)
+#                 logging.info('RESULT OF TASK: {0}'.format(tmp.get()))
+                print tmp.ready()
                 result["celery_pid"] = tmp.id
 
-            logging.info("executeTask :  result of task : %s", str(tmp))
+            logging.info("executeTask :  result of task : %s", str(tmp.id))
             result["success"] = True
             return result
         except Exception, e:
             logging.error("executeTask : error - %s", str(e))
+            traceback.print_exc()
             return {
                 "success": False,
                 "reason": str(e),
@@ -323,7 +382,7 @@ class backendservices():
         return res
     
     
-    def describeTask(self, params):
+    def describeTask(self, params, database=None):
         '''
         @param params: A dictionary with the following fields
          "AWS_ACCESS_KEY_ID" : AWS access key
@@ -333,13 +392,16 @@ class backendservices():
          a dictionary of the form :
          {"taskid":"result:"","state":""} 
         '''
+        
         logging.debug("describeTask : setting environment variables : AWS_ACCESS_KEY_ID - %s", params['AWS_ACCESS_KEY_ID']) 
         os.environ["AWS_ACCESS_KEY_ID"] = params['AWS_ACCESS_KEY_ID']
         logging.debug("describeTask : setting environment variables : AWS_SECRET_ACCESS_KEY - %s", params['AWS_SECRET_ACCESS_KEY'])
         os.environ["AWS_SECRET_ACCESS_KEY"] = params['AWS_SECRET_ACCESS_KEY']
+        if not database:
+            database = DynamoDB(params['AWS_ACCESS_KEY_ID'], params['AWS_SECRET_ACCESS_KEY'])
         result = {}
         try:
-            result = describetask(params['taskids'], backendservices.TABLENAME)
+            result = database.describetask(params['taskids'], backendservices.TABLENAME)
         except Exception, e:
             logging.error("describeTask : exiting with error : %s", str(e))
             return None
@@ -368,18 +430,21 @@ class backendservices():
         }
         return self.describeTask(describe_params)
     
-    def deleteTasks(self, taskids):
+    def deleteTasks(self, taskids, database=None):
         '''
         @param taskid:the list of taskids to be removed 
         this method revokes scheduled tasks as well as the tasks in progress. It 
         also removes task from the database. It ignores the taskids which are not active.
         '''
+        if not database:
+            database = DynamoDB(os.environ["AWS_ACCESS_KEY_ID"], os.environ["AWS_SECRET_ACCESS_KEY"])
+            
         logging.info("deleteTasks : inside method with taskids : %s", taskids)
         try:
             for taskid_pair in taskids:
                 print 'deleteTasks: removing task {0}'.format(str(taskid_pair))
                 removeTask(taskid_pair[0]) #this removes task from celery queue
-                removetask(backendservices.TABLENAME,taskid_pair[1]) #this removes task information from DB. ToDo: change the name of method
+                database.removetask(backendservices.TABLENAME,taskid_pair[1]) #this removes task information from DB. ToDo: change the name of method
             logging.info("deleteTasks: All tasks removed")
         except Exception, e:
             logging.error("deleteTasks : exiting with error : %s", str(e))
@@ -400,9 +465,10 @@ class backendservices():
                 logging.error("deleteTaskLocal : couldn't kill process. error: %s", str(e))
         logging.info("deleteTaskLocal : exiting method")
     
-    def isOneOrMoreComputeNodesRunning(self, params):# credentials):
+        
+    def isOneOrMoreComputeNodesRunning(self, params, ins_type=None):# credentials):
         '''
-        Checks for the existence of running compute nodes. Only need one running compute node
+        Checks for the existence of running compute nodes. Only need one of running compute node
         to be able to run a job in the cloud.
         '''
         credentials = params["credentials"]
@@ -419,33 +485,14 @@ class backendservices():
             if all_vms == None:
                 return False
             # Just need one running vm
-            for vm in all_vms:
-                if vm != None and vm['state'] == 'running':
-                    return True
-            return False
-        except:
-            return False
-    
-    def isQueueHeadRunning(self, params):
-        '''
-        '''
-        credentials = params["credentials"]
-        key_prefix = self.KEYPREFIX
-        if "key_prefix" in params:
-            key_prefix = params["key_prefix"]
-        try:
-            params = {
-                "infrastructure": self.INFRA_EC2,
-                "credentials": credentials,
-                "key_prefix": key_prefix
-            }
-            all_vms = self.describeMachines(params)
-            if all_vms == None:
-                return False
-            # Just need one running vm with the QUEUEHEAD_KEY_TAG in the name of the keypair
-            for vm in all_vms:
-                if vm != None and vm['state'] == 'running' and vm['key_name'].find(self.QUEUEHEAD_KEY_TAG) != -1:
-                    return True
+            if ins_type:
+                for vm in all_vms:
+                    if vm != None and vm['state'] == 'running' and vm['instance_type'] == ins_type:
+                        return True
+            else:
+                for vm in all_vms:
+                    if vm != None and vm['state'] == 'running':
+                        return True
             return False
         except:
             return False
@@ -475,145 +522,87 @@ class backendservices():
             # returning a response from a request.
             i = InfrastructureManager(blocking=block)
             res = {}
+            
+            # 1. change the status of 'failed' in the previous launch in db to 'terminated' 
             # NOTE: We need to make sure that the RabbitMQ server is running if any compute
             # nodes are running as we are using the AMQP broker option for Celery.
-            compute_check_params = {
-                "credentials": params["credentials"],
-                "key_prefix": key_prefix
-            }
-            if self.isQueueHeadRunning(compute_check_params):
-		#Queue head is running so start as many vms as requested
-                res = i.run_instances(params,[])
-                self.copyCeleryConfigToInstance(res, params)
-                # start celery via ssh
-                self.startCeleryViaSSH(res, params)
+
+
+
+            ins_ids = VMStateModel.terminate_not_active(params)
+            
+            # 2. get credentials
+            infra = None
+            access_key = None
+            secret_key = None
+            if 'infrastructure' in params:
+                infra = params['infrastructure']
             else:
-                # Need to start the queue head (RabbitMQ)
-                params["queue_head"] = True
-                try:
-                    vms_requested = int(params["num_vms"])
-                except Exception:
-                    vms_requested = 1
-                requested_key_name = params["keyname"]
-                # Only want one queue head, and it must have its own key so
-                # it can be differentiated if necessary
-                params["num_vms"] = 1
-                params["keyname"] = requested_key_name+'-'+self.QUEUEHEAD_KEY_TAG
-                res = i.run_instances(params,[])
-
-                #NOTE: This relies on the InfrastructureManager being run in blocking mode...
-                queue_head_ip = res["vm_info"]["public_ips"][0]
-                self.__update_celery_config_with_queue_head_ip(queue_head_ip)
-                self.copyCeleryConfigToInstance(res, params)
-                # start celery via ssh
-                self.startCeleryViaSSH(res, params)
-
-                params["keyname"] = requested_key_name
-                params["queue_head"] = False
-                if vms_requested > 1:
-                    #subtract 1 since we can use the queue head as a worker
-                    params["num_vms"] = vms_requested - 1
-                    res = i.run_instances(params,[])
-                    self.copyCeleryConfigToInstance(res, params)
-                    # start celery via ssh
-                    self.startCeleryViaSSH(res, params)
-
-                params["num_vms"] = vms_requested
-
+                raise Exception('VMStateModel ERROR: Infrastructure is not decided.')
+                return False, 'Infrastructure is not decided.'
+             
+            if 'credentials' in params:
+                if 'EC2_ACCESS_KEY' in params['credentials'] and 'EC2_SECRET_KEY' in params['credentials']:
+                    access_key = params['credentials']['EC2_ACCESS_KEY']
+                    secret_key = params['credentials']['EC2_SECRET_KEY']
+                else:
+                    raise Exception('VMStateModel ERROR: Cannot get access key or secret.')
+                    return False, 'Cannot get access key or secret of the current infrastructure.'
+            else:
+                raise Exception('VMStateModel ERROR: No credentials are provided.')
+                return False, 'No credentials are provided.'
+            
+            if infra is None or access_key is None or secret_key is None:
+                raise Exception('VMStateModel ERROR: Either infrastracture or credetials is none.')
+                return False, 'Either infrastracture or credetials is none.'
+            # 3. create exact number of entities in db for this launch, and set the status to 'creating'
+            ids = []
+            num = 0
+            if 'vms' in params:
+                for vm in params['vms']:
+                    logging.info('vm: {0}, num: {1}'.format(vm['instance_type'], vm['num_vms']))
+                    num += vm['num_vms']
+            if 'head_node' in params:
+                num += 1
+                
+            for _ in range(0, num):
+                
+                vm_status = VMStateModel(state = VMStateModel.STATE_CREATING, infra = infra, access_key = access_key, secret_key = secret_key)
+                vm_status.put()         
+                ids.append(vm_status.key().id())
+            
+            params[VMStateModel.IDS] = ids
+            
+            
+            res = i.run_instances(params,[])
+            #res = i.run_instances(params,[])
+#            else:
+#                # Need to start the queue head (RabbitMQ)
+#                params["queue_head"] = True
+#                vms_requested = int(params["num_vms"])
+#                requested_key_name = params["keyname"]
+#                # Only want one queue head, and it must have its own key so
+#                # it can be differentiated if necessary
+#                params["num_vms"] = 1
+#                params["keyname"] = requested_key_name+'-'+self.QUEUEHEAD_KEY_TAG
+#                res = i.run_instances(params,[])
+#                #NOTE: This relies on the InfrastructureManager being run in blocking mode...
+#                queue_head_ip = res["vm_info"]["public_ips"][0]
+#                self.__update_celery_config_with_queue_head_ip(queue_head_ip)
+#                params["keyname"] = requested_key_name
+#                params["queue_head"] = False
+#                if vms_requested > 1:
+#                    params["num_vms"] = vms_requested - 1
+#                    res = i.run_instances(params,[])
+#                params["num_vms"] = vms_requested
             logging.info("startMachines : exiting method with result : %s", str(res))
-            return res
+            return True, None
         except Exception, e:
             traceback.print_exc()
             logging.error("startMachines : exiting method with error : {0}".format(str(e)))
             print "startMachines : exiting method with error :", str(e)
-            return None
-
-    def copyCeleryConfigToInstance(self, reservation, params):
-##      # Update celery config file...it should have the correct IP
-##      # of the Queue head node, which should already be running.
-##      celery_config_filename = os.path.join(
-##        os.path.dirname(os.path.abspath(__file__)),
-##        "../celeryconfig.py"
-##      )
-##      # Pass it line by line so theres no weird formatting errors from 
-##      # trying to echo a multi-line file directly on the command line
-##      with open(celery_config_filename, 'r') as celery_config_file:
-##        lines = celery_config_file.readlines()
-##        # Make sure we overwrite the file with our first write
-##        userstr += "echo '{0}' > /home/ubuntu/celeryconfig.py\n".format(lines[0])
-##        for line in lines[1:]:
-##          userstr += "echo '{0}' >> /home/ubuntu/celeryconfig.py\n".format(line)
-        #print "reservation={0}".format(reservation)
-        #print "params={0}".format(params)
-        keyfile = "{0}/../{1}.key".format(os.path.dirname(__file__),params['keyname'])
-        #logging.debug("keyfile = {0}".format(keyfile))
-        if not os.path.exists(keyfile):
-            raise Exception("ssh keyfile file not found: {0}".format(keyfile))
-        celery_config_filename = "{0}/{1}".format(os.path.dirname(__file__),"/celeryconfig.py")
-        if not os.path.exists(celery_config_filename):
-            raise Exception("celery config file not found: {0}".format(celery_config_filename))
-        for ip in reservation['vm_info']['public_ips']:
-            self.waitforSSHconnection(keyfile, ip)
-            cmd = "scp -o 'StrictHostKeyChecking no' -i {0} {1} ubuntu@{2}:celeryconfig.py".format(keyfile, celery_config_filename, ip)
-            logging.info(cmd)
-            success = os.system(cmd)
-            if success == 0:
-                logging.info("scp success: {0} transfered to {1}".format(celery_config_filename, ip))
-            else:
-                raise Exception("scp failure: {0} not transfered to {1}".format(celery_config_filename, ip))
-
-    def waitforSSHconnection(self, keyfile, ip):
-        SSH_RETRY_COUNT = 30
-        SSH_RETRY_WAIT = 3
-        for _ in range(0, SSH_RETRY_COUNT):
-            cmd = "ssh -o 'StrictHostKeyChecking no' -i {0} ubuntu@{1} \"pwd\"".format(keyfile, ip)
-            logging.info(cmd)
-            success = os.system(cmd)
-            if success == 0:
-                logging.info("ssh connected to {0}".format(ip))
-                return True
-            else:
-                logging.info("ssh not connected to {0}, sleeping {1}".format(ip, SSH_RETRY_WAIT))
-                time.sleep(SSH_RETRY_WAIT)
-        raise Exception("Timeout waiting to connect to node via SSH")
-        
-
-    def startCeleryViaSSH(self, reservation, params):
-##    # Even the queue head gets a celery worker
-##    # NOTE: We only need to use the -n argument to celery command if we are starting
-##    #       multiple workers on the same machine. Instead, we are starting one worker
-##    #       per machine and letting that one worker execute one task per core, using
-##    #       the configuration in celeryconfig.py to ensure that Celery detects the 
-##    #       number of cores and enforces this desired behavior.
-##    userstr += "export PYTHONPATH=/home/ubuntu/pyurdme/:/home/ubuntu/stochss/app/\n"
-##    if self.PARAM_WORKER_QUEUE in parameters:
-##      start_celery_str = "celery -A tasks worker --autoreload --loglevel=info -Q {0} --workdir /home/ubuntu > /home/ubuntu/celery.log 2>&1 & \n".format(parameters[self.PARAM_WORKER_QUEUE])
-##    else:
-##      start_celery_str = "celery -A tasks worker --autoreload --loglevel=info --workdir /home/ubuntu > /home/ubuntu/celery.log 2>&1"
-##    #userstr+="sudo -u ubuntu screen -d -m bash -c '{0}'\n".format(start_celery_str)  # PyURDME must be run inside a 'screen' terminal as part of the FEniCS code depends on the ability to write to the processe's terminal, screen provides this terminal.
-##    userstr+="screen -d -m bash -c '{0}'\n".format(start_celery_str)  # PyURDME must be run inside a 'screen' terminal as part of the FEniCS code depends on the ability to write to the process' terminal, screen provides this terminal.
-        credentials = params['credentials']
-        python_path = "source /home/ubuntu/.bashrc;export PYTHONPATH=/home/ubuntu/pyurdme/:/home/ubuntu/stochss/app/;"
-        python_path+='export AWS_ACCESS_KEY_ID={0};'.format(str(credentials['EC2_ACCESS_KEY']))
-        python_path+='export AWS_SECRET_ACCESS_KEY={0};'.format( str(credentials['EC2_SECRET_KEY']))
-        start_celery_str = "celery -A tasks worker --autoreload --loglevel=info --workdir /home/ubuntu > /home/ubuntu/celery.log 2>&1"
-        # PyURDME must be run inside a 'screen' terminal as part of the FEniCS code depends on the ability to write to the process' terminal, screen provides this terminal.
-        celerycmd = "sudo screen -d -m bash -c '{1}{0}'\n".format(start_celery_str,python_path)
-        #print "reservation={0}".format(reservation)
-        #print "params={0}".format(params)
-        keyfile = "{0}/../{1}.key".format(os.path.dirname(__file__),params['keyname'])
-        #logging.info("keyfile = {0}".format(keyfile))
-        if not os.path.exists(keyfile):
-            raise Exception("ssh keyfile file not found: {0}".format(keyfile))
-        for ip in reservation['vm_info']['public_ips']:
-            self.waitforSSHconnection(keyfile, ip)
-            cmd = "ssh -o 'StrictHostKeyChecking no' -i {0} ubuntu@{1} \"{2}\"".format(keyfile, ip, celerycmd)
-            logging.info(cmd)
-            success = os.system(cmd)
-            if success == 0:
-                logging.info("celery started on {0}".format(ip))
-            else:
-                raise Exception("Failure to start celery on {0}".format(ip))
+            return False, 'Errors occur in starting machines:'+str(e)
+ 
         
     def stopMachines(self, params, block=False):
         '''
@@ -630,6 +619,8 @@ class backendservices():
             logging.info("Stopping compute nodes with key_prefix: {0}".format(key_prefix))
             i = InfrastructureManager(blocking=block)
             res = i.terminate_instances(params,key_prefix)
+            # update db
+            VMStateModel.terminate_all(params)
             return True
         except Exception, e:
             logging.error("Terminate machine failed with error : %s", str(e))
@@ -649,6 +640,7 @@ class backendservices():
                 key_prefix = self.KEYPREFIX + key_prefix
         else:
             key_prefix = self.KEYPREFIX
+        params["key_prefix"] = key_prefix
         try:
             i = InfrastructureManager()
             res = i.describe_instances(params, [], key_prefix)
@@ -658,7 +650,12 @@ class backendservices():
             logging.error("describeMachines : exiting method with error : %s", str(e))
             return None
     
-    
+    def describeMachinesFromDB(self, params):
+        i = InfrastructureManager()
+        i.synchronize_db(params)
+        all_vms = VMStateModel.get_all(params)
+        return all_vms
+        
     def validateCredentials(self, params):
         '''
         This method verifies the validity of ec2 credentials
@@ -755,30 +752,6 @@ class backendservices():
         except Exception, e:
             logging.error("fetchOutput : exiting with error : %s", str(e))
             return False
-    
-    def __update_celery_config_with_queue_head_ip(self, queue_head_ip):
-        # Write queue_head_ip to file on the appropriate line
-        celery_config_filename = os.path.join(
-            os.path.dirname(os.path.abspath(__file__)),
-            "celeryconfig.py"
-        )
-        celery_template_filename = os.path.join(
-            os.path.dirname(os.path.abspath(__file__)),
-            "celeryconfig.py.template"
-        )
-        celery_config_lines = []
-        with open(celery_template_filename, 'r') as celery_config_file:
-            celery_config_lines = celery_config_file.readlines()
-        with open(celery_config_filename, 'w') as celery_config_file:
-            for line in celery_config_lines:
-                if line.strip().startswith('BROKER_URL'):
-                    celery_config_file.write('BROKER_URL = "amqp://stochss:ucsb@{0}:5672/"\n'.format(queue_head_ip))
-                else:
-                    celery_config_file.write(line)
-        # Now update the actual Celery app....
-        #TODO: Doesnt seem to work in GAE until next request comes in to server
-        my_celery = CelerySingleton()
-        my_celery.configure()
 
 
 ################## tests #############################
@@ -941,13 +914,15 @@ def teststochoptim(backend,compute_check_params):
 
 ##########################################
 ##########################################
-def teststochss(backend,params):
+def teststochss(backend,params,database=None):
     '''
     This tests a stochkit job using a local run (2 tasks)
     and a cloud run (2 tasks)
     It can also test describe* and start/stop Machines
     '''
-
+    if not database:
+            database = DynamoDB(os.environ["AWS_ACCESS_KEY_ID"], os.environ["AWS_SECRET_ACCESS_KEY"])
+            
     if backend.validateCredentials(params) :
 	print bcolors.FAIL + \
             'startMachines is commented out, make sure you have one+ started!'\
@@ -971,7 +946,7 @@ def teststochss(backend,params):
         os.environ["AWS_ACCESS_KEY_ID"] = credentials['EC2_ACCESS_KEY']
         os.environ["AWS_SECRET_ACCESS_KEY"] = credentials['EC2_SECRET_KEY']
         print 'access key: '+os.environ["AWS_ACCESS_KEY_ID"]
-        createtable(backendservices.TABLENAME)
+        database.createtable(backendservices.TABLENAME)
 
 	#Test that local tasks execute and can be deleted
         #NOTE: dimer_decay.xml must be in this local dir

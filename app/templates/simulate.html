@@ -73,6 +73,7 @@
 <script type="text/javascript" src = "/static/js/sensitivity.js"></script>
 <script type="text/javascript" src = "/static/model/stochkit.js"></script>
 <script type="text/javascript" src = "/static/js/simulate.js"></script>
+<script type="text/javascript" src="static/js/status.js"></script>
 
 <script id="simulationConfTemplate" type="text/template">
     <div class="well well-large">
@@ -223,6 +224,10 @@
 </script>
 
 <script type="text/template" id="jobInfoTemplate">
+	<ol class="breadcrumb">
+  		<li><a href="/status">Job Status</a></li>
+  		<li class="active"><%= name %></a></li>
+	</ol>
     <h2> Job summary: <span style="COLOR:green;"><%= name %></span></h2>
     <br />
     <div class="well">                    
@@ -256,15 +261,51 @@
     <div id="error">
     </div>
       
-    <br />
-      
     <div id="msg"></div>
-    <br />
+    
     
     <div class="well">
         <h3>Output</h3>
         <br />
-        <button id="access" type="submit" class="btn btn-primary btn-large"><i class="icon-download-alt"></i> Fetch Data from Cloud</button>
+        <% if (resource =="Local" || output_stored == "True"){ %>
+        	<button id="access" type="submit" class="btn btn-primary btn-large"><i class="icon-download-alt"></i> Fetch Data from Cloud</button>
+    	<% } %>
+    	
+    	<% if (resource =="Cloud"){ %>
+    		<% if(output_stored == "True"){ %>
+    		<button class="btn btn-primary btn-large" onclick="rerun('/reproduce?req_type=delOutput&job_type=stochkit&uuid=<%= pid %>', 'delete', '/simulate?id=<%=id%>');"> Delete Output</button>
+    		<% }else{ %>
+    		<p>No output stored.</p>
+    		<% } %>		
+    	<% } %>
     </div>
+    
+    <div class="well">
+        <h3>Reproduction and Cost Analysis</h3>
+        <br />
+    	<% if (resource =="Cloud"){ %>
+    		<% if(output_stored != "True"){ %>
+    		<p> Reproduction Node Type: </p>
+    		<select id="instance_type" style="width: 100pt;">
+				<option name="instance_type" value="t1.micro" selected>t1.micro</option>
+				<option name="instance_type" value="m1.small">m1.small</option>
+				<option name="instance_type" value="m3.medium">m3.medium</option>
+				<option name="instance_type" value="m3.large">m3.large</option>
+				<% %>
+				<option name="instance_type" value="c3.large">c3.large</option>
+				<option name="instance_type" value="c3.xlarge">c3.xlarge</option>
+			 </select>
+			 </br>
+			 <button class="btn btn-primary btn-large" onclick="rerun('/reproduce?req_type=rerun&job_type=stochkit&uuid=<%= pid %>', 'rerun', '/status');"> Reproduce Results</button>
+    		 <% } %>
+    		 
+    		 <button class="btn btn-primary btn-large" onclick="location.href = '/cost_analysis?job_type=stochkit&id=<%= id %>';"> Cost Analysis</button>
+    		
+    	<% } else{ %>
+    		<p>Local job. No reprduction and cost analysis available</p>
+    	<% } %>    	
+    </div>
+        
 </script>
+
 {% endblock %}

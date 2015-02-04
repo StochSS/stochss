@@ -3,7 +3,7 @@
 {% block content %}
 
 <!-- Script to check/unckeck all checkboxes -->
-<script language="JavaScript">
+<script language="">
     function toggle(source) {
     checkboxes = document.getElementsByName('select_job');
     for(var i=0, n=checkboxes.length;i<n;i++) {
@@ -24,6 +24,10 @@
                 {{help_modal|safe}}
             </h2>
             </br>
+            
+            <span id="msg"></span>
+            </br>
+            </br>
             <form class ="well form" action="/status" method="post">
                 {% if all_jobs %}
                 Deterministic/Stochastic Simulations:
@@ -34,10 +38,15 @@
                             <th width="40pt"></th>
                             <th width="40pt">Job #</th>
                             <th>Job name </th>
-                            <th>Job type </th>
-                            <th width="200pt">Status</th>
+                            <th width="50pt">Resource </th>
+                        
+                            <th width="100pt">Status</th>
+                            <th width="220pt">Result Analysis and Reproduction</th>
                             
-                            <th width="200pt"></th>
+                            <!--
+                            <th width="150pt">Reproduce</th>
+                            <th width="100pt">Cost Analysis</th>
+                            -->
                         </tr>
                     </thead>
                     <tbody>
@@ -57,7 +66,11 @@
                                 <span>{{job.name}}</span>
                             </td>
                             <td>
-                                <span>{{job.execType}}</span>
+                                {% if job.resource == "Local" %}
+                                <span>Local</span>
+                                {% else %}
+                                <span>Cloud</span>
+                                {% endif %}
                             </td>
                             <td>
                                 {% if job.status == "Running" or job.status == "Finished" %}
@@ -72,13 +85,35 @@
                             </td>
                             <td>
                                 {% if job.status == "Finished" %}
-                                <a href="/simulate?id={{job.id}}">View results</a>
-                                {% else %}
-                                {% if job.status == "Failed" %}
-                                <a href="/simulate?id={{job.id}}">Get Debugging Info</a>
-                                {% endif %}
+                                
+                                	<a href="/simulate?id={{job.id}}">View</a>
+                                
+                                {% elif job.status == "Failed"%}
+                          
+                                	<a href="/simulate?id={{job.id}}">Get Debugging Info</a>
+                                
                                 {% endif %}
                             </td>
+                            <!--
+                            <td>
+                                {% if job.resource == "Cloud" %}
+                                {% if job.status == "Finished" or job.status == "Failed"%}
+                                {% if job.output_stored == "True" %}
+                                <a href="javascript:void(0)" onclick="rerun('/reproduce?req_type=delOutput&job_type=stochkit&uuid={{job.uuid}}', 'delete');">Delete output</a>
+                                {% else %}
+                                <a href="javascript:void(0)" onclick="rerun('/reproduce?req_type=rerun&job_type=stochkit&uuid={{job.uuid}}', 'rerun');">Reproduce Results</a>
+                                {% endif%}
+                                {% endif%}
+                                {% else %}
+                                <span style="color: black" class="create_msg">N/A</span>
+                                {% endif%}
+                                
+                                
+                            </td>
+                            <td>
+                            	<a href="/cost_analysis?uuid={{job.uuid}}&name={{job.name}}">Analyze</a>
+                            </td>
+                            -->
                         </tr>
                         
                         {% endfor %}
@@ -95,8 +130,15 @@
                             <th width="40pt"></th>
                             <th width="40pt">Job #</th>
                             <th>Job name </th>
-                            <th width="200pt">Status</th>                            
-                            <th width="200pt"></th>
+                            <th width="50pt">Resource </th>
+                        
+                            <th width="100pt">Status</th>
+                            
+                            <th width="220pt">Result Analysis and Reproduction</th>
+                            <!--
+                            <th width="150pt">Reproduce</th>
+                            <th width="100pt">Cost Analysis</th>
+                            -->
                         </tr>
                     </thead>
                     <tbody>
@@ -116,6 +158,13 @@
                                 <span>{{job.name}}</span>
                             </td>
                             <td>
+                                {% if job.resource == "local" %}
+                                <span>Local</span>
+                                {% else %}
+                                <span>Cloud</span>
+                                {% endif %}
+                            </td>
+                            <td>
                                 {% if job.status == "Running" or job.status == "Finished" %}
                                 <span style="color: green" class="create_msg">{{job.status}}</span>
                                 {% endif %}
@@ -128,13 +177,35 @@
                             </td>
                             <td>
                                 {% if job.status == "Finished" %}
-                                <a href="/spatial?id={{job.id}}">View results</a>
-                                {% else %}
-                                {% if job.status == "Failed" %}
+                                
+                                <a href="/spatial?id={{job.id}}">View</a>
+                               
+                                {% elif job.status == "Failed"%}
+                                
                                 <a href="/spatial?id={{job.id}}">Get Debugging Info</a>
-                                {% endif %}
+                            
                                 {% endif %}
                             </td>
+                            <!--
+                            <td>
+                                {% if job.resource == "cloud" %}
+                                {% if job.status == "Finished" or job.status == "Failed"%}
+                                {% if job.output_stored == "True" %}
+                                <a href="javascript:void(0)" onclick="rerun('/reproduce?req_type=delOutput&job_type=spatial&uuid={{job.uuid}}', 'delete');">Delete output</a>
+                                {% else %}
+                                <a href="javascript:void(0)" onclick="rerun('/reproduce?req_type=rerun&job_type=spatial&uuid={{job.uuid}}', 'rerun');">Reproduce Results</a>
+                                {% endif%}
+                                {% endif%}
+                                {% else %}
+                                <span style="color: black" class="create_msg">N/A</span>
+                                {% endif%}
+                                
+                                
+                            </td>
+                            <td>
+                            	<a href="/cost_analysis?uuid={{job.uuid}}&name={{job.name}}">Analyze</a>
+                            </td>
+                            -->
                         </tr>
                         {% endfor %}
                     </tbody>
@@ -150,8 +221,15 @@
                             <th width="40pt"></th>
                             <th width="40pt">Job #</th>
                             <th>Job name </th>
-                            <th width="200pt">Status</th>
-                            <th width="200pt"></th>
+                            <th width="50pt">Resource </th>
+                        
+                            <th width="100pt">Status</th>
+                            
+                            <th width="220pt">Result Analysis and Reproduction</th>
+                            <!--
+                            <th width="150pt">Reproduce</th>
+                            <th width="100pt">Cost Analysis</th>
+                            -->
                         </tr>
                     </thead>
                     <tbody>
@@ -163,6 +241,13 @@
                             </td>
                             <td>
                                 <span>{{job.name}}</span>
+                            </td>
+                            <td>
+                                {% if job.resource == "local" %}
+                                <span>Local</span>
+                                {% else %}
+                                <span>Cloud</span>
+                                {% endif %}
                             </td>
                             <td>
                                 {% if job.status == "Running" or job.status == "Finished" %}
@@ -177,13 +262,33 @@
                             </td>
                             <td>
                                 {% if job.status == "Finished" %}
-                                <a href="/sensitivity?id={{job.id}}">View results</a>
-                                {% else %}
-                                {% if job.status == "Failed" %}
+                                
+                                <a href="/sensitivity?id={{job.id}}">View</a>
+                                
+                                {% elif job.status == "Failed"%}
+                                
                                 <a href="/sensitivity?id={{job.id}}">Get Debugging Info</a>
-                                {% endif %}
+                                
                                 {% endif %}
                             </td>
+                            <!--
+                            <td>
+                                {% if job.resource == "cloud" %}
+                                {% if job.status == "Finished" or job.status == "Failed"%}
+                                {% if job.output_stored == "True" %}
+                                <a href="javascript:void(0)" onclick="rerun('/reproduce?req_type=delOutput&job_type=sensitivity&uuid={{job.uuid}}', 'delete');">Delete output</a>
+                                {% else %}
+                                <a href="javascript:void(0)" onclick="rerun('/reproduce?req_type=rerun&job_type=sensitivity&uuid={{job.uuid}}', 'rerun');">Reproduce Results</a>
+                                {% endif%}
+                                {% endif%}
+                                {% else %}
+                                <span style="color: black" class="create_msg">N/A</span>
+                                {% endif%}
+                            </td>
+                            <td>
+                            	<a href="/cost_analysis?uuid={{job.uuid}}&name={{job.name}}">Analyze</a>
+                            </td>
+                            -->
                         </tr>
                         
                         {% endfor %}
@@ -250,7 +355,8 @@
                         <tr>
                             <th width="40pt"></th>
                             <th width="40pt">Job #</th>
-                            <th>Job name</th>
+                            <th width="200pt">Job name </th>
+                            <th width="100pt">Resource </th>
                             <th width="200pt">Status</th>
                             <th width="200pt"></th>
                         </tr>
@@ -270,6 +376,13 @@
                             </td>
                             <td>
                                 <span>{{job.name}}</span>
+                            </td>
+                            <td>
+                                {% if job.resource == "local" %}
+                                <span>Local</span>
+                                {% else %}
+                                <span>Cloud</span>
+                                {% endif %}
                             </td>
                             <td>
                                 {% if job.status|lower == "running" or job.status|lower == "finished" %}
@@ -296,6 +409,7 @@
                                 {% endif %}
                                 {% endif %}
                             </td>
+                            
                         </tr>
                         
                         {% endfor %}
@@ -325,6 +439,9 @@
 <script>
 function deleteJob(path)
 {
+    msg = "Deleting the job...";
+    updateMsg( { status: true,
+              msg: msg } );
 $.ajax({ url : path,
     type : 'POST',
     success : function(data)
@@ -338,6 +455,45 @@ $.ajax({ url : path,
 
 return false;
 }
+
+var updateMsg = function(data)
+{
+    $( "#msg" ).text(data.msg);
+    if(data.status)
+    $( "#msg" ).prop('class', 'alert alert-success');
+    else
+    $( "#msg" ).prop('class', 'alert alert-error');
+    $( "#msg" ).show();
+};
+
+function rerun(path, type)
+{
+    if (type == "delete"){
+        msg = "Deleting output in cloud...";
+    }else if(type == "rerun"){
+        msg = "Rerunning job in cloud...";
+    }else{
+        msg = "Unknown requested type.";
+    }
+    updateMsg( { status: true,
+              msg: msg } );
+              
+              $.ajax({ url : path,
+                     type : 'POST',
+                     success : function(data)
+                     {
+                     updateMsg(data);
+                     if(data.status)
+                     window.location = '/status';
+                     },
+                     error : function(data)
+                     {
+                     location.reload();
+                     }});
+                     
+                     return false;
+}
+
 </script>
 
 {% endblock %}
