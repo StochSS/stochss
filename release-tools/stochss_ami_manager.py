@@ -510,7 +510,7 @@ def cleanup_local_files():
 if __name__ == '__main__':
     parser = argparse.ArgumentParser(description="StochSS AMI Manager Tool for creating StochSS Node AMIs from \
                                                                                 stochss git repo or deleting AMIs")
-    parser.add_argument('-s', '--settings', help="Configuration Settings File (Default: $STOCHSS_GIT_REPO/release_tools/stochss_ami_config.json)",
+    parser.add_argument('-s', '--settings', help="Configuration Settings File, (Default: $STOCHSS/release_tools/stochss_ami_config.json). For more info, visit http://www.stochss.org/",
                         action="store", dest="config_file",
                         default=os.path.join(os.path.dirname(__file__), "stochss_ami_config.json"))
     parser.add_argument('-c', '--cleanup', help="Cleanup Local files", action="store_true", default=False)
