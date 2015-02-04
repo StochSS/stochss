@@ -326,8 +326,7 @@ class AmiManager:
         print '=================================================='
         print header
         commands = ['cd stochss',
-                    "sed -i '\|launchapp|d' run.ubuntu.sh",
-                    './run.ubuntu.sh']
+                    './run.ubuntu.sh --install']
         command = ';'.join(commands)
         self.__run_remote_command(command=command, log_header=header)
 
