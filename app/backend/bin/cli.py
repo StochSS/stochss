@@ -1,3 +1,5 @@
+#!/usr/bin/env python
+
 import sys
 import os
 
@@ -595,13 +597,13 @@ class BackendCli:
         commands = []
         commands.append('source /home/ubuntu/.bashrc')
         commands.append(
-            'export PYTHONPATH=/home/ubuntu:/home/ubuntu/pyurdme:/home/ubuntu/stochss/app:/home/ubuntu/stochss/app/backend:/home/ubuntu/stochss/app/lib/cloudtracker')
+            'export PYTHONPATH=/home/ubuntu/stochss:/home/ubuntu/stochss/pyurdme:/home/ubuntu/stochss/app:/home/ubuntu/stochss/app/backend:/home/ubuntu/stochss/app/lib/cloudtracker')
         commands.append('export AWS_ACCESS_KEY_ID={0}'.format(self.aws_credentials['AWS_ACCESS_KEY_ID']))
         commands.append('export AWS_SECRET_ACCESS_KEY={0}'.format(self.aws_credentials['AWS_SECRET_ACCESS_KEY']))
         commands.append(
             "celery -A tasks worker -Q " + CELERY_QUEUE_FLEX + "," \
             + CELERY_QUEUE_FLEX + "_" + self.INSTANCE_TYPE.replace(".", "") \
-            + " --autoreload --loglevel=debug --workdir /home/ubuntu > /home/ubuntu/celery.log 2>&1")
+            + " --autoreload --loglevel=info --workdir /home/ubuntu > /home/ubuntu/celery.log 2>&1")
 
         # PyURDME must be run inside a 'screen' terminal as part of the FEniCS code depends on the ability to write to
         # the process' terminal, screen provides this terminal.
