@@ -18,6 +18,9 @@ import argparse
 import glob
 
 
+class ShellCommandException(Exception):
+    pass
+
 def get_remote_command(user, ip, key_file, command):
     return 'ssh -o UserKnownHostsFile=/dev/null -o StrictHostKeyChecking=no -i {0} {1}@{2} "{3}"'.format(key_file, user,
                                                                                                          ip, command)
@@ -49,17 +52,24 @@ class ShellCommand(object):
         if timeout is not None:
             thread.join(timeout)
             if thread.is_alive():
-                if silent is False:  print 'Terminating process...'
+                if silent is False:
+                    print 'Terminating process due to timeout...'
                 self.process.terminate()
                 thread.join()
-                if silent is False:  print 'Process return code =', self.process.returncode
+                if silent is False:
+                    print 'Process return code =', self.process.returncode
         else:
             thread.join()
+            if self.process.returncode != 0:
+                raise ShellCommandException("return code = {0}".format(self.process.returncode))
+
 
 
 class AmiManager:
     INVALID_INSTANCE_TYPES = ['t1.micro', 'm1.small', 'm1.medium', 'm3.medium']
     NUM_TRIALS = 3
+    NUM_SSH_TRIALS = 10
+    DEFAULT_AMI_FILENAME = os.path.join(os.path.abspath(os.path.dirname(__file__)), 'ami.json')
 
     def __init__(self, options):
         self.uuid = uuid.uuid4()
@@ -106,48 +116,62 @@ class AmiManager:
         self.is_old_ami = True
         self.verbose = options["verbose"] if "verbose" in options.keys() else False
 
+        if "ami_list_filename" in options.keys():
+            self.ami_list_filename = options["ami_list_filename"]
+        else:
+            self.ami_list_filename = self.DEFAULT_AMI_FILENAME
+
     def run(self):
         try:
             self.__launch_instance()
 
-            tries = self.NUM_TRIALS
-            while True:
-                print "====================[Trial #{0}]======================".format(self.NUM_TRIALS - tries + 1)
-                self.__update_instance()
-                self.__install_dependencies()
+            trial = 0
+            while trial <= self.NUM_TRIALS:
+                if trial == self.NUM_TRIALS:
+                    raise Exception("Dependency Installation failed after {0} trials!".format(self.NUM_TRIALS))
+
+                print "====================[Trial #{0}]======================".format(trial + 1)
+                try:
+                    self.__update_instance()
+                    self.__install_dependencies()
+                except ShellCommandException:
+                    trial += 1
+                    continue
+
                 is_successful = self.__check_dependency_installation()
 
                 if is_successful:
-                    print "Trial #{0} of linux dependency installation successful!".format(self.NUM_TRIALS - tries + 1)
+                    print "Trial #{0} of linux dependency installation successful!".format(trial + 1)
                     break
                 else:
-                    if tries == 0:
-                        raise Exception("Dependency Installation failed after {0} tries!".format(self.NUM_TRIALS))
+                    print "Trial #{0} of linux dependency installation failed!".format(trial + 1)
 
-                tries -= 1
+
+                trial += 1
 
             self.__update_fenics()
             self.__check_fenics_installation()
 
             self.__reboot_instance()
 
-            self.__update_fenics()
-            self.__check_fenics_installation()
+            while trial <= self.NUM_TRIALS:
+                if trial == self.NUM_TRIALS:
+                    raise Exception("Dependency Installation failed after {0} trials!".format(self.NUM_TRIALS))
 
-            tries = self.NUM_TRIALS
-            while True:
-                print "====================[Trial #{0}]======================".format(self.NUM_TRIALS - tries + 1)
-                self.__install_python_packages()
-                is_successful = self.__check_python_packages_installation()
+                print "====================[Trial #{0}]======================".format(trial + 1)
+                try:
+                    self.__install_python_packages()
+                except ShellCommandException:
+                    trial += 1
+                    continue
+
+                is_successful = self.__check_dependency_installation()
 
                 if is_successful:
-                    print "Trial #{0} of python package installation successful!".format(self.NUM_TRIALS - tries + 1)
+                    print "Trial #{0} of linux dependency installation successful!".format(trial + 1)
                     break
                 else:
-                    if tries == 0:
-                        raise Exception("Python Package Installation failed after {0} tries!".format(self.NUM_TRIALS))
-
-                tries -= 1
+                    print "Trial #{0} of linux dependency installation failed!".format(trial + 1)
 
             self.__download_stochss_repo()
             self.__compile_stochss()
@@ -158,7 +182,8 @@ class AmiManager:
             self.run_tests()
             self.__cleanup_instance()
 
-            self.make_image()
+            new_ami_info = self.make_image()
+            self.update_ami_list(new_ami_info)
 
         except:
             traceback.print_exc()
@@ -255,33 +280,35 @@ class AmiManager:
                             'sudo apt-get -y update',
                             'sudo apt-get -y install fenics',
                             'sudo apt-get -y dist-upgrade'])
+
         self.__run_remote_command(command=command, log_header=header)
 
+
     def __wait_until_successful_ssh(self):
-        while (True):
+        command = 'echo Instance {0} with ip {1} is up!'.format(self.instance_id, self.instance_ip)
+
+        trial = 0
+        while trial < self.NUM_SSH_TRIALS:
             time.sleep(5)
-            tmp_log_stdout_file = tempfile.TemporaryFile()
-            tmp_log_stderr_file = tempfile.TemporaryFile()
-
-            remote_cmd = get_remote_command(user=self.instance_user, ip=self.instance_ip, key_file=self.key_file,
-                                            command="echo Instance {0} with ip {1} is up!".format(self.instance_id,
-                                                                                                  self.instance_ip))
-            shell_cmd = ShellCommand(remote_cmd, stdout=tmp_log_stdout_file, stderr=tmp_log_stderr_file)
-            shell_cmd.run(timeout=5, silent=True)
-
+            header = 'Trying to ssh into {0} #{1} ...'.format(self.instance_ip, trial + 1)
             if self.verbose:
-                tmp_log_stderr_file.seek(0)
-                print >> 2, tmp_log_stderr_file.read()
+                print header
 
-            tmp_log_stderr_file.close()
-
-            tmp_log_stdout_file.seek(0)
-            output = tmp_log_stdout_file.read().strip()
-            tmp_log_stdout_file.close()
-
-            if output == "Instance {0} with ip {1} is up!".format(self.instance_id, self.instance_ip):
-                print output
+            try:
+                self.__run_remote_command(command=command, timeout=5, log_header=header)
+                print "Instance {0} with ip {1} is up!".format(self.instance_id, self.instance_ip)
                 break
+
+            except ShellCommandException:
+                if self.verbose:
+                    print 'SSH failed!'
+
+            except:
+                traceback.print_stack()
+                break
+
+            trial += 1
+
 
     def __reboot_instance(self):
         print '=================================================='
@@ -364,7 +391,9 @@ class AmiManager:
     def make_image(self):
         print '=================================================='
         print 'Making AMI...'
-        date_string = time.strftime("%Y%b%d-%H%M%S")
+        gmt_time = time.gmtime()
+        gmt_time_string = time.strftime("%a, %d %b %Y %H:%M:%S +0000", gmt_time)
+        date_string = time.strftime("%Y%b%d-%H%M%S", gmt_time)
         new_ami_name = "StochSS-Node-{0}".format(date_string)
 
         print "Creating AMI '{0}' from instance {1}...".format(new_ami_name, self.instance_id)
@@ -383,6 +412,28 @@ class AmiManager:
                                                    attribute='launchPermission',
                                                    operation='add',
                                                    groups='all')
+
+        return {"ami_id": new_ami_id, "name": new_ami_name, "creation_time": gmt_time_string}
+
+    def update_ami_list(self, new_ami_info=None):
+        print '=================================================='
+        print 'Updating AMI list in {0}...'.format(self.ami_list_filename)
+        if os.path.exists(self.ami_list_filename):
+            with open(self.ami_list_filename) as file:
+                ami_list = json.loads(file.read())
+        else:
+            ami_list = []
+
+        if new_ami_info != None:
+            ami_list.append(new_ami_info)
+
+        ami_ids = [ ami_info["ami_id"] for ami_info in ami_list ]
+        valid_amis = self.ec2_connection.get_all_images(image_ids=ami_ids)
+        valid_ami_ids = [ valid_ami.id for valid_ami in valid_amis]
+
+        ami_list = [ ami_info for ami_info in ami_list if ami_info["ami_id"] in valid_ami_ids]
+        with open(self.ami_list_filename, 'w') as file:
+            file.write(pprint.pformat(ami_list))
 
 
     def __terminate_instance(self):
@@ -421,8 +472,18 @@ class AmiManager:
             return False
 
     def __check_fenics_installation(self):
-        # TODO: check FeniCS installation
-        pass
+        header = 'Checking FeniCS installation'
+        print '=================================================='
+        print header
+
+        try:
+            self.__run_remote_command(command='python -c "import dolfin" 2>/dev/null',
+                                      log_header=header)
+            print 'FeniCS installation successful!'
+
+        except:
+            print 'FeniCS installation failed!'
+
 
     def __check_python_packages_installation(self):
         header = 'Checking python packages installation...'
@@ -464,7 +525,7 @@ class AmiManager:
             print 'List of installed python packages: \n{0}'.format(pprint.pformat(installed_python_packages))
             return False
 
-    def __run_remote_command(self, command, log_header=None, log_files=None, silent=False):
+    def __run_remote_command(self, command, log_header=None, log_files=None, silent=False, timeout=None):
         remote_cmd = get_remote_command(user=self.instance_user, ip=self.instance_ip, key_file=self.key_file,
                                         command=command)
         if silent == False and self.verbose == True:
@@ -489,7 +550,7 @@ class AmiManager:
         else:
             shell_cmd = ShellCommand(remote_cmd)
 
-        shell_cmd.run()
+        shell_cmd.run(timeout=timeout)
 
     def __cleanup(self):
         if self.log_type == "file":
