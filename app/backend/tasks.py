@@ -1,16 +1,16 @@
-import sys,os,logging
+import sys
+import os
+
 sys.path.append(os.path.join(os.path.dirname(__file__), '../lib/celery'))
 sys.path.append(os.path.join(os.path.dirname(__file__), '../lib/boto'))
 sys.path.append(os.path.join(os.path.dirname(__file__), '../lib/kombu'))
-sys.path.append(os.path.join(os.path.dirname(__file__), '../'))
-sys.path.append(os.path.join(os.path.dirname(__file__), '/'))
+sys.path.append(os.path.join(os.path.dirname(__file__), '..'))
 sys.path.append(os.path.join(os.path.dirname(__file__), '../lib/amqp'))
 sys.path.append(os.path.join(os.path.dirname(__file__), '../lib/billiard'))
 sys.path.append(os.path.join(os.path.dirname(__file__), '../lib/anyjson'))
 sys.path.append(os.path.join(os.path.dirname(__file__), '../lib/pytz'))
 sys.path.append(os.path.join(os.path.dirname(__file__), '../lib/cloudtracker'))
 
-#print str(sys.path)
 from celery import Celery, group
 
 try:
@@ -21,18 +21,11 @@ except ImportError:
             fdw.write(fdr.read())
     import celeryconfig
      
-import os, subprocess, shlex
-import uuid,traceback
 
-THOME = '/home/ubuntu'
-STOCHKIT_DIR = '/home/ubuntu/StochKit'
-ODE_DIR = '/home/ubuntu/ode'
-MCEM2_DIR = '/home/ubuntu/stochoptim'
-STOCHOPTIM_R_LIB_DIR = os.path.join(MCEM2_DIR, 'library')
-
-import logging, subprocess
-import boto.dynamodb
-from boto.exception import S3ResponseError
+import shlex
+import traceback
+import logging
+import subprocess
 from datetime import datetime
 from multiprocessing import Process
 import tempfile, time
@@ -40,6 +33,17 @@ import signal
 import pickle
 from cloudtracker import CloudTracker
 from kombu import Exchange, Queue
+
+class TaskConfig:
+    STOCHSS_HOME = os.path.join('/home', 'ubuntu', 'stochss')
+    STOCHKIT_DIR = os.path.join(STOCHSS_HOME, 'StochKit')
+    ODE_DIR = os.path.join(STOCHSS_HOME, 'ode')
+    STOCHOPTIM_DIR = os.path.join(STOCHSS_HOME, 'stochoptim')
+    STOCHOPTIM_R_LIB_DIR = os.path.join(STOCHOPTIM_DIR, 'library')
+    SCCPY_PATH = os.path.join(STOCHSS_HOME, 'app', 'backend', 'bin', 'sccpy.py')
+    PYURDME_DIR = os.path.join(STOCHSS_HOME, 'pyurdme')
+    PYURDME_WRAPPER_PATH = os.path.join(PYURDME_DIR, 'pyurdme_wrapper.py')
+
 
 class CelerySingleton(object):
     """
@@ -191,7 +195,7 @@ def update_s3_bucket(task_id, bucket_name, output_dir, database):
         tar_output_str = "tar -zcf {0}.tar {0}".format(output_dir)
         print "S3 update", tar_output_str
         os.system(tar_output_str)
-        copy_to_s3_str = "python {0}/sccpy.py {1}.tar {2}".format(THOME, output_dir, bucket_name)
+        copy_to_s3_str = "python {0} {1}.tar {2}".format(TaskConfig.SCCPY_PATH, output_dir, bucket_name)
         print "S3 update", copy_to_s3_str
         os.system(copy_to_s3_str)
         data = {
@@ -208,12 +212,12 @@ def handle_task_success(task_id, data, s3_data, bucket_name, database):
     tar_output_str = "tar -zcf {0}.tar {0}".format(s3_data)
     print tar_output_str
     os.system(tar_output_str)
-    copy_to_s3_str = "python {0}/sccpy.py {1}.tar {2}".format(THOME, s3_data, bucket_name)
+    copy_to_s3_str = "python {0} {1}.tar {2}".format(TaskConfig.SCCPY_PATH, s3_data, bucket_name)
     print copy_to_s3_str
     return_code = os.system(copy_to_s3_str)
     if return_code != 0:
         print "S3 update conflict, waiting 60 seconds for retry..."
-        sleep(60)
+        time.sleep(60)
         return_code = os.system(copy_to_s3_str)
     print "Return code after S3 retry is {0}".format(return_code)
     cleanup_string = "rm -rf {0} {0}".format(s3_data)
@@ -227,12 +231,12 @@ def handle_task_failure(task_id, data, database, s3_data=None, bucket_name=None)
         tar_output_str = "tar -zcf {0}.tar {0}".format(s3_data)
         print tar_output_str
         os.system(tar_output_str)
-        copy_to_s3_str = "python {0}/sccpy.py {1}.tar {2}".format(THOME, s3_data, bucket_name)
+        copy_to_s3_str = "python {0} {1}.tar {2}".format(TaskConfig.SCCPY_PATH, s3_data, bucket_name)
         print copy_to_s3_str
         return_code = os.system(copy_to_s3_str)
         if return_code != 0:
             print "S3 update conflict, waiting 60 seconds for retry..."
-            sleep(60)
+            time.sleep(60)
             return_code = os.system(copy_to_s3_str)
         print "Return code after S3 retry is {0}".format(return_code)
         cleanup_string = "rm -rf {0} {0}".format(s3_data)
@@ -246,8 +250,6 @@ def master_task(task_id, params, database):
     '''
     This task encapsulates the logic behind the new R program.
     '''
-    global MCEM2_DIR
-    global STOCHOPTIM_R_LIB_DIR
     try:
         print "Master task starting execution..."
         start_time = datetime.now()
@@ -297,7 +299,7 @@ def master_task(task_id, params, database):
         )
         # Construct execution string and call it
         exec_str = "{0}/{1} --model {2} --data {3}".format(
-            MCEM2_DIR,
+            TaskConfig.STOCHOPTIM_DIR,
             params["paramstring"],
             model_file_name,
             model_data_file_name
@@ -312,7 +314,7 @@ def master_task(task_id, params, database):
 
         environ = os.environ.copy()
         if not environ.has_key('R_LIBS'):
-            environ['R_LIBS'] = STOCHOPTIM_R_LIB_DIR
+            environ['R_LIBS'] = TaskConfig.STOCHOPTIM_R_LIB_DIR
 
         with open(stdout, 'w') as stdout_fh:
             with open(stderr, 'w') as stderr_fh:
@@ -424,7 +426,7 @@ def slave_task(params):
 
     environ = os.environ.copy()
     if not environ.has_key('R_LIBS'):
-        environ['R_LIBS'] = STOCHOPTIM_R_LIB_DIR
+        environ['R_LIBS'] = TaskConfig.STOCHOPTIM_R_LIB_DIR
 
     # Now command_segments is the correct execution string, just need to join it.
     execution_string = " ".join(command_segments)
@@ -494,20 +496,11 @@ def with_temp_file(file_names):
 @celery.task(name='stochss')
 def task(taskid, params, database, access_key, secret_key, task_prefix=""):
   ''' 
-  This is the actual work done by a task worker 
-  
+  This is the actual work done by a task worker
   params    should contain at least 'bucketname'
-  
-  
   '''
     
   try:
-      
-      
-      global THOME
-      global STOCHKIT_DIR
-      global ODE_DIR
-      
       res = {}
       uuidstr = taskid
        
@@ -556,15 +549,15 @@ def task(taskid, params, database, access_key, secret_key, task_prefix=""):
       exec_str = ''
       if job_type == 'stochkit':
           # The following executiong string is of the form : stochkit_exec_str = "~/StochKit/ssa -m ~/output/%s/dimer_decay.xml -t 20 -i 10 -r 1000" % (uuidstr)
-          exec_str = "{0}/{1} -m {2} --force --out-dir output/{3}/result 2>{4} > {5}".format(STOCHKIT_DIR, paramstr, xmlfilepath, uuidstr, stderr, stdout)
+          exec_str = "{0}/{1} -m {2} --force --out-dir output/{3}/result 2>{4} > {5}".format(TaskConfig.STOCHKIT_DIR, paramstr, xmlfilepath, uuidstr, stderr, stdout)
       elif job_type == 'stochkit_ode' or job_type == 'sensitivity':
           logging.info('SENSITIVITY JOB!!!')
-          exec_str = "{0}/{1} -m {2} --force --out-dir output/{3}/result 2>{4} > {5}".format(ODE_DIR, paramstr, xmlfilepath, uuidstr, stderr, stdout)
+          exec_str = "{0}/{1} -m {2} --force --out-dir output/{3}/result 2>{4} > {5}".format(TaskConfig.ODE_DIR, paramstr, xmlfilepath, uuidstr, stderr, stdout)
       elif job_type == 'spatial':
           cmd = "chown -R ubuntu output/{0}".format(uuidstr)
           print cmd
           os.system(cmd)
-          exec_str = "sudo -E -u ubuntu {0}/pyurdme_wrapper.py {1} {2} {3} {4} {5} 2>{6} > {7}".format(THOME, xmlfilepath, 'output/{0}/results'.format(uuidstr), params['simulation_algorithm'], params['simulation_realizations'], params['simulation_seed'], stderr, stdout)
+          exec_str = "sudo -E -u ubuntu {0} {1} {2} {3} {4} {5} 2>{6} > {7}".format(TaskConfig.PYURDME_WRAPPER_PATH, xmlfilepath, 'output/{0}/results'.format(uuidstr), params['simulation_algorithm'], params['simulation_realizations'], params['simulation_seed'], stderr, stdout)
      
       
       
@@ -604,7 +597,7 @@ def task(taskid, params, database, access_key, secret_key, task_prefix=""):
           print 'generating tar file'
           create_tar_output_str = "tar -zcvf output/{0}.tar output/{0}".format(uuidstr)
           print create_tar_output_str      
-          copy_to_s3_str = "python {2}/sccpy.py output/{0}.tar {1}".format(uuidstr,bucketname,THOME)     
+          copy_to_s3_str = "python {2} output/{0}.tar {1}".format(uuidstr, bucketname, TaskConfig.SCCPY_PATH)
           os.system(create_tar_output_str)
           print 'copying file to s3 : {0}'.format(copy_to_s3_str)
           os.system(copy_to_s3_str)
@@ -633,7 +626,7 @@ def task(taskid, params, database, access_key, secret_key, task_prefix=""):
           create_tar_output_str = "tar -zcvf {0}.tar {0}".format(expected_output_dir)
           os.system(create_tar_output_str)
           bucketname = params['bucketname']
-          copy_to_s3_str = "python {0}/sccpy.py {1}.tar {2}".format(THOME, expected_output_dir, bucketname)
+          copy_to_s3_str = "python {0} {1}.tar {2}".format(TaskConfig.SCCPY_PATH, expected_output_dir, bucketname)
           os.system(copy_to_s3_str)
           # Now clean up
           remove_output_str = "rm {0}.tar {0}".format(expected_output_dir)
@@ -730,134 +723,3 @@ def workersConsumingFromQueue(from_queue):
 #    #print str(i.registered())
 #    #print str(i.active())
 #    #print str(i.scheduled())
-
-
-# 
-# """
-# All DynamoBD related methods follow next. TODO: move it to a different file
-# """
-# 
-# def describetask(taskids,tablename):
-#     res = {}
-#     try:
-#         logging.info('inside describetask method with taskids = {0} and tablename {1}'.format(str(taskids), tablename))
-#         dynamo=boto.connect_dynamodb()
-#         if not tableexists(dynamo, tablename): return res
-#         table = dynamo.get_table(tablename)
-#         for taskid in taskids:
-#             try:
-#                 item = table.get_item(hash_key=taskid)
-#                 res[taskid] = item
-#             except Exception,e:
-#                 res[taskid] = None
-#         return res
-#     except Exception,e:
-#         print "exiting describetask  with error : {0}".format(str(e))
-#         print str(e)
-#         return res
-# 
-# def removetask(tablename,taskid):
-#     print 'inside removetask method with tablename = {0} and taskid = {1}'.format(tablename, taskid)
-#     try:
-#         dynamo=boto.connect_dynamodb()
-#         if tableexists(dynamo, tablename):
-#             table = dynamo.get_table(tablename)
-#             item = table.get_item(hash_key=taskid)
-#             item.delete()
-#             return True
-#         else:
-#             print 'exiting removetask with error : table doesn\'t exists'
-#             return False
-#         
-#     except Exception,e:
-#         print 'exiting removetask with error {0}'.format(str(e))
-#         return False
-#     
-# def createtable(tablename=str()):
-#     print 'inside create table method with tablename :: {0}'.format(tablename)
-#     if tablename == None:
-#         tablename = "stochss"
-#         print 'default table name picked as stochss'
-#     try:
-#         print 'connecting to dynamodb'
-#         dynamo=boto.connect_dynamodb()
-#         #check if table already exisits
-#         print 'checking if table {0} exists'.format(tablename)
-#         if not tableexists(dynamo,tablename):
-#             print 'creating table schema'
-#             myschema=dynamo.create_schema(hash_key_name='taskid',hash_key_proto_value=str)
-#             table=dynamo.create_table(name=tablename, schema=myschema, read_units=6, write_units=4)
-#         else:
-#             print "table already exists"
-#         return True  
-#     except Exception,e:
-#         print str(e)
-#         return False
-# 
-# def tableexists(dynamo, tablename):
-#     try:
-#         table = dynamo.get_table(tablename)
-#         if table == None:
-#             print "table doesn't exist"
-#             return False
-#         else:
-#             return True
-#     except Exception,e:
-#         print str(e)
-#         return False
-# 
-# def updateEntry(taskid=str(), data=dict(), tablename=str()):
-#     '''
-#      check if entry exists
-#      create a entry if not or
-#      update the status
-#     '''
-#     try:
-#         print 'inside update entry method with taskid = {0} and data = {1}'.format(taskid, str(data))
-#         dynamo=boto.connect_dynamodb()
-#         if not tableexists(dynamo, tablename):
-#             print "invalid table name specified"
-#             return False
-#         table = dynamo.get_table(tablename)
-#         item = table.new_item(hash_key=str(taskid),attrs=data)
-#         item.put()
-#         return True
-#     except Exception,e:
-#         print 'exiting updatedata with error : {0}'.format(str(e))
-#         return False
-#     
-# if __name__ == "__main__":
-# 
-#     '''
-#     NOTE: these must be set in your environment:
-#     export AWS_SECRET_ACCESS_KEY=XXX
-#     export AWS_ACCESS_KEY_ID=YYY
-#     '''
-#     global THOME
-#     global STOCHKIT_DIR
-#     os.environ["AWS_ACCESS_KEY_ID"] = os.environ['EC2_ACCESS_KEY']
-#     os.environ["AWS_SECRET_ACCESS_KEY"] = os.environ['EC2_SECRET_KEY']
-# 
-#     print createtable('stochss')
-#     val = {'status':"running", 'message':'done'}
-#     updateEntry('1234', val, 'stochss')
-#     print describetask(['1234', '1234'], 'stochss')
-#     
-#     #this executes a task locally
-#     #NOTE: dimer_decay.xml must be in this local dir
-#     xmlfile = open('dimer_decay.xml','r')
-#     doc = xmlfile.read()
-#     xmlfile.close()
-#     taskargs = {}
-#     taskargs['paramstring'] = 'ssa -t 100 -i 1000 -r 100 --keep-trajectories --seed 706370 --label'
-#     taskargs['document'] = doc
-#     taskargs['bucketname'] = 'cjk1234'
-# 
-#     THOME=os.getcwd()
-#     STOCHKIT_DIR='{0}/../../StochKit'.format(THOME)
-#     task('1234',taskargs)
-#     print describetask(['1234', '1234'], 'stochss')
-#  
-#     print 'BE SURE TO GO TO YOUR AWS ADMIN CONSOLE AND DELETE DYNAMODB TABLES AND S3 BUCKETS'
-#     
-

@@ -31,7 +31,7 @@ class backendservices():
     INFRA_EC2 = 'ec2'
     INFRA_CLUSTER = 'cluster'
     WORKER_AMIS = {
-        INFRA_EC2: 'ami-f28bc89a'
+        INFRA_EC2: 'ami-a26924ca'
     }
     VMSTATUS_IDS = 'ids'
 
@@ -526,8 +526,6 @@ class backendservices():
             # 1. change the status of 'failed' in the previous launch in db to 'terminated' 
             # NOTE: We need to make sure that the RabbitMQ server is running if any compute
             # nodes are running as we are using the AMQP broker option for Celery.
-
-
 
             ins_ids = VMStateModel.terminate_not_active(params)
             
