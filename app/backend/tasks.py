@@ -35,7 +35,7 @@ from cloudtracker import CloudTracker
 from kombu import Exchange, Queue
 
 class TaskConfig:
-    STOCHSS_HOME = os.path.join('home', 'ubuntu', 'stochss')
+    STOCHSS_HOME = os.path.join('/home', 'ubuntu', 'stochss')
     STOCHKIT_DIR = os.path.join(STOCHSS_HOME, 'StochKit')
     ODE_DIR = os.path.join(STOCHSS_HOME, 'ode')
     STOCHOPTIM_DIR = os.path.join(STOCHSS_HOME, 'stochoptim')
