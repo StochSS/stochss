@@ -62,10 +62,10 @@ class StochKitModelWrapper(db.Model):
 
             products = dict([(sModel.getSpecies(product['specie']), product['stoichiometry']) for product in reaction['products']])
             
-            if(reaction['type'] == 'massaction'):
-                sModel.addReaction(stochss.model.Reaction(reaction['name'], reactants, products, None, True, sModel.getParameter(reaction['rate']), None))
-            else:
+            if(reaction['type'] == 'custom'):
                 sModel.addReaction(stochss.model.Reaction(reaction['name'], reactants, products, reaction['equation'], False, None, None))
+            else:
+                sModel.addReaction(stochss.model.Reaction(reaction['name'], reactants, products, None, True, sModel.getParameter(reaction['rate']), None))
 
         return sModel
 
@@ -515,8 +515,7 @@ class ImportFromXMLPage(BaseHandler):
         stochKitModel = stochss.stochkit.StochMLDocument.fromString(storage.file.read()).toModel(name)
         modelDb = StochKitModelWrapper.createFromStochKitModel(self, stochKitModel)
 
-        return
-        #self.redirect("/modeleditor")
+        self.redirect("/modeleditor")
 
 class ModelEditorPage(BaseHandler):
     """
