@@ -336,7 +336,7 @@ class SpatialPage(BaseHandler):
     def construct_pyurdme_model(self, data):
         '''
         '''
-        json_model_refs = ModelManager.getModel(self, data["id"], modelAsString = False) # data["id"] is the model id of the selected model I think
+        json_model_refs = ModelManager.getModel(self, data["id"]) # data["id"] is the model id of the selected model I think
 
         stochkit_model_obj = StochKitModelWrapper.get_by_id(data["id"]).createStochKitModel()
         #print 'json_model_refs["spatial"]["mesh_wrapper_id"]:', json_model_refs["spatial"]["mesh_wrapper_id"]
