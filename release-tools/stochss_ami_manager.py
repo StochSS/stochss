@@ -440,7 +440,7 @@ class AmiManager:
         with open(self.ami_list_filename, 'w') as file:
             file.write('[')
             if ami_list != []:
-                file.write(','.join(map(lambda x:json.dumps(x), ami_list)))
+                file.write(',\n'.join(map(lambda x:json.dumps(x), ami_list)))
             file.write(']')
 
 
