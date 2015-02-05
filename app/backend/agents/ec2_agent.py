@@ -298,16 +298,16 @@ class EC2Agent(BaseAgent):
     userstr+='echo export AWS_ACCESS_KEY_ID={0} >> /home/ubuntu/.bashrc\n'.format(str(credentials['EC2_ACCESS_KEY']))   
     userstr+='echo export AWS_SECRET_ACCESS_KEY={0} >> /home/ubuntu/.bashrc\n'.format( str(credentials['EC2_SECRET_KEY']))
 
-    userstr+='export STOCHKIT_HOME={0}\n'.format('/home/ubuntu/StochKit/')
-    userstr+='export STOCHKIT_ODE={0}\n'.format('/home/ubuntu/ode/')
-    userstr+='echo export STOCHKIT_HOME={0} >> ~/.bashrc\n'.format("/home/ubuntu/StochKit/")
-    userstr+='echo export STOCHKIT_HOME={0} >> /home/ubuntu/.bashrc\n'.format("/home/ubuntu/StochKit/")
-    userstr+='echo export STOCHKIT_ODE={0} >> ~/.bashrc\n'.format("/home/ubuntu/ode/")
-    userstr+='echo export STOCHKIT_ODE={0} >> /home/ubuntu/.bashrc\n'.format("/home/ubuntu/ode/")
+    userstr+='export STOCHKIT_HOME={0}\n'.format('/home/ubuntu/stochss/StochKit/')
+    userstr+='export STOCHKIT_ODE={0}\n'.format('/home/ubuntu/stochss/ode/')
+    userstr+='echo export STOCHKIT_HOME={0} >> ~/.bashrc\n'.format("/home/ubuntu/stochss/StochKit/")
+    userstr+='echo export STOCHKIT_HOME={0} >> /home/ubuntu/.bashrc\n'.format("/home/ubuntu/stochss/StochKit/")
+    userstr+='echo export STOCHKIT_ODE={0} >> ~/.bashrc\n'.format("/home/ubuntu/stochss/ode/")
+    userstr+='echo export STOCHKIT_ODE={0} >> /home/ubuntu/.bashrc\n'.format("/home/ubuntu/stochss/ode/")
 
-    userstr+='export R_LIBS={0}\n'.format('/home/ubuntu/stochoptim/library')
-    userstr+='echo export R_LIBS={0} >> ~/.bashrc\n'.format("/home/ubuntu/stochoptim/library")
-    userstr+='echo export R_LIBS={0} >> /home/ubuntu/.bashrc\n'.format("/home/ubuntu/stochoptim/library")
+    userstr+='export R_LIBS={0}\n'.format('/home/ubuntu/stochss/stochoptim/library')
+    userstr+='echo export R_LIBS={0} >> ~/.bashrc\n'.format("/home/ubuntu/stochss/stochoptim/library")
+    userstr+='echo export R_LIBS={0} >> /home/ubuntu/.bashrc\n'.format("/home/ubuntu/stochss/stochoptim/library")
 
     userstr+='source ~/.bashrc \n'
     userstr+='source /home/ubuntu/.bashrc \n'

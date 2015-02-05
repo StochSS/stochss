@@ -1,4 +1,3 @@
-
 import webapp2
 from google.appengine.api import background_thread, urlfetch, modules
 from agents.base_agent import AgentRuntimeException
@@ -16,6 +15,7 @@ import datetime
 import re
 import fileinput
 from tasks import CelerySingleton
+from tasks import TaskConfig
 from subprocess import Popen, PIPE, STDOUT
 from google.appengine.ext import db
 from kombu import Queue, Exchange
@@ -693,12 +693,21 @@ class BackendWorker():
         
         
         credentials = params['credentials']
-        python_path = "source /home/ubuntu/.bashrc;export PYTHONPATH=/home/ubuntu:/home/ubuntu/pyurdme:/home/ubuntu/stochss/app:/home/ubuntu/stochss/app/backend:/home/ubuntu/stochss/app/lib/cloudtracker;"
-        python_path+='export AWS_ACCESS_KEY_ID={0};'.format(str(credentials['EC2_ACCESS_KEY']))
-        python_path+='export AWS_SECRET_ACCESS_KEY={0};'.format( str(credentials['EC2_SECRET_KEY']))
+        commands = []
+        commands.append('source /home/ubuntu/.bashrc')
+
+        python_path = [TaskConfig.STOCHSS_HOME,
+                       TaskConfig.PYURDME_DIR,
+                       os.path.join(TaskConfig.STOCHSS_HOME, 'app'),
+                       os.path.join(TaskConfig.STOCHSS_HOME, 'app', 'backend'),
+                       os.path.join(TaskConfig.STOCHSS_HOME, 'app', 'lib', 'cloudtracker')]
+        commands.append('export PYTHONPATH={0}'.format(':'.join(python_path)))
+
+        commands.append('export AWS_ACCESS_KEY_ID={0};'.format(str(credentials['EC2_ACCESS_KEY'])))
+        commands.append('export AWS_SECRET_ACCESS_KEY={0};'.format( str(credentials['EC2_SECRET_KEY'])))
         #start_celery_str = "celery -A tasks worker --autoreload --loglevel=info --workdir /home/ubuntu > /home/ubuntu/celery.log 2>&1"
         # PyURDME must be run inside a 'screen' terminal as part of the FEniCS code depends on the ability to write to the process' terminal, screen provides this terminal.
-        #celerycmd = "sudo screen -d -m bash -c '{1}{0}'\n".format(start_celery_str,python_path)
+        #celerycmd = "sudo screen -d -m bash -c '{1}{0}'\n".format(start_celery_str,command)
         
 #         celery = CelerySingleton()
 #         celery.add_queue(CELERY_QUEUE_EC2, 
@@ -719,9 +728,14 @@ class BackendWorker():
             else:
                 raise Exception("scp failure: {0} not transfered to {1}".format(celery_config_filename, ip))
             
-            
-            start_celery_str = "celery -A tasks worker -Q "+CELERY_QUEUE_EC2+","+CELERY_QUEUE_EC2+"_"+ins_type.replace(".", "")+" --autoreload --loglevel=debug --workdir /home/ubuntu > /home/ubuntu/celery.log 2>&1"
-            celerycmd = "sudo screen -d -m bash -c '{1}{0}'\n".format(start_celery_str,python_path)
+
+            start_celery_str = "celery -A tasks worker -Q {q1},{q2} --autoreload --loglevel=debug --workdir /home/ubuntu > /home/ubuntu/celery.log 2>&1".format(
+                q1=CELERY_QUEUE_EC2,
+                q2="{0}_{1}".format(CELERY_QUEUE_EC2, ins_type.replace(".", "")))
+
+            command = ';'.join(commands)
+
+            celerycmd = "sudo screen -d -m bash -c '{1}{0}'".format(start_celery_str, command)
 
             cmd = "ssh -o 'StrictHostKeyChecking no' -i {0} ubuntu@{1} \"{2}\"".format(keyfile, ip, celerycmd)
             logging.info(cmd)

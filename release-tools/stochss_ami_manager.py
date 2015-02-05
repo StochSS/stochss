@@ -35,7 +35,7 @@ class ShellCommand(object):
         self.process = None
         self.verbose = verbose
 
-    def run(self, timeout=None, silent=False):
+    def run(self, timeout=None, silent=True):
         def target():
             if self.verbose: print 'Running... $', self.cmd
             self.process = subprocess.Popen(self.cmd,
@@ -67,7 +67,7 @@ class ShellCommand(object):
 
 class AmiManager:
     INVALID_INSTANCE_TYPES = ['t1.micro', 'm1.small', 'm1.medium', 'm3.medium']
-    NUM_TRIALS = 3
+    NUM_TRIALS = 5
     NUM_SSH_TRIALS = 10
     DEFAULT_AMI_FILENAME = os.path.join(os.path.abspath(os.path.dirname(__file__)), 'ami.json')
 
@@ -113,7 +113,7 @@ class AmiManager:
             print 'stderr_log_filename: {0}'.format(stderr_log_filename)
             self.stderr_log = open(stderr_log_filename, 'w')
 
-        self.is_old_ami = True
+        self.is_old_ami = False
         self.verbose = options["verbose"] if "verbose" in options.keys() else False
 
         if "ami_list_filename" in options.keys():
@@ -128,17 +128,19 @@ class AmiManager:
             trial = 0
             while trial <= self.NUM_TRIALS:
                 if trial == self.NUM_TRIALS:
-                    raise Exception("Dependency Installation failed after {0} trials!".format(self.NUM_TRIALS))
+                    raise Exception("Linux Dependency Installation failed after {0} trials!".format(self.NUM_TRIALS))
 
                 print "====================[Trial #{0}]======================".format(trial + 1)
+
+                is_successful = False
                 try:
                     self.__update_instance()
                     self.__install_dependencies()
+                    is_successful = self.__check_dependency_installation()
                 except ShellCommandException:
-                    trial += 1
-                    continue
+                    pass
 
-                is_successful = self.__check_dependency_installation()
+
 
                 if is_successful:
                     print "Trial #{0} of linux dependency installation successful!".format(trial + 1)
@@ -146,32 +148,35 @@ class AmiManager:
                 else:
                     print "Trial #{0} of linux dependency installation failed!".format(trial + 1)
 
-
+                time.sleep(5)
                 trial += 1
 
             self.__update_fenics()
+            self.__reboot_instance()
             self.__check_fenics_installation()
 
-            self.__reboot_instance()
-
+            trial = 0
             while trial <= self.NUM_TRIALS:
                 if trial == self.NUM_TRIALS:
-                    raise Exception("Dependency Installation failed after {0} trials!".format(self.NUM_TRIALS))
+                    raise Exception("Python package installation failed after {0} trials!".format(self.NUM_TRIALS))
 
                 print "====================[Trial #{0}]======================".format(trial + 1)
+
+                is_successful = False
                 try:
                     self.__install_python_packages()
+                    is_successful = self.__check_python_packages_installation()
                 except ShellCommandException:
-                    trial += 1
-                    continue
-
-                is_successful = self.__check_dependency_installation()
+                    pass
 
                 if is_successful:
-                    print "Trial #{0} of linux dependency installation successful!".format(trial + 1)
+                    print "Trial #{0} of python package installation successful!".format(trial + 1)
                     break
                 else:
-                    print "Trial #{0} of linux dependency installation failed!".format(trial + 1)
+                    print "Trial #{0} of python package installation failed!".format(trial + 1)
+
+                time.sleep(5)
+                trial += 1
 
             self.__download_stochss_repo()
             self.__compile_stochss()
@@ -217,7 +222,7 @@ class AmiManager:
         self.key_file = os.path.join(current_dir, "{0}.pem".format(self.key_name))
 
         if os.path.exists(self.key_file):
-            print 'Downloaded key file: ', self.key_file
+            print 'Downloaded key file: {0}'.format(self.key_file)
         else:
             print "Key file: {0} doesn't exist! Exiting.".format(self.key_file)
             sys.exit(1)
@@ -295,7 +300,7 @@ class AmiManager:
                 print header
 
             try:
-                self.__run_remote_command(command=command, timeout=5, log_header=header)
+                self.__run_remote_command(command=command, log_header=header)
                 print "Instance {0} with ip {1} is up!".format(self.instance_id, self.instance_ip)
                 break
 
@@ -433,7 +438,10 @@ class AmiManager:
 
         ami_list = [ ami_info for ami_info in ami_list if ami_info["ami_id"] in valid_ami_ids]
         with open(self.ami_list_filename, 'w') as file:
-            file.write(pprint.pformat(ami_list))
+            file.write('[')
+            if ami_list != []:
+                file.write(','.join(map(lambda x:json.dumps(x), ami_list)))
+            file.write(']')
 
 
     def __terminate_instance(self):
@@ -472,12 +480,12 @@ class AmiManager:
             return False
 
     def __check_fenics_installation(self):
-        header = 'Checking FeniCS installation'
+        header = 'Checking FeniCS installation...'
         print '=================================================='
         print header
 
         try:
-            self.__run_remote_command(command='python -c "import dolfin" 2>/dev/null',
+            self.__run_remote_command(command="python -c 'import dolfin' 2>/dev/null",
                                       log_header=header)
             print 'FeniCS installation successful!'
 
@@ -550,7 +558,7 @@ class AmiManager:
         else:
             shell_cmd = ShellCommand(remote_cmd)
 
-        shell_cmd.run(timeout=timeout)
+        shell_cmd.run(timeout=timeout, silent=silent)
 
     def __cleanup(self):
         if self.log_type == "file":
@@ -569,8 +577,11 @@ def cleanup_local_files():
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser(description="StochSS AMI Manager Tool for creating StochSS Node AMIs from \
-                                                                                stochss git repo or deleting AMIs")
-    parser.add_argument('-s', '--settings', help="Configuration Settings File, (Default: $STOCHSS/release_tools/stochss_ami_config.json). For more info, visit http://www.stochss.org/",
+                                                  stochss git repo or deleting AMIs. It takes 10-15 minutes depending \
+                                                  on network speed. Use <Ctrl+C> to kill running manager tool.")
+    parser.add_argument('-s', '--settings', help="Configuration Settings File, \
+                                                  (Default: $STOCHSS/release_tools/stochss_ami_config.json). \
+                                                  For more info, visit http://www.stochss.org/",
                         action="store", dest="config_file",
                         default=os.path.join(os.path.dirname(__file__), "stochss_ami_config.json"))
     parser.add_argument('-c', '--cleanup', help="Cleanup Local files", action="store_true", default=False)

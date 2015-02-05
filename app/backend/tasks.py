@@ -39,9 +39,11 @@ class TaskConfig:
     STOCHKIT_DIR = os.path.join(STOCHSS_HOME, 'StochKit')
     ODE_DIR = os.path.join(STOCHSS_HOME, 'ode')
     STOCHOPTIM_DIR = os.path.join(STOCHSS_HOME, 'stochoptim')
-    SCCPY_PATH = os.path.join(STOCHSS_HOME, 'app', 'backend', 'bin', 'sccpy.py')
-    PYURDME_WRAPPER_PATH = os.path.join(STOCHSS_HOME, 'pyurdme', 'pyurdme_wrapper.py')
     STOCHOPTIM_R_LIB_DIR = os.path.join(STOCHOPTIM_DIR, 'library')
+    SCCPY_PATH = os.path.join(STOCHSS_HOME, 'app', 'backend', 'bin', 'sccpy.py')
+    PYURDME_DIR = os.path.join(STOCHSS_HOME, 'pyurdme')
+    PYURDME_WRAPPER_PATH = os.path.join(PYURDME_DIR, 'pyurdme_wrapper.py')
+
 
 class CelerySingleton(object):
     """
