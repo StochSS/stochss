@@ -212,11 +212,11 @@ var Model = AmpersandModel.extend({
                 
                 var products = reaction.products.map(function(product) { return [speciesByName[product.specie], product.stoichiometry ] });
                 
-                if(reaction.type == 'massaction')
+                if(reaction.type == 'custom')
                 {
-                    this.reactions.addMassActionReaction(reaction.name, parametersByName[reaction.rate], reactants, products, attr.spatial.reactions_subdomain_assignments[reactions[i].name]);
-                } else {
                     this.reactions.addCustomReaction(reaction.name, reaction.rate, reactants, products, attr.spatial.reactions_subdomain_assignments[reactions[i].name]);
+                } else {
+                    this.reactions.addMassActionReaction(reaction.name, reaction.type, parametersByName[reaction.rate], reactants, products, attr.spatial.reactions_subdomain_assignments[reactions[i].name]);
                 }
             }
         }
@@ -268,11 +268,11 @@ var Model = AmpersandModel.extend({
             reactionOut.products = reactionIn.products.map(function(stoichSpecie) { return { specie : stoichSpecie.specie.name, stoichiometry : stoichSpecie.stoichiometry } });
 
             reactionOut.type = reactionIn.type;
-            if(reactionOut.type == 'massaction')
+            if(reactionOut.type == 'custom')
             {
-                reactionOut.rate = reactionIn.rate.name;
-            } else {
                 reactionOut.rate = reactionIn.equation;
+            } else {
+                reactionOut.rate = reactionIn.rate.name;
             }
 
             obj.reactions.push(reactionOut);

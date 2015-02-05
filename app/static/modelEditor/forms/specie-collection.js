@@ -145,7 +145,7 @@ var SpecieCollectionFormView = AmpersandView.extend({
     {
         if(this.collection.parent.isSpatial)
         {
-            this.template = "<div><table data-hook='speciesTable'><thead><th></th><th>Name</th><th>Diffusion</th><th>Subdomains</th></thead><tbody data-hook='speciesTBody'></tbody></table><div><button data-hook='previous'>Previous 10</button><span data-hook='position'></span><button data-hook='next'>Next 10</button></div>Add Specie: <form data-hook='addSpeciesForm'></form></div>";
+            this.template = "<div><table data-hook='speciesTable'><thead><th></th><th>Name</th><th>Diffusion coefficients</th><th>Species allowed in these subdomains</th></thead><tbody data-hook='speciesTBody'></tbody></table><div><button data-hook='previous'>Previous 10</button><span data-hook='position'></span><button data-hook='next'>Next 10</button></div>Add Specie: <form data-hook='addSpeciesForm'></form></div>";
         }
         else
         {

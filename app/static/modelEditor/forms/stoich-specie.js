@@ -14,12 +14,44 @@ module.exports = View.extend({
         if(element.valid)
             this.model[element.name] = element.value;
     },
+    initialize: function()
+    {
+        View.prototype.initialize.apply(this, arguments);
+
+        this.reaction = this.model.collection.parent;
+
+        this.listenToAndRun(this.reaction, 'change:type', _.bind(this.setReactionType, this));
+    },
+    setReactionType: function()
+    {
+        this.reactionType = this.reaction.type;
+    },
+    props:
+    {
+        reactionType : 'string'
+    },
+    derived: {
+        massAction :
+        {
+            deps : ['reactionType'],
+            fn : function() { return this.reactionType != 'custom'; }
+        },
+        showCustom :
+        {
+            deps : ['reactionType'],
+            fn : function() { return this.reactionType == 'massaction' || this.reactionType == 'custom'; }
+        }
+    },
     bindings : {
         "model.stoichiometry" : {
             type : 'text',
             hook : 'stoichiometry'
+        },
+        "showCustom" : {
+            type : 'toggle',
+            selector : 'button'
         }
-    },
+    },        
     events : {
         "click [data-hook='delete']" : "deleteModel",
         "click [data-hook='plus']" : "addOne",
@@ -47,7 +79,7 @@ module.exports = View.extend({
 
         this.renderSubview(
             new ModifyingSelectView({
-                template: '<span><span data-hook="label"></span><select></select><span data-hook="message-container"><span data-hook="message-text"></span></span></span>',
+                template: '<span><select></select><span data-hook="message-container"><span data-hook="message-text"></span></span></span>',
                 label: '',
                 name: 'specie',
                 value: this.model.specie,

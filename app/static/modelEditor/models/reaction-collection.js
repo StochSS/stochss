@@ -18,14 +18,14 @@ module.exports = AmpCollection.extend({
         this.baseModel.species.trigger('stoich-specie-change');
         this.trigger('change');
     },
-    addMassActionReaction: function(name, rate, reactants, products, subdomains) {
+    addMassActionReaction: function(name, type, rate, reactants, products, subdomains) {
         var unique = this.models.every(function(model) { return model["name"] != name });
         
         // If the new Species name is not unique, return false
         if(!unique)
             return undefined;
-        
-        var reaction = this.add({ name : name, equation : '', type : 'massaction', rate : rate, subdomains : subdomains }, { reactants : reactants, products : products });
+
+        var reaction = this.add({ name : name, equation : '', type : type, rate : rate, subdomains : subdomains }, { reactants : reactants, products : products });
 
         return reaction;
     },

@@ -3,20 +3,64 @@ var AmpersandView = require('ampersand-view');
 var AmpersandFormView = require('ampersand-form-view');
 var InputView = require('ampersand-input-view');
 var SelectView = require('ampersand-select-view');
+var DetailedReactionFormView = require('./reaction-detail');
 var ReactionFormView = require('./reaction');
 var SubCollection = require('ampersand-subcollection');
+var PaginatedCollectionView = require('./paginated-collection-view');
+var katex = require('katex');
 
 var Tests = require('./tests');
 var AddNewReactionForm = AmpersandFormView.extend({
     submitCallback: function (obj) {
         var validSubdomains = this.baseModel.mesh.uniqueSubdomains.map( function(model) { return model.name; } );
 
-        if(obj.type == 'massaction')
+        var model;
+
+        var s1 = this.baseModel.species.at(0);
+        var s2 = this.baseModel.species.at(1);
+
+        var rate = this.baseModel.parameters.models[0];
+
+        if(obj.type != 'custom')
         {
-            this.collection.addMassActionReaction(obj.name, obj.parameter, [], [], validSubdomains);
+            var reactants;
+            var products;
+            if(obj.type == 'creation')
+            {
+                reactants = [];
+                products = [[s1, 1]];
+            }
+            else if(obj.type == 'destruction')
+            {
+                reactants = [[s1, 1]];
+                products = [];
+            }
+            if(obj.type == 'change')
+            {
+                reactants = [[s1, 1]];
+                products = [[s2, 1]];
+            }
+            if(obj.type == 'dimerization')
+            {
+                reactants = [[s1, 2]];
+                products = [[s2, 1]];
+            }
+            if(obj.type == 'split')
+            {
+                reactants = [[s2, 1]];
+                products = [[s1, 1], [s1, 1]];
+            }
+            if(obj.type == 'four')
+            {
+                reactants = [[s1, 1], [s1, 1]];
+                products = [[s1, 1], [s1, 1]];
+            }
+            model = this.collection.addMassActionReaction(obj.name, obj.type, rate, reactants, products, validSubdomains);
         } else {
-            this.collection.addCustomReaction(obj.name, obj.equation, [], [], validSubdomains);
+            model = this.collection.addCustomReaction(obj.name, '', [], [], validSubdomains);
         }
+        
+        this.selectView.select(model);
     },
     validCallback: function (valid) {
         if (valid) {
@@ -27,57 +71,46 @@ var AddNewReactionForm = AmpersandFormView.extend({
     },
     update: function (obj) {
         AmpersandFormView.prototype.update.apply(this, arguments);
-
-        if(obj.name == 'type')
-        {
-            if(obj.value == 'massaction')
-            {
-                $( this.fields[3].el ).hide();
-                $( this.fields[2].el ).show();
-            } else {
-                $( this.fields[2].el ).hide();
-                $( this.fields[3].el ).show();
-            }
-        }
     },
     initialize: function(attr, options) {
         this.collection = options.collection;
 
+        this.selectView = attr.selectView;
         this.baseModel = this.collection.parent;
+
+        var options = [];
+
+        var emptyDiv = $( '<div>' );
+        katex.render('\\emptyset \\rightarrow A', emptyDiv[0]);
+        options.push(['creation', emptyDiv.html()]);
+        katex.render('A \\rightarrow \\emptyset', emptyDiv[0]);
+        options.push(['destruction', emptyDiv.html()]);
+        katex.render('A \\rightarrow B', emptyDiv[0]);
+        options.push(['change', emptyDiv.html()]);
+        katex.render('A + A \\rightarrow B', emptyDiv[0]);
+        options.push(['dimerization', emptyDiv.html()]);
+        katex.render('A \\rightarrow B + C', emptyDiv[0]);
+        options.push(['split', emptyDiv.html()]);
+        katex.render('A + B \\rightarrow C + D', emptyDiv[0]);
+        options.push(['four', emptyDiv.html()]);
+        options.push(['massaction', 'Mass action, custom stoichiometry']);
+        options.push(['custom', 'Custom propensity, custom stoichiometry']);
 
         this.fields = [
             new InputView({
                 label: 'Name',
                 name: 'name',
                 value: '',
-                required: false,
+                required: true,
                 placeholder: 'NewReaction',
                 tests: [].concat(Tests.naming(this.collection))
             }),
             new SelectView({
                 label: 'Type',
                 name: 'type',
-                value: 'massaction',
-                options: [['massaction', 'Mass action'], ['custom', 'Custom']],
+                value: 'creation',
+                options: options,
                 required: true,
-            }),
-            new SelectView({
-                label: 'Parameter',
-                name: 'parameter',
-                options: this.baseModel.parameters,
-                unselectedText: 'Pick one',
-                required: true,
-                idAttribute: 'cid',
-                textAttribute: 'name',
-                yieldModel: true
-            }),
-            new InputView({
-                label: 'Equation',
-                name: 'equation',
-                value: '',
-                required: false,
-                placeholder: '',
-                tests: []
             })
         ];
 
@@ -95,109 +128,78 @@ var AddNewReactionForm = AmpersandFormView.extend({
 });
 
 var ReactionCollectionFormView = AmpersandView.extend({
+    template: "<div>\
+  <div class='row'> \
+    <div class='span4' data-hook='collection'></div>\
+    <div class='span7' data-hook='reactionEditorWorkspace'></div>\
+  </div> \
+  <h4>Add Reaction</h4>\
+  <form data-hook='addReactionForm'></form>\
+</div>",
     initialize: function(attr, options)
     {
         AmpersandView.prototype.initialize.call(this, attr, options);
-
-        this.listenToAndRun(this.collection, 'add remove change', _.bind(this.updateHasModels, this))
-
-        this.subCollection = new SubCollection(this.collection, { limit : 10, offset : 0 });
-
-        this.offset = 0;
-    },
-    setSelectRange : function(index) {
-        this.subCollection.configure( { limit : 10, offset : index } );
-
-        $( this.queryByHook('position') ).text( ' [ ' + index + ' / ' + this.collection.models.length + ' ] ' );
-    },
-    shift10Plus : function()
-    {
-        if(this.offset + 10 < this.collection.models.length)
-            this.offset = this.offset + 10;
-
-        this.setSelectRange(this.offset);
-    },
-    shift10Minus : function()
-    {
-        if(this.offset - 10 >= 0)
-            this.offset = this.offset - 10;
-
-        this.setSelectRange(this.offset);
-    },
-    events : {
-        "click [data-hook='next']" : "shift10Plus",
-        "click [data-hook='previous']" : "shift10Minus"
     },
     props: {
         selected : 'object',
-        hasModels : 'boolean'
     },
-    bindings : {
-        'hasModels' : {
-            type : 'toggle',
-            hook : 'reactionsTable'
-        }
-    },
-    updateHasModels: function()
+    select: function()
     {
-        this.hasModels = this.collection.models.length > 0;
+        var model = this.selectView.value;
+
+        if(typeof(this.detailView) != 'undefined')
+            this.detailView.remove();
+
+        if(model)
+        {
+            this.detailView = this.renderSubview(new DetailedReactionFormView({
+                model : model
+            }), $( '<div>' ).appendTo( this.queryByHook('reactionEditorWorkspace') )[0]);
+        }
     },
     render: function()
     {
         this.baseModel = this.collection.parent;
 
-        if(this.baseModel.isSpatial)
-        {
-            this.template = "<div>\
-  <table data-hook='reactionsTable'>\
+        var collectionTemplate = '';
+
+        collectionTemplate = "<div>\
+  <table data-hook='table'>\
     <thead>\
-      <th></th><th>Name</th><th>Type</th><th>Parameter</th><th>Custom Propensity</th><th>Subdomains</th><th>Latex</th><th></th>\
+      <th></th><th>Name</th><th>Summary</th><th>Edit</th>\
     </thead>\
+    <tbody data-hook='items'>\
+    </tbody>\
   </table>\
   <div>\
-    <button data-hook='previous'>Previous 10</button>\
-    <span data-hook='position'></span>\
-    <button data-hook='next'>Next 10</button>\
-  </div>\
-  <h4>Add Reaction</h4>\
-  <form data-hook='addReactionForm'></form>\
+    <button class='btn' data-hook='previous'>&lt;&lt;</button>\
+    [ <span data-hook='position'></span> / <span data-hook='total'></span> ] \
+    <button class='btn' data-hook='next'>&gt;&gt;</button>\
 </div>";
-        }
-        else
-        {
-            this.template = "<div>\
-  <table data-hook='reactionsTable'>\
-    <thead>\
-      <th></th><th>Name</th><th>Type</th><th>Parameter</th><th>Custom Propensity</th><th>Latex</th><th></th>\
-    </thead>\
-  </table>\
-  <div>\
-    <button data-hook='previous'>Previous 10</button>\
-    <span data-hook='position'></span>\
-    <button data-hook='next'>Next 10</button>\
-  </div>\
-  <h4>Add Reaction</h4>\
-  <form data-hook='addReactionForm'></form>\
-</div>";
-        }
 
         AmpersandView.prototype.render.apply(this, arguments);
 
-        this.setSelectRange(0);
-
-        this.renderCollection(this.subCollection, ReactionFormView, this.el.querySelector('[data-hook=reactionsTable]'));
+        this.selectView = this.renderSubview( new PaginatedCollectionView({
+            template : collectionTemplate,
+            collection : this.collection,
+            view : ReactionFormView,
+            limit : 10
+        }), this.queryByHook('collection'));
 
         this.addForm = new AddNewReactionForm(
             { 
-                el : this.el.querySelector('[data-hook=addReactionForm]')
+                el : this.el.querySelector('[data-hook=addReactionForm]'),
+                selectView : this.selectView
             },
             {
                 collection : this.collection
             }
         );
+
+        this.listenToAndRun(this.selectView, 'change:value', _.bind(this.select, this));
         
         return this;
     }
 });
 
-module.exports = ReactionCollectionFormView
+module.exports = ReactionCollectionFormView;

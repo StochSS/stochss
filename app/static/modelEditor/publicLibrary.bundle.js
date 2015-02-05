@@ -1589,7 +1589,118 @@ var ModifyingSelectView = _.extend(SelectView, {
 });
 
 module.exports = ModifyingSelectView
-},{"ampersand-select-view":"/home/bbales2/stochssModel/app/static/modelEditor/node_modules/ampersand-select-view/ampersand-select-view.js","jquery":"/home/bbales2/stochssModel/app/static/modelEditor/node_modules/jquery/dist/jquery.js","underscore":"/home/bbales2/stochssModel/app/static/modelEditor/node_modules/underscore/underscore.js"}],"/home/bbales2/stochssModel/app/static/modelEditor/forms/parameter-collection.js":[function(require,module,exports){
+},{"ampersand-select-view":"/home/bbales2/stochssModel/app/static/modelEditor/node_modules/ampersand-select-view/ampersand-select-view.js","jquery":"/home/bbales2/stochssModel/app/static/modelEditor/node_modules/jquery/dist/jquery.js","underscore":"/home/bbales2/stochssModel/app/static/modelEditor/node_modules/underscore/underscore.js"}],"/home/bbales2/stochssModel/app/static/modelEditor/forms/paginated-collection-view.js":[function(require,module,exports){
+var AmpersandView = require('ampersand-view');
+var SubCollection = require('ampersand-subcollection');
+
+var PaginatedCollectionView = AmpersandView.extend({
+    initialize: function(attr, options)
+    {
+        AmpersandView.prototype.initialize.call(this, attr, options);
+
+        this.listenToAndRun(this.collection, 'add remove', this.updateModelCount.bind(this))
+
+        this.limit = attr.limit;
+        this.view = attr.view;
+        this.offset = 0;
+
+        this.subCollection = new SubCollection(this.collection, { limit : this.limit, offset : this.offset });
+    },
+    select : function(model)
+    {
+        if(this.value == model)
+            return;
+
+        this.value = model;
+
+        //Search for model in current selection
+        for(var i = 0; i < this.subCollection.models.length; i++)
+        {
+            if(model == this.subCollection.models[i])
+            {
+                this.subCollectionViews._getViewByModel(model).select();
+                return;
+            }
+        }
+
+        //If not in current selection look elsewhere
+        var i;
+        for(i = 0; i < this.collection.models.length; i++)
+        {
+            if(model == this.collection.models[i])
+            {
+                this.offset = i;
+                this.subCollection.configure( { limit : this.limit, offset : this.offset } );
+                
+                this.subCollectionViews._getViewByModel(model).select();
+                break;
+            }
+        }
+
+        //If not found do nothing
+    },
+    shiftPlus : function()
+    {
+        if(this.offset + this.limit < this.collection.models.length)
+            this.offset = this.offset + this.limit;
+
+        this.subCollection.configure( { limit : this.limit, offset : this.offset } );
+    },
+    shiftMinus : function()
+    {
+        if(this.offset - this.limit >= 0)
+            this.offset = this.offset - this.limit;
+        else
+            this.offset = 0;
+
+        this.subCollection.configure( { limit : this.limit, offset : this.offset } );
+    },
+    events : {
+        "click [data-hook='next']" : "shiftPlus",
+        "click [data-hook='previous']" : "shiftMinus"
+    },
+    props: {
+        value : 'object',
+        offset : 'number',
+        modelCount : 'number'
+    },
+    bindings : {
+        'modelCount' : [
+            {
+                type : 'toggle',
+                hook : 'table'
+            },
+            {
+                type : 'text',
+                hook : 'total'
+            }
+        ],
+        'offset' : 
+        {
+            type : 'text',
+            hook : 'position'
+        }
+    },
+    updateModelCount: function()
+    {
+        this.modelCount = this.collection.models.length;
+    },
+    render: function()
+    {
+        AmpersandView.prototype.render.apply(this, arguments);
+
+        this.subCollectionViews = this.renderCollection(this.subCollection, this.view, this.el.querySelector('[data-hook=table]'));
+        
+        if(this.collection.models.length > 0)
+            this.select(this.collection.models[0]);
+
+        return this;
+    }
+});
+
+module.exports = PaginatedCollectionView;
+
+},{"ampersand-subcollection":"/home/bbales2/stochssModel/app/static/modelEditor/node_modules/ampersand-subcollection/ampersand-subcollection.js","ampersand-view":"/home/bbales2/stochssModel/app/static/modelEditor/node_modules/ampersand-view/ampersand-view.js"}],"/home/bbales2/stochssModel/app/static/modelEditor/forms/parameter-collection.js":[function(require,module,exports){
 var $ = require('jquery');
 var AmpersandView = require('ampersand-view');
 var AmpersandFormView = require('ampersand-form-view');
@@ -1790,20 +1901,64 @@ var AmpersandView = require('ampersand-view');
 var AmpersandFormView = require('ampersand-form-view');
 var InputView = require('ampersand-input-view');
 var SelectView = require('ampersand-select-view');
+var DetailedReactionFormView = require('./reaction-detail');
 var ReactionFormView = require('./reaction');
 var SubCollection = require('ampersand-subcollection');
+var PaginatedCollectionView = require('./paginated-collection-view');
+var katex = require('katex');
 
 var Tests = require('./tests');
 var AddNewReactionForm = AmpersandFormView.extend({
     submitCallback: function (obj) {
         var validSubdomains = this.baseModel.mesh.uniqueSubdomains.map( function(model) { return model.name; } );
 
-        if(obj.type == 'massaction')
+        var model;
+
+        var s1 = this.baseModel.species.at(0);
+        var s2 = this.baseModel.species.at(1);
+
+        var rate = this.baseModel.parameters.models[0];
+
+        if(obj.type != 'custom')
         {
-            this.collection.addMassActionReaction(obj.name, obj.parameter, [], [], validSubdomains);
+            var reactants;
+            var products;
+            if(obj.type == 'creation')
+            {
+                reactants = [];
+                products = [[s1, 1]];
+            }
+            else if(obj.type == 'destruction')
+            {
+                reactants = [[s1, 1]];
+                products = [];
+            }
+            if(obj.type == 'change')
+            {
+                reactants = [[s1, 1]];
+                products = [[s2, 1]];
+            }
+            if(obj.type == 'dimerization')
+            {
+                reactants = [[s1, 2]];
+                products = [[s2, 1]];
+            }
+            if(obj.type == 'split')
+            {
+                reactants = [[s2, 1]];
+                products = [[s1, 1], [s1, 1]];
+            }
+            if(obj.type == 'four')
+            {
+                reactants = [[s1, 1], [s1, 1]];
+                products = [[s1, 1], [s1, 1]];
+            }
+            model = this.collection.addMassActionReaction(obj.name, obj.type, rate, reactants, products, validSubdomains);
         } else {
-            this.collection.addCustomReaction(obj.name, obj.equation, [], [], validSubdomains);
+            model = this.collection.addCustomReaction(obj.name, '', [], [], validSubdomains);
         }
+        
+        this.selectView.select(model);
     },
     validCallback: function (valid) {
         if (valid) {
@@ -1814,57 +1969,46 @@ var AddNewReactionForm = AmpersandFormView.extend({
     },
     update: function (obj) {
         AmpersandFormView.prototype.update.apply(this, arguments);
-
-        if(obj.name == 'type')
-        {
-            if(obj.value == 'massaction')
-            {
-                $( this.fields[3].el ).hide();
-                $( this.fields[2].el ).show();
-            } else {
-                $( this.fields[2].el ).hide();
-                $( this.fields[3].el ).show();
-            }
-        }
     },
     initialize: function(attr, options) {
         this.collection = options.collection;
 
+        this.selectView = attr.selectView;
         this.baseModel = this.collection.parent;
+
+        var options = [];
+
+        var emptyDiv = $( '<div>' );
+        katex.render('\\emptyset \\rightarrow A', emptyDiv[0]);
+        options.push(['creation', emptyDiv.html()]);
+        katex.render('A \\rightarrow \\emptyset', emptyDiv[0]);
+        options.push(['destruction', emptyDiv.html()]);
+        katex.render('A \\rightarrow B', emptyDiv[0]);
+        options.push(['change', emptyDiv.html()]);
+        katex.render('A + A \\rightarrow B', emptyDiv[0]);
+        options.push(['dimerization', emptyDiv.html()]);
+        katex.render('A \\rightarrow B + C', emptyDiv[0]);
+        options.push(['split', emptyDiv.html()]);
+        katex.render('A + B \\rightarrow C + D', emptyDiv[0]);
+        options.push(['four', emptyDiv.html()]);
+        options.push(['massaction', 'Mass action, custom stoichiometry']);
+        options.push(['custom', 'Custom propensity, custom stoichiometry']);
 
         this.fields = [
             new InputView({
                 label: 'Name',
                 name: 'name',
                 value: '',
-                required: false,
+                required: true,
                 placeholder: 'NewReaction',
                 tests: [].concat(Tests.naming(this.collection))
             }),
             new SelectView({
                 label: 'Type',
                 name: 'type',
-                value: 'massaction',
-                options: [['massaction', 'Mass action'], ['custom', 'Custom']],
+                value: 'creation',
+                options: options,
                 required: true,
-            }),
-            new SelectView({
-                label: 'Parameter',
-                name: 'parameter',
-                options: this.baseModel.parameters,
-                unselectedText: 'Pick one',
-                required: true,
-                idAttribute: 'cid',
-                textAttribute: 'name',
-                yieldModel: true
-            }),
-            new InputView({
-                label: 'Equation',
-                name: 'equation',
-                value: '',
-                required: false,
-                placeholder: '',
-                tests: []
             })
         ];
 
@@ -1882,113 +2026,83 @@ var AddNewReactionForm = AmpersandFormView.extend({
 });
 
 var ReactionCollectionFormView = AmpersandView.extend({
+    template: "<div>\
+  <div class='row'> \
+    <div class='span4' data-hook='collection'></div>\
+    <div class='span7' data-hook='reactionEditorWorkspace'></div>\
+  </div> \
+  <h4>Add Reaction</h4>\
+  <form data-hook='addReactionForm'></form>\
+</div>",
     initialize: function(attr, options)
     {
         AmpersandView.prototype.initialize.call(this, attr, options);
-
-        this.listenToAndRun(this.collection, 'add remove change', _.bind(this.updateHasModels, this))
-
-        this.subCollection = new SubCollection(this.collection, { limit : 10, offset : 0 });
-
-        this.offset = 0;
-    },
-    setSelectRange : function(index) {
-        this.subCollection.configure( { limit : 10, offset : index } );
-
-        $( this.queryByHook('position') ).text( ' [ ' + index + ' / ' + this.collection.models.length + ' ] ' );
-    },
-    shift10Plus : function()
-    {
-        if(this.offset + 10 < this.collection.models.length)
-            this.offset = this.offset + 10;
-
-        this.setSelectRange(this.offset);
-    },
-    shift10Minus : function()
-    {
-        if(this.offset - 10 >= 0)
-            this.offset = this.offset - 10;
-
-        this.setSelectRange(this.offset);
-    },
-    events : {
-        "click [data-hook='next']" : "shift10Plus",
-        "click [data-hook='previous']" : "shift10Minus"
     },
     props: {
         selected : 'object',
-        hasModels : 'boolean'
     },
-    bindings : {
-        'hasModels' : {
-            type : 'toggle',
-            hook : 'reactionsTable'
-        }
-    },
-    updateHasModels: function()
+    select: function()
     {
-        this.hasModels = this.collection.models.length > 0;
+        var model = this.selectView.value;
+
+        if(typeof(this.detailView) != 'undefined')
+            this.detailView.remove();
+
+        if(model)
+        {
+            this.detailView = this.renderSubview(new DetailedReactionFormView({
+                model : model
+            }), $( '<div>' ).appendTo( this.queryByHook('reactionEditorWorkspace') )[0]);
+        }
     },
     render: function()
     {
         this.baseModel = this.collection.parent;
 
-        if(this.baseModel.isSpatial)
-        {
-            this.template = "<div>\
-  <table data-hook='reactionsTable'>\
+        var collectionTemplate = '';
+
+        collectionTemplate = "<div>\
+  <table data-hook='table'>\
     <thead>\
-      <th></th><th>Name</th><th>Type</th><th>Parameter</th><th>Custom Propensity</th><th>Subdomains</th><th>Latex</th><th></th>\
+      <th></th><th>Name</th><th>Summary</th><th>Edit</th>\
     </thead>\
+    <tbody data-hook='items'>\
+    </tbody>\
   </table>\
   <div>\
-    <button data-hook='previous'>Previous 10</button>\
-    <span data-hook='position'></span>\
-    <button data-hook='next'>Next 10</button>\
-  </div>\
-  <h4>Add Reaction</h4>\
-  <form data-hook='addReactionForm'></form>\
+    <button class='btn' data-hook='previous'>&lt;&lt;</button>\
+    [ <span data-hook='position'></span> / <span data-hook='total'></span> ] \
+    <button class='btn' data-hook='next'>&gt;&gt;</button>\
 </div>";
-        }
-        else
-        {
-            this.template = "<div>\
-  <table data-hook='reactionsTable'>\
-    <thead>\
-      <th></th><th>Name</th><th>Type</th><th>Parameter</th><th>Custom Propensity</th><th>Latex</th><th></th>\
-    </thead>\
-  </table>\
-  <div>\
-    <button data-hook='previous'>Previous 10</button>\
-    <span data-hook='position'></span>\
-    <button data-hook='next'>Next 10</button>\
-  </div>\
-  <h4>Add Reaction</h4>\
-  <form data-hook='addReactionForm'></form>\
-</div>";
-        }
 
         AmpersandView.prototype.render.apply(this, arguments);
 
-        this.setSelectRange(0);
-
-        this.renderCollection(this.subCollection, ReactionFormView, this.el.querySelector('[data-hook=reactionsTable]'));
+        this.selectView = this.renderSubview( new PaginatedCollectionView({
+            template : collectionTemplate,
+            collection : this.collection,
+            view : ReactionFormView,
+            limit : 10
+        }), this.queryByHook('collection'));
 
         this.addForm = new AddNewReactionForm(
             { 
-                el : this.el.querySelector('[data-hook=addReactionForm]')
+                el : this.el.querySelector('[data-hook=addReactionForm]'),
+                selectView : this.selectView
             },
             {
                 collection : this.collection
             }
         );
+
+        this.listenToAndRun(this.selectView, 'change:value', _.bind(this.select, this));
         
         return this;
     }
 });
 
-module.exports = ReactionCollectionFormView
-},{"./reaction":"/home/bbales2/stochssModel/app/static/modelEditor/forms/reaction.js","./tests":"/home/bbales2/stochssModel/app/static/modelEditor/forms/tests.js","ampersand-form-view":"/home/bbales2/stochssModel/app/static/modelEditor/node_modules/ampersand-form-view/ampersand-form-view.js","ampersand-input-view":"/home/bbales2/stochssModel/app/static/modelEditor/node_modules/ampersand-input-view/ampersand-input-view.js","ampersand-select-view":"/home/bbales2/stochssModel/app/static/modelEditor/node_modules/ampersand-select-view/ampersand-select-view.js","ampersand-subcollection":"/home/bbales2/stochssModel/app/static/modelEditor/node_modules/ampersand-subcollection/ampersand-subcollection.js","ampersand-view":"/home/bbales2/stochssModel/app/static/modelEditor/node_modules/ampersand-view/ampersand-view.js","jquery":"/home/bbales2/stochssModel/app/static/modelEditor/node_modules/jquery/dist/jquery.js"}],"/home/bbales2/stochssModel/app/static/modelEditor/forms/reaction.js":[function(require,module,exports){
+module.exports = ReactionCollectionFormView;
+
+},{"./paginated-collection-view":"/home/bbales2/stochssModel/app/static/modelEditor/forms/paginated-collection-view.js","./reaction":"/home/bbales2/stochssModel/app/static/modelEditor/forms/reaction.js","./reaction-detail":"/home/bbales2/stochssModel/app/static/modelEditor/forms/reaction-detail.js","./tests":"/home/bbales2/stochssModel/app/static/modelEditor/forms/tests.js","ampersand-form-view":"/home/bbales2/stochssModel/app/static/modelEditor/node_modules/ampersand-form-view/ampersand-form-view.js","ampersand-input-view":"/home/bbales2/stochssModel/app/static/modelEditor/node_modules/ampersand-input-view/ampersand-input-view.js","ampersand-select-view":"/home/bbales2/stochssModel/app/static/modelEditor/node_modules/ampersand-select-view/ampersand-select-view.js","ampersand-subcollection":"/home/bbales2/stochssModel/app/static/modelEditor/node_modules/ampersand-subcollection/ampersand-subcollection.js","ampersand-view":"/home/bbales2/stochssModel/app/static/modelEditor/node_modules/ampersand-view/ampersand-view.js","jquery":"/home/bbales2/stochssModel/app/static/modelEditor/node_modules/jquery/dist/jquery.js","katex":"/home/bbales2/stochssModel/app/static/modelEditor/node_modules/katex/katex.js"}],"/home/bbales2/stochssModel/app/static/modelEditor/forms/reaction-detail.js":[function(require,module,exports){
 var _ = require('underscore');
 var $ = require('jquery');
 var View = require('ampersand-view');
@@ -2006,9 +2120,75 @@ module.exports = View.extend({
     // This gets called when things update
     update: function(obj)
     {
+        var s1 = this.baseModel.species.at(0);
+        var s2 = this.baseModel.species.at(1);
+
         if(obj.name == 'type')
         {
             this.model.type = obj.value;
+
+            // Make sure we have a rate
+            if(this.model.type != 'custom')
+            {
+                if(this.model.rate == null)
+                {
+                    this.model.rate = this.rateSelect.value;
+                }
+            }
+
+            if(obj.value != 'custom' && obj.value != 'massaction')
+            {
+                var reactants;
+                var products;
+
+                if(obj.value == 'creation')
+                {
+                    reactants = 0;
+                    products = 1;
+                }
+                else if(obj.value == 'destruction')
+                {
+                    reactants = 1;
+                    products = 0;
+                }
+                if(obj.value == 'change')
+                {
+                    reactants = 1;
+                    products = 1;
+                }
+                if(obj.value == 'dimerization')
+                {
+                    reactants = 1;
+                    products = 1;
+                }
+                if(obj.value == 'split')
+                {
+                    reactants = 1;
+                    products = 2;
+                }
+                if(obj.value == 'four')
+                {
+                    reactants = 2;
+                    products = 2;
+                }
+
+                while(this.model.reactants.length > reactants)
+                    this.model.reactants.remove(this.model.reactants.at(0));
+
+                while(this.model.products.length > products)
+                    this.model.products.remove(this.model.products.at(0));
+
+                while(this.model.reactants.length < reactants)
+                    this.model.reactants.addStoichSpecie(s1, 1);
+
+                while(this.model.products.length < products)
+                    this.model.products.addStoichSpecie(s2, 1);
+
+                if(obj.value == 'dimerization')
+                {
+                    this.model.reactants.at(0).stoichiometry = 2;
+                }
+            }
         } else if(obj.name == 'parameter') {
             this.model.rate = obj.value;
         } else if(obj.name == 'subdomains') {
@@ -2022,6 +2202,14 @@ module.exports = View.extend({
             }
         }
     },
+    initialize: function(attr)
+    {
+        View.prototype.initialize.apply(this, arguments);
+
+        this.model = attr.model;
+
+        this.collection = this.model.collection.parent.mesh.uniqueSubdomains;
+    },
     renderSubdomains: function()
     {
         if(this.subdomainsView)
@@ -2029,7 +2217,7 @@ module.exports = View.extend({
             this.subdomainsView.remove();
         }
 
-        this.subdomainsView = this.renderCollection(this.baseModel.mesh.uniqueSubdomains, SubdomainFormView, this.queryByHook('subdomains') );
+        this.subdomainsView = this.renderCollection(this.baseModel.mesh.uniqueSubdomains, SubdomainFormView, this.el.querySelector('[data-hook="subdomains"]') );
 
         this.updateSelected();
     },
@@ -2090,25 +2278,26 @@ module.exports = View.extend({
         katex.render(latexString, this.queryByHook('latex'));
     },
     //Start the removal process... Eventually events will cause this.remove to get called. We don't have to do it explicitly though
-    removeModel: function()
-    {
-        this.model.collection.remove(this.model);        
-    },
-    toggleEdit: function()
-    {
-        $( this.queryByHook('advanced') ).toggle();
-    },
-    events: {
-        "click [data-hook='remove']" : "removeModel",
-        "click [data-hook='edit']" : "toggleEdit"
-    },
     bindings: {
-        'model.type' : {
-            type: 'switch',
-            cases: {
-                'massaction' : '[data-hook="parameter"]',
-                'custom' : '[data-hook="custom"]'
-            }
+        'massAction' : {
+            type : 'toggle',
+            hook : 'parameter'
+        },
+        'showCustom' : {
+            type : 'toggle',
+            hook : 'custom'
+        }
+    },
+    derived: {
+        massAction :
+        {
+            deps : ['model.type'],
+            fn : function() { return this.model.type != 'custom'; }
+        },
+        showCustom :
+        {
+            deps : ['model.type'],
+            fn : function() { return this.model.type == 'custom'; }
         }
     },
     render: function()
@@ -2117,90 +2306,79 @@ module.exports = View.extend({
 
         if(this.baseModel.isSpatial)
         {
-            this.template = "<tbody>\
-  <tr data-hook='basic'>\
-    <td><button data-hook='remove'>x</button></td>\
-    <td><span data-hook='name'></span></td> \
-    <td><span data-hook='typeSelect'></span></td> \
-    <td><span data-hook='parameter'></span></td> \
-    <td><span data-hook='custom'></span></td> \
-    <td><span data-hook='subdomains'></span></td> \
-    <td><span data-hook='latex'></span></td> \
-    <td><button data-hook='edit'>Edit</button></td>\
-  </tr>\
-  <tr> \
-    <td colspan='7'> \
-      <table width='100%' data-hook='advanced'>\
-        <tr> \
-          <td><h4>Reactants</h4><div data-hook='reactants'></div></td>\
-          <td><h4>Products</h4><div data-hook='products'></div></td>\
-        </tr>\
-      </table>\
-    </td>\
-  </tr>\
-</tbody>";
+            this.template = "<div> \
+<div data-hook='latex' style='font-size: 35px;'></div> \
+<div data-hook='typeSelect'></div> \
+<div data-hook='parameter'></div> \
+<div data-hook='custom'></div> \
+<div>Subdomains reaction can occur in:</div> \
+<div data-hook='subdomains'></div> \
+  <table width='100%' data-hook='advanced'>\
+    <tr> \
+      <td><h4>Reactants</h4><div data-hook='reactants'></div></td>\
+      <td><h4>Products</h4><div data-hook='products'></div></td>\
+    </tr>\
+  </table>\
+</div>";
         }
         else
         {
-            this.template = "<tbody>\
-  <tr data-hook='basic'>\
-    <td><button data-hook='remove'>x</button></td>\
-    <td><span data-hook='name'></span></td> \
-    <td><span data-hook='typeSelect'></span></td> \
-    <td><span data-hook='parameter'></span></td> \
-    <td><span data-hook='custom'></span></td> \
-    <td><span data-hook='latex'></span></td> \
-    <td><button data-hook='edit'>Edit</button></td>\
-  </tr>\
-  <tr> \
-    <td colspan='7'> \
-      <table width='100%' data-hook='advanced'>\
-        <tr> \
-          <td><h4>Reactants</h4><div data-hook='reactants'></div></td>\
-          <td><h4>Products</h4><div data-hook='products'></div></td>\
-        </tr>\
-      </table>\
-    </td>\
-  </tr>\
-</tbody>";
+            this.template = "<div>\
+<div data-hook='latex'></div> \
+<div data-hook='typeSelect'></div> \
+<div data-hook='parameter'></div> \
+<div data-hook='custom'></div> \
+  <table width='100%' data-hook='advanced'>\
+    <tr> \
+      <td><h4>Reactants</h4><div data-hook='reactants'></div></td>\
+      <td><h4>Products</h4><div data-hook='products'></div></td>\
+    </tr>\
+  </table>\
+</div>";
         }
 
         View.prototype.render.apply(this, arguments);
 
-        $( this.queryByHook('advanced') ).hide();
-
         this.listenTo(this.model, 'change', _.bind(this.redrawLatex, this));
         this.listenTo(this.model.reactants, 'add remove change', _.bind(this.redrawLatex, this));
         this.listenToAndRun(this.model.products, 'add remove change', _.bind(this.redrawLatex, this));
-
-        this.renderSubview(
-            new ModifyingInputView({
-                template: '<span><span data-hook="label"></span><input><span data-hook="message-container"><span data-hook="message-text"></span></span></span>',
-                label: '',
-                name: 'name',
-                value: this.model.name,
-                required: false,
-                placeholder: 'Name',
-                model : this.model,
-                tests: [].concat(Tests.naming(this.model.collection, this.model))
-            }), this.el.querySelector("[data-hook='name']"));
+        var options = [];
+        var emptyDiv = $( '<div>' );
+        katex.render('\\emptyset \\rightarrow A', emptyDiv[0]);
+        options.push(['creation', emptyDiv.html()]);
+        katex.render('A \\rightarrow \\emptyset', emptyDiv[0]);
+        options.push(['destruction', emptyDiv.html()]);
+        katex.render('A \\rightarrow B', emptyDiv[0]);
+        options.push(['change', emptyDiv.html()]);
+        katex.render('A + A \\rightarrow B', emptyDiv[0]);
+        options.push(['dimerization', emptyDiv.html()]);
+        katex.render('A \\rightarrow B + C', emptyDiv[0]);
+        options.push(['split', emptyDiv.html()]);
+        katex.render('A + B \\rightarrow C + D', emptyDiv[0]);
+        options.push(['four', emptyDiv.html()]);
+        options.push(['massaction', 'Mass action, custom stoichiometry']);
+        options.push(['custom', 'Custom propensity, custom stoichiometry']);
 
         this.renderSubview(
             new SelectView({
-                template: '<span><select></select><span data-hook="message-container"><span data-hook="message-text"></span></span></span>',
-                label: '',
+                //template: '<span><select></select><span data-hook="message-container"><span data-hook="message-text"></span></span></span>',
+                label: 'Reaction Type: ',
                 name: 'type',
                 value: this.model.type,
-                options: [['massaction', 'Mass action'], ['custom', 'Custom']],
+                options: options,
                 required: true,
             }), this.el.querySelector("[data-hook='typeSelect']"));
 
-        this.renderSubview(
+        var selected = this.model.rate;
+        if(selected == null)
+            selected = this.baseModel.parameters.at(0);
+
+        this.rateSelect = this.renderSubview(
             new SelectView({
-                template: '<span><select></select><span data-hook="message-container"><span data-hook="message-text"></span></span></span>',
-                label: '',
+                //template: '<span><select></select><span data-hook="message-container"><span data-hook="message-text"></span></span></span>',
+                label: 'Rate parameter: ',
                 name: 'parameter',
-                value: this.model.rate,
+                value: selected,
                 options: this.baseModel.parameters,
                 required: false,
                 idAttribute: 'cid',
@@ -2210,8 +2388,8 @@ module.exports = View.extend({
 
         this.renderSubview(
             new ModifyingInputView({
-                template: '<span><span data-hook="label"></span><input><span data-hook="message-container"><span data-hook="message-text"></span></span></span>',
-                label: '',
+                //template: '<span><span data-hook="label"></span><input><span data-hook="message-container"><span data-hook="message-text"></span></span></span>',
+                label: 'Custom rate equation: ',
                 name: 'equation',
                 value: this.model.equation,
                 required: false,
@@ -2238,6 +2416,115 @@ module.exports = View.extend({
             new StoichSpecieCollectionFormView({
                 collection: this.model.products
             }), this.el.querySelector("[data-hook='products']"));
+        
+        return this;
+    }
+});
+
+},{"./modifying-input-view":"/home/bbales2/stochssModel/app/static/modelEditor/forms/modifying-input-view.js","./modifying-number-input-view":"/home/bbales2/stochssModel/app/static/modelEditor/forms/modifying-number-input-view.js","./stoich-specie-collection":"/home/bbales2/stochssModel/app/static/modelEditor/forms/stoich-specie-collection.js","./subdomain":"/home/bbales2/stochssModel/app/static/modelEditor/forms/subdomain.js","./tests":"/home/bbales2/stochssModel/app/static/modelEditor/forms/tests.js","ampersand-select-view":"/home/bbales2/stochssModel/app/static/modelEditor/node_modules/ampersand-select-view/ampersand-select-view.js","ampersand-view":"/home/bbales2/stochssModel/app/static/modelEditor/node_modules/ampersand-view/ampersand-view.js","jquery":"/home/bbales2/stochssModel/app/static/modelEditor/node_modules/jquery/dist/jquery.js","katex":"/home/bbales2/stochssModel/app/static/modelEditor/node_modules/katex/katex.js","underscore":"/home/bbales2/stochssModel/app/static/modelEditor/node_modules/underscore/underscore.js"}],"/home/bbales2/stochssModel/app/static/modelEditor/forms/reaction.js":[function(require,module,exports){
+var _ = require('underscore');
+var $ = require('jquery');
+var View = require('ampersand-view');
+var ModifyingInputView = require('./modifying-input-view')
+var ModifyingNumberInputView = require('./modifying-number-input-view')
+var StoichSpecieCollectionFormView = require('./stoich-specie-collection');
+var SubdomainFormView = require('./subdomain');
+var SelectView = require('ampersand-select-view');
+
+var katex = require('katex')
+
+var Tests = require('./tests');
+module.exports = View.extend({
+    // Gotta have a few of these functions just so this works as a form view
+    // This gets called when things update
+    template : "<tbody>\
+  <tr data-hook='basic'>\
+    <td><button data-hook='remove'>x</button></td>\
+    <td><span data-hook='name'></span></td> \
+    <td><span data-hook='latex'></span></td> \
+    <td><input type='radio' name='reaction' data-hook='radio'></td>\
+  </tr>\
+</tbody>",
+    // On any change of anything, redraw the Latex
+    redrawLatex: function(obj)
+    {
+        var latexString = '';
+
+        var numReactants = this.model.reactants.models.length;
+        if(numReactants == 0)
+        {
+            latexString = '\\emptyset';
+        } else {
+            for(var i = 0; i < numReactants; i++)
+            {
+                var stoichSpecie = this.model.reactants.models[i]; 
+                latexString += stoichSpecie.stoichiometry + stoichSpecie.specie.name;
+                
+                if(i < numReactants - 1)
+                    latexString += ' + ';
+            }
+        }
+            
+        latexString += ' \\rightarrow ';
+
+        var numProducts = this.model.products.models.length;
+        if(numProducts == 0)
+        {
+            latexString += '\\emptyset';
+        } else {
+            for(var i = 0; i < numProducts; i++)
+            {
+                var stoichSpecie = this.model.products.models[i]; 
+                latexString += stoichSpecie.stoichiometry + stoichSpecie.specie.name;
+                
+                if(i < numProducts - 1)
+                    latexString += ' + ';
+            }
+        }
+
+        katex.render(latexString, this.queryByHook('latex'));
+    },
+    //Start the removal process... Eventually events will cause this.remove to get called. We don't have to do it explicitly though
+    removeModel: function()
+    {
+        this.model.collection.remove(this.model);        
+    },
+    // These two functions are a little weird. The first calls the parent select function
+    //  But by design the parent is a paginatedCollectionView
+    //  Which calls select on the model selected... So calling selectMe gets select called too
+    selectMe : function()
+    {
+        this.parent.parent.select(this.model);
+    },
+    select : function()
+    {
+        $( this.el ).find( "[data-hook='radio']" ).prop('checked', true);
+    },
+    events: {
+        "click [data-hook='remove']" : "removeModel",
+        "click [data-hook='radio']" : "selectMe"
+    },
+    render: function()
+    {
+        this.baseModel = this.model.collection.parent;
+
+        View.prototype.render.apply(this, arguments);
+
+        this.listenTo(this.model, 'change', _.bind(this.redrawLatex, this));
+        this.listenTo(this.model.reactants, 'add remove change', _.bind(this.redrawLatex, this));
+        this.listenToAndRun(this.model.products, 'add remove change', _.bind(this.redrawLatex, this));
+
+        this.renderSubview(
+            new ModifyingInputView({
+                template: '<span><span data-hook="label"></span><input><span data-hook="message-container"><span data-hook="message-text"></span></span></span>',
+                label: '',
+                name: 'name',
+                value: this.model.name,
+                required: false,
+                placeholder: 'Name',
+                model : this.model,
+                tests: [].concat(Tests.naming(this.model.collection, this.model))
+            }), this.el.querySelector("[data-hook='name']"));
         
         return this;
     }
@@ -2391,7 +2678,7 @@ var SpecieCollectionFormView = AmpersandView.extend({
     {
         if(this.collection.parent.isSpatial)
         {
-            this.template = "<div><table data-hook='speciesTable'><thead><th></th><th>Name</th><th>Diffusion</th><th>Subdomains</th></thead><tbody data-hook='speciesTBody'></tbody></table><div><button data-hook='previous'>Previous 10</button><span data-hook='position'></span><button data-hook='next'>Next 10</button></div>Add Specie: <form data-hook='addSpeciesForm'></form></div>";
+            this.template = "<div><table data-hook='speciesTable'><thead><th></th><th>Name</th><th>Diffusion coefficients</th><th>Species allowed in these subdomains</th></thead><tbody data-hook='speciesTBody'></tbody></table><div><button data-hook='previous'>Previous 10</button><span data-hook='position'></span><button data-hook='next'>Next 10</button></div>Add Specie: <form data-hook='addSpeciesForm'></form></div>";
         }
         else
         {
@@ -2610,11 +2897,38 @@ var AddNewStoichSpecieForm = AmpersandFormView.extend({
 });
 
 var StoichSpecieCollectionFormView = AmpersandView.extend({
-    template: "<div><table data-hook='stoichSpecieTable'></table>Add Specie: <form data-hook='addStoichSpecieForm'></form></div>",
+    template: "<div><table data-hook='stoichSpecieTable'></table><div data-hook='addStoichSpecieDiv'>Add Specie: <form data-hook='addStoichSpecieForm'></form></div></div>",
     initialize: function(attr, options)
     {
         AmpersandView.prototype.initialize.call(this, attr, options);
+
+        this.reaction = this.collection.parent;
+
+        this.listenToAndRun(this.reaction, 'change:type', _.bind(this.setReactionType, this));
     },
+    setReactionType: function()
+    {
+        this.reactionType = this.reaction.type;
+    },
+    props:
+    {
+        reactionType : 'string'
+    },
+    derived: {
+        showCustom :
+        {
+            deps : ['reactionType'],
+            fn : function() {
+                return this.reactionType == 'custom' || this.reactionType == 'massaction';
+            }
+        }
+    },
+    bindings : {
+        "showCustom" : {
+            type : 'toggle',
+            hook : 'addStoichSpecieDiv'
+        }
+    },        
     render: function()
     {
         AmpersandView.prototype.render.apply(this, arguments);
@@ -2652,12 +2966,44 @@ module.exports = View.extend({
         if(element.valid)
             this.model[element.name] = element.value;
     },
+    initialize: function()
+    {
+        View.prototype.initialize.apply(this, arguments);
+
+        this.reaction = this.model.collection.parent;
+
+        this.listenToAndRun(this.reaction, 'change:type', _.bind(this.setReactionType, this));
+    },
+    setReactionType: function()
+    {
+        this.reactionType = this.reaction.type;
+    },
+    props:
+    {
+        reactionType : 'string'
+    },
+    derived: {
+        massAction :
+        {
+            deps : ['reactionType'],
+            fn : function() { return this.reactionType != 'custom'; }
+        },
+        showCustom :
+        {
+            deps : ['reactionType'],
+            fn : function() { return this.reactionType == 'massaction' || this.reactionType == 'custom'; }
+        }
+    },
     bindings : {
         "model.stoichiometry" : {
             type : 'text',
             hook : 'stoichiometry'
+        },
+        "showCustom" : {
+            type : 'toggle',
+            selector : 'button'
         }
-    },
+    },        
     events : {
         "click [data-hook='delete']" : "deleteModel",
         "click [data-hook='plus']" : "addOne",
@@ -2685,7 +3031,7 @@ module.exports = View.extend({
 
         this.renderSubview(
             new ModifyingSelectView({
-                template: '<span><span data-hook="label"></span><select></select><span data-hook="message-container"><span data-hook="message-text"></span></span></span>',
+                template: '<span><select></select><span data-hook="message-container"><span data-hook="message-text"></span></span></span>',
                 label: '',
                 name: 'specie',
                 value: this.model.specie,
@@ -3121,11 +3467,11 @@ var Model = AmpersandModel.extend({
                 
                 var products = reaction.products.map(function(product) { return [speciesByName[product.specie], product.stoichiometry ] });
                 
-                if(reaction.type == 'massaction')
+                if(reaction.type == 'custom')
                 {
-                    this.reactions.addMassActionReaction(reaction.name, parametersByName[reaction.rate], reactants, products, attr.spatial.reactions_subdomain_assignments[reactions[i].name]);
-                } else {
                     this.reactions.addCustomReaction(reaction.name, reaction.rate, reactants, products, attr.spatial.reactions_subdomain_assignments[reactions[i].name]);
+                } else {
+                    this.reactions.addMassActionReaction(reaction.name, reaction.type, parametersByName[reaction.rate], reactants, products, attr.spatial.reactions_subdomain_assignments[reactions[i].name]);
                 }
             }
         }
@@ -3177,11 +3523,11 @@ var Model = AmpersandModel.extend({
             reactionOut.products = reactionIn.products.map(function(stoichSpecie) { return { specie : stoichSpecie.specie.name, stoichiometry : stoichSpecie.stoichiometry } });
 
             reactionOut.type = reactionIn.type;
-            if(reactionOut.type == 'massaction')
+            if(reactionOut.type == 'custom')
             {
-                reactionOut.rate = reactionIn.rate.name;
-            } else {
                 reactionOut.rate = reactionIn.equation;
+            } else {
+                reactionOut.rate = reactionIn.rate.name;
             }
 
             obj.reactions.push(reactionOut);
@@ -3306,14 +3652,14 @@ module.exports = AmpCollection.extend({
         this.baseModel.species.trigger('stoich-specie-change');
         this.trigger('change');
     },
-    addMassActionReaction: function(name, rate, reactants, products, subdomains) {
+    addMassActionReaction: function(name, type, rate, reactants, products, subdomains) {
         var unique = this.models.every(function(model) { return model["name"] != name });
         
         // If the new Species name is not unique, return false
         if(!unique)
             return undefined;
-        
-        var reaction = this.add({ name : name, equation : '', type : 'massaction', rate : rate, subdomains : subdomains }, { reactants : reactants, products : products });
+
+        var reaction = this.add({ name : name, equation : '', type : type, rate : rate, subdomains : subdomains }, { reactants : reactants, products : products });
 
         return reaction;
     },
@@ -3529,7 +3875,29 @@ module.exports = State.extend({
 });
 
 
-},{"ampersand-state":"/home/bbales2/stochssModel/app/static/modelEditor/node_modules/ampersand-state/ampersand-state.js","underscore":"/home/bbales2/stochssModel/app/static/modelEditor/node_modules/underscore/underscore.js"}],"/home/bbales2/stochssModel/app/static/modelEditor/node_modules/ampersand-checkbox-view/ampersand-checkbox-view.js":[function(require,module,exports){
+},{"ampersand-state":"/home/bbales2/stochssModel/app/static/modelEditor/node_modules/ampersand-state/ampersand-state.js","underscore":"/home/bbales2/stochssModel/app/static/modelEditor/node_modules/underscore/underscore.js"}],"/home/bbales2/stochssModel/app/static/modelEditor/node_modules/amp-extend/extend.js":[function(require,module,exports){
+var isObject = require('amp-is-object');
+
+
+module.exports = function(obj) {
+    if (!isObject(obj)) return obj;
+    var source, prop;
+    for (var i = 1, length = arguments.length; i < length; i++) {
+        source = arguments[i];
+        for (prop in source) {
+            obj[prop] = source[prop];
+        }
+    }
+    return obj;
+};
+
+},{"amp-is-object":"/home/bbales2/stochssModel/app/static/modelEditor/node_modules/amp-extend/node_modules/amp-is-object/is-object.js"}],"/home/bbales2/stochssModel/app/static/modelEditor/node_modules/amp-extend/node_modules/amp-is-object/is-object.js":[function(require,module,exports){
+module.exports = function isObject(obj) {
+    var type = typeof obj;
+    return !!obj && (type === 'function' || type === 'object');
+};
+
+},{}],"/home/bbales2/stochssModel/app/static/modelEditor/node_modules/ampersand-checkbox-view/ampersand-checkbox-view.js":[function(require,module,exports){
 ;if (typeof window !== "undefined") {  window.ampersand = window.ampersand || {};  window.ampersand["ampersand-checkbox-view"] = window.ampersand["ampersand-checkbox-view"] || [];  window.ampersand["ampersand-checkbox-view"].push("2.0.2");}
 var domify = require('domify');
 var dom = require('ampersand-dom');
@@ -4591,6 +4959,435 @@ function hide (el) {
     el.style.display = 'none';
 }
 
+},{}],"/home/bbales2/stochssModel/app/static/modelEditor/node_modules/ampersand-events/ampersand-events.js":[function(require,module,exports){
+;if (typeof window !== "undefined") {  window.ampersand = window.ampersand || {};  window.ampersand["ampersand-events"] = window.ampersand["ampersand-events"] || [];  window.ampersand["ampersand-events"].push("1.0.1");}
+var runOnce = require('amp-once');
+var uniqueId = require('amp-unique-id');
+var keys = require('amp-keys');
+var isEmpty = require('amp-is-empty');
+var each = require('amp-each');
+var bind = require('amp-bind');
+var extend = require('amp-extend');
+var slice = Array.prototype.slice;
+var eventSplitter = /\s+/;
+
+
+var Events = {
+    // Bind an event to a `callback` function. Passing `"all"` will bind
+    // the callback to all events fired.
+    on: function(name, callback, context) {
+        if (!eventsApi(this, 'on', name, [callback, context]) || !callback) return this;
+        this._events || (this._events = {});
+        var events = this._events[name] || (this._events[name] = []);
+        events.push({callback: callback, context: context, ctx: context || this});
+        return this;
+    },
+
+    // Bind an event to only be triggered a single time. After the first time
+    // the callback is invoked, it will be removed.
+    once: function(name, callback, context) {
+        if (!eventsApi(this, 'once', name, [callback, context]) || !callback) return this;
+        var self = this;
+        var once = runOnce(function() {
+            self.off(name, once);
+            callback.apply(this, arguments);
+        });
+        once._callback = callback;
+        return this.on(name, once, context);
+    },
+
+    // Remove one or many callbacks. If `context` is null, removes all
+    // callbacks with that function. If `callback` is null, removes all
+    // callbacks for the event. If `name` is null, removes all bound
+    // callbacks for all events.
+    off: function(name, callback, context) {
+        var retain, ev, events, names, i, l, j, k;
+        if (!this._events || !eventsApi(this, 'off', name, [callback, context])) return this;
+        if (!name && !callback && !context) {
+            this._events = void 0;
+            return this;
+        }
+        names = name ? [name] : keys(this._events);
+        for (i = 0, l = names.length; i < l; i++) {
+            name = names[i];
+            if (events = this._events[name]) {
+                this._events[name] = retain = [];
+                if (callback || context) {
+                    for (j = 0, k = events.length; j < k; j++) {
+                        ev = events[j];
+                        if ((callback && callback !== ev.callback && callback !== ev.callback._callback) ||
+                                (context && context !== ev.context)) {
+                            retain.push(ev);
+                        }
+                    }
+                }
+                if (!retain.length) delete this._events[name];
+            }
+        }
+
+        return this;
+    },
+
+    // Trigger one or many events, firing all bound callbacks. Callbacks are
+    // passed the same arguments as `trigger` is, apart from the event name
+    // (unless you're listening on `"all"`, which will cause your callback to
+    // receive the true name of the event as the first argument).
+    trigger: function(name) {
+        if (!this._events) return this;
+        var args = slice.call(arguments, 1);
+        if (!eventsApi(this, 'trigger', name, args)) return this;
+        var events = this._events[name];
+        var allEvents = this._events.all;
+        if (events) triggerEvents(events, args);
+        if (allEvents) triggerEvents(allEvents, arguments);
+        return this;
+    },
+
+    // Tell this object to stop listening to either specific events ... or
+    // to every object it's currently listening to.
+    stopListening: function(obj, name, callback) {
+        var listeningTo = this._listeningTo;
+        if (!listeningTo) return this;
+        var remove = !name && !callback;
+        if (!callback && typeof name === 'object') callback = this;
+        if (obj) (listeningTo = {})[obj._listenId] = obj;
+        for (var id in listeningTo) {
+            obj = listeningTo[id];
+            obj.off(name, callback, this);
+            if (remove || isEmpty(obj._events)) delete this._listeningTo[id];
+        }
+        return this;
+    },
+
+    // extend an object with event capabilities if passed
+    // or just return a new one.
+    createEmitter: function (obj) {
+        return extend(obj || {}, Events);
+    }
+};
+
+
+// Implement fancy features of the Events API such as multiple event
+// names `"change blur"` and jQuery-style event maps `{change: action}`
+// in terms of the existing API.
+var eventsApi = function(obj, action, name, rest) {
+    if (!name) return true;
+
+    // Handle event maps.
+    if (typeof name === 'object') {
+        for (var key in name) {
+            obj[action].apply(obj, [key, name[key]].concat(rest));
+        }
+        return false;
+    }
+
+    // Handle space separated event names.
+    if (eventSplitter.test(name)) {
+        var names = name.split(eventSplitter);
+        for (var i = 0, l = names.length; i < l; i++) {
+            obj[action].apply(obj, [names[i]].concat(rest));
+        }
+        return false;
+    }
+
+    return true;
+};
+
+// A difficult-to-believe, but optimized internal dispatch function for
+// triggering events. Tries to keep the usual cases speedy.
+var triggerEvents = function(events, args) {
+    var ev;
+    var i = -1;
+    var l = events.length;
+    var a1 = args[0];
+    var a2 = args[1];
+    var a3 = args[2];
+    switch (args.length) {
+        case 0: while (++i < l) (ev = events[i]).callback.call(ev.ctx); return;
+        case 1: while (++i < l) (ev = events[i]).callback.call(ev.ctx, a1); return;
+        case 2: while (++i < l) (ev = events[i]).callback.call(ev.ctx, a1, a2); return;
+        case 3: while (++i < l) (ev = events[i]).callback.call(ev.ctx, a1, a2, a3); return;
+        default: while (++i < l) (ev = events[i]).callback.apply(ev.ctx, args); return;
+    }
+};
+
+var listenMethods = {
+    listenTo: 'on', 
+    listenToOnce: 'once'
+};
+
+// Inversion-of-control versions of `on` and `once`. Tell *this* object to
+// listen to an event in another object ... keeping track of what it's
+// listening to.
+each(listenMethods, function(implementation, method) {
+    Events[method] = function(obj, name, callback, run) {
+        var listeningTo = this._listeningTo || (this._listeningTo = {});
+        var id = obj._listenId || (obj._listenId = uniqueId('l'));
+        listeningTo[id] = obj;
+        if (!callback && typeof name === 'object') callback = this;
+        obj[implementation](name, callback, this);
+        return this;
+    };
+});
+
+Events.listenToAndRun = function (obj, name, callback) {
+    Events.listenTo.apply(this, arguments);
+    if (!callback && typeof name === 'object') callback = this;
+    callback.apply(this);
+    return this;
+};
+
+module.exports = Events;
+
+},{"amp-bind":"/home/bbales2/stochssModel/app/static/modelEditor/node_modules/ampersand-events/node_modules/amp-bind/bind.js","amp-each":"/home/bbales2/stochssModel/app/static/modelEditor/node_modules/ampersand-events/node_modules/amp-each/each.js","amp-extend":"/home/bbales2/stochssModel/app/static/modelEditor/node_modules/ampersand-events/node_modules/amp-extend/extend.js","amp-is-empty":"/home/bbales2/stochssModel/app/static/modelEditor/node_modules/ampersand-events/node_modules/amp-is-empty/is-empty.js","amp-keys":"/home/bbales2/stochssModel/app/static/modelEditor/node_modules/ampersand-events/node_modules/amp-keys/keys.js","amp-once":"/home/bbales2/stochssModel/app/static/modelEditor/node_modules/ampersand-events/node_modules/amp-once/once.js","amp-unique-id":"/home/bbales2/stochssModel/app/static/modelEditor/node_modules/ampersand-events/node_modules/amp-unique-id/unique-id.js"}],"/home/bbales2/stochssModel/app/static/modelEditor/node_modules/ampersand-events/node_modules/amp-bind/bind.js":[function(require,module,exports){
+var isFunction = require('amp-is-function');
+var isObject = require('amp-is-object');
+var nativeBind = Function.prototype.bind;
+var slice = Array.prototype.slice;
+var Ctor = function () {};
+
+
+module.exports = function bind(func, context) {
+    var args, bound;
+    if (nativeBind && func.bind === nativeBind) return nativeBind.apply(func, slice.call(arguments, 1));
+    if (!isFunction(func)) throw new TypeError('Bind must be called on a function');
+    args = slice.call(arguments, 2);
+    bound = function() {
+        if (!(this instanceof bound)) return func.apply(context, args.concat(slice.call(arguments)));
+        Ctor.prototype = func.prototype;
+        var self = new Ctor();
+        Ctor.prototype = null;
+        var result = func.apply(self, args.concat(slice.call(arguments)));
+        if (isObject(result)) return result;
+        return self;
+    };
+    return bound;
+};
+
+},{"amp-is-function":"/home/bbales2/stochssModel/app/static/modelEditor/node_modules/ampersand-events/node_modules/amp-bind/node_modules/amp-is-function/is-function.js","amp-is-object":"/home/bbales2/stochssModel/app/static/modelEditor/node_modules/ampersand-events/node_modules/amp-bind/node_modules/amp-is-object/is-object.js"}],"/home/bbales2/stochssModel/app/static/modelEditor/node_modules/ampersand-events/node_modules/amp-bind/node_modules/amp-is-function/is-function.js":[function(require,module,exports){
+var toString = Object.prototype.toString;
+var func = function isFunction(obj) {
+    return toString.call(obj) === '[object Function]';
+};
+
+// Optimize `isFunction` if appropriate. Work around an IE 11 bug.
+if (typeof /./ !== 'function') {
+    func = function isFunction(obj) {
+      return typeof obj == 'function' || false;
+    };
+}
+
+module.exports = func;
+
+},{}],"/home/bbales2/stochssModel/app/static/modelEditor/node_modules/ampersand-events/node_modules/amp-bind/node_modules/amp-is-object/is-object.js":[function(require,module,exports){
+module.exports=require("/home/bbales2/stochssModel/app/static/modelEditor/node_modules/amp-extend/node_modules/amp-is-object/is-object.js")
+},{"/home/bbales2/stochssModel/app/static/modelEditor/node_modules/amp-extend/node_modules/amp-is-object/is-object.js":"/home/bbales2/stochssModel/app/static/modelEditor/node_modules/amp-extend/node_modules/amp-is-object/is-object.js"}],"/home/bbales2/stochssModel/app/static/modelEditor/node_modules/ampersand-events/node_modules/amp-each/each.js":[function(require,module,exports){
+var objKeys = require('amp-keys');
+var createCallback = require('amp-create-callback');
+
+
+module.exports = function each(obj, iteratee, context) {
+    if (obj == null) return obj;
+    iteratee = createCallback(iteratee, context);
+    var i, length = obj.length;
+    if (length === +length) {
+        for (i = 0; i < length; i++) {
+            iteratee(obj[i], i, obj);
+        }
+    } else {
+        var keys = objKeys(obj);
+        for (i = 0, length = keys.length; i < length; i++) {
+            iteratee(obj[keys[i]], keys[i], obj);
+        }
+    }
+    return obj;
+};
+
+},{"amp-create-callback":"/home/bbales2/stochssModel/app/static/modelEditor/node_modules/ampersand-events/node_modules/amp-each/node_modules/amp-create-callback/create-callback.js","amp-keys":"/home/bbales2/stochssModel/app/static/modelEditor/node_modules/ampersand-events/node_modules/amp-keys/keys.js"}],"/home/bbales2/stochssModel/app/static/modelEditor/node_modules/ampersand-events/node_modules/amp-each/node_modules/amp-create-callback/create-callback.js":[function(require,module,exports){
+module.exports = function createCallback(func, context, argCount) {
+    if (context === void 0) return func;
+    switch (argCount) {
+    case 1: 
+        return function(value) {
+            return func.call(context, value);
+        };
+    case 2: 
+        return function(value, other) {
+            return func.call(context, value, other);
+        };
+    case 3: 
+        return function(value, index, collection) {
+            return func.call(context, value, index, collection);
+        };
+    case 4: 
+        return function(accumulator, value, index, collection) {
+            return func.call(context, accumulator, value, index, collection);
+        };
+    }
+    return function() {
+        return func.apply(context, arguments);
+    };
+};
+
+},{}],"/home/bbales2/stochssModel/app/static/modelEditor/node_modules/ampersand-events/node_modules/amp-extend/extend.js":[function(require,module,exports){
+module.exports=require("/home/bbales2/stochssModel/app/static/modelEditor/node_modules/amp-extend/extend.js")
+},{"/home/bbales2/stochssModel/app/static/modelEditor/node_modules/amp-extend/extend.js":"/home/bbales2/stochssModel/app/static/modelEditor/node_modules/amp-extend/extend.js"}],"/home/bbales2/stochssModel/app/static/modelEditor/node_modules/ampersand-events/node_modules/amp-is-empty/is-empty.js":[function(require,module,exports){
+var isArray = require('amp-is-array');
+var isString = require('amp-is-string');
+var isArguments = require('amp-is-arguments');
+var isNumber = require('amp-is-number');
+var isNan = require('amp-is-nan');
+var keys = require('amp-keys');
+
+
+module.exports = function isEmpty(obj) {
+    if (obj == null) return true;
+    if (isArray(obj) || isString(obj) || isArguments(obj)) return obj.length === 0;
+    if (isNumber(obj)) return obj === 0 || isNan(obj);
+    if (keys(obj).length !== 0) return false;
+    return true;
+};
+
+},{"amp-is-arguments":"/home/bbales2/stochssModel/app/static/modelEditor/node_modules/ampersand-events/node_modules/amp-is-empty/node_modules/amp-is-arguments/is-arguments.js","amp-is-array":"/home/bbales2/stochssModel/app/static/modelEditor/node_modules/ampersand-events/node_modules/amp-is-empty/node_modules/amp-is-array/is-array.js","amp-is-nan":"/home/bbales2/stochssModel/app/static/modelEditor/node_modules/ampersand-events/node_modules/amp-is-empty/node_modules/amp-is-nan/is-nan.js","amp-is-number":"/home/bbales2/stochssModel/app/static/modelEditor/node_modules/ampersand-events/node_modules/amp-is-empty/node_modules/amp-is-number/is-number.js","amp-is-string":"/home/bbales2/stochssModel/app/static/modelEditor/node_modules/ampersand-events/node_modules/amp-is-empty/node_modules/amp-is-string/is-string.js","amp-keys":"/home/bbales2/stochssModel/app/static/modelEditor/node_modules/ampersand-events/node_modules/amp-keys/keys.js"}],"/home/bbales2/stochssModel/app/static/modelEditor/node_modules/ampersand-events/node_modules/amp-is-empty/node_modules/amp-is-arguments/is-arguments.js":[function(require,module,exports){
+var toString = Object.prototype.toString;
+var hasOwn = Object.prototype.hasOwnProperty;
+var isArgs = function isArgs(obj) {
+    return toString.call(obj) === '[object Arguments]';
+};
+
+// for IE <9
+if (!isArgs(arguments)) {
+    isArgs = function (obj) {
+        return obj && hasOwn.call(obj, 'callee');
+    };
+}
+
+module.exports = isArgs;
+
+},{}],"/home/bbales2/stochssModel/app/static/modelEditor/node_modules/ampersand-events/node_modules/amp-is-empty/node_modules/amp-is-array/is-array.js":[function(require,module,exports){
+var toString = Object.prototype.toString;
+var nativeIsArray = Array.isArray;
+
+
+module.exports = nativeIsArray || function isArray(obj) {
+    return toString.call(obj) === '[object Array]';
+};
+
+},{}],"/home/bbales2/stochssModel/app/static/modelEditor/node_modules/ampersand-events/node_modules/amp-is-empty/node_modules/amp-is-nan/is-nan.js":[function(require,module,exports){
+var isNumber = require('amp-is-number');
+
+
+module.exports = function isNaN(obj) {
+    return isNumber(obj) && obj !== +obj;
+};
+
+},{"amp-is-number":"/home/bbales2/stochssModel/app/static/modelEditor/node_modules/ampersand-events/node_modules/amp-is-empty/node_modules/amp-is-number/is-number.js"}],"/home/bbales2/stochssModel/app/static/modelEditor/node_modules/ampersand-events/node_modules/amp-is-empty/node_modules/amp-is-number/is-number.js":[function(require,module,exports){
+var toString = Object.prototype.toString;
+
+
+module.exports = function isNumber(obj) {
+    return toString.call(obj) === '[object Number]';
+};
+
+},{}],"/home/bbales2/stochssModel/app/static/modelEditor/node_modules/ampersand-events/node_modules/amp-is-empty/node_modules/amp-is-string/is-string.js":[function(require,module,exports){
+var toString = Object.prototype.toString;
+
+
+module.exports = function isString(obj) {
+    return toString.call(obj) === '[object String]';
+};
+
+},{}],"/home/bbales2/stochssModel/app/static/modelEditor/node_modules/ampersand-events/node_modules/amp-keys/keys.js":[function(require,module,exports){
+var has = require('amp-has');
+var indexOf = require('amp-index-of');
+var isObject = require('amp-is-object');
+var nativeKeys = Object.keys;
+var hasEnumBug = !({toString: null}).propertyIsEnumerable('toString');
+var nonEnumerableProps = ['constructor', 'valueOf', 'isPrototypeOf', 'toString', 'propertyIsEnumerable', 'hasOwnProperty', 'toLocaleString'];
+
+
+module.exports = function keys(obj) {
+    if (!isObject(obj)) return [];
+    if (nativeKeys) {
+        return nativeKeys(obj);
+    }
+    var result = [];
+    for (var key in obj) if (has(obj, key)) result.push(key);
+    // IE < 9
+    if (hasEnumBug) {
+        var nonEnumIdx = nonEnumerableProps.length;
+        while (nonEnumIdx--) {
+            var prop = nonEnumerableProps[nonEnumIdx];
+            if (has(obj, prop) && indexOf(result, prop) === -1) result.push(prop);
+        }
+    }
+    return result;
+};
+
+},{"amp-has":"/home/bbales2/stochssModel/app/static/modelEditor/node_modules/ampersand-events/node_modules/amp-keys/node_modules/amp-has/has.js","amp-index-of":"/home/bbales2/stochssModel/app/static/modelEditor/node_modules/ampersand-events/node_modules/amp-keys/node_modules/amp-index-of/index-of.js","amp-is-object":"/home/bbales2/stochssModel/app/static/modelEditor/node_modules/ampersand-events/node_modules/amp-keys/node_modules/amp-is-object/is-object.js"}],"/home/bbales2/stochssModel/app/static/modelEditor/node_modules/ampersand-events/node_modules/amp-keys/node_modules/amp-has/has.js":[function(require,module,exports){
+var hasOwn = Object.prototype.hasOwnProperty;
+
+
+module.exports = function has(obj, key) {
+    return obj != null && hasOwn.call(obj, key);
+};
+
+},{}],"/home/bbales2/stochssModel/app/static/modelEditor/node_modules/ampersand-events/node_modules/amp-keys/node_modules/amp-index-of/index-of.js":[function(require,module,exports){
+var isNumber = require('amp-is-number');
+
+
+module.exports = function indexOf(arr, item, from) {
+    var i = 0;
+    var l = arr && arr.length;
+    if (isNumber(from)) {
+        i = from < 0 ? Math.max(0, l + from) : from;
+    }
+    for (; i < l; i++) {
+        if (arr[i] === item) return i;
+    }
+    return -1;
+};
+
+},{"amp-is-number":"/home/bbales2/stochssModel/app/static/modelEditor/node_modules/ampersand-events/node_modules/amp-keys/node_modules/amp-index-of/node_modules/amp-is-number/is-number.js"}],"/home/bbales2/stochssModel/app/static/modelEditor/node_modules/ampersand-events/node_modules/amp-keys/node_modules/amp-index-of/node_modules/amp-is-number/is-number.js":[function(require,module,exports){
+module.exports=require("/home/bbales2/stochssModel/app/static/modelEditor/node_modules/ampersand-events/node_modules/amp-is-empty/node_modules/amp-is-number/is-number.js")
+},{"/home/bbales2/stochssModel/app/static/modelEditor/node_modules/ampersand-events/node_modules/amp-is-empty/node_modules/amp-is-number/is-number.js":"/home/bbales2/stochssModel/app/static/modelEditor/node_modules/ampersand-events/node_modules/amp-is-empty/node_modules/amp-is-number/is-number.js"}],"/home/bbales2/stochssModel/app/static/modelEditor/node_modules/ampersand-events/node_modules/amp-keys/node_modules/amp-is-object/is-object.js":[function(require,module,exports){
+module.exports=require("/home/bbales2/stochssModel/app/static/modelEditor/node_modules/ampersand-events/node_modules/amp-bind/node_modules/amp-is-object/is-object.js")
+},{"/home/bbales2/stochssModel/app/static/modelEditor/node_modules/ampersand-events/node_modules/amp-bind/node_modules/amp-is-object/is-object.js":"/home/bbales2/stochssModel/app/static/modelEditor/node_modules/ampersand-events/node_modules/amp-bind/node_modules/amp-is-object/is-object.js"}],"/home/bbales2/stochssModel/app/static/modelEditor/node_modules/ampersand-events/node_modules/amp-once/node_modules/amp-limit-calls/limit-calls.js":[function(require,module,exports){
+module.exports = function limitCalls(fn, times) {
+    var memo;
+    return function() {
+        if (times-- > 0) {
+            memo = fn.apply(this, arguments);
+        } else {
+            fn = null;
+        }
+        return memo;
+    };
+};
+
+},{}],"/home/bbales2/stochssModel/app/static/modelEditor/node_modules/ampersand-events/node_modules/amp-once/once.js":[function(require,module,exports){
+var limitCalls = require('amp-limit-calls');
+
+
+module.exports = function once(fn) {
+    return limitCalls(fn, 1);
+};
+
+},{"amp-limit-calls":"/home/bbales2/stochssModel/app/static/modelEditor/node_modules/ampersand-events/node_modules/amp-once/node_modules/amp-limit-calls/limit-calls.js"}],"/home/bbales2/stochssModel/app/static/modelEditor/node_modules/ampersand-events/node_modules/amp-unique-id/unique-id.js":[function(require,module,exports){
+(function (global){
+/*global window, global*/
+var theGlobal = (typeof window !== 'undefined') ? window : global;
+if (!theGlobal.__ampIdCounter) {
+    theGlobal.__ampIdCounter = 0;
+}
+
+
+module.exports = function uniqueId(prefix) {
+    var id = ++theGlobal.__ampIdCounter + '';
+    return prefix ? prefix + id : id;
+};
+
+}).call(this,typeof global !== "undefined" ? global : typeof self !== "undefined" ? self : typeof window !== "undefined" ? window : {})
 },{}],"/home/bbales2/stochssModel/app/static/modelEditor/node_modules/ampersand-form-view/ampersand-form-view.js":[function(require,module,exports){
 ;if (typeof window !== "undefined") {  window.ampersand = window.ampersand || {};  window.ampersand["ampersand-form-view"] = window.ampersand["ampersand-form-view"] || [];  window.ampersand["ampersand-form-view"].push("2.2.0");}
 var BBEvents = require('backbone-events-standalone');
@@ -7444,6 +8241,8 @@ module.exports = mixins;
 var domify = require('domify');
 var dom = require('ampersand-dom');
 var matches = require('matches-selector');
+var Events = require('ampersand-events');
+var extend = require('amp-extend');
 
 //Replaceable with anything with label, message-container, message-text data-hooks and a <select>
 var defaultTemplate = [
@@ -7512,6 +8311,8 @@ function SelectView (opts) {
     this.setValue(opts.value);
 }
 
+extend(SelectView.prototype, Events);
+
 SelectView.prototype.render = function () {
     if (this.rendered) return;
 
@@ -7569,14 +8370,33 @@ SelectView.prototype.renderOptions = function () {
     this.select.innerHTML = '';
     if (this.unselectedText) {
         this.select.appendChild(
-            createOption(null, this.unselectedText)
+            this.createOption(null, this.unselectedText)
         );
     }
 
     this.options.forEach(function (option) {
-        this.select.appendChild(
-            createOption(this.getOptionValue(option), this.getOptionText(option))
-        );
+        var option;
+
+        if (Array.isArray(option))
+        {
+            option = this.createOption(option[0], option[1]);
+        }
+        else
+        {
+            if (this.options.isCollection) {
+                if (this.idAttribute && option[this.idAttribute]) {
+                    value = option[this.idAttribute];
+                }
+                
+                if (this.textAttribute && option[this.textAttribute]) {
+                    text = option[this.textAttribute];
+                }
+            }
+            
+            option = this.createOption(value, text, option);
+        }
+        
+        this.select.appendChild(option);
     }.bind(this));
 };
 
@@ -7673,18 +8493,6 @@ SelectView.prototype.validate = function () {
     return this.valid;
 };
 
-SelectView.prototype.getOptionValue = function (option) {
-    if (Array.isArray(option)) return option[0];
-
-    if (this.options.isCollection) {
-        if (this.idAttribute && option[this.idAttribute]) {
-            return option[this.idAttribute];
-        }
-    }
-
-    return option;
-};
-
 SelectView.prototype.setMessage = function (message) {
     var mContainer = this.el.querySelector('[data-hook~=message-container]');
     var mText = this.el.querySelector('[data-hook~=message-text]');
@@ -7704,33 +8512,29 @@ SelectView.prototype.setMessage = function (message) {
     }
 };
 
-SelectView.prototype.getOptionText = function (option) {
-    if (Array.isArray(option)) return option[1];
-
-    if (this.options.isCollection) {
-        if (this.textAttribute && option[this.textAttribute]) {
-            return option[this.textAttribute];
-        }
-    }
-
-    return option;
-};
-
-function createOption (value, text) {
+SelectView.prototype.createOption = function (value, text, model) {
     var node = document.createElement('option');
 
     //Set to empty-string if undefined or null, but not if 0, false, etc
     if (value === null || value === undefined) { value = ''; }
 
-    node.textContent = text;
+    node.innerHTML = text;
     node.value = value;
+
+    if(model)
+    {
+        this.listenTo(model, 'change:' + this.textAttribute, _.bind(_.partial(
+            function(model, element) {
+                node.innerHTML = model[this.textAttribute]; 
+            }, model, node), this));
+    }
 
     return node;
 }
 
 module.exports = SelectView;
 
-},{"ampersand-dom":"/home/bbales2/stochssModel/app/static/modelEditor/node_modules/ampersand-dom/ampersand-dom.js","domify":"/home/bbales2/stochssModel/app/static/modelEditor/node_modules/domify/index.js","matches-selector":"/home/bbales2/stochssModel/app/static/modelEditor/node_modules/matches-selector/index.js"}],"/home/bbales2/stochssModel/app/static/modelEditor/node_modules/ampersand-state/ampersand-state.js":[function(require,module,exports){
+},{"amp-extend":"/home/bbales2/stochssModel/app/static/modelEditor/node_modules/amp-extend/extend.js","ampersand-dom":"/home/bbales2/stochssModel/app/static/modelEditor/node_modules/ampersand-dom/ampersand-dom.js","ampersand-events":"/home/bbales2/stochssModel/app/static/modelEditor/node_modules/ampersand-events/ampersand-events.js","domify":"/home/bbales2/stochssModel/app/static/modelEditor/node_modules/domify/index.js","matches-selector":"/home/bbales2/stochssModel/app/static/modelEditor/node_modules/matches-selector/index.js"}],"/home/bbales2/stochssModel/app/static/modelEditor/node_modules/ampersand-state/ampersand-state.js":[function(require,module,exports){
 ;if (typeof window !== "undefined") {  window.ampersand = window.ampersand || {};  window.ampersand["ampersand-state"] = window.ampersand["ampersand-state"] || [];  window.ampersand["ampersand-state"].push("4.4.4");}
 var _ = require('underscore');
 var BBEvents = require('backbone-events-standalone');

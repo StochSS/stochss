@@ -515,7 +515,8 @@ class ImportFromXMLPage(BaseHandler):
         stochKitModel = stochss.stochkit.StochMLDocument.fromString(storage.file.read()).toModel(name)
         modelDb = StochKitModelWrapper.createFromStochKitModel(self, stochKitModel)
 
-        self.redirect("/modeleditor")
+        return
+        #self.redirect("/modeleditor")
 
 class ModelEditorPage(BaseHandler):
     """

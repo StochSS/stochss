@@ -49,11 +49,38 @@ var AddNewStoichSpecieForm = AmpersandFormView.extend({
 });
 
 var StoichSpecieCollectionFormView = AmpersandView.extend({
-    template: "<div><table data-hook='stoichSpecieTable'></table>Add Specie: <form data-hook='addStoichSpecieForm'></form></div>",
+    template: "<div><table data-hook='stoichSpecieTable'></table><div data-hook='addStoichSpecieDiv'>Add Specie: <form data-hook='addStoichSpecieForm'></form></div></div>",
     initialize: function(attr, options)
     {
         AmpersandView.prototype.initialize.call(this, attr, options);
+
+        this.reaction = this.collection.parent;
+
+        this.listenToAndRun(this.reaction, 'change:type', _.bind(this.setReactionType, this));
     },
+    setReactionType: function()
+    {
+        this.reactionType = this.reaction.type;
+    },
+    props:
+    {
+        reactionType : 'string'
+    },
+    derived: {
+        showCustom :
+        {
+            deps : ['reactionType'],
+            fn : function() {
+                return this.reactionType == 'custom' || this.reactionType == 'massaction';
+            }
+        }
+    },
+    bindings : {
+        "showCustom" : {
+            type : 'toggle',
+            hook : 'addStoichSpecieDiv'
+        }
+    },        
     render: function()
     {
         AmpersandView.prototype.render.apply(this, arguments);
