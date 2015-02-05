@@ -687,7 +687,7 @@ class BackendWorker():
         if not os.path.exists(keyfile):
             raise Exception("ssh keyfile file not found: {0}".format(keyfile))
         
-        celery_config_filename = "{0}/{1}".format(os.path.dirname(__file__),"/celeryconfig.py")
+        celery_config_filename = os.path.join(os.path.dirname(__file__), "celeryconfig.py")
         if not os.path.exists(celery_config_filename):
             raise Exception("celery config file not found: {0}".format(celery_config_filename))
         
@@ -703,8 +703,8 @@ class BackendWorker():
                        os.path.join(TaskConfig.STOCHSS_HOME, 'app', 'lib', 'cloudtracker')]
         commands.append('export PYTHONPATH={0}'.format(':'.join(python_path)))
 
-        commands.append('export AWS_ACCESS_KEY_ID={0};'.format(str(credentials['EC2_ACCESS_KEY'])))
-        commands.append('export AWS_SECRET_ACCESS_KEY={0};'.format( str(credentials['EC2_SECRET_KEY'])))
+        commands.append('export AWS_ACCESS_KEY_ID={0}'.format(str(credentials['EC2_ACCESS_KEY'])))
+        commands.append('export AWS_SECRET_ACCESS_KEY={0}'.format( str(credentials['EC2_SECRET_KEY'])))
         #start_celery_str = "celery -A tasks worker --autoreload --loglevel=info --workdir /home/ubuntu > /home/ubuntu/celery.log 2>&1"
         # PyURDME must be run inside a 'screen' terminal as part of the FEniCS code depends on the ability to write to the process' terminal, screen provides this terminal.
         #celerycmd = "sudo screen -d -m bash -c '{1}{0}'\n".format(start_celery_str,command)
@@ -729,13 +729,14 @@ class BackendWorker():
                 raise Exception("scp failure: {0} not transfered to {1}".format(celery_config_filename, ip))
             
 
-            start_celery_str = "celery -A tasks worker -Q {q1},{q2} --autoreload --loglevel=debug --workdir /home/ubuntu > /home/ubuntu/celery.log 2>&1".format(
-                q1=CELERY_QUEUE_EC2,
-                q2="{0}_{1}".format(CELERY_QUEUE_EC2, ins_type.replace(".", "")))
+            commands.append(
+                "celery -A tasks worker -Q {q1},{q2} --autoreload --loglevel=info --workdir /home/ubuntu > /home/ubuntu/celery.log 2>&1".format(
+                    q1=CELERY_QUEUE_EC2,
+                    q2="{0}_{1}".format(CELERY_QUEUE_EC2, ins_type.replace(".", ""))))
 
             command = ';'.join(commands)
 
-            celerycmd = "sudo screen -d -m bash -c '{1}{0}'".format(start_celery_str, command)
+            celerycmd = "sudo screen -d -m bash -c '{0}'".format(command)
 
             cmd = "ssh -o 'StrictHostKeyChecking no' -i {0} ubuntu@{1} \"{2}\"".format(keyfile, ip, celerycmd)
             logging.info(cmd)
