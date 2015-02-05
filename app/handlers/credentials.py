@@ -18,8 +18,6 @@ from backend.databases.dynamo_db import DynamoDB
 import os
 
 class CredentialsPage(BaseHandler):
-    """
-    """
     INS_TYPES = ["t1.micro", "m1.small", "m3.medium", "m3.large", "c3.large", "c3.xlarge"]
     HEAD_NODE_TYPES = ["c3.large", "c3.xlarge"]
     
@@ -96,11 +94,11 @@ class CredentialsPage(BaseHandler):
                         if int(params[num_type]) > 20:
                             result = {'status': 'Failure' , 'msg': 'Number of new vms should be no more than 20.'}
                             all_numbers_correct = False
-                            break;
+                            break
                         elif int(params[num_type]) <= 0:
                             result = {'status': 'Failure' , 'msg': 'Number of new vms should be at least 1.'}
                             all_numbers_correct = False
-                            break;
+                            break
                         else:
                             vms.append({"instance_type": type, "num_vms": int(params[num_type])})                   
 
@@ -280,7 +278,7 @@ class CredentialsPage(BaseHandler):
         params ={"infrastructure":"ec2",
              'group':group_random_name, 
              'vms': vms_info,
-             'image_id': 'ami-6e226406',
+             'image_id': 'ami-10551878',
              'key_prefix':key_prefix, #key_prefix = user_id
              'keyname':group_random_name, 
              'email':[user_id],

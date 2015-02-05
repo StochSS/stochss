@@ -8,7 +8,6 @@ class AmazonS3Agent():
     def upload_file(self, file, bucket_name):
         try:
             uploadfile = file
-            bucket_name = bucket_name
             lifecycle = Lifecycle()
             lifecycle.add_rule('rulename', prefix='logs/', status='Enabled',
                                expiration=Expiration(days=10))

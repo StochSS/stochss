@@ -1,5 +1,24 @@
 #!/bin/bash
 
+help_message="Usage: $0 [--run] [--install]"
+
+mode="run"
+if [ $# -ge 2 ]; then
+    echo "Error: $0 takes at most 1 argument."
+    echo "$help_message"
+    exit
+elif [ $# -eq 1 ]; then
+    if [ "$1" = "--run" ]; then
+        mode="run"
+    elif [ "$1" = "--install" ]; then
+        mode="install"
+    else
+        echo "Error: Invalid argument '$1'!"
+        echo "$help_message"
+        exit
+    fi
+fi
+
 # Attempt to install StochKit 2.0.11
 #
 # Install it in the user's home folder by default
@@ -304,15 +323,29 @@ echo -n "Testing if Stochoptim built... "
 
 rm -r "$rundir" >& /dev/null
 
+is_stochoptim_installed="false"
 function check_if_StochOptim_Installed {
+   is_stochoptim_installed="false"
+
    export R_LIBS="$STOCHOPTIM/library"
    CMD="Rscript --vanilla \"$STOCHOPTIM/exec/mcem2.r\" --model \"$STOCHOPTIM/inst/extdata/birth_death_MAmodel.R\" --data \"$STOCHOPTIM/birth_death_MAdata.txt\" --steps \"\" --seed 1 --cores 1 --K.ce 1000 --K.em 100 --K.lik 10000 --K.cov 10000 --rho 0.01 --perturb 0.25 --alpha 0.25 --beta 0.25 --gamma 0.25 --k 3 --pcutoff 0.05 --qcutoff 0.005 --numIter 10 --numConverge 1 --command 'bash' >& /dev/null"
-   #echo $CMD
+
+#   echo $CMD
    eval $CMD
-   return $?
+
+   status_code=$?
+#   echo "status_code = $status_code"
+   if [ $status_code -ne 0 ]; then
+      is_stochoptim_installed="false"
+   else
+      is_stochoptim_installed="true"
+   fi
+#   echo "is_stochoptim_installed = $is_stochoptim_installed"
+   return $status_code
 }
 
-if check_if_StochOptim_Installed; then
+check_if_StochOptim_Installed
+if [ "$is_stochoptim_installed" = "true" ]; then
     echo "Yes"
     echo "$STOCHOPTIM_VERSION found in $STOCHOPTIM"
 else
@@ -347,13 +380,14 @@ else
 
     export R_LIBS="$STOCHOPTIM/library"
 
+    check_if_StochOptim_Installed
     # Test that StochKit was installed successfully by running it on a sample model
-    if check_if_StochOptim_Installed; then
-	    echo "Success!"
+    if [ "$is_stochoptim_installed" = "true" ]; then
+            echo "Success!"
     else
-	    echo "Failed"
-	    echo "$STOCHOPTIM failed to install. Consult logs above for errors"	
-	    exit -1
+            echo "Failed"
+            echo "$STOCHOPTIM failed to install. Consult logs above for errors"
+            exit -1
     fi
 fi
 
@@ -441,6 +475,9 @@ echo "$STOCHKIT_ODE" >> "$STOCHSS_HOME/conf/config"
 echo -n "$STOCHOPTIM" >> "$STOCHSS_HOME/conf/config"
 echo "Done!"
 
-export PATH=$PATH:$STOCHKIT_HOME
+if [ "$mode" = "run" ]; then
+    echo "Running StochSS..."
+    export PATH=$PATH:$STOCHKIT_HOME
+    exec python "$STOCHSS_HOME/launchapp.py" $0
+fi
 
-exec python "$STOCHSS_HOME/launchapp.py" $0

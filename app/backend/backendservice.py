@@ -31,7 +31,7 @@ class backendservices():
     INFRA_EC2 = 'ec2'
     INFRA_CLUSTER = 'cluster'
     WORKER_AMIS = {
-        INFRA_EC2: 'ami-6e226406'
+        INFRA_EC2: 'ami-10551878'
     }
     VMSTATUS_IDS = 'ids'
 
@@ -50,13 +50,29 @@ class backendservices():
         Returns return value from celery async call and the task ID
         '''
         #logging.info('inside execute task for cloud : Params - %s', str(params))
+        import tasks
+        from tasks import task
+            
+        if instance_type:
+                queue_ins_name = "_"+instance_type.replace(".", "")
+        else:
+                queue_ins_name = ""
+                
+        celery_config = tasks.CelerySingleton()
+        celery_config.configure()
+        celery_config.printCeleryQueue()
+        celery_queue_name = backend_handler.CELERY_QUEUE_EC2+""+queue_ins_name
+        celery_exchange = backend_handler.CELERY_EXCHANGE_EC2
+        celery_routing_key = backend_handler.CELERY_ROUTING_KEY_EC2+""+queue_ins_name
+        logging.info('Deliver the task to the queue: {0}, routing key: {1}'.format(celery_queue_name, celery_routing_key))
+                
         if not database:
             database = DynamoDB(access_key, secret_key)
             
         result = {}
+        
         try:
-            import tasks
-            from tasks import task
+            
             #This is a celery task in tasks.py: @celery.task(name='stochss')
             
             # Need to make sure that the queue is actually reachable because
@@ -204,7 +220,7 @@ class backendservices():
                 # Update DB entry just before sending to worker
                 database.updateEntry(taskid, data, backendservices.TABLENAME)
                 params["queue"] = queue_name
-                tmp = master_task.delay(taskid, params, database)
+                tmp = master_task.apply_async(args=[taskid, params, database], queue=celery_queue_name, routing_key=celery_routing_key)
                 #TODO: This should really be done as a background_thread as soon as the task is sent
                 #      to a worker, but this would require an update to GAE SDK.
                 # call the poll task process
@@ -226,18 +242,7 @@ class backendservices():
                     logging.error("Caught exception {0}".format(e))
                 result["celery_pid"] = tmp.id
             else:
-                if instance_type:
-                    queue_ins_name = "_"+instance_type.replace(".", "")
-                else:
-                    queue_ins_name = ""
                 
-                celery_config = tasks.CelerySingleton()
-                celery_config.configure()
-                celery_config.printCeleryQueue()
-                celery_queue_name = backend_handler.CELERY_QUEUE_EC2+""+queue_ins_name
-                celery_exchange = backend_handler.CELERY_EXCHANGE_EC2
-                celery_routing_key = backend_handler.CELERY_ROUTING_KEY_EC2+""+queue_ins_name
-                logging.info('Deliver the task to the queue: {0}, routing key: {1}'.format(celery_queue_name, celery_routing_key))
                 #celery async task execution http://ask.github.io/celery/userguide/executing.html
                 
                 # if this is the cost analysis replay then update the stochss-cost-analysis table
@@ -518,7 +523,9 @@ class backendservices():
             i = InfrastructureManager(blocking=block)
             res = {}
             
-            # 1. change the status of 'failed' in the previous launch in db to 'terminated'
+            # 1. change the status of 'failed' in the previous launch in db to 'terminated' 
+            # NOTE: We need to make sure that the RabbitMQ server is running if any compute
+            # nodes are running as we are using the AMQP broker option for Celery.
 
             ins_ids = VMStateModel.terminate_not_active(params)
             

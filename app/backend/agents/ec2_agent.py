@@ -1,8 +1,9 @@
 from base_agent import BaseAgent, AgentConfigurationException, AgentRuntimeException
 import sys,os,traceback
+
 sys.path.append(os.path.join(os.path.dirname(__file__), '../../lib/boto'))
 sys.path.append(os.path.join(os.path.dirname(__file__), '../'))
-#print sys.path
+
 import boto
 from boto.exception import EC2ResponseError
 import datetime
@@ -14,9 +15,6 @@ from uuid import uuid4
 import logging
 
 import httplib
-
-
-
 
 
 __author__ = 'hiranya, anand'
@@ -306,6 +304,11 @@ class EC2Agent(BaseAgent):
     userstr+='echo export STOCHKIT_HOME={0} >> /home/ubuntu/.bashrc\n'.format("/home/ubuntu/stochss/StochKit/")
     userstr+='echo export STOCHKIT_ODE={0} >> ~/.bashrc\n'.format("/home/ubuntu/stochss/ode/")
     userstr+='echo export STOCHKIT_ODE={0} >> /home/ubuntu/.bashrc\n'.format("/home/ubuntu/stochss/ode/")
+
+    userstr+='export R_LIBS={0}\n'.format('/home/ubuntu/stochss/stochoptim/library')
+    userstr+='echo export R_LIBS={0} >> ~/.bashrc\n'.format("/home/ubuntu/stochss/stochoptim/library")
+    userstr+='echo export R_LIBS={0} >> /home/ubuntu/.bashrc\n'.format("/home/ubuntu/stochss/stochoptim/library")
+
     userstr+='source ~/.bashrc \n'
     userstr+='source /home/ubuntu/.bashrc \n'
     # Workers need an alarm...
