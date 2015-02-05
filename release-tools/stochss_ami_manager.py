@@ -169,13 +169,13 @@ class AmiManager:
 
     @staticmethod
     def create_ec2_connection(aws_region):
-        if os.environ.has_key('AWS_ACCESS_KEY_ID'):
-            aws_access_key = os.environ['AWS_ACCESS_KEY_ID']
+        if os.environ.has_key('AWS_ACCESS_KEY'):
+            aws_access_key = os.environ['AWS_ACCESS_KEY']
         else:
             aws_access_key = raw_input("Please enter your AWS access key: ")
 
-        if os.environ.has_key('AWS_SECRET_ACCESS_KEY'):
-            aws_secret_key = os.environ['AWS_SECRET_ACCESS_KEY']
+        if os.environ.has_key('AWS_SECRET_KEY'):
+            aws_secret_key = os.environ['AWS_SECRET_KEY']
         else:
             aws_secret_key = raw_input("Please enter your AWS secret key: ")
 
