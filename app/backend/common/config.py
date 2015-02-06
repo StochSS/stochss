@@ -1,7 +1,12 @@
+import os
 class CeleryConfig(object):
     EXCHANGE_PREFIX = "exchange_stochss"
     QUEUE_PREFIX = "queue_stochss"
     ROUTING_KEY_PREFIX = "routing_key_stochss"
+
+    CONFIG_FILENAME = os.path.abspath(os.path.join(os.path.dirname(__file__), '..', 'celeryconfig.py'))
+    CONFIG_TEMPLATE_FILENAME = os.path.abspath(os.path.join(os.path.dirname(__file__),
+                                                            '..', 'celeryconfig.py.template'))
 
     @staticmethod
     def get_exchange_name(agent_type, instance_type=None):
@@ -34,3 +39,6 @@ class JobTypes(object):
 class AgentTypes(object):
     EC2 = 'ec2'
     FLEX = 'flex'
+
+class FlexConfig(object):
+    INSTANCE_TYPE = 'flex_vm'

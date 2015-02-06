@@ -1,5 +1,4 @@
 from ec2_agent import EC2Agent
-from euca_agent import EucalyptusAgent
 
 __author__ = 'hiranya'
 __email__ = 'hiranya@appscale.com'
@@ -11,8 +10,7 @@ class InfrastructureAgentFactory:
   """
 
   agents = {
-    'ec2': EC2Agent,
-    'euca': EucalyptusAgent
+    'ec2': EC2Agent
   }
 
   def create_agent(self, infrastructure):

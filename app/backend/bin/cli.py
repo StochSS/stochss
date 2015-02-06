@@ -20,9 +20,9 @@ import shlex
 from databases.dynamo_db import DynamoDB
 import tasks
 from tasks import *
+import common.helper as helper
 
 import celery
-from celery.task.control import inspect
 
 
 CELERY_EXCHANGE_FLEX = "exchange_stochss_flex"
@@ -49,6 +49,7 @@ class InvalidConfigurationError(BaseException):
 class BackendCli:
     SUPPORTED_OUTPUT_STORES = ["amazon_s3"]
     SUPPORTED_JOB_STATUS_DB_STORES = ["amazon_dynamodb"]
+    AGENT_TYPE = 'flex_cli'
     INSTANCE_TYPE = 'flexvm'
 
     def __init__(self, cli_jobs_config):
@@ -134,218 +135,10 @@ class BackendCli:
         if not database:
             database = DynamoDB(access_key, secret_key)
 
-        result = {}
-        try:
-            #This is a celery task in tasks.py: @celery.task(name='stochss')
-
-            # Need to make sure that the queue is actually reachable because
-            # we don't want the user to try to submit a task and have it
-            # timeout because the broker server isn't up yet.
-            sleep_time = 5
-            total_wait_time = 15
-            total_tries = total_wait_time / sleep_time
-            current_try = 0
-
-            logging.info("About to check broker at: {0}".format(celery.current_app.conf['BROKER_URL']))
-
-            while True:
-                try:
-                    insp = inspect().stats()
-                except IOError as e:
-                    current_try += 1
-                    logging.info("Broker down, try: {0}, exception: {1}".format(current_try, e))
-                    if current_try >= total_tries:
-                        logging.info("Broker unreachable for {0} seconds.".format(total_wait_time))
-                        return {
-                            "success": False,
-                            "reason": "Cloud instances unavailable. Please wait a minute for their initialization to complete.",
-                            "exception": str(e),
-                            "traceback": traceback.format_exc()
-                        }
-                    time.sleep(sleep_time)
-                    continue
-                logging.info("Broker up")
-                break
-
-            # if there is no taskid explicit, create one the first run
-            if not task_id:
-                task_id = str(uuid.uuid4())
-
-            result["db_id"] = task_id
-            #create a celery task
-            logging.info("execute_cloud_task : executing task with uuid : %s ", task_id)
-            timenow = datetime.now()
-            data = {
-                'status': "pending",
-                "start_time": timenow.strftime('%Y-%m-%d %H:%M:%S'),
-                'Message': "Task sent to Cloud",
-                'uuid': task_id
-            }
-
-            tmp = None
-            if params["job_type"] == "mcem2":
-                queue_name = task_id
-                result["queue"] = queue_name
-                data["queue"] = queue_name
-                # How many cores?
-                requested_cores = -1
-                if "cores" in params:
-                    requested_cores = int(params["cores"])
-
-                ##################################################################################################################
-                # The master task can run on any node...
-                #TODO: master task might need to run on node with at least 2 cores...
-                # launch_params["instance_type"] = "c3.large"
-                # launch_params["num_vms"] = 1
-                ##################################################################################################################
-
-                celery_info = CelerySingleton().app.control.inspect()
-                # How many active workers are there?
-                active_workers = celery_info.active()
-                # We will keep around a dictionary of the available workers, where
-                # the key will be the workers name and the value will be how many
-                # cores that worker has (i.e. how many tasks they can execute
-                # concurrently).
-                available_workers = {}
-                core_count = 0
-                if active_workers:
-                    for worker_name in active_workers:
-                        # active_workers[worker_name] will be a list of dictionaries representing
-                        # tasks that the worker is currently executing, so if it doesn't exist
-                        # then the worker isn't busy
-                        if not active_workers[worker_name]:
-                            available_workers[worker_name] = celery_info.stats()[worker_name]['pool']['max-concurrency']
-                            core_count += int(available_workers[worker_name])
-                logging.info("All available workers:".format(available_workers))
-                # We assume that at least one worker is already consuming from the main queue
-                # so we just need to find that one worker and remove it from the list, since
-                # we need one worker on the main queue for the master task.
-                done = False
-                for worker_name in available_workers:
-                    worker_queues = celery_info.active_queues()[worker_name]
-                    for queue in worker_queues:
-                        if queue["name"] == "celery":
-                            popped_cores = int(available_workers.pop(worker_name))
-                            done = True
-                            core_count -= popped_cores
-                            break
-                    if done:
-                        break
-                if core_count <= 0:
-                    # Then theres only one worker available
-                    return {
-                        "success": False,
-                        "reason": "You need to have at least two workers in order to run a parameter estimation job in the cloud."
-                    }
-                logging.info("Found {0} cores that can be used as slaves on the following workers: {1}".format(
-                    core_count,
-                    available_workers
-                ))
-                if requested_cores == -1:
-                    params["paramstring"] += " --cores {0}".format(core_count)
-                    # Now just use all available cores since the user didn't request
-                    # a specific amount, i.e. re-route active workers to the new queue
-                    worker_names = []
-                    for worker_name in available_workers:
-                        worker_names.append(worker_name)
-                    logging.info("Rerouting all available workers: {0} to queue: {1}".format(worker_names, queue_name))
-                    rerouteWorkers(worker_names, queue_name)
-                else:
-                    params["paramstring"] += " --cores {0}".format(requested_cores)
-                    # Now loop through available workers and see if we have enough free to meet
-                    # requested core count.
-                    worker_names = []
-                    unmatched_cores = requested_cores
-                    if available_workers:
-                        for worker_name in available_workers:
-                            # We need to find out what the concurrency of the worker is.
-                            worker_cores = available_workers[worker_name]
-                            # Subtract this from our running count and save the workers name
-                            unmatched_cores -= worker_cores
-                            worker_names.append(worker_name)
-                            if unmatched_cores <= 0:
-                                # Then we have enough
-                                break
-                    # Did we get enough?
-                    if unmatched_cores > 0:
-                        # Nope...
-                        return {
-                            "success": False,
-                            "reason": "Didn't find enough idle cores to meet requested core count of {0}. Still need {1} more.".format(
-                                requested_cores,
-                                unmatched_cores
-                            )
-                        }
-                    logging.info("Found enough idle cores to meet requested core count of {0}".format(requested_cores))
-                    # We have enough, re-route active workers to the new queue
-                    logging.info("Rerouting workers: {0} to queue: {1}".format(worker_names, queue_name))
-                    rerouteWorkers(worker_names, queue_name)
-
-                # Update DB entry just before sending to worker
-                database.updateEntry(task_id, data, self.job_status_db_store_info['table_name'])
-                params["queue"] = queue_name
-                tmp = master_task.delay(task_id, params, database)
-                #TODO: This should really be done as a background_thread as soon as the task is sent
-                #      to a worker, but this would require an update to GAE SDK.
-                # call the poll task process
-                poll_task_path = os.path.join(
-                    os.path.dirname(os.path.abspath(__file__)),
-                    "poll_task.py"
-                )
-                logging.info("Task sent to cloud with celery id {0}...".format(tmp.id))
-                poll_task_string = "python {0} {1} {2} > poll_task_{1}.log 2>&1".format(
-                    poll_task_path,
-                    tmp.id,
-                    queue_name
-                )
-                p = subprocess.Popen(shlex.split(poll_task_string))
-                result["celery_pid"] = tmp.id
-
-            # for all other jobs
-            else:
-                if instance_type:
-                    queue_ins_name = "_" + instance_type.replace(".", "")
-                else:
-                    queue_ins_name = ""
-
-                logging.info("queue_ins_name = {0}".format(queue_ins_name))
-
-                celery_config = tasks.CelerySingleton()
-                celery_config.configure()
-                celery_config.printCeleryQueue()
-                celery_queue_name = CELERY_QUEUE_FLEX + "" + queue_ins_name
-                celery_exchange = CELERY_EXCHANGE_FLEX
-                celery_routing_key = CELERY_ROUTING_KEY_FLEX + "" + queue_ins_name
-                logging.info('Deliver the task to the queue: {0}, routing key: {1}'.format(celery_queue_name,
-                                                                                           celery_routing_key))
-                #celery async task execution http://ask.github.io/celery/userguide/executing.html
-
-                # if this is the cost analysis replay then update the stochss-cost-analysis table
-                if cost_replay:
-                    raise NotImplementedError
-                else:
-                    params["db_table"] = self.job_status_db_store_info['table_name']
-                    database.updateEntry(task_id, data, params["db_table"])
-                    tmp = tasks.task.apply_async(args=[task_id, params, database, access_key, secret_key],
-                                                 queue=celery_queue_name, routing_key=celery_routing_key)
-                    # delay(taskid, params, access_key, secret_key)  #calls task(taskid,params,access_key,secret_key)
-                #                 logging.info('RESULT OF TASK: {0}'.format(tmp.get()))
-                print tmp.ready()
-                result["celery_pid"] = tmp.id
-
-            logging.info("execute_cloud_task:  result of task : %s", str(tmp.id))
-            result["success"] = True
-            return result
-
-        except Exception, e:
-            logging.error("execute_cloud_task: error - %s", str(e))
-            traceback.print_exc()
-            return {
-                "success": False,
-                "reason": str(e),
-                "exception": str(e),
-                "traceback": traceback.format_exc()
-            }
+        result = helper.execute_cloud_task(params=params, agent=agent, access_key=access_key, secret_key=secret_key,
+                                           task_id=task_id, instance_type=instance_type, cost_replay=cost_replay,
+                                           database=database)
+        return result
 
 
     def config_celery_queues(self, exchange_name, queue_name, routing_key, ins_types):
@@ -381,38 +174,6 @@ class BackendCli:
         my_celery = tasks.CelerySingleton()
         my_celery.configure()
 
-    def is_queue_broker_up(self):
-        """
-            Check if Celery Broker is up
-            :return: is_broker_up, exception, traceback_str
-        """
-        sleep_time = 5
-        total_wait_time = 15
-        total_tries = total_wait_time / sleep_time
-
-        current_try = 0
-        broker_url = celery.current_app.conf['BROKER_URL']
-        logging.info("About to check broker at: {0}".format(broker_url))
-
-        while True:
-            try:
-                inspection_stats = inspect().stats()
-
-            except IOError as e:
-                current_try += 1
-                logging.info("Broker down, try: {0}, exception: {1}".format(current_try, e))
-
-                if current_try >= total_tries:
-                    logging.info("Broker unreachable for {0} seconds.".format(total_wait_time))
-                    return False, e, traceback.format_exc()
-
-                time.sleep(sleep_time)
-                continue
-
-            logging.info("Broker is up!")
-            break
-
-        return True, None, None
 
     def run(self):
         self.database.createtable(self.job_status_db_store_info['table_name'])
@@ -581,7 +342,7 @@ class BackendCli:
 
             self.__configure_celery(queue_head)
 
-            self.config_celery_queues(CELERY_EXCHANGE_FLEX, CELERY_QUEUE_FLEX, CELERY_ROUTING_KEY_FLEX, instance_types)
+            helper.config_celery_queues(agent=self.AGENT_TYPE, instance_types=instance_types)
 
             return {"success": True}
 

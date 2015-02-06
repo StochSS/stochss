@@ -14,6 +14,145 @@ from datetime import datetime
 
 from common.config import CeleryConfig, JobDatabaseConfig, JobTypes, AgentTypes
 import tasks
+from tasks import TaskConfig
+
+
+def copy_celery_config_to_vm(ins_type, ip, keyfile):
+    celery_config_filename = CeleryConfig.CONFIG_FILENAME
+    if not os.path.exists(celery_config_filename):
+        raise Exception("celery config file not found: {0}".format(celery_config_filename))
+
+    config_celery_queues(agent=AgentTypes.EC2, instance_types=[ins_type])
+    cmd = "scp -o 'StrictHostKeyChecking no' -i {0} {1} ubuntu@{2}:celeryconfig.py".format(keyfile,
+                                                                                           celery_config_filename,
+                                                                                           ip)
+    logging.info(cmd)
+    success = os.system(cmd)
+    if success == 0:
+        logging.info("scp success!")
+        logging.info(" {0} transfered to {1}".format(celery_config_filename, ip))
+    else:
+        raise Exception("scp failure: {0} not transfered to {1}".format(celery_config_filename, ip))
+
+def start_celery_on_vm(instance_type, ip, key_file, username="ubuntu", prepend_commands=None):
+    copy_celery_config_to_vm(instance_type, ip, key_file)
+
+    commands = prepend_commands if prepend_commands is None else []
+    python_path = [TaskConfig.STOCHSS_HOME,
+                   TaskConfig.PYURDME_DIR,
+                   os.path.join(TaskConfig.STOCHSS_HOME, 'app'),
+                   os.path.join(TaskConfig.STOCHSS_HOME, 'app', 'backend'),
+                   os.path.join(TaskConfig.STOCHSS_HOME, 'app', 'lib', 'cloudtracker')]
+    commands.append('export PYTHONPATH={0}'.format(':'.join(python_path)))
+
+    commands.append(
+        "celery -A tasks worker -Q {q1},{q2} --autoreload --loglevel=info --workdir /home/ubuntu > /home/ubuntu/celery.log 2>&1".format(
+            q1=CeleryConfig.get_queue_name("ec2"),
+            q2=CeleryConfig.get_queue_name("ec2", instance_type)))
+
+    command = ';'.join(commands)
+
+    # start_celery_str = "celery -A tasks worker --autoreload --loglevel=info --workdir /home/ubuntu > /home/ubuntu/celery.log 2>&1"
+    # PyURDME must be run inside a 'screen' terminal as part of the FEniCS code depends on the ability to
+    # write to the process' terminal, screen provides this terminal.
+    celery_cmd = "sudo screen -d -m bash -c '{0}'".format(command)
+
+    cmd = "ssh -o 'StrictHostKeyChecking no' -i {key_file} {username}@{ip} \"{cmd}\"".format(key_file=key_file,
+                                                                                             ip=ip,
+                                                                                             username=username,
+                                                                                             cmd=celery_cmd)
+    logging.info(cmd)
+    success = os.system(cmd)
+    return success
+
+def update_celery_config_with_queue_head_ip(queue_head_ip):
+    '''
+    Method used for updating celery config file. It should have the correct IP
+    of the queue head node, which should already be running.
+
+    Args
+        queue_head_ip    The ip that is going to be written in the celery configuration file
+    '''
+    # Write queue_head_ip to file on the appropriate line
+    with open(CeleryConfig.CONFIG_TEMPLATE_FILENAME, 'r') as celery_config_file:
+        celery_config_lines = celery_config_file.readlines()
+    with open(CeleryConfig.CONFIG_FILENAME, 'w') as celery_config_file:
+        for line in celery_config_lines:
+            if line.strip().startswith('BROKER_URL'):
+                celery_config_file.write('BROKER_URL = "amqp://stochss:ucsb@{0}:5672/"\n'.format(queue_head_ip))
+            else:
+                celery_config_file.write(line)
+
+    # Now update the actual Celery app....
+    # TODO: Doesnt seem to work in GAE until next request comes in to server
+    tasks.CelerySingleton().configure()
+
+
+def wait_for_ssh_connection(self, keyfile, ip, username="ubuntu"):
+    '''
+    Method that is actually doing the ssh connection verification. It will check for
+    a certain amount of times before determin the failure of connection.
+
+    Args
+        keyfile    the file that contains the key pairs for ssh
+        ip         the ip address that is going to be connected
+        username   the username of the machine to be connected to
+
+    Return
+        A boolean value of whether the connection is successful or not
+    '''
+    SSH_RETRY_COUNT = 8
+    SSH_RETRY_WAIT = 3
+
+    cmd = "ssh -o StrictHostKeyChecking=no -i {keyfile} {username}@{ip} \"pwd\"".format(keyfile=keyfile, ip=ip,
+                                                                                        username=username)
+    logging.info(cmd)
+    for x in range(0, SSH_RETRY_COUNT):
+        p = subprocess.Popen(cmd, shell=True, stdin=subprocess.PIPE, stdout=subprocess.PIPE,
+                             stderr=subprocess.STDOUT, close_fds=True)
+        output = p.stdout.read()
+        if output.startswith('Warning:'):
+            logging.info("ssh connected to {0}".format(ip))
+            return True
+        else:
+            logging.info("ssh not connected to {0}, sleeping {1}".format(ip, SSH_RETRY_WAIT))
+            time.sleep(SSH_RETRY_WAIT)
+
+    logging.info('Timeout waiting to connect to node via SSH.')
+    return False
+
+def config_celery_queues(agent, instance_types):
+    exchange = "exchange = Exchange('{0}', type = 'direct')".format(CeleryConfig.get_exchange_name(agent_type=agent))
+    agent_queue_name = CeleryConfig.get_queue_name(agent_type=agent)
+    agent_routing_key = CeleryConfig.get_routing_key_name(agent_type=agent)
+
+    queue_list = map(lambda instance_type: "Queue('{0}', exchange, routing_key = '{1}'), ".format(
+                                    CeleryConfig.get_queue_name(agent_type=agent, instance_type=instance_type),
+                                    CeleryConfig.get_routing_key_name(agent_type=agent, instance_type=instance_type)),
+                    instance_types)
+    queue_list.insert(0, "Queue('{0}', exchange, routing_key = '{1}')".format(agent_queue_name, agent_routing_key))
+    queues_string = 'CELERY_QUEUES = ({0})'.format(', '.join(queue_list))
+
+    with open(CeleryConfig.CONFIG_FILENAME, 'r') as f:
+        lines = f.readlines()
+
+    f = open(CeleryConfig.CONFIG_FILENAME, 'w')
+    clear_following = False
+    for line in lines:
+        if clear_following:
+            f.write("")
+        elif line.strip().startswith('exchange'):
+            f.write(exchange+"\n")
+        elif line.strip().startswith('CELERY_QUEUES'):
+            f.write(queues_string+"\n")
+            clear_following = True
+        else:
+            f.write(line)
+    f.close()
+
+    # reload the celery configuration
+    tasks.CelerySingleton().configure()
+
 
 def execute_cloud_cost_analysis_task(params, agent, instance_type, task_id, database,
                                      access_key, secret_key, start_time,
@@ -122,7 +261,7 @@ def execute_cloud_stochoptim_task(params, data, database, task_id, celery_queue_
             worker_names.append(worker_name)
 
         logging.info("Rerouting all available workers: {0} to queue: {1}".format(worker_names, queue_name))
-        tasks.rerouteWorkers(worker_names, queue_name)
+        tasks.reroute_workers(worker_names, queue_name)
 
     else:
         params["paramstring"] += " --cores {0}".format(requested_cores)
@@ -154,7 +293,7 @@ def execute_cloud_stochoptim_task(params, data, database, task_id, celery_queue_
         logging.info("Found enough idle cores to meet requested core count of {0}".format(requested_cores))
         # We have enough, re-route active workers to the new queue
         logging.info("Rerouting workers: from queue {0} to queue: {1}".format(worker_names, queue_name))
-        tasks.rerouteWorkers(worker_names, queue_name)
+        tasks.reroute_workers(worker_names, queue_name)
 
     # Update DB entry just before sending to worker
     database.updateEntry(task_id, data, JobDatabaseConfig.TABLE_NAME)

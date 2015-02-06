@@ -1,10 +1,10 @@
 import sys
 import os
 
+sys.path.append(os.path.join(os.path.dirname(__file__), '..'))
 sys.path.append(os.path.join(os.path.dirname(__file__), '../lib/celery'))
 sys.path.append(os.path.join(os.path.dirname(__file__), '../lib/boto'))
 sys.path.append(os.path.join(os.path.dirname(__file__), '../lib/kombu'))
-sys.path.append(os.path.join(os.path.dirname(__file__), '..'))
 sys.path.append(os.path.join(os.path.dirname(__file__), '../lib/amqp'))
 sys.path.append(os.path.join(os.path.dirname(__file__), '../lib/billiard'))
 sys.path.append(os.path.join(os.path.dirname(__file__), '../lib/anyjson'))
@@ -15,12 +15,12 @@ from celery import Celery, group
 
 try:
     import celeryconfig
+
 except ImportError:
     with open('{0}/celeryconfig.py.template'.format(os.path.dirname(__file__)), 'r') as fdr:
         with open('{0}/celeryconfig.py'.format(os.path.dirname(__file__)), 'w') as fdw:
             fdw.write(fdr.read())
     import celeryconfig
-     
 
 import shlex
 import traceback
@@ -33,6 +33,7 @@ import signal
 import pickle
 from cloudtracker import CloudTracker
 from kombu import Exchange, Queue
+
 
 class TaskConfig:
     STOCHSS_HOME = os.path.join('/home', 'ubuntu', 'stochss')
@@ -52,22 +53,23 @@ class CelerySingleton(object):
     http://web.archive.org/web/20090619190842/http://www.suttoncourtenay.org.uk/duncan/accu/pythonpatterns.html#singleton-and-the-borg
     """
     _instance = None
+
     def __new__(cls, *args, **kwargs):
         if not cls._instance:
             cls._instance = object.__new__(cls)
             cls._instance.app = Celery('tasks')
-            #cls.__configure(cls._instance)
+            # cls.__configure(cls._instance)
         return cls._instance
-    
+
     def configure(self):
         reload(celeryconfig)
         self.app.config_from_object('celeryconfig')
-        
+
     def printCeleryQueue(self):
         print self.app.conf.BROKER_URL
         print self.app.conf.CELERY_QUEUES
-        
-#     def add_queue(self, queue_name, exchange_name, routing_key):
+
+# def add_queue(self, queue_name, exchange_name, routing_key):
 #         exchange = Exchange(exchange_name, type='direct')
 #         if not self.app.conf.CELERY_QUEUES:
 #             logging.info('No celery queue is currently existing.Creating CELERY_QUEUES')
@@ -76,13 +78,13 @@ class CelerySingleton(object):
 #             logging.info('{0} queue is not existing.Creating it.'.format(queue_name))
 #             self.app.conf.CELERY_QUEUES += (Queue(queue_name, exchange, routing_key),)
 
+
 celery_config = CelerySingleton()
 celery_config.configure()
 celery = celery_config.app
 
+
 def poll_commands(queue_name):
-    '''
-    '''
     print "Polling process: just started..."
     package_root = "StochOptim"
     commands_file = os.path.abspath("commands.txt")
@@ -132,15 +134,15 @@ def poll_commands(queue_name):
                 # in the command string and the value is the file contents.
                 # We need to re-write the contents to file on the slave before calling.
                 if segment == "--model":
-                    file_name = command_segments[index+1]
+                    file_name = command_segments[index + 1]
                     with open(file_name, 'r') as file_content:
                         slave_params[file_name] = file_content.read()
                 elif segment == "--initial":
-                    file_name = command_segments[index+1]
+                    file_name = command_segments[index + 1]
                     with open(file_name, 'r') as file_content:
                         slave_params[file_name] = file_content.read()
                 elif segment == "--final":
-                    file_name = command_segments[index+1]
+                    file_name = command_segments[index + 1]
                     with open(file_name, 'r') as file_content:
                         slave_params[file_name] = file_content.read()
                 # For output files, we don't need to do anything really because the slave will deal with
@@ -187,6 +189,7 @@ def poll_commands(queue_name):
         # file-system and should have all the files it needs now.
         print "Polling process: done writing output files"
 
+
 def update_s3_bucket(task_id, bucket_name, output_dir, database):
     print "S3 update process just started..."
     # Wait 60 seconds initially for some output to build up
@@ -208,6 +211,7 @@ def update_s3_bucket(task_id, bucket_name, output_dir, database):
         # Update the output in S3 every 60 seconds...
         time.sleep(60)
 
+
 def handle_task_success(task_id, data, s3_data, bucket_name, database):
     tar_output_str = "tar -zcf {0}.tar {0}".format(s3_data)
     print tar_output_str
@@ -225,6 +229,7 @@ def handle_task_success(task_id, data, s3_data, bucket_name, database):
     os.system(cleanup_string)
     data['output'] = "https://s3.amazonaws.com/{0}/{1}.tar".format(bucket_name, s3_data)
     database.updateEntry(task_id, data, "stochss")
+
 
 def handle_task_failure(task_id, data, database, s3_data=None, bucket_name=None):
     if s3_data and bucket_name:
@@ -245,6 +250,7 @@ def handle_task_failure(task_id, data, database, s3_data=None, bucket_name=None)
         data['output'] = "https://s3.amazonaws.com/{0}/{1}.tar".format(bucket_name, s3_data)
     database.updateEntry(task_id, data, "stochss")
 
+
 @celery.task(name='tasks.master_task')
 def master_task(task_id, params, database):
     '''
@@ -261,9 +267,9 @@ def master_task(task_id, params, database):
         result = {
             'uuid': task_id
         }
-        paramstr =  params['paramstring']
+        paramstr = params['paramstring']
         output_dir = "output/{0}".format(task_id)
-        create_dir_str = "mkdir -p {0}".format(output_dir) #output_dir+"/result"
+        create_dir_str = "mkdir -p {0}".format(output_dir)  #output_dir+"/result"
         print create_dir_str
         os.system(create_dir_str)
         # Write files
@@ -306,7 +312,7 @@ def master_task(task_id, params, database):
         )
         if final_data_file_name:
             exec_str += " --finalData {0}".format(final_data_file_name)
-        
+
         stdout = "{0}/stdout".format(output_dir)
         stderr = "{0}/stderr".format(output_dir)
         print "Master: about to call {0}".format(exec_str)
@@ -341,6 +347,7 @@ def master_task(task_id, params, database):
                         print "Exception:", e
                         print traceback.format_exc()
                         print '******************************************************************'
+
                 # Register the handler with SIGTERM signal
                 signal.signal(signal.SIGTERM, handler)
                 # Wait on program execution...
@@ -373,11 +380,12 @@ def master_task(task_id, params, database):
         handle_task_success(task_id, data, output_dir, bucket_name, database)
     except Exception, e:
         data = {
-            'status':'failed',
+            'status': 'failed',
             'message': str(e),
             'traceback': traceback.format_exc()
         }
         handle_task_failure(task_id, data, database)
+
 
 @celery.task(name='tasks.slave_task')
 def slave_task(params):
@@ -399,29 +407,29 @@ def slave_task(params):
         # string before calling executable.
         if segment == "--model":
             for file_handle in with_temp_file(input_files):
-                file_handle.write(params[command_segments[index+1]])
-            command_segments[index+1] = input_files[-1]
+                file_handle.write(params[command_segments[index + 1]])
+            command_segments[index + 1] = input_files[-1]
         elif segment == "--initial":
             for file_handle in with_temp_file(input_files):
-                file_handle.write(params[command_segments[index+1]])
-            command_segments[index+1] = input_files[-1]
+                file_handle.write(params[command_segments[index + 1]])
+            command_segments[index + 1] = input_files[-1]
         elif segment == "--final":
             for file_handle in with_temp_file(input_files):
-                file_handle.write(params[command_segments[index+1]])
-            command_segments[index+1] = input_files[-1]
+                file_handle.write(params[command_segments[index + 1]])
+            command_segments[index + 1] = input_files[-1]
         # For output files, we need to store the name that the master is expecting and
         # then replace it with a new temp file name
         elif segment == "--output":
-            output_files["output"] = [command_segments[index+1]]
+            output_files["output"] = [command_segments[index + 1]]
             fileint, file_name = tempfile.mkstemp(suffix=".RData")
             os.close(fileint)
-            command_segments[index+1] = file_name
+            command_segments[index + 1] = file_name
             output_files["output"].append(file_name)
         elif segment == "--stats":
-            output_files["stats"] = [command_segments[index+1]]
+            output_files["stats"] = [command_segments[index + 1]]
             fileint, file_name = tempfile.mkstemp(suffix=".RData")
             os.close(fileint)
-            command_segments[index+1] = file_name
+            command_segments[index + 1] = file_name
             output_files["stats"].append(file_name)
 
     environ = os.environ.copy()
@@ -486,6 +494,7 @@ def slave_task(params):
         os.system(delete_file_string)
     return result
 
+
 def with_temp_file(file_names):
     fileint, file_name = tempfile.mkstemp(suffix=".RData")
     os.close(fileint)
@@ -493,158 +502,163 @@ def with_temp_file(file_names):
     with open(file_name, 'w') as file_handle:
         yield file_handle
 
+
 @celery.task(name='stochss')
 def task(taskid, params, database, access_key, secret_key, task_prefix=""):
-  ''' 
-  This is the actual work done by a task worker
-  params    should contain at least 'bucketname'
-  '''
-    
-  try:
-      res = {}
-      uuidstr = taskid
-       
-      bucketname = params['bucketname']
-      if_tracking = False
-      try:
-        # Initialize cloudtracker with the task's UUID
-        ct = CloudTracker(access_key, secret_key, uuidstr, bucketname)
-        if_tracking = ct.if_tracking()
-        
-        logging.info('This is the first time to execute the job? '.format(if_tracking))
-        if if_tracking:
-            ct.track_input(params)
-        
-      except Exception:
-        print "Error initializing tracking"
+    '''
+    This is the actual work done by a task worker
+    params    should contain at least 'bucketname'
+    '''
 
-      logging.info('task to be executed at remote location')
-      print 'inside celery task method'
-      data = {'status':'active','message':'Task Executing in cloud'}
-      
-      # will have prefix for cost-anaylsis job
-      taskid = task_prefix + taskid
-      
-      database.updateEntry(taskid, data, params["db_table"])
-      paramstr =  params['paramstring']
-      
-      job_type = params['job_type']
-      if job_type == 'spatial':
-        create_dir_str = "mkdir -p output/%s/results " % uuidstr
+    try:
+        res = {}
+        uuidstr = taskid
+
+        bucketname = params['bucketname']
+        if_tracking = False
+        try:
+            # Initialize cloudtracker with the task's UUID
+            ct = CloudTracker(access_key, secret_key, uuidstr, bucketname)
+            if_tracking = ct.if_tracking()
+
+            logging.info('This is the first time to execute the job? '.format(if_tracking))
+            if if_tracking:
+                ct.track_input(params)
+
+        except Exception:
+            print "Error initializing tracking"
+
+        logging.info('task to be executed at remote location')
+        print 'inside celery task method'
+        data = {'status': 'active', 'message': 'Task Executing in cloud'}
+
+        # will have prefix for cost-anaylsis job
+        taskid = task_prefix + taskid
+
+        database.updateEntry(taskid, data, params["db_table"])
+        paramstr = params['paramstring']
+
+        job_type = params['job_type']
+        if job_type == 'spatial':
+            create_dir_str = "mkdir -p output/%s/results " % uuidstr
+            os.system(create_dir_str)
+        create_dir_str = "mkdir -p output/%s/result " % uuidstr
         os.system(create_dir_str)
-      create_dir_str = "mkdir -p output/%s/result " % uuidstr
-      os.system(create_dir_str)
 
-      filename = "output/{0}/{0}.xml".format(uuidstr)
-      f = open(filename,'w')
-      f.write(params['document'])
-      f.close()
-      xmlfilepath = filename
-      stdout = "output/%s/stdout.log" % uuidstr
-      stderr = "output/%s/stderr.log" % uuidstr
+        filename = os.path.join('output', uuidstr, '{0}.xml'.format(uuidstr))
+        with open(filename, 'w') as f:
+            f.write(params['document'])
+
+        xmlfilepath = filename
+
+        stdout = os.path.join('output', uuidstr, 'stdout.log')
+        stderr = os.path.join('output', uuidstr, 'stderr.log')
+
+        exec_str = ''
+        if job_type == 'stochkit':
+            # The following executiong string is of the form : stochkit_exec_str = "~/StochKit/ssa -m ~/output/%s/dimer_decay.xml -t 20 -i 10 -r 1000" % (uuidstr)
+            exec_str = "{0}/{1} -m {2} --force --out-dir output/{3}/result 2>{4} > {5}".format(TaskConfig.STOCHKIT_DIR,
+                                                                                               paramstr, xmlfilepath,
+                                                                                               uuidstr, stderr, stdout)
+        elif job_type == 'stochkit_ode' or job_type == 'sensitivity':
+            logging.info('SENSITIVITY JOB!!!')
+            exec_str = "{0}/{1} -m {2} --force --out-dir output/{3}/result 2>{4} > {5}".format(TaskConfig.ODE_DIR,
+                                                                                               paramstr, xmlfilepath,
+                                                                                               uuidstr, stderr, stdout)
+        elif job_type == 'spatial':
+            cmd = "chown -R ubuntu output/{0}".format(uuidstr)
+            print cmd
+            os.system(cmd)
+            exec_str = "sudo -E -u ubuntu {0} {1} {2} {3} {4} {5} 2>{6} > {7}".format(TaskConfig.PYURDME_WRAPPER_PATH,
+                                                                                      xmlfilepath,
+                                                                                      os.path.join('output', uuidstr, 'results'),
+                                                                                      params['simulation_algorithm'],
+                                                                                      params['simulation_realizations'],
+                                                                                      params['simulation_seed'],
+                                                                                      stderr, stdout)
+
+        print "======================="
+        print " Command to be executed : "
+        print "{0}".format(exec_str)
+        print "======================="
+        print "To test if the command string was correct. Copy the above line and execute in terminal."
+        timestarted = datetime.now()
+        os.system(exec_str)
+        timeended = datetime.now()
+
+        results = os.listdir("output/{0}/result".format(uuidstr))
+        if 'stats' in results and os.listdir("output/{0}/result/stats".format(uuidstr)) == ['.parallel']:
+            raise Exception("The compute node can not handle a job of this size.")
+
+        filepath = "output/%s//" % (uuidstr)
+        absolute_file_path = os.path.abspath(filepath)
+
+        try:
+            if if_tracking:
+                ct.track_output(absolute_file_path)
+        except Exception, e:
+            print "CloudTracker Error: track_output"
+            print e
+
+        data = {'status': 'active', 'message': 'Task finished. Generating output.'}
+        database.updateEntry(taskid, data, params["db_table"])
+        diff = timeended - timestarted
+
+        if task_prefix != "":
+            res['status'] = "finished"
+            res['time_taken'] = "{0} seconds".format(diff.total_seconds())
+        else:
+            print 'generating tar file'
+            create_tar_output_str = "tar -zcvf output/{0}.tar output/{0}".format(uuidstr)
+            print create_tar_output_str
+            copy_to_s3_str = "python {2} output/{0}.tar {1}".format(uuidstr, bucketname, TaskConfig.SCCPY_PATH)
+            os.system(create_tar_output_str)
+            print 'copying file to s3 : {0}'.format(copy_to_s3_str)
+            os.system(copy_to_s3_str)
+            print 'removing xml file'
+            removefilestr = "rm {0}".format(xmlfilepath)
+            os.system(removefilestr)
+            removetarstr = "rm output/{0}.tar".format(uuidstr)
+            os.system(removetarstr)
+            removeoutputdirstr = "rm -r output/{0}".format(uuidstr)
+            os.system(removeoutputdirstr)
+
+            # if there is some task prefix, meaning that it is cost replay,
+            # update the table another way
+            res['status'] = "finished"
+            res['pid'] = uuidstr
+            res['output'] = "https://s3.amazonaws.com/{1}/output/{0}.tar".format(uuidstr, bucketname)
+            res['time_taken'] = "{0} seconds and {1} microseconds ".format(diff.seconds, diff.microseconds)
+
+        database.updateEntry(taskid, res, params["db_table"])
+
+    except Exception, e:
+        expected_output_dir = "output/%s" % uuidstr
+        # First check for existence of output directory
+        if os.path.isdir(expected_output_dir):
+            # Then we should store this in S3 for debugging purposes
+            create_tar_output_str = "tar -zcvf {0}.tar {0}".format(expected_output_dir)
+            os.system(create_tar_output_str)
+            bucketname = params['bucketname']
+            copy_to_s3_str = "python {0} {1}.tar {2}".format(TaskConfig.SCCPY_PATH, expected_output_dir, bucketname)
+            os.system(copy_to_s3_str)
+            # Now clean up
+            remove_output_str = "rm {0}.tar {0}".format(expected_output_dir)
+            os.system(remove_output_str)
+            # Update the DB entry
+            res['output'] = "https://s3.amazonaws.com/{0}/{1}.tar".format(bucketname, expected_output_dir)
+            res['status'] = 'failed'
+            res['message'] = str(e)
+            database.updateEntry(taskid, res, "stochss")
+        else:
+            # Nothing to do here besides send the exception
+            data = {'status': 'failed', 'message': str(e)}
+            database.updateEntry(taskid, data, "stochss")
+        raise e
+    return res
 
 
-      
-      
-      exec_str = ''
-      if job_type == 'stochkit':
-          # The following executiong string is of the form : stochkit_exec_str = "~/StochKit/ssa -m ~/output/%s/dimer_decay.xml -t 20 -i 10 -r 1000" % (uuidstr)
-          exec_str = "{0}/{1} -m {2} --force --out-dir output/{3}/result 2>{4} > {5}".format(TaskConfig.STOCHKIT_DIR, paramstr, xmlfilepath, uuidstr, stderr, stdout)
-      elif job_type == 'stochkit_ode' or job_type == 'sensitivity':
-          logging.info('SENSITIVITY JOB!!!')
-          exec_str = "{0}/{1} -m {2} --force --out-dir output/{3}/result 2>{4} > {5}".format(TaskConfig.ODE_DIR, paramstr, xmlfilepath, uuidstr, stderr, stdout)
-      elif job_type == 'spatial':
-          cmd = "chown -R ubuntu output/{0}".format(uuidstr)
-          print cmd
-          os.system(cmd)
-          exec_str = "sudo -E -u ubuntu {0} {1} {2} {3} {4} {5} 2>{6} > {7}".format(TaskConfig.PYURDME_WRAPPER_PATH, xmlfilepath, 'output/{0}/results'.format(uuidstr), params['simulation_algorithm'], params['simulation_realizations'], params['simulation_seed'], stderr, stdout)
-     
-      
-      
-      
-      
-      print "======================="
-      print " Command to be executed : "
-      print "{0}".format(exec_str)
-      print "======================="
-      print "To test if the command string was correct. Copy the above line and execute in terminal."
-      timestarted = datetime.now()
-      os.system(exec_str)
-      timeended = datetime.now()
-      
-      results = os.listdir("output/{0}/result".format(uuidstr))
-      if 'stats' in results and os.listdir("output/{0}/result/stats".format(uuidstr)) == ['.parallel']:
-          raise Exception("The compute node can not handle a job of this size.")     
-      
-      filepath = "output/%s//" % (uuidstr)
-      absolute_file_path = os.path.abspath(filepath)  
-      
-      try:
-          if if_tracking:
-              ct.track_output(absolute_file_path)
-      except Exception,e:
-        print "CloudTracker Error: track_output"
-        print e
-          
-      data = {'status':'active','message':'Task finished. Generating output.'}
-      database.updateEntry(taskid, data, params["db_table"])
-      diff = timeended - timestarted
-      
-      if task_prefix != "":
-          res['status'] = "finished"
-          res['time_taken'] = "{0} seconds".format(diff.total_seconds())
-      else:   
-          print 'generating tar file'
-          create_tar_output_str = "tar -zcvf output/{0}.tar output/{0}".format(uuidstr)
-          print create_tar_output_str      
-          copy_to_s3_str = "python {2} output/{0}.tar {1}".format(uuidstr, bucketname, TaskConfig.SCCPY_PATH)
-          os.system(create_tar_output_str)
-          print 'copying file to s3 : {0}'.format(copy_to_s3_str)
-          os.system(copy_to_s3_str)
-          print 'removing xml file'
-          removefilestr = "rm {0}".format(xmlfilepath)
-          os.system(removefilestr)
-          removetarstr = "rm output/{0}.tar".format(uuidstr)
-          os.system(removetarstr)
-          removeoutputdirstr = "rm -r output/{0}".format(uuidstr)
-          os.system(removeoutputdirstr)
-      
-          # if there is some task prefix, meaning that it is cost replay, 
-          # update the table another way
-          res['status'] = "finished" 
-          res['pid'] = uuidstr
-          res['output'] = "https://s3.amazonaws.com/{1}/output/{0}.tar".format(uuidstr,bucketname)  
-          res['time_taken'] = "{0} seconds and {1} microseconds ".format(diff.seconds, diff.microseconds)
-      
-      database.updateEntry(taskid, res, params["db_table"])
-
-  except Exception,e:
-      expected_output_dir = "output/%s" % uuidstr
-      # First check for existence of output directory
-      if os.path.isdir(expected_output_dir):
-          # Then we should store this in S3 for debugging purposes
-          create_tar_output_str = "tar -zcvf {0}.tar {0}".format(expected_output_dir)
-          os.system(create_tar_output_str)
-          bucketname = params['bucketname']
-          copy_to_s3_str = "python {0} {1}.tar {2}".format(TaskConfig.SCCPY_PATH, expected_output_dir, bucketname)
-          os.system(copy_to_s3_str)
-          # Now clean up
-          remove_output_str = "rm {0}.tar {0}".format(expected_output_dir)
-          os.system(remove_output_str)
-          # Update the DB entry
-          res['output'] = "https://s3.amazonaws.com/{0}/{1}.tar".format(bucketname, expected_output_dir)
-          res['status'] = 'failed'
-          res['message'] = str(e)
-          database.updateEntry(taskid, res, "stochss")
-      else:
-          # Nothing to do here besides send the exception
-          data = {'status':'failed', 'message':str(e)}
-          database.updateEntry(taskid, data, "stochss")
-      raise e
-  return res
-
-
-def checkStatus(task_id):
+def check_task_status(task_id):
     '''
     Method takes task_id as input and returns the result of the celery task
     '''
@@ -652,6 +666,7 @@ def checkStatus(task_id):
     result = {}
     try:
         from celery.result import AsyncResult
+
         res = AsyncResult(task_id)
         logging.debug("checkStatus: result returned for the taskid = {0} is {1}".format(task_id, str(res)))
         result = res.result
@@ -664,8 +679,8 @@ def checkStatus(task_id):
         elif res.status == "SUCCESS":
             result['result'] = res.result
         elif res.status == "FAILURE":
-            result['result'] = res.result 
-        
+            result['result'] = res.result
+
     except Exception, e:
         logging.debug("checkStatus error : %s", str(e))
         result['state'] = "FAILURE"
@@ -674,7 +689,7 @@ def checkStatus(task_id):
     return result
 
 
-def removeTask(task_id):
+def remove_task(task_id):
     '''
     this method revokes scheduled tasks as well as the tasks in progress
     '''
@@ -684,10 +699,11 @@ def removeTask(task_id):
         # Celery can't use remote control (which includes revoking tasks) with SQS
         # http://docs.celeryproject.org/en/latest/getting-started/brokers/sqs.html
         revoke(task_id, terminate=True, signal="SIGTERM")
-    except Exception,e:
+    except Exception, e:
         print "task {0} cannot be removed/deleted. Error : {1}".format(task_id, str(e))
 
-def rerouteWorkers(worker_names, to_queue, from_queue="celery"):
+
+def reroute_workers(worker_names, to_queue, from_queue="celery"):
     '''
     Changes all workers specified by worker_names to stop consuming from the
     from_queue and start consuming from the to_queue.
@@ -698,7 +714,8 @@ def rerouteWorkers(worker_names, to_queue, from_queue="celery"):
     app.control.cancel_consumer(from_queue, reply=True, destination=worker_names)
     app.control.add_consumer(to_queue, reply=True, destination=worker_names)
 
-def workersConsumingFromQueue(from_queue):
+
+def get_worker_list_consuming_from_queue(from_queue):
     '''
     Returns a list of the names of all workers that are consuming from the
     from_queue, or an empty list if no workers are consuming from the queue.
@@ -713,13 +730,13 @@ def workersConsumingFromQueue(from_queue):
                 worker_names.append(worker_name)
     return worker_names
 
-#def describeTask():
-#    i = celery.control.inspect()
-#    print type(i)
-#    print dir(i)
-#    print str(i.active_queues())
-#    print str(i.registered_tasks())
-#    print str(i.stats())
-#    #print str(i.registered())
-#    #print str(i.active())
-#    #print str(i.scheduled())
+    #def describeTask():
+    #    i = celery.control.inspect()
+    #    print type(i)
+    #    print dir(i)
+    #    print str(i.active_queues())
+    #    print str(i.registered_tasks())
+    #    print str(i.stats())
+    #    #print str(i.registered())
+    #    #print str(i.active())
+    #    #print str(i.scheduled())
