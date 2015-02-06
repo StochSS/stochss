@@ -30,9 +30,6 @@ class backendservices():
     QUEUEHEAD_KEY_TAG = 'queuehead'
     INFRA_EC2 = 'ec2'
     INFRA_CLUSTER = 'cluster'
-    WORKER_AMIS = {
-        INFRA_EC2: 'ami-a26924ca'
-    }
     VMSTATUS_IDS = 'ids'
 
     def __init__(self):
@@ -762,6 +759,7 @@ class bcolors:
     ENDC = '\033[0m'
 
 ##########################################
+EC2_AMI = 'ami-20b7fa48'
 ##########################################
 def teststochoptim(backend,compute_check_params):
     '''
@@ -780,7 +778,7 @@ def teststochoptim(backend,compute_check_params):
             "credentials": credentials,
             "num_vms": 1,
             "group": keypair_name,
-            "image_id": backend.WORKER_AMIS[backend.INFRA_EC2],
+            "image_id": EC2_AMI,
             "instance_type": 't1.micro',#"c3.large",
             "key_prefix": keypair_name,
             "keyname": keypair_name,
@@ -800,7 +798,7 @@ def teststochoptim(backend,compute_check_params):
         "credentials": credentials,
         "num_vms": cores_to_use,
         "group": keypair_name,
-        "image_id": backend.WORKER_AMIS[backend.INFRA_EC2],
+        "image_id": EC2_AMI,
         "instance_type": 't1.micro',#"c3.large",
         "key_prefix": keypair_name,
         "keyname": keypair_name,
@@ -1108,7 +1106,7 @@ if __name__ == "__main__":
     params['keyname'] = 'testkey'
     params['use_spot_instances'] = False
     if params['infrastructure'] == backendservices.INFRA_EC2 :
-        params['image_id'] = backend.WORKER_AMIS[backend.INFRA_EC2]
+        params['image_id'] = EC2_AMI
     else :
         raise TypeError("Error, unexpected infrastructure type: "+params['infrastructure'])
 
