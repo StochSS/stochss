@@ -5,6 +5,7 @@ __email__ = 'dnath@cs.ucsb.edu'
 
 import sys
 import os
+sys.path.append(os.path.join(os.path.dirname(__file__),  '..', 'app', 'lib', 'boto'))
 import boto.ec2
 import time
 import uuid
