@@ -143,7 +143,7 @@ var PrimaryView = View.extend({
             new ModelSelectView( {
                 collection : this.collection,
                 meshCollection : this.meshCollection
-            } ), $( '<div>' ).appendTo( this.queryByHook('modelSelect') )[0]
+            } ), this.queryByHook('modelSelect')
         );
 
         this.selectModel();
