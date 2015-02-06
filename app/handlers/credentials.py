@@ -285,7 +285,7 @@ class CredentialsPage(BaseHandler):
              'use_spot_instances':False}
         # Check for AMI build by the stochss_ami_manager
         try:
-            json_config_file = os.path.join(os.path.dirname(__file__), '../../conf/ec2_config.json')
+            json_config_file = os.path.join(os.path.dirname(__file__),  '..', 'conf', 'ec2_config.json')
             with open(json_config_file) as fd:
                 ec2_config = json.load(fd)
                 params['image_id'] = ec2_config['ami_id']

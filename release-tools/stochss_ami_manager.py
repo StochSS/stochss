@@ -70,7 +70,7 @@ class AmiManager:
     NUM_TRIALS = 5
     NUM_SSH_TRIALS = 10
     DEFAULT_AMI_FILENAME = os.path.join(os.path.abspath(os.path.dirname(__file__)), 'ami.json')
-    DEFAULT_STOCHSS_AMI_FILENAME = os.path.join(os.path.abspath(os.path.dirname(__file__)), '../conf/ec2_config.json')
+    DEFAULT_STOCHSS_AMI_FILENAME = os.path.join(os.path.abspath(os.path.dirname(__file__)),  '..', 'conf', 'ec2_config.json')
 
     def __init__(self, options):
         self.uuid = uuid.uuid4()
