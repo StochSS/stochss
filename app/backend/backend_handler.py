@@ -20,8 +20,10 @@ from subprocess import Popen, PIPE, STDOUT
 from google.appengine.ext import db
 from kombu import Queue, Exchange
 
-__author__ = 'mengyuan'
-__email__ = 'gmy.melissa@gmail.com'
+from common.config import CeleryConfig
+
+__author__ = 'mengyuan, dev'
+__email__ = 'gmy.melissa@gmail.com, dnath@cs.ucsb.edu'
 
 BACKEND_NAME = 'backendthread'
 BACKEND_URL = 'http://%s' % modules.get_hostname(BACKEND_NAME)
@@ -33,10 +35,6 @@ BACKEND_MANAGER_R_URL = BACKEND_URL+'/backend/manager'
 BACKEND_QUEUE_R_URL = 'http://%s' % modules.get_hostname('backendqueue')+'/backend/queue'
   
 INS_TYPES_EC2 = ["t1.micro", "m1.small", "m3.medium", "m3.large", "c3.large", "c3.xlarge"]
-  
-CELERY_EXCHANGE_EC2 = "exchange_stochss_ec2"
-CELERY_QUEUE_EC2 = "queue_stochss_ec2"
-CELERY_ROUTING_KEY_EC2 = "routing_key_stochss_ec2"
                        
 class VMStateSyn(db.Model):
     last_syn = db.DateTimeProperty()
@@ -717,7 +715,10 @@ class BackendWorker():
         for ip, ins_id in zip(public_ips, instance_ids):
             #self.__wait_for_ssh_connection(keyfile, ip)
             ins_type = VMStateModel.get_instance_type(params, ins_id)
-            self.__config_celery_queues(CELERY_EXCHANGE_EC2, CELERY_QUEUE_EC2, CELERY_ROUTING_KEY_EC2, [ins_type])
+            self.__config_celery_queues(CeleryConfig.get_exchange_name("ec2"),
+                                        CeleryConfig.get_queue_name("ec2"),
+                                        CeleryConfig.get_routing_key_name("ec2"),
+                                        [ins_type])
 
             cmd = "scp -o 'StrictHostKeyChecking no' -i {0} {1} ubuntu@{2}:celeryconfig.py".format(keyfile, celery_config_filename, ip)
             logging.info(cmd)
@@ -731,8 +732,8 @@ class BackendWorker():
 
             commands.append(
                 "celery -A tasks worker -Q {q1},{q2} --autoreload --loglevel=info --workdir /home/ubuntu > /home/ubuntu/celery.log 2>&1".format(
-                    q1=CELERY_QUEUE_EC2,
-                    q2="{0}_{1}".format(CELERY_QUEUE_EC2, ins_type.replace(".", ""))))
+                    q1=CeleryConfig.get_queue_name("ec2"),
+                    q2=CeleryConfig.get_queue_name("ec2", ins_type)))
 
             command = ';'.join(commands)
 
@@ -754,7 +755,10 @@ class BackendWorker():
         
         # get all intstance types and configure the celeryconfig.py locally
         instance_types = VMStateModel.get_running_instance_type(params)
-        self.__config_celery_queues(CELERY_EXCHANGE_EC2, CELERY_QUEUE_EC2, CELERY_ROUTING_KEY_EC2, instance_types)
+        self.__config_celery_queues(CeleryConfig.get_exchange_name("ec2"),
+                                        CeleryConfig.get_queue_name("ec2"),
+                                        CeleryConfig.get_routing_key_name("ec2"),
+                                        instance_types)
         
         
     def __config_celery_queues(self, exchange_name, queue_name, routing_key, ins_types):
