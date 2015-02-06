@@ -19,10 +19,6 @@ var MeshCollection = require('./models/mesh-collection');
 var MeshSelectView = require('./forms/mesh-collection');
 
 var PrimaryView = View.extend({
-    template: "<div> \
-<div data-hook='selector'></div> \
-<div data-hook='editor'></div> \
-</div>",
     initialize: function(attr, options)
     {
         View.prototype.initialize.call(this, attr, options);
@@ -142,13 +138,13 @@ var PrimaryView = View.extend({
     },
     render: function()
     {
-        View.prototype.render.apply(this, arguments);
-
+        //View.prototype.render.apply(this, arguments);
+        
         this.modelSelector = this.renderSubview(
             new ModelSelectView( {
                 collection : this.collection,
                 meshCollection : this.meshCollection
-            } ), $( '<div>' ).appendTo( this.queryByHook('selector') )[0]
+            } ), $( '<div>' ).appendTo( this.queryByHook('modelSelect') )[0]
         );
 
         this.selectModel();
@@ -216,7 +212,7 @@ module.exports = {
     blastoff: function () {
         var self = window.app = this;
 
-        var div = $( '#modelSelect' )[0];
+        var div = $( '.modelEditor' )[0];
 
         if(!div)
             div = document.body;
@@ -1809,11 +1805,11 @@ var PaginatedCollectionView = AmpersandView.extend({
     {
         AmpersandView.prototype.initialize.call(this, attr, options);
 
-        this.listenToAndRun(this.collection, 'add remove', this.updateModelCount.bind(this))
-
         this.limit = attr.limit;
         this.view = attr.view;
         this.offset = 0;
+
+        this.listenToAndRun(this.collection, 'add remove', this.updateModelCount.bind(this))
 
         this.subCollection = new SubCollection(this.collection, { limit : this.limit, offset : this.offset });
     },
@@ -1880,7 +1876,8 @@ var PaginatedCollectionView = AmpersandView.extend({
     props: {
         value : 'object',
         offset : 'number',
-        modelCount : 'number'
+        modelCount : 'number',
+        overLimit : 'boolean'
     },
     bindings : {
         'modelCount' : [
@@ -1893,6 +1890,10 @@ var PaginatedCollectionView = AmpersandView.extend({
                 hook : 'total'
             }
         ],
+        'overLimit' : {
+            type : 'toggle',
+            hook : 'nav'
+        },
         'offset' : 
         {
             type : 'text',
@@ -1902,6 +1903,8 @@ var PaginatedCollectionView = AmpersandView.extend({
     updateModelCount: function()
     {
         this.modelCount = this.collection.models.length;
+
+        this.overLimit = this.collection.models.length > this.limit;
     },
     render: function()
     {
@@ -2006,7 +2009,7 @@ var ParameterCollectionFormView = AmpersandView.extend({
     <tbody data-hook='items'> \
     </tbody> \
   </table> \
-  <div> \
+  <div data-hook='nav'> \
     <button class='btn' data-hook='previous'>&lt;&lt;</button>\
     [ <span data-hook='position'></span> / <span data-hook='total'></span> ] \
     <button class='btn' data-hook='next'>&gt;&gt;</button>\
@@ -2216,15 +2219,21 @@ var ReactionCollectionFormView = AmpersandView.extend({
     {
         AmpersandView.prototype.initialize.call(this, attr, options);
     },
-    props:
-    {
-        selected : 'object',
-    },
     remove: function()
     {
+        //if(model == this.selectView.value)
         this.removeDetailView();
 
         AmpersandView.prototype.remove.apply(this, arguments);
+    },
+    handleCollectionRemove: function(model, collection)
+    {
+        if(model == this.selectView.value)
+        {
+            this.removeDetailView();
+            
+            this.selectView.select(this.collection.at(0));
+        }
     },
     removeDetailView: function()
     {
@@ -2232,14 +2241,13 @@ var ReactionCollectionFormView = AmpersandView.extend({
         {
             this.detailView.remove();
             delete this.detailView;
-            this.stopListening(this.selectView.value);
         }
     },
     select: function()
     {
-        var model = this.selectView.value;
-
         this.removeDetailView();
+
+        var model = this.selectView.value;
 
         if(model)
         {
@@ -2250,15 +2258,7 @@ var ReactionCollectionFormView = AmpersandView.extend({
             });
 
             this.detailView.render();
-
-            this.listenTo(model, 'remove', _.bind(this.removeEvents, this));
         }
-    },
-    removeEvents : function()
-    {
-        this.removeDetailView();
-
-        this.selectView.select(this.collection.at(0));
     },
     render: function()
     {
@@ -2274,10 +2274,11 @@ var ReactionCollectionFormView = AmpersandView.extend({
     <tbody data-hook='items'>\
     </tbody>\
   </table>\
-  <div>\
+  <div data-hook='nav'> \
     <button class='btn' data-hook='previous'>&lt;&lt;</button>\
     [ <span data-hook='position'></span> / <span data-hook='total'></span> ] \
     <button class='btn' data-hook='next'>&gt;&gt;</button>\
+  </div> \
 </div>";
 
         AmpersandView.prototype.render.apply(this, arguments);
@@ -2300,6 +2301,7 @@ var ReactionCollectionFormView = AmpersandView.extend({
         );
 
         this.listenToAndRun(this.selectView, 'change:value', _.bind(this.select, this));
+        this.listenTo(this.collection, 'remove', _.bind(this.handleCollectionRemove, this));
         
         return this;
     }
@@ -2943,9 +2945,11 @@ var SpecieCollectionFormView = AmpersandView.extend({
     <tbody data-hook='items'> \
     </tbody> \
   </table> \
-  <button class='btn' data-hook='previous'>&lt;&lt;</button> \
-  [ <span data-hook='position'></span> / <span data-hook='total'></span> ] \
-  <button class='btn' data-hook='next'>&gt;&gt;</button> \
+  <div data-hook='nav'> \
+    <button class='btn' data-hook='previous'>&lt;&lt;</button> \
+    [ <span data-hook='position'></span> / <span data-hook='total'></span> ] \
+    <button class='btn' data-hook='next'>&gt;&gt;</button> \
+  </div> \
 </div>";
 
         AmpersandView.prototype.render.apply(this, arguments);
@@ -4031,13 +4035,19 @@ var Reaction = State.extend({
 
                 for(var i = 0; i < reactants; i++)
                 {
-                    if(!this.reactants.at(0).specie)
+                    if(!this.reactants.at(i))
+                        return false;
+
+                    if(!this.reactants.at(i).specie)
                         return false;
                 }
 
                 for(var i = 0; i < products; i++)
                 {
-                    if(!this.products.at(0).specie)
+                    if(!this.products.at(i))
+                        return false;
+
+                    if(!this.products.at(i).specie)
                         return false;
                 }
 
@@ -4198,7 +4208,7 @@ var StoichSpecie = State.extend({
         State.prototype.initialize.apply(this, arguments);
         //add remove 
         // Whenever we pick a new species, let the species collection know
-        this.on('change', _.bind(function(model) {
+        this.on('change:specie', _.bind(function(model) {
             model.specie.collection.trigger('stoich-specie-change');
         }, this) );
     }
@@ -66128,6 +66138,7 @@ var InputView = require('ampersand-input-view');
 var ModelSelectView = require('./model');
 var Model = require('../models/model');
 var CheckboxView = require('ampersand-checkbox-view');
+var PaginatedCollectionView = require('../forms/paginated-collection-view');
 
 var Tests = require('../forms/tests.js');
 var AddNewModelForm = AmpersandFormView.extend({
@@ -66157,6 +66168,8 @@ var AddNewModelForm = AmpersandFormView.extend({
 
         this.collection.add(model).save();
 
+        this.selectView.select(model);
+
         $( this.nameField.el ).find('input').val('');
     },
     validCallback: function (valid) {
@@ -66169,6 +66182,7 @@ var AddNewModelForm = AmpersandFormView.extend({
     initialize: function(attr, options) {
         this.collection = attr.collection;
         this.meshCollection = attr.meshCollection;
+        this.selectView = attr.selectView;
 
         this.nameField = new InputView({
             label: 'Name',
@@ -66203,45 +66217,50 @@ var AddNewModelForm = AmpersandFormView.extend({
 });
 
 var ModelCollectionSelectView = AmpersandView.extend({
-    template: $( '.modelSelectorTemplate' ).text(),
+    template: "<div> \
+  <h3>Add Model</h3> \
+  <div data-hook='modelCollection'></div> \
+  <form data-hook='addModelForm'></form> \
+</div>",
     props: {
         selected : 'object',
-        hasModels : 'boolean'
-    },
-    bindings : {
-        'hasModels' : {
-            type : 'toggle',
-            hook : 'modelTable'
-        }
-    },
-    updateHasModels: function()
-    {
-        this.hasModels = this.collection.models.length > 0;
     },
     initialize: function(attr, options)
     {
         AmpersandView.prototype.initialize.call(this, attr, options);
 
         this.meshCollection = attr.meshCollection;
-
-        this.selected = this.collection.at(0);
-
-        if(attr.noAdd)
-            this.noAdd = attr.noAdd;
-        else
-            this.noAdd = false;
-
-        this.listenToAndRun(this.collection, 'add remove change', _.bind(this.updateHasModels, this))
     },
-    selectModel: function(model)
+    select: function()
     {
-        this.selected = model;
+        this.selected = this.selectView.value;
     },
     render: function()
     {
+        var collectionTemplate = "<div> \
+  <table data-hook='table' class='table table-bordered'> \
+    <thead> \
+      <th width='25px'></th><th width='170px'>Name</th><th>Type</th><th width='25px'>Delete</th> \
+    </thead> \
+    <tbody data-hook='items'></tbody> \
+  </table> \
+  <div data-hook='nav'> \
+    <button class='btn' data-hook='previous'>&lt;&lt;</button> \
+    [ <span data-hook='position'></span> / <span data-hook='total'></span> ] \
+    <button class='btn' data-hook='next'>&gt;&gt;</button> \
+  </div> \
+</div>";
+
         AmpersandView.prototype.render.apply(this, arguments);
 
-        this.renderCollection(this.collection, ModelSelectView, this.el.querySelector('[data-hook=modelTBody]'));
+        this.selectView = this.renderSubview(new PaginatedCollectionView({
+            template : collectionTemplate,
+            collection : this.collection,
+            view : ModelSelectView,
+            limit : 10
+        }), this.queryByHook('modelCollection'));
+
+        this.listenToAndRun(this.selectView, 'change:value', _.bind(this.select, this));
 
         $( '[data-hook="duplicateLink"]' ).click( _.bind( function() {
             this.selected.trigger('duplicateLink');
@@ -66253,27 +66272,15 @@ var ModelCollectionSelectView = AmpersandView.extend({
             this.selected.trigger('convertToSpatialLink');
         }, this ) );
 
-        // Select the currently selected model
-        var inputs = $( this.el ).find('input');
-        for(var i = 0; i < inputs.length; i++)
-        {
-            if(this.selected == this.collection.models[i])
-            {
-                $( inputs.get(i) ).prop('checked', true);
-            }
-        }
-
         //this.fields.forEach( function(field) { $( field.el ).find('input').val(''); } );
-        if(!this.noAdd)
-        {
-            this.addForm = new AddNewModelForm(
-                {
-                    el : this.el.querySelector('[data-hook=addModelForm]'),
-                    meshCollection : this.meshCollection,
-                    collection : this.collection
-                }
-            );
-        }
+        this.addForm = new AddNewModelForm(
+            {
+                el : this.el.querySelector('[data-hook=addModelForm]'),
+                selectView : this.selectView,
+                meshCollection : this.meshCollection,
+                collection : this.collection
+            }
+        );
         
         return this;
     }
@@ -66281,7 +66288,7 @@ var ModelCollectionSelectView = AmpersandView.extend({
 
 module.exports = ModelCollectionSelectView
 
-},{"../forms/tests.js":"/home/bbales2/stochssModel/app/static/modelEditor/forms/tests.js","../models/model":"/home/bbales2/stochssModel/app/static/modelEditor/models/model.js","./model":"/home/bbales2/stochssModel/app/static/modelEditor/select/model.js","ampersand-checkbox-view":"/home/bbales2/stochssModel/app/static/modelEditor/node_modules/ampersand-checkbox-view/ampersand-checkbox-view.js","ampersand-form-view":"/home/bbales2/stochssModel/app/static/modelEditor/node_modules/ampersand-form-view/ampersand-form-view.js","ampersand-input-view":"/home/bbales2/stochssModel/app/static/modelEditor/node_modules/ampersand-input-view/ampersand-input-view.js","ampersand-select-view":"/home/bbales2/stochssModel/app/static/modelEditor/node_modules/ampersand-select-view/ampersand-select-view.js","ampersand-view":"/home/bbales2/stochssModel/app/static/modelEditor/node_modules/ampersand-view/ampersand-view.js","jquery":"/home/bbales2/stochssModel/app/static/modelEditor/node_modules/jquery/dist/jquery.js","underscore":"/home/bbales2/stochssModel/app/static/modelEditor/node_modules/underscore/underscore.js"}],"/home/bbales2/stochssModel/app/static/modelEditor/select/model.js":[function(require,module,exports){
+},{"../forms/paginated-collection-view":"/home/bbales2/stochssModel/app/static/modelEditor/forms/paginated-collection-view.js","../forms/tests.js":"/home/bbales2/stochssModel/app/static/modelEditor/forms/tests.js","../models/model":"/home/bbales2/stochssModel/app/static/modelEditor/models/model.js","./model":"/home/bbales2/stochssModel/app/static/modelEditor/select/model.js","ampersand-checkbox-view":"/home/bbales2/stochssModel/app/static/modelEditor/node_modules/ampersand-checkbox-view/ampersand-checkbox-view.js","ampersand-form-view":"/home/bbales2/stochssModel/app/static/modelEditor/node_modules/ampersand-form-view/ampersand-form-view.js","ampersand-input-view":"/home/bbales2/stochssModel/app/static/modelEditor/node_modules/ampersand-input-view/ampersand-input-view.js","ampersand-select-view":"/home/bbales2/stochssModel/app/static/modelEditor/node_modules/ampersand-select-view/ampersand-select-view.js","ampersand-view":"/home/bbales2/stochssModel/app/static/modelEditor/node_modules/ampersand-view/ampersand-view.js","jquery":"/home/bbales2/stochssModel/app/static/modelEditor/node_modules/jquery/dist/jquery.js","underscore":"/home/bbales2/stochssModel/app/static/modelEditor/node_modules/underscore/underscore.js"}],"/home/bbales2/stochssModel/app/static/modelEditor/select/model.js":[function(require,module,exports){
 var _ = require('underscore');
 var $ = require('jquery');
 var View = require('ampersand-view');
@@ -66345,7 +66352,11 @@ module.exports = View.extend({
     selectSelf: function()
     {
         // There is a CollectionView parent here that must be navigated
-        this.parent.parent.selectModel(this.model);
+        this.parent.parent.select(this.model);
+    },
+    select : function()
+    {
+        $( this.el ).find( "input[type='radio']" ).prop('checked', true);
     },
     removeModel: function()
     {

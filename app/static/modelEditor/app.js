@@ -18,10 +18,6 @@ var MeshCollection = require('./models/mesh-collection');
 var MeshSelectView = require('./forms/mesh-collection');
 
 var PrimaryView = View.extend({
-    template: "<div> \
-<div data-hook='selector'></div> \
-<div data-hook='editor'></div> \
-</div>",
     initialize: function(attr, options)
     {
         View.prototype.initialize.call(this, attr, options);
@@ -141,13 +137,13 @@ var PrimaryView = View.extend({
     },
     render: function()
     {
-        View.prototype.render.apply(this, arguments);
-
+        //View.prototype.render.apply(this, arguments);
+        
         this.modelSelector = this.renderSubview(
             new ModelSelectView( {
                 collection : this.collection,
                 meshCollection : this.meshCollection
-            } ), $( '<div>' ).appendTo( this.queryByHook('selector') )[0]
+            } ), $( '<div>' ).appendTo( this.queryByHook('modelSelect') )[0]
         );
 
         this.selectModel();
@@ -215,7 +211,7 @@ module.exports = {
     blastoff: function () {
         var self = window.app = this;
 
-        var div = $( '#modelSelect' )[0];
+        var div = $( '.modelEditor' )[0];
 
         if(!div)
             div = document.body;

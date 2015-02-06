@@ -85,7 +85,7 @@ var ParameterCollectionFormView = AmpersandView.extend({
     <tbody data-hook='items'> \
     </tbody> \
   </table> \
-  <div> \
+  <div data-hook='nav'> \
     <button class='btn' data-hook='previous'>&lt;&lt;</button>\
     [ <span data-hook='position'></span> / <span data-hook='total'></span> ] \
     <button class='btn' data-hook='next'>&gt;&gt;</button>\

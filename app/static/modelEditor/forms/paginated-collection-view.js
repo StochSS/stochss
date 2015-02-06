@@ -6,11 +6,11 @@ var PaginatedCollectionView = AmpersandView.extend({
     {
         AmpersandView.prototype.initialize.call(this, attr, options);
 
-        this.listenToAndRun(this.collection, 'add remove', this.updateModelCount.bind(this))
-
         this.limit = attr.limit;
         this.view = attr.view;
         this.offset = 0;
+
+        this.listenToAndRun(this.collection, 'add remove', this.updateModelCount.bind(this))
 
         this.subCollection = new SubCollection(this.collection, { limit : this.limit, offset : this.offset });
     },
@@ -77,7 +77,8 @@ var PaginatedCollectionView = AmpersandView.extend({
     props: {
         value : 'object',
         offset : 'number',
-        modelCount : 'number'
+        modelCount : 'number',
+        overLimit : 'boolean'
     },
     bindings : {
         'modelCount' : [
@@ -90,6 +91,10 @@ var PaginatedCollectionView = AmpersandView.extend({
                 hook : 'total'
             }
         ],
+        'overLimit' : {
+            type : 'toggle',
+            hook : 'nav'
+        },
         'offset' : 
         {
             type : 'text',
@@ -99,6 +104,8 @@ var PaginatedCollectionView = AmpersandView.extend({
     updateModelCount: function()
     {
         this.modelCount = this.collection.models.length;
+
+        this.overLimit = this.collection.models.length > this.limit;
     },
     render: function()
     {

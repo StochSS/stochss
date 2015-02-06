@@ -175,6 +175,7 @@ module.exports = ReactionCollectionView
 var _ = require('underscore');
 var $ = require('jquery');
 var View = require('ampersand-view');
+var ReactionFormView = require('../forms/reaction');
 
 var katex = require('katex')
 
@@ -201,44 +202,7 @@ var ReactionView = View.extend({
         }
     },
     // On any change of anything, redraw the Latex
-    redrawLatex: function()
-    {
-        var latexString = '';
-
-        var numReactants = this.model.reactants.models.length;
-        if(numReactants == 0)
-        {
-            latexString = '\emptyset';
-        } else {
-            for(var i = 0; i < numReactants; i++)
-            {
-                var stoichSpecie = this.model.reactants.models[i]; 
-                latexString += stoichSpecie.stoichiometry + stoichSpecie.specie.name;
-                
-                if(i < numReactants - 1)
-                    latexString += ' + ';
-            }
-        }
-        
-        latexString += ' \\rightarrow ';
-
-        var numProducts = this.model.products.models.length;
-        if(numProducts == 0)
-        {
-            latexString = '\emptyset';
-        } else {
-            for(var i = 0; i < numProducts; i++)
-            {
-                var stoichSpecie = this.model.products.models[i]; 
-                latexString += stoichSpecie.stoichiometry + stoichSpecie.specie.name;
-                
-                if(i < numProducts - 1)
-                    latexString += ' + ';
-            }
-        }
-
-        katex.render(latexString, this.queryByHook('latex'));
-    },
+    redrawLatex: ReactionFormView.prototype.redrawLatex,
     bindings: {
         'model.name' :
         {
@@ -315,7 +279,7 @@ ReactionView.computeConversionFactor = function(reaction, volume)
 };
 
 module.exports = ReactionView;
-},{"ampersand-view":"/home/bbales2/stochssModel/app/static/modelEditor/node_modules/ampersand-view/ampersand-view.js","jquery":"/home/bbales2/stochssModel/app/static/modelEditor/node_modules/jquery/dist/jquery.js","katex":"/home/bbales2/stochssModel/app/static/modelEditor/node_modules/katex/katex.js","underscore":"/home/bbales2/stochssModel/app/static/modelEditor/node_modules/underscore/underscore.js"}],"/home/bbales2/stochssModel/app/static/modelEditor/convertToPopulation/specie-collection.js":[function(require,module,exports){
+},{"../forms/reaction":"/home/bbales2/stochssModel/app/static/modelEditor/forms/reaction.js","ampersand-view":"/home/bbales2/stochssModel/app/static/modelEditor/node_modules/ampersand-view/ampersand-view.js","jquery":"/home/bbales2/stochssModel/app/static/modelEditor/node_modules/jquery/dist/jquery.js","katex":"/home/bbales2/stochssModel/app/static/modelEditor/node_modules/katex/katex.js","underscore":"/home/bbales2/stochssModel/app/static/modelEditor/node_modules/underscore/underscore.js"}],"/home/bbales2/stochssModel/app/static/modelEditor/convertToPopulation/specie-collection.js":[function(require,module,exports){
 var $ = require('jquery');
 var View = require('ampersand-view');
 var SpecieView = require('./specie');
@@ -407,7 +371,7 @@ var AddNewInitialConditionForm = AmpersandFormView.extend({
     {
         AmpersandFormView.prototype.render.apply(this, arguments);
 
-        this.button = $('<input type="submit" value="Add"/>').appendTo( $( this.el ) );
+        this.button = $('<button class="btn btn-primary" type="submit">Add Initial Condition</button>').appendTo( $( this.el ) );
     }
 });
 
@@ -479,7 +443,7 @@ var Tests = require('./tests');
 module.exports = View.extend({
     template : "<tr> \
   <td> \
-    <button data-hook='delete'>x</button> \
+    <button class='btn' data-hook='delete'>x</button> \
   </td> \
   <td data-hook='typeSelect'></td> \
   <td data-hook='specie'></td> \
@@ -1329,6 +1293,12 @@ module.exports = View.extend({
             saveMessageDom.addClass( "alert-error" );
             saveMessageDom.text( "Model Save Failed!" );
         }
+        else
+        {
+            saveMessageDom.removeClass( "alert-success" );
+            saveMessageDom.addClass( "alert-error" );
+            saveMessageDom.text( this.model.saveState );
+        }
     },
     duplicateModel: function()
     {
@@ -1598,11 +1568,11 @@ var PaginatedCollectionView = AmpersandView.extend({
     {
         AmpersandView.prototype.initialize.call(this, attr, options);
 
-        this.listenToAndRun(this.collection, 'add remove', this.updateModelCount.bind(this))
-
         this.limit = attr.limit;
         this.view = attr.view;
         this.offset = 0;
+
+        this.listenToAndRun(this.collection, 'add remove', this.updateModelCount.bind(this))
 
         this.subCollection = new SubCollection(this.collection, { limit : this.limit, offset : this.offset });
     },
@@ -1618,7 +1588,9 @@ var PaginatedCollectionView = AmpersandView.extend({
         {
             if(model == this.subCollection.models[i])
             {
-                this.subCollectionViews._getViewByModel(model).select();
+                var view = this.subCollectionViews._getViewByModel(model);
+                if(typeof(view.select) == 'function')
+                    view.select();
                 return;
             }
         }
@@ -1629,10 +1601,15 @@ var PaginatedCollectionView = AmpersandView.extend({
         {
             if(model == this.collection.models[i])
             {
-                this.offset = i;
+                if(i == this.collection.models.length - 1)
+                    this.offset = i + 1 - this.collection.models.length % this.limit;
+                else
+                    this.offset = i;
                 this.subCollection.configure( { limit : this.limit, offset : this.offset } );
                 
-                this.subCollectionViews._getViewByModel(model).select();
+                var view = _.has(this.subCollectionViews._getViewByModel(model));
+                if(typeof(view.select) == 'function')
+                    view.select();
                 break;
             }
         }
@@ -1662,19 +1639,24 @@ var PaginatedCollectionView = AmpersandView.extend({
     props: {
         value : 'object',
         offset : 'number',
-        modelCount : 'number'
+        modelCount : 'number',
+        overLimit : 'boolean'
     },
     bindings : {
         'modelCount' : [
             {
                 type : 'toggle',
-                hook : 'table'
+                selector : 'div'
             },
             {
                 type : 'text',
                 hook : 'total'
             }
         ],
+        'overLimit' : {
+            type : 'toggle',
+            hook : 'nav'
+        },
         'offset' : 
         {
             type : 'text',
@@ -1684,6 +1666,8 @@ var PaginatedCollectionView = AmpersandView.extend({
     updateModelCount: function()
     {
         this.modelCount = this.collection.models.length;
+
+        this.overLimit = this.collection.models.length > this.limit;
     },
     render: function()
     {
@@ -1706,15 +1690,17 @@ var AmpersandView = require('ampersand-view');
 var AmpersandFormView = require('ampersand-form-view');
 var InputView = require('ampersand-input-view');
 var ParameterFormView = require('./parameter');
-var SubCollection = require('ampersand-subcollection');
+var PaginatedCollectionView = require('./paginated-collection-view');
 
 var Tests = require('./tests');
 var AddNewParameterForm = AmpersandFormView.extend({
     submitCallback: function (obj) {
-        this.collection.addParameter(obj.name, obj.value);
+        this.selectView.select(this.collection.addParameter(obj.name, obj.value));
 
-        this.fields.forEach( function(field) { $( field.el ).find('input').val(''); } );
-    },
+        $( this.nameField.el ).find('input').val('');
+
+        $( this.valueField.el ).find('input').val(0); 
+   },
             // this valid callback gets called (if it exists)
             // when the form first loads and any time the form
             // changes from valid to invalid or vice versa.
@@ -1729,26 +1715,31 @@ var AddNewParameterForm = AmpersandFormView.extend({
     },
     initialize: function(attr, options) {
         this.collection = options.collection;
+        this.selectView = attr.selectView;
+
+        this.nameField = new InputView({
+            label: 'Name',
+            name: 'name',
+            value: '',
+            required: true,
+            placeholder: 'NewParameters',
+            tests: [].concat(Tests.naming(this.collection))
+        });
+        
+        this.valueField = new InputView({
+            label: 'Value',
+            name: 'value',
+            value: '0',
+            required: true,
+            placeholder: '0',
+            tests: []
+        });
+
 
         this.fields = [
-            new InputView({
-                label: 'Name',
-                name: 'name',
-                value: '',
-                required: true,
-                placeholder: 'NewParameters',
-                tests: [].concat(Tests.naming(this.collection))
-            }),
-            new InputView({
-                label: 'Value',
-                name: 'value',
-                value: '0',
-                required: true,
-                placeholder: '0',
-                tests: []
-            })
+            this.nameField,
+            this.valueField
         ];
-
     },
     render: function()
     {
@@ -1756,70 +1747,49 @@ var AddNewParameterForm = AmpersandFormView.extend({
 
         $( this.el ).find('input').prop('autocomplete', 'off');
 
-        this.button = $('<input type="submit" value="Add" />').appendTo( $( this.el ) );
+        this.button = $('<button class="btn btn-primary" type="submit">Add</button>').appendTo( $( this.el ) );
     }
 });
 
 var ParameterCollectionFormView = AmpersandView.extend({
-    template: "<div><table data-hook='parametersTable' class='table table-bordered'><thead><th></th><th>Name</th><th>Value</th></thead><tbody data-hook='parametersTBody'></tbody></table><div><button data-hook='previous'>Previous 10</button><span data-hook='position'></span><button data-hook='next'>Next 10</button></div>Add Parameter: <form data-hook='addParametersForm'></form></div>",
+    template: "<div> \
+  <div data-hook='collection'></div> \
+  Add Parameter: <form data-hook='addParametersForm'></form> \
+</div>",
     initialize: function(attr, options)
     {
         AmpersandView.prototype.initialize.call(this, attr, options);
-
-        this.listenToAndRun(this.collection, 'add remove change', _.bind(this.updateHasModels, this))
-
-        this.subCollection = new SubCollection(this.collection, { limit : 10, offset : 0 });
-
-        this.offset = 0;
-    },
-    setSelectRange : function(index) {
-        this.subCollection.configure( { limit : 10, offset : index } );
-
-        $( this.queryByHook('position') ).text( ' [ ' + index + ' / ' + this.collection.models.length + ' ] ' );
-    },
-    shift10Plus : function()
-    {
-        if(this.offset + 10 < this.collection.models.length)
-            this.offset = this.offset + 10;
-
-        this.setSelectRange(this.offset);
-    },
-    shift10Minus : function()
-    {
-        if(this.offset - 10 >= 0)
-            this.offset = this.offset - 10;
-
-        this.setSelectRange(this.offset);
-    },
-    events : {
-        "click [data-hook='next']" : "shift10Plus",
-        "click [data-hook='previous']" : "shift10Minus"
-    },
-    props: {
-        selected : 'object',
-        hasModels : 'boolean'
-    },
-    bindings : {
-        'hasModels' : {
-            type : 'toggle',
-            hook : 'parametersTable'
-        }
-    },
-    updateHasModels: function()
-    {
-        this.hasModels = this.collection.models.length > 0;
     },
     render: function()
     {
         AmpersandView.prototype.render.apply(this, arguments);
 
-        this.setSelectRange(this.offset);
+        collectionTemplate = "<div> \
+  <table data-hook='table'> \
+    <thead> \
+      <th width='25px'></th><th width='120px'>Name</th><th width='120px'>Value</th> \
+    </thead> \
+    <tbody data-hook='items'> \
+    </tbody> \
+  </table> \
+  <div data-hook='nav'> \
+    <button class='btn' data-hook='previous'>&lt;&lt;</button>\
+    [ <span data-hook='position'></span> / <span data-hook='total'></span> ] \
+    <button class='btn' data-hook='next'>&gt;&gt;</button>\
+  </div> \
+</div>";
 
-        this.renderCollection(this.subCollection, ParameterFormView, this.el.querySelector('[data-hook=parametersTBody]'));
+        this.selectView = this.renderSubview( new PaginatedCollectionView( {
+            template : collectionTemplate,
+            collection : this.collection,
+            view : ParameterFormView,
+            limit : 10
+        }), this.queryByHook('collection'));
 
         this.addForm = new AddNewParameterForm(
             { 
-                el : this.el.querySelector('[data-hook=addParametersForm]')
+                el : this.el.querySelector('[data-hook=addParametersForm]'),
+                selectView : this.selectView
             },
             {
                 collection : this.collection
@@ -1831,7 +1801,7 @@ var ParameterCollectionFormView = AmpersandView.extend({
 });
 
 module.exports = ParameterCollectionFormView
-},{"./parameter":"/home/bbales2/stochssModel/app/static/modelEditor/forms/parameter.js","./tests":"/home/bbales2/stochssModel/app/static/modelEditor/forms/tests.js","ampersand-form-view":"/home/bbales2/stochssModel/app/static/modelEditor/node_modules/ampersand-form-view/ampersand-form-view.js","ampersand-input-view":"/home/bbales2/stochssModel/app/static/modelEditor/node_modules/ampersand-input-view/ampersand-input-view.js","ampersand-subcollection":"/home/bbales2/stochssModel/app/static/modelEditor/node_modules/ampersand-subcollection/ampersand-subcollection.js","ampersand-view":"/home/bbales2/stochssModel/app/static/modelEditor/node_modules/ampersand-view/ampersand-view.js","jquery":"/home/bbales2/stochssModel/app/static/modelEditor/node_modules/jquery/dist/jquery.js"}],"/home/bbales2/stochssModel/app/static/modelEditor/forms/parameter.js":[function(require,module,exports){
+},{"./paginated-collection-view":"/home/bbales2/stochssModel/app/static/modelEditor/forms/paginated-collection-view.js","./parameter":"/home/bbales2/stochssModel/app/static/modelEditor/forms/parameter.js","./tests":"/home/bbales2/stochssModel/app/static/modelEditor/forms/tests.js","ampersand-form-view":"/home/bbales2/stochssModel/app/static/modelEditor/node_modules/ampersand-form-view/ampersand-form-view.js","ampersand-input-view":"/home/bbales2/stochssModel/app/static/modelEditor/node_modules/ampersand-input-view/ampersand-input-view.js","ampersand-view":"/home/bbales2/stochssModel/app/static/modelEditor/node_modules/ampersand-view/ampersand-view.js","jquery":"/home/bbales2/stochssModel/app/static/modelEditor/node_modules/jquery/dist/jquery.js"}],"/home/bbales2/stochssModel/app/static/modelEditor/forms/parameter.js":[function(require,module,exports){
 var _ = require('underscore');
 var $ = require('jquery');
 var View = require('ampersand-view');
@@ -1840,7 +1810,7 @@ var ModifyingNumberInputView = require('./modifying-number-input-view')
 
 var Tests = require('./tests');
 module.exports = View.extend({
-    template: "<tr><td><button data-hook='delete'>x</button></td><td data-hook='name'></td><td data-hook='value'></td></tr>",
+    template: "<tr><td><button class='btn' data-hook='delete'>x</button></td><td data-hook='name'></td><td data-hook='value'></td></tr>",
     // Gotta have a few of these functions just so this works as a form view
     // This gets called when things update
     update: function()
@@ -1914,49 +1884,22 @@ var AddNewReactionForm = AmpersandFormView.extend({
 
         var model;
 
+        var rate = this.baseModel.parameters.at(0);
         var s1 = this.baseModel.species.at(0);
-        var s2 = this.baseModel.species.at(1);
+        
+        var reactants = [];
+        var products = [[s1, 1]];
 
-        var rate = this.baseModel.parameters.models[0];
-
-        if(obj.type != 'custom')
+        var i = this.collection.models.length;
+        var name = 'R' + i;
+        var names = this.collection.map( function(reaction) { return reaction.name; } );
+        while(_.contains(names, name))
         {
-            var reactants;
-            var products;
-            if(obj.type == 'creation')
-            {
-                reactants = [];
-                products = [[s1, 1]];
-            }
-            else if(obj.type == 'destruction')
-            {
-                reactants = [[s1, 1]];
-                products = [];
-            }
-            if(obj.type == 'change')
-            {
-                reactants = [[s1, 1]];
-                products = [[s2, 1]];
-            }
-            if(obj.type == 'dimerization')
-            {
-                reactants = [[s1, 2]];
-                products = [[s2, 1]];
-            }
-            if(obj.type == 'split')
-            {
-                reactants = [[s2, 1]];
-                products = [[s1, 1], [s1, 1]];
-            }
-            if(obj.type == 'four')
-            {
-                reactants = [[s1, 1], [s1, 1]];
-                products = [[s1, 1], [s1, 1]];
-            }
-            model = this.collection.addMassActionReaction(obj.name, obj.type, rate, reactants, products, validSubdomains);
-        } else {
-            model = this.collection.addCustomReaction(obj.name, '', [], [], validSubdomains);
+            i += 1;
+            name = 'R' + i;
         }
+
+        model = this.collection.addMassActionReaction(name, 'creation', rate, reactants, products, validSubdomains);
         
         this.selectView.select(model);
     },
@@ -1978,7 +1921,7 @@ var AddNewReactionForm = AmpersandFormView.extend({
 
         var options = [];
 
-        var emptyDiv = $( '<div>' );
+        /*var emptyDiv = $( '<div>' );
         katex.render('\\emptyset \\rightarrow A', emptyDiv[0]);
         options.push(['creation', emptyDiv.html()]);
         katex.render('A \\rightarrow \\emptyset', emptyDiv[0]);
@@ -2010,7 +1953,7 @@ var AddNewReactionForm = AmpersandFormView.extend({
                 options: options,
                 required: true,
             })
-        ];
+        ];*/
 
     },
     render: function()
@@ -2021,38 +1964,63 @@ var AddNewReactionForm = AmpersandFormView.extend({
 
         $( this.el ).find('input').prop('autocomplete', 'off');
 
-        this.button = $('<input type="submit" value="Add"/>').appendTo( $( this.el ) );
+        this.button = $('<button class="btn btn-primary" type="submit">Add Reaction</button>').appendTo( $( this.el ) );
     }
 });
 
 var ReactionCollectionFormView = AmpersandView.extend({
     template: "<div>\
-  <div class='row'> \
-    <div class='span4' data-hook='collection'></div>\
-    <div class='span7' data-hook='reactionEditorWorkspace'></div>\
+  <div>\
+    <div data-hook='collection'></div>\
+    <div data-hook='reactionEditorWorkspace'></div>\
   </div> \
-  <h4>Add Reaction</h4>\
-  <form data-hook='addReactionForm'></form>\
+  <div style='clear: both;'> \
+    <form data-hook='addReactionForm'></form>\
+  </div> \
 </div>",
     initialize: function(attr, options)
     {
         AmpersandView.prototype.initialize.call(this, attr, options);
     },
-    props: {
-        selected : 'object',
+    remove: function()
+    {
+        //if(model == this.selectView.value)
+        this.removeDetailView();
+
+        AmpersandView.prototype.remove.apply(this, arguments);
+    },
+    handleCollectionRemove: function(model, collection)
+    {
+        if(model == this.selectView.value)
+        {
+            this.removeDetailView();
+            
+            this.selectView.select(this.collection.at(0));
+        }
+    },
+    removeDetailView: function()
+    {
+        if(typeof(this.detailView) != 'undefined')
+        {
+            this.detailView.remove();
+            delete this.detailView;
+        }
     },
     select: function()
     {
-        var model = this.selectView.value;
+        this.removeDetailView();
 
-        if(typeof(this.detailView) != 'undefined')
-            this.detailView.remove();
+        var model = this.selectView.value;
 
         if(model)
         {
-            this.detailView = this.renderSubview(new DetailedReactionFormView({
-                model : model
-            }), $( '<div>' ).appendTo( this.queryByHook('reactionEditorWorkspace') )[0]);
+            this.detailView = new DetailedReactionFormView({
+                el: $( '<div>' ).appendTo( this.queryByHook('reactionEditorWorkspace') )[0],
+                model: model,
+                parent : this
+            });
+
+            this.detailView.render();
         }
     },
     render: function()
@@ -2064,15 +2032,16 @@ var ReactionCollectionFormView = AmpersandView.extend({
         collectionTemplate = "<div>\
   <table data-hook='table'>\
     <thead>\
-      <th></th><th>Name</th><th>Summary</th><th>Edit</th>\
+      <th width='25px'></th><th width='120px'>Name</th><th>Summary</th><th width='25px'>Edit</th>\
     </thead>\
     <tbody data-hook='items'>\
     </tbody>\
   </table>\
-  <div>\
+  <div data-hook='nav'> \
     <button class='btn' data-hook='previous'>&lt;&lt;</button>\
     [ <span data-hook='position'></span> / <span data-hook='total'></span> ] \
     <button class='btn' data-hook='next'>&gt;&gt;</button>\
+  </div> \
 </div>";
 
         AmpersandView.prototype.render.apply(this, arguments);
@@ -2095,6 +2064,7 @@ var ReactionCollectionFormView = AmpersandView.extend({
         );
 
         this.listenToAndRun(this.selectView, 'change:value', _.bind(this.select, this));
+        this.listenTo(this.collection, 'remove', _.bind(this.handleCollectionRemove, this));
         
         return this;
     }
@@ -2111,6 +2081,7 @@ var ModifyingNumberInputView = require('./modifying-number-input-view')
 var StoichSpecieCollectionFormView = require('./stoich-specie-collection');
 var SubdomainFormView = require('./subdomain');
 var SelectView = require('ampersand-select-view');
+var ReactionFormView = require('./reaction');
 
 var katex = require('katex')
 
@@ -2120,9 +2091,6 @@ module.exports = View.extend({
     // This gets called when things update
     update: function(obj)
     {
-        var s1 = this.baseModel.species.at(0);
-        var s2 = this.baseModel.species.at(1);
-
         if(obj.name == 'type')
         {
             this.model.type = obj.value;
@@ -2179,10 +2147,10 @@ module.exports = View.extend({
                     this.model.products.remove(this.model.products.at(0));
 
                 while(this.model.reactants.length < reactants)
-                    this.model.reactants.addStoichSpecie(s1, 1);
+                    this.model.reactants.addStoichSpecie(null, 1);
 
                 while(this.model.products.length < products)
-                    this.model.products.addStoichSpecie(s2, 1);
+                    this.model.products.addStoichSpecie(null, 1);
 
                 if(obj.value == 'dimerization')
                 {
@@ -2239,44 +2207,7 @@ module.exports = View.extend({
         }
     },
     // On any change of anything, redraw the Latex
-    redrawLatex: function(obj)
-    {
-        var latexString = '';
-
-        var numReactants = this.model.reactants.models.length;
-        if(numReactants == 0)
-        {
-            latexString = '\\emptyset';
-        } else {
-            for(var i = 0; i < numReactants; i++)
-            {
-                var stoichSpecie = this.model.reactants.models[i]; 
-                latexString += stoichSpecie.stoichiometry + stoichSpecie.specie.name;
-                
-                if(i < numReactants - 1)
-                    latexString += ' + ';
-            }
-        }
-            
-        latexString += ' \\rightarrow ';
-
-        var numProducts = this.model.products.models.length;
-        if(numProducts == 0)
-        {
-            latexString += '\\emptyset';
-        } else {
-            for(var i = 0; i < numProducts; i++)
-            {
-                var stoichSpecie = this.model.products.models[i]; 
-                latexString += stoichSpecie.stoichiometry + stoichSpecie.specie.name;
-                
-                if(i < numProducts - 1)
-                    latexString += ' + ';
-            }
-        }
-
-        katex.render(latexString, this.queryByHook('latex'));
-    },
+    redrawLatex: ReactionFormView.prototype.redrawLatex,
     //Start the removal process... Eventually events will cause this.remove to get called. We don't have to do it explicitly though
     bindings: {
         'massAction' : {
@@ -2286,6 +2217,14 @@ module.exports = View.extend({
         'showCustom' : {
             type : 'toggle',
             hook : 'custom'
+        },
+        'notValid' : {
+            type : 'toggle',
+            hook : 'reactionMessage'
+        },
+        'validMessage' : {
+            type : 'text',
+            hook : 'reactionMessage'
         }
     },
     derived: {
@@ -2298,6 +2237,71 @@ module.exports = View.extend({
         {
             deps : ['model.type'],
             fn : function() { return this.model.type == 'custom'; }
+        },
+        validMessage :
+        {
+            deps : ['model.type', 'model.rate'],
+            fn : function() {
+                if(this.model.type != 'custom' && !this.model.rate)
+                {
+                    return "Select a valid rate parameter!";
+                }
+                
+var reactants;
+                var products;
+                if(this.model.type == 'creation')
+                {
+                    reactants = 0;
+                    products = 1;
+                }
+                else if(this.model.type == 'destruction')
+                {
+                    reactants = 1;
+                    products = 0;
+                }
+                if(this.model.type == 'change')
+                {
+                    reactants = 1;
+                    products = 1;
+                }
+                if(this.model.type == 'dimerization')
+                {
+                    reactants = 1;
+                    products = 1;
+                }
+                if(this.model.type == 'split')
+                {
+                    reactants = 1;
+                    products = 2;
+                }
+                if(this.model.type == 'four')
+                {
+                    reactants = 2;
+                    products = 2;
+                }
+
+                for(var i = 0; i < reactants; i++)
+                {
+                    if(!this.model.reactants.at(0).specie)
+                        return "Select valid reactants!";
+                }
+
+                for(var i = 0; i < products; i++)
+                {
+                    if(!this.model.products.at(0).specie)
+                        return "Select valid products!";
+                }
+
+                return true;
+            }
+        },
+        notValid :
+        {
+            deps : ['model.valid'],
+            fn : function()
+            {
+                return !this.model.valid;
+            }
         }
     },
     render: function()
@@ -2306,8 +2310,10 @@ module.exports = View.extend({
 
         if(this.baseModel.isSpatial)
         {
+            //style='font-size: 35px;'
             this.template = "<div> \
-<div data-hook='latex' style='font-size: 35px;'></div> \
+<div class='reactionDetail'>\
+<center><div data-hook='latex' class='largeLatex'></div></center> \
 <div data-hook='typeSelect'></div> \
 <div data-hook='parameter'></div> \
 <div data-hook='custom'></div> \
@@ -2319,12 +2325,16 @@ module.exports = View.extend({
       <td><h4>Products</h4><div data-hook='products'></div></td>\
     </tr>\
   </table>\
+  <br>\
+  <div class='alert alert-error' data-hook='reactionMessage'></div> \
+</div>\
 </div>";
         }
         else
         {
             this.template = "<div>\
-<div data-hook='latex'></div> \
+<div class='reactionDetail'>\
+<center><div data-hook='latex' class='largeLatex'></div></center> \
 <div data-hook='typeSelect'></div> \
 <div data-hook='parameter'></div> \
 <div data-hook='custom'></div> \
@@ -2334,14 +2344,19 @@ module.exports = View.extend({
       <td><h4>Products</h4><div data-hook='products'></div></td>\
     </tr>\
   </table>\
+  <br> \
+  <div class='alert alert-error' data-hook='reactionMessage'></div> \
+</div>\
 </div>";
         }
 
         View.prototype.render.apply(this, arguments);
 
         this.listenTo(this.model, 'change', _.bind(this.redrawLatex, this));
+        this.listenTo(this.baseModel.species, 'change:name', _.bind(this.redrawLatex, this));
         this.listenTo(this.model.reactants, 'add remove change', _.bind(this.redrawLatex, this));
         this.listenToAndRun(this.model.products, 'add remove change', _.bind(this.redrawLatex, this));
+
         var options = [];
         var emptyDiv = $( '<div>' );
         katex.render('\\emptyset \\rightarrow A', emptyDiv[0]);
@@ -2379,6 +2394,7 @@ module.exports = View.extend({
                 label: 'Rate parameter: ',
                 name: 'parameter',
                 value: selected,
+                unselectedText: 'Select a parameter', 
                 options: this.baseModel.parameters,
                 required: false,
                 idAttribute: 'cid',
@@ -2421,7 +2437,7 @@ module.exports = View.extend({
     }
 });
 
-},{"./modifying-input-view":"/home/bbales2/stochssModel/app/static/modelEditor/forms/modifying-input-view.js","./modifying-number-input-view":"/home/bbales2/stochssModel/app/static/modelEditor/forms/modifying-number-input-view.js","./stoich-specie-collection":"/home/bbales2/stochssModel/app/static/modelEditor/forms/stoich-specie-collection.js","./subdomain":"/home/bbales2/stochssModel/app/static/modelEditor/forms/subdomain.js","./tests":"/home/bbales2/stochssModel/app/static/modelEditor/forms/tests.js","ampersand-select-view":"/home/bbales2/stochssModel/app/static/modelEditor/node_modules/ampersand-select-view/ampersand-select-view.js","ampersand-view":"/home/bbales2/stochssModel/app/static/modelEditor/node_modules/ampersand-view/ampersand-view.js","jquery":"/home/bbales2/stochssModel/app/static/modelEditor/node_modules/jquery/dist/jquery.js","katex":"/home/bbales2/stochssModel/app/static/modelEditor/node_modules/katex/katex.js","underscore":"/home/bbales2/stochssModel/app/static/modelEditor/node_modules/underscore/underscore.js"}],"/home/bbales2/stochssModel/app/static/modelEditor/forms/reaction.js":[function(require,module,exports){
+},{"./modifying-input-view":"/home/bbales2/stochssModel/app/static/modelEditor/forms/modifying-input-view.js","./modifying-number-input-view":"/home/bbales2/stochssModel/app/static/modelEditor/forms/modifying-number-input-view.js","./reaction":"/home/bbales2/stochssModel/app/static/modelEditor/forms/reaction.js","./stoich-specie-collection":"/home/bbales2/stochssModel/app/static/modelEditor/forms/stoich-specie-collection.js","./subdomain":"/home/bbales2/stochssModel/app/static/modelEditor/forms/subdomain.js","./tests":"/home/bbales2/stochssModel/app/static/modelEditor/forms/tests.js","ampersand-select-view":"/home/bbales2/stochssModel/app/static/modelEditor/node_modules/ampersand-select-view/ampersand-select-view.js","ampersand-view":"/home/bbales2/stochssModel/app/static/modelEditor/node_modules/ampersand-view/ampersand-view.js","jquery":"/home/bbales2/stochssModel/app/static/modelEditor/node_modules/jquery/dist/jquery.js","katex":"/home/bbales2/stochssModel/app/static/modelEditor/node_modules/katex/katex.js","underscore":"/home/bbales2/stochssModel/app/static/modelEditor/node_modules/underscore/underscore.js"}],"/home/bbales2/stochssModel/app/static/modelEditor/forms/reaction.js":[function(require,module,exports){
 var _ = require('underscore');
 var $ = require('jquery');
 var View = require('ampersand-view');
@@ -2439,9 +2455,9 @@ module.exports = View.extend({
     // This gets called when things update
     template : "<tbody>\
   <tr data-hook='basic'>\
-    <td><button data-hook='remove'>x</button></td>\
+    <td><button class='btn' data-hook='remove'>x</button></td>\
     <td><span data-hook='name'></span></td> \
-    <td><span data-hook='latex'></span></td> \
+    <td><center><span data-hook='latex'></span></center></td> \
     <td><input type='radio' name='reaction' data-hook='radio'></td>\
   </tr>\
 </tbody>",
@@ -2457,8 +2473,13 @@ module.exports = View.extend({
         } else {
             for(var i = 0; i < numReactants; i++)
             {
-                var stoichSpecie = this.model.reactants.models[i]; 
-                latexString += stoichSpecie.stoichiometry + stoichSpecie.specie.name;
+                var stoichSpecie = this.model.reactants.models[i];
+                var name = (stoichSpecie.specie) ? stoichSpecie.specie.name : 'X';
+
+                if(stoichSpecie.stoichiometry > 1)
+                    latexString += stoichSpecie.stoichiometry + name;
+                else
+                    latexString += name;
                 
                 if(i < numReactants - 1)
                     latexString += ' + ';
@@ -2475,7 +2496,12 @@ module.exports = View.extend({
             for(var i = 0; i < numProducts; i++)
             {
                 var stoichSpecie = this.model.products.models[i]; 
-                latexString += stoichSpecie.stoichiometry + stoichSpecie.specie.name;
+                var name = (stoichSpecie.specie) ? stoichSpecie.specie.name : 'X';
+
+                if(stoichSpecie.stoichiometry > 1)
+                    latexString += stoichSpecie.stoichiometry + name;
+                else
+                    latexString += name;
                 
                 if(i < numProducts - 1)
                     latexString += ' + ';
@@ -2487,7 +2513,8 @@ module.exports = View.extend({
     //Start the removal process... Eventually events will cause this.remove to get called. We don't have to do it explicitly though
     removeModel: function()
     {
-        this.model.collection.remove(this.model);        
+        if(confirm('Are you sure you want to delete reaction ' + this.model.name + '?'))
+            this.model.collection.remove(this.model);        
     },
     // These two functions are a little weird. The first calls the parent select function
     //  But by design the parent is a paginatedCollectionView
@@ -2500,9 +2527,28 @@ module.exports = View.extend({
     {
         $( this.el ).find( "[data-hook='radio']" ).prop('checked', true);
     },
+    derived: {
+        "notValid": {
+            deps : ['model.valid'],
+            fn : function() { return !this.model.valid; }
+        }
+    },
+    bindings: {
+        "notValid" : {
+            type : 'booleanClass',
+            selector : 'tr',
+            name: 'invalidRow'
+        }
+    },
     events: {
         "click [data-hook='remove']" : "removeModel",
         "click [data-hook='radio']" : "selectMe"
+    },
+    remove: function()
+    {
+        this.stopListening();
+
+        View.prototype.remove.apply(this, arguments);
     },
     render: function()
     {
@@ -2536,23 +2582,32 @@ var AmpersandView = require('ampersand-view');
 var AmpersandFormView = require('ampersand-form-view');
 var InputView = require('ampersand-input-view');
 var SpecieFormView = require('./specie');
-var SubCollection = require('ampersand-subcollection');
+var PaginatedCollectionView = require('./paginated-collection-view');
 
 var Tests = require('./tests');
 var AddNewSpecieForm = AmpersandFormView.extend({
     submitCallback: function (obj) {
         var validSubdomains = this.baseModel.mesh.uniqueSubdomains.map( function(model) { return model.name; } );
 
+        var model;
         if(this.baseModel.isSpatial)
         {
-            this.collection.addSpecie(obj.name, 0, Number(obj.diffusion), validSubdomains);
+            model = this.collection.addSpecie(obj.name, 0, Number(obj.diffusion), validSubdomains);
         }
         else
         {
-            this.collection.addSpecie(obj.name, Number(obj.initialCondition), 0, validSubdomains);
+            model = this.collection.addSpecie(obj.name, Number(obj.initialCondition), 0, validSubdomains);
         }
 
-        this.fields.forEach( function(field) { $( field.el ).find('input').val(''); } );
+        this.selectView.select(model);
+
+        $( this.nameField.el ).find('input').val('');
+
+        if(this.diffusionField)
+            $( this.diffusionField.el ).find('input').val(0);
+
+        if(this.initialConditionField)
+            $( this.initialConditionField ).find('input').val(0);
     },
             // this valid callback gets called (if it exists)
             // when the form first loads and any time the form
@@ -2571,6 +2626,7 @@ var AddNewSpecieForm = AmpersandFormView.extend({
 
         this.baseModel = this.collection.parent;
 
+        this.selectView = attr.selectView;
         this.fields = [
             new InputView({
                 label: 'Name',
@@ -2582,27 +2638,33 @@ var AddNewSpecieForm = AmpersandFormView.extend({
             })
         ];
 
+        this.nameField = this.fields[0];
+
         if(this.baseModel.isSpatial)
         {
-            this.fields.push(new InputView({
+            this.diffusionField = new InputView({
                 label: 'Diffusion',
                 name: 'diffusion',
                 value: '0',
                 required: true,
                 placeholder: '0',
                 tests: [].concat(Tests.positive())
-            }));
+            });
+
+            this.fields.push(this.diffusionField);
         }
         else
         {
-            this.fields.push(new InputView({
+            this.initialConditionField = new InputView({
                 label: 'Initial Condition',
                 name: 'initialCondition',
                 value: '0',
                 required: true,
                 placeholder: '0',
                 tests: [].concat(Tests.nonzero(), Tests.units(this.collection.parent))
-            }));
+            });
+
+            this.fields.push(this.initialConditionField);
         }
     },
     render: function()
@@ -2611,7 +2673,7 @@ var AddNewSpecieForm = AmpersandFormView.extend({
 
         $( this.el ).find('input').prop('autocomplete', 'off');
 
-        this.button = $('<input type="submit" value="Add" />').appendTo( $( this.el ) );
+        this.button = $('<button class="btn btn-primary" type="submit">Add</button>').appendTo( $( this.el ) );
     }
 });
 
@@ -2628,72 +2690,44 @@ var AddNewSpecieForm = AmpersandFormView.extend({
 new TestForm();*/
 
 var SpecieCollectionFormView = AmpersandView.extend({
+    template: "<div> \
+  <div data-hook='collection'></div> \
+  Add Specie: <form data-hook='addSpeciesForm'></form> \
+</div>",
     initialize: function(attr, options)
     {
         AmpersandView.prototype.initialize.call(this, attr, options);
-
-        this.listenToAndRun(this.collection, 'add remove change', _.bind(this.updateHasModels, this))
-
-        this.subCollection = new SubCollection(this.collection, { limit : 10, offset : 0 });
-
-        this.offset = 0;
-    },
-    setSelectRange : function(index) {
-        this.subCollection.configure( { limit : 10, offset : index } );
-
-        $( this.queryByHook('position') ).text( ' [ ' + index + ' / ' + this.collection.models.length + ' ] ' );
-    },
-    shift10Plus : function()
-    {
-        if(this.offset + 10 < this.collection.models.length)
-            this.offset = this.offset + 10;
-
-        this.setSelectRange(this.offset);
-    },
-    shift10Minus : function()
-    {
-        if(this.offset - 10 >= 0)
-            this.offset = this.offset - 10;
-
-        this.setSelectRange(this.offset);
-    },
-    events : {
-        "click [data-hook='next']" : "shift10Plus",
-        "click [data-hook='previous']" : "shift10Minus"
-    },
-    props : {
-        hasModels : 'boolean'
-    },
-    bindings : {
-        'hasModels' : {
-            type : 'toggle',
-            hook : 'speciesTable'
-        }
-    },
-    updateHasModels: function()
-    {
-        this.hasModels = this.collection.models.length > 0;
     },
     render: function()
     {
-        if(this.collection.parent.isSpatial)
-        {
-            this.template = "<div><table data-hook='speciesTable'><thead><th></th><th>Name</th><th>Diffusion coefficients</th><th>Species allowed in these subdomains</th></thead><tbody data-hook='speciesTBody'></tbody></table><div><button data-hook='previous'>Previous 10</button><span data-hook='position'></span><button data-hook='next'>Next 10</button></div>Add Specie: <form data-hook='addSpeciesForm'></form></div>";
-        }
-        else
-        {
-            this.template = "<div><table data-hook='speciesTable'><thead><th></th><th>Name</th><th>Initial Condition</th></thead><tbody data-hook='speciesTBody'></tbody></table><div><button data-hook='previous'>Previous 10</button><span data-hook='position'></span><button data-hook='next'>Next 10</button></div>Add Specie: <form data-hook='addSpeciesForm'></form></div>";
-        }
+        var collectionTemplate = "<div> \
+  <table data-hook='table'> \
+    <thead> \
+<th width='25px'></th><th width='120px'>Name</th><th width='120px'>Diffusion coefficients</th>" + ((this.collection.parent.isSpatial) ? "<th width='120px'>Species allowed in these subdomains</th>" : "") + " \
+    </thead> \
+    <tbody data-hook='items'> \
+    </tbody> \
+  </table> \
+  <div data-hook='nav'> \
+    <button class='btn' data-hook='previous'>&lt;&lt;</button> \
+    [ <span data-hook='position'></span> / <span data-hook='total'></span> ] \
+    <button class='btn' data-hook='next'>&gt;&gt;</button> \
+  </div> \
+</div>";
 
         AmpersandView.prototype.render.apply(this, arguments);
 
-        this.setSelectRange(0);
-
-        this.renderCollection(this.subCollection, SpecieFormView, this.el.querySelector('[data-hook=speciesTBody]'));
+        this.selectView = this.renderSubview( new PaginatedCollectionView( {
+            template : collectionTemplate,
+            collection : this.collection,
+            view : SpecieFormView,
+            limit : 10
+        }), this.queryByHook('collection'));
 
         this.addForm = new AddNewSpecieForm(
             { 
-                el : this.el.querySelector('[data-hook=addSpeciesForm]')
+                el : this.el.querySelector('[data-hook=addSpeciesForm]'),
+                selectView : this.selectView
             },
             {
                 collection : this.collection
@@ -2705,7 +2739,7 @@ var SpecieCollectionFormView = AmpersandView.extend({
 });
 
 module.exports = SpecieCollectionFormView
-},{"./specie":"/home/bbales2/stochssModel/app/static/modelEditor/forms/specie.js","./tests":"/home/bbales2/stochssModel/app/static/modelEditor/forms/tests.js","ampersand-form-view":"/home/bbales2/stochssModel/app/static/modelEditor/node_modules/ampersand-form-view/ampersand-form-view.js","ampersand-input-view":"/home/bbales2/stochssModel/app/static/modelEditor/node_modules/ampersand-input-view/ampersand-input-view.js","ampersand-subcollection":"/home/bbales2/stochssModel/app/static/modelEditor/node_modules/ampersand-subcollection/ampersand-subcollection.js","ampersand-view":"/home/bbales2/stochssModel/app/static/modelEditor/node_modules/ampersand-view/ampersand-view.js","jquery":"/home/bbales2/stochssModel/app/static/modelEditor/node_modules/jquery/dist/jquery.js"}],"/home/bbales2/stochssModel/app/static/modelEditor/forms/specie.js":[function(require,module,exports){
+},{"./paginated-collection-view":"/home/bbales2/stochssModel/app/static/modelEditor/forms/paginated-collection-view.js","./specie":"/home/bbales2/stochssModel/app/static/modelEditor/forms/specie.js","./tests":"/home/bbales2/stochssModel/app/static/modelEditor/forms/tests.js","ampersand-form-view":"/home/bbales2/stochssModel/app/static/modelEditor/node_modules/ampersand-form-view/ampersand-form-view.js","ampersand-input-view":"/home/bbales2/stochssModel/app/static/modelEditor/node_modules/ampersand-input-view/ampersand-input-view.js","ampersand-view":"/home/bbales2/stochssModel/app/static/modelEditor/node_modules/ampersand-view/ampersand-view.js","jquery":"/home/bbales2/stochssModel/app/static/modelEditor/node_modules/jquery/dist/jquery.js"}],"/home/bbales2/stochssModel/app/static/modelEditor/forms/specie.js":[function(require,module,exports){
 var _ = require('underscore');
 var $ = require('jquery');
 var View = require('ampersand-view');
@@ -2787,11 +2821,11 @@ module.exports = View.extend({
     {
         if(this.baseModel.isSpatial)
         {
-            this.template = "<tr><td><button data-hook='delete'>x</button></td><td data-hook='name'></td><td data-hook='diffusion'></td><td data-hook='subdomains'></td></tr>";
+            this.template = "<tr><td><button class='btn' data-hook='delete'>x</button></td><td data-hook='name'></td><td data-hook='diffusion'></td><td><center><div data-hook='subdomains'></div></center></td></tr>";
         }
         else
         {
-            this.template = "<tr><td><button data-hook='delete'>x</button></td><td data-hook='name'></td><td data-hook='initialCondition'></td></tr>";
+            this.template = "<tr><td><button class='btn' data-hook='delete'>x</button></td><td data-hook='name'></td><td data-hook='initialCondition'></td></tr>";
         }
 
         View.prototype.render.apply(this, arguments);
@@ -3155,11 +3189,24 @@ module.exports = {
         }
     }
 };
-},{"underscore":"/home/bbales2/stochssModel/app/static/modelEditor/node_modules/underscore/underscore.js"}],"/home/bbales2/stochssModel/app/static/modelEditor/models/initial-condition-collection.js":[function(require,module,exports){
+},{"underscore":"/home/bbales2/stochssModel/app/static/modelEditor/node_modules/underscore/underscore.js"}],"/home/bbales2/stochssModel/app/static/modelEditor/models/collection.js":[function(require,module,exports){
 var AmpCollection = require('ampersand-collection');
-var InitialCondition = require('./initial-condition');
 
 module.exports = AmpCollection.extend({
+    remove: function(model)
+    {
+        model.stopListening();
+
+        AmpCollection.prototype.remove.apply(this, arguments);
+    }
+});
+
+
+},{"ampersand-collection":"/home/bbales2/stochssModel/app/static/modelEditor/node_modules/ampersand-collection/ampersand-collection.js"}],"/home/bbales2/stochssModel/app/static/modelEditor/models/initial-condition-collection.js":[function(require,module,exports){
+var Collection = require('./collection');
+var InitialCondition = require('./initial-condition');
+
+module.exports = Collection.extend({
     model: InitialCondition,
     addScatterInitialCondition: function(specie, count, subdomain) {
         return this.add({ specie : specie, type : 'scatter', subdomain : subdomain, count : count, X : 0, Y : 0, Z : 0 });
@@ -3174,7 +3221,7 @@ module.exports = AmpCollection.extend({
     }
 });
 
-},{"./initial-condition":"/home/bbales2/stochssModel/app/static/modelEditor/models/initial-condition.js","ampersand-collection":"/home/bbales2/stochssModel/app/static/modelEditor/node_modules/ampersand-collection/ampersand-collection.js"}],"/home/bbales2/stochssModel/app/static/modelEditor/models/initial-condition.js":[function(require,module,exports){
+},{"./collection":"/home/bbales2/stochssModel/app/static/modelEditor/models/collection.js","./initial-condition":"/home/bbales2/stochssModel/app/static/modelEditor/models/initial-condition.js"}],"/home/bbales2/stochssModel/app/static/modelEditor/models/initial-condition.js":[function(require,module,exports){
 var _ = require('underscore');
 var State = require('ampersand-state');
 
@@ -3371,6 +3418,12 @@ var Model = AmpersandModel.extend({
     {
         if(this.saveState != 'saving')
             this.saveState = 'saving';
+
+        if(!this.reactions.every( function(reaction) { return reaction.valid; } ))
+        {
+            this.saveState = 'Model not valid'
+            return;
+        }
 
         this.actuallySaveModel();
     },
@@ -3580,11 +3633,11 @@ module.exports = Model;
 
 },{"./initial-condition-collection":"/home/bbales2/stochssModel/app/static/modelEditor/models/initial-condition-collection.js","./parameter-collection":"/home/bbales2/stochssModel/app/static/modelEditor/models/parameter-collection.js","./reaction-collection":"/home/bbales2/stochssModel/app/static/modelEditor/models/reaction-collection.js","./specie-collection":"/home/bbales2/stochssModel/app/static/modelEditor/models/specie-collection.js","ampersand-model":"/home/bbales2/stochssModel/app/static/modelEditor/node_modules/ampersand-model/ampersand-model.js","underscore":"/home/bbales2/stochssModel/app/static/modelEditor/node_modules/underscore/underscore.js"}],"/home/bbales2/stochssModel/app/static/modelEditor/models/parameter-collection.js":[function(require,module,exports){
 // parameter Collection - parameter-collection.js
-var AmpCollection = require('ampersand-collection');
+var Collection = require('./collection');
 var parameter = require('./parameter');
 
 
-module.exports = AmpCollection.extend({
+module.exports = Collection.extend({
     model: parameter,
     addParameter: function(name, value) {
         var unique = this.models.every(function(model) { return model["name"] != name });
@@ -3596,7 +3649,7 @@ module.exports = AmpCollection.extend({
         return this.add({ name : name, value : value });
     }
 });
-},{"./parameter":"/home/bbales2/stochssModel/app/static/modelEditor/models/parameter.js","ampersand-collection":"/home/bbales2/stochssModel/app/static/modelEditor/node_modules/ampersand-collection/ampersand-collection.js"}],"/home/bbales2/stochssModel/app/static/modelEditor/models/parameter.js":[function(require,module,exports){
+},{"./collection":"/home/bbales2/stochssModel/app/static/modelEditor/models/collection.js","./parameter":"/home/bbales2/stochssModel/app/static/modelEditor/models/parameter.js"}],"/home/bbales2/stochssModel/app/static/modelEditor/models/parameter.js":[function(require,module,exports){
 // parameter Model - parameter.js
 var _ = require('underscore');
 var AmpModel = require('ampersand-model');
@@ -3617,6 +3670,12 @@ module.exports = AmpModel.extend({
         
         this.updateInUse();
     },
+    remove: function()
+    {
+        this.stopListening();
+
+        AmpModel.prototype.remove.apply(this, arguments);
+    },
     updateInUse: function()
     {
         var model = this;
@@ -3633,14 +3692,14 @@ module.exports = AmpModel.extend({
 });
 },{"ampersand-model":"/home/bbales2/stochssModel/app/static/modelEditor/node_modules/ampersand-model/ampersand-model.js","underscore":"/home/bbales2/stochssModel/app/static/modelEditor/node_modules/underscore/underscore.js"}],"/home/bbales2/stochssModel/app/static/modelEditor/models/reaction-collection.js":[function(require,module,exports){
 var _ = require('underscore');
-var AmpCollection = require('ampersand-collection');
+var Collection = require('./collection');
 var Reaction = require('./reaction');
 
-module.exports = AmpCollection.extend({
+module.exports = Collection.extend({
     model: Reaction,
     initialize: function()
     {
-        AmpCollection.prototype.initialize.apply(this, arguments);
+        Collection.prototype.initialize.apply(this, arguments);
 
         this.on('add remove', _.bind(this.triggerChange, this));
     },
@@ -3676,7 +3735,7 @@ module.exports = AmpCollection.extend({
     }
 });
 
-},{"./reaction":"/home/bbales2/stochssModel/app/static/modelEditor/models/reaction.js","ampersand-collection":"/home/bbales2/stochssModel/app/static/modelEditor/node_modules/ampersand-collection/ampersand-collection.js","underscore":"/home/bbales2/stochssModel/app/static/modelEditor/node_modules/underscore/underscore.js"}],"/home/bbales2/stochssModel/app/static/modelEditor/models/reaction.js":[function(require,module,exports){
+},{"./collection":"/home/bbales2/stochssModel/app/static/modelEditor/models/collection.js","./reaction":"/home/bbales2/stochssModel/app/static/modelEditor/models/reaction.js","underscore":"/home/bbales2/stochssModel/app/static/modelEditor/node_modules/underscore/underscore.js"}],"/home/bbales2/stochssModel/app/static/modelEditor/models/reaction.js":[function(require,module,exports){
 var _ = require('underscore');
 var State = require('ampersand-state');
 var StoichSpecie = require('./stoich-specie');
@@ -3694,6 +3753,70 @@ var Reaction = State.extend({
             type : 'object',
             default : function() { return []; }
         },
+    },
+    derived: {
+        valid : {
+            deps : ['type', 'rate'],
+            fn : function() {
+                if(this.type != 'custom' && !this.rate)
+                {
+                    return false;
+                }
+
+                var reactants;
+                var products;
+                if(this.type == 'creation')
+                {
+                    reactants = 0;
+                    products = 1;
+                }
+                else if(this.type == 'destruction')
+                {
+                    reactants = 1;
+                    products = 0;
+                }
+                if(this.type == 'change')
+                {
+                    reactants = 1;
+                    products = 1;
+                }
+                if(this.type == 'dimerization')
+                {
+                    reactants = 1;
+                    products = 1;
+                }
+                if(this.type == 'split')
+                {
+                    reactants = 1;
+                    products = 2;
+                }
+                if(this.type == 'four')
+                {
+                    reactants = 2;
+                    products = 2;
+                }
+
+                for(var i = 0; i < reactants; i++)
+                {
+                    if(!this.reactants.at(i))
+                        return false;
+
+                    if(!this.reactants.at(i).specie)
+                        return false;
+                }
+
+                for(var i = 0; i < products; i++)
+                {
+                    if(!this.products.at(i))
+                        return false;
+
+                    if(!this.products.at(i).specie)
+                        return false;
+                }
+
+                return true;
+            }
+        }
     },
     collections: {
         reactants: StoichSpecieCollection,
@@ -3735,10 +3858,10 @@ module.exports = Reaction;
 
 },{"./parameter":"/home/bbales2/stochssModel/app/static/modelEditor/models/parameter.js","./stoich-specie":"/home/bbales2/stochssModel/app/static/modelEditor/models/stoich-specie.js","./stoich-specie-collection":"/home/bbales2/stochssModel/app/static/modelEditor/models/stoich-specie-collection.js","ampersand-state":"/home/bbales2/stochssModel/app/static/modelEditor/node_modules/ampersand-state/ampersand-state.js","underscore":"/home/bbales2/stochssModel/app/static/modelEditor/node_modules/underscore/underscore.js"}],"/home/bbales2/stochssModel/app/static/modelEditor/models/specie-collection.js":[function(require,module,exports){
 // specie Collection - specie-collection.js
-var AmpCollection = require('ampersand-collection');
+var Collection = require('./collection');
 var specie = require('./specie');
 
-module.exports = AmpCollection.extend({
+module.exports = Collection.extend({
     model: specie,
     addSpecie: function(name, initialCondition, diffusion, subdomains) {
         var unique = this.models.every(function(model) { return model["name"] != name });
@@ -3750,7 +3873,7 @@ module.exports = AmpCollection.extend({
         return this.add({ name : name, initialCondition : initialCondition, diffusion : diffusion, subdomains : subdomains });
     }
 });
-},{"./specie":"/home/bbales2/stochssModel/app/static/modelEditor/models/specie.js","ampersand-collection":"/home/bbales2/stochssModel/app/static/modelEditor/node_modules/ampersand-collection/ampersand-collection.js"}],"/home/bbales2/stochssModel/app/static/modelEditor/models/specie.js":[function(require,module,exports){
+},{"./collection":"/home/bbales2/stochssModel/app/static/modelEditor/models/collection.js","./specie":"/home/bbales2/stochssModel/app/static/modelEditor/models/specie.js"}],"/home/bbales2/stochssModel/app/static/modelEditor/models/specie.js":[function(require,module,exports){
 // specie Model - specie.js
 var _ = require('underscore');
 var AmpModel = require('ampersand-model');
@@ -3848,7 +3971,7 @@ var StoichSpecie = State.extend({
         State.prototype.initialize.apply(this, arguments);
         //add remove 
         // Whenever we pick a new species, let the species collection know
-        this.on('change', _.bind(function(model) {
+        this.on('change:specie', _.bind(function(model) {
             model.specie.collection.trigger('stoich-specie-change');
         }, this) );
     }

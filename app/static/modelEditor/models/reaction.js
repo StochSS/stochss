@@ -60,13 +60,19 @@ var Reaction = State.extend({
 
                 for(var i = 0; i < reactants; i++)
                 {
-                    if(!this.reactants.at(0).specie)
+                    if(!this.reactants.at(i))
+                        return false;
+
+                    if(!this.reactants.at(i).specie)
                         return false;
                 }
 
                 for(var i = 0; i < products; i++)
                 {
-                    if(!this.products.at(0).specie)
+                    if(!this.products.at(i))
+                        return false;
+
+                    if(!this.products.at(i).specie)
                         return false;
                 }
 

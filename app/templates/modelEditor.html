@@ -12,7 +12,23 @@
         <div>
             <h1>Model Editor</h1>
             <div class="well">
-                <div id="modelSelect">Loading models...</div>
+                <div data-hook='selector'>
+                    <div class="selectAccordion">
+                        <div class="accordion-group">
+                            <div class="accordion-heading">
+                                <h2><a class="accordion-toggle" data-toggle="collapse" data-parent="#selectAccordion" href="#collapseSelector">Select Model</a></h2>
+                            </div>
+                            <div id="collapseSelector" class="accordion-body collapse in">
+                                <div class="accordion-inner">
+                                    <div data-hook="modelSelect">
+                                        <div id="modelSelect">Loading models...</div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div data-hook='editor'></div>
             </div>
         </div>
     </div>
@@ -38,27 +54,6 @@
 
 {% endblock %}
 {% block jscontent %}
-<script class="modelSelectorTemplate" type="text/template">
-    <div class="selectAccordion">
-        <div class="accordion-group">
-            <div class="accordion-heading">
-                <h2><a class="accordion-toggle" data-toggle="collapse" data-parent="#selectAccordion" href="#collapseSelector">Select Model</a></h2>
-            </div>
-            <div id="collapseSelector" class="accordion-body collapse in">
-                <div class="accordion-inner">
-                    <table data-hook='modelTable' class='table table-bordered'>
-                        <thead>
-                            <th></th><th>Name</th><th>Type</th><th>Delete</th>
-                        </thead>
-                        <tbody data-hook='modelTBody'></tbody>
-                    </table>
-                    <h3>Add Model</h3>
-                    <form data-hook='addModelForm'></form>
-                </div>
-            </div>
-        </div>
-    </div>
-</script>
 
 <script class="modelEditorTemplate" type="text/template">
     <div>

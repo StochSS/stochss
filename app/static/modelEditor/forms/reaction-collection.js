@@ -114,15 +114,21 @@ var ReactionCollectionFormView = AmpersandView.extend({
     {
         AmpersandView.prototype.initialize.call(this, attr, options);
     },
-    props:
-    {
-        selected : 'object',
-    },
     remove: function()
     {
+        //if(model == this.selectView.value)
         this.removeDetailView();
 
         AmpersandView.prototype.remove.apply(this, arguments);
+    },
+    handleCollectionRemove: function(model, collection)
+    {
+        if(model == this.selectView.value)
+        {
+            this.removeDetailView();
+            
+            this.selectView.select(this.collection.at(0));
+        }
     },
     removeDetailView: function()
     {
@@ -130,14 +136,13 @@ var ReactionCollectionFormView = AmpersandView.extend({
         {
             this.detailView.remove();
             delete this.detailView;
-            this.stopListening(this.selectView.value);
         }
     },
     select: function()
     {
-        var model = this.selectView.value;
-
         this.removeDetailView();
+
+        var model = this.selectView.value;
 
         if(model)
         {
@@ -148,15 +153,7 @@ var ReactionCollectionFormView = AmpersandView.extend({
             });
 
             this.detailView.render();
-
-            this.listenTo(model, 'remove', _.bind(this.removeEvents, this));
         }
-    },
-    removeEvents : function()
-    {
-        this.removeDetailView();
-
-        this.selectView.select(this.collection.at(0));
     },
     render: function()
     {
@@ -172,10 +169,11 @@ var ReactionCollectionFormView = AmpersandView.extend({
     <tbody data-hook='items'>\
     </tbody>\
   </table>\
-  <div>\
+  <div data-hook='nav'> \
     <button class='btn' data-hook='previous'>&lt;&lt;</button>\
     [ <span data-hook='position'></span> / <span data-hook='total'></span> ] \
     <button class='btn' data-hook='next'>&gt;&gt;</button>\
+  </div> \
 </div>";
 
         AmpersandView.prototype.render.apply(this, arguments);
@@ -198,6 +196,7 @@ var ReactionCollectionFormView = AmpersandView.extend({
         );
 
         this.listenToAndRun(this.selectView, 'change:value', _.bind(this.select, this));
+        this.listenTo(this.collection, 'remove', _.bind(this.handleCollectionRemove, this));
         
         return this;
     }

@@ -7,6 +7,7 @@ var InputView = require('ampersand-input-view');
 var ModelSelectView = require('./model');
 var Model = require('../models/model');
 var CheckboxView = require('ampersand-checkbox-view');
+var PaginatedCollectionView = require('../forms/paginated-collection-view');
 
 var Tests = require('../forms/tests.js');
 var AddNewModelForm = AmpersandFormView.extend({
@@ -36,6 +37,8 @@ var AddNewModelForm = AmpersandFormView.extend({
 
         this.collection.add(model).save();
 
+        this.selectView.select(model);
+
         $( this.nameField.el ).find('input').val('');
     },
     validCallback: function (valid) {
@@ -48,6 +51,7 @@ var AddNewModelForm = AmpersandFormView.extend({
     initialize: function(attr, options) {
         this.collection = attr.collection;
         this.meshCollection = attr.meshCollection;
+        this.selectView = attr.selectView;
 
         this.nameField = new InputView({
             label: 'Name',
@@ -82,45 +86,50 @@ var AddNewModelForm = AmpersandFormView.extend({
 });
 
 var ModelCollectionSelectView = AmpersandView.extend({
-    template: $( '.modelSelectorTemplate' ).text(),
+    template: "<div> \
+  <h3>Add Model</h3> \
+  <div data-hook='modelCollection'></div> \
+  <form data-hook='addModelForm'></form> \
+</div>",
     props: {
         selected : 'object',
-        hasModels : 'boolean'
-    },
-    bindings : {
-        'hasModels' : {
-            type : 'toggle',
-            hook : 'modelTable'
-        }
-    },
-    updateHasModels: function()
-    {
-        this.hasModels = this.collection.models.length > 0;
     },
     initialize: function(attr, options)
     {
         AmpersandView.prototype.initialize.call(this, attr, options);
 
         this.meshCollection = attr.meshCollection;
-
-        this.selected = this.collection.at(0);
-
-        if(attr.noAdd)
-            this.noAdd = attr.noAdd;
-        else
-            this.noAdd = false;
-
-        this.listenToAndRun(this.collection, 'add remove change', _.bind(this.updateHasModels, this))
     },
-    selectModel: function(model)
+    select: function()
     {
-        this.selected = model;
+        this.selected = this.selectView.value;
     },
     render: function()
     {
+        var collectionTemplate = "<div> \
+  <table data-hook='table' class='table table-bordered'> \
+    <thead> \
+      <th width='25px'></th><th width='170px'>Name</th><th>Type</th><th width='25px'>Delete</th> \
+    </thead> \
+    <tbody data-hook='items'></tbody> \
+  </table> \
+  <div data-hook='nav'> \
+    <button class='btn' data-hook='previous'>&lt;&lt;</button> \
+    [ <span data-hook='position'></span> / <span data-hook='total'></span> ] \
+    <button class='btn' data-hook='next'>&gt;&gt;</button> \
+  </div> \
+</div>";
+
         AmpersandView.prototype.render.apply(this, arguments);
 
-        this.renderCollection(this.collection, ModelSelectView, this.el.querySelector('[data-hook=modelTBody]'));
+        this.selectView = this.renderSubview(new PaginatedCollectionView({
+            template : collectionTemplate,
+            collection : this.collection,
+            view : ModelSelectView,
+            limit : 10
+        }), this.queryByHook('modelCollection'));
+
+        this.listenToAndRun(this.selectView, 'change:value', _.bind(this.select, this));
 
         $( '[data-hook="duplicateLink"]' ).click( _.bind( function() {
             this.selected.trigger('duplicateLink');
@@ -132,27 +141,15 @@ var ModelCollectionSelectView = AmpersandView.extend({
             this.selected.trigger('convertToSpatialLink');
         }, this ) );
 
-        // Select the currently selected model
-        var inputs = $( this.el ).find('input');
-        for(var i = 0; i < inputs.length; i++)
-        {
-            if(this.selected == this.collection.models[i])
-            {
-                $( inputs.get(i) ).prop('checked', true);
-            }
-        }
-
         //this.fields.forEach( function(field) { $( field.el ).find('input').val(''); } );
-        if(!this.noAdd)
-        {
-            this.addForm = new AddNewModelForm(
-                {
-                    el : this.el.querySelector('[data-hook=addModelForm]'),
-                    meshCollection : this.meshCollection,
-                    collection : this.collection
-                }
-            );
-        }
+        this.addForm = new AddNewModelForm(
+            {
+                el : this.el.querySelector('[data-hook=addModelForm]'),
+                selectView : this.selectView,
+                meshCollection : this.meshCollection,
+                collection : this.collection
+            }
+        );
         
         return this;
     }
