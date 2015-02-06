@@ -114,7 +114,7 @@ class AmiManager:
             print 'stderr_log_filename: {0}'.format(stderr_log_filename)
             self.stderr_log = open(stderr_log_filename, 'w')
 
-        self.is_old_ami = False
+        self.is_old_ami = options["enable_old_ami_layout"]
         self.verbose = options["verbose"] if "verbose" in options.keys() else False
 
         if "ami_list_filename" in options.keys():
@@ -613,6 +613,8 @@ if __name__ == '__main__':
                                                   (Default: $STOCHSS/conf/ec2_config.json).",
                         action="store", dest="stochss_ami_config_filename",
                         default=os.path.join(os.path.dirname(__file__), "../conf/ec2_config.json"))
+    parser.add_argument('--enable-old-ami-layout', help="Enable Old StochSS AMI layout.",
+                        dest="enable_old_ami_layout", action="store_true", default=False)
 
     args = parser.parse_args(sys.argv[1:])
 
@@ -631,6 +633,7 @@ if __name__ == '__main__':
             contents = fin.read()
 
         options = json.loads(contents)
+        options["enable_old_ami_layout"] = args.enable_old_ami_layout
 
         if args.git_branch != None:
             options["git_repo"]["branch"] = args.git_branch
