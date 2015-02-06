@@ -41,7 +41,7 @@ var AddNewInitialConditionForm = AmpersandFormView.extend({
     {
         AmpersandFormView.prototype.render.apply(this, arguments);
 
-        this.button = $('<input type="submit" value="Add"/>').appendTo( $( this.el ) );
+        this.button = $('<button class="btn btn-primary" type="submit">Add Initial Condition</button>').appendTo( $( this.el ) );
     }
 });
 

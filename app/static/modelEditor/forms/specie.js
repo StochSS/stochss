@@ -79,11 +79,11 @@ module.exports = View.extend({
     {
         if(this.baseModel.isSpatial)
         {
-            this.template = "<tr><td><button data-hook='delete'>x</button></td><td data-hook='name'></td><td data-hook='diffusion'></td><td data-hook='subdomains'></td></tr>";
+            this.template = "<tr><td><button class='btn' data-hook='delete'>x</button></td><td data-hook='name'></td><td data-hook='diffusion'></td><td><center><div data-hook='subdomains'></div></center></td></tr>";
         }
         else
         {
-            this.template = "<tr><td><button data-hook='delete'>x</button></td><td data-hook='name'></td><td data-hook='initialCondition'></td></tr>";
+            this.template = "<tr><td><button class='btn' data-hook='delete'>x</button></td><td data-hook='name'></td><td data-hook='initialCondition'></td></tr>";
         }
 
         View.prototype.render.apply(this, arguments);

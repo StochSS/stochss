@@ -26,7 +26,9 @@ var PaginatedCollectionView = AmpersandView.extend({
         {
             if(model == this.subCollection.models[i])
             {
-                this.subCollectionViews._getViewByModel(model).select();
+                var view = this.subCollectionViews._getViewByModel(model);
+                if(typeof(view.select) == 'function')
+                    view.select();
                 return;
             }
         }
@@ -37,10 +39,15 @@ var PaginatedCollectionView = AmpersandView.extend({
         {
             if(model == this.collection.models[i])
             {
-                this.offset = i;
+                if(i == this.collection.models.length - 1)
+                    this.offset = i + 1 - this.collection.models.length % this.limit;
+                else
+                    this.offset = i;
                 this.subCollection.configure( { limit : this.limit, offset : this.offset } );
                 
-                this.subCollectionViews._getViewByModel(model).select();
+                var view = _.has(this.subCollectionViews._getViewByModel(model));
+                if(typeof(view.select) == 'function')
+                    view.select();
                 break;
             }
         }
@@ -76,7 +83,7 @@ var PaginatedCollectionView = AmpersandView.extend({
         'modelCount' : [
             {
                 type : 'toggle',
-                hook : 'table'
+                selector : 'div'
             },
             {
                 type : 'text',

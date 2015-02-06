@@ -1,12 +1,12 @@
 var _ = require('underscore');
-var AmpCollection = require('ampersand-collection');
+var Collection = require('./collection');
 var Reaction = require('./reaction');
 
-module.exports = AmpCollection.extend({
+module.exports = Collection.extend({
     model: Reaction,
     initialize: function()
     {
-        AmpCollection.prototype.initialize.apply(this, arguments);
+        Collection.prototype.initialize.apply(this, arguments);
 
         this.on('add remove', _.bind(this.triggerChange, this));
     },

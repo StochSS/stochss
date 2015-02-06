@@ -1,9 +1,9 @@
 // parameter Collection - parameter-collection.js
-var AmpCollection = require('ampersand-collection');
+var Collection = require('./collection');
 var parameter = require('./parameter');
 
 
-module.exports = AmpCollection.extend({
+module.exports = Collection.extend({
     model: parameter,
     addParameter: function(name, value) {
         var unique = this.models.every(function(model) { return model["name"] != name });

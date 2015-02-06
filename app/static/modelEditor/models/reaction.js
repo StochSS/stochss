@@ -16,6 +16,64 @@ var Reaction = State.extend({
             default : function() { return []; }
         },
     },
+    derived: {
+        valid : {
+            deps : ['type', 'rate'],
+            fn : function() {
+                if(this.type != 'custom' && !this.rate)
+                {
+                    return false;
+                }
+
+                var reactants;
+                var products;
+                if(this.type == 'creation')
+                {
+                    reactants = 0;
+                    products = 1;
+                }
+                else if(this.type == 'destruction')
+                {
+                    reactants = 1;
+                    products = 0;
+                }
+                if(this.type == 'change')
+                {
+                    reactants = 1;
+                    products = 1;
+                }
+                if(this.type == 'dimerization')
+                {
+                    reactants = 1;
+                    products = 1;
+                }
+                if(this.type == 'split')
+                {
+                    reactants = 1;
+                    products = 2;
+                }
+                if(this.type == 'four')
+                {
+                    reactants = 2;
+                    products = 2;
+                }
+
+                for(var i = 0; i < reactants; i++)
+                {
+                    if(!this.reactants.at(0).specie)
+                        return false;
+                }
+
+                for(var i = 0; i < products; i++)
+                {
+                    if(!this.products.at(0).specie)
+                        return false;
+                }
+
+                return true;
+            }
+        }
+    },
     collections: {
         reactants: StoichSpecieCollection,
         products: StoichSpecieCollection

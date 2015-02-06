@@ -6,6 +6,7 @@ var ModifyingNumberInputView = require('./modifying-number-input-view')
 var StoichSpecieCollectionFormView = require('./stoich-specie-collection');
 var SubdomainFormView = require('./subdomain');
 var SelectView = require('ampersand-select-view');
+var ReactionFormView = require('./reaction');
 
 var katex = require('katex')
 
@@ -15,9 +16,6 @@ module.exports = View.extend({
     // This gets called when things update
     update: function(obj)
     {
-        var s1 = this.baseModel.species.at(0);
-        var s2 = this.baseModel.species.at(1);
-
         if(obj.name == 'type')
         {
             this.model.type = obj.value;
@@ -74,10 +72,10 @@ module.exports = View.extend({
                     this.model.products.remove(this.model.products.at(0));
 
                 while(this.model.reactants.length < reactants)
-                    this.model.reactants.addStoichSpecie(s1, 1);
+                    this.model.reactants.addStoichSpecie(null, 1);
 
                 while(this.model.products.length < products)
-                    this.model.products.addStoichSpecie(s2, 1);
+                    this.model.products.addStoichSpecie(null, 1);
 
                 if(obj.value == 'dimerization')
                 {
@@ -134,44 +132,7 @@ module.exports = View.extend({
         }
     },
     // On any change of anything, redraw the Latex
-    redrawLatex: function(obj)
-    {
-        var latexString = '';
-
-        var numReactants = this.model.reactants.models.length;
-        if(numReactants == 0)
-        {
-            latexString = '\\emptyset';
-        } else {
-            for(var i = 0; i < numReactants; i++)
-            {
-                var stoichSpecie = this.model.reactants.models[i]; 
-                latexString += stoichSpecie.stoichiometry + stoichSpecie.specie.name;
-                
-                if(i < numReactants - 1)
-                    latexString += ' + ';
-            }
-        }
-            
-        latexString += ' \\rightarrow ';
-
-        var numProducts = this.model.products.models.length;
-        if(numProducts == 0)
-        {
-            latexString += '\\emptyset';
-        } else {
-            for(var i = 0; i < numProducts; i++)
-            {
-                var stoichSpecie = this.model.products.models[i]; 
-                latexString += stoichSpecie.stoichiometry + stoichSpecie.specie.name;
-                
-                if(i < numProducts - 1)
-                    latexString += ' + ';
-            }
-        }
-
-        katex.render(latexString, this.queryByHook('latex'));
-    },
+    redrawLatex: ReactionFormView.prototype.redrawLatex,
     //Start the removal process... Eventually events will cause this.remove to get called. We don't have to do it explicitly though
     bindings: {
         'massAction' : {
@@ -181,6 +142,14 @@ module.exports = View.extend({
         'showCustom' : {
             type : 'toggle',
             hook : 'custom'
+        },
+        'notValid' : {
+            type : 'toggle',
+            hook : 'reactionMessage'
+        },
+        'validMessage' : {
+            type : 'text',
+            hook : 'reactionMessage'
         }
     },
     derived: {
@@ -193,6 +162,71 @@ module.exports = View.extend({
         {
             deps : ['model.type'],
             fn : function() { return this.model.type == 'custom'; }
+        },
+        validMessage :
+        {
+            deps : ['model.type', 'model.rate'],
+            fn : function() {
+                if(this.model.type != 'custom' && !this.model.rate)
+                {
+                    return "Select a valid rate parameter!";
+                }
+                
+var reactants;
+                var products;
+                if(this.model.type == 'creation')
+                {
+                    reactants = 0;
+                    products = 1;
+                }
+                else if(this.model.type == 'destruction')
+                {
+                    reactants = 1;
+                    products = 0;
+                }
+                if(this.model.type == 'change')
+                {
+                    reactants = 1;
+                    products = 1;
+                }
+                if(this.model.type == 'dimerization')
+                {
+                    reactants = 1;
+                    products = 1;
+                }
+                if(this.model.type == 'split')
+                {
+                    reactants = 1;
+                    products = 2;
+                }
+                if(this.model.type == 'four')
+                {
+                    reactants = 2;
+                    products = 2;
+                }
+
+                for(var i = 0; i < reactants; i++)
+                {
+                    if(!this.model.reactants.at(0).specie)
+                        return "Select valid reactants!";
+                }
+
+                for(var i = 0; i < products; i++)
+                {
+                    if(!this.model.products.at(0).specie)
+                        return "Select valid products!";
+                }
+
+                return true;
+            }
+        },
+        notValid :
+        {
+            deps : ['model.valid'],
+            fn : function()
+            {
+                return !this.model.valid;
+            }
         }
     },
     render: function()
@@ -201,8 +235,10 @@ module.exports = View.extend({
 
         if(this.baseModel.isSpatial)
         {
+            //style='font-size: 35px;'
             this.template = "<div> \
-<div data-hook='latex' style='font-size: 35px;'></div> \
+<div class='reactionDetail'>\
+<center><div data-hook='latex' class='largeLatex'></div></center> \
 <div data-hook='typeSelect'></div> \
 <div data-hook='parameter'></div> \
 <div data-hook='custom'></div> \
@@ -214,12 +250,16 @@ module.exports = View.extend({
       <td><h4>Products</h4><div data-hook='products'></div></td>\
     </tr>\
   </table>\
+  <br>\
+  <div class='alert alert-error' data-hook='reactionMessage'></div> \
+</div>\
 </div>";
         }
         else
         {
             this.template = "<div>\
-<div data-hook='latex'></div> \
+<div class='reactionDetail'>\
+<center><div data-hook='latex' class='largeLatex'></div></center> \
 <div data-hook='typeSelect'></div> \
 <div data-hook='parameter'></div> \
 <div data-hook='custom'></div> \
@@ -229,14 +269,19 @@ module.exports = View.extend({
       <td><h4>Products</h4><div data-hook='products'></div></td>\
     </tr>\
   </table>\
+  <br> \
+  <div class='alert alert-error' data-hook='reactionMessage'></div> \
+</div>\
 </div>";
         }
 
         View.prototype.render.apply(this, arguments);
 
         this.listenTo(this.model, 'change', _.bind(this.redrawLatex, this));
+        this.listenTo(this.baseModel.species, 'change:name', _.bind(this.redrawLatex, this));
         this.listenTo(this.model.reactants, 'add remove change', _.bind(this.redrawLatex, this));
         this.listenToAndRun(this.model.products, 'add remove change', _.bind(this.redrawLatex, this));
+
         var options = [];
         var emptyDiv = $( '<div>' );
         katex.render('\\emptyset \\rightarrow A', emptyDiv[0]);
@@ -274,6 +319,7 @@ module.exports = View.extend({
                 label: 'Rate parameter: ',
                 name: 'parameter',
                 value: selected,
+                unselectedText: 'Select a parameter', 
                 options: this.baseModel.parameters,
                 required: false,
                 idAttribute: 'cid',

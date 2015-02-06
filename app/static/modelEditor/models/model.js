@@ -117,6 +117,12 @@ var Model = AmpersandModel.extend({
         if(this.saveState != 'saving')
             this.saveState = 'saving';
 
+        if(!this.reactions.every( function(reaction) { return reaction.valid; } ))
+        {
+            this.saveState = 'Model not valid'
+            return;
+        }
+
         this.actuallySaveModel();
     },
     actuallySaveModel: _.debounce(

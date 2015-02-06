@@ -1,6 +1,7 @@
 var _ = require('underscore');
 var $ = require('jquery');
 var View = require('ampersand-view');
+var ReactionFormView = require('../forms/reaction');
 
 var katex = require('katex')
 
@@ -27,44 +28,7 @@ var ReactionView = View.extend({
         }
     },
     // On any change of anything, redraw the Latex
-    redrawLatex: function()
-    {
-        var latexString = '';
-
-        var numReactants = this.model.reactants.models.length;
-        if(numReactants == 0)
-        {
-            latexString = '\emptyset';
-        } else {
-            for(var i = 0; i < numReactants; i++)
-            {
-                var stoichSpecie = this.model.reactants.models[i]; 
-                latexString += stoichSpecie.stoichiometry + stoichSpecie.specie.name;
-                
-                if(i < numReactants - 1)
-                    latexString += ' + ';
-            }
-        }
-        
-        latexString += ' \\rightarrow ';
-
-        var numProducts = this.model.products.models.length;
-        if(numProducts == 0)
-        {
-            latexString = '\emptyset';
-        } else {
-            for(var i = 0; i < numProducts; i++)
-            {
-                var stoichSpecie = this.model.products.models[i]; 
-                latexString += stoichSpecie.stoichiometry + stoichSpecie.specie.name;
-                
-                if(i < numProducts - 1)
-                    latexString += ' + ';
-            }
-        }
-
-        katex.render(latexString, this.queryByHook('latex'));
-    },
+    redrawLatex: ReactionFormView.prototype.redrawLatex,
     bindings: {
         'model.name' :
         {

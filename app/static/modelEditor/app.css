@@ -15,7 +15,11 @@ input {
 }
 
 .modelEditor input[type="text"], .modelEditor select {
-    width : 120px;
+    width : 100px;
+}
+
+.selectAccordion input[type="text"] {
+    width : 150px;
 }
 
 select {
@@ -27,4 +31,35 @@ select {
     font-size: large;
     bottom: 50px;
     right: 50px;
+}
+
+.reactionsAccordion [data-hook=reactionEditorWorkspace] {
+    background-color : #EEEEEE;
+    float: right;
+    width: 49%;
+}
+
+.reactionsAccordion [data-hook=collection] {
+    float: left;
+    width: 50%;
+}
+
+.reactionsAccordion [data-hook=collection] table {
+    width: 100%;
+    word-wrap:break-word;
+    table-layout: fixed;
+}
+
+.reactionDetail {
+    padding : 10px;
+}
+
+.invalidRow  {
+    background-color: #f2dede;
+}
+
+.largeLatex {
+    font-size: 35px;
+    line-height: 45px;
+    word-wrap: break-word;
 }

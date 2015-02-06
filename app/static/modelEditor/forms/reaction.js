@@ -15,9 +15,9 @@ module.exports = View.extend({
     // This gets called when things update
     template : "<tbody>\
   <tr data-hook='basic'>\
-    <td><button data-hook='remove'>x</button></td>\
+    <td><button class='btn' data-hook='remove'>x</button></td>\
     <td><span data-hook='name'></span></td> \
-    <td><span data-hook='latex'></span></td> \
+    <td><center><span data-hook='latex'></span></center></td> \
     <td><input type='radio' name='reaction' data-hook='radio'></td>\
   </tr>\
 </tbody>",
@@ -33,8 +33,13 @@ module.exports = View.extend({
         } else {
             for(var i = 0; i < numReactants; i++)
             {
-                var stoichSpecie = this.model.reactants.models[i]; 
-                latexString += stoichSpecie.stoichiometry + stoichSpecie.specie.name;
+                var stoichSpecie = this.model.reactants.models[i];
+                var name = (stoichSpecie.specie) ? stoichSpecie.specie.name : 'X';
+
+                if(stoichSpecie.stoichiometry > 1)
+                    latexString += stoichSpecie.stoichiometry + name;
+                else
+                    latexString += name;
                 
                 if(i < numReactants - 1)
                     latexString += ' + ';
@@ -51,7 +56,12 @@ module.exports = View.extend({
             for(var i = 0; i < numProducts; i++)
             {
                 var stoichSpecie = this.model.products.models[i]; 
-                latexString += stoichSpecie.stoichiometry + stoichSpecie.specie.name;
+                var name = (stoichSpecie.specie) ? stoichSpecie.specie.name : 'X';
+
+                if(stoichSpecie.stoichiometry > 1)
+                    latexString += stoichSpecie.stoichiometry + name;
+                else
+                    latexString += name;
                 
                 if(i < numProducts - 1)
                     latexString += ' + ';
@@ -63,7 +73,8 @@ module.exports = View.extend({
     //Start the removal process... Eventually events will cause this.remove to get called. We don't have to do it explicitly though
     removeModel: function()
     {
-        this.model.collection.remove(this.model);        
+        if(confirm('Are you sure you want to delete reaction ' + this.model.name + '?'))
+            this.model.collection.remove(this.model);        
     },
     // These two functions are a little weird. The first calls the parent select function
     //  But by design the parent is a paginatedCollectionView
@@ -76,9 +87,28 @@ module.exports = View.extend({
     {
         $( this.el ).find( "[data-hook='radio']" ).prop('checked', true);
     },
+    derived: {
+        "notValid": {
+            deps : ['model.valid'],
+            fn : function() { return !this.model.valid; }
+        }
+    },
+    bindings: {
+        "notValid" : {
+            type : 'booleanClass',
+            selector : 'tr',
+            name: 'invalidRow'
+        }
+    },
     events: {
         "click [data-hook='remove']" : "removeModel",
         "click [data-hook='radio']" : "selectMe"
+    },
+    remove: function()
+    {
+        this.stopListening();
+
+        View.prototype.remove.apply(this, arguments);
     },
     render: function()
     {

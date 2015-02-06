@@ -6,7 +6,7 @@ var ModifyingNumberInputView = require('./modifying-number-input-view')
 
 var Tests = require('./tests');
 module.exports = View.extend({
-    template: "<tr><td><button data-hook='delete'>x</button></td><td data-hook='name'></td><td data-hook='value'></td></tr>",
+    template: "<tr><td><button class='btn' data-hook='delete'>x</button></td><td data-hook='name'></td><td data-hook='value'></td></tr>",
     // Gotta have a few of these functions just so this works as a form view
     // This gets called when things update
     update: function()

@@ -42,6 +42,12 @@ module.exports = View.extend({
             saveMessageDom.addClass( "alert-error" );
             saveMessageDom.text( "Model Save Failed!" );
         }
+        else
+        {
+            saveMessageDom.removeClass( "alert-success" );
+            saveMessageDom.addClass( "alert-error" );
+            saveMessageDom.text( this.model.saveState );
+        }
     },
     duplicateModel: function()
     {

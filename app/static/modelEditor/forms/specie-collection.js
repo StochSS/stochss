@@ -3,23 +3,32 @@ var AmpersandView = require('ampersand-view');
 var AmpersandFormView = require('ampersand-form-view');
 var InputView = require('ampersand-input-view');
 var SpecieFormView = require('./specie');
-var SubCollection = require('ampersand-subcollection');
+var PaginatedCollectionView = require('./paginated-collection-view');
 
 var Tests = require('./tests');
 var AddNewSpecieForm = AmpersandFormView.extend({
     submitCallback: function (obj) {
         var validSubdomains = this.baseModel.mesh.uniqueSubdomains.map( function(model) { return model.name; } );
 
+        var model;
         if(this.baseModel.isSpatial)
         {
-            this.collection.addSpecie(obj.name, 0, Number(obj.diffusion), validSubdomains);
+            model = this.collection.addSpecie(obj.name, 0, Number(obj.diffusion), validSubdomains);
         }
         else
         {
-            this.collection.addSpecie(obj.name, Number(obj.initialCondition), 0, validSubdomains);
+            model = this.collection.addSpecie(obj.name, Number(obj.initialCondition), 0, validSubdomains);
         }
 
-        this.fields.forEach( function(field) { $( field.el ).find('input').val(''); } );
+        this.selectView.select(model);
+
+        $( this.nameField.el ).find('input').val('');
+
+        if(this.diffusionField)
+            $( this.diffusionField.el ).find('input').val(0);
+
+        if(this.initialConditionField)
+            $( this.initialConditionField ).find('input').val(0);
     },
             // this valid callback gets called (if it exists)
             // when the form first loads and any time the form
@@ -38,6 +47,7 @@ var AddNewSpecieForm = AmpersandFormView.extend({
 
         this.baseModel = this.collection.parent;
 
+        this.selectView = attr.selectView;
         this.fields = [
             new InputView({
                 label: 'Name',
@@ -49,27 +59,33 @@ var AddNewSpecieForm = AmpersandFormView.extend({
             })
         ];
 
+        this.nameField = this.fields[0];
+
         if(this.baseModel.isSpatial)
         {
-            this.fields.push(new InputView({
+            this.diffusionField = new InputView({
                 label: 'Diffusion',
                 name: 'diffusion',
                 value: '0',
                 required: true,
                 placeholder: '0',
                 tests: [].concat(Tests.positive())
-            }));
+            });
+
+            this.fields.push(this.diffusionField);
         }
         else
         {
-            this.fields.push(new InputView({
+            this.initialConditionField = new InputView({
                 label: 'Initial Condition',
                 name: 'initialCondition',
                 value: '0',
                 required: true,
                 placeholder: '0',
                 tests: [].concat(Tests.nonzero(), Tests.units(this.collection.parent))
-            }));
+            });
+
+            this.fields.push(this.initialConditionField);
         }
     },
     render: function()
@@ -78,7 +94,7 @@ var AddNewSpecieForm = AmpersandFormView.extend({
 
         $( this.el ).find('input').prop('autocomplete', 'off');
 
-        this.button = $('<input type="submit" value="Add" />').appendTo( $( this.el ) );
+        this.button = $('<button class="btn btn-primary" type="submit">Add</button>').appendTo( $( this.el ) );
     }
 });
 
@@ -95,72 +111,42 @@ var AddNewSpecieForm = AmpersandFormView.extend({
 new TestForm();*/
 
 var SpecieCollectionFormView = AmpersandView.extend({
+    template: "<div> \
+  <div data-hook='collection'></div> \
+  Add Specie: <form data-hook='addSpeciesForm'></form> \
+</div>",
     initialize: function(attr, options)
     {
         AmpersandView.prototype.initialize.call(this, attr, options);
-
-        this.listenToAndRun(this.collection, 'add remove change', _.bind(this.updateHasModels, this))
-
-        this.subCollection = new SubCollection(this.collection, { limit : 10, offset : 0 });
-
-        this.offset = 0;
-    },
-    setSelectRange : function(index) {
-        this.subCollection.configure( { limit : 10, offset : index } );
-
-        $( this.queryByHook('position') ).text( ' [ ' + index + ' / ' + this.collection.models.length + ' ] ' );
-    },
-    shift10Plus : function()
-    {
-        if(this.offset + 10 < this.collection.models.length)
-            this.offset = this.offset + 10;
-
-        this.setSelectRange(this.offset);
-    },
-    shift10Minus : function()
-    {
-        if(this.offset - 10 >= 0)
-            this.offset = this.offset - 10;
-
-        this.setSelectRange(this.offset);
-    },
-    events : {
-        "click [data-hook='next']" : "shift10Plus",
-        "click [data-hook='previous']" : "shift10Minus"
-    },
-    props : {
-        hasModels : 'boolean'
-    },
-    bindings : {
-        'hasModels' : {
-            type : 'toggle',
-            hook : 'speciesTable'
-        }
-    },
-    updateHasModels: function()
-    {
-        this.hasModels = this.collection.models.length > 0;
     },
     render: function()
     {
-        if(this.collection.parent.isSpatial)
-        {
-            this.template = "<div><table data-hook='speciesTable'><thead><th></th><th>Name</th><th>Diffusion coefficients</th><th>Species allowed in these subdomains</th></thead><tbody data-hook='speciesTBody'></tbody></table><div><button data-hook='previous'>Previous 10</button><span data-hook='position'></span><button data-hook='next'>Next 10</button></div>Add Specie: <form data-hook='addSpeciesForm'></form></div>";
-        }
-        else
-        {
-            this.template = "<div><table data-hook='speciesTable'><thead><th></th><th>Name</th><th>Initial Condition</th></thead><tbody data-hook='speciesTBody'></tbody></table><div><button data-hook='previous'>Previous 10</button><span data-hook='position'></span><button data-hook='next'>Next 10</button></div>Add Specie: <form data-hook='addSpeciesForm'></form></div>";
-        }
+        var collectionTemplate = "<div> \
+  <table data-hook='table'> \
+    <thead> \
+<th width='25px'></th><th width='120px'>Name</th><th width='120px'>Diffusion coefficients</th>" + ((this.collection.parent.isSpatial) ? "<th width='120px'>Species allowed in these subdomains</th>" : "") + " \
+    </thead> \
+    <tbody data-hook='items'> \
+    </tbody> \
+  </table> \
+  <button class='btn' data-hook='previous'>&lt;&lt;</button> \
+  [ <span data-hook='position'></span> / <span data-hook='total'></span> ] \
+  <button class='btn' data-hook='next'>&gt;&gt;</button> \
+</div>";
 
         AmpersandView.prototype.render.apply(this, arguments);
 
-        this.setSelectRange(0);
-
-        this.renderCollection(this.subCollection, SpecieFormView, this.el.querySelector('[data-hook=speciesTBody]'));
+        this.selectView = this.renderSubview( new PaginatedCollectionView( {
+            template : collectionTemplate,
+            collection : this.collection,
+            view : SpecieFormView,
+            limit : 10
+        }), this.queryByHook('collection'));
 
         this.addForm = new AddNewSpecieForm(
             { 
-                el : this.el.querySelector('[data-hook=addSpeciesForm]')
+                el : this.el.querySelector('[data-hook=addSpeciesForm]'),
+                selectView : this.selectView
             },
             {
                 collection : this.collection

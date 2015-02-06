@@ -16,49 +16,22 @@ var AddNewReactionForm = AmpersandFormView.extend({
 
         var model;
 
+        var rate = this.baseModel.parameters.at(0);
         var s1 = this.baseModel.species.at(0);
-        var s2 = this.baseModel.species.at(1);
+        
+        var reactants = [];
+        var products = [[s1, 1]];
 
-        var rate = this.baseModel.parameters.models[0];
-
-        if(obj.type != 'custom')
+        var i = this.collection.models.length;
+        var name = 'R' + i;
+        var names = this.collection.map( function(reaction) { return reaction.name; } );
+        while(_.contains(names, name))
         {
-            var reactants;
-            var products;
-            if(obj.type == 'creation')
-            {
-                reactants = [];
-                products = [[s1, 1]];
-            }
-            else if(obj.type == 'destruction')
-            {
-                reactants = [[s1, 1]];
-                products = [];
-            }
-            if(obj.type == 'change')
-            {
-                reactants = [[s1, 1]];
-                products = [[s2, 1]];
-            }
-            if(obj.type == 'dimerization')
-            {
-                reactants = [[s1, 2]];
-                products = [[s2, 1]];
-            }
-            if(obj.type == 'split')
-            {
-                reactants = [[s2, 1]];
-                products = [[s1, 1], [s1, 1]];
-            }
-            if(obj.type == 'four')
-            {
-                reactants = [[s1, 1], [s1, 1]];
-                products = [[s1, 1], [s1, 1]];
-            }
-            model = this.collection.addMassActionReaction(obj.name, obj.type, rate, reactants, products, validSubdomains);
-        } else {
-            model = this.collection.addCustomReaction(obj.name, '', [], [], validSubdomains);
+            i += 1;
+            name = 'R' + i;
         }
+
+        model = this.collection.addMassActionReaction(name, 'creation', rate, reactants, products, validSubdomains);
         
         this.selectView.select(model);
     },
@@ -80,7 +53,7 @@ var AddNewReactionForm = AmpersandFormView.extend({
 
         var options = [];
 
-        var emptyDiv = $( '<div>' );
+        /*var emptyDiv = $( '<div>' );
         katex.render('\\emptyset \\rightarrow A', emptyDiv[0]);
         options.push(['creation', emptyDiv.html()]);
         katex.render('A \\rightarrow \\emptyset', emptyDiv[0]);
@@ -112,7 +85,7 @@ var AddNewReactionForm = AmpersandFormView.extend({
                 options: options,
                 required: true,
             })
-        ];
+        ];*/
 
     },
     render: function()
@@ -123,39 +96,67 @@ var AddNewReactionForm = AmpersandFormView.extend({
 
         $( this.el ).find('input').prop('autocomplete', 'off');
 
-        this.button = $('<input type="submit" value="Add"/>').appendTo( $( this.el ) );
+        this.button = $('<button class="btn btn-primary" type="submit">Add Reaction</button>').appendTo( $( this.el ) );
     }
 });
 
 var ReactionCollectionFormView = AmpersandView.extend({
     template: "<div>\
-  <div class='row'> \
-    <div class='span4' data-hook='collection'></div>\
-    <div class='span7' data-hook='reactionEditorWorkspace'></div>\
+  <div>\
+    <div data-hook='collection'></div>\
+    <div data-hook='reactionEditorWorkspace'></div>\
   </div> \
-  <h4>Add Reaction</h4>\
-  <form data-hook='addReactionForm'></form>\
+  <div style='clear: both;'> \
+    <form data-hook='addReactionForm'></form>\
+  </div> \
 </div>",
     initialize: function(attr, options)
     {
         AmpersandView.prototype.initialize.call(this, attr, options);
     },
-    props: {
+    props:
+    {
         selected : 'object',
+    },
+    remove: function()
+    {
+        this.removeDetailView();
+
+        AmpersandView.prototype.remove.apply(this, arguments);
+    },
+    removeDetailView: function()
+    {
+        if(typeof(this.detailView) != 'undefined')
+        {
+            this.detailView.remove();
+            delete this.detailView;
+            this.stopListening(this.selectView.value);
+        }
     },
     select: function()
     {
         var model = this.selectView.value;
 
-        if(typeof(this.detailView) != 'undefined')
-            this.detailView.remove();
+        this.removeDetailView();
 
         if(model)
         {
-            this.detailView = this.renderSubview(new DetailedReactionFormView({
-                model : model
-            }), $( '<div>' ).appendTo( this.queryByHook('reactionEditorWorkspace') )[0]);
+            this.detailView = new DetailedReactionFormView({
+                el: $( '<div>' ).appendTo( this.queryByHook('reactionEditorWorkspace') )[0],
+                model: model,
+                parent : this
+            });
+
+            this.detailView.render();
+
+            this.listenTo(model, 'remove', _.bind(this.removeEvents, this));
         }
+    },
+    removeEvents : function()
+    {
+        this.removeDetailView();
+
+        this.selectView.select(this.collection.at(0));
     },
     render: function()
     {
@@ -166,7 +167,7 @@ var ReactionCollectionFormView = AmpersandView.extend({
         collectionTemplate = "<div>\
   <table data-hook='table'>\
     <thead>\
-      <th></th><th>Name</th><th>Summary</th><th>Edit</th>\
+      <th width='25px'></th><th width='120px'>Name</th><th>Summary</th><th width='25px'>Edit</th>\
     </thead>\
     <tbody data-hook='items'>\
     </tbody>\

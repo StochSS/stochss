@@ -1,7 +1,7 @@
-var AmpCollection = require('ampersand-collection');
+var Collection = require('./collection');
 var InitialCondition = require('./initial-condition');
 
-module.exports = AmpCollection.extend({
+module.exports = Collection.extend({
     model: InitialCondition,
     addScatterInitialCondition: function(specie, count, subdomain) {
         return this.add({ specie : specie, type : 'scatter', subdomain : subdomain, count : count, X : 0, Y : 0, Z : 0 });

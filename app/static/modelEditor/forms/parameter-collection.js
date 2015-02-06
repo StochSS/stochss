@@ -3,15 +3,17 @@ var AmpersandView = require('ampersand-view');
 var AmpersandFormView = require('ampersand-form-view');
 var InputView = require('ampersand-input-view');
 var ParameterFormView = require('./parameter');
-var SubCollection = require('ampersand-subcollection');
+var PaginatedCollectionView = require('./paginated-collection-view');
 
 var Tests = require('./tests');
 var AddNewParameterForm = AmpersandFormView.extend({
     submitCallback: function (obj) {
-        this.collection.addParameter(obj.name, obj.value);
+        this.selectView.select(this.collection.addParameter(obj.name, obj.value));
 
-        this.fields.forEach( function(field) { $( field.el ).find('input').val(''); } );
-    },
+        $( this.nameField.el ).find('input').val('');
+
+        $( this.valueField.el ).find('input').val(0); 
+   },
             // this valid callback gets called (if it exists)
             // when the form first loads and any time the form
             // changes from valid to invalid or vice versa.
@@ -26,26 +28,31 @@ var AddNewParameterForm = AmpersandFormView.extend({
     },
     initialize: function(attr, options) {
         this.collection = options.collection;
+        this.selectView = attr.selectView;
+
+        this.nameField = new InputView({
+            label: 'Name',
+            name: 'name',
+            value: '',
+            required: true,
+            placeholder: 'NewParameters',
+            tests: [].concat(Tests.naming(this.collection))
+        });
+        
+        this.valueField = new InputView({
+            label: 'Value',
+            name: 'value',
+            value: '0',
+            required: true,
+            placeholder: '0',
+            tests: []
+        });
+
 
         this.fields = [
-            new InputView({
-                label: 'Name',
-                name: 'name',
-                value: '',
-                required: true,
-                placeholder: 'NewParameters',
-                tests: [].concat(Tests.naming(this.collection))
-            }),
-            new InputView({
-                label: 'Value',
-                name: 'value',
-                value: '0',
-                required: true,
-                placeholder: '0',
-                tests: []
-            })
+            this.nameField,
+            this.valueField
         ];
-
     },
     render: function()
     {
@@ -53,70 +60,49 @@ var AddNewParameterForm = AmpersandFormView.extend({
 
         $( this.el ).find('input').prop('autocomplete', 'off');
 
-        this.button = $('<input type="submit" value="Add" />').appendTo( $( this.el ) );
+        this.button = $('<button class="btn btn-primary" type="submit">Add</button>').appendTo( $( this.el ) );
     }
 });
 
 var ParameterCollectionFormView = AmpersandView.extend({
-    template: "<div><table data-hook='parametersTable' class='table table-bordered'><thead><th></th><th>Name</th><th>Value</th></thead><tbody data-hook='parametersTBody'></tbody></table><div><button data-hook='previous'>Previous 10</button><span data-hook='position'></span><button data-hook='next'>Next 10</button></div>Add Parameter: <form data-hook='addParametersForm'></form></div>",
+    template: "<div> \
+  <div data-hook='collection'></div> \
+  Add Parameter: <form data-hook='addParametersForm'></form> \
+</div>",
     initialize: function(attr, options)
     {
         AmpersandView.prototype.initialize.call(this, attr, options);
-
-        this.listenToAndRun(this.collection, 'add remove change', _.bind(this.updateHasModels, this))
-
-        this.subCollection = new SubCollection(this.collection, { limit : 10, offset : 0 });
-
-        this.offset = 0;
-    },
-    setSelectRange : function(index) {
-        this.subCollection.configure( { limit : 10, offset : index } );
-
-        $( this.queryByHook('position') ).text( ' [ ' + index + ' / ' + this.collection.models.length + ' ] ' );
-    },
-    shift10Plus : function()
-    {
-        if(this.offset + 10 < this.collection.models.length)
-            this.offset = this.offset + 10;
-
-        this.setSelectRange(this.offset);
-    },
-    shift10Minus : function()
-    {
-        if(this.offset - 10 >= 0)
-            this.offset = this.offset - 10;
-
-        this.setSelectRange(this.offset);
-    },
-    events : {
-        "click [data-hook='next']" : "shift10Plus",
-        "click [data-hook='previous']" : "shift10Minus"
-    },
-    props: {
-        selected : 'object',
-        hasModels : 'boolean'
-    },
-    bindings : {
-        'hasModels' : {
-            type : 'toggle',
-            hook : 'parametersTable'
-        }
-    },
-    updateHasModels: function()
-    {
-        this.hasModels = this.collection.models.length > 0;
     },
     render: function()
     {
         AmpersandView.prototype.render.apply(this, arguments);
 
-        this.setSelectRange(this.offset);
+        collectionTemplate = "<div> \
+  <table data-hook='table'> \
+    <thead> \
+      <th width='25px'></th><th width='120px'>Name</th><th width='120px'>Value</th> \
+    </thead> \
+    <tbody data-hook='items'> \
+    </tbody> \
+  </table> \
+  <div> \
+    <button class='btn' data-hook='previous'>&lt;&lt;</button>\
+    [ <span data-hook='position'></span> / <span data-hook='total'></span> ] \
+    <button class='btn' data-hook='next'>&gt;&gt;</button>\
+  </div> \
+</div>";
 
-        this.renderCollection(this.subCollection, ParameterFormView, this.el.querySelector('[data-hook=parametersTBody]'));
+        this.selectView = this.renderSubview( new PaginatedCollectionView( {
+            template : collectionTemplate,
+            collection : this.collection,
+            view : ParameterFormView,
+            limit : 10
+        }), this.queryByHook('collection'));
 
         this.addForm = new AddNewParameterForm(
             { 
-                el : this.el.querySelector('[data-hook=addParametersForm]')
+                el : this.el.querySelector('[data-hook=addParametersForm]'),
+                selectView : this.selectView
             },
             {
                 collection : this.collection

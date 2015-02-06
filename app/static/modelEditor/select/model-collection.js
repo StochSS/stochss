@@ -35,6 +35,8 @@ var AddNewModelForm = AmpersandFormView.extend({
                                 mesh : this.meshCollection.at(0) });
 
         this.collection.add(model).save();
+
+        $( this.nameField.el ).find('input').val('');
     },
     validCallback: function (valid) {
         if (valid) {
@@ -47,22 +49,26 @@ var AddNewModelForm = AmpersandFormView.extend({
         this.collection = attr.collection;
         this.meshCollection = attr.meshCollection;
 
+        this.nameField = new InputView({
+            label: 'Name',
+            name: 'name',
+            value: '',
+            required: true,
+            placeholder: 'NewModel',
+            tests: [].concat(Tests.naming(this.collection))
+        });
+
+        this.unitsSelectField = new SelectView({
+            label: 'Units',
+            name: 'units',
+            value: 'population',
+            options: [['concentration', 'Concentration'], ['population', 'Population'], ['spatialPopulation', 'Spatial Population']],
+            required: true,
+        });
+
         this.fields = [
-            new InputView({
-                label: 'Name',
-                name: 'name',
-                value: '',
-                required: true,
-                placeholder: 'NewModel',
-                tests: [].concat(Tests.naming(this.collection))
-            }),
-            new SelectView({
-                label: 'Units',
-                name: 'units',
-                value: 'population',
-                options: [['concentration', 'Concentration'], ['population', 'Population'], ['spatialPopulation', 'Spatial Population']],
-                required: true,
-            })
+            this.nameField,
+            this.unitsSelectField
         ];
     },
     render: function()
@@ -71,7 +77,7 @@ var AddNewModelForm = AmpersandFormView.extend({
 
         $( this.el ).find('input').prop('autocomplete', 'off');
 
-        this.button = $('<input type="submit" value="Add" />').appendTo( $( this.el ) );
+        this.button = $('<button class="btn btn-primary" type="submit">Add Model</button>').appendTo( $( this.el ) );
     }
 });
 

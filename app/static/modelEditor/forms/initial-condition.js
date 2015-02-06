@@ -11,7 +11,7 @@ var Tests = require('./tests');
 module.exports = View.extend({
     template : "<tr> \
   <td> \
-    <button data-hook='delete'>x</button> \
+    <button class='btn' data-hook='delete'>x</button> \
   </td> \
   <td data-hook='typeSelect'></td> \
   <td data-hook='specie'></td> \

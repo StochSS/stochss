@@ -1,8 +1,8 @@
 // specie Collection - specie-collection.js
-var AmpCollection = require('ampersand-collection');
+var Collection = require('./collection');
 var specie = require('./specie');
 
-module.exports = AmpCollection.extend({
+module.exports = Collection.extend({
     model: specie,
     addSpecie: function(name, initialCondition, diffusion, subdomains) {
         var unique = this.models.every(function(model) { return model["name"] != name });

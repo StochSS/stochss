@@ -18,6 +18,12 @@ module.exports = AmpModel.extend({
         
         this.updateInUse();
     },
+    remove: function()
+    {
+        this.stopListening();
+
+        AmpModel.prototype.remove.apply(this, arguments);
+    },
     updateInUse: function()
     {
         var model = this;
