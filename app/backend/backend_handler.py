@@ -668,7 +668,7 @@ class BackendWorker():
         for ip, ins_id in zip(public_ips, instance_ids):
             #self.__wait_for_ssh_connection(key_file, ip)
             ins_type = VMStateModel.get_instance_type(params, ins_id)
-            success = helper.start_celery_on_vm(instance_type=ins_type, ip=ip, key_file=key_file,
+            success = helper.start_celery_on_vm(instance_type=ins_type, ip=ip, key_file=key_file, agent=agent,
                                                 prepend_commands=commands)
             if success == 0:
                 # update db with successful running vms    

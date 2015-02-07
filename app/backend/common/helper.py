@@ -20,13 +20,13 @@ import tasks
 from tasks import TaskConfig
 
 
-def copy_celery_config_to_vm(ins_type, ip, keyfile):
+def copy_celery_config_to_vm(instance_type, ip, key_file, agent):
     celery_config_filename = CeleryConfig.CONFIG_FILENAME
     if not os.path.exists(celery_config_filename):
         raise Exception("celery config file not found: {0}".format(celery_config_filename))
 
-    config_celery_queues(agent=AgentTypes.EC2, instance_types=[ins_type])
-    cmd = "scp -o 'StrictHostKeyChecking no' -i {0} {1} ubuntu@{2}:celeryconfig.py".format(keyfile,
+    config_celery_queues(agent=agent, instance_types=[instance_type])
+    cmd = "scp -o 'StrictHostKeyChecking no' -i {0} {1} ubuntu@{2}:celeryconfig.py".format(key_file,
                                                                                            celery_config_filename,
                                                                                            ip)
     logging.info(cmd)
@@ -37,8 +37,8 @@ def copy_celery_config_to_vm(ins_type, ip, keyfile):
     else:
         raise Exception("scp failure: {0} not transfered to {1}".format(celery_config_filename, ip))
 
-def start_celery_on_vm(instance_type, ip, key_file, username="ubuntu", prepend_commands=None):
-    copy_celery_config_to_vm(instance_type, ip, key_file)
+def start_celery_on_vm(instance_type, ip, key_file, agent, username="ubuntu", prepend_commands=None):
+    copy_celery_config_to_vm(instance_type=instance_type, ip=ip, key_file=key_file, agent=agent)
 
     commands = prepend_commands if prepend_commands is not None else []
     python_path = [TaskConfig.STOCHSS_HOME,
@@ -50,8 +50,8 @@ def start_celery_on_vm(instance_type, ip, key_file, username="ubuntu", prepend_c
 
     commands.append(
         "celery -A tasks worker -Q {q1},{q2} --autoreload --loglevel=info --workdir /home/ubuntu > /home/ubuntu/celery.log 2>&1".format(
-            q1=CeleryConfig.get_queue_name("ec2"),
-            q2=CeleryConfig.get_queue_name("ec2", instance_type)))
+            q1=CeleryConfig.get_queue_name(agent_type=agent),
+            q2=CeleryConfig.get_queue_name(agent_type=agent, instance_type=instance_type)))
 
     command = ';'.join(commands)
 
@@ -125,15 +125,15 @@ def wait_for_ssh_connection(key_file, ip, username="ubuntu"):
     return False
 
 def config_celery_queues(agent, instance_types):
-    exchange = "exchange = Exchange('{0}', type = 'direct')".format(CeleryConfig.get_exchange_name(agent_type=agent))
+    exchange = "exchange = Exchange('{0}', type='direct')".format(CeleryConfig.get_exchange_name(agent_type=agent))
     agent_queue_name = CeleryConfig.get_queue_name(agent_type=agent)
     agent_routing_key = CeleryConfig.get_routing_key_name(agent_type=agent)
 
-    queue_list = map(lambda instance_type: "Queue('{0}', exchange, routing_key = '{1}')".format(
+    queue_list = map(lambda instance_type: "Queue('{0}', exchange, routing_key='{1}')".format(
                                     CeleryConfig.get_queue_name(agent_type=agent, instance_type=instance_type),
                                     CeleryConfig.get_routing_key_name(agent_type=agent, instance_type=instance_type)),
                     instance_types)
-    queue_list.insert(0, "Queue('{0}', exchange, routing_key = '{1}')".format(agent_queue_name, agent_routing_key))
+    queue_list.insert(0, "Queue('{0}', exchange, routing_key='{1}')".format(agent_queue_name, agent_routing_key))
     queues_string = 'CELERY_QUEUES = ({0})'.format(', '.join(queue_list))
 
     with open(CeleryConfig.CONFIG_FILENAME, 'r') as f:
@@ -369,9 +369,9 @@ def execute_cloud_task(params, agent, access_key, secret_key, task_id,
     celery_config.configure()
     celery_config.printCeleryQueue()
 
-    celery_queue_name = CeleryConfig.get_queue_name("ec2", instance_type)
+    celery_queue_name = CeleryConfig.get_queue_name(agent_type=agent, instance_type=instance_type)
     # celery_exchange = CeleryConfig.get_exchange_name("ec2", instance_type)
-    celery_routing_key = CeleryConfig.get_routing_key_name("ec2", instance_type)
+    celery_routing_key = CeleryConfig.get_routing_key_name(agent_type=agent, instance_type=instance_type)
 
     logging.info('Deliver the task to the queue: {0}, routing key: {1}'.format(celery_queue_name, celery_routing_key))
 

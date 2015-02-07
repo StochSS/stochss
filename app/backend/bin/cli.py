@@ -11,19 +11,14 @@ import json
 import re
 import pprint
 import time
-import uuid
-import datetime
 import argparse
-import subprocess
-import shlex
 
 from databases.dynamo_db import DynamoDB
 import tasks
 from tasks import *
+
+from common.config import AgentTypes, FlexConfig
 import common.helper as helper
-
-import celery
-
 
 CELERY_EXCHANGE_FLEX = "exchange_stochss_flex"
 CELERY_QUEUE_FLEX = "queue_stochss_flex"
@@ -50,7 +45,6 @@ class BackendCli:
     SUPPORTED_OUTPUT_STORES = ["amazon_s3"]
     SUPPORTED_JOB_STATUS_DB_STORES = ["amazon_dynamodb"]
     AGENT_TYPE = 'flex_cli'
-    INSTANCE_TYPE = 'flexvm'
 
     def __init__(self, cli_jobs_config):
         self.machines = cli_jobs_config["machines"]
@@ -107,8 +101,8 @@ class BackendCli:
             params['bucketname'] = self.output_store_info['bucket_name']
 
             result = self.execute_cloud_task(params=params,
-                                             agent="flex",
-                                             instance_type=self.INSTANCE_TYPE,
+                                             agent=self.AGENT_TYPE,
+                                             instance_type=FlexConfig.INSTANCE_TYPE,
                                              secret_key=self.aws_credentials["AWS_SECRET_ACCESS_KEY"],
                                              access_key=self.aws_credentials["AWS_ACCESS_KEY_ID"],
                                              database=self.database)
@@ -141,40 +135,6 @@ class BackendCli:
         return result
 
 
-    def config_celery_queues(self, exchange_name, queue_name, routing_key, ins_types):
-        exchange = "exchange = Exchange('" + exchange_name + "', type = 'direct')"
-
-        CELERY_QUEUES = "CELERY_QUEUES = (Queue('" + queue_name + "', exchange, routing_key = '" + routing_key + "'), "
-        for ins_type in ins_types:
-            celery_queue_name = queue_name + "_" + ins_type.replace(".", "")
-            celery_routing_key = routing_key + "_" + ins_type.replace(".", "")
-            CELERY_QUEUES = CELERY_QUEUES + "Queue('" + celery_queue_name + "', exchange, routing_key = '" + celery_routing_key + "'), "
-
-        CELERY_QUEUES = CELERY_QUEUES + ")"
-
-        celery_config_filename = os.path.join(os.path.dirname(os.path.abspath(__file__)), "celeryconfig.py")
-
-        with open(celery_config_filename, 'r') as f:
-            lines = f.readlines()
-
-        with open(celery_config_filename, 'w') as f:
-            clear_following = False
-            for line in lines:
-                if clear_following:
-                    f.write("")
-                elif line.strip().startswith('exchange'):
-                    f.write(exchange + "\n")
-                elif line.strip().startswith('CELERY_QUEUES'):
-                    f.write(CELERY_QUEUES + "\n")
-                    clear_following = True
-                else:
-                    f.write(line)
-
-        # reload the celery configuration
-        my_celery = tasks.CelerySingleton()
-        my_celery.configure()
-
-
     def run(self):
         self.database.createtable(self.job_status_db_store_info['table_name'])
 
@@ -189,22 +149,6 @@ class BackendCli:
 
         commands = []
         commands.append('#!/bin/bash')
-        # commands.append("set -x")
-        # commands.append("exec > >(tee /var/log/user-data.log|logger -t user-data -s 2>/dev/console) 2>&1")
-        # commands.append("touch anand3.txt")
-        # commands.append("echo testing logfile")
-        # commands.append("echo BEGIN")
-        # commands.append("date '+%Y-%m-%d %H:%M:%S'")
-        # commands.append("echo END")
-        # commands.append("touch anand2.txt")
-
-        # commands.append('export AWS_ACCESS_KEY_ID={0}'.format(self.aws_credentials['AWS_ACCESS_KEY_ID']))
-        # commands.append('export AWS_SECRET_ACCESS_KEY={0}'.format(self.aws_credentials['AWS_SECRET_ACCESS_KEY']))
-
-        # commands.append(
-        # 'echo export AWS_ACCESS_KEY_ID={0} >> ~/.bashrc'.format(self.aws_credentials['AWS_ACCESS_KEY_ID']))
-        # commands.append(
-        # 'echo export AWS_SECRET_ACCESS_KEY={0} >> ~/.bashrc'.format(self.aws_credentials['AWS_SECRET_ACCESS_KEY']))
 
         commands.append(
             'echo export AWS_ACCESS_KEY_ID={0} >> ~/.bashrc'.format(str(self.aws_credentials['AWS_ACCESS_KEY_ID'])))
@@ -225,51 +169,27 @@ class BackendCli:
         return commands
 
     def __configure_celery(self, queue_head):
-        logging.info("queue_head['public_ip'] = {0}".format(queue_head["public_ip"]))
-        self.__update_celery_config_with_queue_head_ip(queue_head_ip=queue_head["public_ip"])
-        logging.info("Updated celery config with queue head ip: {0}".format(queue_head["public_ip"]))
+        commands = []
+        commands.append('source ~/.bashrc')
+        commands.append('export AWS_ACCESS_KEY_ID={0}'.format(str(self.aws_credentials['AWS_ACCESS_KEY_ID'])))
+        commands.append('export AWS_SECRET_ACCESS_KEY={0}'.format(str(self.aws_credentials['AWS_SECRET_ACCESS_KEY'])))
+
         for machine in self.machines:
-            logging.info("Copying celery config to {ip}".format(ip=machine["public_ip"]))
-            self.__copy_celery_config_to_machine(user=machine["username"],
-                                                 ip=machine["public_ip"],
-                                                 key_file_path=machine["keyfile"])
-
             logging.info("Starting celery on {ip}".format(ip=machine["public_ip"]))
-            self.__start_celery_on_machine_via_ssh(user=machine["username"],
-                                                   ip=machine["public_ip"],
-                                                   key_file_path=machine["keyfile"])
+            success = helper.start_celery_on_vm(instance_type=FlexConfig.INSTANCE_TYPE,
+                                                ip=machine["public_ip"],
+                                                key_file=machine["keyfile"],
+                                                prepend_commands=commands,
+                                                agent=self.AGENT_TYPE)
+            if success != 0:
+                raise Exception("Failure to start celery on {0}".format(machine["public_ip"]))
 
-    def __update_celery_config_with_queue_head_ip(self, queue_head_ip):
-        # Write queue_head_ip to file on the appropriate line
-        current_dir = os.path.dirname(os.path.abspath(__file__))
-        celery_config_filename = os.path.join(current_dir, "celeryconfig.py")
-        celery_template_filename = os.path.join(current_dir, "..", "celeryconfig.py.template")
-
-        logging.debug("celery_config_filename = {0}".format(celery_config_filename))
-        logging.debug("celery_template_filename = {0}".format(celery_template_filename))
-
-        celery_config_lines = []
-        with open(celery_template_filename) as celery_config_file:
-            celery_config_lines = celery_config_file.readlines()
-
-        with open(celery_config_filename, 'w') as celery_config_file:
-            for line in celery_config_lines:
-                if line.strip().startswith('BROKER_URL'):
-                    celery_config_file.write('BROKER_URL = "amqp://stochss:ucsb@{0}:5672/"\n'.format(queue_head_ip))
-                else:
-                    celery_config_file.write(line)
-
-        # Now update the actual Celery app....
-        # TODO: Doesnt seem to work in GAE until next request comes in to server
-        my_celery = tasks.CelerySingleton()
-        my_celery.configure()
+        # get all intstance types and configure the celeryconfig.py locally
+        instance_types = [FlexConfig.INSTANCE_TYPE]
+        helper.config_celery_queues(agent=self.AGENT_TYPE, instance_types=instance_types)
 
 
-    def prepare_machines(self):
-        logging.info("prepare_machines: inside method with machine_info : \n%s", pprint.pformat(self.machines))
-
-        instance_types = [self.INSTANCE_TYPE]
-
+    def __get_queue_head_machine_info(self):
         queue_head = None
         for machine in self.machines:
             if machine["type"] == "queue-head":
@@ -281,9 +201,14 @@ class BackendCli:
                 pass
             else:
                 raise InvalidConfigurationError("Invalid machine type : {0} !".format(machine["type"]))
-
         if queue_head == None:
             raise InvalidConfigurationError("Need at least one master!")
+        return queue_head
+
+    def prepare_machines(self):
+        logging.info("prepare_machines: inside method with machine_info : \n%s", pprint.pformat(self.machines))
+
+        queue_head = self.__get_queue_head_machine_info()
 
         logging.info("queue head = \n{0}".format(pprint.pformat(queue_head)))
 
@@ -340,9 +265,10 @@ class BackendCli:
                 if success != 0:
                     raise Exception("Remote command failed on {ip}!".format(ip=machine['public_ip']))
 
-            self.__configure_celery(queue_head)
+            helper.update_celery_config_with_queue_head_ip(queue_head_ip=queue_head["public_ip"])
+            logging.info("Updated celery config with queue head ip: {0}".format(queue_head["public_ip"]))
 
-            helper.config_celery_queues(agent=self.AGENT_TYPE, instance_types=instance_types)
+            self.__configure_celery(queue_head)
 
             return {"success": True}
 
@@ -350,69 +276,6 @@ class BackendCli:
             traceback.print_exc()
             logging.error("prepare_machines : exiting method with error : {0}".format(str(e)))
             return None
-
-
-    def __start_celery_on_machine_via_ssh(self, user, ip, key_file_path):
-        # sudo export PYTHONPATH=/home/ubuntu:/home/ubuntu/pyurdme:/home/ubuntu/stochss/app:/home/ubuntu/stochss/app/backend:/home/ubuntu/stochss/app/lib/cloudtracker;export AWS_ACCESS_KEY_ID=AKIAJLESBH6UR3N4TJTA;export AWS_SECRET_ACCESS_KEY=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;celery -A tasks worker -Q queue_stochss_flex,queue_stochss_flex_flexvm --autoreload --loglevel=debug --workdir /home/ubuntu > /home/ubuntu/celery.log 2>&1'
-
-        commands = []
-        commands.append('source /home/ubuntu/.bashrc')
-        commands.append(
-            'export PYTHONPATH=/home/ubuntu/stochss:/home/ubuntu/stochss/pyurdme:/home/ubuntu/stochss/app:/home/ubuntu/stochss/app/backend:/home/ubuntu/stochss/app/lib/cloudtracker')
-        commands.append('export AWS_ACCESS_KEY_ID={0}'.format(self.aws_credentials['AWS_ACCESS_KEY_ID']))
-        commands.append('export AWS_SECRET_ACCESS_KEY={0}'.format(self.aws_credentials['AWS_SECRET_ACCESS_KEY']))
-        commands.append(
-            "celery -A tasks worker -Q " + CELERY_QUEUE_FLEX + "," \
-            + CELERY_QUEUE_FLEX + "_" + self.INSTANCE_TYPE.replace(".", "") \
-            + " --autoreload --loglevel=info --workdir /home/ubuntu > /home/ubuntu/celery.log 2>&1")
-
-        # PyURDME must be run inside a 'screen' terminal as part of the FEniCS code depends on the ability to write to
-        # the process' terminal, screen provides this terminal.
-        celery_cmd = "sudo screen -d -m bash -c '{0}'\n".format(';'.join(commands))
-
-        logging.info("keyfile = {0}".format(key_file_path))
-
-        if not os.path.exists(key_file_path):
-            raise Exception("ssh keyfile file not found: {0}".format(key_file_path))
-
-        command = "ssh -o 'StrictHostKeyChecking no' -i {key_file_path} {user}@{ip} \"{cmd}\"".format(
-            key_file_path=key_file_path,
-            user=user,
-            ip=ip,
-            cmd=celery_cmd)
-        logging.info(command)
-        success = os.system(command)
-
-        if success == 0:
-            logging.info("celery started on {0}".format(ip))
-        else:
-            raise Exception("Failure to start celery on {0}".format(ip))
-
-
-    def __copy_celery_config_to_machine(self, user, ip, key_file_path):
-        logging.info("keyfile = {0}".format(key_file_path))
-
-        if not os.path.exists(key_file_path):
-            raise Exception("ssh keyfile file not found: {0}".format(key_file_path))
-
-        celery_config_filename = os.path.join(os.path.dirname(os.path.abspath(__file__)), "celeryconfig.py")
-        logging.debug("celery_config_filename = {0}".format(celery_config_filename))
-
-        if not os.path.exists(celery_config_filename):
-            raise Exception("celery config file not found: {0}".format(celery_config_filename))
-
-        cmd = "scp -o 'StrictHostKeyChecking no' -i {key_file_path} {file} {user}@{ip}:celeryconfig.py".format(
-            key_file_path=key_file_path,
-            file=celery_config_filename,
-            user=user,
-            ip=ip)
-        logging.info(cmd)
-        success = os.system(cmd)
-
-        if success == 0:
-            logging.info("scp success: {0} transfered to {1}".format(celery_config_filename, ip))
-        else:
-            raise Exception("scp failure: {0} not transfered to {1}".format(celery_config_filename, ip))
 
 
 if __name__ == "__main__":

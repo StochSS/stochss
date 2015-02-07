@@ -9,8 +9,8 @@
     },
     "machines": [
         {
-            "public_ip": "52.0.104.30",
-            "private_ip": "52.0.104.30",
+            "public_ip": "52.0.59.150",
+            "private_ip": "52.0.59.150",
             "username": "ubuntu",
             "keyfile": "/Users/kaos/Downloads/test-stochss-cli.pem",
             "type": "queue-head"
