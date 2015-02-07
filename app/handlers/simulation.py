@@ -339,7 +339,7 @@ class SimulatePage(BaseHandler):
     
     def get(self):
         # Query the datastore
-        all_models_q = db.GqlQuery("SELECT * FROM StochKitModelWrapper WHERE user_id = :1", self.user.user_id())
+        all_models_q = db.GqlQuery("SELECT * FROM StochKitModelWrapper WHERE user_id = :1 AND is_public = False", self.user.user_id())
         all_models=[]
         for q in all_models_q.run():
             all_models.append({ "name" : q.name,
