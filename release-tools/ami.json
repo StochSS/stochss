@@ -1,4 +1,5 @@
 [{"ami_id": "ami-10551878", "creation_time": "Thu, 05 Feb 2015 10:53:32 +0000", "name": "StochSS-Node-2015Feb05-105332"},
 {"ami_id": "ami-a26924ca", "creation_time": "Thu, 05 Feb 2015 12:09:39 +0000", "name": "StochSS-Node-2015Feb05-120939"},
 {"ami_id": "ami-0c9ad564", "creation_time": "Fri, 06 Feb 2015 23:44:52 +0000", "name": "StochSS-Node-2015Feb06-234452"},
-{"ami_id": "ami-34c6895c", "creation_time": "Sat, 07 Feb 2015 04:28:45 +0000", "name": "StochSS-Node-2015Feb07-042845"}]
+{"ami_id": "ami-34c6895c", "creation_time": "Sat, 07 Feb 2015 04:28:45 +0000", "name": "StochSS-Node-2015Feb07-042845"},
+{"ami_id": "ami-9cf1bef4", "creation_time": "Sat, 07 Feb 2015 08:00:06 +0000", "name": "StochSS-Node-2015Feb07-080006"}]

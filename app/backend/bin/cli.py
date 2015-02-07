@@ -17,6 +17,7 @@ from databases.dynamo_db import DynamoDB
 import tasks
 from tasks import *
 
+from common.config import FlexConfig
 import common.helper as helper
 
 def get_aws_credentials():
@@ -38,7 +39,7 @@ class InvalidConfigurationError(BaseException):
 class BackendCli:
     SUPPORTED_OUTPUT_STORES = ["amazon_s3"]
     SUPPORTED_JOB_STATUS_DB_STORES = ["amazon_dynamodb"]
-    AGENT_TYPE = 'flex_cli'
+    AGENT_TYPE = 'flex'
 
     def __init__(self, cli_jobs_config):
         self.machines = cli_jobs_config["machines"]
@@ -174,13 +175,13 @@ class BackendCli:
                                                 ip=machine["public_ip"],
                                                 key_file=machine["keyfile"],
                                                 prepend_commands=commands,
-                                                agent=self.AGENT_TYPE)
+                                                agent_type=self.AGENT_TYPE)
             if success != 0:
                 raise Exception("Failure to start celery on {0}".format(machine["public_ip"]))
 
         # get all intstance types and configure the celeryconfig.py locally
         instance_types = [FlexConfig.INSTANCE_TYPE]
-        helper.config_celery_queues(agent=self.AGENT_TYPE, instance_types=instance_types)
+        helper.config_celery_queues(agent_type=self.AGENT_TYPE, instance_types=instance_types)
 
 
     def __get_queue_head_machine_info(self):

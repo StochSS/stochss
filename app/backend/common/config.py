@@ -41,4 +41,4 @@ class AgentTypes(object):
     FLEX = 'flex'
 
 class FlexConfig(object):
-    INSTANCE_TYPE = 'flex_vm'
+    INSTANCE_TYPE = 'flexvm'

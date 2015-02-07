@@ -668,7 +668,8 @@ class BackendWorker():
         for ip, ins_id in zip(public_ips, instance_ids):
             #self.__wait_for_ssh_connection(key_file, ip)
             ins_type = VMStateModel.get_instance_type(params, ins_id)
-            success = helper.start_celery_on_vm(instance_type=ins_type, ip=ip, key_file=key_file, agent=agent,
+            success = helper.start_celery_on_vm(instance_type=ins_type, ip=ip, key_file=key_file,
+                                                agent_type=AgentTypes.EC2,
                                                 prepend_commands=commands)
             if success == 0:
                 # update db with successful running vms    
@@ -684,7 +685,7 @@ class BackendWorker():
 
         # get all intstance types and configure the celeryconfig.py locally
         instance_types = VMStateModel.get_running_instance_type(params)
-        helper.config_celery_queues(agent=AgentTypes.EC2, instance_types=instance_types)
+        helper.config_celery_queues(agent_type=AgentTypes.EC2, instance_types=instance_types)
 
 
     def __is_queue_head_running(self, agent, params):
