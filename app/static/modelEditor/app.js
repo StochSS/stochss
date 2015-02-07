@@ -138,7 +138,9 @@ var PrimaryView = View.extend({
     render: function()
     {
         //View.prototype.render.apply(this, arguments);
-        
+
+        $( this.queryByHook('modelSelect') ).empty();
+
         this.modelSelector = this.renderSubview(
             new ModelSelectView( {
                 collection : this.collection,

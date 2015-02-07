@@ -14,11 +14,11 @@ var Reaction = State.extend({
         {
             type : 'object',
             default : function() { return []; }
-        },
+        }
     },
     derived: {
         valid : {
-            deps : ['type', 'rate'],
+            deps : ['type', 'rate', 'reactants', 'products'],
             fn : function() {
                 if(this.type != 'custom' && !this.rate)
                 {
@@ -67,13 +67,16 @@ var Reaction = State.extend({
                         return false;
                 }
 
-                for(var i = 0; i < products; i++)
+                if(this.products)
                 {
-                    if(!this.products.at(i))
-                        return false;
-
-                    if(!this.products.at(i).specie)
-                        return false;
+                    for(var i = 0; i < products; i++)
+                    {
+                        if(!this.products.at(i))
+                            return false;
+                        
+                        if(!this.products.at(i).specie)
+                            return false;
+                    }
                 }
 
                 return true;
@@ -89,11 +92,15 @@ var Reaction = State.extend({
     },
     triggerChange: function()
     {
-        this.trigger('change');
+        this.trigger('change:reactants');
+        this.trigger('change:products');
         this.collection.parent.species.trigger('stoich-specie-change');
     },
     initialize : function(attrs, options)
     {
+        this.reactants = new StoichSpecieCollection(undefined, { parent : this });
+        this.products = new StoichSpecieCollection(undefined, { parent : this });
+
         State.prototype.initialize.apply(this, arguments);
 
         //add remove 

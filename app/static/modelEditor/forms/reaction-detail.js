@@ -18,16 +18,14 @@ module.exports = View.extend({
     {
         if(obj.name == 'type')
         {
-            this.model.type = obj.value;
-
             // Make sure we have a rate
-            if(this.model.type != 'custom')
-            {
-                if(this.model.rate == null)
-                {
-                    this.model.rate = this.rateSelect.value;
-                }
-            }
+            //if(obj.name != 'custom')
+            //{
+            //    if(this.model.rate == null)
+            //    {
+            //        this.model.rate = this.rateSelect.value;
+            //    }
+            //}
 
             if(obj.value != 'custom' && obj.value != 'massaction')
             {
@@ -81,7 +79,15 @@ module.exports = View.extend({
                 {
                     this.model.reactants.at(0).stoichiometry = 2;
                 }
+                else
+                {
+                    this.model.reactants.each( function(reactant) { reactant.stoichiometry = 1; } );
+                }
+
+                this.model.products.each( function(product) { product.stoichiometry = 1; } );
             }
+
+            this.model.type = obj.value;
         } else if(obj.name == 'parameter') {
             this.model.rate = obj.value;
         } else if(obj.name == 'subdomains') {
@@ -165,7 +171,7 @@ module.exports = View.extend({
         },
         validMessage :
         {
-            deps : ['model.type', 'model.rate'],
+            deps : ['model.type', 'model.rate', 'model.reactants', 'model.products'],
             fn : function() {
                 if(this.model.type != 'custom' && !this.model.rate)
                 {
@@ -207,13 +213,19 @@ var reactants;
 
                 for(var i = 0; i < reactants; i++)
                 {
-                    if(!this.model.reactants.at(0).specie)
+                    if(!this.model.reactants.at(i))
+                        return "Not enough reactants!";
+
+                    if(!this.model.reactants.at(i).specie)
                         return "Select valid reactants!";
                 }
 
                 for(var i = 0; i < products; i++)
                 {
-                    if(!this.model.products.at(0).specie)
+                    if(!this.model.products.at(i))
+                        return "Not enough products!";
+
+                    if(!this.model.products.at(i).specie)
                         return "Select valid products!";
                 }
 

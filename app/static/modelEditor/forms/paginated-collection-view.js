@@ -45,7 +45,7 @@ var PaginatedCollectionView = AmpersandView.extend({
                     this.offset = i;
                 this.subCollection.configure( { limit : this.limit, offset : this.offset } );
                 
-                var view = _.has(this.subCollectionViews._getViewByModel(model));
+                var view = this.subCollectionViews._getViewByModel(model);
                 if(typeof(view.select) == 'function')
                     view.select();
                 break;

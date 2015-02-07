@@ -33,6 +33,7 @@
     "stylizer": "^1.0.0",
     "templatizer": "^1.0.0",
     "underscore": "^1.7.0",
+    "underscore.string": "^3.0.2",
     "xmldom": "^0.1.19"
   },
   "devDependencies": {

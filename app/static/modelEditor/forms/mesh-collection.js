@@ -4,6 +4,7 @@ var AmpersandView = require('ampersand-view');
 var MeshSelectView = require('./mesh');
 var Mesh = require('../models/mesh');
 var FileUpload = require('blueimp-file-upload');
+var _s = require('underscore.string');
 
 var Tests = require('../forms/tests.js');
 
@@ -20,7 +21,7 @@ var AddNewMeshForm = AmpersandView.extend({
         this.collection = options.collection;
     },
     events: {
-        "click .meshUploadButton" : "handleMeshUploadButton"
+        "click #meshUploadButton" : "handleMeshUploadButton"
     },
     render: function()
     {
@@ -40,8 +41,8 @@ var AddNewMeshForm = AmpersandView.extend({
             url: '/FileServer/large/subdomainFiles',
             dataType: 'json',
             replaceFileInput : false,
-            add : _.bind(this.handleSubdomainsDataAdd, this),
-            done : _.bind(this.handleSubdomainsUploadFinish, this)
+            add : _.bind(this.handleSubdomainsDataAdd, this)//,
+            //done : _.bind(this.handleSubdomainsUploadFinish, this)
         });
     },
     handleMeshUploadButton : function(event)
@@ -58,7 +59,12 @@ var AddNewMeshForm = AmpersandView.extend({
         
         if(this.uploaderState.subdomainsFileData)
         {
-            this.uploaderState.subdomainsFileData.submit();
+            this.uploaderState.reader = new FileReader();
+
+            this.uploaderState.reader.onload = _.bind(this.handleSubdomainsUploadFinish, this);
+            
+            this.uploaderState.reader.readAsText(this.uploaderState.subdomainsFileData.files[0]);
+            //this.uploaderState.subdomainsFileData.submit();
             this.uploaderState.subdomainsSubmitted = true;
             
             updateMsg( $( this.el ).find('#subdomainDataUploadStatus'),
@@ -106,32 +112,7 @@ var AddNewMeshForm = AmpersandView.extend({
             baseName = nameBox.val().trim();
         }
 
-        var newName;
-        var i = 0;
-        
-        var nameUnique = true;
-        do
-        {
-            nameUnique = true;
-            
-            newName = baseName + i;
-            
-            for(var ii in this.data.meshes)
-            {
-                if(this.data.meshes[ii])
-                {
-                    if(this.data.meshes[ii].name == newName)
-                    {
-                        nameUnique = false;
-                        break;
-                    }
-                }
-            }
-
-            i = i + 1;
-        } while(!nameUnique);
-
-        nameBox.val(newName);
+        nameBox.val(baseName);
 
         this.uploaderState.meshFileData = data;
 
@@ -143,7 +124,8 @@ var AddNewMeshForm = AmpersandView.extend({
         {
             delete this.uploaderState.subdomainsFileData;
             delete this.uploaderState.subdomainsSubmitted;
-            delete this.uploaderState.subdomainsFileId;
+            delete this.uploaderState.subdomains;
+            delete this.uploaderState.uniqueSubdomains;
         }
 
         var textArray = data.files[0].name.split('.');
@@ -172,10 +154,23 @@ var AddNewMeshForm = AmpersandView.extend({
         this.createMeshWrapper();
     },
 
-    handleSubdomainsUploadFinish : function(event, data)
+    handleSubdomainsUploadFinish : function(event)
     {
-        this.uploaderState.subdomainsFileId = data.result[0].id;
-        
+        // _s is the underscore string library. Weird variable name I apologize
+        var lines = event.target.result.split('\n');
+
+        var subdomains = [];
+        for(var i = 0; i < lines.length; i++)
+        {
+            var data = lines[i].split(',');
+
+            if(data.length == 2)
+                subdomains.push([parseInt(data[0]), parseInt(data[1])]);
+        }
+
+        this.uploaderState.subdomains = _.sortBy(subdomains, function(element) { return element[0]; });
+        this.uploaderState.uniqueSubdomains = _.unique(subdomains);
+
         updateMsg( $( this.el ).find( '#subdomainDataUploadStatus' ),
                    { status : true,
                      msg : 'Subdomains uploaded' } );
@@ -192,21 +187,38 @@ var AddNewMeshForm = AmpersandView.extend({
             data['meshFileId'] = this.uploaderState.meshFileId;
             data['name'] = this.uploaderState.name;
             data['description'] = this.uploaderState.description;
-
-            if(this.uploaderState.subdomainsSubmitted && this.uploaderState.subdomainsFileId)
+            
+            if(this.uploaderState.subdomainsSubmitted && this.uploaderState.subdomains)
             {
-                data['subdomainsFileId'] = this.uploaderState.subdomainsFileId;
+                data['subdomains'] = this.uploaderState.subdomains;
+                data['uniqueSubdomains'] = this.uploaderState.uniqueSubdomains;
             }
-
-            if(!this.uploaderState.subdomainsSubmitted || (this.uploaderState.meshFileId && this.uploaderState.subdomainsFileId))
+            else
             {
-                $.ajax( { type : 'POST',
-                          url: '/modeleditor/mesheditor',
-                          data: { reqType : 'addMeshWrapper',
-                                  data : JSON.stringify( data ) },
-                          success : _.bind(this.handleMeshWrapperCreated, this) });
+                data['subdomains'] = [];
+                data['uniqueSubdomains'] = [1];
+            }
+            
+            data['undeletable'] = false;
+            
+            if(!this.uploaderState.subdomainsSubmitted || (this.uploaderState.meshFileId && this.uploaderState.subdomains))
+            {
+                var mesh = new Mesh(data);
+                
+                mesh.processMesh(_.bind(this.handleMeshWrapperCreated, this));
+
+                this.uploaderState.mesh = mesh;
             }
         }
+    },
+
+    handleMeshWrapperCreated : function()
+    {
+        this.collection.add(this.uploaderState.mesh);
+
+        this.uploaderState.mesh.save();
+
+        this.uploaderState = {};
     }
 });
 

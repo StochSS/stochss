@@ -130,6 +130,13 @@ var Model = AmpersandModel.extend({
         {
             if(this.collection && this.collection.url)
             {
+
+                if(!this.reactions.every( function(reaction) { return reaction.valid; } ))
+                {
+                    this.saveState = 'Model not valid'
+                    return;
+                }
+
                 this.save(undefined, { success : _.bind(this.modelSaved, this), error : _.bind(this.modelSaveFailed, this) } );
             }
         }
