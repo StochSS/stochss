@@ -1,5 +1,8 @@
 import os
 import sys
+
+sys.path.append(os.path.join(os.path.dirname(__file__), '..'))
+
 import logging
 import datetime
 import uuid
@@ -126,7 +129,7 @@ def config_celery_queues(agent, instance_types):
     agent_queue_name = CeleryConfig.get_queue_name(agent_type=agent)
     agent_routing_key = CeleryConfig.get_routing_key_name(agent_type=agent)
 
-    queue_list = map(lambda instance_type: "Queue('{0}', exchange, routing_key = '{1}'), ".format(
+    queue_list = map(lambda instance_type: "Queue('{0}', exchange, routing_key = '{1}')".format(
                                     CeleryConfig.get_queue_name(agent_type=agent, instance_type=instance_type),
                                     CeleryConfig.get_routing_key_name(agent_type=agent, instance_type=instance_type)),
                     instance_types)
