@@ -9,7 +9,7 @@ var InputView = require('ampersand-input-view');
 var Tests = require('../forms/tests');
 
 module.exports = View.extend({
-    template: "<div>Model type: <div data-hook='type'></div><div data-hook='specie'></div><div data-hook='parameter'></div><div data-hook='reaction'></div><div data-hook='volume'></div></div>",
+    template: $( ".convertToPopulationTemplate" ).text(),
     props: {
         volume : 'Number'
     },
@@ -19,6 +19,9 @@ module.exports = View.extend({
 
         this.volume = 1.0;
     },
+    events : {
+        "click [data-hook=finishConvertButton]" : "clickConvertToPopulation"
+    },
     // Gotta have a few of these functions just so this works as a form view
     // This gets called when things update
     bindings: {
@@ -26,6 +29,10 @@ module.exports = View.extend({
             type : 'text',
             hook: 'type'
         }
+    },
+    clickConvertToPopulation : function()
+    {
+        $( '[data-hook=convertToPopulationLink]' ).trigger('click');
     },
     update: function(element)
     {

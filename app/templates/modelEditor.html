@@ -128,6 +128,27 @@
     </div>
 </script>
 
+<script class="convertToPopulationTemplate" type="text/template">
+    <div>
+        <div class="speciesAccordion">
+            <div class="accordion-group">
+                <div class="accordion-heading">
+                    <h2><a class="accordion-toggle" data-toggle="collapse" data-parent="#speciesAccordion" href="#collapseSpecies">Convert to Population</a></h2>
+                </div>
+                <div id="collapseSpecies" class="accordion-body collapse in">
+                    <div class="accordion-inner">
+                        <div data-hook="specie"></div>
+                        <div data-hook="parameter"></div>
+                        <div data-hook="reaction"></div>
+                        <div data-hook="volume"></div>
+                        <button class="btn btn-primary" data-hook="finishConvertButton">Finish conversion</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</script>
+
 <script class="meshCollectionTemplate" type="text/template">
     <div>
         <div class="accordion" id="accordion22">
@@ -141,8 +162,8 @@
                     <div class="accordion-inner">
                         <div class="row">
                             <div class="span8">
-                              <div data-hook="meshTable">
-                              </div>
+                                <div data-hook="meshTable">
+                                </div>
                             </div>
                             <div class="span3 meshSelectDescriptionDiv">
                                 <h4>Description:</h4>
@@ -159,7 +180,7 @@
             <div class="accordion-group">
                 <div class="accordion-heading">
                     <a class="accordion-toggle meshUpload" data-toggle="collapse" data-parent="#accordion22" href="#collapseThree2">
-                            Upload a Mesh
+                        Upload a Mesh
                     </a>
                 </div>
                 <div id="collapseThree2" class="accordion-body collapse uploadMeshDiv">

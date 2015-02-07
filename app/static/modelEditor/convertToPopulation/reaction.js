@@ -6,24 +6,37 @@ var ReactionFormView = require('../forms/reaction');
 var katex = require('katex')
 
 var ReactionView = View.extend({
-    template: "<tr><td data-hook='name'></td><td data-hook='typeSelect'></td><td data-hook='parameter'></td><td data-hook='equation'></td><td data-hook='latex'></td><td data-hook='result'></td></tr>",
+    template: "<tr><td data-hook='name'></td><td data-hook='parameter'></td><td data-hook='equation'></td><td data-hook='latex'></td><td data-hook='result'></td></tr>",
     volumeChange: function(obj)
     {
         var factor = ReactionView.computeConversionFactor(this.model, this.baseView.volume);
 
         var result = $( this.queryByHook('result') );
 
-        if(this.model.type == 'massaction')
+        if(this.model.type != 'massaction' && this.model.type != 'custom')
         {
             if(typeof(factor) != 'undefined')
             {
                 katex.render(this.model.rate.name + factor, this.queryByHook('parameter'));
-                result.text('Successful');
+                result.text('Successfully converted');
             } else {
                 katex.render(this.model.rate.name, this.queryByHook('parameter'));                    
-                result.text('Failed, Valid Mass Action, but Invalid under SSA assumptions');
+                result.text('Failed, valid mass action, but invalid under SSA assumptions');
             }
-        } else {
+        }
+        else if(this.model.type == 'massaction')
+        {
+            if(typeof(factor) != 'undefined')
+            {
+                katex.render(this.model.rate.name + factor, this.queryByHook('parameter'));
+                result.text('Successfully converted');
+            } else {
+                katex.render(this.model.rate.name, this.queryByHook('parameter'));                    
+                result.text('Failed, valid mass action, but invalid under SSA assumptions');
+            }
+        }
+        else
+        {
             result.text('Cannot convert custom propensities automatically');
         }
     },
@@ -35,25 +48,34 @@ var ReactionView = View.extend({
             type: 'text',
             hook: 'name'
         },
-        'model.type' : [
-            {
-                type: 'text',
-                hook: 'typeSelect'
-            },
+        'modelType' : [
             {
                 type: 'switch',
                 cases: {
-                    'massaction' : '[data-hook="parameter"]',
+                    'notCustom' : '[data-hook="parameter"]',
                     'custom' : '[data-hook="equation"]'
                 }
             }
         ]
     },
+    derived: {
+        'modelType' : {
+            deps : ['model.type'],
+            fn : function() { 
+                if(this.model.type == 'custom')
+                {
+                    return 'custom';
+                } else {
+                    return 'notCustom';
+                }
+            }
+        }
+    },
     render: function()
     {
         View.prototype.render.apply(this, arguments);
 
-        this.baseView = this.parent.parent.parent;
+        this.baseView = this.parent.parent.parent.parent;
 
         this.listenToAndRun(this.baseView, 'change:volume', this.volumeChange);
 
@@ -84,7 +106,7 @@ ReactionView.computeConversionFactor = function(reaction, volume)
         last = specie;
     }
     
-    if(reaction.type == 'massaction')
+    if(reaction.type != 'massaction')
     {
 	if(reactantCount == 0) {
             return ' * ' + volume;

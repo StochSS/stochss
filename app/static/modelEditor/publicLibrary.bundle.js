@@ -10,7 +10,7 @@ var InputView = require('ampersand-input-view');
 var Tests = require('../forms/tests');
 
 module.exports = View.extend({
-    template: "<div>Model type: <div data-hook='type'></div><div data-hook='specie'></div><div data-hook='parameter'></div><div data-hook='reaction'></div><div data-hook='volume'></div></div>",
+    template: $( ".convertToPopulationTemplate" ).text(),
     props: {
         volume : 'Number'
     },
@@ -20,6 +20,9 @@ module.exports = View.extend({
 
         this.volume = 1.0;
     },
+    events : {
+        "click [data-hook=finishConvertButton]" : "clickConvertToPopulation"
+    },
     // Gotta have a few of these functions just so this works as a form view
     // This gets called when things update
     bindings: {
@@ -27,6 +30,10 @@ module.exports = View.extend({
             type : 'text',
             hook: 'type'
         }
+    },
+    clickConvertToPopulation : function()
+    {
+        $( '[data-hook=convertToPopulationLink]' ).trigger('click');
     },
     update: function(element)
     {
@@ -118,21 +125,44 @@ module.exports = View.extend({
 var $ = require('jquery');
 var View = require('ampersand-view');
 var ParameterView = require('./parameter');
+var PaginatedCollectionView = require('../forms/paginated-collection-view');
 
 var ParameterCollectionFormView = View.extend({
-    template: "<div><div>Parameters editor<div><table data-hook='parametersTable'></table></div>",
+    template: "<div><div data-hook='parametersTable'></div></div>",
     render: function()
     {
+        var collectionTemplate = "<div> \
+  <h3>Parameters</h3> \
+  <table class='table table-bordered' data-hook='table'> \
+    <thead> \
+      <th width='120px'>Name</th><th width='120px'>Value</th> \
+    </thead> \
+    <tbody data-hook='items'> \
+    </tbody> \
+  </table> \
+  <div data-hook='nav'> \
+    <button class='btn' data-hook='previous'>&lt;&lt;</button> \
+    [ <span data-hook='position'></span> / <span data-hook='total'></span> ] \
+    <button class='btn' data-hook='next'>&gt;&gt;</button> \
+  </div> \
+</div>";
+
         View.prototype.render.apply(this, arguments);
 
-        this.renderCollection(this.collection, ParameterView, this.el.querySelector('[data-hook=parametersTable]'));
+        this.selectView = this.renderSubview( new PaginatedCollectionView( {
+            template : collectionTemplate,
+            collection : this.collection,
+            view : ParameterView,
+            parent : this,
+            limit : 10
+        }), this.queryByHook('parametersTable'));
         
         return this;
     }
 });
 
 module.exports = ParameterCollectionFormView
-},{"./parameter":"/home/bbales2/stochssModel/app/static/modelEditor/convertToPopulation/parameter.js","ampersand-view":"/home/bbales2/stochssModel/app/static/modelEditor/node_modules/ampersand-view/ampersand-view.js","jquery":"/home/bbales2/stochssModel/app/static/modelEditor/node_modules/jquery/dist/jquery.js"}],"/home/bbales2/stochssModel/app/static/modelEditor/convertToPopulation/parameter.js":[function(require,module,exports){
+},{"../forms/paginated-collection-view":"/home/bbales2/stochssModel/app/static/modelEditor/forms/paginated-collection-view.js","./parameter":"/home/bbales2/stochssModel/app/static/modelEditor/convertToPopulation/parameter.js","ampersand-view":"/home/bbales2/stochssModel/app/static/modelEditor/node_modules/ampersand-view/ampersand-view.js","jquery":"/home/bbales2/stochssModel/app/static/modelEditor/node_modules/jquery/dist/jquery.js"}],"/home/bbales2/stochssModel/app/static/modelEditor/convertToPopulation/parameter.js":[function(require,module,exports){
 var _ = require('underscore');
 var $ = require('jquery');
 var View = require('ampersand-view');
@@ -157,21 +187,44 @@ module.exports = View.extend({
 var $ = require('jquery');
 var View = require('ampersand-view');
 var ReactionView = require('./reaction');
+var PaginatedCollectionView = require('../forms/paginated-collection-view');
 
 var ReactionCollectionView = View.extend({
-    template: "<div><div>Reactions editor<div><table border='1' data-hook='reactionTable'></table></div>",
+    template: "<div><div data-hook='reactionTable'></div></div>",
     render: function()
     {
-        View.prototype.render.apply(this, arguments);
+        var collectionTemplate = "<div> \
+  <h3>Reactions</h3> \
+  <table class='table table-bordered' data-hook='table'> \
+    <thead> \
+      <th width='120px'>Name</th><th>Rate</th><th>Summary</th><th>Result</th> \
+    </thead> \
+    <tbody data-hook='items'> \
+    </tbody> \
+  </table> \
+  <div data-hook='nav'> \
+    <button class='btn' data-hook='previous'>&lt;&lt;</button> \
+    [ <span data-hook='position'></span> / <span data-hook='total'></span> ] \
+    <button class='btn' data-hook='next'>&gt;&gt;</button> \
+  </div> \
+</div>";
 
-        this.renderCollection(this.collection, ReactionView, this.el.querySelector('[data-hook=reactionTable]'));
+        View.prototype.render.apply(this, arguments);
         
+        this.selectView = this.renderSubview( new PaginatedCollectionView( {
+            template : collectionTemplate,
+            collection : this.collection,
+            view : ReactionView,
+            parent : this,
+            limit : 10
+        }), this.queryByHook('reactionTable'));
+
         return this;
     }
 });
 
 module.exports = ReactionCollectionView
-},{"./reaction":"/home/bbales2/stochssModel/app/static/modelEditor/convertToPopulation/reaction.js","ampersand-view":"/home/bbales2/stochssModel/app/static/modelEditor/node_modules/ampersand-view/ampersand-view.js","jquery":"/home/bbales2/stochssModel/app/static/modelEditor/node_modules/jquery/dist/jquery.js"}],"/home/bbales2/stochssModel/app/static/modelEditor/convertToPopulation/reaction.js":[function(require,module,exports){
+},{"../forms/paginated-collection-view":"/home/bbales2/stochssModel/app/static/modelEditor/forms/paginated-collection-view.js","./reaction":"/home/bbales2/stochssModel/app/static/modelEditor/convertToPopulation/reaction.js","ampersand-view":"/home/bbales2/stochssModel/app/static/modelEditor/node_modules/ampersand-view/ampersand-view.js","jquery":"/home/bbales2/stochssModel/app/static/modelEditor/node_modules/jquery/dist/jquery.js"}],"/home/bbales2/stochssModel/app/static/modelEditor/convertToPopulation/reaction.js":[function(require,module,exports){
 var _ = require('underscore');
 var $ = require('jquery');
 var View = require('ampersand-view');
@@ -180,24 +233,37 @@ var ReactionFormView = require('../forms/reaction');
 var katex = require('katex')
 
 var ReactionView = View.extend({
-    template: "<tr><td data-hook='name'></td><td data-hook='typeSelect'></td><td data-hook='parameter'></td><td data-hook='equation'></td><td data-hook='latex'></td><td data-hook='result'></td></tr>",
+    template: "<tr><td data-hook='name'></td><td data-hook='parameter'></td><td data-hook='equation'></td><td data-hook='latex'></td><td data-hook='result'></td></tr>",
     volumeChange: function(obj)
     {
         var factor = ReactionView.computeConversionFactor(this.model, this.baseView.volume);
 
         var result = $( this.queryByHook('result') );
 
-        if(this.model.type == 'massaction')
+        if(this.model.type != 'massaction' && this.model.type != 'custom')
         {
             if(typeof(factor) != 'undefined')
             {
                 katex.render(this.model.rate.name + factor, this.queryByHook('parameter'));
-                result.text('Successful');
+                result.text('Successfully converted');
             } else {
                 katex.render(this.model.rate.name, this.queryByHook('parameter'));                    
-                result.text('Failed, Valid Mass Action, but Invalid under SSA assumptions');
+                result.text('Failed, valid mass action, but invalid under SSA assumptions');
             }
-        } else {
+        }
+        else if(this.model.type == 'massaction')
+        {
+            if(typeof(factor) != 'undefined')
+            {
+                katex.render(this.model.rate.name + factor, this.queryByHook('parameter'));
+                result.text('Successfully converted');
+            } else {
+                katex.render(this.model.rate.name, this.queryByHook('parameter'));                    
+                result.text('Failed, valid mass action, but invalid under SSA assumptions');
+            }
+        }
+        else
+        {
             result.text('Cannot convert custom propensities automatically');
         }
     },
@@ -209,25 +275,34 @@ var ReactionView = View.extend({
             type: 'text',
             hook: 'name'
         },
-        'model.type' : [
-            {
-                type: 'text',
-                hook: 'typeSelect'
-            },
+        'modelType' : [
             {
                 type: 'switch',
                 cases: {
-                    'massaction' : '[data-hook="parameter"]',
+                    'notCustom' : '[data-hook="parameter"]',
                     'custom' : '[data-hook="equation"]'
                 }
             }
         ]
     },
+    derived: {
+        'modelType' : {
+            deps : ['model.type'],
+            fn : function() { 
+                if(this.model.type == 'custom')
+                {
+                    return 'custom';
+                } else {
+                    return 'notCustom';
+                }
+            }
+        }
+    },
     render: function()
     {
         View.prototype.render.apply(this, arguments);
 
-        this.baseView = this.parent.parent.parent;
+        this.baseView = this.parent.parent.parent.parent;
 
         this.listenToAndRun(this.baseView, 'change:volume', this.volumeChange);
 
@@ -258,7 +333,7 @@ ReactionView.computeConversionFactor = function(reaction, volume)
         last = specie;
     }
     
-    if(reaction.type == 'massaction')
+    if(reaction.type != 'massaction')
     {
 	if(reactantCount == 0) {
             return ' * ' + volume;
@@ -283,21 +358,44 @@ module.exports = ReactionView;
 var $ = require('jquery');
 var View = require('ampersand-view');
 var SpecieView = require('./specie');
+var PaginatedCollectionView = require('../forms/paginated-collection-view');
 
 var SpecieCollectionView = View.extend({
-    template: "<div><div>Species editor<div><table data-hook='speciesTable'></table></div>",
+    template: "<div><div data-hook='speciesTable'></div></div>",
     render: function()
     {
+        var collectionTemplate = "<div> \
+  <h3>Species</h3> \
+  <table class='table table-bordered' data-hook='table'> \
+    <thead> \
+      <th width='120px'>Name</th><th width='120px'>Initial Condition</th> \
+    </thead> \
+    <tbody data-hook='items'> \
+    </tbody> \
+  </table> \
+  <div data-hook='nav'> \
+    <button class='btn' data-hook='previous'>&lt;&lt;</button> \
+    [ <span data-hook='position'></span> / <span data-hook='total'></span> ] \
+    <button class='btn' data-hook='next'>&gt;&gt;</button> \
+  </div> \
+</div>";
+
         View.prototype.render.apply(this, arguments);
 
-        this.renderCollection(this.collection, SpecieView, this.el.querySelector('[data-hook=speciesTable]'));
-        
+        this.selectView = this.renderSubview( new PaginatedCollectionView( {
+            template : collectionTemplate,
+            collection : this.collection,
+            view : SpecieView,
+            parent : this,
+            limit : 10
+        }), this.queryByHook('speciesTable'));
+
         return this;
     }
 });
 
 module.exports = SpecieCollectionView
-},{"./specie":"/home/bbales2/stochssModel/app/static/modelEditor/convertToPopulation/specie.js","ampersand-view":"/home/bbales2/stochssModel/app/static/modelEditor/node_modules/ampersand-view/ampersand-view.js","jquery":"/home/bbales2/stochssModel/app/static/modelEditor/node_modules/jquery/dist/jquery.js"}],"/home/bbales2/stochssModel/app/static/modelEditor/convertToPopulation/specie.js":[function(require,module,exports){
+},{"../forms/paginated-collection-view":"/home/bbales2/stochssModel/app/static/modelEditor/forms/paginated-collection-view.js","./specie":"/home/bbales2/stochssModel/app/static/modelEditor/convertToPopulation/specie.js","ampersand-view":"/home/bbales2/stochssModel/app/static/modelEditor/node_modules/ampersand-view/ampersand-view.js","jquery":"/home/bbales2/stochssModel/app/static/modelEditor/node_modules/jquery/dist/jquery.js"}],"/home/bbales2/stochssModel/app/static/modelEditor/convertToPopulation/specie.js":[function(require,module,exports){
 var _ = require('underscore');
 var $ = require('jquery');
 var View = require('ampersand-view');
@@ -319,7 +417,7 @@ module.exports = View.extend({
     {
         View.prototype.render.apply(this, arguments);
 
-        this.baseView = this.parent.parent.parent;
+        this.baseView = this.parent.parent.parent.parent;
 
         this.listenToAndRun(this.baseView, 'change:volume', this.volumeChange);
 
@@ -2788,7 +2886,7 @@ var SpecieCollectionFormView = AmpersandView.extend({
         var collectionTemplate = "<div> \
   <table data-hook='table'> \
     <thead> \
-<th width='25px'></th><th width='120px'>Name</th><th width='120px'>Diffusion coefficients</th>" + ((this.collection.parent.isSpatial) ? "<th width='120px'>Species allowed in these subdomains</th>" : "") + " \
+<th width='25px'></th><th width='120px'>Name</th><th width='120px'>" + ((this.collection.parent.isSpatial) ? "Diffusion coefficient" : "Initial Condition") + "</th>" + ((this.collection.parent.isSpatial) ? "<th width='120px'>Species allowed in these subdomains</th>" : "") + " \
     </thead> \
     <tbody data-hook='items'> \
     </tbody> \

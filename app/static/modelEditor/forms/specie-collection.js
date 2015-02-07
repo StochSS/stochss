@@ -124,7 +124,7 @@ var SpecieCollectionFormView = AmpersandView.extend({
         var collectionTemplate = "<div> \
   <table data-hook='table'> \
     <thead> \
-<th width='25px'></th><th width='120px'>Name</th><th width='120px'>Diffusion coefficients</th>" + ((this.collection.parent.isSpatial) ? "<th width='120px'>Species allowed in these subdomains</th>" : "") + " \
+<th width='25px'></th><th width='120px'>Name</th><th width='120px'>" + ((this.collection.parent.isSpatial) ? "Diffusion coefficient" : "Initial Condition") + "</th>" + ((this.collection.parent.isSpatial) ? "<th width='120px'>Species allowed in these subdomains</th>" : "") + " \
     </thead> \
     <tbody data-hook='items'> \
     </tbody> \
