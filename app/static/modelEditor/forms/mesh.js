@@ -37,7 +37,11 @@ module.exports = View.extend({
     selectSelf: function()
     {
         // There is a CollectionView parent here that must be navigated
-        this.parent.parent.selectModel(this.model);
+        this.parent.parent.select(this.model);
+    },
+    select : function()
+    {
+        $( this.el ).find( "input[type='radio']" ).prop('checked', true);
     },
     removeModel: function()
     {

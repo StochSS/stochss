@@ -4,7 +4,7 @@ var AmpersandView = require('ampersand-view');
 var MeshSelectView = require('./mesh');
 var Mesh = require('../models/mesh');
 var FileUpload = require('blueimp-file-upload');
-var _s = require('underscore.string');
+var PaginatedCollectionView = require('./paginated-collection-view');
 
 var Tests = require('../forms/tests.js');
 
@@ -15,20 +15,57 @@ var updateMsg = function(el, data)
 
 var AddNewMeshForm = AmpersandView.extend({
     template : $( '.meshCollectionAddTemplate' ).text(),
+    props : {
+        meshFileData : 'object'
+    },
+    derived : {
+        notValid : {
+            deps : ['meshFileData'],
+            fn : function() { return !Boolean(this.meshFileData); }
+        }
+    },
+    bindings : {
+        'notValid' : {
+            type : 'booleanAttribute',
+            hook : 'meshUploadButton',
+            name : 'disabled'
+        }
+    },
     initialize: function(attr, options) {
         AmpersandView.prototype.initialize.apply(this, arguments);
 
         this.collection = options.collection;
     },
     events: {
-        "click #meshUploadButton" : "handleMeshUploadButton"
+        "click [data-hook=meshUploadButton]" : "handleMeshUploadButton",
+        "click [data-hook=resetFormButton]" : "meshReset"
+    },
+    updateMessage: function( selector, data )
+    {
+        var el = $( this.el ).find( selector );
+        el.html('');
+        
+        if(!data || !_.has(data, 'status'))
+        {
+            el.text('').prop('class', '').hide();
+            
+            return;
+        }
+        
+        var text = data.msg;
+        
+        el.html(text);
+        if(data.status)
+            el.prop('class', 'alert alert-success');
+        else
+            el.prop('class', 'alert alert-error');
+        
+        el.show();
     },
     render: function()
     {
         AmpersandView.prototype.render.apply(this, arguments);
 
-        this.uploaderState = {};
-        
         $( this.el ).find('#meshDataUpload').fileupload({
             url: '/FileServer/large/meshFiles',
             dataType: 'json',
@@ -47,41 +84,41 @@ var AddNewMeshForm = AmpersandView.extend({
     },
     handleMeshUploadButton : function(event)
     {
-        if(this.uploaderState.meshFileData)
+        if(this.meshFileData)
         {
-            this.uploaderState.meshFileData.submit();
-            this.uploaderState.meshSubmitted = true;
+            this.meshFileData.submit();
+            this.meshSubmitted = true;
             
-            updateMsg( $( this.el ).find('#meshDataUploadStatus'),
+            this.updateMessage( $( this.el ).find('#meshDataUploadStatus'),
                        { status : true,
                          msg : 'Uploading mesh...' } );
         }
         
-        if(this.uploaderState.subdomainsFileData)
+        if(this.subdomainsFileData)
         {
-            this.uploaderState.reader = new FileReader();
+            this.reader = new FileReader();
 
-            this.uploaderState.reader.onload = _.bind(this.handleSubdomainsUploadFinish, this);
+            this.reader.onload = _.bind(this.handleSubdomainsUploadFinish, this);
             
-            this.uploaderState.reader.readAsText(this.uploaderState.subdomainsFileData.files[0]);
-            //this.uploaderState.subdomainsFileData.submit();
-            this.uploaderState.subdomainsSubmitted = true;
+            this.reader.readAsText(this.subdomainsFileData.files[0]);
+            //this.subdomainsFileData.submit();
+            this.subdomainsSubmitted = true;
             
-            updateMsg( $( this.el ).find('#subdomainDataUploadStatus'),
+            this.updateMessage( $( this.el ).find('#subdomainDataUploadStatus'),
                        { status : true,
                          msg : 'Uploading subdomain...' } );
         }
         
-        this.uploaderState.name = $( this.el ).find( '.uploadMeshDiv' ).find( '.name' ).val();
-        this.uploaderState.description = $( this.el ).find( '.uploadMeshDiv' ).find( '.descriptionText' ).val();
+        this.name = $( this.el ).find( '.name' ).val();
+        this.description = $( this.el ).find( '.descriptionText' ).val();
     },
     handleMeshDataAdd : function(event, data)
     {
-        if(this.uploaderState.meshFileData)
+        if(this.meshFileData)
         {
-            delete this.uploaderState.meshFileData;
-            delete this.uploaderState.meshSubmitted;
-            delete this.uploaderState.meshFileId;
+            this.meshFileData = null;
+            delete this.meshSubmitted;
+            delete this.meshFileId;
         }
 
         var textArray = data.files[0].name.split('.');
@@ -90,7 +127,7 @@ var AddNewMeshForm = AmpersandView.extend({
 
         if(ext.toLowerCase() != 'xml')
         {
-            updateMsg( $( this.el ).find( '#meshDataUploadStatus' ),
+            this.updateMessage( $( this.el ).find( '#meshDataUploadStatus' ),
                        { status : false,
                          msg : 'Mesh file must be a .xml' });
             
@@ -99,7 +136,7 @@ var AddNewMeshForm = AmpersandView.extend({
 
         $( event.target ).prop('title', data.files[0].name);
 
-        var nameBox = $( '.uploadMeshDiv' ).find('.name');
+        var nameBox = $( this.el ).find('.name');
 
         var baseName;
 
@@ -114,18 +151,16 @@ var AddNewMeshForm = AmpersandView.extend({
 
         nameBox.val(baseName);
 
-        this.uploaderState.meshFileData = data;
-
-        $( this.el ).find( "#meshUploadButton" ).prop('disabled', false);
+        this.meshFileData = data;
     },
     handleSubdomainsDataAdd : function(event, data)
     {
-        if(this.uploaderState.subdomainFileData)
+        if(this.subdomainFileData)
         {
-            delete this.uploaderState.subdomainsFileData;
-            delete this.uploaderState.subdomainsSubmitted;
-            delete this.uploaderState.subdomains;
-            delete this.uploaderState.uniqueSubdomains;
+            delete this.subdomainsFileData;
+            delete this.subdomainsSubmitted;
+            delete this.subdomains;
+            delete this.uniqueSubdomains;
         }
 
         var textArray = data.files[0].name.split('.');
@@ -134,20 +169,20 @@ var AddNewMeshForm = AmpersandView.extend({
 
         if(ext.toLowerCase() != 'txt')
         {
-            updateMsg( $( this.el ).find( '#subdomainDataUploadStatus' ),
+            this.updateMessage( $( this.el ).find( '#subdomainDataUploadStatus' ),
                        { status : false,
                          msg : 'Subdomain file must be a .txt' } );
             
             return;
         }
 
-        this.uploaderState.subdomainsFileData = data;
+        this.subdomainsFileData = data;
     },
     handleMeshUploadFinish : function(event, data)
     {
-        this.uploaderState.meshFileId = data.result[0].id;
+        this.meshFileId = data.result[0].id;
 
-        updateMsg( $( this.el ).find( '#meshDataUploadStatus' ),
+        this.updateMessage( $( this.el ).find( '#meshDataUploadStatus' ),
                    { status : true,
                      msg : 'Mesh uploaded' } );
         
@@ -168,30 +203,29 @@ var AddNewMeshForm = AmpersandView.extend({
                 subdomains.push([parseInt(data[0]), parseInt(data[1])]);
         }
 
-        this.uploaderState.subdomains = _.sortBy(subdomains, function(element) { return element[0]; });
-        this.uploaderState.uniqueSubdomains = _.unique(subdomains);
+        this.subdomains = _.map(_.sortBy(subdomains, function(element) { return element[0]; }), function(element) { return element[1];});
+        this.uniqueSubdomains = _.unique(this.subdomains);
 
-        updateMsg( $( this.el ).find( '#subdomainDataUploadStatus' ),
+        this.updateMessage( $( this.el ).find( '#subdomainDataUploadStatus' ),
                    { status : true,
                      msg : 'Subdomains uploaded' } );
         
         this.createMeshWrapper();
     },
-
     createMeshWrapper : function()
     {
         var data = {};
         
-        if(this.uploaderState.meshSubmitted && this.uploaderState.meshFileId)
+        if(this.meshSubmitted && this.meshFileId)
         {
-            data['meshFileId'] = this.uploaderState.meshFileId;
-            data['name'] = this.uploaderState.name;
-            data['description'] = this.uploaderState.description;
+            data['meshFileId'] = this.meshFileId;
+            data['name'] = this.name;
+            data['description'] = this.description;
             
-            if(this.uploaderState.subdomainsSubmitted && this.uploaderState.subdomains)
+            if(this.subdomainsSubmitted && this.subdomains)
             {
-                data['subdomains'] = this.uploaderState.subdomains;
-                data['uniqueSubdomains'] = this.uploaderState.uniqueSubdomains;
+                data['subdomains'] = this.subdomains;
+                data['uniqueSubdomains'] = this.uniqueSubdomains;
             }
             else
             {
@@ -201,24 +235,40 @@ var AddNewMeshForm = AmpersandView.extend({
             
             data['undeletable'] = false;
             
-            if(!this.uploaderState.subdomainsSubmitted || (this.uploaderState.meshFileId && this.uploaderState.subdomains))
+            if(!this.subdomainsFiledata || this.subdomains)
             {
                 var mesh = new Mesh(data);
+
+                this.mesh = mesh;
                 
                 mesh.processMesh(_.bind(this.handleMeshWrapperCreated, this));
-
-                this.uploaderState.mesh = mesh;
             }
         }
     },
-
     handleMeshWrapperCreated : function()
     {
-        this.collection.add(this.uploaderState.mesh);
+        this.collection.add(this.mesh);
 
-        this.uploaderState.mesh.save();
+        this.mesh.save();
 
-        this.uploaderState = {};
+        this.parent.selectModel(this.mesh);
+
+        this.meshReset();
+    },
+    meshReset : function()
+    {
+        this.updateMessage( '#subdomainDataUploadStatus' );
+        this.updateMessage( '#meshDataUploadStatus' );
+
+        this.meshFileData = null;
+        delete this.meshSubmitted;
+        delete this.meshFileId;
+        delete this.subdomainsFileData;
+        delete this.subdomainsSubmitted;
+        delete this.subdomains;
+        delete this.uniqueSubdomains;
+        
+        $( "#meshForm" )[0].reset();
     }
 });
 
@@ -230,17 +280,12 @@ var MeshCollectionSelectView = AmpersandView.extend({
     initialize: function(attr, options)
     {
         AmpersandView.prototype.initialize.call(this, attr, options);
-
-        this.selected = this.model.mesh;
-
-        if(typeof(this.selected) == 'undefined')
-        {
-            this.selected = this.collection.at(0);
-        }
     },
-    selectModel: function(model)
+    selectModel: function()
     {
-        this.selected = model;
+        this.selected = this.selectView.value;
+        
+        //$( this.el ).find( ".meshLibrary" ).trigger('click');
 
         this.model.mesh = this.selected;
 
@@ -248,26 +293,35 @@ var MeshCollectionSelectView = AmpersandView.extend({
     },
     render: function()
     {
+        var collectionTemplate = "<div> \
+  <table cellpadding='0' cellspacing='0' border='0' class='table table-striped table-bordered' data-hook='table'> \
+    <thead><tr><th>Delete</th><th>Select</th><th style='width: 100%'>Mesh Name</th></tr></thead> \
+    <tbody data-hook='items'></tbody> \
+  </table> \
+  <div data-hook='nav'> \
+    <button class='btn' data-hook='previous'>&lt;&lt;</button> \
+    [ <span data-hook='position'></span> / <span data-hook='total'></span> ] \
+    <button class='btn' data-hook='next'>&gt;&gt;</button> \
+  </div> \
+</div>";
+
         AmpersandView.prototype.render.apply(this, arguments);
 
-        this.renderCollection(this.collection, MeshSelectView, this.el.querySelector('[data-hook=meshTable]'));
+        this.selectView = this.renderSubview( new PaginatedCollectionView( {
+            template : collectionTemplate,
+            collection : this.collection,
+            view : MeshSelectView,
+            limit : 10
+        }), this.queryByHook('meshTable'));
 
-        // Select the currently selected model
-        var inputs = $( this.el ).find('input');
-        for(var i = 0; i < inputs.length; i++)
-        {
-            if(this.selected == this.collection.models[i])
-            {
-                $( inputs.get(i) ).prop('checked', true);
-            }
-        }
-
-        this.selectModel( this.selected );
+        this.listenTo(this.selectView, 'change:value', _.bind(this.selectModel, this));
+        this.selectView.select(this.model.mesh);
 
         //this.fields.forEach( function(field) { $( field.el ).find('input').val(''); } );
         this.addForm = new AddNewMeshForm(
             {
-                el : this.el.querySelector('[data-hook=addMeshForm]')
+                el : this.el.querySelector('[data-hook=addMeshForm]'),
+                parent : this
             },
             {
                 collection : this.collection

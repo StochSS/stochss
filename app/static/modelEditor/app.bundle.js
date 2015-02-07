@@ -860,7 +860,7 @@ var AmpersandView = require('ampersand-view');
 var MeshSelectView = require('./mesh');
 var Mesh = require('../models/mesh');
 var FileUpload = require('blueimp-file-upload');
-var _s = require('underscore.string');
+var PaginatedCollectionView = require('./paginated-collection-view');
 
 var Tests = require('../forms/tests.js');
 
@@ -871,20 +871,57 @@ var updateMsg = function(el, data)
 
 var AddNewMeshForm = AmpersandView.extend({
     template : $( '.meshCollectionAddTemplate' ).text(),
+    props : {
+        meshFileData : 'object'
+    },
+    derived : {
+        notValid : {
+            deps : ['meshFileData'],
+            fn : function() { return !Boolean(this.meshFileData); }
+        }
+    },
+    bindings : {
+        'notValid' : {
+            type : 'booleanAttribute',
+            hook : 'meshUploadButton',
+            name : 'disabled'
+        }
+    },
     initialize: function(attr, options) {
         AmpersandView.prototype.initialize.apply(this, arguments);
 
         this.collection = options.collection;
     },
     events: {
-        "click #meshUploadButton" : "handleMeshUploadButton"
+        "click [data-hook=meshUploadButton]" : "handleMeshUploadButton",
+        "click [data-hook=resetFormButton]" : "meshReset"
+    },
+    updateMessage: function( selector, data )
+    {
+        var el = $( this.el ).find( selector );
+        el.html('');
+        
+        if(!data || !_.has(data, 'status'))
+        {
+            el.text('').prop('class', '').hide();
+            
+            return;
+        }
+        
+        var text = data.msg;
+        
+        el.html(text);
+        if(data.status)
+            el.prop('class', 'alert alert-success');
+        else
+            el.prop('class', 'alert alert-error');
+        
+        el.show();
     },
     render: function()
     {
         AmpersandView.prototype.render.apply(this, arguments);
 
-        this.uploaderState = {};
-        
         $( this.el ).find('#meshDataUpload').fileupload({
             url: '/FileServer/large/meshFiles',
             dataType: 'json',
@@ -903,41 +940,41 @@ var AddNewMeshForm = AmpersandView.extend({
     },
     handleMeshUploadButton : function(event)
     {
-        if(this.uploaderState.meshFileData)
+        if(this.meshFileData)
         {
-            this.uploaderState.meshFileData.submit();
-            this.uploaderState.meshSubmitted = true;
+            this.meshFileData.submit();
+            this.meshSubmitted = true;
             
-            updateMsg( $( this.el ).find('#meshDataUploadStatus'),
+            this.updateMessage( $( this.el ).find('#meshDataUploadStatus'),
                        { status : true,
                          msg : 'Uploading mesh...' } );
         }
         
-        if(this.uploaderState.subdomainsFileData)
+        if(this.subdomainsFileData)
         {
-            this.uploaderState.reader = new FileReader();
+            this.reader = new FileReader();
 
-            this.uploaderState.reader.onload = _.bind(this.handleSubdomainsUploadFinish, this);
+            this.reader.onload = _.bind(this.handleSubdomainsUploadFinish, this);
             
-            this.uploaderState.reader.readAsText(this.uploaderState.subdomainsFileData.files[0]);
-            //this.uploaderState.subdomainsFileData.submit();
-            this.uploaderState.subdomainsSubmitted = true;
+            this.reader.readAsText(this.subdomainsFileData.files[0]);
+            //this.subdomainsFileData.submit();
+            this.subdomainsSubmitted = true;
             
-            updateMsg( $( this.el ).find('#subdomainDataUploadStatus'),
+            this.updateMessage( $( this.el ).find('#subdomainDataUploadStatus'),
                        { status : true,
                          msg : 'Uploading subdomain...' } );
         }
         
-        this.uploaderState.name = $( this.el ).find( '.uploadMeshDiv' ).find( '.name' ).val();
-        this.uploaderState.description = $( this.el ).find( '.uploadMeshDiv' ).find( '.descriptionText' ).val();
+        this.name = $( this.el ).find( '.name' ).val();
+        this.description = $( this.el ).find( '.descriptionText' ).val();
     },
     handleMeshDataAdd : function(event, data)
     {
-        if(this.uploaderState.meshFileData)
+        if(this.meshFileData)
         {
-            delete this.uploaderState.meshFileData;
-            delete this.uploaderState.meshSubmitted;
-            delete this.uploaderState.meshFileId;
+            this.meshFileData = null;
+            delete this.meshSubmitted;
+            delete this.meshFileId;
         }
 
         var textArray = data.files[0].name.split('.');
@@ -946,7 +983,7 @@ var AddNewMeshForm = AmpersandView.extend({
 
         if(ext.toLowerCase() != 'xml')
         {
-            updateMsg( $( this.el ).find( '#meshDataUploadStatus' ),
+            this.updateMessage( $( this.el ).find( '#meshDataUploadStatus' ),
                        { status : false,
                          msg : 'Mesh file must be a .xml' });
             
@@ -955,7 +992,7 @@ var AddNewMeshForm = AmpersandView.extend({
 
         $( event.target ).prop('title', data.files[0].name);
 
-        var nameBox = $( '.uploadMeshDiv' ).find('.name');
+        var nameBox = $( this.el ).find('.name');
 
         var baseName;
 
@@ -970,18 +1007,16 @@ var AddNewMeshForm = AmpersandView.extend({
 
         nameBox.val(baseName);
 
-        this.uploaderState.meshFileData = data;
-
-        $( this.el ).find( "#meshUploadButton" ).prop('disabled', false);
+        this.meshFileData = data;
     },
     handleSubdomainsDataAdd : function(event, data)
     {
-        if(this.uploaderState.subdomainFileData)
+        if(this.subdomainFileData)
         {
-            delete this.uploaderState.subdomainsFileData;
-            delete this.uploaderState.subdomainsSubmitted;
-            delete this.uploaderState.subdomains;
-            delete this.uploaderState.uniqueSubdomains;
+            delete this.subdomainsFileData;
+            delete this.subdomainsSubmitted;
+            delete this.subdomains;
+            delete this.uniqueSubdomains;
         }
 
         var textArray = data.files[0].name.split('.');
@@ -990,20 +1025,20 @@ var AddNewMeshForm = AmpersandView.extend({
 
         if(ext.toLowerCase() != 'txt')
         {
-            updateMsg( $( this.el ).find( '#subdomainDataUploadStatus' ),
+            this.updateMessage( $( this.el ).find( '#subdomainDataUploadStatus' ),
                        { status : false,
                          msg : 'Subdomain file must be a .txt' } );
             
             return;
         }
 
-        this.uploaderState.subdomainsFileData = data;
+        this.subdomainsFileData = data;
     },
     handleMeshUploadFinish : function(event, data)
     {
-        this.uploaderState.meshFileId = data.result[0].id;
+        this.meshFileId = data.result[0].id;
 
-        updateMsg( $( this.el ).find( '#meshDataUploadStatus' ),
+        this.updateMessage( $( this.el ).find( '#meshDataUploadStatus' ),
                    { status : true,
                      msg : 'Mesh uploaded' } );
         
@@ -1024,30 +1059,29 @@ var AddNewMeshForm = AmpersandView.extend({
                 subdomains.push([parseInt(data[0]), parseInt(data[1])]);
         }
 
-        this.uploaderState.subdomains = _.sortBy(subdomains, function(element) { return element[0]; });
-        this.uploaderState.uniqueSubdomains = _.unique(subdomains);
+        this.subdomains = _.map(_.sortBy(subdomains, function(element) { return element[0]; }), function(element) { return element[1];});
+        this.uniqueSubdomains = _.unique(this.subdomains);
 
-        updateMsg( $( this.el ).find( '#subdomainDataUploadStatus' ),
+        this.updateMessage( $( this.el ).find( '#subdomainDataUploadStatus' ),
                    { status : true,
                      msg : 'Subdomains uploaded' } );
         
         this.createMeshWrapper();
     },
-
     createMeshWrapper : function()
     {
         var data = {};
         
-        if(this.uploaderState.meshSubmitted && this.uploaderState.meshFileId)
+        if(this.meshSubmitted && this.meshFileId)
         {
-            data['meshFileId'] = this.uploaderState.meshFileId;
-            data['name'] = this.uploaderState.name;
-            data['description'] = this.uploaderState.description;
+            data['meshFileId'] = this.meshFileId;
+            data['name'] = this.name;
+            data['description'] = this.description;
             
-            if(this.uploaderState.subdomainsSubmitted && this.uploaderState.subdomains)
+            if(this.subdomainsSubmitted && this.subdomains)
             {
-                data['subdomains'] = this.uploaderState.subdomains;
-                data['uniqueSubdomains'] = this.uploaderState.uniqueSubdomains;
+                data['subdomains'] = this.subdomains;
+                data['uniqueSubdomains'] = this.uniqueSubdomains;
             }
             else
             {
@@ -1057,24 +1091,40 @@ var AddNewMeshForm = AmpersandView.extend({
             
             data['undeletable'] = false;
             
-            if(!this.uploaderState.subdomainsSubmitted || (this.uploaderState.meshFileId && this.uploaderState.subdomains))
+            if(!this.subdomainsFiledata || this.subdomains)
             {
                 var mesh = new Mesh(data);
+
+                this.mesh = mesh;
                 
                 mesh.processMesh(_.bind(this.handleMeshWrapperCreated, this));
-
-                this.uploaderState.mesh = mesh;
             }
         }
     },
-
     handleMeshWrapperCreated : function()
     {
-        this.collection.add(this.uploaderState.mesh);
+        this.collection.add(this.mesh);
 
-        this.uploaderState.mesh.save();
+        this.mesh.save();
 
-        this.uploaderState = {};
+        this.parent.selectModel(this.mesh);
+
+        this.meshReset();
+    },
+    meshReset : function()
+    {
+        this.updateMessage( '#subdomainDataUploadStatus' );
+        this.updateMessage( '#meshDataUploadStatus' );
+
+        this.meshFileData = null;
+        delete this.meshSubmitted;
+        delete this.meshFileId;
+        delete this.subdomainsFileData;
+        delete this.subdomainsSubmitted;
+        delete this.subdomains;
+        delete this.uniqueSubdomains;
+        
+        $( "#meshForm" )[0].reset();
     }
 });
 
@@ -1086,17 +1136,12 @@ var MeshCollectionSelectView = AmpersandView.extend({
     initialize: function(attr, options)
     {
         AmpersandView.prototype.initialize.call(this, attr, options);
-
-        this.selected = this.model.mesh;
-
-        if(typeof(this.selected) == 'undefined')
-        {
-            this.selected = this.collection.at(0);
-        }
     },
-    selectModel: function(model)
+    selectModel: function()
     {
-        this.selected = model;
+        this.selected = this.selectView.value;
+        
+        //$( this.el ).find( ".meshLibrary" ).trigger('click');
 
         this.model.mesh = this.selected;
 
@@ -1104,26 +1149,35 @@ var MeshCollectionSelectView = AmpersandView.extend({
     },
     render: function()
     {
+        var collectionTemplate = "<div> \
+  <table cellpadding='0' cellspacing='0' border='0' class='table table-striped table-bordered' data-hook='table'> \
+    <thead><tr><th>Delete</th><th>Select</th><th style='width: 100%'>Mesh Name</th></tr></thead> \
+    <tbody data-hook='items'></tbody> \
+  </table> \
+  <div data-hook='nav'> \
+    <button class='btn' data-hook='previous'>&lt;&lt;</button> \
+    [ <span data-hook='position'></span> / <span data-hook='total'></span> ] \
+    <button class='btn' data-hook='next'>&gt;&gt;</button> \
+  </div> \
+</div>";
+
         AmpersandView.prototype.render.apply(this, arguments);
 
-        this.renderCollection(this.collection, MeshSelectView, this.el.querySelector('[data-hook=meshTable]'));
+        this.selectView = this.renderSubview( new PaginatedCollectionView( {
+            template : collectionTemplate,
+            collection : this.collection,
+            view : MeshSelectView,
+            limit : 10
+        }), this.queryByHook('meshTable'));
 
-        // Select the currently selected model
-        var inputs = $( this.el ).find('input');
-        for(var i = 0; i < inputs.length; i++)
-        {
-            if(this.selected == this.collection.models[i])
-            {
-                $( inputs.get(i) ).prop('checked', true);
-            }
-        }
-
-        this.selectModel( this.selected );
+        this.listenTo(this.selectView, 'change:value', _.bind(this.selectModel, this));
+        this.selectView.select(this.model.mesh);
 
         //this.fields.forEach( function(field) { $( field.el ).find('input').val(''); } );
         this.addForm = new AddNewMeshForm(
             {
-                el : this.el.querySelector('[data-hook=addMeshForm]')
+                el : this.el.querySelector('[data-hook=addMeshForm]'),
+                parent : this
             },
             {
                 collection : this.collection
@@ -1138,7 +1192,7 @@ var MeshCollectionSelectView = AmpersandView.extend({
 
 module.exports = MeshCollectionSelectView
 
-},{"../forms/tests.js":"/home/bbales2/stochssModel/app/static/modelEditor/forms/tests.js","../models/mesh":"/home/bbales2/stochssModel/app/static/modelEditor/models/mesh.js","./mesh":"/home/bbales2/stochssModel/app/static/modelEditor/forms/mesh.js","ampersand-view":"/home/bbales2/stochssModel/app/static/modelEditor/node_modules/ampersand-view/ampersand-view.js","blueimp-file-upload":"/home/bbales2/stochssModel/app/static/modelEditor/node_modules/blueimp-file-upload/js/jquery.fileupload.js","jquery":"/home/bbales2/stochssModel/app/static/modelEditor/node_modules/jquery/dist/jquery.js","underscore":"/home/bbales2/stochssModel/app/static/modelEditor/node_modules/underscore/underscore.js","underscore.string":"/home/bbales2/stochssModel/app/static/modelEditor/node_modules/underscore.string/index.js"}],"/home/bbales2/stochssModel/app/static/modelEditor/forms/mesh.js":[function(require,module,exports){
+},{"../forms/tests.js":"/home/bbales2/stochssModel/app/static/modelEditor/forms/tests.js","../models/mesh":"/home/bbales2/stochssModel/app/static/modelEditor/models/mesh.js","./mesh":"/home/bbales2/stochssModel/app/static/modelEditor/forms/mesh.js","./paginated-collection-view":"/home/bbales2/stochssModel/app/static/modelEditor/forms/paginated-collection-view.js","ampersand-view":"/home/bbales2/stochssModel/app/static/modelEditor/node_modules/ampersand-view/ampersand-view.js","blueimp-file-upload":"/home/bbales2/stochssModel/app/static/modelEditor/node_modules/blueimp-file-upload/js/jquery.fileupload.js","jquery":"/home/bbales2/stochssModel/app/static/modelEditor/node_modules/jquery/dist/jquery.js","underscore":"/home/bbales2/stochssModel/app/static/modelEditor/node_modules/underscore/underscore.js"}],"/home/bbales2/stochssModel/app/static/modelEditor/forms/mesh.js":[function(require,module,exports){
 var _ = require('underscore');
 var $ = require('jquery');
 var View = require('ampersand-view');
@@ -1178,7 +1232,11 @@ module.exports = View.extend({
     selectSelf: function()
     {
         // There is a CollectionView parent here that must be navigated
-        this.parent.parent.selectModel(this.model);
+        this.parent.parent.select(this.model);
+    },
+    select : function()
+    {
+        $( this.el ).find( "input[type='radio']" ).prop('checked', true);
     },
     removeModel: function()
     {
@@ -5632,9 +5690,7 @@ module.exports = function createCallback(func, context, argCount) {
 
 },{}],"/home/bbales2/stochssModel/app/static/modelEditor/node_modules/ampersand-events/node_modules/amp-extend/extend.js":[function(require,module,exports){
 module.exports=require("/home/bbales2/stochssModel/app/static/modelEditor/node_modules/amp-extend/extend.js")
-},{"/home/bbales2/stochssModel/app/static/modelEditor/node_modules/amp-extend/extend.js":"/home/bbales2/stochssModel/app/static/modelEditor/node_modules/amp-extend/extend.js"}],"/home/bbales2/stochssModel/app/static/modelEditor/node_modules/ampersand-events/node_modules/amp-extend/node_modules/amp-is-object/is-object.js":[function(require,module,exports){
-module.exports=require("/home/bbales2/stochssModel/app/static/modelEditor/node_modules/amp-extend/node_modules/amp-is-object/is-object.js")
-},{"/home/bbales2/stochssModel/app/static/modelEditor/node_modules/amp-extend/node_modules/amp-is-object/is-object.js":"/home/bbales2/stochssModel/app/static/modelEditor/node_modules/amp-extend/node_modules/amp-is-object/is-object.js"}],"/home/bbales2/stochssModel/app/static/modelEditor/node_modules/ampersand-events/node_modules/amp-is-empty/is-empty.js":[function(require,module,exports){
+},{"/home/bbales2/stochssModel/app/static/modelEditor/node_modules/amp-extend/extend.js":"/home/bbales2/stochssModel/app/static/modelEditor/node_modules/amp-extend/extend.js"}],"/home/bbales2/stochssModel/app/static/modelEditor/node_modules/ampersand-events/node_modules/amp-is-empty/is-empty.js":[function(require,module,exports){
 var isArray = require('amp-is-array');
 var isString = require('amp-is-string');
 var isArguments = require('amp-is-arguments');
@@ -5754,8 +5810,8 @@ module.exports = function indexOf(arr, item, from) {
 },{"amp-is-number":"/home/bbales2/stochssModel/app/static/modelEditor/node_modules/ampersand-events/node_modules/amp-keys/node_modules/amp-index-of/node_modules/amp-is-number/is-number.js"}],"/home/bbales2/stochssModel/app/static/modelEditor/node_modules/ampersand-events/node_modules/amp-keys/node_modules/amp-index-of/node_modules/amp-is-number/is-number.js":[function(require,module,exports){
 module.exports=require("/home/bbales2/stochssModel/app/static/modelEditor/node_modules/ampersand-events/node_modules/amp-is-empty/node_modules/amp-is-number/is-number.js")
 },{"/home/bbales2/stochssModel/app/static/modelEditor/node_modules/ampersand-events/node_modules/amp-is-empty/node_modules/amp-is-number/is-number.js":"/home/bbales2/stochssModel/app/static/modelEditor/node_modules/ampersand-events/node_modules/amp-is-empty/node_modules/amp-is-number/is-number.js"}],"/home/bbales2/stochssModel/app/static/modelEditor/node_modules/ampersand-events/node_modules/amp-keys/node_modules/amp-is-object/is-object.js":[function(require,module,exports){
-module.exports=require("/home/bbales2/stochssModel/app/static/modelEditor/node_modules/amp-extend/node_modules/amp-is-object/is-object.js")
-},{"/home/bbales2/stochssModel/app/static/modelEditor/node_modules/amp-extend/node_modules/amp-is-object/is-object.js":"/home/bbales2/stochssModel/app/static/modelEditor/node_modules/amp-extend/node_modules/amp-is-object/is-object.js"}],"/home/bbales2/stochssModel/app/static/modelEditor/node_modules/ampersand-events/node_modules/amp-once/node_modules/amp-limit-calls/limit-calls.js":[function(require,module,exports){
+module.exports=require("/home/bbales2/stochssModel/app/static/modelEditor/node_modules/ampersand-events/node_modules/amp-bind/node_modules/amp-is-object/is-object.js")
+},{"/home/bbales2/stochssModel/app/static/modelEditor/node_modules/ampersand-events/node_modules/amp-bind/node_modules/amp-is-object/is-object.js":"/home/bbales2/stochssModel/app/static/modelEditor/node_modules/ampersand-events/node_modules/amp-bind/node_modules/amp-is-object/is-object.js"}],"/home/bbales2/stochssModel/app/static/modelEditor/node_modules/ampersand-events/node_modules/amp-once/node_modules/amp-limit-calls/limit-calls.js":[function(require,module,exports){
 module.exports = function limitCalls(fn, times) {
     var memo;
     return function() {
@@ -5955,9 +6011,7 @@ FormView.extend = function (obj) {
 
 module.exports = FormView;
 
-},{"backbone-events-standalone":"/home/bbales2/stochssModel/app/static/modelEditor/node_modules/ampersand-form-view/node_modules/backbone-events-standalone/index.js","extend-object":"/home/bbales2/stochssModel/app/static/modelEditor/node_modules/ampersand-form-view/node_modules/extend-object/extend-object.js"}],"/home/bbales2/stochssModel/app/static/modelEditor/node_modules/ampersand-form-view/node_modules/backbone-events-standalone/backbone-events-standalone.js":[function(require,module,exports){
-module.exports=require("/home/bbales2/stochssModel/app/static/modelEditor/node_modules/ampersand-collection/node_modules/backbone-events-standalone/backbone-events-standalone.js")
-},{"/home/bbales2/stochssModel/app/static/modelEditor/node_modules/ampersand-collection/node_modules/backbone-events-standalone/backbone-events-standalone.js":"/home/bbales2/stochssModel/app/static/modelEditor/node_modules/ampersand-collection/node_modules/backbone-events-standalone/backbone-events-standalone.js"}],"/home/bbales2/stochssModel/app/static/modelEditor/node_modules/ampersand-form-view/node_modules/backbone-events-standalone/index.js":[function(require,module,exports){
+},{"backbone-events-standalone":"/home/bbales2/stochssModel/app/static/modelEditor/node_modules/ampersand-form-view/node_modules/backbone-events-standalone/index.js","extend-object":"/home/bbales2/stochssModel/app/static/modelEditor/node_modules/ampersand-form-view/node_modules/extend-object/extend-object.js"}],"/home/bbales2/stochssModel/app/static/modelEditor/node_modules/ampersand-form-view/node_modules/backbone-events-standalone/index.js":[function(require,module,exports){
 module.exports=require("/home/bbales2/stochssModel/app/static/modelEditor/node_modules/ampersand-collection/node_modules/backbone-events-standalone/index.js")
 },{"/home/bbales2/stochssModel/app/static/modelEditor/node_modules/ampersand-collection/node_modules/backbone-events-standalone/index.js":"/home/bbales2/stochssModel/app/static/modelEditor/node_modules/ampersand-collection/node_modules/backbone-events-standalone/index.js"}],"/home/bbales2/stochssModel/app/static/modelEditor/node_modules/ampersand-form-view/node_modules/extend-object/extend-object.js":[function(require,module,exports){
 module.exports=require("/home/bbales2/stochssModel/app/static/modelEditor/node_modules/ampersand-collection/node_modules/extend-object/extend-object.js")
@@ -8572,35 +8626,9 @@ module.exports = {
 
 },{"ampersand-sync":"/home/bbales2/stochssModel/app/static/modelEditor/node_modules/ampersand-rest-collection/node_modules/ampersand-collection-rest-mixin/node_modules/ampersand-sync/ampersand-sync.js","extend-object":"/home/bbales2/stochssModel/app/static/modelEditor/node_modules/ampersand-rest-collection/node_modules/ampersand-collection-rest-mixin/node_modules/extend-object/extend-object.js"}],"/home/bbales2/stochssModel/app/static/modelEditor/node_modules/ampersand-rest-collection/node_modules/ampersand-collection-rest-mixin/node_modules/ampersand-sync/ampersand-sync.js":[function(require,module,exports){
 module.exports=require("/home/bbales2/stochssModel/app/static/modelEditor/node_modules/ampersand-model/node_modules/ampersand-sync/ampersand-sync.js")
-},{"/home/bbales2/stochssModel/app/static/modelEditor/node_modules/ampersand-model/node_modules/ampersand-sync/ampersand-sync.js":"/home/bbales2/stochssModel/app/static/modelEditor/node_modules/ampersand-model/node_modules/ampersand-sync/ampersand-sync.js"}],"/home/bbales2/stochssModel/app/static/modelEditor/node_modules/ampersand-rest-collection/node_modules/ampersand-collection-rest-mixin/node_modules/ampersand-sync/node_modules/qs/index.js":[function(require,module,exports){
-module.exports=require("/home/bbales2/stochssModel/app/static/modelEditor/node_modules/ampersand-model/node_modules/ampersand-sync/node_modules/qs/index.js")
-},{"/home/bbales2/stochssModel/app/static/modelEditor/node_modules/ampersand-model/node_modules/ampersand-sync/node_modules/qs/index.js":"/home/bbales2/stochssModel/app/static/modelEditor/node_modules/ampersand-model/node_modules/ampersand-sync/node_modules/qs/index.js"}],"/home/bbales2/stochssModel/app/static/modelEditor/node_modules/ampersand-rest-collection/node_modules/ampersand-collection-rest-mixin/node_modules/ampersand-sync/node_modules/qs/lib/index.js":[function(require,module,exports){
-module.exports=require("/home/bbales2/stochssModel/app/static/modelEditor/node_modules/ampersand-model/node_modules/ampersand-sync/node_modules/qs/lib/index.js")
-},{"/home/bbales2/stochssModel/app/static/modelEditor/node_modules/ampersand-model/node_modules/ampersand-sync/node_modules/qs/lib/index.js":"/home/bbales2/stochssModel/app/static/modelEditor/node_modules/ampersand-model/node_modules/ampersand-sync/node_modules/qs/lib/index.js"}],"/home/bbales2/stochssModel/app/static/modelEditor/node_modules/ampersand-rest-collection/node_modules/ampersand-collection-rest-mixin/node_modules/ampersand-sync/node_modules/qs/lib/parse.js":[function(require,module,exports){
-module.exports=require("/home/bbales2/stochssModel/app/static/modelEditor/node_modules/ampersand-model/node_modules/ampersand-sync/node_modules/qs/lib/parse.js")
-},{"/home/bbales2/stochssModel/app/static/modelEditor/node_modules/ampersand-model/node_modules/ampersand-sync/node_modules/qs/lib/parse.js":"/home/bbales2/stochssModel/app/static/modelEditor/node_modules/ampersand-model/node_modules/ampersand-sync/node_modules/qs/lib/parse.js"}],"/home/bbales2/stochssModel/app/static/modelEditor/node_modules/ampersand-rest-collection/node_modules/ampersand-collection-rest-mixin/node_modules/ampersand-sync/node_modules/qs/lib/stringify.js":[function(require,module,exports){
-module.exports=require("/home/bbales2/stochssModel/app/static/modelEditor/node_modules/ampersand-model/node_modules/ampersand-sync/node_modules/qs/lib/stringify.js")
-},{"/home/bbales2/stochssModel/app/static/modelEditor/node_modules/ampersand-model/node_modules/ampersand-sync/node_modules/qs/lib/stringify.js":"/home/bbales2/stochssModel/app/static/modelEditor/node_modules/ampersand-model/node_modules/ampersand-sync/node_modules/qs/lib/stringify.js"}],"/home/bbales2/stochssModel/app/static/modelEditor/node_modules/ampersand-rest-collection/node_modules/ampersand-collection-rest-mixin/node_modules/ampersand-sync/node_modules/qs/lib/utils.js":[function(require,module,exports){
-module.exports=require("/home/bbales2/stochssModel/app/static/modelEditor/node_modules/ampersand-model/node_modules/ampersand-sync/node_modules/qs/lib/utils.js")
-},{"/home/bbales2/stochssModel/app/static/modelEditor/node_modules/ampersand-model/node_modules/ampersand-sync/node_modules/qs/lib/utils.js":"/home/bbales2/stochssModel/app/static/modelEditor/node_modules/ampersand-model/node_modules/ampersand-sync/node_modules/qs/lib/utils.js"}],"/home/bbales2/stochssModel/app/static/modelEditor/node_modules/ampersand-rest-collection/node_modules/ampersand-collection-rest-mixin/node_modules/ampersand-sync/node_modules/underscore/underscore.js":[function(require,module,exports){
-module.exports=require("/home/bbales2/stochssModel/app/static/modelEditor/node_modules/ampersand-model/node_modules/ampersand-sync/node_modules/underscore/underscore.js")
-},{"/home/bbales2/stochssModel/app/static/modelEditor/node_modules/ampersand-model/node_modules/ampersand-sync/node_modules/underscore/underscore.js":"/home/bbales2/stochssModel/app/static/modelEditor/node_modules/ampersand-model/node_modules/ampersand-sync/node_modules/underscore/underscore.js"}],"/home/bbales2/stochssModel/app/static/modelEditor/node_modules/ampersand-rest-collection/node_modules/ampersand-collection-rest-mixin/node_modules/ampersand-sync/node_modules/xhr/index.js":[function(require,module,exports){
-module.exports=require("/home/bbales2/stochssModel/app/static/modelEditor/node_modules/ampersand-model/node_modules/ampersand-sync/node_modules/xhr/index.js")
-},{"/home/bbales2/stochssModel/app/static/modelEditor/node_modules/ampersand-model/node_modules/ampersand-sync/node_modules/xhr/index.js":"/home/bbales2/stochssModel/app/static/modelEditor/node_modules/ampersand-model/node_modules/ampersand-sync/node_modules/xhr/index.js"}],"/home/bbales2/stochssModel/app/static/modelEditor/node_modules/ampersand-rest-collection/node_modules/ampersand-collection-rest-mixin/node_modules/ampersand-sync/node_modules/xhr/node_modules/global/window.js":[function(require,module,exports){
-module.exports=require("/home/bbales2/stochssModel/app/static/modelEditor/node_modules/ampersand-model/node_modules/ampersand-sync/node_modules/xhr/node_modules/global/window.js")
-},{"/home/bbales2/stochssModel/app/static/modelEditor/node_modules/ampersand-model/node_modules/ampersand-sync/node_modules/xhr/node_modules/global/window.js":"/home/bbales2/stochssModel/app/static/modelEditor/node_modules/ampersand-model/node_modules/ampersand-sync/node_modules/xhr/node_modules/global/window.js"}],"/home/bbales2/stochssModel/app/static/modelEditor/node_modules/ampersand-rest-collection/node_modules/ampersand-collection-rest-mixin/node_modules/ampersand-sync/node_modules/xhr/node_modules/once/once.js":[function(require,module,exports){
-module.exports=require("/home/bbales2/stochssModel/app/static/modelEditor/node_modules/ampersand-model/node_modules/ampersand-sync/node_modules/xhr/node_modules/once/once.js")
-},{"/home/bbales2/stochssModel/app/static/modelEditor/node_modules/ampersand-model/node_modules/ampersand-sync/node_modules/xhr/node_modules/once/once.js":"/home/bbales2/stochssModel/app/static/modelEditor/node_modules/ampersand-model/node_modules/ampersand-sync/node_modules/xhr/node_modules/once/once.js"}],"/home/bbales2/stochssModel/app/static/modelEditor/node_modules/ampersand-rest-collection/node_modules/ampersand-collection-rest-mixin/node_modules/ampersand-sync/node_modules/xhr/node_modules/parse-headers/node_modules/for-each/index.js":[function(require,module,exports){
-module.exports=require("/home/bbales2/stochssModel/app/static/modelEditor/node_modules/ampersand-model/node_modules/ampersand-sync/node_modules/xhr/node_modules/parse-headers/node_modules/for-each/index.js")
-},{"/home/bbales2/stochssModel/app/static/modelEditor/node_modules/ampersand-model/node_modules/ampersand-sync/node_modules/xhr/node_modules/parse-headers/node_modules/for-each/index.js":"/home/bbales2/stochssModel/app/static/modelEditor/node_modules/ampersand-model/node_modules/ampersand-sync/node_modules/xhr/node_modules/parse-headers/node_modules/for-each/index.js"}],"/home/bbales2/stochssModel/app/static/modelEditor/node_modules/ampersand-rest-collection/node_modules/ampersand-collection-rest-mixin/node_modules/ampersand-sync/node_modules/xhr/node_modules/parse-headers/node_modules/for-each/node_modules/is-function/index.js":[function(require,module,exports){
-module.exports=require("/home/bbales2/stochssModel/app/static/modelEditor/node_modules/ampersand-model/node_modules/ampersand-sync/node_modules/xhr/node_modules/parse-headers/node_modules/for-each/node_modules/is-function/index.js")
-},{"/home/bbales2/stochssModel/app/static/modelEditor/node_modules/ampersand-model/node_modules/ampersand-sync/node_modules/xhr/node_modules/parse-headers/node_modules/for-each/node_modules/is-function/index.js":"/home/bbales2/stochssModel/app/static/modelEditor/node_modules/ampersand-model/node_modules/ampersand-sync/node_modules/xhr/node_modules/parse-headers/node_modules/for-each/node_modules/is-function/index.js"}],"/home/bbales2/stochssModel/app/static/modelEditor/node_modules/ampersand-rest-collection/node_modules/ampersand-collection-rest-mixin/node_modules/ampersand-sync/node_modules/xhr/node_modules/parse-headers/node_modules/trim/index.js":[function(require,module,exports){
-module.exports=require("/home/bbales2/stochssModel/app/static/modelEditor/node_modules/ampersand-model/node_modules/ampersand-sync/node_modules/xhr/node_modules/parse-headers/node_modules/trim/index.js")
-},{"/home/bbales2/stochssModel/app/static/modelEditor/node_modules/ampersand-model/node_modules/ampersand-sync/node_modules/xhr/node_modules/parse-headers/node_modules/trim/index.js":"/home/bbales2/stochssModel/app/static/modelEditor/node_modules/ampersand-model/node_modules/ampersand-sync/node_modules/xhr/node_modules/parse-headers/node_modules/trim/index.js"}],"/home/bbales2/stochssModel/app/static/modelEditor/node_modules/ampersand-rest-collection/node_modules/ampersand-collection-rest-mixin/node_modules/ampersand-sync/node_modules/xhr/node_modules/parse-headers/parse-headers.js":[function(require,module,exports){
-module.exports=require("/home/bbales2/stochssModel/app/static/modelEditor/node_modules/ampersand-model/node_modules/ampersand-sync/node_modules/xhr/node_modules/parse-headers/parse-headers.js")
-},{"/home/bbales2/stochssModel/app/static/modelEditor/node_modules/ampersand-model/node_modules/ampersand-sync/node_modules/xhr/node_modules/parse-headers/parse-headers.js":"/home/bbales2/stochssModel/app/static/modelEditor/node_modules/ampersand-model/node_modules/ampersand-sync/node_modules/xhr/node_modules/parse-headers/parse-headers.js"}],"/home/bbales2/stochssModel/app/static/modelEditor/node_modules/ampersand-rest-collection/node_modules/ampersand-collection-rest-mixin/node_modules/extend-object/extend-object.js":[function(require,module,exports){
-module.exports=require("/home/bbales2/stochssModel/app/static/modelEditor/node_modules/ampersand-collection/node_modules/extend-object/extend-object.js")
-},{"/home/bbales2/stochssModel/app/static/modelEditor/node_modules/ampersand-collection/node_modules/extend-object/extend-object.js":"/home/bbales2/stochssModel/app/static/modelEditor/node_modules/ampersand-collection/node_modules/extend-object/extend-object.js"}],"/home/bbales2/stochssModel/app/static/modelEditor/node_modules/ampersand-rest-collection/node_modules/ampersand-collection-underscore-mixin/ampersand-collection-underscore-mixin.js":[function(require,module,exports){
+},{"/home/bbales2/stochssModel/app/static/modelEditor/node_modules/ampersand-model/node_modules/ampersand-sync/ampersand-sync.js":"/home/bbales2/stochssModel/app/static/modelEditor/node_modules/ampersand-model/node_modules/ampersand-sync/ampersand-sync.js"}],"/home/bbales2/stochssModel/app/static/modelEditor/node_modules/ampersand-rest-collection/node_modules/ampersand-collection-rest-mixin/node_modules/extend-object/extend-object.js":[function(require,module,exports){
+module.exports=require("/home/bbales2/stochssModel/app/static/modelEditor/node_modules/ampersand-form-view/node_modules/extend-object/extend-object.js")
+},{"/home/bbales2/stochssModel/app/static/modelEditor/node_modules/ampersand-form-view/node_modules/extend-object/extend-object.js":"/home/bbales2/stochssModel/app/static/modelEditor/node_modules/ampersand-form-view/node_modules/extend-object/extend-object.js"}],"/home/bbales2/stochssModel/app/static/modelEditor/node_modules/ampersand-rest-collection/node_modules/ampersand-collection-underscore-mixin/ampersand-collection-underscore-mixin.js":[function(require,module,exports){
 ;if (typeof window !== "undefined") {  window.ampersand = window.ampersand || {};  window.ampersand["ampersand-collection-underscore-mixin"] = window.ampersand["ampersand-collection-underscore-mixin"] || [];  window.ampersand["ampersand-collection-underscore-mixin"].push("1.0.3");}
 var _ = require('underscore');
 var slice = [].slice;
@@ -9749,11 +9777,9 @@ module.exports = function arrayNext(array, currentItem) {
     return array[newIndex];
 };
 
-},{}],"/home/bbales2/stochssModel/app/static/modelEditor/node_modules/ampersand-state/node_modules/backbone-events-standalone/backbone-events-standalone.js":[function(require,module,exports){
-module.exports=require("/home/bbales2/stochssModel/app/static/modelEditor/node_modules/ampersand-collection/node_modules/backbone-events-standalone/backbone-events-standalone.js")
-},{"/home/bbales2/stochssModel/app/static/modelEditor/node_modules/ampersand-collection/node_modules/backbone-events-standalone/backbone-events-standalone.js":"/home/bbales2/stochssModel/app/static/modelEditor/node_modules/ampersand-collection/node_modules/backbone-events-standalone/backbone-events-standalone.js"}],"/home/bbales2/stochssModel/app/static/modelEditor/node_modules/ampersand-state/node_modules/backbone-events-standalone/index.js":[function(require,module,exports){
-module.exports=require("/home/bbales2/stochssModel/app/static/modelEditor/node_modules/ampersand-collection/node_modules/backbone-events-standalone/index.js")
-},{"/home/bbales2/stochssModel/app/static/modelEditor/node_modules/ampersand-collection/node_modules/backbone-events-standalone/index.js":"/home/bbales2/stochssModel/app/static/modelEditor/node_modules/ampersand-collection/node_modules/backbone-events-standalone/index.js"}],"/home/bbales2/stochssModel/app/static/modelEditor/node_modules/ampersand-state/node_modules/key-tree-store/key-tree-store.js":[function(require,module,exports){
+},{}],"/home/bbales2/stochssModel/app/static/modelEditor/node_modules/ampersand-state/node_modules/backbone-events-standalone/index.js":[function(require,module,exports){
+module.exports=require("/home/bbales2/stochssModel/app/static/modelEditor/node_modules/ampersand-form-view/node_modules/backbone-events-standalone/index.js")
+},{"/home/bbales2/stochssModel/app/static/modelEditor/node_modules/ampersand-form-view/node_modules/backbone-events-standalone/index.js":"/home/bbales2/stochssModel/app/static/modelEditor/node_modules/ampersand-form-view/node_modules/backbone-events-standalone/index.js"}],"/home/bbales2/stochssModel/app/static/modelEditor/node_modules/ampersand-state/node_modules/key-tree-store/key-tree-store.js":[function(require,module,exports){
 function KeyTreeStore() {
     this.storage = {};
 }
@@ -10021,15 +10047,11 @@ module.exports = SubCollection;
 
 },{"ampersand-class-extend":"/home/bbales2/stochssModel/app/static/modelEditor/node_modules/ampersand-subcollection/node_modules/ampersand-class-extend/ampersand-class-extend.js","ampersand-collection-underscore-mixin":"/home/bbales2/stochssModel/app/static/modelEditor/node_modules/ampersand-subcollection/node_modules/ampersand-collection-underscore-mixin/ampersand-collection-underscore-mixin.js","backbone-events-standalone":"/home/bbales2/stochssModel/app/static/modelEditor/node_modules/ampersand-subcollection/node_modules/backbone-events-standalone/index.js","underscore":"/home/bbales2/stochssModel/app/static/modelEditor/node_modules/underscore/underscore.js"}],"/home/bbales2/stochssModel/app/static/modelEditor/node_modules/ampersand-subcollection/node_modules/ampersand-class-extend/ampersand-class-extend.js":[function(require,module,exports){
 module.exports=require("/home/bbales2/stochssModel/app/static/modelEditor/node_modules/ampersand-collection/node_modules/ampersand-class-extend/ampersand-class-extend.js")
-},{"/home/bbales2/stochssModel/app/static/modelEditor/node_modules/ampersand-collection/node_modules/ampersand-class-extend/ampersand-class-extend.js":"/home/bbales2/stochssModel/app/static/modelEditor/node_modules/ampersand-collection/node_modules/ampersand-class-extend/ampersand-class-extend.js"}],"/home/bbales2/stochssModel/app/static/modelEditor/node_modules/ampersand-subcollection/node_modules/ampersand-class-extend/node_modules/extend-object/extend-object.js":[function(require,module,exports){
-module.exports=require("/home/bbales2/stochssModel/app/static/modelEditor/node_modules/ampersand-collection/node_modules/extend-object/extend-object.js")
-},{"/home/bbales2/stochssModel/app/static/modelEditor/node_modules/ampersand-collection/node_modules/extend-object/extend-object.js":"/home/bbales2/stochssModel/app/static/modelEditor/node_modules/ampersand-collection/node_modules/extend-object/extend-object.js"}],"/home/bbales2/stochssModel/app/static/modelEditor/node_modules/ampersand-subcollection/node_modules/ampersand-collection-underscore-mixin/ampersand-collection-underscore-mixin.js":[function(require,module,exports){
+},{"/home/bbales2/stochssModel/app/static/modelEditor/node_modules/ampersand-collection/node_modules/ampersand-class-extend/ampersand-class-extend.js":"/home/bbales2/stochssModel/app/static/modelEditor/node_modules/ampersand-collection/node_modules/ampersand-class-extend/ampersand-class-extend.js"}],"/home/bbales2/stochssModel/app/static/modelEditor/node_modules/ampersand-subcollection/node_modules/ampersand-collection-underscore-mixin/ampersand-collection-underscore-mixin.js":[function(require,module,exports){
 module.exports=require("/home/bbales2/stochssModel/app/static/modelEditor/node_modules/ampersand-rest-collection/node_modules/ampersand-collection-underscore-mixin/ampersand-collection-underscore-mixin.js")
-},{"/home/bbales2/stochssModel/app/static/modelEditor/node_modules/ampersand-rest-collection/node_modules/ampersand-collection-underscore-mixin/ampersand-collection-underscore-mixin.js":"/home/bbales2/stochssModel/app/static/modelEditor/node_modules/ampersand-rest-collection/node_modules/ampersand-collection-underscore-mixin/ampersand-collection-underscore-mixin.js"}],"/home/bbales2/stochssModel/app/static/modelEditor/node_modules/ampersand-subcollection/node_modules/backbone-events-standalone/backbone-events-standalone.js":[function(require,module,exports){
-module.exports=require("/home/bbales2/stochssModel/app/static/modelEditor/node_modules/ampersand-collection/node_modules/backbone-events-standalone/backbone-events-standalone.js")
-},{"/home/bbales2/stochssModel/app/static/modelEditor/node_modules/ampersand-collection/node_modules/backbone-events-standalone/backbone-events-standalone.js":"/home/bbales2/stochssModel/app/static/modelEditor/node_modules/ampersand-collection/node_modules/backbone-events-standalone/backbone-events-standalone.js"}],"/home/bbales2/stochssModel/app/static/modelEditor/node_modules/ampersand-subcollection/node_modules/backbone-events-standalone/index.js":[function(require,module,exports){
-module.exports=require("/home/bbales2/stochssModel/app/static/modelEditor/node_modules/ampersand-collection/node_modules/backbone-events-standalone/index.js")
-},{"/home/bbales2/stochssModel/app/static/modelEditor/node_modules/ampersand-collection/node_modules/backbone-events-standalone/index.js":"/home/bbales2/stochssModel/app/static/modelEditor/node_modules/ampersand-collection/node_modules/backbone-events-standalone/index.js"}],"/home/bbales2/stochssModel/app/static/modelEditor/node_modules/ampersand-view/ampersand-view.js":[function(require,module,exports){
+},{"/home/bbales2/stochssModel/app/static/modelEditor/node_modules/ampersand-rest-collection/node_modules/ampersand-collection-underscore-mixin/ampersand-collection-underscore-mixin.js":"/home/bbales2/stochssModel/app/static/modelEditor/node_modules/ampersand-rest-collection/node_modules/ampersand-collection-underscore-mixin/ampersand-collection-underscore-mixin.js"}],"/home/bbales2/stochssModel/app/static/modelEditor/node_modules/ampersand-subcollection/node_modules/backbone-events-standalone/index.js":[function(require,module,exports){
+module.exports=require("/home/bbales2/stochssModel/app/static/modelEditor/node_modules/ampersand-state/node_modules/backbone-events-standalone/index.js")
+},{"/home/bbales2/stochssModel/app/static/modelEditor/node_modules/ampersand-state/node_modules/backbone-events-standalone/index.js":"/home/bbales2/stochssModel/app/static/modelEditor/node_modules/ampersand-state/node_modules/backbone-events-standalone/index.js"}],"/home/bbales2/stochssModel/app/static/modelEditor/node_modules/ampersand-view/ampersand-view.js":[function(require,module,exports){
 ;if (typeof window !== "undefined") {  window.ampersand = window.ampersand || {};  window.ampersand["ampersand-view"] = window.ampersand["ampersand-view"] || [];  window.ampersand["ampersand-view"].push("7.2.0");}
 var State = require('ampersand-state');
 var CollectionView = require('ampersand-collection-view');
@@ -10561,291 +10583,10 @@ CollectionView.extend = ampExtend;
 module.exports = CollectionView;
 
 },{"ampersand-class-extend":"/home/bbales2/stochssModel/app/static/modelEditor/node_modules/ampersand-view/node_modules/ampersand-collection-view/node_modules/ampersand-class-extend/ampersand-class-extend.js","backbone-events-standalone":"/home/bbales2/stochssModel/app/static/modelEditor/node_modules/ampersand-view/node_modules/ampersand-collection-view/node_modules/backbone-events-standalone/index.js","underscore":"/home/bbales2/stochssModel/app/static/modelEditor/node_modules/ampersand-view/node_modules/underscore/underscore.js"}],"/home/bbales2/stochssModel/app/static/modelEditor/node_modules/ampersand-view/node_modules/ampersand-collection-view/node_modules/ampersand-class-extend/ampersand-class-extend.js":[function(require,module,exports){
-module.exports=require("/home/bbales2/stochssModel/app/static/modelEditor/node_modules/ampersand-collection/node_modules/ampersand-class-extend/ampersand-class-extend.js")
-},{"/home/bbales2/stochssModel/app/static/modelEditor/node_modules/ampersand-collection/node_modules/ampersand-class-extend/ampersand-class-extend.js":"/home/bbales2/stochssModel/app/static/modelEditor/node_modules/ampersand-collection/node_modules/ampersand-class-extend/ampersand-class-extend.js"}],"/home/bbales2/stochssModel/app/static/modelEditor/node_modules/ampersand-view/node_modules/ampersand-collection-view/node_modules/ampersand-class-extend/node_modules/extend-object/extend-object.js":[function(require,module,exports){
-module.exports=require("/home/bbales2/stochssModel/app/static/modelEditor/node_modules/ampersand-collection/node_modules/extend-object/extend-object.js")
-},{"/home/bbales2/stochssModel/app/static/modelEditor/node_modules/ampersand-collection/node_modules/extend-object/extend-object.js":"/home/bbales2/stochssModel/app/static/modelEditor/node_modules/ampersand-collection/node_modules/extend-object/extend-object.js"}],"/home/bbales2/stochssModel/app/static/modelEditor/node_modules/ampersand-view/node_modules/ampersand-collection-view/node_modules/backbone-events-standalone/backbone-events-standalone.js":[function(require,module,exports){
-/**
- * Standalone extraction of Backbone.Events, no external dependency required.
- * Degrades nicely when Backone/underscore are already available in the current
- * global context.
- *
- * Note that docs suggest to use underscore's `_.extend()` method to add Events
- * support to some given object. A `mixin()` method has been added to the Events
- * prototype to avoid using underscore for that sole purpose:
- *
- *     var myEventEmitter = BackboneEvents.mixin({});
- *
- * Or for a function constructor:
- *
- *     function MyConstructor(){}
- *     MyConstructor.prototype.foo = function(){}
- *     BackboneEvents.mixin(MyConstructor.prototype);
- *
- * (c) 2009-2013 Jeremy Ashkenas, DocumentCloud Inc.
- * (c) 2013 Nicolas Perriault
- */
-/* global exports:true, define, module */
-(function() {
-  var root = this,
-      breaker = {},
-      nativeForEach = Array.prototype.forEach,
-      hasOwnProperty = Object.prototype.hasOwnProperty,
-      slice = Array.prototype.slice,
-      idCounter = 0;
-
-  // Returns a partial implementation matching the minimal API subset required
-  // by Backbone.Events
-  function miniscore() {
-    return {
-      keys: Object.keys || function (obj) {
-        if (typeof obj !== "object" && typeof obj !== "function" || obj === null) {
-          throw new TypeError("keys() called on a non-object");
-        }
-        var key, keys = [];
-        for (key in obj) {
-          if (obj.hasOwnProperty(key)) {
-            keys[keys.length] = key;
-          }
-        }
-        return keys;
-      },
-
-      uniqueId: function(prefix) {
-        var id = ++idCounter + '';
-        return prefix ? prefix + id : id;
-      },
-
-      has: function(obj, key) {
-        return hasOwnProperty.call(obj, key);
-      },
-
-      each: function(obj, iterator, context) {
-        if (obj == null) return;
-        if (nativeForEach && obj.forEach === nativeForEach) {
-          obj.forEach(iterator, context);
-        } else if (obj.length === +obj.length) {
-          for (var i = 0, l = obj.length; i < l; i++) {
-            if (iterator.call(context, obj[i], i, obj) === breaker) return;
-          }
-        } else {
-          for (var key in obj) {
-            if (this.has(obj, key)) {
-              if (iterator.call(context, obj[key], key, obj) === breaker) return;
-            }
-          }
-        }
-      },
-
-      once: function(func) {
-        var ran = false, memo;
-        return function() {
-          if (ran) return memo;
-          ran = true;
-          memo = func.apply(this, arguments);
-          func = null;
-          return memo;
-        };
-      }
-    };
-  }
-
-  var _ = miniscore(), Events;
-
-  // Backbone.Events
-  // ---------------
-
-  // A module that can be mixed in to *any object* in order to provide it with
-  // custom events. You may bind with `on` or remove with `off` callback
-  // functions to an event; `trigger`-ing an event fires all callbacks in
-  // succession.
-  //
-  //     var object = {};
-  //     _.extend(object, Backbone.Events);
-  //     object.on('expand', function(){ alert('expanded'); });
-  //     object.trigger('expand');
-  //
-  Events = {
-
-    // Bind an event to a `callback` function. Passing `"all"` will bind
-    // the callback to all events fired.
-    on: function(name, callback, context) {
-      if (!eventsApi(this, 'on', name, [callback, context]) || !callback) return this;
-      this._events || (this._events = {});
-      var events = this._events[name] || (this._events[name] = []);
-      events.push({callback: callback, context: context, ctx: context || this});
-      return this;
-    },
-
-    // Bind an event to only be triggered a single time. After the first time
-    // the callback is invoked, it will be removed.
-    once: function(name, callback, context) {
-      if (!eventsApi(this, 'once', name, [callback, context]) || !callback) return this;
-      var self = this;
-      var once = _.once(function() {
-        self.off(name, once);
-        callback.apply(this, arguments);
-      });
-      once._callback = callback;
-      return this.on(name, once, context);
-    },
-
-    // Remove one or many callbacks. If `context` is null, removes all
-    // callbacks with that function. If `callback` is null, removes all
-    // callbacks for the event. If `name` is null, removes all bound
-    // callbacks for all events.
-    off: function(name, callback, context) {
-      var retain, ev, events, names, i, l, j, k;
-      if (!this._events || !eventsApi(this, 'off', name, [callback, context])) return this;
-      if (!name && !callback && !context) {
-        this._events = {};
-        return this;
-      }
-
-      names = name ? [name] : _.keys(this._events);
-      for (i = 0, l = names.length; i < l; i++) {
-        name = names[i];
-        if (events = this._events[name]) {
-          this._events[name] = retain = [];
-          if (callback || context) {
-            for (j = 0, k = events.length; j < k; j++) {
-              ev = events[j];
-              if ((callback && callback !== ev.callback && callback !== ev.callback._callback) ||
-                  (context && context !== ev.context)) {
-                retain.push(ev);
-              }
-            }
-          }
-          if (!retain.length) delete this._events[name];
-        }
-      }
-
-      return this;
-    },
-
-    // Trigger one or many events, firing all bound callbacks. Callbacks are
-    // passed the same arguments as `trigger` is, apart from the event name
-    // (unless you're listening on `"all"`, which will cause your callback to
-    // receive the true name of the event as the first argument).
-    trigger: function(name) {
-      if (!this._events) return this;
-      var args = slice.call(arguments, 1);
-      if (!eventsApi(this, 'trigger', name, args)) return this;
-      var events = this._events[name];
-      var allEvents = this._events.all;
-      if (events) triggerEvents(events, args);
-      if (allEvents) triggerEvents(allEvents, arguments);
-      return this;
-    },
-
-    // Tell this object to stop listening to either specific events ... or
-    // to every object it's currently listening to.
-    stopListening: function(obj, name, callback) {
-      var listeners = this._listeners;
-      if (!listeners) return this;
-      var deleteListener = !name && !callback;
-      if (typeof name === 'object') callback = this;
-      if (obj) (listeners = {})[obj._listenerId] = obj;
-      for (var id in listeners) {
-        listeners[id].off(name, callback, this);
-        if (deleteListener) delete this._listeners[id];
-      }
-      return this;
-    }
-
-  };
-
-  // Regular expression used to split event strings.
-  var eventSplitter = /\s+/;
-
-  // Implement fancy features of the Events API such as multiple event
-  // names `"change blur"` and jQuery-style event maps `{change: action}`
-  // in terms of the existing API.
-  var eventsApi = function(obj, action, name, rest) {
-    if (!name) return true;
-
-    // Handle event maps.
-    if (typeof name === 'object') {
-      for (var key in name) {
-        obj[action].apply(obj, [key, name[key]].concat(rest));
-      }
-      return false;
-    }
-
-    // Handle space separated event names.
-    if (eventSplitter.test(name)) {
-      var names = name.split(eventSplitter);
-      for (var i = 0, l = names.length; i < l; i++) {
-        obj[action].apply(obj, [names[i]].concat(rest));
-      }
-      return false;
-    }
-
-    return true;
-  };
-
-  // A difficult-to-believe, but optimized internal dispatch function for
-  // triggering events. Tries to keep the usual cases speedy (most internal
-  // Backbone events have 3 arguments).
-  var triggerEvents = function(events, args) {
-    var ev, i = -1, l = events.length, a1 = args[0], a2 = args[1], a3 = args[2];
-    switch (args.length) {
-      case 0: while (++i < l) (ev = events[i]).callback.call(ev.ctx); return;
-      case 1: while (++i < l) (ev = events[i]).callback.call(ev.ctx, a1); return;
-      case 2: while (++i < l) (ev = events[i]).callback.call(ev.ctx, a1, a2); return;
-      case 3: while (++i < l) (ev = events[i]).callback.call(ev.ctx, a1, a2, a3); return;
-      default: while (++i < l) (ev = events[i]).callback.apply(ev.ctx, args);
-    }
-  };
-
-  var listenMethods = {listenTo: 'on', listenToOnce: 'once'};
-
-  // Inversion-of-control versions of `on` and `once`. Tell *this* object to
-  // listen to an event in another object ... keeping track of what it's
-  // listening to.
-  _.each(listenMethods, function(implementation, method) {
-    Events[method] = function(obj, name, callback) {
-      var listeners = this._listeners || (this._listeners = {});
-      var id = obj._listenerId || (obj._listenerId = _.uniqueId('l'));
-      listeners[id] = obj;
-      if (typeof name === 'object') callback = this;
-      obj[implementation](name, callback, this);
-      return this;
-    };
-  });
-
-  // Aliases for backwards compatibility.
-  Events.bind   = Events.on;
-  Events.unbind = Events.off;
-
-  // Mixin utility
-  Events.mixin = function(proto) {
-    var exports = ['on', 'once', 'off', 'trigger', 'stopListening', 'listenTo',
-                   'listenToOnce', 'bind', 'unbind'];
-    _.each(exports, function(name) {
-      proto[name] = this[name];
-    }, this);
-    return proto;
-  };
-
-  // Export Events as BackboneEvents depending on current context
-  if (typeof define === "function") {
-    define(function() {
-      return Events;
-    });
-  } else if (typeof exports !== 'undefined') {
-    if (typeof module !== 'undefined' && module.exports) {
-      exports = module.exports = Events;
-    }
-    exports.BackboneEvents = Events;
-  } else {
-    root.BackboneEvents = Events;
-  }
-})(this);
-
-},{}],"/home/bbales2/stochssModel/app/static/modelEditor/node_modules/ampersand-view/node_modules/ampersand-collection-view/node_modules/backbone-events-standalone/index.js":[function(require,module,exports){
-module.exports=require("/home/bbales2/stochssModel/app/static/modelEditor/node_modules/ampersand-collection/node_modules/backbone-events-standalone/index.js")
-},{"/home/bbales2/stochssModel/app/static/modelEditor/node_modules/ampersand-collection/node_modules/backbone-events-standalone/index.js":"/home/bbales2/stochssModel/app/static/modelEditor/node_modules/ampersand-collection/node_modules/backbone-events-standalone/index.js"}],"/home/bbales2/stochssModel/app/static/modelEditor/node_modules/ampersand-view/node_modules/ampersand-dom-bindings/ampersand-dom-bindings.js":[function(require,module,exports){
+module.exports=require("/home/bbales2/stochssModel/app/static/modelEditor/node_modules/ampersand-subcollection/node_modules/ampersand-class-extend/ampersand-class-extend.js")
+},{"/home/bbales2/stochssModel/app/static/modelEditor/node_modules/ampersand-subcollection/node_modules/ampersand-class-extend/ampersand-class-extend.js":"/home/bbales2/stochssModel/app/static/modelEditor/node_modules/ampersand-subcollection/node_modules/ampersand-class-extend/ampersand-class-extend.js"}],"/home/bbales2/stochssModel/app/static/modelEditor/node_modules/ampersand-view/node_modules/ampersand-collection-view/node_modules/backbone-events-standalone/index.js":[function(require,module,exports){
+module.exports=require("/home/bbales2/stochssModel/app/static/modelEditor/node_modules/ampersand-subcollection/node_modules/backbone-events-standalone/index.js")
+},{"/home/bbales2/stochssModel/app/static/modelEditor/node_modules/ampersand-subcollection/node_modules/backbone-events-standalone/index.js":"/home/bbales2/stochssModel/app/static/modelEditor/node_modules/ampersand-subcollection/node_modules/backbone-events-standalone/index.js"}],"/home/bbales2/stochssModel/app/static/modelEditor/node_modules/ampersand-view/node_modules/ampersand-dom-bindings/ampersand-dom-bindings.js":[function(require,module,exports){
 ;if (typeof window !== "undefined") {  window.ampersand = window.ampersand || {};  window.ampersand["ampersand-dom-bindings"] = window.ampersand["ampersand-dom-bindings"] || [];  window.ampersand["ampersand-dom-bindings"].push("3.3.3");}
 var Store = require('key-tree-store');
 var dom = require('ampersand-dom');
@@ -63537,1017 +63278,7 @@ if (typeof exports !== 'undefined') {
   this['THREE'] = THREE;
 }
 
-},{}],"/home/bbales2/stochssModel/app/static/modelEditor/node_modules/underscore.string/camelize.js":[function(require,module,exports){
-var trim = require('./trim');
-var decap = require('./decapitalize');
-
-module.exports = function camelize(str, decapitalize) {
-  str = trim(str).replace(/[-_\s]+(.)?/g, function(match, c) {
-    return c ? c.toUpperCase() : "";
-  });
-
-  if (decapitalize === true) {
-    return decap(str);
-  } else {
-    return str;
-  }
-};
-
-},{"./decapitalize":"/home/bbales2/stochssModel/app/static/modelEditor/node_modules/underscore.string/decapitalize.js","./trim":"/home/bbales2/stochssModel/app/static/modelEditor/node_modules/underscore.string/trim.js"}],"/home/bbales2/stochssModel/app/static/modelEditor/node_modules/underscore.string/capitalize.js":[function(require,module,exports){
-var makeString = require('./helper/makeString');
-
-module.exports = function capitalize(str) {
-  str = makeString(str);
-  return str.charAt(0).toUpperCase() + str.slice(1);
-};
-
-},{"./helper/makeString":"/home/bbales2/stochssModel/app/static/modelEditor/node_modules/underscore.string/helper/makeString.js"}],"/home/bbales2/stochssModel/app/static/modelEditor/node_modules/underscore.string/chars.js":[function(require,module,exports){
-var makeString = require('./helper/makeString');
-
-module.exports = function chars(str) {
-  return makeString(str).split('');
-};
-
-},{"./helper/makeString":"/home/bbales2/stochssModel/app/static/modelEditor/node_modules/underscore.string/helper/makeString.js"}],"/home/bbales2/stochssModel/app/static/modelEditor/node_modules/underscore.string/chop.js":[function(require,module,exports){
-module.exports = function chop(str, step) {
-  if (str == null) return [];
-  str = String(str);
-  step = ~~step;
-  return step > 0 ? str.match(new RegExp('.{1,' + step + '}', 'g')) : [str];
-};
-
-},{}],"/home/bbales2/stochssModel/app/static/modelEditor/node_modules/underscore.string/classify.js":[function(require,module,exports){
-var capitalize = require('./capitalize');
-var camelize = require('./camelize');
-var makeString = require('./helper/makeString');
-
-module.exports = function classify(str) {
-  str = makeString(str);
-  return capitalize(camelize(str.replace(/[\W_]/g, ' ')).replace(/\s/g, ''));
-};
-
-},{"./camelize":"/home/bbales2/stochssModel/app/static/modelEditor/node_modules/underscore.string/camelize.js","./capitalize":"/home/bbales2/stochssModel/app/static/modelEditor/node_modules/underscore.string/capitalize.js","./helper/makeString":"/home/bbales2/stochssModel/app/static/modelEditor/node_modules/underscore.string/helper/makeString.js"}],"/home/bbales2/stochssModel/app/static/modelEditor/node_modules/underscore.string/clean.js":[function(require,module,exports){
-var trim = require('./trim');
-
-module.exports = function clean(str) {
-  return trim(str).replace(/\s+/g, ' ');
-};
-
-},{"./trim":"/home/bbales2/stochssModel/app/static/modelEditor/node_modules/underscore.string/trim.js"}],"/home/bbales2/stochssModel/app/static/modelEditor/node_modules/underscore.string/count.js":[function(require,module,exports){
-var makeString = require('./helper/makeString');
-
-module.exports = function(str, substr) {
-  str = makeString(str);
-  substr = makeString(substr);
-
-  if (str.length === 0 || substr.length === 0) return 0;
-
-  var count = 0,
-    pos = 0,
-    length = substr.length;
-
-  while (true) {
-    pos = str.indexOf(substr, pos);
-    if (pos === -1) break;
-    count++;
-    pos += length;
-  }
-
-  return count;
-};
-
-},{"./helper/makeString":"/home/bbales2/stochssModel/app/static/modelEditor/node_modules/underscore.string/helper/makeString.js"}],"/home/bbales2/stochssModel/app/static/modelEditor/node_modules/underscore.string/dasherize.js":[function(require,module,exports){
-var trim = require('./trim');
-
-module.exports = function dasherize(str) {
-  return trim(str).replace(/([A-Z])/g, '-$1').replace(/[-_\s]+/g, '-').toLowerCase();
-};
-
-},{"./trim":"/home/bbales2/stochssModel/app/static/modelEditor/node_modules/underscore.string/trim.js"}],"/home/bbales2/stochssModel/app/static/modelEditor/node_modules/underscore.string/decapitalize.js":[function(require,module,exports){
-var makeString = require('./helper/makeString');
-
-module.exports = function decapitalize(str) {
-  str = makeString(str);
-  return str.charAt(0).toLowerCase() + str.slice(1);
-};
-
-},{"./helper/makeString":"/home/bbales2/stochssModel/app/static/modelEditor/node_modules/underscore.string/helper/makeString.js"}],"/home/bbales2/stochssModel/app/static/modelEditor/node_modules/underscore.string/dedent.js":[function(require,module,exports){
-var makeString = require('./helper/makeString');
-
-function getIndent(str) {
-  var matches = str.match(/^[\s\\t]*/gm);
-  var indent = matches[0].length;
-  
-  for (var i = 1; i < matches.length; i++) {
-    indent = Math.min(matches[i].length, indent);
-  }
-
-  return indent;
-}
-
-module.exports = function dedent(str, pattern) {
-  str = makeString(str);
-  var indent = getIndent(str);
-  var reg;
-
-  if (indent === 0) return str;
-
-  if (typeof pattern === 'string') {
-    reg = new RegExp('^' + pattern, 'gm');
-  } else {
-    reg = new RegExp('^[ \\t]{' + indent + '}', 'gm');
-  }
-
-  return str.replace(reg, '');
-};
-
-},{"./helper/makeString":"/home/bbales2/stochssModel/app/static/modelEditor/node_modules/underscore.string/helper/makeString.js"}],"/home/bbales2/stochssModel/app/static/modelEditor/node_modules/underscore.string/endsWith.js":[function(require,module,exports){
-var makeString = require('./helper/makeString');
-var toPositive = require('./helper/toPositive');
-
-module.exports = function endsWith(str, ends, position) {
-  str = makeString(str);
-  ends = '' + ends;
-  if (typeof position == 'undefined') {
-    position = str.length - ends.length;
-  } else {
-    position = Math.min(toPositive(position), str.length) - ends.length;
-  }
-  return position >= 0 && str.indexOf(ends, position) === position;
-};
-
-},{"./helper/makeString":"/home/bbales2/stochssModel/app/static/modelEditor/node_modules/underscore.string/helper/makeString.js","./helper/toPositive":"/home/bbales2/stochssModel/app/static/modelEditor/node_modules/underscore.string/helper/toPositive.js"}],"/home/bbales2/stochssModel/app/static/modelEditor/node_modules/underscore.string/escapeHTML.js":[function(require,module,exports){
-var makeString = require('./helper/makeString');
-var escapeChars = require('./helper/escapeChars');
-var reversedEscapeChars = {};
-
-for(var key in escapeChars) reversedEscapeChars[escapeChars[key]] = key;
-reversedEscapeChars["'"] = '#39';
-
-module.exports = function escapeHTML(str) {
-  return makeString(str).replace(/[&<>"']/g, function(m) {
-    return '&' + reversedEscapeChars[m] + ';';
-  });
-};
-
-},{"./helper/escapeChars":"/home/bbales2/stochssModel/app/static/modelEditor/node_modules/underscore.string/helper/escapeChars.js","./helper/makeString":"/home/bbales2/stochssModel/app/static/modelEditor/node_modules/underscore.string/helper/makeString.js"}],"/home/bbales2/stochssModel/app/static/modelEditor/node_modules/underscore.string/exports.js":[function(require,module,exports){
-module.exports = function() {
-  var result = {};
-
-  for (var prop in this) {
-    if (!this.hasOwnProperty(prop) || prop.match(/^(?:include|contains|reverse|join)$/)) continue;
-    result[prop] = this[prop];
-  }
-
-  return result;
-};
-
-},{}],"/home/bbales2/stochssModel/app/static/modelEditor/node_modules/underscore.string/helper/adjacent.js":[function(require,module,exports){
-var makeString = require('./makeString');
-
-module.exports = function adjacent(str, direction) {
-  str = makeString(str);
-  if (str.length === 0) {
-    return '';
-  }
-  return str.slice(0, -1) + String.fromCharCode(str.charCodeAt(str.length - 1) + direction);
-};
-
-},{"./makeString":"/home/bbales2/stochssModel/app/static/modelEditor/node_modules/underscore.string/helper/makeString.js"}],"/home/bbales2/stochssModel/app/static/modelEditor/node_modules/underscore.string/helper/defaultToWhiteSpace.js":[function(require,module,exports){
-var escapeRegExp = require('./escapeRegExp');
-
-module.exports = function defaultToWhiteSpace(characters) {
-  if (characters == null)
-    return '\\s';
-  else if (characters.source)
-    return characters.source;
-  else
-    return '[' + escapeRegExp(characters) + ']';
-};
-
-},{"./escapeRegExp":"/home/bbales2/stochssModel/app/static/modelEditor/node_modules/underscore.string/helper/escapeRegExp.js"}],"/home/bbales2/stochssModel/app/static/modelEditor/node_modules/underscore.string/helper/escapeChars.js":[function(require,module,exports){
-var escapeChars = {
-  lt: '<',
-  gt: '>',
-  quot: '"',
-  amp: '&',
-  apos: "'"
-};
-
-module.exports = escapeChars;
-
-},{}],"/home/bbales2/stochssModel/app/static/modelEditor/node_modules/underscore.string/helper/escapeRegExp.js":[function(require,module,exports){
-var makeString = require('./makeString');
-
-module.exports = function escapeRegExp(str) {
-  return makeString(str).replace(/([.*+?^=!:${}()|[\]\/\\])/g, '\\$1');
-};
-
-},{"./makeString":"/home/bbales2/stochssModel/app/static/modelEditor/node_modules/underscore.string/helper/makeString.js"}],"/home/bbales2/stochssModel/app/static/modelEditor/node_modules/underscore.string/helper/makeString.js":[function(require,module,exports){
-/**
- * Ensure some object is a coerced to a string
- **/
-module.exports = function makeString(object) {
-  if (object == null) return '';
-  return '' + object;
-};
-
-},{}],"/home/bbales2/stochssModel/app/static/modelEditor/node_modules/underscore.string/helper/strRepeat.js":[function(require,module,exports){
-module.exports = function strRepeat(str, qty){
-  if (qty < 1) return '';
-  var result = '';
-  while (qty > 0) {
-    if (qty & 1) result += str;
-    qty >>= 1, str += str;
-  }
-  return result;
-};
-
-},{}],"/home/bbales2/stochssModel/app/static/modelEditor/node_modules/underscore.string/helper/toPositive.js":[function(require,module,exports){
-module.exports = function toPositive(number) {
-  return number < 0 ? 0 : (+number || 0);
-};
-
-},{}],"/home/bbales2/stochssModel/app/static/modelEditor/node_modules/underscore.string/humanize.js":[function(require,module,exports){
-var capitalize = require('./capitalize');
-var underscored = require('./underscored');
-var trim = require('./trim');
-
-module.exports = function humanize(str) {
-  return capitalize(trim(underscored(str).replace(/_id$/, '').replace(/_/g, ' ')));
-};
-
-},{"./capitalize":"/home/bbales2/stochssModel/app/static/modelEditor/node_modules/underscore.string/capitalize.js","./trim":"/home/bbales2/stochssModel/app/static/modelEditor/node_modules/underscore.string/trim.js","./underscored":"/home/bbales2/stochssModel/app/static/modelEditor/node_modules/underscore.string/underscored.js"}],"/home/bbales2/stochssModel/app/static/modelEditor/node_modules/underscore.string/include.js":[function(require,module,exports){
-var makeString = require('./helper/makeString');
-
-module.exports = function include(str, needle) {
-  if (needle === '') return true;
-  return makeString(str).indexOf(needle) !== -1;
-};
-
-},{"./helper/makeString":"/home/bbales2/stochssModel/app/static/modelEditor/node_modules/underscore.string/helper/makeString.js"}],"/home/bbales2/stochssModel/app/static/modelEditor/node_modules/underscore.string/index.js":[function(require,module,exports){
-//  Underscore.string
-//  (c) 2010 Esa-Matti Suuronen <esa-matti aet suuronen dot org>
-//  Underscore.string is freely distributable under the terms of the MIT license.
-//  Documentation: https://github.com/epeli/underscore.string
-//  Some code is borrowed from MooTools and Alexandru Marasteanu.
-//  Version '3.0.2'
-
-'use strict';
-
-function s(value) {
-  /* jshint validthis: true */
-  if (!(this instanceof s)) return new s(value);
-  this._wrapped = value;
-}
-
-s.VERSION = '3.0.2';
-
-s.isBlank          = require('./isBlank');
-s.stripTags        = require('./stripTags');
-s.capitalize       = require('./capitalize');
-s.decapitalize     = require('./decapitalize');
-s.chop             = require('./chop');
-s.trim             = require('./trim');
-s.clean            = require('./clean');
-s.count            = require('./count');
-s.chars            = require('./chars');
-s.swapCase         = require('./swapCase');
-s.escapeHTML       = require('./escapeHTML');
-s.unescapeHTML     = require('./unescapeHTML');
-s.splice           = require('./splice');
-s.insert           = require('./insert');
-s.replaceAll       = require('./replaceAll');
-s.include          = require('./include');
-s.join             = require('./join');
-s.lines            = require('./lines');
-s.dedent           = require('./dedent');
-s.reverse          = require('./reverse');
-s.startsWith       = require('./startsWith');
-s.endsWith         = require('./endsWith');
-s.pred             = require('./pred');
-s.succ             = require('./succ');
-s.titleize         = require('./titleize');
-s.camelize         = require('./camelize');
-s.underscored      = require('./underscored');
-s.dasherize        = require('./dasherize');
-s.classify         = require('./classify');
-s.humanize         = require('./humanize');
-s.ltrim            = require('./ltrim');
-s.rtrim            = require('./rtrim');
-s.truncate         = require('./truncate');
-s.prune            = require('./prune');
-s.words            = require('./words');
-s.pad              = require('./pad');
-s.lpad             = require('./lpad');
-s.rpad             = require('./rpad');
-s.lrpad            = require('./lrpad');
-s.sprintf          = require('./sprintf');
-s.vsprintf         = require('./vsprintf');
-s.toNumber         = require('./toNumber');
-s.numberFormat     = require('./numberFormat');
-s.strRight         = require('./strRight');
-s.strRightBack     = require('./strRightBack');
-s.strLeft          = require('./strLeft');
-s.strLeftBack      = require('./strLeftBack');
-s.toSentence       = require('./toSentence');
-s.toSentenceSerial = require('./toSentenceSerial');
-s.slugify          = require('./slugify');
-s.surround         = require('./surround');
-s.quote            = require('./quote');
-s.unquote          = require('./unquote');
-s.repeat           = require('./repeat');
-s.naturalCmp       = require('./naturalCmp');
-s.levenshtein      = require('./levenshtein');
-s.toBoolean        = require('./toBoolean');
-s.exports          = require('./exports');
-s.escapeRegExp     = require('./helper/escapeRegExp');
-
-// Aliases
-s.strip     = s.trim;
-s.lstrip    = s.ltrim;
-s.rstrip    = s.rtrim;
-s.center    = s.lrpad;
-s.rjust     = s.lpad;
-s.ljust     = s.rpad;
-s.contains  = s.include;
-s.q         = s.quote;
-s.toBool    = s.toBoolean;
-s.camelcase = s.camelize;
-
-
-// Implement chaining
-s.prototype = {
-  value: function value() {
-    return this._wrapped;
-  }
-};
-
-function fn2method(key, fn) {
-    if (typeof fn !== "function") return;
-    s.prototype[key] = function() {
-      var args = [this._wrapped].concat(Array.prototype.slice.call(arguments));
-      var res = fn.apply(null, args);
-      // if the result is non-string stop the chain and return the value
-      return typeof res === 'string' ? new s(res) : res;
-    };
-}
-
-// Copy functions to instance methods for chaining
-for (var key in s) fn2method(key, s[key]);
-
-fn2method("tap", function tap(string, fn) {
-  return fn(string);
-});
-
-function prototype2method(methodName) {
-  fn2method(methodName, function(context) {
-    var args = Array.prototype.slice.call(arguments, 1);
-    return String.prototype[methodName].apply(context, args);
-  });
-}
-
-var prototypeMethods = [
-  "toUpperCase",
-  "toLowerCase",
-  "split",
-  "replace",
-  "slice",
-  "substring",
-  "substr",
-  "concat"
-];
-
-for (var key in prototypeMethods) prototype2method(prototypeMethods[key]);
-
-
-module.exports = s;
-
-},{"./camelize":"/home/bbales2/stochssModel/app/static/modelEditor/node_modules/underscore.string/camelize.js","./capitalize":"/home/bbales2/stochssModel/app/static/modelEditor/node_modules/underscore.string/capitalize.js","./chars":"/home/bbales2/stochssModel/app/static/modelEditor/node_modules/underscore.string/chars.js","./chop":"/home/bbales2/stochssModel/app/static/modelEditor/node_modules/underscore.string/chop.js","./classify":"/home/bbales2/stochssModel/app/static/modelEditor/node_modules/underscore.string/classify.js","./clean":"/home/bbales2/stochssModel/app/static/modelEditor/node_modules/underscore.string/clean.js","./count":"/home/bbales2/stochssModel/app/static/modelEditor/node_modules/underscore.string/count.js","./dasherize":"/home/bbales2/stochssModel/app/static/modelEditor/node_modules/underscore.string/dasherize.js","./decapitalize":"/home/bbales2/stochssModel/app/static/modelEditor/node_modules/underscore.string/decapitalize.js","./dedent":"/home/bbales2/stochssModel/app/static/modelEditor/node_modules/underscore.string/dedent.js","./endsWith":"/home/bbales2/stochssModel/app/static/modelEditor/node_modules/underscore.string/endsWith.js","./escapeHTML":"/home/bbales2/stochssModel/app/static/modelEditor/node_modules/underscore.string/escapeHTML.js","./exports":"/home/bbales2/stochssModel/app/static/modelEditor/node_modules/underscore.string/exports.js","./helper/escapeRegExp":"/home/bbales2/stochssModel/app/static/modelEditor/node_modules/underscore.string/helper/escapeRegExp.js","./humanize":"/home/bbales2/stochssModel/app/static/modelEditor/node_modules/underscore.string/humanize.js","./include":"/home/bbales2/stochssModel/app/static/modelEditor/node_modules/underscore.string/include.js","./insert":"/home/bbales2/stochssModel/app/static/modelEditor/node_modules/underscore.string/insert.js","./isBlank":"/home/bbales2/stochssModel/app/static/modelEditor/node_modules/underscore.string/isBlank.js","./join":"/home/bbales2/stochssModel/app/static/modelEditor/node_modules/underscore.string/join.js","./levenshtein":"/home/bbales2/stochssModel/app/static/modelEditor/node_modules/underscore.string/levenshtein.js","./lines":"/home/bbales2/stochssModel/app/static/modelEditor/node_modules/underscore.string/lines.js","./lpad":"/home/bbales2/stochssModel/app/static/modelEditor/node_modules/underscore.string/lpad.js","./lrpad":"/home/bbales2/stochssModel/app/static/modelEditor/node_modules/underscore.string/lrpad.js","./ltrim":"/home/bbales2/stochssModel/app/static/modelEditor/node_modules/underscore.string/ltrim.js","./naturalCmp":"/home/bbales2/stochssModel/app/static/modelEditor/node_modules/underscore.string/naturalCmp.js","./numberFormat":"/home/bbales2/stochssModel/app/static/modelEditor/node_modules/underscore.string/numberFormat.js","./pad":"/home/bbales2/stochssModel/app/static/modelEditor/node_modules/underscore.string/pad.js","./pred":"/home/bbales2/stochssModel/app/static/modelEditor/node_modules/underscore.string/pred.js","./prune":"/home/bbales2/stochssModel/app/static/modelEditor/node_modules/underscore.string/prune.js","./quote":"/home/bbales2/stochssModel/app/static/modelEditor/node_modules/underscore.string/quote.js","./repeat":"/home/bbales2/stochssModel/app/static/modelEditor/node_modules/underscore.string/repeat.js","./replaceAll":"/home/bbales2/stochssModel/app/static/modelEditor/node_modules/underscore.string/replaceAll.js","./reverse":"/home/bbales2/stochssModel/app/static/modelEditor/node_modules/underscore.string/reverse.js","./rpad":"/home/bbales2/stochssModel/app/static/modelEditor/node_modules/underscore.string/rpad.js","./rtrim":"/home/bbales2/stochssModel/app/static/modelEditor/node_modules/underscore.string/rtrim.js","./slugify":"/home/bbales2/stochssModel/app/static/modelEditor/node_modules/underscore.string/slugify.js","./splice":"/home/bbales2/stochssModel/app/static/modelEditor/node_modules/underscore.string/splice.js","./sprintf":"/home/bbales2/stochssModel/app/static/modelEditor/node_modules/underscore.string/sprintf.js","./startsWith":"/home/bbales2/stochssModel/app/static/modelEditor/node_modules/underscore.string/startsWith.js","./strLeft":"/home/bbales2/stochssModel/app/static/modelEditor/node_modules/underscore.string/strLeft.js","./strLeftBack":"/home/bbales2/stochssModel/app/static/modelEditor/node_modules/underscore.string/strLeftBack.js","./strRight":"/home/bbales2/stochssModel/app/static/modelEditor/node_modules/underscore.string/strRight.js","./strRightBack":"/home/bbales2/stochssModel/app/static/modelEditor/node_modules/underscore.string/strRightBack.js","./stripTags":"/home/bbales2/stochssModel/app/static/modelEditor/node_modules/underscore.string/stripTags.js","./succ":"/home/bbales2/stochssModel/app/static/modelEditor/node_modules/underscore.string/succ.js","./surround":"/home/bbales2/stochssModel/app/static/modelEditor/node_modules/underscore.string/surround.js","./swapCase":"/home/bbales2/stochssModel/app/static/modelEditor/node_modules/underscore.string/swapCase.js","./titleize":"/home/bbales2/stochssModel/app/static/modelEditor/node_modules/underscore.string/titleize.js","./toBoolean":"/home/bbales2/stochssModel/app/static/modelEditor/node_modules/underscore.string/toBoolean.js","./toNumber":"/home/bbales2/stochssModel/app/static/modelEditor/node_modules/underscore.string/toNumber.js","./toSentence":"/home/bbales2/stochssModel/app/static/modelEditor/node_modules/underscore.string/toSentence.js","./toSentenceSerial":"/home/bbales2/stochssModel/app/static/modelEditor/node_modules/underscore.string/toSentenceSerial.js","./trim":"/home/bbales2/stochssModel/app/static/modelEditor/node_modules/underscore.string/trim.js","./truncate":"/home/bbales2/stochssModel/app/static/modelEditor/node_modules/underscore.string/truncate.js","./underscored":"/home/bbales2/stochssModel/app/static/modelEditor/node_modules/underscore.string/underscored.js","./unescapeHTML":"/home/bbales2/stochssModel/app/static/modelEditor/node_modules/underscore.string/unescapeHTML.js","./unquote":"/home/bbales2/stochssModel/app/static/modelEditor/node_modules/underscore.string/unquote.js","./vsprintf":"/home/bbales2/stochssModel/app/static/modelEditor/node_modules/underscore.string/vsprintf.js","./words":"/home/bbales2/stochssModel/app/static/modelEditor/node_modules/underscore.string/words.js"}],"/home/bbales2/stochssModel/app/static/modelEditor/node_modules/underscore.string/insert.js":[function(require,module,exports){
-var splice = require('./splice');
-
-module.exports = function insert(str, i, substr) {
-  return splice(str, i, 0, substr);
-};
-
-},{"./splice":"/home/bbales2/stochssModel/app/static/modelEditor/node_modules/underscore.string/splice.js"}],"/home/bbales2/stochssModel/app/static/modelEditor/node_modules/underscore.string/isBlank.js":[function(require,module,exports){
-var makeString = require('./helper/makeString');
-
-module.exports = function isBlank(str) {
-  return (/^\s*$/).test(makeString(str));
-};
-
-},{"./helper/makeString":"/home/bbales2/stochssModel/app/static/modelEditor/node_modules/underscore.string/helper/makeString.js"}],"/home/bbales2/stochssModel/app/static/modelEditor/node_modules/underscore.string/join.js":[function(require,module,exports){
-var makeString = require('./helper/makeString');
-var slice = [].slice;
-
-module.exports = function join() {
-  var args = slice.call(arguments),
-    separator = args.shift();
-
-  return args.join(makeString(separator));
-};
-
-},{"./helper/makeString":"/home/bbales2/stochssModel/app/static/modelEditor/node_modules/underscore.string/helper/makeString.js"}],"/home/bbales2/stochssModel/app/static/modelEditor/node_modules/underscore.string/levenshtein.js":[function(require,module,exports){
-var makeString = require('./helper/makeString');
-
-module.exports = function levenshtein(str1, str2) {
-  str1 = makeString(str1);
-  str2 = makeString(str2);
-
-  var current = [],
-    prev, value;
-
-  for (var i = 0; i <= str2.length; i++)
-    for (var j = 0; j <= str1.length; j++) {
-      if (i && j)
-        if (str1.charAt(j - 1) === str2.charAt(i - 1))
-          value = prev;
-        else
-          value = Math.min(current[j], current[j - 1], prev) + 1;
-        else
-          value = i + j;
-
-      prev = current[j];
-      current[j] = value;
-    }
-
-  return current.pop();
-};
-
-},{"./helper/makeString":"/home/bbales2/stochssModel/app/static/modelEditor/node_modules/underscore.string/helper/makeString.js"}],"/home/bbales2/stochssModel/app/static/modelEditor/node_modules/underscore.string/lines.js":[function(require,module,exports){
-module.exports = function lines(str) {
-  if (str == null) return [];
-  return String(str).split(/\r?\n/);
-};
-
-},{}],"/home/bbales2/stochssModel/app/static/modelEditor/node_modules/underscore.string/lpad.js":[function(require,module,exports){
-var pad = require('./pad');
-
-module.exports = function lpad(str, length, padStr) {
-  return pad(str, length, padStr);
-};
-
-},{"./pad":"/home/bbales2/stochssModel/app/static/modelEditor/node_modules/underscore.string/pad.js"}],"/home/bbales2/stochssModel/app/static/modelEditor/node_modules/underscore.string/lrpad.js":[function(require,module,exports){
-var pad = require('./pad');
-
-module.exports = function lrpad(str, length, padStr) {
-  return pad(str, length, padStr, 'both');
-};
-
-},{"./pad":"/home/bbales2/stochssModel/app/static/modelEditor/node_modules/underscore.string/pad.js"}],"/home/bbales2/stochssModel/app/static/modelEditor/node_modules/underscore.string/ltrim.js":[function(require,module,exports){
-var makeString = require('./helper/makeString');
-var defaultToWhiteSpace = require('./helper/defaultToWhiteSpace');
-var nativeTrimLeft = String.prototype.trimLeft;
-
-module.exports = function ltrim(str, characters) {
-  str = makeString(str);
-  if (!characters && nativeTrimLeft) return nativeTrimLeft.call(str);
-  characters = defaultToWhiteSpace(characters);
-  return str.replace(new RegExp('^' + characters + '+'), '');
-};
-
-},{"./helper/defaultToWhiteSpace":"/home/bbales2/stochssModel/app/static/modelEditor/node_modules/underscore.string/helper/defaultToWhiteSpace.js","./helper/makeString":"/home/bbales2/stochssModel/app/static/modelEditor/node_modules/underscore.string/helper/makeString.js"}],"/home/bbales2/stochssModel/app/static/modelEditor/node_modules/underscore.string/naturalCmp.js":[function(require,module,exports){
-module.exports = function naturalCmp(str1, str2) {
-  if (str1 == str2) return 0;
-  if (!str1) return -1;
-  if (!str2) return 1;
-
-  var cmpRegex = /(\.\d+)|(\d+)|(\D+)/g,
-    tokens1 = String(str1).match(cmpRegex),
-    tokens2 = String(str2).match(cmpRegex),
-    count = Math.min(tokens1.length, tokens2.length);
-
-  for (var i = 0; i < count; i++) {
-    var a = tokens1[i],
-      b = tokens2[i];
-
-    if (a !== b) {
-      var num1 = +a;
-      var num2 = +b;
-      if (num1 === num1 && num2 === num2) {
-        return num1 > num2 ? 1 : -1;
-      }
-      return a < b ? -1 : 1;
-    }
-  }
-
-  if (tokens1.length != tokens2.length)
-    return tokens1.length - tokens2.length;
-
-  return str1 < str2 ? -1 : 1;
-};
-
-},{}],"/home/bbales2/stochssModel/app/static/modelEditor/node_modules/underscore.string/numberFormat.js":[function(require,module,exports){
-module.exports = function numberFormat(number, dec, dsep, tsep) {
-  if (isNaN(number) || number == null) return '';
-
-  number = number.toFixed(~~dec);
-  tsep = typeof tsep == 'string' ? tsep : ',';
-
-  var parts = number.split('.'),
-    fnums = parts[0],
-    decimals = parts[1] ? (dsep || '.') + parts[1] : '';
-
-  return fnums.replace(/(\d)(?=(?:\d{3})+$)/g, '$1' + tsep) + decimals;
-};
-
-},{}],"/home/bbales2/stochssModel/app/static/modelEditor/node_modules/underscore.string/pad.js":[function(require,module,exports){
-var makeString = require('./helper/makeString');
-var strRepeat = require('./helper/strRepeat');
-
-module.exports = function pad(str, length, padStr, type) {
-  str = makeString(str);
-  length = ~~length;
-
-  var padlen = 0;
-
-  if (!padStr)
-    padStr = ' ';
-  else if (padStr.length > 1)
-    padStr = padStr.charAt(0);
-
-  switch (type) {
-    case 'right':
-      padlen = length - str.length;
-      return str + strRepeat(padStr, padlen);
-    case 'both':
-      padlen = length - str.length;
-      return strRepeat(padStr, Math.ceil(padlen / 2)) + str + strRepeat(padStr, Math.floor(padlen / 2));
-    default: // 'left'
-      padlen = length - str.length;
-      return strRepeat(padStr, padlen) + str;
-  }
-};
-
-},{"./helper/makeString":"/home/bbales2/stochssModel/app/static/modelEditor/node_modules/underscore.string/helper/makeString.js","./helper/strRepeat":"/home/bbales2/stochssModel/app/static/modelEditor/node_modules/underscore.string/helper/strRepeat.js"}],"/home/bbales2/stochssModel/app/static/modelEditor/node_modules/underscore.string/pred.js":[function(require,module,exports){
-var adjacent = require('./helper/adjacent');
-
-module.exports = function succ(str) {
-  return adjacent(str, -1);
-};
-
-},{"./helper/adjacent":"/home/bbales2/stochssModel/app/static/modelEditor/node_modules/underscore.string/helper/adjacent.js"}],"/home/bbales2/stochssModel/app/static/modelEditor/node_modules/underscore.string/prune.js":[function(require,module,exports){
-/**
- * _s.prune: a more elegant version of truncate
- * prune extra chars, never leaving a half-chopped word.
- * @author github.com/rwz
- */
-var makeString = require('./helper/makeString');
-var rtrim = require('./rtrim');
-
-module.exports = function prune(str, length, pruneStr) {
-  str = makeString(str);
-  length = ~~length;
-  pruneStr = pruneStr != null ? String(pruneStr) : '...';
-
-  if (str.length <= length) return str;
-
-  var tmpl = function(c) {
-    return c.toUpperCase() !== c.toLowerCase() ? 'A' : ' ';
-  },
-    template = str.slice(0, length + 1).replace(/.(?=\W*\w*$)/g, tmpl); // 'Hello, world' -> 'HellAA AAAAA'
-
-  if (template.slice(template.length - 2).match(/\w\w/))
-    template = template.replace(/\s*\S+$/, '');
-  else
-    template = rtrim(template.slice(0, template.length - 1));
-
-  return (template + pruneStr).length > str.length ? str : str.slice(0, template.length) + pruneStr;
-};
-
-},{"./helper/makeString":"/home/bbales2/stochssModel/app/static/modelEditor/node_modules/underscore.string/helper/makeString.js","./rtrim":"/home/bbales2/stochssModel/app/static/modelEditor/node_modules/underscore.string/rtrim.js"}],"/home/bbales2/stochssModel/app/static/modelEditor/node_modules/underscore.string/quote.js":[function(require,module,exports){
-var surround = require('./surround');
-
-module.exports = function quote(str, quoteChar) {
-  return surround(str, quoteChar || '"');
-};
-
-},{"./surround":"/home/bbales2/stochssModel/app/static/modelEditor/node_modules/underscore.string/surround.js"}],"/home/bbales2/stochssModel/app/static/modelEditor/node_modules/underscore.string/repeat.js":[function(require,module,exports){
-var makeString = require('./helper/makeString');
-var strRepeat = require('./helper/strRepeat');
-
-module.exports = function repeat(str, qty, separator) {
-  str = makeString(str);
-
-  qty = ~~qty;
-
-  // using faster implementation if separator is not needed;
-  if (separator == null) return strRepeat(str, qty);
-
-  // this one is about 300x slower in Google Chrome
-  for (var repeat = []; qty > 0; repeat[--qty] = str) {}
-  return repeat.join(separator);
-};
-
-},{"./helper/makeString":"/home/bbales2/stochssModel/app/static/modelEditor/node_modules/underscore.string/helper/makeString.js","./helper/strRepeat":"/home/bbales2/stochssModel/app/static/modelEditor/node_modules/underscore.string/helper/strRepeat.js"}],"/home/bbales2/stochssModel/app/static/modelEditor/node_modules/underscore.string/replaceAll.js":[function(require,module,exports){
-var makeString = require('./helper/makeString');
-
-module.exports = function replaceAll(str, find, replace, ignorecase) {
-  var flags = (ignorecase === true)?'gi':'g';
-  var reg = new RegExp(find, flags);
-
-  return makeString(str).replace(reg, replace);
-};
-
-},{"./helper/makeString":"/home/bbales2/stochssModel/app/static/modelEditor/node_modules/underscore.string/helper/makeString.js"}],"/home/bbales2/stochssModel/app/static/modelEditor/node_modules/underscore.string/reverse.js":[function(require,module,exports){
-var chars = require('./chars');
-
-module.exports = function reverse(str) {
-  return chars(str).reverse().join('');
-};
-
-},{"./chars":"/home/bbales2/stochssModel/app/static/modelEditor/node_modules/underscore.string/chars.js"}],"/home/bbales2/stochssModel/app/static/modelEditor/node_modules/underscore.string/rpad.js":[function(require,module,exports){
-var pad = require('./pad');
-
-module.exports = function rpad(str, length, padStr) {
-  return pad(str, length, padStr, 'right');
-};
-
-},{"./pad":"/home/bbales2/stochssModel/app/static/modelEditor/node_modules/underscore.string/pad.js"}],"/home/bbales2/stochssModel/app/static/modelEditor/node_modules/underscore.string/rtrim.js":[function(require,module,exports){
-var makeString = require('./helper/makeString');
-var defaultToWhiteSpace = require('./helper/defaultToWhiteSpace');
-var nativeTrimRight = String.prototype.trimRight;
-
-module.exports = function rtrim(str, characters) {
-  str = makeString(str);
-  if (!characters && nativeTrimRight) return nativeTrimRight.call(str);
-  characters = defaultToWhiteSpace(characters);
-  return str.replace(new RegExp(characters + '+$'), '');
-};
-
-},{"./helper/defaultToWhiteSpace":"/home/bbales2/stochssModel/app/static/modelEditor/node_modules/underscore.string/helper/defaultToWhiteSpace.js","./helper/makeString":"/home/bbales2/stochssModel/app/static/modelEditor/node_modules/underscore.string/helper/makeString.js"}],"/home/bbales2/stochssModel/app/static/modelEditor/node_modules/underscore.string/slugify.js":[function(require,module,exports){
-var makeString = require('./helper/makeString');
-var defaultToWhiteSpace = require('./helper/defaultToWhiteSpace');
-var trim = require('./trim');
-var dasherize = require('./dasherize');
-
-module.exports = function slugify(str) {
-  var from  = "ąàáäâãåæăćčĉęèéëêĝĥìíïîĵłľńňòóöőôõðøśșšŝťțŭùúüűûñÿýçżźž",
-      to    = "aaaaaaaaaccceeeeeghiiiijllnnoooooooossssttuuuuuunyyczzz",
-      regex = new RegExp(defaultToWhiteSpace(from), 'g');
-
-  str = makeString(str).toLowerCase().replace(regex, function(c){
-    var index = from.indexOf(c);
-    return to.charAt(index) || '-';
-  });
-
-  return trim(dasherize(str.replace(/[^\w\s-]/g, '-')), '-');
-};
-
-},{"./dasherize":"/home/bbales2/stochssModel/app/static/modelEditor/node_modules/underscore.string/dasherize.js","./helper/defaultToWhiteSpace":"/home/bbales2/stochssModel/app/static/modelEditor/node_modules/underscore.string/helper/defaultToWhiteSpace.js","./helper/makeString":"/home/bbales2/stochssModel/app/static/modelEditor/node_modules/underscore.string/helper/makeString.js","./trim":"/home/bbales2/stochssModel/app/static/modelEditor/node_modules/underscore.string/trim.js"}],"/home/bbales2/stochssModel/app/static/modelEditor/node_modules/underscore.string/splice.js":[function(require,module,exports){
-var chars = require('./chars');
-
-module.exports = function splice(str, i, howmany, substr) {
-  var arr = chars(str);
-  arr.splice(~~i, ~~howmany, substr);
-  return arr.join('');
-};
-
-},{"./chars":"/home/bbales2/stochssModel/app/static/modelEditor/node_modules/underscore.string/chars.js"}],"/home/bbales2/stochssModel/app/static/modelEditor/node_modules/underscore.string/sprintf.js":[function(require,module,exports){
-// sprintf() for JavaScript 0.7-beta1
-// http://www.diveintojavascript.com/projects/javascript-sprintf
-//
-// Copyright (c) Alexandru Marasteanu <alexaholic [at) gmail (dot] com>
-// All rights reserved.
-var strRepeat = require('./helper/strRepeat');
-var toString = Object.prototype.toString;
-var sprintf = (function() {
-  function get_type(variable) {
-    return toString.call(variable).slice(8, -1).toLowerCase();
-  }
-
-  var str_repeat = strRepeat;
-
-  var str_format = function() {
-    if (!str_format.cache.hasOwnProperty(arguments[0])) {
-      str_format.cache[arguments[0]] = str_format.parse(arguments[0]);
-    }
-    return str_format.format.call(null, str_format.cache[arguments[0]], arguments);
-  };
-
-  str_format.format = function(parse_tree, argv) {
-    var cursor = 1, tree_length = parse_tree.length, node_type = '', arg, output = [], i, k, match, pad, pad_character, pad_length;
-    for (i = 0; i < tree_length; i++) {
-      node_type = get_type(parse_tree[i]);
-      if (node_type === 'string') {
-        output.push(parse_tree[i]);
-      }
-      else if (node_type === 'array') {
-        match = parse_tree[i]; // convenience purposes only
-        if (match[2]) { // keyword argument
-          arg = argv[cursor];
-          for (k = 0; k < match[2].length; k++) {
-            if (!arg.hasOwnProperty(match[2][k])) {
-              throw new Error(sprintf('[_.sprintf] property "%s" does not exist', match[2][k]));
-            }
-            arg = arg[match[2][k]];
-          }
-        } else if (match[1]) { // positional argument (explicit)
-          arg = argv[match[1]];
-        }
-        else { // positional argument (implicit)
-          arg = argv[cursor++];
-        }
-
-        if (/[^s]/.test(match[8]) && (get_type(arg) != 'number')) {
-          throw new Error(sprintf('[_.sprintf] expecting number but found %s', get_type(arg)));
-        }
-        switch (match[8]) {
-          case 'b': arg = arg.toString(2); break;
-          case 'c': arg = String.fromCharCode(arg); break;
-          case 'd': arg = parseInt(arg, 10); break;
-          case 'e': arg = match[7] ? arg.toExponential(match[7]) : arg.toExponential(); break;
-          case 'f': arg = match[7] ? parseFloat(arg).toFixed(match[7]) : parseFloat(arg); break;
-          case 'o': arg = arg.toString(8); break;
-          case 's': arg = ((arg = String(arg)) && match[7] ? arg.substring(0, match[7]) : arg); break;
-          case 'u': arg = Math.abs(arg); break;
-          case 'x': arg = arg.toString(16); break;
-          case 'X': arg = arg.toString(16).toUpperCase(); break;
-        }
-        arg = (/[def]/.test(match[8]) && match[3] && arg >= 0 ? '+'+ arg : arg);
-        pad_character = match[4] ? match[4] == '0' ? '0' : match[4].charAt(1) : ' ';
-        pad_length = match[6] - String(arg).length;
-        pad = match[6] ? str_repeat(pad_character, pad_length) : '';
-        output.push(match[5] ? arg + pad : pad + arg);
-      }
-    }
-    return output.join('');
-  };
-
-  str_format.cache = {};
-
-  str_format.parse = function(fmt) {
-    var _fmt = fmt, match = [], parse_tree = [], arg_names = 0;
-    while (_fmt) {
-      if ((match = /^[^\x25]+/.exec(_fmt)) !== null) {
-        parse_tree.push(match[0]);
-      }
-      else if ((match = /^\x25{2}/.exec(_fmt)) !== null) {
-        parse_tree.push('%');
-      }
-      else if ((match = /^\x25(?:([1-9]\d*)\$|\(([^\)]+)\))?(\+)?(0|'[^$])?(-)?(\d+)?(?:\.(\d+))?([b-fosuxX])/.exec(_fmt)) !== null) {
-        if (match[2]) {
-          arg_names |= 1;
-          var field_list = [], replacement_field = match[2], field_match = [];
-          if ((field_match = /^([a-z_][a-z_\d]*)/i.exec(replacement_field)) !== null) {
-            field_list.push(field_match[1]);
-            while ((replacement_field = replacement_field.substring(field_match[0].length)) !== '') {
-              if ((field_match = /^\.([a-z_][a-z_\d]*)/i.exec(replacement_field)) !== null) {
-                field_list.push(field_match[1]);
-              }
-              else if ((field_match = /^\[(\d+)\]/.exec(replacement_field)) !== null) {
-                field_list.push(field_match[1]);
-              }
-              else {
-                throw new Error('[_.sprintf] huh?');
-              }
-            }
-          }
-          else {
-            throw new Error('[_.sprintf] huh?');
-          }
-          match[2] = field_list;
-        }
-        else {
-          arg_names |= 2;
-        }
-        if (arg_names === 3) {
-          throw new Error('[_.sprintf] mixing positional and named placeholders is not (yet) supported');
-        }
-        parse_tree.push(match);
-      }
-      else {
-        throw new Error('[_.sprintf] huh?');
-      }
-      _fmt = _fmt.substring(match[0].length);
-    }
-    return parse_tree;
-  };
-
-  return str_format;
-})();
-
-module.exports = sprintf;
-
-},{"./helper/strRepeat":"/home/bbales2/stochssModel/app/static/modelEditor/node_modules/underscore.string/helper/strRepeat.js"}],"/home/bbales2/stochssModel/app/static/modelEditor/node_modules/underscore.string/startsWith.js":[function(require,module,exports){
-var makeString = require('./helper/makeString');
-var toPositive = require('./helper/toPositive');
-
-module.exports = function startsWith(str, starts, position) {
-  str = makeString(str);
-  starts = '' + starts;
-  position = position == null ? 0 : Math.min(toPositive(position), str.length);
-  return str.lastIndexOf(starts, position) === position;
-};
-
-},{"./helper/makeString":"/home/bbales2/stochssModel/app/static/modelEditor/node_modules/underscore.string/helper/makeString.js","./helper/toPositive":"/home/bbales2/stochssModel/app/static/modelEditor/node_modules/underscore.string/helper/toPositive.js"}],"/home/bbales2/stochssModel/app/static/modelEditor/node_modules/underscore.string/strLeft.js":[function(require,module,exports){
-var makeString = require('./helper/makeString');
-
-module.exports = function strLeft(str, sep) {
-  str = makeString(str);
-  sep = makeString(sep);
-  var pos = !sep ? -1 : str.indexOf(sep);
-  return~ pos ? str.slice(0, pos) : str;
-};
-
-},{"./helper/makeString":"/home/bbales2/stochssModel/app/static/modelEditor/node_modules/underscore.string/helper/makeString.js"}],"/home/bbales2/stochssModel/app/static/modelEditor/node_modules/underscore.string/strLeftBack.js":[function(require,module,exports){
-var makeString = require('./helper/makeString');
-
-module.exports = function strLeftBack(str, sep) {
-  str = makeString(str);
-  sep = makeString(sep);
-  var pos = str.lastIndexOf(sep);
-  return~ pos ? str.slice(0, pos) : str;
-};
-
-},{"./helper/makeString":"/home/bbales2/stochssModel/app/static/modelEditor/node_modules/underscore.string/helper/makeString.js"}],"/home/bbales2/stochssModel/app/static/modelEditor/node_modules/underscore.string/strRight.js":[function(require,module,exports){
-var makeString = require('./helper/makeString');
-
-module.exports = function strRight(str, sep) {
-  str = makeString(str);
-  sep = makeString(sep);
-  var pos = !sep ? -1 : str.indexOf(sep);
-  return~ pos ? str.slice(pos + sep.length, str.length) : str;
-};
-
-},{"./helper/makeString":"/home/bbales2/stochssModel/app/static/modelEditor/node_modules/underscore.string/helper/makeString.js"}],"/home/bbales2/stochssModel/app/static/modelEditor/node_modules/underscore.string/strRightBack.js":[function(require,module,exports){
-var makeString = require('./helper/makeString');
-
-module.exports = function strRightBack(str, sep) {
-  str = makeString(str);
-  sep = makeString(sep);
-  var pos = !sep ? -1 : str.lastIndexOf(sep);
-  return~ pos ? str.slice(pos + sep.length, str.length) : str;
-};
-
-},{"./helper/makeString":"/home/bbales2/stochssModel/app/static/modelEditor/node_modules/underscore.string/helper/makeString.js"}],"/home/bbales2/stochssModel/app/static/modelEditor/node_modules/underscore.string/stripTags.js":[function(require,module,exports){
-var makeString = require('./helper/makeString');
-
-module.exports = function stripTags(str) {
-  return makeString(str).replace(/<\/?[^>]+>/g, '');
-};
-
-},{"./helper/makeString":"/home/bbales2/stochssModel/app/static/modelEditor/node_modules/underscore.string/helper/makeString.js"}],"/home/bbales2/stochssModel/app/static/modelEditor/node_modules/underscore.string/succ.js":[function(require,module,exports){
-var adjacent = require('./helper/adjacent');
-
-module.exports = function succ(str) {
-  return adjacent(str, 1);
-};
-
-},{"./helper/adjacent":"/home/bbales2/stochssModel/app/static/modelEditor/node_modules/underscore.string/helper/adjacent.js"}],"/home/bbales2/stochssModel/app/static/modelEditor/node_modules/underscore.string/surround.js":[function(require,module,exports){
-module.exports = function surround(str, wrapper) {
-  return [wrapper, str, wrapper].join('');
-};
-
-},{}],"/home/bbales2/stochssModel/app/static/modelEditor/node_modules/underscore.string/swapCase.js":[function(require,module,exports){
-var makeString = require('./helper/makeString');
-
-module.exports = function swapCase(str) {
-  return makeString(str).replace(/\S/g, function(c) {
-    return c === c.toUpperCase() ? c.toLowerCase() : c.toUpperCase();
-  });
-};
-
-},{"./helper/makeString":"/home/bbales2/stochssModel/app/static/modelEditor/node_modules/underscore.string/helper/makeString.js"}],"/home/bbales2/stochssModel/app/static/modelEditor/node_modules/underscore.string/titleize.js":[function(require,module,exports){
-var makeString = require('./helper/makeString');
-
-module.exports = function titleize(str) {
-  return makeString(str).toLowerCase().replace(/(?:^|\s|-)\S/g, function(c) {
-    return c.toUpperCase();
-  });
-};
-
-},{"./helper/makeString":"/home/bbales2/stochssModel/app/static/modelEditor/node_modules/underscore.string/helper/makeString.js"}],"/home/bbales2/stochssModel/app/static/modelEditor/node_modules/underscore.string/toBoolean.js":[function(require,module,exports){
-var trim = require('./trim');
-
-function boolMatch(s, matchers) {
-  var i, matcher, down = s.toLowerCase();
-  matchers = [].concat(matchers);
-  for (i = 0; i < matchers.length; i += 1) {
-    matcher = matchers[i];
-    if (!matcher) continue;
-    if (matcher.test && matcher.test(s)) return true;
-    if (matcher.toLowerCase() === down) return true;
-  }
-}
-
-module.exports = function toBoolean(str, trueValues, falseValues) {
-  if (typeof str === "number") str = "" + str;
-  if (typeof str !== "string") return !!str;
-  str = trim(str);
-  if (boolMatch(str, trueValues || ["true", "1"])) return true;
-  if (boolMatch(str, falseValues || ["false", "0"])) return false;
-};
-
-},{"./trim":"/home/bbales2/stochssModel/app/static/modelEditor/node_modules/underscore.string/trim.js"}],"/home/bbales2/stochssModel/app/static/modelEditor/node_modules/underscore.string/toNumber.js":[function(require,module,exports){
-var trim = require('./trim');
-var parseNumber = function(source) {
-  return source * 1 || 0;
-};
-
-module.exports = function toNumber(num, precision) {
-  if (num == null) return 0;
-  var factor = Math.pow(10, isFinite(precision) ? precision : 0);
-  return Math.round(num * factor) / factor;
-};
-
-},{"./trim":"/home/bbales2/stochssModel/app/static/modelEditor/node_modules/underscore.string/trim.js"}],"/home/bbales2/stochssModel/app/static/modelEditor/node_modules/underscore.string/toSentence.js":[function(require,module,exports){
-var rtrim = require('./rtrim');
-
-module.exports = function toSentence(array, separator, lastSeparator, serial) {
-  separator = separator || ', ';
-  lastSeparator = lastSeparator || ' and ';
-  var a = array.slice(),
-    lastMember = a.pop();
-
-  if (array.length > 2 && serial) lastSeparator = rtrim(separator) + lastSeparator;
-
-  return a.length ? a.join(separator) + lastSeparator + lastMember : lastMember;
-};
-
-},{"./rtrim":"/home/bbales2/stochssModel/app/static/modelEditor/node_modules/underscore.string/rtrim.js"}],"/home/bbales2/stochssModel/app/static/modelEditor/node_modules/underscore.string/toSentenceSerial.js":[function(require,module,exports){
-var toSentence = require('./toSentence');
-
-module.exports = function toSentenceSerial(array, sep, lastSep) {
-  return toSentence(array, sep, lastSep, true);
-};
-
-},{"./toSentence":"/home/bbales2/stochssModel/app/static/modelEditor/node_modules/underscore.string/toSentence.js"}],"/home/bbales2/stochssModel/app/static/modelEditor/node_modules/underscore.string/trim.js":[function(require,module,exports){
-var makeString = require('./helper/makeString');
-var defaultToWhiteSpace = require('./helper/defaultToWhiteSpace');
-var nativeTrim = String.prototype.trim;
-
-module.exports = function trim(str, characters) {
-  str = makeString(str);
-  if (!characters && nativeTrim) return nativeTrim.call(str);
-  characters = defaultToWhiteSpace(characters);
-  return str.replace(new RegExp('^' + characters + '+|' + characters + '+$', 'g'), '');
-};
-
-},{"./helper/defaultToWhiteSpace":"/home/bbales2/stochssModel/app/static/modelEditor/node_modules/underscore.string/helper/defaultToWhiteSpace.js","./helper/makeString":"/home/bbales2/stochssModel/app/static/modelEditor/node_modules/underscore.string/helper/makeString.js"}],"/home/bbales2/stochssModel/app/static/modelEditor/node_modules/underscore.string/truncate.js":[function(require,module,exports){
-var makeString = require('./helper/makeString');
-
-module.exports = function truncate(str, length, truncateStr) {
-  str = makeString(str);
-  truncateStr = truncateStr || '...';
-  length = ~~length;
-  return str.length > length ? str.slice(0, length) + truncateStr : str;
-};
-
-},{"./helper/makeString":"/home/bbales2/stochssModel/app/static/modelEditor/node_modules/underscore.string/helper/makeString.js"}],"/home/bbales2/stochssModel/app/static/modelEditor/node_modules/underscore.string/underscored.js":[function(require,module,exports){
-var trim = require('./trim');
-
-module.exports = function underscored(str) {
-  return trim(str).replace(/([a-z\d])([A-Z]+)/g, '$1_$2').replace(/[-\s]+/g, '_').toLowerCase();
-};
-
-},{"./trim":"/home/bbales2/stochssModel/app/static/modelEditor/node_modules/underscore.string/trim.js"}],"/home/bbales2/stochssModel/app/static/modelEditor/node_modules/underscore.string/unescapeHTML.js":[function(require,module,exports){
-var makeString = require('./helper/makeString');
-var escapeChars = require('./helper/escapeChars');
-
-module.exports = function unescapeHTML(str) {
-  return makeString(str).replace(/\&([^;]+);/g, function(entity, entityCode) {
-    var match;
-
-    if (entityCode in escapeChars) {
-      return escapeChars[entityCode];
-    } else if (match = entityCode.match(/^#x([\da-fA-F]+)$/)) {
-      return String.fromCharCode(parseInt(match[1], 16));
-    } else if (match = entityCode.match(/^#(\d+)$/)) {
-      return String.fromCharCode(~~match[1]);
-    } else {
-      return entity;
-    }
-  });
-};
-
-},{"./helper/escapeChars":"/home/bbales2/stochssModel/app/static/modelEditor/node_modules/underscore.string/helper/escapeChars.js","./helper/makeString":"/home/bbales2/stochssModel/app/static/modelEditor/node_modules/underscore.string/helper/makeString.js"}],"/home/bbales2/stochssModel/app/static/modelEditor/node_modules/underscore.string/unquote.js":[function(require,module,exports){
-module.exports = function unquote(str, quoteChar) {
-  quoteChar = quoteChar || '"';
-  if (str[0] === quoteChar && str[str.length - 1] === quoteChar)
-    return str.slice(1, str.length - 1);
-  else return str;
-};
-
-},{}],"/home/bbales2/stochssModel/app/static/modelEditor/node_modules/underscore.string/vsprintf.js":[function(require,module,exports){
-var sprintf = require('./sprintf');
-
-module.exports = function vsprintf(fmt, argv) {
-  argv.unshift(fmt);
-  return sprintf.apply(null, argv);
-};
-
-},{"./sprintf":"/home/bbales2/stochssModel/app/static/modelEditor/node_modules/underscore.string/sprintf.js"}],"/home/bbales2/stochssModel/app/static/modelEditor/node_modules/underscore.string/words.js":[function(require,module,exports){
-var isBlank = require('./isBlank');
-var trim = require('./trim');
-
-module.exports = function words(str, delimiter) {
-  if (isBlank(str)) return [];
-  return trim(str, delimiter).split(delimiter || /\s+/);
-};
-
-},{"./isBlank":"/home/bbales2/stochssModel/app/static/modelEditor/node_modules/underscore.string/isBlank.js","./trim":"/home/bbales2/stochssModel/app/static/modelEditor/node_modules/underscore.string/trim.js"}],"/home/bbales2/stochssModel/app/static/modelEditor/node_modules/underscore/underscore.js":[function(require,module,exports){
+},{}],"/home/bbales2/stochssModel/app/static/modelEditor/node_modules/underscore/underscore.js":[function(require,module,exports){
 //     Underscore.js 1.7.0
 //     http://underscorejs.org
 //     (c) 2009-2014 Jeremy Ashkenas, DocumentCloud and Investigative Reporters & Editors

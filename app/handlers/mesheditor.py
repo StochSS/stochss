@@ -157,7 +157,7 @@ class MeshBackboneInterface(BaseHandler):
     def post(self):
         jsonMesh = json.loads(self.request.body)
 
-        meshId = MeshManager.updateMesh(self, jsonMesh)
+        meshId = MeshManager.updateMesh(self, jsonMesh, rename = True)
 
         self.response.content_type = "application/json"
 
