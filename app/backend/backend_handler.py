@@ -603,7 +603,7 @@ class BackendWorker():
         for (pub_ip, ins_id) in zip(public_ips, instance_ids):
 
             logging.info('connecting to {0}...'.format(pub_ip))
-            success = helper.wait_for_ssh_connection(keyfile=keyfile, ip=pub_ip)
+            success = helper.wait_for_ssh_connection(key_file=keyfile, ip=pub_ip)
 
             if success == True:
                 logging.info('{0} is successfully added'.format(pub_ip))
@@ -652,7 +652,7 @@ class BackendWorker():
         # trying to echo a multi-line file directly on the command line
 
 
-        key_file = os.path.join(os.path.dirname(__file__), '..', '{1}.key'.format(params['keyname']))
+        key_file = os.path.join(os.path.dirname(__file__), '..', '{0}.key'.format(params['keyname']))
         logging.debug("key_file = {0}".format(key_file))
 
         if not os.path.exists(key_file):

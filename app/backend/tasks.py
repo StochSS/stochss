@@ -590,7 +590,7 @@ def task(taskid, params, database, access_key, secret_key, task_prefix=""):
         if 'stats' in results and os.listdir("output/{0}/result/stats".format(uuidstr)) == ['.parallel']:
             raise Exception("The compute node can not handle a job of this size.")
 
-        filepath = "output/%s//" % (uuidstr)
+        filepath = os.path.join('output', uuidstr)
         absolute_file_path = os.path.abspath(filepath)
 
         try:

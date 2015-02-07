@@ -12,7 +12,7 @@ import celery
 from celery.task.control import inspect
 from datetime import datetime
 
-from common.config import CeleryConfig, JobDatabaseConfig, JobTypes, AgentTypes
+from config import CeleryConfig, JobDatabaseConfig, JobTypes, AgentTypes
 import tasks
 from tasks import TaskConfig
 
@@ -37,7 +37,7 @@ def copy_celery_config_to_vm(ins_type, ip, keyfile):
 def start_celery_on_vm(instance_type, ip, key_file, username="ubuntu", prepend_commands=None):
     copy_celery_config_to_vm(instance_type, ip, key_file)
 
-    commands = prepend_commands if prepend_commands is None else []
+    commands = prepend_commands if prepend_commands is not None else []
     python_path = [TaskConfig.STOCHSS_HOME,
                    TaskConfig.PYURDME_DIR,
                    os.path.join(TaskConfig.STOCHSS_HOME, 'app'),
@@ -88,7 +88,7 @@ def update_celery_config_with_queue_head_ip(queue_head_ip):
     tasks.CelerySingleton().configure()
 
 
-def wait_for_ssh_connection(self, keyfile, ip, username="ubuntu"):
+def wait_for_ssh_connection(key_file, ip, username="ubuntu"):
     '''
     Method that is actually doing the ssh connection verification. It will check for
     a certain amount of times before determin the failure of connection.
@@ -104,7 +104,7 @@ def wait_for_ssh_connection(self, keyfile, ip, username="ubuntu"):
     SSH_RETRY_COUNT = 8
     SSH_RETRY_WAIT = 3
 
-    cmd = "ssh -o StrictHostKeyChecking=no -i {keyfile} {username}@{ip} \"pwd\"".format(keyfile=keyfile, ip=ip,
+    cmd = "ssh -o StrictHostKeyChecking=no -i {keyfile} {username}@{ip} \"pwd\"".format(keyfile=key_file, ip=ip,
                                                                                         username=username)
     logging.info(cmd)
     for x in range(0, SSH_RETRY_COUNT):
