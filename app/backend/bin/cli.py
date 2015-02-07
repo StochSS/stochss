@@ -17,13 +17,7 @@ from databases.dynamo_db import DynamoDB
 import tasks
 from tasks import *
 
-from common.config import AgentTypes, FlexConfig
 import common.helper as helper
-
-CELERY_EXCHANGE_FLEX = "exchange_stochss_flex"
-CELERY_QUEUE_FLEX = "queue_stochss_flex"
-CELERY_ROUTING_KEY_FLEX = "routing_key_stochss_flex"
-
 
 def get_aws_credentials():
     if not os.environ.has_key("AWS_ACCESS_KEY_ID") or not os.environ.has_key("AWS_SECRET_ACCESS_KEY"):
