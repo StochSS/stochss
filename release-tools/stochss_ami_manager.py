@@ -5,6 +5,7 @@ __email__ = 'dnath@cs.ucsb.edu'
 
 import sys
 import os
+sys.path.append(os.path.join(os.path.dirname(__file__),  '..', 'app', 'lib', 'boto'))
 import boto.ec2
 import time
 import uuid
@@ -70,6 +71,7 @@ class AmiManager:
     NUM_TRIALS = 5
     NUM_SSH_TRIALS = 10
     DEFAULT_AMI_FILENAME = os.path.join(os.path.abspath(os.path.dirname(__file__)), 'ami.json')
+    DEFAULT_STOCHSS_AMI_FILENAME = os.path.join(os.path.abspath(os.path.dirname(__file__)),  '..', 'conf', 'ec2_config.json')
 
     def __init__(self, options):
         self.uuid = uuid.uuid4()
@@ -120,7 +122,15 @@ class AmiManager:
             self.ami_list_filename = options["ami_list_filename"]
         else:
             self.ami_list_filename = self.DEFAULT_AMI_FILENAME
-
+        if "stochsss_ami_config_filename" in options.keys():
+            self.stochss_ami_filename = options["stochss_ami_config_filename"]
+        else:
+            self.stochss_ami_filename = self.DEFAULT_STOCHSS_AMI_FILENAME
+        if "publish" in options.keys():
+            self.publish = options["publish"]
+        else:
+            self.publish = False
+            
     def run(self):
         try:
             self.__launch_instance()
@@ -189,6 +199,8 @@ class AmiManager:
 
             new_ami_info = self.make_image()
             self.update_ami_list(new_ami_info)
+            if self.publish:
+                self.update_stochss_ami(new_ami_info)
 
         except:
             traceback.print_exc()
@@ -420,6 +432,12 @@ class AmiManager:
 
         return {"ami_id": new_ami_id, "name": new_ami_name, "creation_time": gmt_time_string}
 
+    def update_stochss_ami(self, new_ami_info=None):
+        print '=================================================='
+        print 'Updating StochSS AMI in {0}...'.format(self.stochss_ami_filename)
+        with open(self.stochss_ami_filename, 'w') as fd:
+            json.dump(new_ami_info, fd)
+
     def update_ami_list(self, new_ami_info=None):
         print '=================================================='
         print 'Updating AMI list in {0}...'.format(self.ami_list_filename)
@@ -590,6 +608,12 @@ if __name__ == '__main__':
                         dest="ami_id")
     parser.add_argument('-b', '--branch', help="StochSS Git branch name (overridden)", action="store",
                         dest="git_branch")
+    parser.add_argument('-p', '--publish', help="Update the StochSS config to use the new AMI", action="store_true",\
+                        dest="publish",  default=False)
+    parser.add_argument('-f', '--configfile', help="Configuration Settings File, \
+                                                  (Default: $STOCHSS/conf/ec2_config.json).",
+                        action="store", dest="stochss_ami_config_filename",
+                        default=os.path.join(os.path.dirname(__file__), "../conf/ec2_config.json"))
     parser.add_argument('--enable-old-ami-layout', help="Enable Old StochSS AMI layout.",
                         dest="enable_old_ami_layout", action="store_true", default=False)
 
@@ -614,9 +638,11 @@ if __name__ == '__main__':
 
         if args.git_branch != None:
             options["git_repo"]["branch"] = args.git_branch
-
         if args.verbose != None:
             options['verbose'] = args.verbose
+        if args.publish != None:
+            options['publish'] = args.publish
+        if args.stochss_ami_config_filename != None:
+            options['stochss_ami_config_filename'] = args.stochss_ami_config_filename
 
         AmiManager(options).run()
-
