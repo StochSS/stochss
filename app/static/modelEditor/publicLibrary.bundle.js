@@ -902,7 +902,10 @@ var MeshCollectionSelectView = AmpersandView.extend({
     {
         this.selected = this.selectView.value;
         
+        // The jquery click here doesn't work but the Javascript one does!
         //$( this.el ).find( ".meshLibrary" ).trigger('click');
+        if($( this.el ).find( "#collapseThree2" ).hasClass('in'))
+            $( this.el ).find( ".meshLibrary" )[0].click();
 
         this.model.mesh = this.selected;
 
