@@ -139,7 +139,7 @@ class DataReproductionPage(BaseHandler):
                     job.startDate = time.strftime("%Y-%m-%d-%H-%M-%S")
             
                     job.put()
-                    result = {'status':True,'msg':'Job rerun submitted sucessfully.'}
+                    result = {'status':True,'msg':'Job rerun submitted successfully.'}
             
             
                 except Exception,e:
@@ -181,7 +181,7 @@ class DataReproductionPage(BaseHandler):
                     job.startTime = time.strftime("%Y-%m-%d-%H-%M-%S")
                     job.output_stored = 'True'
                     job.put()
-                    result = {'status':True,'msg':'Job rerun submitted sucessfully.'}
+                    result = {'status':True,'msg':'Job rerun submitted successfully.'}
             
                 except Exception,e:
                     result = {'status':False,'msg':'Cloud execution failed: '+str(e)}
@@ -221,7 +221,7 @@ class DataReproductionPage(BaseHandler):
                     job.startTime = time.strftime("%Y-%m-%d-%H-%M-%S")
                     job.output_stored = 'True'
                     job.put()
-                    result = {'status':True,'msg':'Job rerun submitted sucessfully.'}
+                    result = {'status':True,'msg':'Job rerun submitted successfully.'}
             
                 except Exception,e:
                     result = {'status':False,'msg':'Cloud execution failed: '+str(e)}
