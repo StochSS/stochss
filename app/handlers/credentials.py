@@ -274,7 +274,6 @@ class CredentialsPage(BaseHandler):
         key_prefix = user_id
         group_random_name = key_prefix +"-"+''.join(random.choice(string.ascii_uppercase + string.digits) for x in range(6))
         
-                
         params ={"infrastructure":"ec2",
              'group':group_random_name, 
              'vms': vms_info,
@@ -284,6 +283,15 @@ class CredentialsPage(BaseHandler):
              'email':[user_id],
              'credentials':credentials,
              'use_spot_instances':False}
+        # Check for AMI build by the stochss_ami_manager
+        try:
+            json_config_file = os.path.join(os.path.dirname(__file__),  '..', 'conf', 'ec2_config.json')
+            with open(json_config_file) as fd:
+                ec2_config = json.load(fd)
+                params['image_id'] = ec2_config['ami_id']
+        except Exception as e:
+            logging.error(e)
+
         service = backendservices()
         
         if not service.isOneOrMoreComputeNodesRunning(params):

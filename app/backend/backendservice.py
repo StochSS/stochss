@@ -26,9 +26,6 @@ class backendservices(object):
     QUEUEHEAD_KEY_TAG = 'queuehead'
     INFRA_EC2 = 'ec2'
     INFRA_CLUSTER = 'cluster'
-    WORKER_AMIS = {
-        INFRA_EC2: 'ami-766f211e'
-    }
     VMSTATUS_IDS = 'ids'
 
     def __init__(self):
