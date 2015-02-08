@@ -30,7 +30,7 @@ from datetime import datetime
 from multiprocessing import Process
 import tempfile, time
 import signal
-import pickle
+import pprint
 from cloudtracker import CloudTracker
 from kombu import Exchange, Queue
 
@@ -65,9 +65,9 @@ class CelerySingleton(object):
         reload(celeryconfig)
         self.app.config_from_object('celeryconfig')
 
-    def printCeleryQueue(self):
-        print self.app.conf.BROKER_URL
-        print self.app.conf.CELERY_QUEUES
+    def print_celery_queue_config(self):
+        print "BROKER_URL = {0}".format(self.app.conf.BROKER_URL)
+        print "CELERY_QUEUES = \n{0}".format(pprint.pformat(self.app.conf.CELERY_QUEUES))
 
 # def add_queue(self, queue_name, exchange_name, routing_key):
 #         exchange = Exchange(exchange_name, type='direct')

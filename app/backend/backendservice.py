@@ -52,7 +52,7 @@ class backendservices(object):
         if not task_id:
             task_id = str(uuid.uuid4())
 
-        result = helper.execute_cloud_task(params=params, agent=agent, access_key=access_key, secret_key=secret_key,
+        result = helper.execute_cloud_task(params=params, agent_type=agent, access_key=access_key, secret_key=secret_key,
                                            task_id=task_id, instance_type=instance_type, cost_replay=cost_replay,
                                            database=database)
 

@@ -1,7 +1,4 @@
 import os
-import sys
-
-sys.path.append(os.path.join(os.path.dirname(__file__), '..'))
 
 import logging
 import datetime
@@ -15,20 +12,22 @@ import celery
 from celery.task.control import inspect
 from datetime import datetime
 
-from config import CeleryConfig, JobDatabaseConfig, JobTypes, AgentTypes
+from config import CeleryConfig, JobDatabaseConfig, JobTypes, AgentTypes, JobConfig
 import tasks
 from tasks import TaskConfig
 
 
-def copy_celery_config_to_vm(instance_type, ip, key_file, agent_type):
+def copy_celery_config_to_vm(instance_type, ip, key_file, agent_type, username):
     celery_config_filename = CeleryConfig.CONFIG_FILENAME
     if not os.path.exists(celery_config_filename):
         raise Exception("celery config file not found: {0}".format(celery_config_filename))
 
     config_celery_queues(agent_type=agent_type, instance_types=[instance_type])
-    cmd = "scp -o 'StrictHostKeyChecking no' -i {0} {1} ubuntu@{2}:celeryconfig.py".format(key_file,
-                                                                                           celery_config_filename,
-                                                                                           ip)
+    cmd = "scp -o 'StrictHostKeyChecking no' -i {key_file} {file_to_transfer} {user}@{ip}:celeryconfig.py".format(
+                                                                           key_file=key_file,
+                                                                           file_to_transfer=celery_config_filename,
+                                                                           ip=ip,
+                                                                           user=username)
     logging.info(cmd)
     success = os.system(cmd)
     if success == 0:
@@ -38,15 +37,18 @@ def copy_celery_config_to_vm(instance_type, ip, key_file, agent_type):
         raise Exception("scp failure: {0} not transfered to {1}".format(celery_config_filename, ip))
 
 def start_celery_on_vm(instance_type, ip, key_file, agent_type, username="ubuntu", prepend_commands=None):
-    copy_celery_config_to_vm(instance_type=instance_type, ip=ip, key_file=key_file, agent_type=agent_type)
+    copy_celery_config_to_vm(instance_type=instance_type, ip=ip, key_file=key_file,
+                             agent_type=agent_type, username=username)
 
     commands = prepend_commands if prepend_commands is not None else []
-    python_path = [TaskConfig.STOCHSS_HOME,
+
+    python_path_list = [TaskConfig.STOCHSS_HOME,
                    TaskConfig.PYURDME_DIR,
                    os.path.join(TaskConfig.STOCHSS_HOME, 'app'),
                    os.path.join(TaskConfig.STOCHSS_HOME, 'app', 'backend'),
                    os.path.join(TaskConfig.STOCHSS_HOME, 'app', 'lib', 'cloudtracker')]
-    commands.append('export PYTHONPATH={0}'.format(':'.join(python_path)))
+    python_path = 'export PYTHONPATH={0}'.format(':'.join(python_path_list))
+    commands.append(python_path)
 
     commands.append(
         "celery -A tasks worker -Q {q1},{q2} --autoreload --loglevel=info --workdir /home/ubuntu > /home/ubuntu/celery.log 2>&1".format(
@@ -66,6 +68,7 @@ def start_celery_on_vm(instance_type, ip, key_file, agent_type, username="ubuntu
                                                                                              cmd=celery_cmd)
     logging.info(cmd)
     success = os.system(cmd)
+    logging.debug("success = {0}".format(success))
     return success
 
 def update_celery_config_with_queue_head_ip(queue_head_ip):
@@ -76,7 +79,8 @@ def update_celery_config_with_queue_head_ip(queue_head_ip):
     Args
         queue_head_ip    The ip that is going to be written in the celery configuration file
     '''
-    # Write queue_head_ip to file on the appropriate line
+    logging.debug("queue_head_ip = {0}".format(queue_head_ip))
+
     with open(CeleryConfig.CONFIG_TEMPLATE_FILENAME, 'r') as celery_config_file:
         celery_config_lines = celery_config_file.readlines()
     with open(CeleryConfig.CONFIG_FILENAME, 'w') as celery_config_file:
@@ -126,15 +130,20 @@ def wait_for_ssh_connection(key_file, ip, username="ubuntu"):
 
 def config_celery_queues(agent_type, instance_types):
     exchange = "exchange = Exchange('{0}', type='direct')".format(CeleryConfig.get_exchange_name(agent_type=agent_type))
-    agent_queue_name = CeleryConfig.get_queue_name(agent_type=agent_type)
-    agent_routing_key = CeleryConfig.get_routing_key_name(agent_type=agent_type)
+    logging.debug(exchange)
 
     queue_list = map(lambda instance_type: "Queue('{0}', exchange, routing_key='{1}')".format(
                                     CeleryConfig.get_queue_name(agent_type=agent_type, instance_type=instance_type),
                                     CeleryConfig.get_routing_key_name(agent_type=agent_type, instance_type=instance_type)),
                     instance_types)
+
+    agent_queue_name = CeleryConfig.get_queue_name(agent_type=agent_type)
+    agent_routing_key = CeleryConfig.get_routing_key_name(agent_type=agent_type)
     queue_list.insert(0, "Queue('{0}', exchange, routing_key='{1}')".format(agent_queue_name, agent_routing_key))
+    logging.debug(pprint.pformat(queue_list))
+
     queues_string = 'CELERY_QUEUES = ({0})'.format(', '.join(queue_list))
+    logging.debug(queues_string)
 
     with open(CeleryConfig.CONFIG_FILENAME, 'r') as f:
         lines = f.readlines()
@@ -353,7 +362,7 @@ def check_broker_status():
     return True, None, None
 
 
-def execute_cloud_task(params, agent, access_key, secret_key, task_id,
+def execute_cloud_task(params, agent_type, access_key, secret_key, task_id,
                        instance_type, cost_replay, database):
     '''
     This method instantiates celery tasks in the cloud.
@@ -361,17 +370,13 @@ def execute_cloud_task(params, agent, access_key, secret_key, task_id,
     '''
     logging.debug('execute_cloud_task: Params - %s', str(pprint.pformat(params)))
 
-    import tasks
-    from tasks import task
-
-
     celery_config = tasks.CelerySingleton()
     celery_config.configure()
-    celery_config.printCeleryQueue()
+    celery_config.print_celery_queue_config()
 
-    celery_queue_name = CeleryConfig.get_queue_name(agent_type=agent, instance_type=instance_type)
-    # celery_exchange = CeleryConfig.get_exchange_name("ec2", instance_type)
-    celery_routing_key = CeleryConfig.get_routing_key_name(agent_type=agent, instance_type=instance_type)
+    celery_queue_name = CeleryConfig.get_queue_name(agent_type=agent_type, instance_type=instance_type)
+    celery_exchange = CeleryConfig.get_exchange_name(agent_type=agent_type, instance_type=instance_type)
+    celery_routing_key = CeleryConfig.get_routing_key_name(agent_type=agent_type, instance_type=instance_type)
 
     logging.info('Deliver the task to the queue: {0}, routing key: {1}'.format(celery_queue_name, celery_routing_key))
 
@@ -407,12 +412,16 @@ def execute_cloud_task(params, agent, access_key, secret_key, task_id,
 
         else:
             # if this is the cost analysis and agent is ec2 replay then update the stochss-cost-analysis table
-            if cost_replay and agent == AgentTypes.EC2:
-                result = execute_cloud_cost_analysis_task(params=params, agent=agent, instance_type=instance_type,
+            if cost_replay:
+                if agent_type in JobConfig.SUPPORTED_AGENT_TYPES_FOR_COST_ANALYSIS:
+                    result = execute_cloud_cost_analysis_task(params=params, agent=agent_type, instance_type=instance_type,
                                                           task_id=task_id, database=database, access_key=access_key,
                                                           secret_key=secret_key, start_time=start_time,
                                                           celery_queue_name=celery_queue_name,
                                                           celery_routing_key=celery_routing_key)
+                else:
+                    raise Exception("cost replay not supported for agent type = {0}".format(agent_type))
+
             else:
                 result = {}
                 result["db_id"] = task_id

@@ -1,5 +1,3 @@
-#!/usr/bin/env python
-
 import sys
 import os
 
@@ -11,14 +9,23 @@ import json
 import re
 import pprint
 import time
+import uuid
+import datetime
+import tempfile
+import subprocess
+import shlex
 import argparse
 
 from databases.dynamo_db import DynamoDB
 import tasks
 from tasks import *
 
-from common.config import FlexConfig
+from common.config import CeleryConfig, JobTypes, JobDatabaseConfig, JobConfig
 import common.helper as helper
+
+import celery
+from celery.task.control import inspect
+
 
 def get_aws_credentials():
     if not os.environ.has_key("AWS_ACCESS_KEY_ID") or not os.environ.has_key("AWS_SECRET_ACCESS_KEY"):
@@ -39,7 +46,8 @@ class InvalidConfigurationError(BaseException):
 class BackendCli:
     SUPPORTED_OUTPUT_STORES = ["amazon_s3"]
     SUPPORTED_JOB_STATUS_DB_STORES = ["amazon_dynamodb"]
-    AGENT_TYPE = 'flex'
+    AGENT_TYPE = 'flex_cli'
+    INSTANCE_TYPE = 'flexvm'
 
     def __init__(self, cli_jobs_config):
         self.machines = cli_jobs_config["machines"]
@@ -63,7 +71,7 @@ class BackendCli:
             self.database = DynamoDB(secret_key=self.aws_credentials["AWS_SECRET_ACCESS_KEY"],
                                      access_key=self.aws_credentials["AWS_ACCESS_KEY_ID"])
         else:
-            raise InvalidConfigurationError("Job status database not supported!")
+            self.database = None
 
 
     def __wait_for_jobs(self, task_id_job_map, task_ids):
@@ -83,61 +91,55 @@ class BackendCli:
                     logging.info("Status = \n{0}".format(pprint.pformat(task)))
                     task_ids.remove(task_id)
 
+    def __submit_job(self, job_index, job):
+        logging.info("Preparing for  Job #{0}...".format(job_index))
+        with open(job['model_file_path']) as xml_file:
+            model_xml_doc = xml_file.read()
+
+        params = job["params"]
+        params['document'] = model_xml_doc
+        params['bucketname'] = self.output_store_info['bucket_name']
+
+        task_id = str(uuid.uuid4())
+
+        result = helper.execute_cloud_task(params=params,
+                                           agent_type=self.AGENT_TYPE,
+                                           access_key=self.aws_credentials["AWS_ACCESS_KEY_ID"],
+                                           secret_key=self.aws_credentials["AWS_SECRET_ACCESS_KEY"],
+                                           task_id=task_id,
+                                           instance_type=self.INSTANCE_TYPE,
+                                           cost_replay=False,
+                                           database=self.database)
+        if result["success"]:
+            logging.info("Job #{0} successfully ubmitted to backend.".format(job_index))
+        else:
+            logging.info("Failed to submit Job #{0} to backend.".format(job_index))
+        logging.debug("result = {0}".format(pprint.pformat(result)))
+        return result
+
     def __launch_jobs(self):
         task_ids = []
         task_id_job_map = {}
-        for index, job in enumerate(self.jobs):
-            logging.info("Preparing for  Job #{0}...".format(index))
-            with open(job['model_file_path']) as xml_file:
-                model_xml_doc = xml_file.read()
-
-            params = job["params"]
-            params['document'] = model_xml_doc
-            params['bucketname'] = self.output_store_info['bucket_name']
-
-            result = self.execute_cloud_task(params=params,
-                                             agent=self.AGENT_TYPE,
-                                             instance_type=FlexConfig.INSTANCE_TYPE,
-                                             secret_key=self.aws_credentials["AWS_SECRET_ACCESS_KEY"],
-                                             access_key=self.aws_credentials["AWS_ACCESS_KEY_ID"],
-                                             database=self.database)
-            logging.info("Job #{0} submitted to backend.".format(index))
-
-            logging.info("result = \n{0}".format(pprint.pprint(result)))
-
-            if not result["success"]:
-                logging.error("Exception:\n%s" % result["exception"])
+        for job_index, job in enumerate(self.jobs):
+            result = self.__submit_job(job_index, job)
 
             task_id = result["db_id"]
             task_ids.append(task_id)
-            task_id_job_map[task_id] = index
+            task_id_job_map[task_id] = job_index
 
         return task_id_job_map, task_ids
-
-    def execute_cloud_task(self, params, agent, access_key, secret_key,
-                           task_id=None, instance_type=None, cost_replay=False, database=None):
-        '''
-        This method instantiates celery tasks in the cloud.
-        Returns return value from celery async call and the task ID
-        '''
-        # logging.info('inside execute task for cloud : Params - %s', str(params))
-        if not database:
-            database = DynamoDB(access_key, secret_key)
-
-        result = helper.execute_cloud_task(params=params, agent=agent, access_key=access_key, secret_key=secret_key,
-                                           task_id=task_id, instance_type=instance_type, cost_replay=cost_replay,
-                                           database=database)
-        return result
-
 
     def run(self):
         self.database.createtable(self.job_status_db_store_info['table_name'])
 
-        self.prepare_machines()
-        task_id_job_map, task_ids = self.__launch_jobs()
-        self.__wait_for_jobs(task_id_job_map, task_ids)
+        if self.prepare_machines():
+            task_id_job_map, task_ids = self.__launch_jobs()
+            self.__wait_for_jobs(task_id_job_map, task_ids)
 
-        logging.info('All jobs finished!')
+            logging.info('All jobs finished!')
+
+        else:
+            logging.error("Failed to prepare machines!")
 
     def __get_preparing_commands(self):
         # These are commutative commands
@@ -150,14 +152,11 @@ class BackendCli:
         commands.append(
             'echo export AWS_SECRET_ACCESS_KEY={0} >> ~/.bashrc'.format(self.aws_credentials['AWS_SECRET_ACCESS_KEY']))
 
-        # commands.append('export STOCHKIT_HOME={0}'.format('~/stochss/StochKit/'))
-        # commands.append('export STOCHKIT_ODE={0}'.format('~/stochss/ode/'))
-
         commands.append('echo export STOCHKIT_HOME={0} >> ~/.bashrc'.format("/home/ubuntu/stochss/StochKit/"))
         commands.append('echo export STOCHKIT_ODE={0} >> ~/.bashrc'.format("/home/ubuntu/stochss/ode/"))
 
         commands.append('echo export C_FORCE_ROOT=1 >> ~/.bashrc')
-        # commands.append('echo export C_FORCE_ROOT=1 >> /home/ubuntu/.bashrc')
+        commands.append('echo export R_LIBS={0} >> ~/.bashrc'.format("/home/ubuntu/stochss/stochoptim/library"))
 
         commands.append('source ~/.bashrc')
 
@@ -171,8 +170,9 @@ class BackendCli:
 
         for machine in self.machines:
             logging.info("Starting celery on {ip}".format(ip=machine["public_ip"]))
-            success = helper.start_celery_on_vm(instance_type=FlexConfig.INSTANCE_TYPE,
+            success = helper.start_celery_on_vm(instance_type=self.INSTANCE_TYPE,
                                                 ip=machine["public_ip"],
+                                                username=machine["username"],
                                                 key_file=machine["keyfile"],
                                                 prepend_commands=commands,
                                                 agent_type=self.AGENT_TYPE)
@@ -180,82 +180,101 @@ class BackendCli:
                 raise Exception("Failure to start celery on {0}".format(machine["public_ip"]))
 
         # get all intstance types and configure the celeryconfig.py locally
-        instance_types = [FlexConfig.INSTANCE_TYPE]
+        instance_types = [self.INSTANCE_TYPE]
         helper.config_celery_queues(agent_type=self.AGENT_TYPE, instance_types=instance_types)
-
 
     def __get_queue_head_machine_info(self):
         queue_head = None
         for machine in self.machines:
             if machine["type"] == "queue-head":
                 if queue_head is not None:
-                    raise InvalidConfigurationError("There can be only one master !")
+                    raise InvalidConfigurationError("There can be only one queue head!")
                 else:
                     queue_head = machine
             elif machine["type"] == "worker":
                 pass
             else:
                 raise InvalidConfigurationError("Invalid machine type : {0} !".format(machine["type"]))
+
         if queue_head == None:
-            raise InvalidConfigurationError("Need at least one master!")
+            raise InvalidConfigurationError("Need at least one queue head!")
+
         return queue_head
+
+    def __run_prepare_script_on_vm(self, machine):
+        run_script_commands = [
+            "chmod +x ~/setup_script.sh",
+            "bash ~/setup_script.sh"
+        ]
+
+        run_script_command = ";".join(run_script_commands)
+        remote_command = "ssh -o 'UserKnownHostsFile=/dev/null' -o 'StrictHostKeyChecking=no' -i {key_file} {user}@{ip} \"{cmd}\"".format(
+            key_file=machine["keyfile"],
+            user=machine["username"],
+            ip=machine["public_ip"],
+            cmd=run_script_command)
+
+        logging.info("Remote command: {0}".format(run_script_command))
+
+        success = os.system(remote_command)
+        return success
+
+    def __copy_prepare_script_to_vm(self, machine):
+        script_commands = self.__get_preparing_commands()
+
+        if machine['type'] == 'queue-head':
+            rabbitmq_commands = []
+            rabbitmq_commands.append('sudo rabbitmqctl add_user stochss ucsb')
+            rabbitmq_commands.append(
+                'sudo rabbitmqctl set_permissions -p / stochss ".*" ".*" ".*"')
+
+            logging.info("Adding RabbitMQ commands for {0}...".format(machine['public_ip']))
+            script_command_string = '\n'.join(script_commands + rabbitmq_commands)
+
+        else:
+            script_command_string = '\n'.join(script_commands)
+
+        logging.debug("command = \n{0}".format(script_command_string))
+
+        bash_script_filename = os.path.abspath(os.path.join(os.path.dirname(__file__), "setup_script.sh"))
+        with open(bash_script_filename, 'w') as file:
+            file.write(script_command_string)
+
+        logging.debug("script =\n\n{0}\n\n".format(script_command_string))
+        remote_copy_command = \
+            "scp -o UserKnownHostsFile=/dev/null -o StrictHostKeyChecking=no -i {key_file} {bash_script_filename} {user}@{ip}:~/setup_script.sh".format(
+                key_file=machine["keyfile"],
+                user=machine["username"],
+                ip=machine["public_ip"],
+                bash_script_filename=bash_script_filename)
+
+        logging.info("Remote copy command: {0}".format(remote_copy_command))
+
+        success = os.system(remote_copy_command)
+        return success
 
     def prepare_machines(self):
         logging.info("prepare_machines: inside method with machine_info : \n%s", pprint.pformat(self.machines))
 
         queue_head = self.__get_queue_head_machine_info()
 
+        # push queue head to be the first node to be prepared
+        self.machines.remove(queue_head)
+        self.machines.insert(0, queue_head)
+
         logging.info("queue head = \n{0}".format(pprint.pformat(queue_head)))
 
         try:
-            commands = self.__get_preparing_commands()
-
             logging.info("Preparing environment on remote machines...")
             for machine in self.machines:
                 logging.info("For machine {ip}".format(ip=machine['public_ip']))
 
-                if machine['type'] == 'queue-head':
-                    rabbitmq_commands = []
-                    rabbitmq_commands.append('sudo rabbitmqctl add_user stochss ucsb')
-                    rabbitmq_commands.append(
-                        'sudo rabbitmqctl set_permissions -p / stochss ".*" ".*" ".*"')
-
-                    logging.info("Adding RabbitMQ commands for {0}...".format(machine['public_ip']))
-                    command = '\n'.join(commands + rabbitmq_commands)
-
-                else:
-                    command = '\n'.join(commands)
-
-                bash_script_filename = os.path.join(os.path.dirname(__file__), "setup_script.sh")
-                with open(bash_script_filename, 'w') as file:
-                    file.write(command)
-
-                logging.debug("script =\n{0}".format(command))
-
-                remote_copy_command = "scp -o UserKnownHostsFile=/dev/null -o StrictHostKeyChecking=no -i {key_file} {bash_script_filename} {user}@{ip}:setup_script.sh".format(
-                    key_file=machine["keyfile"],
-                    user=machine["username"],
-                    ip=machine["public_ip"],
-                    bash_script_filename=bash_script_filename)
-
-                logging.info("Remote copy command: {0}".format(remote_copy_command))
-                success = os.system(remote_copy_command)
+                success = self.__copy_prepare_script_to_vm(machine)
 
                 if success != 0:
                     raise Exception("Remote copy command failed on {ip}!".format(ip=machine['public_ip']))
 
-                commands = [
-                    "chmod +x /home/ubuntu/setup_script.sh",
-                    "bash /home/ubuntu/setup_script.sh"
-                ]
-                remote_command = "ssh -o 'UserKnownHostsFile=/dev/null' -o 'StrictHostKeyChecking=no' -i {key_file} {user}@{ip} \"{cmd}\"".format(
-                    key_file=machine["keyfile"],
-                    user=machine["username"],
-                    ip=machine["public_ip"],
-                    cmd=";".join(commands))
-
-                logging.info("Remote command: {0}".format(remote_command))
-                success = os.system(remote_command)
+                success = self.__run_prepare_script_on_vm(machine)
 
                 if success != 0:
                     raise Exception("Remote command failed on {ip}!".format(ip=machine['public_ip']))
@@ -265,21 +284,22 @@ class BackendCli:
 
             self.__configure_celery(queue_head)
 
-            return {"success": True}
+            return True
 
         except Exception, e:
             traceback.print_exc()
             logging.error("prepare_machines : exiting method with error : {0}".format(str(e)))
-            return None
+            return False
 
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
-    parser.add_argument('-s', '--settings', help="Job/Configuration Settings File (../conf/cli_jobs_config.json by default)",
+    parser.add_argument('-s', '--settings',
+                        help="Job/Configuration Settings File (../conf/cli_jobs_config.json by default)",
                         action="store", dest="config_file",
                         default=os.path.join(os.path.dirname(__file__), "..", "conf", "cli_jobs_config.json"))
     parser.add_argument('-l', '--loglevel', help="Log level (eg. debug, info, error)",
-                        action="store", dest="log_level",default="info")
+                        action="store", dest="log_level", default="info")
 
     args = parser.parse_args(sys.argv[1:])
 

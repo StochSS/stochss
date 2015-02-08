@@ -1,4 +1,12 @@
 import os
+
+class AgentTypes(object):
+    EC2 = 'ec2'
+    FLEX = 'flex'
+
+class FlexConfig(object):
+    INSTANCE_TYPE = 'flexvm'
+
 class CeleryConfig(object):
     EXCHANGE_PREFIX = "exchange_stochss"
     QUEUE_PREFIX = "queue_stochss"
@@ -36,9 +44,5 @@ class JobDatabaseConfig(object):
 class JobTypes(object):
     STOCHOPTIM = 'mcem2'
 
-class AgentTypes(object):
-    EC2 = 'ec2'
-    FLEX = 'flex'
-
-class FlexConfig(object):
-    INSTANCE_TYPE = 'flexvm'
+class JobConfig:
+    SUPPORTED_AGENT_TYPES_FOR_COST_ANALYSIS = [AgentTypes.EC2]
