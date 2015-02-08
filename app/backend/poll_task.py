@@ -16,13 +16,13 @@ def poll_task(task_id, queue_name):
         sleep(60)
     sys.stderr.write("poll_task(): Task {0} done.".format(task_id))
     # Ok its done, need to get the workers now
-    worker_names = tasks.workersConsumingFromQueue(queue_name)
+    worker_names = tasks.get_worker_list_consuming_from_queue(queue_name)
     if worker_names:
         sys.stderr.write("Rerouting workers {0} from {1} back to main queue.\n".format(worker_names, queue_name))
         # If there are still workers consuming from this queue (i.e.
         # they haven't been terminated by the alarms yet), we need
         # to reclaim them.
-        tasks.rerouteWorkers(worker_names, "celery", from_queue=queue_name)
+        tasks.reroute_workers(worker_names, "celery", from_queue=queue_name)
     return True
 
 def print_usage_and_exit():
