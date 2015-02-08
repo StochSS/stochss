@@ -457,11 +457,6 @@ class SimulatePage(BaseHandler):
             # delete the db entry
             job.delete(self)
             
-            #except Exception,e:
-            #    self.response.headers['Content-Type'] = 'application/json'
-            #    self.response.write(json.dumps({ 'status' : False,
-            #                                     'msg' : "Failed to delete job"}))
-            #    return
 
             self.response.headers['Content-Type'] = 'application/json'
             self.response.write(json.dumps({ 'status' : True,
