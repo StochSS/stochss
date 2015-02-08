@@ -175,7 +175,7 @@ def execute_cloud_cost_analysis_task(params, agent, instance_type, task_id, data
     result = {}
     result["db_id"] = task_id
 
-    params["db_table"] = JobDatabaseConfig.TABLE_NAME
+    params["db_table"] = JobDatabaseConfig.COST_ANALYSIS_TABLE_NAME
 
     data = {}
     data['status'] = "pending"
@@ -186,6 +186,7 @@ def execute_cloud_cost_analysis_task(params, agent, instance_type, task_id, data
     data['uuid'] = task_id
     taskid_prefix = '{0}_{1}_'.format(agent, instance_type)
 
+    logging.info("cost analysis task, dynamodb table: {0}".format(params["db_table"]));
     database.updateEntry(taskid_prefix + task_id, data, params["db_table"])
     cost_analysis_task = tasks.task.apply_async(args=[task_id, params, database, access_key, secret_key, taskid_prefix],
                                  queue=celery_queue_name, routing_key=celery_routing_key)
