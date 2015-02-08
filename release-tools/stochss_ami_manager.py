@@ -260,12 +260,12 @@ class AmiManager:
                                                         security_groups=self.security_groups)
 
         instance = reservation.instances[0]
+        self.instance_id = instance.id
 
         while instance.update() != "running":
             time.sleep(5)
 
         self.instance_ip = instance.ip_address
-        self.instance_id = instance.id
 
         self.__wait_until_successful_ssh()
 
