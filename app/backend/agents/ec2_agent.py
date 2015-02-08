@@ -621,7 +621,7 @@ class EC2Agent(BaseAgent):
       str(credentials['EC2_SECRET_KEY']))
 
 
-  def validate_Credentials(self, credentials):
+  def validate_credentials(self, credentials):
       try:
           conn = boto.connect_ec2(str(credentials['EC2_ACCESS_KEY']), str(credentials['EC2_SECRET_KEY']))
           conn.get_all_instances()
