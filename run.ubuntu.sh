@@ -1,5 +1,11 @@
 #!/bin/bash
 
+osname=$(uname)
+if [ "$osname" != 'Linux' ]; then
+    echo "Error: $0 runs on Linux! This is $osname"
+    exit
+fi
+
 help_message="Usage: $0 [--run] [--install]"
 
 mode="run"

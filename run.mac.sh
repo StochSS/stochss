@@ -1,5 +1,12 @@
 #!/usr/bin/env bash
 
+osname=$(uname)
+if [ "$osname" != 'Darwin' ]; then
+    echo "Error: $0 runs on Mac OSX! This is $osname"
+    exit
+fi
+
+
 # Attempt to install StochKit 2.0.10, StochOptim, and PyURDME
 #
 # Install it in the user's home folder by default

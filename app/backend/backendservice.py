@@ -7,6 +7,7 @@ from infrastructure_manager import InfrastructureManager
 import uuid
 import logging
 from tasks import *
+from boto.exception import S3ResponseError
 from boto.s3.connection import S3Connection
 from backend_handler import VMStateModel
 from databases.dynamo_db import DynamoDB
@@ -24,8 +25,7 @@ class backendservices(object):
     # Class Constants
     KEYPREFIX = 'stochss'
     QUEUEHEAD_KEY_TAG = 'queuehead'
-    INFRA_EC2 = 'ec2'
-    INFRA_CLUSTER = 'cluster'
+    INFRA_EC2 = AgentTypes.EC2
     VMSTATUS_IDS = 'ids'
 
     def __init__(self):
@@ -49,8 +49,10 @@ class backendservices(object):
         if not task_id:
             task_id = str(uuid.uuid4())
 
-        result = helper.execute_cloud_task(params=params, agent_type=agent, access_key=access_key, secret_key=secret_key,
-                                           task_id=task_id, instance_type=instance_type, cost_replay=cost_replay,
+        result = helper.execute_cloud_task(params=params, agent_type=agent,
+                                           access_key=access_key, secret_key=secret_key,
+                                           task_id=task_id, instance_type=instance_type,
+                                           cost_replay=cost_replay,
                                            database=database)
 
         return result
@@ -102,12 +104,12 @@ class backendservices(object):
 
             p = subprocess.Popen(stochkit_exec_str.split(), stdin=subprocess.PIPE)
 
-            #logging.debug("executeTaskLocal: the result of task {0} or error {1} ".format(output,error))
+            # logging.debug("executeTaskLocal: the result of task {0} or error {1} ".format(output,error))
             pid = p.pid
 
             res['pid'] = pid
             logging.debug("executeTaskLocal : PID generated - %s", pid)
-            filepath =  os.path.join('output', uuid_str)
+            filepath = os.path.join('output', uuid_str)
             absolute_file_path = os.path.abspath(filepath)
             logging.debug("executeTaskLocal : Output file - %s", absolute_file_path)
             res['output'] = absolute_file_path
@@ -213,10 +215,10 @@ class backendservices(object):
         try:
             for taskid_pair in taskids:
                 print 'deleteTasks: removing task {0}'.format(str(taskid_pair))
-                remove_task(taskid_pair[0])  #this removes task from celery queue
+                remove_task(taskid_pair[0])  # this removes task from celery queue
                 database.removetask(JobDatabaseConfig.TABLE_NAME,
                                     taskid_pair[1])
-                        #this removes task information from DB. ToDo: change the name of method
+                # this removes task information from DB. ToDo: change the name of method
             logging.info("deleteTasks: All tasks removed")
         except Exception, e:
             logging.error("deleteTasks : exiting with error : %s", str(e))
@@ -273,10 +275,9 @@ class backendservices(object):
         '''
         This method instantiates ec2 instances
         '''
-
         logging.info("startMachines : inside method with params : %s", str(params))
         try:
-            #make sure that any keynames we use are prefixed with stochss so that
+            # make sure that any keynames we use are prefixed with stochss so that
             #we can do a terminate all based on keyname prefix
             if "key_prefix" in params:
                 key_prefix = params["key_prefix"]
@@ -320,7 +321,7 @@ class backendservices(object):
                 raise Exception('VMStateModel ERROR: No credentials are provided.')
 
             if infra is None or access_key is None or secret_key is None:
-                raise Exception('VMStateModel ERROR: Either infrastracture or credetials is none.')
+                raise Exception('VMStateModel ERROR: Either infrastructure or credentials is none.')
 
             # 3. create exact number of entities in db for this launch, and set the status to 'creating'
             ids = []
@@ -341,28 +342,10 @@ class backendservices(object):
             params[VMStateModel.IDS] = ids
 
             res = i.run_instances(params, [])
-            #res = i.run_instances(params,[])
-            #            else:
-            #                # Need to start the queue head (RabbitMQ)
-            #                params["queue_head"] = True
-            #                vms_requested = int(params["num_vms"])
-            #                requested_key_name = params["keyname"]
-            #                # Only want one queue head, and it must have its own key so
-            #                # it can be differentiated if necessary
-            #                params["num_vms"] = 1
-            #                params["keyname"] = requested_key_name+'-'+self.QUEUEHEAD_KEY_TAG
-            #                res = i.run_instances(params,[])
-            #                #NOTE: This relies on the InfrastructureManager being run in blocking mode...
-            #                queue_head_ip = res["vm_info"]["public_ips"][0]
-            #                self.__update_celery_config_with_queue_head_ip(queue_head_ip)
-            #                params["keyname"] = requested_key_name
-            #                params["queue_head"] = False
-            #                if vms_requested > 1:
-            #                    params["num_vms"] = vms_requested - 1
-            #                    res = i.run_instances(params,[])
-            #                params["num_vms"] = vms_requested
             logging.info("startMachines : exiting method with result : %s", str(res))
+
             return True, None
+
         except Exception, e:
             traceback.print_exc()
             logging.error("startMachines : exiting method with error : {0}".format(str(e)))
@@ -373,8 +356,8 @@ class backendservices(object):
     def stopMachines(self, params, block=False):
         '''
         This method would terminate all the  instances associated with the account
-	that have a keyname prefixed with stochss (all instances created by the backend service)
-	params must contain credentials key/value
+	    that have a keyname prefixed with stochss (all instances created by the backend service)
+	    params must contain credentials key/value
         '''
         key_prefix = self.KEYPREFIX
         if "key_prefix" in params and not params["key_prefix"].startswith(key_prefix):
@@ -398,7 +381,7 @@ class backendservices(object):
         '''
         # add calls to the infrastructure manager for getting details of
         # machines
-        #logging.info("describeMachines : inside method with params : %s", str(params))
+        # logging.info("describeMachines : inside method with params : %s", str(params))
         key_prefix = ""
         if "key_prefix" in params:
             key_prefix = params["key_prefix"]
@@ -444,7 +427,7 @@ class backendservices(object):
         try:
             i = InfrastructureManager()
             logging.info("validateCredentials: exiting with result : %s", str(i))
-            return i.validate_Credentials(params)
+            return i.validate_credentials(params)
         except Exception, e:
             logging.error("validateCredentials: exiting with error : %s", str(e))
             return False
@@ -474,7 +457,7 @@ class backendservices(object):
                 # Try to get the bucket
                 try:
                     bucket = conn.get_bucket(bucket_name)
-                except boto.exception.S3ResponseError:
+                except S3ResponseError:
                     # If the bucket doesn't exist, neither do any of the keys
                     for key_name, job_name in output_buckets[bucket_name]:
                         result[job_name] = None
@@ -503,14 +486,13 @@ class backendservices(object):
         try:
             logging.info("fetchOutput: inside method with taskid : {0} and url {1}".format(taskid, outputurl))
             filename = "{0}.tar".format(taskid)
-            #the output directory
-            #logging.debug("fetchOutput : the name of file to be fetched : {0}".format(filename))
-            #baseurl = "https://s3.amazonaws.com/stochkitoutput/output"
-            #fileurl = "{0}/{1}".format(baseurl,filename)
+
+            logging.debug("fetchOutput : the name of file to be fetched : {0}".format(filename))
+
             logging.debug("url to be fetched : {0}".format(taskid))
-            fetchurlcmdstr = "curl --remote-name {0}".format(outputurl)
-            logging.debug("fetchOutput : Fetching file using command : {0}".format(fetchurlcmdstr))
-            os.system(fetchurlcmdstr)
+            fetch_url_cmd_str = "curl --remote-name {0}".format(outputurl)
+            logging.debug("fetchOutput : Fetching file using command : {0}".format(fetch_url_cmd_str))
+            os.system(fetch_url_cmd_str)
             if not os.path.exists(filename):
                 logging.error('unable to download file. Returning result as False')
                 return False

@@ -4,6 +4,10 @@ class AgentTypes(object):
     EC2 = 'ec2'
     FLEX = 'flex'
 
+class AWSConfig(object):
+    EC2_SETTINGS_FILENAME = os.path.abspath(os.path.join(os.path.dirname(__file__),
+                                                         '..', '..', '..', 'conf', 'ec2_config.json'))
+
 class FlexConfig(object):
     INSTANCE_TYPE = 'flexvm'
 

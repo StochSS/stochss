@@ -429,7 +429,7 @@ class InfrastructureManager:
       parameters = json.loads(parameters)
     return parameters, secret
 
-  def validate_Credentials(self, parameters):
+  def validate_credentials(self, parameters):
       """
       Validate if the creds work with IAAS
       
@@ -438,5 +438,5 @@ class InfrastructureManager:
       """
       infrastructure = parameters[self.PARAM_INFRASTRUCTURE]
       agent = self.agent_factory.create_agent(infrastructure)
-      return agent.validate_Credentials(parameters['credentials'])
+      return agent.validate_credentials(parameters['credentials'])
       

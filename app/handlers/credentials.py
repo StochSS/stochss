@@ -17,6 +17,8 @@ from backend import pricing
 from backend.databases.dynamo_db import DynamoDB
 import os
 
+from backend.common.config import AWSConfig, AgentTypes
+
 class CredentialsPage(BaseHandler):
     INS_TYPES = ["t1.micro", "m1.small", "m3.medium", "m3.large", "c3.large", "c3.xlarge"]
     HEAD_NODE_TYPES = ["c3.large", "c3.xlarge"]
@@ -192,14 +194,19 @@ class CredentialsPage(BaseHandler):
         
         # Check if the credentials are valid.
         if not self.user_data.valid_credentials:
-            result = {'status':False,'vm_status':False,'vm_status_msg':'Could not determine the status of the VMs: Invalid Credentials.'}
+            result = {'status': False,
+                      'vm_status': False,
+                      'vm_status_msg': 'Could not determine the status of the VMs: Invalid Credentials.'}
+
             context['vm_names'] = None
             context['valid_credentials']=False
             context['active_vms']=False
 
-            fake_credentials = { 'EC2_ACCESS_KEY': '', 'EC2_SECRET_KEY': '' }
+            fake_credentials = { 'EC2_ACCESS_KEY': '',
+                                 'EC2_SECRET_KEY': '' }
         else:
-            fake_credentials = { 'EC2_ACCESS_KEY': '*' * len(credentials['EC2_ACCESS_KEY']), 'EC2_SECRET_KEY': '*' * len(credentials['EC2_SECRET_KEY']) }
+            fake_credentials = { 'EC2_ACCESS_KEY': '*' * len(credentials['EC2_ACCESS_KEY']),
+                                 'EC2_SECRET_KEY': '*' * len(credentials['EC2_SECRET_KEY']) }
             
             context['valid_credentials'] = True
             all_vms = self.get_all_vms(user_id,params)
@@ -274,23 +281,29 @@ class CredentialsPage(BaseHandler):
         key_prefix = user_id
         group_random_name = key_prefix +"-"+''.join(random.choice(string.ascii_uppercase + string.digits) for x in range(6))
         
-        params ={"infrastructure":"ec2",
-             'group':group_random_name, 
-             'vms': vms_info,
-             'image_id': 'ami-3a2b6c52',
-             'key_prefix':key_prefix, #key_prefix = user_id
-             'keyname':group_random_name, 
-             'email':[user_id],
-             'credentials':credentials,
-             'use_spot_instances':False}
+        params ={
+            "infrastructure": AgentTypes.EC2,
+            'group': group_random_name,
+            'vms': vms_info,
+            'image_id': None,
+            'key_prefix': key_prefix, #key_prefix = user_id
+            'keyname': group_random_name,
+            'email': [user_id],
+            'credentials': credentials,
+            'use_spot_instances' :False
+        }
+
         # Check for AMI build by the stochss_ami_manager
         try:
-            json_config_file = os.path.join(os.path.dirname(__file__),  '..', 'conf', 'ec2_config.json')
-            with open(json_config_file) as fd:
+            with open(AWSConfig.EC2_SETTINGS_FILENAME) as fd:
                 ec2_config = json.load(fd)
                 params['image_id'] = ec2_config['ami_id']
         except Exception as e:
             logging.error(e)
+            return {
+                'status':'Failure',
+                'msg': 'Cannot load AMI config from {0}!'.format(AWSConfig.EC2_SETTINGS_FILENAME)
+            }
 
         service = backendservices()
         
@@ -305,9 +318,16 @@ class CredentialsPage(BaseHandler):
                       
         res, msg = service.startMachines(params)
         if res == True:
-            result = {'status':'Success' , 'msg': 'Successfully requested starting virtual machines. Processing request...'}
+            result = {
+                'status':'Success',
+                'msg': 'Successfully requested starting virtual machines. Processing request...'
+            }
         else:
-            result = {'status':'Failure' , 'msg': msg}
+            result = {
+                'status':'Failure',
+                'msg': msg
+            }
+
         return result
 
 
