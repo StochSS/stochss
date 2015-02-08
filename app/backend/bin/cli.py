@@ -1,3 +1,5 @@
+#!/usr/bin/env python
+
 import sys
 import os
 
@@ -52,6 +54,7 @@ class BackendCli:
     def __init__(self, cli_jobs_config):
         self.machines = cli_jobs_config["machines"]
         self.jobs = cli_jobs_config["jobs"]
+        self.output_filename = cli_jobs_config["output_filename"]
 
         if cli_jobs_config["output_store"]["type"] not in self.SUPPORTED_OUTPUT_STORES:
             raise UnsupportedError("Output store {0} not supported !".format(cli_jobs_config["output_store"]["type"]))
@@ -75,6 +78,7 @@ class BackendCli:
 
 
     def __wait_for_jobs(self, task_id_job_map, task_ids):
+        finished_tasks = []
         while True:
             if len(task_ids) == 0:
                 break
@@ -89,7 +93,10 @@ class BackendCli:
                 if task['status'] == 'finished':
                     logging.info("Job #{0} finished.".format(job_index))
                     logging.info("Status = \n{0}".format(pprint.pformat(task)))
+                    finished_tasks.append({'job_index': job_index, 'job_status': task})
                     task_ids.remove(task_id)
+
+        return finished_tasks
 
     def __submit_job(self, job_index, job):
         logging.info("Preparing for  Job #{0}...".format(job_index))
@@ -134,7 +141,10 @@ class BackendCli:
 
         if self.prepare_machines():
             task_id_job_map, task_ids = self.__launch_jobs()
-            self.__wait_for_jobs(task_id_job_map, task_ids)
+            finished_tasks = self.__wait_for_jobs(task_id_job_map, task_ids)
+
+            with open(self.output_filename, 'w') as f:
+                f.write(pprint.pformat(finished_tasks))
 
             logging.info('All jobs finished!')
 
@@ -293,13 +303,19 @@ class BackendCli:
 
 
 if __name__ == "__main__":
-    parser = argparse.ArgumentParser()
+    parser = argparse.ArgumentParser(description="StochSS Command Line Interface (CLI) for running Batched StochSS Jobs \
+                                                  on cloud virtual machines.")
     parser.add_argument('-s', '--settings',
-                        help="Job/Configuration Settings File (../conf/cli_jobs_config.json by default)",
+                        help="Job/Configuration Settings File for setting up machine info, job info, etc. \
+                              For more info, visit http://www.stochss.org/ \
+                              (Default: $STOCHSS/app/backend/conf/cli_jobs_config.json)",
                         action="store", dest="config_file",
                         default=os.path.join(os.path.dirname(__file__), "..", "conf", "cli_jobs_config.json"))
     parser.add_argument('-l', '--loglevel', help="Log level (eg. debug, info, error)",
                         action="store", dest="log_level", default="info")
+    parser.add_argument('-o', '--output', help="Output file containing job output info. \
+                                               (Default: ./stochss_cli_job_output.json)",
+                        action="store", dest="output_filename", default="./stochss_cli_job_output.json")
 
     args = parser.parse_args(sys.argv[1:])
 
@@ -322,5 +338,6 @@ if __name__ == "__main__":
     with open(args.config_file) as file:
         cli_jobs_config = json.loads(file.read())
 
+    cli_jobs_config['output_filename'] = args.output_filename
     cli = BackendCli(cli_jobs_config)
     cli.run()
