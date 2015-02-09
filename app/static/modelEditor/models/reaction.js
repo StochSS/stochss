@@ -42,6 +42,11 @@ var Reaction = State.extend({
                     reactants = 1;
                     products = 1;
                 }
+                if(this.type == 'merge')
+                {
+                    reactants = 2;
+                    products = 1;
+                }
                 if(this.type == 'dimerization')
                 {
                     reactants = 1;

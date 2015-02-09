@@ -204,12 +204,12 @@ class ModelManager():
         if not user_id:
             user_id = handler.user.user_id()
 
-        model = db.GqlQuery("SELECT * FROM StochKitModelWrapper WHERE user_id = :1 AND name = :2", user_id, modelName).get()
+        modelDb = db.GqlQuery("SELECT * FROM StochKitModelWrapper WHERE user_id = :1 AND name = :2", user_id, modelName).get()
 
-        if model == None:
+        if modelDb == None:
             return None
 
-        jsonModel = model.toJSON()
+        jsonModel = modelDb.toJSON()
         jsonModel["ownedByMe"] = modelDb.user_id == handler.user.user_id()
                 
         return jsonModel

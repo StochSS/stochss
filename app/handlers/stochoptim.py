@@ -1,5 +1,5 @@
 from stochssapp import BaseHandler
-from modeleditor import ModelManager
+from modeleditor import ModelManager, StochKitModelWrapper
 import stochss
 import exportimport
 import backend.backendservice
@@ -349,11 +349,11 @@ class StochOptimPage(BaseHandler):
     def runLocal(self, data):
         '''
         '''
-        model = ModelManager.getModel(self, data["modelID"], modelAsString = False)
+        modelDb = StochKitModelWrapper.get_by_id(data["modelID"])
 
         berniemodel = StochOptimModel()
 
-        success, msgs = berniemodel.fromStochKitModel(model["model"])
+        success, msgs = berniemodel.fromStochKitModel(modelDb.createStochKitModel())
 
         if not success:
             self.response.content_type = 'application/json'
@@ -372,7 +372,7 @@ class StochOptimPage(BaseHandler):
         job.jobName = data["jobName"]
         job.indata = json.dumps(data)
         job.outData = dataDir
-        job.modelName = model["name"]
+        job.modelName = modelDb.name
         job.resource = "local"
 
         job.status = "Running"
@@ -431,9 +431,12 @@ class StochOptimPage(BaseHandler):
     def runCloud(self, data):
         '''
         '''
-        model = ModelManager.getModel(self, data["modelID"], modelAsString = False)
+        modelDb = StochKitModelWrapper.get_by_id(data["modelID"])
+
         berniemodel = StochOptimModel()
-        success, msgs = berniemodel.fromStochKitModel(model["model"])
+
+        success, msgs = berniemodel.fromStochKitModel(modelDb.createStochKitModel())
+
         result = {
             "success": success
         }
@@ -451,7 +454,7 @@ class StochOptimPage(BaseHandler):
         job.startTime = time.strftime("%Y-%m-%d-%H-%M-%S")
         job.jobName = data["jobName"]
         job.indata = json.dumps(data)
-        job.modelName = model["name"]
+        job.modelName = modelDb.name
         job.outData = dataDir
         job.status = "Pending"
         job.resource = "cloud"
@@ -610,7 +613,9 @@ class StochOptimVisualization(BaseHandler):
         modelName = job.modelName
         proposedName = data["proposedName"]
         
-        model = ModelManager.getModelByName(self, modelName, modelAsString = False);
+        model = ModelManager.getModelByName(self, modelName);
+
+        del model["id"]
 
         if ModelManager.getModelByName(self, proposedName):
             self.response.write(json.dumps({"status" : False,
@@ -624,11 +629,14 @@ class StochOptimVisualization(BaseHandler):
 
         model["name"] = proposedName
 
-        for parameter in parameters:
-            model["model"].getParameter(parameter).value = parameters[parameter]
-            model["model"].getParameter(parameter).expression = str(parameters[parameter])
+        parameterByName = {}
+        for parameter in model["parameters"]:
+            parameterByName[parameter["name"]] = parameter
 
-        if ModelManager.createModel(self, model, modelAsString = False):
+        for parameter in parameters:
+            parameterByName[parameter]["value"] = str(parameters[parameter])
+
+        if ModelManager.updateModel(self, model):
             self.response.write(json.dumps({"status" : True,
                                             "msg" : "Model created",
                                             "url" : "/modeleditor?model_edited={0}".format(proposedName) }))

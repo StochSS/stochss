@@ -42,6 +42,11 @@ module.exports = View.extend({
                     reactants = 1;
                     products = 0;
                 }
+                if(obj.value == 'merge')
+                {
+                    reactants = 2;
+                    products = 1;
+                }
                 if(obj.value == 'change')
                 {
                     reactants = 1;
@@ -190,6 +195,11 @@ var reactants;
                     reactants = 1;
                     products = 0;
                 }
+                if(this.model.type == 'merge')
+                {
+                    reactants = 2;
+                    products = 1;
+                }
                 if(this.model.type == 'change')
                 {
                     reactants = 1;
@@ -304,6 +314,8 @@ var reactants;
         options.push(['change', emptyDiv.html()]);
         katex.render('A + A \\rightarrow B', emptyDiv[0]);
         options.push(['dimerization', emptyDiv.html()]);
+        katex.render('A + B \\rightarrow C', emptyDiv[0]);
+        options.push(['merge', emptyDiv.html()]);
         katex.render('A \\rightarrow B + C', emptyDiv[0]);
         options.push(['split', emptyDiv.html()]);
         katex.render('A + B \\rightarrow C + D', emptyDiv[0]);
