@@ -4,6 +4,7 @@ import sys
 import os
 
 sys.path.append(os.path.join(os.path.dirname(__file__), '..'))
+sys.path.append(os.path.join(os.path.dirname(__file__), '..', '..', 'lib', 'boto'))
 
 import logging
 import traceback
@@ -17,12 +18,15 @@ import tempfile
 import subprocess
 import shlex
 import argparse
+import boto
+import uuid
+import threading
 
 from databases.dynamo_db import DynamoDB
 import tasks
 from tasks import *
 
-from common.config import CeleryConfig, JobTypes, JobDatabaseConfig, JobConfig, AgentTypes
+from common.config import CeleryConfig, JobTypes, JobDatabaseConfig, JobConfig, AgentTypes, AWSConfig
 import common.helper as helper
 
 import celery
@@ -302,8 +306,185 @@ class BackendCli:
             logging.error("prepare_machines : exiting method with error : {0}".format(str(e)))
             return False
 
+class ShellCommandException(Exception):
+    pass
 
-if __name__ == "__main__":
+class ShellCommand(object):
+    def __init__(self, cmd, stdin=sys.stdin, stdout=sys.stdout, stderr=sys.stderr, verbose=False):
+        self.cmd = cmd
+        self.stdin = stdin
+        self.stdout = stdout
+        self.stderr = stderr
+        self.process = None
+        self.verbose = verbose
+
+    def run(self, timeout=None, silent=True):
+        def target():
+            if self.verbose: print 'Running... $', self.cmd
+            self.process = subprocess.Popen(self.cmd,
+                                            stdin=self.stdin,
+                                            stdout=self.stdout,
+                                            stderr=self.stderr,
+                                            shell=True)
+            self.process.communicate()
+            if self.verbose: print 'End of cmd $', self.cmd
+
+        thread = threading.Thread(target=target)
+        thread.start()
+
+        if timeout is not None:
+            thread.join(timeout)
+            if thread.is_alive():
+                if silent is False:
+                    print 'Terminating process due to timeout...'
+                self.process.terminate()
+                thread.join()
+                if silent is False:
+                    print 'Process return code =', self.process.returncode
+        else:
+            thread.join()
+            if self.process.returncode != 0:
+                raise ShellCommandException("return code = {0}".format(self.process.returncode))
+
+
+class EC2Helper(object):
+    NUM_SSH_TRIALS = 15
+    KEY_PREFIX = "stochss_cli_kp"
+
+    def __init__(self):
+        self.ec2_connection = self.__create_ec2_connection()
+
+    def __create_ec2_connection(self, aws_region='us-east-1'):
+        if os.environ.has_key('AWS_ACCESS_KEY'):
+            aws_access_key = os.environ['AWS_ACCESS_KEY']
+        else:
+            aws_access_key = raw_input("Please enter your AWS access key: ")
+
+        if os.environ.has_key('AWS_SECRET_KEY'):
+            aws_secret_key = os.environ['AWS_SECRET_KEY']
+        else:
+            aws_secret_key = raw_input("Please enter your AWS secret key: ")
+
+        return boto.ec2.connect_to_region(region_name=aws_region,
+                                          aws_access_key_id=aws_access_key,
+                                          aws_secret_access_key=aws_secret_key)
+
+    def launch_instance(self, ami_id, instance_type):
+        ec2_uuid = uuid.uuid4()
+        key_name = "{0}_{1}".format(self.KEY_PREFIX, ec2_uuid)
+        key_pair = self.ec2_connection.create_key_pair(key_name)
+
+        current_dir = os.path.dirname(os.path.abspath(__file__))
+        key_pair.save(current_dir)
+
+        key_file = os.path.join(current_dir, "{0}.pem".format(key_name))
+
+        if os.path.exists(key_file):
+            print 'Downloaded key file: {0}'.format(key_file)
+        else:
+            print "Key file: {0} doesn't exist! Exiting.".format(key_file)
+            sys.exit(1)
+
+        security_group_name = "stochss_cli_sg_{0}".format(ec2_uuid)
+        new_security_group = self.ec2_connection.create_security_group(name=security_group_name,
+                                                                       description='StochSS CLI')
+
+        new_security_group.authorize('tcp', 22, 22, '0.0.0.0/0')
+        new_security_group.authorize('tcp', 5672, 5672, '0.0.0.0/0')
+        new_security_group.authorize('tcp', 6379, 6379, '0.0.0.0/0')
+        new_security_group.authorize('tcp', 11211, 11211, '0.0.0.0/0')
+        new_security_group.authorize('tcp', 55672, 55672, '0.0.0.0/0')
+
+        print "Security group {0} successfully created with appropriate permissions.".format(new_security_group.name)
+
+        security_groups = [new_security_group.name]
+
+        print 'Trying to launch instance... [this might take a while]'
+        reservation = self.ec2_connection.run_instances(image_id=ami_id,
+                                                        key_name=key_name,
+                                                        instance_type=instance_type,
+                                                        security_groups=security_groups)
+
+        instance = reservation.instances[0]
+        instance_id = instance.id
+
+        while instance.update() != "running":
+            time.sleep(5)
+
+        instance_ip = instance.ip_address
+
+        self.__wait_until_successful_ssh(instance_id=instance_id, instance_ip=instance_ip,
+                                         key_file=key_file, user="ubuntu")
+
+        print 'Instance successfully running - ip: {0}, id: {1}, base_ami_id = {2}'.format(instance_ip,
+                                                                                           instance_id,
+                                                                                           ami_id)
+
+        print "Please add the following line to your job config file in the machines section and decide whether it'll be a worker or queue-head in the blank section"
+        machine_info = {
+            "public_ip": instance_ip,
+            "private_ip": instance_ip,
+            "username": "ubuntu",
+            "keyfile": key_file,
+            "type": "___"
+        }
+
+        print ',\n'.join(json.dumps(machine_info).split(','))
+
+    def __wait_until_successful_ssh(self, instance_id, instance_ip, user, key_file):
+        command = 'echo Instance {0} with ip {1} is up!'.format(instance_id, instance_ip)
+
+        trial = 0
+        while trial < self.NUM_SSH_TRIALS:
+            time.sleep(5)
+            print 'Trying to ssh into {0} #{1} ...'.format(instance_ip, trial + 1)
+
+            try:
+                EC2Helper.run_remote_command(user=user, ip=instance_ip, key_file=key_file, command=command)
+                print "Instance {0} with ip {1} is up!".format(instance_id, instance_ip)
+                break
+
+            except:
+                pass
+
+            trial += 1
+
+    def terminate_instances(self):
+        reservations = self.ec2_connection.get_all_instances()
+        instances = [i for r in reservations for i in r.instances]
+
+        running_cli_instances = []
+        for i in instances:
+            if i.key_name is not None and i.key_name.startswith(self.KEY_PREFIX) and i.state == 'running':
+                running_cli_instances.append(i)
+
+        instance_ids = map(lambda x: x.id, running_cli_instances)
+        if instance_ids != []:
+            terminated_instances = self.ec2_connection.terminate_instances(instance_ids)
+            for instance in terminated_instances:
+                print ('Instance {0} was terminated.'.format(instance.id))
+        else:
+            print 'No StochSS CLI instance running.'
+
+    @staticmethod
+    def get_remote_command(user, ip, key_file, command):
+        return 'ssh -o UserKnownHostsFile=/dev/null -o StrictHostKeyChecking=no -i {0} {1}@{2} "{3}"'.format(key_file, user,
+                                                                                                         ip, command)
+
+    @staticmethod
+    def run_remote_command(user, ip, key_file, command):
+        remote_cmd = EC2Helper.get_remote_command(user=user, ip=ip,
+                                             key_file=key_file,
+                                             command=command)
+        shell_cmd = ShellCommand(remote_cmd)
+        shell_cmd.run()
+
+
+def build_arg_parser():
+    with open(AWSConfig.EC2_SETTINGS_FILENAME) as f:
+        ami_info = json.loads(f.read())
+    default_ami_id = ami_info["ami_id"]
+
     parser = argparse.ArgumentParser(description="StochSS Command Line Interface (CLI) for running Batched StochSS Jobs \
                                                   on cloud virtual machines.")
     parser.add_argument('-s', '--settings',
@@ -317,6 +498,21 @@ if __name__ == "__main__":
     parser.add_argument('-o', '--output', help="Output file containing job output info. \
                                                (Default: ./stochss_cli_job_output.json)",
                         action="store", dest="output_filename", default="./stochss_cli_job_output.json")
+    parser.add_argument('--ec2-launch', help="Launch EC2 instances",
+                        action="store_true", dest="ec2_launch", default=False)
+    parser.add_argument('--ec2-type', help="EC2 instance type, used with --ec2-launch. eg. c3.large",
+                        action="store", dest="ec2_instance_type", default=None)
+    parser.add_argument('--ec2-ami-id', help="EC2 AMI id, Default: {0} used with --ec2-launch".format(default_ami_id),
+                        action="store", dest="ec2_ami_id", default=default_ami_id)
+
+    parser.add_argument('--ec2-terminate', help="Terminate previously launched EC2 instances for StochSS CLI",
+                        action="store_true", dest="ec2_terminate", default=False)
+
+    return parser
+
+
+if __name__ == "__main__":
+    parser = build_arg_parser()
 
     args = parser.parse_args(sys.argv[1:])
 
@@ -330,6 +526,22 @@ if __name__ == "__main__":
     else:
         raise Exception('Invalid Log Level = {0}!'.format(args.log_level))
     # logging.basicConfig(filename='testoutput.log', filemode='w', level=logging.DEBUG)
+
+    if args.ec2_launch:
+        if args.ec2_ami_id == None or args.ec2_instance_type == None:
+            print 'Error: Please provide ec2 ami id and/or ec2 instance type!'
+        else:
+            ec2helper = EC2Helper()
+            print 'Trying to start EC2 instance with ami id = {0}, instance type = {1} ...'.format(args.ec2_ami_id,
+                                                                                              args.ec2_instance_type)
+            ec2helper.launch_instance(ami_id=args.ec2_ami_id, instance_type=args.ec2_instance_type)
+
+        sys.exit(0)
+
+    if args.ec2_terminate:
+        ec2helper = EC2Helper()
+        ec2helper.terminate_instances()
+        sys.exit(0)
 
     logging.info("config_file = {0}".format(args.config_file))
 
