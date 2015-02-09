@@ -379,6 +379,8 @@ class BackendWorker():
         parameters      A dictionary of parameters
         reservation_id  the reservation id for the instances that are going to be spawned
         """
+        logging.info("AGENT_NAME = {0}".format(agent.AGENT_NAME))
+
         if not parameters["vms"] and 'head_node' not in parameters:
             logging.info("No vms are waiting for spawned.")
             return
@@ -492,7 +494,8 @@ class BackendWorker():
                 queue_head_ip = connected_public_ips[0]
                 utils.log('queue_head_ip: {0}'.format(queue_head_ip))
                 # celery configuration needs to be updated with the queue head ip                 
-                helper.update_celery_config_with_queue_head_ip(queue_head_ip)
+                helper.update_celery_config_with_queue_head_ip(queue_head_ip=queue_head_ip,
+                                                               agent_type=agent.AGENT_NAME)
 
             # copy celery configure to nodes.
             self.__configure_celery(agent, parameters, connected_public_ips, connected_instance_ids)

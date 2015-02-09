@@ -21,7 +21,7 @@ from tasks import TaskConfig
 
 
 def copy_celery_config_to_vm(instance_type, ip, key_file, agent_type, username):
-    celery_config_filename = CeleryConfig.CONFIG_FILENAME
+    celery_config_filename = CeleryConfig.get_config_filename(agent_type=agent_type)
     if not os.path.exists(celery_config_filename):
         raise Exception("celery config file not found: {0}".format(celery_config_filename))
 
@@ -74,7 +74,7 @@ def start_celery_on_vm(instance_type, ip, key_file, agent_type, username="ubuntu
     logging.debug("success = {0}".format(success))
     return success
 
-def update_celery_config_with_queue_head_ip(queue_head_ip):
+def update_celery_config_with_queue_head_ip(queue_head_ip, agent_type):
     '''
     Method used for updating celery config file. It should have the correct IP
     of the queue head node, which should already be running.
@@ -86,7 +86,7 @@ def update_celery_config_with_queue_head_ip(queue_head_ip):
 
     with open(CeleryConfig.CONFIG_TEMPLATE_FILENAME, 'r') as celery_config_file:
         celery_config_lines = celery_config_file.readlines()
-    with open(CeleryConfig.CONFIG_FILENAME, 'w') as celery_config_file:
+    with open(CeleryConfig.get_config_filename(agent_type=agent_type), 'w') as celery_config_file:
         for line in celery_config_lines:
             if line.strip().startswith('BROKER_URL'):
                 celery_config_file.write('BROKER_URL = "amqp://stochss:ucsb@{0}:5672/"\n'.format(queue_head_ip))
@@ -148,10 +148,10 @@ def config_celery_queues(agent_type, instance_types):
     queues_string = 'CELERY_QUEUES = ({0})'.format(', '.join(queue_list))
     logging.debug(queues_string)
 
-    with open(CeleryConfig.CONFIG_FILENAME, 'r') as f:
+    with open(CeleryConfig.get_config_filename(agent_type=agent_type), 'r') as f:
         lines = f.readlines()
 
-    f = open(CeleryConfig.CONFIG_FILENAME, 'w')
+    f = open(CeleryConfig.get_config_filename(agent_type=agent_type), 'w')
     clear_following = False
     for line in lines:
         if clear_following:

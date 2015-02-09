@@ -22,7 +22,7 @@ from databases.dynamo_db import DynamoDB
 import tasks
 from tasks import *
 
-from common.config import CeleryConfig, JobTypes, JobDatabaseConfig, JobConfig
+from common.config import CeleryConfig, JobTypes, JobDatabaseConfig, JobConfig, AgentTypes
 import common.helper as helper
 
 import celery
@@ -48,7 +48,7 @@ class InvalidConfigurationError(BaseException):
 class BackendCli:
     SUPPORTED_OUTPUT_STORES = ["amazon_s3"]
     SUPPORTED_JOB_STATUS_DB_STORES = ["amazon_dynamodb"]
-    AGENT_TYPE = 'flex_cli'
+    AGENT_TYPE = AgentTypes.FLEX_CLI
     INSTANCE_TYPE = 'flexvm'
 
     def __init__(self, cli_jobs_config):
@@ -289,7 +289,8 @@ class BackendCli:
                 if success != 0:
                     raise Exception("Remote command failed on {ip}!".format(ip=machine['public_ip']))
 
-            helper.update_celery_config_with_queue_head_ip(queue_head_ip=queue_head["public_ip"])
+            helper.update_celery_config_with_queue_head_ip(queue_head_ip=queue_head["public_ip"],
+                                                           agent_type=self.AGENT_TYPE)
             logging.info("Updated celery config with queue head ip: {0}".format(queue_head["public_ip"]))
 
             self.__configure_celery(queue_head)

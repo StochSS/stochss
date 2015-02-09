@@ -3,6 +3,7 @@ import os
 class AgentTypes(object):
     EC2 = 'ec2'
     FLEX = 'flex'
+    FLEX_CLI = 'flex_cli'
 
 class AWSConfig(object):
     EC2_SETTINGS_FILENAME = os.path.abspath(os.path.join(os.path.dirname(__file__),
@@ -19,6 +20,12 @@ class CeleryConfig(object):
     CONFIG_FILENAME = os.path.abspath(os.path.join(os.path.dirname(__file__), '..', 'celeryconfig.py'))
     CONFIG_TEMPLATE_FILENAME = os.path.abspath(os.path.join(os.path.dirname(__file__),
                                                             '..', 'celeryconfig.py.template'))
+    @staticmethod
+    def get_config_filename(agent_type):
+        if agent_type == AgentTypes.FLEX_CLI:
+            return os.path.abspath(os.path.join(os.path.dirname(__file__), '..', 'bin', 'celeryconfig.py'))
+        else:
+            return CeleryConfig.CONFIG_FILENAME
 
     @staticmethod
     def get_exchange_name(agent_type, instance_type=None):
