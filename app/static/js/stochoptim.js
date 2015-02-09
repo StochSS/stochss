@@ -425,7 +425,7 @@ StochOptim.Controller = Backbone.View.extend(
 
                 var checkboxTemplate = _.template("<input type='checkbox' value='<%= name %>'/><span>&nbsp;<%= name %>&nbsp;<span />");
 
-                var parameters = this.model.getParameters();
+                var parameters = this.model.attributes.parameters;
 
                 var initialCheckbox = undefined;
 

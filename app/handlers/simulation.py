@@ -378,12 +378,12 @@ class SimulatePage(BaseHandler):
     
     def get(self):
         # Query the datastore
-        all_models_q = db.GqlQuery("SELECT * FROM StochKitModelWrapper WHERE user_id = :1", self.user.user_id())
+        all_models_q = db.GqlQuery("SELECT * FROM StochKitModelWrapper WHERE user_id = :1 AND is_public = False", self.user.user_id())
         all_models=[]
         for q in all_models_q.run():
-            all_models.append({ "name" : q.model.name,
+            all_models.append({ "name" : q.name,
                                 "id" : q.key().id(),
-                                "units" : q.model.units,
+                                "units" : q.units,
                                 "isSpatial" : q.isSpatial })
         context = {'all_models': all_models}
         
@@ -616,7 +616,7 @@ class SimulatePage(BaseHandler):
     def runCloud(self, params):
         
         try:
-            model = StochKitModelWrapper.get_by_id(params["id"]).model
+            model = StochKitModelWrapper.get_by_id(params["id"]).createStochKitModel()
 
             if not model:
                 return {'status':False,'msg':'Failed to retrive the model to simulate.'}
@@ -779,7 +779,7 @@ class SimulatePage(BaseHandler):
             if not model:
                 return {'status':False,'msg':'Failed to retrive the model to simulate.'}
 
-            model = model.model
+            model = model.createStochKitModel()
 
             # Execute as concentration or population?
             execType = params['execType']

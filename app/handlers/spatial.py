@@ -1,5 +1,5 @@
 from stochssapp import BaseHandler
-from modeleditor import ModelManager
+from modeleditor import ModelManager, StochKitModelWrapper
 import stochss
 import exportimport
 import backend.backendservice
@@ -372,9 +372,9 @@ class SpatialPage(BaseHandler):
     def construct_pyurdme_model(self, data):
         '''
         '''
-        json_model_refs = ModelManager.getModel(self, data["id"], modelAsString = False) # data["id"] is the model id of the selected model I think
-        
-        stochkit_model_obj = json_model_refs["model"]
+        json_model_refs = ModelManager.getModel(self, data["id"]) # data["id"] is the model id of the selected model I think
+
+        stochkit_model_obj = StochKitModelWrapper.get_by_id(data["id"]).createStochKitModel()
         #print 'json_model_refs["spatial"]["mesh_wrapper_id"]:', json_model_refs["spatial"]["mesh_wrapper_id"]
         try:
             meshWrapperDb = mesheditor.MeshWrapper.get_by_id(json_model_refs["spatial"]["mesh_wrapper_id"])
@@ -391,12 +391,6 @@ class SpatialPage(BaseHandler):
             #return
             raise Exception("Mesh file inaccessible. Try another mesh")
             #TODO: if we get advanced options, we don't need a mesh
-
-        try:    
-            subdomainFileObj = fileserver.FileManager.getFile(self, meshWrapperDb.subdomainsFileId)
-            mesh_subdomain_filename = subdomainFileObj["storePath"]
-        except IOError as e:
-            mesh_subdomain_filename = None
 
         reaction_subdomain_assigments = json_model_refs["spatial"]["reactions_subdomain_assignments"]  #e.g. {'R1':[1,2,3]}
         species_subdomain_assigments = json_model_refs["spatial"]["species_subdomain_assignments"]  #e.g. {'S1':[1,2,3]}
@@ -422,21 +416,9 @@ class SpatialPage(BaseHandler):
         # timespan
         pymodel.timespan(numpy.arange(0,simulation_end_time+simulation_time_increment, simulation_time_increment))
         # subdomains
-        if mesh_subdomain_filename is not None:
-            #if we get a 'mesh_subdomain_filename' read it in and use model.set_subdomain_vector() to set the subdomain
-            try:
-                with open(mesh_subdomain_filename) as fd:
-                    input_sd = numpy.zeros(len(pymodel.mesh.coordinates()))
-                    for line in fd:
-                        ndx, val = line.split(',', 2)
-                        input_sd[int(ndx)] = int(float((val.strip())))
-                    pymodel.set_subdomain_vector(input_sd)
-            except IOError as e:
-                #self.response.write(json.dumps({"status" : False,
-                #                                "msg" : "Mesh subdomain file specified, but file not found: {0}".format(e)}))
-                #return
-                raise Exception("Mesh subdomain file specified, but file not found: {0}".format(e))
-            
+        if len(meshWrapperDb.subdomains) > 0:
+            pymodel.set_subdomain_vector(numpy.array(meshWrapperDb.subdomains))
+
         # species
         for s in stochkit_model_obj.listOfSpecies:
             pymodel.add_species(pyurdme.Species(name=s, diffusion_constant=float(species_diffusion_coefficients[s])))
@@ -462,7 +444,7 @@ class SpatialPage(BaseHandler):
             pymodel.listOfReactions[r].restrict_to = reaction_subdomain_assigments[r]
         # Initial Conditions
         # initial_conditions = json_model_refs["spatial"]["initial_conditions"] #e.g.  { ic0 : { type : "place", species : "S0",  x : 5.0, y : 10.0, z : 1.0, count : 5000 }, ic1 : { type : "scatter",species : "S0", subdomain : 1, count : 100 }, ic2 : { type : "distribute",species : "S0", subdomain : 2, count : 100 } }
-        for ic_name, ic in initial_conditions.iteritems():
+        for ic in initial_conditions:
             spec = pymodel.listOfSpecies[ic['species']]
             if ic['type'] == "place":
                 pymodel.set_initial_condition_place_near({spec:int(ic['count'])}, point=[float(ic['x']),float(ic['y']),float(ic['z'])])

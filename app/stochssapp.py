@@ -34,6 +34,23 @@ import mimetypes
 jinja_environment = jinja2.Environment(autoescape=True,
                                        loader=(jinja2.FileSystemLoader(os.path.join(os.path.dirname(__file__), 'templates')))) 
 
+
+class ObjectProperty(db.Property):
+    """  A db property to store objects. """
+
+    def get_value_for_datastore(self, model_instance):
+        result = super(ObjectProperty, self).get_value_for_datastore(model_instance)
+        result = pickle.dumps(result)
+        return db.Blob(result)
+
+    def make_value_from_datastore(self, value):
+        if value is None:
+            return None
+        return pickle.loads(value)
+
+    def empty(self, value):
+        return value is None
+
 class DictionaryProperty(db.Property):
     """  A db property to store objects. """
     
@@ -301,7 +318,7 @@ except:
 
 from handlers.exportimport import *
 from handlers.specieseditor import *
-from handlers.modeleditor import *
+import handlers.modeleditor
 from handlers.parametereditor import *
 from handlers.volumeeditor import *
 from handlers.reactioneditor import *
@@ -351,19 +368,18 @@ if 'lib' not in sys.path:
 
 app = webapp2.WSGIApplication([
                                ('/', MainPage),
-                               ('/models/list.*', ModelBackboneInterface),
+                               ('/models.*', handlers.modeleditor.ModelBackboneInterface),
+                               ('/publicModels.*', handlers.modeleditor.PublicModelBackboneInterface),
+                               ('/importFromXML.*', handlers.modeleditor.ImportFromXMLPage),
+                               ('/meshes.*', handlers.mesheditor.MeshBackboneInterface),
+                               ('/models/list.*', handlers.modeleditor.ModelBackboneInterface),
                                ('/stochkit/list.*', JobBackboneInterface),
-                               ('/convert', ModelConvertPage),
-                               ('/modeleditor/specieseditor', SpeciesEditorPage),
-                               ('/modeleditor/mesheditor', handlers.mesheditor.MeshEditorPage),
-                               ('/modeleditor/reactioneditor', ReactionEditorPage),
-                               ('/modeleditor/parametereditor', ParameterEditorPage),
-                               ('/modeleditor/volumeeditor', VolumeEditorPage),
-                               ('/modeleditor/converttopopulation', ConvertToPopulationPage),
-                               ('/modeleditor/import/fromfile', ModelEditorImportFromFilePage),
-                               ('/modeleditor/import/publiclibrary', ModelEditorImportFromLibrary),
-                               ('/modeleditor/export/tostochkit2', ModelEditorExportToStochkit2),
-                               ('/modeleditor.*', ModelEditorPage),
+                               #('/modeleditor/converttopopulation', ConvertToPopulationPage),
+                               #('/modeleditor/import/fromfile', ModelEditorImportFromFilePage),
+                               #('/modeleditor/import/publiclibrary', ModelEditorImportFromLibrary),
+                               #('/modeleditor/export/tostochkit2', ModelEditorExportToStochkit2),
+                               ('/modeleditor.*', handlers.modeleditor.ModelEditorPage),
+                               ('/publicLibrary.*', handlers.modeleditor.PublicModelPage),
                                ('/simulate',SimulatePage),
                                ('/sensitivity',SensitivityPage),
                                ('/spatial',handlers.spatial.SpatialPage),

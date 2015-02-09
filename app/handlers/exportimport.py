@@ -24,7 +24,7 @@ import fileserver
 import spatial
 from stochssapp import BaseHandler, User
 from stochss.model import *
-from stochss.stochkit import *
+import stochss.stochkit
 from stochss.examplemodels import *
 from backend.backendservice import backendservices
 
@@ -114,7 +114,7 @@ class SuperZip:
 
     def addStochKitModel(self, model):
         jsonModel = { "version" : self.version,
-                      "name" : model.model_name,
+                      "name" : model.name,
                       "user_id" : model.user_id }
 
         if model.user_id == "":
@@ -125,19 +125,22 @@ class SuperZip:
 
             meshWrapperDb = mesheditor.MeshWrapper.get_by_id(model.spatial['mesh_wrapper_id'])
             meshData = fileserver.FileManager.getFile(self, meshWrapperDb.meshFileId, noFile = False)
-            meshFileName = self.addBytes('models/data/{0}.mesh.xml'.format(model.model_name), meshData['data'])
+            meshFileName = self.addBytes('models/data/{0}.mesh.xml'.format(model.name), meshData['data'])
             jsonModel["meshFile"] = meshFileName;
-            if meshWrapperDb.subdomainsFileId:
-                subdomainsData = fileserver.FileManager.getFile(self, meshWrapperDb.subdomainsFileId, noFile = False)
-                subdomainsFileName = self.addBytes('models/data/{0}.subdomains.txt'.format(model.model_name), subdomainsData['data'])
+
+            if meshWrapperDb.subdomains:
+                subdomainsData = ''
+                for i, s in enumerate(meshWrapperDb.subdomains):
+                    subdomainsData += '{0} {1} {2}'.format(i, s, os.linesep)
+                subdomainsFileName = self.addBytes('models/data/{0}.subdomains.txt'.format(model.name), subdomainsData)
                 jsonModel["subdomainsFile"] = subdomainsFileName;
 
             jsonModel["spatial"] = model.spatial
 
-        jsonModel["units"] = model.model.units
-        jsonModel["model"] = self.addBytes('models/data/{0}.xml'.format(model.model_name), model.model.serialize())
+        jsonModel["units"] = model.units
+        jsonModel["model"] = self.addBytes('models/data/{0}.xml'.format(model.name), model.createStochKitModel().serialize())
 
-        self.addBytes('models/{0}.json'.format(model.model_name), json.dumps(jsonModel, sort_keys=True, indent=4, separators=(', ', ': ')))
+        self.addBytes('models/{0}.json'.format(model.name), json.dumps(jsonModel, sort_keys=True, indent=4, separators=(', ', ': ')))
 
     def addStochKitJob(self, job, globalOp = False):
         stochkit_job = job.stochkit_job
@@ -393,23 +396,63 @@ class SuperZip:
             meshFileId = fileserver.FileManager.createFile(handler, "meshFiles", os.path.basename(modelj["meshFile"]), meshFileData, 777)
 
             if 'subdomainsFile' in modelj:
-                subdomainsFileId = fileserver.FileManager.createFile(handler, "subdomainsFiles", os.path.basename(modelj["subdomainsFile"]), subdomainsFileData, 777)
-                
+                subdomainsData = []
+                for line in subdomainsFileData.split('\n'):
+                    line = line.strip()
+                    if len(line) == 0:
+                        continue
+                    i, subdomain = line.split()
+                    subdomainsData.append(int(subdomain))
+            
             meshDb = mesheditor.MeshWrapper()
             meshDb.userId = handler.user.user_id()
             meshDb.name = os.path.basename(modelj["meshFile"])
             meshDb.description = ""
             meshDb.meshFileId = int(meshFileId)
-            meshDb.subdomainsFileId = int(subdomainsFileId)
+            meshDb.subdomains = subdomainsData
+            meshDb.uniqueSubdomains = list(set(meshDb.subdomains))
+            meshDb.undeletable = False
             meshDb.ghost = True
         
             meshDb.put()
 
             modelj["spatial"]["mesh_wrapper_id"] = meshDb.key().id()
             modelj["isSpatial"] = True
-            
-        res = modeleditor.ModelManager.createModel(handler, modelj, rename = rename)
-        return res
+
+        names = [model['name'] for model in modeleditor.ModelManager.getModels(handler)]
+
+        name = modelj["name"]
+        if rename:
+            tmpName = name
+            while tmpName in names:
+                tmpName = name + '_' + ''.join(random.choice('abcdefghijklmnopqrztuvwxyz') for x in range(3))
+            name = tmpName
+        else:
+            if name in names:
+                raise Exception("Model name already in use")
+
+        stochKitModel = stochss.stochkit.StochMLDocument.fromString(modelj["model"]).toModel(name)
+        modelDb = modeleditor.StochKitModelWrapper.createFromStochKitModel(handler, stochKitModel)
+
+        if "isSpatial" in modelj:
+            modelDb.isSpatial = modelj["isSpatial"]
+        else:
+            modelDb.isSpatial = False
+
+        if "spatial" in modelj:
+            modelDb.spatial = modelj["spatial"]
+
+        if "is_public" in modelj:
+            modelDb.is_public = modelj["is_public"]
+        else:
+            modelDb.is_public = False
+
+        if "meshFile" in modelj:
+            modelDb.spatial['mesh_wrapper_id'] = meshDb.key().id()
+
+        modelDb.put()
+
+        return modelDb
 
     def extractStochKitJob(self, path, userId = None, handler = None, rename = None):
         jobj = json.loads(self.zipfb.read(path))
@@ -664,7 +707,7 @@ class ExportPage(BaseHandler):
             )
 
             if not globalOp:
-                models = db.GqlQuery("SELECT * FROM StochKitModelWrapper WHERE user_id = :1", self.user.user_id()).run()
+                models = db.GqlQuery("SELECT * FROM StochKitModelWrapper WHERE user_id = :1 AND is_public = False", self.user.user_id()).run()
             else:
                 models = db.GqlQuery("SELECT * FROM StochKitModelWrapper").run()
 
@@ -1077,7 +1120,7 @@ class ImportPage(BaseHandler):
 
                     rename = False
                     dbName = headers['models'][name]["name"]
-                    jobs = list(db.GqlQuery("SELECT * FROM StochKitModelWrapper WHERE user_id = :1 AND model_name = :2", userID, dbName).run())
+                    jobs = list(db.GqlQuery("SELECT * FROM StochKitModelWrapper WHERE user_id = :1 AND name = :2", userID, dbName).run())
 
                     if len(jobs) > 0:
                         otherJob = jobs[0]

@@ -62,14 +62,14 @@ Sensitivity.SelectTable = Backbone.View.extend(
             this.$el.hide();
 
             if(_.has(this, 'model')) {
-                var parameters = this.model.ParametersList.children();
+                var parameters = this.model.attributes.parameters;
 
                 var firstBoxParam = '';
 
                 for(var i = 0; i < parameters.length; i++) {
-                    var parameter = parameters.eq(i);
+                    var parameter = parameters[i];
 
-                    var id = parameter.find('Id').text();
+                    var id = parameter.name;
 
                     var html = this.rowTemplate({ name : id + ((i == parameters.length - 1) ? '' : ', ') });
 
