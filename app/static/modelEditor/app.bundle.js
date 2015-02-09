@@ -2037,8 +2037,9 @@ var PaginatedCollectionView = AmpersandView.extend({
         {
             if(model == this.subCollection.models[i])
             {
-                if(typeof(this.view.select) == 'function')
-                    this.view.select();
+                if(this.view)
+                    if(typeof(this.view.select) == 'function')
+                        this.view.select();
                 return;
             }
         }
@@ -2055,8 +2056,9 @@ var PaginatedCollectionView = AmpersandView.extend({
                     this.offset = i;
                 this.subCollection.configure( { limit : this.limit, offset : this.offset } );
                 
-                if(typeof(this.view.select) == 'function')
-                    this.view.select();
+                if(this.view)
+                    if(typeof(this.view.select) == 'function')
+                        this.view.select();
                 break;
             }
         }
@@ -2983,6 +2985,7 @@ module.exports = View.extend({
             }
         }
 
+        latexString = latexString.replace(/_/g, '\\_');
         katex.render(latexString, this.queryByHook('latex'));
     },
     //Start the removal process... Eventually events will cause this.remove to get called. We don't have to do it explicitly though
@@ -10743,8 +10746,8 @@ module.exports = CollectionView;
 },{"ampersand-class-extend":"/home/bbales2/stochssModel/app/static/modelEditor/node_modules/ampersand-view/node_modules/ampersand-collection-view/node_modules/ampersand-class-extend/ampersand-class-extend.js","backbone-events-standalone":"/home/bbales2/stochssModel/app/static/modelEditor/node_modules/ampersand-view/node_modules/ampersand-collection-view/node_modules/backbone-events-standalone/index.js","underscore":"/home/bbales2/stochssModel/app/static/modelEditor/node_modules/ampersand-view/node_modules/underscore/underscore.js"}],"/home/bbales2/stochssModel/app/static/modelEditor/node_modules/ampersand-view/node_modules/ampersand-collection-view/node_modules/ampersand-class-extend/ampersand-class-extend.js":[function(require,module,exports){
 module.exports=require("/home/bbales2/stochssModel/app/static/modelEditor/node_modules/ampersand-subcollection/node_modules/ampersand-class-extend/ampersand-class-extend.js")
 },{"/home/bbales2/stochssModel/app/static/modelEditor/node_modules/ampersand-subcollection/node_modules/ampersand-class-extend/ampersand-class-extend.js":"/home/bbales2/stochssModel/app/static/modelEditor/node_modules/ampersand-subcollection/node_modules/ampersand-class-extend/ampersand-class-extend.js"}],"/home/bbales2/stochssModel/app/static/modelEditor/node_modules/ampersand-view/node_modules/ampersand-collection-view/node_modules/backbone-events-standalone/index.js":[function(require,module,exports){
-module.exports=require("/home/bbales2/stochssModel/app/static/modelEditor/node_modules/ampersand-subcollection/node_modules/backbone-events-standalone/index.js")
-},{"/home/bbales2/stochssModel/app/static/modelEditor/node_modules/ampersand-subcollection/node_modules/backbone-events-standalone/index.js":"/home/bbales2/stochssModel/app/static/modelEditor/node_modules/ampersand-subcollection/node_modules/backbone-events-standalone/index.js"}],"/home/bbales2/stochssModel/app/static/modelEditor/node_modules/ampersand-view/node_modules/ampersand-dom-bindings/ampersand-dom-bindings.js":[function(require,module,exports){
+module.exports=require("/home/bbales2/stochssModel/app/static/modelEditor/node_modules/ampersand-state/node_modules/backbone-events-standalone/index.js")
+},{"/home/bbales2/stochssModel/app/static/modelEditor/node_modules/ampersand-state/node_modules/backbone-events-standalone/index.js":"/home/bbales2/stochssModel/app/static/modelEditor/node_modules/ampersand-state/node_modules/backbone-events-standalone/index.js"}],"/home/bbales2/stochssModel/app/static/modelEditor/node_modules/ampersand-view/node_modules/ampersand-dom-bindings/ampersand-dom-bindings.js":[function(require,module,exports){
 ;if (typeof window !== "undefined") {  window.ampersand = window.ampersand || {};  window.ampersand["ampersand-dom-bindings"] = window.ampersand["ampersand-dom-bindings"] || [];  window.ampersand["ampersand-dom-bindings"].push("3.3.3");}
 var Store = require('key-tree-store');
 var dom = require('ampersand-dom');
