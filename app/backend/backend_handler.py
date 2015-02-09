@@ -6,6 +6,11 @@ import pickle
 import urllib
 import sys
 import os
+sys.path.append(os.path.join(os.path.dirname(__file__), '..',  'lib', 'amqp'))
+sys.path.append(os.path.join(os.path.dirname(__file__), '..',  'lib', 'kombu'))
+sys.path.append(os.path.join(os.path.dirname(__file__), '..', 'lib', 'celery'))
+sys.path.append(os.path.join(os.path.dirname(__file__), '..', 'lib', 'billiard'))
+sys.path.append(os.path.join(os.path.dirname(__file__), '..', 'lib', 'anyjson'))
 import time
 import logging
 from threading import Timer
