@@ -23,6 +23,7 @@ import subprocess
 import shlex
 import argparse
 import boto
+from boto.exception import S3CreateError
 import uuid
 import threading
 
@@ -79,13 +80,35 @@ class BackendCli:
             self.aws_credentials = get_aws_credentials()
 
         self.output_store_info = cli_jobs_config["output_store"]
+
+        if self.output_store_info["type"] == "amazon_s3":
+            trial = 0
+            s3helper = S3Helper()
+            while trial < 5:
+                s3_uuid = uuid.uuid4()
+                self.output_store_info['bucket_name'] = "{0}-{1}".format(self.output_store_info['bucket_name_prefix'],
+                                                                         s3_uuid)
+                if s3helper.make_s3_bucket(self.output_store_info['bucket_name_prefix']):
+                    logging.info('bucket name = {0}'.format(self.output_store_info['bucket_name']))
+                    break
+                else:
+                    self.output_store_info['bucket_name'] = None
+                trial += 1
+
+            if self.output_store_info['bucket_name'] == None:
+                logging.error("Could not create S3 bucket!")
+                sys.exit(0)
+        else:
+            raise NotImplementedError("Only Amazon S3 is supported!")
+
+
         self.job_status_db_store_info = cli_jobs_config["job_status_db_store"]
 
         if self.job_status_db_store_info["type"] == "amazon_dynamodb":
             self.database = DynamoDB(secret_key=self.aws_credentials["AWS_SECRET_ACCESS_KEY"],
                                      access_key=self.aws_credentials["AWS_ACCESS_KEY_ID"])
         else:
-            self.database = None
+            raise NotImplementedError("Only Amazon Dynamo DB is supported!")
 
 
     def __wait_for_jobs(self, task_id_job_map, task_ids):
@@ -129,7 +152,7 @@ class BackendCli:
                                            cost_replay=False,
                                            database=self.database)
         if result["success"]:
-            logging.info("Job #{0} successfully ubmitted to backend.".format(job_index))
+            logging.info("Job #{0} successfully submitted to backend.".format(job_index))
         else:
             logging.info("Failed to submit Job #{0} to backend.".format(job_index))
         logging.debug("result = {0}".format(pprint.pformat(result)))
@@ -353,6 +376,36 @@ class ShellCommand(object):
             if self.process.returncode != 0:
                 raise ShellCommandException("return code = {0}".format(self.process.returncode))
 
+
+class S3Helper(object):
+    def __init__(self):
+        self.s3_connection = self.__create_s3_connection()
+
+    def __create_s3_connection(self):
+        if os.environ.has_key('AWS_ACCESS_KEY'):
+            aws_access_key = os.environ['AWS_ACCESS_KEY']
+        else:
+            aws_access_key = raw_input("Please enter your AWS access key: ")
+
+        if os.environ.has_key('AWS_SECRET_KEY'):
+            aws_secret_key = os.environ['AWS_SECRET_KEY']
+        else:
+            aws_secret_key = raw_input("Please enter your AWS secret key: ")
+
+        return boto.connect_s3(aws_access_key_id=aws_access_key,
+                               aws_secret_access_key=aws_secret_key)
+
+    def make_s3_bucket(self, bucket_name):
+        try:
+            self.s3_connection.create_bucket(bucket_name)
+
+        except S3CreateError:
+            traceback.print_exc()
+            return False
+
+        bucket = self.s3_connection.get_bucket(bucket_name)
+        bucket.set_acl('public-read')
+        return True
 
 class EC2Helper(object):
     NUM_SSH_TRIALS = 15

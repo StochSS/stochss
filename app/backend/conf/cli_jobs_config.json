@@ -1,7 +1,7 @@
 {
     "output_store": {
         "type" : "amazon_s3",
-        "bucket_name" : "stochss-cli-bucket"
+        "bucket_name_prefix" : "stochss-cli-bucket"
     },
     "job_status_db_store": {
         "type": "amazon_dynamodb",
@@ -9,10 +9,10 @@
     },
     "machines": [
         {
-            "public_ip": "52.0.183.189",
-            "private_ip": "52.0.183.189",
+            "public_ip": "52.0.185.215",
+            "private_ip": "52.0.185.215",
             "username": "ubuntu",
-            "keyfile": "/Users/kaos/Downloads/test-stochss-cli.pem",
+            "keyfile": "/Users/kaos/base2/stochss/app/backend/bin/stochss_cli_kp_7277454d-f426-427f-ae7f-a4d7427d59f8.pem",
             "type": "queue-head"
         }
     ],
