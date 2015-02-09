@@ -101,12 +101,6 @@ var PaginatedCollectionView = AmpersandView.extend({
             hook : 'position'
         }
     },
-    derived : {
-        whatever : {
-            deps : ['overLimit'],
-            fn : function() { console.log('whatever'); }
-        }
-    },
     updateModelCount: function()
     {
         this.modelCount = this.collection.models.length;

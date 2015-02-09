@@ -92,6 +92,7 @@ var Reaction = State.extend({
     },
     triggerChange: function()
     {
+        this.trigger('change');
         this.trigger('change:reactants');
         this.trigger('change:products');
         this.collection.parent.species.trigger('stoich-specie-change');

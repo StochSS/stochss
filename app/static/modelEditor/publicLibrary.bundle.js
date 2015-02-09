@@ -245,14 +245,20 @@ var ReactionView = View.extend({
 
         var result = $( this.queryByHook('result') );
 
+        var name = 'X';
+
+        if(this.model.rate)
+            if(this.model.rate.name)
+                name = this.model.rate.name;
+
         if(this.model.type != 'massaction' && this.model.type != 'custom')
         {
             if(typeof(factor) != 'undefined')
             {
-                katex.render(this.model.rate.name + factor, this.queryByHook('parameter'));
+                katex.render(name + factor, this.queryByHook('parameter'));
                 result.text('Successfully converted');
             } else {
-                katex.render(this.model.rate.name, this.queryByHook('parameter'));                    
+                katex.render(name, this.queryByHook('parameter'));                    
                 result.text('Failed, valid mass action, but invalid under SSA assumptions');
             }
         }
@@ -260,10 +266,10 @@ var ReactionView = View.extend({
         {
             if(typeof(factor) != 'undefined')
             {
-                katex.render(this.model.rate.name + factor, this.queryByHook('parameter'));
+                katex.render(name + factor, this.queryByHook('parameter'));
                 result.text('Successfully converted');
             } else {
-                katex.render(this.model.rate.name, this.queryByHook('parameter'));                    
+                katex.render(name, this.queryByHook('parameter'));                    
                 result.text('Failed, valid mass action, but invalid under SSA assumptions');
             }
         }
@@ -1846,12 +1852,6 @@ var PaginatedCollectionView = AmpersandView.extend({
         {
             type : 'text',
             hook : 'position'
-        }
-    },
-    derived : {
-        whatever : {
-            deps : ['overLimit'],
-            fn : function() { console.log('whatever'); }
         }
     },
     updateModelCount: function()
@@ -4044,6 +4044,7 @@ var Reaction = State.extend({
     },
     triggerChange: function()
     {
+        this.trigger('change');
         this.trigger('change:reactants');
         this.trigger('change:products');
         this.collection.parent.species.trigger('stoich-specie-change');
