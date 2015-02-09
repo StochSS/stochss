@@ -59,6 +59,22 @@
     <div>
         <div data-hook="saveMessage" class="alert alert-success"></div>
         <div data-hook="editor">
+            <div class="spatial">
+                <div class="mesh3dAccordion">
+                    <div class="accordion-group">
+                        <div class="accordion-heading">
+                            <h2><a class="accordion-toggle" data-toggle="collapse" data-parent="#mesh3dAccordion" href="#collapseMesh3d">Mesh Editor</a></h2>
+                        </div>
+                        <div id="collapseMesh3d" class="accordion-body collapse">
+                            <div class="accordion-inner">
+                                <div data-hook="mesh"></div>
+                                <hr />
+                                <div data-hook="mesh3d"></div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
             <div class="speciesAccordion">
                 <div class="accordion-group">
                     <div class="accordion-heading">
@@ -67,6 +83,20 @@
                     <div id="collapseSpecies" class="accordion-body collapse in">
                         <div class="accordion-inner">
                             <div data-hook="specie"></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="spatial">
+                <div class="initialConditionsAccordion">
+                    <div class="accordion-group">
+                        <div class="accordion-heading">
+                            <h2><a class="accordion-toggle" data-toggle="collapse" data-parent="#initialConditionsAccordion" href="#collapseInitialConditions">Initial Conditions Editor</a></h2>
+                        </div>
+                        <div id="collapseInitialConditions" class="accordion-body collapse">
+                            <div class="accordion-inner">
+                                <div data-hook="initialConditions"></div>
+                            </div>
                         </div>
                     </div>
                 </div>
@@ -91,34 +121,6 @@
                     <div id="collapseReactions" class="accordion-body collapse">
                         <div class="accordion-inner">
                             <div data-hook="reaction"></div>
-                        </div>
-                    </div>
-                </div>
-            </div>
-            <div class="spatial">
-                <div class="initialConditionsAccordion">
-                    <div class="accordion-group">
-                        <div class="accordion-heading">
-                            <h2><a class="accordion-toggle" data-toggle="collapse" data-parent="#initialConditionsAccordion" href="#collapseInitialConditions">Initial Conditions Editor</a></h2>
-                        </div>
-                        <div id="collapseInitialConditions" class="accordion-body collapse">
-                            <div class="accordion-inner">
-                                <div data-hook="initialConditions"></div>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-                <div class="mesh3dAccordion">
-                    <div class="accordion-group">
-                        <div class="accordion-heading">
-                            <h2><a class="accordion-toggle" data-toggle="collapse" data-parent="#mesh3dAccordion" href="#collapseMesh3d">Mesh Editor</a></h2>
-                        </div>
-                        <div id="collapseMesh3d" class="accordion-body collapse">
-                            <div class="accordion-inner">
-                                <div data-hook="mesh"></div>
-                                <hr />
-                                <div data-hook="mesh3d"></div>
-                            </div>
                         </div>
                     </div>
                 </div>

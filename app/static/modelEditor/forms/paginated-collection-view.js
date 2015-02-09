@@ -13,6 +13,7 @@ var PaginatedCollectionView = AmpersandView.extend({
         this.listenTo(this.collection, 'add remove', this.updateModelCount.bind(this))
 
         this.subCollection = new SubCollection(this.collection, { limit : this.limit, offset : this.offset });
+        this.subCollection.parent = this.collection.parent;
     },
     select : function(model)
     {

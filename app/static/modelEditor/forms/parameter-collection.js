@@ -67,7 +67,8 @@ var AddNewParameterForm = AmpersandFormView.extend({
 var ParameterCollectionFormView = AmpersandView.extend({
     template: "<div> \
   <div data-hook='collection'></div> \
-  Add Parameter: <form data-hook='addParametersForm'></form> \
+  <h4>Add Parameter</h4> \
+  <form data-hook='addParametersForm'></form> \
 </div>",
     initialize: function(attr, options)
     {

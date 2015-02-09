@@ -113,7 +113,8 @@ new TestForm();*/
 var SpecieCollectionFormView = AmpersandView.extend({
     template: "<div> \
   <div data-hook='collection'></div> \
-  Add Specie: <form data-hook='addSpeciesForm'></form> \
+  <h4>Add Specie</h4> \
+  <form data-hook='addSpeciesForm'></form> \
 </div>",
     initialize: function(attr, options)
     {

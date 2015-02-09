@@ -87,8 +87,8 @@ var AddNewModelForm = AmpersandFormView.extend({
 
 var ModelCollectionSelectView = AmpersandView.extend({
     template: "<div> \
-  <h3>Add Model</h3> \
   <div data-hook='modelCollection'></div> \
+  <h4>Add Model</h4> \
   <form data-hook='addModelForm'></form> \
 </div>",
     props: {
