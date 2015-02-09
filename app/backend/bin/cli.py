@@ -88,7 +88,7 @@ class BackendCli:
                 s3_uuid = uuid.uuid4()
                 self.output_store_info['bucket_name'] = "{0}-{1}".format(self.output_store_info['bucket_name_prefix'],
                                                                          s3_uuid)
-                if s3helper.make_s3_bucket(self.output_store_info['bucket_name_prefix']):
+                if s3helper.make_s3_bucket(self.output_store_info['bucket_name']):
                     logging.info('bucket name = {0}'.format(self.output_store_info['bucket_name']))
                     break
                 else:

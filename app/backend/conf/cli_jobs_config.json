@@ -9,17 +9,17 @@
     },
     "machines": [
         {
-            "public_ip": "52.0.185.215",
-            "private_ip": "52.0.185.215",
+            "public_ip": "52.0.64.45",
+            "private_ip": "52.0.64.45",
             "username": "ubuntu",
-            "keyfile": "/Users/kaos/base2/stochss/app/backend/bin/stochss_cli_kp_7277454d-f426-427f-ae7f-a4d7427d59f8.pem",
+            "keyfile": "./app/backend/bin/stochss_cli_kp_f2c7b0b4-4e7f-4d35-be1c-9aca1cea42b2.pem",
             "type": "queue-head"
         }
     ],
     "jobs": [
         {
             "job_type": "stochkit",
-            "model_file_path": "/Users/kaos/new1/stochss/examples/dimer_decay.xml",
+            "model_file_path": "./examples/dimer_decay.xml",
             "params": {
                 "job_type": "stochkit",
                 "algorithm": "ssa",
@@ -37,7 +37,7 @@
         },
         {
             "job_type": "stochkit_ode",
-            "model_file_path": "/Users/kaos/new1/stochss/examples/dimer_decay.xml",
+            "model_file_path": "./examples/dimer_decay.xml",
             "params": {
                 "job_type": "stochkit_ode",
                 "algorithm": "ssa",
@@ -55,7 +55,7 @@
         },
         {
             "job_type": "sensitivity",
-            "model_file_path": "/Users/kaos/blah/stochss/examples/dimer_decay.xml",
+            "model_file_path": "./examples/dimer_decay.xml",
             "params": {
                 "job_type": "sensitivity",
                 "paramstring": "stochkit_ode.py --sensi --parameters c1 -t 100.0 -i 100"
@@ -65,7 +65,7 @@
     "old_jobs": [
         {
             "job_type": "spatial",
-            "model_file_path": "/Users/kaos/blah/stochss/examples/spatial/simple_diffusion.xml",
+            "model_file_path": "./examples/spatial/simple_diffusion.xml",
             "params": {
                 "job_type": "spatial",
                 "paramstring": "",
