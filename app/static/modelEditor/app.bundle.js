@@ -2085,7 +2085,6 @@ var PaginatedCollectionView = AmpersandView.extend({
     },
     props: {
         value : 'object',
-        view : 'object',
         offset : 'number',
         modelCount : 'number',
         overLimit : 'boolean'
@@ -4295,16 +4294,13 @@ var Reaction = State.extend({
                         return false;
                 }
 
-                if(this.products)
+                for(var i = 0; i < products; i++)
                 {
-                    for(var i = 0; i < products; i++)
-                    {
-                        if(!this.products.at(i))
-                            return false;
-                        
-                        if(!this.products.at(i).specie)
-                            return false;
-                    }
+                    if(!this.products.at(i))
+                        return false;
+                    
+                    if(!this.products.at(i).specie)
+                        return false;
                 }
 
                 return true;
@@ -4320,10 +4316,10 @@ var Reaction = State.extend({
     },
     triggerChange: function()
     {
-        this.trigger('change');
         this.trigger('change:reactants');
         this.trigger('change:products');
         this.collection.parent.species.trigger('stoich-specie-change');
+        this.trigger('change');
     },
     initialize : function(attrs, options)
     {
@@ -10212,8 +10208,8 @@ module.exports=require("/home/bbales2/stochssModel/app/static/modelEditor/node_m
 },{"/home/bbales2/stochssModel/app/static/modelEditor/node_modules/ampersand-collection/node_modules/ampersand-class-extend/ampersand-class-extend.js":"/home/bbales2/stochssModel/app/static/modelEditor/node_modules/ampersand-collection/node_modules/ampersand-class-extend/ampersand-class-extend.js"}],"/home/bbales2/stochssModel/app/static/modelEditor/node_modules/ampersand-subcollection/node_modules/ampersand-collection-underscore-mixin/ampersand-collection-underscore-mixin.js":[function(require,module,exports){
 module.exports=require("/home/bbales2/stochssModel/app/static/modelEditor/node_modules/ampersand-rest-collection/node_modules/ampersand-collection-underscore-mixin/ampersand-collection-underscore-mixin.js")
 },{"/home/bbales2/stochssModel/app/static/modelEditor/node_modules/ampersand-rest-collection/node_modules/ampersand-collection-underscore-mixin/ampersand-collection-underscore-mixin.js":"/home/bbales2/stochssModel/app/static/modelEditor/node_modules/ampersand-rest-collection/node_modules/ampersand-collection-underscore-mixin/ampersand-collection-underscore-mixin.js"}],"/home/bbales2/stochssModel/app/static/modelEditor/node_modules/ampersand-subcollection/node_modules/backbone-events-standalone/index.js":[function(require,module,exports){
-module.exports=require("/home/bbales2/stochssModel/app/static/modelEditor/node_modules/ampersand-form-view/node_modules/backbone-events-standalone/index.js")
-},{"/home/bbales2/stochssModel/app/static/modelEditor/node_modules/ampersand-form-view/node_modules/backbone-events-standalone/index.js":"/home/bbales2/stochssModel/app/static/modelEditor/node_modules/ampersand-form-view/node_modules/backbone-events-standalone/index.js"}],"/home/bbales2/stochssModel/app/static/modelEditor/node_modules/ampersand-view/ampersand-view.js":[function(require,module,exports){
+module.exports=require("/home/bbales2/stochssModel/app/static/modelEditor/node_modules/ampersand-state/node_modules/backbone-events-standalone/index.js")
+},{"/home/bbales2/stochssModel/app/static/modelEditor/node_modules/ampersand-state/node_modules/backbone-events-standalone/index.js":"/home/bbales2/stochssModel/app/static/modelEditor/node_modules/ampersand-state/node_modules/backbone-events-standalone/index.js"}],"/home/bbales2/stochssModel/app/static/modelEditor/node_modules/ampersand-view/ampersand-view.js":[function(require,module,exports){
 ;if (typeof window !== "undefined") {  window.ampersand = window.ampersand || {};  window.ampersand["ampersand-view"] = window.ampersand["ampersand-view"] || [];  window.ampersand["ampersand-view"].push("7.2.0");}
 var State = require('ampersand-state');
 var CollectionView = require('ampersand-collection-view');
@@ -10747,8 +10743,8 @@ module.exports = CollectionView;
 },{"ampersand-class-extend":"/home/bbales2/stochssModel/app/static/modelEditor/node_modules/ampersand-view/node_modules/ampersand-collection-view/node_modules/ampersand-class-extend/ampersand-class-extend.js","backbone-events-standalone":"/home/bbales2/stochssModel/app/static/modelEditor/node_modules/ampersand-view/node_modules/ampersand-collection-view/node_modules/backbone-events-standalone/index.js","underscore":"/home/bbales2/stochssModel/app/static/modelEditor/node_modules/ampersand-view/node_modules/underscore/underscore.js"}],"/home/bbales2/stochssModel/app/static/modelEditor/node_modules/ampersand-view/node_modules/ampersand-collection-view/node_modules/ampersand-class-extend/ampersand-class-extend.js":[function(require,module,exports){
 module.exports=require("/home/bbales2/stochssModel/app/static/modelEditor/node_modules/ampersand-subcollection/node_modules/ampersand-class-extend/ampersand-class-extend.js")
 },{"/home/bbales2/stochssModel/app/static/modelEditor/node_modules/ampersand-subcollection/node_modules/ampersand-class-extend/ampersand-class-extend.js":"/home/bbales2/stochssModel/app/static/modelEditor/node_modules/ampersand-subcollection/node_modules/ampersand-class-extend/ampersand-class-extend.js"}],"/home/bbales2/stochssModel/app/static/modelEditor/node_modules/ampersand-view/node_modules/ampersand-collection-view/node_modules/backbone-events-standalone/index.js":[function(require,module,exports){
-module.exports=require("/home/bbales2/stochssModel/app/static/modelEditor/node_modules/ampersand-form-view/node_modules/backbone-events-standalone/index.js")
-},{"/home/bbales2/stochssModel/app/static/modelEditor/node_modules/ampersand-form-view/node_modules/backbone-events-standalone/index.js":"/home/bbales2/stochssModel/app/static/modelEditor/node_modules/ampersand-form-view/node_modules/backbone-events-standalone/index.js"}],"/home/bbales2/stochssModel/app/static/modelEditor/node_modules/ampersand-view/node_modules/ampersand-dom-bindings/ampersand-dom-bindings.js":[function(require,module,exports){
+module.exports=require("/home/bbales2/stochssModel/app/static/modelEditor/node_modules/ampersand-subcollection/node_modules/backbone-events-standalone/index.js")
+},{"/home/bbales2/stochssModel/app/static/modelEditor/node_modules/ampersand-subcollection/node_modules/backbone-events-standalone/index.js":"/home/bbales2/stochssModel/app/static/modelEditor/node_modules/ampersand-subcollection/node_modules/backbone-events-standalone/index.js"}],"/home/bbales2/stochssModel/app/static/modelEditor/node_modules/ampersand-view/node_modules/ampersand-dom-bindings/ampersand-dom-bindings.js":[function(require,module,exports){
 ;if (typeof window !== "undefined") {  window.ampersand = window.ampersand || {};  window.ampersand["ampersand-dom-bindings"] = window.ampersand["ampersand-dom-bindings"] || [];  window.ampersand["ampersand-dom-bindings"].push("3.3.3");}
 var Store = require('key-tree-store');
 var dom = require('ampersand-dom');

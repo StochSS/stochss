@@ -76,7 +76,6 @@ var PaginatedCollectionView = AmpersandView.extend({
     },
     props: {
         value : 'object',
-        view : 'object',
         offset : 'number',
         modelCount : 'number',
         overLimit : 'boolean'

@@ -72,16 +72,13 @@ var Reaction = State.extend({
                         return false;
                 }
 
-                if(this.products)
+                for(var i = 0; i < products; i++)
                 {
-                    for(var i = 0; i < products; i++)
-                    {
-                        if(!this.products.at(i))
-                            return false;
-                        
-                        if(!this.products.at(i).specie)
-                            return false;
-                    }
+                    if(!this.products.at(i))
+                        return false;
+                    
+                    if(!this.products.at(i).specie)
+                        return false;
                 }
 
                 return true;
@@ -97,10 +94,10 @@ var Reaction = State.extend({
     },
     triggerChange: function()
     {
-        this.trigger('change');
         this.trigger('change:reactants');
         this.trigger('change:products');
         this.collection.parent.species.trigger('stoich-specie-change');
+        this.trigger('change');
     },
     initialize : function(attrs, options)
     {
