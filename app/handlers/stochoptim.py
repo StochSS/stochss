@@ -9,6 +9,7 @@ from google.appengine.ext import db
 import copy
 import fileserver
 import json
+import sys
 import os
 import re
 import signal
@@ -161,6 +162,7 @@ class StochOptimJobWrapper(db.Model):
     outputURL = db.StringProperty()
     cloudDatabaseID = db.StringProperty()
     celeryPID = db.StringProperty()
+    pollProcessPID = db.IntegerProperty()
 
     def delete(self):
         service = backend.backendservice.backendservices()
@@ -175,7 +177,7 @@ class StochOptimJobWrapper(db.Model):
         super(StochOptimJobWrapper, self).delete()
 
     def stop(self, credentials=None):
-        if self.status == "Running":
+        if self.status == "Running" or self.status == "Pending":
             if self.resource.lower() == "local":
                 try:
                     os.killpg(self.pid, signal.SIGTERM)
@@ -226,7 +228,9 @@ class StochOptimPage(BaseHandler):
         if reqType == 'newJob':
             data = json.loads(self.request.get('data'))
 
-            job = db.GqlQuery("SELECT * FROM StochOptimJobWrapper WHERE userId = :1 AND jobName = :2", self.user.user_id(), data["jobName"].strip()).get()
+            job = db.GqlQuery("SELECT * FROM StochOptimJobWrapper WHERE userId = :1 AND jobName = :2",
+                              self.user.user_id(),
+                              data["jobName"].strip()).get()
 
             if job != None:
                 self.response.write(json.dumps({"status" : False,
@@ -272,10 +276,15 @@ class StochOptimPage(BaseHandler):
 
             if job.userId == self.user.user_id():
                 if job.resource.lower() == "cloud":
+                    try:
+                        logging.info("KILL TASK {0}".format(job.pollProcessPID))
+                        os.kill(job.pollProcessPID, signal.SIGTERM)
+                    except Exception as e:
+                        logging.error("StochOptimPage.post.stopJob(): exception during kill process: {0}".format(e))
                     if not self.user_data.valid_credentials:
                         return self.response.write(json.dumps({
                             'status': False,
-                            'msg': 'Could not stop the job '+stochkit_job.name +'. Invalid credentials.'
+                            'msg': 'Could not stop the job '+job.jobName +'. Invalid credentials.'
                         }))
                     credentials = self.user_data.getCredentials()
                     success = job.stop(credentials={
@@ -285,7 +294,7 @@ class StochOptimPage(BaseHandler):
                     if not success:
                         return self.response.write(json.dumps({
                             'status': False,
-                            'msg': 'Could not stop the job '+stochkit_job.name +'. Unexpected error.'
+                            'msg': 'Could not stop the job '+job.jobName +'. Unexpected error.'
                         }))
                 else:
                     job.stop()
@@ -483,13 +492,14 @@ class StochOptimPage(BaseHandler):
         os.environ["AWS_ACCESS_KEY_ID"] = self.user_data.getCredentials()['EC2_ACCESS_KEY']
         os.environ["AWS_SECRET_ACCESS_KEY"] = self.user_data.getCredentials()['EC2_SECRET_KEY']
         service = backend.backendservice.backendservices()
-        cloud_result = service.executeTask(cloud_params)
+        cloud_result = service.executeTask(cloud_params, "ec2", os.environ["AWS_ACCESS_KEY_ID"], os.environ["AWS_SECRET_ACCESS_KEY"])
         if not cloud_result["success"]:
             result = {
                 "success": False,
                 "msg": cloud_result["reason"]
             }
             try:
+                result["poll_process_pid"] = cloud_result["poll_process_pid"]
                 result["exception"] = cloud_result["exception"]
                 result["traceback"] = cloud_result["traceback"]
             except KeyError:
@@ -498,6 +508,7 @@ class StochOptimPage(BaseHandler):
         
         job.cloudDatabaseID = cloud_result["db_id"]
         job.celeryPID = cloud_result["celery_pid"]
+        job.pollProcessPID = int(cloud_result["poll_process_pid"])
         # job.pid = handle.pid
         job.put()
         result["job"] = job
@@ -510,6 +521,9 @@ class StochOptimVisualization(BaseHandler):
         return True
     
     def get(self, queryType = None, jobID = None):
+        
+        logging.info("JobID: {0}".format(jobID));
+        
         jobID = int(jobID)
 
         output = { "jobID" : jobID }
@@ -629,8 +643,26 @@ class StochOptimVisualization(BaseHandler):
         '''
         try:
             result = {}
-            # Grab the remote files
             service = backend.backendservice.backendservices()
+            # check if the outputURL is empty, if so, update it from the DB
+            if job_wrapper.outputURL is None:
+                logging.info("stochoptim.outputURL is None")
+                # Retrive credentials from the datastore
+                if not self.user_data.valid_credentials:
+                    return {'status':False,'msg':'Could not retrieve the status of job '+job_wrapper.jobName +'. Invalid credentials.'}
+                credentials = self.user_data.getCredentials()
+                # Check the status from backend
+                taskparams = {
+                    'AWS_ACCESS_KEY_ID': credentials['EC2_ACCESS_KEY'],
+                    'AWS_SECRET_ACCESS_KEY': credentials['EC2_SECRET_KEY'],
+                    'taskids': [job_wrapper.cloudDatabaseID]
+                }
+                task_status = service.describeTask(taskparams)
+                logging.info("job_status = task_status[job.cloudDatabaseID={0}] = {1}".format(job_wrapper.cloudDatabaseID, task_status))
+                job_status = task_status[job_wrapper.cloudDatabaseID]
+                logging.info("job_status = {0}".format(job_status))
+                job_wrapper.outputURL = job_status['output']
+            # Grab the remote files
             service.fetchOutput(job_wrapper.cloudDatabaseID, job_wrapper.outputURL)
             # Unpack it to its local output location...
             os.system('tar -xf' +job_wrapper.cloudDatabaseID+'.tar')
@@ -642,7 +674,7 @@ class StochOptimVisualization(BaseHandler):
             # Save the updated status
             job_wrapper.put()
             result['status']=True
-            result['msg'] = "Sucessfully fetched the remote output files."
+            result['msg'] = "Successfully fetched the remote output files."
         except Exception,e:
             logging.info('************************************* {0}'.format(e))
             result['status']=False

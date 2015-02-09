@@ -100,7 +100,7 @@ class BaseAgent:
     """
     raise NotImplementedError
 
-  def validate_Credentials(self, credentials):
+  def validate_credentials(self, credentials):
     """
     Terminate a set of virtual machines using the parameters given.
 

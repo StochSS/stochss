@@ -1,15 +1,17 @@
 #!/usr/bin/env python
+import sys
+import os
+sys.path.append(os.path.join(os.path.abspath(os.path.dirname(__file__)), '../app/lib/pyurdme-stochss'))
+
 import pyurdme
 import pickle
-import sys
 import os
 
 # For all solvers StochSS supports, import them here and add them to the 'supported_algorithms' dict.
 from pyurdme.nsmsolver import NSMSolver
-supported_algorithms = {'nsm':NSMSolver}
+supported_algorithms = {'nsm': NSMSolver}
 
-
-sys.path.append(os.path.join(os.path.dirname(__file__), "../app"))
+sys.path.append(os.path.join(os.path.abspath(os.path.dirname(__file__)), '../app'))
 
 input_file = sys.argv[1]
 output_dir = sys.argv[2]
@@ -34,6 +36,8 @@ print "Running model"
 results = sol.run(number_of_trajectories=int(num_runs), seed=int(seed))
 
 print "Writing out results"
+if not os.path.exists(output_dir):
+    os.system('mkdir -p {0}'.format(output_dir))
 if isinstance(results, list):
     for i,r in enumerate(results):
         with open('{0}/result{1}'.format(output_dir,i),'w') as fd:
@@ -41,6 +45,7 @@ if isinstance(results, list):
 else:
     with open('{0}/result{1}'.format(output_dir,0),'w') as fd:
         pickle.dump(results, fd)
+
 cfile = "{0}/complete".format(output_dir)
 print "writing completion file '{0}'".format(cfile)
 with open(cfile,'w') as fd:

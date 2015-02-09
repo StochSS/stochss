@@ -195,9 +195,11 @@ class StatusPage(BaseHandler):
                 job.put()
 
                 all_jobs.append({ "name" : stochkit_job.name,
+                                  "uuid": job.cloud_id, 
                                   "status" : stochkit_job.status,
                                   "resource" : stochkit_job.resource,
                                   "execType" : stochkit_job.exec_type,
+                                  "output_stored": job.output_stored,
                                   "id" : job.key().id(),
                                   "number" : number})
         
@@ -261,6 +263,9 @@ class StatusPage(BaseHandler):
                 
                 job.put()   
                 allSensJobs.append({ "name" : job.jobName,
+                                     "uuid" : job.cloudDatabaseID,
+                                     "output_stored": job.output_stored,
+                                     "resource": job.resource,
                                      "status" : job.status,
                                      "id" : job.key().id(),
                                      "number" : number})
@@ -359,6 +364,7 @@ class StatusPage(BaseHandler):
 
                 allParameterJobs.append({ "status" : job.status,
                                        "name" : job.jobName,
+                                       "resource": job.resource,
                                        "number" : number,
                                        "id" : job.key().id()})
         
@@ -409,13 +415,14 @@ class StatusPage(BaseHandler):
                                     # Update the spatial job 
                                     job.output_url = job_status['output']
                                     job.uuid = job_status['uuid']
-                                    if job.outData is None:
-                                        job.status = 'Finished'
-                                    else:
-                                        if os.path.exists("{0}/results/complete".format(job.outData)):
-                                            job.status = "Finished"
-                                        else:
-                                            job.status = "Failed"
+                                    job.status = 'Finished'
+#                                     if job.outData is None:
+#                                         job.status = 'Finished'
+#                                     else:
+#                                         if os.path.exists("{0}/results/complete".format(job.outData)):
+#                                             job.status = "Finished"
+#                                         else:
+#                                             job.status = "Failed"
                                 
                                 elif job_status['status'] == 'failed':
                                     job.status = 'Failed'
@@ -438,6 +445,9 @@ class StatusPage(BaseHandler):
 
                 allSpatialJobs.append({ "status" : job.status,
                                         "name" : job.jobName,
+                                        "uuid" : job.cloud_id,
+                                        "output_stored": job.output_stored,
+                                        "resource": job.resource,
                                         "number" : number,
                                         "id" : job.key().id()})
         
@@ -613,7 +623,7 @@ class JobOutPutPage(BaseHandler):
             stochkit_job_wrapper.put()
             
             result['status']=True
-            result['msg'] = "Sucessfully fetched the remote output files."
+            result['msg'] = "Successfully fetched the remote output files."
             
         except Exception,e:
             logging.info('************************************* {0}'.format(e))

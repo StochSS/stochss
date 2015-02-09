@@ -1,12 +1,13 @@
 # localhost should get changed to be the hostname of the 
 # head node unless its on the same physical machine
-BROKER_URL = "amqp://stochss:ucsb@0.0.0.0:5672/"
+BROKER_URL = "amqp://stochss:ucsb@0.0.0.0:5672//"
 CELERY_RESULT_BACKEND = "amqp://"
 CELERY_TASK_SERIALIZER = "pickle"
 CELERY_RESULT_SERIALIZER = "pickle"
 # Since we dont need rate limiting, disabling it will
 # give performance improvements.
 # http://celery.readthedocs.org/en/latest/userguide/tasks.html#disable-rate-limits-if-they-re-not-used
+# CELERY_REDIRECT_STDOUTS_LEVEL = "DEBUG"
 CELERY_DISABLE_RATE_LIMITS = True
 # Set Prefetch Multiplier to 1, i.e. make sure each worker
 # only tries to pick up one task at a time for each processor
@@ -18,3 +19,6 @@ CELERYD_PREFETCH_MULTIPLIER = 1
 # be bad if there is a task that always fails, e.g. always raises
 # an exception)
 # CELERY_ACKS_LATE = True
+from kombu import Queue, Exchange
+exchange = Exchange('default', type = 'direct')
+CELERY_QUEUES = (Queue('default', exchange, routing_key = 'default'),)

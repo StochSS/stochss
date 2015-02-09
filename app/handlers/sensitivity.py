@@ -51,6 +51,7 @@ class SensitivityJobWrapper(db.Model):
     celeryPID = db.StringProperty()
     outputURL = db.StringProperty()
     exceptionMessage = db.StringProperty()
+    output_stored = db.StringProperty()
 
     def delete(self):
         if self.outData:
@@ -60,6 +61,8 @@ class SensitivityJobWrapper(db.Model):
         if self.zipFileName:
             if os.path.exists(self.zipFileName):
                 os.remove(self.zipFileName)
+                
+            
 
         super(SensitivityJobWrapper, self).delete()
 
@@ -74,15 +77,18 @@ class SensitivityPage(BaseHandler):
         if reqType == "jobInfo":
             job = SensitivityJobWrapper.get_by_id(int(self.request.get('id')))
             
-            jsonJob = { "userId" : job.userId,
+            jsonJob = { "id": int(self.request.get('id')),
+                        "userId" : job.userId,
                         "jobName" : job.jobName,
                         "startTime" : job.startTime,
                         "indata" : json.loads(job.indata),
                         "outData" : job.outData,
                         "status" : job.status,
                         "resource" : job.resource,
+                        "uuid": job.cloudDatabaseID,
+                        "output_stored": job.output_stored,
                         "modelName" : job.modelName }
-
+            
             if self.user.user_id() != job.userId:
                 self.response.headers['Content-Type'] = 'application/json'
                 self.response.write(json.dumps(["Not the right user"]))
@@ -241,7 +247,12 @@ class SensitivityPage(BaseHandler):
                     "key_prefix": self.user.user_id()
                 }
                 if self.user_data.valid_credentials and backend_services.isOneOrMoreComputeNodesRunning(compute_check_params):
-                    job = self.runCloud(data)
+                    job, cloud_result = self.runCloud(data)
+                    if not job:
+                         e = cloud_result["exception"]
+                         self.response.write(json.dumps({"status" : False,
+                                            "msg" : 'Cloud execution failed: '+str(e)}))
+                         return
                 else:
                     return self.response.write(json.dumps({
                         "status": False,
@@ -339,11 +350,15 @@ class SensitivityPage(BaseHandler):
         os.environ["AWS_ACCESS_KEY_ID"] = db_credentials['EC2_ACCESS_KEY']
         os.environ["AWS_SECRET_ACCESS_KEY"] = db_credentials['EC2_SECRET_KEY']
         # Send the task to the backend
-        cloud_result = service.executeTask(params)
+        cloud_result = service.executeTask(params, "ec2", db_credentials['EC2_ACCESS_KEY'], db_credentials['EC2_SECRET_KEY'])
         # if not cloud_result["success"]:
+        if not cloud_result["success"]:
+            return None, cloud_result
+            
         job.cloudDatabaseID = cloud_result["db_id"]
         job.celeryPID = cloud_result["celery_pid"]
         job.outData = None
         job.zipFileName = None
+        job.output_stored = 'True'
         job.put()
-        return job
+        return job, None

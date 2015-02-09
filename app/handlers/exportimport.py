@@ -171,7 +171,7 @@ class SuperZip:
                         "result" : stochkit_job.result }
             # For cloud jobs, we need to include the output_url and possibly grab the results from S3
             if stochkit_job.resource == 'Cloud':
-                jsonJob["output_url"] = job.stochkit_job.output_url
+                #jsonJob["output_url"] = job.stochkit_job.output_url
                 # Only grab S3 data if user wants us to
                 #print 'globalOP', globalOp
                 if (job.name in self.stochKitJobsToDownload) or globalOp:
@@ -216,7 +216,7 @@ class SuperZip:
         
         # For cloud jobs, we need to include the output_url and possibly grab the results from S3
         if job.resource == 'cloud':
-            jsonJob["output_url"] = job.outputURL
+            #jsonJob["output_url"] = job.outputURL
             # Only grab S3 data if user wants us to
             if (job.jobName in self.stochOptimJobsToDownload) or globalOp:
                 # Grab the remote files
@@ -258,7 +258,7 @@ class SuperZip:
                 outputLocation = self.addFolder('sensitivityJobs/data/{0}'.format(job.jobName), job.outData)
                 jsonJob["outData"] = outputLocation
             elif job.resource == "cloud":
-                jsonJob["outputURL"] = job.outputURL
+                #jsonJob["outputURL"] = job.outputURL
                 # Only grab S3 data if user wants us to
                 if (job.jobName in self.sensitivityJobsToDownload) or globalOp:
                     if job.outData is None or (job.outData is not None and not os.path.exists(job.outData)):
@@ -286,16 +286,12 @@ class SuperZip:
                     "modelName" : job.modelName,
                     "indata" : json.loads(job.indata),
                     "outData" : job.outData,
-                    "resource" : job.resource,
+                    "resource" : "Local",
                     "uuid" : job.uuid,
-                    "output_url" : job.output_url,
-                    "cloudDatabaseID" : job.cloudDatabaseID,
-                    "celeryPID" : job.celeryPID,
-                    "exception_message" : job.exception_message,
                     "status" : job.status }
         
         if job.resource == "cloud":
-            jsonJob["output_url"] = job.output_url
+            #jsonJob["output_url"] = job.output_url
             # Only grab S3 data if user wants us to
             if (job.jobName in self.spatialJobsToDownload) or globalOp:
                 if job.outData is None or (job.outData is not None and not os.path.exists(job.outData)):
@@ -373,18 +369,8 @@ class SuperZip:
         job.modelName = jsonJob["modelName"] if "modelName" in jsonJob else None
         job.indata = json.dumps(jsonJob["indata"])
         job.outData = outPath
+        job.resource = "local"
         job.status = jsonJob["status"]
-
-        if 'uuid' in jsonJob:
-            job.uuid = jsonJob["uuid"]
-        if 'output_url' in jsonJob:
-            job.output_url = jsonJob["output_url"]
-        if 'cloudDatabaseID' in jsonJob:
-            job.cloudDatabaseID = jsonJob["cloudDatabaseID"]
-        if 'celeryPID' in jsonJob:
-            job.celeryPID = jsonJob["celeryPID"]
-        if 'exception_message' in jsonJob:
-            job.exception_message = jsonJob["exception_message"]
 
         job.put()
 
@@ -476,6 +462,8 @@ class SuperZip:
 
         zipPath = jobj["output_location"]
 
+        #print "output_location", zipPath
+
         if jobj["user_id"] not in [x.user_id() for x in User.query().fetch()]:
             jobj["user_id"] = handler.user.user_id()
 
@@ -483,6 +471,8 @@ class SuperZip:
             jobj["user_id"] = userId
 
         outPath = tempfile.mkdtemp(dir = "{0}/../output/".format(path))
+
+        #print "output_location", outPath
 
         for name in self.zipfb.namelist():
             if re.search('^{0}/.*$'.format(zipPath), name):
@@ -554,6 +544,7 @@ class SuperZip:
         job.indata = json.dumps(jsonJob["indata"])
         job.nameToIndex = json.dumps(jsonJob["nameToIndex"])
         job.outData = outPath
+        job.resource = "local"
         job.status = jsonJob["status"]
 
         job.put()
@@ -607,6 +598,7 @@ class SuperZip:
         job.indata = json.dumps(jsonJob["indata"])
         job.modelName = jsonJob["modelName"] if "modelName" in jsonJob else None
         job.outData = outPath
+        job.resource = "local"
         job.status = jsonJob["status"]
 
         job.put()
@@ -911,34 +903,62 @@ class ImportPage(BaseHandler):
                 job_name = cloud_job.name
                 if job_name in job_sizes:
                     # These are the relevant jobs
+                    if job_sizes[job_name] is None:
+                        size = 0
+                        no_data = True
+                    else:
+                        size = float(job_sizes[job_name])
+                        no_data = False
                     context["stochkit_jobs"].append({
                         'name': job_name,
                         'exec_type': cloud_job.stochkit_job.exec_type,
-                        'size': '{0} KB'.format(round(float(job_sizes[job_name])/1024, 1))
+                        'size': '{0} KB'.format(round(size/1024, 1)),
+                        'no_data' : no_data
                     })
             for cloud_job in sensi_jobs:
                 job_name = cloud_job.jobName
                 if job_name in job_sizes:
+                    if job_sizes[job_name] is None:
+                        size = 0
+                        no_data = True
+                    else:
+                        size = float(job_sizes[job_name])
+                        no_data = False
                     context["sensitivity_jobs"].append({
                         'name': job_name,
                         'exec_type': 'sensitivity_jobs',
-                        'size': '{0} KB'.format(round(float(job_sizes[job_name])/1024, 1))
+                        'size': '{0} KB'.format(round(size/1024, 1)),
+                        'no_data' : no_data
                     })
             for cloud_job in stochoptim_jobs:
                 job_name = cloud_job.jobName
                 if job_name in job_sizes:
+                    if job_sizes[job_name] is None:
+                        size = 0
+                        no_data = True
+                    else:
+                        size = float(job_sizes[job_name])
+                        no_data = False
                     context["stochoptim_jobs"].append({
                         'name': job_name,
                         'exec_type': 'mcem2',
-                        'size': '{0} KB'.format(round(float(job_sizes[job_name])/1024, 1))
+                        'size': '{0} KB'.format(round(size/1024, 1)),
+                        'no_data' : no_data
                     })
             for cloud_job in spatial_jobs:
                 job_name = cloud_job.jobName
                 if job_name in job_sizes:
+                    if job_sizes[job_name] is None:
+                        size = 0
+                        no_data = True
+                    else:
+                        size = float(job_sizes[job_name])
+                        no_data = False
                     context["spatial_jobs"].append({
                         'name': job_name,
                         'exec_type': 'spatial',
-                        'size': '{0} KB'.format(round(float(job_sizes[job_name])/1024, 1))
+                        'size': '{0} KB'.format(round(size/1024, 1)),
+                        'no_data' : no_data
                     })
         return self.render_response('exportimport.html', **context)
 
