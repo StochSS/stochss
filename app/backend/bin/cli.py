@@ -5,6 +5,10 @@ import os
 
 sys.path.append(os.path.join(os.path.dirname(__file__), '..'))
 sys.path.append(os.path.join(os.path.dirname(__file__), '..', '..', 'lib', 'boto'))
+sys.path.append(os.path.join(os.path.dirname(__file__), '..', '..', 'lib', 'celery'))
+sys.path.append(os.path.join(os.path.dirname(__file__), '..', '..', 'lib', 'kombu'))
+sys.path.append(os.path.join(os.path.dirname(__file__), '..', '..', 'lib', 'amqp'))
+sys.path.append(os.path.join(os.path.dirname(__file__), '..', '..', 'lib', 'billiard'))
 
 import logging
 import traceback
@@ -34,11 +38,14 @@ from celery.task.control import inspect
 
 
 def get_aws_credentials():
-    if not os.environ.has_key("AWS_ACCESS_KEY_ID") or not os.environ.has_key("AWS_SECRET_ACCESS_KEY"):
-        raise Exception("Environment variables AWS_ACCESS_KEY_ID and AWS_SECRET_ACCESS_KEY are not set!")
-
-    return {'AWS_ACCESS_KEY_ID': os.environ["AWS_ACCESS_KEY_ID"],
+    if os.environ.has_key("AWS_ACCESS_KEY_ID") and os.environ.has_key("AWS_SECRET_ACCESS_KEY"):
+        return {'AWS_ACCESS_KEY_ID': os.environ["AWS_ACCESS_KEY_ID"],
             'AWS_SECRET_ACCESS_KEY': os.environ["AWS_SECRET_ACCESS_KEY"]}
+    elif os.environ.has_key("AWS_ACCESS_KEY") and os.environ.has_key("AWS_SECRET_KEY"):
+        return {'AWS_ACCESS_KEY_ID': os.environ["AWS_ACCESS_KEY"],
+            'AWS_SECRET_ACCESS_KEY': os.environ["AWS_SECRET_KEY"]}
+
+    raise Exception("Environment variables AWS_ACCESS_KEY_ID/AWS_ACCESS_KEY and AWS_SECRET_ACCESS_KEY/AWS_SECRET_KEY are not set!")
 
 
 class UnsupportedError(BaseException):
