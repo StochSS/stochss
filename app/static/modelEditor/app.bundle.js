@@ -66491,6 +66491,13 @@ var ModelCollectionSelectView = AmpersandView.extend({
 
         this.meshCollection = attr.meshCollection;
     },
+    handleCollectionRemove: function(model, collection)
+    {
+        if(model == this.selectView.value)
+        {
+            this.selectView.select(this.collection.at(0));
+        }
+    },
     select: function()
     {
         this.selected = this.selectView.value;
@@ -66521,6 +66528,7 @@ var ModelCollectionSelectView = AmpersandView.extend({
         }), this.queryByHook('modelCollection'));
 
         this.listenToAndRun(this.selectView, 'change:value', _.bind(this.select, this));
+        this.listenToAndRun(this.collection, 'remove', _.bind(this.handleCollectionRemove, this));
 
         //this.fields.forEach( function(field) { $( field.el ).find('input').val(''); } );
         this.addForm = new AddNewModelForm(
@@ -66610,6 +66618,9 @@ module.exports = View.extend({
     },
     removeModel: function()
     {
+        if(!confirm("Are you sure you want to delete this model?"))
+            return;
+
         var saveMessageDom = $( '[data-hook="saveMessage"]' );
 
         //this.model.collection.remove(this.model);

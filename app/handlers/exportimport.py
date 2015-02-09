@@ -399,7 +399,7 @@ class SuperZip:
                 subdomainsData = []
                 for line in subdomainsFileData.split('\n'):
                     line = line.strip()
-                    if len(line) == 0:
+                    if len(line) != 2:
                         continue
                     i, subdomain = line.split(',')
                     subdomainsData.append(int(float(subdomain)))
