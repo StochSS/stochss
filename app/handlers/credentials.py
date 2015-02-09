@@ -77,10 +77,6 @@ class CredentialsPage(BaseHandler):
             if 'compute_power' in params:   
                 if params['compute_power'] == 'small':
                      head_node = {"instance_type": 't1.micro', "num_vms": 1}
-#                 elif params['compute_power'] == 'medium':
-#                      head_node = {"instance_type": 'c3.xlarge', "num_vms": 1}
-#                 elif params['compute_power'] == 'large':
-#                      head_node = {"instance_type": 'c3.2xlarge', "num_vms": 1}
                 else:
                     result = {'status': 'Failure' , 'msg': 'Unknown instance type.'}
                     all_numbers_correct = False
@@ -267,11 +263,7 @@ class CredentialsPage(BaseHandler):
         else:
             try:
                 service = backendservices()
-#                 params = {
-#                     "infrastructure": service.INFRA_EC2,
-#                     "credentials": credentials,
-#                     "key_prefix": service.KEYPREFIX + user_id
-#                 }
+
                 result = service.describeMachinesFromDB(params)
                 return result
             except:
@@ -280,7 +272,7 @@ class CredentialsPage(BaseHandler):
     def start_vms(self, user_id, credentials, head_node, vms_info):
         key_prefix = user_id
         group_random_name = key_prefix +"-"+''.join(random.choice(string.ascii_uppercase + string.digits) for x in range(6))
-        
+
         params ={
             "infrastructure": AgentTypes.EC2,
             'group': group_random_name,

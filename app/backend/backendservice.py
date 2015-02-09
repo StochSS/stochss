@@ -7,8 +7,11 @@ from infrastructure_manager import InfrastructureManager
 import uuid
 import logging
 from tasks import *
+
+import boto
 from boto.exception import S3ResponseError
 from boto.s3.connection import S3Connection
+
 from backend_handler import VMStateModel
 from databases.dynamo_db import DynamoDB
 
@@ -41,7 +44,6 @@ class backendservices(object):
                     instance_type=None, cost_replay=False, database=None):
         if not database:
             database = DynamoDB(access_key, secret_key)
-
         if not agent:
             agent = AgentTypes.EC2
 
@@ -341,7 +343,18 @@ class backendservices(object):
 
             params[VMStateModel.IDS] = ids
 
-            res = i.run_instances(params, [])
+            res = i.run_instances(params,[])
+            
+            # check if dynamodb stochss table exists
+            database = DynamoDB(access_key, secret_key)
+            dynamo = boto.connect_dynamodb(access_key, secret_key)
+            if not database.tableexists(dynamo, JobDatabaseConfig.TABLE_NAME):
+                results = database.createtable(JobDatabaseConfig.TABLE_NAME)
+                if results:
+                    logging.info("creating table {0}".format(JobDatabaseConfig.TABLE_NAME))
+                else:
+                    logging.error("FAILED on creating table {0}".format(JobDatabaseConfig.TABLE_NAME))
+
             logging.info("startMachines : exiting method with result : %s", str(res))
 
             return True, None
@@ -382,6 +395,7 @@ class backendservices(object):
         # add calls to the infrastructure manager for getting details of
         # machines
         # logging.info("describeMachines : inside method with params : %s", str(params))
+
         key_prefix = ""
         if "key_prefix" in params:
             key_prefix = params["key_prefix"]
@@ -500,3 +514,4 @@ class backendservices(object):
         except Exception, e:
             logging.error("fetchOutput : exiting with error : %s", str(e))
             return False
+

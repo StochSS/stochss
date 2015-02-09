@@ -730,13 +730,3 @@ def get_worker_list_consuming_from_queue(from_queue):
                 worker_names.append(worker_name)
     return worker_names
 
-    #def describeTask():
-    #    i = celery.control.inspect()
-    #    print type(i)
-    #    print dir(i)
-    #    print str(i.active_queues())
-    #    print str(i.registered_tasks())
-    #    print str(i.stats())
-    #    #print str(i.registered())
-    #    #print str(i.active())
-    #    #print str(i.scheduled())

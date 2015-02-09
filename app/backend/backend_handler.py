@@ -404,16 +404,10 @@ class BackendWorker():
                 requested_key_name = parameters["keyname"]
 
                 # get the largest instance_type and let it to be queue head
-                #                 vms = parameters["vms"]
-                #                 vm = vms[len(vms)-1]
-                head_node = parameters['head_node']
+                head_node = parameters['head_node']                
                 parameters["instance_type"] = head_node["instance_type"]
                 parameters["num_vms"] = 1
                 num_vms = 1
-                #                 vm["num_vms"] = vm["num_vms"] - 1
-                #
-                #                 if vm["num_vms"] == 0:
-                #                     vms.remove(vm)
 
                 # Only want one queue head, and it must have its own key so
                 # it can be differentiated if necessary
@@ -669,7 +663,7 @@ class BackendWorker():
         commands.append('export AWS_SECRET_ACCESS_KEY={0}'.format(str(credentials['EC2_SECRET_KEY'])))
 
         for ip, ins_id in zip(public_ips, instance_ids):
-            #self.__wait_for_ssh_connection(key_file, ip)
+            # helper.wait_for_ssh_connection(key_file, ip)
             ins_type = VMStateModel.get_instance_type(params, ins_id)
             success = helper.start_celery_on_vm(instance_type=ins_type, ip=ip, key_file=key_file,
                                                 agent_type=AgentTypes.EC2,
@@ -706,7 +700,6 @@ class BackendWorker():
 
         params['key_prefix'] = self.KEYPREFIX
         try:
-            # logging.info('key_prefix: {0}'.format(params['key_prefix']))
             all_vms = agent.describe_instances(params, params['key_prefix'])
             if all_vms == None:
                 logging.info('No vms are found.')
