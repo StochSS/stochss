@@ -95,7 +95,7 @@ var ParameterCollectionFormView = AmpersandView.extend({
         this.selectView = this.renderSubview( new PaginatedCollectionView( {
             template : collectionTemplate,
             collection : this.collection,
-            view : ParameterFormView,
+            viewModel : ParameterFormView,
             limit : 10
         }), this.queryByHook('collection'));
 

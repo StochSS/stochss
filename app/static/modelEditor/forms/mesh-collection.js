@@ -313,7 +313,7 @@ var MeshCollectionSelectView = AmpersandView.extend({
         this.selectView = this.renderSubview( new PaginatedCollectionView( {
             template : collectionTemplate,
             collection : this.collection,
-            view : MeshSelectView,
+            viewModel : MeshSelectView,
             limit : 10
         }), this.queryByHook('meshTable'));
 

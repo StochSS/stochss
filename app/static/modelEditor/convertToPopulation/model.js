@@ -20,7 +20,8 @@ module.exports = View.extend({
         this.volume = 1.0;
     },
     events : {
-        "click [data-hook=finishConvertButton]" : "clickConvertToPopulation"
+        "click [data-hook=finishConvertToPopulationButton]" : "clickConvertToPopulation",
+        "click [data-hook=cancelConvertToPopulationButton]" : "clickCancel"
     },
     // Gotta have a few of these functions just so this works as a form view
     // This gets called when things update
@@ -32,7 +33,11 @@ module.exports = View.extend({
     },
     clickConvertToPopulation : function()
     {
-        $( '[data-hook=convertToPopulationLink]' ).trigger('click');
+        this.parent.convertToPopulation();
+    },
+    clickCancel : function()
+    {
+        this.parent.cancelConvertToPopulation();
     },
     update: function(element)
     {

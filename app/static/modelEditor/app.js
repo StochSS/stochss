@@ -26,6 +26,24 @@ var PrimaryView = View.extend({
 
         $( "[data-hook='exportToPublic']" ).click(_.bind(this.exportModel, this));
         $( "[data-hook='exportToZip']" ).click(_.bind(this.exportModelAsZip, this));
+
+        $( '[data-hook="duplicateLink"]' ).click( _.bind( function() {
+            this.modelEditor.duplicateModel();
+        }, this ) );
+        $( '[data-hook="convertToPopulationLink"]' ).click( _.bind( function() {
+            this.modelEditor.convertToPopulation();
+        }, this ) );
+        $( '[data-hook="convertToSpatialLink"]' ).click( _.bind( function() {
+            this.modelEditor.convertToSpatial();
+        }, this ) );
+    },
+    remove : function()
+    {
+        $( '[data-hook="duplicateLink"]' ).off( 'click' );
+        $( '[data-hook="convertToPopulationLink"]' ).off( 'click' );
+        $( '[data-hook="convertToSpatialLink"]' ).off( 'click' );
+
+        PrimaryView.prototype.remove.apply(this, arguments);
     },
     selectModel: function()
     {

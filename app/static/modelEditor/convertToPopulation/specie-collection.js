@@ -28,7 +28,7 @@ var SpecieCollectionView = View.extend({
         this.selectView = this.renderSubview( new PaginatedCollectionView( {
             template : collectionTemplate,
             collection : this.collection,
-            view : SpecieView,
+            viewModel : SpecieView,
             parent : this,
             limit : 10
         }), this.queryByHook('speciesTable'));

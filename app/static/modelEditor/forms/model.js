@@ -95,6 +95,15 @@ module.exports = View.extend({
             this.render();
         }
     },
+    cancelConvertToPopulation: function()
+    {
+        if(this.state == 'converting') {
+            this.state = 'concentration';
+
+            this.remove();
+            this.render();
+        }
+    },
     convertToSpatial: function()
     {
         if(this.state == 'population')

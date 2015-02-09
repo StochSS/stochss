@@ -7,10 +7,10 @@ var PaginatedCollectionView = AmpersandView.extend({
         AmpersandView.prototype.initialize.call(this, attr, options);
 
         this.limit = attr.limit;
-        this.view = attr.view;
+        this.viewModel = attr.viewModel;
         this.offset = 0;
 
-        this.listenToAndRun(this.collection, 'add remove', this.updateModelCount.bind(this))
+        this.listenTo(this.collection, 'add remove', this.updateModelCount.bind(this))
 
         this.subCollection = new SubCollection(this.collection, { limit : this.limit, offset : this.offset });
     },
@@ -20,15 +20,15 @@ var PaginatedCollectionView = AmpersandView.extend({
             return;
 
         this.value = model;
+        this.view = this.subCollectionViews._getViewByModel(model);
 
         //Search for model in current selection
         for(var i = 0; i < this.subCollection.models.length; i++)
         {
             if(model == this.subCollection.models[i])
             {
-                var view = this.subCollectionViews._getViewByModel(model);
-                if(typeof(view.select) == 'function')
-                    view.select();
+                if(typeof(this.view.select) == 'function')
+                    this.view.select();
                 return;
             }
         }
@@ -45,9 +45,8 @@ var PaginatedCollectionView = AmpersandView.extend({
                     this.offset = i;
                 this.subCollection.configure( { limit : this.limit, offset : this.offset } );
                 
-                var view = this.subCollectionViews._getViewByModel(model);
-                if(typeof(view.select) == 'function')
-                    view.select();
+                if(typeof(this.view.select) == 'function')
+                    this.view.select();
                 break;
             }
         }
@@ -76,6 +75,7 @@ var PaginatedCollectionView = AmpersandView.extend({
     },
     props: {
         value : 'object',
+        view : 'object',
         offset : 'number',
         modelCount : 'number',
         overLimit : 'boolean'
@@ -101,20 +101,29 @@ var PaginatedCollectionView = AmpersandView.extend({
             hook : 'position'
         }
     },
+    derived : {
+        whatever : {
+            deps : ['overLimit'],
+            fn : function() { console.log('whatever'); }
+        }
+    },
     updateModelCount: function()
     {
         this.modelCount = this.collection.models.length;
 
+        this.overLimit = !(this.collection.models.length > this.limit);
         this.overLimit = this.collection.models.length > this.limit;
     },
     render: function()
     {
         AmpersandView.prototype.render.apply(this, arguments);
 
-        this.subCollectionViews = this.renderCollection(this.subCollection, this.view, this.el.querySelector('[data-hook=table]'));
+        this.subCollectionViews = this.renderCollection(this.subCollection, this.viewModel, this.el.querySelector('[data-hook=table]'));
         
         if(this.collection.models.length > 0)
             this.select(this.collection.models[0]);
+
+        this.updateModelCount();
 
         return this;
     }

@@ -181,7 +181,7 @@ var ReactionCollectionFormView = AmpersandView.extend({
         this.selectView = this.renderSubview( new PaginatedCollectionView({
             template : collectionTemplate,
             collection : this.collection,
-            view : ReactionFormView,
+            viewModel : ReactionFormView,
             limit : 10
         }), this.queryByHook('collection'));
 

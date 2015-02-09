@@ -125,21 +125,11 @@ var ModelCollectionSelectView = AmpersandView.extend({
         this.selectView = this.renderSubview(new PaginatedCollectionView({
             template : collectionTemplate,
             collection : this.collection,
-            view : ModelSelectView,
+            viewModel : ModelSelectView,
             limit : 10
         }), this.queryByHook('modelCollection'));
 
         this.listenToAndRun(this.selectView, 'change:value', _.bind(this.select, this));
-
-        $( '[data-hook="duplicateLink"]' ).click( _.bind( function() {
-            this.selected.trigger('duplicateLink');
-        }, this ) );
-        $( '[data-hook="convertToPopulationLink"]' ).click( _.bind( function() {
-            this.selected.trigger('convertToPopulationLink');
-        }, this ) );
-        $( '[data-hook="convertToSpatialLink"]' ).click( _.bind( function() {
-            this.selected.trigger('convertToSpatialLink');
-        }, this ) );
 
         //this.fields.forEach( function(field) { $( field.el ).find('input').val(''); } );
         this.addForm = new AddNewModelForm(

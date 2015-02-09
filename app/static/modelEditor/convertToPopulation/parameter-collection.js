@@ -28,7 +28,7 @@ var ParameterCollectionFormView = View.extend({
         this.selectView = this.renderSubview( new PaginatedCollectionView( {
             template : collectionTemplate,
             collection : this.collection,
-            view : ParameterView,
+            viewModel : ParameterView,
             parent : this,
             limit : 10
         }), this.queryByHook('parametersTable'));

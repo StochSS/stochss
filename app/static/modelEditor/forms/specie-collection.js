@@ -141,7 +141,7 @@ var SpecieCollectionFormView = AmpersandView.extend({
         this.selectView = this.renderSubview( new PaginatedCollectionView( {
             template : collectionTemplate,
             collection : this.collection,
-            view : SpecieFormView,
+            viewModel : SpecieFormView,
             limit : 10
         }), this.queryByHook('collection'));
 
