@@ -403,16 +403,10 @@ class BackendWorker():
                 requested_key_name = parameters["keyname"]
                 
                 # get the largest instance_type and let it to be queue head
-#                 vms = parameters["vms"]
-#                 vm = vms[len(vms)-1]
                 head_node = parameters['head_node']                
                 parameters["instance_type"] = head_node["instance_type"]
                 parameters["num_vms"] = 1
                 num_vms = 1
-#                 vm["num_vms"] = vm["num_vms"] - 1
-#                 
-#                 if vm["num_vms"] == 0:
-#                     vms.remove(vm)
                 
                 # Only want one queue head, and it must have its own key so
                 # it can be differentiated if necessary
@@ -709,10 +703,6 @@ class BackendWorker():
         # PyURDME must be run inside a 'screen' terminal as part of the FEniCS code depends on the ability to write to the process' terminal, screen provides this terminal.
         #celerycmd = "sudo screen -d -m bash -c '{1}{0}'\n".format(start_celery_str,command)
         
-#         celery = CelerySingleton()
-#         celery.add_queue(CELERY_QUEUE_EC2, 
-#                          CELERY_EXCHANGE_EC2, 
-#                          CELERY_ROUTING_KEY_EC2)
         
         for ip, ins_id in zip(public_ips, instance_ids):
             #self.__wait_for_ssh_connection(keyfile, ip)
@@ -827,37 +817,7 @@ class BackendWorker():
         logging.info('Timeout waiting to connect to node via SSH.')
         return False
     
-    
-#     def __start_celery_vis_ssh(self, reservation, params):
-#         # Even the queue head gets a celery worker
-#         # NOTE: We only need to use the -n argument to celery command if we are starting
-#         #       multiple workers on the same machine. Instead, we are starting one worker
-#         #       per machine and letting that one worker execute one task per core, using
-#         #       the configuration in celeryconfig.py to ensure that Celery detects the
-#         #       number of cores and enforces this desired behavior.
-#         
-#         credentials = params['credentials']
-#         python_path = "source /home/ubuntu/.bashrc;export PYTHONPATH=/home/ubuntu/pyurdme/:/home/ubuntu/stochss/app/;"
-#         python_path+='export AWS_ACCESS_KEY_ID={0};'.format(str(credentials['EC2_ACCESS_KEY']))
-#         python_path+='export AWS_SECRET_ACCESS_KEY={0};'.format( str(credentials['EC2_SECRET_KEY']))
-#         start_celery_str = "celery -A tasks worker --autoreload --loglevel=info --workdir /home/ubuntu > /home/ubuntu/celery.log 2>&1"
-#         # PyURDME must be run inside a 'screen' terminal as part of the FEniCS code depends on the ability to write to the process' terminal, screen provides this terminal.
-#         celerycmd = "sudo screen -d -m bash -c '{1}{0}'\n".format(start_celery_str,python_path)
-#         #print "reservation={0}".format(reservation)
-#         #print "params={0}".format(params)
-#         keyfile = "{0}/../{1}.key".format(os.path.dirname(__file__),params['keyname'])
-#         #logging.info("keyfile = {0}".format(keyfile))
-#         if not os.path.exists(keyfile):
-#             raise Exception("ssh keyfile file not found: {0}".format(keyfile))
-#         for ip in reservation['vm_info']['public_ips']:
-#             self.__wait_for_ssh_connection(keyfile, ip)
-#             cmd = "ssh -o StrictHostKeyChecking=no -i {0} ubuntu@{1} \"{2}\"".format(keyfile, ip, celerycmd)
-#             logging.info(cmd)
-#             success = os.system(cmd)
-#             if success == 0:
-#                 logging.info("celery started on {0}".format(ip))
-#             else:
-#                 raise Exception("Failure to start celery on {0}".format(ip))
+
             
 
     def __is_queue_head_running(self, agent, params):
@@ -875,7 +835,6 @@ class BackendWorker():
 
         params['key_prefix'] = self.KEYPREFIX           
         try:
-#             logging.info('key_prefix: {0}'.format(params['key_prefix']))
             all_vms = agent.describe_instances(params, params['key_prefix'])
             if all_vms == None:
                 logging.info('No vms are found.')

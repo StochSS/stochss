@@ -9,6 +9,7 @@ import os, subprocess, shlex, signal, uuid, sys, time
 import logging, traceback
 from datetime import datetime
 from tasks import *
+import boto
 from boto.s3.connection import S3Connection
 import celery
 from celery.task.control import inspect
@@ -252,13 +253,7 @@ class backendservices():
                     data['agent'] = agent
                     data['instance_type'] = instance_type
                     data['uuid'] = taskid
-#                     data = {
-#                             'status': "pending",
-#                             'start_time': timenow.strftime('%Y-%m-%d %H:%M:%S'),
-#                             'Message': "Task sent to Cloud",
-#                             'agent': agent,
-#                             'instance_type': instance_type
-#                     }
+
                     taskid_prefix = agent+"_"+instance_type+"_"
                     
                     database.updateEntry(taskid_prefix+taskid, data, params["db_table"])
@@ -570,26 +565,18 @@ class backendservices():
             
             
             res = i.run_instances(params,[])
-            #res = i.run_instances(params,[])
-#            else:
-#                # Need to start the queue head (RabbitMQ)
-#                params["queue_head"] = True
-#                vms_requested = int(params["num_vms"])
-#                requested_key_name = params["keyname"]
-#                # Only want one queue head, and it must have its own key so
-#                # it can be differentiated if necessary
-#                params["num_vms"] = 1
-#                params["keyname"] = requested_key_name+'-'+self.QUEUEHEAD_KEY_TAG
-#                res = i.run_instances(params,[])
-#                #NOTE: This relies on the InfrastructureManager being run in blocking mode...
-#                queue_head_ip = res["vm_info"]["public_ips"][0]
-#                self.__update_celery_config_with_queue_head_ip(queue_head_ip)
-#                params["keyname"] = requested_key_name
-#                params["queue_head"] = False
-#                if vms_requested > 1:
-#                    params["num_vms"] = vms_requested - 1
-#                    res = i.run_instances(params,[])
-#                params["num_vms"] = vms_requested
+            
+            # check if dynamodb stochss table exists
+            database = DynamoDB(access_key, secret_key)
+            dynamo=boto.connect_dynamodb(access_key, secret_key)
+            if not database.tableexists(dynamo, backendservices.TABLENAME):
+                results = database.createtable(backendservices.TABLENAME)
+                if results:
+                    logging.info("create table {0}".format(backendservices.TABLENAME))
+                else:
+                    logging.error("FAILED on creating table {0}".format(backendservices.TABLENAME))
+            
+            
             logging.info("startMachines : exiting method with result : %s", str(res))
             return True, None
         except Exception, e:
@@ -627,7 +614,6 @@ class backendservices():
         '''
         # add calls to the infrastructure manager for getting details of
         # machines
-        #logging.info("describeMachines : inside method with params : %s", str(params))
         key_prefix = ""
         if "key_prefix" in params:
             key_prefix = params["key_prefix"]
@@ -748,13 +734,4 @@ class backendservices():
             logging.error("fetchOutput : exiting with error : %s", str(e))
             return False
 
-
-################## tests #############################
-class bcolors:
-    HEADER = '\033[95m'
-    OKBLUE = '\033[94m'
-    OKGREEN = '\033[92m'
-    WARNING = '\033[93m' #yellow
-    FAIL = '\033[91m'
-    ENDC = '\033[0m'
 

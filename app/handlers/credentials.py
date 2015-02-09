@@ -75,10 +75,6 @@ class CredentialsPage(BaseHandler):
             if 'compute_power' in params:   
                 if params['compute_power'] == 'small':
                      head_node = {"instance_type": 't1.micro', "num_vms": 1}
-#                 elif params['compute_power'] == 'medium':
-#                      head_node = {"instance_type": 'c3.xlarge', "num_vms": 1}
-#                 elif params['compute_power'] == 'large':
-#                      head_node = {"instance_type": 'c3.2xlarge', "num_vms": 1}
                 else:
                     result = {'status': 'Failure' , 'msg': 'Unknown instance type.'}
                     all_numbers_correct = False
@@ -260,11 +256,7 @@ class CredentialsPage(BaseHandler):
         else:
             try:
                 service = backendservices()
-#                 params = {
-#                     "infrastructure": service.INFRA_EC2,
-#                     "credentials": credentials,
-#                     "key_prefix": service.KEYPREFIX + user_id
-#                 }
+
                 result = service.describeMachinesFromDB(params)
                 return result
             except:
@@ -278,7 +270,7 @@ class CredentialsPage(BaseHandler):
              'group':group_random_name, 
              'vms': vms_info,
              'image_id': 'ami-a26924ca',
-             'key_prefix':key_prefix, #key_prefix = user_id
+             'key_prefix':key_prefix, 
              'keyname':group_random_name, 
              'email':[user_id],
              'credentials':credentials,

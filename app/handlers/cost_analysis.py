@@ -21,13 +21,6 @@ ALL_INSTANCE_TYPES = ['t1.micro', 'm1.small', 'm3.medium', 'm3.large', 'c3.large
 
 def get_all_jobs_time_cost(uuid, access_key, secret_key):
     
-#     dynamo=boto.connect_dynamodb(aws_access_key_id=access_key, aws_secret_access_key=secret_key)
-#     tables = dynamo.list_tables()
-#     if "stochss_cost_analysis" in tables:
-#         table = dynamo.get_table("stochss_cost_analysis")
-#         results = table.scan(scan_filter={'uuid' :condition.EQ(uuid)})
-#     else:
-#         results = {}
     database = DynamoDB(access_key, secret_key)
     results = database.getEntry('uuid', uuid, "stochss_cost_analysis")
              
