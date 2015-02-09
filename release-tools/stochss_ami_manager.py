@@ -5,7 +5,10 @@ __email__ = 'dnath@cs.ucsb.edu'
 
 import sys
 import os
+
+sys.path.append(os.path.join(os.path.dirname(__file__),  '..', 'app', 'backend'))
 sys.path.append(os.path.join(os.path.dirname(__file__),  '..', 'app', 'lib', 'boto'))
+
 import boto.ec2
 import time
 import uuid
@@ -18,6 +21,7 @@ import pprint
 import argparse
 import glob
 
+from common.config import AWSConfig
 
 class ShellCommandException(Exception):
     pass
@@ -608,12 +612,12 @@ if __name__ == '__main__':
                         dest="ami_id")
     parser.add_argument('-b', '--branch', help="StochSS Git branch name (overridden)", action="store",
                         dest="git_branch")
-    parser.add_argument('-p', '--publish', help="Update the StochSS config to use the new AMI", action="store_true",\
+    parser.add_argument('-p', '--publish', help="Update the StochSS config to use the new AMI", action="store_true",
                         dest="publish",  default=False)
     parser.add_argument('-f', '--configfile', help="Configuration Settings File, \
-                                                  (Default: $STOCHSS/conf/ec2_config.json).",
+                                                  (Default: {0}).".format(AWSConfig.EC2_SETTINGS_FILENAME),
                         action="store", dest="stochss_ami_config_filename",
-                        default=os.path.join(os.path.dirname(__file__), "../conf/ec2_config.json"))
+                        default=AWSConfig.EC2_SETTINGS_FILENAME)
     parser.add_argument('--enable-old-ami-layout', help="Enable Old StochSS AMI layout.",
                         dest="enable_old_ami_layout", action="store_true", default=False)
 

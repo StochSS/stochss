@@ -763,7 +763,7 @@ class SimulatePage(BaseHandler):
             stochkit_job_db.output_stored = 'True'
             stochkit_job_db.cloud_id = taskid
             stochkit_job_db.put()
-            result = {'status':True,'msg':'Job submitted sucessfully.'}
+            result = {'status':True,'msg':'Job submitted successfully.'}
                 
         except Exception,e:
             result = {'status':False,'msg':'Cloud execution failed: '+str(e)}       
@@ -876,7 +876,7 @@ class SimulatePage(BaseHandler):
             stochkit_job_db.modelName = model.name
             stochkit_job_db.put()
     
-            result = {'status':True,'msg':'Job submitted sucessfully'}
+            result = {'status':True,'msg':'Job submitted successfully'}
             
         except None:#Exception,e:
             raise e
