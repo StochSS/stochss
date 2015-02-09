@@ -1,5 +1,24 @@
 #!/bin/bash
 
+help_message="Usage: $0 [--run] [--install]"
+
+mode="run"
+if [ $# -ge 2 ]; then
+    echo "Error: $0 takes at most 1 argument."
+    echo "$help_message"
+    exit
+elif [ $# -eq 1 ]; then
+    if [ "$1" = "--run" ]; then
+        mode="run"
+    elif [ "$1" = "--install" ]; then
+        mode="install"
+    else
+        echo "Error: Invalid argument '$1'!"
+        echo "$help_message"
+        exit
+    fi
+fi
+
 # Attempt to install StochKit 2.0.11
 #
 # Install it in the user's home folder by default
@@ -456,6 +475,9 @@ echo "$STOCHKIT_ODE" >> "$STOCHSS_HOME/conf/config"
 echo -n "$STOCHOPTIM" >> "$STOCHSS_HOME/conf/config"
 echo "Done!"
 
-export PATH=$PATH:$STOCHKIT_HOME
+if [ "$mode" = "run" ]; then
+    echo "Running StochSS..."
+    export PATH=$PATH:$STOCHKIT_HOME
+    exec python "$STOCHSS_HOME/launchapp.py" $0
+fi
 
-exec python "$STOCHSS_HOME/launchapp.py" $0

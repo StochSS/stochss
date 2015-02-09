@@ -9,6 +9,7 @@ import os, subprocess, shlex, signal, uuid, sys, time
 import logging, traceback
 from datetime import datetime
 from tasks import *
+import boto
 from boto.s3.connection import S3Connection
 import celery
 from celery.task.control import inspect
@@ -30,9 +31,6 @@ class backendservices():
     QUEUEHEAD_KEY_TAG = 'queuehead'
     INFRA_EC2 = 'ec2'
     INFRA_CLUSTER = 'cluster'
-    WORKER_AMIS = {
-        INFRA_EC2: 'ami-f28bc89a'
-    }
     VMSTATUS_IDS = 'ids'
 
     def __init__(self):
@@ -521,8 +519,6 @@ class backendservices():
             # NOTE: We need to make sure that the RabbitMQ server is running if any compute
             # nodes are running as we are using the AMQP broker option for Celery.
 
-
-
             ins_ids = VMStateModel.terminate_not_active(params)
             
             # 2. get credentials
@@ -737,4 +733,5 @@ class backendservices():
         except Exception, e:
             logging.error("fetchOutput : exiting with error : %s", str(e))
             return False
+
 

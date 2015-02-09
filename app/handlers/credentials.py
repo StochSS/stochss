@@ -18,8 +18,6 @@ from backend.databases.dynamo_db import DynamoDB
 import os
 
 class CredentialsPage(BaseHandler):
-    """
-    """
     INS_TYPES = ["t1.micro", "m1.small", "m3.medium", "m3.large", "c3.large", "c3.xlarge"]
     HEAD_NODE_TYPES = ["c3.large", "c3.xlarge"]
     
@@ -92,11 +90,11 @@ class CredentialsPage(BaseHandler):
                         if int(params[num_type]) > 20:
                             result = {'status': 'Failure' , 'msg': 'Number of new vms should be no more than 20.'}
                             all_numbers_correct = False
-                            break;
+                            break
                         elif int(params[num_type]) <= 0:
                             result = {'status': 'Failure' , 'msg': 'Number of new vms should be at least 1.'}
                             all_numbers_correct = False
-                            break;
+                            break
                         else:
                             vms.append({"instance_type": type, "num_vms": int(params[num_type])})                   
 
@@ -121,7 +119,7 @@ class CredentialsPage(BaseHandler):
                 stopped = service.stopMachines(terminate_params,True) #True means blocking, ie wait for success (its pretty quick)
                 if not stopped:
                     raise
-                result = {'status': True, 'msg': 'Sucessfully terminated all running VMs.'}
+                result = {'status': True, 'msg': 'Successfully terminated all running VMs.'}
             except Exception,e:
                 result = {'status': False, 'msg': 'Failed to terminate the VMs. Please check their status in the EC2 managment consol available from your Amazon account.'}
             finally:
@@ -268,16 +266,24 @@ class CredentialsPage(BaseHandler):
         key_prefix = user_id
         group_random_name = key_prefix +"-"+''.join(random.choice(string.ascii_uppercase + string.digits) for x in range(6))
         
-                
         params ={"infrastructure":"ec2",
              'group':group_random_name, 
              'vms': vms_info,
-             'image_id': 'ami-3a2b6c52',
+             'image_id': 'ami-a26924ca',
              'key_prefix':key_prefix, 
              'keyname':group_random_name, 
              'email':[user_id],
              'credentials':credentials,
              'use_spot_instances':False}
+        # Check for AMI build by the stochss_ami_manager
+        try:
+            json_config_file = os.path.join(os.path.dirname(__file__),  '..', 'conf', 'ec2_config.json')
+            with open(json_config_file) as fd:
+                ec2_config = json.load(fd)
+                params['image_id'] = ec2_config['ami_id']
+        except Exception as e:
+            logging.error(e)
+
         service = backendservices()
         
         if not service.isOneOrMoreComputeNodesRunning(params):
@@ -291,7 +297,7 @@ class CredentialsPage(BaseHandler):
                       
         res, msg = service.startMachines(params)
         if res == True:
-            result = {'status':'Success' , 'msg': 'Sucessfully requested starting virtual machines. Processing request...'}
+            result = {'status':'Success' , 'msg': 'Successfully requested starting virtual machines. Processing request...'}
         else:
             result = {'status':'Failure' , 'msg': msg}
         return result
