@@ -5,7 +5,7 @@
     "instance_user": "ubuntu",
     "git_repo": {
         "url": "https://github.com/StochSS/stochss.git",
-        "branch": "cost-analysis"
+        "branch": "develop"
     },
     "log": {
         "type": "file",
