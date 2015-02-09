@@ -399,7 +399,7 @@ class SuperZip:
                 subdomainsData = []
                 for line in subdomainsFileData.split('\n'):
                     line = line.strip()
-                    if len(line) != 2:
+                    if len(line.split(',')) != 2:
                         continue
                     i, subdomain = line.split(',')
                     subdomainsData.append(int(float(subdomain)))
@@ -462,8 +462,6 @@ class SuperZip:
             modelDb.spatial['mesh_wrapper_id'] = meshDb.key().id()
 
         modelDb.put()
-
-        print modelDb.spatial
 
         return modelDb
 
