@@ -28,8 +28,9 @@ var PaginatedCollectionView = AmpersandView.extend({
         {
             if(model == this.subCollection.models[i])
             {
-                if(typeof(this.view.select) == 'function')
-                    this.view.select();
+                if(this.view)
+                    if(typeof(this.view.select) == 'function')
+                        this.view.select();
                 return;
             }
         }
@@ -46,8 +47,9 @@ var PaginatedCollectionView = AmpersandView.extend({
                     this.offset = i;
                 this.subCollection.configure( { limit : this.limit, offset : this.offset } );
                 
-                if(typeof(this.view.select) == 'function')
-                    this.view.select();
+                if(this.view)
+                    if(typeof(this.view.select) == 'function')
+                        this.view.select();
                 break;
             }
         }

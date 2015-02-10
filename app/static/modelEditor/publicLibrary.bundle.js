@@ -1780,8 +1780,9 @@ var PaginatedCollectionView = AmpersandView.extend({
         {
             if(model == this.subCollection.models[i])
             {
-                if(typeof(this.view.select) == 'function')
-                    this.view.select();
+                if(this.view)
+                    if(typeof(this.view.select) == 'function')
+                        this.view.select();
                 return;
             }
         }
@@ -1798,8 +1799,9 @@ var PaginatedCollectionView = AmpersandView.extend({
                     this.offset = i;
                 this.subCollection.configure( { limit : this.limit, offset : this.offset } );
                 
-                if(typeof(this.view.select) == 'function')
-                    this.view.select();
+                if(this.view)
+                    if(typeof(this.view.select) == 'function')
+                        this.view.select();
                 break;
             }
         }
@@ -1828,7 +1830,6 @@ var PaginatedCollectionView = AmpersandView.extend({
     },
     props: {
         value : 'object',
-        view : 'object',
         offset : 'number',
         modelCount : 'number',
         overLimit : 'boolean'
@@ -2312,6 +2313,11 @@ module.exports = View.extend({
                     reactants = 1;
                     products = 0;
                 }
+                if(obj.value == 'merge')
+                {
+                    reactants = 2;
+                    products = 1;
+                }
                 if(obj.value == 'change')
                 {
                     reactants = 1;
@@ -2393,9 +2399,9 @@ module.exports = View.extend({
     updateSelected : function()
     {
         // We do two things in here: #1 make sure all members of this.model.subdomains are valid subdomains and #2 check the checkboxes in the collection that are selected
-        var validSubdomains = this.collection.each( function(model) { return model.name; } );
+        var validSubdomains = this.collection.map( function(model) { return model.name; } );
 
-        this.subdomains = _.filter(this.subdomains, function(value) { return _.contains(validSubdomains, value); })
+        this.subdomains = _.intersection(this.subdomains, validSubdomains);
 
         // Select the currently selected model
         var inputs = $( this.queryByHook('subdomains') ).find('input');
@@ -2459,6 +2465,11 @@ var reactants;
                 {
                     reactants = 1;
                     products = 0;
+                }
+                if(this.model.type == 'merge')
+                {
+                    reactants = 2;
+                    products = 1;
                 }
                 if(this.model.type == 'change')
                 {
@@ -2574,6 +2585,8 @@ var reactants;
         options.push(['change', emptyDiv.html()]);
         katex.render('A + A \\rightarrow B', emptyDiv[0]);
         options.push(['dimerization', emptyDiv.html()]);
+        katex.render('A + B \\rightarrow C', emptyDiv[0]);
+        options.push(['merge', emptyDiv.html()]);
         katex.render('A \\rightarrow B + C', emptyDiv[0]);
         options.push(['split', emptyDiv.html()]);
         katex.render('A + B \\rightarrow C + D', emptyDiv[0]);
@@ -2715,6 +2728,7 @@ module.exports = View.extend({
             }
         }
 
+        latexString = latexString.replace(/_/g, '\\_');
         katex.render(latexString, this.queryByHook('latex'));
     },
     //Start the removal process... Eventually events will cause this.remove to get called. We don't have to do it explicitly though
@@ -3002,7 +3016,7 @@ module.exports = View.extend({
         // We do two things in here: #1 make sure all members of this.model.subdomains are valid subdomains and #2 check the checkboxes in the collection that are selected
         var validSubdomains = this.baseModel.mesh.uniqueSubdomains.map( function(model) { return model.name; } );
 
-        this.model.subdomains = _.union(this.model.subdomains, validSubdomains)
+        this.model.subdomains = _.intersection(this.model.subdomains, validSubdomains)
 
         // Select the currently selected model
         var inputs = $( this.queryByHook('subdomains') ).find('input');
@@ -3996,6 +4010,11 @@ var Reaction = State.extend({
                     reactants = 1;
                     products = 1;
                 }
+                if(this.type == 'merge')
+                {
+                    reactants = 2;
+                    products = 1;
+                }
                 if(this.type == 'dimerization')
                 {
                     reactants = 1;
@@ -4021,16 +4040,13 @@ var Reaction = State.extend({
                         return false;
                 }
 
-                if(this.products)
+                for(var i = 0; i < products; i++)
                 {
-                    for(var i = 0; i < products; i++)
-                    {
-                        if(!this.products.at(i))
-                            return false;
-                        
-                        if(!this.products.at(i).specie)
-                            return false;
-                    }
+                    if(!this.products.at(i))
+                        return false;
+                    
+                    if(!this.products.at(i).specie)
+                        return false;
                 }
 
                 return true;
@@ -4046,10 +4062,10 @@ var Reaction = State.extend({
     },
     triggerChange: function()
     {
-        this.trigger('change');
         this.trigger('change:reactants');
         this.trigger('change:products');
         this.collection.parent.species.trigger('stoich-specie-change');
+        this.trigger('change');
     },
     initialize : function(attrs, options)
     {

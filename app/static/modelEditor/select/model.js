@@ -69,6 +69,9 @@ module.exports = View.extend({
     },
     removeModel: function()
     {
+        if(!confirm("Are you sure you want to delete this model?"))
+            return;
+
         var saveMessageDom = $( '[data-hook="saveMessage"]' );
 
         //this.model.collection.remove(this.model);

@@ -52,7 +52,7 @@ module.exports = View.extend({
         // We do two things in here: #1 make sure all members of this.model.subdomains are valid subdomains and #2 check the checkboxes in the collection that are selected
         var validSubdomains = this.baseModel.mesh.uniqueSubdomains.map( function(model) { return model.name; } );
 
-        this.model.subdomains = _.union(this.model.subdomains, validSubdomains)
+        this.model.subdomains = _.intersection(this.model.subdomains, validSubdomains)
 
         // Select the currently selected model
         var inputs = $( this.queryByHook('subdomains') ).find('input');

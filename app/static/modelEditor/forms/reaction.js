@@ -68,6 +68,7 @@ module.exports = View.extend({
             }
         }
 
+        latexString = latexString.replace(/_/g, '\\_');
         katex.render(latexString, this.queryByHook('latex'));
     },
     //Start the removal process... Eventually events will cause this.remove to get called. We don't have to do it explicitly though

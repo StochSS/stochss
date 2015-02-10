@@ -128,9 +128,9 @@ module.exports = View.extend({
     updateSelected : function()
     {
         // We do two things in here: #1 make sure all members of this.model.subdomains are valid subdomains and #2 check the checkboxes in the collection that are selected
-        var validSubdomains = this.collection.each( function(model) { return model.name; } );
+        var validSubdomains = this.collection.map( function(model) { return model.name; } );
 
-        this.subdomains = _.filter(this.subdomains, function(value) { return _.contains(validSubdomains, value); })
+        this.subdomains = _.intersection(this.subdomains, validSubdomains);
 
         // Select the currently selected model
         var inputs = $( this.queryByHook('subdomains') ).find('input');

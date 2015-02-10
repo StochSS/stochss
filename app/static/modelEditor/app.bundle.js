@@ -2037,8 +2037,9 @@ var PaginatedCollectionView = AmpersandView.extend({
         {
             if(model == this.subCollection.models[i])
             {
-                if(typeof(this.view.select) == 'function')
-                    this.view.select();
+                if(this.view)
+                    if(typeof(this.view.select) == 'function')
+                        this.view.select();
                 return;
             }
         }
@@ -2055,8 +2056,9 @@ var PaginatedCollectionView = AmpersandView.extend({
                     this.offset = i;
                 this.subCollection.configure( { limit : this.limit, offset : this.offset } );
                 
-                if(typeof(this.view.select) == 'function')
-                    this.view.select();
+                if(this.view)
+                    if(typeof(this.view.select) == 'function')
+                        this.view.select();
                 break;
             }
         }
@@ -2654,9 +2656,9 @@ module.exports = View.extend({
     updateSelected : function()
     {
         // We do two things in here: #1 make sure all members of this.model.subdomains are valid subdomains and #2 check the checkboxes in the collection that are selected
-        var validSubdomains = this.collection.each( function(model) { return model.name; } );
+        var validSubdomains = this.collection.map( function(model) { return model.name; } );
 
-        this.subdomains = _.filter(this.subdomains, function(value) { return _.contains(validSubdomains, value); })
+        this.subdomains = _.intersection(this.subdomains, validSubdomains);
 
         // Select the currently selected model
         var inputs = $( this.queryByHook('subdomains') ).find('input');
@@ -2983,6 +2985,7 @@ module.exports = View.extend({
             }
         }
 
+        latexString = latexString.replace(/_/g, '\\_');
         katex.render(latexString, this.queryByHook('latex'));
     },
     //Start the removal process... Eventually events will cause this.remove to get called. We don't have to do it explicitly though
@@ -3270,7 +3273,7 @@ module.exports = View.extend({
         // We do two things in here: #1 make sure all members of this.model.subdomains are valid subdomains and #2 check the checkboxes in the collection that are selected
         var validSubdomains = this.baseModel.mesh.uniqueSubdomains.map( function(model) { return model.name; } );
 
-        this.model.subdomains = _.union(this.model.subdomains, validSubdomains)
+        this.model.subdomains = _.intersection(this.model.subdomains, validSubdomains)
 
         // Select the currently selected model
         var inputs = $( this.queryByHook('subdomains') ).find('input');
@@ -66488,6 +66491,13 @@ var ModelCollectionSelectView = AmpersandView.extend({
 
         this.meshCollection = attr.meshCollection;
     },
+    handleCollectionRemove: function(model, collection)
+    {
+        if(model == this.selectView.value)
+        {
+            this.selectView.select(this.collection.at(0));
+        }
+    },
     select: function()
     {
         this.selected = this.selectView.value;
@@ -66518,6 +66528,7 @@ var ModelCollectionSelectView = AmpersandView.extend({
         }), this.queryByHook('modelCollection'));
 
         this.listenToAndRun(this.selectView, 'change:value', _.bind(this.select, this));
+        this.listenToAndRun(this.collection, 'remove', _.bind(this.handleCollectionRemove, this));
 
         //this.fields.forEach( function(field) { $( field.el ).find('input').val(''); } );
         this.addForm = new AddNewModelForm(
@@ -66607,6 +66618,9 @@ module.exports = View.extend({
     },
     removeModel: function()
     {
+        if(!confirm("Are you sure you want to delete this model?"))
+            return;
+
         var saveMessageDom = $( '[data-hook="saveMessage"]' );
 
         //this.model.collection.remove(this.model);

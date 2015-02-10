@@ -58,9 +58,23 @@ class StochKitModelWrapper(db.Model):
             sModel.addParameter(stochss.model.Parameter(parameter['name'], parameter['value']))
 
         for reaction in self.reactions:
-            reactants = dict([(sModel.getSpecies(reactant['specie']), reactant['stoichiometry']) for reactant in reaction['reactants']])
+            inReactants = {}
+            for reactant in reaction['reactants']:
+                if reactant['specie'] not in inReactants:
+                    inReactants[reactant['specie']] = 0
 
-            products = dict([(sModel.getSpecies(product['specie']), product['stoichiometry']) for product in reaction['products']])
+                inReactants[reactant['specie']] += reactant['stoichiometry']
+
+            inProducts = {}
+            for product in reaction['products']:
+                if product['specie'] not in inProducts:
+                    inProducts[product['specie']] = 0
+
+                inProducts[product['specie']] += product['stoichiometry']
+
+            reactants = dict([(sModel.getSpecies(reactant[0]), reactant[1]) for reactant in inReactants.items()])
+
+            products = dict([(sModel.getSpecies(product[0]), product[1]) for product in inProducts.items()])
             
             if(reaction['type'] == 'custom'):
                 sModel.addReaction(stochss.model.Reaction(reaction['name'], reactants, products, reaction['equation'], False, None, None))

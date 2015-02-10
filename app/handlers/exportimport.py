@@ -131,7 +131,7 @@ class SuperZip:
             if meshWrapperDb.subdomains:
                 subdomainsData = ''
                 for i, s in enumerate(meshWrapperDb.subdomains):
-                    subdomainsData += '{0} {1} {2}'.format(i, s, os.linesep)
+                    subdomainsData += '{0},{1}{2}'.format(i, s, os.linesep)
                 subdomainsFileName = self.addBytes('models/data/{0}.subdomains.txt'.format(model.name), subdomainsData)
                 jsonModel["subdomainsFile"] = subdomainsFileName;
 
@@ -399,10 +399,10 @@ class SuperZip:
                 subdomainsData = []
                 for line in subdomainsFileData.split('\n'):
                     line = line.strip()
-                    if len(line) == 0:
+                    if len(line.split(',')) != 2:
                         continue
-                    i, subdomain = line.split()
-                    subdomainsData.append(int(subdomain))
+                    i, subdomain = line.split(',')
+                    subdomainsData.append(int(float(subdomain)))
             
             meshDb = mesheditor.MeshWrapper()
             meshDb.userId = handler.user.user_id()
@@ -441,6 +441,17 @@ class SuperZip:
 
         if "spatial" in modelj:
             modelDb.spatial = modelj["spatial"]
+
+            # If this is true we're probably importing an older version
+            if isinstance(modelDb.spatial["initial_conditions"], dict):
+                initial_conditions = modelDb.spatial["initial_conditions"].values()
+                for initial_condition in initial_conditions:
+                    initial_condition["count"] = int(initial_condition["count"])
+
+                modelDb.spatial["initial_conditions"] = initial_conditions
+
+            for specie in modelDb.spatial["species_diffusion_coefficients"]:
+                modelDb.spatial["species_diffusion_coefficients"][specie] = float(modelDb.spatial["species_diffusion_coefficients"][specie])
 
         if "is_public" in modelj:
             modelDb.is_public = modelj["is_public"]
