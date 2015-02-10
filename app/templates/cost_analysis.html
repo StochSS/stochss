@@ -70,14 +70,14 @@
 	<td align="center"><h3>cost($) vs. instance</h3></td>
 </tr>
 <tr>
-	<td>
+	<td width="500pt" height="300pt">
 		<span id="time_chart">
-		<svg width="350pt" height="300pt" onload="plot_time_chart('{{jobs}}');">
+		<svg onload="plot_time_chart('{{jobs}}');">
 		</span>
 	</td>
-	<td>
+	<td width="500pt" height="300pt">
 		<span id="cost_chart">
-		<svg width="350pt" height="300pt" onload="plot_cost_chart('{{jobs}}');">
+		<svg onload="plot_cost_chart('{{jobs}}');">
 		</span>
 	</td>
 </tr>
@@ -149,7 +149,6 @@ function plot_time_chart(jobs){
    					.tickFormat(d3.format(',.2e'));
   		}
   			
-      
 
   		d3.select('#time_chart svg')
       		.datum(time)
@@ -208,7 +207,6 @@ function plot_cost_chart(jobs){
   			cost_chart.valueFormat(d3.format(',.2e'));
    			cost_chart.yAxis.tickFormat(d3.format(',.2e'));
   		}
-  
       
 		d3.select('#cost_chart svg')
   			.datum(cost)
