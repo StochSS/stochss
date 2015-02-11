@@ -21,3 +21,16 @@
     position: absolute;
     z-index: 1;
 }
+
+
+#inset {
+    position: absolute;
+    z-index: 1;
+}
+
+#container {
+  border-style: solid; 
+  color: white;
+  padding: 5px;
+  background-color : grey;
+}
