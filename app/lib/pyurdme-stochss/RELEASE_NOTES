@@ -1,0 +1,8 @@
+1.0.0
+------------
+- First release. 
+
+1.0.1
+--------------
+- Fixes a bug in run_ensemle that led to the wrong result for more than one trajectory 
+- Minor updates and bug-fixes for compatibility with StochSS 1.4
