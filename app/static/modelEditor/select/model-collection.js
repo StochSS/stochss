@@ -93,7 +93,7 @@ var ModelCollectionSelectView = AmpersandView.extend({
     },
     select: function(model)
     {
-        if(model)
+        if(model instanceof Model)
         {
             this.selectView.select(model);
         }
