@@ -52,7 +52,7 @@ var PrimaryView = View.extend({
             if(this.modelEditor)
             {
                 this.modelEditor.remove()
-                this.stopListening(this.modelSelector.selected);
+                this.stopListening(this.lastSelected);
                 
                 delete this.modelEditor;
             }
@@ -83,6 +83,9 @@ var PrimaryView = View.extend({
                 $( this.el ).find('.initialConditionsAccordion').find('a').first()[0].click();
             if(!$( this.el ).find('.reactionsAccordion .accordion-body').first().hasClass('in'))
                 $( this.el ).find('.reactionsAccordion').find('a').first()[0].click();
+
+            // Need to remember this so we can clean up event handlers
+            this.lastSelected = this.modelSelector.selected;
         }
     },
     exportModel : function()

@@ -1,5 +1,6 @@
 var AmpersandView = require('ampersand-view');
 var SubCollection = require('ampersand-subcollection');
+var _ = require('underscore');
 
 var PaginatedCollectionView = AmpersandView.extend({
     initialize: function(attr, options)
@@ -9,6 +10,11 @@ var PaginatedCollectionView = AmpersandView.extend({
         this.limit = attr.limit;
         this.viewModel = attr.viewModel;
         this.offset = 0;
+
+        if(typeof(attr.autoSelect) != "undefined")
+            this.autoSelect = attr.autoSelect;
+        else
+            this.autoSelect = true;
 
         this.listenTo(this.collection, 'add remove', this.updateModelCount.bind(this))
 
@@ -139,8 +145,9 @@ var PaginatedCollectionView = AmpersandView.extend({
 
         this.subCollectionViews = this.renderCollection(this.subCollection, this.viewModel, this.el.querySelector('[data-hook=table]'));
         
-        if(this.collection.models.length > 0)
-            this.select(this.collection.models[0]);
+        if(this.autoSelect)
+            if(this.collection.models.length > 0)
+                this.select(this.collection.models[0]);
 
         this.updateModelCount();
 

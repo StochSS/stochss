@@ -53,7 +53,7 @@ var PrimaryView = View.extend({
             if(this.modelEditor)
             {
                 this.modelEditor.remove()
-                this.stopListening(this.modelSelector.selected);
+                this.stopListening(this.lastSelected);
                 
                 delete this.modelEditor;
             }
@@ -84,6 +84,9 @@ var PrimaryView = View.extend({
                 $( this.el ).find('.initialConditionsAccordion').find('a').first()[0].click();
             if(!$( this.el ).find('.reactionsAccordion .accordion-body').first().hasClass('in'))
                 $( this.el ).find('.reactionsAccordion').find('a').first()[0].click();
+
+            // Need to remember this so we can clean up event handlers
+            this.lastSelected = this.modelSelector.selected;
         }
     },
     exportModel : function()
@@ -2005,6 +2008,7 @@ module.exports = ModifyingSelectView
 },{"ampersand-select-view":"/home/bbales2/stochssModel/app/static/modelEditor/node_modules/ampersand-select-view/ampersand-select-view.js","jquery":"/home/bbales2/stochssModel/app/static/modelEditor/node_modules/jquery/dist/jquery.js","underscore":"/home/bbales2/stochssModel/app/static/modelEditor/node_modules/underscore/underscore.js"}],"/home/bbales2/stochssModel/app/static/modelEditor/forms/paginated-collection-view.js":[function(require,module,exports){
 var AmpersandView = require('ampersand-view');
 var SubCollection = require('ampersand-subcollection');
+var _ = require('underscore');
 
 var PaginatedCollectionView = AmpersandView.extend({
     initialize: function(attr, options)
@@ -2014,6 +2018,11 @@ var PaginatedCollectionView = AmpersandView.extend({
         this.limit = attr.limit;
         this.viewModel = attr.viewModel;
         this.offset = 0;
+
+        if(typeof(attr.autoSelect) != "undefined")
+            this.autoSelect = attr.autoSelect;
+        else
+            this.autoSelect = true;
 
         this.listenTo(this.collection, 'add remove', this.updateModelCount.bind(this))
 
@@ -2144,8 +2153,9 @@ var PaginatedCollectionView = AmpersandView.extend({
 
         this.subCollectionViews = this.renderCollection(this.subCollection, this.viewModel, this.el.querySelector('[data-hook=table]'));
         
-        if(this.collection.models.length > 0)
-            this.select(this.collection.models[0]);
+        if(this.autoSelect)
+            if(this.collection.models.length > 0)
+                this.select(this.collection.models[0]);
 
         this.updateModelCount();
 
@@ -2155,7 +2165,7 @@ var PaginatedCollectionView = AmpersandView.extend({
 
 module.exports = PaginatedCollectionView;
 
-},{"ampersand-subcollection":"/home/bbales2/stochssModel/app/static/modelEditor/node_modules/ampersand-subcollection/ampersand-subcollection.js","ampersand-view":"/home/bbales2/stochssModel/app/static/modelEditor/node_modules/ampersand-view/ampersand-view.js"}],"/home/bbales2/stochssModel/app/static/modelEditor/forms/parameter-collection.js":[function(require,module,exports){
+},{"ampersand-subcollection":"/home/bbales2/stochssModel/app/static/modelEditor/node_modules/ampersand-subcollection/ampersand-subcollection.js","ampersand-view":"/home/bbales2/stochssModel/app/static/modelEditor/node_modules/ampersand-view/ampersand-view.js","underscore":"/home/bbales2/stochssModel/app/static/modelEditor/node_modules/underscore/underscore.js"}],"/home/bbales2/stochssModel/app/static/modelEditor/forms/parameter-collection.js":[function(require,module,exports){
 var $ = require('jquery');
 var AmpersandView = require('ampersand-view');
 var AmpersandFormView = require('ampersand-form-view');
@@ -66496,13 +66506,6 @@ var ModelCollectionSelectView = AmpersandView.extend({
 
         this.meshCollection = attr.meshCollection;
     },
-    handleCollectionRemove: function(model, collection)
-    {
-        if(model == this.selectView.value)
-        {
-            this.selectView.select(this.collection.at(0));
-        }
-    },
     select: function()
     {
         this.selected = this.selectView.value;
@@ -66529,11 +66532,11 @@ var ModelCollectionSelectView = AmpersandView.extend({
             template : collectionTemplate,
             collection : this.collection,
             viewModel : ModelSelectView,
-            limit : 10
+            limit : 10,
+            autoSelect : false
         }), this.queryByHook('modelCollection'));
 
         this.listenToAndRun(this.selectView, 'change:value', _.bind(this.select, this));
-        this.listenToAndRun(this.collection, 'remove', _.bind(this.handleCollectionRemove, this));
 
         //this.fields.forEach( function(field) { $( field.el ).find('input').val(''); } );
         this.addForm = new AddNewModelForm(
