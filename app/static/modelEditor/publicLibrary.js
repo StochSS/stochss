@@ -66,12 +66,14 @@ var PrimaryView = View.extend({
             error : _.bind(this.modelNotSaved, this)
         });
     },
-    modelSaved: function() {
+    modelSaved: function(model) {
         var saveMessageDom = $( this.queryByHook('saveMessage') );
 
         saveMessageDom.removeClass( "alert-error" );
         saveMessageDom.addClass( "alert-success" );
         saveMessageDom.text( "Saved model to local library" );
+        
+        window.location = '/modeleditor?select=' + String(model.id);
     },
     modelNotSaved: function()
     {

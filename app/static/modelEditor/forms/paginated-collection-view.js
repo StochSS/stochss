@@ -21,10 +21,11 @@ var PaginatedCollectionView = AmpersandView.extend({
         this.subCollection = new SubCollection(this.collection, { limit : this.limit, offset : this.offset });
         this.subCollection.parent = this.collection.parent;
     },
-    select : function(model, getFocus)
+    select : function(model, getFocus, force)
     {
-        if(this.value == model)
-            return;
+        if(!force)
+            if(this.value == model)
+                return;
 
         if(this.view)
             if(this.view.deSelect)
@@ -144,10 +145,13 @@ var PaginatedCollectionView = AmpersandView.extend({
         AmpersandView.prototype.render.apply(this, arguments);
 
         this.subCollectionViews = this.renderCollection(this.subCollection, this.viewModel, this.el.querySelector('[data-hook=table]'));
-        
-        if(this.autoSelect)
-            if(this.collection.models.length > 0)
-                this.select(this.collection.models[0]);
+
+        if(this.value)
+            this.select(this.value, true, true);
+        else
+            if(this.autoSelect)
+                if(this.collection.models.length > 0)
+                    this.select(this.collection.models[0]);
 
         this.updateModelCount();
 

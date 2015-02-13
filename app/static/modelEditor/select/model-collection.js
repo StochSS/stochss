@@ -91,16 +91,23 @@ var ModelCollectionSelectView = AmpersandView.extend({
 
         this.meshCollection = attr.meshCollection;
     },
-    select: function()
+    select: function(model)
     {
-        this.selected = this.selectView.value;
+        if(model)
+        {
+            this.selectView.select(model);
+        }
+        else
+        {
+            this.selected = this.selectView.value;
+        }
     },
     render: function()
     {
         var collectionTemplate = "<div> \
   <table data-hook='table' class='table table-bordered'> \
     <thead> \
-      <th width='25px'></th><th width='170px'>Name</th><th>Type</th><th width='25px'>Delete</th> \
+      <th width='25px'></th><th width='170px'>Name</th><th>Properties</th><th width='25px'>Delete</th> \
     </thead> \
     <tbody data-hook='items'></tbody> \
   </table> \
@@ -118,6 +125,7 @@ var ModelCollectionSelectView = AmpersandView.extend({
             collection : this.collection,
             viewModel : ModelSelectView,
             limit : 10,
+            value : this.selected,
             autoSelect : false
         }), this.queryByHook('modelCollection'));
 
