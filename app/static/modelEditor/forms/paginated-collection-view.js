@@ -63,9 +63,10 @@ var PaginatedCollectionView = AmpersandView.extend({
             if(model == this.collection.models[i])
             {
                 if(i == this.collection.models.length - 1)
-                    this.offset = i + 1 - this.collection.models.length % this.limit;
+                    this.offset = Math.max(0, i + 1 - this.limit);
                 else
                     this.offset = i;
+
                 this.subCollection.configure( { limit : this.limit, offset : this.offset } );
                 
                 if(this.view)
@@ -86,14 +87,16 @@ var PaginatedCollectionView = AmpersandView.extend({
 
         //If not found do nothing
     },
-    shiftPlus : function()
+    shiftPlus : function(e)
     {
         if(this.offset + this.limit < this.collection.models.length)
             this.offset = this.offset + this.limit;
 
         this.subCollection.configure( { limit : this.limit, offset : this.offset } );
+
+        e.preventDefault();
     },
-    shiftMinus : function()
+    shiftMinus : function(e)
     {
         if(this.offset - this.limit >= 0)
             this.offset = this.offset - this.limit;
@@ -101,6 +104,8 @@ var PaginatedCollectionView = AmpersandView.extend({
             this.offset = 0;
 
         this.subCollection.configure( { limit : this.limit, offset : this.offset } );
+
+        e.preventDefault();
     },
     events : {
         "click [data-hook='next']" : "shiftPlus",

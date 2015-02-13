@@ -12,9 +12,11 @@ module.exports = View.extend({
     update: function()
     {
     },
-    removeSpecies: function()
+    removeSpecies: function(e)
     {
         this.model.collection.remove(this.model);
+
+        e.preventDefault();
     },
     events: {
         'click [data-hook="delete"]': 'removeSpecies'
@@ -79,11 +81,11 @@ module.exports = View.extend({
     {
         if(this.baseModel.isSpatial)
         {
-            this.template = "<tr><td data-hook='name'></td><td data-hook='diffusion'></td><td><center><div data-hook='subdomains'></div></center></td><td><button class='btn' data-hook='delete'>x</button></td></tr>";
+            this.template = "<tr><td data-hook='name'></td><td data-hook='diffusion'></td><td><center><div data-hook='subdomains'></div></center></td><td><a data-hook='delete' href='#'>Delete</a></td></tr>";
         }
         else
         {
-            this.template = "<tr><td data-hook='name'></td><td data-hook='initialCondition'></td><td><button class='btn' data-hook='delete'>x</button></td></tr>";
+            this.template = "<tr><td data-hook='name'></td><td data-hook='initialCondition'></td><td><a data-hook='delete' href='#'>X</a></td></tr>";
         }
 
         View.prototype.render.apply(this, arguments);

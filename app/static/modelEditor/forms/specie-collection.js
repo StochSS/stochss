@@ -85,9 +85,9 @@ var SpecieCollectionFormView = AmpersandView.extend({
     </tbody> \
   </table> \
   <div data-hook='nav'> \
-    <button class='btn' data-hook='previous'>&lt;&lt;</button> \
-    [ <span data-hook='position'></span> / <span data-hook='total'></span> ] \
-    <button class='btn' data-hook='next'>&gt;&gt;</button> \
+    <a data-hook='previous' href='#'>&lt;&lt;</a> \
+    <span data-hook='position'></span> / <span data-hook='total'></span> \
+    <a data-hook='next' href='#'>&gt;&gt;</a> \
   </div> \
 </div>";
 

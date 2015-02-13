@@ -1801,9 +1801,10 @@ var PaginatedCollectionView = AmpersandView.extend({
             if(model == this.collection.models[i])
             {
                 if(i == this.collection.models.length - 1)
-                    this.offset = i + 1 - this.collection.models.length % this.limit;
+                    this.offset = Math.max(0, i + 1 - this.limit);
                 else
                     this.offset = i;
+
                 this.subCollection.configure( { limit : this.limit, offset : this.offset } );
                 
                 if(this.view)
@@ -1824,14 +1825,16 @@ var PaginatedCollectionView = AmpersandView.extend({
 
         //If not found do nothing
     },
-    shiftPlus : function()
+    shiftPlus : function(e)
     {
         if(this.offset + this.limit < this.collection.models.length)
             this.offset = this.offset + this.limit;
 
         this.subCollection.configure( { limit : this.limit, offset : this.offset } );
+
+        e.preventDefault();
     },
-    shiftMinus : function()
+    shiftMinus : function(e)
     {
         if(this.offset - this.limit >= 0)
             this.offset = this.offset - this.limit;
@@ -1839,6 +1842,8 @@ var PaginatedCollectionView = AmpersandView.extend({
             this.offset = 0;
 
         this.subCollection.configure( { limit : this.limit, offset : this.offset } );
+
+        e.preventDefault();
     },
     events : {
         "click [data-hook='next']" : "shiftPlus",
@@ -2946,9 +2951,9 @@ var SpecieCollectionFormView = AmpersandView.extend({
     </tbody> \
   </table> \
   <div data-hook='nav'> \
-    <button class='btn' data-hook='previous'>&lt;&lt;</button> \
-    [ <span data-hook='position'></span> / <span data-hook='total'></span> ] \
-    <button class='btn' data-hook='next'>&gt;&gt;</button> \
+    <a data-hook='previous' href='#'>&lt;&lt;</a> \
+    <span data-hook='position'></span> / <span data-hook='total'></span> \
+    <a data-hook='next' href='#'>&gt;&gt;</a> \
   </div> \
 </div>";
 
@@ -2991,9 +2996,11 @@ module.exports = View.extend({
     update: function()
     {
     },
-    removeSpecies: function()
+    removeSpecies: function(e)
     {
         this.model.collection.remove(this.model);
+
+        e.preventDefault();
     },
     events: {
         'click [data-hook="delete"]': 'removeSpecies'
@@ -3058,11 +3065,11 @@ module.exports = View.extend({
     {
         if(this.baseModel.isSpatial)
         {
-            this.template = "<tr><td data-hook='name'></td><td data-hook='diffusion'></td><td><center><div data-hook='subdomains'></div></center></td><td><button class='btn' data-hook='delete'>x</button></td></tr>";
+            this.template = "<tr><td data-hook='name'></td><td data-hook='diffusion'></td><td><center><div data-hook='subdomains'></div></center></td><td><a data-hook='delete' href='#'>Delete</a></td></tr>";
         }
         else
         {
-            this.template = "<tr><td data-hook='name'></td><td data-hook='initialCondition'></td><td><button class='btn' data-hook='delete'>x</button></td></tr>";
+            this.template = "<tr><td data-hook='name'></td><td data-hook='initialCondition'></td><td><a data-hook='delete' href='#'>X</a></td></tr>";
         }
 
         View.prototype.render.apply(this, arguments);
