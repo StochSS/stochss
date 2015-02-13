@@ -6,7 +6,7 @@ var ModifyingNumberInputView = require('./modifying-number-input-view')
 
 var Tests = require('./tests');
 module.exports = View.extend({
-    template: "<tr><td><button class='btn' data-hook='delete'>x</button></td><td data-hook='name'></td><td data-hook='value'></td></tr>",
+    template: "<tr><td data-hook='name'></td><td data-hook='value'></td><td><button class='btn' data-hook='delete'>x</button></td></tr>",
     // Gotta have a few of these functions just so this works as a form view
     // This gets called when things update
     update: function()
@@ -32,8 +32,7 @@ module.exports = View.extend({
 
         this.renderSubview(
             new ModifyingInputView({
-                template: '<span><span data-hook="label"></span><input><span data-hook="message-container"><span data-hook="message-text"></span></span></span>',
-                label: 'Name',
+                label: '',
                 name: 'name',
                 value: this.model.name,
                 required: false,
@@ -44,8 +43,7 @@ module.exports = View.extend({
 
         this.renderSubview(
             new ModifyingInputView({
-                template: '<span><span data-hook="label"></span><input><span data-hook="message-container"><span data-hook="message-text"></span></span></span>',
-                label: 'Value',
+                label: '',
                 name: 'value',
                 value: this.model.value,
                 required: false,

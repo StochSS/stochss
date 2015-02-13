@@ -15,10 +15,14 @@ var PaginatedCollectionView = AmpersandView.extend({
         this.subCollection = new SubCollection(this.collection, { limit : this.limit, offset : this.offset });
         this.subCollection.parent = this.collection.parent;
     },
-    select : function(model)
+    select : function(model, getFocus)
     {
         if(this.value == model)
             return;
+
+        if(this.view)
+            if(this.view.deSelect)
+                this.view.deSelect();
 
         this.value = model;
         this.view = this.subCollectionViews._getViewByModel(model);
@@ -29,8 +33,18 @@ var PaginatedCollectionView = AmpersandView.extend({
             if(model == this.subCollection.models[i])
             {
                 if(this.view)
+                {
                     if(typeof(this.view.select) == 'function')
                         this.view.select();
+
+                    if(getFocus)
+                    {
+                        var textBox = $( this.view.el ).find( 'input[type=text]' ).filter(':visible').last();
+                        if(textBox)
+                            textBox.focus();
+                    }
+                }
+
                 return;
             }
         }
@@ -48,8 +62,17 @@ var PaginatedCollectionView = AmpersandView.extend({
                 this.subCollection.configure( { limit : this.limit, offset : this.offset } );
                 
                 if(this.view)
+                {
                     if(typeof(this.view.select) == 'function')
                         this.view.select();
+
+                    if(getFocus)
+                    {
+                        var textBox = $( this.view.el ).find( 'input[type=text]' ).filter(':visible').last();
+                        if(textBox)
+                            textBox.focus();
+                    }
+                }
                 break;
             }
         }

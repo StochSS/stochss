@@ -9,48 +9,28 @@ var PaginatedCollectionView = require('./paginated-collection-view');
 var Tests = require('./tests');
 var AddNewInitialConditionForm = AmpersandFormView.extend({
     submitCallback: function (obj) {
-        if(obj.type == 'scatter')
-        {
-            var model = this.collection.addScatterInitialCondition(this.baseModel.species.at(0), 0, this.baseModel.mesh.uniqueSubdomains.at(0));
-        }
-        else if(obj.type == 'place')
-        {
-            var model = this.collection.addPlaceInitialCondition(this.baseModel.species.at(0), 0, 0, 0, 0);
-        }
-        else if(obj.type == 'distribute')
-        {
-            var model = this.collection.addDistributeUniformlyInitialCondition(this.baseModel.species.at(0), 0, this.baseModel.mesh.uniqueSubdomains.at(0));
-        }
+        var model = this.collection.addScatterInitialCondition(this.baseModel.species.at(0), 0, this.baseModel.mesh.uniqueSubdomains.at(0));
+        
+        this.selectView.select(model, true);
     },
     initialize: function(attr, options) {
         this.collection = options.collection;
 
         this.selectView = attr.selectView;
         this.baseModel = this.collection.parent;
-
-        this.fields = [
-            new SelectView({
-                label: 'Type: ',
-                name: 'type',
-                value: 'scatter',
-                options: [['scatter', 'Scatter'], ['place', 'Place'], ['distribute', 'Distribute Uniformly']],
-                required: true,
-            })
-        ];
-
     },
     render: function()
     {
         AmpersandFormView.prototype.render.apply(this, arguments);
 
-        this.button = $('<button class="btn btn-primary" type="submit">Add Initial Condition</button>').appendTo( $( this.el ) );
+        this.button = $('<button class="btn btn-large btn-primary" type="submit">Add Initial Condition</button>').appendTo( $( this.el ) );
     }
 });
 
 var InitialConditionCollectionFormView = AmpersandView.extend({
     template : "<div>\
   <div data-hook='initialConditionCollection'></div> \
-  <h4>Add Initial Condition</h4>\
+  <br />\
   <form data-hook='addInitialConditionForm'></form>\
 </div>",
     render: function()

@@ -68,6 +68,22 @@ var PrimaryView = View.extend({
             this.listenTo(this.modelSelector.selected, 'remove', _.bind(this.modelDeleted, this));
             this.registerSubview(this.modelEditor);
             this.modelEditor.render();
+
+            if($( this.el ).find('.selectAccordion .accordion-body').hasClass('in'))
+            {
+                $( this.el ).find('.selectAccordion .accordion-body').find('a').first()[0].click();
+            }
+
+            if(!$( this.el ).find('.speciesAccordion .accordion-body').first().hasClass('in'))
+                $( this.el ).find('.speciesAccordion').find('a').first()[0].click();
+            if(!$( this.el ).find('.parametersAccordion .accordion-body').first().hasClass('in'))
+                $( this.el ).find('.parametersAccordion').find('a').first()[0].click();
+            if(!$( this.el ).find('.mesh3dAccordion .accordion-body').first().hasClass('in'))
+                $( this.el ).find('.mesh3dAccordion').find('a').first()[0].click();
+            if(!$( this.el ).find('.initialConditionsAccordion .accordion-body').first().hasClass('in'))
+                $( this.el ).find('.initialConditionsAccordion').find('a').first()[0].click();
+            if(!$( this.el ).find('.reactionsAccordion .accordion-body').first().hasClass('in'))
+                $( this.el ).find('.reactionsAccordion').find('a').first()[0].click();
         }
     },
     exportModel : function()
@@ -705,48 +721,28 @@ var PaginatedCollectionView = require('./paginated-collection-view');
 var Tests = require('./tests');
 var AddNewInitialConditionForm = AmpersandFormView.extend({
     submitCallback: function (obj) {
-        if(obj.type == 'scatter')
-        {
-            var model = this.collection.addScatterInitialCondition(this.baseModel.species.at(0), 0, this.baseModel.mesh.uniqueSubdomains.at(0));
-        }
-        else if(obj.type == 'place')
-        {
-            var model = this.collection.addPlaceInitialCondition(this.baseModel.species.at(0), 0, 0, 0, 0);
-        }
-        else if(obj.type == 'distribute')
-        {
-            var model = this.collection.addDistributeUniformlyInitialCondition(this.baseModel.species.at(0), 0, this.baseModel.mesh.uniqueSubdomains.at(0));
-        }
+        var model = this.collection.addScatterInitialCondition(this.baseModel.species.at(0), 0, this.baseModel.mesh.uniqueSubdomains.at(0));
+        
+        this.selectView.select(model, true);
     },
     initialize: function(attr, options) {
         this.collection = options.collection;
 
         this.selectView = attr.selectView;
         this.baseModel = this.collection.parent;
-
-        this.fields = [
-            new SelectView({
-                label: 'Type: ',
-                name: 'type',
-                value: 'scatter',
-                options: [['scatter', 'Scatter'], ['place', 'Place'], ['distribute', 'Distribute Uniformly']],
-                required: true,
-            })
-        ];
-
     },
     render: function()
     {
         AmpersandFormView.prototype.render.apply(this, arguments);
 
-        this.button = $('<button class="btn btn-primary" type="submit">Add Initial Condition</button>').appendTo( $( this.el ) );
+        this.button = $('<button class="btn btn-large btn-primary" type="submit">Add Initial Condition</button>').appendTo( $( this.el ) );
     }
 });
 
 var InitialConditionCollectionFormView = AmpersandView.extend({
     template : "<div>\
   <div data-hook='initialConditionCollection'></div> \
-  <h4>Add Initial Condition</h4>\
+  <br />\
   <form data-hook='addInitialConditionForm'></form>\
 </div>",
     render: function()
@@ -815,12 +811,12 @@ module.exports = View.extend({
   <td data-hook='details'> \
     <table> \
       <tr> \
-        <td>Count</td><td><div data-hook='count'></div></td> \
+        <td>Count:</td><td><div data-hook='count'></div></td> \
       </tr> \
       <tbody data-hook='xyz'> \
-        <tr><td>X</td><td><div data-hook='X'></div></td></tr> \
-        <tr><td>Y</td><td><div data-hook='Y'></div></td></tr> \
-        <tr><td>Z</td><td><div data-hook='Z'></div></td></tr> \
+        <tr><td>X:</td><td><div data-hook='X'></div></td></tr> \
+        <tr><td>Y:</td><td><div data-hook='Y'></div></td></tr> \
+        <tr><td>Z:</td><td><div data-hook='Z'></div></td></tr> \
       </tbody> \
       <tbody data-hook='subdomainTbody'> \
         <tr><td>Subdomain</td><td><div data-hook='subdomain'></div></td></tr> \
@@ -914,7 +910,7 @@ module.exports = View.extend({
 
         this.renderSubview(
             new ModifyingNumberInputView({
-                template: '<span><span data-hook="label"></span><input><span data-hook="message-container"><span data-hook="message-text"></span></span></span>',
+                //template: '<span><span data-hook="label"></span><input><span data-hook="message-container"><span data-hook="message-text"></span></span></span>',
                 label: '',
                 name: 'count',
                 value: this.model.count,
@@ -926,7 +922,7 @@ module.exports = View.extend({
 
         this.renderSubview(
             new ModifyingNumberInputView({
-                template: '<span><span data-hook="label"></span><input><span data-hook="message-container"><span data-hook="message-text"></span></span></span>',
+                //template: '<span><span data-hook="label"></span><input><span data-hook="message-container"><span data-hook="message-text"></span></span></span>',
                 label: '',
                 name: 'X',
                 value: this.model.X,
@@ -938,7 +934,7 @@ module.exports = View.extend({
 
         this.renderSubview(
             new ModifyingNumberInputView({
-                template: '<span><span data-hook="label"></span><input><span data-hook="message-container"><span data-hook="message-text"></span></span></span>',
+                //template: '<span><span data-hook="label"></span><input><span data-hook="message-container"><span data-hook="message-text"></span></span></span>',
                 label: '',
                 name: 'Y',
                 value: this.model.Y,
@@ -950,7 +946,7 @@ module.exports = View.extend({
 
         this.renderSubview(
             new ModifyingNumberInputView({
-                template: '<span><span data-hook="label"></span><input><span data-hook="message-container"><span data-hook="message-text"></span></span></span>',
+                //template: '<span><span data-hook="label"></span><input><span data-hook="message-container"><span data-hook="message-text"></span></span></span>',
                 label: '',
                 name: 'Z',
                 value: this.model.Z,
@@ -2024,10 +2020,14 @@ var PaginatedCollectionView = AmpersandView.extend({
         this.subCollection = new SubCollection(this.collection, { limit : this.limit, offset : this.offset });
         this.subCollection.parent = this.collection.parent;
     },
-    select : function(model)
+    select : function(model, getFocus)
     {
         if(this.value == model)
             return;
+
+        if(this.view)
+            if(this.view.deSelect)
+                this.view.deSelect();
 
         this.value = model;
         this.view = this.subCollectionViews._getViewByModel(model);
@@ -2038,8 +2038,18 @@ var PaginatedCollectionView = AmpersandView.extend({
             if(model == this.subCollection.models[i])
             {
                 if(this.view)
+                {
                     if(typeof(this.view.select) == 'function')
                         this.view.select();
+
+                    if(getFocus)
+                    {
+                        var textBox = $( this.view.el ).find( 'input[type=text]' ).filter(':visible').last();
+                        if(textBox)
+                            textBox.focus();
+                    }
+                }
+
                 return;
             }
         }
@@ -2057,8 +2067,17 @@ var PaginatedCollectionView = AmpersandView.extend({
                 this.subCollection.configure( { limit : this.limit, offset : this.offset } );
                 
                 if(this.view)
+                {
                     if(typeof(this.view.select) == 'function')
                         this.view.select();
+
+                    if(getFocus)
+                    {
+                        var textBox = $( this.view.el ).find( 'input[type=text]' ).filter(':visible').last();
+                        if(textBox)
+                            textBox.focus();
+                    }
+                }
                 break;
             }
         }
@@ -2147,11 +2166,16 @@ var PaginatedCollectionView = require('./paginated-collection-view');
 var Tests = require('./tests');
 var AddNewParameterForm = AmpersandFormView.extend({
     submitCallback: function (obj) {
-        this.selectView.select(this.collection.addParameter(obj.name, obj.value));
+        var i = this.collection.models.length;
+        var name = 'k' + i;
+        var names = this.collection.map( function(parameter) { return parameter.name; } );
+        while(_.contains(names, name))
+        {
+            i += 1;
+            name = 'k' + i;
+        }
 
-        $( this.nameField.el ).find('input').val('');
-
-        $( this.valueField.el ).find('input').val(0); 
+        this.selectView.select(this.collection.addParameter(name, "0"), true);
    },
             // this valid callback gets called (if it exists)
             // when the form first loads and any time the form
@@ -2169,44 +2193,19 @@ var AddNewParameterForm = AmpersandFormView.extend({
         this.collection = options.collection;
         this.selectView = attr.selectView;
 
-        this.nameField = new InputView({
-            label: 'Name',
-            name: 'name',
-            value: '',
-            required: true,
-            placeholder: 'NewParameters',
-            tests: [].concat(Tests.naming(this.collection))
-        });
-        
-        this.valueField = new InputView({
-            label: 'Value',
-            name: 'value',
-            value: '0',
-            required: true,
-            placeholder: '0',
-            tests: []
-        });
-
-
-        this.fields = [
-            this.nameField,
-            this.valueField
-        ];
     },
     render: function()
     {
         AmpersandFormView.prototype.render.apply(this, arguments);
 
-        $( this.el ).find('input').prop('autocomplete', 'off');
-
-        this.button = $('<button class="btn btn-primary" type="submit">Add</button>').appendTo( $( this.el ) );
+        this.button = $('<button class="btn btn-large btn-primary" type="submit">Add Parameter</button>').appendTo( $( this.el ) );
     }
 });
 
 var ParameterCollectionFormView = AmpersandView.extend({
     template: "<div> \
   <div data-hook='collection'></div> \
-  <h4>Add Parameter</h4> \
+  <br /> \
   <form data-hook='addParametersForm'></form> \
 </div>",
     initialize: function(attr, options)
@@ -2218,9 +2217,9 @@ var ParameterCollectionFormView = AmpersandView.extend({
         AmpersandView.prototype.render.apply(this, arguments);
 
         collectionTemplate = "<div> \
-  <table data-hook='table'> \
+  <table width='100%' data-hook='table'> \
     <thead> \
-      <th width='25px'></th><th width='120px'>Name</th><th width='120px'>Value</th> \
+      <th width='120px'>Name</th><th width='120px'>Value</th><th></th> \
     </thead> \
     <tbody data-hook='items'> \
     </tbody> \
@@ -2263,7 +2262,7 @@ var ModifyingNumberInputView = require('./modifying-number-input-view')
 
 var Tests = require('./tests');
 module.exports = View.extend({
-    template: "<tr><td><button class='btn' data-hook='delete'>x</button></td><td data-hook='name'></td><td data-hook='value'></td></tr>",
+    template: "<tr><td data-hook='name'></td><td data-hook='value'></td><td><button class='btn' data-hook='delete'>x</button></td></tr>",
     // Gotta have a few of these functions just so this works as a form view
     // This gets called when things update
     update: function()
@@ -2289,8 +2288,7 @@ module.exports = View.extend({
 
         this.renderSubview(
             new ModifyingInputView({
-                template: '<span><span data-hook="label"></span><input><span data-hook="message-container"><span data-hook="message-text"></span></span></span>',
-                label: 'Name',
+                label: '',
                 name: 'name',
                 value: this.model.name,
                 required: false,
@@ -2301,8 +2299,7 @@ module.exports = View.extend({
 
         this.renderSubview(
             new ModifyingInputView({
-                template: '<span><span data-hook="label"></span><input><span data-hook="message-container"><span data-hook="message-text"></span></span></span>',
-                label: 'Value',
+                label: '',
                 name: 'value',
                 value: this.model.value,
                 required: false,
@@ -2335,14 +2332,64 @@ var AddNewReactionForm = AmpersandFormView.extend({
     submitCallback: function (obj) {
         var validSubdomains = this.baseModel.mesh.uniqueSubdomains.map( function(model) { return model.name; } );
 
+        // I shouldn't extract the type this way probly
+        var type = $( obj.toElement ).attr( "data-hook" );
+
         var model;
 
-        var rate = this.baseModel.parameters.at(0);
-        var s1 = this.baseModel.species.at(0);
-        
-        var reactants = [];
-        var products = [[s1, 1]];
+        var reactants = 0;
+        var products = 0;
+        if(type == 'creation')
+        {
+            reactants = 0;
+            products = 1;
+        }
+        else if(type == 'destruction')
+        {
+            reactants = 1;
+            products = 0;
+        }
+        if(type == 'change')
+        {
+            reactants = 1;
+            products = 1;
+        }
+        if(type == 'merge')
+        {
+            reactants = 2;
+            products = 1;
+        }
+        if(type == 'dimerization')
+        {
+            reactants = 1;
+            products = 1;
+        }
+        if(type == 'split')
+        {
+            reactants = 1;
+            products = 2;
+        }
+        if(type == 'four')
+        {
+            reactants = 2;
+            products = 2;
+        }
 
+        var modelReactants = []
+        var modelProducts = []
+        for(var i = 0; i < reactants; i++)
+        {
+            modelReactants.push([this.baseModel.species.at(i), 1]);
+        }
+        
+        for(var i = 0; i < products; i++)
+        {
+            modelProducts.push([this.baseModel.species.at(i), 1]);
+        }
+
+        if(type == 'dimerization')
+            modelReactants[0][1] = 2;
+        
         var i = this.collection.models.length;
         var name = 'R' + i;
         var names = this.collection.map( function(reaction) { return reaction.name; } );
@@ -2352,9 +2399,13 @@ var AddNewReactionForm = AmpersandFormView.extend({
             name = 'R' + i;
         }
 
-        model = this.collection.addMassActionReaction(name, 'creation', rate, reactants, products, validSubdomains);
+        var rate = this.baseModel.parameters.at(0);
+
+        model = this.collection.addMassActionReaction(name, type, rate, modelReactants, modelProducts, validSubdomains);
         
-        this.selectView.select(model);
+        this.selectView.select(model, true);
+
+        obj.preventDefault();
     },
     validCallback: function (valid) {
         if (valid) {
@@ -2372,24 +2423,7 @@ var AddNewReactionForm = AmpersandFormView.extend({
         this.selectView = attr.selectView;
         this.baseModel = this.collection.parent;
 
-        var options = [];
-
-        /*var emptyDiv = $( '<div>' );
-        katex.render('\\emptyset \\rightarrow A', emptyDiv[0]);
-        options.push(['creation', emptyDiv.html()]);
-        katex.render('A \\rightarrow \\emptyset', emptyDiv[0]);
-        options.push(['destruction', emptyDiv.html()]);
-        katex.render('A \\rightarrow B', emptyDiv[0]);
-        options.push(['change', emptyDiv.html()]);
-        katex.render('A + A \\rightarrow B', emptyDiv[0]);
-        options.push(['dimerization', emptyDiv.html()]);
-        katex.render('A \\rightarrow B + C', emptyDiv[0]);
-        options.push(['split', emptyDiv.html()]);
-        katex.render('A + B \\rightarrow C + D', emptyDiv[0]);
-        options.push(['four', emptyDiv.html()]);
-        options.push(['massaction', 'Mass action, custom stoichiometry']);
-        options.push(['custom', 'Custom propensity, custom stoichiometry']);
-
+        /*var options = [];
         this.fields = [
             new InputView({
                 label: 'Name',
@@ -2417,7 +2451,33 @@ var AddNewReactionForm = AmpersandFormView.extend({
 
         $( this.el ).find('input').prop('autocomplete', 'off');
 
-        this.button = $('<button class="btn btn-primary" type="submit">Add Reaction</button>').appendTo( $( this.el ) );
+        this.buttonTemplate = '<div class="btn-group"> \
+  <a class="btn btn-large btn-primary dropdown-toggle" data-toggle="dropdown" href="#"> \
+    Add Reaction \
+    <span class="caret"></span> \
+  </a> \
+  <ul class="dropdown-menu"> \
+    <li><a data-hook="creation" tabindex="-1" href="#"></a></li> \
+    <li><a data-hook="destruction" tabindex="-1" href="#"></a></li> \
+    <li><a data-hook="change" tabindex="-1" href="#"></a></li> \
+    <li><a data-hook="dimerization" tabindex="-1" href="#"></a></li> \
+    <li><a data-hook="split" tabindex="-1" href="#"></a></li> \
+    <li><a data-hook="four" tabindex="-1" href="#"></a></li> \
+    <li><a data-hook="massaction" tabindex="-1" href="#">Custom mass action</a></li> \
+    <li><a data-hook="custom" tabindex="-1" href="#">Custom propensity</a></li> \
+  </ul> \
+</div>';
+
+        this.button = $( this.buttonTemplate ).appendTo( $( this.el ) );
+
+        katex.render('\\emptyset \\rightarrow A', $( this.el ).find('[data-hook=creation]')[0]);
+        katex.render('A \\rightarrow \\emptyset', $( this.el ).find('[data-hook=destruction]')[0]);
+        katex.render('A \\rightarrow B', $( this.el ).find('[data-hook=change]')[0]);
+        katex.render('A + A \\rightarrow B', $( this.el ).find('[data-hook=dimerization]')[0]);
+        katex.render('A \\rightarrow B + C', $( this.el ).find('[data-hook=split]')[0]);
+        katex.render('A + B \\rightarrow C + D', $( this.el ).find('[data-hook=four]')[0]);
+
+        $( this.el ).find( 'li a' ).click( _.bind(this.submitCallback, this));
     }
 });
 
@@ -2485,7 +2545,7 @@ var ReactionCollectionFormView = AmpersandView.extend({
         collectionTemplate = "<div>\
   <table data-hook='table'>\
     <thead>\
-      <th width='25px'></th><th width='120px'>Name</th><th>Summary</th><th width='25px'>Edit</th>\
+      <th width='25px'>Edit</th><th width='120px'>Name</th><th>Summary</th><th width='40px'>Delete</th>\
     </thead>\
     <tbody data-hook='items'>\
     </tbody>\
@@ -2848,7 +2908,7 @@ var reactants;
         options.push(['split', emptyDiv.html()]);
         katex.render('A + B \\rightarrow C + D', emptyDiv[0]);
         options.push(['four', emptyDiv.html()]);
-        options.push(['massaction', 'Mass action, custom stoichiometry']);
+        options.push(['massaction', 'Custom mass action']);
         options.push(['custom', 'Custom propensity, custom stoichiometry']);
 
         this.renderSubview(
@@ -2932,10 +2992,10 @@ module.exports = View.extend({
     // This gets called when things update
     template : "<tbody>\
   <tr data-hook='basic'>\
-    <td><button class='btn' data-hook='remove'>x</button></td>\
-    <td><span data-hook='name'></span></td> \
+    <td><center><input type='radio' name='reaction' data-hook='radio'></center></td>\
+    <td><center><span data-hook='name'></span></center></td> \
     <td><center><span data-hook='latex'></span></center></td> \
-    <td><input type='radio' name='reaction' data-hook='radio'></td>\
+    <td><center><button class='btn' data-hook='remove'>x</button></center></td>\
   </tr>\
 </tbody>",
     // On any change of anything, redraw the Latex
@@ -3067,25 +3127,18 @@ var AddNewSpecieForm = AmpersandFormView.extend({
     submitCallback: function (obj) {
         var validSubdomains = this.baseModel.mesh.uniqueSubdomains.map( function(model) { return model.name; } );
 
-        var model;
-        if(this.baseModel.isSpatial)
+        var i = this.collection.models.length;
+        var name = 'S' + i;
+        var names = this.collection.map( function(specie) { return specie.name; } );
+        while(_.contains(names, name))
         {
-            model = this.collection.addSpecie(obj.name, 0, Number(obj.diffusion), validSubdomains);
-        }
-        else
-        {
-            model = this.collection.addSpecie(obj.name, Number(obj.initialCondition), 0, validSubdomains);
+            i += 1;
+            name = 'S' + i;
         }
 
-        this.selectView.select(model);
+        var model = this.collection.addSpecie(name, 0, 0, validSubdomains);
 
-        $( this.nameField.el ).find('input').val('');
-
-        if(this.diffusionField)
-            $( this.diffusionField.el ).find('input').val(0);
-
-        if(this.initialConditionField)
-            $( this.initialConditionField ).find('input').val(0);
+        this.selectView.select(model, true);
     },
             // this valid callback gets called (if it exists)
             // when the form first loads and any time the form
@@ -3105,45 +3158,6 @@ var AddNewSpecieForm = AmpersandFormView.extend({
         this.baseModel = this.collection.parent;
 
         this.selectView = attr.selectView;
-        this.fields = [
-            new InputView({
-                label: 'Name',
-                name: 'name',
-                value: '',
-                required: true,
-                placeholder: 'NewSpecies',
-                tests: [].concat(Tests.naming(this.collection))
-            })
-        ];
-
-        this.nameField = this.fields[0];
-
-        if(this.baseModel.isSpatial)
-        {
-            this.diffusionField = new InputView({
-                label: 'Diffusion',
-                name: 'diffusion',
-                value: '0',
-                required: true,
-                placeholder: '0',
-                tests: [].concat(Tests.positive())
-            });
-
-            this.fields.push(this.diffusionField);
-        }
-        else
-        {
-            this.initialConditionField = new InputView({
-                label: 'Initial Condition',
-                name: 'initialCondition',
-                value: '0',
-                required: true,
-                placeholder: '0',
-                tests: [].concat(Tests.nonzero(), Tests.units(this.collection.parent))
-            });
-
-            this.fields.push(this.initialConditionField);
-        }
     },
     render: function()
     {
@@ -3151,7 +3165,7 @@ var AddNewSpecieForm = AmpersandFormView.extend({
 
         $( this.el ).find('input').prop('autocomplete', 'off');
 
-        this.button = $('<button class="btn btn-primary" type="submit">Add</button>').appendTo( $( this.el ) );
+        this.button = $('<button class="btn btn-large btn-primary" type="submit">Add Species</button>').appendTo( $( this.el ) );
     }
 });
 
@@ -3170,7 +3184,7 @@ new TestForm();*/
 var SpecieCollectionFormView = AmpersandView.extend({
     template: "<div> \
   <div data-hook='collection'></div> \
-  <h4>Add Specie</h4> \
+  <br /> \
   <form data-hook='addSpeciesForm'></form> \
 </div>",
     initialize: function(attr, options)
@@ -3180,9 +3194,9 @@ var SpecieCollectionFormView = AmpersandView.extend({
     render: function()
     {
         var collectionTemplate = "<div> \
-  <table data-hook='table'> \
+  <table width='100%' data-hook='table'> \
     <thead> \
-<th width='25px'></th><th width='120px'>Name</th><th width='120px'>" + ((this.collection.parent.isSpatial) ? "Diffusion coefficient" : "Initial Condition") + "</th>" + ((this.collection.parent.isSpatial) ? "<th width='120px'>Species allowed in these subdomains</th>" : "") + " \
+<th width='120px'>Name</th><th width='120px'>" + ((this.collection.parent.isSpatial) ? "Diffusion coefficient" : "Initial Condition") + "</th>" + ((this.collection.parent.isSpatial) ? "<th width='120px'>Species allowed in these subdomains</th>" : "") + "<th></th> \
     </thead> \
     <tbody data-hook='items'> \
     </tbody> \
@@ -3300,18 +3314,18 @@ module.exports = View.extend({
     {
         if(this.baseModel.isSpatial)
         {
-            this.template = "<tr><td><button class='btn' data-hook='delete'>x</button></td><td data-hook='name'></td><td data-hook='diffusion'></td><td><center><div data-hook='subdomains'></div></center></td></tr>";
+            this.template = "<tr><td data-hook='name'></td><td data-hook='diffusion'></td><td><center><div data-hook='subdomains'></div></center></td><td><button class='btn' data-hook='delete'>x</button></td></tr>";
         }
         else
         {
-            this.template = "<tr><td><button class='btn' data-hook='delete'>x</button></td><td data-hook='name'></td><td data-hook='initialCondition'></td></tr>";
+            this.template = "<tr><td data-hook='name'></td><td data-hook='initialCondition'></td><td><button class='btn' data-hook='delete'>x</button></td></tr>";
         }
 
         View.prototype.render.apply(this, arguments);
 
         this.renderSubview(
             new ModifyingInputView({
-                template: '<span><span data-hook="label"></span><input><span data-hook="message-container"><span data-hook="message-text"></span></span></span>',
+                //template: '<div><div data-hook="label"></div><div><input type="text"></div><div data-hook="message-container"><div data-hook="message-text"></div></div></div>',
                 label: '',
                 name: 'name',
                 value: this.model.name,
@@ -3325,7 +3339,7 @@ module.exports = View.extend({
         {
             this.renderSubview(
                 new ModifyingNumberInputView({
-                    template: '<span><span data-hook="label"></span><input><span data-hook="message-container"><span data-hook="message-text"></span></span></span>',
+                    //template: '<span><span data-hook="label"></span><div><input></div><div data-hook="message-container"><span data-hook="message-text"></span></div></span>',
                     label: '',
                     name: 'diffusion',
                     value: this.model.diffusion,
@@ -3343,8 +3357,8 @@ module.exports = View.extend({
         {
             this.renderSubview(
                 new ModifyingNumberInputView({
-                    template: '<span><span data-hook="label"></span><input><span data-hook="message-container"><span data-hook="message-text"></span></span></span>',
-                    label: 'Initial Condition',
+                    //template: '<div><span data-hook="label"></span><div><input></div><div data-hook="message-container"><div data-hook="message-text"></div></div></div>',
+                    label: '',
                     name: 'initialCondition',
                     value: this.model.initialCondition,
                     required: false,
@@ -3655,7 +3669,7 @@ module.exports = {
             {
                 if(value % 1 != 0)
                 {
-                    return "Initial condition must be integer";
+                    return "Initial condition must be an integer";
                 }
             }
         }
@@ -66403,24 +66417,25 @@ var PaginatedCollectionView = require('../forms/paginated-collection-view');
 var Tests = require('../forms/tests.js');
 var AddNewModelForm = AmpersandFormView.extend({
     submitCallback: function (obj) {
-        var units = '';
+        var units = $( obj.toElement ).attr( 'data-hook' );
         var isSpatial = false;
 
-        if(obj.units == 'concentration')
-        {
-            units = obj.units;
-        }
-        else if(obj.units == 'population')
-        {
-            units = obj.units
-        }
-        else
+        if(units == 'spatial')
         {
             units = 'population'
             isSpatial = true;
-        }   
+        }
 
-        var model = new Model({ name : obj.name,
+        var i = this.collection.models.length;
+        var name = 'model' + i;
+        var names = this.collection.map( function(specie) { return specie.name; } );
+        while(_.contains(names, name))
+        {
+            i += 1;
+            name = 'model' + i;
+        }
+
+        var model = new Model({ name : name,
                                 units : units,
                                 type : 'massaction',
                                 isSpatial : isSpatial,
@@ -66428,9 +66443,7 @@ var AddNewModelForm = AmpersandFormView.extend({
 
         this.collection.add(model).save();
 
-        this.selectView.select(model);
-
-        $( this.nameField.el ).find('input').val('');
+        this.selectView.select(model, true);
     },
     validCallback: function (valid) {
         if (valid) {
@@ -66443,28 +66456,6 @@ var AddNewModelForm = AmpersandFormView.extend({
         this.collection = attr.collection;
         this.meshCollection = attr.meshCollection;
         this.selectView = attr.selectView;
-
-        this.nameField = new InputView({
-            label: 'Name',
-            name: 'name',
-            value: '',
-            required: true,
-            placeholder: 'NewModel',
-            tests: [].concat(Tests.naming(this.collection))
-        });
-
-        this.unitsSelectField = new SelectView({
-            label: 'Units',
-            name: 'units',
-            value: 'population',
-            options: [['concentration', 'Concentration'], ['population', 'Population'], ['spatialPopulation', 'Spatial Population']],
-            required: true,
-        });
-
-        this.fields = [
-            this.nameField,
-            this.unitsSelectField
-        ];
     },
     render: function()
     {
@@ -66472,14 +66463,28 @@ var AddNewModelForm = AmpersandFormView.extend({
 
         $( this.el ).find('input').prop('autocomplete', 'off');
 
-        this.button = $('<button class="btn btn-primary" type="submit">Add Model</button>').appendTo( $( this.el ) );
+        this.buttonTemplate = '<div class="btn-group"> \
+  <a class="btn btn-large btn-primary dropdown-toggle" data-toggle="dropdown" href="#"> \
+    Add Model \
+    <span class="caret"></span> \
+  </a> \
+  <ul class="dropdown-menu"> \
+    <li><a data-hook="concentration" tabindex="-1" href="#">Concentration, Well-mixed</a></li> \
+    <li><a data-hook="population" tabindex="-1" href="#">Population, Well-mixed</a></li> \
+    <li><a data-hook="spatial" tabindex="-1" href="#">Population, Spatial</a></li> \
+  </ul> \
+</div>';
+
+        this.button = $( this.buttonTemplate ).appendTo( $( this.el ) );
+
+        $( this.el ).find( 'li a' ).click( _.bind(this.submitCallback, this));
     }
 });
 
 var ModelCollectionSelectView = AmpersandView.extend({
     template: "<div> \
   <div data-hook='modelCollection'></div> \
-  <h4>Add Model</h4> \
+  <br /> \
   <form data-hook='addModelForm'></form> \
 </div>",
     props: {
@@ -66556,7 +66561,7 @@ var Tests = require('../forms/tests');
 module.exports = View.extend({
     template: '<tr> \
   <td> \
-    <input type="radio" name="model" /> \
+    <button data-hook="edit" class="btn-small btn">Edit</button> \
   </td> \
   <td data-hook="name"> \
   </td> \
@@ -66604,17 +66609,21 @@ module.exports = View.extend({
         }
     },
     events: {
-        "click input" : "selectSelf",
-        "click button" : "removeModel"
+        "click [data-hook=edit]" : "selectSelf",
+        "click [data-hook=delete]" : "removeModel"
     },
     selectSelf: function()
     {
         // There is a CollectionView parent here that must be navigated
         this.parent.parent.select(this.model);
     },
+    deSelect : function()
+    {
+        $( this.queryByHook( "edit" ) ).removeClass('btn-success');
+    },
     select : function()
     {
-        $( this.el ).find( "input[type='radio']" ).prop('checked', true);
+        $( this.queryByHook( "edit" ) ).addClass('btn-success');
     },
     removeModel: function()
     {

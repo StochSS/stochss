@@ -320,7 +320,7 @@ var reactants;
         options.push(['split', emptyDiv.html()]);
         katex.render('A + B \\rightarrow C + D', emptyDiv[0]);
         options.push(['four', emptyDiv.html()]);
-        options.push(['massaction', 'Mass action, custom stoichiometry']);
+        options.push(['massaction', 'Custom mass action']);
         options.push(['custom', 'Custom propensity, custom stoichiometry']);
 
         this.renderSubview(
