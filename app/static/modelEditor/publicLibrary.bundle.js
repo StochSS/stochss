@@ -1856,24 +1856,29 @@ var PaginatedCollectionView = AmpersandView.extend({
         overLimit : 'boolean'
     },
     bindings : {
-        'modelCount' : [
-            {
-                type : 'toggle',
-                selector : 'div'
-            },
-            {
-                type : 'text',
-                hook : 'total'
-            }
-        ],
+        'modelCount' : {
+            type : 'toggle',
+            selector : 'div'
+        },
         'overLimit' : {
             type : 'toggle',
             hook : 'nav'
         },
+        'rightOffset' :
+        {
+            type : 'text',
+            hook : 'rightPosition'
+        },
         'offset' : 
         {
             type : 'text',
-            hook : 'position'
+            hook : 'leftPosition'
+        }
+    },
+    derived : {
+        rightOffset : {
+            deps : ['offset', 'modelCount'],
+            fn : function() { return Math.min(this.modelCount, this.offset + 10); }
         }
     },
     updateModelCount: function()
@@ -2952,7 +2957,7 @@ var SpecieCollectionFormView = AmpersandView.extend({
   </table> \
   <div data-hook='nav'> \
     <a data-hook='previous' href='#'>&lt;&lt;</a> \
-    <span data-hook='position'></span> / <span data-hook='total'></span> \
+    <span data-hook='leftPosition'></span> - <span data-hook='rightPosition'></span> \
     <a data-hook='next' href='#'>&gt;&gt;</a> \
   </div> \
 </div>";

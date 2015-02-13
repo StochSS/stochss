@@ -118,24 +118,29 @@ var PaginatedCollectionView = AmpersandView.extend({
         overLimit : 'boolean'
     },
     bindings : {
-        'modelCount' : [
-            {
-                type : 'toggle',
-                selector : 'div'
-            },
-            {
-                type : 'text',
-                hook : 'total'
-            }
-        ],
+        'modelCount' : {
+            type : 'toggle',
+            selector : 'div'
+        },
         'overLimit' : {
             type : 'toggle',
             hook : 'nav'
         },
+        'rightOffset' :
+        {
+            type : 'text',
+            hook : 'rightPosition'
+        },
         'offset' : 
         {
             type : 'text',
-            hook : 'position'
+            hook : 'leftPosition'
+        }
+    },
+    derived : {
+        rightOffset : {
+            deps : ['offset', 'modelCount'],
+            fn : function() { return Math.min(this.modelCount, this.offset + 10); }
         }
     },
     updateModelCount: function()
