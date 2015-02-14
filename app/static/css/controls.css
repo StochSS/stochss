@@ -1,0 +1,23 @@
+[data-hook="container"] {
+  border-style: solid; 
+  color: white;
+  padding: 5px;
+  background-color : grey;
+}
+
+.button-container{
+    display: inline-block;
+    padding: 2px;
+    border-style: solid;
+    border-color: black;
+    border-width: 1px;
+}
+
+.button {
+    height : 25px;
+}
+
+[data-hook="inset"] {
+    position: absolute;
+    z-index: 1;
+}

@@ -115,12 +115,12 @@ def get_url(backend=None, instance=None, protocol='http'):
   if backend is None:
     backend = get_backend()
 
+  return _get_dev2_url(backend, instance)
 
   if _is_dev2_environment():
     return _get_dev2_url(backend, instance)
   elif _is_dev_environment():
     return _get_dev_url(backend, instance)
-
 
   hostname = get_hostname(backend, instance)
   return '%s://%s' % (protocol, hostname)

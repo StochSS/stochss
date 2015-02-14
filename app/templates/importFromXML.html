@@ -1,0 +1,18 @@
+{% extends "base.html" %}
+{% block title%}Import Model from XML{% endblock %}
+{% block content %}
+{% block csscontent %}
+<link href="/static/modelEditor/app.css" rel="stylesheet">
+{% endblock %}
+
+<div class="span9">
+    <div class="well well-large">
+      <h3>Import From XML</h3>
+      <form action="/importFromXML" enctype="multipart/form-data" method="post">
+        Please specify a valid StochKit XML file:<br>
+        <input type="file" name="datafile" size="40">
+        <input type="submit" value="Submit">
+      </form>
+</div>
+
+{% endblock %}

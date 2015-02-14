@@ -8,9 +8,12 @@ import tempfile,sys
 from google.appengine.ext import db
 import pickle
 import threading
+import random
 import subprocess
 import traceback
 import logging
+import boto
+from boto.dynamodb import condition
 from google.appengine.api import users
 
 from stochss.model import *
@@ -20,6 +23,8 @@ from stochssapp import BaseHandler
 from modeleditor import StochKitModelWrapper, ObjectProperty
 
 from backend.backendservice import backendservices
+sys.path.append(os.path.join(os.path.dirname(__file__), '../lib/cloudtracker'))
+from s3_helper import *
 
 import exportimport
 
@@ -68,9 +73,12 @@ class StochKitJobWrapper(db.Model):
     attributes = ObjectProperty()
     stochkit_job = ObjectProperty()
     startDate = db.StringProperty()
+    output_stored = db.StringProperty()
 
     stdout = db.StringProperty()
     stderr = db.StringProperty()
+    
+    cloud_id = db.StringProperty()
 
     def delete(self, handler):
         job = self
@@ -82,8 +90,14 @@ class StochKitJobWrapper(db.Model):
         if job.stochkit_job.zipFileName:
             if os.path.exists(job.stochkit_job.zipFileName):
                 os.remove(job.stochkit_job.zipFileName)
+        
+#         #delete the ouput results of execution locally, if exists.       
+#         if stochkit_job.output_location:
+#             if os.path.exists(stochkit_job.output_location):
+#                 shutil.rmtree(stochkit_job.output_location)
 
         if stochkit_job.resource == 'Local':
+            output_path = os.path.join(os.path.dirname(__file__), '../output/joblib/boto')
             service.deleteTaskLocal([stochkit_job.pid])
             
             time.sleep(0.25)
@@ -94,6 +108,28 @@ class StochKitJobWrapper(db.Model):
             os.environ["AWS_ACCESS_KEY_ID"] = db_credentials['EC2_ACCESS_KEY']
             os.environ["AWS_SECRET_ACCESS_KEY"] = db_credentials['EC2_SECRET_KEY']
             service.deleteTasks([(stochkit_job.celery_pid,stochkit_job.pid)])
+            
+            try:
+                user_data = db.GqlQuery("SELECT * FROM UserData WHERE ec2_access_key = :1 AND ec2_secret_key = :2", db_credentials['EC2_ACCESS_KEY'], db_credentials['EC2_SECRET_KEY']).get()
+                
+                bucketname = user_data.S3_bucket_name
+                logging.info(bucketname)
+                #delete the folder that contains the replay sources
+                delete_folder(bucketname, stochkit_job.pid, db_credentials['EC2_ACCESS_KEY'], db_credentials['EC2_SECRET_KEY'])
+                logging.info('delete the rerun source folder {1} in bucket {0}'.format(bucketname, stochkit_job.pid))
+                #delete the output tar file
+                delete_file(bucketname, 'output/'+stochkit_job.pid+'.tar', db_credentials['EC2_ACCESS_KEY'], db_credentials['EC2_SECRET_KEY'])
+                logging.info('delete the output tar file output/{1}.tar in bucket {0}'.format(bucketname, stochkit_job.pid))
+                
+                #delete dynamodb entries
+                dynamo=boto.connect_dynamodb(aws_access_key_id=os.environ["AWS_ACCESS_KEY_ID"], aws_secret_access_key=os.environ["AWS_SECRET_ACCESS_KEY"])
+                table = dynamo.get_table("stochss_cost_analysis")
+                results = table.scan(scan_filter={'uuid' :condition.EQ(stochkit_job.pid)})
+                for result in results:
+                    result.delete()
+                
+            except:
+                raise Exception('fail to delete cloud output or rerun sources.')
 
         if stochkit_job.output_location is not None and os.path.exists(str(stochkit_job.output_location)):
             shutil.rmtree(stochkit_job.output_location)
@@ -116,6 +152,7 @@ class JobManager():
                         "type" : job.stochkit_job.type,
                         "status" : job.stochkit_job.status,
                         "modelName" : job.modelName,
+                        "output_stored": job.output_stored,
                         "output_location" : job.stochkit_job.output_location,
                         "zipFileName" : job.stochkit_job.zipFileName,
                         "output_url" : job.stochkit_job.output_url,
@@ -154,6 +191,7 @@ class JobManager():
                     "type" : job.stochkit_job.type,
                     "status" : job.stochkit_job.status,
                     "modelName" : job.modelName,
+                    "output_stored": job.output_stored,
                     "output_location" : job.stochkit_job.output_location,
                     "zipFileName" : job.stochkit_job.zipFileName,
                     "units" : job.stochkit_job.units,
@@ -214,6 +252,8 @@ class JobManager():
 
         jobWrap.stdout = job['stdout']
         jobWrap.stderr = job['stderr']
+        if 'output_stored' in job:
+            jobWrap.output_stored = job['output_stored']
 
         jobWrap.put()
 
@@ -316,7 +356,7 @@ class StochKitJob(Job):
         
         self.epsilon = epsilon
         self.threshold = threshold
-        self.resource = "local"
+        self.resource = "Local"
 
     
         # Status of the Job (Running, Pending, Done)
@@ -338,15 +378,17 @@ class SimulatePage(BaseHandler):
     
     def get(self):
         # Query the datastore
-        all_models_q = db.GqlQuery("SELECT * FROM StochKitModelWrapper WHERE user_id = :1", self.user.user_id())
+        all_models_q = db.GqlQuery("SELECT * FROM StochKitModelWrapper WHERE user_id = :1 AND is_public = False", self.user.user_id())
         all_models=[]
         for q in all_models_q.run():
-            all_models.append({ "name" : q.model.name,
+            all_models.append({ "name" : q.name,
                                 "id" : q.key().id(),
-                                "units" : q.model.units,
+                                "units" : q.units,
                                 "isSpatial" : q.isSpatial })
-    
         context = {'all_models': all_models}
+        
+        
+        
         self.render_response('simulate.html',**context)
     def post(self):
         """ Assemble the input to StochKit2 and submit the job (locally or via cloud). """
@@ -412,12 +454,9 @@ class SimulatePage(BaseHandler):
             assert job.user_id == self.user.user_id()
 
             #try:
+            # delete the db entry
             job.delete(self)
-            #except Exception,e:
-            #    self.response.headers['Content-Type'] = 'application/json'
-            #    self.response.write(json.dumps({ 'status' : False,
-            #                                     'msg' : "Failed to delete job"}))
-            #    return
+            
 
             self.response.headers['Content-Type'] = 'application/json'
             self.response.write(json.dumps({ 'status' : True,
@@ -432,7 +471,7 @@ class SimulatePage(BaseHandler):
                 self.response.write(json.dumps(["Not the right user"]))
 
             if job.stochkit_job.status == "Finished":
-                if job.stochkit_job.resource == 'Cloud' and job.stochkit_job.output_location is None:
+                if job.stochkit_job.resource == 'Cloud' and job.output_stored == 'False' or job.stochkit_job.resource == 'Cloud' and job.stochkit_job.output_location is None:
                     self.response.headers['Content-Type'] = 'application/json'
                     self.response.write(json.dumps({ "status" : "Finished",
                                                      "values" : [],
@@ -490,9 +529,12 @@ class SimulatePage(BaseHandler):
                             vhandle.close()
                     else:
                         outfile = '/result/output.txt'
-
-                        vhandle = open(outputdir + '/result/output.txt', 'r')
                         values = { 'time' : [], 'trajectories' : {} }
+
+                        #if not os.path.isfile(outputdir + outfile):
+                            
+                        vhandle = open(outputdir + outfile, 'r')
+                                       
                         columnToList = []
                         for i, line in enumerate(vhandle):
                             if i == 0:
@@ -574,7 +616,7 @@ class SimulatePage(BaseHandler):
     def runCloud(self, params):
         
         try:
-            model = StochKitModelWrapper.get_by_id(params["id"]).model
+            model = StochKitModelWrapper.get_by_id(params["id"]).createStochKitModel()
 
             if not model:
                 return {'status':False,'msg':'Failed to retrive the model to simulate.'}
@@ -629,6 +671,11 @@ class SimulatePage(BaseHandler):
             stime = params['time']
             realizations = params['realizations']
             increment = params['increment']
+
+            if int(params['seed']) < 0:
+                random.seed()
+                params['seed'] = random.randint(0, 2147483647)
+
             seed = params['seed']
 
             # Assemble the argument list
@@ -655,9 +702,8 @@ class SimulatePage(BaseHandler):
                 if "keep-histograms" in params:
                     args+=' --keep-histograms'
                 
-                if int(seed) >= 0:
-                    args+=' --seed '
-                    args+=str(seed)
+                args+=' --seed '
+                args+=str(seed)
             else:
                 params['job_type'] = 'stochkit_ode'
                 executable = "stochkit_ode.py"
@@ -672,12 +718,16 @@ class SimulatePage(BaseHandler):
             params['paramstring'] = cmd
 
             bucketname = self.user_data.getBucketName()
-            params['bucketname'] = bucketname         
+            params['bucketname'] = bucketname  
+            
+            params['user_id'] = self.user.user_id()       
         
             # Call backendservices and execute StochKit
             service = backendservices()
+            access_key = os.environ["AWS_ACCESS_KEY_ID"]
+            secret_key = os.environ['AWS_SECRET_ACCESS_KEY']
             print "backendservices.executeTask() params = {0}".format(params)
-            cloud_result = service.executeTask(params)
+            cloud_result = service.executeTask(params, "ec2", access_key, secret_key)
             if not cloud_result["success"]:
                 e = cloud_result["exception"]
                 result = {
@@ -710,8 +760,10 @@ class SimulatePage(BaseHandler):
             stochkit_job_db.name = stochkit_job.name
             stochkit_job_db.stochkit_job = stochkit_job
             stochkit_job_db.modelName = model.name
+            stochkit_job_db.output_stored = 'True'
+            stochkit_job_db.cloud_id = taskid
             stochkit_job_db.put()
-            result = {'status':True,'msg':'Job submitted sucessfully.'}
+            result = {'status':True,'msg':'Job submitted successfully.'}
                 
         except Exception,e:
             result = {'status':False,'msg':'Cloud execution failed: '+str(e)}       
@@ -727,7 +779,7 @@ class SimulatePage(BaseHandler):
             if not model:
                 return {'status':False,'msg':'Failed to retrive the model to simulate.'}
 
-            model = model.model
+            model = model.createStochKitModel()
 
             # Execute as concentration or population?
             execType = params['execType']
@@ -756,8 +808,12 @@ class SimulatePage(BaseHandler):
 
                 args += ' --realizations {0} '.format(params['realizations'])
                 args += ' --keep-trajectories '
-                if int(params['seed']) >= 0:
-                    args += '--seed {0} '.format(params['seed'])
+
+                if int(params['seed']) < 0:
+                    random.seed()
+                    params['seed'] = random.randint(0, 2147483647)
+
+                args += '--seed {0} '.format(params['seed'])
             else:
                 executable = "{0}/../../ode/stochkit_ode.py".format(path)
 
@@ -820,7 +876,7 @@ class SimulatePage(BaseHandler):
             stochkit_job_db.modelName = model.name
             stochkit_job_db.put()
     
-            result = {'status':True,'msg':'Job submitted sucessfully'}
+            result = {'status':True,'msg':'Job submitted successfully'}
             
         except None:#Exception,e:
             raise e
