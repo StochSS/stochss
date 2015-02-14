@@ -86,7 +86,7 @@ module.exports = View.extend({
                 name: 'specie',
                 value: this.model.specie,
                 options: this.baseModel.species,
-                unselectedText: 'Pick a specie',
+                unselectedText: 'Pick species',
                 required: true,
                 idAttribute: 'cid',
                 textAttribute: 'name',
