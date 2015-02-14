@@ -18,6 +18,12 @@ module.exports = View.extend({
         state: 'string',
         selector: 'object'
     },
+    bindings: {
+        'model.name' : {
+            type : 'text',
+            hook : 'modelName'
+        }
+    },
     events : {
         "click [data-hook='convertToPopulationButton']" : "convertToPopulation"
     },

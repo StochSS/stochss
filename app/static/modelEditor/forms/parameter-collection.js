@@ -8,11 +8,16 @@ var PaginatedCollectionView = require('./paginated-collection-view');
 var Tests = require('./tests');
 var AddNewParameterForm = AmpersandFormView.extend({
     submitCallback: function (obj) {
-        this.selectView.select(this.collection.addParameter(obj.name, obj.value));
+        var i = this.collection.models.length;
+        var name = 'k' + i;
+        var names = this.collection.map( function(parameter) { return parameter.name; } );
+        while(_.contains(names, name))
+        {
+            i += 1;
+            name = 'k' + i;
+        }
 
-        $( this.nameField.el ).find('input').val('');
-
-        $( this.valueField.el ).find('input').val(0); 
+        this.selectView.select(this.collection.addParameter(name, "0"), true);
    },
             // this valid callback gets called (if it exists)
             // when the form first loads and any time the form
@@ -30,44 +35,19 @@ var AddNewParameterForm = AmpersandFormView.extend({
         this.collection = options.collection;
         this.selectView = attr.selectView;
 
-        this.nameField = new InputView({
-            label: 'Name',
-            name: 'name',
-            value: '',
-            required: true,
-            placeholder: 'NewParameters',
-            tests: [].concat(Tests.naming(this.collection))
-        });
-        
-        this.valueField = new InputView({
-            label: 'Value',
-            name: 'value',
-            value: '0',
-            required: true,
-            placeholder: '0',
-            tests: []
-        });
-
-
-        this.fields = [
-            this.nameField,
-            this.valueField
-        ];
     },
     render: function()
     {
         AmpersandFormView.prototype.render.apply(this, arguments);
 
-        $( this.el ).find('input').prop('autocomplete', 'off');
-
-        this.button = $('<button class="btn btn-primary" type="submit">Add</button>').appendTo( $( this.el ) );
+        this.button = $('<button class="btn btn-large btn-primary" type="submit">Add Parameter</button>').appendTo( $( this.el ) );
     }
 });
 
 var ParameterCollectionFormView = AmpersandView.extend({
     template: "<div> \
   <div data-hook='collection'></div> \
-  <h4>Add Parameter</h4> \
+  <br /> \
   <form data-hook='addParametersForm'></form> \
 </div>",
     initialize: function(attr, options)
@@ -79,16 +59,16 @@ var ParameterCollectionFormView = AmpersandView.extend({
         AmpersandView.prototype.render.apply(this, arguments);
 
         collectionTemplate = "<div> \
-  <table data-hook='table'> \
+  <table width='100%' data-hook='table'> \
     <thead> \
-      <th width='25px'></th><th width='120px'>Name</th><th width='120px'>Value</th> \
+      <th width='120px'>Name</th><th width='120px'>Value</th><th></th> \
     </thead> \
     <tbody data-hook='items'> \
     </tbody> \
   </table> \
   <div data-hook='nav'> \
     <button class='btn' data-hook='previous'>&lt;&lt;</button>\
-    [ <span data-hook='position'></span> / <span data-hook='total'></span> ] \
+    [ <span data-hook='leftPosition'></span> - <span data-hook='rightPosition'></span> ] \
     <button class='btn' data-hook='next'>&gt;&gt;</button>\
   </div> \
 </div>";

@@ -49,10 +49,11 @@ var Model = AmpersandModel.extend({
                 }
             }
         }
-        else
+
+        if(!this.mesh)
         {
-            this.meshId = meshCollection.models.at(0).id;
-            this.mesh = meshCollection.models.at(0);
+            this.meshId = meshCollection.models[0].id;
+            this.mesh = meshCollection.models[0];
         }
 
         for(var i = 0; i < this.species.models.length; i++)

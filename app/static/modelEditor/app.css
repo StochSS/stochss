@@ -4,6 +4,7 @@
 
 .message, .message p {
     display : inline;
+    color : DarkRed;
 }
 
 .form-input {
@@ -31,6 +32,10 @@ select {
     font-size: large;
     bottom: 50px;
     right: 50px;
+}
+
+.reactionsAccordion .accordion-body.in, .selectAccordion .accordion-body.in {
+  overflow:visible;
 }
 
 .reactionsAccordion [data-hook=reactionEditorWorkspace] {

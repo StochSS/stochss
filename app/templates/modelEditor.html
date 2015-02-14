@@ -16,7 +16,7 @@
                     <div class="selectAccordion">
                         <div class="accordion-group">
                             <div class="accordion-heading">
-                                <h2><a class="accordion-toggle" data-toggle="collapse" data-parent="#selectAccordion" href="#collapseSelector">Select Model</a></h2>
+                                <h2><a class="accordion-toggle" data-toggle="collapse" data-parent="#selectAccordion" href="#collapseSelector">Select Model <span data-hook="modelName"></span></a></h2>
                             </div>
                             <div id="collapseSelector" class="accordion-body collapse in">
                                 <div class="accordion-inner">
@@ -36,17 +36,18 @@
     <div class="span2 modelRightBar">
         <div class="well sidebar-nav">
             <ul class="nav nav-list">
-                <li class="nav-header">Model Actions</li>
-                <li><a data-hook="duplicateLink" href="#">Duplicate Model</a></li>
-                <li><a data-hook="convertToPopulationLink" href="#">Convert to Population</a></li>
-                <li><a data-hook="convertToSpatialLink" href="#">Convert to Spatial</a></li>
-                <li class="nav-header">Import/Export</li>
-                <li><a href="/publicLibrary">Import from Public Library</a></li>
-                <li><a data-hook="exportToPublic" href="#">Export Model to Public Library</a></li>
-                <li><a href="/import?tab=1">Import from Zip</a></li>
-                <li><a href="/importFromXML">Import from XML</a></li>
+                <li class="reqModel nav-header">Model Actions</li>
+                <li class="reqModel"><a data-hook="duplicateLink" href="#">Duplicate Model</a></li>
+                <li class="reqModel"><a data-hook="convertToPopulationLink" href="#">Convert to Population</a></li>
+                <li class="reqModel"><a data-hook="convertToSpatialLink" href="#">Convert to Spatial</a></li>
+                <li class="nav-header">Import / Export</li>
+                <li><a href="/import?tab=1">Import from .zip</a></li>
+                <li><a href="/importFromXML">Import from .XML</a></li>
                 <!--<li><a data-hook="exportToXML" href="#">Export to .XML</a></li>-->
-                <li><a data-hook="exportToZip" href="#">Export to .zip</a></li>
+                <li class="reqModel"><a data-hook="exportToZip" href="#">Export to .zip</a></li>
+                <li class="nav-header">Public Library</li>
+                <li><a href="/publicLibrary">Import from Public Library</a></li>
+                <li class="reqModel"><a data-hook="exportToPublic" href="#">Export Model to Public Library</a></li>
             </ul>
         </div>
     </div>
@@ -80,7 +81,7 @@
                     <div class="accordion-heading">
                         <h2><a class="accordion-toggle" data-toggle="collapse" data-parent="#speciesAccordion" href="#collapseSpecies">Species Editor</a></h2>
                     </div>
-                    <div id="collapseSpecies" class="accordion-body collapse in">
+                    <div id="collapseSpecies" class="accordion-body collapse">
                         <div class="accordion-inner">
                             <div data-hook="specie"></div>
                         </div>

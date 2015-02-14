@@ -12,24 +12,25 @@ var PaginatedCollectionView = require('../forms/paginated-collection-view');
 var Tests = require('../forms/tests.js');
 var AddNewModelForm = AmpersandFormView.extend({
     submitCallback: function (obj) {
-        var units = '';
+        var units = $( obj.toElement ).attr( 'data-hook' );
         var isSpatial = false;
 
-        if(obj.units == 'concentration')
-        {
-            units = obj.units;
-        }
-        else if(obj.units == 'population')
-        {
-            units = obj.units
-        }
-        else
+        if(units == 'spatial')
         {
             units = 'population'
             isSpatial = true;
-        }   
+        }
 
-        var model = new Model({ name : obj.name,
+        var i = this.collection.models.length;
+        var name = 'model' + i;
+        var names = this.collection.map( function(specie) { return specie.name; } );
+        while(_.contains(names, name))
+        {
+            i += 1;
+            name = 'model' + i;
+        }
+
+        var model = new Model({ name : name,
                                 units : units,
                                 type : 'massaction',
                                 isSpatial : isSpatial,
@@ -37,9 +38,7 @@ var AddNewModelForm = AmpersandFormView.extend({
 
         this.collection.add(model).save();
 
-        this.selectView.select(model);
-
-        $( this.nameField.el ).find('input').val('');
+        this.selectView.select(model, true);
     },
     validCallback: function (valid) {
         if (valid) {
@@ -52,28 +51,6 @@ var AddNewModelForm = AmpersandFormView.extend({
         this.collection = attr.collection;
         this.meshCollection = attr.meshCollection;
         this.selectView = attr.selectView;
-
-        this.nameField = new InputView({
-            label: 'Name',
-            name: 'name',
-            value: '',
-            required: true,
-            placeholder: 'NewModel',
-            tests: [].concat(Tests.naming(this.collection))
-        });
-
-        this.unitsSelectField = new SelectView({
-            label: 'Units',
-            name: 'units',
-            value: 'population',
-            options: [['concentration', 'Concentration'], ['population', 'Population'], ['spatialPopulation', 'Spatial Population']],
-            required: true,
-        });
-
-        this.fields = [
-            this.nameField,
-            this.unitsSelectField
-        ];
     },
     render: function()
     {
@@ -81,14 +58,28 @@ var AddNewModelForm = AmpersandFormView.extend({
 
         $( this.el ).find('input').prop('autocomplete', 'off');
 
-        this.button = $('<button class="btn btn-primary" type="submit">Add Model</button>').appendTo( $( this.el ) );
+        this.buttonTemplate = '<div class="btn-group"> \
+  <a class="btn btn-large btn-primary dropdown-toggle" data-toggle="dropdown" href="#"> \
+    Add Model \
+    <span class="caret"></span> \
+  </a> \
+  <ul class="dropdown-menu"> \
+    <li><a data-hook="concentration" tabindex="-1" href="#">Concentration, Well-mixed</a></li> \
+    <li><a data-hook="population" tabindex="-1" href="#">Population, Well-mixed</a></li> \
+    <li><a data-hook="spatial" tabindex="-1" href="#">Population, Spatial</a></li> \
+  </ul> \
+</div>';
+
+        this.button = $( this.buttonTemplate ).appendTo( $( this.el ) );
+
+        $( this.el ).find( 'li a' ).click( _.bind(this.submitCallback, this));
     }
 });
 
 var ModelCollectionSelectView = AmpersandView.extend({
     template: "<div> \
   <div data-hook='modelCollection'></div> \
-  <h4>Add Model</h4> \
+  <br /> \
   <form data-hook='addModelForm'></form> \
 </div>",
     props: {
@@ -100,29 +91,29 @@ var ModelCollectionSelectView = AmpersandView.extend({
 
         this.meshCollection = attr.meshCollection;
     },
-    handleCollectionRemove: function(model, collection)
+    select: function(model)
     {
-        if(model == this.selectView.value)
+        if(model instanceof Model)
         {
-            this.selectView.select(this.collection.at(0));
+            this.selectView.select(model);
         }
-    },
-    select: function()
-    {
-        this.selected = this.selectView.value;
+        else
+        {
+            this.selected = this.selectView.value;
+        }
     },
     render: function()
     {
         var collectionTemplate = "<div> \
   <table data-hook='table' class='table table-bordered'> \
     <thead> \
-      <th width='25px'></th><th width='170px'>Name</th><th>Type</th><th width='25px'>Delete</th> \
+      <th width='25px'></th><th width='170px'>Name</th><th>Properties</th><th width='25px'>Delete</th> \
     </thead> \
     <tbody data-hook='items'></tbody> \
   </table> \
   <div data-hook='nav'> \
     <button class='btn' data-hook='previous'>&lt;&lt;</button> \
-    [ <span data-hook='position'></span> / <span data-hook='total'></span> ] \
+    [ <span data-hook='leftPosition'></span> - <span data-hook='rightPosition'></span> ] \
     <button class='btn' data-hook='next'>&gt;&gt;</button> \
   </div> \
 </div>";
@@ -133,11 +124,12 @@ var ModelCollectionSelectView = AmpersandView.extend({
             template : collectionTemplate,
             collection : this.collection,
             viewModel : ModelSelectView,
-            limit : 10
+            limit : 10,
+            value : this.selected,
+            autoSelect : false
         }), this.queryByHook('modelCollection'));
 
         this.listenToAndRun(this.selectView, 'change:value', _.bind(this.select, this));
-        this.listenToAndRun(this.collection, 'remove', _.bind(this.handleCollectionRemove, this));
 
         //this.fields.forEach( function(field) { $( field.el ).find('input').val(''); } );
         this.addForm = new AddNewModelForm(

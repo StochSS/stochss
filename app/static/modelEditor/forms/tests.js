@@ -53,7 +53,7 @@ module.exports = {
             {
                 if(value % 1 != 0)
                 {
-                    return "Initial condition must be integer";
+                    return "Initial condition must be an integer";
                 }
             }
         }

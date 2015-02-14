@@ -79,18 +79,18 @@ module.exports = View.extend({
     {
         if(this.baseModel.isSpatial)
         {
-            this.template = "<tr><td><button class='btn' data-hook='delete'>x</button></td><td data-hook='name'></td><td data-hook='diffusion'></td><td><center><div data-hook='subdomains'></div></center></td></tr>";
+            this.template = "<tr><td data-hook='name'></td><td data-hook='diffusion'></td><td><center><div data-hook='subdomains'></div></center></td><td><button class='btn' data-hook='delete'>x</button></td></tr>";
         }
         else
         {
-            this.template = "<tr><td><button class='btn' data-hook='delete'>x</button></td><td data-hook='name'></td><td data-hook='initialCondition'></td></tr>";
+            this.template = "<tr><td data-hook='name'></td><td data-hook='initialCondition'></td><td><button class='btn' data-hook='delete'>x</button></td></tr>";
         }
 
         View.prototype.render.apply(this, arguments);
 
         this.renderSubview(
             new ModifyingInputView({
-                template: '<span><span data-hook="label"></span><input><span data-hook="message-container"><span data-hook="message-text"></span></span></span>',
+                //template: '<div><div data-hook="label"></div><div><input type="text"></div><div data-hook="message-container"><div data-hook="message-text"></div></div></div>',
                 label: '',
                 name: 'name',
                 value: this.model.name,
@@ -104,7 +104,7 @@ module.exports = View.extend({
         {
             this.renderSubview(
                 new ModifyingNumberInputView({
-                    template: '<span><span data-hook="label"></span><input><span data-hook="message-container"><span data-hook="message-text"></span></span></span>',
+                    //template: '<span><span data-hook="label"></span><div><input></div><div data-hook="message-container"><span data-hook="message-text"></span></div></span>',
                     label: '',
                     name: 'diffusion',
                     value: this.model.diffusion,
@@ -122,8 +122,8 @@ module.exports = View.extend({
         {
             this.renderSubview(
                 new ModifyingNumberInputView({
-                    template: '<span><span data-hook="label"></span><input><span data-hook="message-container"><span data-hook="message-text"></span></span></span>',
-                    label: 'Initial Condition',
+                    //template: '<div><span data-hook="label"></span><div><input></div><div data-hook="message-container"><div data-hook="message-text"></div></div></div>',
+                    label: '',
                     name: 'initialCondition',
                     value: this.model.initialCondition,
                     required: false,

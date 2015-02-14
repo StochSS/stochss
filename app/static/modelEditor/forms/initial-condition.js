@@ -18,12 +18,12 @@ module.exports = View.extend({
   <td data-hook='details'> \
     <table> \
       <tr> \
-        <td>Count</td><td><div data-hook='count'></div></td> \
+        <td>Count:</td><td><div data-hook='count'></div></td> \
       </tr> \
       <tbody data-hook='xyz'> \
-        <tr><td>X</td><td><div data-hook='X'></div></td></tr> \
-        <tr><td>Y</td><td><div data-hook='Y'></div></td></tr> \
-        <tr><td>Z</td><td><div data-hook='Z'></div></td></tr> \
+        <tr><td>X:</td><td><div data-hook='X'></div></td></tr> \
+        <tr><td>Y:</td><td><div data-hook='Y'></div></td></tr> \
+        <tr><td>Z:</td><td><div data-hook='Z'></div></td></tr> \
       </tbody> \
       <tbody data-hook='subdomainTbody'> \
         <tr><td>Subdomain</td><td><div data-hook='subdomain'></div></td></tr> \
@@ -117,7 +117,7 @@ module.exports = View.extend({
 
         this.renderSubview(
             new ModifyingNumberInputView({
-                template: '<span><span data-hook="label"></span><input><span data-hook="message-container"><span data-hook="message-text"></span></span></span>',
+                //template: '<span><span data-hook="label"></span><input><span data-hook="message-container"><span data-hook="message-text"></span></span></span>',
                 label: '',
                 name: 'count',
                 value: this.model.count,
@@ -129,7 +129,7 @@ module.exports = View.extend({
 
         this.renderSubview(
             new ModifyingNumberInputView({
-                template: '<span><span data-hook="label"></span><input><span data-hook="message-container"><span data-hook="message-text"></span></span></span>',
+                //template: '<span><span data-hook="label"></span><input><span data-hook="message-container"><span data-hook="message-text"></span></span></span>',
                 label: '',
                 name: 'X',
                 value: this.model.X,
@@ -141,7 +141,7 @@ module.exports = View.extend({
 
         this.renderSubview(
             new ModifyingNumberInputView({
-                template: '<span><span data-hook="label"></span><input><span data-hook="message-container"><span data-hook="message-text"></span></span></span>',
+                //template: '<span><span data-hook="label"></span><input><span data-hook="message-container"><span data-hook="message-text"></span></span></span>',
                 label: '',
                 name: 'Y',
                 value: this.model.Y,
@@ -153,7 +153,7 @@ module.exports = View.extend({
 
         this.renderSubview(
             new ModifyingNumberInputView({
-                template: '<span><span data-hook="label"></span><input><span data-hook="message-container"><span data-hook="message-text"></span></span></span>',
+                //template: '<span><span data-hook="label"></span><input><span data-hook="message-container"><span data-hook="message-text"></span></span></span>',
                 label: '',
                 name: 'Z',
                 value: this.model.Z,

@@ -17,6 +17,7 @@ module.exports = View.extend({
     initialize: function()
     {
         View.prototype.initialize.apply(this, arguments);
+        this.showCustomOverride = this.parent.showCustomOverride;
 
         this.reaction = this.model.collection.parent;
 
@@ -28,7 +29,8 @@ module.exports = View.extend({
     },
     props:
     {
-        reactionType : 'string'
+        reactionType : 'string',
+        showCustomOverride : 'boolean'
     },
     derived: {
         massAction :
@@ -39,7 +41,7 @@ module.exports = View.extend({
         showCustom :
         {
             deps : ['reactionType'],
-            fn : function() { return this.reactionType == 'massaction' || this.reactionType == 'custom'; }
+            fn : function() { return this.showCustomOverride || (this.reactionType == 'massaction' || this.reactionType == 'custom'); }
         }
     },
     bindings : {
@@ -84,7 +86,7 @@ module.exports = View.extend({
                 name: 'specie',
                 value: this.model.specie,
                 options: this.baseModel.species,
-                unselectedText: 'Pick a specie',
+                unselectedText: 'Pick species',
                 required: true,
                 idAttribute: 'cid',
                 textAttribute: 'name',

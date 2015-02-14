@@ -403,10 +403,18 @@ class SuperZip:
                         continue
                     i, subdomain = line.split(',')
                     subdomainsData.append(int(float(subdomain)))
+
+            names = [x.name for x in db.Query(mesheditor.MeshWrapper).filter('userId =', handler.user.user_id()).run()]
+
+            tmpName = os.path.basename(modelj["meshFile"]).split(".")[0]
+            i = 0
+            while tmpName in names:
+                tmpName = os.path.basename(modelj["meshFile"]).split(".")[0] + '_' + str(i)
+                i += 1
             
             meshDb = mesheditor.MeshWrapper()
             meshDb.userId = handler.user.user_id()
-            meshDb.name = os.path.basename(modelj["meshFile"])
+            meshDb.name = tmpName
             meshDb.description = ""
             meshDb.meshFileId = int(meshFileId)
             meshDb.subdomains = subdomainsData
