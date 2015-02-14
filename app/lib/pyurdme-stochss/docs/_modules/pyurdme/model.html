@@ -1,0 +1,470 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>pyurdme.model &mdash; PyURDME 1.0.1 documentation</title>
+    
+    <link rel="stylesheet" href="../../_static/default.css" type="text/css" />
+    <link rel="stylesheet" href="../../_static/pygments.css" type="text/css" />
+    
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    '../../',
+        VERSION:     '1.0.1',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true
+      };
+    </script>
+    <script type="text/javascript" src="../../_static/jquery.js"></script>
+    <script type="text/javascript" src="../../_static/underscore.js"></script>
+    <script type="text/javascript" src="../../_static/doctools.js"></script>
+    <link rel="top" title="PyURDME 1.0.1 documentation" href="../../index.html" />
+    <link rel="up" title="Module code" href="../index.html" /> 
+  </head>
+  <body>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="../../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li><a href="../../index.html">PyURDME 1.0.1 documentation</a> &raquo;</li>
+          <li><a href="../index.html" accesskey="U">Module code</a> &raquo;</li> 
+      </ul>
+    </div>  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body">
+            
+  <h1>Source code for pyurdme.model</h1><div class="highlight"><pre>
+<span class="sd">&quot;&quot;&quot; </span>
+<span class="sd">    This module defines a model of a well mixed biochemical reaction network.</span>
+<span class="sd">    </span>
+<span class="sd">&quot;&quot;&quot;</span>
+
+<span class="kn">from</span> <span class="nn">collections</span> <span class="kn">import</span> <span class="n">OrderedDict</span>
+
+
+<div class="viewcode-block" id="Model"><a class="viewcode-back" href="../../pyurdme.html#pyurdme.model.Model">[docs]</a><span class="k">class</span> <span class="nc">Model</span><span class="p">():</span>
+    <span class="sd">&quot;&quot;&quot; Representation of a well mixed biochemical model. Interfaces to solvers in StochSS</span>
+<span class="sd">        should attempt to extend Model. &quot;&quot;&quot;</span>
+    
+    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">name</span><span class="o">=</span><span class="s">&quot;&quot;</span><span class="p">,</span> <span class="n">volume</span><span class="o">=</span><span class="mf">1.0</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot; Create an empty model. &quot;&quot;&quot;</span>
+        
+        <span class="c"># The name that the model is referenced by (should be a String)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">name</span> <span class="o">=</span> <span class="n">name</span>
+        
+        <span class="c"># Optional decription of the model (string)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">annotation</span> <span class="o">=</span> <span class="s">&quot;&quot;</span>
+        
+        <span class="c"># Dictionaries with Species, Reactions and Parameter objects.</span>
+        <span class="c"># Species,Reactio and Paramter names are used as keys.</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">listOfParameters</span> <span class="o">=</span> <span class="n">OrderedDict</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">listOfSpecies</span>    <span class="o">=</span> <span class="n">OrderedDict</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">listOfReactions</span>  <span class="o">=</span> <span class="n">OrderedDict</span><span class="p">()</span>
+        
+        <span class="c"># A well mixed model has an optional volume parameter</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">volume</span> <span class="o">=</span> <span class="n">volume</span><span class="p">;</span>
+        
+        <span class="c"># Dict that holds flattended parameters and species for</span>
+        <span class="c"># evaluation of expressions in the scope of the model.</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">namespace</span> <span class="o">=</span> <span class="n">OrderedDict</span><span class="p">([])</span>
+
+<div class="viewcode-block" id="Model.update_namespace"><a class="viewcode-back" href="../../pyurdme.html#pyurdme.model.Model.update_namespace">[docs]</a>    <span class="k">def</span> <span class="nf">update_namespace</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot; Create a dict with flattened parameter and species objects. &quot;&quot;&quot;</span>
+        
+        <span class="k">for</span> <span class="n">param</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">listOfParameters</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">namespace</span><span class="p">[</span><span class="n">param</span><span class="p">]</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">listOfParameters</span><span class="p">[</span><span class="n">param</span><span class="p">]</span><span class="o">.</span><span class="n">value</span>
+        <span class="c"># Dictionary of expressions that can be evaluated in the scope of this model.</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">expressions</span> <span class="o">=</span> <span class="p">{}</span>
+    </div>
+<div class="viewcode-block" id="Model.get_species"><a class="viewcode-back" href="../../pyurdme.html#pyurdme.model.Model.get_species">[docs]</a>    <span class="k">def</span> <span class="nf">get_species</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">sname</span><span class="p">):</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">listOfSpecies</span><span class="p">[</span><span class="n">sname</span><span class="p">]</span>
+    </div>
+<div class="viewcode-block" id="Model.get_num_species"><a class="viewcode-back" href="../../pyurdme.html#pyurdme.model.Model.get_num_species">[docs]</a>    <span class="k">def</span> <span class="nf">get_num_species</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">listOfSpecies</span><span class="p">)</span>
+    </div>
+<div class="viewcode-block" id="Model.get_all_species"><a class="viewcode-back" href="../../pyurdme.html#pyurdme.model.Model.get_all_species">[docs]</a>    <span class="k">def</span> <span class="nf">get_all_species</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">listOfSpecies</span>
+</div>
+<div class="viewcode-block" id="Model.add_species"><a class="viewcode-back" href="../../pyurdme.html#pyurdme.model.Model.add_species">[docs]</a>    <span class="k">def</span> <span class="nf">add_species</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">obj</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot; </span>
+<span class="sd">            Add a Species to listOfSpecies. Accepts input either as a single Species object, or</span>
+<span class="sd">            as a list of Species objects.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">obj</span><span class="p">,</span> <span class="n">Species</span><span class="p">):</span>
+            <span class="k">if</span> <span class="n">obj</span><span class="o">.</span><span class="n">name</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">listOfSpecies</span><span class="p">:</span>
+                <span class="k">raise</span> <span class="n">ModelError</span><span class="p">(</span><span class="s">&quot;Can&#39;t add species. A species with that name already exists.&quot;</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">listOfSpecies</span><span class="p">[</span><span class="n">obj</span><span class="o">.</span><span class="n">name</span><span class="p">]</span> <span class="o">=</span> <span class="n">obj</span><span class="p">;</span>
+        <span class="k">else</span><span class="p">:</span> <span class="c"># obj is a list of species</span>
+            <span class="k">for</span> <span class="n">S</span> <span class="ow">in</span> <span class="n">obj</span><span class="p">:</span>
+                <span class="k">if</span> <span class="n">S</span><span class="o">.</span><span class="n">name</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">listOfSpecies</span><span class="p">:</span>
+                    <span class="k">raise</span> <span class="n">ModelError</span><span class="p">(</span><span class="s">&quot;Can&#39;t add species. A species with that name already exists.&quot;</span><span class="p">)</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">listOfSpecies</span><span class="p">[</span><span class="n">S</span><span class="o">.</span><span class="n">name</span><span class="p">]</span> <span class="o">=</span> <span class="n">S</span><span class="p">;</span>
+</div>
+<div class="viewcode-block" id="Model.delete_species"><a class="viewcode-back" href="../../pyurdme.html#pyurdme.model.Model.delete_species">[docs]</a>    <span class="k">def</span> <span class="nf">delete_species</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">obj</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot; Remove a Species from model.listOfSpecies. &quot;&quot;&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">listOfSpecies</span><span class="o">.</span><span class="n">pop</span><span class="p">(</span><span class="n">obj</span><span class="p">)</span>        
+         </div>
+<div class="viewcode-block" id="Model.delete_all_species"><a class="viewcode-back" href="../../pyurdme.html#pyurdme.model.Model.delete_all_species">[docs]</a>    <span class="k">def</span> <span class="nf">delete_all_species</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">listOfSpecies</span><span class="o">.</span><span class="n">clear</span><span class="p">()</span>
+</div>
+<div class="viewcode-block" id="Model.get_parameter"><a class="viewcode-back" href="../../pyurdme.html#pyurdme.model.Model.get_parameter">[docs]</a>    <span class="k">def</span> <span class="nf">get_parameter</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span><span class="n">pname</span><span class="p">):</span>
+        <span class="k">try</span><span class="p">:</span>
+            <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">listOfParameters</span><span class="p">[</span><span class="n">pname</span><span class="p">]</span>
+        <span class="k">except</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="n">ModelError</span><span class="p">(</span><span class="s">&quot;No parameter named &quot;</span><span class="o">+</span><span class="n">pname</span><span class="p">)</span>
+</div>
+<div class="viewcode-block" id="Model.get_all_parameters"><a class="viewcode-back" href="../../pyurdme.html#pyurdme.model.Model.get_all_parameters">[docs]</a>    <span class="k">def</span> <span class="nf">get_all_parameters</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">listOfParameters</span>
+    </div>
+<div class="viewcode-block" id="Model.add_parameter"><a class="viewcode-back" href="../../pyurdme.html#pyurdme.model.Model.add_parameter">[docs]</a>    <span class="k">def</span> <span class="nf">add_parameter</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span><span class="n">params</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot; Add Parameter(s) to model.listOfParameters. Input can be either a single</span>
+<span class="sd">            Parameter object or a list of Parameter objects.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="c"># TODO, make sure that you don&#39;t overwrite an existing parameter??</span>
+        <span class="k">if</span> <span class="nb">type</span><span class="p">(</span><span class="n">params</span><span class="p">)</span><span class="o">.</span><span class="n">__name__</span><span class="o">==</span><span class="s">&#39;list&#39;</span><span class="p">:</span>
+            <span class="k">for</span> <span class="n">p</span> <span class="ow">in</span> <span class="n">params</span><span class="p">:</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">listOfParameters</span><span class="p">[</span><span class="n">p</span><span class="o">.</span><span class="n">name</span><span class="p">]</span> <span class="o">=</span> <span class="n">p</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">if</span> <span class="nb">type</span><span class="p">(</span><span class="n">params</span><span class="p">)</span><span class="o">.</span><span class="n">__name__</span><span class="o">==</span><span class="s">&#39;instance&#39;</span><span class="p">:</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">listOfParameters</span><span class="p">[</span><span class="n">params</span><span class="o">.</span><span class="n">name</span><span class="p">]</span> <span class="o">=</span> <span class="n">params</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="k">raise</span>
+</div>
+<div class="viewcode-block" id="Model.delete_parameter"><a class="viewcode-back" href="../../pyurdme.html#pyurdme.model.Model.delete_parameter">[docs]</a>    <span class="k">def</span> <span class="nf">delete_parameter</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">obj</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">listOfParameters</span><span class="o">.</span><span class="n">pop</span><span class="p">(</span><span class="n">obj</span><span class="p">)</span>
+</div>
+<div class="viewcode-block" id="Model.set_parameter"><a class="viewcode-back" href="../../pyurdme.html#pyurdme.model.Model.set_parameter">[docs]</a>    <span class="k">def</span> <span class="nf">set_parameter</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span><span class="n">pname</span><span class="p">,</span><span class="n">expression</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot; Set the expression of an existing paramter. &quot;&quot;&quot;</span>
+        <span class="n">p</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">listOfParameters</span><span class="p">[</span><span class="n">pname</span><span class="p">]</span>
+        <span class="n">p</span><span class="o">.</span><span class="n">expression</span> <span class="o">=</span> <span class="n">expression</span>
+        <span class="n">p</span><span class="o">.</span><span class="n">evaluate</span><span class="p">()</span>
+        </div>
+<div class="viewcode-block" id="Model.resolve_parameters"><a class="viewcode-back" href="../../pyurdme.html#pyurdme.model.Model.resolve_parameters">[docs]</a>    <span class="k">def</span> <span class="nf">resolve_parameters</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot; Attempt to resolve all parameter expressions to scalar floating point values. </span>
+<span class="sd">            Must be called prior to exporting the model.  &quot;&quot;&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">update_namespace</span><span class="p">()</span>
+        <span class="k">for</span> <span class="n">param</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">listOfParameters</span><span class="p">:</span>
+            <span class="k">try</span><span class="p">:</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">listOfParameters</span><span class="p">[</span><span class="n">param</span><span class="p">]</span><span class="o">.</span><span class="n">evaluate</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">namespace</span><span class="p">)</span>
+            <span class="k">except</span><span class="p">:</span>
+                <span class="k">raise</span> <span class="n">ParameterError</span><span class="p">(</span><span class="s">&quot;Could not resolve Parameter expression &quot;</span><span class="o">+</span><span class="n">param</span> <span class="o">+</span> <span class="s">&quot;to a scalar value.&quot;</span><span class="p">)</span>
+    </div>
+<div class="viewcode-block" id="Model.delete_all_parameters"><a class="viewcode-back" href="../../pyurdme.html#pyurdme.model.Model.delete_all_parameters">[docs]</a>    <span class="k">def</span> <span class="nf">delete_all_parameters</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">listOfParameters</span><span class="o">.</span><span class="n">clear</span><span class="p">()</span>
+</div>
+<div class="viewcode-block" id="Model.add_reaction"><a class="viewcode-back" href="../../pyurdme.html#pyurdme.model.Model.add_reaction">[docs]</a>    <span class="k">def</span> <span class="nf">add_reaction</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span><span class="n">reacs</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot; Add Reaction(s) to the model. Input can be single instance, a list of instances</span>
+<span class="sd">            or a dict with name,instance pairs. &quot;&quot;&quot;</span>
+        
+        <span class="c"># TODO, make sure that you cannot overwrite an existing parameter</span>
+        <span class="n">param_type</span> <span class="o">=</span> <span class="nb">type</span><span class="p">(</span><span class="n">reacs</span><span class="p">)</span><span class="o">.</span><span class="n">__name__</span>
+        <span class="k">if</span> <span class="n">param_type</span> <span class="o">==</span> <span class="s">&#39;list&#39;</span><span class="p">:</span>
+            <span class="k">for</span> <span class="n">r</span> <span class="ow">in</span> <span class="n">reacs</span><span class="p">:</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">listOfReactions</span><span class="p">[</span><span class="n">r</span><span class="o">.</span><span class="n">name</span><span class="p">]</span> <span class="o">=</span> <span class="n">r</span>
+        <span class="k">elif</span> <span class="n">param_type</span> <span class="o">==</span> <span class="s">&#39;dict&#39;</span> <span class="ow">or</span> <span class="n">param_type</span> <span class="o">==</span> <span class="s">&#39;OrderedDict&#39;</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">listOfReactions</span> <span class="o">=</span> <span class="n">reacs</span>
+        <span class="k">elif</span> <span class="n">param_type</span> <span class="o">==</span> <span class="s">&#39;instance&#39;</span><span class="p">:</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">listOfReactions</span><span class="p">[</span><span class="n">reacs</span><span class="o">.</span><span class="n">name</span><span class="p">]</span> <span class="o">=</span> <span class="n">reacs</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">raise</span>
+</div>
+<div class="viewcode-block" id="Model.get_reaction"><a class="viewcode-back" href="../../pyurdme.html#pyurdme.model.Model.get_reaction">[docs]</a>    <span class="k">def</span> <span class="nf">get_reaction</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">rname</span><span class="p">):</span>
+        <span class="k">return</span> <span class="n">reactions</span><span class="p">[</span><span class="n">rname</span><span class="p">]</span>
+</div>
+<div class="viewcode-block" id="Model.get_num_reactions"><a class="viewcode-back" href="../../pyurdme.html#pyurdme.model.Model.get_num_reactions">[docs]</a>    <span class="k">def</span> <span class="nf">get_num_reactions</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">listOfReactions</span><span class="p">)</span>
+</div>
+<div class="viewcode-block" id="Model.get_all_reactions"><a class="viewcode-back" href="../../pyurdme.html#pyurdme.model.Model.get_all_reactions">[docs]</a>    <span class="k">def</span> <span class="nf">get_all_reactions</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">listOfReactions</span>
+    </div>
+<div class="viewcode-block" id="Model.delete_reaction"><a class="viewcode-back" href="../../pyurdme.html#pyurdme.model.Model.delete_reaction">[docs]</a>    <span class="k">def</span> <span class="nf">delete_reaction</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">obj</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">listOfReactions</span><span class="o">.</span><span class="n">pop</span><span class="p">(</span><span class="n">obj</span><span class="p">)</span>
+        </div>
+<div class="viewcode-block" id="Model.delete_all_reactions"><a class="viewcode-back" href="../../pyurdme.html#pyurdme.model.Model.delete_all_reactions">[docs]</a>    <span class="k">def</span> <span class="nf">delete_all_reactions</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">listOfReactions</span><span class="o">.</span><span class="n">clear</span><span class="p">()</span>
+</div>
+    <span class="k">def</span> <span class="nf">__ne__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">other</span><span class="p">):</span>
+        <span class="k">return</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">__eq__</span><span class="p">(</span><span class="n">other</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">__eq__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">other</span><span class="p">):</span>
+        <span class="k">return</span> <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">listOfParameters</span> <span class="o">==</span> <span class="n">other</span><span class="o">.</span><span class="n">listOfParameters</span> <span class="ow">and</span> \
+            <span class="bp">self</span><span class="o">.</span><span class="n">listOfSpecies</span> <span class="o">==</span> <span class="n">other</span><span class="o">.</span><span class="n">listOfSpecies</span> <span class="ow">and</span> \
+            <span class="bp">self</span><span class="o">.</span><span class="n">listOfReactions</span> <span class="o">==</span> <span class="n">other</span><span class="o">.</span><span class="n">listOfReactions</span> <span class="ow">and</span> \
+            <span class="bp">self</span><span class="o">.</span><span class="n">name</span> <span class="o">==</span> <span class="n">other</span><span class="o">.</span><span class="n">name</span><span class="p">)</span>
+
+</div>
+<div class="viewcode-block" id="Species"><a class="viewcode-back" href="../../pyurdme.html#pyurdme.model.Species">[docs]</a><span class="k">class</span> <span class="nc">Species</span><span class="p">():</span>
+    <span class="sd">&quot;&quot;&quot; Model of a biochemical species. &quot;&quot;&quot;</span>
+    
+    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span><span class="n">name</span><span class="o">=</span><span class="s">&quot;&quot;</span><span class="p">,</span><span class="n">diffusion_constant</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span><span class="n">reaction_radius</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span><span class="n">dimension</span><span class="o">=</span><span class="mi">3</span><span class="p">):</span>
+        <span class="c"># A species has a name (string) and an initial value (positive integer)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">name</span> <span class="o">=</span> <span class="n">name</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">dimension</span><span class="o">=</span><span class="n">dimension</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">diffusion_constant</span><span class="o">=</span><span class="n">diffusion_constant</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">reaction_radius</span><span class="o">=</span><span class="n">reaction_radius</span>
+
+<div class="viewcode-block" id="Species.dim"><a class="viewcode-back" href="../../pyurdme.html#pyurdme.model.Species.dim">[docs]</a>    <span class="k">def</span> <span class="nf">dim</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">dimension</span>
+</div>
+    <span class="k">def</span> <span class="nf">__str__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">name</span>
+</div>
+<div class="viewcode-block" id="Parameter"><a class="viewcode-back" href="../../pyurdme.html#pyurdme.model.Parameter">[docs]</a><span class="k">class</span> <span class="nc">Parameter</span><span class="p">():</span>
+    <span class="sd">&quot;&quot;&quot; </span>
+<span class="sd">        Model of a rate paramter. </span>
+<span class="sd">        A parameter can be given as a String expression (function) or directly as a scalar value.</span>
+<span class="sd">        If given a String expression, it should be evaluable in the namespace of a parent Model.</span>
+<span class="sd">        </span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    
+    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span><span class="n">name</span><span class="o">=</span><span class="s">&quot;&quot;</span><span class="p">,</span><span class="n">expression</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span><span class="n">value</span><span class="o">=</span><span class="bp">None</span><span class="p">):</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">name</span> <span class="o">=</span> <span class="n">name</span>        
+        <span class="c"># We allow expression to be passed in as a non-string type. Invalid strings</span>
+        <span class="c"># will be caught below. It is perfectly fine to give a scalar value as the expression.</span>
+        <span class="c"># This can then be evaluated in an empty namespace to the scalar value.</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">expression</span> <span class="o">=</span> <span class="n">expression</span>
+        <span class="k">if</span> <span class="n">expression</span> <span class="o">!=</span> <span class="bp">None</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">expression</span> <span class="o">=</span> <span class="nb">str</span><span class="p">(</span><span class="n">expression</span><span class="p">)</span>
+        
+        <span class="bp">self</span><span class="o">.</span><span class="n">value</span> <span class="o">=</span> <span class="n">value</span>
+            
+        <span class="c"># self.value is allowed to be None, but not self.expression. self.value</span>
+        <span class="c"># might not be evaluable in the namespace of this parameter, but defined</span>
+        <span class="c"># in the context of a model or reaction.</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">expression</span> <span class="o">==</span> <span class="bp">None</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">TypeError</span>
+    
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">value</span> <span class="o">==</span> <span class="bp">None</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">evaluate</span><span class="p">()</span>
+    
+<div class="viewcode-block" id="Parameter.evaluate"><a class="viewcode-back" href="../../pyurdme.html#pyurdme.model.Parameter.evaluate">[docs]</a>    <span class="k">def</span> <span class="nf">evaluate</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span><span class="n">namespace</span><span class="o">=</span><span class="p">{}):</span>
+        <span class="sd">&quot;&quot;&quot; Evaluate the expression and return the (scalar) value &quot;&quot;&quot;</span>
+        <span class="k">try</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">value</span> <span class="o">=</span> <span class="p">(</span><span class="nb">float</span><span class="p">(</span><span class="nb">eval</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">expression</span><span class="p">,</span> <span class="n">namespace</span><span class="p">)))</span>
+        <span class="k">except</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">value</span> <span class="o">=</span> <span class="bp">None</span>
+            </div>
+<div class="viewcode-block" id="Parameter.set_expression"><a class="viewcode-back" href="../../pyurdme.html#pyurdme.model.Parameter.set_expression">[docs]</a>    <span class="k">def</span> <span class="nf">set_expression</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span><span class="n">expression</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">expression</span> <span class="o">=</span> <span class="n">expression</span>
+        <span class="c"># We allow expression to be passed in as a non-string type. Invalid strings</span>
+        <span class="c"># will be caught below. It is perfectly fine to give a scalar value as the expression.</span>
+        <span class="c"># This can then be evaluated in an empty namespace to the scalar value.</span>
+        <span class="k">if</span> <span class="n">expression</span> <span class="o">!=</span> <span class="bp">None</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">expression</span> <span class="o">=</span> <span class="nb">str</span><span class="p">(</span><span class="n">expression</span><span class="p">)</span>
+                    
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">expression</span> <span class="o">==</span> <span class="bp">None</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">TypeError</span>
+    
+        <span class="bp">self</span><span class="o">.</span><span class="n">evaluate</span><span class="p">()</span>
+        </div>
+    <span class="k">def</span> <span class="nf">__str__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="nb">str</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">value</span><span class="p">)</span>
+        
+</div>
+<div class="viewcode-block" id="Reaction"><a class="viewcode-back" href="../../pyurdme.html#pyurdme.model.Reaction">[docs]</a><span class="k">class</span> <span class="nc">Reaction</span><span class="p">():</span>
+    <span class="sd">&quot;&quot;&quot; </span>
+<span class="sd">        Models a biochemical reaction. A reaction conatains dictinaries of species (reactants and products) and parameters.</span>
+<span class="sd">        The reaction&#39;s propensity function needs to be evaluable and result in a non-negative scalar value</span>
+<span class="sd">        in the namespace defined by the union of its Reactant, Product and Parameter dictionaries.</span>
+<span class="sd">        </span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">name</span> <span class="o">=</span> <span class="s">&quot;&quot;</span><span class="p">,</span> <span class="n">reactants</span> <span class="o">=</span> <span class="p">{},</span> <span class="n">products</span> <span class="o">=</span> <span class="p">{},</span> <span class="n">propensity_function</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span> <span class="n">massaction</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span> <span class="n">rate</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span> <span class="n">annotation</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span><span class="n">restrict_to</span><span class="o">=</span><span class="bp">None</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot; </span>
+<span class="sd">            Initializes the reaction using short-hand notation. </span>
+<span class="sd">            </span>
+<span class="sd">            Input: </span>
+<span class="sd">                name:                       string that the model is referenced by</span>
+<span class="sd">                parameters:                 a list of parameter instances</span>
+<span class="sd">                propensity_function:        String with the expression for the reaction&#39;s propensity</span>
+<span class="sd">                reactants:                  List of (species,stoichiometry) tuples</span>
+<span class="sd">                product:                    List of (species,stoichiometry) tuples</span>
+<span class="sd">                annotation:                 Description of the reaction (meta)</span>
+<span class="sd">            </span>
+<span class="sd">                massaction True,{False}     is the reaction of mass action type or not?</span>
+<span class="sd">                rate                        if mass action, rate is a reference to a parameter instance.</span>
+<span class="sd">            </span>
+<span class="sd">            If massaction is set to true, propensity_function is not a valid argument. Instead, the </span>
+<span class="sd">            propensity function is constructed automatically. For mass-action, zeroth, first and second</span>
+<span class="sd">            order reactions are supported, appemting to used higher orders will result in an error.</span>
+<span class="sd">            </span>
+
+<span class="sd">            Raises: ReactionError</span>
+<span class="sd">            </span>
+<span class="sd">        &quot;&quot;&quot;</span>
+            
+        <span class="c"># Metadata</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">name</span> <span class="o">=</span> <span class="n">name</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">annotation</span> <span class="o">=</span> <span class="s">&quot;&quot;</span>
+        
+        <span class="bp">self</span><span class="o">.</span><span class="n">massaction</span> <span class="o">=</span> <span class="n">massaction</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">propensity_function</span> <span class="o">=</span> <span class="bp">None</span>
+        <span class="k">if</span> <span class="n">propensity_function</span> <span class="ow">is</span> <span class="ow">not</span> <span class="bp">None</span><span class="p">:</span>
+            <span class="k">if</span> <span class="s">&#39;return &#39;</span> <span class="ow">in</span> <span class="n">propensity_function</span><span class="p">:</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">propensity_function</span> <span class="o">=</span> <span class="n">propensity_function</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">propensity_function</span> <span class="o">=</span> <span class="s">&#39;return &#39;</span> <span class="o">+</span>  <span class="n">propensity_function</span> <span class="o">+</span> <span class="s">&#39;;&#39;</span>
+
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">propensity_function</span> <span class="ow">is</span> <span class="bp">None</span> <span class="ow">and</span> <span class="bp">self</span><span class="o">.</span><span class="n">massaction</span> <span class="ow">is</span> <span class="bp">None</span><span class="p">:</span>
+            <span class="k">if</span> <span class="n">rate</span> <span class="ow">is</span> <span class="bp">None</span><span class="p">:</span>
+                <span class="n">errmsg</span> <span class="o">=</span> <span class="s">&quot;Reaction &quot;</span><span class="o">+</span><span class="bp">self</span><span class="o">.</span><span class="n">name</span> <span class="o">+</span><span class="s">&quot;: You must either set the reaction to be mass-action or specifiy a propensity function.&quot;</span>
+                <span class="k">raise</span> <span class="n">ReactionError</span><span class="p">(</span><span class="n">errmsg</span><span class="p">)</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="c"># If they don&#39;t give us a propensity function and do give a rate, assume mass-action.</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">massaction</span> <span class="o">=</span> <span class="bp">True</span>
+
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">propensity_function</span> <span class="ow">is</span> <span class="ow">not</span> <span class="bp">None</span> <span class="ow">and</span> <span class="bp">self</span><span class="o">.</span><span class="n">massaction</span><span class="p">:</span>
+            <span class="n">errmsg</span> <span class="o">=</span> <span class="s">&quot;Reaction &quot;</span><span class="o">+</span><span class="bp">self</span><span class="o">.</span><span class="n">name</span> <span class="o">+</span><span class="s">&quot;: You cannot set the propensity type to mass-action and simultaneously set a propensity function.&quot;</span>
+            <span class="k">raise</span> <span class="n">ReactionError</span><span class="p">(</span><span class="n">errmsg</span><span class="p">)</span>
+        
+        <span class="bp">self</span><span class="o">.</span><span class="n">reactants</span> <span class="o">=</span> <span class="p">{}</span>
+        <span class="k">if</span> <span class="n">reactants</span> <span class="ow">is</span> <span class="ow">not</span> <span class="bp">None</span><span class="p">:</span>
+            <span class="k">for</span> <span class="n">r</span> <span class="ow">in</span> <span class="n">reactants</span><span class="p">:</span>
+                <span class="n">rtype</span> <span class="o">=</span> <span class="nb">type</span><span class="p">(</span><span class="n">r</span><span class="p">)</span><span class="o">.</span><span class="n">__name__</span>
+                <span class="k">if</span> <span class="n">rtype</span><span class="o">==</span><span class="s">&#39;instance&#39;</span><span class="p">:</span>
+                    <span class="bp">self</span><span class="o">.</span><span class="n">reactants</span><span class="p">[</span><span class="n">r</span><span class="o">.</span><span class="n">name</span><span class="p">]</span> <span class="o">=</span> <span class="n">reactants</span><span class="p">[</span><span class="n">r</span><span class="p">]</span>
+                <span class="k">else</span><span class="p">:</span>
+                    <span class="bp">self</span><span class="o">.</span><span class="n">reactants</span><span class="p">[</span><span class="n">r</span><span class="p">]</span><span class="o">=</span><span class="n">reactants</span><span class="p">[</span><span class="n">r</span><span class="p">]</span>
+    
+        <span class="bp">self</span><span class="o">.</span><span class="n">products</span> <span class="o">=</span> <span class="p">{}</span>
+        <span class="k">if</span> <span class="n">products</span> <span class="ow">is</span> <span class="ow">not</span> <span class="bp">None</span><span class="p">:</span>
+            <span class="k">for</span> <span class="n">p</span> <span class="ow">in</span> <span class="n">products</span><span class="p">:</span>
+                <span class="n">rtype</span> <span class="o">=</span> <span class="nb">type</span><span class="p">(</span><span class="n">p</span><span class="p">)</span><span class="o">.</span><span class="n">__name__</span>
+                <span class="k">if</span> <span class="n">rtype</span><span class="o">==</span><span class="s">&#39;instance&#39;</span><span class="p">:</span>
+                    <span class="bp">self</span><span class="o">.</span><span class="n">products</span><span class="p">[</span><span class="n">p</span><span class="o">.</span><span class="n">name</span><span class="p">]</span> <span class="o">=</span> <span class="n">products</span><span class="p">[</span><span class="n">p</span><span class="p">]</span>
+                <span class="k">else</span><span class="p">:</span>
+                    <span class="bp">self</span><span class="o">.</span><span class="n">products</span><span class="p">[</span><span class="n">p</span><span class="p">]</span><span class="o">=</span><span class="n">products</span><span class="p">[</span><span class="n">p</span><span class="p">]</span>
+
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">massaction</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">type</span> <span class="o">=</span> <span class="s">&quot;mass-action&quot;</span>
+            <span class="k">if</span> <span class="n">rate</span> <span class="o">==</span> <span class="bp">None</span><span class="p">:</span>
+                <span class="k">raise</span> <span class="n">ReactionError</span><span class="p">(</span><span class="s">&quot;Reaction &quot;</span><span class="o">+</span><span class="bp">self</span><span class="o">.</span><span class="n">name</span> <span class="o">+</span><span class="s">&quot;: A mass-action propensity has to have a rate.&quot;</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">marate</span> <span class="o">=</span> <span class="n">rate</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">create_mass_action</span><span class="p">()</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">type</span> <span class="o">=</span> <span class="s">&quot;customized&quot;</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">restrict_to</span> <span class="o">=</span> <span class="n">restrict_to</span>
+                
+<div class="viewcode-block" id="Reaction.create_mass_action"><a class="viewcode-back" href="../../pyurdme.html#pyurdme.model.Reaction.create_mass_action">[docs]</a>    <span class="k">def</span> <span class="nf">create_mass_action</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot; Create a mass action propensity function given self.reactants and a single parameter value.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="c"># We support zeroth, first and second order propensities only.</span>
+        <span class="c"># There is no theoretical justification for higher order propensities.</span>
+        <span class="c"># Users can still create such propensities if they really want to,</span>
+        <span class="c"># but should then use a custom propensity.</span>
+        <span class="n">total_stoch</span><span class="o">=</span><span class="mi">0</span>
+        <span class="k">for</span> <span class="n">r</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">reactants</span><span class="p">:</span>
+            <span class="n">total_stoch</span><span class="o">+=</span><span class="bp">self</span><span class="o">.</span><span class="n">reactants</span><span class="p">[</span><span class="n">r</span><span class="p">]</span>
+        <span class="k">if</span> <span class="n">total_stoch</span><span class="o">&gt;</span><span class="mi">2</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="n">ReactionError</span><span class="p">(</span><span class="s">&quot;Reaction: &quot;</span> <span class="o">+</span><span class="bp">self</span><span class="o">.</span><span class="n">name</span> <span class="o">+</span> <span class="s">&quot;A mass-action reaction cannot involve more than two species.&quot;</span><span class="p">)</span>
+    
+        <span class="c"># Case EmptySet -&gt; Y</span>
+        <span class="n">propensity_function</span> <span class="o">=</span> <span class="s">&#39;return &#39;</span> <span class="o">+</span> <span class="bp">self</span><span class="o">.</span><span class="n">marate</span><span class="o">.</span><span class="n">name</span><span class="p">;</span>
+             
+        <span class="c"># There are only three ways to get &#39;total_stoch==2&#39;:</span>
+        <span class="k">for</span> <span class="n">r</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">reactants</span><span class="p">:</span>
+            <span class="c"># Case 1: 2X -&gt; Y</span>
+            <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">reactants</span><span class="p">[</span><span class="n">r</span><span class="p">]</span> <span class="o">==</span> <span class="mi">2</span><span class="p">:</span>
+                <span class="n">propensity_function</span> <span class="o">=</span> <span class="s">&quot;0.5*&quot;</span> <span class="o">+</span><span class="n">propensity_function</span><span class="o">+</span> <span class="s">&quot;*&quot;</span><span class="o">+</span><span class="n">r</span><span class="o">+</span><span class="s">&quot;*(&quot;</span><span class="o">+</span><span class="n">r</span><span class="o">+</span><span class="s">&quot;-1)&quot;</span>
+            <span class="k">else</span><span class="p">:</span>
+            <span class="c"># Case 3: X1, X2 -&gt; Y;</span>
+                <span class="n">propensity_function</span> <span class="o">+=</span> <span class="s">&quot;*&quot;</span><span class="o">+</span><span class="n">r</span>
+
+        <span class="c"># Set the volume dependency based on order.</span>
+        <span class="n">order</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">reactants</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">order</span> <span class="o">==</span> <span class="mi">2</span><span class="p">:</span>
+            <span class="n">propensity_function</span> <span class="o">+=</span> <span class="s">&quot;/vol&quot;</span>
+        <span class="k">elif</span> <span class="n">order</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
+            <span class="n">propensity_function</span> <span class="o">+=</span> <span class="s">&quot;*vol&quot;</span>
+
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">propensity_function</span> <span class="o">=</span> <span class="n">propensity_function</span> <span class="o">+</span> <span class="s">&#39;;&#39;</span>
+            </div>
+<div class="viewcode-block" id="Reaction.set_type"><a class="viewcode-back" href="../../pyurdme.html#pyurdme.model.Reaction.set_type">[docs]</a>    <span class="k">def</span> <span class="nf">set_type</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span><span class="nb">type</span><span class="p">):</span>
+        <span class="k">if</span> <span class="nb">type</span> <span class="ow">not</span> <span class="ow">in</span> <span class="p">{</span><span class="s">&#39;mass-action&#39;</span><span class="p">,</span><span class="s">&#39;customized&#39;</span><span class="p">}:</span>
+            <span class="k">raise</span> <span class="n">ReactionError</span><span class="p">(</span><span class="s">&quot;Invalid reaction type.&quot;</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">type</span> <span class="o">=</span> <span class="nb">type</span>
+    </div>
+<div class="viewcode-block" id="Reaction.add_reactant"><a class="viewcode-back" href="../../pyurdme.html#pyurdme.model.Reaction.add_reactant">[docs]</a>    <span class="k">def</span> <span class="nf">add_reactant</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span><span class="n">S</span><span class="p">,</span><span class="n">stoichiometry</span><span class="p">):</span>
+        <span class="k">if</span> <span class="n">stoichiometry</span> <span class="o">&lt;=</span> <span class="mi">0</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="n">ReactionError</span><span class="p">(</span><span class="s">&quot;Reaction &quot;</span><span class="o">+</span><span class="bp">self</span><span class="o">.</span><span class="n">name</span><span class="o">+</span><span class="s">&quot;Stoichiometry must be a positive integer.&quot;</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">reactants</span><span class="p">[</span><span class="n">S</span><span class="o">.</span><span class="n">name</span><span class="p">]</span><span class="o">=</span><span class="n">stoichiometry</span>
+</div>
+<div class="viewcode-block" id="Reaction.add_product"><a class="viewcode-back" href="../../pyurdme.html#pyurdme.model.Reaction.add_product">[docs]</a>    <span class="k">def</span> <span class="nf">add_product</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span><span class="n">S</span><span class="p">,</span><span class="n">stoichiometry</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">products</span><span class="p">[</span><span class="n">S</span><span class="o">.</span><span class="n">name</span><span class="p">]</span><span class="o">=</span><span class="n">stoichiometry</span>
+</div>
+<div class="viewcode-block" id="Reaction.annotate"><a class="viewcode-back" href="../../pyurdme.html#pyurdme.model.Reaction.annotate">[docs]</a>    <span class="k">def</span> <span class="nf">annotate</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span><span class="n">annotation</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">annotation</span> <span class="o">=</span> <span class="n">annotation</span>
+
+
+<span class="c"># Module exceptions</span></div></div>
+<div class="viewcode-block" id="ModelError"><a class="viewcode-back" href="../../pyurdme.html#pyurdme.model.ModelError">[docs]</a><span class="k">class</span> <span class="nc">ModelError</span><span class="p">(</span><span class="ne">Exception</span><span class="p">):</span>
+    <span class="k">pass</span>
+</div>
+<div class="viewcode-block" id="SpeciesError"><a class="viewcode-back" href="../../pyurdme.html#pyurdme.model.SpeciesError">[docs]</a><span class="k">class</span> <span class="nc">SpeciesError</span><span class="p">(</span><span class="n">ModelError</span><span class="p">):</span>
+    <span class="k">pass</span>
+</div>
+<div class="viewcode-block" id="ReactionError"><a class="viewcode-back" href="../../pyurdme.html#pyurdme.model.ReactionError">[docs]</a><span class="k">class</span> <span class="nc">ReactionError</span><span class="p">(</span><span class="n">ModelError</span><span class="p">):</span>
+    <span class="k">pass</span>
+</div>
+<div class="viewcode-block" id="ParameterError"><a class="viewcode-back" href="../../pyurdme.html#pyurdme.model.ParameterError">[docs]</a><span class="k">class</span> <span class="nc">ParameterError</span><span class="p">(</span><span class="n">ModelError</span><span class="p">):</span>
+    <span class="k">pass</span></div>
+</pre></div>
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar">
+        <div class="sphinxsidebarwrapper">
+<div id="searchbox" style="display: none">
+  <h3>Quick search</h3>
+    <form class="search" action="../../search.html" method="get">
+      <input type="text" name="q" />
+      <input type="submit" value="Go" />
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+    <p class="searchtip" style="font-size: 90%">
+    Enter search terms or a module, class or function name.
+    </p>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="../../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li><a href="../../index.html">PyURDME 1.0.1 documentation</a> &raquo;</li>
+          <li><a href="../index.html" >Module code</a> &raquo;</li> 
+      </ul>
+    </div>
+    <div class="footer">
+        &copy; Copyright 2014, Brian Drawert, Andreas Hellander.
+      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.2b3.
+    </div>
+  </body>
+</html>
