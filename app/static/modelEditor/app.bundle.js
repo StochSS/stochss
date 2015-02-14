@@ -27,7 +27,13 @@ var PrimaryView = View.extend({
         modelNameText : {
             type : 'text',
             hook : 'modelName'
-        }
+        },
+        selected : [
+            {
+                type : 'toggle',
+                selector : '.reqModel'
+            }
+        ]
     },
     derived : {
         modelNameText : {
@@ -1257,7 +1263,7 @@ var AddNewMeshForm = AmpersandView.extend({
 
                 this.mesh = mesh;
                 
-                mesh.processMesh(_.bind(this.handleMeshWrapperCreated, this));
+                this.handleMeshWrapperCreated();
             }
         }
     },
@@ -1318,9 +1324,9 @@ var MeshCollectionSelectView = AmpersandView.extend({
     <tbody data-hook='items'></tbody> \
   </table> \
   <div data-hook='nav'> \
-    <button class='btn' data-hook='previous'>&lt;&lt;</button> \
-    [ <span data-hook='position'></span> / <span data-hook='total'></span> ] \
-    <button class='btn' data-hook='next'>&gt;&gt;</button> \
+    <button class='btn' data-hook='previous'>&lt;&lt;</button>\
+    [ <span data-hook='leftPosition'></span> - <span data-hook='rightPosition'></span> ] \
+    <button class='btn' data-hook='next'>&gt;&gt;</button>\
   </div> \
 </div>";
 
@@ -2081,13 +2087,14 @@ var PaginatedCollectionView = AmpersandView.extend({
                 this.view.deSelect();
 
         this.value = model;
-        this.view = this.subCollectionViews._getViewByModel(model);
 
         //Search for model in current selection
         for(var i = 0; i < this.subCollection.models.length; i++)
         {
             if(model == this.subCollection.models[i])
             {
+                this.view = this.subCollectionViews._getViewByModel(model);
+
                 if(this.view)
                 {
                     if(typeof(this.view.select) == 'function')
@@ -2117,7 +2124,9 @@ var PaginatedCollectionView = AmpersandView.extend({
                     this.offset = i;
 
                 this.subCollection.configure( { limit : this.limit, offset : this.offset } );
-                
+
+                this.view = this.subCollectionViews._getViewByModel(model);
+
                 if(this.view)
                 {
                     if(typeof(this.view.select) == 'function')
@@ -2291,7 +2300,7 @@ var ParameterCollectionFormView = AmpersandView.extend({
   </table> \
   <div data-hook='nav'> \
     <button class='btn' data-hook='previous'>&lt;&lt;</button>\
-    [ <span data-hook='position'></span> / <span data-hook='total'></span> ] \
+    [ <span data-hook='leftPosition'></span> - <span data-hook='rightPosition'></span> ] \
     <button class='btn' data-hook='next'>&gt;&gt;</button>\
   </div> \
 </div>";
@@ -2553,6 +2562,7 @@ var ReactionCollectionFormView = AmpersandView.extend({
     <div data-hook='reactionEditorWorkspace'></div>\
   </div> \
   <div style='clear: both;'> \
+    <br /> \
     <form data-hook='addReactionForm'></form>\
   </div> \
 </div>",
@@ -2617,7 +2627,7 @@ var ReactionCollectionFormView = AmpersandView.extend({
   </table>\
   <div data-hook='nav'> \
     <button class='btn' data-hook='previous'>&lt;&lt;</button>\
-    [ <span data-hook='position'></span> / <span data-hook='total'></span> ] \
+    [ <span data-hook='leftPosition'></span> - <span data-hook='rightPosition'></span> ] \
     <button class='btn' data-hook='next'>&gt;&gt;</button>\
   </div> \
 </div>";
@@ -2921,8 +2931,8 @@ var reactants;
 <div data-hook='subdomains'></div> \
   <table width='100%' data-hook='advanced'>\
     <tr> \
-      <td><h4>Reactants</h4><div data-hook='reactants'></div></td>\
-      <td><h4>Products</h4><div data-hook='products'></div></td>\
+      <td style='vertical-align:top'><h4>Reactants</h4><div data-hook='reactants'></div></td>\
+      <td style='vertical-align:top'><h4>Products</h4><div data-hook='products'></div></td>\
     </tr>\
   </table>\
   <br>\
@@ -2940,8 +2950,8 @@ var reactants;
 <div data-hook='custom'></div> \
   <table width='100%' data-hook='advanced'>\
     <tr> \
-      <td><h4>Reactants</h4><div data-hook='reactants'></div></td>\
-      <td><h4>Products</h4><div data-hook='products'></div></td>\
+      <td style='vertical-align:top'><h4>Reactants</h4><div data-hook='reactants'></div></td>\
+      <td style='vertical-align:top'><h4>Products</h4><div data-hook='products'></div></td>\
     </tr>\
   </table>\
   <br> \
@@ -3032,7 +3042,8 @@ var reactants;
 
         this.renderSubview(
             new StoichSpecieCollectionFormView({
-                collection: this.model.products
+                collection: this.model.products,
+                showCustomOverride : true
             }), this.el.querySelector("[data-hook='products']"));
         
         return this;
@@ -3267,9 +3278,9 @@ var SpecieCollectionFormView = AmpersandView.extend({
     </tbody> \
   </table> \
   <div data-hook='nav'> \
-    <a data-hook='previous' href='#'>&lt;&lt;</a> \
-    <span data-hook='leftPosition'></span> - <span data-hook='rightPosition'></span> \
-    <a data-hook='next' href='#'>&gt;&gt;</a> \
+    <button class='btn' data-hook='previous'>&lt;&lt;</button>\
+    [ <span data-hook='leftPosition'></span> - <span data-hook='rightPosition'></span> ] \
+    <button class='btn' data-hook='next'>&gt;&gt;</button>\
   </div> \
 </div>";
 
@@ -3312,11 +3323,9 @@ module.exports = View.extend({
     update: function()
     {
     },
-    removeSpecies: function(e)
+    removeSpecies: function()
     {
         this.model.collection.remove(this.model);
-
-        e.preventDefault();
     },
     events: {
         'click [data-hook="delete"]': 'removeSpecies'
@@ -3381,11 +3390,11 @@ module.exports = View.extend({
     {
         if(this.baseModel.isSpatial)
         {
-            this.template = "<tr><td data-hook='name'></td><td data-hook='diffusion'></td><td><center><div data-hook='subdomains'></div></center></td><td><a data-hook='delete' href='#'>Delete</a></td></tr>";
+            this.template = "<tr><td data-hook='name'></td><td data-hook='diffusion'></td><td><center><div data-hook='subdomains'></div></center></td><td><button class='btn' data-hook='delete'>x</button></td></tr>";
         }
         else
         {
-            this.template = "<tr><td data-hook='name'></td><td data-hook='initialCondition'></td><td><a data-hook='delete' href='#'>X</a></td></tr>";
+            this.template = "<tr><td data-hook='name'></td><td data-hook='initialCondition'></td><td><button class='btn' data-hook='delete'>x</button></td></tr>";
         }
 
         View.prototype.render.apply(this, arguments);
@@ -3470,7 +3479,8 @@ var AddNewStoichSpecieForm = AmpersandFormView.extend({
 
         this.fields = [
             new SelectView({
-                label: 'Species',
+                template: '<span><select></select><span data-hook="message-container"><span data-hook="message-text"></span></span></span>',
+                label: '',
                 name: 'specie',
                 value: this.baseModel.species.models[0],
                 options: this.baseModel.species,
@@ -3506,14 +3516,15 @@ var StoichSpecieCollectionFormView = AmpersandView.extend({
     },
     props:
     {
-        reactionType : 'string'
+        reactionType : 'string',
+        showCustomOverride : 'boolean'
     },
     derived: {
         showCustom :
         {
             deps : ['reactionType'],
             fn : function() {
-                return this.reactionType == 'custom' || this.reactionType == 'massaction';
+                return this.showCustomOverride || (this.reactionType == 'custom' || this.reactionType == 'massaction');
             }
         }
     },
@@ -3527,7 +3538,7 @@ var StoichSpecieCollectionFormView = AmpersandView.extend({
     {
         AmpersandView.prototype.render.apply(this, arguments);
 
-        this.renderCollection(this.collection, StoichSpecieFormView, this.el.querySelector('[data-hook=stoichSpecieTable]'));
+        this.renderCollection(this.collection, StoichSpecieFormView, this.el.querySelector('[data-hook=stoichSpecieTable]'), { showCustomOverride : this.showCustomOverride } );
 
         this.addForm = new AddNewStoichSpecieForm(
             { 
@@ -3563,6 +3574,7 @@ module.exports = View.extend({
     initialize: function()
     {
         View.prototype.initialize.apply(this, arguments);
+        this.showCustomOverride = this.parent.showCustomOverride;
 
         this.reaction = this.model.collection.parent;
 
@@ -3574,7 +3586,8 @@ module.exports = View.extend({
     },
     props:
     {
-        reactionType : 'string'
+        reactionType : 'string',
+        showCustomOverride : 'boolean'
     },
     derived: {
         massAction :
@@ -3585,7 +3598,7 @@ module.exports = View.extend({
         showCustom :
         {
             deps : ['reactionType'],
-            fn : function() { return this.reactionType == 'massaction' || this.reactionType == 'custom'; }
+            fn : function() { return this.showCustomOverride || (this.reactionType == 'massaction' || this.reactionType == 'custom'); }
         }
     },
     bindings : {
@@ -3856,6 +3869,14 @@ module.exports = Model.extend({
     {
         this.threeJsMesh = data;
 
+        if(this.subdomains.length == 0)
+        {
+            for(var i = 0; i < this.threeJsMesh.vertices.length / 3; i++)
+            {
+                this.subdomains.push(1);
+            }
+        }
+
         callback(this);
     }
 });
@@ -3912,10 +3933,11 @@ var Model = AmpersandModel.extend({
                 }
             }
         }
-        else
+
+        if(!this.mesh)
         {
-            this.meshId = meshCollection.models.at(0).id;
-            this.mesh = meshCollection.models.at(0);
+            this.meshId = meshCollection.models[0].id;
+            this.mesh = meshCollection.models[0];
         }
 
         for(var i = 0; i < this.species.models.length; i++)
@@ -66963,9 +66985,9 @@ var ModelCollectionSelectView = AmpersandView.extend({
     <tbody data-hook='items'></tbody> \
   </table> \
   <div data-hook='nav'> \
-    <button class='btn btn-link' data-hook='previous'>&lt;&lt;</button> \
-    [ <span data-hook='position'></span> / <span data-hook='total'></span> ] \
-    <button class='btn btn-link' data-hook='next'>&gt;&gt;</button> \
+    <button class='btn' data-hook='previous'>&lt;&lt;</button> \
+    [ <span data-hook='leftPosition'></span> - <span data-hook='rightPosition'></span> ] \
+    <button class='btn' data-hook='next'>&gt;&gt;</button> \
   </div> \
 </div>";
 

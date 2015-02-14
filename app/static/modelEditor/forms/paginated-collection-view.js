@@ -32,13 +32,14 @@ var PaginatedCollectionView = AmpersandView.extend({
                 this.view.deSelect();
 
         this.value = model;
-        this.view = this.subCollectionViews._getViewByModel(model);
 
         //Search for model in current selection
         for(var i = 0; i < this.subCollection.models.length; i++)
         {
             if(model == this.subCollection.models[i])
             {
+                this.view = this.subCollectionViews._getViewByModel(model);
+
                 if(this.view)
                 {
                     if(typeof(this.view.select) == 'function')
@@ -68,7 +69,9 @@ var PaginatedCollectionView = AmpersandView.extend({
                     this.offset = i;
 
                 this.subCollection.configure( { limit : this.limit, offset : this.offset } );
-                
+
+                this.view = this.subCollectionViews._getViewByModel(model);
+
                 if(this.view)
                 {
                     if(typeof(this.view.select) == 'function')

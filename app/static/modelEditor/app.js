@@ -26,7 +26,13 @@ var PrimaryView = View.extend({
         modelNameText : {
             type : 'text',
             hook : 'modelName'
-        }
+        },
+        selected : [
+            {
+                type : 'toggle',
+                selector : '.reqModel'
+            }
+        ]
     },
     derived : {
         modelNameText : {

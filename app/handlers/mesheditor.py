@@ -122,7 +122,7 @@ class MeshManager():
 
     @staticmethod
     def deleteMesh(handler, meshId):
-        MeshWrapper.get_by_id(model_id).delete()
+        MeshWrapper.get_by_id(meshId).delete()
 
 class MeshBackboneInterface(BaseHandler):
     def get(self):

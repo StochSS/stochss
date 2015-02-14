@@ -268,8 +268,8 @@ var reactants;
 <div data-hook='subdomains'></div> \
   <table width='100%' data-hook='advanced'>\
     <tr> \
-      <td><h4>Reactants</h4><div data-hook='reactants'></div></td>\
-      <td><h4>Products</h4><div data-hook='products'></div></td>\
+      <td style='vertical-align:top'><h4>Reactants</h4><div data-hook='reactants'></div></td>\
+      <td style='vertical-align:top'><h4>Products</h4><div data-hook='products'></div></td>\
     </tr>\
   </table>\
   <br>\
@@ -287,8 +287,8 @@ var reactants;
 <div data-hook='custom'></div> \
   <table width='100%' data-hook='advanced'>\
     <tr> \
-      <td><h4>Reactants</h4><div data-hook='reactants'></div></td>\
-      <td><h4>Products</h4><div data-hook='products'></div></td>\
+      <td style='vertical-align:top'><h4>Reactants</h4><div data-hook='reactants'></div></td>\
+      <td style='vertical-align:top'><h4>Products</h4><div data-hook='products'></div></td>\
     </tr>\
   </table>\
   <br> \
@@ -379,7 +379,8 @@ var reactants;
 
         this.renderSubview(
             new StoichSpecieCollectionFormView({
-                collection: this.model.products
+                collection: this.model.products,
+                showCustomOverride : true
             }), this.el.querySelector("[data-hook='products']"));
         
         return this;

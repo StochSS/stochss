@@ -170,6 +170,7 @@ var ReactionCollectionFormView = AmpersandView.extend({
     <div data-hook='reactionEditorWorkspace'></div>\
   </div> \
   <div style='clear: both;'> \
+    <br /> \
     <form data-hook='addReactionForm'></form>\
   </div> \
 </div>",
@@ -234,7 +235,7 @@ var ReactionCollectionFormView = AmpersandView.extend({
   </table>\
   <div data-hook='nav'> \
     <button class='btn' data-hook='previous'>&lt;&lt;</button>\
-    [ <span data-hook='position'></span> / <span data-hook='total'></span> ] \
+    [ <span data-hook='leftPosition'></span> - <span data-hook='rightPosition'></span> ] \
     <button class='btn' data-hook='next'>&gt;&gt;</button>\
   </div> \
 </div>";
