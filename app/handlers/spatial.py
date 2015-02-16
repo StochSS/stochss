@@ -227,7 +227,45 @@ class SpatialPage(BaseHandler):
                 self.response.headers['Content-Type'] = 'application/json'
                 self.response.write(json.dumps(result))
             return
+        elif reqType == 'onlyColor':
+            try:
+                job = SpatialJobWrapper.get_by_id(int(self.request.get('id')))
 
+                data = json.loads(self.request.get('data'))
+
+                trajectory = data["trajectory"]
+                timeIdx = data["timeIdx"]
+
+                with open(str(job.outData + '/results/result{0}'.format(trajectory))) as fd:
+                    result = pickle.load(fd)
+        
+                    species = result.model.get_species_map().keys()
+
+                    threeJS = {}
+                    #print "exporting ", timeIdx
+
+                    
+                    for specie in species:
+                        concVals = result.get_species(specie, timeIdx, concentration=True)
+                        popVals = result.get_species(specie, timeIdx, concentration=False)
+
+                        minIdx = numpy.argmin(concVals)
+                        maxIdx = numpy.argmax(concVals)
+
+                        threeJS[specie] = { "mesh" : result._compute_solution_colors(specie, timeIdx),
+                                            "max" : int(popVals[maxIdx]),
+                                            "min" : int(popVals[minIdx]) }
+
+                self.response.content_type = 'application/json'
+                self.response.write(json.dumps( threeJS ))
+            except Exception as e:
+                traceback.print_exc()
+                result = {}
+                result['status'] = False
+                result['msg'] = 'Error: error fetching results {0}'.format(e)
+                self.response.headers['Content-Type'] = 'application/json'
+                self.response.write(json.dumps(result))
+            return
         self.render_response('spatial.html')
 
     def post(self):

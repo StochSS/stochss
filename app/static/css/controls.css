@@ -1,16 +1,20 @@
 [data-hook="container"] {
-  border-style: solid; 
-  color: white;
+  border-style:solid;
+  border-color: #C6C6C6;
+  border-radius: 5px;
+  border-width: 0.5px;
+  color: black;
   padding: 5px;
-  background-color : grey;
+  background-color:#F5F5F5;
 }
 
 .button-container{
     display: inline-block;
     padding: 2px;
-    border-style: solid;
-    border-color: black;
-    border-width: 1px;
+    border-style:solid;
+    border-color: #C6C6C6;
+    border-radius: 5px;
+    border-width: 0.5px;
 }
 
 .button {
@@ -29,8 +33,11 @@
 }
 
 #container {
-  border-style: solid; 
-  color: white;
+  border-style:solid;
+  border-color: #C6C6C6;
+  border-radius: 5px;
+  border-width: 0.5px;
+  color: black;
   padding: 5px;
-  background-color : grey;
+  background-color:#F5F5F5;
 }

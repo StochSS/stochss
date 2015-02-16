@@ -25,6 +25,8 @@ Spatial.Controller = Backbone.View.extend(
 
         initialize : function(attributes)
         {
+            this.initializeCache();
+
             // Set up room for the model select stuff
             // Pull in all the models from the internets
             // Build the simulationConf page (don't need external info to make that happen)
@@ -66,6 +68,7 @@ Spatial.Controller = Backbone.View.extend(
 
         },
 
+
         
         addGui : function() {
             $(" #container").show();
@@ -80,9 +83,40 @@ Spatial.Controller = Backbone.View.extend(
             $( '#rotateDown_btn' ).click( _.bind(function() { this.controls.rotateUp(-0.5);}, this) );
             $( '#rotateRight_btn' ).click( _.bind(function() { this.controls.rotateLeft(0.5);}, this) );
             $( '#rotateLeft_btn' ).click( _.bind(function() { this.controls.rotateLeft(-0.5);}, this) );
-            $( '#reset_btn' ).click( _.bind(function() { this.controls.reset();this.camera.position.z = 1.5; }, this) ); 
+            $( '#reset_btn' ).click( _.bind(function() { this.controls.reset();this.camera.position.z = 1.5; }, this) );
+
+            $( '#play_btn' ).click(_.bind(this.playMesh, this));
+            $( '#stop_btn' ).click(_.bind(this.stopMesh, this));
          },
 
+         playMesh: function(){
+            console.log("In play Mesh");
+            
+            this.updateCacheRange(0, 10);
+            this.timeIdx = 0;
+
+            this.intervalId = setInterval(_.bind(
+                function(){
+                    if(this.cache[this.timeIdx])            
+                        {   
+                            console.log("Cache initialized at time"+this.timeIdx);
+                            this.handleMeshColorUpdate(this.cache[this.timeIdx]); 
+                            this.overwriteCache(this.timeIdx , (this.timeIdx+11)%100)
+                            this.timeIdx = (this.timeIdx+1)%100;
+                        }
+                    else{
+                            console.log("Cache not initialized");
+                    }
+                }
+                , this),
+            1000);
+         },
+
+         stopMesh: function(){
+            console.log("Stopping mesh with Id: "+this.intervalId);
+            clearInterval(this.intervalId);
+            console.log("Stopping mesh @"+this.intervalId);
+         },
 
         createText : function(letter, x, y, z){
 
@@ -127,33 +161,42 @@ Spatial.Controller = Backbone.View.extend(
             var scene2 = new THREE.Scene();
             this.scene2 = scene2;
 
-            // axes
             var dir = new THREE.Vector3( 1.0, 0.0, 0.0 );
             var origin = new THREE.Vector3( 0, 0, 0 ); 
-            var length = 1; 
             var hex = 0xff0000; 
-            var xaxis = new THREE.ArrowHelper( dir, origin, length, hex );
+            var material = new THREE.LineBasicMaterial({ color: hex });
+            var geometry = new THREE.Geometry();
+            geometry.vertices.push( origin, dir );
+            var line = new THREE.Line( geometry, material );
+            //var coneGeometry = new THREE.CylinderGeometry( 0, 0.5, 1, 5, 1 );
+            //coneGeometry.applyMatrix( new THREE.Matrix4().makeTranslation( 1.0, 0.0, 0 ) );
+            //var cone = new THREE.Mesh( coneGeometry, new THREE.MeshBasicMaterial( { color: color } ) );
+             //   this.cone.matrixAutoUpdate = false;
+             //   this.add( this.cone );
             this.createText('X',1.25, -0.3, 0);
-            scene2.add( xaxis );
-
-
+            this.scene2.add( line );
+            
+            
             dir = new THREE.Vector3( 0, 1.0, 0 );
             origin = new THREE.Vector3( 0, 0, 0 ); 
-            length = 1; 
             hex = 0x0000ff; 
-            yaxis = new THREE.ArrowHelper( dir, origin, length, hex );
+            material = new THREE.LineBasicMaterial({ color: hex });
+            geometry = new THREE.Geometry();
+            geometry.vertices.push( origin, dir );
+            line = new THREE.Line( geometry, material );
             this.createText('Y', 0.5,0.5,0);            
-            scene2.add( yaxis );
-
-
+            scene2.add( line );
+            
+            
             dir = new THREE.Vector3( 0, 0, 1.0 );
             origin = new THREE.Vector3( 0, 0, 0 ); 
-            length = 1; 
             hex = 0x00ff00; 
-            zaxis = new THREE.ArrowHelper( dir, origin, length, hex );
+            material = new THREE.LineBasicMaterial({ color: hex });
+            geometry = new THREE.Geometry();
+            geometry.vertices.push( origin, dir );
+            line = new THREE.Line( geometry, material );
             this.createText('Z', 0.5,-0.4,0.9);
-            scene2.add( zaxis );
-
+            scene2.add( line );
 
         },
 
@@ -282,30 +325,112 @@ Spatial.Controller = Backbone.View.extend(
 
         },
 
+        /*
 
+        Caching Methods
 
+        */
 
-        acquireNewData : function()
+        initializeCache: function()
         {
-            //$( "#meshPreview" ).hide();
-            $( "#meshPreviewMsg" ).show();
-
-            $.ajax( { type : "GET",
-                      url : "/spatial",
-                      data : { reqType : "timeData",
-                               id : this.attributes.id,
-                               data : JSON.stringify( { trajectory : this.trajectory,
-                                                        timeIdx : this.timeIdx } )},
-                      success : _.bind(this.handleMeshDataUpdate, this)
-                    });
+            console.log("initializeCache: function()");
+            this.cache = {};
         },
 
+        updateCacheRange: function(start, stop)
+        { 
+            console.log("updateCacheRange: function("+start+", "+stop+")");
+            this.initializeCache();
+            for(time=start; time<=stop; time++)
+            {
+                console.log("Calling this.updateCache("+time+")")
+                this.updateCache(time);
+            }
+        },
 
-       
+        updateCache: function(time)
+        { 
+          console.log("updateCache: function("+time+")");
+           $.ajax( { type : "GET",
+                    url : "/spatial",
+                    data : { reqType : "onlyColor",
+                    id : this.attributes.id,
+                    data : JSON.stringify( { trajectory : this.trajectory, timeIdx : time} )},
+                    success : _.bind(function(data){
+                    console.log("Initializing Cache @ Time : "+time);
+                    this.cache[time] = data;
+                    }, this)
+                    }
+                );
+        },
 
+        overwriteCache : function(orig_time, new_time){
+            console.log("overwriteCache : function("+orig_time+", "+new_time+")")
+            delete this.cache[orig_time];
+            this.updateCache(new_time);
+        },
+
+        updateColor : function(){
+            console.log(" updateColor : function()");
+            $.ajax( { type : "GET",
+                    url : "/spatial",
+                    data : { reqType : "onlyColor",
+                    id : this.attributes.id,
+                    data : JSON.stringify( { trajectory : this.trajectory, timeIdx : this.timeIdx} )},
+                    success : _.bind(this.handleMeshColorUpdate, this)
+                    }
+            );
+        },
+
+        updateMesh : function(){
+                $.ajax( { type : "GET",
+                    url : "/spatial",
+                    data : { reqType : "timeData",
+                    id : this.attributes.id,
+                    data : JSON.stringify( { trajectory : this.trajectory,
+                    timeIdx : this.timeIdx } )},
+                    success : _.bind(this.handleMeshDataUpdate, this)
+                });
+        },
+
+       acquireNewData : function()
+        {
+            console.log("acquireNewData : function()");
+
+            // Cache available
+            if(this.cache[this.timeIdx])
+            {
+                this.handleMeshColorUpdate(this.cache[this.timeIdx]); 
+                return;
+            }
+
+            $( "#meshPreviewMsg" ).show();
+            
+            // Mesh Available
+            if(this.meshData){
+                this.updateColor();
+
+            }
+
+            // Neither cache or mesh available
+            else{
+                this.updateMesh();
+                return;
+            }
+            
+            // Update the cache
+            rangeStart = this.timeIdx % 100;
+            rangeEnd = (rangeStart + 10 )% 100;
+            console.log("Calling this.updateCache("+rangeStart+", "+rangeEnd+");")
+            this.updateCacheRange(rangeStart, rangeEnd);
+
+        },
+         
 
         handleSliderChange : function(event)
         {
+            console.log("handleSliderChange : function(event)");
+
             var slider = $( event.target );
 
             $( '#timeSelectDisplay' ).text('Time: ' + slider.val())
@@ -317,13 +442,32 @@ Spatial.Controller = Backbone.View.extend(
 
         handleMeshDataUpdate : function(data)
         {
+            console.log(" handleMeshDataUpdate : function(data)");
+            $( '#speciesSelect' ).empty();
+            this.meshData = data;
+            var sortedSpecies = _.keys(data).sort();
+            this.handleMeshUpdate(sortedSpecies);
+
+        },
+
+        handleMeshColorUpdate : function(data)
+        {
+            console.log("handleMeshColorUpdate : function(data)");
             // Add radio buttons for species select
             $( '#speciesSelect' ).empty();
 
-            this.meshData = data;
-
             var sortedSpecies = _.keys(data).sort();
 
+            for(i in sortedSpecies){
+                val = sortedSpecies[i];
+                this.meshData[val].mesh.colors = data[val].mesh
+            } 
+
+            this.handleMeshUpdate(sortedSpecies);
+        },
+
+        handleMeshUpdate: function(sortedSpecies)
+        {
             for(var i in sortedSpecies) {
                 var specie = sortedSpecies[i];
 
@@ -405,6 +549,8 @@ Spatial.Controller = Backbone.View.extend(
 
         handleTrajectorySelectChange : function(event)
         {
+            this.initializeCache();
+            
             this.trajectory = Number( $( event.target ).val() );
 
             this.acquireNewData();
