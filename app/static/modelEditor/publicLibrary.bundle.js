@@ -3184,7 +3184,7 @@ var AddNewStoichSpecieForm = AmpersandFormView.extend({
 });
 
 var StoichSpecieCollectionFormView = AmpersandView.extend({
-    template: "<div><table data-hook='stoichSpecieTable'></table><div data-hook='addStoichSpecieDiv'>Add Specie: <form data-hook='addStoichSpecieForm'></form></div></div>",
+    template: "<div><table data-hook='stoichSpecieTable'></table><div data-hook='addStoichSpecieDiv'>Add Species: <form data-hook='addStoichSpecieForm'></form></div></div>",
     initialize: function(attr, options)
     {
         AmpersandView.prototype.initialize.call(this, attr, options);
