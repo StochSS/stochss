@@ -1480,11 +1480,11 @@ module.exports = View.extend({
         {
             if(_.contains(subdomains, subdomainLabels[i]))
             {
-                colors[i] = new THREE.Color( 0xFF0000 );
+                colors[i] = new THREE.Color( 0x992200 );
             }
             else
             {
-                colors[i] = new THREE.Color( 0x000000 );
+                colors[i] = new THREE.Color( 0x333399 );
             }
         }
 
