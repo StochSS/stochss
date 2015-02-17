@@ -1167,7 +1167,7 @@ module.exports = View.extend({
             }
             else
             {
-                colors[i] = new THREE.Color( 0x333399 );
+                colors[i] = new THREE.Color( 0x000066 );
             }
         }
 
