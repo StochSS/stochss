@@ -37,16 +37,10 @@
                         <tr>
                             <th width="40pt"></th>
                             <th width="40pt">Job #</th>
-                            <th>Job name </th>
-                            <th width="50pt">Resource </th>
-                        
+                            <th>Job name</th>
+                            <th width="50pt">Resource</th>
                             <th width="100pt">Status</th>
-                            <th width="220pt">Result Analysis and Reproduction</th>
-                            
-                            <!--
-                            <th width="150pt">Reproduce</th>
-                            <th width="100pt">Cost Analysis</th>
-                            -->
+                            <th width="220pt">Result</th>
                         </tr>
                     </thead>
                     <tbody>
@@ -94,26 +88,6 @@
                                 
                                 {% endif %}
                             </td>
-                            <!--
-                            <td>
-                                {% if job.resource == "Cloud" %}
-                                {% if job.status == "Finished" or job.status == "Failed"%}
-                                {% if job.output_stored == "True" %}
-                                <a href="javascript:void(0)" onclick="rerun('/reproduce?req_type=delOutput&job_type=stochkit&uuid={{job.uuid}}', 'delete');">Delete output</a>
-                                {% else %}
-                                <a href="javascript:void(0)" onclick="rerun('/reproduce?req_type=rerun&job_type=stochkit&uuid={{job.uuid}}', 'rerun');">Reproduce Results</a>
-                                {% endif%}
-                                {% endif%}
-                                {% else %}
-                                <span style="color: black" class="create_msg">N/A</span>
-                                {% endif%}
-                                
-                                
-                            </td>
-                            <td>
-                            	<a href="/cost_analysis?uuid={{job.uuid}}&name={{job.name}}">Analyze</a>
-                            </td>
-                            -->
                         </tr>
                         
                         {% endfor %}
@@ -129,16 +103,10 @@
                         <tr>
                             <th width="40pt"></th>
                             <th width="40pt">Job #</th>
-                            <th>Job name </th>
-                            <th width="50pt">Resource </th>
-                        
+                            <th>Job name</th>
+                            <th width="50pt">Resource</th>
                             <th width="100pt">Status</th>
-                            
-                            <th width="220pt">Result Analysis and Reproduction</th>
-                            <!--
-                            <th width="150pt">Reproduce</th>
-                            <th width="100pt">Cost Analysis</th>
-                            -->
+                            <th width="220pt">Result</th>
                         </tr>
                     </thead>
                     <tbody>
@@ -186,26 +154,6 @@
                             
                                 {% endif %}
                             </td>
-                            <!--
-                            <td>
-                                {% if job.resource == "cloud" %}
-                                {% if job.status == "Finished" or job.status == "Failed"%}
-                                {% if job.output_stored == "True" %}
-                                <a href="javascript:void(0)" onclick="rerun('/reproduce?req_type=delOutput&job_type=spatial&uuid={{job.uuid}}', 'delete');">Delete output</a>
-                                {% else %}
-                                <a href="javascript:void(0)" onclick="rerun('/reproduce?req_type=rerun&job_type=spatial&uuid={{job.uuid}}', 'rerun');">Reproduce Results</a>
-                                {% endif%}
-                                {% endif%}
-                                {% else %}
-                                <span style="color: black" class="create_msg">N/A</span>
-                                {% endif%}
-                                
-                                
-                            </td>
-                            <td>
-                            	<a href="/cost_analysis?uuid={{job.uuid}}&name={{job.name}}">Analyze</a>
-                            </td>
-                            -->
                         </tr>
                         {% endfor %}
                     </tbody>
@@ -220,16 +168,12 @@
                         <tr>
                             <th width="40pt"></th>
                             <th width="40pt">Job #</th>
-                            <th>Job name </th>
-                            <th width="50pt">Resource </th>
+                            <th>Job name</th>
+                            <th width="50pt">Resource</th>
                         
                             <th width="100pt">Status</th>
                             
-                            <th width="220pt">Result Analysis and Reproduction</th>
-                            <!--
-                            <th width="150pt">Reproduce</th>
-                            <th width="100pt">Cost Analysis</th>
-                            -->
+                            <th width="220pt">Result</th>
                         </tr>
                     </thead>
                     <tbody>
@@ -271,24 +215,6 @@
                                 
                                 {% endif %}
                             </td>
-                            <!--
-                            <td>
-                                {% if job.resource == "cloud" %}
-                                {% if job.status == "Finished" or job.status == "Failed"%}
-                                {% if job.output_stored == "True" %}
-                                <a href="javascript:void(0)" onclick="rerun('/reproduce?req_type=delOutput&job_type=sensitivity&uuid={{job.uuid}}', 'delete');">Delete output</a>
-                                {% else %}
-                                <a href="javascript:void(0)" onclick="rerun('/reproduce?req_type=rerun&job_type=sensitivity&uuid={{job.uuid}}', 'rerun');">Reproduce Results</a>
-                                {% endif%}
-                                {% endif%}
-                                {% else %}
-                                <span style="color: black" class="create_msg">N/A</span>
-                                {% endif%}
-                            </td>
-                            <td>
-                            	<a href="/cost_analysis?uuid={{job.uuid}}&name={{job.name}}">Analyze</a>
-                            </td>
-                            -->
                         </tr>
                         
                         {% endfor %}
