@@ -2667,7 +2667,7 @@ var reactants;
         katex.render('A + B \\rightarrow C + D', emptyDiv[0]);
         options.push(['four', emptyDiv.html()]);
         options.push(['massaction', 'Custom mass action']);
-        options.push(['custom', 'Custom propensity, custom stoichiometry']);
+        options.push(['custom', 'Custom propensity']);
 
         this.renderSubview(
             new SelectView({
@@ -66498,7 +66498,7 @@ module.exports = View.extend({
                 if(this.model.type == 'massaction')
                     base += 'Mass action, ';
                 else
-                    base += 'Non mass action, ';
+                    base += 'Non-mass action, ';
 
                 if(this.model.units == 'concentration')
                 {

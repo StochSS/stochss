@@ -2984,7 +2984,7 @@ var reactants;
         katex.render('A + B \\rightarrow C + D', emptyDiv[0]);
         options.push(['four', emptyDiv.html()]);
         options.push(['massaction', 'Custom mass action']);
-        options.push(['custom', 'Custom propensity, custom stoichiometry']);
+        options.push(['custom', 'Custom propensity']);
 
         this.renderSubview(
             new SelectView({
@@ -2993,7 +2993,7 @@ var reactants;
                 name: 'type',
                 value: this.model.type,
                 options: options,
-                required: true,
+                required: true
             }), this.el.querySelector("[data-hook='typeSelect']"));
 
         var selected = this.model.rate;
@@ -67022,7 +67022,7 @@ var Tests = require('../forms/tests');
 module.exports = View.extend({
     template: '<tr> \
   <td> \
-    <button data-hook="edit" class="btn-small btn">Edit</button> \
+    <button data-hook="edit" class="btn-small btn">Select</button> \
   </td> \
   <td data-hook="name"> \
   </td> \
@@ -67050,7 +67050,7 @@ module.exports = View.extend({
                 if(this.model.type == 'massaction')
                     base += 'Mass action, ';
                 else
-                    base += 'Non mass action, ';
+                    base += 'Non-mass action, ';
 
                 if(this.model.units == 'concentration')
                 {
