@@ -66498,7 +66498,7 @@ module.exports = View.extend({
                 if(this.model.type == 'massaction')
                     base += 'Mass action, ';
                 else
-                    base += 'Non mass action, ';
+                    base += 'Non-mass action, ';
 
                 if(this.model.units == 'concentration')
                 {
