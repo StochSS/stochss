@@ -76,7 +76,7 @@ class CredentialsPage(BaseHandler):
             
             if 'compute_power' in params:   
                 if params['compute_power'] == 'small':
-                     head_node = {"instance_type": 't1.micro', "num_vms": 1}
+                     head_node = {"instance_type": 'c3.large', "num_vms": 1}
                 else:
                     result = {'status': 'Failure' , 'msg': 'Unknown instance type.'}
                     all_numbers_correct = False
@@ -99,9 +99,10 @@ class CredentialsPage(BaseHandler):
                             break
                         else:
                             vms.append({"instance_type": type, "num_vms": int(params[num_type])})                   
+            active_nodes = context['number_creating'] + context['number_pending'] + context['number_running']
 
-            if all_numbers_correct:    
-                result = self.start_vms(user_id, self.user_data.getCredentials(), head_node, vms)
+            if all_numbers_correct:
+                result = self.start_vms(user_id, self.user_data.getCredentials(), head_node, vms, active_nodes)
                 context['starting_vms'] = True
             else:
                 context['starting_vms'] = False
@@ -269,7 +270,7 @@ class CredentialsPage(BaseHandler):
             except:
                 return None
                     
-    def start_vms(self, user_id, credentials, head_node, vms_info):
+    def start_vms(self, user_id, credentials, head_node, vms_info, active_nodes):
         key_prefix = user_id
         group_random_name = key_prefix +"-"+''.join(random.choice(string.ascii_uppercase + string.digits) for x in range(6))
 
@@ -299,7 +300,7 @@ class CredentialsPage(BaseHandler):
 
         service = backendservices()
         
-        if not service.isOneOrMoreComputeNodesRunning(params):
+        if active_nodes == 0:
             if head_node is None:
                 return {'status':'Failure' , 'msg': "At least one head node needs to be launched."} 
             else:
