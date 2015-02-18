@@ -282,6 +282,9 @@ class EC2Agent(BaseAgent):
     group = parameters[self.PARAM_GROUP]
     spot = parameters[self.PARAM_SPOT]
     count = parameters["num_vms"]
+    shutdown = "stop"
+    if "shutdown" in parameters and parameters["shutdown"]=="terminate":
+        shutdown = parameters["shutdown"]
 
     utils.log('[{0}] [{1}] [{2}] [{3}] [ec2] [{4}] [{5}]'.format(count,
       image_id, instance_type, keyname, group, spot))
@@ -349,7 +352,7 @@ class EC2Agent(BaseAgent):
           security_groups=[group], instance_type=instance_type, count=count, user_data = userstr)
     else:
         conn.run_instances(image_id, count, count, key_name=keyname,
-          security_groups=[group], instance_type=instance_type, user_data=userstr)
+          security_groups=[group], instance_type=instance_type, user_data=userstr, instance_initiated_shutdown_behavior=shutdown)
         
     return 
     

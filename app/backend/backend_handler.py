@@ -28,11 +28,11 @@ __email__ = 'gmy.melissa@gmail.com, dnath@cs.ucsb.edu'
 BACKEND_NAME = 'backendthread'
 BACKEND_URL = 'http://%s' % modules.get_hostname(BACKEND_NAME)
 
-#BACKEND_START = BACKEND_URL + '/_ah/start'
-#BACKEND_BACKGROUND = BACKEND_URL + '/_ah/background'
+BACKEND_START = BACKEND_URL + '/_ah/start'
+BACKEND_BACKGROUND = BACKEND_URL + '/_ah/background'
 BACKEND_SYN_R_URL = BACKEND_URL + '/backend/synchronizedb'
-#BACKEND_MANAGER_R_URL = BACKEND_URL + '/backend/manager'
-#BACKEND_QUEUE_R_URL = 'http://%s' % modules.get_hostname('backendqueue') + '/backend/queue'
+BACKEND_MANAGER_R_URL = BACKEND_URL + '/backend/manager'
+BACKEND_QUEUE_R_URL = 'http://%s' % modules.get_hostname('backendqueue') + '/backend/queue'
 
 INS_TYPES_EC2 = ["t1.micro", "m1.small", "m3.medium", "m3.large", "c3.large", "c3.xlarge"]
 
@@ -54,7 +54,8 @@ class VMStateModel(db.Model):
 
     DESCRI_FAIL_TO_RUN = 'fail to run the instance'
     DESCRI_TIMEOUT_ON_SSH = 'timeout to connect instance via ssh'
-    DESCRI_FAIL_TO_COFIGURE_CELERY = 'fail to celery on the instance'
+    DESCRI_FAIL_TO_COFIGURE_CELERY = 'fail to configure celery on the instance'
+    DESCRI_FAIL_TO_COFIGURE_SHUTDOWN = 'fail to configure shutdown behavior on the instance'
     DESCRI_NOT_FOUND = 'not find the instance in cloud infrastructure'
     DESCRI_SUCCESS = 'success'
 
@@ -142,29 +143,6 @@ class VMStateModel(db.Model):
         except Exception as e:
             logging.error("Error in getting all running instance types from db! {0}".format(e))
             return None
-    @staticmethod
-    def fail_active(params):
-        '''
-        update all vms that are 'creating' to 'failed'.
-        Args
-            params    a dictionary of parameters, containing at least 'agent' and 'credentials'.
-        '''
-        try:
-            infra, access_key, secret_key = VMStateModel.validate_credentials(params)
-            if infra is None:
-                return
-
-            entities = VMStateModel.all()
-            entities.filter('infra =', infra).filter('access_key =', access_key).filter('secret_key =', secret_key)
-            entities.filter('state =', VMStateModel.STATE_CREATING)
-
-            for e in entities:
-                e.state = VMStateModel.STATE_FAILED
-                e.put()
-
-        except Exception as e:
-            logging.error("Error in updating 'creating' vms to 'failed' in db! {0}".format(e))    
-
 
     @staticmethod
     def terminate_not_active(params):
@@ -424,9 +402,7 @@ class BackendWorker():
                 # Queue head is not running, so create a queue head
                 if 'head_node' not in parameters:
                     logging.info("Head node is needed.")
-		    # if there is no head node running, and the current worker nodes are not tagged 'head node' then just fail all 'creating' ones
-                    VMStateModel.fail_active(parameters) 	
-		    return
+                    return
 
                 utils.log('About to start a queue head.')
 
@@ -458,7 +434,9 @@ class BackendWorker():
 
                 parameters["queue_head"] = False
                 security_configured = agent.configure_instance_security(parameters)
-
+                
+                # set shutdown behavior to "terminate"
+                parameters["shutdown"] = "terminate"
                 for vm in parameters["vms"]:
                     parameters["instance_type"] = vm["instance_type"]
                     parameters["num_vms"] = vm["num_vms"]
@@ -485,17 +463,17 @@ class BackendWorker():
             ############################################################
             # step 3: set alarm for the nodes, if it is NOT queue head #
             ############################################################
-            logging.info('Set shutdown alarm')
-
-            try:
-                if "queue_head" not in parameters or parameters["queue_head"] == False:
-                    for ins_id in instance_ids:
-                        agent.make_sleepy(parameters, ins_id)
-                else:
-                    agent.make_sleepy(parameters, instance_ids[0], '7200')
-
-            except:
-                raise Exception('Errors in set alarm for instances.')
+#             logging.info('Set shutdown alarm')
+# 
+#             try:
+#                 if "queue_head" not in parameters or parameters["queue_head"] == False:
+#                     for ins_id in instance_ids:
+#                         agent.make_sleepy(parameters, ins_id)
+#                 else:
+#                     agent.make_sleepy(parameters, instance_ids[0], '7200')
+# 
+#             except:
+#                 raise Exception('Errors in set alarm for instances.')
 
             ########################################################
             # step 4: verify whether nodes are connectable via ssh #
@@ -509,7 +487,7 @@ class BackendWorker():
                     self.spawn_vms(infra, agent, parameters, reservation_id)
                 else:
                     return
-
+            
 
             #########################################
             # step 5: configure celery on each node #
@@ -523,6 +501,8 @@ class BackendWorker():
 
             # copy celery configure to nodes.
             self.__configure_celery(agent, parameters, connected_public_ips, connected_instance_ids)
+            
+            
 
 
             #################################################################
@@ -659,8 +639,7 @@ class BackendWorker():
         instance_ids = None
 
         return connected_public_ips, connected_instance_ids
-
-
+            
     def __configure_celery(self, agent, params, public_ips, instance_ids):
         '''
         Private method used for uploading the current celery configuration to each instance 
