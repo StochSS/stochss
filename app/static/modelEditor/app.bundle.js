@@ -1606,9 +1606,7 @@ module.exports = View.extend({
             this.rendererDom = $( renderer.domElement ).appendTo( this.queryByHook( "mesh" ) );
             
             var controls = new OrbitControls( camera, renderer.domElement );
-            // var controls = new THREE.OrbitControls( camera );
-            //controls.addEventListener( 'change', render );
-            
+            controls.noZoom = true;controls.noRotate = true; controls.noPan = true;
             camera.position.z = 1.5;
             
             this.camera = camera;
