@@ -15,10 +15,10 @@ module.exports = View.extend({
     // This gets called when things update
     template : "<tbody>\
   <tr data-hook='basic'>\
-    <td><button class='btn' data-hook='remove'>x</button></td>\
-    <td><span data-hook='name'></span></td> \
+    <td><center><input type='radio' name='reaction' data-hook='radio'></center></td>\
+    <td><center><span data-hook='name'></span></center></td> \
     <td><center><span data-hook='latex'></span></center></td> \
-    <td><input type='radio' name='reaction' data-hook='radio'></td>\
+    <td><center><button class='btn' data-hook='remove'>x</button></center></td>\
   </tr>\
 </tbody>",
     // On any change of anything, redraw the Latex

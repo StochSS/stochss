@@ -16,8 +16,38 @@ var domReady = require('domready');
 var Mesh = require('./models/mesh');
 var MeshCollection = require('./models/mesh-collection');
 var MeshSelectView = require('./forms/mesh-collection');
+var URL = require('url-parse');
 
 var PrimaryView = View.extend({
+    props : {
+        selected : 'object'
+    },
+    bindings : {
+        modelNameText : {
+            type : 'text',
+            hook : 'modelName'
+        },
+        selected : [
+            {
+                type : 'toggle',
+                selector : '.reqModel'
+            }
+        ]
+    },
+    derived : {
+        modelNameText : {
+            deps : ['selected.name'],
+            fn : function() {
+                if(this.selected) {
+                    return '(current: ' + this.selected.name + ')';
+                }
+                else
+                {
+                    return '';
+                }
+            }
+        }
+    },
     initialize: function(attr, options)
     {
         View.prototype.initialize.call(this, attr, options);
@@ -52,7 +82,7 @@ var PrimaryView = View.extend({
             if(this.modelEditor)
             {
                 this.modelEditor.remove()
-                this.stopListening(this.modelSelector.selected);
+                this.stopListening(this.lastSelected);
                 
                 delete this.modelEditor;
             }
@@ -67,6 +97,25 @@ var PrimaryView = View.extend({
             this.listenTo(this.modelSelector.selected, 'remove', _.bind(this.modelDeleted, this));
             this.registerSubview(this.modelEditor);
             this.modelEditor.render();
+
+            if($( this.el ).find('.selectAccordion .accordion-body').hasClass('in'))
+            {
+                $( this.el ).find('.selectAccordion a').first()[0].click();
+            }
+
+            if(!$( this.el ).find('.speciesAccordion .accordion-body').first().hasClass('in'))
+                $( this.el ).find('.speciesAccordion').find('a').first()[0].click();
+            if(!$( this.el ).find('.parametersAccordion .accordion-body').first().hasClass('in'))
+                $( this.el ).find('.parametersAccordion').find('a').first()[0].click();
+            if(!$( this.el ).find('.mesh3dAccordion .accordion-body').first().hasClass('in'))
+                $( this.el ).find('.mesh3dAccordion').find('a').first()[0].click();
+            if(!$( this.el ).find('.initialConditionsAccordion .accordion-body').first().hasClass('in'))
+                $( this.el ).find('.initialConditionsAccordion').find('a').first()[0].click();
+            if(!$( this.el ).find('.reactionsAccordion .accordion-body').first().hasClass('in'))
+                $( this.el ).find('.reactionsAccordion').find('a').first()[0].click();
+
+            // Need to remember this so we can clean up event handlers
+            this.selected = this.modelSelector.selected;
         }
     },
     exportModel : function()
@@ -112,6 +161,8 @@ var PrimaryView = View.extend({
         saveMessageDom.removeClass( "alert-error" );
         saveMessageDom.addClass( "alert-success" );
         saveMessageDom.text( "Saved model to public library" );
+
+        window.location = '/publicLibrary';
     },
     modelNotSaved: function()
     {
@@ -159,10 +210,19 @@ var PrimaryView = View.extend({
 
         $( this.queryByHook('modelSelect') ).empty();
 
+        var url = new URL(document.URL, true);
+
+        var model;
+        if(url.query.select)
+        {
+            model = this.collection.get(parseInt(url.query.select), "id");
+        }
+
         this.modelSelector = this.renderSubview(
             new ModelSelectView( {
                 collection : this.collection,
-                meshCollection : this.meshCollection
+                meshCollection : this.meshCollection,
+                selected : model
             } ), this.queryByHook('modelSelect')
         );
 

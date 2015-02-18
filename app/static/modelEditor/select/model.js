@@ -7,7 +7,7 @@ var Tests = require('../forms/tests');
 module.exports = View.extend({
     template: '<tr> \
   <td> \
-    <input type="radio" name="model" /> \
+    <button data-hook="edit" class="btn-small btn">Select</button> \
   </td> \
   <td data-hook="name"> \
   </td> \
@@ -35,7 +35,7 @@ module.exports = View.extend({
                 if(this.model.type == 'massaction')
                     base += 'Mass action, ';
                 else
-                    base += 'Non mass action, ';
+                    base += 'Non-mass action, ';
 
                 if(this.model.units == 'concentration')
                 {
@@ -55,17 +55,21 @@ module.exports = View.extend({
         }
     },
     events: {
-        "click input" : "selectSelf",
-        "click button" : "removeModel"
+        "click [data-hook=edit]" : "selectSelf",
+        "click [data-hook=delete]" : "removeModel"
     },
     selectSelf: function()
     {
         // There is a CollectionView parent here that must be navigated
         this.parent.parent.select(this.model);
     },
+    deSelect : function()
+    {
+        $( this.queryByHook( "edit" ) ).removeClass('btn-success');
+    },
     select : function()
     {
-        $( this.el ).find( "input[type='radio']" ).prop('checked', true);
+        $( this.queryByHook( "edit" ) ).addClass('btn-success');
     },
     removeModel: function()
     {

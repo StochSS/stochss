@@ -46,6 +46,14 @@ module.exports = Model.extend({
     {
         this.threeJsMesh = data;
 
+        if(this.subdomains.length == 0)
+        {
+            for(var i = 0; i < this.threeJsMesh.vertices.length / 3; i++)
+            {
+                this.subdomains.push(1);
+            }
+        }
+
         callback(this);
     }
 });

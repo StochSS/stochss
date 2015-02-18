@@ -1,0 +1,170 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>pyurdme.nemsolver &mdash; PyURDME 1.0 documentation</title>
+    
+    <link rel="stylesheet" href="../../_static/default.css" type="text/css" />
+    <link rel="stylesheet" href="../../_static/pygments.css" type="text/css" />
+    
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    '../../',
+        VERSION:     '1.0',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true
+      };
+    </script>
+    <script type="text/javascript" src="../../_static/jquery.js"></script>
+    <script type="text/javascript" src="../../_static/underscore.js"></script>
+    <script type="text/javascript" src="../../_static/doctools.js"></script>
+    <link rel="top" title="PyURDME 1.0 documentation" href="../../index.html" />
+    <link rel="up" title="Module code" href="../index.html" /> 
+  </head>
+  <body>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="../../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li><a href="../../index.html">PyURDME 1.0 documentation</a> &raquo;</li>
+          <li><a href="../index.html" accesskey="U">Module code</a> &raquo;</li> 
+      </ul>
+    </div>  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body">
+            
+  <h1>Source code for pyurdme.nemsolver</h1><div class="highlight"><pre>
+<span class="sd">&quot;&quot;&quot; NSM solver. &quot;&quot;&quot;</span>
+<span class="kn">import</span> <span class="nn">pyurdme</span>
+<span class="kn">import</span> <span class="nn">os</span>
+
+<div class="viewcode-block" id="NEMSolver"><a class="viewcode-back" href="../../pyurdme.html#pyurdme.nemsolver.NEMSolver">[docs]</a><span class="k">class</span> <span class="nc">NEMSolver</span><span class="p">(</span><span class="n">pyurdme</span><span class="o">.</span><span class="n">URDMESolver</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot; NEM solver class. &quot;&quot;&quot;</span>
+
+    <span class="n">NAME</span> <span class="o">=</span> <span class="s">&#39;nem&#39;</span>
+
+<div class="viewcode-block" id="NEMSolver.createPropensityFile"><a class="viewcode-back" href="../../pyurdme.html#pyurdme.nemsolver.NEMSolver.createPropensityFile">[docs]</a>    <span class="k">def</span> <span class="nf">createPropensityFile</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">file_name</span><span class="o">=</span><span class="bp">None</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot; Generate a C propensity file on the new experimental format. &quot;&quot;&quot;</span>
+
+        <span class="n">template</span> <span class="o">=</span> <span class="nb">open</span><span class="p">(</span><span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">abspath</span><span class="p">(</span><span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">dirname</span><span class="p">(</span><span class="n">__file__</span><span class="p">))</span> <span class="o">+</span> <span class="s">&#39;/data/propensity_file_new_template.c&#39;</span><span class="p">,</span> <span class="s">&#39;r&#39;</span><span class="p">)</span>
+        <span class="n">propfile</span> <span class="o">=</span> <span class="nb">open</span><span class="p">(</span><span class="n">file_name</span><span class="p">,</span> <span class="s">&quot;w&quot;</span><span class="p">)</span>
+        <span class="n">propfilestr</span> <span class="o">=</span> <span class="n">template</span><span class="o">.</span><span class="n">read</span><span class="p">()</span>
+
+        <span class="n">propfilestr</span> <span class="o">=</span> <span class="n">propfilestr</span><span class="o">.</span><span class="n">replace</span><span class="p">(</span><span class="s">&quot;__NUMBER_OF_REACTIONS__&quot;</span><span class="p">,</span> <span class="nb">str</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">model</span><span class="o">.</span><span class="n">getNumReactions</span><span class="p">()))</span>
+        <span class="n">propfilestr</span> <span class="o">=</span> <span class="n">propfilestr</span><span class="o">.</span><span class="n">replace</span><span class="p">(</span><span class="s">&quot;__NUMBER_OF_SPECIES__&quot;</span><span class="p">,</span> <span class="nb">str</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">model</span><span class="o">.</span><span class="n">listOfSpecies</span><span class="p">)))</span>
+
+
+        <span class="n">speciesdef</span> <span class="o">=</span> <span class="s">&quot;&quot;</span>
+        <span class="k">for</span> <span class="n">i</span><span class="p">,</span> <span class="n">sname</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">model</span><span class="o">.</span><span class="n">listOfSpecies</span><span class="p">):</span>
+            <span class="n">S</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">model</span><span class="o">.</span><span class="n">listOfSpecies</span><span class="p">[</span><span class="n">sname</span><span class="p">]</span>
+            <span class="n">speciesdef</span> <span class="o">+=</span> <span class="s">&quot;species *&quot;</span> <span class="o">+</span> <span class="n">sname</span> <span class="o">+</span> <span class="s">&quot;;</span><span class="se">\n\t</span><span class="s">&quot;</span>
+            <span class="n">speciesdef</span> <span class="o">+=</span> <span class="n">sname</span> <span class="o">+</span> <span class="s">&quot;= (species *)malloc(sizeof(species));</span><span class="se">\n\t</span><span class="s">&quot;</span>
+            <span class="n">speciesdef</span> <span class="o">+=</span> <span class="n">sname</span> <span class="o">+</span> <span class="s">&quot;-&gt;gamma = &quot;</span> <span class="o">+</span> <span class="nb">str</span><span class="p">(</span><span class="n">S</span><span class="o">.</span><span class="n">diffusion_constant</span><span class="p">)</span> <span class="o">+</span> <span class="s">&quot;;</span><span class="se">\n\t</span><span class="s">&quot;</span>
+            <span class="n">speciesdef</span> <span class="o">+=</span> <span class="n">sname</span> <span class="o">+</span> <span class="s">&quot;-&gt;sigma = &quot;</span> <span class="o">+</span> <span class="nb">str</span><span class="p">(</span><span class="n">S</span><span class="o">.</span><span class="n">reaction_radius</span><span class="p">)</span> <span class="o">+</span> <span class="s">&quot;;</span><span class="se">\n\t</span><span class="s">&quot;</span>
+            <span class="n">speciesdef</span> <span class="o">+=</span> <span class="s">&quot;ptr[&quot;</span><span class="o">+</span><span class="nb">str</span><span class="p">(</span><span class="n">i</span><span class="p">)</span><span class="o">+</span><span class="s">&quot;] = &quot;</span> <span class="o">+</span> <span class="n">sname</span> <span class="o">+</span> <span class="s">&quot;;</span><span class="se">\n\n\t</span><span class="s">&quot;</span>
+
+
+        <span class="n">propfilestr</span> <span class="o">=</span> <span class="n">propfilestr</span><span class="o">.</span><span class="n">replace</span><span class="p">(</span><span class="s">&quot;__DEFINE_SPECIES__&quot;</span><span class="p">,</span> <span class="n">speciesdef</span><span class="p">)</span>
+
+
+        <span class="c"># Make sure all paramters are evaluated to scalars before we write them to the file.</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">model</span><span class="o">.</span><span class="n">resolveParameters</span><span class="p">()</span>
+
+        <span class="n">reacstr</span> <span class="o">=</span> <span class="s">&quot;&quot;</span>
+
+        <span class="k">for</span> <span class="n">j</span><span class="p">,</span> <span class="n">sname</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">model</span><span class="o">.</span><span class="n">listOfSpecies</span><span class="p">):</span>
+            <span class="n">reacstr</span> <span class="o">+=</span> <span class="s">&quot;int &quot;</span> <span class="o">+</span> <span class="n">sname</span> <span class="o">+</span> <span class="s">&quot;=&quot;</span> <span class="o">+</span> <span class="nb">str</span><span class="p">(</span><span class="n">j</span><span class="p">)</span> <span class="o">+</span> <span class="s">&quot;;</span><span class="se">\n\t</span><span class="s">&quot;</span>
+
+        <span class="n">reacstr</span> <span class="o">+=</span> <span class="s">&quot;</span><span class="se">\n\t</span><span class="s">&quot;</span>
+
+        <span class="k">for</span> <span class="n">i</span><span class="p">,</span> <span class="n">rname</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">model</span><span class="o">.</span><span class="n">listOfReactions</span><span class="p">):</span>
+            <span class="n">R</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">model</span><span class="o">.</span><span class="n">listOfReactions</span><span class="p">[</span><span class="n">rname</span><span class="p">]</span>
+
+            <span class="n">reacstr</span> <span class="o">+=</span> <span class="s">&quot;reaction *&quot;</span> <span class="o">+</span> <span class="n">rname</span> <span class="o">+</span> <span class="s">&quot;;</span><span class="se">\n\t</span><span class="s">&quot;</span>
+            <span class="n">reacstr</span> <span class="o">+=</span> <span class="n">rname</span> <span class="o">+</span> <span class="s">&quot;=(reaction *)malloc(sizeof(reaction));</span><span class="se">\n\t</span><span class="s">&quot;</span>
+            <span class="n">reacstr</span> <span class="o">+=</span> <span class="n">rname</span> <span class="o">+</span> <span class="s">&quot;-&gt;order=&quot;</span> <span class="o">+</span> <span class="nb">str</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">R</span><span class="o">.</span><span class="n">reactants</span><span class="p">))</span> <span class="o">+</span> <span class="s">&quot;;</span><span class="se">\n\t</span><span class="s">&quot;</span>
+            <span class="n">reacstr</span> <span class="o">+=</span> <span class="n">rname</span> <span class="o">+</span> <span class="s">&quot;-&gt;nr_reactants=&quot;</span> <span class="o">+</span> <span class="nb">str</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">R</span><span class="o">.</span><span class="n">reactants</span><span class="p">))</span> <span class="o">+</span> <span class="s">&quot;;</span><span class="se">\n\t</span><span class="s">&quot;</span>
+            <span class="n">reacstr</span> <span class="o">+=</span> <span class="n">rname</span> <span class="o">+</span> <span class="s">&quot;-&gt;nr_products=&quot;</span> <span class="o">+</span> <span class="nb">str</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">R</span><span class="o">.</span><span class="n">products</span><span class="p">))</span> <span class="o">+</span> <span class="s">&quot;;</span><span class="se">\n\t</span><span class="s">&quot;</span>
+
+
+            <span class="n">reacstr</span> <span class="o">+=</span> <span class="n">rname</span><span class="o">+</span><span class="s">&quot;-&gt;reactants=(int *)malloc(&quot;</span> <span class="o">+</span> <span class="n">rname</span> <span class="o">+</span> <span class="s">&quot;-&gt;nr_reactants*sizeof(int));</span><span class="se">\n\t</span><span class="s">&quot;</span>
+            <span class="k">for</span> <span class="n">j</span><span class="p">,</span> <span class="n">reactant</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">R</span><span class="o">.</span><span class="n">reactants</span><span class="p">):</span>
+                <span class="n">reacstr</span> <span class="o">+=</span> <span class="n">rname</span> <span class="o">+</span> <span class="s">&quot;-&gt;reactants[&quot;</span> <span class="o">+</span> <span class="nb">str</span><span class="p">(</span><span class="n">j</span><span class="p">)</span> <span class="o">+</span> <span class="s">&quot;]=&quot;</span> <span class="o">+</span> <span class="nb">str</span><span class="p">(</span><span class="n">reactant</span><span class="p">)</span><span class="o">+</span><span class="s">&quot;;</span><span class="se">\n\t</span><span class="s">&quot;</span>
+
+            <span class="n">reacstr</span> <span class="o">+=</span> <span class="s">&quot;</span><span class="se">\n\t</span><span class="s">&quot;</span> <span class="o">+</span> <span class="n">rname</span> <span class="o">+</span> <span class="s">&quot;-&gt;products=(int *)malloc(&quot;</span> <span class="o">+</span> <span class="n">rname</span> <span class="o">+</span> <span class="s">&quot;-&gt;nr_products*sizeof(int));</span><span class="se">\n\t</span><span class="s">&quot;</span>
+            <span class="k">for</span> <span class="n">j</span><span class="p">,</span> <span class="n">product</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">R</span><span class="o">.</span><span class="n">products</span><span class="p">):</span>
+                <span class="n">reacstr</span> <span class="o">+=</span> <span class="n">rname</span> <span class="o">+</span> <span class="s">&quot;-&gt;products[&quot;</span> <span class="o">+</span> <span class="nb">str</span><span class="p">(</span><span class="n">j</span><span class="p">)</span> <span class="o">+</span> <span class="s">&quot;]=&quot;</span> <span class="o">+</span> <span class="nb">str</span><span class="p">(</span><span class="n">product</span><span class="p">)</span> <span class="o">+</span> <span class="s">&quot;;</span><span class="se">\n\t</span><span class="s">&quot;</span>
+
+            <span class="n">reacstr</span> <span class="o">+=</span> <span class="s">&quot;</span><span class="se">\n\t</span><span class="s">&quot;</span> <span class="o">+</span> <span class="n">rname</span> <span class="o">+</span> <span class="s">&quot;-&gt;nr=(int *)calloc(&quot;</span> <span class="o">+</span> <span class="nb">str</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">model</span><span class="o">.</span><span class="n">listOfSpecies</span><span class="p">))</span> <span class="o">+</span> <span class="s">&quot;,sizeof(int));</span><span class="se">\n\t</span><span class="s">&quot;</span>
+
+            <span class="k">for</span> <span class="n">j</span><span class="p">,</span> <span class="n">reactant</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">R</span><span class="o">.</span><span class="n">reactants</span><span class="p">):</span>
+                <span class="n">reacstr</span> <span class="o">+=</span> <span class="n">rname</span> <span class="o">+</span> <span class="s">&quot;-&gt;nr[&quot;</span> <span class="o">+</span> <span class="n">reactant</span> <span class="o">+</span> <span class="s">&quot;]=-&quot;</span> <span class="o">+</span> <span class="nb">str</span><span class="p">(</span><span class="n">R</span><span class="o">.</span><span class="n">reactants</span><span class="p">[</span><span class="n">reactant</span><span class="p">])</span> <span class="o">+</span> <span class="s">&quot;;</span><span class="se">\n\t</span><span class="s">&quot;</span>
+
+            <span class="k">for</span> <span class="n">j</span><span class="p">,</span> <span class="n">product</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">R</span><span class="o">.</span><span class="n">products</span><span class="p">):</span>
+                <span class="n">reacstr</span> <span class="o">+=</span> <span class="n">rname</span> <span class="o">+</span> <span class="s">&quot;-&gt;nr[&quot;</span> <span class="o">+</span> <span class="n">product</span> <span class="o">+</span> <span class="s">&quot;]=&quot;</span> <span class="o">+</span> <span class="nb">str</span><span class="p">(</span><span class="n">R</span><span class="o">.</span><span class="n">products</span><span class="p">[</span><span class="n">product</span><span class="p">])</span> <span class="o">+</span> <span class="s">&quot;;</span><span class="se">\n\t</span><span class="s">&quot;</span>
+
+            <span class="n">reacstr</span> <span class="o">+=</span> <span class="n">rname</span> <span class="o">+</span> <span class="s">&quot;-&gt;k=&quot;</span> <span class="o">+</span> <span class="nb">str</span><span class="p">(</span><span class="n">R</span><span class="o">.</span><span class="n">marate</span><span class="o">.</span><span class="n">value</span><span class="p">)</span> <span class="o">+</span> <span class="s">&quot;;</span><span class="se">\n\t</span><span class="s">&quot;</span>
+
+            <span class="n">reacstr</span> <span class="o">+=</span> <span class="s">&quot;</span><span class="se">\n\t</span><span class="s">ptr[&quot;</span> <span class="o">+</span> <span class="nb">str</span><span class="p">(</span><span class="n">i</span><span class="p">)</span> <span class="o">+</span> <span class="s">&quot;] = &quot;</span> <span class="o">+</span> <span class="n">rname</span> <span class="o">+</span> <span class="s">&quot;;</span><span class="se">\n\n\t</span><span class="s">&quot;</span>
+
+
+        <span class="n">propfilestr</span> <span class="o">=</span> <span class="n">propfilestr</span><span class="o">.</span><span class="n">replace</span><span class="p">(</span><span class="s">&quot;__DEFINE_REACTIONS__&quot;</span><span class="p">,</span> <span class="n">reacstr</span><span class="p">)</span>
+
+        <span class="n">propfile</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="n">propfilestr</span><span class="p">)</span>
+        <span class="n">propfile</span><span class="o">.</span><span class="n">close</span><span class="p">()</span></div></div>
+</pre></div>
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar">
+        <div class="sphinxsidebarwrapper">
+<div id="searchbox" style="display: none">
+  <h3>Quick search</h3>
+    <form class="search" action="../../search.html" method="get">
+      <input type="text" name="q" />
+      <input type="submit" value="Go" />
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+    <p class="searchtip" style="font-size: 90%">
+    Enter search terms or a module, class or function name.
+    </p>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="../../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li><a href="../../index.html">PyURDME 1.0 documentation</a> &raquo;</li>
+          <li><a href="../index.html" >Module code</a> &raquo;</li> 
+      </ul>
+    </div>
+    <div class="footer">
+        &copy; Copyright 2014, Brian Drawert, Andreas Hellander.
+      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.2b3.
+    </div>
+  </body>
+</html>
