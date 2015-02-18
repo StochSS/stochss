@@ -67022,7 +67022,7 @@ var Tests = require('../forms/tests');
 module.exports = View.extend({
     template: '<tr> \
   <td> \
-    <button data-hook="edit" class="btn-small btn">Edit</button> \
+    <button data-hook="edit" class="btn-small btn">Select</button> \
   </td> \
   <td data-hook="name"> \
   </td> \
