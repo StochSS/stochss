@@ -92,8 +92,8 @@ Spatial.Controller = Backbone.View.extend(
          playMesh: function(){
             console.log("In play Mesh");
             
-            this.updateCacheRange(0, 10);
-            this.timeIdx = 0;
+            //this.updateCacheRange(0, 10);
+            //this.timeIdx = 0;
 
             this.intervalId = setInterval(_.bind(
                 function(){
