@@ -10,25 +10,18 @@ var AddNewSpecieForm = AmpersandFormView.extend({
     submitCallback: function (obj) {
         var validSubdomains = this.baseModel.mesh.uniqueSubdomains.map( function(model) { return model.name; } );
 
-        var model;
-        if(this.baseModel.isSpatial)
+        var i = this.collection.models.length;
+        var name = 'S' + i;
+        var names = this.collection.map( function(specie) { return specie.name; } );
+        while(_.contains(names, name))
         {
-            model = this.collection.addSpecie(obj.name, 0, Number(obj.diffusion), validSubdomains);
-        }
-        else
-        {
-            model = this.collection.addSpecie(obj.name, Number(obj.initialCondition), 0, validSubdomains);
+            i += 1;
+            name = 'S' + i;
         }
 
-        this.selectView.select(model);
+        var model = this.collection.addSpecie(name, 0, 0, validSubdomains);
 
-        $( this.nameField.el ).find('input').val('');
-
-        if(this.diffusionField)
-            $( this.diffusionField.el ).find('input').val(0);
-
-        if(this.initialConditionField)
-            $( this.initialConditionField ).find('input').val(0);
+        this.selectView.select(model, true);
     },
             // this valid callback gets called (if it exists)
             // when the form first loads and any time the form
@@ -48,45 +41,6 @@ var AddNewSpecieForm = AmpersandFormView.extend({
         this.baseModel = this.collection.parent;
 
         this.selectView = attr.selectView;
-        this.fields = [
-            new InputView({
-                label: 'Name',
-                name: 'name',
-                value: '',
-                required: true,
-                placeholder: 'NewSpecies',
-                tests: [].concat(Tests.naming(this.collection))
-            })
-        ];
-
-        this.nameField = this.fields[0];
-
-        if(this.baseModel.isSpatial)
-        {
-            this.diffusionField = new InputView({
-                label: 'Diffusion',
-                name: 'diffusion',
-                value: '0',
-                required: true,
-                placeholder: '0',
-                tests: [].concat(Tests.positive())
-            });
-
-            this.fields.push(this.diffusionField);
-        }
-        else
-        {
-            this.initialConditionField = new InputView({
-                label: 'Initial Condition',
-                name: 'initialCondition',
-                value: '0',
-                required: true,
-                placeholder: '0',
-                tests: [].concat(Tests.nonzero(), Tests.units(this.collection.parent))
-            });
-
-            this.fields.push(this.initialConditionField);
-        }
     },
     render: function()
     {
@@ -94,7 +48,7 @@ var AddNewSpecieForm = AmpersandFormView.extend({
 
         $( this.el ).find('input').prop('autocomplete', 'off');
 
-        this.button = $('<button class="btn btn-primary" type="submit">Add</button>').appendTo( $( this.el ) );
+        this.button = $('<button class="btn btn-large btn-primary" type="submit">Add Species</button>').appendTo( $( this.el ) );
     }
 });
 
@@ -113,7 +67,7 @@ new TestForm();*/
 var SpecieCollectionFormView = AmpersandView.extend({
     template: "<div> \
   <div data-hook='collection'></div> \
-  <h4>Add Specie</h4> \
+  <br /> \
   <form data-hook='addSpeciesForm'></form> \
 </div>",
     initialize: function(attr, options)
@@ -123,17 +77,17 @@ var SpecieCollectionFormView = AmpersandView.extend({
     render: function()
     {
         var collectionTemplate = "<div> \
-  <table data-hook='table'> \
+  <table width='100%' data-hook='table'> \
     <thead> \
-<th width='25px'></th><th width='120px'>Name</th><th width='120px'>" + ((this.collection.parent.isSpatial) ? "Diffusion coefficient" : "Initial Condition") + "</th>" + ((this.collection.parent.isSpatial) ? "<th width='120px'>Species allowed in these subdomains</th>" : "") + " \
+<th width='120px'>Name</th><th width='120px'>" + ((this.collection.parent.isSpatial) ? "Diffusion coefficient" : "Initial Condition") + "</th>" + ((this.collection.parent.isSpatial) ? "<th width='120px'>Species allowed in these subdomains</th>" : "") + "<th></th> \
     </thead> \
     <tbody data-hook='items'> \
     </tbody> \
   </table> \
   <div data-hook='nav'> \
-    <button class='btn' data-hook='previous'>&lt;&lt;</button> \
-    [ <span data-hook='position'></span> / <span data-hook='total'></span> ] \
-    <button class='btn' data-hook='next'>&gt;&gt;</button> \
+    <button class='btn' data-hook='previous'>&lt;&lt;</button>\
+    [ <span data-hook='leftPosition'></span> - <span data-hook='rightPosition'></span> ] \
+    <button class='btn' data-hook='next'>&gt;&gt;</button>\
   </div> \
 </div>";
 

@@ -28,11 +28,11 @@ __email__ = 'gmy.melissa@gmail.com, dnath@cs.ucsb.edu'
 BACKEND_NAME = 'backendthread'
 BACKEND_URL = 'http://%s' % modules.get_hostname(BACKEND_NAME)
 
-BACKEND_START = BACKEND_URL + '/_ah/start'
-BACKEND_BACKGROUND = BACKEND_URL + '/_ah/background'
+#BACKEND_START = BACKEND_URL + '/_ah/start'
+#BACKEND_BACKGROUND = BACKEND_URL + '/_ah/background'
 BACKEND_SYN_R_URL = BACKEND_URL + '/backend/synchronizedb'
-BACKEND_MANAGER_R_URL = BACKEND_URL + '/backend/manager'
-BACKEND_QUEUE_R_URL = 'http://%s' % modules.get_hostname('backendqueue') + '/backend/queue'
+#BACKEND_MANAGER_R_URL = BACKEND_URL + '/backend/manager'
+#BACKEND_QUEUE_R_URL = 'http://%s' % modules.get_hostname('backendqueue') + '/backend/queue'
 
 INS_TYPES_EC2 = ["t1.micro", "m1.small", "m3.medium", "m3.large", "c3.large", "c3.xlarge"]
 
@@ -142,6 +142,29 @@ class VMStateModel(db.Model):
         except Exception as e:
             logging.error("Error in getting all running instance types from db! {0}".format(e))
             return None
+    @staticmethod
+    def fail_active(params):
+        '''
+        update all vms that are 'creating' to 'failed'.
+        Args
+            params    a dictionary of parameters, containing at least 'agent' and 'credentials'.
+        '''
+        try:
+            infra, access_key, secret_key = VMStateModel.validate_credentials(params)
+            if infra is None:
+                return
+
+            entities = VMStateModel.all()
+            entities.filter('infra =', infra).filter('access_key =', access_key).filter('secret_key =', secret_key)
+            entities.filter('state =', VMStateModel.STATE_CREATING)
+
+            for e in entities:
+                e.state = VMStateModel.STATE_FAILED
+                e.put()
+
+        except Exception as e:
+            logging.error("Error in updating 'creating' vms to 'failed' in db! {0}".format(e))    
+
 
     @staticmethod
     def terminate_not_active(params):
@@ -401,7 +424,9 @@ class BackendWorker():
                 # Queue head is not running, so create a queue head
                 if 'head_node' not in parameters:
                     logging.info("Head node is needed.")
-                    return
+		    # if there is no head node running, and the current worker nodes are not tagged 'head node' then just fail all 'creating' ones
+                    VMStateModel.fail_active(parameters) 	
+		    return
 
                 utils.log('About to start a queue head.')
 

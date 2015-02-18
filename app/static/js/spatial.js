@@ -265,6 +265,7 @@ Spatial.Controller = Backbone.View.extend(
                 var rendererDom = $( renderer.domElement ).appendTo(dom);
                 
                 var controls = new THREE.OrbitControls( camera, renderer.domElement );
+                controls.noZoom = true;controls.noRotate = true; controls.noPan = true;
 
                 camera.position.z = 1.5;
 

@@ -241,7 +241,7 @@ var AddNewMeshForm = AmpersandView.extend({
 
                 this.mesh = mesh;
                 
-                mesh.processMesh(_.bind(this.handleMeshWrapperCreated, this));
+                this.handleMeshWrapperCreated();
             }
         }
     },
@@ -302,9 +302,9 @@ var MeshCollectionSelectView = AmpersandView.extend({
     <tbody data-hook='items'></tbody> \
   </table> \
   <div data-hook='nav'> \
-    <button class='btn' data-hook='previous'>&lt;&lt;</button> \
-    [ <span data-hook='position'></span> / <span data-hook='total'></span> ] \
-    <button class='btn' data-hook='next'>&gt;&gt;</button> \
+    <button class='btn' data-hook='previous'>&lt;&lt;</button>\
+    [ <span data-hook='leftPosition'></span> - <span data-hook='rightPosition'></span> ] \
+    <button class='btn' data-hook='next'>&gt;&gt;</button>\
   </div> \
 </div>";
 

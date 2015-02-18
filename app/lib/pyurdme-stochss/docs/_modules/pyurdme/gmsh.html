@@ -1,0 +1,163 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>pyurdme.gmsh &mdash; PyURDME 1.0 documentation</title>
+    
+    <link rel="stylesheet" href="../../_static/default.css" type="text/css" />
+    <link rel="stylesheet" href="../../_static/pygments.css" type="text/css" />
+    
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    '../../',
+        VERSION:     '1.0',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true
+      };
+    </script>
+    <script type="text/javascript" src="../../_static/jquery.js"></script>
+    <script type="text/javascript" src="../../_static/underscore.js"></script>
+    <script type="text/javascript" src="../../_static/doctools.js"></script>
+    <link rel="top" title="PyURDME 1.0 documentation" href="../../index.html" />
+    <link rel="up" title="Module code" href="../index.html" /> 
+  </head>
+  <body>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="../../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li><a href="../../index.html">PyURDME 1.0 documentation</a> &raquo;</li>
+          <li><a href="../index.html" accesskey="U">Module code</a> &raquo;</li> 
+      </ul>
+    </div>  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body">
+            
+  <h1>Source code for pyurdme.gmsh</h1><div class="highlight"><pre>
+<span class="sd">&quot;&quot;&quot; Wrappers for selected Gmsh functionality. &quot;&quot;&quot;</span>
+<span class="kn">import</span> <span class="nn">subprocess</span>
+<span class="kn">import</span> <span class="nn">numpy</span> <span class="kn">as</span> <span class="nn">np</span>
+
+<div class="viewcode-block" id="gmshGeometry"><a class="viewcode-back" href="../../pyurdme.html#pyurdme.gmsh.gmshGeometry">[docs]</a><span class="k">class</span> <span class="nc">gmshGeometry</span><span class="p">():</span>
+    <span class="sd">&quot;&quot;&quot; Represent a Gmsh geometry. Wrapper around a Gmesh .geo file. &quot;&quot;&quot;</span>
+    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span><span class="nb">file</span><span class="o">=</span><span class="bp">None</span><span class="p">):</span>
+        <span class="n">geomfile</span> <span class="o">=</span> <span class="nb">open</span><span class="p">(</span><span class="nb">file</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">geometry_file</span> <span class="o">=</span> <span class="n">geomfile</span><span class="o">.</span><span class="n">read</span><span class="p">()</span>
+        <span class="n">geomfile</span><span class="o">.</span><span class="n">close</span><span class="p">()</span>
+</div>
+<div class="viewcode-block" id="GmshMesh"><a class="viewcode-back" href="../../pyurdme.html#pyurdme.gmsh.GmshMesh">[docs]</a><span class="k">class</span> <span class="nc">GmshMesh</span><span class="p">():</span>
+
+    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span><span class="n">meshfile</span><span class="o">=</span><span class="bp">None</span><span class="p">):</span>
+        <span class="n">importmesh</span><span class="p">(</span><span class="n">meshfile</span><span class="p">)</span>
+
+<div class="viewcode-block" id="GmshMesh.refine"><a class="viewcode-back" href="../../pyurdme.html#pyurdme.gmsh.GmshMesh.refine">[docs]</a>    <span class="k">def</span> <span class="nf">refine</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot; Refine the mesh &quot;&quot;&quot;</span>
+</div></div>
+<div class="viewcode-block" id="importMesh"><a class="viewcode-back" href="../../pyurdme.html#pyurdme.gmsh.importMesh">[docs]</a><span class="k">def</span> <span class="nf">importMesh</span><span class="p">(</span><span class="n">meshfile</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot; Import a Gmsh .msh file. &quot;&quot;&quot;</span>
+    <span class="n">meshf</span> <span class="o">=</span> <span class="nb">open</span><span class="p">(</span><span class="n">meshfile</span><span class="p">,</span><span class="s">&#39;r&#39;</span><span class="p">)</span>
+    <span class="n">lines</span> <span class="o">=</span> <span class="n">meshf</span><span class="o">.</span><span class="n">readlines</span><span class="p">()</span>
+    
+    <span class="c"># Read number of nodes</span>
+    <span class="k">for</span> <span class="n">lineno</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">lines</span><span class="p">)):</span>
+        <span class="k">if</span> <span class="n">lines</span><span class="p">[</span><span class="n">lineno</span><span class="p">]</span><span class="o">==</span><span class="s">&quot;$Nodes</span><span class="se">\n</span><span class="s">&quot;</span><span class="p">:</span>
+            <span class="k">break</span>
+    <span class="n">lineno</span><span class="o">=</span><span class="n">lineno</span><span class="o">+</span><span class="mi">1</span>
+    <span class="n">number_of_nodes</span><span class="o">=</span><span class="nb">int</span><span class="p">(</span><span class="n">lines</span><span class="p">[</span><span class="n">lineno</span><span class="p">])</span>
+
+    <span class="c"># Read the node values</span>
+    <span class="n">p</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">((</span><span class="mi">3</span><span class="p">,</span><span class="n">number_of_nodes</span><span class="p">))</span>
+    <span class="c"># !!!! IT IS READING ONE NODE TOO LITTLE.</span>
+    <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">number_of_nodes</span><span class="p">):</span>
+        <span class="n">line</span> <span class="o">=</span> <span class="n">lines</span><span class="p">[</span><span class="n">lineno</span><span class="o">+</span><span class="n">i</span><span class="o">+</span><span class="mi">1</span><span class="p">]</span>
+        <span class="n">vtx</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">asmatrix</span><span class="p">(</span><span class="n">line</span><span class="p">[:</span><span class="o">-</span><span class="mi">1</span><span class="p">])</span>
+        <span class="n">p</span><span class="p">[</span><span class="mi">0</span><span class="p">,</span><span class="n">i</span><span class="p">]</span><span class="o">=</span><span class="n">vtx</span><span class="p">[</span><span class="mi">0</span><span class="p">,</span><span class="mi">1</span><span class="p">]</span>
+        <span class="n">p</span><span class="p">[</span><span class="mi">1</span><span class="p">,</span><span class="n">i</span><span class="p">]</span><span class="o">=</span><span class="n">vtx</span><span class="p">[</span><span class="mi">0</span><span class="p">,</span><span class="mi">2</span><span class="p">]</span>
+        <span class="n">p</span><span class="p">[</span><span class="mi">2</span><span class="p">,</span><span class="n">i</span><span class="p">]</span><span class="o">=</span><span class="n">vtx</span><span class="p">[</span><span class="mi">0</span><span class="p">,</span><span class="mi">3</span><span class="p">]</span>
+
+    <span class="n">lineno</span> <span class="o">=</span> <span class="n">lineno</span><span class="o">+</span><span class="n">number_of_nodes</span>
+    <span class="k">if</span> <span class="n">lines</span><span class="p">[</span><span class="n">lineno</span><span class="p">]</span><span class="o">!=</span><span class="s">&quot;$EndNodes&quot;</span><span class="p">:</span>
+        <span class="k">print</span> <span class="n">lines</span><span class="p">[</span><span class="n">lineno</span><span class="p">]</span>
+        
+
+        
+</div>
+<div class="viewcode-block" id="meshinit"><a class="viewcode-back" href="../../pyurdme.html#pyurdme.gmsh.meshinit">[docs]</a><span class="k">def</span> <span class="nf">meshinit</span><span class="p">(</span><span class="n">geometry</span><span class="p">):</span>
+    <span class="c"># Write temporary geometry file</span>
+    <span class="n">geometry_file_name</span><span class="o">=</span><span class="s">&#39;.gmsh_temporary_geometry_file.geo&#39;</span>
+    <span class="n">geometry_file</span><span class="o">=</span><span class="nb">open</span><span class="p">(</span><span class="n">geometry_file_name</span><span class="p">,</span><span class="s">&#39;w&#39;</span><span class="p">)</span>
+    <span class="n">geometry_file</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="n">geometry</span><span class="o">.</span><span class="n">geometry_file</span><span class="p">)</span>
+    <span class="n">geometry_file</span><span class="o">.</span><span class="n">close</span><span class="p">()</span>
+    
+    <span class="n">mesh_outfile_name</span> <span class="o">=</span> <span class="s">&#39;.gmsh_temporary_mesh_file.msh&#39;</span>
+    <span class="n">mesh_outfile</span> <span class="o">=</span> <span class="nb">open</span><span class="p">(</span><span class="n">mesh_outfile_name</span><span class="p">,</span><span class="s">&#39;w&#39;</span><span class="p">)</span>
+    <span class="n">mesh_outfile</span><span class="o">.</span><span class="n">close</span><span class="p">()</span>
+    
+    <span class="n">subprocess</span><span class="o">.</span><span class="n">call</span><span class="p">([</span><span class="s">&#39;gmsh&#39;</span><span class="p">,</span><span class="s">&#39;-3&#39;</span><span class="p">,</span><span class="s">&#39;-optimize&#39;</span><span class="p">,</span><span class="n">geometry_file_name</span><span class="p">,</span><span class="s">&#39;-o&#39;</span><span class="p">,</span><span class="n">mesh_outfile_name</span><span class="p">])</span>
+
+    <span class="n">importMesh</span><span class="p">(</span><span class="n">mesh_outfile_name</span><span class="p">)</span>
+    
+    <span class="c"># Clean up</span>
+    <span class="c">#subprocess.call([&#39;rm&#39;,&#39;-rf&#39;,geometry_file_name])</span>
+    <span class="c">#subprocess.call([&#39;rm&#39;,&#39;-rf&#39;,mesh_outfile_name])</span>
+
+    </div>
+<div class="viewcode-block" id="toDolfin"><a class="viewcode-back" href="../../pyurdme.html#pyurdme.gmsh.toDolfin">[docs]</a><span class="k">def</span> <span class="nf">toDolfin</span><span class="p">(</span><span class="n">mesh</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot; Serialize a Gmsh mesh to Dolfin format. &quot;&quot;&quot;</span>
+    <span class="c"># TBD.  </span></div>
+</pre></div>
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar">
+        <div class="sphinxsidebarwrapper">
+<div id="searchbox" style="display: none">
+  <h3>Quick search</h3>
+    <form class="search" action="../../search.html" method="get">
+      <input type="text" name="q" />
+      <input type="submit" value="Go" />
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+    <p class="searchtip" style="font-size: 90%">
+    Enter search terms or a module, class or function name.
+    </p>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="../../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li><a href="../../index.html">PyURDME 1.0 documentation</a> &raquo;</li>
+          <li><a href="../index.html" >Module code</a> &raquo;</li> 
+      </ul>
+    </div>
+    <div class="footer">
+        &copy; Copyright 2014, Brian Drawert, Andreas Hellander.
+      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.2b3.
+    </div>
+  </body>
+</html>

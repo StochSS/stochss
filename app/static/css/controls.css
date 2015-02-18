@@ -1,20 +1,20 @@
-[data-hook="container"] {
+.button-container{
+  display: inline-block;
+  padding: 2px;
   border-style:solid;
   border-color: #C6C6C6;
   border-radius: 5px;
-  border-width: 0.5px;
-  color: black;
-  padding: 5px;
-  background-color:#F5F5F5;
+  border-width: 1px;
 }
 
-.button-container{
-    display: inline-block;
-    padding: 2px;
-    border-style:solid;
-    border-color: #C6C6C6;
-    border-radius: 5px;
-    border-width: 0.5px;
+[data-hook="container"], #container {
+  border-style: solid;
+  border-color: #C6C6C6;
+  border-radius: 5px;
+  border-width: 1px;
+  color: black;
+  padding: 5px;
+  background-color: #F5F5F5;
 }
 
 .button {
@@ -26,18 +26,7 @@
     z-index: 1;
 }
 
-
 #inset {
     position: absolute;
     z-index: 1;
-}
-
-#container {
-  border-style:solid;
-  border-color: #C6C6C6;
-  border-radius: 5px;
-  border-width: 0.5px;
-  color: black;
-  padding: 5px;
-  background-color:#F5F5F5;
 }

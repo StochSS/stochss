@@ -28,7 +28,8 @@ var AddNewStoichSpecieForm = AmpersandFormView.extend({
 
         this.fields = [
             new SelectView({
-                label: 'Species',
+                template: '<span><select></select><span data-hook="message-container"><span data-hook="message-text"></span></span></span>',
+                label: '',
                 name: 'specie',
                 value: this.baseModel.species.models[0],
                 options: this.baseModel.species,
@@ -49,7 +50,7 @@ var AddNewStoichSpecieForm = AmpersandFormView.extend({
 });
 
 var StoichSpecieCollectionFormView = AmpersandView.extend({
-    template: "<div><table data-hook='stoichSpecieTable'></table><div data-hook='addStoichSpecieDiv'>Add Specie: <form data-hook='addStoichSpecieForm'></form></div></div>",
+    template: "<div><table data-hook='stoichSpecieTable'></table><div data-hook='addStoichSpecieDiv'>Add Species: <form data-hook='addStoichSpecieForm'></form></div></div>",
     initialize: function(attr, options)
     {
         AmpersandView.prototype.initialize.call(this, attr, options);
@@ -64,14 +65,15 @@ var StoichSpecieCollectionFormView = AmpersandView.extend({
     },
     props:
     {
-        reactionType : 'string'
+        reactionType : 'string',
+        showCustomOverride : 'boolean'
     },
     derived: {
         showCustom :
         {
             deps : ['reactionType'],
             fn : function() {
-                return this.reactionType == 'custom' || this.reactionType == 'massaction';
+                return this.showCustomOverride || (this.reactionType == 'custom' || this.reactionType == 'massaction');
             }
         }
     },
@@ -85,7 +87,7 @@ var StoichSpecieCollectionFormView = AmpersandView.extend({
     {
         AmpersandView.prototype.render.apply(this, arguments);
 
-        this.renderCollection(this.collection, StoichSpecieFormView, this.el.querySelector('[data-hook=stoichSpecieTable]'));
+        this.renderCollection(this.collection, StoichSpecieFormView, this.el.querySelector('[data-hook=stoichSpecieTable]'), { showCustomOverride : this.showCustomOverride } );
 
         this.addForm = new AddNewStoichSpecieForm(
             { 

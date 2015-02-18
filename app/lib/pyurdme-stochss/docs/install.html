@@ -1,0 +1,262 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>Installing PyURDME &mdash; PyURDME 1.0.1 documentation</title>
+    
+    <link rel="stylesheet" href="_static/default.css" type="text/css" />
+    <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+    
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    './',
+        VERSION:     '1.0.1',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true
+      };
+    </script>
+    <script type="text/javascript" src="_static/jquery.js"></script>
+    <script type="text/javascript" src="_static/underscore.js"></script>
+    <script type="text/javascript" src="_static/doctools.js"></script>
+    <link rel="top" title="PyURDME 1.0.1 documentation" href="index.html" />
+    <link rel="next" title="PyURDME API" href="pyurdme.html" />
+    <link rel="prev" title="Welcome to PyURDME’s documentation!" href="index.html" /> 
+  </head>
+  <body>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="pyurdme.html" title="PyURDME API"
+             accesskey="N">next</a> |</li>
+        <li class="right" >
+          <a href="index.html" title="Welcome to PyURDME’s documentation!"
+             accesskey="P">previous</a> |</li>
+        <li><a href="index.html">PyURDME 1.0.1 documentation</a> &raquo;</li> 
+      </ul>
+    </div>  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body">
+            
+  <div class="section" id="installing-pyurdme">
+<h1>Installing PyURDME<a class="headerlink" href="#installing-pyurdme" title="Permalink to this headline">¶</a></h1>
+<p>pyurdme is a modeling and simulation toolkit for spatial stochastic simulations. It makes use of a modified version of the core solver of URDME (www.urdme.org) for mesocopic simulations via the Reaction-Diffusion Master Equation (RDME), and builds on Dolfin/FeniCS (<a class="reference external" href="http://fenicsproject.org">http://fenicsproject.org</a>) for geometric modeling, meshing and Finite Element Assembly.</p>
+<p>Currently supported (tested) platforms are MacOSX &gt;= 10.8 and Ubuntu &gt;= 12.04.</p>
+<div class="section" id="dependencies">
+<h2>Dependencies<a class="headerlink" href="#dependencies" title="Permalink to this headline">¶</a></h2>
+<p>To install and use pyurdme, you need to satisfy the following dependencies. Below we point at suggested ways to satisfy them for OSX and Ubuntu.</p>
+<ul>
+<li><dl class="first docutils">
+<dt>GCC: <a class="reference external" href="http://gcc.gnu.org/">http://gcc.gnu.org/</a></dt>
+<dd><ul class="first last">
+<li><dl class="first docutils">
+<dt>Ubuntu:</dt>
+<dd><ul class="first last simple">
+<li><tt class="docutils literal"><span class="pre">sudo</span> <span class="pre">apt-get</span> <span class="pre">install</span> <span class="pre">gcc</span></tt></li>
+</ul>
+</dd>
+</dl>
+</li>
+<li><dl class="first docutils">
+<dt>OSX:</dt>
+<dd><ul class="first last simple">
+<li>We recommend installing Xcode: <a class="reference external" href="https://developer.apple.com/xcode/">https://developer.apple.com/xcode/</a>.</li>
+</ul>
+</dd>
+</dl>
+</li>
+</ul>
+</dd>
+</dl>
+</li>
+<li><dl class="first docutils">
+<dt>FEniCS: <a class="reference external" href="http://fenicsproject.org/">http://fenicsproject.org/</a></dt>
+<dd><ul class="first last">
+<li><dl class="first docutils">
+<dt>Ubuntu:</dt>
+<dd><ul class="first last simple">
+<li><tt class="docutils literal"><span class="pre">sudo</span> <span class="pre">apt-get</span> <span class="pre">install</span> <span class="pre">fenics</span></tt></li>
+</ul>
+</dd>
+</dl>
+</li>
+<li><dl class="first docutils">
+<dt>OSX:</dt>
+<dd><ul class="first last simple">
+<li>We recommend using the binary installer provided here: <a class="reference external" href="http://fenicsproject.org/download/osx_details.html">http://fenicsproject.org/download/osx_details.html</a></li>
+</ul>
+</dd>
+</dl>
+</li>
+</ul>
+</dd>
+</dl>
+</li>
+<li><dl class="first docutils">
+<dt>numpy, scipy, matplotlib:  <a class="reference external" href="http://www.scipy.org/">http://www.scipy.org/</a></dt>
+<dd><ul class="first last">
+<li><dl class="first docutils">
+<dt>Ubuntu:</dt>
+<dd><ul class="first last simple">
+<li><tt class="docutils literal"><span class="pre">sudo</span> <span class="pre">apt-get</span> <span class="pre">install</span> <span class="pre">python-numpy</span> <span class="pre">python-scipy</span> <span class="pre">python-matplotlib</span></tt></li>
+</ul>
+</dd>
+</dl>
+</li>
+<li><dl class="first docutils">
+<dt>OSX:</dt>
+<dd><ul class="first last simple">
+<li>We recommend using the installer provided by <a class="reference external" href="http://fonnesbeck.github.io/ScipySuperpack/">http://fonnesbeck.github.io/ScipySuperpack/</a></li>
+</ul>
+</dd>
+</dl>
+</li>
+</ul>
+</dd>
+</dl>
+</li>
+<li><dl class="first docutils">
+<dt>h5py: <a class="reference external" href="http://www.h5py.org/">http://www.h5py.org/</a></dt>
+<dd><ul class="first last">
+<li><dl class="first docutils">
+<dt>Ubuntu:</dt>
+<dd><ul class="first last simple">
+<li><tt class="docutils literal"><span class="pre">sudo</span> <span class="pre">apt-get</span> <span class="pre">intall</span> <span class="pre">python-h5py</span></tt></li>
+</ul>
+</dd>
+</dl>
+</li>
+<li><dl class="first docutils">
+<dt>OSX:</dt>
+<dd><ul class="first last simple">
+<li><tt class="docutils literal"><span class="pre">sudo</span> <span class="pre">brew</span> <span class="pre">install</span> <span class="pre">h5py</span></tt></li>
+</ul>
+</dd>
+</dl>
+</li>
+</ul>
+</dd>
+</dl>
+</li>
+</ul>
+<p>Note: We strongly recommend using the appropriate package manager or binary installer for your platform to satisfy the above dependencies. However, we understand that some users prefer a non-system-wide installation of python packages, such as if using virtualenv. If one of the above listed dependencies is not satisfied, setuptools will try to install it from the PyPI index. For numpy, scipy, matplotlib, h5py this involves building from source. Due to the many non-python dependencies, you will likely need to install development versions of certain libraries (such as freetype and libpng). An easy way to satisfy the dependencies for Ubuntu is</p>
+<div class="highlight-bash"><div class="highlight"><pre>sudo apt-get install build-dep python-numpy python-scipy python-matplotlib
+</pre></div>
+</div>
+<p>If you do not mind system-wide installations, we provide a script to install all dependecies for Ubuntu, see detailed instructions below.</p>
+</div>
+<div class="section" id="installation">
+<h2>Installation<a class="headerlink" href="#installation" title="Permalink to this headline">¶</a></h2>
+<div class="section" id="ubuntu">
+<h3>Ubuntu<a class="headerlink" href="#ubuntu" title="Permalink to this headline">¶</a></h3>
+<p>For Ubuntu, we provide a script that will install pyurdme and all dependecies. The install script must be run as root</p>
+<div class="highlight-bash"><div class="highlight"><pre>git clone https://github.com/pyurdme/pyurdme
+<span class="nb">cd </span>pyurdme
+sudo ./install_ubuntu.sh
+</pre></div>
+</div>
+<p>If you want to manage the dependencies yourself, after installing them do:</p>
+<div class="highlight-bash"><div class="highlight"><pre>git clone https://github.com/pyurdme/pyurdme.git
+<span class="nb">cd </span>pyurdme
+sudo python setup.py install
+</pre></div>
+</div>
+<p>or simply</p>
+<div class="highlight-bash"><div class="highlight"><pre>sudo pip install https://github.com/pyurdme/pyurdme/tarball/master
+</pre></div>
+</div>
+</div>
+<div class="section" id="osx">
+<h3>OSX<a class="headerlink" href="#osx" title="Permalink to this headline">¶</a></h3>
+<div class="highlight-bash"><div class="highlight"><pre>git clone https://github.com/pyurdme/pyurdme.git
+<span class="nb">cd </span>pyurdme
+sudo python setup.py install
+</pre></div>
+</div>
+<p>or simply:</p>
+<div class="highlight-bash"><div class="highlight"><pre>sudo pip install https://github.com/pyurdme/pyurdme/tarball/master
+</pre></div>
+</div>
+</div>
+</div>
+</div>
+
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar">
+        <div class="sphinxsidebarwrapper">
+  <h3><a href="index.html">Table Of Contents</a></h3>
+  <ul>
+<li><a class="reference internal" href="#">Installing PyURDME</a><ul>
+<li><a class="reference internal" href="#dependencies">Dependencies</a></li>
+<li><a class="reference internal" href="#installation">Installation</a><ul>
+<li><a class="reference internal" href="#ubuntu">Ubuntu</a></li>
+<li><a class="reference internal" href="#osx">OSX</a></li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+
+  <h4>Previous topic</h4>
+  <p class="topless"><a href="index.html"
+                        title="previous chapter">Welcome to PyURDME&#8217;s documentation!</a></p>
+  <h4>Next topic</h4>
+  <p class="topless"><a href="pyurdme.html"
+                        title="next chapter">PyURDME API</a></p>
+  <h3>This Page</h3>
+  <ul class="this-page-menu">
+    <li><a href="_sources/install.txt"
+           rel="nofollow">Show Source</a></li>
+  </ul>
+<div id="searchbox" style="display: none">
+  <h3>Quick search</h3>
+    <form class="search" action="search.html" method="get">
+      <input type="text" name="q" />
+      <input type="submit" value="Go" />
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+    <p class="searchtip" style="font-size: 90%">
+    Enter search terms or a module, class or function name.
+    </p>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="pyurdme.html" title="PyURDME API"
+             >next</a> |</li>
+        <li class="right" >
+          <a href="index.html" title="Welcome to PyURDME’s documentation!"
+             >previous</a> |</li>
+        <li><a href="index.html">PyURDME 1.0.1 documentation</a> &raquo;</li> 
+      </ul>
+    </div>
+    <div class="footer">
+        &copy; Copyright 2014, Brian Drawert, Andreas Hellander.
+      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.2b3.
+    </div>
+  </body>
+</html>

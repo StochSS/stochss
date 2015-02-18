@@ -279,7 +279,7 @@ class SensitivityPage(BaseHandler):
         model = modeleditor.StochKitModelWrapper.get_by_id(data["id"])
         job.startTime = time.strftime("%Y-%m-%d-%H-%M-%S")
         job.jobName = data["jobName"]
-        job.modelName = model.model_name
+        job.modelName = model.name
         
         runtime = float(data["time"])
         dt = float(data["increment"])
@@ -298,9 +298,10 @@ class SensitivityPage(BaseHandler):
 
         job.outData = dataDir
 
-        modelFileName = '{0}/{1}.xml'.format(job.outData, model.model_name)
+        modelFileName = '{0}/{1}.xml'.format(job.outData, model.name)
         fmodelHandle = open(modelFileName, 'w')
-        fmodelHandle.write(model.model.serialize())
+        stochkitmodel = model.createStochKitModel()
+        fmodelHandle.write(stochkitmodel.serialize())
         fmodelHandle.close()
 
         job.status = "Pending"
@@ -326,7 +327,7 @@ class SensitivityPage(BaseHandler):
         job.startTime = time.strftime("%Y-%m-%d-%H-%M-%S")
         job.jobName = data["jobName"]
         job.status = "Pending"
-        job.modelName = model.model_name
+        job.modelName = model.name
 
         runtime = float(data["time"])
         dt = float(data["increment"])
@@ -337,10 +338,10 @@ class SensitivityPage(BaseHandler):
         for parameter in data['selections']["pc"]:
             if data['selections']["pc"][parameter]:
                 parameters.append(parameter)
-        
+        stochkitmodel = model.createStochKitModel() 
         params = {
             "job_type": "sensitivity",
-            "document": str( model.model.serialize() ),
+            "document": str( stochkitmodel.serialize() ),
             "paramstring": "stochkit_ode.py --sensi --parameters {0} -t {1} -i {2}".format( " ".join(parameters), runtime, int(runtime / dt)),
             "bucketname": self.user_data.getBucketName()
         }
