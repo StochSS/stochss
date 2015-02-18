@@ -2984,7 +2984,7 @@ var reactants;
         katex.render('A + B \\rightarrow C + D', emptyDiv[0]);
         options.push(['four', emptyDiv.html()]);
         options.push(['massaction', 'Custom mass action']);
-        options.push(['custom', 'Custom propensity, custom stoichiometry']);
+        options.push(['custom', 'Custom propensity']);
 
         this.renderSubview(
             new SelectView({
@@ -2993,7 +2993,7 @@ var reactants;
                 name: 'type',
                 value: this.model.type,
                 options: options,
-                required: true,
+                required: true
             }), this.el.querySelector("[data-hook='typeSelect']"));
 
         var selected = this.model.rate;
