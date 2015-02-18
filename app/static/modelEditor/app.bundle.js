@@ -1646,7 +1646,7 @@ module.exports = View.extend({
             this.rendererDom = $( renderer.domElement ).appendTo( this.queryByHook( "mesh" ) );
             
             var controls = new OrbitControls( camera, renderer.domElement );
-            controls.noZoom = true;controls.noRotate = true; controls.noPan = true;
+            controls.noZoom = true;
             camera.position.z = 1.5;
             
             this.camera = camera;
