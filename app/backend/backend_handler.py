@@ -146,6 +146,29 @@ class VMStateModel(db.Model):
             return None
 
     @staticmethod
+    def fail_active(params):
+        '''
+        update all vms that are 'creating' to 'failed'.
+        Args
+            params    a dictionary of parameters, containing at least 'agent' and 'credentials'.
+        '''
+        try:
+            infra, access_key, secret_key = VMStateModel.validate_credentials(params)
+            if infra is None:
+                return
+
+            entities = VMStateModel.all()
+            entities.filter('infra =', infra).filter('access_key =', access_key).filter('secret_key =', secret_key)
+            entities.filter('state =', VMStateModel.STATE_CREATING)
+
+            for e in entities:
+                e.state = VMStateModel.STATE_FAILED
+                e.put()
+
+        except Exception as e:
+            logging.error("Error in updating 'creating' vms to 'failed' in db! {0}".format(e))
+            
+    @staticmethod
     def terminate_not_active(params):
         '''
         update all vms that are 'failed' in the last launch to 'terminated'.
@@ -403,6 +426,8 @@ class BackendWorker():
                 # Queue head is not running, so create a queue head
                 if 'head_node' not in parameters:
                     logging.info("Head node is needed.")
+                    # if there is no head node running, and the current worker nodes are not tagged 'head node' then just fail all 'creating' ones
+                    VMStateModel.fail_active(parameters)
                     return
 
                 utils.log('About to start a queue head.')
