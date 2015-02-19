@@ -152,6 +152,8 @@ var updateMsg = function(data)
 var run = function()
 {
     $( '.mainTable' ).DataTable( { "bPaginate" : false, "bFilter" : false } );
+    $( '.mainTable' ).css('border-bottom', '1px solid #ddd');
+    $( '.mainTable thead th' ).css('border-bottom', '1px solid #ddd');
 
     var id = $.url().param("id");
     var tid = $.url().param("tid");
