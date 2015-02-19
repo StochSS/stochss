@@ -159,7 +159,8 @@ class CredentialsPage(BaseHandler):
                         if not database:
                             database = DynamoDB(os.environ["AWS_ACCESS_KEY_ID"], os.environ["AWS_SECRET_ACCESS_KEY"])
                             
-                        database.createtable(backendservices.TABLENAME)
+                        database.createtable(backendservices.STOCHSS_TABLE)
+                        database.createtable(backendservices.COST_ANALYSIS_TABLE)
                         self.user_data.is_amazon_db_table=True
                     except Exception,e:
                         pass

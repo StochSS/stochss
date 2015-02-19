@@ -18,6 +18,7 @@ import subprocess
 import tempfile
 import time
 import logging
+from backend.backendservice import backendservices
 
 def int_or_float(s):
     try:
@@ -536,6 +537,66 @@ class StochOptimVisualization(BaseHandler):
             return
 
         optimization = StochOptimJobWrapper.get_by_id(jobID)
+        # check if job is finised, if so, mark finished
+        if optimization.status != "Finished":
+            service = backendservices()
+            if optimization.resource == "local" or not optimization.resource:
+                res = service.checkTaskStatusLocal([optimization.pid])
+                if res[optimization.pid] and optimization.pid:
+                    optimization.status = "Running"
+                else:
+                    try:
+                        fd = os.open("{0}/stderr".format(optimization.outData), os.O_RDONLY)
+                        f = os.fdopen(fd)
+                        stderr = f.read().strip()
+                        f.close()
+                    except:
+                        stderr = '1'
+                    if len(stderr) == 0:
+                        optimization.status = "Finished"
+                    else:
+                        optimization.status = "Failed"
+            else: #cloud
+                # Retrive credentials from the datastore
+                if not self.user_data.valid_credentials:
+                    return {'status':False,'msg':'Could not retrieve the status of job '+stochkit_job.name +'. Invalid credentials.'}
+                credentials = self.user_data.getCredentials()
+                # Check the status from backend
+                taskparams = {
+                    'AWS_ACCESS_KEY_ID': credentials['EC2_ACCESS_KEY'],
+                    'AWS_SECRET_ACCESS_KEY': credentials['EC2_SECRET_KEY'],
+                    'taskids': [optimization.cloudDatabaseID]
+                }
+                task_status = service.describeTask(taskparams)
+                job_status = task_status[optimization.cloudDatabaseID]
+                # If it's finished
+                if job_status['status'] == 'finished':
+                    # Update the job 
+                    optimization.status = 'Finished'
+                    optimization.outputURL = job_status['output']
+                # 
+                elif job_status['status'] == 'failed':
+                    optimization.status = 'Failed'
+                    optimization.exceptionMessage = job_status['message']
+                    # Might not have an output if an exception was raised early on or if there is just no output available
+                    try:
+                        optimization.outputURL = job_status['output']
+                    except KeyError:
+                        pass
+                # 
+                elif job_status['status'] == 'pending':
+                    optimization.status = 'Pending'
+                else:
+                    # The state gives more fine-grained results, like if the job is being re-run, but
+                    #  we don't bother the users with this info, we just tell them that it is still running.  
+                    optimization.status = 'Running'
+                    try:
+                        optimization.outputURL = job_status['output']
+                        logging.info("Found running stochoptim job with S3 output: {0}".format(optimization.outputURL))
+                    except KeyError:
+                        pass
+
+            optimization.put()
         # Might need to download the cloud data
         if optimization.resource == "cloud":
             if optimization.status == "Finished":

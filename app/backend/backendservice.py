@@ -30,6 +30,8 @@ class backendservices(object):
     QUEUEHEAD_KEY_TAG = 'queuehead'
     INFRA_EC2 = AgentTypes.EC2
     VMSTATUS_IDS = 'ids'
+    STOCHSS_TABLE= 'stochss'
+    COST_ANALYSIS_TABLE = 'stochss_cost_analysis'
 
     def __init__(self):
         '''

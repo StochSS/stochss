@@ -33,6 +33,7 @@ import signal
 import pprint
 from cloudtracker import CloudTracker
 from kombu import Exchange, Queue
+import time
 
 
 class TaskConfig:
@@ -44,6 +45,49 @@ class TaskConfig:
     SCCPY_PATH = os.path.join(STOCHSS_HOME, 'app', 'backend', 'bin', 'sccpy.py')
     PYURDME_DIR = os.path.join(STOCHSS_HOME, 'pyurdme')
     PYURDME_WRAPPER_PATH = os.path.join(PYURDME_DIR, 'pyurdme_wrapper.py')
+    STOCHSS_PID_DIR = '/tmp/stochss_job_pid'
+    STOCHSS_PID_FILE_PREFIX = 'pid'
+    STOCHSS_COMPLETED_FILE = 'complete'
+    SHUTDOWN_MONITOR_POLL_INTERVAL = 600
+    SHUTDOWN_MONITOR_IDLE_TIME = 5400 #(90 minutes)
+
+
+class ShutdownMonitor():
+    """ Class to contain the shutdown monitor code. """
+    
+    def check_if_any_jobs_are_running(self):
+        """ Return False if any jobs are currently running. """
+        logging.info("check_if_any_jobs_are_running")
+        if not os.path.exists(TaskConfig.STOCHSS_PID_DIR):
+            os.mkdir(TaskConfig.STOCHSS_PID_DIR)
+        for fname in os.listdir(TaskConfig.STOCHSS_PID_DIR):
+            if fname.startswith(TaskConfig.STOCHSS_PID_FILE_PREFIX):
+                logging.info("found {0}, delaying shutdown".format(fname))
+                return False
+        return True
+    
+    def time_since_last_job_ended(self):
+        """ Return the number of seconds since the last job ended. """
+        last_command_completed_file = os.path.join(TaskConfig.STOCHSS_PID_DIR, TaskConfig.STOCHSS_COMPLETED_FILE)
+        if not os.path.exists(last_command_completed_file):
+            logging.info("touching file '{0}'".format(last_command_completed_file))
+            os.system("touch {0}".format(last_command_completed_file))
+        idle_time = time.time() - os.stat(last_command_completed_file).st_mtime
+        logging.info("idle_time='{0}'".format(idle_time))
+        return idle_time
+
+    def start(self):
+        logging.basicConfig(filename='shutdown_monitor.log',level=logging.DEBUG)
+        logging.info("="*80)
+        logging.info("Starting ShutdownMonitor")
+
+        while True:
+            logging.info("="*80)
+            logging.info("ShutdownMonitor: checking at: {0}".format(time.asctime(time.localtime(time.time()))))
+            if self.check_if_any_jobs_are_running() and self.time_since_last_job_ended() > TaskConfig.SHUTDOWN_MONITOR_IDLE_TIME:
+                logging.info("ShutdownMonitor: shutting down computer")
+                os.system("sudo shutdown -h now")
+            time.sleep(TaskConfig.SHUTDOWN_MONITOR_POLL_INTERVAL)
 
 
 class CelerySingleton(object):
@@ -325,33 +369,51 @@ def master_task(task_id, params, database):
         with open(stdout, 'w') as stdout_fh:
             with open(stderr, 'w') as stderr_fh:
                 execution_start = datetime.now()
-                p = subprocess.Popen(
-                    shlex.split(exec_str),
-                    stdout=stdout_fh,
-                    stderr=stderr_fh,
-                    env=environ
-                )
-                poll_process.start()
-                update_process.start()
-                # Handler that should catch the first SIGTERM signal and then kill
-                # off all subprocesses
-                def handler(signum, frame, *args):
-                    print 'Caught signal:', signum
-                    # try to kill subprocesses off...
-                    try:
-                        p.terminate()
-                        poll_process.terminate()
-                        update_process.terminate()
-                    except Exception as e:
-                        print '******************************************************************'
-                        print "Exception:", e
-                        print traceback.format_exc()
-                        print '******************************************************************'
+                try:
+                    p = subprocess.Popen(
+                        shlex.split(exec_str),
+                        stdout=stdout_fh,
+                        stderr=stderr_fh,
+                        env=environ
+                    )
+                    pid = p.pid
+                    if not os.path.exists(TaskConfig.STOCHSS_PID_DIR):
+                        os.mkdir(TaskConfig.STOCHSS_PID_DIR)
+                    # create pid file
+                    pid_file = os.path.join(TaskConfig.STOCHSS_PID_DIR, "{0}-{1}".format(TaskConfig.STOCHSS_PID_FILE_PREFIX, pid))
+                    logging.info("[Master] creating PID file '{0}'".format(pid_file))
+                    with open(pid_file, 'w+') as fd:
+                        fd.write(str(pid))
+                    poll_process.start()
+                    update_process.start()
+                    # Handler that should catch the first SIGTERM signal and then kill
+                    # off all subprocesses
+                    def handler(signum, frame, *args):
+                        print 'Caught signal:', signum
+                        # try to kill subprocesses off...
+                        try:
+                            p.terminate()
+                            poll_process.terminate()
+                            update_process.terminate()
+                        except Exception as e:
+                            print '******************************************************************'
+                            print "Exception:", e
+                            print traceback.format_exc()
+                            print '******************************************************************'
 
-                # Register the handler with SIGTERM signal
-                signal.signal(signal.SIGTERM, handler)
-                # Wait on program execution...
-                stdout, stderr = p.communicate()
+                    # Register the handler with SIGTERM signal
+                    signal.signal(signal.SIGTERM, handler)
+                    # Wait on program execution...
+                    stdout, stderr = p.communicate() # wait for process to complete
+                except Exception as e:
+                    logging.error(e)
+                finally:
+                    logging.info("[Master] deleting PID file '{0}'".format(pid_file))
+                    os.remove(pid_file) #clean up pid file
+                    last_command_completed_file = os.path.join(TaskConfig.STOCHSS_PID_DIR, TaskConfig.STOCHSS_COMPLETED_FILE)
+                    logging.info("[Master] touching file '{0}'".format(last_command_completed_file))
+                    os.system("touch {0}".format(last_command_completed_file))
+                
                 execution_time = (datetime.now() - execution_start).total_seconds()
                 print "Should be empty:", stdout
                 print "Should be empty:", stderr
@@ -439,13 +501,33 @@ def slave_task(params):
     # Now command_segments is the correct execution string, just need to join it.
     execution_string = " ".join(command_segments)
     print execution_string
-    p = subprocess.Popen(
-        shlex.split(execution_string),
-        stdout=subprocess.PIPE,
-        stderr=subprocess.PIPE,
-        env=environ
-    )
-    stdout, stderr = p.communicate()
+    try:
+        p = subprocess.Popen(
+            shlex.split(execution_string),
+            stdout=subprocess.PIPE,
+            stderr=subprocess.PIPE,
+            env=environ
+        )
+        pid = p.pid
+        if not os.path.exists(TaskConfig.STOCHSS_PID_DIR):
+            os.mkdir(TaskConfig.STOCHSS_PID_DIR)
+        # create pid file
+        pid_file = os.path.join(TaskConfig.STOCHSS_PID_DIR, "{0}-{1}".format(TaskConfig.STOCHSS_PID_FILE_PREFIX, pid))
+        logging.info("[Slave] creating PID file '{0}'".format(pid_file))
+        with open(pid_file, 'w+') as fd:
+            fd.write(str(pid))
+        stdout, stderr = p.communicate() # wait for process to complete
+    except Exception as e:
+        logging.error(e)
+    finally:
+        logging.info("[Slave] deleting PID file '{0}'".format(pid_file))
+        os.remove(pid_file) #clean up pid file
+        last_command_completed_file = os.path.join(TaskConfig.STOCHSS_PID_DIR, TaskConfig.STOCHSS_COMPLETED_FILE)
+        logging.info("[Slave] touching file '{0}'".format(last_command_completed_file))
+        os.system("touch {0}".format(last_command_completed_file))
+
+
+
     # Clean up the input files first
     delete_input_string = "rm -f {0}".format(" ".join(input_files))
     print delete_input_string
@@ -503,8 +585,32 @@ def with_temp_file(file_names):
         yield file_handle
 
 
+
+def execute_task(exec_str):
+    try:
+        p = subprocess.Popen(exec_str, shell=True)
+        pid = p.pid
+        if not os.path.exists(TaskConfig.STOCHSS_PID_DIR):
+            os.mkdir(TaskConfig.STOCHSS_PID_DIR)
+        # create pid file
+        pid_file = os.path.join(TaskConfig.STOCHSS_PID_DIR, "{0}-{1}".format(TaskConfig.STOCHSS_PID_FILE_PREFIX, pid))
+        logging.info("creating PID file '{0}'".format(pid_file))
+        with open(pid_file, 'w+') as fd:
+            fd.write(str(pid))
+        p.wait() # wait for process to complete
+    except Exception as e:
+        logging.error(e)
+    finally:
+        logging.info("deleting PID file '{0}'".format(pid_file))
+        os.remove(pid_file) #clean up pid file
+        last_command_completed_file = os.path.join(TaskConfig.STOCHSS_PID_DIR, TaskConfig.STOCHSS_COMPLETED_FILE)
+        logging.info("touching file '{0}'".format(last_command_completed_file))
+        os.system("touch {0}".format(last_command_completed_file))
+
+
+
 @celery.task(name='stochss')
-def task(taskid, params, database, access_key, secret_key, task_prefix=""):
+def task(taskid, params, agent, database, access_key, secret_key, task_prefix=""):
     '''
     This is the actual work done by a task worker
     params    should contain at least 'bucketname'
@@ -583,7 +689,8 @@ def task(taskid, params, database, access_key, secret_key, task_prefix=""):
         print "======================="
         print "To test if the command string was correct. Copy the above line and execute in terminal."
         timestarted = datetime.now()
-        os.system(exec_str)
+        #os.system(exec_str)
+        execute_task(exec_str)
         timeended = datetime.now()
 
         results = os.listdir("output/{0}/result".format(uuidstr))
@@ -628,9 +735,43 @@ def task(taskid, params, database, access_key, secret_key, task_prefix=""):
             res['status'] = "finished"
             res['pid'] = uuidstr
             res['output'] = "https://s3.amazonaws.com/{1}/output/{0}.tar".format(uuidstr, bucketname)
-            res['time_taken'] = "{0} seconds and {1} microseconds ".format(diff.seconds, diff.microseconds)
+            res['time_taken'] = "{0} seconds".format(diff.total_seconds())
 
         database.updateEntry(taskid, res, params["db_table"])
+        
+        # there is no "cost_analysis_table" in params in cost analysis task,
+        # but it there should have in normal task and rerun task.
+        if "cost_analysis_table" in params:
+            if "INSTANCE_TYPE" not in os.environ:
+                logging.error("Error: there is no INSTANCE_TYPE in environment variable.")
+                res['message'] = "Error: there is no INSTANCE_TYPE in environment variable."
+                return res
+        
+            result = database.getEntry('taskid', taskid, params["db_table"])
+            data = None
+            for one in result:
+                data = one
+                logging.info("{0} data in stochss table: {1}".format(taskid, one))
+                break
+            if data == None:
+                logging.error("Error: there is no data in stochss table with {0}.".format(taskid))
+                res['message'] = "EError: there is no data in stochss table with {0}.".format(taskid)
+                return res
+            
+            instance_type = os.environ["INSTANCE_TYPE"]
+            taskid_prefix = '{0}_{1}_'.format(agent, instance_type)
+            taskid = taskid_prefix+taskid
+            cost_analysis_data = {
+                    'agent': agent,
+                    'instance_type': instance_type,
+                    'message': data['message'],
+                    'start_time': data['start_time'],
+                    'status': data['status'],
+                    'time_taken': data['time_taken'],
+                    'uuid': data['uuid']
+                    }
+            database.updateEntry(taskid, cost_analysis_data, params["cost_analysis_table"])
+    
 
     except Exception, e:
         expected_output_dir = "output/%s" % uuidstr
@@ -729,4 +870,10 @@ def get_worker_list_consuming_from_queue(from_queue):
             if queue["name"] == from_queue:
                 worker_names.append(worker_name)
     return worker_names
+
+
+
+if __name__ == "__main__":
+    if len(sys.argv) > 1 and sys.argv[1] == "shutdown-monitor":
+        ShutdownMonitor().start()
 
