@@ -671,9 +671,11 @@ class BackendWorker():
         commands.append('export AWS_ACCESS_KEY_ID={0}'.format(str(credentials['EC2_ACCESS_KEY'])))
         commands.append('export AWS_SECRET_ACCESS_KEY={0}'.format(str(credentials['EC2_SECRET_KEY'])))
 
+
         for ip, ins_id in zip(public_ips, instance_ids):
             # helper.wait_for_ssh_connection(key_file, ip)
             ins_type = VMStateModel.get_instance_type(params, ins_id)
+            commands.append('export INSTANCE_TYPE={0}'.format(ins_type))
             success = helper.start_celery_on_vm(instance_type=ins_type, ip=ip, key_file=key_file,
                                                 agent_type=AgentTypes.EC2,
                                                 prepend_commands=commands)

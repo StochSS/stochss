@@ -22,7 +22,7 @@ ALL_INSTANCE_TYPES = ['t1.micro', 'm1.small', 'm3.medium', 'm3.large', 'c3.large
 def get_all_jobs_time_cost(uuid, access_key, secret_key):
     
     database = DynamoDB(access_key, secret_key)
-    results = database.getEntry('uuid', uuid, "stochss_cost_analysis")
+    results = database.getEntry('uuid', uuid, backendservice.backendservices.COST_ANALYSIS_TABLE)
              
     jobs = []
     if results is None:
@@ -37,6 +37,7 @@ def get_all_jobs_time_cost(uuid, access_key, secret_key):
             if 'time_taken' not in result:
                 time = 0
             else:
+                logging.info("time taken: {0}".format(result['time_taken']))
                 time = result['time_taken']
                 if time:
                     time = time.partition(' ')[0]#seconds
