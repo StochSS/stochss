@@ -6,8 +6,6 @@ except ImportError:
 import os
 from google.appengine.ext import db
 import boto
-from pylab import figure, axes, pie, title
-from matplotlib.backends.backend_agg import FigureCanvasAgg
 from backend import backendservice
 from backend.pricing import Price
 from cloudtracker import CloudTracker
