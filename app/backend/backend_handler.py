@@ -49,6 +49,7 @@ class VMStateModel(db.Model):
     STATE_CREATING = 'creating'
     STATE_PENDING = 'pending'
     STATE_RUNNING = 'running'
+    STATE_STOPPED = 'stopped'
     STATE_FAILED = 'failed'
     STATE_TERMINATED = 'terminated'
 
@@ -68,7 +69,7 @@ class VMStateModel(db.Model):
     pub_ip = db.StringProperty()
     pri_ip = db.StringProperty()
     local_key = db.StringProperty()
-    choices = set([STATE_CREATING, STATE_PENDING, STATE_RUNNING, STATE_FAILED, STATE_TERMINATED])
+    choices = set([STATE_CREATING, STATE_PENDING, STATE_RUNNING, STATE_STOPPED, STATE_FAILED, STATE_TERMINATED])
     state = db.StringProperty(required=True,
                               choices=choices)
     description = db.StringProperty()
@@ -413,6 +414,7 @@ class BackendWorker():
                 head_node = parameters['head_node']                
                 parameters["instance_type"] = head_node["instance_type"]
                 parameters["num_vms"] = 1
+                parameters["shutdown"] = "terminate"
                 num_vms = 1
 
                 # Only want one queue head, and it must have its own key so
