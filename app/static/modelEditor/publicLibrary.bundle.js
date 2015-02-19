@@ -1616,6 +1616,17 @@ module.exports = View.extend({
             $( this.el ).find( '[data-hook="editor"]' ).show();
             $( '[data-hook="convertToSpatialLink"]' ).show();
             $( this.el ).find( '.spatial' ).hide();
+
+            if(!$( this.el ).find('.speciesAccordion .accordion-body').first().hasClass('in'))
+                $( this.el ).find('.speciesAccordion').find('a').first()[0].click();
+            if(!$( this.el ).find('.parametersAccordion .accordion-body').first().hasClass('in'))
+                $( this.el ).find('.parametersAccordion').find('a').first()[0].click();
+            if(!$( this.el ).find('.mesh3dAccordion .accordion-body').first().hasClass('in'))
+                $( this.el ).find('.mesh3dAccordion').find('a').first()[0].click();
+            if(!$( this.el ).find('.initialConditionsAccordion .accordion-body').first().hasClass('in'))
+                $( this.el ).find('.initialConditionsAccordion').find('a').first()[0].click();
+            if(!$( this.el ).find('.reactionsAccordion .accordion-body').first().hasClass('in'))
+                $( this.el ).find('.reactionsAccordion').find('a').first()[0].click();
         }
         else if(this.state == 'spatial')
         {
@@ -2783,8 +2794,8 @@ var reactants;
 <div data-hook='subdomains'></div> \
   <table width='100%' data-hook='advanced'>\
     <tr> \
-      <td style='vertical-align:top'><h4>Reactants</h4><div data-hook='reactants'></div></td>\
-      <td style='vertical-align:top'><h4>Products</h4><div data-hook='products'></div></td>\
+      <td style='vertical-align:top'><div data-hook='reactants'></div></td>\
+      <td style='vertical-align:top'><div data-hook='products'></div></td>\
     </tr>\
   </table>\
   <br>\
@@ -2802,8 +2813,8 @@ var reactants;
 <div data-hook='custom'></div> \
   <table width='100%' data-hook='advanced'>\
     <tr> \
-      <td style='vertical-align:top'><h4>Reactants</h4><div data-hook='reactants'></div></td>\
-      <td style='vertical-align:top'><h4>Products</h4><div data-hook='products'></div></td>\
+      <td style='vertical-align:top'><div data-hook='reactants'></div></td>\
+      <td style='vertical-align:top'><div data-hook='products'></div></td>\
     </tr>\
   </table>\
   <br> \
@@ -2889,13 +2900,14 @@ var reactants;
 
         this.renderSubview(
             new StoichSpecieCollectionFormView({
+                label : 'Reactants',
                 collection: this.model.reactants,
             }), this.el.querySelector("[data-hook='reactants']"));
 
         this.renderSubview(
             new StoichSpecieCollectionFormView({
+                label : 'Products',
                 collection: this.model.products,
-                showCustomOverride : true
             }), this.el.querySelector("[data-hook='products']"));
         
         return this;
@@ -3426,7 +3438,9 @@ var AddNewStoichSpecieForm = AmpersandFormView.extend({
 });
 
 var StoichSpecieCollectionFormView = AmpersandView.extend({
-    template: "<table height='100%'>\
+    template: "<div>\
+<h4><span data-hook='label'></span></h4>\
+<table height='100%'>\
 <tr><td valign='top'>\
 <table data-hook='stoichSpecieTable'></table>\
 </td><tr/>\
@@ -3436,7 +3450,8 @@ var StoichSpecieCollectionFormView = AmpersandView.extend({
 </form>\
 </div>\
 </td></tr>\
-</table>",
+</table>\
+</div>",
     initialize: function(attr, options)
     {
         AmpersandView.prototype.initialize.call(this, attr, options);
@@ -3452,7 +3467,8 @@ var StoichSpecieCollectionFormView = AmpersandView.extend({
     props:
     {
         reactionType : 'string',
-        showCustomOverride : 'boolean'
+        showCustomOverride : 'boolean',
+        label : 'string'
     },
     derived: {
         showCustom :
@@ -3467,6 +3483,10 @@ var StoichSpecieCollectionFormView = AmpersandView.extend({
         "showCustom" : {
             type : 'toggle',
             hook : 'addStoichSpecieDiv'
+        },
+        "label" : {
+            type : "text",
+            hook : "label"
         }
     },        
     render: function()

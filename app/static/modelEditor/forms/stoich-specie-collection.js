@@ -50,7 +50,9 @@ var AddNewStoichSpecieForm = AmpersandFormView.extend({
 });
 
 var StoichSpecieCollectionFormView = AmpersandView.extend({
-    template: "<table height='100%'>\
+    template: "<div>\
+<h4><span data-hook='label'></span></h4>\
+<table height='100%'>\
 <tr><td valign='top'>\
 <table data-hook='stoichSpecieTable'></table>\
 </td><tr/>\
@@ -60,7 +62,8 @@ var StoichSpecieCollectionFormView = AmpersandView.extend({
 </form>\
 </div>\
 </td></tr>\
-</table>",
+</table>\
+</div>",
     initialize: function(attr, options)
     {
         AmpersandView.prototype.initialize.call(this, attr, options);
@@ -76,7 +79,8 @@ var StoichSpecieCollectionFormView = AmpersandView.extend({
     props:
     {
         reactionType : 'string',
-        showCustomOverride : 'boolean'
+        showCustomOverride : 'boolean',
+        label : 'string'
     },
     derived: {
         showCustom :
@@ -91,6 +95,10 @@ var StoichSpecieCollectionFormView = AmpersandView.extend({
         "showCustom" : {
             type : 'toggle',
             hook : 'addStoichSpecieDiv'
+        },
+        "label" : {
+            type : "text",
+            hook : "label"
         }
     },        
     render: function()

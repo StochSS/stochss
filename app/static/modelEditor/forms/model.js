@@ -147,6 +147,17 @@ module.exports = View.extend({
             $( this.el ).find( '[data-hook="editor"]' ).show();
             $( '[data-hook="convertToSpatialLink"]' ).show();
             $( this.el ).find( '.spatial' ).hide();
+
+            if(!$( this.el ).find('.speciesAccordion .accordion-body').first().hasClass('in'))
+                $( this.el ).find('.speciesAccordion').find('a').first()[0].click();
+            if(!$( this.el ).find('.parametersAccordion .accordion-body').first().hasClass('in'))
+                $( this.el ).find('.parametersAccordion').find('a').first()[0].click();
+            if(!$( this.el ).find('.mesh3dAccordion .accordion-body').first().hasClass('in'))
+                $( this.el ).find('.mesh3dAccordion').find('a').first()[0].click();
+            if(!$( this.el ).find('.initialConditionsAccordion .accordion-body').first().hasClass('in'))
+                $( this.el ).find('.initialConditionsAccordion').find('a').first()[0].click();
+            if(!$( this.el ).find('.reactionsAccordion .accordion-body').first().hasClass('in'))
+                $( this.el ).find('.reactionsAccordion').find('a').first()[0].click();
         }
         else if(this.state == 'spatial')
         {
