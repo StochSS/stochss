@@ -255,10 +255,10 @@ var ReactionView = View.extend({
         {
             if(typeof(factor) != 'undefined')
             {
-                katex.render(name + factor, this.queryByHook('parameter'));
+                katex.render((name + factor).replace(/_/g, '\\_'), this.queryByHook('parameter'));
                 result.text('Successfully converted');
             } else {
-                katex.render(name, this.queryByHook('parameter'));                    
+                katex.render(name.replace(/_/g, '\\_'), this.queryByHook('parameter'));                    
                 result.text('Failed, valid mass action, but invalid under SSA assumptions');
             }
         }
@@ -266,10 +266,10 @@ var ReactionView = View.extend({
         {
             if(typeof(factor) != 'undefined')
             {
-                katex.render(name + factor, this.queryByHook('parameter'));
+                katex.render((name + factor).replace(/_/g, '\\_'), this.queryByHook('parameter'));
                 result.text('Successfully converted');
             } else {
-                katex.render(name, this.queryByHook('parameter'));                    
+                katex.render(name.replace(/_/g, '\\_'), this.queryByHook('parameter'));                    
                 result.text('Failed, valid mass action, but invalid under SSA assumptions');
             }
         }
@@ -1079,8 +1079,8 @@ var MeshCollectionSelectView = AmpersandView.extend({
             limit : 10
         }), this.queryByHook('meshTable'));
 
-        this.listenTo(this.selectView, 'change:value', _.bind(this.selectModel, this));
         this.selectView.select(this.model.mesh);
+        this.listenToAndRun(this.selectView, 'change:value', _.bind(this.selectModel, this));
 
         //this.fields.forEach( function(field) { $( field.el ).find('input').val(''); } );
         this.addForm = new AddNewMeshForm(
@@ -1616,6 +1616,17 @@ module.exports = View.extend({
             $( this.el ).find( '[data-hook="editor"]' ).show();
             $( '[data-hook="convertToSpatialLink"]' ).show();
             $( this.el ).find( '.spatial' ).hide();
+
+            if(!$( this.el ).find('.speciesAccordion .accordion-body').first().hasClass('in'))
+                $( this.el ).find('.speciesAccordion').find('a').first()[0].click();
+            if(!$( this.el ).find('.parametersAccordion .accordion-body').first().hasClass('in'))
+                $( this.el ).find('.parametersAccordion').find('a').first()[0].click();
+            if(!$( this.el ).find('.mesh3dAccordion .accordion-body').first().hasClass('in'))
+                $( this.el ).find('.mesh3dAccordion').find('a').first()[0].click();
+            if(!$( this.el ).find('.initialConditionsAccordion .accordion-body').first().hasClass('in'))
+                $( this.el ).find('.initialConditionsAccordion').find('a').first()[0].click();
+            if(!$( this.el ).find('.reactionsAccordion .accordion-body').first().hasClass('in'))
+                $( this.el ).find('.reactionsAccordion').find('a').first()[0].click();
         }
         else if(this.state == 'spatial')
         {
@@ -2359,6 +2370,7 @@ var AddNewReactionForm = AmpersandFormView.extend({
     <li><a data-hook="destruction" tabindex="-1" href="#"></a></li> \
     <li><a data-hook="change" tabindex="-1" href="#"></a></li> \
     <li><a data-hook="dimerization" tabindex="-1" href="#"></a></li> \
+    <li><a data-hook="merge" tabindex="-1" href="#"></a></li> \
     <li><a data-hook="split" tabindex="-1" href="#"></a></li> \
     <li><a data-hook="four" tabindex="-1" href="#"></a></li> \
     <li><a data-hook="massaction" tabindex="-1" href="#">Custom mass action</a></li> \
@@ -2372,6 +2384,7 @@ var AddNewReactionForm = AmpersandFormView.extend({
         katex.render('A \\rightarrow \\emptyset', $( this.el ).find('[data-hook=destruction]')[0]);
         katex.render('A \\rightarrow B', $( this.el ).find('[data-hook=change]')[0]);
         katex.render('A + A \\rightarrow B', $( this.el ).find('[data-hook=dimerization]')[0]);
+        katex.render('A + B \\rightarrow C', $( this.el ).find('[data-hook=merge]')[0]);
         katex.render('A \\rightarrow B + C', $( this.el ).find('[data-hook=split]')[0]);
         katex.render('A + B \\rightarrow C + D', $( this.el ).find('[data-hook=four]')[0]);
 
@@ -2532,13 +2545,13 @@ module.exports = View.extend({
         if(obj.name == 'type')
         {
             // Make sure we have a rate
-            //if(obj.name != 'custom')
-            //{
-            //    if(this.model.rate == null)
-            //    {
-            //        this.model.rate = this.rateSelect.value;
-            //    }
-            //}
+            if(obj.name != 'custom')
+            {
+                if(this.model.rate == null)
+                {
+                    this.model.rate = this.rateSelect.value;
+                }
+            }
 
             if(obj.value != 'custom' && obj.value != 'massaction')
             {
@@ -2781,8 +2794,8 @@ var reactants;
 <div data-hook='subdomains'></div> \
   <table width='100%' data-hook='advanced'>\
     <tr> \
-      <td style='vertical-align:top'><h4>Reactants</h4><div data-hook='reactants'></div></td>\
-      <td style='vertical-align:top'><h4>Products</h4><div data-hook='products'></div></td>\
+      <td style='vertical-align:top'><div data-hook='reactants'></div></td>\
+      <td style='vertical-align:top'><div data-hook='products'></div></td>\
     </tr>\
   </table>\
   <br>\
@@ -2800,8 +2813,8 @@ var reactants;
 <div data-hook='custom'></div> \
   <table width='100%' data-hook='advanced'>\
     <tr> \
-      <td style='vertical-align:top'><h4>Reactants</h4><div data-hook='reactants'></div></td>\
-      <td style='vertical-align:top'><h4>Products</h4><div data-hook='products'></div></td>\
+      <td style='vertical-align:top'><div data-hook='reactants'></div></td>\
+      <td style='vertical-align:top'><div data-hook='products'></div></td>\
     </tr>\
   </table>\
   <br> \
@@ -2887,13 +2900,14 @@ var reactants;
 
         this.renderSubview(
             new StoichSpecieCollectionFormView({
-                collection: this.model.reactants
+                label : 'Reactants',
+                collection: this.model.reactants,
             }), this.el.querySelector("[data-hook='reactants']"));
 
         this.renderSubview(
             new StoichSpecieCollectionFormView({
+                label : 'Products',
                 collection: this.model.products,
-                showCustomOverride : true
             }), this.el.querySelector("[data-hook='products']"));
         
         return this;
@@ -3163,7 +3177,7 @@ var SpecieCollectionFormView = AmpersandView.extend({
         var collectionTemplate = "<div> \
   <table width='100%' data-hook='table'> \
     <thead> \
-<th width='120px'>Name</th><th width='120px'>" + ((this.collection.parent.isSpatial) ? "Diffusion coefficient" : "Initial Condition") + "</th>" + ((this.collection.parent.isSpatial) ? "<th width='120px'>Species allowed in these subdomains</th>" : "") + "<th></th> \
+<th width='120px'>Name</th><th width='120px'>" + ((this.collection.parent.isSpatial) ? "Diffusion coefficient" : "Initial Condition") + "</th>" + ((this.collection.parent.isSpatial) ? "<th width='120px'>Active in subdomains</th>" : "") + "<th></th> \
     </thead> \
     <tbody data-hook='items'> \
     </tbody> \
@@ -3340,7 +3354,7 @@ module.exports = View.extend({
                     label: '',
                     name: 'diffusion',
                     value: this.model.diffusion,
-                    required: true,
+                    required: false,
                     placeholder: 'Diffusion Constant',
                     model : this.model,
                     parent : this,
@@ -3402,10 +3416,10 @@ var AddNewStoichSpecieForm = AmpersandFormView.extend({
 
         this.fields = [
             new SelectView({
-                template: '<span><select></select><span data-hook="message-container"><span data-hook="message-text"></span></span></span>',
+                template: '<span><select></select></span>',
                 label: '',
                 name: 'specie',
-                value: this.baseModel.species.models[0],
+                unselectedText: 'Add species',
                 options: this.baseModel.species,
                 required: true,
                 idAttribute: 'cid',
@@ -3419,12 +3433,25 @@ var AddNewStoichSpecieForm = AmpersandFormView.extend({
 
         $( this.el ).find('input').prop('autocomplete', 'off');
 
-        this.button = $('<input type="submit" value="Add" />').appendTo( $( this.el ) );
+        this.button = $('<button type="submit">Add</button>').appendTo( $( this.el ) );
     }
 });
 
 var StoichSpecieCollectionFormView = AmpersandView.extend({
-    template: "<div><table data-hook='stoichSpecieTable'></table><div data-hook='addStoichSpecieDiv'>Add Species: <form data-hook='addStoichSpecieForm'></form></div></div>",
+    template: "<div>\
+<h4><span data-hook='label'></span></h4>\
+<table height='100%'>\
+<tr><td valign='top'>\
+<table data-hook='stoichSpecieTable'></table>\
+</td><tr/>\
+<tr><td valign='bottom'>\
+<div data-hook='addStoichSpecieDiv'>\
+<form data-hook='addStoichSpecieForm'>\
+</form>\
+</div>\
+</td></tr>\
+</table>\
+</div>",
     initialize: function(attr, options)
     {
         AmpersandView.prototype.initialize.call(this, attr, options);
@@ -3440,7 +3467,8 @@ var StoichSpecieCollectionFormView = AmpersandView.extend({
     props:
     {
         reactionType : 'string',
-        showCustomOverride : 'boolean'
+        showCustomOverride : 'boolean',
+        label : 'string'
     },
     derived: {
         showCustom :
@@ -3455,6 +3483,10 @@ var StoichSpecieCollectionFormView = AmpersandView.extend({
         "showCustom" : {
             type : 'toggle',
             hook : 'addStoichSpecieDiv'
+        },
+        "label" : {
+            type : "text",
+            hook : "label"
         }
     },        
     render: function()
@@ -3644,6 +3676,11 @@ module.exports = {
     isNumber : function()
     {
         return function(value) {
+            if(value.length == 0)
+            {
+                return "Entry must be non-empty";
+            }
+
             if(!(value < 0 || value > 0 || value == 0))
             {
                 return "Entry must be a number";
@@ -3909,7 +3946,7 @@ var Model = AmpersandModel.extend({
         var massAction = true;
 
         var massAction = this.reactions.every( function(reaction) {
-            if(reaction.type == 'massaction')
+            if(reaction.type != 'custom')
             {
                 return true;
             } else {
@@ -3945,7 +3982,7 @@ var Model = AmpersandModel.extend({
 
                 if(!this.reactions.every( function(reaction) { return reaction.valid; } ))
                 {
-                    this.saveState = 'Model not valid'
+                    this.saveState = 'invalid';
                     return;
                 }
 
