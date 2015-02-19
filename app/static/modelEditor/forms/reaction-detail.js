@@ -19,13 +19,13 @@ module.exports = View.extend({
         if(obj.name == 'type')
         {
             // Make sure we have a rate
-            //if(obj.name != 'custom')
-            //{
-            //    if(this.model.rate == null)
-            //    {
-            //        this.model.rate = this.rateSelect.value;
-            //    }
-            //}
+            if(obj.name != 'custom')
+            {
+                if(this.model.rate == null)
+                {
+                    this.model.rate = this.rateSelect.value;
+                }
+            }
 
             if(obj.value != 'custom' && obj.value != 'massaction')
             {
@@ -374,7 +374,7 @@ var reactants;
 
         this.renderSubview(
             new StoichSpecieCollectionFormView({
-                collection: this.model.reactants
+                collection: this.model.reactants,
             }), this.el.querySelector("[data-hook='reactants']"));
 
         this.renderSubview(

@@ -86,11 +86,11 @@ var PrimaryView = View.extend({
                 saveMessageDom.addClass( "alert-error" );
                 saveMessageDom.text( "Model Save Failed!" );
             }
-            else
+            else if(this.selected.saveState == 'invalid')
             {
                 saveMessageDom.removeClass( "alert-success" );
                 saveMessageDom.addClass( "alert-error" );
-                saveMessageDom.text( this.model.saveState );
+                saveMessageDom.text( this.message );
             }
         }
     },
@@ -130,6 +130,8 @@ var PrimaryView = View.extend({
     },
     saveModel: function(model)
     {
+        this.updateValid();
+
         if(this.valid)
         {
             if(this.selected)
@@ -273,7 +275,8 @@ var PrimaryView = View.extend({
         {
             this.modelEditor.remove()
             this.stopListening(this.modelSelector.selected);
-            
+            this.selected = undefined;
+
             delete this.modelEditor;
         }
     },

@@ -398,6 +398,8 @@ StochOptim.Controller = Backbone.View.extend(
 
                 $( this.el ).html( modelSelectTemplate( { models : data } ) );
 
+                $( this.el ).find( '.mainTable' ).DataTable( { "bPaginate" : false, "bFilter" : false } );
+
                 for(var i in data)
                 {
                     if(!(data[i].attributes.units == 'concentration' || data[i].attributes.isSpatial))
@@ -469,7 +471,15 @@ StochOptim.Controller = Backbone.View.extend(
                     
                     if(!data)
                         return;
-                    
+
+                    if(!this.selectedTrajectories || !this.selectedInitialData || !this.selectedTrajectories.attributes || !this.selectedInitialData.attributes)
+                    {
+                        updateMsg( { status : false,
+                                     msg : "Trajectories and Initial Data files must be supplied" } );
+
+                        return;                        
+                    }
+
                     data.trajectoriesID = this.selectedTrajectories.attributes.id;
                     data.initialDataID = this.selectedInitialData.attributes.id;
                     data.modelID = this.model.attributes.id;

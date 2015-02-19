@@ -137,7 +137,7 @@ module.exports = View.extend({
                     label: '',
                     name: 'diffusion',
                     value: this.model.diffusion,
-                    required: true,
+                    required: false,
                     placeholder: 'Diffusion Constant',
                     model : this.model,
                     parent : this,

@@ -151,6 +151,8 @@ var updateMsg = function(data)
 
 var run = function()
 {
+    $( '.mainTable' ).DataTable( { "bPaginate" : false, "bFilter" : false } );
+
     var id = $.url().param("id");
     var tid = $.url().param("tid");
 

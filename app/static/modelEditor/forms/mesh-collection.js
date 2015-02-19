@@ -317,8 +317,8 @@ var MeshCollectionSelectView = AmpersandView.extend({
             limit : 10
         }), this.queryByHook('meshTable'));
 
-        this.listenTo(this.selectView, 'change:value', _.bind(this.selectModel, this));
         this.selectView.select(this.model.mesh);
+        this.listenToAndRun(this.selectView, 'change:value', _.bind(this.selectModel, this));
 
         //this.fields.forEach( function(field) { $( field.el ).find('input').val(''); } );
         this.addForm = new AddNewMeshForm(

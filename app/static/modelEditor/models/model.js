@@ -101,7 +101,7 @@ var Model = AmpersandModel.extend({
         var massAction = true;
 
         var massAction = this.reactions.every( function(reaction) {
-            if(reaction.type == 'massaction')
+            if(reaction.type != 'custom')
             {
                 return true;
             } else {
@@ -137,7 +137,7 @@ var Model = AmpersandModel.extend({
 
                 if(!this.reactions.every( function(reaction) { return reaction.valid; } ))
                 {
-                    this.saveState = 'Model not valid'
+                    this.saveState = 'invalid';
                     return;
                 }
 

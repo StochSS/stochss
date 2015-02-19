@@ -24,6 +24,11 @@ module.exports = {
     isNumber : function()
     {
         return function(value) {
+            if(value.length == 0)
+            {
+                return "Entry must be non-empty";
+            }
+
             if(!(value < 0 || value > 0 || value == 0))
             {
                 return "Entry must be a number";

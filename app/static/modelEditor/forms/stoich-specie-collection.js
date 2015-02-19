@@ -28,10 +28,10 @@ var AddNewStoichSpecieForm = AmpersandFormView.extend({
 
         this.fields = [
             new SelectView({
-                template: '<span><select></select><span data-hook="message-container"><span data-hook="message-text"></span></span></span>',
+                template: '<span><select></select></span>',
                 label: '',
                 name: 'specie',
-                value: this.baseModel.species.models[0],
+                unselectedText: 'Add species',
                 options: this.baseModel.species,
                 required: true,
                 idAttribute: 'cid',
@@ -45,12 +45,22 @@ var AddNewStoichSpecieForm = AmpersandFormView.extend({
 
         $( this.el ).find('input').prop('autocomplete', 'off');
 
-        this.button = $('<input type="submit" value="Add" />').appendTo( $( this.el ) );
+        this.button = $('<button type="submit">Add</button>').appendTo( $( this.el ) );
     }
 });
 
 var StoichSpecieCollectionFormView = AmpersandView.extend({
-    template: "<div><table data-hook='stoichSpecieTable'></table><div data-hook='addStoichSpecieDiv'>Add Species: <form data-hook='addStoichSpecieForm'></form></div></div>",
+    template: "<table height='100%'>\
+<tr><td valign='top'>\
+<table data-hook='stoichSpecieTable'></table>\
+</td><tr/>\
+<tr><td valign='bottom'>\
+<div data-hook='addStoichSpecieDiv'>\
+<form data-hook='addStoichSpecieForm'>\
+</form>\
+</div>\
+</td></tr>\
+</table>",
     initialize: function(attr, options)
     {
         AmpersandView.prototype.initialize.call(this, attr, options);
