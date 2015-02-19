@@ -294,26 +294,14 @@ class EC2Agent(BaseAgent):
     creds = parameters['credentials']
     f = open('userfile','w')
     userstr  = """#!/bin/bash \nset -x\nexec > >(tee /var/log/user-data.log|logger -t user-data -s 2>/dev/console) 2>&1\ntouch anand3.txt\necho "testing logfile"\necho BEGIN\ndate '+%Y-%m-%d %H:%M:%S'\necho END\ntouch anand2.txt\n"""
-    userstr+='export AWS_ACCESS_KEY_ID={0}\n'.format(str(credentials['EC2_ACCESS_KEY']))
-    userstr+='export AWS_SECRET_ACCESS_KEY={0}\n'.format( str(credentials['EC2_SECRET_KEY']))
-    userstr+='echo export AWS_ACCESS_KEY_ID={0} >> ~/.bashrc\n'.format(str(credentials['EC2_ACCESS_KEY']))
-    userstr+='echo export AWS_SECRET_ACCESS_KEY={0} >> ~/.bashrc\n'.format( str(credentials['EC2_SECRET_KEY']))
     userstr+='echo export AWS_ACCESS_KEY_ID={0} >> /home/ubuntu/.bashrc\n'.format(str(credentials['EC2_ACCESS_KEY']))   
     userstr+='echo export AWS_SECRET_ACCESS_KEY={0} >> /home/ubuntu/.bashrc\n'.format( str(credentials['EC2_SECRET_KEY']))
-
-    userstr+='export STOCHKIT_HOME={0}\n'.format('/home/ubuntu/stochss/StochKit/')
-    userstr+='export STOCHKIT_ODE={0}\n'.format('/home/ubuntu/stochss/ode/')
-    userstr+='echo export STOCHKIT_HOME={0} >> ~/.bashrc\n'.format("/home/ubuntu/stochss/StochKit/")
+    
     userstr+='echo export STOCHKIT_HOME={0} >> /home/ubuntu/.bashrc\n'.format("/home/ubuntu/stochss/StochKit/")
-    userstr+='echo export STOCHKIT_ODE={0} >> ~/.bashrc\n'.format("/home/ubuntu/stochss/ode/")
     userstr+='echo export STOCHKIT_ODE={0} >> /home/ubuntu/.bashrc\n'.format("/home/ubuntu/stochss/ode/")
-
-    userstr+='export R_LIBS={0}\n'.format('/home/ubuntu/stochss/stochoptim/library')
-    userstr+='echo export R_LIBS={0} >> ~/.bashrc\n'.format("/home/ubuntu/stochss/stochoptim/library")
     userstr+='echo export R_LIBS={0} >> /home/ubuntu/.bashrc\n'.format("/home/ubuntu/stochss/stochoptim/library")
 
-    userstr+='source ~/.bashrc \n'
-    userstr+='source /home/ubuntu/.bashrc \n'
+
     # Workers need an alarm...
     if self.PARAM_QUEUE_HEAD in parameters and parameters[self.PARAM_QUEUE_HEAD]:
         ## # ...but the queue head doesnt
@@ -341,6 +329,9 @@ class EC2Agent(BaseAgent):
             instance_type = 't1.micro'
         else:
             instance_type = parameters["instance_type"]
+  
+    userstr+='echo export INSTANCE_TYPE={0} >> /home/ubuntu/.bashrc\n'.format(instance_type)
+    userstr+='source /home/ubuntu/.bashrc \n'
 
     f.write(userstr)
     f.close()   

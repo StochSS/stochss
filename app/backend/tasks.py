@@ -610,7 +610,7 @@ def execute_task(exec_str):
 
 
 @celery.task(name='stochss')
-def task(taskid, params, database, access_key, secret_key, task_prefix=""):
+def task(taskid, params, agent, database, access_key, secret_key, task_prefix=""):
     '''
     This is the actual work done by a task worker
     params    should contain at least 'bucketname'
@@ -735,9 +735,43 @@ def task(taskid, params, database, access_key, secret_key, task_prefix=""):
             res['status'] = "finished"
             res['pid'] = uuidstr
             res['output'] = "https://s3.amazonaws.com/{1}/output/{0}.tar".format(uuidstr, bucketname)
-            res['time_taken'] = "{0} seconds and {1} microseconds ".format(diff.seconds, diff.microseconds)
+            res['time_taken'] = "{0} seconds".format(diff.total_seconds())
 
         database.updateEntry(taskid, res, params["db_table"])
+        
+        # there is no "cost_analysis_table" in params in cost analysis task,
+        # but it there should have in normal task and rerun task.
+        if "cost_analysis_table" in params:
+            if "INSTANCE_TYPE" not in os.environ:
+                logging.error("Error: there is no INSTANCE_TYPE in environment variable.")
+                res['message'] = "Error: there is no INSTANCE_TYPE in environment variable."
+                return res
+        
+            result = database.getEntry('taskid', taskid, params["db_table"])
+            data = None
+            for one in result:
+                data = one
+                logging.info("{0} data in stochss table: {1}".format(taskid, one))
+                break
+            if data == None:
+                logging.error("Error: there is no data in stochss table with {0}.".format(taskid))
+                res['message'] = "EError: there is no data in stochss table with {0}.".format(taskid)
+                return res
+            
+            instance_type = os.environ["INSTANCE_TYPE"]
+            taskid_prefix = '{0}_{1}_'.format(agent, instance_type)
+            taskid = taskid_prefix+taskid
+            cost_analysis_data = {
+                    'agent': agent,
+                    'instance_type': instance_type,
+                    'message': data['message'],
+                    'start_time': data['start_time'],
+                    'status': data['status'],
+                    'time_taken': data['time_taken'],
+                    'uuid': data['uuid']
+                    }
+            database.updateEntry(taskid, cost_analysis_data, params["cost_analysis_table"])
+    
 
     except Exception, e:
         expected_output_dir = "output/%s" % uuidstr
