@@ -70,6 +70,29 @@ var SpecieCollectionFormView = AmpersandView.extend({
   <br /> \
   <form data-hook='addSpeciesForm'></form> \
 </div>",
+    props : {
+        valid : 'boolean',
+        message : 'string'
+    },
+    updateValid : function()
+    {
+        if(this.selectView)
+        {
+            this.selectView.updateValid();
+            
+            this.valid = this.selectView.valid;
+            this.message = this.selectView.message;
+        }
+        else
+        {
+            this.valid = true;
+            this.message = '';
+        }
+    },
+    update : function()
+    {
+        this.parent.update();
+    },
     initialize: function(attr, options)
     {
         AmpersandView.prototype.initialize.call(this, attr, options);
@@ -97,6 +120,7 @@ var SpecieCollectionFormView = AmpersandView.extend({
             template : collectionTemplate,
             collection : this.collection,
             viewModel : SpecieFormView,
+            parent : this,
             limit : 10
         }), this.queryByHook('collection'));
 

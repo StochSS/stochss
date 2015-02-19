@@ -84,6 +84,28 @@ var ModelCollectionSelectView = AmpersandView.extend({
 </div>",
     props: {
         selected : 'object',
+        valid : 'boolean',
+        message : 'string'
+    },
+    updateValid : function()
+    {
+        if(this.selectView)
+        {
+            this.selectView.updateValid();
+
+            this.valid = this.selectView.valid;
+            this.message = this.selectView.message;
+        }
+        else
+        {
+            this.valid = true;
+            this.message = '';
+        }
+    },
+    update: function()
+    {
+        if(this.parent && this.parent.update)
+            this.parent.update();
     },
     initialize: function(attr, options)
     {
@@ -124,6 +146,7 @@ var ModelCollectionSelectView = AmpersandView.extend({
             template : collectionTemplate,
             collection : this.collection,
             viewModel : ModelSelectView,
+            parent : this,
             limit : 10,
             value : this.selected,
             autoSelect : false

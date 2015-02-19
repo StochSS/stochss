@@ -12,11 +12,9 @@ var MeshView = require('./mesh3d');
 
 module.exports = View.extend({
     template: $( '.modelEditorTemplate' ).text(),
-    // Gotta have a few of these functions just so this works as a form view
-    // This gets called when things update
     props: {
         state: 'string',
-        selector: 'object'
+        valid : 'boolean'
     },
     bindings: {
         'model.name' : {
@@ -27,33 +25,37 @@ module.exports = View.extend({
     events : {
         "click [data-hook='convertToPopulationButton']" : "convertToPopulation"
     },
-    updateSaveMessage: function()
+    updateValid : function()
     {
-        var saveMessageDom = $( this.queryByHook('saveMessage') );
+        var valid = true;
+        var message = '';
+        
+        for(var i = 0; i < this.subViews.length; i++)
+        {
+            if(this.subViews[i].updateValid)
+            {
+                this.subViews[i].updateValid()
+            }
 
-        if(this.model.saveState == 'saved')
-        {
-            saveMessageDom.removeClass( "alert-error" );
-            saveMessageDom.addClass( "alert-success" );
-            saveMessageDom.text( "Saved" );
+            if(typeof(this.subViews[i].valid) != "undefined")
+            {
+                valid = valid && this.subViews[i].valid;
+                message = this.subViews[i].message;
+            }
+            
+            if(!valid)
+                break;
         }
-        else if(this.model.saveState == 'saving')
-        {
-            saveMessageDom.removeClass( "alert-success alert-error" );
-            saveMessageDom.text( "Saving..." );
-        }
-        else if(this.model.saveState == 'failed')
-        {
-            saveMessageDom.removeClass( "alert-success" );
-            saveMessageDom.addClass( "alert-error" );
-            saveMessageDom.text( "Model Save Failed!" );
-        }
-        else
-        {
-            saveMessageDom.removeClass( "alert-success" );
-            saveMessageDom.addClass( "alert-error" );
-            saveMessageDom.text( this.model.saveState );
-        }
+
+        this.valid = valid;
+        this.message = message;
+    },
+    update : function()
+    {
+        this.updateValid();
+
+        if(this.parent && this.parent.update)
+            this.parent.update();
     },
     duplicateModel: function()
     {
@@ -73,9 +75,7 @@ module.exports = View.extend({
         }
 
         model.id = undefined;
-
         
-
         model.setupMesh(this.model.mesh.collection);
 
         this.model.collection.add(model);
@@ -177,7 +177,6 @@ module.exports = View.extend({
         this.meshCollection = attr.meshCollection;
 
         this.on('change:state', this.updateVisibility);
-        this.listenTo(this.model, 'change:saveState', _.bind(this.updateSaveMessage, this));
     },
     remove: function()
     {

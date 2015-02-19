@@ -31,6 +31,26 @@ module.exports = View.extend({
     </table> \
   </td> \
 </tr>",
+    updateValid : function()
+    {
+        var valid = true;
+        var message = '';
+
+        for(var i = 0; i < this._subviews.length; i++)
+        {
+            if(typeof(this._subviews[i].valid) != "undefined")
+            {
+                valid = valid && this._subviews[i].valid;
+                message = "Invalid initial condition, please fix";
+            }
+
+            if(!valid)
+                break;
+        }
+
+        this.valid = valid;
+        this.message = message;
+    },
     // Gotta have a few of these functions just so this works as a form view
     // This gets called when things update
     update: function(obj)
@@ -43,6 +63,12 @@ module.exports = View.extend({
         } else if(obj.name == 'subdomain') {
             this.model.subdomain = obj.value;
         }
+
+        if(this.parent && this.parent.update)
+            this.parent.update();
+
+        if(this.parent && this.parent.parent && this.parent.parent.update)
+            this.parent.parent.update();
     },
     removeThis: function()
     {
@@ -93,6 +119,7 @@ module.exports = View.extend({
                 name: 'subdomain',
                 value: this.model.subdomain,
                 options: this.baseModel.mesh.uniqueSubdomains,
+                parent : this,
                 required: false,
                 idAttribute: 'cid',
                 textAttribute: 'name',
@@ -110,6 +137,7 @@ module.exports = View.extend({
                 template: '<span><select></select><span data-hook="message-container"><span data-hook="message-text"></span></span></span>',
                 label: '',
                 name: 'type',
+                parent : this,
                 value: this.model.type,
                 options: [['scatter', 'Scatter'], ['place', 'Place'], ['distribute', 'Distribute Uniformly']],
                 required: true,
@@ -122,6 +150,7 @@ module.exports = View.extend({
                 name: 'count',
                 value: this.model.count,
                 required: false,
+                parent : this,
                 placeholder: 'Count',
                 model : this.model,
                 tests: [].concat(Tests.positive(), Tests.integer())
@@ -133,7 +162,8 @@ module.exports = View.extend({
                 label: '',
                 name: 'X',
                 value: this.model.X,
-                required: true,
+                required: false,
+                parent : this,
                 placeholder: 'X',
                 model : this.model,
                 tests: [].concat(Tests.isNumber())
@@ -145,7 +175,8 @@ module.exports = View.extend({
                 label: '',
                 name: 'Y',
                 value: this.model.Y,
-                required: true,
+                parent : this,
+                required: false,
                 placeholder: 'Y',
                 model : this.model,
                 tests: [].concat(Tests.isNumber())
@@ -157,7 +188,8 @@ module.exports = View.extend({
                 label: '',
                 name: 'Z',
                 value: this.model.Z,
-                required: true,
+                parent : this,
+                required: false,
                 placeholder: 'Z',
                 model : this.model,
                 tests: [].concat(Tests.isNumber())
@@ -170,6 +202,7 @@ module.exports = View.extend({
                 name: 'specie',
                 value: this.model.specie,
                 options: this.baseModel.species,
+                parent : this,
                 required: true,
                 idAttribute: 'cid',
                 textAttribute: 'name',

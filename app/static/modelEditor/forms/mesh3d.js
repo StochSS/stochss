@@ -59,7 +59,7 @@ module.exports = View.extend({
             }
             else
             {
-                colors[i] = new THREE.Color( 0x000066 );
+                colors[i] = new THREE.Color( 0x000099 );
             }
         }
 

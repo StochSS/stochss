@@ -49,6 +49,98 @@ var PrimaryView = View.extend({
             }
         }
     },
+    updateSaveMessage: function( state, msg )
+    {
+        var saveMessageDom = $( this.queryByHook('saveMessage') );
+
+        if(typeof(state) == "boolean")
+        {
+            if(state)
+            {
+                saveMessageDom.removeClass( "alert-error" );
+                saveMessageDom.addClass( "alert-success" );
+                saveMessageDom.text( msg );                
+            }
+            else
+            {
+                saveMessageDom.removeClass( "alert-success" );
+                saveMessageDom.addClass( "alert-error" );
+                saveMessageDom.text( msg );
+            }
+        }
+        else
+        {
+            if(this.selected.saveState == 'saved')
+            {
+                saveMessageDom.removeClass( "alert-error" );
+                saveMessageDom.addClass( "alert-success" );
+                saveMessageDom.text( "Saved" );
+            }
+            else if(this.selected.saveState == 'saving')
+            {
+                saveMessageDom.removeClass( "alert-success alert-error" );
+                saveMessageDom.text( "Saving..." );
+            }
+            else if(this.selected.saveState == 'failed')
+            {
+                saveMessageDom.removeClass( "alert-success" );
+                saveMessageDom.addClass( "alert-error" );
+                saveMessageDom.text( "Model Save Failed!" );
+            }
+            else
+            {
+                saveMessageDom.removeClass( "alert-success" );
+                saveMessageDom.addClass( "alert-error" );
+                saveMessageDom.text( this.model.saveState );
+            }
+        }
+    },
+    updateValid : function()
+    {
+        this.modelSelector.updateValid();
+
+        this.valid = this.modelSelector.valid;
+        this.message = '';
+
+        if(!this.modelSelector.valid)
+            this.message = this.modelSelector.message;
+
+        if(this.modelEditor)
+        {
+            this.modelEditor.updateValid();
+            
+            this.valid = this.valid && this.modelEditor.valid
+            
+            if(!this.modelEditor.valid && this.message.length == 0)
+                this.message = this.modelEditor.message;
+        }
+    },
+    update : function()
+    {
+        var lastValid = this.valid;
+
+        this.updateValid();
+
+        if(!this.valid)
+            this.updateSaveMessage( false, this.message );
+
+        if(lastValid != this.valid && lastValid == false)
+        {
+            this.saveModel();
+        }
+    },
+    saveModel: function(model)
+    {
+        if(this.valid)
+        {
+            if(this.selected)
+                this.selected.saveModel();
+        }
+        else if(!this.valid)
+        {
+            this.updateSaveMessage( false, this.message );
+        }
+    },
     initialize: function(attr, options)
     {
         View.prototype.initialize.call(this, attr, options);
@@ -83,7 +175,7 @@ var PrimaryView = View.extend({
             if(this.modelEditor)
             {
                 this.modelEditor.remove()
-                this.stopListening(this.lastSelected);
+                this.stopListening(this.selected);
                 
                 delete this.modelEditor;
             }
@@ -96,13 +188,16 @@ var PrimaryView = View.extend({
             } );
             
             this.listenTo(this.modelSelector.selected, 'remove', _.bind(this.modelDeleted, this));
+            this.listenTo(this.modelSelector.selected, 'requestSave', _.bind(this.saveModel, this));
+            this.listenTo(this.modelSelector.selected, 'change:saveState', _.bind(this.updateSaveMessage, this));
+            
             this.registerSubview(this.modelEditor);
             this.modelEditor.render();
 
-            if($( this.el ).find('.selectAccordion .accordion-body').hasClass('in'))
-            {
-                $( this.el ).find('.selectAccordion a').first()[0].click();
-            }
+            //if($( this.el ).find('.selectAccordion .accordion-body').hasClass('in'))
+            //{
+            //    $( this.el ).find('.selectAccordion a').first()[0].click();
+            //}
 
             if(!$( this.el ).find('.speciesAccordion .accordion-body').first().hasClass('in'))
                 $( this.el ).find('.speciesAccordion').find('a').first()[0].click();
@@ -223,6 +318,7 @@ var PrimaryView = View.extend({
             new ModelSelectView( {
                 collection : this.collection,
                 meshCollection : this.meshCollection,
+                parent : this,
                 selected : model
             } ), this.queryByHook('modelSelect')
         );
@@ -789,6 +885,29 @@ var InitialConditionCollectionFormView = AmpersandView.extend({
   <br />\
   <form data-hook='addInitialConditionForm'></form>\
 </div>",
+    props : {
+        valid : 'boolean',
+        message : 'string'
+    },
+    updateValid : function()
+    {
+        if(this.selectView)
+        {
+            this.selectView.updateValid();
+            
+            this.valid = this.selectView.valid;
+            this.message = this.selectView.message;
+        }
+        else
+        {
+            this.valid = true;
+            this.message = '';
+        }
+    },
+    update : function()
+    {
+        this.parent.update();
+    },
     render: function()
     {
         this.baseModel = this.collection.parent;
@@ -814,6 +933,7 @@ var InitialConditionCollectionFormView = AmpersandView.extend({
             template : collectionTemplate,
             collection : this.collection,
             viewModel : InitialConditionFormView,
+            parent : this,
             limit : 10
         }), this.queryByHook('initialConditionCollection'));
 
@@ -868,6 +988,26 @@ module.exports = View.extend({
     </table> \
   </td> \
 </tr>",
+    updateValid : function()
+    {
+        var valid = true;
+        var message = '';
+
+        for(var i = 0; i < this._subviews.length; i++)
+        {
+            if(typeof(this._subviews[i].valid) != "undefined")
+            {
+                valid = valid && this._subviews[i].valid;
+                message = "Invalid initial condition, please fix";
+            }
+
+            if(!valid)
+                break;
+        }
+
+        this.valid = valid;
+        this.message = message;
+    },
     // Gotta have a few of these functions just so this works as a form view
     // This gets called when things update
     update: function(obj)
@@ -880,6 +1020,12 @@ module.exports = View.extend({
         } else if(obj.name == 'subdomain') {
             this.model.subdomain = obj.value;
         }
+
+        if(this.parent && this.parent.update)
+            this.parent.update();
+
+        if(this.parent && this.parent.parent && this.parent.parent.update)
+            this.parent.parent.update();
     },
     removeThis: function()
     {
@@ -930,6 +1076,7 @@ module.exports = View.extend({
                 name: 'subdomain',
                 value: this.model.subdomain,
                 options: this.baseModel.mesh.uniqueSubdomains,
+                parent : this,
                 required: false,
                 idAttribute: 'cid',
                 textAttribute: 'name',
@@ -947,6 +1094,7 @@ module.exports = View.extend({
                 template: '<span><select></select><span data-hook="message-container"><span data-hook="message-text"></span></span></span>',
                 label: '',
                 name: 'type',
+                parent : this,
                 value: this.model.type,
                 options: [['scatter', 'Scatter'], ['place', 'Place'], ['distribute', 'Distribute Uniformly']],
                 required: true,
@@ -959,6 +1107,7 @@ module.exports = View.extend({
                 name: 'count',
                 value: this.model.count,
                 required: false,
+                parent : this,
                 placeholder: 'Count',
                 model : this.model,
                 tests: [].concat(Tests.positive(), Tests.integer())
@@ -970,7 +1119,8 @@ module.exports = View.extend({
                 label: '',
                 name: 'X',
                 value: this.model.X,
-                required: true,
+                required: false,
+                parent : this,
                 placeholder: 'X',
                 model : this.model,
                 tests: [].concat(Tests.isNumber())
@@ -982,7 +1132,8 @@ module.exports = View.extend({
                 label: '',
                 name: 'Y',
                 value: this.model.Y,
-                required: true,
+                parent : this,
+                required: false,
                 placeholder: 'Y',
                 model : this.model,
                 tests: [].concat(Tests.isNumber())
@@ -994,7 +1145,8 @@ module.exports = View.extend({
                 label: '',
                 name: 'Z',
                 value: this.model.Z,
-                required: true,
+                parent : this,
+                required: false,
                 placeholder: 'Z',
                 model : this.model,
                 tests: [].concat(Tests.isNumber())
@@ -1007,6 +1159,7 @@ module.exports = View.extend({
                 name: 'specie',
                 value: this.model.specie,
                 options: this.baseModel.species,
+                parent : this,
                 required: true,
                 idAttribute: 'cid',
                 textAttribute: 'name',
@@ -1484,7 +1637,7 @@ module.exports = View.extend({
             }
             else
             {
-                colors[i] = new THREE.Color( 0x000066 );
+                colors[i] = new THREE.Color( 0x000099 );
             }
         }
 
@@ -1741,11 +1894,9 @@ var MeshView = require('./mesh3d');
 
 module.exports = View.extend({
     template: $( '.modelEditorTemplate' ).text(),
-    // Gotta have a few of these functions just so this works as a form view
-    // This gets called when things update
     props: {
         state: 'string',
-        selector: 'object'
+        valid : 'boolean'
     },
     bindings: {
         'model.name' : {
@@ -1756,33 +1907,37 @@ module.exports = View.extend({
     events : {
         "click [data-hook='convertToPopulationButton']" : "convertToPopulation"
     },
-    updateSaveMessage: function()
+    updateValid : function()
     {
-        var saveMessageDom = $( this.queryByHook('saveMessage') );
+        var valid = true;
+        var message = '';
+        
+        for(var i = 0; i < this.subViews.length; i++)
+        {
+            if(this.subViews[i].updateValid)
+            {
+                this.subViews[i].updateValid()
+            }
 
-        if(this.model.saveState == 'saved')
-        {
-            saveMessageDom.removeClass( "alert-error" );
-            saveMessageDom.addClass( "alert-success" );
-            saveMessageDom.text( "Saved" );
+            if(typeof(this.subViews[i].valid) != "undefined")
+            {
+                valid = valid && this.subViews[i].valid;
+                message = this.subViews[i].message;
+            }
+            
+            if(!valid)
+                break;
         }
-        else if(this.model.saveState == 'saving')
-        {
-            saveMessageDom.removeClass( "alert-success alert-error" );
-            saveMessageDom.text( "Saving..." );
-        }
-        else if(this.model.saveState == 'failed')
-        {
-            saveMessageDom.removeClass( "alert-success" );
-            saveMessageDom.addClass( "alert-error" );
-            saveMessageDom.text( "Model Save Failed!" );
-        }
-        else
-        {
-            saveMessageDom.removeClass( "alert-success" );
-            saveMessageDom.addClass( "alert-error" );
-            saveMessageDom.text( this.model.saveState );
-        }
+
+        this.valid = valid;
+        this.message = message;
+    },
+    update : function()
+    {
+        this.updateValid();
+
+        if(this.parent && this.parent.update)
+            this.parent.update();
     },
     duplicateModel: function()
     {
@@ -1802,9 +1957,7 @@ module.exports = View.extend({
         }
 
         model.id = undefined;
-
         
-
         model.setupMesh(this.model.mesh.collection);
 
         this.model.collection.add(model);
@@ -1906,7 +2059,6 @@ module.exports = View.extend({
         this.meshCollection = attr.meshCollection;
 
         this.on('change:state', this.updateVisibility);
-        this.listenTo(this.model, 'change:saveState', _.bind(this.updateSaveMessage, this));
     },
     remove: function()
     {
@@ -2058,6 +2210,39 @@ var SubCollection = require('ampersand-subcollection');
 var _ = require('underscore');
 
 var PaginatedCollectionView = AmpersandView.extend({
+    updateValid : function()
+    {
+        var valid = true;
+        var message = '';
+
+        if(this.subCollectionViews)
+        {
+            for(var i = 0; i < this.subCollectionViews.views.length; i++)
+            {
+                if(this.subCollectionViews.views[i].updateValid)
+                {
+                    this.subCollectionViews.views[i].updateValid();
+                }
+
+                if(typeof(this.subCollectionViews.views[i].valid) != "undefined")
+                {
+                    valid = valid && this.subCollectionViews.views[i].valid;
+                    message = this.subCollectionViews.views[i].message;
+                }
+                
+                if(!valid)
+                    break;
+            }
+        }
+
+        this.valid = valid;
+        this.message = message;
+    },
+    update : function()
+    {
+        if(this.parent && this.parent.update)
+            this.parent.update();
+    },
     initialize: function(attr, options)
     {
         AmpersandView.prototype.initialize.call(this, attr, options);
@@ -2065,6 +2250,7 @@ var PaginatedCollectionView = AmpersandView.extend({
         this.limit = attr.limit;
         this.viewModel = attr.viewModel;
         this.offset = 0;
+        //this.parent = attr.parent;
 
         if(typeof(attr.autoSelect) != "undefined")
             this.autoSelect = attr.autoSelect;
@@ -2170,6 +2356,8 @@ var PaginatedCollectionView = AmpersandView.extend({
         "click [data-hook='previous']" : "shiftMinus"
     },
     props: {
+        valid : 'boolean',
+        message : 'string',
         value : 'object',
         offset : 'number',
         modelCount : 'number',
@@ -2282,6 +2470,29 @@ var ParameterCollectionFormView = AmpersandView.extend({
   <br /> \
   <form data-hook='addParametersForm'></form> \
 </div>",
+    props : {
+        valid : 'boolean',
+        message : 'string'
+    },
+    updateValid : function()
+    {
+        if(this.selectView)
+        {
+            this.selectView.updateValid();
+            
+            this.valid = this.selectView.valid;
+            this.message = this.selectView.message;
+        }
+        else
+        {
+            this.valid = true;
+            this.message = '';
+        }
+    },
+    update : function()
+    {
+        this.parent.update();
+    },
     initialize: function(attr, options)
     {
         AmpersandView.prototype.initialize.call(this, attr, options);
@@ -2309,6 +2520,7 @@ var ParameterCollectionFormView = AmpersandView.extend({
             template : collectionTemplate,
             collection : this.collection,
             viewModel : ParameterFormView,
+            parent : this,
             limit : 10
         }), this.queryByHook('collection'));
 
@@ -2341,6 +2553,29 @@ module.exports = View.extend({
     // This gets called when things update
     update: function()
     {
+        var valid = true;
+        var message = '';
+        
+        for(var i = 0; i < this._subviews.length; i++)
+        {
+            if(typeof(this._subviews[i].valid) != "undefined")
+            {
+                valid = valid && this._subviews[i].valid;
+                message = "Invalid parameter, please fix";
+            }
+            
+            if(!valid)
+                break;
+        }
+        
+        this.valid = valid;
+        this.message = message;
+        
+        if(this.parent && this.parent.update)
+            this.parent.update();
+        
+        if(this.parent && this.parent.parent && this.parent.parent.update)
+            this.parent.parent.update();
     },
     removeParameter: function()
     {
@@ -2367,6 +2602,7 @@ module.exports = View.extend({
                 value: this.model.name,
                 required: false,
                 placeholder: 'Name',
+                parent : this,
                 model : this.model,
                 tests: [].concat(Tests.naming(this.model.collection, this.model))
             }), this.el.querySelector("[data-hook='name']"));
@@ -2378,6 +2614,7 @@ module.exports = View.extend({
                 value: this.model.value,
                 required: false,
                 placeholder: 'Value',
+                parent : this,
                 model : this.model,
                 tests: []
             }), this.el.querySelector("[data-hook='value']"));
@@ -2566,6 +2803,31 @@ var ReactionCollectionFormView = AmpersandView.extend({
     <form data-hook='addReactionForm'></form>\
   </div> \
 </div>",
+    props : {
+        valid : 'boolean',
+        message : 'string'
+    },
+    updateValid : function()
+    {
+        if(this.selectView)
+        {
+            this.selectView.updateValid();
+            
+            this.valid = this.selectView.valid;
+            
+            if(!this.selectView.valid)
+                this.message = this.selectView.message;
+        }
+        else
+        {
+            this.valid = true;
+            this.message = '';
+        }
+    },
+    update : function()
+    {
+        this.parent.update();
+    },
     initialize: function(attr, options)
     {
         AmpersandView.prototype.initialize.call(this, attr, options);
@@ -2638,6 +2900,7 @@ var ReactionCollectionFormView = AmpersandView.extend({
             template : collectionTemplate,
             collection : this.collection,
             viewModel : ReactionFormView,
+            parent : this,
             limit : 10
         }), this.queryByHook('collection'));
 
@@ -2993,7 +3256,7 @@ var reactants;
                 name: 'type',
                 value: this.model.type,
                 options: options,
-                required: true
+                required: true,
             }), this.el.querySelector("[data-hook='typeSelect']"));
 
         var selected = this.model.rate;
@@ -3074,6 +3337,22 @@ module.exports = View.extend({
     <td><center><button class='btn' data-hook='remove'>x</button></center></td>\
   </tr>\
 </tbody>",
+    updateValid : function()
+    {
+        this.valid = this.nameBox.valid && !this.notValid;
+        this.message = '';
+
+        if(!this.valid)
+            this.message = "Invalid reaction, please fix";
+    },
+    update : function(obj)
+    {
+        if(this.parent && this.parent.update)
+            this.parent.update();
+
+        if(this.parent && this.parent.parent && this.parent.parent.update)
+            this.parent.parent.update();
+    },
     // On any change of anything, redraw the Latex
     redrawLatex: function(obj)
     {
@@ -3170,16 +3449,18 @@ module.exports = View.extend({
 
         View.prototype.render.apply(this, arguments);
 
+        this.listenTo(this.model, 'change', _.bind(this.update, this));
         this.listenTo(this.model, 'change', _.bind(this.redrawLatex, this));
         this.listenTo(this.model.reactants, 'add remove change', _.bind(this.redrawLatex, this));
         this.listenToAndRun(this.model.products, 'add remove change', _.bind(this.redrawLatex, this));
 
-        this.renderSubview(
+        this.nameBox = this.renderSubview(
             new ModifyingInputView({
-                template: '<span><span data-hook="label"></span><input><span data-hook="message-container"><span data-hook="message-text"></span></span></span>',
+                //template: '<span><span data-hook="label"></span><input><span data-hook="message-container"><span data-hook="message-text"></span></span></span>',
                 label: '',
                 name: 'name',
                 value: this.model.name,
+                parent : this,
                 required: false,
                 placeholder: 'Name',
                 model : this.model,
@@ -3263,6 +3544,29 @@ var SpecieCollectionFormView = AmpersandView.extend({
   <br /> \
   <form data-hook='addSpeciesForm'></form> \
 </div>",
+    props : {
+        valid : 'boolean',
+        message : 'string'
+    },
+    updateValid : function()
+    {
+        if(this.selectView)
+        {
+            this.selectView.updateValid();
+            
+            this.valid = this.selectView.valid;
+            this.message = this.selectView.message;
+        }
+        else
+        {
+            this.valid = true;
+            this.message = '';
+        }
+    },
+    update : function()
+    {
+        this.parent.update();
+    },
     initialize: function(attr, options)
     {
         AmpersandView.prototype.initialize.call(this, attr, options);
@@ -3290,6 +3594,7 @@ var SpecieCollectionFormView = AmpersandView.extend({
             template : collectionTemplate,
             collection : this.collection,
             viewModel : SpecieFormView,
+            parent : this,
             limit : 10
         }), this.queryByHook('collection'));
 
@@ -3318,14 +3623,13 @@ var SubdomainFormView = require('./subdomain');
 
 var Tests = require('./tests');
 module.exports = View.extend({
-    // Gotta have a few of these functions just so this works as a form view
-    // This gets called when things update
-    update: function()
-    {
-    },
     removeSpecies: function()
     {
         this.model.collection.remove(this.model);
+    },
+    props : {
+        valid : 'boolean',
+        message : 'string'
     },
     events: {
         'click [data-hook="delete"]': 'removeSpecies'
@@ -3344,19 +3648,48 @@ module.exports = View.extend({
         this.baseModel = this.model.collection.parent;
     },
     // This will get called by the SubdomainFormView children when a subdomain gets selected/deselected
+    updateValid : function()
+    {
+        var valid = true;
+        var message = '';
+
+        for(var i = 0; i < this._subviews.length; i++)
+        {
+            if(typeof(this._subviews[i].valid) != "undefined")
+            {
+                valid = valid && this._subviews[i].valid;
+                message = "Invalid species, please fix";
+            }
+
+            if(!valid)
+                break;
+        }
+
+        this.valid = valid;
+        this.message = message;
+    },
     update : function(obj)
     {
-        var subdomain = obj.value.model;
-        var checked = obj.value.checked;
-        // If we're already in the right state do nothing
-        if(checked)
+        if(obj.name == "subdomains")
         {
-            this.model.subdomains = _.union(this.model.subdomains, [subdomain.name]);
+            var subdomain = obj.value.model;
+            var checked = obj.value.checked;
+            // If we're already in the right state do nothing
+            if(checked)
+            {
+                this.model.subdomains = _.union(this.model.subdomains, [subdomain.name]);
+            }
+            else
+            {
+                this.model.subdomains = _.difference(this.model.subdomains, [subdomain.name]);
+            }
         }
-        else
-        {
-            this.model.subdomains = _.difference(this.model.subdomains, [subdomain.name]);
-        }
+
+        if(this.parent && this.parent.update)
+            this.parent.update();
+
+        if(this.parent && this.parent.parent && this.parent.parent.update)
+            this.parent.parent.update();
     },
     updateSelected : function()
     {
@@ -3408,6 +3741,7 @@ module.exports = View.extend({
                 required: false,
                 placeholder: 'Name',
                 model : this.model,
+                parent : this,
                 tests: [].concat(Tests.naming(this.model.collection, this.model))
             }), this.el.querySelector("[data-hook='name']"));
 
@@ -3422,7 +3756,8 @@ module.exports = View.extend({
                     required: true,
                     placeholder: 'Diffusion Constant',
                     model : this.model,
-                    tests: [].concat(Tests.positive())
+                    parent : this,
+                    tests: [].concat(Tests.isNumber(), Tests.positive())
                 }), this.el.querySelector("[data-hook='diffusion']"));
 
             this.renderSubdomains();
@@ -3440,6 +3775,7 @@ module.exports = View.extend({
                     required: false,
                     placeholder: 'Initial Condition',
                     model : this.model,
+                    parent : this,
                     tests: [].concat(Tests.nonzero(), Tests.units(this.model.collection.parent))
                 }), this.el.querySelector("[data-hook='initialCondition']"));
         }
@@ -3501,7 +3837,7 @@ var AddNewStoichSpecieForm = AmpersandFormView.extend({
 });
 
 var StoichSpecieCollectionFormView = AmpersandView.extend({
-    template: "<div><table data-hook='stoichSpecieTable'></table><div data-hook='addStoichSpecieDiv'>Add Specie: <form data-hook='addStoichSpecieForm'></form></div></div>",
+    template: "<div><table data-hook='stoichSpecieTable'></table><div data-hook='addStoichSpecieDiv'>Add Species: <form data-hook='addStoichSpecieForm'></form></div></div>",
     initialize: function(attr, options)
     {
         AmpersandView.prototype.initialize.call(this, attr, options);
@@ -3554,6 +3890,7 @@ var StoichSpecieCollectionFormView = AmpersandView.extend({
 });
 
 module.exports = StoichSpecieCollectionFormView
+
 },{"./stoich-specie":"/home/bbales2/stochssModel/app/static/modelEditor/forms/stoich-specie.js","./tests":"/home/bbales2/stochssModel/app/static/modelEditor/forms/tests.js","ampersand-form-view":"/home/bbales2/stochssModel/app/static/modelEditor/node_modules/ampersand-form-view/ampersand-form-view.js","ampersand-input-view":"/home/bbales2/stochssModel/app/static/modelEditor/node_modules/ampersand-input-view/ampersand-input-view.js","ampersand-select-view":"/home/bbales2/stochssModel/app/static/modelEditor/node_modules/ampersand-select-view/ampersand-select-view.js","ampersand-view":"/home/bbales2/stochssModel/app/static/modelEditor/node_modules/ampersand-view/ampersand-view.js","jquery":"/home/bbales2/stochssModel/app/static/modelEditor/node_modules/jquery/dist/jquery.js"}],"/home/bbales2/stochssModel/app/static/modelEditor/forms/stoich-specie.js":[function(require,module,exports){
 var _ = require('underscore');
 var $ = require('jquery');
@@ -3904,6 +4241,10 @@ var Model = AmpersandModel.extend({
         saveState : 'string',
         ownedByMe : 'boolean'
     },
+    triggerChange : function()
+    {
+        this.trigger('requestSave');
+    },
     initialize: function(attrs, options) {
         this.is_public = false;
 
@@ -3914,12 +4255,11 @@ var Model = AmpersandModel.extend({
         // Every time the type of one of the reactions changes, update the type here
         this.listenTo(this.reactions, 'add remove change:type', _.bind(this.computeType, this));
 
-        this.listenTo(this.reactions, 'add remove change', _.bind(this.saveModel, this));
-        this.listenTo(this.species, 'add remove change', _.bind(this.saveModel, this));
-        this.listenTo(this.parameters, 'add remove change', _.bind(this.saveModel, this));
-        this.listenTo(this.initialConditions, 'add remove change', _.bind(this.saveModel, this));
-
-        this.on('change:name change:units change:type change:isSpatial change:mesh', _.bind(this.saveModel, this));
+        this.listenTo(this.reactions, 'add remove change', _.bind(this.triggerChange, this));
+        this.listenTo(this.species, 'add remove change', _.bind(this.triggerChange, this));
+        this.listenTo(this.parameters, 'add remove change', _.bind(this.triggerChange, this));
+        this.listenTo(this.initialConditions, 'add remove change', _.bind(this.triggerChange, this));
+        this.on('change:name change:units change:type change:isSpatial change:mesh', _.bind(this.triggerChange, this));
         // this will run if the name changes
     },
     setupMesh: function(meshCollection) {
@@ -5954,9 +6294,7 @@ module.exports = function createCallback(func, context, argCount) {
 
 },{}],"/home/bbales2/stochssModel/app/static/modelEditor/node_modules/ampersand-events/node_modules/amp-extend/extend.js":[function(require,module,exports){
 module.exports=require("/home/bbales2/stochssModel/app/static/modelEditor/node_modules/amp-extend/extend.js")
-},{"/home/bbales2/stochssModel/app/static/modelEditor/node_modules/amp-extend/extend.js":"/home/bbales2/stochssModel/app/static/modelEditor/node_modules/amp-extend/extend.js"}],"/home/bbales2/stochssModel/app/static/modelEditor/node_modules/ampersand-events/node_modules/amp-extend/node_modules/amp-is-object/is-object.js":[function(require,module,exports){
-module.exports=require("/home/bbales2/stochssModel/app/static/modelEditor/node_modules/amp-extend/node_modules/amp-is-object/is-object.js")
-},{"/home/bbales2/stochssModel/app/static/modelEditor/node_modules/amp-extend/node_modules/amp-is-object/is-object.js":"/home/bbales2/stochssModel/app/static/modelEditor/node_modules/amp-extend/node_modules/amp-is-object/is-object.js"}],"/home/bbales2/stochssModel/app/static/modelEditor/node_modules/ampersand-events/node_modules/amp-is-empty/is-empty.js":[function(require,module,exports){
+},{"/home/bbales2/stochssModel/app/static/modelEditor/node_modules/amp-extend/extend.js":"/home/bbales2/stochssModel/app/static/modelEditor/node_modules/amp-extend/extend.js"}],"/home/bbales2/stochssModel/app/static/modelEditor/node_modules/ampersand-events/node_modules/amp-is-empty/is-empty.js":[function(require,module,exports){
 var isArray = require('amp-is-array');
 var isString = require('amp-is-string');
 var isArguments = require('amp-is-arguments');
@@ -6076,8 +6414,8 @@ module.exports = function indexOf(arr, item, from) {
 },{"amp-is-number":"/home/bbales2/stochssModel/app/static/modelEditor/node_modules/ampersand-events/node_modules/amp-keys/node_modules/amp-index-of/node_modules/amp-is-number/is-number.js"}],"/home/bbales2/stochssModel/app/static/modelEditor/node_modules/ampersand-events/node_modules/amp-keys/node_modules/amp-index-of/node_modules/amp-is-number/is-number.js":[function(require,module,exports){
 module.exports=require("/home/bbales2/stochssModel/app/static/modelEditor/node_modules/ampersand-events/node_modules/amp-is-empty/node_modules/amp-is-number/is-number.js")
 },{"/home/bbales2/stochssModel/app/static/modelEditor/node_modules/ampersand-events/node_modules/amp-is-empty/node_modules/amp-is-number/is-number.js":"/home/bbales2/stochssModel/app/static/modelEditor/node_modules/ampersand-events/node_modules/amp-is-empty/node_modules/amp-is-number/is-number.js"}],"/home/bbales2/stochssModel/app/static/modelEditor/node_modules/ampersand-events/node_modules/amp-keys/node_modules/amp-is-object/is-object.js":[function(require,module,exports){
-module.exports=require("/home/bbales2/stochssModel/app/static/modelEditor/node_modules/amp-extend/node_modules/amp-is-object/is-object.js")
-},{"/home/bbales2/stochssModel/app/static/modelEditor/node_modules/amp-extend/node_modules/amp-is-object/is-object.js":"/home/bbales2/stochssModel/app/static/modelEditor/node_modules/amp-extend/node_modules/amp-is-object/is-object.js"}],"/home/bbales2/stochssModel/app/static/modelEditor/node_modules/ampersand-events/node_modules/amp-once/node_modules/amp-limit-calls/limit-calls.js":[function(require,module,exports){
+module.exports=require("/home/bbales2/stochssModel/app/static/modelEditor/node_modules/ampersand-events/node_modules/amp-bind/node_modules/amp-is-object/is-object.js")
+},{"/home/bbales2/stochssModel/app/static/modelEditor/node_modules/ampersand-events/node_modules/amp-bind/node_modules/amp-is-object/is-object.js":"/home/bbales2/stochssModel/app/static/modelEditor/node_modules/ampersand-events/node_modules/amp-bind/node_modules/amp-is-object/is-object.js"}],"/home/bbales2/stochssModel/app/static/modelEditor/node_modules/ampersand-events/node_modules/amp-once/node_modules/amp-limit-calls/limit-calls.js":[function(require,module,exports){
 module.exports = function limitCalls(fn, times) {
     var memo;
     return function() {
@@ -6277,9 +6615,7 @@ FormView.extend = function (obj) {
 
 module.exports = FormView;
 
-},{"backbone-events-standalone":"/home/bbales2/stochssModel/app/static/modelEditor/node_modules/ampersand-form-view/node_modules/backbone-events-standalone/index.js","extend-object":"/home/bbales2/stochssModel/app/static/modelEditor/node_modules/ampersand-form-view/node_modules/extend-object/extend-object.js"}],"/home/bbales2/stochssModel/app/static/modelEditor/node_modules/ampersand-form-view/node_modules/backbone-events-standalone/backbone-events-standalone.js":[function(require,module,exports){
-module.exports=require("/home/bbales2/stochssModel/app/static/modelEditor/node_modules/ampersand-collection/node_modules/backbone-events-standalone/backbone-events-standalone.js")
-},{"/home/bbales2/stochssModel/app/static/modelEditor/node_modules/ampersand-collection/node_modules/backbone-events-standalone/backbone-events-standalone.js":"/home/bbales2/stochssModel/app/static/modelEditor/node_modules/ampersand-collection/node_modules/backbone-events-standalone/backbone-events-standalone.js"}],"/home/bbales2/stochssModel/app/static/modelEditor/node_modules/ampersand-form-view/node_modules/backbone-events-standalone/index.js":[function(require,module,exports){
+},{"backbone-events-standalone":"/home/bbales2/stochssModel/app/static/modelEditor/node_modules/ampersand-form-view/node_modules/backbone-events-standalone/index.js","extend-object":"/home/bbales2/stochssModel/app/static/modelEditor/node_modules/ampersand-form-view/node_modules/extend-object/extend-object.js"}],"/home/bbales2/stochssModel/app/static/modelEditor/node_modules/ampersand-form-view/node_modules/backbone-events-standalone/index.js":[function(require,module,exports){
 module.exports=require("/home/bbales2/stochssModel/app/static/modelEditor/node_modules/ampersand-collection/node_modules/backbone-events-standalone/index.js")
 },{"/home/bbales2/stochssModel/app/static/modelEditor/node_modules/ampersand-collection/node_modules/backbone-events-standalone/index.js":"/home/bbales2/stochssModel/app/static/modelEditor/node_modules/ampersand-collection/node_modules/backbone-events-standalone/index.js"}],"/home/bbales2/stochssModel/app/static/modelEditor/node_modules/ampersand-form-view/node_modules/extend-object/extend-object.js":[function(require,module,exports){
 module.exports=require("/home/bbales2/stochssModel/app/static/modelEditor/node_modules/ampersand-collection/node_modules/extend-object/extend-object.js")
@@ -8894,35 +9230,9 @@ module.exports = {
 
 },{"ampersand-sync":"/home/bbales2/stochssModel/app/static/modelEditor/node_modules/ampersand-rest-collection/node_modules/ampersand-collection-rest-mixin/node_modules/ampersand-sync/ampersand-sync.js","extend-object":"/home/bbales2/stochssModel/app/static/modelEditor/node_modules/ampersand-rest-collection/node_modules/ampersand-collection-rest-mixin/node_modules/extend-object/extend-object.js"}],"/home/bbales2/stochssModel/app/static/modelEditor/node_modules/ampersand-rest-collection/node_modules/ampersand-collection-rest-mixin/node_modules/ampersand-sync/ampersand-sync.js":[function(require,module,exports){
 module.exports=require("/home/bbales2/stochssModel/app/static/modelEditor/node_modules/ampersand-model/node_modules/ampersand-sync/ampersand-sync.js")
-},{"/home/bbales2/stochssModel/app/static/modelEditor/node_modules/ampersand-model/node_modules/ampersand-sync/ampersand-sync.js":"/home/bbales2/stochssModel/app/static/modelEditor/node_modules/ampersand-model/node_modules/ampersand-sync/ampersand-sync.js"}],"/home/bbales2/stochssModel/app/static/modelEditor/node_modules/ampersand-rest-collection/node_modules/ampersand-collection-rest-mixin/node_modules/ampersand-sync/node_modules/qs/index.js":[function(require,module,exports){
-module.exports=require("/home/bbales2/stochssModel/app/static/modelEditor/node_modules/ampersand-model/node_modules/ampersand-sync/node_modules/qs/index.js")
-},{"/home/bbales2/stochssModel/app/static/modelEditor/node_modules/ampersand-model/node_modules/ampersand-sync/node_modules/qs/index.js":"/home/bbales2/stochssModel/app/static/modelEditor/node_modules/ampersand-model/node_modules/ampersand-sync/node_modules/qs/index.js"}],"/home/bbales2/stochssModel/app/static/modelEditor/node_modules/ampersand-rest-collection/node_modules/ampersand-collection-rest-mixin/node_modules/ampersand-sync/node_modules/qs/lib/index.js":[function(require,module,exports){
-module.exports=require("/home/bbales2/stochssModel/app/static/modelEditor/node_modules/ampersand-model/node_modules/ampersand-sync/node_modules/qs/lib/index.js")
-},{"/home/bbales2/stochssModel/app/static/modelEditor/node_modules/ampersand-model/node_modules/ampersand-sync/node_modules/qs/lib/index.js":"/home/bbales2/stochssModel/app/static/modelEditor/node_modules/ampersand-model/node_modules/ampersand-sync/node_modules/qs/lib/index.js"}],"/home/bbales2/stochssModel/app/static/modelEditor/node_modules/ampersand-rest-collection/node_modules/ampersand-collection-rest-mixin/node_modules/ampersand-sync/node_modules/qs/lib/parse.js":[function(require,module,exports){
-module.exports=require("/home/bbales2/stochssModel/app/static/modelEditor/node_modules/ampersand-model/node_modules/ampersand-sync/node_modules/qs/lib/parse.js")
-},{"/home/bbales2/stochssModel/app/static/modelEditor/node_modules/ampersand-model/node_modules/ampersand-sync/node_modules/qs/lib/parse.js":"/home/bbales2/stochssModel/app/static/modelEditor/node_modules/ampersand-model/node_modules/ampersand-sync/node_modules/qs/lib/parse.js"}],"/home/bbales2/stochssModel/app/static/modelEditor/node_modules/ampersand-rest-collection/node_modules/ampersand-collection-rest-mixin/node_modules/ampersand-sync/node_modules/qs/lib/stringify.js":[function(require,module,exports){
-module.exports=require("/home/bbales2/stochssModel/app/static/modelEditor/node_modules/ampersand-model/node_modules/ampersand-sync/node_modules/qs/lib/stringify.js")
-},{"/home/bbales2/stochssModel/app/static/modelEditor/node_modules/ampersand-model/node_modules/ampersand-sync/node_modules/qs/lib/stringify.js":"/home/bbales2/stochssModel/app/static/modelEditor/node_modules/ampersand-model/node_modules/ampersand-sync/node_modules/qs/lib/stringify.js"}],"/home/bbales2/stochssModel/app/static/modelEditor/node_modules/ampersand-rest-collection/node_modules/ampersand-collection-rest-mixin/node_modules/ampersand-sync/node_modules/qs/lib/utils.js":[function(require,module,exports){
-module.exports=require("/home/bbales2/stochssModel/app/static/modelEditor/node_modules/ampersand-model/node_modules/ampersand-sync/node_modules/qs/lib/utils.js")
-},{"/home/bbales2/stochssModel/app/static/modelEditor/node_modules/ampersand-model/node_modules/ampersand-sync/node_modules/qs/lib/utils.js":"/home/bbales2/stochssModel/app/static/modelEditor/node_modules/ampersand-model/node_modules/ampersand-sync/node_modules/qs/lib/utils.js"}],"/home/bbales2/stochssModel/app/static/modelEditor/node_modules/ampersand-rest-collection/node_modules/ampersand-collection-rest-mixin/node_modules/ampersand-sync/node_modules/underscore/underscore.js":[function(require,module,exports){
-module.exports=require("/home/bbales2/stochssModel/app/static/modelEditor/node_modules/ampersand-model/node_modules/ampersand-sync/node_modules/underscore/underscore.js")
-},{"/home/bbales2/stochssModel/app/static/modelEditor/node_modules/ampersand-model/node_modules/ampersand-sync/node_modules/underscore/underscore.js":"/home/bbales2/stochssModel/app/static/modelEditor/node_modules/ampersand-model/node_modules/ampersand-sync/node_modules/underscore/underscore.js"}],"/home/bbales2/stochssModel/app/static/modelEditor/node_modules/ampersand-rest-collection/node_modules/ampersand-collection-rest-mixin/node_modules/ampersand-sync/node_modules/xhr/index.js":[function(require,module,exports){
-module.exports=require("/home/bbales2/stochssModel/app/static/modelEditor/node_modules/ampersand-model/node_modules/ampersand-sync/node_modules/xhr/index.js")
-},{"/home/bbales2/stochssModel/app/static/modelEditor/node_modules/ampersand-model/node_modules/ampersand-sync/node_modules/xhr/index.js":"/home/bbales2/stochssModel/app/static/modelEditor/node_modules/ampersand-model/node_modules/ampersand-sync/node_modules/xhr/index.js"}],"/home/bbales2/stochssModel/app/static/modelEditor/node_modules/ampersand-rest-collection/node_modules/ampersand-collection-rest-mixin/node_modules/ampersand-sync/node_modules/xhr/node_modules/global/window.js":[function(require,module,exports){
-module.exports=require("/home/bbales2/stochssModel/app/static/modelEditor/node_modules/ampersand-model/node_modules/ampersand-sync/node_modules/xhr/node_modules/global/window.js")
-},{"/home/bbales2/stochssModel/app/static/modelEditor/node_modules/ampersand-model/node_modules/ampersand-sync/node_modules/xhr/node_modules/global/window.js":"/home/bbales2/stochssModel/app/static/modelEditor/node_modules/ampersand-model/node_modules/ampersand-sync/node_modules/xhr/node_modules/global/window.js"}],"/home/bbales2/stochssModel/app/static/modelEditor/node_modules/ampersand-rest-collection/node_modules/ampersand-collection-rest-mixin/node_modules/ampersand-sync/node_modules/xhr/node_modules/once/once.js":[function(require,module,exports){
-module.exports=require("/home/bbales2/stochssModel/app/static/modelEditor/node_modules/ampersand-model/node_modules/ampersand-sync/node_modules/xhr/node_modules/once/once.js")
-},{"/home/bbales2/stochssModel/app/static/modelEditor/node_modules/ampersand-model/node_modules/ampersand-sync/node_modules/xhr/node_modules/once/once.js":"/home/bbales2/stochssModel/app/static/modelEditor/node_modules/ampersand-model/node_modules/ampersand-sync/node_modules/xhr/node_modules/once/once.js"}],"/home/bbales2/stochssModel/app/static/modelEditor/node_modules/ampersand-rest-collection/node_modules/ampersand-collection-rest-mixin/node_modules/ampersand-sync/node_modules/xhr/node_modules/parse-headers/node_modules/for-each/index.js":[function(require,module,exports){
-module.exports=require("/home/bbales2/stochssModel/app/static/modelEditor/node_modules/ampersand-model/node_modules/ampersand-sync/node_modules/xhr/node_modules/parse-headers/node_modules/for-each/index.js")
-},{"/home/bbales2/stochssModel/app/static/modelEditor/node_modules/ampersand-model/node_modules/ampersand-sync/node_modules/xhr/node_modules/parse-headers/node_modules/for-each/index.js":"/home/bbales2/stochssModel/app/static/modelEditor/node_modules/ampersand-model/node_modules/ampersand-sync/node_modules/xhr/node_modules/parse-headers/node_modules/for-each/index.js"}],"/home/bbales2/stochssModel/app/static/modelEditor/node_modules/ampersand-rest-collection/node_modules/ampersand-collection-rest-mixin/node_modules/ampersand-sync/node_modules/xhr/node_modules/parse-headers/node_modules/for-each/node_modules/is-function/index.js":[function(require,module,exports){
-module.exports=require("/home/bbales2/stochssModel/app/static/modelEditor/node_modules/ampersand-model/node_modules/ampersand-sync/node_modules/xhr/node_modules/parse-headers/node_modules/for-each/node_modules/is-function/index.js")
-},{"/home/bbales2/stochssModel/app/static/modelEditor/node_modules/ampersand-model/node_modules/ampersand-sync/node_modules/xhr/node_modules/parse-headers/node_modules/for-each/node_modules/is-function/index.js":"/home/bbales2/stochssModel/app/static/modelEditor/node_modules/ampersand-model/node_modules/ampersand-sync/node_modules/xhr/node_modules/parse-headers/node_modules/for-each/node_modules/is-function/index.js"}],"/home/bbales2/stochssModel/app/static/modelEditor/node_modules/ampersand-rest-collection/node_modules/ampersand-collection-rest-mixin/node_modules/ampersand-sync/node_modules/xhr/node_modules/parse-headers/node_modules/trim/index.js":[function(require,module,exports){
-module.exports=require("/home/bbales2/stochssModel/app/static/modelEditor/node_modules/ampersand-model/node_modules/ampersand-sync/node_modules/xhr/node_modules/parse-headers/node_modules/trim/index.js")
-},{"/home/bbales2/stochssModel/app/static/modelEditor/node_modules/ampersand-model/node_modules/ampersand-sync/node_modules/xhr/node_modules/parse-headers/node_modules/trim/index.js":"/home/bbales2/stochssModel/app/static/modelEditor/node_modules/ampersand-model/node_modules/ampersand-sync/node_modules/xhr/node_modules/parse-headers/node_modules/trim/index.js"}],"/home/bbales2/stochssModel/app/static/modelEditor/node_modules/ampersand-rest-collection/node_modules/ampersand-collection-rest-mixin/node_modules/ampersand-sync/node_modules/xhr/node_modules/parse-headers/parse-headers.js":[function(require,module,exports){
-module.exports=require("/home/bbales2/stochssModel/app/static/modelEditor/node_modules/ampersand-model/node_modules/ampersand-sync/node_modules/xhr/node_modules/parse-headers/parse-headers.js")
-},{"/home/bbales2/stochssModel/app/static/modelEditor/node_modules/ampersand-model/node_modules/ampersand-sync/node_modules/xhr/node_modules/parse-headers/parse-headers.js":"/home/bbales2/stochssModel/app/static/modelEditor/node_modules/ampersand-model/node_modules/ampersand-sync/node_modules/xhr/node_modules/parse-headers/parse-headers.js"}],"/home/bbales2/stochssModel/app/static/modelEditor/node_modules/ampersand-rest-collection/node_modules/ampersand-collection-rest-mixin/node_modules/extend-object/extend-object.js":[function(require,module,exports){
-module.exports=require("/home/bbales2/stochssModel/app/static/modelEditor/node_modules/ampersand-collection/node_modules/extend-object/extend-object.js")
-},{"/home/bbales2/stochssModel/app/static/modelEditor/node_modules/ampersand-collection/node_modules/extend-object/extend-object.js":"/home/bbales2/stochssModel/app/static/modelEditor/node_modules/ampersand-collection/node_modules/extend-object/extend-object.js"}],"/home/bbales2/stochssModel/app/static/modelEditor/node_modules/ampersand-rest-collection/node_modules/ampersand-collection-underscore-mixin/ampersand-collection-underscore-mixin.js":[function(require,module,exports){
+},{"/home/bbales2/stochssModel/app/static/modelEditor/node_modules/ampersand-model/node_modules/ampersand-sync/ampersand-sync.js":"/home/bbales2/stochssModel/app/static/modelEditor/node_modules/ampersand-model/node_modules/ampersand-sync/ampersand-sync.js"}],"/home/bbales2/stochssModel/app/static/modelEditor/node_modules/ampersand-rest-collection/node_modules/ampersand-collection-rest-mixin/node_modules/extend-object/extend-object.js":[function(require,module,exports){
+module.exports=require("/home/bbales2/stochssModel/app/static/modelEditor/node_modules/ampersand-form-view/node_modules/extend-object/extend-object.js")
+},{"/home/bbales2/stochssModel/app/static/modelEditor/node_modules/ampersand-form-view/node_modules/extend-object/extend-object.js":"/home/bbales2/stochssModel/app/static/modelEditor/node_modules/ampersand-form-view/node_modules/extend-object/extend-object.js"}],"/home/bbales2/stochssModel/app/static/modelEditor/node_modules/ampersand-rest-collection/node_modules/ampersand-collection-underscore-mixin/ampersand-collection-underscore-mixin.js":[function(require,module,exports){
 ;if (typeof window !== "undefined") {  window.ampersand = window.ampersand || {};  window.ampersand["ampersand-collection-underscore-mixin"] = window.ampersand["ampersand-collection-underscore-mixin"] || [];  window.ampersand["ampersand-collection-underscore-mixin"].push("1.0.3");}
 var _ = require('underscore');
 var slice = [].slice;
@@ -10071,11 +10381,9 @@ module.exports = function arrayNext(array, currentItem) {
     return array[newIndex];
 };
 
-},{}],"/home/bbales2/stochssModel/app/static/modelEditor/node_modules/ampersand-state/node_modules/backbone-events-standalone/backbone-events-standalone.js":[function(require,module,exports){
-module.exports=require("/home/bbales2/stochssModel/app/static/modelEditor/node_modules/ampersand-collection/node_modules/backbone-events-standalone/backbone-events-standalone.js")
-},{"/home/bbales2/stochssModel/app/static/modelEditor/node_modules/ampersand-collection/node_modules/backbone-events-standalone/backbone-events-standalone.js":"/home/bbales2/stochssModel/app/static/modelEditor/node_modules/ampersand-collection/node_modules/backbone-events-standalone/backbone-events-standalone.js"}],"/home/bbales2/stochssModel/app/static/modelEditor/node_modules/ampersand-state/node_modules/backbone-events-standalone/index.js":[function(require,module,exports){
-module.exports=require("/home/bbales2/stochssModel/app/static/modelEditor/node_modules/ampersand-collection/node_modules/backbone-events-standalone/index.js")
-},{"/home/bbales2/stochssModel/app/static/modelEditor/node_modules/ampersand-collection/node_modules/backbone-events-standalone/index.js":"/home/bbales2/stochssModel/app/static/modelEditor/node_modules/ampersand-collection/node_modules/backbone-events-standalone/index.js"}],"/home/bbales2/stochssModel/app/static/modelEditor/node_modules/ampersand-state/node_modules/key-tree-store/key-tree-store.js":[function(require,module,exports){
+},{}],"/home/bbales2/stochssModel/app/static/modelEditor/node_modules/ampersand-state/node_modules/backbone-events-standalone/index.js":[function(require,module,exports){
+module.exports=require("/home/bbales2/stochssModel/app/static/modelEditor/node_modules/ampersand-form-view/node_modules/backbone-events-standalone/index.js")
+},{"/home/bbales2/stochssModel/app/static/modelEditor/node_modules/ampersand-form-view/node_modules/backbone-events-standalone/index.js":"/home/bbales2/stochssModel/app/static/modelEditor/node_modules/ampersand-form-view/node_modules/backbone-events-standalone/index.js"}],"/home/bbales2/stochssModel/app/static/modelEditor/node_modules/ampersand-state/node_modules/key-tree-store/key-tree-store.js":[function(require,module,exports){
 function KeyTreeStore() {
     this.storage = {};
 }
@@ -10343,15 +10651,11 @@ module.exports = SubCollection;
 
 },{"ampersand-class-extend":"/home/bbales2/stochssModel/app/static/modelEditor/node_modules/ampersand-subcollection/node_modules/ampersand-class-extend/ampersand-class-extend.js","ampersand-collection-underscore-mixin":"/home/bbales2/stochssModel/app/static/modelEditor/node_modules/ampersand-subcollection/node_modules/ampersand-collection-underscore-mixin/ampersand-collection-underscore-mixin.js","backbone-events-standalone":"/home/bbales2/stochssModel/app/static/modelEditor/node_modules/ampersand-subcollection/node_modules/backbone-events-standalone/index.js","underscore":"/home/bbales2/stochssModel/app/static/modelEditor/node_modules/underscore/underscore.js"}],"/home/bbales2/stochssModel/app/static/modelEditor/node_modules/ampersand-subcollection/node_modules/ampersand-class-extend/ampersand-class-extend.js":[function(require,module,exports){
 module.exports=require("/home/bbales2/stochssModel/app/static/modelEditor/node_modules/ampersand-collection/node_modules/ampersand-class-extend/ampersand-class-extend.js")
-},{"/home/bbales2/stochssModel/app/static/modelEditor/node_modules/ampersand-collection/node_modules/ampersand-class-extend/ampersand-class-extend.js":"/home/bbales2/stochssModel/app/static/modelEditor/node_modules/ampersand-collection/node_modules/ampersand-class-extend/ampersand-class-extend.js"}],"/home/bbales2/stochssModel/app/static/modelEditor/node_modules/ampersand-subcollection/node_modules/ampersand-class-extend/node_modules/extend-object/extend-object.js":[function(require,module,exports){
-module.exports=require("/home/bbales2/stochssModel/app/static/modelEditor/node_modules/ampersand-collection/node_modules/extend-object/extend-object.js")
-},{"/home/bbales2/stochssModel/app/static/modelEditor/node_modules/ampersand-collection/node_modules/extend-object/extend-object.js":"/home/bbales2/stochssModel/app/static/modelEditor/node_modules/ampersand-collection/node_modules/extend-object/extend-object.js"}],"/home/bbales2/stochssModel/app/static/modelEditor/node_modules/ampersand-subcollection/node_modules/ampersand-collection-underscore-mixin/ampersand-collection-underscore-mixin.js":[function(require,module,exports){
+},{"/home/bbales2/stochssModel/app/static/modelEditor/node_modules/ampersand-collection/node_modules/ampersand-class-extend/ampersand-class-extend.js":"/home/bbales2/stochssModel/app/static/modelEditor/node_modules/ampersand-collection/node_modules/ampersand-class-extend/ampersand-class-extend.js"}],"/home/bbales2/stochssModel/app/static/modelEditor/node_modules/ampersand-subcollection/node_modules/ampersand-collection-underscore-mixin/ampersand-collection-underscore-mixin.js":[function(require,module,exports){
 module.exports=require("/home/bbales2/stochssModel/app/static/modelEditor/node_modules/ampersand-rest-collection/node_modules/ampersand-collection-underscore-mixin/ampersand-collection-underscore-mixin.js")
-},{"/home/bbales2/stochssModel/app/static/modelEditor/node_modules/ampersand-rest-collection/node_modules/ampersand-collection-underscore-mixin/ampersand-collection-underscore-mixin.js":"/home/bbales2/stochssModel/app/static/modelEditor/node_modules/ampersand-rest-collection/node_modules/ampersand-collection-underscore-mixin/ampersand-collection-underscore-mixin.js"}],"/home/bbales2/stochssModel/app/static/modelEditor/node_modules/ampersand-subcollection/node_modules/backbone-events-standalone/backbone-events-standalone.js":[function(require,module,exports){
-module.exports=require("/home/bbales2/stochssModel/app/static/modelEditor/node_modules/ampersand-collection/node_modules/backbone-events-standalone/backbone-events-standalone.js")
-},{"/home/bbales2/stochssModel/app/static/modelEditor/node_modules/ampersand-collection/node_modules/backbone-events-standalone/backbone-events-standalone.js":"/home/bbales2/stochssModel/app/static/modelEditor/node_modules/ampersand-collection/node_modules/backbone-events-standalone/backbone-events-standalone.js"}],"/home/bbales2/stochssModel/app/static/modelEditor/node_modules/ampersand-subcollection/node_modules/backbone-events-standalone/index.js":[function(require,module,exports){
-module.exports=require("/home/bbales2/stochssModel/app/static/modelEditor/node_modules/ampersand-collection/node_modules/backbone-events-standalone/index.js")
-},{"/home/bbales2/stochssModel/app/static/modelEditor/node_modules/ampersand-collection/node_modules/backbone-events-standalone/index.js":"/home/bbales2/stochssModel/app/static/modelEditor/node_modules/ampersand-collection/node_modules/backbone-events-standalone/index.js"}],"/home/bbales2/stochssModel/app/static/modelEditor/node_modules/ampersand-view/ampersand-view.js":[function(require,module,exports){
+},{"/home/bbales2/stochssModel/app/static/modelEditor/node_modules/ampersand-rest-collection/node_modules/ampersand-collection-underscore-mixin/ampersand-collection-underscore-mixin.js":"/home/bbales2/stochssModel/app/static/modelEditor/node_modules/ampersand-rest-collection/node_modules/ampersand-collection-underscore-mixin/ampersand-collection-underscore-mixin.js"}],"/home/bbales2/stochssModel/app/static/modelEditor/node_modules/ampersand-subcollection/node_modules/backbone-events-standalone/index.js":[function(require,module,exports){
+module.exports=require("/home/bbales2/stochssModel/app/static/modelEditor/node_modules/ampersand-state/node_modules/backbone-events-standalone/index.js")
+},{"/home/bbales2/stochssModel/app/static/modelEditor/node_modules/ampersand-state/node_modules/backbone-events-standalone/index.js":"/home/bbales2/stochssModel/app/static/modelEditor/node_modules/ampersand-state/node_modules/backbone-events-standalone/index.js"}],"/home/bbales2/stochssModel/app/static/modelEditor/node_modules/ampersand-view/ampersand-view.js":[function(require,module,exports){
 ;if (typeof window !== "undefined") {  window.ampersand = window.ampersand || {};  window.ampersand["ampersand-view"] = window.ampersand["ampersand-view"] || [];  window.ampersand["ampersand-view"].push("7.2.0");}
 var State = require('ampersand-state');
 var CollectionView = require('ampersand-collection-view');
@@ -10883,291 +11187,10 @@ CollectionView.extend = ampExtend;
 module.exports = CollectionView;
 
 },{"ampersand-class-extend":"/home/bbales2/stochssModel/app/static/modelEditor/node_modules/ampersand-view/node_modules/ampersand-collection-view/node_modules/ampersand-class-extend/ampersand-class-extend.js","backbone-events-standalone":"/home/bbales2/stochssModel/app/static/modelEditor/node_modules/ampersand-view/node_modules/ampersand-collection-view/node_modules/backbone-events-standalone/index.js","underscore":"/home/bbales2/stochssModel/app/static/modelEditor/node_modules/ampersand-view/node_modules/underscore/underscore.js"}],"/home/bbales2/stochssModel/app/static/modelEditor/node_modules/ampersand-view/node_modules/ampersand-collection-view/node_modules/ampersand-class-extend/ampersand-class-extend.js":[function(require,module,exports){
-module.exports=require("/home/bbales2/stochssModel/app/static/modelEditor/node_modules/ampersand-collection/node_modules/ampersand-class-extend/ampersand-class-extend.js")
-},{"/home/bbales2/stochssModel/app/static/modelEditor/node_modules/ampersand-collection/node_modules/ampersand-class-extend/ampersand-class-extend.js":"/home/bbales2/stochssModel/app/static/modelEditor/node_modules/ampersand-collection/node_modules/ampersand-class-extend/ampersand-class-extend.js"}],"/home/bbales2/stochssModel/app/static/modelEditor/node_modules/ampersand-view/node_modules/ampersand-collection-view/node_modules/ampersand-class-extend/node_modules/extend-object/extend-object.js":[function(require,module,exports){
-module.exports=require("/home/bbales2/stochssModel/app/static/modelEditor/node_modules/ampersand-collection/node_modules/extend-object/extend-object.js")
-},{"/home/bbales2/stochssModel/app/static/modelEditor/node_modules/ampersand-collection/node_modules/extend-object/extend-object.js":"/home/bbales2/stochssModel/app/static/modelEditor/node_modules/ampersand-collection/node_modules/extend-object/extend-object.js"}],"/home/bbales2/stochssModel/app/static/modelEditor/node_modules/ampersand-view/node_modules/ampersand-collection-view/node_modules/backbone-events-standalone/backbone-events-standalone.js":[function(require,module,exports){
-/**
- * Standalone extraction of Backbone.Events, no external dependency required.
- * Degrades nicely when Backone/underscore are already available in the current
- * global context.
- *
- * Note that docs suggest to use underscore's `_.extend()` method to add Events
- * support to some given object. A `mixin()` method has been added to the Events
- * prototype to avoid using underscore for that sole purpose:
- *
- *     var myEventEmitter = BackboneEvents.mixin({});
- *
- * Or for a function constructor:
- *
- *     function MyConstructor(){}
- *     MyConstructor.prototype.foo = function(){}
- *     BackboneEvents.mixin(MyConstructor.prototype);
- *
- * (c) 2009-2013 Jeremy Ashkenas, DocumentCloud Inc.
- * (c) 2013 Nicolas Perriault
- */
-/* global exports:true, define, module */
-(function() {
-  var root = this,
-      breaker = {},
-      nativeForEach = Array.prototype.forEach,
-      hasOwnProperty = Object.prototype.hasOwnProperty,
-      slice = Array.prototype.slice,
-      idCounter = 0;
-
-  // Returns a partial implementation matching the minimal API subset required
-  // by Backbone.Events
-  function miniscore() {
-    return {
-      keys: Object.keys || function (obj) {
-        if (typeof obj !== "object" && typeof obj !== "function" || obj === null) {
-          throw new TypeError("keys() called on a non-object");
-        }
-        var key, keys = [];
-        for (key in obj) {
-          if (obj.hasOwnProperty(key)) {
-            keys[keys.length] = key;
-          }
-        }
-        return keys;
-      },
-
-      uniqueId: function(prefix) {
-        var id = ++idCounter + '';
-        return prefix ? prefix + id : id;
-      },
-
-      has: function(obj, key) {
-        return hasOwnProperty.call(obj, key);
-      },
-
-      each: function(obj, iterator, context) {
-        if (obj == null) return;
-        if (nativeForEach && obj.forEach === nativeForEach) {
-          obj.forEach(iterator, context);
-        } else if (obj.length === +obj.length) {
-          for (var i = 0, l = obj.length; i < l; i++) {
-            if (iterator.call(context, obj[i], i, obj) === breaker) return;
-          }
-        } else {
-          for (var key in obj) {
-            if (this.has(obj, key)) {
-              if (iterator.call(context, obj[key], key, obj) === breaker) return;
-            }
-          }
-        }
-      },
-
-      once: function(func) {
-        var ran = false, memo;
-        return function() {
-          if (ran) return memo;
-          ran = true;
-          memo = func.apply(this, arguments);
-          func = null;
-          return memo;
-        };
-      }
-    };
-  }
-
-  var _ = miniscore(), Events;
-
-  // Backbone.Events
-  // ---------------
-
-  // A module that can be mixed in to *any object* in order to provide it with
-  // custom events. You may bind with `on` or remove with `off` callback
-  // functions to an event; `trigger`-ing an event fires all callbacks in
-  // succession.
-  //
-  //     var object = {};
-  //     _.extend(object, Backbone.Events);
-  //     object.on('expand', function(){ alert('expanded'); });
-  //     object.trigger('expand');
-  //
-  Events = {
-
-    // Bind an event to a `callback` function. Passing `"all"` will bind
-    // the callback to all events fired.
-    on: function(name, callback, context) {
-      if (!eventsApi(this, 'on', name, [callback, context]) || !callback) return this;
-      this._events || (this._events = {});
-      var events = this._events[name] || (this._events[name] = []);
-      events.push({callback: callback, context: context, ctx: context || this});
-      return this;
-    },
-
-    // Bind an event to only be triggered a single time. After the first time
-    // the callback is invoked, it will be removed.
-    once: function(name, callback, context) {
-      if (!eventsApi(this, 'once', name, [callback, context]) || !callback) return this;
-      var self = this;
-      var once = _.once(function() {
-        self.off(name, once);
-        callback.apply(this, arguments);
-      });
-      once._callback = callback;
-      return this.on(name, once, context);
-    },
-
-    // Remove one or many callbacks. If `context` is null, removes all
-    // callbacks with that function. If `callback` is null, removes all
-    // callbacks for the event. If `name` is null, removes all bound
-    // callbacks for all events.
-    off: function(name, callback, context) {
-      var retain, ev, events, names, i, l, j, k;
-      if (!this._events || !eventsApi(this, 'off', name, [callback, context])) return this;
-      if (!name && !callback && !context) {
-        this._events = {};
-        return this;
-      }
-
-      names = name ? [name] : _.keys(this._events);
-      for (i = 0, l = names.length; i < l; i++) {
-        name = names[i];
-        if (events = this._events[name]) {
-          this._events[name] = retain = [];
-          if (callback || context) {
-            for (j = 0, k = events.length; j < k; j++) {
-              ev = events[j];
-              if ((callback && callback !== ev.callback && callback !== ev.callback._callback) ||
-                  (context && context !== ev.context)) {
-                retain.push(ev);
-              }
-            }
-          }
-          if (!retain.length) delete this._events[name];
-        }
-      }
-
-      return this;
-    },
-
-    // Trigger one or many events, firing all bound callbacks. Callbacks are
-    // passed the same arguments as `trigger` is, apart from the event name
-    // (unless you're listening on `"all"`, which will cause your callback to
-    // receive the true name of the event as the first argument).
-    trigger: function(name) {
-      if (!this._events) return this;
-      var args = slice.call(arguments, 1);
-      if (!eventsApi(this, 'trigger', name, args)) return this;
-      var events = this._events[name];
-      var allEvents = this._events.all;
-      if (events) triggerEvents(events, args);
-      if (allEvents) triggerEvents(allEvents, arguments);
-      return this;
-    },
-
-    // Tell this object to stop listening to either specific events ... or
-    // to every object it's currently listening to.
-    stopListening: function(obj, name, callback) {
-      var listeners = this._listeners;
-      if (!listeners) return this;
-      var deleteListener = !name && !callback;
-      if (typeof name === 'object') callback = this;
-      if (obj) (listeners = {})[obj._listenerId] = obj;
-      for (var id in listeners) {
-        listeners[id].off(name, callback, this);
-        if (deleteListener) delete this._listeners[id];
-      }
-      return this;
-    }
-
-  };
-
-  // Regular expression used to split event strings.
-  var eventSplitter = /\s+/;
-
-  // Implement fancy features of the Events API such as multiple event
-  // names `"change blur"` and jQuery-style event maps `{change: action}`
-  // in terms of the existing API.
-  var eventsApi = function(obj, action, name, rest) {
-    if (!name) return true;
-
-    // Handle event maps.
-    if (typeof name === 'object') {
-      for (var key in name) {
-        obj[action].apply(obj, [key, name[key]].concat(rest));
-      }
-      return false;
-    }
-
-    // Handle space separated event names.
-    if (eventSplitter.test(name)) {
-      var names = name.split(eventSplitter);
-      for (var i = 0, l = names.length; i < l; i++) {
-        obj[action].apply(obj, [names[i]].concat(rest));
-      }
-      return false;
-    }
-
-    return true;
-  };
-
-  // A difficult-to-believe, but optimized internal dispatch function for
-  // triggering events. Tries to keep the usual cases speedy (most internal
-  // Backbone events have 3 arguments).
-  var triggerEvents = function(events, args) {
-    var ev, i = -1, l = events.length, a1 = args[0], a2 = args[1], a3 = args[2];
-    switch (args.length) {
-      case 0: while (++i < l) (ev = events[i]).callback.call(ev.ctx); return;
-      case 1: while (++i < l) (ev = events[i]).callback.call(ev.ctx, a1); return;
-      case 2: while (++i < l) (ev = events[i]).callback.call(ev.ctx, a1, a2); return;
-      case 3: while (++i < l) (ev = events[i]).callback.call(ev.ctx, a1, a2, a3); return;
-      default: while (++i < l) (ev = events[i]).callback.apply(ev.ctx, args);
-    }
-  };
-
-  var listenMethods = {listenTo: 'on', listenToOnce: 'once'};
-
-  // Inversion-of-control versions of `on` and `once`. Tell *this* object to
-  // listen to an event in another object ... keeping track of what it's
-  // listening to.
-  _.each(listenMethods, function(implementation, method) {
-    Events[method] = function(obj, name, callback) {
-      var listeners = this._listeners || (this._listeners = {});
-      var id = obj._listenerId || (obj._listenerId = _.uniqueId('l'));
-      listeners[id] = obj;
-      if (typeof name === 'object') callback = this;
-      obj[implementation](name, callback, this);
-      return this;
-    };
-  });
-
-  // Aliases for backwards compatibility.
-  Events.bind   = Events.on;
-  Events.unbind = Events.off;
-
-  // Mixin utility
-  Events.mixin = function(proto) {
-    var exports = ['on', 'once', 'off', 'trigger', 'stopListening', 'listenTo',
-                   'listenToOnce', 'bind', 'unbind'];
-    _.each(exports, function(name) {
-      proto[name] = this[name];
-    }, this);
-    return proto;
-  };
-
-  // Export Events as BackboneEvents depending on current context
-  if (typeof define === "function") {
-    define(function() {
-      return Events;
-    });
-  } else if (typeof exports !== 'undefined') {
-    if (typeof module !== 'undefined' && module.exports) {
-      exports = module.exports = Events;
-    }
-    exports.BackboneEvents = Events;
-  } else {
-    root.BackboneEvents = Events;
-  }
-})(this);
-
-},{}],"/home/bbales2/stochssModel/app/static/modelEditor/node_modules/ampersand-view/node_modules/ampersand-collection-view/node_modules/backbone-events-standalone/index.js":[function(require,module,exports){
-module.exports=require("/home/bbales2/stochssModel/app/static/modelEditor/node_modules/ampersand-collection/node_modules/backbone-events-standalone/index.js")
-},{"/home/bbales2/stochssModel/app/static/modelEditor/node_modules/ampersand-collection/node_modules/backbone-events-standalone/index.js":"/home/bbales2/stochssModel/app/static/modelEditor/node_modules/ampersand-collection/node_modules/backbone-events-standalone/index.js"}],"/home/bbales2/stochssModel/app/static/modelEditor/node_modules/ampersand-view/node_modules/ampersand-dom-bindings/ampersand-dom-bindings.js":[function(require,module,exports){
+module.exports=require("/home/bbales2/stochssModel/app/static/modelEditor/node_modules/ampersand-subcollection/node_modules/ampersand-class-extend/ampersand-class-extend.js")
+},{"/home/bbales2/stochssModel/app/static/modelEditor/node_modules/ampersand-subcollection/node_modules/ampersand-class-extend/ampersand-class-extend.js":"/home/bbales2/stochssModel/app/static/modelEditor/node_modules/ampersand-subcollection/node_modules/ampersand-class-extend/ampersand-class-extend.js"}],"/home/bbales2/stochssModel/app/static/modelEditor/node_modules/ampersand-view/node_modules/ampersand-collection-view/node_modules/backbone-events-standalone/index.js":[function(require,module,exports){
+module.exports=require("/home/bbales2/stochssModel/app/static/modelEditor/node_modules/ampersand-subcollection/node_modules/backbone-events-standalone/index.js")
+},{"/home/bbales2/stochssModel/app/static/modelEditor/node_modules/ampersand-subcollection/node_modules/backbone-events-standalone/index.js":"/home/bbales2/stochssModel/app/static/modelEditor/node_modules/ampersand-subcollection/node_modules/backbone-events-standalone/index.js"}],"/home/bbales2/stochssModel/app/static/modelEditor/node_modules/ampersand-view/node_modules/ampersand-dom-bindings/ampersand-dom-bindings.js":[function(require,module,exports){
 ;if (typeof window !== "undefined") {  window.ampersand = window.ampersand || {};  window.ampersand["ampersand-dom-bindings"] = window.ampersand["ampersand-dom-bindings"] || [];  window.ampersand["ampersand-dom-bindings"].push("3.3.3");}
 var Store = require('key-tree-store');
 var dom = require('ampersand-dom');
@@ -67274,6 +67297,28 @@ var ModelCollectionSelectView = AmpersandView.extend({
 </div>",
     props: {
         selected : 'object',
+        valid : 'boolean',
+        message : 'string'
+    },
+    updateValid : function()
+    {
+        if(this.selectView)
+        {
+            this.selectView.updateValid();
+
+            this.valid = this.selectView.valid;
+            this.message = this.selectView.message;
+        }
+        else
+        {
+            this.valid = true;
+            this.message = '';
+        }
+    },
+    update: function()
+    {
+        if(this.parent && this.parent.update)
+            this.parent.update();
     },
     initialize: function(attr, options)
     {
@@ -67314,6 +67359,7 @@ var ModelCollectionSelectView = AmpersandView.extend({
             template : collectionTemplate,
             collection : this.collection,
             viewModel : ModelSelectView,
+            parent : this,
             limit : 10,
             value : this.selected,
             autoSelect : false
@@ -67398,6 +67444,24 @@ module.exports = View.extend({
         "click [data-hook=edit]" : "selectSelf",
         "click [data-hook=delete]" : "removeModel"
     },
+    updateValid : function()
+    {
+        this.valid = this.nameBox.valid;
+        this.message = '';
+
+        if(!this.nameBox.valid)
+            this.message = 'Model name invalid';
+    },
+    update : function(obj)
+    {
+        this.updateValid();
+
+        if(this.parent && this.parent.update)
+            this.parent.update();
+
+        if(this.parent && this.parent.parent && this.parent.parent.update)
+            this.parent.parent.update();
+    },
     selectSelf: function()
     {
         // There is a CollectionView parent here that must be navigated
@@ -67406,10 +67470,12 @@ module.exports = View.extend({
     deSelect : function()
     {
         $( this.queryByHook( "edit" ) ).removeClass('btn-success');
+        $( this.queryByHook( "name" ) ).find('input').prop('disabled', true);
     },
     select : function()
     {
         $( this.queryByHook( "edit" ) ).addClass('btn-success');
+        $( this.queryByHook( "name" ) ).find('input').prop('disabled', false);
     },
     removeModel: function()
     {
@@ -67447,19 +67513,22 @@ module.exports = View.extend({
     {
         View.prototype.render.apply(this, arguments);
 
-        this.renderSubview(
+        this.nameBox = this.renderSubview(
             new ModifyingInputView({
-                template: '<span><span data-hook="label"></span><input><span data-hook="message-container"><span data-hook="message-text"></span></span></span>',
+                //template: '<span><span data-hook="label"></span><input><span data-hook="message-container"><span data-hook="message-text"></span></span></span>',
                 label: '',
                 name: 'name',
                 value: this.model.name,
                 required: false,
+                parent: this,
                 placeholder: 'Name',
                 model : this.model,
                 tests: [].concat(Tests.naming(this.model.collection, this.model))
             }), this.el.querySelector("[data-hook='name']"));
 
         var model = this.model;
+
+        this.deSelect();
 
         return this;
     }

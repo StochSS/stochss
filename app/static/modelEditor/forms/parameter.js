@@ -11,6 +11,29 @@ module.exports = View.extend({
     // This gets called when things update
     update: function()
     {
+        var valid = true;
+        var message = '';
+        
+        for(var i = 0; i < this._subviews.length; i++)
+        {
+            if(typeof(this._subviews[i].valid) != "undefined")
+            {
+                valid = valid && this._subviews[i].valid;
+                message = "Invalid parameter, please fix";
+            }
+            
+            if(!valid)
+                break;
+        }
+        
+        this.valid = valid;
+        this.message = message;
+        
+        if(this.parent && this.parent.update)
+            this.parent.update();
+        
+        if(this.parent && this.parent.parent && this.parent.parent.update)
+            this.parent.parent.update();
     },
     removeParameter: function()
     {
@@ -37,6 +60,7 @@ module.exports = View.extend({
                 value: this.model.name,
                 required: false,
                 placeholder: 'Name',
+                parent : this,
                 model : this.model,
                 tests: [].concat(Tests.naming(this.model.collection, this.model))
             }), this.el.querySelector("[data-hook='name']"));
@@ -48,6 +72,7 @@ module.exports = View.extend({
                 value: this.model.value,
                 required: false,
                 placeholder: 'Value',
+                parent : this,
                 model : this.model,
                 tests: []
             }), this.el.querySelector("[data-hook='value']"));

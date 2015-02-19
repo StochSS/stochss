@@ -3,6 +3,39 @@ var SubCollection = require('ampersand-subcollection');
 var _ = require('underscore');
 
 var PaginatedCollectionView = AmpersandView.extend({
+    updateValid : function()
+    {
+        var valid = true;
+        var message = '';
+
+        if(this.subCollectionViews)
+        {
+            for(var i = 0; i < this.subCollectionViews.views.length; i++)
+            {
+                if(this.subCollectionViews.views[i].updateValid)
+                {
+                    this.subCollectionViews.views[i].updateValid();
+                }
+
+                if(typeof(this.subCollectionViews.views[i].valid) != "undefined")
+                {
+                    valid = valid && this.subCollectionViews.views[i].valid;
+                    message = this.subCollectionViews.views[i].message;
+                }
+                
+                if(!valid)
+                    break;
+            }
+        }
+
+        this.valid = valid;
+        this.message = message;
+    },
+    update : function()
+    {
+        if(this.parent && this.parent.update)
+            this.parent.update();
+    },
     initialize: function(attr, options)
     {
         AmpersandView.prototype.initialize.call(this, attr, options);
@@ -10,6 +43,7 @@ var PaginatedCollectionView = AmpersandView.extend({
         this.limit = attr.limit;
         this.viewModel = attr.viewModel;
         this.offset = 0;
+        //this.parent = attr.parent;
 
         if(typeof(attr.autoSelect) != "undefined")
             this.autoSelect = attr.autoSelect;
@@ -115,6 +149,8 @@ var PaginatedCollectionView = AmpersandView.extend({
         "click [data-hook='previous']" : "shiftMinus"
     },
     props: {
+        valid : 'boolean',
+        message : 'string',
         value : 'object',
         offset : 'number',
         modelCount : 'number',
