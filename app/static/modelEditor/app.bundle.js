@@ -21,7 +21,8 @@ var URL = require('url-parse');
 
 var PrimaryView = View.extend({
     props : {
-        selected : 'object'
+        selected : 'object',
+        modelNameText : 'string'
     },
     bindings : {
         modelNameText : {
@@ -35,18 +36,14 @@ var PrimaryView = View.extend({
             }
         ]
     },
-    derived : {
-        modelNameText : {
-            deps : ['selected.name'],
-            fn : function() {
-                if(this.selected) {
-                    return '(current: ' + this.selected.name + ')';
-                }
-                else
-                {
-                    return '';
-                }
-            }
+    updateModelNameText : function()
+    {
+        if(this.selected) {
+            this.modelNameText = '(current: ' + this.selected.name + ')';
+        }
+        else
+        {
+            this.modelNameText =  '';
         }
     },
     updateSaveMessage: function( state, msg )
@@ -117,6 +114,8 @@ var PrimaryView = View.extend({
     },
     update : function()
     {
+        this.updateModelNameText();
+
         var lastValid = this.valid;
 
         this.updateValid();
@@ -214,6 +213,8 @@ var PrimaryView = View.extend({
 
             // Need to remember this so we can clean up event handlers
             this.selected = this.modelSelector.selected;
+
+            this.updateModelNameText();
         }
     },
     exportModel : function()
@@ -1803,6 +1804,9 @@ module.exports = View.extend({
             
             var controls = new OrbitControls( camera, renderer.domElement );
             controls.noZoom = true;
+            // var controls = new THREE.OrbitControls( camera );
+            //controls.addEventListener( 'change', render );
+            
             camera.position.z = 1.5;
             
             this.camera = camera;
@@ -3830,10 +3834,10 @@ var AddNewStoichSpecieForm = AmpersandFormView.extend({
 
         this.fields = [
             new SelectView({
-                template: '<span><select></select></span>',
+                template: '<span><select></select><span data-hook="message-container"><span data-hook="message-text"></span></span></span>',
                 label: '',
                 name: 'specie',
-                unselectedText: 'Add species',
+                value: this.baseModel.species.models[0],
                 options: this.baseModel.species,
                 required: true,
                 idAttribute: 'cid',
@@ -3847,25 +3851,12 @@ var AddNewStoichSpecieForm = AmpersandFormView.extend({
 
         $( this.el ).find('input').prop('autocomplete', 'off');
 
-        this.button = $('<button type="submit">Add</button>').appendTo( $( this.el ) );
+        this.button = $('<input type="submit" value="Add" />').appendTo( $( this.el ) );
     }
 });
 
 var StoichSpecieCollectionFormView = AmpersandView.extend({
-    template: "<div>\
-<h4><span data-hook='label'></span></h4>\
-<table height='100%'>\
-<tr><td valign='top'>\
-<table data-hook='stoichSpecieTable'></table>\
-</td><tr/>\
-<tr><td valign='bottom'>\
-<div data-hook='addStoichSpecieDiv'>\
-<form data-hook='addStoichSpecieForm'>\
-</form>\
-</div>\
-</td></tr>\
-</table>\
-</div>",
+    template: "<div><table data-hook='stoichSpecieTable'></table><div data-hook='addStoichSpecieDiv'>Add Species: <form data-hook='addStoichSpecieForm'></form></div></div>",
     initialize: function(attr, options)
     {
         AmpersandView.prototype.initialize.call(this, attr, options);
@@ -3881,8 +3872,7 @@ var StoichSpecieCollectionFormView = AmpersandView.extend({
     props:
     {
         reactionType : 'string',
-        showCustomOverride : 'boolean',
-        label : 'string'
+        showCustomOverride : 'boolean'
     },
     derived: {
         showCustom :
@@ -3897,10 +3887,6 @@ var StoichSpecieCollectionFormView = AmpersandView.extend({
         "showCustom" : {
             type : 'toggle',
             hook : 'addStoichSpecieDiv'
-        },
-        "label" : {
-            type : "text",
-            hook : "label"
         }
     },        
     render: function()
@@ -4090,11 +4076,6 @@ module.exports = {
     isNumber : function()
     {
         return function(value) {
-            if(value.length == 0)
-            {
-                return "Entry must be non-empty";
-            }
-
             if(!(value < 0 || value > 0 || value == 0))
             {
                 return "Entry must be a number";
@@ -4360,7 +4341,7 @@ var Model = AmpersandModel.extend({
         var massAction = true;
 
         var massAction = this.reactions.every( function(reaction) {
-            if(reaction.type != 'custom')
+            if(reaction.type == 'massaction')
             {
                 return true;
             } else {
@@ -4396,7 +4377,7 @@ var Model = AmpersandModel.extend({
 
                 if(!this.reactions.every( function(reaction) { return reaction.valid; } ))
                 {
-                    this.saveState = 'invalid';
+                    this.saveState = 'Model not valid'
                     return;
                 }
 

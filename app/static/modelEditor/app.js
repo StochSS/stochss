@@ -20,7 +20,8 @@ var URL = require('url-parse');
 
 var PrimaryView = View.extend({
     props : {
-        selected : 'object'
+        selected : 'object',
+        modelNameText : 'string'
     },
     bindings : {
         modelNameText : {
@@ -34,18 +35,14 @@ var PrimaryView = View.extend({
             }
         ]
     },
-    derived : {
-        modelNameText : {
-            deps : ['selected.name'],
-            fn : function() {
-                if(this.selected) {
-                    return '(current: ' + this.selected.name + ')';
-                }
-                else
-                {
-                    return '';
-                }
-            }
+    updateModelNameText : function()
+    {
+        if(this.selected) {
+            this.modelNameText = '(current: ' + this.selected.name + ')';
+        }
+        else
+        {
+            this.modelNameText =  '';
         }
     },
     updateSaveMessage: function( state, msg )
@@ -116,6 +113,8 @@ var PrimaryView = View.extend({
     },
     update : function()
     {
+        this.updateModelNameText();
+
         var lastValid = this.valid;
 
         this.updateValid();
@@ -213,6 +212,8 @@ var PrimaryView = View.extend({
 
             // Need to remember this so we can clean up event handlers
             this.selected = this.modelSelector.selected;
+
+            this.updateModelNameText();
         }
     },
     exportModel : function()
