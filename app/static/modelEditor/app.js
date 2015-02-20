@@ -316,6 +316,16 @@ var PrimaryView = View.extend({
         {
             model = this.collection.get(parseInt(url.query.select), "id");
         }
+        else if(url.query.model_edited)
+        {
+            for(var i = 0; i < this.collection.models.length; i++)
+            {
+                if(this.collection.at(i).name == url.query.model_edited)
+                {
+                    model = this.collection.at(i);
+                }
+            }
+        }
 
         this.modelSelector = this.renderSubview(
             new ModelSelectView( {

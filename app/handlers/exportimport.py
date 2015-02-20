@@ -1125,9 +1125,14 @@ class ImportPage(BaseHandler):
 
                 validUsers = [x.user_id() for x in User.query().fetch()]
 
+                totalObjects = 0
+                importedObjects = 0
+
                 for name in state['selections']['mc']:
                     if not state['selections']['mc'][name]:
                         continue
+
+                    totalObjects += 1
 
                     if userId == None:
                         userID = headers['models'][name]["user_id"]
@@ -1163,6 +1168,7 @@ class ImportPage(BaseHandler):
                             rename = True
                             
                     #print "importing ", name
+                    importedObjects += 1
                     szip.extractStochKitModel(name, userId, self, rename = rename)
 
                 #print "globalOp", userId
@@ -1170,6 +1176,8 @@ class ImportPage(BaseHandler):
                 for name in state['selections']['sjc']:
                     if not state['selections']['sjc'][name]:
                         continue
+
+                    totalObjects += 1
 
                     if userId == None:
                         userID = headers['stochkitJobs'][name]["user_id"]
@@ -1196,11 +1204,14 @@ class ImportPage(BaseHandler):
                         elif overwriteType == 'renameNew':
                             rename = True
 
+                    importedObjects += 1
                     szip.extractStochKitJob(name, userId, self, rename = rename)
 
                 for name in state['selections']['snc']:
                     if not state['selections']['snc'][name]:
                         continue
+
+                    totalObjects += 1
 
                     if userId == None:
                         userID = headers['sensitivityJobs'][name]["userId"]
@@ -1225,11 +1236,14 @@ class ImportPage(BaseHandler):
                         elif overwriteType == 'renameNew':
                             rename = True
 
+                    importedObjects += 1
                     szip.extractSensitivityJob(name, userId, self, rename = rename)
 
                 for name in state['selections']['soc']:
                     if not state['selections']['soc'][name]:
                         continue
+
+                    totalObjects += 1
 
                     if userId == None:
                         userID = headers['stochOptimJobs'][name]["userId"]
@@ -1254,11 +1268,14 @@ class ImportPage(BaseHandler):
                         elif overwriteType == 'renameNew':
                             rename = True
 
+                    importedObjects += 1
                     szip.extractStochOptimJob(name, userId, self, rename = rename)
 
                 for name in state['selections']['spc']:
                     if not state['selections']['spc'][name]:
                         continue
+
+                    totalObjects += 1
 
                     if userId == None:
                         userID = headers['spatialJobs'][name]["userId"]
@@ -1283,6 +1300,7 @@ class ImportPage(BaseHandler):
                         elif overwriteType == 'renameNew':
                             rename = True
 
+                    importedObjects += 1
                     szip.extractSpatialJob(name, userId, self, rename = rename)
 
                 szip.close()
@@ -1292,7 +1310,7 @@ class ImportPage(BaseHandler):
                 # and a list of job jsons to import
                 self.response.headers['Content-Type'] = 'application/json'
                 self.response.write(json.dumps( { "status" : True,
-                                                  "msg" : "Archive imported" }))
+                                                  "msg" : "{0} of {1} objects imported from archive".format(importedObjects, totalObjects) }))
                 
                 return
             elif reqType == 'delJob':

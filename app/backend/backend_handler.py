@@ -203,6 +203,8 @@ class VMStateModel(db.Model):
             if infra is None:
                 return
 
+            print "HEY GUYS !!!!!"
+
             entities = VMStateModel.all()
             entities.filter('infra =', infra).filter('access_key =', access_key).filter('secret_key =', secret_key)
             entities.filter('state !=', VMStateModel.STATE_TERMINATED)

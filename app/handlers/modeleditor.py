@@ -501,13 +501,12 @@ class PublicModelPage(BaseHandler):
             if re.search('models/[a-zA-Z0-9\-_]*\.json$', name):
                 toImport[json.loads(szip.zipfb.read(name))['name']] = name
 
-        userId = ""
-        
         names = [model['name'] for model in ModelManager.getModels(self, public = True)]
 
         for name in set(toImport.keys()) - set(names):
             path = toImport[name]
-            modelDb = szip.extractStochKitModel(path, userId, self, rename = True)
+            modelDb = szip.extractStochKitModel(path, "", self, rename = True)
+            modelDb.user_id = ""
             modelDb.name = name
             modelDb.is_public = True
             modelDb.put()
