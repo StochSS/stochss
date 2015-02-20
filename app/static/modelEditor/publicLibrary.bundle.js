@@ -2243,11 +2243,8 @@ var katex = require('katex');
 
 var Tests = require('./tests');
 var AddNewReactionForm = AmpersandFormView.extend({
-    submitCallback: function (obj) {
+    submitCallback: function (type, obj) {
         var validSubdomains = this.baseModel.mesh.uniqueSubdomains.map( function(model) { return model.name; } );
-
-        // I shouldn't extract the type this way probly
-        var type = $( obj.toElement ).attr( "data-hook" );
 
         var model;
 
@@ -2393,7 +2390,15 @@ var AddNewReactionForm = AmpersandFormView.extend({
         katex.render('A \\rightarrow B + C', $( this.el ).find('[data-hook=split]')[0]);
         katex.render('A + B \\rightarrow C + D', $( this.el ).find('[data-hook=four]')[0]);
 
-        $( this.el ).find( 'li a' ).click( _.bind(this.submitCallback, this));
+        $( this.el ).find('[data-hook=creation]').click( _.bind(_.partial(this.submitCallback, 'creation'), this));
+        $( this.el ).find('[data-hook=destruction]').click( _.bind(_.partial(this.submitCallback, 'destruction'), this));
+        $( this.el ).find('[data-hook=change]').click( _.bind(_.partial(this.submitCallback, 'change'), this));
+        $( this.el ).find('[data-hook=dimerization]').click( _.bind(_.partial(this.submitCallback, 'dimerization'), this));
+        $( this.el ).find('[data-hook=merge]').click( _.bind(_.partial(this.submitCallback, 'merge'), this));
+        $( this.el ).find('[data-hook=split]').click( _.bind(_.partial(this.submitCallback, 'split'), this));
+        $( this.el ).find('[data-hook=four]').click( _.bind(_.partial(this.submitCallback, 'four'), this));
+        $( this.el ).find('[data-hook=massaction]').click( _.bind(_.partial(this.submitCallback, 'massaction'), this));
+        $( this.el ).find('[data-hook=custom]').click( _.bind(_.partial(this.submitCallback, 'custom'), this));
     }
 });
 

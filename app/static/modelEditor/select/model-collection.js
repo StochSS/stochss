@@ -11,8 +11,7 @@ var PaginatedCollectionView = require('../forms/paginated-collection-view');
 
 var Tests = require('../forms/tests.js');
 var AddNewModelForm = AmpersandFormView.extend({
-    submitCallback: function (obj) {
-        var units = $( obj.toElement ).attr( 'data-hook' );
+    submitCallback: function (units, obj) {
         var isSpatial = false;
 
         if(units == 'spatial')
@@ -72,7 +71,9 @@ var AddNewModelForm = AmpersandFormView.extend({
 
         this.button = $( this.buttonTemplate ).appendTo( $( this.el ) );
 
-        $( this.el ).find( 'li a' ).click( _.bind(this.submitCallback, this));
+        $( this.el ).find('[data-hook=concentration]').click( _.bind(_.partial(this.submitCallback, 'concentration'), this));
+        $( this.el ).find('[data-hook=population]').click( _.bind(_.partial(this.submitCallback, 'population'), this));
+        $( this.el ).find('[data-hook=spatial]').click( _.bind(_.partial(this.submitCallback, 'spatial'), this));
     }
 });
 
