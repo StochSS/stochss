@@ -740,7 +740,7 @@ class BackendWorker():
 
         params['key_prefix'] = self.KEYPREFIX
         try:
-            all_vms = agent.describe_instances(params, params['key_prefix'])
+            all_vms = agent.describe_instances(params, params['key_prefix'] + ''.join(params['email']))
             if all_vms == None:
                 logging.info('No vms are found.')
                 return False

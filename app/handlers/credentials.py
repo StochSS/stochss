@@ -66,9 +66,8 @@ class CredentialsPage(BaseHandler):
             # TODO: This is a hack to make it unlikely that the db transaction has not completed
             # before we re-render the page (which would cause an error). We need some real solution for this...
             time.sleep(0.5)
-            context = self.getContext(user_id)
-            self.render_response('credentials.html', **(dict(context, **result)))
 
+            self.redirect('/credentials')
         elif 'start' in params:
             context = self.getContext(user_id)
             vms = []           
@@ -78,7 +77,7 @@ class CredentialsPage(BaseHandler):
                 if params['compute_power'] == 'small':
                      head_node = {"instance_type": 'c3.large', "num_vms": 1}
                 else:
-                    result = {'status': 'Failure' , 'msg': 'Unknown instance type.'}
+                    result = {'status': False , 'msg': 'Unknown instance type.'}
                     all_numbers_correct = False
             else:
                 head_node = None
@@ -90,11 +89,11 @@ class CredentialsPage(BaseHandler):
                  
                     if num_type in params and params[num_type] != '':
                         if int(params[num_type]) > 20:
-                            result = {'status': 'Failure' , 'msg': 'Number of new vms should be no more than 20.'}
+                            result = {'status': False , 'msg': 'Number of new vms should be no more than 20.'}
                             all_numbers_correct = False
                             break
                         elif int(params[num_type]) <= 0:
-                            result = {'status': 'Failure' , 'msg': 'Number of new vms should be at least 1.'}
+                            result = {'status': False , 'msg': 'Number of new vms should be at least 1.'}
                             all_numbers_correct = False
                             break
                         else:
@@ -106,8 +105,8 @@ class CredentialsPage(BaseHandler):
                 context['starting_vms'] = True
             else:
                 context['starting_vms'] = False
-                
-            self.render_response('credentials.html', **(dict(context, **result)))
+            
+            self.redirect('/credentials');
 
         elif 'stop' in params:
             # Kill all running VMs.
@@ -124,17 +123,15 @@ class CredentialsPage(BaseHandler):
                     raise
                 result = {'status': True, 'msg': 'Successfully terminated all running VMs.'}
             except Exception,e:
-                result = {'status': False, 'msg': 'Failed to terminate the VMs. Please check their status in the EC2 managment consol available from your Amazon account.'}
-            finally:
+                result = {'status': False, 'msg': 'Failed to terminate the VMs. Please check their status in the EC2 managment console available from your Amazon account.'}
                 context = self.getContext(user_id)
                 self.render_response('credentials.html',**(dict(context,**result)))
+                return
+
+            self.redirect('/credentials');
     
-        elif 'refresh' in params:
+        else: # This happens when you click the refresh button
             self.redirect('/credentials')
-        else:
-            result = {'status': True, 'msg': ''}
-            context = self.getContext(user_id)
-            self.render_response('credentials.html', **(dict(context, **result)))
 
     def saveCredentials(self, credentials, database=None):
         """ Save the Credentials to the datastore. """
@@ -295,7 +292,7 @@ class CredentialsPage(BaseHandler):
         except Exception as e:
             logging.error(e)
             return {
-                'status':'Failure',
+                'status':False,
                 'msg': 'Cannot load AMI config from {0}!'.format(AWSConfig.EC2_SETTINGS_FILENAME)
             }
 
@@ -303,7 +300,7 @@ class CredentialsPage(BaseHandler):
         
         if active_nodes == 0:
             if head_node is None:
-                return {'status':'Failure' , 'msg': "At least one head node needs to be launched."} 
+                return {'status':False , 'msg': "At least one head node needs to be launched."} 
             else:
                 params['head_node'] = head_node
                 
@@ -313,12 +310,12 @@ class CredentialsPage(BaseHandler):
         res, msg = service.startMachines(params)
         if res == True:
             result = {
-                'status':'Success',
+                'status':True,
                 'msg': 'Successfully requested starting virtual machines. Processing request...'
             }
         else:
             result = {
-                'status':'Failure',
+                'status':False,
                 'msg': msg
             }
 

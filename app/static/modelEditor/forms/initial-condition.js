@@ -36,16 +36,20 @@ module.exports = View.extend({
         var valid = true;
         var message = '';
 
-        for(var i = 0; i < this._subviews.length; i++)
+        try
         {
-            if(typeof(this._subviews[i].valid) != "undefined")
+            for(var i = 0; i < this._subviews.length; i++)
             {
-                valid = valid && this._subviews[i].valid;
-                message = "Invalid initial condition, please fix";
+                if(typeof(this._subviews[i].valid) != "undefined")
+                {
+                    valid = valid && this._subviews[i].valid;
+                    message = "Invalid initial condition, please fix";
+                }
+                
+                if(!valid)
+                    break;
             }
-
-            if(!valid)
-                break;
+        } catch(err) {
         }
 
         this.valid = valid;

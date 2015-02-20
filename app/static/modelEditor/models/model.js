@@ -231,7 +231,7 @@ var Model = AmpersandModel.extend({
                 
                 if(reaction.type == 'custom')
                 {
-                    this.reactions.addCustomReaction(reaction.name, reaction.rate, reactants, products, attr.spatial.reactions_subdomain_assignments[reactions[i].name]);
+                    this.reactions.addCustomReaction(reaction.name, reaction.equation, reactants, products, attr.spatial.reactions_subdomain_assignments[reactions[i].name]);
                 } else {
                     this.reactions.addMassActionReaction(reaction.name, reaction.type, parametersByName[reaction.rate], reactants, products, attr.spatial.reactions_subdomain_assignments[reactions[i].name]);
                 }

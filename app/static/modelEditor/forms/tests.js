@@ -9,7 +9,7 @@ module.exports = {
             },
             function(value) {
                 if(value != '' && !/^[a-zA-Z_][a-zA-Z0-9_]*$/.test(value))
-                    return "Letters, numbers, underscores only";
+                    return "Letters, numbers, underscores only. Start with letter/underscore";
             },
             function(value) {
                 if(collection) {

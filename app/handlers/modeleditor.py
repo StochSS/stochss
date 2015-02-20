@@ -103,6 +103,12 @@ class StochKitModelWrapper(db.Model):
 
         meshWrapperDb = db.GqlQuery("SELECT * FROM MeshWrapper WHERE userId = :1", handler.user.user_id()).get()
 
+        def fixName(name):
+            if re.match('^[^a-zA-Z_]', name):
+                name = 'a' + name
+
+            return re.sub('[^a-zA-Z0-9_]', '', name)
+
         spatial = {
           'initial_conditions' : [],
           'mesh_wrapper_id' : meshWrapperDb.key().id(),
@@ -112,13 +118,15 @@ class StochKitModelWrapper(db.Model):
           }
 
         for specieName, specie in model.listOfSpecies.items():
-            species.append({ 'name' : specie.name, 'initialCondition' : specie.initial_value })
-            spatial['species_diffusion_coefficients'][specie.name] = 0.0
-            spatial['species_subdomain_assignments'][specie.name] = meshWrapperDb.uniqueSubdomains
+            name = fixName(specie.name)
+            species.append({ 'name' : name, 'initialCondition' : specie.initial_value })
+            spatial['species_diffusion_coefficients'][name] = 0.0
+            spatial['species_subdomain_assignments'][name] = meshWrapperDb.uniqueSubdomains
 
         for parameterName, parameter in model.listOfParameters.items():
             parameter.evaluate()
-            parameters.append({ 'name' : parameter.name, 'value' : parameter.value })
+            name = fixName(name)
+            parameters.append({ 'name' : name, 'value' : parameter.value })
 
         modelType = 'massaction'
         for reactionName, reaction in model.listOfReactions.items():
@@ -128,14 +136,16 @@ class StochKitModelWrapper(db.Model):
             products = []
 
             for reactantName, stoichiometry in reaction.reactants.items():
+                reactantName = fixName(reactantName)
                 reactants.append({ 'specie' : reactantName, 'stoichiometry' : stoichiometry })
 
             for productName, stoichiometry in reaction.products.items():
+                productName = fixName(productName)
                 products.append({ 'specie' : productName, 'stoichiometry' : stoichiometry })
                 
             if reaction.massaction == True:
                 outReaction['type'] = 'massaction'
-                outReaction['rate'] = reaction.marate.name
+                outReaction['rate'] = fixName(reaction.marate.name)
             else:
                 modelType = 'custom'
                 outReaction['type'] = 'custom'
@@ -143,9 +153,9 @@ class StochKitModelWrapper(db.Model):
 
             outReaction['reactants'] = reactants
             outReaction['products'] = products
-            outReaction['name'] = reaction.name
+            outReaction['name'] = fixName(reaction.name)
 
-            spatial['reactions_subdomain_assignments'][reaction.name] = meshWrapperDb.uniqueSubdomains
+            spatial['reactions_subdomain_assignments'][fixName(reaction.name)] = meshWrapperDb.uniqueSubdomains
 
             reactions.append(outReaction)
 
@@ -154,9 +164,9 @@ class StochKitModelWrapper(db.Model):
         modelDb = StochKitModelWrapper()
 
         
-        tmpName = model.name
+        tmpName = fixName(model.name)
         while tmpName in names:
-            tmpName = model.name + '_' + ''.join(random.choice('abcdefghijklmnopqrztuvwxyz') for x in range(3))
+            tmpName = fixName(model.name) + '_' + ''.join(random.choice('abcdefghijklmnopqrztuvwxyz') for x in range(3))
         name = tmpName
 
         modelDb.user_id = handler.user.user_id()

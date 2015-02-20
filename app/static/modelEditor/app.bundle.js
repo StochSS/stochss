@@ -1007,16 +1007,20 @@ module.exports = View.extend({
         var valid = true;
         var message = '';
 
-        for(var i = 0; i < this._subviews.length; i++)
+        try
         {
-            if(typeof(this._subviews[i].valid) != "undefined")
+            for(var i = 0; i < this._subviews.length; i++)
             {
-                valid = valid && this._subviews[i].valid;
-                message = "Invalid initial condition, please fix";
+                if(typeof(this._subviews[i].valid) != "undefined")
+                {
+                    valid = valid && this._subviews[i].valid;
+                    message = "Invalid initial condition, please fix";
+                }
+                
+                if(!valid)
+                    break;
             }
-
-            if(!valid)
-                break;
+        } catch(err) {
         }
 
         this.valid = valid;
@@ -4089,7 +4093,7 @@ module.exports = {
             },
             function(value) {
                 if(value != '' && !/^[a-zA-Z_][a-zA-Z0-9_]*$/.test(value))
-                    return "Letters, numbers, underscores only";
+                    return "Letters, numbers, underscores only. Start with letter/underscore";
             },
             function(value) {
                 if(collection) {
@@ -4504,7 +4508,7 @@ var Model = AmpersandModel.extend({
                 
                 if(reaction.type == 'custom')
                 {
-                    this.reactions.addCustomReaction(reaction.name, reaction.rate, reactants, products, attr.spatial.reactions_subdomain_assignments[reactions[i].name]);
+                    this.reactions.addCustomReaction(reaction.name, reaction.equation, reactants, products, attr.spatial.reactions_subdomain_assignments[reactions[i].name]);
                 } else {
                     this.reactions.addMassActionReaction(reaction.name, reaction.type, parametersByName[reaction.rate], reactants, products, attr.spatial.reactions_subdomain_assignments[reactions[i].name]);
                 }
