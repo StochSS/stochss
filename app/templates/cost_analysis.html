@@ -60,9 +60,16 @@
     		{% endfor%}
     	</tr>
     </tbody>
-    
+    <tbody>
+        <tr>
+                <th>Actual Cost ($)</th>
+                {% for each_instance_type in all_instance_types %}
+                        <td><span id="actual_cost_{{each_instance_type}}"></span></td>
+                {% endfor%}
+        </tr>
+    </tbody>
 </table>
-
+<p> *The actual cost charged by EC2 is by hour </p>
 </br>
 <table>
 <tr>
@@ -116,6 +123,8 @@ function plot_time_chart(jobs){
 		}
 		var span = document.getElementById("status_"+job['instance_type']);
 		span.appendChild( document.createTextNode(job['status']) );
+		var span2 = document.getElementById("actual_cost_"+job['instance_type']);
+		span2.appendChild(document.createTextNode(job['cost_by_hour']));
 		times.push(label_value_time);
 	}
 	
