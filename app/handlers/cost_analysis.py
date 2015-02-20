@@ -43,9 +43,13 @@ def get_all_jobs_time_cost(uuid, access_key, secret_key):
                     time = 0
                 
             job['time'] = str(float(time)/60.00)
-            job['cost'] = str(Price.COST_TABLE_PER_HOUR['ec2'][job['instance_type']] * float(time)/3600.00)
             
-            logging.info('agent: '+job['agent']+', instance_type: '+job['instance_type']+', time: '+job['time']+', cost: '+job['cost'])
+            cost_per_hour = Price.COST_TABLE_PER_HOUR['ec2'][job['instance_type']]
+            job['cost'] = str( cost_per_hour * float(time)/3600.00)
+            time_by_hour = int(float(time))/3600 + 1
+            job['cost_by_hour'] = str(cost_per_hour * time_by_hour)
+            
+            logging.info('agent: '+job['agent']+', instance_type: '+job['instance_type']+', time: '+job['time']+', cost: '+job['cost']+', cost per hour: '+str(cost_per_hour)+', cost by hour: '+ job['cost_by_hour'])
             jobs.append(job)
         return jobs
     except Exception, e:
