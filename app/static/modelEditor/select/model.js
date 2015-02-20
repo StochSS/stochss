@@ -58,6 +58,24 @@ module.exports = View.extend({
         "click [data-hook=edit]" : "selectSelf",
         "click [data-hook=delete]" : "removeModel"
     },
+    updateValid : function()
+    {
+        this.valid = this.nameBox.valid;
+        this.message = '';
+
+        if(!this.nameBox.valid)
+            this.message = 'Model name invalid';
+    },
+    update : function(obj)
+    {
+        this.updateValid();
+
+        if(this.parent && this.parent.update)
+            this.parent.update();
+
+        if(this.parent && this.parent.parent && this.parent.parent.update)
+            this.parent.parent.update();
+    },
     selectSelf: function()
     {
         // There is a CollectionView parent here that must be navigated
@@ -66,10 +84,12 @@ module.exports = View.extend({
     deSelect : function()
     {
         $( this.queryByHook( "edit" ) ).removeClass('btn-success');
+        $( this.queryByHook( "name" ) ).find('input').prop('disabled', true);
     },
     select : function()
     {
         $( this.queryByHook( "edit" ) ).addClass('btn-success');
+        $( this.queryByHook( "name" ) ).find('input').prop('disabled', false);
     },
     removeModel: function()
     {
@@ -107,19 +127,22 @@ module.exports = View.extend({
     {
         View.prototype.render.apply(this, arguments);
 
-        this.renderSubview(
+        this.nameBox = this.renderSubview(
             new ModifyingInputView({
-                template: '<span><span data-hook="label"></span><input><span data-hook="message-container"><span data-hook="message-text"></span></span></span>',
+                //template: '<span><span data-hook="label"></span><input><span data-hook="message-container"><span data-hook="message-text"></span></span></span>',
                 label: '',
                 name: 'name',
                 value: this.model.name,
                 required: false,
+                parent: this,
                 placeholder: 'Name',
                 model : this.model,
                 tests: [].concat(Tests.naming(this.model.collection, this.model))
             }), this.el.querySelector("[data-hook='name']"));
 
         var model = this.model;
+
+        this.deSelect();
 
         return this;
     }

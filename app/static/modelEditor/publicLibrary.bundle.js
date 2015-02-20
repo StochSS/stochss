@@ -255,10 +255,10 @@ var ReactionView = View.extend({
         {
             if(typeof(factor) != 'undefined')
             {
-                katex.render(name + factor, this.queryByHook('parameter'));
+                katex.render((name + factor).replace(/_/g, '\\_'), this.queryByHook('parameter'));
                 result.text('Successfully converted');
             } else {
-                katex.render(name, this.queryByHook('parameter'));                    
+                katex.render(name.replace(/_/g, '\\_'), this.queryByHook('parameter'));                    
                 result.text('Failed, valid mass action, but invalid under SSA assumptions');
             }
         }
@@ -266,10 +266,10 @@ var ReactionView = View.extend({
         {
             if(typeof(factor) != 'undefined')
             {
-                katex.render(name + factor, this.queryByHook('parameter'));
+                katex.render((name + factor).replace(/_/g, '\\_'), this.queryByHook('parameter'));
                 result.text('Successfully converted');
             } else {
-                katex.render(name, this.queryByHook('parameter'));                    
+                katex.render(name.replace(/_/g, '\\_'), this.queryByHook('parameter'));                    
                 result.text('Failed, valid mass action, but invalid under SSA assumptions');
             }
         }
@@ -472,6 +472,29 @@ var InitialConditionCollectionFormView = AmpersandView.extend({
   <br />\
   <form data-hook='addInitialConditionForm'></form>\
 </div>",
+    props : {
+        valid : 'boolean',
+        message : 'string'
+    },
+    updateValid : function()
+    {
+        if(this.selectView)
+        {
+            this.selectView.updateValid();
+            
+            this.valid = this.selectView.valid;
+            this.message = this.selectView.message;
+        }
+        else
+        {
+            this.valid = true;
+            this.message = '';
+        }
+    },
+    update : function()
+    {
+        this.parent.update();
+    },
     render: function()
     {
         this.baseModel = this.collection.parent;
@@ -497,6 +520,7 @@ var InitialConditionCollectionFormView = AmpersandView.extend({
             template : collectionTemplate,
             collection : this.collection,
             viewModel : InitialConditionFormView,
+            parent : this,
             limit : 10
         }), this.queryByHook('initialConditionCollection'));
 
@@ -551,6 +575,26 @@ module.exports = View.extend({
     </table> \
   </td> \
 </tr>",
+    updateValid : function()
+    {
+        var valid = true;
+        var message = '';
+
+        for(var i = 0; i < this._subviews.length; i++)
+        {
+            if(typeof(this._subviews[i].valid) != "undefined")
+            {
+                valid = valid && this._subviews[i].valid;
+                message = "Invalid initial condition, please fix";
+            }
+
+            if(!valid)
+                break;
+        }
+
+        this.valid = valid;
+        this.message = message;
+    },
     // Gotta have a few of these functions just so this works as a form view
     // This gets called when things update
     update: function(obj)
@@ -563,6 +607,12 @@ module.exports = View.extend({
         } else if(obj.name == 'subdomain') {
             this.model.subdomain = obj.value;
         }
+
+        if(this.parent && this.parent.update)
+            this.parent.update();
+
+        if(this.parent && this.parent.parent && this.parent.parent.update)
+            this.parent.parent.update();
     },
     removeThis: function()
     {
@@ -613,6 +663,7 @@ module.exports = View.extend({
                 name: 'subdomain',
                 value: this.model.subdomain,
                 options: this.baseModel.mesh.uniqueSubdomains,
+                parent : this,
                 required: false,
                 idAttribute: 'cid',
                 textAttribute: 'name',
@@ -630,6 +681,7 @@ module.exports = View.extend({
                 template: '<span><select></select><span data-hook="message-container"><span data-hook="message-text"></span></span></span>',
                 label: '',
                 name: 'type',
+                parent : this,
                 value: this.model.type,
                 options: [['scatter', 'Scatter'], ['place', 'Place'], ['distribute', 'Distribute Uniformly']],
                 required: true,
@@ -642,6 +694,7 @@ module.exports = View.extend({
                 name: 'count',
                 value: this.model.count,
                 required: false,
+                parent : this,
                 placeholder: 'Count',
                 model : this.model,
                 tests: [].concat(Tests.positive(), Tests.integer())
@@ -653,7 +706,8 @@ module.exports = View.extend({
                 label: '',
                 name: 'X',
                 value: this.model.X,
-                required: true,
+                required: false,
+                parent : this,
                 placeholder: 'X',
                 model : this.model,
                 tests: [].concat(Tests.isNumber())
@@ -665,7 +719,8 @@ module.exports = View.extend({
                 label: '',
                 name: 'Y',
                 value: this.model.Y,
-                required: true,
+                parent : this,
+                required: false,
                 placeholder: 'Y',
                 model : this.model,
                 tests: [].concat(Tests.isNumber())
@@ -677,7 +732,8 @@ module.exports = View.extend({
                 label: '',
                 name: 'Z',
                 value: this.model.Z,
-                required: true,
+                parent : this,
+                required: false,
                 placeholder: 'Z',
                 model : this.model,
                 tests: [].concat(Tests.isNumber())
@@ -690,6 +746,7 @@ module.exports = View.extend({
                 name: 'specie',
                 value: this.model.specie,
                 options: this.baseModel.species,
+                parent : this,
                 required: true,
                 idAttribute: 'cid',
                 textAttribute: 'name',
@@ -1022,8 +1079,8 @@ var MeshCollectionSelectView = AmpersandView.extend({
             limit : 10
         }), this.queryByHook('meshTable'));
 
-        this.listenTo(this.selectView, 'change:value', _.bind(this.selectModel, this));
         this.selectView.select(this.model.mesh);
+        this.listenToAndRun(this.selectView, 'change:value', _.bind(this.selectModel, this));
 
         //this.fields.forEach( function(field) { $( field.el ).find('input').val(''); } );
         this.addForm = new AddNewMeshForm(
@@ -1167,7 +1224,7 @@ module.exports = View.extend({
             }
             else
             {
-                colors[i] = new THREE.Color( 0x333399 );
+                colors[i] = new THREE.Color( 0x000099 );
             }
         }
 
@@ -1329,6 +1386,7 @@ module.exports = View.extend({
             this.rendererDom = $( renderer.domElement ).appendTo( this.queryByHook( "mesh" ) );
             
             var controls = new OrbitControls( camera, renderer.domElement );
+            controls.noZoom = true;
             // var controls = new THREE.OrbitControls( camera );
             //controls.addEventListener( 'change', render );
             
@@ -1424,11 +1482,9 @@ var MeshView = require('./mesh3d');
 
 module.exports = View.extend({
     template: $( '.modelEditorTemplate' ).text(),
-    // Gotta have a few of these functions just so this works as a form view
-    // This gets called when things update
     props: {
         state: 'string',
-        selector: 'object'
+        valid : 'boolean'
     },
     bindings: {
         'model.name' : {
@@ -1439,33 +1495,37 @@ module.exports = View.extend({
     events : {
         "click [data-hook='convertToPopulationButton']" : "convertToPopulation"
     },
-    updateSaveMessage: function()
+    updateValid : function()
     {
-        var saveMessageDom = $( this.queryByHook('saveMessage') );
+        var valid = true;
+        var message = '';
+        
+        for(var i = 0; i < this.subViews.length; i++)
+        {
+            if(this.subViews[i].updateValid)
+            {
+                this.subViews[i].updateValid()
+            }
 
-        if(this.model.saveState == 'saved')
-        {
-            saveMessageDom.removeClass( "alert-error" );
-            saveMessageDom.addClass( "alert-success" );
-            saveMessageDom.text( "Saved" );
+            if(typeof(this.subViews[i].valid) != "undefined")
+            {
+                valid = valid && this.subViews[i].valid;
+                message = this.subViews[i].message;
+            }
+            
+            if(!valid)
+                break;
         }
-        else if(this.model.saveState == 'saving')
-        {
-            saveMessageDom.removeClass( "alert-success alert-error" );
-            saveMessageDom.text( "Saving..." );
-        }
-        else if(this.model.saveState == 'failed')
-        {
-            saveMessageDom.removeClass( "alert-success" );
-            saveMessageDom.addClass( "alert-error" );
-            saveMessageDom.text( "Model Save Failed!" );
-        }
-        else
-        {
-            saveMessageDom.removeClass( "alert-success" );
-            saveMessageDom.addClass( "alert-error" );
-            saveMessageDom.text( this.model.saveState );
-        }
+
+        this.valid = valid;
+        this.message = message;
+    },
+    update : function()
+    {
+        this.updateValid();
+
+        if(this.parent && this.parent.update)
+            this.parent.update();
     },
     duplicateModel: function()
     {
@@ -1485,9 +1545,7 @@ module.exports = View.extend({
         }
 
         model.id = undefined;
-
         
-
         model.setupMesh(this.model.mesh.collection);
 
         this.model.collection.add(model);
@@ -1559,6 +1617,17 @@ module.exports = View.extend({
             $( this.el ).find( '[data-hook="editor"]' ).show();
             $( '[data-hook="convertToSpatialLink"]' ).show();
             $( this.el ).find( '.spatial' ).hide();
+
+            if(!$( this.el ).find('.speciesAccordion .accordion-body').first().hasClass('in'))
+                $( this.el ).find('.speciesAccordion').find('a').first()[0].click();
+            if(!$( this.el ).find('.parametersAccordion .accordion-body').first().hasClass('in'))
+                $( this.el ).find('.parametersAccordion').find('a').first()[0].click();
+            if(!$( this.el ).find('.mesh3dAccordion .accordion-body').first().hasClass('in'))
+                $( this.el ).find('.mesh3dAccordion').find('a').first()[0].click();
+            if(!$( this.el ).find('.initialConditionsAccordion .accordion-body').first().hasClass('in'))
+                $( this.el ).find('.initialConditionsAccordion').find('a').first()[0].click();
+            if(!$( this.el ).find('.reactionsAccordion .accordion-body').first().hasClass('in'))
+                $( this.el ).find('.reactionsAccordion').find('a').first()[0].click();
         }
         else if(this.state == 'spatial')
         {
@@ -1589,7 +1658,6 @@ module.exports = View.extend({
         this.meshCollection = attr.meshCollection;
 
         this.on('change:state', this.updateVisibility);
-        this.listenTo(this.model, 'change:saveState', _.bind(this.updateSaveMessage, this));
     },
     remove: function()
     {
@@ -1741,6 +1809,39 @@ var SubCollection = require('ampersand-subcollection');
 var _ = require('underscore');
 
 var PaginatedCollectionView = AmpersandView.extend({
+    updateValid : function()
+    {
+        var valid = true;
+        var message = '';
+
+        if(this.subCollectionViews)
+        {
+            for(var i = 0; i < this.subCollectionViews.views.length; i++)
+            {
+                if(this.subCollectionViews.views[i].updateValid)
+                {
+                    this.subCollectionViews.views[i].updateValid();
+                }
+
+                if(typeof(this.subCollectionViews.views[i].valid) != "undefined")
+                {
+                    valid = valid && this.subCollectionViews.views[i].valid;
+                    message = this.subCollectionViews.views[i].message;
+                }
+                
+                if(!valid)
+                    break;
+            }
+        }
+
+        this.valid = valid;
+        this.message = message;
+    },
+    update : function()
+    {
+        if(this.parent && this.parent.update)
+            this.parent.update();
+    },
     initialize: function(attr, options)
     {
         AmpersandView.prototype.initialize.call(this, attr, options);
@@ -1748,6 +1849,7 @@ var PaginatedCollectionView = AmpersandView.extend({
         this.limit = attr.limit;
         this.viewModel = attr.viewModel;
         this.offset = 0;
+        //this.parent = attr.parent;
 
         if(typeof(attr.autoSelect) != "undefined")
             this.autoSelect = attr.autoSelect;
@@ -1853,6 +1955,8 @@ var PaginatedCollectionView = AmpersandView.extend({
         "click [data-hook='previous']" : "shiftMinus"
     },
     props: {
+        valid : 'boolean',
+        message : 'string',
         value : 'object',
         offset : 'number',
         modelCount : 'number',
@@ -1965,6 +2069,29 @@ var ParameterCollectionFormView = AmpersandView.extend({
   <br /> \
   <form data-hook='addParametersForm'></form> \
 </div>",
+    props : {
+        valid : 'boolean',
+        message : 'string'
+    },
+    updateValid : function()
+    {
+        if(this.selectView)
+        {
+            this.selectView.updateValid();
+            
+            this.valid = this.selectView.valid;
+            this.message = this.selectView.message;
+        }
+        else
+        {
+            this.valid = true;
+            this.message = '';
+        }
+    },
+    update : function()
+    {
+        this.parent.update();
+    },
     initialize: function(attr, options)
     {
         AmpersandView.prototype.initialize.call(this, attr, options);
@@ -1992,6 +2119,7 @@ var ParameterCollectionFormView = AmpersandView.extend({
             template : collectionTemplate,
             collection : this.collection,
             viewModel : ParameterFormView,
+            parent : this,
             limit : 10
         }), this.queryByHook('collection'));
 
@@ -2024,6 +2152,29 @@ module.exports = View.extend({
     // This gets called when things update
     update: function()
     {
+        var valid = true;
+        var message = '';
+        
+        for(var i = 0; i < this._subviews.length; i++)
+        {
+            if(typeof(this._subviews[i].valid) != "undefined")
+            {
+                valid = valid && this._subviews[i].valid;
+                message = "Invalid parameter, please fix";
+            }
+            
+            if(!valid)
+                break;
+        }
+        
+        this.valid = valid;
+        this.message = message;
+        
+        if(this.parent && this.parent.update)
+            this.parent.update();
+        
+        if(this.parent && this.parent.parent && this.parent.parent.update)
+            this.parent.parent.update();
     },
     removeParameter: function()
     {
@@ -2050,6 +2201,7 @@ module.exports = View.extend({
                 value: this.model.name,
                 required: false,
                 placeholder: 'Name',
+                parent : this,
                 model : this.model,
                 tests: [].concat(Tests.naming(this.model.collection, this.model))
             }), this.el.querySelector("[data-hook='name']"));
@@ -2061,6 +2213,7 @@ module.exports = View.extend({
                 value: this.model.value,
                 required: false,
                 placeholder: 'Value',
+                parent : this,
                 model : this.model,
                 tests: []
             }), this.el.querySelector("[data-hook='value']"));
@@ -2218,6 +2371,7 @@ var AddNewReactionForm = AmpersandFormView.extend({
     <li><a data-hook="destruction" tabindex="-1" href="#"></a></li> \
     <li><a data-hook="change" tabindex="-1" href="#"></a></li> \
     <li><a data-hook="dimerization" tabindex="-1" href="#"></a></li> \
+    <li><a data-hook="merge" tabindex="-1" href="#"></a></li> \
     <li><a data-hook="split" tabindex="-1" href="#"></a></li> \
     <li><a data-hook="four" tabindex="-1" href="#"></a></li> \
     <li><a data-hook="massaction" tabindex="-1" href="#">Custom mass action</a></li> \
@@ -2231,6 +2385,7 @@ var AddNewReactionForm = AmpersandFormView.extend({
         katex.render('A \\rightarrow \\emptyset', $( this.el ).find('[data-hook=destruction]')[0]);
         katex.render('A \\rightarrow B', $( this.el ).find('[data-hook=change]')[0]);
         katex.render('A + A \\rightarrow B', $( this.el ).find('[data-hook=dimerization]')[0]);
+        katex.render('A + B \\rightarrow C', $( this.el ).find('[data-hook=merge]')[0]);
         katex.render('A \\rightarrow B + C', $( this.el ).find('[data-hook=split]')[0]);
         katex.render('A + B \\rightarrow C + D', $( this.el ).find('[data-hook=four]')[0]);
 
@@ -2249,6 +2404,31 @@ var ReactionCollectionFormView = AmpersandView.extend({
     <form data-hook='addReactionForm'></form>\
   </div> \
 </div>",
+    props : {
+        valid : 'boolean',
+        message : 'string'
+    },
+    updateValid : function()
+    {
+        if(this.selectView)
+        {
+            this.selectView.updateValid();
+            
+            this.valid = this.selectView.valid;
+            
+            if(!this.selectView.valid)
+                this.message = this.selectView.message;
+        }
+        else
+        {
+            this.valid = true;
+            this.message = '';
+        }
+    },
+    update : function()
+    {
+        this.parent.update();
+    },
     initialize: function(attr, options)
     {
         AmpersandView.prototype.initialize.call(this, attr, options);
@@ -2321,6 +2501,7 @@ var ReactionCollectionFormView = AmpersandView.extend({
             template : collectionTemplate,
             collection : this.collection,
             viewModel : ReactionFormView,
+            parent : this,
             limit : 10
         }), this.queryByHook('collection'));
 
@@ -2365,13 +2546,13 @@ module.exports = View.extend({
         if(obj.name == 'type')
         {
             // Make sure we have a rate
-            //if(obj.name != 'custom')
-            //{
-            //    if(this.model.rate == null)
-            //    {
-            //        this.model.rate = this.rateSelect.value;
-            //    }
-            //}
+            if(obj.name != 'custom')
+            {
+                if(this.model.rate == null)
+                {
+                    this.model.rate = this.rateSelect.value;
+                }
+            }
 
             if(obj.value != 'custom' && obj.value != 'massaction')
             {
@@ -2614,8 +2795,8 @@ var reactants;
 <div data-hook='subdomains'></div> \
   <table width='100%' data-hook='advanced'>\
     <tr> \
-      <td style='vertical-align:top'><h4>Reactants</h4><div data-hook='reactants'></div></td>\
-      <td style='vertical-align:top'><h4>Products</h4><div data-hook='products'></div></td>\
+      <td style='vertical-align:top'><div data-hook='reactants'></div></td>\
+      <td style='vertical-align:top'><div data-hook='products'></div></td>\
     </tr>\
   </table>\
   <br>\
@@ -2633,8 +2814,8 @@ var reactants;
 <div data-hook='custom'></div> \
   <table width='100%' data-hook='advanced'>\
     <tr> \
-      <td style='vertical-align:top'><h4>Reactants</h4><div data-hook='reactants'></div></td>\
-      <td style='vertical-align:top'><h4>Products</h4><div data-hook='products'></div></td>\
+      <td style='vertical-align:top'><div data-hook='reactants'></div></td>\
+      <td style='vertical-align:top'><div data-hook='products'></div></td>\
     </tr>\
   </table>\
   <br> \
@@ -2720,13 +2901,14 @@ var reactants;
 
         this.renderSubview(
             new StoichSpecieCollectionFormView({
-                collection: this.model.reactants
+                label : 'Reactants',
+                collection: this.model.reactants,
             }), this.el.querySelector("[data-hook='reactants']"));
 
         this.renderSubview(
             new StoichSpecieCollectionFormView({
+                label : 'Products',
                 collection: this.model.products,
-                showCustomOverride : true
             }), this.el.querySelector("[data-hook='products']"));
         
         return this;
@@ -2757,6 +2939,22 @@ module.exports = View.extend({
     <td><center><button class='btn' data-hook='remove'>x</button></center></td>\
   </tr>\
 </tbody>",
+    updateValid : function()
+    {
+        this.valid = this.nameBox.valid && !this.notValid;
+        this.message = '';
+
+        if(!this.valid)
+            this.message = "Invalid reaction, please fix";
+    },
+    update : function(obj)
+    {
+        if(this.parent && this.parent.update)
+            this.parent.update();
+
+        if(this.parent && this.parent.parent && this.parent.parent.update)
+            this.parent.parent.update();
+    },
     // On any change of anything, redraw the Latex
     redrawLatex: function(obj)
     {
@@ -2853,16 +3051,18 @@ module.exports = View.extend({
 
         View.prototype.render.apply(this, arguments);
 
+        this.listenTo(this.model, 'change', _.bind(this.update, this));
         this.listenTo(this.model, 'change', _.bind(this.redrawLatex, this));
         this.listenTo(this.model.reactants, 'add remove change', _.bind(this.redrawLatex, this));
         this.listenToAndRun(this.model.products, 'add remove change', _.bind(this.redrawLatex, this));
 
-        this.renderSubview(
+        this.nameBox = this.renderSubview(
             new ModifyingInputView({
-                template: '<span><span data-hook="label"></span><input><span data-hook="message-container"><span data-hook="message-text"></span></span></span>',
+                //template: '<span><span data-hook="label"></span><input><span data-hook="message-container"><span data-hook="message-text"></span></span></span>',
                 label: '',
                 name: 'name',
                 value: this.model.name,
+                parent : this,
                 required: false,
                 placeholder: 'Name',
                 model : this.model,
@@ -2946,6 +3146,29 @@ var SpecieCollectionFormView = AmpersandView.extend({
   <br /> \
   <form data-hook='addSpeciesForm'></form> \
 </div>",
+    props : {
+        valid : 'boolean',
+        message : 'string'
+    },
+    updateValid : function()
+    {
+        if(this.selectView)
+        {
+            this.selectView.updateValid();
+            
+            this.valid = this.selectView.valid;
+            this.message = this.selectView.message;
+        }
+        else
+        {
+            this.valid = true;
+            this.message = '';
+        }
+    },
+    update : function()
+    {
+        this.parent.update();
+    },
     initialize: function(attr, options)
     {
         AmpersandView.prototype.initialize.call(this, attr, options);
@@ -2955,7 +3178,7 @@ var SpecieCollectionFormView = AmpersandView.extend({
         var collectionTemplate = "<div> \
   <table width='100%' data-hook='table'> \
     <thead> \
-<th width='120px'>Name</th><th width='120px'>" + ((this.collection.parent.isSpatial) ? "Diffusion coefficient" : "Initial Condition") + "</th>" + ((this.collection.parent.isSpatial) ? "<th width='120px'>Species allowed in these subdomains</th>" : "") + "<th></th> \
+<th width='120px'>Name</th><th width='120px'>" + ((this.collection.parent.isSpatial) ? "Diffusion coefficient" : "Initial Condition") + "</th>" + ((this.collection.parent.isSpatial) ? "<th width='120px'>Active in subdomains</th>" : "") + "<th></th> \
     </thead> \
     <tbody data-hook='items'> \
     </tbody> \
@@ -2973,6 +3196,7 @@ var SpecieCollectionFormView = AmpersandView.extend({
             template : collectionTemplate,
             collection : this.collection,
             viewModel : SpecieFormView,
+            parent : this,
             limit : 10
         }), this.queryByHook('collection'));
 
@@ -3001,14 +3225,13 @@ var SubdomainFormView = require('./subdomain');
 
 var Tests = require('./tests');
 module.exports = View.extend({
-    // Gotta have a few of these functions just so this works as a form view
-    // This gets called when things update
-    update: function()
-    {
-    },
     removeSpecies: function()
     {
         this.model.collection.remove(this.model);
+    },
+    props : {
+        valid : 'boolean',
+        message : 'string'
     },
     events: {
         'click [data-hook="delete"]': 'removeSpecies'
@@ -3027,19 +3250,48 @@ module.exports = View.extend({
         this.baseModel = this.model.collection.parent;
     },
     // This will get called by the SubdomainFormView children when a subdomain gets selected/deselected
+    updateValid : function()
+    {
+        var valid = true;
+        var message = '';
+
+        for(var i = 0; i < this._subviews.length; i++)
+        {
+            if(typeof(this._subviews[i].valid) != "undefined")
+            {
+                valid = valid && this._subviews[i].valid;
+                message = "Invalid species, please fix";
+            }
+
+            if(!valid)
+                break;
+        }
+
+        this.valid = valid;
+        this.message = message;
+    },
     update : function(obj)
     {
-        var subdomain = obj.value.model;
-        var checked = obj.value.checked;
-        // If we're already in the right state do nothing
-        if(checked)
+        if(obj.name == "subdomains")
         {
-            this.model.subdomains = _.union(this.model.subdomains, [subdomain.name]);
+            var subdomain = obj.value.model;
+            var checked = obj.value.checked;
+            // If we're already in the right state do nothing
+            if(checked)
+            {
+                this.model.subdomains = _.union(this.model.subdomains, [subdomain.name]);
+            }
+            else
+            {
+                this.model.subdomains = _.difference(this.model.subdomains, [subdomain.name]);
+            }
         }
-        else
-        {
-            this.model.subdomains = _.difference(this.model.subdomains, [subdomain.name]);
-        }
+
+        if(this.parent && this.parent.update)
+            this.parent.update();
+
+        if(this.parent && this.parent.parent && this.parent.parent.update)
+            this.parent.parent.update();
     },
     updateSelected : function()
     {
@@ -3091,6 +3343,7 @@ module.exports = View.extend({
                 required: false,
                 placeholder: 'Name',
                 model : this.model,
+                parent : this,
                 tests: [].concat(Tests.naming(this.model.collection, this.model))
             }), this.el.querySelector("[data-hook='name']"));
 
@@ -3102,10 +3355,11 @@ module.exports = View.extend({
                     label: '',
                     name: 'diffusion',
                     value: this.model.diffusion,
-                    required: true,
+                    required: false,
                     placeholder: 'Diffusion Constant',
                     model : this.model,
-                    tests: [].concat(Tests.positive())
+                    parent : this,
+                    tests: [].concat(Tests.isNumber(), Tests.positive())
                 }), this.el.querySelector("[data-hook='diffusion']"));
 
             this.renderSubdomains();
@@ -3123,6 +3377,7 @@ module.exports = View.extend({
                     required: false,
                     placeholder: 'Initial Condition',
                     model : this.model,
+                    parent : this,
                     tests: [].concat(Tests.nonzero(), Tests.units(this.model.collection.parent))
                 }), this.el.querySelector("[data-hook='initialCondition']"));
         }
@@ -3162,10 +3417,10 @@ var AddNewStoichSpecieForm = AmpersandFormView.extend({
 
         this.fields = [
             new SelectView({
-                template: '<span><select></select><span data-hook="message-container"><span data-hook="message-text"></span></span></span>',
+                template: '<span><select></select></span>',
                 label: '',
                 name: 'specie',
-                value: this.baseModel.species.models[0],
+                unselectedText: 'Add species',
                 options: this.baseModel.species,
                 required: true,
                 idAttribute: 'cid',
@@ -3179,12 +3434,25 @@ var AddNewStoichSpecieForm = AmpersandFormView.extend({
 
         $( this.el ).find('input').prop('autocomplete', 'off');
 
-        this.button = $('<input type="submit" value="Add" />').appendTo( $( this.el ) );
+        this.button = $('<button type="submit">Add</button>').appendTo( $( this.el ) );
     }
 });
 
 var StoichSpecieCollectionFormView = AmpersandView.extend({
-    template: "<div><table data-hook='stoichSpecieTable'></table><div data-hook='addStoichSpecieDiv'>Add Species: <form data-hook='addStoichSpecieForm'></form></div></div>",
+    template: "<div>\
+<h4><span data-hook='label'></span></h4>\
+<table height='100%'>\
+<tr><td valign='top'>\
+<table data-hook='stoichSpecieTable'></table>\
+</td><tr/>\
+<tr><td valign='bottom'>\
+<div data-hook='addStoichSpecieDiv'>\
+<form data-hook='addStoichSpecieForm'>\
+</form>\
+</div>\
+</td></tr>\
+</table>\
+</div>",
     initialize: function(attr, options)
     {
         AmpersandView.prototype.initialize.call(this, attr, options);
@@ -3200,7 +3468,8 @@ var StoichSpecieCollectionFormView = AmpersandView.extend({
     props:
     {
         reactionType : 'string',
-        showCustomOverride : 'boolean'
+        showCustomOverride : 'boolean',
+        label : 'string'
     },
     derived: {
         showCustom :
@@ -3215,6 +3484,10 @@ var StoichSpecieCollectionFormView = AmpersandView.extend({
         "showCustom" : {
             type : 'toggle',
             hook : 'addStoichSpecieDiv'
+        },
+        "label" : {
+            type : "text",
+            hook : "label"
         }
     },        
     render: function()
@@ -3237,6 +3510,7 @@ var StoichSpecieCollectionFormView = AmpersandView.extend({
 });
 
 module.exports = StoichSpecieCollectionFormView
+
 },{"./stoich-specie":"/home/bbales2/stochssModel/app/static/modelEditor/forms/stoich-specie.js","./tests":"/home/bbales2/stochssModel/app/static/modelEditor/forms/tests.js","ampersand-form-view":"/home/bbales2/stochssModel/app/static/modelEditor/node_modules/ampersand-form-view/ampersand-form-view.js","ampersand-input-view":"/home/bbales2/stochssModel/app/static/modelEditor/node_modules/ampersand-input-view/ampersand-input-view.js","ampersand-select-view":"/home/bbales2/stochssModel/app/static/modelEditor/node_modules/ampersand-select-view/ampersand-select-view.js","ampersand-view":"/home/bbales2/stochssModel/app/static/modelEditor/node_modules/ampersand-view/ampersand-view.js","jquery":"/home/bbales2/stochssModel/app/static/modelEditor/node_modules/jquery/dist/jquery.js"}],"/home/bbales2/stochssModel/app/static/modelEditor/forms/stoich-specie.js":[function(require,module,exports){
 var _ = require('underscore');
 var $ = require('jquery');
@@ -3403,6 +3677,11 @@ module.exports = {
     isNumber : function()
     {
         return function(value) {
+            if(value.length == 0)
+            {
+                return "Entry must be non-empty";
+            }
+
             if(!(value < 0 || value > 0 || value == 0))
             {
                 return "Entry must be a number";
@@ -3587,6 +3866,10 @@ var Model = AmpersandModel.extend({
         saveState : 'string',
         ownedByMe : 'boolean'
     },
+    triggerChange : function()
+    {
+        this.trigger('requestSave');
+    },
     initialize: function(attrs, options) {
         this.is_public = false;
 
@@ -3597,12 +3880,11 @@ var Model = AmpersandModel.extend({
         // Every time the type of one of the reactions changes, update the type here
         this.listenTo(this.reactions, 'add remove change:type', _.bind(this.computeType, this));
 
-        this.listenTo(this.reactions, 'add remove change', _.bind(this.saveModel, this));
-        this.listenTo(this.species, 'add remove change', _.bind(this.saveModel, this));
-        this.listenTo(this.parameters, 'add remove change', _.bind(this.saveModel, this));
-        this.listenTo(this.initialConditions, 'add remove change', _.bind(this.saveModel, this));
-
-        this.on('change:name change:units change:type change:isSpatial change:mesh', _.bind(this.saveModel, this));
+        this.listenTo(this.reactions, 'add remove change', _.bind(this.triggerChange, this));
+        this.listenTo(this.species, 'add remove change', _.bind(this.triggerChange, this));
+        this.listenTo(this.parameters, 'add remove change', _.bind(this.triggerChange, this));
+        this.listenTo(this.initialConditions, 'add remove change', _.bind(this.triggerChange, this));
+        this.on('change:name change:units change:type change:isSpatial change:mesh', _.bind(this.triggerChange, this));
         // this will run if the name changes
     },
     setupMesh: function(meshCollection) {
@@ -3665,7 +3947,7 @@ var Model = AmpersandModel.extend({
         var massAction = true;
 
         var massAction = this.reactions.every( function(reaction) {
-            if(reaction.type == 'massaction')
+            if(reaction.type != 'custom')
             {
                 return true;
             } else {
@@ -3701,7 +3983,7 @@ var Model = AmpersandModel.extend({
 
                 if(!this.reactions.every( function(reaction) { return reaction.valid; } ))
                 {
-                    this.saveState = 'Model not valid'
+                    this.saveState = 'invalid';
                     return;
                 }
 

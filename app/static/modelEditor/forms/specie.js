@@ -7,14 +7,13 @@ var SubdomainFormView = require('./subdomain');
 
 var Tests = require('./tests');
 module.exports = View.extend({
-    // Gotta have a few of these functions just so this works as a form view
-    // This gets called when things update
-    update: function()
-    {
-    },
     removeSpecies: function()
     {
         this.model.collection.remove(this.model);
+    },
+    props : {
+        valid : 'boolean',
+        message : 'string'
     },
     events: {
         'click [data-hook="delete"]': 'removeSpecies'
@@ -33,19 +32,48 @@ module.exports = View.extend({
         this.baseModel = this.model.collection.parent;
     },
     // This will get called by the SubdomainFormView children when a subdomain gets selected/deselected
+    updateValid : function()
+    {
+        var valid = true;
+        var message = '';
+
+        for(var i = 0; i < this._subviews.length; i++)
+        {
+            if(typeof(this._subviews[i].valid) != "undefined")
+            {
+                valid = valid && this._subviews[i].valid;
+                message = "Invalid species, please fix";
+            }
+
+            if(!valid)
+                break;
+        }
+
+        this.valid = valid;
+        this.message = message;
+    },
     update : function(obj)
     {
-        var subdomain = obj.value.model;
-        var checked = obj.value.checked;
-        // If we're already in the right state do nothing
-        if(checked)
+        if(obj.name == "subdomains")
         {
-            this.model.subdomains = _.union(this.model.subdomains, [subdomain.name]);
+            var subdomain = obj.value.model;
+            var checked = obj.value.checked;
+            // If we're already in the right state do nothing
+            if(checked)
+            {
+                this.model.subdomains = _.union(this.model.subdomains, [subdomain.name]);
+            }
+            else
+            {
+                this.model.subdomains = _.difference(this.model.subdomains, [subdomain.name]);
+            }
         }
-        else
-        {
-            this.model.subdomains = _.difference(this.model.subdomains, [subdomain.name]);
-        }
+
+        if(this.parent && this.parent.update)
+            this.parent.update();
+
+        if(this.parent && this.parent.parent && this.parent.parent.update)
+            this.parent.parent.update();
     },
     updateSelected : function()
     {
@@ -97,6 +125,7 @@ module.exports = View.extend({
                 required: false,
                 placeholder: 'Name',
                 model : this.model,
+                parent : this,
                 tests: [].concat(Tests.naming(this.model.collection, this.model))
             }), this.el.querySelector("[data-hook='name']"));
 
@@ -108,10 +137,11 @@ module.exports = View.extend({
                     label: '',
                     name: 'diffusion',
                     value: this.model.diffusion,
-                    required: true,
+                    required: false,
                     placeholder: 'Diffusion Constant',
                     model : this.model,
-                    tests: [].concat(Tests.positive())
+                    parent : this,
+                    tests: [].concat(Tests.isNumber(), Tests.positive())
                 }), this.el.querySelector("[data-hook='diffusion']"));
 
             this.renderSubdomains();
@@ -129,6 +159,7 @@ module.exports = View.extend({
                     required: false,
                     placeholder: 'Initial Condition',
                     model : this.model,
+                    parent : this,
                     tests: [].concat(Tests.nonzero(), Tests.units(this.model.collection.parent))
                 }), this.el.querySelector("[data-hook='initialCondition']"));
         }

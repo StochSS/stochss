@@ -33,6 +33,29 @@ var InitialConditionCollectionFormView = AmpersandView.extend({
   <br />\
   <form data-hook='addInitialConditionForm'></form>\
 </div>",
+    props : {
+        valid : 'boolean',
+        message : 'string'
+    },
+    updateValid : function()
+    {
+        if(this.selectView)
+        {
+            this.selectView.updateValid();
+            
+            this.valid = this.selectView.valid;
+            this.message = this.selectView.message;
+        }
+        else
+        {
+            this.valid = true;
+            this.message = '';
+        }
+    },
+    update : function()
+    {
+        this.parent.update();
+    },
     render: function()
     {
         this.baseModel = this.collection.parent;
@@ -58,6 +81,7 @@ var InitialConditionCollectionFormView = AmpersandView.extend({
             template : collectionTemplate,
             collection : this.collection,
             viewModel : InitialConditionFormView,
+            parent : this,
             limit : 10
         }), this.queryByHook('initialConditionCollection'));
 

@@ -20,6 +20,10 @@ var Model = AmpersandModel.extend({
         saveState : 'string',
         ownedByMe : 'boolean'
     },
+    triggerChange : function()
+    {
+        this.trigger('requestSave');
+    },
     initialize: function(attrs, options) {
         this.is_public = false;
 
@@ -30,12 +34,11 @@ var Model = AmpersandModel.extend({
         // Every time the type of one of the reactions changes, update the type here
         this.listenTo(this.reactions, 'add remove change:type', _.bind(this.computeType, this));
 
-        this.listenTo(this.reactions, 'add remove change', _.bind(this.saveModel, this));
-        this.listenTo(this.species, 'add remove change', _.bind(this.saveModel, this));
-        this.listenTo(this.parameters, 'add remove change', _.bind(this.saveModel, this));
-        this.listenTo(this.initialConditions, 'add remove change', _.bind(this.saveModel, this));
-
-        this.on('change:name change:units change:type change:isSpatial change:mesh', _.bind(this.saveModel, this));
+        this.listenTo(this.reactions, 'add remove change', _.bind(this.triggerChange, this));
+        this.listenTo(this.species, 'add remove change', _.bind(this.triggerChange, this));
+        this.listenTo(this.parameters, 'add remove change', _.bind(this.triggerChange, this));
+        this.listenTo(this.initialConditions, 'add remove change', _.bind(this.triggerChange, this));
+        this.on('change:name change:units change:type change:isSpatial change:mesh', _.bind(this.triggerChange, this));
         // this will run if the name changes
     },
     setupMesh: function(meshCollection) {
@@ -98,7 +101,7 @@ var Model = AmpersandModel.extend({
         var massAction = true;
 
         var massAction = this.reactions.every( function(reaction) {
-            if(reaction.type == 'massaction')
+            if(reaction.type != 'custom')
             {
                 return true;
             } else {
@@ -134,7 +137,7 @@ var Model = AmpersandModel.extend({
 
                 if(!this.reactions.every( function(reaction) { return reaction.valid; } ))
                 {
-                    this.saveState = 'Model not valid'
+                    this.saveState = 'invalid';
                     return;
                 }
 

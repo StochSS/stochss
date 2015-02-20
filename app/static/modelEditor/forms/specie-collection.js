@@ -70,6 +70,29 @@ var SpecieCollectionFormView = AmpersandView.extend({
   <br /> \
   <form data-hook='addSpeciesForm'></form> \
 </div>",
+    props : {
+        valid : 'boolean',
+        message : 'string'
+    },
+    updateValid : function()
+    {
+        if(this.selectView)
+        {
+            this.selectView.updateValid();
+            
+            this.valid = this.selectView.valid;
+            this.message = this.selectView.message;
+        }
+        else
+        {
+            this.valid = true;
+            this.message = '';
+        }
+    },
+    update : function()
+    {
+        this.parent.update();
+    },
     initialize: function(attr, options)
     {
         AmpersandView.prototype.initialize.call(this, attr, options);
@@ -79,7 +102,7 @@ var SpecieCollectionFormView = AmpersandView.extend({
         var collectionTemplate = "<div> \
   <table width='100%' data-hook='table'> \
     <thead> \
-<th width='120px'>Name</th><th width='120px'>" + ((this.collection.parent.isSpatial) ? "Diffusion coefficient" : "Initial Condition") + "</th>" + ((this.collection.parent.isSpatial) ? "<th width='120px'>Species allowed in these subdomains</th>" : "") + "<th></th> \
+<th width='120px'>Name</th><th width='120px'>" + ((this.collection.parent.isSpatial) ? "Diffusion coefficient" : "Initial Condition") + "</th>" + ((this.collection.parent.isSpatial) ? "<th width='120px'>Active in subdomains</th>" : "") + "<th></th> \
     </thead> \
     <tbody data-hook='items'> \
     </tbody> \
@@ -97,6 +120,7 @@ var SpecieCollectionFormView = AmpersandView.extend({
             template : collectionTemplate,
             collection : this.collection,
             viewModel : SpecieFormView,
+            parent : this,
             limit : 10
         }), this.queryByHook('collection'));
 

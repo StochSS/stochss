@@ -22,6 +22,8 @@ from stochss.stochkit import *
 from stochssapp import BaseHandler
 from modeleditor import StochKitModelWrapper, ObjectProperty
 
+import modeleditor
+
 from backend.backendservice import backendservices
 sys.path.append(os.path.join(os.path.dirname(__file__), '../lib/cloudtracker'))
 from s3_helper import *
@@ -377,14 +379,13 @@ class SimulatePage(BaseHandler):
         return True
     
     def get(self):
+        all_models = []
         # Query the datastore
-        all_models_q = db.GqlQuery("SELECT * FROM StochKitModelWrapper WHERE user_id = :1 AND is_public = False", self.user.user_id())
-        all_models=[]
-        for q in all_models_q.run():
-            all_models.append({ "name" : q.name,
-                                "id" : q.key().id(),
-                                "units" : q.units,
-                                "isSpatial" : q.isSpatial })
+        for model in modeleditor.ModelManager.getModels(self):
+            all_models.append({ "name" : model["name"],
+                                "id" : model["id"],
+                                "units" : model["units"],
+                                "isSpatial" : model["isSpatial"] })
         context = {'all_models': all_models}
         
         

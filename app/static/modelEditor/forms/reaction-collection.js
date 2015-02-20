@@ -143,6 +143,7 @@ var AddNewReactionForm = AmpersandFormView.extend({
     <li><a data-hook="destruction" tabindex="-1" href="#"></a></li> \
     <li><a data-hook="change" tabindex="-1" href="#"></a></li> \
     <li><a data-hook="dimerization" tabindex="-1" href="#"></a></li> \
+    <li><a data-hook="merge" tabindex="-1" href="#"></a></li> \
     <li><a data-hook="split" tabindex="-1" href="#"></a></li> \
     <li><a data-hook="four" tabindex="-1" href="#"></a></li> \
     <li><a data-hook="massaction" tabindex="-1" href="#">Custom mass action</a></li> \
@@ -156,6 +157,7 @@ var AddNewReactionForm = AmpersandFormView.extend({
         katex.render('A \\rightarrow \\emptyset', $( this.el ).find('[data-hook=destruction]')[0]);
         katex.render('A \\rightarrow B', $( this.el ).find('[data-hook=change]')[0]);
         katex.render('A + A \\rightarrow B', $( this.el ).find('[data-hook=dimerization]')[0]);
+        katex.render('A + B \\rightarrow C', $( this.el ).find('[data-hook=merge]')[0]);
         katex.render('A \\rightarrow B + C', $( this.el ).find('[data-hook=split]')[0]);
         katex.render('A + B \\rightarrow C + D', $( this.el ).find('[data-hook=four]')[0]);
 
@@ -174,6 +176,31 @@ var ReactionCollectionFormView = AmpersandView.extend({
     <form data-hook='addReactionForm'></form>\
   </div> \
 </div>",
+    props : {
+        valid : 'boolean',
+        message : 'string'
+    },
+    updateValid : function()
+    {
+        if(this.selectView)
+        {
+            this.selectView.updateValid();
+            
+            this.valid = this.selectView.valid;
+            
+            if(!this.selectView.valid)
+                this.message = this.selectView.message;
+        }
+        else
+        {
+            this.valid = true;
+            this.message = '';
+        }
+    },
+    update : function()
+    {
+        this.parent.update();
+    },
     initialize: function(attr, options)
     {
         AmpersandView.prototype.initialize.call(this, attr, options);
@@ -246,6 +273,7 @@ var ReactionCollectionFormView = AmpersandView.extend({
             template : collectionTemplate,
             collection : this.collection,
             viewModel : ReactionFormView,
+            parent : this,
             limit : 10
         }), this.queryByHook('collection'));
 

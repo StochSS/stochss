@@ -325,13 +325,15 @@ Spatial.Controller = Backbone.View.extend(
 
             var sortedSpecies = _.keys(data).sort();
 
+            var speciesSelect = $("#speciesSelect");
+
+            speciesSelect.on('change', _.bind(this.handleSpeciesSelect, this));
+
             for(var i in sortedSpecies) {
                 var specie = sortedSpecies[i];
 
-                var input = $( '<div><input type="radio" name="speciesSelect" value="' + specie + '"> ' + specie + '</div>' ).appendTo( $( '#speciesSelect' ) ).find( 'input' );
-
-                // Register event handler
-                input.click(_.bind(this.handleSpeciesSelect, this));
+                var input = $( '<option value="' + specie + '">' + specie + '</option>' ).appendTo( speciesSelect );
+                //var input = $( '<div><input type="radio" name="speciesSelect" value="' + specie + '"> ' + specie + '</div>' ).appendTo( $( '#speciesSelect' ) ).find( 'input' );
 
                 // Select default
                 if(typeof this.selectedSpecies === 'undefined')
@@ -341,7 +343,7 @@ Spatial.Controller = Backbone.View.extend(
 
                 if(this.selectedSpecies == specie)
                 {
-                    input.trigger('click');
+                    input.trigger('change');
                 }
             }
         },

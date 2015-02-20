@@ -21,6 +21,22 @@ module.exports = View.extend({
     <td><center><button class='btn' data-hook='remove'>x</button></center></td>\
   </tr>\
 </tbody>",
+    updateValid : function()
+    {
+        this.valid = this.nameBox.valid && !this.notValid;
+        this.message = '';
+
+        if(!this.valid)
+            this.message = "Invalid reaction, please fix";
+    },
+    update : function(obj)
+    {
+        if(this.parent && this.parent.update)
+            this.parent.update();
+
+        if(this.parent && this.parent.parent && this.parent.parent.update)
+            this.parent.parent.update();
+    },
     // On any change of anything, redraw the Latex
     redrawLatex: function(obj)
     {
@@ -117,16 +133,18 @@ module.exports = View.extend({
 
         View.prototype.render.apply(this, arguments);
 
+        this.listenTo(this.model, 'change', _.bind(this.update, this));
         this.listenTo(this.model, 'change', _.bind(this.redrawLatex, this));
         this.listenTo(this.model.reactants, 'add remove change', _.bind(this.redrawLatex, this));
         this.listenToAndRun(this.model.products, 'add remove change', _.bind(this.redrawLatex, this));
 
-        this.renderSubview(
+        this.nameBox = this.renderSubview(
             new ModifyingInputView({
-                template: '<span><span data-hook="label"></span><input><span data-hook="message-container"><span data-hook="message-text"></span></span></span>',
+                //template: '<span><span data-hook="label"></span><input><span data-hook="message-container"><span data-hook="message-text"></span></span></span>',
                 label: '',
                 name: 'name',
                 value: this.model.name,
+                parent : this,
                 required: false,
                 placeholder: 'Name',
                 model : this.model,

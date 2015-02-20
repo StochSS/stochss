@@ -50,6 +50,29 @@ var ParameterCollectionFormView = AmpersandView.extend({
   <br /> \
   <form data-hook='addParametersForm'></form> \
 </div>",
+    props : {
+        valid : 'boolean',
+        message : 'string'
+    },
+    updateValid : function()
+    {
+        if(this.selectView)
+        {
+            this.selectView.updateValid();
+            
+            this.valid = this.selectView.valid;
+            this.message = this.selectView.message;
+        }
+        else
+        {
+            this.valid = true;
+            this.message = '';
+        }
+    },
+    update : function()
+    {
+        this.parent.update();
+    },
     initialize: function(attr, options)
     {
         AmpersandView.prototype.initialize.call(this, attr, options);
@@ -77,6 +100,7 @@ var ParameterCollectionFormView = AmpersandView.extend({
             template : collectionTemplate,
             collection : this.collection,
             viewModel : ParameterFormView,
+            parent : this,
             limit : 10
         }), this.queryByHook('collection'));
 
