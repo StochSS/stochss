@@ -62,7 +62,7 @@ module.exports = View.extend({
                 placeholder: 'Name',
                 parent : this,
                 model : this.model,
-                tests: [].concat(Tests.naming(this.model.collection, this.model))
+                tests: [].concat(Tests.naming(this.model.collection, this.model), Tests.naming(this.model.collection.parent.species, this.model, "between species and parameters"))
             }), this.el.querySelector("[data-hook='name']"));
 
         this.renderSubview(

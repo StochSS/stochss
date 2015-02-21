@@ -198,7 +198,7 @@ class SensitivityPage(BaseHandler):
                 
                 job.zipFileName = szip.getFileName()
 
-                szip.addSensitivityJob(job, True)
+                szip.addSensitivityJob(job, globalOp = True, ignoreStatus = True)
                 
                 szip.close()
 

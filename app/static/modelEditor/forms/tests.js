@@ -1,7 +1,7 @@
 var _ = require('underscore');
 
 module.exports = {
-    naming : function(collection, thisModel) {
+    naming : function(collection, thisModel, msg) {
         return [
             function(value) {
                 if(value != '' && /^[0-9][a-zA-Z0-9_]*$/.test(value))
@@ -16,7 +16,7 @@ module.exports = {
                     if(!collection.every(_.bind(function(model) {
                         return model.name != value || model == thisModel;
                     }, this)))
-                        return "Name must be unique";
+                        return "Name must be unique" + ((msg) ? " " + msg : "") ;
                 }
             }
         ];

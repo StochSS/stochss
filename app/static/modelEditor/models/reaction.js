@@ -7,7 +7,10 @@ var Parameter = require('./parameter');
 var Reaction = State.extend({
     props: {
         name : 'string',
-        equation : 'string',
+        equation : {
+            type : 'string',
+            default : function() { return ''; }
+        },
         type : 'string',
         rate : 'object',
         subdomains :

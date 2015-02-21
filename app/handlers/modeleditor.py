@@ -77,6 +77,7 @@ class StochKitModelWrapper(db.Model):
             products = dict([(sModel.getSpecies(product[0]), product[1]) for product in inProducts.items()])
             
             if(reaction['type'] == 'custom'):
+                print 'equation', reaction
                 sModel.addReaction(stochss.model.Reaction(reaction['name'], reactants, products, reaction['equation'], False, None, None))
             else:
                 sModel.addReaction(stochss.model.Reaction(reaction['name'], reactants, products, None, True, sModel.getParameter(reaction['rate']), None))

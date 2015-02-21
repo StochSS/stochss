@@ -126,7 +126,7 @@ module.exports = View.extend({
                 placeholder: 'Name',
                 model : this.model,
                 parent : this,
-                tests: [].concat(Tests.naming(this.model.collection, this.model))
+                tests: [].concat(Tests.naming(this.model.collection, this.model), Tests.naming(this.model.collection.parent.parameters, this.model, "between species and parameters"))
             }), this.el.querySelector("[data-hook='name']"));
 
         if(this.baseModel.isSpatial)

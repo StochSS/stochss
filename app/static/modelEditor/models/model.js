@@ -287,7 +287,7 @@ var Model = AmpersandModel.extend({
             reactionOut.type = reactionIn.type;
             if(reactionOut.type == 'custom')
             {
-                reactionOut.rate = reactionIn.equation;
+                reactionOut.equation = reactionIn.equation;
             } else {
                 reactionOut.rate = reactionIn.rate.name;
             }

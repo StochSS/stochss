@@ -421,14 +421,19 @@ class SimulatePage(BaseHandler):
         elif reqType == 'getDataLocal':
             job = StochKitJobWrapper.get_by_id(int(self.request.get('id')))
 
-            print int(self.request.get('id'))
-            
             if not job.stochkit_job.zipFileName:
+            #if not (job.stochkit_job.zipFileName and job.stochkit_job.status != 'Failed'):
+            #    if job.stochkit_job.zipFileName:
+            #        try:
+            #            os.remove(job.stochkit_job.zipFileName)
+            #        except:
+            #            print "Failed to remove cached zipFile"
+
                 szip = exportimport.SuperZip(os.path.abspath(os.path.dirname(__file__) + '/../static/tmp/'), preferredName = job.name + "_")
                 
                 job.stochkit_job.zipFileName = szip.getFileName()
 
-                szip.addStochKitJob(job, True)
+                szip.addStochKitJob(job, globalOp = True, ignoreStatus = True)
                 
                 szip.close()
 
@@ -507,11 +512,7 @@ class SimulatePage(BaseHandler):
                         else:
                             outfile = '/result/stats/means.txt'
                         
-                            print "outputdir", outputdir
-                            
                             vhandle = open(outputdir + outfile, 'r')
-
-                            print outputdir + outfile
 
                             values = { 'time' : [], 'trajectories' : {} }
                             columnToList = []

@@ -2207,7 +2207,7 @@ module.exports = View.extend({
                 placeholder: 'Name',
                 parent : this,
                 model : this.model,
-                tests: [].concat(Tests.naming(this.model.collection, this.model))
+                tests: [].concat(Tests.naming(this.model.collection, this.model), Tests.naming(this.model.collection.parent.species, this.model, "between species and parameters"))
             }), this.el.querySelector("[data-hook='name']"));
 
         this.renderSubview(
@@ -3374,7 +3374,7 @@ module.exports = View.extend({
                 placeholder: 'Name',
                 model : this.model,
                 parent : this,
-                tests: [].concat(Tests.naming(this.model.collection, this.model))
+                tests: [].concat(Tests.naming(this.model.collection, this.model), Tests.naming(this.model.collection.parent.parameters, this.model, "between species and parameters"))
             }), this.el.querySelector("[data-hook='name']"));
 
         if(this.baseModel.isSpatial)
@@ -3684,7 +3684,7 @@ module.exports = View.extend({
 var _ = require('underscore');
 
 module.exports = {
-    naming : function(collection, thisModel) {
+    naming : function(collection, thisModel, msg) {
         return [
             function(value) {
                 if(value != '' && /^[0-9][a-zA-Z0-9_]*$/.test(value))
@@ -3699,7 +3699,7 @@ module.exports = {
                     if(!collection.every(_.bind(function(model) {
                         return model.name != value || model == thisModel;
                     }, this)))
-                        return "Name must be unique";
+                        return "Name must be unique" + ((msg) ? " " + msg : "") ;
                 }
             }
         ];
@@ -4163,7 +4163,7 @@ var Model = AmpersandModel.extend({
             reactionOut.type = reactionIn.type;
             if(reactionOut.type == 'custom')
             {
-                reactionOut.rate = reactionIn.equation;
+                    reactionOut.equation = reactionIn.equation;
             } else {
                 reactionOut.rate = reactionIn.rate.name;
             }
@@ -4330,7 +4330,10 @@ var Parameter = require('./parameter');
 var Reaction = State.extend({
     props: {
         name : 'string',
-        equation : 'string',
+        equation : {
+            type : 'string',
+            default : function() { return ''; }
+        },
         type : 'string',
         rate : 'object',
         subdomains :

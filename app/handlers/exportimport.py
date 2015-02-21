@@ -142,11 +142,11 @@ class SuperZip:
 
         self.addBytes('models/{0}.json'.format(model.name), json.dumps(jsonModel, sort_keys=True, indent=4, separators=(', ', ': ')))
 
-    def addStochKitJob(self, job, globalOp = False):
+    def addStochKitJob(self, job, globalOp = False, ignoreStatus = False):
         stochkit_job = job.stochkit_job
 
-        # Only export finished jobs
-        if stochkit_job.status == "Finished":
+        # Only export finished jobs unless flag says to export them all
+        if stochkit_job.status == "Finished" or ignoreStatus:
             # These are fields shared among all jobs
             jsonJob = { "version" : self.version,
                         "name" : job.name,
@@ -244,8 +244,8 @@ class SuperZip:
 
         self.addBytes('stochOptimJobs/{0}.json'.format(job.jobName), json.dumps(jsonJob, sort_keys=True, indent=4, separators=(', ', ': ')))
     
-    def addSensitivityJob(self, job, globalOp = False):
-        if job.status == "Finished":
+    def addSensitivityJob(self, job, globalOp = False, ignoreStatus = False):
+        if job.status == "Finished" or ignoreStatus:
             # Shared fields
             jsonJob = { "version" : self.version,
                         "userId" : job.userId,
