@@ -371,6 +371,7 @@ class SuperZip:
         job.outData = outPath
         job.resource = "local"
         job.status = jsonJob["status"]
+        job.uuid = jsonJob["uuid"]
 
         job.put()
 

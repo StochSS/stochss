@@ -126,7 +126,7 @@ class StochKitModelWrapper(db.Model):
 
         for parameterName, parameter in model.listOfParameters.items():
             parameter.evaluate()
-            name = fixName(name)
+            name = fixName(parameter.name)
             parameters.append({ 'name' : name, 'value' : parameter.value })
 
         modelType = 'massaction'

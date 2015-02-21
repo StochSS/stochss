@@ -457,7 +457,7 @@ class SimulatePage(BaseHandler):
                                                  'msg' : "Could not retrieve job" + int(self.request.get('id'))+ " from the datastore."}))
                 return
 
-            assert job.user_id == self.user.user_id()
+            assert (not job.user_id) or (job.user_id == self.user.user_id())
 
             #try:
             # delete the db entry
@@ -477,102 +477,116 @@ class SimulatePage(BaseHandler):
                 self.response.write(json.dumps(["Not the right user"]))
 
             if job.stochkit_job.status == "Finished":
-                if job.stochkit_job.resource == 'Cloud' and job.output_stored == 'False' or job.stochkit_job.resource == 'Cloud' and job.stochkit_job.output_location is None:
+                try:
+                    if job.stochkit_job.resource == 'Cloud' and job.output_stored == 'False' or job.stochkit_job.resource == 'Cloud' and job.stochkit_job.output_location is None:
+                        self.response.headers['Content-Type'] = 'application/json'
+                        self.response.write(json.dumps({ "status" : "Finished",
+                                                         "values" : [],
+                                                         "job" : JobManager.getJob(self, job.key().id())}))
+                        return
+                    else:
+                        outputdir = job.stochkit_job.output_location
+                    # Load all data from file in JSON format
+                        if job.stochkit_job.exec_type == 'stochastic':
+                            tid = self.request.get('tid')
+
+                            if tid != '' and tid != 'mean':
+                                outfile = '/result/trajectories/trajectory{0}.txt'.format(tid)
+
+                                vhandle = open(outputdir + outfile, 'r')
+                        
+                                values = { 'time' : [], 'trajectories' : {} }
+                                columnToList = []
+                                for i, line in enumerate(vhandle):
+                                    if i == 0:
+                                        names = line.split()
+                                        for name in names:
+                                            if name == 'time':
+                                                columnToList.append(values['time'])
+                                            else:
+                                                values['trajectories'][name] = [] # start a new timeseries for this name
+                                                columnToList.append(values['trajectories'][name]) # Store a reference here for future use
+                                    else:
+                                        for storage, value in zip(columnToList, map(float, line.split())):
+                                            storage.append(value)
+                                vhandle.close()
+                            else:
+                                outfile = '/result/stats/means.txt'
+
+                                vhandle = open(outputdir + outfile, 'r')
+
+                                values = { 'time' : [], 'trajectories' : {} }
+                                columnToList = []
+                                for i, line in enumerate(vhandle):
+                                    if i == 0:
+                                        names = line.split()
+                                        for name in names:
+                                            if name == 'time':
+                                                columnToList.append(values['time'])
+                                            else:
+                                                values['trajectories'][name] = [] # start a new timeseries for this name
+                                                columnToList.append(values['trajectories'][name]) # Store a reference here for future use
+                                    else:
+                                        for storage, value in zip(columnToList, map(float, line.split())):
+                                            storage.append(value)
+                                vhandle.close()
+                        else:
+                            outfile = '/result/output.txt'
+                            values = { 'time' : [], 'trajectories' : {} }
+
+                            #if not os.path.isfile(outputdir + outfile):
+
+                            vhandle = open(outputdir + outfile, 'r')
+
+                            columnToList = []
+                            for i, line in enumerate(vhandle):
+                                if i == 0:
+                                    continue
+                                elif i == 1:
+                                    names = line.split()
+                                    for name in names:
+                                        if name == 'time':
+                                            columnToList.append(values['time'])
+                                        else:
+                                            values['trajectories'][name] = [] # start a new timeseries for this name
+                                            columnToList.append(values['trajectories'][name]) # Store a reference here for future use
+                                elif i == 2:
+                                    continue
+                                elif i == 3:
+                                    for storage, value in zip(columnToList, map(float, line.split())):
+                                        storage.append(value)
+                                elif i == 4:
+                                    continue
+                                else:
+                                    for storage, value in zip(columnToList, map(float, line.split())):
+                                        storage.append(value)
+                            vhandle.close()
+
                     self.response.headers['Content-Type'] = 'application/json'
                     self.response.write(json.dumps({ "status" : "Finished",
-                                                     "values" : [],
+                                                     "values" : values,
                                                      "job" : JobManager.getJob(self, job.key().id())}))
                     return
+                except Exception as e:
+                    traceback.print_exc()
+                    job.stochkit_job.status = "Failed"
+                    job.put()
+                    print "Failed to parse output data. Assuming job failed and continuing"
+            
+            if job.stochkit_job.status == "Failed":
+                self.response.headers['Content-Type'] = 'application/json'
+                
+                if os.path.isfile(job.stochkit_job.output_location + '/stdout'):
+                    fstdoutHandle = open(job.stochkit_job.output_location + '/stdout', 'r')
                 else:
-                    outputdir = job.stochkit_job.output_location
-                # Load all data from file in JSON format
-                    if job.stochkit_job.exec_type == 'stochastic':
-                        tid = self.request.get('tid')
-                        
-                        if tid != '' and tid != 'mean':
-                            outfile = '/result/trajectories/trajectory{0}.txt'.format(tid)
-                            
-                            vhandle = open(outputdir + outfile, 'r')
-                            
-                            values = { 'time' : [], 'trajectories' : {} }
-                            columnToList = []
-                            for i, line in enumerate(vhandle):
-                                if i == 0:
-                                    names = line.split()
-                                    for name in names:
-                                        if name == 'time':
-                                            columnToList.append(values['time'])
-                                        else:
-                                            values['trajectories'][name] = [] # start a new timeseries for this name
-                                            columnToList.append(values['trajectories'][name]) # Store a reference here for future use
-                                else:
-                                    for storage, value in zip(columnToList, map(float, line.split())):
-                                        storage.append(value)
-                            vhandle.close()
-                        else:
-                            outfile = '/result/stats/means.txt'
-                        
-                            vhandle = open(outputdir + outfile, 'r')
-
-                            values = { 'time' : [], 'trajectories' : {} }
-                            columnToList = []
-                            for i, line in enumerate(vhandle):
-                                if i == 0:
-                                    names = line.split()
-                                    for name in names:
-                                        if name == 'time':
-                                            columnToList.append(values['time'])
-                                        else:
-                                            values['trajectories'][name] = [] # start a new timeseries for this name
-                                            columnToList.append(values['trajectories'][name]) # Store a reference here for future use
-                                else:
-                                    for storage, value in zip(columnToList, map(float, line.split())):
-                                        storage.append(value)
-                            vhandle.close()
-                    else:
-                        outfile = '/result/output.txt'
-                        values = { 'time' : [], 'trajectories' : {} }
-
-                        #if not os.path.isfile(outputdir + outfile):
-                            
-                        vhandle = open(outputdir + outfile, 'r')
-                                       
-                        columnToList = []
-                        for i, line in enumerate(vhandle):
-                            if i == 0:
-                                continue
-                            elif i == 1:
-                                names = line.split()
-                                for name in names:
-                                    if name == 'time':
-                                        columnToList.append(values['time'])
-                                    else:
-                                        values['trajectories'][name] = [] # start a new timeseries for this name
-                                        columnToList.append(values['trajectories'][name]) # Store a reference here for future use
-                            elif i == 2:
-                                continue
-                            elif i == 3:
-                                for storage, value in zip(columnToList, map(float, line.split())):
-                                    storage.append(value)
-                            elif i == 4:
-                                continue
-                            else:
-                                for storage, value in zip(columnToList, map(float, line.split())):
-                                    storage.append(value)
-                        vhandle.close()
-
-                self.response.headers['Content-Type'] = 'application/json'
-                self.response.write(json.dumps({ "status" : "Finished",
-                                                 "values" : values,
-                                                 "job" : JobManager.getJob(self, job.key().id())}))
-            elif job.stochkit_job.status == "Failed":
-                self.response.headers['Content-Type'] = 'application/json'
-
-                fstdoutHandle = open(job.stochkit_job.output_location + '/stdout', 'r')
+                    fstdoutHandle = open(job.stochkit_job.output_location + '/stdout.log', 'r')
                 stdout = fstdoutHandle.read()
                 fstdoutHandle.close()
 
-                fstderrHandle = open(job.stochkit_job.output_location + '/stderr', 'r')
+                if os.path.isfile(job.stochkit_job.output_location + '/stderr'):
+                    fstderrHandle = open(job.stochkit_job.output_location + '/stderr', 'r')
+                else:
+                    fstderrHandle = open(job.stochkit_job.output_location + '/stderr.log', 'r')
                 stderr = fstderrHandle.read()
                 fstderrHandle.close()
 
@@ -710,8 +724,6 @@ class SimulatePage(BaseHandler):
                 params['job_type'] = 'stochkit_ode'
                 executable = "stochkit_ode.py"
 
-            print executable
-    
             # Columns need to be labeled for visulatization page to work.  
             args += ' --label'
         
