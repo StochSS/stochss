@@ -771,7 +771,7 @@ ReactionView.computeConversionFactor = function(reaction, volume)
         last = specie;
     }
     
-    if(reaction.type != 'massaction')
+    if(reaction.type != 'custom')
     {
 	if(reactantCount == 0) {
             return ' * ' + volume;
@@ -2830,16 +2830,6 @@ var AddNewReactionForm = AmpersandFormView.extend({
 });
 
 var ReactionCollectionFormView = AmpersandView.extend({
-    template: "<div>\
-  <div>\
-    <div data-hook='collection'></div>\
-    <div data-hook='reactionEditorWorkspace'></div>\
-  </div> \
-  <div style='clear: both;'> \
-    <br /> \
-    <form data-hook='addReactionForm'></form>\
-  </div> \
-</div>",
     props : {
         valid : 'boolean',
         message : 'string'
@@ -2912,6 +2902,28 @@ var ReactionCollectionFormView = AmpersandView.extend({
     },
     render: function()
     {
+        var intro;
+        if(this.collection.parent.isSpatial)
+        {
+            intro = "Define reactions here. Select from the given reaction templates, or use the custom types at the bottom of the add button. In general, try to use templated reactions and mass action reactions before using custom propensities.<br><br>Reactions can be limited to occur only in specific subdomains.";
+        }
+        else
+        {
+            intro = "Define reactions here. Select from the given reaction templates, or use the custom types at the bottom of the add button. In general, try to use templated reactions and mass action reactions before using custom propensities.";
+        }
+
+        this.template = "<div>" + intro + "\
+  <div>\
+    <div data-hook='collection'></div>\
+    <div data-hook='reactionEditorWorkspace'></div>\
+  </div> \
+  <div style='clear: both;'> \
+    <br /> \
+    <form data-hook='addReactionForm'></form>\
+  </div> \
+</div>";
+
+
         this.baseModel = this.collection.parent;
 
         var collectionTemplate = '';
@@ -3611,8 +3623,17 @@ var SpecieCollectionFormView = AmpersandView.extend({
     },
     render: function()
     {
-        var collectionTemplate = "<div> \
-  <table width='100%' data-hook='table'> \
+        var intro;
+        if(this.collection.parent.isSpatial)
+        {
+            intro = "Define species and their spatial properties here. Species have a single diffusion coefficient for the entire model, but can be limited to only diffuse into certain subdomains.";
+        }
+        else
+        {
+            intro = "Define species and their initial conditions here. For concentration models this is a positive floating point value and for population models this is an integer.";
+        }
+
+        var collectionTemplate = "<div>" + intro + "<table width='100%' data-hook='table'> \
     <thead> \
 <th width='120px'>Name</th><th width='120px'>" + ((this.collection.parent.isSpatial) ? "Diffusion coefficient" : "Initial Condition") + "</th>" + ((this.collection.parent.isSpatial) ? "<th width='120px'>Active in subdomains</th>" : "") + "<th></th> \
     </thead> \

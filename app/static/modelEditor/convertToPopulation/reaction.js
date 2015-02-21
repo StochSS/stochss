@@ -112,7 +112,7 @@ ReactionView.computeConversionFactor = function(reaction, volume)
         last = specie;
     }
     
-    if(reaction.type != 'massaction')
+    if(reaction.type != 'custom')
     {
 	if(reactantCount == 0) {
             return ' * ' + volume;

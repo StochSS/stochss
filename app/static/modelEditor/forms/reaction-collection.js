@@ -171,16 +171,6 @@ var AddNewReactionForm = AmpersandFormView.extend({
 });
 
 var ReactionCollectionFormView = AmpersandView.extend({
-    template: "<div>\
-  <div>\
-    <div data-hook='collection'></div>\
-    <div data-hook='reactionEditorWorkspace'></div>\
-  </div> \
-  <div style='clear: both;'> \
-    <br /> \
-    <form data-hook='addReactionForm'></form>\
-  </div> \
-</div>",
     props : {
         valid : 'boolean',
         message : 'string'
@@ -253,6 +243,28 @@ var ReactionCollectionFormView = AmpersandView.extend({
     },
     render: function()
     {
+        var intro;
+        if(this.collection.parent.isSpatial)
+        {
+            intro = "Define reactions here. Select from the given reaction templates, or use the custom types at the bottom of the add button. In general, try to use templated reactions and mass action reactions before using custom propensities.<br><br>Reactions can be limited to occur only in specific subdomains.";
+        }
+        else
+        {
+            intro = "Define reactions here. Select from the given reaction templates, or use the custom types at the bottom of the add button. In general, try to use templated reactions and mass action reactions before using custom propensities.";
+        }
+
+        this.template = "<div>" + intro + "\
+  <div>\
+    <div data-hook='collection'></div>\
+    <div data-hook='reactionEditorWorkspace'></div>\
+  </div> \
+  <div style='clear: both;'> \
+    <br /> \
+    <form data-hook='addReactionForm'></form>\
+  </div> \
+</div>";
+
+
         this.baseModel = this.collection.parent;
 
         var collectionTemplate = '';
