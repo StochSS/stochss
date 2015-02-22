@@ -57,9 +57,11 @@ module.exports = View.extend({
         }
 
         var reactions = this.model.reactions.models;
+        var parameters = this.model.parameters.models;
+        var species = this.model.species.models;
         for(var i = 0; i < reactions.length; i++)
         {
-            if(reactions[i].type == 'massaction')
+            if(reactions[i].type != 'custom')
             {
                 var factor = ReactionView.computeConversionFactor(reactions[i], this.volume);
                 if(factor && factor.length > 0)
@@ -69,7 +71,7 @@ module.exports = View.extend({
 
                     var modelNames
 
-                    while(_.findWhere(reactions, { name : tmpName + j } ))
+                    while(_.findWhere(parameters, { name : tmpName + j } ) || _.findWhere(species, { name : tmpName + j } ))
                     {
                         j += 1;
                     }

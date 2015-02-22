@@ -791,12 +791,12 @@ class SimulatePage(BaseHandler):
     def runStochKitLocal(self, params):
         """ Submit a local StochKit job """
         try:
-            model = StochKitModelWrapper.get_by_id(params["id"])
+            modelDb = StochKitModelWrapper.get_by_id(params["id"])
 
-            if not model:
+            if not modelDb:
                 return {'status':False,'msg':'Failed to retrive the model to simulate.'}
 
-            model = model.createStochKitModel()
+            model = modelDb.createStochKitModel()
 
             # Execute as concentration or population?
             execType = params['execType']
@@ -843,7 +843,7 @@ class SimulatePage(BaseHandler):
             dataDir = tempfile.mkdtemp(dir = basedir + 'output')
 
             # Wow, what a hack
-            if executable == 'deterministic' and model.units.lower() == 'population':
+            if params['execType'] == 'deterministic' and model.units.lower() == 'population':
                 document = model.serialize()
 
                 model = StochMLDocument.fromString(document).toModel(model.name)
