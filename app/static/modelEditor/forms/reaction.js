@@ -13,17 +13,19 @@ var Tests = require('./tests');
 module.exports = View.extend({
     // Gotta have a few of these functions just so this works as a form view
     // This gets called when things update
-    template : "<tbody>\
-  <tr data-hook='basic'>\
+    template : "<tr data-hook='row'>\
     <td><center><input type='radio' name='reaction' data-hook='radio'></center></td>\
     <td><center><span data-hook='name'></span></center></td> \
     <td><center><span data-hook='latex'></span></center></td> \
     <td><center><button class='btn' data-hook='remove'>x</button></center></td>\
-  </tr>\
-</tbody>",
+  </tr>",
+    props : {
+        valid : 'boolean',
+        message : 'string'
+    },
     updateValid : function()
     {
-        this.valid = this.nameBox.valid && !this.notValid;
+        this.valid = (!this.nameBox || this.nameBox.valid) && !this.notValid;
         this.message = '';
 
         if(!this.valid)
@@ -31,6 +33,8 @@ module.exports = View.extend({
     },
     update : function(obj)
     {
+        this.updateValid();
+
         if(this.parent && this.parent.update)
             this.parent.update();
 
@@ -105,15 +109,15 @@ module.exports = View.extend({
         $( this.el ).find( "[data-hook='radio']" ).prop('checked', true);
     },
     derived: {
-        "notValid": {
-            deps : ['model.valid'],
-            fn : function() { return !this.model.valid; }
+        "invalid": {
+            deps : ['model.valid', 'valid'],
+            fn : function() { return !(this.model.valid && this.valid); }
         }
     },
     bindings: {
-        "notValid" : {
+        "invalid" : {
             type : 'booleanClass',
-            selector : 'tr',
+            hook : 'row',
             name: 'invalidRow'
         }
     },
@@ -126,6 +130,12 @@ module.exports = View.extend({
         this.stopListening();
 
         View.prototype.remove.apply(this, arguments);
+    },
+    initialize: function()
+    {
+        View.prototype.render.apply(this, arguments);
+
+        this.updateValid();
     },
     render: function()
     {
@@ -151,6 +161,7 @@ module.exports = View.extend({
                 tests: [].concat(Tests.naming(this.model.collection, this.model))
             }), this.el.querySelector("[data-hook='name']"));
         
+        this.updateValid();
         return this;
     }
 });

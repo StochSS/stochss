@@ -157,6 +157,7 @@ class SuperZip:
                         "type" : stochkit_job.type,
                         "status" : stochkit_job.status,
                         "modelName" : job.modelName,
+                        "startDate" : job.startDate,
                         "final_time" : stochkit_job.final_time,
                         "increment" : stochkit_job.increment,
                         "units" : job.stochkit_job.units,

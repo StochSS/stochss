@@ -157,10 +157,16 @@ var PaginatedCollectionView = AmpersandView.extend({
         overLimit : 'boolean'
     },
     bindings : {
-        'modelCount' : {
-            type : 'toggle',
-            selector : 'div'
-        },
+        'modelCount' : [
+            {
+                type : 'toggle',
+                selector : 'div'
+            },
+            {
+                type : 'text',
+                hook : 'total'
+            }
+        ],
         'overLimit' : {
             type : 'toggle',
             hook : 'nav'

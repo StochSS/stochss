@@ -252,6 +252,9 @@ class JobManager():
         # This is probably not a good idea...
         jobWrap.stochkit_job = StochKitJob(**job)
 
+        if 'startDate' in job:
+            jobWrap.startDate = job['startDate']
+
         jobWrap.stdout = job['stdout']
         jobWrap.stderr = job['stderr']
         if 'output_stored' in job:

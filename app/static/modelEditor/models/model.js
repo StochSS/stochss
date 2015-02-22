@@ -141,7 +141,14 @@ var Model = AmpersandModel.extend({
                     return;
                 }
 
-                this.save(undefined, { success : _.bind(this.modelSaved, this), error : _.bind(this.modelSaveFailed, this) } );
+                try
+                {
+                    this.save(undefined, { success : _.bind(this.modelSaved, this), error : _.bind(this.modelSaveFailed, this) } );
+                }
+                catch(e)
+                {
+                    this.modelSaveFailed();
+                }
             }
         }
         , 500),

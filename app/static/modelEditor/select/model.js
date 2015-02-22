@@ -5,7 +5,7 @@ var Tests = require('../forms/tests');
 //<div>Model type: <div data-hook='type'></div><div data-hook='specie'></div><div data-hook='parameter'></div><div data-hook='reaction'></div><div data-hook='convertToPopulation'></div></div>
 //<i class="icon-remove"></i></span>
 module.exports = View.extend({
-    template: '<tr> \
+    template: '<tr data-hook="row"> \
   <td> \
     <button data-hook="edit" class="btn-small btn">Select</button> \
   </td> \
@@ -21,7 +21,16 @@ module.exports = View.extend({
 </tr>',
     // Gotta have a few of these functions just so this works as a form view
     // This gets called when things update
+    props : {
+        valid : 'boolean',
+        message : 'string'
+    },
     bindings: {
+        'invalid' : {
+            type : 'booleanClass',
+            name : 'invalidRow',
+            hook : 'row'
+        },
         'textType' : {
             type : 'text',
             hook: 'type'
@@ -52,6 +61,12 @@ module.exports = View.extend({
 
                 return base;
             }
+        },
+        invalid : {
+            deps : ['valid'],
+            fn : function() {
+                return !this.valid;
+            }
         }
     },
     events: {
@@ -60,10 +75,10 @@ module.exports = View.extend({
     },
     updateValid : function()
     {
-        this.valid = this.nameBox.valid;
+        this.valid = (!this.nameBox || this.nameBox.valid);
         this.message = '';
 
-        if(!this.nameBox.valid)
+        if(this.nameBox && !this.nameBox.valid)
             this.message = 'Model name invalid';
     },
     update : function(obj)
@@ -123,6 +138,12 @@ module.exports = View.extend({
         saveMessageDom.addClass( "alert-error" );
         saveMessageDom.text( "Model not saved to local library!" );
     },
+    initialize: function()
+    {
+        View.prototype.initialize.apply(this, arguments);
+
+        this.updateValid();
+    },
     render: function()
     {
         View.prototype.render.apply(this, arguments);
@@ -144,6 +165,7 @@ module.exports = View.extend({
 
         this.deSelect();
 
+        this.updateValid();
         return this;
     }
 });

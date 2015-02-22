@@ -13,6 +13,8 @@ module.exports = View.extend({
     {
         if(element.valid)
             this.model[element.name] = element.value;
+        else
+            this.model[element.name] = null;
     },
     initialize: function()
     {
@@ -81,7 +83,7 @@ module.exports = View.extend({
 
         this.renderSubview(
             new ModifyingSelectView({
-                template: '<span><select></select><span data-hook="message-container"><span data-hook="message-text"></span></span></span>',
+                template: '<span><select></select><span data-hook="message-container"></span>',
                 label: '',
                 name: 'specie',
                 value: this.model.specie,

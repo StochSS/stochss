@@ -9,7 +9,7 @@ var SubdomainFormView = require('./subdomain');
 
 var Tests = require('./tests');
 module.exports = View.extend({
-    template : "<tr> \
+    template : "<tr data-hook='row'> \
   <td> \
     <button class='btn' data-hook='delete'>x</button> \
   </td> \
@@ -31,6 +31,10 @@ module.exports = View.extend({
     </table> \
   </td> \
 </tr>",
+    props : {
+        valid : 'boolean',
+        message : 'string'
+    },
     updateValid : function()
     {
         var valid = true;
@@ -67,6 +71,8 @@ module.exports = View.extend({
         } else if(obj.name == 'subdomain') {
             this.model.subdomain = obj.value;
         }
+        
+        this.updateValid();
 
         if(this.parent && this.parent.update)
             this.parent.update();
@@ -94,6 +100,12 @@ module.exports = View.extend({
                     return 'xyz';
                 }
             }
+        },
+        invalid : {
+            deps : ['valid'],
+            fn : function() {
+                return !this.valid;
+            }
         }
     },
     bindings: {
@@ -103,11 +115,18 @@ module.exports = View.extend({
                 'subdomain' : '[data-hook="subdomainTbody"]',
                 'xyz' : '[data-hook="xyz"]',
             }
+        },
+        'invalid' : {
+            type : 'booleanClass',
+            name : 'invalidRow',
+            hook : 'row'
         }
     },
     initialize : function()
     {
         View.prototype.initialize.apply(this, arguments);
+
+        this.updateValid();
     },
     renderSubdomainSelector: function()
     {
@@ -118,13 +137,14 @@ module.exports = View.extend({
 
         this.renderSubview(
             new SelectView({
-                template: '<span><select></select><span data-hook="message-container"><span data-hook="message-text"></span></span></span>',
+                template: '<div><select></select><div data-hook="message-container"><div class="message" data-hook="message-text"></div></div></div>',
                 label: '',
                 name: 'subdomain',
                 value: this.model.subdomain,
                 options: this.baseModel.mesh.uniqueSubdomains,
+                unselectedText: 'Select subdomain',
                 parent : this,
-                required: false,
+                required: true,
                 idAttribute: 'cid',
                 textAttribute: 'name',
                 yieldModel: true
@@ -138,7 +158,7 @@ module.exports = View.extend({
 
         this.renderSubview(
             new SelectView({
-                template: '<span><select></select><span data-hook="message-container"><span data-hook="message-text"></span></span></span>',
+                template: '<div><select></select><div data-hook="message-container"><div class="message" data-hook="message-text"></div></div></div>',
                 label: '',
                 name: 'type',
                 parent : this,
@@ -201,11 +221,12 @@ module.exports = View.extend({
 
         this.renderSubview(
             new ModifyingSelectView({
-                template: '<span><select></select><span data-hook="message-container"><span data-hook="message-text"></span></span></span>',
+                template: '<div><select></select><div data-hook="message-container"><div class="message" data-hook="message-text"></div></div></div>',
                 label: '',
                 name: 'specie',
                 value: this.model.specie,
                 options: this.baseModel.species,
+                unselectedText : 'Pick species',
                 parent : this,
                 required: true,
                 idAttribute: 'cid',
@@ -215,6 +236,7 @@ module.exports = View.extend({
 
         this.listenToAndRun(this.model, 'change:mesh', _.bind(this.renderSubdomainSelector, this));
 
+        this.updateValid();
         return this;
     }
 });

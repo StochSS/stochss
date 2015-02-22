@@ -15,6 +15,14 @@ module.exports = View.extend({
         valid : 'boolean',
         message : 'string'
     },
+    derived : {
+        invalid : {
+            deps : ['valid'],
+            fn : function() {
+                return !this.valid;
+            }
+        }
+    },
     events: {
         'click [data-hook="delete"]': 'removeSpecies'
     },
@@ -23,6 +31,11 @@ module.exports = View.extend({
             type: 'booleanAttribute',
             hook: 'delete',
             name: 'disabled'
+        },
+        'invalid' : {
+            type : 'booleanClass',
+            name : 'invalidRow',
+            hook : 'row'
         }
     },
     initialize : function()
@@ -30,6 +43,8 @@ module.exports = View.extend({
         View.prototype.initialize.apply(this, arguments);
         
         this.baseModel = this.model.collection.parent;
+
+        this.updateValid();
     },
     // This will get called by the SubdomainFormView children when a subdomain gets selected/deselected
     updateValid : function()
@@ -37,16 +52,19 @@ module.exports = View.extend({
         var valid = true;
         var message = '';
 
-        for(var i = 0; i < this._subviews.length; i++)
+        if(this._subviews)
         {
-            if(typeof(this._subviews[i].valid) != "undefined")
+            for(var i = 0; i < this._subviews.length; i++)
             {
-                valid = valid && this._subviews[i].valid;
-                message = "Invalid species, please fix";
+                if(typeof(this._subviews[i].valid) != "undefined")
+                {
+                    valid = valid && this._subviews[i].valid;
+                    message = "Invalid species, please fix";
+                }
+                
+                if(!valid)
+                    break;
             }
-
-            if(!valid)
-                break;
         }
 
         this.valid = valid;
@@ -68,6 +86,8 @@ module.exports = View.extend({
                 this.model.subdomains = _.difference(this.model.subdomains, [subdomain.name]);
             }
         }
+
+        this.updateValid();
 
         if(this.parent && this.parent.update)
             this.parent.update();
@@ -107,11 +127,11 @@ module.exports = View.extend({
     {
         if(this.baseModel.isSpatial)
         {
-            this.template = "<tr><td data-hook='name'></td><td data-hook='diffusion'></td><td><center><div data-hook='subdomains'></div></center></td><td><button class='btn' data-hook='delete'>x</button></td></tr>";
+            this.template = "<tr data-hook='row'><td data-hook='name'></td><td data-hook='diffusion'></td><td><center><div data-hook='subdomains'></div></center></td><td><button class='btn' data-hook='delete'>x</button></td></tr>";
         }
         else
         {
-            this.template = "<tr><td data-hook='name'></td><td data-hook='initialCondition'></td><td><button class='btn' data-hook='delete'>x</button></td></tr>";
+            this.template = "<tr data-hook='row'><td data-hook='name'></td><td data-hook='initialCondition'></td><td><button class='btn' data-hook='delete'>x</button></td></tr>";
         }
 
         View.prototype.render.apply(this, arguments);
@@ -164,6 +184,7 @@ module.exports = View.extend({
                 }), this.el.querySelector("[data-hook='initialCondition']"));
         }
 
+        this.updateValid();
         return this;
     }
 });

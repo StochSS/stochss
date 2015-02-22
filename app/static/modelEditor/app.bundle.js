@@ -936,7 +936,7 @@ var InitialConditionCollectionFormView = AmpersandView.extend({
   </table>\
   <div data-hook='nav'> \
     <button class='btn' data-hook='previous'>&lt;&lt;</button> \
-    [ <span data-hook='position'></span> / <span data-hook='total'></span> ] \
+    [ <span data-hook='position'></span> / <span data-hook='total'></span> of <span data-hook='total'></span> ] \
     <button class='btn' data-hook='next'>&gt;&gt;</button> \
   </div> \
 </div>";
@@ -980,7 +980,7 @@ var SubdomainFormView = require('./subdomain');
 
 var Tests = require('./tests');
 module.exports = View.extend({
-    template : "<tr> \
+    template : "<tr data-hook='row'> \
   <td> \
     <button class='btn' data-hook='delete'>x</button> \
   </td> \
@@ -1002,6 +1002,10 @@ module.exports = View.extend({
     </table> \
   </td> \
 </tr>",
+    props : {
+        valid : 'boolean',
+        message : 'string'
+    },
     updateValid : function()
     {
         var valid = true;
@@ -1038,6 +1042,8 @@ module.exports = View.extend({
         } else if(obj.name == 'subdomain') {
             this.model.subdomain = obj.value;
         }
+        
+        this.updateValid();
 
         if(this.parent && this.parent.update)
             this.parent.update();
@@ -1065,6 +1071,12 @@ module.exports = View.extend({
                     return 'xyz';
                 }
             }
+        },
+        invalid : {
+            deps : ['valid'],
+            fn : function() {
+                return !this.valid;
+            }
         }
     },
     bindings: {
@@ -1074,11 +1086,18 @@ module.exports = View.extend({
                 'subdomain' : '[data-hook="subdomainTbody"]',
                 'xyz' : '[data-hook="xyz"]',
             }
+        },
+        'invalid' : {
+            type : 'booleanClass',
+            name : 'invalidRow',
+            hook : 'row'
         }
     },
     initialize : function()
     {
         View.prototype.initialize.apply(this, arguments);
+
+        this.updateValid();
     },
     renderSubdomainSelector: function()
     {
@@ -1089,13 +1108,14 @@ module.exports = View.extend({
 
         this.renderSubview(
             new SelectView({
-                template: '<span><select></select><span data-hook="message-container"><span data-hook="message-text"></span></span></span>',
+                template: '<div><select></select><div data-hook="message-container"><div class="message" data-hook="message-text"></div></div></div>',
                 label: '',
                 name: 'subdomain',
                 value: this.model.subdomain,
                 options: this.baseModel.mesh.uniqueSubdomains,
+                unselectedText: 'Select subdomain',
                 parent : this,
-                required: false,
+                required: true,
                 idAttribute: 'cid',
                 textAttribute: 'name',
                 yieldModel: true
@@ -1109,7 +1129,7 @@ module.exports = View.extend({
 
         this.renderSubview(
             new SelectView({
-                template: '<span><select></select><span data-hook="message-container"><span data-hook="message-text"></span></span></span>',
+                template: '<div><select></select><div data-hook="message-container"><div class="message" data-hook="message-text"></div></div></div>',
                 label: '',
                 name: 'type',
                 parent : this,
@@ -1172,11 +1192,12 @@ module.exports = View.extend({
 
         this.renderSubview(
             new ModifyingSelectView({
-                template: '<span><select></select><span data-hook="message-container"><span data-hook="message-text"></span></span></span>',
+                template: '<div><select></select><div data-hook="message-container"><div class="message" data-hook="message-text"></div></div></div>',
                 label: '',
                 name: 'specie',
                 value: this.model.specie,
                 options: this.baseModel.species,
+                unselectedText : 'Pick species',
                 parent : this,
                 required: true,
                 idAttribute: 'cid',
@@ -1186,6 +1207,7 @@ module.exports = View.extend({
 
         this.listenToAndRun(this.model, 'change:mesh', _.bind(this.renderSubdomainSelector, this));
 
+        this.updateValid();
         return this;
     }
 });
@@ -1496,7 +1518,7 @@ var MeshCollectionSelectView = AmpersandView.extend({
   </table> \
   <div data-hook='nav'> \
     <button class='btn' data-hook='previous'>&lt;&lt;</button>\
-    [ <span data-hook='leftPosition'></span> - <span data-hook='rightPosition'></span> ] \
+    [ <span data-hook='leftPosition'></span> - <span data-hook='rightPosition'></span> of <span data-hook='total'></span> ] \
     <button class='btn' data-hook='next'>&gt;&gt;</button>\
   </div> \
 </div>";
@@ -2394,10 +2416,16 @@ var PaginatedCollectionView = AmpersandView.extend({
         overLimit : 'boolean'
     },
     bindings : {
-        'modelCount' : {
-            type : 'toggle',
-            selector : 'div'
-        },
+        'modelCount' : [
+            {
+                type : 'toggle',
+                selector : 'div'
+            },
+            {
+                type : 'text',
+                hook : 'total'
+            }
+        ],
         'overLimit' : {
             type : 'toggle',
             hook : 'nav'
@@ -2541,7 +2569,7 @@ var ParameterCollectionFormView = AmpersandView.extend({
   </table> \
   <div data-hook='nav'> \
     <button class='btn' data-hook='previous'>&lt;&lt;</button>\
-    [ <span data-hook='leftPosition'></span> - <span data-hook='rightPosition'></span> ] \
+    [ <span data-hook='leftPosition'></span> - <span data-hook='rightPosition'></span> of <span data-hook='total'></span> ] \
     <button class='btn' data-hook='next'>&gt;&gt;</button>\
   </div> \
 </div>";
@@ -2578,29 +2606,48 @@ var ModifyingNumberInputView = require('./modifying-number-input-view')
 
 var Tests = require('./tests');
 module.exports = View.extend({
-    template: "<tr><td data-hook='name'></td><td data-hook='value'></td><td><button class='btn' data-hook='delete'>x</button></td></tr>",
+    template: "<tr data-hook='row'><td data-hook='name'></td><td data-hook='value'></td><td><button class='btn' data-hook='delete'>x</button></td></tr>",
     // Gotta have a few of these functions just so this works as a form view
     // This gets called when things update
-    update: function()
+    props : {
+        valid : 'boolean',
+        message : 'string'
+    },
+    derived : {
+        invalid : {
+            deps : ['valid'],
+            fn : function() {
+                return !this.valid;
+            }
+        }
+    },
+    updateValid: function()
     {
         var valid = true;
         var message = '';
         
-        for(var i = 0; i < this._subviews.length; i++)
+        if(this._subviews)
         {
-            if(typeof(this._subviews[i].valid) != "undefined")
+            for(var i = 0; i < this._subviews.length; i++)
             {
-                valid = valid && this._subviews[i].valid;
-                message = "Invalid parameter, please fix";
+                if(typeof(this._subviews[i].valid) != "undefined")
+                {
+                    valid = valid && this._subviews[i].valid;
+                    message = "Invalid parameter, please fix";
+                }
+                
+                if(!valid)
+                    break;
             }
-            
-            if(!valid)
-                break;
         }
         
         this.valid = valid;
         this.message = message;
-        
+    },
+    update: function()
+    {
+        this.updateValid();
+
         if(this.parent && this.parent.update)
             this.parent.update();
         
@@ -2615,11 +2662,22 @@ module.exports = View.extend({
         'click [data-hook="delete"]': 'removeParameter'
     },
     bindings: {
+        'invalid' : {
+            type : 'booleanClass',
+            name : 'invalidRow',
+            hook : 'row'
+        },
         'model.inUse' : {
             type: 'booleanAttribute',
             hook: 'delete',
             name: 'disabled'
         }
+    },
+    initialize: function()
+    {
+        View.prototype.initialize.apply(this, arguments);
+
+        this.updateValid();
     },
     render: function()
     {
@@ -2652,6 +2710,7 @@ module.exports = View.extend({
         //Hide all the labels!
         $( this.el ).find('[data-hook="label"]').hide();
 
+        this.updateValid();
         return this;
     }
 });
@@ -2938,7 +2997,7 @@ var ReactionCollectionFormView = AmpersandView.extend({
   </table>\
   <div data-hook='nav'> \
     <button class='btn' data-hook='previous'>&lt;&lt;</button>\
-    [ <span data-hook='leftPosition'></span> - <span data-hook='rightPosition'></span> ] \
+    [ <span data-hook='leftPosition'></span> - <span data-hook='rightPosition'></span> of <span data-hook='total'></span> ] \
     <button class='btn' data-hook='next'>&gt;&gt;</button>\
   </div> \
 </div>";
@@ -3195,6 +3254,11 @@ var reactants;
                     reactants = 2;
                     products = 2;
                 }
+                if(this.model.type == 'massaction')
+                {
+                    reactants = this.model.reactants.models.length;
+                    products = this.model.products.models.length;
+                }
 
                 for(var i = 0; i < reactants; i++)
                 {
@@ -3379,17 +3443,19 @@ var Tests = require('./tests');
 module.exports = View.extend({
     // Gotta have a few of these functions just so this works as a form view
     // This gets called when things update
-    template : "<tbody>\
-  <tr data-hook='basic'>\
+    template : "<tr data-hook='row'>\
     <td><center><input type='radio' name='reaction' data-hook='radio'></center></td>\
     <td><center><span data-hook='name'></span></center></td> \
     <td><center><span data-hook='latex'></span></center></td> \
     <td><center><button class='btn' data-hook='remove'>x</button></center></td>\
-  </tr>\
-</tbody>",
+  </tr>",
+    props : {
+        valid : 'boolean',
+        message : 'string'
+    },
     updateValid : function()
     {
-        this.valid = this.nameBox.valid && !this.notValid;
+        this.valid = (!this.nameBox || this.nameBox.valid) && !this.notValid;
         this.message = '';
 
         if(!this.valid)
@@ -3397,6 +3463,8 @@ module.exports = View.extend({
     },
     update : function(obj)
     {
+        this.updateValid();
+
         if(this.parent && this.parent.update)
             this.parent.update();
 
@@ -3471,15 +3539,15 @@ module.exports = View.extend({
         $( this.el ).find( "[data-hook='radio']" ).prop('checked', true);
     },
     derived: {
-        "notValid": {
-            deps : ['model.valid'],
-            fn : function() { return !this.model.valid; }
+        "invalid": {
+            deps : ['model.valid', 'valid'],
+            fn : function() { return !(this.model.valid && this.valid); }
         }
     },
     bindings: {
-        "notValid" : {
+        "invalid" : {
             type : 'booleanClass',
-            selector : 'tr',
+            hook : 'row',
             name: 'invalidRow'
         }
     },
@@ -3492,6 +3560,12 @@ module.exports = View.extend({
         this.stopListening();
 
         View.prototype.remove.apply(this, arguments);
+    },
+    initialize: function()
+    {
+        View.prototype.render.apply(this, arguments);
+
+        this.updateValid();
     },
     render: function()
     {
@@ -3517,6 +3591,7 @@ module.exports = View.extend({
                 tests: [].concat(Tests.naming(this.model.collection, this.model))
             }), this.el.querySelector("[data-hook='name']"));
         
+        this.updateValid();
         return this;
     }
 });
@@ -3642,7 +3717,7 @@ var SpecieCollectionFormView = AmpersandView.extend({
   </table> \
   <div data-hook='nav'> \
     <button class='btn' data-hook='previous'>&lt;&lt;</button>\
-    [ <span data-hook='leftPosition'></span> - <span data-hook='rightPosition'></span> ] \
+    [ <span data-hook='leftPosition'></span> - <span data-hook='rightPosition'></span> of <span data-hook='total'></span> ] \
     <button class='btn' data-hook='next'>&gt;&gt;</button>\
   </div> \
 </div>";
@@ -3690,6 +3765,14 @@ module.exports = View.extend({
         valid : 'boolean',
         message : 'string'
     },
+    derived : {
+        invalid : {
+            deps : ['valid'],
+            fn : function() {
+                return !this.valid;
+            }
+        }
+    },
     events: {
         'click [data-hook="delete"]': 'removeSpecies'
     },
@@ -3698,6 +3781,11 @@ module.exports = View.extend({
             type: 'booleanAttribute',
             hook: 'delete',
             name: 'disabled'
+        },
+        'invalid' : {
+            type : 'booleanClass',
+            name : 'invalidRow',
+            hook : 'row'
         }
     },
     initialize : function()
@@ -3705,6 +3793,8 @@ module.exports = View.extend({
         View.prototype.initialize.apply(this, arguments);
         
         this.baseModel = this.model.collection.parent;
+
+        this.updateValid();
     },
     // This will get called by the SubdomainFormView children when a subdomain gets selected/deselected
     updateValid : function()
@@ -3712,16 +3802,19 @@ module.exports = View.extend({
         var valid = true;
         var message = '';
 
-        for(var i = 0; i < this._subviews.length; i++)
+        if(this._subviews)
         {
-            if(typeof(this._subviews[i].valid) != "undefined")
+            for(var i = 0; i < this._subviews.length; i++)
             {
-                valid = valid && this._subviews[i].valid;
-                message = "Invalid species, please fix";
+                if(typeof(this._subviews[i].valid) != "undefined")
+                {
+                    valid = valid && this._subviews[i].valid;
+                    message = "Invalid species, please fix";
+                }
+                
+                if(!valid)
+                    break;
             }
-
-            if(!valid)
-                break;
         }
 
         this.valid = valid;
@@ -3743,6 +3836,8 @@ module.exports = View.extend({
                 this.model.subdomains = _.difference(this.model.subdomains, [subdomain.name]);
             }
         }
+
+        this.updateValid();
 
         if(this.parent && this.parent.update)
             this.parent.update();
@@ -3782,11 +3877,11 @@ module.exports = View.extend({
     {
         if(this.baseModel.isSpatial)
         {
-            this.template = "<tr><td data-hook='name'></td><td data-hook='diffusion'></td><td><center><div data-hook='subdomains'></div></center></td><td><button class='btn' data-hook='delete'>x</button></td></tr>";
+            this.template = "<tr data-hook='row'><td data-hook='name'></td><td data-hook='diffusion'></td><td><center><div data-hook='subdomains'></div></center></td><td><button class='btn' data-hook='delete'>x</button></td></tr>";
         }
         else
         {
-            this.template = "<tr><td data-hook='name'></td><td data-hook='initialCondition'></td><td><button class='btn' data-hook='delete'>x</button></td></tr>";
+            this.template = "<tr data-hook='row'><td data-hook='name'></td><td data-hook='initialCondition'></td><td><button class='btn' data-hook='delete'>x</button></td></tr>";
         }
 
         View.prototype.render.apply(this, arguments);
@@ -3839,6 +3934,7 @@ module.exports = View.extend({
                 }), this.el.querySelector("[data-hook='initialCondition']"));
         }
 
+        this.updateValid();
         return this;
     }
 });
@@ -3984,6 +4080,8 @@ module.exports = View.extend({
     {
         if(element.valid)
             this.model[element.name] = element.value;
+        else
+            this.model[element.name] = null;
     },
     initialize: function()
     {
@@ -4052,7 +4150,7 @@ module.exports = View.extend({
 
         this.renderSubview(
             new ModifyingSelectView({
-                template: '<span><select></select><span data-hook="message-container"><span data-hook="message-text"></span></span></span>',
+                template: '<span><select></select><span data-hook="message-container"></span>',
                 label: '',
                 name: 'specie',
                 value: this.model.specie,
@@ -4444,7 +4542,14 @@ var Model = AmpersandModel.extend({
                     return;
                 }
 
-                this.save(undefined, { success : _.bind(this.modelSaved, this), error : _.bind(this.modelSaveFailed, this) } );
+                try
+                {
+                    this.save(undefined, { success : _.bind(this.modelSaved, this), error : _.bind(this.modelSaveFailed, this) } );
+                }
+                catch(e)
+                {
+                    this.modelSaveFailed();
+                }
             }
         }
         , 500),
@@ -4590,7 +4695,7 @@ var Model = AmpersandModel.extend({
             reactionOut.type = reactionIn.type;
             if(reactionOut.type == 'custom')
             {
-                    reactionOut.equation = reactionIn.equation;
+                reactionOut.equation = reactionIn.equation;
             } else {
                 reactionOut.rate = reactionIn.rate.name;
             }
@@ -4815,6 +4920,11 @@ var Reaction = State.extend({
                     reactants = 2;
                     products = 2;
                 }
+                if(this.type == 'massaction')
+                {
+                    reactants = this.reactants.models.length;
+                    products = this.products.models.length;
+                }
 
                 for(var i = 0; i < reactants; i++)
                 {
@@ -4997,7 +5107,8 @@ var StoichSpecie = State.extend({
         //add remove 
         // Whenever we pick a new species, let the species collection know
         this.on('change:specie', _.bind(function(model) {
-            model.specie.collection.trigger('stoich-specie-change');
+            if(model.specie)
+                model.specie.collection.trigger('stoich-specie-change');
         }, this) );
     }
 });
@@ -67434,7 +67545,7 @@ var ModelCollectionSelectView = AmpersandView.extend({
   </table> \
   <div data-hook='nav'> \
     <button class='btn' data-hook='previous'>&lt;&lt;</button> \
-    [ <span data-hook='leftPosition'></span> - <span data-hook='rightPosition'></span> ] \
+    [ <span data-hook='leftPosition'></span> - <span data-hook='rightPosition'></span> of <span data-hook='total'></span> ] \
     <button class='btn' data-hook='next'>&gt;&gt;</button> \
   </div> \
 </div>";
@@ -67477,7 +67588,7 @@ var Tests = require('../forms/tests');
 //<div>Model type: <div data-hook='type'></div><div data-hook='specie'></div><div data-hook='parameter'></div><div data-hook='reaction'></div><div data-hook='convertToPopulation'></div></div>
 //<i class="icon-remove"></i></span>
 module.exports = View.extend({
-    template: '<tr> \
+    template: '<tr data-hook="row"> \
   <td> \
     <button data-hook="edit" class="btn-small btn">Select</button> \
   </td> \
@@ -67493,7 +67604,16 @@ module.exports = View.extend({
 </tr>',
     // Gotta have a few of these functions just so this works as a form view
     // This gets called when things update
+    props : {
+        valid : 'boolean',
+        message : 'string'
+    },
     bindings: {
+        'invalid' : {
+            type : 'booleanClass',
+            name : 'invalidRow',
+            hook : 'row'
+        },
         'textType' : {
             type : 'text',
             hook: 'type'
@@ -67524,6 +67644,12 @@ module.exports = View.extend({
 
                 return base;
             }
+        },
+        invalid : {
+            deps : ['valid'],
+            fn : function() {
+                return !this.valid;
+            }
         }
     },
     events: {
@@ -67532,10 +67658,10 @@ module.exports = View.extend({
     },
     updateValid : function()
     {
-        this.valid = this.nameBox.valid;
+        this.valid = (!this.nameBox || this.nameBox.valid);
         this.message = '';
 
-        if(!this.nameBox.valid)
+        if(this.nameBox && !this.nameBox.valid)
             this.message = 'Model name invalid';
     },
     update : function(obj)
@@ -67595,6 +67721,12 @@ module.exports = View.extend({
         saveMessageDom.addClass( "alert-error" );
         saveMessageDom.text( "Model not saved to local library!" );
     },
+    initialize: function()
+    {
+        View.prototype.initialize.apply(this, arguments);
+
+        this.updateValid();
+    },
     render: function()
     {
         View.prototype.render.apply(this, arguments);
@@ -67616,6 +67748,7 @@ module.exports = View.extend({
 
         this.deSelect();
 
+        this.updateValid();
         return this;
     }
 });

@@ -220,6 +220,11 @@ var reactants;
                     reactants = 2;
                     products = 2;
                 }
+                if(this.model.type == 'massaction')
+                {
+                    reactants = this.model.reactants.models.length;
+                    products = this.model.products.models.length;
+                }
 
                 for(var i = 0; i < reactants; i++)
                 {
