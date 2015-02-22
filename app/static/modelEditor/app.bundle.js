@@ -1040,7 +1040,8 @@ module.exports = View.extend({
         } else if(obj.name == 'specie') {
             this.model.specie = obj.value;
         } else if(obj.name == 'subdomain') {
-            this.model.subdomain = obj.value;
+            if(typeof(obj.value) != 'undefined' && obj.value.length > 0)
+                this.model.subdomain = Number(obj.value);
         }
         
         this.updateValid();
@@ -1106,19 +1107,18 @@ module.exports = View.extend({
             this.subdomainSelector.remove();
         }
 
-        this.renderSubview(
+        var validSubdomains = this.baseModel.mesh.uniqueSubdomains.map( function(model) { return [String(model.name), String(model.name)]; } );
+
+        this.subdomainSelector = this.renderSubview(
             new SelectView({
                 template: '<div><select></select><div data-hook="message-container"><div class="message" data-hook="message-text"></div></div></div>',
                 label: '',
                 name: 'subdomain',
-                value: this.model.subdomain,
-                options: this.baseModel.mesh.uniqueSubdomains,
+                value: String(this.model.subdomain),
+                options: validSubdomains,
                 unselectedText: 'Select subdomain',
                 parent : this,
-                required: true,
-                idAttribute: 'cid',
-                textAttribute: 'name',
-                yieldModel: true
+                required: true
             }), this.el.querySelector('[data-hook="subdomain"]'));
     },
     render: function()
@@ -1205,7 +1205,7 @@ module.exports = View.extend({
                 yieldModel: true
             }), this.el.querySelector("[data-hook='specie']"));
 
-        this.listenToAndRun(this.model, 'change:mesh', _.bind(this.renderSubdomainSelector, this));
+        this.listenToAndRun(this.baseModel, 'change:mesh', _.bind(this.renderSubdomainSelector, this));
 
         this.updateValid();
         return this;
@@ -4232,7 +4232,7 @@ module.exports = {
     isNumber : function()
     {
         return function(value) {
-            if(value.length == 0)
+            if(value == null || typeof(value) == undefined || (typeof(value) == 'string' && value.length == 0))
             {
                 return "Entry must be non-empty";
             }
@@ -4321,10 +4321,35 @@ module.exports = State.extend({
         type : 'string',
         specie : 'object',
         count : 'number',
-        subdomain : 'object',
-        X : 'number',
-        Y : 'number',
-        Z : 'number'
+        subdomain : 'number',
+        X : {
+            type : 'number',
+            default : function() { return 0.0; }
+        },
+        Y :  {
+            type : 'number',
+            default : function() { return 0.0; }
+        },
+        Z :  {
+            type : 'number',
+            default : function() { return 0.0; }
+        }
+    },
+    derived : {
+        valid : {
+            deps : ['subdomain'],
+            fn : function()
+            {
+                this.baseModel = this.collection.parent;
+
+                for(var i = 0; i < this.baseModel.mesh.uniqueSubdomains.models.length; i++)
+                    if(this.subdomain == this.baseModel.mesh.uniqueSubdomains.models[i].name)
+                        return true;
+
+                return false;
+            },
+            cache : false
+        }
     }
 });
 
@@ -4493,7 +4518,7 @@ var Model = AmpersandModel.extend({
                                          X : initialCondition.x,
                                          Y : initialCondition.y,
                                          Z : initialCondition.z,
-                                         subdomain : subdomainsByName[initialCondition.subdomain] });
+                                         subdomain : initialCondition.subdomain });
         }
 
         delete this.unprocessedInitialConditions;
@@ -4536,7 +4561,7 @@ var Model = AmpersandModel.extend({
             if(this.collection && this.collection.url)
             {
 
-                if(!this.reactions.every( function(reaction) { return reaction.valid; } ))
+                if(!(this.reactions.every( function(reaction) { return reaction.valid; } ) && this.initialConditions.every( function(initialCondition) { return initialCondition.valid; } )))
                 {
                     this.saveState = 'invalid';
                     return;
@@ -4731,7 +4756,7 @@ var Model = AmpersandModel.extend({
                        x : initialCondition.X,
                        y : initialCondition.Y,
                        z : initialCondition.Z,
-                       subdomain : initialCondition.subdomain.name };
+                       subdomain : initialCondition.subdomain };
 
             obj.spatial.initial_conditions.push(ic);
         }

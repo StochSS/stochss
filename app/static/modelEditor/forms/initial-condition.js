@@ -69,7 +69,8 @@ module.exports = View.extend({
         } else if(obj.name == 'specie') {
             this.model.specie = obj.value;
         } else if(obj.name == 'subdomain') {
-            this.model.subdomain = obj.value;
+            if(typeof(obj.value) != 'undefined' && obj.value.length > 0)
+                this.model.subdomain = Number(obj.value);
         }
         
         this.updateValid();
@@ -135,19 +136,18 @@ module.exports = View.extend({
             this.subdomainSelector.remove();
         }
 
-        this.renderSubview(
+        var validSubdomains = this.baseModel.mesh.uniqueSubdomains.map( function(model) { return [String(model.name), String(model.name)]; } );
+
+        this.subdomainSelector = this.renderSubview(
             new SelectView({
                 template: '<div><select></select><div data-hook="message-container"><div class="message" data-hook="message-text"></div></div></div>',
                 label: '',
                 name: 'subdomain',
-                value: this.model.subdomain,
-                options: this.baseModel.mesh.uniqueSubdomains,
+                value: String(this.model.subdomain),
+                options: validSubdomains,
                 unselectedText: 'Select subdomain',
                 parent : this,
-                required: true,
-                idAttribute: 'cid',
-                textAttribute: 'name',
-                yieldModel: true
+                required: true
             }), this.el.querySelector('[data-hook="subdomain"]'));
     },
     render: function()
@@ -234,7 +234,7 @@ module.exports = View.extend({
                 yieldModel: true
             }), this.el.querySelector("[data-hook='specie']"));
 
-        this.listenToAndRun(this.model, 'change:mesh', _.bind(this.renderSubdomainSelector, this));
+        this.listenToAndRun(this.baseModel, 'change:mesh', _.bind(this.renderSubdomainSelector, this));
 
         this.updateValid();
         return this;

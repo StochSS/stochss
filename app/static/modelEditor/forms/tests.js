@@ -24,7 +24,7 @@ module.exports = {
     isNumber : function()
     {
         return function(value) {
-            if(value.length == 0)
+            if(value == null || typeof(value) == undefined || (typeof(value) == 'string' && value.length == 0))
             {
                 return "Entry must be non-empty";
             }

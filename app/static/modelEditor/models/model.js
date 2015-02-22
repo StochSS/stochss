@@ -92,7 +92,7 @@ var Model = AmpersandModel.extend({
                                          X : initialCondition.x,
                                          Y : initialCondition.y,
                                          Z : initialCondition.z,
-                                         subdomain : subdomainsByName[initialCondition.subdomain] });
+                                         subdomain : initialCondition.subdomain });
         }
 
         delete this.unprocessedInitialConditions;
@@ -135,7 +135,7 @@ var Model = AmpersandModel.extend({
             if(this.collection && this.collection.url)
             {
 
-                if(!this.reactions.every( function(reaction) { return reaction.valid; } ))
+                if(!(this.reactions.every( function(reaction) { return reaction.valid; } ) && this.initialConditions.every( function(initialCondition) { return initialCondition.valid; } )))
                 {
                     this.saveState = 'invalid';
                     return;
@@ -330,7 +330,7 @@ var Model = AmpersandModel.extend({
                        x : initialCondition.X,
                        y : initialCondition.Y,
                        z : initialCondition.Z,
-                       subdomain : initialCondition.subdomain.name };
+                       subdomain : initialCondition.subdomain };
 
             obj.spatial.initial_conditions.push(ic);
         }
