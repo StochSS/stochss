@@ -102,6 +102,7 @@ class StochKitModelWrapper(db.Model):
         parameters = []
         reactions = []
 
+        mesheditor.setupMeshes(handler)
         meshWrapperDb = db.GqlQuery("SELECT * FROM MeshWrapper WHERE userId = :1", handler.user.user_id()).get()
 
         def fixName(name):
