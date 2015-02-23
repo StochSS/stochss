@@ -113,7 +113,8 @@
     		<% } %>		
     	<% } %>
     </div>
-    
+
+    <% if (status != "Failed" ){ %>
     <div class="well">
         <h3>Reproduction and Cost Analysis</h3>
         <br />
@@ -138,6 +139,7 @@
     		<p>Local job. No reproduction and cost analysis available</p>
     	<% } %>    	
     </div>
+    <% } %>    	
 
 </script>
 {% endblock %}

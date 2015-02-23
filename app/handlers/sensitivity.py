@@ -102,75 +102,89 @@ class SensitivityPage(BaseHandler):
                                                      "job" : jsonJob}))
                     return
                 outputdir = job.outData
-                # Load all data from file in JSON format
-                vhandle = open(outputdir + '/result/output.txt', 'r')
-                values = { 'time' : [], 'trajectories' : {}, 'sensitivities' : {}, 'parameters' : {}}
-                parameters = []
-                columnToList = []
-                for i, line in enumerate(vhandle):
-                    if i == 0:
-                        continue
-                    elif i == 1:
-                        names = line.split()
+                try:
+                    # Load all data from file in JSON format
+                    vhandle = open(outputdir + '/result/output.txt', 'r')
+                    values = { 'time' : [], 'trajectories' : {}, 'sensitivities' : {}, 'parameters' : {}}
+                    parameters = []
+                    columnToList = []
+                    for i, line in enumerate(vhandle):
+                        if i == 0:
+                            continue
+                        elif i == 1:
+                            names = line.split()
 
-                        parameterNames = []
+                            parameterNames = []
 
-                        for name in names:
-                            if ':' in name:
-                                specie, parameter = name.split(':')
-                                if parameter not in parameterNames:
-                                    parameterNames.append(parameter)
-                        
-                        for name in names:
-                            if name == 'time':
-                                columnToList.append(values['time'])
-                            elif ':' in name:
-                                specie, parameter = name.split(':')
+                            for name in names:
+                                if ':' in name:
+                                    specie, parameter = name.split(':')
+                                    if parameter not in parameterNames:
+                                        parameterNames.append(parameter)
+                            
+                            for name in names:
+                                if name == 'time':
+                                    columnToList.append(values['time'])
+                                elif ':' in name:
+                                    specie, parameter = name.split(':')
 
-                                if specie not in values['sensitivities']:
-                                    values['sensitivities'][specie] = {}
+                                    if specie not in values['sensitivities']:
+                                        values['sensitivities'][specie] = {}
 
-                                values['sensitivities'][specie][parameter] = [] # Make a new timeseries for sensitivity
-                                columnToList.append(values['sensitivities'][specie][parameter]) # Store a reference here for future use
-                            else:
-                                values['trajectories'][name] = [] # start a new timeseries for this name
-                                columnToList.append(values['trajectories'][name]) # Store a reference here for future use
-                    elif i == 2:
-                        parameters = map(float, line.split())
-                    elif i == 3:
-                        for storage, value in zip(columnToList, map(float, line.split())):
-                            storage.append(value)
-                    elif i == 4:
-                        continue
-                    else:
-                        for storage, value in zip(columnToList, map(float, line.split())):
-                            storage.append(value)
-                vhandle.close()
+                                    values['sensitivities'][specie][parameter] = [] # Make a new timeseries for sensitivity
+                                    columnToList.append(values['sensitivities'][specie][parameter]) # Store a reference here for future use
+                                else:
+                                    values['trajectories'][name] = [] # start a new timeseries for this name
+                                    columnToList.append(values['trajectories'][name]) # Store a reference here for future use
+                        elif i == 2:
+                            parameters = map(float, line.split())
+                        elif i == 3:
+                            for storage, value in zip(columnToList, map(float, line.split())):
+                                storage.append(value)
+                        elif i == 4:
+                            continue
+                        else:
+                            for storage, value in zip(columnToList, map(float, line.split())):
+                                storage.append(value)
+                    vhandle.close()
 
-                values['parameters'] = dict(zip(parameterNames, parameters))
+                    values['parameters'] = dict(zip(parameterNames, parameters))
 
+                    self.response.headers['Content-Type'] = 'application/json'
+                    self.response.write(json.dumps({ "status" : "Finished",
+                                                     "values" : values,
+                                                     "job" : jsonJob }))
+                    return
+                except IOError as ioe:
+                    logging.error("caught error {0}".format(ioe))
+                    job.status = "Failed"
+                    print "put job.status = Failed"
+                    job.put()
+                    
+            if job.status == "Failed":
                 self.response.headers['Content-Type'] = 'application/json'
-                self.response.write(json.dumps({ "status" : "Finished",
-                                                 "values" : values,
-                                                 "job" : jsonJob }))
-            elif job.status == "Failed":
-                self.response.headers['Content-Type'] = 'application/json'
 
-                fstdoutHandle = open(job.outData + '/stdout', 'r')
-                stdout = fstdoutHandle.read()
-                fstdoutHandle.close()
-
-                fstderrHandle = open(job.outData + '/stderr', 'r')
-                stderr = fstderrHandle.read()
-                fstderrHandle.close()
+                stdout = ''
+                stderr = ''
+                try:
+                    fstdoutHandle = open(job.outData + '/stdout.log', 'r')
+                    stdout = fstdoutHandle.read()
+                    fstdoutHandle.close()
+                    fstderrHandle = open(job.outData + '/stderr.log', 'r')
+                    stderr = fstderrHandle.read()
+                    fstderrHandle.close()
+                except  IOError as ioe:
+                    logging.error("could not open error log files in {0}".format(job.outData))
 
                 self.response.write(json.dumps({ "status" : "Failed",
                                                  "stdout" : stdout,
                                                  "stderr" : stderr,
                                                  "job" : jsonJob}))
-            else:
-                self.response.headers['Content-Type'] = 'application/json'
-                self.response.write(json.dumps({ "status" : "asdfasdf" }))
+                return
+
+            # else
+            self.response.headers['Content-Type'] = 'application/json'
+            self.response.write(json.dumps({ "status" : "asdfasdf" }))
         elif reqType == "getFromCloud":
             job = SensitivityJobWrapper.get_by_id(int(self.request.get('id')))
 
