@@ -880,7 +880,7 @@ var PaginatedCollectionView = require('./paginated-collection-view');
 var Tests = require('./tests');
 var AddNewInitialConditionForm = AmpersandFormView.extend({
     submitCallback: function (obj) {
-        var model = this.collection.addScatterInitialCondition(this.baseModel.species.at(0), 0, this.baseModel.mesh.uniqueSubdomains.at(0));
+        var model = this.collection.addScatterInitialCondition(this.baseModel.species.at(0), 0, this.baseModel.mesh.uniqueSubdomains.at(0).name);
         
         this.selectView.select(model, true);
     },
@@ -1125,6 +1125,8 @@ module.exports = View.extend({
                 parent : this,
                 required: true
             }), this.el.querySelector('[data-hook="subdomain"]'));
+
+        this.update(this.subdomainSelector);
     },
     render: function()
     {
@@ -1751,7 +1753,6 @@ module.exports = View.extend({
         // renderer
         var renderer2 = new THREE.WebGLRenderer({ alpha: true });
         renderer2.setClearColor( 0x000000, 0 ); 
-        console.log("Width: ",this.d_width);
         renderer2.setSize( this.d_width/5, this.d_width/5);
         $( renderer2.domElement ).appendTo(dom2);
         
@@ -1814,10 +1815,14 @@ module.exports = View.extend({
             return;
         }
 
-        var canvas = document.createElement('canvas');
-        gl = canvas.getContext("webgl");
-        delete canvas;
-        if (!gl) {
+        if(typeof(this.webGL) == 'undefined')
+        {
+            var canvas = document.createElement('canvas');
+            this.webGL = Boolean(canvas.getContext("webgl"));
+            delete canvas;
+        }
+
+        if (!this.webGL) {
             // Browser could not initialize WebGL. User probably needs to
             // update their drivers or get a new browser. Present a link to
             // http://get.webgl.org/troubleshooting

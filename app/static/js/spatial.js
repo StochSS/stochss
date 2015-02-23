@@ -110,51 +110,58 @@ Spatial.Controller = Backbone.View.extend(
 
         addAxes : function(){
             var dom2 = $( '#inset' ).empty();
-            // camera
             var camera2 = new THREE.OrthographicCamera( -1, 1, 1, -1, 1, 1000);
             this.camera2 = camera2; 
-
+            
             // renderer
             var renderer2 = new THREE.WebGLRenderer({ alpha: true });
             renderer2.setClearColor( 0x000000, 0 ); 
-            console.log("Width: ",this.d_width);
             renderer2.setSize( this.d_width/5, this.d_width/5);
             $( renderer2.domElement ).appendTo(dom2);
-
+            
             this.renderer2 = renderer2;
-
+            
             // scene
             var scene2 = new THREE.Scene();
             this.scene2 = scene2;
-
+            
             // axes
             var dir = new THREE.Vector3( 1.0, 0.0, 0.0 );
             var origin = new THREE.Vector3( 0, 0, 0 ); 
-            var length = 1; 
             var hex = 0xff0000; 
-            var xaxis = new THREE.ArrowHelper( dir, origin, length, hex );
+            var material = new THREE.LineBasicMaterial({ color: hex });
+            var geometry = new THREE.Geometry();
+            geometry.vertices.push( origin, dir );
+            var line = new THREE.Line( geometry, material );
+            //var coneGeometry = new THREE.CylinderGeometry( 0, 0.5, 1, 5, 1 );
+            //coneGeometry.applyMatrix( new THREE.Matrix4().makeTranslation( 1.0, 0.0, 0 ) );
+            //var cone = new THREE.Mesh( coneGeometry, new THREE.MeshBasicMaterial( { color: color } ) );
+            //   this.cone.matrixAutoUpdate = false;
+            //   this.add( this.cone );
             this.createText('X',1.25, -0.3, 0);
-            scene2.add( xaxis );
-
-
+            this.scene2.add( line );
+            
+            
             dir = new THREE.Vector3( 0, 1.0, 0 );
             origin = new THREE.Vector3( 0, 0, 0 ); 
-            length = 1; 
             hex = 0x0000ff; 
-            yaxis = new THREE.ArrowHelper( dir, origin, length, hex );
+            material = new THREE.LineBasicMaterial({ color: hex });
+            geometry = new THREE.Geometry();
+            geometry.vertices.push( origin, dir );
+            line = new THREE.Line( geometry, material );
             this.createText('Y', 0.5,0.5,0);            
-            scene2.add( yaxis );
-
-
+            scene2.add( line );
+            
+            
             dir = new THREE.Vector3( 0, 0, 1.0 );
             origin = new THREE.Vector3( 0, 0, 0 ); 
-            length = 1; 
             hex = 0x00ff00; 
-            zaxis = new THREE.ArrowHelper( dir, origin, length, hex );
+            material = new THREE.LineBasicMaterial({ color: hex });
+            geometry = new THREE.Geometry();
+            geometry.vertices.push( origin, dir );
+            line = new THREE.Line( geometry, material );
             this.createText('Z', 0.5,-0.4,0.9);
-            scene2.add( zaxis );
-
-
+            scene2.add( line );
         },
 
 
@@ -192,11 +199,14 @@ Spatial.Controller = Backbone.View.extend(
                 return;
             }
 
-            var canvas = document.createElement('canvas');
+            if(typeof(this.webGL) == 'undefined')
+            {
+                var canvas = document.createElement('canvas');
+                this.webGL = Boolean(canvas.getContext("webgl"));
+                delete canvas;
+            }
 
-            gl = canvas.getContext("webgl");
-            delete canvas;
-            if (!gl) {
+            if (!this.webGL) {
                 // Browser could not initialize WebGL. User probably needs to
                 // update their drivers or get a new browser. Present a link to
                 // http://get.webgl.org/troubleshooting
@@ -230,7 +240,11 @@ Spatial.Controller = Backbone.View.extend(
                 this.renderer = renderer;
                 this.controls = controls;
 
-
+                // Adding gui
+                this.addGui();
+                
+                // Adding Axes
+                this.addAxes();
             }
             else
             {
@@ -263,12 +277,6 @@ Spatial.Controller = Backbone.View.extend(
             
             this.scene = scene;
 
-            // Adding gui
-            this.addGui();
-
-            // Adding Axes
-            this.addAxes();
-
             $( "#meshPreviewMsg" ).hide();
 
             //$( "#meshPreview" ).show();
@@ -278,9 +286,6 @@ Spatial.Controller = Backbone.View.extend(
                 this.renderFrame();
                 this.rendererInitialized = true;
             }
-
-            console.log("Width: "+width+" Height:"+height);
-
         },
 
 

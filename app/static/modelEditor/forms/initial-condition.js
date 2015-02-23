@@ -149,6 +149,8 @@ module.exports = View.extend({
                 parent : this,
                 required: true
             }), this.el.querySelector('[data-hook="subdomain"]'));
+
+        this.update(this.subdomainSelector);
     },
     render: function()
     {
