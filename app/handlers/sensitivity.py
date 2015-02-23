@@ -301,6 +301,19 @@ class SensitivityPage(BaseHandler):
         modelFileName = '{0}/{1}.xml'.format(job.outData, model.name)
         fmodelHandle = open(modelFileName, 'w')
         stochkitmodel = model.createStochKitModel()
+
+        # Wow, what a hack
+        if stochkitmodel.units.lower() == 'population':
+            document = stochkitmodel.serialize()
+            
+            stochkitmodel = StochMLDocument.fromString(document).toModel(model.name)
+            
+            for reactionN in stochkitmodel.getAllReactions():
+                reaction = stochkitmodel.getAllReactions()[reactionN]
+                if reaction.massaction:
+                    if len(reaction.reactants) == 1 and reaction.reactants.values()[0] == 2:
+                        reaction.marate.setExpression(reaction.marate.expression + ' / 2')
+
         fmodelHandle.write(stochkitmodel.serialize())
         fmodelHandle.close()
 
@@ -339,6 +352,19 @@ class SensitivityPage(BaseHandler):
             if data['selections']["pc"][parameter]:
                 parameters.append(parameter)
         stochkitmodel = model.createStochKitModel() 
+
+        # Wow, what a hack
+        if stochkitmodel.units.lower() == 'population':
+            document = stochkitmodel.serialize()
+            
+            stochkitmodel = StochMLDocument.fromString(document).toModel(model.name)
+            
+            for reactionN in stochkitmodel.getAllReactions():
+                reaction = stochkitmodel.getAllReactions()[reactionN]
+                if reaction.massaction:
+                    if len(reaction.reactants) == 1 and reaction.reactants.values()[0] == 2:
+                        reaction.marate.setExpression(reaction.marate.expression + ' / 2')
+
         params = {
             "job_type": "sensitivity",
             "document": str( stochkitmodel.serialize() ),

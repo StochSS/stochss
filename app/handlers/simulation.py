@@ -672,6 +672,8 @@ class SimulatePage(BaseHandler):
             executable = exec_type.lower()
             document = model.serialize()
 
+            # Wow, what a hack
+
             if executable == 'deterministic' and model.units.lower() == 'population':
                 model = StochMLDocument.fromString(document).toModel(model.name)
 
