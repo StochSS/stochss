@@ -678,7 +678,7 @@ class URDMEModel(Model):
         maxcolsum = numpy.argmax(colsum)
         if colsum[0,maxcolsum] > 1e-10:
             D = urdme_solver_data["D"]
-            raise InvalidSystemMatrixException("Invalid diffusion matrix. The sum of the columns does not sum to zero. " + str(maxcolsum) + str(colsum[0,maxcolsum]))
+            raise InvalidSystemMatrixException("Invalid diffusion matrix. The sum of the columns does not sum to zero. \n" + str(maxcolsum) + ' ' + str(colsum[0,maxcolsum]) + "\nThis can be caused by a large difference between the largest and smallest diffusion coefficients.")
 
     def create_connectivity_matrix(self):
         """ Assemble a connectivity matrix in CCS format. """
