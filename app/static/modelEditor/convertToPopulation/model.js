@@ -76,6 +76,7 @@ module.exports = View.extend({
                     }
 
                     var newParam = this.model.parameters.addParameter(tmpName + j, reactions[i].rate.value + factor );
+
                     reactions[i].rate = newParam;
                 }
             }

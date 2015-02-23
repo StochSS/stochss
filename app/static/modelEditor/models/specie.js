@@ -23,7 +23,7 @@ module.exports = AmpModel.extend({
     {
         AmpModel.prototype.initialize.apply(this, arguments);
     },
-    setupValidation: function()
+    setUpValidation: function()
     {
         //Listen for messages from stoich-specie objects
         this.listenTo(this.collection, 'stoich-specie-change', _.bind(this.updateInUse, this))

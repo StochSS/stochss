@@ -77,6 +77,7 @@ module.exports = View.extend({
                     }
 
                     var newParam = this.model.parameters.addParameter(tmpName + j, reactions[i].rate.value + factor );
+
                     reactions[i].rate = newParam;
                 }
             }
@@ -4062,12 +4063,12 @@ var Model = AmpersandModel.extend({
 
         for(var i = 0; i < this.species.models.length; i++)
         {
-            this.species.models[i].setupValidation();
+            this.species.models[i].setUpValidation();
         }
 
         for(var i = 0; i < this.parameters.models.length; i++)
         {
-            this.parameters.models[i].setupValidation();
+            this.parameters.models[i].setUpValidation();
         }
 
         var speciesByName = {};
@@ -4213,7 +4214,7 @@ var Model = AmpersandModel.extend({
         {
             for(var i = 0; i < species.length; i++)
             {
-                speciesByName[species[i].name] = this.species.addSpecie(species[i].name, species[i].initialCondition, attr.spatial.species_diffusion_coefficients[species[i].name], attr.spatial.species_subdomain_assignments[species[i].name]);
+                speciesByName[species[i].name] = this.species.addSpecie(species[i].name, species[i].initialCondition, attr.spatial.species_diffusion_coefficients[species[i].name], attr.spatial.species_subdomain_assignments[species[i].name], true);
             }
         }
 
@@ -4223,7 +4224,7 @@ var Model = AmpersandModel.extend({
         {
             for(var i = 0; i < parameters.length; i++)
             {
-                parametersByName[parameters[i].name] = this.parameters.addParameter(parameters[i].name, String(parameters[i].value));
+                parametersByName[parameters[i].name] = this.parameters.addParameter(parameters[i].name, String(parameters[i].value), true);
             }
         }
 
@@ -4356,14 +4357,19 @@ var parameter = require('./parameter');
 
 module.exports = Collection.extend({
     model: parameter,
-    addParameter: function(name, value) {
+    addParameter: function(name, value, skipSetUpValidation) {
         var unique = this.models.every(function(model) { return model["name"] != name });
 
         // If the new Species name is not unique, return false
         if(!unique)
             return undefined;
 
-        return this.add({ name : name, value : value });
+        var parameter = this.add({ name : name, value : value });
+
+        if(!skipSetUpValidation)
+            parameter.setUpValidation();
+
+        return parameter;
     }
 });
 },{"./collection":"/home/bbales2/stochssModel/app/static/modelEditor/models/collection.js","./parameter":"/home/bbales2/stochssModel/app/static/modelEditor/models/parameter.js"}],"/home/bbales2/stochssModel/app/static/modelEditor/models/parameter.js":[function(require,module,exports){
@@ -4380,7 +4386,7 @@ module.exports = AmpModel.extend({
     {
         AmpModel.prototype.initialize.apply(this, arguments);
     },
-    setupValidation: function()
+    setUpValidation: function()
     {
         //Listen for messages from reaction objects
         this.listenTo(this.collection, 'reaction-rate-change', _.bind(this.updateInUse, this))
@@ -4598,14 +4604,19 @@ var specie = require('./specie');
 
 module.exports = Collection.extend({
     model: specie,
-    addSpecie: function(name, initialCondition, diffusion, subdomains) {
+    addSpecie: function(name, initialCondition, diffusion, subdomains, skipSetUpValidation) {
         var unique = this.models.every(function(model) { return model["name"] != name });
 
         // If the new Species name is not unique, return false
         if(!unique)
             return undefined;
 
-        return this.add({ name : name, initialCondition : initialCondition, diffusion : diffusion, subdomains : subdomains });
+        var specie = this.add({ name : name, initialCondition : initialCondition, diffusion : diffusion, subdomains : subdomains });
+        
+        if(skipSetUpValidation)
+            specie.setUpValidation();
+
+        return specie;
     }
 });
 },{"./collection":"/home/bbales2/stochssModel/app/static/modelEditor/models/collection.js","./specie":"/home/bbales2/stochssModel/app/static/modelEditor/models/specie.js"}],"/home/bbales2/stochssModel/app/static/modelEditor/models/specie.js":[function(require,module,exports){
@@ -4634,7 +4645,7 @@ module.exports = AmpModel.extend({
     {
         AmpModel.prototype.initialize.apply(this, arguments);
     },
-    setupValidation: function()
+    setUpValidation: function()
     {
         //Listen for messages from stoich-specie objects
         this.listenTo(this.collection, 'stoich-specie-change', _.bind(this.updateInUse, this))

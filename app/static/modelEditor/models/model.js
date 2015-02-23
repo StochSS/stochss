@@ -61,12 +61,12 @@ var Model = AmpersandModel.extend({
 
         for(var i = 0; i < this.species.models.length; i++)
         {
-            this.species.models[i].setupValidation();
+            this.species.models[i].setUpValidation();
         }
 
         for(var i = 0; i < this.parameters.models.length; i++)
         {
-            this.parameters.models[i].setupValidation();
+            this.parameters.models[i].setUpValidation();
         }
 
         var speciesByName = {};
@@ -212,7 +212,7 @@ var Model = AmpersandModel.extend({
         {
             for(var i = 0; i < species.length; i++)
             {
-                speciesByName[species[i].name] = this.species.addSpecie(species[i].name, species[i].initialCondition, attr.spatial.species_diffusion_coefficients[species[i].name], attr.spatial.species_subdomain_assignments[species[i].name]);
+                speciesByName[species[i].name] = this.species.addSpecie(species[i].name, species[i].initialCondition, attr.spatial.species_diffusion_coefficients[species[i].name], attr.spatial.species_subdomain_assignments[species[i].name], true);
             }
         }
 
@@ -222,7 +222,7 @@ var Model = AmpersandModel.extend({
         {
             for(var i = 0; i < parameters.length; i++)
             {
-                parametersByName[parameters[i].name] = this.parameters.addParameter(parameters[i].name, String(parameters[i].value));
+                parametersByName[parameters[i].name] = this.parameters.addParameter(parameters[i].name, String(parameters[i].value), true);
             }
         }
 
