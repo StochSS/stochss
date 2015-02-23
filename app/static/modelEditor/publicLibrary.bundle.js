@@ -4061,7 +4061,7 @@ var Model = AmpersandModel.extend({
             this.mesh = meshCollection.models[0];
         }
 
-        for(var i = 0; i < this.species.models.length; i++)
+        /*for(var i = 0; i < this.species.models.length; i++)
         {
             this.species.models[i].setUpValidation();
         }
@@ -4069,7 +4069,7 @@ var Model = AmpersandModel.extend({
         for(var i = 0; i < this.parameters.models.length; i++)
         {
             this.parameters.models[i].setUpValidation();
-        }
+        }*/
 
         var speciesByName = {};
         var subdomainsByName = {};
@@ -4613,7 +4613,7 @@ module.exports = Collection.extend({
 
         var specie = this.add({ name : name, initialCondition : initialCondition, diffusion : diffusion, subdomains : subdomains });
         
-        if(skipSetUpValidation)
+        if(!skipSetUpValidation)
             specie.setUpValidation();
 
         return specie;

@@ -13,7 +13,7 @@ module.exports = Collection.extend({
 
         var specie = this.add({ name : name, initialCondition : initialCondition, diffusion : diffusion, subdomains : subdomains });
         
-        if(skipSetUpValidation)
+        if(!skipSetUpValidation)
             specie.setUpValidation();
 
         return specie;
