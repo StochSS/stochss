@@ -212,9 +212,9 @@ var PrimaryView = View.extend({
 
             // Need to remember this so we can clean up event handlers
             this.selected = this.modelSelector.selected;
-
-            this.updateModelNameText();
         }
+
+        this.updateModelNameText();
     },
     exportModel : function()
     {
@@ -280,6 +280,8 @@ var PrimaryView = View.extend({
 
             delete this.modelEditor;
         }
+
+        this.updateModelNameText();
     },
     exportModelAsZip: function()
     {

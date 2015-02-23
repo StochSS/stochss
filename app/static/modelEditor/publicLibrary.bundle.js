@@ -556,12 +556,12 @@ var SubdomainFormView = require('./subdomain');
 var Tests = require('./tests');
 module.exports = View.extend({
     template : "<tr data-hook='row'> \
-  <td> \
+  <td valign='top'> \
     <button class='btn' data-hook='delete'>x</button> \
   </td> \
-  <td data-hook='typeSelect'></td> \
-  <td data-hook='specie'></td> \
-  <td data-hook='details'> \
+  <td data-hook='typeSelect' valign='top'></td> \
+  <td data-hook='specie' valign='top'></td> \
+  <td data-hook='details' valign='top'> \
     <table> \
       <tr> \
         <td>Count:</td><td><div data-hook='count'></div></td> \
@@ -2539,11 +2539,11 @@ var ReactionCollectionFormView = AmpersandView.extend({
         var intro;
         if(this.collection.parent.isSpatial)
         {
-            intro = "Define reactions here. Select from the given reaction templates, or use the custom types at the bottom of the add button. In general, try to use templated reactions and mass action reactions before using custom propensities.<br><br>Reactions can be limited to occur only in specific subdomains.";
+            intro = "Define reactions. Select from the given reaction templates, or use the custom types. Using templated reaction types will help eliminate errors. For non-linear reactions, use the custom propensity type. Reactions can be restricted to specific subdomains.";
         }
         else
         {
-            intro = "Define reactions here. Select from the given reaction templates, or use the custom types at the bottom of the add button. In general, try to use templated reactions and mass action reactions before using custom propensities.";
+            intro = "Define reactions. Select from the given reaction templates, or use the custom types. Using templated reaction types will help eliminate errors. For non-linear reactions, use the custom propensity type.";
         }
 
         this.template = "<div>" + intro + "\
@@ -3276,11 +3276,11 @@ var SpecieCollectionFormView = AmpersandView.extend({
         var intro;
         if(this.collection.parent.isSpatial)
         {
-            intro = "Define species and their spatial properties here. Species have a single diffusion coefficient for the entire model, but can be limited to only diffuse into certain subdomains.";
+            intro = "Define species and their spatial properties. Species have a single diffusion coefficient for the entire model, but can be limited to only diffuse into certain subdomains.";
         }
         else
         {
-            intro = "Define species and their initial conditions here. For concentration models this is a positive floating point value and for population models this is an integer.";
+            intro = "Define species and their initial conditions. For concentration models this is a positive floating point value and for population models this is an integer.";
         }
 
         var collectionTemplate = "<div>" + intro + "<table width='100%' data-hook='table'> \

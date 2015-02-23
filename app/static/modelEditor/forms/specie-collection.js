@@ -102,11 +102,11 @@ var SpecieCollectionFormView = AmpersandView.extend({
         var intro;
         if(this.collection.parent.isSpatial)
         {
-            intro = "Define species and their spatial properties here. Species have a single diffusion coefficient for the entire model, but can be limited to only diffuse into certain subdomains.";
+            intro = "Define species and their spatial properties. Species have a single diffusion coefficient for the entire model, but can be limited to only diffuse into certain subdomains.";
         }
         else
         {
-            intro = "Define species and their initial conditions here. For concentration models this is a positive floating point value and for population models this is an integer.";
+            intro = "Define species and their initial conditions. For concentration models this is a positive floating point value and for population models this is an integer.";
         }
 
         var collectionTemplate = "<div>" + intro + "<table width='100%' data-hook='table'> \

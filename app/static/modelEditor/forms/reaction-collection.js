@@ -246,11 +246,11 @@ var ReactionCollectionFormView = AmpersandView.extend({
         var intro;
         if(this.collection.parent.isSpatial)
         {
-            intro = "Define reactions here. Select from the given reaction templates, or use the custom types at the bottom of the add button. In general, try to use templated reactions and mass action reactions before using custom propensities.<br><br>Reactions can be limited to occur only in specific subdomains.";
+            intro = "Define reactions. Select from the given reaction templates, or use the custom types. Using templated reaction types will help eliminate errors. For non-linear reactions, use the custom propensity type. Reactions can be restricted to specific subdomains.";
         }
         else
         {
-            intro = "Define reactions here. Select from the given reaction templates, or use the custom types at the bottom of the add button. In general, try to use templated reactions and mass action reactions before using custom propensities.";
+            intro = "Define reactions. Select from the given reaction templates, or use the custom types. Using templated reaction types will help eliminate errors. For non-linear reactions, use the custom propensity type.";
         }
 
         this.template = "<div>" + intro + "\

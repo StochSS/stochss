@@ -68,7 +68,6 @@
                         </div>
                         <div id="collapseMesh3d" class="accordion-body collapse">
                             <div class="accordion-inner">
-                                Select a model mesh here and visualize the subdomains. The subdomain information will be used later to define where species can diffuse and where reactions take effect.
                                 <div data-hook="mesh"></div>
                                 <hr />
                                 <div data-hook="mesh3d"></div>
@@ -97,12 +96,11 @@
                         </div>
                         <div id="collapseInitialConditions" class="accordion-body collapse">
                             <div class="accordion-inner">
-                                Define the initial conditions for a spatial simulation here.
-                                <br><br>
+                                Define the initial conditions for a spatial simulation.
                                 <ul>
-                                    <li>A 'Scatter' initial condition distributes Count particles over the chosen subdomain.</li>
-                                    <li>A 'Place' initial condition places Count particles at a given X, Y, Z coordinate.</li>
-                                    <li>A 'Distribute uniformly' initial condition puts Count particles in each voxel of the chosen subdomain.</li>
+                                    <li>A 'Scatter' initial condition distributes 'Count' particles over the chosen subdomain.</li>
+                                    <li>A 'Place' initial condition places 'Count' particles at a given X, Y, Z coordinate.</li>
+                                    <li>A 'Distribute Uniformly' initial condition puts 'Count' particles in each voxel of the chosen subdomain.</li>
                                 </ul>
 
                                 <div data-hook="initialConditions"></div>
@@ -118,7 +116,7 @@
                     </div>
                     <div id="collapseParameters" class="accordion-body collapse">
                         <div class="accordion-inner">
-                            Define the model parameters here. Parameters constants used to defined reaction rates in the simulation. Parameters can be functions of other parameters. The syntax is limited to that accepted in Stochkit.
+                            Define the model parameters. Parameter constants are used to defined reaction rates in the simulation. Stochkit syntax is used to define the parameters. They can be functions of other parameters or simple math operations.
                             <div data-hook="parameter"></div>
                         </div>
                     </div>
@@ -176,7 +174,9 @@
                 <div id="collapseTwo2" class="accordion-body collapse in">
                     <div class="accordion-inner">
                         <div class="row">
-                            <div class="span11">For a guide on the .xml/.txt mesh format used here, look at <a href="http://iguana.cs.ucsb.edu/releases/tutorials/dolfin_notes.pdf">dolfin_notes.pdf</a> (which can also be found in the documentation on the StochSS website).</div>
+                            <div class="span11">
+                                Select a model mesh and visualize the subdomains. The subdomain information will be used to define where species can diffuse and where reactions occur.
+                            </div>
 
                             <div class="span8">
                                 <div data-hook="meshTable">

@@ -10,12 +10,12 @@ var SubdomainFormView = require('./subdomain');
 var Tests = require('./tests');
 module.exports = View.extend({
     template : "<tr data-hook='row'> \
-  <td> \
+  <td valign='top'> \
     <button class='btn' data-hook='delete'>x</button> \
   </td> \
-  <td data-hook='typeSelect'></td> \
-  <td data-hook='specie'></td> \
-  <td data-hook='details'> \
+  <td data-hook='typeSelect' valign='top'></td> \
+  <td data-hook='specie' valign='top'></td> \
+  <td data-hook='details' valign='top'> \
     <table> \
       <tr> \
         <td>Count:</td><td><div data-hook='count'></div></td> \
