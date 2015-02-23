@@ -81,6 +81,9 @@ class CostAnalysisPage(BaseHandler):
         context['id'] = params['id']
         context['job_type']= params['job_type'] 
         context['all_instance_types'] = ALL_INSTANCE_TYPES
+        context['analyzed_instance_types'] = {x:True for x in ALL_INSTANCE_TYPES}
+        for job in eval(context['jobs']):
+            context['analyzed_instance_types'][job['instance_type']] = False
         self.render_response('cost_analysis.html', **context) 
     
     def post(self):

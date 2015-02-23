@@ -47,7 +47,9 @@
 			<th width="150pt">Run Analysis</th>
 			{% for each_instance_type in all_instance_types %}
     		<td width="100pt">
+                {% if analyzed_instance_types[each_instance_type] %}
     			<a href="javascript:void(0)" onclick="costrun('/cost_analysis?req_type=analyze&job_type={{job_type}}&id={{id}}&instance_type={{each_instance_type}}', '{{uuid}}', '{{name}}', '{{each_instance_type}}');">Analyze</a>
+  		        {% endif %}
     		</td>
     		{% endfor%}
     	</tr>
