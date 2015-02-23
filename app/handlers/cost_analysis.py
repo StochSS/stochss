@@ -27,10 +27,15 @@ def get_all_jobs_time_cost(uuid, access_key, secret_key):
         return jobs
     
     try:
+        seen_instance_types = {} # so we don't get duplicate entries
         for result in results:
             job = {}
             job['agent'] = result['agent']
             job['instance_type'] = result['instance_type']
+            if job['instance_type'] in seen_instance_types:
+                continue
+            else:
+                seen_instance_types[job['instance_type']] = 1
             job['status'] = result['status']
             if 'time_taken' not in result:
                 time = 0
