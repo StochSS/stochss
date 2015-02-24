@@ -501,7 +501,12 @@ class PublicModelPage(BaseHandler):
         return True
     
     def get(self):
-        self.importExamplePublicModels()
+        try:
+            self.importExamplePublicModels()
+        except:
+            traceback.print_exc()
+            print "ERROR: Failed to import example public models"
+
         self.render_response('publicLibrary.html')
 
     def importExamplePublicModels(self):
