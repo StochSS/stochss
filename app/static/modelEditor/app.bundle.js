@@ -2356,8 +2356,6 @@ var PaginatedCollectionView = AmpersandView.extend({
             if(this.view.deSelect)
                 this.view.deSelect();
 
-        this.value = model;
-
         //Search for model in current selection
         for(var i = 0; i < this.subCollection.models.length; i++)
         {
@@ -2377,7 +2375,8 @@ var PaginatedCollectionView = AmpersandView.extend({
                             textBox.focus();
                     }
                 }
-
+                
+                this.value = model;
                 return;
             }
         }
@@ -2409,11 +2408,11 @@ var PaginatedCollectionView = AmpersandView.extend({
                             textBox.focus();
                     }
                 }
+
+                this.value = model;
                 break;
             }
         }
-
-        //If not found do nothing
     },
     shiftPlus : function(e)
     {
