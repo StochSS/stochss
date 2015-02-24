@@ -4490,7 +4490,7 @@ var Model = AmpersandModel.extend({
         AmpersandModel.prototype.initialize.apply(this, arguments);
 
         // Every time the type of one of the reactions changes, update the type here
-        this.listenTo(this.reactions, 'add remove change:type', _.bind(this.computeType, this));
+        this.listenToAndRun(this.reactions, 'add remove change:type', _.bind(this.computeType, this));
 
         this.listenTo(this.reactions, 'add remove change', _.bind(this.triggerChange, this));
         this.listenTo(this.species, 'add remove change', _.bind(this.triggerChange, this));
