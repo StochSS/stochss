@@ -1,36 +1,94 @@
-import sys,os,logging
+import sys
+import os
+
+sys.path.append(os.path.join(os.path.dirname(__file__), '..'))
 sys.path.append(os.path.join(os.path.dirname(__file__), '../lib/celery'))
+sys.path.append(os.path.join(os.path.dirname(__file__), '../lib/boto'))
 sys.path.append(os.path.join(os.path.dirname(__file__), '../lib/kombu'))
-sys.path.append(os.path.join(os.path.dirname(__file__), '../'))
 sys.path.append(os.path.join(os.path.dirname(__file__), '../lib/amqp'))
 sys.path.append(os.path.join(os.path.dirname(__file__), '../lib/billiard'))
 sys.path.append(os.path.join(os.path.dirname(__file__), '../lib/anyjson'))
 sys.path.append(os.path.join(os.path.dirname(__file__), '../lib/pytz'))
-#print str(sys.path)
+sys.path.append(os.path.join(os.path.dirname(__file__), '../lib/cloudtracker'))
+
 from celery import Celery, group
+
 try:
     import celeryconfig
+
 except ImportError:
     with open('{0}/celeryconfig.py.template'.format(os.path.dirname(__file__)), 'r') as fdr:
         with open('{0}/celeryconfig.py'.format(os.path.dirname(__file__)), 'w') as fdw:
             fdw.write(fdr.read())
     import celeryconfig
-     
-import os, subprocess, shlex
-import uuid,traceback
 
-THOME = '/home/ubuntu'
-STOCHKIT_DIR = '/home/ubuntu/StochKit'
-ODE_DIR = '/home/ubuntu/ode'
-MCEM2_DIR = '/home/ubuntu/stochoptim'
-
-import logging, subprocess
-import boto.dynamodb
-from boto.exception import S3ResponseError
+import shlex
+import traceback
+import logging
+import subprocess
 from datetime import datetime
 from multiprocessing import Process
 import tempfile, time
 import signal
+import pprint
+from cloudtracker import CloudTracker
+from kombu import Exchange, Queue
+import time
+
+
+class TaskConfig:
+    STOCHSS_HOME = os.path.join('/home', 'ubuntu', 'stochss')
+    STOCHKIT_DIR = os.path.join(STOCHSS_HOME, 'StochKit')
+    ODE_DIR = os.path.join(STOCHSS_HOME, 'ode')
+    STOCHOPTIM_DIR = os.path.join(STOCHSS_HOME, 'stochoptim')
+    STOCHOPTIM_R_LIB_DIR = os.path.join(STOCHOPTIM_DIR, 'library')
+    SCCPY_PATH = os.path.join(STOCHSS_HOME, 'app', 'backend', 'bin', 'sccpy.py')
+    PYURDME_DIR = os.path.join(STOCHSS_HOME, 'pyurdme')
+    PYURDME_WRAPPER_PATH = os.path.join(PYURDME_DIR, 'pyurdme_wrapper.py')
+    STOCHSS_PID_DIR = '/tmp/stochss_job_pid'
+    STOCHSS_PID_FILE_PREFIX = 'pid'
+    STOCHSS_COMPLETED_FILE = 'complete'
+    SHUTDOWN_MONITOR_POLL_INTERVAL = 600
+    SHUTDOWN_MONITOR_IDLE_TIME = 5400 #(90 minutes)
+
+
+class ShutdownMonitor():
+    """ Class to contain the shutdown monitor code. """
+    
+    def check_if_any_jobs_are_running(self):
+        """ Return False if any jobs are currently running. """
+        logging.info("check_if_any_jobs_are_running")
+        if not os.path.exists(TaskConfig.STOCHSS_PID_DIR):
+            os.mkdir(TaskConfig.STOCHSS_PID_DIR)
+        for fname in os.listdir(TaskConfig.STOCHSS_PID_DIR):
+            if fname.startswith(TaskConfig.STOCHSS_PID_FILE_PREFIX):
+                logging.info("found {0}, delaying shutdown".format(fname))
+                return False
+        return True
+    
+    def time_since_last_job_ended(self):
+        """ Return the number of seconds since the last job ended. """
+        last_command_completed_file = os.path.join(TaskConfig.STOCHSS_PID_DIR, TaskConfig.STOCHSS_COMPLETED_FILE)
+        if not os.path.exists(last_command_completed_file):
+            logging.info("touching file '{0}'".format(last_command_completed_file))
+            os.system("touch {0}".format(last_command_completed_file))
+        idle_time = time.time() - os.stat(last_command_completed_file).st_mtime
+        logging.info("idle_time='{0}'".format(idle_time))
+        return idle_time
+
+    def start(self):
+        logging.basicConfig(filename='shutdown_monitor.log',level=logging.DEBUG)
+        logging.info("="*80)
+        logging.info("Starting ShutdownMonitor")
+
+        while True:
+            logging.info("="*80)
+            logging.info("ShutdownMonitor: checking at: {0}".format(time.asctime(time.localtime(time.time()))))
+            if self.check_if_any_jobs_are_running() and self.time_since_last_job_ended() > TaskConfig.SHUTDOWN_MONITOR_IDLE_TIME:
+                logging.info("ShutdownMonitor: shutting down computer")
+                os.system("sudo shutdown -h now")
+            time.sleep(TaskConfig.SHUTDOWN_MONITOR_POLL_INTERVAL)
+
 
 class CelerySingleton(object):
     """
@@ -39,23 +97,38 @@ class CelerySingleton(object):
     http://web.archive.org/web/20090619190842/http://www.suttoncourtenay.org.uk/duncan/accu/pythonpatterns.html#singleton-and-the-borg
     """
     _instance = None
+
     def __new__(cls, *args, **kwargs):
         if not cls._instance:
             cls._instance = object.__new__(cls)
             cls._instance.app = Celery('tasks')
+            # cls.__configure(cls._instance)
         return cls._instance
-    
+
     def configure(self):
         reload(celeryconfig)
         self.app.config_from_object('celeryconfig')
+
+    def print_celery_queue_config(self):
+        print "BROKER_URL = {0}".format(self.app.conf.BROKER_URL)
+        print "CELERY_QUEUES = \n{0}".format(pprint.pformat(self.app.conf.CELERY_QUEUES))
+
+# def add_queue(self, queue_name, exchange_name, routing_key):
+#         exchange = Exchange(exchange_name, type='direct')
+#         if not self.app.conf.CELERY_QUEUES:
+#             logging.info('No celery queue is currently existing.Creating CELERY_QUEUES')
+#             self.app.conf.CELERY_QUEUES = ()
+#         if Queue(queue_name, exchange, routing_key) not in self.app.conf.CELERY_QUEUES:
+#             logging.info('{0} queue is not existing.Creating it.'.format(queue_name))
+#             self.app.conf.CELERY_QUEUES += (Queue(queue_name, exchange, routing_key),)
+
 
 celery_config = CelerySingleton()
 celery_config.configure()
 celery = celery_config.app
 
+
 def poll_commands(queue_name):
-    '''
-    '''
     print "Polling process: just started..."
     package_root = "StochOptim"
     commands_file = os.path.abspath("commands.txt")
@@ -105,15 +178,15 @@ def poll_commands(queue_name):
                 # in the command string and the value is the file contents.
                 # We need to re-write the contents to file on the slave before calling.
                 if segment == "--model":
-                    file_name = command_segments[index+1]
+                    file_name = command_segments[index + 1]
                     with open(file_name, 'r') as file_content:
                         slave_params[file_name] = file_content.read()
                 elif segment == "--initial":
-                    file_name = command_segments[index+1]
+                    file_name = command_segments[index + 1]
                     with open(file_name, 'r') as file_content:
                         slave_params[file_name] = file_content.read()
                 elif segment == "--final":
-                    file_name = command_segments[index+1]
+                    file_name = command_segments[index + 1]
                     with open(file_name, 'r') as file_content:
                         slave_params[file_name] = file_content.read()
                 # For output files, we don't need to do anything really because the slave will deal with
@@ -160,7 +233,8 @@ def poll_commands(queue_name):
         # file-system and should have all the files it needs now.
         print "Polling process: done writing output files"
 
-def update_s3_bucket(task_id, bucket_name, output_dir):
+
+def update_s3_bucket(task_id, bucket_name, output_dir, database):
     print "S3 update process just started..."
     # Wait 60 seconds initially for some output to build up
     time.sleep(60)
@@ -168,7 +242,7 @@ def update_s3_bucket(task_id, bucket_name, output_dir):
         tar_output_str = "tar -zcf {0}.tar {0}".format(output_dir)
         print "S3 update", tar_output_str
         os.system(tar_output_str)
-        copy_to_s3_str = "python {0}/sccpy.py {1}.tar {2}".format(THOME, output_dir, bucket_name)
+        copy_to_s3_str = "python {0} {1}.tar {2}".format(TaskConfig.SCCPY_PATH, output_dir, bucket_name)
         print "S3 update", copy_to_s3_str
         os.system(copy_to_s3_str)
         data = {
@@ -177,53 +251,55 @@ def update_s3_bucket(task_id, bucket_name, output_dir):
             'message': 'Task executing in the cloud.',
             'output': "https://s3.amazonaws.com/{0}/{1}.tar".format(bucket_name, output_dir)
         }
-        updateEntry(task_id, data, "stochss")
+        database.updateEntry(task_id, data, "stochss")
         # Update the output in S3 every 60 seconds...
         time.sleep(60)
 
-def handle_task_success(task_id, data, s3_data, bucket_name):
+
+def handle_task_success(task_id, data, s3_data, bucket_name, database):
     tar_output_str = "tar -zcf {0}.tar {0}".format(s3_data)
     print tar_output_str
     os.system(tar_output_str)
-    copy_to_s3_str = "python {0}/sccpy.py {1}.tar {2}".format(THOME, s3_data, bucket_name)
+    copy_to_s3_str = "python {0} {1}.tar {2}".format(TaskConfig.SCCPY_PATH, s3_data, bucket_name)
     print copy_to_s3_str
     return_code = os.system(copy_to_s3_str)
     if return_code != 0:
         print "S3 update conflict, waiting 60 seconds for retry..."
-        sleep(60)
+        time.sleep(60)
         return_code = os.system(copy_to_s3_str)
     print "Return code after S3 retry is {0}".format(return_code)
     cleanup_string = "rm -rf {0} {0}".format(s3_data)
     print cleanup_string
     os.system(cleanup_string)
     data['output'] = "https://s3.amazonaws.com/{0}/{1}.tar".format(bucket_name, s3_data)
-    updateEntry(task_id, data, "stochss")
+    database.updateEntry(task_id, data, "stochss")
 
-def handle_task_failure(task_id, data, s3_data=None, bucket_name=None):
+
+def handle_task_failure(task_id, data, database, s3_data=None, bucket_name=None):
     if s3_data and bucket_name:
         tar_output_str = "tar -zcf {0}.tar {0}".format(s3_data)
         print tar_output_str
         os.system(tar_output_str)
-        copy_to_s3_str = "python {0}/sccpy.py {1}.tar {2}".format(THOME, s3_data, bucket_name)
+        copy_to_s3_str = "python {0} {1}.tar {2}".format(TaskConfig.SCCPY_PATH, s3_data, bucket_name)
         print copy_to_s3_str
         return_code = os.system(copy_to_s3_str)
         if return_code != 0:
             print "S3 update conflict, waiting 60 seconds for retry..."
-            sleep(60)
+            time.sleep(60)
             return_code = os.system(copy_to_s3_str)
         print "Return code after S3 retry is {0}".format(return_code)
         cleanup_string = "rm -rf {0} {0}".format(s3_data)
         print cleanup_string
         os.system(cleanup_string)
         data['output'] = "https://s3.amazonaws.com/{0}/{1}.tar".format(bucket_name, s3_data)
-    updateEntry(task_id, data, "stochss")
+    database.updateEntry(task_id, data, "stochss")
+
 
 @celery.task(name='tasks.master_task')
-def master_task(task_id, params):
+def master_task(task_id, params, database):
     '''
     This task encapsulates the logic behind the new R program.
     '''
-    global MCEM2_DIR
     try:
         print "Master task starting execution..."
         start_time = datetime.now()
@@ -231,13 +307,13 @@ def master_task(task_id, params):
             'status': 'active',
             'message': 'Task executing in the cloud.'
         }
-        updateEntry(task_id, data, "stochss")
+        database.updateEntry(task_id, data, "stochss")
         result = {
             'uuid': task_id
         }
-        paramstr =  params['paramstring']
+        paramstr = params['paramstring']
         output_dir = "output/{0}".format(task_id)
-        create_dir_str = "mkdir -p {0}".format(output_dir) #output_dir+"/result"
+        create_dir_str = "mkdir -p {0}".format(output_dir)  #output_dir+"/result"
         print create_dir_str
         os.system(create_dir_str)
         # Write files
@@ -269,50 +345,75 @@ def master_task(task_id, params):
         bucket_name = params["bucketname"]
         update_process = Process(
             target=update_s3_bucket,
-            args=(task_id, bucket_name, output_dir)
+            args=(task_id, bucket_name, output_dir, database)
         )
         # Construct execution string and call it
         exec_str = "{0}/{1} --model {2} --data {3}".format(
-            MCEM2_DIR,
+            TaskConfig.STOCHOPTIM_DIR,
             params["paramstring"],
             model_file_name,
             model_data_file_name
         )
         if final_data_file_name:
             exec_str += " --finalData {0}".format(final_data_file_name)
-        
+
         stdout = "{0}/stdout".format(output_dir)
         stderr = "{0}/stderr".format(output_dir)
         print "Master: about to call {0}".format(exec_str)
         execution_time = 0
+
+        environ = os.environ.copy()
+        if not environ.has_key('R_LIBS'):
+            environ['R_LIBS'] = TaskConfig.STOCHOPTIM_R_LIB_DIR
+
         with open(stdout, 'w') as stdout_fh:
             with open(stderr, 'w') as stderr_fh:
                 execution_start = datetime.now()
-                p = subprocess.Popen(
-                    shlex.split(exec_str),
-                    stdout=stdout_fh,
-                    stderr=stderr_fh
-                )
-                poll_process.start()
-                update_process.start()
-                # Handler that should catch the first SIGTERM signal and then kill
-                # off all subprocesses
-                def handler(signum, frame, *args):
-                    print 'Caught signal:', signum
-                    # try to kill subprocesses off...
-                    try:
-                        p.terminate()
-                        poll_process.terminate()
-                        update_process.terminate()
-                    except Exception as e:
-                        print '******************************************************************'
-                        print "Exception:", e
-                        print traceback.format_exc()
-                        print '******************************************************************'
-                # Register the handler with SIGTERM signal
-                signal.signal(signal.SIGTERM, handler)
-                # Wait on program execution...
-                stdout, stderr = p.communicate()
+                try:
+                    p = subprocess.Popen(
+                        shlex.split(exec_str),
+                        stdout=stdout_fh,
+                        stderr=stderr_fh,
+                        env=environ
+                    )
+                    pid = p.pid
+                    if not os.path.exists(TaskConfig.STOCHSS_PID_DIR):
+                        os.mkdir(TaskConfig.STOCHSS_PID_DIR)
+                    # create pid file
+                    pid_file = os.path.join(TaskConfig.STOCHSS_PID_DIR, "{0}-{1}".format(TaskConfig.STOCHSS_PID_FILE_PREFIX, pid))
+                    logging.info("[Master] creating PID file '{0}'".format(pid_file))
+                    with open(pid_file, 'w+') as fd:
+                        fd.write(str(pid))
+                    poll_process.start()
+                    update_process.start()
+                    # Handler that should catch the first SIGTERM signal and then kill
+                    # off all subprocesses
+                    def handler(signum, frame, *args):
+                        print 'Caught signal:', signum
+                        # try to kill subprocesses off...
+                        try:
+                            p.terminate()
+                            poll_process.terminate()
+                            update_process.terminate()
+                        except Exception as e:
+                            print '******************************************************************'
+                            print "Exception:", e
+                            print traceback.format_exc()
+                            print '******************************************************************'
+
+                    # Register the handler with SIGTERM signal
+                    signal.signal(signal.SIGTERM, handler)
+                    # Wait on program execution...
+                    stdout, stderr = p.communicate() # wait for process to complete
+                except Exception as e:
+                    logging.error(e)
+                finally:
+                    logging.info("[Master] deleting PID file '{0}'".format(pid_file))
+                    os.remove(pid_file) #clean up pid file
+                    last_command_completed_file = os.path.join(TaskConfig.STOCHSS_PID_DIR, TaskConfig.STOCHSS_COMPLETED_FILE)
+                    logging.info("[Master] touching file '{0}'".format(last_command_completed_file))
+                    os.system("touch {0}".format(last_command_completed_file))
+                
                 execution_time = (datetime.now() - execution_start).total_seconds()
                 print "Should be empty:", stdout
                 print "Should be empty:", stderr
@@ -329,7 +430,7 @@ def master_task(task_id, params):
                 'status': 'failed',
                 'message': 'The executable failed with an exit status of {0}.'.format(p.returncode)
             }
-            handle_task_failure(task_id, data, output_dir, bucket_name)
+            handle_task_failure(task_id, data, database, output_dir, bucket_name)
             return
         # Else just send final output to S3
         data = {
@@ -338,14 +439,15 @@ def master_task(task_id, params):
             'total_time': (datetime.now() - start_time).total_seconds(),
             'execution_time': execution_time
         }
-        handle_task_success(task_id, data, output_dir, bucket_name)
+        handle_task_success(task_id, data, output_dir, bucket_name, database)
     except Exception, e:
         data = {
-            'status':'failed',
+            'status': 'failed',
             'message': str(e),
             'traceback': traceback.format_exc()
         }
-        handle_task_failure(task_id, data)
+        handle_task_failure(task_id, data, database)
+
 
 @celery.task(name='tasks.slave_task')
 def slave_task(params):
@@ -367,39 +469,65 @@ def slave_task(params):
         # string before calling executable.
         if segment == "--model":
             for file_handle in with_temp_file(input_files):
-                file_handle.write(params[command_segments[index+1]])
-            command_segments[index+1] = input_files[-1]
+                file_handle.write(params[command_segments[index + 1]])
+            command_segments[index + 1] = input_files[-1]
         elif segment == "--initial":
             for file_handle in with_temp_file(input_files):
-                file_handle.write(params[command_segments[index+1]])
-            command_segments[index+1] = input_files[-1]
+                file_handle.write(params[command_segments[index + 1]])
+            command_segments[index + 1] = input_files[-1]
         elif segment == "--final":
             for file_handle in with_temp_file(input_files):
-                file_handle.write(params[command_segments[index+1]])
-            command_segments[index+1] = input_files[-1]
+                file_handle.write(params[command_segments[index + 1]])
+            command_segments[index + 1] = input_files[-1]
         # For output files, we need to store the name that the master is expecting and
         # then replace it with a new temp file name
         elif segment == "--output":
-            output_files["output"] = [command_segments[index+1]]
+            output_files["output"] = [command_segments[index + 1]]
             fileint, file_name = tempfile.mkstemp(suffix=".RData")
             os.close(fileint)
-            command_segments[index+1] = file_name
+            command_segments[index + 1] = file_name
             output_files["output"].append(file_name)
         elif segment == "--stats":
-            output_files["stats"] = [command_segments[index+1]]
+            output_files["stats"] = [command_segments[index + 1]]
             fileint, file_name = tempfile.mkstemp(suffix=".RData")
             os.close(fileint)
-            command_segments[index+1] = file_name
+            command_segments[index + 1] = file_name
             output_files["stats"].append(file_name)
+
+    environ = os.environ.copy()
+    if not environ.has_key('R_LIBS'):
+        environ['R_LIBS'] = TaskConfig.STOCHOPTIM_R_LIB_DIR
+
     # Now command_segments is the correct execution string, just need to join it.
     execution_string = " ".join(command_segments)
     print execution_string
-    p = subprocess.Popen(
-        shlex.split(execution_string),
-        stdout=subprocess.PIPE,
-        stderr=subprocess.PIPE
-    )
-    stdout, stderr = p.communicate()
+    try:
+        p = subprocess.Popen(
+            shlex.split(execution_string),
+            stdout=subprocess.PIPE,
+            stderr=subprocess.PIPE,
+            env=environ
+        )
+        pid = p.pid
+        if not os.path.exists(TaskConfig.STOCHSS_PID_DIR):
+            os.mkdir(TaskConfig.STOCHSS_PID_DIR)
+        # create pid file
+        pid_file = os.path.join(TaskConfig.STOCHSS_PID_DIR, "{0}-{1}".format(TaskConfig.STOCHSS_PID_FILE_PREFIX, pid))
+        logging.info("[Slave] creating PID file '{0}'".format(pid_file))
+        with open(pid_file, 'w+') as fd:
+            fd.write(str(pid))
+        stdout, stderr = p.communicate() # wait for process to complete
+    except Exception as e:
+        logging.error(e)
+    finally:
+        logging.info("[Slave] deleting PID file '{0}'".format(pid_file))
+        os.remove(pid_file) #clean up pid file
+        last_command_completed_file = os.path.join(TaskConfig.STOCHSS_PID_DIR, TaskConfig.STOCHSS_COMPLETED_FILE)
+        logging.info("[Slave] touching file '{0}'".format(last_command_completed_file))
+        os.system("touch {0}".format(last_command_completed_file))
+
+
+
     # Clean up the input files first
     delete_input_string = "rm -f {0}".format(" ".join(input_files))
     print delete_input_string
@@ -448,6 +576,7 @@ def slave_task(params):
         os.system(delete_file_string)
     return result
 
+
 def with_temp_file(file_names):
     fileint, file_name = tempfile.mkstemp(suffix=".RData")
     os.close(fileint)
@@ -455,115 +584,222 @@ def with_temp_file(file_names):
     with open(file_name, 'w') as file_handle:
         yield file_handle
 
+
+
+def execute_task(exec_str):
+    try:
+        p = subprocess.Popen(exec_str, shell=True)
+        pid = p.pid
+        if not os.path.exists(TaskConfig.STOCHSS_PID_DIR):
+            os.mkdir(TaskConfig.STOCHSS_PID_DIR)
+        # create pid file
+        pid_file = os.path.join(TaskConfig.STOCHSS_PID_DIR, "{0}-{1}".format(TaskConfig.STOCHSS_PID_FILE_PREFIX, pid))
+        logging.info("creating PID file '{0}'".format(pid_file))
+        with open(pid_file, 'w+') as fd:
+            fd.write(str(pid))
+        p.wait() # wait for process to complete
+    except Exception as e:
+        logging.error(e)
+    finally:
+        logging.info("deleting PID file '{0}'".format(pid_file))
+        os.remove(pid_file) #clean up pid file
+        last_command_completed_file = os.path.join(TaskConfig.STOCHSS_PID_DIR, TaskConfig.STOCHSS_COMPLETED_FILE)
+        logging.info("touching file '{0}'".format(last_command_completed_file))
+        os.system("touch {0}".format(last_command_completed_file))
+
+
+
 @celery.task(name='stochss')
-def task(taskid,params):
-  ''' This is the actual work done by a task worker '''
-  try:
-        
-      global THOME
-      global STOCHKIT_DIR
-      global ODE_DIR
+def task(taskid, params, agent, database, access_key, secret_key, task_prefix=""):
+    '''
+    This is the actual work done by a task worker
+    params    should contain at least 'bucketname'
+    '''
 
-      print 'task to be executed at remote location'
-      print 'inside celery task method'
-      data = {'status':'active','message':'Task Executing in cloud'}
-      updateEntry(taskid, data, "stochss")
-      res = {}
-      paramstr =  params['paramstring']
-      uuidstr = taskid
-      res['uuid'] = uuidstr
-      job_type = params['job_type']
-      if job_type == 'spatial':
-        create_dir_str = "mkdir -p output/%s/results " % uuidstr
+    try:
+        res = {}
+        uuidstr = taskid
+
+        bucketname = params['bucketname']
+        if_tracking = False
+        try:
+            # Initialize cloudtracker with the task's UUID
+            ct = CloudTracker(access_key, secret_key, uuidstr, bucketname)
+            if_tracking = ct.if_tracking()
+
+            logging.info('This is the first time to execute the job? '.format(if_tracking))
+            if if_tracking:
+                ct.track_input(params)
+
+        except Exception:
+            print "Error initializing tracking"
+
+        logging.info('task to be executed at remote location')
+        print 'inside celery task method'
+        data = {'status': 'active', 'message': 'Task Executing in cloud'}
+
+        # will have prefix for cost-anaylsis job
+        taskid = task_prefix + taskid
+
+        database.updateEntry(taskid, data, params["db_table"])
+        paramstr = params['paramstring']
+
+        job_type = params['job_type']
+        if job_type == 'spatial':
+            create_dir_str = "mkdir -p output/%s/results " % uuidstr
+            os.system(create_dir_str)
+        create_dir_str = "mkdir -p output/%s/result " % uuidstr
         os.system(create_dir_str)
-      create_dir_str = "mkdir -p output/%s/result " % uuidstr
-      os.system(create_dir_str)
-      filename = "output/{0}/{0}.xml".format(uuidstr)
-      f = open(filename,'w')
-      f.write(params['document'])
-      f.close()
-      xmlfilepath = filename
-      stdout = "output/%s/stdout.log" % uuidstr
-      stderr = "output/%s/stderr.log" % uuidstr
 
-      exec_str = ''
-      if job_type == 'stochkit':
-          # The following executiong string is of the form : stochkit_exec_str = "~/StochKit/ssa -m ~/output/%s/dimer_decay.xml -t 20 -i 10 -r 1000" % (uuidstr)
-          exec_str = "{0}/{1} -m {2} --force --out-dir output/{3}/result 2>{4} > {5}".format(STOCHKIT_DIR, paramstr, xmlfilepath, uuidstr, stderr, stdout)
-      elif job_type == 'stochkit_ode' or job_type == 'sensitivity':
-          exec_str = "{0}/{1} -m {2} --force --out-dir output/{3}/result 2>{4} > {5}".format(ODE_DIR, paramstr, xmlfilepath, uuidstr, stderr, stdout)
-      elif job_type == 'spatial':
-	  cmd = "chown -R ubuntu output/{0}".format(uuidstr)
-	  print cmd
-	  os.system(cmd)
-          exec_str = "sudo -E -u ubuntu {0}/pyurdme_wrapper.py {1} {2} {3} {4} {5} 2>{6} > {7}".format(THOME, xmlfilepath, 'output/{0}/results'.format(uuidstr), params['simulation_algorithm'], params['simulation_realizations'], params['simulation_seed'], stderr, stdout)
-      
-      print "======================="
-      print " Command to be executed : "
-      print "{0}".format(exec_str)
-      print "======================="
-      print "To test if the command string was correct. Copy the above line and execute in terminal."
-      timestarted = datetime.now()
-      os.system(exec_str)
-      timeended = datetime.now()
-      
-      results = os.listdir("output/{0}/result".format(uuidstr))
-      if 'stats' in results and os.listdir("output/{0}/result/stats".format(uuidstr)) == ['.parallel']:
-          raise Exception("The compute node can not handle a job of this size.")
-      
-      res['pid'] = taskid
-      filepath = "output/%s//" % (uuidstr)
-      absolute_file_path = os.path.abspath(filepath)
-      print 'generating tar file'
-      create_tar_output_str = "tar -zcvf output/{0}.tar output/{0}".format(uuidstr)
-      print create_tar_output_str
-      logging.debug("following cmd to be executed %s" % (create_tar_output_str))
-      bucketname = params['bucketname']
-      copy_to_s3_str = "python {2}/sccpy.py output/{0}.tar {1}".format(uuidstr,bucketname,THOME)
-      data = {'status':'active','message':'Task finished. Generating output.'}
-      updateEntry(taskid, data, "stochss")
-      os.system(create_tar_output_str)
-      print 'copying file to s3 : {0}'.format(copy_to_s3_str)
-      os.system(copy_to_s3_str)
-      print 'removing xml file'
-      removefilestr = "rm {0}".format(xmlfilepath)
-      os.system(removefilestr)
-      removetarstr = "rm output/{0}.tar".format(uuidstr)
-      os.system(removetarstr)
-      removeoutputdirstr = "rm -r output/{0}".format(uuidstr)
-      os.system(removeoutputdirstr)
-      res['output'] = "https://s3.amazonaws.com/{1}/output/{0}.tar".format(taskid,bucketname)
-      res['status'] = "finished"
-      diff = timeended - timestarted
-      res['time_taken'] = "{0} seconds and {1} microseconds ".format(diff.seconds, diff.microseconds)
-      updateEntry(taskid, res, "stochss")
-  except Exception,e:
-      expected_output_dir = "output/%s" % uuidstr
-      # First check for existence of output directory
-      if os.path.isdir(expected_output_dir):
-          # Then we should store this in S3 for debugging purposes
-          create_tar_output_str = "tar -zcvf {0}.tar {0}".format(expected_output_dir)
-          os.system(create_tar_output_str)
-          bucketname = params['bucketname']
-          copy_to_s3_str = "python {0}/sccpy.py {1}.tar {2}".format(THOME, expected_output_dir, bucketname)
-          os.system(copy_to_s3_str)
-          # Now clean up
-          remove_output_str = "rm {0}.tar {0}".format(expected_output_dir)
-          os.system(remove_output_str)
-          # Update the DB entry
-          res['output'] = "https://s3.amazonaws.com/{0}/{1}.tar".format(bucketname, expected_output_dir)
-          res['status'] = 'failed'
-          res['message'] = str(e)
-          updateEntry(taskid, res, "stochss")
-      else:
-          # Nothing to do here besides send the exception
-          data = {'status':'failed', 'message':str(e)}
-          updateEntry(taskid, data, "stochss")
-      raise e
-  return res
+        filename = os.path.join('output', uuidstr, '{0}.xml'.format(uuidstr))
+        with open(filename, 'w') as f:
+            f.write(params['document'])
+
+        xmlfilepath = filename
+
+        stdout = os.path.join('output', uuidstr, 'stdout.log')
+        stderr = os.path.join('output', uuidstr, 'stderr.log')
+
+        exec_str = ''
+        if job_type == 'stochkit':
+            # The following executiong string is of the form : stochkit_exec_str = "~/StochKit/ssa -m ~/output/%s/dimer_decay.xml -t 20 -i 10 -r 1000" % (uuidstr)
+            exec_str = "{0}/{1} -m {2} --force --out-dir output/{3}/result 2>{4} > {5}".format(TaskConfig.STOCHKIT_DIR,
+                                                                                               paramstr, xmlfilepath,
+                                                                                               uuidstr, stderr, stdout)
+        elif job_type == 'stochkit_ode' or job_type == 'sensitivity':
+            logging.info('SENSITIVITY JOB!!!')
+            exec_str = "{0}/{1} -m {2} --force --out-dir output/{3}/result 2>{4} > {5}".format(TaskConfig.ODE_DIR,
+                                                                                               paramstr, xmlfilepath,
+                                                                                               uuidstr, stderr, stdout)
+        elif job_type == 'spatial':
+            cmd = "chown -R ubuntu output/{0}".format(uuidstr)
+            print cmd
+            os.system(cmd)
+            exec_str = "sudo -E -u ubuntu {0} {1} {2} {3} {4} {5} 2>{6} > {7}".format(TaskConfig.PYURDME_WRAPPER_PATH,
+                                                                                      xmlfilepath,
+                                                                                      os.path.join('output', uuidstr, 'results'),
+                                                                                      params['simulation_algorithm'],
+                                                                                      params['simulation_realizations'],
+                                                                                      params['simulation_seed'],
+                                                                                      stderr, stdout)
+
+        print "======================="
+        print " Command to be executed : "
+        print "{0}".format(exec_str)
+        print "======================="
+        print "To test if the command string was correct. Copy the above line and execute in terminal."
+        timestarted = datetime.now()
+        #os.system(exec_str)
+        execute_task(exec_str)
+        timeended = datetime.now()
+
+        results = os.listdir("output/{0}/result".format(uuidstr))
+        if 'stats' in results and os.listdir("output/{0}/result/stats".format(uuidstr)) == ['.parallel']:
+            raise Exception("The compute node can not handle a job of this size.")
+
+        filepath = os.path.join('output', uuidstr)
+        absolute_file_path = os.path.abspath(filepath)
+
+        try:
+            if if_tracking:
+                ct.track_output(absolute_file_path)
+        except Exception, e:
+            print "CloudTracker Error: track_output"
+            print e
+
+        data = {'status': 'active', 'message': 'Task finished. Generating output.'}
+        database.updateEntry(taskid, data, params["db_table"])
+        diff = timeended - timestarted
+
+        if task_prefix != "":
+            res['status'] = "finished"
+            res['time_taken'] = "{0} seconds".format(diff.total_seconds())
+        else:
+            print 'generating tar file'
+            create_tar_output_str = "tar -zcvf output/{0}.tar output/{0}".format(uuidstr)
+            print create_tar_output_str
+            copy_to_s3_str = "python {2} output/{0}.tar {1}".format(uuidstr, bucketname, TaskConfig.SCCPY_PATH)
+            os.system(create_tar_output_str)
+            print 'copying file to s3 : {0}'.format(copy_to_s3_str)
+            os.system(copy_to_s3_str)
+            print 'removing xml file'
+            removefilestr = "rm {0}".format(xmlfilepath)
+            os.system(removefilestr)
+            removetarstr = "rm output/{0}.tar".format(uuidstr)
+            os.system(removetarstr)
+            removeoutputdirstr = "rm -r output/{0}".format(uuidstr)
+            os.system(removeoutputdirstr)
+
+            # if there is some task prefix, meaning that it is cost replay,
+            # update the table another way
+            res['status'] = "finished"
+            res['pid'] = uuidstr
+            res['output'] = "https://s3.amazonaws.com/{1}/output/{0}.tar".format(uuidstr, bucketname)
+            res['time_taken'] = "{0} seconds".format(diff.total_seconds())
+
+        database.updateEntry(taskid, res, params["db_table"])
+        
+        # there is no "cost_analysis_table" in params in cost analysis task,
+        # but it there should have in normal task and rerun task.
+        if "cost_analysis_table" in params:
+            if "INSTANCE_TYPE" not in os.environ:
+                logging.error("Error: there is no INSTANCE_TYPE in environment variable.")
+                res['message'] = "Error: there is no INSTANCE_TYPE in environment variable."
+                return res
+        
+            result = database.getEntry('taskid', taskid, params["db_table"])
+            data = None
+            for one in result:
+                data = one
+                logging.info("{0} data in stochss table: {1}".format(taskid, one))
+                break
+            if data == None:
+                logging.error("Error: there is no data in stochss table with {0}.".format(taskid))
+                res['message'] = "EError: there is no data in stochss table with {0}.".format(taskid)
+                return res
+            
+            instance_type = os.environ["INSTANCE_TYPE"]
+            taskid_prefix = '{0}_{1}_'.format(agent, instance_type)
+            taskid = taskid_prefix+taskid
+            cost_analysis_data = {
+                    'agent': agent,
+                    'instance_type': instance_type,
+                    'message': data['message'],
+                    'start_time': data['start_time'],
+                    'status': data['status'],
+                    'time_taken': data['time_taken'],
+                    'uuid': data['uuid']
+                    }
+            database.updateEntry(taskid, cost_analysis_data, params["cost_analysis_table"])
+    
+
+    except Exception, e:
+        expected_output_dir = "output/%s" % uuidstr
+        # First check for existence of output directory
+        if os.path.isdir(expected_output_dir):
+            # Then we should store this in S3 for debugging purposes
+            create_tar_output_str = "tar -zcvf {0}.tar {0}".format(expected_output_dir)
+            os.system(create_tar_output_str)
+            bucketname = params['bucketname']
+            copy_to_s3_str = "python {0} {1}.tar {2}".format(TaskConfig.SCCPY_PATH, expected_output_dir, bucketname)
+            os.system(copy_to_s3_str)
+            # Now clean up
+            remove_output_str = "rm {0}.tar {0}".format(expected_output_dir)
+            os.system(remove_output_str)
+            # Update the DB entry
+            res['output'] = "https://s3.amazonaws.com/{0}/{1}.tar".format(bucketname, expected_output_dir)
+            res['status'] = 'failed'
+            res['message'] = str(e)
+            database.updateEntry(taskid, res, "stochss")
+        else:
+            # Nothing to do here besides send the exception
+            data = {'status': 'failed', 'message': str(e)}
+            database.updateEntry(taskid, data, "stochss")
+        raise e
+    return res
 
 
-def checkStatus(task_id):
+def check_task_status(task_id):
     '''
     Method takes task_id as input and returns the result of the celery task
     '''
@@ -571,6 +807,7 @@ def checkStatus(task_id):
     result = {}
     try:
         from celery.result import AsyncResult
+
         res = AsyncResult(task_id)
         logging.debug("checkStatus: result returned for the taskid = {0} is {1}".format(task_id, str(res)))
         result = res.result
@@ -583,8 +820,8 @@ def checkStatus(task_id):
         elif res.status == "SUCCESS":
             result['result'] = res.result
         elif res.status == "FAILURE":
-            result['result'] = res.result 
-        
+            result['result'] = res.result
+
     except Exception, e:
         logging.debug("checkStatus error : %s", str(e))
         result['state'] = "FAILURE"
@@ -593,7 +830,7 @@ def checkStatus(task_id):
     return result
 
 
-def removeTask(task_id):
+def remove_task(task_id):
     '''
     this method revokes scheduled tasks as well as the tasks in progress
     '''
@@ -603,10 +840,11 @@ def removeTask(task_id):
         # Celery can't use remote control (which includes revoking tasks) with SQS
         # http://docs.celeryproject.org/en/latest/getting-started/brokers/sqs.html
         revoke(task_id, terminate=True, signal="SIGTERM")
-    except Exception,e:
+    except Exception, e:
         print "task {0} cannot be removed/deleted. Error : {1}".format(task_id, str(e))
 
-def rerouteWorkers(worker_names, to_queue, from_queue="celery"):
+
+def reroute_workers(worker_names, to_queue, from_queue="celery"):
     '''
     Changes all workers specified by worker_names to stop consuming from the
     from_queue and start consuming from the to_queue.
@@ -617,7 +855,8 @@ def rerouteWorkers(worker_names, to_queue, from_queue="celery"):
     app.control.cancel_consumer(from_queue, reply=True, destination=worker_names)
     app.control.add_consumer(to_queue, reply=True, destination=worker_names)
 
-def workersConsumingFromQueue(from_queue):
+
+def get_worker_list_consuming_from_queue(from_queue):
     '''
     Returns a list of the names of all workers that are consuming from the
     from_queue, or an empty list if no workers are consuming from the queue.
@@ -632,142 +871,9 @@ def workersConsumingFromQueue(from_queue):
                 worker_names.append(worker_name)
     return worker_names
 
-#def describeTask():
-#    i = celery.control.inspect()
-#    print type(i)
-#    print dir(i)
-#    print str(i.active_queues())
-#    print str(i.registered_tasks())
-#    print str(i.stats())
-#    #print str(i.registered())
-#    #print str(i.active())
-#    #print str(i.scheduled())
 
-"""
-All DynamoBD related methods follow next. TODO: move it to a different file
-"""
 
-def describetask(taskids,tablename):
-    res = {}
-    try:
-        print 'inside describetask method with taskids = {0} and tablename {1}'.format(str(taskids), tablename)
-        dynamo=boto.connect_dynamodb()
-        if not tableexists(dynamo, tablename): return res
-        table = dynamo.get_table(tablename)
-        for taskid in taskids:
-            try:
-                item = table.get_item(hash_key=taskid)
-                res[taskid] = item
-            except Exception,e:
-                res[taskid] = None
-        return res
-    except Exception,e:
-        print "exiting describetask  with error : {0}".format(str(e))
-        print str(e)
-        return res
-
-def removetask(tablename,taskid):
-    print 'inside removetask method with tablename = {0} and taskid = {1}'.format(tablename, taskid)
-    try:
-        dynamo=boto.connect_dynamodb()
-        if tableexists(dynamo, tablename):
-            table = dynamo.get_table(tablename)
-            item = table.get_item(hash_key=taskid)
-            item.delete()
-            return True
-        else:
-            print 'exiting removetask with error : table doesn\'t exists'
-            return False
-        
-    except Exception,e:
-        print 'exiting removetask with error {0}'.format(str(e))
-        return False
-    
-def createtable(tablename=str()):
-    print 'inside create table method with tablename :: {0}'.format(tablename)
-    if tablename == None:
-        tablename = "stochss"
-        print 'default table name picked as stochss'
-    try:
-        print 'connecting to dynamodb'
-        dynamo=boto.connect_dynamodb()
-        #check if table already exisits
-        print 'checking if table {0} exists'.format(tablename)
-        if not tableexists(dynamo,tablename):
-            print 'creating table schema'
-            myschema=dynamo.create_schema(hash_key_name='taskid',hash_key_proto_value=str)
-            table=dynamo.create_table(name=tablename, schema=myschema, read_units=6, write_units=4)
-        else:
-            print "table already exists"
-        return True  
-    except Exception,e:
-        print str(e)
-        return False
-
-def tableexists(dynamo, tablename):
-    try:
-        table = dynamo.get_table(tablename)
-        if table == None:
-            print "table doesn't exist"
-            return False
-        else:
-            return True
-    except Exception,e:
-        print str(e)
-        return False
-
-def updateEntry(taskid=str(), data=dict(), tablename=str()):
-    '''
-     check if entry exists
-     create a entry if not or
-     update the status
-    '''
-    try:
-        print 'inside update entry method with taskid = {0} and data = {1}'.format(taskid, str(data))
-        dynamo=boto.connect_dynamodb()
-        if not tableexists(dynamo, tablename):
-            print "invalid table name specified"
-            return False
-        table = dynamo.get_table(tablename)
-        item = table.new_item(hash_key=str(taskid),attrs=data)
-        item.put()
-        return True
-    except Exception,e:
-        print 'exiting updatedata with error : {0}'.format(str(e))
-        return False
-    
 if __name__ == "__main__":
-
-    '''
-    NOTE: these must be set in your environment:
-    export AWS_SECRET_ACCESS_KEY=XXX
-    export AWS_ACCESS_KEY_ID=YYY
-    '''
-    global THOME
-    global STOCHKIT_DIR
-    os.environ["AWS_ACCESS_KEY_ID"] = os.environ['EC2_ACCESS_KEY']
-    os.environ["AWS_SECRET_ACCESS_KEY"] = os.environ['EC2_SECRET_KEY']
-
-    print createtable('stochss')
-    val = {'status':"running", 'message':'done'}
-    updateEntry('1234', val, 'stochss')
-    print describetask(['1234', '1234'], 'stochss')
-    
-    #this executes a task locally
-    #NOTE: dimer_decay.xml must be in this local dir
-    xmlfile = open('dimer_decay.xml','r')
-    doc = xmlfile.read()
-    xmlfile.close()
-    taskargs = {}
-    taskargs['paramstring'] = 'ssa -t 100 -i 1000 -r 100 --keep-trajectories --seed 706370 --label'
-    taskargs['document'] = doc
-    taskargs['bucketname'] = 'cjk1234'
-
-    THOME=os.getcwd()
-    STOCHKIT_DIR='{0}/../../StochKit'.format(THOME)
-    task('1234',taskargs)
-    print describetask(['1234', '1234'], 'stochss')
- 
-    print 'BE SURE TO GO TO YOUR AWS ADMIN CONSOLE AND DELETE DYNAMODB TABLES AND S3 BUCKETS'
-    
+    if len(sys.argv) > 1 and sys.argv[1] == "shutdown-monitor":
+        ShutdownMonitor().start()
 

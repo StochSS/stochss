@@ -51,6 +51,7 @@ class SensitivityJobWrapper(db.Model):
     celeryPID = db.StringProperty()
     outputURL = db.StringProperty()
     exceptionMessage = db.StringProperty()
+    output_stored = db.StringProperty()
 
     def delete(self):
         if self.outData:
@@ -60,6 +61,8 @@ class SensitivityJobWrapper(db.Model):
         if self.zipFileName:
             if os.path.exists(self.zipFileName):
                 os.remove(self.zipFileName)
+                
+            
 
         super(SensitivityJobWrapper, self).delete()
 
@@ -74,15 +77,18 @@ class SensitivityPage(BaseHandler):
         if reqType == "jobInfo":
             job = SensitivityJobWrapper.get_by_id(int(self.request.get('id')))
             
-            jsonJob = { "userId" : job.userId,
+            jsonJob = { "id": int(self.request.get('id')),
+                        "userId" : job.userId,
                         "jobName" : job.jobName,
                         "startTime" : job.startTime,
                         "indata" : json.loads(job.indata),
                         "outData" : job.outData,
                         "status" : job.status,
                         "resource" : job.resource,
+                        "uuid": job.cloudDatabaseID,
+                        "output_stored": job.output_stored,
                         "modelName" : job.modelName }
-
+            
             if self.user.user_id() != job.userId:
                 self.response.headers['Content-Type'] = 'application/json'
                 self.response.write(json.dumps(["Not the right user"]))
@@ -96,75 +102,89 @@ class SensitivityPage(BaseHandler):
                                                      "job" : jsonJob}))
                     return
                 outputdir = job.outData
-                # Load all data from file in JSON format
-                vhandle = open(outputdir + '/result/output.txt', 'r')
-                values = { 'time' : [], 'trajectories' : {}, 'sensitivities' : {}, 'parameters' : {}}
-                parameters = []
-                columnToList = []
-                for i, line in enumerate(vhandle):
-                    if i == 0:
-                        continue
-                    elif i == 1:
-                        names = line.split()
+                try:
+                    # Load all data from file in JSON format
+                    vhandle = open(outputdir + '/result/output.txt', 'r')
+                    values = { 'time' : [], 'trajectories' : {}, 'sensitivities' : {}, 'parameters' : {}}
+                    parameters = []
+                    columnToList = []
+                    for i, line in enumerate(vhandle):
+                        if i == 0:
+                            continue
+                        elif i == 1:
+                            names = line.split()
 
-                        parameterNames = []
+                            parameterNames = []
 
-                        for name in names:
-                            if ':' in name:
-                                specie, parameter = name.split(':')
-                                if parameter not in parameterNames:
-                                    parameterNames.append(parameter)
-                        
-                        for name in names:
-                            if name == 'time':
-                                columnToList.append(values['time'])
-                            elif ':' in name:
-                                specie, parameter = name.split(':')
+                            for name in names:
+                                if ':' in name:
+                                    specie, parameter = name.split(':')
+                                    if parameter not in parameterNames:
+                                        parameterNames.append(parameter)
+                            
+                            for name in names:
+                                if name == 'time':
+                                    columnToList.append(values['time'])
+                                elif ':' in name:
+                                    specie, parameter = name.split(':')
 
-                                if specie not in values['sensitivities']:
-                                    values['sensitivities'][specie] = {}
+                                    if specie not in values['sensitivities']:
+                                        values['sensitivities'][specie] = {}
 
-                                values['sensitivities'][specie][parameter] = [] # Make a new timeseries for sensitivity
-                                columnToList.append(values['sensitivities'][specie][parameter]) # Store a reference here for future use
-                            else:
-                                values['trajectories'][name] = [] # start a new timeseries for this name
-                                columnToList.append(values['trajectories'][name]) # Store a reference here for future use
-                    elif i == 2:
-                        parameters = map(float, line.split())
-                    elif i == 3:
-                        for storage, value in zip(columnToList, map(float, line.split())):
-                            storage.append(value)
-                    elif i == 4:
-                        continue
-                    else:
-                        for storage, value in zip(columnToList, map(float, line.split())):
-                            storage.append(value)
-                vhandle.close()
+                                    values['sensitivities'][specie][parameter] = [] # Make a new timeseries for sensitivity
+                                    columnToList.append(values['sensitivities'][specie][parameter]) # Store a reference here for future use
+                                else:
+                                    values['trajectories'][name] = [] # start a new timeseries for this name
+                                    columnToList.append(values['trajectories'][name]) # Store a reference here for future use
+                        elif i == 2:
+                            parameters = map(float, line.split())
+                        elif i == 3:
+                            for storage, value in zip(columnToList, map(float, line.split())):
+                                storage.append(value)
+                        elif i == 4:
+                            continue
+                        else:
+                            for storage, value in zip(columnToList, map(float, line.split())):
+                                storage.append(value)
+                    vhandle.close()
 
-                values['parameters'] = dict(zip(parameterNames, parameters))
+                    values['parameters'] = dict(zip(parameterNames, parameters))
 
+                    self.response.headers['Content-Type'] = 'application/json'
+                    self.response.write(json.dumps({ "status" : "Finished",
+                                                     "values" : values,
+                                                     "job" : jsonJob }))
+                    return
+                except IOError as ioe:
+                    logging.error("caught error {0}".format(ioe))
+                    job.status = "Failed"
+                    print "put job.status = Failed"
+                    job.put()
+                    
+            if job.status == "Failed":
                 self.response.headers['Content-Type'] = 'application/json'
-                self.response.write(json.dumps({ "status" : "Finished",
-                                                 "values" : values,
-                                                 "job" : jsonJob }))
-            elif job.status == "Failed":
-                self.response.headers['Content-Type'] = 'application/json'
 
-                fstdoutHandle = open(job.outData + '/stdout', 'r')
-                stdout = fstdoutHandle.read()
-                fstdoutHandle.close()
-
-                fstderrHandle = open(job.outData + '/stderr', 'r')
-                stderr = fstderrHandle.read()
-                fstderrHandle.close()
+                stdout = ''
+                stderr = ''
+                try:
+                    fstdoutHandle = open(job.outData + '/stdout.log', 'r')
+                    stdout = fstdoutHandle.read()
+                    fstdoutHandle.close()
+                    fstderrHandle = open(job.outData + '/stderr.log', 'r')
+                    stderr = fstderrHandle.read()
+                    fstderrHandle.close()
+                except  IOError as ioe:
+                    logging.error("could not open error log files in {0}".format(job.outData))
 
                 self.response.write(json.dumps({ "status" : "Failed",
                                                  "stdout" : stdout,
                                                  "stderr" : stderr,
                                                  "job" : jsonJob}))
-            else:
-                self.response.headers['Content-Type'] = 'application/json'
-                self.response.write(json.dumps({ "status" : "asdfasdf" }))
+                return
+
+            # else
+            self.response.headers['Content-Type'] = 'application/json'
+            self.response.write(json.dumps({ "status" : "asdfasdf" }))
         elif reqType == "getFromCloud":
             job = SensitivityJobWrapper.get_by_id(int(self.request.get('id')))
 
@@ -192,7 +212,7 @@ class SensitivityPage(BaseHandler):
                 
                 job.zipFileName = szip.getFileName()
 
-                szip.addSensitivityJob(job, True)
+                szip.addSensitivityJob(job, globalOp = True, ignoreStatus = True)
                 
                 szip.close()
 
@@ -241,7 +261,12 @@ class SensitivityPage(BaseHandler):
                     "key_prefix": self.user.user_id()
                 }
                 if self.user_data.valid_credentials and backend_services.isOneOrMoreComputeNodesRunning(compute_check_params):
-                    job = self.runCloud(data)
+                    job, cloud_result = self.runCloud(data)
+                    if not job:
+                         e = cloud_result["exception"]
+                         self.response.write(json.dumps({"status" : False,
+                                            "msg" : 'Cloud execution failed: '+str(e)}))
+                         return
                 else:
                     return self.response.write(json.dumps({
                         "status": False,
@@ -268,7 +293,7 @@ class SensitivityPage(BaseHandler):
         model = modeleditor.StochKitModelWrapper.get_by_id(data["id"])
         job.startTime = time.strftime("%Y-%m-%d-%H-%M-%S")
         job.jobName = data["jobName"]
-        job.modelName = model.model_name
+        job.modelName = model.name
         
         runtime = float(data["time"])
         dt = float(data["increment"])
@@ -287,9 +312,23 @@ class SensitivityPage(BaseHandler):
 
         job.outData = dataDir
 
-        modelFileName = '{0}/{1}.xml'.format(job.outData, model.model_name)
+        modelFileName = '{0}/{1}.xml'.format(job.outData, model.name)
         fmodelHandle = open(modelFileName, 'w')
-        fmodelHandle.write(model.model.serialize())
+        stochkitmodel = model.createStochKitModel()
+
+        # Wow, what a hack
+        if stochkitmodel.units.lower() == 'population':
+            document = stochkitmodel.serialize()
+            
+            stochkitmodel = StochMLDocument.fromString(document).toModel(model.name)
+            
+            for reactionN in stochkitmodel.getAllReactions():
+                reaction = stochkitmodel.getAllReactions()[reactionN]
+                if reaction.massaction:
+                    if len(reaction.reactants) == 1 and reaction.reactants.values()[0] == 2:
+                        reaction.marate.setExpression(reaction.marate.expression + ' / 2')
+
+        fmodelHandle.write(stochkitmodel.serialize())
         fmodelHandle.close()
 
         job.status = "Pending"
@@ -315,7 +354,7 @@ class SensitivityPage(BaseHandler):
         job.startTime = time.strftime("%Y-%m-%d-%H-%M-%S")
         job.jobName = data["jobName"]
         job.status = "Pending"
-        job.modelName = model.model_name
+        job.modelName = model.name
 
         runtime = float(data["time"])
         dt = float(data["increment"])
@@ -326,10 +365,23 @@ class SensitivityPage(BaseHandler):
         for parameter in data['selections']["pc"]:
             if data['selections']["pc"][parameter]:
                 parameters.append(parameter)
-        
+        stochkitmodel = model.createStochKitModel() 
+
+        # Wow, what a hack
+        if stochkitmodel.units.lower() == 'population':
+            document = stochkitmodel.serialize()
+            
+            stochkitmodel = StochMLDocument.fromString(document).toModel(model.name)
+            
+            for reactionN in stochkitmodel.getAllReactions():
+                reaction = stochkitmodel.getAllReactions()[reactionN]
+                if reaction.massaction:
+                    if len(reaction.reactants) == 1 and reaction.reactants.values()[0] == 2:
+                        reaction.marate.setExpression(reaction.marate.expression + ' / 2')
+
         params = {
             "job_type": "sensitivity",
-            "document": str( model.model.serialize() ),
+            "document": str( stochkitmodel.serialize() ),
             "paramstring": "stochkit_ode.py --sensi --parameters {0} -t {1} -i {2}".format( " ".join(parameters), runtime, int(runtime / dt)),
             "bucketname": self.user_data.getBucketName()
         }
@@ -339,11 +391,15 @@ class SensitivityPage(BaseHandler):
         os.environ["AWS_ACCESS_KEY_ID"] = db_credentials['EC2_ACCESS_KEY']
         os.environ["AWS_SECRET_ACCESS_KEY"] = db_credentials['EC2_SECRET_KEY']
         # Send the task to the backend
-        cloud_result = service.executeTask(params)
+        cloud_result = service.executeTask(params, "ec2", db_credentials['EC2_ACCESS_KEY'], db_credentials['EC2_SECRET_KEY'])
         # if not cloud_result["success"]:
+        if not cloud_result["success"]:
+            return None, cloud_result
+            
         job.cloudDatabaseID = cloud_result["db_id"]
         job.celeryPID = cloud_result["celery_pid"]
         job.outData = None
         job.zipFileName = None
+        job.output_stored = 'True'
         job.put()
-        return job
+        return job, None

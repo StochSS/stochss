@@ -151,6 +151,10 @@ var updateMsg = function(data)
 
 var run = function()
 {
+    $( '.mainTable' ).DataTable( { "bPaginate" : false, "bFilter" : false } );
+    $( '.mainTable' ).css('border-bottom', '1px solid #ddd');
+    $( '.mainTable thead th' ).css('border-bottom', '1px solid #ddd');
+
     var id = $.url().param("id");
     var tid = $.url().param("tid");
 
@@ -179,7 +183,7 @@ var run = function()
 
                       if(data.status == "Finished")
                       {
-                          if(data.job.output_location != null)
+                          if(data.job.output_location != null && (data.job.resource == 'Local' || data.job.output_stored == "True"))
                           {
                               var plotData = []
 

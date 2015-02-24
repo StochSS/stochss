@@ -1,5 +1,6 @@
 var Splot = Splot || {}
 
+
 Splot.Plot = Backbone.View.extend(
     {
         initialize : function(attributes)
@@ -20,6 +21,8 @@ Splot.Plot = Backbone.View.extend(
             this.plot = undefined;
 
             var initialCheckbox = undefined;
+
+            this.attributes.data = _.sortByNat(this.attributes.data, function(e) { return e.label }); 
 
             for(var k = 0; k < this.attributes.data.length; k++)
             {

@@ -398,6 +398,12 @@ StochOptim.Controller = Backbone.View.extend(
 
                 $( this.el ).html( modelSelectTemplate( { models : data } ) );
 
+                $( this.el ).find( '.mainTable' )
+                    .DataTable( { "bPaginate" : false, "bFilter" : false } );
+
+                $( this.el ).find( '.mainTable' ).css('border-bottom', '1px solid #ddd');
+                $( this.el ).find( '.mainTable thead th' ).css('border-bottom', '1px solid #ddd');
+
                 for(var i in data)
                 {
                     if(!(data[i].attributes.units == 'concentration' || data[i].attributes.isSpatial))
@@ -425,7 +431,7 @@ StochOptim.Controller = Backbone.View.extend(
 
                 var checkboxTemplate = _.template("<input type='checkbox' value='<%= name %>'/><span>&nbsp;<%= name %>&nbsp;<span />");
 
-                var parameters = this.model.getParameters();
+                var parameters = this.model.attributes.parameters;
 
                 var initialCheckbox = undefined;
 
@@ -469,7 +475,15 @@ StochOptim.Controller = Backbone.View.extend(
                     
                     if(!data)
                         return;
-                    
+
+                    if(!this.selectedTrajectories || !this.selectedInitialData || !this.selectedTrajectories.attributes || !this.selectedInitialData.attributes)
+                    {
+                        updateMsg( { status : false,
+                                     msg : "Trajectories and Initial Data files must be supplied" } );
+
+                        return;                        
+                    }
+
                     data.trajectoriesID = this.selectedTrajectories.attributes.id;
                     data.initialDataID = this.selectedInitialData.attributes.id;
                     data.modelID = this.model.attributes.id;

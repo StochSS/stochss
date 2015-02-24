@@ -6,3 +6,4 @@ stdout.log
 .DS_Store
 *.pem
 app/stochss*.key
+./release-tools/ami.json

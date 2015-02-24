@@ -1,0 +1,41 @@
+{% extends "base.html" %}
+{% block title%}Import Model from Public Library{% endblock %}
+{% block content %}
+{% block csscontent %}
+<link href="/static/modelEditor/app.css" rel="stylesheet">
+{% endblock %}
+
+<div class="span9">
+    <div class="well well-large">
+        <div data-hook="publicModelDiv">Loading models...</div>
+    </div>
+</div>
+
+{% endblock %}
+{% block jscontent %}
+<script class="modelSelectorTemplate" type="text/template">
+    <div>
+        <div class="alert alert-success" data-hook="saveMessage"></div>
+        
+        <div class="selectAccordion">
+            <div class="accordion-group">
+                <div class="accordion-heading">
+                    <h2><a class="accordion-toggle" data-toggle="collapse" data-parent="#selectAccordion" href="#collapseSelector">Public Model Library</a></h2>
+                </div>
+                <div id="collapseSelector" class="accordion-body collapse in">
+                    <div class="accordion-inner">
+                        <table data-hook='modelTable' class='table table-bordered'>
+                            <thead>
+                                <th></th><th>Name</th><th>Type</th>
+                            </thead>
+                            <tbody data-hook='modelTBody'></tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</script>
+
+<script type="text/javascript" src = "/static/modelEditor/publicLibrary.bundle.js"></script>
+{% endblock %}

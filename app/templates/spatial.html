@@ -19,7 +19,7 @@
 <script type="text/javascript" src = "/static/js/backbone.js"></script>
 <script type="text/javascript" src = "/static/model/stochkit.js"></script>
 <link rel="stylesheet" href="/static/css/nv.d3.css">
-
+<link rel="stylesheet" href="/static/css/controls.css">
 <script type="text/javascript" src = "/static/js/purl.js"></script>
 <script type="text/javascript" src = "/static/js/canvas2image.js"></script>
 <script type="text/javascript" src = "/static/js/splot.js"></script>
@@ -30,8 +30,14 @@
 <script type="text/javascript" src = "/static/js/three.js"></script>
 <script type="text/javascript" src = "/static/js/OrbitControls.js"></script>
 <script type="text/javascript" src = "/static/js/spatial.js"></script>
+<script type="text/javascript" src="static/js/status.js"></script>
+
 
 <script type="text/template" id="jobInfoTemplate">
+	<ol class="breadcrumb">
+  		<li><a href="/status">Job Status</a></li>
+  		<li class="active"><%= name %></a></li>
+	</ol>
     <h2> Job summary: <span style="COLOR:green;"><%= name %></span></h2>
     <br />
     <div class="well">
@@ -70,7 +76,7 @@
                 </td>
                 <td valign=top>
                     Select species:<br />
-                    <span id="speciesSelect"></span>
+                    <select id="speciesSelect"></select>
                 </td>
             </tr>
         </table>
@@ -79,11 +85,45 @@
                 <tr>
                     <td>
                         <div id="meshPreviewMsg"><CENTER><H1>Loading...</H1></CENTER></div>
-                        <div id="meshPreview"></div>
+
+                        <div id="container">
+                            <center>
+                                
+                            <div class="button-container button-container-left" >
+                                <button class="button" id="zoomPlus_btn"><i class="icon-plus"></i></button> 
+                                Zoom
+                                <button class="button" id="zoomMinus_btn"><i class="icon-minus"></i></button> 
+                            </div>
+                            &nbsp; 
+                            <div class="button-container">
+                                <button class="button" id="panLeft_btn"><i class="icon-arrow-left"></i></button> 
+                                <button class="button" id="panUp_btn"><i class="icon-arrow-up"></i></button> 
+                                Pan
+                                <button class="button" id="panDown_btn"><i class="icon-arrow-down"></i></button>
+                                <button class="button" id="panRight_btn"><i class="icon-arrow-right"></i></button>
+                            </div>
+                            &nbsp; 
+                            <div class="button-container">
+                                <button class="button" id="rotateLeft_btn"><i class="icon-arrow-left"></i></button>
+                                <button class="button" id="rotateUp_btn"><i class=" icon-arrow-up"></i></button> 
+                                Rotate
+                                <button class="button" id="rotateDown_btn"><i class="icon-arrow-down"></i></button> 
+                                <button class="button" id="rotateRight_btn"><i class="icon-arrow-right"></i></button> 
+                            </div>
+                            &nbsp; 
+                            <div class="button-container button-container-right">
+                                <button class="button" id="reset_btn">Reset</button>
+                            </div>
+                            </center>
+                        </div>
+                        <div id="inset"></div>
+                        <div id="meshPreview" style="z-index=-2"></div>
                     </td>
                 </tr>
             </table>
-            
+             
+
+
             <div class="span1">
                 <div>Maximum voxel population:</div>
                 <div id="maxVal"></div>
@@ -92,6 +132,7 @@
                 <div id="minVal"></div>
             </div>
         </div>
+
     </div>
 
     <div id="error" style="clear:both; display: none;">
@@ -102,15 +143,52 @@
         <pre><%= stderr %></pre>
     </div>
       
-    <br />
-      
     <div id="msg" style="clear:both; display: none;"></div>
-    <br />
     
     <div id="accessOutput" class="well" style="clear:both; display: none;">
         <h3>Output</h3>
         <br />
-        <button id="access" type="submit" class="btn btn-primary btn-large"><i class="icon-download-alt"></i> Fetch Data from Cloud</button>
+        
+        <% if (resource =="local" || output_stored == "True"){ %>
+        	<button id="access" type="submit" class="btn btn-primary btn-large"><i class="icon-download-alt"></i> Fetch Data from Cloud</button>
+    	<% } %>
+    	
+    	<% if (resource =="cloud"){ %>
+    		<% if(output_stored == "True"){ %>
+    		<button class="btn btn-primary btn-large" onclick="rerun('/reproduce?req_type=delOutput&job_type=spatial&uuid=<%= uuid %>', 'delete', '/spatial?id=<%=id%>');"> Delete Output</button>
+    		<% }else{ %>
+    		<p>No output stored.</p>
+    		<% } %>		
+    	<% } %>
     </div>
+
+    <% if (jobStatus != "Failed" ){ %>
+    <div class="well">
+        <h3>Reproduction and Cost Analysis</h3>
+        <br />
+    	<% if (resource =="cloud"){ %>
+    		<% if(output_stored != "True"){ %>
+    		<p> Reproduction Node Type: </p>
+    		<select id="instance_type" style="width: 100pt;">
+				<option name="instance_type" value="t1.micro" selected>t1.micro</option>
+				<option name="instance_type" value="m1.small">m1.small</option>
+				<option name="instance_type" value="m3.medium">m3.medium</option>
+				<option name="instance_type" value="m3.large">m3.large</option>
+				<option name="instance_type" value="c3.large">c3.large</option>
+				<option name="instance_type" value="c3.xlarge">c3.xlarge</option>
+			</select>
+			</br>
+			<button class="btn btn-primary btn-large" onclick="rerun('/reproduce?req_type=rerun&job_type=spatial&uuid=<%= uuid %>', 'rerun', '/status');"> Reproduce Results</button>    		
+    		<% } %>
+    		
+    		<button class="btn btn-primary btn-large" onclick="location.href = '/cost_analysis?job_type=spatial&id=<%= id %>';"> Cost Analysis</button>
+
+		<% }else{ %>
+    		<p>Local job. No reproduction and cost analysis available</p>
+    	<% } %>    	
+    </div>
+    <% } %>
+    
+    
 </script>
 {% endblock %}
