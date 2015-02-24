@@ -170,20 +170,23 @@ var PaginatedCollectionView = AmpersandView.extend({
         'overLimit' : {
             type : 'toggle',
             hook : 'nav'
-        },
-        'rightOffset' :
-        {
-            type : 'text',
-            hook : 'rightPosition'
-        },
-        'offset' : 
+        },        'leftPosition' : 
         {
             type : 'text',
             hook : 'leftPosition'
+        },
+        'rightPosition' :
+        {
+            type : 'text',
+            hook : 'rightPosition'
         }
     },
     derived : {
-        rightOffset : {
+        leftPosition : {
+            deps : ['offset'],
+            fn : function() { return this.offset + 1; }
+        },
+        rightPosition : {
             deps : ['offset', 'modelCount'],
             fn : function() { return Math.min(this.modelCount, this.offset + 10); }
         }
