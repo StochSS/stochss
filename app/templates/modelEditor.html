@@ -148,11 +148,15 @@
                 </div>
                 <div id="collapseSpecies" class="accordion-body collapse in">
                     <div class="accordion-inner">
-                        Converting concentration models to population models should be automatic for mass action models defined under the assumptions of Gillespie-SSA. For more complex mass action models, or ones with custom propensities, conversion must be done manually. Conversion to population is still possible in the cases where automatic conversion fails -- the user will be responsible for fixing the reactions which were not automatically converted though!
+                        To convert the model from concentration to population you must specify a system volume, initial conditions will be converted as initial_population = initial_concentration * volume.
+                        <br><br>
+                        Converting concentration models to population models should be automatic for mass action models defined under the assumptions of Gillespie-SSA. For more complex mass action models, or ones with custom propensities, conversion must be done manually. Conversion to population is still possible in the cases where automatic conversion fails; the user will be responsible for fixing the reactions which were not automatically converted though.
+                        <br><br>
+                        <h4>Volume</h4>
+                        <div data-hook="volume"></div>
                         <div data-hook="specie"></div>
                         <div data-hook="parameter"></div>
                         <div data-hook="reaction"></div>
-                        <div data-hook="volume"></div>
                         <button class="btn btn-primary" data-hook="finishConvertToPopulationButton">Finish conversion</button>
                         <button class="btn btn-danger" data-hook="cancelConvertToPopulationButton">Cancel conversion</button>
                     </div>
