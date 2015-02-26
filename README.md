@@ -47,5 +47,4 @@ If the webserver launched without error, the above scripts will open the App usi
 
 ### Terminating the App 
 
-Closing the browser does not terminate the App. To shut it down properly, in the same terminal where you lunched the app,
-press "Ctrl-C" on your keyboard, after which you can close the terminal. Please wait for jobs to finish or stop them before shutting the application down to avoid runaway background processes. 
+Closing the browser does not terminate the App. To shut it down properly press Ctrl-C in the same terminal where you lunched the app. Please wait for jobs to finish or stop them before shutting the application down to avoid runaway background processes. 
