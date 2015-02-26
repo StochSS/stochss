@@ -37,7 +37,7 @@ MacOSX:
 
 In the stochss folder, type
 OSX:
-    $ ./run.mac.wrap.sh
+    $ ./run.mac.sh
     
 Ubuntu:
     $ ./run.ubuntu.sh
@@ -47,5 +47,5 @@ If the webserver launched without error, the above scripts will open the App usi
 
 ### Terminating the App 
 
-Closing the browser does not terminate the App. To shut it down permanently, in the same terminal where you lunched the app,
-press "Ctrl-C" on your keyboard, after which you can close the terminal. **Note that the data created in the app is not persisted until the app is terminated. If the app is not terminated normally, the pending transactions will not be applied and the data may be lost.** 
+Closing the browser does not terminate the App. To shut it down properly, in the same terminal where you lunched the app,
+press "Ctrl-C" on your keyboard, after which you can close the terminal. Please wait for jobs to finish or stop them before shutting the application down to avoid runaway background processes. 
