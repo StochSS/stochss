@@ -258,6 +258,53 @@ class SpatialPage(BaseHandler):
 
                 self.response.content_type = 'application/json'
                 self.response.write(json.dumps( threeJS ))
+
+            except Exception as e:
+                traceback.print_exc()
+                result = {}
+                result['status'] = False
+                result['msg'] = 'Error: error fetching results {0}'.format(e)
+                self.response.headers['Content-Type'] = 'application/json'
+                self.response.write(json.dumps(result))
+        
+        elif reqType == 'onlyColorRange':
+            try:
+                job = SpatialJobWrapper.get_by_id(int(self.request.get('id')))
+
+                data = json.loads(self.request.get('data'))
+
+                trajectory = data["trajectory"]
+                sTime= data["timeStart"]
+                eTime = data["timeEnd"]
+
+                with open(str(job.outData + '/results/result{0}'.format(trajectory))) as fd:
+                    result = pickle.load(fd)
+        
+                    species = result.model.get_species_map().keys()
+
+                    threeJS = {}
+
+
+                    #print "exporting ", timeIdx
+                    timeIdx = sTime;
+                    while timeIdx !=eTime:
+                        subthreeJS = {}
+                        for specie in species:
+                            concVals = result.get_species(specie, timeIdx, concentration=True)
+                            popVals = result.get_species(specie, timeIdx, concentration=False)
+
+                            minIdx = numpy.argmin(concVals)
+                            maxIdx = numpy.argmax(concVals)
+
+                            subthreeJS[specie] = { "mesh" : result._compute_solution_colors(specie, timeIdx),
+                                                "max" : int(popVals[maxIdx]),
+                                                "min" : int(popVals[minIdx]) }
+                        
+                        threeJS[timeIdx] = {"mesh": subthreeJS}
+                        timeIdx = (timeIdx+1) % 101;
+
+                self.response.content_type = 'application/json'
+                self.response.write(json.dumps( threeJS ))
             except Exception as e:
                 traceback.print_exc()
                 result = {}

@@ -71,13 +71,20 @@
                     <input id="timeSelect" type="range" min="0" max="0" step="0" value="0">
                 </td>
                 <td valign=top>
-                    Animation:<br />
+                    Animation:<br/>
                     <button class="button" id="play_btn"><i class="icon-play"></i></button> 
-                    <button class="button" id="stop_btn"><i class="icon-stop"></i></button> 
+                    <button class="button" id="stop_btn"><i class="icon-stop"></i></button>
+                    <p id="playStats">Stopped</p>
                 </td>
                 <td valign=top>
                     Select Trajectory:<br />
                     <select  id="trajectorySelect"></select>
+                </td>
+
+                <td valign=top>
+                    Select Wireframe:<br />
+                    <input type="radio" id="withWire" name="wireframe" value="1">Yes
+                    <input type="radio" id="withoutWire" name="wireframe" value="0">No
                 </td>
                 <td valign=top>
                     Select species:<br />

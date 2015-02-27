@@ -25,6 +25,12 @@ Spatial.Controller = Backbone.View.extend(
 
         initialize : function(attributes)
         {
+            this.maxLimit = 101;
+            this.wireFlag = false;
+            this.playFlag = true;
+            this.spt = this.timeIdx % this.maxLimit;
+            this.upt = (this.timeIdx + 25) % this.maxLimit;
+            
             this.initializeCache();
 
             // Set up room for the model select stuff
@@ -89,33 +95,103 @@ Spatial.Controller = Backbone.View.extend(
             $( '#stop_btn' ).click(_.bind(this.stopMesh, this));
          },
 
-         playMesh: function(){
-            console.log("In play Mesh");
-            
-            //this.updateCacheRange(0, 10);
-            //this.timeIdx = 0;
-
-            this.intervalId = setInterval(_.bind(
-                function(){
-                    if(this.cache[this.timeIdx])            
-                        {   
-                            console.log("Cache initialized at time"+this.timeIdx);
-                            this.handleMeshColorUpdate(this.cache[this.timeIdx]); 
-                            this.overwriteCache(this.timeIdx , (this.timeIdx+11)%100)
-                            this.timeIdx = (this.timeIdx+1)%100;
-                        }
-                    else{
-                            console.log("Cache not initialized");
-                    }
-                }
-                , this),
-            1000);
+         playTimeHelper: function(timeVal, delta){
+            return Math.min(timeVal + delta, this.maxLimit-1); 
          },
 
-         stopMesh: function(){
-            console.log("Stopping mesh with Id: "+this.intervalId);
-            clearInterval(this.intervalId);
-            console.log("Stopping mesh @"+this.intervalId);
+         playMesh: function(){
+
+            this.spt = this.timeIdx;
+
+            this.playFlag = true;
+
+            var playStats = $( "#playStats" ).html( 'Running');
+
+            var count = 0;
+            this.intervalID = setInterval(
+                // Function for setInterval
+                _.bind(function(){
+
+                if(this.playFlag){
+                $( "#playStats" ).html( '@'+this.timeIdx);
+
+                if(! ( this.timeIdx >= this.spt && this.timeIdx <= this.playTimeHelper(this.spt , 25) ) )
+                {
+
+                if(this.timeIdx <= this.playTimeHelper(this.spt , 50) )
+                    this.deleteCache(this.spt, this.playTimeHelper(this.spt , 25) );
+                else
+                    this.deleteCache(this.spt, this.playTimeHelper(this.spt , 50) );
+                            
+                
+                // Updating the cache from 50 to 75
+                if(this.timeIdx <= this.playTimeHelper(this.spt , 50) )
+                        this.updateCache( this.playTimeHelper(this.spt , 49) , this.playTimeHelper(this.spt , 75 ) ); 
+                else
+                        this.updateCache( this.timeIdx , this.playTimeHelper(this.timeIdx , 25 ) ); 
+
+                this.spt = this.timeIdx;
+                
+                }
+
+                // Updating the screen
+                else{
+
+                if(this.cache[this.timeIdx])
+                {
+                    count = 0;
+                    console.log("Data is "+this.cache[this.timeIdx]+" @time"+this.timeIdx);
+                    this.handleMeshColorUpdate(this.cache[this.timeIdx]);
+                    // Changing the time
+                    console.log(" *** Changing @Time : "+this.timeIdx);
+                    this.timeIdx = (this.timeIdx+1);
+                    console.log(" *** New Time = "+this.timeIdx); 
+                }
+                else{
+                if(this.timeIdx < 100){
+                    $( "#playStats" ).html( 'Buffering..');
+                    console.log("Cache still loading");
+                    count++;
+
+                    if(count == 5)
+                    {
+                        this.updateCache(this.timeIdx, this.playTimeHelper(this.timeIdx , 25 ) );
+                    }
+
+                }
+
+
+                }
+
+                // Checking if time == 100
+                if(this.timeIdx == 100)
+                {
+                    console.log("STOP!");
+                    this.playFlag = false;
+                    clearInterval(this.intervalID);
+                    $( "#playStats" ).html( 'Stopped');
+                    return;
+                }
+            
+
+            }
+
+            }
+
+            }, this), 
+
+            // Time for update
+            1000);
+
+         },
+
+        stopMesh: function(){
+            console.log("Stopping mesh with Id: "+this.intervalID);
+            console.log("STOP!");
+            clearInterval(this.intervalID);
+            $( "#playStats" ).html( 'Stopped');
+            this.playFlag =false;
+
          },
 
         createText : function(letter, x, y, z){
@@ -151,7 +227,6 @@ Spatial.Controller = Backbone.View.extend(
             // renderer
             var renderer2 = new THREE.WebGLRenderer({ alpha: true });
             renderer2.setClearColor( 0x000000, 0 ); 
-            console.log("Width: ",this.d_width);
             renderer2.setSize( this.d_width/5, this.d_width/5);
             $( renderer2.domElement ).appendTo(dom2);
 
@@ -211,6 +286,8 @@ Spatial.Controller = Backbone.View.extend(
         // This event gets fired when the user selects a csv data file
         meshDataPreview : function(data)
         {
+            console.log("meshDataPreview : function(data)");
+
             if(String(data['min']).length > 5 || String(data['max']).length > 5)
             {
                 this.minVal = data['min'].toExponential(3);
@@ -225,34 +302,36 @@ Spatial.Controller = Backbone.View.extend(
             $( "#minVal" ).text(this.minVal);
             $( "#maxVal" ).text(this.maxVal);
 
-            if (!window.WebGLRenderingContext) {
-                // Browser has no idea what WebGL is. Suggest they
-                // get a new browser by presenting the user with link to
-                // http://get.webgl.org
-                $( "#meshPreview" ).html('<center><h2 style="color: red;">WebGL Not Supported</h2><br /> \
-                    <ul><li>Download an updated Firefox or Chromium to use StochSS (both come with WebGL support)</li> \
-                    <li>It may be necessary to update system video drivers to make this work</li></ul></center>');
-                return;
-            }
-
-            var canvas = document.createElement('canvas');
-
-            gl = canvas.getContext("webgl");
-            delete canvas;
-            if (!gl) {
-                // Browser could not initialize WebGL. User probably needs to
-                // update their drivers or get a new browser. Present a link to
-                // http://get.webgl.org/troubleshooting
-                $( "#meshPreview" ).html('<center><h2 style="color: red;">WebGL Disabled</h2><br /> \
-                    <ul><li>In Safari and certain older browsers, this must be enabled manually</li> \
-                    <li>Browsers can also throw this error when they detect old or incompatible video drivers</li> \
-                    <li>Enable WebGL, or try using StochSS in an up to date Chrome or Firefox browser</li> \
-                    </ul></center>');
-                return;  
-            }
+            
 
             if(!this.renderer)
             {
+                if (!window.WebGLRenderingContext) {
+                    // Browser has no idea what WebGL is. Suggest they
+                    // get a new browser by presenting the user with link to
+                    // http://get.webgl.org
+                    $( "#meshPreview" ).html('<center><h2 style="color: red;">WebGL Not Supported</h2><br /> \
+                        <ul><li>Download an updated Firefox or Chromium to use StochSS (both come with WebGL support)</li> \
+                        <li>It may be necessary to update system video drivers to make this work</li></ul></center>');
+                    return;
+                }
+
+                var canvas = document.createElement('canvas');
+
+                gl = canvas.getContext("webgl");
+                delete canvas;
+                if (!gl) {
+                    // Browser could not initialize WebGL. User probably needs to
+                    // update their drivers or get a new browser. Present a link to
+                    // http://get.webgl.org/troubleshooting
+                    $( "#meshPreview" ).html('<center><h2 style="color: red;">WebGL Disabled</h2><br /> \
+                        <ul><li>In Safari and certain older browsers, this must be enabled manually</li> \
+                        <li>Browsers can also throw this error when they detect old or incompatible video drivers</li> \
+                        <li>Enable WebGL, or try using StochSS in an up to date Chrome or Firefox browser</li> \
+                        </ul></center>');
+                    return;  
+                }
+
                 var dom = $( "#meshPreview" ).empty();
                 var scene = new THREE.Scene();
                 var width = dom.width(); this.d_width = width;
@@ -265,13 +344,19 @@ Spatial.Controller = Backbone.View.extend(
                 var rendererDom = $( renderer.domElement ).appendTo(dom);
                 
                 var controls = new THREE.OrbitControls( camera, renderer.domElement );
-                controls.noZoom = true;controls.noRotate = true; controls.noPan = true;
 
                 camera.position.z = 1.5;
 
                 this.camera = camera;
                 this.renderer = renderer;
                 this.controls = controls;
+
+
+            // Adding gui
+            this.addGui();
+
+            // Adding Axes
+            this.addAxes();
 
 
             }
@@ -285,7 +370,7 @@ Spatial.Controller = Backbone.View.extend(
             
             var model = loader.parse(data['mesh']);
 
-            var material = new THREE.MeshBasicMaterial( { vertexColors: THREE.VertexColors, wireframe:false } );
+            var material = new THREE.MeshBasicMaterial( { vertexColors: THREE.VertexColors, wireframe:this.wireFlag } );
 	    
             material.side = THREE.DoubleSide;
             mesh = new THREE.Mesh(model.geometry, material);
@@ -305,13 +390,6 @@ Spatial.Controller = Backbone.View.extend(
             scene.add(directionalLight);
             
             this.scene = scene;
-
-            // Adding gui
-            this.addGui();
-
-            // Adding Axes
-            this.addAxes();
-
             $( "#meshPreviewMsg" ).hide();
 
             //$( "#meshPreview" ).show();
@@ -321,8 +399,6 @@ Spatial.Controller = Backbone.View.extend(
                 this.renderFrame();
                 this.rendererInitialized = true;
             }
-
-            console.log("Width: "+width+" Height:"+height);
 
         },
 
@@ -338,47 +414,42 @@ Spatial.Controller = Backbone.View.extend(
             this.cache = {};
         },
 
-        updateCacheRange: function(start, stop)
-        { 
-            console.log("updateCacheRange: function("+start+", "+stop+")");
-            this.initializeCache();
-            for(time=start; time<=stop; time++)
+        initializeCache: function()
+        {
+            console.log("initializeCache: function()");
+            this.cache = {};
+        },
+
+        deleteCache : function(start, stop){
+            console.log(" deleteCache : function("+start+", "+stop+")");
+
+            idx = start; 
+
+            while(idx!=stop)
             {
-                console.log("Calling this.updateCache("+time+")")
-                this.updateCache(time);
+                delete this.cache[idx];
+                idx = (idx + 1 )% this.maxLimit;
             }
+
         },
 
-        updateCache: function(time)
-        { 
-          console.log("updateCache: function("+time+")");
-           $.ajax( { type : "GET",
-                    url : "/spatial",
-                    data : { reqType : "onlyColor",
-                    id : this.attributes.id,
-                    data : JSON.stringify( { trajectory : this.trajectory, timeIdx : time} )},
-                    success : _.bind(function(data){
-                    console.log("Initializing Cache @ Time : "+time);
-                    this.cache[time] = data;
-                    }, this)
-                    }
-                );
-        },
+        updateCache : function(start, stop){
+            console.log(" updateCache : function("+start+", "+stop+")");
 
-        overwriteCache : function(orig_time, new_time){
-            console.log("overwriteCache : function("+orig_time+", "+new_time+")")
-            delete this.cache[orig_time];
-            this.updateCache(new_time);
-        },
-
-        updateColor : function(){
-            console.log(" updateColor : function()");
             $.ajax( { type : "GET",
                     url : "/spatial",
-                    data : { reqType : "onlyColor",
+                    data : { reqType : "onlyColorRange",
                     id : this.attributes.id,
-                    data : JSON.stringify( { trajectory : this.trajectory, timeIdx : this.timeIdx} )},
-                    success : _.bind(this.handleMeshColorUpdate, this)
+                    data : JSON.stringify( { trajectory : this.trajectory, timeStart : start , timeEnd: stop} )},
+                    success : _.bind(function(data)
+                        {
+                            var time = _.keys(data).sort();
+                            for (var i = 0; i < time.length; i++) {
+                                var t = time[i]; 
+                                this.cache[t] = data[t].mesh;
+                            }
+
+                        }, this)
                     }
             );
         },
@@ -396,6 +467,8 @@ Spatial.Controller = Backbone.View.extend(
 
        acquireNewData : function()
         {
+            $( "#meshPreviewMsg" ).show();
+            
             console.log("acquireNewData : function()");
 
             // Cache available
@@ -405,12 +478,12 @@ Spatial.Controller = Backbone.View.extend(
                 return;
             }
 
-            $( "#meshPreviewMsg" ).show();
-            
             // Mesh Available
             if(this.meshData){
-                this.updateColor();
-
+                this.initializeCache();
+                this.updateCache(this.timeIdx, ( this.timeIdx + 50 )% this.maxLimit);
+                this.updateMesh();
+                return;
             }
 
             // Neither cache or mesh available
@@ -418,12 +491,7 @@ Spatial.Controller = Backbone.View.extend(
                 this.updateMesh();
                 return;
             }
-            
-            // Update the cache
-            rangeStart = this.timeIdx % 100;
-            rangeEnd = (rangeStart + 10 )% 100;
-            console.log("Calling this.updateCache("+rangeStart+", "+rangeEnd+");")
-            this.updateCacheRange(rangeStart, rangeEnd);
+
 
         },
          
@@ -465,10 +533,13 @@ Spatial.Controller = Backbone.View.extend(
             } 
 
             this.handleMeshUpdate(sortedSpecies);
+
         },
 
         handleMeshUpdate: function(sortedSpecies)
         {
+
+            console.log("handleMeshUpdate: function(sortedSpecies)");
             for(var i in sortedSpecies) {
                 var specie = sortedSpecies[i];
 
@@ -488,15 +559,18 @@ Spatial.Controller = Backbone.View.extend(
                     input.trigger('click');
                 }
             }
+
         },
 
         handleSpeciesSelect : function(event)
         {
+            console.log("handleSpeciesSelect : function(event)");
             var species = $( event.target ).val();
 
             this.selectedSpecies = species;
 
             this.meshDataPreview(this.meshData[species]);
+
         },
 
         handleDownloadDataButton : function(event)
@@ -599,6 +673,20 @@ Spatial.Controller = Backbone.View.extend(
                     slider.on('change', _.throttle(_.bind(this.handleSliderChange, this), 1000));
 
                     slider.trigger('change');
+
+                    // Set up radio buttons
+
+                    var withWire = $("#withWire");
+                    withWire.click(_.bind(function(){
+                    this.wireFlag = true;
+                    this.acquireNewData();
+                    }, this));
+
+                    var withoutWire = $("#withoutWire");
+                    withoutWire.click(_.bind(function(){
+                    this.wireFlag = false;
+                    this.acquireNewData();
+                    }, this));
 
 
                 }
