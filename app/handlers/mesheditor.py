@@ -198,10 +198,10 @@ def setupMeshes(handler):
               'unit_cube_with_membrane_mesh.xml',
               'unit_sphere_with_membrane_mesh.xml' ]
                 
-    descriptions = { 'coli_with_membrane_mesh.xml' : 'Mesh for simulation of the E. coli or similar rod-shaped bacteria.',
-                     'cylinder_mesh.xml' : 'Mesh for simulations in a cylindrical domain.',
-                     'unit_cube_with_membrane_mesh.xml' : 'Simulations on a unit cube domain.',
-                     'unit_sphere_with_membrane_mesh.xml' : 'Simulations on a unit sphere domain.' }
+    descriptions = { 'coli_with_membrane_mesh.xml' : 'Mesh for simulation of E. coli or similar rod-shaped bacteria.\n\nBounding box:\n-0.25 to 0.25 on x-axis\n-0.25 to 2.25 on y-axis\n-0.25 to 0.25 on z-axis',
+                     'cylinder_mesh.xml' : 'Mesh for simulations in a cylindrical domain.\n\nBounding box:\n-5.0 to 5.0 on x-axis\n-1.0 to 1.0 on y-axis\n-1.0 to 1.0 on z-axis',
+                     'unit_cube_with_membrane_mesh.xml' : 'Simulations on a unit cube domain.\n\nBounding box:\n0.0 to 1.0 on x-axis\n0.0 to 1.0 on y-axis\n0.0 to 1.0 on z-axis',
+                     'unit_sphere_with_membrane_mesh.xml' : 'Simulations on a unit sphere domain.\n\nBounding box:\n-1.0 to 1.0 on x-axis\n-1.0 to 1.0 on y-axis\n-1.0 to 1.0 on z-axis' }
     
     namesToFilenames = { 'E-coli with membrane' : 'coli_with_membrane_mesh.xml',
                          'Cylinder' : 'cylinder_mesh.xml',

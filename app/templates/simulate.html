@@ -9,11 +9,11 @@
                 {% if all_models %}
                 <h3> Select model to simulate </h3>
                 <br />
-                <table class="table">
+                <table class="table table-striped table-bordered mainTable">
                   <thead>
                     <tr>
-                      <th></th>
-                      <th>Name</th>
+                      <th width="25px"></th>
+                      <th width="200px">Name</th>
                       <th>Type</th>
                       <th>Spatial</th>
                     </tr>
@@ -60,10 +60,14 @@
 
 {% block jscontent %}
 <script type="text/javascript" src = "/static/js/underscore.js"></script>
+<script type="text/javascript" src = "/static/js/underscore_natural_sort.js"></script>
 <script type="text/javascript" src = "/static/utils.js"></script>
 <script type="text/javascript" src = "/static/js/backbone.js"></script>
 <script type="text/javascript" src = "/static/model/stochkit.js"></script>
 <link rel="stylesheet" href="/static/css/nv.d3.css">
+
+<link rel="stylesheet" type="text/css" href="/static/css/jquery.dataTables.css">
+<script type="text/javascript" charset="utf8" src="/static/js/jquery.dataTables.js"></script>
 
 <script type="text/javascript" src = "/static/js/purl.js"></script>
 <script type="text/javascript" src = "/static/js/canvas2image.js"></script>
@@ -279,7 +283,8 @@
     		<% } %>		
     	<% } %>
     </div>
-    
+
+    <% if(status != "Failed"){ %>
     <div class="well">
         <h3>Reproduction and Cost Analysis</h3>
         <br />
@@ -305,6 +310,7 @@
     		<p>Local job. No reproduction and cost analysis available</p>
     	<% } %>    	
     </div>
+    <% } %>
         
 </script>
 

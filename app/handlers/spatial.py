@@ -494,54 +494,55 @@ class SpatialPage(BaseHandler):
         simulation_seed = data['seed'] # If this is set to -1, it means choose a seed at random! (Whatever that means)
         
         #### Construct the PyURDME object from the Stockkit model and mesh and other inputs
-        # model
-        pymodel = pyurdme.URDMEModel(name=stochkit_model_obj.name)
-        # mesh
-        pymodel.mesh = pyurdme.URDMEMesh.read_dolfin_mesh(str(mesh_filename))
-        # timespan
-        pymodel.timespan(numpy.arange(0,simulation_end_time+simulation_time_increment, simulation_time_increment))
-        # subdomains
-        if len(meshWrapperDb.subdomains) > 0:
-            pymodel.set_subdomain_vector(numpy.array(meshWrapperDb.subdomains))
+        try:
+            # model
+            pymodel = pyurdme.URDMEModel(name=stochkit_model_obj.name)
+            # mesh
+            pymodel.mesh = pyurdme.URDMEMesh.read_dolfin_mesh(str(mesh_filename))
+            # timespan
+            pymodel.timespan(numpy.arange(0,simulation_end_time+simulation_time_increment, simulation_time_increment))
+            # subdomains
+            if len(meshWrapperDb.subdomains) > 0:
+                pymodel.set_subdomain_vector(numpy.array(meshWrapperDb.subdomains))
 
-        # species
-        for s in stochkit_model_obj.listOfSpecies:
-            pymodel.add_species(pyurdme.Species(name=s, diffusion_constant=float(species_diffusion_coefficients[s])))
-        # species subdomain restriction
-        for s, sd_list in species_subdomain_assigments.iteritems():
-            spec = pymodel.listOfSpecies[s]
-            pymodel.restrict(spec, sd_list)
-        # parameters
-        for p_name, p in stochkit_model_obj.listOfParameters.iteritems():
-            pymodel.add_parameter(pyurdme.Parameter(name=p_name, expression=p.expression))
-        # reactions
-        for r_name, r in stochkit_model_obj.listOfReactions.iteritems():
-            print "="*80
-            print r.__dict__
-            cow = pyurdme.Reaction(name=r_name, reactants=r.reactants, products=r.products, rate=r.marate, massaction=True)
-            print cow.__dict__
-            if r.massaction:
-                pymodel.add_reaction(pyurdme.Reaction(name=r_name, reactants=r.reactants, products=r.products, rate=r.marate, massaction=True))
-            else:
-                pymodel.add_reaction(pyurdme.Reaction(name=r_name, reactants=r.reactants, products=r.products, propensity_function=r.propensity_function))
-        # reaction subdomain restrictions
-        for r in reaction_subdomain_assigments:
-            pymodel.listOfReactions[r].restrict_to = reaction_subdomain_assigments[r]
-        # Initial Conditions
-        # initial_conditions = json_model_refs["spatial"]["initial_conditions"] #e.g.  { ic0 : { type : "place", species : "S0",  x : 5.0, y : 10.0, z : 1.0, count : 5000 }, ic1 : { type : "scatter",species : "S0", subdomain : 1, count : 100 }, ic2 : { type : "distribute",species : "S0", subdomain : 2, count : 100 } }
-        for ic in initial_conditions:
-            spec = pymodel.listOfSpecies[ic['species']]
-            if ic['type'] == "place":
-                pymodel.set_initial_condition_place_near({spec:int(ic['count'])}, point=[float(ic['x']),float(ic['y']),float(ic['z'])])
-            elif ic['type'] == "scatter":
-                pymodel.set_initial_condition_scatter({spec:int(ic['count'])},subdomains=[int(ic['subdomain'])])
-            elif ic['type'] == "distribute":
-                pymodel.set_initial_condition_distribute_uniformly({spec:int(ic['count'])},subdomains=[int(ic['subdomain'])])
-            else:
-                #self.response.write(json.dumps({"status" : False,
-                #                                "msg" : "Unknown initial condition type {0}".format(ic['type'])}))
-                #return
-                raise Exception("Unknown initial condition type {0}".format(ic['type']))
+            # species
+            for s in stochkit_model_obj.listOfSpecies:
+                pymodel.add_species(pyurdme.Species(name=s, diffusion_constant=float(species_diffusion_coefficients[s])))
+            # species subdomain restriction
+            for s, sd_list in species_subdomain_assigments.iteritems():
+                spec = pymodel.listOfSpecies[s]
+                pymodel.restrict(spec, sd_list)
+            # parameters
+            for p_name, p in stochkit_model_obj.listOfParameters.iteritems():
+                pymodel.add_parameter(pyurdme.Parameter(name=p_name, expression=p.expression))
+            # reactions
+            for r_name, r in stochkit_model_obj.listOfReactions.iteritems():
+                cow = pyurdme.Reaction(name=r_name, reactants=r.reactants, products=r.products, rate=r.marate, massaction=True)
+                print cow.__dict__
+                if r.massaction:
+                    pymodel.add_reaction(pyurdme.Reaction(name=r_name, reactants=r.reactants, products=r.products, rate=r.marate, massaction=True))
+                else:
+                    pymodel.add_reaction(pyurdme.Reaction(name=r_name, reactants=r.reactants, products=r.products, propensity_function=r.propensity_function))
+            # reaction subdomain restrictions
+            for r in reaction_subdomain_assigments:
+                pymodel.listOfReactions[r].restrict_to = reaction_subdomain_assigments[r]
+            # Initial Conditions
+            # initial_conditions = json_model_refs["spatial"]["initial_conditions"] #e.g.  { ic0 : { type : "place", species : "S0",  x : 5.0, y : 10.0, z : 1.0, count : 5000 }, ic1 : { type : "scatter",species : "S0", subdomain : 1, count : 100 }, ic2 : { type : "distribute",species : "S0", subdomain : 2, count : 100 } }
+            for ic in initial_conditions:
+                spec = pymodel.listOfSpecies[ic['species']]
+                if ic['type'] == "place":
+                    pymodel.set_initial_condition_place_near({spec:int(ic['count'])}, point=[float(ic['x']),float(ic['y']),float(ic['z'])])
+                elif ic['type'] == "scatter":
+                    pymodel.set_initial_condition_scatter({spec:int(ic['count'])},subdomains=[int(ic['subdomain'])])
+                elif ic['type'] == "distribute":
+                    pymodel.set_initial_condition_distribute_uniformly({spec:int(ic['count'])},subdomains=[int(ic['subdomain'])])
+                else:
+                    #self.response.write(json.dumps({"status" : False,
+                    #                                "msg" : "Unknown initial condition type {0}".format(ic['type'])}))
+                    #return
+                    raise Exception("Unknown initial condition type {0}".format(ic['type']))
+        except Exception as e:
+            raise Exception("Error while assembling the model: {0}".format(e))
 
         return pymodel
 

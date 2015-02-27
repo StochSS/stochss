@@ -6,8 +6,6 @@ except ImportError:
 import os
 from google.appengine.ext import db
 import boto
-from pylab import figure, axes, pie, title
-from matplotlib.backends.backend_agg import FigureCanvasAgg
 from backend import backendservice
 from backend.pricing import Price
 from cloudtracker import CloudTracker
@@ -22,21 +20,27 @@ ALL_INSTANCE_TYPES = ['t1.micro', 'm1.small', 'm3.medium', 'm3.large', 'c3.large
 def get_all_jobs_time_cost(uuid, access_key, secret_key):
     
     database = DynamoDB(access_key, secret_key)
-    results = database.getEntry('uuid', uuid, "stochss_cost_analysis")
+    results = database.getEntry('uuid', uuid, backendservice.backendservices.COST_ANALYSIS_TABLE)
              
     jobs = []
     if results is None:
         return jobs
     
     try:
+        seen_instance_types = {} # so we don't get duplicate entries
         for result in results:
             job = {}
             job['agent'] = result['agent']
             job['instance_type'] = result['instance_type']
+            if job['instance_type'] in seen_instance_types:
+                continue
+            else:
+                seen_instance_types[job['instance_type']] = 1
             job['status'] = result['status']
             if 'time_taken' not in result:
                 time = 0
             else:
+                logging.info("time taken: {0}".format(result['time_taken']))
                 time = result['time_taken']
                 if time:
                     time = time.partition(' ')[0]#seconds
@@ -44,9 +48,13 @@ def get_all_jobs_time_cost(uuid, access_key, secret_key):
                     time = 0
                 
             job['time'] = str(float(time)/60.00)
-            job['cost'] = str(Price.COST_TABLE_PER_HOUR['ec2'][job['instance_type']] * float(time)/3600.00)
             
-            logging.info('agent: '+job['agent']+', instance_type: '+job['instance_type']+', time: '+job['time']+', cost: '+job['cost'])
+            cost_per_hour = Price.COST_TABLE_PER_HOUR['ec2'][job['instance_type']]
+            job['cost'] = str( cost_per_hour * float(time)/3600.00)
+            time_by_hour = int(float(time))/3600 + 1
+            job['cost_by_hour'] = str(cost_per_hour * time_by_hour)
+            
+            logging.info('agent: '+job['agent']+', instance_type: '+job['instance_type']+', time: '+job['time']+', cost: '+job['cost']+', cost per hour: '+str(cost_per_hour)+', cost by hour: '+ job['cost_by_hour'])
             jobs.append(job)
         return jobs
     except Exception, e:
@@ -78,6 +86,9 @@ class CostAnalysisPage(BaseHandler):
         context['id'] = params['id']
         context['job_type']= params['job_type'] 
         context['all_instance_types'] = ALL_INSTANCE_TYPES
+        context['analyzed_instance_types'] = {x:True for x in ALL_INSTANCE_TYPES}
+        for job in eval(context['jobs']):
+            context['analyzed_instance_types'][job['instance_type']] = False
         self.render_response('cost_analysis.html', **context) 
     
     def post(self):

@@ -19,13 +19,13 @@ module.exports = View.extend({
         if(obj.name == 'type')
         {
             // Make sure we have a rate
-            //if(obj.name != 'custom')
-            //{
-            //    if(this.model.rate == null)
-            //    {
-            //        this.model.rate = this.rateSelect.value;
-            //    }
-            //}
+            if(obj.name != 'custom')
+            {
+                if(this.model.rate == null)
+                {
+                    this.model.rate = this.rateSelect.value;
+                }
+            }
 
             if(obj.value != 'custom' && obj.value != 'massaction')
             {
@@ -220,6 +220,11 @@ var reactants;
                     reactants = 2;
                     products = 2;
                 }
+                if(this.model.type == 'massaction')
+                {
+                    reactants = this.model.reactants.models.length;
+                    products = this.model.products.models.length;
+                }
 
                 for(var i = 0; i < reactants; i++)
                 {
@@ -268,8 +273,8 @@ var reactants;
 <div data-hook='subdomains'></div> \
   <table width='100%' data-hook='advanced'>\
     <tr> \
-      <td style='vertical-align:top'><h4>Reactants</h4><div data-hook='reactants'></div></td>\
-      <td style='vertical-align:top'><h4>Products</h4><div data-hook='products'></div></td>\
+      <td style='vertical-align:top'><div data-hook='reactants'></div></td>\
+      <td style='vertical-align:top'><div data-hook='products'></div></td>\
     </tr>\
   </table>\
   <br>\
@@ -287,8 +292,8 @@ var reactants;
 <div data-hook='custom'></div> \
   <table width='100%' data-hook='advanced'>\
     <tr> \
-      <td style='vertical-align:top'><h4>Reactants</h4><div data-hook='reactants'></div></td>\
-      <td style='vertical-align:top'><h4>Products</h4><div data-hook='products'></div></td>\
+      <td style='vertical-align:top'><div data-hook='reactants'></div></td>\
+      <td style='vertical-align:top'><div data-hook='products'></div></td>\
     </tr>\
   </table>\
   <br> \
@@ -374,13 +379,14 @@ var reactants;
 
         this.renderSubview(
             new StoichSpecieCollectionFormView({
-                collection: this.model.reactants
+                label : 'Reactants',
+                collection: this.model.reactants,
             }), this.el.querySelector("[data-hook='reactants']"));
 
         this.renderSubview(
             new StoichSpecieCollectionFormView({
+                label : 'Products',
                 collection: this.model.products,
-                showCustomOverride : true
             }), this.el.querySelector("[data-hook='products']"));
         
         return this;

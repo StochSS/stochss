@@ -66,6 +66,8 @@ Sensitivity.SelectTable = Backbone.View.extend(
 
                 var firstBoxParam = '';
 
+                var parameters = _.sortByNat(parameters, function(p) { return p.name }); 
+
                 for(var i = 0; i < parameters.length; i++) {
                     var parameter = parameters[i];
 

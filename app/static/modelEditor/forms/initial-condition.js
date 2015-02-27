@@ -9,13 +9,13 @@ var SubdomainFormView = require('./subdomain');
 
 var Tests = require('./tests');
 module.exports = View.extend({
-    template : "<tr> \
-  <td> \
+    template : "<tr data-hook='row'> \
+  <td valign='top'> \
     <button class='btn' data-hook='delete'>x</button> \
   </td> \
-  <td data-hook='typeSelect'></td> \
-  <td data-hook='specie'></td> \
-  <td data-hook='details'> \
+  <td data-hook='typeSelect' valign='top'></td> \
+  <td data-hook='specie' valign='top'></td> \
+  <td data-hook='details' valign='top'> \
     <table> \
       <tr> \
         <td>Count:</td><td><div data-hook='count'></div></td> \
@@ -31,6 +31,34 @@ module.exports = View.extend({
     </table> \
   </td> \
 </tr>",
+    props : {
+        valid : 'boolean',
+        message : 'string'
+    },
+    updateValid : function()
+    {
+        var valid = true;
+        var message = '';
+
+        try
+        {
+            for(var i = 0; i < this._subviews.length; i++)
+            {
+                if(typeof(this._subviews[i].valid) != "undefined")
+                {
+                    valid = valid && this._subviews[i].valid;
+                    message = "Invalid initial condition, please fix";
+                }
+                
+                if(!valid)
+                    break;
+            }
+        } catch(err) {
+        }
+
+        this.valid = valid;
+        this.message = message;
+    },
     // Gotta have a few of these functions just so this works as a form view
     // This gets called when things update
     update: function(obj)
@@ -41,8 +69,17 @@ module.exports = View.extend({
         } else if(obj.name == 'specie') {
             this.model.specie = obj.value;
         } else if(obj.name == 'subdomain') {
-            this.model.subdomain = obj.value;
+            if(typeof(obj.value) != 'undefined' && obj.value.length > 0)
+                this.model.subdomain = Number(obj.value);
         }
+        
+        this.updateValid();
+
+        if(this.parent && this.parent.update)
+            this.parent.update();
+
+        if(this.parent && this.parent.parent && this.parent.parent.update)
+            this.parent.parent.update();
     },
     removeThis: function()
     {
@@ -64,6 +101,12 @@ module.exports = View.extend({
                     return 'xyz';
                 }
             }
+        },
+        invalid : {
+            deps : ['valid'],
+            fn : function() {
+                return !this.valid;
+            }
         }
     },
     bindings: {
@@ -73,11 +116,18 @@ module.exports = View.extend({
                 'subdomain' : '[data-hook="subdomainTbody"]',
                 'xyz' : '[data-hook="xyz"]',
             }
+        },
+        'invalid' : {
+            type : 'booleanClass',
+            name : 'invalidRow',
+            hook : 'row'
         }
     },
     initialize : function()
     {
         View.prototype.initialize.apply(this, arguments);
+
+        this.updateValid();
     },
     renderSubdomainSelector: function()
     {
@@ -86,18 +136,21 @@ module.exports = View.extend({
             this.subdomainSelector.remove();
         }
 
-        this.renderSubview(
+        var validSubdomains = this.baseModel.mesh.uniqueSubdomains.map( function(model) { return [String(model.name), String(model.name)]; } );
+
+        this.subdomainSelector = this.renderSubview(
             new SelectView({
-                template: '<span><select></select><span data-hook="message-container"><span data-hook="message-text"></span></span></span>',
+                template: '<div><select></select><div data-hook="message-container"><div class="message" data-hook="message-text"></div></div></div>',
                 label: '',
                 name: 'subdomain',
-                value: this.model.subdomain,
-                options: this.baseModel.mesh.uniqueSubdomains,
-                required: false,
-                idAttribute: 'cid',
-                textAttribute: 'name',
-                yieldModel: true
+                value: String(this.model.subdomain),
+                options: validSubdomains,
+                unselectedText: 'Select subdomain',
+                parent : this,
+                required: true
             }), this.el.querySelector('[data-hook="subdomain"]'));
+
+        this.update(this.subdomainSelector);
     },
     render: function()
     {
@@ -107,9 +160,10 @@ module.exports = View.extend({
 
         this.renderSubview(
             new SelectView({
-                template: '<span><select></select><span data-hook="message-container"><span data-hook="message-text"></span></span></span>',
+                template: '<div><select></select><div data-hook="message-container"><div class="message" data-hook="message-text"></div></div></div>',
                 label: '',
                 name: 'type',
+                parent : this,
                 value: this.model.type,
                 options: [['scatter', 'Scatter'], ['place', 'Place'], ['distribute', 'Distribute Uniformly']],
                 required: true,
@@ -122,6 +176,7 @@ module.exports = View.extend({
                 name: 'count',
                 value: this.model.count,
                 required: false,
+                parent : this,
                 placeholder: 'Count',
                 model : this.model,
                 tests: [].concat(Tests.positive(), Tests.integer())
@@ -133,7 +188,8 @@ module.exports = View.extend({
                 label: '',
                 name: 'X',
                 value: this.model.X,
-                required: true,
+                required: false,
+                parent : this,
                 placeholder: 'X',
                 model : this.model,
                 tests: [].concat(Tests.isNumber())
@@ -145,7 +201,8 @@ module.exports = View.extend({
                 label: '',
                 name: 'Y',
                 value: this.model.Y,
-                required: true,
+                parent : this,
+                required: false,
                 placeholder: 'Y',
                 model : this.model,
                 tests: [].concat(Tests.isNumber())
@@ -157,7 +214,8 @@ module.exports = View.extend({
                 label: '',
                 name: 'Z',
                 value: this.model.Z,
-                required: true,
+                parent : this,
+                required: false,
                 placeholder: 'Z',
                 model : this.model,
                 tests: [].concat(Tests.isNumber())
@@ -165,19 +223,22 @@ module.exports = View.extend({
 
         this.renderSubview(
             new ModifyingSelectView({
-                template: '<span><select></select><span data-hook="message-container"><span data-hook="message-text"></span></span></span>',
+                template: '<div><select></select><div data-hook="message-container"><div class="message" data-hook="message-text"></div></div></div>',
                 label: '',
                 name: 'specie',
                 value: this.model.specie,
                 options: this.baseModel.species,
+                unselectedText : 'Pick species',
+                parent : this,
                 required: true,
                 idAttribute: 'cid',
                 textAttribute: 'name',
                 yieldModel: true
             }), this.el.querySelector("[data-hook='specie']"));
 
-        this.listenToAndRun(this.model, 'change:mesh', _.bind(this.renderSubdomainSelector, this));
+        this.listenToAndRun(this.baseModel, 'change:mesh', _.bind(this.renderSubdomainSelector, this));
 
+        this.updateValid();
         return this;
     }
 });

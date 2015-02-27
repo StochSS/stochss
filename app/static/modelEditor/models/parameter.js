@@ -11,7 +11,7 @@ module.exports = AmpModel.extend({
     {
         AmpModel.prototype.initialize.apply(this, arguments);
     },
-    setupValidation: function()
+    setUpValidation: function()
     {
         //Listen for messages from reaction objects
         this.listenTo(this.collection, 'reaction-rate-change', _.bind(this.updateInUse, this))

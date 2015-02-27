@@ -77,6 +77,7 @@ class StochKitModelWrapper(db.Model):
             products = dict([(sModel.getSpecies(product[0]), product[1]) for product in inProducts.items()])
             
             if(reaction['type'] == 'custom'):
+                print 'equation', reaction
                 sModel.addReaction(stochss.model.Reaction(reaction['name'], reactants, products, reaction['equation'], False, None, None))
             else:
                 sModel.addReaction(stochss.model.Reaction(reaction['name'], reactants, products, None, True, sModel.getParameter(reaction['rate']), None))
@@ -101,7 +102,14 @@ class StochKitModelWrapper(db.Model):
         parameters = []
         reactions = []
 
+        mesheditor.setupMeshes(handler)
         meshWrapperDb = db.GqlQuery("SELECT * FROM MeshWrapper WHERE userId = :1", handler.user.user_id()).get()
+
+        def fixName(name):
+            if re.match('^[^a-zA-Z_]', name):
+                name = 'a' + name
+
+            return re.sub('[^a-zA-Z0-9_]', '', name)
 
         spatial = {
           'initial_conditions' : [],
@@ -112,13 +120,15 @@ class StochKitModelWrapper(db.Model):
           }
 
         for specieName, specie in model.listOfSpecies.items():
-            species.append({ 'name' : specie.name, 'initialCondition' : specie.initial_value })
-            spatial['species_diffusion_coefficients'][specie.name] = 0.0
-            spatial['species_subdomain_assignments'][specie.name] = meshWrapperDb.uniqueSubdomains
+            name = fixName(specie.name)
+            species.append({ 'name' : name, 'initialCondition' : specie.initial_value })
+            spatial['species_diffusion_coefficients'][name] = 0.0
+            spatial['species_subdomain_assignments'][name] = meshWrapperDb.uniqueSubdomains
 
         for parameterName, parameter in model.listOfParameters.items():
             parameter.evaluate()
-            parameters.append({ 'name' : parameter.name, 'value' : parameter.value })
+            name = fixName(parameter.name)
+            parameters.append({ 'name' : name, 'value' : parameter.value })
 
         modelType = 'massaction'
         for reactionName, reaction in model.listOfReactions.items():
@@ -128,14 +138,16 @@ class StochKitModelWrapper(db.Model):
             products = []
 
             for reactantName, stoichiometry in reaction.reactants.items():
+                reactantName = fixName(reactantName)
                 reactants.append({ 'specie' : reactantName, 'stoichiometry' : stoichiometry })
 
             for productName, stoichiometry in reaction.products.items():
+                productName = fixName(productName)
                 products.append({ 'specie' : productName, 'stoichiometry' : stoichiometry })
                 
             if reaction.massaction == True:
                 outReaction['type'] = 'massaction'
-                outReaction['rate'] = reaction.marate.name
+                outReaction['rate'] = fixName(reaction.marate.name)
             else:
                 modelType = 'custom'
                 outReaction['type'] = 'custom'
@@ -143,9 +155,9 @@ class StochKitModelWrapper(db.Model):
 
             outReaction['reactants'] = reactants
             outReaction['products'] = products
-            outReaction['name'] = reaction.name
+            outReaction['name'] = fixName(reaction.name)
 
-            spatial['reactions_subdomain_assignments'][reaction.name] = meshWrapperDb.uniqueSubdomains
+            spatial['reactions_subdomain_assignments'][fixName(reaction.name)] = meshWrapperDb.uniqueSubdomains
 
             reactions.append(outReaction)
 
@@ -154,9 +166,9 @@ class StochKitModelWrapper(db.Model):
         modelDb = StochKitModelWrapper()
 
         
-        tmpName = model.name
+        tmpName = fixName(model.name)
         while tmpName in names:
-            tmpName = model.name + '_' + ''.join(random.choice('abcdefghijklmnopqrztuvwxyz') for x in range(3))
+            tmpName = fixName(model.name) + '_' + ''.join(random.choice('abcdefghijklmnopqrztuvwxyz') for x in range(3))
         name = tmpName
 
         modelDb.user_id = handler.user.user_id()
@@ -489,7 +501,12 @@ class PublicModelPage(BaseHandler):
         return True
     
     def get(self):
-        self.importExamplePublicModels()
+        try:
+            self.importExamplePublicModels()
+        except:
+            traceback.print_exc()
+            print "ERROR: Failed to import example public models"
+
         self.render_response('publicLibrary.html')
 
     def importExamplePublicModels(self):
@@ -501,13 +518,12 @@ class PublicModelPage(BaseHandler):
             if re.search('models/[a-zA-Z0-9\-_]*\.json$', name):
                 toImport[json.loads(szip.zipfb.read(name))['name']] = name
 
-        userId = ""
-        
         names = [model['name'] for model in ModelManager.getModels(self, public = True)]
 
         for name in set(toImport.keys()) - set(names):
             path = toImport[name]
-            modelDb = szip.extractStochKitModel(path, userId, self, rename = True)
+            modelDb = szip.extractStochKitModel(path, "", self, rename = True)
+            modelDb.user_id = ""
             modelDb.name = name
             modelDb.is_public = True
             modelDb.put()
@@ -529,7 +545,7 @@ class ImportFromXMLPage(BaseHandler):
         stochKitModel = stochss.stochkit.StochMLDocument.fromString(storage.file.read()).toModel(name)
         modelDb = StochKitModelWrapper.createFromStochKitModel(self, stochKitModel)
 
-        self.redirect("/modeleditor")
+        self.redirect("/modeleditor?select={0}".format(modelDb.key().id()))
 
 class ModelEditorPage(BaseHandler):
     """

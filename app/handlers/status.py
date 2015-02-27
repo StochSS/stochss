@@ -128,7 +128,8 @@ class StatusPage(BaseHandler):
                 stochkit_job = job.stochkit_job
                 
                 # Query the backend for the status of the job, but only if the current status is not Finished
-                if not stochkit_job.status == "Finished":
+                #if not stochkit_job.status == "Finished":
+                if True:
                     try:
                         if stochkit_job.resource == 'Local':
                             # First, check if the job is still running
@@ -150,7 +151,22 @@ class StatusPage(BaseHandler):
                                 else:
                                     stochkit_job.status = "Failed"
                 
-                        elif stochkit_job.resource == 'Cloud':
+                        elif stochkit_job.resource == 'Cloud' and stochkit_job.output_location is not None:
+                            # The data has been downloaded already
+                            # Check if the signature file is present, that will always be the case for a sucessful job.
+                            # for ssa and tau leaping, this is means.txt
+                            # for ode, this is output.txt
+
+                            if stochkit_job.exec_type == 'stochastic':
+                                file_to_check = stochkit_job.output_location+"/result/stats/means.txt"
+                            else:
+                                file_to_check = stochkit_job.output_location+"/result/output.txt"
+                            
+                            if os.path.exists(file_to_check):
+                                stochkit_job.status = "Finished"
+                            else:
+                                stochkit_job.status = "Failed"
+                        elif stochkit_job.resource == 'Cloud' and stochkit_job.output_location is None:
                             # Retrive credentials from the datastore
                             if not self.user_data.valid_credentials:
                                 return {'status':False,'msg':'Could not retrieve the status of job '+stochkit_job.name +'. Invalid credentials.'}
@@ -190,6 +206,8 @@ class StatusPage(BaseHandler):
                     
                     except Exception,e:
                         result = {'status':False,'msg':'Could not determine the status of the jobs.'+str(e)}                
+                else:
+                    logging.info("Job {0} has status {1}".format(stochkit_job.name, stochkit_job.status))
 
                 # Save changes to the status
                 job.put()
@@ -229,8 +247,14 @@ class StatusPage(BaseHandler):
                                 job.status = "Finished"
                             else:
                                 job.status = "Failed"
-                #
-                elif job.resource == "cloud" and job.status != "Finished":
+                #elif job.resource == "cloud" and job.status != "Finished":
+                elif job.resource == "cloud" and job.outData is not None:
+                    file_to_check = job.outData + "/result/output.txt"
+                    if os.path.exists(file_to_check):
+                        job.status = "Finished"
+                    else:
+                        job.status = "Failed"
+                elif job.resource == "cloud" and job.outData is None:
                     # Retrive credentials from the datastore
                     if not self.user_data.valid_credentials:
                         return {'status':False,'msg':'Could not retrieve the status of job '+stochkit_job.name +'. Invalid credentials.'}
@@ -416,13 +440,13 @@ class StatusPage(BaseHandler):
                                     job.output_url = job_status['output']
                                     job.uuid = job_status['uuid']
                                     job.status = 'Finished'
-#                                     if job.outData is None:
-#                                         job.status = 'Finished'
-#                                     else:
-#                                         if os.path.exists("{0}/results/complete".format(job.outData)):
-#                                             job.status = "Finished"
-#                                         else:
-#                                             job.status = "Failed"
+                                    if job.outData is None:
+                                        job.status = 'Finished'
+                                    else:
+                                        if os.path.exists("{0}/results/complete".format(job.outData)):
+                                            job.status = "Finished"
+                                        else:
+                                            job.status = "Failed"
                                 
                                 elif job_status['status'] == 'failed':
                                     job.status = 'Failed'

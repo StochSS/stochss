@@ -30,6 +30,8 @@ class backendservices(object):
     QUEUEHEAD_KEY_TAG = 'queuehead'
     INFRA_EC2 = AgentTypes.EC2
     VMSTATUS_IDS = 'ids'
+    STOCHSS_TABLE= 'stochss'
+    COST_ANALYSIS_TABLE = 'stochss_cost_analysis'
 
     def __init__(self):
         '''
@@ -381,12 +383,15 @@ class backendservices(object):
             logging.info("Stopping compute nodes with key_prefix: {0}".format(key_prefix))
             i = InfrastructureManager(blocking=block)
             res = i.terminate_instances(params, key_prefix)
-            # update db
-            VMStateModel.terminate_all(params)
-            return True
+            ret = True
         except Exception, e:
             logging.error("Terminate machine failed with error : %s", str(e))
-            return False
+            ret = False
+        finally:
+            # update db
+            VMStateModel.terminate_all(params)
+
+        return ret
 
     def describeMachines(self, params):
         '''

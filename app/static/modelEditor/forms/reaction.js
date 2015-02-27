@@ -13,14 +13,34 @@ var Tests = require('./tests');
 module.exports = View.extend({
     // Gotta have a few of these functions just so this works as a form view
     // This gets called when things update
-    template : "<tbody>\
-  <tr data-hook='basic'>\
+    template : "<tr data-hook='row'>\
     <td><center><input type='radio' name='reaction' data-hook='radio'></center></td>\
     <td><center><span data-hook='name'></span></center></td> \
     <td><center><span data-hook='latex'></span></center></td> \
     <td><center><button class='btn' data-hook='remove'>x</button></center></td>\
-  </tr>\
-</tbody>",
+  </tr>",
+    props : {
+        valid : 'boolean',
+        message : 'string'
+    },
+    updateValid : function()
+    {
+        this.valid = (!this.nameBox || this.nameBox.valid) && !this.notValid;
+        this.message = '';
+
+        if(!this.valid)
+            this.message = "Invalid reaction, please fix";
+    },
+    update : function(obj)
+    {
+        this.updateValid();
+
+        if(this.parent && this.parent.update)
+            this.parent.update();
+
+        if(this.parent && this.parent.parent && this.parent.parent.update)
+            this.parent.parent.update();
+    },
     // On any change of anything, redraw the Latex
     redrawLatex: function(obj)
     {
@@ -89,15 +109,15 @@ module.exports = View.extend({
         $( this.el ).find( "[data-hook='radio']" ).prop('checked', true);
     },
     derived: {
-        "notValid": {
-            deps : ['model.valid'],
-            fn : function() { return !this.model.valid; }
+        "invalid": {
+            deps : ['model.valid', 'valid'],
+            fn : function() { return !(this.model.valid && this.valid); }
         }
     },
     bindings: {
-        "notValid" : {
+        "invalid" : {
             type : 'booleanClass',
-            selector : 'tr',
+            hook : 'row',
             name: 'invalidRow'
         }
     },
@@ -111,28 +131,37 @@ module.exports = View.extend({
 
         View.prototype.remove.apply(this, arguments);
     },
+    initialize: function()
+    {
+        View.prototype.render.apply(this, arguments);
+
+        this.updateValid();
+    },
     render: function()
     {
         this.baseModel = this.model.collection.parent;
 
         View.prototype.render.apply(this, arguments);
 
+        this.listenTo(this.model, 'change', _.bind(this.update, this));
         this.listenTo(this.model, 'change', _.bind(this.redrawLatex, this));
         this.listenTo(this.model.reactants, 'add remove change', _.bind(this.redrawLatex, this));
         this.listenToAndRun(this.model.products, 'add remove change', _.bind(this.redrawLatex, this));
 
-        this.renderSubview(
+        this.nameBox = this.renderSubview(
             new ModifyingInputView({
-                template: '<span><span data-hook="label"></span><input><span data-hook="message-container"><span data-hook="message-text"></span></span></span>',
+                //template: '<span><span data-hook="label"></span><input><span data-hook="message-container"><span data-hook="message-text"></span></span></span>',
                 label: '',
                 name: 'name',
                 value: this.model.name,
+                parent : this,
                 required: false,
                 placeholder: 'Name',
                 model : this.model,
                 tests: [].concat(Tests.naming(this.model.collection, this.model))
             }), this.el.querySelector("[data-hook='name']"));
         
+        this.updateValid();
         return this;
     }
 });

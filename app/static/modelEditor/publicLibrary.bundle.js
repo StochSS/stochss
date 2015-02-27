@@ -57,9 +57,11 @@ module.exports = View.extend({
         }
 
         var reactions = this.model.reactions.models;
+        var parameters = this.model.parameters.models;
+        var species = this.model.species.models;
         for(var i = 0; i < reactions.length; i++)
         {
-            if(reactions[i].type == 'massaction')
+            if(reactions[i].type != 'custom')
             {
                 var factor = ReactionView.computeConversionFactor(reactions[i], this.volume);
                 if(factor && factor.length > 0)
@@ -69,12 +71,13 @@ module.exports = View.extend({
 
                     var modelNames
 
-                    while(_.findWhere(reactions, { name : tmpName + j } ))
+                    while(_.findWhere(parameters, { name : tmpName + j } ) || _.findWhere(species, { name : tmpName + j } ))
                     {
                         j += 1;
                     }
 
                     var newParam = this.model.parameters.addParameter(tmpName + j, reactions[i].rate.value + factor );
+
                     reactions[i].rate = newParam;
                 }
             }
@@ -103,7 +106,7 @@ module.exports = View.extend({
             }),
             new InputView({
                 el: this.el.querySelector("[data-hook='volume']"),
-                label: 'Volume',
+                label: '',
                 name: 'volume',
                 value: this.volume,
                 required: true,
@@ -255,10 +258,10 @@ var ReactionView = View.extend({
         {
             if(typeof(factor) != 'undefined')
             {
-                katex.render(name + factor, this.queryByHook('parameter'));
+                katex.render((name + factor).replace(/_/g, '\\_'), this.queryByHook('parameter'));
                 result.text('Successfully converted');
             } else {
-                katex.render(name, this.queryByHook('parameter'));                    
+                katex.render(name.replace(/_/g, '\\_'), this.queryByHook('parameter'));                    
                 result.text('Failed, valid mass action, but invalid under SSA assumptions');
             }
         }
@@ -266,10 +269,10 @@ var ReactionView = View.extend({
         {
             if(typeof(factor) != 'undefined')
             {
-                katex.render(name + factor, this.queryByHook('parameter'));
+                katex.render((name + factor).replace(/_/g, '\\_'), this.queryByHook('parameter'));
                 result.text('Successfully converted');
             } else {
-                katex.render(name, this.queryByHook('parameter'));                    
+                katex.render(name.replace(/_/g, '\\_'), this.queryByHook('parameter'));                    
                 result.text('Failed, valid mass action, but invalid under SSA assumptions');
             }
         }
@@ -344,7 +347,7 @@ ReactionView.computeConversionFactor = function(reaction, volume)
         last = specie;
     }
     
-    if(reaction.type != 'massaction')
+    if(reaction.type != 'custom')
     {
 	if(reactantCount == 0) {
             return ' * ' + volume;
@@ -448,7 +451,7 @@ var PaginatedCollectionView = require('./paginated-collection-view');
 var Tests = require('./tests');
 var AddNewInitialConditionForm = AmpersandFormView.extend({
     submitCallback: function (obj) {
-        var model = this.collection.addScatterInitialCondition(this.baseModel.species.at(0), 0, this.baseModel.mesh.uniqueSubdomains.at(0));
+        var model = this.collection.addScatterInitialCondition(this.baseModel.species.at(0), 0, this.baseModel.mesh.uniqueSubdomains.at(0).name);
         
         this.selectView.select(model, true);
     },
@@ -472,6 +475,29 @@ var InitialConditionCollectionFormView = AmpersandView.extend({
   <br />\
   <form data-hook='addInitialConditionForm'></form>\
 </div>",
+    props : {
+        valid : 'boolean',
+        message : 'string'
+    },
+    updateValid : function()
+    {
+        if(this.selectView)
+        {
+            this.selectView.updateValid();
+            
+            this.valid = this.selectView.valid;
+            this.message = this.selectView.message;
+        }
+        else
+        {
+            this.valid = true;
+            this.message = '';
+        }
+    },
+    update : function()
+    {
+        this.parent.update();
+    },
     render: function()
     {
         this.baseModel = this.collection.parent;
@@ -486,7 +512,7 @@ var InitialConditionCollectionFormView = AmpersandView.extend({
   </table>\
   <div data-hook='nav'> \
     <button class='btn' data-hook='previous'>&lt;&lt;</button> \
-    [ <span data-hook='position'></span> / <span data-hook='total'></span> ] \
+    [ <span data-hook='position'></span> / <span data-hook='total'></span> of <span data-hook='total'></span> ] \
     <button class='btn' data-hook='next'>&gt;&gt;</button> \
   </div> \
 </div>";
@@ -497,6 +523,7 @@ var InitialConditionCollectionFormView = AmpersandView.extend({
             template : collectionTemplate,
             collection : this.collection,
             viewModel : InitialConditionFormView,
+            parent : this,
             limit : 10
         }), this.queryByHook('initialConditionCollection'));
 
@@ -529,13 +556,13 @@ var SubdomainFormView = require('./subdomain');
 
 var Tests = require('./tests');
 module.exports = View.extend({
-    template : "<tr> \
-  <td> \
+    template : "<tr data-hook='row'> \
+  <td valign='top'> \
     <button class='btn' data-hook='delete'>x</button> \
   </td> \
-  <td data-hook='typeSelect'></td> \
-  <td data-hook='specie'></td> \
-  <td data-hook='details'> \
+  <td data-hook='typeSelect' valign='top'></td> \
+  <td data-hook='specie' valign='top'></td> \
+  <td data-hook='details' valign='top'> \
     <table> \
       <tr> \
         <td>Count:</td><td><div data-hook='count'></div></td> \
@@ -551,6 +578,34 @@ module.exports = View.extend({
     </table> \
   </td> \
 </tr>",
+    props : {
+        valid : 'boolean',
+        message : 'string'
+    },
+    updateValid : function()
+    {
+        var valid = true;
+        var message = '';
+
+        try
+        {
+            for(var i = 0; i < this._subviews.length; i++)
+            {
+                if(typeof(this._subviews[i].valid) != "undefined")
+                {
+                    valid = valid && this._subviews[i].valid;
+                    message = "Invalid initial condition, please fix";
+                }
+                
+                if(!valid)
+                    break;
+            }
+        } catch(err) {
+        }
+
+        this.valid = valid;
+        this.message = message;
+    },
     // Gotta have a few of these functions just so this works as a form view
     // This gets called when things update
     update: function(obj)
@@ -561,8 +616,17 @@ module.exports = View.extend({
         } else if(obj.name == 'specie') {
             this.model.specie = obj.value;
         } else if(obj.name == 'subdomain') {
-            this.model.subdomain = obj.value;
+            if(typeof(obj.value) != 'undefined' && obj.value.length > 0)
+                this.model.subdomain = Number(obj.value);
         }
+        
+        this.updateValid();
+
+        if(this.parent && this.parent.update)
+            this.parent.update();
+
+        if(this.parent && this.parent.parent && this.parent.parent.update)
+            this.parent.parent.update();
     },
     removeThis: function()
     {
@@ -584,6 +648,12 @@ module.exports = View.extend({
                     return 'xyz';
                 }
             }
+        },
+        invalid : {
+            deps : ['valid'],
+            fn : function() {
+                return !this.valid;
+            }
         }
     },
     bindings: {
@@ -593,11 +663,18 @@ module.exports = View.extend({
                 'subdomain' : '[data-hook="subdomainTbody"]',
                 'xyz' : '[data-hook="xyz"]',
             }
+        },
+        'invalid' : {
+            type : 'booleanClass',
+            name : 'invalidRow',
+            hook : 'row'
         }
     },
     initialize : function()
     {
         View.prototype.initialize.apply(this, arguments);
+
+        this.updateValid();
     },
     renderSubdomainSelector: function()
     {
@@ -606,18 +683,21 @@ module.exports = View.extend({
             this.subdomainSelector.remove();
         }
 
-        this.renderSubview(
+        var validSubdomains = this.baseModel.mesh.uniqueSubdomains.map( function(model) { return [String(model.name), String(model.name)]; } );
+
+        this.subdomainSelector = this.renderSubview(
             new SelectView({
-                template: '<span><select></select><span data-hook="message-container"><span data-hook="message-text"></span></span></span>',
+                template: '<div><select></select><div data-hook="message-container"><div class="message" data-hook="message-text"></div></div></div>',
                 label: '',
                 name: 'subdomain',
-                value: this.model.subdomain,
-                options: this.baseModel.mesh.uniqueSubdomains,
-                required: false,
-                idAttribute: 'cid',
-                textAttribute: 'name',
-                yieldModel: true
+                value: String(this.model.subdomain),
+                options: validSubdomains,
+                unselectedText: 'Select subdomain',
+                parent : this,
+                required: true
             }), this.el.querySelector('[data-hook="subdomain"]'));
+
+        this.update(this.subdomainSelector);
     },
     render: function()
     {
@@ -627,9 +707,10 @@ module.exports = View.extend({
 
         this.renderSubview(
             new SelectView({
-                template: '<span><select></select><span data-hook="message-container"><span data-hook="message-text"></span></span></span>',
+                template: '<div><select></select><div data-hook="message-container"><div class="message" data-hook="message-text"></div></div></div>',
                 label: '',
                 name: 'type',
+                parent : this,
                 value: this.model.type,
                 options: [['scatter', 'Scatter'], ['place', 'Place'], ['distribute', 'Distribute Uniformly']],
                 required: true,
@@ -642,6 +723,7 @@ module.exports = View.extend({
                 name: 'count',
                 value: this.model.count,
                 required: false,
+                parent : this,
                 placeholder: 'Count',
                 model : this.model,
                 tests: [].concat(Tests.positive(), Tests.integer())
@@ -653,7 +735,8 @@ module.exports = View.extend({
                 label: '',
                 name: 'X',
                 value: this.model.X,
-                required: true,
+                required: false,
+                parent : this,
                 placeholder: 'X',
                 model : this.model,
                 tests: [].concat(Tests.isNumber())
@@ -665,7 +748,8 @@ module.exports = View.extend({
                 label: '',
                 name: 'Y',
                 value: this.model.Y,
-                required: true,
+                parent : this,
+                required: false,
                 placeholder: 'Y',
                 model : this.model,
                 tests: [].concat(Tests.isNumber())
@@ -677,7 +761,8 @@ module.exports = View.extend({
                 label: '',
                 name: 'Z',
                 value: this.model.Z,
-                required: true,
+                parent : this,
+                required: false,
                 placeholder: 'Z',
                 model : this.model,
                 tests: [].concat(Tests.isNumber())
@@ -685,19 +770,22 @@ module.exports = View.extend({
 
         this.renderSubview(
             new ModifyingSelectView({
-                template: '<span><select></select><span data-hook="message-container"><span data-hook="message-text"></span></span></span>',
+                template: '<div><select></select><div data-hook="message-container"><div class="message" data-hook="message-text"></div></div></div>',
                 label: '',
                 name: 'specie',
                 value: this.model.specie,
                 options: this.baseModel.species,
+                unselectedText : 'Pick species',
+                parent : this,
                 required: true,
                 idAttribute: 'cid',
                 textAttribute: 'name',
                 yieldModel: true
             }), this.el.querySelector("[data-hook='specie']"));
 
-        this.listenToAndRun(this.model, 'change:mesh', _.bind(this.renderSubdomainSelector, this));
+        this.listenToAndRun(this.baseModel, 'change:mesh', _.bind(this.renderSubdomainSelector, this));
 
+        this.updateValid();
         return this;
     }
 });
@@ -1008,7 +1096,7 @@ var MeshCollectionSelectView = AmpersandView.extend({
   </table> \
   <div data-hook='nav'> \
     <button class='btn' data-hook='previous'>&lt;&lt;</button>\
-    [ <span data-hook='leftPosition'></span> - <span data-hook='rightPosition'></span> ] \
+    [ <span data-hook='leftPosition'></span> - <span data-hook='rightPosition'></span> of <span data-hook='total'></span> ] \
     <button class='btn' data-hook='next'>&gt;&gt;</button>\
   </div> \
 </div>";
@@ -1022,8 +1110,8 @@ var MeshCollectionSelectView = AmpersandView.extend({
             limit : 10
         }), this.queryByHook('meshTable'));
 
-        this.listenTo(this.selectView, 'change:value', _.bind(this.selectModel, this));
         this.selectView.select(this.model.mesh);
+        this.listenToAndRun(this.selectView, 'change:value', _.bind(this.selectModel, this));
 
         //this.fields.forEach( function(field) { $( field.el ).find('input').val(''); } );
         this.addForm = new AddNewMeshForm(
@@ -1167,7 +1255,7 @@ module.exports = View.extend({
             }
             else
             {
-                colors[i] = new THREE.Color( 0x333399 );
+                colors[i] = new THREE.Color( 0x000099 );
             }
         }
 
@@ -1236,7 +1324,6 @@ module.exports = View.extend({
         // renderer
         var renderer2 = new THREE.WebGLRenderer({ alpha: true });
         renderer2.setClearColor( 0x000000, 0 ); 
-        console.log("Width: ",this.d_width);
         renderer2.setSize( this.d_width/5, this.d_width/5);
         $( renderer2.domElement ).appendTo(dom2);
         
@@ -1299,10 +1386,14 @@ module.exports = View.extend({
             return;
         }
 
-        var canvas = document.createElement('canvas');
-        gl = canvas.getContext("webgl");
-        delete canvas;
-        if (!gl) {
+        if(typeof(this.webGL) == 'undefined')
+        {
+            var canvas = document.createElement('canvas');
+            this.webGL = Boolean(canvas.getContext("webgl"));
+            delete canvas;
+        }
+
+        if (!this.webGL) {
             // Browser could not initialize WebGL. User probably needs to
             // update their drivers or get a new browser. Present a link to
             // http://get.webgl.org/troubleshooting
@@ -1329,6 +1420,7 @@ module.exports = View.extend({
             this.rendererDom = $( renderer.domElement ).appendTo( this.queryByHook( "mesh" ) );
             
             var controls = new OrbitControls( camera, renderer.domElement );
+            controls.noZoom = true;
             // var controls = new THREE.OrbitControls( camera );
             //controls.addEventListener( 'change', render );
             
@@ -1424,11 +1516,9 @@ var MeshView = require('./mesh3d');
 
 module.exports = View.extend({
     template: $( '.modelEditorTemplate' ).text(),
-    // Gotta have a few of these functions just so this works as a form view
-    // This gets called when things update
     props: {
         state: 'string',
-        selector: 'object'
+        valid : 'boolean'
     },
     bindings: {
         'model.name' : {
@@ -1439,33 +1529,37 @@ module.exports = View.extend({
     events : {
         "click [data-hook='convertToPopulationButton']" : "convertToPopulation"
     },
-    updateSaveMessage: function()
+    updateValid : function()
     {
-        var saveMessageDom = $( this.queryByHook('saveMessage') );
+        var valid = true;
+        var message = '';
+        
+        for(var i = 0; i < this.subViews.length; i++)
+        {
+            if(this.subViews[i].updateValid)
+            {
+                this.subViews[i].updateValid()
+            }
 
-        if(this.model.saveState == 'saved')
-        {
-            saveMessageDom.removeClass( "alert-error" );
-            saveMessageDom.addClass( "alert-success" );
-            saveMessageDom.text( "Saved" );
+            if(typeof(this.subViews[i].valid) != "undefined")
+            {
+                valid = valid && this.subViews[i].valid;
+                message = this.subViews[i].message;
+            }
+            
+            if(!valid)
+                break;
         }
-        else if(this.model.saveState == 'saving')
-        {
-            saveMessageDom.removeClass( "alert-success alert-error" );
-            saveMessageDom.text( "Saving..." );
-        }
-        else if(this.model.saveState == 'failed')
-        {
-            saveMessageDom.removeClass( "alert-success" );
-            saveMessageDom.addClass( "alert-error" );
-            saveMessageDom.text( "Model Save Failed!" );
-        }
-        else
-        {
-            saveMessageDom.removeClass( "alert-success" );
-            saveMessageDom.addClass( "alert-error" );
-            saveMessageDom.text( this.model.saveState );
-        }
+
+        this.valid = valid;
+        this.message = message;
+    },
+    update : function()
+    {
+        this.updateValid();
+
+        if(this.parent && this.parent.update)
+            this.parent.update();
     },
     duplicateModel: function()
     {
@@ -1485,9 +1579,7 @@ module.exports = View.extend({
         }
 
         model.id = undefined;
-
         
-
         model.setupMesh(this.model.mesh.collection);
 
         this.model.collection.add(model);
@@ -1559,6 +1651,17 @@ module.exports = View.extend({
             $( this.el ).find( '[data-hook="editor"]' ).show();
             $( '[data-hook="convertToSpatialLink"]' ).show();
             $( this.el ).find( '.spatial' ).hide();
+
+            if(!$( this.el ).find('.speciesAccordion .accordion-body').first().hasClass('in'))
+                $( this.el ).find('.speciesAccordion').find('a').first()[0].click();
+            if(!$( this.el ).find('.parametersAccordion .accordion-body').first().hasClass('in'))
+                $( this.el ).find('.parametersAccordion').find('a').first()[0].click();
+            if(!$( this.el ).find('.mesh3dAccordion .accordion-body').first().hasClass('in'))
+                $( this.el ).find('.mesh3dAccordion').find('a').first()[0].click();
+            if(!$( this.el ).find('.initialConditionsAccordion .accordion-body').first().hasClass('in'))
+                $( this.el ).find('.initialConditionsAccordion').find('a').first()[0].click();
+            if(!$( this.el ).find('.reactionsAccordion .accordion-body').first().hasClass('in'))
+                $( this.el ).find('.reactionsAccordion').find('a').first()[0].click();
         }
         else if(this.state == 'spatial')
         {
@@ -1589,7 +1692,6 @@ module.exports = View.extend({
         this.meshCollection = attr.meshCollection;
 
         this.on('change:state', this.updateVisibility);
-        this.listenTo(this.model, 'change:saveState', _.bind(this.updateSaveMessage, this));
     },
     remove: function()
     {
@@ -1741,6 +1843,39 @@ var SubCollection = require('ampersand-subcollection');
 var _ = require('underscore');
 
 var PaginatedCollectionView = AmpersandView.extend({
+    updateValid : function()
+    {
+        var valid = true;
+        var message = '';
+
+        if(this.subCollectionViews)
+        {
+            for(var i = 0; i < this.subCollectionViews.views.length; i++)
+            {
+                if(this.subCollectionViews.views[i].updateValid)
+                {
+                    this.subCollectionViews.views[i].updateValid();
+                }
+
+                if(typeof(this.subCollectionViews.views[i].valid) != "undefined")
+                {
+                    valid = valid && this.subCollectionViews.views[i].valid;
+                    message = this.subCollectionViews.views[i].message;
+                }
+                
+                if(!valid)
+                    break;
+            }
+        }
+
+        this.valid = valid;
+        this.message = message;
+    },
+    update : function()
+    {
+        if(this.parent && this.parent.update)
+            this.parent.update();
+    },
     initialize: function(attr, options)
     {
         AmpersandView.prototype.initialize.call(this, attr, options);
@@ -1748,6 +1883,7 @@ var PaginatedCollectionView = AmpersandView.extend({
         this.limit = attr.limit;
         this.viewModel = attr.viewModel;
         this.offset = 0;
+        //this.parent = attr.parent;
 
         if(typeof(attr.autoSelect) != "undefined")
             this.autoSelect = attr.autoSelect;
@@ -1769,8 +1905,6 @@ var PaginatedCollectionView = AmpersandView.extend({
             if(this.view.deSelect)
                 this.view.deSelect();
 
-        this.value = model;
-
         //Search for model in current selection
         for(var i = 0; i < this.subCollection.models.length; i++)
         {
@@ -1790,7 +1924,8 @@ var PaginatedCollectionView = AmpersandView.extend({
                             textBox.focus();
                     }
                 }
-
+                
+                this.value = model;
                 return;
             }
         }
@@ -1822,11 +1957,11 @@ var PaginatedCollectionView = AmpersandView.extend({
                             textBox.focus();
                     }
                 }
+
+                this.value = model;
                 break;
             }
         }
-
-        //If not found do nothing
     },
     shiftPlus : function(e)
     {
@@ -1853,33 +1988,44 @@ var PaginatedCollectionView = AmpersandView.extend({
         "click [data-hook='previous']" : "shiftMinus"
     },
     props: {
+        valid : 'boolean',
+        message : 'string',
         value : 'object',
         offset : 'number',
         modelCount : 'number',
         overLimit : 'boolean'
     },
     bindings : {
-        'modelCount' : {
-            type : 'toggle',
-            selector : 'div'
-        },
+        'modelCount' : [
+            {
+                type : 'toggle',
+                selector : 'div'
+            },
+            {
+                type : 'text',
+                hook : 'total'
+            }
+        ],
         'overLimit' : {
             type : 'toggle',
             hook : 'nav'
-        },
-        'rightOffset' :
-        {
-            type : 'text',
-            hook : 'rightPosition'
-        },
-        'offset' : 
+        },        'leftPosition' : 
         {
             type : 'text',
             hook : 'leftPosition'
+        },
+        'rightPosition' :
+        {
+            type : 'text',
+            hook : 'rightPosition'
         }
     },
     derived : {
-        rightOffset : {
+        leftPosition : {
+            deps : ['offset'],
+            fn : function() { return this.offset + 1; }
+        },
+        rightPosition : {
             deps : ['offset', 'modelCount'],
             fn : function() { return Math.min(this.modelCount, this.offset + 10); }
         }
@@ -1965,6 +2111,29 @@ var ParameterCollectionFormView = AmpersandView.extend({
   <br /> \
   <form data-hook='addParametersForm'></form> \
 </div>",
+    props : {
+        valid : 'boolean',
+        message : 'string'
+    },
+    updateValid : function()
+    {
+        if(this.selectView)
+        {
+            this.selectView.updateValid();
+            
+            this.valid = this.selectView.valid;
+            this.message = this.selectView.message;
+        }
+        else
+        {
+            this.valid = true;
+            this.message = '';
+        }
+    },
+    update : function()
+    {
+        this.parent.update();
+    },
     initialize: function(attr, options)
     {
         AmpersandView.prototype.initialize.call(this, attr, options);
@@ -1983,7 +2152,7 @@ var ParameterCollectionFormView = AmpersandView.extend({
   </table> \
   <div data-hook='nav'> \
     <button class='btn' data-hook='previous'>&lt;&lt;</button>\
-    [ <span data-hook='leftPosition'></span> - <span data-hook='rightPosition'></span> ] \
+    [ <span data-hook='leftPosition'></span> - <span data-hook='rightPosition'></span> of <span data-hook='total'></span> ] \
     <button class='btn' data-hook='next'>&gt;&gt;</button>\
   </div> \
 </div>";
@@ -1992,6 +2161,7 @@ var ParameterCollectionFormView = AmpersandView.extend({
             template : collectionTemplate,
             collection : this.collection,
             viewModel : ParameterFormView,
+            parent : this,
             limit : 10
         }), this.queryByHook('collection'));
 
@@ -2019,11 +2189,53 @@ var ModifyingNumberInputView = require('./modifying-number-input-view')
 
 var Tests = require('./tests');
 module.exports = View.extend({
-    template: "<tr><td data-hook='name'></td><td data-hook='value'></td><td><button class='btn' data-hook='delete'>x</button></td></tr>",
+    template: "<tr data-hook='row'><td data-hook='name'></td><td data-hook='value'></td><td><button class='btn' data-hook='delete'>x</button></td></tr>",
     // Gotta have a few of these functions just so this works as a form view
     // This gets called when things update
+    props : {
+        valid : 'boolean',
+        message : 'string'
+    },
+    derived : {
+        invalid : {
+            deps : ['valid'],
+            fn : function() {
+                return !this.valid;
+            }
+        }
+    },
+    updateValid: function()
+    {
+        var valid = true;
+        var message = '';
+        
+        if(this._subviews)
+        {
+            for(var i = 0; i < this._subviews.length; i++)
+            {
+                if(typeof(this._subviews[i].valid) != "undefined")
+                {
+                    valid = valid && this._subviews[i].valid;
+                    message = "Invalid parameter, please fix";
+                }
+                
+                if(!valid)
+                    break;
+            }
+        }
+        
+        this.valid = valid;
+        this.message = message;
+    },
     update: function()
     {
+        this.updateValid();
+
+        if(this.parent && this.parent.update)
+            this.parent.update();
+        
+        if(this.parent && this.parent.parent && this.parent.parent.update)
+            this.parent.parent.update();
     },
     removeParameter: function()
     {
@@ -2033,11 +2245,22 @@ module.exports = View.extend({
         'click [data-hook="delete"]': 'removeParameter'
     },
     bindings: {
+        'invalid' : {
+            type : 'booleanClass',
+            name : 'invalidRow',
+            hook : 'row'
+        },
         'model.inUse' : {
             type: 'booleanAttribute',
             hook: 'delete',
             name: 'disabled'
         }
+    },
+    initialize: function()
+    {
+        View.prototype.initialize.apply(this, arguments);
+
+        this.updateValid();
     },
     render: function()
     {
@@ -2050,8 +2273,9 @@ module.exports = View.extend({
                 value: this.model.name,
                 required: false,
                 placeholder: 'Name',
+                parent : this,
                 model : this.model,
-                tests: [].concat(Tests.naming(this.model.collection, this.model))
+                tests: [].concat(Tests.naming(this.model.collection, this.model), Tests.naming(this.model.collection.parent.species, this.model, "between species and parameters"))
             }), this.el.querySelector("[data-hook='name']"));
 
         this.renderSubview(
@@ -2061,6 +2285,7 @@ module.exports = View.extend({
                 value: this.model.value,
                 required: false,
                 placeholder: 'Value',
+                parent : this,
                 model : this.model,
                 tests: []
             }), this.el.querySelector("[data-hook='value']"));
@@ -2068,6 +2293,7 @@ module.exports = View.extend({
         //Hide all the labels!
         $( this.el ).find('[data-hook="label"]').hide();
 
+        this.updateValid();
         return this;
     }
 });
@@ -2086,11 +2312,8 @@ var katex = require('katex');
 
 var Tests = require('./tests');
 var AddNewReactionForm = AmpersandFormView.extend({
-    submitCallback: function (obj) {
+    submitCallback: function (type, obj) {
         var validSubdomains = this.baseModel.mesh.uniqueSubdomains.map( function(model) { return model.name; } );
-
-        // I shouldn't extract the type this way probly
-        var type = $( obj.toElement ).attr( "data-hook" );
 
         var model;
 
@@ -2218,6 +2441,7 @@ var AddNewReactionForm = AmpersandFormView.extend({
     <li><a data-hook="destruction" tabindex="-1" href="#"></a></li> \
     <li><a data-hook="change" tabindex="-1" href="#"></a></li> \
     <li><a data-hook="dimerization" tabindex="-1" href="#"></a></li> \
+    <li><a data-hook="merge" tabindex="-1" href="#"></a></li> \
     <li><a data-hook="split" tabindex="-1" href="#"></a></li> \
     <li><a data-hook="four" tabindex="-1" href="#"></a></li> \
     <li><a data-hook="massaction" tabindex="-1" href="#">Custom mass action</a></li> \
@@ -2231,24 +2455,48 @@ var AddNewReactionForm = AmpersandFormView.extend({
         katex.render('A \\rightarrow \\emptyset', $( this.el ).find('[data-hook=destruction]')[0]);
         katex.render('A \\rightarrow B', $( this.el ).find('[data-hook=change]')[0]);
         katex.render('A + A \\rightarrow B', $( this.el ).find('[data-hook=dimerization]')[0]);
+        katex.render('A + B \\rightarrow C', $( this.el ).find('[data-hook=merge]')[0]);
         katex.render('A \\rightarrow B + C', $( this.el ).find('[data-hook=split]')[0]);
         katex.render('A + B \\rightarrow C + D', $( this.el ).find('[data-hook=four]')[0]);
 
-        $( this.el ).find( 'li a' ).click( _.bind(this.submitCallback, this));
+        $( this.el ).find('[data-hook=creation]').click( _.bind(_.partial(this.submitCallback, 'creation'), this));
+        $( this.el ).find('[data-hook=destruction]').click( _.bind(_.partial(this.submitCallback, 'destruction'), this));
+        $( this.el ).find('[data-hook=change]').click( _.bind(_.partial(this.submitCallback, 'change'), this));
+        $( this.el ).find('[data-hook=dimerization]').click( _.bind(_.partial(this.submitCallback, 'dimerization'), this));
+        $( this.el ).find('[data-hook=merge]').click( _.bind(_.partial(this.submitCallback, 'merge'), this));
+        $( this.el ).find('[data-hook=split]').click( _.bind(_.partial(this.submitCallback, 'split'), this));
+        $( this.el ).find('[data-hook=four]').click( _.bind(_.partial(this.submitCallback, 'four'), this));
+        $( this.el ).find('[data-hook=massaction]').click( _.bind(_.partial(this.submitCallback, 'massaction'), this));
+        $( this.el ).find('[data-hook=custom]').click( _.bind(_.partial(this.submitCallback, 'custom'), this));
     }
 });
 
 var ReactionCollectionFormView = AmpersandView.extend({
-    template: "<div>\
-  <div>\
-    <div data-hook='collection'></div>\
-    <div data-hook='reactionEditorWorkspace'></div>\
-  </div> \
-  <div style='clear: both;'> \
-    <br /> \
-    <form data-hook='addReactionForm'></form>\
-  </div> \
-</div>",
+    props : {
+        valid : 'boolean',
+        message : 'string'
+    },
+    updateValid : function()
+    {
+        if(this.selectView)
+        {
+            this.selectView.updateValid();
+            
+            this.valid = this.selectView.valid;
+            
+            if(!this.selectView.valid)
+                this.message = this.selectView.message;
+        }
+        else
+        {
+            this.valid = true;
+            this.message = '';
+        }
+    },
+    update : function()
+    {
+        this.parent.update();
+    },
     initialize: function(attr, options)
     {
         AmpersandView.prototype.initialize.call(this, attr, options);
@@ -2296,6 +2544,28 @@ var ReactionCollectionFormView = AmpersandView.extend({
     },
     render: function()
     {
+        var intro;
+        if(this.collection.parent.isSpatial)
+        {
+            intro = "Define reactions. Select from the given reaction templates, or use the custom types. Using templated reaction types will help eliminate errors. For non-linear reactions, use the custom propensity type. Reactions can be restricted to specific subdomains.";
+        }
+        else
+        {
+            intro = "Define reactions. Select from the given reaction templates, or use the custom types. Using templated reaction types will help eliminate errors. For non-linear reactions, use the custom propensity type.";
+        }
+
+        this.template = "<div>" + intro + "\
+  <div>\
+    <div data-hook='collection'></div>\
+    <div data-hook='reactionEditorWorkspace'></div>\
+  </div> \
+  <div style='clear: both;'> \
+    <br /> \
+    <form data-hook='addReactionForm'></form>\
+  </div> \
+</div>";
+
+
         this.baseModel = this.collection.parent;
 
         var collectionTemplate = '';
@@ -2310,7 +2580,7 @@ var ReactionCollectionFormView = AmpersandView.extend({
   </table>\
   <div data-hook='nav'> \
     <button class='btn' data-hook='previous'>&lt;&lt;</button>\
-    [ <span data-hook='leftPosition'></span> - <span data-hook='rightPosition'></span> ] \
+    [ <span data-hook='leftPosition'></span> - <span data-hook='rightPosition'></span> of <span data-hook='total'></span> ] \
     <button class='btn' data-hook='next'>&gt;&gt;</button>\
   </div> \
 </div>";
@@ -2321,6 +2591,7 @@ var ReactionCollectionFormView = AmpersandView.extend({
             template : collectionTemplate,
             collection : this.collection,
             viewModel : ReactionFormView,
+            parent : this,
             limit : 10
         }), this.queryByHook('collection'));
 
@@ -2365,13 +2636,13 @@ module.exports = View.extend({
         if(obj.name == 'type')
         {
             // Make sure we have a rate
-            //if(obj.name != 'custom')
-            //{
-            //    if(this.model.rate == null)
-            //    {
-            //        this.model.rate = this.rateSelect.value;
-            //    }
-            //}
+            if(obj.name != 'custom')
+            {
+                if(this.model.rate == null)
+                {
+                    this.model.rate = this.rateSelect.value;
+                }
+            }
 
             if(obj.value != 'custom' && obj.value != 'massaction')
             {
@@ -2566,6 +2837,11 @@ var reactants;
                     reactants = 2;
                     products = 2;
                 }
+                if(this.model.type == 'massaction')
+                {
+                    reactants = this.model.reactants.models.length;
+                    products = this.model.products.models.length;
+                }
 
                 for(var i = 0; i < reactants; i++)
                 {
@@ -2614,8 +2890,8 @@ var reactants;
 <div data-hook='subdomains'></div> \
   <table width='100%' data-hook='advanced'>\
     <tr> \
-      <td style='vertical-align:top'><h4>Reactants</h4><div data-hook='reactants'></div></td>\
-      <td style='vertical-align:top'><h4>Products</h4><div data-hook='products'></div></td>\
+      <td style='vertical-align:top'><div data-hook='reactants'></div></td>\
+      <td style='vertical-align:top'><div data-hook='products'></div></td>\
     </tr>\
   </table>\
   <br>\
@@ -2633,8 +2909,8 @@ var reactants;
 <div data-hook='custom'></div> \
   <table width='100%' data-hook='advanced'>\
     <tr> \
-      <td style='vertical-align:top'><h4>Reactants</h4><div data-hook='reactants'></div></td>\
-      <td style='vertical-align:top'><h4>Products</h4><div data-hook='products'></div></td>\
+      <td style='vertical-align:top'><div data-hook='reactants'></div></td>\
+      <td style='vertical-align:top'><div data-hook='products'></div></td>\
     </tr>\
   </table>\
   <br> \
@@ -2720,13 +2996,14 @@ var reactants;
 
         this.renderSubview(
             new StoichSpecieCollectionFormView({
-                collection: this.model.reactants
+                label : 'Reactants',
+                collection: this.model.reactants,
             }), this.el.querySelector("[data-hook='reactants']"));
 
         this.renderSubview(
             new StoichSpecieCollectionFormView({
+                label : 'Products',
                 collection: this.model.products,
-                showCustomOverride : true
             }), this.el.querySelector("[data-hook='products']"));
         
         return this;
@@ -2749,14 +3026,34 @@ var Tests = require('./tests');
 module.exports = View.extend({
     // Gotta have a few of these functions just so this works as a form view
     // This gets called when things update
-    template : "<tbody>\
-  <tr data-hook='basic'>\
+    template : "<tr data-hook='row'>\
     <td><center><input type='radio' name='reaction' data-hook='radio'></center></td>\
     <td><center><span data-hook='name'></span></center></td> \
     <td><center><span data-hook='latex'></span></center></td> \
     <td><center><button class='btn' data-hook='remove'>x</button></center></td>\
-  </tr>\
-</tbody>",
+  </tr>",
+    props : {
+        valid : 'boolean',
+        message : 'string'
+    },
+    updateValid : function()
+    {
+        this.valid = (!this.nameBox || this.nameBox.valid) && !this.notValid;
+        this.message = '';
+
+        if(!this.valid)
+            this.message = "Invalid reaction, please fix";
+    },
+    update : function(obj)
+    {
+        this.updateValid();
+
+        if(this.parent && this.parent.update)
+            this.parent.update();
+
+        if(this.parent && this.parent.parent && this.parent.parent.update)
+            this.parent.parent.update();
+    },
     // On any change of anything, redraw the Latex
     redrawLatex: function(obj)
     {
@@ -2825,15 +3122,15 @@ module.exports = View.extend({
         $( this.el ).find( "[data-hook='radio']" ).prop('checked', true);
     },
     derived: {
-        "notValid": {
-            deps : ['model.valid'],
-            fn : function() { return !this.model.valid; }
+        "invalid": {
+            deps : ['model.valid', 'valid'],
+            fn : function() { return !(this.model.valid && this.valid); }
         }
     },
     bindings: {
-        "notValid" : {
+        "invalid" : {
             type : 'booleanClass',
-            selector : 'tr',
+            hook : 'row',
             name: 'invalidRow'
         }
     },
@@ -2847,28 +3144,37 @@ module.exports = View.extend({
 
         View.prototype.remove.apply(this, arguments);
     },
+    initialize: function()
+    {
+        View.prototype.render.apply(this, arguments);
+
+        this.updateValid();
+    },
     render: function()
     {
         this.baseModel = this.model.collection.parent;
 
         View.prototype.render.apply(this, arguments);
 
+        this.listenTo(this.model, 'change', _.bind(this.update, this));
         this.listenTo(this.model, 'change', _.bind(this.redrawLatex, this));
         this.listenTo(this.model.reactants, 'add remove change', _.bind(this.redrawLatex, this));
         this.listenToAndRun(this.model.products, 'add remove change', _.bind(this.redrawLatex, this));
 
-        this.renderSubview(
+        this.nameBox = this.renderSubview(
             new ModifyingInputView({
-                template: '<span><span data-hook="label"></span><input><span data-hook="message-container"><span data-hook="message-text"></span></span></span>',
+                //template: '<span><span data-hook="label"></span><input><span data-hook="message-container"><span data-hook="message-text"></span></span></span>',
                 label: '',
                 name: 'name',
                 value: this.model.name,
+                parent : this,
                 required: false,
                 placeholder: 'Name',
                 model : this.model,
                 tests: [].concat(Tests.naming(this.model.collection, this.model))
             }), this.el.querySelector("[data-hook='name']"));
         
+        this.updateValid();
         return this;
     }
 });
@@ -2946,23 +3252,55 @@ var SpecieCollectionFormView = AmpersandView.extend({
   <br /> \
   <form data-hook='addSpeciesForm'></form> \
 </div>",
+    props : {
+        valid : 'boolean',
+        message : 'string'
+    },
+    updateValid : function()
+    {
+        if(this.selectView)
+        {
+            this.selectView.updateValid();
+            
+            this.valid = this.selectView.valid;
+            this.message = this.selectView.message;
+        }
+        else
+        {
+            this.valid = true;
+            this.message = '';
+        }
+    },
+    update : function()
+    {
+        this.parent.update();
+    },
     initialize: function(attr, options)
     {
         AmpersandView.prototype.initialize.call(this, attr, options);
     },
     render: function()
     {
-        var collectionTemplate = "<div> \
-  <table width='100%' data-hook='table'> \
+        var intro;
+        if(this.collection.parent.isSpatial)
+        {
+            intro = "Define species and their spatial properties. Species have a single diffusion coefficient for the entire model, but can be limited to only diffuse into certain subdomains.";
+        }
+        else
+        {
+            intro = "Define species and their initial conditions. For concentration models this is a positive floating point value and for population models this is an integer.";
+        }
+
+        var collectionTemplate = "<div>" + intro + "<table width='100%' data-hook='table'> \
     <thead> \
-<th width='120px'>Name</th><th width='120px'>" + ((this.collection.parent.isSpatial) ? "Diffusion coefficient" : "Initial Condition") + "</th>" + ((this.collection.parent.isSpatial) ? "<th width='120px'>Species allowed in these subdomains</th>" : "") + "<th></th> \
+<th width='120px'>Name</th><th width='120px'>" + ((this.collection.parent.isSpatial) ? "Diffusion coefficient" : "Initial Condition") + "</th>" + ((this.collection.parent.isSpatial) ? "<th width='120px'>Active in subdomains</th>" : "") + "<th></th> \
     </thead> \
     <tbody data-hook='items'> \
     </tbody> \
   </table> \
   <div data-hook='nav'> \
     <button class='btn' data-hook='previous'>&lt;&lt;</button>\
-    [ <span data-hook='leftPosition'></span> - <span data-hook='rightPosition'></span> ] \
+    [ <span data-hook='leftPosition'></span> - <span data-hook='rightPosition'></span> of <span data-hook='total'></span> ] \
     <button class='btn' data-hook='next'>&gt;&gt;</button>\
   </div> \
 </div>";
@@ -2973,6 +3311,7 @@ var SpecieCollectionFormView = AmpersandView.extend({
             template : collectionTemplate,
             collection : this.collection,
             viewModel : SpecieFormView,
+            parent : this,
             limit : 10
         }), this.queryByHook('collection'));
 
@@ -3001,14 +3340,21 @@ var SubdomainFormView = require('./subdomain');
 
 var Tests = require('./tests');
 module.exports = View.extend({
-    // Gotta have a few of these functions just so this works as a form view
-    // This gets called when things update
-    update: function()
-    {
-    },
     removeSpecies: function()
     {
         this.model.collection.remove(this.model);
+    },
+    props : {
+        valid : 'boolean',
+        message : 'string'
+    },
+    derived : {
+        invalid : {
+            deps : ['valid'],
+            fn : function() {
+                return !this.valid;
+            }
+        }
     },
     events: {
         'click [data-hook="delete"]': 'removeSpecies'
@@ -3018,6 +3364,11 @@ module.exports = View.extend({
             type: 'booleanAttribute',
             hook: 'delete',
             name: 'disabled'
+        },
+        'invalid' : {
+            type : 'booleanClass',
+            name : 'invalidRow',
+            hook : 'row'
         }
     },
     initialize : function()
@@ -3025,21 +3376,57 @@ module.exports = View.extend({
         View.prototype.initialize.apply(this, arguments);
         
         this.baseModel = this.model.collection.parent;
+
+        this.updateValid();
     },
     // This will get called by the SubdomainFormView children when a subdomain gets selected/deselected
+    updateValid : function()
+    {
+        var valid = true;
+        var message = '';
+
+        if(this._subviews)
+        {
+            for(var i = 0; i < this._subviews.length; i++)
+            {
+                if(typeof(this._subviews[i].valid) != "undefined")
+                {
+                    valid = valid && this._subviews[i].valid;
+                    message = "Invalid species, please fix";
+                }
+                
+                if(!valid)
+                    break;
+            }
+        }
+
+        this.valid = valid;
+        this.message = message;
+    },
     update : function(obj)
     {
-        var subdomain = obj.value.model;
-        var checked = obj.value.checked;
-        // If we're already in the right state do nothing
-        if(checked)
+        if(obj.name == "subdomains")
         {
-            this.model.subdomains = _.union(this.model.subdomains, [subdomain.name]);
+            var subdomain = obj.value.model;
+            var checked = obj.value.checked;
+            // If we're already in the right state do nothing
+            if(checked)
+            {
+                this.model.subdomains = _.union(this.model.subdomains, [subdomain.name]);
+            }
+            else
+            {
+                this.model.subdomains = _.difference(this.model.subdomains, [subdomain.name]);
+            }
         }
-        else
-        {
-            this.model.subdomains = _.difference(this.model.subdomains, [subdomain.name]);
-        }
+
+        this.updateValid();
+
+        if(this.parent && this.parent.update)
+            this.parent.update();
+
+        if(this.parent && this.parent.parent && this.parent.parent.update)
+            this.parent.parent.update();
     },
     updateSelected : function()
     {
@@ -3073,11 +3460,11 @@ module.exports = View.extend({
     {
         if(this.baseModel.isSpatial)
         {
-            this.template = "<tr><td data-hook='name'></td><td data-hook='diffusion'></td><td><center><div data-hook='subdomains'></div></center></td><td><button class='btn' data-hook='delete'>x</button></td></tr>";
+            this.template = "<tr data-hook='row'><td data-hook='name'></td><td data-hook='diffusion'></td><td><center><div data-hook='subdomains'></div></center></td><td><button class='btn' data-hook='delete'>x</button></td></tr>";
         }
         else
         {
-            this.template = "<tr><td data-hook='name'></td><td data-hook='initialCondition'></td><td><button class='btn' data-hook='delete'>x</button></td></tr>";
+            this.template = "<tr data-hook='row'><td data-hook='name'></td><td data-hook='initialCondition'></td><td><button class='btn' data-hook='delete'>x</button></td></tr>";
         }
 
         View.prototype.render.apply(this, arguments);
@@ -3091,7 +3478,8 @@ module.exports = View.extend({
                 required: false,
                 placeholder: 'Name',
                 model : this.model,
-                tests: [].concat(Tests.naming(this.model.collection, this.model))
+                parent : this,
+                tests: [].concat(Tests.naming(this.model.collection, this.model), Tests.naming(this.model.collection.parent.parameters, this.model, "between species and parameters"))
             }), this.el.querySelector("[data-hook='name']"));
 
         if(this.baseModel.isSpatial)
@@ -3102,10 +3490,11 @@ module.exports = View.extend({
                     label: '',
                     name: 'diffusion',
                     value: this.model.diffusion,
-                    required: true,
+                    required: false,
                     placeholder: 'Diffusion Constant',
                     model : this.model,
-                    tests: [].concat(Tests.positive())
+                    parent : this,
+                    tests: [].concat(Tests.isNumber(), Tests.positive())
                 }), this.el.querySelector("[data-hook='diffusion']"));
 
             this.renderSubdomains();
@@ -3123,10 +3512,12 @@ module.exports = View.extend({
                     required: false,
                     placeholder: 'Initial Condition',
                     model : this.model,
+                    parent : this,
                     tests: [].concat(Tests.nonzero(), Tests.units(this.model.collection.parent))
                 }), this.el.querySelector("[data-hook='initialCondition']"));
         }
 
+        this.updateValid();
         return this;
     }
 });
@@ -3162,10 +3553,10 @@ var AddNewStoichSpecieForm = AmpersandFormView.extend({
 
         this.fields = [
             new SelectView({
-                template: '<span><select></select><span data-hook="message-container"><span data-hook="message-text"></span></span></span>',
+                template: '<span><select></select></span>',
                 label: '',
                 name: 'specie',
-                value: this.baseModel.species.models[0],
+                unselectedText: 'Add species',
                 options: this.baseModel.species,
                 required: true,
                 idAttribute: 'cid',
@@ -3179,12 +3570,25 @@ var AddNewStoichSpecieForm = AmpersandFormView.extend({
 
         $( this.el ).find('input').prop('autocomplete', 'off');
 
-        this.button = $('<input type="submit" value="Add" />').appendTo( $( this.el ) );
+        this.button = $('<button type="submit">Add</button>').appendTo( $( this.el ) );
     }
 });
 
 var StoichSpecieCollectionFormView = AmpersandView.extend({
-    template: "<div><table data-hook='stoichSpecieTable'></table><div data-hook='addStoichSpecieDiv'>Add Species: <form data-hook='addStoichSpecieForm'></form></div></div>",
+    template: "<div>\
+<h4><span data-hook='label'></span></h4>\
+<table height='100%'>\
+<tr><td valign='top'>\
+<table data-hook='stoichSpecieTable'></table>\
+</td><tr/>\
+<tr><td valign='bottom'>\
+<div data-hook='addStoichSpecieDiv'>\
+<form data-hook='addStoichSpecieForm'>\
+</form>\
+</div>\
+</td></tr>\
+</table>\
+</div>",
     initialize: function(attr, options)
     {
         AmpersandView.prototype.initialize.call(this, attr, options);
@@ -3200,7 +3604,8 @@ var StoichSpecieCollectionFormView = AmpersandView.extend({
     props:
     {
         reactionType : 'string',
-        showCustomOverride : 'boolean'
+        showCustomOverride : 'boolean',
+        label : 'string'
     },
     derived: {
         showCustom :
@@ -3215,6 +3620,10 @@ var StoichSpecieCollectionFormView = AmpersandView.extend({
         "showCustom" : {
             type : 'toggle',
             hook : 'addStoichSpecieDiv'
+        },
+        "label" : {
+            type : "text",
+            hook : "label"
         }
     },        
     render: function()
@@ -3237,6 +3646,7 @@ var StoichSpecieCollectionFormView = AmpersandView.extend({
 });
 
 module.exports = StoichSpecieCollectionFormView
+
 },{"./stoich-specie":"/home/bbales2/stochssModel/app/static/modelEditor/forms/stoich-specie.js","./tests":"/home/bbales2/stochssModel/app/static/modelEditor/forms/tests.js","ampersand-form-view":"/home/bbales2/stochssModel/app/static/modelEditor/node_modules/ampersand-form-view/ampersand-form-view.js","ampersand-input-view":"/home/bbales2/stochssModel/app/static/modelEditor/node_modules/ampersand-input-view/ampersand-input-view.js","ampersand-select-view":"/home/bbales2/stochssModel/app/static/modelEditor/node_modules/ampersand-select-view/ampersand-select-view.js","ampersand-view":"/home/bbales2/stochssModel/app/static/modelEditor/node_modules/ampersand-view/ampersand-view.js","jquery":"/home/bbales2/stochssModel/app/static/modelEditor/node_modules/jquery/dist/jquery.js"}],"/home/bbales2/stochssModel/app/static/modelEditor/forms/stoich-specie.js":[function(require,module,exports){
 var _ = require('underscore');
 var $ = require('jquery');
@@ -3253,6 +3663,8 @@ module.exports = View.extend({
     {
         if(element.valid)
             this.model[element.name] = element.value;
+        else
+            this.model[element.name] = null;
     },
     initialize: function()
     {
@@ -3321,7 +3733,7 @@ module.exports = View.extend({
 
         this.renderSubview(
             new ModifyingSelectView({
-                template: '<span><select></select><span data-hook="message-container"><span data-hook="message-text"></span></span></span>',
+                template: '<span><select></select><span data-hook="message-container"></span>',
                 label: '',
                 name: 'specie',
                 value: this.model.specie,
@@ -3380,7 +3792,7 @@ module.exports = View.extend({
 var _ = require('underscore');
 
 module.exports = {
-    naming : function(collection, thisModel) {
+    naming : function(collection, thisModel, msg) {
         return [
             function(value) {
                 if(value != '' && /^[0-9][a-zA-Z0-9_]*$/.test(value))
@@ -3388,14 +3800,14 @@ module.exports = {
             },
             function(value) {
                 if(value != '' && !/^[a-zA-Z_][a-zA-Z0-9_]*$/.test(value))
-                    return "Letters, numbers, underscores only";
+                    return "Letters, numbers, underscores only. Start with letter/underscore";
             },
             function(value) {
                 if(collection) {
                     if(!collection.every(_.bind(function(model) {
                         return model.name != value || model == thisModel;
                     }, this)))
-                        return "Name must be unique";
+                        return "Name must be unique" + ((msg) ? " " + msg : "") ;
                 }
             }
         ];
@@ -3403,6 +3815,11 @@ module.exports = {
     isNumber : function()
     {
         return function(value) {
+            if(value == null || typeof(value) == undefined || (typeof(value) == 'string' && value.length == 0))
+            {
+                return "Entry must be non-empty";
+            }
+
             if(!(value < 0 || value > 0 || value == 0))
             {
                 return "Entry must be a number";
@@ -3487,10 +3904,35 @@ module.exports = State.extend({
         type : 'string',
         specie : 'object',
         count : 'number',
-        subdomain : 'object',
-        X : 'number',
-        Y : 'number',
-        Z : 'number'
+        subdomain : 'number',
+        X : {
+            type : 'number',
+            default : function() { return 0.0; }
+        },
+        Y :  {
+            type : 'number',
+            default : function() { return 0.0; }
+        },
+        Z :  {
+            type : 'number',
+            default : function() { return 0.0; }
+        }
+    },
+    derived : {
+        valid : {
+            deps : ['subdomain'],
+            fn : function()
+            {
+                this.baseModel = this.collection.parent;
+
+                for(var i = 0; i < this.baseModel.mesh.uniqueSubdomains.models.length; i++)
+                    if(this.subdomain == this.baseModel.mesh.uniqueSubdomains.models[i].name)
+                        return true;
+
+                return false;
+            },
+            cache : false
+        }
     }
 });
 
@@ -3587,6 +4029,10 @@ var Model = AmpersandModel.extend({
         saveState : 'string',
         ownedByMe : 'boolean'
     },
+    triggerChange : function()
+    {
+        this.trigger('requestSave');
+    },
     initialize: function(attrs, options) {
         this.is_public = false;
 
@@ -3596,13 +4042,13 @@ var Model = AmpersandModel.extend({
 
         // Every time the type of one of the reactions changes, update the type here
         this.listenTo(this.reactions, 'add remove change:type', _.bind(this.computeType, this));
+        this.computeType();
 
-        this.listenTo(this.reactions, 'add remove change', _.bind(this.saveModel, this));
-        this.listenTo(this.species, 'add remove change', _.bind(this.saveModel, this));
-        this.listenTo(this.parameters, 'add remove change', _.bind(this.saveModel, this));
-        this.listenTo(this.initialConditions, 'add remove change', _.bind(this.saveModel, this));
-
-        this.on('change:name change:units change:type change:isSpatial change:mesh', _.bind(this.saveModel, this));
+        this.listenTo(this.reactions, 'add remove change', _.bind(this.triggerChange, this));
+        this.listenTo(this.species, 'add remove change', _.bind(this.triggerChange, this));
+        this.listenTo(this.parameters, 'add remove change', _.bind(this.triggerChange, this));
+        this.listenTo(this.initialConditions, 'add remove change', _.bind(this.triggerChange, this));
+        this.on('change:name change:units change:type change:isSpatial change:mesh', _.bind(this.triggerChange, this));
         // this will run if the name changes
     },
     setupMesh: function(meshCollection) {
@@ -3625,12 +4071,12 @@ var Model = AmpersandModel.extend({
 
         for(var i = 0; i < this.species.models.length; i++)
         {
-            this.species.models[i].setupValidation();
+            this.species.models[i].setUpValidation();
         }
 
         for(var i = 0; i < this.parameters.models.length; i++)
         {
-            this.parameters.models[i].setupValidation();
+            this.parameters.models[i].setUpValidation();
         }
 
         var speciesByName = {};
@@ -3656,7 +4102,7 @@ var Model = AmpersandModel.extend({
                                          X : initialCondition.x,
                                          Y : initialCondition.y,
                                          Z : initialCondition.z,
-                                         subdomain : subdomainsByName[initialCondition.subdomain] });
+                                         subdomain : initialCondition.subdomain });
         }
 
         delete this.unprocessedInitialConditions;
@@ -3665,7 +4111,7 @@ var Model = AmpersandModel.extend({
         var massAction = true;
 
         var massAction = this.reactions.every( function(reaction) {
-            if(reaction.type == 'massaction')
+            if(reaction.type != 'custom')
             {
                 return true;
             } else {
@@ -3699,13 +4145,20 @@ var Model = AmpersandModel.extend({
             if(this.collection && this.collection.url)
             {
 
-                if(!this.reactions.every( function(reaction) { return reaction.valid; } ))
+                if(!(this.reactions.every( function(reaction) { return reaction.valid; } ) && this.initialConditions.every( function(initialCondition) { return initialCondition.valid; } )))
                 {
-                    this.saveState = 'Model not valid'
+                    this.saveState = 'invalid';
                     return;
                 }
 
-                this.save(undefined, { success : _.bind(this.modelSaved, this), error : _.bind(this.modelSaveFailed, this) } );
+                try
+                {
+                    this.save(undefined, { success : _.bind(this.modelSaved, this), error : _.bind(this.modelSaveFailed, this) } );
+                }
+                catch(e)
+                {
+                    this.modelSaveFailed();
+                }
             }
         }
         , 500),
@@ -3769,7 +4222,7 @@ var Model = AmpersandModel.extend({
         {
             for(var i = 0; i < species.length; i++)
             {
-                speciesByName[species[i].name] = this.species.addSpecie(species[i].name, species[i].initialCondition, attr.spatial.species_diffusion_coefficients[species[i].name], attr.spatial.species_subdomain_assignments[species[i].name]);
+                speciesByName[species[i].name] = this.species.addSpecie(species[i].name, species[i].initialCondition, attr.spatial.species_diffusion_coefficients[species[i].name], attr.spatial.species_subdomain_assignments[species[i].name], true);
             }
         }
 
@@ -3779,7 +4232,7 @@ var Model = AmpersandModel.extend({
         {
             for(var i = 0; i < parameters.length; i++)
             {
-                parametersByName[parameters[i].name] = this.parameters.addParameter(parameters[i].name, String(parameters[i].value));
+                parametersByName[parameters[i].name] = this.parameters.addParameter(parameters[i].name, String(parameters[i].value), true);
             }
         }
 
@@ -3795,7 +4248,7 @@ var Model = AmpersandModel.extend({
                 
                 if(reaction.type == 'custom')
                 {
-                    this.reactions.addCustomReaction(reaction.name, reaction.rate, reactants, products, attr.spatial.reactions_subdomain_assignments[reactions[i].name]);
+                    this.reactions.addCustomReaction(reaction.name, reaction.equation, reactants, products, attr.spatial.reactions_subdomain_assignments[reactions[i].name]);
                 } else {
                     this.reactions.addMassActionReaction(reaction.name, reaction.type, parametersByName[reaction.rate], reactants, products, attr.spatial.reactions_subdomain_assignments[reactions[i].name]);
                 }
@@ -3851,7 +4304,7 @@ var Model = AmpersandModel.extend({
             reactionOut.type = reactionIn.type;
             if(reactionOut.type == 'custom')
             {
-                reactionOut.rate = reactionIn.equation;
+                reactionOut.equation = reactionIn.equation;
             } else {
                 reactionOut.rate = reactionIn.rate.name;
             }
@@ -3887,7 +4340,7 @@ var Model = AmpersandModel.extend({
                        x : initialCondition.X,
                        y : initialCondition.Y,
                        z : initialCondition.Z,
-                       subdomain : initialCondition.subdomain.name };
+                       subdomain : initialCondition.subdomain };
 
             obj.spatial.initial_conditions.push(ic);
         }
@@ -3912,14 +4365,19 @@ var parameter = require('./parameter');
 
 module.exports = Collection.extend({
     model: parameter,
-    addParameter: function(name, value) {
+    addParameter: function(name, value, skipSetUpValidation) {
         var unique = this.models.every(function(model) { return model["name"] != name });
 
         // If the new Species name is not unique, return false
         if(!unique)
             return undefined;
 
-        return this.add({ name : name, value : value });
+        var parameter = this.add({ name : name, value : value });
+
+        if(!skipSetUpValidation)
+            parameter.setUpValidation();
+
+        return parameter;
     }
 });
 },{"./collection":"/home/bbales2/stochssModel/app/static/modelEditor/models/collection.js","./parameter":"/home/bbales2/stochssModel/app/static/modelEditor/models/parameter.js"}],"/home/bbales2/stochssModel/app/static/modelEditor/models/parameter.js":[function(require,module,exports){
@@ -3936,7 +4394,7 @@ module.exports = AmpModel.extend({
     {
         AmpModel.prototype.initialize.apply(this, arguments);
     },
-    setupValidation: function()
+    setUpValidation: function()
     {
         //Listen for messages from reaction objects
         this.listenTo(this.collection, 'reaction-rate-change', _.bind(this.updateInUse, this))
@@ -4018,7 +4476,10 @@ var Parameter = require('./parameter');
 var Reaction = State.extend({
     props: {
         name : 'string',
-        equation : 'string',
+        equation : {
+            type : 'string',
+            default : function() { return ''; }
+        },
         type : 'string',
         rate : 'object',
         subdomains :
@@ -4072,6 +4533,11 @@ var Reaction = State.extend({
                 {
                     reactants = 2;
                     products = 2;
+                }
+                if(this.type == 'massaction')
+                {
+                    reactants = this.reactants.models.length;
+                    products = this.products.models.length;
                 }
 
                 for(var i = 0; i < reactants; i++)
@@ -4146,14 +4612,19 @@ var specie = require('./specie');
 
 module.exports = Collection.extend({
     model: specie,
-    addSpecie: function(name, initialCondition, diffusion, subdomains) {
+    addSpecie: function(name, initialCondition, diffusion, subdomains, skipSetUpValidation) {
         var unique = this.models.every(function(model) { return model["name"] != name });
 
         // If the new Species name is not unique, return false
         if(!unique)
             return undefined;
 
-        return this.add({ name : name, initialCondition : initialCondition, diffusion : diffusion, subdomains : subdomains });
+        var specie = this.add({ name : name, initialCondition : initialCondition, diffusion : diffusion, subdomains : subdomains });
+        
+        if(!skipSetUpValidation)
+            specie.setUpValidation();
+
+        return specie;
     }
 });
 },{"./collection":"/home/bbales2/stochssModel/app/static/modelEditor/models/collection.js","./specie":"/home/bbales2/stochssModel/app/static/modelEditor/models/specie.js"}],"/home/bbales2/stochssModel/app/static/modelEditor/models/specie.js":[function(require,module,exports){
@@ -4182,7 +4653,7 @@ module.exports = AmpModel.extend({
     {
         AmpModel.prototype.initialize.apply(this, arguments);
     },
-    setupValidation: function()
+    setUpValidation: function()
     {
         //Listen for messages from stoich-specie objects
         this.listenTo(this.collection, 'stoich-specie-change', _.bind(this.updateInUse, this))
@@ -4255,7 +4726,8 @@ var StoichSpecie = State.extend({
         //add remove 
         // Whenever we pick a new species, let the species collection know
         this.on('change:specie', _.bind(function(model) {
-            model.specie.collection.trigger('stoich-specie-change');
+            if(model.specie)
+                model.specie.collection.trigger('stoich-specie-change');
         }, this) );
     }
 });
@@ -9997,8 +10469,8 @@ module.exports=require("/home/bbales2/stochssModel/app/static/modelEditor/node_m
 },{"/home/bbales2/stochssModel/app/static/modelEditor/node_modules/ampersand-collection/node_modules/ampersand-class-extend/ampersand-class-extend.js":"/home/bbales2/stochssModel/app/static/modelEditor/node_modules/ampersand-collection/node_modules/ampersand-class-extend/ampersand-class-extend.js"}],"/home/bbales2/stochssModel/app/static/modelEditor/node_modules/ampersand-subcollection/node_modules/ampersand-collection-underscore-mixin/ampersand-collection-underscore-mixin.js":[function(require,module,exports){
 module.exports=require("/home/bbales2/stochssModel/app/static/modelEditor/node_modules/ampersand-rest-collection/node_modules/ampersand-collection-underscore-mixin/ampersand-collection-underscore-mixin.js")
 },{"/home/bbales2/stochssModel/app/static/modelEditor/node_modules/ampersand-rest-collection/node_modules/ampersand-collection-underscore-mixin/ampersand-collection-underscore-mixin.js":"/home/bbales2/stochssModel/app/static/modelEditor/node_modules/ampersand-rest-collection/node_modules/ampersand-collection-underscore-mixin/ampersand-collection-underscore-mixin.js"}],"/home/bbales2/stochssModel/app/static/modelEditor/node_modules/ampersand-subcollection/node_modules/backbone-events-standalone/index.js":[function(require,module,exports){
-module.exports=require("/home/bbales2/stochssModel/app/static/modelEditor/node_modules/ampersand-state/node_modules/backbone-events-standalone/index.js")
-},{"/home/bbales2/stochssModel/app/static/modelEditor/node_modules/ampersand-state/node_modules/backbone-events-standalone/index.js":"/home/bbales2/stochssModel/app/static/modelEditor/node_modules/ampersand-state/node_modules/backbone-events-standalone/index.js"}],"/home/bbales2/stochssModel/app/static/modelEditor/node_modules/ampersand-view/ampersand-view.js":[function(require,module,exports){
+module.exports=require("/home/bbales2/stochssModel/app/static/modelEditor/node_modules/ampersand-form-view/node_modules/backbone-events-standalone/index.js")
+},{"/home/bbales2/stochssModel/app/static/modelEditor/node_modules/ampersand-form-view/node_modules/backbone-events-standalone/index.js":"/home/bbales2/stochssModel/app/static/modelEditor/node_modules/ampersand-form-view/node_modules/backbone-events-standalone/index.js"}],"/home/bbales2/stochssModel/app/static/modelEditor/node_modules/ampersand-view/ampersand-view.js":[function(require,module,exports){
 ;if (typeof window !== "undefined") {  window.ampersand = window.ampersand || {};  window.ampersand["ampersand-view"] = window.ampersand["ampersand-view"] || [];  window.ampersand["ampersand-view"].push("7.2.0");}
 var State = require('ampersand-state');
 var CollectionView = require('ampersand-collection-view');
@@ -10532,8 +11004,8 @@ module.exports = CollectionView;
 },{"ampersand-class-extend":"/home/bbales2/stochssModel/app/static/modelEditor/node_modules/ampersand-view/node_modules/ampersand-collection-view/node_modules/ampersand-class-extend/ampersand-class-extend.js","backbone-events-standalone":"/home/bbales2/stochssModel/app/static/modelEditor/node_modules/ampersand-view/node_modules/ampersand-collection-view/node_modules/backbone-events-standalone/index.js","underscore":"/home/bbales2/stochssModel/app/static/modelEditor/node_modules/ampersand-view/node_modules/underscore/underscore.js"}],"/home/bbales2/stochssModel/app/static/modelEditor/node_modules/ampersand-view/node_modules/ampersand-collection-view/node_modules/ampersand-class-extend/ampersand-class-extend.js":[function(require,module,exports){
 module.exports=require("/home/bbales2/stochssModel/app/static/modelEditor/node_modules/ampersand-subcollection/node_modules/ampersand-class-extend/ampersand-class-extend.js")
 },{"/home/bbales2/stochssModel/app/static/modelEditor/node_modules/ampersand-subcollection/node_modules/ampersand-class-extend/ampersand-class-extend.js":"/home/bbales2/stochssModel/app/static/modelEditor/node_modules/ampersand-subcollection/node_modules/ampersand-class-extend/ampersand-class-extend.js"}],"/home/bbales2/stochssModel/app/static/modelEditor/node_modules/ampersand-view/node_modules/ampersand-collection-view/node_modules/backbone-events-standalone/index.js":[function(require,module,exports){
-module.exports=require("/home/bbales2/stochssModel/app/static/modelEditor/node_modules/ampersand-subcollection/node_modules/backbone-events-standalone/index.js")
-},{"/home/bbales2/stochssModel/app/static/modelEditor/node_modules/ampersand-subcollection/node_modules/backbone-events-standalone/index.js":"/home/bbales2/stochssModel/app/static/modelEditor/node_modules/ampersand-subcollection/node_modules/backbone-events-standalone/index.js"}],"/home/bbales2/stochssModel/app/static/modelEditor/node_modules/ampersand-view/node_modules/ampersand-dom-bindings/ampersand-dom-bindings.js":[function(require,module,exports){
+module.exports=require("/home/bbales2/stochssModel/app/static/modelEditor/node_modules/ampersand-form-view/node_modules/backbone-events-standalone/index.js")
+},{"/home/bbales2/stochssModel/app/static/modelEditor/node_modules/ampersand-form-view/node_modules/backbone-events-standalone/index.js":"/home/bbales2/stochssModel/app/static/modelEditor/node_modules/ampersand-form-view/node_modules/backbone-events-standalone/index.js"}],"/home/bbales2/stochssModel/app/static/modelEditor/node_modules/ampersand-view/node_modules/ampersand-dom-bindings/ampersand-dom-bindings.js":[function(require,module,exports){
 ;if (typeof window !== "undefined") {  window.ampersand = window.ampersand || {};  window.ampersand["ampersand-dom-bindings"] = window.ampersand["ampersand-dom-bindings"] || [];  window.ampersand["ampersand-dom-bindings"].push("3.3.3");}
 var Store = require('key-tree-store');
 var dom = require('ampersand-dom');

@@ -20,6 +20,10 @@ var Model = AmpersandModel.extend({
         saveState : 'string',
         ownedByMe : 'boolean'
     },
+    triggerChange : function()
+    {
+        this.trigger('requestSave');
+    },
     initialize: function(attrs, options) {
         this.is_public = false;
 
@@ -29,13 +33,13 @@ var Model = AmpersandModel.extend({
 
         // Every time the type of one of the reactions changes, update the type here
         this.listenTo(this.reactions, 'add remove change:type', _.bind(this.computeType, this));
+        this.computeType();
 
-        this.listenTo(this.reactions, 'add remove change', _.bind(this.saveModel, this));
-        this.listenTo(this.species, 'add remove change', _.bind(this.saveModel, this));
-        this.listenTo(this.parameters, 'add remove change', _.bind(this.saveModel, this));
-        this.listenTo(this.initialConditions, 'add remove change', _.bind(this.saveModel, this));
-
-        this.on('change:name change:units change:type change:isSpatial change:mesh', _.bind(this.saveModel, this));
+        this.listenTo(this.reactions, 'add remove change', _.bind(this.triggerChange, this));
+        this.listenTo(this.species, 'add remove change', _.bind(this.triggerChange, this));
+        this.listenTo(this.parameters, 'add remove change', _.bind(this.triggerChange, this));
+        this.listenTo(this.initialConditions, 'add remove change', _.bind(this.triggerChange, this));
+        this.on('change:name change:units change:type change:isSpatial change:mesh', _.bind(this.triggerChange, this));
         // this will run if the name changes
     },
     setupMesh: function(meshCollection) {
@@ -58,12 +62,12 @@ var Model = AmpersandModel.extend({
 
         for(var i = 0; i < this.species.models.length; i++)
         {
-            this.species.models[i].setupValidation();
+            this.species.models[i].setUpValidation();
         }
 
         for(var i = 0; i < this.parameters.models.length; i++)
         {
-            this.parameters.models[i].setupValidation();
+            this.parameters.models[i].setUpValidation();
         }
 
         var speciesByName = {};
@@ -89,7 +93,7 @@ var Model = AmpersandModel.extend({
                                          X : initialCondition.x,
                                          Y : initialCondition.y,
                                          Z : initialCondition.z,
-                                         subdomain : subdomainsByName[initialCondition.subdomain] });
+                                         subdomain : initialCondition.subdomain });
         }
 
         delete this.unprocessedInitialConditions;
@@ -98,7 +102,7 @@ var Model = AmpersandModel.extend({
         var massAction = true;
 
         var massAction = this.reactions.every( function(reaction) {
-            if(reaction.type == 'massaction')
+            if(reaction.type != 'custom')
             {
                 return true;
             } else {
@@ -132,13 +136,20 @@ var Model = AmpersandModel.extend({
             if(this.collection && this.collection.url)
             {
 
-                if(!this.reactions.every( function(reaction) { return reaction.valid; } ))
+                if(!(this.reactions.every( function(reaction) { return reaction.valid; } ) && this.initialConditions.every( function(initialCondition) { return initialCondition.valid; } )))
                 {
-                    this.saveState = 'Model not valid'
+                    this.saveState = 'invalid';
                     return;
                 }
 
-                this.save(undefined, { success : _.bind(this.modelSaved, this), error : _.bind(this.modelSaveFailed, this) } );
+                try
+                {
+                    this.save(undefined, { success : _.bind(this.modelSaved, this), error : _.bind(this.modelSaveFailed, this) } );
+                }
+                catch(e)
+                {
+                    this.modelSaveFailed();
+                }
             }
         }
         , 500),
@@ -202,7 +213,7 @@ var Model = AmpersandModel.extend({
         {
             for(var i = 0; i < species.length; i++)
             {
-                speciesByName[species[i].name] = this.species.addSpecie(species[i].name, species[i].initialCondition, attr.spatial.species_diffusion_coefficients[species[i].name], attr.spatial.species_subdomain_assignments[species[i].name]);
+                speciesByName[species[i].name] = this.species.addSpecie(species[i].name, species[i].initialCondition, attr.spatial.species_diffusion_coefficients[species[i].name], attr.spatial.species_subdomain_assignments[species[i].name], true);
             }
         }
 
@@ -212,7 +223,7 @@ var Model = AmpersandModel.extend({
         {
             for(var i = 0; i < parameters.length; i++)
             {
-                parametersByName[parameters[i].name] = this.parameters.addParameter(parameters[i].name, String(parameters[i].value));
+                parametersByName[parameters[i].name] = this.parameters.addParameter(parameters[i].name, String(parameters[i].value), true);
             }
         }
 
@@ -228,7 +239,7 @@ var Model = AmpersandModel.extend({
                 
                 if(reaction.type == 'custom')
                 {
-                    this.reactions.addCustomReaction(reaction.name, reaction.rate, reactants, products, attr.spatial.reactions_subdomain_assignments[reactions[i].name]);
+                    this.reactions.addCustomReaction(reaction.name, reaction.equation, reactants, products, attr.spatial.reactions_subdomain_assignments[reactions[i].name]);
                 } else {
                     this.reactions.addMassActionReaction(reaction.name, reaction.type, parametersByName[reaction.rate], reactants, products, attr.spatial.reactions_subdomain_assignments[reactions[i].name]);
                 }
@@ -284,7 +295,7 @@ var Model = AmpersandModel.extend({
             reactionOut.type = reactionIn.type;
             if(reactionOut.type == 'custom')
             {
-                reactionOut.rate = reactionIn.equation;
+                reactionOut.equation = reactionIn.equation;
             } else {
                 reactionOut.rate = reactionIn.rate.name;
             }
@@ -320,7 +331,7 @@ var Model = AmpersandModel.extend({
                        x : initialCondition.X,
                        y : initialCondition.Y,
                        z : initialCondition.Z,
-                       subdomain : initialCondition.subdomain.name };
+                       subdomain : initialCondition.subdomain };
 
             obj.spatial.initial_conditions.push(ic);
         }

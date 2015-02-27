@@ -52,13 +52,16 @@ def start_celery_on_vm(instance_type, ip, key_file, agent_type, username="ubuntu
                    os.path.join(TaskConfig.STOCHSS_HOME, 'app', 'lib', 'cloudtracker')]
     python_path = 'export PYTHONPATH={0}'.format(':'.join(python_path_list))
     commands.append(python_path)
+    command = ';'.join(commands)
 
-    commands.append(
+    # Start the shutdown-monitor
+    command += ';python /home/ubuntu/stochss/app/backend/tasks.py shutdown-monitor &'
+
+    command += \
         "celery -A tasks worker -Q {q1},{q2} --autoreload --loglevel=info --workdir /home/ubuntu > /home/ubuntu/celery.log 2>&1".format(
             q1=CeleryConfig.get_queue_name(agent_type=agent_type),
-            q2=CeleryConfig.get_queue_name(agent_type=agent_type, instance_type=instance_type)))
+            q2=CeleryConfig.get_queue_name(agent_type=agent_type, instance_type=instance_type))
 
-    command = ';'.join(commands)
 
     # start_celery_str = "celery -A tasks worker --autoreload --loglevel=info --workdir /home/ubuntu > /home/ubuntu/celery.log 2>&1"
     # PyURDME must be run inside a 'screen' terminal as part of the FEniCS code depends on the ability to
@@ -188,7 +191,7 @@ def execute_cloud_cost_analysis_task(params, agent, instance_type, task_id, data
 
     logging.info("cost analysis task, dynamodb table: {0}".format(params["db_table"]));
     database.updateEntry(taskid_prefix + task_id, data, params["db_table"])
-    cost_analysis_task = tasks.task.apply_async(args=[task_id, params, database, access_key, secret_key, taskid_prefix],
+    cost_analysis_task = tasks.task.apply_async(args=[task_id, params, agent, database, access_key, secret_key, taskid_prefix],
                                  queue=celery_queue_name, routing_key=celery_routing_key)
     logging.info(cost_analysis_task.ready())
 
@@ -431,9 +434,10 @@ def execute_cloud_task(params, agent_type, access_key, secret_key, task_id,
                 result["db_id"] = task_id
 
                 params["db_table"] = JobDatabaseConfig.TABLE_NAME
+                params["cost_analysis_table"] = JobDatabaseConfig.COST_ANALYSIS_TABLE_NAME
                 database.updateEntry(task_id, data, params["db_table"])
 
-                tmp = tasks.task.apply_async(args=[task_id, params, database, access_key, secret_key],
+                tmp = tasks.task.apply_async(args=[task_id, params, agent_type, database, access_key, secret_key],
                                              queue=celery_queue_name, routing_key=celery_routing_key)
                 logging.info(tmp.ready())
                 result["celery_pid"] = tmp.id

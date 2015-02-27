@@ -59,7 +59,7 @@ module.exports = View.extend({
             }
             else
             {
-                colors[i] = new THREE.Color( 0x333399 );
+                colors[i] = new THREE.Color( 0x000099 );
             }
         }
 
@@ -128,7 +128,6 @@ module.exports = View.extend({
         // renderer
         var renderer2 = new THREE.WebGLRenderer({ alpha: true });
         renderer2.setClearColor( 0x000000, 0 ); 
-        console.log("Width: ",this.d_width);
         renderer2.setSize( this.d_width/5, this.d_width/5);
         $( renderer2.domElement ).appendTo(dom2);
         
@@ -191,10 +190,14 @@ module.exports = View.extend({
             return;
         }
 
-        var canvas = document.createElement('canvas');
-        gl = canvas.getContext("webgl");
-        delete canvas;
-        if (!gl) {
+        if(typeof(this.webGL) == 'undefined')
+        {
+            var canvas = document.createElement('canvas');
+            this.webGL = Boolean(canvas.getContext("webgl"));
+            delete canvas;
+        }
+
+        if (!this.webGL) {
             // Browser could not initialize WebGL. User probably needs to
             // update their drivers or get a new browser. Present a link to
             // http://get.webgl.org/troubleshooting
@@ -221,6 +224,7 @@ module.exports = View.extend({
             this.rendererDom = $( renderer.domElement ).appendTo( this.queryByHook( "mesh" ) );
             
             var controls = new OrbitControls( camera, renderer.domElement );
+            controls.noZoom = true;
             // var controls = new THREE.OrbitControls( camera );
             //controls.addEventListener( 'change', render );
             

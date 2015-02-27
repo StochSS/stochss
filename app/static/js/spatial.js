@@ -220,34 +220,28 @@ Spatial.Controller = Backbone.View.extend(
 
         addAxes : function(){
             var dom2 = $( '#inset' ).empty();
-            // camera
             var camera2 = new THREE.OrthographicCamera( -1, 1, 1, -1, 1, 1000);
             this.camera2 = camera2; 
-
+            
             // renderer
             var renderer2 = new THREE.WebGLRenderer({ alpha: true });
             renderer2.setClearColor( 0x000000, 0 ); 
             renderer2.setSize( this.d_width/5, this.d_width/5);
             $( renderer2.domElement ).appendTo(dom2);
-
+            
             this.renderer2 = renderer2;
-
+            
             // scene
             var scene2 = new THREE.Scene();
             this.scene2 = scene2;
-
-            var dir = new THREE.Vector3( 1.0, 0.0, 0.0 );
+            
+            var dir = new THREE.Vector3( 1.0, 0, 0 );
             var origin = new THREE.Vector3( 0, 0, 0 ); 
-            var hex = 0xff0000; 
+            var hex = 0x0000ff; 
             var material = new THREE.LineBasicMaterial({ color: hex });
             var geometry = new THREE.Geometry();
             geometry.vertices.push( origin, dir );
             var line = new THREE.Line( geometry, material );
-            //var coneGeometry = new THREE.CylinderGeometry( 0, 0.5, 1, 5, 1 );
-            //coneGeometry.applyMatrix( new THREE.Matrix4().makeTranslation( 1.0, 0.0, 0 ) );
-            //var cone = new THREE.Mesh( coneGeometry, new THREE.MeshBasicMaterial( { color: color } ) );
-             //   this.cone.matrixAutoUpdate = false;
-             //   this.add( this.cone );
             this.createText('X',1.25, -0.3, 0);
             this.scene2.add( line );
             
@@ -272,7 +266,6 @@ Spatial.Controller = Backbone.View.extend(
             line = new THREE.Line( geometry, material );
             this.createText('Z', 0.5,-0.4,0.9);
             scene2.add( line );
-
         },
 
 
@@ -302,7 +295,35 @@ Spatial.Controller = Backbone.View.extend(
             $( "#minVal" ).text(this.minVal);
             $( "#maxVal" ).text(this.maxVal);
 
-            
+            if (!window.WebGLRenderingContext) {
+                // Browser has no idea what WebGL is. Suggest they
+                // get a new browser by presenting the user with link to
+                // http://get.webgl.org
+                $( "#meshPreview" ).html('<center><h2 style="color: red;">WebGL Not Supported</h2><br /> \
+                    <ul><li>Download an updated Firefox or Chromium to use StochSS (both come with WebGL support)</li> \
+                    <li>It may be necessary to update system video drivers to make this work</li></ul></center>');
+                return;
+            }
+
+            if(typeof(this.webGL) == 'undefined')
+            {
+                var canvas = document.createElement('canvas');
+                this.webGL = Boolean(canvas.getContext("webgl"));
+                delete canvas;
+            }
+
+            if (!this.webGL) {
+                // Browser could not initialize WebGL. User probably needs to
+                // update their drivers or get a new browser. Present a link to
+                // http://get.webgl.org/troubleshooting
+                $( "#meshPreview" ).html('<center><h2 style="color: red;">WebGL Disabled</h2><br /> \
+                    <ul><li>In Safari and certain older browsers, this must be enabled manually</li> \
+                    <li>Browsers can also throw this error when they detect old or incompatible video drivers</li> \
+                    <li>Enable WebGL, or try using StochSS in an up to date Chrome or Firefox browser</li> \
+                    </ul></center>');
+                return;  
+            }
+
 
             if(!this.renderer)
             {
@@ -345,19 +366,18 @@ Spatial.Controller = Backbone.View.extend(
                 
                 var controls = new THREE.OrbitControls( camera, renderer.domElement );
 
+
                 camera.position.z = 1.5;
 
                 this.camera = camera;
                 this.renderer = renderer;
                 this.controls = controls;
 
-
             // Adding gui
             this.addGui();
 
             // Adding Axes
             this.addAxes();
-
 
             }
             else
@@ -390,6 +410,7 @@ Spatial.Controller = Backbone.View.extend(
             scene.add(directionalLight);
             
             this.scene = scene;
+
             $( "#meshPreviewMsg" ).hide();
 
             //$( "#meshPreview" ).show();
@@ -399,7 +420,6 @@ Spatial.Controller = Backbone.View.extend(
                 this.renderFrame();
                 this.rendererInitialized = true;
             }
-
         },
 
         /*
@@ -540,13 +560,15 @@ Spatial.Controller = Backbone.View.extend(
         {
 
             console.log("handleMeshUpdate: function(sortedSpecies)");
+            var speciesSelect = $("#speciesSelect");
+
+            speciesSelect.on('change', _.bind(this.handleSpeciesSelect, this));
+
             for(var i in sortedSpecies) {
                 var specie = sortedSpecies[i];
 
-                var input = $( '<div><input type="radio" name="speciesSelect" value="' + specie + '"> ' + specie + '</div>' ).appendTo( $( '#speciesSelect' ) ).find( 'input' );
-
-                // Register event handler
-                input.click(_.bind(this.handleSpeciesSelect, this));
+                var input = $( '<option value="' + specie + '">' + specie + '</option>' ).appendTo( speciesSelect );
+                //var input = $( '<div><input type="radio" name="speciesSelect" value="' + specie + '"> ' + specie + '</div>' ).appendTo( $( '#speciesSelect' ) ).find( 'input' );
 
                 // Select default
                 if(typeof this.selectedSpecies === 'undefined')
@@ -556,7 +578,7 @@ Spatial.Controller = Backbone.View.extend(
 
                 if(this.selectedSpecies == specie)
                 {
-                    input.trigger('click');
+                    input.trigger('change');
                 }
             }
 

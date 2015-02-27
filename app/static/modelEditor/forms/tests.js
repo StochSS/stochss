@@ -1,7 +1,7 @@
 var _ = require('underscore');
 
 module.exports = {
-    naming : function(collection, thisModel) {
+    naming : function(collection, thisModel, msg) {
         return [
             function(value) {
                 if(value != '' && /^[0-9][a-zA-Z0-9_]*$/.test(value))
@@ -9,14 +9,14 @@ module.exports = {
             },
             function(value) {
                 if(value != '' && !/^[a-zA-Z_][a-zA-Z0-9_]*$/.test(value))
-                    return "Letters, numbers, underscores only";
+                    return "Letters, numbers, underscores only. Start with letter/underscore";
             },
             function(value) {
                 if(collection) {
                     if(!collection.every(_.bind(function(model) {
                         return model.name != value || model == thisModel;
                     }, this)))
-                        return "Name must be unique";
+                        return "Name must be unique" + ((msg) ? " " + msg : "") ;
                 }
             }
         ];
@@ -24,6 +24,11 @@ module.exports = {
     isNumber : function()
     {
         return function(value) {
+            if(value == null || typeof(value) == undefined || (typeof(value) == 'string' && value.length == 0))
+            {
+                return "Entry must be non-empty";
+            }
+
             if(!(value < 0 || value > 0 || value == 0))
             {
                 return "Entry must be a number";

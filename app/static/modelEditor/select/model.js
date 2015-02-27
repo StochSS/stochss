@@ -5,7 +5,7 @@ var Tests = require('../forms/tests');
 //<div>Model type: <div data-hook='type'></div><div data-hook='specie'></div><div data-hook='parameter'></div><div data-hook='reaction'></div><div data-hook='convertToPopulation'></div></div>
 //<i class="icon-remove"></i></span>
 module.exports = View.extend({
-    template: '<tr> \
+    template: '<tr data-hook="row"> \
   <td> \
     <button data-hook="edit" class="btn-small btn">Select</button> \
   </td> \
@@ -21,7 +21,16 @@ module.exports = View.extend({
 </tr>',
     // Gotta have a few of these functions just so this works as a form view
     // This gets called when things update
+    props : {
+        valid : 'boolean',
+        message : 'string'
+    },
     bindings: {
+        'invalid' : {
+            type : 'booleanClass',
+            name : 'invalidRow',
+            hook : 'row'
+        },
         'textType' : {
             type : 'text',
             hook: 'type'
@@ -52,11 +61,35 @@ module.exports = View.extend({
 
                 return base;
             }
+        },
+        invalid : {
+            deps : ['valid'],
+            fn : function() {
+                return !this.valid;
+            }
         }
     },
     events: {
         "click [data-hook=edit]" : "selectSelf",
         "click [data-hook=delete]" : "removeModel"
+    },
+    updateValid : function()
+    {
+        this.valid = (!this.nameBox || this.nameBox.valid);
+        this.message = '';
+
+        if(this.nameBox && !this.nameBox.valid)
+            this.message = 'Model name invalid';
+    },
+    update : function(obj)
+    {
+        this.updateValid();
+
+        if(this.parent && this.parent.update)
+            this.parent.update();
+
+        if(this.parent && this.parent.parent && this.parent.parent.update)
+            this.parent.parent.update();
     },
     selectSelf: function()
     {
@@ -66,10 +99,12 @@ module.exports = View.extend({
     deSelect : function()
     {
         $( this.queryByHook( "edit" ) ).removeClass('btn-success');
+        $( this.queryByHook( "name" ) ).find('input').prop('disabled', true);
     },
     select : function()
     {
         $( this.queryByHook( "edit" ) ).addClass('btn-success');
+        $( this.queryByHook( "name" ) ).find('input').prop('disabled', false);
     },
     removeModel: function()
     {
@@ -103,17 +138,24 @@ module.exports = View.extend({
         saveMessageDom.addClass( "alert-error" );
         saveMessageDom.text( "Model not saved to local library!" );
     },
+    initialize: function()
+    {
+        View.prototype.initialize.apply(this, arguments);
+
+        this.updateValid();
+    },
     render: function()
     {
         View.prototype.render.apply(this, arguments);
 
-        this.renderSubview(
+        this.nameBox = this.renderSubview(
             new ModifyingInputView({
-                template: '<span><span data-hook="label"></span><input><span data-hook="message-container"><span data-hook="message-text"></span></span></span>',
+                //template: '<span><span data-hook="label"></span><input><span data-hook="message-container"><span data-hook="message-text"></span></span></span>',
                 label: '',
                 name: 'name',
                 value: this.model.name,
                 required: false,
+                parent: this,
                 placeholder: 'Name',
                 model : this.model,
                 tests: [].concat(Tests.naming(this.model.collection, this.model))
@@ -121,6 +163,9 @@ module.exports = View.extend({
 
         var model = this.model;
 
+        this.deSelect();
+
+        this.updateValid();
         return this;
     }
 });

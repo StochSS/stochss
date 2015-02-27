@@ -7,14 +7,21 @@ var SubdomainFormView = require('./subdomain');
 
 var Tests = require('./tests');
 module.exports = View.extend({
-    // Gotta have a few of these functions just so this works as a form view
-    // This gets called when things update
-    update: function()
-    {
-    },
     removeSpecies: function()
     {
         this.model.collection.remove(this.model);
+    },
+    props : {
+        valid : 'boolean',
+        message : 'string'
+    },
+    derived : {
+        invalid : {
+            deps : ['valid'],
+            fn : function() {
+                return !this.valid;
+            }
+        }
     },
     events: {
         'click [data-hook="delete"]': 'removeSpecies'
@@ -24,6 +31,11 @@ module.exports = View.extend({
             type: 'booleanAttribute',
             hook: 'delete',
             name: 'disabled'
+        },
+        'invalid' : {
+            type : 'booleanClass',
+            name : 'invalidRow',
+            hook : 'row'
         }
     },
     initialize : function()
@@ -31,21 +43,57 @@ module.exports = View.extend({
         View.prototype.initialize.apply(this, arguments);
         
         this.baseModel = this.model.collection.parent;
+
+        this.updateValid();
     },
     // This will get called by the SubdomainFormView children when a subdomain gets selected/deselected
+    updateValid : function()
+    {
+        var valid = true;
+        var message = '';
+
+        if(this._subviews)
+        {
+            for(var i = 0; i < this._subviews.length; i++)
+            {
+                if(typeof(this._subviews[i].valid) != "undefined")
+                {
+                    valid = valid && this._subviews[i].valid;
+                    message = "Invalid species, please fix";
+                }
+                
+                if(!valid)
+                    break;
+            }
+        }
+
+        this.valid = valid;
+        this.message = message;
+    },
     update : function(obj)
     {
-        var subdomain = obj.value.model;
-        var checked = obj.value.checked;
-        // If we're already in the right state do nothing
-        if(checked)
+        if(obj.name == "subdomains")
         {
-            this.model.subdomains = _.union(this.model.subdomains, [subdomain.name]);
+            var subdomain = obj.value.model;
+            var checked = obj.value.checked;
+            // If we're already in the right state do nothing
+            if(checked)
+            {
+                this.model.subdomains = _.union(this.model.subdomains, [subdomain.name]);
+            }
+            else
+            {
+                this.model.subdomains = _.difference(this.model.subdomains, [subdomain.name]);
+            }
         }
-        else
-        {
-            this.model.subdomains = _.difference(this.model.subdomains, [subdomain.name]);
-        }
+
+        this.updateValid();
+
+        if(this.parent && this.parent.update)
+            this.parent.update();
+
+        if(this.parent && this.parent.parent && this.parent.parent.update)
+            this.parent.parent.update();
     },
     updateSelected : function()
     {
@@ -79,11 +127,11 @@ module.exports = View.extend({
     {
         if(this.baseModel.isSpatial)
         {
-            this.template = "<tr><td data-hook='name'></td><td data-hook='diffusion'></td><td><center><div data-hook='subdomains'></div></center></td><td><button class='btn' data-hook='delete'>x</button></td></tr>";
+            this.template = "<tr data-hook='row'><td data-hook='name'></td><td data-hook='diffusion'></td><td><center><div data-hook='subdomains'></div></center></td><td><button class='btn' data-hook='delete'>x</button></td></tr>";
         }
         else
         {
-            this.template = "<tr><td data-hook='name'></td><td data-hook='initialCondition'></td><td><button class='btn' data-hook='delete'>x</button></td></tr>";
+            this.template = "<tr data-hook='row'><td data-hook='name'></td><td data-hook='initialCondition'></td><td><button class='btn' data-hook='delete'>x</button></td></tr>";
         }
 
         View.prototype.render.apply(this, arguments);
@@ -97,7 +145,8 @@ module.exports = View.extend({
                 required: false,
                 placeholder: 'Name',
                 model : this.model,
-                tests: [].concat(Tests.naming(this.model.collection, this.model))
+                parent : this,
+                tests: [].concat(Tests.naming(this.model.collection, this.model), Tests.naming(this.model.collection.parent.parameters, this.model, "between species and parameters"))
             }), this.el.querySelector("[data-hook='name']"));
 
         if(this.baseModel.isSpatial)
@@ -108,10 +157,11 @@ module.exports = View.extend({
                     label: '',
                     name: 'diffusion',
                     value: this.model.diffusion,
-                    required: true,
+                    required: false,
                     placeholder: 'Diffusion Constant',
                     model : this.model,
-                    tests: [].concat(Tests.positive())
+                    parent : this,
+                    tests: [].concat(Tests.isNumber(), Tests.positive())
                 }), this.el.querySelector("[data-hook='diffusion']"));
 
             this.renderSubdomains();
@@ -129,10 +179,12 @@ module.exports = View.extend({
                     required: false,
                     placeholder: 'Initial Condition',
                     model : this.model,
+                    parent : this,
                     tests: [].concat(Tests.nonzero(), Tests.units(this.model.collection.parent))
                 }), this.el.querySelector("[data-hook='initialCondition']"));
         }
 
+        this.updateValid();
         return this;
     }
 });

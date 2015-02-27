@@ -7,7 +7,10 @@ var Parameter = require('./parameter');
 var Reaction = State.extend({
     props: {
         name : 'string',
-        equation : 'string',
+        equation : {
+            type : 'string',
+            default : function() { return ''; }
+        },
         type : 'string',
         rate : 'object',
         subdomains :
@@ -61,6 +64,11 @@ var Reaction = State.extend({
                 {
                     reactants = 2;
                     products = 2;
+                }
+                if(this.type == 'massaction')
+                {
+                    reactants = this.reactants.models.length;
+                    products = this.products.models.length;
                 }
 
                 for(var i = 0; i < reactants; i++)

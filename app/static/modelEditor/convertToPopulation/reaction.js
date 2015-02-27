@@ -23,10 +23,10 @@ var ReactionView = View.extend({
         {
             if(typeof(factor) != 'undefined')
             {
-                katex.render(name + factor, this.queryByHook('parameter'));
+                katex.render((name + factor).replace(/_/g, '\\_'), this.queryByHook('parameter'));
                 result.text('Successfully converted');
             } else {
-                katex.render(name, this.queryByHook('parameter'));                    
+                katex.render(name.replace(/_/g, '\\_'), this.queryByHook('parameter'));                    
                 result.text('Failed, valid mass action, but invalid under SSA assumptions');
             }
         }
@@ -34,10 +34,10 @@ var ReactionView = View.extend({
         {
             if(typeof(factor) != 'undefined')
             {
-                katex.render(name + factor, this.queryByHook('parameter'));
+                katex.render((name + factor).replace(/_/g, '\\_'), this.queryByHook('parameter'));
                 result.text('Successfully converted');
             } else {
-                katex.render(name, this.queryByHook('parameter'));                    
+                katex.render(name.replace(/_/g, '\\_'), this.queryByHook('parameter'));                    
                 result.text('Failed, valid mass action, but invalid under SSA assumptions');
             }
         }
@@ -112,7 +112,7 @@ ReactionView.computeConversionFactor = function(reaction, volume)
         last = specie;
     }
     
-    if(reaction.type != 'massaction')
+    if(reaction.type != 'custom')
     {
 	if(reactantCount == 0) {
             return ' * ' + volume;

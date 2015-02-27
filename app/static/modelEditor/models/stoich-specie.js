@@ -12,7 +12,8 @@ var StoichSpecie = State.extend({
         //add remove 
         // Whenever we pick a new species, let the species collection know
         this.on('change:specie', _.bind(function(model) {
-            model.specie.collection.trigger('stoich-specie-change');
+            if(model.specie)
+                model.specie.collection.trigger('stoich-specie-change');
         }, this) );
     }
 });

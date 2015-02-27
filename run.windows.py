@@ -299,7 +299,7 @@ class EC2Services:
                 reservation = self.conn.run_instances(
                     EC2Services.supported_ec2_regions[self.region],
                     key_name=key_pair,
-                    instance_type='m1.small',
+                    instance_type='c3.large',
                     security_groups=[security_group]
                 )
             except boto.exception.EC2ResponseError as e:

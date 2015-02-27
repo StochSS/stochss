@@ -11,11 +11,8 @@ var katex = require('katex');
 
 var Tests = require('./tests');
 var AddNewReactionForm = AmpersandFormView.extend({
-    submitCallback: function (obj) {
+    submitCallback: function (type, obj) {
         var validSubdomains = this.baseModel.mesh.uniqueSubdomains.map( function(model) { return model.name; } );
-
-        // I shouldn't extract the type this way probly
-        var type = $( obj.toElement ).attr( "data-hook" );
 
         var model;
 
@@ -143,6 +140,7 @@ var AddNewReactionForm = AmpersandFormView.extend({
     <li><a data-hook="destruction" tabindex="-1" href="#"></a></li> \
     <li><a data-hook="change" tabindex="-1" href="#"></a></li> \
     <li><a data-hook="dimerization" tabindex="-1" href="#"></a></li> \
+    <li><a data-hook="merge" tabindex="-1" href="#"></a></li> \
     <li><a data-hook="split" tabindex="-1" href="#"></a></li> \
     <li><a data-hook="four" tabindex="-1" href="#"></a></li> \
     <li><a data-hook="massaction" tabindex="-1" href="#">Custom mass action</a></li> \
@@ -156,24 +154,48 @@ var AddNewReactionForm = AmpersandFormView.extend({
         katex.render('A \\rightarrow \\emptyset', $( this.el ).find('[data-hook=destruction]')[0]);
         katex.render('A \\rightarrow B', $( this.el ).find('[data-hook=change]')[0]);
         katex.render('A + A \\rightarrow B', $( this.el ).find('[data-hook=dimerization]')[0]);
+        katex.render('A + B \\rightarrow C', $( this.el ).find('[data-hook=merge]')[0]);
         katex.render('A \\rightarrow B + C', $( this.el ).find('[data-hook=split]')[0]);
         katex.render('A + B \\rightarrow C + D', $( this.el ).find('[data-hook=four]')[0]);
 
-        $( this.el ).find( 'li a' ).click( _.bind(this.submitCallback, this));
+        $( this.el ).find('[data-hook=creation]').click( _.bind(_.partial(this.submitCallback, 'creation'), this));
+        $( this.el ).find('[data-hook=destruction]').click( _.bind(_.partial(this.submitCallback, 'destruction'), this));
+        $( this.el ).find('[data-hook=change]').click( _.bind(_.partial(this.submitCallback, 'change'), this));
+        $( this.el ).find('[data-hook=dimerization]').click( _.bind(_.partial(this.submitCallback, 'dimerization'), this));
+        $( this.el ).find('[data-hook=merge]').click( _.bind(_.partial(this.submitCallback, 'merge'), this));
+        $( this.el ).find('[data-hook=split]').click( _.bind(_.partial(this.submitCallback, 'split'), this));
+        $( this.el ).find('[data-hook=four]').click( _.bind(_.partial(this.submitCallback, 'four'), this));
+        $( this.el ).find('[data-hook=massaction]').click( _.bind(_.partial(this.submitCallback, 'massaction'), this));
+        $( this.el ).find('[data-hook=custom]').click( _.bind(_.partial(this.submitCallback, 'custom'), this));
     }
 });
 
 var ReactionCollectionFormView = AmpersandView.extend({
-    template: "<div>\
-  <div>\
-    <div data-hook='collection'></div>\
-    <div data-hook='reactionEditorWorkspace'></div>\
-  </div> \
-  <div style='clear: both;'> \
-    <br /> \
-    <form data-hook='addReactionForm'></form>\
-  </div> \
-</div>",
+    props : {
+        valid : 'boolean',
+        message : 'string'
+    },
+    updateValid : function()
+    {
+        if(this.selectView)
+        {
+            this.selectView.updateValid();
+            
+            this.valid = this.selectView.valid;
+            
+            if(!this.selectView.valid)
+                this.message = this.selectView.message;
+        }
+        else
+        {
+            this.valid = true;
+            this.message = '';
+        }
+    },
+    update : function()
+    {
+        this.parent.update();
+    },
     initialize: function(attr, options)
     {
         AmpersandView.prototype.initialize.call(this, attr, options);
@@ -221,6 +243,28 @@ var ReactionCollectionFormView = AmpersandView.extend({
     },
     render: function()
     {
+        var intro;
+        if(this.collection.parent.isSpatial)
+        {
+            intro = "Define reactions. Select from the given reaction templates, or use the custom types. Using templated reaction types will help eliminate errors. For non-linear reactions, use the custom propensity type. Reactions can be restricted to specific subdomains.";
+        }
+        else
+        {
+            intro = "Define reactions. Select from the given reaction templates, or use the custom types. Using templated reaction types will help eliminate errors. For non-linear reactions, use the custom propensity type.";
+        }
+
+        this.template = "<div>" + intro + "\
+  <div>\
+    <div data-hook='collection'></div>\
+    <div data-hook='reactionEditorWorkspace'></div>\
+  </div> \
+  <div style='clear: both;'> \
+    <br /> \
+    <form data-hook='addReactionForm'></form>\
+  </div> \
+</div>";
+
+
         this.baseModel = this.collection.parent;
 
         var collectionTemplate = '';
@@ -235,7 +279,7 @@ var ReactionCollectionFormView = AmpersandView.extend({
   </table>\
   <div data-hook='nav'> \
     <button class='btn' data-hook='previous'>&lt;&lt;</button>\
-    [ <span data-hook='leftPosition'></span> - <span data-hook='rightPosition'></span> ] \
+    [ <span data-hook='leftPosition'></span> - <span data-hook='rightPosition'></span> of <span data-hook='total'></span> ] \
     <button class='btn' data-hook='next'>&gt;&gt;</button>\
   </div> \
 </div>";
@@ -246,6 +290,7 @@ var ReactionCollectionFormView = AmpersandView.extend({
             template : collectionTemplate,
             collection : this.collection,
             viewModel : ReactionFormView,
+            parent : this,
             limit : 10
         }), this.queryByHook('collection'));
 

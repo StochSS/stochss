@@ -303,7 +303,7 @@ var MeshCollectionSelectView = AmpersandView.extend({
   </table> \
   <div data-hook='nav'> \
     <button class='btn' data-hook='previous'>&lt;&lt;</button>\
-    [ <span data-hook='leftPosition'></span> - <span data-hook='rightPosition'></span> ] \
+    [ <span data-hook='leftPosition'></span> - <span data-hook='rightPosition'></span> of <span data-hook='total'></span> ] \
     <button class='btn' data-hook='next'>&gt;&gt;</button>\
   </div> \
 </div>";
@@ -317,8 +317,8 @@ var MeshCollectionSelectView = AmpersandView.extend({
             limit : 10
         }), this.queryByHook('meshTable'));
 
-        this.listenTo(this.selectView, 'change:value', _.bind(this.selectModel, this));
         this.selectView.select(this.model.mesh);
+        this.listenToAndRun(this.selectView, 'change:value', _.bind(this.selectModel, this));
 
         //this.fields.forEach( function(field) { $( field.el ).find('input').val(''); } );
         this.addForm = new AddNewMeshForm(

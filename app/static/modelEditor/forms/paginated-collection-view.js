@@ -3,6 +3,39 @@ var SubCollection = require('ampersand-subcollection');
 var _ = require('underscore');
 
 var PaginatedCollectionView = AmpersandView.extend({
+    updateValid : function()
+    {
+        var valid = true;
+        var message = '';
+
+        if(this.subCollectionViews)
+        {
+            for(var i = 0; i < this.subCollectionViews.views.length; i++)
+            {
+                if(this.subCollectionViews.views[i].updateValid)
+                {
+                    this.subCollectionViews.views[i].updateValid();
+                }
+
+                if(typeof(this.subCollectionViews.views[i].valid) != "undefined")
+                {
+                    valid = valid && this.subCollectionViews.views[i].valid;
+                    message = this.subCollectionViews.views[i].message;
+                }
+                
+                if(!valid)
+                    break;
+            }
+        }
+
+        this.valid = valid;
+        this.message = message;
+    },
+    update : function()
+    {
+        if(this.parent && this.parent.update)
+            this.parent.update();
+    },
     initialize: function(attr, options)
     {
         AmpersandView.prototype.initialize.call(this, attr, options);
@@ -10,6 +43,7 @@ var PaginatedCollectionView = AmpersandView.extend({
         this.limit = attr.limit;
         this.viewModel = attr.viewModel;
         this.offset = 0;
+        //this.parent = attr.parent;
 
         if(typeof(attr.autoSelect) != "undefined")
             this.autoSelect = attr.autoSelect;
@@ -31,8 +65,6 @@ var PaginatedCollectionView = AmpersandView.extend({
             if(this.view.deSelect)
                 this.view.deSelect();
 
-        this.value = model;
-
         //Search for model in current selection
         for(var i = 0; i < this.subCollection.models.length; i++)
         {
@@ -52,7 +84,8 @@ var PaginatedCollectionView = AmpersandView.extend({
                             textBox.focus();
                     }
                 }
-
+                
+                this.value = model;
                 return;
             }
         }
@@ -84,11 +117,11 @@ var PaginatedCollectionView = AmpersandView.extend({
                             textBox.focus();
                     }
                 }
+
+                this.value = model;
                 break;
             }
         }
-
-        //If not found do nothing
     },
     shiftPlus : function(e)
     {
@@ -115,33 +148,44 @@ var PaginatedCollectionView = AmpersandView.extend({
         "click [data-hook='previous']" : "shiftMinus"
     },
     props: {
+        valid : 'boolean',
+        message : 'string',
         value : 'object',
         offset : 'number',
         modelCount : 'number',
         overLimit : 'boolean'
     },
     bindings : {
-        'modelCount' : {
-            type : 'toggle',
-            selector : 'div'
-        },
+        'modelCount' : [
+            {
+                type : 'toggle',
+                selector : 'div'
+            },
+            {
+                type : 'text',
+                hook : 'total'
+            }
+        ],
         'overLimit' : {
             type : 'toggle',
             hook : 'nav'
-        },
-        'rightOffset' :
-        {
-            type : 'text',
-            hook : 'rightPosition'
-        },
-        'offset' : 
+        },        'leftPosition' : 
         {
             type : 'text',
             hook : 'leftPosition'
+        },
+        'rightPosition' :
+        {
+            type : 'text',
+            hook : 'rightPosition'
         }
     },
     derived : {
-        rightOffset : {
+        leftPosition : {
+            deps : ['offset'],
+            fn : function() { return this.offset + 1; }
+        },
+        rightPosition : {
             deps : ['offset', 'modelCount'],
             fn : function() { return Math.min(this.modelCount, this.offset + 10); }
         }

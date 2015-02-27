@@ -88,7 +88,7 @@
                 </td>
                 <td valign=top>
                     Select species:<br />
-                    <span id="speciesSelect"></span>
+                    <select id="speciesSelect"></select>
                 </td>
             </tr>
         </table>
@@ -173,7 +173,8 @@
     		<% } %>		
     	<% } %>
     </div>
-    
+
+    <% if (jobStatus != "Failed" ){ %>
     <div class="well">
         <h3>Reproduction and Cost Analysis</h3>
         <br />
@@ -198,6 +199,7 @@
     		<p>Local job. No reproduction and cost analysis available</p>
     	<% } %>    	
     </div>
+    <% } %>
     
     
 </script>

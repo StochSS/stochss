@@ -11,8 +11,7 @@ var PaginatedCollectionView = require('../forms/paginated-collection-view');
 
 var Tests = require('../forms/tests.js');
 var AddNewModelForm = AmpersandFormView.extend({
-    submitCallback: function (obj) {
-        var units = $( obj.toElement ).attr( 'data-hook' );
+    submitCallback: function (units, obj) {
         var isSpatial = false;
 
         if(units == 'spatial')
@@ -72,7 +71,9 @@ var AddNewModelForm = AmpersandFormView.extend({
 
         this.button = $( this.buttonTemplate ).appendTo( $( this.el ) );
 
-        $( this.el ).find( 'li a' ).click( _.bind(this.submitCallback, this));
+        $( this.el ).find('[data-hook=concentration]').click( _.bind(_.partial(this.submitCallback, 'concentration'), this));
+        $( this.el ).find('[data-hook=population]').click( _.bind(_.partial(this.submitCallback, 'population'), this));
+        $( this.el ).find('[data-hook=spatial]').click( _.bind(_.partial(this.submitCallback, 'spatial'), this));
     }
 });
 
@@ -84,6 +85,28 @@ var ModelCollectionSelectView = AmpersandView.extend({
 </div>",
     props: {
         selected : 'object',
+        valid : 'boolean',
+        message : 'string'
+    },
+    updateValid : function()
+    {
+        if(this.selectView)
+        {
+            this.selectView.updateValid();
+
+            this.valid = this.selectView.valid;
+            this.message = this.selectView.message;
+        }
+        else
+        {
+            this.valid = true;
+            this.message = '';
+        }
+    },
+    update: function()
+    {
+        if(this.parent && this.parent.update)
+            this.parent.update();
     },
     initialize: function(attr, options)
     {
@@ -113,7 +136,7 @@ var ModelCollectionSelectView = AmpersandView.extend({
   </table> \
   <div data-hook='nav'> \
     <button class='btn' data-hook='previous'>&lt;&lt;</button> \
-    [ <span data-hook='leftPosition'></span> - <span data-hook='rightPosition'></span> ] \
+    [ <span data-hook='leftPosition'></span> - <span data-hook='rightPosition'></span> of <span data-hook='total'></span> ] \
     <button class='btn' data-hook='next'>&gt;&gt;</button> \
   </div> \
 </div>";
@@ -124,6 +147,7 @@ var ModelCollectionSelectView = AmpersandView.extend({
             template : collectionTemplate,
             collection : this.collection,
             viewModel : ModelSelectView,
+            parent : this,
             limit : 10,
             value : this.selected,
             autoSelect : false
