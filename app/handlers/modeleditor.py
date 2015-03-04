@@ -528,6 +528,11 @@ class PublicModelPage(BaseHandler):
             modelDb.is_public = True
             modelDb.put()
 
+            if modelDb.isSpatial:
+                meshDb = mesheditor.MeshWrapper.get_by_id(modelDb.spatial["mesh_wrapper_id"])
+                meshDb.undeletable = True
+                meshDb.put()
+
         szip.close()
 
 class ImportFromXMLPage(BaseHandler):

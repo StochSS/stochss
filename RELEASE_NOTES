@@ -2,8 +2,10 @@ StochSS - Stochastic Simulation Service: Release Notes
 
 1.5.0
 =============================
-- Added job reproduction system for cloud. Data for cloud jobs can be deleted and then reproduced when needed
-- Added cost analysis system. Cost analysis tests can be run to figure out the cost of running different jobs on different computers
+- Launching VMs is done asynchronously
+- Instance types can be configured for head and worker nodes
+- Job reproduction system introduced for cloud. Data for cloud jobs can be deleted and then reproduced when needed
+- Cost analysis system introduced for cloud. Cost analysis tests can be run to figure out the cost of running different jobs on different computers
 - Model editor rebuilt to be more efficient
 
 1.4.1
