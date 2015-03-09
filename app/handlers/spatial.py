@@ -432,8 +432,6 @@ class SpatialPage(BaseHandler):
                 pymodel.add_parameter(pyurdme.Parameter(name=p_name, expression=p.expression))
             # reactions
             for r_name, r in stochkit_model_obj.listOfReactions.iteritems():
-                cow = pyurdme.Reaction(name=r_name, reactants=r.reactants, products=r.products, rate=r.marate, massaction=True)
-                print cow.__dict__
                 if r.massaction:
                     pymodel.add_reaction(pyurdme.Reaction(name=r_name, reactants=r.reactants, products=r.products, rate=r.marate, massaction=True))
                 else:
