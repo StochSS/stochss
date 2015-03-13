@@ -4,44 +4,74 @@
 
 {% block content %}
 <div class="active span7">
-  <div id="users" class="well well-large">
-    <table class="table table-bordered active-usr-table">
-      <thead>
-        <tr>
-          <th>#</th>
-          <th>Name</th>
-          <th>Email</th>
-          <th>Actions</th>
-        </tr>
-      </thead>
-      <tbody>
-        {% for user in active_users %}
-        <tr>
-          <td>{{ loop.index }}</td>
-          <td>{{ user.name }}</td>
-          <td>{{ user.email_address }}</td>
-          <td>
-            {% if not user.is_admin_user() %}
-            <button class="btn btn-warning table-action-button" data-action="reset">Reset Password</button>
-            {% if user.email_address in users_waiting_approval %}
-            <button class="btn btn-success table-action-button" data-action="approve1">Activate Account</button>
-            {% else %}
-            <button class="btn btn-danger table-action-button" data-action="revoke">Revoke Permissions</button>
-            {% endif %}
-            <button class="btn btn-danger table-action-button" data-action="delete">Delete</button>
-            {% endif %}
-          </td>
-        </tr>
-        {% endfor %}
-      </tbody>
-    </table>
-  </div>
+    <div class="users well well-large">
+        <h3>Users</h3>
+        <table class="table table-bordered active-usr-table">
+            <thead>
+                <tr>
+                    <th>#</th>
+                    <th>Name</th>
+                    <th>Email</th>
+                    <th>Actions</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for user in active_users %}
+                <tr>
+                    <td>{{ loop.index }}</td>
+                    <td>{{ user.name }}</td>
+                    <td>{{ user.email_address }}</td>
+                    <td>
+                        {% if not user.is_admin_user() %}
+                        <button class="btn btn-warning table-action-button" data-action="reset">Reset Password</button>
+                        {% if user.email_address in users_waiting_approval %}
+                        <button class="btn btn-success table-action-button" data-action="approve">Activate Account</button>
+                        {% else %}
+                        <button class="btn btn-danger table-action-button" data-action="revoke">Revoke Permissions</button>
+                        {% endif %}
+                        <button class="btn btn-danger table-action-button" data-action="delete">Delete</button>
+                        {% endif %}
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+
+        <h3>Pre-approved Users</h3>
+        <table class="table table-bordered">
+            <thead>
+                <tr>
+                    <th>#</th>
+                    <th>Email</th>
+                    <th>Actions</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for user in preapproved_users %}
+                <tr>
+                    <td>{{ loop.index }}</td>
+                    <td>{{ user }}</td>
+                    <td>
+                        <button class="btn btn-danger table-action-button" data-action="revoke_preapproved">Revoke Access</button>
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
 </div>
-<div style="display: none;" class="span3">
-  <div class="well well-large">
-    <form id='approve-user-form' action="/admin" method="post">
-    </form>
-  </div>
+<div class="span3">
+    <div class="well well-large">
+        <form id='approve-user-form' action="/admin" method="post">
+            <fieldset>
+                <legend>Pre-approve User</legend>
+                <label>Type an e-mail address in the box below to add a pre-approved user:</label>
+                <input style="display: none;" name="action" value="preapprove">
+                <input name="email" type="email" placeholder="example@example.com" required>
+                <button id="grant-access-button" class="btn btn-primary btn-large" type="submit">Pre-approve User</button>
+            </fieldset>
+        </form>
+    </div>
 </div>
 {% endblock %}
 

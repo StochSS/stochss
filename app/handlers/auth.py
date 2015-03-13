@@ -108,7 +108,13 @@ class UserRegistrationPage(BaseHandler):
             pending_users_list = PendingUsersList.shared_list()
 
             # Now add to approval waitlist
-            success = pending_users_list.add_user_to_approval_waitlist(user_email) or pending_users_list.user_exists(user_email)
+            if pending_users_list.is_user_approved(user_email):
+                success = True
+            elif pending_users_list.user_exists(user_email):
+                success = True
+            else:
+                success = pending_users_list.add_user_to_approval_waitlist(user_email)
+
             if success:
                 # Then create the user
                 _attrs = {

@@ -317,11 +317,7 @@ except:
     pass
 
 from handlers.exportimport import *
-from handlers.specieseditor import *
 import handlers.modeleditor
-from handlers.parametereditor import *
-from handlers.volumeeditor import *
-from handlers.reactioneditor import *
 import handlers.stochoptim
 import handlers.mesheditor
 from handlers.simulation import *
