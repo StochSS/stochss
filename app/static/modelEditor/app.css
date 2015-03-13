@@ -81,6 +81,8 @@ select {
     word-wrap: break-word;
 }
 
+/* The dropup code below was taken from Bootstrap 2.3.2 https://cdnjs.cloudflare.com/ajax/libs/twitter-bootstrap/2.3.2/css/bootstrap.css */
+
 .dropup .caret {
     border-top: 0;
     border-bottom: 4px solid #FFFFFF;
