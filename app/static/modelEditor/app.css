@@ -23,6 +23,10 @@ input {
     width : 150px;
 }
 
+.reactionDetail input[type="text"] {
+    width : 190px;
+}
+
 select {
     margin-bottom : 0px;
 }
@@ -75,4 +79,34 @@ select {
     font-size: 35px;
     line-height: 45px;
     word-wrap: break-word;
+}
+
+.dropup .caret {
+    border-top: 0;
+    border-bottom: 4px solid #FFFFFF;
+    content: "";
+}
+
+.dropup .dropdown-menu {
+    top: auto;
+    bottom: 100%;
+    margin-bottom: 1px;
+}
+
+.dropup .dropdown-submenu > .dropdown-menu {
+    top: auto;
+    bottom: 0;
+    margin-top: 0;
+    margin-bottom: -2px;
+    -webkit-border-radius: 5px 5px 5px 0;
+    -moz-border-radius: 5px 5px 5px 0;
+    border-radius: 5px 5px 5px 0;
+}
+
+.dropup .btn-large .caret {
+    border-bottom-width: 5px;
+}
+
+.dropup {
+    position:relative;
 }
