@@ -122,6 +122,9 @@ var PaginatedCollectionView = AmpersandView.extend({
                 break;
             }
         }
+
+	// HACK FOR MESH-COLLECTION RENDER --> If this model isn't found anywhere, save it as the value anyway
+	this.value = model;
     },
     shiftPlus : function(e)
     {

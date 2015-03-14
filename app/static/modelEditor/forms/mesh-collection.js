@@ -1,6 +1,7 @@
 var _ = require('underscore');
 var $ = require('jquery');
 var AmpersandView = require('ampersand-view');
+var SubCollection = require('ampersand-subcollection');
 var MeshSelectView = require('./mesh');
 var Mesh = require('../models/mesh');
 var FileUpload = require('blueimp-file-upload');
@@ -280,6 +281,8 @@ var MeshCollectionSelectView = AmpersandView.extend({
     initialize: function(attr, options)
     {
         AmpersandView.prototype.initialize.call(this, attr, options);
+
+	this.subCollection = new SubCollection(this.collection, { where : { ghost : false } });
     },
     selectModel: function()
     {
@@ -291,6 +294,7 @@ var MeshCollectionSelectView = AmpersandView.extend({
             $( this.el ).find( ".meshLibrary" )[0].click();
 
         this.model.mesh = this.selected;
+	this.model.meshId = this.selected.id;
 
         $( this.el ).find( '.description' ).text( this.selected.description );
     },
@@ -312,9 +316,10 @@ var MeshCollectionSelectView = AmpersandView.extend({
 
         this.selectView = this.renderSubview( new PaginatedCollectionView( {
             template : collectionTemplate,
-            collection : this.collection,
+            collection : this.subCollection,
             viewModel : MeshSelectView,
-            limit : 10
+            limit : 10,
+	    autoSelect : !Boolean(this.model.mesh)
         }), this.queryByHook('meshTable'));
 
         this.selectView.select(this.model.mesh);

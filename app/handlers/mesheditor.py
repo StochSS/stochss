@@ -37,8 +37,8 @@ class MeshWrapper(db.Model):
                  "meshFileId" : self.meshFileId,
                  "subdomains" : self.subdomains if not reduced else [],
                  "uniqueSubdomains" : self.uniqueSubdomains,
-                 "undeletable" : self.undeletable,
-                 "ghost" : self.ghost,
+                 "undeletable" : bool(self.undeletable),
+                 "ghost" : bool(self.ghost),
                  "id" : self.key().id() }
 
     def delete(self):
@@ -122,7 +122,9 @@ class MeshManager():
 
     @staticmethod
     def deleteMesh(handler, meshId):
-        MeshWrapper.get_by_id(meshId).delete()
+        meshDb = MeshWrapper.get_by_id(meshId)
+        meshDb.ghost = True
+        meshDb.put()
 
 class MeshBackboneInterface(BaseHandler):
     def get(self):
