@@ -50,7 +50,6 @@ class PendingUsersList(db.Model):
         Returns False if email address already in list, else True.
         """
         if (self.users_waiting_approval and (user_email in self.users_waiting_approval)):
-            print "FALSE"
             return False
 
         self.users_waiting_approval.append(user_email)
@@ -110,8 +109,14 @@ class AdminPage(BaseHandler):
             users = None
         pending_users_list = PendingUsersList.shared_list()
 
+        # This is complicated. We need to get the Users that don't exist as User objects, but exist as approved users. These are the pre-approved users. The admin user must be specifically excluded
+        active_users = set(filter(None, [str(u.email_address) if not u.is_admin_user() else None for u in users]))
+        approved_users = set([str(u) for u in pending_users_list.approved_users])
+        preapproved_users = approved_users - active_users
+
         context = {
             'active_users': users,
+            'preapproved_users': preapproved_users,
             'users_waiting_approval': pending_users_list.users_waiting_approval
         }
         self.render_response('admin.html', **context)
@@ -128,10 +133,15 @@ class AdminPage(BaseHandler):
             'email': email
         }
         failure_message = ''
-        if action in ['approve', 'approve1']:
+        if action in ['approve']:
             result = self._approve_user(email, True)
+        elif action in ['preapprove']:
+            result = self._approve_user(email, False)
+            self.redirect('/admin')
         elif action == 'revoke':
             result = self._revoke_user(email)
+        elif action == 'revoke_preapproved':
+            result = self._revoke_preapproved_user(email)
         elif action == 'delete':
             result = self._delete_user(email)
             if not result:
@@ -161,6 +171,12 @@ class AdminPage(BaseHandler):
         pending_users_list.add_user_to_approval_waitlist(email)
         return True
 
+    def _revoke_preapproved_user(self, email):
+        """ Remove pre-approved user from approved users list """
+        pending_users_list = PendingUsersList.shared_list()
+        pending_users_list.remove_user_from_approved_list(email)
+        return True
+
     def _delete_user(self, email):
         """ Delete existing user """
         user = User.get_by_auth_id(email)
@@ -169,6 +185,11 @@ class AdminPage(BaseHandler):
                 return False
             # Delete from db
             user.key.delete()
+            
+            pending_users_list = PendingUsersList.shared_list()
+            if(pending_users_list.is_user_approved(email)):
+                pending_users_list.remove_user_from_approved_list(email)
+
             # Need to delete the auth_id from the 'unique' model store
             # see https://code.google.com/p/webapp-improved/source/browse/webapp2_extras/appengine/auth/models.py
             unique_auth_id = "User.auth_id:{0}".format(email)

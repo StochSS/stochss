@@ -21,31 +21,31 @@
         <div class="control-group">
           <label class="control-label">Name</label>
           <div class="controls">
-            <input id="name" type="text" name="name" value="{{name}}">
+            <input id="name" type="text" name="name" value="{{name}}" required>
           </div>
         </div>
         <div class="control-group">
           <label class="control-label">Email Address</label>
           <div class="controls">
-            <input id="email" type="email" name="email" value="{{email_address}}">
+            <input id="email" type="email" name="email" value="{{email_address}}" required>
           </div>
         </div>
         <div class="control-group">
           <label class="control-label">Password</label>
           <div class="controls">
-            <input id="password" type="password" name="password">
+            <input id="password" type="password" name="password" required>
           </div>
         </div>
         <div class="control-group">
           <label class="control-label">Password Confirmation</label>
           <div class="controls">
-            <input id="password_conf" type="password" name="password_confirmation">
+            <input id="password_conf" type="password" name="password_confirmation" required>
           </div>
         </div>
         {% if create_admin %}
           <input type="hidden" name="secret_key" value="{{secret_key}}">
         {% else %}
-          <p class="new-user-warning">Note: If you haven't been approved by the admin, this process will fail.<p>
+          <p class="new-user-warning">Note: You will not be able to log in until your account is approved by the admin.<p>
         {% endif %}
         <div class="form-actions">
           <button id="submit-btn" type="submit" class="btn btn-primary">Submit</button>
