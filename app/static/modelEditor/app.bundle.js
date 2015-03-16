@@ -1,4 +1,4 @@
-(function e(t,n,r){function s(o,u){if(!n[o]){if(!t[o]){var a=typeof require=="function"&&require;if(!u&&a)return a(o,!0);if(i)return i(o,!0);var f=new Error("Cannot find module '"+o+"'");throw f.code="MODULE_NOT_FOUND",f}var l=n[o]={exports:{}};t[o][0].call(l.exports,function(e){var n=t[o][1][e];return s(n?n:e)},l,l.exports,e,t,n,r)}return n[o].exports}var i=typeof require=="function"&&require;for(var o=0;o<r.length;o++)s(r[o]);return s})({"/home/bbales2/stochss/app/static/modelEditor/app.js":[function(require,module,exports){
+(function e(t,n,r){function s(o,u){if(!n[o]){if(!t[o]){var a=typeof require=="function"&&require;if(!u&&a)return a(o,!0);if(i)return i(o,!0);var f=new Error("Cannot find module '"+o+"'");throw f.code="MODULE_NOT_FOUND",f}var l=n[o]={exports:{}};t[o][0].call(l.exports,function(e){var n=t[o][1][e];return s(n?n:e)},l,l.exports,e,t,n,r)}return n[o].exports}var i=typeof require=="function"&&require;for(var o=0;o<r.length;o++)s(r[o]);return s})({1:[function(require,module,exports){
 /*global app, me, $*/
 var $ = require('jquery');
 var _ = require('underscore');
@@ -449,7 +449,7 @@ module.exports = {
 };
 
 
-},{"./forms/mesh-collection":"/home/bbales2/stochss/app/static/modelEditor/forms/mesh-collection.js","./forms/model":"/home/bbales2/stochss/app/static/modelEditor/forms/model.js","./models/mesh":"/home/bbales2/stochss/app/static/modelEditor/models/mesh.js","./models/mesh-collection":"/home/bbales2/stochss/app/static/modelEditor/models/mesh-collection.js","./models/model":"/home/bbales2/stochss/app/static/modelEditor/models/model.js","./select/model-collection":"/home/bbales2/stochss/app/static/modelEditor/select/model-collection.js","ampersand-model":"/home/bbales2/stochss/app/static/modelEditor/node_modules/ampersand-model/ampersand-model.js","ampersand-rest-collection":"/home/bbales2/stochss/app/static/modelEditor/node_modules/ampersand-rest-collection/ampersand-rest-collection.js","ampersand-view":"/home/bbales2/stochss/app/static/modelEditor/node_modules/ampersand-view/ampersand-view.js","andlog":"/home/bbales2/stochss/app/static/modelEditor/node_modules/andlog/andlog.js","clientconfig":"/home/bbales2/stochss/app/static/modelEditor/node_modules/clientconfig/clientconfig.js","domready":"/home/bbales2/stochss/app/static/modelEditor/node_modules/domready/ready.js","jquery":"/home/bbales2/stochss/app/static/modelEditor/node_modules/jquery/dist/jquery.js","underscore":"/home/bbales2/stochss/app/static/modelEditor/node_modules/underscore/underscore.js","url-parse":"/home/bbales2/stochss/app/static/modelEditor/node_modules/url-parse/index.js"}],"/home/bbales2/stochss/app/static/modelEditor/convertToPopulation/model.js":[function(require,module,exports){
+},{"./forms/mesh-collection":11,"./forms/model":14,"./models/mesh":34,"./models/mesh-collection":33,"./models/model":35,"./select/model-collection":181,"ampersand-model":85,"ampersand-rest-collection":100,"ampersand-view":131,"andlog":147,"clientconfig":154,"domready":157,"jquery":158,"underscore":176,"url-parse":177}],2:[function(require,module,exports){
 var _ = require('underscore');
 var $ = require('jquery');
 var View = require('ampersand-view');
@@ -580,7 +580,7 @@ module.exports = View.extend({
     }
 });
 
-},{"../forms/tests":"/home/bbales2/stochss/app/static/modelEditor/forms/tests.js","./parameter-collection":"/home/bbales2/stochss/app/static/modelEditor/convertToPopulation/parameter-collection.js","./reaction":"/home/bbales2/stochss/app/static/modelEditor/convertToPopulation/reaction.js","./reaction-collection":"/home/bbales2/stochss/app/static/modelEditor/convertToPopulation/reaction-collection.js","./specie-collection":"/home/bbales2/stochss/app/static/modelEditor/convertToPopulation/specie-collection.js","ampersand-input-view":"/home/bbales2/stochss/app/static/modelEditor/node_modules/ampersand-input-view/ampersand-input-view.js","ampersand-view":"/home/bbales2/stochss/app/static/modelEditor/node_modules/ampersand-view/ampersand-view.js","jquery":"/home/bbales2/stochss/app/static/modelEditor/node_modules/jquery/dist/jquery.js","underscore":"/home/bbales2/stochss/app/static/modelEditor/node_modules/underscore/underscore.js"}],"/home/bbales2/stochss/app/static/modelEditor/convertToPopulation/parameter-collection.js":[function(require,module,exports){
+},{"../forms/tests":29,"./parameter-collection":3,"./reaction":6,"./reaction-collection":5,"./specie-collection":7,"ampersand-input-view":84,"ampersand-view":131,"jquery":158,"underscore":176}],3:[function(require,module,exports){
 var $ = require('jquery');
 var View = require('ampersand-view');
 var ParameterView = require('./parameter');
@@ -621,7 +621,7 @@ var ParameterCollectionFormView = View.extend({
 });
 
 module.exports = ParameterCollectionFormView
-},{"../forms/paginated-collection-view":"/home/bbales2/stochss/app/static/modelEditor/forms/paginated-collection-view.js","./parameter":"/home/bbales2/stochss/app/static/modelEditor/convertToPopulation/parameter.js","ampersand-view":"/home/bbales2/stochss/app/static/modelEditor/node_modules/ampersand-view/ampersand-view.js","jquery":"/home/bbales2/stochss/app/static/modelEditor/node_modules/jquery/dist/jquery.js"}],"/home/bbales2/stochss/app/static/modelEditor/convertToPopulation/parameter.js":[function(require,module,exports){
+},{"../forms/paginated-collection-view":18,"./parameter":4,"ampersand-view":131,"jquery":158}],4:[function(require,module,exports){
 var _ = require('underscore');
 var $ = require('jquery');
 var View = require('ampersand-view');
@@ -642,7 +642,7 @@ module.exports = View.extend({
     }
 });
 
-},{"ampersand-view":"/home/bbales2/stochss/app/static/modelEditor/node_modules/ampersand-view/ampersand-view.js","jquery":"/home/bbales2/stochss/app/static/modelEditor/node_modules/jquery/dist/jquery.js","underscore":"/home/bbales2/stochss/app/static/modelEditor/node_modules/underscore/underscore.js"}],"/home/bbales2/stochss/app/static/modelEditor/convertToPopulation/reaction-collection.js":[function(require,module,exports){
+},{"ampersand-view":131,"jquery":158,"underscore":176}],5:[function(require,module,exports){
 var $ = require('jquery');
 var View = require('ampersand-view');
 var ReactionView = require('./reaction');
@@ -683,7 +683,7 @@ var ReactionCollectionView = View.extend({
 });
 
 module.exports = ReactionCollectionView
-},{"../forms/paginated-collection-view":"/home/bbales2/stochss/app/static/modelEditor/forms/paginated-collection-view.js","./reaction":"/home/bbales2/stochss/app/static/modelEditor/convertToPopulation/reaction.js","ampersand-view":"/home/bbales2/stochss/app/static/modelEditor/node_modules/ampersand-view/ampersand-view.js","jquery":"/home/bbales2/stochss/app/static/modelEditor/node_modules/jquery/dist/jquery.js"}],"/home/bbales2/stochss/app/static/modelEditor/convertToPopulation/reaction.js":[function(require,module,exports){
+},{"../forms/paginated-collection-view":18,"./reaction":6,"ampersand-view":131,"jquery":158}],6:[function(require,module,exports){
 var _ = require('underscore');
 var $ = require('jquery');
 var View = require('ampersand-view');
@@ -819,7 +819,7 @@ ReactionView.computeConversionFactor = function(reaction, volume)
 };
 
 module.exports = ReactionView;
-},{"../forms/reaction":"/home/bbales2/stochss/app/static/modelEditor/forms/reaction.js","ampersand-view":"/home/bbales2/stochss/app/static/modelEditor/node_modules/ampersand-view/ampersand-view.js","jquery":"/home/bbales2/stochss/app/static/modelEditor/node_modules/jquery/dist/jquery.js","katex":"/home/bbales2/stochss/app/static/modelEditor/node_modules/katex/katex.js","underscore":"/home/bbales2/stochss/app/static/modelEditor/node_modules/underscore/underscore.js"}],"/home/bbales2/stochss/app/static/modelEditor/convertToPopulation/specie-collection.js":[function(require,module,exports){
+},{"../forms/reaction":23,"ampersand-view":131,"jquery":158,"katex":159,"underscore":176}],7:[function(require,module,exports){
 var $ = require('jquery');
 var View = require('ampersand-view');
 var SpecieView = require('./specie');
@@ -860,7 +860,7 @@ var SpecieCollectionView = View.extend({
 });
 
 module.exports = SpecieCollectionView
-},{"../forms/paginated-collection-view":"/home/bbales2/stochss/app/static/modelEditor/forms/paginated-collection-view.js","./specie":"/home/bbales2/stochss/app/static/modelEditor/convertToPopulation/specie.js","ampersand-view":"/home/bbales2/stochss/app/static/modelEditor/node_modules/ampersand-view/ampersand-view.js","jquery":"/home/bbales2/stochss/app/static/modelEditor/node_modules/jquery/dist/jquery.js"}],"/home/bbales2/stochss/app/static/modelEditor/convertToPopulation/specie.js":[function(require,module,exports){
+},{"../forms/paginated-collection-view":18,"./specie":8,"ampersand-view":131,"jquery":158}],8:[function(require,module,exports){
 var _ = require('underscore');
 var $ = require('jquery');
 var View = require('ampersand-view');
@@ -890,7 +890,7 @@ module.exports = View.extend({
     }
 });
 
-},{"ampersand-view":"/home/bbales2/stochss/app/static/modelEditor/node_modules/ampersand-view/ampersand-view.js","jquery":"/home/bbales2/stochss/app/static/modelEditor/node_modules/jquery/dist/jquery.js","underscore":"/home/bbales2/stochss/app/static/modelEditor/node_modules/underscore/underscore.js"}],"/home/bbales2/stochss/app/static/modelEditor/forms/initial-condition-collection.js":[function(require,module,exports){
+},{"ampersand-view":131,"jquery":158,"underscore":176}],9:[function(require,module,exports){
 var $ = require('jquery');
 var AmpersandView = require('ampersand-view');
 var AmpersandFormView = require('ampersand-form-view');
@@ -995,7 +995,7 @@ var InitialConditionCollectionFormView = AmpersandView.extend({
 });
 
 module.exports = InitialConditionCollectionFormView
-},{"./initial-condition":"/home/bbales2/stochss/app/static/modelEditor/forms/initial-condition.js","./paginated-collection-view":"/home/bbales2/stochss/app/static/modelEditor/forms/paginated-collection-view.js","./tests":"/home/bbales2/stochss/app/static/modelEditor/forms/tests.js","ampersand-form-view":"/home/bbales2/stochss/app/static/modelEditor/node_modules/ampersand-form-view/ampersand-form-view.js","ampersand-input-view":"/home/bbales2/stochss/app/static/modelEditor/node_modules/ampersand-input-view/ampersand-input-view.js","ampersand-select-view":"/home/bbales2/stochss/app/static/modelEditor/node_modules/ampersand-select-view/ampersand-select-view.js","ampersand-view":"/home/bbales2/stochss/app/static/modelEditor/node_modules/ampersand-view/ampersand-view.js","jquery":"/home/bbales2/stochss/app/static/modelEditor/node_modules/jquery/dist/jquery.js"}],"/home/bbales2/stochss/app/static/modelEditor/forms/initial-condition.js":[function(require,module,exports){
+},{"./initial-condition":10,"./paginated-collection-view":18,"./tests":29,"ampersand-form-view":80,"ampersand-input-view":84,"ampersand-select-view":118,"ampersand-view":131,"jquery":158}],10:[function(require,module,exports){
 var _ = require('underscore');
 var $ = require('jquery');
 var View = require('ampersand-view');
@@ -1241,7 +1241,7 @@ module.exports = View.extend({
     }
 });
 
-},{"./modifying-input-view":"/home/bbales2/stochss/app/static/modelEditor/forms/modifying-input-view.js","./modifying-number-input-view":"/home/bbales2/stochss/app/static/modelEditor/forms/modifying-number-input-view.js","./modifying-select-view":"/home/bbales2/stochss/app/static/modelEditor/forms/modifying-select-view.js","./subdomain":"/home/bbales2/stochss/app/static/modelEditor/forms/subdomain.js","./tests":"/home/bbales2/stochss/app/static/modelEditor/forms/tests.js","ampersand-select-view":"/home/bbales2/stochss/app/static/modelEditor/node_modules/ampersand-select-view/ampersand-select-view.js","ampersand-view":"/home/bbales2/stochss/app/static/modelEditor/node_modules/ampersand-view/ampersand-view.js","jquery":"/home/bbales2/stochss/app/static/modelEditor/node_modules/jquery/dist/jquery.js","underscore":"/home/bbales2/stochss/app/static/modelEditor/node_modules/underscore/underscore.js"}],"/home/bbales2/stochss/app/static/modelEditor/forms/mesh-collection.js":[function(require,module,exports){
+},{"./modifying-input-view":15,"./modifying-number-input-view":16,"./modifying-select-view":17,"./subdomain":28,"./tests":29,"ampersand-select-view":118,"ampersand-view":131,"jquery":158,"underscore":176}],11:[function(require,module,exports){
 var _ = require('underscore');
 var $ = require('jquery');
 var AmpersandView = require('ampersand-view');
@@ -1588,7 +1588,7 @@ var MeshCollectionSelectView = AmpersandView.extend({
 
 module.exports = MeshCollectionSelectView
 
-},{"../forms/tests.js":"/home/bbales2/stochss/app/static/modelEditor/forms/tests.js","../models/mesh":"/home/bbales2/stochss/app/static/modelEditor/models/mesh.js","./mesh":"/home/bbales2/stochss/app/static/modelEditor/forms/mesh.js","./paginated-collection-view":"/home/bbales2/stochss/app/static/modelEditor/forms/paginated-collection-view.js","ampersand-subcollection":"/home/bbales2/stochss/app/static/modelEditor/node_modules/ampersand-subcollection/ampersand-subcollection.js","ampersand-view":"/home/bbales2/stochss/app/static/modelEditor/node_modules/ampersand-view/ampersand-view.js","blueimp-file-upload":"/home/bbales2/stochss/app/static/modelEditor/node_modules/blueimp-file-upload/js/jquery.fileupload.js","jquery":"/home/bbales2/stochss/app/static/modelEditor/node_modules/jquery/dist/jquery.js","underscore":"/home/bbales2/stochss/app/static/modelEditor/node_modules/underscore/underscore.js"}],"/home/bbales2/stochss/app/static/modelEditor/forms/mesh.js":[function(require,module,exports){
+},{"../forms/tests.js":29,"../models/mesh":34,"./mesh":12,"./paginated-collection-view":18,"ampersand-subcollection":125,"ampersand-view":131,"blueimp-file-upload":148,"jquery":158,"underscore":176}],12:[function(require,module,exports){
 var _ = require('underscore');
 var $ = require('jquery');
 var View = require('ampersand-view');
@@ -1649,7 +1649,7 @@ module.exports = View.extend({
     }
 });
 
-},{"ampersand-view":"/home/bbales2/stochss/app/static/modelEditor/node_modules/ampersand-view/ampersand-view.js","jquery":"/home/bbales2/stochss/app/static/modelEditor/node_modules/jquery/dist/jquery.js","underscore":"/home/bbales2/stochss/app/static/modelEditor/node_modules/underscore/underscore.js"}],"/home/bbales2/stochss/app/static/modelEditor/forms/mesh3d.js":[function(require,module,exports){
+},{"ampersand-view":131,"jquery":158,"underscore":176}],13:[function(require,module,exports){
 var _ = require('underscore');
 var $ = require('jquery');
 var View = require('ampersand-view');
@@ -1957,7 +1957,7 @@ module.exports = View.extend({
     }
 });
 
-},{"./subdomain":"/home/bbales2/stochss/app/static/modelEditor/forms/subdomain.js","ampersand-view":"/home/bbales2/stochss/app/static/modelEditor/node_modules/ampersand-view/ampersand-view.js","jquery":"/home/bbales2/stochss/app/static/modelEditor/node_modules/jquery/dist/jquery.js","three":"/home/bbales2/stochss/app/static/modelEditor/node_modules/three/three.js","three-orbit-controls":"/home/bbales2/stochss/app/static/modelEditor/node_modules/three-orbit-controls/index.js","underscore":"/home/bbales2/stochss/app/static/modelEditor/node_modules/underscore/underscore.js"}],"/home/bbales2/stochss/app/static/modelEditor/forms/model.js":[function(require,module,exports){
+},{"./subdomain":28,"ampersand-view":131,"jquery":158,"three":175,"three-orbit-controls":174,"underscore":176}],14:[function(require,module,exports){
 var _ = require('underscore');
 var $ = require('jquery');
 var View = require('ampersand-view');
@@ -2231,7 +2231,7 @@ module.exports = View.extend({
     }
 });
 
-},{"../convertToPopulation/model":"/home/bbales2/stochss/app/static/modelEditor/convertToPopulation/model.js","../models/model":"/home/bbales2/stochss/app/static/modelEditor/models/model.js","./initial-condition-collection":"/home/bbales2/stochss/app/static/modelEditor/forms/initial-condition-collection.js","./mesh-collection":"/home/bbales2/stochss/app/static/modelEditor/forms/mesh-collection.js","./mesh3d":"/home/bbales2/stochss/app/static/modelEditor/forms/mesh3d.js","./parameter-collection":"/home/bbales2/stochss/app/static/modelEditor/forms/parameter-collection.js","./reaction-collection":"/home/bbales2/stochss/app/static/modelEditor/forms/reaction-collection.js","./specie-collection":"/home/bbales2/stochss/app/static/modelEditor/forms/specie-collection.js","ampersand-view":"/home/bbales2/stochss/app/static/modelEditor/node_modules/ampersand-view/ampersand-view.js","jquery":"/home/bbales2/stochss/app/static/modelEditor/node_modules/jquery/dist/jquery.js","underscore":"/home/bbales2/stochss/app/static/modelEditor/node_modules/underscore/underscore.js"}],"/home/bbales2/stochss/app/static/modelEditor/forms/modifying-input-view.js":[function(require,module,exports){
+},{"../convertToPopulation/model":2,"../models/model":35,"./initial-condition-collection":9,"./mesh-collection":11,"./mesh3d":13,"./parameter-collection":19,"./reaction-collection":21,"./specie-collection":24,"ampersand-view":131,"jquery":158,"underscore":176}],15:[function(require,module,exports){
 var $ = require('jquery');
 var _ = require('underscore');
 var InputView = require('ampersand-input-view');
@@ -2259,7 +2259,7 @@ ModifyingInputView = InputView.extend({
 });
 
 module.exports = ModifyingInputView
-},{"ampersand-input-view":"/home/bbales2/stochss/app/static/modelEditor/node_modules/ampersand-input-view/ampersand-input-view.js","jquery":"/home/bbales2/stochss/app/static/modelEditor/node_modules/jquery/dist/jquery.js","underscore":"/home/bbales2/stochss/app/static/modelEditor/node_modules/underscore/underscore.js"}],"/home/bbales2/stochss/app/static/modelEditor/forms/modifying-number-input-view.js":[function(require,module,exports){
+},{"ampersand-input-view":84,"jquery":158,"underscore":176}],16:[function(require,module,exports){
 var $ = require('jquery');
 var _ = require('underscore');
 var ModifyingInputView = require('./modifying-input-view');
@@ -2273,7 +2273,7 @@ ModifyingNumberInputView = ModifyingInputView.extend({
 });
 
 module.exports = ModifyingNumberInputView
-},{"./modifying-input-view":"/home/bbales2/stochss/app/static/modelEditor/forms/modifying-input-view.js","jquery":"/home/bbales2/stochss/app/static/modelEditor/node_modules/jquery/dist/jquery.js","underscore":"/home/bbales2/stochss/app/static/modelEditor/node_modules/underscore/underscore.js"}],"/home/bbales2/stochss/app/static/modelEditor/forms/modifying-select-view.js":[function(require,module,exports){
+},{"./modifying-input-view":15,"jquery":158,"underscore":176}],17:[function(require,module,exports){
 var $ = require('jquery');
 var _ = require('underscore');
 var SelectView = require('ampersand-select-view');
@@ -2293,7 +2293,7 @@ var ModifyingSelectView = _.extend(SelectView, {
 });
 
 module.exports = ModifyingSelectView
-},{"ampersand-select-view":"/home/bbales2/stochss/app/static/modelEditor/node_modules/ampersand-select-view/ampersand-select-view.js","jquery":"/home/bbales2/stochss/app/static/modelEditor/node_modules/jquery/dist/jquery.js","underscore":"/home/bbales2/stochss/app/static/modelEditor/node_modules/underscore/underscore.js"}],"/home/bbales2/stochss/app/static/modelEditor/forms/paginated-collection-view.js":[function(require,module,exports){
+},{"ampersand-select-view":118,"jquery":158,"underscore":176}],18:[function(require,module,exports){
 var AmpersandView = require('ampersand-view');
 var SubCollection = require('ampersand-subcollection');
 var _ = require('underscore');
@@ -2517,7 +2517,7 @@ var PaginatedCollectionView = AmpersandView.extend({
 
 module.exports = PaginatedCollectionView;
 
-},{"ampersand-subcollection":"/home/bbales2/stochss/app/static/modelEditor/node_modules/ampersand-subcollection/ampersand-subcollection.js","ampersand-view":"/home/bbales2/stochss/app/static/modelEditor/node_modules/ampersand-view/ampersand-view.js","underscore":"/home/bbales2/stochss/app/static/modelEditor/node_modules/underscore/underscore.js"}],"/home/bbales2/stochss/app/static/modelEditor/forms/parameter-collection.js":[function(require,module,exports){
+},{"ampersand-subcollection":125,"ampersand-view":131,"underscore":176}],19:[function(require,module,exports){
 var $ = require('jquery');
 var AmpersandView = require('ampersand-view');
 var AmpersandFormView = require('ampersand-form-view');
@@ -2639,7 +2639,7 @@ var ParameterCollectionFormView = AmpersandView.extend({
 });
 
 module.exports = ParameterCollectionFormView
-},{"./paginated-collection-view":"/home/bbales2/stochss/app/static/modelEditor/forms/paginated-collection-view.js","./parameter":"/home/bbales2/stochss/app/static/modelEditor/forms/parameter.js","./tests":"/home/bbales2/stochss/app/static/modelEditor/forms/tests.js","ampersand-form-view":"/home/bbales2/stochss/app/static/modelEditor/node_modules/ampersand-form-view/ampersand-form-view.js","ampersand-input-view":"/home/bbales2/stochss/app/static/modelEditor/node_modules/ampersand-input-view/ampersand-input-view.js","ampersand-view":"/home/bbales2/stochss/app/static/modelEditor/node_modules/ampersand-view/ampersand-view.js","jquery":"/home/bbales2/stochss/app/static/modelEditor/node_modules/jquery/dist/jquery.js"}],"/home/bbales2/stochss/app/static/modelEditor/forms/parameter.js":[function(require,module,exports){
+},{"./paginated-collection-view":18,"./parameter":20,"./tests":29,"ampersand-form-view":80,"ampersand-input-view":84,"ampersand-view":131,"jquery":158}],20:[function(require,module,exports){
 var _ = require('underscore');
 var $ = require('jquery');
 var View = require('ampersand-view');
@@ -2757,7 +2757,7 @@ module.exports = View.extend({
     }
 });
 
-},{"./modifying-input-view":"/home/bbales2/stochss/app/static/modelEditor/forms/modifying-input-view.js","./modifying-number-input-view":"/home/bbales2/stochss/app/static/modelEditor/forms/modifying-number-input-view.js","./tests":"/home/bbales2/stochss/app/static/modelEditor/forms/tests.js","ampersand-view":"/home/bbales2/stochss/app/static/modelEditor/node_modules/ampersand-view/ampersand-view.js","jquery":"/home/bbales2/stochss/app/static/modelEditor/node_modules/jquery/dist/jquery.js","underscore":"/home/bbales2/stochss/app/static/modelEditor/node_modules/underscore/underscore.js"}],"/home/bbales2/stochss/app/static/modelEditor/forms/reaction-collection.js":[function(require,module,exports){
+},{"./modifying-input-view":15,"./modifying-number-input-view":16,"./tests":29,"ampersand-view":131,"jquery":158,"underscore":176}],21:[function(require,module,exports){
 var $ = require('jquery');
 var AmpersandView = require('ampersand-view');
 var AmpersandFormView = require('ampersand-form-view');
@@ -2890,11 +2890,11 @@ var AddNewReactionForm = AmpersandFormView.extend({
 
         $( this.el ).find('input').prop('autocomplete', 'off');
 
-        this.buttonTemplate = '<div class="btn-group"> \
-  <a class="btn btn-large btn-primary dropdown-toggle" data-toggle="dropdown" href="#"> \
+        this.buttonTemplate = '<div class="btn-group dropup"> \
+  <button class="btn btn-large btn-primary dropdown-toggle" data-toggle="dropdown"> \
     Add Reaction \
     <span class="caret"></span> \
-  </a> \
+  </button> \
   <ul class="dropdown-menu"> \
     <li><a data-hook="creation" tabindex="-1" href="#"></a></li> \
     <li><a data-hook="destruction" tabindex="-1" href="#"></a></li> \
@@ -3073,7 +3073,7 @@ var ReactionCollectionFormView = AmpersandView.extend({
 
 module.exports = ReactionCollectionFormView;
 
-},{"./paginated-collection-view":"/home/bbales2/stochss/app/static/modelEditor/forms/paginated-collection-view.js","./reaction":"/home/bbales2/stochss/app/static/modelEditor/forms/reaction.js","./reaction-detail":"/home/bbales2/stochss/app/static/modelEditor/forms/reaction-detail.js","./tests":"/home/bbales2/stochss/app/static/modelEditor/forms/tests.js","ampersand-form-view":"/home/bbales2/stochss/app/static/modelEditor/node_modules/ampersand-form-view/ampersand-form-view.js","ampersand-input-view":"/home/bbales2/stochss/app/static/modelEditor/node_modules/ampersand-input-view/ampersand-input-view.js","ampersand-select-view":"/home/bbales2/stochss/app/static/modelEditor/node_modules/ampersand-select-view/ampersand-select-view.js","ampersand-subcollection":"/home/bbales2/stochss/app/static/modelEditor/node_modules/ampersand-subcollection/ampersand-subcollection.js","ampersand-view":"/home/bbales2/stochss/app/static/modelEditor/node_modules/ampersand-view/ampersand-view.js","jquery":"/home/bbales2/stochss/app/static/modelEditor/node_modules/jquery/dist/jquery.js","katex":"/home/bbales2/stochss/app/static/modelEditor/node_modules/katex/katex.js"}],"/home/bbales2/stochss/app/static/modelEditor/forms/reaction-detail.js":[function(require,module,exports){
+},{"./paginated-collection-view":18,"./reaction":23,"./reaction-detail":22,"./tests":29,"ampersand-form-view":80,"ampersand-input-view":84,"ampersand-select-view":118,"ampersand-subcollection":125,"ampersand-view":131,"jquery":158,"katex":159}],22:[function(require,module,exports){
 var _ = require('underscore');
 var $ = require('jquery');
 var View = require('ampersand-view');
@@ -3469,7 +3469,7 @@ var reactants;
     }
 });
 
-},{"./modifying-input-view":"/home/bbales2/stochss/app/static/modelEditor/forms/modifying-input-view.js","./modifying-number-input-view":"/home/bbales2/stochss/app/static/modelEditor/forms/modifying-number-input-view.js","./reaction":"/home/bbales2/stochss/app/static/modelEditor/forms/reaction.js","./stoich-specie-collection":"/home/bbales2/stochss/app/static/modelEditor/forms/stoich-specie-collection.js","./subdomain":"/home/bbales2/stochss/app/static/modelEditor/forms/subdomain.js","./tests":"/home/bbales2/stochss/app/static/modelEditor/forms/tests.js","ampersand-select-view":"/home/bbales2/stochss/app/static/modelEditor/node_modules/ampersand-select-view/ampersand-select-view.js","ampersand-view":"/home/bbales2/stochss/app/static/modelEditor/node_modules/ampersand-view/ampersand-view.js","jquery":"/home/bbales2/stochss/app/static/modelEditor/node_modules/jquery/dist/jquery.js","katex":"/home/bbales2/stochss/app/static/modelEditor/node_modules/katex/katex.js","underscore":"/home/bbales2/stochss/app/static/modelEditor/node_modules/underscore/underscore.js"}],"/home/bbales2/stochss/app/static/modelEditor/forms/reaction.js":[function(require,module,exports){
+},{"./modifying-input-view":15,"./modifying-number-input-view":16,"./reaction":23,"./stoich-specie-collection":26,"./subdomain":28,"./tests":29,"ampersand-select-view":118,"ampersand-view":131,"jquery":158,"katex":159,"underscore":176}],23:[function(require,module,exports){
 var _ = require('underscore');
 var $ = require('jquery');
 var View = require('ampersand-view');
@@ -3638,7 +3638,7 @@ module.exports = View.extend({
     }
 });
 
-},{"./modifying-input-view":"/home/bbales2/stochss/app/static/modelEditor/forms/modifying-input-view.js","./modifying-number-input-view":"/home/bbales2/stochss/app/static/modelEditor/forms/modifying-number-input-view.js","./stoich-specie-collection":"/home/bbales2/stochss/app/static/modelEditor/forms/stoich-specie-collection.js","./subdomain":"/home/bbales2/stochss/app/static/modelEditor/forms/subdomain.js","./tests":"/home/bbales2/stochss/app/static/modelEditor/forms/tests.js","ampersand-select-view":"/home/bbales2/stochss/app/static/modelEditor/node_modules/ampersand-select-view/ampersand-select-view.js","ampersand-view":"/home/bbales2/stochss/app/static/modelEditor/node_modules/ampersand-view/ampersand-view.js","jquery":"/home/bbales2/stochss/app/static/modelEditor/node_modules/jquery/dist/jquery.js","katex":"/home/bbales2/stochss/app/static/modelEditor/node_modules/katex/katex.js","underscore":"/home/bbales2/stochss/app/static/modelEditor/node_modules/underscore/underscore.js"}],"/home/bbales2/stochss/app/static/modelEditor/forms/specie-collection.js":[function(require,module,exports){
+},{"./modifying-input-view":15,"./modifying-number-input-view":16,"./stoich-specie-collection":26,"./subdomain":28,"./tests":29,"ampersand-select-view":118,"ampersand-view":131,"jquery":158,"katex":159,"underscore":176}],24:[function(require,module,exports){
 var $ = require('jquery');
 var AmpersandView = require('ampersand-view');
 var AmpersandFormView = require('ampersand-form-view');
@@ -3789,7 +3789,7 @@ var SpecieCollectionFormView = AmpersandView.extend({
 });
 
 module.exports = SpecieCollectionFormView
-},{"./paginated-collection-view":"/home/bbales2/stochss/app/static/modelEditor/forms/paginated-collection-view.js","./specie":"/home/bbales2/stochss/app/static/modelEditor/forms/specie.js","./tests":"/home/bbales2/stochss/app/static/modelEditor/forms/tests.js","ampersand-form-view":"/home/bbales2/stochss/app/static/modelEditor/node_modules/ampersand-form-view/ampersand-form-view.js","ampersand-input-view":"/home/bbales2/stochss/app/static/modelEditor/node_modules/ampersand-input-view/ampersand-input-view.js","ampersand-view":"/home/bbales2/stochss/app/static/modelEditor/node_modules/ampersand-view/ampersand-view.js","jquery":"/home/bbales2/stochss/app/static/modelEditor/node_modules/jquery/dist/jquery.js"}],"/home/bbales2/stochss/app/static/modelEditor/forms/specie.js":[function(require,module,exports){
+},{"./paginated-collection-view":18,"./specie":25,"./tests":29,"ampersand-form-view":80,"ampersand-input-view":84,"ampersand-view":131,"jquery":158}],25:[function(require,module,exports){
 var _ = require('underscore');
 var $ = require('jquery');
 var View = require('ampersand-view');
@@ -3981,7 +3981,7 @@ module.exports = View.extend({
     }
 });
 
-},{"./modifying-input-view":"/home/bbales2/stochss/app/static/modelEditor/forms/modifying-input-view.js","./modifying-number-input-view":"/home/bbales2/stochss/app/static/modelEditor/forms/modifying-number-input-view.js","./subdomain":"/home/bbales2/stochss/app/static/modelEditor/forms/subdomain.js","./tests":"/home/bbales2/stochss/app/static/modelEditor/forms/tests.js","ampersand-view":"/home/bbales2/stochss/app/static/modelEditor/node_modules/ampersand-view/ampersand-view.js","jquery":"/home/bbales2/stochss/app/static/modelEditor/node_modules/jquery/dist/jquery.js","underscore":"/home/bbales2/stochss/app/static/modelEditor/node_modules/underscore/underscore.js"}],"/home/bbales2/stochss/app/static/modelEditor/forms/stoich-specie-collection.js":[function(require,module,exports){
+},{"./modifying-input-view":15,"./modifying-number-input-view":16,"./subdomain":28,"./tests":29,"ampersand-view":131,"jquery":158,"underscore":176}],26:[function(require,module,exports){
 var $ = require('jquery');
 var AmpersandView = require('ampersand-view');
 var AmpersandFormView = require('ampersand-form-view');
@@ -4106,7 +4106,7 @@ var StoichSpecieCollectionFormView = AmpersandView.extend({
 
 module.exports = StoichSpecieCollectionFormView
 
-},{"./stoich-specie":"/home/bbales2/stochss/app/static/modelEditor/forms/stoich-specie.js","./tests":"/home/bbales2/stochss/app/static/modelEditor/forms/tests.js","ampersand-form-view":"/home/bbales2/stochss/app/static/modelEditor/node_modules/ampersand-form-view/ampersand-form-view.js","ampersand-input-view":"/home/bbales2/stochss/app/static/modelEditor/node_modules/ampersand-input-view/ampersand-input-view.js","ampersand-select-view":"/home/bbales2/stochss/app/static/modelEditor/node_modules/ampersand-select-view/ampersand-select-view.js","ampersand-view":"/home/bbales2/stochss/app/static/modelEditor/node_modules/ampersand-view/ampersand-view.js","jquery":"/home/bbales2/stochss/app/static/modelEditor/node_modules/jquery/dist/jquery.js"}],"/home/bbales2/stochss/app/static/modelEditor/forms/stoich-specie.js":[function(require,module,exports){
+},{"./stoich-specie":27,"./tests":29,"ampersand-form-view":80,"ampersand-input-view":84,"ampersand-select-view":118,"ampersand-view":131,"jquery":158}],27:[function(require,module,exports){
 var _ = require('underscore');
 var $ = require('jquery');
 var View = require('ampersand-view');
@@ -4208,7 +4208,7 @@ module.exports = View.extend({
     }
 });
 
-},{"./modifying-number-input-view":"/home/bbales2/stochss/app/static/modelEditor/forms/modifying-number-input-view.js","./modifying-select-view":"/home/bbales2/stochss/app/static/modelEditor/forms/modifying-select-view.js","./tests":"/home/bbales2/stochss/app/static/modelEditor/forms/tests.js","ampersand-view":"/home/bbales2/stochss/app/static/modelEditor/node_modules/ampersand-view/ampersand-view.js","jquery":"/home/bbales2/stochss/app/static/modelEditor/node_modules/jquery/dist/jquery.js","underscore":"/home/bbales2/stochss/app/static/modelEditor/node_modules/underscore/underscore.js"}],"/home/bbales2/stochss/app/static/modelEditor/forms/subdomain.js":[function(require,module,exports){
+},{"./modifying-number-input-view":16,"./modifying-select-view":17,"./tests":29,"ampersand-view":131,"jquery":158,"underscore":176}],28:[function(require,module,exports){
 var _ = require('underscore');
 var $ = require('jquery');
 var View = require('ampersand-view');
@@ -4247,7 +4247,7 @@ module.exports = View.extend({
     }
 });
 
-},{"./tests":"/home/bbales2/stochss/app/static/modelEditor/forms/tests.js","ampersand-checkbox-view":"/home/bbales2/stochss/app/static/modelEditor/node_modules/ampersand-checkbox-view/ampersand-checkbox-view.js","ampersand-view":"/home/bbales2/stochss/app/static/modelEditor/node_modules/ampersand-view/ampersand-view.js","jquery":"/home/bbales2/stochss/app/static/modelEditor/node_modules/jquery/dist/jquery.js","underscore":"/home/bbales2/stochss/app/static/modelEditor/node_modules/underscore/underscore.js"}],"/home/bbales2/stochss/app/static/modelEditor/forms/tests.js":[function(require,module,exports){
+},{"./tests":29,"ampersand-checkbox-view":48,"ampersand-view":131,"jquery":158,"underscore":176}],29:[function(require,module,exports){
 var _ = require('underscore');
 
 module.exports = {
@@ -4322,7 +4322,7 @@ module.exports = {
         }
     }
 };
-},{"underscore":"/home/bbales2/stochss/app/static/modelEditor/node_modules/underscore/underscore.js"}],"/home/bbales2/stochss/app/static/modelEditor/models/collection.js":[function(require,module,exports){
+},{"underscore":176}],30:[function(require,module,exports){
 var AmpCollection = require('ampersand-collection');
 
 module.exports = AmpCollection.extend({
@@ -4335,7 +4335,7 @@ module.exports = AmpCollection.extend({
 });
 
 
-},{"ampersand-collection":"/home/bbales2/stochss/app/static/modelEditor/node_modules/ampersand-collection/ampersand-collection.js"}],"/home/bbales2/stochss/app/static/modelEditor/models/initial-condition-collection.js":[function(require,module,exports){
+},{"ampersand-collection":50}],31:[function(require,module,exports){
 var Collection = require('./collection');
 var InitialCondition = require('./initial-condition');
 
@@ -4354,7 +4354,7 @@ module.exports = Collection.extend({
     }
 });
 
-},{"./collection":"/home/bbales2/stochss/app/static/modelEditor/models/collection.js","./initial-condition":"/home/bbales2/stochss/app/static/modelEditor/models/initial-condition.js"}],"/home/bbales2/stochss/app/static/modelEditor/models/initial-condition.js":[function(require,module,exports){
+},{"./collection":30,"./initial-condition":32}],32:[function(require,module,exports){
 var _ = require('underscore');
 var State = require('ampersand-state');
 
@@ -4396,7 +4396,7 @@ module.exports = State.extend({
 });
 
 
-},{"ampersand-state":"/home/bbales2/stochss/app/static/modelEditor/node_modules/ampersand-state/ampersand-state.js","underscore":"/home/bbales2/stochss/app/static/modelEditor/node_modules/underscore/underscore.js"}],"/home/bbales2/stochss/app/static/modelEditor/models/mesh-collection.js":[function(require,module,exports){
+},{"ampersand-state":120,"underscore":176}],33:[function(require,module,exports){
 var AmpCollection = require('ampersand-collection');
 var Mesh = require('./mesh');
 
@@ -4404,7 +4404,7 @@ module.exports = AmpCollection.extend({
     model: Mesh
 });
 
-},{"./mesh":"/home/bbales2/stochss/app/static/modelEditor/models/mesh.js","ampersand-collection":"/home/bbales2/stochss/app/static/modelEditor/node_modules/ampersand-collection/ampersand-collection.js"}],"/home/bbales2/stochss/app/static/modelEditor/models/mesh.js":[function(require,module,exports){
+},{"./mesh":34,"ampersand-collection":50}],34:[function(require,module,exports){
 var _ = require('underscore');
 var Model = require('ampersand-model');
 var SubdomainCollection = require('./subdomain-collection');
@@ -4466,7 +4466,7 @@ module.exports = Model.extend({
     }
 });
 
-},{"./subdomain-collection":"/home/bbales2/stochss/app/static/modelEditor/models/subdomain-collection.js","ampersand-model":"/home/bbales2/stochss/app/static/modelEditor/node_modules/ampersand-model/ampersand-model.js","underscore":"/home/bbales2/stochss/app/static/modelEditor/node_modules/underscore/underscore.js"}],"/home/bbales2/stochss/app/static/modelEditor/models/model.js":[function(require,module,exports){
+},{"./subdomain-collection":44,"ampersand-model":85,"underscore":176}],35:[function(require,module,exports){
 var _ = require('underscore');
 var AmpersandModel = require('ampersand-model');
 var SpecieCollection = require('./specie-collection');
@@ -4817,7 +4817,7 @@ Model.buildFromJSON = function(json, model)
 
 module.exports = Model;
 
-},{"./initial-condition-collection":"/home/bbales2/stochss/app/static/modelEditor/models/initial-condition-collection.js","./parameter-collection":"/home/bbales2/stochss/app/static/modelEditor/models/parameter-collection.js","./reaction-collection":"/home/bbales2/stochss/app/static/modelEditor/models/reaction-collection.js","./specie-collection":"/home/bbales2/stochss/app/static/modelEditor/models/specie-collection.js","ampersand-model":"/home/bbales2/stochss/app/static/modelEditor/node_modules/ampersand-model/ampersand-model.js","underscore":"/home/bbales2/stochss/app/static/modelEditor/node_modules/underscore/underscore.js"}],"/home/bbales2/stochss/app/static/modelEditor/models/parameter-collection.js":[function(require,module,exports){
+},{"./initial-condition-collection":31,"./parameter-collection":36,"./reaction-collection":38,"./specie-collection":40,"ampersand-model":85,"underscore":176}],36:[function(require,module,exports){
 // parameter Collection - parameter-collection.js
 var Collection = require('./collection');
 var parameter = require('./parameter');
@@ -4840,7 +4840,7 @@ module.exports = Collection.extend({
         return parameter;
     }
 });
-},{"./collection":"/home/bbales2/stochss/app/static/modelEditor/models/collection.js","./parameter":"/home/bbales2/stochss/app/static/modelEditor/models/parameter.js"}],"/home/bbales2/stochss/app/static/modelEditor/models/parameter.js":[function(require,module,exports){
+},{"./collection":30,"./parameter":37}],37:[function(require,module,exports){
 // parameter Model - parameter.js
 var _ = require('underscore');
 var AmpModel = require('ampersand-model');
@@ -4881,7 +4881,7 @@ module.exports = AmpModel.extend({
         );
     }
 });
-},{"ampersand-model":"/home/bbales2/stochss/app/static/modelEditor/node_modules/ampersand-model/ampersand-model.js","underscore":"/home/bbales2/stochss/app/static/modelEditor/node_modules/underscore/underscore.js"}],"/home/bbales2/stochss/app/static/modelEditor/models/reaction-collection.js":[function(require,module,exports){
+},{"ampersand-model":85,"underscore":176}],38:[function(require,module,exports){
 var _ = require('underscore');
 var Collection = require('./collection');
 var Reaction = require('./reaction');
@@ -4926,7 +4926,7 @@ module.exports = Collection.extend({
     }
 });
 
-},{"./collection":"/home/bbales2/stochss/app/static/modelEditor/models/collection.js","./reaction":"/home/bbales2/stochss/app/static/modelEditor/models/reaction.js","underscore":"/home/bbales2/stochss/app/static/modelEditor/node_modules/underscore/underscore.js"}],"/home/bbales2/stochss/app/static/modelEditor/models/reaction.js":[function(require,module,exports){
+},{"./collection":30,"./reaction":39,"underscore":176}],39:[function(require,module,exports){
 var _ = require('underscore');
 var State = require('ampersand-state');
 var StoichSpecie = require('./stoich-specie');
@@ -5065,7 +5065,7 @@ var Reaction = State.extend({
 
 module.exports = Reaction;
 
-},{"./parameter":"/home/bbales2/stochss/app/static/modelEditor/models/parameter.js","./stoich-specie":"/home/bbales2/stochss/app/static/modelEditor/models/stoich-specie.js","./stoich-specie-collection":"/home/bbales2/stochss/app/static/modelEditor/models/stoich-specie-collection.js","ampersand-state":"/home/bbales2/stochss/app/static/modelEditor/node_modules/ampersand-state/ampersand-state.js","underscore":"/home/bbales2/stochss/app/static/modelEditor/node_modules/underscore/underscore.js"}],"/home/bbales2/stochss/app/static/modelEditor/models/specie-collection.js":[function(require,module,exports){
+},{"./parameter":37,"./stoich-specie":43,"./stoich-specie-collection":42,"ampersand-state":120,"underscore":176}],40:[function(require,module,exports){
 // specie Collection - specie-collection.js
 var Collection = require('./collection');
 var specie = require('./specie');
@@ -5087,7 +5087,7 @@ module.exports = Collection.extend({
         return specie;
     }
 });
-},{"./collection":"/home/bbales2/stochss/app/static/modelEditor/models/collection.js","./specie":"/home/bbales2/stochss/app/static/modelEditor/models/specie.js"}],"/home/bbales2/stochss/app/static/modelEditor/models/specie.js":[function(require,module,exports){
+},{"./collection":30,"./specie":41}],41:[function(require,module,exports){
 // specie Model - specie.js
 var _ = require('underscore');
 var AmpModel = require('ampersand-model');
@@ -5136,7 +5136,7 @@ module.exports = AmpModel.extend({
         );
     }
 });
-},{"ampersand-model":"/home/bbales2/stochss/app/static/modelEditor/node_modules/ampersand-model/ampersand-model.js","underscore":"/home/bbales2/stochss/app/static/modelEditor/node_modules/underscore/underscore.js"}],"/home/bbales2/stochss/app/static/modelEditor/models/stoich-specie-collection.js":[function(require,module,exports){
+},{"ampersand-model":85,"underscore":176}],42:[function(require,module,exports){
 var _ = require('underscore');
 var AmpCollection = require('ampersand-collection');
 var StoichSpecie = require('./stoich-specie');
@@ -5171,7 +5171,7 @@ module.exports = AmpCollection.extend({
     }
 });
 
-},{"./stoich-specie":"/home/bbales2/stochss/app/static/modelEditor/models/stoich-specie.js","ampersand-collection":"/home/bbales2/stochss/app/static/modelEditor/node_modules/ampersand-collection/ampersand-collection.js","underscore":"/home/bbales2/stochss/app/static/modelEditor/node_modules/underscore/underscore.js"}],"/home/bbales2/stochss/app/static/modelEditor/models/stoich-specie.js":[function(require,module,exports){
+},{"./stoich-specie":43,"ampersand-collection":50,"underscore":176}],43:[function(require,module,exports){
 var _ = require('underscore');
 var State = require('ampersand-state');
 var Specie = require('./specie');
@@ -5194,7 +5194,7 @@ var StoichSpecie = State.extend({
 
 module.exports = StoichSpecie;
 
-},{"./specie":"/home/bbales2/stochss/app/static/modelEditor/models/specie.js","ampersand-state":"/home/bbales2/stochss/app/static/modelEditor/node_modules/ampersand-state/ampersand-state.js","underscore":"/home/bbales2/stochss/app/static/modelEditor/node_modules/underscore/underscore.js"}],"/home/bbales2/stochss/app/static/modelEditor/models/subdomain-collection.js":[function(require,module,exports){
+},{"./specie":41,"ampersand-state":120,"underscore":176}],44:[function(require,module,exports){
 var AmpCollection = require('ampersand-collection');
 var Subdomain = require('./subdomain');
 
@@ -5202,7 +5202,7 @@ module.exports = AmpCollection.extend({
     model: Subdomain
 });
 
-},{"./subdomain":"/home/bbales2/stochss/app/static/modelEditor/models/subdomain.js","ampersand-collection":"/home/bbales2/stochss/app/static/modelEditor/node_modules/ampersand-collection/ampersand-collection.js"}],"/home/bbales2/stochss/app/static/modelEditor/models/subdomain.js":[function(require,module,exports){
+},{"./subdomain":45,"ampersand-collection":50}],45:[function(require,module,exports){
 var _ = require('underscore');
 var State = require('ampersand-state');
 
@@ -5213,7 +5213,7 @@ module.exports = State.extend({
 });
 
 
-},{"ampersand-state":"/home/bbales2/stochss/app/static/modelEditor/node_modules/ampersand-state/ampersand-state.js","underscore":"/home/bbales2/stochss/app/static/modelEditor/node_modules/underscore/underscore.js"}],"/home/bbales2/stochss/app/static/modelEditor/node_modules/amp-extend/extend.js":[function(require,module,exports){
+},{"ampersand-state":120,"underscore":176}],46:[function(require,module,exports){
 var isObject = require('amp-is-object');
 
 
@@ -5229,13 +5229,13 @@ module.exports = function(obj) {
     return obj;
 };
 
-},{"amp-is-object":"/home/bbales2/stochss/app/static/modelEditor/node_modules/amp-extend/node_modules/amp-is-object/is-object.js"}],"/home/bbales2/stochss/app/static/modelEditor/node_modules/amp-extend/node_modules/amp-is-object/is-object.js":[function(require,module,exports){
+},{"amp-is-object":47}],47:[function(require,module,exports){
 module.exports = function isObject(obj) {
     var type = typeof obj;
     return !!obj && (type === 'function' || type === 'object');
 };
 
-},{}],"/home/bbales2/stochss/app/static/modelEditor/node_modules/ampersand-checkbox-view/ampersand-checkbox-view.js":[function(require,module,exports){
+},{}],48:[function(require,module,exports){
 ;if (typeof window !== "undefined") {  window.ampersand = window.ampersand || {};  window.ampersand["ampersand-checkbox-view"] = window.ampersand["ampersand-checkbox-view"] || [];  window.ampersand["ampersand-checkbox-view"].push("2.0.2");}
 var domify = require('domify');
 var dom = require('ampersand-dom');
@@ -5362,7 +5362,7 @@ CheckboxView.prototype.test = function () {
 
 module.exports = CheckboxView;
 
-},{"ampersand-dom":"/home/bbales2/stochss/app/static/modelEditor/node_modules/ampersand-dom/ampersand-dom.js","domify":"/home/bbales2/stochss/app/static/modelEditor/node_modules/ampersand-checkbox-view/node_modules/domify/index.js"}],"/home/bbales2/stochss/app/static/modelEditor/node_modules/ampersand-checkbox-view/node_modules/domify/index.js":[function(require,module,exports){
+},{"ampersand-dom":59,"domify":49}],49:[function(require,module,exports){
 
 /**
  * Expose `parse`.
@@ -5451,7 +5451,7 @@ function parse(html) {
   return fragment;
 }
 
-},{}],"/home/bbales2/stochss/app/static/modelEditor/node_modules/ampersand-collection/ampersand-collection.js":[function(require,module,exports){
+},{}],50:[function(require,module,exports){
 var BackboneEvents = require('backbone-events-standalone');
 var classExtend = require('ampersand-class-extend');
 var isArray = require('is-array');
@@ -5803,7 +5803,7 @@ Collection.extend = classExtend;
 
 module.exports = Collection;
 
-},{"amp-bind":"/home/bbales2/stochss/app/static/modelEditor/node_modules/ampersand-collection/node_modules/amp-bind/bind.js","ampersand-class-extend":"/home/bbales2/stochss/app/static/modelEditor/node_modules/ampersand-collection/node_modules/ampersand-class-extend/ampersand-class-extend.js","backbone-events-standalone":"/home/bbales2/stochss/app/static/modelEditor/node_modules/ampersand-collection/node_modules/backbone-events-standalone/index.js","extend-object":"/home/bbales2/stochss/app/static/modelEditor/node_modules/ampersand-collection/node_modules/extend-object/extend-object.js","is-array":"/home/bbales2/stochss/app/static/modelEditor/node_modules/ampersand-collection/node_modules/is-array/index.js"}],"/home/bbales2/stochss/app/static/modelEditor/node_modules/ampersand-collection/node_modules/amp-bind/bind.js":[function(require,module,exports){
+},{"amp-bind":51,"ampersand-class-extend":54,"backbone-events-standalone":56,"extend-object":57,"is-array":58}],51:[function(require,module,exports){
 var isFunction = require('amp-is-function');
 var isObject = require('amp-is-object');
 var nativeBind = Function.prototype.bind;
@@ -5828,7 +5828,7 @@ module.exports = function bind(func, context) {
     return bound;
 };
 
-},{"amp-is-function":"/home/bbales2/stochss/app/static/modelEditor/node_modules/ampersand-collection/node_modules/amp-bind/node_modules/amp-is-function/is-function.js","amp-is-object":"/home/bbales2/stochss/app/static/modelEditor/node_modules/ampersand-collection/node_modules/amp-bind/node_modules/amp-is-object/is-object.js"}],"/home/bbales2/stochss/app/static/modelEditor/node_modules/ampersand-collection/node_modules/amp-bind/node_modules/amp-is-function/is-function.js":[function(require,module,exports){
+},{"amp-is-function":52,"amp-is-object":53}],52:[function(require,module,exports){
 var toString = Object.prototype.toString;
 var func = function isFunction(obj) {
     return toString.call(obj) === '[object Function]';
@@ -5843,9 +5843,9 @@ if (typeof /./ !== 'function') {
 
 module.exports = func;
 
-},{}],"/home/bbales2/stochss/app/static/modelEditor/node_modules/ampersand-collection/node_modules/amp-bind/node_modules/amp-is-object/is-object.js":[function(require,module,exports){
-arguments[4]["/home/bbales2/stochss/app/static/modelEditor/node_modules/amp-extend/node_modules/amp-is-object/is-object.js"][0].apply(exports,arguments)
-},{}],"/home/bbales2/stochss/app/static/modelEditor/node_modules/ampersand-collection/node_modules/ampersand-class-extend/ampersand-class-extend.js":[function(require,module,exports){
+},{}],53:[function(require,module,exports){
+arguments[4][47][0].apply(exports,arguments)
+},{"dup":47}],54:[function(require,module,exports){
 var objectExtend = require('extend-object');
 
 
@@ -5895,7 +5895,7 @@ var extend = function(protoProps) {
 // Expose the extend function
 module.exports = extend;
 
-},{"extend-object":"/home/bbales2/stochss/app/static/modelEditor/node_modules/ampersand-collection/node_modules/extend-object/extend-object.js"}],"/home/bbales2/stochss/app/static/modelEditor/node_modules/ampersand-collection/node_modules/backbone-events-standalone/backbone-events-standalone.js":[function(require,module,exports){
+},{"extend-object":57}],55:[function(require,module,exports){
 /**
  * Standalone extraction of Backbone.Events, no external dependency required.
  * Degrades nicely when Backone/underscore are already available in the current
@@ -6163,10 +6163,10 @@ module.exports = extend;
   }
 })(this);
 
-},{}],"/home/bbales2/stochss/app/static/modelEditor/node_modules/ampersand-collection/node_modules/backbone-events-standalone/index.js":[function(require,module,exports){
+},{}],56:[function(require,module,exports){
 module.exports = require('./backbone-events-standalone');
 
-},{"./backbone-events-standalone":"/home/bbales2/stochss/app/static/modelEditor/node_modules/ampersand-collection/node_modules/backbone-events-standalone/backbone-events-standalone.js"}],"/home/bbales2/stochss/app/static/modelEditor/node_modules/ampersand-collection/node_modules/extend-object/extend-object.js":[function(require,module,exports){
+},{"./backbone-events-standalone":55}],57:[function(require,module,exports){
 var arr = [];
 var each = arr.forEach;
 var slice = arr.slice;
@@ -6183,7 +6183,7 @@ module.exports = function(obj) {
     return obj;
 };
 
-},{}],"/home/bbales2/stochss/app/static/modelEditor/node_modules/ampersand-collection/node_modules/is-array/index.js":[function(require,module,exports){
+},{}],58:[function(require,module,exports){
 
 /**
  * isArray
@@ -6218,7 +6218,7 @@ module.exports = isArray || function (val) {
   return !! val && '[object Array]' == str.call(val);
 };
 
-},{}],"/home/bbales2/stochss/app/static/modelEditor/node_modules/ampersand-dom/ampersand-dom.js":[function(require,module,exports){
+},{}],59:[function(require,module,exports){
 ;if (typeof window !== "undefined") {  window.ampersand = window.ampersand || {};  window.ampersand["ampersand-dom"] = window.ampersand["ampersand-dom"] || [];  window.ampersand["ampersand-dom"].push("1.2.7");}
 var dom = module.exports = {
     text: function (el, val) {
@@ -6338,7 +6338,7 @@ function hide (el) {
     el.style.display = 'none';
 }
 
-},{}],"/home/bbales2/stochss/app/static/modelEditor/node_modules/ampersand-events/ampersand-events.js":[function(require,module,exports){
+},{}],60:[function(require,module,exports){
 ;if (typeof window !== "undefined") {  window.ampersand = window.ampersand || {};  window.ampersand["ampersand-events"] = window.ampersand["ampersand-events"] || [];  window.ampersand["ampersand-events"].push("1.0.1");}
 var runOnce = require('amp-once');
 var uniqueId = require('amp-unique-id');
@@ -6518,13 +6518,13 @@ Events.listenToAndRun = function (obj, name, callback) {
 
 module.exports = Events;
 
-},{"amp-bind":"/home/bbales2/stochss/app/static/modelEditor/node_modules/ampersand-events/node_modules/amp-bind/bind.js","amp-each":"/home/bbales2/stochss/app/static/modelEditor/node_modules/ampersand-events/node_modules/amp-each/each.js","amp-extend":"/home/bbales2/stochss/app/static/modelEditor/node_modules/amp-extend/extend.js","amp-is-empty":"/home/bbales2/stochss/app/static/modelEditor/node_modules/ampersand-events/node_modules/amp-is-empty/is-empty.js","amp-keys":"/home/bbales2/stochss/app/static/modelEditor/node_modules/ampersand-events/node_modules/amp-keys/keys.js","amp-once":"/home/bbales2/stochss/app/static/modelEditor/node_modules/ampersand-events/node_modules/amp-once/once.js","amp-unique-id":"/home/bbales2/stochss/app/static/modelEditor/node_modules/ampersand-events/node_modules/amp-unique-id/unique-id.js"}],"/home/bbales2/stochss/app/static/modelEditor/node_modules/ampersand-events/node_modules/amp-bind/bind.js":[function(require,module,exports){
-arguments[4]["/home/bbales2/stochss/app/static/modelEditor/node_modules/ampersand-collection/node_modules/amp-bind/bind.js"][0].apply(exports,arguments)
-},{"amp-is-function":"/home/bbales2/stochss/app/static/modelEditor/node_modules/ampersand-events/node_modules/amp-bind/node_modules/amp-is-function/is-function.js","amp-is-object":"/home/bbales2/stochss/app/static/modelEditor/node_modules/ampersand-events/node_modules/amp-bind/node_modules/amp-is-object/is-object.js"}],"/home/bbales2/stochss/app/static/modelEditor/node_modules/ampersand-events/node_modules/amp-bind/node_modules/amp-is-function/is-function.js":[function(require,module,exports){
-arguments[4]["/home/bbales2/stochss/app/static/modelEditor/node_modules/ampersand-collection/node_modules/amp-bind/node_modules/amp-is-function/is-function.js"][0].apply(exports,arguments)
-},{}],"/home/bbales2/stochss/app/static/modelEditor/node_modules/ampersand-events/node_modules/amp-bind/node_modules/amp-is-object/is-object.js":[function(require,module,exports){
-arguments[4]["/home/bbales2/stochss/app/static/modelEditor/node_modules/ampersand-collection/node_modules/amp-bind/node_modules/amp-is-object/is-object.js"][0].apply(exports,arguments)
-},{}],"/home/bbales2/stochss/app/static/modelEditor/node_modules/ampersand-events/node_modules/amp-each/each.js":[function(require,module,exports){
+},{"amp-bind":61,"amp-each":64,"amp-extend":46,"amp-is-empty":66,"amp-keys":72,"amp-once":78,"amp-unique-id":79}],61:[function(require,module,exports){
+arguments[4][51][0].apply(exports,arguments)
+},{"amp-is-function":62,"amp-is-object":63,"dup":51}],62:[function(require,module,exports){
+arguments[4][52][0].apply(exports,arguments)
+},{"dup":52}],63:[function(require,module,exports){
+arguments[4][47][0].apply(exports,arguments)
+},{"dup":47}],64:[function(require,module,exports){
 var objKeys = require('amp-keys');
 var createCallback = require('amp-create-callback');
 
@@ -6546,7 +6546,7 @@ module.exports = function each(obj, iteratee, context) {
     return obj;
 };
 
-},{"amp-create-callback":"/home/bbales2/stochss/app/static/modelEditor/node_modules/ampersand-events/node_modules/amp-each/node_modules/amp-create-callback/create-callback.js","amp-keys":"/home/bbales2/stochss/app/static/modelEditor/node_modules/ampersand-events/node_modules/amp-keys/keys.js"}],"/home/bbales2/stochss/app/static/modelEditor/node_modules/ampersand-events/node_modules/amp-each/node_modules/amp-create-callback/create-callback.js":[function(require,module,exports){
+},{"amp-create-callback":65,"amp-keys":72}],65:[function(require,module,exports){
 module.exports = function createCallback(func, context, argCount) {
     if (context === void 0) return func;
     switch (argCount) {
@@ -6572,7 +6572,7 @@ module.exports = function createCallback(func, context, argCount) {
     };
 };
 
-},{}],"/home/bbales2/stochss/app/static/modelEditor/node_modules/ampersand-events/node_modules/amp-is-empty/is-empty.js":[function(require,module,exports){
+},{}],66:[function(require,module,exports){
 var isArray = require('amp-is-array');
 var isString = require('amp-is-string');
 var isArguments = require('amp-is-arguments');
@@ -6589,7 +6589,7 @@ module.exports = function isEmpty(obj) {
     return true;
 };
 
-},{"amp-is-arguments":"/home/bbales2/stochss/app/static/modelEditor/node_modules/ampersand-events/node_modules/amp-is-empty/node_modules/amp-is-arguments/is-arguments.js","amp-is-array":"/home/bbales2/stochss/app/static/modelEditor/node_modules/ampersand-events/node_modules/amp-is-empty/node_modules/amp-is-array/is-array.js","amp-is-nan":"/home/bbales2/stochss/app/static/modelEditor/node_modules/ampersand-events/node_modules/amp-is-empty/node_modules/amp-is-nan/is-nan.js","amp-is-number":"/home/bbales2/stochss/app/static/modelEditor/node_modules/ampersand-events/node_modules/amp-is-empty/node_modules/amp-is-number/is-number.js","amp-is-string":"/home/bbales2/stochss/app/static/modelEditor/node_modules/ampersand-events/node_modules/amp-is-empty/node_modules/amp-is-string/is-string.js","amp-keys":"/home/bbales2/stochss/app/static/modelEditor/node_modules/ampersand-events/node_modules/amp-keys/keys.js"}],"/home/bbales2/stochss/app/static/modelEditor/node_modules/ampersand-events/node_modules/amp-is-empty/node_modules/amp-is-arguments/is-arguments.js":[function(require,module,exports){
+},{"amp-is-arguments":67,"amp-is-array":68,"amp-is-nan":69,"amp-is-number":70,"amp-is-string":71,"amp-keys":72}],67:[function(require,module,exports){
 var toString = Object.prototype.toString;
 var hasOwn = Object.prototype.hasOwnProperty;
 var isArgs = function isArgs(obj) {
@@ -6605,7 +6605,7 @@ if (!isArgs(arguments)) {
 
 module.exports = isArgs;
 
-},{}],"/home/bbales2/stochss/app/static/modelEditor/node_modules/ampersand-events/node_modules/amp-is-empty/node_modules/amp-is-array/is-array.js":[function(require,module,exports){
+},{}],68:[function(require,module,exports){
 var toString = Object.prototype.toString;
 var nativeIsArray = Array.isArray;
 
@@ -6614,7 +6614,7 @@ module.exports = nativeIsArray || function isArray(obj) {
     return toString.call(obj) === '[object Array]';
 };
 
-},{}],"/home/bbales2/stochss/app/static/modelEditor/node_modules/ampersand-events/node_modules/amp-is-empty/node_modules/amp-is-nan/is-nan.js":[function(require,module,exports){
+},{}],69:[function(require,module,exports){
 var isNumber = require('amp-is-number');
 
 
@@ -6622,7 +6622,7 @@ module.exports = function isNaN(obj) {
     return isNumber(obj) && obj !== +obj;
 };
 
-},{"amp-is-number":"/home/bbales2/stochss/app/static/modelEditor/node_modules/ampersand-events/node_modules/amp-is-empty/node_modules/amp-is-number/is-number.js"}],"/home/bbales2/stochss/app/static/modelEditor/node_modules/ampersand-events/node_modules/amp-is-empty/node_modules/amp-is-number/is-number.js":[function(require,module,exports){
+},{"amp-is-number":70}],70:[function(require,module,exports){
 var toString = Object.prototype.toString;
 
 
@@ -6630,7 +6630,7 @@ module.exports = function isNumber(obj) {
     return toString.call(obj) === '[object Number]';
 };
 
-},{}],"/home/bbales2/stochss/app/static/modelEditor/node_modules/ampersand-events/node_modules/amp-is-empty/node_modules/amp-is-string/is-string.js":[function(require,module,exports){
+},{}],71:[function(require,module,exports){
 var toString = Object.prototype.toString;
 
 
@@ -6638,7 +6638,7 @@ module.exports = function isString(obj) {
     return toString.call(obj) === '[object String]';
 };
 
-},{}],"/home/bbales2/stochss/app/static/modelEditor/node_modules/ampersand-events/node_modules/amp-keys/keys.js":[function(require,module,exports){
+},{}],72:[function(require,module,exports){
 var has = require('amp-has');
 var indexOf = require('amp-index-of');
 var isObject = require('amp-is-object');
@@ -6665,7 +6665,7 @@ module.exports = function keys(obj) {
     return result;
 };
 
-},{"amp-has":"/home/bbales2/stochss/app/static/modelEditor/node_modules/ampersand-events/node_modules/amp-keys/node_modules/amp-has/has.js","amp-index-of":"/home/bbales2/stochss/app/static/modelEditor/node_modules/ampersand-events/node_modules/amp-keys/node_modules/amp-index-of/index-of.js","amp-is-object":"/home/bbales2/stochss/app/static/modelEditor/node_modules/ampersand-events/node_modules/amp-keys/node_modules/amp-is-object/is-object.js"}],"/home/bbales2/stochss/app/static/modelEditor/node_modules/ampersand-events/node_modules/amp-keys/node_modules/amp-has/has.js":[function(require,module,exports){
+},{"amp-has":73,"amp-index-of":74,"amp-is-object":76}],73:[function(require,module,exports){
 var hasOwn = Object.prototype.hasOwnProperty;
 
 
@@ -6673,7 +6673,7 @@ module.exports = function has(obj, key) {
     return obj != null && hasOwn.call(obj, key);
 };
 
-},{}],"/home/bbales2/stochss/app/static/modelEditor/node_modules/ampersand-events/node_modules/amp-keys/node_modules/amp-index-of/index-of.js":[function(require,module,exports){
+},{}],74:[function(require,module,exports){
 var isNumber = require('amp-is-number');
 
 
@@ -6689,11 +6689,11 @@ module.exports = function indexOf(arr, item, from) {
     return -1;
 };
 
-},{"amp-is-number":"/home/bbales2/stochss/app/static/modelEditor/node_modules/ampersand-events/node_modules/amp-keys/node_modules/amp-index-of/node_modules/amp-is-number/is-number.js"}],"/home/bbales2/stochss/app/static/modelEditor/node_modules/ampersand-events/node_modules/amp-keys/node_modules/amp-index-of/node_modules/amp-is-number/is-number.js":[function(require,module,exports){
-arguments[4]["/home/bbales2/stochss/app/static/modelEditor/node_modules/ampersand-events/node_modules/amp-is-empty/node_modules/amp-is-number/is-number.js"][0].apply(exports,arguments)
-},{}],"/home/bbales2/stochss/app/static/modelEditor/node_modules/ampersand-events/node_modules/amp-keys/node_modules/amp-is-object/is-object.js":[function(require,module,exports){
-arguments[4]["/home/bbales2/stochss/app/static/modelEditor/node_modules/ampersand-events/node_modules/amp-bind/node_modules/amp-is-object/is-object.js"][0].apply(exports,arguments)
-},{}],"/home/bbales2/stochss/app/static/modelEditor/node_modules/ampersand-events/node_modules/amp-once/node_modules/amp-limit-calls/limit-calls.js":[function(require,module,exports){
+},{"amp-is-number":75}],75:[function(require,module,exports){
+arguments[4][70][0].apply(exports,arguments)
+},{"dup":70}],76:[function(require,module,exports){
+arguments[4][47][0].apply(exports,arguments)
+},{"dup":47}],77:[function(require,module,exports){
 module.exports = function limitCalls(fn, times) {
     var memo;
     return function() {
@@ -6706,7 +6706,7 @@ module.exports = function limitCalls(fn, times) {
     };
 };
 
-},{}],"/home/bbales2/stochss/app/static/modelEditor/node_modules/ampersand-events/node_modules/amp-once/once.js":[function(require,module,exports){
+},{}],78:[function(require,module,exports){
 var limitCalls = require('amp-limit-calls');
 
 
@@ -6714,7 +6714,7 @@ module.exports = function once(fn) {
     return limitCalls(fn, 1);
 };
 
-},{"amp-limit-calls":"/home/bbales2/stochss/app/static/modelEditor/node_modules/ampersand-events/node_modules/amp-once/node_modules/amp-limit-calls/limit-calls.js"}],"/home/bbales2/stochss/app/static/modelEditor/node_modules/ampersand-events/node_modules/amp-unique-id/unique-id.js":[function(require,module,exports){
+},{"amp-limit-calls":77}],79:[function(require,module,exports){
 (function (global){
 /*global window, global*/
 var theGlobal = (typeof window !== 'undefined') ? window : global;
@@ -6729,7 +6729,7 @@ module.exports = function uniqueId(prefix) {
 };
 
 }).call(this,typeof global !== "undefined" ? global : typeof self !== "undefined" ? self : typeof window !== "undefined" ? window : {})
-},{}],"/home/bbales2/stochss/app/static/modelEditor/node_modules/ampersand-form-view/ampersand-form-view.js":[function(require,module,exports){
+},{}],80:[function(require,module,exports){
 ;if (typeof window !== "undefined") {  window.ampersand = window.ampersand || {};  window.ampersand["ampersand-form-view"] = window.ampersand["ampersand-form-view"] || [];  window.ampersand["ampersand-form-view"].push("2.2.0");}
 var BBEvents = require('backbone-events-standalone');
 var extend = require('extend-object');
@@ -6893,13 +6893,13 @@ FormView.extend = function (obj) {
 
 module.exports = FormView;
 
-},{"backbone-events-standalone":"/home/bbales2/stochss/app/static/modelEditor/node_modules/ampersand-form-view/node_modules/backbone-events-standalone/index.js","extend-object":"/home/bbales2/stochss/app/static/modelEditor/node_modules/ampersand-form-view/node_modules/extend-object/extend-object.js"}],"/home/bbales2/stochss/app/static/modelEditor/node_modules/ampersand-form-view/node_modules/backbone-events-standalone/backbone-events-standalone.js":[function(require,module,exports){
-arguments[4]["/home/bbales2/stochss/app/static/modelEditor/node_modules/ampersand-collection/node_modules/backbone-events-standalone/backbone-events-standalone.js"][0].apply(exports,arguments)
-},{}],"/home/bbales2/stochss/app/static/modelEditor/node_modules/ampersand-form-view/node_modules/backbone-events-standalone/index.js":[function(require,module,exports){
-arguments[4]["/home/bbales2/stochss/app/static/modelEditor/node_modules/ampersand-collection/node_modules/backbone-events-standalone/index.js"][0].apply(exports,arguments)
-},{"./backbone-events-standalone":"/home/bbales2/stochss/app/static/modelEditor/node_modules/ampersand-form-view/node_modules/backbone-events-standalone/backbone-events-standalone.js"}],"/home/bbales2/stochss/app/static/modelEditor/node_modules/ampersand-form-view/node_modules/extend-object/extend-object.js":[function(require,module,exports){
-arguments[4]["/home/bbales2/stochss/app/static/modelEditor/node_modules/ampersand-collection/node_modules/extend-object/extend-object.js"][0].apply(exports,arguments)
-},{}],"/home/bbales2/stochss/app/static/modelEditor/node_modules/ampersand-input-view/ampersand-input-view.js":[function(require,module,exports){
+},{"backbone-events-standalone":82,"extend-object":83}],81:[function(require,module,exports){
+arguments[4][55][0].apply(exports,arguments)
+},{"dup":55}],82:[function(require,module,exports){
+arguments[4][56][0].apply(exports,arguments)
+},{"./backbone-events-standalone":81,"dup":56}],83:[function(require,module,exports){
+arguments[4][57][0].apply(exports,arguments)
+},{"dup":57}],84:[function(require,module,exports){
 var View = require('ampersand-view');
 
 
@@ -7098,7 +7098,7 @@ module.exports = View.extend({
     }
 });
 
-},{"ampersand-view":"/home/bbales2/stochss/app/static/modelEditor/node_modules/ampersand-view/ampersand-view.js"}],"/home/bbales2/stochss/app/static/modelEditor/node_modules/ampersand-model/ampersand-model.js":[function(require,module,exports){
+},{"ampersand-view":131}],85:[function(require,module,exports){
 ;if (typeof window !== "undefined") {  window.ampersand = window.ampersand || {};  window.ampersand["ampersand-model"] = window.ampersand["ampersand-model"] || [];  window.ampersand["ampersand-model"].push("4.1.0");}
 var State = require('ampersand-state');
 var _ = require('underscore');
@@ -7232,7 +7232,7 @@ var wrapError = function (model, options) {
 
 module.exports = Model;
 
-},{"ampersand-state":"/home/bbales2/stochss/app/static/modelEditor/node_modules/ampersand-state/ampersand-state.js","ampersand-sync":"/home/bbales2/stochss/app/static/modelEditor/node_modules/ampersand-model/node_modules/ampersand-sync/ampersand-sync.js","underscore":"/home/bbales2/stochss/app/static/modelEditor/node_modules/underscore/underscore.js"}],"/home/bbales2/stochss/app/static/modelEditor/node_modules/ampersand-model/node_modules/ampersand-sync/ampersand-sync.js":[function(require,module,exports){
+},{"ampersand-state":120,"ampersand-sync":86,"underscore":176}],86:[function(require,module,exports){
 var _ = require('underscore');
 var xhr = require('xhr');
 var qs = require('qs');
@@ -7353,10 +7353,10 @@ var methodMap = {
     'read':   'GET'
 };
 
-},{"qs":"/home/bbales2/stochss/app/static/modelEditor/node_modules/ampersand-model/node_modules/ampersand-sync/node_modules/qs/index.js","underscore":"/home/bbales2/stochss/app/static/modelEditor/node_modules/ampersand-model/node_modules/ampersand-sync/node_modules/underscore/underscore.js","xhr":"/home/bbales2/stochss/app/static/modelEditor/node_modules/ampersand-model/node_modules/ampersand-sync/node_modules/xhr/index.js"}],"/home/bbales2/stochss/app/static/modelEditor/node_modules/ampersand-model/node_modules/ampersand-sync/node_modules/qs/index.js":[function(require,module,exports){
+},{"qs":87,"underscore":92,"xhr":93}],87:[function(require,module,exports){
 module.exports = require('./lib');
 
-},{"./lib":"/home/bbales2/stochss/app/static/modelEditor/node_modules/ampersand-model/node_modules/ampersand-sync/node_modules/qs/lib/index.js"}],"/home/bbales2/stochss/app/static/modelEditor/node_modules/ampersand-model/node_modules/ampersand-sync/node_modules/qs/lib/index.js":[function(require,module,exports){
+},{"./lib":88}],88:[function(require,module,exports){
 // Load modules
 
 var Stringify = require('./stringify');
@@ -7373,7 +7373,7 @@ module.exports = {
     parse: Parse
 };
 
-},{"./parse":"/home/bbales2/stochss/app/static/modelEditor/node_modules/ampersand-model/node_modules/ampersand-sync/node_modules/qs/lib/parse.js","./stringify":"/home/bbales2/stochss/app/static/modelEditor/node_modules/ampersand-model/node_modules/ampersand-sync/node_modules/qs/lib/stringify.js"}],"/home/bbales2/stochss/app/static/modelEditor/node_modules/ampersand-model/node_modules/ampersand-sync/node_modules/qs/lib/parse.js":[function(require,module,exports){
+},{"./parse":89,"./stringify":90}],89:[function(require,module,exports){
 // Load modules
 
 var Utils = require('./utils');
@@ -7530,7 +7530,7 @@ module.exports = function (str, depth, delimiter) {
     return Utils.compact(obj);
 };
 
-},{"./utils":"/home/bbales2/stochss/app/static/modelEditor/node_modules/ampersand-model/node_modules/ampersand-sync/node_modules/qs/lib/utils.js"}],"/home/bbales2/stochss/app/static/modelEditor/node_modules/ampersand-model/node_modules/ampersand-sync/node_modules/qs/lib/stringify.js":[function(require,module,exports){
+},{"./utils":91}],90:[function(require,module,exports){
 (function (Buffer){
 // Load modules
 
@@ -7589,7 +7589,7 @@ module.exports = function (obj, delimiter) {
 };
 
 }).call(this,require("buffer").Buffer)
-},{"buffer":"/home/bbales2/stochss/app/static/modelEditor/node_modules/watchify/node_modules/browserify/node_modules/buffer/index.js"}],"/home/bbales2/stochss/app/static/modelEditor/node_modules/ampersand-model/node_modules/ampersand-sync/node_modules/qs/lib/utils.js":[function(require,module,exports){
+},{"buffer":150}],91:[function(require,module,exports){
 (function (Buffer){
 // Load modules
 
@@ -7726,7 +7726,7 @@ exports.compact = function (obj) {
 };
 
 }).call(this,require("buffer").Buffer)
-},{"buffer":"/home/bbales2/stochss/app/static/modelEditor/node_modules/watchify/node_modules/browserify/node_modules/buffer/index.js"}],"/home/bbales2/stochss/app/static/modelEditor/node_modules/ampersand-model/node_modules/ampersand-sync/node_modules/underscore/underscore.js":[function(require,module,exports){
+},{"buffer":150}],92:[function(require,module,exports){
 //     Underscore.js 1.6.0
 //     http://underscorejs.org
 //     (c) 2009-2014 Jeremy Ashkenas, DocumentCloud and Investigative Reporters & Editors
@@ -9071,7 +9071,7 @@ exports.compact = function (obj) {
   }
 }).call(this);
 
-},{}],"/home/bbales2/stochss/app/static/modelEditor/node_modules/ampersand-model/node_modules/ampersand-sync/node_modules/xhr/index.js":[function(require,module,exports){
+},{}],93:[function(require,module,exports){
 var window = require("global/window")
 var once = require("once")
 var parseHeaders = require('parse-headers')
@@ -9250,7 +9250,7 @@ function createXHR(options, callback) {
 
 function noop() {}
 
-},{"global/window":"/home/bbales2/stochss/app/static/modelEditor/node_modules/ampersand-model/node_modules/ampersand-sync/node_modules/xhr/node_modules/global/window.js","once":"/home/bbales2/stochss/app/static/modelEditor/node_modules/ampersand-model/node_modules/ampersand-sync/node_modules/xhr/node_modules/once/once.js","parse-headers":"/home/bbales2/stochss/app/static/modelEditor/node_modules/ampersand-model/node_modules/ampersand-sync/node_modules/xhr/node_modules/parse-headers/parse-headers.js"}],"/home/bbales2/stochss/app/static/modelEditor/node_modules/ampersand-model/node_modules/ampersand-sync/node_modules/xhr/node_modules/global/window.js":[function(require,module,exports){
+},{"global/window":94,"once":95,"parse-headers":99}],94:[function(require,module,exports){
 (function (global){
 if (typeof window !== "undefined") {
     module.exports = window;
@@ -9263,7 +9263,7 @@ if (typeof window !== "undefined") {
 }
 
 }).call(this,typeof global !== "undefined" ? global : typeof self !== "undefined" ? self : typeof window !== "undefined" ? window : {})
-},{}],"/home/bbales2/stochss/app/static/modelEditor/node_modules/ampersand-model/node_modules/ampersand-sync/node_modules/xhr/node_modules/once/once.js":[function(require,module,exports){
+},{}],95:[function(require,module,exports){
 module.exports = once
 
 once.proto = once(function () {
@@ -9284,7 +9284,7 @@ function once (fn) {
   }
 }
 
-},{}],"/home/bbales2/stochss/app/static/modelEditor/node_modules/ampersand-model/node_modules/ampersand-sync/node_modules/xhr/node_modules/parse-headers/node_modules/for-each/index.js":[function(require,module,exports){
+},{}],96:[function(require,module,exports){
 var isFunction = require('is-function')
 
 module.exports = forEach
@@ -9332,7 +9332,7 @@ function forEachObject(object, iterator, context) {
     }
 }
 
-},{"is-function":"/home/bbales2/stochss/app/static/modelEditor/node_modules/ampersand-model/node_modules/ampersand-sync/node_modules/xhr/node_modules/parse-headers/node_modules/for-each/node_modules/is-function/index.js"}],"/home/bbales2/stochss/app/static/modelEditor/node_modules/ampersand-model/node_modules/ampersand-sync/node_modules/xhr/node_modules/parse-headers/node_modules/for-each/node_modules/is-function/index.js":[function(require,module,exports){
+},{"is-function":97}],97:[function(require,module,exports){
 module.exports = isFunction
 
 var toString = Object.prototype.toString
@@ -9349,7 +9349,7 @@ function isFunction (fn) {
       fn === window.prompt))
 };
 
-},{}],"/home/bbales2/stochss/app/static/modelEditor/node_modules/ampersand-model/node_modules/ampersand-sync/node_modules/xhr/node_modules/parse-headers/node_modules/trim/index.js":[function(require,module,exports){
+},{}],98:[function(require,module,exports){
 
 exports = module.exports = trim;
 
@@ -9365,7 +9365,7 @@ exports.right = function(str){
   return str.replace(/\s*$/, '');
 };
 
-},{}],"/home/bbales2/stochss/app/static/modelEditor/node_modules/ampersand-model/node_modules/ampersand-sync/node_modules/xhr/node_modules/parse-headers/parse-headers.js":[function(require,module,exports){
+},{}],99:[function(require,module,exports){
 var trim = require('trim')
   , forEach = require('for-each')
   , isArray = function(arg) {
@@ -9397,7 +9397,7 @@ module.exports = function (headers) {
 
   return result
 }
-},{"for-each":"/home/bbales2/stochss/app/static/modelEditor/node_modules/ampersand-model/node_modules/ampersand-sync/node_modules/xhr/node_modules/parse-headers/node_modules/for-each/index.js","trim":"/home/bbales2/stochss/app/static/modelEditor/node_modules/ampersand-model/node_modules/ampersand-sync/node_modules/xhr/node_modules/parse-headers/node_modules/trim/index.js"}],"/home/bbales2/stochss/app/static/modelEditor/node_modules/ampersand-rest-collection/ampersand-rest-collection.js":[function(require,module,exports){
+},{"for-each":96,"trim":98}],100:[function(require,module,exports){
 ;if (typeof window !== "undefined") {  window.ampersand = window.ampersand || {};  window.ampersand["ampersand-rest-collection"] = window.ampersand["ampersand-rest-collection"] || [];  window.ampersand["ampersand-rest-collection"].push("2.0.4");}
 var Collection = require('ampersand-collection');
 var underscoreMixin = require('ampersand-collection-underscore-mixin');
@@ -9406,7 +9406,7 @@ var restMixins = require('ampersand-collection-rest-mixin');
 
 module.exports = Collection.extend(underscoreMixin, restMixins);
 
-},{"ampersand-collection":"/home/bbales2/stochss/app/static/modelEditor/node_modules/ampersand-collection/ampersand-collection.js","ampersand-collection-rest-mixin":"/home/bbales2/stochss/app/static/modelEditor/node_modules/ampersand-rest-collection/node_modules/ampersand-collection-rest-mixin/ampersand-collection-rest-mixin.js","ampersand-collection-underscore-mixin":"/home/bbales2/stochss/app/static/modelEditor/node_modules/ampersand-rest-collection/node_modules/ampersand-collection-underscore-mixin/ampersand-collection-underscore-mixin.js"}],"/home/bbales2/stochss/app/static/modelEditor/node_modules/ampersand-rest-collection/node_modules/ampersand-collection-rest-mixin/ampersand-collection-rest-mixin.js":[function(require,module,exports){
+},{"ampersand-collection":50,"ampersand-collection-rest-mixin":101,"ampersand-collection-underscore-mixin":117}],101:[function(require,module,exports){
 ;if (typeof window !== "undefined") {  window.ampersand = window.ampersand || {};  window.ampersand["ampersand-collection-rest-mixin"] = window.ampersand["ampersand-collection-rest-mixin"] || [];  window.ampersand["ampersand-collection-rest-mixin"].push("3.0.1");}
 var sync = require('ampersand-sync');
 var extend = require('extend-object');
@@ -9508,37 +9508,37 @@ module.exports = {
     }
 };
 
-},{"ampersand-sync":"/home/bbales2/stochss/app/static/modelEditor/node_modules/ampersand-rest-collection/node_modules/ampersand-collection-rest-mixin/node_modules/ampersand-sync/ampersand-sync.js","extend-object":"/home/bbales2/stochss/app/static/modelEditor/node_modules/ampersand-rest-collection/node_modules/ampersand-collection-rest-mixin/node_modules/extend-object/extend-object.js"}],"/home/bbales2/stochss/app/static/modelEditor/node_modules/ampersand-rest-collection/node_modules/ampersand-collection-rest-mixin/node_modules/ampersand-sync/ampersand-sync.js":[function(require,module,exports){
-arguments[4]["/home/bbales2/stochss/app/static/modelEditor/node_modules/ampersand-model/node_modules/ampersand-sync/ampersand-sync.js"][0].apply(exports,arguments)
-},{"qs":"/home/bbales2/stochss/app/static/modelEditor/node_modules/ampersand-rest-collection/node_modules/ampersand-collection-rest-mixin/node_modules/ampersand-sync/node_modules/qs/index.js","underscore":"/home/bbales2/stochss/app/static/modelEditor/node_modules/ampersand-rest-collection/node_modules/ampersand-collection-rest-mixin/node_modules/ampersand-sync/node_modules/underscore/underscore.js","xhr":"/home/bbales2/stochss/app/static/modelEditor/node_modules/ampersand-rest-collection/node_modules/ampersand-collection-rest-mixin/node_modules/ampersand-sync/node_modules/xhr/index.js"}],"/home/bbales2/stochss/app/static/modelEditor/node_modules/ampersand-rest-collection/node_modules/ampersand-collection-rest-mixin/node_modules/ampersand-sync/node_modules/qs/index.js":[function(require,module,exports){
-arguments[4]["/home/bbales2/stochss/app/static/modelEditor/node_modules/ampersand-model/node_modules/ampersand-sync/node_modules/qs/index.js"][0].apply(exports,arguments)
-},{"./lib":"/home/bbales2/stochss/app/static/modelEditor/node_modules/ampersand-rest-collection/node_modules/ampersand-collection-rest-mixin/node_modules/ampersand-sync/node_modules/qs/lib/index.js"}],"/home/bbales2/stochss/app/static/modelEditor/node_modules/ampersand-rest-collection/node_modules/ampersand-collection-rest-mixin/node_modules/ampersand-sync/node_modules/qs/lib/index.js":[function(require,module,exports){
-arguments[4]["/home/bbales2/stochss/app/static/modelEditor/node_modules/ampersand-model/node_modules/ampersand-sync/node_modules/qs/lib/index.js"][0].apply(exports,arguments)
-},{"./parse":"/home/bbales2/stochss/app/static/modelEditor/node_modules/ampersand-rest-collection/node_modules/ampersand-collection-rest-mixin/node_modules/ampersand-sync/node_modules/qs/lib/parse.js","./stringify":"/home/bbales2/stochss/app/static/modelEditor/node_modules/ampersand-rest-collection/node_modules/ampersand-collection-rest-mixin/node_modules/ampersand-sync/node_modules/qs/lib/stringify.js"}],"/home/bbales2/stochss/app/static/modelEditor/node_modules/ampersand-rest-collection/node_modules/ampersand-collection-rest-mixin/node_modules/ampersand-sync/node_modules/qs/lib/parse.js":[function(require,module,exports){
-arguments[4]["/home/bbales2/stochss/app/static/modelEditor/node_modules/ampersand-model/node_modules/ampersand-sync/node_modules/qs/lib/parse.js"][0].apply(exports,arguments)
-},{"./utils":"/home/bbales2/stochss/app/static/modelEditor/node_modules/ampersand-rest-collection/node_modules/ampersand-collection-rest-mixin/node_modules/ampersand-sync/node_modules/qs/lib/utils.js"}],"/home/bbales2/stochss/app/static/modelEditor/node_modules/ampersand-rest-collection/node_modules/ampersand-collection-rest-mixin/node_modules/ampersand-sync/node_modules/qs/lib/stringify.js":[function(require,module,exports){
-arguments[4]["/home/bbales2/stochss/app/static/modelEditor/node_modules/ampersand-model/node_modules/ampersand-sync/node_modules/qs/lib/stringify.js"][0].apply(exports,arguments)
-},{"buffer":"/home/bbales2/stochss/app/static/modelEditor/node_modules/watchify/node_modules/browserify/node_modules/buffer/index.js"}],"/home/bbales2/stochss/app/static/modelEditor/node_modules/ampersand-rest-collection/node_modules/ampersand-collection-rest-mixin/node_modules/ampersand-sync/node_modules/qs/lib/utils.js":[function(require,module,exports){
-arguments[4]["/home/bbales2/stochss/app/static/modelEditor/node_modules/ampersand-model/node_modules/ampersand-sync/node_modules/qs/lib/utils.js"][0].apply(exports,arguments)
-},{"buffer":"/home/bbales2/stochss/app/static/modelEditor/node_modules/watchify/node_modules/browserify/node_modules/buffer/index.js"}],"/home/bbales2/stochss/app/static/modelEditor/node_modules/ampersand-rest-collection/node_modules/ampersand-collection-rest-mixin/node_modules/ampersand-sync/node_modules/underscore/underscore.js":[function(require,module,exports){
-arguments[4]["/home/bbales2/stochss/app/static/modelEditor/node_modules/ampersand-model/node_modules/ampersand-sync/node_modules/underscore/underscore.js"][0].apply(exports,arguments)
-},{}],"/home/bbales2/stochss/app/static/modelEditor/node_modules/ampersand-rest-collection/node_modules/ampersand-collection-rest-mixin/node_modules/ampersand-sync/node_modules/xhr/index.js":[function(require,module,exports){
-arguments[4]["/home/bbales2/stochss/app/static/modelEditor/node_modules/ampersand-model/node_modules/ampersand-sync/node_modules/xhr/index.js"][0].apply(exports,arguments)
-},{"global/window":"/home/bbales2/stochss/app/static/modelEditor/node_modules/ampersand-rest-collection/node_modules/ampersand-collection-rest-mixin/node_modules/ampersand-sync/node_modules/xhr/node_modules/global/window.js","once":"/home/bbales2/stochss/app/static/modelEditor/node_modules/ampersand-rest-collection/node_modules/ampersand-collection-rest-mixin/node_modules/ampersand-sync/node_modules/xhr/node_modules/once/once.js","parse-headers":"/home/bbales2/stochss/app/static/modelEditor/node_modules/ampersand-rest-collection/node_modules/ampersand-collection-rest-mixin/node_modules/ampersand-sync/node_modules/xhr/node_modules/parse-headers/parse-headers.js"}],"/home/bbales2/stochss/app/static/modelEditor/node_modules/ampersand-rest-collection/node_modules/ampersand-collection-rest-mixin/node_modules/ampersand-sync/node_modules/xhr/node_modules/global/window.js":[function(require,module,exports){
-arguments[4]["/home/bbales2/stochss/app/static/modelEditor/node_modules/ampersand-model/node_modules/ampersand-sync/node_modules/xhr/node_modules/global/window.js"][0].apply(exports,arguments)
-},{}],"/home/bbales2/stochss/app/static/modelEditor/node_modules/ampersand-rest-collection/node_modules/ampersand-collection-rest-mixin/node_modules/ampersand-sync/node_modules/xhr/node_modules/once/once.js":[function(require,module,exports){
-arguments[4]["/home/bbales2/stochss/app/static/modelEditor/node_modules/ampersand-model/node_modules/ampersand-sync/node_modules/xhr/node_modules/once/once.js"][0].apply(exports,arguments)
-},{}],"/home/bbales2/stochss/app/static/modelEditor/node_modules/ampersand-rest-collection/node_modules/ampersand-collection-rest-mixin/node_modules/ampersand-sync/node_modules/xhr/node_modules/parse-headers/node_modules/for-each/index.js":[function(require,module,exports){
-arguments[4]["/home/bbales2/stochss/app/static/modelEditor/node_modules/ampersand-model/node_modules/ampersand-sync/node_modules/xhr/node_modules/parse-headers/node_modules/for-each/index.js"][0].apply(exports,arguments)
-},{"is-function":"/home/bbales2/stochss/app/static/modelEditor/node_modules/ampersand-rest-collection/node_modules/ampersand-collection-rest-mixin/node_modules/ampersand-sync/node_modules/xhr/node_modules/parse-headers/node_modules/for-each/node_modules/is-function/index.js"}],"/home/bbales2/stochss/app/static/modelEditor/node_modules/ampersand-rest-collection/node_modules/ampersand-collection-rest-mixin/node_modules/ampersand-sync/node_modules/xhr/node_modules/parse-headers/node_modules/for-each/node_modules/is-function/index.js":[function(require,module,exports){
-arguments[4]["/home/bbales2/stochss/app/static/modelEditor/node_modules/ampersand-model/node_modules/ampersand-sync/node_modules/xhr/node_modules/parse-headers/node_modules/for-each/node_modules/is-function/index.js"][0].apply(exports,arguments)
-},{}],"/home/bbales2/stochss/app/static/modelEditor/node_modules/ampersand-rest-collection/node_modules/ampersand-collection-rest-mixin/node_modules/ampersand-sync/node_modules/xhr/node_modules/parse-headers/node_modules/trim/index.js":[function(require,module,exports){
-arguments[4]["/home/bbales2/stochss/app/static/modelEditor/node_modules/ampersand-model/node_modules/ampersand-sync/node_modules/xhr/node_modules/parse-headers/node_modules/trim/index.js"][0].apply(exports,arguments)
-},{}],"/home/bbales2/stochss/app/static/modelEditor/node_modules/ampersand-rest-collection/node_modules/ampersand-collection-rest-mixin/node_modules/ampersand-sync/node_modules/xhr/node_modules/parse-headers/parse-headers.js":[function(require,module,exports){
-arguments[4]["/home/bbales2/stochss/app/static/modelEditor/node_modules/ampersand-model/node_modules/ampersand-sync/node_modules/xhr/node_modules/parse-headers/parse-headers.js"][0].apply(exports,arguments)
-},{"for-each":"/home/bbales2/stochss/app/static/modelEditor/node_modules/ampersand-rest-collection/node_modules/ampersand-collection-rest-mixin/node_modules/ampersand-sync/node_modules/xhr/node_modules/parse-headers/node_modules/for-each/index.js","trim":"/home/bbales2/stochss/app/static/modelEditor/node_modules/ampersand-rest-collection/node_modules/ampersand-collection-rest-mixin/node_modules/ampersand-sync/node_modules/xhr/node_modules/parse-headers/node_modules/trim/index.js"}],"/home/bbales2/stochss/app/static/modelEditor/node_modules/ampersand-rest-collection/node_modules/ampersand-collection-rest-mixin/node_modules/extend-object/extend-object.js":[function(require,module,exports){
-arguments[4]["/home/bbales2/stochss/app/static/modelEditor/node_modules/ampersand-form-view/node_modules/extend-object/extend-object.js"][0].apply(exports,arguments)
-},{}],"/home/bbales2/stochss/app/static/modelEditor/node_modules/ampersand-rest-collection/node_modules/ampersand-collection-underscore-mixin/ampersand-collection-underscore-mixin.js":[function(require,module,exports){
+},{"ampersand-sync":102,"extend-object":116}],102:[function(require,module,exports){
+arguments[4][86][0].apply(exports,arguments)
+},{"dup":86,"qs":103,"underscore":108,"xhr":109}],103:[function(require,module,exports){
+arguments[4][87][0].apply(exports,arguments)
+},{"./lib":104,"dup":87}],104:[function(require,module,exports){
+arguments[4][88][0].apply(exports,arguments)
+},{"./parse":105,"./stringify":106,"dup":88}],105:[function(require,module,exports){
+arguments[4][89][0].apply(exports,arguments)
+},{"./utils":107,"dup":89}],106:[function(require,module,exports){
+arguments[4][90][0].apply(exports,arguments)
+},{"buffer":150,"dup":90}],107:[function(require,module,exports){
+arguments[4][91][0].apply(exports,arguments)
+},{"buffer":150,"dup":91}],108:[function(require,module,exports){
+arguments[4][92][0].apply(exports,arguments)
+},{"dup":92}],109:[function(require,module,exports){
+arguments[4][93][0].apply(exports,arguments)
+},{"dup":93,"global/window":110,"once":111,"parse-headers":115}],110:[function(require,module,exports){
+arguments[4][94][0].apply(exports,arguments)
+},{"dup":94}],111:[function(require,module,exports){
+arguments[4][95][0].apply(exports,arguments)
+},{"dup":95}],112:[function(require,module,exports){
+arguments[4][96][0].apply(exports,arguments)
+},{"dup":96,"is-function":113}],113:[function(require,module,exports){
+arguments[4][97][0].apply(exports,arguments)
+},{"dup":97}],114:[function(require,module,exports){
+arguments[4][98][0].apply(exports,arguments)
+},{"dup":98}],115:[function(require,module,exports){
+arguments[4][99][0].apply(exports,arguments)
+},{"dup":99,"for-each":112,"trim":114}],116:[function(require,module,exports){
+arguments[4][57][0].apply(exports,arguments)
+},{"dup":57}],117:[function(require,module,exports){
 ;if (typeof window !== "undefined") {  window.ampersand = window.ampersand || {};  window.ampersand["ampersand-collection-underscore-mixin"] = window.ampersand["ampersand-collection-underscore-mixin"] || [];  window.ampersand["ampersand-collection-underscore-mixin"].push("1.0.3");}
 var _ = require('underscore');
 var slice = [].slice;
@@ -9605,7 +9605,7 @@ mixins.pluck = function (attr) {
 
 module.exports = mixins;
 
-},{"underscore":"/home/bbales2/stochss/app/static/modelEditor/node_modules/underscore/underscore.js"}],"/home/bbales2/stochss/app/static/modelEditor/node_modules/ampersand-select-view/ampersand-select-view.js":[function(require,module,exports){
+},{"underscore":176}],118:[function(require,module,exports){
 ;if (typeof window !== "undefined") {  window.ampersand = window.ampersand || {};  window.ampersand["ampersand-select-view"] = window.ampersand["ampersand-select-view"] || [];  window.ampersand["ampersand-select-view"].push("2.3.0");}
 var domify = require('domify');
 var dom = require('ampersand-dom');
@@ -9903,7 +9903,7 @@ SelectView.prototype.createOption = function (value, text, model) {
 
 module.exports = SelectView;
 
-},{"amp-extend":"/home/bbales2/stochss/app/static/modelEditor/node_modules/amp-extend/extend.js","ampersand-dom":"/home/bbales2/stochss/app/static/modelEditor/node_modules/ampersand-dom/ampersand-dom.js","ampersand-events":"/home/bbales2/stochss/app/static/modelEditor/node_modules/ampersand-events/ampersand-events.js","domify":"/home/bbales2/stochss/app/static/modelEditor/node_modules/domify/index.js","matches-selector":"/home/bbales2/stochss/app/static/modelEditor/node_modules/ampersand-select-view/node_modules/matches-selector/index.js"}],"/home/bbales2/stochss/app/static/modelEditor/node_modules/ampersand-select-view/node_modules/matches-selector/index.js":[function(require,module,exports){
+},{"amp-extend":46,"ampersand-dom":59,"ampersand-events":60,"domify":156,"matches-selector":119}],119:[function(require,module,exports){
 'use strict';
 
 var proto = Element.prototype;
@@ -9933,7 +9933,7 @@ function match(el, selector) {
   }
   return false;
 }
-},{}],"/home/bbales2/stochss/app/static/modelEditor/node_modules/ampersand-state/ampersand-state.js":[function(require,module,exports){
+},{}],120:[function(require,module,exports){
 ;if (typeof window !== "undefined") {  window.ampersand = window.ampersand || {};  window.ampersand["ampersand-state"] = window.ampersand["ampersand-state"] || [];  window.ampersand["ampersand-state"].push("4.4.5");}
 var _ = require('underscore');
 var BBEvents = require('backbone-events-standalone');
@@ -10713,7 +10713,7 @@ Base.extend = extend;
 // Our main exports
 module.exports = Base;
 
-},{"array-next":"/home/bbales2/stochss/app/static/modelEditor/node_modules/ampersand-state/node_modules/array-next/array-next.js","backbone-events-standalone":"/home/bbales2/stochss/app/static/modelEditor/node_modules/ampersand-state/node_modules/backbone-events-standalone/index.js","key-tree-store":"/home/bbales2/stochss/app/static/modelEditor/node_modules/ampersand-state/node_modules/key-tree-store/key-tree-store.js","underscore":"/home/bbales2/stochss/app/static/modelEditor/node_modules/underscore/underscore.js"}],"/home/bbales2/stochss/app/static/modelEditor/node_modules/ampersand-state/node_modules/array-next/array-next.js":[function(require,module,exports){
+},{"array-next":121,"backbone-events-standalone":123,"key-tree-store":124,"underscore":176}],121:[function(require,module,exports){
 module.exports = function arrayNext(array, currentItem) {
     var len = array.length;
     var newIndex = array.indexOf(currentItem) + 1;
@@ -10721,11 +10721,11 @@ module.exports = function arrayNext(array, currentItem) {
     return array[newIndex];
 };
 
-},{}],"/home/bbales2/stochss/app/static/modelEditor/node_modules/ampersand-state/node_modules/backbone-events-standalone/backbone-events-standalone.js":[function(require,module,exports){
-arguments[4]["/home/bbales2/stochss/app/static/modelEditor/node_modules/ampersand-form-view/node_modules/backbone-events-standalone/backbone-events-standalone.js"][0].apply(exports,arguments)
-},{}],"/home/bbales2/stochss/app/static/modelEditor/node_modules/ampersand-state/node_modules/backbone-events-standalone/index.js":[function(require,module,exports){
-arguments[4]["/home/bbales2/stochss/app/static/modelEditor/node_modules/ampersand-form-view/node_modules/backbone-events-standalone/index.js"][0].apply(exports,arguments)
-},{"./backbone-events-standalone":"/home/bbales2/stochss/app/static/modelEditor/node_modules/ampersand-state/node_modules/backbone-events-standalone/backbone-events-standalone.js"}],"/home/bbales2/stochss/app/static/modelEditor/node_modules/ampersand-state/node_modules/key-tree-store/key-tree-store.js":[function(require,module,exports){
+},{}],122:[function(require,module,exports){
+arguments[4][55][0].apply(exports,arguments)
+},{"dup":55}],123:[function(require,module,exports){
+arguments[4][56][0].apply(exports,arguments)
+},{"./backbone-events-standalone":122,"dup":56}],124:[function(require,module,exports){
 function KeyTreeStore() {
     this.storage = {};
 }
@@ -10766,7 +10766,7 @@ KeyTreeStore.prototype.get = function (keypath) {
 
 module.exports = KeyTreeStore;
 
-},{}],"/home/bbales2/stochss/app/static/modelEditor/node_modules/ampersand-subcollection/ampersand-subcollection.js":[function(require,module,exports){
+},{}],125:[function(require,module,exports){
 ;if (typeof window !== "undefined") {  window.ampersand = window.ampersand || {};  window.ampersand["ampersand-subcollection"] = window.ampersand["ampersand-subcollection"] || [];  window.ampersand["ampersand-subcollection"].push("2.0.1");}
 var _ = require('underscore');
 var Events = require('backbone-events-standalone');
@@ -10991,17 +10991,17 @@ SubCollection.extend = classExtend;
 
 module.exports = SubCollection;
 
-},{"ampersand-class-extend":"/home/bbales2/stochss/app/static/modelEditor/node_modules/ampersand-subcollection/node_modules/ampersand-class-extend/ampersand-class-extend.js","ampersand-collection-underscore-mixin":"/home/bbales2/stochss/app/static/modelEditor/node_modules/ampersand-subcollection/node_modules/ampersand-collection-underscore-mixin/ampersand-collection-underscore-mixin.js","backbone-events-standalone":"/home/bbales2/stochss/app/static/modelEditor/node_modules/ampersand-subcollection/node_modules/backbone-events-standalone/index.js","underscore":"/home/bbales2/stochss/app/static/modelEditor/node_modules/underscore/underscore.js"}],"/home/bbales2/stochss/app/static/modelEditor/node_modules/ampersand-subcollection/node_modules/ampersand-class-extend/ampersand-class-extend.js":[function(require,module,exports){
-arguments[4]["/home/bbales2/stochss/app/static/modelEditor/node_modules/ampersand-collection/node_modules/ampersand-class-extend/ampersand-class-extend.js"][0].apply(exports,arguments)
-},{"extend-object":"/home/bbales2/stochss/app/static/modelEditor/node_modules/ampersand-subcollection/node_modules/ampersand-class-extend/node_modules/extend-object/extend-object.js"}],"/home/bbales2/stochss/app/static/modelEditor/node_modules/ampersand-subcollection/node_modules/ampersand-class-extend/node_modules/extend-object/extend-object.js":[function(require,module,exports){
-arguments[4]["/home/bbales2/stochss/app/static/modelEditor/node_modules/ampersand-rest-collection/node_modules/ampersand-collection-rest-mixin/node_modules/extend-object/extend-object.js"][0].apply(exports,arguments)
-},{}],"/home/bbales2/stochss/app/static/modelEditor/node_modules/ampersand-subcollection/node_modules/ampersand-collection-underscore-mixin/ampersand-collection-underscore-mixin.js":[function(require,module,exports){
-arguments[4]["/home/bbales2/stochss/app/static/modelEditor/node_modules/ampersand-rest-collection/node_modules/ampersand-collection-underscore-mixin/ampersand-collection-underscore-mixin.js"][0].apply(exports,arguments)
-},{"underscore":"/home/bbales2/stochss/app/static/modelEditor/node_modules/underscore/underscore.js"}],"/home/bbales2/stochss/app/static/modelEditor/node_modules/ampersand-subcollection/node_modules/backbone-events-standalone/backbone-events-standalone.js":[function(require,module,exports){
-arguments[4]["/home/bbales2/stochss/app/static/modelEditor/node_modules/ampersand-state/node_modules/backbone-events-standalone/backbone-events-standalone.js"][0].apply(exports,arguments)
-},{}],"/home/bbales2/stochss/app/static/modelEditor/node_modules/ampersand-subcollection/node_modules/backbone-events-standalone/index.js":[function(require,module,exports){
-arguments[4]["/home/bbales2/stochss/app/static/modelEditor/node_modules/ampersand-state/node_modules/backbone-events-standalone/index.js"][0].apply(exports,arguments)
-},{"./backbone-events-standalone":"/home/bbales2/stochss/app/static/modelEditor/node_modules/ampersand-subcollection/node_modules/backbone-events-standalone/backbone-events-standalone.js"}],"/home/bbales2/stochss/app/static/modelEditor/node_modules/ampersand-view/ampersand-view.js":[function(require,module,exports){
+},{"ampersand-class-extend":126,"ampersand-collection-underscore-mixin":128,"backbone-events-standalone":130,"underscore":176}],126:[function(require,module,exports){
+arguments[4][54][0].apply(exports,arguments)
+},{"dup":54,"extend-object":127}],127:[function(require,module,exports){
+arguments[4][57][0].apply(exports,arguments)
+},{"dup":57}],128:[function(require,module,exports){
+arguments[4][117][0].apply(exports,arguments)
+},{"dup":117,"underscore":176}],129:[function(require,module,exports){
+arguments[4][55][0].apply(exports,arguments)
+},{"dup":55}],130:[function(require,module,exports){
+arguments[4][56][0].apply(exports,arguments)
+},{"./backbone-events-standalone":129,"dup":56}],131:[function(require,module,exports){
 ;if (typeof window !== "undefined") {  window.ampersand = window.ampersand || {};  window.ampersand["ampersand-view"] = window.ampersand["ampersand-view"] || [];  window.ampersand["ampersand-view"].push("7.2.0");}
 var State = require('ampersand-state');
 var CollectionView = require('ampersand-collection-view');
@@ -11371,7 +11371,7 @@ _.extend(View.prototype, {
 View.extend = BaseState.extend;
 module.exports = View;
 
-},{"ampersand-collection-view":"/home/bbales2/stochss/app/static/modelEditor/node_modules/ampersand-view/node_modules/ampersand-collection-view/ampersand-collection-view.js","ampersand-dom-bindings":"/home/bbales2/stochss/app/static/modelEditor/node_modules/ampersand-view/node_modules/ampersand-dom-bindings/ampersand-dom-bindings.js","ampersand-state":"/home/bbales2/stochss/app/static/modelEditor/node_modules/ampersand-state/ampersand-state.js","domify":"/home/bbales2/stochss/app/static/modelEditor/node_modules/domify/index.js","events-mixin":"/home/bbales2/stochss/app/static/modelEditor/node_modules/ampersand-view/node_modules/events-mixin/index.js","get-object-path":"/home/bbales2/stochss/app/static/modelEditor/node_modules/ampersand-view/node_modules/get-object-path/index.js","matches-selector":"/home/bbales2/stochss/app/static/modelEditor/node_modules/ampersand-view/node_modules/matches-selector/index.js","underscore":"/home/bbales2/stochss/app/static/modelEditor/node_modules/ampersand-view/node_modules/underscore/underscore.js"}],"/home/bbales2/stochss/app/static/modelEditor/node_modules/ampersand-view/node_modules/ampersand-collection-view/ampersand-collection-view.js":[function(require,module,exports){
+},{"ampersand-collection-view":132,"ampersand-dom-bindings":137,"ampersand-state":120,"domify":156,"events-mixin":139,"get-object-path":144,"matches-selector":145,"underscore":146}],132:[function(require,module,exports){
 ;if (typeof window !== "undefined") {  window.ampersand = window.ampersand || {};  window.ampersand["ampersand-collection-view"] = window.ampersand["ampersand-collection-view"] || [];  window.ampersand["ampersand-collection-view"].push("1.2.1");}
 var _ = require('underscore');
 var BBEvents = require('backbone-events-standalone');
@@ -11533,11 +11533,11 @@ CollectionView.extend = ampExtend;
 
 module.exports = CollectionView;
 
-},{"ampersand-class-extend":"/home/bbales2/stochss/app/static/modelEditor/node_modules/ampersand-view/node_modules/ampersand-collection-view/node_modules/ampersand-class-extend/ampersand-class-extend.js","backbone-events-standalone":"/home/bbales2/stochss/app/static/modelEditor/node_modules/ampersand-view/node_modules/ampersand-collection-view/node_modules/backbone-events-standalone/index.js","underscore":"/home/bbales2/stochss/app/static/modelEditor/node_modules/ampersand-view/node_modules/underscore/underscore.js"}],"/home/bbales2/stochss/app/static/modelEditor/node_modules/ampersand-view/node_modules/ampersand-collection-view/node_modules/ampersand-class-extend/ampersand-class-extend.js":[function(require,module,exports){
-arguments[4]["/home/bbales2/stochss/app/static/modelEditor/node_modules/ampersand-subcollection/node_modules/ampersand-class-extend/ampersand-class-extend.js"][0].apply(exports,arguments)
-},{"extend-object":"/home/bbales2/stochss/app/static/modelEditor/node_modules/ampersand-view/node_modules/ampersand-collection-view/node_modules/ampersand-class-extend/node_modules/extend-object/extend-object.js"}],"/home/bbales2/stochss/app/static/modelEditor/node_modules/ampersand-view/node_modules/ampersand-collection-view/node_modules/ampersand-class-extend/node_modules/extend-object/extend-object.js":[function(require,module,exports){
-arguments[4]["/home/bbales2/stochss/app/static/modelEditor/node_modules/ampersand-subcollection/node_modules/ampersand-class-extend/node_modules/extend-object/extend-object.js"][0].apply(exports,arguments)
-},{}],"/home/bbales2/stochss/app/static/modelEditor/node_modules/ampersand-view/node_modules/ampersand-collection-view/node_modules/backbone-events-standalone/backbone-events-standalone.js":[function(require,module,exports){
+},{"ampersand-class-extend":133,"backbone-events-standalone":136,"underscore":146}],133:[function(require,module,exports){
+arguments[4][54][0].apply(exports,arguments)
+},{"dup":54,"extend-object":134}],134:[function(require,module,exports){
+arguments[4][57][0].apply(exports,arguments)
+},{"dup":57}],135:[function(require,module,exports){
 /**
  * Standalone extraction of Backbone.Events, no external dependency required.
  * Degrades nicely when Backone/underscore are already available in the current
@@ -11815,9 +11815,9 @@ arguments[4]["/home/bbales2/stochss/app/static/modelEditor/node_modules/ampersan
   }
 })(this);
 
-},{}],"/home/bbales2/stochss/app/static/modelEditor/node_modules/ampersand-view/node_modules/ampersand-collection-view/node_modules/backbone-events-standalone/index.js":[function(require,module,exports){
-arguments[4]["/home/bbales2/stochss/app/static/modelEditor/node_modules/ampersand-subcollection/node_modules/backbone-events-standalone/index.js"][0].apply(exports,arguments)
-},{"./backbone-events-standalone":"/home/bbales2/stochss/app/static/modelEditor/node_modules/ampersand-view/node_modules/ampersand-collection-view/node_modules/backbone-events-standalone/backbone-events-standalone.js"}],"/home/bbales2/stochss/app/static/modelEditor/node_modules/ampersand-view/node_modules/ampersand-dom-bindings/ampersand-dom-bindings.js":[function(require,module,exports){
+},{}],136:[function(require,module,exports){
+arguments[4][56][0].apply(exports,arguments)
+},{"./backbone-events-standalone":135,"dup":56}],137:[function(require,module,exports){
 ;if (typeof window !== "undefined") {  window.ampersand = window.ampersand || {};  window.ampersand["ampersand-dom-bindings"] = window.ampersand["ampersand-dom-bindings"] || [];  window.ampersand["ampersand-dom-bindings"].push("3.3.3");}
 var Store = require('key-tree-store');
 var dom = require('ampersand-dom');
@@ -12011,7 +12011,7 @@ function getBindingFunc(binding, context) {
     }
 }
 
-},{"ampersand-dom":"/home/bbales2/stochss/app/static/modelEditor/node_modules/ampersand-dom/ampersand-dom.js","key-tree-store":"/home/bbales2/stochss/app/static/modelEditor/node_modules/ampersand-view/node_modules/ampersand-dom-bindings/node_modules/key-tree-store/key-tree-store.js","matches-selector":"/home/bbales2/stochss/app/static/modelEditor/node_modules/ampersand-view/node_modules/matches-selector/index.js"}],"/home/bbales2/stochss/app/static/modelEditor/node_modules/ampersand-view/node_modules/ampersand-dom-bindings/node_modules/key-tree-store/key-tree-store.js":[function(require,module,exports){
+},{"ampersand-dom":59,"key-tree-store":138,"matches-selector":145}],138:[function(require,module,exports){
 var slice = Array.prototype.slice;
 
 // our constructor
@@ -12093,7 +12093,7 @@ KeyTreeStore.prototype.run = function (keypath, context) {
 
 module.exports = KeyTreeStore;
 
-},{}],"/home/bbales2/stochss/app/static/modelEditor/node_modules/ampersand-view/node_modules/events-mixin/index.js":[function(require,module,exports){
+},{}],139:[function(require,module,exports){
 
 /**
  * Module dependencies.
@@ -12283,7 +12283,7 @@ function parse(event) {
   }
 }
 
-},{"component-event":"/home/bbales2/stochss/app/static/modelEditor/node_modules/ampersand-view/node_modules/events-mixin/node_modules/component-event/index.js","delegate-events":"/home/bbales2/stochss/app/static/modelEditor/node_modules/ampersand-view/node_modules/events-mixin/node_modules/delegate-events/index.js"}],"/home/bbales2/stochss/app/static/modelEditor/node_modules/ampersand-view/node_modules/events-mixin/node_modules/component-event/index.js":[function(require,module,exports){
+},{"component-event":140,"delegate-events":141}],140:[function(require,module,exports){
 var bind = window.addEventListener ? 'addEventListener' : 'attachEvent',
     unbind = window.removeEventListener ? 'removeEventListener' : 'detachEvent',
     prefix = bind !== 'addEventListener' ? 'on' : '';
@@ -12319,7 +12319,7 @@ exports.unbind = function(el, type, fn, capture){
   el[unbind](prefix + type, fn, capture || false);
   return fn;
 };
-},{}],"/home/bbales2/stochss/app/static/modelEditor/node_modules/ampersand-view/node_modules/events-mixin/node_modules/delegate-events/index.js":[function(require,module,exports){
+},{}],141:[function(require,module,exports){
 /**
  * Module dependencies.
  */
@@ -12371,7 +12371,7 @@ exports.unbind = function(el, type, fn, capture){
   event.unbind(el, type, fn, capture);
 };
 
-},{"closest":"/home/bbales2/stochss/app/static/modelEditor/node_modules/ampersand-view/node_modules/events-mixin/node_modules/delegate-events/node_modules/closest/index.js","event":"/home/bbales2/stochss/app/static/modelEditor/node_modules/ampersand-view/node_modules/events-mixin/node_modules/component-event/index.js"}],"/home/bbales2/stochss/app/static/modelEditor/node_modules/ampersand-view/node_modules/events-mixin/node_modules/delegate-events/node_modules/closest/index.js":[function(require,module,exports){
+},{"closest":142,"event":140}],142:[function(require,module,exports){
 var matches = require('matches-selector')
 
 module.exports = function (element, selector, checkYoSelf) {
@@ -12383,7 +12383,7 @@ module.exports = function (element, selector, checkYoSelf) {
   }
 }
 
-},{"matches-selector":"/home/bbales2/stochss/app/static/modelEditor/node_modules/ampersand-view/node_modules/events-mixin/node_modules/delegate-events/node_modules/closest/node_modules/matches-selector/index.js"}],"/home/bbales2/stochss/app/static/modelEditor/node_modules/ampersand-view/node_modules/events-mixin/node_modules/delegate-events/node_modules/closest/node_modules/matches-selector/index.js":[function(require,module,exports){
+},{"matches-selector":143}],143:[function(require,module,exports){
 
 /**
  * Element prototype.
@@ -12424,7 +12424,7 @@ function match(el, selector) {
   }
   return false;
 }
-},{}],"/home/bbales2/stochss/app/static/modelEditor/node_modules/ampersand-view/node_modules/get-object-path/index.js":[function(require,module,exports){
+},{}],144:[function(require,module,exports){
 module.exports = get;
 
 function get (context, path) {
@@ -12447,11 +12447,11 @@ function get (context, path) {
   return result;
 }
 
-},{}],"/home/bbales2/stochss/app/static/modelEditor/node_modules/ampersand-view/node_modules/matches-selector/index.js":[function(require,module,exports){
-arguments[4]["/home/bbales2/stochss/app/static/modelEditor/node_modules/ampersand-select-view/node_modules/matches-selector/index.js"][0].apply(exports,arguments)
-},{}],"/home/bbales2/stochss/app/static/modelEditor/node_modules/ampersand-view/node_modules/underscore/underscore.js":[function(require,module,exports){
-arguments[4]["/home/bbales2/stochss/app/static/modelEditor/node_modules/ampersand-rest-collection/node_modules/ampersand-collection-rest-mixin/node_modules/ampersand-sync/node_modules/underscore/underscore.js"][0].apply(exports,arguments)
-},{}],"/home/bbales2/stochss/app/static/modelEditor/node_modules/andlog/andlog.js":[function(require,module,exports){
+},{}],145:[function(require,module,exports){
+arguments[4][119][0].apply(exports,arguments)
+},{"dup":119}],146:[function(require,module,exports){
+arguments[4][92][0].apply(exports,arguments)
+},{"dup":92}],147:[function(require,module,exports){
 // follow @HenrikJoreteg and @andyet if you like this ;)
 (function () {
     var inNode = typeof window === 'undefined',
@@ -12482,7 +12482,7 @@ arguments[4]["/home/bbales2/stochss/app/static/modelEditor/node_modules/ampersan
     }
 })();
 
-},{}],"/home/bbales2/stochss/app/static/modelEditor/node_modules/blueimp-file-upload/js/jquery.fileupload.js":[function(require,module,exports){
+},{}],148:[function(require,module,exports){
 /*
  * jQuery File Upload Plugin 5.42.3
  * https://github.com/blueimp/jQuery-File-Upload
@@ -13951,7 +13951,7 @@ arguments[4]["/home/bbales2/stochss/app/static/modelEditor/node_modules/ampersan
 
 }));
 
-},{"./vendor/jquery.ui.widget":"/home/bbales2/stochss/app/static/modelEditor/node_modules/blueimp-file-upload/js/vendor/jquery.ui.widget.js","jquery":"/home/bbales2/stochss/app/static/modelEditor/node_modules/jquery/dist/jquery.js"}],"/home/bbales2/stochss/app/static/modelEditor/node_modules/blueimp-file-upload/js/vendor/jquery.ui.widget.js":[function(require,module,exports){
+},{"./vendor/jquery.ui.widget":149,"jquery":158}],149:[function(require,module,exports){
 /*! jQuery UI - v1.11.1+CommonJS - 2014-09-17
 * http://jqueryui.com
 * Includes: widget.js
@@ -14516,7 +14516,1557 @@ var widget = $.widget;
 
 }));
 
-},{"jquery":"/home/bbales2/stochss/app/static/modelEditor/node_modules/jquery/dist/jquery.js"}],"/home/bbales2/stochss/app/static/modelEditor/node_modules/clientconfig/clientconfig.js":[function(require,module,exports){
+},{"jquery":158}],150:[function(require,module,exports){
+/*!
+ * The buffer module from node.js, for the browser.
+ *
+ * @author   Feross Aboukhadijeh <feross@feross.org> <http://feross.org>
+ * @license  MIT
+ */
+
+var base64 = require('base64-js')
+var ieee754 = require('ieee754')
+var isArray = require('is-array')
+
+exports.Buffer = Buffer
+exports.SlowBuffer = SlowBuffer
+exports.INSPECT_MAX_BYTES = 50
+Buffer.poolSize = 8192 // not used by this implementation
+
+var kMaxLength = 0x3fffffff
+var rootParent = {}
+
+/**
+ * If `Buffer.TYPED_ARRAY_SUPPORT`:
+ *   === true    Use Uint8Array implementation (fastest)
+ *   === false   Use Object implementation (most compatible, even IE6)
+ *
+ * Browsers that support typed arrays are IE 10+, Firefox 4+, Chrome 7+, Safari 5.1+,
+ * Opera 11.6+, iOS 4.2+.
+ *
+ * Note:
+ *
+ * - Implementation must support adding new properties to `Uint8Array` instances.
+ *   Firefox 4-29 lacked support, fixed in Firefox 30+.
+ *   See: https://bugzilla.mozilla.org/show_bug.cgi?id=695438.
+ *
+ *  - Chrome 9-10 is missing the `TypedArray.prototype.subarray` function.
+ *
+ *  - IE10 has a broken `TypedArray.prototype.subarray` function which returns arrays of
+ *    incorrect length in some situations.
+ *
+ * We detect these buggy browsers and set `Buffer.TYPED_ARRAY_SUPPORT` to `false` so they will
+ * get the Object implementation, which is slower but will work correctly.
+ */
+Buffer.TYPED_ARRAY_SUPPORT = (function () {
+  try {
+    var buf = new ArrayBuffer(0)
+    var arr = new Uint8Array(buf)
+    arr.foo = function () { return 42 }
+    return arr.foo() === 42 && // typed array instances can be augmented
+        typeof arr.subarray === 'function' && // chrome 9-10 lack `subarray`
+        new Uint8Array(1).subarray(1, 1).byteLength === 0 // ie10 has broken `subarray`
+  } catch (e) {
+    return false
+  }
+})()
+
+/**
+ * Class: Buffer
+ * =============
+ *
+ * The Buffer constructor returns instances of `Uint8Array` that are augmented
+ * with function properties for all the node `Buffer` API functions. We use
+ * `Uint8Array` so that square bracket notation works as expected -- it returns
+ * a single octet.
+ *
+ * By augmenting the instances, we can avoid modifying the `Uint8Array`
+ * prototype.
+ */
+function Buffer (subject, encoding) {
+  var self = this
+  if (!(self instanceof Buffer)) return new Buffer(subject, encoding)
+
+  var type = typeof subject
+  var length
+
+  if (type === 'number') {
+    length = +subject
+  } else if (type === 'string') {
+    length = Buffer.byteLength(subject, encoding)
+  } else if (type === 'object' && subject !== null) {
+    // assume object is array-like
+    if (subject.type === 'Buffer' && isArray(subject.data)) subject = subject.data
+    length = +subject.length
+  } else {
+    throw new TypeError('must start with number, buffer, array or string')
+  }
+
+  if (length > kMaxLength) {
+    throw new RangeError('Attempt to allocate Buffer larger than maximum size: 0x' +
+      kMaxLength.toString(16) + ' bytes')
+  }
+
+  if (length < 0) length = 0
+  else length >>>= 0 // coerce to uint32
+
+  if (Buffer.TYPED_ARRAY_SUPPORT) {
+    // Preferred: Return an augmented `Uint8Array` instance for best performance
+    self = Buffer._augment(new Uint8Array(length)) // eslint-disable-line consistent-this
+  } else {
+    // Fallback: Return THIS instance of Buffer (created by `new`)
+    self.length = length
+    self._isBuffer = true
+  }
+
+  var i
+  if (Buffer.TYPED_ARRAY_SUPPORT && typeof subject.byteLength === 'number') {
+    // Speed optimization -- use set if we're copying from a typed array
+    self._set(subject)
+  } else if (isArrayish(subject)) {
+    // Treat array-ish objects as a byte array
+    if (Buffer.isBuffer(subject)) {
+      for (i = 0; i < length; i++) {
+        self[i] = subject.readUInt8(i)
+      }
+    } else {
+      for (i = 0; i < length; i++) {
+        self[i] = ((subject[i] % 256) + 256) % 256
+      }
+    }
+  } else if (type === 'string') {
+    self.write(subject, 0, encoding)
+  } else if (type === 'number' && !Buffer.TYPED_ARRAY_SUPPORT) {
+    for (i = 0; i < length; i++) {
+      self[i] = 0
+    }
+  }
+
+  if (length > 0 && length <= Buffer.poolSize) self.parent = rootParent
+
+  return self
+}
+
+function SlowBuffer (subject, encoding) {
+  if (!(this instanceof SlowBuffer)) return new SlowBuffer(subject, encoding)
+
+  var buf = new Buffer(subject, encoding)
+  delete buf.parent
+  return buf
+}
+
+Buffer.isBuffer = function isBuffer (b) {
+  return !!(b != null && b._isBuffer)
+}
+
+Buffer.compare = function compare (a, b) {
+  if (!Buffer.isBuffer(a) || !Buffer.isBuffer(b)) {
+    throw new TypeError('Arguments must be Buffers')
+  }
+
+  if (a === b) return 0
+
+  var x = a.length
+  var y = b.length
+  for (var i = 0, len = Math.min(x, y); i < len && a[i] === b[i]; i++) {}
+  if (i !== len) {
+    x = a[i]
+    y = b[i]
+  }
+  if (x < y) return -1
+  if (y < x) return 1
+  return 0
+}
+
+Buffer.isEncoding = function isEncoding (encoding) {
+  switch (String(encoding).toLowerCase()) {
+    case 'hex':
+    case 'utf8':
+    case 'utf-8':
+    case 'ascii':
+    case 'binary':
+    case 'base64':
+    case 'raw':
+    case 'ucs2':
+    case 'ucs-2':
+    case 'utf16le':
+    case 'utf-16le':
+      return true
+    default:
+      return false
+  }
+}
+
+Buffer.concat = function concat (list, totalLength) {
+  if (!isArray(list)) throw new TypeError('list argument must be an Array of Buffers.')
+
+  if (list.length === 0) {
+    return new Buffer(0)
+  } else if (list.length === 1) {
+    return list[0]
+  }
+
+  var i
+  if (totalLength === undefined) {
+    totalLength = 0
+    for (i = 0; i < list.length; i++) {
+      totalLength += list[i].length
+    }
+  }
+
+  var buf = new Buffer(totalLength)
+  var pos = 0
+  for (i = 0; i < list.length; i++) {
+    var item = list[i]
+    item.copy(buf, pos)
+    pos += item.length
+  }
+  return buf
+}
+
+Buffer.byteLength = function byteLength (str, encoding) {
+  var ret
+  str = str + ''
+  switch (encoding || 'utf8') {
+    case 'ascii':
+    case 'binary':
+    case 'raw':
+      ret = str.length
+      break
+    case 'ucs2':
+    case 'ucs-2':
+    case 'utf16le':
+    case 'utf-16le':
+      ret = str.length * 2
+      break
+    case 'hex':
+      ret = str.length >>> 1
+      break
+    case 'utf8':
+    case 'utf-8':
+      ret = utf8ToBytes(str).length
+      break
+    case 'base64':
+      ret = base64ToBytes(str).length
+      break
+    default:
+      ret = str.length
+  }
+  return ret
+}
+
+// pre-set for values that may exist in the future
+Buffer.prototype.length = undefined
+Buffer.prototype.parent = undefined
+
+// toString(encoding, start=0, end=buffer.length)
+Buffer.prototype.toString = function toString (encoding, start, end) {
+  var loweredCase = false
+
+  start = start >>> 0
+  end = end === undefined || end === Infinity ? this.length : end >>> 0
+
+  if (!encoding) encoding = 'utf8'
+  if (start < 0) start = 0
+  if (end > this.length) end = this.length
+  if (end <= start) return ''
+
+  while (true) {
+    switch (encoding) {
+      case 'hex':
+        return hexSlice(this, start, end)
+
+      case 'utf8':
+      case 'utf-8':
+        return utf8Slice(this, start, end)
+
+      case 'ascii':
+        return asciiSlice(this, start, end)
+
+      case 'binary':
+        return binarySlice(this, start, end)
+
+      case 'base64':
+        return base64Slice(this, start, end)
+
+      case 'ucs2':
+      case 'ucs-2':
+      case 'utf16le':
+      case 'utf-16le':
+        return utf16leSlice(this, start, end)
+
+      default:
+        if (loweredCase) throw new TypeError('Unknown encoding: ' + encoding)
+        encoding = (encoding + '').toLowerCase()
+        loweredCase = true
+    }
+  }
+}
+
+Buffer.prototype.equals = function equals (b) {
+  if (!Buffer.isBuffer(b)) throw new TypeError('Argument must be a Buffer')
+  if (this === b) return true
+  return Buffer.compare(this, b) === 0
+}
+
+Buffer.prototype.inspect = function inspect () {
+  var str = ''
+  var max = exports.INSPECT_MAX_BYTES
+  if (this.length > 0) {
+    str = this.toString('hex', 0, max).match(/.{2}/g).join(' ')
+    if (this.length > max) str += ' ... '
+  }
+  return '<Buffer ' + str + '>'
+}
+
+Buffer.prototype.compare = function compare (b) {
+  if (!Buffer.isBuffer(b)) throw new TypeError('Argument must be a Buffer')
+  if (this === b) return 0
+  return Buffer.compare(this, b)
+}
+
+Buffer.prototype.indexOf = function indexOf (val, byteOffset) {
+  if (byteOffset > 0x7fffffff) byteOffset = 0x7fffffff
+  else if (byteOffset < -0x80000000) byteOffset = -0x80000000
+  byteOffset >>= 0
+
+  if (this.length === 0) return -1
+  if (byteOffset >= this.length) return -1
+
+  // Negative offsets start from the end of the buffer
+  if (byteOffset < 0) byteOffset = Math.max(this.length + byteOffset, 0)
+
+  if (typeof val === 'string') {
+    if (val.length === 0) return -1 // special case: looking for empty string always fails
+    return String.prototype.indexOf.call(this, val, byteOffset)
+  }
+  if (Buffer.isBuffer(val)) {
+    return arrayIndexOf(this, val, byteOffset)
+  }
+  if (typeof val === 'number') {
+    if (Buffer.TYPED_ARRAY_SUPPORT && Uint8Array.prototype.indexOf === 'function') {
+      return Uint8Array.prototype.indexOf.call(this, val, byteOffset)
+    }
+    return arrayIndexOf(this, [ val ], byteOffset)
+  }
+
+  function arrayIndexOf (arr, val, byteOffset) {
+    var foundIndex = -1
+    for (var i = 0; byteOffset + i < arr.length; i++) {
+      if (arr[byteOffset + i] === val[foundIndex === -1 ? 0 : i - foundIndex]) {
+        if (foundIndex === -1) foundIndex = i
+        if (i - foundIndex + 1 === val.length) return byteOffset + foundIndex
+      } else {
+        foundIndex = -1
+      }
+    }
+    return -1
+  }
+
+  throw new TypeError('val must be string, number or Buffer')
+}
+
+// `get` will be removed in Node 0.13+
+Buffer.prototype.get = function get (offset) {
+  console.log('.get() is deprecated. Access using array indexes instead.')
+  return this.readUInt8(offset)
+}
+
+// `set` will be removed in Node 0.13+
+Buffer.prototype.set = function set (v, offset) {
+  console.log('.set() is deprecated. Access using array indexes instead.')
+  return this.writeUInt8(v, offset)
+}
+
+function hexWrite (buf, string, offset, length) {
+  offset = Number(offset) || 0
+  var remaining = buf.length - offset
+  if (!length) {
+    length = remaining
+  } else {
+    length = Number(length)
+    if (length > remaining) {
+      length = remaining
+    }
+  }
+
+  // must be an even number of digits
+  var strLen = string.length
+  if (strLen % 2 !== 0) throw new Error('Invalid hex string')
+
+  if (length > strLen / 2) {
+    length = strLen / 2
+  }
+  for (var i = 0; i < length; i++) {
+    var parsed = parseInt(string.substr(i * 2, 2), 16)
+    if (isNaN(parsed)) throw new Error('Invalid hex string')
+    buf[offset + i] = parsed
+  }
+  return i
+}
+
+function utf8Write (buf, string, offset, length) {
+  var charsWritten = blitBuffer(utf8ToBytes(string, buf.length - offset), buf, offset, length)
+  return charsWritten
+}
+
+function asciiWrite (buf, string, offset, length) {
+  var charsWritten = blitBuffer(asciiToBytes(string), buf, offset, length)
+  return charsWritten
+}
+
+function binaryWrite (buf, string, offset, length) {
+  return asciiWrite(buf, string, offset, length)
+}
+
+function base64Write (buf, string, offset, length) {
+  var charsWritten = blitBuffer(base64ToBytes(string), buf, offset, length)
+  return charsWritten
+}
+
+function utf16leWrite (buf, string, offset, length) {
+  var charsWritten = blitBuffer(utf16leToBytes(string, buf.length - offset), buf, offset, length)
+  return charsWritten
+}
+
+Buffer.prototype.write = function write (string, offset, length, encoding) {
+  // Support both (string, offset, length, encoding)
+  // and the legacy (string, encoding, offset, length)
+  if (isFinite(offset)) {
+    if (!isFinite(length)) {
+      encoding = length
+      length = undefined
+    }
+  } else {  // legacy
+    var swap = encoding
+    encoding = offset
+    offset = length
+    length = swap
+  }
+
+  offset = Number(offset) || 0
+
+  if (length < 0 || offset < 0 || offset > this.length) {
+    throw new RangeError('attempt to write outside buffer bounds')
+  }
+
+  var remaining = this.length - offset
+  if (!length) {
+    length = remaining
+  } else {
+    length = Number(length)
+    if (length > remaining) {
+      length = remaining
+    }
+  }
+  encoding = String(encoding || 'utf8').toLowerCase()
+
+  var ret
+  switch (encoding) {
+    case 'hex':
+      ret = hexWrite(this, string, offset, length)
+      break
+    case 'utf8':
+    case 'utf-8':
+      ret = utf8Write(this, string, offset, length)
+      break
+    case 'ascii':
+      ret = asciiWrite(this, string, offset, length)
+      break
+    case 'binary':
+      ret = binaryWrite(this, string, offset, length)
+      break
+    case 'base64':
+      ret = base64Write(this, string, offset, length)
+      break
+    case 'ucs2':
+    case 'ucs-2':
+    case 'utf16le':
+    case 'utf-16le':
+      ret = utf16leWrite(this, string, offset, length)
+      break
+    default:
+      throw new TypeError('Unknown encoding: ' + encoding)
+  }
+  return ret
+}
+
+Buffer.prototype.toJSON = function toJSON () {
+  return {
+    type: 'Buffer',
+    data: Array.prototype.slice.call(this._arr || this, 0)
+  }
+}
+
+function base64Slice (buf, start, end) {
+  if (start === 0 && end === buf.length) {
+    return base64.fromByteArray(buf)
+  } else {
+    return base64.fromByteArray(buf.slice(start, end))
+  }
+}
+
+function utf8Slice (buf, start, end) {
+  var res = ''
+  var tmp = ''
+  end = Math.min(buf.length, end)
+
+  for (var i = start; i < end; i++) {
+    if (buf[i] <= 0x7F) {
+      res += decodeUtf8Char(tmp) + String.fromCharCode(buf[i])
+      tmp = ''
+    } else {
+      tmp += '%' + buf[i].toString(16)
+    }
+  }
+
+  return res + decodeUtf8Char(tmp)
+}
+
+function asciiSlice (buf, start, end) {
+  var ret = ''
+  end = Math.min(buf.length, end)
+
+  for (var i = start; i < end; i++) {
+    ret += String.fromCharCode(buf[i] & 0x7F)
+  }
+  return ret
+}
+
+function binarySlice (buf, start, end) {
+  var ret = ''
+  end = Math.min(buf.length, end)
+
+  for (var i = start; i < end; i++) {
+    ret += String.fromCharCode(buf[i])
+  }
+  return ret
+}
+
+function hexSlice (buf, start, end) {
+  var len = buf.length
+
+  if (!start || start < 0) start = 0
+  if (!end || end < 0 || end > len) end = len
+
+  var out = ''
+  for (var i = start; i < end; i++) {
+    out += toHex(buf[i])
+  }
+  return out
+}
+
+function utf16leSlice (buf, start, end) {
+  var bytes = buf.slice(start, end)
+  var res = ''
+  for (var i = 0; i < bytes.length; i += 2) {
+    res += String.fromCharCode(bytes[i] + bytes[i + 1] * 256)
+  }
+  return res
+}
+
+Buffer.prototype.slice = function slice (start, end) {
+  var len = this.length
+  start = ~~start
+  end = end === undefined ? len : ~~end
+
+  if (start < 0) {
+    start += len
+    if (start < 0) start = 0
+  } else if (start > len) {
+    start = len
+  }
+
+  if (end < 0) {
+    end += len
+    if (end < 0) end = 0
+  } else if (end > len) {
+    end = len
+  }
+
+  if (end < start) end = start
+
+  var newBuf
+  if (Buffer.TYPED_ARRAY_SUPPORT) {
+    newBuf = Buffer._augment(this.subarray(start, end))
+  } else {
+    var sliceLen = end - start
+    newBuf = new Buffer(sliceLen, undefined)
+    for (var i = 0; i < sliceLen; i++) {
+      newBuf[i] = this[i + start]
+    }
+  }
+
+  if (newBuf.length) newBuf.parent = this.parent || this
+
+  return newBuf
+}
+
+/*
+ * Need to make sure that buffer isn't trying to write out of bounds.
+ */
+function checkOffset (offset, ext, length) {
+  if ((offset % 1) !== 0 || offset < 0) throw new RangeError('offset is not uint')
+  if (offset + ext > length) throw new RangeError('Trying to access beyond buffer length')
+}
+
+Buffer.prototype.readUIntLE = function readUIntLE (offset, byteLength, noAssert) {
+  offset = offset >>> 0
+  byteLength = byteLength >>> 0
+  if (!noAssert) checkOffset(offset, byteLength, this.length)
+
+  var val = this[offset]
+  var mul = 1
+  var i = 0
+  while (++i < byteLength && (mul *= 0x100)) {
+    val += this[offset + i] * mul
+  }
+
+  return val
+}
+
+Buffer.prototype.readUIntBE = function readUIntBE (offset, byteLength, noAssert) {
+  offset = offset >>> 0
+  byteLength = byteLength >>> 0
+  if (!noAssert) {
+    checkOffset(offset, byteLength, this.length)
+  }
+
+  var val = this[offset + --byteLength]
+  var mul = 1
+  while (byteLength > 0 && (mul *= 0x100)) {
+    val += this[offset + --byteLength] * mul
+  }
+
+  return val
+}
+
+Buffer.prototype.readUInt8 = function readUInt8 (offset, noAssert) {
+  if (!noAssert) checkOffset(offset, 1, this.length)
+  return this[offset]
+}
+
+Buffer.prototype.readUInt16LE = function readUInt16LE (offset, noAssert) {
+  if (!noAssert) checkOffset(offset, 2, this.length)
+  return this[offset] | (this[offset + 1] << 8)
+}
+
+Buffer.prototype.readUInt16BE = function readUInt16BE (offset, noAssert) {
+  if (!noAssert) checkOffset(offset, 2, this.length)
+  return (this[offset] << 8) | this[offset + 1]
+}
+
+Buffer.prototype.readUInt32LE = function readUInt32LE (offset, noAssert) {
+  if (!noAssert) checkOffset(offset, 4, this.length)
+
+  return ((this[offset]) |
+      (this[offset + 1] << 8) |
+      (this[offset + 2] << 16)) +
+      (this[offset + 3] * 0x1000000)
+}
+
+Buffer.prototype.readUInt32BE = function readUInt32BE (offset, noAssert) {
+  if (!noAssert) checkOffset(offset, 4, this.length)
+
+  return (this[offset] * 0x1000000) +
+    ((this[offset + 1] << 16) |
+    (this[offset + 2] << 8) |
+    this[offset + 3])
+}
+
+Buffer.prototype.readIntLE = function readIntLE (offset, byteLength, noAssert) {
+  offset = offset >>> 0
+  byteLength = byteLength >>> 0
+  if (!noAssert) checkOffset(offset, byteLength, this.length)
+
+  var val = this[offset]
+  var mul = 1
+  var i = 0
+  while (++i < byteLength && (mul *= 0x100)) {
+    val += this[offset + i] * mul
+  }
+  mul *= 0x80
+
+  if (val >= mul) val -= Math.pow(2, 8 * byteLength)
+
+  return val
+}
+
+Buffer.prototype.readIntBE = function readIntBE (offset, byteLength, noAssert) {
+  offset = offset >>> 0
+  byteLength = byteLength >>> 0
+  if (!noAssert) checkOffset(offset, byteLength, this.length)
+
+  var i = byteLength
+  var mul = 1
+  var val = this[offset + --i]
+  while (i > 0 && (mul *= 0x100)) {
+    val += this[offset + --i] * mul
+  }
+  mul *= 0x80
+
+  if (val >= mul) val -= Math.pow(2, 8 * byteLength)
+
+  return val
+}
+
+Buffer.prototype.readInt8 = function readInt8 (offset, noAssert) {
+  if (!noAssert) checkOffset(offset, 1, this.length)
+  if (!(this[offset] & 0x80)) return (this[offset])
+  return ((0xff - this[offset] + 1) * -1)
+}
+
+Buffer.prototype.readInt16LE = function readInt16LE (offset, noAssert) {
+  if (!noAssert) checkOffset(offset, 2, this.length)
+  var val = this[offset] | (this[offset + 1] << 8)
+  return (val & 0x8000) ? val | 0xFFFF0000 : val
+}
+
+Buffer.prototype.readInt16BE = function readInt16BE (offset, noAssert) {
+  if (!noAssert) checkOffset(offset, 2, this.length)
+  var val = this[offset + 1] | (this[offset] << 8)
+  return (val & 0x8000) ? val | 0xFFFF0000 : val
+}
+
+Buffer.prototype.readInt32LE = function readInt32LE (offset, noAssert) {
+  if (!noAssert) checkOffset(offset, 4, this.length)
+
+  return (this[offset]) |
+    (this[offset + 1] << 8) |
+    (this[offset + 2] << 16) |
+    (this[offset + 3] << 24)
+}
+
+Buffer.prototype.readInt32BE = function readInt32BE (offset, noAssert) {
+  if (!noAssert) checkOffset(offset, 4, this.length)
+
+  return (this[offset] << 24) |
+    (this[offset + 1] << 16) |
+    (this[offset + 2] << 8) |
+    (this[offset + 3])
+}
+
+Buffer.prototype.readFloatLE = function readFloatLE (offset, noAssert) {
+  if (!noAssert) checkOffset(offset, 4, this.length)
+  return ieee754.read(this, offset, true, 23, 4)
+}
+
+Buffer.prototype.readFloatBE = function readFloatBE (offset, noAssert) {
+  if (!noAssert) checkOffset(offset, 4, this.length)
+  return ieee754.read(this, offset, false, 23, 4)
+}
+
+Buffer.prototype.readDoubleLE = function readDoubleLE (offset, noAssert) {
+  if (!noAssert) checkOffset(offset, 8, this.length)
+  return ieee754.read(this, offset, true, 52, 8)
+}
+
+Buffer.prototype.readDoubleBE = function readDoubleBE (offset, noAssert) {
+  if (!noAssert) checkOffset(offset, 8, this.length)
+  return ieee754.read(this, offset, false, 52, 8)
+}
+
+function checkInt (buf, value, offset, ext, max, min) {
+  if (!Buffer.isBuffer(buf)) throw new TypeError('buffer must be a Buffer instance')
+  if (value > max || value < min) throw new RangeError('value is out of bounds')
+  if (offset + ext > buf.length) throw new RangeError('index out of range')
+}
+
+Buffer.prototype.writeUIntLE = function writeUIntLE (value, offset, byteLength, noAssert) {
+  value = +value
+  offset = offset >>> 0
+  byteLength = byteLength >>> 0
+  if (!noAssert) checkInt(this, value, offset, byteLength, Math.pow(2, 8 * byteLength), 0)
+
+  var mul = 1
+  var i = 0
+  this[offset] = value & 0xFF
+  while (++i < byteLength && (mul *= 0x100)) {
+    this[offset + i] = (value / mul) >>> 0 & 0xFF
+  }
+
+  return offset + byteLength
+}
+
+Buffer.prototype.writeUIntBE = function writeUIntBE (value, offset, byteLength, noAssert) {
+  value = +value
+  offset = offset >>> 0
+  byteLength = byteLength >>> 0
+  if (!noAssert) checkInt(this, value, offset, byteLength, Math.pow(2, 8 * byteLength), 0)
+
+  var i = byteLength - 1
+  var mul = 1
+  this[offset + i] = value & 0xFF
+  while (--i >= 0 && (mul *= 0x100)) {
+    this[offset + i] = (value / mul) >>> 0 & 0xFF
+  }
+
+  return offset + byteLength
+}
+
+Buffer.prototype.writeUInt8 = function writeUInt8 (value, offset, noAssert) {
+  value = +value
+  offset = offset >>> 0
+  if (!noAssert) checkInt(this, value, offset, 1, 0xff, 0)
+  if (!Buffer.TYPED_ARRAY_SUPPORT) value = Math.floor(value)
+  this[offset] = value
+  return offset + 1
+}
+
+function objectWriteUInt16 (buf, value, offset, littleEndian) {
+  if (value < 0) value = 0xffff + value + 1
+  for (var i = 0, j = Math.min(buf.length - offset, 2); i < j; i++) {
+    buf[offset + i] = (value & (0xff << (8 * (littleEndian ? i : 1 - i)))) >>>
+      (littleEndian ? i : 1 - i) * 8
+  }
+}
+
+Buffer.prototype.writeUInt16LE = function writeUInt16LE (value, offset, noAssert) {
+  value = +value
+  offset = offset >>> 0
+  if (!noAssert) checkInt(this, value, offset, 2, 0xffff, 0)
+  if (Buffer.TYPED_ARRAY_SUPPORT) {
+    this[offset] = value
+    this[offset + 1] = (value >>> 8)
+  } else {
+    objectWriteUInt16(this, value, offset, true)
+  }
+  return offset + 2
+}
+
+Buffer.prototype.writeUInt16BE = function writeUInt16BE (value, offset, noAssert) {
+  value = +value
+  offset = offset >>> 0
+  if (!noAssert) checkInt(this, value, offset, 2, 0xffff, 0)
+  if (Buffer.TYPED_ARRAY_SUPPORT) {
+    this[offset] = (value >>> 8)
+    this[offset + 1] = value
+  } else {
+    objectWriteUInt16(this, value, offset, false)
+  }
+  return offset + 2
+}
+
+function objectWriteUInt32 (buf, value, offset, littleEndian) {
+  if (value < 0) value = 0xffffffff + value + 1
+  for (var i = 0, j = Math.min(buf.length - offset, 4); i < j; i++) {
+    buf[offset + i] = (value >>> (littleEndian ? i : 3 - i) * 8) & 0xff
+  }
+}
+
+Buffer.prototype.writeUInt32LE = function writeUInt32LE (value, offset, noAssert) {
+  value = +value
+  offset = offset >>> 0
+  if (!noAssert) checkInt(this, value, offset, 4, 0xffffffff, 0)
+  if (Buffer.TYPED_ARRAY_SUPPORT) {
+    this[offset + 3] = (value >>> 24)
+    this[offset + 2] = (value >>> 16)
+    this[offset + 1] = (value >>> 8)
+    this[offset] = value
+  } else {
+    objectWriteUInt32(this, value, offset, true)
+  }
+  return offset + 4
+}
+
+Buffer.prototype.writeUInt32BE = function writeUInt32BE (value, offset, noAssert) {
+  value = +value
+  offset = offset >>> 0
+  if (!noAssert) checkInt(this, value, offset, 4, 0xffffffff, 0)
+  if (Buffer.TYPED_ARRAY_SUPPORT) {
+    this[offset] = (value >>> 24)
+    this[offset + 1] = (value >>> 16)
+    this[offset + 2] = (value >>> 8)
+    this[offset + 3] = value
+  } else {
+    objectWriteUInt32(this, value, offset, false)
+  }
+  return offset + 4
+}
+
+Buffer.prototype.writeIntLE = function writeIntLE (value, offset, byteLength, noAssert) {
+  value = +value
+  offset = offset >>> 0
+  if (!noAssert) {
+    checkInt(
+      this, value, offset, byteLength,
+      Math.pow(2, 8 * byteLength - 1) - 1,
+      -Math.pow(2, 8 * byteLength - 1)
+    )
+  }
+
+  var i = 0
+  var mul = 1
+  var sub = value < 0 ? 1 : 0
+  this[offset] = value & 0xFF
+  while (++i < byteLength && (mul *= 0x100)) {
+    this[offset + i] = ((value / mul) >> 0) - sub & 0xFF
+  }
+
+  return offset + byteLength
+}
+
+Buffer.prototype.writeIntBE = function writeIntBE (value, offset, byteLength, noAssert) {
+  value = +value
+  offset = offset >>> 0
+  if (!noAssert) {
+    checkInt(
+      this, value, offset, byteLength,
+      Math.pow(2, 8 * byteLength - 1) - 1,
+      -Math.pow(2, 8 * byteLength - 1)
+    )
+  }
+
+  var i = byteLength - 1
+  var mul = 1
+  var sub = value < 0 ? 1 : 0
+  this[offset + i] = value & 0xFF
+  while (--i >= 0 && (mul *= 0x100)) {
+    this[offset + i] = ((value / mul) >> 0) - sub & 0xFF
+  }
+
+  return offset + byteLength
+}
+
+Buffer.prototype.writeInt8 = function writeInt8 (value, offset, noAssert) {
+  value = +value
+  offset = offset >>> 0
+  if (!noAssert) checkInt(this, value, offset, 1, 0x7f, -0x80)
+  if (!Buffer.TYPED_ARRAY_SUPPORT) value = Math.floor(value)
+  if (value < 0) value = 0xff + value + 1
+  this[offset] = value
+  return offset + 1
+}
+
+Buffer.prototype.writeInt16LE = function writeInt16LE (value, offset, noAssert) {
+  value = +value
+  offset = offset >>> 0
+  if (!noAssert) checkInt(this, value, offset, 2, 0x7fff, -0x8000)
+  if (Buffer.TYPED_ARRAY_SUPPORT) {
+    this[offset] = value
+    this[offset + 1] = (value >>> 8)
+  } else {
+    objectWriteUInt16(this, value, offset, true)
+  }
+  return offset + 2
+}
+
+Buffer.prototype.writeInt16BE = function writeInt16BE (value, offset, noAssert) {
+  value = +value
+  offset = offset >>> 0
+  if (!noAssert) checkInt(this, value, offset, 2, 0x7fff, -0x8000)
+  if (Buffer.TYPED_ARRAY_SUPPORT) {
+    this[offset] = (value >>> 8)
+    this[offset + 1] = value
+  } else {
+    objectWriteUInt16(this, value, offset, false)
+  }
+  return offset + 2
+}
+
+Buffer.prototype.writeInt32LE = function writeInt32LE (value, offset, noAssert) {
+  value = +value
+  offset = offset >>> 0
+  if (!noAssert) checkInt(this, value, offset, 4, 0x7fffffff, -0x80000000)
+  if (Buffer.TYPED_ARRAY_SUPPORT) {
+    this[offset] = value
+    this[offset + 1] = (value >>> 8)
+    this[offset + 2] = (value >>> 16)
+    this[offset + 3] = (value >>> 24)
+  } else {
+    objectWriteUInt32(this, value, offset, true)
+  }
+  return offset + 4
+}
+
+Buffer.prototype.writeInt32BE = function writeInt32BE (value, offset, noAssert) {
+  value = +value
+  offset = offset >>> 0
+  if (!noAssert) checkInt(this, value, offset, 4, 0x7fffffff, -0x80000000)
+  if (value < 0) value = 0xffffffff + value + 1
+  if (Buffer.TYPED_ARRAY_SUPPORT) {
+    this[offset] = (value >>> 24)
+    this[offset + 1] = (value >>> 16)
+    this[offset + 2] = (value >>> 8)
+    this[offset + 3] = value
+  } else {
+    objectWriteUInt32(this, value, offset, false)
+  }
+  return offset + 4
+}
+
+function checkIEEE754 (buf, value, offset, ext, max, min) {
+  if (value > max || value < min) throw new RangeError('value is out of bounds')
+  if (offset + ext > buf.length) throw new RangeError('index out of range')
+  if (offset < 0) throw new RangeError('index out of range')
+}
+
+function writeFloat (buf, value, offset, littleEndian, noAssert) {
+  if (!noAssert) {
+    checkIEEE754(buf, value, offset, 4, 3.4028234663852886e+38, -3.4028234663852886e+38)
+  }
+  ieee754.write(buf, value, offset, littleEndian, 23, 4)
+  return offset + 4
+}
+
+Buffer.prototype.writeFloatLE = function writeFloatLE (value, offset, noAssert) {
+  return writeFloat(this, value, offset, true, noAssert)
+}
+
+Buffer.prototype.writeFloatBE = function writeFloatBE (value, offset, noAssert) {
+  return writeFloat(this, value, offset, false, noAssert)
+}
+
+function writeDouble (buf, value, offset, littleEndian, noAssert) {
+  if (!noAssert) {
+    checkIEEE754(buf, value, offset, 8, 1.7976931348623157E+308, -1.7976931348623157E+308)
+  }
+  ieee754.write(buf, value, offset, littleEndian, 52, 8)
+  return offset + 8
+}
+
+Buffer.prototype.writeDoubleLE = function writeDoubleLE (value, offset, noAssert) {
+  return writeDouble(this, value, offset, true, noAssert)
+}
+
+Buffer.prototype.writeDoubleBE = function writeDoubleBE (value, offset, noAssert) {
+  return writeDouble(this, value, offset, false, noAssert)
+}
+
+// copy(targetBuffer, targetStart=0, sourceStart=0, sourceEnd=buffer.length)
+Buffer.prototype.copy = function copy (target, target_start, start, end) {
+  var self = this // source
+
+  if (!start) start = 0
+  if (!end && end !== 0) end = this.length
+  if (target_start >= target.length) target_start = target.length
+  if (!target_start) target_start = 0
+  if (end > 0 && end < start) end = start
+
+  // Copy 0 bytes; we're done
+  if (end === start) return 0
+  if (target.length === 0 || self.length === 0) return 0
+
+  // Fatal error conditions
+  if (target_start < 0) {
+    throw new RangeError('targetStart out of bounds')
+  }
+  if (start < 0 || start >= self.length) throw new RangeError('sourceStart out of bounds')
+  if (end < 0) throw new RangeError('sourceEnd out of bounds')
+
+  // Are we oob?
+  if (end > this.length) end = this.length
+  if (target.length - target_start < end - start) {
+    end = target.length - target_start + start
+  }
+
+  var len = end - start
+
+  if (len < 1000 || !Buffer.TYPED_ARRAY_SUPPORT) {
+    for (var i = 0; i < len; i++) {
+      target[i + target_start] = this[i + start]
+    }
+  } else {
+    target._set(this.subarray(start, start + len), target_start)
+  }
+
+  return len
+}
+
+// fill(value, start=0, end=buffer.length)
+Buffer.prototype.fill = function fill (value, start, end) {
+  if (!value) value = 0
+  if (!start) start = 0
+  if (!end) end = this.length
+
+  if (end < start) throw new RangeError('end < start')
+
+  // Fill 0 bytes; we're done
+  if (end === start) return
+  if (this.length === 0) return
+
+  if (start < 0 || start >= this.length) throw new RangeError('start out of bounds')
+  if (end < 0 || end > this.length) throw new RangeError('end out of bounds')
+
+  var i
+  if (typeof value === 'number') {
+    for (i = start; i < end; i++) {
+      this[i] = value
+    }
+  } else {
+    var bytes = utf8ToBytes(value.toString())
+    var len = bytes.length
+    for (i = start; i < end; i++) {
+      this[i] = bytes[i % len]
+    }
+  }
+
+  return this
+}
+
+/**
+ * Creates a new `ArrayBuffer` with the *copied* memory of the buffer instance.
+ * Added in Node 0.12. Only available in browsers that support ArrayBuffer.
+ */
+Buffer.prototype.toArrayBuffer = function toArrayBuffer () {
+  if (typeof Uint8Array !== 'undefined') {
+    if (Buffer.TYPED_ARRAY_SUPPORT) {
+      return (new Buffer(this)).buffer
+    } else {
+      var buf = new Uint8Array(this.length)
+      for (var i = 0, len = buf.length; i < len; i += 1) {
+        buf[i] = this[i]
+      }
+      return buf.buffer
+    }
+  } else {
+    throw new TypeError('Buffer.toArrayBuffer not supported in this browser')
+  }
+}
+
+// HELPER FUNCTIONS
+// ================
+
+var BP = Buffer.prototype
+
+/**
+ * Augment a Uint8Array *instance* (not the Uint8Array class!) with Buffer methods
+ */
+Buffer._augment = function _augment (arr) {
+  arr.constructor = Buffer
+  arr._isBuffer = true
+
+  // save reference to original Uint8Array get/set methods before overwriting
+  arr._get = arr.get
+  arr._set = arr.set
+
+  // deprecated, will be removed in node 0.13+
+  arr.get = BP.get
+  arr.set = BP.set
+
+  arr.write = BP.write
+  arr.toString = BP.toString
+  arr.toLocaleString = BP.toString
+  arr.toJSON = BP.toJSON
+  arr.equals = BP.equals
+  arr.compare = BP.compare
+  arr.indexOf = BP.indexOf
+  arr.copy = BP.copy
+  arr.slice = BP.slice
+  arr.readUIntLE = BP.readUIntLE
+  arr.readUIntBE = BP.readUIntBE
+  arr.readUInt8 = BP.readUInt8
+  arr.readUInt16LE = BP.readUInt16LE
+  arr.readUInt16BE = BP.readUInt16BE
+  arr.readUInt32LE = BP.readUInt32LE
+  arr.readUInt32BE = BP.readUInt32BE
+  arr.readIntLE = BP.readIntLE
+  arr.readIntBE = BP.readIntBE
+  arr.readInt8 = BP.readInt8
+  arr.readInt16LE = BP.readInt16LE
+  arr.readInt16BE = BP.readInt16BE
+  arr.readInt32LE = BP.readInt32LE
+  arr.readInt32BE = BP.readInt32BE
+  arr.readFloatLE = BP.readFloatLE
+  arr.readFloatBE = BP.readFloatBE
+  arr.readDoubleLE = BP.readDoubleLE
+  arr.readDoubleBE = BP.readDoubleBE
+  arr.writeUInt8 = BP.writeUInt8
+  arr.writeUIntLE = BP.writeUIntLE
+  arr.writeUIntBE = BP.writeUIntBE
+  arr.writeUInt16LE = BP.writeUInt16LE
+  arr.writeUInt16BE = BP.writeUInt16BE
+  arr.writeUInt32LE = BP.writeUInt32LE
+  arr.writeUInt32BE = BP.writeUInt32BE
+  arr.writeIntLE = BP.writeIntLE
+  arr.writeIntBE = BP.writeIntBE
+  arr.writeInt8 = BP.writeInt8
+  arr.writeInt16LE = BP.writeInt16LE
+  arr.writeInt16BE = BP.writeInt16BE
+  arr.writeInt32LE = BP.writeInt32LE
+  arr.writeInt32BE = BP.writeInt32BE
+  arr.writeFloatLE = BP.writeFloatLE
+  arr.writeFloatBE = BP.writeFloatBE
+  arr.writeDoubleLE = BP.writeDoubleLE
+  arr.writeDoubleBE = BP.writeDoubleBE
+  arr.fill = BP.fill
+  arr.inspect = BP.inspect
+  arr.toArrayBuffer = BP.toArrayBuffer
+
+  return arr
+}
+
+var INVALID_BASE64_RE = /[^+\/0-9A-z\-]/g
+
+function base64clean (str) {
+  // Node strips out invalid characters like \n and \t from the string, base64-js does not
+  str = stringtrim(str).replace(INVALID_BASE64_RE, '')
+  // Node converts strings with length < 2 to ''
+  if (str.length < 2) return ''
+  // Node allows for non-padded base64 strings (missing trailing ===), base64-js does not
+  while (str.length % 4 !== 0) {
+    str = str + '='
+  }
+  return str
+}
+
+function stringtrim (str) {
+  if (str.trim) return str.trim()
+  return str.replace(/^\s+|\s+$/g, '')
+}
+
+function isArrayish (subject) {
+  return isArray(subject) || Buffer.isBuffer(subject) ||
+      subject && typeof subject === 'object' &&
+      typeof subject.length === 'number'
+}
+
+function toHex (n) {
+  if (n < 16) return '0' + n.toString(16)
+  return n.toString(16)
+}
+
+function utf8ToBytes (string, units) {
+  units = units || Infinity
+  var codePoint
+  var length = string.length
+  var leadSurrogate = null
+  var bytes = []
+  var i = 0
+
+  for (; i < length; i++) {
+    codePoint = string.charCodeAt(i)
+
+    // is surrogate component
+    if (codePoint > 0xD7FF && codePoint < 0xE000) {
+      // last char was a lead
+      if (leadSurrogate) {
+        // 2 leads in a row
+        if (codePoint < 0xDC00) {
+          if ((units -= 3) > -1) bytes.push(0xEF, 0xBF, 0xBD)
+          leadSurrogate = codePoint
+          continue
+        } else {
+          // valid surrogate pair
+          codePoint = leadSurrogate - 0xD800 << 10 | codePoint - 0xDC00 | 0x10000
+          leadSurrogate = null
+        }
+      } else {
+        // no lead yet
+
+        if (codePoint > 0xDBFF) {
+          // unexpected trail
+          if ((units -= 3) > -1) bytes.push(0xEF, 0xBF, 0xBD)
+          continue
+        } else if (i + 1 === length) {
+          // unpaired lead
+          if ((units -= 3) > -1) bytes.push(0xEF, 0xBF, 0xBD)
+          continue
+        } else {
+          // valid lead
+          leadSurrogate = codePoint
+          continue
+        }
+      }
+    } else if (leadSurrogate) {
+      // valid bmp char, but last char was a lead
+      if ((units -= 3) > -1) bytes.push(0xEF, 0xBF, 0xBD)
+      leadSurrogate = null
+    }
+
+    // encode utf8
+    if (codePoint < 0x80) {
+      if ((units -= 1) < 0) break
+      bytes.push(codePoint)
+    } else if (codePoint < 0x800) {
+      if ((units -= 2) < 0) break
+      bytes.push(
+        codePoint >> 0x6 | 0xC0,
+        codePoint & 0x3F | 0x80
+      )
+    } else if (codePoint < 0x10000) {
+      if ((units -= 3) < 0) break
+      bytes.push(
+        codePoint >> 0xC | 0xE0,
+        codePoint >> 0x6 & 0x3F | 0x80,
+        codePoint & 0x3F | 0x80
+      )
+    } else if (codePoint < 0x200000) {
+      if ((units -= 4) < 0) break
+      bytes.push(
+        codePoint >> 0x12 | 0xF0,
+        codePoint >> 0xC & 0x3F | 0x80,
+        codePoint >> 0x6 & 0x3F | 0x80,
+        codePoint & 0x3F | 0x80
+      )
+    } else {
+      throw new Error('Invalid code point')
+    }
+  }
+
+  return bytes
+}
+
+function asciiToBytes (str) {
+  var byteArray = []
+  for (var i = 0; i < str.length; i++) {
+    // Node's code seems to be doing this and not & 0x7F..
+    byteArray.push(str.charCodeAt(i) & 0xFF)
+  }
+  return byteArray
+}
+
+function utf16leToBytes (str, units) {
+  var c, hi, lo
+  var byteArray = []
+  for (var i = 0; i < str.length; i++) {
+    if ((units -= 2) < 0) break
+
+    c = str.charCodeAt(i)
+    hi = c >> 8
+    lo = c % 256
+    byteArray.push(lo)
+    byteArray.push(hi)
+  }
+
+  return byteArray
+}
+
+function base64ToBytes (str) {
+  return base64.toByteArray(base64clean(str))
+}
+
+function blitBuffer (src, dst, offset, length) {
+  for (var i = 0; i < length; i++) {
+    if ((i + offset >= dst.length) || (i >= src.length)) break
+    dst[i + offset] = src[i]
+  }
+  return i
+}
+
+function decodeUtf8Char (str) {
+  try {
+    return decodeURIComponent(str)
+  } catch (err) {
+    return String.fromCharCode(0xFFFD) // UTF 8 invalid char
+  }
+}
+
+},{"base64-js":151,"ieee754":152,"is-array":153}],151:[function(require,module,exports){
+var lookup = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/';
+
+;(function (exports) {
+	'use strict';
+
+  var Arr = (typeof Uint8Array !== 'undefined')
+    ? Uint8Array
+    : Array
+
+	var PLUS   = '+'.charCodeAt(0)
+	var SLASH  = '/'.charCodeAt(0)
+	var NUMBER = '0'.charCodeAt(0)
+	var LOWER  = 'a'.charCodeAt(0)
+	var UPPER  = 'A'.charCodeAt(0)
+	var PLUS_URL_SAFE = '-'.charCodeAt(0)
+	var SLASH_URL_SAFE = '_'.charCodeAt(0)
+
+	function decode (elt) {
+		var code = elt.charCodeAt(0)
+		if (code === PLUS ||
+		    code === PLUS_URL_SAFE)
+			return 62 // '+'
+		if (code === SLASH ||
+		    code === SLASH_URL_SAFE)
+			return 63 // '/'
+		if (code < NUMBER)
+			return -1 //no match
+		if (code < NUMBER + 10)
+			return code - NUMBER + 26 + 26
+		if (code < UPPER + 26)
+			return code - UPPER
+		if (code < LOWER + 26)
+			return code - LOWER + 26
+	}
+
+	function b64ToByteArray (b64) {
+		var i, j, l, tmp, placeHolders, arr
+
+		if (b64.length % 4 > 0) {
+			throw new Error('Invalid string. Length must be a multiple of 4')
+		}
+
+		// the number of equal signs (place holders)
+		// if there are two placeholders, than the two characters before it
+		// represent one byte
+		// if there is only one, then the three characters before it represent 2 bytes
+		// this is just a cheap hack to not do indexOf twice
+		var len = b64.length
+		placeHolders = '=' === b64.charAt(len - 2) ? 2 : '=' === b64.charAt(len - 1) ? 1 : 0
+
+		// base64 is 4/3 + up to two characters of the original data
+		arr = new Arr(b64.length * 3 / 4 - placeHolders)
+
+		// if there are placeholders, only get up to the last complete 4 chars
+		l = placeHolders > 0 ? b64.length - 4 : b64.length
+
+		var L = 0
+
+		function push (v) {
+			arr[L++] = v
+		}
+
+		for (i = 0, j = 0; i < l; i += 4, j += 3) {
+			tmp = (decode(b64.charAt(i)) << 18) | (decode(b64.charAt(i + 1)) << 12) | (decode(b64.charAt(i + 2)) << 6) | decode(b64.charAt(i + 3))
+			push((tmp & 0xFF0000) >> 16)
+			push((tmp & 0xFF00) >> 8)
+			push(tmp & 0xFF)
+		}
+
+		if (placeHolders === 2) {
+			tmp = (decode(b64.charAt(i)) << 2) | (decode(b64.charAt(i + 1)) >> 4)
+			push(tmp & 0xFF)
+		} else if (placeHolders === 1) {
+			tmp = (decode(b64.charAt(i)) << 10) | (decode(b64.charAt(i + 1)) << 4) | (decode(b64.charAt(i + 2)) >> 2)
+			push((tmp >> 8) & 0xFF)
+			push(tmp & 0xFF)
+		}
+
+		return arr
+	}
+
+	function uint8ToBase64 (uint8) {
+		var i,
+			extraBytes = uint8.length % 3, // if we have 1 byte left, pad 2 bytes
+			output = "",
+			temp, length
+
+		function encode (num) {
+			return lookup.charAt(num)
+		}
+
+		function tripletToBase64 (num) {
+			return encode(num >> 18 & 0x3F) + encode(num >> 12 & 0x3F) + encode(num >> 6 & 0x3F) + encode(num & 0x3F)
+		}
+
+		// go through the array every three bytes, we'll deal with trailing stuff later
+		for (i = 0, length = uint8.length - extraBytes; i < length; i += 3) {
+			temp = (uint8[i] << 16) + (uint8[i + 1] << 8) + (uint8[i + 2])
+			output += tripletToBase64(temp)
+		}
+
+		// pad the end with zeros, but make sure to not forget the extra bytes
+		switch (extraBytes) {
+			case 1:
+				temp = uint8[uint8.length - 1]
+				output += encode(temp >> 2)
+				output += encode((temp << 4) & 0x3F)
+				output += '=='
+				break
+			case 2:
+				temp = (uint8[uint8.length - 2] << 8) + (uint8[uint8.length - 1])
+				output += encode(temp >> 10)
+				output += encode((temp >> 4) & 0x3F)
+				output += encode((temp << 2) & 0x3F)
+				output += '='
+				break
+		}
+
+		return output
+	}
+
+	exports.toByteArray = b64ToByteArray
+	exports.fromByteArray = uint8ToBase64
+}(typeof exports === 'undefined' ? (this.base64js = {}) : exports))
+
+},{}],152:[function(require,module,exports){
+exports.read = function(buffer, offset, isLE, mLen, nBytes) {
+  var e, m,
+      eLen = nBytes * 8 - mLen - 1,
+      eMax = (1 << eLen) - 1,
+      eBias = eMax >> 1,
+      nBits = -7,
+      i = isLE ? (nBytes - 1) : 0,
+      d = isLE ? -1 : 1,
+      s = buffer[offset + i];
+
+  i += d;
+
+  e = s & ((1 << (-nBits)) - 1);
+  s >>= (-nBits);
+  nBits += eLen;
+  for (; nBits > 0; e = e * 256 + buffer[offset + i], i += d, nBits -= 8);
+
+  m = e & ((1 << (-nBits)) - 1);
+  e >>= (-nBits);
+  nBits += mLen;
+  for (; nBits > 0; m = m * 256 + buffer[offset + i], i += d, nBits -= 8);
+
+  if (e === 0) {
+    e = 1 - eBias;
+  } else if (e === eMax) {
+    return m ? NaN : ((s ? -1 : 1) * Infinity);
+  } else {
+    m = m + Math.pow(2, mLen);
+    e = e - eBias;
+  }
+  return (s ? -1 : 1) * m * Math.pow(2, e - mLen);
+};
+
+exports.write = function(buffer, value, offset, isLE, mLen, nBytes) {
+  var e, m, c,
+      eLen = nBytes * 8 - mLen - 1,
+      eMax = (1 << eLen) - 1,
+      eBias = eMax >> 1,
+      rt = (mLen === 23 ? Math.pow(2, -24) - Math.pow(2, -77) : 0),
+      i = isLE ? 0 : (nBytes - 1),
+      d = isLE ? 1 : -1,
+      s = value < 0 || (value === 0 && 1 / value < 0) ? 1 : 0;
+
+  value = Math.abs(value);
+
+  if (isNaN(value) || value === Infinity) {
+    m = isNaN(value) ? 1 : 0;
+    e = eMax;
+  } else {
+    e = Math.floor(Math.log(value) / Math.LN2);
+    if (value * (c = Math.pow(2, -e)) < 1) {
+      e--;
+      c *= 2;
+    }
+    if (e + eBias >= 1) {
+      value += rt / c;
+    } else {
+      value += rt * Math.pow(2, 1 - eBias);
+    }
+    if (value * c >= 2) {
+      e++;
+      c /= 2;
+    }
+
+    if (e + eBias >= eMax) {
+      m = 0;
+      e = eMax;
+    } else if (e + eBias >= 1) {
+      m = (value * c - 1) * Math.pow(2, mLen);
+      e = e + eBias;
+    } else {
+      m = value * Math.pow(2, eBias - 1) * Math.pow(2, mLen);
+      e = 0;
+    }
+  }
+
+  for (; mLen >= 8; buffer[offset + i] = m & 0xff, i += d, m /= 256, mLen -= 8);
+
+  e = (e << mLen) | m;
+  eLen += mLen;
+  for (; eLen > 0; buffer[offset + i] = e & 0xff, i += d, e /= 256, eLen -= 8);
+
+  buffer[offset + i - d] |= s * 128;
+};
+
+},{}],153:[function(require,module,exports){
+arguments[4][58][0].apply(exports,arguments)
+},{"dup":58}],154:[function(require,module,exports){
 var cookies = require('cookie-getter'),
     config = cookies('config') || {};
 
@@ -14531,7 +16081,7 @@ document.cookie = 'config=;expires=Thu, 01 Jan 1970 00:00:00 GMT';
 // export it
 module.exports = config;
 
-},{"cookie-getter":"/home/bbales2/stochss/app/static/modelEditor/node_modules/clientconfig/node_modules/cookie-getter/cookie-getter.js"}],"/home/bbales2/stochss/app/static/modelEditor/node_modules/clientconfig/node_modules/cookie-getter/cookie-getter.js":[function(require,module,exports){
+},{"cookie-getter":155}],155:[function(require,module,exports){
 // simple commonJS cookie reader, best perf according to http://jsperf.com/cookie-parsing
 module.exports = function (name) {
     var cookie = document.cookie,
@@ -14543,7 +16093,7 @@ module.exports = function (name) {
     return (res.charAt(0) === '{') ? JSON.parse(res) : res;
 };
 
-},{}],"/home/bbales2/stochss/app/static/modelEditor/node_modules/domify/index.js":[function(require,module,exports){
+},{}],156:[function(require,module,exports){
 
 /**
  * Expose `parse`.
@@ -14653,7 +16203,7 @@ function parse(html, doc) {
   return fragment;
 }
 
-},{}],"/home/bbales2/stochss/app/static/modelEditor/node_modules/domready/ready.js":[function(require,module,exports){
+},{}],157:[function(require,module,exports){
 /*!
   * domready (c) Dustin Diaz 2014 - License MIT
   */
@@ -14685,7 +16235,7 @@ function parse(html, doc) {
 
 });
 
-},{}],"/home/bbales2/stochss/app/static/modelEditor/node_modules/jquery/dist/jquery.js":[function(require,module,exports){
+},{}],158:[function(require,module,exports){
 /*!
  * jQuery JavaScript Library v2.1.3
  * http://jquery.com/
@@ -23892,7 +25442,7 @@ return jQuery;
 
 }));
 
-},{}],"/home/bbales2/stochss/app/static/modelEditor/node_modules/katex/katex.js":[function(require,module,exports){
+},{}],159:[function(require,module,exports){
 /**
  * This is the main entry point for KaTeX. Here, we expose functions for
  * rendering expressions either to DOM nodes or to markup strings.
@@ -23948,7 +25498,7 @@ module.exports = {
     ParseError: ParseError
 };
 
-},{"./src/ParseError":"/home/bbales2/stochss/app/static/modelEditor/node_modules/katex/src/ParseError.js","./src/buildTree":"/home/bbales2/stochss/app/static/modelEditor/node_modules/katex/src/buildTree.js","./src/parseTree":"/home/bbales2/stochss/app/static/modelEditor/node_modules/katex/src/parseTree.js","./src/utils":"/home/bbales2/stochss/app/static/modelEditor/node_modules/katex/src/utils.js"}],"/home/bbales2/stochss/app/static/modelEditor/node_modules/katex/src/Lexer.js":[function(require,module,exports){
+},{"./src/ParseError":162,"./src/buildTree":166,"./src/parseTree":171,"./src/utils":173}],160:[function(require,module,exports){
 /**
  * The Lexer class handles tokenizing the input in various ways. Since our
  * parser expects us to be able to backtrack, the lexer allows lexing from any
@@ -24140,7 +25690,7 @@ Lexer.prototype.lex = function(pos, mode) {
 
 module.exports = Lexer;
 
-},{"./ParseError":"/home/bbales2/stochss/app/static/modelEditor/node_modules/katex/src/ParseError.js"}],"/home/bbales2/stochss/app/static/modelEditor/node_modules/katex/src/Options.js":[function(require,module,exports){
+},{"./ParseError":162}],161:[function(require,module,exports){
 /**
  * This file contains information about the options that the Parser carries
  * around with it while parsing. Data is held in an `Options` object, and when
@@ -24227,7 +25777,7 @@ Options.prototype.getColor = function() {
 
 module.exports = Options;
 
-},{}],"/home/bbales2/stochss/app/static/modelEditor/node_modules/katex/src/ParseError.js":[function(require,module,exports){
+},{}],162:[function(require,module,exports){
 /**
  * This is the ParseError class, which is the main error thrown by KaTeX
  * functions when something has gone wrong. This is used to distinguish internal
@@ -24269,7 +25819,7 @@ ParseError.prototype.__proto__ = Error.prototype;
 
 module.exports = ParseError;
 
-},{}],"/home/bbales2/stochss/app/static/modelEditor/node_modules/katex/src/Parser.js":[function(require,module,exports){
+},{}],163:[function(require,module,exports){
 var functions = require("./functions");
 var Lexer = require("./Lexer");
 var symbols = require("./symbols");
@@ -24910,7 +26460,7 @@ Parser.prototype.parseSymbol = function(pos, mode) {
 
 module.exports = Parser;
 
-},{"./Lexer":"/home/bbales2/stochss/app/static/modelEditor/node_modules/katex/src/Lexer.js","./ParseError":"/home/bbales2/stochss/app/static/modelEditor/node_modules/katex/src/ParseError.js","./functions":"/home/bbales2/stochss/app/static/modelEditor/node_modules/katex/src/functions.js","./symbols":"/home/bbales2/stochss/app/static/modelEditor/node_modules/katex/src/symbols.js","./utils":"/home/bbales2/stochss/app/static/modelEditor/node_modules/katex/src/utils.js"}],"/home/bbales2/stochss/app/static/modelEditor/node_modules/katex/src/Style.js":[function(require,module,exports){
+},{"./Lexer":160,"./ParseError":162,"./functions":170,"./symbols":172,"./utils":173}],164:[function(require,module,exports){
 /**
  * This file contains information and classes for the various kinds of styles
  * used in TeX. It provides a generic `Style` class, which holds information
@@ -25038,7 +26588,7 @@ module.exports = {
     SCRIPTSCRIPT: styles[SS]
 };
 
-},{}],"/home/bbales2/stochss/app/static/modelEditor/node_modules/katex/src/buildCommon.js":[function(require,module,exports){
+},{}],165:[function(require,module,exports){
 /**
  * This module contains general functions that can be used for building
  * different kinds of domTree nodes in a consistent manner.
@@ -25311,7 +26861,7 @@ module.exports = {
     makeVList: makeVList
 };
 
-},{"./domTree":"/home/bbales2/stochss/app/static/modelEditor/node_modules/katex/src/domTree.js","./fontMetrics":"/home/bbales2/stochss/app/static/modelEditor/node_modules/katex/src/fontMetrics.js","./symbols":"/home/bbales2/stochss/app/static/modelEditor/node_modules/katex/src/symbols.js"}],"/home/bbales2/stochss/app/static/modelEditor/node_modules/katex/src/buildTree.js":[function(require,module,exports){
+},{"./domTree":168,"./fontMetrics":169,"./symbols":172}],166:[function(require,module,exports){
 /**
  * This file does the main work of building a domTree structure from a parse
  * tree. The entry point is the `buildTree` function, which takes a parse tree.
@@ -26480,7 +28030,7 @@ var buildTree = function(tree) {
 
 module.exports = buildTree;
 
-},{"./Options":"/home/bbales2/stochss/app/static/modelEditor/node_modules/katex/src/Options.js","./ParseError":"/home/bbales2/stochss/app/static/modelEditor/node_modules/katex/src/ParseError.js","./Style":"/home/bbales2/stochss/app/static/modelEditor/node_modules/katex/src/Style.js","./buildCommon":"/home/bbales2/stochss/app/static/modelEditor/node_modules/katex/src/buildCommon.js","./delimiter":"/home/bbales2/stochss/app/static/modelEditor/node_modules/katex/src/delimiter.js","./domTree":"/home/bbales2/stochss/app/static/modelEditor/node_modules/katex/src/domTree.js","./fontMetrics":"/home/bbales2/stochss/app/static/modelEditor/node_modules/katex/src/fontMetrics.js","./utils":"/home/bbales2/stochss/app/static/modelEditor/node_modules/katex/src/utils.js"}],"/home/bbales2/stochss/app/static/modelEditor/node_modules/katex/src/delimiter.js":[function(require,module,exports){
+},{"./Options":161,"./ParseError":162,"./Style":164,"./buildCommon":165,"./delimiter":167,"./domTree":168,"./fontMetrics":169,"./utils":173}],167:[function(require,module,exports){
 /**
  * This file deals with creating delimiters of various sizes. The TeXbook
  * discusses these routines on page 441-442, in the "Another subroutine sets box
@@ -27023,7 +28573,7 @@ module.exports = {
     leftRightDelim: makeLeftRightDelim
 };
 
-},{"./ParseError":"/home/bbales2/stochss/app/static/modelEditor/node_modules/katex/src/ParseError.js","./Style":"/home/bbales2/stochss/app/static/modelEditor/node_modules/katex/src/Style.js","./buildCommon":"/home/bbales2/stochss/app/static/modelEditor/node_modules/katex/src/buildCommon.js","./fontMetrics":"/home/bbales2/stochss/app/static/modelEditor/node_modules/katex/src/fontMetrics.js","./symbols":"/home/bbales2/stochss/app/static/modelEditor/node_modules/katex/src/symbols.js","./utils":"/home/bbales2/stochss/app/static/modelEditor/node_modules/katex/src/utils.js"}],"/home/bbales2/stochss/app/static/modelEditor/node_modules/katex/src/domTree.js":[function(require,module,exports){
+},{"./ParseError":162,"./Style":164,"./buildCommon":165,"./fontMetrics":169,"./symbols":172,"./utils":173}],168:[function(require,module,exports){
 /**
  * These objects store the data about the DOM nodes we create, as well as some
  * extra data. They can then be transformed into real DOM nodes with the toNode
@@ -27266,7 +28816,7 @@ module.exports = {
     symbolNode: symbolNode
 };
 
-},{"./utils":"/home/bbales2/stochss/app/static/modelEditor/node_modules/katex/src/utils.js"}],"/home/bbales2/stochss/app/static/modelEditor/node_modules/katex/src/fontMetrics.js":[function(require,module,exports){
+},{"./utils":173}],169:[function(require,module,exports){
 /* jshint unused:false */
 
 var Style = require("./Style");
@@ -27397,7 +28947,7 @@ module.exports = {
     getCharacterMetrics: getCharacterMetrics
 };
 
-},{"./Style":"/home/bbales2/stochss/app/static/modelEditor/node_modules/katex/src/Style.js"}],"/home/bbales2/stochss/app/static/modelEditor/node_modules/katex/src/functions.js":[function(require,module,exports){
+},{"./Style":164}],170:[function(require,module,exports){
 var utils = require("./utils");
 var ParseError = require("./ParseError");
 
@@ -27938,7 +29488,7 @@ module.exports = {
     getGreediness: getGreediness
 };
 
-},{"./ParseError":"/home/bbales2/stochss/app/static/modelEditor/node_modules/katex/src/ParseError.js","./utils":"/home/bbales2/stochss/app/static/modelEditor/node_modules/katex/src/utils.js"}],"/home/bbales2/stochss/app/static/modelEditor/node_modules/katex/src/parseTree.js":[function(require,module,exports){
+},{"./ParseError":162,"./utils":173}],171:[function(require,module,exports){
 /**
  * Provides a single function for parsing an expression using a Parser
  * TODO(emily): Remove this
@@ -27957,7 +29507,7 @@ var parseTree = function(toParse) {
 
 module.exports = parseTree;
 
-},{"./Parser":"/home/bbales2/stochss/app/static/modelEditor/node_modules/katex/src/Parser.js"}],"/home/bbales2/stochss/app/static/modelEditor/node_modules/katex/src/symbols.js":[function(require,module,exports){
+},{"./Parser":163}],172:[function(require,module,exports){
 /**
  * This file holds a list of all no-argument functions and single-character
  * symbols (like 'a' or ';').
@@ -28965,7 +30515,7 @@ for (var i = 0; i < letters.length; i++) {
 
 module.exports = symbols;
 
-},{}],"/home/bbales2/stochss/app/static/modelEditor/node_modules/katex/src/utils.js":[function(require,module,exports){
+},{}],173:[function(require,module,exports){
 /**
  * This file contains a list of utility functions which are useful in other
  * files.
@@ -29064,7 +30614,7 @@ module.exports = {
     clearNode: clearNode
 };
 
-},{}],"/home/bbales2/stochss/app/static/modelEditor/node_modules/three-orbit-controls/index.js":[function(require,module,exports){
+},{}],174:[function(require,module,exports){
 module.exports = function(THREE) {
     var MOUSE = THREE.MOUSE
     if (!MOUSE)
@@ -29746,7 +31296,7 @@ module.exports = function(THREE) {
     OrbitControls.prototype.constructor = OrbitControls;
     return OrbitControls;
 }
-},{}],"/home/bbales2/stochss/app/static/modelEditor/node_modules/three/three.js":[function(require,module,exports){
+},{}],175:[function(require,module,exports){
 // File:src/Three.js
 
 /**
@@ -64292,7 +65842,7 @@ THREE.MorphBlendMesh.prototype.update = function ( delta ) {
 
 };
 
-},{}],"/home/bbales2/stochss/app/static/modelEditor/node_modules/underscore/underscore.js":[function(require,module,exports){
+},{}],176:[function(require,module,exports){
 //     Underscore.js 1.8.2
 //     http://underscorejs.org
 //     (c) 2009-2015 Jeremy Ashkenas, DocumentCloud and Investigative Reporters & Editors
@@ -65830,7 +67380,7 @@ THREE.MorphBlendMesh.prototype.update = function ( delta ) {
   }
 }.call(this));
 
-},{}],"/home/bbales2/stochss/app/static/modelEditor/node_modules/url-parse/index.js":[function(require,module,exports){
+},{}],177:[function(require,module,exports){
 'use strict';
 
 var required = require('requires-port')
@@ -66057,7 +67607,7 @@ URL.qs = qs;
 URL.location = lolcation;
 module.exports = URL;
 
-},{"./lolcation":"/home/bbales2/stochss/app/static/modelEditor/node_modules/url-parse/lolcation.js","querystringify":"/home/bbales2/stochss/app/static/modelEditor/node_modules/url-parse/node_modules/querystringify/index.js","requires-port":"/home/bbales2/stochss/app/static/modelEditor/node_modules/url-parse/node_modules/requires-port/index.js"}],"/home/bbales2/stochss/app/static/modelEditor/node_modules/url-parse/lolcation.js":[function(require,module,exports){
+},{"./lolcation":178,"querystringify":179,"requires-port":180}],178:[function(require,module,exports){
 (function (global){
 'use strict';
 
@@ -66106,7 +67656,7 @@ module.exports = function lolcation(loc) {
 };
 
 }).call(this,typeof global !== "undefined" ? global : typeof self !== "undefined" ? self : typeof window !== "undefined" ? window : {})
-},{"./":"/home/bbales2/stochss/app/static/modelEditor/node_modules/url-parse/index.js"}],"/home/bbales2/stochss/app/static/modelEditor/node_modules/url-parse/node_modules/querystringify/index.js":[function(require,module,exports){
+},{"./":177}],179:[function(require,module,exports){
 'use strict';
 
 var has = Object.prototype.hasOwnProperty;
@@ -66169,7 +67719,7 @@ function querystringify(obj, prefix) {
 exports.stringify = querystringify;
 exports.parse = querystring;
 
-},{}],"/home/bbales2/stochss/app/static/modelEditor/node_modules/url-parse/node_modules/requires-port/index.js":[function(require,module,exports){
+},{}],180:[function(require,module,exports){
 'use strict';
 
 /**
@@ -66209,1557 +67759,7 @@ module.exports = function required(port, protocol) {
   return port !== 0;
 };
 
-},{}],"/home/bbales2/stochss/app/static/modelEditor/node_modules/watchify/node_modules/browserify/node_modules/buffer/index.js":[function(require,module,exports){
-/*!
- * The buffer module from node.js, for the browser.
- *
- * @author   Feross Aboukhadijeh <feross@feross.org> <http://feross.org>
- * @license  MIT
- */
-
-var base64 = require('base64-js')
-var ieee754 = require('ieee754')
-var isArray = require('is-array')
-
-exports.Buffer = Buffer
-exports.SlowBuffer = SlowBuffer
-exports.INSPECT_MAX_BYTES = 50
-Buffer.poolSize = 8192 // not used by this implementation
-
-var kMaxLength = 0x3fffffff
-var rootParent = {}
-
-/**
- * If `Buffer.TYPED_ARRAY_SUPPORT`:
- *   === true    Use Uint8Array implementation (fastest)
- *   === false   Use Object implementation (most compatible, even IE6)
- *
- * Browsers that support typed arrays are IE 10+, Firefox 4+, Chrome 7+, Safari 5.1+,
- * Opera 11.6+, iOS 4.2+.
- *
- * Note:
- *
- * - Implementation must support adding new properties to `Uint8Array` instances.
- *   Firefox 4-29 lacked support, fixed in Firefox 30+.
- *   See: https://bugzilla.mozilla.org/show_bug.cgi?id=695438.
- *
- *  - Chrome 9-10 is missing the `TypedArray.prototype.subarray` function.
- *
- *  - IE10 has a broken `TypedArray.prototype.subarray` function which returns arrays of
- *    incorrect length in some situations.
- *
- * We detect these buggy browsers and set `Buffer.TYPED_ARRAY_SUPPORT` to `false` so they will
- * get the Object implementation, which is slower but will work correctly.
- */
-Buffer.TYPED_ARRAY_SUPPORT = (function () {
-  try {
-    var buf = new ArrayBuffer(0)
-    var arr = new Uint8Array(buf)
-    arr.foo = function () { return 42 }
-    return arr.foo() === 42 && // typed array instances can be augmented
-        typeof arr.subarray === 'function' && // chrome 9-10 lack `subarray`
-        new Uint8Array(1).subarray(1, 1).byteLength === 0 // ie10 has broken `subarray`
-  } catch (e) {
-    return false
-  }
-})()
-
-/**
- * Class: Buffer
- * =============
- *
- * The Buffer constructor returns instances of `Uint8Array` that are augmented
- * with function properties for all the node `Buffer` API functions. We use
- * `Uint8Array` so that square bracket notation works as expected -- it returns
- * a single octet.
- *
- * By augmenting the instances, we can avoid modifying the `Uint8Array`
- * prototype.
- */
-function Buffer (subject, encoding) {
-  var self = this
-  if (!(self instanceof Buffer)) return new Buffer(subject, encoding)
-
-  var type = typeof subject
-  var length
-
-  if (type === 'number') {
-    length = +subject
-  } else if (type === 'string') {
-    length = Buffer.byteLength(subject, encoding)
-  } else if (type === 'object' && subject !== null) {
-    // assume object is array-like
-    if (subject.type === 'Buffer' && isArray(subject.data)) subject = subject.data
-    length = +subject.length
-  } else {
-    throw new TypeError('must start with number, buffer, array or string')
-  }
-
-  if (length > kMaxLength) {
-    throw new RangeError('Attempt to allocate Buffer larger than maximum size: 0x' +
-      kMaxLength.toString(16) + ' bytes')
-  }
-
-  if (length < 0) length = 0
-  else length >>>= 0 // coerce to uint32
-
-  if (Buffer.TYPED_ARRAY_SUPPORT) {
-    // Preferred: Return an augmented `Uint8Array` instance for best performance
-    self = Buffer._augment(new Uint8Array(length)) // eslint-disable-line consistent-this
-  } else {
-    // Fallback: Return THIS instance of Buffer (created by `new`)
-    self.length = length
-    self._isBuffer = true
-  }
-
-  var i
-  if (Buffer.TYPED_ARRAY_SUPPORT && typeof subject.byteLength === 'number') {
-    // Speed optimization -- use set if we're copying from a typed array
-    self._set(subject)
-  } else if (isArrayish(subject)) {
-    // Treat array-ish objects as a byte array
-    if (Buffer.isBuffer(subject)) {
-      for (i = 0; i < length; i++) {
-        self[i] = subject.readUInt8(i)
-      }
-    } else {
-      for (i = 0; i < length; i++) {
-        self[i] = ((subject[i] % 256) + 256) % 256
-      }
-    }
-  } else if (type === 'string') {
-    self.write(subject, 0, encoding)
-  } else if (type === 'number' && !Buffer.TYPED_ARRAY_SUPPORT) {
-    for (i = 0; i < length; i++) {
-      self[i] = 0
-    }
-  }
-
-  if (length > 0 && length <= Buffer.poolSize) self.parent = rootParent
-
-  return self
-}
-
-function SlowBuffer (subject, encoding) {
-  if (!(this instanceof SlowBuffer)) return new SlowBuffer(subject, encoding)
-
-  var buf = new Buffer(subject, encoding)
-  delete buf.parent
-  return buf
-}
-
-Buffer.isBuffer = function isBuffer (b) {
-  return !!(b != null && b._isBuffer)
-}
-
-Buffer.compare = function compare (a, b) {
-  if (!Buffer.isBuffer(a) || !Buffer.isBuffer(b)) {
-    throw new TypeError('Arguments must be Buffers')
-  }
-
-  if (a === b) return 0
-
-  var x = a.length
-  var y = b.length
-  for (var i = 0, len = Math.min(x, y); i < len && a[i] === b[i]; i++) {}
-  if (i !== len) {
-    x = a[i]
-    y = b[i]
-  }
-  if (x < y) return -1
-  if (y < x) return 1
-  return 0
-}
-
-Buffer.isEncoding = function isEncoding (encoding) {
-  switch (String(encoding).toLowerCase()) {
-    case 'hex':
-    case 'utf8':
-    case 'utf-8':
-    case 'ascii':
-    case 'binary':
-    case 'base64':
-    case 'raw':
-    case 'ucs2':
-    case 'ucs-2':
-    case 'utf16le':
-    case 'utf-16le':
-      return true
-    default:
-      return false
-  }
-}
-
-Buffer.concat = function concat (list, totalLength) {
-  if (!isArray(list)) throw new TypeError('list argument must be an Array of Buffers.')
-
-  if (list.length === 0) {
-    return new Buffer(0)
-  } else if (list.length === 1) {
-    return list[0]
-  }
-
-  var i
-  if (totalLength === undefined) {
-    totalLength = 0
-    for (i = 0; i < list.length; i++) {
-      totalLength += list[i].length
-    }
-  }
-
-  var buf = new Buffer(totalLength)
-  var pos = 0
-  for (i = 0; i < list.length; i++) {
-    var item = list[i]
-    item.copy(buf, pos)
-    pos += item.length
-  }
-  return buf
-}
-
-Buffer.byteLength = function byteLength (str, encoding) {
-  var ret
-  str = str + ''
-  switch (encoding || 'utf8') {
-    case 'ascii':
-    case 'binary':
-    case 'raw':
-      ret = str.length
-      break
-    case 'ucs2':
-    case 'ucs-2':
-    case 'utf16le':
-    case 'utf-16le':
-      ret = str.length * 2
-      break
-    case 'hex':
-      ret = str.length >>> 1
-      break
-    case 'utf8':
-    case 'utf-8':
-      ret = utf8ToBytes(str).length
-      break
-    case 'base64':
-      ret = base64ToBytes(str).length
-      break
-    default:
-      ret = str.length
-  }
-  return ret
-}
-
-// pre-set for values that may exist in the future
-Buffer.prototype.length = undefined
-Buffer.prototype.parent = undefined
-
-// toString(encoding, start=0, end=buffer.length)
-Buffer.prototype.toString = function toString (encoding, start, end) {
-  var loweredCase = false
-
-  start = start >>> 0
-  end = end === undefined || end === Infinity ? this.length : end >>> 0
-
-  if (!encoding) encoding = 'utf8'
-  if (start < 0) start = 0
-  if (end > this.length) end = this.length
-  if (end <= start) return ''
-
-  while (true) {
-    switch (encoding) {
-      case 'hex':
-        return hexSlice(this, start, end)
-
-      case 'utf8':
-      case 'utf-8':
-        return utf8Slice(this, start, end)
-
-      case 'ascii':
-        return asciiSlice(this, start, end)
-
-      case 'binary':
-        return binarySlice(this, start, end)
-
-      case 'base64':
-        return base64Slice(this, start, end)
-
-      case 'ucs2':
-      case 'ucs-2':
-      case 'utf16le':
-      case 'utf-16le':
-        return utf16leSlice(this, start, end)
-
-      default:
-        if (loweredCase) throw new TypeError('Unknown encoding: ' + encoding)
-        encoding = (encoding + '').toLowerCase()
-        loweredCase = true
-    }
-  }
-}
-
-Buffer.prototype.equals = function equals (b) {
-  if (!Buffer.isBuffer(b)) throw new TypeError('Argument must be a Buffer')
-  if (this === b) return true
-  return Buffer.compare(this, b) === 0
-}
-
-Buffer.prototype.inspect = function inspect () {
-  var str = ''
-  var max = exports.INSPECT_MAX_BYTES
-  if (this.length > 0) {
-    str = this.toString('hex', 0, max).match(/.{2}/g).join(' ')
-    if (this.length > max) str += ' ... '
-  }
-  return '<Buffer ' + str + '>'
-}
-
-Buffer.prototype.compare = function compare (b) {
-  if (!Buffer.isBuffer(b)) throw new TypeError('Argument must be a Buffer')
-  if (this === b) return 0
-  return Buffer.compare(this, b)
-}
-
-Buffer.prototype.indexOf = function indexOf (val, byteOffset) {
-  if (byteOffset > 0x7fffffff) byteOffset = 0x7fffffff
-  else if (byteOffset < -0x80000000) byteOffset = -0x80000000
-  byteOffset >>= 0
-
-  if (this.length === 0) return -1
-  if (byteOffset >= this.length) return -1
-
-  // Negative offsets start from the end of the buffer
-  if (byteOffset < 0) byteOffset = Math.max(this.length + byteOffset, 0)
-
-  if (typeof val === 'string') {
-    if (val.length === 0) return -1 // special case: looking for empty string always fails
-    return String.prototype.indexOf.call(this, val, byteOffset)
-  }
-  if (Buffer.isBuffer(val)) {
-    return arrayIndexOf(this, val, byteOffset)
-  }
-  if (typeof val === 'number') {
-    if (Buffer.TYPED_ARRAY_SUPPORT && Uint8Array.prototype.indexOf === 'function') {
-      return Uint8Array.prototype.indexOf.call(this, val, byteOffset)
-    }
-    return arrayIndexOf(this, [ val ], byteOffset)
-  }
-
-  function arrayIndexOf (arr, val, byteOffset) {
-    var foundIndex = -1
-    for (var i = 0; byteOffset + i < arr.length; i++) {
-      if (arr[byteOffset + i] === val[foundIndex === -1 ? 0 : i - foundIndex]) {
-        if (foundIndex === -1) foundIndex = i
-        if (i - foundIndex + 1 === val.length) return byteOffset + foundIndex
-      } else {
-        foundIndex = -1
-      }
-    }
-    return -1
-  }
-
-  throw new TypeError('val must be string, number or Buffer')
-}
-
-// `get` will be removed in Node 0.13+
-Buffer.prototype.get = function get (offset) {
-  console.log('.get() is deprecated. Access using array indexes instead.')
-  return this.readUInt8(offset)
-}
-
-// `set` will be removed in Node 0.13+
-Buffer.prototype.set = function set (v, offset) {
-  console.log('.set() is deprecated. Access using array indexes instead.')
-  return this.writeUInt8(v, offset)
-}
-
-function hexWrite (buf, string, offset, length) {
-  offset = Number(offset) || 0
-  var remaining = buf.length - offset
-  if (!length) {
-    length = remaining
-  } else {
-    length = Number(length)
-    if (length > remaining) {
-      length = remaining
-    }
-  }
-
-  // must be an even number of digits
-  var strLen = string.length
-  if (strLen % 2 !== 0) throw new Error('Invalid hex string')
-
-  if (length > strLen / 2) {
-    length = strLen / 2
-  }
-  for (var i = 0; i < length; i++) {
-    var parsed = parseInt(string.substr(i * 2, 2), 16)
-    if (isNaN(parsed)) throw new Error('Invalid hex string')
-    buf[offset + i] = parsed
-  }
-  return i
-}
-
-function utf8Write (buf, string, offset, length) {
-  var charsWritten = blitBuffer(utf8ToBytes(string, buf.length - offset), buf, offset, length)
-  return charsWritten
-}
-
-function asciiWrite (buf, string, offset, length) {
-  var charsWritten = blitBuffer(asciiToBytes(string), buf, offset, length)
-  return charsWritten
-}
-
-function binaryWrite (buf, string, offset, length) {
-  return asciiWrite(buf, string, offset, length)
-}
-
-function base64Write (buf, string, offset, length) {
-  var charsWritten = blitBuffer(base64ToBytes(string), buf, offset, length)
-  return charsWritten
-}
-
-function utf16leWrite (buf, string, offset, length) {
-  var charsWritten = blitBuffer(utf16leToBytes(string, buf.length - offset), buf, offset, length)
-  return charsWritten
-}
-
-Buffer.prototype.write = function write (string, offset, length, encoding) {
-  // Support both (string, offset, length, encoding)
-  // and the legacy (string, encoding, offset, length)
-  if (isFinite(offset)) {
-    if (!isFinite(length)) {
-      encoding = length
-      length = undefined
-    }
-  } else {  // legacy
-    var swap = encoding
-    encoding = offset
-    offset = length
-    length = swap
-  }
-
-  offset = Number(offset) || 0
-
-  if (length < 0 || offset < 0 || offset > this.length) {
-    throw new RangeError('attempt to write outside buffer bounds')
-  }
-
-  var remaining = this.length - offset
-  if (!length) {
-    length = remaining
-  } else {
-    length = Number(length)
-    if (length > remaining) {
-      length = remaining
-    }
-  }
-  encoding = String(encoding || 'utf8').toLowerCase()
-
-  var ret
-  switch (encoding) {
-    case 'hex':
-      ret = hexWrite(this, string, offset, length)
-      break
-    case 'utf8':
-    case 'utf-8':
-      ret = utf8Write(this, string, offset, length)
-      break
-    case 'ascii':
-      ret = asciiWrite(this, string, offset, length)
-      break
-    case 'binary':
-      ret = binaryWrite(this, string, offset, length)
-      break
-    case 'base64':
-      ret = base64Write(this, string, offset, length)
-      break
-    case 'ucs2':
-    case 'ucs-2':
-    case 'utf16le':
-    case 'utf-16le':
-      ret = utf16leWrite(this, string, offset, length)
-      break
-    default:
-      throw new TypeError('Unknown encoding: ' + encoding)
-  }
-  return ret
-}
-
-Buffer.prototype.toJSON = function toJSON () {
-  return {
-    type: 'Buffer',
-    data: Array.prototype.slice.call(this._arr || this, 0)
-  }
-}
-
-function base64Slice (buf, start, end) {
-  if (start === 0 && end === buf.length) {
-    return base64.fromByteArray(buf)
-  } else {
-    return base64.fromByteArray(buf.slice(start, end))
-  }
-}
-
-function utf8Slice (buf, start, end) {
-  var res = ''
-  var tmp = ''
-  end = Math.min(buf.length, end)
-
-  for (var i = start; i < end; i++) {
-    if (buf[i] <= 0x7F) {
-      res += decodeUtf8Char(tmp) + String.fromCharCode(buf[i])
-      tmp = ''
-    } else {
-      tmp += '%' + buf[i].toString(16)
-    }
-  }
-
-  return res + decodeUtf8Char(tmp)
-}
-
-function asciiSlice (buf, start, end) {
-  var ret = ''
-  end = Math.min(buf.length, end)
-
-  for (var i = start; i < end; i++) {
-    ret += String.fromCharCode(buf[i] & 0x7F)
-  }
-  return ret
-}
-
-function binarySlice (buf, start, end) {
-  var ret = ''
-  end = Math.min(buf.length, end)
-
-  for (var i = start; i < end; i++) {
-    ret += String.fromCharCode(buf[i])
-  }
-  return ret
-}
-
-function hexSlice (buf, start, end) {
-  var len = buf.length
-
-  if (!start || start < 0) start = 0
-  if (!end || end < 0 || end > len) end = len
-
-  var out = ''
-  for (var i = start; i < end; i++) {
-    out += toHex(buf[i])
-  }
-  return out
-}
-
-function utf16leSlice (buf, start, end) {
-  var bytes = buf.slice(start, end)
-  var res = ''
-  for (var i = 0; i < bytes.length; i += 2) {
-    res += String.fromCharCode(bytes[i] + bytes[i + 1] * 256)
-  }
-  return res
-}
-
-Buffer.prototype.slice = function slice (start, end) {
-  var len = this.length
-  start = ~~start
-  end = end === undefined ? len : ~~end
-
-  if (start < 0) {
-    start += len
-    if (start < 0) start = 0
-  } else if (start > len) {
-    start = len
-  }
-
-  if (end < 0) {
-    end += len
-    if (end < 0) end = 0
-  } else if (end > len) {
-    end = len
-  }
-
-  if (end < start) end = start
-
-  var newBuf
-  if (Buffer.TYPED_ARRAY_SUPPORT) {
-    newBuf = Buffer._augment(this.subarray(start, end))
-  } else {
-    var sliceLen = end - start
-    newBuf = new Buffer(sliceLen, undefined)
-    for (var i = 0; i < sliceLen; i++) {
-      newBuf[i] = this[i + start]
-    }
-  }
-
-  if (newBuf.length) newBuf.parent = this.parent || this
-
-  return newBuf
-}
-
-/*
- * Need to make sure that buffer isn't trying to write out of bounds.
- */
-function checkOffset (offset, ext, length) {
-  if ((offset % 1) !== 0 || offset < 0) throw new RangeError('offset is not uint')
-  if (offset + ext > length) throw new RangeError('Trying to access beyond buffer length')
-}
-
-Buffer.prototype.readUIntLE = function readUIntLE (offset, byteLength, noAssert) {
-  offset = offset >>> 0
-  byteLength = byteLength >>> 0
-  if (!noAssert) checkOffset(offset, byteLength, this.length)
-
-  var val = this[offset]
-  var mul = 1
-  var i = 0
-  while (++i < byteLength && (mul *= 0x100)) {
-    val += this[offset + i] * mul
-  }
-
-  return val
-}
-
-Buffer.prototype.readUIntBE = function readUIntBE (offset, byteLength, noAssert) {
-  offset = offset >>> 0
-  byteLength = byteLength >>> 0
-  if (!noAssert) {
-    checkOffset(offset, byteLength, this.length)
-  }
-
-  var val = this[offset + --byteLength]
-  var mul = 1
-  while (byteLength > 0 && (mul *= 0x100)) {
-    val += this[offset + --byteLength] * mul
-  }
-
-  return val
-}
-
-Buffer.prototype.readUInt8 = function readUInt8 (offset, noAssert) {
-  if (!noAssert) checkOffset(offset, 1, this.length)
-  return this[offset]
-}
-
-Buffer.prototype.readUInt16LE = function readUInt16LE (offset, noAssert) {
-  if (!noAssert) checkOffset(offset, 2, this.length)
-  return this[offset] | (this[offset + 1] << 8)
-}
-
-Buffer.prototype.readUInt16BE = function readUInt16BE (offset, noAssert) {
-  if (!noAssert) checkOffset(offset, 2, this.length)
-  return (this[offset] << 8) | this[offset + 1]
-}
-
-Buffer.prototype.readUInt32LE = function readUInt32LE (offset, noAssert) {
-  if (!noAssert) checkOffset(offset, 4, this.length)
-
-  return ((this[offset]) |
-      (this[offset + 1] << 8) |
-      (this[offset + 2] << 16)) +
-      (this[offset + 3] * 0x1000000)
-}
-
-Buffer.prototype.readUInt32BE = function readUInt32BE (offset, noAssert) {
-  if (!noAssert) checkOffset(offset, 4, this.length)
-
-  return (this[offset] * 0x1000000) +
-    ((this[offset + 1] << 16) |
-    (this[offset + 2] << 8) |
-    this[offset + 3])
-}
-
-Buffer.prototype.readIntLE = function readIntLE (offset, byteLength, noAssert) {
-  offset = offset >>> 0
-  byteLength = byteLength >>> 0
-  if (!noAssert) checkOffset(offset, byteLength, this.length)
-
-  var val = this[offset]
-  var mul = 1
-  var i = 0
-  while (++i < byteLength && (mul *= 0x100)) {
-    val += this[offset + i] * mul
-  }
-  mul *= 0x80
-
-  if (val >= mul) val -= Math.pow(2, 8 * byteLength)
-
-  return val
-}
-
-Buffer.prototype.readIntBE = function readIntBE (offset, byteLength, noAssert) {
-  offset = offset >>> 0
-  byteLength = byteLength >>> 0
-  if (!noAssert) checkOffset(offset, byteLength, this.length)
-
-  var i = byteLength
-  var mul = 1
-  var val = this[offset + --i]
-  while (i > 0 && (mul *= 0x100)) {
-    val += this[offset + --i] * mul
-  }
-  mul *= 0x80
-
-  if (val >= mul) val -= Math.pow(2, 8 * byteLength)
-
-  return val
-}
-
-Buffer.prototype.readInt8 = function readInt8 (offset, noAssert) {
-  if (!noAssert) checkOffset(offset, 1, this.length)
-  if (!(this[offset] & 0x80)) return (this[offset])
-  return ((0xff - this[offset] + 1) * -1)
-}
-
-Buffer.prototype.readInt16LE = function readInt16LE (offset, noAssert) {
-  if (!noAssert) checkOffset(offset, 2, this.length)
-  var val = this[offset] | (this[offset + 1] << 8)
-  return (val & 0x8000) ? val | 0xFFFF0000 : val
-}
-
-Buffer.prototype.readInt16BE = function readInt16BE (offset, noAssert) {
-  if (!noAssert) checkOffset(offset, 2, this.length)
-  var val = this[offset + 1] | (this[offset] << 8)
-  return (val & 0x8000) ? val | 0xFFFF0000 : val
-}
-
-Buffer.prototype.readInt32LE = function readInt32LE (offset, noAssert) {
-  if (!noAssert) checkOffset(offset, 4, this.length)
-
-  return (this[offset]) |
-    (this[offset + 1] << 8) |
-    (this[offset + 2] << 16) |
-    (this[offset + 3] << 24)
-}
-
-Buffer.prototype.readInt32BE = function readInt32BE (offset, noAssert) {
-  if (!noAssert) checkOffset(offset, 4, this.length)
-
-  return (this[offset] << 24) |
-    (this[offset + 1] << 16) |
-    (this[offset + 2] << 8) |
-    (this[offset + 3])
-}
-
-Buffer.prototype.readFloatLE = function readFloatLE (offset, noAssert) {
-  if (!noAssert) checkOffset(offset, 4, this.length)
-  return ieee754.read(this, offset, true, 23, 4)
-}
-
-Buffer.prototype.readFloatBE = function readFloatBE (offset, noAssert) {
-  if (!noAssert) checkOffset(offset, 4, this.length)
-  return ieee754.read(this, offset, false, 23, 4)
-}
-
-Buffer.prototype.readDoubleLE = function readDoubleLE (offset, noAssert) {
-  if (!noAssert) checkOffset(offset, 8, this.length)
-  return ieee754.read(this, offset, true, 52, 8)
-}
-
-Buffer.prototype.readDoubleBE = function readDoubleBE (offset, noAssert) {
-  if (!noAssert) checkOffset(offset, 8, this.length)
-  return ieee754.read(this, offset, false, 52, 8)
-}
-
-function checkInt (buf, value, offset, ext, max, min) {
-  if (!Buffer.isBuffer(buf)) throw new TypeError('buffer must be a Buffer instance')
-  if (value > max || value < min) throw new RangeError('value is out of bounds')
-  if (offset + ext > buf.length) throw new RangeError('index out of range')
-}
-
-Buffer.prototype.writeUIntLE = function writeUIntLE (value, offset, byteLength, noAssert) {
-  value = +value
-  offset = offset >>> 0
-  byteLength = byteLength >>> 0
-  if (!noAssert) checkInt(this, value, offset, byteLength, Math.pow(2, 8 * byteLength), 0)
-
-  var mul = 1
-  var i = 0
-  this[offset] = value & 0xFF
-  while (++i < byteLength && (mul *= 0x100)) {
-    this[offset + i] = (value / mul) >>> 0 & 0xFF
-  }
-
-  return offset + byteLength
-}
-
-Buffer.prototype.writeUIntBE = function writeUIntBE (value, offset, byteLength, noAssert) {
-  value = +value
-  offset = offset >>> 0
-  byteLength = byteLength >>> 0
-  if (!noAssert) checkInt(this, value, offset, byteLength, Math.pow(2, 8 * byteLength), 0)
-
-  var i = byteLength - 1
-  var mul = 1
-  this[offset + i] = value & 0xFF
-  while (--i >= 0 && (mul *= 0x100)) {
-    this[offset + i] = (value / mul) >>> 0 & 0xFF
-  }
-
-  return offset + byteLength
-}
-
-Buffer.prototype.writeUInt8 = function writeUInt8 (value, offset, noAssert) {
-  value = +value
-  offset = offset >>> 0
-  if (!noAssert) checkInt(this, value, offset, 1, 0xff, 0)
-  if (!Buffer.TYPED_ARRAY_SUPPORT) value = Math.floor(value)
-  this[offset] = value
-  return offset + 1
-}
-
-function objectWriteUInt16 (buf, value, offset, littleEndian) {
-  if (value < 0) value = 0xffff + value + 1
-  for (var i = 0, j = Math.min(buf.length - offset, 2); i < j; i++) {
-    buf[offset + i] = (value & (0xff << (8 * (littleEndian ? i : 1 - i)))) >>>
-      (littleEndian ? i : 1 - i) * 8
-  }
-}
-
-Buffer.prototype.writeUInt16LE = function writeUInt16LE (value, offset, noAssert) {
-  value = +value
-  offset = offset >>> 0
-  if (!noAssert) checkInt(this, value, offset, 2, 0xffff, 0)
-  if (Buffer.TYPED_ARRAY_SUPPORT) {
-    this[offset] = value
-    this[offset + 1] = (value >>> 8)
-  } else {
-    objectWriteUInt16(this, value, offset, true)
-  }
-  return offset + 2
-}
-
-Buffer.prototype.writeUInt16BE = function writeUInt16BE (value, offset, noAssert) {
-  value = +value
-  offset = offset >>> 0
-  if (!noAssert) checkInt(this, value, offset, 2, 0xffff, 0)
-  if (Buffer.TYPED_ARRAY_SUPPORT) {
-    this[offset] = (value >>> 8)
-    this[offset + 1] = value
-  } else {
-    objectWriteUInt16(this, value, offset, false)
-  }
-  return offset + 2
-}
-
-function objectWriteUInt32 (buf, value, offset, littleEndian) {
-  if (value < 0) value = 0xffffffff + value + 1
-  for (var i = 0, j = Math.min(buf.length - offset, 4); i < j; i++) {
-    buf[offset + i] = (value >>> (littleEndian ? i : 3 - i) * 8) & 0xff
-  }
-}
-
-Buffer.prototype.writeUInt32LE = function writeUInt32LE (value, offset, noAssert) {
-  value = +value
-  offset = offset >>> 0
-  if (!noAssert) checkInt(this, value, offset, 4, 0xffffffff, 0)
-  if (Buffer.TYPED_ARRAY_SUPPORT) {
-    this[offset + 3] = (value >>> 24)
-    this[offset + 2] = (value >>> 16)
-    this[offset + 1] = (value >>> 8)
-    this[offset] = value
-  } else {
-    objectWriteUInt32(this, value, offset, true)
-  }
-  return offset + 4
-}
-
-Buffer.prototype.writeUInt32BE = function writeUInt32BE (value, offset, noAssert) {
-  value = +value
-  offset = offset >>> 0
-  if (!noAssert) checkInt(this, value, offset, 4, 0xffffffff, 0)
-  if (Buffer.TYPED_ARRAY_SUPPORT) {
-    this[offset] = (value >>> 24)
-    this[offset + 1] = (value >>> 16)
-    this[offset + 2] = (value >>> 8)
-    this[offset + 3] = value
-  } else {
-    objectWriteUInt32(this, value, offset, false)
-  }
-  return offset + 4
-}
-
-Buffer.prototype.writeIntLE = function writeIntLE (value, offset, byteLength, noAssert) {
-  value = +value
-  offset = offset >>> 0
-  if (!noAssert) {
-    checkInt(
-      this, value, offset, byteLength,
-      Math.pow(2, 8 * byteLength - 1) - 1,
-      -Math.pow(2, 8 * byteLength - 1)
-    )
-  }
-
-  var i = 0
-  var mul = 1
-  var sub = value < 0 ? 1 : 0
-  this[offset] = value & 0xFF
-  while (++i < byteLength && (mul *= 0x100)) {
-    this[offset + i] = ((value / mul) >> 0) - sub & 0xFF
-  }
-
-  return offset + byteLength
-}
-
-Buffer.prototype.writeIntBE = function writeIntBE (value, offset, byteLength, noAssert) {
-  value = +value
-  offset = offset >>> 0
-  if (!noAssert) {
-    checkInt(
-      this, value, offset, byteLength,
-      Math.pow(2, 8 * byteLength - 1) - 1,
-      -Math.pow(2, 8 * byteLength - 1)
-    )
-  }
-
-  var i = byteLength - 1
-  var mul = 1
-  var sub = value < 0 ? 1 : 0
-  this[offset + i] = value & 0xFF
-  while (--i >= 0 && (mul *= 0x100)) {
-    this[offset + i] = ((value / mul) >> 0) - sub & 0xFF
-  }
-
-  return offset + byteLength
-}
-
-Buffer.prototype.writeInt8 = function writeInt8 (value, offset, noAssert) {
-  value = +value
-  offset = offset >>> 0
-  if (!noAssert) checkInt(this, value, offset, 1, 0x7f, -0x80)
-  if (!Buffer.TYPED_ARRAY_SUPPORT) value = Math.floor(value)
-  if (value < 0) value = 0xff + value + 1
-  this[offset] = value
-  return offset + 1
-}
-
-Buffer.prototype.writeInt16LE = function writeInt16LE (value, offset, noAssert) {
-  value = +value
-  offset = offset >>> 0
-  if (!noAssert) checkInt(this, value, offset, 2, 0x7fff, -0x8000)
-  if (Buffer.TYPED_ARRAY_SUPPORT) {
-    this[offset] = value
-    this[offset + 1] = (value >>> 8)
-  } else {
-    objectWriteUInt16(this, value, offset, true)
-  }
-  return offset + 2
-}
-
-Buffer.prototype.writeInt16BE = function writeInt16BE (value, offset, noAssert) {
-  value = +value
-  offset = offset >>> 0
-  if (!noAssert) checkInt(this, value, offset, 2, 0x7fff, -0x8000)
-  if (Buffer.TYPED_ARRAY_SUPPORT) {
-    this[offset] = (value >>> 8)
-    this[offset + 1] = value
-  } else {
-    objectWriteUInt16(this, value, offset, false)
-  }
-  return offset + 2
-}
-
-Buffer.prototype.writeInt32LE = function writeInt32LE (value, offset, noAssert) {
-  value = +value
-  offset = offset >>> 0
-  if (!noAssert) checkInt(this, value, offset, 4, 0x7fffffff, -0x80000000)
-  if (Buffer.TYPED_ARRAY_SUPPORT) {
-    this[offset] = value
-    this[offset + 1] = (value >>> 8)
-    this[offset + 2] = (value >>> 16)
-    this[offset + 3] = (value >>> 24)
-  } else {
-    objectWriteUInt32(this, value, offset, true)
-  }
-  return offset + 4
-}
-
-Buffer.prototype.writeInt32BE = function writeInt32BE (value, offset, noAssert) {
-  value = +value
-  offset = offset >>> 0
-  if (!noAssert) checkInt(this, value, offset, 4, 0x7fffffff, -0x80000000)
-  if (value < 0) value = 0xffffffff + value + 1
-  if (Buffer.TYPED_ARRAY_SUPPORT) {
-    this[offset] = (value >>> 24)
-    this[offset + 1] = (value >>> 16)
-    this[offset + 2] = (value >>> 8)
-    this[offset + 3] = value
-  } else {
-    objectWriteUInt32(this, value, offset, false)
-  }
-  return offset + 4
-}
-
-function checkIEEE754 (buf, value, offset, ext, max, min) {
-  if (value > max || value < min) throw new RangeError('value is out of bounds')
-  if (offset + ext > buf.length) throw new RangeError('index out of range')
-  if (offset < 0) throw new RangeError('index out of range')
-}
-
-function writeFloat (buf, value, offset, littleEndian, noAssert) {
-  if (!noAssert) {
-    checkIEEE754(buf, value, offset, 4, 3.4028234663852886e+38, -3.4028234663852886e+38)
-  }
-  ieee754.write(buf, value, offset, littleEndian, 23, 4)
-  return offset + 4
-}
-
-Buffer.prototype.writeFloatLE = function writeFloatLE (value, offset, noAssert) {
-  return writeFloat(this, value, offset, true, noAssert)
-}
-
-Buffer.prototype.writeFloatBE = function writeFloatBE (value, offset, noAssert) {
-  return writeFloat(this, value, offset, false, noAssert)
-}
-
-function writeDouble (buf, value, offset, littleEndian, noAssert) {
-  if (!noAssert) {
-    checkIEEE754(buf, value, offset, 8, 1.7976931348623157E+308, -1.7976931348623157E+308)
-  }
-  ieee754.write(buf, value, offset, littleEndian, 52, 8)
-  return offset + 8
-}
-
-Buffer.prototype.writeDoubleLE = function writeDoubleLE (value, offset, noAssert) {
-  return writeDouble(this, value, offset, true, noAssert)
-}
-
-Buffer.prototype.writeDoubleBE = function writeDoubleBE (value, offset, noAssert) {
-  return writeDouble(this, value, offset, false, noAssert)
-}
-
-// copy(targetBuffer, targetStart=0, sourceStart=0, sourceEnd=buffer.length)
-Buffer.prototype.copy = function copy (target, target_start, start, end) {
-  var self = this // source
-
-  if (!start) start = 0
-  if (!end && end !== 0) end = this.length
-  if (target_start >= target.length) target_start = target.length
-  if (!target_start) target_start = 0
-  if (end > 0 && end < start) end = start
-
-  // Copy 0 bytes; we're done
-  if (end === start) return 0
-  if (target.length === 0 || self.length === 0) return 0
-
-  // Fatal error conditions
-  if (target_start < 0) {
-    throw new RangeError('targetStart out of bounds')
-  }
-  if (start < 0 || start >= self.length) throw new RangeError('sourceStart out of bounds')
-  if (end < 0) throw new RangeError('sourceEnd out of bounds')
-
-  // Are we oob?
-  if (end > this.length) end = this.length
-  if (target.length - target_start < end - start) {
-    end = target.length - target_start + start
-  }
-
-  var len = end - start
-
-  if (len < 1000 || !Buffer.TYPED_ARRAY_SUPPORT) {
-    for (var i = 0; i < len; i++) {
-      target[i + target_start] = this[i + start]
-    }
-  } else {
-    target._set(this.subarray(start, start + len), target_start)
-  }
-
-  return len
-}
-
-// fill(value, start=0, end=buffer.length)
-Buffer.prototype.fill = function fill (value, start, end) {
-  if (!value) value = 0
-  if (!start) start = 0
-  if (!end) end = this.length
-
-  if (end < start) throw new RangeError('end < start')
-
-  // Fill 0 bytes; we're done
-  if (end === start) return
-  if (this.length === 0) return
-
-  if (start < 0 || start >= this.length) throw new RangeError('start out of bounds')
-  if (end < 0 || end > this.length) throw new RangeError('end out of bounds')
-
-  var i
-  if (typeof value === 'number') {
-    for (i = start; i < end; i++) {
-      this[i] = value
-    }
-  } else {
-    var bytes = utf8ToBytes(value.toString())
-    var len = bytes.length
-    for (i = start; i < end; i++) {
-      this[i] = bytes[i % len]
-    }
-  }
-
-  return this
-}
-
-/**
- * Creates a new `ArrayBuffer` with the *copied* memory of the buffer instance.
- * Added in Node 0.12. Only available in browsers that support ArrayBuffer.
- */
-Buffer.prototype.toArrayBuffer = function toArrayBuffer () {
-  if (typeof Uint8Array !== 'undefined') {
-    if (Buffer.TYPED_ARRAY_SUPPORT) {
-      return (new Buffer(this)).buffer
-    } else {
-      var buf = new Uint8Array(this.length)
-      for (var i = 0, len = buf.length; i < len; i += 1) {
-        buf[i] = this[i]
-      }
-      return buf.buffer
-    }
-  } else {
-    throw new TypeError('Buffer.toArrayBuffer not supported in this browser')
-  }
-}
-
-// HELPER FUNCTIONS
-// ================
-
-var BP = Buffer.prototype
-
-/**
- * Augment a Uint8Array *instance* (not the Uint8Array class!) with Buffer methods
- */
-Buffer._augment = function _augment (arr) {
-  arr.constructor = Buffer
-  arr._isBuffer = true
-
-  // save reference to original Uint8Array get/set methods before overwriting
-  arr._get = arr.get
-  arr._set = arr.set
-
-  // deprecated, will be removed in node 0.13+
-  arr.get = BP.get
-  arr.set = BP.set
-
-  arr.write = BP.write
-  arr.toString = BP.toString
-  arr.toLocaleString = BP.toString
-  arr.toJSON = BP.toJSON
-  arr.equals = BP.equals
-  arr.compare = BP.compare
-  arr.indexOf = BP.indexOf
-  arr.copy = BP.copy
-  arr.slice = BP.slice
-  arr.readUIntLE = BP.readUIntLE
-  arr.readUIntBE = BP.readUIntBE
-  arr.readUInt8 = BP.readUInt8
-  arr.readUInt16LE = BP.readUInt16LE
-  arr.readUInt16BE = BP.readUInt16BE
-  arr.readUInt32LE = BP.readUInt32LE
-  arr.readUInt32BE = BP.readUInt32BE
-  arr.readIntLE = BP.readIntLE
-  arr.readIntBE = BP.readIntBE
-  arr.readInt8 = BP.readInt8
-  arr.readInt16LE = BP.readInt16LE
-  arr.readInt16BE = BP.readInt16BE
-  arr.readInt32LE = BP.readInt32LE
-  arr.readInt32BE = BP.readInt32BE
-  arr.readFloatLE = BP.readFloatLE
-  arr.readFloatBE = BP.readFloatBE
-  arr.readDoubleLE = BP.readDoubleLE
-  arr.readDoubleBE = BP.readDoubleBE
-  arr.writeUInt8 = BP.writeUInt8
-  arr.writeUIntLE = BP.writeUIntLE
-  arr.writeUIntBE = BP.writeUIntBE
-  arr.writeUInt16LE = BP.writeUInt16LE
-  arr.writeUInt16BE = BP.writeUInt16BE
-  arr.writeUInt32LE = BP.writeUInt32LE
-  arr.writeUInt32BE = BP.writeUInt32BE
-  arr.writeIntLE = BP.writeIntLE
-  arr.writeIntBE = BP.writeIntBE
-  arr.writeInt8 = BP.writeInt8
-  arr.writeInt16LE = BP.writeInt16LE
-  arr.writeInt16BE = BP.writeInt16BE
-  arr.writeInt32LE = BP.writeInt32LE
-  arr.writeInt32BE = BP.writeInt32BE
-  arr.writeFloatLE = BP.writeFloatLE
-  arr.writeFloatBE = BP.writeFloatBE
-  arr.writeDoubleLE = BP.writeDoubleLE
-  arr.writeDoubleBE = BP.writeDoubleBE
-  arr.fill = BP.fill
-  arr.inspect = BP.inspect
-  arr.toArrayBuffer = BP.toArrayBuffer
-
-  return arr
-}
-
-var INVALID_BASE64_RE = /[^+\/0-9A-z\-]/g
-
-function base64clean (str) {
-  // Node strips out invalid characters like \n and \t from the string, base64-js does not
-  str = stringtrim(str).replace(INVALID_BASE64_RE, '')
-  // Node converts strings with length < 2 to ''
-  if (str.length < 2) return ''
-  // Node allows for non-padded base64 strings (missing trailing ===), base64-js does not
-  while (str.length % 4 !== 0) {
-    str = str + '='
-  }
-  return str
-}
-
-function stringtrim (str) {
-  if (str.trim) return str.trim()
-  return str.replace(/^\s+|\s+$/g, '')
-}
-
-function isArrayish (subject) {
-  return isArray(subject) || Buffer.isBuffer(subject) ||
-      subject && typeof subject === 'object' &&
-      typeof subject.length === 'number'
-}
-
-function toHex (n) {
-  if (n < 16) return '0' + n.toString(16)
-  return n.toString(16)
-}
-
-function utf8ToBytes (string, units) {
-  units = units || Infinity
-  var codePoint
-  var length = string.length
-  var leadSurrogate = null
-  var bytes = []
-  var i = 0
-
-  for (; i < length; i++) {
-    codePoint = string.charCodeAt(i)
-
-    // is surrogate component
-    if (codePoint > 0xD7FF && codePoint < 0xE000) {
-      // last char was a lead
-      if (leadSurrogate) {
-        // 2 leads in a row
-        if (codePoint < 0xDC00) {
-          if ((units -= 3) > -1) bytes.push(0xEF, 0xBF, 0xBD)
-          leadSurrogate = codePoint
-          continue
-        } else {
-          // valid surrogate pair
-          codePoint = leadSurrogate - 0xD800 << 10 | codePoint - 0xDC00 | 0x10000
-          leadSurrogate = null
-        }
-      } else {
-        // no lead yet
-
-        if (codePoint > 0xDBFF) {
-          // unexpected trail
-          if ((units -= 3) > -1) bytes.push(0xEF, 0xBF, 0xBD)
-          continue
-        } else if (i + 1 === length) {
-          // unpaired lead
-          if ((units -= 3) > -1) bytes.push(0xEF, 0xBF, 0xBD)
-          continue
-        } else {
-          // valid lead
-          leadSurrogate = codePoint
-          continue
-        }
-      }
-    } else if (leadSurrogate) {
-      // valid bmp char, but last char was a lead
-      if ((units -= 3) > -1) bytes.push(0xEF, 0xBF, 0xBD)
-      leadSurrogate = null
-    }
-
-    // encode utf8
-    if (codePoint < 0x80) {
-      if ((units -= 1) < 0) break
-      bytes.push(codePoint)
-    } else if (codePoint < 0x800) {
-      if ((units -= 2) < 0) break
-      bytes.push(
-        codePoint >> 0x6 | 0xC0,
-        codePoint & 0x3F | 0x80
-      )
-    } else if (codePoint < 0x10000) {
-      if ((units -= 3) < 0) break
-      bytes.push(
-        codePoint >> 0xC | 0xE0,
-        codePoint >> 0x6 & 0x3F | 0x80,
-        codePoint & 0x3F | 0x80
-      )
-    } else if (codePoint < 0x200000) {
-      if ((units -= 4) < 0) break
-      bytes.push(
-        codePoint >> 0x12 | 0xF0,
-        codePoint >> 0xC & 0x3F | 0x80,
-        codePoint >> 0x6 & 0x3F | 0x80,
-        codePoint & 0x3F | 0x80
-      )
-    } else {
-      throw new Error('Invalid code point')
-    }
-  }
-
-  return bytes
-}
-
-function asciiToBytes (str) {
-  var byteArray = []
-  for (var i = 0; i < str.length; i++) {
-    // Node's code seems to be doing this and not & 0x7F..
-    byteArray.push(str.charCodeAt(i) & 0xFF)
-  }
-  return byteArray
-}
-
-function utf16leToBytes (str, units) {
-  var c, hi, lo
-  var byteArray = []
-  for (var i = 0; i < str.length; i++) {
-    if ((units -= 2) < 0) break
-
-    c = str.charCodeAt(i)
-    hi = c >> 8
-    lo = c % 256
-    byteArray.push(lo)
-    byteArray.push(hi)
-  }
-
-  return byteArray
-}
-
-function base64ToBytes (str) {
-  return base64.toByteArray(base64clean(str))
-}
-
-function blitBuffer (src, dst, offset, length) {
-  for (var i = 0; i < length; i++) {
-    if ((i + offset >= dst.length) || (i >= src.length)) break
-    dst[i + offset] = src[i]
-  }
-  return i
-}
-
-function decodeUtf8Char (str) {
-  try {
-    return decodeURIComponent(str)
-  } catch (err) {
-    return String.fromCharCode(0xFFFD) // UTF 8 invalid char
-  }
-}
-
-},{"base64-js":"/home/bbales2/stochss/app/static/modelEditor/node_modules/watchify/node_modules/browserify/node_modules/buffer/node_modules/base64-js/lib/b64.js","ieee754":"/home/bbales2/stochss/app/static/modelEditor/node_modules/watchify/node_modules/browserify/node_modules/buffer/node_modules/ieee754/index.js","is-array":"/home/bbales2/stochss/app/static/modelEditor/node_modules/watchify/node_modules/browserify/node_modules/buffer/node_modules/is-array/index.js"}],"/home/bbales2/stochss/app/static/modelEditor/node_modules/watchify/node_modules/browserify/node_modules/buffer/node_modules/base64-js/lib/b64.js":[function(require,module,exports){
-var lookup = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/';
-
-;(function (exports) {
-	'use strict';
-
-  var Arr = (typeof Uint8Array !== 'undefined')
-    ? Uint8Array
-    : Array
-
-	var PLUS   = '+'.charCodeAt(0)
-	var SLASH  = '/'.charCodeAt(0)
-	var NUMBER = '0'.charCodeAt(0)
-	var LOWER  = 'a'.charCodeAt(0)
-	var UPPER  = 'A'.charCodeAt(0)
-	var PLUS_URL_SAFE = '-'.charCodeAt(0)
-	var SLASH_URL_SAFE = '_'.charCodeAt(0)
-
-	function decode (elt) {
-		var code = elt.charCodeAt(0)
-		if (code === PLUS ||
-		    code === PLUS_URL_SAFE)
-			return 62 // '+'
-		if (code === SLASH ||
-		    code === SLASH_URL_SAFE)
-			return 63 // '/'
-		if (code < NUMBER)
-			return -1 //no match
-		if (code < NUMBER + 10)
-			return code - NUMBER + 26 + 26
-		if (code < UPPER + 26)
-			return code - UPPER
-		if (code < LOWER + 26)
-			return code - LOWER + 26
-	}
-
-	function b64ToByteArray (b64) {
-		var i, j, l, tmp, placeHolders, arr
-
-		if (b64.length % 4 > 0) {
-			throw new Error('Invalid string. Length must be a multiple of 4')
-		}
-
-		// the number of equal signs (place holders)
-		// if there are two placeholders, than the two characters before it
-		// represent one byte
-		// if there is only one, then the three characters before it represent 2 bytes
-		// this is just a cheap hack to not do indexOf twice
-		var len = b64.length
-		placeHolders = '=' === b64.charAt(len - 2) ? 2 : '=' === b64.charAt(len - 1) ? 1 : 0
-
-		// base64 is 4/3 + up to two characters of the original data
-		arr = new Arr(b64.length * 3 / 4 - placeHolders)
-
-		// if there are placeholders, only get up to the last complete 4 chars
-		l = placeHolders > 0 ? b64.length - 4 : b64.length
-
-		var L = 0
-
-		function push (v) {
-			arr[L++] = v
-		}
-
-		for (i = 0, j = 0; i < l; i += 4, j += 3) {
-			tmp = (decode(b64.charAt(i)) << 18) | (decode(b64.charAt(i + 1)) << 12) | (decode(b64.charAt(i + 2)) << 6) | decode(b64.charAt(i + 3))
-			push((tmp & 0xFF0000) >> 16)
-			push((tmp & 0xFF00) >> 8)
-			push(tmp & 0xFF)
-		}
-
-		if (placeHolders === 2) {
-			tmp = (decode(b64.charAt(i)) << 2) | (decode(b64.charAt(i + 1)) >> 4)
-			push(tmp & 0xFF)
-		} else if (placeHolders === 1) {
-			tmp = (decode(b64.charAt(i)) << 10) | (decode(b64.charAt(i + 1)) << 4) | (decode(b64.charAt(i + 2)) >> 2)
-			push((tmp >> 8) & 0xFF)
-			push(tmp & 0xFF)
-		}
-
-		return arr
-	}
-
-	function uint8ToBase64 (uint8) {
-		var i,
-			extraBytes = uint8.length % 3, // if we have 1 byte left, pad 2 bytes
-			output = "",
-			temp, length
-
-		function encode (num) {
-			return lookup.charAt(num)
-		}
-
-		function tripletToBase64 (num) {
-			return encode(num >> 18 & 0x3F) + encode(num >> 12 & 0x3F) + encode(num >> 6 & 0x3F) + encode(num & 0x3F)
-		}
-
-		// go through the array every three bytes, we'll deal with trailing stuff later
-		for (i = 0, length = uint8.length - extraBytes; i < length; i += 3) {
-			temp = (uint8[i] << 16) + (uint8[i + 1] << 8) + (uint8[i + 2])
-			output += tripletToBase64(temp)
-		}
-
-		// pad the end with zeros, but make sure to not forget the extra bytes
-		switch (extraBytes) {
-			case 1:
-				temp = uint8[uint8.length - 1]
-				output += encode(temp >> 2)
-				output += encode((temp << 4) & 0x3F)
-				output += '=='
-				break
-			case 2:
-				temp = (uint8[uint8.length - 2] << 8) + (uint8[uint8.length - 1])
-				output += encode(temp >> 10)
-				output += encode((temp >> 4) & 0x3F)
-				output += encode((temp << 2) & 0x3F)
-				output += '='
-				break
-		}
-
-		return output
-	}
-
-	exports.toByteArray = b64ToByteArray
-	exports.fromByteArray = uint8ToBase64
-}(typeof exports === 'undefined' ? (this.base64js = {}) : exports))
-
-},{}],"/home/bbales2/stochss/app/static/modelEditor/node_modules/watchify/node_modules/browserify/node_modules/buffer/node_modules/ieee754/index.js":[function(require,module,exports){
-exports.read = function(buffer, offset, isLE, mLen, nBytes) {
-  var e, m,
-      eLen = nBytes * 8 - mLen - 1,
-      eMax = (1 << eLen) - 1,
-      eBias = eMax >> 1,
-      nBits = -7,
-      i = isLE ? (nBytes - 1) : 0,
-      d = isLE ? -1 : 1,
-      s = buffer[offset + i];
-
-  i += d;
-
-  e = s & ((1 << (-nBits)) - 1);
-  s >>= (-nBits);
-  nBits += eLen;
-  for (; nBits > 0; e = e * 256 + buffer[offset + i], i += d, nBits -= 8);
-
-  m = e & ((1 << (-nBits)) - 1);
-  e >>= (-nBits);
-  nBits += mLen;
-  for (; nBits > 0; m = m * 256 + buffer[offset + i], i += d, nBits -= 8);
-
-  if (e === 0) {
-    e = 1 - eBias;
-  } else if (e === eMax) {
-    return m ? NaN : ((s ? -1 : 1) * Infinity);
-  } else {
-    m = m + Math.pow(2, mLen);
-    e = e - eBias;
-  }
-  return (s ? -1 : 1) * m * Math.pow(2, e - mLen);
-};
-
-exports.write = function(buffer, value, offset, isLE, mLen, nBytes) {
-  var e, m, c,
-      eLen = nBytes * 8 - mLen - 1,
-      eMax = (1 << eLen) - 1,
-      eBias = eMax >> 1,
-      rt = (mLen === 23 ? Math.pow(2, -24) - Math.pow(2, -77) : 0),
-      i = isLE ? 0 : (nBytes - 1),
-      d = isLE ? 1 : -1,
-      s = value < 0 || (value === 0 && 1 / value < 0) ? 1 : 0;
-
-  value = Math.abs(value);
-
-  if (isNaN(value) || value === Infinity) {
-    m = isNaN(value) ? 1 : 0;
-    e = eMax;
-  } else {
-    e = Math.floor(Math.log(value) / Math.LN2);
-    if (value * (c = Math.pow(2, -e)) < 1) {
-      e--;
-      c *= 2;
-    }
-    if (e + eBias >= 1) {
-      value += rt / c;
-    } else {
-      value += rt * Math.pow(2, 1 - eBias);
-    }
-    if (value * c >= 2) {
-      e++;
-      c /= 2;
-    }
-
-    if (e + eBias >= eMax) {
-      m = 0;
-      e = eMax;
-    } else if (e + eBias >= 1) {
-      m = (value * c - 1) * Math.pow(2, mLen);
-      e = e + eBias;
-    } else {
-      m = value * Math.pow(2, eBias - 1) * Math.pow(2, mLen);
-      e = 0;
-    }
-  }
-
-  for (; mLen >= 8; buffer[offset + i] = m & 0xff, i += d, m /= 256, mLen -= 8);
-
-  e = (e << mLen) | m;
-  eLen += mLen;
-  for (; eLen > 0; buffer[offset + i] = e & 0xff, i += d, e /= 256, eLen -= 8);
-
-  buffer[offset + i - d] |= s * 128;
-};
-
-},{}],"/home/bbales2/stochss/app/static/modelEditor/node_modules/watchify/node_modules/browserify/node_modules/buffer/node_modules/is-array/index.js":[function(require,module,exports){
-arguments[4]["/home/bbales2/stochss/app/static/modelEditor/node_modules/ampersand-collection/node_modules/is-array/index.js"][0].apply(exports,arguments)
-},{}],"/home/bbales2/stochss/app/static/modelEditor/select/model-collection.js":[function(require,module,exports){
+},{}],181:[function(require,module,exports){
 var _ = require('underscore');
 var $ = require('jquery');
 var AmpersandView = require('ampersand-view');
@@ -67933,7 +67933,7 @@ var ModelCollectionSelectView = AmpersandView.extend({
 
 module.exports = ModelCollectionSelectView
 
-},{"../forms/paginated-collection-view":"/home/bbales2/stochss/app/static/modelEditor/forms/paginated-collection-view.js","../forms/tests.js":"/home/bbales2/stochss/app/static/modelEditor/forms/tests.js","../models/model":"/home/bbales2/stochss/app/static/modelEditor/models/model.js","./model":"/home/bbales2/stochss/app/static/modelEditor/select/model.js","ampersand-checkbox-view":"/home/bbales2/stochss/app/static/modelEditor/node_modules/ampersand-checkbox-view/ampersand-checkbox-view.js","ampersand-form-view":"/home/bbales2/stochss/app/static/modelEditor/node_modules/ampersand-form-view/ampersand-form-view.js","ampersand-input-view":"/home/bbales2/stochss/app/static/modelEditor/node_modules/ampersand-input-view/ampersand-input-view.js","ampersand-select-view":"/home/bbales2/stochss/app/static/modelEditor/node_modules/ampersand-select-view/ampersand-select-view.js","ampersand-view":"/home/bbales2/stochss/app/static/modelEditor/node_modules/ampersand-view/ampersand-view.js","jquery":"/home/bbales2/stochss/app/static/modelEditor/node_modules/jquery/dist/jquery.js","underscore":"/home/bbales2/stochss/app/static/modelEditor/node_modules/underscore/underscore.js"}],"/home/bbales2/stochss/app/static/modelEditor/select/model.js":[function(require,module,exports){
+},{"../forms/paginated-collection-view":18,"../forms/tests.js":29,"../models/model":35,"./model":182,"ampersand-checkbox-view":48,"ampersand-form-view":80,"ampersand-input-view":84,"ampersand-select-view":118,"ampersand-view":131,"jquery":158,"underscore":176}],182:[function(require,module,exports){
 var _ = require('underscore');
 var $ = require('jquery');
 var View = require('ampersand-view');
@@ -68106,4 +68106,4 @@ module.exports = View.extend({
     }
 });
 
-},{"../forms/tests":"/home/bbales2/stochss/app/static/modelEditor/forms/tests.js","ampersand-view":"/home/bbales2/stochss/app/static/modelEditor/node_modules/ampersand-view/ampersand-view.js","jquery":"/home/bbales2/stochss/app/static/modelEditor/node_modules/jquery/dist/jquery.js","underscore":"/home/bbales2/stochss/app/static/modelEditor/node_modules/underscore/underscore.js"}]},{},["/home/bbales2/stochss/app/static/modelEditor/app.js"]);
+},{"../forms/tests":29,"ampersand-view":131,"jquery":158,"underscore":176}]},{},[1]);
