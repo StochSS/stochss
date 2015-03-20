@@ -6,6 +6,7 @@ var MeshSelectView = require('./mesh');
 var Mesh = require('../models/mesh');
 var FileUpload = require('blueimp-file-upload');
 var PaginatedCollectionView = require('./paginated-collection-view');
+var MeshDescription = require('./mesh-description');
 
 var Tests = require('../forms/tests.js');
 
@@ -313,6 +314,12 @@ var MeshCollectionSelectView = AmpersandView.extend({
 </div>";
 
         AmpersandView.prototype.render.apply(this, arguments);
+
+        this.descriptionView = this.renderSubview(new MeshDescription({
+            parent: this,
+	    baseModel : this.model,
+            model: this.model.mesh
+        }), this.queryByHook("meshDescription"));
 
         this.selectView = this.renderSubview( new PaginatedCollectionView( {
             template : collectionTemplate,
