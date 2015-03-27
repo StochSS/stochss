@@ -169,9 +169,9 @@
 <script class="meshCollectionTemplate" type="text/template">
     <div>
         <div class="accordion" id="accordion22">
-            <div class="accordion-group">
+            <div class="accordion-group" data-hook="meshDescriptionAccordion">
                 <div class="accordion-heading">
-                    <a class="accordion-toggle meshLibrary" data-toggle="collapse" data-parent="#accordion22" href="#collapseOne2">
+                    <a class="accordion-toggle" data-toggle="collapse" data-parent="#accordion22" href="#collapseOne2">
                         Current Mesh
                     </a>
                 </div>
@@ -182,10 +182,9 @@
                     </div>
                 </div>
             </div>
-
-            <div class="accordion-group">
+            <div class="accordion-group" data-hook="meshLibraryAccordion">
                 <div class="accordion-heading">
-                    <a class="accordion-toggle meshLibrary" data-toggle="collapse" data-parent="#accordion22" href="#collapseTwo2">
+                    <a class="accordion-toggle" data-toggle="collapse" data-parent="#accordion22" href="#collapseTwo2">
                         Select a Mesh
                     </a>
                 </div>
@@ -206,8 +205,8 @@
                                 </pre>
                             </div>
                         </div>
-
-                        <!--<button id="selectButton" class="btn btn-primary">Done</button>-->
+			<br>
+                        <button data-hook="doneSelectButton" class="btn btn-primary">Done</button>
                     </div>
                 </div>
             </div>

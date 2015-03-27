@@ -10,22 +10,28 @@ module.exports = View.extend({
         <div data-hook="name"> \
         </div> \
     </div> \
-    <br /> \
-    <div> \
-        <h5>Mesh Description:</h5> \
-        <pre data-hook="description"> \
-        </pre> \
+    <div data-hook="descriptionContainer"> \
+        <br /> \
+        <div> \
+            <h5>Mesh Description:</h5> \
+            <pre data-hook="description"> \
+            </pre> \
+        </div> \
     </div> \
 </div>',
     bindings: {
         'model.name' : {
             type : 'text',
             hook: 'name'
-        },
-        'model.description' : {
+        }, 
+	'model.description' : [{
             type : 'text',
             hook: 'description'
-        }
+        },
+        {
+	    type : 'toggle',
+	    hook: 'descriptionContainer'
+	}]
     },
     initialize: function(opts)
     {

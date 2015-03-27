@@ -422,7 +422,7 @@ class SuperZip:
             meshDb.subdomains = subdomainsData
             meshDb.uniqueSubdomains = list(set(meshDb.subdomains))
             meshDb.undeletable = False
-            meshDb.ghost = True
+            meshDb.ghost = False
         
             meshDb.put()
 

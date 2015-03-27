@@ -320,6 +320,8 @@ class ModelManager():
 
     @staticmethod
     def updateModel(handler, jsonModel):
+        createModel = False
+
         if "id" in jsonModel:
             modelWrap = StochKitModelWrapper.get_by_id(jsonModel["id"])
 
@@ -328,6 +330,8 @@ class ModelManager():
             if userID != modelWrap.user_id:
                 raise "Error accessing model {0} with user id {1} (model owned by {2})".format(jsonModel["id"], userID, modelWrap.user_id)
         else:
+            createModel = True
+
             modelWrap = StochKitModelWrapper()
 
             if 'isSpatial' not in jsonModel or 'spatial' not in jsonModel:
@@ -357,17 +361,26 @@ class ModelManager():
             # Make sure we have access to a copy of the mesh
             meshDbCurrent = mesheditor.MeshWrapper.get_by_id(modelWrap.spatial["mesh_wrapper_id"])
 
-            if meshDbCurrent.userId != userID:
+            if createModel:
                 meshDb = mesheditor.MeshWrapper()
 
                 meshDb.userId = userID
+
+                names = [x.name for x in db.Query(mesheditor.MeshWrapper).filter('userId =', handler.user.user_id()).run()]
+
+                tmpName = meshDbCurrent.name
+                i = 0
+                while tmpName in names:
+                    tmpName = meshDbCurrent.name + '_' + str(i)
+                    i += 1
+
                 meshDb.name = meshDbCurrent.name
                 meshDb.description = meshDbCurrent.description
                 meshDb.meshFileId = meshDbCurrent.meshFileId
                 meshDb.subdomains = meshDbCurrent.subdomains
                 meshDb.uniqueSubdomains = meshDbCurrent.uniqueSubdomains
                 meshDb.undeletable = meshDbCurrent.undeletable
-                meshDb.ghost = meshDbCurrent.ghost
+                meshDb.ghost = False
 
                 meshDb.put()
 
