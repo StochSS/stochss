@@ -44,7 +44,7 @@ module.exports = View.extend({
 	$( this.el ).find('button').prop('disabled', true);
         $( this.el ).find( "input[type='radio']" ).prop('checked', true);
     },
-    deselect : function()
+    deSelect : function()
     {
 	$( this.el ).find('button').prop('disabled', false);
     },

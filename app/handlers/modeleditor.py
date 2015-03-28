@@ -77,7 +77,6 @@ class StochKitModelWrapper(db.Model):
             products = dict([(sModel.getSpecies(product[0]), product[1]) for product in inProducts.items()])
             
             if(reaction['type'] == 'custom'):
-                print 'equation', reaction
                 sModel.addReaction(stochss.model.Reaction(reaction['name'], reactants, products, reaction['equation'], False, None, None))
             else:
                 sModel.addReaction(stochss.model.Reaction(reaction['name'], reactants, products, None, True, sModel.getParameter(reaction['rate']), None))
@@ -362,29 +361,34 @@ class ModelManager():
             meshDbCurrent = mesheditor.MeshWrapper.get_by_id(modelWrap.spatial["mesh_wrapper_id"])
 
             if createModel:
-                meshDb = mesheditor.MeshWrapper()
+                if meshDbCurrent.userId != userID:
+                    meshDb = mesheditor.MeshWrapper()
 
-                meshDb.userId = userID
+                    meshDb.userId = userID
 
-                names = [x.name for x in db.Query(mesheditor.MeshWrapper).filter('userId =', handler.user.user_id()).run()]
 
-                tmpName = meshDbCurrent.name
-                i = 0
-                while tmpName in names:
-                    tmpName = meshDbCurrent.name + '_' + str(i)
-                    i += 1
+                    names = [x.name for x in db.Query(mesheditor.MeshWrapper).filter('userId =', handler.user.user_id()).run()]
+                    
+                    tmpName = meshDbCurrent.name
+                    i = 0
+                    while tmpName in names:
+                        tmpName = meshDbCurrent.name + '_' + str(i)
+                        i += 1
 
-                meshDb.name = meshDbCurrent.name
-                meshDb.description = meshDbCurrent.description
-                meshDb.meshFileId = meshDbCurrent.meshFileId
-                meshDb.subdomains = meshDbCurrent.subdomains
-                meshDb.uniqueSubdomains = meshDbCurrent.uniqueSubdomains
-                meshDb.undeletable = meshDbCurrent.undeletable
-                meshDb.ghost = False
+                    meshDb.name = tmpName
+                    meshDb.description = meshDbCurrent.description
+                    meshDb.meshFileId = meshDbCurrent.meshFileId
+                    meshDb.subdomains = meshDbCurrent.subdomains
+                    meshDb.uniqueSubdomains = meshDbCurrent.uniqueSubdomains
+                    meshDb.undeletable = meshDbCurrent.undeletable
+                    meshDb.ghost = False
+                    
+                    meshDb.put()
 
-                meshDb.put()
-
-                modelWrap.spatial["mesh_wrapper_id"] = meshDb.key().id()
+                    modelWrap.spatial["mesh_wrapper_id"] = meshDb.key().id()
+                else:
+                    meshDbCurrent.ghost = False
+                    meshDbCurrent.put()
 
             # This is maintained here!
             modelWrap.subdomains = meshDbCurrent.uniqueSubdomains

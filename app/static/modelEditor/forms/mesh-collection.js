@@ -292,12 +292,20 @@ var MeshCollectionSelectView = AmpersandView.extend({
         // The jquery click here doesn't work but the Javascript one does!
         //$( this.el ).find( ".meshLibrary" ).trigger('click');
         if($( this.el ).find( "#collapseThree2" ).hasClass('in'))
-            $( this.el ).find( ".meshLibrary" )[0].click();
+            $( this.el ).find( "[data-hook='meshLibraryAccordion'] a" )[0].click();
 
         this.model.mesh = this.selected;
 	this.model.meshId = this.selected.id;
 
-        $( this.el ).find( '.description' ).text( this.selected.description );
+	if( this.selected.description )
+	{
+	    $( this.el ).find( '.descriptionContainer' ).show();
+            $( this.el ).find( '.description' ).text( this.selected.description );
+	}
+	else
+	{
+	    $( this.el ).find( '.descriptionContainer' ).hide();
+	}
     },
     render: function()
     {
