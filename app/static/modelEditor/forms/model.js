@@ -23,7 +23,16 @@ module.exports = View.extend({
         }
     },
     events : {
-        "click [data-hook='convertToPopulationButton']" : "convertToPopulation"
+        "click [data-hook='convertToPopulationButton']" : "convertToPopulation",
+	"click [data-hook='doneSelectButton']" : "doneSelect",
+    },
+    doneSelect : function()
+    {
+        if(!$( this.el ).find('[data-hook="meshDescriptionAccordion"] .accordion-body').first().hasClass('in'))
+            $( this.el ).find('[data-hook="meshDescriptionAccordion"] a').first()[0].click();
+
+        if($( this.el ).find('[data-hook="meshLibraryAccordion"] .accordion-body').first().hasClass('in'))
+            $( this.el ).find('[data-hook="meshLibraryAccordion"] a').first()[0].click();
     },
     updateValid : function()
     {

@@ -1,10 +1,12 @@
 var _ = require('underscore');
 var $ = require('jquery');
 var AmpersandView = require('ampersand-view');
+var SubCollection = require('ampersand-subcollection');
 var MeshSelectView = require('./mesh');
 var Mesh = require('../models/mesh');
 var FileUpload = require('blueimp-file-upload');
 var PaginatedCollectionView = require('./paginated-collection-view');
+var MeshDescription = require('./mesh-description');
 
 var Tests = require('../forms/tests.js');
 
@@ -280,6 +282,8 @@ var MeshCollectionSelectView = AmpersandView.extend({
     initialize: function(attr, options)
     {
         AmpersandView.prototype.initialize.call(this, attr, options);
+
+	this.subCollection = new SubCollection(this.collection, { where : { ghost : false } });
     },
     selectModel: function()
     {
@@ -288,11 +292,20 @@ var MeshCollectionSelectView = AmpersandView.extend({
         // The jquery click here doesn't work but the Javascript one does!
         //$( this.el ).find( ".meshLibrary" ).trigger('click');
         if($( this.el ).find( "#collapseThree2" ).hasClass('in'))
-            $( this.el ).find( ".meshLibrary" )[0].click();
+            $( this.el ).find( "[data-hook='meshLibraryAccordion'] a" )[0].click();
 
         this.model.mesh = this.selected;
+	this.model.meshId = this.selected.id;
 
-        $( this.el ).find( '.description' ).text( this.selected.description );
+	if( this.selected.description )
+	{
+	    $( this.el ).find( '.descriptionContainer' ).show();
+            $( this.el ).find( '.description' ).text( this.selected.description );
+	}
+	else
+	{
+	    $( this.el ).find( '.descriptionContainer' ).hide();
+	}
     },
     render: function()
     {
@@ -310,11 +323,18 @@ var MeshCollectionSelectView = AmpersandView.extend({
 
         AmpersandView.prototype.render.apply(this, arguments);
 
+        this.descriptionView = this.renderSubview(new MeshDescription({
+            parent: this,
+	    baseModel : this.model,
+            model: this.model.mesh
+        }), this.queryByHook("meshDescription"));
+
         this.selectView = this.renderSubview( new PaginatedCollectionView( {
             template : collectionTemplate,
-            collection : this.collection,
+            collection : this.subCollection,
             viewModel : MeshSelectView,
-            limit : 10
+            limit : 10,
+	    autoSelect : !Boolean(this.model.mesh)
         }), this.queryByHook('meshTable'));
 
         this.selectView.select(this.model.mesh);

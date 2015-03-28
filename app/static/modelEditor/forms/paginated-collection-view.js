@@ -55,11 +55,36 @@ var PaginatedCollectionView = AmpersandView.extend({
         this.subCollection = new SubCollection(this.collection, { limit : this.limit, offset : this.offset });
         this.subCollection.parent = this.collection.parent;
     },
+    selectIfVisible : function()
+    {
+        if(this.view)
+            if(this.view.deSelect)
+                this.view.deSelect();
+
+        //Search for model in current selection
+	if(this.subCollectionViews)
+	{
+            for(var i = 0; i < this.subCollection.models.length; i++)
+            {
+		if(this.value == this.subCollection.models[i])
+		{
+                    this.view = this.subCollectionViews._getViewByModel(this.value);
+		    
+                    if(this.view)
+                    {
+			if(typeof(this.view.select) == 'function')
+                            this.view.select();
+                    }
+                    return;
+		}
+            }
+	}
+    },
     select : function(model, getFocus, force)
     {
-        if(!force)
-            if(this.value == model)
-                return;
+        //if(!force)
+        //    if(this.value == model)
+        //        return;
 
         if(this.view)
             if(this.view.deSelect)
@@ -84,8 +109,10 @@ var PaginatedCollectionView = AmpersandView.extend({
                             textBox.focus();
                     }
                 }
-                
-                this.value = model;
+          
+		if(this.value != model || this.force)
+                    this.value = model;
+
                 return;
             }
         }
@@ -118,10 +145,16 @@ var PaginatedCollectionView = AmpersandView.extend({
                     }
                 }
 
-                this.value = model;
+		if(this.value != model || this.force)
+		    this.value = model;
+
                 break;
             }
         }
+
+	// HACK FOR MESH-COLLECTION RENDER --> If this model isn't found anywhere, save it as the value anyway
+	if(this.value != model || this.force)
+	    this.value = model;
     },
     shiftPlus : function(e)
     {
@@ -129,6 +162,10 @@ var PaginatedCollectionView = AmpersandView.extend({
             this.offset = this.offset + this.limit;
 
         this.subCollection.configure( { limit : this.limit, offset : this.offset } );
+
+	this.subCollection.on('add', _.bind(this.selectIfVisible, this));
+
+	this.selectIfVisible();
 
         e.preventDefault();
     },
@@ -140,6 +177,8 @@ var PaginatedCollectionView = AmpersandView.extend({
             this.offset = 0;
 
         this.subCollection.configure( { limit : this.limit, offset : this.offset } );
+
+	this.selectIfVisible();
 
         e.preventDefault();
     },
