@@ -41,7 +41,12 @@ module.exports = View.extend({
     },
     select : function()
     {
+	$( this.el ).find('button').prop('disabled', true);
         $( this.el ).find( "input[type='radio']" ).prop('checked', true);
+    },
+    deSelect : function()
+    {
+	$( this.el ).find('button').prop('disabled', false);
     },
     removeModel: function()
     {

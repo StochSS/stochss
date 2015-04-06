@@ -130,11 +130,11 @@ var AddNewReactionForm = AmpersandFormView.extend({
 
         $( this.el ).find('input').prop('autocomplete', 'off');
 
-        this.buttonTemplate = '<div class="btn-group"> \
-  <a class="btn btn-large btn-primary dropdown-toggle" data-toggle="dropdown" href="#"> \
+        this.buttonTemplate = '<div class="btn-group dropup"> \
+  <button class="btn btn-large btn-primary dropdown-toggle" data-toggle="dropdown"> \
     Add Reaction \
     <span class="caret"></span> \
-  </a> \
+  </button> \
   <ul class="dropdown-menu"> \
     <li><a data-hook="creation" tabindex="-1" href="#"></a></li> \
     <li><a data-hook="destruction" tabindex="-1" href="#"></a></li> \

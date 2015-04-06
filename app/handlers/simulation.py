@@ -313,15 +313,11 @@ class JobBackboneInterface(BaseHandler):
       jsonJob = json.loads(self.request.body)
       job = JobManager.updateJob(self, jsonJob)
       
-      print 'UPDATE', req, job["id"]
-
       self.response.content_type = "application/json"
       self.response.write(json.dumps(job))
 
   def delete(self):
       job_id = request.uri.split('/')[-1]
-      
-      print 'DELETE', str(int(job_id))
       
       JobManager.deleteJob(self, int(job_id))
       

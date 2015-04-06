@@ -105,7 +105,7 @@ module.exports = View.extend({
             }),
             new InputView({
                 el: this.el.querySelector("[data-hook='volume']"),
-                label: 'Volume',
+                label: '',
                 name: 'volume',
                 value: this.volume,
                 required: true,

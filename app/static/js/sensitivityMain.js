@@ -93,11 +93,13 @@ var run = function()
                               data = data.values
                           
                               var totalSpecies = 0;
-                              var totalPts = 2000;
+                              var totalPts = 1000;
 
-                              for(var specie in data.trajectories)
+                              totalSpecies += _.keys(data.trajectories).length;
+
+                              for(var specie in data.sensitivities)
                               {
-                                  totalSpecies += 1;
+                                  totalSpecies += _.keys(data.sensitivities[specie]).length;
                               }
 
                               for(var specie in data.sensitivities)
@@ -122,7 +124,7 @@ var run = function()
                                           mult = 1;
                                       }
 
-                                      for(var k = 0; k < data.sensitivities[specie][parameter].length; k++)
+                                      for(var k = 0; k < pts; k++)
                                       {
                                           id = Math.round(mult * k);
                                           series.push({ x : data.time[id + 1],
@@ -154,7 +156,7 @@ var run = function()
                                       mult = 1;
                                   }        
 
-                                  for(var k = 0; k < data.trajectories[specie].length; k++)
+                                  for(var k = 0; k < pts; k++)
                                   {
                                       id = Math.round(mult * k);
                                       series.push({ x : data.time[id],

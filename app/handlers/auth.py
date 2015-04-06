@@ -108,7 +108,16 @@ class UserRegistrationPage(BaseHandler):
             pending_users_list = PendingUsersList.shared_list()
 
             # Now add to approval waitlist
-            success = pending_users_list.add_user_to_approval_waitlist(user_email) or pending_users_list.user_exists(user_email)
+            if pending_users_list.is_user_approved(user_email):
+                success = True
+                approved = True
+            elif pending_users_list.user_exists(user_email):
+                success = True
+                approved = False
+            else:
+                success = pending_users_list.add_user_to_approval_waitlist(user_email)
+                approved = False
+
             if success:
                 # Then create the user
                 _attrs = {
@@ -119,10 +128,17 @@ class UserRegistrationPage(BaseHandler):
                 success, user = self.auth.store.user_model.create_user(user_email, **_attrs)
                 
                 if success:
-                    context = {
-                        'success_alert': True,
-                        'alert_message': 'Account creation successful! Once an admin has approved your account, you can login.'
-                    }
+                    if approved:
+                        context = {
+                            'success_alert': True,
+                            'alert_message': 'Account creation successful! Your account is approved and you can log in immediately.'
+                        }
+                    else:
+                        context = {
+                            'success_alert': True,
+                            'alert_message': 'Account creation successful! Once an admin has approved your account, you can login.'
+                        }
+
                     return self.render_response('login.html', **context)
                 else:
                     logging.info("Acount registration failed for: {0}".format(user))

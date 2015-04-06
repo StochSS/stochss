@@ -332,6 +332,7 @@ Spatial.Controller = Backbone.View.extend(
 
             var speciesSelect = $("#speciesSelect");
 
+            speciesSelect.off('change');
             speciesSelect.on('change', _.bind(this.handleSpeciesSelect, this));
 
             for(var i in sortedSpecies) {
@@ -348,6 +349,7 @@ Spatial.Controller = Backbone.View.extend(
 
                 if(this.selectedSpecies == specie)
                 {
+                    speciesSelect.val(this.selectedSpecies);
                     input.trigger('change');
                 }
             }
@@ -446,7 +448,8 @@ Spatial.Controller = Backbone.View.extend(
                     {
                         $( '<option value="' + i + '">Trajectory ' + i + '</option>' ).appendTo( trajectorySelect );
                     }
-
+                    
+                    trajectorySelect.off('change');
                     trajectorySelect.on('change', _.bind(this.handleTrajectorySelectChange, this));
 
                     //Set up slider
@@ -457,11 +460,10 @@ Spatial.Controller = Backbone.View.extend(
                     slider.prop('step', this.jobInfo.indata.increment);
 
                     //Add event handler to slider
+                    slider.off('change');
                     slider.on('change', _.throttle(_.bind(this.handleSliderChange, this), 1000));
 
                     slider.trigger('change');
-
-
                 }
                 else
                 {
