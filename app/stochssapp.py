@@ -84,6 +84,10 @@ class UserData(db.Model):
     
     # Is the amazon db table initalizes
     is_amazon_db_table = db.BooleanProperty()
+
+    # Private Cloud Machine Info
+    flex_cloud_machine_info = db.StringProperty(default="[]")
+    valid_flex_cloud_info = db.BooleanProperty(default=False)
     
     env_variables = db.StringProperty()
 
@@ -103,6 +107,14 @@ class UserData(db.Model):
 
     def isTable(self):
         return self.is_amazon_db_table
+
+    def set_flex_cloud_machine_info(self, machine_info):
+        logging.info("machine_info = {0}".format(machine_info))
+        self.flex_cloud_machine_info = json.dumps(machine_info, encoding="ascii")
+
+    def get_flex_cloud_machine_info(self):
+        logging.info("self.flex_cloud_machine_info = {0}".format(self.flex_cloud_machine_info))
+        return json.loads(self.flex_cloud_machine_info, encoding="ascii")
 
 class BaseHandler(webapp2.RequestHandler):
     """

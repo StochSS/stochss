@@ -451,6 +451,37 @@ class backendservices(object):
             logging.error("validateCredentials: exiting with error : %s", str(e))
             return False
 
+    @staticmethod
+    def __get_remote_command_string(command, ip, username, keyfile):
+        return "ssh -o 'StrictHostKeyChecking no' -i {keyfile} {username}@{ip} \"{command}\"".format(keyfile=keyfile,
+                                                                                                     username=username,
+                                                                                                     command=command,
+                                                                                                     ip=ip)
+
+    @staticmethod
+    def validate_flex_cloud_info(machine_info):
+        # get queue head and validate its creds
+        queue_head = None
+        for machine in machine_info:
+            if machine['queue_head'] == True:
+                queue_head = machine
+                logging.info("queue head = {0}".format(queue_head))
+                cmd = "[ -d /home/{username}/stochss ] && echo yes".format(username=queue_head["username"])
+                remote_cmd = backendservices.__get_remote_command_string(command=cmd,
+                                                                        keyfile=queue_head["keyfile"],
+                                                                        username=queue_head["username"],
+                                                                        ip=queue_head["ip"])
+                result = os.system(remote_cmd)
+
+                logging.info("Result of \n{0} \n= {1}".format(remote_cmd, result))
+                if result == 0:
+                    logging.info('Validation successful!')
+                    return True
+
+        if queue_head is None:
+            logging.error('Could not find any queue_head in machine info !')
+        return False
+
 
     def getSizeOfOutputResults(self, aws_access_key, aws_secret_key, output_buckets):
         '''
