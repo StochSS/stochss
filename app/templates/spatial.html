@@ -29,7 +29,8 @@
 <script type="text/javascript" src = "/static/model/stochkit.js"></script>
 <script type="text/javascript" src = "/static/js/three.js"></script>
 <script type="text/javascript" src = "/static/js/OrbitControls.js"></script>
-<script type="text/javascript" src = "/static/js/spatial.js"></script>
+<script type="text/javascript" src = "/static/js/AnimationFrame.js"></script>
+<script type="text/javascript" src = "/static/js/spatial.app.js"></script>
 <script type="text/javascript" src="static/js/status.js"></script>
 
 
@@ -70,6 +71,11 @@
                     Select <span id="timeSelectDisplay"></span><br />
                     <input id="timeSelect" type="range" min="0" max="0" step="0" value="0">
                 </td>
+                <td valign=top>
+                    Plane <span id="planeSelectDisplay"></span><br />
+                    <input id="planeSelect" type="range" min="-5" max="+5" step="1" value="0">
+                </td>
+
                 <td valign=top>
                     Animation:<br/>
                     <button class="button" id="play_btn"><i class="icon-play"></i></button> 

@@ -1,4 +1,4 @@
-(function e(t,n,r){function s(o,u){if(!n[o]){if(!t[o]){var a=typeof require=="function"&&require;if(!u&&a)return a(o,!0);if(i)return i(o,!0);var f=new Error("Cannot find module '"+o+"'");throw f.code="MODULE_NOT_FOUND",f}var l=n[o]={exports:{}};t[o][0].call(l.exports,function(e){var n=t[o][1][e];return s(n?n:e)},l,l.exports,e,t,n,r)}return n[o].exports}var i=typeof require=="function"&&require;for(var o=0;o<r.length;o++)s(r[o]);return s})({"/home/bbales2/stochssModel/app/static/modelEditor/app.js":[function(require,module,exports){
+(function e(t,n,r){function s(o,u){if(!n[o]){if(!t[o]){var a=typeof require=="function"&&require;if(!u&&a)return a(o,!0);if(i)return i(o,!0);var f=new Error("Cannot find module '"+o+"'");throw f.code="MODULE_NOT_FOUND",f}var l=n[o]={exports:{}};t[o][0].call(l.exports,function(e){var n=t[o][1][e];return s(n?n:e)},l,l.exports,e,t,n,r)}return n[o].exports}var i=typeof require=="function"&&require;for(var o=0;o<r.length;o++)s(r[o]);return s})({"/home/debjani/Desktop/newstochss/stochss/app/static/modelEditor/app.js":[function(require,module,exports){
 /*global app, me, $*/
 var $ = require('jquery');
 var _ = require('underscore');
@@ -449,7 +449,7 @@ module.exports = {
 };
 
 
-},{"./forms/mesh-collection":"/home/bbales2/stochssModel/app/static/modelEditor/forms/mesh-collection.js","./forms/model":"/home/bbales2/stochssModel/app/static/modelEditor/forms/model.js","./models/mesh":"/home/bbales2/stochssModel/app/static/modelEditor/models/mesh.js","./models/mesh-collection":"/home/bbales2/stochssModel/app/static/modelEditor/models/mesh-collection.js","./models/model":"/home/bbales2/stochssModel/app/static/modelEditor/models/model.js","./select/model-collection":"/home/bbales2/stochssModel/app/static/modelEditor/select/model-collection.js","ampersand-model":"/home/bbales2/stochssModel/app/static/modelEditor/node_modules/ampersand-model/ampersand-model.js","ampersand-rest-collection":"/home/bbales2/stochssModel/app/static/modelEditor/node_modules/ampersand-rest-collection/ampersand-rest-collection.js","ampersand-view":"/home/bbales2/stochssModel/app/static/modelEditor/node_modules/ampersand-view/ampersand-view.js","andlog":"/home/bbales2/stochssModel/app/static/modelEditor/node_modules/andlog/andlog.js","clientconfig":"/home/bbales2/stochssModel/app/static/modelEditor/node_modules/clientconfig/clientconfig.js","domready":"/home/bbales2/stochssModel/app/static/modelEditor/node_modules/domready/ready.js","jquery":"/home/bbales2/stochssModel/app/static/modelEditor/node_modules/jquery/dist/jquery.js","underscore":"/home/bbales2/stochssModel/app/static/modelEditor/node_modules/underscore/underscore.js","url-parse":"/home/bbales2/stochssModel/app/static/modelEditor/node_modules/url-parse/index.js"}],"/home/bbales2/stochssModel/app/static/modelEditor/convertToPopulation/model.js":[function(require,module,exports){
+},{"./forms/mesh-collection":"/home/debjani/Desktop/newstochss/stochss/app/static/modelEditor/forms/mesh-collection.js","./forms/model":"/home/debjani/Desktop/newstochss/stochss/app/static/modelEditor/forms/model.js","./models/mesh":"/home/debjani/Desktop/newstochss/stochss/app/static/modelEditor/models/mesh.js","./models/mesh-collection":"/home/debjani/Desktop/newstochss/stochss/app/static/modelEditor/models/mesh-collection.js","./models/model":"/home/debjani/Desktop/newstochss/stochss/app/static/modelEditor/models/model.js","./select/model-collection":"/home/debjani/Desktop/newstochss/stochss/app/static/modelEditor/select/model-collection.js","ampersand-model":"/home/debjani/Desktop/newstochss/stochss/app/static/modelEditor/node_modules/ampersand-model/ampersand-model.js","ampersand-rest-collection":"/home/debjani/Desktop/newstochss/stochss/app/static/modelEditor/node_modules/ampersand-rest-collection/ampersand-rest-collection.js","ampersand-view":"/home/debjani/Desktop/newstochss/stochss/app/static/modelEditor/node_modules/ampersand-view/ampersand-view.js","andlog":"/home/debjani/Desktop/newstochss/stochss/app/static/modelEditor/node_modules/andlog/andlog.js","clientconfig":"/home/debjani/Desktop/newstochss/stochss/app/static/modelEditor/node_modules/clientconfig/clientconfig.js","domready":"/home/debjani/Desktop/newstochss/stochss/app/static/modelEditor/node_modules/domready/ready.js","jquery":"/home/debjani/Desktop/newstochss/stochss/app/static/modelEditor/node_modules/jquery/dist/jquery.js","underscore":"/home/debjani/Desktop/newstochss/stochss/app/static/modelEditor/node_modules/underscore/underscore.js","url-parse":"/home/debjani/Desktop/newstochss/stochss/app/static/modelEditor/node_modules/url-parse/index.js"}],"/home/debjani/Desktop/newstochss/stochss/app/static/modelEditor/convertToPopulation/model.js":[function(require,module,exports){
 var _ = require('underscore');
 var $ = require('jquery');
 var View = require('ampersand-view');
@@ -580,7 +580,7 @@ module.exports = View.extend({
     }
 });
 
-},{"../forms/tests":"/home/bbales2/stochssModel/app/static/modelEditor/forms/tests.js","./parameter-collection":"/home/bbales2/stochssModel/app/static/modelEditor/convertToPopulation/parameter-collection.js","./reaction":"/home/bbales2/stochssModel/app/static/modelEditor/convertToPopulation/reaction.js","./reaction-collection":"/home/bbales2/stochssModel/app/static/modelEditor/convertToPopulation/reaction-collection.js","./specie-collection":"/home/bbales2/stochssModel/app/static/modelEditor/convertToPopulation/specie-collection.js","ampersand-input-view":"/home/bbales2/stochssModel/app/static/modelEditor/node_modules/ampersand-input-view/ampersand-input-view.js","ampersand-view":"/home/bbales2/stochssModel/app/static/modelEditor/node_modules/ampersand-view/ampersand-view.js","jquery":"/home/bbales2/stochssModel/app/static/modelEditor/node_modules/jquery/dist/jquery.js","underscore":"/home/bbales2/stochssModel/app/static/modelEditor/node_modules/underscore/underscore.js"}],"/home/bbales2/stochssModel/app/static/modelEditor/convertToPopulation/parameter-collection.js":[function(require,module,exports){
+},{"../forms/tests":"/home/debjani/Desktop/newstochss/stochss/app/static/modelEditor/forms/tests.js","./parameter-collection":"/home/debjani/Desktop/newstochss/stochss/app/static/modelEditor/convertToPopulation/parameter-collection.js","./reaction":"/home/debjani/Desktop/newstochss/stochss/app/static/modelEditor/convertToPopulation/reaction.js","./reaction-collection":"/home/debjani/Desktop/newstochss/stochss/app/static/modelEditor/convertToPopulation/reaction-collection.js","./specie-collection":"/home/debjani/Desktop/newstochss/stochss/app/static/modelEditor/convertToPopulation/specie-collection.js","ampersand-input-view":"/home/debjani/Desktop/newstochss/stochss/app/static/modelEditor/node_modules/ampersand-input-view/ampersand-input-view.js","ampersand-view":"/home/debjani/Desktop/newstochss/stochss/app/static/modelEditor/node_modules/ampersand-view/ampersand-view.js","jquery":"/home/debjani/Desktop/newstochss/stochss/app/static/modelEditor/node_modules/jquery/dist/jquery.js","underscore":"/home/debjani/Desktop/newstochss/stochss/app/static/modelEditor/node_modules/underscore/underscore.js"}],"/home/debjani/Desktop/newstochss/stochss/app/static/modelEditor/convertToPopulation/parameter-collection.js":[function(require,module,exports){
 var $ = require('jquery');
 var View = require('ampersand-view');
 var ParameterView = require('./parameter');
@@ -621,7 +621,7 @@ var ParameterCollectionFormView = View.extend({
 });
 
 module.exports = ParameterCollectionFormView
-},{"../forms/paginated-collection-view":"/home/bbales2/stochssModel/app/static/modelEditor/forms/paginated-collection-view.js","./parameter":"/home/bbales2/stochssModel/app/static/modelEditor/convertToPopulation/parameter.js","ampersand-view":"/home/bbales2/stochssModel/app/static/modelEditor/node_modules/ampersand-view/ampersand-view.js","jquery":"/home/bbales2/stochssModel/app/static/modelEditor/node_modules/jquery/dist/jquery.js"}],"/home/bbales2/stochssModel/app/static/modelEditor/convertToPopulation/parameter.js":[function(require,module,exports){
+},{"../forms/paginated-collection-view":"/home/debjani/Desktop/newstochss/stochss/app/static/modelEditor/forms/paginated-collection-view.js","./parameter":"/home/debjani/Desktop/newstochss/stochss/app/static/modelEditor/convertToPopulation/parameter.js","ampersand-view":"/home/debjani/Desktop/newstochss/stochss/app/static/modelEditor/node_modules/ampersand-view/ampersand-view.js","jquery":"/home/debjani/Desktop/newstochss/stochss/app/static/modelEditor/node_modules/jquery/dist/jquery.js"}],"/home/debjani/Desktop/newstochss/stochss/app/static/modelEditor/convertToPopulation/parameter.js":[function(require,module,exports){
 var _ = require('underscore');
 var $ = require('jquery');
 var View = require('ampersand-view');
@@ -642,7 +642,7 @@ module.exports = View.extend({
     }
 });
 
-},{"ampersand-view":"/home/bbales2/stochssModel/app/static/modelEditor/node_modules/ampersand-view/ampersand-view.js","jquery":"/home/bbales2/stochssModel/app/static/modelEditor/node_modules/jquery/dist/jquery.js","underscore":"/home/bbales2/stochssModel/app/static/modelEditor/node_modules/underscore/underscore.js"}],"/home/bbales2/stochssModel/app/static/modelEditor/convertToPopulation/reaction-collection.js":[function(require,module,exports){
+},{"ampersand-view":"/home/debjani/Desktop/newstochss/stochss/app/static/modelEditor/node_modules/ampersand-view/ampersand-view.js","jquery":"/home/debjani/Desktop/newstochss/stochss/app/static/modelEditor/node_modules/jquery/dist/jquery.js","underscore":"/home/debjani/Desktop/newstochss/stochss/app/static/modelEditor/node_modules/underscore/underscore.js"}],"/home/debjani/Desktop/newstochss/stochss/app/static/modelEditor/convertToPopulation/reaction-collection.js":[function(require,module,exports){
 var $ = require('jquery');
 var View = require('ampersand-view');
 var ReactionView = require('./reaction');
@@ -683,7 +683,7 @@ var ReactionCollectionView = View.extend({
 });
 
 module.exports = ReactionCollectionView
-},{"../forms/paginated-collection-view":"/home/bbales2/stochssModel/app/static/modelEditor/forms/paginated-collection-view.js","./reaction":"/home/bbales2/stochssModel/app/static/modelEditor/convertToPopulation/reaction.js","ampersand-view":"/home/bbales2/stochssModel/app/static/modelEditor/node_modules/ampersand-view/ampersand-view.js","jquery":"/home/bbales2/stochssModel/app/static/modelEditor/node_modules/jquery/dist/jquery.js"}],"/home/bbales2/stochssModel/app/static/modelEditor/convertToPopulation/reaction.js":[function(require,module,exports){
+},{"../forms/paginated-collection-view":"/home/debjani/Desktop/newstochss/stochss/app/static/modelEditor/forms/paginated-collection-view.js","./reaction":"/home/debjani/Desktop/newstochss/stochss/app/static/modelEditor/convertToPopulation/reaction.js","ampersand-view":"/home/debjani/Desktop/newstochss/stochss/app/static/modelEditor/node_modules/ampersand-view/ampersand-view.js","jquery":"/home/debjani/Desktop/newstochss/stochss/app/static/modelEditor/node_modules/jquery/dist/jquery.js"}],"/home/debjani/Desktop/newstochss/stochss/app/static/modelEditor/convertToPopulation/reaction.js":[function(require,module,exports){
 var _ = require('underscore');
 var $ = require('jquery');
 var View = require('ampersand-view');
@@ -819,7 +819,7 @@ ReactionView.computeConversionFactor = function(reaction, volume)
 };
 
 module.exports = ReactionView;
-},{"../forms/reaction":"/home/bbales2/stochssModel/app/static/modelEditor/forms/reaction.js","ampersand-view":"/home/bbales2/stochssModel/app/static/modelEditor/node_modules/ampersand-view/ampersand-view.js","jquery":"/home/bbales2/stochssModel/app/static/modelEditor/node_modules/jquery/dist/jquery.js","katex":"/home/bbales2/stochssModel/app/static/modelEditor/node_modules/katex/katex.js","underscore":"/home/bbales2/stochssModel/app/static/modelEditor/node_modules/underscore/underscore.js"}],"/home/bbales2/stochssModel/app/static/modelEditor/convertToPopulation/specie-collection.js":[function(require,module,exports){
+},{"../forms/reaction":"/home/debjani/Desktop/newstochss/stochss/app/static/modelEditor/forms/reaction.js","ampersand-view":"/home/debjani/Desktop/newstochss/stochss/app/static/modelEditor/node_modules/ampersand-view/ampersand-view.js","jquery":"/home/debjani/Desktop/newstochss/stochss/app/static/modelEditor/node_modules/jquery/dist/jquery.js","katex":"/home/debjani/Desktop/newstochss/stochss/app/static/modelEditor/node_modules/katex/katex.js","underscore":"/home/debjani/Desktop/newstochss/stochss/app/static/modelEditor/node_modules/underscore/underscore.js"}],"/home/debjani/Desktop/newstochss/stochss/app/static/modelEditor/convertToPopulation/specie-collection.js":[function(require,module,exports){
 var $ = require('jquery');
 var View = require('ampersand-view');
 var SpecieView = require('./specie');
@@ -860,7 +860,7 @@ var SpecieCollectionView = View.extend({
 });
 
 module.exports = SpecieCollectionView
-},{"../forms/paginated-collection-view":"/home/bbales2/stochssModel/app/static/modelEditor/forms/paginated-collection-view.js","./specie":"/home/bbales2/stochssModel/app/static/modelEditor/convertToPopulation/specie.js","ampersand-view":"/home/bbales2/stochssModel/app/static/modelEditor/node_modules/ampersand-view/ampersand-view.js","jquery":"/home/bbales2/stochssModel/app/static/modelEditor/node_modules/jquery/dist/jquery.js"}],"/home/bbales2/stochssModel/app/static/modelEditor/convertToPopulation/specie.js":[function(require,module,exports){
+},{"../forms/paginated-collection-view":"/home/debjani/Desktop/newstochss/stochss/app/static/modelEditor/forms/paginated-collection-view.js","./specie":"/home/debjani/Desktop/newstochss/stochss/app/static/modelEditor/convertToPopulation/specie.js","ampersand-view":"/home/debjani/Desktop/newstochss/stochss/app/static/modelEditor/node_modules/ampersand-view/ampersand-view.js","jquery":"/home/debjani/Desktop/newstochss/stochss/app/static/modelEditor/node_modules/jquery/dist/jquery.js"}],"/home/debjani/Desktop/newstochss/stochss/app/static/modelEditor/convertToPopulation/specie.js":[function(require,module,exports){
 var _ = require('underscore');
 var $ = require('jquery');
 var View = require('ampersand-view');
@@ -890,7 +890,7 @@ module.exports = View.extend({
     }
 });
 
-},{"ampersand-view":"/home/bbales2/stochssModel/app/static/modelEditor/node_modules/ampersand-view/ampersand-view.js","jquery":"/home/bbales2/stochssModel/app/static/modelEditor/node_modules/jquery/dist/jquery.js","underscore":"/home/bbales2/stochssModel/app/static/modelEditor/node_modules/underscore/underscore.js"}],"/home/bbales2/stochssModel/app/static/modelEditor/forms/initial-condition-collection.js":[function(require,module,exports){
+},{"ampersand-view":"/home/debjani/Desktop/newstochss/stochss/app/static/modelEditor/node_modules/ampersand-view/ampersand-view.js","jquery":"/home/debjani/Desktop/newstochss/stochss/app/static/modelEditor/node_modules/jquery/dist/jquery.js","underscore":"/home/debjani/Desktop/newstochss/stochss/app/static/modelEditor/node_modules/underscore/underscore.js"}],"/home/debjani/Desktop/newstochss/stochss/app/static/modelEditor/forms/initial-condition-collection.js":[function(require,module,exports){
 var $ = require('jquery');
 var AmpersandView = require('ampersand-view');
 var AmpersandFormView = require('ampersand-form-view');
@@ -995,7 +995,7 @@ var InitialConditionCollectionFormView = AmpersandView.extend({
 });
 
 module.exports = InitialConditionCollectionFormView
-},{"./initial-condition":"/home/bbales2/stochssModel/app/static/modelEditor/forms/initial-condition.js","./paginated-collection-view":"/home/bbales2/stochssModel/app/static/modelEditor/forms/paginated-collection-view.js","./tests":"/home/bbales2/stochssModel/app/static/modelEditor/forms/tests.js","ampersand-form-view":"/home/bbales2/stochssModel/app/static/modelEditor/node_modules/ampersand-form-view/ampersand-form-view.js","ampersand-input-view":"/home/bbales2/stochssModel/app/static/modelEditor/node_modules/ampersand-input-view/ampersand-input-view.js","ampersand-select-view":"/home/bbales2/stochssModel/app/static/modelEditor/node_modules/ampersand-select-view/ampersand-select-view.js","ampersand-view":"/home/bbales2/stochssModel/app/static/modelEditor/node_modules/ampersand-view/ampersand-view.js","jquery":"/home/bbales2/stochssModel/app/static/modelEditor/node_modules/jquery/dist/jquery.js"}],"/home/bbales2/stochssModel/app/static/modelEditor/forms/initial-condition.js":[function(require,module,exports){
+},{"./initial-condition":"/home/debjani/Desktop/newstochss/stochss/app/static/modelEditor/forms/initial-condition.js","./paginated-collection-view":"/home/debjani/Desktop/newstochss/stochss/app/static/modelEditor/forms/paginated-collection-view.js","./tests":"/home/debjani/Desktop/newstochss/stochss/app/static/modelEditor/forms/tests.js","ampersand-form-view":"/home/debjani/Desktop/newstochss/stochss/app/static/modelEditor/node_modules/ampersand-form-view/ampersand-form-view.js","ampersand-input-view":"/home/debjani/Desktop/newstochss/stochss/app/static/modelEditor/node_modules/ampersand-input-view/ampersand-input-view.js","ampersand-select-view":"/home/debjani/Desktop/newstochss/stochss/app/static/modelEditor/node_modules/ampersand-select-view/ampersand-select-view.js","ampersand-view":"/home/debjani/Desktop/newstochss/stochss/app/static/modelEditor/node_modules/ampersand-view/ampersand-view.js","jquery":"/home/debjani/Desktop/newstochss/stochss/app/static/modelEditor/node_modules/jquery/dist/jquery.js"}],"/home/debjani/Desktop/newstochss/stochss/app/static/modelEditor/forms/initial-condition.js":[function(require,module,exports){
 var _ = require('underscore');
 var $ = require('jquery');
 var View = require('ampersand-view');
@@ -1241,7 +1241,7 @@ module.exports = View.extend({
     }
 });
 
-},{"./modifying-input-view":"/home/bbales2/stochssModel/app/static/modelEditor/forms/modifying-input-view.js","./modifying-number-input-view":"/home/bbales2/stochssModel/app/static/modelEditor/forms/modifying-number-input-view.js","./modifying-select-view":"/home/bbales2/stochssModel/app/static/modelEditor/forms/modifying-select-view.js","./subdomain":"/home/bbales2/stochssModel/app/static/modelEditor/forms/subdomain.js","./tests":"/home/bbales2/stochssModel/app/static/modelEditor/forms/tests.js","ampersand-select-view":"/home/bbales2/stochssModel/app/static/modelEditor/node_modules/ampersand-select-view/ampersand-select-view.js","ampersand-view":"/home/bbales2/stochssModel/app/static/modelEditor/node_modules/ampersand-view/ampersand-view.js","jquery":"/home/bbales2/stochssModel/app/static/modelEditor/node_modules/jquery/dist/jquery.js","underscore":"/home/bbales2/stochssModel/app/static/modelEditor/node_modules/underscore/underscore.js"}],"/home/bbales2/stochssModel/app/static/modelEditor/forms/mesh-collection.js":[function(require,module,exports){
+},{"./modifying-input-view":"/home/debjani/Desktop/newstochss/stochss/app/static/modelEditor/forms/modifying-input-view.js","./modifying-number-input-view":"/home/debjani/Desktop/newstochss/stochss/app/static/modelEditor/forms/modifying-number-input-view.js","./modifying-select-view":"/home/debjani/Desktop/newstochss/stochss/app/static/modelEditor/forms/modifying-select-view.js","./subdomain":"/home/debjani/Desktop/newstochss/stochss/app/static/modelEditor/forms/subdomain.js","./tests":"/home/debjani/Desktop/newstochss/stochss/app/static/modelEditor/forms/tests.js","ampersand-select-view":"/home/debjani/Desktop/newstochss/stochss/app/static/modelEditor/node_modules/ampersand-select-view/ampersand-select-view.js","ampersand-view":"/home/debjani/Desktop/newstochss/stochss/app/static/modelEditor/node_modules/ampersand-view/ampersand-view.js","jquery":"/home/debjani/Desktop/newstochss/stochss/app/static/modelEditor/node_modules/jquery/dist/jquery.js","underscore":"/home/debjani/Desktop/newstochss/stochss/app/static/modelEditor/node_modules/underscore/underscore.js"}],"/home/debjani/Desktop/newstochss/stochss/app/static/modelEditor/forms/mesh-collection.js":[function(require,module,exports){
 var _ = require('underscore');
 var $ = require('jquery');
 var AmpersandView = require('ampersand-view');
@@ -1583,7 +1583,7 @@ var MeshCollectionSelectView = AmpersandView.extend({
 
 module.exports = MeshCollectionSelectView
 
-},{"../forms/tests.js":"/home/bbales2/stochssModel/app/static/modelEditor/forms/tests.js","../models/mesh":"/home/bbales2/stochssModel/app/static/modelEditor/models/mesh.js","./mesh":"/home/bbales2/stochssModel/app/static/modelEditor/forms/mesh.js","./paginated-collection-view":"/home/bbales2/stochssModel/app/static/modelEditor/forms/paginated-collection-view.js","ampersand-view":"/home/bbales2/stochssModel/app/static/modelEditor/node_modules/ampersand-view/ampersand-view.js","blueimp-file-upload":"/home/bbales2/stochssModel/app/static/modelEditor/node_modules/blueimp-file-upload/js/jquery.fileupload.js","jquery":"/home/bbales2/stochssModel/app/static/modelEditor/node_modules/jquery/dist/jquery.js","underscore":"/home/bbales2/stochssModel/app/static/modelEditor/node_modules/underscore/underscore.js"}],"/home/bbales2/stochssModel/app/static/modelEditor/forms/mesh.js":[function(require,module,exports){
+},{"../forms/tests.js":"/home/debjani/Desktop/newstochss/stochss/app/static/modelEditor/forms/tests.js","../models/mesh":"/home/debjani/Desktop/newstochss/stochss/app/static/modelEditor/models/mesh.js","./mesh":"/home/debjani/Desktop/newstochss/stochss/app/static/modelEditor/forms/mesh.js","./paginated-collection-view":"/home/debjani/Desktop/newstochss/stochss/app/static/modelEditor/forms/paginated-collection-view.js","ampersand-view":"/home/debjani/Desktop/newstochss/stochss/app/static/modelEditor/node_modules/ampersand-view/ampersand-view.js","blueimp-file-upload":"/home/debjani/Desktop/newstochss/stochss/app/static/modelEditor/node_modules/blueimp-file-upload/js/jquery.fileupload.js","jquery":"/home/debjani/Desktop/newstochss/stochss/app/static/modelEditor/node_modules/jquery/dist/jquery.js","underscore":"/home/debjani/Desktop/newstochss/stochss/app/static/modelEditor/node_modules/underscore/underscore.js"}],"/home/debjani/Desktop/newstochss/stochss/app/static/modelEditor/forms/mesh.js":[function(require,module,exports){
 var _ = require('underscore');
 var $ = require('jquery');
 var View = require('ampersand-view');
@@ -1644,7 +1644,7 @@ module.exports = View.extend({
     }
 });
 
-},{"ampersand-view":"/home/bbales2/stochssModel/app/static/modelEditor/node_modules/ampersand-view/ampersand-view.js","jquery":"/home/bbales2/stochssModel/app/static/modelEditor/node_modules/jquery/dist/jquery.js","underscore":"/home/bbales2/stochssModel/app/static/modelEditor/node_modules/underscore/underscore.js"}],"/home/bbales2/stochssModel/app/static/modelEditor/forms/mesh3d.js":[function(require,module,exports){
+},{"ampersand-view":"/home/debjani/Desktop/newstochss/stochss/app/static/modelEditor/node_modules/ampersand-view/ampersand-view.js","jquery":"/home/debjani/Desktop/newstochss/stochss/app/static/modelEditor/node_modules/jquery/dist/jquery.js","underscore":"/home/debjani/Desktop/newstochss/stochss/app/static/modelEditor/node_modules/underscore/underscore.js"}],"/home/debjani/Desktop/newstochss/stochss/app/static/modelEditor/forms/mesh3d.js":[function(require,module,exports){
 var _ = require('underscore');
 var $ = require('jquery');
 var View = require('ampersand-view');
@@ -1692,10 +1692,55 @@ module.exports = View.extend({
 
         this.highLightSubdomains(this.subdomains);
     },
+
+    generateSolidMesh : function(desiredSubdomain)
+    {
+    var sdmesh = this.model.mesh.subdomains;
+    var vtx = this.model.mesh.threeJsMesh.vertices;
+    var faces = this.model.mesh.threeJsMesh.faces;
+    
+    var sub_faces = [];
+    var sub_faces_idx = 0;
+    for(var f=0; f<faces.length/7; f++)
+        {
+            if(sdmesh[faces[f*7 + 1]] == desiredSubdomain && sdmesh[faces[f*7 + 2]] == desiredSubdomain && sdmesh[faces[f*7 + 3]] == desiredSubdomain)
+            {
+                var slice = faces.slice(f*7, f*7+7);
+                for(s = 0; s<slice.length; s++)
+                    sub_faces[sub_faces_idx++] = slice[s];
+            }
+        }
+
+    this.model.mesh.threeJsMesh.faces = sub_faces;
+
+
+    },
+
+    generateSolidVertexMesh : function(x)
+    {
+    var sdmesh = this.model.mesh.subdomains;
+    var vtx = this.model.mesh.threeJsMesh.vertices;
+    var faces = this.model.mesh.threeJsMesh.faces;
+    var vtxlist = [];
+    var vtxlistidx = 0;
+    
+    for(var v=0; v<(vtx.length/3); v++)
+    {
+        // Anything lesser than or equal to the value will be displayed
+        if(vtx[v*3] < x)
+            sdmesh[v] = 3;
+    }
+    this.model.mesh.subdomains = sdmesh;
+    this.generateSolidMesh(3);
+    
+    },
+
+
     highLightSubdomains : function(subdomains)
     {
         var subdomainLabels = this.model.mesh.subdomains;
 
+        
         var colors = new Array(subdomainLabels.length);
         
         for(var i = 0; i < subdomainLabels.length; i++)
@@ -1709,7 +1754,10 @@ module.exports = View.extend({
                 colors[i] = new THREE.Color( 0x000099 );
             }
         }
-
+        
+        
+        this.generateSolidVertexMesh(0.2);
+        this.meshDataPreview();
         this.redrawColors(colors);
     },
     redrawColors : function(colors) {
@@ -1921,7 +1969,7 @@ module.exports = View.extend({
         
         this.scene = scene;
 
-        this.highLightSubdomains([])
+        //this.highLightSubdomains([])
         
         if(!this.rendererInitialized)
         {
@@ -1952,7 +2000,7 @@ module.exports = View.extend({
     }
 });
 
-},{"./subdomain":"/home/bbales2/stochssModel/app/static/modelEditor/forms/subdomain.js","ampersand-view":"/home/bbales2/stochssModel/app/static/modelEditor/node_modules/ampersand-view/ampersand-view.js","jquery":"/home/bbales2/stochssModel/app/static/modelEditor/node_modules/jquery/dist/jquery.js","three":"/home/bbales2/stochssModel/app/static/modelEditor/node_modules/three/three.js","three-orbit-controls":"/home/bbales2/stochssModel/app/static/modelEditor/node_modules/three-orbit-controls/index.js","underscore":"/home/bbales2/stochssModel/app/static/modelEditor/node_modules/underscore/underscore.js"}],"/home/bbales2/stochssModel/app/static/modelEditor/forms/model.js":[function(require,module,exports){
+},{"./subdomain":"/home/debjani/Desktop/newstochss/stochss/app/static/modelEditor/forms/subdomain.js","ampersand-view":"/home/debjani/Desktop/newstochss/stochss/app/static/modelEditor/node_modules/ampersand-view/ampersand-view.js","jquery":"/home/debjani/Desktop/newstochss/stochss/app/static/modelEditor/node_modules/jquery/dist/jquery.js","three":"/home/debjani/Desktop/newstochss/stochss/app/static/modelEditor/node_modules/three/three.js","three-orbit-controls":"/home/debjani/Desktop/newstochss/stochss/app/static/modelEditor/node_modules/three-orbit-controls/index.js","underscore":"/home/debjani/Desktop/newstochss/stochss/app/static/modelEditor/node_modules/underscore/underscore.js"}],"/home/debjani/Desktop/newstochss/stochss/app/static/modelEditor/forms/model.js":[function(require,module,exports){
 var _ = require('underscore');
 var $ = require('jquery');
 var View = require('ampersand-view');
@@ -2226,7 +2274,7 @@ module.exports = View.extend({
     }
 });
 
-},{"../convertToPopulation/model":"/home/bbales2/stochssModel/app/static/modelEditor/convertToPopulation/model.js","../models/model":"/home/bbales2/stochssModel/app/static/modelEditor/models/model.js","./initial-condition-collection":"/home/bbales2/stochssModel/app/static/modelEditor/forms/initial-condition-collection.js","./mesh-collection":"/home/bbales2/stochssModel/app/static/modelEditor/forms/mesh-collection.js","./mesh3d":"/home/bbales2/stochssModel/app/static/modelEditor/forms/mesh3d.js","./parameter-collection":"/home/bbales2/stochssModel/app/static/modelEditor/forms/parameter-collection.js","./reaction-collection":"/home/bbales2/stochssModel/app/static/modelEditor/forms/reaction-collection.js","./specie-collection":"/home/bbales2/stochssModel/app/static/modelEditor/forms/specie-collection.js","ampersand-view":"/home/bbales2/stochssModel/app/static/modelEditor/node_modules/ampersand-view/ampersand-view.js","jquery":"/home/bbales2/stochssModel/app/static/modelEditor/node_modules/jquery/dist/jquery.js","underscore":"/home/bbales2/stochssModel/app/static/modelEditor/node_modules/underscore/underscore.js"}],"/home/bbales2/stochssModel/app/static/modelEditor/forms/modifying-input-view.js":[function(require,module,exports){
+},{"../convertToPopulation/model":"/home/debjani/Desktop/newstochss/stochss/app/static/modelEditor/convertToPopulation/model.js","../models/model":"/home/debjani/Desktop/newstochss/stochss/app/static/modelEditor/models/model.js","./initial-condition-collection":"/home/debjani/Desktop/newstochss/stochss/app/static/modelEditor/forms/initial-condition-collection.js","./mesh-collection":"/home/debjani/Desktop/newstochss/stochss/app/static/modelEditor/forms/mesh-collection.js","./mesh3d":"/home/debjani/Desktop/newstochss/stochss/app/static/modelEditor/forms/mesh3d.js","./parameter-collection":"/home/debjani/Desktop/newstochss/stochss/app/static/modelEditor/forms/parameter-collection.js","./reaction-collection":"/home/debjani/Desktop/newstochss/stochss/app/static/modelEditor/forms/reaction-collection.js","./specie-collection":"/home/debjani/Desktop/newstochss/stochss/app/static/modelEditor/forms/specie-collection.js","ampersand-view":"/home/debjani/Desktop/newstochss/stochss/app/static/modelEditor/node_modules/ampersand-view/ampersand-view.js","jquery":"/home/debjani/Desktop/newstochss/stochss/app/static/modelEditor/node_modules/jquery/dist/jquery.js","underscore":"/home/debjani/Desktop/newstochss/stochss/app/static/modelEditor/node_modules/underscore/underscore.js"}],"/home/debjani/Desktop/newstochss/stochss/app/static/modelEditor/forms/modifying-input-view.js":[function(require,module,exports){
 var $ = require('jquery');
 var _ = require('underscore');
 var InputView = require('ampersand-input-view');
@@ -2254,7 +2302,7 @@ ModifyingInputView = InputView.extend({
 });
 
 module.exports = ModifyingInputView
-},{"ampersand-input-view":"/home/bbales2/stochssModel/app/static/modelEditor/node_modules/ampersand-input-view/ampersand-input-view.js","jquery":"/home/bbales2/stochssModel/app/static/modelEditor/node_modules/jquery/dist/jquery.js","underscore":"/home/bbales2/stochssModel/app/static/modelEditor/node_modules/underscore/underscore.js"}],"/home/bbales2/stochssModel/app/static/modelEditor/forms/modifying-number-input-view.js":[function(require,module,exports){
+},{"ampersand-input-view":"/home/debjani/Desktop/newstochss/stochss/app/static/modelEditor/node_modules/ampersand-input-view/ampersand-input-view.js","jquery":"/home/debjani/Desktop/newstochss/stochss/app/static/modelEditor/node_modules/jquery/dist/jquery.js","underscore":"/home/debjani/Desktop/newstochss/stochss/app/static/modelEditor/node_modules/underscore/underscore.js"}],"/home/debjani/Desktop/newstochss/stochss/app/static/modelEditor/forms/modifying-number-input-view.js":[function(require,module,exports){
 var $ = require('jquery');
 var _ = require('underscore');
 var ModifyingInputView = require('./modifying-input-view');
@@ -2268,7 +2316,7 @@ ModifyingNumberInputView = ModifyingInputView.extend({
 });
 
 module.exports = ModifyingNumberInputView
-},{"./modifying-input-view":"/home/bbales2/stochssModel/app/static/modelEditor/forms/modifying-input-view.js","jquery":"/home/bbales2/stochssModel/app/static/modelEditor/node_modules/jquery/dist/jquery.js","underscore":"/home/bbales2/stochssModel/app/static/modelEditor/node_modules/underscore/underscore.js"}],"/home/bbales2/stochssModel/app/static/modelEditor/forms/modifying-select-view.js":[function(require,module,exports){
+},{"./modifying-input-view":"/home/debjani/Desktop/newstochss/stochss/app/static/modelEditor/forms/modifying-input-view.js","jquery":"/home/debjani/Desktop/newstochss/stochss/app/static/modelEditor/node_modules/jquery/dist/jquery.js","underscore":"/home/debjani/Desktop/newstochss/stochss/app/static/modelEditor/node_modules/underscore/underscore.js"}],"/home/debjani/Desktop/newstochss/stochss/app/static/modelEditor/forms/modifying-select-view.js":[function(require,module,exports){
 var $ = require('jquery');
 var _ = require('underscore');
 var SelectView = require('ampersand-select-view');
@@ -2288,7 +2336,7 @@ var ModifyingSelectView = _.extend(SelectView, {
 });
 
 module.exports = ModifyingSelectView
-},{"ampersand-select-view":"/home/bbales2/stochssModel/app/static/modelEditor/node_modules/ampersand-select-view/ampersand-select-view.js","jquery":"/home/bbales2/stochssModel/app/static/modelEditor/node_modules/jquery/dist/jquery.js","underscore":"/home/bbales2/stochssModel/app/static/modelEditor/node_modules/underscore/underscore.js"}],"/home/bbales2/stochssModel/app/static/modelEditor/forms/paginated-collection-view.js":[function(require,module,exports){
+},{"ampersand-select-view":"/home/debjani/Desktop/newstochss/stochss/app/static/modelEditor/node_modules/ampersand-select-view/ampersand-select-view.js","jquery":"/home/debjani/Desktop/newstochss/stochss/app/static/modelEditor/node_modules/jquery/dist/jquery.js","underscore":"/home/debjani/Desktop/newstochss/stochss/app/static/modelEditor/node_modules/underscore/underscore.js"}],"/home/debjani/Desktop/newstochss/stochss/app/static/modelEditor/forms/paginated-collection-view.js":[function(require,module,exports){
 var AmpersandView = require('ampersand-view');
 var SubCollection = require('ampersand-subcollection');
 var _ = require('underscore');
@@ -2509,7 +2557,7 @@ var PaginatedCollectionView = AmpersandView.extend({
 
 module.exports = PaginatedCollectionView;
 
-},{"ampersand-subcollection":"/home/bbales2/stochssModel/app/static/modelEditor/node_modules/ampersand-subcollection/ampersand-subcollection.js","ampersand-view":"/home/bbales2/stochssModel/app/static/modelEditor/node_modules/ampersand-view/ampersand-view.js","underscore":"/home/bbales2/stochssModel/app/static/modelEditor/node_modules/underscore/underscore.js"}],"/home/bbales2/stochssModel/app/static/modelEditor/forms/parameter-collection.js":[function(require,module,exports){
+},{"ampersand-subcollection":"/home/debjani/Desktop/newstochss/stochss/app/static/modelEditor/node_modules/ampersand-subcollection/ampersand-subcollection.js","ampersand-view":"/home/debjani/Desktop/newstochss/stochss/app/static/modelEditor/node_modules/ampersand-view/ampersand-view.js","underscore":"/home/debjani/Desktop/newstochss/stochss/app/static/modelEditor/node_modules/underscore/underscore.js"}],"/home/debjani/Desktop/newstochss/stochss/app/static/modelEditor/forms/parameter-collection.js":[function(require,module,exports){
 var $ = require('jquery');
 var AmpersandView = require('ampersand-view');
 var AmpersandFormView = require('ampersand-form-view');
@@ -2631,7 +2679,7 @@ var ParameterCollectionFormView = AmpersandView.extend({
 });
 
 module.exports = ParameterCollectionFormView
-},{"./paginated-collection-view":"/home/bbales2/stochssModel/app/static/modelEditor/forms/paginated-collection-view.js","./parameter":"/home/bbales2/stochssModel/app/static/modelEditor/forms/parameter.js","./tests":"/home/bbales2/stochssModel/app/static/modelEditor/forms/tests.js","ampersand-form-view":"/home/bbales2/stochssModel/app/static/modelEditor/node_modules/ampersand-form-view/ampersand-form-view.js","ampersand-input-view":"/home/bbales2/stochssModel/app/static/modelEditor/node_modules/ampersand-input-view/ampersand-input-view.js","ampersand-view":"/home/bbales2/stochssModel/app/static/modelEditor/node_modules/ampersand-view/ampersand-view.js","jquery":"/home/bbales2/stochssModel/app/static/modelEditor/node_modules/jquery/dist/jquery.js"}],"/home/bbales2/stochssModel/app/static/modelEditor/forms/parameter.js":[function(require,module,exports){
+},{"./paginated-collection-view":"/home/debjani/Desktop/newstochss/stochss/app/static/modelEditor/forms/paginated-collection-view.js","./parameter":"/home/debjani/Desktop/newstochss/stochss/app/static/modelEditor/forms/parameter.js","./tests":"/home/debjani/Desktop/newstochss/stochss/app/static/modelEditor/forms/tests.js","ampersand-form-view":"/home/debjani/Desktop/newstochss/stochss/app/static/modelEditor/node_modules/ampersand-form-view/ampersand-form-view.js","ampersand-input-view":"/home/debjani/Desktop/newstochss/stochss/app/static/modelEditor/node_modules/ampersand-input-view/ampersand-input-view.js","ampersand-view":"/home/debjani/Desktop/newstochss/stochss/app/static/modelEditor/node_modules/ampersand-view/ampersand-view.js","jquery":"/home/debjani/Desktop/newstochss/stochss/app/static/modelEditor/node_modules/jquery/dist/jquery.js"}],"/home/debjani/Desktop/newstochss/stochss/app/static/modelEditor/forms/parameter.js":[function(require,module,exports){
 var _ = require('underscore');
 var $ = require('jquery');
 var View = require('ampersand-view');
@@ -2749,7 +2797,7 @@ module.exports = View.extend({
     }
 });
 
-},{"./modifying-input-view":"/home/bbales2/stochssModel/app/static/modelEditor/forms/modifying-input-view.js","./modifying-number-input-view":"/home/bbales2/stochssModel/app/static/modelEditor/forms/modifying-number-input-view.js","./tests":"/home/bbales2/stochssModel/app/static/modelEditor/forms/tests.js","ampersand-view":"/home/bbales2/stochssModel/app/static/modelEditor/node_modules/ampersand-view/ampersand-view.js","jquery":"/home/bbales2/stochssModel/app/static/modelEditor/node_modules/jquery/dist/jquery.js","underscore":"/home/bbales2/stochssModel/app/static/modelEditor/node_modules/underscore/underscore.js"}],"/home/bbales2/stochssModel/app/static/modelEditor/forms/reaction-collection.js":[function(require,module,exports){
+},{"./modifying-input-view":"/home/debjani/Desktop/newstochss/stochss/app/static/modelEditor/forms/modifying-input-view.js","./modifying-number-input-view":"/home/debjani/Desktop/newstochss/stochss/app/static/modelEditor/forms/modifying-number-input-view.js","./tests":"/home/debjani/Desktop/newstochss/stochss/app/static/modelEditor/forms/tests.js","ampersand-view":"/home/debjani/Desktop/newstochss/stochss/app/static/modelEditor/node_modules/ampersand-view/ampersand-view.js","jquery":"/home/debjani/Desktop/newstochss/stochss/app/static/modelEditor/node_modules/jquery/dist/jquery.js","underscore":"/home/debjani/Desktop/newstochss/stochss/app/static/modelEditor/node_modules/underscore/underscore.js"}],"/home/debjani/Desktop/newstochss/stochss/app/static/modelEditor/forms/reaction-collection.js":[function(require,module,exports){
 var $ = require('jquery');
 var AmpersandView = require('ampersand-view');
 var AmpersandFormView = require('ampersand-form-view');
@@ -3065,7 +3113,7 @@ var ReactionCollectionFormView = AmpersandView.extend({
 
 module.exports = ReactionCollectionFormView;
 
-},{"./paginated-collection-view":"/home/bbales2/stochssModel/app/static/modelEditor/forms/paginated-collection-view.js","./reaction":"/home/bbales2/stochssModel/app/static/modelEditor/forms/reaction.js","./reaction-detail":"/home/bbales2/stochssModel/app/static/modelEditor/forms/reaction-detail.js","./tests":"/home/bbales2/stochssModel/app/static/modelEditor/forms/tests.js","ampersand-form-view":"/home/bbales2/stochssModel/app/static/modelEditor/node_modules/ampersand-form-view/ampersand-form-view.js","ampersand-input-view":"/home/bbales2/stochssModel/app/static/modelEditor/node_modules/ampersand-input-view/ampersand-input-view.js","ampersand-select-view":"/home/bbales2/stochssModel/app/static/modelEditor/node_modules/ampersand-select-view/ampersand-select-view.js","ampersand-subcollection":"/home/bbales2/stochssModel/app/static/modelEditor/node_modules/ampersand-subcollection/ampersand-subcollection.js","ampersand-view":"/home/bbales2/stochssModel/app/static/modelEditor/node_modules/ampersand-view/ampersand-view.js","jquery":"/home/bbales2/stochssModel/app/static/modelEditor/node_modules/jquery/dist/jquery.js","katex":"/home/bbales2/stochssModel/app/static/modelEditor/node_modules/katex/katex.js"}],"/home/bbales2/stochssModel/app/static/modelEditor/forms/reaction-detail.js":[function(require,module,exports){
+},{"./paginated-collection-view":"/home/debjani/Desktop/newstochss/stochss/app/static/modelEditor/forms/paginated-collection-view.js","./reaction":"/home/debjani/Desktop/newstochss/stochss/app/static/modelEditor/forms/reaction.js","./reaction-detail":"/home/debjani/Desktop/newstochss/stochss/app/static/modelEditor/forms/reaction-detail.js","./tests":"/home/debjani/Desktop/newstochss/stochss/app/static/modelEditor/forms/tests.js","ampersand-form-view":"/home/debjani/Desktop/newstochss/stochss/app/static/modelEditor/node_modules/ampersand-form-view/ampersand-form-view.js","ampersand-input-view":"/home/debjani/Desktop/newstochss/stochss/app/static/modelEditor/node_modules/ampersand-input-view/ampersand-input-view.js","ampersand-select-view":"/home/debjani/Desktop/newstochss/stochss/app/static/modelEditor/node_modules/ampersand-select-view/ampersand-select-view.js","ampersand-subcollection":"/home/debjani/Desktop/newstochss/stochss/app/static/modelEditor/node_modules/ampersand-subcollection/ampersand-subcollection.js","ampersand-view":"/home/debjani/Desktop/newstochss/stochss/app/static/modelEditor/node_modules/ampersand-view/ampersand-view.js","jquery":"/home/debjani/Desktop/newstochss/stochss/app/static/modelEditor/node_modules/jquery/dist/jquery.js","katex":"/home/debjani/Desktop/newstochss/stochss/app/static/modelEditor/node_modules/katex/katex.js"}],"/home/debjani/Desktop/newstochss/stochss/app/static/modelEditor/forms/reaction-detail.js":[function(require,module,exports){
 var _ = require('underscore');
 var $ = require('jquery');
 var View = require('ampersand-view');
@@ -3461,7 +3509,7 @@ var reactants;
     }
 });
 
-},{"./modifying-input-view":"/home/bbales2/stochssModel/app/static/modelEditor/forms/modifying-input-view.js","./modifying-number-input-view":"/home/bbales2/stochssModel/app/static/modelEditor/forms/modifying-number-input-view.js","./reaction":"/home/bbales2/stochssModel/app/static/modelEditor/forms/reaction.js","./stoich-specie-collection":"/home/bbales2/stochssModel/app/static/modelEditor/forms/stoich-specie-collection.js","./subdomain":"/home/bbales2/stochssModel/app/static/modelEditor/forms/subdomain.js","./tests":"/home/bbales2/stochssModel/app/static/modelEditor/forms/tests.js","ampersand-select-view":"/home/bbales2/stochssModel/app/static/modelEditor/node_modules/ampersand-select-view/ampersand-select-view.js","ampersand-view":"/home/bbales2/stochssModel/app/static/modelEditor/node_modules/ampersand-view/ampersand-view.js","jquery":"/home/bbales2/stochssModel/app/static/modelEditor/node_modules/jquery/dist/jquery.js","katex":"/home/bbales2/stochssModel/app/static/modelEditor/node_modules/katex/katex.js","underscore":"/home/bbales2/stochssModel/app/static/modelEditor/node_modules/underscore/underscore.js"}],"/home/bbales2/stochssModel/app/static/modelEditor/forms/reaction.js":[function(require,module,exports){
+},{"./modifying-input-view":"/home/debjani/Desktop/newstochss/stochss/app/static/modelEditor/forms/modifying-input-view.js","./modifying-number-input-view":"/home/debjani/Desktop/newstochss/stochss/app/static/modelEditor/forms/modifying-number-input-view.js","./reaction":"/home/debjani/Desktop/newstochss/stochss/app/static/modelEditor/forms/reaction.js","./stoich-specie-collection":"/home/debjani/Desktop/newstochss/stochss/app/static/modelEditor/forms/stoich-specie-collection.js","./subdomain":"/home/debjani/Desktop/newstochss/stochss/app/static/modelEditor/forms/subdomain.js","./tests":"/home/debjani/Desktop/newstochss/stochss/app/static/modelEditor/forms/tests.js","ampersand-select-view":"/home/debjani/Desktop/newstochss/stochss/app/static/modelEditor/node_modules/ampersand-select-view/ampersand-select-view.js","ampersand-view":"/home/debjani/Desktop/newstochss/stochss/app/static/modelEditor/node_modules/ampersand-view/ampersand-view.js","jquery":"/home/debjani/Desktop/newstochss/stochss/app/static/modelEditor/node_modules/jquery/dist/jquery.js","katex":"/home/debjani/Desktop/newstochss/stochss/app/static/modelEditor/node_modules/katex/katex.js","underscore":"/home/debjani/Desktop/newstochss/stochss/app/static/modelEditor/node_modules/underscore/underscore.js"}],"/home/debjani/Desktop/newstochss/stochss/app/static/modelEditor/forms/reaction.js":[function(require,module,exports){
 var _ = require('underscore');
 var $ = require('jquery');
 var View = require('ampersand-view');
@@ -3630,7 +3678,7 @@ module.exports = View.extend({
     }
 });
 
-},{"./modifying-input-view":"/home/bbales2/stochssModel/app/static/modelEditor/forms/modifying-input-view.js","./modifying-number-input-view":"/home/bbales2/stochssModel/app/static/modelEditor/forms/modifying-number-input-view.js","./stoich-specie-collection":"/home/bbales2/stochssModel/app/static/modelEditor/forms/stoich-specie-collection.js","./subdomain":"/home/bbales2/stochssModel/app/static/modelEditor/forms/subdomain.js","./tests":"/home/bbales2/stochssModel/app/static/modelEditor/forms/tests.js","ampersand-select-view":"/home/bbales2/stochssModel/app/static/modelEditor/node_modules/ampersand-select-view/ampersand-select-view.js","ampersand-view":"/home/bbales2/stochssModel/app/static/modelEditor/node_modules/ampersand-view/ampersand-view.js","jquery":"/home/bbales2/stochssModel/app/static/modelEditor/node_modules/jquery/dist/jquery.js","katex":"/home/bbales2/stochssModel/app/static/modelEditor/node_modules/katex/katex.js","underscore":"/home/bbales2/stochssModel/app/static/modelEditor/node_modules/underscore/underscore.js"}],"/home/bbales2/stochssModel/app/static/modelEditor/forms/specie-collection.js":[function(require,module,exports){
+},{"./modifying-input-view":"/home/debjani/Desktop/newstochss/stochss/app/static/modelEditor/forms/modifying-input-view.js","./modifying-number-input-view":"/home/debjani/Desktop/newstochss/stochss/app/static/modelEditor/forms/modifying-number-input-view.js","./stoich-specie-collection":"/home/debjani/Desktop/newstochss/stochss/app/static/modelEditor/forms/stoich-specie-collection.js","./subdomain":"/home/debjani/Desktop/newstochss/stochss/app/static/modelEditor/forms/subdomain.js","./tests":"/home/debjani/Desktop/newstochss/stochss/app/static/modelEditor/forms/tests.js","ampersand-select-view":"/home/debjani/Desktop/newstochss/stochss/app/static/modelEditor/node_modules/ampersand-select-view/ampersand-select-view.js","ampersand-view":"/home/debjani/Desktop/newstochss/stochss/app/static/modelEditor/node_modules/ampersand-view/ampersand-view.js","jquery":"/home/debjani/Desktop/newstochss/stochss/app/static/modelEditor/node_modules/jquery/dist/jquery.js","katex":"/home/debjani/Desktop/newstochss/stochss/app/static/modelEditor/node_modules/katex/katex.js","underscore":"/home/debjani/Desktop/newstochss/stochss/app/static/modelEditor/node_modules/underscore/underscore.js"}],"/home/debjani/Desktop/newstochss/stochss/app/static/modelEditor/forms/specie-collection.js":[function(require,module,exports){
 var $ = require('jquery');
 var AmpersandView = require('ampersand-view');
 var AmpersandFormView = require('ampersand-form-view');
@@ -3781,7 +3829,7 @@ var SpecieCollectionFormView = AmpersandView.extend({
 });
 
 module.exports = SpecieCollectionFormView
-},{"./paginated-collection-view":"/home/bbales2/stochssModel/app/static/modelEditor/forms/paginated-collection-view.js","./specie":"/home/bbales2/stochssModel/app/static/modelEditor/forms/specie.js","./tests":"/home/bbales2/stochssModel/app/static/modelEditor/forms/tests.js","ampersand-form-view":"/home/bbales2/stochssModel/app/static/modelEditor/node_modules/ampersand-form-view/ampersand-form-view.js","ampersand-input-view":"/home/bbales2/stochssModel/app/static/modelEditor/node_modules/ampersand-input-view/ampersand-input-view.js","ampersand-view":"/home/bbales2/stochssModel/app/static/modelEditor/node_modules/ampersand-view/ampersand-view.js","jquery":"/home/bbales2/stochssModel/app/static/modelEditor/node_modules/jquery/dist/jquery.js"}],"/home/bbales2/stochssModel/app/static/modelEditor/forms/specie.js":[function(require,module,exports){
+},{"./paginated-collection-view":"/home/debjani/Desktop/newstochss/stochss/app/static/modelEditor/forms/paginated-collection-view.js","./specie":"/home/debjani/Desktop/newstochss/stochss/app/static/modelEditor/forms/specie.js","./tests":"/home/debjani/Desktop/newstochss/stochss/app/static/modelEditor/forms/tests.js","ampersand-form-view":"/home/debjani/Desktop/newstochss/stochss/app/static/modelEditor/node_modules/ampersand-form-view/ampersand-form-view.js","ampersand-input-view":"/home/debjani/Desktop/newstochss/stochss/app/static/modelEditor/node_modules/ampersand-input-view/ampersand-input-view.js","ampersand-view":"/home/debjani/Desktop/newstochss/stochss/app/static/modelEditor/node_modules/ampersand-view/ampersand-view.js","jquery":"/home/debjani/Desktop/newstochss/stochss/app/static/modelEditor/node_modules/jquery/dist/jquery.js"}],"/home/debjani/Desktop/newstochss/stochss/app/static/modelEditor/forms/specie.js":[function(require,module,exports){
 var _ = require('underscore');
 var $ = require('jquery');
 var View = require('ampersand-view');
@@ -3973,7 +4021,7 @@ module.exports = View.extend({
     }
 });
 
-},{"./modifying-input-view":"/home/bbales2/stochssModel/app/static/modelEditor/forms/modifying-input-view.js","./modifying-number-input-view":"/home/bbales2/stochssModel/app/static/modelEditor/forms/modifying-number-input-view.js","./subdomain":"/home/bbales2/stochssModel/app/static/modelEditor/forms/subdomain.js","./tests":"/home/bbales2/stochssModel/app/static/modelEditor/forms/tests.js","ampersand-view":"/home/bbales2/stochssModel/app/static/modelEditor/node_modules/ampersand-view/ampersand-view.js","jquery":"/home/bbales2/stochssModel/app/static/modelEditor/node_modules/jquery/dist/jquery.js","underscore":"/home/bbales2/stochssModel/app/static/modelEditor/node_modules/underscore/underscore.js"}],"/home/bbales2/stochssModel/app/static/modelEditor/forms/stoich-specie-collection.js":[function(require,module,exports){
+},{"./modifying-input-view":"/home/debjani/Desktop/newstochss/stochss/app/static/modelEditor/forms/modifying-input-view.js","./modifying-number-input-view":"/home/debjani/Desktop/newstochss/stochss/app/static/modelEditor/forms/modifying-number-input-view.js","./subdomain":"/home/debjani/Desktop/newstochss/stochss/app/static/modelEditor/forms/subdomain.js","./tests":"/home/debjani/Desktop/newstochss/stochss/app/static/modelEditor/forms/tests.js","ampersand-view":"/home/debjani/Desktop/newstochss/stochss/app/static/modelEditor/node_modules/ampersand-view/ampersand-view.js","jquery":"/home/debjani/Desktop/newstochss/stochss/app/static/modelEditor/node_modules/jquery/dist/jquery.js","underscore":"/home/debjani/Desktop/newstochss/stochss/app/static/modelEditor/node_modules/underscore/underscore.js"}],"/home/debjani/Desktop/newstochss/stochss/app/static/modelEditor/forms/stoich-specie-collection.js":[function(require,module,exports){
 var $ = require('jquery');
 var AmpersandView = require('ampersand-view');
 var AmpersandFormView = require('ampersand-form-view');
@@ -4098,7 +4146,7 @@ var StoichSpecieCollectionFormView = AmpersandView.extend({
 
 module.exports = StoichSpecieCollectionFormView
 
-},{"./stoich-specie":"/home/bbales2/stochssModel/app/static/modelEditor/forms/stoich-specie.js","./tests":"/home/bbales2/stochssModel/app/static/modelEditor/forms/tests.js","ampersand-form-view":"/home/bbales2/stochssModel/app/static/modelEditor/node_modules/ampersand-form-view/ampersand-form-view.js","ampersand-input-view":"/home/bbales2/stochssModel/app/static/modelEditor/node_modules/ampersand-input-view/ampersand-input-view.js","ampersand-select-view":"/home/bbales2/stochssModel/app/static/modelEditor/node_modules/ampersand-select-view/ampersand-select-view.js","ampersand-view":"/home/bbales2/stochssModel/app/static/modelEditor/node_modules/ampersand-view/ampersand-view.js","jquery":"/home/bbales2/stochssModel/app/static/modelEditor/node_modules/jquery/dist/jquery.js"}],"/home/bbales2/stochssModel/app/static/modelEditor/forms/stoich-specie.js":[function(require,module,exports){
+},{"./stoich-specie":"/home/debjani/Desktop/newstochss/stochss/app/static/modelEditor/forms/stoich-specie.js","./tests":"/home/debjani/Desktop/newstochss/stochss/app/static/modelEditor/forms/tests.js","ampersand-form-view":"/home/debjani/Desktop/newstochss/stochss/app/static/modelEditor/node_modules/ampersand-form-view/ampersand-form-view.js","ampersand-input-view":"/home/debjani/Desktop/newstochss/stochss/app/static/modelEditor/node_modules/ampersand-input-view/ampersand-input-view.js","ampersand-select-view":"/home/debjani/Desktop/newstochss/stochss/app/static/modelEditor/node_modules/ampersand-select-view/ampersand-select-view.js","ampersand-view":"/home/debjani/Desktop/newstochss/stochss/app/static/modelEditor/node_modules/ampersand-view/ampersand-view.js","jquery":"/home/debjani/Desktop/newstochss/stochss/app/static/modelEditor/node_modules/jquery/dist/jquery.js"}],"/home/debjani/Desktop/newstochss/stochss/app/static/modelEditor/forms/stoich-specie.js":[function(require,module,exports){
 var _ = require('underscore');
 var $ = require('jquery');
 var View = require('ampersand-view');
@@ -4200,7 +4248,7 @@ module.exports = View.extend({
     }
 });
 
-},{"./modifying-number-input-view":"/home/bbales2/stochssModel/app/static/modelEditor/forms/modifying-number-input-view.js","./modifying-select-view":"/home/bbales2/stochssModel/app/static/modelEditor/forms/modifying-select-view.js","./tests":"/home/bbales2/stochssModel/app/static/modelEditor/forms/tests.js","ampersand-view":"/home/bbales2/stochssModel/app/static/modelEditor/node_modules/ampersand-view/ampersand-view.js","jquery":"/home/bbales2/stochssModel/app/static/modelEditor/node_modules/jquery/dist/jquery.js","underscore":"/home/bbales2/stochssModel/app/static/modelEditor/node_modules/underscore/underscore.js"}],"/home/bbales2/stochssModel/app/static/modelEditor/forms/subdomain.js":[function(require,module,exports){
+},{"./modifying-number-input-view":"/home/debjani/Desktop/newstochss/stochss/app/static/modelEditor/forms/modifying-number-input-view.js","./modifying-select-view":"/home/debjani/Desktop/newstochss/stochss/app/static/modelEditor/forms/modifying-select-view.js","./tests":"/home/debjani/Desktop/newstochss/stochss/app/static/modelEditor/forms/tests.js","ampersand-view":"/home/debjani/Desktop/newstochss/stochss/app/static/modelEditor/node_modules/ampersand-view/ampersand-view.js","jquery":"/home/debjani/Desktop/newstochss/stochss/app/static/modelEditor/node_modules/jquery/dist/jquery.js","underscore":"/home/debjani/Desktop/newstochss/stochss/app/static/modelEditor/node_modules/underscore/underscore.js"}],"/home/debjani/Desktop/newstochss/stochss/app/static/modelEditor/forms/subdomain.js":[function(require,module,exports){
 var _ = require('underscore');
 var $ = require('jquery');
 var View = require('ampersand-view');
@@ -4239,7 +4287,7 @@ module.exports = View.extend({
     }
 });
 
-},{"./tests":"/home/bbales2/stochssModel/app/static/modelEditor/forms/tests.js","ampersand-checkbox-view":"/home/bbales2/stochssModel/app/static/modelEditor/node_modules/ampersand-checkbox-view/ampersand-checkbox-view.js","ampersand-view":"/home/bbales2/stochssModel/app/static/modelEditor/node_modules/ampersand-view/ampersand-view.js","jquery":"/home/bbales2/stochssModel/app/static/modelEditor/node_modules/jquery/dist/jquery.js","underscore":"/home/bbales2/stochssModel/app/static/modelEditor/node_modules/underscore/underscore.js"}],"/home/bbales2/stochssModel/app/static/modelEditor/forms/tests.js":[function(require,module,exports){
+},{"./tests":"/home/debjani/Desktop/newstochss/stochss/app/static/modelEditor/forms/tests.js","ampersand-checkbox-view":"/home/debjani/Desktop/newstochss/stochss/app/static/modelEditor/node_modules/ampersand-checkbox-view/ampersand-checkbox-view.js","ampersand-view":"/home/debjani/Desktop/newstochss/stochss/app/static/modelEditor/node_modules/ampersand-view/ampersand-view.js","jquery":"/home/debjani/Desktop/newstochss/stochss/app/static/modelEditor/node_modules/jquery/dist/jquery.js","underscore":"/home/debjani/Desktop/newstochss/stochss/app/static/modelEditor/node_modules/underscore/underscore.js"}],"/home/debjani/Desktop/newstochss/stochss/app/static/modelEditor/forms/tests.js":[function(require,module,exports){
 var _ = require('underscore');
 
 module.exports = {
@@ -4314,7 +4362,7 @@ module.exports = {
         }
     }
 };
-},{"underscore":"/home/bbales2/stochssModel/app/static/modelEditor/node_modules/underscore/underscore.js"}],"/home/bbales2/stochssModel/app/static/modelEditor/models/collection.js":[function(require,module,exports){
+},{"underscore":"/home/debjani/Desktop/newstochss/stochss/app/static/modelEditor/node_modules/underscore/underscore.js"}],"/home/debjani/Desktop/newstochss/stochss/app/static/modelEditor/models/collection.js":[function(require,module,exports){
 var AmpCollection = require('ampersand-collection');
 
 module.exports = AmpCollection.extend({
@@ -4327,7 +4375,7 @@ module.exports = AmpCollection.extend({
 });
 
 
-},{"ampersand-collection":"/home/bbales2/stochssModel/app/static/modelEditor/node_modules/ampersand-collection/ampersand-collection.js"}],"/home/bbales2/stochssModel/app/static/modelEditor/models/initial-condition-collection.js":[function(require,module,exports){
+},{"ampersand-collection":"/home/debjani/Desktop/newstochss/stochss/app/static/modelEditor/node_modules/ampersand-collection/ampersand-collection.js"}],"/home/debjani/Desktop/newstochss/stochss/app/static/modelEditor/models/initial-condition-collection.js":[function(require,module,exports){
 var Collection = require('./collection');
 var InitialCondition = require('./initial-condition');
 
@@ -4346,7 +4394,7 @@ module.exports = Collection.extend({
     }
 });
 
-},{"./collection":"/home/bbales2/stochssModel/app/static/modelEditor/models/collection.js","./initial-condition":"/home/bbales2/stochssModel/app/static/modelEditor/models/initial-condition.js"}],"/home/bbales2/stochssModel/app/static/modelEditor/models/initial-condition.js":[function(require,module,exports){
+},{"./collection":"/home/debjani/Desktop/newstochss/stochss/app/static/modelEditor/models/collection.js","./initial-condition":"/home/debjani/Desktop/newstochss/stochss/app/static/modelEditor/models/initial-condition.js"}],"/home/debjani/Desktop/newstochss/stochss/app/static/modelEditor/models/initial-condition.js":[function(require,module,exports){
 var _ = require('underscore');
 var State = require('ampersand-state');
 
@@ -4388,7 +4436,7 @@ module.exports = State.extend({
 });
 
 
-},{"ampersand-state":"/home/bbales2/stochssModel/app/static/modelEditor/node_modules/ampersand-state/ampersand-state.js","underscore":"/home/bbales2/stochssModel/app/static/modelEditor/node_modules/underscore/underscore.js"}],"/home/bbales2/stochssModel/app/static/modelEditor/models/mesh-collection.js":[function(require,module,exports){
+},{"ampersand-state":"/home/debjani/Desktop/newstochss/stochss/app/static/modelEditor/node_modules/ampersand-state/ampersand-state.js","underscore":"/home/debjani/Desktop/newstochss/stochss/app/static/modelEditor/node_modules/underscore/underscore.js"}],"/home/debjani/Desktop/newstochss/stochss/app/static/modelEditor/models/mesh-collection.js":[function(require,module,exports){
 var AmpCollection = require('ampersand-collection');
 var Mesh = require('./mesh');
 
@@ -4396,7 +4444,7 @@ module.exports = AmpCollection.extend({
     model: Mesh
 });
 
-},{"./mesh":"/home/bbales2/stochssModel/app/static/modelEditor/models/mesh.js","ampersand-collection":"/home/bbales2/stochssModel/app/static/modelEditor/node_modules/ampersand-collection/ampersand-collection.js"}],"/home/bbales2/stochssModel/app/static/modelEditor/models/mesh.js":[function(require,module,exports){
+},{"./mesh":"/home/debjani/Desktop/newstochss/stochss/app/static/modelEditor/models/mesh.js","ampersand-collection":"/home/debjani/Desktop/newstochss/stochss/app/static/modelEditor/node_modules/ampersand-collection/ampersand-collection.js"}],"/home/debjani/Desktop/newstochss/stochss/app/static/modelEditor/models/mesh.js":[function(require,module,exports){
 var _ = require('underscore');
 var Model = require('ampersand-model');
 var SubdomainCollection = require('./subdomain-collection');
@@ -4457,7 +4505,7 @@ module.exports = Model.extend({
     }
 });
 
-},{"./subdomain-collection":"/home/bbales2/stochssModel/app/static/modelEditor/models/subdomain-collection.js","ampersand-model":"/home/bbales2/stochssModel/app/static/modelEditor/node_modules/ampersand-model/ampersand-model.js","underscore":"/home/bbales2/stochssModel/app/static/modelEditor/node_modules/underscore/underscore.js"}],"/home/bbales2/stochssModel/app/static/modelEditor/models/model.js":[function(require,module,exports){
+},{"./subdomain-collection":"/home/debjani/Desktop/newstochss/stochss/app/static/modelEditor/models/subdomain-collection.js","ampersand-model":"/home/debjani/Desktop/newstochss/stochss/app/static/modelEditor/node_modules/ampersand-model/ampersand-model.js","underscore":"/home/debjani/Desktop/newstochss/stochss/app/static/modelEditor/node_modules/underscore/underscore.js"}],"/home/debjani/Desktop/newstochss/stochss/app/static/modelEditor/models/model.js":[function(require,module,exports){
 var _ = require('underscore');
 var AmpersandModel = require('ampersand-model');
 var SpecieCollection = require('./specie-collection');
@@ -4808,7 +4856,7 @@ Model.buildFromJSON = function(json, model)
 
 module.exports = Model;
 
-},{"./initial-condition-collection":"/home/bbales2/stochssModel/app/static/modelEditor/models/initial-condition-collection.js","./parameter-collection":"/home/bbales2/stochssModel/app/static/modelEditor/models/parameter-collection.js","./reaction-collection":"/home/bbales2/stochssModel/app/static/modelEditor/models/reaction-collection.js","./specie-collection":"/home/bbales2/stochssModel/app/static/modelEditor/models/specie-collection.js","ampersand-model":"/home/bbales2/stochssModel/app/static/modelEditor/node_modules/ampersand-model/ampersand-model.js","underscore":"/home/bbales2/stochssModel/app/static/modelEditor/node_modules/underscore/underscore.js"}],"/home/bbales2/stochssModel/app/static/modelEditor/models/parameter-collection.js":[function(require,module,exports){
+},{"./initial-condition-collection":"/home/debjani/Desktop/newstochss/stochss/app/static/modelEditor/models/initial-condition-collection.js","./parameter-collection":"/home/debjani/Desktop/newstochss/stochss/app/static/modelEditor/models/parameter-collection.js","./reaction-collection":"/home/debjani/Desktop/newstochss/stochss/app/static/modelEditor/models/reaction-collection.js","./specie-collection":"/home/debjani/Desktop/newstochss/stochss/app/static/modelEditor/models/specie-collection.js","ampersand-model":"/home/debjani/Desktop/newstochss/stochss/app/static/modelEditor/node_modules/ampersand-model/ampersand-model.js","underscore":"/home/debjani/Desktop/newstochss/stochss/app/static/modelEditor/node_modules/underscore/underscore.js"}],"/home/debjani/Desktop/newstochss/stochss/app/static/modelEditor/models/parameter-collection.js":[function(require,module,exports){
 // parameter Collection - parameter-collection.js
 var Collection = require('./collection');
 var parameter = require('./parameter');
@@ -4831,7 +4879,7 @@ module.exports = Collection.extend({
         return parameter;
     }
 });
-},{"./collection":"/home/bbales2/stochssModel/app/static/modelEditor/models/collection.js","./parameter":"/home/bbales2/stochssModel/app/static/modelEditor/models/parameter.js"}],"/home/bbales2/stochssModel/app/static/modelEditor/models/parameter.js":[function(require,module,exports){
+},{"./collection":"/home/debjani/Desktop/newstochss/stochss/app/static/modelEditor/models/collection.js","./parameter":"/home/debjani/Desktop/newstochss/stochss/app/static/modelEditor/models/parameter.js"}],"/home/debjani/Desktop/newstochss/stochss/app/static/modelEditor/models/parameter.js":[function(require,module,exports){
 // parameter Model - parameter.js
 var _ = require('underscore');
 var AmpModel = require('ampersand-model');
@@ -4872,7 +4920,7 @@ module.exports = AmpModel.extend({
         );
     }
 });
-},{"ampersand-model":"/home/bbales2/stochssModel/app/static/modelEditor/node_modules/ampersand-model/ampersand-model.js","underscore":"/home/bbales2/stochssModel/app/static/modelEditor/node_modules/underscore/underscore.js"}],"/home/bbales2/stochssModel/app/static/modelEditor/models/reaction-collection.js":[function(require,module,exports){
+},{"ampersand-model":"/home/debjani/Desktop/newstochss/stochss/app/static/modelEditor/node_modules/ampersand-model/ampersand-model.js","underscore":"/home/debjani/Desktop/newstochss/stochss/app/static/modelEditor/node_modules/underscore/underscore.js"}],"/home/debjani/Desktop/newstochss/stochss/app/static/modelEditor/models/reaction-collection.js":[function(require,module,exports){
 var _ = require('underscore');
 var Collection = require('./collection');
 var Reaction = require('./reaction');
@@ -4917,7 +4965,7 @@ module.exports = Collection.extend({
     }
 });
 
-},{"./collection":"/home/bbales2/stochssModel/app/static/modelEditor/models/collection.js","./reaction":"/home/bbales2/stochssModel/app/static/modelEditor/models/reaction.js","underscore":"/home/bbales2/stochssModel/app/static/modelEditor/node_modules/underscore/underscore.js"}],"/home/bbales2/stochssModel/app/static/modelEditor/models/reaction.js":[function(require,module,exports){
+},{"./collection":"/home/debjani/Desktop/newstochss/stochss/app/static/modelEditor/models/collection.js","./reaction":"/home/debjani/Desktop/newstochss/stochss/app/static/modelEditor/models/reaction.js","underscore":"/home/debjani/Desktop/newstochss/stochss/app/static/modelEditor/node_modules/underscore/underscore.js"}],"/home/debjani/Desktop/newstochss/stochss/app/static/modelEditor/models/reaction.js":[function(require,module,exports){
 var _ = require('underscore');
 var State = require('ampersand-state');
 var StoichSpecie = require('./stoich-specie');
@@ -5056,7 +5104,7 @@ var Reaction = State.extend({
 
 module.exports = Reaction;
 
-},{"./parameter":"/home/bbales2/stochssModel/app/static/modelEditor/models/parameter.js","./stoich-specie":"/home/bbales2/stochssModel/app/static/modelEditor/models/stoich-specie.js","./stoich-specie-collection":"/home/bbales2/stochssModel/app/static/modelEditor/models/stoich-specie-collection.js","ampersand-state":"/home/bbales2/stochssModel/app/static/modelEditor/node_modules/ampersand-state/ampersand-state.js","underscore":"/home/bbales2/stochssModel/app/static/modelEditor/node_modules/underscore/underscore.js"}],"/home/bbales2/stochssModel/app/static/modelEditor/models/specie-collection.js":[function(require,module,exports){
+},{"./parameter":"/home/debjani/Desktop/newstochss/stochss/app/static/modelEditor/models/parameter.js","./stoich-specie":"/home/debjani/Desktop/newstochss/stochss/app/static/modelEditor/models/stoich-specie.js","./stoich-specie-collection":"/home/debjani/Desktop/newstochss/stochss/app/static/modelEditor/models/stoich-specie-collection.js","ampersand-state":"/home/debjani/Desktop/newstochss/stochss/app/static/modelEditor/node_modules/ampersand-state/ampersand-state.js","underscore":"/home/debjani/Desktop/newstochss/stochss/app/static/modelEditor/node_modules/underscore/underscore.js"}],"/home/debjani/Desktop/newstochss/stochss/app/static/modelEditor/models/specie-collection.js":[function(require,module,exports){
 // specie Collection - specie-collection.js
 var Collection = require('./collection');
 var specie = require('./specie');
@@ -5078,7 +5126,7 @@ module.exports = Collection.extend({
         return specie;
     }
 });
-},{"./collection":"/home/bbales2/stochssModel/app/static/modelEditor/models/collection.js","./specie":"/home/bbales2/stochssModel/app/static/modelEditor/models/specie.js"}],"/home/bbales2/stochssModel/app/static/modelEditor/models/specie.js":[function(require,module,exports){
+},{"./collection":"/home/debjani/Desktop/newstochss/stochss/app/static/modelEditor/models/collection.js","./specie":"/home/debjani/Desktop/newstochss/stochss/app/static/modelEditor/models/specie.js"}],"/home/debjani/Desktop/newstochss/stochss/app/static/modelEditor/models/specie.js":[function(require,module,exports){
 // specie Model - specie.js
 var _ = require('underscore');
 var AmpModel = require('ampersand-model');
@@ -5127,7 +5175,7 @@ module.exports = AmpModel.extend({
         );
     }
 });
-},{"ampersand-model":"/home/bbales2/stochssModel/app/static/modelEditor/node_modules/ampersand-model/ampersand-model.js","underscore":"/home/bbales2/stochssModel/app/static/modelEditor/node_modules/underscore/underscore.js"}],"/home/bbales2/stochssModel/app/static/modelEditor/models/stoich-specie-collection.js":[function(require,module,exports){
+},{"ampersand-model":"/home/debjani/Desktop/newstochss/stochss/app/static/modelEditor/node_modules/ampersand-model/ampersand-model.js","underscore":"/home/debjani/Desktop/newstochss/stochss/app/static/modelEditor/node_modules/underscore/underscore.js"}],"/home/debjani/Desktop/newstochss/stochss/app/static/modelEditor/models/stoich-specie-collection.js":[function(require,module,exports){
 var _ = require('underscore');
 var AmpCollection = require('ampersand-collection');
 var StoichSpecie = require('./stoich-specie');
@@ -5162,7 +5210,7 @@ module.exports = AmpCollection.extend({
     }
 });
 
-},{"./stoich-specie":"/home/bbales2/stochssModel/app/static/modelEditor/models/stoich-specie.js","ampersand-collection":"/home/bbales2/stochssModel/app/static/modelEditor/node_modules/ampersand-collection/ampersand-collection.js","underscore":"/home/bbales2/stochssModel/app/static/modelEditor/node_modules/underscore/underscore.js"}],"/home/bbales2/stochssModel/app/static/modelEditor/models/stoich-specie.js":[function(require,module,exports){
+},{"./stoich-specie":"/home/debjani/Desktop/newstochss/stochss/app/static/modelEditor/models/stoich-specie.js","ampersand-collection":"/home/debjani/Desktop/newstochss/stochss/app/static/modelEditor/node_modules/ampersand-collection/ampersand-collection.js","underscore":"/home/debjani/Desktop/newstochss/stochss/app/static/modelEditor/node_modules/underscore/underscore.js"}],"/home/debjani/Desktop/newstochss/stochss/app/static/modelEditor/models/stoich-specie.js":[function(require,module,exports){
 var _ = require('underscore');
 var State = require('ampersand-state');
 var Specie = require('./specie');
@@ -5185,7 +5233,7 @@ var StoichSpecie = State.extend({
 
 module.exports = StoichSpecie;
 
-},{"./specie":"/home/bbales2/stochssModel/app/static/modelEditor/models/specie.js","ampersand-state":"/home/bbales2/stochssModel/app/static/modelEditor/node_modules/ampersand-state/ampersand-state.js","underscore":"/home/bbales2/stochssModel/app/static/modelEditor/node_modules/underscore/underscore.js"}],"/home/bbales2/stochssModel/app/static/modelEditor/models/subdomain-collection.js":[function(require,module,exports){
+},{"./specie":"/home/debjani/Desktop/newstochss/stochss/app/static/modelEditor/models/specie.js","ampersand-state":"/home/debjani/Desktop/newstochss/stochss/app/static/modelEditor/node_modules/ampersand-state/ampersand-state.js","underscore":"/home/debjani/Desktop/newstochss/stochss/app/static/modelEditor/node_modules/underscore/underscore.js"}],"/home/debjani/Desktop/newstochss/stochss/app/static/modelEditor/models/subdomain-collection.js":[function(require,module,exports){
 var AmpCollection = require('ampersand-collection');
 var Subdomain = require('./subdomain');
 
@@ -5193,7 +5241,7 @@ module.exports = AmpCollection.extend({
     model: Subdomain
 });
 
-},{"./subdomain":"/home/bbales2/stochssModel/app/static/modelEditor/models/subdomain.js","ampersand-collection":"/home/bbales2/stochssModel/app/static/modelEditor/node_modules/ampersand-collection/ampersand-collection.js"}],"/home/bbales2/stochssModel/app/static/modelEditor/models/subdomain.js":[function(require,module,exports){
+},{"./subdomain":"/home/debjani/Desktop/newstochss/stochss/app/static/modelEditor/models/subdomain.js","ampersand-collection":"/home/debjani/Desktop/newstochss/stochss/app/static/modelEditor/node_modules/ampersand-collection/ampersand-collection.js"}],"/home/debjani/Desktop/newstochss/stochss/app/static/modelEditor/models/subdomain.js":[function(require,module,exports){
 var _ = require('underscore');
 var State = require('ampersand-state');
 
@@ -5204,7 +5252,7 @@ module.exports = State.extend({
 });
 
 
-},{"ampersand-state":"/home/bbales2/stochssModel/app/static/modelEditor/node_modules/ampersand-state/ampersand-state.js","underscore":"/home/bbales2/stochssModel/app/static/modelEditor/node_modules/underscore/underscore.js"}],"/home/bbales2/stochssModel/app/static/modelEditor/node_modules/amp-extend/extend.js":[function(require,module,exports){
+},{"ampersand-state":"/home/debjani/Desktop/newstochss/stochss/app/static/modelEditor/node_modules/ampersand-state/ampersand-state.js","underscore":"/home/debjani/Desktop/newstochss/stochss/app/static/modelEditor/node_modules/underscore/underscore.js"}],"/home/debjani/Desktop/newstochss/stochss/app/static/modelEditor/node_modules/amp-extend/extend.js":[function(require,module,exports){
 var isObject = require('amp-is-object');
 
 
@@ -5220,13 +5268,13 @@ module.exports = function(obj) {
     return obj;
 };
 
-},{"amp-is-object":"/home/bbales2/stochssModel/app/static/modelEditor/node_modules/amp-extend/node_modules/amp-is-object/is-object.js"}],"/home/bbales2/stochssModel/app/static/modelEditor/node_modules/amp-extend/node_modules/amp-is-object/is-object.js":[function(require,module,exports){
+},{"amp-is-object":"/home/debjani/Desktop/newstochss/stochss/app/static/modelEditor/node_modules/amp-extend/node_modules/amp-is-object/is-object.js"}],"/home/debjani/Desktop/newstochss/stochss/app/static/modelEditor/node_modules/amp-extend/node_modules/amp-is-object/is-object.js":[function(require,module,exports){
 module.exports = function isObject(obj) {
     var type = typeof obj;
     return !!obj && (type === 'function' || type === 'object');
 };
 
-},{}],"/home/bbales2/stochssModel/app/static/modelEditor/node_modules/ampersand-checkbox-view/ampersand-checkbox-view.js":[function(require,module,exports){
+},{}],"/home/debjani/Desktop/newstochss/stochss/app/static/modelEditor/node_modules/ampersand-checkbox-view/ampersand-checkbox-view.js":[function(require,module,exports){
 ;if (typeof window !== "undefined") {  window.ampersand = window.ampersand || {};  window.ampersand["ampersand-checkbox-view"] = window.ampersand["ampersand-checkbox-view"] || [];  window.ampersand["ampersand-checkbox-view"].push("2.0.2");}
 var domify = require('domify');
 var dom = require('ampersand-dom');
@@ -5353,7 +5401,7 @@ CheckboxView.prototype.test = function () {
 
 module.exports = CheckboxView;
 
-},{"ampersand-dom":"/home/bbales2/stochssModel/app/static/modelEditor/node_modules/ampersand-dom/ampersand-dom.js","domify":"/home/bbales2/stochssModel/app/static/modelEditor/node_modules/ampersand-checkbox-view/node_modules/domify/index.js"}],"/home/bbales2/stochssModel/app/static/modelEditor/node_modules/ampersand-checkbox-view/node_modules/domify/index.js":[function(require,module,exports){
+},{"ampersand-dom":"/home/debjani/Desktop/newstochss/stochss/app/static/modelEditor/node_modules/ampersand-dom/ampersand-dom.js","domify":"/home/debjani/Desktop/newstochss/stochss/app/static/modelEditor/node_modules/ampersand-checkbox-view/node_modules/domify/index.js"}],"/home/debjani/Desktop/newstochss/stochss/app/static/modelEditor/node_modules/ampersand-checkbox-view/node_modules/domify/index.js":[function(require,module,exports){
 
 /**
  * Expose `parse`.
@@ -5442,10 +5490,11 @@ function parse(html) {
   return fragment;
 }
 
-},{}],"/home/bbales2/stochssModel/app/static/modelEditor/node_modules/ampersand-collection/ampersand-collection.js":[function(require,module,exports){
+},{}],"/home/debjani/Desktop/newstochss/stochss/app/static/modelEditor/node_modules/ampersand-collection/ampersand-collection.js":[function(require,module,exports){
 var BackboneEvents = require('backbone-events-standalone');
 var classExtend = require('ampersand-class-extend');
 var isArray = require('is-array');
+var bind = require('amp-bind');
 var extend = require('extend-object');
 var slice = [].slice;
 
@@ -5682,7 +5731,7 @@ extend(Collection.prototype, BackboneEvents, {
                 return 0;
             });
         } else {
-            this.models.sort(this.comparator.bind(this));
+            this.models.sort(bind(this.comparator,this));
         }
 
         if (!options.silent) this.trigger('sort', this, options);
@@ -5795,7 +5844,49 @@ Collection.extend = classExtend;
 
 module.exports = Collection;
 
-},{"ampersand-class-extend":"/home/bbales2/stochssModel/app/static/modelEditor/node_modules/ampersand-collection/node_modules/ampersand-class-extend/ampersand-class-extend.js","backbone-events-standalone":"/home/bbales2/stochssModel/app/static/modelEditor/node_modules/ampersand-collection/node_modules/backbone-events-standalone/index.js","extend-object":"/home/bbales2/stochssModel/app/static/modelEditor/node_modules/ampersand-collection/node_modules/extend-object/extend-object.js","is-array":"/home/bbales2/stochssModel/app/static/modelEditor/node_modules/ampersand-collection/node_modules/is-array/index.js"}],"/home/bbales2/stochssModel/app/static/modelEditor/node_modules/ampersand-collection/node_modules/ampersand-class-extend/ampersand-class-extend.js":[function(require,module,exports){
+},{"amp-bind":"/home/debjani/Desktop/newstochss/stochss/app/static/modelEditor/node_modules/ampersand-collection/node_modules/amp-bind/bind.js","ampersand-class-extend":"/home/debjani/Desktop/newstochss/stochss/app/static/modelEditor/node_modules/ampersand-collection/node_modules/ampersand-class-extend/ampersand-class-extend.js","backbone-events-standalone":"/home/debjani/Desktop/newstochss/stochss/app/static/modelEditor/node_modules/ampersand-collection/node_modules/backbone-events-standalone/index.js","extend-object":"/home/debjani/Desktop/newstochss/stochss/app/static/modelEditor/node_modules/ampersand-collection/node_modules/extend-object/extend-object.js","is-array":"/home/debjani/Desktop/newstochss/stochss/app/static/modelEditor/node_modules/ampersand-collection/node_modules/is-array/index.js"}],"/home/debjani/Desktop/newstochss/stochss/app/static/modelEditor/node_modules/ampersand-collection/node_modules/amp-bind/bind.js":[function(require,module,exports){
+var isFunction = require('amp-is-function');
+var isObject = require('amp-is-object');
+var nativeBind = Function.prototype.bind;
+var slice = Array.prototype.slice;
+var Ctor = function () {};
+
+
+module.exports = function bind(func, context) {
+    var args, bound;
+    if (nativeBind && func.bind === nativeBind) return nativeBind.apply(func, slice.call(arguments, 1));
+    if (!isFunction(func)) throw new TypeError('Bind must be called on a function');
+    args = slice.call(arguments, 2);
+    bound = function() {
+        if (!(this instanceof bound)) return func.apply(context, args.concat(slice.call(arguments)));
+        Ctor.prototype = func.prototype;
+        var self = new Ctor();
+        Ctor.prototype = null;
+        var result = func.apply(self, args.concat(slice.call(arguments)));
+        if (isObject(result)) return result;
+        return self;
+    };
+    return bound;
+};
+
+},{"amp-is-function":"/home/debjani/Desktop/newstochss/stochss/app/static/modelEditor/node_modules/ampersand-collection/node_modules/amp-bind/node_modules/amp-is-function/is-function.js","amp-is-object":"/home/debjani/Desktop/newstochss/stochss/app/static/modelEditor/node_modules/ampersand-collection/node_modules/amp-bind/node_modules/amp-is-object/is-object.js"}],"/home/debjani/Desktop/newstochss/stochss/app/static/modelEditor/node_modules/ampersand-collection/node_modules/amp-bind/node_modules/amp-is-function/is-function.js":[function(require,module,exports){
+var toString = Object.prototype.toString;
+var func = function isFunction(obj) {
+    return toString.call(obj) === '[object Function]';
+};
+
+// Optimize `isFunction` if appropriate. Work around an IE 11 bug.
+if (typeof /./ !== 'function') {
+    func = function isFunction(obj) {
+      return typeof obj == 'function' || false;
+    };
+}
+
+module.exports = func;
+
+},{}],"/home/debjani/Desktop/newstochss/stochss/app/static/modelEditor/node_modules/ampersand-collection/node_modules/amp-bind/node_modules/amp-is-object/is-object.js":[function(require,module,exports){
+arguments[4]["/home/debjani/Desktop/newstochss/stochss/app/static/modelEditor/node_modules/amp-extend/node_modules/amp-is-object/is-object.js"][0].apply(exports,arguments)
+},{}],"/home/debjani/Desktop/newstochss/stochss/app/static/modelEditor/node_modules/ampersand-collection/node_modules/ampersand-class-extend/ampersand-class-extend.js":[function(require,module,exports){
 var objectExtend = require('extend-object');
 
 
@@ -5845,7 +5936,7 @@ var extend = function(protoProps) {
 // Expose the extend function
 module.exports = extend;
 
-},{"extend-object":"/home/bbales2/stochssModel/app/static/modelEditor/node_modules/ampersand-collection/node_modules/extend-object/extend-object.js"}],"/home/bbales2/stochssModel/app/static/modelEditor/node_modules/ampersand-collection/node_modules/backbone-events-standalone/backbone-events-standalone.js":[function(require,module,exports){
+},{"extend-object":"/home/debjani/Desktop/newstochss/stochss/app/static/modelEditor/node_modules/ampersand-collection/node_modules/extend-object/extend-object.js"}],"/home/debjani/Desktop/newstochss/stochss/app/static/modelEditor/node_modules/ampersand-collection/node_modules/backbone-events-standalone/backbone-events-standalone.js":[function(require,module,exports){
 /**
  * Standalone extraction of Backbone.Events, no external dependency required.
  * Degrades nicely when Backone/underscore are already available in the current
@@ -6113,10 +6204,10 @@ module.exports = extend;
   }
 })(this);
 
-},{}],"/home/bbales2/stochssModel/app/static/modelEditor/node_modules/ampersand-collection/node_modules/backbone-events-standalone/index.js":[function(require,module,exports){
+},{}],"/home/debjani/Desktop/newstochss/stochss/app/static/modelEditor/node_modules/ampersand-collection/node_modules/backbone-events-standalone/index.js":[function(require,module,exports){
 module.exports = require('./backbone-events-standalone');
 
-},{"./backbone-events-standalone":"/home/bbales2/stochssModel/app/static/modelEditor/node_modules/ampersand-collection/node_modules/backbone-events-standalone/backbone-events-standalone.js"}],"/home/bbales2/stochssModel/app/static/modelEditor/node_modules/ampersand-collection/node_modules/extend-object/extend-object.js":[function(require,module,exports){
+},{"./backbone-events-standalone":"/home/debjani/Desktop/newstochss/stochss/app/static/modelEditor/node_modules/ampersand-collection/node_modules/backbone-events-standalone/backbone-events-standalone.js"}],"/home/debjani/Desktop/newstochss/stochss/app/static/modelEditor/node_modules/ampersand-collection/node_modules/extend-object/extend-object.js":[function(require,module,exports){
 var arr = [];
 var each = arr.forEach;
 var slice = arr.slice;
@@ -6133,7 +6224,7 @@ module.exports = function(obj) {
     return obj;
 };
 
-},{}],"/home/bbales2/stochssModel/app/static/modelEditor/node_modules/ampersand-collection/node_modules/is-array/index.js":[function(require,module,exports){
+},{}],"/home/debjani/Desktop/newstochss/stochss/app/static/modelEditor/node_modules/ampersand-collection/node_modules/is-array/index.js":[function(require,module,exports){
 
 /**
  * isArray
@@ -6168,7 +6259,7 @@ module.exports = isArray || function (val) {
   return !! val && '[object Array]' == str.call(val);
 };
 
-},{}],"/home/bbales2/stochssModel/app/static/modelEditor/node_modules/ampersand-dom/ampersand-dom.js":[function(require,module,exports){
+},{}],"/home/debjani/Desktop/newstochss/stochss/app/static/modelEditor/node_modules/ampersand-dom/ampersand-dom.js":[function(require,module,exports){
 ;if (typeof window !== "undefined") {  window.ampersand = window.ampersand || {};  window.ampersand["ampersand-dom"] = window.ampersand["ampersand-dom"] || [];  window.ampersand["ampersand-dom"].push("1.2.7");}
 var dom = module.exports = {
     text: function (el, val) {
@@ -6288,7 +6379,7 @@ function hide (el) {
     el.style.display = 'none';
 }
 
-},{}],"/home/bbales2/stochssModel/app/static/modelEditor/node_modules/ampersand-events/ampersand-events.js":[function(require,module,exports){
+},{}],"/home/debjani/Desktop/newstochss/stochss/app/static/modelEditor/node_modules/ampersand-events/ampersand-events.js":[function(require,module,exports){
 ;if (typeof window !== "undefined") {  window.ampersand = window.ampersand || {};  window.ampersand["ampersand-events"] = window.ampersand["ampersand-events"] || [];  window.ampersand["ampersand-events"].push("1.0.1");}
 var runOnce = require('amp-once');
 var uniqueId = require('amp-unique-id');
@@ -6468,49 +6559,13 @@ Events.listenToAndRun = function (obj, name, callback) {
 
 module.exports = Events;
 
-},{"amp-bind":"/home/bbales2/stochssModel/app/static/modelEditor/node_modules/ampersand-events/node_modules/amp-bind/bind.js","amp-each":"/home/bbales2/stochssModel/app/static/modelEditor/node_modules/ampersand-events/node_modules/amp-each/each.js","amp-extend":"/home/bbales2/stochssModel/app/static/modelEditor/node_modules/ampersand-events/node_modules/amp-extend/extend.js","amp-is-empty":"/home/bbales2/stochssModel/app/static/modelEditor/node_modules/ampersand-events/node_modules/amp-is-empty/is-empty.js","amp-keys":"/home/bbales2/stochssModel/app/static/modelEditor/node_modules/ampersand-events/node_modules/amp-keys/keys.js","amp-once":"/home/bbales2/stochssModel/app/static/modelEditor/node_modules/ampersand-events/node_modules/amp-once/once.js","amp-unique-id":"/home/bbales2/stochssModel/app/static/modelEditor/node_modules/ampersand-events/node_modules/amp-unique-id/unique-id.js"}],"/home/bbales2/stochssModel/app/static/modelEditor/node_modules/ampersand-events/node_modules/amp-bind/bind.js":[function(require,module,exports){
-var isFunction = require('amp-is-function');
-var isObject = require('amp-is-object');
-var nativeBind = Function.prototype.bind;
-var slice = Array.prototype.slice;
-var Ctor = function () {};
-
-
-module.exports = function bind(func, context) {
-    var args, bound;
-    if (nativeBind && func.bind === nativeBind) return nativeBind.apply(func, slice.call(arguments, 1));
-    if (!isFunction(func)) throw new TypeError('Bind must be called on a function');
-    args = slice.call(arguments, 2);
-    bound = function() {
-        if (!(this instanceof bound)) return func.apply(context, args.concat(slice.call(arguments)));
-        Ctor.prototype = func.prototype;
-        var self = new Ctor();
-        Ctor.prototype = null;
-        var result = func.apply(self, args.concat(slice.call(arguments)));
-        if (isObject(result)) return result;
-        return self;
-    };
-    return bound;
-};
-
-},{"amp-is-function":"/home/bbales2/stochssModel/app/static/modelEditor/node_modules/ampersand-events/node_modules/amp-bind/node_modules/amp-is-function/is-function.js","amp-is-object":"/home/bbales2/stochssModel/app/static/modelEditor/node_modules/ampersand-events/node_modules/amp-bind/node_modules/amp-is-object/is-object.js"}],"/home/bbales2/stochssModel/app/static/modelEditor/node_modules/ampersand-events/node_modules/amp-bind/node_modules/amp-is-function/is-function.js":[function(require,module,exports){
-var toString = Object.prototype.toString;
-var func = function isFunction(obj) {
-    return toString.call(obj) === '[object Function]';
-};
-
-// Optimize `isFunction` if appropriate. Work around an IE 11 bug.
-if (typeof /./ !== 'function') {
-    func = function isFunction(obj) {
-      return typeof obj == 'function' || false;
-    };
-}
-
-module.exports = func;
-
-},{}],"/home/bbales2/stochssModel/app/static/modelEditor/node_modules/ampersand-events/node_modules/amp-bind/node_modules/amp-is-object/is-object.js":[function(require,module,exports){
-module.exports=require("/home/bbales2/stochssModel/app/static/modelEditor/node_modules/amp-extend/node_modules/amp-is-object/is-object.js")
-},{"/home/bbales2/stochssModel/app/static/modelEditor/node_modules/amp-extend/node_modules/amp-is-object/is-object.js":"/home/bbales2/stochssModel/app/static/modelEditor/node_modules/amp-extend/node_modules/amp-is-object/is-object.js"}],"/home/bbales2/stochssModel/app/static/modelEditor/node_modules/ampersand-events/node_modules/amp-each/each.js":[function(require,module,exports){
+},{"amp-bind":"/home/debjani/Desktop/newstochss/stochss/app/static/modelEditor/node_modules/ampersand-events/node_modules/amp-bind/bind.js","amp-each":"/home/debjani/Desktop/newstochss/stochss/app/static/modelEditor/node_modules/ampersand-events/node_modules/amp-each/each.js","amp-extend":"/home/debjani/Desktop/newstochss/stochss/app/static/modelEditor/node_modules/amp-extend/extend.js","amp-is-empty":"/home/debjani/Desktop/newstochss/stochss/app/static/modelEditor/node_modules/ampersand-events/node_modules/amp-is-empty/is-empty.js","amp-keys":"/home/debjani/Desktop/newstochss/stochss/app/static/modelEditor/node_modules/ampersand-events/node_modules/amp-keys/keys.js","amp-once":"/home/debjani/Desktop/newstochss/stochss/app/static/modelEditor/node_modules/ampersand-events/node_modules/amp-once/once.js","amp-unique-id":"/home/debjani/Desktop/newstochss/stochss/app/static/modelEditor/node_modules/ampersand-events/node_modules/amp-unique-id/unique-id.js"}],"/home/debjani/Desktop/newstochss/stochss/app/static/modelEditor/node_modules/ampersand-events/node_modules/amp-bind/bind.js":[function(require,module,exports){
+arguments[4]["/home/debjani/Desktop/newstochss/stochss/app/static/modelEditor/node_modules/ampersand-collection/node_modules/amp-bind/bind.js"][0].apply(exports,arguments)
+},{"amp-is-function":"/home/debjani/Desktop/newstochss/stochss/app/static/modelEditor/node_modules/ampersand-events/node_modules/amp-bind/node_modules/amp-is-function/is-function.js","amp-is-object":"/home/debjani/Desktop/newstochss/stochss/app/static/modelEditor/node_modules/ampersand-events/node_modules/amp-bind/node_modules/amp-is-object/is-object.js"}],"/home/debjani/Desktop/newstochss/stochss/app/static/modelEditor/node_modules/ampersand-events/node_modules/amp-bind/node_modules/amp-is-function/is-function.js":[function(require,module,exports){
+arguments[4]["/home/debjani/Desktop/newstochss/stochss/app/static/modelEditor/node_modules/ampersand-collection/node_modules/amp-bind/node_modules/amp-is-function/is-function.js"][0].apply(exports,arguments)
+},{}],"/home/debjani/Desktop/newstochss/stochss/app/static/modelEditor/node_modules/ampersand-events/node_modules/amp-bind/node_modules/amp-is-object/is-object.js":[function(require,module,exports){
+arguments[4]["/home/debjani/Desktop/newstochss/stochss/app/static/modelEditor/node_modules/ampersand-collection/node_modules/amp-bind/node_modules/amp-is-object/is-object.js"][0].apply(exports,arguments)
+},{}],"/home/debjani/Desktop/newstochss/stochss/app/static/modelEditor/node_modules/ampersand-events/node_modules/amp-each/each.js":[function(require,module,exports){
 var objKeys = require('amp-keys');
 var createCallback = require('amp-create-callback');
 
@@ -6532,7 +6587,7 @@ module.exports = function each(obj, iteratee, context) {
     return obj;
 };
 
-},{"amp-create-callback":"/home/bbales2/stochssModel/app/static/modelEditor/node_modules/ampersand-events/node_modules/amp-each/node_modules/amp-create-callback/create-callback.js","amp-keys":"/home/bbales2/stochssModel/app/static/modelEditor/node_modules/ampersand-events/node_modules/amp-keys/keys.js"}],"/home/bbales2/stochssModel/app/static/modelEditor/node_modules/ampersand-events/node_modules/amp-each/node_modules/amp-create-callback/create-callback.js":[function(require,module,exports){
+},{"amp-create-callback":"/home/debjani/Desktop/newstochss/stochss/app/static/modelEditor/node_modules/ampersand-events/node_modules/amp-each/node_modules/amp-create-callback/create-callback.js","amp-keys":"/home/debjani/Desktop/newstochss/stochss/app/static/modelEditor/node_modules/ampersand-events/node_modules/amp-keys/keys.js"}],"/home/debjani/Desktop/newstochss/stochss/app/static/modelEditor/node_modules/ampersand-events/node_modules/amp-each/node_modules/amp-create-callback/create-callback.js":[function(require,module,exports){
 module.exports = function createCallback(func, context, argCount) {
     if (context === void 0) return func;
     switch (argCount) {
@@ -6558,9 +6613,7 @@ module.exports = function createCallback(func, context, argCount) {
     };
 };
 
-},{}],"/home/bbales2/stochssModel/app/static/modelEditor/node_modules/ampersand-events/node_modules/amp-extend/extend.js":[function(require,module,exports){
-module.exports=require("/home/bbales2/stochssModel/app/static/modelEditor/node_modules/amp-extend/extend.js")
-},{"/home/bbales2/stochssModel/app/static/modelEditor/node_modules/amp-extend/extend.js":"/home/bbales2/stochssModel/app/static/modelEditor/node_modules/amp-extend/extend.js"}],"/home/bbales2/stochssModel/app/static/modelEditor/node_modules/ampersand-events/node_modules/amp-is-empty/is-empty.js":[function(require,module,exports){
+},{}],"/home/debjani/Desktop/newstochss/stochss/app/static/modelEditor/node_modules/ampersand-events/node_modules/amp-is-empty/is-empty.js":[function(require,module,exports){
 var isArray = require('amp-is-array');
 var isString = require('amp-is-string');
 var isArguments = require('amp-is-arguments');
@@ -6577,7 +6630,7 @@ module.exports = function isEmpty(obj) {
     return true;
 };
 
-},{"amp-is-arguments":"/home/bbales2/stochssModel/app/static/modelEditor/node_modules/ampersand-events/node_modules/amp-is-empty/node_modules/amp-is-arguments/is-arguments.js","amp-is-array":"/home/bbales2/stochssModel/app/static/modelEditor/node_modules/ampersand-events/node_modules/amp-is-empty/node_modules/amp-is-array/is-array.js","amp-is-nan":"/home/bbales2/stochssModel/app/static/modelEditor/node_modules/ampersand-events/node_modules/amp-is-empty/node_modules/amp-is-nan/is-nan.js","amp-is-number":"/home/bbales2/stochssModel/app/static/modelEditor/node_modules/ampersand-events/node_modules/amp-is-empty/node_modules/amp-is-number/is-number.js","amp-is-string":"/home/bbales2/stochssModel/app/static/modelEditor/node_modules/ampersand-events/node_modules/amp-is-empty/node_modules/amp-is-string/is-string.js","amp-keys":"/home/bbales2/stochssModel/app/static/modelEditor/node_modules/ampersand-events/node_modules/amp-keys/keys.js"}],"/home/bbales2/stochssModel/app/static/modelEditor/node_modules/ampersand-events/node_modules/amp-is-empty/node_modules/amp-is-arguments/is-arguments.js":[function(require,module,exports){
+},{"amp-is-arguments":"/home/debjani/Desktop/newstochss/stochss/app/static/modelEditor/node_modules/ampersand-events/node_modules/amp-is-empty/node_modules/amp-is-arguments/is-arguments.js","amp-is-array":"/home/debjani/Desktop/newstochss/stochss/app/static/modelEditor/node_modules/ampersand-events/node_modules/amp-is-empty/node_modules/amp-is-array/is-array.js","amp-is-nan":"/home/debjani/Desktop/newstochss/stochss/app/static/modelEditor/node_modules/ampersand-events/node_modules/amp-is-empty/node_modules/amp-is-nan/is-nan.js","amp-is-number":"/home/debjani/Desktop/newstochss/stochss/app/static/modelEditor/node_modules/ampersand-events/node_modules/amp-is-empty/node_modules/amp-is-number/is-number.js","amp-is-string":"/home/debjani/Desktop/newstochss/stochss/app/static/modelEditor/node_modules/ampersand-events/node_modules/amp-is-empty/node_modules/amp-is-string/is-string.js","amp-keys":"/home/debjani/Desktop/newstochss/stochss/app/static/modelEditor/node_modules/ampersand-events/node_modules/amp-keys/keys.js"}],"/home/debjani/Desktop/newstochss/stochss/app/static/modelEditor/node_modules/ampersand-events/node_modules/amp-is-empty/node_modules/amp-is-arguments/is-arguments.js":[function(require,module,exports){
 var toString = Object.prototype.toString;
 var hasOwn = Object.prototype.hasOwnProperty;
 var isArgs = function isArgs(obj) {
@@ -6593,7 +6646,7 @@ if (!isArgs(arguments)) {
 
 module.exports = isArgs;
 
-},{}],"/home/bbales2/stochssModel/app/static/modelEditor/node_modules/ampersand-events/node_modules/amp-is-empty/node_modules/amp-is-array/is-array.js":[function(require,module,exports){
+},{}],"/home/debjani/Desktop/newstochss/stochss/app/static/modelEditor/node_modules/ampersand-events/node_modules/amp-is-empty/node_modules/amp-is-array/is-array.js":[function(require,module,exports){
 var toString = Object.prototype.toString;
 var nativeIsArray = Array.isArray;
 
@@ -6602,7 +6655,7 @@ module.exports = nativeIsArray || function isArray(obj) {
     return toString.call(obj) === '[object Array]';
 };
 
-},{}],"/home/bbales2/stochssModel/app/static/modelEditor/node_modules/ampersand-events/node_modules/amp-is-empty/node_modules/amp-is-nan/is-nan.js":[function(require,module,exports){
+},{}],"/home/debjani/Desktop/newstochss/stochss/app/static/modelEditor/node_modules/ampersand-events/node_modules/amp-is-empty/node_modules/amp-is-nan/is-nan.js":[function(require,module,exports){
 var isNumber = require('amp-is-number');
 
 
@@ -6610,7 +6663,7 @@ module.exports = function isNaN(obj) {
     return isNumber(obj) && obj !== +obj;
 };
 
-},{"amp-is-number":"/home/bbales2/stochssModel/app/static/modelEditor/node_modules/ampersand-events/node_modules/amp-is-empty/node_modules/amp-is-number/is-number.js"}],"/home/bbales2/stochssModel/app/static/modelEditor/node_modules/ampersand-events/node_modules/amp-is-empty/node_modules/amp-is-number/is-number.js":[function(require,module,exports){
+},{"amp-is-number":"/home/debjani/Desktop/newstochss/stochss/app/static/modelEditor/node_modules/ampersand-events/node_modules/amp-is-empty/node_modules/amp-is-number/is-number.js"}],"/home/debjani/Desktop/newstochss/stochss/app/static/modelEditor/node_modules/ampersand-events/node_modules/amp-is-empty/node_modules/amp-is-number/is-number.js":[function(require,module,exports){
 var toString = Object.prototype.toString;
 
 
@@ -6618,7 +6671,7 @@ module.exports = function isNumber(obj) {
     return toString.call(obj) === '[object Number]';
 };
 
-},{}],"/home/bbales2/stochssModel/app/static/modelEditor/node_modules/ampersand-events/node_modules/amp-is-empty/node_modules/amp-is-string/is-string.js":[function(require,module,exports){
+},{}],"/home/debjani/Desktop/newstochss/stochss/app/static/modelEditor/node_modules/ampersand-events/node_modules/amp-is-empty/node_modules/amp-is-string/is-string.js":[function(require,module,exports){
 var toString = Object.prototype.toString;
 
 
@@ -6626,7 +6679,7 @@ module.exports = function isString(obj) {
     return toString.call(obj) === '[object String]';
 };
 
-},{}],"/home/bbales2/stochssModel/app/static/modelEditor/node_modules/ampersand-events/node_modules/amp-keys/keys.js":[function(require,module,exports){
+},{}],"/home/debjani/Desktop/newstochss/stochss/app/static/modelEditor/node_modules/ampersand-events/node_modules/amp-keys/keys.js":[function(require,module,exports){
 var has = require('amp-has');
 var indexOf = require('amp-index-of');
 var isObject = require('amp-is-object');
@@ -6653,7 +6706,7 @@ module.exports = function keys(obj) {
     return result;
 };
 
-},{"amp-has":"/home/bbales2/stochssModel/app/static/modelEditor/node_modules/ampersand-events/node_modules/amp-keys/node_modules/amp-has/has.js","amp-index-of":"/home/bbales2/stochssModel/app/static/modelEditor/node_modules/ampersand-events/node_modules/amp-keys/node_modules/amp-index-of/index-of.js","amp-is-object":"/home/bbales2/stochssModel/app/static/modelEditor/node_modules/ampersand-events/node_modules/amp-keys/node_modules/amp-is-object/is-object.js"}],"/home/bbales2/stochssModel/app/static/modelEditor/node_modules/ampersand-events/node_modules/amp-keys/node_modules/amp-has/has.js":[function(require,module,exports){
+},{"amp-has":"/home/debjani/Desktop/newstochss/stochss/app/static/modelEditor/node_modules/ampersand-events/node_modules/amp-keys/node_modules/amp-has/has.js","amp-index-of":"/home/debjani/Desktop/newstochss/stochss/app/static/modelEditor/node_modules/ampersand-events/node_modules/amp-keys/node_modules/amp-index-of/index-of.js","amp-is-object":"/home/debjani/Desktop/newstochss/stochss/app/static/modelEditor/node_modules/ampersand-events/node_modules/amp-keys/node_modules/amp-is-object/is-object.js"}],"/home/debjani/Desktop/newstochss/stochss/app/static/modelEditor/node_modules/ampersand-events/node_modules/amp-keys/node_modules/amp-has/has.js":[function(require,module,exports){
 var hasOwn = Object.prototype.hasOwnProperty;
 
 
@@ -6661,7 +6714,7 @@ module.exports = function has(obj, key) {
     return obj != null && hasOwn.call(obj, key);
 };
 
-},{}],"/home/bbales2/stochssModel/app/static/modelEditor/node_modules/ampersand-events/node_modules/amp-keys/node_modules/amp-index-of/index-of.js":[function(require,module,exports){
+},{}],"/home/debjani/Desktop/newstochss/stochss/app/static/modelEditor/node_modules/ampersand-events/node_modules/amp-keys/node_modules/amp-index-of/index-of.js":[function(require,module,exports){
 var isNumber = require('amp-is-number');
 
 
@@ -6677,11 +6730,11 @@ module.exports = function indexOf(arr, item, from) {
     return -1;
 };
 
-},{"amp-is-number":"/home/bbales2/stochssModel/app/static/modelEditor/node_modules/ampersand-events/node_modules/amp-keys/node_modules/amp-index-of/node_modules/amp-is-number/is-number.js"}],"/home/bbales2/stochssModel/app/static/modelEditor/node_modules/ampersand-events/node_modules/amp-keys/node_modules/amp-index-of/node_modules/amp-is-number/is-number.js":[function(require,module,exports){
-module.exports=require("/home/bbales2/stochssModel/app/static/modelEditor/node_modules/ampersand-events/node_modules/amp-is-empty/node_modules/amp-is-number/is-number.js")
-},{"/home/bbales2/stochssModel/app/static/modelEditor/node_modules/ampersand-events/node_modules/amp-is-empty/node_modules/amp-is-number/is-number.js":"/home/bbales2/stochssModel/app/static/modelEditor/node_modules/ampersand-events/node_modules/amp-is-empty/node_modules/amp-is-number/is-number.js"}],"/home/bbales2/stochssModel/app/static/modelEditor/node_modules/ampersand-events/node_modules/amp-keys/node_modules/amp-is-object/is-object.js":[function(require,module,exports){
-module.exports=require("/home/bbales2/stochssModel/app/static/modelEditor/node_modules/ampersand-events/node_modules/amp-bind/node_modules/amp-is-object/is-object.js")
-},{"/home/bbales2/stochssModel/app/static/modelEditor/node_modules/ampersand-events/node_modules/amp-bind/node_modules/amp-is-object/is-object.js":"/home/bbales2/stochssModel/app/static/modelEditor/node_modules/ampersand-events/node_modules/amp-bind/node_modules/amp-is-object/is-object.js"}],"/home/bbales2/stochssModel/app/static/modelEditor/node_modules/ampersand-events/node_modules/amp-once/node_modules/amp-limit-calls/limit-calls.js":[function(require,module,exports){
+},{"amp-is-number":"/home/debjani/Desktop/newstochss/stochss/app/static/modelEditor/node_modules/ampersand-events/node_modules/amp-keys/node_modules/amp-index-of/node_modules/amp-is-number/is-number.js"}],"/home/debjani/Desktop/newstochss/stochss/app/static/modelEditor/node_modules/ampersand-events/node_modules/amp-keys/node_modules/amp-index-of/node_modules/amp-is-number/is-number.js":[function(require,module,exports){
+arguments[4]["/home/debjani/Desktop/newstochss/stochss/app/static/modelEditor/node_modules/ampersand-events/node_modules/amp-is-empty/node_modules/amp-is-number/is-number.js"][0].apply(exports,arguments)
+},{}],"/home/debjani/Desktop/newstochss/stochss/app/static/modelEditor/node_modules/ampersand-events/node_modules/amp-keys/node_modules/amp-is-object/is-object.js":[function(require,module,exports){
+arguments[4]["/home/debjani/Desktop/newstochss/stochss/app/static/modelEditor/node_modules/ampersand-events/node_modules/amp-bind/node_modules/amp-is-object/is-object.js"][0].apply(exports,arguments)
+},{}],"/home/debjani/Desktop/newstochss/stochss/app/static/modelEditor/node_modules/ampersand-events/node_modules/amp-once/node_modules/amp-limit-calls/limit-calls.js":[function(require,module,exports){
 module.exports = function limitCalls(fn, times) {
     var memo;
     return function() {
@@ -6694,7 +6747,7 @@ module.exports = function limitCalls(fn, times) {
     };
 };
 
-},{}],"/home/bbales2/stochssModel/app/static/modelEditor/node_modules/ampersand-events/node_modules/amp-once/once.js":[function(require,module,exports){
+},{}],"/home/debjani/Desktop/newstochss/stochss/app/static/modelEditor/node_modules/ampersand-events/node_modules/amp-once/once.js":[function(require,module,exports){
 var limitCalls = require('amp-limit-calls');
 
 
@@ -6702,7 +6755,7 @@ module.exports = function once(fn) {
     return limitCalls(fn, 1);
 };
 
-},{"amp-limit-calls":"/home/bbales2/stochssModel/app/static/modelEditor/node_modules/ampersand-events/node_modules/amp-once/node_modules/amp-limit-calls/limit-calls.js"}],"/home/bbales2/stochssModel/app/static/modelEditor/node_modules/ampersand-events/node_modules/amp-unique-id/unique-id.js":[function(require,module,exports){
+},{"amp-limit-calls":"/home/debjani/Desktop/newstochss/stochss/app/static/modelEditor/node_modules/ampersand-events/node_modules/amp-once/node_modules/amp-limit-calls/limit-calls.js"}],"/home/debjani/Desktop/newstochss/stochss/app/static/modelEditor/node_modules/ampersand-events/node_modules/amp-unique-id/unique-id.js":[function(require,module,exports){
 (function (global){
 /*global window, global*/
 var theGlobal = (typeof window !== 'undefined') ? window : global;
@@ -6717,7 +6770,7 @@ module.exports = function uniqueId(prefix) {
 };
 
 }).call(this,typeof global !== "undefined" ? global : typeof self !== "undefined" ? self : typeof window !== "undefined" ? window : {})
-},{}],"/home/bbales2/stochssModel/app/static/modelEditor/node_modules/ampersand-form-view/ampersand-form-view.js":[function(require,module,exports){
+},{}],"/home/debjani/Desktop/newstochss/stochss/app/static/modelEditor/node_modules/ampersand-form-view/ampersand-form-view.js":[function(require,module,exports){
 ;if (typeof window !== "undefined") {  window.ampersand = window.ampersand || {};  window.ampersand["ampersand-form-view"] = window.ampersand["ampersand-form-view"] || [];  window.ampersand["ampersand-form-view"].push("2.2.0");}
 var BBEvents = require('backbone-events-standalone');
 var extend = require('extend-object');
@@ -6881,11 +6934,13 @@ FormView.extend = function (obj) {
 
 module.exports = FormView;
 
-},{"backbone-events-standalone":"/home/bbales2/stochssModel/app/static/modelEditor/node_modules/ampersand-form-view/node_modules/backbone-events-standalone/index.js","extend-object":"/home/bbales2/stochssModel/app/static/modelEditor/node_modules/ampersand-form-view/node_modules/extend-object/extend-object.js"}],"/home/bbales2/stochssModel/app/static/modelEditor/node_modules/ampersand-form-view/node_modules/backbone-events-standalone/index.js":[function(require,module,exports){
-module.exports=require("/home/bbales2/stochssModel/app/static/modelEditor/node_modules/ampersand-collection/node_modules/backbone-events-standalone/index.js")
-},{"/home/bbales2/stochssModel/app/static/modelEditor/node_modules/ampersand-collection/node_modules/backbone-events-standalone/index.js":"/home/bbales2/stochssModel/app/static/modelEditor/node_modules/ampersand-collection/node_modules/backbone-events-standalone/index.js"}],"/home/bbales2/stochssModel/app/static/modelEditor/node_modules/ampersand-form-view/node_modules/extend-object/extend-object.js":[function(require,module,exports){
-module.exports=require("/home/bbales2/stochssModel/app/static/modelEditor/node_modules/ampersand-collection/node_modules/extend-object/extend-object.js")
-},{"/home/bbales2/stochssModel/app/static/modelEditor/node_modules/ampersand-collection/node_modules/extend-object/extend-object.js":"/home/bbales2/stochssModel/app/static/modelEditor/node_modules/ampersand-collection/node_modules/extend-object/extend-object.js"}],"/home/bbales2/stochssModel/app/static/modelEditor/node_modules/ampersand-input-view/ampersand-input-view.js":[function(require,module,exports){
+},{"backbone-events-standalone":"/home/debjani/Desktop/newstochss/stochss/app/static/modelEditor/node_modules/ampersand-form-view/node_modules/backbone-events-standalone/index.js","extend-object":"/home/debjani/Desktop/newstochss/stochss/app/static/modelEditor/node_modules/ampersand-form-view/node_modules/extend-object/extend-object.js"}],"/home/debjani/Desktop/newstochss/stochss/app/static/modelEditor/node_modules/ampersand-form-view/node_modules/backbone-events-standalone/backbone-events-standalone.js":[function(require,module,exports){
+arguments[4]["/home/debjani/Desktop/newstochss/stochss/app/static/modelEditor/node_modules/ampersand-collection/node_modules/backbone-events-standalone/backbone-events-standalone.js"][0].apply(exports,arguments)
+},{}],"/home/debjani/Desktop/newstochss/stochss/app/static/modelEditor/node_modules/ampersand-form-view/node_modules/backbone-events-standalone/index.js":[function(require,module,exports){
+arguments[4]["/home/debjani/Desktop/newstochss/stochss/app/static/modelEditor/node_modules/ampersand-collection/node_modules/backbone-events-standalone/index.js"][0].apply(exports,arguments)
+},{"./backbone-events-standalone":"/home/debjani/Desktop/newstochss/stochss/app/static/modelEditor/node_modules/ampersand-form-view/node_modules/backbone-events-standalone/backbone-events-standalone.js"}],"/home/debjani/Desktop/newstochss/stochss/app/static/modelEditor/node_modules/ampersand-form-view/node_modules/extend-object/extend-object.js":[function(require,module,exports){
+arguments[4]["/home/debjani/Desktop/newstochss/stochss/app/static/modelEditor/node_modules/ampersand-collection/node_modules/extend-object/extend-object.js"][0].apply(exports,arguments)
+},{}],"/home/debjani/Desktop/newstochss/stochss/app/static/modelEditor/node_modules/ampersand-input-view/ampersand-input-view.js":[function(require,module,exports){
 var View = require('ampersand-view');
 
 
@@ -7084,8 +7139,8 @@ module.exports = View.extend({
     }
 });
 
-},{"ampersand-view":"/home/bbales2/stochssModel/app/static/modelEditor/node_modules/ampersand-view/ampersand-view.js"}],"/home/bbales2/stochssModel/app/static/modelEditor/node_modules/ampersand-model/ampersand-model.js":[function(require,module,exports){
-;if (typeof window !== "undefined") {  window.ampersand = window.ampersand || {};  window.ampersand["ampersand-model"] = window.ampersand["ampersand-model"] || [];  window.ampersand["ampersand-model"].push("4.0.3");}
+},{"ampersand-view":"/home/debjani/Desktop/newstochss/stochss/app/static/modelEditor/node_modules/ampersand-view/ampersand-view.js"}],"/home/debjani/Desktop/newstochss/stochss/app/static/modelEditor/node_modules/ampersand-model/ampersand-model.js":[function(require,module,exports){
+;if (typeof window !== "undefined") {  window.ampersand = window.ampersand || {};  window.ampersand["ampersand-model"] = window.ampersand["ampersand-model"] || [];  window.ampersand["ampersand-model"].push("4.1.0");}
 var State = require('ampersand-state');
 var _ = require('underscore');
 var sync = require('ampersand-sync');
@@ -7218,7 +7273,7 @@ var wrapError = function (model, options) {
 
 module.exports = Model;
 
-},{"ampersand-state":"/home/bbales2/stochssModel/app/static/modelEditor/node_modules/ampersand-state/ampersand-state.js","ampersand-sync":"/home/bbales2/stochssModel/app/static/modelEditor/node_modules/ampersand-model/node_modules/ampersand-sync/ampersand-sync.js","underscore":"/home/bbales2/stochssModel/app/static/modelEditor/node_modules/underscore/underscore.js"}],"/home/bbales2/stochssModel/app/static/modelEditor/node_modules/ampersand-model/node_modules/ampersand-sync/ampersand-sync.js":[function(require,module,exports){
+},{"ampersand-state":"/home/debjani/Desktop/newstochss/stochss/app/static/modelEditor/node_modules/ampersand-state/ampersand-state.js","ampersand-sync":"/home/debjani/Desktop/newstochss/stochss/app/static/modelEditor/node_modules/ampersand-model/node_modules/ampersand-sync/ampersand-sync.js","underscore":"/home/debjani/Desktop/newstochss/stochss/app/static/modelEditor/node_modules/underscore/underscore.js"}],"/home/debjani/Desktop/newstochss/stochss/app/static/modelEditor/node_modules/ampersand-model/node_modules/ampersand-sync/ampersand-sync.js":[function(require,module,exports){
 var _ = require('underscore');
 var xhr = require('xhr');
 var qs = require('qs');
@@ -7339,10 +7394,10 @@ var methodMap = {
     'read':   'GET'
 };
 
-},{"qs":"/home/bbales2/stochssModel/app/static/modelEditor/node_modules/ampersand-model/node_modules/ampersand-sync/node_modules/qs/index.js","underscore":"/home/bbales2/stochssModel/app/static/modelEditor/node_modules/ampersand-model/node_modules/ampersand-sync/node_modules/underscore/underscore.js","xhr":"/home/bbales2/stochssModel/app/static/modelEditor/node_modules/ampersand-model/node_modules/ampersand-sync/node_modules/xhr/index.js"}],"/home/bbales2/stochssModel/app/static/modelEditor/node_modules/ampersand-model/node_modules/ampersand-sync/node_modules/qs/index.js":[function(require,module,exports){
+},{"qs":"/home/debjani/Desktop/newstochss/stochss/app/static/modelEditor/node_modules/ampersand-model/node_modules/ampersand-sync/node_modules/qs/index.js","underscore":"/home/debjani/Desktop/newstochss/stochss/app/static/modelEditor/node_modules/ampersand-model/node_modules/ampersand-sync/node_modules/underscore/underscore.js","xhr":"/home/debjani/Desktop/newstochss/stochss/app/static/modelEditor/node_modules/ampersand-model/node_modules/ampersand-sync/node_modules/xhr/index.js"}],"/home/debjani/Desktop/newstochss/stochss/app/static/modelEditor/node_modules/ampersand-model/node_modules/ampersand-sync/node_modules/qs/index.js":[function(require,module,exports){
 module.exports = require('./lib');
 
-},{"./lib":"/home/bbales2/stochssModel/app/static/modelEditor/node_modules/ampersand-model/node_modules/ampersand-sync/node_modules/qs/lib/index.js"}],"/home/bbales2/stochssModel/app/static/modelEditor/node_modules/ampersand-model/node_modules/ampersand-sync/node_modules/qs/lib/index.js":[function(require,module,exports){
+},{"./lib":"/home/debjani/Desktop/newstochss/stochss/app/static/modelEditor/node_modules/ampersand-model/node_modules/ampersand-sync/node_modules/qs/lib/index.js"}],"/home/debjani/Desktop/newstochss/stochss/app/static/modelEditor/node_modules/ampersand-model/node_modules/ampersand-sync/node_modules/qs/lib/index.js":[function(require,module,exports){
 // Load modules
 
 var Stringify = require('./stringify');
@@ -7359,7 +7414,7 @@ module.exports = {
     parse: Parse
 };
 
-},{"./parse":"/home/bbales2/stochssModel/app/static/modelEditor/node_modules/ampersand-model/node_modules/ampersand-sync/node_modules/qs/lib/parse.js","./stringify":"/home/bbales2/stochssModel/app/static/modelEditor/node_modules/ampersand-model/node_modules/ampersand-sync/node_modules/qs/lib/stringify.js"}],"/home/bbales2/stochssModel/app/static/modelEditor/node_modules/ampersand-model/node_modules/ampersand-sync/node_modules/qs/lib/parse.js":[function(require,module,exports){
+},{"./parse":"/home/debjani/Desktop/newstochss/stochss/app/static/modelEditor/node_modules/ampersand-model/node_modules/ampersand-sync/node_modules/qs/lib/parse.js","./stringify":"/home/debjani/Desktop/newstochss/stochss/app/static/modelEditor/node_modules/ampersand-model/node_modules/ampersand-sync/node_modules/qs/lib/stringify.js"}],"/home/debjani/Desktop/newstochss/stochss/app/static/modelEditor/node_modules/ampersand-model/node_modules/ampersand-sync/node_modules/qs/lib/parse.js":[function(require,module,exports){
 // Load modules
 
 var Utils = require('./utils');
@@ -7516,7 +7571,7 @@ module.exports = function (str, depth, delimiter) {
     return Utils.compact(obj);
 };
 
-},{"./utils":"/home/bbales2/stochssModel/app/static/modelEditor/node_modules/ampersand-model/node_modules/ampersand-sync/node_modules/qs/lib/utils.js"}],"/home/bbales2/stochssModel/app/static/modelEditor/node_modules/ampersand-model/node_modules/ampersand-sync/node_modules/qs/lib/stringify.js":[function(require,module,exports){
+},{"./utils":"/home/debjani/Desktop/newstochss/stochss/app/static/modelEditor/node_modules/ampersand-model/node_modules/ampersand-sync/node_modules/qs/lib/utils.js"}],"/home/debjani/Desktop/newstochss/stochss/app/static/modelEditor/node_modules/ampersand-model/node_modules/ampersand-sync/node_modules/qs/lib/stringify.js":[function(require,module,exports){
 (function (Buffer){
 // Load modules
 
@@ -7575,7 +7630,7 @@ module.exports = function (obj, delimiter) {
 };
 
 }).call(this,require("buffer").Buffer)
-},{"buffer":"/home/bbales2/stochssModel/app/static/modelEditor/node_modules/watchify/node_modules/browserify/node_modules/buffer/index.js"}],"/home/bbales2/stochssModel/app/static/modelEditor/node_modules/ampersand-model/node_modules/ampersand-sync/node_modules/qs/lib/utils.js":[function(require,module,exports){
+},{"buffer":"/home/debjani/Desktop/newstochss/stochss/app/static/modelEditor/node_modules/watchify/node_modules/browserify/node_modules/buffer/index.js"}],"/home/debjani/Desktop/newstochss/stochss/app/static/modelEditor/node_modules/ampersand-model/node_modules/ampersand-sync/node_modules/qs/lib/utils.js":[function(require,module,exports){
 (function (Buffer){
 // Load modules
 
@@ -7712,7 +7767,7 @@ exports.compact = function (obj) {
 };
 
 }).call(this,require("buffer").Buffer)
-},{"buffer":"/home/bbales2/stochssModel/app/static/modelEditor/node_modules/watchify/node_modules/browserify/node_modules/buffer/index.js"}],"/home/bbales2/stochssModel/app/static/modelEditor/node_modules/ampersand-model/node_modules/ampersand-sync/node_modules/underscore/underscore.js":[function(require,module,exports){
+},{"buffer":"/home/debjani/Desktop/newstochss/stochss/app/static/modelEditor/node_modules/watchify/node_modules/browserify/node_modules/buffer/index.js"}],"/home/debjani/Desktop/newstochss/stochss/app/static/modelEditor/node_modules/ampersand-model/node_modules/ampersand-sync/node_modules/underscore/underscore.js":[function(require,module,exports){
 //     Underscore.js 1.6.0
 //     http://underscorejs.org
 //     (c) 2009-2014 Jeremy Ashkenas, DocumentCloud and Investigative Reporters & Editors
@@ -9057,7 +9112,7 @@ exports.compact = function (obj) {
   }
 }).call(this);
 
-},{}],"/home/bbales2/stochssModel/app/static/modelEditor/node_modules/ampersand-model/node_modules/ampersand-sync/node_modules/xhr/index.js":[function(require,module,exports){
+},{}],"/home/debjani/Desktop/newstochss/stochss/app/static/modelEditor/node_modules/ampersand-model/node_modules/ampersand-sync/node_modules/xhr/index.js":[function(require,module,exports){
 var window = require("global/window")
 var once = require("once")
 var parseHeaders = require('parse-headers')
@@ -9236,7 +9291,7 @@ function createXHR(options, callback) {
 
 function noop() {}
 
-},{"global/window":"/home/bbales2/stochssModel/app/static/modelEditor/node_modules/ampersand-model/node_modules/ampersand-sync/node_modules/xhr/node_modules/global/window.js","once":"/home/bbales2/stochssModel/app/static/modelEditor/node_modules/ampersand-model/node_modules/ampersand-sync/node_modules/xhr/node_modules/once/once.js","parse-headers":"/home/bbales2/stochssModel/app/static/modelEditor/node_modules/ampersand-model/node_modules/ampersand-sync/node_modules/xhr/node_modules/parse-headers/parse-headers.js"}],"/home/bbales2/stochssModel/app/static/modelEditor/node_modules/ampersand-model/node_modules/ampersand-sync/node_modules/xhr/node_modules/global/window.js":[function(require,module,exports){
+},{"global/window":"/home/debjani/Desktop/newstochss/stochss/app/static/modelEditor/node_modules/ampersand-model/node_modules/ampersand-sync/node_modules/xhr/node_modules/global/window.js","once":"/home/debjani/Desktop/newstochss/stochss/app/static/modelEditor/node_modules/ampersand-model/node_modules/ampersand-sync/node_modules/xhr/node_modules/once/once.js","parse-headers":"/home/debjani/Desktop/newstochss/stochss/app/static/modelEditor/node_modules/ampersand-model/node_modules/ampersand-sync/node_modules/xhr/node_modules/parse-headers/parse-headers.js"}],"/home/debjani/Desktop/newstochss/stochss/app/static/modelEditor/node_modules/ampersand-model/node_modules/ampersand-sync/node_modules/xhr/node_modules/global/window.js":[function(require,module,exports){
 (function (global){
 if (typeof window !== "undefined") {
     module.exports = window;
@@ -9249,7 +9304,7 @@ if (typeof window !== "undefined") {
 }
 
 }).call(this,typeof global !== "undefined" ? global : typeof self !== "undefined" ? self : typeof window !== "undefined" ? window : {})
-},{}],"/home/bbales2/stochssModel/app/static/modelEditor/node_modules/ampersand-model/node_modules/ampersand-sync/node_modules/xhr/node_modules/once/once.js":[function(require,module,exports){
+},{}],"/home/debjani/Desktop/newstochss/stochss/app/static/modelEditor/node_modules/ampersand-model/node_modules/ampersand-sync/node_modules/xhr/node_modules/once/once.js":[function(require,module,exports){
 module.exports = once
 
 once.proto = once(function () {
@@ -9270,7 +9325,7 @@ function once (fn) {
   }
 }
 
-},{}],"/home/bbales2/stochssModel/app/static/modelEditor/node_modules/ampersand-model/node_modules/ampersand-sync/node_modules/xhr/node_modules/parse-headers/node_modules/for-each/index.js":[function(require,module,exports){
+},{}],"/home/debjani/Desktop/newstochss/stochss/app/static/modelEditor/node_modules/ampersand-model/node_modules/ampersand-sync/node_modules/xhr/node_modules/parse-headers/node_modules/for-each/index.js":[function(require,module,exports){
 var isFunction = require('is-function')
 
 module.exports = forEach
@@ -9318,7 +9373,7 @@ function forEachObject(object, iterator, context) {
     }
 }
 
-},{"is-function":"/home/bbales2/stochssModel/app/static/modelEditor/node_modules/ampersand-model/node_modules/ampersand-sync/node_modules/xhr/node_modules/parse-headers/node_modules/for-each/node_modules/is-function/index.js"}],"/home/bbales2/stochssModel/app/static/modelEditor/node_modules/ampersand-model/node_modules/ampersand-sync/node_modules/xhr/node_modules/parse-headers/node_modules/for-each/node_modules/is-function/index.js":[function(require,module,exports){
+},{"is-function":"/home/debjani/Desktop/newstochss/stochss/app/static/modelEditor/node_modules/ampersand-model/node_modules/ampersand-sync/node_modules/xhr/node_modules/parse-headers/node_modules/for-each/node_modules/is-function/index.js"}],"/home/debjani/Desktop/newstochss/stochss/app/static/modelEditor/node_modules/ampersand-model/node_modules/ampersand-sync/node_modules/xhr/node_modules/parse-headers/node_modules/for-each/node_modules/is-function/index.js":[function(require,module,exports){
 module.exports = isFunction
 
 var toString = Object.prototype.toString
@@ -9335,7 +9390,7 @@ function isFunction (fn) {
       fn === window.prompt))
 };
 
-},{}],"/home/bbales2/stochssModel/app/static/modelEditor/node_modules/ampersand-model/node_modules/ampersand-sync/node_modules/xhr/node_modules/parse-headers/node_modules/trim/index.js":[function(require,module,exports){
+},{}],"/home/debjani/Desktop/newstochss/stochss/app/static/modelEditor/node_modules/ampersand-model/node_modules/ampersand-sync/node_modules/xhr/node_modules/parse-headers/node_modules/trim/index.js":[function(require,module,exports){
 
 exports = module.exports = trim;
 
@@ -9351,7 +9406,7 @@ exports.right = function(str){
   return str.replace(/\s*$/, '');
 };
 
-},{}],"/home/bbales2/stochssModel/app/static/modelEditor/node_modules/ampersand-model/node_modules/ampersand-sync/node_modules/xhr/node_modules/parse-headers/parse-headers.js":[function(require,module,exports){
+},{}],"/home/debjani/Desktop/newstochss/stochss/app/static/modelEditor/node_modules/ampersand-model/node_modules/ampersand-sync/node_modules/xhr/node_modules/parse-headers/parse-headers.js":[function(require,module,exports){
 var trim = require('trim')
   , forEach = require('for-each')
   , isArray = function(arg) {
@@ -9383,7 +9438,7 @@ module.exports = function (headers) {
 
   return result
 }
-},{"for-each":"/home/bbales2/stochssModel/app/static/modelEditor/node_modules/ampersand-model/node_modules/ampersand-sync/node_modules/xhr/node_modules/parse-headers/node_modules/for-each/index.js","trim":"/home/bbales2/stochssModel/app/static/modelEditor/node_modules/ampersand-model/node_modules/ampersand-sync/node_modules/xhr/node_modules/parse-headers/node_modules/trim/index.js"}],"/home/bbales2/stochssModel/app/static/modelEditor/node_modules/ampersand-rest-collection/ampersand-rest-collection.js":[function(require,module,exports){
+},{"for-each":"/home/debjani/Desktop/newstochss/stochss/app/static/modelEditor/node_modules/ampersand-model/node_modules/ampersand-sync/node_modules/xhr/node_modules/parse-headers/node_modules/for-each/index.js","trim":"/home/debjani/Desktop/newstochss/stochss/app/static/modelEditor/node_modules/ampersand-model/node_modules/ampersand-sync/node_modules/xhr/node_modules/parse-headers/node_modules/trim/index.js"}],"/home/debjani/Desktop/newstochss/stochss/app/static/modelEditor/node_modules/ampersand-rest-collection/ampersand-rest-collection.js":[function(require,module,exports){
 ;if (typeof window !== "undefined") {  window.ampersand = window.ampersand || {};  window.ampersand["ampersand-rest-collection"] = window.ampersand["ampersand-rest-collection"] || [];  window.ampersand["ampersand-rest-collection"].push("2.0.4");}
 var Collection = require('ampersand-collection');
 var underscoreMixin = require('ampersand-collection-underscore-mixin');
@@ -9392,7 +9447,7 @@ var restMixins = require('ampersand-collection-rest-mixin');
 
 module.exports = Collection.extend(underscoreMixin, restMixins);
 
-},{"ampersand-collection":"/home/bbales2/stochssModel/app/static/modelEditor/node_modules/ampersand-collection/ampersand-collection.js","ampersand-collection-rest-mixin":"/home/bbales2/stochssModel/app/static/modelEditor/node_modules/ampersand-rest-collection/node_modules/ampersand-collection-rest-mixin/ampersand-collection-rest-mixin.js","ampersand-collection-underscore-mixin":"/home/bbales2/stochssModel/app/static/modelEditor/node_modules/ampersand-rest-collection/node_modules/ampersand-collection-underscore-mixin/ampersand-collection-underscore-mixin.js"}],"/home/bbales2/stochssModel/app/static/modelEditor/node_modules/ampersand-rest-collection/node_modules/ampersand-collection-rest-mixin/ampersand-collection-rest-mixin.js":[function(require,module,exports){
+},{"ampersand-collection":"/home/debjani/Desktop/newstochss/stochss/app/static/modelEditor/node_modules/ampersand-collection/ampersand-collection.js","ampersand-collection-rest-mixin":"/home/debjani/Desktop/newstochss/stochss/app/static/modelEditor/node_modules/ampersand-rest-collection/node_modules/ampersand-collection-rest-mixin/ampersand-collection-rest-mixin.js","ampersand-collection-underscore-mixin":"/home/debjani/Desktop/newstochss/stochss/app/static/modelEditor/node_modules/ampersand-rest-collection/node_modules/ampersand-collection-underscore-mixin/ampersand-collection-underscore-mixin.js"}],"/home/debjani/Desktop/newstochss/stochss/app/static/modelEditor/node_modules/ampersand-rest-collection/node_modules/ampersand-collection-rest-mixin/ampersand-collection-rest-mixin.js":[function(require,module,exports){
 ;if (typeof window !== "undefined") {  window.ampersand = window.ampersand || {};  window.ampersand["ampersand-collection-rest-mixin"] = window.ampersand["ampersand-collection-rest-mixin"] || [];  window.ampersand["ampersand-collection-rest-mixin"].push("3.0.1");}
 var sync = require('ampersand-sync');
 var extend = require('extend-object');
@@ -9494,11 +9549,37 @@ module.exports = {
     }
 };
 
-},{"ampersand-sync":"/home/bbales2/stochssModel/app/static/modelEditor/node_modules/ampersand-rest-collection/node_modules/ampersand-collection-rest-mixin/node_modules/ampersand-sync/ampersand-sync.js","extend-object":"/home/bbales2/stochssModel/app/static/modelEditor/node_modules/ampersand-rest-collection/node_modules/ampersand-collection-rest-mixin/node_modules/extend-object/extend-object.js"}],"/home/bbales2/stochssModel/app/static/modelEditor/node_modules/ampersand-rest-collection/node_modules/ampersand-collection-rest-mixin/node_modules/ampersand-sync/ampersand-sync.js":[function(require,module,exports){
-module.exports=require("/home/bbales2/stochssModel/app/static/modelEditor/node_modules/ampersand-model/node_modules/ampersand-sync/ampersand-sync.js")
-},{"/home/bbales2/stochssModel/app/static/modelEditor/node_modules/ampersand-model/node_modules/ampersand-sync/ampersand-sync.js":"/home/bbales2/stochssModel/app/static/modelEditor/node_modules/ampersand-model/node_modules/ampersand-sync/ampersand-sync.js"}],"/home/bbales2/stochssModel/app/static/modelEditor/node_modules/ampersand-rest-collection/node_modules/ampersand-collection-rest-mixin/node_modules/extend-object/extend-object.js":[function(require,module,exports){
-module.exports=require("/home/bbales2/stochssModel/app/static/modelEditor/node_modules/ampersand-form-view/node_modules/extend-object/extend-object.js")
-},{"/home/bbales2/stochssModel/app/static/modelEditor/node_modules/ampersand-form-view/node_modules/extend-object/extend-object.js":"/home/bbales2/stochssModel/app/static/modelEditor/node_modules/ampersand-form-view/node_modules/extend-object/extend-object.js"}],"/home/bbales2/stochssModel/app/static/modelEditor/node_modules/ampersand-rest-collection/node_modules/ampersand-collection-underscore-mixin/ampersand-collection-underscore-mixin.js":[function(require,module,exports){
+},{"ampersand-sync":"/home/debjani/Desktop/newstochss/stochss/app/static/modelEditor/node_modules/ampersand-rest-collection/node_modules/ampersand-collection-rest-mixin/node_modules/ampersand-sync/ampersand-sync.js","extend-object":"/home/debjani/Desktop/newstochss/stochss/app/static/modelEditor/node_modules/ampersand-rest-collection/node_modules/ampersand-collection-rest-mixin/node_modules/extend-object/extend-object.js"}],"/home/debjani/Desktop/newstochss/stochss/app/static/modelEditor/node_modules/ampersand-rest-collection/node_modules/ampersand-collection-rest-mixin/node_modules/ampersand-sync/ampersand-sync.js":[function(require,module,exports){
+arguments[4]["/home/debjani/Desktop/newstochss/stochss/app/static/modelEditor/node_modules/ampersand-model/node_modules/ampersand-sync/ampersand-sync.js"][0].apply(exports,arguments)
+},{"qs":"/home/debjani/Desktop/newstochss/stochss/app/static/modelEditor/node_modules/ampersand-rest-collection/node_modules/ampersand-collection-rest-mixin/node_modules/ampersand-sync/node_modules/qs/index.js","underscore":"/home/debjani/Desktop/newstochss/stochss/app/static/modelEditor/node_modules/ampersand-rest-collection/node_modules/ampersand-collection-rest-mixin/node_modules/ampersand-sync/node_modules/underscore/underscore.js","xhr":"/home/debjani/Desktop/newstochss/stochss/app/static/modelEditor/node_modules/ampersand-rest-collection/node_modules/ampersand-collection-rest-mixin/node_modules/ampersand-sync/node_modules/xhr/index.js"}],"/home/debjani/Desktop/newstochss/stochss/app/static/modelEditor/node_modules/ampersand-rest-collection/node_modules/ampersand-collection-rest-mixin/node_modules/ampersand-sync/node_modules/qs/index.js":[function(require,module,exports){
+arguments[4]["/home/debjani/Desktop/newstochss/stochss/app/static/modelEditor/node_modules/ampersand-model/node_modules/ampersand-sync/node_modules/qs/index.js"][0].apply(exports,arguments)
+},{"./lib":"/home/debjani/Desktop/newstochss/stochss/app/static/modelEditor/node_modules/ampersand-rest-collection/node_modules/ampersand-collection-rest-mixin/node_modules/ampersand-sync/node_modules/qs/lib/index.js"}],"/home/debjani/Desktop/newstochss/stochss/app/static/modelEditor/node_modules/ampersand-rest-collection/node_modules/ampersand-collection-rest-mixin/node_modules/ampersand-sync/node_modules/qs/lib/index.js":[function(require,module,exports){
+arguments[4]["/home/debjani/Desktop/newstochss/stochss/app/static/modelEditor/node_modules/ampersand-model/node_modules/ampersand-sync/node_modules/qs/lib/index.js"][0].apply(exports,arguments)
+},{"./parse":"/home/debjani/Desktop/newstochss/stochss/app/static/modelEditor/node_modules/ampersand-rest-collection/node_modules/ampersand-collection-rest-mixin/node_modules/ampersand-sync/node_modules/qs/lib/parse.js","./stringify":"/home/debjani/Desktop/newstochss/stochss/app/static/modelEditor/node_modules/ampersand-rest-collection/node_modules/ampersand-collection-rest-mixin/node_modules/ampersand-sync/node_modules/qs/lib/stringify.js"}],"/home/debjani/Desktop/newstochss/stochss/app/static/modelEditor/node_modules/ampersand-rest-collection/node_modules/ampersand-collection-rest-mixin/node_modules/ampersand-sync/node_modules/qs/lib/parse.js":[function(require,module,exports){
+arguments[4]["/home/debjani/Desktop/newstochss/stochss/app/static/modelEditor/node_modules/ampersand-model/node_modules/ampersand-sync/node_modules/qs/lib/parse.js"][0].apply(exports,arguments)
+},{"./utils":"/home/debjani/Desktop/newstochss/stochss/app/static/modelEditor/node_modules/ampersand-rest-collection/node_modules/ampersand-collection-rest-mixin/node_modules/ampersand-sync/node_modules/qs/lib/utils.js"}],"/home/debjani/Desktop/newstochss/stochss/app/static/modelEditor/node_modules/ampersand-rest-collection/node_modules/ampersand-collection-rest-mixin/node_modules/ampersand-sync/node_modules/qs/lib/stringify.js":[function(require,module,exports){
+arguments[4]["/home/debjani/Desktop/newstochss/stochss/app/static/modelEditor/node_modules/ampersand-model/node_modules/ampersand-sync/node_modules/qs/lib/stringify.js"][0].apply(exports,arguments)
+},{"buffer":"/home/debjani/Desktop/newstochss/stochss/app/static/modelEditor/node_modules/watchify/node_modules/browserify/node_modules/buffer/index.js"}],"/home/debjani/Desktop/newstochss/stochss/app/static/modelEditor/node_modules/ampersand-rest-collection/node_modules/ampersand-collection-rest-mixin/node_modules/ampersand-sync/node_modules/qs/lib/utils.js":[function(require,module,exports){
+arguments[4]["/home/debjani/Desktop/newstochss/stochss/app/static/modelEditor/node_modules/ampersand-model/node_modules/ampersand-sync/node_modules/qs/lib/utils.js"][0].apply(exports,arguments)
+},{"buffer":"/home/debjani/Desktop/newstochss/stochss/app/static/modelEditor/node_modules/watchify/node_modules/browserify/node_modules/buffer/index.js"}],"/home/debjani/Desktop/newstochss/stochss/app/static/modelEditor/node_modules/ampersand-rest-collection/node_modules/ampersand-collection-rest-mixin/node_modules/ampersand-sync/node_modules/underscore/underscore.js":[function(require,module,exports){
+arguments[4]["/home/debjani/Desktop/newstochss/stochss/app/static/modelEditor/node_modules/ampersand-model/node_modules/ampersand-sync/node_modules/underscore/underscore.js"][0].apply(exports,arguments)
+},{}],"/home/debjani/Desktop/newstochss/stochss/app/static/modelEditor/node_modules/ampersand-rest-collection/node_modules/ampersand-collection-rest-mixin/node_modules/ampersand-sync/node_modules/xhr/index.js":[function(require,module,exports){
+arguments[4]["/home/debjani/Desktop/newstochss/stochss/app/static/modelEditor/node_modules/ampersand-model/node_modules/ampersand-sync/node_modules/xhr/index.js"][0].apply(exports,arguments)
+},{"global/window":"/home/debjani/Desktop/newstochss/stochss/app/static/modelEditor/node_modules/ampersand-rest-collection/node_modules/ampersand-collection-rest-mixin/node_modules/ampersand-sync/node_modules/xhr/node_modules/global/window.js","once":"/home/debjani/Desktop/newstochss/stochss/app/static/modelEditor/node_modules/ampersand-rest-collection/node_modules/ampersand-collection-rest-mixin/node_modules/ampersand-sync/node_modules/xhr/node_modules/once/once.js","parse-headers":"/home/debjani/Desktop/newstochss/stochss/app/static/modelEditor/node_modules/ampersand-rest-collection/node_modules/ampersand-collection-rest-mixin/node_modules/ampersand-sync/node_modules/xhr/node_modules/parse-headers/parse-headers.js"}],"/home/debjani/Desktop/newstochss/stochss/app/static/modelEditor/node_modules/ampersand-rest-collection/node_modules/ampersand-collection-rest-mixin/node_modules/ampersand-sync/node_modules/xhr/node_modules/global/window.js":[function(require,module,exports){
+arguments[4]["/home/debjani/Desktop/newstochss/stochss/app/static/modelEditor/node_modules/ampersand-model/node_modules/ampersand-sync/node_modules/xhr/node_modules/global/window.js"][0].apply(exports,arguments)
+},{}],"/home/debjani/Desktop/newstochss/stochss/app/static/modelEditor/node_modules/ampersand-rest-collection/node_modules/ampersand-collection-rest-mixin/node_modules/ampersand-sync/node_modules/xhr/node_modules/once/once.js":[function(require,module,exports){
+arguments[4]["/home/debjani/Desktop/newstochss/stochss/app/static/modelEditor/node_modules/ampersand-model/node_modules/ampersand-sync/node_modules/xhr/node_modules/once/once.js"][0].apply(exports,arguments)
+},{}],"/home/debjani/Desktop/newstochss/stochss/app/static/modelEditor/node_modules/ampersand-rest-collection/node_modules/ampersand-collection-rest-mixin/node_modules/ampersand-sync/node_modules/xhr/node_modules/parse-headers/node_modules/for-each/index.js":[function(require,module,exports){
+arguments[4]["/home/debjani/Desktop/newstochss/stochss/app/static/modelEditor/node_modules/ampersand-model/node_modules/ampersand-sync/node_modules/xhr/node_modules/parse-headers/node_modules/for-each/index.js"][0].apply(exports,arguments)
+},{"is-function":"/home/debjani/Desktop/newstochss/stochss/app/static/modelEditor/node_modules/ampersand-rest-collection/node_modules/ampersand-collection-rest-mixin/node_modules/ampersand-sync/node_modules/xhr/node_modules/parse-headers/node_modules/for-each/node_modules/is-function/index.js"}],"/home/debjani/Desktop/newstochss/stochss/app/static/modelEditor/node_modules/ampersand-rest-collection/node_modules/ampersand-collection-rest-mixin/node_modules/ampersand-sync/node_modules/xhr/node_modules/parse-headers/node_modules/for-each/node_modules/is-function/index.js":[function(require,module,exports){
+arguments[4]["/home/debjani/Desktop/newstochss/stochss/app/static/modelEditor/node_modules/ampersand-model/node_modules/ampersand-sync/node_modules/xhr/node_modules/parse-headers/node_modules/for-each/node_modules/is-function/index.js"][0].apply(exports,arguments)
+},{}],"/home/debjani/Desktop/newstochss/stochss/app/static/modelEditor/node_modules/ampersand-rest-collection/node_modules/ampersand-collection-rest-mixin/node_modules/ampersand-sync/node_modules/xhr/node_modules/parse-headers/node_modules/trim/index.js":[function(require,module,exports){
+arguments[4]["/home/debjani/Desktop/newstochss/stochss/app/static/modelEditor/node_modules/ampersand-model/node_modules/ampersand-sync/node_modules/xhr/node_modules/parse-headers/node_modules/trim/index.js"][0].apply(exports,arguments)
+},{}],"/home/debjani/Desktop/newstochss/stochss/app/static/modelEditor/node_modules/ampersand-rest-collection/node_modules/ampersand-collection-rest-mixin/node_modules/ampersand-sync/node_modules/xhr/node_modules/parse-headers/parse-headers.js":[function(require,module,exports){
+arguments[4]["/home/debjani/Desktop/newstochss/stochss/app/static/modelEditor/node_modules/ampersand-model/node_modules/ampersand-sync/node_modules/xhr/node_modules/parse-headers/parse-headers.js"][0].apply(exports,arguments)
+},{"for-each":"/home/debjani/Desktop/newstochss/stochss/app/static/modelEditor/node_modules/ampersand-rest-collection/node_modules/ampersand-collection-rest-mixin/node_modules/ampersand-sync/node_modules/xhr/node_modules/parse-headers/node_modules/for-each/index.js","trim":"/home/debjani/Desktop/newstochss/stochss/app/static/modelEditor/node_modules/ampersand-rest-collection/node_modules/ampersand-collection-rest-mixin/node_modules/ampersand-sync/node_modules/xhr/node_modules/parse-headers/node_modules/trim/index.js"}],"/home/debjani/Desktop/newstochss/stochss/app/static/modelEditor/node_modules/ampersand-rest-collection/node_modules/ampersand-collection-rest-mixin/node_modules/extend-object/extend-object.js":[function(require,module,exports){
+arguments[4]["/home/debjani/Desktop/newstochss/stochss/app/static/modelEditor/node_modules/ampersand-form-view/node_modules/extend-object/extend-object.js"][0].apply(exports,arguments)
+},{}],"/home/debjani/Desktop/newstochss/stochss/app/static/modelEditor/node_modules/ampersand-rest-collection/node_modules/ampersand-collection-underscore-mixin/ampersand-collection-underscore-mixin.js":[function(require,module,exports){
 ;if (typeof window !== "undefined") {  window.ampersand = window.ampersand || {};  window.ampersand["ampersand-collection-underscore-mixin"] = window.ampersand["ampersand-collection-underscore-mixin"] || [];  window.ampersand["ampersand-collection-underscore-mixin"].push("1.0.3");}
 var _ = require('underscore');
 var slice = [].slice;
@@ -9565,7 +9646,7 @@ mixins.pluck = function (attr) {
 
 module.exports = mixins;
 
-},{"underscore":"/home/bbales2/stochssModel/app/static/modelEditor/node_modules/underscore/underscore.js"}],"/home/bbales2/stochssModel/app/static/modelEditor/node_modules/ampersand-select-view/ampersand-select-view.js":[function(require,module,exports){
+},{"underscore":"/home/debjani/Desktop/newstochss/stochss/app/static/modelEditor/node_modules/underscore/underscore.js"}],"/home/debjani/Desktop/newstochss/stochss/app/static/modelEditor/node_modules/ampersand-select-view/ampersand-select-view.js":[function(require,module,exports){
 ;if (typeof window !== "undefined") {  window.ampersand = window.ampersand || {};  window.ampersand["ampersand-select-view"] = window.ampersand["ampersand-select-view"] || [];  window.ampersand["ampersand-select-view"].push("2.3.0");}
 var domify = require('domify');
 var dom = require('ampersand-dom');
@@ -9863,8 +9944,38 @@ SelectView.prototype.createOption = function (value, text, model) {
 
 module.exports = SelectView;
 
-},{"amp-extend":"/home/bbales2/stochssModel/app/static/modelEditor/node_modules/amp-extend/extend.js","ampersand-dom":"/home/bbales2/stochssModel/app/static/modelEditor/node_modules/ampersand-dom/ampersand-dom.js","ampersand-events":"/home/bbales2/stochssModel/app/static/modelEditor/node_modules/ampersand-events/ampersand-events.js","domify":"/home/bbales2/stochssModel/app/static/modelEditor/node_modules/domify/index.js","matches-selector":"/home/bbales2/stochssModel/app/static/modelEditor/node_modules/matches-selector/index.js"}],"/home/bbales2/stochssModel/app/static/modelEditor/node_modules/ampersand-state/ampersand-state.js":[function(require,module,exports){
-;if (typeof window !== "undefined") {  window.ampersand = window.ampersand || {};  window.ampersand["ampersand-state"] = window.ampersand["ampersand-state"] || [];  window.ampersand["ampersand-state"].push("4.4.4");}
+},{"amp-extend":"/home/debjani/Desktop/newstochss/stochss/app/static/modelEditor/node_modules/amp-extend/extend.js","ampersand-dom":"/home/debjani/Desktop/newstochss/stochss/app/static/modelEditor/node_modules/ampersand-dom/ampersand-dom.js","ampersand-events":"/home/debjani/Desktop/newstochss/stochss/app/static/modelEditor/node_modules/ampersand-events/ampersand-events.js","domify":"/home/debjani/Desktop/newstochss/stochss/app/static/modelEditor/node_modules/domify/index.js","matches-selector":"/home/debjani/Desktop/newstochss/stochss/app/static/modelEditor/node_modules/ampersand-select-view/node_modules/matches-selector/index.js"}],"/home/debjani/Desktop/newstochss/stochss/app/static/modelEditor/node_modules/ampersand-select-view/node_modules/matches-selector/index.js":[function(require,module,exports){
+'use strict';
+
+var proto = Element.prototype;
+var vendor = proto.matches
+  || proto.matchesSelector
+  || proto.webkitMatchesSelector
+  || proto.mozMatchesSelector
+  || proto.msMatchesSelector
+  || proto.oMatchesSelector;
+
+module.exports = match;
+
+/**
+ * Match `el` to `selector`.
+ *
+ * @param {Element} el
+ * @param {String} selector
+ * @return {Boolean}
+ * @api public
+ */
+
+function match(el, selector) {
+  if (vendor) return vendor.call(el, selector);
+  var nodes = el.parentNode.querySelectorAll(selector);
+  for (var i = 0; i < nodes.length; i++) {
+    if (nodes[i] == el) return true;
+  }
+  return false;
+}
+},{}],"/home/debjani/Desktop/newstochss/stochss/app/static/modelEditor/node_modules/ampersand-state/ampersand-state.js":[function(require,module,exports){
+;if (typeof window !== "undefined") {  window.ampersand = window.ampersand || {};  window.ampersand["ampersand-state"] = window.ampersand["ampersand-state"] || [];  window.ampersand["ampersand-state"].push("4.4.5");}
 var _ = require('underscore');
 var BBEvents = require('backbone-events-standalone');
 var KeyTree = require('key-tree-store');
@@ -10453,7 +10564,9 @@ var dataTypes = {
     date: {
         set: function (newVal) {
             var newType;
-            if (!_.isDate(newVal)) {
+            if (newVal == null) {
+                newType = typeof null;
+            } else if (!_.isDate(newVal)) {
                 try {
                     var dateVal = new Date(newVal).valueOf();
                     if (isNaN(dateVal)) {
@@ -10470,12 +10583,14 @@ var dataTypes = {
                 newType = 'date';
                 newVal = newVal.valueOf();
             }
+
             return {
                 val: newVal,
                 type: newType
             };
         },
         get: function (val) {
+            if (val == null) { return val; }
             return new Date(val);
         },
         default: function () {
@@ -10639,7 +10754,7 @@ Base.extend = extend;
 // Our main exports
 module.exports = Base;
 
-},{"array-next":"/home/bbales2/stochssModel/app/static/modelEditor/node_modules/ampersand-state/node_modules/array-next/array-next.js","backbone-events-standalone":"/home/bbales2/stochssModel/app/static/modelEditor/node_modules/ampersand-state/node_modules/backbone-events-standalone/index.js","key-tree-store":"/home/bbales2/stochssModel/app/static/modelEditor/node_modules/ampersand-state/node_modules/key-tree-store/key-tree-store.js","underscore":"/home/bbales2/stochssModel/app/static/modelEditor/node_modules/underscore/underscore.js"}],"/home/bbales2/stochssModel/app/static/modelEditor/node_modules/ampersand-state/node_modules/array-next/array-next.js":[function(require,module,exports){
+},{"array-next":"/home/debjani/Desktop/newstochss/stochss/app/static/modelEditor/node_modules/ampersand-state/node_modules/array-next/array-next.js","backbone-events-standalone":"/home/debjani/Desktop/newstochss/stochss/app/static/modelEditor/node_modules/ampersand-state/node_modules/backbone-events-standalone/index.js","key-tree-store":"/home/debjani/Desktop/newstochss/stochss/app/static/modelEditor/node_modules/ampersand-state/node_modules/key-tree-store/key-tree-store.js","underscore":"/home/debjani/Desktop/newstochss/stochss/app/static/modelEditor/node_modules/underscore/underscore.js"}],"/home/debjani/Desktop/newstochss/stochss/app/static/modelEditor/node_modules/ampersand-state/node_modules/array-next/array-next.js":[function(require,module,exports){
 module.exports = function arrayNext(array, currentItem) {
     var len = array.length;
     var newIndex = array.indexOf(currentItem) + 1;
@@ -10647,9 +10762,11 @@ module.exports = function arrayNext(array, currentItem) {
     return array[newIndex];
 };
 
-},{}],"/home/bbales2/stochssModel/app/static/modelEditor/node_modules/ampersand-state/node_modules/backbone-events-standalone/index.js":[function(require,module,exports){
-module.exports=require("/home/bbales2/stochssModel/app/static/modelEditor/node_modules/ampersand-form-view/node_modules/backbone-events-standalone/index.js")
-},{"/home/bbales2/stochssModel/app/static/modelEditor/node_modules/ampersand-form-view/node_modules/backbone-events-standalone/index.js":"/home/bbales2/stochssModel/app/static/modelEditor/node_modules/ampersand-form-view/node_modules/backbone-events-standalone/index.js"}],"/home/bbales2/stochssModel/app/static/modelEditor/node_modules/ampersand-state/node_modules/key-tree-store/key-tree-store.js":[function(require,module,exports){
+},{}],"/home/debjani/Desktop/newstochss/stochss/app/static/modelEditor/node_modules/ampersand-state/node_modules/backbone-events-standalone/backbone-events-standalone.js":[function(require,module,exports){
+arguments[4]["/home/debjani/Desktop/newstochss/stochss/app/static/modelEditor/node_modules/ampersand-form-view/node_modules/backbone-events-standalone/backbone-events-standalone.js"][0].apply(exports,arguments)
+},{}],"/home/debjani/Desktop/newstochss/stochss/app/static/modelEditor/node_modules/ampersand-state/node_modules/backbone-events-standalone/index.js":[function(require,module,exports){
+arguments[4]["/home/debjani/Desktop/newstochss/stochss/app/static/modelEditor/node_modules/ampersand-form-view/node_modules/backbone-events-standalone/index.js"][0].apply(exports,arguments)
+},{"./backbone-events-standalone":"/home/debjani/Desktop/newstochss/stochss/app/static/modelEditor/node_modules/ampersand-state/node_modules/backbone-events-standalone/backbone-events-standalone.js"}],"/home/debjani/Desktop/newstochss/stochss/app/static/modelEditor/node_modules/ampersand-state/node_modules/key-tree-store/key-tree-store.js":[function(require,module,exports){
 function KeyTreeStore() {
     this.storage = {};
 }
@@ -10690,7 +10807,7 @@ KeyTreeStore.prototype.get = function (keypath) {
 
 module.exports = KeyTreeStore;
 
-},{}],"/home/bbales2/stochssModel/app/static/modelEditor/node_modules/ampersand-subcollection/ampersand-subcollection.js":[function(require,module,exports){
+},{}],"/home/debjani/Desktop/newstochss/stochss/app/static/modelEditor/node_modules/ampersand-subcollection/ampersand-subcollection.js":[function(require,module,exports){
 ;if (typeof window !== "undefined") {  window.ampersand = window.ampersand || {};  window.ampersand["ampersand-subcollection"] = window.ampersand["ampersand-subcollection"] || [];  window.ampersand["ampersand-subcollection"].push("2.0.1");}
 var _ = require('underscore');
 var Events = require('backbone-events-standalone');
@@ -10915,13 +11032,17 @@ SubCollection.extend = classExtend;
 
 module.exports = SubCollection;
 
-},{"ampersand-class-extend":"/home/bbales2/stochssModel/app/static/modelEditor/node_modules/ampersand-subcollection/node_modules/ampersand-class-extend/ampersand-class-extend.js","ampersand-collection-underscore-mixin":"/home/bbales2/stochssModel/app/static/modelEditor/node_modules/ampersand-subcollection/node_modules/ampersand-collection-underscore-mixin/ampersand-collection-underscore-mixin.js","backbone-events-standalone":"/home/bbales2/stochssModel/app/static/modelEditor/node_modules/ampersand-subcollection/node_modules/backbone-events-standalone/index.js","underscore":"/home/bbales2/stochssModel/app/static/modelEditor/node_modules/underscore/underscore.js"}],"/home/bbales2/stochssModel/app/static/modelEditor/node_modules/ampersand-subcollection/node_modules/ampersand-class-extend/ampersand-class-extend.js":[function(require,module,exports){
-module.exports=require("/home/bbales2/stochssModel/app/static/modelEditor/node_modules/ampersand-collection/node_modules/ampersand-class-extend/ampersand-class-extend.js")
-},{"/home/bbales2/stochssModel/app/static/modelEditor/node_modules/ampersand-collection/node_modules/ampersand-class-extend/ampersand-class-extend.js":"/home/bbales2/stochssModel/app/static/modelEditor/node_modules/ampersand-collection/node_modules/ampersand-class-extend/ampersand-class-extend.js"}],"/home/bbales2/stochssModel/app/static/modelEditor/node_modules/ampersand-subcollection/node_modules/ampersand-collection-underscore-mixin/ampersand-collection-underscore-mixin.js":[function(require,module,exports){
-module.exports=require("/home/bbales2/stochssModel/app/static/modelEditor/node_modules/ampersand-rest-collection/node_modules/ampersand-collection-underscore-mixin/ampersand-collection-underscore-mixin.js")
-},{"/home/bbales2/stochssModel/app/static/modelEditor/node_modules/ampersand-rest-collection/node_modules/ampersand-collection-underscore-mixin/ampersand-collection-underscore-mixin.js":"/home/bbales2/stochssModel/app/static/modelEditor/node_modules/ampersand-rest-collection/node_modules/ampersand-collection-underscore-mixin/ampersand-collection-underscore-mixin.js"}],"/home/bbales2/stochssModel/app/static/modelEditor/node_modules/ampersand-subcollection/node_modules/backbone-events-standalone/index.js":[function(require,module,exports){
-module.exports=require("/home/bbales2/stochssModel/app/static/modelEditor/node_modules/ampersand-form-view/node_modules/backbone-events-standalone/index.js")
-},{"/home/bbales2/stochssModel/app/static/modelEditor/node_modules/ampersand-form-view/node_modules/backbone-events-standalone/index.js":"/home/bbales2/stochssModel/app/static/modelEditor/node_modules/ampersand-form-view/node_modules/backbone-events-standalone/index.js"}],"/home/bbales2/stochssModel/app/static/modelEditor/node_modules/ampersand-view/ampersand-view.js":[function(require,module,exports){
+},{"ampersand-class-extend":"/home/debjani/Desktop/newstochss/stochss/app/static/modelEditor/node_modules/ampersand-subcollection/node_modules/ampersand-class-extend/ampersand-class-extend.js","ampersand-collection-underscore-mixin":"/home/debjani/Desktop/newstochss/stochss/app/static/modelEditor/node_modules/ampersand-subcollection/node_modules/ampersand-collection-underscore-mixin/ampersand-collection-underscore-mixin.js","backbone-events-standalone":"/home/debjani/Desktop/newstochss/stochss/app/static/modelEditor/node_modules/ampersand-subcollection/node_modules/backbone-events-standalone/index.js","underscore":"/home/debjani/Desktop/newstochss/stochss/app/static/modelEditor/node_modules/underscore/underscore.js"}],"/home/debjani/Desktop/newstochss/stochss/app/static/modelEditor/node_modules/ampersand-subcollection/node_modules/ampersand-class-extend/ampersand-class-extend.js":[function(require,module,exports){
+arguments[4]["/home/debjani/Desktop/newstochss/stochss/app/static/modelEditor/node_modules/ampersand-collection/node_modules/ampersand-class-extend/ampersand-class-extend.js"][0].apply(exports,arguments)
+},{"extend-object":"/home/debjani/Desktop/newstochss/stochss/app/static/modelEditor/node_modules/ampersand-subcollection/node_modules/ampersand-class-extend/node_modules/extend-object/extend-object.js"}],"/home/debjani/Desktop/newstochss/stochss/app/static/modelEditor/node_modules/ampersand-subcollection/node_modules/ampersand-class-extend/node_modules/extend-object/extend-object.js":[function(require,module,exports){
+arguments[4]["/home/debjani/Desktop/newstochss/stochss/app/static/modelEditor/node_modules/ampersand-rest-collection/node_modules/ampersand-collection-rest-mixin/node_modules/extend-object/extend-object.js"][0].apply(exports,arguments)
+},{}],"/home/debjani/Desktop/newstochss/stochss/app/static/modelEditor/node_modules/ampersand-subcollection/node_modules/ampersand-collection-underscore-mixin/ampersand-collection-underscore-mixin.js":[function(require,module,exports){
+arguments[4]["/home/debjani/Desktop/newstochss/stochss/app/static/modelEditor/node_modules/ampersand-rest-collection/node_modules/ampersand-collection-underscore-mixin/ampersand-collection-underscore-mixin.js"][0].apply(exports,arguments)
+},{"underscore":"/home/debjani/Desktop/newstochss/stochss/app/static/modelEditor/node_modules/underscore/underscore.js"}],"/home/debjani/Desktop/newstochss/stochss/app/static/modelEditor/node_modules/ampersand-subcollection/node_modules/backbone-events-standalone/backbone-events-standalone.js":[function(require,module,exports){
+arguments[4]["/home/debjani/Desktop/newstochss/stochss/app/static/modelEditor/node_modules/ampersand-state/node_modules/backbone-events-standalone/backbone-events-standalone.js"][0].apply(exports,arguments)
+},{}],"/home/debjani/Desktop/newstochss/stochss/app/static/modelEditor/node_modules/ampersand-subcollection/node_modules/backbone-events-standalone/index.js":[function(require,module,exports){
+arguments[4]["/home/debjani/Desktop/newstochss/stochss/app/static/modelEditor/node_modules/ampersand-state/node_modules/backbone-events-standalone/index.js"][0].apply(exports,arguments)
+},{"./backbone-events-standalone":"/home/debjani/Desktop/newstochss/stochss/app/static/modelEditor/node_modules/ampersand-subcollection/node_modules/backbone-events-standalone/backbone-events-standalone.js"}],"/home/debjani/Desktop/newstochss/stochss/app/static/modelEditor/node_modules/ampersand-view/ampersand-view.js":[function(require,module,exports){
 ;if (typeof window !== "undefined") {  window.ampersand = window.ampersand || {};  window.ampersand["ampersand-view"] = window.ampersand["ampersand-view"] || [];  window.ampersand["ampersand-view"].push("7.2.0");}
 var State = require('ampersand-state');
 var CollectionView = require('ampersand-collection-view');
@@ -11291,8 +11412,8 @@ _.extend(View.prototype, {
 View.extend = BaseState.extend;
 module.exports = View;
 
-},{"ampersand-collection-view":"/home/bbales2/stochssModel/app/static/modelEditor/node_modules/ampersand-view/node_modules/ampersand-collection-view/ampersand-collection-view.js","ampersand-dom-bindings":"/home/bbales2/stochssModel/app/static/modelEditor/node_modules/ampersand-view/node_modules/ampersand-dom-bindings/ampersand-dom-bindings.js","ampersand-state":"/home/bbales2/stochssModel/app/static/modelEditor/node_modules/ampersand-state/ampersand-state.js","domify":"/home/bbales2/stochssModel/app/static/modelEditor/node_modules/domify/index.js","events-mixin":"/home/bbales2/stochssModel/app/static/modelEditor/node_modules/ampersand-view/node_modules/events-mixin/index.js","get-object-path":"/home/bbales2/stochssModel/app/static/modelEditor/node_modules/ampersand-view/node_modules/get-object-path/index.js","matches-selector":"/home/bbales2/stochssModel/app/static/modelEditor/node_modules/ampersand-view/node_modules/matches-selector/index.js","underscore":"/home/bbales2/stochssModel/app/static/modelEditor/node_modules/ampersand-view/node_modules/underscore/underscore.js"}],"/home/bbales2/stochssModel/app/static/modelEditor/node_modules/ampersand-view/node_modules/ampersand-collection-view/ampersand-collection-view.js":[function(require,module,exports){
-;if (typeof window !== "undefined") {  window.ampersand = window.ampersand || {};  window.ampersand["ampersand-collection-view"] = window.ampersand["ampersand-collection-view"] || [];  window.ampersand["ampersand-collection-view"].push("1.2.0");}
+},{"ampersand-collection-view":"/home/debjani/Desktop/newstochss/stochss/app/static/modelEditor/node_modules/ampersand-view/node_modules/ampersand-collection-view/ampersand-collection-view.js","ampersand-dom-bindings":"/home/debjani/Desktop/newstochss/stochss/app/static/modelEditor/node_modules/ampersand-view/node_modules/ampersand-dom-bindings/ampersand-dom-bindings.js","ampersand-state":"/home/debjani/Desktop/newstochss/stochss/app/static/modelEditor/node_modules/ampersand-state/ampersand-state.js","domify":"/home/debjani/Desktop/newstochss/stochss/app/static/modelEditor/node_modules/domify/index.js","events-mixin":"/home/debjani/Desktop/newstochss/stochss/app/static/modelEditor/node_modules/ampersand-view/node_modules/events-mixin/index.js","get-object-path":"/home/debjani/Desktop/newstochss/stochss/app/static/modelEditor/node_modules/ampersand-view/node_modules/get-object-path/index.js","matches-selector":"/home/debjani/Desktop/newstochss/stochss/app/static/modelEditor/node_modules/ampersand-view/node_modules/matches-selector/index.js","underscore":"/home/debjani/Desktop/newstochss/stochss/app/static/modelEditor/node_modules/ampersand-view/node_modules/underscore/underscore.js"}],"/home/debjani/Desktop/newstochss/stochss/app/static/modelEditor/node_modules/ampersand-view/node_modules/ampersand-collection-view/ampersand-collection-view.js":[function(require,module,exports){
+;if (typeof window !== "undefined") {  window.ampersand = window.ampersand || {};  window.ampersand["ampersand-collection-view"] = window.ampersand["ampersand-collection-view"] || [];  window.ampersand["ampersand-collection-view"].push("1.2.1");}
 var _ = require('underscore');
 var BBEvents = require('backbone-events-standalone');
 var ampExtend = require('ampersand-class-extend');
@@ -11352,6 +11473,7 @@ _.extend(CollectionView.prototype, BBEvents, {
         }
         if (this.renderedEmptyView) {
             this.renderedEmptyView.remove();
+            delete this.renderedEmptyView;
         }
         var view = this._getOrCreateByModel(model, {containerEl: this.el});
         if (options && options.rerender) {
@@ -11427,7 +11549,7 @@ _.extend(CollectionView.prototype, BBEvents, {
         }, this);
     },
     _renderEmptyView: function() {
-        if (this.emptyView) {
+        if (this.emptyView && !this.renderedEmptyView) {
             var view = this.renderedEmptyView = new this.emptyView();
             this.el.appendChild(view.render().el);
         }
@@ -11452,11 +11574,292 @@ CollectionView.extend = ampExtend;
 
 module.exports = CollectionView;
 
-},{"ampersand-class-extend":"/home/bbales2/stochssModel/app/static/modelEditor/node_modules/ampersand-view/node_modules/ampersand-collection-view/node_modules/ampersand-class-extend/ampersand-class-extend.js","backbone-events-standalone":"/home/bbales2/stochssModel/app/static/modelEditor/node_modules/ampersand-view/node_modules/ampersand-collection-view/node_modules/backbone-events-standalone/index.js","underscore":"/home/bbales2/stochssModel/app/static/modelEditor/node_modules/ampersand-view/node_modules/underscore/underscore.js"}],"/home/bbales2/stochssModel/app/static/modelEditor/node_modules/ampersand-view/node_modules/ampersand-collection-view/node_modules/ampersand-class-extend/ampersand-class-extend.js":[function(require,module,exports){
-module.exports=require("/home/bbales2/stochssModel/app/static/modelEditor/node_modules/ampersand-subcollection/node_modules/ampersand-class-extend/ampersand-class-extend.js")
-},{"/home/bbales2/stochssModel/app/static/modelEditor/node_modules/ampersand-subcollection/node_modules/ampersand-class-extend/ampersand-class-extend.js":"/home/bbales2/stochssModel/app/static/modelEditor/node_modules/ampersand-subcollection/node_modules/ampersand-class-extend/ampersand-class-extend.js"}],"/home/bbales2/stochssModel/app/static/modelEditor/node_modules/ampersand-view/node_modules/ampersand-collection-view/node_modules/backbone-events-standalone/index.js":[function(require,module,exports){
-module.exports=require("/home/bbales2/stochssModel/app/static/modelEditor/node_modules/ampersand-form-view/node_modules/backbone-events-standalone/index.js")
-},{"/home/bbales2/stochssModel/app/static/modelEditor/node_modules/ampersand-form-view/node_modules/backbone-events-standalone/index.js":"/home/bbales2/stochssModel/app/static/modelEditor/node_modules/ampersand-form-view/node_modules/backbone-events-standalone/index.js"}],"/home/bbales2/stochssModel/app/static/modelEditor/node_modules/ampersand-view/node_modules/ampersand-dom-bindings/ampersand-dom-bindings.js":[function(require,module,exports){
+},{"ampersand-class-extend":"/home/debjani/Desktop/newstochss/stochss/app/static/modelEditor/node_modules/ampersand-view/node_modules/ampersand-collection-view/node_modules/ampersand-class-extend/ampersand-class-extend.js","backbone-events-standalone":"/home/debjani/Desktop/newstochss/stochss/app/static/modelEditor/node_modules/ampersand-view/node_modules/ampersand-collection-view/node_modules/backbone-events-standalone/index.js","underscore":"/home/debjani/Desktop/newstochss/stochss/app/static/modelEditor/node_modules/ampersand-view/node_modules/underscore/underscore.js"}],"/home/debjani/Desktop/newstochss/stochss/app/static/modelEditor/node_modules/ampersand-view/node_modules/ampersand-collection-view/node_modules/ampersand-class-extend/ampersand-class-extend.js":[function(require,module,exports){
+arguments[4]["/home/debjani/Desktop/newstochss/stochss/app/static/modelEditor/node_modules/ampersand-subcollection/node_modules/ampersand-class-extend/ampersand-class-extend.js"][0].apply(exports,arguments)
+},{"extend-object":"/home/debjani/Desktop/newstochss/stochss/app/static/modelEditor/node_modules/ampersand-view/node_modules/ampersand-collection-view/node_modules/ampersand-class-extend/node_modules/extend-object/extend-object.js"}],"/home/debjani/Desktop/newstochss/stochss/app/static/modelEditor/node_modules/ampersand-view/node_modules/ampersand-collection-view/node_modules/ampersand-class-extend/node_modules/extend-object/extend-object.js":[function(require,module,exports){
+arguments[4]["/home/debjani/Desktop/newstochss/stochss/app/static/modelEditor/node_modules/ampersand-subcollection/node_modules/ampersand-class-extend/node_modules/extend-object/extend-object.js"][0].apply(exports,arguments)
+},{}],"/home/debjani/Desktop/newstochss/stochss/app/static/modelEditor/node_modules/ampersand-view/node_modules/ampersand-collection-view/node_modules/backbone-events-standalone/backbone-events-standalone.js":[function(require,module,exports){
+/**
+ * Standalone extraction of Backbone.Events, no external dependency required.
+ * Degrades nicely when Backone/underscore are already available in the current
+ * global context.
+ *
+ * Note that docs suggest to use underscore's `_.extend()` method to add Events
+ * support to some given object. A `mixin()` method has been added to the Events
+ * prototype to avoid using underscore for that sole purpose:
+ *
+ *     var myEventEmitter = BackboneEvents.mixin({});
+ *
+ * Or for a function constructor:
+ *
+ *     function MyConstructor(){}
+ *     MyConstructor.prototype.foo = function(){}
+ *     BackboneEvents.mixin(MyConstructor.prototype);
+ *
+ * (c) 2009-2013 Jeremy Ashkenas, DocumentCloud Inc.
+ * (c) 2013 Nicolas Perriault
+ */
+/* global exports:true, define, module */
+(function() {
+  var root = this,
+      breaker = {},
+      nativeForEach = Array.prototype.forEach,
+      hasOwnProperty = Object.prototype.hasOwnProperty,
+      slice = Array.prototype.slice,
+      idCounter = 0;
+
+  // Returns a partial implementation matching the minimal API subset required
+  // by Backbone.Events
+  function miniscore() {
+    return {
+      keys: Object.keys || function (obj) {
+        if (typeof obj !== "object" && typeof obj !== "function" || obj === null) {
+          throw new TypeError("keys() called on a non-object");
+        }
+        var key, keys = [];
+        for (key in obj) {
+          if (obj.hasOwnProperty(key)) {
+            keys[keys.length] = key;
+          }
+        }
+        return keys;
+      },
+
+      uniqueId: function(prefix) {
+        var id = ++idCounter + '';
+        return prefix ? prefix + id : id;
+      },
+
+      has: function(obj, key) {
+        return hasOwnProperty.call(obj, key);
+      },
+
+      each: function(obj, iterator, context) {
+        if (obj == null) return;
+        if (nativeForEach && obj.forEach === nativeForEach) {
+          obj.forEach(iterator, context);
+        } else if (obj.length === +obj.length) {
+          for (var i = 0, l = obj.length; i < l; i++) {
+            if (iterator.call(context, obj[i], i, obj) === breaker) return;
+          }
+        } else {
+          for (var key in obj) {
+            if (this.has(obj, key)) {
+              if (iterator.call(context, obj[key], key, obj) === breaker) return;
+            }
+          }
+        }
+      },
+
+      once: function(func) {
+        var ran = false, memo;
+        return function() {
+          if (ran) return memo;
+          ran = true;
+          memo = func.apply(this, arguments);
+          func = null;
+          return memo;
+        };
+      }
+    };
+  }
+
+  var _ = miniscore(), Events;
+
+  // Backbone.Events
+  // ---------------
+
+  // A module that can be mixed in to *any object* in order to provide it with
+  // custom events. You may bind with `on` or remove with `off` callback
+  // functions to an event; `trigger`-ing an event fires all callbacks in
+  // succession.
+  //
+  //     var object = {};
+  //     _.extend(object, Backbone.Events);
+  //     object.on('expand', function(){ alert('expanded'); });
+  //     object.trigger('expand');
+  //
+  Events = {
+
+    // Bind an event to a `callback` function. Passing `"all"` will bind
+    // the callback to all events fired.
+    on: function(name, callback, context) {
+      if (!eventsApi(this, 'on', name, [callback, context]) || !callback) return this;
+      this._events || (this._events = {});
+      var events = this._events[name] || (this._events[name] = []);
+      events.push({callback: callback, context: context, ctx: context || this});
+      return this;
+    },
+
+    // Bind an event to only be triggered a single time. After the first time
+    // the callback is invoked, it will be removed.
+    once: function(name, callback, context) {
+      if (!eventsApi(this, 'once', name, [callback, context]) || !callback) return this;
+      var self = this;
+      var once = _.once(function() {
+        self.off(name, once);
+        callback.apply(this, arguments);
+      });
+      once._callback = callback;
+      return this.on(name, once, context);
+    },
+
+    // Remove one or many callbacks. If `context` is null, removes all
+    // callbacks with that function. If `callback` is null, removes all
+    // callbacks for the event. If `name` is null, removes all bound
+    // callbacks for all events.
+    off: function(name, callback, context) {
+      var retain, ev, events, names, i, l, j, k;
+      if (!this._events || !eventsApi(this, 'off', name, [callback, context])) return this;
+      if (!name && !callback && !context) {
+        this._events = {};
+        return this;
+      }
+
+      names = name ? [name] : _.keys(this._events);
+      for (i = 0, l = names.length; i < l; i++) {
+        name = names[i];
+        if (events = this._events[name]) {
+          this._events[name] = retain = [];
+          if (callback || context) {
+            for (j = 0, k = events.length; j < k; j++) {
+              ev = events[j];
+              if ((callback && callback !== ev.callback && callback !== ev.callback._callback) ||
+                  (context && context !== ev.context)) {
+                retain.push(ev);
+              }
+            }
+          }
+          if (!retain.length) delete this._events[name];
+        }
+      }
+
+      return this;
+    },
+
+    // Trigger one or many events, firing all bound callbacks. Callbacks are
+    // passed the same arguments as `trigger` is, apart from the event name
+    // (unless you're listening on `"all"`, which will cause your callback to
+    // receive the true name of the event as the first argument).
+    trigger: function(name) {
+      if (!this._events) return this;
+      var args = slice.call(arguments, 1);
+      if (!eventsApi(this, 'trigger', name, args)) return this;
+      var events = this._events[name];
+      var allEvents = this._events.all;
+      if (events) triggerEvents(events, args);
+      if (allEvents) triggerEvents(allEvents, arguments);
+      return this;
+    },
+
+    // Tell this object to stop listening to either specific events ... or
+    // to every object it's currently listening to.
+    stopListening: function(obj, name, callback) {
+      var listeners = this._listeners;
+      if (!listeners) return this;
+      var deleteListener = !name && !callback;
+      if (typeof name === 'object') callback = this;
+      if (obj) (listeners = {})[obj._listenerId] = obj;
+      for (var id in listeners) {
+        listeners[id].off(name, callback, this);
+        if (deleteListener) delete this._listeners[id];
+      }
+      return this;
+    }
+
+  };
+
+  // Regular expression used to split event strings.
+  var eventSplitter = /\s+/;
+
+  // Implement fancy features of the Events API such as multiple event
+  // names `"change blur"` and jQuery-style event maps `{change: action}`
+  // in terms of the existing API.
+  var eventsApi = function(obj, action, name, rest) {
+    if (!name) return true;
+
+    // Handle event maps.
+    if (typeof name === 'object') {
+      for (var key in name) {
+        obj[action].apply(obj, [key, name[key]].concat(rest));
+      }
+      return false;
+    }
+
+    // Handle space separated event names.
+    if (eventSplitter.test(name)) {
+      var names = name.split(eventSplitter);
+      for (var i = 0, l = names.length; i < l; i++) {
+        obj[action].apply(obj, [names[i]].concat(rest));
+      }
+      return false;
+    }
+
+    return true;
+  };
+
+  // A difficult-to-believe, but optimized internal dispatch function for
+  // triggering events. Tries to keep the usual cases speedy (most internal
+  // Backbone events have 3 arguments).
+  var triggerEvents = function(events, args) {
+    var ev, i = -1, l = events.length, a1 = args[0], a2 = args[1], a3 = args[2];
+    switch (args.length) {
+      case 0: while (++i < l) (ev = events[i]).callback.call(ev.ctx); return;
+      case 1: while (++i < l) (ev = events[i]).callback.call(ev.ctx, a1); return;
+      case 2: while (++i < l) (ev = events[i]).callback.call(ev.ctx, a1, a2); return;
+      case 3: while (++i < l) (ev = events[i]).callback.call(ev.ctx, a1, a2, a3); return;
+      default: while (++i < l) (ev = events[i]).callback.apply(ev.ctx, args);
+    }
+  };
+
+  var listenMethods = {listenTo: 'on', listenToOnce: 'once'};
+
+  // Inversion-of-control versions of `on` and `once`. Tell *this* object to
+  // listen to an event in another object ... keeping track of what it's
+  // listening to.
+  _.each(listenMethods, function(implementation, method) {
+    Events[method] = function(obj, name, callback) {
+      var listeners = this._listeners || (this._listeners = {});
+      var id = obj._listenerId || (obj._listenerId = _.uniqueId('l'));
+      listeners[id] = obj;
+      if (typeof name === 'object') callback = this;
+      obj[implementation](name, callback, this);
+      return this;
+    };
+  });
+
+  // Aliases for backwards compatibility.
+  Events.bind   = Events.on;
+  Events.unbind = Events.off;
+
+  // Mixin utility
+  Events.mixin = function(proto) {
+    var exports = ['on', 'once', 'off', 'trigger', 'stopListening', 'listenTo',
+                   'listenToOnce', 'bind', 'unbind'];
+    _.each(exports, function(name) {
+      proto[name] = this[name];
+    }, this);
+    return proto;
+  };
+
+  // Export Events as BackboneEvents depending on current context
+  if (typeof define === "function") {
+    define(function() {
+      return Events;
+    });
+  } else if (typeof exports !== 'undefined') {
+    if (typeof module !== 'undefined' && module.exports) {
+      exports = module.exports = Events;
+    }
+    exports.BackboneEvents = Events;
+  } else {
+    root.BackboneEvents = Events;
+  }
+})(this);
+
+},{}],"/home/debjani/Desktop/newstochss/stochss/app/static/modelEditor/node_modules/ampersand-view/node_modules/ampersand-collection-view/node_modules/backbone-events-standalone/index.js":[function(require,module,exports){
+arguments[4]["/home/debjani/Desktop/newstochss/stochss/app/static/modelEditor/node_modules/ampersand-subcollection/node_modules/backbone-events-standalone/index.js"][0].apply(exports,arguments)
+},{"./backbone-events-standalone":"/home/debjani/Desktop/newstochss/stochss/app/static/modelEditor/node_modules/ampersand-view/node_modules/ampersand-collection-view/node_modules/backbone-events-standalone/backbone-events-standalone.js"}],"/home/debjani/Desktop/newstochss/stochss/app/static/modelEditor/node_modules/ampersand-view/node_modules/ampersand-dom-bindings/ampersand-dom-bindings.js":[function(require,module,exports){
 ;if (typeof window !== "undefined") {  window.ampersand = window.ampersand || {};  window.ampersand["ampersand-dom-bindings"] = window.ampersand["ampersand-dom-bindings"] || [];  window.ampersand["ampersand-dom-bindings"].push("3.3.3");}
 var Store = require('key-tree-store');
 var dom = require('ampersand-dom');
@@ -11650,7 +12053,7 @@ function getBindingFunc(binding, context) {
     }
 }
 
-},{"ampersand-dom":"/home/bbales2/stochssModel/app/static/modelEditor/node_modules/ampersand-dom/ampersand-dom.js","key-tree-store":"/home/bbales2/stochssModel/app/static/modelEditor/node_modules/ampersand-view/node_modules/ampersand-dom-bindings/node_modules/key-tree-store/key-tree-store.js","matches-selector":"/home/bbales2/stochssModel/app/static/modelEditor/node_modules/ampersand-view/node_modules/matches-selector/index.js"}],"/home/bbales2/stochssModel/app/static/modelEditor/node_modules/ampersand-view/node_modules/ampersand-dom-bindings/node_modules/key-tree-store/key-tree-store.js":[function(require,module,exports){
+},{"ampersand-dom":"/home/debjani/Desktop/newstochss/stochss/app/static/modelEditor/node_modules/ampersand-dom/ampersand-dom.js","key-tree-store":"/home/debjani/Desktop/newstochss/stochss/app/static/modelEditor/node_modules/ampersand-view/node_modules/ampersand-dom-bindings/node_modules/key-tree-store/key-tree-store.js","matches-selector":"/home/debjani/Desktop/newstochss/stochss/app/static/modelEditor/node_modules/ampersand-view/node_modules/matches-selector/index.js"}],"/home/debjani/Desktop/newstochss/stochss/app/static/modelEditor/node_modules/ampersand-view/node_modules/ampersand-dom-bindings/node_modules/key-tree-store/key-tree-store.js":[function(require,module,exports){
 var slice = Array.prototype.slice;
 
 // our constructor
@@ -11732,7 +12135,7 @@ KeyTreeStore.prototype.run = function (keypath, context) {
 
 module.exports = KeyTreeStore;
 
-},{}],"/home/bbales2/stochssModel/app/static/modelEditor/node_modules/ampersand-view/node_modules/events-mixin/index.js":[function(require,module,exports){
+},{}],"/home/debjani/Desktop/newstochss/stochss/app/static/modelEditor/node_modules/ampersand-view/node_modules/events-mixin/index.js":[function(require,module,exports){
 
 /**
  * Module dependencies.
@@ -11813,7 +12216,17 @@ Events.prototype.bind = function(event, method){
   // callback
   function cb(){
     var a = [].slice.call(arguments).concat(args);
-    obj[method].apply(obj, a);
+
+    if (typeof method === 'function') {
+        method.apply(obj, a);    
+        return;
+    }
+    
+    if (!obj[method]) {
+        throw new Error(method + ' method is not defined');
+    } else {
+        obj[method].apply(obj, a);
+    }
   }
 
   // bind
@@ -11912,7 +12325,7 @@ function parse(event) {
   }
 }
 
-},{"component-event":"/home/bbales2/stochssModel/app/static/modelEditor/node_modules/ampersand-view/node_modules/events-mixin/node_modules/component-event/index.js","delegate-events":"/home/bbales2/stochssModel/app/static/modelEditor/node_modules/ampersand-view/node_modules/events-mixin/node_modules/delegate-events/index.js"}],"/home/bbales2/stochssModel/app/static/modelEditor/node_modules/ampersand-view/node_modules/events-mixin/node_modules/component-event/index.js":[function(require,module,exports){
+},{"component-event":"/home/debjani/Desktop/newstochss/stochss/app/static/modelEditor/node_modules/ampersand-view/node_modules/events-mixin/node_modules/component-event/index.js","delegate-events":"/home/debjani/Desktop/newstochss/stochss/app/static/modelEditor/node_modules/ampersand-view/node_modules/events-mixin/node_modules/delegate-events/index.js"}],"/home/debjani/Desktop/newstochss/stochss/app/static/modelEditor/node_modules/ampersand-view/node_modules/events-mixin/node_modules/component-event/index.js":[function(require,module,exports){
 var bind = window.addEventListener ? 'addEventListener' : 'attachEvent',
     unbind = window.removeEventListener ? 'removeEventListener' : 'detachEvent',
     prefix = bind !== 'addEventListener' ? 'on' : '';
@@ -11948,7 +12361,7 @@ exports.unbind = function(el, type, fn, capture){
   el[unbind](prefix + type, fn, capture || false);
   return fn;
 };
-},{}],"/home/bbales2/stochssModel/app/static/modelEditor/node_modules/ampersand-view/node_modules/events-mixin/node_modules/delegate-events/index.js":[function(require,module,exports){
+},{}],"/home/debjani/Desktop/newstochss/stochss/app/static/modelEditor/node_modules/ampersand-view/node_modules/events-mixin/node_modules/delegate-events/index.js":[function(require,module,exports){
 /**
  * Module dependencies.
  */
@@ -12000,7 +12413,7 @@ exports.unbind = function(el, type, fn, capture){
   event.unbind(el, type, fn, capture);
 };
 
-},{"closest":"/home/bbales2/stochssModel/app/static/modelEditor/node_modules/ampersand-view/node_modules/events-mixin/node_modules/delegate-events/node_modules/closest/index.js","event":"/home/bbales2/stochssModel/app/static/modelEditor/node_modules/ampersand-view/node_modules/events-mixin/node_modules/component-event/index.js"}],"/home/bbales2/stochssModel/app/static/modelEditor/node_modules/ampersand-view/node_modules/events-mixin/node_modules/delegate-events/node_modules/closest/index.js":[function(require,module,exports){
+},{"closest":"/home/debjani/Desktop/newstochss/stochss/app/static/modelEditor/node_modules/ampersand-view/node_modules/events-mixin/node_modules/delegate-events/node_modules/closest/index.js","event":"/home/debjani/Desktop/newstochss/stochss/app/static/modelEditor/node_modules/ampersand-view/node_modules/events-mixin/node_modules/component-event/index.js"}],"/home/debjani/Desktop/newstochss/stochss/app/static/modelEditor/node_modules/ampersand-view/node_modules/events-mixin/node_modules/delegate-events/node_modules/closest/index.js":[function(require,module,exports){
 var matches = require('matches-selector')
 
 module.exports = function (element, selector, checkYoSelf) {
@@ -12012,7 +12425,7 @@ module.exports = function (element, selector, checkYoSelf) {
   }
 }
 
-},{"matches-selector":"/home/bbales2/stochssModel/app/static/modelEditor/node_modules/ampersand-view/node_modules/events-mixin/node_modules/delegate-events/node_modules/closest/node_modules/matches-selector/index.js"}],"/home/bbales2/stochssModel/app/static/modelEditor/node_modules/ampersand-view/node_modules/events-mixin/node_modules/delegate-events/node_modules/closest/node_modules/matches-selector/index.js":[function(require,module,exports){
+},{"matches-selector":"/home/debjani/Desktop/newstochss/stochss/app/static/modelEditor/node_modules/ampersand-view/node_modules/events-mixin/node_modules/delegate-events/node_modules/closest/node_modules/matches-selector/index.js"}],"/home/debjani/Desktop/newstochss/stochss/app/static/modelEditor/node_modules/ampersand-view/node_modules/events-mixin/node_modules/delegate-events/node_modules/closest/node_modules/matches-selector/index.js":[function(require,module,exports){
 
 /**
  * Element prototype.
@@ -12053,7 +12466,7 @@ function match(el, selector) {
   }
   return false;
 }
-},{}],"/home/bbales2/stochssModel/app/static/modelEditor/node_modules/ampersand-view/node_modules/get-object-path/index.js":[function(require,module,exports){
+},{}],"/home/debjani/Desktop/newstochss/stochss/app/static/modelEditor/node_modules/ampersand-view/node_modules/get-object-path/index.js":[function(require,module,exports){
 module.exports = get;
 
 function get (context, path) {
@@ -12076,39 +12489,11 @@ function get (context, path) {
   return result;
 }
 
-},{}],"/home/bbales2/stochssModel/app/static/modelEditor/node_modules/ampersand-view/node_modules/matches-selector/index.js":[function(require,module,exports){
-'use strict';
-
-var proto = Element.prototype;
-var vendor = proto.matches
-  || proto.matchesSelector
-  || proto.webkitMatchesSelector
-  || proto.mozMatchesSelector
-  || proto.msMatchesSelector
-  || proto.oMatchesSelector;
-
-module.exports = match;
-
-/**
- * Match `el` to `selector`.
- *
- * @param {Element} el
- * @param {String} selector
- * @return {Boolean}
- * @api public
- */
-
-function match(el, selector) {
-  if (vendor) return vendor.call(el, selector);
-  var nodes = el.parentNode.querySelectorAll(selector);
-  for (var i = 0; i < nodes.length; i++) {
-    if (nodes[i] == el) return true;
-  }
-  return false;
-}
-},{}],"/home/bbales2/stochssModel/app/static/modelEditor/node_modules/ampersand-view/node_modules/underscore/underscore.js":[function(require,module,exports){
-module.exports=require("/home/bbales2/stochssModel/app/static/modelEditor/node_modules/ampersand-model/node_modules/ampersand-sync/node_modules/underscore/underscore.js")
-},{"/home/bbales2/stochssModel/app/static/modelEditor/node_modules/ampersand-model/node_modules/ampersand-sync/node_modules/underscore/underscore.js":"/home/bbales2/stochssModel/app/static/modelEditor/node_modules/ampersand-model/node_modules/ampersand-sync/node_modules/underscore/underscore.js"}],"/home/bbales2/stochssModel/app/static/modelEditor/node_modules/andlog/andlog.js":[function(require,module,exports){
+},{}],"/home/debjani/Desktop/newstochss/stochss/app/static/modelEditor/node_modules/ampersand-view/node_modules/matches-selector/index.js":[function(require,module,exports){
+arguments[4]["/home/debjani/Desktop/newstochss/stochss/app/static/modelEditor/node_modules/ampersand-select-view/node_modules/matches-selector/index.js"][0].apply(exports,arguments)
+},{}],"/home/debjani/Desktop/newstochss/stochss/app/static/modelEditor/node_modules/ampersand-view/node_modules/underscore/underscore.js":[function(require,module,exports){
+arguments[4]["/home/debjani/Desktop/newstochss/stochss/app/static/modelEditor/node_modules/ampersand-rest-collection/node_modules/ampersand-collection-rest-mixin/node_modules/ampersand-sync/node_modules/underscore/underscore.js"][0].apply(exports,arguments)
+},{}],"/home/debjani/Desktop/newstochss/stochss/app/static/modelEditor/node_modules/andlog/andlog.js":[function(require,module,exports){
 // follow @HenrikJoreteg and @andyet if you like this ;)
 (function () {
     var inNode = typeof window === 'undefined',
@@ -12139,9 +12524,9 @@ module.exports=require("/home/bbales2/stochssModel/app/static/modelEditor/node_m
     }
 })();
 
-},{}],"/home/bbales2/stochssModel/app/static/modelEditor/node_modules/blueimp-file-upload/js/jquery.fileupload.js":[function(require,module,exports){
+},{}],"/home/debjani/Desktop/newstochss/stochss/app/static/modelEditor/node_modules/blueimp-file-upload/js/jquery.fileupload.js":[function(require,module,exports){
 /*
- * jQuery File Upload Plugin 5.42.2
+ * jQuery File Upload Plugin 5.42.3
  * https://github.com/blueimp/jQuery-File-Upload
  *
  * Copyright 2010, Sebastian Tschan
@@ -13486,18 +13871,19 @@ module.exports=require("/home/bbales2/stochssModel/app/static/modelEditor/node_m
         _initDataAttributes: function () {
             var that = this,
                 options = this.options,
-                clone = $(this.element[0].cloneNode(false)),
-                data = clone.data();
-            // Avoid memory leaks:
-            clone.remove();
+                data = this.element.data();
             // Initialize options set via HTML5 data-attributes:
             $.each(
-                data,
-                function (key, value) {
-                    var dataAttributeName = 'data-' +
-                        // Convert camelCase to hyphen-ated key:
-                        key.replace(/([a-z])([A-Z])/g, '$1-$2').toLowerCase();
-                    if (clone.attr(dataAttributeName)) {
+                this.element[0].attributes,
+                function (index, attr) {
+                    var key = attr.name.toLowerCase(),
+                        value;
+                    if (/^data-/.test(key)) {
+                        // Convert hyphen-ated key to camelCase:
+                        key = key.slice(5).replace(/-[a-z]/g, function (str) {
+                            return str.charAt(1).toUpperCase();
+                        });
+                        value = data[key];
                         if (that._isRegExpOption(key, value)) {
                             value = that._getRegExp(value);
                         }
@@ -13607,7 +13993,7 @@ module.exports=require("/home/bbales2/stochssModel/app/static/modelEditor/node_m
 
 }));
 
-},{"./vendor/jquery.ui.widget":"/home/bbales2/stochssModel/app/static/modelEditor/node_modules/blueimp-file-upload/js/vendor/jquery.ui.widget.js","jquery":"/home/bbales2/stochssModel/app/static/modelEditor/node_modules/jquery/dist/jquery.js"}],"/home/bbales2/stochssModel/app/static/modelEditor/node_modules/blueimp-file-upload/js/vendor/jquery.ui.widget.js":[function(require,module,exports){
+},{"./vendor/jquery.ui.widget":"/home/debjani/Desktop/newstochss/stochss/app/static/modelEditor/node_modules/blueimp-file-upload/js/vendor/jquery.ui.widget.js","jquery":"/home/debjani/Desktop/newstochss/stochss/app/static/modelEditor/node_modules/jquery/dist/jquery.js"}],"/home/debjani/Desktop/newstochss/stochss/app/static/modelEditor/node_modules/blueimp-file-upload/js/vendor/jquery.ui.widget.js":[function(require,module,exports){
 /*! jQuery UI - v1.11.1+CommonJS - 2014-09-17
 * http://jqueryui.com
 * Includes: widget.js
@@ -14172,7 +14558,7 @@ var widget = $.widget;
 
 }));
 
-},{"jquery":"/home/bbales2/stochssModel/app/static/modelEditor/node_modules/jquery/dist/jquery.js"}],"/home/bbales2/stochssModel/app/static/modelEditor/node_modules/clientconfig/clientconfig.js":[function(require,module,exports){
+},{"jquery":"/home/debjani/Desktop/newstochss/stochss/app/static/modelEditor/node_modules/jquery/dist/jquery.js"}],"/home/debjani/Desktop/newstochss/stochss/app/static/modelEditor/node_modules/clientconfig/clientconfig.js":[function(require,module,exports){
 var cookies = require('cookie-getter'),
     config = cookies('config') || {};
 
@@ -14187,7 +14573,7 @@ document.cookie = 'config=;expires=Thu, 01 Jan 1970 00:00:00 GMT';
 // export it
 module.exports = config;
 
-},{"cookie-getter":"/home/bbales2/stochssModel/app/static/modelEditor/node_modules/clientconfig/node_modules/cookie-getter/cookie-getter.js"}],"/home/bbales2/stochssModel/app/static/modelEditor/node_modules/clientconfig/node_modules/cookie-getter/cookie-getter.js":[function(require,module,exports){
+},{"cookie-getter":"/home/debjani/Desktop/newstochss/stochss/app/static/modelEditor/node_modules/clientconfig/node_modules/cookie-getter/cookie-getter.js"}],"/home/debjani/Desktop/newstochss/stochss/app/static/modelEditor/node_modules/clientconfig/node_modules/cookie-getter/cookie-getter.js":[function(require,module,exports){
 // simple commonJS cookie reader, best perf according to http://jsperf.com/cookie-parsing
 module.exports = function (name) {
     var cookie = document.cookie,
@@ -14199,7 +14585,7 @@ module.exports = function (name) {
     return (res.charAt(0) === '{') ? JSON.parse(res) : res;
 };
 
-},{}],"/home/bbales2/stochssModel/app/static/modelEditor/node_modules/domify/index.js":[function(require,module,exports){
+},{}],"/home/debjani/Desktop/newstochss/stochss/app/static/modelEditor/node_modules/domify/index.js":[function(require,module,exports){
 
 /**
  * Expose `parse`.
@@ -14308,7 +14694,7 @@ function parse(html, doc) {
   return fragment;
 }
 
-},{}],"/home/bbales2/stochssModel/app/static/modelEditor/node_modules/domready/ready.js":[function(require,module,exports){
+},{}],"/home/debjani/Desktop/newstochss/stochss/app/static/modelEditor/node_modules/domready/ready.js":[function(require,module,exports){
 /*!
   * domready (c) Dustin Diaz 2014 - License MIT
   */
@@ -14340,7 +14726,7 @@ function parse(html, doc) {
 
 });
 
-},{}],"/home/bbales2/stochssModel/app/static/modelEditor/node_modules/jquery/dist/jquery.js":[function(require,module,exports){
+},{}],"/home/debjani/Desktop/newstochss/stochss/app/static/modelEditor/node_modules/jquery/dist/jquery.js":[function(require,module,exports){
 /*!
  * jQuery JavaScript Library v2.1.3
  * http://jquery.com/
@@ -23547,7 +23933,7 @@ return jQuery;
 
 }));
 
-},{}],"/home/bbales2/stochssModel/app/static/modelEditor/node_modules/katex/katex.js":[function(require,module,exports){
+},{}],"/home/debjani/Desktop/newstochss/stochss/app/static/modelEditor/node_modules/katex/katex.js":[function(require,module,exports){
 /**
  * This is the main entry point for KaTeX. Here, we expose functions for
  * rendering expressions either to DOM nodes or to markup strings.
@@ -23603,7 +23989,7 @@ module.exports = {
     ParseError: ParseError
 };
 
-},{"./src/ParseError":"/home/bbales2/stochssModel/app/static/modelEditor/node_modules/katex/src/ParseError.js","./src/buildTree":"/home/bbales2/stochssModel/app/static/modelEditor/node_modules/katex/src/buildTree.js","./src/parseTree":"/home/bbales2/stochssModel/app/static/modelEditor/node_modules/katex/src/parseTree.js","./src/utils":"/home/bbales2/stochssModel/app/static/modelEditor/node_modules/katex/src/utils.js"}],"/home/bbales2/stochssModel/app/static/modelEditor/node_modules/katex/src/Lexer.js":[function(require,module,exports){
+},{"./src/ParseError":"/home/debjani/Desktop/newstochss/stochss/app/static/modelEditor/node_modules/katex/src/ParseError.js","./src/buildTree":"/home/debjani/Desktop/newstochss/stochss/app/static/modelEditor/node_modules/katex/src/buildTree.js","./src/parseTree":"/home/debjani/Desktop/newstochss/stochss/app/static/modelEditor/node_modules/katex/src/parseTree.js","./src/utils":"/home/debjani/Desktop/newstochss/stochss/app/static/modelEditor/node_modules/katex/src/utils.js"}],"/home/debjani/Desktop/newstochss/stochss/app/static/modelEditor/node_modules/katex/src/Lexer.js":[function(require,module,exports){
 /**
  * The Lexer class handles tokenizing the input in various ways. Since our
  * parser expects us to be able to backtrack, the lexer allows lexing from any
@@ -23795,7 +24181,7 @@ Lexer.prototype.lex = function(pos, mode) {
 
 module.exports = Lexer;
 
-},{"./ParseError":"/home/bbales2/stochssModel/app/static/modelEditor/node_modules/katex/src/ParseError.js"}],"/home/bbales2/stochssModel/app/static/modelEditor/node_modules/katex/src/Options.js":[function(require,module,exports){
+},{"./ParseError":"/home/debjani/Desktop/newstochss/stochss/app/static/modelEditor/node_modules/katex/src/ParseError.js"}],"/home/debjani/Desktop/newstochss/stochss/app/static/modelEditor/node_modules/katex/src/Options.js":[function(require,module,exports){
 /**
  * This file contains information about the options that the Parser carries
  * around with it while parsing. Data is held in an `Options` object, and when
@@ -23882,7 +24268,7 @@ Options.prototype.getColor = function() {
 
 module.exports = Options;
 
-},{}],"/home/bbales2/stochssModel/app/static/modelEditor/node_modules/katex/src/ParseError.js":[function(require,module,exports){
+},{}],"/home/debjani/Desktop/newstochss/stochss/app/static/modelEditor/node_modules/katex/src/ParseError.js":[function(require,module,exports){
 /**
  * This is the ParseError class, which is the main error thrown by KaTeX
  * functions when something has gone wrong. This is used to distinguish internal
@@ -23924,7 +24310,7 @@ ParseError.prototype.__proto__ = Error.prototype;
 
 module.exports = ParseError;
 
-},{}],"/home/bbales2/stochssModel/app/static/modelEditor/node_modules/katex/src/Parser.js":[function(require,module,exports){
+},{}],"/home/debjani/Desktop/newstochss/stochss/app/static/modelEditor/node_modules/katex/src/Parser.js":[function(require,module,exports){
 var functions = require("./functions");
 var Lexer = require("./Lexer");
 var symbols = require("./symbols");
@@ -24565,7 +24951,7 @@ Parser.prototype.parseSymbol = function(pos, mode) {
 
 module.exports = Parser;
 
-},{"./Lexer":"/home/bbales2/stochssModel/app/static/modelEditor/node_modules/katex/src/Lexer.js","./ParseError":"/home/bbales2/stochssModel/app/static/modelEditor/node_modules/katex/src/ParseError.js","./functions":"/home/bbales2/stochssModel/app/static/modelEditor/node_modules/katex/src/functions.js","./symbols":"/home/bbales2/stochssModel/app/static/modelEditor/node_modules/katex/src/symbols.js","./utils":"/home/bbales2/stochssModel/app/static/modelEditor/node_modules/katex/src/utils.js"}],"/home/bbales2/stochssModel/app/static/modelEditor/node_modules/katex/src/Style.js":[function(require,module,exports){
+},{"./Lexer":"/home/debjani/Desktop/newstochss/stochss/app/static/modelEditor/node_modules/katex/src/Lexer.js","./ParseError":"/home/debjani/Desktop/newstochss/stochss/app/static/modelEditor/node_modules/katex/src/ParseError.js","./functions":"/home/debjani/Desktop/newstochss/stochss/app/static/modelEditor/node_modules/katex/src/functions.js","./symbols":"/home/debjani/Desktop/newstochss/stochss/app/static/modelEditor/node_modules/katex/src/symbols.js","./utils":"/home/debjani/Desktop/newstochss/stochss/app/static/modelEditor/node_modules/katex/src/utils.js"}],"/home/debjani/Desktop/newstochss/stochss/app/static/modelEditor/node_modules/katex/src/Style.js":[function(require,module,exports){
 /**
  * This file contains information and classes for the various kinds of styles
  * used in TeX. It provides a generic `Style` class, which holds information
@@ -24693,7 +25079,7 @@ module.exports = {
     SCRIPTSCRIPT: styles[SS]
 };
 
-},{}],"/home/bbales2/stochssModel/app/static/modelEditor/node_modules/katex/src/buildCommon.js":[function(require,module,exports){
+},{}],"/home/debjani/Desktop/newstochss/stochss/app/static/modelEditor/node_modules/katex/src/buildCommon.js":[function(require,module,exports){
 /**
  * This module contains general functions that can be used for building
  * different kinds of domTree nodes in a consistent manner.
@@ -24966,7 +25352,7 @@ module.exports = {
     makeVList: makeVList
 };
 
-},{"./domTree":"/home/bbales2/stochssModel/app/static/modelEditor/node_modules/katex/src/domTree.js","./fontMetrics":"/home/bbales2/stochssModel/app/static/modelEditor/node_modules/katex/src/fontMetrics.js","./symbols":"/home/bbales2/stochssModel/app/static/modelEditor/node_modules/katex/src/symbols.js"}],"/home/bbales2/stochssModel/app/static/modelEditor/node_modules/katex/src/buildTree.js":[function(require,module,exports){
+},{"./domTree":"/home/debjani/Desktop/newstochss/stochss/app/static/modelEditor/node_modules/katex/src/domTree.js","./fontMetrics":"/home/debjani/Desktop/newstochss/stochss/app/static/modelEditor/node_modules/katex/src/fontMetrics.js","./symbols":"/home/debjani/Desktop/newstochss/stochss/app/static/modelEditor/node_modules/katex/src/symbols.js"}],"/home/debjani/Desktop/newstochss/stochss/app/static/modelEditor/node_modules/katex/src/buildTree.js":[function(require,module,exports){
 /**
  * This file does the main work of building a domTree structure from a parse
  * tree. The entry point is the `buildTree` function, which takes a parse tree.
@@ -26135,7 +26521,7 @@ var buildTree = function(tree) {
 
 module.exports = buildTree;
 
-},{"./Options":"/home/bbales2/stochssModel/app/static/modelEditor/node_modules/katex/src/Options.js","./ParseError":"/home/bbales2/stochssModel/app/static/modelEditor/node_modules/katex/src/ParseError.js","./Style":"/home/bbales2/stochssModel/app/static/modelEditor/node_modules/katex/src/Style.js","./buildCommon":"/home/bbales2/stochssModel/app/static/modelEditor/node_modules/katex/src/buildCommon.js","./delimiter":"/home/bbales2/stochssModel/app/static/modelEditor/node_modules/katex/src/delimiter.js","./domTree":"/home/bbales2/stochssModel/app/static/modelEditor/node_modules/katex/src/domTree.js","./fontMetrics":"/home/bbales2/stochssModel/app/static/modelEditor/node_modules/katex/src/fontMetrics.js","./utils":"/home/bbales2/stochssModel/app/static/modelEditor/node_modules/katex/src/utils.js"}],"/home/bbales2/stochssModel/app/static/modelEditor/node_modules/katex/src/delimiter.js":[function(require,module,exports){
+},{"./Options":"/home/debjani/Desktop/newstochss/stochss/app/static/modelEditor/node_modules/katex/src/Options.js","./ParseError":"/home/debjani/Desktop/newstochss/stochss/app/static/modelEditor/node_modules/katex/src/ParseError.js","./Style":"/home/debjani/Desktop/newstochss/stochss/app/static/modelEditor/node_modules/katex/src/Style.js","./buildCommon":"/home/debjani/Desktop/newstochss/stochss/app/static/modelEditor/node_modules/katex/src/buildCommon.js","./delimiter":"/home/debjani/Desktop/newstochss/stochss/app/static/modelEditor/node_modules/katex/src/delimiter.js","./domTree":"/home/debjani/Desktop/newstochss/stochss/app/static/modelEditor/node_modules/katex/src/domTree.js","./fontMetrics":"/home/debjani/Desktop/newstochss/stochss/app/static/modelEditor/node_modules/katex/src/fontMetrics.js","./utils":"/home/debjani/Desktop/newstochss/stochss/app/static/modelEditor/node_modules/katex/src/utils.js"}],"/home/debjani/Desktop/newstochss/stochss/app/static/modelEditor/node_modules/katex/src/delimiter.js":[function(require,module,exports){
 /**
  * This file deals with creating delimiters of various sizes. The TeXbook
  * discusses these routines on page 441-442, in the "Another subroutine sets box
@@ -26678,7 +27064,7 @@ module.exports = {
     leftRightDelim: makeLeftRightDelim
 };
 
-},{"./ParseError":"/home/bbales2/stochssModel/app/static/modelEditor/node_modules/katex/src/ParseError.js","./Style":"/home/bbales2/stochssModel/app/static/modelEditor/node_modules/katex/src/Style.js","./buildCommon":"/home/bbales2/stochssModel/app/static/modelEditor/node_modules/katex/src/buildCommon.js","./fontMetrics":"/home/bbales2/stochssModel/app/static/modelEditor/node_modules/katex/src/fontMetrics.js","./symbols":"/home/bbales2/stochssModel/app/static/modelEditor/node_modules/katex/src/symbols.js","./utils":"/home/bbales2/stochssModel/app/static/modelEditor/node_modules/katex/src/utils.js"}],"/home/bbales2/stochssModel/app/static/modelEditor/node_modules/katex/src/domTree.js":[function(require,module,exports){
+},{"./ParseError":"/home/debjani/Desktop/newstochss/stochss/app/static/modelEditor/node_modules/katex/src/ParseError.js","./Style":"/home/debjani/Desktop/newstochss/stochss/app/static/modelEditor/node_modules/katex/src/Style.js","./buildCommon":"/home/debjani/Desktop/newstochss/stochss/app/static/modelEditor/node_modules/katex/src/buildCommon.js","./fontMetrics":"/home/debjani/Desktop/newstochss/stochss/app/static/modelEditor/node_modules/katex/src/fontMetrics.js","./symbols":"/home/debjani/Desktop/newstochss/stochss/app/static/modelEditor/node_modules/katex/src/symbols.js","./utils":"/home/debjani/Desktop/newstochss/stochss/app/static/modelEditor/node_modules/katex/src/utils.js"}],"/home/debjani/Desktop/newstochss/stochss/app/static/modelEditor/node_modules/katex/src/domTree.js":[function(require,module,exports){
 /**
  * These objects store the data about the DOM nodes we create, as well as some
  * extra data. They can then be transformed into real DOM nodes with the toNode
@@ -26921,7 +27307,7 @@ module.exports = {
     symbolNode: symbolNode
 };
 
-},{"./utils":"/home/bbales2/stochssModel/app/static/modelEditor/node_modules/katex/src/utils.js"}],"/home/bbales2/stochssModel/app/static/modelEditor/node_modules/katex/src/fontMetrics.js":[function(require,module,exports){
+},{"./utils":"/home/debjani/Desktop/newstochss/stochss/app/static/modelEditor/node_modules/katex/src/utils.js"}],"/home/debjani/Desktop/newstochss/stochss/app/static/modelEditor/node_modules/katex/src/fontMetrics.js":[function(require,module,exports){
 /* jshint unused:false */
 
 var Style = require("./Style");
@@ -27052,7 +27438,7 @@ module.exports = {
     getCharacterMetrics: getCharacterMetrics
 };
 
-},{"./Style":"/home/bbales2/stochssModel/app/static/modelEditor/node_modules/katex/src/Style.js"}],"/home/bbales2/stochssModel/app/static/modelEditor/node_modules/katex/src/functions.js":[function(require,module,exports){
+},{"./Style":"/home/debjani/Desktop/newstochss/stochss/app/static/modelEditor/node_modules/katex/src/Style.js"}],"/home/debjani/Desktop/newstochss/stochss/app/static/modelEditor/node_modules/katex/src/functions.js":[function(require,module,exports){
 var utils = require("./utils");
 var ParseError = require("./ParseError");
 
@@ -27593,7 +27979,7 @@ module.exports = {
     getGreediness: getGreediness
 };
 
-},{"./ParseError":"/home/bbales2/stochssModel/app/static/modelEditor/node_modules/katex/src/ParseError.js","./utils":"/home/bbales2/stochssModel/app/static/modelEditor/node_modules/katex/src/utils.js"}],"/home/bbales2/stochssModel/app/static/modelEditor/node_modules/katex/src/parseTree.js":[function(require,module,exports){
+},{"./ParseError":"/home/debjani/Desktop/newstochss/stochss/app/static/modelEditor/node_modules/katex/src/ParseError.js","./utils":"/home/debjani/Desktop/newstochss/stochss/app/static/modelEditor/node_modules/katex/src/utils.js"}],"/home/debjani/Desktop/newstochss/stochss/app/static/modelEditor/node_modules/katex/src/parseTree.js":[function(require,module,exports){
 /**
  * Provides a single function for parsing an expression using a Parser
  * TODO(emily): Remove this
@@ -27612,7 +27998,7 @@ var parseTree = function(toParse) {
 
 module.exports = parseTree;
 
-},{"./Parser":"/home/bbales2/stochssModel/app/static/modelEditor/node_modules/katex/src/Parser.js"}],"/home/bbales2/stochssModel/app/static/modelEditor/node_modules/katex/src/symbols.js":[function(require,module,exports){
+},{"./Parser":"/home/debjani/Desktop/newstochss/stochss/app/static/modelEditor/node_modules/katex/src/Parser.js"}],"/home/debjani/Desktop/newstochss/stochss/app/static/modelEditor/node_modules/katex/src/symbols.js":[function(require,module,exports){
 /**
  * This file holds a list of all no-argument functions and single-character
  * symbols (like 'a' or ';').
@@ -28620,7 +29006,7 @@ for (var i = 0; i < letters.length; i++) {
 
 module.exports = symbols;
 
-},{}],"/home/bbales2/stochssModel/app/static/modelEditor/node_modules/katex/src/utils.js":[function(require,module,exports){
+},{}],"/home/debjani/Desktop/newstochss/stochss/app/static/modelEditor/node_modules/katex/src/utils.js":[function(require,module,exports){
 /**
  * This file contains a list of utility functions which are useful in other
  * files.
@@ -28719,9 +29105,7 @@ module.exports = {
     clearNode: clearNode
 };
 
-},{}],"/home/bbales2/stochssModel/app/static/modelEditor/node_modules/matches-selector/index.js":[function(require,module,exports){
-module.exports=require("/home/bbales2/stochssModel/app/static/modelEditor/node_modules/ampersand-view/node_modules/matches-selector/index.js")
-},{"/home/bbales2/stochssModel/app/static/modelEditor/node_modules/ampersand-view/node_modules/matches-selector/index.js":"/home/bbales2/stochssModel/app/static/modelEditor/node_modules/ampersand-view/node_modules/matches-selector/index.js"}],"/home/bbales2/stochssModel/app/static/modelEditor/node_modules/three-orbit-controls/index.js":[function(require,module,exports){
+},{}],"/home/debjani/Desktop/newstochss/stochss/app/static/modelEditor/node_modules/three-orbit-controls/index.js":[function(require,module,exports){
 module.exports = function(THREE) {
     var MOUSE = THREE.MOUSE
     if (!MOUSE)
@@ -28985,7 +29369,7 @@ module.exports = function(THREE) {
 
             phi = Math.atan2( Math.sqrt( offset.x * offset.x + offset.z * offset.z ), offset.y );
 
-            if ( this.autoRotate ) {
+            if ( this.autoRotate && state === STATE.NONE ) {
 
                 this.rotateLeft( getAutoRotationAngle() );
 
@@ -29403,14 +29787,14 @@ module.exports = function(THREE) {
     OrbitControls.prototype.constructor = OrbitControls;
     return OrbitControls;
 }
-},{}],"/home/bbales2/stochssModel/app/static/modelEditor/node_modules/three/three.js":[function(require,module,exports){
-var self = self || {};// File:src/Three.js
+},{}],"/home/debjani/Desktop/newstochss/stochss/app/static/modelEditor/node_modules/three/three.js":[function(require,module,exports){
+// File:src/Three.js
 
 /**
  * @author mrdoob / http://mrdoob.com/
  */
 
-var THREE = { REVISION: '69' };
+var THREE = { REVISION: '70' };
 
 // browserify support
 
@@ -29523,13 +29907,15 @@ THREE.AddOperation = 2;
 
 // Mapping modes
 
-THREE.UVMapping = function () {};
+THREE.UVMapping = 300;
 
-THREE.CubeReflectionMapping = function () {};
-THREE.CubeRefractionMapping = function () {};
+THREE.CubeReflectionMapping = 301;
+THREE.CubeRefractionMapping = 302;
 
-THREE.SphericalReflectionMapping = function () {};
-THREE.SphericalRefractionMapping = function () {};
+THREE.EquirectangularReflectionMapping = 303;
+THREE.EquirectangularRefractionMapping = 304;
+
+THREE.SphericalReflectionMapping = 305;
 
 // Wrapping modes
 
@@ -29570,6 +29956,8 @@ THREE.RGBFormat = 1020;
 THREE.RGBAFormat = 1021;
 THREE.LuminanceFormat = 1022;
 THREE.LuminanceAlphaFormat = 1023;
+// THREE.RGBEFormat handled as THREE.RGBAFormat in shaders
+THREE.RGBEFormat = THREE.RGBAFormat; //1024;
 
 // DDS / ST3C Compressed texture formats
 
@@ -29586,6 +29974,46 @@ THREE.RGB_PVRTC_2BPPV1_Format = 2101;
 THREE.RGBA_PVRTC_4BPPV1_Format = 2102;
 THREE.RGBA_PVRTC_2BPPV1_Format = 2103;
 
+
+// DEPRECATED
+
+THREE.Projector = function () {
+
+	console.error( 'THREE.Projector has been moved to /examples/js/renderers/Projector.js.' );
+
+	this.projectVector = function ( vector, camera ) {
+
+		console.warn( 'THREE.Projector: .projectVector() is now vector.project().' );
+		vector.project( camera );
+
+	};
+
+	this.unprojectVector = function ( vector, camera ) {
+
+		console.warn( 'THREE.Projector: .unprojectVector() is now vector.unproject().' );
+		vector.unproject( camera );
+
+	};
+
+	this.pickingRay = function ( vector, camera ) {
+
+		console.error( 'THREE.Projector: .pickingRay() is now raycaster.setFromCamera().' );
+
+	};
+
+};
+
+THREE.CanvasRenderer = function () {
+
+	console.error( 'THREE.CanvasRenderer has been moved to /examples/js/renderers/CanvasRenderer.js' );
+
+	this.domElement = document.createElement( 'canvas' );
+	this.clear = function () {};
+	this.render = function () {};
+	this.setClearColor = function () {};
+	this.setSize = function () {};
+
+};
 
 // File:src/math/Color.js
 
@@ -30923,6 +31351,19 @@ THREE.Vector2.prototype = {
 
 	},
 
+	fromAttribute: function ( attribute, index, offset ) {
+
+	    if ( offset === undefined ) offset = 0;
+
+	    index = index * attribute.itemSize + offset;
+
+	    this.x = attribute.array[ index ];
+	    this.y = attribute.array[ index + 1 ];
+
+	    return this;
+
+	},
+
 	clone: function () {
 
 		return new THREE.Vector2( this.x, this.y );
@@ -31744,6 +32185,20 @@ THREE.Vector3.prototype = {
 
 	},
 
+	fromAttribute: function ( attribute, index, offset ) {
+
+	    if ( offset === undefined ) offset = 0;
+
+	    index = index * attribute.itemSize + offset;
+
+	    this.x = attribute.array[ index ];
+	    this.y = attribute.array[ index + 1 ];
+	    this.z = attribute.array[ index + 2 ];
+
+	    return this;
+
+	},
+
 	clone: function () {
 
 		return new THREE.Vector3( this.x, this.y, this.z );
@@ -32404,6 +32859,21 @@ THREE.Vector4.prototype = {
 
 	},
 
+	fromAttribute: function ( attribute, index, offset ) {
+
+	    if ( offset === undefined ) offset = 0;
+
+	    index = index * attribute.itemSize + offset;
+
+	    this.x = attribute.array[ index ];
+	    this.y = attribute.array[ index + 1 ];
+	    this.z = attribute.array[ index + 2 ];
+	    this.w = attribute.array[ index + 3 ];
+
+	    return this;
+
+	},
+
 	clone: function () {
 
 		return new THREE.Vector4( this.x, this.y, this.z, this.w );
@@ -32517,7 +32987,7 @@ THREE.Euler.prototype = {
 
 	},
 
-	setFromRotationMatrix: function ( m, order ) {
+	setFromRotationMatrix: function ( m, order, update ) {
 
 		var clamp = THREE.Math.clamp;
 
@@ -32634,74 +33104,31 @@ THREE.Euler.prototype = {
 
 		this._order = order;
 
-		this.onChangeCallback();
+		if ( update !== false ) this.onChangeCallback();
 
 		return this;
 
 	},
 
-	setFromQuaternion: function ( q, order, update ) {
+	setFromQuaternion: function () {
 
-		var clamp = THREE.Math.clamp;
+		var matrix;
 
-		// q is assumed to be normalized
+		return function ( q, order, update ) {
 
-		// http://www.mathworks.com/matlabcentral/fileexchange/20696-function-to-convert-between-dcm-euler-angles-quaternions-and-euler-vectors/content/SpinCalc.m
+			if ( matrix === undefined ) matrix = new THREE.Matrix4();
+			matrix.makeRotationFromQuaternion( q );
+			this.setFromRotationMatrix( matrix, order, update );
 
-		var sqx = q.x * q.x;
-		var sqy = q.y * q.y;
-		var sqz = q.z * q.z;
-		var sqw = q.w * q.w;
+			return this;
 
-		order = order || this._order;
+		};
 
-		if ( order === 'XYZ' ) {
+	}(),
 
-			this._x = Math.atan2( 2 * ( q.x * q.w - q.y * q.z ), ( sqw - sqx - sqy + sqz ) );
-			this._y = Math.asin(  clamp( 2 * ( q.x * q.z + q.y * q.w ), - 1, 1 ) );
-			this._z = Math.atan2( 2 * ( q.z * q.w - q.x * q.y ), ( sqw + sqx - sqy - sqz ) );
+	setFromVector3: function ( v, order ) {
 
-		} else if ( order ===  'YXZ' ) {
-
-			this._x = Math.asin(  clamp( 2 * ( q.x * q.w - q.y * q.z ), - 1, 1 ) );
-			this._y = Math.atan2( 2 * ( q.x * q.z + q.y * q.w ), ( sqw - sqx - sqy + sqz ) );
-			this._z = Math.atan2( 2 * ( q.x * q.y + q.z * q.w ), ( sqw - sqx + sqy - sqz ) );
-
-		} else if ( order === 'ZXY' ) {
-
-			this._x = Math.asin(  clamp( 2 * ( q.x * q.w + q.y * q.z ), - 1, 1 ) );
-			this._y = Math.atan2( 2 * ( q.y * q.w - q.z * q.x ), ( sqw - sqx - sqy + sqz ) );
-			this._z = Math.atan2( 2 * ( q.z * q.w - q.x * q.y ), ( sqw - sqx + sqy - sqz ) );
-
-		} else if ( order === 'ZYX' ) {
-
-			this._x = Math.atan2( 2 * ( q.x * q.w + q.z * q.y ), ( sqw - sqx - sqy + sqz ) );
-			this._y = Math.asin(  clamp( 2 * ( q.y * q.w - q.x * q.z ), - 1, 1 ) );
-			this._z = Math.atan2( 2 * ( q.x * q.y + q.z * q.w ), ( sqw + sqx - sqy - sqz ) );
-
-		} else if ( order === 'YZX' ) {
-
-			this._x = Math.atan2( 2 * ( q.x * q.w - q.z * q.y ), ( sqw - sqx + sqy - sqz ) );
-			this._y = Math.atan2( 2 * ( q.y * q.w - q.x * q.z ), ( sqw + sqx - sqy - sqz ) );
-			this._z = Math.asin(  clamp( 2 * ( q.x * q.y + q.z * q.w ), - 1, 1 ) );
-
-		} else if ( order === 'XZY' ) {
-
-			this._x = Math.atan2( 2 * ( q.x * q.w + q.y * q.z ), ( sqw - sqx + sqy - sqz ) );
-			this._y = Math.atan2( 2 * ( q.x * q.z + q.y * q.w ), ( sqw + sqx - sqy - sqz ) );
-			this._z = Math.asin(  clamp( 2 * ( q.z * q.w - q.x * q.y ), - 1, 1 ) );
-
-		} else {
-
-			console.warn( 'THREE.Euler: .setFromQuaternion() given unsupported order: ' + order )
-
-		}
-
-		this._order = order;
-
-		if ( update !== false ) this.onChangeCallback();
-
-		return this;
+		return this.set( v.x, v.y, v.z, order || this._order );
 
 	},
 
@@ -32717,7 +33144,6 @@ THREE.Euler.prototype = {
 			this.setFromQuaternion( q, newOrder );
 
 		};
-
 
 	}(),
 
@@ -32743,6 +33169,20 @@ THREE.Euler.prototype = {
 	toArray: function () {
 
 		return [ this._x, this._y, this._z, this._order ];
+
+	},
+
+	toVector3: function ( optionalResult ) {
+
+		if ( optionalResult ) {
+
+			return optionalResult.set( this._x, this._y, this._z );
+
+		} else {
+
+			return new THREE.Vector3( this._x, this._y, this._z );
+
+		}
 
 	},
 
@@ -33855,6 +34295,31 @@ THREE.Matrix4.prototype = {
 
 	},
 
+	extractBasis: function ( xAxis, yAxis, zAxis ) {
+ 
+ 		var te = this.elements;
+ 
+		xAxis.set( te[ 0 ], te[ 1 ], te[ 2 ] );
+		yAxis.set( te[ 4 ], te[ 5 ], te[ 6 ] );
+		zAxis.set( te[ 8 ], te[ 9 ], te[ 10 ] );
+ 
+ 		return this;
+ 		
+ 	},
+ 
+	makeBasis: function ( xAxis, yAxis, zAxis ) {
+
+		this.set(
+			xAxis.x, yAxis.x, zAxis.x, 0,
+			xAxis.y, yAxis.y, zAxis.y, 0,
+			xAxis.z, yAxis.z, zAxis.z, 0,
+			0,       0,       0,       1
+		);
+
+	    return this;
+
+	},
+
 	extractRotation: function () {
 
 		var v1 = new THREE.Vector3();
@@ -34824,53 +35289,70 @@ THREE.Ray.prototype = {
 
 	}(),
 
-	distanceSqToSegment: function ( v0, v1, optionalPointOnRay, optionalPointOnSegment ) {
+	distanceSqToSegment: function () {
 
-		// from http://www.geometrictools.com/LibMathematics/Distance/Wm5DistRay3Segment3.cpp
-		// It returns the min distance between the ray and the segment
-		// defined by v0 and v1
-		// It can also set two optional targets :
-		// - The closest point on the ray
-		// - The closest point on the segment
+		var segCenter = new THREE.Vector3();
+		var segDir = new THREE.Vector3();
+		var diff = new THREE.Vector3();
 
-		var segCenter = v0.clone().add( v1 ).multiplyScalar( 0.5 );
-		var segDir = v1.clone().sub( v0 ).normalize();
-		var segExtent = v0.distanceTo( v1 ) * 0.5;
-		var diff = this.origin.clone().sub( segCenter );
-		var a01 = - this.direction.dot( segDir );
-		var b0 = diff.dot( this.direction );
-		var b1 = - diff.dot( segDir );
-		var c = diff.lengthSq();
-		var det = Math.abs( 1 - a01 * a01 );
-		var s0, s1, sqrDist, extDet;
+		return function ( v0, v1, optionalPointOnRay, optionalPointOnSegment ) {
 
-		if ( det >= 0 ) {
+			// from http://www.geometrictools.com/LibMathematics/Distance/Wm5DistRay3Segment3.cpp
+			// It returns the min distance between the ray and the segment
+			// defined by v0 and v1
+			// It can also set two optional targets :
+			// - The closest point on the ray
+			// - The closest point on the segment
 
-			// The ray and segment are not parallel.
+			segCenter.copy( v0 ).add( v1 ).multiplyScalar( 0.5 );
+			segDir.copy( v1 ).sub( v0 ).normalize();
+			diff.copy( this.origin ).sub( segCenter );
 
-			s0 = a01 * b1 - b0;
-			s1 = a01 * b0 - b1;
-			extDet = segExtent * det;
+			var segExtent = v0.distanceTo( v1 ) * 0.5;
+			var a01 = - this.direction.dot( segDir );
+			var b0 = diff.dot( this.direction );
+			var b1 = - diff.dot( segDir );
+			var c = diff.lengthSq();
+			var det = Math.abs( 1 - a01 * a01 );
+			var s0, s1, sqrDist, extDet;
 
-			if ( s0 >= 0 ) {
+			if ( det > 0 ) {
 
-				if ( s1 >= - extDet ) {
+				// The ray and segment are not parallel.
 
-					if ( s1 <= extDet ) {
+				s0 = a01 * b1 - b0;
+				s1 = a01 * b0 - b1;
+				extDet = segExtent * det;
 
-						// region 0
-						// Minimum at interior points of ray and segment.
+				if ( s0 >= 0 ) {
 
-						var invDet = 1 / det;
-						s0 *= invDet;
-						s1 *= invDet;
-						sqrDist = s0 * ( s0 + a01 * s1 + 2 * b0 ) + s1 * ( a01 * s0 + s1 + 2 * b1 ) + c;
+					if ( s1 >= - extDet ) {
+
+						if ( s1 <= extDet ) {
+
+							// region 0
+							// Minimum at interior points of ray and segment.
+
+							var invDet = 1 / det;
+							s0 *= invDet;
+							s1 *= invDet;
+							sqrDist = s0 * ( s0 + a01 * s1 + 2 * b0 ) + s1 * ( a01 * s0 + s1 + 2 * b1 ) + c;
+
+						} else {
+
+							// region 1
+
+							s1 = segExtent;
+							s0 = Math.max( 0, - ( a01 * s1 + b0 ) );
+							sqrDist = - s0 * s0 + s1 * ( s1 + 2 * b1 ) + c;
+
+						}
 
 					} else {
 
-						// region 1
+						// region 5
 
-						s1 = segExtent;
+						s1 = - segExtent;
 						s0 = Math.max( 0, - ( a01 * s1 + b0 ) );
 						sqrDist = - s0 * s0 + s1 * ( s1 + 2 * b1 ) + c;
 
@@ -34878,69 +35360,62 @@ THREE.Ray.prototype = {
 
 				} else {
 
-					// region 5
+					if ( s1 <= - extDet ) {
 
-					s1 = - segExtent;
-					s0 = Math.max( 0, - ( a01 * s1 + b0 ) );
-					sqrDist = - s0 * s0 + s1 * ( s1 + 2 * b1 ) + c;
+						// region 4
+
+						s0 = Math.max( 0, - ( - a01 * segExtent + b0 ) );
+						s1 = ( s0 > 0 ) ? - segExtent : Math.min( Math.max( - segExtent, - b1 ), segExtent );
+						sqrDist = - s0 * s0 + s1 * ( s1 + 2 * b1 ) + c;
+
+					} else if ( s1 <= extDet ) {
+
+						// region 3
+
+						s0 = 0;
+						s1 = Math.min( Math.max( - segExtent, - b1 ), segExtent );
+						sqrDist = s1 * ( s1 + 2 * b1 ) + c;
+
+					} else {
+
+						// region 2
+
+						s0 = Math.max( 0, - ( a01 * segExtent + b0 ) );
+						s1 = ( s0 > 0 ) ? segExtent : Math.min( Math.max( - segExtent, - b1 ), segExtent );
+						sqrDist = - s0 * s0 + s1 * ( s1 + 2 * b1 ) + c;
+
+					}
 
 				}
 
 			} else {
 
-				if ( s1 <= - extDet ) {
+				// Ray and segment are parallel.
 
-					// region 4
-
-					s0 = Math.max( 0, - ( - a01 * segExtent + b0 ) );
-					s1 = ( s0 > 0 ) ? - segExtent : Math.min( Math.max( - segExtent, - b1 ), segExtent );
-					sqrDist = - s0 * s0 + s1 * ( s1 + 2 * b1 ) + c;
-
-				} else if ( s1 <= extDet ) {
-
-					// region 3
-
-					s0 = 0;
-					s1 = Math.min( Math.max( - segExtent, - b1 ), segExtent );
-					sqrDist = s1 * ( s1 + 2 * b1 ) + c;
-
-				} else {
-
-					// region 2
-
-					s0 = Math.max( 0, - ( a01 * segExtent + b0 ) );
-					s1 = ( s0 > 0 ) ? segExtent : Math.min( Math.max( - segExtent, - b1 ), segExtent );
-					sqrDist = - s0 * s0 + s1 * ( s1 + 2 * b1 ) + c;
-
-				}
+				s1 = ( a01 > 0 ) ? - segExtent : segExtent;
+				s0 = Math.max( 0, - ( a01 * s1 + b0 ) );
+				sqrDist = - s0 * s0 + s1 * ( s1 + 2 * b1 ) + c;
 
 			}
 
-		} else {
+			if ( optionalPointOnRay ) {
 
-			// Ray and segment are parallel.
+				optionalPointOnRay.copy( this.direction ).multiplyScalar( s0 ).add( this.origin );
 
-			s1 = ( a01 > 0 ) ? - segExtent : segExtent;
-			s0 = Math.max( 0, - ( a01 * s1 + b0 ) );
-			sqrDist = - s0 * s0 + s1 * ( s1 + 2 * b1 ) + c;
+			}
 
-		}
+			if ( optionalPointOnSegment ) {
 
-		if ( optionalPointOnRay ) {
+				optionalPointOnSegment.copy( segDir ).multiplyScalar( s1 ).add( segCenter );
 
-			optionalPointOnRay.copy( this.direction.clone().multiplyScalar( s0 ).add( this.origin ) );
+			}
 
-		}
+			return sqrDist;
 
-		if ( optionalPointOnSegment ) {
+		};
 
-			optionalPointOnSegment.copy( segDir.clone().multiplyScalar( s1 ).add( segCenter ) );
+	}(),
 
-		}
-
-		return sqrDist;
-
-	},
 
 	isIntersectionSphere: function ( sphere ) {
 
@@ -35909,7 +36384,7 @@ THREE.Math = {
 
 	randInt: function ( low, high ) {
 
-		return low + Math.floor( Math.random() * ( high - low + 1 ) );
+		return Math.floor( this.randFloat( low, high ) );
 
 	},
 
@@ -36581,8 +37056,31 @@ THREE.EventDispatcher.prototype = {
 
 		set: function ( origin, direction ) {
 
-			this.ray.set( origin, direction );
 			// direction is assumed to be normalized (for accurate distance calculations)
+
+			this.ray.set( origin, direction );
+
+		},
+
+		setFromCamera: function ( coords, camera ) {
+
+			// camera is assumed _not_ to be a child of a transformed object
+
+			if ( camera instanceof THREE.PerspectiveCamera ) {
+
+				this.ray.origin.copy( camera.position );
+				this.ray.direction.set( coords.x, coords.y, 0.5 ).unproject( camera ).sub( camera.position ).normalize();
+
+			} else if ( camera instanceof THREE.OrthographicCamera ) {
+
+				this.ray.origin.set( coords.x, coords.y, - 1 ).unproject( camera );
+				this.ray.direction.set( 0, 0, - 1 ).transformDirection( camera.matrixWorld );
+
+			} else {
+
+				console.error( 'THREE.Raycaster: Unsupported camera type.' );
+
+			}
 
 		},
 
@@ -36684,8 +37182,6 @@ THREE.Object3D = function () {
 			value: scale
 		},
 	} );
-
-	this.renderDepth = null;
 
 	this.rotationAutoUpdate = true;
 
@@ -37008,33 +37504,24 @@ THREE.Object3D.prototype = {
 
 	getObjectById: function ( id, recursive ) {
 
-		if ( this.id === id ) return this;
-
-		for ( var i = 0, l = this.children.length; i < l; i ++ ) {
-
-			var child = this.children[ i ];
-			var object = child.getObjectById( id, recursive );
-
-			if ( object !== undefined ) {
-
-				return object;
-
-			}
-
-		}
-
-		return undefined;
+		return this.getObjectByProperty( 'id', id, recursive );
 
 	},
 
 	getObjectByName: function ( name, recursive ) {
 
-		if ( this.name === name ) return this;
+		return this.getObjectByProperty( 'name', name, recursive );
+
+	},
+
+	getObjectByProperty: function ( name, value, recursive ) {
+
+		if ( this[ name ] === value ) return this;
 
 		for ( var i = 0, l = this.children.length; i < l; i ++ ) {
 
 			var child = this.children[ i ];
-			var object = child.getObjectByName( name, recursive );
+			var object = child.getObjectByProperty( name, value, recursive );
 
 			if ( object !== undefined ) {
 
@@ -37151,6 +37638,18 @@ THREE.Object3D.prototype = {
 		for ( var i = 0, l = this.children.length; i < l; i ++ ) {
 
 			this.children[ i ].traverseVisible( callback );
+
+		}
+
+	},
+
+	traverseAncestors: function ( callback ) {
+
+		if ( this.parent ) {
+
+			callback( this.parent );
+
+			this.parent.traverseAncestors( callback );
 
 		}
 
@@ -37372,8 +37871,6 @@ THREE.Object3D.prototype = {
 		object.quaternion.copy( this.quaternion );
 		object.scale.copy( this.scale );
 
-		object.renderDepth = this.renderDepth;
-
 		object.rotationAutoUpdate = this.rotationAutoUpdate;
 
 		object.matrix.copy( this.matrix );
@@ -37411,38 +37908,6 @@ THREE.Object3D.prototype = {
 THREE.EventDispatcher.prototype.apply( THREE.Object3D.prototype );
 
 THREE.Object3DIdCount = 0;
-
-// File:src/core/Projector.js
-
-/**
- * @author mrdoob / http://mrdoob.com/
- */
-
-THREE.Projector = function () {
-
-	console.warn( 'THREE.Projector has been moved to /examples/renderers/Projector.js.' );
-
-	this.projectVector = function ( vector, camera ) {
-
-		console.warn( 'THREE.Projector: .projectVector() is now vector.project().' );
-		vector.project( camera );
-
-	};
-
-	this.unprojectVector = function ( vector, camera ) {
-
-		console.warn( 'THREE.Projector: .unprojectVector() is now vector.unproject().' );
-		vector.unproject( camera );
-
-	};
-
-	this.pickingRay = function ( vector, camera ) {
-
-		console.error( 'THREE.Projector: .pickingRay() has been removed.' );
-
-	};
-
-};
 
 // File:src/core/Face3.js
 
@@ -38460,11 +38925,43 @@ THREE.BufferGeometry.prototype = {
 		*/
 
 		return offsets;
+
 	},
 
-	merge: function () {
+	merge: function ( geometry, offset ) {
 
-		console.log( 'BufferGeometry.merge(): TODO' );
+		if ( geometry instanceof THREE.BufferGeometry === false ) {
+
+			console.error( 'THREE.BufferGeometry.merge(): geometry not an instance of THREE.BufferGeometry.', geometry );
+			return;
+
+		}
+
+		if ( offset === undefined ) offset = 0;
+
+		var attributes = this.attributes;
+
+		for ( var key in attributes ) {
+
+			if ( geometry.attributes[ key ] === undefined ) continue;
+
+			var attribute1 = attributes[ key ];
+			var attributeArray1 = attribute1.array;
+
+			var attribute2 = geometry.attributes[ key ];
+			var attributeArray2 = attribute2.array;
+
+			var attributeSize = attribute2.itemSize;
+
+			for ( var i = 0, j = attributeSize * offset; i < attributeArray2.length; i ++, j ++ ) {
+
+				attributeArray1[ j ] = attributeArray2[ i ];
+
+			}
+
+		}
+
+		return this;
 
 	},
 
@@ -38773,7 +39270,12 @@ THREE.Geometry.prototype = {
 			var vertexColors = colors !== undefined ? [ scope.colors[ a ].clone(), scope.colors[ b ].clone(), scope.colors[ c ].clone() ] : [];
 
 			scope.faces.push( new THREE.Face3( a, b, c, vertexNormals, vertexColors ) );
-			scope.faceVertexUvs[ 0 ].push( [ tempUVs[ a ], tempUVs[ b ], tempUVs[ c ] ] );
+
+			if ( uvs !== undefined ) {
+
+				scope.faceVertexUvs[ 0 ].push( [ tempUVs[ a ].clone(), tempUVs[ b ].clone(), tempUVs[ c ].clone() ] );
+
+			}
 
 		};
 
@@ -38794,7 +39296,7 @@ THREE.Geometry.prototype = {
 			}
 
 		}
-		
+
 		this.computeFaceNormals();
 
 		if ( geometry.boundingBox !== null ) {
@@ -39289,13 +39791,28 @@ THREE.Geometry.prototype = {
 
 			for ( var j = 0, jl = uv.length; j < jl; j ++ ) {
 
-				uvCopy.push( new THREE.Vector2( uv[ j ].x, uv[ j ].y ) );
+				uvCopy.push( uv[ j ].clone() );
 
 			}
 
 			uvs1.push( uvCopy );
 
 		}
+
+	},
+
+	mergeMesh: function ( mesh ) {
+
+		if ( mesh instanceof THREE.Mesh === false ) {
+
+			console.error( 'THREE.Geometry.mergeMesh(): mesh not an instance of THREE.Mesh.', mesh );
+			return;
+
+		}
+
+		mesh.matrixAutoUpdate && mesh.updateMatrix();
+
+		this.merge( mesh.geometry, mesh.matrix );
 
 	},
 
@@ -39609,19 +40126,31 @@ THREE.Geometry.prototype = {
 
 		}
 
-		var uvs = this.faceVertexUvs[ 0 ];
+		for ( var i = 0, il = this.faceVertexUvs.length; i < il; i ++ ) {
 
-		for ( var i = 0, il = uvs.length; i < il; i ++ ) {
+			var faceVertexUvs = this.faceVertexUvs[ i ];
 
-			var uv = uvs[ i ], uvCopy = [];
+			if ( geometry.faceVertexUvs[ i ] === undefined ) {
 
-			for ( var j = 0, jl = uv.length; j < jl; j ++ ) {
-
-				uvCopy.push( new THREE.Vector2( uv[ j ].x, uv[ j ].y ) );
+				geometry.faceVertexUvs[ i ] = [];
 
 			}
 
-			geometry.faceVertexUvs[ 0 ].push( uvCopy );
+			for ( var j = 0, jl = faceVertexUvs.length; j < jl; j ++ ) {
+
+				var uvs = faceVertexUvs[ j ], uvsCopy = [];
+
+				for ( var k = 0, kl = uvs.length; k < kl; k ++ ) {
+
+					var uv = uvs[ k ];
+
+					uvsCopy.push( uv.clone() );
+
+				}
+
+				geometry.faceVertexUvs[ i ].push( uvsCopy );
+
+			}
 
 		}
 
@@ -39661,6 +40190,7 @@ THREE.Camera = function () {
 };
 
 THREE.Camera.prototype = Object.create( THREE.Object3D.prototype );
+THREE.Camera.prototype.constructor = THREE.Camera;
 
 THREE.Camera.prototype.getWorldDirection = function () {
 
@@ -39787,6 +40317,7 @@ THREE.CubeCamera = function ( near, far, cubeResolution ) {
 };
 
 THREE.CubeCamera.prototype = Object.create( THREE.Object3D.prototype );
+THREE.CubeCamera.prototype.constructor = THREE.CubeCamera;
 
 // File:src/cameras/OrthographicCamera.js
 
@@ -39815,6 +40346,7 @@ THREE.OrthographicCamera = function ( left, right, top, bottom, near, far ) {
 };
 
 THREE.OrthographicCamera.prototype = Object.create( THREE.Camera.prototype );
+THREE.OrthographicCamera.prototype.constructor = THREE.OrthographicCamera;
 
 THREE.OrthographicCamera.prototype.updateProjectionMatrix = function () {
 
@@ -39874,6 +40406,7 @@ THREE.PerspectiveCamera = function ( fov, aspect, near, far ) {
 };
 
 THREE.PerspectiveCamera.prototype = Object.create( THREE.Camera.prototype );
+THREE.PerspectiveCamera.prototype.constructor = THREE.PerspectiveCamera;
 
 
 /**
@@ -40010,6 +40543,7 @@ THREE.Light = function ( color ) {
 };
 
 THREE.Light.prototype = Object.create( THREE.Object3D.prototype );
+THREE.Light.prototype.constructor = THREE.Light;
 
 THREE.Light.prototype.clone = function ( light ) {
 
@@ -40038,6 +40572,7 @@ THREE.AmbientLight = function ( color ) {
 };
 
 THREE.AmbientLight.prototype = Object.create( THREE.Light.prototype );
+THREE.AmbientLight.prototype.constructor = THREE.AmbientLight;
 
 THREE.AmbientLight.prototype.clone = function () {
 
@@ -40077,6 +40612,7 @@ THREE.AreaLight = function ( color, intensity ) {
 };
 
 THREE.AreaLight.prototype = Object.create( THREE.Light.prototype );
+THREE.AreaLight.prototype.constructor = THREE.AreaLight;
 
 
 // File:src/lights/DirectionalLight.js
@@ -40144,6 +40680,7 @@ THREE.DirectionalLight = function ( color, intensity ) {
 };
 
 THREE.DirectionalLight.prototype = Object.create( THREE.Light.prototype );
+THREE.DirectionalLight.prototype.constructor = THREE.DirectionalLight;
 
 THREE.DirectionalLight.prototype.clone = function () {
 
@@ -40214,6 +40751,7 @@ THREE.HemisphereLight = function ( skyColor, groundColor, intensity ) {
 };
 
 THREE.HemisphereLight.prototype = Object.create( THREE.Light.prototype );
+THREE.HemisphereLight.prototype.constructor = THREE.HemisphereLight;
 
 THREE.HemisphereLight.prototype.clone = function () {
 
@@ -40246,6 +40784,7 @@ THREE.PointLight = function ( color, intensity, distance ) {
 };
 
 THREE.PointLight.prototype = Object.create( THREE.Light.prototype );
+THREE.PointLight.prototype.constructor = THREE.PointLight;
 
 THREE.PointLight.prototype.clone = function () {
 
@@ -40307,6 +40846,7 @@ THREE.SpotLight = function ( color, intensity, distance, angle, exponent ) {
 };
 
 THREE.SpotLight.prototype = Object.create( THREE.Light.prototype );
+THREE.SpotLight.prototype.constructor = THREE.SpotLight;
 
 THREE.SpotLight.prototype.clone = function () {
 
@@ -40764,70 +41304,13 @@ THREE.Loader.prototype = {
 
 		}
 
-		// special case for normal mapped material
+		if ( m.mapNormalFactor ) {
 
-		if ( m.mapNormal ) {
-
-			var shader = THREE.ShaderLib[ 'normalmap' ];
-			var uniforms = THREE.UniformsUtils.clone( shader.uniforms );
-
-			uniforms[ 'tNormal' ].value = mpars.normalMap;
-
-			if ( m.mapNormalFactor ) {
-
-				uniforms[ 'uNormalScale' ].value.set( m.mapNormalFactor, m.mapNormalFactor );
-
-			}
-
-			if ( mpars.map ) {
-
-				uniforms[ 'tDiffuse' ].value = mpars.map;
-				uniforms[ 'enableDiffuse' ].value = true;
-
-			}
-
-			if ( mpars.specularMap ) {
-
-				uniforms[ 'tSpecular' ].value = mpars.specularMap;
-				uniforms[ 'enableSpecular' ].value = true;
-
-			}
-
-			if ( mpars.lightMap ) {
-
-				uniforms[ 'tAO' ].value = mpars.lightMap;
-				uniforms[ 'enableAO' ].value = true;
-
-			}
-
-			// for the moment don't handle displacement texture
-
-			uniforms[ 'diffuse' ].value.setHex( mpars.color );
-			uniforms[ 'specular' ].value.setHex( mpars.specular );
-			uniforms[ 'ambient' ].value.setHex( mpars.ambient );
-
-			uniforms[ 'shininess' ].value = mpars.shininess;
-
-			if ( mpars.opacity !== undefined ) {
-
-				uniforms[ 'opacity' ].value = mpars.opacity;
-
-			}
-
-			var parameters = { fragmentShader: shader.fragmentShader, vertexShader: shader.vertexShader, uniforms: uniforms, lights: true, fog: true };
-			var material = new THREE.ShaderMaterial( parameters );
-
-			if ( mpars.transparent ) {
-
-				material.transparent = true;
-
-			}
-
-		} else {
-
-			var material = new THREE[ mtype ]( mpars );
+			mpars.normalScale = new THREE.Vector2( m.mapNormalFactor, m.mapNormalFactor );
 
 		}
+
+		var material = new THREE[ mtype ]( mpars );
 
 		if ( m.DbgName !== undefined ) material.name = m.DbgName;
 
@@ -41053,6 +41536,7 @@ THREE.JSONLoader = function ( showStatus ) {
 };
 
 THREE.JSONLoader.prototype = Object.create( THREE.Loader.prototype );
+THREE.JSONLoader.prototype.constructor = THREE.JSONLoader;
 
 THREE.JSONLoader.prototype.load = function ( url, callback, texturePath ) {
 
@@ -41648,7 +42132,7 @@ THREE.BufferGeometryLoader.prototype = {
 
 		var scope = this;
 
-		var loader = new THREE.XHRLoader();
+		var loader = new THREE.XHRLoader( scope.manager );
 		loader.setCrossOrigin( this.crossOrigin );
 		loader.load( url, function ( text ) {
 
@@ -41729,7 +42213,7 @@ THREE.MaterialLoader.prototype = {
 
 		var scope = this;
 
-		var loader = new THREE.XHRLoader();
+		var loader = new THREE.XHRLoader( scope.manager );
 		loader.setCrossOrigin( this.crossOrigin );
 		loader.load( url, function ( text ) {
 
@@ -41756,7 +42240,7 @@ THREE.MaterialLoader.prototype = {
 		if ( json.shininess !== undefined ) material.shininess = json.shininess;
 		if ( json.uniforms !== undefined ) material.uniforms = json.uniforms;
 		if ( json.vertexShader !== undefined ) material.vertexShader = json.vertexShader;
-		if ( json.fragmentShader !== undefined ) material.fragmentShader = json.fragmentShader;		
+		if ( json.fragmentShader !== undefined ) material.fragmentShader = json.fragmentShader;
 		if ( json.vertexColors !== undefined ) material.vertexColors = json.vertexColors;
 		if ( json.shading !== undefined ) material.shading = json.shading;
 		if ( json.blending !== undefined ) material.blending = json.blending;
@@ -42202,6 +42686,96 @@ THREE.TextureLoader.prototype = {
 
 };
 
+// File:src/loaders/BinaryTextureLoader.js
+
+/**
+ * @author Nikos M. / https://github.com/foo123/
+ *
+ * Abstract Base class to load generic binary textures formats (rgbe, hdr, ...)
+ */
+
+THREE.DataTextureLoader = THREE.BinaryTextureLoader = function () {
+
+	// override in sub classes
+	this._parser = null;
+
+};
+
+THREE.BinaryTextureLoader.prototype = {
+
+	constructor: THREE.BinaryTextureLoader,
+
+	load: function ( url, onLoad, onProgress, onError ) {
+
+		var scope = this;
+
+		var texture = new THREE.DataTexture( );
+
+		var loader = new THREE.XHRLoader();
+		loader.setResponseType( 'arraybuffer' );
+
+		loader.load( url, function ( buffer ) {
+
+			var texData = scope._parser( buffer );
+
+			if ( !texData ) return;
+
+			if ( undefined !== texData.image ) {
+
+				texture.image = texData.image;
+
+			} else if ( undefined !== texData.data ){
+
+				texture.image.width = texData.width;
+				texture.image.height = texData.height;
+				texture.image.data = texData.data;
+
+			}
+
+			texture.wrapS = undefined !== texData.wrapS ? texData.wrapS : THREE.ClampToEdgeWrapping;
+			texture.wrapT = undefined !== texData.wrapT ? texData.wrapT : THREE.ClampToEdgeWrapping;
+
+			texture.magFilter = undefined !== texData.magFilter ? texData.magFilter : THREE.LinearFilter;
+			texture.minFilter = undefined !== texData.minFilter ? texData.minFilter : THREE.LinearMipMapLinearFilter;
+
+			texture.anisotropy = undefined !== texData.anisotropy ? texData.anisotropy : 1;
+
+			if ( undefined !== texData.format ) {
+
+				texture.format = texData.format;
+
+			}
+			if ( undefined !== texData.type ) {
+
+				texture.type = texData.type;
+
+			}
+
+			if ( undefined !== texData.mipmaps ) {
+
+				texture.mipmaps = texData.mipmaps;
+
+			}
+
+			if ( 1 === texData.mipmapCount ) {
+
+				texture.minFilter = THREE.LinearFilter;
+
+			}
+
+			texture.needsUpdate = true;
+
+			if ( onLoad ) onLoad( texture, texData );
+
+		}, onProgress, onError );
+
+
+		return texture;
+
+	}
+
+};
+
 // File:src/loaders/CompressedTextureLoader.js
 
 /**
@@ -42586,6 +43160,7 @@ THREE.LineBasicMaterial = function ( parameters ) {
 };
 
 THREE.LineBasicMaterial.prototype = Object.create( THREE.Material.prototype );
+THREE.LineBasicMaterial.prototype.constructor = THREE.LineBasicMaterial;
 
 THREE.LineBasicMaterial.prototype.clone = function () {
 
@@ -42655,6 +43230,7 @@ THREE.LineDashedMaterial = function ( parameters ) {
 };
 
 THREE.LineDashedMaterial.prototype = Object.create( THREE.Material.prototype );
+THREE.LineDashedMaterial.prototype.constructor = THREE.LineDashedMaterial;
 
 THREE.LineDashedMaterial.prototype.clone = function () {
 
@@ -42757,6 +43333,7 @@ THREE.MeshBasicMaterial = function ( parameters ) {
 };
 
 THREE.MeshBasicMaterial.prototype = Object.create( THREE.Material.prototype );
+THREE.MeshBasicMaterial.prototype.constructor = THREE.MeshBasicMaterial;
 
 THREE.MeshBasicMaterial.prototype.clone = function () {
 
@@ -42886,6 +43463,7 @@ THREE.MeshLambertMaterial = function ( parameters ) {
 };
 
 THREE.MeshLambertMaterial.prototype = Object.create( THREE.Material.prototype );
+THREE.MeshLambertMaterial.prototype.constructor = THREE.MeshLambertMaterial;
 
 THREE.MeshLambertMaterial.prototype.clone = function () {
 
@@ -43039,6 +43617,7 @@ THREE.MeshPhongMaterial = function ( parameters ) {
 };
 
 THREE.MeshPhongMaterial.prototype = Object.create( THREE.Material.prototype );
+THREE.MeshPhongMaterial.prototype.constructor = THREE.MeshPhongMaterial;
 
 THREE.MeshPhongMaterial.prototype.clone = function () {
 
@@ -43128,6 +43707,7 @@ THREE.MeshDepthMaterial = function ( parameters ) {
 };
 
 THREE.MeshDepthMaterial.prototype = Object.create( THREE.Material.prototype );
+THREE.MeshDepthMaterial.prototype.constructor = THREE.MeshDepthMaterial;
 
 THREE.MeshDepthMaterial.prototype.clone = function () {
 
@@ -43178,6 +43758,7 @@ THREE.MeshNormalMaterial = function ( parameters ) {
 };
 
 THREE.MeshNormalMaterial.prototype = Object.create( THREE.Material.prototype );
+THREE.MeshNormalMaterial.prototype.constructor = THREE.MeshNormalMaterial;
 
 THREE.MeshNormalMaterial.prototype.clone = function () {
 
@@ -43265,6 +43846,7 @@ THREE.MeshFaceMaterial.prototype = {
  *  map: new THREE.Texture( <Image> ),
  *
  *  size: <float>,
+ *  sizeAttenuation: <bool>,
  *
  *  blending: THREE.NormalBlending,
  *  depthTest: <bool>,
@@ -43298,6 +43880,7 @@ THREE.PointCloudMaterial = function ( parameters ) {
 };
 
 THREE.PointCloudMaterial.prototype = Object.create( THREE.Material.prototype );
+THREE.PointCloudMaterial.prototype.constructor = THREE.PointCloudMaterial;
 
 THREE.PointCloudMaterial.prototype.clone = function () {
 
@@ -43414,6 +43997,7 @@ THREE.ShaderMaterial = function ( parameters ) {
 };
 
 THREE.ShaderMaterial.prototype = Object.create( THREE.Material.prototype );
+THREE.ShaderMaterial.prototype.constructor = THREE.ShaderMaterial;
 
 THREE.ShaderMaterial.prototype.clone = function () {
 
@@ -43464,6 +44048,7 @@ THREE.RawShaderMaterial = function ( parameters ) {
 };
 
 THREE.RawShaderMaterial.prototype = Object.create( THREE.ShaderMaterial.prototype );
+THREE.RawShaderMaterial.prototype.constructor = THREE.RawShaderMaterial;
 
 THREE.RawShaderMaterial.prototype.clone = function () {
 
@@ -43516,6 +44101,7 @@ THREE.SpriteMaterial = function ( parameters ) {
 };
 
 THREE.SpriteMaterial.prototype = Object.create( THREE.Material.prototype );
+THREE.SpriteMaterial.prototype.constructor = THREE.SpriteMaterial;
 
 THREE.SpriteMaterial.prototype.clone = function () {
 
@@ -43580,7 +44166,7 @@ THREE.Texture = function ( image, mapping, wrapS, wrapT, magFilter, minFilter, f
 };
 
 THREE.Texture.DEFAULT_IMAGE = undefined;
-THREE.Texture.DEFAULT_MAPPING = new THREE.UVMapping();
+THREE.Texture.DEFAULT_MAPPING = THREE.UVMapping;
 
 THREE.Texture.prototype = {
 
@@ -43658,6 +44244,8 @@ THREE.TextureIdCount = 0;
 
 THREE.CubeTexture = function ( images, mapping, wrapS, wrapT, magFilter, minFilter, format, type, anisotropy ) {
 
+	mapping = mapping !== undefined ? mapping : THREE.CubeReflectionMapping;
+	
 	THREE.Texture.call( this, images, mapping, wrapS, wrapT, magFilter, minFilter, format, type, anisotropy );
 
 	this.images = images;
@@ -43665,6 +44253,7 @@ THREE.CubeTexture = function ( images, mapping, wrapS, wrapT, magFilter, minFilt
 };
 
 THREE.CubeTexture.prototype = Object.create( THREE.Texture.prototype );
+THREE.CubeTexture.prototype.constructor = THREE.CubeTexture;
 
 THREE.CubeTexture.clone = function ( texture ) {
 
@@ -43704,6 +44293,7 @@ THREE.CompressedTexture = function ( mipmaps, width, height, format, type, mappi
 };
 
 THREE.CompressedTexture.prototype = Object.create( THREE.Texture.prototype );
+THREE.CompressedTexture.prototype.constructor = THREE.CompressedTexture;
 
 THREE.CompressedTexture.prototype.clone = function () {
 
@@ -43730,6 +44320,7 @@ THREE.DataTexture = function ( data, width, height, format, type, mapping, wrapS
 };
 
 THREE.DataTexture.prototype = Object.create( THREE.Texture.prototype );
+THREE.DataTexture.prototype.constructor = THREE.DataTexture;
 
 THREE.DataTexture.prototype.clone = function () {
 
@@ -43772,6 +44363,7 @@ THREE.VideoTexture = function ( video, mapping, wrapS, wrapT, magFilter, minFilt
 };
 
 THREE.VideoTexture.prototype = Object.create( THREE.Texture.prototype );
+THREE.VideoTexture.prototype.constructor = THREE.VideoTexture;
 
 // File:src/objects/Group.js
 
@@ -43788,6 +44380,7 @@ THREE.Group = function () {
 };
 
 THREE.Group.prototype = Object.create( THREE.Object3D.prototype );
+THREE.Group.prototype.constructor = THREE.Group;
 
 // File:src/objects/PointCloud.js
 
@@ -43804,11 +44397,10 @@ THREE.PointCloud = function ( geometry, material ) {
 	this.geometry = geometry !== undefined ? geometry : new THREE.Geometry();
 	this.material = material !== undefined ? material : new THREE.PointCloudMaterial( { color: Math.random() * 0xffffff } );
 
-	this.sortParticles = false;
-
 };
 
 THREE.PointCloud.prototype = Object.create( THREE.Object3D.prototype );
+THREE.PointCloud.prototype.constructor = THREE.PointCloud;
 
 THREE.PointCloud.prototype.raycast = ( function () {
 
@@ -43941,8 +44533,6 @@ THREE.PointCloud.prototype.clone = function ( object ) {
 
 	if ( object === undefined ) object = new THREE.PointCloud( this.geometry, this.material );
 
-	object.sortParticles = this.sortParticles;
-
 	THREE.Object3D.prototype.clone.call( this, object );
 
 	return object;
@@ -43981,6 +44571,7 @@ THREE.LineStrip = 0;
 THREE.LinePieces = 1;
 
 THREE.Line.prototype = Object.create( THREE.Object3D.prototype );
+THREE.Line.prototype.constructor = THREE.Line;
 
 THREE.Line.prototype.raycast = ( function () {
 
@@ -44011,17 +44602,105 @@ THREE.Line.prototype.raycast = ( function () {
 		inverseMatrix.getInverse( this.matrixWorld );
 		ray.copy( raycaster.ray ).applyMatrix4( inverseMatrix );
 
-		/* if ( geometry instanceof THREE.BufferGeometry ) {
+		var vStart = new THREE.Vector3();
+		var vEnd = new THREE.Vector3();
+		var interSegment = new THREE.Vector3();
+		var interRay = new THREE.Vector3();
+		var step = this.mode === THREE.LineStrip ? 1 : 2;
 
-		} else */ if ( geometry instanceof THREE.Geometry ) {
+		if ( geometry instanceof THREE.BufferGeometry ) {
+
+			var attributes = geometry.attributes;
+
+			if ( attributes.index !== undefined ) {
+
+				var indices = attributes.index.array;
+				var positions = attributes.position.array;
+				var offsets = geometry.offsets;
+
+				if ( offsets.length === 0 ) {
+
+					offsets = [ { start: 0, count: indices.length, index: 0 } ];
+
+				}
+
+				for ( var oi = 0; oi < offsets.length; oi++){
+
+					var start = offsets[ oi ].start;
+					var count = offsets[ oi ].count;
+					var index = offsets[ oi ].index;
+
+					for ( var i = start; i < start + count - 1; i += step ) {
+
+						var a = index + indices[ i ];
+						var b = index + indices[ i + 1 ];
+
+						vStart.fromArray( positions, a * 3 );
+						vEnd.fromArray( positions, b * 3 );
+
+						var distSq = ray.distanceSqToSegment( vStart, vEnd, interRay, interSegment );
+
+						if ( distSq > precisionSq ) continue;
+
+						var distance = ray.origin.distanceTo( interRay );
+
+						if ( distance < raycaster.near || distance > raycaster.far ) continue;
+
+						intersects.push( {
+
+							distance: distance,
+							// What do we want? intersection point on the ray or on the segment??
+							// point: raycaster.ray.at( distance ),
+							point: interSegment.clone().applyMatrix4( this.matrixWorld ),
+							face: null,
+							faceIndex: null,
+							object: this
+
+						} );
+
+					}
+
+				}
+
+			} else {
+
+				var positions = attributes.position.array;
+
+				for ( var i = 0; i < positions.length / 3 - 1; i += step ) {
+
+					vStart.fromArray( positions, 3 * i );
+					vEnd.fromArray( positions, 3 * i + 3 );
+
+					var distSq = ray.distanceSqToSegment( vStart, vEnd, interRay, interSegment );
+
+					if ( distSq > precisionSq ) continue;
+
+					var distance = ray.origin.distanceTo( interRay );
+
+					if ( distance < raycaster.near || distance > raycaster.far ) continue;
+
+					intersects.push( {
+
+						distance: distance,
+						// What do we want? intersection point on the ray or on the segment??
+						// point: raycaster.ray.at( distance ),
+						point: interSegment.clone().applyMatrix4( this.matrixWorld ),
+						face: null,
+						faceIndex: null,
+						object: this
+
+					} );
+
+				}
+
+			}
+
+		} else if ( geometry instanceof THREE.Geometry ) {
 
 			var vertices = geometry.vertices;
 			var nbVertices = vertices.length;
-			var interSegment = new THREE.Vector3();
-			var interRay = new THREE.Vector3();
-			var step = this.mode === THREE.LineStrip ? 1 : 2;
 
-			for ( var i = 0; i < nbVertices - 1; i = i + step ) {
+			for ( var i = 0; i < nbVertices - 1; i += step ) {
 
 				var distSq = ray.distanceSqToSegment( vertices[ i ], vertices[ i + 1 ], interRay, interSegment );
 
@@ -44084,6 +44763,7 @@ THREE.Mesh = function ( geometry, material ) {
 };
 
 THREE.Mesh.prototype = Object.create( THREE.Object3D.prototype );
+THREE.Mesh.prototype.constructor = THREE.Mesh;
 
 THREE.Mesh.prototype.updateMorphTargets = function () {
 
@@ -44405,6 +45085,7 @@ THREE.Bone = function ( belongsToSkin ) {
 };
 
 THREE.Bone.prototype = Object.create( THREE.Object3D.prototype );
+THREE.Bone.prototype.constructor = THREE.Bone;
 
 
 // File:src/objects/Skeleton.js
@@ -44674,6 +45355,7 @@ THREE.SkinnedMesh = function ( geometry, material, useVertexTexture ) {
 
 
 THREE.SkinnedMesh.prototype = Object.create( THREE.Mesh.prototype );
+THREE.SkinnedMesh.prototype.constructor = THREE.SkinnedMesh;
 
 THREE.SkinnedMesh.prototype.bind = function( skeleton, bindMatrix ) {
 
@@ -44794,6 +45476,7 @@ THREE.MorphAnimMesh = function ( geometry, material ) {
 };
 
 THREE.MorphAnimMesh.prototype = Object.create( THREE.Mesh.prototype );
+THREE.MorphAnimMesh.prototype.constructor = THREE.MorphAnimMesh;
 
 THREE.MorphAnimMesh.prototype.setFrameRange = function ( start, end ) {
 
@@ -44997,6 +45680,7 @@ THREE.LOD = function () {
 
 
 THREE.LOD.prototype = Object.create( THREE.Object3D.prototype );
+THREE.LOD.prototype.constructor = THREE.LOD;
 
 THREE.LOD.prototype.addLevel = function ( object, distance ) {
 
@@ -45142,6 +45826,7 @@ THREE.Sprite = ( function () {
 } )();
 
 THREE.Sprite.prototype = Object.create( THREE.Object3D.prototype );
+THREE.Sprite.prototype.constructor = THREE.Sprite;
 
 THREE.Sprite.prototype.raycast = ( function () {
 
@@ -45211,6 +45896,7 @@ THREE.LensFlare = function ( texture, size, distance, blending, color ) {
 };
 
 THREE.LensFlare.prototype = Object.create( THREE.Object3D.prototype );
+THREE.LensFlare.prototype.constructor = THREE.LensFlare;
 
 
 /*
@@ -45288,6 +45974,7 @@ THREE.Scene = function () {
 };
 
 THREE.Scene.prototype = Object.create( THREE.Object3D.prototype );
+THREE.Scene.prototype.constructor = THREE.Scene;
 
 THREE.Scene.prototype.clone = function ( object ) {
 
@@ -45369,7 +46056,7 @@ THREE.ShaderChunk[ 'map_particle_pars_fragment'] = "#ifdef USE_MAP\n\n	uniform s
 
 // File:src/renderers/shaders/ShaderChunk/default_vertex.glsl
 
-THREE.ShaderChunk[ 'default_vertex'] = "vec4 mvPosition;\n\n#ifdef USE_SKINNING\n\n	mvPosition = modelViewMatrix * skinned;\n\n#endif\n\n#if !defined( USE_SKINNING ) && defined( USE_MORPHTARGETS )\n\n	mvPosition = modelViewMatrix * vec4( morphed, 1.0 );\n\n#endif\n\n#if !defined( USE_SKINNING ) && ! defined( USE_MORPHTARGETS )\n\n	mvPosition = modelViewMatrix * vec4( position, 1.0 );\n\n#endif\n\ngl_Position = projectionMatrix * mvPosition;";
+THREE.ShaderChunk[ 'default_vertex'] = "#ifdef USE_SKINNING\n\n	vec4 mvPosition = modelViewMatrix * skinned;\n\n#elif defined( USE_MORPHTARGETS )\n\n	vec4 mvPosition = modelViewMatrix * vec4( morphed, 1.0 );\n\n#else\n\n	vec4 mvPosition = modelViewMatrix * vec4( position, 1.0 );\n\n#endif\n\ngl_Position = projectionMatrix * mvPosition;\n";
 
 // File:src/renderers/shaders/ShaderChunk/map_pars_fragment.glsl
 
@@ -45401,7 +46088,7 @@ THREE.ShaderChunk[ 'morphnormal_vertex'] = "#ifdef USE_MORPHNORMALS\n\n	vec3 mor
 
 // File:src/renderers/shaders/ShaderChunk/envmap_pars_fragment.glsl
 
-THREE.ShaderChunk[ 'envmap_pars_fragment'] = "#ifdef USE_ENVMAP\n\n	uniform float reflectivity;\n	uniform samplerCube envMap;\n	uniform float flipEnvMap;\n	uniform int combine;\n\n	#if defined( USE_BUMPMAP ) || defined( USE_NORMALMAP ) || defined( PHONG )\n\n		uniform bool useRefract;\n		uniform float refractionRatio;\n\n	#else\n\n		varying vec3 vReflect;\n\n	#endif\n\n#endif";
+THREE.ShaderChunk[ 'envmap_pars_fragment'] = "#ifdef USE_ENVMAP\n\n	uniform float reflectivity;\n	#ifdef ENVMAP_TYPE_CUBE\n		uniform samplerCube envMap;\n	#else\n		uniform sampler2D envMap;\n	#endif\n	uniform float flipEnvMap;\n\n	#if defined( USE_BUMPMAP ) || defined( USE_NORMALMAP ) || defined( PHONG )\n\n		uniform float refractionRatio;\n\n	#else\n\n		varying vec3 vReflect;\n\n	#endif\n\n#endif\n";
 
 // File:src/renderers/shaders/ShaderChunk/logdepthbuf_fragment.glsl
 
@@ -45453,7 +46140,7 @@ THREE.ShaderChunk[ 'skinning_vertex'] = "#ifdef USE_SKINNING\n\n	#ifdef USE_MORP
 
 // File:src/renderers/shaders/ShaderChunk/envmap_pars_vertex.glsl
 
-THREE.ShaderChunk[ 'envmap_pars_vertex'] = "#if defined( USE_ENVMAP ) && ! defined( USE_BUMPMAP ) && ! defined( USE_NORMALMAP ) && ! defined( PHONG )\n\n	varying vec3 vReflect;\n\n	uniform float refractionRatio;\n	uniform bool useRefract;\n\n#endif\n";
+THREE.ShaderChunk[ 'envmap_pars_vertex'] = "#if defined( USE_ENVMAP ) && ! defined( USE_BUMPMAP ) && ! defined( USE_NORMALMAP ) && ! defined( PHONG )\n\n	varying vec3 vReflect;\n\n	uniform float refractionRatio;\n\n#endif\n";
 
 // File:src/renderers/shaders/ShaderChunk/linear_to_gamma_fragment.glsl
 
@@ -45473,7 +46160,7 @@ THREE.ShaderChunk[ 'map_pars_vertex'] = "#if defined( USE_MAP ) || defined( USE_
 
 // File:src/renderers/shaders/ShaderChunk/envmap_fragment.glsl
 
-THREE.ShaderChunk[ 'envmap_fragment'] = "#ifdef USE_ENVMAP\n\n	vec3 reflectVec;\n\n	#if defined( USE_BUMPMAP ) || defined( USE_NORMALMAP ) || defined( PHONG )\n\n		vec3 cameraToVertex = normalize( vWorldPosition - cameraPosition );\n\n		// http://en.wikibooks.org/wiki/GLSL_Programming/Applying_Matrix_Transformations\n		// Transforming Normal Vectors with the Inverse Transformation\n\n		vec3 worldNormal = normalize( vec3( vec4( normal, 0.0 ) * viewMatrix ) );\n\n		if ( useRefract ) {\n\n			reflectVec = refract( cameraToVertex, worldNormal, refractionRatio );\n\n		} else { \n\n			reflectVec = reflect( cameraToVertex, worldNormal );\n\n		}\n\n	#else\n\n		reflectVec = vReflect;\n\n	#endif\n\n	#ifdef DOUBLE_SIDED\n\n		float flipNormal = ( -1.0 + 2.0 * float( gl_FrontFacing ) );\n		vec4 cubeColor = textureCube( envMap, flipNormal * vec3( flipEnvMap * reflectVec.x, reflectVec.yz ) );\n\n	#else\n\n		vec4 cubeColor = textureCube( envMap, vec3( flipEnvMap * reflectVec.x, reflectVec.yz ) );\n\n	#endif\n\n	#ifdef GAMMA_INPUT\n\n		cubeColor.xyz *= cubeColor.xyz;\n\n	#endif\n\n	if ( combine == 1 ) {\n\n		gl_FragColor.xyz = mix( gl_FragColor.xyz, cubeColor.xyz, specularStrength * reflectivity );\n\n	} else if ( combine == 2 ) {\n\n		gl_FragColor.xyz += cubeColor.xyz * specularStrength * reflectivity;\n\n	} else {\n\n		gl_FragColor.xyz = mix( gl_FragColor.xyz, gl_FragColor.xyz * cubeColor.xyz, specularStrength * reflectivity );\n\n	}\n\n#endif";
+THREE.ShaderChunk[ 'envmap_fragment'] = "#ifdef USE_ENVMAP\n\n	#if defined( USE_BUMPMAP ) || defined( USE_NORMALMAP ) || defined( PHONG )\n\n		vec3 cameraToVertex = normalize( vWorldPosition - cameraPosition );\n\n		// http://en.wikibooks.org/wiki/GLSL_Programming/Applying_Matrix_Transformations\n		// Transforming Normal Vectors with the Inverse Transformation\n\n		vec3 worldNormal = normalize( vec3( vec4( normal, 0.0 ) * viewMatrix ) );\n\n		#ifdef ENVMAP_MODE_REFLECTION\n\n			vec3 reflectVec = reflect( cameraToVertex, worldNormal );\n\n		#else\n\n			vec3 reflectVec = refract( cameraToVertex, worldNormal, refractionRatio );\n\n		#endif\n\n	#else\n\n		vec3 reflectVec = vReflect;\n\n	#endif\n\n	#ifdef DOUBLE_SIDED\n		float flipNormal = ( -1.0 + 2.0 * float( gl_FrontFacing ) );\n	#else\n		float flipNormal = 1.0;\n	#endif\n\n	#ifdef ENVMAP_TYPE_CUBE\n		vec4 envColor = textureCube( envMap, flipNormal * vec3( flipEnvMap * reflectVec.x, reflectVec.yz ) );\n\n	#elif defined( ENVMAP_TYPE_EQUIREC )\n		vec2 sampleUV;\n		sampleUV.y = clamp( flipNormal * reflectVec.y * 0.5 + 0.5, 0.0, 1.0);\n		sampleUV.x = atan( flipNormal * reflectVec.z, flipNormal * reflectVec.x ) * 0.15915494309189533576888376337251 + 0.5; // reciprocal( 2 PI ) + 0.5\n		vec4 envColor = texture2D( envMap, sampleUV );\n		\n	#elif defined( ENVMAP_TYPE_SPHERE )\n		vec3 reflectView = flipNormal * normalize((viewMatrix * vec4( reflectVec, 0.0 )).xyz + vec3(0.0,0.0,1.0));\n		vec4 envColor = texture2D( envMap, reflectView.xy * 0.5 + 0.5 );\n	#endif\n\n	#ifdef GAMMA_INPUT\n\n		envColor.xyz *= envColor.xyz;\n\n	#endif\n\n	#ifdef ENVMAP_BLENDING_MULTIPLY\n\n		gl_FragColor.xyz = mix( gl_FragColor.xyz, gl_FragColor.xyz * envColor.xyz, specularStrength * reflectivity );\n\n	#elif defined( ENVMAP_BLENDING_MIX )\n\n		gl_FragColor.xyz = mix( gl_FragColor.xyz, envColor.xyz, specularStrength * reflectivity );\n\n	#elif defined( ENVMAP_BLENDING_ADD )\n\n		gl_FragColor.xyz += envColor.xyz * specularStrength * reflectivity;\n\n	#endif\n\n#endif\n";
 
 // File:src/renderers/shaders/ShaderChunk/specularmap_pars_fragment.glsl
 
@@ -45501,7 +46188,7 @@ THREE.ShaderChunk[ 'bumpmap_pars_fragment'] = "#ifdef USE_BUMPMAP\n\n	uniform sa
 
 // File:src/renderers/shaders/ShaderChunk/defaultnormal_vertex.glsl
 
-THREE.ShaderChunk[ 'defaultnormal_vertex'] = "vec3 objectNormal;\n\n#ifdef USE_SKINNING\n\n	objectNormal = skinnedNormal.xyz;\n\n#endif\n\n#if !defined( USE_SKINNING ) && defined( USE_MORPHNORMALS )\n\n	objectNormal = morphedNormal;\n\n#endif\n\n#if !defined( USE_SKINNING ) && ! defined( USE_MORPHNORMALS )\n\n	objectNormal = normal;\n\n#endif\n\n#ifdef FLIP_SIDED\n\n	objectNormal = -objectNormal;\n\n#endif\n\nvec3 transformedNormal = normalMatrix * objectNormal;";
+THREE.ShaderChunk[ 'defaultnormal_vertex'] = "#ifdef USE_SKINNING\n\n	vec3 objectNormal = skinnedNormal.xyz;\n\n#elif defined( USE_MORPHNORMALS )\n\n	vec3 objectNormal = morphedNormal;\n\n#else\n\n	vec3 objectNormal = normal;\n\n#endif\n\n#ifdef FLIP_SIDED\n\n	objectNormal = -objectNormal;\n\n#endif\n\nvec3 transformedNormal = normalMatrix * objectNormal;\n";
 
 // File:src/renderers/shaders/ShaderChunk/lights_phong_pars_fragment.glsl
 
@@ -45533,7 +46220,7 @@ THREE.ShaderChunk[ 'morphtarget_vertex'] = "#ifdef USE_MORPHTARGETS\n\n	vec3 mor
 
 // File:src/renderers/shaders/ShaderChunk/envmap_vertex.glsl
 
-THREE.ShaderChunk[ 'envmap_vertex'] = "#if defined( USE_ENVMAP ) && ! defined( USE_BUMPMAP ) && ! defined( USE_NORMALMAP ) && ! defined( PHONG )\n\n	vec3 worldNormal = mat3( modelMatrix[ 0 ].xyz, modelMatrix[ 1 ].xyz, modelMatrix[ 2 ].xyz ) * objectNormal;\n	worldNormal = normalize( worldNormal );\n\n	vec3 cameraToVertex = normalize( worldPosition.xyz - cameraPosition );\n\n	if ( useRefract ) {\n\n		vReflect = refract( cameraToVertex, worldNormal, refractionRatio );\n\n	} else {\n\n		vReflect = reflect( cameraToVertex, worldNormal );\n\n	}\n\n#endif";
+THREE.ShaderChunk[ 'envmap_vertex'] = "#if defined( USE_ENVMAP ) && ! defined( USE_BUMPMAP ) && ! defined( USE_NORMALMAP ) && ! defined( PHONG )\n\n	vec3 worldNormal = mat3( modelMatrix[ 0 ].xyz, modelMatrix[ 1 ].xyz, modelMatrix[ 2 ].xyz ) * objectNormal;\n	worldNormal = normalize( worldNormal );\n\n	vec3 cameraToVertex = normalize( worldPosition.xyz - cameraPosition );\n\n	#ifdef ENVMAP_MODE_REFLECTION\n\n		vReflect = reflect( cameraToVertex, worldNormal );\n\n	#else\n\n		vReflect = refract( cameraToVertex, worldNormal, refractionRatio );\n\n	#endif\n\n#endif\n";
 
 // File:src/renderers/shaders/ShaderChunk/shadowmap_fragment.glsl
 
@@ -45541,7 +46228,7 @@ THREE.ShaderChunk[ 'shadowmap_fragment'] = "#ifdef USE_SHADOWMAP\n\n	#ifdef SHAD
 
 // File:src/renderers/shaders/ShaderChunk/worldpos_vertex.glsl
 
-THREE.ShaderChunk[ 'worldpos_vertex'] = "#if defined( USE_ENVMAP ) || defined( PHONG ) || defined( LAMBERT ) || defined ( USE_SHADOWMAP )\n\n	#ifdef USE_SKINNING\n\n		vec4 worldPosition = modelMatrix * skinned;\n\n	#endif\n\n	#if defined( USE_MORPHTARGETS ) && ! defined( USE_SKINNING )\n\n		vec4 worldPosition = modelMatrix * vec4( morphed, 1.0 );\n\n	#endif\n\n	#if ! defined( USE_MORPHTARGETS ) && ! defined( USE_SKINNING )\n\n		vec4 worldPosition = modelMatrix * vec4( position, 1.0 );\n\n	#endif\n\n#endif";
+THREE.ShaderChunk[ 'worldpos_vertex'] = "#if defined( USE_ENVMAP ) || defined( PHONG ) || defined( LAMBERT ) || defined ( USE_SHADOWMAP )\n\n	#ifdef USE_SKINNING\n\n		vec4 worldPosition = modelMatrix * skinned;\n\n	#elif defined( USE_MORPHTARGETS )\n\n		vec4 worldPosition = modelMatrix * vec4( morphed, 1.0 );\n\n	#else\n\n		vec4 worldPosition = modelMatrix * vec4( position, 1.0 );\n\n	#endif\n\n#endif\n";
 
 // File:src/renderers/shaders/ShaderChunk/shadowmap_pars_fragment.glsl
 
@@ -45654,10 +46341,8 @@ THREE.UniformsLib = {
 
 		"envMap" : { type: "t", value: null },
 		"flipEnvMap" : { type: "f", value: - 1 },
-		"useRefract" : { type: "i", value: 0 },
 		"reflectivity" : { type: "f", value: 1.0 },
 		"refractionRatio" : { type: "f", value: 0.98 },
-		"combine" : { type: "i", value: 0 },
 
 		"morphTargetInfluences" : { type: "f", value: 0 }
 
@@ -46330,624 +47015,6 @@ THREE.ShaderLib = {
 	},
 
 	/* -------------------------------------------------------------------------
-	//	Normal map shader
-	//		- Blinn-Phong
-	//		- normal + diffuse + specular + AO + displacement + reflection + shadow maps
-	//		- point and directional lights (use with "lights: true" material option)
-	 ------------------------------------------------------------------------- */
-
-	'normalmap' : {
-
-		uniforms: THREE.UniformsUtils.merge( [
-
-			THREE.UniformsLib[ "fog" ],
-			THREE.UniformsLib[ "lights" ],
-			THREE.UniformsLib[ "shadowmap" ],
-
-			{
-
-			"enableAO"          : { type: "i", value: 0 },
-			"enableDiffuse"     : { type: "i", value: 0 },
-			"enableSpecular"    : { type: "i", value: 0 },
-			"enableReflection"  : { type: "i", value: 0 },
-			"enableDisplacement": { type: "i", value: 0 },
-
-			"tDisplacement": { type: "t", value: null }, // must go first as this is vertex texture
-			"tDiffuse"     : { type: "t", value: null },
-			"tCube"        : { type: "t", value: null },
-			"tNormal"      : { type: "t", value: null },
-			"tSpecular"    : { type: "t", value: null },
-			"tAO"          : { type: "t", value: null },
-
-			"uNormalScale": { type: "v2", value: new THREE.Vector2( 1, 1 ) },
-
-			"uDisplacementBias": { type: "f", value: 0.0 },
-			"uDisplacementScale": { type: "f", value: 1.0 },
-
-			"diffuse": { type: "c", value: new THREE.Color( 0xffffff ) },
-			"specular": { type: "c", value: new THREE.Color( 0x111111 ) },
-			"ambient": { type: "c", value: new THREE.Color( 0xffffff ) },
-			"shininess": { type: "f", value: 30 },
-			"opacity": { type: "f", value: 1 },
-
-			"useRefract": { type: "i", value: 0 },
-			"refractionRatio": { type: "f", value: 0.98 },
-			"reflectivity": { type: "f", value: 0.5 },
-
-			"uOffset" : { type: "v2", value: new THREE.Vector2( 0, 0 ) },
-			"uRepeat" : { type: "v2", value: new THREE.Vector2( 1, 1 ) },
-
-			"wrapRGB" : { type: "v3", value: new THREE.Vector3( 1, 1, 1 ) }
-
-			}
-
-		] ),
-
-		fragmentShader: [
-
-			"uniform vec3 ambient;",
-			"uniform vec3 diffuse;",
-			"uniform vec3 specular;",
-			"uniform float shininess;",
-			"uniform float opacity;",
-
-			"uniform bool enableDiffuse;",
-			"uniform bool enableSpecular;",
-			"uniform bool enableAO;",
-			"uniform bool enableReflection;",
-
-			"uniform sampler2D tDiffuse;",
-			"uniform sampler2D tNormal;",
-			"uniform sampler2D tSpecular;",
-			"uniform sampler2D tAO;",
-
-			"uniform samplerCube tCube;",
-
-			"uniform vec2 uNormalScale;",
-
-			"uniform bool useRefract;",
-			"uniform float refractionRatio;",
-			"uniform float reflectivity;",
-
-			"varying vec3 vTangent;",
-			"varying vec3 vBinormal;",
-			"varying vec3 vNormal;",
-			"varying vec2 vUv;",
-
-			"uniform vec3 ambientLightColor;",
-
-			"#if MAX_DIR_LIGHTS > 0",
-
-			"	uniform vec3 directionalLightColor[ MAX_DIR_LIGHTS ];",
-			"	uniform vec3 directionalLightDirection[ MAX_DIR_LIGHTS ];",
-
-			"#endif",
-
-			"#if MAX_HEMI_LIGHTS > 0",
-
-			"	uniform vec3 hemisphereLightSkyColor[ MAX_HEMI_LIGHTS ];",
-			"	uniform vec3 hemisphereLightGroundColor[ MAX_HEMI_LIGHTS ];",
-			"	uniform vec3 hemisphereLightDirection[ MAX_HEMI_LIGHTS ];",
-
-			"#endif",
-
-			"#if MAX_POINT_LIGHTS > 0",
-
-			"	uniform vec3 pointLightColor[ MAX_POINT_LIGHTS ];",
-			"	uniform vec3 pointLightPosition[ MAX_POINT_LIGHTS ];",
-			"	uniform float pointLightDistance[ MAX_POINT_LIGHTS ];",
-
-			"#endif",
-
-			"#if MAX_SPOT_LIGHTS > 0",
-
-			"	uniform vec3 spotLightColor[ MAX_SPOT_LIGHTS ];",
-			"	uniform vec3 spotLightPosition[ MAX_SPOT_LIGHTS ];",
-			"	uniform vec3 spotLightDirection[ MAX_SPOT_LIGHTS ];",
-			"	uniform float spotLightAngleCos[ MAX_SPOT_LIGHTS ];",
-			"	uniform float spotLightExponent[ MAX_SPOT_LIGHTS ];",
-			"	uniform float spotLightDistance[ MAX_SPOT_LIGHTS ];",
-
-			"#endif",
-
-			"#ifdef WRAP_AROUND",
-
-			"	uniform vec3 wrapRGB;",
-
-			"#endif",
-
-			"varying vec3 vWorldPosition;",
-			"varying vec3 vViewPosition;",
-
-			THREE.ShaderChunk[ "shadowmap_pars_fragment" ],
-			THREE.ShaderChunk[ "fog_pars_fragment" ],
-			THREE.ShaderChunk[ "logdepthbuf_pars_fragment" ],
-
-			"void main() {",
-				THREE.ShaderChunk[ "logdepthbuf_fragment" ],
-
-			"	gl_FragColor = vec4( vec3( 1.0 ), opacity );",
-
-			"	vec3 specularTex = vec3( 1.0 );",
-
-			"	vec3 normalTex = texture2D( tNormal, vUv ).xyz * 2.0 - 1.0;",
-			"	normalTex.xy *= uNormalScale;",
-			"	normalTex = normalize( normalTex );",
-
-			"	if( enableDiffuse ) {",
-
-			"		#ifdef GAMMA_INPUT",
-
-			"			vec4 texelColor = texture2D( tDiffuse, vUv );",
-			"			texelColor.xyz *= texelColor.xyz;",
-
-			"			gl_FragColor = gl_FragColor * texelColor;",
-
-			"		#else",
-
-			"			gl_FragColor = gl_FragColor * texture2D( tDiffuse, vUv );",
-
-			"		#endif",
-
-			"	}",
-
-			"	if( enableAO ) {",
-
-			"		#ifdef GAMMA_INPUT",
-
-			"			vec4 aoColor = texture2D( tAO, vUv );",
-			"			aoColor.xyz *= aoColor.xyz;",
-
-			"			gl_FragColor.xyz = gl_FragColor.xyz * aoColor.xyz;",
-
-			"		#else",
-
-			"			gl_FragColor.xyz = gl_FragColor.xyz * texture2D( tAO, vUv ).xyz;",
-
-			"		#endif",
-
-			"	}",
-			
-			THREE.ShaderChunk[ "alphatest_fragment" ],
-
-			"	if( enableSpecular )",
-			"		specularTex = texture2D( tSpecular, vUv ).xyz;",
-
-			"	mat3 tsb = mat3( normalize( vTangent ), normalize( vBinormal ), normalize( vNormal ) );",
-			"	vec3 finalNormal = tsb * normalTex;",
-
-			"	#ifdef FLIP_SIDED",
-
-			"		finalNormal = -finalNormal;",
-
-			"	#endif",
-
-			"	vec3 normal = normalize( finalNormal );",
-			"	vec3 viewPosition = normalize( vViewPosition );",
-
-				// point lights
-
-			"	#if MAX_POINT_LIGHTS > 0",
-
-			"		vec3 pointDiffuse = vec3( 0.0 );",
-			"		vec3 pointSpecular = vec3( 0.0 );",
-
-			"		for ( int i = 0; i < MAX_POINT_LIGHTS; i ++ ) {",
-
-			"			vec4 lPosition = viewMatrix * vec4( pointLightPosition[ i ], 1.0 );",
-			"			vec3 pointVector = lPosition.xyz + vViewPosition.xyz;",
-
-			"			float pointDistance = 1.0;",
-			"			if ( pointLightDistance[ i ] > 0.0 )",
-			"				pointDistance = 1.0 - min( ( length( pointVector ) / pointLightDistance[ i ] ), 1.0 );",
-
-			"			pointVector = normalize( pointVector );",
-
-						// diffuse
-
-			"			#ifdef WRAP_AROUND",
-
-			"				float pointDiffuseWeightFull = max( dot( normal, pointVector ), 0.0 );",
-			"				float pointDiffuseWeightHalf = max( 0.5 * dot( normal, pointVector ) + 0.5, 0.0 );",
-
-			"				vec3 pointDiffuseWeight = mix( vec3( pointDiffuseWeightFull ), vec3( pointDiffuseWeightHalf ), wrapRGB );",
-
-			"			#else",
-
-			"				float pointDiffuseWeight = max( dot( normal, pointVector ), 0.0 );",
-
-			"			#endif",
-
-			"			pointDiffuse += pointDistance * pointLightColor[ i ] * diffuse * pointDiffuseWeight;",
-
-						// specular
-
-			"			vec3 pointHalfVector = normalize( pointVector + viewPosition );",
-			"			float pointDotNormalHalf = max( dot( normal, pointHalfVector ), 0.0 );",
-			"			float pointSpecularWeight = specularTex.r * max( pow( pointDotNormalHalf, shininess ), 0.0 );",
-
-			"			float specularNormalization = ( shininess + 2.0 ) / 8.0;",
-
-			"			vec3 schlick = specular + vec3( 1.0 - specular ) * pow( max( 1.0 - dot( pointVector, pointHalfVector ), 0.0 ), 5.0 );",
-			"			pointSpecular += schlick * pointLightColor[ i ] * pointSpecularWeight * pointDiffuseWeight * pointDistance * specularNormalization;",
-
-			"		}",
-
-			"	#endif",
-
-				// spot lights
-
-			"	#if MAX_SPOT_LIGHTS > 0",
-
-			"		vec3 spotDiffuse = vec3( 0.0 );",
-			"		vec3 spotSpecular = vec3( 0.0 );",
-
-			"		for ( int i = 0; i < MAX_SPOT_LIGHTS; i ++ ) {",
-
-			"			vec4 lPosition = viewMatrix * vec4( spotLightPosition[ i ], 1.0 );",
-			"			vec3 spotVector = lPosition.xyz + vViewPosition.xyz;",
-
-			"			float spotDistance = 1.0;",
-			"			if ( spotLightDistance[ i ] > 0.0 )",
-			"				spotDistance = 1.0 - min( ( length( spotVector ) / spotLightDistance[ i ] ), 1.0 );",
-
-			"			spotVector = normalize( spotVector );",
-
-			"			float spotEffect = dot( spotLightDirection[ i ], normalize( spotLightPosition[ i ] - vWorldPosition ) );",
-
-			"			if ( spotEffect > spotLightAngleCos[ i ] ) {",
-
-			"				spotEffect = max( pow( max( spotEffect, 0.0 ), spotLightExponent[ i ] ), 0.0 );",
-
-							// diffuse
-
-			"				#ifdef WRAP_AROUND",
-
-			"					float spotDiffuseWeightFull = max( dot( normal, spotVector ), 0.0 );",
-			"					float spotDiffuseWeightHalf = max( 0.5 * dot( normal, spotVector ) + 0.5, 0.0 );",
-
-			"					vec3 spotDiffuseWeight = mix( vec3( spotDiffuseWeightFull ), vec3( spotDiffuseWeightHalf ), wrapRGB );",
-
-			"				#else",
-
-			"					float spotDiffuseWeight = max( dot( normal, spotVector ), 0.0 );",
-
-			"				#endif",
-
-			"				spotDiffuse += spotDistance * spotLightColor[ i ] * diffuse * spotDiffuseWeight * spotEffect;",
-
-							// specular
-
-			"				vec3 spotHalfVector = normalize( spotVector + viewPosition );",
-			"				float spotDotNormalHalf = max( dot( normal, spotHalfVector ), 0.0 );",
-			"				float spotSpecularWeight = specularTex.r * max( pow( spotDotNormalHalf, shininess ), 0.0 );",
-
-			"				float specularNormalization = ( shininess + 2.0 ) / 8.0;",
-
-			"				vec3 schlick = specular + vec3( 1.0 - specular ) * pow( max( 1.0 - dot( spotVector, spotHalfVector ), 0.0 ), 5.0 );",
-			"				spotSpecular += schlick * spotLightColor[ i ] * spotSpecularWeight * spotDiffuseWeight * spotDistance * specularNormalization * spotEffect;",
-
-			"			}",
-
-			"		}",
-
-			"	#endif",
-
-				// directional lights
-
-			"	#if MAX_DIR_LIGHTS > 0",
-
-			"		vec3 dirDiffuse = vec3( 0.0 );",
-			"		vec3 dirSpecular = vec3( 0.0 );",
-
-			"		for( int i = 0; i < MAX_DIR_LIGHTS; i++ ) {",
-
-			"			vec4 lDirection = viewMatrix * vec4( directionalLightDirection[ i ], 0.0 );",
-			"			vec3 dirVector = normalize( lDirection.xyz );",
-
-						// diffuse
-
-			"			#ifdef WRAP_AROUND",
-
-			"				float directionalLightWeightingFull = max( dot( normal, dirVector ), 0.0 );",
-			"				float directionalLightWeightingHalf = max( 0.5 * dot( normal, dirVector ) + 0.5, 0.0 );",
-
-			"				vec3 dirDiffuseWeight = mix( vec3( directionalLightWeightingFull ), vec3( directionalLightWeightingHalf ), wrapRGB );",
-
-			"			#else",
-
-			"				float dirDiffuseWeight = max( dot( normal, dirVector ), 0.0 );",
-
-			"			#endif",
-
-			"			dirDiffuse += directionalLightColor[ i ] * diffuse * dirDiffuseWeight;",
-
-						// specular
-
-			"			vec3 dirHalfVector = normalize( dirVector + viewPosition );",
-			"			float dirDotNormalHalf = max( dot( normal, dirHalfVector ), 0.0 );",
-			"			float dirSpecularWeight = specularTex.r * max( pow( dirDotNormalHalf, shininess ), 0.0 );",
-
-			"			float specularNormalization = ( shininess + 2.0 ) / 8.0;",
-
-			"			vec3 schlick = specular + vec3( 1.0 - specular ) * pow( max( 1.0 - dot( dirVector, dirHalfVector ), 0.0 ), 5.0 );",
-			"			dirSpecular += schlick * directionalLightColor[ i ] * dirSpecularWeight * dirDiffuseWeight * specularNormalization;",
-
-			"		}",
-
-			"	#endif",
-
-				// hemisphere lights
-
-			"	#if MAX_HEMI_LIGHTS > 0",
-
-			"		vec3 hemiDiffuse = vec3( 0.0 );",
-			"		vec3 hemiSpecular = vec3( 0.0 );" ,
-
-			"		for( int i = 0; i < MAX_HEMI_LIGHTS; i ++ ) {",
-
-			"			vec4 lDirection = viewMatrix * vec4( hemisphereLightDirection[ i ], 0.0 );",
-			"			vec3 lVector = normalize( lDirection.xyz );",
-
-						// diffuse
-
-			"			float dotProduct = dot( normal, lVector );",
-			"			float hemiDiffuseWeight = 0.5 * dotProduct + 0.5;",
-
-			"			vec3 hemiColor = mix( hemisphereLightGroundColor[ i ], hemisphereLightSkyColor[ i ], hemiDiffuseWeight );",
-
-			"			hemiDiffuse += diffuse * hemiColor;",
-
-						// specular (sky light)
-
-
-			"			vec3 hemiHalfVectorSky = normalize( lVector + viewPosition );",
-			"			float hemiDotNormalHalfSky = 0.5 * dot( normal, hemiHalfVectorSky ) + 0.5;",
-			"			float hemiSpecularWeightSky = specularTex.r * max( pow( max( hemiDotNormalHalfSky, 0.0 ), shininess ), 0.0 );",
-
-						// specular (ground light)
-
-			"			vec3 lVectorGround = -lVector;",
-
-			"			vec3 hemiHalfVectorGround = normalize( lVectorGround + viewPosition );",
-			"			float hemiDotNormalHalfGround = 0.5 * dot( normal, hemiHalfVectorGround ) + 0.5;",
-			"			float hemiSpecularWeightGround = specularTex.r * max( pow( max( hemiDotNormalHalfGround, 0.0 ), shininess ), 0.0 );",
-
-			"			float dotProductGround = dot( normal, lVectorGround );",
-
-			"			float specularNormalization = ( shininess + 2.0 ) / 8.0;",
-
-			"			vec3 schlickSky = specular + vec3( 1.0 - specular ) * pow( max( 1.0 - dot( lVector, hemiHalfVectorSky ), 0.0 ), 5.0 );",
-			"			vec3 schlickGround = specular + vec3( 1.0 - specular ) * pow( max( 1.0 - dot( lVectorGround, hemiHalfVectorGround ), 0.0 ), 5.0 );",
-			"			hemiSpecular += hemiColor * specularNormalization * ( schlickSky * hemiSpecularWeightSky * max( dotProduct, 0.0 ) + schlickGround * hemiSpecularWeightGround * max( dotProductGround, 0.0 ) );",
-
-			"		}",
-
-			"	#endif",
-
-				// all lights contribution summation
-
-			"	vec3 totalDiffuse = vec3( 0.0 );",
-			"	vec3 totalSpecular = vec3( 0.0 );",
-
-			"	#if MAX_DIR_LIGHTS > 0",
-
-			"		totalDiffuse += dirDiffuse;",
-			"		totalSpecular += dirSpecular;",
-
-			"	#endif",
-
-			"	#if MAX_HEMI_LIGHTS > 0",
-
-			"		totalDiffuse += hemiDiffuse;",
-			"		totalSpecular += hemiSpecular;",
-
-			"	#endif",
-
-			"	#if MAX_POINT_LIGHTS > 0",
-
-			"		totalDiffuse += pointDiffuse;",
-			"		totalSpecular += pointSpecular;",
-
-			"	#endif",
-
-			"	#if MAX_SPOT_LIGHTS > 0",
-
-			"		totalDiffuse += spotDiffuse;",
-			"		totalSpecular += spotSpecular;",
-
-			"	#endif",
-
-			"	#ifdef METAL",
-
-			"		gl_FragColor.xyz = gl_FragColor.xyz * ( totalDiffuse + ambientLightColor * ambient + totalSpecular );",
-
-			"	#else",
-
-			"		gl_FragColor.xyz = gl_FragColor.xyz * ( totalDiffuse + ambientLightColor * ambient ) + totalSpecular;",
-
-			"	#endif",
-
-			"	if ( enableReflection ) {",
-
-			"		vec3 vReflect;",
-			"		vec3 cameraToVertex = normalize( vWorldPosition - cameraPosition );",
-
-			"		if ( useRefract ) {",
-
-			"			vReflect = refract( cameraToVertex, normal, refractionRatio );",
-
-			"		} else {",
-
-			"			vReflect = reflect( cameraToVertex, normal );",
-
-			"		}",
-
-			"		vec4 cubeColor = textureCube( tCube, vec3( -vReflect.x, vReflect.yz ) );",
-
-			"		#ifdef GAMMA_INPUT",
-
-			"			cubeColor.xyz *= cubeColor.xyz;",
-
-			"		#endif",
-
-			"		gl_FragColor.xyz = mix( gl_FragColor.xyz, cubeColor.xyz, specularTex.r * reflectivity );",
-
-			"	}",
-
-				THREE.ShaderChunk[ "shadowmap_fragment" ],
-				THREE.ShaderChunk[ "linear_to_gamma_fragment" ],
-				THREE.ShaderChunk[ "fog_fragment" ],
-
-			"}"
-
-		].join("\n"),
-
-		vertexShader: [
-
-			"attribute vec4 tangent;",
-
-			"uniform vec2 uOffset;",
-			"uniform vec2 uRepeat;",
-
-			"uniform bool enableDisplacement;",
-
-			"#ifdef VERTEX_TEXTURES",
-
-			"	uniform sampler2D tDisplacement;",
-			"	uniform float uDisplacementScale;",
-			"	uniform float uDisplacementBias;",
-
-			"#endif",
-
-			"varying vec3 vTangent;",
-			"varying vec3 vBinormal;",
-			"varying vec3 vNormal;",
-			"varying vec2 vUv;",
-
-			"varying vec3 vWorldPosition;",
-			"varying vec3 vViewPosition;",
-
-			THREE.ShaderChunk[ "skinning_pars_vertex" ],
-			THREE.ShaderChunk[ "shadowmap_pars_vertex" ],
-			THREE.ShaderChunk[ "logdepthbuf_pars_vertex" ],
-
-			"void main() {",
-
-				THREE.ShaderChunk[ "skinbase_vertex" ],
-				THREE.ShaderChunk[ "skinnormal_vertex" ],
-
-				// normal, tangent and binormal vectors
-
-			"	#ifdef USE_SKINNING",
-
-			"		vNormal = normalize( normalMatrix * skinnedNormal.xyz );",
-
-			"		vec4 skinnedTangent = skinMatrix * vec4( tangent.xyz, 0.0 );",
-			"		vTangent = normalize( normalMatrix * skinnedTangent.xyz );",
-
-			"	#else",
-
-			"		vNormal = normalize( normalMatrix * normal );",
-			"		vTangent = normalize( normalMatrix * tangent.xyz );",
-
-			"	#endif",
-
-			"	vBinormal = normalize( cross( vNormal, vTangent ) * tangent.w );",
-
-			"	vUv = uv * uRepeat + uOffset;",
-
-				// displacement mapping
-
-			"	vec3 displacedPosition;",
-
-			"	#ifdef VERTEX_TEXTURES",
-
-			"		if ( enableDisplacement ) {",
-
-			"			vec3 dv = texture2D( tDisplacement, uv ).xyz;",
-			"			float df = uDisplacementScale * dv.x + uDisplacementBias;",
-			"			displacedPosition = position + normalize( normal ) * df;",
-
-			"		} else {",
-
-			"			#ifdef USE_SKINNING",
-
-			"				vec4 skinVertex = bindMatrix * vec4( position, 1.0 );",
-
-			"				vec4 skinned = vec4( 0.0 );",
-			"				skinned += boneMatX * skinVertex * skinWeight.x;",
-			"				skinned += boneMatY * skinVertex * skinWeight.y;",
-			"				skinned += boneMatZ * skinVertex * skinWeight.z;",
-			"				skinned += boneMatW * skinVertex * skinWeight.w;",
-			"				skinned  = bindMatrixInverse * skinned;",
-
-			"				displacedPosition = skinned.xyz;",
-
-			"			#else",
-
-			"				displacedPosition = position;",
-
-			"			#endif",
-
-			"		}",
-
-			"	#else",
-
-			"		#ifdef USE_SKINNING",
-
-			"			vec4 skinVertex = bindMatrix * vec4( position, 1.0 );",
-
-			"			vec4 skinned = vec4( 0.0 );",
-			"			skinned += boneMatX * skinVertex * skinWeight.x;",
-			"			skinned += boneMatY * skinVertex * skinWeight.y;",
-			"			skinned += boneMatZ * skinVertex * skinWeight.z;",
-			"			skinned += boneMatW * skinVertex * skinWeight.w;",
-			"			skinned  = bindMatrixInverse * skinned;",
-
-			"			displacedPosition = skinned.xyz;",
-
-			"		#else",
-
-			"			displacedPosition = position;",
-
-			"		#endif",
-
-			"	#endif",
-
-				//
-
-			"	vec4 mvPosition = modelViewMatrix * vec4( displacedPosition, 1.0 );",
-			"	vec4 worldPosition = modelMatrix * vec4( displacedPosition, 1.0 );",
-
-			"	gl_Position = projectionMatrix * mvPosition;",
-
-				THREE.ShaderChunk[ "logdepthbuf_vertex" ],
-
-				//
-
-			"	vWorldPosition = worldPosition.xyz;",
-			"	vViewPosition = -mvPosition.xyz;",
-
-				// shadows
-
-			"	#ifdef USE_SHADOWMAP",
-
-			"		for( int i = 0; i < MAX_SHADOWS; i ++ ) {",
-
-			"			vShadowCoord[ i ] = shadowMatrix[ i ] * worldPosition;",
-
-			"		}",
-
-			"	#endif",
-
-			"}"
-
-		].join("\n")
-
-	},
-
-	/* -------------------------------------------------------------------------
 	//	Cube map shader
 	 ------------------------------------------------------------------------- */
 
@@ -46987,6 +47054,60 @@ THREE.ShaderLib = {
 			"void main() {",
 
 			"	gl_FragColor = textureCube( tCube, vec3( tFlip * vWorldPosition.x, vWorldPosition.yz ) );",
+
+				THREE.ShaderChunk[ "logdepthbuf_fragment" ],
+
+			"}"
+
+		].join("\n")
+
+	},
+
+	/* -------------------------------------------------------------------------
+	//	Cube map shader
+	 ------------------------------------------------------------------------- */
+
+	'equirect': {
+
+		uniforms: { "tEquirect": { type: "t", value: null },
+					"tFlip": { type: "f", value: - 1 } },
+
+		vertexShader: [
+
+			"varying vec3 vWorldPosition;",
+
+			THREE.ShaderChunk[ "logdepthbuf_pars_vertex" ],
+
+			"void main() {",
+
+			"	vec4 worldPosition = modelMatrix * vec4( position, 1.0 );",
+			"	vWorldPosition = worldPosition.xyz;",
+
+			"	gl_Position = projectionMatrix * modelViewMatrix * vec4( position, 1.0 );",
+
+				THREE.ShaderChunk[ "logdepthbuf_vertex" ],
+
+			"}"
+
+		].join("\n"),
+
+		fragmentShader: [
+
+			"uniform sampler2D tEquirect;",
+			"uniform float tFlip;",
+
+			"varying vec3 vWorldPosition;",
+
+			THREE.ShaderChunk[ "logdepthbuf_pars_fragment" ],
+
+			"void main() {",
+
+				// "	gl_FragColor = textureCube( tCube, vec3( tFlip * vWorldPosition.x, vWorldPosition.yz ) );",
+				"vec3 direction = normalize( vWorldPosition );",
+				"vec2 sampleUV;",
+				"sampleUV.y = clamp( tFlip * direction.y * -0.5 + 0.5, 0.0, 1.0);",
+				"sampleUV.x = atan( direction.z, direction.x ) * 0.15915494309189533576888376337251 + 0.5;", // reciprocal( 2 PI ) + 0.5
+				"gl_FragColor = texture2D( tEquirect, sampleUV );",
 
 				THREE.ShaderChunk[ "logdepthbuf_fragment" ],
 
@@ -47089,6 +47210,8 @@ THREE.WebGLRenderer = function ( parameters ) {
 	var _canvas = parameters.canvas !== undefined ? parameters.canvas : document.createElement( 'canvas' ),
 	_context = parameters.context !== undefined ? parameters.context : null,
 
+	pixelRatio = 1,
+
 	_precision = parameters.precision !== undefined ? parameters.precision : 'highp',
 
 	_alpha = parameters.alpha !== undefined ? parameters.alpha : false,
@@ -47117,11 +47240,6 @@ THREE.WebGLRenderer = function ( parameters ) {
 
 	this.domElement = _canvas;
 	this.context = null;
-	this.devicePixelRatio = parameters.devicePixelRatio !== undefined
-				 ? parameters.devicePixelRatio
-				 : self.devicePixelRatio !== undefined
-					 ? self.devicePixelRatio
-					 : 1;
 
 	// clearing
 
@@ -47190,7 +47308,7 @@ THREE.WebGLRenderer = function ( parameters ) {
 	_currentProgram = null,
 	_currentFramebuffer = null,
 	_currentMaterialId = - 1,
-	_currentGeometryGroupHash = - 1,
+	_currentGeometryProgram = '',
 	_currentCamera = null,
 
 	_usedTextureUnits = 0,
@@ -47283,6 +47401,17 @@ THREE.WebGLRenderer = function ( parameters ) {
 
 		}
 
+		_canvas.addEventListener( 'webglcontextlost', function ( event ) {
+
+			event.preventDefault();
+
+			resetGLState();
+			setDefaultGLState();
+
+			_webglObjects = {};
+
+		}, false);
+
 	} catch ( error ) {
 
 		console.error( error );
@@ -47317,7 +47446,7 @@ THREE.WebGLRenderer = function ( parameters ) {
 
 	//
 
-	function setDefaultGLState() {
+	var setDefaultGLState = function () {
 
 		_gl.clearColor( 0, 0, 0, 1 );
 		_gl.clearDepth( 1 );
@@ -47338,7 +47467,30 @@ THREE.WebGLRenderer = function ( parameters ) {
 
 		_gl.clearColor( _clearColor.r, _clearColor.g, _clearColor.b, _clearAlpha );
 
-	}
+	};
+
+	var resetGLState = function () {
+
+		_currentProgram = null;
+		_currentCamera = null;
+
+		_oldBlending = - 1;
+		_oldDepthTest = - 1;
+		_oldDepthWrite = - 1;
+		_oldDoubleSided = - 1;
+		_oldFlipSided = - 1;
+		_currentGeometryProgram = '';
+		_currentMaterialId = - 1;
+
+		_lightsNeedUpdate = true;
+
+		for ( var i = 0; i < _enabledAttributes.length; i ++ ) {
+
+			_enabledAttributes[ i ] = 0;
+
+		}
+
+	};
 
 	setDefaultGLState();
 
@@ -47389,7 +47541,7 @@ THREE.WebGLRenderer = function ( parameters ) {
 				}
 
 			}
-			
+
 			return array;
 
 		};
@@ -47436,6 +47588,12 @@ THREE.WebGLRenderer = function ( parameters ) {
 	this.getContext = function () {
 
 		return _gl;
+
+	};
+
+	this.forceContextLoss = function () {
+
+		extensions.get( 'WEBGL_lose_context' ).loseContext();
 
 	};
 
@@ -47503,10 +47661,22 @@ THREE.WebGLRenderer = function ( parameters ) {
 
 	};
 
+	this.getPixelRatio = function () {
+
+		return pixelRatio;
+
+	};
+
+	this.setPixelRatio = function ( value ) {
+
+		pixelRatio = value;
+
+	};
+
 	this.setSize = function ( width, height, updateStyle ) {
 
-		_canvas.width = width * this.devicePixelRatio;
-		_canvas.height = height * this.devicePixelRatio;
+		_canvas.width = width * pixelRatio;
+		_canvas.height = height * pixelRatio;
 
 		if ( updateStyle !== false ) {
 
@@ -47521,11 +47691,11 @@ THREE.WebGLRenderer = function ( parameters ) {
 
 	this.setViewport = function ( x, y, width, height ) {
 
-		_viewportX = x * this.devicePixelRatio;
-		_viewportY = y * this.devicePixelRatio;
+		_viewportX = x * pixelRatio;
+		_viewportY = y * pixelRatio;
 
-		_viewportWidth = width * this.devicePixelRatio;
-		_viewportHeight = height * this.devicePixelRatio;
+		_viewportWidth = width * pixelRatio;
+		_viewportHeight = height * pixelRatio;
 
 		_gl.viewport( _viewportX, _viewportY, _viewportWidth, _viewportHeight );
 
@@ -47534,10 +47704,10 @@ THREE.WebGLRenderer = function ( parameters ) {
 	this.setScissor = function ( x, y, width, height ) {
 
 		_gl.scissor(
-			x * this.devicePixelRatio,
-			y * this.devicePixelRatio,
-			width * this.devicePixelRatio,
-			height * this.devicePixelRatio
+			x * pixelRatio,
+			y * pixelRatio,
+			width * pixelRatio,
+			height * pixelRatio
 		);
 
 	};
@@ -47550,6 +47720,12 @@ THREE.WebGLRenderer = function ( parameters ) {
 
 	// Clearing
 
+	this.getClearColor = function () {
+
+		return _clearColor;
+
+	};
+
 	this.setClearColor = function ( color, alpha ) {
 
 		_clearColor.set( color );
@@ -47559,22 +47735,17 @@ THREE.WebGLRenderer = function ( parameters ) {
 
 	};
 
-	this.setClearColorHex = function ( hex, alpha ) {
-
-		console.warn( 'THREE.WebGLRenderer: .setClearColorHex() is being removed. Use .setClearColor() instead.' );
-		this.setClearColor( hex, alpha );
-
-	};
-
-	this.getClearColor = function () {
-
-		return _clearColor;
-
-	};
-
 	this.getClearAlpha = function () {
 
 		return _clearAlpha;
+
+	};
+
+	this.setClearAlpha = function ( alpha ) {
+
+		_clearAlpha = alpha;
+
+		_gl.clearColor( _clearColor.r, _clearColor.g, _clearColor.b, _clearAlpha );
 
 	};
 
@@ -47617,22 +47788,7 @@ THREE.WebGLRenderer = function ( parameters ) {
 
 	// Reset
 
-	this.resetGLState = function () {
-
-		_currentProgram = null;
-		_currentCamera = null;
-
-		_oldBlending = - 1;
-		_oldDepthTest = - 1;
-		_oldDepthWrite = - 1;
-		_oldDoubleSided = - 1;
-		_oldFlipSided = - 1;
-		_currentGeometryGroupHash = - 1;
-		_currentMaterialId = - 1;
-
-		_lightsNeedUpdate = true;
-
-	};
+	this.resetGLState = resetGLState;
 
 	// Buffer allocation
 
@@ -47670,13 +47826,13 @@ THREE.WebGLRenderer = function ( parameters ) {
 		geometryGroup.__webglFaceBuffer = _gl.createBuffer();
 		geometryGroup.__webglLineBuffer = _gl.createBuffer();
 
-		var m, ml;
+		var numMorphTargets = geometryGroup.numMorphTargets;
 
-		if ( geometryGroup.numMorphTargets ) {
+		if ( numMorphTargets ) {
 
 			geometryGroup.__webglMorphTargetsBuffers = [];
 
-			for ( m = 0, ml = geometryGroup.numMorphTargets; m < ml; m ++ ) {
+			for ( var m = 0, ml = numMorphTargets; m < ml; m ++ ) {
 
 				geometryGroup.__webglMorphTargetsBuffers.push( _gl.createBuffer() );
 
@@ -47684,11 +47840,13 @@ THREE.WebGLRenderer = function ( parameters ) {
 
 		}
 
-		if ( geometryGroup.numMorphNormals ) {
+		var numMorphNormals = geometryGroup.numMorphNormals;
+
+		if ( numMorphNormals ) {
 
 			geometryGroup.__webglMorphNormalsBuffers = [];
 
-			for ( m = 0, ml = geometryGroup.numMorphNormals; m < ml; m ++ ) {
+			for ( var m = 0, ml = numMorphNormals; m < ml; m ++ ) {
 
 				geometryGroup.__webglMorphNormalsBuffers.push( _gl.createBuffer() );
 
@@ -47764,7 +47922,7 @@ THREE.WebGLRenderer = function ( parameters ) {
 	// Buffer deallocation
 
 	var deleteBuffers = function ( geometry ) {
-	
+
 		var buffers = [
 			'__webglVertexBuffer',
 			'__webglNormalBuffer',
@@ -47772,13 +47930,13 @@ THREE.WebGLRenderer = function ( parameters ) {
 			'__webglColorBuffer',
 			'__webglUVBuffer',
 			'__webglUV2Buffer',
-			
+
 			'__webglSkinIndicesBuffer',
 			'__webglSkinWeightsBuffer',
-			
+
 			'__webglFaceBuffer',
 			'__webglLineBuffer',
-			
+
 			'__webglLineDistanceBuffer'
 		];
 
@@ -47821,7 +47979,7 @@ THREE.WebGLRenderer = function ( parameters ) {
 		if ( geometry instanceof THREE.BufferGeometry ) {
 
 			for ( var name in geometry.attributes ) {
-			
+
 				var attribute = geometry.attributes[ name ];
 
 				if ( attribute.buffer !== undefined ) {
@@ -47842,7 +48000,7 @@ THREE.WebGLRenderer = function ( parameters ) {
 
 			if ( geometryGroupsList !== undefined ) {
 
-				for ( var i = 0,l = geometryGroupsList.length; i < l; i ++ ) {
+				for ( var i = 0, l = geometryGroupsList.length; i < l; i ++ ) {
 
 					var geometryGroup = geometryGroupsList[ i ];
 
@@ -47886,7 +48044,7 @@ THREE.WebGLRenderer = function ( parameters ) {
 
 		// TOFIX: Workaround for deleted geometry being currently bound
 
-		_currentGeometryGroupHash = - 1;
+		_currentGeometryProgram = '';
 
 	};
 
@@ -48128,13 +48286,13 @@ THREE.WebGLRenderer = function ( parameters ) {
 		geometryGroup.__faceArray = new UintArray( ntris * 3 );
 		geometryGroup.__lineArray = new UintArray( nlines * 2 );
 
-		var m, ml;
+		var numMorphTargets = geometryGroup.numMorphTargets;
 
-		if ( geometryGroup.numMorphTargets ) {
+		if ( numMorphTargets ) {
 
 			geometryGroup.__morphTargetsArrays = [];
 
-			for ( m = 0, ml = geometryGroup.numMorphTargets; m < ml; m ++ ) {
+			for ( var m = 0, ml = numMorphTargets; m < ml; m ++ ) {
 
 				geometryGroup.__morphTargetsArrays.push( new Float32Array( nvertices * 3 ) );
 
@@ -48142,11 +48300,13 @@ THREE.WebGLRenderer = function ( parameters ) {
 
 		}
 
-		if ( geometryGroup.numMorphNormals ) {
+		var numMorphNormals = geometryGroup.numMorphNormals;
+
+		if ( numMorphNormals ) {
 
 			geometryGroup.__morphNormalsArrays = [];
 
-			for ( m = 0, ml = geometryGroup.numMorphNormals; m < ml; m ++ ) {
+			for ( var m = 0, ml = numMorphNormals; m < ml; m ++ ) {
 
 				geometryGroup.__morphNormalsArrays.push( new Float32Array( nvertices * 3 ) );
 
@@ -48256,27 +48416,11 @@ THREE.WebGLRenderer = function ( parameters ) {
 		a, ca, cal, value,
 		customAttribute;
 
-		if ( object.sortParticles ) {
-
-			_projScreenMatrixPS.copy( _projScreenMatrix );
-			_projScreenMatrixPS.multiply( object.matrixWorld );
+		if ( dirtyVertices ) {
 
 			for ( v = 0; v < vl; v ++ ) {
 
 				vertex = vertices[ v ];
-
-				_vector3.copy( vertex );
-				_vector3.applyProjection( _projScreenMatrixPS );
-
-				sortArray[ v ] = [ _vector3.z, v ];
-
-			}
-
-			sortArray.sort( numericalSort );
-
-			for ( v = 0; v < vl; v ++ ) {
-
-				vertex = vertices[ sortArray[ v ][ 1 ] ];
 
 				offset = v * 3;
 
@@ -48286,11 +48430,18 @@ THREE.WebGLRenderer = function ( parameters ) {
 
 			}
 
+			_gl.bindBuffer( _gl.ARRAY_BUFFER, geometry.__webglVertexBuffer );
+			_gl.bufferData( _gl.ARRAY_BUFFER, vertexArray, hint );
+
+		}
+
+		if ( dirtyColors ) {
+
 			for ( c = 0; c < cl; c ++ ) {
 
-				offset = c * 3;
+				color = colors[ c ];
 
-				color = colors[ sortArray[ c ][ 1 ] ];
+				offset = c * 3;
 
 				colorArray[ offset ]     = color.r;
 				colorArray[ offset + 1 ] = color.g;
@@ -48298,25 +48449,28 @@ THREE.WebGLRenderer = function ( parameters ) {
 
 			}
 
-			if ( customAttributes ) {
+			_gl.bindBuffer( _gl.ARRAY_BUFFER, geometry.__webglColorBuffer );
+			_gl.bufferData( _gl.ARRAY_BUFFER, colorArray, hint );
 
-				for ( i = 0, il = customAttributes.length; i < il; i ++ ) {
+		}
 
-					customAttribute = customAttributes[ i ];
+		if ( customAttributes ) {
 
-					if ( ! ( customAttribute.boundTo === undefined || customAttribute.boundTo === 'vertices' ) ) continue;
+			for ( i = 0, il = customAttributes.length; i < il; i ++ ) {
 
-					offset = 0;
+				customAttribute = customAttributes[ i ];
+
+				if ( customAttribute.needsUpdate && ( customAttribute.boundTo === undefined ||  customAttribute.boundTo === 'vertices' ) ) {
 
 					cal = customAttribute.value.length;
+
+					offset = 0;
 
 					if ( customAttribute.size === 1 ) {
 
 						for ( ca = 0; ca < cal; ca ++ ) {
 
-							index = sortArray[ ca ][ 1 ];
-
-							customAttribute.array[ ca ] = customAttribute.value[ index ];
+							customAttribute.array[ ca ] = customAttribute.value[ ca ];
 
 						}
 
@@ -48324,9 +48478,7 @@ THREE.WebGLRenderer = function ( parameters ) {
 
 						for ( ca = 0; ca < cal; ca ++ ) {
 
-							index = sortArray[ ca ][ 1 ];
-
-							value = customAttribute.value[ index ];
+							value = customAttribute.value[ ca ];
 
 							customAttribute.array[ offset ]   = value.x;
 							customAttribute.array[ offset + 1 ] = value.y;
@@ -48341,11 +48493,9 @@ THREE.WebGLRenderer = function ( parameters ) {
 
 							for ( ca = 0; ca < cal; ca ++ ) {
 
-								index = sortArray[ ca ][ 1 ];
+								value = customAttribute.value[ ca ];
 
-								value = customAttribute.value[ index ];
-
-								customAttribute.array[ offset ]     = value.r;
+								customAttribute.array[ offset ]   = value.r;
 								customAttribute.array[ offset + 1 ] = value.g;
 								customAttribute.array[ offset + 2 ] = value.b;
 
@@ -48357,9 +48507,7 @@ THREE.WebGLRenderer = function ( parameters ) {
 
 							for ( ca = 0; ca < cal; ca ++ ) {
 
-								index = sortArray[ ca ][ 1 ];
-
-								value = customAttribute.value[ index ];
+								value = customAttribute.value[ ca ];
 
 								customAttribute.array[ offset ]   = value.x;
 								customAttribute.array[ offset + 1 ] = value.y;
@@ -48375,9 +48523,7 @@ THREE.WebGLRenderer = function ( parameters ) {
 
 						for ( ca = 0; ca < cal; ca ++ ) {
 
-							index = sortArray[ ca ][ 1 ];
-
-							value = customAttribute.value[ index ];
+							value = customAttribute.value[ ca ];
 
 							customAttribute.array[ offset ]      = value.x;
 							customAttribute.array[ offset + 1  ] = value.y;
@@ -48392,160 +48538,10 @@ THREE.WebGLRenderer = function ( parameters ) {
 
 				}
 
-			}
+				_gl.bindBuffer( _gl.ARRAY_BUFFER, customAttribute.buffer );
+				_gl.bufferData( _gl.ARRAY_BUFFER, customAttribute.array, hint );
 
-		} else {
-
-			if ( dirtyVertices ) {
-
-				for ( v = 0; v < vl; v ++ ) {
-
-					vertex = vertices[ v ];
-
-					offset = v * 3;
-
-					vertexArray[ offset ]     = vertex.x;
-					vertexArray[ offset + 1 ] = vertex.y;
-					vertexArray[ offset + 2 ] = vertex.z;
-
-				}
-
-			}
-
-			if ( dirtyColors ) {
-
-				for ( c = 0; c < cl; c ++ ) {
-
-					color = colors[ c ];
-
-					offset = c * 3;
-
-					colorArray[ offset ]     = color.r;
-					colorArray[ offset + 1 ] = color.g;
-					colorArray[ offset + 2 ] = color.b;
-
-				}
-
-			}
-
-			if ( customAttributes ) {
-
-				for ( i = 0, il = customAttributes.length; i < il; i ++ ) {
-
-					customAttribute = customAttributes[ i ];
-
-					if ( customAttribute.needsUpdate &&
-						 ( customAttribute.boundTo === undefined ||
-							 customAttribute.boundTo === 'vertices' ) ) {
-
-						cal = customAttribute.value.length;
-
-						offset = 0;
-
-						if ( customAttribute.size === 1 ) {
-
-							for ( ca = 0; ca < cal; ca ++ ) {
-
-								customAttribute.array[ ca ] = customAttribute.value[ ca ];
-
-							}
-
-						} else if ( customAttribute.size === 2 ) {
-
-							for ( ca = 0; ca < cal; ca ++ ) {
-
-								value = customAttribute.value[ ca ];
-
-								customAttribute.array[ offset ]   = value.x;
-								customAttribute.array[ offset + 1 ] = value.y;
-
-								offset += 2;
-
-							}
-
-						} else if ( customAttribute.size === 3 ) {
-
-							if ( customAttribute.type === 'c' ) {
-
-								for ( ca = 0; ca < cal; ca ++ ) {
-
-									value = customAttribute.value[ ca ];
-
-									customAttribute.array[ offset ]   = value.r;
-									customAttribute.array[ offset + 1 ] = value.g;
-									customAttribute.array[ offset + 2 ] = value.b;
-
-									offset += 3;
-
-								}
-
-							} else {
-
-								for ( ca = 0; ca < cal; ca ++ ) {
-
-									value = customAttribute.value[ ca ];
-
-									customAttribute.array[ offset ]   = value.x;
-									customAttribute.array[ offset + 1 ] = value.y;
-									customAttribute.array[ offset + 2 ] = value.z;
-
-									offset += 3;
-
-								}
-
-							}
-
-						} else if ( customAttribute.size === 4 ) {
-
-							for ( ca = 0; ca < cal; ca ++ ) {
-
-								value = customAttribute.value[ ca ];
-
-								customAttribute.array[ offset ]      = value.x;
-								customAttribute.array[ offset + 1  ] = value.y;
-								customAttribute.array[ offset + 2  ] = value.z;
-								customAttribute.array[ offset + 3  ] = value.w;
-
-								offset += 4;
-
-							}
-
-						}
-
-					}
-
-				}
-
-			}
-
-		}
-
-		if ( dirtyVertices || object.sortParticles ) {
-
-			_gl.bindBuffer( _gl.ARRAY_BUFFER, geometry.__webglVertexBuffer );
-			_gl.bufferData( _gl.ARRAY_BUFFER, vertexArray, hint );
-
-		}
-
-		if ( dirtyColors || object.sortParticles ) {
-
-			_gl.bindBuffer( _gl.ARRAY_BUFFER, geometry.__webglColorBuffer );
-			_gl.bufferData( _gl.ARRAY_BUFFER, colorArray, hint );
-
-		}
-
-		if ( customAttributes ) {
-
-			for ( i = 0, il = customAttributes.length; i < il; i ++ ) {
-
-				customAttribute = customAttributes[ i ];
-
-				if ( customAttribute.needsUpdate || object.sortParticles ) {
-
-					_gl.bindBuffer( _gl.ARRAY_BUFFER, customAttribute.buffer );
-					_gl.bufferData( _gl.ARRAY_BUFFER, customAttribute.array, hint );
-
-				}
+				customAttribute.needsUpdate = false;
 
 			}
 
@@ -48636,9 +48632,7 @@ THREE.WebGLRenderer = function ( parameters ) {
 
 				customAttribute = customAttributes[ i ];
 
-				if ( customAttribute.needsUpdate &&
-					 ( customAttribute.boundTo === undefined ||
-						 customAttribute.boundTo === 'vertices' ) ) {
+				if ( customAttribute.needsUpdate && ( customAttribute.boundTo === undefined || customAttribute.boundTo === 'vertices' ) ) {
 
 					offset = 0;
 
@@ -48716,6 +48710,8 @@ THREE.WebGLRenderer = function ( parameters ) {
 
 					_gl.bindBuffer( _gl.ARRAY_BUFFER, customAttribute.buffer );
 					_gl.bufferData( _gl.ARRAY_BUFFER, customAttribute.array, hint );
+
+					customAttribute.needsUpdate = false;
 
 				}
 
@@ -49524,38 +49520,6 @@ THREE.WebGLRenderer = function ( parameters ) {
 
 	};
 
-	function setDirectBuffers( geometry ) {
-
-		var attributes = geometry.attributes;
-		var attributesKeys = geometry.attributesKeys;
-
-		for ( var i = 0, l = attributesKeys.length; i < l; i ++ ) {
-
-			var key = attributesKeys[ i ];
-			var attribute = attributes[ key ];
-
-			if ( attribute.buffer === undefined ) {
-
-				attribute.buffer = _gl.createBuffer();
-				attribute.needsUpdate = true;
-
-			}
-
-			if ( attribute.needsUpdate === true ) {
-
-				var bufferType = ( key === 'index' ) ? _gl.ELEMENT_ARRAY_BUFFER : _gl.ARRAY_BUFFER;
-
-				_gl.bindBuffer( bufferType, attribute.buffer );
-				_gl.bufferData( bufferType, attribute.array, _gl.STATIC_DRAW );
-
-				attribute.needsUpdate = false;
-
-			}
-
-		}
-
-	}
-
 	// Buffer rendering
 
 	this.renderBufferImmediate = function ( object, program, material ) {
@@ -49707,15 +49671,17 @@ THREE.WebGLRenderer = function ( parameters ) {
 
 		if ( material.visible === false ) return;
 
+		updateObject( object );
+
 		var program = setProgram( camera, lights, fog, material, object );
 
 		var updateBuffers = false,
 			wireframeBit = material.wireframe ? 1 : 0,
-			geometryHash = ( geometry.id * 0xffffff ) + ( program.id * 2 ) + wireframeBit;
+			geometryProgram = 'direct_' + geometry.id + '_' + program.id + '_' + wireframeBit;
 
-		if ( geometryHash !== _currentGeometryGroupHash ) {
+		if ( geometryProgram !== _currentGeometryProgram ) {
 
-			_currentGeometryGroupHash = geometryHash;
+			_currentGeometryProgram = geometryProgram;
 			updateBuffers = true;
 
 		}
@@ -49826,20 +49792,108 @@ THREE.WebGLRenderer = function ( parameters ) {
 
 			// render particles
 
-			if ( updateBuffers ) {
+			var mode = _gl.POINTS;
 
-				setupVertexAttributes( material, program, geometry, 0 );
+			var index = geometry.attributes.index;
+
+			if ( index ) {
+
+				// indexed points
+
+				var type, size;
+
+				if ( index.array instanceof Uint32Array && extensions.get( 'OES_element_index_uint' ) ) {
+
+					type = _gl.UNSIGNED_INT;
+					size = 4;
+
+				} else {
+
+					type = _gl.UNSIGNED_SHORT;
+					size = 2;
+
+				}
+
+				var offsets = geometry.offsets;
+
+				if ( offsets.length === 0 ) {
+
+					if ( updateBuffers ) {
+
+						setupVertexAttributes( material, program, geometry, 0 );
+						_gl.bindBuffer( _gl.ELEMENT_ARRAY_BUFFER, index.buffer );
+
+					}
+
+					_gl.drawElements( mode, index.array.length, type, 0);
+
+					_this.info.render.calls ++;
+					_this.info.render.points += index.array.length;
+
+				} else {
+
+					// if there is more than 1 chunk
+					// must set attribute pointers to use new offsets for each chunk
+					// even if geometry and materials didn't change
+
+					if ( offsets.length > 1 ) updateBuffers = true;
+
+					for ( var i = 0, il = offsets.length; i < il; i ++ ) {
+
+						var startIndex = offsets[ i ].index;
+
+						if ( updateBuffers ) {
+
+							setupVertexAttributes( material, program, geometry, startIndex );
+							_gl.bindBuffer( _gl.ELEMENT_ARRAY_BUFFER, index.buffer );
+
+						}
+
+						// render indexed points
+
+						_gl.drawElements( mode, offsets[ i ].count, type, offsets[ i ].start * size );
+
+						_this.info.render.calls ++;
+						_this.info.render.points += offsets[ i ].count;
+
+					}
+
+				}
+
+			} else {
+
+				// non-indexed points
+
+				if ( updateBuffers ) {
+
+					setupVertexAttributes( material, program, geometry, 0 );
+
+				}
+
+				var position = geometry.attributes.position;
+				var offsets = geometry.offsets;
+
+				if ( offsets.length === 0 ) {
+
+					_gl.drawArrays( mode, 0, position.array.length / 3 );
+
+					_this.info.render.calls ++;
+					_this.info.render.points += position.array.length / 3;
+
+				} else {
+
+					for ( var i = 0, il = offsets.length; i < il; i ++ ) {
+
+						_gl.drawArrays( mode, offsets[ i ].index, offsets[ i ].count );
+
+						_this.info.render.calls ++;
+						_this.info.render.points += offsets[ i ].count;
+
+					}
+
+				}
 
 			}
-
-			var position = geometry.attributes.position;
-
-			// render particles
-
-			_gl.drawArrays( _gl.POINTS, 0, position.array.length / 3 );
-
-			_this.info.render.calls ++;
-			_this.info.render.points += position.array.length / 3;
 
 		} else if ( object instanceof THREE.Line ) {
 
@@ -49924,11 +49978,27 @@ THREE.WebGLRenderer = function ( parameters ) {
 				}
 
 				var position = geometry.attributes.position;
+				var offsets = geometry.offsets;
 
-				_gl.drawArrays( mode, 0, position.array.length / 3 );
+				if ( offsets.length === 0 ) {
 
-				_this.info.render.calls ++;
-				_this.info.render.points += position.array.length / 3;
+					_gl.drawArrays( mode, 0, position.array.length / 3 );
+
+					_this.info.render.calls ++;
+					_this.info.render.vertices += position.array.length / 3;
+
+				} else {
+
+					for ( var i = 0, il = offsets.length; i < il; i ++ ) {
+
+						_gl.drawArrays( mode, offsets[ i ].index, offsets[ i ].count );
+
+						_this.info.render.calls ++;
+						_this.info.render.vertices += offsets[ i ].count;
+
+					}
+
+				}
 
 			}
 
@@ -49940,17 +50010,19 @@ THREE.WebGLRenderer = function ( parameters ) {
 
 		if ( material.visible === false ) return;
 
+		updateObject( object );
+
 		var program = setProgram( camera, lights, fog, material, object );
 
 		var attributes = program.attributes;
 
 		var updateBuffers = false,
 			wireframeBit = material.wireframe ? 1 : 0,
-			geometryGroupHash = ( geometryGroup.id * 0xffffff ) + ( program.id * 2 ) + wireframeBit;
+			geometryProgram = geometryGroup.id + '_' + program.id + '_' + wireframeBit;
 
-		if ( geometryGroupHash !== _currentGeometryGroupHash ) {
+		if ( geometryProgram !== _currentGeometryProgram ) {
 
-			_currentGeometryGroupHash = geometryGroupHash;
+			_currentGeometryProgram = geometryProgram;
 			updateBuffers = true;
 
 		}
@@ -50229,46 +50301,48 @@ THREE.WebGLRenderer = function ( parameters ) {
 			var order = object.morphTargetForcedOrder;
 			var influences = object.morphTargetInfluences;
 
+			var attribute;
+
 			while ( m < material.numSupportedMorphTargets && m < order.length ) {
 
-				if ( attributes[ 'morphTarget' + m ] >= 0 ) {
+				attribute = attributes[ 'morphTarget' + m ];
+
+				if ( attribute >= 0 ) {
 
 					_gl.bindBuffer( _gl.ARRAY_BUFFER, geometryGroup.__webglMorphTargetsBuffers[ order[ m ] ] );
-					enableAttribute( attributes[ 'morphTarget' + m ] );
-					_gl.vertexAttribPointer( attributes[ 'morphTarget' + m ], 3, _gl.FLOAT, false, 0, 0 );
+					enableAttribute( attribute );
+					_gl.vertexAttribPointer( attribute, 3, _gl.FLOAT, false, 0, 0 );
 
 				}
 
-				if ( attributes[ 'morphNormal' + m ] >= 0 && material.morphNormals ) {
+				attribute = attributes[ 'morphNormal' + m ];
+
+				if ( attribute >= 0 && material.morphNormals ) {
 
 					_gl.bindBuffer( _gl.ARRAY_BUFFER, geometryGroup.__webglMorphNormalsBuffers[ order[ m ] ] );
-					enableAttribute( attributes[ 'morphNormal' + m ] );
-					_gl.vertexAttribPointer( attributes[ 'morphNormal' + m ], 3, _gl.FLOAT, false, 0, 0 );
+					enableAttribute( attribute );
+					_gl.vertexAttribPointer( attribute, 3, _gl.FLOAT, false, 0, 0 );
 
 				}
 
 				object.__webglMorphTargetInfluences[ m ] = influences[ order[ m ] ];
 
 				m ++;
+
 			}
 
 		} else {
 
 			// find the most influencing
 
-			var influence, activeInfluenceIndices = [];
+			var activeInfluenceIndices = [];
 			var influences = object.morphTargetInfluences;
-			var i, il = influences.length;
 
-			for ( i = 0; i < il; i ++ ) {
+			for ( var i = 0, il = influences.length; i < il; i ++ ) {
 
-				influence = influences[ i ];
+				var influence = influences[ i ];
 
-				if ( influence > 0 ) {
-
-					activeInfluenceIndices.push( [ influence, i ] );
-
-				}
+				activeInfluenceIndices.push( [ influence, i ] );
 
 			}
 
@@ -50285,29 +50359,33 @@ THREE.WebGLRenderer = function ( parameters ) {
 
 				activeInfluenceIndices.push( [ 0, 0 ] );
 
-			};
+			}
 
-			var influenceIndex, m = 0;
+			var attribute;
 
-			while ( m < material.numSupportedMorphTargets ) {
+			for ( var m = 0, ml = material.numSupportedMorphTargets; m < ml; m ++ ) {
 
 				if ( activeInfluenceIndices[ m ] ) {
 
-					influenceIndex = activeInfluenceIndices[ m ][ 1 ];
+					var influenceIndex = activeInfluenceIndices[ m ][ 1 ];
 
-					if ( attributes[ 'morphTarget' + m ] >= 0 ) {
+					attribute = attributes[ 'morphTarget' + m ];
+
+					if ( attribute >= 0 ) {
 
 						_gl.bindBuffer( _gl.ARRAY_BUFFER, geometryGroup.__webglMorphTargetsBuffers[ influenceIndex ] );
-						enableAttribute( attributes[ 'morphTarget' + m ] );
-						_gl.vertexAttribPointer( attributes[ 'morphTarget' + m ], 3, _gl.FLOAT, false, 0, 0 );
+						enableAttribute( attribute );
+						_gl.vertexAttribPointer( attribute, 3, _gl.FLOAT, false, 0, 0 );
 
 					}
 
-					if ( attributes[ 'morphNormal' + m ] >= 0 && material.morphNormals ) {
+					attribute = attributes[ 'morphNormal' + m ];
+
+					if ( attribute >= 0 && material.morphNormals ) {
 
 						_gl.bindBuffer( _gl.ARRAY_BUFFER, geometryGroup.__webglMorphNormalsBuffers[ influenceIndex ] );
-						enableAttribute( attributes[ 'morphNormal' + m ] );
-						_gl.vertexAttribPointer( attributes[ 'morphNormal' + m ], 3, _gl.FLOAT, false, 0, 0 );
+						enableAttribute( attribute );
+						_gl.vertexAttribPointer( attribute, 3, _gl.FLOAT, false, 0, 0 );
 
 
 					}
@@ -50330,8 +50408,6 @@ THREE.WebGLRenderer = function ( parameters ) {
 
 				}
 
-				m ++;
-
 			}
 
 		}
@@ -50352,11 +50428,11 @@ THREE.WebGLRenderer = function ( parameters ) {
 
 		if ( a.material.id !== b.material.id ) {
 
-			return b.material.id - a.material.id;
+			return a.material.id - b.material.id;
 
 		} else if ( a.z !== b.z ) {
 
-			return b.z - a.z;
+			return a.z - b.z;
 
 		} else {
 
@@ -50370,7 +50446,7 @@ THREE.WebGLRenderer = function ( parameters ) {
 
 		if ( a.z !== b.z ) {
 
-			return a.z - b.z;
+			return b.z - a.z;
 
 		} else {
 
@@ -50401,7 +50477,7 @@ THREE.WebGLRenderer = function ( parameters ) {
 
 		// reset caching for this frame
 
-		_currentGeometryGroupHash = - 1;
+		_currentGeometryProgram = '';
 		_currentMaterialId = - 1;
 		_currentCamera = null;
 		_lightsNeedUpdate = true;
@@ -50438,7 +50514,7 @@ THREE.WebGLRenderer = function ( parameters ) {
 		sprites.length = 0;
 		lensFlares.length = 0;
 
-		projectObject( scene, scene );
+		projectObject( scene );
 
 		if ( _this.sortObjects === true ) {
 
@@ -50536,7 +50612,7 @@ THREE.WebGLRenderer = function ( parameters ) {
 
 	};
 
-	function projectObject( scene, object ) {
+	function projectObject( object ) {
 
 		if ( object.visible === false ) return;
 
@@ -50546,7 +50622,7 @@ THREE.WebGLRenderer = function ( parameters ) {
 
 		} else {
 
-			initObject( object, scene );
+			initObject( object );
 
 			if ( object instanceof THREE.Light ) {
 
@@ -50566,8 +50642,6 @@ THREE.WebGLRenderer = function ( parameters ) {
 
 				if ( webglObjects && ( object.frustumCulled === false || _frustum.intersectsObject( object ) === true ) ) {
 
-					updateObject( object, scene );
-
 					for ( var i = 0, l = webglObjects.length; i < l; i ++ ) {
 
 						var webglObject = webglObjects[i];
@@ -50578,18 +50652,10 @@ THREE.WebGLRenderer = function ( parameters ) {
 
 						if ( _this.sortObjects === true ) {
 
-							if ( object.renderDepth !== null ) {
+							_vector3.setFromMatrixPosition( object.matrixWorld );
+							_vector3.applyProjection( _projScreenMatrix );
 
-								webglObject.z = object.renderDepth;
-
-							} else {
-
-								_vector3.setFromMatrixPosition( object.matrixWorld );
-								_vector3.applyProjection( _projScreenMatrix );
-
-								webglObject.z = _vector3.z;
-
-							}
+							webglObject.z = _vector3.z;
 
 						}
 
@@ -50603,7 +50669,7 @@ THREE.WebGLRenderer = function ( parameters ) {
 
 		for ( var i = 0, l = object.children.length; i < l; i ++ ) {
 
-			projectObject( scene, object.children[ i ] );
+			projectObject( object.children[ i ] );
 
 		}
 
@@ -50613,7 +50679,7 @@ THREE.WebGLRenderer = function ( parameters ) {
 
 		var material;
 
-		for ( var i = renderList.length - 1; i !== - 1; i -- ) {
+		for ( var i = 0, l = renderList.length; i < l; i ++ ) {
 
 			var webglObject = renderList[ i ];
 
@@ -50660,7 +50726,7 @@ THREE.WebGLRenderer = function ( parameters ) {
 
 		var material;
 
-		for ( var i = 0, il = renderList.length; i < il; i ++ ) {
+		for ( var i = 0, l = renderList.length; i < l; i ++ ) {
 
 			var webglObject = renderList[ i ];
 			var object = webglObject.object;
@@ -50697,7 +50763,7 @@ THREE.WebGLRenderer = function ( parameters ) {
 
 		var program = setProgram( camera, lights, fog, material, object );
 
-		_currentGeometryGroupHash = - 1;
+		_currentGeometryProgram = '';
 
 		_this.setMaterialFaces( material );
 
@@ -50776,7 +50842,7 @@ THREE.WebGLRenderer = function ( parameters ) {
 
 	}
 
-	function initObject( object, scene ) {
+	function initObject( object ) {
 
 		if ( object.__webglInit === undefined ) {
 
@@ -50801,11 +50867,11 @@ THREE.WebGLRenderer = function ( parameters ) {
 
 			if ( geometry instanceof THREE.BufferGeometry ) {
 
-				//
+				_this.info.memory.geometries ++;
 
 			} else if ( object instanceof THREE.Mesh ) {
 
-				initGeometryGroups( scene, object, geometry );
+				initGeometryGroups( object, geometry );
 
 			} else if ( object instanceof THREE.Line ) {
 
@@ -50913,7 +50979,7 @@ THREE.WebGLRenderer = function ( parameters ) {
 					numMorphTargets: numMorphTargets,
 					numMorphNormals: numMorphNormals
 				};
-				
+
 				groups[ groupHash ] = group;
 				groupsList.push( group );
 
@@ -50934,7 +51000,7 @@ THREE.WebGLRenderer = function ( parameters ) {
 						numMorphTargets: numMorphTargets,
 						numMorphNormals: numMorphNormals
 					};
-					
+
 					groups[ groupHash ] = group;
 					groupsList.push( group );
 
@@ -50951,7 +51017,7 @@ THREE.WebGLRenderer = function ( parameters ) {
 
 	}
 
-	function initGeometryGroups( scene, object, geometry ) {
+	function initGeometryGroups( object, geometry ) {
 
 		var material = object.material, addBuffers = false;
 
@@ -51040,13 +51106,39 @@ THREE.WebGLRenderer = function ( parameters ) {
 
 	// Objects updates
 
-	function updateObject( object, scene ) {
+	function updateObject( object ) {
 
-		var geometry = object.geometry, customAttributesDirty, material;
+		var geometry = object.geometry;
 
 		if ( geometry instanceof THREE.BufferGeometry ) {
 
-			setDirectBuffers( geometry );
+			var attributes = geometry.attributes;
+			var attributesKeys = geometry.attributesKeys;
+
+			for ( var i = 0, l = attributesKeys.length; i < l; i ++ ) {
+
+				var key = attributesKeys[ i ];
+				var attribute = attributes[ key ];
+
+				if ( attribute.buffer === undefined ) {
+
+					attribute.buffer = _gl.createBuffer();
+					attribute.needsUpdate = true;
+
+				}
+
+				if ( attribute.needsUpdate === true ) {
+
+					var bufferType = ( key === 'index' ) ? _gl.ELEMENT_ARRAY_BUFFER : _gl.ARRAY_BUFFER;
+
+					_gl.bindBuffer( bufferType, attribute.buffer );
+					_gl.bufferData( bufferType, attribute.array, _gl.STATIC_DRAW );
+
+					attribute.needsUpdate = false;
+
+				}
+
+			}
 
 		} else if ( object instanceof THREE.Mesh ) {
 
@@ -51054,7 +51146,7 @@ THREE.WebGLRenderer = function ( parameters ) {
 
 			if ( geometry.groupsNeedUpdate === true ) {
 
-				initGeometryGroups( scene, object, geometry );
+				initGeometryGroups( object, geometry );
 
 			}
 
@@ -51063,8 +51155,7 @@ THREE.WebGLRenderer = function ( parameters ) {
 			for ( var i = 0, il = geometryGroupsList.length; i < il; i ++ ) {
 
 				var geometryGroup = geometryGroupsList[ i ];
-
-				material = getBufferMaterial( object, geometryGroup );
+				var material = getBufferMaterial( object, geometryGroup );
 
 				if ( geometry.groupsNeedUpdate === true ) {
 
@@ -51072,7 +51163,7 @@ THREE.WebGLRenderer = function ( parameters ) {
 
 				}
 
-				customAttributesDirty = material.attributes && areCustomAttributesDirty( material );
+				var customAttributesDirty = material.attributes && areCustomAttributesDirty( material );
 
 				if ( geometry.verticesNeedUpdate || geometry.morphTargetsNeedUpdate || geometry.elementsNeedUpdate ||
 					 geometry.uvsNeedUpdate || geometry.normalsNeedUpdate ||
@@ -51096,9 +51187,8 @@ THREE.WebGLRenderer = function ( parameters ) {
 
 		} else if ( object instanceof THREE.Line ) {
 
-			material = getBufferMaterial( object, geometry );
-
-			customAttributesDirty = material.attributes && areCustomAttributesDirty( material );
+			var material = getBufferMaterial( object, geometry );
+			var customAttributesDirty = material.attributes && areCustomAttributesDirty( material );
 
 			if ( geometry.verticesNeedUpdate || geometry.colorsNeedUpdate || geometry.lineDistancesNeedUpdate || customAttributesDirty ) {
 
@@ -51112,14 +51202,12 @@ THREE.WebGLRenderer = function ( parameters ) {
 
 			material.attributes && clearCustomAttributes( material );
 
-
 		} else if ( object instanceof THREE.PointCloud ) {
 
-			material = getBufferMaterial( object, geometry );
+			var material = getBufferMaterial( object, geometry );
+			var customAttributesDirty = material.attributes && areCustomAttributesDirty( material );
 
-			customAttributesDirty = material.attributes && areCustomAttributesDirty( material );
-
-			if ( geometry.verticesNeedUpdate || geometry.colorsNeedUpdate || object.sortParticles || customAttributesDirty ) {
+			if ( geometry.verticesNeedUpdate || geometry.colorsNeedUpdate || customAttributesDirty ) {
 
 				setParticleBuffers( geometry, _gl.DYNAMIC_DRAW, object );
 
@@ -51198,45 +51286,22 @@ THREE.WebGLRenderer = function ( parameters ) {
 
 	// Materials
 
+	var shaderIDs = {
+		MeshDepthMaterial: 'depth',
+		MeshNormalMaterial: 'normal',
+		MeshBasicMaterial: 'basic',
+		MeshLambertMaterial: 'lambert',
+		MeshPhongMaterial: 'phong',
+		LineBasicMaterial: 'basic',
+		LineDashedMaterial: 'dashed',
+		PointCloudMaterial: 'particle_basic'
+	};
+
 	function initMaterial( material, lights, fog, object ) {
 
 		material.addEventListener( 'dispose', onMaterialDispose );
 
-		var shaderID;
-
-		if ( material instanceof THREE.MeshDepthMaterial ) {
-
-			shaderID = 'depth';
-
-		} else if ( material instanceof THREE.MeshNormalMaterial ) {
-
-			shaderID = 'normal';
-
-		} else if ( material instanceof THREE.MeshBasicMaterial ) {
-
-			shaderID = 'basic';
-
-		} else if ( material instanceof THREE.MeshLambertMaterial ) {
-
-			shaderID = 'lambert';
-
-		} else if ( material instanceof THREE.MeshPhongMaterial ) {
-
-			shaderID = 'phong';
-
-		} else if ( material instanceof THREE.LineBasicMaterial ) {
-
-			shaderID = 'basic';
-
-		} else if ( material instanceof THREE.LineDashedMaterial ) {
-
-			shaderID = 'dashed';
-
-		} else if ( material instanceof THREE.PointCloudMaterial ) {
-
-			shaderID = 'particle_basic';
-
-		}
+		var shaderID = shaderIDs[ material.type ];
 
 		if ( shaderID ) {
 
@@ -51272,11 +51337,14 @@ THREE.WebGLRenderer = function ( parameters ) {
 
 			map: !! material.map,
 			envMap: !! material.envMap,
+			envMapMode: material.envMap && material.envMap.mapping,
 			lightMap: !! material.lightMap,
 			bumpMap: !! material.bumpMap,
 			normalMap: !! material.normalMap,
 			specularMap: !! material.specularMap,
 			alphaMap: !! material.alphaMap,
+
+			combine: material.combine,
 
 			vertexColors: material.vertexColors,
 
@@ -51518,6 +51586,7 @@ THREE.WebGLRenderer = function ( parameters ) {
 
 			if ( material instanceof THREE.MeshPhongMaterial ||
 				 material instanceof THREE.MeshLambertMaterial ||
+				 material instanceof THREE.MeshBasicMaterial ||
 				 material instanceof THREE.ShaderMaterial ||
 				 material.skinning ) {
 
@@ -51771,8 +51840,6 @@ THREE.WebGLRenderer = function ( parameters ) {
 		}
 
 		uniforms.refractionRatio.value = material.refractionRatio;
-		uniforms.combine.value = material.combine;
-		uniforms.useRefract.value = material.envMap && material.envMap.mapping instanceof THREE.CubeRefractionMapping;
 
 	}
 
@@ -52678,6 +52745,8 @@ THREE.WebGLRenderer = function ( parameters ) {
 
 	function setLineWidth ( width ) {
 
+		width *= pixelRatio;
+
 		if ( width !== _oldLineWidth ) {
 
 			_gl.lineWidth( width );
@@ -52809,8 +52878,20 @@ THREE.WebGLRenderer = function ( parameters ) {
 			_gl.texParameteri( textureType, _gl.TEXTURE_WRAP_S, _gl.CLAMP_TO_EDGE );
 			_gl.texParameteri( textureType, _gl.TEXTURE_WRAP_T, _gl.CLAMP_TO_EDGE );
 
+			if ( texture.wrapS !== THREE.ClampToEdgeWrapping || texture.wrapT !== THREE.ClampToEdgeWrapping ) {
+
+				console.warn( 'THREE.WebGLRenderer: Texture is not power of two. Texture.wrapS and Texture.wrapT is set to THREE.ClampToEdgeWrapping. ( ' + texture.sourceFile + ' )' );
+
+			}
+
 			_gl.texParameteri( textureType, _gl.TEXTURE_MAG_FILTER, filterFallback( texture.magFilter ) );
 			_gl.texParameteri( textureType, _gl.TEXTURE_MIN_FILTER, filterFallback( texture.minFilter ) );
+
+			if ( texture.minFilter !== THREE.NearestFilter && texture.minFilter !== THREE.LinearFilter ) {
+
+				console.warn( 'THREE.WebGLRenderer: Texture is not power of two. Texture.minFilter is set to THREE.LinearFilter or THREE.NearestFilter. ( ' + texture.sourceFile + ' )' );
+
+			}
 
 		}
 
@@ -53496,7 +53577,7 @@ THREE.WebGLRenderer = function ( parameters ) {
 	}
 
 	// DEPRECATED
-	
+
 	this.initMaterial = function () {
 
 		console.warn( 'THREE.WebGLRenderer: .initMaterial() has been removed.' );
@@ -53625,8 +53706,13 @@ THREE.WebGLRenderTargetCube = function ( width, height, options ) {
 };
 
 THREE.WebGLRenderTargetCube.prototype = Object.create( THREE.WebGLRenderTarget.prototype );
+THREE.WebGLRenderTargetCube.prototype.constructor = THREE.WebGLRenderTargetCube;
 
 // File:src/renderers/webgl/WebGLExtensions.js
+
+/**
+* @author mrdoob / http://mrdoob.com/
+*/
 
 THREE.WebGLExtensions = function ( gl ) {
 
@@ -53643,18 +53729,6 @@ THREE.WebGLExtensions = function ( gl ) {
 		var extension;
 
 		switch ( name ) {
-		
-			case 'OES_texture_float':
-				extension = gl.getExtension( 'OES_texture_float' );
-				break;
-
-			case 'OES_texture_float_linear':
-				extension = gl.getExtension( 'OES_texture_float_linear' );
-				break;
-
-			case 'OES_standard_derivatives':
-				extension = gl.getExtension( 'OES_standard_derivatives' );
-				break;
 
 			case 'EXT_texture_filter_anisotropic':
 				extension = gl.getExtension( 'EXT_texture_filter_anisotropic' ) || gl.getExtension( 'MOZ_EXT_texture_filter_anisotropic' ) || gl.getExtension( 'WEBKIT_EXT_texture_filter_anisotropic' );
@@ -53668,17 +53742,8 @@ THREE.WebGLExtensions = function ( gl ) {
 				extension = gl.getExtension( 'WEBGL_compressed_texture_pvrtc' ) || gl.getExtension( 'WEBKIT_WEBGL_compressed_texture_pvrtc' );
 				break;
 
-			case 'OES_element_index_uint':
-				extension = gl.getExtension( 'OES_element_index_uint' );
-				break;
-
-			case 'EXT_blend_minmax':
-				extension = gl.getExtension( 'EXT_blend_minmax' );
-				break;
-
-			case 'EXT_frag_depth':
-				extension = gl.getExtension( 'EXT_frag_depth' );
-				break;
+			default:
+				extension = gl.getExtension( name );
 
 		}
 
@@ -53711,12 +53776,12 @@ THREE.WebGLProgram = ( function () {
 			value = defines[ d ];
 			if ( value === false ) continue;
 
-			chunk = "#define " + d + " " + value;
+			chunk = '#define ' + d + ' ' + value;
 			chunks.push( chunk );
 
 		}
 
-		return chunks.join( "\n" );
+		return chunks.join( '\n' );
 
 	};
 
@@ -53772,19 +53837,70 @@ THREE.WebGLProgram = ( function () {
 
 		}
 
-		var shadowMapTypeDefine = "SHADOWMAP_TYPE_BASIC";
+		var shadowMapTypeDefine = 'SHADOWMAP_TYPE_BASIC';
 
 		if ( parameters.shadowMapType === THREE.PCFShadowMap ) {
 
-			shadowMapTypeDefine = "SHADOWMAP_TYPE_PCF";
+			shadowMapTypeDefine = 'SHADOWMAP_TYPE_PCF';
 
 		} else if ( parameters.shadowMapType === THREE.PCFSoftShadowMap ) {
 
-			shadowMapTypeDefine = "SHADOWMAP_TYPE_PCF_SOFT";
+			shadowMapTypeDefine = 'SHADOWMAP_TYPE_PCF_SOFT';
 
 		}
 
-		// console.log( "building new program " );
+		var envMapTypeDefine = 'ENVMAP_TYPE_CUBE';
+		var envMapModeDefine = 'ENVMAP_MODE_REFLECTION';
+		var envMapBlendingDefine = 'ENVMAP_BLENDING_MULTIPLY';
+
+		if ( parameters.envMap ) {
+
+			switch ( material.envMap.mapping ) {
+
+				case THREE.CubeReflectionMapping:
+				case THREE.CubeRefractionMapping:
+					envMapTypeDefine = 'ENVMAP_TYPE_CUBE';
+					break;
+
+				case THREE.EquirectangularReflectionMapping:
+				case THREE.EquirectangularRefractionMapping:
+					envMapTypeDefine = 'ENVMAP_TYPE_EQUIREC';
+					break;
+
+				case THREE.SphericalReflectionMapping:
+					envMapTypeDefine = 'ENVMAP_TYPE_SPHERE';
+					break;
+
+			}
+
+			switch ( material.envMap.mapping ) {
+
+				case THREE.CubeRefractionMapping:
+				case THREE.EquirectangularRefractionMapping:
+					envMapModeDefine = 'ENVMAP_MODE_REFRACTION';
+					break;
+
+			}
+
+			switch ( material.combine ) {
+
+				case THREE.MultiplyOperation:
+					envMapBlendingDefine = 'ENVMAP_BLENDING_MULTIPLY';
+					break;
+
+				case THREE.MixOperation:
+					envMapBlendingDefine = 'ENVMAP_BLENDING_MIX';
+					break;
+
+				case THREE.AddOperation:
+					envMapBlendingDefine = 'ENVMAP_BLENDING_ADD';
+					break;
+
+			}
+
+		}
+
+		// console.log( 'building new program ' );
 
 		//
 
@@ -53805,157 +53921,161 @@ THREE.WebGLProgram = ( function () {
 
 			prefix_vertex = [
 
-				"precision " + parameters.precision + " float;",
-				"precision " + parameters.precision + " int;",
+				'precision ' + parameters.precision + ' float;',
+				'precision ' + parameters.precision + ' int;',
 
 				customDefines,
 
-				parameters.supportsVertexTextures ? "#define VERTEX_TEXTURES" : "",
+				parameters.supportsVertexTextures ? '#define VERTEX_TEXTURES' : '',
 
-				_this.gammaInput ? "#define GAMMA_INPUT" : "",
-				_this.gammaOutput ? "#define GAMMA_OUTPUT" : "",
+				_this.gammaInput ? '#define GAMMA_INPUT' : '',
+				_this.gammaOutput ? '#define GAMMA_OUTPUT' : '',
 
-				"#define MAX_DIR_LIGHTS " + parameters.maxDirLights,
-				"#define MAX_POINT_LIGHTS " + parameters.maxPointLights,
-				"#define MAX_SPOT_LIGHTS " + parameters.maxSpotLights,
-				"#define MAX_HEMI_LIGHTS " + parameters.maxHemiLights,
+				'#define MAX_DIR_LIGHTS ' + parameters.maxDirLights,
+				'#define MAX_POINT_LIGHTS ' + parameters.maxPointLights,
+				'#define MAX_SPOT_LIGHTS ' + parameters.maxSpotLights,
+				'#define MAX_HEMI_LIGHTS ' + parameters.maxHemiLights,
 
-				"#define MAX_SHADOWS " + parameters.maxShadows,
+				'#define MAX_SHADOWS ' + parameters.maxShadows,
 
-				"#define MAX_BONES " + parameters.maxBones,
+				'#define MAX_BONES ' + parameters.maxBones,
 
-				parameters.map ? "#define USE_MAP" : "",
-				parameters.envMap ? "#define USE_ENVMAP" : "",
-				parameters.lightMap ? "#define USE_LIGHTMAP" : "",
-				parameters.bumpMap ? "#define USE_BUMPMAP" : "",
-				parameters.normalMap ? "#define USE_NORMALMAP" : "",
-				parameters.specularMap ? "#define USE_SPECULARMAP" : "",
-				parameters.alphaMap ? "#define USE_ALPHAMAP" : "",
-				parameters.vertexColors ? "#define USE_COLOR" : "",
+				parameters.map ? '#define USE_MAP' : '',
+				parameters.envMap ? '#define USE_ENVMAP' : '',
+				parameters.envMap ? '#define ' + envMapModeDefine : '',
+				parameters.lightMap ? '#define USE_LIGHTMAP' : '',
+				parameters.bumpMap ? '#define USE_BUMPMAP' : '',
+				parameters.normalMap ? '#define USE_NORMALMAP' : '',
+				parameters.specularMap ? '#define USE_SPECULARMAP' : '',
+				parameters.alphaMap ? '#define USE_ALPHAMAP' : '',
+				parameters.vertexColors ? '#define USE_COLOR' : '',
 
-				parameters.skinning ? "#define USE_SKINNING" : "",
-				parameters.useVertexTexture ? "#define BONE_TEXTURE" : "",
+				parameters.skinning ? '#define USE_SKINNING' : '',
+				parameters.useVertexTexture ? '#define BONE_TEXTURE' : '',
 
-				parameters.morphTargets ? "#define USE_MORPHTARGETS" : "",
-				parameters.morphNormals ? "#define USE_MORPHNORMALS" : "",
-				parameters.wrapAround ? "#define WRAP_AROUND" : "",
-				parameters.doubleSided ? "#define DOUBLE_SIDED" : "",
-				parameters.flipSided ? "#define FLIP_SIDED" : "",
+				parameters.morphTargets ? '#define USE_MORPHTARGETS' : '',
+				parameters.morphNormals ? '#define USE_MORPHNORMALS' : '',
+				parameters.wrapAround ? '#define WRAP_AROUND' : '',
+				parameters.doubleSided ? '#define DOUBLE_SIDED' : '',
+				parameters.flipSided ? '#define FLIP_SIDED' : '',
 
-				parameters.shadowMapEnabled ? "#define USE_SHADOWMAP" : "",
-				parameters.shadowMapEnabled ? "#define " + shadowMapTypeDefine : "",
-				parameters.shadowMapDebug ? "#define SHADOWMAP_DEBUG" : "",
-				parameters.shadowMapCascade ? "#define SHADOWMAP_CASCADE" : "",
+				parameters.shadowMapEnabled ? '#define USE_SHADOWMAP' : '',
+				parameters.shadowMapEnabled ? '#define ' + shadowMapTypeDefine : '',
+				parameters.shadowMapDebug ? '#define SHADOWMAP_DEBUG' : '',
+				parameters.shadowMapCascade ? '#define SHADOWMAP_CASCADE' : '',
 
-				parameters.sizeAttenuation ? "#define USE_SIZEATTENUATION" : "",
+				parameters.sizeAttenuation ? '#define USE_SIZEATTENUATION' : '',
 
-				parameters.logarithmicDepthBuffer ? "#define USE_LOGDEPTHBUF" : "",
-				//_this._glExtensionFragDepth ? "#define USE_LOGDEPTHBUF_EXT" : "",
+				parameters.logarithmicDepthBuffer ? '#define USE_LOGDEPTHBUF' : '',
+				//_this._glExtensionFragDepth ? '#define USE_LOGDEPTHBUF_EXT' : '',
 
 
-				"uniform mat4 modelMatrix;",
-				"uniform mat4 modelViewMatrix;",
-				"uniform mat4 projectionMatrix;",
-				"uniform mat4 viewMatrix;",
-				"uniform mat3 normalMatrix;",
-				"uniform vec3 cameraPosition;",
+				'uniform mat4 modelMatrix;',
+				'uniform mat4 modelViewMatrix;',
+				'uniform mat4 projectionMatrix;',
+				'uniform mat4 viewMatrix;',
+				'uniform mat3 normalMatrix;',
+				'uniform vec3 cameraPosition;',
 
-				"attribute vec3 position;",
-				"attribute vec3 normal;",
-				"attribute vec2 uv;",
-				"attribute vec2 uv2;",
+				'attribute vec3 position;',
+				'attribute vec3 normal;',
+				'attribute vec2 uv;',
+				'attribute vec2 uv2;',
 
-				"#ifdef USE_COLOR",
+				'#ifdef USE_COLOR',
 
-				"	attribute vec3 color;",
+				'	attribute vec3 color;',
 
-				"#endif",
+				'#endif',
 
-				"#ifdef USE_MORPHTARGETS",
+				'#ifdef USE_MORPHTARGETS',
 
-				"	attribute vec3 morphTarget0;",
-				"	attribute vec3 morphTarget1;",
-				"	attribute vec3 morphTarget2;",
-				"	attribute vec3 morphTarget3;",
+				'	attribute vec3 morphTarget0;',
+				'	attribute vec3 morphTarget1;',
+				'	attribute vec3 morphTarget2;',
+				'	attribute vec3 morphTarget3;',
 
-				"	#ifdef USE_MORPHNORMALS",
+				'	#ifdef USE_MORPHNORMALS',
 
-				"		attribute vec3 morphNormal0;",
-				"		attribute vec3 morphNormal1;",
-				"		attribute vec3 morphNormal2;",
-				"		attribute vec3 morphNormal3;",
+				'		attribute vec3 morphNormal0;',
+				'		attribute vec3 morphNormal1;',
+				'		attribute vec3 morphNormal2;',
+				'		attribute vec3 morphNormal3;',
 
-				"	#else",
+				'	#else',
 
-				"		attribute vec3 morphTarget4;",
-				"		attribute vec3 morphTarget5;",
-				"		attribute vec3 morphTarget6;",
-				"		attribute vec3 morphTarget7;",
+				'		attribute vec3 morphTarget4;',
+				'		attribute vec3 morphTarget5;',
+				'		attribute vec3 morphTarget6;',
+				'		attribute vec3 morphTarget7;',
 
-				"	#endif",
+				'	#endif',
 
-				"#endif",
+				'#endif',
 
-				"#ifdef USE_SKINNING",
+				'#ifdef USE_SKINNING',
 
-				"	attribute vec4 skinIndex;",
-				"	attribute vec4 skinWeight;",
+				'	attribute vec4 skinIndex;',
+				'	attribute vec4 skinWeight;',
 
-				"#endif",
+				'#endif',
 
-				""
+				''
 
 			].join( '\n' );
 
 			prefix_fragment = [
 
-				"precision " + parameters.precision + " float;",
-				"precision " + parameters.precision + " int;",
+				'precision ' + parameters.precision + ' float;',
+				'precision ' + parameters.precision + ' int;',
 
-				( parameters.bumpMap || parameters.normalMap ) ? "#extension GL_OES_standard_derivatives : enable" : "",
+				( parameters.bumpMap || parameters.normalMap ) ? '#extension GL_OES_standard_derivatives : enable' : '',
 
 				customDefines,
 
-				"#define MAX_DIR_LIGHTS " + parameters.maxDirLights,
-				"#define MAX_POINT_LIGHTS " + parameters.maxPointLights,
-				"#define MAX_SPOT_LIGHTS " + parameters.maxSpotLights,
-				"#define MAX_HEMI_LIGHTS " + parameters.maxHemiLights,
+				'#define MAX_DIR_LIGHTS ' + parameters.maxDirLights,
+				'#define MAX_POINT_LIGHTS ' + parameters.maxPointLights,
+				'#define MAX_SPOT_LIGHTS ' + parameters.maxSpotLights,
+				'#define MAX_HEMI_LIGHTS ' + parameters.maxHemiLights,
 
-				"#define MAX_SHADOWS " + parameters.maxShadows,
+				'#define MAX_SHADOWS ' + parameters.maxShadows,
 
-				parameters.alphaTest ? "#define ALPHATEST " + parameters.alphaTest: "",
+				parameters.alphaTest ? '#define ALPHATEST ' + parameters.alphaTest: '',
 
-				_this.gammaInput ? "#define GAMMA_INPUT" : "",
-				_this.gammaOutput ? "#define GAMMA_OUTPUT" : "",
+				_this.gammaInput ? '#define GAMMA_INPUT' : '',
+				_this.gammaOutput ? '#define GAMMA_OUTPUT' : '',
 
-				( parameters.useFog && parameters.fog ) ? "#define USE_FOG" : "",
-				( parameters.useFog && parameters.fogExp ) ? "#define FOG_EXP2" : "",
+				( parameters.useFog && parameters.fog ) ? '#define USE_FOG' : '',
+				( parameters.useFog && parameters.fogExp ) ? '#define FOG_EXP2' : '',
 
-				parameters.map ? "#define USE_MAP" : "",
-				parameters.envMap ? "#define USE_ENVMAP" : "",
-				parameters.lightMap ? "#define USE_LIGHTMAP" : "",
-				parameters.bumpMap ? "#define USE_BUMPMAP" : "",
-				parameters.normalMap ? "#define USE_NORMALMAP" : "",
-				parameters.specularMap ? "#define USE_SPECULARMAP" : "",
-				parameters.alphaMap ? "#define USE_ALPHAMAP" : "",
-				parameters.vertexColors ? "#define USE_COLOR" : "",
+				parameters.map ? '#define USE_MAP' : '',
+				parameters.envMap ? '#define USE_ENVMAP' : '',
+				parameters.envMap ? '#define ' + envMapTypeDefine : '',
+				parameters.envMap ? '#define ' + envMapModeDefine : '',
+				parameters.envMap ? '#define ' + envMapBlendingDefine : '',
+				parameters.lightMap ? '#define USE_LIGHTMAP' : '',
+				parameters.bumpMap ? '#define USE_BUMPMAP' : '',
+				parameters.normalMap ? '#define USE_NORMALMAP' : '',
+				parameters.specularMap ? '#define USE_SPECULARMAP' : '',
+				parameters.alphaMap ? '#define USE_ALPHAMAP' : '',
+				parameters.vertexColors ? '#define USE_COLOR' : '',
 
-				parameters.metal ? "#define METAL" : "",
-				parameters.wrapAround ? "#define WRAP_AROUND" : "",
-				parameters.doubleSided ? "#define DOUBLE_SIDED" : "",
-				parameters.flipSided ? "#define FLIP_SIDED" : "",
+				parameters.metal ? '#define METAL' : '',
+				parameters.wrapAround ? '#define WRAP_AROUND' : '',
+				parameters.doubleSided ? '#define DOUBLE_SIDED' : '',
+				parameters.flipSided ? '#define FLIP_SIDED' : '',
 
-				parameters.shadowMapEnabled ? "#define USE_SHADOWMAP" : "",
-				parameters.shadowMapEnabled ? "#define " + shadowMapTypeDefine : "",
-				parameters.shadowMapDebug ? "#define SHADOWMAP_DEBUG" : "",
-				parameters.shadowMapCascade ? "#define SHADOWMAP_CASCADE" : "",
+				parameters.shadowMapEnabled ? '#define USE_SHADOWMAP' : '',
+				parameters.shadowMapEnabled ? '#define ' + shadowMapTypeDefine : '',
+				parameters.shadowMapDebug ? '#define SHADOWMAP_DEBUG' : '',
+				parameters.shadowMapCascade ? '#define SHADOWMAP_CASCADE' : '',
 
-				parameters.logarithmicDepthBuffer ? "#define USE_LOGDEPTHBUF" : "",
-				//_this._glExtensionFragDepth ? "#define USE_LOGDEPTHBUF_EXT" : "",
+				parameters.logarithmicDepthBuffer ? '#define USE_LOGDEPTHBUF' : '',
+				//_this._glExtensionFragDepth ? '#define USE_LOGDEPTHBUF_EXT' : '',
 
-				"uniform mat4 viewMatrix;",
-				"uniform vec3 cameraPosition;",
-				""
+				'uniform mat4 viewMatrix;',
+				'uniform vec3 cameraPosition;',
+				''
 
 			].join( '\n' );
 
@@ -53990,6 +54110,8 @@ THREE.WebGLProgram = ( function () {
 		if ( _gl.getProgramInfoLog( program ) !== '' ) {
 
 			console.warn( 'THREE.WebGLProgram: gl.getProgramInfoLog()', _gl.getProgramInfoLog( program ) );
+			// console.warn( _gl.getExtension( 'WEBGL_debug_shaders' ).getTranslatedShaderSource( glVertexShader ) );
+			// console.warn( _gl.getExtension( 'WEBGL_debug_shaders' ).getTranslatedShaderSource( glFragmentShader ) );
 
 		}
 
@@ -54002,7 +54124,15 @@ THREE.WebGLProgram = ( function () {
 
 		var identifiers = [
 
-			'viewMatrix', 'modelViewMatrix', 'projectionMatrix', 'normalMatrix', 'modelMatrix', 'cameraPosition', 'morphTargetInfluences', 'bindMatrix', 'bindMatrixInverse'
+			'viewMatrix',
+			'modelViewMatrix',
+			'projectionMatrix',
+			'normalMatrix',
+			'modelMatrix',
+			'cameraPosition',
+			'morphTargetInfluences',
+			'bindMatrix',
+			'bindMatrixInverse'
 
 		];
 
@@ -54037,20 +54167,27 @@ THREE.WebGLProgram = ( function () {
 
 		identifiers = [
 
-			"position", "normal", "uv", "uv2", "tangent", "color",
-			"skinIndex", "skinWeight", "lineDistance"
+			'position',
+			'normal',
+			'uv',
+			'uv2',
+			'tangent',
+			'color',
+			'skinIndex',
+			'skinWeight',
+			'lineDistance'
 
 		];
 
 		for ( var i = 0; i < parameters.maxMorphTargets; i ++ ) {
 
-			identifiers.push( "morphTarget" + i );
+			identifiers.push( 'morphTarget' + i );
 
 		}
 
 		for ( var i = 0; i < parameters.maxMorphNormals; i ++ ) {
 
-			identifiers.push( "morphNormal" + i );
+			identifiers.push( 'morphNormal' + i );
 
 		}
 
@@ -55137,7 +55274,13 @@ THREE.SpritePlugin = function ( renderer, sprites ) {
 	var program, attributes, uniforms;
 
 	var texture;
-	
+
+	// decompose matrixWorld
+
+	var spritePosition = new THREE.Vector3();
+	var spriteRotation = new THREE.Quaternion();
+	var spriteScale = new THREE.Vector3();
+
 	var init = function () {
 
 		var vertices = new Float32Array( [
@@ -55278,16 +55421,7 @@ THREE.SpritePlugin = function ( renderer, sprites ) {
 			var sprite = sprites[ i ];
 
 			sprite._modelViewMatrix.multiplyMatrices( camera.matrixWorldInverse, sprite.matrixWorld );
-
-			if ( sprite.renderDepth === null ) {
-
-				sprite.z = - sprite._modelViewMatrix.elements[ 14 ];
-
-			} else {
-
-				sprite.z = sprite.renderDepth;
-
-			}
+			sprite.z = - sprite._modelViewMatrix.elements[ 14 ];
 
 		}
 
@@ -55305,8 +55439,10 @@ THREE.SpritePlugin = function ( renderer, sprites ) {
 			gl.uniform1f( uniforms.alphaTest, material.alphaTest );
 			gl.uniformMatrix4fv( uniforms.modelViewMatrix, false, sprite._modelViewMatrix.elements );
 
-			scale[ 0 ] = sprite.scale.x;
-			scale[ 1 ] = sprite.scale.y;
+			sprite.matrixWorld.decompose( spritePosition, spriteRotation, spriteScale );
+
+			scale[ 0 ] = spriteScale.x;
+			scale[ 1 ] = spriteScale.y;
 
 			var fogType = 0;
 
@@ -55362,7 +55498,7 @@ THREE.SpritePlugin = function ( renderer, sprites ) {
 		// restore gl
 
 		gl.enable( gl.CULL_FACE );
-		
+
 		renderer.resetGLState();
 
 	};
@@ -55595,7 +55731,7 @@ THREE.ImageUtils = {
 
 				}
 
-			} );
+			}, undefined, onError );
 
 		}
 
@@ -56290,6 +56426,7 @@ THREE.Audio = function ( listener ) {
 };
 
 THREE.Audio.prototype = Object.create( THREE.Object3D.prototype );
+THREE.Audio.prototype.constructor = THREE.Audio;
 
 THREE.Audio.prototype.load = function ( file ) {
 
@@ -56366,6 +56503,7 @@ THREE.AudioListener = function () {
 };
 
 THREE.AudioListener.prototype = Object.create( THREE.Object3D.prototype );
+THREE.AudioListener.prototype.constructor = THREE.AudioListener;
 
 THREE.AudioListener.prototype.updateMatrixWorld = ( function () {
 
@@ -56383,6 +56521,7 @@ THREE.AudioListener.prototype.updateMatrixWorld = ( function () {
 		THREE.Object3D.prototype.updateMatrixWorld.call( this, force );
 
 		var listener = this.context.listener;
+		var up = this.up;
 
 		this.matrixWorld.decompose( position, quaternion, scale );
 
@@ -56390,7 +56529,7 @@ THREE.AudioListener.prototype.updateMatrixWorld = ( function () {
 		velocity.subVectors( position, positionPrev );
 
 		listener.setPosition( position.x, position.y, position.z );
-		listener.setOrientation( orientation.x, orientation.y, orientation.z, this.up.x, this.up.y, this.up.z );
+		listener.setOrientation( orientation.x, orientation.y, orientation.z, up.x, up.y, up.z );
 		listener.setVelocity( velocity.x, velocity.y, velocity.z );
 
 		positionPrev.copy( position );
@@ -56731,6 +56870,7 @@ THREE.Curve.Utils = {
 THREE.Curve.create = function ( constructor, getPointFunc ) {
 
 	constructor.prototype = Object.create( THREE.Curve.prototype );
+	constructor.prototype.constructor = constructor;
 	constructor.prototype.getPoint = getPointFunc;
 
 	return constructor;
@@ -56758,6 +56898,7 @@ THREE.CurvePath = function () {
 };
 
 THREE.CurvePath.prototype = Object.create( THREE.Curve.prototype );
+THREE.CurvePath.prototype.constructor = THREE.CurvePath;
 
 THREE.CurvePath.prototype.add = function ( curve ) {
 
@@ -57078,6 +57219,7 @@ THREE.Gyroscope = function () {
 };
 
 THREE.Gyroscope.prototype = Object.create( THREE.Object3D.prototype );
+THREE.Gyroscope.prototype.constructor = THREE.Gyroscope;
 
 THREE.Gyroscope.prototype.updateMatrixWorld = ( function () {
 
@@ -57155,6 +57297,7 @@ THREE.Path = function ( points ) {
 };
 
 THREE.Path.prototype = Object.create( THREE.CurvePath.prototype );
+THREE.Path.prototype.constructor = THREE.Path;
 
 THREE.PathActions = {
 
@@ -57831,6 +57974,7 @@ THREE.Shape = function () {
 };
 
 THREE.Shape.prototype = Object.create( THREE.Path.prototype );
+THREE.Shape.prototype.constructor = THREE.Shape;
 
 // Convenience method to return ExtrudeGeometry
 
@@ -58403,6 +58547,7 @@ THREE.LineCurve = function ( v1, v2 ) {
 };
 
 THREE.LineCurve.prototype = Object.create( THREE.Curve.prototype );
+THREE.LineCurve.prototype.constructor = THREE.LineCurve;
 
 THREE.LineCurve.prototype.getPoint = function ( t ) {
 
@@ -58445,6 +58590,7 @@ THREE.QuadraticBezierCurve = function ( v0, v1, v2 ) {
 };
 
 THREE.QuadraticBezierCurve.prototype = Object.create( THREE.Curve.prototype );
+THREE.QuadraticBezierCurve.prototype.constructor = THREE.QuadraticBezierCurve;
 
 
 THREE.QuadraticBezierCurve.prototype.getPoint = function ( t ) {
@@ -58488,6 +58634,7 @@ THREE.CubicBezierCurve = function ( v0, v1, v2, v3 ) {
 };
 
 THREE.CubicBezierCurve.prototype = Object.create( THREE.Curve.prototype );
+THREE.CubicBezierCurve.prototype.constructor = THREE.CubicBezierCurve;
 
 THREE.CubicBezierCurve.prototype.getPoint = function ( t ) {
 
@@ -58527,6 +58674,7 @@ THREE.SplineCurve = function ( points /* array of Vector2 */ ) {
 };
 
 THREE.SplineCurve.prototype = Object.create( THREE.Curve.prototype );
+THREE.SplineCurve.prototype.constructor = THREE.SplineCurve;
 
 THREE.SplineCurve.prototype.getPoint = function ( t ) {
 
@@ -58572,6 +58720,7 @@ THREE.EllipseCurve = function ( aX, aY, xRadius, yRadius, aStartAngle, aEndAngle
 };
 
 THREE.EllipseCurve.prototype = Object.create( THREE.Curve.prototype );
+THREE.EllipseCurve.prototype.constructor = THREE.EllipseCurve;
 
 THREE.EllipseCurve.prototype.getPoint = function ( t ) {
 
@@ -58613,6 +58762,7 @@ THREE.ArcCurve = function ( aX, aY, aRadius, aStartAngle, aEndAngle, aClockwise 
 };
 
 THREE.ArcCurve.prototype = Object.create( THREE.EllipseCurve.prototype );
+THREE.ArcCurve.prototype.constructor = THREE.ArcCurve;
 
 // File:src/extras/curves/LineCurve3.js
 
@@ -58810,7 +58960,7 @@ THREE.AnimationHandler = {
 
 	init: function ( data ) {
 
-		if ( data.initialized === true ) return;
+		if ( data.initialized === true ) return data;
 
 		// loop through all keys
 
@@ -59054,8 +59204,6 @@ THREE.Animation.prototype.reset = function () {
 
 		var object = this.hierarchy[ h ];
 
-		object.matrixAutoUpdate = true;
-
 		if ( object.animationCache === undefined ) {
 
 			object.animationCache = {
@@ -59198,7 +59346,6 @@ THREE.Animation.prototype.update = (function(){
 			} else {
 
 				this.stop();
-				return;
 
 			}
 
@@ -59237,9 +59384,6 @@ THREE.Animation.prototype.update = (function(){
 					animationCache.nextKey[ type ] = nextKey;
 
 				}
-
-				object.matrixAutoUpdate = true;
-				object.matrixWorldNeedsUpdate = true;
 
 				var scale = ( this.currentTime - prevKey.time ) / ( nextKey.time - prevKey.time );
 
@@ -59660,6 +59804,7 @@ THREE.KeyFrameAnimation.prototype.getPrevKeyWith = function( sid, h, key ) {
 
 /**
  * @author mrdoob / http://mrdoob.com
+ * @author willy-vvu / http://willy-vvu.github.io
  */
 
 THREE.MorphAnimation = function ( mesh ) {
@@ -59669,12 +59814,16 @@ THREE.MorphAnimation = function ( mesh ) {
 	this.currentTime = 0;
 	this.duration = 1000;
 	this.loop = true;
+	this.lastFrame = 0;
+	this.currentFrame = 0;
 
 	this.isPlaying = false;
 
 };
 
 THREE.MorphAnimation.prototype = {
+
+	constructor: THREE.MorphAnimation,
 
 	play: function () {
 
@@ -59688,45 +59837,38 @@ THREE.MorphAnimation.prototype = {
 
 	},
 
-	update: ( function () {
+	update: function ( delta ) {
 
-		var lastFrame = 0;
-		var currentFrame = 0;
+		if ( this.isPlaying === false ) return;
 
-		return function ( delta ) {
+		this.currentTime += delta;
 
-			if ( this.isPlaying === false ) return;
+		if ( this.loop === true && this.currentTime > this.duration ) {
 
-			this.currentTime += delta;
-
-			if ( this.loop === true && this.currentTime > this.duration ) {
-
-				this.currentTime %= this.duration;
-
-			}
-
-			this.currentTime = Math.min( this.currentTime, this.duration );
-
-			var interpolation = this.duration / this.frames;
-			var frame = Math.floor( this.currentTime / interpolation );
-
-			if ( frame != currentFrame ) {
-
-				this.mesh.morphTargetInfluences[ lastFrame ] = 0;
-				this.mesh.morphTargetInfluences[ currentFrame ] = 1;
-				this.mesh.morphTargetInfluences[ frame ] = 0;
-
-				lastFrame = currentFrame;
-				currentFrame = frame;
-
-			}
-
-			this.mesh.morphTargetInfluences[ frame ] = ( this.currentTime % interpolation ) / interpolation;
-			this.mesh.morphTargetInfluences[ lastFrame ] = 1 - this.mesh.morphTargetInfluences[ frame ];
+			this.currentTime %= this.duration;
 
 		}
 
-	} )()
+		this.currentTime = Math.min( this.currentTime, this.duration );
+
+		var interpolation = this.duration / this.frames;
+		var frame = Math.floor( this.currentTime / interpolation );
+
+		if ( frame != this.currentFrame ) {
+
+			this.mesh.morphTargetInfluences[ this.lastFrame ] = 0;
+			this.mesh.morphTargetInfluences[ this.currentFrame ] = 1;
+			this.mesh.morphTargetInfluences[ frame ] = 0;
+
+			this.lastFrame = this.currentFrame;
+			this.currentFrame = frame;
+
+		}
+
+		this.mesh.morphTargetInfluences[ frame ] = ( this.currentTime % interpolation ) / interpolation;
+		this.mesh.morphTargetInfluences[ this.lastFrame ] = 1 - this.mesh.morphTargetInfluences[ frame ];
+
+	}
 
 };
 
@@ -59858,6 +60000,7 @@ THREE.BoxGeometry = function ( width, height, depth, widthSegments, heightSegmen
 };
 
 THREE.BoxGeometry.prototype = Object.create( THREE.Geometry.prototype );
+THREE.BoxGeometry.prototype.constructor = THREE.BoxGeometry;
 
 // File:src/extras/geometries/CircleGeometry.js
 
@@ -59919,6 +60062,7 @@ THREE.CircleGeometry = function ( radius, segments, thetaStart, thetaLength ) {
 };
 
 THREE.CircleGeometry.prototype = Object.create( THREE.Geometry.prototype );
+THREE.CircleGeometry.prototype.constructor = THREE.CircleGeometry;
 
 // File:src/extras/geometries/CubeGeometry.js
 
@@ -59940,7 +60084,7 @@ THREE.CubeGeometry = function ( width, height, depth, widthSegments, heightSegme
  * @author mrdoob / http://mrdoob.com/
  */
 
-THREE.CylinderGeometry = function ( radiusTop, radiusBottom, height, radialSegments, heightSegments, openEnded ) {
+THREE.CylinderGeometry = function ( radiusTop, radiusBottom, height, radialSegments, heightSegments, openEnded, thetaStart, thetaLength ) {
 
 	THREE.Geometry.call( this );
 
@@ -59952,7 +60096,9 @@ THREE.CylinderGeometry = function ( radiusTop, radiusBottom, height, radialSegme
 		height: height,
 		radialSegments: radialSegments,
 		heightSegments: heightSegments,
-		openEnded: openEnded
+		openEnded: openEnded,
+		thetaStart: thetaStart,
+		thetaLength: thetaLength
 	};
 
 	radiusTop = radiusTop !== undefined ? radiusTop : 20;
@@ -59963,6 +60109,8 @@ THREE.CylinderGeometry = function ( radiusTop, radiusBottom, height, radialSegme
 	heightSegments = heightSegments || 1;
 
 	openEnded = openEnded !== undefined ? openEnded : false;
+	thetaStart = thetaStart !== undefined ? thetaStart : 0;
+	thetaLength = thetaLength !== undefined ? thetaLength : 2 * Math.PI;
 
 	var heightHalf = height / 2;
 
@@ -59981,9 +60129,9 @@ THREE.CylinderGeometry = function ( radiusTop, radiusBottom, height, radialSegme
 			var u = x / radialSegments;
 
 			var vertex = new THREE.Vector3();
-			vertex.x = radius * Math.sin( u * Math.PI * 2 );
+			vertex.x = radius * Math.sin( u * thetaLength + thetaStart );
 			vertex.y = - v * height + heightHalf;
-			vertex.z = radius * Math.cos( u * Math.PI * 2 );
+			vertex.z = radius * Math.cos( u * thetaLength + thetaStart );
 
 			this.vertices.push( vertex );
 
@@ -60079,16 +60227,16 @@ THREE.CylinderGeometry = function ( radiusTop, radiusBottom, height, radialSegme
 
 		for ( x = 0; x < radialSegments; x ++ ) {
 
-			var v1 = vertices[ y ][ x + 1 ];
-			var v2 = vertices[ y ][ x ];
+			var v1 = vertices[ heightSegments ][ x + 1 ];
+			var v2 = vertices[ heightSegments ][ x ];
 			var v3 = this.vertices.length - 1;
 
 			var n1 = new THREE.Vector3( 0, - 1, 0 );
 			var n2 = new THREE.Vector3( 0, - 1, 0 );
 			var n3 = new THREE.Vector3( 0, - 1, 0 );
 
-			var uv1 = uvs[ y ][ x + 1 ].clone();
-			var uv2 = uvs[ y ][ x ].clone();
+			var uv1 = uvs[ heightSegments ][ x + 1 ].clone();
+			var uv2 = uvs[ heightSegments ][ x ].clone();
 			var uv3 = new THREE.Vector2( uv2.x, 1 );
 
 			this.faces.push( new THREE.Face3( v1, v2, v3, [ n1, n2, n3 ] ) );
@@ -60100,9 +60248,10 @@ THREE.CylinderGeometry = function ( radiusTop, radiusBottom, height, radialSegme
 
 	this.computeFaceNormals();
 
-}
+};
 
 THREE.CylinderGeometry.prototype = Object.create( THREE.Geometry.prototype );
+THREE.CylinderGeometry.prototype.constructor = THREE.CylinderGeometry;
 
 // File:src/extras/geometries/ExtrudeGeometry.js
 
@@ -60160,6 +60309,7 @@ THREE.ExtrudeGeometry = function ( shapes, options ) {
 };
 
 THREE.ExtrudeGeometry.prototype = Object.create( THREE.Geometry.prototype );
+THREE.ExtrudeGeometry.prototype.constructor = THREE.ExtrudeGeometry;
 
 THREE.ExtrudeGeometry.prototype.addShapeList = function ( shapes, options ) {
 	var sl = shapes.length;
@@ -60813,6 +60963,7 @@ THREE.ShapeGeometry = function ( shapes, options ) {
 };
 
 THREE.ShapeGeometry.prototype = Object.create( THREE.Geometry.prototype );
+THREE.ShapeGeometry.prototype.constructor = THREE.ShapeGeometry;
 
 /**
  * Add an array of shapes to THREE.ShapeGeometry.
@@ -61023,6 +61174,7 @@ THREE.LatheGeometry = function ( points, segments, phiStart, phiLength ) {
 };
 
 THREE.LatheGeometry.prototype = Object.create( THREE.Geometry.prototype );
+THREE.LatheGeometry.prototype.constructor = THREE.LatheGeometry;
 
 // File:src/extras/geometries/PlaneGeometry.js
 
@@ -61051,6 +61203,7 @@ THREE.PlaneGeometry = function ( width, height, widthSegments, heightSegments ) 
 };
 
 THREE.PlaneGeometry.prototype = Object.create( THREE.Geometry.prototype );
+THREE.PlaneGeometry.prototype.constructor = THREE.PlaneGeometry;
 
 // File:src/extras/geometries/PlaneBufferGeometry.js
 
@@ -61149,6 +61302,7 @@ THREE.PlaneBufferGeometry = function ( width, height, widthSegments, heightSegme
 };
 
 THREE.PlaneBufferGeometry.prototype = Object.create( THREE.BufferGeometry.prototype );
+THREE.PlaneBufferGeometry.prototype.constructor = THREE.PlaneBufferGeometry;
 
 // File:src/extras/geometries/RingGeometry.js
 
@@ -61233,6 +61387,7 @@ THREE.RingGeometry = function ( innerRadius, outerRadius, thetaSegments, phiSegm
 };
 
 THREE.RingGeometry.prototype = Object.create( THREE.Geometry.prototype );
+THREE.RingGeometry.prototype.constructor = THREE.RingGeometry;
 
 
 // File:src/extras/geometries/SphereGeometry.js
@@ -61349,6 +61504,7 @@ THREE.SphereGeometry = function ( radius, widthSegments, heightSegments, phiStar
 };
 
 THREE.SphereGeometry.prototype = Object.create( THREE.Geometry.prototype );
+THREE.SphereGeometry.prototype.constructor = THREE.SphereGeometry;
 
 // File:src/extras/geometries/TextGeometry.js
 
@@ -61413,6 +61569,7 @@ THREE.TextGeometry = function ( text, parameters ) {
 };
 
 THREE.TextGeometry.prototype = Object.create( THREE.ExtrudeGeometry.prototype );
+THREE.TextGeometry.prototype.constructor = THREE.TextGeometry;
 
 // File:src/extras/geometries/TorusGeometry.js
 
@@ -61494,6 +61651,7 @@ THREE.TorusGeometry = function ( radius, tube, radialSegments, tubularSegments, 
 };
 
 THREE.TorusGeometry.prototype = Object.create( THREE.Geometry.prototype );
+THREE.TorusGeometry.prototype.constructor = THREE.TorusGeometry;
 
 // File:src/extras/geometries/TorusKnotGeometry.js
 
@@ -61609,6 +61767,7 @@ THREE.TorusKnotGeometry = function ( radius, tube, radialSegments, tubularSegmen
 };
 
 THREE.TorusKnotGeometry.prototype = Object.create( THREE.Geometry.prototype );
+THREE.TorusKnotGeometry.prototype.constructor = THREE.TorusKnotGeometry;
 
 // File:src/extras/geometries/TubeGeometry.js
 
@@ -61616,6 +61775,7 @@ THREE.TorusKnotGeometry.prototype = Object.create( THREE.Geometry.prototype );
  * @author WestLangley / https://github.com/WestLangley
  * @author zz85 / https://github.com/zz85
  * @author miningold / https://github.com/miningold
+ * @author jonobr1 / https://github.com/jonobr1
  *
  * Modified from the TorusKnotGeometry by @oosmoxiecode
  *
@@ -61625,7 +61785,7 @@ THREE.TorusKnotGeometry.prototype = Object.create( THREE.Geometry.prototype );
  * http://www.cs.indiana.edu/pub/techreports/TR425.pdf
  */
 
-THREE.TubeGeometry = function ( path, segments, radius, radialSegments, closed ) {
+THREE.TubeGeometry = function ( path, segments, radius, radialSegments, closed, taper ) {
 
 	THREE.Geometry.call( this );
 
@@ -61643,6 +61803,7 @@ THREE.TubeGeometry = function ( path, segments, radius, radialSegments, closed )
 	radius = radius || 1;
 	radialSegments = radialSegments || 8;
 	closed = closed || false;
+	taper = taper || THREE.TubeGeometry.NoTaper;
 
 	var grid = [];
 
@@ -61656,7 +61817,7 @@ THREE.TubeGeometry = function ( path, segments, radius, radialSegments, closed )
 
 		x, y, z,
 		tx, ty, tz,
-		u, v,
+		u, v, r,
 
 		cx, cy,
 		pos, pos2 = new THREE.Vector3(),
@@ -61695,12 +61856,14 @@ THREE.TubeGeometry = function ( path, segments, radius, radialSegments, closed )
 		normal = normals[ i ];
 		binormal = binormals[ i ];
 
+		r = radius * taper( u );
+
 		for ( j = 0; j < radialSegments; j ++ ) {
 
 			v = j / radialSegments * 2 * Math.PI;
 
-			cx = - radius * Math.cos( v ); // TODO: Hack: Negating it so it faces outside.
-			cy = radius * Math.sin( v );
+			cx = - r * Math.cos( v ); // TODO: Hack: Negating it so it faces outside.
+			cy = r * Math.sin( v );
 
 			pos2.copy( pos );
 			pos2.x += cx * normal.x + cy * binormal.x;
@@ -61747,7 +61910,19 @@ THREE.TubeGeometry = function ( path, segments, radius, radialSegments, closed )
 };
 
 THREE.TubeGeometry.prototype = Object.create( THREE.Geometry.prototype );
+THREE.TubeGeometry.prototype.constructor = THREE.TubeGeometry;
 
+THREE.TubeGeometry.NoTaper = function ( u ) {
+
+	return 1;
+
+};
+
+THREE.TubeGeometry.SinusoidalTaper = function ( u ) {
+
+	return Math.sin( Math.PI * u );
+
+};
 
 // For computing of Frenet frames, exposing the tangents, normals and binormals the spline
 THREE.TubeGeometry.FrenetFrames = function ( path, segments, closed ) {
@@ -62132,6 +62307,7 @@ THREE.PolyhedronGeometry = function ( vertices, indices, radius, detail ) {
 };
 
 THREE.PolyhedronGeometry.prototype = Object.create( THREE.Geometry.prototype );
+THREE.PolyhedronGeometry.prototype.constructor = THREE.PolyhedronGeometry;
 
 // File:src/extras/geometries/DodecahedronGeometry.js
 
@@ -62190,6 +62366,7 @@ THREE.DodecahedronGeometry = function ( radius, detail ) {
 };
 
 THREE.DodecahedronGeometry.prototype = Object.create( THREE.Geometry.prototype );
+THREE.DodecahedronGeometry.prototype.constructor = THREE.DodecahedronGeometry;
 
 // File:src/extras/geometries/IcosahedronGeometry.js
 
@@ -62225,6 +62402,7 @@ THREE.IcosahedronGeometry = function ( radius, detail ) {
 };
 
 THREE.IcosahedronGeometry.prototype = Object.create( THREE.Geometry.prototype );
+THREE.IcosahedronGeometry.prototype.constructor = THREE.IcosahedronGeometry;
 
 // File:src/extras/geometries/OctahedronGeometry.js
 
@@ -62258,6 +62436,7 @@ THREE.OctahedronGeometry = function ( radius, detail ) {
 };
 
 THREE.OctahedronGeometry.prototype = Object.create( THREE.Geometry.prototype );
+THREE.OctahedronGeometry.prototype.constructor = THREE.OctahedronGeometry;
 
 // File:src/extras/geometries/TetrahedronGeometry.js
 
@@ -62287,6 +62466,7 @@ THREE.TetrahedronGeometry = function ( radius, detail ) {
 };
 
 THREE.TetrahedronGeometry.prototype = Object.create( THREE.Geometry.prototype );
+THREE.TetrahedronGeometry.prototype.constructor = THREE.TetrahedronGeometry;
 
 // File:src/extras/geometries/ParametricGeometry.js
 
@@ -62374,6 +62554,7 @@ THREE.ParametricGeometry = function ( func, slices, stacks ) {
 };
 
 THREE.ParametricGeometry.prototype = Object.create( THREE.Geometry.prototype );
+THREE.ParametricGeometry.prototype.constructor = THREE.ParametricGeometry;
 
 // File:src/extras/helpers/AxisHelper.js
 
@@ -62409,6 +62590,7 @@ THREE.AxisHelper = function ( size ) {
 };
 
 THREE.AxisHelper.prototype = Object.create( THREE.Line.prototype );
+THREE.AxisHelper.prototype.constructor = THREE.AxisHelper;
 
 // File:src/extras/helpers/ArrowHelper.js
 
@@ -62465,6 +62647,7 @@ THREE.ArrowHelper = ( function () {
 }() );
 
 THREE.ArrowHelper.prototype = Object.create( THREE.Object3D.prototype );
+THREE.ArrowHelper.prototype.constructor = THREE.ArrowHelper;
 
 THREE.ArrowHelper.prototype.setDirection = ( function () {
 
@@ -62502,7 +62685,7 @@ THREE.ArrowHelper.prototype.setLength = function ( length, headLength, headWidth
 	if ( headLength === undefined ) headLength = 0.2 * length;
 	if ( headWidth === undefined ) headWidth = 0.2 * headLength;
 
-	this.line.scale.set( 1, length, 1 );
+	this.line.scale.set( 1, length - headLength, 1 );
 	this.line.updateMatrix();
 
 	this.cone.scale.set( headWidth, headLength, headWidth );
@@ -62540,6 +62723,7 @@ THREE.BoxHelper = function ( object ) {
 };
 
 THREE.BoxHelper.prototype = Object.create( THREE.Line.prototype );
+THREE.BoxHelper.prototype.constructor = THREE.BoxHelper;
 
 THREE.BoxHelper.prototype.update = function ( object ) {
 
@@ -62642,6 +62826,7 @@ THREE.BoundingBoxHelper = function ( object, hex ) {
 };
 
 THREE.BoundingBoxHelper.prototype = Object.create( THREE.Mesh.prototype );
+THREE.BoundingBoxHelper.prototype.constructor = THREE.BoundingBoxHelper;
 
 THREE.BoundingBoxHelper.prototype.update = function () {
 
@@ -62761,6 +62946,7 @@ THREE.CameraHelper = function ( camera ) {
 };
 
 THREE.CameraHelper.prototype = Object.create( THREE.Line.prototype );
+THREE.CameraHelper.prototype.constructor = THREE.CameraHelper;
 
 THREE.CameraHelper.prototype.update = function () {
 
@@ -62894,6 +63080,7 @@ THREE.DirectionalLightHelper = function ( light, size ) {
 };
 
 THREE.DirectionalLightHelper.prototype = Object.create( THREE.Object3D.prototype );
+THREE.DirectionalLightHelper.prototype.constructor = THREE.DirectionalLightHelper;
 
 THREE.DirectionalLightHelper.prototype.dispose = function () {
 
@@ -63012,6 +63199,7 @@ THREE.EdgesHelper = function ( object, hex ) {
 };
 
 THREE.EdgesHelper.prototype = Object.create( THREE.Line.prototype );
+THREE.EdgesHelper.prototype.constructor = THREE.EdgesHelper;
 
 // File:src/extras/helpers/FaceNormalsHelper.js
 
@@ -63051,6 +63239,7 @@ THREE.FaceNormalsHelper = function ( object, size, hex, linewidth ) {
 };
 
 THREE.FaceNormalsHelper.prototype = Object.create( THREE.Line.prototype );
+THREE.FaceNormalsHelper.prototype.constructor = THREE.FaceNormalsHelper;
 
 THREE.FaceNormalsHelper.prototype.update = function () {
 
@@ -63122,6 +63311,7 @@ THREE.GridHelper = function ( size, step ) {
 };
 
 THREE.GridHelper.prototype = Object.create( THREE.Line.prototype );
+THREE.GridHelper.prototype.constructor = THREE.GridHelper;
 
 THREE.GridHelper.prototype.setColors = function( colorCenterLine, colorGrid ) {
 
@@ -63170,6 +63360,7 @@ THREE.HemisphereLightHelper = function ( light, sphereSize, arrowLength, domeSiz
 };
 
 THREE.HemisphereLightHelper.prototype = Object.create( THREE.Object3D.prototype );
+THREE.HemisphereLightHelper.prototype.constructor = THREE.HemisphereLightHelper;
 
 THREE.HemisphereLightHelper.prototype.dispose = function () {
 	this.lightSphere.geometry.dispose();
@@ -63238,6 +63429,7 @@ THREE.PointLightHelper = function ( light, sphereSize ) {
 };
 
 THREE.PointLightHelper.prototype = Object.create( THREE.Mesh.prototype );
+THREE.PointLightHelper.prototype.constructor = THREE.PointLightHelper;
 
 THREE.PointLightHelper.prototype.dispose = function () {
 
@@ -63311,6 +63503,7 @@ THREE.SkeletonHelper = function ( object ) {
 
 
 THREE.SkeletonHelper.prototype = Object.create( THREE.Line.prototype );
+THREE.SkeletonHelper.prototype.constructor = THREE.SkeletonHelper;
 
 THREE.SkeletonHelper.prototype.getBoneList = function( object ) {
 
@@ -63399,6 +63592,7 @@ THREE.SpotLightHelper = function ( light ) {
 };
 
 THREE.SpotLightHelper.prototype = Object.create( THREE.Object3D.prototype );
+THREE.SpotLightHelper.prototype.constructor = THREE.SpotLightHelper;
 
 THREE.SpotLightHelper.prototype.dispose = function () {
 	this.cone.geometry.dispose();
@@ -63474,6 +63668,7 @@ THREE.VertexNormalsHelper = function ( object, size, hex, linewidth ) {
 };
 
 THREE.VertexNormalsHelper.prototype = Object.create( THREE.Line.prototype );
+THREE.VertexNormalsHelper.prototype.constructor = THREE.VertexNormalsHelper;
 
 THREE.VertexNormalsHelper.prototype.update = ( function ( object ) {
 
@@ -63575,6 +63770,7 @@ THREE.VertexTangentsHelper = function ( object, size, hex, linewidth ) {
 };
 
 THREE.VertexTangentsHelper.prototype = Object.create( THREE.Line.prototype );
+THREE.VertexTangentsHelper.prototype.constructor = THREE.VertexTangentsHelper;
 
 THREE.VertexTangentsHelper.prototype.update = ( function ( object ) {
 
@@ -63807,6 +64003,7 @@ THREE.WireframeHelper = function ( object, hex ) {
 };
 
 THREE.WireframeHelper.prototype = Object.create( THREE.Line.prototype );
+THREE.WireframeHelper.prototype.constructor = THREE.WireframeHelper;
 
 // File:src/extras/objects/ImmediateRenderObject.js
 
@@ -63823,6 +64020,7 @@ THREE.ImmediateRenderObject = function () {
 };
 
 THREE.ImmediateRenderObject.prototype = Object.create( THREE.Object3D.prototype );
+THREE.ImmediateRenderObject.prototype.constructor = THREE.ImmediateRenderObject;
 
 // File:src/extras/objects/MorphBlendMesh.js
 
@@ -63855,6 +64053,7 @@ THREE.MorphBlendMesh = function( geometry, material ) {
 };
 
 THREE.MorphBlendMesh.prototype = Object.create( THREE.Mesh.prototype );
+THREE.MorphBlendMesh.prototype.constructor = THREE.MorphBlendMesh;
 
 THREE.MorphBlendMesh.prototype.createAnimation = function ( name, start, end, fps ) {
 
@@ -64134,24 +64333,10 @@ THREE.MorphBlendMesh.prototype.update = function ( delta ) {
 
 };
 
-
-// Export the THREE object for **Node.js**, with
-// backwards-compatibility for the old `require()` API. If we're in
-// the browser, add `_` as a global object via a string identifier,
-// for Closure Compiler "advanced" mode.
-if (typeof exports !== 'undefined') {
-  if (typeof module !== 'undefined' && module.exports) {
-    exports = module.exports = THREE;
-  }
-  exports.THREE = THREE;
-} else {
-  this['THREE'] = THREE;
-}
-
-},{}],"/home/bbales2/stochssModel/app/static/modelEditor/node_modules/underscore/underscore.js":[function(require,module,exports){
-//     Underscore.js 1.7.0
+},{}],"/home/debjani/Desktop/newstochss/stochss/app/static/modelEditor/node_modules/underscore/underscore.js":[function(require,module,exports){
+//     Underscore.js 1.8.2
 //     http://underscorejs.org
-//     (c) 2009-2014 Jeremy Ashkenas, DocumentCloud and Investigative Reporters & Editors
+//     (c) 2009-2015 Jeremy Ashkenas, DocumentCloud and Investigative Reporters & Editors
 //     Underscore may be freely distributed under the MIT license.
 
 (function() {
@@ -64172,7 +64357,6 @@ if (typeof exports !== 'undefined') {
   var
     push             = ArrayProto.push,
     slice            = ArrayProto.slice,
-    concat           = ArrayProto.concat,
     toString         = ObjProto.toString,
     hasOwnProperty   = ObjProto.hasOwnProperty;
 
@@ -64181,7 +64365,11 @@ if (typeof exports !== 'undefined') {
   var
     nativeIsArray      = Array.isArray,
     nativeKeys         = Object.keys,
-    nativeBind         = FuncProto.bind;
+    nativeBind         = FuncProto.bind,
+    nativeCreate       = Object.create;
+
+  // Naked function reference for surrogate-prototype-swapping.
+  var Ctor = function(){};
 
   // Create a safe reference to the Underscore object for use below.
   var _ = function(obj) {
@@ -64203,12 +64391,12 @@ if (typeof exports !== 'undefined') {
   }
 
   // Current version.
-  _.VERSION = '1.7.0';
+  _.VERSION = '1.8.2';
 
   // Internal function that returns an efficient (for current engines) version
   // of the passed-in callback, to be repeatedly applied in other Underscore
   // functions.
-  var createCallback = function(func, context, argCount) {
+  var optimizeCb = function(func, context, argCount) {
     if (context === void 0) return func;
     switch (argCount == null ? 3 : argCount) {
       case 1: return function(value) {
@@ -64232,11 +64420,51 @@ if (typeof exports !== 'undefined') {
   // A mostly-internal function to generate callbacks that can be applied
   // to each element in a collection, returning the desired result — either
   // identity, an arbitrary callback, a property matcher, or a property accessor.
-  _.iteratee = function(value, context, argCount) {
+  var cb = function(value, context, argCount) {
     if (value == null) return _.identity;
-    if (_.isFunction(value)) return createCallback(value, context, argCount);
-    if (_.isObject(value)) return _.matches(value);
+    if (_.isFunction(value)) return optimizeCb(value, context, argCount);
+    if (_.isObject(value)) return _.matcher(value);
     return _.property(value);
+  };
+  _.iteratee = function(value, context) {
+    return cb(value, context, Infinity);
+  };
+
+  // An internal function for creating assigner functions.
+  var createAssigner = function(keysFunc, undefinedOnly) {
+    return function(obj) {
+      var length = arguments.length;
+      if (length < 2 || obj == null) return obj;
+      for (var index = 1; index < length; index++) {
+        var source = arguments[index],
+            keys = keysFunc(source),
+            l = keys.length;
+        for (var i = 0; i < l; i++) {
+          var key = keys[i];
+          if (!undefinedOnly || obj[key] === void 0) obj[key] = source[key];
+        }
+      }
+      return obj;
+    };
+  };
+
+  // An internal function for creating a new object that inherits from another.
+  var baseCreate = function(prototype) {
+    if (!_.isObject(prototype)) return {};
+    if (nativeCreate) return nativeCreate(prototype);
+    Ctor.prototype = prototype;
+    var result = new Ctor;
+    Ctor.prototype = null;
+    return result;
+  };
+
+  // Helper for collection methods to determine whether a collection
+  // should be iterated as an array or as an object
+  // Related: http://people.mozilla.org/~jorendorff/es6-draft.html#sec-tolength
+  var MAX_ARRAY_INDEX = Math.pow(2, 53) - 1;
+  var isArrayLike = function(collection) {
+    var length = collection && collection.length;
+    return typeof length == 'number' && length >= 0 && length <= MAX_ARRAY_INDEX;
   };
 
   // Collection Functions
@@ -64246,11 +64474,10 @@ if (typeof exports !== 'undefined') {
   // Handles raw objects in addition to array-likes. Treats all
   // sparse array-likes as if they were dense.
   _.each = _.forEach = function(obj, iteratee, context) {
-    if (obj == null) return obj;
-    iteratee = createCallback(iteratee, context);
-    var i, length = obj.length;
-    if (length === +length) {
-      for (i = 0; i < length; i++) {
+    iteratee = optimizeCb(iteratee, context);
+    var i, length;
+    if (isArrayLike(obj)) {
+      for (i = 0, length = obj.length; i < length; i++) {
         iteratee(obj[i], i, obj);
       }
     } else {
@@ -64264,77 +64491,66 @@ if (typeof exports !== 'undefined') {
 
   // Return the results of applying the iteratee to each element.
   _.map = _.collect = function(obj, iteratee, context) {
-    if (obj == null) return [];
-    iteratee = _.iteratee(iteratee, context);
-    var keys = obj.length !== +obj.length && _.keys(obj),
+    iteratee = cb(iteratee, context);
+    var keys = !isArrayLike(obj) && _.keys(obj),
         length = (keys || obj).length,
-        results = Array(length),
-        currentKey;
+        results = Array(length);
     for (var index = 0; index < length; index++) {
-      currentKey = keys ? keys[index] : index;
+      var currentKey = keys ? keys[index] : index;
       results[index] = iteratee(obj[currentKey], currentKey, obj);
     }
     return results;
   };
 
-  var reduceError = 'Reduce of empty array with no initial value';
+  // Create a reducing function iterating left or right.
+  function createReduce(dir) {
+    // Optimized iterator function as using arguments.length
+    // in the main function will deoptimize the, see #1991.
+    function iterator(obj, iteratee, memo, keys, index, length) {
+      for (; index >= 0 && index < length; index += dir) {
+        var currentKey = keys ? keys[index] : index;
+        memo = iteratee(memo, obj[currentKey], currentKey, obj);
+      }
+      return memo;
+    }
+
+    return function(obj, iteratee, memo, context) {
+      iteratee = optimizeCb(iteratee, context, 4);
+      var keys = !isArrayLike(obj) && _.keys(obj),
+          length = (keys || obj).length,
+          index = dir > 0 ? 0 : length - 1;
+      // Determine the initial value if none is provided.
+      if (arguments.length < 3) {
+        memo = obj[keys ? keys[index] : index];
+        index += dir;
+      }
+      return iterator(obj, iteratee, memo, keys, index, length);
+    };
+  }
 
   // **Reduce** builds up a single result from a list of values, aka `inject`,
   // or `foldl`.
-  _.reduce = _.foldl = _.inject = function(obj, iteratee, memo, context) {
-    if (obj == null) obj = [];
-    iteratee = createCallback(iteratee, context, 4);
-    var keys = obj.length !== +obj.length && _.keys(obj),
-        length = (keys || obj).length,
-        index = 0, currentKey;
-    if (arguments.length < 3) {
-      if (!length) throw new TypeError(reduceError);
-      memo = obj[keys ? keys[index++] : index++];
-    }
-    for (; index < length; index++) {
-      currentKey = keys ? keys[index] : index;
-      memo = iteratee(memo, obj[currentKey], currentKey, obj);
-    }
-    return memo;
-  };
+  _.reduce = _.foldl = _.inject = createReduce(1);
 
   // The right-associative version of reduce, also known as `foldr`.
-  _.reduceRight = _.foldr = function(obj, iteratee, memo, context) {
-    if (obj == null) obj = [];
-    iteratee = createCallback(iteratee, context, 4);
-    var keys = obj.length !== + obj.length && _.keys(obj),
-        index = (keys || obj).length,
-        currentKey;
-    if (arguments.length < 3) {
-      if (!index) throw new TypeError(reduceError);
-      memo = obj[keys ? keys[--index] : --index];
-    }
-    while (index--) {
-      currentKey = keys ? keys[index] : index;
-      memo = iteratee(memo, obj[currentKey], currentKey, obj);
-    }
-    return memo;
-  };
+  _.reduceRight = _.foldr = createReduce(-1);
 
   // Return the first value which passes a truth test. Aliased as `detect`.
   _.find = _.detect = function(obj, predicate, context) {
-    var result;
-    predicate = _.iteratee(predicate, context);
-    _.some(obj, function(value, index, list) {
-      if (predicate(value, index, list)) {
-        result = value;
-        return true;
-      }
-    });
-    return result;
+    var key;
+    if (isArrayLike(obj)) {
+      key = _.findIndex(obj, predicate, context);
+    } else {
+      key = _.findKey(obj, predicate, context);
+    }
+    if (key !== void 0 && key !== -1) return obj[key];
   };
 
   // Return all the elements that pass a truth test.
   // Aliased as `select`.
   _.filter = _.select = function(obj, predicate, context) {
     var results = [];
-    if (obj == null) return results;
-    predicate = _.iteratee(predicate, context);
+    predicate = cb(predicate, context);
     _.each(obj, function(value, index, list) {
       if (predicate(value, index, list)) results.push(value);
     });
@@ -64343,19 +64559,17 @@ if (typeof exports !== 'undefined') {
 
   // Return all the elements for which a truth test fails.
   _.reject = function(obj, predicate, context) {
-    return _.filter(obj, _.negate(_.iteratee(predicate)), context);
+    return _.filter(obj, _.negate(cb(predicate)), context);
   };
 
   // Determine whether all of the elements match a truth test.
   // Aliased as `all`.
   _.every = _.all = function(obj, predicate, context) {
-    if (obj == null) return true;
-    predicate = _.iteratee(predicate, context);
-    var keys = obj.length !== +obj.length && _.keys(obj),
-        length = (keys || obj).length,
-        index, currentKey;
-    for (index = 0; index < length; index++) {
-      currentKey = keys ? keys[index] : index;
+    predicate = cb(predicate, context);
+    var keys = !isArrayLike(obj) && _.keys(obj),
+        length = (keys || obj).length;
+    for (var index = 0; index < length; index++) {
+      var currentKey = keys ? keys[index] : index;
       if (!predicate(obj[currentKey], currentKey, obj)) return false;
     }
     return true;
@@ -64364,24 +64578,21 @@ if (typeof exports !== 'undefined') {
   // Determine if at least one element in the object matches a truth test.
   // Aliased as `any`.
   _.some = _.any = function(obj, predicate, context) {
-    if (obj == null) return false;
-    predicate = _.iteratee(predicate, context);
-    var keys = obj.length !== +obj.length && _.keys(obj),
-        length = (keys || obj).length,
-        index, currentKey;
-    for (index = 0; index < length; index++) {
-      currentKey = keys ? keys[index] : index;
+    predicate = cb(predicate, context);
+    var keys = !isArrayLike(obj) && _.keys(obj),
+        length = (keys || obj).length;
+    for (var index = 0; index < length; index++) {
+      var currentKey = keys ? keys[index] : index;
       if (predicate(obj[currentKey], currentKey, obj)) return true;
     }
     return false;
   };
 
   // Determine if the array or object contains a given value (using `===`).
-  // Aliased as `include`.
-  _.contains = _.include = function(obj, target) {
-    if (obj == null) return false;
-    if (obj.length !== +obj.length) obj = _.values(obj);
-    return _.indexOf(obj, target) >= 0;
+  // Aliased as `includes` and `include`.
+  _.contains = _.includes = _.include = function(obj, target, fromIndex) {
+    if (!isArrayLike(obj)) obj = _.values(obj);
+    return _.indexOf(obj, target, typeof fromIndex == 'number' && fromIndex) >= 0;
   };
 
   // Invoke a method (with arguments) on every item in a collection.
@@ -64389,7 +64600,8 @@ if (typeof exports !== 'undefined') {
     var args = slice.call(arguments, 2);
     var isFunc = _.isFunction(method);
     return _.map(obj, function(value) {
-      return (isFunc ? method : value[method]).apply(value, args);
+      var func = isFunc ? method : value[method];
+      return func == null ? func : func.apply(value, args);
     });
   };
 
@@ -64401,13 +64613,13 @@ if (typeof exports !== 'undefined') {
   // Convenience version of a common use case of `filter`: selecting only objects
   // containing specific `key:value` pairs.
   _.where = function(obj, attrs) {
-    return _.filter(obj, _.matches(attrs));
+    return _.filter(obj, _.matcher(attrs));
   };
 
   // Convenience version of a common use case of `find`: getting the first object
   // containing specific `key:value` pairs.
   _.findWhere = function(obj, attrs) {
-    return _.find(obj, _.matches(attrs));
+    return _.find(obj, _.matcher(attrs));
   };
 
   // Return the maximum element (or element-based computation).
@@ -64415,7 +64627,7 @@ if (typeof exports !== 'undefined') {
     var result = -Infinity, lastComputed = -Infinity,
         value, computed;
     if (iteratee == null && obj != null) {
-      obj = obj.length === +obj.length ? obj : _.values(obj);
+      obj = isArrayLike(obj) ? obj : _.values(obj);
       for (var i = 0, length = obj.length; i < length; i++) {
         value = obj[i];
         if (value > result) {
@@ -64423,7 +64635,7 @@ if (typeof exports !== 'undefined') {
         }
       }
     } else {
-      iteratee = _.iteratee(iteratee, context);
+      iteratee = cb(iteratee, context);
       _.each(obj, function(value, index, list) {
         computed = iteratee(value, index, list);
         if (computed > lastComputed || computed === -Infinity && result === -Infinity) {
@@ -64440,7 +64652,7 @@ if (typeof exports !== 'undefined') {
     var result = Infinity, lastComputed = Infinity,
         value, computed;
     if (iteratee == null && obj != null) {
-      obj = obj.length === +obj.length ? obj : _.values(obj);
+      obj = isArrayLike(obj) ? obj : _.values(obj);
       for (var i = 0, length = obj.length; i < length; i++) {
         value = obj[i];
         if (value < result) {
@@ -64448,7 +64660,7 @@ if (typeof exports !== 'undefined') {
         }
       }
     } else {
-      iteratee = _.iteratee(iteratee, context);
+      iteratee = cb(iteratee, context);
       _.each(obj, function(value, index, list) {
         computed = iteratee(value, index, list);
         if (computed < lastComputed || computed === Infinity && result === Infinity) {
@@ -64463,7 +64675,7 @@ if (typeof exports !== 'undefined') {
   // Shuffle a collection, using the modern version of the
   // [Fisher-Yates shuffle](http://en.wikipedia.org/wiki/Fisher–Yates_shuffle).
   _.shuffle = function(obj) {
-    var set = obj && obj.length === +obj.length ? obj : _.values(obj);
+    var set = isArrayLike(obj) ? obj : _.values(obj);
     var length = set.length;
     var shuffled = Array(length);
     for (var index = 0, rand; index < length; index++) {
@@ -64479,7 +64691,7 @@ if (typeof exports !== 'undefined') {
   // The internal `guard` argument allows it to work with `map`.
   _.sample = function(obj, n, guard) {
     if (n == null || guard) {
-      if (obj.length !== +obj.length) obj = _.values(obj);
+      if (!isArrayLike(obj)) obj = _.values(obj);
       return obj[_.random(obj.length - 1)];
     }
     return _.shuffle(obj).slice(0, Math.max(0, n));
@@ -64487,7 +64699,7 @@ if (typeof exports !== 'undefined') {
 
   // Sort the object's values by a criterion produced by an iteratee.
   _.sortBy = function(obj, iteratee, context) {
-    iteratee = _.iteratee(iteratee, context);
+    iteratee = cb(iteratee, context);
     return _.pluck(_.map(obj, function(value, index, list) {
       return {
         value: value,
@@ -64509,7 +64721,7 @@ if (typeof exports !== 'undefined') {
   var group = function(behavior) {
     return function(obj, iteratee, context) {
       var result = {};
-      iteratee = _.iteratee(iteratee, context);
+      iteratee = cb(iteratee, context);
       _.each(obj, function(value, index) {
         var key = iteratee(value, index, obj);
         behavior(result, value, key);
@@ -64537,37 +64749,24 @@ if (typeof exports !== 'undefined') {
     if (_.has(result, key)) result[key]++; else result[key] = 1;
   });
 
-  // Use a comparator function to figure out the smallest index at which
-  // an object should be inserted so as to maintain order. Uses binary search.
-  _.sortedIndex = function(array, obj, iteratee, context) {
-    iteratee = _.iteratee(iteratee, context, 1);
-    var value = iteratee(obj);
-    var low = 0, high = array.length;
-    while (low < high) {
-      var mid = low + high >>> 1;
-      if (iteratee(array[mid]) < value) low = mid + 1; else high = mid;
-    }
-    return low;
-  };
-
   // Safely create a real, live array from anything iterable.
   _.toArray = function(obj) {
     if (!obj) return [];
     if (_.isArray(obj)) return slice.call(obj);
-    if (obj.length === +obj.length) return _.map(obj, _.identity);
+    if (isArrayLike(obj)) return _.map(obj, _.identity);
     return _.values(obj);
   };
 
   // Return the number of elements in an object.
   _.size = function(obj) {
     if (obj == null) return 0;
-    return obj.length === +obj.length ? obj.length : _.keys(obj).length;
+    return isArrayLike(obj) ? obj.length : _.keys(obj).length;
   };
 
   // Split a collection into two arrays: one whose elements all satisfy the given
   // predicate, and one whose elements all do not satisfy the predicate.
   _.partition = function(obj, predicate, context) {
-    predicate = _.iteratee(predicate, context);
+    predicate = cb(predicate, context);
     var pass = [], fail = [];
     _.each(obj, function(value, key, obj) {
       (predicate(value, key, obj) ? pass : fail).push(value);
@@ -64584,30 +64783,27 @@ if (typeof exports !== 'undefined') {
   _.first = _.head = _.take = function(array, n, guard) {
     if (array == null) return void 0;
     if (n == null || guard) return array[0];
-    if (n < 0) return [];
-    return slice.call(array, 0, n);
+    return _.initial(array, array.length - n);
   };
 
   // Returns everything but the last entry of the array. Especially useful on
   // the arguments object. Passing **n** will return all the values in
-  // the array, excluding the last N. The **guard** check allows it to work with
-  // `_.map`.
+  // the array, excluding the last N.
   _.initial = function(array, n, guard) {
     return slice.call(array, 0, Math.max(0, array.length - (n == null || guard ? 1 : n)));
   };
 
   // Get the last element of an array. Passing **n** will return the last N
-  // values in the array. The **guard** check allows it to work with `_.map`.
+  // values in the array.
   _.last = function(array, n, guard) {
     if (array == null) return void 0;
     if (n == null || guard) return array[array.length - 1];
-    return slice.call(array, Math.max(array.length - n, 0));
+    return _.rest(array, Math.max(0, array.length - n));
   };
 
   // Returns everything but the first entry of the array. Aliased as `tail` and `drop`.
   // Especially useful on the arguments object. Passing an **n** will return
-  // the rest N values in the array. The **guard**
-  // check allows it to work with `_.map`.
+  // the rest N values in the array.
   _.rest = _.tail = _.drop = function(array, n, guard) {
     return slice.call(array, n == null || guard ? 1 : n);
   };
@@ -64618,18 +64814,20 @@ if (typeof exports !== 'undefined') {
   };
 
   // Internal implementation of a recursive `flatten` function.
-  var flatten = function(input, shallow, strict, output) {
-    if (shallow && _.every(input, _.isArray)) {
-      return concat.apply(output, input);
-    }
-    for (var i = 0, length = input.length; i < length; i++) {
+  var flatten = function(input, shallow, strict, startIndex) {
+    var output = [], idx = 0;
+    for (var i = startIndex || 0, length = input && input.length; i < length; i++) {
       var value = input[i];
-      if (!_.isArray(value) && !_.isArguments(value)) {
-        if (!strict) output.push(value);
-      } else if (shallow) {
-        push.apply(output, value);
-      } else {
-        flatten(value, shallow, strict, output);
+      if (isArrayLike(value) && (_.isArray(value) || _.isArguments(value))) {
+        //flatten current level of array or arguments object
+        if (!shallow) value = flatten(value, shallow, strict);
+        var j = 0, len = value.length;
+        output.length += len;
+        while (j < len) {
+          output[idx++] = value[j++];
+        }
+      } else if (!strict) {
+        output[idx++] = value;
       }
     }
     return output;
@@ -64637,7 +64835,7 @@ if (typeof exports !== 'undefined') {
 
   // Flatten out an array, either recursively (by default), or just one level.
   _.flatten = function(array, shallow) {
-    return flatten(array, shallow, false, []);
+    return flatten(array, shallow, false);
   };
 
   // Return a version of the array that does not contain the specified value(s).
@@ -64655,21 +64853,21 @@ if (typeof exports !== 'undefined') {
       iteratee = isSorted;
       isSorted = false;
     }
-    if (iteratee != null) iteratee = _.iteratee(iteratee, context);
+    if (iteratee != null) iteratee = cb(iteratee, context);
     var result = [];
     var seen = [];
     for (var i = 0, length = array.length; i < length; i++) {
-      var value = array[i];
+      var value = array[i],
+          computed = iteratee ? iteratee(value, i, array) : value;
       if (isSorted) {
-        if (!i || seen !== value) result.push(value);
-        seen = value;
+        if (!i || seen !== computed) result.push(value);
+        seen = computed;
       } else if (iteratee) {
-        var computed = iteratee(value, i, array);
-        if (_.indexOf(seen, computed) < 0) {
+        if (!_.contains(seen, computed)) {
           seen.push(computed);
           result.push(value);
         }
-      } else if (_.indexOf(result, value) < 0) {
+      } else if (!_.contains(result, value)) {
         result.push(value);
       }
     }
@@ -64679,7 +64877,7 @@ if (typeof exports !== 'undefined') {
   // Produce an array that contains the union: each distinct element from all of
   // the passed-in arrays.
   _.union = function() {
-    return _.uniq(flatten(arguments, true, true, []));
+    return _.uniq(flatten(arguments, true, true));
   };
 
   // Produce an array that contains every item shared between all the
@@ -64702,7 +64900,7 @@ if (typeof exports !== 'undefined') {
   // Take the difference between one array and a number of other arrays.
   // Only the elements present in just the first array will remain.
   _.difference = function(array) {
-    var rest = flatten(slice.call(arguments, 1), true, true, []);
+    var rest = flatten(arguments, true, true, 1);
     return _.filter(array, function(value){
       return !_.contains(rest, value);
     });
@@ -64710,23 +64908,28 @@ if (typeof exports !== 'undefined') {
 
   // Zip together multiple lists into a single array -- elements that share
   // an index go together.
-  _.zip = function(array) {
-    if (array == null) return [];
-    var length = _.max(arguments, 'length').length;
-    var results = Array(length);
-    for (var i = 0; i < length; i++) {
-      results[i] = _.pluck(arguments, i);
+  _.zip = function() {
+    return _.unzip(arguments);
+  };
+
+  // Complement of _.zip. Unzip accepts an array of arrays and groups
+  // each array's elements on shared indices
+  _.unzip = function(array) {
+    var length = array && _.max(array, 'length').length || 0;
+    var result = Array(length);
+
+    for (var index = 0; index < length; index++) {
+      result[index] = _.pluck(array, index);
     }
-    return results;
+    return result;
   };
 
   // Converts lists into objects. Pass either a single array of `[key, value]`
   // pairs, or two parallel arrays of the same length -- one of keys, and one of
   // the corresponding values.
   _.object = function(list, values) {
-    if (list == null) return {};
     var result = {};
-    for (var i = 0, length = list.length; i < length; i++) {
+    for (var i = 0, length = list && list.length; i < length; i++) {
       if (values) {
         result[list[i]] = values[i];
       } else {
@@ -64741,28 +64944,61 @@ if (typeof exports !== 'undefined') {
   // If the array is large and already in sort order, pass `true`
   // for **isSorted** to use binary search.
   _.indexOf = function(array, item, isSorted) {
-    if (array == null) return -1;
-    var i = 0, length = array.length;
-    if (isSorted) {
-      if (typeof isSorted == 'number') {
-        i = isSorted < 0 ? Math.max(0, length + isSorted) : isSorted;
-      } else {
-        i = _.sortedIndex(array, item);
-        return array[i] === item ? i : -1;
-      }
+    var i = 0, length = array && array.length;
+    if (typeof isSorted == 'number') {
+      i = isSorted < 0 ? Math.max(0, length + isSorted) : isSorted;
+    } else if (isSorted && length) {
+      i = _.sortedIndex(array, item);
+      return array[i] === item ? i : -1;
+    }
+    if (item !== item) {
+      return _.findIndex(slice.call(array, i), _.isNaN);
     }
     for (; i < length; i++) if (array[i] === item) return i;
     return -1;
   };
 
   _.lastIndexOf = function(array, item, from) {
-    if (array == null) return -1;
-    var idx = array.length;
+    var idx = array ? array.length : 0;
     if (typeof from == 'number') {
       idx = from < 0 ? idx + from + 1 : Math.min(idx, from + 1);
     }
+    if (item !== item) {
+      return _.findLastIndex(slice.call(array, 0, idx), _.isNaN);
+    }
     while (--idx >= 0) if (array[idx] === item) return idx;
     return -1;
+  };
+
+  // Generator function to create the findIndex and findLastIndex functions
+  function createIndexFinder(dir) {
+    return function(array, predicate, context) {
+      predicate = cb(predicate, context);
+      var length = array != null && array.length;
+      var index = dir > 0 ? 0 : length - 1;
+      for (; index >= 0 && index < length; index += dir) {
+        if (predicate(array[index], index, array)) return index;
+      }
+      return -1;
+    };
+  }
+
+  // Returns the first index on an array-like that passes a predicate test
+  _.findIndex = createIndexFinder(1);
+
+  _.findLastIndex = createIndexFinder(-1);
+
+  // Use a comparator function to figure out the smallest index at which
+  // an object should be inserted so as to maintain order. Uses binary search.
+  _.sortedIndex = function(array, obj, iteratee, context) {
+    iteratee = cb(iteratee, context, 1);
+    var value = iteratee(obj);
+    var low = 0, high = array.length;
+    while (low < high) {
+      var mid = Math.floor((low + high) / 2);
+      if (iteratee(array[mid]) < value) low = mid + 1; else high = mid;
+    }
+    return low;
   };
 
   // Generate an integer Array containing an arithmetic progression. A port of
@@ -64788,25 +65024,25 @@ if (typeof exports !== 'undefined') {
   // Function (ahem) Functions
   // ------------------
 
-  // Reusable constructor function for prototype setting.
-  var Ctor = function(){};
+  // Determines whether to execute a function as a constructor
+  // or a normal function with the provided arguments
+  var executeBound = function(sourceFunc, boundFunc, context, callingContext, args) {
+    if (!(callingContext instanceof boundFunc)) return sourceFunc.apply(context, args);
+    var self = baseCreate(sourceFunc.prototype);
+    var result = sourceFunc.apply(self, args);
+    if (_.isObject(result)) return result;
+    return self;
+  };
 
   // Create a function bound to a given object (assigning `this`, and arguments,
   // optionally). Delegates to **ECMAScript 5**'s native `Function.bind` if
   // available.
   _.bind = function(func, context) {
-    var args, bound;
     if (nativeBind && func.bind === nativeBind) return nativeBind.apply(func, slice.call(arguments, 1));
     if (!_.isFunction(func)) throw new TypeError('Bind must be called on a function');
-    args = slice.call(arguments, 2);
-    bound = function() {
-      if (!(this instanceof bound)) return func.apply(context, args.concat(slice.call(arguments)));
-      Ctor.prototype = func.prototype;
-      var self = new Ctor;
-      Ctor.prototype = null;
-      var result = func.apply(self, args.concat(slice.call(arguments)));
-      if (_.isObject(result)) return result;
-      return self;
+    var args = slice.call(arguments, 2);
+    var bound = function() {
+      return executeBound(func, bound, context, this, args.concat(slice.call(arguments)));
     };
     return bound;
   };
@@ -64816,15 +65052,16 @@ if (typeof exports !== 'undefined') {
   // as a placeholder, allowing any combination of arguments to be pre-filled.
   _.partial = function(func) {
     var boundArgs = slice.call(arguments, 1);
-    return function() {
-      var position = 0;
-      var args = boundArgs.slice();
-      for (var i = 0, length = args.length; i < length; i++) {
-        if (args[i] === _) args[i] = arguments[position++];
+    var bound = function() {
+      var position = 0, length = boundArgs.length;
+      var args = Array(length);
+      for (var i = 0; i < length; i++) {
+        args[i] = boundArgs[i] === _ ? arguments[position++] : boundArgs[i];
       }
       while (position < arguments.length) args.push(arguments[position++]);
-      return func.apply(this, args);
+      return executeBound(func, bound, this, this, args);
     };
+    return bound;
   };
 
   // Bind a number of an object's methods to that object. Remaining arguments
@@ -64844,7 +65081,7 @@ if (typeof exports !== 'undefined') {
   _.memoize = function(func, hasher) {
     var memoize = function(key) {
       var cache = memoize.cache;
-      var address = hasher ? hasher.apply(this, arguments) : key;
+      var address = '' + (hasher ? hasher.apply(this, arguments) : key);
       if (!_.has(cache, address)) cache[address] = func.apply(this, arguments);
       return cache[address];
     };
@@ -64863,9 +65100,7 @@ if (typeof exports !== 'undefined') {
 
   // Defers a function, scheduling it to run after the current call stack has
   // cleared.
-  _.defer = function(func) {
-    return _.delay.apply(_, [func, 1].concat(slice.call(arguments, 1)));
-  };
+  _.defer = _.partial(_.delay, _, 1);
 
   // Returns a function, that, when invoked, will only be triggered at most once
   // during a given window of time. Normally, the throttled function will run
@@ -64890,8 +65125,10 @@ if (typeof exports !== 'undefined') {
       context = this;
       args = arguments;
       if (remaining <= 0 || remaining > wait) {
-        clearTimeout(timeout);
-        timeout = null;
+        if (timeout) {
+          clearTimeout(timeout);
+          timeout = null;
+        }
         previous = now;
         result = func.apply(context, args);
         if (!timeout) context = args = null;
@@ -64912,7 +65149,7 @@ if (typeof exports !== 'undefined') {
     var later = function() {
       var last = _.now() - timestamp;
 
-      if (last < wait && last > 0) {
+      if (last < wait && last >= 0) {
         timeout = setTimeout(later, wait - last);
       } else {
         timeout = null;
@@ -64965,7 +65202,7 @@ if (typeof exports !== 'undefined') {
     };
   };
 
-  // Returns a function that will only be executed after being called N times.
+  // Returns a function that will only be executed on and after the Nth call.
   _.after = function(times, func) {
     return function() {
       if (--times < 1) {
@@ -64974,15 +65211,14 @@ if (typeof exports !== 'undefined') {
     };
   };
 
-  // Returns a function that will only be executed before being called N times.
+  // Returns a function that will only be executed up to (but not including) the Nth call.
   _.before = function(times, func) {
     var memo;
     return function() {
       if (--times > 0) {
         memo = func.apply(this, arguments);
-      } else {
-        func = null;
       }
+      if (times <= 1) func = null;
       return memo;
     };
   };
@@ -64994,13 +65230,47 @@ if (typeof exports !== 'undefined') {
   // Object Functions
   // ----------------
 
-  // Retrieve the names of an object's properties.
+  // Keys in IE < 9 that won't be iterated by `for key in ...` and thus missed.
+  var hasEnumBug = !{toString: null}.propertyIsEnumerable('toString');
+  var nonEnumerableProps = ['valueOf', 'isPrototypeOf', 'toString',
+                      'propertyIsEnumerable', 'hasOwnProperty', 'toLocaleString'];
+
+  function collectNonEnumProps(obj, keys) {
+    var nonEnumIdx = nonEnumerableProps.length;
+    var constructor = obj.constructor;
+    var proto = (_.isFunction(constructor) && constructor.prototype) || ObjProto;
+
+    // Constructor is a special case.
+    var prop = 'constructor';
+    if (_.has(obj, prop) && !_.contains(keys, prop)) keys.push(prop);
+
+    while (nonEnumIdx--) {
+      prop = nonEnumerableProps[nonEnumIdx];
+      if (prop in obj && obj[prop] !== proto[prop] && !_.contains(keys, prop)) {
+        keys.push(prop);
+      }
+    }
+  }
+
+  // Retrieve the names of an object's own properties.
   // Delegates to **ECMAScript 5**'s native `Object.keys`
   _.keys = function(obj) {
     if (!_.isObject(obj)) return [];
     if (nativeKeys) return nativeKeys(obj);
     var keys = [];
     for (var key in obj) if (_.has(obj, key)) keys.push(key);
+    // Ahem, IE < 9.
+    if (hasEnumBug) collectNonEnumProps(obj, keys);
+    return keys;
+  };
+
+  // Retrieve all the property names of an object.
+  _.allKeys = function(obj) {
+    if (!_.isObject(obj)) return [];
+    var keys = [];
+    for (var key in obj) keys.push(key);
+    // Ahem, IE < 9.
+    if (hasEnumBug) collectNonEnumProps(obj, keys);
     return keys;
   };
 
@@ -65013,6 +65283,21 @@ if (typeof exports !== 'undefined') {
       values[i] = obj[keys[i]];
     }
     return values;
+  };
+
+  // Returns the results of applying the iteratee to each element of the object
+  // In contrast to _.map it returns an object
+  _.mapObject = function(obj, iteratee, context) {
+    iteratee = cb(iteratee, context);
+    var keys =  _.keys(obj),
+          length = keys.length,
+          results = {},
+          currentKey;
+      for (var index = 0; index < length; index++) {
+        currentKey = keys[index];
+        results[currentKey] = iteratee(obj[currentKey], currentKey, obj);
+      }
+      return results;
   };
 
   // Convert an object into a list of `[key, value]` pairs.
@@ -65047,37 +65332,38 @@ if (typeof exports !== 'undefined') {
   };
 
   // Extend a given object with all the properties in passed-in object(s).
-  _.extend = function(obj) {
-    if (!_.isObject(obj)) return obj;
-    var source, prop;
-    for (var i = 1, length = arguments.length; i < length; i++) {
-      source = arguments[i];
-      for (prop in source) {
-        if (hasOwnProperty.call(source, prop)) {
-            obj[prop] = source[prop];
-        }
-      }
+  _.extend = createAssigner(_.allKeys);
+
+  // Assigns a given object with all the own properties in the passed-in object(s)
+  // (https://developer.mozilla.org/docs/Web/JavaScript/Reference/Global_Objects/Object/assign)
+  _.extendOwn = _.assign = createAssigner(_.keys);
+
+  // Returns the first key on an object that passes a predicate test
+  _.findKey = function(obj, predicate, context) {
+    predicate = cb(predicate, context);
+    var keys = _.keys(obj), key;
+    for (var i = 0, length = keys.length; i < length; i++) {
+      key = keys[i];
+      if (predicate(obj[key], key, obj)) return key;
     }
-    return obj;
   };
 
   // Return a copy of the object only containing the whitelisted properties.
-  _.pick = function(obj, iteratee, context) {
-    var result = {}, key;
+  _.pick = function(object, oiteratee, context) {
+    var result = {}, obj = object, iteratee, keys;
     if (obj == null) return result;
-    if (_.isFunction(iteratee)) {
-      iteratee = createCallback(iteratee, context);
-      for (key in obj) {
-        var value = obj[key];
-        if (iteratee(value, key, obj)) result[key] = value;
-      }
+    if (_.isFunction(oiteratee)) {
+      keys = _.allKeys(obj);
+      iteratee = optimizeCb(oiteratee, context);
     } else {
-      var keys = concat.apply([], slice.call(arguments, 1));
-      obj = new Object(obj);
-      for (var i = 0, length = keys.length; i < length; i++) {
-        key = keys[i];
-        if (key in obj) result[key] = obj[key];
-      }
+      keys = flatten(arguments, false, false, 1);
+      iteratee = function(value, key, obj) { return key in obj; };
+      obj = Object(obj);
+    }
+    for (var i = 0, length = keys.length; i < length; i++) {
+      var key = keys[i];
+      var value = obj[key];
+      if (iteratee(value, key, obj)) result[key] = value;
     }
     return result;
   };
@@ -65087,7 +65373,7 @@ if (typeof exports !== 'undefined') {
     if (_.isFunction(iteratee)) {
       iteratee = _.negate(iteratee);
     } else {
-      var keys = _.map(concat.apply([], slice.call(arguments, 1)), String);
+      var keys = _.map(flatten(arguments, false, false, 1), String);
       iteratee = function(value, key) {
         return !_.contains(keys, key);
       };
@@ -65096,16 +65382,7 @@ if (typeof exports !== 'undefined') {
   };
 
   // Fill in a given object with default properties.
-  _.defaults = function(obj) {
-    if (!_.isObject(obj)) return obj;
-    for (var i = 1, length = arguments.length; i < length; i++) {
-      var source = arguments[i];
-      for (var prop in source) {
-        if (obj[prop] === void 0) obj[prop] = source[prop];
-      }
-    }
-    return obj;
-  };
+  _.defaults = createAssigner(_.allKeys, true);
 
   // Create a (shallow-cloned) duplicate of an object.
   _.clone = function(obj) {
@@ -65120,6 +65397,19 @@ if (typeof exports !== 'undefined') {
     interceptor(obj);
     return obj;
   };
+
+  // Returns whether an object has a given set of `key:value` pairs.
+  _.isMatch = function(object, attrs) {
+    var keys = _.keys(attrs), length = keys.length;
+    if (object == null) return !length;
+    var obj = Object(object);
+    for (var i = 0; i < length; i++) {
+      var key = keys[i];
+      if (attrs[key] !== obj[key] || !(key in obj)) return false;
+    }
+    return true;
+  };
+
 
   // Internal recursive comparison function for `isEqual`.
   var eq = function(a, b, aStack, bStack) {
@@ -65155,74 +65445,76 @@ if (typeof exports !== 'undefined') {
         // of `NaN` are not equivalent.
         return +a === +b;
     }
-    if (typeof a != 'object' || typeof b != 'object') return false;
+
+    var areArrays = className === '[object Array]';
+    if (!areArrays) {
+      if (typeof a != 'object' || typeof b != 'object') return false;
+
+      // Objects with different constructors are not equivalent, but `Object`s or `Array`s
+      // from different frames are.
+      var aCtor = a.constructor, bCtor = b.constructor;
+      if (aCtor !== bCtor && !(_.isFunction(aCtor) && aCtor instanceof aCtor &&
+                               _.isFunction(bCtor) && bCtor instanceof bCtor)
+                          && ('constructor' in a && 'constructor' in b)) {
+        return false;
+      }
+    }
     // Assume equality for cyclic structures. The algorithm for detecting cyclic
     // structures is adapted from ES 5.1 section 15.12.3, abstract operation `JO`.
+    
+    // Initializing stack of traversed objects.
+    // It's done here since we only need them for objects and arrays comparison.
+    aStack = aStack || [];
+    bStack = bStack || [];
     var length = aStack.length;
     while (length--) {
       // Linear search. Performance is inversely proportional to the number of
       // unique nested structures.
       if (aStack[length] === a) return bStack[length] === b;
     }
-    // Objects with different constructors are not equivalent, but `Object`s
-    // from different frames are.
-    var aCtor = a.constructor, bCtor = b.constructor;
-    if (
-      aCtor !== bCtor &&
-      // Handle Object.create(x) cases
-      'constructor' in a && 'constructor' in b &&
-      !(_.isFunction(aCtor) && aCtor instanceof aCtor &&
-        _.isFunction(bCtor) && bCtor instanceof bCtor)
-    ) {
-      return false;
-    }
+
     // Add the first object to the stack of traversed objects.
     aStack.push(a);
     bStack.push(b);
-    var size, result;
+
     // Recursively compare objects and arrays.
-    if (className === '[object Array]') {
+    if (areArrays) {
       // Compare array lengths to determine if a deep comparison is necessary.
-      size = a.length;
-      result = size === b.length;
-      if (result) {
-        // Deep compare the contents, ignoring non-numeric properties.
-        while (size--) {
-          if (!(result = eq(a[size], b[size], aStack, bStack))) break;
-        }
+      length = a.length;
+      if (length !== b.length) return false;
+      // Deep compare the contents, ignoring non-numeric properties.
+      while (length--) {
+        if (!eq(a[length], b[length], aStack, bStack)) return false;
       }
     } else {
       // Deep compare objects.
       var keys = _.keys(a), key;
-      size = keys.length;
+      length = keys.length;
       // Ensure that both objects contain the same number of properties before comparing deep equality.
-      result = _.keys(b).length === size;
-      if (result) {
-        while (size--) {
-          // Deep compare each member
-          key = keys[size];
-          if (!(result = _.has(b, key) && eq(a[key], b[key], aStack, bStack))) break;
-        }
+      if (_.keys(b).length !== length) return false;
+      while (length--) {
+        // Deep compare each member
+        key = keys[length];
+        if (!(_.has(b, key) && eq(a[key], b[key], aStack, bStack))) return false;
       }
     }
     // Remove the first object from the stack of traversed objects.
     aStack.pop();
     bStack.pop();
-    return result;
+    return true;
   };
 
   // Perform a deep comparison to check if two objects are equal.
   _.isEqual = function(a, b) {
-    return eq(a, b, [], []);
+    return eq(a, b);
   };
 
   // Is a given array, string, or object empty?
   // An "empty" object has no enumerable own-properties.
   _.isEmpty = function(obj) {
     if (obj == null) return true;
-    if (_.isArray(obj) || _.isString(obj) || _.isArguments(obj)) return obj.length === 0;
-    for (var key in obj) if (_.has(obj, key)) return false;
-    return true;
+    if (isArrayLike(obj) && (_.isArray(obj) || _.isString(obj) || _.isArguments(obj))) return obj.length === 0;
+    return _.keys(obj).length === 0;
   };
 
   // Is a given value a DOM element?
@@ -65242,14 +65534,14 @@ if (typeof exports !== 'undefined') {
     return type === 'function' || type === 'object' && !!obj;
   };
 
-  // Add some isType methods: isArguments, isFunction, isString, isNumber, isDate, isRegExp.
-  _.each(['Arguments', 'Function', 'String', 'Number', 'Date', 'RegExp'], function(name) {
+  // Add some isType methods: isArguments, isFunction, isString, isNumber, isDate, isRegExp, isError.
+  _.each(['Arguments', 'Function', 'String', 'Number', 'Date', 'RegExp', 'Error'], function(name) {
     _['is' + name] = function(obj) {
       return toString.call(obj) === '[object ' + name + ']';
     };
   });
 
-  // Define a fallback version of the method in browsers (ahem, IE), where
+  // Define a fallback version of the method in browsers (ahem, IE < 9), where
   // there isn't any inspectable "Arguments" type.
   if (!_.isArguments(arguments)) {
     _.isArguments = function(obj) {
@@ -65257,8 +65549,9 @@ if (typeof exports !== 'undefined') {
     };
   }
 
-  // Optimize `isFunction` if appropriate. Work around an IE 11 bug.
-  if (typeof /./ !== 'function') {
+  // Optimize `isFunction` if appropriate. Work around some typeof bugs in old v8,
+  // IE 11 (#1621), and in Safari 8 (#1929).
+  if (typeof /./ != 'function' && typeof Int8Array != 'object') {
     _.isFunction = function(obj) {
       return typeof obj == 'function' || false;
     };
@@ -65310,6 +65603,7 @@ if (typeof exports !== 'undefined') {
     return value;
   };
 
+  // Predicate-generating functions. Often useful outside of Underscore.
   _.constant = function(value) {
     return function() {
       return value;
@@ -65320,28 +65614,30 @@ if (typeof exports !== 'undefined') {
 
   _.property = function(key) {
     return function(obj) {
+      return obj == null ? void 0 : obj[key];
+    };
+  };
+
+  // Generates a function for a given object that returns a given property.
+  _.propertyOf = function(obj) {
+    return obj == null ? function(){} : function(key) {
       return obj[key];
     };
   };
 
-  // Returns a predicate for checking whether an object has a given set of `key:value` pairs.
-  _.matches = function(attrs) {
-    var pairs = _.pairs(attrs), length = pairs.length;
+  // Returns a predicate for checking whether an object has a given set of 
+  // `key:value` pairs.
+  _.matcher = _.matches = function(attrs) {
+    attrs = _.extendOwn({}, attrs);
     return function(obj) {
-      if (obj == null) return !length;
-      obj = new Object(obj);
-      for (var i = 0; i < length; i++) {
-        var pair = pairs[i], key = pair[0];
-        if (pair[1] !== obj[key] || !(key in obj)) return false;
-      }
-      return true;
+      return _.isMatch(obj, attrs);
     };
   };
 
   // Run a function **n** times.
   _.times = function(n, iteratee, context) {
     var accum = Array(Math.max(0, n));
-    iteratee = createCallback(iteratee, context, 1);
+    iteratee = optimizeCb(iteratee, context, 1);
     for (var i = 0; i < n; i++) accum[i] = iteratee(i);
     return accum;
   };
@@ -65390,10 +65686,12 @@ if (typeof exports !== 'undefined') {
 
   // If the value of the named `property` is a function then invoke it with the
   // `object` as context; otherwise, return it.
-  _.result = function(object, property) {
-    if (object == null) return void 0;
-    var value = object[property];
-    return _.isFunction(value) ? object[property]() : value;
+  _.result = function(object, property, fallback) {
+    var value = object == null ? void 0 : object[property];
+    if (value === void 0) {
+      value = fallback;
+    }
+    return _.isFunction(value) ? value.call(object) : value;
   };
 
   // Generate a unique integer id (unique within the entire client session).
@@ -65508,8 +65806,8 @@ if (typeof exports !== 'undefined') {
   // underscore functions. Wrapped objects may be chained.
 
   // Helper function to continue chaining intermediate results.
-  var result = function(obj) {
-    return this._chain ? _(obj).chain() : obj;
+  var result = function(instance, obj) {
+    return instance._chain ? _(obj).chain() : obj;
   };
 
   // Add your own custom functions to the Underscore object.
@@ -65519,7 +65817,7 @@ if (typeof exports !== 'undefined') {
       _.prototype[name] = function() {
         var args = [this._wrapped];
         push.apply(args, arguments);
-        return result.call(this, func.apply(_, args));
+        return result(this, func.apply(_, args));
       };
     });
   };
@@ -65534,7 +65832,7 @@ if (typeof exports !== 'undefined') {
       var obj = this._wrapped;
       method.apply(obj, arguments);
       if ((name === 'shift' || name === 'splice') && obj.length === 0) delete obj[0];
-      return result.call(this, obj);
+      return result(this, obj);
     };
   });
 
@@ -65542,13 +65840,21 @@ if (typeof exports !== 'undefined') {
   _.each(['concat', 'join', 'slice'], function(name) {
     var method = ArrayProto[name];
     _.prototype[name] = function() {
-      return result.call(this, method.apply(this._wrapped, arguments));
+      return result(this, method.apply(this._wrapped, arguments));
     };
   });
 
   // Extracts the result from a wrapped and chained object.
   _.prototype.value = function() {
     return this._wrapped;
+  };
+
+  // Provide unwrapping proxy for some methods used in engine operations
+  // such as arithmetic and JSON stringification.
+  _.prototype.valueOf = _.prototype.toJSON = _.prototype.value;
+  
+  _.prototype.toString = function() {
+    return '' + this._wrapped;
   };
 
   // AMD registration happens at the end for compatibility with AMD loaders
@@ -65565,7 +65871,7 @@ if (typeof exports !== 'undefined') {
   }
 }.call(this));
 
-},{}],"/home/bbales2/stochssModel/app/static/modelEditor/node_modules/url-parse/index.js":[function(require,module,exports){
+},{}],"/home/debjani/Desktop/newstochss/stochss/app/static/modelEditor/node_modules/url-parse/index.js":[function(require,module,exports){
 'use strict';
 
 var required = require('requires-port')
@@ -65792,7 +66098,7 @@ URL.qs = qs;
 URL.location = lolcation;
 module.exports = URL;
 
-},{"./lolcation":"/home/bbales2/stochssModel/app/static/modelEditor/node_modules/url-parse/lolcation.js","querystringify":"/home/bbales2/stochssModel/app/static/modelEditor/node_modules/url-parse/node_modules/querystringify/index.js","requires-port":"/home/bbales2/stochssModel/app/static/modelEditor/node_modules/url-parse/node_modules/requires-port/index.js"}],"/home/bbales2/stochssModel/app/static/modelEditor/node_modules/url-parse/lolcation.js":[function(require,module,exports){
+},{"./lolcation":"/home/debjani/Desktop/newstochss/stochss/app/static/modelEditor/node_modules/url-parse/lolcation.js","querystringify":"/home/debjani/Desktop/newstochss/stochss/app/static/modelEditor/node_modules/url-parse/node_modules/querystringify/index.js","requires-port":"/home/debjani/Desktop/newstochss/stochss/app/static/modelEditor/node_modules/url-parse/node_modules/requires-port/index.js"}],"/home/debjani/Desktop/newstochss/stochss/app/static/modelEditor/node_modules/url-parse/lolcation.js":[function(require,module,exports){
 (function (global){
 'use strict';
 
@@ -65841,7 +66147,7 @@ module.exports = function lolcation(loc) {
 };
 
 }).call(this,typeof global !== "undefined" ? global : typeof self !== "undefined" ? self : typeof window !== "undefined" ? window : {})
-},{"./":"/home/bbales2/stochssModel/app/static/modelEditor/node_modules/url-parse/index.js"}],"/home/bbales2/stochssModel/app/static/modelEditor/node_modules/url-parse/node_modules/querystringify/index.js":[function(require,module,exports){
+},{"./":"/home/debjani/Desktop/newstochss/stochss/app/static/modelEditor/node_modules/url-parse/index.js"}],"/home/debjani/Desktop/newstochss/stochss/app/static/modelEditor/node_modules/url-parse/node_modules/querystringify/index.js":[function(require,module,exports){
 'use strict';
 
 var has = Object.prototype.hasOwnProperty;
@@ -65904,7 +66210,7 @@ function querystringify(obj, prefix) {
 exports.stringify = querystringify;
 exports.parse = querystring;
 
-},{}],"/home/bbales2/stochssModel/app/static/modelEditor/node_modules/url-parse/node_modules/requires-port/index.js":[function(require,module,exports){
+},{}],"/home/debjani/Desktop/newstochss/stochss/app/static/modelEditor/node_modules/url-parse/node_modules/requires-port/index.js":[function(require,module,exports){
 'use strict';
 
 /**
@@ -65944,7 +66250,7 @@ module.exports = function required(port, protocol) {
   return port !== 0;
 };
 
-},{}],"/home/bbales2/stochssModel/app/static/modelEditor/node_modules/watchify/node_modules/browserify/node_modules/buffer/index.js":[function(require,module,exports){
+},{}],"/home/debjani/Desktop/newstochss/stochss/app/static/modelEditor/node_modules/watchify/node_modules/browserify/node_modules/buffer/index.js":[function(require,module,exports){
 /*!
  * The buffer module from node.js, for the browser.
  *
@@ -65991,7 +66297,7 @@ Buffer.TYPED_ARRAY_SUPPORT = (function () {
     var buf = new ArrayBuffer(0)
     var arr = new Uint8Array(buf)
     arr.foo = function () { return 42 }
-    return 42 === arr.foo() && // typed array instances can be augmented
+    return arr.foo() === 42 && // typed array instances can be augmented
         typeof arr.subarray === 'function' && // chrome 9-10 lack `subarray`
         new Uint8Array(1).subarray(1, 1).byteLength === 0 // ie10 has broken `subarray`
   } catch (e) {
@@ -66019,60 +66325,67 @@ function Buffer (subject, encoding, noZero) {
 
   // Find the length
   var length
-  if (type === 'number')
-    length = subject > 0 ? subject >>> 0 : 0
-  else if (type === 'string') {
+  if (type === 'number') {
+    length = +subject
+  } else if (type === 'string') {
     length = Buffer.byteLength(subject, encoding)
   } else if (type === 'object' && subject !== null) { // assume object is array-like
     if (subject.type === 'Buffer' && isArray(subject.data))
       subject = subject.data
-    length = +subject.length > 0 ? Math.floor(+subject.length) : 0
-  } else
+    length = +subject.length
+  } else {
     throw new TypeError('must start with number, buffer, array or string')
+  }
 
   if (length > kMaxLength)
     throw new RangeError('Attempt to allocate Buffer larger than maximum ' +
       'size: 0x' + kMaxLength.toString(16) + ' bytes')
 
-  var buf
+  if (length < 0)
+    length = 0
+  else
+    length >>>= 0 // Coerce to uint32.
+
+  var self = this
   if (Buffer.TYPED_ARRAY_SUPPORT) {
     // Preferred: Return an augmented `Uint8Array` instance for best performance
-    buf = Buffer._augment(new Uint8Array(length))
+    /*eslint-disable consistent-this */
+    self = Buffer._augment(new Uint8Array(length))
+    /*eslint-enable consistent-this */
   } else {
     // Fallback: Return THIS instance of Buffer (created by `new`)
-    buf = this
-    buf.length = length
-    buf._isBuffer = true
+    self.length = length
+    self._isBuffer = true
   }
 
   var i
   if (Buffer.TYPED_ARRAY_SUPPORT && typeof subject.byteLength === 'number') {
     // Speed optimization -- use set if we're copying from a typed array
-    buf._set(subject)
+    self._set(subject)
   } else if (isArrayish(subject)) {
     // Treat array-ish objects as a byte array
     if (Buffer.isBuffer(subject)) {
       for (i = 0; i < length; i++)
-        buf[i] = subject.readUInt8(i)
+        self[i] = subject.readUInt8(i)
     } else {
       for (i = 0; i < length; i++)
-        buf[i] = ((subject[i] % 256) + 256) % 256
+        self[i] = ((subject[i] % 256) + 256) % 256
     }
   } else if (type === 'string') {
-    buf.write(subject, 0, encoding)
+    self.write(subject, 0, encoding)
   } else if (type === 'number' && !Buffer.TYPED_ARRAY_SUPPORT && !noZero) {
     for (i = 0; i < length; i++) {
-      buf[i] = 0
+      self[i] = 0
     }
   }
 
   if (length > 0 && length <= Buffer.poolSize)
-    buf.parent = rootParent
+    self.parent = rootParent
 
-  return buf
+  return self
 }
 
-function SlowBuffer(subject, encoding, noZero) {
+function SlowBuffer (subject, encoding, noZero) {
   if (!(this instanceof SlowBuffer))
     return new SlowBuffer(subject, encoding, noZero)
 
@@ -66088,6 +66401,8 @@ Buffer.isBuffer = function (b) {
 Buffer.compare = function (a, b) {
   if (!Buffer.isBuffer(a) || !Buffer.isBuffer(b))
     throw new TypeError('Arguments must be Buffers')
+
+  if (a === b) return 0
 
   var x = a.length
   var y = b.length
@@ -66229,6 +66544,7 @@ Buffer.prototype.toString = function (encoding, start, end) {
 
 Buffer.prototype.equals = function (b) {
   if (!Buffer.isBuffer(b)) throw new TypeError('Argument must be a Buffer')
+  if (this === b) return true
   return Buffer.compare(this, b) === 0
 }
 
@@ -66245,6 +66561,7 @@ Buffer.prototype.inspect = function () {
 
 Buffer.prototype.compare = function (b) {
   if (!Buffer.isBuffer(b)) throw new TypeError('Argument must be a Buffer')
+  if (this === b) return 0
   return Buffer.compare(this, b)
 }
 
@@ -66307,7 +66624,7 @@ function base64Write (buf, string, offset, length) {
 }
 
 function utf16leWrite (buf, string, offset, length) {
-  var charsWritten = blitBuffer(utf16leToBytes(string, buf.length - offset), buf, offset, length, 2)
+  var charsWritten = blitBuffer(utf16leToBytes(string, buf.length - offset), buf, offset, length)
   return charsWritten
 }
 
@@ -66329,7 +66646,7 @@ Buffer.prototype.write = function (string, offset, length, encoding) {
   offset = Number(offset) || 0
 
   if (length < 0 || offset < 0 || offset > this.length)
-    throw new RangeError('attempt to write outside buffer bounds');
+    throw new RangeError('attempt to write outside buffer bounds')
 
   var remaining = this.length - offset
   if (!length) {
@@ -66452,7 +66769,7 @@ Buffer.prototype.slice = function (start, end) {
   end = end === undefined ? len : ~~end
 
   if (start < 0) {
-    start += len;
+    start += len
     if (start < 0)
       start = 0
   } else if (start > len) {
@@ -66521,7 +66838,7 @@ Buffer.prototype.readUIntBE = function (offset, byteLength, noAssert) {
   var val = this[offset + --byteLength]
   var mul = 1
   while (byteLength > 0 && (mul *= 0x100))
-    val += this[offset + --byteLength] * mul;
+    val += this[offset + --byteLength] * mul
 
   return val
 }
@@ -66929,7 +67246,7 @@ Buffer.prototype.writeDoubleBE = function (value, offset, noAssert) {
 
 // copy(targetBuffer, targetStart=0, sourceStart=0, sourceEnd=buffer.length)
 Buffer.prototype.copy = function (target, target_start, start, end) {
-  var source = this
+  var self = this // source
 
   if (!start) start = 0
   if (!end && end !== 0) end = this.length
@@ -66939,12 +67256,12 @@ Buffer.prototype.copy = function (target, target_start, start, end) {
 
   // Copy 0 bytes; we're done
   if (end === start) return 0
-  if (target.length === 0 || source.length === 0) return 0
+  if (target.length === 0 || self.length === 0) return 0
 
   // Fatal error conditions
   if (target_start < 0)
     throw new RangeError('targetStart out of bounds')
-  if (start < 0 || start >= source.length) throw new RangeError('sourceStart out of bounds')
+  if (start < 0 || start >= self.length) throw new RangeError('sourceStart out of bounds')
   if (end < 0) throw new RangeError('sourceEnd out of bounds')
 
   // Are we oob?
@@ -67118,61 +67435,50 @@ function toHex (n) {
   return n.toString(16)
 }
 
-function utf8ToBytes(string, units) {
-  var codePoint, length = string.length
-  var leadSurrogate = null
+function utf8ToBytes (string, units) {
   units = units || Infinity
+  var codePoint
+  var length = string.length
+  var leadSurrogate = null
   var bytes = []
   var i = 0
 
-  for (; i<length; i++) {
+  for (; i < length; i++) {
     codePoint = string.charCodeAt(i)
 
     // is surrogate component
     if (codePoint > 0xD7FF && codePoint < 0xE000) {
-
       // last char was a lead
       if (leadSurrogate) {
-
         // 2 leads in a row
         if (codePoint < 0xDC00) {
           if ((units -= 3) > -1) bytes.push(0xEF, 0xBF, 0xBD)
           leadSurrogate = codePoint
           continue
-        }
-
-        // valid surrogate pair
-        else {
+        } else {
+          // valid surrogate pair
           codePoint = leadSurrogate - 0xD800 << 10 | codePoint - 0xDC00 | 0x10000
           leadSurrogate = null
         }
-      }
+      } else {
+        // no lead yet
 
-      // no lead yet
-      else {
-
-        // unexpected trail
         if (codePoint > 0xDBFF) {
+          // unexpected trail
           if ((units -= 3) > -1) bytes.push(0xEF, 0xBF, 0xBD)
           continue
-        }
-
-        // unpaired lead
-        else if (i + 1 === length) {
+        } else if (i + 1 === length) {
+          // unpaired lead
           if ((units -= 3) > -1) bytes.push(0xEF, 0xBF, 0xBD)
           continue
-        }
-
-        // valid lead
-        else {
+        } else {
+          // valid lead
           leadSurrogate = codePoint
           continue
         }
       }
-    }
-
-    // valid bmp char, but last char was a lead
-    else if (leadSurrogate) {
+    } else if (leadSurrogate) {
+      // valid bmp char, but last char was a lead
       if ((units -= 3) > -1) bytes.push(0xEF, 0xBF, 0xBD)
       leadSurrogate = null
     }
@@ -67181,32 +67487,28 @@ function utf8ToBytes(string, units) {
     if (codePoint < 0x80) {
       if ((units -= 1) < 0) break
       bytes.push(codePoint)
-    }
-    else if (codePoint < 0x800) {
+    } else if (codePoint < 0x800) {
       if ((units -= 2) < 0) break
       bytes.push(
         codePoint >> 0x6 | 0xC0,
         codePoint & 0x3F | 0x80
-      );
-    }
-    else if (codePoint < 0x10000) {
+      )
+    } else if (codePoint < 0x10000) {
       if ((units -= 3) < 0) break
       bytes.push(
         codePoint >> 0xC | 0xE0,
         codePoint >> 0x6 & 0x3F | 0x80,
         codePoint & 0x3F | 0x80
-      );
-    }
-    else if (codePoint < 0x200000) {
+      )
+    } else if (codePoint < 0x200000) {
       if ((units -= 4) < 0) break
       bytes.push(
         codePoint >> 0x12 | 0xF0,
         codePoint >> 0xC & 0x3F | 0x80,
         codePoint >> 0x6 & 0x3F | 0x80,
         codePoint & 0x3F | 0x80
-      );
-    }
-    else {
+      )
+    } else {
       throw new Error('Invalid code point')
     }
   }
@@ -67227,7 +67529,6 @@ function utf16leToBytes (str, units) {
   var c, hi, lo
   var byteArray = []
   for (var i = 0; i < str.length; i++) {
-
     if ((units -= 2) < 0) break
 
     c = str.charCodeAt(i)
@@ -67244,8 +67545,7 @@ function base64ToBytes (str) {
   return base64.toByteArray(base64clean(str))
 }
 
-function blitBuffer (src, dst, offset, length, unitSize) {
-  if (unitSize) length -= length % unitSize;
+function blitBuffer (src, dst, offset, length) {
   for (var i = 0; i < length; i++) {
     if ((i + offset >= dst.length) || (i >= src.length))
       break
@@ -67262,7 +67562,7 @@ function decodeUtf8Char (str) {
   }
 }
 
-},{"base64-js":"/home/bbales2/stochssModel/app/static/modelEditor/node_modules/watchify/node_modules/browserify/node_modules/buffer/node_modules/base64-js/lib/b64.js","ieee754":"/home/bbales2/stochssModel/app/static/modelEditor/node_modules/watchify/node_modules/browserify/node_modules/buffer/node_modules/ieee754/index.js","is-array":"/home/bbales2/stochssModel/app/static/modelEditor/node_modules/watchify/node_modules/browserify/node_modules/buffer/node_modules/is-array/index.js"}],"/home/bbales2/stochssModel/app/static/modelEditor/node_modules/watchify/node_modules/browserify/node_modules/buffer/node_modules/base64-js/lib/b64.js":[function(require,module,exports){
+},{"base64-js":"/home/debjani/Desktop/newstochss/stochss/app/static/modelEditor/node_modules/watchify/node_modules/browserify/node_modules/buffer/node_modules/base64-js/lib/b64.js","ieee754":"/home/debjani/Desktop/newstochss/stochss/app/static/modelEditor/node_modules/watchify/node_modules/browserify/node_modules/buffer/node_modules/ieee754/index.js","is-array":"/home/debjani/Desktop/newstochss/stochss/app/static/modelEditor/node_modules/watchify/node_modules/browserify/node_modules/buffer/node_modules/is-array/index.js"}],"/home/debjani/Desktop/newstochss/stochss/app/static/modelEditor/node_modules/watchify/node_modules/browserify/node_modules/buffer/node_modules/base64-js/lib/b64.js":[function(require,module,exports){
 var lookup = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/';
 
 ;(function (exports) {
@@ -67388,7 +67688,7 @@ var lookup = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/';
 	exports.fromByteArray = uint8ToBase64
 }(typeof exports === 'undefined' ? (this.base64js = {}) : exports))
 
-},{}],"/home/bbales2/stochssModel/app/static/modelEditor/node_modules/watchify/node_modules/browserify/node_modules/buffer/node_modules/ieee754/index.js":[function(require,module,exports){
+},{}],"/home/debjani/Desktop/newstochss/stochss/app/static/modelEditor/node_modules/watchify/node_modules/browserify/node_modules/buffer/node_modules/ieee754/index.js":[function(require,module,exports){
 exports.read = function(buffer, offset, isLE, mLen, nBytes) {
   var e, m,
       eLen = nBytes * 8 - mLen - 1,
@@ -67474,9 +67774,9 @@ exports.write = function(buffer, value, offset, isLE, mLen, nBytes) {
   buffer[offset + i - d] |= s * 128;
 };
 
-},{}],"/home/bbales2/stochssModel/app/static/modelEditor/node_modules/watchify/node_modules/browserify/node_modules/buffer/node_modules/is-array/index.js":[function(require,module,exports){
-module.exports=require("/home/bbales2/stochssModel/app/static/modelEditor/node_modules/ampersand-collection/node_modules/is-array/index.js")
-},{"/home/bbales2/stochssModel/app/static/modelEditor/node_modules/ampersand-collection/node_modules/is-array/index.js":"/home/bbales2/stochssModel/app/static/modelEditor/node_modules/ampersand-collection/node_modules/is-array/index.js"}],"/home/bbales2/stochssModel/app/static/modelEditor/select/model-collection.js":[function(require,module,exports){
+},{}],"/home/debjani/Desktop/newstochss/stochss/app/static/modelEditor/node_modules/watchify/node_modules/browserify/node_modules/buffer/node_modules/is-array/index.js":[function(require,module,exports){
+arguments[4]["/home/debjani/Desktop/newstochss/stochss/app/static/modelEditor/node_modules/ampersand-collection/node_modules/is-array/index.js"][0].apply(exports,arguments)
+},{}],"/home/debjani/Desktop/newstochss/stochss/app/static/modelEditor/select/model-collection.js":[function(require,module,exports){
 var _ = require('underscore');
 var $ = require('jquery');
 var AmpersandView = require('ampersand-view');
@@ -67650,7 +67950,7 @@ var ModelCollectionSelectView = AmpersandView.extend({
 
 module.exports = ModelCollectionSelectView
 
-},{"../forms/paginated-collection-view":"/home/bbales2/stochssModel/app/static/modelEditor/forms/paginated-collection-view.js","../forms/tests.js":"/home/bbales2/stochssModel/app/static/modelEditor/forms/tests.js","../models/model":"/home/bbales2/stochssModel/app/static/modelEditor/models/model.js","./model":"/home/bbales2/stochssModel/app/static/modelEditor/select/model.js","ampersand-checkbox-view":"/home/bbales2/stochssModel/app/static/modelEditor/node_modules/ampersand-checkbox-view/ampersand-checkbox-view.js","ampersand-form-view":"/home/bbales2/stochssModel/app/static/modelEditor/node_modules/ampersand-form-view/ampersand-form-view.js","ampersand-input-view":"/home/bbales2/stochssModel/app/static/modelEditor/node_modules/ampersand-input-view/ampersand-input-view.js","ampersand-select-view":"/home/bbales2/stochssModel/app/static/modelEditor/node_modules/ampersand-select-view/ampersand-select-view.js","ampersand-view":"/home/bbales2/stochssModel/app/static/modelEditor/node_modules/ampersand-view/ampersand-view.js","jquery":"/home/bbales2/stochssModel/app/static/modelEditor/node_modules/jquery/dist/jquery.js","underscore":"/home/bbales2/stochssModel/app/static/modelEditor/node_modules/underscore/underscore.js"}],"/home/bbales2/stochssModel/app/static/modelEditor/select/model.js":[function(require,module,exports){
+},{"../forms/paginated-collection-view":"/home/debjani/Desktop/newstochss/stochss/app/static/modelEditor/forms/paginated-collection-view.js","../forms/tests.js":"/home/debjani/Desktop/newstochss/stochss/app/static/modelEditor/forms/tests.js","../models/model":"/home/debjani/Desktop/newstochss/stochss/app/static/modelEditor/models/model.js","./model":"/home/debjani/Desktop/newstochss/stochss/app/static/modelEditor/select/model.js","ampersand-checkbox-view":"/home/debjani/Desktop/newstochss/stochss/app/static/modelEditor/node_modules/ampersand-checkbox-view/ampersand-checkbox-view.js","ampersand-form-view":"/home/debjani/Desktop/newstochss/stochss/app/static/modelEditor/node_modules/ampersand-form-view/ampersand-form-view.js","ampersand-input-view":"/home/debjani/Desktop/newstochss/stochss/app/static/modelEditor/node_modules/ampersand-input-view/ampersand-input-view.js","ampersand-select-view":"/home/debjani/Desktop/newstochss/stochss/app/static/modelEditor/node_modules/ampersand-select-view/ampersand-select-view.js","ampersand-view":"/home/debjani/Desktop/newstochss/stochss/app/static/modelEditor/node_modules/ampersand-view/ampersand-view.js","jquery":"/home/debjani/Desktop/newstochss/stochss/app/static/modelEditor/node_modules/jquery/dist/jquery.js","underscore":"/home/debjani/Desktop/newstochss/stochss/app/static/modelEditor/node_modules/underscore/underscore.js"}],"/home/debjani/Desktop/newstochss/stochss/app/static/modelEditor/select/model.js":[function(require,module,exports){
 var _ = require('underscore');
 var $ = require('jquery');
 var View = require('ampersand-view');
@@ -67823,4 +68123,4 @@ module.exports = View.extend({
     }
 });
 
-},{"../forms/tests":"/home/bbales2/stochssModel/app/static/modelEditor/forms/tests.js","ampersand-view":"/home/bbales2/stochssModel/app/static/modelEditor/node_modules/ampersand-view/ampersand-view.js","jquery":"/home/bbales2/stochssModel/app/static/modelEditor/node_modules/jquery/dist/jquery.js","underscore":"/home/bbales2/stochssModel/app/static/modelEditor/node_modules/underscore/underscore.js"}]},{},["/home/bbales2/stochssModel/app/static/modelEditor/app.js"]);
+},{"../forms/tests":"/home/debjani/Desktop/newstochss/stochss/app/static/modelEditor/forms/tests.js","ampersand-view":"/home/debjani/Desktop/newstochss/stochss/app/static/modelEditor/node_modules/ampersand-view/ampersand-view.js","jquery":"/home/debjani/Desktop/newstochss/stochss/app/static/modelEditor/node_modules/jquery/dist/jquery.js","underscore":"/home/debjani/Desktop/newstochss/stochss/app/static/modelEditor/node_modules/underscore/underscore.js"}]},{},["/home/debjani/Desktop/newstochss/stochss/app/static/modelEditor/app.js"]);

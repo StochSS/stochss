@@ -35,7 +35,10 @@
     "underscore": "^1.7.0",
     "underscore.string": "^3.0.2",
     "url-parse": "^1.0.0",
-    "xmldom": "^0.1.19"
+    "xmldom": "^0.1.19",
+    "ampersand-checkbox-view": "~2.0.2",
+    "three": "~0.70.0",
+    "three-orbit-controls": "~69.0.4"
   },
   "devDependencies": {
     "browserify": "^8.0.3",

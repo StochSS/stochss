@@ -45,10 +45,55 @@ module.exports = View.extend({
 
         this.highLightSubdomains(this.subdomains);
     },
+
+    generateSolidMesh : function(desiredSubdomain)
+    {
+    var sdmesh = this.model.mesh.subdomains;
+    var vtx = this.model.mesh.threeJsMesh.vertices;
+    var faces = this.model.mesh.threeJsMesh.faces;
+    
+    var sub_faces = [];
+    var sub_faces_idx = 0;
+    for(var f=0; f<faces.length/7; f++)
+        {
+            if(sdmesh[faces[f*7 + 1]] == desiredSubdomain && sdmesh[faces[f*7 + 2]] == desiredSubdomain && sdmesh[faces[f*7 + 3]] == desiredSubdomain)
+            {
+                var slice = faces.slice(f*7, f*7+7);
+                for(s = 0; s<slice.length; s++)
+                    sub_faces[sub_faces_idx++] = slice[s];
+            }
+        }
+
+    this.model.mesh.threeJsMesh.faces = sub_faces;
+
+
+    },
+
+    generateSolidVertexMesh : function(x)
+    {
+    var sdmesh = this.model.mesh.subdomains;
+    var vtx = this.model.mesh.threeJsMesh.vertices;
+    var faces = this.model.mesh.threeJsMesh.faces;
+    var vtxlist = [];
+    var vtxlistidx = 0;
+    
+    for(var v=0; v<(vtx.length/3); v++)
+    {
+        // Anything lesser than or equal to the value will be displayed
+        if(vtx[v*3] < x)
+            sdmesh[v] = 3;
+    }
+    this.model.mesh.subdomains = sdmesh;
+    this.generateSolidMesh(3);
+    
+    },
+
+
     highLightSubdomains : function(subdomains)
     {
         var subdomainLabels = this.model.mesh.subdomains;
 
+        
         var colors = new Array(subdomainLabels.length);
         
         for(var i = 0; i < subdomainLabels.length; i++)
@@ -62,10 +107,15 @@ module.exports = View.extend({
                 colors[i] = new THREE.Color( 0x000099 );
             }
         }
-
+        
+        
+        this.generateSolidVertexMesh(0.2);
+        this.meshDataPreview();
         this.redrawColors(colors);
     },
+    
     redrawColors : function(colors) {
+        
         for(var i = 0; i < this.mesh.geometry.faces.length; i++)
         {
             var faceIndices = ['a', 'b', 'c'];         
@@ -274,7 +324,7 @@ module.exports = View.extend({
         
         this.scene = scene;
 
-        this.highLightSubdomains([])
+        //this.highLightSubdomains([])
         
         if(!this.rendererInitialized)
         {
