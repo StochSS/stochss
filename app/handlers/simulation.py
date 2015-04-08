@@ -794,7 +794,12 @@ class SimulatePage(BaseHandler):
             if not modelDb:
                 return {'status':False,'msg':'Failed to retrive the model to simulate.'}
 
-            model = modelDb.createStochKitModel()
+            try:
+                model = modelDb.createStochKitModel()
+            except Exception as e:
+                traceback.print_exc()
+                return {"status" : False, "msg" : "Error: {0}".format(e)}
+                
 
             # Execute as concentration or population?
             execType = params['execType']
