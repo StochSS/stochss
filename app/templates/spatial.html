@@ -33,6 +33,46 @@
 <script type="text/javascript" src = "/static/js/spatial.app.js"></script>
 <script type="text/javascript" src="static/js/status.js"></script>
 
+    <script type="x-shader/x-vertex" id="vertexshader">
+
+        // switch on high precision floats
+        #ifdef GL_ES
+        precision highp float;
+        #endif
+
+        uniform float xval;
+        varying vec4 vColor;
+
+        void main()
+        {
+            vColor = vec4(color, 1.0);
+
+            gl_Position = projectionMatrix * modelViewMatrix * vec4(position,1.0);
+
+            if(position.x <= xval )
+                vColor = vec4(0.0, 0.0, 0.0, 0.0);
+
+        }
+
+    </script>
+
+    <script type="x-shader/x-fragment" id="fragmentshader">
+
+        #ifdef GL_ES
+        precision highp float;
+        #endif
+
+        varying vec4 vColor;
+
+        void main()
+        {
+            if(vColor.a != 1.0 ) 
+                discard;
+            else
+                gl_FragColor = vColor;
+        }
+
+    </script>
 
 <script type="text/template" id="jobInfoTemplate">
 	<ol class="breadcrumb">
@@ -70,10 +110,6 @@
                 <td valign=top>
                     Select <span id="timeSelectDisplay"></span><br />
                     <input id="timeSelect" type="range" min="0" max="0" step="0" value="0">
-                </td>
-                <td valign=top>
-                    Plane <span id="planeSelectDisplay"></span><br />
-                    <input id="planeSelect" type="range" min="-5" max="+5" step="1" value="0">
                 </td>
 
                 <td valign=top>
@@ -164,9 +200,28 @@
     <div id="msg" style="clear:both; display: none;"></div>
     
     <div id="accessOutput" class="well" style="clear:both; display: none;">
+        <span> Enable: </span>
+        <input type="checkbox" id="planeXCheck" /> X-plane &nbsp; &nbsp; &nbsp;
+        <input type="checkbox" id="planeYCheck" /> Y-plane &nbsp; &nbsp; &nbsp;
+        <input type="checkbox" id="planeZCheck" /> Z-plane &nbsp; &nbsp; &nbsp;
+
+        <br/>
+        <br/>
+        
+        <span> X-Axis </span>
+        <input id="planeXSelect" type="range" min="-5" max="+5" step="1" value="0">
+        
+        <span> Y-Axis </span>
+        <input id="planeYSelect" type="range" min="-5" max="+5" step="1" value="0">
+
+        <span> Z-Axis </span>
+        <input id="planeZSelect" type="range" min="-5" max="+5" step="1" value="0">
+
+
         <h3>Output</h3>
         <br />
         
+
         <% if (resource =="local" || output_stored == "True"){ %>
         	<button id="access" type="submit" class="btn btn-primary btn-large"><i class="icon-download-alt"></i> Fetch Data from Cloud</button>
     	<% } %>
