@@ -20,6 +20,7 @@ Spatial.Controller = Backbone.View.extend(
     {
         el : $("#jobInfo"),
 
+
         initialize : function(attributes)
         {
             this.maxLimit = undefined;
@@ -377,7 +378,7 @@ Spatial.Controller = Backbone.View.extend(
             
             var scene = new THREE.Scene();
             var loader = new THREE.JSONLoader();
-            var uniforms =  { xval : {type: 'f', value: -2.0} };
+            var uniforms =  { xval : {type: 'f', value: -2.0}, yval : {type: 'f', value: -2.0}, zval : {type: 'f', value: -2.0} };
 
             var material = new THREE.ShaderMaterial( {
                     vertexShader:   $('#vertexshader').text(),
@@ -385,7 +386,8 @@ Spatial.Controller = Backbone.View.extend(
                     side : THREE.DoubleSide,
                     depthTest: true,
                     vertexColors: THREE.VertexColors,
-                    uniforms: uniforms
+                    uniforms: uniforms,
+                    wireframe: this.wireFlag
             } );
             
             var model = loader.parse(data['mesh']);
@@ -400,17 +402,31 @@ Spatial.Controller = Backbone.View.extend(
             */
 
             // PLANE - X
-            planeGeometry = new THREE.PlaneGeometry(radius, radius);
-            planeX = new THREE.Mesh(planeGeometry, new THREE.MeshBasicMaterial( {  color: 0xffffff, side: THREE.DoubleSide, transparent: true, opacity: 0.5} ));
+            var planeGeometry = new THREE.PlaneGeometry(radius*2, radius*2);
+            planeX = new THREE.Mesh(planeGeometry, new THREE.MeshBasicMaterial( {  color: 0xffffff, side: THREE.DoubleSide, transparent: true, opacity: 0} ));
             planeX.rotateOnAxis( new THREE.Vector3(0,1,0), (Math.PI/2) );
             planeXEdges = new THREE.EdgesHelper( planeX, 0x0000ff ); 
             planeXEdges.material.linewidth = 2;
+            planeX.visible = false; planeXEdges.visible = false;
 
+
+            // PLANE - Y
+            planeY= new THREE.Mesh(planeGeometry, new THREE.MeshBasicMaterial( {  color: 0xffffff, side: THREE.DoubleSide, transparent: true, opacity: 0} ));
+            planeYEdges = new THREE.EdgesHelper( planeY, 0x00ff00 ); 
+            planeYEdges.material.linewidth = 2;
+            planeY.visible = false; planeYEdges.visible = false;
             
-            //scene.add(grid);        
+            // PLANE - Y
+            planeZ = new THREE.Mesh(planeGeometry, new THREE.MeshBasicMaterial( {  color: 0xffffff, side: THREE.DoubleSide} ));
+            planeZ.rotateOnAxis( new THREE.Vector3(1,0,0), (Math.PI/2) );
+            planeZEdges = new THREE.EdgesHelper( planeZ, 0xff0000 ); 
+            planeZEdges.material.linewidth = 2;
+            planeZ.visible = false; planeZEdges.visible = false;
+
             scene.add(this.mesh);
-            scene.add(planeX);
-            scene.add(planeXEdges);
+            scene.add(planeX);scene.add(planeXEdges);
+            scene.add(planeY);scene.add(planeYEdges);
+            scene.add(planeZ);scene.add(planeZEdges);
 
             delete loader;
             delete material;            
@@ -448,12 +464,12 @@ Spatial.Controller = Backbone.View.extend(
             var val = parseFloat(planeX.position.x);
             this.mesh.material.uniforms.xval.value = val;
 
-        },
+            var val = parseFloat(planeY.position.z);
+            this.mesh.material.uniforms.yval.value = val;
 
-        handlePlaneChecked: function(event)
-        {
-            // If X-check is present
-            console.log("handlePlaneChecked: function(event)");
+            var val = parseFloat(planeZ.position.y);
+            this.mesh.material.uniforms.zval.value = val;
+
         },
 
         handlePlaneSliderChange: function(event)
@@ -465,6 +481,18 @@ Spatial.Controller = Backbone.View.extend(
             planeXEdges.position.x =  val; 
             planeX.geometry.verticesNeedUpdate = true;
             planeXEdges.geometry.verticesNeedUpdate = true;
+
+            var val = $("#planeYSelect").val();
+            planeY.position.z = val; 
+            planeYEdges.position.z =  val; 
+            planeY.geometry.verticesNeedUpdate = true;
+            planeYEdges.geometry.verticesNeedUpdate = true;
+
+            var val = $("#planeZSelect").val();
+            planeZ.position.y = val; 
+            planeZEdges.position.z =  val; 
+            planeZ.geometry.verticesNeedUpdate = true;
+            planeZEdges.geometry.verticesNeedUpdate = true;
 
             this.hideMesh();
         },
@@ -481,14 +509,34 @@ Spatial.Controller = Backbone.View.extend(
             slider.prop('min', min);
             slider.prop('max', max);
             slider.val(min);
-            var pos = sphere.center;
-            pos.x = min;
+            //var pos = sphere.center;
+            //pos.x = min;
             slider.prop('step', (max - min)/10 ) ;
             slider.on('change', _.throttle(_.bind(this.handlePlaneSliderChange, this), 1000));
             slider.trigger('change');
-            
-            //var check = $( "#planeXCheck" );
-            //check.click( _.bind(this.handlePlaneChecked, this) );
+
+
+            // For plane Y
+            var slider = $( "#planeYSelect" );
+            var min = sphere.center.z - (sphere.radius/2);
+            var max = sphere.center.z + (sphere.radius/2);
+            slider.prop('min', min);
+            slider.prop('max', max);
+            slider.val(min);
+            slider.prop('step', (max - min)/15 ) ;
+            slider.on('change', _.throttle(_.bind(this.handlePlaneSliderChange, this), 1000));
+            slider.trigger('change');
+
+            // For plane z
+            var slider = $( "#planeZSelect" );
+            var min = sphere.center.y - (sphere.radius/2);
+            var max = sphere.center.y + (sphere.radius/2);
+            slider.prop('min', min);
+            slider.prop('max', max);
+            slider.val(min);
+            slider.prop('step', (max - min)/15 ) ;
+            slider.on('change', _.throttle(_.bind(this.handlePlaneSliderChange, this), 1000));
+            slider.trigger('change');
         },
 
         /*
@@ -790,14 +838,73 @@ Spatial.Controller = Backbone.View.extend(
                     // Set up radio buttons
                     var withWire = $("#withWire");
                     withWire.click(_.bind(function(){
+                    console.log('withWire.click');
                     this.wireFlag = true;
                     this.acquireNewData();
                     }, this));
 
                     var withoutWire = $("#withoutWire");
                     withoutWire.click(_.bind(function(){
+                    console.log('withoutWire.click');  
                     this.wireFlag = false;
                     this.acquireNewData();
+                    }, this));
+
+                    var checkbox = $( "#planeXCheck" );
+                    checkbox.click(_.bind(function(){
+                        
+                        console.log('checkbox x click');
+                        
+                        if($("#planeXCheck").is(':checked'))
+                        {
+                            planeX.visible = true; planeXEdges.visible = true; 
+                        }
+
+                        else{
+                            planeX.visible = false; planeXEdges.visible = false;
+                            $( "#planeXSelect" ).val( $( "#planeXSelect" )[0].min ) ;
+                        }
+                        planeX.position.x = $( "#planeXSelect" ).val();
+                        this.hideMesh();
+
+                    }, this));
+
+                    var checkbox = $( "#planeYCheck" );
+                    checkbox.click(_.bind(function(){ 
+                        console.log('checkbox y click');
+                        
+                        if($("#planeYCheck").is(':checked'))
+                        {
+                            planeY.visible = true; planeYEdges.visible = true;
+                           
+                        }
+
+                        else{
+                            planeY.visible = false; planeYEdges.visible = false;
+                            $( "#planeYSelect" ).val( $( "#planeYSelect" )[0].min ) ;
+                        }
+                        planeY.position.z = $( "#planeYSelect" ).val();
+                        this.hideMesh();
+
+                    }, this));
+
+                    var checkbox = $( "#planeZCheck" );
+                    checkbox.click(_.bind(function(){
+                        console.log('checkbox z click');
+
+                        if($("#planeZCheck").is(':checked'))
+                        {
+                            planeZ.visible = true; planeZEdges.visible = true;
+                           
+                        }
+
+                        else{
+                            planeZ.visible = false; planeZEdges.visible = false;
+                            $( "#planeZSelect" ).val( $( "#planeZSelect" )[0].min ) ;
+                        }
+                        planeZ.position.y = $( "#planeZSelect" ).val();
+                        this.hideMesh();
+ 
                     }, this));
 
                 }

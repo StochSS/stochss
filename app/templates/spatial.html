@@ -41,6 +41,8 @@
         #endif
 
         uniform float xval;
+        uniform float yval;
+        uniform float zval;
         varying vec4 vColor;
 
         void main()
@@ -49,7 +51,7 @@
 
             gl_Position = projectionMatrix * modelViewMatrix * vec4(position,1.0);
 
-            if(position.x <= xval )
+            if(position.x <= xval || position.z <= yval || position.y <= zval)
                 vColor = vec4(0.0, 0.0, 0.0, 0.0);
 
         }
@@ -201,10 +203,9 @@
     
     <div id="accessOutput" class="well" style="clear:both; display: none;">
         <span> Enable: </span>
-        <input type="checkbox" id="planeXCheck" /> X-plane &nbsp; &nbsp; &nbsp;
-        <input type="checkbox" id="planeYCheck" /> Y-plane &nbsp; &nbsp; &nbsp;
-        <input type="checkbox" id="planeZCheck" /> Z-plane &nbsp; &nbsp; &nbsp;
-
+        <input type="checkbox" id="planeXCheck"/>X-plane &nbsp;&nbsp;&nbsp; 
+        <input type="checkbox" id="planeYCheck"/>Y-plane &nbsp;&nbsp;&nbsp;
+        <input type="checkbox" id="planeZCheck"/>Z-plane 
         <br/>
         <br/>
         
