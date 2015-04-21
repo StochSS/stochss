@@ -13,7 +13,6 @@ var updateMsg = function(data)
     $( "#msg" ).show();
 };
 
-
 var Spatial = Spatial || {}
 
 Spatial.Controller = Backbone.View.extend(
@@ -23,13 +22,13 @@ Spatial.Controller = Backbone.View.extend(
 
         initialize : function(attributes)
         {
-            this.maxLimit = undefined;
+            maxLimit = undefined;
             this.wireFlag = false;
             this.playFlag = false;
-            this.spt = this.timeIdx % this.maxLimit;
-            this.upt = (this.timeIdx + 25) % this.maxLimit;
+            cache = {};
 
             this.initializeCache();
+
 
             // Set up room for the model select stuff
             // Pull in all the models from the internets
@@ -48,10 +47,11 @@ Spatial.Controller = Backbone.View.extend(
             // Draw a screen so folks have something to see
             this.render();
 
-
             // Go get the csvFiles we have hosted
-            //this.meshFiles = new meshserver.FileList();
             this.refreshData();
+
+            this.updateCache(this.timeIdx, this.timeIdx + 25);
+
         },
 
         refreshData : function()
@@ -95,7 +95,7 @@ Spatial.Controller = Backbone.View.extend(
          },
 
          playTimeHelper: function(timeVal, delta){
-            return Math.min(timeVal + delta, this.maxLimit-1); 
+            return Math.min(timeVal + delta, maxLimit-1); 
          },
 
          playMesh: function(){
@@ -107,82 +107,68 @@ Spatial.Controller = Backbone.View.extend(
             var playStats = $( "#playStats" ).html( 'Running');
 
             this.count = 0;
+            this.playCount = 0;
 
             this.intervalID = setInterval(_.bind(this.play, this), 1000);
         },
 
         play: function(dt){
-            
             if(this.playFlag){
-                //$( "#playStats" ).html( '@'+this.timeIdx);
-
-                if(! ( this.timeIdx >= this.spt && this.timeIdx <= this.playTimeHelper(this.spt , 25) ) )
-                {
-
-                if(this.timeIdx <= this.playTimeHelper(this.spt , 50) )
-                    this.deleteCache(this.spt, this.playTimeHelper(this.spt , 25) );
-                else
-                    this.deleteCache(this.spt, this.playTimeHelper(this.spt , 50) );
-                            
-                
-                // Updating the cache from 50 to 75
-                if(this.timeIdx <= this.playTimeHelper(this.spt , 50) )
-                        this.updateCache( this.playTimeHelper(this.spt , 49) , this.playTimeHelper(this.spt , 75 ) ); 
-                else
-                        this.updateCache( this.timeIdx , this.playTimeHelper(this.timeIdx , 25 ) ); 
-
-                this.spt = this.timeIdx;
-                
-                }
-
-            // Updating the screen
-            else{
-                if(this.cache[this.timeIdx])
+                    
+                    // Animation is at maxLimit
+                    if(this.timeIdx ==  maxLimit)
                     {
-                        $( "#playStats" ).html( 'Running');
-                        this.count = 0;
-                        console.log("Data is "+this.cache[this.timeIdx]+" @time"+this.timeIdx);
-                        this.handleMeshColorUpdate(this.cache[this.timeIdx]);
-                        // Changing the time
-                        console.log(" *** Changing @Time : "+this.timeIdx);
-                        this.timeIdx = (this.timeIdx+1);
-                        console.log(" *** New Time = "+this.timeIdx); 
-                        $('#timeSelect').trigger('change');
-                        
-                    }
-                else{
-                        if(this.timeIdx < this.maxLimit){
-                            $( "#playStats" ).html( 'Buffering..');
-                            console.log("Cache still loading");
-                            this.count++;
+                        // Show maxLimit frame
+                        this.handleMeshColorUpdate(cache[this.timeIdx]);
 
-                            if(this.count == 5)
-                            {
-                                this.updateCache(this.timeIdx, this.playTimeHelper(this.timeIdx , 25 ) );
-                            }
-
-                        }
-                    }
-
-                    // Checking if time == 100
-                if(this.timeIdx == 100)
-                    {
                         console.log("STOP!");
                         this.playFlag = false;
                         clearInterval(this.intervalID);
                         $( "#playStats" ).html( 'Stopped');
                         return;
                     }
-                }
+
+                    // If cached value is present
+                    if(cache[this.timeIdx])
+                    {
+                        $( "#playStats" ).html( 'Running');
+                        this.count = 0;
+                        this.playCount +=1;
+                        console.log("Playing @time"+this.timeIdx);
+                        this.handleMeshColorUpdate(cache[this.timeIdx]);
+
+                        if(this.playCount == 10)
+                            {   
+                                this.playCount = 0;
+                                var stime = this.timeIdx - 10 ;
+                                var etime = this.timeIdx;
+                                var stime2 = stime + 25;
+                                var etime2 = stime2 + 10;
+                                this.replaceCache(stime, etime, stime2, etime2); 
+                            } 
+                        
+                        this.timeIdx = (this.timeIdx+1);
+                        $('#timeSelect').trigger('change');
+                    }
+                    else{
+                            if(this.timeIdx < maxLimit){
+                                $( "#playStats" ).html( 'Buffering..');
+                                console.log("Cache still loading");
+                                this.count++;
+
+                                if(this.count == 5)
+                                    this.updateCache(this.timeIdx, this.timeIdx +25 );
+                            }
+                    }
+                    
+      
             }
         },
 
         stopMesh: function(){
             console.log("Stopping mesh with Id: "+this.intervalID);
             console.log("STOP!");
-            
             clearInterval(this.intervalID);
-
             $( "#playStats" ).html( 'Stopped');
             this.playFlag =false;
 
@@ -415,7 +401,7 @@ Spatial.Controller = Backbone.View.extend(
             planeY.visible = $("#planeYCheck").is(':checked'); planeYEdges.visible = $("#planeYCheck").is(':checked');
             
             // PLANE - Y
-            planeZ = new THREE.Mesh(planeGeometry, new THREE.MeshBasicMaterial( {  color: 0xffffff, side: THREE.DoubleSide} ));
+            planeZ = new THREE.Mesh(planeGeometry, new THREE.MeshBasicMaterial( {  color: 0xffffff, side: THREE.DoubleSide, transparent: true, opacity: 0} ));
             planeZ.rotateOnAxis( new THREE.Vector3(1,0,0), (Math.PI/2) );
             planeZEdges = new THREE.EdgesHelper( planeZ, 0xff0000 ); 
             planeZEdges.material.linewidth = 2;
@@ -469,11 +455,14 @@ Spatial.Controller = Backbone.View.extend(
         hideMesh: function(){
             // To update uniforms
             console.log("hideMesh: function()");
-            var val = parseFloat(planeX.position.x);
+            var val = parseFloat( $("#planeXSelect").val() ) ;
+
             this.mesh.material.uniforms.xval.value = val;
-            var val = parseFloat(planeY.position.z);
+            
+            val = parseFloat( $("#planeYSelect").val() );
             this.mesh.material.uniforms.yval.value = val;
-            var val = parseFloat(planeZ.position.y);
+            
+            val = parseFloat( $("#planeZSelect").val() );
             this.mesh.material.uniforms.zval.value = val;
 
         },
@@ -482,25 +471,41 @@ Spatial.Controller = Backbone.View.extend(
         {
             console.log("handlePlaneSliderChange : function(event)");
             
-            var val = $("#planeXSelect").val();
-            planeX.position.x = val; 
-            planeXEdges.position.x =  val; 
-            planeX.geometry.verticesNeedUpdate = true;
-            planeXEdges.geometry.verticesNeedUpdate = true;
+            var change = false;
 
-            var val = $("#planeYSelect").val();
-            planeY.position.z = val; 
-            planeYEdges.position.z =  val; 
-            planeY.geometry.verticesNeedUpdate = true;
-            planeYEdges.geometry.verticesNeedUpdate = true;
+            if(planeX.visible){
+                var val = $("#planeXSelect").val();
+                planeX.position.x = val; 
+                planeXEdges.position.x =  val; 
+                planeX.geometry.verticesNeedUpdate = true;
+                planeXEdges.geometry.verticesNeedUpdate = true;
+                change = true;
+            }
 
-            var val = $("#planeZSelect").val();
-            planeZ.position.y = val; 
-            planeZEdges.position.z =  val; 
-            planeZ.geometry.verticesNeedUpdate = true;
-            planeZEdges.geometry.verticesNeedUpdate = true;
+            if(planeY.visible)
+            {
+                var val = $("#planeYSelect").val();
+                planeY.position.z = val; 
+                planeYEdges.position.z =  val; 
+                planeY.geometry.verticesNeedUpdate = true;
+                planeYEdges.geometry.verticesNeedUpdate = true;
+                change = true;
+            }
 
-            this.hideMesh();
+            if(planeZ.visible)
+            {
+                var val = $("#planeZSelect").val();
+                planeZ.position.y = val; 
+                planeZEdges.position.z =  val; 
+                planeZ.geometry.verticesNeedUpdate = true;
+                planeZEdges.geometry.verticesNeedUpdate = true;
+                change = true;                
+            }
+
+            if(change){
+                this.hideMesh();
+            }
+
         },
 
         setupPlaneSliders : function(){
@@ -554,25 +559,37 @@ Spatial.Controller = Backbone.View.extend(
         initializeCache: function()
         {
             console.log("initializeCache: function()");
-            this.cache = {};
+            cache = {};
         },
 
 
-        deleteCache : function(start, stop){
+        deleteCache : function(start1, stop1){
+
+            var start = start1 % (maxLimit + 1);
+            var stop = stop1 % (maxLimit + 1);
             console.log(" deleteCache : function("+start+", "+stop+")");
 
             idx = start; 
 
             while(idx!=stop)
             {
-                delete this.cache[idx];
-                idx = (idx + 1 )% this.maxLimit;
+                delete cache[idx];
+                idx = (idx + 1 )% maxLimit;
             }
 
         },
 
-        updateCache : function(start, stop){
+        replaceCache : function(stime1, etime1, stime2, etime2){
+            console.log("replaceCache : function("+stime1+","+etime1+", "+stime2+","+etime2+")");
+            this.deleteCache(stime1, etime1);
+            this.updateCache(stime2, etime2 );
+        },
+
+        updateCache : function(start1, stop1){
+            var start = start1 % (maxLimit + 1);
+            var stop = stop1 % (maxLimit + 1);
             console.log(" updateCache : function("+start+", "+stop+")");
+
 
             $.ajax( { type : "GET",
                     url : "/spatial",
@@ -584,7 +601,7 @@ Spatial.Controller = Backbone.View.extend(
                             var time = _.keys(data).sort();
                             for (var i = 0; i < time.length; i++) {
                                 var t = time[i]; 
-                                this.cache[t] = data[t].mesh;
+                                cache[t] = data[t].mesh;
                             }
 
                         }, this)
@@ -610,16 +627,15 @@ Spatial.Controller = Backbone.View.extend(
             console.log("acquireNewData : function()");
 
             // Cache available
-            if(this.cache[this.timeIdx])
+            if(cache[this.timeIdx])
             {
-                this.handleMeshColorUpdate(this.cache[this.timeIdx]); 
+                this.handleMeshColorUpdate(cache[this.timeIdx]); 
                 return;
             }
 
             // Mesh Available
             if(this.meshData){
-                this.initializeCache();
-                this.updateCache(this.timeIdx, ( this.timeIdx + 50 )% this.maxLimit);
+                this.updateCache(this.timeIdx, ( this.timeIdx + 50 )% maxLimit);
                 this.updateMesh();
                 return;
             }
@@ -731,11 +747,9 @@ Spatial.Controller = Backbone.View.extend(
         {
             console.log("handleSpeciesSelect : function(event)");
             var species = $( event.target ).val();
-
             this.selectedSpecies = species;
-
             this.meshDataPreview(this.meshData[species]);
-
+            this.hideMesh();
         },
 
         handleDownloadDataButton : function(event)
@@ -835,7 +849,7 @@ Spatial.Controller = Backbone.View.extend(
                     slider.val(slider.prop('max'));
                     slider.prop('step', this.jobInfo.indata.increment);
 
-                    this.maxLimit = this.jobInfo.indata.time;
+                    maxLimit = this.jobInfo.indata.time;
 
                     //Add event handler to slider
                     slider.on('change', _.throttle(_.bind(this.handleSliderChange, this), 1000));
