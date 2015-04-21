@@ -88,7 +88,7 @@ Spatial.Controller = Backbone.View.extend(
             $( '#rotateDown_btn' ).click( _.bind(function() { this.controls.rotateUp(-0.5);}, this) );
             $( '#rotateRight_btn' ).click( _.bind(function() { this.controls.rotateLeft(0.5);}, this) );
             $( '#rotateLeft_btn' ).click( _.bind(function() { this.controls.rotateLeft(-0.5);}, this) );
-            $( '#reset_btn' ).click( _.bind(function() { this.controls.reset();this.camera.position.z = 1.5; }, this) );
+            $( '#reset_btn' ).click( _.bind(function() { this.controls.reset(); this.camera.position.z = this.mesh.geometry.boundingSphere.radius * 2; }, this) );
 
             $( '#play_btn' ).click(_.bind(this.playMesh, this));
             $( '#stop_btn' ).click(_.bind(this.stopMesh, this));
@@ -359,11 +359,9 @@ Spatial.Controller = Backbone.View.extend(
                 var rendererDom = $( renderer.domElement ).appendTo(dom);
                 
                 var controls = new THREE.OrbitControls( camera, renderer.domElement );
-
-
-                camera.position.z = 1.5;
-
+                camera.position.z = 1.5 ;
                 this.camera = camera;
+
                 this.renderer = renderer;
                 this.controls = controls;
                 this.addGui();
@@ -407,21 +405,21 @@ Spatial.Controller = Backbone.View.extend(
             planeX.rotateOnAxis( new THREE.Vector3(0,1,0), (Math.PI/2) );
             planeXEdges = new THREE.EdgesHelper( planeX, 0x0000ff ); 
             planeXEdges.material.linewidth = 2;
-            planeX.visible = false; planeXEdges.visible = false;
+            planeX.visible = $("#planeXCheck").is(':checked'); planeXEdges.visible = $("#planeXCheck").is(':checked');
 
 
             // PLANE - Y
             planeY= new THREE.Mesh(planeGeometry, new THREE.MeshBasicMaterial( {  color: 0xffffff, side: THREE.DoubleSide, transparent: true, opacity: 0} ));
             planeYEdges = new THREE.EdgesHelper( planeY, 0x00ff00 ); 
             planeYEdges.material.linewidth = 2;
-            planeY.visible = false; planeYEdges.visible = false;
+            planeY.visible = $("#planeYCheck").is(':checked'); planeYEdges.visible = $("#planeYCheck").is(':checked');
             
             // PLANE - Y
             planeZ = new THREE.Mesh(planeGeometry, new THREE.MeshBasicMaterial( {  color: 0xffffff, side: THREE.DoubleSide} ));
             planeZ.rotateOnAxis( new THREE.Vector3(1,0,0), (Math.PI/2) );
             planeZEdges = new THREE.EdgesHelper( planeZ, 0xff0000 ); 
             planeZEdges.material.linewidth = 2;
-            planeZ.visible = false; planeZEdges.visible = false;
+            planeZ.visible = $("#planeZCheck").is(':checked'); planeZEdges.visible = $("#planeZCheck").is(':checked');
 
             scene.add(this.mesh);
             scene.add(planeX);scene.add(planeXEdges);
@@ -444,8 +442,18 @@ Spatial.Controller = Backbone.View.extend(
             this.scene = scene;
 
             $( "#meshPreviewMsg" ).hide();
+
+             this.camera.position.z =  this.mesh.geometry.boundingSphere.radius* 2;
+
             //this.highLightSubdomains([])
             
+            /* Recalculating distance
+            var dist = this.camera.position.z - (this.mesh.geometry.boundingSphere.center.z + this.mesh.geometry.boundingSphere.radius)
+            var height = this.mesh.geometry.boundingSphere.radius * 2
+            var fov = 2 * Math.atan( height / ( 2 * dist ) ) * ( 180 / Math.PI );
+            this.camera.fov = fov;*/
+
+
             if(!this.rendererInitialized)
             {
                 this.rendererInitialized = true;
@@ -463,10 +471,8 @@ Spatial.Controller = Backbone.View.extend(
             console.log("hideMesh: function()");
             var val = parseFloat(planeX.position.x);
             this.mesh.material.uniforms.xval.value = val;
-
             var val = parseFloat(planeY.position.z);
             this.mesh.material.uniforms.yval.value = val;
-
             var val = parseFloat(planeZ.position.y);
             this.mesh.material.uniforms.zval.value = val;
 
@@ -518,8 +524,8 @@ Spatial.Controller = Backbone.View.extend(
 
             // For plane Y
             var slider = $( "#planeYSelect" );
-            var min = sphere.center.z - (sphere.radius/2);
-            var max = sphere.center.z + (sphere.radius/2);
+            var min = sphere.center.z - (sphere.radius);
+            var max = sphere.center.z + (sphere.radius);
             slider.prop('min', min);
             slider.prop('max', max);
             slider.val(min);
@@ -529,8 +535,8 @@ Spatial.Controller = Backbone.View.extend(
 
             // For plane z
             var slider = $( "#planeZSelect" );
-            var min = sphere.center.y - (sphere.radius/2);
-            var max = sphere.center.y + (sphere.radius/2);
+            var min = sphere.center.y - (sphere.radius);
+            var max = sphere.center.y + (sphere.radius);
             slider.prop('min', min);
             slider.prop('max', max);
             slider.val(min);
