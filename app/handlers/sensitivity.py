@@ -348,7 +348,7 @@ class SensitivityPage(BaseHandler):
         job.pid = handle.pid
 
         job.put()
-        return job, None
+        return job
     
     def runCloud(self, data):
         '''

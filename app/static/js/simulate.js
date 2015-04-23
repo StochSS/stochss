@@ -288,7 +288,7 @@ var run = function()
                                   label = data.job.units.charAt(0).toUpperCase() + data.job.units.slice(1);
                               }
 
-                              gplot = Splot.plot( $( "#plot" ), plotData, label);
+                              gplot = Splot.plot( "Species select", $( "#plot" ), plotData, label);
                               //$( "#plotButton" ).click( gplot.getImage );
                           }
                           else
