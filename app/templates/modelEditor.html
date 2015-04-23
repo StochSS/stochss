@@ -150,7 +150,7 @@
                     <div class="accordion-inner">
                         To convert the model from concentration to population you must specify a system volume, initial conditions will be converted as initial_population = initial_concentration * volume.
                         <br><br>
-                        Converting concentration models to population models should be automatic for mass action models defined under the assumptions of Gillespie-SSA. For more complex mass action models, or ones with custom propensities, conversion must be done manually. Conversion to population is still possible in the cases where automatic conversion fails; the user will be responsible for fixing the reactions which were not automatically converted though.
+                        Converting concentration models to population models should be automatic for models with mass action reactions with two or less reactants. For more complex reactions, or ones with custom propensities, conversion must be done manually. Conversion to population is still possible in the cases where automatic conversion fails; the user will be responsible for fixing the reactions which were not automatically converted though.
                         <br><br>
                         <h4>Volume</h4>
                         <div data-hook="volume"></div>
@@ -169,13 +169,26 @@
 <script class="meshCollectionTemplate" type="text/template">
     <div>
         <div class="accordion" id="accordion22">
-            <div class="accordion-group">
+            <div class="accordion-group" data-hook="meshDescriptionAccordion">
                 <div class="accordion-heading">
-                    <a class="accordion-toggle meshLibrary" data-toggle="collapse" data-parent="#accordion22" href="#collapseTwo2">
+                    <a class="accordion-toggle" data-toggle="collapse" data-parent="#accordion22" href="#collapseOne2">
+                        Current Mesh
+                    </a>
+                </div>
+                <div id="collapseOne2" class="accordion-body collapse in">
+                    <div class="accordion-inner">
+                        <div data-hook="meshDescription">
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="accordion-group" data-hook="meshLibraryAccordion">
+                <div class="accordion-heading">
+                    <a class="accordion-toggle" data-toggle="collapse" data-parent="#accordion22" href="#collapseTwo2">
                         Select a Mesh
                     </a>
                 </div>
-                <div id="collapseTwo2" class="accordion-body collapse in">
+                <div id="collapseTwo2" class="accordion-body collapse">
                     <div class="accordion-inner">
                         <div class="row">
                             <div class="span11">
@@ -187,13 +200,15 @@
                                 </div>
                             </div>
                             <div class="span3 meshSelectDescriptionDiv">
-                                <h4>Description:</h4>
-                                <pre class="description">
-                                </pre>
+				<div class="descriptionContainer">
+                                    <h4>Description:</h4>
+                                    <pre class="description">
+                                    </pre>
+				</div>
                             </div>
                         </div>
-
-                        <!--<button id="selectButton" class="btn btn-primary">Done</button>-->
+			<br>
+                        <button data-hook="doneSelectButton" class="btn btn-primary">Done</button>
                     </div>
                 </div>
             </div>

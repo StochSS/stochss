@@ -70,8 +70,10 @@ class SpatialJobWrapper(db.Model):
         
         #delete the local output
         output_path = os.path.join(os.path.dirname(__file__), '../output/')
-        if os.path.exists(str(output_path)+self.uuid):
-            shutil.rmtree(str(output_path)+self.uuid)
+
+        if self.uuid:
+            if os.path.exists(str(output_path) + self.uuid):
+                shutil.rmtree(str(output_path) + self.uuid)
         
         if self.resource.lower() == "cloud":
             try:
@@ -432,8 +434,6 @@ class SpatialPage(BaseHandler):
                 pymodel.add_parameter(pyurdme.Parameter(name=p_name, expression=p.expression))
             # reactions
             for r_name, r in stochkit_model_obj.listOfReactions.iteritems():
-                cow = pyurdme.Reaction(name=r_name, reactants=r.reactants, products=r.products, rate=r.marate, massaction=True)
-                print cow.__dict__
                 if r.massaction:
                     pymodel.add_reaction(pyurdme.Reaction(name=r_name, reactants=r.reactants, products=r.products, rate=r.marate, massaction=True))
                 else:

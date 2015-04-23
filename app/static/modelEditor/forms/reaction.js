@@ -37,9 +37,6 @@ module.exports = View.extend({
 
         if(this.parent && this.parent.update)
             this.parent.update();
-
-        if(this.parent && this.parent.parent && this.parent.parent.update)
-            this.parent.parent.update();
     },
     // On any change of anything, redraw the Latex
     redrawLatex: function(obj)
@@ -102,7 +99,7 @@ module.exports = View.extend({
     //  Which calls select on the model selected... So calling selectMe gets select called too
     selectMe : function()
     {
-        this.parent.parent.select(this.model);
+        this.parent.select(this.model);
     },
     select : function()
     {

@@ -50,9 +50,6 @@ module.exports = View.extend({
 
         if(this.parent && this.parent.update)
             this.parent.update();
-        
-        if(this.parent && this.parent.parent && this.parent.parent.update)
-            this.parent.parent.update();
     },
     removeParameter: function()
     {

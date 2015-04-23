@@ -77,7 +77,6 @@ class StochKitModelWrapper(db.Model):
             products = dict([(sModel.getSpecies(product[0]), product[1]) for product in inProducts.items()])
             
             if(reaction['type'] == 'custom'):
-                print 'equation', reaction
                 sModel.addReaction(stochss.model.Reaction(reaction['name'], reactants, products, reaction['equation'], False, None, None))
             else:
                 sModel.addReaction(stochss.model.Reaction(reaction['name'], reactants, products, None, True, sModel.getParameter(reaction['rate']), None))
@@ -240,72 +239,72 @@ class ModelManager():
                 
         return jsonModel
 
-    @staticmethod
-    def createModel(handler, model, rename = None):
-        userID = None
+    #@staticmethod
+    #def createModel(handler, model, rename = None):
+    #    userID = None
 
         # Set up defaults
-        if 'isSpatial' not in model or 'spatial' not in model:
-            model['isSpatial'] = False
-            model['spatial'] = { 'subdomains' : [],
-                                 'mesh_wrapper_id' : None,
-                                 'species_diffusion_coefficients' : {} ,
-                                 'species_subdomain_assignments' : {} ,
-                                 'reactions_subdomain_assignments' : {},
-                                 'initial_conditions' : [] }
+    #    if 'isSpatial' not in model or 'spatial' not in model:
+    #        model['isSpatial'] = False
+    #        model['spatial'] = { 'subdomains' : [],
+    #                             'mesh_wrapper_id' : None,
+    #                             'species_diffusion_coefficients' : {} ,
+    #                             'species_subdomain_assignments' : {} ,
+    #                             'reactions_subdomain_assignments' : {},
+    #                             'initial_conditions' : [] }
 
-        if 'is_public' not in model:
-            model['is_public'] = False
+    #    if 'is_public' not in model:
+    #        model['is_public'] = False
 
-        if 'user_id' in model:
-            userID = model['user_id']
-        else:
-            userID = handler.user.user_id()
+    #    if 'user_id' in model:
+    #        userID = model['user_id']
+    #    else:
+    #        userID = handler.user.user_id()
 
         # Make sure name isn't taken, or build one that isn't taken
-        if "name" in model:
-            tryName = model["name"]
-            if tryName in [x.name for x in db.Query(StochKitModelWrapper).filter('user_id =', userID).run()]:
-                if rename:
-                    i = 1
-                    tryName = '{0}_{1}'.format(model["name"], i)
+    #    if "name" in model:
+    #        tryName = model["name"]
+    #        if tryName in [x.name for x in db.Query(StochKitModelWrapper).filter('user_id =', userID).run()]:
+    #            if rename:
+    #                i = 1
+    #                tryName = '{0}_{1}'.format(model["name"], i)
 
-                    while tryName in [x.name for x in db.Query(StochKitModelWrapper).filter('user_id =', userID).run()]:
-                        i = i + 1
-                        tryName = '{0}_{1}'.format(model["name"], i)
-                else:
-                    return None
+    #                while tryName in [x.name for x in db.Query(StochKitModelWrapper).filter('user_id =', userID).run()]:
+    #                    i = i + 1
+    #                    tryName = '{0}_{1}'.format(model["name"], i)
+    #            else:
+    #                return None
 
-        modelWrap = StochKitModelWrapper()
+    #    modelWrap = StochKitModelWrapper()
 
-        if rename:
-            model["name"] = tryName
+    #    if rename:
+    #        model["name"] = tryName
 
-        if "name" in model:
-            name = model["name"]
-        else:
-            raise Exception("Why is this code here? modeleditor.py 185")
+    #    if "name" in model:
+    #        name = model["name"]
+    #    else:
+    #        raise Exception("Why is this code here? modeleditor.py 185")
             #name = "tmpname"
 
-        if 'isSpatial' in model:
-            modelWrap.isSpatial = model['isSpatial']
+    #    if 'isSpatial' in model:
+    #        modelWrap.isSpatial = model['isSpatial']
 
-        if 'spatial' in model:
-            modelWrap.spatial = model['spatial']
+    #    if 'spatial' in model:
+    #        modelWrap.spatial = model['spatial']
 
-        modelWrap.name = name
+    #    modelWrap.name = name
 
-        modelWrap.species = model["species"]
-        modelWrap.parameters = model["parameters"]
-        modelWrap.reactions = model["reactions"]
-        modelWrap.type = model["type"]
-        modelWrap.spatial = model["spatial"]
-        modelWrap.isSpatial = model["isSpatial"]
-        modelWrap.is_public = model["is_public"]
-        modelWrap.units = model["units"]
-        modelWrap.user_id = userID
+    #    modelWrap.species = model["species"]
+    #    modelWrap.parameters = model["parameters"]
+    #    modelWrap.reactions = model["reactions"]
+    #    modelWrap.type = model["type"]
+    #    modelWrap.spatial = model["spatial"]
+    #    modelWrap.isSpatial = model["isSpatial"]
+    #    modelWrap.is_public = model["is_public"]
+    #    modelWrap.units = model["units"]
+    #    modelWrap.user_id = userID
 
-        return modelWrap.put().id()
+    #    return modelWrap.put().id()
 
     @staticmethod
     def deleteModel(handler, model_id):
@@ -320,6 +319,8 @@ class ModelManager():
 
     @staticmethod
     def updateModel(handler, jsonModel):
+        createModel = False
+
         if "id" in jsonModel:
             modelWrap = StochKitModelWrapper.get_by_id(jsonModel["id"])
 
@@ -328,6 +329,8 @@ class ModelManager():
             if userID != modelWrap.user_id:
                 raise "Error accessing model {0} with user id {1} (model owned by {2})".format(jsonModel["id"], userID, modelWrap.user_id)
         else:
+            createModel = True
+
             modelWrap = StochKitModelWrapper()
 
             if 'isSpatial' not in jsonModel or 'spatial' not in jsonModel:
@@ -353,6 +356,42 @@ class ModelManager():
 
         if 'spatial' in jsonModel:
             modelWrap.spatial = jsonModel['spatial']
+
+            # Make sure we have access to a copy of the mesh
+            meshDbCurrent = mesheditor.MeshWrapper.get_by_id(modelWrap.spatial["mesh_wrapper_id"])
+
+            if createModel:
+                if meshDbCurrent.userId != userID:
+                    meshDb = mesheditor.MeshWrapper()
+
+                    meshDb.userId = userID
+
+
+                    names = [x.name for x in db.Query(mesheditor.MeshWrapper).filter('userId =', handler.user.user_id()).run()]
+                    
+                    tmpName = meshDbCurrent.name
+                    i = 0
+                    while tmpName in names:
+                        tmpName = meshDbCurrent.name + '_' + str(i)
+                        i += 1
+
+                    meshDb.name = tmpName
+                    meshDb.description = meshDbCurrent.description
+                    meshDb.meshFileId = meshDbCurrent.meshFileId
+                    meshDb.subdomains = meshDbCurrent.subdomains
+                    meshDb.uniqueSubdomains = meshDbCurrent.uniqueSubdomains
+                    meshDb.undeletable = meshDbCurrent.undeletable
+                    meshDb.ghost = False
+                    
+                    meshDb.put()
+
+                    modelWrap.spatial["mesh_wrapper_id"] = meshDb.key().id()
+                else:
+                    meshDbCurrent.ghost = False
+                    meshDbCurrent.put()
+
+            # This is maintained here!
+            modelWrap.subdomains = meshDbCurrent.uniqueSubdomains
 
         if 'is_public' not in jsonModel:
             jsonModel['is_public'] = False
@@ -528,6 +567,11 @@ class PublicModelPage(BaseHandler):
             modelDb.is_public = True
             modelDb.put()
 
+            if modelDb.isSpatial:
+                meshDb = mesheditor.MeshWrapper.get_by_id(modelDb.spatial["mesh_wrapper_id"])
+                meshDb.undeletable = True
+                meshDb.put()
+
         szip.close()
 
 class ImportFromXMLPage(BaseHandler):
@@ -559,25 +603,37 @@ class ModelEditorPage(BaseHandler):
             modelId = int(self.request.get('id'));
 
             model = StochKitModelWrapper.get_by_id(modelId)
+            
+            try:
+                if model.zipFileName:
+                    if os.path.exists(model.zipFileName):
+                        os.remove(model.zipFileName)
 
-            if not model.zipFileName:
                 szip = exportimport.SuperZip(os.path.abspath(os.path.dirname(__file__) + '/../static/tmp/'), preferredName = model.name + "_")
                 
                 model.zipFileName = szip.getFileName()
-
+                
                 szip.addStochKitModel(model)
                 
                 szip.close()
-
+                
                 # Save the updated status
                 model.put()
-            
-            relpath = '/' + os.path.relpath(model.zipFileName, os.path.abspath(os.path.dirname(__file__) + '/../'))
+                
+                relpath = '/' + os.path.relpath(model.zipFileName, os.path.abspath(os.path.dirname(__file__) + '/../'))
+                
+                self.response.headers['Content-Type'] = 'application/json'
+                self.response.write(json.dumps({ 'status' : True,
+                                                 'msg' : 'Model prepared',
+                                                 'url' : relpath }))
+            except Exception as e:
+                traceback.print_exc()
+                result = {}
+                result['status'] = False
+                result['msg'] = 'Error: {0}'.format(e)
+                self.response.headers['Content-Type'] = 'application/json'
+                self.response.write(json.dumps(result))
 
-            self.response.headers['Content-Type'] = 'application/json'
-            self.response.write(json.dumps({ 'status' : True,
-                                             'msg' : 'Model prepared',
-                                             'url' : relpath }))
             return
 
         mesheditor.setupMeshes(self)

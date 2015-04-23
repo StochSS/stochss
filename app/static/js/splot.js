@@ -9,7 +9,7 @@ Splot.Plot = Backbone.View.extend(
 
             this.$el = this.attributes.selector;
 
-            $("<hr />Trajectory select:<br />").appendTo( this.$el );
+            $("<hr />" + this.attributes.title + ":<br />").appendTo( this.$el );
             this.controlDiv = $( "<div />" ).appendTo( this.$el );
             this.renderDiv = $( "<div />" ).appendTo( this.$el );
             this.hiddenDiv = $( "<div />" ).appendTo( this.$el );
@@ -180,9 +180,9 @@ Splot.Plot = Backbone.View.extend(
     }
 );
 
-Splot.plot = function( selector, data, ylabel )
+Splot.plot = function( title, selector, data, ylabel )
 {
-    var plot = new Splot.Plot( { selector : selector, data : data, ylabel : ylabel } );
+    var plot = new Splot.Plot( { title : title, selector : selector, data : data, ylabel : ylabel } );
 
     return plot;
 }
