@@ -37,7 +37,7 @@ module.exports = View.extend({
     selectSelf: function()
     {
         // There is a CollectionView parent here that must be navigated
-        this.parent.parent.select(this.model);
+        this.parent.select(this.model);
     },
     select : function()
     {

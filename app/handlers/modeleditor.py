@@ -603,25 +603,37 @@ class ModelEditorPage(BaseHandler):
             modelId = int(self.request.get('id'));
 
             model = StochKitModelWrapper.get_by_id(modelId)
+            
+            try:
+                if model.zipFileName:
+                    if os.path.exists(model.zipFileName):
+                        os.remove(model.zipFileName)
 
-            if not model.zipFileName:
                 szip = exportimport.SuperZip(os.path.abspath(os.path.dirname(__file__) + '/../static/tmp/'), preferredName = model.name + "_")
                 
                 model.zipFileName = szip.getFileName()
-
+                
                 szip.addStochKitModel(model)
                 
                 szip.close()
-
+                
                 # Save the updated status
                 model.put()
-            
-            relpath = '/' + os.path.relpath(model.zipFileName, os.path.abspath(os.path.dirname(__file__) + '/../'))
+                
+                relpath = '/' + os.path.relpath(model.zipFileName, os.path.abspath(os.path.dirname(__file__) + '/../'))
+                
+                self.response.headers['Content-Type'] = 'application/json'
+                self.response.write(json.dumps({ 'status' : True,
+                                                 'msg' : 'Model prepared',
+                                                 'url' : relpath }))
+            except Exception as e:
+                traceback.print_exc()
+                result = {}
+                result['status'] = False
+                result['msg'] = 'Error: {0}'.format(e)
+                self.response.headers['Content-Type'] = 'application/json'
+                self.response.write(json.dumps(result))
 
-            self.response.headers['Content-Type'] = 'application/json'
-            self.response.write(json.dumps({ 'status' : True,
-                                             'msg' : 'Model prepared',
-                                             'url' : relpath }))
             return
 
         mesheditor.setupMeshes(self)

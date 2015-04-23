@@ -87,14 +87,11 @@ module.exports = View.extend({
 
         if(this.parent && this.parent.update)
             this.parent.update();
-
-        if(this.parent && this.parent.parent && this.parent.parent.update)
-            this.parent.parent.update();
     },
     selectSelf: function()
     {
         // There is a CollectionView parent here that must be navigated
-        this.parent.parent.select(this.model);
+        this.parent.select(this.model);
     },
     deSelect : function()
     {
