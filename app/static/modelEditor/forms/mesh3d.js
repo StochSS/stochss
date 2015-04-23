@@ -69,26 +69,6 @@ module.exports = View.extend({
 
     },
 
-    generateSolidVertexMesh : function(x)
-    {
-    var sdmesh = this.model.mesh.subdomains;
-    var vtx = this.model.mesh.threeJsMesh.vertices;
-    var faces = this.model.mesh.threeJsMesh.faces;
-    var vtxlist = [];
-    var vtxlistidx = 0;
-    
-    for(var v=0; v<(vtx.length/3); v++)
-    {
-        // Anything lesser than or equal to the value will be displayed
-        if(vtx[v*3] < x)
-            sdmesh[v] = 3;
-    }
-    this.model.mesh.subdomains = sdmesh;
-    this.generateSolidMesh(3);
-    
-    },
-
-
     highLightSubdomains : function(subdomains)
     {
         var subdomainLabels = this.model.mesh.subdomains;
@@ -108,8 +88,6 @@ module.exports = View.extend({
             }
         }
         
-        
-        this.generateSolidVertexMesh(0.2);
         this.meshDataPreview();
         this.redrawColors(colors);
     },
@@ -142,9 +120,9 @@ module.exports = View.extend({
         
         $( this.queryByHook('rotateUp_btn') ).click( _.bind(function() { this.controls.rotateUp(0.5);}, this) );
         $( this.queryByHook('rotateDown_btn') ).click( _.bind(function() { this.controls.rotateUp(-0.5);}, this) );
-        $( this.queryByHook('rotateRight_btn') ).click( _.bind(function() { this.controls.rotateLeft(0.5);}, this) );
-        $( this.queryByHook('rotateLeft_btn') ).click( _.bind(function() { this.controls.rotateLeft(-0.5);}, this) );
-        $( this.queryByHook('reset_btn') ).click( _.bind(function() { this.controls.reset();this.camera.position.z = 1.5; }, this) ); 
+        $( this.queryByHook('rotateRight_btn') ).click( _.bind(function() { this.controls.rotateLeft(2.0);}, this) );
+        $( this.queryByHook('rotateLeft_btn') ).click( _.bind(function() { this.controls.rotateLeft(2.0);}, this) );
+        $( this.queryByHook('reset_btn') ).click( _.bind(function() { this.controls.reset(); this.camera.position.z = this.mesh.geometry.boundingSphere.radius * 2;; }, this) ); 
     },
 
     createText : function(letter, x, y, z){
@@ -277,8 +255,7 @@ module.exports = View.extend({
             controls.noZoom = true;
             // var controls = new THREE.OrbitControls( camera );
             //controls.addEventListener( 'change', render );
-            
-            camera.position.z = 1.5;
+        
             
             this.camera = camera;
             this.renderer = renderer;
@@ -307,6 +284,7 @@ module.exports = View.extend({
         scene.add(mesh);
 
         this.mesh = mesh;
+        this.camera.position.z = this.mesh.geometry.boundingSphere.radius * 2;
         
         delete loader;
         delete material;            

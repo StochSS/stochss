@@ -374,11 +374,14 @@ Spatial.Controller = Backbone.View.extend(
                     wireframe: this.wireFlag
             } );
             
+
+
             var model = loader.parse(data['mesh']);
             this.model = model;
             mesh = new THREE.Mesh(this.model.geometry, material);
             this.mesh = mesh;
             var radius = this.mesh.geometry.boundingSphere.radius;
+
 
             /* 
             GRID
@@ -455,15 +458,18 @@ Spatial.Controller = Backbone.View.extend(
         hideMesh: function(){
             // To update uniforms
             console.log("hideMesh: function()");
-            var val = parseFloat( $("#planeXSelect").val() ) ;
 
-            this.mesh.material.uniforms.xval.value = val;
+            if(planeX.visible){
+                var val = parseFloat( $("#planeXSelect").val() ) ;
+                this.mesh.material.uniforms.xval.value = val;}
             
-            val = parseFloat( $("#planeYSelect").val() );
-            this.mesh.material.uniforms.yval.value = val;
+            if(planeY.visible){
+            val = parseFloat( $("#planeYSelect").val()  );
+            this.mesh.material.uniforms.yval.value = val;}
             
-            val = parseFloat( $("#planeZSelect").val() );
-            this.mesh.material.uniforms.zval.value = val;
+            if(planeZ.visible){
+            val = parseFloat( $("#planeZSelect").val()  );
+            this.mesh.material.uniforms.zval.value = val;}
 
         },
 
@@ -859,15 +865,15 @@ Spatial.Controller = Backbone.View.extend(
                     var withWire = $("#withWire");
                     withWire.click(_.bind(function(){
                     console.log('withWire.click');
-                    this.wireFlag = true;
-                    this.acquireNewData();
+                    this.mesh.material.wireframe = true;
+                    this.mesh.material.needsUpdate = true;
                     }, this));
 
                     var withoutWire = $("#withoutWire");
                     withoutWire.click(_.bind(function(){
-                    console.log('withoutWire.click');  
-                    this.wireFlag = false;
-                    this.acquireNewData();
+                    console.log('withoutWire.click'); 
+                    this.mesh.material.wireframe = false;
+                    this.mesh.material.needsUpdate = true;
                     }, this));
 
                     var checkbox = $( "#planeXCheck" );
@@ -878,14 +884,16 @@ Spatial.Controller = Backbone.View.extend(
                         if($("#planeXCheck").is(':checked'))
                         {
                             planeX.visible = true; planeXEdges.visible = true; 
+                            this.hideMesh();
                         }
 
                         else{
-                            planeX.visible = false; planeXEdges.visible = false;
                             $( "#planeXSelect" ).val( $( "#planeXSelect" )[0].min ) ;
+                            this.hideMesh();
+                            planeX.visible = false; planeXEdges.visible = false;
                         }
                         planeX.position.x = $( "#planeXSelect" ).val();
-                        this.hideMesh();
+                        
 
                     }, this));
 
@@ -896,15 +904,16 @@ Spatial.Controller = Backbone.View.extend(
                         if($("#planeYCheck").is(':checked'))
                         {
                             planeY.visible = true; planeYEdges.visible = true;
-                           
+                            this.hideMesh();
                         }
 
                         else{
-                            planeY.visible = false; planeYEdges.visible = false;
                             $( "#planeYSelect" ).val( $( "#planeYSelect" )[0].min ) ;
+                            this.hideMesh();                            
+                            planeY.visible = false; planeYEdges.visible = false;
                         }
                         planeY.position.z = $( "#planeYSelect" ).val();
-                        this.hideMesh();
+                        
 
                     }, this));
 
@@ -915,15 +924,16 @@ Spatial.Controller = Backbone.View.extend(
                         if($("#planeZCheck").is(':checked'))
                         {
                             planeZ.visible = true; planeZEdges.visible = true;
-                           
+                           this.hideMesh();
                         }
 
                         else{
+                             $( "#planeZSelect" ).val( $( "#planeZSelect" )[0].min ) ;
+                            this.hideMesh();
                             planeZ.visible = false; planeZEdges.visible = false;
-                            $( "#planeZSelect" ).val( $( "#planeZSelect" )[0].min ) ;
                         }
                         planeZ.position.y = $( "#planeZSelect" ).val();
-                        this.hideMesh();
+                        
  
                     }, this));
 

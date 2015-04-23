@@ -373,11 +373,14 @@ Spatial.Controller = Backbone.View.extend(
                     wireframe: this.wireFlag
             } );
             
+
+
             var model = loader.parse(data['mesh']);
             this.model = model;
             mesh = new THREE.Mesh(this.model.geometry, material);
             this.mesh = mesh;
             var radius = this.mesh.geometry.boundingSphere.radius;
+
 
             /* 
             GRID
@@ -859,14 +862,14 @@ Spatial.Controller = Backbone.View.extend(
                     withWire.click(_.bind(function(){
                     console.log('withWire.click');
                     this.wireFlag = true;
-                    this.acquireNewData();
+                    
                     }, this));
 
                     var withoutWire = $("#withoutWire");
                     withoutWire.click(_.bind(function(){
                     console.log('withoutWire.click');  
                     this.wireFlag = false;
-                    this.acquireNewData();
+                    
                     }, this));
 
                     var checkbox = $( "#planeXCheck" );
