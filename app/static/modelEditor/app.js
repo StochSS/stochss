@@ -1,7 +1,6 @@
 /*global app, me, $*/
 var $ = require('jquery');
 var _ = require('underscore');
-var logger = require('andlog');
 var config = require('clientconfig');
 
 //var Router = require('./router');
