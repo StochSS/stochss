@@ -23,7 +23,16 @@ module.exports = View.extend({
         }
     },
     events : {
-        "click [data-hook='convertToPopulationButton']" : "convertToPopulation"
+        "click [data-hook='convertToPopulationButton']" : "convertToPopulation",
+	"click [data-hook='doneSelectButton']" : "doneSelect",
+    },
+    doneSelect : function()
+    {
+        if(!$( this.el ).find('[data-hook="meshDescriptionAccordion"] .accordion-body').first().hasClass('in'))
+            $( this.el ).find('[data-hook="meshDescriptionAccordion"] a').first()[0].click();
+
+        if($( this.el ).find('[data-hook="meshLibraryAccordion"] .accordion-body').first().hasClass('in'))
+            $( this.el ).find('[data-hook="meshLibraryAccordion"] a').first()[0].click();
     },
     updateValid : function()
     {
@@ -134,9 +143,8 @@ module.exports = View.extend({
         else if(this.state == 'converting')
         {
             $( this.el ).find( '[data-hook="convertToPopulation"]' ).show();
-            $( '[data-hook="convertToPopulationLink"]' ).show();
             $( this.el ).find( '[data-hook="editor"]' ).hide();
-            $( '[data-hook="convertToPopulationLink"]' ).show()
+            $( '[data-hook="convertToPopulationLink"]' ).hide()
             $( '[data-hook="convertToSpatialLink"]' ).hide();
             $( this.el ).find( '.spatial' ).hide();
         }

@@ -407,7 +407,6 @@ class SuperZip:
                     subdomainsData.append(int(float(subdomain)))
 
             names = [x.name for x in db.Query(mesheditor.MeshWrapper).filter('userId =', handler.user.user_id()).run()]
-
             tmpName = os.path.basename(modelj["meshFile"]).split(".")[0]
             i = 0
             while tmpName in names:
@@ -422,7 +421,7 @@ class SuperZip:
             meshDb.subdomains = subdomainsData
             meshDb.uniqueSubdomains = list(set(meshDb.subdomains))
             meshDb.undeletable = False
-            meshDb.ghost = True
+            meshDb.ghost = False
         
             meshDb.put()
 

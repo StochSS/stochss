@@ -10,7 +10,8 @@ module.exports = Model.extend({
         threeJsMesh : 'object',
         subdomains : 'object',
         uniqueSubdomains : 'object',
-        undeletable : 'boolean'
+        undeletable : { type : 'boolean', default : false },
+	ghost : { type : 'boolean', default : false }
     },
     derived: {
         deletable : {

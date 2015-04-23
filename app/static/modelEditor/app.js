@@ -1,7 +1,6 @@
 /*global app, me, $*/
 var $ = require('jquery');
 var _ = require('underscore');
-var logger = require('andlog');
 var config = require('clientconfig');
 
 //var Router = require('./router');
@@ -311,7 +310,7 @@ var PrimaryView = View.extend({
                   url : '/modeleditor',
                   data : { reqType : 'exportToZip', id : this.modelSelector.selected.id },
                   dataType : 'json',
-                  success : _.bind(this.forwardToFile)
+                  success : _.bind(this.forwardToFile, this)
                 } )
     },
     exportModelAsXML: function()
@@ -320,12 +319,23 @@ var PrimaryView = View.extend({
                   url : '/modeleditor',
                   data : { reqType : 'exportToXML', id : this.modelSelector.selected.id },
                   dataType : 'json',
-                  success : _.bind(this.forwardToFile)
+                  success : _.bind(this.forwardToFile, this)
                 } )
     },
     forwardToFile: function(data)
     {
-        window.location = data.url;
+	if(data.url)
+	{
+	    window.location = data.url;
+	}
+	else
+	{
+            var saveMessageDom = $( this.queryByHook('saveMessage') );
+
+            saveMessageDom.removeClass( "alert-success" );
+            saveMessageDom.addClass( "alert-error" );
+            saveMessageDom.text( data.msg );	    
+	}
     },
     render: function()
     {

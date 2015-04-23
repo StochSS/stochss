@@ -1,7 +1,7 @@
 var form = $('#approve-user-form');
 var emailInput = $('#email-input')[0];
 
-$('#users').on('click', 'button.table-action-button', function(e) {
+$('.users').on('click', 'button.table-action-button', function(e) {
     e.preventDefault();
     
     var clickedButton = $(this);
@@ -30,17 +30,17 @@ $('#users').on('click', 'button.table-action-button', function(e) {
         success: function(response) {
             var tableBody = clickedButton.closest('tbody');            
             if (response["success"]) {
-                if (action == "approve1") {
+                if (action == "approve") {
                     clickedButton.data('action', 'revoke');
                     clickedButton.text('Revoke Permissions');
                     clickedButton.removeClass('btn-success');
                     clickedButton.addClass('btn-danger');
                 } else if (action == "revoke") {
-                    clickedButton.data('action', 'approve1');
+                    clickedButton.data('action', 'approve');
                     clickedButton.text('Activate Account');
                     clickedButton.removeClass('btn-danger');
                     clickedButton.addClass('btn-success');
-                } else if (action == "delete") {
+                } else if (action == "delete" || action == "revoke_preapproved") {
                     tableRow.remove();
                 } else if (action == "reset") {
                     alert('The user\'s password has been reset to:\n' + response["password"]);

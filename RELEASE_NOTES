@@ -1,5 +1,9 @@
 StochSS - Stochastic Simulation Service: Release Notes
 
+1.5.1
+=============================
+- Bugfix release
+
 1.5.0
 =============================
 - Launching VMs is done asynchronously

@@ -18,6 +18,7 @@ import subprocess
 import tempfile
 import time
 import logging
+import traceback
 from backend.backendservice import backendservices
 
 def int_or_float(s):
@@ -39,25 +40,23 @@ class StochOptimModel(stochss.model.Model):
         if model.units.lower() == "concentration":
             msgs.append("StochOptimModel cannot be based on a concentration model")
             return False, msgs
-
-        self.annotation = model.annotation
         
         # Species
         # Any species can be converted to StochOptim format
-        self.listOfSpecies = copy.deepcopy(model.listOfSpecies)
+        self.species = copy.deepcopy(model.species)
                 
         # Parameters
         # Any parameter can be converted to StochOptim format
-        self.listOfParameters = copy.deepcopy(model.listOfParameters)
+        self.parameters = copy.deepcopy(model.parameters)
 
         exprParameters = []
-        for pname in self.listOfParameters:
+        for pname in self.parameters:
             if hasattr(self.listOfParameters[pname], 'expression'):
                 exprParameters.append(pname)
 
             #self.listOfParameters[pname].evaluate()
         if(len(exprParameters) > 0):
-            msgs.append(" * Parameter(s) [{0}] are expressed in terms of other variables (not valid for StochOptim)".format(", ".join(exprParameters)))
+            msgs.append(" * Parameter(s) [{0}] must be simple numbers".format(", ".join(exprParameters)))
 
         success = True
         # Reactions
@@ -238,36 +237,46 @@ class StochOptimPage(BaseHandler):
                                                 "msg" : "Job name must be unique"}))
                 return
 
-            if data["resource"] == "local":
-                # This function takes full responsibility for writing responses out to the world. This is probably a bad design mechanism
-                self.runLocal(data)
-                return
-            else:
-                backend_services = backend.backendservice.backendservices()
-                compute_check_params = {
-                    "infrastructure": "ec2",
-                    "credentials": self.user_data.getCredentials(),
-                    "key_prefix": self.user.user_id()
-                }
-                if self.user_data.valid_credentials and backend_services.isOneOrMoreComputeNodesRunning(compute_check_params):
-                    result = self.runCloud(data)
-                    logging.info("Run cloud finished with result: {0}, generating JSON response".format(result))
-                    if not result["success"]:
-                        return self.response.write(json.dumps({
-                            "status": False,
-                            "msg": result["msg"]
-                        }))
+            try:
+                if data["resource"] == "local":
+                    # This function takes full responsibility for writing responses out to the world. This is probably a bad design mechanism
+                    self.runLocal(data)
+                    return
+                else:
+                    backend_services = backend.backendservice.backendservices()
+                    compute_check_params = {
+                        "infrastructure": "ec2",
+                        "credentials": self.user_data.getCredentials(),
+                        "key_prefix": self.user.user_id()
+                    }
+                    if self.user_data.valid_credentials and backend_services.isOneOrMoreComputeNodesRunning(compute_check_params):
+                        result = self.runCloud(data)
+                        logging.info("Run cloud finished with result: {0}, generating JSON response".format(result))
+                        if not result["success"]:
+                            return self.response.write(json.dumps({
+                                "status": False,
+                                "msg": result["msg"]
+                            }))
+                        else:
+                            return self.response.write(json.dumps({
+                                "status": True,
+                                "msg": "Job launched",
+                                "id": result["job"].key().id()
+                            }))
                     else:
                         return self.response.write(json.dumps({
-                            "status": True,
-                            "msg": "Job launched",
-                            "id": result["job"].key().id()
+                            'status': False,
+                            'msg': 'You must have at least one active compute node to run in the cloud.'
                         }))
-                else:
-                    return self.response.write(json.dumps({
-                        'status': False,
-                        'msg': 'You must have at least one active compute node to run in the cloud.'
-                    }))
+            except Exception as e:
+                traceback.print_exc()
+                result = {}
+                result['status'] = False
+                result['msg'] = 'Error: {0}'.format(e)
+                self.response.headers['Content-Type'] = 'application/json'
+                self.response.write(json.dumps(result))
+                return
+
         elif reqType == 'stopJob':
             jobID = json.loads(self.request.get('id'))
 
