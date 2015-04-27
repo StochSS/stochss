@@ -6,7 +6,7 @@ if [ "$osname" != 'Linux' ]; then
     exit
 fi
 
-help_message="Usage: $0 [--run] [--install]"
+help_message="Usage: $0 [--run] [--install] [--run_silent]"
 
 mode="run"
 if [ $# -ge 2 ]; then
@@ -18,6 +18,8 @@ elif [ $# -eq 1 ]; then
         mode="run"
     elif [ "$1" = "--install" ]; then
         mode="install"
+    elif [ "$1" = "--run_silent" ]; then
+        mode="run_silent"
     else
         echo "Error: Invalid argument '$1'!"
         echo "$help_message"
@@ -485,5 +487,9 @@ if [ "$mode" = "run" ]; then
     echo "Running StochSS..."
     export PATH=$PATH:$STOCHKIT_HOME
     exec python "$STOCHSS_HOME/launchapp.py" $0
+elif [ "$mode" = "run_silent" ]; then
+    echo "Running StochSS..."
+    export PATH=$PATH:$STOCHKIT_HOME
+    exec python "$STOCHSS_HOME/launchapp.py" $0 --run_silent
 fi
 
