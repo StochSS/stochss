@@ -112,7 +112,8 @@ class StochKitJobWrapper(db.Model):
             service.deleteTasks([(stochkit_job.celery_pid,stochkit_job.pid)])
             
             try:
-                user_data = db.GqlQuery("SELECT * FROM UserData WHERE ec2_access_key = :1 AND ec2_secret_key = :2", db_credentials['EC2_ACCESS_KEY'], db_credentials['EC2_SECRET_KEY']).get()
+                user_data = db.GqlQuery("SELECT * FROM UserData WHERE ec2_access_key = :1 AND ec2_secret_key = :2",
+                                        db_credentials['EC2_ACCESS_KEY'], db_credentials['EC2_SECRET_KEY']).get()
                 
                 bucketname = user_data.S3_bucket_name
                 logging.info(bucketname)
@@ -124,7 +125,8 @@ class StochKitJobWrapper(db.Model):
                 logging.info('delete the output tar file output/{1}.tar in bucket {0}'.format(bucketname, stochkit_job.pid))
                 
                 #delete dynamodb entries
-                dynamo=boto.connect_dynamodb(aws_access_key_id=os.environ["AWS_ACCESS_KEY_ID"], aws_secret_access_key=os.environ["AWS_SECRET_ACCESS_KEY"])
+                dynamo=boto.connect_dynamodb(aws_access_key_id=os.environ["AWS_ACCESS_KEY_ID"],
+                                             aws_secret_access_key=os.environ["AWS_SECRET_ACCESS_KEY"])
                 table = dynamo.get_table("stochss_cost_analysis")
                 results = table.scan(scan_filter={'uuid' :condition.EQ(stochkit_job.pid)})
                 for result in results:

@@ -18,7 +18,7 @@ import re
 import pprint
 import time
 
-from backend.common.config import AWSConfig, AgentTypes
+from backend.common.config import AWSConfig, AgentTypes, AgentConfig
 from backend.databases.dynamo_db import DynamoDB
 
 class CredentialsPage(BaseHandler):
@@ -237,8 +237,40 @@ class CredentialsPage(BaseHandler):
         
         return result
 
+    def prepare_flex_cloud(self, user_id, credentials, head_node, flex_cloud_machine_info):
+        logging.info('head_node = \n{0}'.format(pprint.pformat(head_node)))
+        params = {
+            'infrastructure': 'flex',
+            'flex_cloud_machine_info': flex_cloud_machine_info,
+            'key_prefix': '', # no prefix
+            'keyname': '',
+            'email': [user_id],
+            'credentials': credentials,
+            'head_node': head_node
+        }
 
-    def getContext(self,user_id):
+        service = backendservices(infrastructure=AgentTypes.FLEX)
+
+        if not service.isOneOrMoreComputeNodesRunning(params):
+            if head_node is None:
+                return {'status': 'Failure',
+                        'msg': "At least one head node needs to be ready."}
+            else:
+                params['head_node'] = head_node
+
+        elif head_node:
+            params['vms'] = [head_node]
+
+        res, msg = service.prepare_flex_cloud_machines(params)
+        if res == True:
+            result = {'status': 'Success',
+                      'msg': 'Successfully prepared flex cloud machines.'}
+        else:
+            result = {'status': 'Failure',
+                      'msg': msg}
+        return result
+
+    def getContext(self, user_id):
         params = {}
         credentials =  self.user_data.getCredentials()
 
@@ -246,54 +278,67 @@ class CredentialsPage(BaseHandler):
         logging.info("flex_cloud_machine_info =\n{0}".format(pprint.pformat(flex_cloud_machine_info)))
 
         params['credentials'] = credentials
-        params["infrastructure"] = "ec2"
         
         context = {}
         result = {}
-        
+
+        # EC2
         # Check if the credentials are valid.
+        params["infrastructure"] = "ec2"
+
         if not self.user_data.valid_credentials:
             result = {'status': False,
                       'vm_status': False,
-                      'vm_status_msg': 'Could not determine the status of the VMs: Invalid Credentials.'}
+                      'vm_status_msg': 'Could not determine the status of the VMs: Invalid Credentials!'}
 
             context['vm_names'] = None
             context['valid_credentials']=False
             context['active_vms']=False
 
             fake_credentials = { 'EC2_ACCESS_KEY': '',
-                                 'EC2_SECRET_KEY': '' }
+                                 'EC2_SECRET_KEY': ''}
         else:
             fake_credentials = { 'EC2_ACCESS_KEY': '*' * len(credentials['EC2_ACCESS_KEY']),
-                                 'EC2_SECRET_KEY': '*' * len(credentials['EC2_SECRET_KEY']) }
-            
+                                 'EC2_SECRET_KEY': '*' * len(credentials['EC2_SECRET_KEY'])}
             context['valid_credentials'] = True
-            all_vms = self.get_all_vms(user_id,params)
+
+            all_vms = self.get_all_vms(user_id, params)
+
             if all_vms == None:
-                result = {'status':False,'vm_status':False,'vm_status_msg':'Could not determine the status of the VMs.'}
+                result = {'status': False,
+                          'vm_status': False,
+                          'vm_status_msg': 'Could not determine the status of the VMs.'}
+
                 context = {'vm_names':all_vms}
             else:
                 number_creating = 0
                 number_pending = 0
                 number_running = 0
                 number_failed = 0
-                running_instances={}
+                running_instances = {}
+
                 for vm in all_vms:
-                    if vm != None and vm['state']=='creating': number_creating = number_creating + 1
-                    elif vm != None and vm['state']=='pending': number_pending = number_pending + 1
+                    if vm != None and vm['state']=='creating':
+                        number_creating += 1
+                    elif vm != None and vm['state']=='pending':
+                        number_pending += 1
                     elif vm != None and vm['state']=='running': 
-                        number_running = number_running + 1
+                        number_running += 1
                         instance_type = vm['instance_type']
                         if instance_type not in running_instances:
                             running_instances[instance_type] = 1
                         else:
                             running_instances[instance_type] = running_instances[instance_type] + 1
-                    elif vm != None and vm['state']=='failed': number_failed = number_failed + 1
+                    elif vm != None and vm['state']=='failed':
+                        number_failed += 1
+
                 number_of_vms = len(all_vms)
-                print "number creating = " + str(number_creating)
-                print "number pending = " + str(number_pending)
-                print "number running = " + str(number_running)
-                print "number failed = " + str(number_failed)
+
+                logging.info("number creating = {0}".format(number_creating))
+                logging.info("number pending = {0}".format(number_pending))
+                logging.info("number running = {0}".format(number_running))
+                logging.info("number failed = {0}".format(number_failed))
+
                 context['number_of_vms'] = number_of_vms
                 context['vm_names'] = all_vms
                 context['number_creating'] = number_creating
@@ -301,6 +346,7 @@ class CredentialsPage(BaseHandler):
                 context['number_running'] = number_running
                 context['number_failed'] = number_failed
                 context['running_instances'] = running_instances
+
                 result['status']= True
                 result['credentials_msg'] = 'The EC2 keys have been validated.'
                 if number_running+number_pending+number_creating+number_failed == 0:
@@ -326,7 +372,7 @@ class CredentialsPage(BaseHandler):
         context = dict(result, **context)
         return context
     
-    def get_all_vms(self,user_id,params):
+    def get_all_vms(self, user_id, params):
         """
             
         """
@@ -335,22 +381,24 @@ class CredentialsPage(BaseHandler):
         else:
             try:
                 service = backendservices()
-
                 result = service.describeMachinesFromDB(params)
                 return result
             except:
                 return None
                     
     def start_vms(self, user_id, credentials, head_node, vms_info, active_nodes):
-        key_prefix = user_id
-        group_random_name = key_prefix +"-"+''.join(random.choice(string.ascii_uppercase + string.digits) for x in range(6))
+        key_prefix = AgentConfig.get_agent_key_prefix(AgentTypes.EC2, key_prefix=user_id)
+        group_random_name = AgentConfig.get_random_group_name(prefix=key_prefix)
+
+        logging.debug("key_prefix = {0}".format(key_prefix))
+        logging.debug("group_random_name = {0}".format(group_random_name))
 
         params ={
             "infrastructure": AgentTypes.EC2,
             'group': group_random_name,
             'vms': vms_info,
             'image_id': None,
-            'key_prefix': key_prefix, #key_prefix = user_id
+            'key_prefix': key_prefix,
             'keyname': group_random_name,
             'email': [user_id],
             'credentials': credentials,

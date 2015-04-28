@@ -16,7 +16,7 @@ from backend_handler import VMStateModel
 from databases.dynamo_db import DynamoDB
 
 import common.helper as helper
-from common.config import AgentTypes, JobDatabaseConfig
+from common.config import AgentTypes, JobDatabaseConfig, AgentConfig
 
 
 class backendservices(object):
@@ -26,21 +26,21 @@ class backendservices(object):
     '''
 
     # Class Constants
-    KEYPREFIX = 'stochss'
-    QUEUEHEAD_KEY_TAG = 'queuehead'
-    INFRA_EC2 = AgentTypes.EC2
-    VMSTATUS_IDS = 'ids'
-    STOCHSS_TABLE= 'stochss'
-    COST_ANALYSIS_TABLE = 'stochss_cost_analysis'
+    INFRA_SUPPORTED = [AgentTypes.EC2, AgentTypes.FLEX]
 
-    def __init__(self):
+    def __init__(self, **kwargs):
         '''
-        constructor to set the path of various libraries
+        constructor to set the path of various libraries and infra type
         '''
         sys.path.append(os.path.join(os.path.dirname(__file__), 'lib/boto'))
         sys.path.append(os.path.join(os.path.dirname(__file__), 'lib/celery'))
         sys.path.append(os.path.join(os.path.dirname(__file__),
                                      '/Library/Python/2.7/site-packages/amqp'))
+
+        self.infrastructure = kwargs.get("infrastructure", AgentTypes.EC2)
+        if self.infrastructure not in backendservices.INFRA_SUPPORTED:
+            raise Exception("Infrastructure {0} not supported!".format(self.infrastructure))
+
 
     def executeTask(self, params, agent, access_key, secret_key, task_id=None,
                     instance_type=None, cost_replay=False, database=None):
@@ -243,6 +243,23 @@ class backendservices(object):
                 logging.error("deleteTaskLocal : couldn't kill process. error: %s", str(e))
         logging.info("deleteTaskLocal : exiting method")
 
+    def prepare_flex_cloud_machines(self, params, block=False):
+        logging.info("prepare_flex_cloud_machines : params : \n%s", pprint.pformat(params))
+        try:
+            i = InfrastructureManager(blocking=block)
+
+            res = i.run_instances(params, [])
+
+            logging.info("prepare_flex_cloud_machines : exiting method with result : %s", str(res))
+            return True, None
+
+        except Exception, e:
+            traceback.print_exc()
+            logging.error("prepare_flex_cloud_machines : exiting method with error : {0}".format(str(e)))
+
+            print "prepare_flex_cloud_machines : exiting method with error :", str(e)
+            return False, 'Errors occur in starting machines:' + str(e)
+
 
     def isOneOrMoreComputeNodesRunning(self, params, ins_type=None):  # credentials):
         '''
@@ -250,45 +267,50 @@ class backendservices(object):
         to be able to run a job in the cloud.
         '''
         credentials = params["credentials"]
-        key_prefix = self.KEYPREFIX
-        if "key_prefix" in params:
-            key_prefix = params["key_prefix"]
+
+        key_prefix = AgentConfig.get_agent_key_prefix(agent_type=self.infrastructure,
+                                                      key_prefix=params.get('key_prefix', ''))
+
         try:
-            params = {
-                "infrastructure": self.INFRA_EC2,
+            parameters = {
+                "infrastructure": self.infrastructure,
                 "credentials": credentials,
                 "key_prefix": key_prefix
             }
-            all_vms = self.describeMachines(params)
+
+            if self.infrastructure == AgentTypes.FLEX:
+                parameters['flex_cloud_machine_info'] = params['flex_cloud_machine_info']
+
+            all_vms = self.describeMachines(parameters)
             if all_vms == None:
                 return False
+
             # Just need one running vm
             if ins_type:
                 for vm in all_vms:
                     if vm != None and vm['state'] == 'running' and vm['instance_type'] == ins_type:
                         return True
+
             else:
                 for vm in all_vms:
                     if vm != None and vm['state'] == 'running':
                         return True
+
             return False
+
         except:
             return False
 
     def startMachines(self, params, block=False):
         '''
-        This method instantiates ec2 instances
+        This method instantiates vm instances
         '''
-        logging.info("startMachines : inside method with params : %s", str(params))
+        logging.info("startMachines : inside method with params : \n%s", pprint.pformat(params))
         try:
             # make sure that any keynames we use are prefixed with stochss so that
             #we can do a terminate all based on keyname prefix
-            if "key_prefix" in params:
-                key_prefix = params["key_prefix"]
-                if not key_prefix.startswith(self.KEYPREFIX):
-                    key_prefix = self.KEYPREFIX + key_prefix
-            else:
-                key_prefix = self.KEYPREFIX
+            key_prefix = AgentConfig.get_agent_key_prefix(agent_type=self.infrastructure,
+                                                          key_prefix=params.get('key_prefix', ''))
 
             key_name = params["keyname"]
             if not key_name.startswith(key_prefix):
@@ -337,15 +359,19 @@ class backendservices(object):
             if 'head_node' in params:
                 num += 1
 
-            for _ in range(0, num):
-                vm_status = VMStateModel(state=VMStateModel.STATE_CREATING, infra=infra, access_key=access_key,
+            logging.info('num = {0}'.format(num))
+
+            for _ in xrange(num):
+                vm_state = VMStateModel(state=VMStateModel.STATE_CREATING,
+                                         infra=infra,
+                                         access_key=access_key,
                                          secret_key=secret_key)
-                vm_status.put()
-                ids.append(vm_status.key().id())
+                vm_state.put()
+                ids.append(vm_state.key().id())
 
             params[VMStateModel.IDS] = ids
 
-            res = i.run_instances(params,[])
+            res = i.run_instances(params, [])
             
             # check if dynamodb stochss table exists
             database = DynamoDB(access_key, secret_key)
@@ -374,19 +400,18 @@ class backendservices(object):
 	    that have a keyname prefixed with stochss (all instances created by the backend service)
 	    params must contain credentials key/value
         '''
-        key_prefix = self.KEYPREFIX
-        if "key_prefix" in params and not params["key_prefix"].startswith(key_prefix):
-            key_prefix += params["key_prefix"]
-        elif "key_prefix" in params:
-            key_prefix = params["key_prefix"]
+        key_prefix = AgentConfig.get_agent_key_prefix(agent_type=self.infrastructure,
+                                                      key_prefix=params.get('key_prefix', ''))
         try:
             logging.info("Stopping compute nodes with key_prefix: {0}".format(key_prefix))
             i = InfrastructureManager(blocking=block)
             res = i.terminate_instances(params, key_prefix)
             ret = True
+
         except Exception, e:
             logging.error("Terminate machine failed with error : %s", str(e))
             ret = False
+
         finally:
             # update db
             VMStateModel.terminate_all(params)
@@ -395,27 +420,24 @@ class backendservices(object):
 
     def describeMachines(self, params):
         '''
-        This method gets the status of all the instances of ec2
+        This method gets the status of all the instances
         '''
-        # add calls to the infrastructure manager for getting details of
-        # machines
-        # logging.info("describeMachines : inside method with params : %s", str(params))
+        # add calls to the infrastructure manager for getting details of machines
+        logging.debug("params =\n%s", pprint.pformat(params))
 
-        key_prefix = ""
-        if "key_prefix" in params:
-            key_prefix = params["key_prefix"]
-            if not key_prefix.startswith(self.KEYPREFIX):
-                key_prefix = self.KEYPREFIX + key_prefix
-        else:
-            key_prefix = self.KEYPREFIX
+        key_prefix = AgentConfig.get_agent_key_prefix(agent_type=self.infrastructure,
+                                                      key_prefix=params.get('key_prefix', ''))
+        logging.info('key_prefix = {0}'.format(key_prefix))
+
         params["key_prefix"] = key_prefix
         try:
             i = InfrastructureManager()
             res = i.describe_instances(params, [], key_prefix)
-            logging.info("describeMachines : exiting method with result : %s", str(res))
+            logging.info("result = %s", str(res))
             return res
+
         except Exception, e:
-            logging.error("describeMachines : exiting method with error : %s", str(e))
+            logging.error("error : %s", str(e))
             return None
 
     def describeMachinesFromDB(self, params):

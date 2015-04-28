@@ -4,22 +4,26 @@ from agents.base_agent import AgentRuntimeException
 from utils import utils
 import pickle
 import urllib
+
 import sys
 import os
-sys.path.append(os.path.join(os.path.dirname(__file__), '..',  'lib', 'amqp'))
-sys.path.append(os.path.join(os.path.dirname(__file__), '..',  'lib', 'kombu'))
+
+sys.path.append(os.path.join(os.path.dirname(__file__), '..', 'lib', 'amqp'))
+sys.path.append(os.path.join(os.path.dirname(__file__), '..', 'lib', 'kombu'))
 sys.path.append(os.path.join(os.path.dirname(__file__), '..', 'lib', 'celery'))
 sys.path.append(os.path.join(os.path.dirname(__file__), '..', 'lib', 'billiard'))
 sys.path.append(os.path.join(os.path.dirname(__file__), '..', 'lib', 'anyjson'))
+
 import time
 import logging
 from threading import Timer
 import datetime
+import pprint
 
 from google.appengine.ext import db
 from kombu import Queue, Exchange
 
-from common.config import AgentTypes
+from common.config import AgentTypes, AgentConfig
 import common.helper as helper
 
 __author__ = 'mengyuan, dev'
@@ -28,11 +32,12 @@ __email__ = 'gmy.melissa@gmail.com, dnath@cs.ucsb.edu'
 BACKEND_NAME = 'backendthread'
 BACKEND_URL = 'http://%s' % modules.get_hostname(BACKEND_NAME)
 
-BACKEND_START = BACKEND_URL + '/_ah/start'
-BACKEND_BACKGROUND = BACKEND_URL + '/_ah/background'
-BACKEND_SYN_R_URL = BACKEND_URL + '/backend/synchronizedb'
-BACKEND_MANAGER_R_URL = BACKEND_URL + '/backend/manager'
-BACKEND_QUEUE_R_URL = 'http://%s' % modules.get_hostname('backendqueue') + '/backend/queue'
+BACKEND_START = '{0}/_ah/start'.format(BACKEND_URL)
+BACKEND_BACKGROUND = '{0}/_ah/background'.format(BACKEND_URL)
+BACKEND_SYN_R_URL = '{0}/backend/synchronizedb'.format(BACKEND_URL)
+BACKEND_MANAGER_R_URL = '{0}/backend/manager'.format(BACKEND_URL)
+BACKEND_QUEUE_R_URL = 'http://{0}{1}'.format(modules.get_hostname('backendqueue'),
+                                             '/backend/queue')
 
 INS_TYPES_EC2 = ["t1.micro", "m1.small", "m3.medium", "m3.large", "c3.large", "c3.xlarge"]
 
@@ -41,7 +46,13 @@ class VMStateSyn(db.Model):
     last_syn = db.DateTimeProperty()
 
 
+class VMStateModelException(Exception):
+    pass
+
+
 class VMStateModel(db.Model):
+    SUPPORTED_INFRA = [AgentTypes.EC2]
+
     IDS = 'ids'
     EC2_ACCESS_KEY = 'EC2_ACCESS_KEY'
     EC2_SECRET_KEY = 'EC2_SECRET_KEY'
@@ -92,16 +103,19 @@ class VMStateModel(db.Model):
             entities = VMStateModel.all()
             entities.filter('infra =', infra).filter('access_key =', access_key).filter('secret_key =', secret_key)
             entities.filter('state !=', VMStateModel.STATE_TERMINATED)
+
             all_vms = []
             for e in entities:
-                dict = {
+                vm_dict = {
                     "ins_id": e.ins_id,
                     "instance_type": e.ins_type,
                     "state": e.state,
                     "discription": e.description
                 }
-                all_vms.append(dict)
+                all_vms.append(vm_dict)
+
             return all_vms
+
         except Exception as e:
             logging.error("Error in getting all vms from db! {0}".format(e))
             return None
@@ -152,6 +166,10 @@ class VMStateModel(db.Model):
         Args
             params    a dictionary of parameters, containing at least 'agent' and 'credentials'.
         '''
+        if params['infrastructure'] not in VMStateModel.SUPPORTED_INFRA:
+            logging.info('VMStateModel does not support infra = {0}!'.format(params['infrastructure']))
+            return
+
         try:
             infra, access_key, secret_key = VMStateModel.validate_credentials(params)
             if infra is None:
@@ -167,7 +185,7 @@ class VMStateModel(db.Model):
 
         except Exception as e:
             logging.error("Error in updating 'creating' vms to 'failed' in db! {0}".format(e))
-            
+
     @staticmethod
     def terminate_not_active(params):
         '''
@@ -203,8 +221,6 @@ class VMStateModel(db.Model):
             if infra is None:
                 return
 
-            print "HEY GUYS !!!!!"
-
             entities = VMStateModel.all()
             entities.filter('infra =', infra).filter('access_key =', access_key).filter('secret_key =', secret_key)
             entities.filter('state !=', VMStateModel.STATE_TERMINATED)
@@ -235,6 +251,7 @@ class VMStateModel(db.Model):
             for e in entities:
                 e.res_id = res_id
                 e.put()
+
         except Exception as e:
             logging.error("Error in updating reservation ids in db! {0}".format(e))
 
@@ -247,6 +264,8 @@ class VMStateModel(db.Model):
             ins_ids   a list of instance ids that are going to be set with
             res_id    the reservation id that is based on
         '''
+        logging.info('update_ins_ids: \nparams =\n{0}\nins_ids = {1}\nres_id = {2}'.format(
+                        pprint.pformat(params), ins_ids, res_id))
         try:
             infra, access_key, secret_key = VMStateModel.validate_credentials(params)
             if infra is None:
@@ -257,9 +276,12 @@ class VMStateModel(db.Model):
             entities.filter('res_id =', res_id).filter('state =', VMStateModel.STATE_CREATING)
 
             for (ins_id, e) in zip(ins_ids, entities.run(limit=len(ins_ids))):
+                logging.info('ins_id = {0}'.format(ins_id))
                 e.ins_id = ins_id
                 e.state = VMStateModel.STATE_PENDING
                 e.put()
+            logging.info('Updated ins_ids = {0}'.format(ins_ids))
+
         except Exception as e:
             logging.error("Error in updating instance ids in db! {0}".format(e))
 
@@ -276,6 +298,8 @@ class VMStateModel(db.Model):
             ins_type  a list of instance types that are going to be set with
             local_key the local key name that is corresponding to this set of instance ids
         '''
+        logging.info('\n\nupdate_ips: \nparams =\n{0}\nins_ids = {1}\npub_ips = {2}\npri_ips = {3}\nins_types = {4}\nlocal_key = {5}'.format(
+                        pprint.pformat(params), ins_ids, pub_ips, pri_ips, ins_types, local_key))
         try:
             infra, access_key, secret_key = VMStateModel.validate_credentials(params)
             if infra is None:
@@ -283,16 +307,20 @@ class VMStateModel(db.Model):
 
             if local_key is None:
                 raise Exception('Error: Cannot find local key!')
+
             for (ins_id, pub_ip, pri_ip, ins_type) in zip(ins_ids, pub_ips, pri_ips, ins_types):
-                e = VMStateModel.all().filter('ins_id =', ins_id).filter('infra =', infra).filter('access_key =',
-                                                                                                  access_key).filter(
-                    'secret_key =', secret_key).get()
+
+                e = VMStateModel.all().filter('ins_id =', ins_id).filter('infra =', infra)\
+                                      .filter('access_key =', access_key).filter('secret_key =', secret_key).get()
+
                 e.pub_ip = pub_ip
                 e.pri_ip = pri_ip
                 e.ins_type = ins_type
                 e.local_key = local_key
                 e.put()
+
         except Exception as e:
+            print sys.exc_info()
             logging.error("Error in updating ips in db! {0}".format(e))
 
     @staticmethod
@@ -305,6 +333,8 @@ class VMStateModel(db.Model):
             state     the state that is going to be set to the instances
             description    (optional) the description to the state     
         '''
+        logging.info('set_state:\nins_ids = {1} state = {2}\ndescription =\n{3}'.format(ins_ids, state, description))
+        logging.debug('set_state:\nparams =\n{0}'.format(pprint.pformat(params)))
         try:
             infra, access_key, secret_key = VMStateModel.validate_credentials(params)
             if infra is None:
@@ -319,8 +349,9 @@ class VMStateModel(db.Model):
                 if description is not None:
                     e.description = description
                 e.put()
+
         except Exception as e:
-            logging.error("Error in set state.")
+            logging.error("Error in set_state: {0}".format(str(e)))
 
     @staticmethod
     def validate_credentials(params):
@@ -331,25 +362,22 @@ class VMStateModel(db.Model):
         Return
             A tuple of the form (infrastructure, access key, secret key).
         '''
-        infra = None
-        access_key = None
-        secret_key = None
-        if 'infrastructure' in params:
+        if 'infrastructure' in params and params['infrastructure'] in VMStateModel.SUPPORTED_INFRA:
             infra = params['infrastructure']
         else:
-            raise Exception('VMStateModel ERROR: Infrastructure is not decided.')
+            raise VMStateModelException('Infrastructure is not supported for VMStateModel!')
 
         if 'credentials' in params:
             if 'EC2_ACCESS_KEY' in params['credentials'] and 'EC2_SECRET_KEY' in params['credentials']:
                 access_key = params['credentials']['EC2_ACCESS_KEY']
                 secret_key = params['credentials']['EC2_SECRET_KEY']
             else:
-                raise Exception('VMStateModel ERROR: Cannot get access key or secret.')
+                raise VMStateModelException('Cannot get access key or secret.')
         else:
-            raise Exception('VMStateModel ERROR: No credentials are provided.')
+            raise VMStateModelException('No credentials are provided.')
 
-        if infra is None or access_key is None or secret_key is None:
-            raise Exception('VMStateModel ERROR: Either infrastracture or credetials is none.')
+        if access_key is None or secret_key is None:
+            raise VMStateModelException('Credentials are not given!')
 
         return infra, access_key, secret_key
 
@@ -359,7 +387,7 @@ class VMStateModel(db.Model):
         synchronization the db with the specific agent
         Args
             agent    the agent that is going to be synchronized with
-            credentials    the dictionary containing access_key and secrest_key pair of the agent
+            credentials    the dictionary containing access_key and secret_key pair of the agent
         '''
         logging.info('Start Synchronizing DB...')
         instanceList = agent.describe_instances({'credentials': credentials})
@@ -390,7 +418,7 @@ class VMStateModel(db.Model):
         logging.info('Finished synchronizing DB!')
 
 
-class BackendWorker():
+class BackendWorker(object):
     '''
     BackendWorker does the job of spawning virtual machines on a specific agent and 
     configuring celery workers on those machines.
@@ -400,10 +428,81 @@ class BackendWorker():
     KEYPREFIX = 'stochss'
     QUEUEHEAD_KEY_TAG = 'queuehead'
 
+    def __launch_ec2_queue_head(self, agent, num_vms, parameters):
+        logging.info('About to start a queue head.')
+        parameters["queue_head"] = True
+        requested_key_name = parameters["keyname"]
 
-    def spawn_vms(self, infra, agent, parameters, reservation_id):
+        # get the largest instance_type and let it to be queue head
+        head_node = parameters['head_node']
+        parameters["instance_type"] = head_node["instance_type"]
+        parameters["num_vms"] = 1
+        parameters["shutdown"] = "terminate"
+
+        num_vms = 1
+
+        # Tag queue head key so that it can be differentiated if necessary
+        parameters["keyname"] = AgentConfig.get_queue_head_keyname(agent_type=agent.AGENT_NAME,
+                                                                   keyname=requested_key_name)
+
+        logging.info('New queue head keyname: {0}'.format(parameters["keyname"] ))
+
+        security_configured = agent.configure_instance_security(parameters)
+        try:
+            agent.run_instances(parameters)
+        except Exception as e:
+            raise Exception('Errors in running instances in agent: ' + str(e))
+
+        del parameters['head_node']
+
+        return num_vms
+
+    def __prepare_queue_head(self, agent, parameters):
+        logging.debug("__prepare_queue_head:\nparameters = \n{0}".format(pprint.pformat(parameters)))
+
+        num_vms = 0
+
+        if not self.__is_queue_head_running(agent, parameters):
+            # Queue head is not running, so create a queue head
+            if 'head_node' not in parameters:
+                logging.error("Head node is needed to run StochSS!")
+                # if there is no head node running, and the current worker nodes are not tagged 'head node' then just fail all 'creating' ones
+                VMStateModel.fail_active(parameters)
+                return None, None
+
+            if agent.AGENT_NAME == AgentTypes.EC2:
+                num_vms = self.__launch_ec2_queue_head(agent, num_vms, parameters)
+
+            else:
+                logging.info('Not launching queue head as agent = {0}'.format(agent.AGENT_NAME))
+                return None, None
+
+        # if the queue head is running
+        else:
+            if "queue_head" in parameters and parameters["queue_head"] == True:
+                parameters["keyname"] = parameters["keyname"].replace('-' + self.QUEUEHEAD_KEY_TAG, '')
+                logging.info('KEYNAME: {0}'.format(parameters["keyname"]))
+
+            parameters["queue_head"] = False
+            security_configured = agent.configure_instance_security(parameters)
+
+            # set shutdown behavior to "terminate"
+            parameters["shutdown"] = "terminate"
+            for vm in parameters["vms"]:
+                parameters["instance_type"] = vm["instance_type"]
+                parameters["num_vms"] = vm["num_vms"]
+                num_vms += vm["num_vms"]
+                try:
+                    agent.run_instances(parameters)
+                except:
+                    raise Exception('Errors in running instances in agent.')
+
+        return num_vms, parameters
+
+
+    def prepare_vms(self, infra, agent, parameters, reservation_id):
         """
-        Public method for starting a set of VMs
+        Public method for preparing a set of VMs
 
         Args:
         infra           Infrastructure that is needed to be call
@@ -412,69 +511,20 @@ class BackendWorker():
         reservation_id  the reservation id for the instances that are going to be spawned
         """
         logging.info("AGENT_NAME = {0}".format(agent.AGENT_NAME))
+        logging.debug("\n\nprepare_vms:\n\nparameters = \n{0}".format(pprint.pformat(parameters)))
 
         if not parameters["vms"] and 'head_node' not in parameters:
-            logging.info("No vms are waiting for spawned.")
+            logging.info("No vms are waiting to be prepared or head_node is not specified!")
             return
 
         try:
             # ##################################################
             # step 1: run instance based on queue head or not #
-            ###################################################
+            # ##################################################
 
-            num_vms = 0
-
-            if not self.__is_queue_head_running(agent, parameters):
-                # Queue head is not running, so create a queue head
-                if 'head_node' not in parameters:
-                    logging.info("Head node is needed.")
-                    # if there is no head node running, and the current worker nodes are not tagged 'head node' then just fail all 'creating' ones
-                    VMStateModel.fail_active(parameters)
-                    return
-
-                utils.log('About to start a queue head.')
-
-                parameters["queue_head"] = True
-                requested_key_name = parameters["keyname"]
-
-                # get the largest instance_type and let it to be queue head
-                head_node = parameters['head_node']                
-                parameters["instance_type"] = head_node["instance_type"]
-                parameters["num_vms"] = 1
-                parameters["shutdown"] = "terminate"
-                num_vms = 1
-
-                # Only want one queue head, and it must have its own key so
-                # it can be differentiated if necessary
-                parameters["keyname"] = requested_key_name + '-' + self.QUEUEHEAD_KEY_TAG
-
-                security_configured = agent.configure_instance_security(parameters)
-                try:
-                    agent.run_instances(parameters)
-                except Exception as e:
-                    raise Exception('Errors in running instances in agent: ' + str(e))
-
-                del parameters['head_node']
-            # if the queue head is running
-            else:
-                if "queue_head" in parameters and parameters["queue_head"] == True:
-                    parameters["keyname"] = parameters["keyname"].replace('-' + self.QUEUEHEAD_KEY_TAG, '')
-                    logging.info('KEYNAME: {0}'.format(parameters["keyname"]))
-
-                parameters["queue_head"] = False
-                security_configured = agent.configure_instance_security(parameters)
-                
-                # set shutdown behavior to "terminate"
-                parameters["shutdown"] = "terminate"
-                for vm in parameters["vms"]:
-                    parameters["instance_type"] = vm["instance_type"]
-                    parameters["num_vms"] = vm["num_vms"]
-                    num_vms += vm["num_vms"]
-                    try:
-                        agent.run_instances(parameters)
-                    except:
-                        raise Exception('Errors in running instances in agent.')
-
+            num_vms, parameters = self.__prepare_queue_head(agent, parameters)
+            if num_vms == None and parameters == None:
+                return
 
 
             ########################################################################
@@ -485,7 +535,7 @@ class BackendWorker():
             if public_ips == None:
                 if not self.__is_queue_head_running(agent, parameters):
                     # if last time of spawning queue head failed, spawn another queue head again
-                    self.spawn_vms(infra, agent, parameters, reservation_id)
+                    self.prepare_vms(infra, agent, parameters, reservation_id)
                 else:
                     return
 
@@ -493,14 +543,14 @@ class BackendWorker():
             # step 3: set alarm for the nodes, if it is NOT queue head #
             ############################################################
 #             logging.info('Set shutdown alarm')
-# 
+#
 #             try:
 #                 if "queue_head" not in parameters or parameters["queue_head"] == False:
 #                     for ins_id in instance_ids:
 #                         agent.make_sleepy(parameters, ins_id)
 #                 else:
 #                     agent.make_sleepy(parameters, instance_ids[0], '7200')
-# 
+#
 #             except:
 #                 raise Exception('Errors in set alarm for instances.')
 
@@ -513,33 +563,30 @@ class BackendWorker():
             if len(connected_public_ips) == 0:
                 if not self.__is_queue_head_running(agent, parameters):
                     # if last time of spawning queue head failed, spawn another queue head again
-                    self.spawn_vms(infra, agent, parameters, reservation_id)
+                    self.prepare_vms(infra, agent, parameters, reservation_id)
                 else:
                     return
-            
+
 
             #########################################
             # step 5: configure celery on each node #
             #########################################
             if "queue_head" in parameters and parameters["queue_head"] == True:
                 queue_head_ip = connected_public_ips[0]
-                utils.log('queue_head_ip: {0}'.format(queue_head_ip))
+                logging.info('queue_head_ip: {0}'.format(queue_head_ip))
                 # celery configuration needs to be updated with the queue head ip                 
                 helper.update_celery_config_with_queue_head_ip(queue_head_ip=queue_head_ip,
                                                                agent_type=agent.AGENT_NAME)
 
             # copy celery configure to nodes.
             self.__configure_celery(agent, parameters, connected_public_ips, connected_instance_ids)
-            
-            
 
-
-            #################################################################
-            # step 6: if current node is queue head, may need to spwan the rest #
-            #################################################################
+            #####################################################################
+            # step 6: if current node is queue head, may need to spawn the rest #
+            #####################################################################
 
             if "queue_head" in parameters and parameters["queue_head"] == True:
-                self.spawn_vms(infra, agent, parameters, reservation_id)
+                self.prepare_vms(infra, agent, parameters, reservation_id)
             else:
                 # else all vms requested are finished spawning. Done!
                 return
@@ -563,11 +610,14 @@ class BackendWorker():
         Return
             A turple of (public ips, private ips, instance ids). Each of the three is a list
         '''
-        utils.log('Start polling task.')
+        logging.info('Start polling task for infrastructure = {0}'.format(parameters['infrastructure']))
 
         ins_ids = agent.describe_instances_launched(parameters)
-        # update db with new instance ids and 'pending'  
-        VMStateModel.update_ins_ids(parameters, ins_ids, reservation_id)
+        logging.info("ins_ids = {0}".format(ins_ids))
+
+        # update db with new instance ids and 'pending'
+        if parameters['infrastructure'] == AgentTypes.EC2:
+            VMStateModel.update_ins_ids(parameters, ins_ids, reservation_id)
 
         public_ips = None
         private_ips = None
@@ -579,36 +629,118 @@ class BackendWorker():
             # get the ips and ids of this keyname
             public_ips, private_ips, instance_ids, instance_types = agent.describe_instances_running(parameters)
 
+            logging.info("public_ips = {0}".format(public_ips))
+            logging.info("private_ips = {0}".format(private_ips))
+            logging.info("instance_ids = {0}".format(instance_ids))
+            logging.info("instance_types = {0}".format(instance_types))
+
             # if we get the requested number of vms (the requested number will be 1 if this is queue head),
             # update reservation information and send a message to the backend server
             if num_vms == len(public_ips):
                 # update db with new public ips and private ips
-                VMStateModel.update_ips(parameters, instance_ids, public_ips, private_ips, instance_types,
-                                        parameters["keyname"])
+                if parameters['infrastructure'] == AgentTypes.EC2:
+                    VMStateModel.update_ips(parameters, instance_ids, public_ips, private_ips, instance_types,
+                                            parameters["keyname"])
                 break
 
             else:
                 if x < POLL_COUNT - 1:
                     time.sleep(POLL_WAIT)
-                    utils.log('polling task: sleep 5 seconds...')
-                else:
-                    VMStateModel.update_ips(parameters, instance_ids, public_ips, private_ips, instance_types,
-                                            parameters["keyname"])
+                    logging.info('Polling task: sleep 5 seconds...')
 
-                    logging.info('Polling timeout. About to terminate some instances:')
-                    terminate_ins_ids = []
-                    for ins_id in ins_ids:
-                        if ins_id not in instance_ids:
-                            logging.info('instance {0}'.format(ins_id))
-                            terminate_ins_ids.append(ins_id)
-                    # terminate timeout instances        
-                    agent.terminate_some_instances(parameters, terminate_ins_ids)
-                    # update db with failure information
-                    VMStateModel.set_state(parameters, terminate_ins_ids, VMStateModel.STATE_FAILED,
-                                           VMStateModel.DESCRI_FAIL_TO_RUN)
+                else:
+                    if parameters['infrastructure'] == AgentTypes.EC2:
+                        VMStateModel.update_ips(parameters, instance_ids, public_ips, private_ips, instance_types,
+                                                parameters["keyname"])
+
+                        logging.info('Polling timeout. About to terminate some instances:')
+                        terminate_ins_ids = []
+                        for ins_id in ins_ids:
+                            if ins_id not in instance_ids:
+                                logging.info('instance {0}'.format(ins_id))
+                                terminate_ins_ids.append(ins_id)
+                        # terminate timeout instances
+                        agent.terminate_some_instances(parameters, terminate_ins_ids)
+                        # update db with failure information
+                        VMStateModel.set_state(parameters, terminate_ins_ids, VMStateModel.STATE_FAILED,
+                                               VMStateModel.DESCRI_FAIL_TO_RUN)
+                    else:
+                        logging.info('Polling timeout.')
 
         return public_ips, private_ips, instance_ids
 
+
+    def __verify_ec2_instances_via_ssh(self, agent, instance_ids, parameters, public_ips):
+        keyfile = os.path.join(os.path.dirname(__file__), '..', '{0}.key'.format(parameters['keyname']))
+        logging.info('keyfile = {0}'.format(keyfile))
+
+        if not os.path.exists(keyfile):
+            raise Exception("ssh keyfile file not found: {0}".format(keyfile))
+
+        connected_public_ips = []
+        connected_instance_ids = []
+
+        for (pub_ip, ins_id) in zip(public_ips, instance_ids):
+            logging.info('connecting to {0}...'.format(pub_ip))
+            success = helper.wait_for_ssh_connection(key_file=keyfile, ip=pub_ip)
+
+            if success == True:
+                logging.info('{0} is successfully added'.format(pub_ip))
+                connected_public_ips.append(pub_ip)
+                connected_instance_ids.append(ins_id)
+
+        # if there are some vms not able to be connected via ssh,
+        # just shut them down explicitly
+        if len(public_ips) != len(connected_public_ips):
+            logging.info('Time out on ssh to {0} instances. They will be terminated.'.format(
+                len(public_ips) - len(connected_public_ips)))
+
+            try:
+                terminate_ins_ids = []
+                for ins_id in instance_ids:
+                    if ins_id not in connected_instance_ids:
+                        terminate_ins_ids.append(ins_id)
+                agent.terminate_some_instances(parameters, terminate_ins_ids)
+                # update db with failed vms
+                VMStateModel.set_state(parameters, terminate_ins_ids,
+                                       VMStateModel.STATE_FAILED,
+                                       VMStateModel.DESCRI_TIMEOUT_ON_SSH)
+            except:
+                raise Exception("Errors in terminating instances that cannot be connected via ssh.")
+
+        public_ips = None
+        instance_ids = None
+
+        return connected_instance_ids, connected_public_ips
+
+    def __verify_flex_instances_via_ssh(self, agent, parameters, public_ips):
+        connected_public_ips = []
+        connected_instance_ids = []
+
+        for machine in parameters['flex_cloud_machine_info']:
+            keyfile = machine['keyfile']
+            if not os.path.exists(keyfile):
+                raise Exception("ssh keyfile file not found: {0}".format(keyfile))
+
+            ip = machine['ip']
+            if ip in public_ips:
+                logging.info('connecting to {0}...'.format(ip))
+                success = helper.wait_for_ssh_connection(key_file=keyfile, ip=ip,
+                                                         username=machine['username'])
+                if success == True:
+                    logging.info('{0} is successfully added'.format(ip))
+                    connected_public_ips.append(ip)
+                    connected_instance_ids.append(agent.get_flex_instance_id(ip))
+                else:
+                    logging.error('Could not make a successful ssh connection to {0}'.format(ip))
+
+            else:
+                logging.info('ip {0} not in public_ips list!'.format(ip))
+
+        if len(public_ips) != len(connected_public_ips):
+            logging.info('Time out on ssh to {0} instances.'.format(len(public_ips) - len(connected_public_ips)))
+
+        return connected_instance_ids, connected_public_ips
 
     def __verify_instances_via_ssh(self, agent, parameters, public_ips, instance_ids):
         '''
@@ -625,50 +757,22 @@ class BackendWorker():
             A turple of (public ips, instance ids). Each of the two is a list of successfully verified
             instances
         '''
-        utils.log('{0} nodes are running. Now trying to verify ssh connectable.'.format(len(public_ips)))
+        logging.info('agent.AGENT_NAME = {0}'.format(agent.AGENT_NAME))
+        logging.info('{0} nodes are running. Now trying to verify ssh connectable.'.format(len(public_ips)))
 
-        # status_info = infra.reservations.get(reservation_id)
+        if agent.AGENT_NAME == AgentTypes.EC2:
+            connected_instance_ids, connected_public_ips = self.__verify_ec2_instances_via_ssh(agent, instance_ids,
+                                                                                               parameters, public_ips)
+            return connected_public_ips, connected_instance_ids
 
-        keyfile = "{0}/../{1}.key".format(os.path.dirname(__file__), parameters['keyname'])
-        if not os.path.exists(keyfile):
-            raise Exception("ssh keyfile file not found: {0}".format(keyfile))
+        elif agent.AGENT_NAME == AgentTypes.FLEX:
+            connected_instance_ids, connected_public_ips = self.__verify_flex_instances_via_ssh(agent, parameters,
+                                                                                                public_ips)
+            return connected_instance_ids, connected_public_ips
+        else:
+            raise Exception('Agent {0} not supported!'.format(agent.AGENT_NAME))
 
-        connected_public_ips = []
-        connected_instance_ids = []
 
-        for (pub_ip, ins_id) in zip(public_ips, instance_ids):
-
-            logging.info('connecting to {0}...'.format(pub_ip))
-            success = helper.wait_for_ssh_connection(key_file=keyfile, ip=pub_ip)
-
-            if success == True:
-                logging.info('{0} is successfully added'.format(pub_ip))
-                connected_public_ips.append(pub_ip)
-                connected_instance_ids.append(ins_id)
-
-        # if there are some vms not able to be connected via ssh, 
-        # just shut them down explicitly            
-        if len(public_ips) != len(connected_public_ips):
-            logging.info('Time out on ssh to {0} instances. They will be terminated.'.format(
-                len(public_ips) - len(connected_public_ips)))
-
-            try:
-                terminate_ins_ids = []
-                for ins_id in instance_ids:
-                    if ins_id not in connected_instance_ids:
-                        terminate_ins_ids.append(ins_id)
-                agent.terminate_some_instances(parameters, terminate_ins_ids)
-                # update db with failed vms 
-                VMStateModel.set_state(parameters, terminate_ins_ids, VMStateModel.STATE_FAILED,
-                                       VMStateModel.DESCRI_TIMEOUT_ON_SSH)
-            except:
-                raise Exception("Errors in terminating instances that cannot be connected via ssh.")
-
-        public_ips = None
-        instance_ids = None
-
-        return connected_public_ips, connected_instance_ids
-            
     def __configure_celery(self, agent, params, public_ips, instance_ids):
         '''
         Private method used for uploading the current celery configuration to each instance 
@@ -700,7 +804,6 @@ class BackendWorker():
         commands.append('export AWS_ACCESS_KEY_ID={0}'.format(str(credentials['EC2_ACCESS_KEY'])))
         commands.append('export AWS_SECRET_ACCESS_KEY={0}'.format(str(credentials['EC2_SECRET_KEY'])))
 
-
         for ip, ins_id in zip(public_ips, instance_ids):
             # helper.wait_for_ssh_connection(key_file, ip)
             ins_type = VMStateModel.get_instance_type(params, ins_id)
@@ -709,11 +812,10 @@ class BackendWorker():
                                                 agent_type=AgentTypes.EC2,
                                                 prepend_commands=commands)
             if success == 0:
-                # update db with successful running vms    
-                VMStateModel.set_state(params, [ins_id], VMStateModel.STATE_RUNNING, VMStateModel.DESCRI_SUCCESS)
+                # update db with successful running vms
                 logging.info("celery started! ")
                 logging.info("host ip: {0}".format(ip))
-
+                VMStateModel.set_state(params, [ins_id], VMStateModel.STATE_RUNNING, VMStateModel.DESCRI_SUCCESS)
             else:
                 agent.terminate_some_instances(params, [ins_id])
                 VMStateModel.set_state(params, [ins_id], VMStateModel.STATE_FAILED,
@@ -737,20 +839,24 @@ class BackendWorker():
         Return
             A boolean value of wether the queue head is running or not
         '''
+        logging.info('Trying to check if queue head is running...')
 
-        params['key_prefix'] = self.KEYPREFIX
+        queue_head_tag = AgentConfig.get_queue_head_key_tag(agent_type=agent.AGENT_NAME)
+
         try:
-            all_vms = agent.describe_instances(params, params['key_prefix'] + ''.join(params['email']))
+            all_vms = agent.describe_instances(params, prefix=params['key_prefix'])
             if all_vms == None:
-                logging.info('No vms are found.')
+                logging.info('No vms were found!')
                 return False
+
             # Just need one running vm with the QUEUEHEAD_KEY_TAG in the name of the keypair
             for vm in all_vms:
-                if vm != None and vm['state'] == 'running' and vm['key_name'].find(self.QUEUEHEAD_KEY_TAG) != -1:
+                if vm != None and vm['state'] == 'running' and vm['key_name'].find(queue_head_tag) != -1:
                     return True
             return False
+
         except Exception as e:
-            logging.error('Error in testing queuehead running. {0}'.format(e))
+            logging.error('Error in testing whether queue_head is running! {0}'.format(e))
             return False
 
 
@@ -811,7 +917,7 @@ class SynchronizeDB(webapp2.RequestHandler):
 
 
 # @staticmethod
-#     def stop():
+# def stop():
 #         SynchronizeDB.TIMER.cancel()
 #         SynchronizeDB.SYNCHRONIZE_DB = False
 
@@ -830,7 +936,7 @@ class BackendQueue(webapp2.RequestHandler):
     def get(self):
         op = self.request.get('op')
         if op == 'start_vms':
-            utils.log('Backend queue got the request to start vms.')
+            logging.info('Backend queue got the request to start vms.')
             # pickle all loading objects
             req_infra = self.request.get('infra')
             infra = pickle.loads(str(req_infra))
@@ -843,11 +949,11 @@ class BackendQueue(webapp2.RequestHandler):
 
             # execute spawning vms
             worker = BackendWorker()
-            worker.spawn_vms(infra, agent, parameters, reservation_id)
-            utils.log('Backend queue finished starting vms.')
+            worker.prepare_vms(infra, agent, parameters, reservation_id)
+            logging.info('Backend queue finished starting vms.')
 
         elif op == 'start_db_syn':
-            utils.log('Backend queue got the request to start syn db.')
+            logging.info('Backend queue got the request to start syn db.')
 
             # trigger db auto synchronization 
             urlfetch.fetch(url=BACKEND_SYN_R_URL,

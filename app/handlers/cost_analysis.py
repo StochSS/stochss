@@ -6,6 +6,7 @@ except ImportError:
 import os
 from google.appengine.ext import db
 import boto
+from backend.common.config import AgentTypes
 from backend import backendservice
 from backend.pricing import Price
 from cloudtracker import CloudTracker
@@ -110,7 +111,7 @@ class CostAnalysisPage(BaseHandler):
             backend_services = backendservice.backendservices()
             
             compute_check_params = {
-                    "infrastructure": "ec2",
+                    "infrastructure": AgentTypes.EC2,
                     "credentials": credentials,
                     "key_prefix": self.user.user_id()
             }

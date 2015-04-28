@@ -123,8 +123,11 @@ def wait_for_ssh_connection(key_file, ip, username="ubuntu"):
     for x in range(0, SSH_RETRY_COUNT):
         p = subprocess.Popen(cmd, shell=True, stdin=subprocess.PIPE, stdout=subprocess.PIPE,
                              stderr=subprocess.STDOUT, close_fds=True)
+
         output = p.stdout.read()
-        if output.startswith('Warning:'):
+        logging.debug('output = {0}'.format(output))
+
+        if output.startswith('Warning:') or output.startswith(os.path.join('/home', username)):
             logging.info("ssh connected to {0}".format(ip))
             return True
         else:

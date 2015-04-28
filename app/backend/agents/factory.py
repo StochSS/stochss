@@ -1,18 +1,20 @@
 from ec2_agent import EC2Agent
+from flex_agent import FlexAgent
 from common.config import AgentTypes
 
 __author__ = 'hiranya'
 __email__ = 'hiranya@appscale.com'
 
 
-class InfrastructureAgentFactory:
+class InfrastructureAgentFactory(object):
     """
     Factory implementation which can be used to instantiate concrete infrastructure
     agents.
     """
 
     agents = {
-        AgentTypes.EC2: EC2Agent
+        AgentTypes.EC2: EC2Agent,
+        AgentTypes.FLEX: FlexAgent
     }
 
     def create_agent(self, infrastructure):

@@ -1,5 +1,6 @@
 from infrastructure_manager import InfrastructureManager
 import json
+import logging
 from M2Crypto import SSL
 import os
 import SOAPpy
@@ -48,21 +49,21 @@ class InfrastructureManagerService:
         secret = utils.get_secret(self.APPSCALE_DIR + 'secret.key')
         break
       except Exception:
-        utils.log('Waiting for the secret key to become available')
+        logging.info('Waiting for the secret key to become available')
         utils.sleep(5)
-    utils.log('Found the secret set to: {0}'.format(secret))
+    logging.info('Found the secret set to: {0}'.format(secret))
 
     SOAPpy.Config.simplify_objects = True
 
     if ssl:
-      utils.log('Checking for the certificate and private key')
+      logging.info('Checking for the certificate and private key')
       cert = self.APPSCALE_DIR + 'certs/mycert.pem'
       key = self.APPSCALE_DIR + 'certs/mykey.pem'
       while True:
         if os.path.exists(cert) and os.path.exists(key):
           break
         else:
-          utils.log('Waiting for certificates')
+          logging.info('Waiting for certificates')
           utils.sleep(5)
 
       ssl_context = SSL.Context()
@@ -78,7 +79,7 @@ class InfrastructureManagerService:
       params = json.load(file_handle)
       file_handle.close()
       if params.has_key(PersistentStoreFactory.PARAM_STORE_TYPE):
-        utils.log('Loading infrastructure manager configuration from ' +
+        logging.info('Loading infrastructure manager configuration from ' +
                   config_file)
         i = InfrastructureManager(params)
       else:
@@ -98,9 +99,9 @@ class InfrastructureManagerService:
     threading requirements
     """
     if self.started:
-      utils.log('Warning - Start called on already running server')
+      logging.info('Warning - Start called on already running server')
     else:
-      utils.log('Starting AppScale Infrastructure Manager on port: ' +
+      logging.info('Starting AppScale Infrastructure Manager on port: ' +
                 str(self.port))
       self.started = True
       while self.started:
@@ -111,11 +112,11 @@ class InfrastructureManagerService:
     Stop the infrastructure manager service.
     """
     if self.started:
-      utils.log('Stopping AppScale Infrastructure Manager')
+      logging.info('Stopping AppScale Infrastructure Manager')
       self.started = False
       self.server.shutdown()
     else:
-      utils.log('Warning - Stop called on already stopped server')
+      logging.info('Warning - Stop called on already stopped server')
 
 if __name__ == '__main__':
   service = InfrastructureManagerService()
