@@ -333,7 +333,7 @@ class VMStateModel(db.Model):
             state     the state that is going to be set to the instances
             description    (optional) the description to the state     
         '''
-        logging.info('set_state:\nins_ids = {1} state = {2}\ndescription =\n{3}'.format(ins_ids, state, description))
+        logging.info('set_state:\nins_ids = {0} state = {1} description ={2}'.format(ins_ids, state, description))
         logging.debug('set_state:\nparams =\n{0}'.format(pprint.pformat(params)))
         try:
             infra, access_key, secret_key = VMStateModel.validate_credentials(params)

@@ -433,7 +433,7 @@ class backendservices(object):
         try:
             i = InfrastructureManager()
             res = i.describe_instances(params, [], key_prefix)
-            logging.info("result = %s", str(res))
+            logging.debug("instances = \n%s", pprint.pformat(res))
             return res
 
         except Exception, e:
