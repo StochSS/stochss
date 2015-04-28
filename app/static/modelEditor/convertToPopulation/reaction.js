@@ -81,7 +81,7 @@ var ReactionView = View.extend({
     {
         View.prototype.render.apply(this, arguments);
 
-        this.baseView = this.parent.parent.parent.parent;
+        this.baseView = this.parent.parent.parent;
 
         this.listenToAndRun(this.baseView, 'change:volume', this.volumeChange);
 

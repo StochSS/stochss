@@ -167,7 +167,7 @@ var run = function()
                                                    data : series } );
                               }
                               
-                              Splot.plot( $( "#data" ), plotData, "");
+                              Splot.plot( "Species/derivative select", $( "#data" ), plotData, "");
                           }
                       }
                       else

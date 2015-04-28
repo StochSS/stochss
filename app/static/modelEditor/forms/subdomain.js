@@ -8,7 +8,7 @@ module.exports = View.extend({
     template: "<span data-hook='checkbox'></span>",
     update: function(element)
     {
-        this.parent.parent.update({ name : 'subdomains', value : { model : this.model, checked : element.value }} );
+        this.parent.update({ name : 'subdomains', value : { model : this.model, checked : element.value }} );
     },
     initialize : function(attr)
     {
@@ -20,7 +20,7 @@ module.exports = View.extend({
     {
         View.prototype.render.apply(this, arguments);
 
-        var checked = _.contains(this.parent.parent.model.subdomains, this.model.name);
+        var checked = _.contains(this.parent.model.subdomains, this.model.name);
 
         this.renderSubview(
             new CheckboxView({

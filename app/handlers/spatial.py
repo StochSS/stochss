@@ -70,8 +70,10 @@ class SpatialJobWrapper(db.Model):
         
         #delete the local output
         output_path = os.path.join(os.path.dirname(__file__), '../output/')
-        if os.path.exists(str(output_path)+self.uuid):
-            shutil.rmtree(str(output_path)+self.uuid)
+
+        if self.uuid:
+            if os.path.exists(str(output_path) + self.uuid):
+                shutil.rmtree(str(output_path) + self.uuid)
         
         if self.resource.lower() == "cloud":
             try:

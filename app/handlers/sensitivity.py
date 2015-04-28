@@ -250,36 +250,41 @@ class SensitivityPage(BaseHandler):
                 self.response.write(json.dumps({"status" : False,
                                                 "msg" : "Job name must be unique"}))
                 return
-            # Either local or cloud
-            if data["resource"] == "local":
-                job = self.runLocal(data)
-            elif data["resource"] == "cloud":
-                backend_services = backendservices()
-                compute_check_params = {
-                    "infrastructure": "ec2",
-                    "credentials": self.user_data.getCredentials(),
-                    "key_prefix": self.user.user_id()
-                }
-                if self.user_data.valid_credentials and backend_services.isOneOrMoreComputeNodesRunning(compute_check_params):
-                    job, cloud_result = self.runCloud(data)
-                    if not job:
-                         e = cloud_result["exception"]
-                         self.response.write(json.dumps({"status" : False,
+
+            try:
+                # Either local or cloud
+                if data["resource"] == "local":
+                    job = self.runLocal(data)
+                elif data["resource"] == "cloud":
+                    backend_services = backendservices()
+                    compute_check_params = {
+                        "infrastructure": "ec2",
+                        "credentials": self.user_data.getCredentials(),
+                        "key_prefix": self.user.user_id()
+                    }
+                    if self.user_data.valid_credentials and backend_services.isOneOrMoreComputeNodesRunning(compute_check_params):
+                        job, cloud_result = self.runCloud(data)
+                        if not job:
+                            e = cloud_result["exception"]
+                            self.response.write(json.dumps({"status" : False,
                                             "msg" : 'Cloud execution failed: '+str(e)}))
-                         return
+                            return
+                    else:
+                        return self.response.write(json.dumps({
+                            "status": False,
+                            "msg": "You must have at least one active compute node to run in the cloud."
+                        }))
                 else:
-                    return self.response.write(json.dumps({
-                        "status": False,
-                        "msg": "You must have at least one active compute node to run in the cloud."
-                    }))
-            else:
-                return self.response.write(json.dumps({"status" : False,
-                                            "msg" : "Unrecognized resource requested: {0}".format(data.resource)}))
-            
-            self.response.write(json.dumps({"status" : True,
-                                            "msg" : "Job launched",
-                                            "kind" : job.kind(),
-                                            "id" : job.key().id()}))
+                    return self.response.write(json.dumps({"status" : False,
+                                                           "msg" : "Unrecognized resource requested: {0}".format(data.resource)}))
+                self.response.write(json.dumps( { "status" : True,
+                                                  "msg" : "Job launched",
+                                                  "kind" : job.kind(),
+                                                  "id" : job.key().id() }))
+            except Exception as e:
+                traceback.print_exc()
+                self.response.write(json.dumps({ "status" : False,
+                                                 "msg" : "Error: {0}".format(e) }))
         else:
             self.response.write(json.dumps({"status" : False,
                                             "msg" : "No data submitted"}))
@@ -314,6 +319,7 @@ class SensitivityPage(BaseHandler):
 
         modelFileName = '{0}/{1}.xml'.format(job.outData, model.name)
         fmodelHandle = open(modelFileName, 'w')
+
         stochkitmodel = model.createStochKitModel()
 
         # Wow, what a hack
