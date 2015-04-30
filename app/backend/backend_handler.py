@@ -264,8 +264,8 @@ class VMStateModel(db.Model):
             ins_ids   a list of instance ids that are going to be set with
             res_id    the reservation id that is based on
         '''
-        logging.info('update_ins_ids: \nparams =\n{0}\nins_ids = {1}\nres_id = {2}'.format(
-                        pprint.pformat(params), ins_ids, res_id))
+        logging.info('update_ins_ids:\nins_ids = {0}\nres_id = {1}'.format(ins_ids, res_id))
+        logging.debug('\n\nparams =\n{0}'.format(pprint.pformat(params)))
         try:
             infra, access_key, secret_key = VMStateModel.validate_credentials(params)
             if infra is None:
@@ -298,8 +298,11 @@ class VMStateModel(db.Model):
             ins_type  a list of instance types that are going to be set with
             local_key the local key name that is corresponding to this set of instance ids
         '''
-        logging.info('\n\nupdate_ips: \nparams =\n{0}\nins_ids = {1}\npub_ips = {2}\npri_ips = {3}\nins_types = {4}\nlocal_key = {5}'.format(
-                        pprint.pformat(params), ins_ids, pub_ips, pri_ips, ins_types, local_key))
+        logging.info(
+            'update_ips:\n\nins_ids = {0}\npub_ips = {1}\npri_ips = {2}\nins_types = {3}\nlocal_key = {4}'.format(
+                ins_ids, pub_ips, pri_ips, ins_types, local_key))
+        logging.debug('\n\nparams = {}'.format(pprint.pformat(params)))
+
         try:
             infra, access_key, secret_key = VMStateModel.validate_credentials(params)
             if infra is None:
@@ -309,9 +312,8 @@ class VMStateModel(db.Model):
                 raise Exception('Error: Cannot find local key!')
 
             for (ins_id, pub_ip, pri_ip, ins_type) in zip(ins_ids, pub_ips, pri_ips, ins_types):
-
-                e = VMStateModel.all().filter('ins_id =', ins_id).filter('infra =', infra)\
-                                      .filter('access_key =', access_key).filter('secret_key =', secret_key).get()
+                e = VMStateModel.all().filter('ins_id =', ins_id).filter('infra =', infra) \
+                    .filter('access_key =', access_key).filter('secret_key =', secret_key).get()
 
                 e.pub_ip = pub_ip
                 e.pri_ip = pri_ip
@@ -333,7 +335,7 @@ class VMStateModel(db.Model):
             state     the state that is going to be set to the instances
             description    (optional) the description to the state     
         '''
-        logging.info('set_state:\nins_ids = {0} state = {1} description ={2}'.format(ins_ids, state, description))
+        logging.debug('set_state:\nins_ids = {0}\nstate = {1}\ndescription = {2}'.format(ins_ids, state, description))
         logging.debug('set_state:\nparams =\n{0}'.format(pprint.pformat(params)))
         try:
             infra, access_key, secret_key = VMStateModel.validate_credentials(params)
@@ -428,7 +430,7 @@ class BackendWorker(object):
     KEYPREFIX = 'stochss'
     QUEUEHEAD_KEY_TAG = 'queuehead'
 
-    def __launch_ec2_queue_head(self, agent, num_vms, parameters):
+    def __launch_ec2_queue_head(self, agent, parameters):
         logging.info('About to start a queue head.')
         parameters["queue_head"] = True
         requested_key_name = parameters["keyname"]
@@ -445,7 +447,7 @@ class BackendWorker(object):
         parameters["keyname"] = AgentConfig.get_queue_head_keyname(agent_type=agent.AGENT_NAME,
                                                                    keyname=requested_key_name)
 
-        logging.info('New queue head keyname: {0}'.format(parameters["keyname"] ))
+        logging.info('New queue head keyname: {0}'.format(parameters["keyname"]))
 
         security_configured = agent.configure_instance_security(parameters)
         try:
@@ -457,31 +459,72 @@ class BackendWorker(object):
 
         return num_vms
 
+    def __is_queue_head_running(self, agent, params):
+        '''
+        Private method that is used for checking whether the queue head is running. Queue head has
+        a different configuration of machine type and should be used for celery configuration.
+
+        Args
+            agent    Agent in charge of current operation
+            params   A dictionary of parameters
+
+        Return
+            A boolean value of wether the queue head is running or not
+        '''
+        logging.info('Trying to check if queue head is running...')
+
+        try:
+            all_vms = agent.describe_instances(params, prefix=params['key_prefix'])
+            if all_vms == None:
+                logging.info('No vms were found!')
+                return False
+
+            queue_head_tag = AgentConfig.get_queue_head_key_tag(agent_type=agent.AGENT_NAME)
+            key_prefix = AgentConfig.get_agent_key_prefix(agent_type=agent.AGENT_NAME,
+                                                          key_prefix=params.get('key_prefix', ''))
+
+            # Just need one running vm with the QUEUEHEAD_KEY_TAG in the name of the keypair
+            for vm in all_vms:
+                if vm != None and vm['state'] == 'running':
+                    if vm['key_name'].endswith(queue_head_tag) and vm['key_name'].startswith(key_prefix):
+                        logging.info('Found queue head:\n{0}'.format(pprint.pformat(vm)))
+                        return True
+            return False
+
+        except Exception as e:
+            logging.error('Error in testing whether queue_head is running! {0}'.format(e))
+            return False
+
     def __prepare_queue_head(self, agent, parameters):
-        logging.debug("__prepare_queue_head:\nparameters = \n{0}".format(pprint.pformat(parameters)))
+        logging.debug("\n\n__prepare_queue_head: parameters = \n{0}".format(pprint.pformat(parameters)))
 
         num_vms = 0
 
         if not self.__is_queue_head_running(agent, parameters):
-            # Queue head is not running, so create a queue head
+            logging.info("Queue head is not running, so create a new queue head...")
             if 'head_node' not in parameters:
                 logging.error("Head node is needed to run StochSS!")
-                # if there is no head node running, and the current worker nodes are not tagged 'head node' then just fail all 'creating' ones
+                # if there is no head node running, and the current worker nodes are not tagged 'head node'
+                # then just fail all 'creating' ones
                 VMStateModel.fail_active(parameters)
                 return None, None
 
             if agent.AGENT_NAME == AgentTypes.EC2:
-                num_vms = self.__launch_ec2_queue_head(agent, num_vms, parameters)
-
+                num_vms = self.__launch_ec2_queue_head(agent, parameters)
             else:
                 logging.info('Not launching queue head as agent = {0}'.format(agent.AGENT_NAME))
                 return None, None
 
-        # if the queue head is running
         else:
+            logging.info("Found queue head running...")
+
+            # Queue head is already running, downgrading to normal worker
             if "queue_head" in parameters and parameters["queue_head"] == True:
-                parameters["keyname"] = parameters["keyname"].replace('-' + self.QUEUEHEAD_KEY_TAG, '')
-                logging.info('KEYNAME: {0}'.format(parameters["keyname"]))
+                parameters["keyname"] = parameters["keyname"].replace(
+                    AgentConfig.get_queue_head_key_tag(agent_type=agent.AGENT_NAME),
+                    '')
+                logging.info(
+                    'After downgrading from queue head to normal worker: keyname = {0}'.format(parameters["keyname"]))
 
             parameters["queue_head"] = False
             security_configured = agent.configure_instance_security(parameters)
@@ -495,7 +538,7 @@ class BackendWorker(object):
                 try:
                     agent.run_instances(parameters)
                 except:
-                    raise Exception('Errors in running instances in agent.')
+                    raise Exception('Errors in running instances in agent: {0}'.format(str(e)))
 
         return num_vms, parameters
 
@@ -510,8 +553,12 @@ class BackendWorker(object):
         parameters      A dictionary of parameters
         reservation_id  the reservation id for the instances that are going to be spawned
         """
+        logging.info("\n\nprepare_vms:\n\nparameters = \n{0}\n".format(pprint.pformat(parameters)))
+        logging.info("infra = {0}".format(infra))
+        logging.info("agent = {0}".format(agent))
+        logging.info("reservation_id = {0}".format(reservation_id))
+
         logging.info("AGENT_NAME = {0}".format(agent.AGENT_NAME))
-        logging.debug("\n\nprepare_vms:\n\nparameters = \n{0}".format(pprint.pformat(parameters)))
 
         if not parameters["vms"] and 'head_node' not in parameters:
             logging.info("No vms are waiting to be prepared or head_node is not specified!")
@@ -527,9 +574,9 @@ class BackendWorker(object):
                 return
 
 
-            ########################################################################
-            # step 2: poll the status of instances, if not running, terminate them #
-            ########################################################################
+            #########################################################################
+            # step 2: poll the status of instances, if not running, terminate them  #
+            #########################################################################
             public_ips, private_ips, instance_ids = self.__poll_instances_status(infra, agent, num_vms, parameters,
                                                                                  reservation_id)
             if public_ips == None:
@@ -542,17 +589,17 @@ class BackendWorker(object):
             ############################################################
             # step 3: set alarm for the nodes, if it is NOT queue head #
             ############################################################
-#             logging.info('Set shutdown alarm')
-#
-#             try:
-#                 if "queue_head" not in parameters or parameters["queue_head"] == False:
-#                     for ins_id in instance_ids:
-#                         agent.make_sleepy(parameters, ins_id)
-#                 else:
-#                     agent.make_sleepy(parameters, instance_ids[0], '7200')
-#
-#             except:
-#                 raise Exception('Errors in set alarm for instances.')
+            # logging.info('Set shutdown alarm')
+            #
+            # try:
+            #     if "queue_head" not in parameters or parameters["queue_head"] == False:
+            #         for ins_id in instance_ids:
+            #             agent.make_sleepy(parameters, ins_id)
+            #     else:
+            #         agent.make_sleepy(parameters, instance_ids[0], '7200')
+            #
+            # except:
+            #     raise Exception('Errors in set alarm for instances.')
 
             ########################################################
             # step 4: verify whether nodes are connectable via ssh #
@@ -827,39 +874,6 @@ class BackendWorker(object):
         helper.config_celery_queues(agent_type=AgentTypes.EC2, instance_types=instance_types)
 
 
-    def __is_queue_head_running(self, agent, params):
-        '''
-        Private method that is used for checking whether the queue head is running. Queue head has
-        a different configuration of machine type and should be used for celery configuration.
-        
-        Args
-            agent    Agent in charge of current operation
-            params   A dictionary of parameters
-            
-        Return
-            A boolean value of wether the queue head is running or not
-        '''
-        logging.info('Trying to check if queue head is running...')
-
-        queue_head_tag = AgentConfig.get_queue_head_key_tag(agent_type=agent.AGENT_NAME)
-
-        try:
-            all_vms = agent.describe_instances(params, prefix=params['key_prefix'])
-            if all_vms == None:
-                logging.info('No vms were found!')
-                return False
-
-            # Just need one running vm with the QUEUEHEAD_KEY_TAG in the name of the keypair
-            for vm in all_vms:
-                if vm != None and vm['state'] == 'running' and vm['key_name'].find(queue_head_tag) != -1:
-                    return True
-            return False
-
-        except Exception as e:
-            logging.error('Error in testing whether queue_head is running! {0}'.format(e))
-            return False
-
-
 class SynchronizeDB(webapp2.RequestHandler):
     '''
     SynchronizeDB's main job is to start a background_thread to synchronize the VMStateModel
@@ -918,7 +932,7 @@ class SynchronizeDB(webapp2.RequestHandler):
 
 # @staticmethod
 # def stop():
-#         SynchronizeDB.TIMER.cancel()
+# SynchronizeDB.TIMER.cancel()
 #         SynchronizeDB.SYNCHRONIZE_DB = False
 
 class BackendQueue(webapp2.RequestHandler):

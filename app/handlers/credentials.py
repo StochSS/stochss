@@ -24,155 +24,170 @@ from backend.databases.dynamo_db import DynamoDB
 class CredentialsPage(BaseHandler):
     INS_TYPES = ["t1.micro", "m1.small", "m3.medium", "m3.large", "c3.large", "c3.xlarge"]
     HEAD_NODE_TYPES = ["c3.large", "c3.xlarge"]
+
+    EC2_SAVE_CREDENTIALS = 'ec2_save_creds'
+    EC2_START_VMS = 'ec2_start'
+    EC2_STOP_VMS = 'ec2_stop'
+
+    FLEX_SAVE_CLOUD_INFO = 'save_flex_cloud_info'
+    FLEX_PREPARE_CLOUD = 'prepare_flex_cloud'
     
     def authentication_required(self):
         return True
     
     def get(self):
-        try:
-            # User id is a string
-            user_id = self.user.user_id()
-            if user_id is None:
-                raise InvalidUserException
-        except Exception, e:
-            raise InvalidUserException('Cannot determine the current user. '+str(e))
+        user_id = self.user.user_id()
+        if user_id is None:
+            raise InvalidUserException('Cannot determine the current user!')
         
         context = self.getContext(user_id)
         self.render_response('credentials.html', **context)
 
 
+    def __handle_json_post_request(self, data_received, user_id):
+        if data_received['action'] == CredentialsPage.FLEX_SAVE_CLOUD_INFO:
+            machine_info = data_received['flex_cloud_machine_info']
+            logging.info("machine_info = \n{0}".format(pprint.pformat(machine_info)))
+
+            result = self.save_flex_cloud_info(machine_info)
+            logging.info("result = {0}".format(result))
+
+            # TODO: This is a hack to make it unlikely that the db transaction has not completed
+            # before we re-render the page (which would cause an error). We need some real solution for this...
+            time.sleep(0.5)
+
+            context = self.getContext(user_id)
+            logging.info('{0}'.format(dict(context, **result)))
+            self.render_response('credentials.html', **(dict(context, **result)))
+
+        elif data_received['action'] == CredentialsPage.FLEX_PREPARE_CLOUD:
+            credentials = self.user_data.getCredentials()
+            flex_cloud_machine_info = self.user_data.get_flex_cloud_machine_info()
+
+            head_node = None
+            for machine in flex_cloud_machine_info:
+                if machine['queue_head'] == True:
+                    head_node = machine
+                    head_node['instance_type'] = None
+
+            result = self.prepare_flex_cloud(user_id, credentials, head_node, flex_cloud_machine_info)
+            logging.info("result = {0}".format(result))
+
+            context = self.getContext(user_id)
+            self.render_response('credentials.html', **(dict(context, **result)))
+
+        else:
+            # This happens when you click the refresh button
+            self.redirect('/credentials')
+
     def post(self):
-        logging.info("request.body = {0}".format(self.request.body))
+        logging.debug("request.body = {0}".format(self.request.body))
         logging.info("CONTENT_TYPE = {0}".format(self.request.environ['CONTENT_TYPE']))
         
-        try:
-            # User id is a string
-            user_id = self.user.user_id()
-            if user_id is None:
-                raise InvalidUserException
-        except Exception, e:
-            raise InvalidUserException('Cannot determine the current user. '+str(e))
+        user_id = self.user.user_id()
+        if user_id is None:
+            raise InvalidUserException('Cannot determine the current user!')
 
         if re.match('^application/json.*', self.request.environ['CONTENT_TYPE']):
             data_received = json.loads(self.request.body)
             logging.info("json data = \n{0}".format(pprint.pformat(data_received)))
-
-            if data_received['action'] == 'save_flex_cloud_info':
-                machine_info = data_received['flex_cloud_machine_info']
-                logging.info("machine_info = \n{0}".format(pprint.pformat(machine_info)))
-
-                result = self.save_flex_cloud_info(machine_info)
-                logging.info("result = {0}".format(result))
-
-                # TODO: This is a hack to make it unlikely that the db transaction has not completed
-                # before we re-render the page (which would cause an error). We need some real solution for this...
-                time.sleep(0.5)
-
-                context = self.getContext(user_id)
-                logging.info('{0}'.format(dict(context, **result)))
-                self.render_response('credentials.html', **(dict(context, **result)))
-
-            elif data_received['action'] == 'prepare_flex_cloud':
-                credentials = self.user_data.getCredentials()
-                flex_cloud_machine_info = self.user_data.get_flex_cloud_machine_info()
-
-                head_node = None
-                for machine in flex_cloud_machine_info:
-                    if machine['queue_head'] == True:
-                        head_node = machine
-                        head_node['instance_type'] = None
-
-                result = self.prepare_flex_cloud(user_id, credentials, head_node, flex_cloud_machine_info)
-                logging.info("result = {0}".format(result))
-
-                context = self.getContext(user_id)
-                self.render_response('credentials.html', **(dict(context, **result)))
-
-            else:
-                result = {'status': True, 'msg': ''}
-                context = self.getContext(user_id)
-                self.render_response('credentials.html', **(dict(context, **result)))
+            self.__handle_json_post_request(data_received, user_id)
 
         else:
             params = self.request.POST
+            logging.info('params = self.request.POST = {0}'.format(params))
+            self.__handle_form_post_request(user_id, params)
 
-            if 'save' in params:
-                # Save the access and private keys to the datastore
-                access_key = params['ec2_access_key']
-                secret_key = params['ec2_secret_key']
 
-                credentials = {'EC2_ACCESS_KEY':access_key, 'EC2_SECRET_KEY':secret_key}
-                result = self.saveCredentials(credentials)
-                # TODO: This is a hack to make it unlikely that the db transaction has not completed
-                # before we re-render the page (which would cause an error). We need some real solution for this...
-                time.sleep(0.5)
+    def __handle_ec2_stop_vms_request(self, params, user_id):
+         # Kill all running VMs.
+        try:
+            service = backendservices()
+            credentials = self.user_data.getCredentials()
+            terminate_params = {
+              "infrastructure": "ec2",
+              "credentials": self.user_data.getCredentials(),
+              "key_prefix": user_id
+            }
+            stopped = service.stopMachines(terminate_params,True) #True means blocking, ie wait for success (its pretty quick)
+            if not stopped:
+                raise
+            result = {'status': True,
+                      'msg': 'Successfully terminated all running VMs.'}
 
-                self.redirect('/credentials')
+        except Exception,e:
+            result = {'status': False,
+                      'msg': 'Failed to terminate the VMs. Please check their status in the EC2 managment console available from your Amazon account.'}
+            context = self.getContext(user_id)
+            self.render_response('credentials.html',**(dict(context,**result)))
+            return
 
-            elif 'start' in params:
-                context = self.getContext(user_id)
-                vms = []
-                all_numbers_correct = True
+        self.redirect('/credentials')
 
-                if 'compute_power' in params:
-                    if params['compute_power'] == 'small':
-                         head_node = {"instance_type": 'c3.large', "num_vms": 1}
-                    else:
-                        result = {'status': False , 'msg': 'Unknown instance type.'}
+    def __handle_ec2_start_vms_request(self, params, user_id):
+        logging.info('__handle_ec2_start_vms_request:\n\nparams =\n{0}\n'.format(pprint.pformat(params)))
+
+        context = self.getContext(user_id)
+        vms = []
+        all_numbers_correct = True
+        if 'compute_power' in params:
+            if params['compute_power'] == 'small':
+                head_node = {"instance_type": 'c3.large', "num_vms": 1}
+            else:
+                result = {'status': False, 'msg': 'Unknown instance type.'}
+                all_numbers_correct = False
+        else:
+            head_node = None
+            if 'head_node' in params:
+                head_node = {"instance_type": params['head_node'].replace('radio_', ''), "num_vms": 1}
+
+            for type in self.INS_TYPES:
+                num_type = 'num_' + type
+
+                if num_type in params and params[num_type] != '':
+                    if int(params[num_type]) > 20:
+                        result = {'status': False, 'msg': 'Number of new vms should be no more than 20.'}
                         all_numbers_correct = False
-                else:
-                    head_node = None
-                    if 'head_node' in params:
-                        head_node = {"instance_type": params['head_node'].replace('radio_', ''), "num_vms": 1}
+                        break
+                    elif int(params[num_type]) <= 0:
+                        result = {'status': False, 'msg': 'Number of new vms should be at least 1.'}
+                        all_numbers_correct = False
+                        break
+                    else:
+                        vms.append({"instance_type": type, "num_vms": int(params[num_type])})
+        active_nodes = context['number_creating'] + context['number_pending'] + context['number_running']
+        if all_numbers_correct:
+            result = self.start_vms(user_id, self.user_data.getCredentials(), head_node, vms, active_nodes)
+            context['starting_vms'] = True
+        else:
+            context['starting_vms'] = False
+        self.redirect('/credentials')
 
-                    for type in self.INS_TYPES:
-                        num_type = 'num_'+type
+    def __handle_ec2_save_credentials(self, params):
+        # Save the access and private keys to the datastore
+        credentials = {'EC2_ACCESS_KEY': params['ec2_access_key'],
+                       'EC2_SECRET_KEY': params['ec2_secret_key']}
+        result = self.saveCredentials(credentials)
 
-                        if num_type in params and params[num_type] != '':
-                            if int(params[num_type]) > 20:
-                                result = {'status': False , 'msg': 'Number of new vms should be no more than 20.'}
-                                all_numbers_correct = False
-                                break
-                            elif int(params[num_type]) <= 0:
-                                result = {'status': False , 'msg': 'Number of new vms should be at least 1.'}
-                                all_numbers_correct = False
-                                break
-                            else:
-                                vms.append({"instance_type": type, "num_vms": int(params[num_type])})
-                active_nodes = context['number_creating'] + context['number_pending'] + context['number_running']
+        # TODO: This is a hack to make it unlikely that the db transaction has not completed
+        # before we re-render the page (which would cause an error). We need some real solution for this...
+        time.sleep(0.5)
+        self.redirect('/credentials')
 
-                if all_numbers_correct:
-                    result = self.start_vms(user_id, self.user_data.getCredentials(), head_node, vms, active_nodes)
-                    context['starting_vms'] = True
-                else:
-                    context['starting_vms'] = False
+    def __handle_form_post_request(self, user_id, params):
+        if CredentialsPage.EC2_SAVE_CREDENTIALS in params:
+            self.__handle_ec2_save_credentials(params)
 
-                self.redirect('/credentials');
+        elif CredentialsPage.EC2_START_VMS in params:
+            self.__handle_ec2_start_vms_request(params, user_id)
 
-            elif 'stop' in params:
-                # Kill all running VMs.
-                try:
-                    service = backendservices()
-                    credentials = self.user_data.getCredentials()
-                    terminate_params = {
-                      "infrastructure": "ec2",
-                      "credentials": self.user_data.getCredentials(),
-                      "key_prefix": user_id
-                    }
-                    stopped = service.stopMachines(terminate_params,True) #True means blocking, ie wait for success (its pretty quick)
-                    if not stopped:
-                        raise
-                    result = {'status': True, 'msg': 'Successfully terminated all running VMs.'}
-                except Exception,e:
-                    result = {'status': False, 'msg': 'Failed to terminate the VMs. Please check their status in the EC2 managment console available from your Amazon account.'}
-                    context = self.getContext(user_id)
-                    self.render_response('credentials.html',**(dict(context,**result)))
-                    return
+        elif CredentialsPage.EC2_STOP_VMS in params:
+            self.__handle_ec2_stop_vms_request(params, user_id)
 
-                self.redirect('/credentials');
+        else:
+            # This happens when you click the refresh button
+            self.redirect('/credentials')
 
-            else: # This happens when you click the refresh button
-                self.redirect('/credentials')
 
     def save_flex_cloud_info(self, machine_info):
         try:
@@ -199,7 +214,7 @@ class CredentialsPage(BaseHandler):
         """ Save the Credentials to the datastore. """
         try:
             service = backendservices()
-            params ={}
+            params = {}
             params['credentials'] =credentials
             params["infrastructure"] = "ec2"
             
@@ -224,7 +239,8 @@ class CredentialsPage(BaseHandler):
                     except Exception,e:
                         pass
             else:
-                result = {'status': False, 'credentials_msg':' Invalid Secret Key or Access key specified'}
+                result = {'status': False,
+                          'credentials_msg':' Invalid Secret Key or Access key specified'}
                 self.user_data.valid_credentials = False
     
             # Write the credentials to the datastore

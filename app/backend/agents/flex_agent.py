@@ -93,7 +93,7 @@ class FlexAgent(BaseAgent):
 
         for machine in machines:
             instance = {}
-            instance["id"] = machine["ip"].replace('.', '', 3)
+            instance["id"] = FlexAgent.get_flex_instance_id(machine["ip"])
             instance["public_ip"] = machine["ip"]
             instance["private_ip"] = machine["ip"]
             instance["state"] = self.get_instance_state(ip=machine["ip"],

@@ -220,27 +220,17 @@ class InfrastructureManager(object):
             return self.__generate_response(False, self.REASON_BAD_ARGUMENTS)
 
         reservation_id = utils.get_random_alphanumeric()
-        #     status_info = {
-        #       'success': True,
-        #       'reason': 'received run request',
-        #       'state': self.STATE_PENDING,
-        #       'vm_info': None
-        #     }
-        #     self.reservations.put(reservation_id, status_info)
-        # update db with reservation ids
         if infrastructure in VMStateModel.SUPPORTED_INFRA:
             VMStateModel.update_res_ids(parameters, parameters[VMStateModel.IDS], reservation_id)
 
-        logging.info('Generated reservation id {0} for this request.'.format(
-            reservation_id)
-        )
+        logging.info('Generated reservation id {0} for this request.'.format(reservation_id))
 
         if self.blocking:
             logging.info('Running __spawn_vms in blocking mode')
             result = self.__spawn_vms(agent, len(parameters['vms']), parameters, reservation_id)
             # NOTE: We will only be able to return an IP for the started instances when run in blocking
             #       mode, but this is needed to update the queue head IP in celeryconfig.py.
-            return result  # self.__generate_response(
+            return result
 
         else:
             logging.info('Running prepare_vms in non-blocking mode')
