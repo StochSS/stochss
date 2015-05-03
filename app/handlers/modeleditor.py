@@ -380,11 +380,11 @@ class ModelManager():
                     meshDb.meshFileId = meshDbCurrent.meshFileId
                     meshDb.subdomains = meshDbCurrent.subdomains
                     meshDb.uniqueSubdomains = meshDbCurrent.uniqueSubdomains
-                    meshDb.undeletable = meshDbCurrent.undeletable
+                    meshDb.undeletable = False#meshDbCurrent.undeletable
                     meshDb.ghost = False
                     
                     meshDb.put()
-
+                    
                     modelWrap.spatial["mesh_wrapper_id"] = meshDb.key().id()
                 else:
                     meshDbCurrent.ghost = False
@@ -569,7 +569,7 @@ class PublicModelPage(BaseHandler):
 
             if modelDb.isSpatial:
                 meshDb = mesheditor.MeshWrapper.get_by_id(modelDb.spatial["mesh_wrapper_id"])
-                meshDb.undeletable = True
+                #meshDb.undeletable = True
                 meshDb.put()
 
         szip.close()
