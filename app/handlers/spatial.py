@@ -193,21 +193,25 @@ class SpatialPage(BaseHandler):
         elif reqType == 'timeData':
             try:
                 job = SpatialJobWrapper.get_by_id(int(self.request.get('id')))
+                
 
+                tmp = time.time()
                 data = json.loads(self.request.get('data'))
 
                 trajectory = data["trajectory"]
-                timeIdx = data["timeIdx"]
+                timeIdx = data["timeIdx"]                
 
                 with open(str(job.outData + '/results/result{0}'.format(trajectory))) as fd:
                     result = pickle.load(fd)
+                
+                    print "time to unpickle stuff2", time.time() - tmp
         
                     species = result.model.get_species_map().keys()
 
                     threeJS = {}
                     #print "exporting ", timeIdx
 
-                    
+                    tmp = time.time()
                     for specie in species:
                         concVals = result.get_species(specie, timeIdx, concentration=True)
                         popVals = result.get_species(specie, timeIdx, concentration=False)
@@ -218,7 +222,8 @@ class SpatialPage(BaseHandler):
                         threeJS[specie] = { "mesh" : json.loads(result.export_to_three_js(specie, timeIdx)),
                                             "max" : int(popVals[maxIdx]),
                                             "min" : int(popVals[minIdx]) }
-
+                    print "time to load stuff2", time.time() - tmp
+                
                 self.response.content_type = 'application/json'
                 self.response.write(json.dumps( threeJS ))
             except Exception as e:
@@ -280,16 +285,18 @@ class SpatialPage(BaseHandler):
                 eTime = data["timeEnd"]
 
                 with open(str(job.outData + '/results/result{0}'.format(trajectory))) as fd:
+                    tmp = time.time()
                     result = pickle.load(fd)
-        
+                    print "time to unpickle stuff", time.time() - tmp
+
                     species = result.model.get_species_map().keys()
 
                     threeJS = {}
 
-
+                    tmp = time.time()
                     #print "exporting ", timeIdx
                     timeIdx = sTime;
-                    while timeIdx !=eTime:
+                    while timeIdx <=eTime:
                         subthreeJS = {}
                         for specie in species:
                             concVals = result.get_species(specie, timeIdx, concentration=True)
@@ -304,7 +311,7 @@ class SpatialPage(BaseHandler):
                         
                         threeJS[timeIdx] = {"mesh": subthreeJS}
                         timeIdx = (timeIdx+1) % 101;
-
+                    print "time to load stuff", time.time() - tmp
                 self.response.content_type = 'application/json'
                 self.response.write(json.dumps( threeJS ))
             except Exception as e:
