@@ -2763,7 +2763,7 @@ module.exports = View.extend({
                 }
             }
 
-            if(obj.value != 'custom' && obj.value != 'massaction')
+            if(obj.value != 'custom')
             {
                 var reactants;
                 var products;
@@ -2778,31 +2778,42 @@ module.exports = View.extend({
                     reactants = 1;
                     products = 0;
                 }
-                if(obj.value == 'merge')
+                else if(obj.value == 'merge')
                 {
                     reactants = 2;
                     products = 1;
                 }
-                if(obj.value == 'change')
+                else if(obj.value == 'change')
                 {
                     reactants = 1;
                     products = 1;
                 }
-                if(obj.value == 'dimerization')
+                else if(obj.value == 'dimerization')
                 {
                     reactants = 1;
                     products = 1;
                 }
-                if(obj.value == 'split')
+                else if(obj.value == 'split')
                 {
                     reactants = 1;
                     products = 2;
                 }
-                if(obj.value == 'four')
+                else if(obj.value == 'four')
                 {
                     reactants = 2;
                     products = 2;
                 }
+		else if(obj.value == 'massaction')
+		{
+		    if(this.model.reactants.length >= 2)
+		    {
+			reactants = 2;
+		    }
+		    else
+		    {
+			reactants = 1;
+		    }
+		}
 
                 while(this.model.reactants.length > reactants)
                     this.model.reactants.remove(this.model.reactants.at(0));
@@ -2820,6 +2831,10 @@ module.exports = View.extend({
                 {
                     this.model.reactants.at(0).stoichiometry = 2;
                 }
+		else if(obj.value == 'massaction' && reactants == 1)
+		{
+		    this.model.reactants.at(0).stoichiometry = Math.min(2, this.model.reactants.at(0).stoichiometry);
+		}
                 else
                 {
                     this.model.reactants.each( function(reactant) { reactant.stoichiometry = 1; } );
@@ -3654,6 +3669,8 @@ var AddNewStoichSpecieForm = AmpersandFormView.extend({
             // You might use this to disable the "submit" button
             // any time the form is invalid, for exmaple.
     validCallback: function (valid) {
+	valid &= this.valid;
+
         if (valid) {
             this.button.prop('disabled', false);
         } else {
@@ -3710,6 +3727,34 @@ var StoichSpecieCollectionFormView = AmpersandView.extend({
 
         this.listenToAndRun(this.reaction, 'change:type', _.bind(this.setReactionType, this));
     },
+    //This will only be used if the stoich-specie-collection is a collection of reactants
+    checkValidReactants: function()
+    {
+	if(this.reactionType == 'massaction')
+	{
+	    var reactantCount = 0;
+
+	    for(var i = 0; i < this.collection.models.length; i++)
+	    {
+		var reactant = this.collection.models[i];
+		
+		reactantCount += reactant.stoichiometry;
+	    }
+
+	    if(reactantCount < 2)
+	    {
+		this.addForm.validCallback(true);
+	    }
+	    else
+	    {
+		this.addForm.validCallback(false);
+	    }
+	}
+	else
+	{
+	    this.addForm.validCallback(true);
+	}
+    },
     setReactionType: function()
     {
         this.reactionType = this.reaction.type;
@@ -3753,6 +3798,10 @@ var StoichSpecieCollectionFormView = AmpersandView.extend({
                 collection : this.collection
             }
         );
+
+	// If we're a collection of reactants, apply the mass action limits to the reactants
+	if(this.collection == this.reaction.reactants)
+            this.listenToAndRun(this.collection, 'add remove change:stoichiometry', _.bind(this.checkValidReactants, this));
         
         return this;
     }
@@ -3830,7 +3879,26 @@ module.exports = View.extend({
     },
     addOne : function()
     {
-        this.model.stoichiometry = this.model.stoichiometry + 1;
+	var reaction = this.model.collection.parent;
+
+	if(this.model.collection == reaction.reactants && reaction.type == 'massaction')
+	{
+	    var numReactants = 0;
+
+	    for(var i = 0; i < this.model.collection.models.length; i++)
+	    {
+		var reactant = this.model.collection.models[i];
+
+		numReactants += reactant.stoichiometry;
+	    }
+
+	    if(numReactants < 2)
+		this.model.stoichiometry = this.model.stoichiometry + 1;
+	}
+	else
+	{
+            this.model.stoichiometry = this.model.stoichiometry + 1;
+	}
     },
     subtractOne : function()
     {
