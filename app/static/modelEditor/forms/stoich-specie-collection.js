@@ -148,7 +148,10 @@ var StoichSpecieCollectionFormView = AmpersandView.extend({
 
 	// If we're a collection of reactants, apply the mass action limits to the reactants
 	if(this.collection == this.reaction.reactants)
+	{
             this.listenToAndRun(this.collection, 'add remove change:stoichiometry', _.bind(this.checkValidReactants, this));
+            this.listenTo(this.reaction, 'change:type', _.bind(this.checkValidReactants, this));
+	}
         
         return this;
     }

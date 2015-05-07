@@ -250,6 +250,19 @@ var reactants;
                         return "Select valid reactants!";
                 }
 
+		if(this.model.type == 'massaction')
+		{
+		    var reactantCount = 0;
+
+		    for(var i = 0; i < reactants; i++)
+		    {
+			reactantCount += this.model.reactants.at(i).stoichiometry;
+		    }
+
+		    if(reactantCount > 2)
+			return "There may only be two or less reactants in mass action reaction";
+		}
+
                 for(var i = 0; i < products; i++)
                 {
                     if(!this.model.products.at(i))

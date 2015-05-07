@@ -2986,6 +2986,19 @@ var reactants;
                         return "Select valid reactants!";
                 }
 
+		if(this.model.type == 'massaction')
+		{
+		    var reactantCount = 0;
+
+		    for(var i = 0; i < reactants; i++)
+		    {
+			reactantCount += this.model.reactants.at(i).stoichiometry;
+		    }
+
+		    if(reactantCount > 2)
+			return "There may only be two or less reactants in mass action reaction";
+		}
+
                 for(var i = 0; i < products; i++)
                 {
                     if(!this.model.products.at(i))
@@ -3801,7 +3814,10 @@ var StoichSpecieCollectionFormView = AmpersandView.extend({
 
 	// If we're a collection of reactants, apply the mass action limits to the reactants
 	if(this.collection == this.reaction.reactants)
+	{
             this.listenToAndRun(this.collection, 'add remove change:stoichiometry', _.bind(this.checkValidReactants, this));
+            this.listenTo(this.reaction, 'change:type', _.bind(this.checkValidReactants, this));
+	}
         
         return this;
     }
@@ -4315,7 +4331,7 @@ var Model = AmpersandModel.extend({
 
         if(!this.reactions.every( function(reaction) { return reaction.valid; } ))
         {
-            this.saveState = 'Model not valid'
+            this.saveState = 'failed'
             return;
         }
 
@@ -4326,12 +4342,17 @@ var Model = AmpersandModel.extend({
         {
             if(this.collection && this.collection.url)
             {
-
-                if(!(this.reactions.every( function(reaction) { return reaction.valid; } ) && this.initialConditions.every( function(initialCondition) { return initialCondition.valid; } )))
+                if(!this.reactions.every( function(reaction) { return reaction.valid; } ))
                 {
-                    this.saveState = 'invalid';
+                    this.saveState = 'failed';
                     return;
                 }
+
+		if(!this.initialConditions.every( function(initialCondition) { return initialCondition.valid; } ))
+		{
+                    this.saveState = 'invalid';
+                    return;
+		}
 
                 try
                 {
@@ -4730,6 +4751,19 @@ var Reaction = State.extend({
                     if(!this.reactants.at(i).specie)
                         return false;
                 }
+
+		if(this.type == 'massaction')
+		{
+		    var reactantCount = 0;
+
+		    for(var i = 0; i < reactants; i++)
+		    {
+			reactantCount += this.reactants.at(i).stoichiometry;
+		    }
+
+		    if(reactantCount > 2)
+			return false;
+		}
 
                 for(var i = 0; i < products; i++)
                 {
