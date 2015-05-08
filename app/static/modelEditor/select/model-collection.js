@@ -130,7 +130,7 @@ var ModelCollectionSelectView = AmpersandView.extend({
         var collectionTemplate = "<div> \
   <table data-hook='table' class='table table-bordered'> \
     <thead> \
-      <th width='25px'></th><th width='170px'>Name</th><th>Properties</th><th width='300px'></th> \
+      <th width='25px'></th><th width='170px'>Name</th><th>Properties</th><th></th> \
     </thead> \
     <tbody data-hook='items'></tbody> \
   </table> \
