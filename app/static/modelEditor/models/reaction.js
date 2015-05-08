@@ -80,6 +80,19 @@ var Reaction = State.extend({
                         return false;
                 }
 
+		if(this.type == 'massaction')
+		{
+		    var reactantCount = 0;
+
+		    for(var i = 0; i < reactants; i++)
+		    {
+			reactantCount += this.reactants.at(i).stoichiometry;
+		    }
+
+		    if(reactantCount > 2)
+			return false;
+		}
+
                 for(var i = 0; i < products; i++)
                 {
                     if(!this.products.at(i))

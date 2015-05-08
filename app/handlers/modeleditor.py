@@ -357,41 +357,42 @@ class ModelManager():
         if 'spatial' in jsonModel:
             modelWrap.spatial = jsonModel['spatial']
 
-            # Make sure we have access to a copy of the mesh
-            meshDbCurrent = mesheditor.MeshWrapper.get_by_id(modelWrap.spatial["mesh_wrapper_id"])
+            # Make sure we have access to a copy of the mesh (if it exists)
+            if "mesh_wrapper_id" in modelWrap.spatial and modelWrap.spatial["mesh_wrapper_id"]:
+                meshDbCurrent = mesheditor.MeshWrapper.get_by_id(modelWrap.spatial["mesh_wrapper_id"])
 
-            if createModel:
-                if meshDbCurrent.userId != userID:
-                    meshDb = mesheditor.MeshWrapper()
+                if createModel:
+                    if meshDbCurrent.userId != userID:
+                        meshDb = mesheditor.MeshWrapper()
 
-                    meshDb.userId = userID
+                        meshDb.userId = userID
 
 
-                    names = [x.name for x in db.Query(mesheditor.MeshWrapper).filter('userId =', handler.user.user_id()).run()]
+                        names = [x.name for x in db.Query(mesheditor.MeshWrapper).filter('userId =', handler.user.user_id()).run()]
                     
-                    tmpName = meshDbCurrent.name
-                    i = 0
-                    while tmpName in names:
-                        tmpName = meshDbCurrent.name + '_' + str(i)
-                        i += 1
+                        tmpName = meshDbCurrent.name
+                        i = 0
+                        while tmpName in names:
+                            tmpName = meshDbCurrent.name + '_' + str(i)
+                            i += 1
 
-                    meshDb.name = tmpName
-                    meshDb.description = meshDbCurrent.description
-                    meshDb.meshFileId = meshDbCurrent.meshFileId
-                    meshDb.subdomains = meshDbCurrent.subdomains
-                    meshDb.uniqueSubdomains = meshDbCurrent.uniqueSubdomains
-                    meshDb.undeletable = meshDbCurrent.undeletable
-                    meshDb.ghost = False
+                        meshDb.name = tmpName
+                        meshDb.description = meshDbCurrent.description
+                        meshDb.meshFileId = meshDbCurrent.meshFileId
+                        meshDb.subdomains = meshDbCurrent.subdomains
+                        meshDb.uniqueSubdomains = meshDbCurrent.uniqueSubdomains
+                        meshDb.undeletable = False#meshDbCurrent.undeletable
+                        meshDb.ghost = False
+                        
+                        meshDb.put()
                     
-                    meshDb.put()
+                        modelWrap.spatial["mesh_wrapper_id"] = meshDb.key().id()
+                    else:
+                        meshDbCurrent.ghost = False
+                        meshDbCurrent.put()
 
-                    modelWrap.spatial["mesh_wrapper_id"] = meshDb.key().id()
-                else:
-                    meshDbCurrent.ghost = False
-                    meshDbCurrent.put()
-
-            # This is maintained here!
-            modelWrap.subdomains = meshDbCurrent.uniqueSubdomains
+                # This is maintained here!
+                modelWrap.subdomains = meshDbCurrent.uniqueSubdomains
 
         if 'is_public' not in jsonModel:
             jsonModel['is_public'] = False
@@ -569,7 +570,7 @@ class PublicModelPage(BaseHandler):
 
             if modelDb.isSpatial:
                 meshDb = mesheditor.MeshWrapper.get_by_id(modelDb.spatial["mesh_wrapper_id"])
-                meshDb.undeletable = True
+                #meshDb.undeletable = True
                 meshDb.put()
 
         szip.close()

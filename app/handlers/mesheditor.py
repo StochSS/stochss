@@ -215,7 +215,6 @@ def setupMeshes(handler):
         converted.add(wrapper.name)
 
     for name in set(namesToFilenames.keys()) - converted:
-        print "WHAT ARE WE DOING HERE?"
         fileName = namesToFilenames[name]
         
         meshDb = MeshWrapper()

@@ -124,7 +124,7 @@ var Model = AmpersandModel.extend({
 
         if(!this.reactions.every( function(reaction) { return reaction.valid; } ))
         {
-            this.saveState = 'Model not valid'
+            this.saveState = 'failed'
             return;
         }
 
@@ -135,12 +135,17 @@ var Model = AmpersandModel.extend({
         {
             if(this.collection && this.collection.url)
             {
-
-                if(!(this.reactions.every( function(reaction) { return reaction.valid; } ) && this.initialConditions.every( function(initialCondition) { return initialCondition.valid; } )))
+                if(!this.reactions.every( function(reaction) { return reaction.valid; } ))
                 {
-                    this.saveState = 'invalid';
+                    this.saveState = 'failed';
                     return;
                 }
+
+		if(!this.initialConditions.every( function(initialCondition) { return initialCondition.valid; } ))
+		{
+                    this.saveState = 'invalid';
+                    return;
+		}
 
                 try
                 {
