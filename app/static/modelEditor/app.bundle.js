@@ -1020,26 +1020,26 @@ var SubdomainFormView = require('./subdomain');
 var Tests = require('./tests');
 module.exports = View.extend({
     template : "<tr data-hook='row'> \
-  <td valign='top'> \
-    <button class='btn' data-hook='delete'>x</button> \
-  </td> \
-  <td data-hook='typeSelect' valign='top'></td> \
-  <td data-hook='specie' valign='top'></td> \
-  <td data-hook='details' valign='top'> \
-    <table> \
-      <tr> \
-        <td>Count:</td><td><div data-hook='count'></div></td> \
-      </tr> \
-      <tbody data-hook='xyz'> \
-        <tr><td>X:</td><td><div data-hook='X'></div></td></tr> \
-        <tr><td>Y:</td><td><div data-hook='Y'></div></td></tr> \
-        <tr><td>Z:</td><td><div data-hook='Z'></div></td></tr> \
-      </tbody> \
-      <tbody data-hook='subdomainTbody'> \
-        <tr><td>Subdomain</td><td><div data-hook='subdomain'></div></td></tr> \
-      </tbody> \
-    </table> \
-  </td> \
+<td valign='top'> \
+<button class='btn' data-hook='delete'>x</button> \
+</td> \
+<td data-hook='typeSelect' valign='top'></td> \
+<td data-hook='specie' valign='top'></td> \
+<td data-hook='details' valign='top'> \
+<table> \
+<tr> \
+<td>Count:</td><td><div data-hook='count'></div></td> \
+</tr> \
+<tbody data-hook='xyz'> \
+<tr><td>X:</td><td><div data-hook='X'></div></td></tr> \
+<tr><td>Y:</td><td><div data-hook='Y'></div></td></tr> \
+<tr><td>Z:</td><td><div data-hook='Z'></div></td></tr> \
+</tbody> \
+<tbody data-hook='subdomainTbody'> \
+<tr><td>Subdomain</td><td><div data-hook='subdomain'></div></td></tr> \
+</tbody> \
+</table> \
+</td> \
 </tr>",
     props : {
         valid : 'boolean',
@@ -1140,17 +1140,18 @@ module.exports = View.extend({
     {
         if(this.subdomainSelector)
         {
+            this._subviews.pop();
             this.subdomainSelector.remove();
         }
 
-        var validSubdomains = this.baseModel.mesh.uniqueSubdomains.map( function(model) { return [String(model.name), String(model.name)]; } );
+        var validSubdomains = this.model.specie.subdomains.map( function(name) { return [String(name), String(name)]; } );
 
         this.subdomainSelector = this.renderSubview(
             new SelectView({
                 template: '<div><select></select><div data-hook="message-container"><div class="message" data-hook="message-text"></div></div></div>',
                 label: '',
                 name: 'subdomain',
-                value: String(this.model.subdomain),
+                value: (!_.contains(this.model.specie.subdomains, this.model.subdomain)) ? undefined : String(this.model.subdomain),
                 options: validSubdomains,
                 unselectedText: 'Select subdomain',
                 parent : this,
@@ -1244,6 +1245,8 @@ module.exports = View.extend({
             }), this.el.querySelector("[data-hook='specie']"));
 
         this.listenToAndRun(this.baseModel, 'change:mesh', _.bind(this.renderSubdomainSelector, this));
+	this.listenTo(this.model.specie.collection, 'change:subdomains', _.bind(this.renderSubdomainSelector, this));
+	this.listenTo(this.model, 'change:specie', _.bind(this.renderSubdomainSelector, this));
 
         this.updateValid();
         return this;
