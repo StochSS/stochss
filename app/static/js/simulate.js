@@ -151,7 +151,8 @@ var updateMsg = function(data)
 
 var run = function()
 {
-    $( '.mainTable' ).DataTable( { "bPaginate" : false, "bFilter" : false } );
+    $( '.mainTable' ).DataTable( { "bLengthChange": false, "bFilter" : false } );
+    $( ':radio:not(:disabled):first' ).click();
     $( '.mainTable' ).css('border-bottom', '1px solid #ddd');
     $( '.mainTable thead th' ).css('border-bottom', '1px solid #ddd');
 

@@ -397,9 +397,10 @@ StochOptim.Controller = Backbone.View.extend(
                 } 
 
                 $( this.el ).html( modelSelectTemplate( { models : data } ) );
+		$( this.el ).find( ':radio:not(:disabled):first' ).click();
 
                 $( this.el ).find( '.mainTable' )
-                    .DataTable( { "bPaginate" : false, "bFilter" : false } );
+                    .DataTable( { "bLengthChange" : false, "bFilter" : false } );
 
                 $( this.el ).find( '.mainTable' ).css('border-bottom', '1px solid #ddd');
                 $( this.el ).find( '.mainTable thead th' ).css('border-bottom', '1px solid #ddd');
