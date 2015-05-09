@@ -1,0 +1,25 @@
+{% extends "base.html" %}
+{% block title%}Import Model from SBML{% endblock %}
+{% block content %}
+{% block csscontent %}
+<link href="/static/modelEditor/app.css" rel="stylesheet">
+{% endblock %}
+
+<div class="span9">
+    <div class="well well-large">
+      <h3>Import From SBML</h3>
+      <form action="/importFromSBML" enctype="multipart/form-data" method="post">
+        Please specify an SBML file to import:<br>
+        <input type="file" name="datafile" size="40" required><br>
+	Specify if model should be imported as concentration or population model:<br>
+	<input type="radio" name="units" value="concentration" required>Concentration<br>
+	<input type="radio" name="units" value="population" required>Population<br><br>
+        <button type="submit">Submit</button>
+
+	{% if status == False %}
+        <div id="msg" class="alert alert-error">{{ msg }}</div>
+	{% endif %}
+      </form>
+</div>
+
+{% endblock %}
