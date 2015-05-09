@@ -1020,26 +1020,26 @@ var SubdomainFormView = require('./subdomain');
 var Tests = require('./tests');
 module.exports = View.extend({
     template : "<tr data-hook='row'> \
-  <td valign='top'> \
-    <button class='btn' data-hook='delete'>x</button> \
-  </td> \
-  <td data-hook='typeSelect' valign='top'></td> \
-  <td data-hook='specie' valign='top'></td> \
-  <td data-hook='details' valign='top'> \
-    <table> \
-      <tr> \
-        <td>Count:</td><td><div data-hook='count'></div></td> \
-      </tr> \
-      <tbody data-hook='xyz'> \
-        <tr><td>X:</td><td><div data-hook='X'></div></td></tr> \
-        <tr><td>Y:</td><td><div data-hook='Y'></div></td></tr> \
-        <tr><td>Z:</td><td><div data-hook='Z'></div></td></tr> \
-      </tbody> \
-      <tbody data-hook='subdomainTbody'> \
-        <tr><td>Subdomain</td><td><div data-hook='subdomain'></div></td></tr> \
-      </tbody> \
-    </table> \
-  </td> \
+<td valign='top'> \
+<button class='btn' data-hook='delete'>x</button> \
+</td> \
+<td data-hook='typeSelect' valign='top'></td> \
+<td data-hook='specie' valign='top'></td> \
+<td data-hook='details' valign='top'> \
+<table> \
+<tr> \
+<td>Count:</td><td><div data-hook='count'></div></td> \
+</tr> \
+<tbody data-hook='xyz'> \
+<tr><td>X:</td><td><div data-hook='X'></div></td></tr> \
+<tr><td>Y:</td><td><div data-hook='Y'></div></td></tr> \
+<tr><td>Z:</td><td><div data-hook='Z'></div></td></tr> \
+</tbody> \
+<tbody data-hook='subdomainTbody'> \
+<tr><td>Subdomain</td><td><div data-hook='subdomain'></div></td></tr> \
+</tbody> \
+</table> \
+</td> \
 </tr>",
     props : {
         valid : 'boolean',
@@ -1140,17 +1140,18 @@ module.exports = View.extend({
     {
         if(this.subdomainSelector)
         {
+            this._subviews.pop();
             this.subdomainSelector.remove();
         }
 
-        var validSubdomains = this.baseModel.mesh.uniqueSubdomains.map( function(model) { return [String(model.name), String(model.name)]; } );
+        var validSubdomains = this.model.specie.subdomains.map( function(name) { return [String(name), String(name)]; } );
 
         this.subdomainSelector = this.renderSubview(
             new SelectView({
                 template: '<div><select></select><div data-hook="message-container"><div class="message" data-hook="message-text"></div></div></div>',
                 label: '',
                 name: 'subdomain',
-                value: String(this.model.subdomain),
+                value: (!_.contains(this.model.specie.subdomains, this.model.subdomain)) ? undefined : String(this.model.subdomain),
                 options: validSubdomains,
                 unselectedText: 'Select subdomain',
                 parent : this,
@@ -1244,6 +1245,8 @@ module.exports = View.extend({
             }), this.el.querySelector("[data-hook='specie']"));
 
         this.listenToAndRun(this.baseModel, 'change:mesh', _.bind(this.renderSubdomainSelector, this));
+	this.listenTo(this.model.specie.collection, 'change:subdomains', _.bind(this.renderSubdomainSelector, this));
+	this.listenTo(this.model, 'change:specie', _.bind(this.renderSubdomainSelector, this));
 
         this.updateValid();
         return this;
@@ -2106,31 +2109,6 @@ module.exports = View.extend({
         if(this.parent && this.parent.update)
             this.parent.update();
     },
-    duplicateModel: function()
-    {
-        var model = new Model(this.model.toJSON());
-
-        var names = this.model.collection.map( function(model) { return model.name; } );
-
-        while(1)
-        {
-            var tmpName = this.model.name + '_' + Math.random().toString(36).substr(2, 3);
-
-            if(!_.contains(names, tmpName))
-            {
-                model.name = tmpName;
-                break;
-            }
-        }
-
-        model.id = undefined;
-        
-        model.setupMesh(this.model.mesh.collection);
-
-        this.model.collection.add(model);
-
-        model.save();
-    },
     convertToPopulation: function()
     {
         // If we're currently showing the concentration model editor, switch to showing the convert page
@@ -2175,27 +2153,38 @@ module.exports = View.extend({
         if(this.state == 'concentration')
         {
             $( this.el ).find( '[data-hook="editor"]' ).show();
-            $( '[data-hook="convertToPopulationLink"]' ).show();
             $( this.el ).find( '[data-hook="convertToPopulation"]' ).hide();
-            $( '[data-hook="convertToSpatialLink"]' ).hide();
             $( this.el ).find( '.spatial' ).hide();
+            //$( '[data-hook="convertToPopulationLink"]' ).show();
+            //$( '[data-hook="convertToSpatialLink"]' ).hide();
         }
         else if(this.state == 'converting')
         {
             $( this.el ).find( '[data-hook="convertToPopulation"]' ).show();
             $( this.el ).find( '[data-hook="editor"]' ).hide();
-            $( '[data-hook="convertToPopulationLink"]' ).hide()
-            $( '[data-hook="convertToSpatialLink"]' ).hide();
             $( this.el ).find( '.spatial' ).hide();
+            //$( '[data-hook="convertToPopulationLink"]' ).hide()
+            //$( '[data-hook="convertToSpatialLink"]' ).hide();
         }
         else if(this.state == 'population')
         {
             $( this.el ).find( '[data-hook="convertToPopulation"]' ).hide();
-            $( '[data-hook="convertToPopulationLink"]' ).hide();
             $( this.el ).find( '[data-hook="editor"]' ).show();
-            $( '[data-hook="convertToSpatialLink"]' ).show();
             $( this.el ).find( '.spatial' ).hide();
+            //$( '[data-hook="convertToPopulationLink"]' ).hide();
+            //$( '[data-hook="convertToSpatialLink"]' ).show();
+        }
+        else if(this.state == 'spatial')
+        {
+            $( this.el ).find( '[data-hook="convertToPopulation"]' ).hide();
+            $( this.el ).find( '[data-hook="editor"]' ).show();
+            $( this.el ).find( '.spatial' ).show();
+            //$( '[data-hook="convertToPopulationLink"]' ).hide();
+            //$( '[data-hook="convertToSpatialLink"]' ).hide();
+        }
 
+	if(this.state == 'concentration' || this.state == 'population' || this.state == 'spatial')
+	{
             if(!$( this.el ).find('.speciesAccordion .accordion-body').first().hasClass('in'))
                 $( this.el ).find('.speciesAccordion').find('a').first()[0].click();
             if(!$( this.el ).find('.parametersAccordion .accordion-body').first().hasClass('in'))
@@ -2206,24 +2195,12 @@ module.exports = View.extend({
                 $( this.el ).find('.initialConditionsAccordion').find('a').first()[0].click();
             if(!$( this.el ).find('.reactionsAccordion .accordion-body').first().hasClass('in'))
                 $( this.el ).find('.reactionsAccordion').find('a').first()[0].click();
-        }
-        else if(this.state == 'spatial')
-        {
-            $( this.el ).find( '[data-hook="convertToPopulation"]' ).hide();
-            $( '[data-hook="convertToPopulationLink"]' ).hide();
-            $( this.el ).find( '[data-hook="editor"]' ).show();
-            $( '[data-hook="convertToSpatialLink"]' ).hide();
-            $( this.el ).find( '.spatial' ).show();
-        }
+	}
     },
     initialize: function(attr)
     {
-        // This is weird, but the model must wait for signals that these buttons have been pressed from the model select
-        // THis is because the buttons are shared
-        this.listenTo(this.model, "duplicateLink", _.bind(this.duplicateModel, this));
-        this.listenTo(this.model, "convertToPopulationLink", _.bind(this.convertToPopulation, this));
-        this.listenTo(this.model, "convertToSpatialLink", _.bind(this.convertToSpatial, this));
-
+	this.select = attr.select;
+	
         if(this.model.isSpatial)
         {
             this.state = 'spatial';
@@ -76203,7 +76180,7 @@ var ModelCollectionSelectView = AmpersandView.extend({
         var collectionTemplate = "<div> \
   <table data-hook='table' class='table table-bordered'> \
     <thead> \
-      <th width='25px'></th><th width='170px'>Name</th><th>Properties</th><th width='25px'>Delete</th> \
+      <th width='25px'></th><th width='170px'>Name</th><th>Properties</th><th></th> \
     </thead> \
     <tbody data-hook='items'></tbody> \
   </table> \
@@ -76249,6 +76226,8 @@ var _ = require('underscore');
 var $ = require('jquery');
 var View = require('ampersand-view');
 var Tests = require('../forms/tests');
+var Model = require('../models/model');
+
 //<div>Model type: <div data-hook='type'></div><div data-hook='specie'></div><div data-hook='parameter'></div><div data-hook='reaction'></div><div data-hook='convertToPopulation'></div></div>
 //<i class="icon-remove"></i></span>
 module.exports = View.extend({
@@ -76261,16 +76240,33 @@ module.exports = View.extend({
   <td data-hook="type"> \
   </td> \
   <td> \
-    <button type="button" class="btn btn-default" data-hook="delete"> \
-      x \
-    </button> \
+    <div class="btn-group"> \
+      <button type="button" class="btn btn-default" data-hook="delete"> \
+        Delete \
+      </button> \
+      <button type="button" class="btn btn-default" data-hook="duplicate"> \
+        Duplicate \
+      </button> \
+      <button type="button" class="btn btn-default" data-hook="convert"> \
+         \
+      </button> \
+      <!--<a class="btn dropdown-toggle" data-toggle="dropdown" data-hook="test" href="#"> \
+        Model Actions \
+        <span class="caret"></span> \
+      </a> \
+      <ul class="dropdown-menu" data-hook="test"> \
+        <a data-hook="convertToPopulation" href="#">Convert to Population</a> \
+        <a data-hook="convertToSpatial" href="#">Convert to Spatial</a> \
+      </ul>--> \
+    </div> \
   </td> \
 </tr>',
     // Gotta have a few of these functions just so this works as a form view
     // This gets called when things update
     props : {
         valid : 'boolean',
-        message : 'string'
+        message : 'string',
+        state : 'string'
     },
     bindings: {
         'invalid' : {
@@ -76318,7 +76314,11 @@ module.exports = View.extend({
     },
     events: {
         "click [data-hook=edit]" : "selectSelf",
-        "click [data-hook=delete]" : "removeModel"
+        "click [data-hook=delete]" : "removeModel",
+        "click [data-hook=duplicate]" : "duplicateModel",
+        "click [data-hook=convert]" : "convert"
+        //"click [data-hook=convertToPopulation]" : "convertToPopulation",
+        //"click [data-hook=convertToSpatial]" : "convertToSpatial"
     },
     updateValid : function()
     {
@@ -76350,6 +76350,28 @@ module.exports = View.extend({
         $( this.queryByHook( "edit" ) ).addClass('btn-success');
         $( this.queryByHook( "name" ) ).find('input').prop('disabled', false);
     },
+    updateVisibility : function() {
+        if(this.model.isSpatial)
+        {
+            //$( this.el ).find( '[data-hook="convertToPopulation"]' ).hide();
+            //$( this.el ).find( '[data-hook="convertToSpatial"]' ).hide();
+            $( this.el ).find( '[data-hook="convert"]' ).remove();
+        }
+        else if(this.model.units == 'concentration')
+        {
+	    $( this.el ).find( '[data-hook="convert"]' ).text( 'Convert to Population' );
+            //$( this.el ).find( '[data-hook="convertToPopulation"]' ).show();
+            //$( this.el ).find( '[data-hook="convertToSpatial"]' ).hide();
+            //$( this.el ).find( '[data-hook="dropdown"]' ).prop('disabled', false);
+        }
+        else if(this.model.units == 'population')
+        {
+	    $( this.el ).find( '[data-hook="convert"]' ).text( 'Convert to Spatial' );
+            //$( this.el ).find( '[data-hook="convertToPopulation"]' ).hide();
+            //$( this.el ).find( '[data-hook="convertToSpatial"]' ).show();
+            //$( this.el ).find( '[data-hook="dropdown"]' ).show('disabled', false);
+        }
+    },
     removeModel: function()
     {
         if(!confirm("Are you sure you want to delete this model?"))
@@ -76365,6 +76387,55 @@ module.exports = View.extend({
             success : _.bind(this.modelDeleted, this),
             error : _.bind(this.modelFailedToDelete, this)
         });
+    },
+    duplicateModel: function()
+    {
+        var model = new Model(this.model.toJSON());
+
+        var names = this.model.collection.map( function(model) { return model.name; } );
+
+        while(1)
+        {
+            var tmpName = this.model.name + '_' + Math.random().toString(36).substr(2, 3);
+
+            if(!_.contains(names, tmpName))
+            {
+                model.name = tmpName;
+                break;
+            }
+        }
+
+        model.id = undefined;
+        
+        model.setupMesh(this.model.mesh.collection);
+
+        this.model.collection.add(model);
+
+        model.save();
+    },
+    convert: function(event)
+    {
+	if(this.model.units == 'concentration')
+	    this.convertToPopulation();
+	else if(this.model.units == 'population')
+	    this.convertToSpatial();
+    },
+    convertToSpatial: function(event)
+    {
+        this.selectSelf();
+
+        //Parent.parent.parent is the highest level UI View
+        this.parent.parent.parent.modelEditor.convertToSpatial();
+
+	//event.preventDefault();
+    },
+    convertToPopulation: function(event)
+    {
+        this.selectSelf();
+        
+        this.parent.parent.parent.modelEditor.convertToPopulation();
+
+	//event.preventDefault();
     },
     modelDeleted: function()
     {
@@ -76410,8 +76481,11 @@ module.exports = View.extend({
         this.deSelect();
 
         this.updateValid();
+
+        this.listenToAndRun(this.model, 'change:units change:isSpatial', _.bind(this.updateVisibility, this));
+
         return this;
     }
 });
 
-},{"../forms/tests":30,"ampersand-view":787,"jquery":890,"underscore":908}]},{},[1]);
+},{"../forms/tests":30,"../models/model":36,"ampersand-view":787,"jquery":890,"underscore":908}]},{},[1]);
