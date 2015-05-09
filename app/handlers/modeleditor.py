@@ -10,6 +10,7 @@ import os
 import traceback
 import re
 import random
+import tempfile
 import time
 from google.appengine.api import users
 
@@ -18,6 +19,7 @@ from stochssapp import BaseHandler, ObjectProperty
 import stochss.stochkit
 import stochss.model
 import stochss.examplemodels
+import stochss.SBMLconverter
 import mesheditor
 
 import webapp2
@@ -583,14 +585,59 @@ class ImportFromXMLPage(BaseHandler):
         self.render_response('importFromXML.html')
 
     def post(self):
-        storage = self.request.POST['datafile']
+        try:
+            storage = self.request.POST['datafile']
 
-        name = storage.filename.split('.')[0]
+            name = storage.filename.split('.')[0]
 
-        stochKitModel = stochss.stochkit.StochMLDocument.fromString(storage.file.read()).toModel(name)
-        modelDb = StochKitModelWrapper.createFromStochKitModel(self, stochKitModel)
+            stochKitModel = stochss.stochkit.StochMLDocument.fromString(storage.file.read()).toModel(name)
+            modelDb = StochKitModelWrapper.createFromStochKitModel(self, stochKitModel)
+            
+            self.redirect("/modeleditor?select={0}".format(modelDb.key().id()))
+        except Exception as e:
+            traceback.print_exc()
+            result = {}
+            result['status'] = False
+            result['msg'] = 'Error: {0}'.format(e)
 
-        self.redirect("/modeleditor?select={0}".format(modelDb.key().id()))
+            self.render_response("importFromXML.html", **result)
+
+class ImportFromSBMLPage(BaseHandler):
+    def authentication_required(self):
+        return True
+    
+    def get(self):
+        self.render_response('importFromSBML.html')
+
+    def post(self):
+        try:
+            storage = self.request.POST['datafile']
+            units = self.request.POST['units']
+
+            name = storage.filename.split('.')[0]
+
+            tmp = tempfile.NamedTemporaryFile(delete = False)
+            filename = tmp.name
+            tmp.write(storage.file.read())
+            tmp.close()
+
+            #stochKitModel = stochss.stochkit.StochMLDocument.fromString(storage.file.read()).toModel(name)
+            modelDb = StochKitModelWrapper.createFromStochKitModel(self, stochss.SBMLconverter.convert(filename, name))
+
+            print units
+            modelDb.units = "concentration" if units == "concentration" else "population"
+            modelDb.put()
+
+            os.remove(filename)
+            
+            self.redirect("/modeleditor?select={0}".format(modelDb.key().id()))
+        except Exception as e:
+            traceback.print_exc()
+            result = {}
+            result['status'] = False
+            result['msg'] = 'Error: {0}'.format(e)
+
+            self.render_response("importFromSBML.html", **result)
 
 class ModelEditorPage(BaseHandler):
     """

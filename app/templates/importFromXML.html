@@ -10,8 +10,12 @@
       <h3>Import From XML</h3>
       <form action="/importFromXML" enctype="multipart/form-data" method="post">
         Please specify a valid StochKit XML file:<br>
-        <input type="file" name="datafile" size="40">
+        <input type="file" name="datafile" size="40" required><br><br>
         <button type="submit">Submit</button>
+
+	{% if status == False %}
+        <div id="msg" class="alert alert-error">{{ msg }}</div>
+	{% endif %}
       </form>
 </div>
 
