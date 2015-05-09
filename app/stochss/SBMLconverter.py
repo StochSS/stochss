@@ -28,7 +28,6 @@ def convert(filename, modelName = None):
     for i in range(model.getNumParameters()):
         parameter=model.getParameter(i)
         name=parameter.getId()
-        parameterNames+=name+','
         value=parameter.getValue()
 
         stochssParameter = stochkit.Parameter(name = name, expression = value)
