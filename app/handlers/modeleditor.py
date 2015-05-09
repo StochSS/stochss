@@ -612,7 +612,6 @@ class ImportFromSBMLPage(BaseHandler):
     def post(self):
         try:
             storage = self.request.POST['datafile']
-            units = self.request.POST['units']
 
             name = storage.filename.split('.')[0]
 
@@ -622,10 +621,10 @@ class ImportFromSBMLPage(BaseHandler):
             tmp.close()
 
             #stochKitModel = stochss.stochkit.StochMLDocument.fromString(storage.file.read()).toModel(name)
-            modelDb = StochKitModelWrapper.createFromStochKitModel(self, stochss.SBMLconverter.convert(filename, name))
+            model, isPopulation = stochss.SBMLconverter.convert(filename, name)
+            modelDb = StochKitModelWrapper.createFromStochKitModel(self, model)
 
-            print units
-            modelDb.units = "concentration" if units == "concentration" else "population"
+            modelDb.units = "population" if isPopulation else "concentration"
             modelDb.put()
 
             os.remove(filename)

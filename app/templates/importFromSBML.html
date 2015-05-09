@@ -10,10 +10,7 @@
       <h3>Import From SBML</h3>
       <form action="/importFromSBML" enctype="multipart/form-data" method="post">
         Please specify an SBML file to import:<br>
-        <input type="file" name="datafile" size="40" required><br>
-	Specify if model should be imported as concentration or population model:<br>
-	<input type="radio" name="units" value="concentration" required>Concentration<br>
-	<input type="radio" name="units" value="population" required>Population<br><br>
+        <input type="file" name="datafile" size="40" required><br><br>
         <button type="submit">Submit</button>
 
 	{% if status == False %}

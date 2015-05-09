@@ -17,10 +17,37 @@ def convert(filename, modelName = None):
 
     stochssModel = stochkit.StochKitModel(name = modelName)
 
+    perSpeciesUnits = []
+    isPopulation = True
+
+    for i in range(model.getNumSpecies()):
+        species = model.getSpecies(i)
+
+        if species.isSetInitialConcentration():
+            perSpeciesUnits.append("concentration")
+        elif species.isSetAmount():
+            perSpeciesUnits.append("population")
+        else:
+            raise Exception("Species initial conditions (initialAmount or initialConcentration) must be defined on all initial conditions for StochSS")
+
+    if len(set(perSpeciesUnits)) > 1:
+        raise Exception("All species initial conditions must be either substance units or amount units. No mixing is possible in StochSS")
+
+    print perSpeciesUnits
+
+    if list(set(perSpeciesUnits))[0] == "population":
+        isPopulation = True
+    else:
+        isPopulation = False
+
     for i in range(model.getNumSpecies()):
         species = model.getSpecies(i)
         name = species.getId()
-        value = species.getInitialAmount()
+
+        if isPopulation:
+            value = species.getInitialAmount()
+        else:
+            value = species.getInitialConcentration()
 
         stochssSpecies = stochkit.Species(name = name, initial_value = value)
         stochssModel.addSpecies([stochssSpecies])
@@ -29,6 +56,14 @@ def convert(filename, modelName = None):
         parameter=model.getParameter(i)
         name=parameter.getId()
         value=parameter.getValue()
+
+        stochssParameter = stochkit.Parameter(name = name, expression = value)
+        stochssModel.addParameter([stochssParameter])
+
+    for i in range(model.getNumCompartments()):
+        compartment=model.getCompartment(i)
+        name=compartment.getId()
+        value=compartment.getSize()
 
         stochssParameter = stochkit.Parameter(name = name, expression = value)
         stochssModel.addParameter([stochssParameter])
@@ -70,4 +105,4 @@ def convert(filename, modelName = None):
 
         stochssModel.addReaction([stochssReaction])
 
-    return stochssModel
+    return stochssModel, isPopulation
