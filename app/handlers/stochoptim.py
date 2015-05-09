@@ -43,14 +43,14 @@ class StochOptimModel(stochss.model.Model):
         
         # Species
         # Any species can be converted to StochOptim format
-        self.species = copy.deepcopy(model.species)
+        self.listOfSpecies = copy.deepcopy(model.listOfSpecies)
                 
         # Parameters
         # Any parameter can be converted to StochOptim format
-        self.parameters = copy.deepcopy(model.parameters)
+        self.listOfParameters = copy.deepcopy(model.listOfParameters)
 
         exprParameters = []
-        for pname in self.parameters:
+        for pname in self.listOfParameters:
             if hasattr(self.listOfParameters[pname], 'expression'):
                 exprParameters.append(pname)
 
