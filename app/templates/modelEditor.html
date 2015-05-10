@@ -36,10 +36,6 @@
     <div class="span2 modelRightBar">
         <div class="well sidebar-nav">
             <ul class="nav nav-list">
-                <li class="reqModel nav-header">Model Actions</li>
-                <li class="reqModel"><a data-hook="duplicateLink" href="#">Duplicate Model</a></li>
-                <li class="reqModel"><a data-hook="convertToPopulationLink" href="#">Convert to Population</a></li>
-                <li class="reqModel"><a data-hook="convertToSpatialLink" href="#">Convert to Spatial</a></li>
                 <li class="nav-header">Import / Export</li>
                 <li><a href="/import?tab=1">Import from .zip</a></li>
                 <li><a href="/importFromXML">Import from .XML</a></li>
@@ -129,7 +125,7 @@
                     </div>
                     <div id="collapseReactions" class="accordion-body collapse">
                         <div class="accordion-inner">
-                            <div data-hook="reaction"></div>
+                            <div data-hook="reaction" style="min-width: 600px"></div>
                         </div>
                     </div>
                 </div>

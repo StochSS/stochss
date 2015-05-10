@@ -14,8 +14,7 @@
                     <tr>
                       <th width="25px"></th>
                       <th width="200px">Name</th>
-                      <th>Type</th>
-                      <th>Spatial</th>
+                      <th>Properties</th>
                     </tr>
                   </thead>
                   <tbody>
@@ -28,10 +27,13 @@
                         {{ item.name }}
                       </td>
                       <td>
-                        {{ item.units }}
-                      </td>
-                      <td>
-                        {{ item.isSpatial }}
+			{% if item.units == "concentration" and not item.isSpatial %}
+			Mass action, concentration, non-spatial
+			{% elif item.units == "population" and not item.isSpatial %}
+			Mass action, population, non-spatial
+			{% elif item.units == "population" and item.isSpatial %}
+			Mass action, population, spatial
+			{% endif %}
                       </td>
                     </tr>
                     {% endfor %}
