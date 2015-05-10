@@ -42,6 +42,7 @@ class InfrastructureManager(object):
 
     # URLs
     BACKEND_QUEUE_URL = '/backend/queue'
+    PREPARE_VMS_OP = 'prepare_vms'
 
     # Default reasons which might be returned by this module
     REASON_BAD_SECRET = 'bad secret'
@@ -62,7 +63,7 @@ class InfrastructureManager(object):
     STATE_FAILED = 'failed'
 
     # A list of parameters required to query the InfrastructureManager about
-    # the state of a run_instances request.
+    # the state of a prepare_instances request.
     DESCRIBE_INSTANCES_REQUIRED_PARAMS = (  )
 
     # A list of parameters required to initiate a VM deployment process
@@ -71,7 +72,7 @@ class InfrastructureManager(object):
     )
 
     # A list of parameters required to initiate a VM termination process
-    TERMINATE_INSTANCES_REQUIRED_PARAMS = ( PARAM_INFRASTRUCTURE, )
+    TERMINATE_INSTANCES_REQUIRED_PARAMS = (PARAM_INFRASTRUCTURE, )
 
     def __init__(self, params=None, blocking=False):
         """
@@ -113,7 +114,7 @@ class InfrastructureManager(object):
         Args:
           parameters  A dictionary of parameters which contains a valid
                       'reservation_id' parameter. A valid 'reservation_id'
-                      is an ID issued by the run_instances method of the
+                      is an ID issued by the prepare_instances method of the
                       same InfrastructureManager object. Alternatively one
                       may provide a valid JSON string instead of a dictionary
                       object.
@@ -164,9 +165,9 @@ class InfrastructureManager(object):
     #    else:
     #      return self.__generate_response(False, self.REASON_RESERVATION_NOT_FOUND)
 
-    def run_instances(self, parameters, secret):
+    def prepare_instances(self, parameters):
         """
-        Start a new virtual machine deployment using the provided parameters. The
+        Prepare and setup a new virtual machine deployment using the provided parameters. The
         input parameter set must include an 'infrastructure' parameter which indicates
         the exact cloud environment to use. Value of this parameter will be used to
         instantiate a cloud environment specific agent which knows how to interact
@@ -185,7 +186,6 @@ class InfrastructureManager(object):
                       'num_vms' and any other cloud platform specific
                       parameters. Alternatively one may provide a valid
                       JSON string instead of a dictionary object.
-          secret      A previously established secret (currently not used)
 
         Returns:
           If the secret is valid and all the required parameters are available in
@@ -203,12 +203,12 @@ class InfrastructureManager(object):
 
         logging.info('Request parameters are {0}'.format(parameters))
         for param in self.RUN_INSTANCES_REQUIRED_PARAMS:
-            logging.info('param: {0}'.format(param))
             if not utils.has_parameter(param, parameters):
                 return self.__generate_response(False, 'no ' + param)
 
         infrastructure = parameters[self.PARAM_INFRASTRUCTURE]
         agent = self.agent_factory.create_agent(infrastructure)
+
         try:
             agent.assert_required_parameters(parameters, BaseAgent.OPERATION_RUN)
         except AgentConfigurationException as exception:
@@ -237,26 +237,17 @@ class InfrastructureManager(object):
 
             # send the spawn vms task to backend server
             from_fields = {
-                'op': 'start_vms',
+                'op': InfrastructureManager.PREPARE_VMS_OP,
                 'infra': pickle.dumps(self),
                 'agent': pickle.dumps(agent),
                 'parameters': pickle.dumps(parameters),
                 'reservation_id': pickle.dumps(reservation_id)
             }
-        #       from_data = urllib.urlencode(from_fields)
-        #
-        #       rpc = urlfetch.create_rpc()
-        #       urlfetch.make_fetch_call(rpc=rpc, url=backend_worker_url,
-        #                                method = urlfetch.POST,
-        #                                payload = from_data)
-        #     os.environ['HTTP_HOST'] = "127.0.0.1:8080"
 
-        taskqueue.add(url=InfrastructureManager.BACKEND_QUEUE_URL, params=from_fields, method='GET')
+            taskqueue.add(url=InfrastructureManager.BACKEND_QUEUE_URL, params=from_fields, method='GET')
 
-        logging.info('Successfully sent request to backend server, reservation_id: {0}.'.format(reservation_id))
-        #     return self.__generate_response(True,
-        #       self.REASON_NONE, {'reservation_id': reservation_id})
-        return self.__generate_response(True, 'Succeed in sending request to backend server.')
+            logging.info('Successfully sent request to backend server, reservation_id: {0}.'.format(reservation_id))
+            return self.__generate_response(True, 'Succeeded in sending request to backend server.')
 
     def synchronize_db(self, params):
         last_time = None
@@ -340,6 +331,7 @@ class InfrastructureManager(object):
             self.__kill_vms(agent, parameters, prefix)
         else:
             thread.start_new_thread(self.__kill_vms, (agent, parameters, prefix))
+
         return self.__generate_response(True, self.REASON_NONE)
 
 

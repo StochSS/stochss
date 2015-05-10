@@ -154,13 +154,17 @@ class CredentialsPage(BaseHandler):
                         all_numbers_correct = False
                         break
                     else:
-                        vms.append({"instance_type": type, "num_vms": int(params[num_type])})
+                        vms.append({"instance_type": type,
+                                    "num_vms": int(params[num_type])})
+
         active_nodes = context['number_creating'] + context['number_pending'] + context['number_running']
+
         if all_numbers_correct:
             result = self.start_vms(user_id, self.user_data.getCredentials(), head_node, vms, active_nodes)
             context['starting_vms'] = True
         else:
             context['starting_vms'] = False
+
         self.redirect('/credentials')
 
     def __handle_ec2_save_credentials(self, params):
@@ -389,9 +393,6 @@ class CredentialsPage(BaseHandler):
         return context
     
     def get_all_vms(self, user_id, params):
-        """
-            
-        """
         if user_id is None or user_id is "":
             return None
         else:
@@ -401,8 +402,28 @@ class CredentialsPage(BaseHandler):
                 return result
             except:
                 return None
+
+    def __get_ec2_image_id(self):
+        '''
+            Check for AMI build by the stochss_ami_manager
+                :return: image_id
+        '''
+        try:
+            with open(AWSConfig.EC2_SETTINGS_FILENAME) as fd:
+                ec2_config = json.load(fd)
+                image_id = ec2_config['ami_id']
+        except Exception as e:
+            logging.error('Failed to read ami id from {0}: {1}'.format(AWSConfig.EC2_SETTINGS_FILENAME, str(e)))
+            image_id = None
+
+        return image_id
                     
     def start_vms(self, user_id, credentials, head_node, vms_info, active_nodes):
+        logging.info('\n\nstart_vms:\nhead_node = {0}\nvms_info = {1}\nactive_nodes = {2}'.format(
+            pprint.pformat(head_node),
+            pprint.pformat(vms_info),
+            pprint.pformat(active_nodes)))
+
         key_prefix = AgentConfig.get_agent_key_prefix(AgentTypes.EC2, key_prefix=user_id)
         group_random_name = AgentConfig.get_random_group_name(prefix=key_prefix)
 
@@ -421,23 +442,22 @@ class CredentialsPage(BaseHandler):
             'use_spot_instances' :False
         }
 
-        # Check for AMI build by the stochss_ami_manager
-        try:
-            with open(AWSConfig.EC2_SETTINGS_FILENAME) as fd:
-                ec2_config = json.load(fd)
-                params['image_id'] = ec2_config['ami_id']
-        except Exception as e:
-            logging.error(e)
+        image_id = self.__get_ec2_image_id()
+        if image_id == None:
             return {
                 'status':False,
-                'msg': 'Cannot load AMI config from {0}!'.format(AWSConfig.EC2_SETTINGS_FILENAME)
+                'msg': 'Cannot load Amazon EC2 Image configuration!'
             }
+        else:
+            params['image_id'] = image_id
+
 
         service = backendservices()
         
         if active_nodes == 0:
             if head_node is None:
-                return {'status':False , 'msg': "At least one head node needs to be launched."} 
+                return {'status':False ,
+                        'msg': "At least one head node needs to be launched."}
             else:
                 params['head_node'] = head_node
                 

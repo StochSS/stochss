@@ -248,7 +248,7 @@ class backendservices(object):
         try:
             i = InfrastructureManager(blocking=block)
 
-            res = i.run_instances(params, [])
+            res = i.prepare_instances(params)
 
             logging.info("prepare_flex_cloud_machines : exiting method with result : %s", str(res))
             return True, None
@@ -371,7 +371,7 @@ class backendservices(object):
 
             params[VMStateModel.IDS] = ids
 
-            res = i.run_instances(params, [])
+            res = i.prepare_instances(params)
             
             # check if dynamodb stochss table exists
             database = DynamoDB(access_key, secret_key)

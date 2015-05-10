@@ -32,14 +32,13 @@ class FlexAgent(BaseAgent):
     def assert_required_parameters(self, parameters, operation):
         pass
 
-    @staticmethod
-    def get_flex_instance_id(public_ip):
+    def __get_flex_instance_id(self, public_ip):
         return public_ip.replace('.', '', 3)
 
     def describe_instances_launched(self, parameters):
         launched_ids = []
         for machine in parameters['flex_cloud_machine_info']:
-            launched_ids.append(FlexAgent.get_flex_instance_id(machine['ip']))
+            launched_ids.append(self.__get_flex_instance_id(machine['ip']))
 
     def describe_instances_running(self, parameters):
         instance_ids = []
@@ -48,7 +47,7 @@ class FlexAgent(BaseAgent):
         instance_types = []
 
         for machine in parameters['flex_cloud_machine_info']:
-            instance_ids.append(FlexAgent.get_flex_instance_id(machine['ip']))
+            instance_ids.append(self.__get_flex_instance_id(machine['ip']))
             public_ips.append(machine['ip'])
             private_ips.append(machine['ip'])
             instance_types.append('c3.large')
@@ -67,12 +66,16 @@ class FlexAgent(BaseAgent):
 
     def get_instance_state(self, ip, username, keyfile):
         logging.info('Checking state...')
-        cmd = self.get_remote_command_string(ip=ip, username=username, keyfile=keyfile,
-                                             command='[ -d ~/stochss ] && echo yes')
+        command = '[ -d ~/stochss ] && echo yes'
 
+        cmd = self.get_remote_command_string(ip=ip, username=username, keyfile=keyfile,
+                                             command=command)
         logging.info('cmd = {0}'.format(cmd))
+
         if os.system(cmd) == 0:
             return 'running'
+
+        # TODO: Check if state is prepared
 
         return 'unknown'
 
@@ -93,7 +96,7 @@ class FlexAgent(BaseAgent):
 
         for machine in machines:
             instance = {}
-            instance["id"] = FlexAgent.get_flex_instance_id(machine["ip"])
+            instance["id"] = self.__get_flex_instance_id(machine["ip"])
             instance["public_ip"] = machine["ip"]
             instance["private_ip"] = machine["ip"]
             instance["state"] = self.get_instance_state(ip=machine["ip"],
