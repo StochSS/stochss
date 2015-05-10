@@ -416,7 +416,7 @@ Spatial.Controller = Backbone.View.extend(
         handleAccessVtkDataButton : function(event)
         {
             updateMsg( { status : true,
-                         msg : "Packing up Vtk data... (will forward you to file when ready)" } );
+                         msg : "Packing up Vtk data... (this can take a couple minutes -- will forward you to file when ready)" } );
 
             $.ajax( { type : "POST",
                       url : "/spatial",
