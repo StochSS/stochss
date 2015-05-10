@@ -75322,16 +75322,19 @@ var PrimaryView = View.extend({
 
 ModelCollection = AmpersandCollection.extend( {
     url: "/models",
+    comparator: 'name',
     model: Model
 });
 
 PublicModelCollection = AmpersandCollection.extend( {
     url: "/publicModels",
+    comparator: 'name',
     model: Model
 });
 
 MeshCollection = AmpersandCollection.extend( {
     url: "/meshes",
+    comparator: 'name',
     model: Mesh
 });
 
