@@ -324,18 +324,18 @@ var PrimaryView = View.extend({
     },
     forwardToFile: function(data)
     {
-	if(data.url)
-	{
-	    window.location = data.url;
-	}
-	else
-	{
+        if(data.url)
+        {
+            window.location = data.url;
+        }
+        else
+        {
             var saveMessageDom = $( this.queryByHook('saveMessage') );
 
             saveMessageDom.removeClass( "alert-success" );
             saveMessageDom.addClass( "alert-error" );
-            saveMessageDom.text( data.msg );	    
-	}
+            saveMessageDom.text( data.msg );        
+        }
     },
     render: function()
     {
