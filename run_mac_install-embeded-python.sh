@@ -34,6 +34,8 @@ function install_lib {
         pkg="$1==2.4.0b1"
     elif [ "$1" = "numpy" ]; then
         pkg="$1==1.8.2"
+    elif [ "$1" = "libsbml" ]; then
+        pkg="python-libsbml"
     else
         pkg="$1"
     fi
@@ -46,7 +48,7 @@ function check_and_install_dependencies {
     if ! check_pip;then
         install_pip
     fi
-    deps=("numpy" "scipy" "matplotlib" "h5py")
+    deps=("numpy" "scipy" "matplotlib" "h5py" "libsbml")
     for dep in "${deps[@]}"
     do
         echo "Checking for $dep" >> run_mac_install.log
