@@ -91,6 +91,20 @@ Sensitivity.SelectTable = Backbone.View.extend(
                     }, this.state.selections.pc, id) );
                 }
 
+		$( '.selectAll' ).click( _.bind(function() {
+		    this.pc.find('input').each(function() {
+			if(!this.checked)
+			    this.click();
+		    });
+		}, this));
+
+		$( '.clearAll' ).click( _.bind(function() {
+		    this.pc.find('input').each(function() {
+			if(this.checked)
+			    this.click();
+		    });
+		}, this));
+
                 /*var species = this.model.SpeciesList.children();
 
                 for(var i = 0; i < species.length; i++) {

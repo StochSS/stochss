@@ -47,6 +47,25 @@ Splot.Plot = Backbone.View.extend(
                 this.selected.push( checkbox.prop("checked") );                   
             }
 
+	    var selectAllClearAllDiv = $( '<div class="btn-group"> \
+		  <button class="btn btn-small selectAll">Select All</button> \
+		  <button class="btn btn-small clearAll">Clear All</button> \
+	      </div>' ).appendTo( this.controlDiv );
+
+	    selectAllClearAllDiv.find( '.selectAll' ).click( _.bind(function() {
+		this.controlDiv.find('input').each(function() {
+		    if(!this.checked)
+			this.click();
+		});
+	    }, this));
+
+	    selectAllClearAllDiv.find( '.clearAll' ).click( _.bind(function() {
+		this.controlDiv.find('input').each(function() {
+		    if(this.checked)
+			this.click();
+		});
+	    }, this));
+
             //$( '#plotButton' ).click( _.partial( function(t) { t.getImage(); }, this) );
 
             if(initialCheckbox)

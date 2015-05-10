@@ -466,6 +466,20 @@ StochOptim.Controller = Backbone.View.extend(
                     initialCheckbox.trigger("click");
                 }
 
+		$( '.selectAll' ).click( _.bind(function() {
+		    this.activateDiv.find('input').each(function() {
+			if(!this.checked)
+			    this.click();
+		    });
+		}, this));
+
+		$( '.clearAll' ).click( _.bind(function() {
+		    this.activateDiv.find('input').each(function() {
+			if(this.checked)
+			    this.click();
+		    });
+		}, this));
+
                 this.renderFiles();
 
                 $( "#runLocal" ).click( _.bind(function() {
