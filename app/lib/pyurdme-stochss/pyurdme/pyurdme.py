@@ -1490,13 +1490,14 @@ class URDMEResult(dict):
         subprocess.call(["mkdir", "-p", folder_name])
         func = dolfin.Function(self.model.mesh.get_function_space())
         func_vector = func.vector()
-        fd = dolfin.File(folder_name+"/trajectory.pvd")
+        filename = os.path.join(folder_name, "trajectory.pvd")
+        fd = dolfin.File(str(filename))
         numvox = self.model.mesh.get_num_dof_voxels()
 
         for i, time in enumerate(self.tspan):
             solvector = (self.sol[species][time]).vector()
             for dof in range(numvox):
-                func_vector[dof] = solvector[dof]
+                func_vector[dof][:] = solvector[dof][:]
             fd << func
 
     def export_to_xyx(self, filename, species=None, file_format="VMD"):

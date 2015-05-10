@@ -215,7 +215,7 @@ var run = function()
 
                               $( "#plotRegion" ).show();
 
-                              $( "#access" ).text( "Access local data" );
+                              $( "#access" ).text( '<i class="icon-download-alt"></i> Access local data' );
                               $( "#access" ).click( _.partial(function(id) {
                                   updateMsg( { status : true,
                                                msg : "Packing up data... (will forward you to file when ready)" } );

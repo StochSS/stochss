@@ -22,6 +22,7 @@ import time
 import logging
 import numbers
 import random
+import zipfile
 
 import pyurdme
 import pickle
@@ -45,7 +46,8 @@ class SpatialJobWrapper(db.Model):
     outData = db.StringProperty() # THis is a path to the output data on the filesystem
     status = db.StringProperty()
     zipFileName = db.StringProperty() # This is a temporary file that the server uses to store a zipped up copy of the output
-    
+    vtkFileName = db.StringProperty()
+
     # These are the cloud attributes
     resource = db.StringProperty()
     uuid = db.StringProperty()
@@ -63,6 +65,10 @@ class SpatialJobWrapper(db.Model):
         if self.zipFileName:
             if os.path.exists(self.zipFileName):
                 os.remove(self.zipFileName)
+
+        if self.vtkFileName:
+            if os.path.exists(self.vtkFileName):
+                os.remove(self.vtkFileName)
 
         self.stop(credentials=credentials)        
         #service.deleteTaskLocal([self.pid])
@@ -360,6 +366,59 @@ class SpatialPage(BaseHandler):
                 job.put()
             
             relpath = '/' + os.path.relpath(job.zipFileName, os.path.abspath(os.path.dirname(__file__) + '/../'))
+
+            self.response.headers['Content-Type'] = 'application/json'
+            self.response.write(json.dumps({ 'status' : True,
+                                             'msg' : 'Job downloaded',
+                                             'url' : relpath }))
+            return
+        elif reqType == 'getVtkLocal':
+            def zipdir(path, ziph):
+                # ziph is zipfile handle
+                for root, dirs, files in os.walk(path):
+                    for file in files:
+                        ziph.write(os.path.join(root, file), os.path.relpath(os.path.join(root, file), path))
+
+            jobID = json.loads(self.request.get('id'))
+
+            jobID = int(jobID)
+
+            job = SpatialJobWrapper.get_by_id(jobID)
+
+            if not job.vtkFileName:
+                try:
+                    tmpDir = None
+
+                    indata = json.loads(job.indata)
+
+                    tmpDir = tempfile.mkdtemp(dir = os.path.abspath(os.path.dirname(__file__) + '/../static/tmp/'))
+
+                    for trajectory in range(indata["realizations"]):
+                        resultFile = open(str(job.outData + '/results/result{0}'.format(trajectory)))
+                        result = pickle.load(resultFile)
+                        resultFile.close()
+
+                        for specie in result.model.listOfSpecies:
+                            result.export_to_vtk(specie, os.path.join(tmpDir, repr(trajectory), specie))
+
+                    tmpFile = tempfile.NamedTemporaryFile(dir = os.path.abspath(os.path.dirname(__file__) + '/../static/tmp/'), prefix = job.jobName + "_", suffix = '.zip', delete = False)
+
+                    zipf = zipfile.ZipFile(tmpFile, "w")
+                    zipdir(tmpDir, zipf)
+                    zipf.close()
+
+                    job.vtkFileName = tmpFile.name
+                    
+                    tmpFile.close()
+
+                    # Save the updated status
+                    job.put()
+                finally:
+                    if tmpDir and os.path.exists(tmpDir):
+                        print "Getting cleaned up"
+                        shutil.rmtree(tmpDir)
+            
+            relpath = '/' + os.path.relpath(job.vtkFileName, os.path.abspath(os.path.dirname(__file__) + '/../'))
 
             self.response.headers['Content-Type'] = 'application/json'
             self.response.write(json.dumps({ 'status' : True,
