@@ -138,9 +138,13 @@ class StochKitModelWrapper(db.Model):
             reactants = []
             products = []
 
+            totalReactants = 0
+            reactantCount = len(reaction.reactants.items())
+            productCount = len(reaction.products.items())
             for reactantName, stoichiometry in reaction.reactants.items():
                 reactantName = fixName(reactantName)
                 reactants.append({ 'specie' : reactantName, 'stoichiometry' : stoichiometry })
+                totalReactants += stoichiometry
 
             for productName, stoichiometry in reaction.products.items():
                 productName = fixName(productName)
@@ -149,6 +153,24 @@ class StochKitModelWrapper(db.Model):
             if reaction.massaction == True:
                 outReaction['type'] = 'massaction'
                 outReaction['rate'] = fixName(reaction.marate.name)
+
+                if reactantCount == 0 and productCount == 1:
+                    outReaction['type'] = 'creation'
+                elif reactantCount == 1 and productCount == 0:
+                    outReaction['type'] = 'destruction'
+                elif reactantCount == 2 and productCount == 1:
+                    outReaction['type'] = 'merge'
+                elif reactantCount == 1 and productCount == 1 and totalReactants == 1:
+                    outReaction['type'] = 'change'
+                elif reactantCount == 1 and productCount == 1 and totalReactants == 2:
+                    outReaction['type'] = 'dimerization'
+                elif reactantCount == 1 and productCount == 2:
+                    outReaction['type'] = 'split'
+                elif reactantCount == 2 and productCount == 2:
+                    outReaction['type'] = 'four'
+
+                if totalReactants > 2:
+                    raise Exception("Error in Reaction {0}: StochKit mass action reactions cannot have more than 2 total reacting particles. Total stoichiometry for this reaction is {1}".format(reactionName, totalRreactants))
             else:
                 modelType = 'custom'
                 outReaction['type'] = 'custom'

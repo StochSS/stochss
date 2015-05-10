@@ -10,11 +10,11 @@
       <h3>Import From SBML</h3>
       <form action="/importFromSBML" enctype="multipart/form-data" method="post">
         Please specify an SBML file to import:<br>
-        <input type="file" name="datafile" size="40" required><br><br>
+        <input type="file" name="datafile" size="40" required>
         <button type="submit">Submit</button>
-
 	{% if status == False %}
-        <div id="msg" class="alert alert-error">{{ msg }}</div>
+	<br><br>
+	<div id="msg" class="alert alert-error">{{ msg }}</div>
 	{% endif %}
       </form>
 </div>
