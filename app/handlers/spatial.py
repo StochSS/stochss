@@ -45,7 +45,7 @@ class SpatialJobWrapper(db.Model):
     outData = db.StringProperty() # THis is a path to the output data on the filesystem
     status = db.StringProperty()
     
-    preprocessed = False
+    preprocessed = db.BooleanProperty()
     preprocessedDir = db.StringProperty() # THis is a path to the output data on the filesystem
     
     zipFileName = db.StringProperty() # This is a temporary file that the server uses to store a zipped up copy of the output
@@ -63,6 +63,7 @@ class SpatialJobWrapper(db.Model):
     def preprocess(self, trajectory):      
         
         ''' Job is already processed check '''
+        print "Preprocess", self.preprocessed
         if self.preprocessed == True:
             return
 
@@ -93,7 +94,7 @@ class SpatialJobWrapper(db.Model):
             for specie in species:
                 threeJS[specie] = {"mesh" : json.loads(result.export_to_three_js(specie, 0))}
 
-            f = str(self.preprocessedDir+ '/{0}/'.format( "mesh.json"))
+            f = str(self.preprocessedDir+ '/{0}/{1}'.format(trajectory, "mesh.json"))
 
             with open(f, 'w') as meshFile:
                 json.dump(threeJS, meshFile) 
@@ -115,6 +116,9 @@ class SpatialJobWrapper(db.Model):
                 
                 with open(f, 'w') as outfile:
                     json.dump(threeJS, outfile)
+
+        self.preprocessed = True
+        self.put()
 
     # More attributes can obvs. be added
     # The delete operator here is a little fancy. When the item gets deleted from the GOogle db, we need to go clean up files stored locally and remotely
@@ -285,7 +289,7 @@ class SpatialPage(BaseHandler):
                     print "Loading the files"
                     colorJS = {}
                     meshJS = {}
-                    with open(str(job.preprocessedDir+ '/{0}/'.format("mesh.json")) ,'r') as meshfile:
+                    with open(str(job.preprocessedDir+ '/{0}/{1}'.format(trajectory, "mesh.json")) ,'r') as meshfile:
                         meshJS = json.load(meshfile)
 
                     with open(str(job.preprocessedDir+ '/{0}/{1}'.format(trajectory, str(timeIdx)+".json")) ,'r') as colorfile:

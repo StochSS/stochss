@@ -108,39 +108,48 @@ Spatial.Controller = Backbone.View.extend(
 
         play: function(dt){
             if(this.playFlag){
-                    
-                    // stopping animation when time limit is reached
-                    if(this.timeIdx == maxLimit-1)
+
+                console.log("Entering Play function" + Date.now() / 1000.0)
+
+                // stopping animation when time limit is reached
+                if(this.timeIdx == maxLimit-1)
+                {
+                    this.stopMesh();
+                    return;
+                }
+
+                // Loading value from cache
+                else if(cache[this.timeIdx])
+                {
+                    console.log("Playing @time"+this.timeIdx);
+                    $( "#playStats" ).html( 'Running...');
+                    // $('#timeSelect').trigger('change');
+                    this.handleSliderChange();
+                    // this.handleMeshColorUpdate(cache[this.timeIdx]);
+
+                    this.playCount += 1;
+
+                    if(this.playCount == 25)
                     {
-                        this.stopMesh();
-                        return;
+                        this.replaceCache(this.timeIdx - 25, this.timeIdx, this.timeIdx + cacheRange - 25, this.timeIdx + cacheRange);
+                        this.playCount = 0;
                     }
 
-                    // Loading value from cache
-                    else if(cache[this.timeIdx])
+                    this.timeIdx += 1;
+                    return;
+                }
+                // If we don't have the value loaded into the cache, wait a few timesteps for it to load before we panic and make an server request
+                else if(this.timeIdx < maxLimit){
+                    this.bufferCount+=1;
+                    if(this.bufferCount == cacheRange)
                     {
-                        // Update the mesh
-                        console.log("Playing @time"+this.timeIdx);
-                        $( "#playStats" ).html( 'Running...');
-                        $('#timeSelect').trigger('change');
-                        this.handleMeshColorUpdate(cache[this.timeIdx]);
-
-                        this.replaceCache(this.timeIdx, -1, this.timeIdx+cacheRange-1, this.timeIdx+cacheRange);
-                        this.timeIdx += 1;
-                        return;
+                        $( "#playStats" ).html( 'Buffering...');
+                        this.bufferCount = 0;
+                        //this.updateCache(this.timeIdx, this.timeIdx +cacheRange);
                     }
-
-                    else if(this.timeIdx < maxLimit){
-                        this.bufferCount+=1;
-                        if(this.bufferCount == cacheRange)
-                        {
-                            $( "#playStats" ).html( 'Buffering...');
-                            this.bufferCount = 0;
-                            this.updateCache(this.timeIdx, this.timeIdx +cacheRange);
-                        }
-                    }
-                    
-      
+                }
+                
+                
             }
         },
 
@@ -638,7 +647,7 @@ Spatial.Controller = Backbone.View.extend(
 
                                 $.ajax( { type : "GET", url : "/spatial",  data : { reqType : "onlyColorRange", 
                                           id : this.attributes.id, 
-                                          data : JSON.stringify({ trajectory : this.trajectory, timeStart : 0 , timeEnd: ( this.jobInfo.indata.time < 10 ?  this.jobInfo.indata.time : 10 ) })
+                                          data : JSON.stringify({ trajectory : this.trajectory, timeStart : 0 , timeEnd: ( this.jobInfo.indata.time < 50 ?  this.jobInfo.indata.time : 50 ) })
                                         } } )
                         ).done(_.bind(function(data1, data2)
                         {
@@ -651,13 +660,14 @@ Spatial.Controller = Backbone.View.extend(
                                     cache[t] = data2[0][t];
                             }
 
-                            cacheRange =  (this.jobInfo.indata.time < 10 )?  this.jobInfo.indata.time : 10;  
+                            cacheRange =  (this.jobInfo.indata.time < 50 )?  this.jobInfo.indata.time : 50;  
 
                         }, this)) ;
         },
 
       acquireNewData : function()
         {
+            console.log("Entering AcquireNewData function" + Date.now() / 1000.0)
             
             console.log("acquireNewData : function()");
 
@@ -694,11 +704,12 @@ Spatial.Controller = Backbone.View.extend(
          
         handleSliderChange : function(event)
         {
+            console.log("Entering handleSliderChange function" + Date.now() / 1000.0)
 
             console.log("handleSliderChange : function(event)");
 
             
-            if(event.originalEvent){
+            if(event && event.originalEvent){
                var slider = $( event.target );
                $( '#timeSelectDisplay' ).text('Time: ' + slider.val())
                this.timeIdx = Math.round( slider.val() / slider.prop('step') );
@@ -728,7 +739,9 @@ Spatial.Controller = Backbone.View.extend(
         {
             console.log("handleMeshColorUpdate : function(data)");
             var val = $( '#speciesSelect' ).val();
+            console.log("Redrawing colors1 function" + Date.now() / 1000.0)
             this.redrawColors( data[val].mesh );
+            console.log("Redrawing colors2 function" + Date.now() / 1000.0)
             this.mesh.geometry.colorsNeedUpdate = true;
 
 
