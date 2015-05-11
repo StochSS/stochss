@@ -12,6 +12,7 @@ import fileserver
 import shlex
 import sys
 import pyurdme
+import numpy
 import tempfile
 import shutil
 
@@ -27,6 +28,7 @@ class MeshWrapper(db.Model):
     meshFileId = db.IntegerProperty()
     subdomains = ObjectProperty()
     uniqueSubdomains = ObjectProperty()
+    volumes = ObjectProperty()
     undeletable = db.BooleanProperty()
     ghost = db.BooleanProperty()
 
@@ -36,6 +38,7 @@ class MeshWrapper(db.Model):
                  "description" : self.description,
                  "meshFileId" : self.meshFileId,
                  "subdomains" : self.subdomains if not reduced else [],
+                 "volumes" : self.volumes,
                  "uniqueSubdomains" : self.uniqueSubdomains,
                  "undeletable" : bool(self.undeletable),
                  "ghost" : bool(self.ghost),
@@ -249,6 +252,22 @@ def setupMeshes(handler):
         meshDb.subdomains = subdomains
         meshDb.uniqueSubdomains = uniqueSubdomains
         meshDb.undeletable = True
+
+        pymodel = pyurdme.URDMEModel(name = 'test')
+        pymodel.mesh = pyurdme.URDMEMesh.read_dolfin_mesh(str(os.path.join(base, fileName)))
+        pymodel.add_species(pyurdme.Species('T', 1))
+        pymodel.set_subdomain_vector(numpy.array(subdomains))
+        sd = pymodel.get_subdomain_vector()
+        vol_accumulator = numpy.zeros(numpy.unique(sd).shape)
+        for ndx, v in enumerate(pymodel.get_solver_datastructure()['vol']):
+            vol_accumulator[sd[ndx] - 1] += v
+
+        volumes = {}
+
+        for s, v in enumerate(vol_accumulator):
+            volumes[s + 1] = v
+
+        meshDb.volumes = volumes
 
         meshDb.put()
         

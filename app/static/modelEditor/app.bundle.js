@@ -1631,12 +1631,23 @@ module.exports = View.extend({
         <div data-hook="name"> \
         </div> \
     </div> \
-    <div data-hook="descriptionContainer"> \
+    <div> \
         <br /> \
-        <div> \
-            <h5>Mesh Description:</h5> \
+        <div data-hook="descriptionContainer" class="span5"> \
+            <h5>Description:</h5> \
             <pre data-hook="description"> \
             </pre> \
+        </div> \
+        <div class="span5"> \
+            <h5>Volumes:</h5> \
+            <table class="table"> \
+                <tr> \
+                    <th>Subdomain</th> \
+                    <th>Volume</th> \
+                </tr> \
+                <tbody data-hook="volume"> \
+                </tbody> \
+            </table> \
         </div> \
     </div> \
 </div>',
@@ -1666,6 +1677,23 @@ module.exports = View.extend({
     changeModel: function()
     {
 	this.model = this.baseModel.mesh;
+
+        this.render();
+    },
+    render: function()
+    {
+	View.prototype.render.apply(this, arguments);
+        
+        var tbody = $( this.queryByHook( 'volume' ) );
+
+        var sortedSubdomains = _.keys(this.model.volumes);
+
+        for(var i = 0; i < sortedSubdomains.length; i++)
+        {
+            var subdomain = sortedSubdomains[i];
+
+            $( '<tr><td>' + subdomain + '</td><td>' + this.model.volumes[subdomain] + '</td></tr>' ).appendTo( tbody );
+        }
     }
 });
 
@@ -4595,6 +4623,7 @@ module.exports = Model.extend({
         meshFileId : 'number',
         threeJsMesh : 'object',
         subdomains : 'object',
+        volumes : 'object',
         uniqueSubdomains : 'object',
         undeletable : { type : 'boolean', default : false },
 	ghost : { type : 'boolean', default : false }

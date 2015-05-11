@@ -21,6 +21,7 @@ import sensitivity
 import stochoptim
 import mesheditor
 import fileserver
+import pyurdme
 import spatial
 from stochssapp import BaseHandler, User
 from stochss.model import *
@@ -423,6 +424,22 @@ class SuperZip:
             meshDb.undeletable = False
             meshDb.ghost = False
         
+            pymodel = pyurdme.URDMEModel(name = 'test')
+            pymodel.mesh = pyurdme.URDMEMesh.read_dolfin_mesh(str(fileserver.FileManager.getFile(self, meshFileId)["storePath"]))
+            pymodel.add_species(pyurdme.Species('T', 1))
+            pymodel.set_subdomain_vector(numpy.array(subdomainsData))
+            sd = pymodel.get_subdomain_vector()
+            vol_accumulator = numpy.zeros(numpy.unique(sd).shape)
+            for ndx, v in enumerate(pymodel.get_solver_datastructure()['vol']):
+                vol_accumulator[sd[ndx] - 1] += v
+
+            volumes = {}
+
+            for s, v in enumerate(vol_accumulator):
+                volumes[s + 1] = v
+
+            meshDb.volumes = volumes
+
             meshDb.put()
 
             modelj["spatial"]["mesh_wrapper_id"] = meshDb.key().id()
