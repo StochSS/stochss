@@ -452,9 +452,12 @@ var PaginatedCollectionView = require('./paginated-collection-view');
 var Tests = require('./tests');
 var AddNewInitialConditionForm = AmpersandFormView.extend({
     submitCallback: function (obj) {
-        var model = this.collection.addScatterInitialCondition(this.baseModel.species.at(0), 0, this.baseModel.mesh.uniqueSubdomains.at(0).name);
+        if(this.baseModel.species.models.length > 0)
+        {
+            var model = this.collection.addScatterInitialCondition(this.baseModel.species.at(0), 0, this.baseModel.mesh.uniqueSubdomains.at(0).name);
         
-        this.selectView.select(model, true);
+            this.selectView.select(model, true);
+        }
     },
     initialize: function(attr, options) {
         this.collection = options.collection;

@@ -373,11 +373,11 @@ class SpatialPage(BaseHandler):
                                              'url' : relpath }))
             return
         elif reqType == 'getVtkLocal':
-            def zipdir(path, ziph):
+            def zipdir(path, ziph, prefix):
                 # ziph is zipfile handle
                 for root, dirs, files in os.walk(path):
                     for file in files:
-                        ziph.write(os.path.join(root, file), os.path.relpath(os.path.join(root, file), path))
+                        ziph.write(os.path.join(root, file), os.path.join(prefix, os.path.relpath(os.path.join(root, file), path)))
 
             jobID = json.loads(self.request.get('id'))
 
@@ -399,12 +399,12 @@ class SpatialPage(BaseHandler):
                         resultFile.close()
 
                         for specie in result.model.listOfSpecies:
-                            result.export_to_vtk(specie, os.path.join(tmpDir, repr(trajectory), specie))
+                            result.export_to_vtk(specie, os.path.join(tmpDir, "trajectory_{0}".format(trajectory), "species_{0}".format(specie)))
 
                     tmpFile = tempfile.NamedTemporaryFile(dir = os.path.abspath(os.path.dirname(__file__) + '/../static/tmp/'), prefix = job.jobName + "_", suffix = '.zip', delete = False)
 
                     zipf = zipfile.ZipFile(tmpFile, "w")
-                    zipdir(tmpDir, zipf)
+                    zipdir(tmpDir, zipf, os.path.basename(tmpFile.name))
                     zipf.close()
 
                     job.vtkFileName = tmpFile.name

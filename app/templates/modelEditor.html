@@ -80,7 +80,7 @@
                     </div>
                     <div id="collapseSpecies" class="accordion-body collapse">
                         <div class="accordion-inner">
-                            <div data-hook="specie"></div>
+                            <div data-hook="specie" style="z-index: 1;"></div>
                         </div>
                     </div>
                 </div>
@@ -100,7 +100,7 @@
                                     <li>A 'Distribute Uniformly' initial condition puts 'Count' particles in each voxel of the chosen subdomain.</li>
                                 </ul>
 
-                                <div data-hook="initialConditions"></div>
+                                <div data-hook="initialConditions" style="z-index: 1"></div>
                             </div>
                         </div>
                     </div>
@@ -112,7 +112,7 @@
                         <h2><a class="accordion-toggle" data-toggle="collapse" data-parent="#parametersAccordion" href="#collapseParameters">Parameters Editor</a></h2>
                     </div>
                     <div id="collapseParameters" class="accordion-body collapse">
-                        <div class="accordion-inner">
+                        <div class="accordion-inner" style="z-index: 1">
                             Define the model parameters. Parameter constants are used to defined reaction rates in the simulation. Stochkit syntax is used to define the parameters. They can be functions of other parameters or simple math operations.
                             <div data-hook="parameter"></div>
                         </div>
