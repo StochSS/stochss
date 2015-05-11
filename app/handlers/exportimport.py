@@ -426,6 +426,13 @@ class SuperZip:
         
             pymodel = pyurdme.URDMEModel(name = 'test')
             pymodel.mesh = pyurdme.URDMEMesh.read_dolfin_mesh(str(fileserver.FileManager.getFile(self, meshFileId)["storePath"]))
+            coordinates = pymodel.mesh.coordinates()
+            minx = numpy.min(coordinates[:, 0])
+            maxx = numpy.max(coordinates[:, 0])
+            miny = numpy.min(coordinates[:, 1])
+            maxy = numpy.max(coordinates[:, 1])
+            minz = numpy.min(coordinates[:, 2])
+            maxz = numpy.max(coordinates[:, 2])
             pymodel.add_species(pyurdme.Species('T', 1))
             pymodel.set_subdomain_vector(numpy.array(subdomainsData))
             sd = pymodel.get_subdomain_vector()
@@ -439,6 +446,7 @@ class SuperZip:
                 volumes[s + 1] = v
 
             meshDb.volumes = volumes
+            meshDb.boundingBox = [[minx, maxx], [miny, maxy], [minz, maxz]]
 
             meshDb.put()
 

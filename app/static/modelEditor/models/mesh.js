@@ -9,6 +9,7 @@ module.exports = Model.extend({
         meshFileId : 'number',
         threeJsMesh : 'object',
         subdomains : 'object',
+        boundingBox : 'object',
         volumes : 'object',
         uniqueSubdomains : 'object',
         undeletable : { type : 'boolean', default : false },

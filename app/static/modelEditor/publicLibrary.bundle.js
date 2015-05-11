@@ -1169,12 +1169,14 @@ module.exports = View.extend({
     </div> \
     <div> \
         <br /> \
-        <div data-hook="descriptionContainer" class="span5"> \
+        <table cellpadding="5" width="100%"> \
+        <tr> \
+        <td data-hook="descriptionContainer" width="33%" valign="top"> \
             <h5>Description:</h5> \
             <pre data-hook="description"> \
             </pre> \
-        </div> \
-        <div class="span5"> \
+        </td> \
+        <td valign="top"> \
             <h5>Volumes:</h5> \
             <table class="table"> \
                 <tr> \
@@ -1184,7 +1186,24 @@ module.exports = View.extend({
                 <tbody data-hook="volume"> \
                 </tbody> \
             </table> \
-        </div> \
+        </td> \
+        <td valign="top"> \
+            <h5>Bounds:</h5> \
+            <table class="table"> \
+                <tr> \
+                    <th>Axis</th> \
+                    <th>Min</th> \
+                    <th>Max</th> \
+                </tr> \
+                <tbody> \
+                    <tr><td>x-axis</td><td data-hook="minx"></td><td data-hook="maxx"></td></tr> \
+                    <tr><td>y-axis</td><td data-hook="miny"></td><td data-hook="maxy"></td></tr> \
+                    <tr><td>z-axis</td><td data-hook="minz"></td><td data-hook="maxz"></td></tr> \
+                </tbody> \
+            </table> \
+        </td> \
+        </tr> \
+        </table> \
     </div> \
 </div>',
     bindings: {
@@ -1228,8 +1247,15 @@ module.exports = View.extend({
         {
             var subdomain = sortedSubdomains[i];
 
-            $( '<tr><td>' + subdomain + '</td><td>' + this.model.volumes[subdomain] + '</td></tr>' ).appendTo( tbody );
+            $( '<tr><td>' + subdomain + '</td><td>' + this.model.volumes[subdomain].toExponential(4) + '</td></tr>' ).appendTo( tbody );
         }
+
+        $( this.queryByHook( 'minx' ) ).text( this.model.boundingBox[0][0].toExponential(4) );
+        $( this.queryByHook( 'miny' ) ).text( this.model.boundingBox[1][0].toExponential(4) );
+        $( this.queryByHook( 'minz' ) ).text( this.model.boundingBox[2][0].toExponential(4) );
+        $( this.queryByHook( 'maxx' ) ).text( this.model.boundingBox[0][1].toExponential(4) );
+        $( this.queryByHook( 'maxy' ) ).text( this.model.boundingBox[1][1].toExponential(4) );
+        $( this.queryByHook( 'maxz' ) ).text( this.model.boundingBox[2][1].toExponential(4) );
     }
 });
 
@@ -4159,6 +4185,7 @@ module.exports = Model.extend({
         meshFileId : 'number',
         threeJsMesh : 'object',
         subdomains : 'object',
+        boundingBox : 'object',
         volumes : 'object',
         uniqueSubdomains : 'object',
         undeletable : { type : 'boolean', default : false },
