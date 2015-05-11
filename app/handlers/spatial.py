@@ -44,6 +44,10 @@ class SpatialJobWrapper(db.Model):
     indata = db.TextProperty() # This is a dump of the json data sent from the html/js that was used to start the job. We save it
     outData = db.StringProperty() # THis is a path to the output data on the filesystem
     status = db.StringProperty()
+    
+    preprocessed = False
+    preprocessedDir = db.StringProperty() # THis is a path to the output data on the filesystem
+    
     zipFileName = db.StringProperty() # This is a temporary file that the server uses to store a zipped up copy of the output
     
     # These are the cloud attributes
@@ -55,6 +59,63 @@ class SpatialJobWrapper(db.Model):
     exception_message = db.StringProperty()
     output_stored = db.StringProperty()
 
+
+    def preprocess(self, trajectory):      
+        
+        ''' Job is already processed check '''
+        if self.preprocessed == True:
+            return
+
+        ''' Unpickle data file '''
+        with open(str(self.outData + '/results/result{0}'.format(trajectory))) as fd:
+            
+            result = pickle.load(fd)
+            species = result.model.get_species_map().keys()
+            
+            ''' Get the max time for the job '''
+            indataStr = json.loads(self.indata)
+            maxTime = indataStr['time']
+
+            ''' This flag will be set once we store the mesh Data '''
+
+            ''' Creating preprocess directory '''
+            if not self.preprocessedDir:
+                self.preprocessedDir = '../preprocessed/'+str(indataStr['id'])
+
+            ''' Creating trajectory directory '''
+            directory = str(self.preprocessedDir+ '/{0}/'.format(trajectory)) 
+                
+            if not os.path.exists(directory):
+                os.makedirs(directory)
+
+            ''' Storing the mesh first : Note that the same mesh is used across time ranges'''
+            threeJS = {}
+            for specie in species:
+                threeJS[specie] = {"mesh" : json.loads(result.export_to_three_js(specie, 0))}
+
+            f = str(self.preprocessedDir+ '/{0}/'.format( "mesh.json"))
+
+            with open(f, 'w') as meshFile:
+                json.dump(threeJS, meshFile) 
+            
+            ''' Storing the colored mesh for each time range '''
+            for timeIdx in range(0, maxTime):
+                threeJS = {}
+                for specie in species:
+                    concVals = result.get_species(specie, timeIdx, concentration=True)
+                    popVals = result.get_species(specie, timeIdx, concentration=False)
+
+                    minIdx = numpy.argmin(concVals)
+                    maxIdx = numpy.argmax(concVals)
+                    threeJS[specie] = { "mesh" : json.loads(result.export_to_three_js(specie, timeIdx))["colors"],
+                                        "max" : int(popVals[maxIdx]),
+                                        "min" : int(popVals[minIdx]) }
+
+                f = str(self.preprocessedDir+ '/{0}/{1}.json'.format(trajectory, timeIdx)) 
+                
+                with open(f, 'w') as outfile:
+                    json.dump(threeJS, outfile)
+
     # More attributes can obvs. be added
     # The delete operator here is a little fancy. When the item gets deleted from the GOogle db, we need to go clean up files stored locally and remotely
     def delete(self, credentials=None):
@@ -63,6 +124,10 @@ class SpatialJobWrapper(db.Model):
         if self.zipFileName:
             if os.path.exists(self.zipFileName):
                 os.remove(self.zipFileName)
+
+        if self.preprocessedDir:
+            if os.path.exists(str(self.preprocessedDir)):
+                shutil.rmtree(str(self.preprocessedDir))
 
         self.stop(credentials=credentials)        
         #service.deleteTaskLocal([self.pid])
@@ -190,113 +255,102 @@ class SpatialPage(BaseHandler):
             self.response.headers['Content-Type'] = 'application/json'
             self.response.write(json.dumps(result))
             return
+
+        elif reqType == 'preprocess':
+            job = SpatialJobWrapper.get_by_id(int(self.request.get('id')))
+            data = json.loads(self.request.get('data'))
+            trajectory = data["trajectory"]           
+            
+            job.preprocess(trajectory)
+            job.put()
+            self.response.headers['Content-Type'] = 'application/json'
+            self.response.write("")
+
         elif reqType == 'timeData':
             try:
+                print "Getting time data"
                 job = SpatialJobWrapper.get_by_id(int(self.request.get('id')))
-                
-
-                tmp = time.time()
                 data = json.loads(self.request.get('data'))
 
                 trajectory = data["trajectory"]
                 timeIdx = data["timeIdx"]                
+                resultJS = {}
 
-                with open(str(job.outData + '/results/result{0}'.format(trajectory))) as fd:
-                    result = pickle.load(fd)
-                
-                    print "time to unpickle stuff2", time.time() - tmp
-        
-                    species = result.model.get_species_map().keys()
+                # If the job has been preprocessed
+                if (job.preprocessed) :
+                    print "Job is preprocessed"
+                    indir = str(job.preprocessedDir+ '/{0}/{1}'.format(trajectory, timeIdx))
+    #               print "Input directory",indir
+                    
+                    print "Loading the files"
+                    colorJS = {}
+                    meshJS = {}
+                    with open(str(job.preprocessedDir+ '/{0}/'.format("mesh.json")) ,'r') as meshfile:
+                        meshJS = json.load(meshfile)
 
-                    threeJS = {}
-                    #print "exporting ", timeIdx
+                    with open(str(job.preprocessedDir+ '/{0}/{1}'.format(trajectory, str(timeIdx)+".json")) ,'r') as colorfile:
+                        colorJS = json.load(colorfile)
 
-                    tmp = time.time()
-                    for specie in species:
-                        concVals = result.get_species(specie, timeIdx, concentration=True)
-                        popVals = result.get_species(specie, timeIdx, concentration=False)
+                    resultJS = colorJS
+                    for key in resultJS.keys():
+                        resultJS[key]["mesh"] = meshJS[key]["mesh"]
 
-                        minIdx = numpy.argmin(concVals)
-                        maxIdx = numpy.argmax(concVals)
 
-                        threeJS[specie] = { "mesh" : json.loads(result.export_to_three_js(specie, timeIdx)),
-                                            "max" : int(popVals[maxIdx]),
-                                            "min" : int(popVals[minIdx]) }
-                    print "time to load stuff2", time.time() - tmp
-                
-                self.response.content_type = 'application/json'
-                self.response.write(json.dumps( threeJS ))
-            except Exception as e:
-                traceback.print_exc()
-                result = {}
-                result['status'] = False
-                result['msg'] = 'Error: error fetching results {0}'.format(e)
-                self.response.headers['Content-Type'] = 'application/json'
-                self.response.write(json.dumps(result))
-            return
-        elif reqType == 'onlyColor':
-            try:
-                job = SpatialJobWrapper.get_by_id(int(self.request.get('id')))
 
-                data = json.loads(self.request.get('data'))
-
-                trajectory = data["trajectory"]
-                timeIdx = data["timeIdx"]
-
-                with open(str(job.outData + '/results/result{0}'.format(trajectory))) as fd:
-                    result = pickle.load(fd)
-        
-                    species = result.model.get_species_map().keys()
-
-                    threeJS = {}
-                    #print "exporting ", timeIdx
-
+                # If the job is not preprocessed
+                # Load the mesh like you did previously
+                else:
+                    with open(str(job.outData + '/results/result{0}'.format(trajectory))) as fd:
+                        result = pickle.load(fd)
+                        species = result.model.get_species_map().keys()
                     
                     for specie in species:
                         concVals = result.get_species(specie, timeIdx, concentration=True)
                         popVals = result.get_species(specie, timeIdx, concentration=False)
-
                         minIdx = numpy.argmin(concVals)
                         maxIdx = numpy.argmax(concVals)
-
-                        threeJS[specie] = { "mesh" : result._compute_solution_colors(specie, timeIdx),
+                        resultJS[specie] = { "mesh" : json.loads(result.export_to_three_js(specie, timeIdx)),
                                             "max" : int(popVals[maxIdx]),
                                             "min" : int(popVals[minIdx]) }
-
+                    
+                
                 self.response.content_type = 'application/json'
-                self.response.write(json.dumps( threeJS ))
-
+                self.response.write(json.dumps(resultJS))
+            
             except Exception as e:
                 traceback.print_exc()
                 result = {}
                 result['status'] = False
                 result['msg'] = 'Error: error fetching results {0}'.format(e)
                 self.response.headers['Content-Type'] = 'application/json'
+
                 self.response.write(json.dumps(result))
+            return
         
         elif reqType == 'onlyColorRange':
             try:
                 job = SpatialJobWrapper.get_by_id(int(self.request.get('id')))
-
                 data = json.loads(self.request.get('data'))
-
                 trajectory = data["trajectory"]
                 sTime= data["timeStart"]
                 eTime = data["timeEnd"]
 
-                with open(str(job.outData + '/results/result{0}'.format(trajectory))) as fd:
-                    tmp = time.time()
+                resultJS = {}
+                
+                # Handling case where job is preprocessed
+                if job.preprocessed:
+                    print "Job is preprocessed"
+                    for timeIdx in range(sTime, eTime):
+                        with open(str(job.preprocessedDir+ '/{0}/{1}'.format(trajectory, str(timeIdx)+".json")) ,'r') as f:
+                            resultJS[timeIdx] = json.load(f)
+
+                #Handling case where job is not preprocessed
+                else:
+                   with open(str(job.outData + '/results/result{0}'.format(trajectory))) as fd:
                     result = pickle.load(fd)
-                    print "time to unpickle stuff", time.time() - tmp
-
                     species = result.model.get_species_map().keys()
-
-                    threeJS = {}
-
-                    tmp = time.time()
-                    #print "exporting ", timeIdx
                     timeIdx = sTime;
-                    while timeIdx <=eTime:
+                    for timeIdx in range(sTime, eTime+1):
                         subthreeJS = {}
                         for specie in species:
                             concVals = result.get_species(specie, timeIdx, concentration=True)
@@ -309,11 +363,11 @@ class SpatialPage(BaseHandler):
                                                 "max" : int(popVals[maxIdx]),
                                                 "min" : int(popVals[minIdx]) }
                         
-                        threeJS[timeIdx] = {"mesh": subthreeJS}
-                        timeIdx = (timeIdx+1) % 101;
-                    print "time to load stuff", time.time() - tmp
+                        resultJS[timeIdx] = {"mesh": subthreeJS}
+
                 self.response.content_type = 'application/json'
-                self.response.write(json.dumps( threeJS ))
+                self.response.write(json.dumps( resultJS ))
+
             except Exception as e:
                 traceback.print_exc()
                 result = {}
@@ -322,6 +376,7 @@ class SpatialPage(BaseHandler):
                 self.response.headers['Content-Type'] = 'application/json'
                 self.response.write(json.dumps(result))
             return
+        
         self.render_response('spatial.html')
 
     def post(self):
@@ -417,6 +472,8 @@ class SpatialPage(BaseHandler):
                 os.system('tar -xf' +job.uuid+'.tar')
                 # Record location
                 job.outData = os.path.abspath(os.path.dirname(__file__))+'/../output/'+job.uuid
+                job.preprocessedDir = os.path.abspath(os.path.dirname(__file__))+'/../preprocessed/'+job.uuid
+                
                 # Clean up
                 os.remove(job.uuid+'.tar')
                 # Save the updated status
@@ -574,6 +631,7 @@ class SpatialPage(BaseHandler):
 
             basedir = path + '/../'
             dataDir = tempfile.mkdtemp(dir = basedir + 'output')
+            predataDir = tempfile.mkdtemp(dir = basedir + 'preprocess')
 
             job = SpatialJobWrapper()
             job.userId = self.user.user_id()
@@ -581,6 +639,7 @@ class SpatialPage(BaseHandler):
             job.jobName = data["jobName"]
             job.indata = json.dumps(data)
             job.outData = dataDir
+            job.preprocessedDir = predataDir
             job.modelName = pymodel.name
             job.resource = "local"
 

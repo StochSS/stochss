@@ -50,6 +50,9 @@ Spatial.Controller = Backbone.View.extend(
             cacheRange = undefined;
             maxLimit = undefined;
 
+            // preprocessing mesh
+            this.preprocessMesh();
+
         },
 
         refreshData : function()
@@ -99,16 +102,16 @@ Spatial.Controller = Backbone.View.extend(
 
             this.spt = this.timeIdx;
             this.playFlag = true;
-            
+            this.bufferCount = 0;
             this.playCount = 0;
-            this.intervalID = setInterval(_.bind(this.play, this), 1000);
+            this.intervalID = setInterval(_.bind(this.play, this), 800);
         },
 
         play: function(dt){
             if(this.playFlag){
                     
                     // stopping animation when time limit is reached
-                    if(this.timeIdx == maxLimit)
+                    if(this.timeIdx == maxLimit-1)
                     {
                         this.stopMesh();
                         return;
@@ -123,20 +126,19 @@ Spatial.Controller = Backbone.View.extend(
                         $('#timeSelect').trigger('change');
                         this.handleMeshColorUpdate(cache[this.timeIdx]);
 
-                        // If cache is equal to the size of the data
-                        if(this.playCount == 2 && cacheRange < maxLimit)
-                            {
-                                this.playCount = 0;
-                                this.replaceCache(this.timeIdx-2, this.timeIdx, this.timeIdx+cacheRange-1, this.timeIdx+cacheRange+1 );
-                            }
-                        this.playCount += 1;
+                        this.replaceCache(this.timeIdx, -1, this.timeIdx+cacheRange-1, this.timeIdx+cacheRange);
                         this.timeIdx += 1;
                         return;
                     }
 
                     else if(this.timeIdx < maxLimit){
-                        $( "#playStats" ).html( 'Buffering..');
-                        this.updateCache(this.timeIdx, this.timeIdx +cacheRange);
+                        this.bufferCount+=1;
+                        if(this.bufferCount == cacheRange)
+                        {
+                            $( "#playStats" ).html( 'Buffering...');
+                            this.bufferCount = 0;
+                            this.updateCache(this.timeIdx, this.timeIdx +cacheRange);
+                        }
                     }
                     
       
@@ -566,12 +568,13 @@ Spatial.Controller = Backbone.View.extend(
             this.updateCache(stime2, etime2);
         },
 
-        updateCache : function(start1, stop1, colorFlag=false){
+        updateCache : function(start1, stop1, colorFlag){
+
             var start = start1 % (maxLimit);
             var stop = stop1 % (maxLimit);
 
             if(stop1 >= maxLimit)
-                stop = maxLimit;
+                stop = maxLimit-1;
 
             console.log(" updateCache : function("+start+", "+stop+")");
 
@@ -583,7 +586,7 @@ Spatial.Controller = Backbone.View.extend(
                     data : JSON.stringify( { trajectory : this.trajectory, timeStart : start , timeEnd: stop} )},
                     success : _.bind(function(data)
                         {
-                            if(Object.keys(cache).length > 30)
+                            if(Object.keys(cache).length > 50)
                             {
                                 cache = {};
                             }
@@ -591,7 +594,7 @@ Spatial.Controller = Backbone.View.extend(
                             var time = _.keys(data).sort();
                             for (var i = 0; i < time.length; i++) {
                                 var t = time[i]; 
-                                cache[t] = data[t].mesh;
+                                cache[t] = data[t];
                             }
 
                             if(colorFlag)
@@ -599,6 +602,18 @@ Spatial.Controller = Backbone.View.extend(
 
                         }, this)
                     });
+        },
+
+        preprocessMesh : function(){
+                 $.ajax( { type : "GET", 
+                            url : "/spatial", 
+                            data : { reqType : "preprocess", 
+                                    id : this.attributes.id, 
+                                    data : JSON.stringify( { trajectory : this.trajectory} ) },
+                            success : function(){ 
+                                console.log("-- Preprocessing Completed -- ")
+                            }
+                        } );
         },
 
         updateMesh : function(){
@@ -615,6 +630,7 @@ Spatial.Controller = Backbone.View.extend(
 
         updateMeshWithCache : function(){
                 
+
                 $.when(
                                 $.ajax( { type : "GET", url : "/spatial", data : { reqType : "timeData", 
                                           id : this.attributes.id, 
@@ -633,7 +649,7 @@ Spatial.Controller = Backbone.View.extend(
                             
                             for (var i = 0; i < time.length; i++) {
                                     var t = time[i]; 
-                                    cache[t] = data2[0][t].mesh;
+                                    cache[t] = data2[0][t];
                             }
 
                             cacheRange =  (this.jobInfo.indata.time < 10 )?  this.jobInfo.indata.time : 10;  
@@ -659,16 +675,17 @@ Spatial.Controller = Backbone.View.extend(
             
                 // If mesh is availablevailable
                 if(this.meshData){
-                    
-                    var start  = this.timeIdx % maxLimit;
-                    var end = (this.timeIdx + cacheRange) % maxLimit;
+                    var start  = this.timeIdx ;
+                    var end = (this.timeIdx + cacheRange);
                     this.updateCache(start , end, true);
+                    $( "#meshPreviewMsg" ).hide();
                     return;
                 }
 
                 // Neither cache or mesh available
                 else{
                     this.updateMeshWithCache();
+                    $( "#meshPreviewMsg" ).hide();
                     return;
                 }
         }
@@ -839,6 +856,7 @@ Spatial.Controller = Backbone.View.extend(
         {   
             this.trajectory = Number( $( event.target ).val() );
             this.acquireNewData();
+            this.preprocessMesh();
         },
 
 
