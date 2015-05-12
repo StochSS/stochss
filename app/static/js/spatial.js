@@ -346,7 +346,13 @@ Spatial.Controller = Backbone.View.extend(
             
             var scene = new THREE.Scene();
             var loader = new THREE.JSONLoader();
-            var uniforms =  { xval : {type: 'f', value: -2.0}, yval : {type: 'f', value: -2.0}, zval : {type: 'f', value: -2.0} };
+            var uniforms =  { xval : {type: 'f', value: -2.0}, 
+                              yval : {type: 'f', value: -2.0}, 
+                              zval : {type: 'f', value: -2.0},
+                              xflag : {type: 'f', value: 0.0},
+                              yflag : {type: 'f', value: 0.0}, 
+                              zflag : {type: 'f', value: 0.0},
+                            };
 
             var material = new THREE.ShaderMaterial( {
                 vertexShader:   $('#vertexshader').text(),
@@ -378,7 +384,8 @@ Spatial.Controller = Backbone.View.extend(
             planeX.rotateOnAxis( new THREE.Vector3(0,1,0), (Math.PI/2) );
             planeXEdges = new THREE.EdgesHelper( planeX, 0x0000ff ); 
             planeXEdges.material.linewidth = 2;
-            planeX.visible = $("#planeXCheck").is(':checked'); planeXEdges.visible = $("#planeXCheck").is(':checked');
+            planeX.visible = $("#planeXCheck").is(':checked'); 
+            planeXEdges.visible = $("#planeXCheck").is(':checked');
 
 
             // PLANE - Y
@@ -451,7 +458,8 @@ Spatial.Controller = Backbone.View.extend(
             
             val = parseFloat( $("#planeZSelect").val() );
             this.mesh.material.uniforms.zval.value = val;
-
+            
+            this.mesh.material.needsUpdate = true;
         },
 
         handlePlaneSliderChange: function(event)
@@ -923,18 +931,19 @@ Spatial.Controller = Backbone.View.extend(
                     checkbox.click(_.bind(function(){
                         
                         console.log('checkbox x click');
-                        
+                        var val = 0.0;
                         if($("#planeXCheck").is(':checked'))
                         {
                             planeX.visible = true; planeXEdges.visible = true; 
+                            val = 1.0;
                         }
 
                         else{
                             planeX.visible = false; planeXEdges.visible = false;
-                            $( "#planeXSelect" ).val( $( "#planeXSelect" )[0].min ) ;
                         }
                         planeX.position.x = $( "#planeXSelect" ).val();
-                        this.hideMesh();
+                        this.mesh.material.uniforms.xflag.value = val;
+                        this.mesh.material.needsUpdate = true;
 
                     }, this));
 
@@ -942,37 +951,39 @@ Spatial.Controller = Backbone.View.extend(
                     checkbox.click(_.bind(function(){ 
                         console.log('checkbox y click');
                         
+                        var val = 0.0;
                         if($("#planeYCheck").is(':checked'))
                         {
                             planeY.visible = true; planeYEdges.visible = true;
-                            
+                            val = 1.0;
                         }
 
                         else{
                             planeY.visible = false; planeYEdges.visible = false;
-                            $( "#planeYSelect" ).val( $( "#planeYSelect" )[0].min ) ;
+
                         }
                         planeY.position.z = $( "#planeYSelect" ).val();
-                        this.hideMesh();
+                        this.mesh.material.uniforms.yflag.value = val;
+                        this.mesh.material.needsUpdate = true;
 
                     }, this));
 
                     var checkbox = $( "#planeZCheck" );
                     checkbox.click(_.bind(function(){
                         console.log('checkbox z click');
-
+                        var val = 0.0;
                         if($("#planeZCheck").is(':checked'))
                         {
-                            planeZ.visible = true; planeZEdges.visible = true;
-                            
+                            planeZ.visible = true; planeZEdges.visible = true; val = 1.0;
                         }
 
                         else{
                             planeZ.visible = false; planeZEdges.visible = false;
-                            $( "#planeZSelect" ).val( $( "#planeZSelect" )[0].min ) ;
+
                         }
                         planeZ.position.y = $( "#planeZSelect" ).val();
-                        this.hideMesh();
+                        this.mesh.material.uniforms.zflag.value = val;
+                        this.mesh.material.needsUpdate = true;
                         
                     }, this));
 
