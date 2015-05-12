@@ -245,7 +245,7 @@ Spatial.Controller = Backbone.View.extend(
         {
             console.log("meshDataPreview : function(data)");
 
-            if(String(data['min']).length > 5 || String(data['max']).length > 5)
+            /*if(String(data['min']).length > 5 || String(data['max']).length > 5)
             {
                 this.minVal = data['min'].toExponential(3);
                 this.maxVal = data['max'].toExponential(3);
@@ -257,7 +257,7 @@ Spatial.Controller = Backbone.View.extend(
             }
 
             $( "#minVal" ).text(this.minVal);
-            $( "#maxVal" ).text(this.maxVal);
+            $( "#maxVal" ).text(this.maxVal);*/
 
             if (!window.WebGLRenderingContext) {
                 // Browser has no idea what WebGL is. Suggest they
@@ -346,9 +346,15 @@ Spatial.Controller = Backbone.View.extend(
             
             var scene = new THREE.Scene();
             var loader = new THREE.JSONLoader();
-            var uniforms =  { xval : {type: 'f', value: -2.0}, 
-                              yval : {type: 'f', value: -2.0}, 
-                              zval : {type: 'f', value: -2.0},
+
+
+            this.model = loader.parse(data);
+
+            var radius = this.model.geometry.boundingSphere.radius;
+
+            var uniforms =  { xval : {type: 'f', value: -radius}, 
+                              yval : {type: 'f', value: -radius}, 
+                              zval : {type: 'f', value: -radius},
                               xflag : {type: 'f', value: 0.0},
                               yflag : {type: 'f', value: 0.0}, 
                               zflag : {type: 'f', value: 0.0},
@@ -364,14 +370,7 @@ Spatial.Controller = Backbone.View.extend(
                 wireframe: false
             } );
             
-
-
-            var model = loader.parse(data['mesh']);
-            this.model = model;
-            mesh = new THREE.Mesh(this.model.geometry, material);
-            this.mesh = mesh;
-            var radius = this.mesh.geometry.boundingSphere.radius;
-
+            this.mesh = new THREE.Mesh(this.model.geometry, material);
 
             /* 
                GRID
@@ -624,7 +623,7 @@ Spatial.Controller = Backbone.View.extend(
                     } );
         },
 
-        updateMesh : function(){
+        /*updateMesh : function(){
             $.ajax( { type : "GET",
                       url : "/spatial",
                       data : { reqType : "timeData",
@@ -633,7 +632,7 @@ Spatial.Controller = Backbone.View.extend(
                                                         timeIdx : this.timeIdx } )},
                       success : _.bind(this.handleMeshDataUpdate, this)
                     });
-        },
+        },*/
 
 
         updateMeshWithCache : function(){
@@ -725,8 +724,8 @@ Spatial.Controller = Backbone.View.extend(
         {
             console.log(" handleMeshDataUpdate : function(data)");
             $( '#speciesSelect' ).empty();
-            this.meshData = data;
-            var sortedSpecies = _.keys(data).sort();
+            this.meshData = data.mesh;
+            var sortedSpecies = _.keys(data.data).sort();
             this.handleMeshUpdate(sortedSpecies);
 
         },
@@ -806,7 +805,7 @@ Spatial.Controller = Backbone.View.extend(
             if(event.originalEvent)
                 this.handleMeshColorUpdate(cache[this.timeIdx]);
             else
-                this.meshDataPreview(this.meshData[species]);
+                this.meshDataPreview(this.meshData);
         },
 
         handleDownloadDataButton : function(event)
