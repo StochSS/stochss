@@ -52,7 +52,6 @@
 
             if(position.x <= xval || position.z <= yval || position.y <= zval)
                 vColor = vec4(0.0, 0.0, 0.0, 0.0);
-
         }
 
     </script>
@@ -67,7 +66,7 @@
 
         void main()
         {
-            if(vColor.a != 1.0 ) 
+            if(vColor.a < 0.9 ) 
                 discard;
             else
                 gl_FragColor = vColor;
