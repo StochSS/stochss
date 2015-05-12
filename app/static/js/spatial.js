@@ -92,12 +92,12 @@ Spatial.Controller = Backbone.View.extend(
 
             $( '#play_btn' ).click(_.bind(this.playMesh, this));
             $( '#stop_btn' ).click(_.bind(this.stopMesh, this));
-         },
+        },
 
-         /*
-            playMesh is triggered when the playButton is pressed and sets appropriate flags
-         */ 
-         playMesh: function(){
+        /*
+          playMesh is triggered when the playButton is pressed and sets appropriate flags
+        */ 
+        playMesh: function(){
 
             this.spt = this.timeIdx;
             this.playFlag = true;
@@ -108,11 +108,8 @@ Spatial.Controller = Backbone.View.extend(
 
         play: function(dt){
             if(this.playFlag){
-
-                console.log("Entering Play function" + Date.now() / 1000.0)
-
                 // stopping animation when time limit is reached
-                if(this.timeIdx == maxLimit-1)
+                if(this.timeIdx > maxLimit)
                 {
                     this.stopMesh();
                     return;
@@ -139,13 +136,13 @@ Spatial.Controller = Backbone.View.extend(
                     return;
                 }
                 // If we don't have the value loaded into the cache, wait a few timesteps for it to load before we panic and make an server request
-                else if(this.timeIdx < maxLimit){
+                else if(this.timeIdx <= maxLimit){
                     this.bufferCount+=1;
                     if(this.bufferCount == cacheRange)
                     {
                         $( "#playStats" ).html( 'Buffering...');
                         this.bufferCount = 0;
-                        //this.updateCache(this.timeIdx, this.timeIdx +cacheRange);
+                        this.updateCache(this.timeIdx, this.timeIdx + cacheRange);
                     }
                 }
                 
@@ -159,7 +156,7 @@ Spatial.Controller = Backbone.View.extend(
             clearInterval(this.intervalID);
             $( "#playStats" ).html( 'Stopped');
             this.playFlag =false;
-         },
+        },
 
         createText : function(letter, x, y, z){
 
@@ -173,14 +170,14 @@ Spatial.Controller = Backbone.View.extend(
             // canvas contents will be used for a texture
             var texture1 = new THREE.Texture(canvas1) 
             texture1.needsUpdate = true;
-              
+            
             var material1 = new THREE.MeshBasicMaterial( {map: texture1, side:THREE.DoubleSide } );
             material1.transparent = true;
 
             var mesh1 = new THREE.Mesh(
                 new THREE.PlaneGeometry(1, 1),
                 material1
-              );
+            );
             mesh1.position.set(x, y, z);
             this.scene2.add( mesh1 );
         },
@@ -267,8 +264,8 @@ Spatial.Controller = Backbone.View.extend(
                 // get a new browser by presenting the user with link to
                 // http://get.webgl.org
                 $( "#meshPreview" ).html('<center><h2 style="color: red;">WebGL Not Supported</h2><br /> \
-                    <ul><li>Download an updated Firefox or Chromium to use StochSS (both come with WebGL support)</li> \
-                    <li>It may be necessary to update system video drivers to make this work</li></ul></center>');
+<ul><li>Download an updated Firefox or Chromium to use StochSS (both come with WebGL support)</li> \
+<li>It may be necessary to update system video drivers to make this work</li></ul></center>');
                 return;
             }
 
@@ -284,10 +281,10 @@ Spatial.Controller = Backbone.View.extend(
                 // update their drivers or get a new browser. Present a link to
                 // http://get.webgl.org/troubleshooting
                 $( "#meshPreview" ).html('<center><h2 style="color: red;">WebGL Disabled</h2><br /> \
-                    <ul><li>In Safari and certain older browsers, this must be enabled manually</li> \
-                    <li>Browsers can also throw this error when they detect old or incompatible video drivers</li> \
-                    <li>Enable WebGL, or try using StochSS in an up to date Chrome or Firefox browser</li> \
-                    </ul></center>');
+<ul><li>In Safari and certain older browsers, this must be enabled manually</li> \
+<li>Browsers can also throw this error when they detect old or incompatible video drivers</li> \
+<li>Enable WebGL, or try using StochSS in an up to date Chrome or Firefox browser</li> \
+</ul></center>');
                 return;  
             }
 
@@ -300,8 +297,8 @@ Spatial.Controller = Backbone.View.extend(
                     // get a new browser by presenting the user with link to
                     // http://get.webgl.org
                     $( "#meshPreview" ).html('<center><h2 style="color: red;">WebGL Not Supported</h2><br /> \
-                        <ul><li>Download an updated Firefox or Chromium to use StochSS (both come with WebGL support)</li> \
-                        <li>It may be necessary to update system video drivers to make this work</li></ul></center>');
+<ul><li>Download an updated Firefox or Chromium to use StochSS (both come with WebGL support)</li> \
+<li>It may be necessary to update system video drivers to make this work</li></ul></center>');
                     return;
                 }
 
@@ -314,10 +311,10 @@ Spatial.Controller = Backbone.View.extend(
                     // update their drivers or get a new browser. Present a link to
                     // http://get.webgl.org/troubleshooting
                     $( "#meshPreview" ).html('<center><h2 style="color: red;">WebGL Disabled</h2><br /> \
-                        <ul><li>In Safari and certain older browsers, this must be enabled manually</li> \
-                        <li>Browsers can also throw this error when they detect old or incompatible video drivers</li> \
-                        <li>Enable WebGL, or try using StochSS in an up to date Chrome or Firefox browser</li> \
-                        </ul></center>');
+<ul><li>In Safari and certain older browsers, this must be enabled manually</li> \
+<li>Browsers can also throw this error when they detect old or incompatible video drivers</li> \
+<li>Enable WebGL, or try using StochSS in an up to date Chrome or Firefox browser</li> \
+</ul></center>');
                     return;  
                 }
 
@@ -352,13 +349,13 @@ Spatial.Controller = Backbone.View.extend(
             var uniforms =  { xval : {type: 'f', value: -2.0}, yval : {type: 'f', value: -2.0}, zval : {type: 'f', value: -2.0} };
 
             var material = new THREE.ShaderMaterial( {
-                    vertexShader:   $('#vertexshader').text(),
-                    fragmentShader: $('#fragmentshader').text(),
-                    side : THREE.DoubleSide,
-                    depthTest: true,
-                    vertexColors: THREE.VertexColors,
-                    uniforms: uniforms,
-                    wireframe: false
+                vertexShader:   $('#vertexshader').text(),
+                fragmentShader: $('#fragmentshader').text(),
+                side : THREE.DoubleSide,
+                depthTest: true,
+                vertexColors: THREE.VertexColors,
+                uniforms: uniforms,
+                wireframe: false
             } );
             
 
@@ -371,8 +368,8 @@ Spatial.Controller = Backbone.View.extend(
 
 
             /* 
-            GRID
-            var grid = new THREE.GridHelper(20, 0.1);          
+               GRID
+               var grid = new THREE.GridHelper(20, 0.1);          
             */
 
             // PLANE - X
@@ -419,15 +416,15 @@ Spatial.Controller = Backbone.View.extend(
 
             $( "#meshPreviewMsg" ).hide();
 
-             this.camera.position.z =  this.mesh.geometry.boundingSphere.radius* 2;
+            this.camera.position.z =  this.mesh.geometry.boundingSphere.radius* 2;
 
             //this.highLightSubdomains([])
             
             /* Recalculating distance
-            var dist = this.camera.position.z - (this.mesh.geometry.boundingSphere.center.z + this.mesh.geometry.boundingSphere.radius)
-            var height = this.mesh.geometry.boundingSphere.radius * 2
-            var fov = 2 * Math.atan( height / ( 2 * dist ) ) * ( 180 / Math.PI );
-            this.camera.fov = fov;*/
+               var dist = this.camera.position.z - (this.mesh.geometry.boundingSphere.center.z + this.mesh.geometry.boundingSphere.radius)
+               var height = this.mesh.geometry.boundingSphere.radius * 2
+               var fov = 2 * Math.atan( height / ( 2 * dist ) ) * ( 180 / Math.PI );
+               this.camera.fov = fov;*/
 
 
             if(!this.rendererInitialized)
@@ -440,7 +437,7 @@ Spatial.Controller = Backbone.View.extend(
         },
 
         /* 
-            Plane methods
+           Plane methods
         */
         hideMesh: function(){
             // To update uniforms
@@ -542,7 +539,7 @@ Spatial.Controller = Backbone.View.extend(
 
         /*
 
-        Caching Methods
+          Caching Methods
 
         */
 
@@ -551,21 +548,21 @@ Spatial.Controller = Backbone.View.extend(
 
             console.log(" deleteCache : function("+start1+", "+stop1+")");
             
-            var start = start1 % maxLimit;
+            var start = Math.max(0, start1);
             var idx = start; 
 
 
             if(stop1 == -1)
             {
-                    delete cache[start];
-                    return;
+                delete cache[start];
+                return;
             }
             
-            var stop = stop1 % maxLimit;
+            var stop = Math.min(stop1, maxLimit);
             while(idx!=stop)
             {
                 delete cache[idx];
-                idx = (idx + 1 )% maxLimit;
+                idx = idx + 1;
             }
 
         },
@@ -577,98 +574,91 @@ Spatial.Controller = Backbone.View.extend(
         },
 
         updateCache : function(start1, stop1, colorFlag){
-
-            var start = start1 % (maxLimit);
-            var stop = stop1 % (maxLimit);
-
-            if(stop1 >= maxLimit)
-                stop = maxLimit-1;
+            var start = start1;
+            var stop = Math.min(stop1, maxLimit);
 
             console.log(" updateCache : function("+start+", "+stop+")");
 
 
             $.ajax( { type : "GET",
-                    url : "/spatial",
-                    data : { reqType : "onlyColorRange",
-                    id : this.attributes.id,
-                    data : JSON.stringify( { trajectory : this.trajectory, timeStart : start , timeEnd: stop} )},
-                    success : _.bind(function(data)
-                        {
-                            if(Object.keys(cache).length > 50)
-                            {
-                                cache = {};
-                            }
-
-                            var time = _.keys(data).sort();
-                            for (var i = 0; i < time.length; i++) {
-                                var t = time[i]; 
-                                cache[t] = data[t];
-                            }
-
-                            if(colorFlag)
-                                this.handleMeshColorUpdate(cache[time[0] ]);
-
-                        }, this)
+                      url : "/spatial",
+                      data : { reqType : "onlyColorRange",
+                               id : this.attributes.id,
+                               data : JSON.stringify( { trajectory : this.trajectory, timeStart : start , timeEnd: stop} )},
+                      success : _.bind(function(data) {
+                          if(Object.keys(cache).length > 50)
+                          {
+                              cache = {};
+                          }
+                          
+                          var time = _.keys(data).sort();
+                          for (var i = 0; i < time.length; i++) {
+                              var t = time[i]; 
+                              cache[t] = data[t];
+                          }
+                          
+                          if(colorFlag)
+                              this.handleMeshColorUpdate(cache[time[0] ]);
+                          
+                      }, this)
                     });
         },
 
         preprocessMesh : function(){
-                 $.ajax( { type : "GET", 
-                            url : "/spatial", 
-                            data : { reqType : "preprocess", 
-                                    id : this.attributes.id, 
-                                    data : JSON.stringify( { trajectory : this.trajectory} ) },
-                            success : function(){ 
-                                console.log("-- Preprocessing Completed -- ")
-                            }
-                        } );
+            $.ajax( { type : "GET", 
+                      url : "/spatial", 
+                      data : { reqType : "preprocess", 
+                               id : this.attributes.id, 
+                               data : JSON.stringify( { trajectory : this.trajectory} ) },
+                      success : function(){ 
+                          console.log("-- Preprocessing Completed -- ")
+                      }
+                    } );
         },
 
         updateMesh : function(){
-                $.ajax( { type : "GET",
-                    url : "/spatial",
-                    data : { reqType : "timeData",
-                    id : this.attributes.id,
-                    data : JSON.stringify( { trajectory : this.trajectory,
-                    timeIdx : this.timeIdx } )},
-                    success : _.bind(this.handleMeshDataUpdate, this)
-                });
+            $.ajax( { type : "GET",
+                      url : "/spatial",
+                      data : { reqType : "timeData",
+                               id : this.attributes.id,
+                               data : JSON.stringify( { trajectory : this.trajectory,
+                                                        timeIdx : this.timeIdx } )},
+                      success : _.bind(this.handleMeshDataUpdate, this)
+                    });
         },
 
 
         updateMeshWithCache : function(){
-                
+            
 
-                $.when(
-                                $.ajax( { type : "GET", url : "/spatial", data : { reqType : "timeData", 
-                                          id : this.attributes.id, 
-                                          data : JSON.stringify( { trajectory : this.trajectory, timeIdx : this.timeIdx })
-                                        } } ),
+            $.when(
+                $.ajax( { type : "GET", url : "/spatial", data : { reqType : "timeData", 
+                                                                   id : this.attributes.id, 
+                                                                   data : JSON.stringify( { trajectory : this.trajectory, timeIdx : this.timeIdx })
+                                                                 } } ),
 
-                                $.ajax( { type : "GET", url : "/spatial",  data : { reqType : "onlyColorRange", 
-                                          id : this.attributes.id, 
-                                          data : JSON.stringify({ trajectory : this.trajectory, timeStart : 0 , timeEnd: ( this.jobInfo.indata.time < 50 ?  this.jobInfo.indata.time : 50 ) })
-                                        } } )
-                        ).done(_.bind(function(data1, data2)
-                        {
-                            this.handleMeshDataUpdate(data1[0]);
+                $.ajax( { type : "GET", url : "/spatial",  data : { reqType : "onlyColorRange", 
+                                                                    id : this.attributes.id, 
+                                                                    data : JSON.stringify({ trajectory : this.trajectory, timeStart : 0 , timeEnd: ( this.jobInfo.indata.time < 50 ?  this.jobInfo.indata.time : 50 ) })
+                                                                  } } )
+            ).done(_.bind(function(data1, data2)
+                          {
+                              this.handleMeshDataUpdate(data1[0]);
 
-                            var time = _.keys(data2[0]).sort();
-                            
-                            for (var i = 0; i < time.length; i++) {
-                                    var t = time[i]; 
-                                    cache[t] = data2[0][t];
-                            }
+                              var time = _.keys(data2[0]).sort();
+                              
+                              for (var i = 0; i < time.length; i++) {
+                                  var t = time[i]; 
+                                  cache[t] = data2[0][t];
+                              }
 
-                            cacheRange =  (this.jobInfo.indata.time < 50 )?  this.jobInfo.indata.time : 50;  
+                              cacheRange =  (this.jobInfo.indata.time < 50 )?  this.jobInfo.indata.time : 50;  
 
-                        }, this)) ;
+                          }, this)) ;
         },
 
-      acquireNewData : function()
+        acquireNewData : function()
         {
-            console.log("Entering AcquireNewData function" + Date.now() / 1000.0)
-            
             console.log("acquireNewData : function()");
 
             // If cache is available
@@ -681,7 +671,7 @@ Spatial.Controller = Backbone.View.extend(
             {
                 if(!this.playFlag)
                     $( "#meshPreviewMsg" ).show();
-            
+                
                 // If mesh is availablevailable
                 if(this.meshData){
                     var start  = this.timeIdx ;
@@ -697,23 +687,21 @@ Spatial.Controller = Backbone.View.extend(
                     $( "#meshPreviewMsg" ).hide();
                     return;
                 }
-        }
+            }
 
 
         },
-         
+        
         handleSliderChange : function(event)
         {
-            console.log("Entering handleSliderChange function" + Date.now() / 1000.0)
-
             console.log("handleSliderChange : function(event)");
 
             
             if(event && event.originalEvent){
-               var slider = $( event.target );
-               $( '#timeSelectDisplay' ).text('Time: ' + slider.val())
-               this.timeIdx = Math.round( slider.val() / slider.prop('step') );
-               
+                var slider = $( event.target );
+                $( '#timeSelectDisplay' ).text('Time: ' + slider.val())
+                this.timeIdx = Math.round( slider.val() / slider.prop('step') );
+                
             }
             else{
                 var slider = $( '#timeSelect' );
@@ -739,9 +727,7 @@ Spatial.Controller = Backbone.View.extend(
         {
             console.log("handleMeshColorUpdate : function(data)");
             var val = $( '#speciesSelect' ).val();
-            console.log("Redrawing colors1 function" + Date.now() / 1000.0)
             this.redrawColors( data[val].mesh );
-            console.log("Redrawing colors2 function" + Date.now() / 1000.0)
             this.mesh.geometry.colorsNeedUpdate = true;
 
 
@@ -758,10 +744,10 @@ Spatial.Controller = Backbone.View.extend(
 
             for(var i = 0; i < this.mesh.geometry.faces.length; i++)
             {
-            var faceIndices = ['a', 'b', 'c'];         
-            var face = this.mesh.geometry.faces[i];   
-        
-            // assign color to each vertex of current face
+                var faceIndices = ['a', 'b', 'c'];         
+                var face = this.mesh.geometry.faces[i];   
+                
+                // assign color to each vertex of current face
                 for( var j = 0; j < 3; j++ )  
                 {
                     var vertexIndex = face[ faceIndices[ j ] ];
@@ -911,7 +897,7 @@ Spatial.Controller = Backbone.View.extend(
                     slider.val(slider.prop('max'));
                     slider.prop('step', this.jobInfo.indata.increment);
 
-                    maxLimit = this.jobInfo.indata.time + 1;
+                    maxLimit = this.jobInfo.indata.time;
 
                     //Add event handler to slider
                     slider.off('change');
@@ -959,7 +945,7 @@ Spatial.Controller = Backbone.View.extend(
                         if($("#planeYCheck").is(':checked'))
                         {
                             planeY.visible = true; planeYEdges.visible = true;
-                           
+                            
                         }
 
                         else{
@@ -978,7 +964,7 @@ Spatial.Controller = Backbone.View.extend(
                         if($("#planeZCheck").is(':checked'))
                         {
                             planeZ.visible = true; planeZEdges.visible = true;
-                           
+                            
                         }
 
                         else{
@@ -987,7 +973,7 @@ Spatial.Controller = Backbone.View.extend(
                         }
                         planeZ.position.y = $( "#planeZSelect" ).val();
                         this.hideMesh();
- 
+                        
                     }, this));
 
                 }

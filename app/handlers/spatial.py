@@ -63,7 +63,6 @@ class SpatialJobWrapper(db.Model):
     def preprocess(self, trajectory):      
         
         ''' Job is already processed check '''
-        print "Preprocess", self.preprocessed
         if self.preprocessed == True:
             return
 
@@ -100,7 +99,7 @@ class SpatialJobWrapper(db.Model):
                 json.dump(threeJS, meshFile) 
             
             ''' Storing the colored mesh for each time range '''
-            for timeIdx in range(0, maxTime):
+            for timeIdx in range(0, maxTime + 1):
                 threeJS = {}
                 for specie in species:
                     concVals = result.get_species(specie, timeIdx, concentration=True)
@@ -344,7 +343,7 @@ class SpatialPage(BaseHandler):
                 # Handling case where job is preprocessed
                 if job.preprocessed:
                     print "Job is preprocessed"
-                    for timeIdx in range(sTime, eTime):
+                    for timeIdx in range(sTime, eTime + 1):
                         with open(str(job.preprocessedDir+ '/{0}/{1}'.format(trajectory, str(timeIdx)+".json")) ,'r') as f:
                             resultJS[timeIdx] = json.load(f)
 
@@ -354,7 +353,7 @@ class SpatialPage(BaseHandler):
                     result = pickle.load(fd)
                     species = result.model.get_species_map().keys()
                     timeIdx = sTime;
-                    for timeIdx in range(sTime, eTime+1):
+                    for timeIdx in range(sTime, eTime + 1):
                         subthreeJS = {}
                         for specie in species:
                             concVals = result.get_species(specie, timeIdx, concentration=True)
@@ -635,7 +634,6 @@ class SpatialPage(BaseHandler):
 
             basedir = path + '/../'
             dataDir = tempfile.mkdtemp(dir = basedir + 'output')
-            predataDir = tempfile.mkdtemp(dir = basedir + 'preprocess')
 
             job = SpatialJobWrapper()
             job.userId = self.user.user_id()
@@ -643,7 +641,6 @@ class SpatialPage(BaseHandler):
             job.jobName = data["jobName"]
             job.indata = json.dumps(data)
             job.outData = dataDir
-            job.preprocessedDir = predataDir
             job.modelName = pymodel.name
             job.resource = "local"
 
