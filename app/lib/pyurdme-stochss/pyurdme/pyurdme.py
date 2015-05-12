@@ -9,7 +9,6 @@ import sys
 import tempfile
 import types
 import warnings
-import copy
 
 import numpy
 import scipy.io
@@ -64,6 +63,7 @@ class URDMEModel(Model):
         
         # subdomins is a list of MeshFunctions with subdomain marker information
         self.subdomains = OrderedDict()
+        self.old_style_subdomain = False
 
         # This dictionary hold information about the subdomains each species is active on
         self.species_to_subdomains = {}
@@ -197,11 +197,33 @@ class URDMEModel(Model):
 
         return self.species_map
 
-    def add_subdomain(self, subdomain):
-        if not subdomain.dim() in self.subdomains.keys():
-            self.subdomains[subdomain.dim()] = subdomain
+    def add_subdomain(self, subdomain, subdomain_id=None):
+        """ Add a subdomain definition to the model.  By default, all regions are set to 
+        subdomain 1.
+        
+        Args:
+            subdomain: an instance of a 'dolfin.SubDomain' subclass.
+            id: an int, the identifier for this subdomain.
+        """
+        if subdomain_id is None and isinstance(subdomain, dolfin.cpp.mesh.MeshFunctionSizet):
+            # Old style, for backwards compatability
+            if not subdomain.dim() in self.subdomains.keys():
+                self.subdomains[subdomain.dim()] = subdomain
+                self.old_style_subdomain = True
+            else:
+                raise ModelException("Failed to add subdomain function of dim "+str(subdomain.dim())+". Only one subdomain function of a given dimension is allowed.")
         else:
-            raise ModelException("Failed to add subdomain function of dim "+str(subdomain.dim())+". Only one subdomain function of a given dimension is allowed.")
+            # New style
+            if self.old_style_subdomain:
+                raise ModelException("Can't mix old and new style subdomains")
+            if not issubclass(subdomain.__class__, dolfin.SubDomain):
+                raise ModelException("'subdomain' argument to add_subdomain() must be a subclass of dolfin.SubDomain")
+            if subdomain_id is None or not isinstance(subdomain_id, int):
+                raise ModelException("'id' argument to add_subdomain() must be an int")
+            self.subdomains[subdomain_id] = subdomain
+
+
+
 
     def create_stoichiometric_matrix(self):
         """ Generate a stoichiometric matrix in sparse CSC format. """
@@ -313,28 +335,26 @@ class URDMEModel(Model):
             is that a species is active in all the defined subdomains.
         """
 
-        # If no subdomain function has been set by the user,
-        # we need to create a default subdomain here.
-        if not self.subdomains:
-            self._initialize_default_subdomain()
+#        # If no subdomain function has been set by the user,
+#        # we need to create a default subdomain here.
+#        if len(self.subdomains) == 0:
+#            self._initialize_default_subdomain()
+#
+#        # The unique elements of the subdomain MeshFunctions
+#        sds = []
+#        for dim, subdomain in self.subdomains.items():
+#            sds = sds + list(numpy.unique(subdomain.array()).flatten())
+#        sds = numpy.unique(sds)
+#        sds = list(sds)
+#
 
-        # The unique elements of the subdomain MeshFunctions
-        sds = []
-        for dim, subdomain in self.subdomains.items():
-            sds = sds + list(numpy.unique(subdomain.array()).flatten())
-        sds = numpy.unique(sds)
-        sds = list(sds)
-
-        # This explicit typecast is necessary for UFL not to choke on the subdomain ids.
-        for i, sd in enumerate(sds):
-            sds[i] = int(sd)
-
+        sds = list(numpy.unique(self.get_subdomain_vector()))
         # This conversion is necessary for UFL not to choke on the subdomain ids.
         for i, sd in enumerate(sds):
             sds[i] = int(sd)
         try:
             sds.remove(0)
-        except Exception:
+        except ValueError:
             pass
 
         # If a species is not present as key in the species_to_subdomain mapping,
@@ -356,13 +376,12 @@ class URDMEModel(Model):
         self.sd = sd
         self.sd_initialied = True
     
-    def get_subdomain_vector(self, subdomains={}):
+    def get_subdomain_vector(self, subdomains=None):
         """ Create the 'sd' vector. 'subdomains' is a dolfin FacetFunction,
             and if no subdomain input is specified, they voxels default to
             subdomain 1. """
         if self.sd_initialied:
             return self.sd
-        
         
         # We need to make sure that the highest dimension is applied
         # first, otherwise the cell level will overwrite all markings
@@ -374,11 +393,21 @@ class URDMEModel(Model):
         self.mesh.init()
 
         # TODO: Support arbitrary sd-numbers and more than one subdomain
-        sd = numpy.zeros(self.mesh.get_num_voxels())
+        sd = numpy.ones(self.mesh.get_num_voxels())
         
-        if subdomains == {}:
+        if len(self.subdomains) == 0:
             self.sd = sd
         else:
+            if self.old_style_subdomain:
+                subdomains = self.subdomains
+            else:
+                subdomains = OrderedDict()
+                sdvec = dolfin.MeshFunction("size_t", self.mesh, self.mesh.topology().dim()-1)
+                sdvec.set_all(1)
+                for id, inst in self.subdomains.iteritems():
+                    inst.mark(sdvec, id)
+                subdomains[sdvec.dim()] = sdvec
+
             for dim, subdomain in subdomains.items():
                 if dim == 0:
                     # If we define subdomains on vertex, ONLY use those.
@@ -439,7 +468,7 @@ class URDMEModel(Model):
 
         self._initialize_species_to_subdomains()
 
-        self.get_subdomain_vector(self.subdomains)
+        self.get_subdomain_vector()
 
         for species in spec_init:
 
@@ -586,7 +615,7 @@ class URDMEModel(Model):
         total_mass = 0.0
 
 
-        sd = self.get_subdomain_vector(self.subdomains)
+        sd = self.get_subdomain_vector()
         sd_vec_dof = numpy.zeros(self.mesh.get_num_dof_voxels())
         vertex_to_dof = dolfin.vertex_to_dof_map(self.mesh.get_function_space())
         for ndx, sd_val in enumerate(sd):
@@ -678,7 +707,7 @@ class URDMEModel(Model):
         maxcolsum = numpy.argmax(colsum)
         if colsum[0,maxcolsum] > 1e-10:
             D = urdme_solver_data["D"]
-            raise InvalidSystemMatrixException("Invalid diffusion matrix. The sum of the columns does not sum to zero. \n" + str(maxcolsum) + ' ' + str(colsum[0,maxcolsum]) + "\nThis can be caused by a large difference between the largest and smallest diffusion coefficients.")
+            raise InvalidSystemMatrixException("Invalid diffusion matrix. The sum of the columns does not sum to zero. " + str(maxcolsum) + str(colsum[0,maxcolsum]))
 
     def create_connectivity_matrix(self):
         """ Assemble a connectivity matrix in CCS format. """
@@ -747,7 +776,7 @@ class URDMEModel(Model):
         # Subdomain vector
         # convert to dof ordering
         sd_vec_dof = numpy.zeros(num_dofvox)
-        for ndx, sd_val in enumerate(self.get_subdomain_vector(self.subdomains)):
+        for ndx, sd_val in enumerate(self.get_subdomain_vector()):
             sd_vec_dof[vertex_to_dof[ndx]] = sd_val
         urdme_solver_data['sd'] = sd_vec_dof
         
@@ -1220,7 +1249,8 @@ class URDMEResult(dict):
         if self.model is None:
             raise Exception("can not continue a result with no model")
         # create a soft copy
-        model2 = copy.copy(self.model)
+        model_str = pickle.dumps(self.model)
+        model2 = pickle.loads(model_str)
         # set the initial conditions 
         model2.u0 = numpy.zeros(self.model.u0.shape)
         for s, sname in enumerate(self.model.listOfSpecies):
@@ -1490,8 +1520,7 @@ class URDMEResult(dict):
         subprocess.call(["mkdir", "-p", folder_name])
         func = dolfin.Function(self.model.mesh.get_function_space())
         func_vector = func.vector()
-        filename = os.path.join(folder_name, "trajectory.pvd")
-        fd = dolfin.File(str(filename))
+        fd = dolfin.File(os.path.join(folder_name, "trajectory.pvd").encode('ascii', 'ignore'))
         numvox = self.model.mesh.get_num_dof_voxels()
 
         for i, time in enumerate(self.tspan):

@@ -4,6 +4,7 @@
 import os
 import pyurdme
 import dolfin
+import mshr
 
 import matplotlib.pyplot as plt
 import numpy
@@ -36,18 +37,13 @@ class cylinderDemo3D(pyurdme.URDMEModel):
         # Define Geometry
         pt1 = dolfin.Point(MAX_X_DIM, 0, 0)
         pt2 = dolfin.Point(MIN_X_DIM, 0, 0)
-        cylinder = dolfin.Cylinder(pt1, pt2, 1.0)
-        self.mesh = pyurdme.URDMEMesh(mesh=dolfin.Mesh(cylinder, 32))
+        cylinder = mshr.Cylinder(pt1, pt2, 1.0, 1.0)
+        self.mesh = pyurdme.URDMEMesh(mesh=mshr.generate_mesh(cylinder, 32))
         
         # Define Subdomains
-        subdomains = dolfin.MeshFunction("size_t", self.mesh, self.mesh.topology().dim()-1)
-        subdomains.set_all(1)
-        
-        # Mark the boundary points
-        Edge1().mark(subdomains,2)
-        Edge2().mark(subdomains,3)
-        
-        self.add_subdomain(subdomains)
+        self.add_subdomain(Edge1(), 2)
+        self.add_subdomain(Edge2(), 3)
+
         data = self.get_solver_datastructure()
         vol = data['vol']
         sd = data['sd']
