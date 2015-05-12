@@ -246,7 +246,6 @@ class SpatialPage(BaseHandler):
 
         elif reqType == 'timeData':
             try:
-                print "Getting time data"
                 job = SpatialJobWrapper.get_by_id(int(self.request.get('id')))
                 data = json.loads(self.request.get('data'))
 
@@ -261,19 +260,8 @@ class SpatialPage(BaseHandler):
                 with open(os.path.join(indir, 'mesh.json') ,'r') as meshfile:
                     mesh = json.load(meshfile)
 
-                data = {}
-                with h5py.File(os.path.join(job.preprocessedDir, 'result{0}'.format(trajectory)), 'r') as dataFile:
-                    for specie in dataFile.keys():
-                        rgbas = cm.to_rgba(dataFile[specie][timeIdx], bytes = True)
-                        rgba = rgbas[0]
-                        #print rgba
-                        #print rgba[1] << 16 | rgba[2] << 8 | rgba[3]
-                        data[specie] = [rgba[0] << 16 | rgba[1] << 8 | rgba[2] for rgba in rgbas]
-
-                resultJS = { "mesh" : mesh, "data" : data }
-                
                 self.response.content_type = 'application/json'
-                self.response.write(json.dumps(resultJS))
+                self.response.write(json.dumps(mesh))
             
             except Exception as e:
                 traceback.print_exc()
@@ -297,15 +285,32 @@ class SpatialPage(BaseHandler):
                 
                 data = {}
                 with h5py.File(os.path.join(job.preprocessedDir, 'result{0}'.format(trajectory)), 'r') as dataFile:
-                    for specie in dataFile.keys():
-                        rgbas = cm.to_rgba(dataFile[specie][sTime:eTime], bytes = True)
-                        rgbas = rgbas[:, :, 0] << 16 | rgbas[:, :, 1] << 8 | rgbas[:, :, 2]
-                        data[specie] = list(rgbas.astype('int').flatten())
+                    dataTmp = {}
 
-                resultJS = { "data" : data }
+                    for specie in dataFile.keys():
+                        rgbas = cm.to_rgba(dataFile[specie][sTime:eTime], bytes = True).astype('int')
+                        rgbas = numpy.left_shift(rgbas[:, :, 0], 16) + numpy.left_shift(rgbas[:, :, 1], 8) + rgbas[:, :, 2]
+
+                        dataTmp[specie] = []
+                        for i in range(rgbas.shape[0]):
+                            dataTmp[specie].append(list(rgbas[i].astype('int')))
+
+                        #rgbas = cm.to_rgba(dataFile[specie][sTime:eTime])#.astype('uint32')
+#                        rgbas = numpy.left_shift(rgbas[:, :, 0], 16) + numpy.left_shift(rgbas[:, :, 1], 8) + rgbas[:, :, 2]
+
+                        #dataTmp[specie] = []
+                        #for i in range(rgbas.shape[0]):
+                        #    dataTmp[specie].append([])
+                        #    for j in range(rgbas.shape[1]):
+                        #        dataTmp[specie][i].append(list(rgbas[i][j].astype('float')[:3]))
+
+                    for i in range(len(dataTmp.values()[0])):
+                        data[sTime + i] = {}
+                        for specie in dataFile.keys():
+                            data[sTime + i][specie] = dataTmp[specie][i]
 
                 self.response.content_type = 'application/json'
-                self.response.write(json.dumps( resultJS ))
+                self.response.write(json.dumps( data ))
 
             except Exception as e:
                 traceback.print_exc()

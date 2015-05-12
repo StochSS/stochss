@@ -48,10 +48,6 @@ Spatial.Controller = Backbone.View.extend(
             cache = {};
             cacheRange = undefined;
             maxLimit = undefined;
-
-            // preprocessing mesh
-            this.preprocessMesh();
-
         },
 
         refreshData : function()
@@ -611,7 +607,7 @@ Spatial.Controller = Backbone.View.extend(
                     });
         },
 
-        preprocessMesh : function(){
+        /*preprocessMesh : function(){
             $.ajax( { type : "GET", 
                       url : "/spatial", 
                       data : { reqType : "preprocess", 
@@ -621,7 +617,7 @@ Spatial.Controller = Backbone.View.extend(
                           console.log("-- Preprocessing Completed -- ")
                       }
                     } );
-        },
+        },*/
 
         /*updateMesh : function(){
             $.ajax( { type : "GET",
@@ -650,7 +646,10 @@ Spatial.Controller = Backbone.View.extend(
                                                                   } } )
             ).done(_.bind(function(data1, data2)
                           {
-                              this.handleMeshDataUpdate(data1[0]);
+                              $( '#speciesSelect' ).empty();
+                              this.meshData = data1[0];
+                              var sortedSpecies = _.keys(data2[0][0]).sort();
+                              this.setUpSpeciesSelect(sortedSpecies);
 
                               var time = _.keys(data2[0]).sort();
                               
@@ -722,21 +721,14 @@ Spatial.Controller = Backbone.View.extend(
 
         handleMeshDataUpdate : function(data)
         {
-            console.log(" handleMeshDataUpdate : function(data)");
-            $( '#speciesSelect' ).empty();
-            this.meshData = data.mesh;
-            var sortedSpecies = _.keys(data.data).sort();
-            this.handleMeshUpdate(sortedSpecies);
-
         },
 
         handleMeshColorUpdate : function(data)
         {
             console.log("handleMeshColorUpdate : function(data)");
             var val = $( '#speciesSelect' ).val();
-            this.redrawColors( data[val].mesh );
+            this.redrawColors( data[val] );
             this.mesh.geometry.colorsNeedUpdate = true;
-
 
             $( "#meshPreviewMsg" ).hide();
         },
@@ -766,10 +758,9 @@ Spatial.Controller = Backbone.View.extend(
 
         },
 
-        handleMeshUpdate: function(sortedSpecies)
+        setUpSpeciesSelect: function(sortedSpecies)
         {
-
-            console.log("handleMeshUpdate: function(sortedSpecies)");
+            console.log("setUpSpeciesSelect: function(sortedSpecies)");
             var speciesSelect = $("#speciesSelect");
 
             speciesSelect.off('change');
@@ -861,7 +852,6 @@ Spatial.Controller = Backbone.View.extend(
         {   
             this.trajectory = Number( $( event.target ).val() );
             this.acquireNewData();
-            this.preprocessMesh();
         },
 
 
