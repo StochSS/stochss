@@ -42,6 +42,11 @@
         uniform float xval;
         uniform float yval;
         uniform float zval;
+
+        uniform float xflag;
+        uniform float yflag;
+        uniform float zflag;
+
         varying vec4 vColor;
 
         void main()
@@ -50,7 +55,13 @@
 
             gl_Position = projectionMatrix * modelViewMatrix * vec4(position,1.0);
 
-            if(position.x <= xval || position.z <= yval || position.y <= zval)
+            if(position.x <= xval && xflag == 1.0)
+                vColor = vec4(0.0, 0.0, 0.0, 0.0);
+            
+            if (position.z <= yval && yflag == 1.0)
+                vColor = vec4(0.0, 0.0, 0.0, 0.0);
+            
+            if( position.y <= zval && zflag == 1.0)
                 vColor = vec4(0.0, 0.0, 0.0, 0.0);
         }
 
