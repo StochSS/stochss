@@ -25,7 +25,7 @@ def convert(filename, modelName = None):
 
         if species.isSetInitialConcentration():
             perSpeciesUnits.append("concentration")
-        elif species.isSetAmount():
+        elif species.isSetInitialAmount():
             perSpeciesUnits.append("population")
         else:
             raise Exception("Species initial conditions (initialAmount or initialConcentration) must be defined on all initial conditions for StochSS")
