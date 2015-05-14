@@ -733,14 +733,25 @@ Spatial.Controller = Backbone.View.extend(
         {
             console.log("handleSliderChange : function(event)");
 
-            
+            var isRace = false;
             if(event && event.originalEvent){
+                
+                // To prevent race conditions during animation
+                if(this.playFlag)
+                    {this.playFlag = false; isRace = true;}
+
                 var slider = $( event.target );
                 $( '#timeSelectDisplay' ).text('Time: ' + slider.val())
                 this.timeIdx = Math.round( slider.val() / slider.prop('step') );
+
+                // After the slider reset is over we can animate again
+                if(isRace)
+                    {this.playFlag = true;}
                 
+
             }
             else{
+                console.log("triggered by B");
                 var slider = $( '#timeSelect' );
                 slider.val(this.timeIdx);
                 $( '#timeSelectDisplay' ).text('Time: ' + this.timeIdx);   
