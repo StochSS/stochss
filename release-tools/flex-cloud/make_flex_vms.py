@@ -153,7 +153,7 @@ class VirtualMachine(object):
                                       source=DEFAULT_FLEX_API_APACHE_CONF,
                                       target='~/{0}.conf'.format(DEFAULT_FLEX_API_APP_NAME))
 
-        print 'scp command:\n{0}'.format(scp_command)
+        # print 'scp command:\n{0}'.format(scp_command)
 
         result = os.system(scp_command)
         if result != 0:
@@ -170,12 +170,12 @@ class VirtualMachine(object):
                         'sudo service apache2 restart']
 
             command = ';'.join(commands)
-            print command
+            # print command
             self.__run_remote_command(command=command, log_header=header)
 
 
     def __enable_network_ports(self):
-        # TODO: Enable ports 22, 5672, 6379, 11211, 55672, 5000
+        # TODO: Enable ports 22, 5672, 6379, 11211, 55672, 80
         pass
 
     def __try_install_dependencies(self):
