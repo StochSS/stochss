@@ -12,6 +12,7 @@ from google.appengine.ext import db
 import copy
 import fileserver
 import json
+import h5py
 import os, sys
 import re
 import signal
@@ -32,6 +33,10 @@ import boto
 from boto.dynamodb import condition
 sys.path.append(os.path.join(os.path.dirname(__file__), '../lib/cloudtracker'))
 from s3_helper import *
+
+import matplotlib.cm
+
+cm = matplotlib.cm.ScalarMappable()
 
 class SpatialJobWrapper(db.Model):
     # These are all the attributes of a job we use for local storage
@@ -68,53 +73,33 @@ class SpatialJobWrapper(db.Model):
 
         ''' Unpickle data file '''
         with open(str(self.outData + '/results/result{0}'.format(trajectory))) as fd:
+            indataStr = json.loads(self.indata)
             
             result = pickle.load(fd)
-            species = result.model.get_species_map().keys()
-            
-            ''' Get the max time for the job '''
-            indataStr = json.loads(self.indata)
-            maxTime = indataStr['time']
 
-            ''' This flag will be set once we store the mesh Data '''
-
-            ''' Creating preprocess directory '''
             if not self.preprocessedDir:
-                self.preprocessedDir = '../preprocessed/'+str(indataStr['id'])
+                self.preprocessedDir = '../preprocessed/{0}/'.format(indataStr['id'])
 
-            ''' Creating trajectory directory '''
-            directory = str(self.preprocessedDir+ '/{0}/'.format(trajectory)) 
+            if not os.path.exists(self.preprocessedDir):
+                os.mkdir(self.preprocessedDir)
                 
-            if not os.path.exists(directory):
-                os.makedirs(directory)
+            target = os.path.join(self.preprocessedDir, "result{0}".format(trajectory)) 
 
-            ''' Storing the mesh first : Note that the same mesh is used across time ranges'''
-            threeJS = {}
-            for specie in species:
-                threeJS[specie] = {"mesh" : json.loads(result.export_to_three_js(specie, 0))}
+            f = os.path.join(self.preprocessedDir, "mesh.json")
 
-            f = str(self.preprocessedDir+ '/{0}/{1}'.format(trajectory, "mesh.json"))
+            species = result.model.get_species_map().keys()
 
             with open(f, 'w') as meshFile:
-                json.dump(threeJS, meshFile) 
+                json.dump(json.loads(result.export_to_three_js(species[0], 0)), meshFile) 
+
+            hdf5File = h5py.File(target, 'w')
+
+            for specie in species:
+                dataSet = hdf5File.create_dataset(specie, data = result.get_species(specie, concentration=False))
             
-            ''' Storing the colored mesh for each time range '''
-            for timeIdx in range(0, maxTime + 1):
-                threeJS = {}
-                for specie in species:
-                    concVals = result.get_species(specie, timeIdx, concentration=True)
-                    popVals = result.get_species(specie, timeIdx, concentration=False)
+            hdf5File.close()
 
-                    minIdx = numpy.argmin(concVals)
-                    maxIdx = numpy.argmax(concVals)
-                    threeJS[specie] = { "mesh" : json.loads(result.export_to_three_js(specie, timeIdx))["colors"],
-                                        "max" : int(popVals[maxIdx]),
-                                        "min" : int(popVals[minIdx]) }
-
-                f = str(self.preprocessedDir+ '/{0}/{1}.json'.format(trajectory, timeIdx)) 
-                
-                with open(f, 'w') as outfile:
-                    json.dump(threeJS, outfile)
+            return
 
         self.preprocessed = True
         self.put()
@@ -259,19 +244,8 @@ class SpatialPage(BaseHandler):
             self.response.write(json.dumps(result))
             return
 
-        elif reqType == 'preprocess':
-            job = SpatialJobWrapper.get_by_id(int(self.request.get('id')))
-            data = json.loads(self.request.get('data'))
-            trajectory = data["trajectory"]           
-            
-            job.preprocess(trajectory)
-            job.put()
-            self.response.headers['Content-Type'] = 'application/json'
-            self.response.write("")
-
         elif reqType == 'timeData':
             try:
-                print "Getting time data"
                 job = SpatialJobWrapper.get_by_id(int(self.request.get('id')))
                 data = json.loads(self.request.get('data'))
 
@@ -279,46 +253,15 @@ class SpatialPage(BaseHandler):
                 timeIdx = data["timeIdx"]                
                 resultJS = {}
 
-                # If the job has been preprocessed
-                if (job.preprocessed) :
-                    print "Job is preprocessed"
-                    indir = str(job.preprocessedDir+ '/{0}/{1}'.format(trajectory, timeIdx))
-    #               print "Input directory",indir
+                job.preprocess(trajectory)
+
+                indir = job.preprocessedDir
                     
-                    print "Loading the files"
-                    colorJS = {}
-                    meshJS = {}
-                    with open(str(job.preprocessedDir+ '/{0}/{1}'.format(trajectory, "mesh.json")) ,'r') as meshfile:
-                        meshJS = json.load(meshfile)
+                with open(os.path.join(indir, 'mesh.json') ,'r') as meshfile:
+                    mesh = json.load(meshfile)
 
-                    with open(str(job.preprocessedDir+ '/{0}/{1}'.format(trajectory, str(timeIdx)+".json")) ,'r') as colorfile:
-                        colorJS = json.load(colorfile)
-
-                    resultJS = colorJS
-                    for key in resultJS.keys():
-                        resultJS[key]["mesh"] = meshJS[key]["mesh"]
-
-
-
-                # If the job is not preprocessed
-                # Load the mesh like you did previously
-                else:
-                    with open(str(job.outData + '/results/result{0}'.format(trajectory))) as fd:
-                        result = pickle.load(fd)
-                        species = result.model.get_species_map().keys()
-                    
-                    for specie in species:
-                        concVals = result.get_species(specie, timeIdx, concentration=True)
-                        popVals = result.get_species(specie, timeIdx, concentration=False)
-                        minIdx = numpy.argmin(concVals)
-                        maxIdx = numpy.argmax(concVals)
-                        resultJS[specie] = { "mesh" : json.loads(result.export_to_three_js(specie, timeIdx)),
-                                            "max" : int(popVals[maxIdx]),
-                                            "min" : int(popVals[minIdx]) }
-                    
-                
                 self.response.content_type = 'application/json'
-                self.response.write(json.dumps(resultJS))
+                self.response.write(json.dumps(mesh))
             
             except Exception as e:
                 traceback.print_exc()
@@ -340,36 +283,34 @@ class SpatialPage(BaseHandler):
 
                 resultJS = {}
                 
-                # Handling case where job is preprocessed
-                if job.preprocessed:
-                    print "Job is preprocessed"
-                    for timeIdx in range(sTime, eTime + 1):
-                        with open(str(job.preprocessedDir+ '/{0}/{1}'.format(trajectory, str(timeIdx)+".json")) ,'r') as f:
-                            resultJS[timeIdx] = json.load(f)
+                data = {}
+                with h5py.File(os.path.join(job.preprocessedDir, 'result{0}'.format(trajectory)), 'r') as dataFile:
+                    dataTmp = {}
 
-                #Handling case where job is not preprocessed
-                else:
-                   with open(str(job.outData + '/results/result{0}'.format(trajectory))) as fd:
-                    result = pickle.load(fd)
-                    species = result.model.get_species_map().keys()
-                    timeIdx = sTime;
-                    for timeIdx in range(sTime, eTime + 1):
-                        subthreeJS = {}
-                        for specie in species:
-                            concVals = result.get_species(specie, timeIdx, concentration=True)
-                            popVals = result.get_species(specie, timeIdx, concentration=False)
+                    for specie in dataFile.keys():
+                        rgbas = cm.to_rgba(dataFile[specie][sTime:eTime], bytes = True).astype('int')
+                        rgbas = numpy.left_shift(rgbas[:, :, 0], 16) + numpy.left_shift(rgbas[:, :, 1], 8) + rgbas[:, :, 2]
 
-                            minIdx = numpy.argmin(concVals)
-                            maxIdx = numpy.argmax(concVals)
+                        dataTmp[specie] = []
+                        for i in range(rgbas.shape[0]):
+                            dataTmp[specie].append(list(rgbas[i].astype('int')))
 
-                            subthreeJS[specie] = { "mesh" : result._compute_solution_colors(specie, timeIdx),
-                                                "max" : int(popVals[maxIdx]),
-                                                "min" : int(popVals[minIdx]) }
-                        
-                        resultJS[timeIdx] = {"mesh": subthreeJS}
+                        #rgbas = cm.to_rgba(dataFile[specie][sTime:eTime])#.astype('uint32')
+#                        rgbas = numpy.left_shift(rgbas[:, :, 0], 16) + numpy.left_shift(rgbas[:, :, 1], 8) + rgbas[:, :, 2]
+
+                        #dataTmp[specie] = []
+                        #for i in range(rgbas.shape[0]):
+                        #    dataTmp[specie].append([])
+                        #    for j in range(rgbas.shape[1]):
+                        #        dataTmp[specie][i].append(list(rgbas[i][j].astype('float')[:3]))
+
+                    for i in range(len(dataTmp.values()[0])):
+                        data[sTime + i] = {}
+                        for specie in dataFile.keys():
+                            data[sTime + i][specie] = dataTmp[specie][i]
 
                 self.response.content_type = 'application/json'
-                self.response.write(json.dumps( resultJS ))
+                self.response.write(json.dumps( data ))
 
             except Exception as e:
                 traceback.print_exc()
