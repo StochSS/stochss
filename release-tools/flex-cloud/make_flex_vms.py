@@ -19,6 +19,14 @@ import glob
 DEFAULT_SETTINGS_FILE = os.path.join(os.path.dirname(__file__), "settings.json")
 DEFAULT_MACHINE_CONFIG_FILE = os.path.join(os.path.dirname(__file__), "machines.json")
 
+DEFAULT_FLEX_API_APACHE_CONF_TEMPLATE = os.path.join(os.path.dirname(__file__), "flex_api_site.conf.template")
+DEFAULT_FLEX_API_APACHE_CONF = os.path.join(os.path.dirname(__file__), "flex_api_site.conf")
+
+DEFAULT_FLEX_API_APP_LOCATION = os.path.join('app', 'backend', 'flex_api')
+DEFAULT_FLEX_API_APP_WSGI_LOCATION = os.path.join(DEFAULT_FLEX_API_APP_LOCATION, 'flex_rest_api.wsgi')
+DEFAULT_FLEX_API_APP_NAME = 'flex_rest_api'
+
+
 class ShellCommandException(Exception):
     pass
 
@@ -26,6 +34,12 @@ class ShellCommandException(Exception):
 def get_remote_command(user, ip, key_file, command):
     return 'ssh -o UserKnownHostsFile=/dev/null -o StrictHostKeyChecking=no -i {0} {1}@{2} "{3}"'.format(key_file, user,
                                                                                                          ip, command)
+
+
+def get_scp_command(user, ip, key_file, target, source, is_sudo=False):
+    return 'scp -o UserKnownHostsFile=/dev/null -o StrictHostKeyChecking=no -i {key_file} {source} {user}@{ip}:{target}'.format(
+        key_file=key_file, user=user, ip=ip,
+        source=source, target=target)
 
 
 class ShellCommand(object):
@@ -71,8 +85,7 @@ class VirtualMachine(object):
     NUM_SSH_TRIALS = 10
 
     def __init__(self, ip, username, keyfile, dependencies, python_packages, git_repo,
-                 log_type="screen", stderr_log=None, stdout_log=None,
-                 keep_existing_stochss_dir=False, verbose=False):
+                 log_type="screen", stderr_log=None, stdout_log=None, verbose=False):
         self.ip = ip
         self.username = username
         self.keyfile = keyfile
@@ -80,7 +93,6 @@ class VirtualMachine(object):
         self.dependencies = dependencies
         self.python_packages = python_packages
         self.git_repo = git_repo
-        self.keep_existing_stochss_dir = keep_existing_stochss_dir
         self.verbose = verbose
 
         self.log_type = log_type
@@ -99,10 +111,56 @@ class VirtualMachine(object):
             self.__download_stochss_repo()
             self.__compile_stochss()
             self.run_tests()
-            self.__cleanup_instance()
+            # self.__setup_flex_api_server()
+            # self.__cleanup_instance()
 
         except:
             traceback.print_exc()
+
+    def __get_remote_stochss_dirname(self):
+        return os.path.join('/home', self.username, 'stochss')
+
+    def __setup_flex_api_server(self):
+        header = 'Setting Flex REST API web server...'
+        print '=================================================='
+        print header
+        stochss_dir = self.__get_remote_stochss_dirname()
+
+        with open(DEFAULT_FLEX_API_APACHE_CONF_TEMPLATE) as fin:
+            contents = fin.read()
+
+        contents = contents.replace('FLEX_API_APP_NAME', DEFAULT_FLEX_API_APP_NAME)
+        contents = contents.replace('FLEX_API_APP_LOCATION', os.path.join(stochss_dir,
+                                                                               DEFAULT_FLEX_API_APP_LOCATION))
+        contents = contents.replace('FLEX_API_APP_WSGI_LOCATION', os.path.join(stochss_dir,
+                                                                               DEFAULT_FLEX_API_APP_WSGI_LOCATION))
+
+        site_config_filename = '/etc/apache2/sites-available/{0}.conf'.format(DEFAULT_FLEX_API_APP_NAME)
+        print 'site file config = {0}'.format(site_config_filename)
+        print 'site file config:\n{0}'.format(contents)
+
+        with open(DEFAULT_FLEX_API_APACHE_CONF, 'w') as fout:
+            fout.write(contents)
+
+        scp_command = get_scp_command(user=self.username, ip =self.ip, key_file=self.keyfile,
+                                      source=DEFAULT_FLEX_API_APACHE_CONF,
+                                      target='~/{0}.conf'.format(DEFAULT_FLEX_API_APP_NAME))
+
+        print 'scp command:\n{0}'.format(scp_command)
+
+        result = os.system(scp_command)
+        if result != 0:
+            print 'scp Failed!'
+        else:
+            commands = ['sudo mv {0} {1}'.format('~/{0}.conf'.format(DEFAULT_FLEX_API_APP_NAME),
+                                                 site_config_filename),
+                        'sudo chown root:root "{0}"'.format(site_config_filename),
+                        'sudo a2ensite {0}'.format(DEFAULT_FLEX_API_APP_NAME),
+                        'sudo service apache2 restart']
+
+            command = ';'.join(commands)
+            print command
+            self.__run_remote_command(command=command, log_header=header)
 
 
     def __enable_network_ports(self):
@@ -260,6 +318,7 @@ class VirtualMachine(object):
                     'git clone --recursive {0}'.format(self.git_repo['url'])]
 
         if self.git_repo.has_key('branch'):
+            print 'Switching to branch {0}...'.format(self.git_repo['branch'])
             commands.append('cd stochss')
             commands.append('git checkout {0}'.format(self.git_repo['branch']))
 
@@ -413,7 +472,6 @@ class FlexVMMaker(object):
         self.python_packages = settings['python_packages']
         self.git_repo = settings['git_repo']
 
-        self.keep_existing_stochss_dir = options['keep_existing_stochss_dir']
         self.verbose = options['verbose']
 
         print 'GIT REPO: {0}'.format(self.git_repo['url'])
@@ -462,9 +520,8 @@ class FlexVMMaker(object):
 
             vm = VirtualMachine(ip=ip, keyfile=keyfile, username=username,
                                 dependencies=self.dependencies, python_packages=self.python_packages,
-                                git_repo=self.git_repo, keep_existing_stochss_dir=self.keep_existing_stochss_dir,
-                                log_type=self.log_type, stdout_log=self.stdout_log, stderr_log=self.stderr_log,
-                                verbose=self.verbose)
+                                git_repo=self.git_repo, log_type=self.log_type,
+                                stdout_log=self.stdout_log, stderr_log=self.stderr_log, verbose=self.verbose)
             vm.make_flex_vm()
 
         self.__cleanup()
@@ -473,6 +530,8 @@ class FlexVMMaker(object):
 
 def cleanup_local_files():
     for file in glob.glob(os.path.join(os.path.dirname(os.path.abspath(__file__)), '*.log')):
+        os.remove(file)
+    for file in glob.glob(os.path.join(os.path.dirname(os.path.abspath(__file__)), '*.conf')):
         os.remove(file)
 
 
@@ -486,12 +545,9 @@ def get_arg_parser():
                                               (Default: $STOCHSS/release_tools/flex-cloud/machines.json). \
                                               For more info, visit http://www.stochss.org/",
                         action="store", dest="machine_config_file")
-    parser.add_argument('--machine',  nargs=3,metavar=('IP', 'USERNAME', 'KEYFILE'),
+    parser.add_argument('--machine', nargs=3, metavar=('IP', 'USERNAME', 'KEYFILE'),
                         help='Configuration for one machine, -f option cannot be used along with this option',
                         action='store', dest='machine')
-    parser.add_argument('-k', '--keep_existing_stochss_dir', help='Keep existing stochss directory in VM, if any \
-                                                                  (Default: False)',
-                        action='store_true', dest='keep_existing_stochss_dir', default='False')
     parser.add_argument('-c', '--cleanup', help="Cleanup Local files", action="store_true", default=False)
     parser.add_argument('-v', '--verbose', help="Verbose output", action="store_true")
     parser.add_argument('-s', '--settings', help="Settings File containing package details, git repo, branch, etc. \
@@ -534,7 +590,6 @@ def get_flex_vm_maker_options(parsed_args):
         options['machine_info'] = json.loads(contents)
 
     options['settings'] = get_settings(settings_file=parsed_args.settings_file)
-    options['keep_existing_stochss_dir'] = parsed_args.keep_existing_stochss_dir
     options['verbose'] = False if parsed_args.verbose else parsed_args.verbose
 
     if parsed_args.git_branch != None:

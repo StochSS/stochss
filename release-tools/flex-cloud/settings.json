@@ -1,7 +1,7 @@
 {
     "git_repo": {
         "url": "https://github.com/StochSS/stochss.git",
-        "branch": "master"
+        "branch": "flex_cloud"
     },
     "log": {
         "type": "file",
@@ -29,6 +29,7 @@
         "html2text",
         "intltool",
         "intltool-debian",
+        "libapache2-mod-wsgi",
         "libarmadillo-dev",
         "libarpack2-dev",
         "libaudio2",
@@ -99,26 +100,12 @@
         "zip"
     ],
     "python_packages": [
-        {
-            "name": "celery",
-            "version": "3.0.19"
-        },
-        {
-            "name": "webob",
-            "version": "1.1"
-        },
-        {
-            "name": "ply"
-        },
-        {
-            "name": "redis"
-        },
-        {
-            "name": "six"
-        },
-        {
-            "name": "boto",
-            "version": "2.9.0"
-        }
+        {"name": "celery", "version": "3.0.19"},
+        {"name": "webob", "version": "1.1"},
+        {"name": "ply"},
+        {"name": "redis"},
+        {"name": "six"},
+        {"name": "boto", "version": "2.9.0"},
+        {"name": "flask"}
     ]
 }

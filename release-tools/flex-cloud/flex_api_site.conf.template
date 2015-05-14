@@ -1,0 +1,12 @@
+<VirtualHost *>
+
+    WSGIDaemonProcess FLEX_API_APP_NAME threads=1
+    WSGIScriptAlias / FLEX_API_APP_WSGI_LOCATION
+
+    <Directory FLEX_API_APP_LOCATION>
+        WSGIProcessGroup FLEX_API_APP_NAME
+        WSGIApplicationGroup %{GLOBAL}
+        Order deny,allow
+        Allow from all
+    </Directory>
+</VirtualHost>
