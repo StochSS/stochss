@@ -751,7 +751,6 @@ Spatial.Controller = Backbone.View.extend(
 
             }
             else{
-                console.log("triggered by B");
                 var slider = $( '#timeSelect' );
                 slider.val(this.timeIdx);
                 $( '#timeSelectDisplay' ).text('Time: ' + this.timeIdx);   
