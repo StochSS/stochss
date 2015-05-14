@@ -23,6 +23,7 @@ Spatial.Controller = Backbone.View.extend(
         {
             this.wireFlag = false;
             this.playFlag = false;
+            this.playMeshInterval = 800;
             
             // Set up room for the model select stuff
             // Pull in all the models from the internets
@@ -92,6 +93,34 @@ Spatial.Controller = Backbone.View.extend(
 
             $( '#play_btn' ).click(_.bind(this.playMesh, this));
             $( '#stop_btn' ).click(_.bind(this.stopMesh, this));
+            $( '#speedup_btn' ).click(_.bind(function(){ 
+                $( "#playStats" ).html( 'Speeding up...');
+                
+                // As speedy as this can be
+                if(this.playMeshInterval <= 600)
+                    return;
+                
+                this.playMeshInterval -=100;
+                clearInterval(this.intervalID);
+                console.log("resetting interval");
+                this.intervalID = setInterval(_.bind(this.play, this), this.playMeshInterval);
+                }, 
+                this));
+            $( '#slowdown_btn' ).click(_.bind(function(){ 
+                
+                $( "#playStats" ).html( 'Slowing down...');
+                
+                // As slow as this can be
+                if(this.playMeshInterval >= 6000)
+                    return;
+
+                this.playMeshInterval +=100;
+
+                clearInterval(this.intervalID);
+                console.log("resetting interval");
+                this.intervalID = setInterval(_.bind(this.play, this), this.playMeshInterval);
+                }, 
+                this));
         },
 
         /*
@@ -103,7 +132,7 @@ Spatial.Controller = Backbone.View.extend(
             this.playFlag = true;
             this.bufferCount = 0;
             this.playCount = 0;
-            this.intervalID = setInterval(_.bind(this.play, this), 800);
+            this.intervalID = setInterval(_.bind(this.play, this), this.playMeshInterval);
         },
 
         play: function(dt){
