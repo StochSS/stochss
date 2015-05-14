@@ -14,6 +14,7 @@ import traceback
 import pprint
 import argparse
 import glob
+import urllib2
 
 
 DEFAULT_SETTINGS_FILE = os.path.join(os.path.dirname(__file__), "settings.json")
@@ -111,11 +112,19 @@ class VirtualMachine(object):
             self.__download_stochss_repo()
             self.__compile_stochss()
             self.run_tests()
-            # self.__setup_flex_api_server()
+            self.__setup_flex_api_server()
+            self.__test_flex_api_server()
             # self.__cleanup_instance()
 
         except:
             traceback.print_exc()
+
+    def __test_flex_api_server(self):
+        json_message = json.loads(urllib2.urlopen("http://{ip}".format(ip=self.ip)).read())
+        if json_message['name'] == 'Flex API' and json_message['version'] == '1.0.0':
+            print 'Flex API Server running!'
+        else:
+            print 'Flex API Server is not working!'
 
     def __get_remote_stochss_dirname(self):
         return os.path.join('/home', self.username, 'stochss')
@@ -135,9 +144,7 @@ class VirtualMachine(object):
         contents = contents.replace('FLEX_API_APP_WSGI_LOCATION', os.path.join(stochss_dir,
                                                                                DEFAULT_FLEX_API_APP_WSGI_LOCATION))
 
-        site_config_filename = '/etc/apache2/sites-available/{0}.conf'.format(DEFAULT_FLEX_API_APP_NAME)
-        print 'site file config = {0}'.format(site_config_filename)
-        print 'site file config:\n{0}'.format(contents)
+        # print 'site file config:\n{0}'.format(contents)
 
         with open(DEFAULT_FLEX_API_APACHE_CONF, 'w') as fout:
             fout.write(contents)
@@ -152,10 +159,14 @@ class VirtualMachine(object):
         if result != 0:
             print 'scp Failed!'
         else:
+            site_config_filename = '/etc/apache2/sites-available/{0}.conf'.format(DEFAULT_FLEX_API_APP_NAME)
+            print 'site file config filename = {0}'.format(site_config_filename)
+
             commands = ['sudo mv {0} {1}'.format('~/{0}.conf'.format(DEFAULT_FLEX_API_APP_NAME),
                                                  site_config_filename),
                         'sudo chown root:root "{0}"'.format(site_config_filename),
-                        'sudo a2ensite {0}'.format(DEFAULT_FLEX_API_APP_NAME),
+                        'sudo a2dissite 000-default',
+                        'sudo a2ensite {0}.conf'.format(DEFAULT_FLEX_API_APP_NAME),
                         'sudo service apache2 restart']
 
             command = ';'.join(commands)

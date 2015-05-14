@@ -1,4 +1,4 @@
-<VirtualHost *>
+<VirtualHost *:80>
 
     WSGIDaemonProcess FLEX_API_APP_NAME threads=1
     WSGIScriptAlias / FLEX_API_APP_WSGI_LOCATION
