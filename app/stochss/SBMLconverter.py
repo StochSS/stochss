@@ -7,7 +7,7 @@ def convert(filename, modelName = None):
     document = libsbml.readSBML(filename)
 
     if document.getNumErrors() > 0:
-        raise "More than zero errors in the model"
+        raise Exception("More than zero errors in the model")
 
     model = document.getModel()
     numOfTabs = 0
@@ -106,3 +106,39 @@ def convert(filename, modelName = None):
         stochssModel.addReaction([stochssReaction])
 
     return stochssModel, isPopulation
+
+
+if __name__=='__main__':
+    import sys
+    import urllib2
+    import tempfile
+    if len(sys.argv) <= 1:
+        raise Exception("Specify a list of filename or URL to check, or '-bmdb' to check all models at the biomodels database")
+
+    if sys.argv[1] == '-bmdb':
+        #http://www.ebi.ac.uk/biomodels-main/download?mid=BIOMD0000000054
+        sbml_list=[]
+        for ndx in range(575):
+            template = 'http://www.ebi.ac.uk/biomodels-main/download?mid=BIOMD0000000000'
+            template = template[:-len(str(ndx+1))] + str(ndx+1)
+            sbml_list.append(template)
+            print template
+    else:
+        sbml_list = sys.argv[1:]
+
+    for sbml_file in sbml_list:
+        print "Testing 'convert()' for {0}".format(sbml_file)
+        if sbml_file.startswith('http'):
+            response = urllib2.urlopen(sbml_file)
+            tmp = tempfile.NamedTemporaryFile()
+            tmp.write(response.read())
+            ######
+            convert(tmp.name)
+            ######
+        else:
+            if not os.path.exists(sbml_file):
+                raise Exception("Can not find file on disk '{0}'".format(sbml_file))
+            ######
+            convert(sbml_file)
+            ######
+            
