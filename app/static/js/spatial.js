@@ -416,11 +416,37 @@ Spatial.Controller = Backbone.View.extend(
         handleAccessVtkDataButton : function(event)
         {
             updateMsg( { status : true,
-                         msg : "Packing up Vtk data... (this can take a couple minutes -- will forward you to file when ready)" } );
+                         msg : "Packing up VTK data... (this can take a couple minutes -- will forward you to file when ready)" } );
 
             $.ajax( { type : "POST",
                       url : "/spatial",
                       data : { reqType : "getVtkLocal",
+                               id : this.attributes.id },
+                      success : function(data) {
+                          updateMsg(data);
+                          
+                          if(data.status == true)
+                          {
+                              window.location = data.url;
+                          }
+                      },                      
+                      error: function(data)
+                      {
+                          updateMsg( { status : false,
+                                       msg : "Server error packaging up job data" } );
+                      },
+                      dataType : 'json'
+                    });
+        },
+
+        handleAccessCsvDataButton : function(event)
+        {
+            updateMsg( { status : true,
+                         msg : "Packing up CSV data... (this can take a couple minutes -- will forward you to file when ready)" } );
+
+            $.ajax( { type : "POST",
+                      url : "/spatial",
+                      data : { reqType : "getCsvLocal",
                                id : this.attributes.id },
                       success : function(data) {
                           updateMsg(data);
@@ -507,6 +533,7 @@ Spatial.Controller = Backbone.View.extend(
                     $( "#access" ).click(_.bind(this.handleDownloadDataButton, this));
 
 		    $( "#accessVtk" ).hide();
+		    $( "#accessCsv" ).hide();
                 }
                 else
                 {
@@ -515,6 +542,9 @@ Spatial.Controller = Backbone.View.extend(
 
 		    $( "#accessVtk" ).show();
                     $( "#accessVtk" ).click(_.bind(this.handleAccessVtkDataButton, this));
+
+		    $( "#accessCsv" ).show();
+                    $( "#accessCsv" ).click(_.bind(this.handleAccessCsvDataButton, this));
                 }
             }
         }

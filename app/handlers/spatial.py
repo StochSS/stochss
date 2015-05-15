@@ -47,6 +47,7 @@ class SpatialJobWrapper(db.Model):
     status = db.StringProperty()
     zipFileName = db.StringProperty() # This is a temporary file that the server uses to store a zipped up copy of the output
     vtkFileName = db.StringProperty()
+    csvFileName = db.StringProperty()
 
     # These are the cloud attributes
     resource = db.StringProperty()
@@ -419,6 +420,59 @@ class SpatialPage(BaseHandler):
                         shutil.rmtree(tmpDir)
             
             relpath = '/' + os.path.relpath(job.vtkFileName, os.path.abspath(os.path.dirname(__file__) + '/../'))
+
+            self.response.headers['Content-Type'] = 'application/json'
+            self.response.write(json.dumps({ 'status' : True,
+                                             'msg' : 'Job downloaded',
+                                             'url' : relpath }))
+            return
+        elif reqType == 'getCsvLocal':
+            def zipdir(path, ziph, prefix):
+                # ziph is zipfile handle
+                for root, dirs, files in os.walk(path):
+                    for file in files:
+                        ziph.write(os.path.join(root, file), os.path.join(prefix, os.path.relpath(os.path.join(root, file), path)))
+
+            jobID = json.loads(self.request.get('id'))
+
+            jobID = int(jobID)
+
+            job = SpatialJobWrapper.get_by_id(jobID)
+
+            if not job.csvFileName:
+                try:
+                    tmpDir = None
+
+                    indata = json.loads(job.indata)
+
+                    tmpDir = tempfile.mkdtemp(dir = os.path.abspath(os.path.dirname(__file__) + '/../static/tmp/'))
+
+                    for trajectory in range(indata["realizations"]):
+                        resultFile = open(str(job.outData + '/results/result{0}'.format(trajectory)))
+                        result = pickle.load(resultFile)
+                        resultFile.close()
+
+                        for specie in result.model.listOfSpecies:
+                            result.export_to_csv(specie, os.path.join(tmpDir, "trajectory_{0}".format(trajectory), "species_{0}".format(specie)))
+
+                    tmpFile = tempfile.NamedTemporaryFile(dir = os.path.abspath(os.path.dirname(__file__) + '/../static/tmp/'), prefix = job.jobName + "_", suffix = '.zip', delete = False)
+
+                    zipf = zipfile.ZipFile(tmpFile, "w")
+                    zipdir(tmpDir, zipf, os.path.basename(tmpFile.name))
+                    zipf.close()
+
+                    job.csvFileName = tmpFile.name
+                    
+                    tmpFile.close()
+
+                    # Save the updated status
+                    job.put()
+                finally:
+                    if tmpDir and os.path.exists(tmpDir):
+                        print "Getting cleaned up"
+                        shutil.rmtree(tmpDir)
+            
+            relpath = '/' + os.path.relpath(job.csvFileName, os.path.abspath(os.path.dirname(__file__) + '/../'))
 
             self.response.headers['Content-Type'] = 'application/json'
             self.response.write(json.dumps({ 'status' : True,
