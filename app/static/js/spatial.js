@@ -23,7 +23,7 @@ Spatial.Controller = Backbone.View.extend(
         {
             this.wireFlag = false;
             this.playFlag = false;
-            this.playMeshInterval = 800;
+            this.playMeshInterval = 1000;
             
             // Set up room for the model select stuff
             // Pull in all the models from the internets
@@ -54,11 +54,11 @@ Spatial.Controller = Backbone.View.extend(
         refreshData : function()
         {
             $.ajax( { url : '/spatial',
-                      type : 'GET',
-                      reqType : 'json',
-                      data : { 'reqType' : 'getJobInfo',
-                               'id' : this.attributes.id },
-                      success : _.bind(this.render, this) } );
+            type : 'GET',
+            reqType : 'json',
+            data : { 'reqType' : 'getJobInfo',
+            'id' : this.attributes.id },
+            success : _.bind(this.render, this) } );
         },
 
         renderFrame : function() {
@@ -93,7 +93,7 @@ Spatial.Controller = Backbone.View.extend(
                 $( "#playStats" ).html( 'Speeding up...');
                 
                 // As speedy as this can be
-                if(this.playMeshInterval <= 600)
+                if(this.playMeshInterval <= 100)
                     return;
                 
                 this.playMeshInterval -=100;
@@ -143,6 +143,7 @@ Spatial.Controller = Backbone.View.extend(
                 // Loading value from cache
                 else if(cache[this.timeIdx])
                 {
+
                     console.log("Playing @time"+this.timeIdx);
                     $( "#playStats" ).html( 'Running...');
                     // $('#timeSelect').trigger('change');
@@ -150,6 +151,7 @@ Spatial.Controller = Backbone.View.extend(
                     // this.handleMeshColorUpdate(cache[this.timeIdx]);
 
                     this.playCount += 1;
+                    this.bufferCount = 0;
 
                     if(this.playCount == 25)
                     {
@@ -162,13 +164,11 @@ Spatial.Controller = Backbone.View.extend(
                 }
                 // If we don't have the value loaded into the cache, wait a few timesteps for it to load before we panic and make an server request
                 else if(this.timeIdx <= maxLimit){
-                    this.bufferCount+=1;
-                    if(this.bufferCount == cacheRange)
-                    {
                         $( "#playStats" ).html( 'Buffering...');
-                        this.bufferCount = 0;
-                        this.updateCache(this.timeIdx, this.timeIdx + cacheRange);
-                    }
+                        if(this.bufferCount == 0)
+                            {
+                                this.updateCache(this.timeIdx, this.timeIdx + cacheRange, true);
+                            }
                 }
                 
                 
@@ -618,10 +618,6 @@ Spatial.Controller = Backbone.View.extend(
                                id : this.attributes.id,
                                data : JSON.stringify( { trajectory : this.trajectory, timeStart : start , timeEnd: stop} )},
                       success : _.bind(function(data) {
-                          if(Object.keys(cache).length > 50)
-                          {
-                              cache = {};
-                          }
                           
                           var time = _.keys(data).sort();
                           for (var i = 0; i < time.length; i++) {
@@ -671,7 +667,7 @@ Spatial.Controller = Backbone.View.extend(
 
                 $.ajax( { type : "GET", url : "/spatial",  data : { reqType : "onlyColorRange", 
                                                                     id : this.attributes.id, 
-                                                                    data : JSON.stringify({ trajectory : this.trajectory, timeStart : 0 , timeEnd: ( this.jobInfo.indata.time < 50 ?  this.jobInfo.indata.time : 50 ) })
+                                                                    data : JSON.stringify({ trajectory : this.trajectory, timeStart : 0 , timeEnd: ( this.jobInfo.indata.time < 50 ?  this.jobInfo.indata.time+1 : 50 ) })
                                                                   } } )
             ).done(_.bind(function(data1, data2)
                           {

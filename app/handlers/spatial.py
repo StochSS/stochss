@@ -66,13 +66,15 @@ class SpatialJobWrapper(db.Model):
 
 
     def preprocess(self, trajectory):      
-        
+        print "Preprocessing ... "
         ''' Job is already processed check '''
-        if self.preprocessed == True:
+        if self.preprocessed == True and os.access(self.preprocessedDir, os.R_OK):
+            print "Job is preprocessed"
             return
 
         ''' Unpickle data file '''
         with open(str(self.outData + '/results/result{0}'.format(trajectory))) as fd:
+            print "Unpickling data file"
             indataStr = json.loads(self.indata)
             
             result = pickle.load(fd)
@@ -80,8 +82,10 @@ class SpatialJobWrapper(db.Model):
             if not self.preprocessedDir:
                 self.preprocessedDir = '../preprocessed/{0}/'.format(indataStr['id'])
 
+            print "Directory:", self.preprocessedDir
+
             if not os.path.exists(self.preprocessedDir):
-                os.mkdir(self.preprocessedDir)
+                os.makedirs(self.preprocessedDir)
                 
             target = os.path.join(self.preprocessedDir, "result{0}".format(trajectory)) 
 
@@ -98,11 +102,9 @@ class SpatialJobWrapper(db.Model):
                 dataSet = hdf5File.create_dataset(specie, data = result.get_species(specie, concentration=False))
             
             hdf5File.close()
-
-            return
-
         self.preprocessed = True
         self.put()
+        return
 
     # More attributes can obvs. be added
     # The delete operator here is a little fancy. When the item gets deleted from the GOogle db, we need to go clean up files stored locally and remotely
@@ -253,7 +255,8 @@ class SpatialPage(BaseHandler):
                 timeIdx = data["timeIdx"]                
                 resultJS = {}
 
-                job.preprocess(trajectory)
+                if not job.preprocessed and not os.path.exists(job.preprocessedDir):
+                    job.preprocess(trajectory)
 
                 indir = job.preprocessedDir
                     
@@ -275,39 +278,53 @@ class SpatialPage(BaseHandler):
         
         elif reqType == 'onlyColorRange':
             try:
+                print "Only color range"
                 job = SpatialJobWrapper.get_by_id(int(self.request.get('id')))
                 data = json.loads(self.request.get('data'))
                 trajectory = data["trajectory"]
                 sTime= data["timeStart"]
                 eTime = data["timeEnd"]
 
+                print data
+                print job
+                print job.preprocessedDir
+
                 resultJS = {}
-                
                 data = {}
-                with h5py.File(os.path.join(job.preprocessedDir, 'result{0}'.format(trajectory)), 'r') as dataFile:
+
+                f = os.path.join(job.preprocessedDir, 'result{0}'.format(trajectory))
+                
+                with h5py.File(f, 'r') as dataFile:
                     dataTmp = {}
 
+                    print "file is", dataFile
+
                     for specie in dataFile.keys():
+                        print "times: ", sTime, eTime, "data File : ", dataFile[specie], "data File at time 0: ", dataFile[specie][sTime]
                         rgbas = cm.to_rgba(dataFile[specie][sTime:eTime], bytes = True).astype('int')
                         rgbas = numpy.left_shift(rgbas[:, :, 0], 16) + numpy.left_shift(rgbas[:, :, 1], 8) + rgbas[:, :, 2]
+
+                        print "rgbs : ",rgbas
 
                         dataTmp[specie] = []
                         for i in range(rgbas.shape[0]):
                             dataTmp[specie].append(list(rgbas[i].astype('int')))
 
-                        #rgbas = cm.to_rgba(dataFile[specie][sTime:eTime])#.astype('uint32')
+
+                    #rgbas = cm.to_rgba(dataFile[specie][sTime:eTime])#.astype('uint32')
 #                        rgbas = numpy.left_shift(rgbas[:, :, 0], 16) + numpy.left_shift(rgbas[:, :, 1], 8) + rgbas[:, :, 2]
 
-                        #dataTmp[specie] = []
-                        #for i in range(rgbas.shape[0]):
-                        #    dataTmp[specie].append([])
-                        #    for j in range(rgbas.shape[1]):
-                        #        dataTmp[specie][i].append(list(rgbas[i][j].astype('float')[:3]))
+                    #dataTmp[specie] = []
+                    #for i in range(rgbas.shape[0]):
+                    #    dataTmp[specie].append([])
+                    #    for j in range(rgbas.shape[1]):
+                    #        dataTmp[specie][i].append(list(rgbas[i][j].astype('float')[:3]))
 
                     for i in range(len(dataTmp.values()[0])):
                         data[sTime + i] = {}
                         for specie in dataFile.keys():
                             data[sTime + i][specie] = dataTmp[specie][i]
+                print "end only color range"
 
                 self.response.content_type = 'application/json'
                 self.response.write(json.dumps( data ))
@@ -691,4 +708,3 @@ class SpatialPage(BaseHandler):
                                             "msg" : "{0}".format(e)}))
                                             #"msg" : "{0}: {1}".format(type(e).__name__, e)}))
             return
-
