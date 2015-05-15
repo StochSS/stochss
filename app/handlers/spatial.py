@@ -452,8 +452,7 @@ class SpatialPage(BaseHandler):
                         result = pickle.load(resultFile)
                         resultFile.close()
 
-                        for specie in result.model.listOfSpecies:
-                            result.export_to_csv(specie, os.path.join(tmpDir, "trajectory_{0}".format(trajectory), "species_{0}".format(specie)))
+                        result.export_to_csv(os.path.join(tmpDir, "trajectory_{0}".format(trajectory)).encode('ascii', 'ignore'))
 
                     tmpFile = tempfile.NamedTemporaryFile(dir = os.path.abspath(os.path.dirname(__file__) + '/../static/tmp/'), prefix = job.jobName + "_", suffix = '.zip', delete = False)
 

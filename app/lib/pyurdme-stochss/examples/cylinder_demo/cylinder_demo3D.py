@@ -78,12 +78,15 @@ if __name__ == "__main__":
     # is written to a folder "Aout", where each snapshot is stored in a separate file. To open the "movie",
     # just open Aout/trajectory.pvd, then you can animate etc.
     if not os.path.isdir('Aout'):
-        print "Writing species 'A' to folder 'Aout'"
+        print "Writing species 'A' to folder 'Aout' in VTK format"
         result.export_to_vtk(species='A',folder_name="Aout")
     if not os.path.isdir('Bout'):
-        print "Writing species 'B' to folder 'Bout'"
+        print "Writing species 'B' to folder 'Bout' in VTK format"
         result.export_to_vtk(species='B',folder_name="Bout")
 
+    if not os.path.isdir('csv_out'):
+        print "Writing trajectory data in CSV format"
+        result.export_to_csv(folder_name="csv_out")
 
     # Plot of the time-average spatial concentration.
     x_vals = model.mesh.coordinates()[:, 0]
