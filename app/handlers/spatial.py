@@ -68,21 +68,21 @@ class SpatialJobWrapper(db.Model):
     def preprocess(self, trajectory):      
         print "Preprocessing ... "
         ''' Job is already processed check '''
-        if self.preprocessed == True and os.access(self.preprocessedDir, os.R_OK):
-            print "Job is preprocessed"
-            return
+        #if self.preprocessed == True and self.preprocessedDir and os.path.exists(self.preprocessedDir):
+            #print "Job is preprocessed"
+        #    return
 
         ''' Unpickle data file '''
         with open(str(self.outData + '/results/result{0}'.format(trajectory))) as fd:
-            print "Unpickling data file"
+            #print "Unpickling data file"
             indataStr = json.loads(self.indata)
             
             result = pickle.load(fd)
 
             if not self.preprocessedDir:
-                self.preprocessedDir = '../preprocessed/{0}/'.format(indataStr['id'])
+                self.preprocessedDir = '../preprocessed/{0}/'.format(self.key().id())
 
-            print "Directory:", self.preprocessedDir
+            #print "Directory:", self.preprocessedDir
 
             if not os.path.exists(self.preprocessedDir):
                 os.makedirs(self.preprocessedDir)
@@ -99,9 +99,17 @@ class SpatialJobWrapper(db.Model):
             hdf5File = h5py.File(target, 'w')
 
             for specie in species:
-                dataSet = hdf5File.create_dataset(specie, data = result.get_species(specie, concentration=False))
+                populationValues = result.get_species(specie, concentration = False)
+                concentrationValues = result.get_species(specie, concentration = True)
+                population = hdf5File.create_dataset(specie + "/population", data = populationValues)
+                population.attrs["min"] = min(populationValues.flatten())
+                population.attrs["max"] = max(populationValues.flatten())
+                concentration = hdf5File.create_dataset(specie + "/concentration", data = concentrationValues)
+                concentration.attrs["min"] = min(concentrationValues.flatten())
+                concentration.attrs["max"] = max(concentrationValues.flatten())
             
             hdf5File.close()
+
         self.preprocessed = True
         self.put()
         return
@@ -249,22 +257,28 @@ class SpatialPage(BaseHandler):
         elif reqType == 'timeData':
             try:
                 job = SpatialJobWrapper.get_by_id(int(self.request.get('id')))
+
                 data = json.loads(self.request.get('data'))
 
                 trajectory = data["trajectory"]
                 timeIdx = data["timeIdx"]                
                 resultJS = {}
 
-                if not job.preprocessed and not os.path.exists(job.preprocessedDir):
-                    job.preprocess(trajectory)
+                #if not job.preprocessed or not os.path.exists(job.preprocessedDir):
+                job.preprocess(trajectory)
 
                 indir = job.preprocessedDir
                     
                 with open(os.path.join(indir, 'mesh.json') ,'r') as meshfile:
                     mesh = json.load(meshfile)
 
+                f = os.path.join(indir, 'result{0}'.format(trajectory))
+                
+                with h5py.File(f, 'r') as dataFile:
+                    species = dataFile.keys()
+
                 self.response.content_type = 'application/json'
-                self.response.write(json.dumps(mesh))
+                self.response.write(json.dumps({ "mesh" : mesh, "species" : species }))
             
             except Exception as e:
                 traceback.print_exc()
@@ -284,50 +298,50 @@ class SpatialPage(BaseHandler):
                 trajectory = data["trajectory"]
                 sTime= data["timeStart"]
                 eTime = data["timeEnd"]
-
-                print data
-                print job
-                print job.preprocessedDir
+                dataType = "population" if "showPopulation" in data and data["showPopulation"] else "concentration"
 
                 resultJS = {}
                 data = {}
 
                 f = os.path.join(job.preprocessedDir, 'result{0}'.format(trajectory))
+
+                limits = {}
                 
                 with h5py.File(f, 'r') as dataFile:
                     dataTmp = {}
 
-                    print "file is", dataFile
-
                     for specie in dataFile.keys():
-                        print "times: ", sTime, eTime, "data File : ", dataFile[specie], "data File at time 0: ", dataFile[specie][sTime]
-                        rgbas = cm.to_rgba(dataFile[specie][sTime:eTime], bytes = True).astype('int')
+                        data2 = dataFile[specie][dataType][sTime:eTime]
+                        
+                        limits['min'] = dataFile[specie][dataType].attrs['min']
+                        limits['max'] = dataFile[specie][dataType].attrs['max']
+
+                        cm.set_clim(dataFile[specie][dataType].attrs['min'], dataFile[specie][dataType].attrs['max'])
+                        rgbas = cm.to_rgba(data2, bytes = True)
+
+                        print len(numpy.where(data2.flatten() > 0.0)[0])
+
                         rgbas = numpy.left_shift(rgbas[:, :, 0], 16) + numpy.left_shift(rgbas[:, :, 1], 8) + rgbas[:, :, 2]
 
-                        print "rgbs : ",rgbas
+                        #rgbaInts = numpy.zeros((rgbas.shape[0], rgbas.shape[1]))
+
+                        #for i in range(rgbas.shape[0]):
+                        #    for j in range(rgbas.shape[1]):
+                        #        rgbaInts[i, j] = int('0x%02x%02x%02x' % tuple(rgbas[i, j][0:3]), 0)
+
+                        print len(numpy.where(rgbas.flatten() > 127)[0])
 
                         dataTmp[specie] = []
                         for i in range(rgbas.shape[0]):
                             dataTmp[specie].append(list(rgbas[i].astype('int')))
 
-
-                    #rgbas = cm.to_rgba(dataFile[specie][sTime:eTime])#.astype('uint32')
-#                        rgbas = numpy.left_shift(rgbas[:, :, 0], 16) + numpy.left_shift(rgbas[:, :, 1], 8) + rgbas[:, :, 2]
-
-                    #dataTmp[specie] = []
-                    #for i in range(rgbas.shape[0]):
-                    #    dataTmp[specie].append([])
-                    #    for j in range(rgbas.shape[1]):
-                    #        dataTmp[specie][i].append(list(rgbas[i][j].astype('float')[:3]))
-
                     for i in range(len(dataTmp.values()[0])):
                         data[sTime + i] = {}
                         for specie in dataFile.keys():
                             data[sTime + i][specie] = dataTmp[specie][i]
-                print "end only color range"
 
                 self.response.content_type = 'application/json'
-                self.response.write(json.dumps( data ))
+                self.response.write(json.dumps( { "colors" : data, "limits" : limits } ))
 
             except Exception as e:
                 traceback.print_exc()

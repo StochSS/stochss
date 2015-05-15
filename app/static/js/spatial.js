@@ -46,9 +46,10 @@ Spatial.Controller = Backbone.View.extend(
             this.refreshData();
 
             // Initializing cache
-            cache = {};
-            cacheRange = undefined;
-            maxLimit = undefined;
+            this.cache = {};
+            this.showPopulation = true;
+            this.cacheRange = undefined;
+            this.maxLimit = undefined;
         },
 
         refreshData : function()
@@ -134,14 +135,14 @@ Spatial.Controller = Backbone.View.extend(
         play: function(dt){
             if(this.playFlag){
                 // stopping animation when time limit is reached
-                if(this.timeIdx > maxLimit)
+                if(this.timeIdx > this.maxLimit)
                 {
                     this.stopMesh();
                     return;
                 }
 
                 // Loading value from cache
-                else if(cache[this.timeIdx])
+                else if(this.cache[this.timeIdx])
                 {
 
                     console.log("Playing @time"+this.timeIdx);
@@ -155,7 +156,7 @@ Spatial.Controller = Backbone.View.extend(
 
                     if(this.playCount == 25)
                     {
-                        this.replaceCache(this.timeIdx - 25, this.timeIdx, this.timeIdx + cacheRange - 25, this.timeIdx + cacheRange);
+                        this.replaceCache(this.timeIdx - 25, this.timeIdx, this.timeIdx + this.cacheRange - 25, this.timeIdx + this.cacheRange);
                         this.playCount = 0;
                     }
 
@@ -163,11 +164,11 @@ Spatial.Controller = Backbone.View.extend(
                     return;
                 }
                 // If we don't have the value loaded into the cache, wait a few timesteps for it to load before we panic and make an server request
-                else if(this.timeIdx <= maxLimit){
+                else if(this.timeIdx <= this.maxLimit){
                         $( "#playStats" ).html( 'Buffering...');
                         if(this.bufferCount == 0)
                             {
-                                this.updateCache(this.timeIdx, this.timeIdx + cacheRange, true);
+                                this.updateCache(this.timeIdx, this.timeIdx + this.cacheRange, true);
                             }
                 }
                 
@@ -586,14 +587,14 @@ Spatial.Controller = Backbone.View.extend(
 
             if(stop1 == -1)
             {
-                delete cache[start];
+                delete this.cache[start];
                 return;
             }
             
-            var stop = Math.min(stop1, maxLimit);
+            var stop = Math.min(stop1, this.maxLimit);
             while(idx!=stop)
             {
-                delete cache[idx];
+                delete this.cache[idx];
                 idx = idx + 1;
             }
 
@@ -607,7 +608,7 @@ Spatial.Controller = Backbone.View.extend(
 
         updateCache : function(start1, stop1, colorFlag){
             var start = start1;
-            var stop = Math.min(stop1, maxLimit);
+            var stop = Math.min(stop1, this.maxLimit);
 
             console.log(" updateCache : function("+start+", "+stop+")");
 
@@ -616,76 +617,51 @@ Spatial.Controller = Backbone.View.extend(
                       url : "/spatial",
                       data : { reqType : "onlyColorRange",
                                id : this.attributes.id,
-                               data : JSON.stringify( { trajectory : this.trajectory, timeStart : start , timeEnd: stop} )},
+                               data : JSON.stringify( {
+                                   showPopulation : this.showPopulation,
+                                   trajectory : this.trajectory,
+                                   timeStart : start,
+                                   timeEnd: stop} )},
                       success : _.bind(function(data) {
                           
-                          var time = _.keys(data).sort();
+                          var time = _.keys(data.colors).sort();
                           for (var i = 0; i < time.length; i++) {
                               var t = time[i]; 
-                              cache[t] = data[t];
+                              this.cache[t] = data.colors[t];
                           }
                           
                           if(colorFlag)
-                              this.handleMeshColorUpdate(cache[time[0] ]);
+                              this.handleMeshColorUpdate(this.cache[time[0] ]);
                           
                       }, this)
                     });
         },
+        //$.ajax( { type : "GET", url : "/spatial",  data : { reqType : "onlyColorRange", 
+        //                                                            id : this.attributes.id, 
+        //                                                            data : JSON.stringify({ trajectory : this.trajectory, timeStart : 0 , timeEnd: ( this.jobInfo.indata.time < 50 ?  this.jobInfo.indata.time+1 : 50 ) })
+        //                                                          } } )
 
-        /*preprocessMesh : function(){
-            $.ajax( { type : "GET", 
-                      url : "/spatial", 
-                      data : { reqType : "preprocess", 
-                               id : this.attributes.id, 
-                               data : JSON.stringify( { trajectory : this.trajectory} ) },
-                      success : function(){ 
-                          console.log("-- Preprocessing Completed -- ")
-                      }
-                    } );
-        },*/
-
-        /*updateMesh : function(){
+        getMesh : function(){
             $.ajax( { type : "GET",
                       url : "/spatial",
-                      data : { reqType : "timeData",
-                               id : this.attributes.id,
-                               data : JSON.stringify( { trajectory : this.trajectory,
-                                                        timeIdx : this.timeIdx } )},
-                      success : _.bind(this.handleMeshDataUpdate, this)
-                    });
-        },*/
+                      data : { reqType : "timeData", 
+                               id : this.attributes.id, 
+                               data : JSON.stringify( {
+                                   trajectory : this.trajectory,
+                                   timeIdx : this.timeIdx })
+                             },
+                      success : _.bind(this.handleGetMesh, this)
+                    } );
+        },
 
+        handleGetMesh : function(data) {
+            $( '#speciesSelect' ).empty();
+            this.meshData = data.mesh;
 
-        updateMeshWithCache : function(){
-            
+            this.updateCache(0, this.cacheRange);
 
-            $.when(
-                $.ajax( { type : "GET", url : "/spatial", data : { reqType : "timeData", 
-                                                                   id : this.attributes.id, 
-                                                                   data : JSON.stringify( { trajectory : this.trajectory, timeIdx : this.timeIdx })
-                                                                 } } ),
-
-                $.ajax( { type : "GET", url : "/spatial",  data : { reqType : "onlyColorRange", 
-                                                                    id : this.attributes.id, 
-                                                                    data : JSON.stringify({ trajectory : this.trajectory, timeStart : 0 , timeEnd: ( this.jobInfo.indata.time < 50 ?  this.jobInfo.indata.time+1 : 50 ) })
-                                                                  } } )
-            ).done(_.bind(function(data1, data2)
-                          {
-                              $( '#speciesSelect' ).empty();
-                              this.meshData = data1[0];
-                              var sortedSpecies = _.keys(data2[0][0]).sort();
-                              this.setUpSpeciesSelect(sortedSpecies);
-
-                              var time = _.keys(data2[0]).sort();
-                              
-                              for (var i = 0; i < time.length; i++) {
-                                  var t = time[i]; 
-                                  cache[t] = data2[0][t];
-                              }
-
-                              cacheRange =  (this.jobInfo.indata.time < 50 )?  this.jobInfo.indata.time : 50;  
-
-                          }, this)) ;
+            var sortedSpecies = data.species.sort();
+            this.setUpSpeciesSelect(sortedSpecies);
         },
 
         acquireNewData : function()
@@ -693,9 +669,9 @@ Spatial.Controller = Backbone.View.extend(
             console.log("acquireNewData : function()");
 
             // If cache is available
-            if(cache[this.timeIdx] && this.meshData)
+            if(this.cache[this.timeIdx] && this.meshData)
             {
-                this.handleMeshColorUpdate(cache[this.timeIdx]); 
+                this.handleMeshColorUpdate(this.cache[this.timeIdx]); 
                 return;
             }
             else
@@ -706,7 +682,7 @@ Spatial.Controller = Backbone.View.extend(
                 // If mesh is availablevailable
                 if(this.meshData){
                     var start  = this.timeIdx ;
-                    var end = (this.timeIdx + cacheRange);
+                    var end = (this.timeIdx + this.cacheRange);
                     this.updateCache(start , end, true);
                     $( "#meshPreviewMsg" ).hide();
                     return;
@@ -714,7 +690,7 @@ Spatial.Controller = Backbone.View.extend(
 
                 // Neither cache or mesh available
                 else{
-                    this.updateMeshWithCache();
+                    this.getMesh();
                     $( "#meshPreviewMsg" ).hide();
                     return;
                 }
@@ -752,10 +728,6 @@ Spatial.Controller = Backbone.View.extend(
             
             this.acquireNewData();
 
-        },
-
-        handleMeshDataUpdate : function(data)
-        {
         },
 
         handleMeshColorUpdate : function(data)
@@ -829,7 +801,7 @@ Spatial.Controller = Backbone.View.extend(
             this.selectedSpecies = species;
 
             if(event.originalEvent)
-                this.handleMeshColorUpdate(cache[this.timeIdx]);
+                this.handleMeshColorUpdate(this.cache[this.timeIdx]);
             else
                 this.meshDataPreview(this.meshData);
         },
@@ -895,6 +867,8 @@ Spatial.Controller = Backbone.View.extend(
             if(typeof data != 'undefined')
             {
                 this.jobInfo = data;
+            
+                this.cacheRange =  (this.jobInfo.indata.time < 50) ? this.jobInfo.indata.time : 50;
 
                 var jobInfoTemplate = _.template( $( "#jobInfoTemplate" ).html() );
 
@@ -929,7 +903,7 @@ Spatial.Controller = Backbone.View.extend(
                     slider.val(slider.prop('max'));
                     slider.prop('step', this.jobInfo.indata.increment);
 
-                    maxLimit = this.jobInfo.indata.time;
+                    this.maxLimit = this.jobInfo.indata.time;
 
                     //Add event handler to slider
                     slider.off('change');
@@ -949,6 +923,19 @@ Spatial.Controller = Backbone.View.extend(
                         console.log('withoutWire.click');  
                         this.mesh.material.wireframe = false;
                         this.mesh.material.needsUpdate = true;
+                    }, this));
+
+                    var drawUnits = $("input[name='drawUnits']");
+                    drawUnits.click(_.bind(function(){
+                        console.log('drawUnits.click');
+
+                        if($("input[name='drawUnits']:checked").val() == 'population')
+                            this.showPopulation  = true;
+                        else
+                            this.showPopulation  = false;
+
+                        this.cache = {}
+                        this.updateCache(this.timeIdx, this.timeIdx + this.cacheRange, true);
                     }, this));
 
                     var checkbox = $( "#planeXCheck" );

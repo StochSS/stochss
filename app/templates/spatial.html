@@ -136,9 +136,14 @@
                 </td>
 
                 <td valign=top>
-                    Select Wireframe:<br />
-                    <input type="radio" id="withWire" name="wireframe" value="1">Yes
-                    <input type="radio" id="withoutWire" name="wireframe" value="0">No
+                    Render Type:<br />
+                    <input type="radio" id="withoutWire" name="wireframe" checked>Solid
+                    <input type="radio" id="withWire" name="wireframe">Wireframe
+                    <br />
+
+                    Draw Units:<br />
+                    <input type="radio" value="population" name="drawUnits" checked>Population
+                    <input type="radio" value="concentration" name="drawUnits">Concentration
                 </td>
                 <td valign=top>
                     Select species:<br />
