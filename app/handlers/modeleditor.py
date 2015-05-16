@@ -25,6 +25,15 @@ import mesheditor
 import webapp2
 import exportimport
 
+class SBMLImportErrorLogs(db.Model):
+    """
+    A wrapper for the StochKit Model object
+    """
+    user_id = db.StringProperty()
+    modelId = db.IntegerProperty()
+    fileName = db.StringProperty()
+    errors = ObjectProperty()
+
 class StochKitModelWrapper(db.Model):
     """
     A wrapper for the StochKit Model object
@@ -629,7 +638,26 @@ class ImportFromSBMLPage(BaseHandler):
         return True
     
     def get(self):
-        self.render_response('importFromSBML.html')
+        if 'reqType' in self.request.GET:
+            if self.request.get('reqType') == 'delete':
+                errorLogsId = int(self.request.get('id'));
+                    
+                errorLogsDb = SBMLImportErrorLogs.get_by_id(errorLogsId)
+
+                errorLogsDb.delete()
+                    
+                self.redirect("/importFromSBML")
+
+        errorLogsDbQuery = list(db.GqlQuery("SELECT * FROM SBMLImportErrorLogs WHERE user_id = :1", self.user.user_id()).run())
+
+        result = []
+
+        for error in errorLogsDbQuery:
+            result.append( { 'id' : error.key().id(),
+                             'fileName' : error.fileName,
+                             'modelName' : StochKitModelWrapper.get_by_id(error.modelId).name } )
+
+        self.render_response('importFromSBML.html', **{ "errors" : result })
 
     def post(self):
         try:
@@ -643,15 +671,23 @@ class ImportFromSBMLPage(BaseHandler):
             tmp.close()
 
             #stochKitModel = stochss.stochkit.StochMLDocument.fromString(storage.file.read()).toModel(name)
-            model, isPopulation = stochss.SBMLconverter.convert(filename, name)
+            model, errors = stochss.SBMLconverter.convert(filename, name)
             modelDb = StochKitModelWrapper.createFromStochKitModel(self, model)
 
-            modelDb.units = "population" if isPopulation else "concentration"
+            modelDb.units = model.units
             modelDb.put()
+
+            errorLogsDb = SBMLImportErrorLogs()
+            errorLogsDb.modelId = modelDb.key().id()
+            errorLogsDb.user_id = self.user.user_id()
+            errorLogsDb.fileName = storage.filename
+            errorLogsDb.errors = errors
+            errorLogsDb.put()
 
             os.remove(filename)
             
-            self.redirect("/modeleditor?select={0}".format(modelDb.key().id()))
+            #self.redirect("/modeleditor?select={0}".format(modelDb.key().id()))
+            self.redirect("/SBMLErrorLogs?id={0}".format(errorLogsDb.key().id()))
         except Exception as e:
             traceback.print_exc()
             result = {}
@@ -659,6 +695,22 @@ class ImportFromSBMLPage(BaseHandler):
             result['msg'] = 'Error: {0}'.format(e)
 
             self.render_response("importFromSBML.html", **result)
+
+class SBMLErrorLogsPage(BaseHandler):
+    def authentication_required(self):
+        return True
+    
+    def get(self):
+        if 'id' in self.request.GET:
+            errorLogsId = int(self.request.get('id'));
+            
+            errorLogsDb = SBMLImportErrorLogs.get_by_id(errorLogsId)
+            result = { "db" : errorLogsDb,
+                       "modelName" : StochKitModelWrapper.get_by_id(errorLogsDb.modelId).name }
+
+            print result["db"].errors
+
+        self.render_response('SBMLErrorLogs.html', **result)
 
 class ModelEditorPage(BaseHandler):
     """

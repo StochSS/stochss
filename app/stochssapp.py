@@ -368,6 +368,7 @@ app = webapp2.WSGIApplication([
                                ('/publicModels.*', handlers.modeleditor.PublicModelBackboneInterface),
                                ('/importFromSBML.*', handlers.modeleditor.ImportFromSBMLPage),
                                ('/importFromXML.*', handlers.modeleditor.ImportFromXMLPage),
+                               ('/SBMLErrorLogs.*', handlers.modeleditor.SBMLErrorLogsPage),
                                ('/meshes.*', handlers.mesheditor.MeshBackboneInterface),
                                ('/models/list.*', handlers.modeleditor.ModelBackboneInterface),
                                ('/stochkit/list.*', JobBackboneInterface),
