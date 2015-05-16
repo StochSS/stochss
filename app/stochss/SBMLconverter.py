@@ -25,7 +25,7 @@ def convert(filename, modelName = None):
     numOfTabs = 0
 
     if modelName == None:
-        modelName = model.getId()
+        modelName = model.getName()
 
     stochssModel = stochkit.StochKitModel(name = modelName)
 

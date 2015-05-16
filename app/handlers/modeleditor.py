@@ -12,6 +12,7 @@ import re
 import random
 import tempfile
 import time
+import datetime
 from google.appengine.api import users
 
 from stochssapp import BaseHandler, ObjectProperty
@@ -32,6 +33,7 @@ class SBMLImportErrorLogs(db.Model):
     user_id = db.StringProperty()
     modelId = db.IntegerProperty()
     fileName = db.StringProperty()
+    date = db.StringProperty()
     errors = ObjectProperty()
 
 class StochKitModelWrapper(db.Model):
@@ -649,11 +651,13 @@ class ImportFromSBMLPage(BaseHandler):
                 self.redirect("/importFromSBML")
 
         errorLogsDbQuery = list(db.GqlQuery("SELECT * FROM SBMLImportErrorLogs WHERE user_id = :1", self.user.user_id()).run())
+        errorLogsDbQuery = sorted(errorLogsDbQuery, key = lambda x : (datetime.datetime.strptime(x.date, '%Y-%m-%d-%H-%M-%S') if hasattr(x, 'date') and x.date != None else datetime.datetime.now()), reverse = True)
 
         result = []
 
         for error in errorLogsDbQuery:
             result.append( { 'id' : error.key().id(),
+                             'date' : error.date,
                              'fileName' : error.fileName,
                              'modelName' : StochKitModelWrapper.get_by_id(error.modelId).name } )
 
@@ -671,7 +675,7 @@ class ImportFromSBMLPage(BaseHandler):
             tmp.close()
 
             #stochKitModel = stochss.stochkit.StochMLDocument.fromString(storage.file.read()).toModel(name)
-            model, errors = stochss.SBMLconverter.convert(filename, name)
+            model, errors = stochss.SBMLconverter.convert(filename)
             modelDb = StochKitModelWrapper.createFromStochKitModel(self, model)
 
             modelDb.units = model.units
@@ -682,6 +686,7 @@ class ImportFromSBMLPage(BaseHandler):
             errorLogsDb.user_id = self.user.user_id()
             errorLogsDb.fileName = storage.filename
             errorLogsDb.errors = errors
+            errorLogsDb.date = time.strftime("%Y-%m-%d-%H-%M-%S")
             errorLogsDb.put()
 
             os.remove(filename)
