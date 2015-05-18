@@ -57,6 +57,9 @@ def convert(filename, modelName = None):
     else:
         model.units = "concentration"
 
+    if isPopulation:
+        raise Exception("FOUND ONE")
+
     for i in range(model.getNumSpecies()):
         species = model.getSpecies(i)
         name = species.getId()
@@ -66,11 +69,23 @@ def convert(filename, modelName = None):
         elif species.isSetInitialConcentration():
             value = species.getInitialConcentration()
         else:
-            ar = model.getAssignmentRule(species.getId())
-            if ar:
-                errors.append(["Species '{0}' does not have any initial conditions. Associated assignment rule '{1}' found, but assignment rules not supported in StochSS. Assuming initial condition 0".format(species.getId(), ar.getId(), libsbml.formulaToString(ar.getMath())), 0])
+            rule = model.getRule(species.getId())
+
+            if rule:
+                msg = ""
+
+                if rule.isAssignment():
+                    msg = "assignment "
+                elif rule.isRate():
+                    msg = "rate "
+                elif rule.isAlgebraic():
+                    msg = "algebraic "
+
+                msg += "rule"
+
+                errors.append(["Species '{0}' does not have any initial conditions. Associated {1} '{2}' found, but {1}s are not supported in StochSS. Assuming initial condition 0".format(species.getId(), msg, rule.getId()), 0])
             else:
-                errors.append(["Species '{0}' does not have any initial conditions or assignment rules. Assuming initial condition 0".format(species.getId()), 0])
+                errors.append(["Species '{0}' does not have any initial conditions or rules. Assuming initial condition 0".format(species.getId()), 0])
 
             value = 0
 

@@ -715,7 +715,7 @@ module.exports = View.extend({
                 name: 'type',
                 parent : this,
                 value: this.model.type,
-                options: [['scatter', 'Scatter'], ['place', 'Place'], ['distribute', 'Distribute Uniformly']],
+                options: [['scatter', 'Scatter'], ['place', 'Place'], ['distribute', 'Distribute Uniformly in Voxel']],
                 required: true,
             }), this.el.querySelector("[data-hook='typeSelect']"));
 
