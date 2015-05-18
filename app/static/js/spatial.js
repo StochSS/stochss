@@ -90,32 +90,46 @@ Spatial.Controller = Backbone.View.extend(
 
             $( '#play_btn' ).click(_.bind(this.playMesh, this));
             $( '#stop_btn' ).click(_.bind(this.stopMesh, this));
+            
             $( '#speedup_btn' ).click(_.bind(function(){ 
-                $( "#playStats" ).html( 'Speeding up...');
                 
-                // As speedy as this can be
-                if(this.playMeshInterval <= 100)
-                    return;
-                
-                this.playMeshInterval -=100;
-                clearInterval(this.intervalID);
-                console.log("resetting interval");
-                this.intervalID = setInterval(_.bind(this.play, this), this.playMeshInterval);
+                if(this.playFlag)
+                {
+                    $( "#playStats" ).html( 'Speeding up...');
+                    
+                    // As speedy as this can be
+                    if(this.playMeshInterval <= 100)
+                        return;
+                    
+                    this.playMeshInterval -=100;
+
+                    $("#playSpeed").html( (1000/this.playMeshInterval).toFixed(2) );
+                    
+                    clearInterval(this.intervalID);
+                    console.log("resetting interval");
+                    this.intervalID = setInterval(_.bind(this.play, this), this.playMeshInterval);
+                }
+
                 }, 
                 this));
             $( '#slowdown_btn' ).click(_.bind(function(){ 
+                if(this.playFlag)
+                {
                 
-                $( "#playStats" ).html( 'Slowing down...');
+                    $( "#playStats" ).html( 'Slowing down...');
                 
-                // As slow as this can be
-                if(this.playMeshInterval >= 6000)
-                    return;
+                    if(this.playMeshInterval >= 6000)
+                        return;
 
-                this.playMeshInterval +=100;
+                    this.playMeshInterval +=100;
 
-                clearInterval(this.intervalID);
-                console.log("resetting interval");
-                this.intervalID = setInterval(_.bind(this.play, this), this.playMeshInterval);
+                    $("#playSpeed").html( (1000/this.playMeshInterval).toFixed(2) ) ;
+
+                    clearInterval(this.intervalID);
+                    console.log("resetting interval");
+                    this.intervalID = setInterval(_.bind(this.play, this), this.playMeshInterval);
+                }
+                
                 }, 
                 this));
         },
@@ -997,6 +1011,8 @@ Spatial.Controller = Backbone.View.extend(
                         this.mesh.material.needsUpdate = true;
                         
                     }, this));
+
+                    $("#playSpeed").html(1000/ this.playMeshInterval);
 
                 }
                 else

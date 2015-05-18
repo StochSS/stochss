@@ -122,14 +122,6 @@
                     Select <span id="timeSelectDisplay"></span><br />
                     <input id="timeSelect" type="range" min="0" max="0" step="0" value="0">
                 </td>
-
-                <td valign=top>
-                    Animation: <span id="playStats">Stopped</span><br/>
-                    <button class="button" id="play_btn"><i class="icon-play"></i></button> 
-                    <button class="button" id="stop_btn"><i class="icon-stop"></i></button>
-                    <button class="button" id="speedup_btn">Speed up</button>
-                    <button class="button" id="slowdown_btn">Slow down</button>
-                </td>
                 <td valign=top>
                     Select Trajectory:<br />
                     <select  id="trajectorySelect"></select>
@@ -139,12 +131,14 @@
                     Render Type:<br />
                     <input type="radio" id="withoutWire" name="wireframe" checked>Solid
                     <input type="radio" id="withWire" name="wireframe">Wireframe
-                    <br />
-
+                </td>
+                
+                <td valign=top>
                     Draw Units:<br />
                     <input type="radio" value="population" name="drawUnits" checked>Population
                     <input type="radio" value="concentration" name="drawUnits">Concentration
                 </td>
+
                 <td valign=top>
                     Select species:<br />
                     <select id="speciesSelect"></select>
@@ -159,8 +153,21 @@
 
                         <div id="container" >
                             <center>
-                                
-                            <div class="button-container button-container-left" >
+                            <div class="button-container  button-container-left">
+                            
+                                Animation: <span id="playStats">Stopped</span><br/>
+                                <button class="button" id="play_btn"><i class="icon-play"></i></button> 
+                                <button class="button" id="stop_btn"><i class="icon-stop"></i></button>
+                            </div>
+                            
+                            <div class="button-container">
+                            Animating <span id="playSpeed">100</span> frames/second<br/>
+                                <button class="button" id="speedup_btn"><i class="icon-arrow-up"/></button>
+                                <button class="button" id="slowdown_btn"><i class="icon-arrow-down"/></button>
+                            
+                            </div>
+                            &nbsp;
+                            <div class="button-container" >
                                 <button class="button" id="zoomPlus_btn"><i class="icon-plus"></i></button> 
                                 Zoom
                                 <button class="button" id="zoomMinus_btn"><i class="icon-minus"></i></button> 
@@ -181,10 +188,15 @@
                                 <button class="button" id="rotateDown_btn"><i class="icon-arrow-down"></i></button> 
                                 <button class="button" id="rotateRight_btn"><i class="icon-arrow-right"></i></button> 
                             </div>
+                            
                             &nbsp; 
-                            <div class="button-container button-container-right">
+                            
+                            <div class="button-container">
                                 <button class="button" id="reset_btn">Reset</button>
                             </div>
+
+
+
                             </center>
                         </div>
                         <div id="inset"></div>
