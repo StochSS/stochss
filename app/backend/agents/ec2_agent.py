@@ -335,7 +335,7 @@ class EC2Agent(BaseAgent):
         script_lines.append('source /home/ubuntu/.bashrc')
 
         bash_script = '\n'.join(script_lines)
-        logging.info("bash_script =\n{0}".format(bash_script))
+        logging.debug("bash_script =\n{0}".format(bash_script))
 
         conn = self.open_connection(parameters)
         if spot == 'True':
@@ -407,7 +407,7 @@ class EC2Agent(BaseAgent):
             return True
 
         except EC2ResponseError:
-            print '\nIn validate_Credentials'
+            logging.error('Invalid EC2 Credentials!')
             traceback.print_exc()
             return False
 

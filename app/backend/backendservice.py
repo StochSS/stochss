@@ -12,12 +12,11 @@ import boto
 from boto.exception import S3ResponseError
 from boto.s3.connection import S3Connection
 
-from backend_handler import VMStateModel
 from databases.dynamo_db import DynamoDB
 
 import common.helper as helper
 from common.config import AgentTypes, JobDatabaseConfig, AgentConfig
-
+from vm_state_model import VMStateModel
 
 class backendservices(object):
     ''' 

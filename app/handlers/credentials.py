@@ -18,7 +18,7 @@ import re
 import pprint
 import time
 
-from backend.common.config import AWSConfig, AgentTypes, AgentConfig
+from backend.common.config import AWSConfig, AgentTypes, AgentConfig, FlexConfig
 from backend.databases.dynamo_db import DynamoDB
 
 class CredentialsPage(BaseHandler):
@@ -31,6 +31,7 @@ class CredentialsPage(BaseHandler):
 
     FLEX_SAVE_CLOUD_INFO = 'save_flex_cloud_info'
     FLEX_PREPARE_CLOUD = 'prepare_flex_cloud'
+    FLEX_SAVE_KEY_FILE = 'flex_save_keyfile'
     
     def authentication_required(self):
         return True
@@ -76,6 +77,28 @@ class CredentialsPage(BaseHandler):
             context = self.getContext(user_id)
             self.render_response('credentials.html', **(dict(context, **result)))
 
+        elif data_received['action'] == CredentialsPage.FLEX_SAVE_KEY_FILE:
+            keyfile_contents = data_received['contents']
+            keyname = data_received['keyname']
+
+            logging.info('Got Keyname: {}'.format(keyname))
+
+            keyfile_dirname = FlexConfig.get_keyfile_dirname(user_id)
+            if not os.path.exists(keyfile_dirname):
+                os.makedirs(keyfile_dirname)
+
+            keyfile_location = os.path.join(keyfile_dirname, keyname)
+            if os.path.exists(keyfile_location):
+                logging.info('Keyname: {0} already exists!\n{1} will be overwritten!'.format(keyname, keyfile_location))
+
+            with open(keyfile_location, 'w') as fout:
+                fout.write(keyfile_contents)
+
+            os.chmod(keyfile_location, int('600', 8))
+
+            self.response.headers['Content-Type'] = 'application/json'
+            json.dump({"success":True}, self.response.out)
+
         else:
             # This happens when you click the refresh button
             self.redirect('/credentials')
@@ -90,7 +113,7 @@ class CredentialsPage(BaseHandler):
 
         if re.match('^application/json.*', self.request.environ['CONTENT_TYPE']):
             data_received = json.loads(self.request.body)
-            logging.info("json data = \n{0}".format(pprint.pformat(data_received)))
+            logging.debug("json data = \n{0}".format(pprint.pformat(data_received)))
             self.__handle_json_post_request(data_received, user_id)
 
         else:

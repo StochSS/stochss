@@ -26,7 +26,7 @@ def copy_celery_config_to_vm(instance_type, ip, key_file, agent_type, username):
         raise Exception("celery config file not found: {0}".format(celery_config_filename))
 
     config_celery_queues(agent_type=agent_type, instance_types=[instance_type])
-    cmd = "scp -o 'StrictHostKeyChecking no' -i {key_file} {file_to_transfer} {user}@{ip}:celeryconfig.py".format(
+    cmd = "scp -o 'StrictHostKeyChecking no' -i {key_file} {file_to_transfer} {user}@{ip}:~/celeryconfig.py".format(
                                                                            key_file=key_file,
                                                                            file_to_transfer=celery_config_filename,
                                                                            ip=ip,
@@ -39,7 +39,8 @@ def copy_celery_config_to_vm(instance_type, ip, key_file, agent_type, username):
     else:
         raise Exception("scp failure: {0} not transfered to {1}".format(celery_config_filename, ip))
 
-def start_celery_on_vm(instance_type, ip, key_file, agent_type, username="ubuntu", prepend_commands=None):
+def start_celery_on_vm(instance_type, ip, key_file, agent_type,
+                       worker_name='%h', username="ubuntu", prepend_commands=None, log_level='info'):
     copy_celery_config_to_vm(instance_type=instance_type, ip=ip, key_file=key_file,
                              agent_type=agent_type, username=username)
 
@@ -58,9 +59,12 @@ def start_celery_on_vm(instance_type, ip, key_file, agent_type, username="ubuntu
     command += ';python /home/ubuntu/stochss/app/backend/tasks.py shutdown-monitor &'
 
     command += \
-        "celery -A tasks worker -Q {q1},{q2} --autoreload --loglevel=info --workdir /home/ubuntu > /home/ubuntu/celery.log 2>&1".format(
+        "celery -A tasks worker -Q {q1},{q2} -n {worker_name} --autoreload --loglevel={log_level} --workdir /home/{username} > /home/{username}/celery.log 2>&1".format(
             q1=CeleryConfig.get_queue_name(agent_type=agent_type),
-            q2=CeleryConfig.get_queue_name(agent_type=agent_type, instance_type=instance_type))
+            q2=CeleryConfig.get_queue_name(agent_type=agent_type, instance_type=instance_type),
+            log_level=log_level,
+            worker_name=worker_name,
+            username=username)
 
 
     # start_celery_str = "celery -A tasks worker --autoreload --loglevel=info --workdir /home/ubuntu > /home/ubuntu/celery.log 2>&1"

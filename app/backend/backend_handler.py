@@ -25,6 +25,7 @@ from kombu import Queue, Exchange
 
 from common.config import AgentTypes, AgentConfig
 import common.helper as helper
+from vm_state_model import VMStateModel
 
 __author__ = 'mengyuan, dev'
 __email__ = 'gmy.melissa@gmail.com, dnath@cs.ucsb.edu'
@@ -47,380 +48,6 @@ class VMStateSyn(db.Model):
     last_syn = db.DateTimeProperty()
 
 
-class VMStateModelException(Exception):
-    pass
-
-
-class VMStateModel(db.Model):
-    SUPPORTED_INFRA = [AgentTypes.EC2, AgentTypes.FLEX]
-
-    IDS = 'ids'
-    EC2_ACCESS_KEY = 'EC2_ACCESS_KEY'
-    EC2_SECRET_KEY = 'EC2_SECRET_KEY'
-
-    STATE_CREATING = 'creating'
-    STATE_PENDING = 'pending'
-    STATE_RUNNING = 'running'
-    STATE_STOPPED = 'stopped'
-    STATE_FAILED = 'failed'
-    STATE_TERMINATED = 'terminated'
-
-    DESCRI_FAIL_TO_RUN = 'fail to run the instance'
-    DESCRI_TIMEOUT_ON_SSH = 'timeout to connect instance via ssh'
-    DESCRI_FAIL_TO_COFIGURE_CELERY = 'fail to configure celery on the instance'
-    DESCRI_FAIL_TO_COFIGURE_SHUTDOWN = 'fail to configure shutdown behavior on the instance'
-    DESCRI_NOT_FOUND = 'not find the instance in cloud infrastructure'
-    DESCRI_SUCCESS = 'success'
-
-    infra = db.StringProperty()
-    access_key = db.StringProperty()
-    secret_key = db.StringProperty()
-    ins_type = db.StringProperty()
-    res_id = db.StringProperty()
-    ins_id = db.StringProperty()
-    pub_ip = db.StringProperty()
-    pri_ip = db.StringProperty()
-    local_key = db.StringProperty()
-    choices = set([STATE_CREATING, STATE_PENDING, STATE_RUNNING, STATE_STOPPED, STATE_FAILED, STATE_TERMINATED])
-    state = db.StringProperty(required=True,
-                              choices=choices)
-    description = db.StringProperty()
-    created = db.DateTimeProperty(auto_now_add=True)
-
-    @staticmethod
-    def get_all(params):
-        '''
-        get the information of all vms that are not terminated
-        Args
-            params    a dictionary of parameters, containing at least 'agent' and 'credentials'.
-        Return
-            a dictionary of vms info
-        '''
-        try:
-            infra, access_key, secret_key = VMStateModel.validate_credentials(params)
-            if infra is None:
-                return None
-
-            entities = VMStateModel.all()
-            entities.filter('infra =', infra).filter('access_key =', access_key).filter('secret_key =', secret_key)
-            entities.filter('state !=', VMStateModel.STATE_TERMINATED)
-
-            all_vms = []
-            for e in entities:
-                vm_dict = {
-                    "ins_id": e.ins_id,
-                    "instance_type": e.ins_type,
-                    "state": e.state,
-                    "discription": e.description
-                }
-                all_vms.append(vm_dict)
-
-            return all_vms
-
-        except Exception as e:
-            logging.error("Error in getting all vms from db! {0}".format(e))
-            return None
-
-    @staticmethod
-    def get_instance_type(params, ins_id):
-        try:
-            infra, access_key, secret_key = VMStateModel.validate_credentials(params)
-            if infra is None:
-                return None
-
-            entities = VMStateModel.all()
-            entities.filter('infra =', infra).filter('access_key =', access_key).filter('secret_key =', secret_key)
-            entities.filter('ins_id ==', ins_id)
-
-            e = entities.get()
-            return e.ins_type
-
-        except Exception as e:
-            logging.error("Error in getting the instance type of instance {0} from db! {1}".format(ins_id, e))
-            return None
-
-    @staticmethod
-    def get_running_instance_type(params):
-        try:
-            infra, access_key, secret_key = VMStateModel.validate_credentials(params)
-            if infra is None:
-                return None
-
-            entities = VMStateModel.all()
-            entities.filter('infra =', infra).filter('access_key =', access_key).filter('secret_key =', secret_key)
-            entities.filter('state ==', VMStateModel.STATE_RUNNING)
-
-            types = []
-            for e in entities:
-                types.append(e.ins_type)
-
-            return list(set(types))
-
-        except Exception as e:
-            logging.error("Error in getting all running instance types from db! {0}".format(e))
-            return None
-
-    @staticmethod
-    def fail_active(params):
-        '''
-        update all vms that are 'creating' to 'failed'.
-        Args
-            params    a dictionary of parameters, containing at least 'agent' and 'credentials'.
-        '''
-        if params['infrastructure'] not in VMStateModel.SUPPORTED_INFRA:
-            logging.info('VMStateModel does not support infra = {0}!'.format(params['infrastructure']))
-            return
-
-        try:
-            infra, access_key, secret_key = VMStateModel.validate_credentials(params)
-            if infra is None:
-                return
-
-            entities = VMStateModel.all()
-            entities.filter('infra =', infra).filter('access_key =', access_key).filter('secret_key =', secret_key)
-            entities.filter('state =', VMStateModel.STATE_CREATING)
-
-            for e in entities:
-                e.state = VMStateModel.STATE_FAILED
-                e.put()
-
-        except Exception as e:
-            logging.error("Error in updating 'creating' vms to 'failed' in db! {0}".format(e))
-
-    @staticmethod
-    def terminate_not_active(params):
-        '''
-        update all vms that are 'failed' in the last launch to 'terminated'.
-        Args
-            params    a dictionary of parameters, containing at least 'agent' and 'credentials'.
-        '''
-        try:
-            infra, access_key, secret_key = VMStateModel.validate_credentials(params)
-            if infra is None:
-                return
-
-            entities = VMStateModel.all()
-            entities.filter('infra =', infra).filter('access_key =', access_key).filter('secret_key =', secret_key)
-            entities.filter('state =', VMStateModel.STATE_FAILED)
-
-            for e in entities:
-                e.state = VMStateModel.STATE_TERMINATED
-                e.put()
-
-        except Exception as e:
-            logging.error("Error in updating non-active vms to terminated in db! {0}".format(e))
-
-    @staticmethod
-    def terminate_all(params):
-        '''
-        update the state of all vms that are not terminated to 'terminated'.
-        Args
-            params    a dictionary of parameters, containing at least 'agent' and 'credentials'.
-        '''
-        try:
-            infra, access_key, secret_key = VMStateModel.validate_credentials(params)
-            if infra is None:
-                return
-
-            entities = VMStateModel.all()
-            entities.filter('infra =', infra).filter('access_key =', access_key).filter('secret_key =', secret_key)
-            entities.filter('state !=', VMStateModel.STATE_TERMINATED)
-
-            for e in entities:
-                e.state = VMStateModel.STATE_TERMINATED
-                e.put()
-        except Exception as e:
-            logging.error("Error in terminating all vms in db! {0}".format(e))
-
-
-    @staticmethod
-    def update_res_ids(params, ids, res_id):
-        '''
-        set the reservation id of the some entities given their ids.
-        Args
-            params    a dictionary of parameters, containing at least 'agent' and 'credentials'.
-            ids       a list of ids which are the primary keys of VMStateModel
-            res_id    the reservation id that should be updated
-        '''
-        try:
-            infra, access_key, secret_key = VMStateModel.validate_credentials(params)
-            if infra is None:
-                return
-
-            entities = VMStateModel.get_by_id(ids)
-
-            for e in entities:
-                e.res_id = res_id
-                e.put()
-
-        except Exception as e:
-            logging.error("Error in updating reservation ids in db! {0}".format(e))
-
-    @staticmethod
-    def update_ins_ids(params, ins_ids, res_id):
-        '''
-        set the instance ids within the certain reservation,
-        Args
-            params    a dictionary of parameters, containing at least 'agent' and 'credentials'.
-            ins_ids   a list of instance ids that are going to be set with
-            res_id    the reservation id that is based on
-        '''
-        logging.info('update_ins_ids:\nins_ids = {0}\nres_id = {1}'.format(ins_ids, res_id))
-        logging.debug('\n\nparams =\n{0}'.format(pprint.pformat(params)))
-        try:
-            infra, access_key, secret_key = VMStateModel.validate_credentials(params)
-            if infra is None:
-                return
-
-            entities = VMStateModel.all()
-            entities.filter('infra =', infra).filter('access_key =', access_key).filter('secret_key =', secret_key)
-            entities.filter('res_id =', res_id).filter('state =', VMStateModel.STATE_CREATING)
-
-            for (ins_id, e) in zip(ins_ids, entities.run(limit=len(ins_ids))):
-                logging.info('ins_id = {0}'.format(ins_id))
-                e.ins_id = ins_id
-                e.state = VMStateModel.STATE_PENDING
-                e.put()
-            logging.info('Updated ins_ids = {0}'.format(ins_ids))
-
-        except Exception as e:
-            logging.error("Error in updating instance ids in db! {0}".format(e))
-
-    @staticmethod
-    def update_ips(params, ins_ids, pub_ips, pri_ips, ins_types, local_key):
-        '''
-        set the the public ips, the private ips, the instance types and the local key 
-        to corresponding instance ids.
-        Args
-            params    a dictionary of parameters, containing at least 'agent' and 'credentials'.
-            ins_ids   a list of instance ids that are based on
-            pub_ips   a list of public ips that are going to be set with
-            pri_ips   a list of private ips that are going to be set with
-            ins_type  a list of instance types that are going to be set with
-            local_key the local key name that is corresponding to this set of instance ids
-        '''
-        logging.info(
-            'update_ips:\n\nins_ids = {0}\npub_ips = {1}\npri_ips = {2}\nins_types = {3}\nlocal_key = {4}'.format(
-                ins_ids, pub_ips, pri_ips, ins_types, local_key))
-        logging.debug('\n\nparams = {}'.format(pprint.pformat(params)))
-
-        try:
-            infra, access_key, secret_key = VMStateModel.validate_credentials(params)
-            if infra is None:
-                return
-
-            if local_key is None:
-                raise Exception('Error: Cannot find local key!')
-
-            for (ins_id, pub_ip, pri_ip, ins_type) in zip(ins_ids, pub_ips, pri_ips, ins_types):
-                e = VMStateModel.all().filter('ins_id =', ins_id).filter('infra =', infra) \
-                    .filter('access_key =', access_key).filter('secret_key =', secret_key).get()
-
-                e.pub_ip = pub_ip
-                e.pri_ip = pri_ip
-                e.ins_type = ins_type
-                e.local_key = local_key
-                e.put()
-
-        except Exception as e:
-            print sys.exc_info()
-            logging.error("Error in updating ips in db! {0}".format(e))
-
-    @staticmethod
-    def set_state(params, ins_ids, state, description=None):
-        '''
-        set the state of a list of instances and add some discriptions if needed.
-        Args
-            params    a dictionary of parameters, containing at least 'agent' and 'credentials'.
-            ins_ids   a list of instance ids that are going to be set state
-            state     the state that is going to be set to the instances
-            description    (optional) the description to the state     
-        '''
-        logging.debug('set_state:\nins_ids = {0}\nstate = {1}\ndescription = {2}'.format(ins_ids, state, description))
-        logging.debug('set_state:\nparams =\n{0}'.format(pprint.pformat(params)))
-        try:
-            infra, access_key, secret_key = VMStateModel.validate_credentials(params)
-            if infra is None:
-                return
-
-            for ins_id in ins_ids:
-                e = VMStateModel.all().filter('ins_id =', ins_id).filter('infra =', infra).filter('access_key =',
-                                                                                                  access_key).filter(
-                    'secret_key =', secret_key).get()
-                if e.state != VMStateModel.STATE_TERMINATED:
-                    e.state = state
-                if description is not None:
-                    e.description = description
-                e.put()
-
-        except Exception as e:
-            logging.error("Error in set_state: {0}".format(str(e)))
-
-    @staticmethod
-    def validate_credentials(params):
-        '''
-        validate if the access key and secret key are available to be used
-        Args
-            params    a dictionary of parameters, containing at least 'agent' and 'credentials'.
-        Return
-            A tuple of the form (infrastructure, access key, secret key).
-        '''
-        if 'infrastructure' in params and params['infrastructure'] in VMStateModel.SUPPORTED_INFRA:
-            infra = params['infrastructure']
-        else:
-            raise VMStateModelException('Infrastructure is not supported for VMStateModel!')
-
-        if 'credentials' in params:
-            if 'EC2_ACCESS_KEY' in params['credentials'] and 'EC2_SECRET_KEY' in params['credentials']:
-                access_key = params['credentials']['EC2_ACCESS_KEY']
-                secret_key = params['credentials']['EC2_SECRET_KEY']
-            else:
-                raise VMStateModelException('Cannot get access key or secret.')
-        else:
-            raise VMStateModelException('No credentials are provided.')
-
-        if access_key is None or secret_key is None:
-            raise VMStateModelException('Credentials are not given!')
-
-        return infra, access_key, secret_key
-
-    @staticmethod
-    def synchronize(agent, credentials):
-        '''
-        synchronization the db with the specific agent
-        Args
-            agent    the agent that is going to be synchronized with
-            credentials    the dictionary containing access_key and secret_key pair of the agent
-        '''
-        logging.info('Start Synchronizing DB...')
-        instanceList = agent.describe_instances({'credentials': credentials})
-
-        entities = VMStateModel.all()
-        entities.filter('infra =', agent.AGENT_NAME).filter('access_key =', credentials['EC2_ACCESS_KEY']).filter(
-            'secret_key =', credentials['EC2_SECRET_KEY'])
-        entities.filter('state !=', VMStateModel.STATE_TERMINATED).filter('state !=', VMStateModel.STATE_CREATING)
-
-        for e in entities:
-            find = False
-            for ins in instanceList:
-                if e.ins_id == ins['id']:
-                    find = True
-                    if e.state == VMStateModel.STATE_PENDING and ins['state'] == VMStateModel.STATE_RUNNING:
-                        break
-                    else:
-                        if ins['state'] == 'shutting-down':
-                            ins['state'] = VMStateModel.STATE_TERMINATED
-                        e.state = ins['state']
-                        e.put()
-                    break
-
-            if not find:
-                e.state = VMStateModel.STATE_TERMINATED
-                e.decription = VMStateModel.DESCRI_NOT_FOUND
-                e.put()
-        logging.info('Finished synchronizing DB!')
-
-
 class BackendWorker(object):
     def prepare_vms(self, parameters):
         raise NotImplementedError
@@ -440,12 +67,37 @@ class FlexBackendWorker(BackendWorker):
         self.infra_manager = infra_manager
         self.reservation_id = reservation_id
 
+    def __prepare_queue_head(self, queue_head_machine):
+        pass
+
+    def __prepare_workers(self, machine, queue_head_ip):
+        pass
+
     def prepare_vms(self, parameters):
-        if 'flex_cloud_machine_info' not in parameters:
+        if 'flex_cloud_machine_info' not in parameters or parameters['flex_cloud_machine_info'] == None \
+                or parameters['flex_cloud_machine_info'] == []:
             logging.error('Error: No flex_cloud_machine_info param!')
             return
 
-        raise NotImplementedError
+        flex_cloud_machine_info = parameters['flex_cloud_machine_info']
+
+        queue_head_machine = None
+        for machine in flex_cloud_machine_info:
+            if machine['is_queue_head']:
+                if queue_head_machine != None:
+                    logging.error('Error: Multiple queue heads !')
+                    return
+                else:
+                    queue_head_machine = machine
+
+        self.__prepare_queue_head(queue_head_machine)
+
+        for machine in flex_cloud_machine_info:
+            if machine != queue_head_machine:
+                self.__prepare_workers(machine, queue_head_ip=queue_head_machine['ip'])
+
+        return
+
 
 
 class EC2BackendWorker(BackendWorker):
@@ -811,6 +463,7 @@ class EC2BackendWorker(BackendWorker):
             commands.append('export INSTANCE_TYPE={0}'.format(ins_type))
             success = helper.start_celery_on_vm(instance_type=ins_type, ip=ip, key_file=key_file,
                                                 agent_type=self.agent_type,
+                                                worker_name=ip.replace('.', '_'),
                                                 prepend_commands=commands)
             if success == 0:
                 # update db with successful running vms
@@ -824,7 +477,7 @@ class EC2BackendWorker(BackendWorker):
                 raise Exception("Failure to start celery on {0}".format(ip))
 
         # get all intstance types and configure the celeryconfig.py locally
-        instance_types = VMStateModel.get_running_instance_type(params)
+        instance_types = VMStateModel.get_running_instance_types(params)
         helper.config_celery_queues(agent_type=self.agent_type, instance_types=instance_types)
 
 

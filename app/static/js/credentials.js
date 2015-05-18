@@ -100,7 +100,7 @@ $(document).ready(function () {
     });
 
     $("#delete_flex_cloud_machine").click(function () {
-        if ($('#flex_cloud_machine_info_table tr').length > 1) {
+        if ($('#flex_cloud_machine_info_table tr').length > 2) {
             $('#flex_cloud_machine_info_table tr:last').remove();
         }
         else {
@@ -111,7 +111,50 @@ $(document).ready(function () {
     });
 });
 
+function send_keyfile_to_stochss(keyname, contents) {
+    var jsonDataToBeSent = {
+        'keyname': keyname,
+        'contents': contents
+    }
+    jsonDataToBeSent['action'] = 'flex_save_keyfile';
 
+    jsonDataToBeSent = JSON.stringify(jsonDataToBeSent);
+    $.ajax({
+        type: "POST",
+        url: "/credentials",
+        data: jsonDataToBeSent,
+        success: function () {
+        },
+        error: function (x,e) {
+            alert("Failed to upload keyfile!")
+        },
+        dataType: "json",
+        contentType: "application/json"
+    });
+}
+
+
+function upload_key_file(evt) {
+    // Retrieve the first (and only!) File from the FileList object
+    var keyfile = evt.target.files[0];
+
+    if (keyfile) {
+        var reader = new FileReader();
+        reader.onload = function(e) {
+            var contents = e.target.result;
+            send_keyfile_to_stochss(keyfile.name, contents)
+        }
+        reader.readAsBinaryString(keyfile);
+    }
+    else {
+        alert("Failed to upload keyfile!");
+    }
+}
+
+var keyfiles = document.getElementsByName('keyfile');
+for (var i = 0; i < keyfiles.length; i++ ) {
+    keyfiles[i].addEventListener('change', upload_key_file, false);
+}
 
 
 /* START: remember opened tab pane */

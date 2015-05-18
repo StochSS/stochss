@@ -2,6 +2,9 @@ import os
 import string
 import random
 
+class InvalidAgentType(Exception):
+    pass
+
 class AgentTypes(object):
     EC2 = 'ec2'
     FLEX = 'flex'
@@ -10,12 +13,17 @@ class AgentTypes(object):
 class AWSConfig(object):
     EC2_SETTINGS_FILENAME = os.path.abspath(os.path.join(os.path.dirname(__file__),
                                                          '..', '..', '..', 'conf', 'ec2_config.json'))
-    EC2_KEY_PREFIX = 'stochss'
-    EC2_QUEUE_HEAD_KEY_TAG = 'queuehead'
+    EC2_KEY_PREFIX = 'stochss-'
+    EC2_QUEUE_HEAD_KEY_TAG = '-queuehead'
 
 
 class FlexConfig(object):
     INSTANCE_TYPE = 'flexvm'
+    KEYFILE_DIRNAME = os.path.abspath(os.path.join(os.path.dirname(__file__), '..', 'tmp', 'keyfiles'))
+
+    @staticmethod
+    def get_keyfile_dirname(user_id):
+        return os.path.join(FlexConfig.KEYFILE_DIRNAME, user_id)
 
 
 class AgentConfig(object):
@@ -25,7 +33,7 @@ class AgentConfig(object):
             if key_prefix == '':
                 return AWSConfig.EC2_KEY_PREFIX
             if not key_prefix.startswith(AWSConfig.EC2_KEY_PREFIX):
-                return '{0}-{1}'.format(AWSConfig.EC2_KEY_PREFIX, key_prefix)
+                return '{0}{1}'.format(AWSConfig.EC2_KEY_PREFIX, key_prefix)
         return key_prefix
 
     @staticmethod
@@ -34,14 +42,14 @@ class AgentConfig(object):
             if queue_head_key_tag == '':
                 return AWSConfig.EC2_QUEUE_HEAD_KEY_TAG
             if not queue_head_key_tag.endswith(AWSConfig.EC2_QUEUE_HEAD_KEY_TAG):
-                return '{0}-{1}'.format(queue_head_key_tag, AWSConfig.EC2_QUEUE_HEAD_KEY_TAG)
+                return '{0}{1}'.format(queue_head_key_tag, AWSConfig.EC2_QUEUE_HEAD_KEY_TAG)
         return queue_head_key_tag
 
     @staticmethod
     def get_queue_head_keyname(agent_type, keyname):
         tag = AgentConfig.get_queue_head_key_tag(agent_type=agent_type)
         if not keyname.endswith(tag) and tag != '':
-            return '{0}-{1}'.format(keyname, tag)
+            return '{0}{1}'.format(keyname, tag)
         return keyname
 
     @staticmethod
@@ -62,10 +70,10 @@ class CeleryConfig(object):
     def get_config_filename(agent_type):
         if agent_type == AgentTypes.FLEX_CLI:
             return os.path.abspath(os.path.join(os.path.dirname(__file__), '..', 'bin', 'celeryconfig.py'))
-        if agent_type == AgentTypes.FLEX:
-            return os.path.abspath(os.path.join(os.path.dirname(__file__), '..', 'conf', agent_type, 'celeryconfig.py'))
+        if agent_type in [AgentTypes.FLEX, AgentTypes.EC2]:
+            return os.path.abspath(os.path.join(os.path.dirname(__file__), '..', 'celeryconfig.py'))
         else:
-            return CeleryConfig.CONFIG_FILENAME
+            raise InvalidAgentType('{0} is not a valid supported agent!'.format(agent_type))
 
     @staticmethod
     def get_exchange_name(agent_type, instance_type=None):
