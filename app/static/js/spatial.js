@@ -436,7 +436,7 @@ Spatial.Controller = Backbone.View.extend(
             */
 
             // PLANE - X
-            var planeGeometry = new THREE.PlaneGeometry(radius*2, radius*2);
+            var planeGeometry = new THREE.PlaneGeometry(maxy-miny, maxz-minz);
             planeX = new THREE.Mesh(planeGeometry, new THREE.MeshBasicMaterial( {  color: 0xffffff, side: THREE.DoubleSide, transparent: true, opacity: 0} ));
             planeX.rotateOnAxis( new THREE.Vector3(0,1,0), (Math.PI/2) );
             planeXEdges = new THREE.EdgesHelper( planeX, 0x0000ff ); 
@@ -446,12 +446,14 @@ Spatial.Controller = Backbone.View.extend(
 
 
             // PLANE - Y
+            planeGeometry = new THREE.PlaneGeometry(maxx-minx, maxy-miny);
             planeY= new THREE.Mesh(planeGeometry, new THREE.MeshBasicMaterial( {  color: 0xffffff, side: THREE.DoubleSide, transparent: true, opacity: 0} ));
             planeYEdges = new THREE.EdgesHelper( planeY, 0x00ff00 ); 
             planeYEdges.material.linewidth = 2;
             planeY.visible = $("#planeYCheck").is(':checked'); planeYEdges.visible = $("#planeYCheck").is(':checked');
             
-            // PLANE - Y
+            // PLANE - Z
+            planeGeometry = new THREE.PlaneGeometry(maxx-minx, maxz-minz);
             planeZ = new THREE.Mesh(planeGeometry, new THREE.MeshBasicMaterial( {  color: 0xffffff, side: THREE.DoubleSide, transparent: true, opacity: 0} ));
             planeZ.rotateOnAxis( new THREE.Vector3(1,0,0), (Math.PI/2) );
             planeZEdges = new THREE.EdgesHelper( planeZ, 0xff0000 ); 
@@ -650,9 +652,22 @@ Spatial.Controller = Backbone.View.extend(
                               var t = time[i]; 
                               this.cache[t] = data.colors[t];
                           }
+
+                          if(this.showPopulation)
+                          {
+                            $("#maxVal").html("Maximum voxel population : "+data.limits["max"].toExponential(3) );
+                            $("#minVal").html("Minimum voxel population : "+data.limits["min"].toExponential(3) ); 
+                          }
+                          else{
+
+                            $("#maxVal").html("Maximum voxel concentration : "+data.limits["max"].toExponential(3) );
+                            $("#minVal").html("Minimum voxel concentration : "+data.limits["min"].toExponential(3));  
+                          
+                          }
                           
                           if(colorFlag)
                               this.handleMeshColorUpdate(this.cache[time[0] ]);
+
                           
                       }, this)
                     });
@@ -951,9 +966,13 @@ Spatial.Controller = Backbone.View.extend(
                         console.log('drawUnits.click');
 
                         if($("input[name='drawUnits']:checked").val() == 'population')
-                            this.showPopulation  = true;
+                            {
+                                this.showPopulation  = true;
+                            }
                         else
-                            this.showPopulation  = false;
+                            {
+                                this.showPopulation  = false;
+                            }
 
                         this.cache = {}
                         this.updateCache(this.timeIdx, this.timeIdx + this.cacheRange, true);
