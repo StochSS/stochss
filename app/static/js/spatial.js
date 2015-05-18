@@ -285,27 +285,10 @@ Spatial.Controller = Backbone.View.extend(
         {
             console.log("meshDataPreview : function(data)");
 
-            /*if(String(data['min']).length > 5 || String(data['max']).length > 5)
-            {
-                this.minVal = data['min'].toExponential(3);
-                this.maxVal = data['max'].toExponential(3);
-            }
-            else
-            {
-                this.minVal = String(data['min']);
-                this.maxVal = String(data['max']);
-            }
-
-            $( "#minVal" ).text(this.minVal);
-            $( "#maxVal" ).text(this.maxVal);*/
-
             if (!window.WebGLRenderingContext) {
-                // Browser has no idea what WebGL is. Suggest they
-                // get a new browser by presenting the user with link to
-                // http://get.webgl.org
                 $( "#meshPreview" ).html('<center><h2 style="color: red;">WebGL Not Supported</h2><br /> \
-<ul><li>Download an updated Firefox or Chromium to use StochSS (both come with WebGL support)</li> \
-<li>It may be necessary to update system video drivers to make this work</li></ul></center>');
+                        <ul><li>Download an updated Firefox or Chromium to use StochSS (both come with WebGL support)</li> \
+                        <li>It may be necessary to update system video drivers to make this work</li></ul></center>');
                 return;
             }
 
@@ -317,14 +300,11 @@ Spatial.Controller = Backbone.View.extend(
             }
 
             if (!this.webGL) {
-                // Browser could not initialize WebGL. User probably needs to
-                // update their drivers or get a new browser. Present a link to
-                // http://get.webgl.org/troubleshooting
                 $( "#meshPreview" ).html('<center><h2 style="color: red;">WebGL Disabled</h2><br /> \
-<ul><li>In Safari and certain older browsers, this must be enabled manually</li> \
-<li>Browsers can also throw this error when they detect old or incompatible video drivers</li> \
-<li>Enable WebGL, or try using StochSS in an up to date Chrome or Firefox browser</li> \
-</ul></center>');
+                <ul><li>In Safari and certain older browsers, this must be enabled manually</li> \
+                <li>Browsers can also throw this error when they detect old or incompatible video drivers</li> \
+                <li>Enable WebGL, or try using StochSS in an up to date Chrome or Firefox browser</li> \
+                </ul></center>');
                 return;  
             }
 
@@ -337,8 +317,8 @@ Spatial.Controller = Backbone.View.extend(
                     // get a new browser by presenting the user with link to
                     // http://get.webgl.org
                     $( "#meshPreview" ).html('<center><h2 style="color: red;">WebGL Not Supported</h2><br /> \
-<ul><li>Download an updated Firefox or Chromium to use StochSS (both come with WebGL support)</li> \
-<li>It may be necessary to update system video drivers to make this work</li></ul></center>');
+                        <ul><li>Download an updated Firefox or Chromium to use StochSS (both come with WebGL support)</li> \
+                        <li>It may be necessary to update system video drivers to make this work</li></ul></center>');
                     return;
                 }
 
@@ -351,10 +331,10 @@ Spatial.Controller = Backbone.View.extend(
                     // update their drivers or get a new browser. Present a link to
                     // http://get.webgl.org/troubleshooting
                     $( "#meshPreview" ).html('<center><h2 style="color: red;">WebGL Disabled</h2><br /> \
-<ul><li>In Safari and certain older browsers, this must be enabled manually</li> \
-<li>Browsers can also throw this error when they detect old or incompatible video drivers</li> \
-<li>Enable WebGL, or try using StochSS in an up to date Chrome or Firefox browser</li> \
-</ul></center>');
+                        <ul><li>In Safari and certain older browsers, this must be enabled manually</li> \
+                        <li>Browsers can also throw this error when they detect old or incompatible video drivers</li> \
+                        <li>Enable WebGL, or try using StochSS in an up to date Chrome or Firefox browser</li> \
+                    </ul></center>');
                     return;  
                 }
 
@@ -411,7 +391,45 @@ Spatial.Controller = Backbone.View.extend(
             } );
             
             this.mesh = new THREE.Mesh(this.model.geometry, material);
+            
+            this.boundingBox = {};
+            var minx = this.mesh.geometry.boundingSphere.center.x + this.mesh.geometry.boundingSphere.radius;  
+            var miny = this.mesh.geometry.boundingSphere.center.y + this.mesh.geometry.boundingSphere.radius;
+            var minz = this.mesh.geometry.boundingSphere.center.z + this.mesh.geometry.boundingSphere.radius; 
 
+            var maxx = this.mesh.geometry.boundingSphere.center.x - this.mesh.geometry.boundingSphere.radius;  
+            var maxy = this.mesh.geometry.boundingSphere.center.y - this.mesh.geometry.boundingSphere.radius;
+            var maxz = this.mesh.geometry.boundingSphere.center.z - this.mesh.geometry.boundingSphere.radius; 
+
+            console.log("minx: "+minx+" maxx: "+maxx+" miny: "+miny+" maxy: "+maxy+" maxz: "+maxz+" minz: "+minz);
+
+            for(var i = 0; i < this.mesh.geometry.vertices.length; i++)
+            {
+                var x = this.mesh.geometry.vertices[i].x;
+                var y = this.mesh.geometry.vertices[i].y; 
+                var z = this.mesh.geometry.vertices[i].z; 
+
+                minx = ( minx > x ? x: minx );    
+                maxx = ( maxx < x ? x: maxx );
+
+                miny = ( miny > y ? y: miny );    
+                maxy = ( maxy < y ? y: maxy );
+
+                minz = ( minz > z ? z: minz );    
+                maxz = ( maxz < z ? z: maxz );
+            }
+
+            console.log("minx: "+minx+" maxx: "+maxx+" miny: "+miny+" maxy: "+maxy+" maxz: "+maxz+" minz: "+minz);
+            
+            this.boundingBox.minx = minx;
+            this.boundingBox.maxx = maxx;
+
+            this.boundingBox.miny = miny;
+            this.boundingBox.maxy = maxy;
+            
+            this.boundingBox.minz = minz;
+            this.boundingBox.maxz = maxz;
+            
             /* 
                GRID
                var grid = new THREE.GridHelper(20, 0.1);          
@@ -463,14 +481,6 @@ Spatial.Controller = Backbone.View.extend(
             $( "#meshPreviewMsg" ).hide();
 
             this.camera.position.z =  this.mesh.geometry.boundingSphere.radius* 2;
-
-            //this.highLightSubdomains([])
-            
-            /* Recalculating distance
-               var dist = this.camera.position.z - (this.mesh.geometry.boundingSphere.center.z + this.mesh.geometry.boundingSphere.radius)
-               var height = this.mesh.geometry.boundingSphere.radius * 2
-               var fov = 2 * Math.atan( height / ( 2 * dist ) ) * ( 180 / Math.PI );
-               this.camera.fov = fov;*/
 
 
             if(!this.rendererInitialized)
@@ -548,14 +558,11 @@ Spatial.Controller = Backbone.View.extend(
 
             // For plane X
             var slider = $( "#planeXSelect" );
-            var sphere = this.mesh.geometry.boundingSphere;
-            var min = sphere.center.x - sphere.radius;
-            var max = sphere.center.x + sphere.radius;
+            var min = this.boundingBox.minx;
+            var max = this.boundingBox.maxx;
             slider.prop('min', min);
             slider.prop('max', max);
             slider.val(min);
-            //var pos = sphere.center;
-            //pos.x = min;
             slider.prop('step', (max - min)/10 ) ;
             slider.on('change', _.throttle(_.bind(this.handlePlaneSliderChange, this), 1000));
             slider.trigger('change');
@@ -563,8 +570,8 @@ Spatial.Controller = Backbone.View.extend(
 
             // For plane Y
             var slider = $( "#planeYSelect" );
-            var min = sphere.center.z - (sphere.radius);
-            var max = sphere.center.z + (sphere.radius);
+            min = this.boundingBox.minz;
+            max = this.boundingBox.maxz;
             slider.prop('min', min);
             slider.prop('max', max);
             slider.val(min);
@@ -574,10 +581,10 @@ Spatial.Controller = Backbone.View.extend(
 
             // For plane z
             var slider = $( "#planeZSelect" );
-            var min = sphere.center.y - (sphere.radius);
-            var max = sphere.center.y + (sphere.radius);
-            slider.prop('min', min);
-            slider.prop('max', max);
+            min = this.boundingBox.miny;
+            max = this.boundingBox.maxy;
+            slider.prop('min', this.boundingBox.miny);
+            slider.prop('max', this.boundingBox.maxy);
             slider.val(min);
             slider.prop('step', (max - min)/15 ) ;
             slider.on('change', _.throttle(_.bind(this.handlePlaneSliderChange, this), 1000));
