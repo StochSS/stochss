@@ -15,7 +15,7 @@ from boto.s3.connection import S3Connection
 from databases.dynamo_db import DynamoDB
 
 import common.helper as helper
-from common.config import AgentTypes, JobDatabaseConfig, AgentConfig
+from common.config import AgentTypes, JobDatabaseConfig, AgentConfig, FlexConfig
 from vm_state_model import VMStateModel
 
 class backendservices(object):
@@ -39,6 +39,23 @@ class backendservices(object):
         self.infrastructure = kwargs.get("infrastructure", AgentTypes.EC2)
         if self.infrastructure not in backendservices.INFRA_SUPPORTED:
             raise Exception("Infrastructure {0} not supported!".format(self.infrastructure))
+
+    def deregister_flex_cloud(self, parameters, blocking=True):
+        try:
+            i = InfrastructureManager(blocking=blocking)
+            res = i.deregister_instances(parameters=parameters, terminate=False)
+            ret = True
+
+        except Exception, e:
+            logging.error("deregister_flex_cloud() failed with error : %s", str(e))
+            ret = False
+
+        finally:
+            # update db
+            # VMStateModel.terminate_all(parameters)
+            pass
+
+        return ret
 
 
     def executeTask(self, params, agent, access_key, secret_key, task_id=None,
@@ -300,11 +317,11 @@ class backendservices(object):
         except:
             return False
 
-    def startMachines(self, params, block=False):
+    def start_ec2_vms(self, params, blocking=False):
         '''
         This method instantiates vm instances
         '''
-        logging.info("startMachines : inside method with params : \n%s", pprint.pformat(params))
+        logging.info("start_ec2_vms : inside method with params : \n%s", pprint.pformat(params))
         try:
             # make sure that any keynames we use are prefixed with stochss so that
             #we can do a terminate all based on keyname prefix
@@ -318,7 +335,7 @@ class backendservices(object):
             # NOTE: We are forcing blocking mode within the InfrastructureManager class
             # for the launching of VMs because of how GAE joins on all threads before
             # returning a response from a request.
-            i = InfrastructureManager(blocking=block)
+            i = InfrastructureManager(blocking=blocking)
             res = {}
 
             # 1. change the status of 'failed' in the previous launch in db to 'terminated' 
@@ -382,20 +399,19 @@ class backendservices(object):
                 else:
                     logging.error("FAILED on creating table {0}".format(JobDatabaseConfig.TABLE_NAME))
 
-            logging.info("startMachines : exiting method with result : %s", str(res))
+            logging.info("start_ec2_vms : exiting method with result : %s", str(res))
 
             return True, None
 
         except Exception, e:
             traceback.print_exc()
-            logging.error("startMachines : exiting method with error : {0}".format(str(e)))
-            print "startMachines : exiting method with error :", str(e)
+            logging.error("start_ec2_vms : exiting method with error : {0}".format(str(e)))
             return False, 'Errors occur in starting machines:' + str(e)
 
 
-    def stopMachines(self, params, block=False):
+    def stop_ec2_vms(self, params, blocking=False):
         '''
-        This method would terminate all the  instances associated with the account
+        This method would terminate all the EC2 instances associated with the account
 	    that have a keyname prefixed with stochss (all instances created by the backend service)
 	    params must contain credentials key/value
         '''
@@ -403,8 +419,8 @@ class backendservices(object):
                                                       key_prefix=params.get('key_prefix', ''))
         try:
             logging.info("Stopping compute nodes with key_prefix: {0}".format(key_prefix))
-            i = InfrastructureManager(blocking=block)
-            res = i.terminate_instances(params, key_prefix)
+            i = InfrastructureManager(blocking=blocking)
+            res = i.deregister_instances(parameters=params, terminate=True)
             ret = True
 
         except Exception, e:
@@ -452,6 +468,7 @@ class backendservices(object):
         if params['infrastructure'] is None:
             logging.error("validateCredentials: infrastructure param not set")
             return False
+
         creds = params['credentials']
         if creds is None:
             logging.error("validateCredentials: credentials param not set")
@@ -468,6 +485,7 @@ class backendservices(object):
             i = InfrastructureManager()
             logging.info("validateCredentials: exiting with result : %s", str(i))
             return i.validate_credentials(params)
+
         except Exception, e:
             logging.error("validateCredentials: exiting with error : %s", str(e))
             return False
@@ -480,28 +498,64 @@ class backendservices(object):
                                                                                                      ip=ip)
 
     @staticmethod
-    def validate_flex_cloud_info(machine_info):
+    def validate_flex_cloud_info(machine_info, user_id):
+        logging.debug('machine_info =\n{0}'.format(pprint.pformat(machine_info)))
+
+        is_valid = True
+        error_reason = None
+
         # get queue head and validate its creds
         queue_head = None
+        errors = []
         for machine in machine_info:
+            logging.debug('machine = {}'.format(machine))
+
+            keyname = machine["keyname"]
+            keyfile = FlexConfig.get_keyfile(keyname=keyname, user_id=user_id)
+
+            logging.debug('keyfile = {0}'.format(keyfile))
+
+            if not os.path.exists(keyfile):
+                error_message = 'Could not find {keyname} at {keyfile}!'.format(keyname=keyname, keyfile=keyfile)
+                logging.error(error_message)
+                errors.append(error_message)
+                is_valid = False
+
             if machine['queue_head'] == True:
-                queue_head = machine
-                logging.info("queue head = {0}".format(queue_head))
-                cmd = "[ -d /home/{username}/stochss ] && echo yes".format(username=queue_head["username"])
-                remote_cmd = backendservices.__get_remote_command_string(command=cmd,
-                                                                        keyfile=queue_head["keyfile"],
-                                                                        username=queue_head["username"],
-                                                                        ip=queue_head["ip"])
-                result = os.system(remote_cmd)
+                if queue_head != None:
+                    error_message = 'There cannot be only one queue head!'
+                    logging.error(error_message)
+                    errors.append(error_message)
+                    is_valid = False
 
-                logging.info("Result of \n{0} \n= {1}".format(remote_cmd, result))
-                if result == 0:
-                    logging.info('Validation successful!')
-                    return True
+                else:
+                    queue_head = machine
+                    logging.info("queue head = {0}".format(queue_head))
+                    cmd = "[ -d ~/stochss ] && echo yes".format(username=queue_head["username"])
+                    remote_cmd = backendservices.__get_remote_command_string(command=cmd,
+                                                                            keyfile=keyfile,
+                                                                            username=queue_head["username"],
+                                                                            ip=queue_head["ip"])
+                    result = os.system(remote_cmd)
 
-        if queue_head is None:
-            logging.error('Could not find any queue_head in machine info !')
-        return False
+                    logging.info("Result of \n{0} \n= {1}".format(remote_cmd, result))
+                    if result == 0:
+                        logging.info('Validation successful!')
+                    else:
+                        error_message = 'Could not successfully connect to queue head with ip: {ip}!'.format(ip=queue_head['ip'])
+                        logging.error(error_message)
+                        errors.append(error_message)
+                        is_valid = False
+
+        if queue_head == None:
+            error_message = 'Could not find any queue_head in machine info !'
+            logging.error(error_message)
+            errors.append(error_message)
+            is_valid = False
+
+        if errors != []:
+            error_reason = '\n'.join(errors)
+        return is_valid, error_reason
 
 
     def getSizeOfOutputResults(self, aws_access_key, aws_secret_key, output_buckets):

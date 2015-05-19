@@ -25,6 +25,7 @@ class FlexAgent(BaseAgent):
 
     PARAM_CREDENTIALS = 'credentials'
     PARAM_QUEUE_HEAD = 'queue_head'
+    PARAM_FLEX_CLOUD_MACHINE_INFO = 'flex_cloud_machine_info'
 
     def configure_instance_security(self, parameters):
         pass
@@ -33,11 +34,11 @@ class FlexAgent(BaseAgent):
         pass
 
     def __get_flex_instance_id(self, public_ip):
-        return public_ip.replace('.', '', 3)
+        return 'flex_{}'.format(public_ip.replace('.', '', 3))
 
     def describe_instances_launched(self, parameters):
         launched_ids = []
-        for machine in parameters['flex_cloud_machine_info']:
+        for machine in parameters[self.PARAM_FLEX_CLOUD_MACHINE_INFO]:
             launched_ids.append(self.__get_flex_instance_id(machine['ip']))
 
     def describe_instances_running(self, parameters):
@@ -46,7 +47,7 @@ class FlexAgent(BaseAgent):
         private_ips = []
         instance_types = []
 
-        for machine in parameters['flex_cloud_machine_info']:
+        for machine in parameters[self.PARAM_FLEX_CLOUD_MACHINE_INFO]:
             instance_ids.append(self.__get_flex_instance_id(machine['ip']))
             public_ips.append(machine['ip'])
             private_ips.append(machine['ip'])
@@ -54,12 +55,13 @@ class FlexAgent(BaseAgent):
 
         return public_ips, private_ips, instance_ids, instance_types
 
-    def run_instances(self, parameters, count=None, security_configured=True):
+    def prepare_instances(self, parameters, count=None, security_configured=True):
         pass
 
 
-    def terminate_instances(self, parameters, prefix=''):
-        raise NotImplementedError
+    def deregister_instances(self, parameters, terminate=False):
+        machines = parameters[self.PARAM_FLEX_CLOUD_MACHINE_INFO]
+        logging.info('machines = {0}'.format(pprint.pformat(machines)))
 
     def validate_credentials(self, credentials):
         raise NotImplementedError
@@ -91,7 +93,7 @@ class FlexAgent(BaseAgent):
           member is a list.
         """
         logging.debug('params = \n{0}'.format(pprint.pformat(parameters)))
-        machines = parameters['flex_cloud_machine_info']
+        machines = parameters[self.PARAM_FLEX_CLOUD_MACHINE_INFO]
         instance_list = []
 
         for machine in machines:
@@ -112,14 +114,6 @@ class FlexAgent(BaseAgent):
         # These are commutative commands
 
         commands = []
-        # commands.append("set -x")
-        # commands.append("exec > >(tee /var/log/user-data.log|logger -t user-data -s 2>/dev/console) 2>&1")
-        # commands.append("touch anand3.txt")
-        # commands.append("echo testing logfile")
-        # commands.append("echo BEGIN")
-        # commands.append("date '+%Y-%m-%d %H:%M:%S'")
-        # commands.append("echo END")
-        # commands.append("touch anand2.txt")
 
         commands.append('export AWS_ACCESS_KEY_ID={0}'.format(aws_credentials['AWS_ACCESS_KEY_ID']))
         commands.append('export AWS_SECRET_ACCESS_KEY={0}'.format(aws_credentials['AWS_SECRET_ACCESS_KEY']))

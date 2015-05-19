@@ -8,11 +8,9 @@ import boto
 from boto.exception import EC2ResponseError
 import datetime
 import os
-import time, uuid
 from boto.ec2.cloudwatch import MetricAlarm
 from utils import utils
-from common.config import AgentTypes
-from uuid import uuid4
+from common.config import AgentTypes, AgentConfig
 import logging
 
 import httplib
@@ -36,7 +34,7 @@ class EC2Agent(BaseAgent):
     # started.
     MAX_VM_CREATION_TIME = 1200
 
-    # The amount of time that run_instances waits between each describe-instances
+    # The amount of time that prepare_instances waits between each describe-instances
     # request. Setting this value too low can cause Eucalyptus to interpret
     # requests as replay attacks.
     SLEEP_TIME = 2
@@ -53,7 +51,7 @@ class EC2Agent(BaseAgent):
     PARAM_WORKER_QUEUE = 'queue'
     PARAM_QUEUE_HEAD = 'queue_head'
 
-    REQUIRED_EC2_RUN_INSTANCES_PARAMS = (
+    REQUIRED_EC2_PREPARE_INSTANCES_PARAMS = (
         PARAM_CREDENTIALS,
         PARAM_GROUP,
         PARAM_IMAGE_ID,
@@ -62,7 +60,7 @@ class EC2Agent(BaseAgent):
         PARAM_SPOT
     )
 
-    REQUIRED_EC2_TERMINATE_INSTANCES_PARAMS = (
+    REQUIRED_EC2_DEREGISTER_INSTANCES_PARAMS = (
         PARAM_CREDENTIALS,
         PARAM_INSTANCE_IDS
     )
@@ -93,10 +91,8 @@ class EC2Agent(BaseAgent):
 
         key_path = '{0}.key'.format(keyname)
         ssh_key = os.path.abspath(key_path)
-        logging.info('About to spawn EC2 instances - ' \
+        logging.info('About to configure EC2 instance security - ' \
                   'Expecting to find a key at {0}'.format(ssh_key))
-
-        # return False
 
         try:
             conn = self.open_connection(parameters)
@@ -127,9 +123,11 @@ class EC2Agent(BaseAgent):
                 newgroup.authorize('tcp', 11211, 11211, '0.0.0.0/0')
                 newgroup.authorize('tcp', 55672, 55672, '0.0.0.0/0')
             return True
+
         except EC2ResponseError as exception:
             self.handle_failure('EC2 response error while initializing '
                                 'security: ' + exception.error_message)
+
         except Exception as exception:
             self.handle_failure('Error while initializing EC2 '
                                 'security: ' + exception.message)
@@ -144,10 +142,10 @@ class EC2Agent(BaseAgent):
           operation   Operations to be invoked using the above parameters
         """
         required_params = ()
-        if operation == BaseAgent.OPERATION_RUN:
-            required_params = self.REQUIRED_EC2_RUN_INSTANCES_PARAMS
-        elif operation == BaseAgent.OPERATION_TERMINATE:
-            required_params = self.REQUIRED_EC2_TERMINATE_INSTANCES_PARAMS
+        if operation == BaseAgent.OPERATION_PREPARE:
+            required_params = self.REQUIRED_EC2_PREPARE_INSTANCES_PARAMS
+        elif operation == BaseAgent.OPERATION_DEREGISTER:
+            required_params = self.REQUIRED_EC2_DEREGISTER_INSTANCES_PARAMS
 
         for param in required_params:
 
@@ -257,7 +255,7 @@ class EC2Agent(BaseAgent):
         ec2.put_metric_alarm(sleepy_alarm)
 
 
-    def run_instances(self, parameters, count=None, security_configured=True):
+    def prepare_instances(self, parameters, count=None, security_configured=True):
         """
         Spawns the specified number of EC2 instances using the parameters
         provided. This method is blocking in that it waits until the
@@ -351,7 +349,7 @@ class EC2Agent(BaseAgent):
         return
 
 
-    def terminate_instances(self, parameters, prefix=''):
+    def deregister_instances(self, parameters, terminate=True):
         """
         Stop one of more EC2 instances using. The input instance IDs are
         fetched from the 'instance_ids' parameters in the input map. (Also
@@ -359,14 +357,20 @@ class EC2Agent(BaseAgent):
 
         Args:
           parameters  A dictionary of parameters
+          terminate   A Boolean flag for terminating instances
         """
+
+        key_prefix = AgentConfig.get_agent_key_prefix(agent_type=self.AGENT_NAME,
+                                                      key_prefix=parameters.get('key_prefix', ''))
         conn = self.open_connection(parameters)
         instance_ids = []
         reservations = conn.get_all_instances()
         instances = [i for r in reservations for i in r.instances]
+
         for i in instances:
-            if i.key_name is not None and i.key_name.startswith(prefix):
+            if i.key_name is not None and i.key_name.startswith(key_prefix):
                 instance_ids.append(i.id)
+
         terminated_instances = conn.terminate_instances(instance_ids)
         for instance in terminated_instances:
             logging.info('Instance {0} was terminated'.format(instance.id))

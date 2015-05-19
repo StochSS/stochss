@@ -199,7 +199,7 @@ class InfrastructureManager(object):
           ValueError  If the input JSON string (parameters) cannot be parsed properly
         """
 
-        logging.info('Received a request to run instances.')
+        logging.info('Received a request to prepare instances.')
 
         logging.info('Request parameters are {0}'.format(parameters))
         for param in self.RUN_INSTANCES_REQUIRED_PARAMS:
@@ -210,7 +210,7 @@ class InfrastructureManager(object):
         agent = self.agent_factory.create_agent(infrastructure)
 
         try:
-            agent.assert_required_parameters(parameters, BaseAgent.OPERATION_RUN)
+            agent.assert_required_parameters(parameters, BaseAgent.OPERATION_PREPARE)
         except AgentConfigurationException as exception:
             return self.__generate_response(False, exception.message)
 
@@ -294,11 +294,11 @@ class InfrastructureManager(object):
             taskqueue.add(url=InfrastructureManager.BACKEND_QUEUE_URL, params=from_fields, method='GET')
 
 
-    def terminate_instances(self, parameters, prefix=''):
+    def deregister_instances(self, parameters, terminate):
         """
-        Terminate a group of virtual machines using the provided parameters.
-        The input parameter map must contain an 'infrastructure' parameter which
-        will be used to instantiate a suitable cloud agent. Any additional
+        Deregister a group of virtual machines  and possibly terminate them using
+        the provided parameters. The input parameter map must contain an 'infrastructure'
+        parameter which will be used to instantiate a suitable cloud agent. Any additional
         environment specific parameters should also be available in the same
         map.
 
@@ -312,7 +312,7 @@ class InfrastructureManager(object):
                       dependent required parameters. Alternatively one
                       may provide a valid JSON string instead of a dictionary
                       object.
-          secret      A previously established secret
+          terminate  A boolean flag to indicate whether to terminate instances or not
 
         Returns:
           If the secret is valid and all the parameters required to successfully
@@ -328,9 +328,9 @@ class InfrastructureManager(object):
         infrastructure = parameters[self.PARAM_INFRASTRUCTURE]
         agent = self.agent_factory.create_agent(infrastructure)
         if self.blocking:
-            self.__kill_vms(agent, parameters, prefix)
+            self.__deregister_vms(agent, parameters, terminate)
         else:
-            thread.start_new_thread(self.__kill_vms, (agent, parameters, prefix))
+            thread.start_new_thread(self.__deregister_vms, (agent, parameters, terminate))
 
         return self.__generate_response(True, self.REASON_NONE)
 
@@ -348,7 +348,7 @@ class InfrastructureManager(object):
         status_info = self.reservations.get(reservation_id)
         try:
             security_configured = agent.configure_instance_security(parameters)
-            instance_info = agent.run_instances(count=num_vms, parameters=parameters,
+            instance_info = agent.prepare_instances(count=num_vms, parameters=parameters,
                                                 security_configured=security_configured)
             ids = instance_info[0]
             public_ips = instance_info[1]
@@ -367,15 +367,16 @@ class InfrastructureManager(object):
         return status_info
 
 
-    def __kill_vms(self, agent, parameters, prefix=''):
+    def __deregister_vms(self, agent, parameters, terminate):
         """
-        Private method for stopping a set of VMs
+        Private method for deregistering a set of VMs
 
         Args:
           agent       Infrastructure agent in charge of current operation
           parameters  A dictionary of parameters
+          terminate   Boolean Flag
         """
-        agent.terminate_instances(parameters, prefix)
+        agent.deregister_instances(parameters=parameters, terminate=terminate)
 
     def __generate_response(self, status, msg, extra=None):
         """

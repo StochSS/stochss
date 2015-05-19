@@ -232,7 +232,7 @@ class EC2BackendWorker(BackendWorker):
 
         self.agent.configure_instance_security(parameters)
         try:
-            self.agent.run_instances(parameters)
+            self.agent.prepare_instances(parameters)
         except Exception as e:
             raise Exception('Errors in running instances in agent: ' + str(e))
 
@@ -312,7 +312,7 @@ class EC2BackendWorker(BackendWorker):
                 parameters["num_vms"] = vm["num_vms"]
                 num_vms += vm["num_vms"]
                 try:
-                    self.agent.run_instances(parameters)
+                    self.agent.prepare_instances(parameters)
                 except Exception as e:
                     raise Exception('Errors in running instances in agent: {0}'.format(str(e)))
 
@@ -544,9 +544,9 @@ class SynchronizeDB(webapp2.RequestHandler):
 
 class BackendQueue(webapp2.RequestHandler):
     '''
-    BackendQueue is a task queue that runs in the background, in parallel with the front end.
+    BackendQueue is a task queue that runs in the background, in parallel with the frontend.
     Currently, there are 2 types of tasks that BackendQueue is going to deal with:
-        1. start vms that front end requests (operation code: start_vms)
+        1. prepare vms that frontend requests (operation code: prepare_vms)
         2. trigger the database auto synchronization (operation code: start_db_syn). 
         Since currently, we could not solve the background http 500 error interruption from somewhere
         using the background_thread, we have to check the db synchronization log every sometime

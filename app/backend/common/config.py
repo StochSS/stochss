@@ -1,6 +1,7 @@
 import os
 import string
 import random
+import logging
 
 class InvalidAgentType(Exception):
     pass
@@ -24,6 +25,10 @@ class FlexConfig(object):
     @staticmethod
     def get_keyfile_dirname(user_id):
         return os.path.join(FlexConfig.KEYFILE_DIRNAME, user_id)
+
+    @staticmethod
+    def get_keyfile(keyname, user_id):
+        return os.path.join(FlexConfig.get_keyfile_dirname(user_id), keyname)
 
 
 class AgentConfig(object):

@@ -1,3 +1,8 @@
+if(typeof(String.prototype.trim) === "undefined") {
+    String.prototype.trim = function() {
+        return String(this).replace(/^\s+|\s+$/g, '');
+    };
+}
 function set_basic() {
     var compute_power = document.getElementsByName("compute_power");
     if (!$('#advanced-settings').hasClass("in")) {
@@ -24,58 +29,161 @@ function save_flex_cloud_info() {
     var inputs = form.getElementsByTagName("input");
 
     var jsonData = [];
-    var info = {};
+    var flex_cloud_machine = {};
     for (i = 0; i < inputs.length; i++) {
         if (inputs[i].name == 'ip') {
-            info['ip'] = inputs[i].value
-        }
-        if (inputs[i].name == 'username') {
-            info['username'] = inputs[i].value
-        }
-        if (inputs[i].name == 'keyfile') {
-            info['keyfile'] = inputs[i].value
-        }
-        if (inputs[i].name == 'queue_head') {
-            info['queue_head'] = false;
-            if (inputs[i].checked) {
-                info['queue_head'] = true
+            flex_cloud_machine['ip'] = inputs[i].value.trim();
+            if (flex_cloud_machine['ip'] == '') {
+                alert('Please provide valid IP Address!');
+                return
             }
         }
-        if (Object.keys(info).length == 4) {
-            jsonData.push(info);
-            info = {};
+
+        if (inputs[i].name == 'username') {
+            flex_cloud_machine['username'] = inputs[i].value.trim();
+            if (flex_cloud_machine['ip'] == '') {
+                alert('Please provide valid username!');
+                return
+            }
+        }
+
+        if (inputs[i].name == 'keyfile') {
+            var keyname_from_keyfile =  inputs[i].value;
+            if (keyname_from_keyfile.search("/") != -1) {
+                keyname_from_keyfile = keyname_from_keyfile.substring(keyname_from_keyfile.lastIndexOf('/')+1)
+            }
+            if (keyname_from_keyfile.search("\\\\") != -1) {
+                keyname_from_keyfile = keyname_from_keyfile.substring(keyname_from_keyfile.lastIndexOf('\\')+1)
+            }
+
+            flex_cloud_machine['keyname'] = keyname_from_keyfile;
+            if (flex_cloud_machine['keyname'] == '') {
+                alert('Please upload valid key file!');
+                return
+            }
+        }
+
+        if (inputs[i].name == 'queue_head') {
+            flex_cloud_machine['queue_head'] = false;
+            if (inputs[i].checked) {
+                flex_cloud_machine['queue_head'] = true
+            }
+        }
+
+        if (Object.keys(flex_cloud_machine).length == 4) {
+            jsonData.push(flex_cloud_machine);
+            flex_cloud_machine = {};
         }
     }
 
-    var jsonDataToBeSent = {}
-    jsonDataToBeSent['flex_cloud_machine_info'] = jsonData
-    jsonDataToBeSent['action'] = 'save_flex_cloud_info'
+    var queue_head = null;
+    for (var i = 0; i < jsonData.length; i++) {
+        if (jsonData[i]['queue_head'] == true) {
+            if (queue_head != null) {
+                alert('Please select only 1 queue head!');
+                return
+            }
+            else {
+                queue_head = jsonData[i];
+            }
+        }
+    }
+
+    if (queue_head == null) {
+        alert('Please select 1 machine as queue head!');
+        return
+    }
+
+    var jsonDataToBeSent = {};
+    jsonDataToBeSent['flex_cloud_machine_info'] = jsonData;
+    jsonDataToBeSent['action'] = 'save_flex_cloud_info';
 
     jsonDataToBeSent = JSON.stringify(jsonDataToBeSent);
     $.ajax({
         type: "POST",
         url: "/credentials",
+        contentType: "application/json",
+        dataType: "json",
         data: jsonDataToBeSent,
+        success: function(){},
+        error: function(x,e){},
+        complete: function() {
+            document.location.reload();
+        }
+    });
+}
+
+function refresh_flex_cloud_info() {
+    $.ajax({
+        type: "GET",
+        url: "/credentials#flex_cloud",
         success: function () {
         },
+        error: function (x,e) {
+        },
+        complete: function(){
+            document.location.reload();
+        }
+    });
+}
+
+function deregister_flex_cloud(){
+    var jsonDataToBeSent = {};
+    jsonDataToBeSent['action'] = 'deregister_flex_cloud';
+
+    jsonDataToBeSent = JSON.stringify(jsonDataToBeSent);
+    $.ajax({
+        type: "POST",
+        url: "/credentials",
+        contentType: "application/json",
         dataType: "json",
-        contentType: "application/json"
+        data: jsonDataToBeSent,
+        success: function(){},
+        error: function(x,e){},
+        complete: function() {
+            document.location.reload();
+        }
     });
 }
 
 function prepare_flex_cloud() {
-    var jsonDataToBeSent = {}
-    jsonDataToBeSent['action'] = 'prepare_flex_cloud'
+    var jsonDataToBeSent = {};
+    jsonDataToBeSent['action'] = 'prepare_flex_cloud';
 
     jsonDataToBeSent = JSON.stringify(jsonDataToBeSent);
     $.ajax({
         type: "POST",
         url: "/credentials",
-        data: jsonDataToBeSent,
-        success: function () {
-        },
+        contentType: "application/json",
         dataType: "json",
-        contentType: "application/json"
+        data: jsonDataToBeSent,
+        success: function(){},
+        error: function(x,e){},
+        complete: function() {
+            document.location.reload();
+        }
+    });
+}
+
+function send_keyfile_to_stochss(keyname, contents) {
+    var jsonDataToBeSent = {
+        'keyname': keyname,
+        'contents': contents
+    };
+    jsonDataToBeSent['action'] = 'flex_save_keyfile';
+
+    jsonDataToBeSent = JSON.stringify(jsonDataToBeSent);
+    $.ajax({
+        type: "POST",
+        url: "/credentials",
+        contentType: "application/json",
+        dataType: "json",
+        data: jsonDataToBeSent,
+        success: function(){},
+        error: function(x,e){
+            alert(e + ": Failed to upload keyfile!");
+        },
+        complete: function() {}
     });
 }
 
@@ -96,11 +204,14 @@ $(document).ready(function () {
         new_row.find('input').val("");
         new_row.find("input[name='queue_head']").attr('checked', false);
         $('#flex_cloud_machine_info_table tr:last').after(new_row);
+
+        add_key_file_upload_listeners();
+
         return false;
     });
 
     $("#delete_flex_cloud_machine").click(function () {
-        if ($('#flex_cloud_machine_info_table tr').length > 2) {
+        if ($('#flex_cloud_machine_info_table tr').length > 1) {
             $('#flex_cloud_machine_info_table tr:last').remove();
         }
         else {
@@ -111,50 +222,37 @@ $(document).ready(function () {
     });
 });
 
-function send_keyfile_to_stochss(keyname, contents) {
-    var jsonDataToBeSent = {
-        'keyname': keyname,
-        'contents': contents
-    }
-    jsonDataToBeSent['action'] = 'flex_save_keyfile';
-
-    jsonDataToBeSent = JSON.stringify(jsonDataToBeSent);
-    $.ajax({
-        type: "POST",
-        url: "/credentials",
-        data: jsonDataToBeSent,
-        success: function () {
-        },
-        error: function (x,e) {
-            alert("Failed to upload keyfile!")
-        },
-        dataType: "json",
-        contentType: "application/json"
-    });
-}
 
 
-function upload_key_file(evt) {
-    // Retrieve the first (and only!) File from the FileList object
-    var keyfile = evt.target.files[0];
 
-    if (keyfile) {
-        var reader = new FileReader();
-        reader.onload = function(e) {
-            var contents = e.target.result;
-            send_keyfile_to_stochss(keyfile.name, contents)
-        }
-        reader.readAsBinaryString(keyfile);
-    }
-    else {
-        alert("Failed to upload keyfile!");
+function add_key_file_upload_listeners() {
+    var keyfiles = document.getElementsByName('keyfile');
+    for (var i = 0; i < keyfiles.length; i++ ) {
+        keyfiles[i].addEventListener('change', function(event){
+            var first_file = event.target.files[0];
+//            var children = $(event.target).parent().children();
+//            alert(children.length);
+
+            if (first_file) {
+                var reader = new FileReader();
+                reader.onload = function(e) {
+                    var contents = e.target.result;
+                    send_keyfile_to_stochss(first_file.name, contents);
+                };
+                reader.readAsBinaryString(first_file);
+            }
+            else {
+                alert("Failed to upload keyfile!");
+            }
+        }, false);
     }
 }
 
-var keyfiles = document.getElementsByName('keyfile');
-for (var i = 0; i < keyfiles.length; i++ ) {
-    keyfiles[i].addEventListener('change', upload_key_file, false);
-}
+add_key_file_upload_listeners();
+
+window.onload = function () {
+
+};
 
 
 /* START: remember opened tab pane */

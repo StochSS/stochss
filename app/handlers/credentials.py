@@ -32,11 +32,14 @@ class CredentialsPage(BaseHandler):
     FLEX_SAVE_CLOUD_INFO = 'save_flex_cloud_info'
     FLEX_PREPARE_CLOUD = 'prepare_flex_cloud'
     FLEX_SAVE_KEY_FILE = 'flex_save_keyfile'
+    FLEX_DEREGISTER_CLOUD = 'deregister_flex_cloud'
     
     def authentication_required(self):
         return True
     
     def get(self):
+        logging.info('GET')
+
         user_id = self.user.user_id()
         if user_id is None:
             raise InvalidUserException('Cannot determine the current user!')
@@ -45,21 +48,39 @@ class CredentialsPage(BaseHandler):
         self.render_response('credentials.html', **context)
 
 
+    def __handle_flex_save_key_file(self, keyfile_contents, keyname, keyfile_dirname):
+        logging.info('Saving keyfile with keyname: {}'.format(keyname))
+
+        if not os.path.exists(keyfile_dirname):
+            os.makedirs(keyfile_dirname)
+
+        keyfile_location = os.path.join(keyfile_dirname, keyname)
+        if os.path.exists(keyfile_location):
+            logging.info('Keyname: {0} already exists!\n{1} will be overwritten!'.format(keyname, keyfile_location))
+
+        with open(keyfile_location, 'w') as fout:
+            fout.write(keyfile_contents)
+
+        os.chmod(keyfile_location, int('600', 8))
+
+        self.response.headers['Content-Type'] = 'application/json'
+        json.dump({"success": True}, self.response.out)
+
     def __handle_json_post_request(self, data_received, user_id):
+        logging.info('__handle_json_post_request: action = {}'.format(data_received['action']))
+
         if data_received['action'] == CredentialsPage.FLEX_SAVE_CLOUD_INFO:
             machine_info = data_received['flex_cloud_machine_info']
             logging.info("machine_info = \n{0}".format(pprint.pformat(machine_info)))
 
-            result = self.save_flex_cloud_info(machine_info)
+            result = self.save_flex_cloud_info(machine_info, user_id)
             logging.info("result = {0}".format(result))
 
             # TODO: This is a hack to make it unlikely that the db transaction has not completed
             # before we re-render the page (which would cause an error). We need some real solution for this...
-            time.sleep(0.5)
+            # time.sleep(0.5)
 
-            context = self.getContext(user_id)
-            logging.info('{0}'.format(dict(context, **result)))
-            self.render_response('credentials.html', **(dict(context, **result)))
+            self.redirect('/credentials')
 
         elif data_received['action'] == CredentialsPage.FLEX_PREPARE_CLOUD:
             credentials = self.user_data.getCredentials()
@@ -73,37 +94,26 @@ class CredentialsPage(BaseHandler):
 
             result = self.prepare_flex_cloud(user_id, credentials, head_node, flex_cloud_machine_info)
             logging.info("result = {0}".format(result))
+            self.redirect('/credentials')
 
-            context = self.getContext(user_id)
-            self.render_response('credentials.html', **(dict(context, **result)))
 
         elif data_received['action'] == CredentialsPage.FLEX_SAVE_KEY_FILE:
             keyfile_contents = data_received['contents']
             keyname = data_received['keyname']
-
-            logging.info('Got Keyname: {}'.format(keyname))
-
             keyfile_dirname = FlexConfig.get_keyfile_dirname(user_id)
-            if not os.path.exists(keyfile_dirname):
-                os.makedirs(keyfile_dirname)
+            self.__handle_flex_save_key_file(keyfile_contents, keyname, keyfile_dirname)
 
-            keyfile_location = os.path.join(keyfile_dirname, keyname)
-            if os.path.exists(keyfile_location):
-                logging.info('Keyname: {0} already exists!\n{1} will be overwritten!'.format(keyname, keyfile_location))
-
-            with open(keyfile_location, 'w') as fout:
-                fout.write(keyfile_contents)
-
-            os.chmod(keyfile_location, int('600', 8))
-
-            self.response.headers['Content-Type'] = 'application/json'
-            json.dump({"success":True}, self.response.out)
+        elif data_received['action'] == CredentialsPage.FLEX_DEREGISTER_CLOUD:
+            flex_cloud_machine_info = self.user_data.get_flex_cloud_machine_info()
+            result = self.deregister_flex_cloud(user_id, flex_cloud_machine_info)
+            logging.info("result = {0}".format(result))
+            self.redirect('/credentials')
 
         else:
-            # This happens when you click the refresh button
             self.redirect('/credentials')
 
     def post(self):
+        logging.info('POST')
         logging.debug("request.body = {0}".format(self.request.body))
         logging.info("CONTENT_TYPE = {0}".format(self.request.environ['CONTENT_TYPE']))
         
@@ -128,11 +138,11 @@ class CredentialsPage(BaseHandler):
             service = backendservices()
             credentials = self.user_data.getCredentials()
             terminate_params = {
-              "infrastructure": "ec2",
-              "credentials": self.user_data.getCredentials(),
+              "infrastructure": AgentTypes.EC2,
+              "credentials": credentials,
               "key_prefix": user_id
             }
-            stopped = service.stopMachines(terminate_params,True) #True means blocking, ie wait for success (its pretty quick)
+            stopped = service.stop_ec2_vms(terminate_params, blocking=True)
             if not stopped:
                 raise
             result = {'status': True,
@@ -183,7 +193,7 @@ class CredentialsPage(BaseHandler):
         active_nodes = context['number_creating'] + context['number_pending'] + context['number_running']
 
         if all_numbers_correct:
-            result = self.start_vms(user_id, self.user_data.getCredentials(), head_node, vms, active_nodes)
+            result = self.start_ec2_vms(user_id, self.user_data.getCredentials(), head_node, vms, active_nodes)
             context['starting_vms'] = True
         else:
             context['starting_vms'] = False
@@ -216,24 +226,28 @@ class CredentialsPage(BaseHandler):
             self.redirect('/credentials')
 
 
-    def save_flex_cloud_info(self, machine_info):
+    def save_flex_cloud_info(self, machine_info, user_id):
         try:
-            if backendservices.validate_flex_cloud_info(machine_info):
+            is_valid, error_reason = backendservices.validate_flex_cloud_info(machine_info, user_id)
+
+            if is_valid:
                 self.user_data.valid_flex_cloud_info = True
                 result = {'flex_cloud_status': True,
                           'flex_cloud_info_msg': 'Flex Cloud machine info has been successfully validated!'}
             else:
                 self.user_data.valid_flex_cloud_info = False
                 result = {'flex_cloud_status': False,
-                          'flex_cloud_info_msg': 'Invalid Flex Cloud machine info!'}
+                          'flex_cloud_info_msg': 'Invalid Flex Cloud machine info!',
+                          'flex_validation_error_message': error_reason}
 
             self.user_data.set_flex_cloud_machine_info(machine_info)
             self.user_data.put()
 
         except Exception, e:
             logging.error(e.message)
-            result = {'status': False,
-                      'flex_cloud_info_msg': 'Invalid Flex Cloud machine info!'}
+            result = {'flex_cloud_status': False,
+                      'flex_cloud_info_msg': 'Invalid Flex Cloud machine info!',
+                      'flex_validation_error_message': e.message}
 
         return result
 
@@ -242,8 +256,8 @@ class CredentialsPage(BaseHandler):
         try:
             service = backendservices()
             params = {}
-            params['credentials'] =credentials
-            params["infrastructure"] = "ec2"
+            params['credentials'] = credentials
+            params["infrastructure"] = AgentTypes.EC2
             
             # Check if the supplied credentials are valid of not
             if service.validateCredentials(params):
@@ -280,16 +294,37 @@ class CredentialsPage(BaseHandler):
         
         return result
 
-    def prepare_flex_cloud(self, user_id, credentials, head_node, flex_cloud_machine_info):
-        logging.info('head_node = \n{0}'.format(pprint.pformat(head_node)))
+    def deregister_flex_cloud(self, user_id, flex_cloud_machine_info):
+
+        service = backendservices(infrastructure=AgentTypes.FLEX)
+        credentials = self.user_data.getCredentials()
         params = {
-            'infrastructure': 'flex',
+            'infrastructure': AgentTypes.FLEX,
             'flex_cloud_machine_info': flex_cloud_machine_info,
             'key_prefix': '', # no prefix
             'keyname': '',
             'email': [user_id],
-            'credentials': credentials,
-            'head_node': head_node
+            'credentials': credentials
+        }
+
+        result = service.deregister_flex_cloud(parameters=params, blocking=True)
+
+        if result == True:
+            self.user_data.valid_flex_cloud_info = False
+            self.user_data.set_flex_cloud_machine_info([])
+            self.user_data.put()
+
+        self.redirect('/credentials')
+
+    def prepare_flex_cloud(self, user_id, credentials, head_node, flex_cloud_machine_info):
+        logging.info('head_node = \n{0}'.format(pprint.pformat(head_node)))
+        params = {
+            'infrastructure': AgentTypes.FLEX,
+            'flex_cloud_machine_info': flex_cloud_machine_info,
+            'key_prefix': '', # no prefix
+            'keyname': '',
+            'email': [user_id],
+            'credentials': credentials
         }
 
         service = backendservices(infrastructure=AgentTypes.FLEX)
@@ -316,10 +351,6 @@ class CredentialsPage(BaseHandler):
     def getContext(self, user_id):
         params = {}
         credentials =  self.user_data.getCredentials()
-
-        flex_cloud_machine_info = self.user_data.get_flex_cloud_machine_info()
-        logging.info("flex_cloud_machine_info =\n{0}".format(pprint.pformat(flex_cloud_machine_info)))
-
         params['credentials'] = credentials
         
         context = {}
@@ -402,17 +433,28 @@ class CredentialsPage(BaseHandler):
                 else:
                     context['running_vms'] = True
 
+
+        flex_cloud_machine_info = self.user_data.get_flex_cloud_machine_info()
+        logging.info("flex_cloud_machine_info =\n{0}".format(pprint.pformat(flex_cloud_machine_info)))
+
+        # Fill with dummy if empty
+        if flex_cloud_machine_info == None or len(flex_cloud_machine_info) == 0:
+            flex_cloud_machine_info = [{'ip': '', 'keyname': '', 'username': '', 'queue_head': False}]
+
+        context['flex_cloud_machine_info'] = flex_cloud_machine_info
+
         # Check if the flex cloud credentials are valid.
         if not self.user_data.valid_flex_cloud_info:
             result['flex_cloud_status'] = False
             result['flex_cloud_info_msg'] = 'Could not determine the status of the machines: Invalid Flex Cloud Credentials!'
             context['valid_flex_cloud_info'] = False
+
         else:
-            context['flex_cloud_machine_info'] = json.dumps(flex_cloud_machine_info)
             context['valid_flex_cloud_info'] = True
                 
         context = dict(context, **fake_credentials)
         context = dict(result, **context)
+
         return context
     
     def get_all_vms(self, user_id, params):
@@ -441,7 +483,7 @@ class CredentialsPage(BaseHandler):
 
         return image_id
                     
-    def start_vms(self, user_id, credentials, head_node, vms_info, active_nodes):
+    def start_ec2_vms(self, user_id, credentials, head_node, vms_info, active_nodes):
         logging.info('\n\nstart_vms:\nhead_node = {0}\nvms_info = {1}\nactive_nodes = {2}'.format(
             pprint.pformat(head_node),
             pprint.pformat(vms_info),
@@ -487,7 +529,7 @@ class CredentialsPage(BaseHandler):
         elif head_node:
             params['vms'] = [head_node]
                       
-        res, msg = service.startMachines(params)
+        res, msg = service.start_ec2_vms(params)
         if res == True:
             result = {
                 'status':True,

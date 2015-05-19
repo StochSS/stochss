@@ -6,15 +6,15 @@ class BaseAgent(object):
     """
     BaseAgent class defines the interface that must be implemented by
     each and every cloud agent implementation. This interface defines
-    the basic operations such as run_instances and terminate_instances,
+    the basic operations such as prepare_instances and deregister_instances,
     which must be supported by every agent. The InfrastructureManager
     assumes that all agent implementations are based on this interface
     and uses that knowledge to interact with different cloud platforms.
     """
 
     # Basic operations supported by agents
-    OPERATION_RUN = 'run'
-    OPERATION_TERMINATE = 'terminate'
+    OPERATION_PREPARE = 'prepare'
+    OPERATION_DEREGISTER = 'deregister'
 
     def configure_instance_security(self, parameters):
         """
@@ -53,9 +53,9 @@ class BaseAgent(object):
         """
         raise NotImplementedError
 
-    def run_instances(self, parameters, count, security_configured):
+    def prepare_instances(self, parameters, count, security_configured):
         """
-        Start a set of virtual machines using the parameters provided.
+        Prepare a set of virtual machines using the parameters provided.
 
         Args:
           count                 An integer that indicates the number of
@@ -76,12 +76,13 @@ class BaseAgent(object):
         """
         raise NotImplementedError
 
-    def terminate_instances(self, parameters):
+    def deregister_instances(self, parameters, terminate=False):
         """
-        Terminate a set of virtual machines using the parameters given.
+        Deregister a set of virtual machines using the parameters given and possibly terminate them.
 
         Args:
           parameters  A dictionary of parameters
+          terminate   A boolean flag to indicate whether to terminate instances or not
         """
         raise NotImplementedError
 

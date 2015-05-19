@@ -111,12 +111,15 @@ class UserData(db.Model):
         return self.is_amazon_db_table
 
     def set_flex_cloud_machine_info(self, machine_info):
-        logging.info("machine_info = {0}".format(machine_info))
+        logging.debug("machine_info = {0}".format(machine_info))
         self.flex_cloud_machine_info = json.dumps(machine_info, encoding="ascii")
 
     def get_flex_cloud_machine_info(self):
-        logging.info("self.flex_cloud_machine_info = {0}".format(self.flex_cloud_machine_info))
-        return json.loads(self.flex_cloud_machine_info, encoding="ascii")
+        info = json.loads(self.flex_cloud_machine_info, encoding="ascii")
+        for machine in info:
+            machine['keyfile'] = machine['keyname']
+        logging.debug("info = {0}".format(self.flex_cloud_machine_info))
+        return info
 
 
 class BaseHandler(webapp2.RequestHandler):
@@ -129,6 +132,7 @@ class BaseHandler(webapp2.RequestHandler):
     def __init__(self, request, response):
 
         self.auth = auth.get_auth()
+
         # If not logged in, the dispatch() call will redirect to /login if needed
         if self.logged_in():
             # Make sure a handler has a reference to the current user
@@ -145,7 +149,8 @@ class BaseHandler(webapp2.RequestHandler):
                 user_data.user_id = self.user.user_id()
 
                 # Get optional app-instance configurations and add those to user_data
-                credentials = {'EC2_SECRET_KEY': "", 'EC2_ACCESS_KEY': ""}
+                credentials = {'EC2_SECRET_KEY': "",
+                               'EC2_ACCESS_KEY': ""}
                 try:
                     env_variables = app.config.get('env_variables')
                     user_data.env_variables = json.dumps(env_variables)
