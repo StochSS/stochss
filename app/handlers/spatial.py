@@ -68,9 +68,9 @@ class SpatialJobWrapper(db.Model):
     def preprocess(self, trajectory):      
         print "Preprocessing ... "
         ''' Job is already processed check '''
-        #if self.preprocessed == True and self.preprocessedDir and os.path.exists(self.preprocessedDir):
+        if self.preprocessed == True and self.preprocessedDir and os.path.exists(self.preprocessedDir):
             #print "Job is preprocessed"
-        #    return
+            return
 
         ''' Unpickle data file '''
         with open(str(self.outData + '/results/result{0}'.format(trajectory))) as fd:

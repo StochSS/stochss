@@ -95,7 +95,7 @@ Spatial.Controller = Backbone.View.extend(
                 
                 if(this.playFlag)
                 {
-                    $( "#playStats" ).html( 'Speeding up...');
+                    //$( "#playStats" ).html( 'Speeding up...');
                     
                     // As speedy as this can be
                     if(this.playMeshInterval <= 100)
@@ -116,7 +116,7 @@ Spatial.Controller = Backbone.View.extend(
                 if(this.playFlag)
                 {
                 
-                    $( "#playStats" ).html( 'Slowing down...');
+                    //$( "#playStats" ).html( 'Slowing down...');
                 
                     if(this.playMeshInterval >= 6000)
                         return;
@@ -160,7 +160,7 @@ Spatial.Controller = Backbone.View.extend(
                 {
 
                     console.log("Playing @time"+this.timeIdx);
-                    $( "#playStats" ).html( 'Running...');
+                    $( "#playStats" ).html( 'running');
                     // $('#timeSelect').trigger('change');
                     this.handleSliderChange();
                     // this.handleMeshColorUpdate(cache[this.timeIdx]);
@@ -179,7 +179,7 @@ Spatial.Controller = Backbone.View.extend(
                 }
                 // If we don't have the value loaded into the cache, wait a few timesteps for it to load before we panic and make an server request
                 else if(this.timeIdx <= this.maxLimit){
-                        $( "#playStats" ).html( 'Buffering...');
+                        $( "#playStats" ).html( 'buffering');
                         if(this.bufferCount == 0)
                             {
                                 this.updateCache(this.timeIdx, this.timeIdx + this.cacheRange, true);
@@ -194,7 +194,7 @@ Spatial.Controller = Backbone.View.extend(
             console.log("Stopping mesh with Id: "+this.intervalID);
             console.log("STOP!");
             clearInterval(this.intervalID);
-            $( "#playStats" ).html( 'Stopped');
+            $( "#playStats" ).html( 'stopped');
             this.playFlag =false;
         },
 
@@ -655,13 +655,13 @@ Spatial.Controller = Backbone.View.extend(
 
                           if(this.showPopulation)
                           {
-                            $("#maxVal").html("Maximum voxel population : "+data.limits["max"].toExponential(3) );
-                            $("#minVal").html("Minimum voxel population : "+data.limits["min"].toExponential(3) ); 
+                            $("#maxVal").html("Maximum voxel population: "+data.limits["max"].toExponential(3) );
+                            $("#minVal").html("Minimum voxel population: "+data.limits["min"].toExponential(3) ); 
                           }
                           else{
 
-                            $("#maxVal").html("Maximum voxel concentration : "+data.limits["max"].toExponential(3) );
-                            $("#minVal").html("Minimum voxel concentration : "+data.limits["min"].toExponential(3));  
+                            $("#maxVal").html("Maximum voxel concentration: "+data.limits["max"].toExponential(3) );
+                            $("#minVal").html("Minimum voxel concentration: "+data.limits["min"].toExponential(3));  
                           
                           }
                           
@@ -1038,7 +1038,7 @@ Spatial.Controller = Backbone.View.extend(
                         
                     }, this));
 
-                    $("#playSpeed").html(1000/ this.playMeshInterval);
+                    $("#playSpeed").html( (1000/ this.playMeshInterval).toFixed(2) );
 
                 }
                 else
