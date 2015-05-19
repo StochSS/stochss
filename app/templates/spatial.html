@@ -47,6 +47,10 @@
         uniform float yflag;
         uniform float zflag;
 
+        uniform float xflip;
+        uniform float yflip;
+        uniform float zflip;
+
         varying vec4 vColor;
 
         void main()
@@ -55,14 +59,32 @@
 
             gl_Position = projectionMatrix * modelViewMatrix * vec4(position,1.0);
 
-            if(position.x <= xval && xflag == 1.0)
-                vColor = vec4(0.0, 0.0, 0.0, 0.0);
+            if(xflag == 1.0)
+            {
+                if(position.x <= xval && xflip >= 0.0)
+                    vColor = vec4(0.0, 0.0, 0.0, 0.0);
+
+                if(position.x > xval && xflip < 0.0)
+                    vColor = vec4(0.0, 0.0, 0.0, 0.0);
+            }            
+
+            if(yflag == 1.0)
+            {
+                if (position.z <= yval && yflip >= 0.0)
+                    vColor = vec4(0.0, 0.0, 0.0, 0.0);
+
+                if (position.z > yval && yflip < 0.0)
+                    vColor = vec4(0.0, 0.0, 0.0, 0.0);
+            }
             
-            if (position.z <= yval && yflag == 1.0)
-                vColor = vec4(0.0, 0.0, 0.0, 0.0);
-            
-            if( position.y <= zval && zflag == 1.0)
-                vColor = vec4(0.0, 0.0, 0.0, 0.0);
+            if(zflag == 1.0)
+            {
+                if( position.y <= zval && zflip >= 0.0)
+                    vColor = vec4(0.0, 0.0, 0.0, 0.0);
+
+                if( position.y > zval && zflip < 0.0)
+                    vColor = vec4(0.0, 0.0, 0.0, 0.0);
+            }
         }
 
     </script>
@@ -231,6 +253,11 @@
         <input type="checkbox" id="planeXCheck"/>X-plane &nbsp;&nbsp;&nbsp; 
         <input type="checkbox" id="planeYCheck"/>Y-plane &nbsp;&nbsp;&nbsp;
         <input type="checkbox" id="planeZCheck"/>Z-plane 
+        <br/>
+        <span> Flip: </span>
+        <input type="checkbox" id="planeXFlip"/>X-plane &nbsp;&nbsp;&nbsp; 
+        <input type="checkbox" id="planeYFlip"/>Y-plane &nbsp;&nbsp;&nbsp;
+        <input type="checkbox" id="planeZFlip"/>Z-plane 
         <br/>
         <br/>
         

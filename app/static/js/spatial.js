@@ -365,6 +365,7 @@ Spatial.Controller = Backbone.View.extend(
             }
             
             var scene = new THREE.Scene();
+            this.renderer.render(scene, this.camera);
             var loader = new THREE.JSONLoader();
 
 
@@ -378,6 +379,9 @@ Spatial.Controller = Backbone.View.extend(
                               xflag : {type: 'f', value: 0.0},
                               yflag : {type: 'f', value: 0.0}, 
                               zflag : {type: 'f', value: 0.0},
+                              xflip : {type: 'f', value: 1.0},
+                              yflip : {type: 'f', value: 1.0}, 
+                              zflip : {type: 'f', value: 1.0}
                             };
 
             var material = new THREE.ShaderMaterial( {
@@ -483,15 +487,6 @@ Spatial.Controller = Backbone.View.extend(
             $( "#meshPreviewMsg" ).hide();
 
             this.camera.position.z =  this.mesh.geometry.boundingSphere.radius* 2;
-
-
-            if(!this.rendererInitialized)
-            {
-                this.rendererInitialized = true;
-                this.setupPlaneSliders();
-                this.renderFrame();
-            }
-
         },
 
         /* 
@@ -664,17 +659,17 @@ Spatial.Controller = Backbone.View.extend(
                               $("#minVal").html("Minimum voxel concentration: " + this.limits[this.selectedSpecies]["min"].toExponential(3));  
                           }
 
-                          if(colorFlag)
-                              this.handleMeshColorUpdate(this.cache[time[0] ]);
+                          this.handleMeshColorUpdate(this.cache[time[0]]);
 
-                          
+                          if(!this.rendererInitialized)
+                          {
+                              this.rendererInitialized = true;
+                              this.setupPlaneSliders();
+                              this.renderFrame();
+                          }
                       }, this)
                     });
         },
-        //$.ajax( { type : "GET", url : "/spatial",  data : { reqType : "onlyColorRange", 
-        //                                                            id : this.attributes.id, 
-        //                                                            data : JSON.stringify({ trajectory : this.trajectory, timeStart : 0 , timeEnd: ( this.jobInfo.indata.time < 50 ?  this.jobInfo.indata.time+1 : 50 ) })
-        //                                                          } } )
 
         getMesh : function(){
             $.ajax( { type : "GET",
@@ -1047,6 +1042,42 @@ Spatial.Controller = Backbone.View.extend(
                         this.mesh.material.uniforms.zflag.value = val;
                         this.mesh.material.needsUpdate = true;
                         
+                    }, this));
+
+                    var checkbox = $( "#planeXFlip" );
+                    checkbox.click(_.bind(function(){
+                        if($("#planeXFlip").is(':checked'))
+                        {
+                            this.mesh.material.uniforms.xflip.value = -1.0;
+                        } else {
+                            this.mesh.material.uniforms.xflip.value = 1.0;
+                        }
+
+                        this.mesh.material.needsUpdate = true;
+                    }, this));
+
+                    var checkbox = $( "#planeYFlip" );
+                    checkbox.click(_.bind(function(){
+                        if($("#planeYFlip").is(':checked'))
+                        {
+                            this.mesh.material.uniforms.yflip.value = -1.0;
+                        } else {
+                            this.mesh.material.uniforms.yflip.value = 1.0;
+                        }
+
+                        this.mesh.material.needsUpdate = true;
+                    }, this));
+
+                    var checkbox = $( "#planeZFlip" );
+                    checkbox.click(_.bind(function(){
+                        if($("#planeZFlip").is(':checked'))
+                        {
+                            this.mesh.material.uniforms.zflip.value = -1.0;
+                        } else {
+                            this.mesh.material.uniforms.zflip.value = 1.0;
+                        }
+
+                        this.mesh.material.needsUpdate = true;
                     }, this));
 
                     $("#playSpeed").html( (1000/ this.playMeshInterval).toFixed(2) );

@@ -68,9 +68,9 @@ class SpatialJobWrapper(db.Model):
     def preprocess(self, trajectory):      
         print "Preprocessing ... "
         ''' Job is already processed check '''
-        if self.preprocessed == True and self.preprocessedDir and os.path.exists(self.preprocessedDir):
+#        if self.preprocessed == True and self.preprocessedDir and os.path.exists(self.preprocessedDir):
             #print "Job is preprocessed"
-            return
+ #           return
 
         ''' Unpickle data file '''
         with open(str(self.outData + '/results/result{0}'.format(trajectory))) as fd:
@@ -316,7 +316,7 @@ class SpatialPage(BaseHandler):
                                            'max' : dataFile[specie][dataType].attrs['max'] }
 
                         cm.set_clim(dataFile[specie][dataType].attrs['min'], dataFile[specie][dataType].attrs['max'])
-                        rgbas = cm.to_rgba(data2, bytes = True)
+                        rgbas = cm.to_rgba(data2, bytes = True).astype('uint32')
 
                         rgbas = numpy.left_shift(rgbas[:, :, 0], 16) + numpy.left_shift(rgbas[:, :, 1], 8) + rgbas[:, :, 2]
 
