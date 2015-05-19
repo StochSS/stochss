@@ -29,39 +29,15 @@ def convert(filename, modelName = None):
 
     stochssModel = stochkit.StochKitModel(name = modelName)
 
-    perSpeciesUnits = []
-    isPopulation = True
+    stochssModel.units = "concentration"
 
     for i in range(model.getNumSpecies()):
         species = model.getSpecies(i)
 
-        if species.isSetInitialConcentration():
-            perSpeciesUnits.append("concentration")
-        elif species.isSetInitialAmount():
-            perSpeciesUnits.append("population")
+        if species.getId() == 'EmptySet':
+            errors.append(["EmptySet species detected in model on line {0}. EmptySet is not an explicit species in StochSS".format(species.getLine()), 0])
+            continue
 
-    if len(set(perSpeciesUnits)) > 1:
-        errors.append(["This model has a mix of Substance and Amount initial conditions. This mixing is not allowed in StochSS", -1])
-
-    if len(perSpeciesUnits) == 0:
-        isPopulation = True
-        errors.append(["There appear to be no species in this model, assuming this is a 'Population' model", -1])
-    else:
-        if list(set(perSpeciesUnits))[0] == "population":
-            isPopulation = True
-        else:
-            isPopulation = False
-
-    if isPopulation:
-        model.units = "population"
-    else:
-        model.units = "concentration"
-
-    if isPopulation:
-        raise Exception("FOUND ONE")
-
-    for i in range(model.getNumSpecies()):
-        species = model.getSpecies(i)
         name = species.getId()
 
         if species.isSetInitialAmount():
@@ -134,12 +110,20 @@ def convert(filename, modelName = None):
 
         for j in range(reaction.getNumReactants()):
             species = reaction.getReactant(j)
-            reactants[species.getSpecies()] = species.getStoichiometry()
+
+            if species.getSpecies() == "EmptySet":
+                errors.append(["EmptySet species detected as reactant in reaction '{0}' on line {1}. EmptySet is not an explicit species in StochSS".format(reaction.getId(), species.getLine()), 0])
+            else:
+                reactants[species.getSpecies()] = species.getStoichiometry()
 
         #get products
         for j in range(reaction.getNumProducts()):
             species=reaction.getProduct(j)
-            products[species.getSpecies()] = species.getStoichiometry()
+
+            if species.getSpecies() == "EmptySet":
+                errors.append(["EmptySet species detected as product in reaction '{0}' on line {1}. EmptySet is not an explicit species in StochSS".format(reaction.getId(), species.getLine()), 0])
+            else:
+                products[species.getSpecies()] = species.getStoichiometry()
 
         #propensity
         kineticLaw = reaction.getKineticLaw()
