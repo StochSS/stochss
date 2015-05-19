@@ -174,6 +174,11 @@ def convert(filename, modelName = None):
 
         errors.append(["Event '{0}' found on line '{1}' with trigger equation '{2}'. StochSS does not support SBML Events".format(event.getId(), event.getLine(), libsbml.formulaToString(event.getTrigger().getMath())), -5])
 
+    for i in range(model.getNumFunctionDefinitions()):
+        function = model.getFunctionDefinition(i)
+
+        errors.append(["Function '{0}' found on line '{1}' with equation '{2}'. StochSS does not support SBML Function Definitions".format(function.getId(), function.getLine(), libsbml.formulaToString(function.getMath())), -5])
+
     return stochssModel, errors
 
 

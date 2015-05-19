@@ -679,7 +679,6 @@ class ImportFromSBMLPage(BaseHandler):
             modelDb = StochKitModelWrapper.createFromStochKitModel(self, model)
 
             modelDb.units = model.units
-            print "Hey the units are", modelDb.units
             modelDb.put()
 
             errorLogsDb = SBMLImportErrorLogs()
