@@ -292,7 +292,6 @@ class SpatialPage(BaseHandler):
         
         elif reqType == 'onlyColorRange':
             try:
-                print "Only color range"
                 job = SpatialJobWrapper.get_by_id(int(self.request.get('id')))
                 data = json.loads(self.request.get('data'))
                 trajectory = data["trajectory"]
@@ -313,13 +312,11 @@ class SpatialPage(BaseHandler):
                     for specie in dataFile.keys():
                         data2 = dataFile[specie][dataType][sTime:eTime]
                         
-                        limits['min'] = dataFile[specie][dataType].attrs['min']
-                        limits['max'] = dataFile[specie][dataType].attrs['max']
+                        limits[specie] = { 'min' : dataFile[specie][dataType].attrs['min'],
+                                           'max' : dataFile[specie][dataType].attrs['max'] }
 
                         cm.set_clim(dataFile[specie][dataType].attrs['min'], dataFile[specie][dataType].attrs['max'])
                         rgbas = cm.to_rgba(data2, bytes = True)
-
-                        print len(numpy.where(data2.flatten() > 0.0)[0])
 
                         rgbas = numpy.left_shift(rgbas[:, :, 0], 16) + numpy.left_shift(rgbas[:, :, 1], 8) + rgbas[:, :, 2]
 
@@ -328,8 +325,6 @@ class SpatialPage(BaseHandler):
                         #for i in range(rgbas.shape[0]):
                         #    for j in range(rgbas.shape[1]):
                         #        rgbaInts[i, j] = int('0x%02x%02x%02x' % tuple(rgbas[i, j][0:3]), 0)
-
-                        print len(numpy.where(rgbas.flatten() > 127)[0])
 
                         dataTmp[specie] = []
                         for i in range(rgbas.shape[0]):

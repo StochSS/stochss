@@ -653,18 +653,17 @@ Spatial.Controller = Backbone.View.extend(
                               this.cache[t] = data.colors[t];
                           }
 
+                          this.limits = data.limits;
+
                           if(this.showPopulation)
                           {
-                            $("#maxVal").html("Maximum voxel population: "+data.limits["max"].toExponential(3) );
-                            $("#minVal").html("Minimum voxel population: "+data.limits["min"].toExponential(3) ); 
+                              $("#maxVal").html("Maximum voxel population: " + this.limits[this.selectedSpecies]["max"].toExponential(3) );
+                              $("#minVal").html("Minimum voxel population: " + this.limits[this.selectedSpecies]["min"].toExponential(3) ); 
+                          } else {
+                              $("#maxVal").html("Maximum voxel concentration: " + this.limits[this.selectedSpecies]["max"].toExponential(3) );
+                              $("#minVal").html("Minimum voxel concentration: " + this.limits[this.selectedSpecies]["min"].toExponential(3));  
                           }
-                          else{
 
-                            $("#maxVal").html("Maximum voxel concentration: "+data.limits["max"].toExponential(3) );
-                            $("#minVal").html("Minimum voxel concentration: "+data.limits["min"].toExponential(3));  
-                          
-                          }
-                          
                           if(colorFlag)
                               this.handleMeshColorUpdate(this.cache[time[0] ]);
 
@@ -836,6 +835,18 @@ Spatial.Controller = Backbone.View.extend(
             var species = $( event.target ).val();
             this.selectedSpecies = species;
 
+            if(typeof(this.limits) != 'undefined')
+            {
+                if(this.showPopulation)
+                {
+                    $("#maxVal").html("Maximum voxel population: " + this.limits[this.selectedSpecies]["max"].toExponential(3) );
+                    $("#minVal").html("Minimum voxel population: " + this.limits[this.selectedSpecies]["min"].toExponential(3) ); 
+                } else {
+                    $("#maxVal").html("Maximum voxel concentration: " + this.limits[this.selectedSpecies]["max"].toExponential(3) );
+                    $("#minVal").html("Minimum voxel concentration: " + this.limits[this.selectedSpecies]["min"].toExponential(3));  
+                }
+            }
+            
             if(event.originalEvent)
                 this.handleMeshColorUpdate(this.cache[this.timeIdx]);
             else
