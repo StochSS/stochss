@@ -624,6 +624,10 @@ class ImportFromXMLPage(BaseHandler):
             name = storage.filename.split('.')[0]
 
             stochKitModel = stochss.stochkit.StochMLDocument.fromString(storage.file.read()).toModel(name)
+
+            if len(stochKitModel.listOfParameters) == 0 and len(stochKitModel.listOfSpecies) == 0 and len(stochKitModel.listOfReactions) == 0:
+                raise Exception("No parameters, species, or reactions detected in model. This XML file is probably not a StochKit Model")
+
             modelDb = StochKitModelWrapper.createFromStochKitModel(self, stochKitModel)
             
             self.redirect("/modeleditor?select={0}".format(modelDb.key().id()))
@@ -656,10 +660,11 @@ class ImportFromSBMLPage(BaseHandler):
         result = []
 
         for error in errorLogsDbQuery:
+            modelDb = StochKitModelWrapper.get_by_id(error.modelId)
             result.append( { 'id' : error.key().id(),
                              'date' : error.date,
                              'fileName' : error.fileName,
-                             'modelName' : StochKitModelWrapper.get_by_id(error.modelId).name } )
+                             'modelName' : modelDb.name if modelDb else None } )
 
         self.render_response('importFromSBML.html', **{ "errors" : result })
 
@@ -708,10 +713,12 @@ class SBMLErrorLogsPage(BaseHandler):
     def get(self):
         if 'id' in self.request.GET:
             errorLogsId = int(self.request.get('id'));
-            
             errorLogsDb = SBMLImportErrorLogs.get_by_id(errorLogsId)
+
+            modelDb = StochKitModelWrapper.get_by_id(errorLogsDb.modelId)
+
             result = { "db" : errorLogsDb,
-                       "modelName" : StochKitModelWrapper.get_by_id(errorLogsDb.modelId).name }
+                       "modelName" : modelDb.name if modelDb else None }
 
             print result["db"].errors
 
