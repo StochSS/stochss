@@ -145,6 +145,25 @@ function check_lib {
     echo "$1 not found"
     return 1 #False
 }
+function install_lib_h5py {
+    echo "We need install the following packages: h5py"
+    read -p "Do you want me to try to use sudo to install required package(s) (y/n): " answer
+    if [ $? != 0 ]; then
+        exit -1
+    fi
+    if [ "$answer" == 'y' ] || [ "$answer" == 'yes' ]; then
+        CMD='sudo CFLAGS="-I/usr/lib/openmpi/include/" pip install h5py'
+        echo $CMD
+        eval $CMD
+        if [ $? != 0 ]; then
+            exit -1
+        fi
+        echo "$1 installed successfully"
+    else
+        echo "Exiting"
+        exit -1
+    fi
+}
 function install_lib {
     if [ -z "$1" ];then
         return 1 #False
@@ -193,7 +212,7 @@ function install_lib_pip {
 
 function check_and_install_deps {
     if ! check_lib "h5py";then
-        install_lib "python-h5py"
+        install_lib_h5py
     fi
     if ! check_lib "numpy";then
         install_lib "python-numpy"
