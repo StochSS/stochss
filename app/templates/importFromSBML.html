@@ -40,7 +40,7 @@
                             {{ e.fileName }}
                         </td>
                         <td>
-                            {{ e.modelName }}
+                          {% if modelName %} {{ e.modelName }} {% else %} [ model deleted ] {% endif %}
                         </td>
                         <td>
                             {{ e.date }}

@@ -660,10 +660,11 @@ class ImportFromSBMLPage(BaseHandler):
         result = []
 
         for error in errorLogsDbQuery:
+            modelDb = StochKitModelWrapper.get_by_id(error.modelId)
             result.append( { 'id' : error.key().id(),
                              'date' : error.date,
                              'fileName' : error.fileName,
-                             'modelName' : StochKitModelWrapper.get_by_id(error.modelId).name } )
+                             'modelName' : modelDb.name if modelDb else None } )
 
         self.render_response('importFromSBML.html', **{ "errors" : result })
 
@@ -712,10 +713,12 @@ class SBMLErrorLogsPage(BaseHandler):
     def get(self):
         if 'id' in self.request.GET:
             errorLogsId = int(self.request.get('id'));
-            
             errorLogsDb = SBMLImportErrorLogs.get_by_id(errorLogsId)
+
+            modelDb = StochKitModelWrapper.get_by_id(errorLogsDb.modelId)
+
             result = { "db" : errorLogsDb,
-                       "modelName" : StochKitModelWrapper.get_by_id(errorLogsDb.modelId).name }
+                       "modelName" : modelDb.name if modelDb else None }
 
             print result["db"].errors
 
