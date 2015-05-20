@@ -150,7 +150,7 @@ var ParameterCollectionFormView = View.extend({
   </table> \
   <div data-hook='nav'> \
     <button class='btn' data-hook='previous'>&lt;&lt;</button> \
-    [ <span data-hook='position'></span> / <span data-hook='total'></span> ] \
+    [ <span data-hook='leftPosition'></span> - <span data-hook='rightPosition'></span> of <span data-hook='total'></span> ] \
     <button class='btn' data-hook='next'>&gt;&gt;</button> \
   </div> \
 </div>";
@@ -170,6 +170,7 @@ var ParameterCollectionFormView = View.extend({
 });
 
 module.exports = ParameterCollectionFormView
+
 },{"../forms/paginated-collection-view":18,"./parameter":3,"ampersand-view":786,"jquery":889}],3:[function(require,module,exports){
 var _ = require('underscore');
 var $ = require('jquery');
@@ -205,14 +206,14 @@ var ReactionCollectionView = View.extend({
   <h3>Reactions</h3> \
   <table class='table table-bordered' data-hook='table'> \
     <thead> \
-      <th width='120px'>Name</th><th>Rate</th><th>Summary</th><th>Result</th> \
+      <th width='120px'>Name</th><th width='300px'>Rate</th><th>Summary</th><th>Result</th> \
     </thead> \
     <tbody data-hook='items'> \
     </tbody> \
   </table> \
   <div data-hook='nav'> \
     <button class='btn' data-hook='previous'>&lt;&lt;</button> \
-    [ <span data-hook='position'></span> / <span data-hook='total'></span> ] \
+    [ <span data-hook='leftPosition'></span> - <span data-hook='rightPosition'></span> of <span data-hook='total'></span> ] \
     <button class='btn' data-hook='next'>&gt;&gt;</button> \
   </div> \
 </div>";
@@ -232,6 +233,7 @@ var ReactionCollectionView = View.extend({
 });
 
 module.exports = ReactionCollectionView
+
 },{"../forms/paginated-collection-view":18,"./reaction":5,"ampersand-view":786,"jquery":889}],5:[function(require,module,exports){
 var _ = require('underscore');
 var $ = require('jquery');
@@ -279,6 +281,8 @@ var ReactionView = View.extend({
         else
         {
             result.text('Cannot convert custom propensities automatically');
+
+            $( this.queryByHook('equation') ).text( this.model.equation );
         }
     },
     // On any change of anything, redraw the Latex
@@ -390,7 +394,7 @@ var SpecieCollectionView = View.extend({
   </table> \
   <div data-hook='nav'> \
     <button class='btn' data-hook='previous'>&lt;&lt;</button> \
-    [ <span data-hook='position'></span> / <span data-hook='total'></span> ] \
+    [ <span data-hook='leftPosition'></span> - <span data-hook='rightPosition'></span> of <span data-hook='total'></span> ] \
     <button class='btn' data-hook='next'>&gt;&gt;</button> \
   </div> \
 </div>";
@@ -410,6 +414,7 @@ var SpecieCollectionView = View.extend({
 });
 
 module.exports = SpecieCollectionView
+
 },{"../forms/paginated-collection-view":18,"./specie":7,"ampersand-view":786,"jquery":889}],7:[function(require,module,exports){
 var _ = require('underscore');
 var $ = require('jquery');
@@ -3508,6 +3513,7 @@ var SpecieCollectionFormView = AmpersandView.extend({
 });
 
 module.exports = SpecieCollectionFormView
+
 },{"./paginated-collection-view":18,"./specie":25,"./tests":29,"ampersand-form-view":103,"ampersand-input-view":107,"ampersand-view":786,"jquery":889}],25:[function(require,module,exports){
 var _ = require('underscore');
 var $ = require('jquery');
