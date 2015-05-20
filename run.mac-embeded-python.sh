@@ -165,7 +165,7 @@ function install_lib {
     if [ "$answer" == 'y' ] || [ "$answer" == 'yes' ]; then
         export ARCHFLAGS='-Wno-error=unused-command-line-argument-hard-error-in-future'
         if [ "$1" = "h5py" ]; then
-            pkg="$1==2.4.0b1"
+            pkg="$1"
         elif [ "$1" = "libsbml" ]; then
             pkg="python-libsbml"
         else
