@@ -11,14 +11,14 @@ var ReactionCollectionView = View.extend({
   <h3>Reactions</h3> \
   <table class='table table-bordered' data-hook='table'> \
     <thead> \
-      <th width='120px'>Name</th><th>Rate</th><th>Summary</th><th>Result</th> \
+      <th width='120px'>Name</th><th width='300px'>Rate</th><th>Summary</th><th>Result</th> \
     </thead> \
     <tbody data-hook='items'> \
     </tbody> \
   </table> \
   <div data-hook='nav'> \
     <button class='btn' data-hook='previous'>&lt;&lt;</button> \
-    [ <span data-hook='position'></span> / <span data-hook='total'></span> ] \
+    [ <span data-hook='leftPosition'></span> - <span data-hook='rightPosition'></span> of <span data-hook='total'></span> ] \
     <button class='btn' data-hook='next'>&gt;&gt;</button> \
   </div> \
 </div>";
