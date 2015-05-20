@@ -54,7 +54,7 @@ var PrimaryView = View.extend({
         model.is_public = false;
         model.id = undefined;
 
-        //model.setupMesh(this.meshCollection);
+        model.setupMesh(this.meshCollection);
 
         this.collection.add(model);
 
@@ -112,16 +112,19 @@ var PrimaryView = View.extend({
 
 ModelCollection = AmpersandCollection.extend( {
     url: "/models",
+    comparator: 'name',
     model: Model
 });
 
 PublicModelCollection = AmpersandCollection.extend( {
     url: "/publicModels",
+    comparator: 'name',
     model: Model
 });
 
 MeshCollection = AmpersandCollection.extend( {
     url: "/meshes",
+    comparator: 'name',
     model: Mesh
 });
 
@@ -176,13 +179,13 @@ module.exports = {
         domReady(function () {
             for(var i = 0; i < modelCollection.models.length; i++)
             {
-                //modelCollection.models[i].setupMesh(meshCollection);
+                modelCollection.models[i].setupMesh(meshCollection);
                 modelCollection.models[i].saveState = 'saved';
             }
 
             for(var i = 0; i < publicModelCollection.models.length; i++)
             {
-                //publicModelCollection.models[i].setupMesh(meshCollection);
+                publicModelCollection.models[i].setupMesh(meshCollection);
                 publicModelCollection.models[i].saveState = 'saved';
             }
 

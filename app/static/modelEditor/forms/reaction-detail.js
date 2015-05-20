@@ -67,17 +67,17 @@ module.exports = View.extend({
                     reactants = 2;
                     products = 2;
                 }
-		else if(obj.value == 'massaction')
-		{
-		    if(this.model.reactants.length >= 2)
-		    {
-			reactants = 2;
-		    }
-		    else
-		    {
-			reactants = 1;
-		    }
-		}
+                else if(obj.value == 'massaction')
+                {
+                    if(this.model.reactants.length >= 2)
+                    {
+                        reactants = 2;
+                    }
+                    else
+                    {
+                        reactants = 1;
+                    }
+                }
 
                 while(this.model.reactants.length > reactants)
                     this.model.reactants.remove(this.model.reactants.at(0));
@@ -95,10 +95,10 @@ module.exports = View.extend({
                 {
                     this.model.reactants.at(0).stoichiometry = 2;
                 }
-		else if(obj.value == 'massaction' && reactants == 1)
-		{
-		    this.model.reactants.at(0).stoichiometry = Math.min(2, this.model.reactants.at(0).stoichiometry);
-		}
+                else if(obj.value == 'massaction' && reactants == 1)
+                {
+                    this.model.reactants.at(0).stoichiometry = Math.min(2, this.model.reactants.at(0).stoichiometry);
+                }
                 else
                 {
                     this.model.reactants.each( function(reactant) { reactant.stoichiometry = 1; } );
@@ -250,18 +250,18 @@ var reactants;
                         return "Select valid reactants!";
                 }
 
-		if(this.model.type == 'massaction')
-		{
-		    var reactantCount = 0;
+                if(this.model.type == 'massaction')
+                {
+                    var reactantCount = 0;
 
-		    for(var i = 0; i < reactants; i++)
-		    {
-			reactantCount += this.model.reactants.at(i).stoichiometry;
-		    }
+                    for(var i = 0; i < reactants; i++)
+                    {
+                        reactantCount += this.model.reactants.at(i).stoichiometry;
+                    }
 
-		    if(reactantCount > 2)
-			return "There may only be two or less reactants in mass action reaction";
-		}
+                    if(reactantCount > 2)
+                        return "There may only be two or less reactants in mass action reaction";
+                }
 
                 for(var i = 0; i < products; i++)
                 {

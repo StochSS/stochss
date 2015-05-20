@@ -12,6 +12,7 @@ import fileserver
 import shlex
 import sys
 import pyurdme
+import numpy
 import tempfile
 import shutil
 
@@ -27,6 +28,8 @@ class MeshWrapper(db.Model):
     meshFileId = db.IntegerProperty()
     subdomains = ObjectProperty()
     uniqueSubdomains = ObjectProperty()
+    volumes = ObjectProperty()
+    boundingBox = ObjectProperty()
     undeletable = db.BooleanProperty()
     ghost = db.BooleanProperty()
 
@@ -36,6 +39,8 @@ class MeshWrapper(db.Model):
                  "description" : self.description,
                  "meshFileId" : self.meshFileId,
                  "subdomains" : self.subdomains if not reduced else [],
+                 "volumes" : self.volumes,
+                 "boundingBox" : self.boundingBox,
                  "uniqueSubdomains" : self.uniqueSubdomains,
                  "undeletable" : bool(self.undeletable),
                  "ghost" : bool(self.ghost),
@@ -200,10 +205,10 @@ def setupMeshes(handler):
               'unit_cube_with_membrane_mesh.xml',
               'unit_sphere_with_membrane_mesh.xml' ]
                 
-    descriptions = { 'coli_with_membrane_mesh.xml' : 'Mesh for simulation of E. coli or similar rod-shaped bacteria.\n\nBounding box:\n-0.25 to 0.25 on x-axis\n-0.25 to 2.25 on y-axis\n-0.25 to 0.25 on z-axis',
-                     'cylinder_mesh.xml' : 'Mesh for simulations in a cylindrical domain.\n\nBounding box:\n-5.0 to 5.0 on x-axis\n-1.0 to 1.0 on y-axis\n-1.0 to 1.0 on z-axis',
-                     'unit_cube_with_membrane_mesh.xml' : 'Simulations on a unit cube domain.\n\nBounding box:\n0.0 to 1.0 on x-axis\n0.0 to 1.0 on y-axis\n0.0 to 1.0 on z-axis',
-                     'unit_sphere_with_membrane_mesh.xml' : 'Simulations on a unit sphere domain.\n\nBounding box:\n-1.0 to 1.0 on x-axis\n-1.0 to 1.0 on y-axis\n-1.0 to 1.0 on z-axis' }
+    descriptions = { 'coli_with_membrane_mesh.xml' : 'Simplified E-coli model mesh',
+                     'cylinder_mesh.xml' : 'Cylindrical domain',
+                     'unit_cube_with_membrane_mesh.xml' : 'Cubic domain of edge length 1.0',
+                     'unit_sphere_with_membrane_mesh.xml' : 'Spherical domain with radius 1.0' }
     
     namesToFilenames = { 'E-coli with membrane' : 'coli_with_membrane_mesh.xml',
                          'Cylinder' : 'cylinder_mesh.xml',
@@ -249,6 +254,30 @@ def setupMeshes(handler):
         meshDb.subdomains = subdomains
         meshDb.uniqueSubdomains = uniqueSubdomains
         meshDb.undeletable = True
+
+        pymodel = pyurdme.URDMEModel(name = 'test')
+        pymodel.mesh = pyurdme.URDMEMesh.read_dolfin_mesh(str(os.path.join(base, fileName)))
+        coordinates = pymodel.mesh.coordinates()
+        minx = numpy.min(coordinates[:, 0])
+        maxx = numpy.max(coordinates[:, 0])
+        miny = numpy.min(coordinates[:, 1])
+        maxy = numpy.max(coordinates[:, 1])
+        minz = numpy.min(coordinates[:, 2])
+        maxz = numpy.max(coordinates[:, 2])
+        pymodel.add_species(pyurdme.Species('T', 1))
+        pymodel.set_subdomain_vector(numpy.array(subdomains))
+        sd = pymodel.get_subdomain_vector()
+        vol_accumulator = numpy.zeros(numpy.unique(sd).shape)
+        for ndx, v in enumerate(pymodel.get_solver_datastructure()['vol']):
+            vol_accumulator[sd[ndx] - 1] += v
+
+        volumes = {}
+
+        for s, v in enumerate(vol_accumulator):
+            volumes[s + 1] = v
+
+        meshDb.volumes = volumes
+        meshDb.boundingBox = [[minx, maxx], [miny, maxy], [minz, maxz]]
 
         meshDb.put()
         

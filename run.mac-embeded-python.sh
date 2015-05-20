@@ -164,12 +164,14 @@ function install_lib {
 
     if [ "$answer" == 'y' ] || [ "$answer" == 'yes' ]; then
         export ARCHFLAGS='-Wno-error=unused-command-line-argument-hard-error-in-future'
-	if [ "$1" = "h5py" ]; then
+        if [ "$1" = "h5py" ]; then
             pkg="$1==2.4.0b1"
-	else
+        elif [ "$1" = "libsbml" ]; then
+            pkg="python-libsbml"
+        else
             pkg="$1"
-	fi
-	CMD="sudo $MYPYTHON $MYPIP install $pkg"
+        fi
+        CMD="sudo $MYPYTHON $MYPIP install $pkg"
         echo $CMD
         eval $CMD
     else
@@ -178,7 +180,7 @@ function install_lib {
 }
 
 function check_and_install_dependencies {
-    deps=("numpy" "scipy" "matplotlib" "h5py")
+    deps=("numpy" "scipy" "matplotlib" "h5py" "libsbml")
     for dep in "${deps[@]}"
     do
         echo "Checking for $dep<br />"
@@ -198,7 +200,7 @@ function check_and_install_dependencies {
 }
 
 function check_spatial_dependencies {
-    deps=("numpy" "scipy" "matplotlib" "h5py")
+    deps=("numpy" "scipy" "matplotlib" "h5py" "libsbml")
     for dep in "${deps[@]}"
     do
         echo "Checking for $dep<br />"

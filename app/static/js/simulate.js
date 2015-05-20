@@ -151,7 +151,8 @@ var updateMsg = function(data)
 
 var run = function()
 {
-    $( '.mainTable' ).DataTable( { "bPaginate" : false, "bFilter" : false } );
+    $( '.mainTable' ).DataTable( { "bLengthChange": false, "bFilter" : false } );
+    $( ':radio:not(:disabled):first' ).click();
     $( '.mainTable' ).css('border-bottom', '1px solid #ddd');
     $( '.mainTable thead th' ).css('border-bottom', '1px solid #ddd');
 
@@ -214,7 +215,7 @@ var run = function()
 
                               $( "#plotRegion" ).show();
 
-                              $( "#access" ).text( "Access local data" );
+                              $( "#access" ).html( '<i class="icon-download-alt"></i> Access local data' );
                               $( "#access" ).click( _.partial(function(id) {
                                   updateMsg( { status : true,
                                                msg : "Packing up data... (will forward you to file when ready)" } );
@@ -326,7 +327,7 @@ var run = function()
 
                           if(data.job.output_location != null)
                           {                          
-                              $( "#access" ).text( "Access input data for debugging" );
+                              $( "#access" ).text( '<i class="icon-download-alt"></i> Access input data for debugging' );
                               $( "#access" ).click( _.partial(function(id) {
                                   updateMsg( { status : true,
                                                msg : "Packing up data... (will forward you to file when ready)" } );
@@ -353,7 +354,7 @@ var run = function()
                           }
                           else
                           {
-                              $( "#access" ).text( "No input data available for debugging" );
+                              $( "#access" ).text( '<i class="icon-download-alt"></i>No input data available for debugging' );
                               $( "#access" ).prop("disabled",true);
                           }
                       }

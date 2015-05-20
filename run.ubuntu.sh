@@ -168,6 +168,29 @@ function install_lib {
     fi
 }
 
+function install_lib_pip {
+    if [ -z "$1" ];then
+        return 1 #False
+    fi
+    echo "We need install the following packages: $1"
+    read -p "Do you want me to try to install required package(s) with pip (y/n): " answer
+    if [ $? != 0 ]; then
+        exit -1
+    fi
+    if [ "$answer" == 'y' ] || [ "$answer" == 'yes' ]; then
+        CMD="pip install --user $1"
+        echo $CMD
+        eval $CMD
+        if [ $? != 0 ]; then
+            exit -1
+        fi
+        echo "$1 installed successfully"
+    else
+        echo "Exiting"
+        exit -1
+    fi
+}
+
 function check_and_install_deps {
     if ! check_lib "h5py";then
         install_lib "python-h5py"
@@ -180,6 +203,9 @@ function check_and_install_deps {
     fi
     if ! check_lib "matplotlib";then
         install_lib "python-matplotlib"
+    fi
+    if ! check_lib "libsbml";then
+        install_lib_pip "python-libsbml"
     fi
 }
 

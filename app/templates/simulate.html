@@ -21,7 +21,7 @@
                 {% for item in all_models %}
                     <tr>
                       <td>
-                        <input type="radio" name="model_to_simulate" value="{{ item.name }} {{ item.id }} {{ item.units }}" checked />
+                        <input type="radio" name="model_to_simulate" value="{{ item.name }} {{ item.id }} {{ item.units }}" />
                       </td>
                       <td>
                         {{ item.name }}
@@ -136,6 +136,10 @@
             <br />
             <div id="parameterContainer">
             </div>
+	    <div class="btn-group">
+		<button class="btn btn-small selectAll">Select All</button>
+		<button class="btn btn-small clearAll">Clear All</button>
+	    </div>
         </div>
 
         <!--<table id="selectTable2" class="sensitivity" border=1 width="50%">

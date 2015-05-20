@@ -39,11 +39,12 @@
                 <li class="nav-header">Import / Export</li>
                 <li><a href="/import?tab=1">Import from .zip</a></li>
                 <li><a href="/importFromXML">Import from .XML</a></li>
+                <li><a href="/importFromSBML">Import from .SBML</a></li>
                 <!--<li><a data-hook="exportToXML" href="#">Export to .XML</a></li>-->
-                <li class="reqModel"><a data-hook="exportToZip" href="#">Export to .zip</a></li>
+                <li class="reqModel" data-anddom-display data-anddom-hidden="true" style="display: none;"><a data-hook="exportToZip" href="#">Export to .zip</a></li>
                 <li class="nav-header">Public Library</li>
                 <li><a href="/publicLibrary">Import from Public Library</a></li>
-                <li class="reqModel"><a data-hook="exportToPublic" href="#">Export to Public Library</a></li>
+                <li class="reqModel" data-anddom-display data-anddom-hidden="true" style="display: none;"><a data-hook="exportToPublic" href="#">Export to Public Library</a></li>
             </ul>
         </div>
     </div>
@@ -79,7 +80,7 @@
                     </div>
                     <div id="collapseSpecies" class="accordion-body collapse">
                         <div class="accordion-inner">
-                            <div data-hook="specie"></div>
+                            <div data-hook="specie" style="z-index: 1;"></div>
                         </div>
                     </div>
                 </div>
@@ -94,12 +95,12 @@
                             <div class="accordion-inner">
                                 Define the initial conditions for a spatial simulation.
                                 <ul>
-                                    <li>A 'Scatter' initial condition distributes 'Count' particles over the chosen subdomain.</li>
-                                    <li>A 'Place' initial condition places 'Count' particles at a given X, Y, Z coordinate.</li>
-                                    <li>A 'Distribute Uniformly' initial condition puts 'Count' particles in each voxel of the chosen subdomain.</li>
+                                    <li>A <b>'Scatter'</b> initial condition distributes 'Count' particles over the chosen subdomain.</li>
+                                    <li>A <b>'Place'</b> initial condition places 'Count' particles at a given X, Y, Z coordinate.</li>
+                                    <li>A <b>'Distribute Uniformly per Voxel'</b> initial condition puts 'Count' particles in each voxel of the chosen subdomain.</li>
                                 </ul>
 
-                                <div data-hook="initialConditions"></div>
+                                <div data-hook="initialConditions" style="z-index: 1"></div>
                             </div>
                         </div>
                     </div>
@@ -111,7 +112,7 @@
                         <h2><a class="accordion-toggle" data-toggle="collapse" data-parent="#parametersAccordion" href="#collapseParameters">Parameters Editor</a></h2>
                     </div>
                     <div id="collapseParameters" class="accordion-body collapse">
-                        <div class="accordion-inner">
+                        <div class="accordion-inner" style="z-index: 1">
                             Define the model parameters. Parameter constants are used to defined reaction rates in the simulation. Stochkit syntax is used to define the parameters. They can be functions of other parameters or simple math operations.
                             <div data-hook="parameter"></div>
                         </div>

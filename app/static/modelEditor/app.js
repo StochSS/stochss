@@ -324,18 +324,18 @@ var PrimaryView = View.extend({
     },
     forwardToFile: function(data)
     {
-	if(data.url)
-	{
-	    window.location = data.url;
-	}
-	else
-	{
+        if(data.url)
+        {
+            window.location = data.url;
+        }
+        else
+        {
             var saveMessageDom = $( this.queryByHook('saveMessage') );
 
             saveMessageDom.removeClass( "alert-success" );
             saveMessageDom.addClass( "alert-error" );
-            saveMessageDom.text( data.msg );	    
-	}
+            saveMessageDom.text( data.msg );        
+        }
     },
     render: function()
     {
@@ -379,16 +379,19 @@ var PrimaryView = View.extend({
 
 ModelCollection = AmpersandCollection.extend( {
     url: "/models",
+    comparator: 'name',
     model: Model
 });
 
 PublicModelCollection = AmpersandCollection.extend( {
     url: "/publicModels",
+    comparator: 'name',
     model: Model
 });
 
 MeshCollection = AmpersandCollection.extend( {
     url: "/meshes",
+    comparator: 'name',
     model: Mesh
 });
 
