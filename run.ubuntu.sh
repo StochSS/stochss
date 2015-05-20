@@ -56,7 +56,7 @@ fi
 # Check that the dependencies are satisfied
 echo -n "Are dependencies satisfied?... "
 
-PKGS="gcc g++ make libxml2-dev curl git r-base-core libgsl0-dev build-essential python-dev python-setuptools cython"
+PKGS="gcc g++ make libxml2-dev curl git r-base-core libgsl0-dev build-essential python-dev python-setuptools cython libbz2-dev"
 if [ `getconf LONG_BIT` != 64 ]; then
     PKGS="gcc-multilib $PKGS"
 fi
