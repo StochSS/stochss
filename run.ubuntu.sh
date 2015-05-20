@@ -145,7 +145,39 @@ function check_lib {
     echo "$1 not found"
     return 1 #False
 }
+function check_pip {
+    if which pip > /dev/null;then
+        echo "pip is installed on your system, using it<br />"
+        return 0 #True
+    else
+        echo "pip is not installed on your system<br />"
+        return 1 #False
+    fi
+}
+
+function install_pip {
+    echo "We need to install python pip from https://bootstrap.pypa.io/get-pip.py"
+    read -p "Do you want me to try to use sudo to install required packages [you may be prompted for the admin password] (y/n): " answer
+
+    if [ $? != 0 ]; then
+        exit -1
+    fi
+
+    if [ "$answer" == 'y' ] || [ "$answer" == 'yes' ]; then
+        CMD="curl -o get-pip.py https://bootstrap.pypa.io/get-pip.py"
+        echo $CMD
+        eval $CMD
+        CMD="sudo python get-pip.py"
+        echo $CMD
+        eval $CMD
+    else
+        exit -1
+    fi
+}
 function install_lib_h5py {
+    if ! check_pip;then
+        install_pip
+    fi
     echo "We need install the following packages: h5py"
     read -p "Do you want me to try to use sudo to install required package(s) (y/n): " answer
     if [ $? != 0 ]; then
@@ -191,13 +223,16 @@ function install_lib_pip {
     if [ -z "$1" ];then
         return 1 #False
     fi
+    if ! check_pip;then
+        install_pip
+    fi
     echo "We need install the following packages: $1"
     read -p "Do you want me to try to install required package(s) with pip (y/n): " answer
     if [ $? != 0 ]; then
         exit -1
     fi
     if [ "$answer" == 'y' ] || [ "$answer" == 'yes' ]; then
-        CMD="pip install --user $1"
+        CMD="sudo pip install $1"
         echo $CMD
         eval $CMD
         if [ $? != 0 ]; then
