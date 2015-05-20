@@ -969,7 +969,10 @@ var InitialConditionCollectionFormView = AmpersandView.extend({
     },
     update : function()
     {
-        this.parent.update();
+        this.updateValid();
+
+        if(this.parent && this.parent.update)
+            this.parent.update();
     },
     render: function()
     {
@@ -1011,6 +1014,8 @@ var InitialConditionCollectionFormView = AmpersandView.extend({
         );
 
         //this.addForm.render();
+
+        this.listenTo(this.collection, "remove", _.bind(this.update, this));
 
         return this;
     }
@@ -1155,15 +1160,16 @@ module.exports = View.extend({
             this.subdomainSelector.remove();
         }
 
-        var validSubdomains = this.model.specie.subdomains.map( function(name) { return [String(name), String(name)]; } );
+        var validSubdomains = this.baseModel.mesh.uniqueSubdomains.map( function(subdomain) { return subdomain.name; } );
+        var validSubdomainOptions = this.baseModel.mesh.uniqueSubdomains.map( function(subdomain) { return [String(subdomain.name), String(subdomain.name)]; } );
 
         this.subdomainSelector = this.renderSubview(
             new SelectView({
                 template: '<div><select></select><div data-hook="message-container"><div class="message" data-hook="message-text"></div></div></div>',
                 label: '',
                 name: 'subdomain',
-                value: (!_.contains(this.model.specie.subdomains, this.model.subdomain)) ? undefined : String(this.model.subdomain),
-                options: validSubdomains,
+                value: (!_.contains(validSubdomains, this.model.subdomain)) ? undefined : String(this.model.subdomain),
+                options: validSubdomainOptions,
                 unselectedText: 'Select subdomain',
                 parent : this,
                 required: true
@@ -2442,6 +2448,12 @@ var PaginatedCollectionView = AmpersandView.extend({
                 {
                     this.subCollectionViews.views[i].updateValid();
                 }
+
+                var model = this.subCollectionViews.views[i].model;
+                var collection = model.collection
+
+                if(typeof(collection.get(model.cid, 'cid')) == "undefined")
+                    continue;
 
                 if(typeof(this.subCollectionViews.views[i].valid) != "undefined")
                 {
