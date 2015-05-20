@@ -30,8 +30,9 @@ class VMStateModel(db.Model):
     DESCRI_SUCCESS = 'success'
 
     infra = db.StringProperty()
-    access_key = db.StringProperty()
-    secret_key = db.StringProperty()
+    ec2_access_key = db.StringProperty()
+    ec2_secret_key = db.StringProperty()
+    user_id = db.StringProperty()
     ins_type = db.StringProperty()
     res_id = db.StringProperty()
     ins_id = db.StringProperty()
@@ -60,6 +61,11 @@ class VMStateModel(db.Model):
         else:
             raise VMStateModelException('Infrastructure is not supported for VMStateModel!')
 
+        if 'user_id' in params and params['user_id'] != None:
+            user_id = params['user_id']
+        else:
+            raise VMStateModelException('Valid user_id not provided in params!')
+
         if infra == AgentTypes.EC2:
             if 'credentials' in params:
                 if 'EC2_ACCESS_KEY' in params['credentials'] and 'EC2_SECRET_KEY' in params['credentials']:
@@ -73,27 +79,27 @@ class VMStateModel(db.Model):
             if access_key is None or secret_key is None:
                 raise VMStateModelException('EC2 Credentials are not given!')
 
-            credentials = {'EC2_ACCESS_KEY': access_key,
+            ec2_credentials = {'EC2_ACCESS_KEY': access_key,
                            'EC2_SECRET_KEY': secret_key}
-            return infra, credentials
+            return infra, ec2_credentials, user_id
 
         elif infra == AgentTypes.FLEX:
-            return infra, None
+            return infra, None, user_id
 
-        return None, None
+        return None, None, None
 
     @staticmethod
     def _get_all_entities(params):
         try:
-            infra, credentials = VMStateModel._validate(params)
+            infra, ec2_credentials, user_id = VMStateModel._validate(params)
 
-            if infra != None:
+            if infra != None and user_id != None:
                 entities = VMStateModel.all()
-                entities.filter('infra =', infra)
+                entities.filter('infra =', infra).filter('user_id =', user_id)
 
                 if infra == AgentTypes.EC2:
-                    entities.filter('access_key =', credentials['EC2_ACCESS_KEY'])\
-                        .filter('secret_key =', credentials['EC2_SECRET_KEY'])
+                    entities.filter('ec2_access_key =', ec2_credentials['EC2_ACCESS_KEY'])\
+                        .filter('ec2_secret_key =', ec2_credentials['EC2_SECRET_KEY'])
 
                 return entities
 
@@ -170,6 +176,8 @@ class VMStateModel(db.Model):
         Args
             params    a dictionary of parameters, containing at least 'agent' and 'credentials'.
         '''
+        logging.info('fail_active')
+
         try:
             entities = VMStateModel._get_all_entities(params)
             entities.filter('state =', VMStateModel.STATE_CREATING)
@@ -227,8 +235,8 @@ class VMStateModel(db.Model):
             res_id    the reservation id that should be updated
         '''
         try:
-            infra, credentials = VMStateModel._validate(params)
-            if infra is None:
+            infra, ec2_credentials, user_id = VMStateModel._validate(params)
+            if infra == None or user_id == None:
                 return
 
             entities = VMStateModel.get_by_id(ids)
@@ -266,9 +274,9 @@ class VMStateModel(db.Model):
             logging.error("Error in updating instance ids in db! {0}".format(e))
 
     @staticmethod
-    def update_ips(params, ins_ids, pub_ips, pri_ips, ins_types, keyname):
+    def update_ips(params, ins_ids, pub_ips, pri_ips, ins_types, keynames):
         '''
-        set the the public ips, the private ips, the instance types and the keyname
+        set the the public ips, the private ips, the instance types and the keynames
         to corresponding instance ids.
         Args
             params    a dictionary of parameters, containing at least 'agent' and 'credentials'.
@@ -276,18 +284,18 @@ class VMStateModel(db.Model):
             pub_ips   a list of public ips that are going to be set with
             pri_ips   a list of private ips that are going to be set with
             ins_type  a list of instance types that are going to be set with
-            keyname key name that is corresponding to this set of instance ids
+            keynames  a list of keynames that is corresponding to this set of instance ids
         '''
         logging.info(
-            'update_ips:\n\nins_ids = {0}\npub_ips = {1}\npri_ips = {2}\nins_types = {3}\nkeyname = {keyname}'.format(
-                ins_ids, pub_ips, pri_ips, ins_types, keyname=keyname))
+            'update_ips:\n\nins_ids = {0}\npub_ips = {1}\npri_ips = {2}\nins_types = {3}\nkeynames = {keynames}'.format(
+                ins_ids, pub_ips, pri_ips, ins_types, keynames=keynames))
         logging.debug('\n\nparams = {}'.format(pprint.pformat(params)))
 
         try:
-            if keyname is None:
+            if keynames is None:
                 raise Exception('Error: Cannot find keyname!')
 
-            for (ins_id, pub_ip, pri_ip, ins_type) in zip(ins_ids, pub_ips, pri_ips, ins_types):
+            for (ins_id, pub_ip, pri_ip, ins_type, keyname) in zip(ins_ids, pub_ips, pri_ips, ins_types, keynames):
                 entities = VMStateModel._get_all_entities(params)
                 e = entities.filter('ins_id =', ins_id).get()
 
@@ -335,7 +343,7 @@ class VMStateModel(db.Model):
 
 
     @staticmethod
-    def synchronize(agent, credentials):
+    def synchronize(agent, parameters):
         '''
         synchronization the db with the specific agent
         Args
@@ -343,11 +351,9 @@ class VMStateModel(db.Model):
             credentials    the dictionary containing access_key and secret_key pair of the agent
         '''
         logging.info('Start Synchronizing DB...')
-        instance_list = agent.describe_instances({'credentials': credentials})
+        instance_list = agent.describe_instances(parameters)
 
-        params = {'infrastructure': agent.AGENT_NAME,
-                  'credentials': credentials}
-        entities = VMStateModel._get_all_entities(params=params)
+        entities = VMStateModel._get_all_entities(params=parameters)
         entities.filter('state !=', VMStateModel.STATE_TERMINATED).filter('state !=', VMStateModel.STATE_CREATING)
 
         for e in entities:

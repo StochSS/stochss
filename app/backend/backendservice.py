@@ -259,12 +259,84 @@ class backendservices(object):
                 logging.error("deleteTaskLocal : couldn't kill process. error: %s", str(e))
         logging.info("deleteTaskLocal : exiting method")
 
-    def prepare_flex_cloud_machines(self, params, block=False):
-        logging.info("prepare_flex_cloud_machines : params : \n%s", pprint.pformat(params))
-        try:
-            i = InfrastructureManager(blocking=block)
+    def __create_flexdb_stochss_table(self, ec2_access_key, ec2_secret_key):
+        self.__create_dynamodb_stochss_table(ec2_access_key=ec2_access_key, ec2_secret_key=ec2_secret_key)
 
+    def __create_dynamodb_stochss_table(self, ec2_access_key, ec2_secret_key):
+        database = DynamoDB(ec2_access_key, ec2_secret_key)
+        dynamo = boto.connect_dynamodb(ec2_access_key, ec2_secret_key)
+        if not database.tableexists(dynamo, JobDatabaseConfig.TABLE_NAME):
+            results = database.createtable(JobDatabaseConfig.TABLE_NAME)
+            if results:
+                logging.info("creating table {0}".format(JobDatabaseConfig.TABLE_NAME))
+            else:
+                logging.error("FAILED on creating table {0}".format(JobDatabaseConfig.TABLE_NAME))
+
+    def __get_required_parameter(self, parameter_key, params):
+        if parameter_key in params and params[parameter_key] != None:
+            return params[parameter_key]
+
+        raise Exception('Error: {0} is not given in params.'.format(parameter_key))
+
+
+    def __create_vm_state_model_entries(self, infrastructure, num_vms, ec2_secret_key, ec2_access_key, user_id):
+        ids = []
+        for _ in xrange(num_vms):
+            vm_state = VMStateModel(state=VMStateModel.STATE_CREATING,
+                                    infra=infrastructure,
+                                    ec2_access_key=ec2_access_key,
+                                    ec2_secret_key=ec2_secret_key,
+                                    user_id=user_id)
+            vm_state.put()
+            ids.append(vm_state.key().id())
+
+        return ids
+
+    def prepare_flex_cloud_machines(self, params, blocking=False):
+        logging.info("prepare_flex_cloud_machines : params : \n%s", pprint.pformat(params))
+
+        try:
+            # NOTE: We are forcing blocking mode within the InfrastructureManager class
+            # for the launching of VMs because of how GAE joins on all threads before
+            # returning a response from a request.
+            i = InfrastructureManager(blocking=blocking)
+            res = {}
+
+            # 1. change the status of 'failed' in the previous launch in db to 'terminated'
+            # NOTE: We need to make sure that the RabbitMQ server is running if any compute
+            # nodes are running as we are using the AMQP broker option for Celery.
+
+            VMStateModel.terminate_not_active(params)
+
+            # 2. get user_id, infra, ec2 credentials
+
+            user_id = self.__get_required_parameter(parameter_key='user_id', params=params)
+            infrastructure = self.__get_required_parameter(parameter_key='infrastructure', params=params)
+
+            ec2_access_key = ''
+            ec2_secret_key = ''
+
+            if 'credentials' in params:
+                if 'EC2_ACCESS_KEY' in params['credentials'] and 'EC2_SECRET_KEY' in params['credentials']:
+                    ec2_access_key = params['credentials']['EC2_ACCESS_KEY']
+                    ec2_secret_key = params['credentials']['EC2_SECRET_KEY']
+
+            logging.info('ec2_access_key = {0} ec2_secret_key = {1}'.format(ec2_access_key, ec2_secret_key))
+
+
+            # 3. create exact number of entities in db for this launch, and set the status to 'creating'
+            num_vms = len(params['flex_cloud_machine_info'])
+            logging.info('num_vms = {0}'.format(num_vms))
+
+            ids = self.__create_vm_state_model_entries(ec2_access_key=ec2_access_key, ec2_secret_key=ec2_secret_key,
+                                                       infrastructure=infrastructure, num_vms=num_vms, user_id=user_id)
+
+            # 4. Prepare Instances
+            params[VMStateModel.IDS] = ids
             res = i.prepare_instances(params)
+
+            # 5, check and create stochss table exists if it does not exist
+            self.__create_flexdb_stochss_table(ec2_access_key=ec2_access_key, ec2_secret_key=ec2_secret_key)
 
             logging.info("prepare_flex_cloud_machines : exiting method with result : %s", str(res))
             return True, None
@@ -272,8 +344,80 @@ class backendservices(object):
         except Exception, e:
             traceback.print_exc()
             logging.error("prepare_flex_cloud_machines : exiting method with error : {0}".format(str(e)))
+            return False, 'Errors occur in preparing machines:' + str(e)
 
-            print "prepare_flex_cloud_machines : exiting method with error :", str(e)
+
+    def start_ec2_vms(self, params, blocking=False):
+        '''
+        This method instantiates EC2 vm instances
+        '''
+        logging.info("start_ec2_vms : inside method with params : \n%s", pprint.pformat(params))
+        try:
+            # make sure that any keynames we use are prefixed with stochss so that
+            #we can do a terminate all based on keyname prefix
+            key_prefix = AgentConfig.get_agent_key_prefix(agent_type=self.infrastructure,
+                                                          key_prefix=params.get('key_prefix', ''))
+
+            key_name = params["keyname"]
+            if not key_name.startswith(key_prefix):
+                params['keyname'] = key_prefix + key_name
+
+            # NOTE: We are forcing blocking mode within the InfrastructureManager class
+            # for the launching of VMs because of how GAE joins on all threads before
+            # returning a response from a request.
+            i = InfrastructureManager(blocking=blocking)
+            res = {}
+
+            # 1. change the status of 'failed' in the previous launch in db to 'terminated' 
+            # NOTE: We need to make sure that the RabbitMQ server is running if any compute
+            # nodes are running as we are using the AMQP broker option for Celery.
+
+            ins_ids = VMStateModel.terminate_not_active(params)
+
+           # 2. get user_id, infra, ec2 credentials
+
+            user_id = self.__get_required_parameter(parameter_key='user_id', params=params)
+            infrastructure = self.__get_required_parameter(parameter_key='infrastructure', params=params)
+
+            if 'credentials' in params:
+                if 'EC2_ACCESS_KEY' in params['credentials'] and 'EC2_SECRET_KEY' in params['credentials']:
+                    ec2_access_key = params['credentials']['EC2_ACCESS_KEY']
+                    ec2_secret_key = params['credentials']['EC2_SECRET_KEY']
+                else:
+                    raise Exception('VMStateModel ERROR: Cannot get access key or secret.')
+            else:
+                raise Exception('VMStateModel ERROR: No credentials are provided.')
+
+            if ec2_access_key is None or ec2_secret_key is None:
+                raise Exception('VMStateModel ERROR: ec2 credentials are not valid.')
+
+            # 3. create exact number of entities in db for this launch, and set the status to 'creating'
+            num_vms = 0
+            if 'vms' in params:
+                for vm in params['vms']:
+                    logging.info('vm: {0}, num: {1}'.format(vm['instance_type'], vm['num_vms']))
+                    num_vms += vm['num_vms']
+            if 'head_node' in params:
+                num_vms += 1
+
+            logging.info('num = {0}'.format(num_vms))
+
+            ids = self.__create_vm_state_model_entries(ec2_access_key=ec2_access_key, ec2_secret_key=ec2_secret_key,
+                                                       infrastructure=infrastructure, num_vms=num_vms, user_id=user_id)
+
+            # 4. Prepare Instances
+            params[VMStateModel.IDS] = ids
+            res = i.prepare_instances(params)
+            
+            # 5, check and create stochss table exists if it does not exist
+            self.__create_dynamodb_stochss_table(ec2_access_key=ec2_access_key, ec2_secret_key=ec2_secret_key)
+
+            logging.info("start_ec2_vms : exiting method with result : %s", str(res))
+            return True, None
+
+        except Exception, e:
+            traceback.print_exc()
+            logging.error("start_ec2_vms : exiting method with error : {0}".format(str(e)))
             return False, 'Errors occur in starting machines:' + str(e)
 
 
@@ -316,98 +460,6 @@ class backendservices(object):
 
         except:
             return False
-
-    def start_ec2_vms(self, params, blocking=False):
-        '''
-        This method instantiates vm instances
-        '''
-        logging.info("start_ec2_vms : inside method with params : \n%s", pprint.pformat(params))
-        try:
-            # make sure that any keynames we use are prefixed with stochss so that
-            #we can do a terminate all based on keyname prefix
-            key_prefix = AgentConfig.get_agent_key_prefix(agent_type=self.infrastructure,
-                                                          key_prefix=params.get('key_prefix', ''))
-
-            key_name = params["keyname"]
-            if not key_name.startswith(key_prefix):
-                params['keyname'] = key_prefix + key_name
-
-            # NOTE: We are forcing blocking mode within the InfrastructureManager class
-            # for the launching of VMs because of how GAE joins on all threads before
-            # returning a response from a request.
-            i = InfrastructureManager(blocking=blocking)
-            res = {}
-
-            # 1. change the status of 'failed' in the previous launch in db to 'terminated' 
-            # NOTE: We need to make sure that the RabbitMQ server is running if any compute
-            # nodes are running as we are using the AMQP broker option for Celery.
-
-            ins_ids = VMStateModel.terminate_not_active(params)
-
-            # 2. get credentials
-            infra = None
-            access_key = None
-            secret_key = None
-            if 'infrastructure' in params:
-                infra = params['infrastructure']
-            else:
-                raise Exception('VMStateModel ERROR: Infrastructure is not decided.')
-
-            if 'credentials' in params:
-                if 'EC2_ACCESS_KEY' in params['credentials'] and 'EC2_SECRET_KEY' in params['credentials']:
-                    access_key = params['credentials']['EC2_ACCESS_KEY']
-                    secret_key = params['credentials']['EC2_SECRET_KEY']
-                else:
-                    raise Exception('VMStateModel ERROR: Cannot get access key or secret.')
-            else:
-                raise Exception('VMStateModel ERROR: No credentials are provided.')
-
-            if infra is None or access_key is None or secret_key is None:
-                raise Exception('VMStateModel ERROR: Either infrastructure or credentials is none.')
-
-            # 3. create exact number of entities in db for this launch, and set the status to 'creating'
-            ids = []
-            num = 0
-            if 'vms' in params:
-                for vm in params['vms']:
-                    logging.info('vm: {0}, num: {1}'.format(vm['instance_type'], vm['num_vms']))
-                    num += vm['num_vms']
-            if 'head_node' in params:
-                num += 1
-
-            logging.info('num = {0}'.format(num))
-
-            for _ in xrange(num):
-                vm_state = VMStateModel(state=VMStateModel.STATE_CREATING,
-                                         infra=infra,
-                                         access_key=access_key,
-                                         secret_key=secret_key)
-                vm_state.put()
-                ids.append(vm_state.key().id())
-
-            params[VMStateModel.IDS] = ids
-
-            res = i.prepare_instances(params)
-            
-            # check if dynamodb stochss table exists
-            database = DynamoDB(access_key, secret_key)
-            dynamo = boto.connect_dynamodb(access_key, secret_key)
-            if not database.tableexists(dynamo, JobDatabaseConfig.TABLE_NAME):
-                results = database.createtable(JobDatabaseConfig.TABLE_NAME)
-                if results:
-                    logging.info("creating table {0}".format(JobDatabaseConfig.TABLE_NAME))
-                else:
-                    logging.error("FAILED on creating table {0}".format(JobDatabaseConfig.TABLE_NAME))
-
-            logging.info("start_ec2_vms : exiting method with result : %s", str(res))
-
-            return True, None
-
-        except Exception, e:
-            traceback.print_exc()
-            logging.error("start_ec2_vms : exiting method with error : {0}".format(str(e)))
-            return False, 'Errors occur in starting machines:' + str(e)
-
 
     def stop_ec2_vms(self, params, blocking=False):
         '''
@@ -455,7 +507,7 @@ class backendservices(object):
             logging.error("error : %s", str(e))
             return None
 
-    def describeMachinesFromDB(self, params):
+    def describe_machines_from_db(self, params):
         i = InfrastructureManager()
         i.synchronize_db(params)
         all_vms = VMStateModel.get_all(params)

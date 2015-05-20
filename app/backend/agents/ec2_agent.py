@@ -162,13 +162,14 @@ class EC2Agent(BaseAgent):
           parameters  A dictionary containing the 'keyname' parameter
 
         Returns:
-          A tuple of the form (public_ips, private_ips, instances, instance_types) where each
+          A tuple of the form (public_ips, private_ips, instances, instance_types, keynames) where each
           member is a list.
         """
         instance_ids = []
         public_ips = []
         private_ips = []
         instance_types = []
+        keynames = []
 
         conn = self.open_connection(parameters)
         reservations = conn.get_all_instances()
@@ -179,8 +180,9 @@ class EC2Agent(BaseAgent):
                 public_ips.append(i.public_dns_name)
                 private_ips.append(i.private_dns_name)
                 instance_types.append(i.instance_type)
+                keynames.append(parameters[self.PARAM_KEYNAME])
 
-        return public_ips, private_ips, instance_ids, instance_types
+        return public_ips, private_ips, instance_ids, instance_types, keynames
 
     def describe_instances_launched(self, parameters):
         """
@@ -218,7 +220,7 @@ class EC2Agent(BaseAgent):
         """
         conn = self.open_connection(parameters)
         reservations = conn.get_all_instances()
-        instanceList = []
+        instance_list = []
         instances = [i for r in reservations for i in r.instances]
         for i in instances:
             if i.key_name is not None and i.key_name.startswith(prefix):
@@ -229,8 +231,8 @@ class EC2Agent(BaseAgent):
                 instance["state"] = i.state
                 instance["key_name"] = i.key_name
                 instance["instance_type"] = i.instance_type
-                instanceList.append(instance)
-        return instanceList
+                instance_list.append(instance)
+        return instance_list
 
 
     def make_sleepy(self, parameters, instance_id, period='3600'):
@@ -376,9 +378,9 @@ class EC2Agent(BaseAgent):
             logging.info('Instance {0} was terminated'.format(instance.id))
 
 
-    def terminate_some_instances(self, parameters, instance_ids):
+    def deregister_some_instances(self, parameters, instance_ids, terminate=True):
         """
-        Stop the specific EC2 instances using.
+        Deregister the specific EC2 instances using.
 
         Args:
           parameters      A dictionary of parameters

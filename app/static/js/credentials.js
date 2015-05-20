@@ -24,18 +24,19 @@ function show_follow_ups() {
     follow_ups.removeAttribute('hidden');
 }
 
-function save_flex_cloud_info() {
+function get_flex_cloud_info_input() {
     var form = document.forms.flex_cloud_machine_info_form;
     var inputs = form.getElementsByTagName("input");
 
-    var jsonData = [];
+    var flex_cloud_machine_info = [];
+
     var flex_cloud_machine = {};
     for (i = 0; i < inputs.length; i++) {
         if (inputs[i].name == 'ip') {
             flex_cloud_machine['ip'] = inputs[i].value.trim();
             if (flex_cloud_machine['ip'] == '') {
                 alert('Please provide valid IP Address!');
-                return
+                return null
             }
         }
 
@@ -43,7 +44,7 @@ function save_flex_cloud_info() {
             flex_cloud_machine['username'] = inputs[i].value.trim();
             if (flex_cloud_machine['ip'] == '') {
                 alert('Please provide valid username!');
-                return
+                return null
             }
         }
 
@@ -59,7 +60,7 @@ function save_flex_cloud_info() {
             flex_cloud_machine['keyname'] = keyname_from_keyfile;
             if (flex_cloud_machine['keyname'] == '') {
                 alert('Please upload valid key file!');
-                return
+                return null
             }
         }
 
@@ -71,47 +72,56 @@ function save_flex_cloud_info() {
         }
 
         if (Object.keys(flex_cloud_machine).length == 4) {
-            jsonData.push(flex_cloud_machine);
+            flex_cloud_machine_info.push(flex_cloud_machine);
             flex_cloud_machine = {};
         }
     }
 
     var queue_head = null;
-    for (var i = 0; i < jsonData.length; i++) {
-        if (jsonData[i]['queue_head'] == true) {
+    for (var i = 0; i < flex_cloud_machine_info.length; i++) {
+        if (flex_cloud_machine_info[i]['queue_head'] == true) {
             if (queue_head != null) {
                 alert('Please select only 1 queue head!');
-                return
+                return null
             }
             else {
-                queue_head = jsonData[i];
+                queue_head = flex_cloud_machine_info[i];
             }
         }
     }
 
-    if (queue_head == null) {
+    if (queue_head == null || flex_cloud_machine_info.length == 0) {
         alert('Please select 1 machine as queue head!');
-        return
+        return null
     }
 
-    var jsonDataToBeSent = {};
-    jsonDataToBeSent['flex_cloud_machine_info'] = jsonData;
-    jsonDataToBeSent['action'] = 'save_flex_cloud_info';
-
-    jsonDataToBeSent = JSON.stringify(jsonDataToBeSent);
-    $.ajax({
-        type: "POST",
-        url: "/credentials",
-        contentType: "application/json",
-        dataType: "json",
-        data: jsonDataToBeSent,
-        success: function(){},
-        error: function(x,e){},
-        complete: function() {
-            document.location.reload();
-        }
-    });
+    return flex_cloud_machine_info
 }
+
+//function save_flex_cloud_info() {
+//    var flex_cloud_machine_info = get_flex_cloud_info_input();
+//    if (flex_cloud_machine_info == null) {
+//        return
+//    }
+//
+//    var jsonDataToBeSent = {};
+//    jsonDataToBeSent['flex_cloud_machine_info'] = flex_cloud_machine_info;
+//    jsonDataToBeSent['action'] = 'save_flex_cloud_info';
+//
+//    jsonDataToBeSent = JSON.stringify(jsonDataToBeSent);
+//    $.ajax({
+//        type: "POST",
+//        url: "/credentials",
+//        contentType: "application/json",
+//        dataType: "json",
+//        data: jsonDataToBeSent,
+//        success: function(){},
+//        error: function(x,e){},
+//        complete: function() {
+//            document.location.reload();
+//        }
+//    });
+//}
 
 function refresh_flex_cloud_info() {
     $.ajax({
@@ -141,13 +151,19 @@ function deregister_flex_cloud(){
         success: function(){},
         error: function(x,e){},
         complete: function() {
-            document.location.reload();
+            refresh_flex_cloud_info()
         }
     });
 }
 
 function prepare_flex_cloud() {
+    var flex_cloud_machine_info = get_flex_cloud_info_input();
+    if (flex_cloud_machine_info == null) {
+        return
+    }
+
     var jsonDataToBeSent = {};
+    jsonDataToBeSent['flex_cloud_machine_info'] = flex_cloud_machine_info;
     jsonDataToBeSent['action'] = 'prepare_flex_cloud';
 
     jsonDataToBeSent = JSON.stringify(jsonDataToBeSent);
@@ -160,7 +176,7 @@ function prepare_flex_cloud() {
         success: function(){},
         error: function(x,e){},
         complete: function() {
-            document.location.reload();
+            refresh_flex_cloud_info()
         }
     });
 }

@@ -22,7 +22,7 @@ from backend.common.config import AWSConfig, AgentTypes, AgentConfig, FlexConfig
 from backend.databases.dynamo_db import DynamoDB
 
 class CredentialsPage(BaseHandler):
-    INS_TYPES = ["t1.micro", "m1.small", "m3.medium", "m3.large", "c3.large", "c3.xlarge"]
+    EC2_INS_TYPES = ["t1.micro", "m1.small", "m3.medium", "m3.large", "c3.large", "c3.xlarge"]
     HEAD_NODE_TYPES = ["c3.large", "c3.xlarge"]
 
     EC2_SAVE_CREDENTIALS = 'ec2_save_creds'
@@ -66,36 +66,25 @@ class CredentialsPage(BaseHandler):
         self.response.headers['Content-Type'] = 'application/json'
         json.dump({"success": True}, self.response.out)
 
+
     def __handle_json_post_request(self, data_received, user_id):
         logging.info('__handle_json_post_request: action = {}'.format(data_received['action']))
 
         if data_received['action'] == CredentialsPage.FLEX_SAVE_CLOUD_INFO:
-            machine_info = data_received['flex_cloud_machine_info']
-            logging.info("machine_info = \n{0}".format(pprint.pformat(machine_info)))
-
-            result = self.save_flex_cloud_info(machine_info, user_id)
-            logging.info("result = {0}".format(result))
-
-            # TODO: This is a hack to make it unlikely that the db transaction has not completed
-            # before we re-render the page (which would cause an error). We need some real solution for this...
-            # time.sleep(0.5)
+            logging.error('save_flex_cloud_info not supported!')
+            # machine_info = data_received['flex_cloud_machine_info']
+            # logging.info("machine_info = \n{0}".format(pprint.pformat(machine_info)))
+            #
+            # result = self.save_flex_cloud_info(machine_info, user_id)
+            # logging.info("result = {0}".format(result))
 
             self.redirect('/credentials')
 
         elif data_received['action'] == CredentialsPage.FLEX_PREPARE_CLOUD:
-            credentials = self.user_data.getCredentials()
-            flex_cloud_machine_info = self.user_data.get_flex_cloud_machine_info()
-
-            head_node = None
-            for machine in flex_cloud_machine_info:
-                if machine['queue_head'] == True:
-                    head_node = machine
-                    head_node['instance_type'] = None
-
-            result = self.prepare_flex_cloud(user_id, credentials, head_node, flex_cloud_machine_info)
+            flex_cloud_machine_info = data_received['flex_cloud_machine_info']
+            result = self.prepare_flex_cloud(user_id, flex_cloud_machine_info)
             logging.info("result = {0}".format(result))
             self.redirect('/credentials')
-
 
         elif data_received['action'] == CredentialsPage.FLEX_SAVE_KEY_FILE:
             keyfile_contents = data_received['contents']
@@ -140,7 +129,8 @@ class CredentialsPage(BaseHandler):
             terminate_params = {
               "infrastructure": AgentTypes.EC2,
               "credentials": credentials,
-              "key_prefix": user_id
+              "key_prefix": user_id,
+              "user_id": user_id
             }
             stopped = service.stop_ec2_vms(terminate_params, blocking=True)
             if not stopped:
@@ -174,7 +164,7 @@ class CredentialsPage(BaseHandler):
             if 'head_node' in params:
                 head_node = {"instance_type": params['head_node'].replace('radio_', ''), "num_vms": 1}
 
-            for type in self.INS_TYPES:
+            for type in self.EC2_INS_TYPES:
                 num_type = 'num_' + type
 
                 if num_type in params and params[num_type] != '':
@@ -304,7 +294,8 @@ class CredentialsPage(BaseHandler):
             'key_prefix': '', # no prefix
             'keyname': '',
             'email': [user_id],
-            'credentials': credentials
+            'credentials': credentials,
+            'user_id': user_id
         }
 
         result = service.deregister_flex_cloud(parameters=params, blocking=True)
@@ -316,49 +307,44 @@ class CredentialsPage(BaseHandler):
 
         self.redirect('/credentials')
 
-    def prepare_flex_cloud(self, user_id, credentials, head_node, flex_cloud_machine_info):
-        logging.info('head_node = \n{0}'.format(pprint.pformat(head_node)))
+    def prepare_flex_cloud(self, user_id, flex_cloud_machine_info):
+        logging.info('prepare_flex_cloud: flex_cloud_machine_info =\n{0}'.format(pprint.pformat(flex_cloud_machine_info)))
+
+        credentials = self.user_data.getCredentials()
+
+        self.user_data.set_flex_cloud_machine_info(flex_cloud_machine_info)
+        self.user_data.put()
+
         params = {
             'infrastructure': AgentTypes.FLEX,
             'flex_cloud_machine_info': flex_cloud_machine_info,
             'key_prefix': '', # no prefix
             'keyname': '',
             'email': [user_id],
+            'user_id': user_id,
             'credentials': credentials
         }
 
         service = backendservices(infrastructure=AgentTypes.FLEX)
 
-        if not service.isOneOrMoreComputeNodesRunning(params):
-            if head_node is None:
-                return {'status': 'Failure',
-                        'msg': "At least one head node needs to be ready."}
-            else:
-                params['head_node'] = head_node
-
-        elif head_node:
-            params['vms'] = [head_node]
-
         res, msg = service.prepare_flex_cloud_machines(params)
         if res == True:
-            result = {'status': 'Success',
-                      'msg': 'Successfully prepared flex cloud machines.'}
+            result = {'flex_cloud_status': 'Success',
+                      'flex_cloud_info_msg': 'Successfully preparing flex cloud machines...'}
         else:
-            result = {'status': 'Failure',
-                      'msg': msg}
+            result = {'flex_cloud_status': 'Failure',
+                      'flex_cloud_info_msg': msg}
         return result
 
-    def getContext(self, user_id):
-        params = {}
-        credentials =  self.user_data.getCredentials()
-        params['credentials'] = credentials
-        
+
+    def __get_ec2_context(self, user_id):
         context = {}
         result = {}
 
-        # EC2
-        # Check if the credentials are valid.
-        params["infrastructure"] = "ec2"
+        credentials = self.user_data.getCredentials()
+        params = {'infrastructure': AgentTypes.EC2,
+                  'credentials': credentials,
+                  'user_id': user_id}
 
         if not self.user_data.valid_credentials:
             result = {'status': False,
@@ -376,14 +362,15 @@ class CredentialsPage(BaseHandler):
                                  'EC2_SECRET_KEY': '*' * len(credentials['EC2_SECRET_KEY'])}
             context['valid_credentials'] = True
 
-            all_vms = self.get_all_vms(user_id, params)
+            all_vms = self.__get_all_vms(params)
 
             if all_vms == None:
                 result = {'status': False,
                           'vm_status': False,
                           'vm_status_msg': 'Could not determine the status of the VMs.'}
 
-                context = {'vm_names':all_vms}
+                context = {'vm_names': all_vms}
+
             else:
                 number_creating = 0
                 number_pending = 0
@@ -396,7 +383,7 @@ class CredentialsPage(BaseHandler):
                         number_creating += 1
                     elif vm != None and vm['state']=='pending':
                         number_pending += 1
-                    elif vm != None and vm['state']=='running': 
+                    elif vm != None and vm['state']=='running':
                         number_running += 1
                         instance_type = vm['instance_type']
                         if instance_type not in running_instances:
@@ -427,12 +414,28 @@ class CredentialsPage(BaseHandler):
                     context['active_vms'] = False
                 else:
                     context['active_vms'] = True
-                    
+
                 if number_running == 0:
                     context['running_vms'] = False
                 else:
                     context['running_vms'] = True
 
+        context = dict(context, **fake_credentials)
+        context = dict(result, **context)
+
+        return context
+
+
+    def __get_flex_context(self, user_id):
+        context = {}
+        result = {}
+
+        params = {'infrastructure': AgentTypes.FLEX,
+                  'user_id': user_id,
+                  'flex_cloud_machine_info': self.user_data.get_flex_cloud_machine_info() }
+
+        all_vms = self.__get_all_vms(params)
+        logging.info('all_vms = {0}'.format(pprint.pformat(all_vms)))
 
         flex_cloud_machine_info = self.user_data.get_flex_cloud_machine_info()
         logging.info("flex_cloud_machine_info =\n{0}".format(pprint.pformat(flex_cloud_machine_info)))
@@ -451,22 +454,24 @@ class CredentialsPage(BaseHandler):
 
         else:
             context['valid_flex_cloud_info'] = True
-                
-        context = dict(context, **fake_credentials)
-        context = dict(result, **context)
 
+        context = dict(result, **context)
+        return context
+
+    def getContext(self, user_id):
+        ec2_context = self.__get_ec2_context(user_id)
+        flex_context = self.__get_flex_context(user_id)
+        context = dict(ec2_context, **flex_context)
         return context
     
-    def get_all_vms(self, user_id, params):
-        if user_id is None or user_id is "":
+    def __get_all_vms(self, params):
+        try:
+            service = backendservices()
+            result = service.describe_machines_from_db(params)
+            return result
+        except Exception as e:
+            logging.error(str(e))
             return None
-        else:
-            try:
-                service = backendservices()
-                result = service.describeMachinesFromDB(params)
-                return result
-            except:
-                return None
 
     def __get_ec2_image_id(self):
         '''
@@ -503,6 +508,7 @@ class CredentialsPage(BaseHandler):
             'key_prefix': key_prefix,
             'keyname': group_random_name,
             'email': [user_id],
+            'user_id': user_id,
             'credentials': credentials,
             'use_spot_instances' :False
         }

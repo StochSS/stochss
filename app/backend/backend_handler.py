@@ -46,6 +46,7 @@ INS_TYPES_EC2 = ["t1.micro", "m1.small", "m3.medium", "m3.large", "c3.large", "c
 
 class VMStateSyn(db.Model):
     last_syn = db.DateTimeProperty()
+    infra = db.StringProperty()
 
 
 class BackendWorker(object):
@@ -57,8 +58,13 @@ class FlexBackendWorker(BackendWorker):
     POLL_COUNT = 10
     POLL_WAIT_TIME = 5
 
+    PARAM_IS_QUEUE_HEAD = 'queue_head'
+    PARAM_FLEX_CLOUD_MACHINE_INFO = 'flex_cloud_machine_info'
+
 
     def __init__(self, agent, infra_manager, reservation_id):
+        logging.info('agent = {0}, infra_manager = {1} reservation_id = {2}'.format(agent,
+                                                                                    infra_manager, reservation_id))
         self.agent = agent
         self.agent_type = self.agent.AGENT_NAME
         if self.agent_type != AgentTypes.FLEX:
@@ -74,27 +80,36 @@ class FlexBackendWorker(BackendWorker):
         pass
 
     def prepare_vms(self, parameters):
-        if 'flex_cloud_machine_info' not in parameters or parameters['flex_cloud_machine_info'] == None \
-                or parameters['flex_cloud_machine_info'] == []:
-            logging.error('Error: No flex_cloud_machine_info param!')
+        logging.info('\n\nFlexBackendWorker.prepare_vms:\n\n{0}'.format(pprint.pformat(parameters)))
+        if self.PARAM_FLEX_CLOUD_MACHINE_INFO not in parameters \
+                or parameters[self.PARAM_FLEX_CLOUD_MACHINE_INFO] == None \
+                or parameters[self.PARAM_FLEX_CLOUD_MACHINE_INFO] == []:
+
+            logging.error('Error: No {0} param!'.format(self.PARAM_FLEX_CLOUD_MACHINE_INFO))
+            VMStateModel.fail_active(parameters)
             return
 
-        flex_cloud_machine_info = parameters['flex_cloud_machine_info']
+        flex_cloud_machine_info = parameters[self.PARAM_FLEX_CLOUD_MACHINE_INFO]
 
         queue_head_machine = None
         for machine in flex_cloud_machine_info:
-            if machine['is_queue_head']:
+            if machine[self.PARAM_IS_QUEUE_HEAD]:
                 if queue_head_machine != None:
                     logging.error('Error: Multiple queue heads !')
+                    VMStateModel.fail_active(parameters)
                     return
                 else:
                     queue_head_machine = machine
 
-        self.__prepare_queue_head(queue_head_machine)
+        result = self.__prepare_queue_head(queue_head_machine)
 
-        for machine in flex_cloud_machine_info:
-            if machine != queue_head_machine:
-                self.__prepare_workers(machine, queue_head_ip=queue_head_machine['ip'])
+        if result == True:
+            for machine in flex_cloud_machine_info:
+                if machine != queue_head_machine:
+                    self.__prepare_workers(machine, queue_head_ip=queue_head_machine['ip'])
+        else:
+            logging.error('Error: could not prepare queue head! Failing other creating nodes.')
+            VMStateModel.fail_active(parameters)
 
         return
 
@@ -341,22 +356,24 @@ class EC2BackendWorker(BackendWorker):
         public_ips = None
         private_ips = None
         instance_ids = None
+        keynames = None
 
         for x in range(0, EC2BackendWorker.POLL_COUNT):
             # get the ips and ids of this keyname
-            public_ips, private_ips, instance_ids, instance_types = self.agent.describe_instances_running(parameters)
+            public_ips, private_ips, instance_ids, instance_types, keynames = self.agent.describe_instances_running(
+                                                                                                            parameters)
 
             logging.info("public_ips = {0}".format(public_ips))
-            logging.info("private_ips = {0}".format(private_ips))
+            logging.debug("private_ips = {0}".format(private_ips))
             logging.info("instance_ids = {0}".format(instance_ids))
             logging.info("instance_types = {0}".format(instance_types))
+            logging.debug("keynames = {0}".format(keynames))
 
             # if we get the requested number of vms (the requested number will be 1 if this is queue head),
             # update reservation information and send a message to the backend server
             if num_vms == len(public_ips):
                 # update db with new public ips and private ips
-                VMStateModel.update_ips(parameters, instance_ids, public_ips, private_ips, instance_types,
-                                        parameters["keyname"])
+                VMStateModel.update_ips(parameters, instance_ids, public_ips, private_ips, instance_types, keynames)
                 break
 
             else:
@@ -365,17 +382,16 @@ class EC2BackendWorker(BackendWorker):
                     logging.info('Polling task: sleep 5 seconds...')
 
                 else:
-                    VMStateModel.update_ips(parameters, instance_ids, public_ips, private_ips, instance_types,
-                                            parameters["keyname"])
+                    VMStateModel.update_ips(parameters, instance_ids, public_ips, private_ips, instance_types, keynames)
 
                     logging.info('Polling timeout. About to terminate some instances:')
                     terminate_ins_ids = []
                     for ins_id in ins_ids:
                         if ins_id not in instance_ids:
-                            logging.info('instance {0}'.format(ins_id))
+                            logging.info('instance {0} to be terminated'.format(ins_id))
                             terminate_ins_ids.append(ins_id)
                     # terminate timeout instances
-                    self.agent.terminate_some_instances(parameters, terminate_ins_ids)
+                    self.agent.deregister_some_instances(parameters, terminate_ins_ids)
                     # update db with failure information
                     VMStateModel.set_state(parameters, terminate_ins_ids, VMStateModel.STATE_FAILED,
                                            VMStateModel.DESCRI_FAIL_TO_RUN)
@@ -413,7 +429,7 @@ class EC2BackendWorker(BackendWorker):
                 for ins_id in instance_ids:
                     if ins_id not in connected_instance_ids:
                         terminate_ins_ids.append(ins_id)
-                self.agent.terminate_some_instances(parameters, terminate_ins_ids)
+                self.agent.deregister_some_instances(parameters, terminate_ins_ids)
                 # update db with failed vms
                 VMStateModel.set_state(parameters, terminate_ins_ids,
                                        VMStateModel.STATE_FAILED,
@@ -471,7 +487,7 @@ class EC2BackendWorker(BackendWorker):
                 logging.info("host ip: {0}".format(ip))
                 VMStateModel.set_state(params, [ins_id], VMStateModel.STATE_RUNNING, VMStateModel.DESCRI_SUCCESS)
             else:
-                self.agent.terminate_some_instances(params, [ins_id])
+                self.agent.deregister_some_instances(params, [ins_id])
                 VMStateModel.set_state(params, [ins_id], VMStateModel.STATE_FAILED,
                                        VMStateModel.DESCRI_FAIL_TO_COFIGURE_CELERY)
                 raise Exception("Failure to start celery on {0}".format(ip))
@@ -491,21 +507,18 @@ class SynchronizeDB(webapp2.RequestHandler):
     def post(self):
         req_agent = self.request.get('agent')
         self.agent = pickle.loads(str(req_agent))
+        self.agent_type = self.agent.AGENT_NAME
+
         req_parameters = self.request.get('parameters')
         self.parameters = pickle.loads(str(req_parameters))
 
         self.is_start = False
 
         id = background_thread.start_new_background_thread(self.begin, [])
-        logging.info('Started a background thread to synchronize db. id: {0}'.format(id))
+        logging.info('Started a background thread to synchronize db. id: {0} agent: {1}'.format(id, self.agent_type))
         return
 
     def begin(self):
-        try:
-            self.credentials = self.parameters['credentials']
-        except:
-            raise Exception('Error: credentials not set properly!')
-
         if not self.is_start:
             self._run()
 
@@ -516,22 +529,24 @@ class SynchronizeDB(webapp2.RequestHandler):
 
     def _run(self):
         self.is_start = False
-        VMStateModel.synchronize(self.agent, self.credentials)
+        VMStateModel.synchronize(agent=self.agent, parameters=self.parameters)
         self._write_time()
         self._start()
 
     def _write_time(self):
         try:
             now = datetime.datetime.now()
-            logging.info('Write datetime of synchronization to db_syn: {0}'.format(now))
-            syn = VMStateSyn.all()
+            logging.info('For agent {0} updating synchronization time to db_syn: {1}'.format(self.agent_type, now))
+            syn = VMStateSyn.all().filter('infra =', self.agent.AGENT_NAME)
+
             if syn.count() == 0:
-                e = VMStateSyn(last_syn=now)
-                e.put()
+                e = VMStateSyn(last_syn=now, infra=self.agent.AGENT_NAME)
             else:
-                e = db.GqlQuery("SELECT * FROM VMStateSyn").get()
+                e = syn.get()
+                logging.info('For agent {0}, old last_syn = {1}'.format(self.agent_type, e.last_syn))
                 e.last_syn = now
-                e.put()
+
+            e.put()
 
         except Exception as e:
             logging.error('Error: have errors in write date time to db_syn. {0}'.format(e))
@@ -573,14 +588,13 @@ class BackendQueue(webapp2.RequestHandler):
         logging.info('AGENT_NAME = {0}'.format(agent.AGENT_NAME))
 
         if agent.AGENT_NAME == AgentTypes.EC2:
-            worker = EC2BackendWorker(infra_manager=infra, agent=agent, reservation_id=reservation_id)
+            EC2BackendWorker(infra_manager=infra, agent=agent, reservation_id=reservation_id).prepare_vms(parameters)
         elif agent.AGENT_NAME == AgentTypes.FLEX:
-            worker = FlexBackendWorker(infra_manager=infra, agent=agent, reservation_id=reservation_id)
+            FlexBackendWorker(infra_manager=infra, agent=agent, reservation_id=reservation_id).prepare_vms(parameters)
         else:
             logging.error('Invalid agent type = {0}!'.format(agent.AGENT_NAME))
             return
 
-        worker.prepare_vms(parameters)
         logging.info('Backend queue finished preparing vms.')
 
     def __handle_start_db_syn(self):

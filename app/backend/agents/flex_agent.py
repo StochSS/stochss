@@ -1,20 +1,24 @@
 from base_agent import BaseAgent, AgentConfigurationException, AgentRuntimeException
-from common.config import AgentTypes
+from common.config import AgentTypes, FlexConfig
 
 import sys
 import os
 import traceback
 
-sys.path.append(os.path.join(os.path.dirname(__file__), '../../lib/boto'))
 sys.path.append(os.path.join(os.path.dirname(__file__), '../'))
+sys.path.append(os.path.join(os.path.dirname(__file__), '../flex_api'))
 
 import datetime
 import time
 import pprint
 import logging
+import urllib2
+import json
 
 from utils import utils
 from tasks import *
+
+from flex_state import FlexVMState
 
 __author__ = 'dev'
 __email__ = 'dnath@cs.ucsb.edu'
@@ -27,44 +31,119 @@ class FlexAgent(BaseAgent):
     PARAM_QUEUE_HEAD = 'queue_head'
     PARAM_FLEX_CLOUD_MACHINE_INFO = 'flex_cloud_machine_info'
 
+    REQUIRED_FLEX_PREPARE_INSTANCES_PARAMS = (
+        PARAM_FLEX_CLOUD_MACHINE_INFO,
+    )
+
+    REQUIRED_FLEX_DEREGISTER_INSTANCES_PARAMS = (
+        PARAM_FLEX_CLOUD_MACHINE_INFO,
+    )
+
     def configure_instance_security(self, parameters):
-        pass
+        # TODO
+        return True
 
     def assert_required_parameters(self, parameters, operation):
-        pass
+        required_params = ()
+        if operation == BaseAgent.OPERATION_PREPARE:
+            required_params = self.REQUIRED_FLEX_PREPARE_INSTANCES_PARAMS
+        elif operation == BaseAgent.OPERATION_DEREGISTER:
+            required_params = self.REQUIRED_FLEX_DEREGISTER_INSTANCES_PARAMS
+
+        logging.info('required_params: {0}'.format(required_params))
+
+        for param in required_params:
+            logging.info('param: {0}'.format(param))
+            if not utils.has_parameter(param, parameters):
+                raise AgentConfigurationException('no ' + param)
 
     def __get_flex_instance_id(self, public_ip):
-        return 'flex_{}'.format(public_ip.replace('.', '', 3))
+        return 'flex_{0}'.format(public_ip.replace('.', '', 3))
 
     def describe_instances_launched(self, parameters):
         launched_ids = []
         for machine in parameters[self.PARAM_FLEX_CLOUD_MACHINE_INFO]:
             launched_ids.append(self.__get_flex_instance_id(machine['ip']))
 
+    def __get_flex_vm_state_url(self, ip, port=80):
+        return 'http://{ip}:{port}/state'.format(ip=ip, port=port)
+
+    def __get_flex_vm_state_info(self, ip):
+        try:
+            data_received = urllib2.urlopen(self.__get_flex_vm_state_url(ip)).read()
+            state_info = json.loads(data_received)
+
+            logging.info('From ip {0}: json = {1}'.format(ip, state_info))
+
+            if state_info['state'] in FlexVMState.VALID_STATES:
+                return state_info
+
+        except Exception as e:
+            logging.error(str(e))
+
+        return {'state': FlexVMState.UNKNOWN}
+
     def describe_instances_running(self, parameters):
         instance_ids = []
         public_ips = []
         private_ips = []
         instance_types = []
+        keynames = []
 
         for machine in parameters[self.PARAM_FLEX_CLOUD_MACHINE_INFO]:
-            instance_ids.append(self.__get_flex_instance_id(machine['ip']))
-            public_ips.append(machine['ip'])
-            private_ips.append(machine['ip'])
-            instance_types.append('c3.large')
+            ip = machine['ip']
+            state_info = self.__get_flex_vm_state_info(ip)
 
-        return public_ips, private_ips, instance_ids, instance_types
+            if state_info['state'] == FlexVMState.UNPREPARED:
+                instance_ids.append(self.__get_flex_instance_id(ip))
+                public_ips.append(ip)
+                private_ips.append(ip)
+                instance_types.append(FlexConfig.INSTANCE_TYPE)
+                keynames.append(machine['keyname'])
+            else:
+                logging.info('ip {0} is already prepared!'.format(ip))
+
+        return public_ips, private_ips, instance_ids, instance_types, keynames
 
     def prepare_instances(self, parameters, count=None, security_configured=True):
         pass
 
+    def __deregister_flex_vm(self, ip, username, keyname):
+        # TODO
+        pass
 
     def deregister_instances(self, parameters, terminate=False):
         machines = parameters[self.PARAM_FLEX_CLOUD_MACHINE_INFO]
-        logging.info('machines = {0}'.format(pprint.pformat(machines)))
+        logging.info('machines to deregistered = {0}'.format(pprint.pformat(machines)))
+        for machine in machines:
+            self.__deregister_flex_vm(ip=machine['ip'], username=machine['username'], keyname=machine['keyname'])
 
     def validate_credentials(self, credentials):
         raise NotImplementedError
+
+    def deregister_some_instances(self, parameters, instance_ids, terminate=False):
+        """
+        Deregister the specific Flex instances
+
+        Args:
+          parameters      A dictionary of parameters
+          instance_ids    The list of instance ids that is going to be terminated
+        """
+        logging.info('instance_ids to be deregistered = {0}'.format(instance_ids))
+
+        machines_to_deregister = []
+        for machine in parameters[self.PARAM_FLEX_CLOUD_MACHINE_INFO]:
+            if self.__get_flex_instance_id(machine['ip']) in instance_ids:
+                machines_to_deregister.append(machine)
+
+        logging.info('machines_to_deregister:\n{0}'.format(pprint.pformat(machines_to_deregister)))
+
+        if len(machines_to_deregister) != len(instance_ids):
+            logging.error('Could not find all instances to be deregistered!')
+
+        for machine in machines_to_deregister:
+            logging.info('Instance with ip {0} was terminated'.format(machine['ip']))
+            self.__deregister_flex_vm(ip=machine['ip'], username=machine['username'], keyname=machine['keyname'])
 
     def get_instance_state(self, ip, username, keyfile):
         logging.info('Checking state...')
