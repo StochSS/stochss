@@ -624,6 +624,10 @@ class ImportFromXMLPage(BaseHandler):
             name = storage.filename.split('.')[0]
 
             stochKitModel = stochss.stochkit.StochMLDocument.fromString(storage.file.read()).toModel(name)
+
+            if len(stochKitModel.listOfParameters) == 0 and len(stochKitModel.listOfSpecies) == 0 and len(stochKitModel.listOfReactions) == 0:
+                raise Exception("No parameters, species, or reactions detected in model. This XML file is probably not a StochKit Model")
+
             modelDb = StochKitModelWrapper.createFromStochKitModel(self, stochKitModel)
             
             self.redirect("/modeleditor?select={0}".format(modelDb.key().id()))
