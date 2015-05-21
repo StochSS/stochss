@@ -279,17 +279,24 @@ class backendservices(object):
         raise Exception('Error: {0} is not given in params.'.format(parameter_key))
 
 
-    def __create_vm_state_model_entries(self, infrastructure, num_vms, ec2_secret_key, ec2_access_key, user_id):
+    def __create_vm_state_model_entries(self, infrastructure, num_vms,
+                                        ec2_secret_key, ec2_access_key,
+                                        user_id, reservation_id):
+        logging.info('__create_vm_state_model_entries')
+        logging.info('num_vms = {0} user_id = {1} reservation_id = {2}'.format(num_vms, user_id, reservation_id))
+
         ids = []
         for _ in xrange(num_vms):
             vm_state = VMStateModel(state=VMStateModel.STATE_CREATING,
                                     infra=infrastructure,
                                     ec2_access_key=ec2_access_key,
                                     ec2_secret_key=ec2_secret_key,
-                                    user_id=user_id)
+                                    user_id=user_id,
+                                    res_id=reservation_id)
             vm_state.put()
             ids.append(vm_state.key().id())
 
+        logging.info('__create_vm_state_model_entries: ids = {0}'.format(ids))
         return ids
 
     def prepare_flex_cloud_machines(self, params, blocking=False):
@@ -323,13 +330,16 @@ class backendservices(object):
 
             logging.info('ec2_access_key = {0} ec2_secret_key = {1}'.format(ec2_access_key, ec2_secret_key))
 
-
             # 3. create exact number of entities in db for this launch, and set the status to 'creating'
             num_vms = len(params['flex_cloud_machine_info'])
             logging.info('num_vms = {0}'.format(num_vms))
 
+            reservation_id = params['reservation_id']
+            logging.info('flex: reservation_id = {0}'.format(reservation_id))
+
             ids = self.__create_vm_state_model_entries(ec2_access_key=ec2_access_key, ec2_secret_key=ec2_secret_key,
-                                                       infrastructure=infrastructure, num_vms=num_vms, user_id=user_id)
+                                                       infrastructure=infrastructure, num_vms=num_vms, user_id=user_id,
+                                                       reservation_id=reservation_id)
 
             # 4. Prepare Instances
             params[VMStateModel.IDS] = ids
@@ -378,6 +388,9 @@ class backendservices(object):
 
             user_id = self.__get_required_parameter(parameter_key='user_id', params=params)
             infrastructure = self.__get_required_parameter(parameter_key='infrastructure', params=params)
+            reservation_id = self.__get_required_parameter(parameter_key='reservation_id', params=params)
+
+            logging.info('ec2: reservation_id = {0}'.format(reservation_id))
 
             if 'credentials' in params:
                 if 'EC2_ACCESS_KEY' in params['credentials'] and 'EC2_SECRET_KEY' in params['credentials']:
@@ -403,7 +416,8 @@ class backendservices(object):
             logging.info('num = {0}'.format(num_vms))
 
             ids = self.__create_vm_state_model_entries(ec2_access_key=ec2_access_key, ec2_secret_key=ec2_secret_key,
-                                                       infrastructure=infrastructure, num_vms=num_vms, user_id=user_id)
+                                                       infrastructure=infrastructure, num_vms=num_vms, user_id=user_id,
+                                                       reservation_id=reservation_id)
 
             # 4. Prepare Instances
             params[VMStateModel.IDS] = ids
@@ -548,6 +562,10 @@ class backendservices(object):
                                                                                                      username=username,
                                                                                                      command=command,
                                                                                                      ip=ip)
+
+    @staticmethod
+    def get_random_alphanumeric(length=10):
+        return str(uuid.uuid4()).replace('-', '')[:length]
 
     @staticmethod
     def validate_flex_cloud_info(machine_info, user_id):

@@ -20,6 +20,7 @@ import time
 
 from backend.common.config import AWSConfig, AgentTypes, AgentConfig, FlexConfig
 from backend.databases.dynamo_db import DynamoDB
+from backend.vm_state_model import VMStateModel
 
 class CredentialsPage(BaseHandler):
     EC2_INS_TYPES = ["t1.micro", "m1.small", "m3.medium", "m3.large", "c3.large", "c3.xlarge"]
@@ -216,30 +217,30 @@ class CredentialsPage(BaseHandler):
             self.redirect('/credentials')
 
 
-    def save_flex_cloud_info(self, machine_info, user_id):
-        try:
-            is_valid, error_reason = backendservices.validate_flex_cloud_info(machine_info, user_id)
-
-            if is_valid:
-                self.user_data.valid_flex_cloud_info = True
-                result = {'flex_cloud_status': True,
-                          'flex_cloud_info_msg': 'Flex Cloud machine info has been successfully validated!'}
-            else:
-                self.user_data.valid_flex_cloud_info = False
-                result = {'flex_cloud_status': False,
-                          'flex_cloud_info_msg': 'Invalid Flex Cloud machine info!',
-                          'flex_validation_error_message': error_reason}
-
-            self.user_data.set_flex_cloud_machine_info(machine_info)
-            self.user_data.put()
-
-        except Exception, e:
-            logging.error(e.message)
-            result = {'flex_cloud_status': False,
-                      'flex_cloud_info_msg': 'Invalid Flex Cloud machine info!',
-                      'flex_validation_error_message': e.message}
-
-        return result
+    # def save_flex_cloud_info(self, machine_info, user_id):
+    #     try:
+    #         is_valid, error_reason = backendservices.validate_flex_cloud_info(machine_info, user_id)
+    #
+    #         if is_valid:
+    #             self.user_data.valid_flex_cloud_info = True
+    #             result = {'flex_cloud_status': True,
+    #                       'flex_cloud_info_msg': 'Flex Cloud machine info has been successfully validated!'}
+    #         else:
+    #             self.user_data.valid_flex_cloud_info = False
+    #             result = {'flex_cloud_status': False,
+    #                       'flex_cloud_info_msg': 'Invalid Flex Cloud machine info!',
+    #                       'flex_validation_error_message': error_reason}
+    #
+    #         self.user_data.set_flex_cloud_machine_info(machine_info)
+    #         self.user_data.put()
+    #
+    #     except Exception, e:
+    #         logging.error(e.message)
+    #         result = {'flex_cloud_status': False,
+    #                   'flex_cloud_info_msg': 'Invalid Flex Cloud machine info!',
+    #                   'flex_validation_error_message': e.message}
+    #
+    #     return result
 
     def saveCredentials(self, credentials, database=None):
         """ Save the Credentials to the datastore. """
@@ -295,15 +296,21 @@ class CredentialsPage(BaseHandler):
             'keyname': '',
             'email': [user_id],
             'credentials': credentials,
-            'user_id': user_id
+            'user_id': user_id,
+            'reservation_id': self.user_data.reservation_id
         }
 
         result = service.deregister_flex_cloud(parameters=params, blocking=True)
 
         if result == True:
+            logging.info('deregister_flex_cloud succeeded!')
             self.user_data.valid_flex_cloud_info = False
+            self.user_data.is_flex_cloud_info_set = False
             self.user_data.set_flex_cloud_machine_info([])
+            self.user_data.reservation_id = None
             self.user_data.put()
+        else:
+            logging.error('deregister_flex_cloud failed!')
 
         self.redirect('/credentials')
 
@@ -312,6 +319,12 @@ class CredentialsPage(BaseHandler):
 
         credentials = self.user_data.getCredentials()
 
+        reservation_id = backendservices.get_random_alphanumeric()
+        logging.info('Generated reservation_id = {0}'.format(reservation_id))
+
+        self.user_data.is_flex_cloud_info_set = True
+        self.user_data.reservation_id = reservation_id
+        self.user_data.valid_flex_cloud_info = False
         self.user_data.set_flex_cloud_machine_info(flex_cloud_machine_info)
         self.user_data.put()
 
@@ -322,7 +335,8 @@ class CredentialsPage(BaseHandler):
             'keyname': '',
             'email': [user_id],
             'user_id': user_id,
-            'credentials': credentials
+            'credentials': credentials,
+            'reservation_id': reservation_id
         }
 
         service = backendservices(infrastructure=AgentTypes.FLEX)
@@ -363,6 +377,7 @@ class CredentialsPage(BaseHandler):
             context['valid_credentials'] = True
 
             all_vms = self.__get_all_vms(params)
+            logging.info('ec2: all_vms = {0}'.format(pprint.pformat(all_vms)))
 
             if all_vms == None:
                 result = {'status': False,
@@ -430,29 +445,70 @@ class CredentialsPage(BaseHandler):
         context = {}
         result = {}
 
-        params = {'infrastructure': AgentTypes.FLEX,
-                  'user_id': user_id,
-                  'flex_cloud_machine_info': self.user_data.get_flex_cloud_machine_info() }
-
-        all_vms = self.__get_all_vms(params)
-        logging.info('all_vms = {0}'.format(pprint.pformat(all_vms)))
-
         flex_cloud_machine_info = self.user_data.get_flex_cloud_machine_info()
         logging.info("flex_cloud_machine_info =\n{0}".format(pprint.pformat(flex_cloud_machine_info)))
 
+        result['is_flex_cloud_info_set'] = self.user_data.is_flex_cloud_info_set
+
         # Fill with dummy if empty
         if flex_cloud_machine_info == None or len(flex_cloud_machine_info) == 0:
+            logging.info('Adding dummy flex cloud machine for UI rendering...')
             flex_cloud_machine_info = [{'ip': '', 'keyname': '', 'username': '', 'queue_head': False}]
+
+        else:
+            reservation_id = self.user_data.reservation_id
+            logging.info('From user_data, reservation_id = {}'.format(reservation_id))
+
+            params = {'infrastructure': AgentTypes.FLEX,
+                      'user_id': user_id,
+                      'flex_cloud_machine_info': self.user_data.get_flex_cloud_machine_info(),
+                      'reservation_id': reservation_id}
+
+            all_vms = self.__get_all_vms(params)
+            logging.info('flex: all_vms =\n{0}'.format(pprint.pformat(all_vms)))
+
+            all_vms_map = {vm['pub_ip']: vm for vm in all_vms}
+            logging.info('flex: all_vms_map =\n{0}'.format(pprint.pformat(all_vms_map)))
+
+            for machine in flex_cloud_machine_info:
+                ip = machine['ip']
+                if ip in all_vms_map:
+                    if all_vms_map[ip]['reservation_id'] == reservation_id:
+                        machine['state'] = all_vms_map[ip]['state']
+                        machine['description'] = all_vms_map[ip]['description']
+                    else:
+                        logging.error('From VMStateModel, reservation_id = {} != user_data.reservation_id'.format(
+                            all_vms_map[ip]['reservation_id']
+                        ))
+                        machine['state'] = VMStateModel.STATE_UNKNOWN
+                        machine['description'] = VMStateModel.STATE_UNKNOWN
+
+                else:
+                    logging.error('Could not find machine with ip : {0}'.format(ip))
+                    machine['state'] = VMStateModel.STATE_UNKNOWN
+                    machine['description'] = VMStateModel.STATE_UNKNOWN
+
+            logging.info('After updating from VMStateModel, flex_cloud_machine_info =\n{0}'.format(flex_cloud_machine_info))
 
         context['flex_cloud_machine_info'] = flex_cloud_machine_info
 
+        # Update Flex Cloud Status
+        for machine in flex_cloud_machine_info:
+            if machine['queue_head'] and machine['state'] == VMStateModel.STATE_RUNNING:
+                self.user_data.valid_flex_cloud_info = True
+            else:
+                self.user_data.valid_flex_cloud_info = False
+        self.user_data.put()
+
         # Check if the flex cloud credentials are valid.
         if not self.user_data.valid_flex_cloud_info:
-            result['flex_cloud_status'] = False
+            result['flex_cloud_status'] = 'Failure'
             result['flex_cloud_info_msg'] = 'Could not determine the status of the machines: Invalid Flex Cloud Credentials!'
             context['valid_flex_cloud_info'] = False
 
         else:
+            result['flex_cloud_status'] = 'Success'
+            result['flex_cloud_info_msg'] = 'At least queue head is running!'
             context['valid_flex_cloud_info'] = True
 
         context = dict(result, **context)
@@ -500,6 +556,9 @@ class CredentialsPage(BaseHandler):
         logging.debug("key_prefix = {0}".format(key_prefix))
         logging.debug("group_random_name = {0}".format(group_random_name))
 
+        reservation_id = backendservices.get_random_alphanumeric()
+        logging.info('Generated reservation_id = {0}'.format(reservation_id))
+
         params ={
             "infrastructure": AgentTypes.EC2,
             'group': group_random_name,
@@ -510,7 +569,8 @@ class CredentialsPage(BaseHandler):
             'email': [user_id],
             'user_id': user_id,
             'credentials': credentials,
-            'use_spot_instances' :False
+            'use_spot_instances' :False,
+            'reservation_id': reservation_id
         }
 
         image_id = self.__get_ec2_image_id()

@@ -23,7 +23,7 @@ import pprint
 from google.appengine.ext import db
 from kombu import Queue, Exchange
 
-from common.config import AgentTypes, AgentConfig
+from common.config import AgentTypes, AgentConfig, FlexConfig
 import common.helper as helper
 from vm_state_model import VMStateModel
 
@@ -73,14 +73,27 @@ class FlexBackendWorker(BackendWorker):
         self.infra_manager = infra_manager
         self.reservation_id = reservation_id
 
-    def __prepare_queue_head(self, queue_head_machine):
-        pass
+    def __get_queue_head_from_params(self, flex_cloud_machine_info, parameters):
+        queue_head_machine = None
+        for machine in flex_cloud_machine_info:
+            if machine[self.PARAM_IS_QUEUE_HEAD]:
+                if queue_head_machine != None:
+                    logging.error('Error: Multiple queue heads !')
+                    VMStateModel.fail_active(parameters)
+                    return None
+                else:
+                    queue_head_machine = machine
 
-    def __prepare_workers(self, machine, queue_head_ip):
-        pass
+        if queue_head_machine == None:
+            logging.error('Error: No queue head !')
+            VMStateModel.fail_active(parameters)
+            return None
+
+        return queue_head_machine
 
     def prepare_vms(self, parameters):
-        logging.info('\n\nFlexBackendWorker.prepare_vms:\n\n{0}'.format(pprint.pformat(parameters)))
+        logging.info('\n\nprepare_vms:\n\n{0}'.format(pprint.pformat(parameters)))
+
         if self.PARAM_FLEX_CLOUD_MACHINE_INFO not in parameters \
                 or parameters[self.PARAM_FLEX_CLOUD_MACHINE_INFO] == None \
                 or parameters[self.PARAM_FLEX_CLOUD_MACHINE_INFO] == []:
@@ -91,27 +104,267 @@ class FlexBackendWorker(BackendWorker):
 
         flex_cloud_machine_info = parameters[self.PARAM_FLEX_CLOUD_MACHINE_INFO]
 
-        queue_head_machine = None
-        for machine in flex_cloud_machine_info:
-            if machine[self.PARAM_IS_QUEUE_HEAD]:
-                if queue_head_machine != None:
-                    logging.error('Error: Multiple queue heads !')
-                    VMStateModel.fail_active(parameters)
-                    return
-                else:
-                    queue_head_machine = machine
+        num_vms_to_prepare = len(flex_cloud_machine_info)
+        public_ips, private_ips, instance_ids, keyfiles, usernames = self.__poll_instances_status(
+                                                                                num_vms=num_vms_to_prepare,
+                                                                                parameters=parameters)
 
-        result = self.__prepare_queue_head(queue_head_machine)
+        logging.info('public_ips = {}'.format(public_ips))
+        logging.info('private_ips = {}'.format(private_ips))
+        logging.info('instance_ids = {}'.format(instance_ids))
+        logging.info('keyfiles = {}'.format(keyfiles))
+        logging.info('usernames = {}'.format(usernames))
 
-        if result == True:
-            for machine in flex_cloud_machine_info:
-                if machine != queue_head_machine:
-                    self.__prepare_workers(machine, queue_head_ip=queue_head_machine['ip'])
-        else:
+        queue_head_machine = self.__get_queue_head_from_params(flex_cloud_machine_info, parameters)
+
+        if queue_head_machine == None or queue_head_machine['ip'] not in public_ips:
+            logging.error('Found no viable queue head machine!')
+            VMStateModel.fail_active(parameters)
+            return
+
+        result = self.__prepare_queue_head(queue_head_machine, parameters)
+        if result == False:
             logging.error('Error: could not prepare queue head! Failing other creating nodes.')
             VMStateModel.fail_active(parameters)
+            return
+
+        self.__prepare_workers(public_ips, parameters)
+
+        connected_public_ips, connected_instance_ids = self.__verify_flex_instances_via_ssh(keyfiles=keyfiles,
+                                                                        instance_ids=instance_ids, public_ips=public_ips,
+                                                                        usernames=usernames, parameters=parameters)
+
+        if len(connected_public_ips) == 0 or len(connected_public_ips) == []:
+            logging.info('No vm was reachable!')
+            VMStateModel.fail_active(parameters)
+            return
+
+        if queue_head_machine['ip'] not in connected_public_ips:
+            logging.info('queue_head_machine with ip {0} was not reachable!'.format(queue_head_machine['ip']))
+            VMStateModel.fail_active(parameters)
+            return
+
+        self.__configure_celery(params=parameters, public_ips=public_ips, instance_ids=instance_ids)
 
         return
+
+
+    def __prepare_queue_head(self, queue_head_machine, parameters):
+        keyfile = FlexConfig.get_keyfile(queue_head_machine['keyname'], user_id=parameters['user_id'])
+        if not os.path.exists(keyfile):
+            logging.error('Queue head keyfile: {0} does not exist!'.format(keyfile))
+            return False
+
+        success = helper.wait_for_ssh_connection(key_file=keyfile,
+                                                 ip=queue_head_machine['ip'],
+                                                 username=queue_head_machine['username'])
+
+        if success == True:
+            logging.info('Queue Head with ip {0} is successfully ssh-able'.format(queue_head_machine['ip']))
+        else:
+            logging.error('Queue Head ssh failed!')
+            return False
+
+        try:
+            params = {
+                'infrastructure': AgentTypes.FLEX,
+                self.PARAM_FLEX_CLOUD_MACHINE_INFO: [queue_head_machine],
+                'credentials': parameters['credentials'],
+                'user_id': parameters['user_id']
+            }
+            self.agent.prepare_instances(params)
+            return True
+
+        except Exception as e:
+            logging.error(e)
+            return False
+
+
+    def __prepare_workers(self, public_ips, parameters):
+        try:
+            flex_cloud_machine_info = []
+            for machine in parameters[self.PARAM_FLEX_CLOUD_MACHINE_INFO]:
+                if machine[self.PARAM_IS_QUEUE_HEAD] != True and machine['ip'] in public_ips:
+                    flex_cloud_machine_info.append(machine)
+
+            params = {
+                'infrastructure': AgentTypes.FLEX,
+                self.PARAM_FLEX_CLOUD_MACHINE_INFO: flex_cloud_machine_info,
+                'credentials': parameters['credentials'],
+                'user_id': parameters['user_id']
+            }
+            self.agent.prepare_instances(params)
+
+        except Exception as e:
+            logging.error(e)
+
+    def __verify_flex_instances_via_ssh(self, instance_ids, keyfiles, public_ips, usernames, parameters):
+        connected_public_ips = []
+        connected_instance_ids = []
+
+        for (pub_ip, ins_id, keyfile, username) in zip(public_ips, instance_ids, keyfiles, usernames):
+            logging.info('connecting to ip: {0}...'.format(pub_ip))
+            success = helper.wait_for_ssh_connection(key_file=keyfile, ip=pub_ip, username=username)
+
+            if success == True:
+                logging.info('{0} is successfully added'.format(pub_ip))
+                connected_public_ips.append(pub_ip)
+                connected_instance_ids.append(ins_id)
+
+        # if there are some vms not able to be connected via ssh,
+        # just shut them down explicitly
+        if len(public_ips) != len(connected_public_ips):
+            logging.info('Time out on ssh to {0} instances. They will be terminated.'.format(
+                len(public_ips) - len(connected_public_ips)))
+
+            try:
+                terminate_ins_ids = []
+                for ins_id in instance_ids:
+                    if ins_id not in connected_instance_ids:
+                        terminate_ins_ids.append(ins_id)
+                self.agent.deregister_some_instances(parameters, terminate_ins_ids)
+
+                # update db with failed vms
+                VMStateModel.set_state(parameters, terminate_ins_ids,
+                                       VMStateModel.STATE_FAILED,
+                                       VMStateModel.DESCRI_TIMEOUT_ON_SSH)
+            except:
+                raise Exception("Errors in terminating instances that cannot be connected via ssh.")
+
+        public_ips = None
+        instance_ids = None
+
+        return connected_public_ips, connected_instance_ids
+
+    def __poll_instances_status(self, num_vms, parameters):
+        '''
+        Private method that working on polling the state of instances that have already spawned
+        every some time and checking the ssh connectability if they are running.
+
+        Args
+            num_vms         Number of virtual machines that are needed to be polling
+            parameters      A dictionary of parameters
+
+        Return
+            A turple of (public ips, private ips, instance ids). Each of the three is a list
+        '''
+        logging.info('Start polling task for infrastructure = {0}'.format(parameters['infrastructure']))
+
+        ins_ids = self.agent.describe_instances_launched(parameters)
+        logging.info("ins_ids = {0}".format(ins_ids))
+
+        # update db with new instance ids and 'pending'
+        VMStateModel.update_ins_ids(parameters, ins_ids, self.reservation_id)
+
+        public_ips = None
+        private_ips = None
+        instance_ids = None
+        keyfiles = None
+        usernames = None
+
+        for x in xrange(FlexBackendWorker.POLL_COUNT):
+            # get the ips and ids of this keyname
+            public_ips, private_ips, instance_ids, instance_types, keynames, usernames = self.agent.describe_instances_running(
+                                                                                                            parameters)
+
+            logging.info("public_ips = {0}".format(public_ips))
+            logging.debug("private_ips = {0}".format(private_ips))
+            logging.info("instance_ids = {0}".format(instance_ids))
+            logging.info("instance_types = {0}".format(instance_types))
+            logging.debug("keynames = {0}".format(keynames))
+            logging.debug("usernames = {0}".format(usernames))
+
+            keyfiles = map(lambda x: FlexConfig.get_keyfile(keyname=x, user_id=parameters['user_id']), keynames)
+
+            # if we get the requested number of vms (the requested number will be 1 if this is queue head),
+            # update reservation information and send a message to the backend server
+            if num_vms == len(public_ips):
+                # update db with new public ips and private ips
+                VMStateModel.update_ips(parameters, instance_ids, public_ips, private_ips, instance_types, keynames)
+                break
+
+            else:
+                if x < FlexBackendWorker.POLL_COUNT - 1:
+                    time.sleep(FlexBackendWorker.POLL_WAIT_TIME)
+                    logging.info('Polling task: sleep 5 seconds...')
+
+                else:
+                    VMStateModel.update_ips(parameters, instance_ids, public_ips, private_ips, instance_types, keynames)
+
+                    logging.info('Polling timeout. About to terminate some instances:')
+                    terminate_ins_ids = []
+                    for ins_id in ins_ids:
+                        if ins_id not in instance_ids:
+                            logging.info('instance {0} to be terminated'.format(ins_id))
+                            terminate_ins_ids.append(ins_id)
+
+                    # terminate timeout instances
+                    self.agent.deregister_some_instances(parameters, terminate_ins_ids)
+
+                    # update db with failure information
+                    VMStateModel.set_state(parameters, terminate_ins_ids, VMStateModel.STATE_FAILED,
+                                           VMStateModel.DESCRI_FAIL_TO_PREPARE)
+
+        return public_ips, private_ips, instance_ids, keyfiles, usernames
+
+
+    def __configure_celery(self, params, public_ips, instance_ids):
+        '''
+        Private method used for uploading the current celery configuration to each instance
+        that is running and ssh connectable.
+
+        Args
+            parameters      A dictionary of parameters
+            public_ips      A list of public ips that are going to be configed
+            instance_ids    A list of instance_ids that are used for terminating instances and update
+                            database if fail on configuration by some reason
+        '''
+        # Update celery config file...it should have the correct IP
+        # of the Queue head node, which should already be running.
+        # Pass it line by line so theres no weird formatting errors from
+        # trying to echo a multi-line file directly on the command line
+
+        flex_cloud_machine_info = params[self.PARAM_FLEX_CLOUD_MACHINE_INFO]
+        flex_cloud_machine_info_map = {machine['ip']: machine for machine in flex_cloud_machine_info}
+
+        credentials = params['credentials']
+
+
+        for ip, ins_id in zip(public_ips, instance_ids):
+            # helper.wait_for_ssh_connection(key_file, ip)
+            ins_type = VMStateModel.get_instance_type(params, ins_id)
+            logging.info('For ip: {0} ins_type = {1}'.format(ip, ins_type))
+
+            commands = []
+            commands.append('source ~/.bashrc')
+            commands.append('export AWS_ACCESS_KEY_ID={0}'.format(credentials['EC2_ACCESS_KEY']))
+            commands.append('export AWS_SECRET_ACCESS_KEY={0}'.format(credentials['EC2_SECRET_KEY']))
+            commands.append('export INSTANCE_TYPE={0}'.format(ins_type))
+
+            keyfile = FlexConfig.get_keyfile(flex_cloud_machine_info_map[ip]['keyname'], user_id=params['user_id'])
+            username = flex_cloud_machine_info_map[ip]['username']
+
+            success = helper.start_celery_on_vm(instance_type=ins_type, ip=ip, key_file=keyfile,
+                                                username=username,
+                                                agent_type=self.agent_type,
+                                                worker_name=ip.replace('.', '_'),
+                                                prepend_commands=commands)
+            if success == 0:
+                # update db with successful running vms
+                logging.info("celery started! ")
+                logging.info("host ip: {0}".format(ip))
+                VMStateModel.set_state(params, [ins_id], VMStateModel.STATE_RUNNING, VMStateModel.DESCRI_SUCCESS)
+
+            else:
+                self.agent.deregister_some_instances(params, [ins_id])
+                VMStateModel.set_state(params, [ins_id], VMStateModel.STATE_FAILED,
+                                       VMStateModel.DESCRI_FAIL_TO_COFIGURE_CELERY)
+                raise Exception("Fail to start celery on {0}".format(ip))
+
+        # get all intstance types and configure the celeryconfig.py locally
+        instance_types = VMStateModel.get_running_instance_types(params)
+        logging.info('For local celery setup, instance_types = {0}'.format(instance_types))
+        helper.config_celery_queues(agent_type=self.agent_type, instance_types=instance_types)
 
 
 
@@ -227,7 +480,7 @@ class EC2BackendWorker(BackendWorker):
 
 
     def __launch_ec2_queue_head(self, parameters):
-        logging.info('About to start a queue head.')
+        logging.info('About to start an EC2 queue head...')
         parameters["queue_head"] = True
         requested_key_name = parameters["keyname"]
 
@@ -358,7 +611,7 @@ class EC2BackendWorker(BackendWorker):
         instance_ids = None
         keynames = None
 
-        for x in range(0, EC2BackendWorker.POLL_COUNT):
+        for x in xrange(EC2BackendWorker.POLL_COUNT):
             # get the ips and ids of this keyname
             public_ips, private_ips, instance_ids, instance_types, keynames = self.agent.describe_instances_running(
                                                                                                             parameters)

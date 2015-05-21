@@ -14,11 +14,13 @@ import pprint
 import logging
 import urllib2
 import json
+import tempfile
 
 from utils import utils
 from tasks import *
 
 from flex_state import FlexVMState
+from vm_state_model import VMStateModel
 
 __author__ = 'dev'
 __email__ = 'dnath@cs.ucsb.edu'
@@ -30,13 +32,16 @@ class FlexAgent(BaseAgent):
     PARAM_CREDENTIALS = 'credentials'
     PARAM_QUEUE_HEAD = 'queue_head'
     PARAM_FLEX_CLOUD_MACHINE_INFO = 'flex_cloud_machine_info'
+    PARAM_USER_ID = 'user_id'
 
     REQUIRED_FLEX_PREPARE_INSTANCES_PARAMS = (
         PARAM_FLEX_CLOUD_MACHINE_INFO,
+        PARAM_USER_ID
     )
 
     REQUIRED_FLEX_DEREGISTER_INSTANCES_PARAMS = (
         PARAM_FLEX_CLOUD_MACHINE_INFO,
+        PARAM_USER_ID
     )
 
     def configure_instance_security(self, parameters):
@@ -65,6 +70,9 @@ class FlexAgent(BaseAgent):
         for machine in parameters[self.PARAM_FLEX_CLOUD_MACHINE_INFO]:
             launched_ids.append(self.__get_flex_instance_id(machine['ip']))
 
+        logging.info('launched_ids = {0}'.format(launched_ids))
+        return launched_ids
+
     def __get_flex_vm_state_url(self, ip, port=80):
         return 'http://{ip}:{port}/state'.format(ip=ip, port=port)
 
@@ -89,6 +97,7 @@ class FlexAgent(BaseAgent):
         private_ips = []
         instance_types = []
         keynames = []
+        usernames = []
 
         for machine in parameters[self.PARAM_FLEX_CLOUD_MACHINE_INFO]:
             ip = machine['ip']
@@ -100,23 +109,30 @@ class FlexAgent(BaseAgent):
                 private_ips.append(ip)
                 instance_types.append(FlexConfig.INSTANCE_TYPE)
                 keynames.append(machine['keyname'])
+                usernames.append(machine['username'])
             else:
                 logging.info('ip {0} is already prepared!'.format(ip))
 
-        return public_ips, private_ips, instance_ids, instance_types, keynames
+        return public_ips, private_ips, instance_ids, instance_types, keynames, usernames
 
-    def prepare_instances(self, parameters, count=None, security_configured=True):
-        pass
+    def __deregister_flex_vm(self, ip, username, keyname, user_id, parameters, force=False):
+        keyfile = FlexConfig.get_keyfile(keyname=keyname, user_id=user_id)
+        deregister_command = self.get_remote_command_string(ip=ip, username=username, keyfile=keyfile,
+                                       command="sudo kill -9 $(ps aux | grep celery | awk '{print $2}')")
 
-    def __deregister_flex_vm(self, ip, username, keyname):
-        # TODO
-        pass
+        logging.info('deregister_command =\n{}'.format(deregister_command))
+        os.system(deregister_command)
+
+        VMStateModel.set_state(params=parameters, ins_ids=[self.__get_flex_instance_id(public_ip=ip)],
+                               state=VMStateModel.STATE_TERMINATED, description='VM Deregistered.')
+
 
     def deregister_instances(self, parameters, terminate=False):
         machines = parameters[self.PARAM_FLEX_CLOUD_MACHINE_INFO]
         logging.info('machines to deregistered = {0}'.format(pprint.pformat(machines)))
         for machine in machines:
-            self.__deregister_flex_vm(ip=machine['ip'], username=machine['username'], keyname=machine['keyname'])
+            self.__deregister_flex_vm(ip=machine['ip'], username=machine['username'], keyname=machine['keyname'],
+                                      user_id=parameters['user_id'], parameters=parameters)
 
     def validate_credentials(self, credentials):
         raise NotImplementedError
@@ -143,7 +159,8 @@ class FlexAgent(BaseAgent):
 
         for machine in machines_to_deregister:
             logging.info('Instance with ip {0} was terminated'.format(machine['ip']))
-            self.__deregister_flex_vm(ip=machine['ip'], username=machine['username'], keyname=machine['keyname'])
+            self.__deregister_flex_vm(ip=machine['ip'], username=machine['username'], keyname=machine['keyname'],
+                                      user_id=parameters['user_id'], parameters=parameters)
 
     def get_instance_state(self, ip, username, keyfile):
         logging.info('Checking state...')
@@ -180,205 +197,116 @@ class FlexAgent(BaseAgent):
             instance["id"] = self.__get_flex_instance_id(machine["ip"])
             instance["public_ip"] = machine["ip"]
             instance["private_ip"] = machine["ip"]
+
             instance["state"] = self.get_instance_state(ip=machine["ip"],
                                                         username=machine["username"],
-                                                        keyfile=machine["keyfile"])
-            instance["key_name"] = os.path.basename(machine["keyfile"])
+                                                        keyfile=FlexConfig.get_keyfile(
+                                                            keyname=machine["keyname"],
+                                                            user_id=parameters[self.PARAM_USER_ID]))
+
+            instance["key_name"] = os.path.basename(machine["keyname"])
             instance_list.append(instance)
 
         logging.info('instance_list = \n{0}'.format(pprint.pformat(instance_list)))
         return instance_list
 
-    def __get_preparing_commands(self, aws_credentials):
-        # These are commutative commands
 
-        commands = []
+    def prepare_instances(self, parameters, count=None, security_configured=True):
+        """
+        prepares the specified number of Flex instances using the parameters
+        provided. This method is blocking in that it waits until the
+        requested VMs are properly booted up. However if the requested
+        VMs cannot be procured within 1800 seconds, this method will treat
+        it as an error and return. (Also see documentation for the BaseAgent
+        class)
 
-        commands.append('export AWS_ACCESS_KEY_ID={0}'.format(aws_credentials['AWS_ACCESS_KEY_ID']))
-        commands.append('export AWS_SECRET_ACCESS_KEY={0}'.format(aws_credentials['AWS_SECRET_ACCESS_KEY']))
+        Args:
+          parameters          A dictionary of parameters. This must contain 'keyname',
+                              'group', 'image_id' and 'instance_type' parameters.
+          security_configured Uses this boolean value as an heuristic to
+                              detect brand new AppScale deployments.
 
-        commands.append(
-            'echo export AWS_ACCESS_KEY_ID={0} >> ~/.bashrc'.format(aws_credentials['AWS_ACCESS_KEY_ID']))
-        commands.append(
-            'echo export AWS_SECRET_ACCESS_KEY={0} >> ~/.bashrc'.format(aws_credentials['AWS_SECRET_ACCESS_KEY']))
+        Returns:
+          A tuple of the form (instances, public_ips, private_ips)
+        """
 
-        # commands.append('echo export AWS_ACCESS_KEY_ID={0} >> /home/ubuntu/.bashrc'.format(str(self.aws_credentials['AWS_ACCESS_KEY_ID'])))
-        # commands.append('echo export AWS_SECRET_ACCESS_KEY={0} >> /home/ubuntu/.bashrc'.format(self.aws_credentials['AWS_SECRET_ACCESS_KEY']))
+        flex_cloud_machine_info = parameters[self.PARAM_FLEX_CLOUD_MACHINE_INFO]
+        user_id = parameters[self.PARAM_USER_ID]
 
-        commands.append('export STOCHKIT_HOME={0}'.format('/home/ubuntu/stochss/StochKit/'))
-        commands.append('export STOCHKIT_ODE={0}'.format('/home/ubuntu/stochss/ode/'))
+        credentials = parameters[self.PARAM_CREDENTIALS]
 
-        commands.append('echo export STOCHKIT_HOME={0} >> ~/.bashrc'.format("/home/ubuntu/stochss/StochKit/"))
-        commands.append('echo export STOCHKIT_ODE={0} >> ~/.bashrc'.format("/home/ubuntu/stochss/ode/"))
+        for machine in flex_cloud_machine_info:
+            ip = machine['ip']
+            keyfile = FlexConfig.get_keyfile(keyname=machine['keyname'], user_id=user_id)
+            username = machine['username']
+            is_queue_head = machine[self.PARAM_QUEUE_HEAD]
+            id = self.__get_flex_instance_id(public_ip=ip)
 
-        commands.append('echo export C_FORCE_ROOT=1 >> ~/.bashrc')
-        # commands.append('echo export C_FORCE_ROOT=1 >> /home/ubuntu/.bashrc')
+            if not os.path.exists(keyfile):
+                logging.error('Keyfile: {0} does not exist!'.format(keyfile))
+                VMStateModel.set_state(params=parameters, ins_ids=[id],
+                                       state=VMStateModel.STATE_FAILED,
+                                       description=VMStateModel.DESCRI_INVALID_KEYFILE)
+                continue
 
-        commands.append('source ~/.bashrc')
 
-        return commands
+            logging.info("[{0}] [{1}] [{2}] [is_queue_head:{3}]".format(ip, keyfile, username, is_queue_head))
 
+            script_lines = []
+            script_lines.append("#!/bin/bash")
 
-    def prepare_machines(self, params):
-        logging.info("prepare_machines: inside method with machine_info : \n%s", pprint.pformat(params["machines"]))
+            script_lines.append("echo export AWS_ACCESS_KEY_ID={0} >> ~/.bashrc".format(credentials['EC2_ACCESS_KEY']))
+            script_lines.append("echo export AWS_SECRET_ACCESS_KEY={0} >> ~/.bashrc".format(credentials['EC2_SECRET_KEY']))
 
-        queue_head = None
-        for machine in params["machines"]:
-            if machine["type"] == "queue-head":
-                if queue_head is not None:
-                    raise AgentConfigurationException("There can be only one master !")
-                else:
-                    queue_head = machine
-            elif machine["type"] == "worker":
-                pass
-            else:
-                raise AgentConfigurationException("Invalid machine type : {0} !".format(machine["type"]))
+            script_lines.append("echo export STOCHKIT_HOME={0} >> ~/.bashrc".format("~/stochss/StochKit/"))
+            script_lines.append("echo export STOCHKIT_ODE={0} >> ~/.bashrc".format("~/stochss/ode/"))
+            script_lines.append("echo export R_LIBS={0} >> ~/.bashrc".format("~/stochss/stochoptim/library"))
 
-        if queue_head == None:
-            raise AgentConfigurationException("Need at least one master!")
+            if is_queue_head:
+                script_lines.append("sudo rabbitmqctl add_user stochss ucsb")
+                script_lines.append('sudo rabbitmqctl set_permissions -p / stochss ".*" ".*" ".*"')
 
-        logging.info("queue head = \n{0}".format(pprint.pformat(queue_head)))
+            bash_script = '\n'.join(script_lines)
+            logging.info("bash_script =\n{0}".format(bash_script))
 
-        try:
-            commands = self.__get_preparing_commands(aws_credentials=params['aws_credentials'])
+            bash_script_file = tempfile.NamedTemporaryFile(mode='w')
+            bash_script_file.write(bash_script)
+
+            scp_command = 'scp -o \'StrictHostKeyChecking no\' -i {keyfile} "{source}" "{target}"'.format(
+                                                keyfile=keyfile,
+                                                source=bash_script_file.name,
+                                                target="{username}@{ip}:~/stochss_init.sh".format(username=username,
+                                                                                                  ip=ip))
+
+            logging.info('scp command =\n{}'.format(scp_command))
+            res = os.system(scp_command)
+            bash_script_file.close()
+
+            if res != 0:
+                logging.error('scp failed!'.format(keyfile))
+                VMStateModel.set_state(params=parameters, ins_ids=[id],
+                                       state=VMStateModel.STATE_FAILED,
+                                       description=VMStateModel.DESCRI_FAIL_TO_PREPARE)
+                continue
+
+            commands = ['chmod +x ~/stochss_init.sh',
+                        '~/stochss_init.sh']
             command = ';'.join(commands)
 
-            logging.info("Preparing environment on remote machines...")
-            for machine in params["machines"]:
-                logging.info("For machine {ip}".format(ip=machine['ip']))
+            remote_command_string = self.get_remote_command_string(ip=ip, username=username,
+                                                                   keyfile=keyfile, command=command)
 
-                if machine['type'] == 'queue-head':
-                    rabbitmq_commands = []
-                    rabbitmq_commands.append('sudo rabbitmqctl add_user stochss ucsb')
-                    rabbitmq_commands.append(
-                        'sudo rabbitmqctl set_permissions -p / stochss \\\".*\\\" \\\".*\\\" \\\".*\\\"')
+            logging.info('remote_command_string =\n{}'.format(remote_command_string))
+            res = os.system(remote_command_string)
 
-                    logging.info("Adding RabbitMQ commands for {0}...".format(machine['ip']))
-                    updated_command = ';'.join(commands + rabbitmq_commands)
-
-                    remote_command = "ssh -o 'StrictHostKeyChecking no' -i {keyfile} {user}@{ip} \"{cmd}\"".format(
-                        keyfile=machine["keyfile"],
-                        user=machine["username"],
-                        ip=machine["public_ip"],
-                        cmd=updated_command)
-                else:
-                    remote_command = "ssh -o 'StrictHostKeyChecking no' -i {keyfile} {user}@{ip} \"{cmd}\"".format(
-                        keyfile=machine["keyfile"],
-                        user=machine["username"],
-                        ip=machine["public_ip"],
-                        cmd=command)
-
-                logging.info("Remote command: {0}".format(remote_command))
-                success = os.system(command)
-
-                if success != 0:
-                    raise Exception("Remote command failed on {ip}!".format(ip=machine['ip']))
-
-            self.__configure_celery(queue_head, params)
-
-            return {"success": True}
-
-        except Exception, e:
-            traceback.print_exc()
-            logging.error("prepare_machines : exiting method with error : {0}".format(str(e)))
-            return None
-
-    def __configure_celery(self, queue_head, params):
-        self.__update_celery_config_with_queue_head_ip(queue_head_ip=queue_head["public_ip"])
-        logging.info("Updated celery config with queue head ip: {0}".format(queue_head["public_ip"]))
-        for machine in params["machines"]:
-            logging.info("Copying celery config to {ip}".format(ip=machine["public_ip"]))
-            self.__copy_celery_config_to_machine(username=machine["username"],
-                                                 ip=machine["public_ip"],
-                                                 keyfile=machine["keyfile"])
-
-            logging.info("Starting celery on {ip}".format(ip=machine["public_ip"]))
-            self.__start_celery_on_machine_via_ssh(username=machine["username"],
-                                                   ip=machine["public_ip"],
-                                                   keyfile=machine["keyfile"],
-                                                   aws_credentials=params['aws_credentials'])
-
-    def __update_celery_config_with_queue_head_ip(self, queue_head_ip):
-        # Write queue_head_ip to file on the appropriate line
-        current_dir = os.path.dirname(os.path.abspath(__file__))
-        celery_config_filename = os.path.join(current_dir, "celeryconfig.py")
-        celery_template_filename = os.path.join(current_dir, "conf", "celeryconfig.py.template")
-
-        logging.debug("celery_config_filename = {0}".format(celery_config_filename))
-        logging.debug("celery_template_filename = {0}".format(celery_template_filename))
-
-        celery_config_lines = []
-        with open(celery_template_filename) as celery_config_file:
-            celery_config_lines = celery_config_file.readlines()
-
-        with open(celery_config_filename, 'w') as celery_config_file:
-            for line in celery_config_lines:
-                if line.strip().startswith('BROKER_URL'):
-                    celery_config_file.write('BROKER_URL = "amqp://stochss:ucsb@{0}:5672/"\n'.format(queue_head_ip))
-                else:
-                    celery_config_file.write(line)
-
-        # Now update the actual Celery app....
-        # TODO: Doesnt seem to work in GAE until next request comes in to server
-        my_celery = CelerySingleton()
-        my_celery.configure()
-
-    def __copy_celery_config_to_machine(self, username, ip, keyfile):
-        logging.info("keyfile = {0}".format(keyfile))
-
-        if not os.path.exists(keyfile):
-            raise Exception("ssh keyfile file not found: {0}".format(keyfile))
-
-        celery_config_filename = os.path.join(os.path.dirname(os.path.abspath(__file__)), "..", "celeryconfig.py")
-        logging.info("celery_config_filename = {0}".format(celery_config_filename))
-
-        if not os.path.exists(celery_config_filename):
-            raise Exception("celery config file not found: {0}".format(celery_config_filename))
-
-        cmd = "scp -o 'StrictHostKeyChecking no' -i {keyfile} {file} {user}@{ip}:celeryconfig.py".format(
-            keyfile=keyfile,
-            file=celery_config_filename,
-            user=username,
-            ip=ip)
-        logging.info(cmd)
-        success = os.system(cmd)
-
-        if success == 0:
-            logging.info("scp success: {0} transfered to {1}".format(celery_config_filename, ip))
-        else:
-            raise Exception("scp failure: {0} not transfered to {1}".format(celery_config_filename, ip))
+            if res != 0:
+                logging.error('remote command failed!'.format(keyfile))
+                VMStateModel.set_state(params=parameters, ins_ids=[id],
+                                       state=VMStateModel.STATE_FAILED,
+                                       description=VMStateModel.DESCRI_FAIL_TO_PREPARE)
+                continue
 
 
-    def __start_celery_on_machine_via_ssh(self, username, ip, keyfile, aws_credentials):
-        commands = []
-        commands.append('source /home/ubuntu/.bashrc')
-        commands.append(
-            'export PYTHONPATH=/home/ubuntu/pyurdme/:/home/ubuntu/stochss/app/:/home/ubuntu/stochss/app/backend')
-        commands.append('export AWS_ACCESS_KEY_ID={0}'.format(aws_credentials['AWS_ACCESS_KEY_ID']))
-        commands.append('export AWS_SECRET_ACCESS_KEY={0}'.format(aws_credentials['AWS_SECRET_ACCESS_KEY']))
-        commands.append(
-            'celery -A tasks worker --autoreload --loglevel=info --workdir /home/ubuntu > /home/ubuntu/celery.log 2>&1')
-
-        # PyURDME must be run inside a 'screen' terminal as part of the FEniCS code depends on the ability to write to
-        # the process' terminal, screen provides this terminal.
-        celery_cmd = "sudo screen -d -m bash -c '{0}'\n".format(';'.join(commands))
-
-        logging.info("keyfile = {0}".format(keyfile))
-
-        if not os.path.exists(keyfile):
-            raise Exception("ssh keyfile file not found: {0}".format(keyfile))
-
-        command = "ssh -o 'StrictHostKeyChecking no' -i {keyfile} {user}@{ip} \"{cmd}\"".format(keyfile=keyfile,
-                                                                                                user=username,
-                                                                                                ip=ip,
-                                                                                                cmd=celery_cmd)
-        logging.info(command)
-        success = os.system(command)
-
-        if success == 0:
-            logging.info("celery started on {0}".format(ip))
-        else:
-            raise Exception("Failure to start celery on {0}".format(ip))
 
     def handle_failure(self, msg):
         """
@@ -399,4 +327,5 @@ class FlexAgent(BaseAgent):
                                                                                                      username=username,
                                                                                                      command=command,
                                                                                                      ip=ip)
+
 

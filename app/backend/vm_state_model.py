@@ -21,6 +21,7 @@ class VMStateModel(db.Model):
     STATE_FAILED = 'failed'
     STATE_TERMINATED = 'terminated'
     STATE_UNPREPARED = 'unprepared'
+    STATE_UNKNOWN = 'unknown'
 
     DESCRI_FAIL_TO_RUN = 'fail to run the instance'
     DESCRI_TIMEOUT_ON_SSH = 'timeout to connect instance via ssh'
@@ -28,6 +29,8 @@ class VMStateModel(db.Model):
     DESCRI_FAIL_TO_COFIGURE_SHUTDOWN = 'fail to configure shutdown behavior on the instance'
     DESCRI_NOT_FOUND = 'not find the instance in cloud infrastructure'
     DESCRI_SUCCESS = 'success'
+    DESCRI_INVALID_KEYFILE = 'fail to find valid key file for instance'
+    DESCRI_FAIL_TO_PREPARE = 'fail to prepare the instance'
 
     infra = db.StringProperty()
     ec2_access_key = db.StringProperty()
@@ -41,7 +44,7 @@ class VMStateModel(db.Model):
     keyname = db.StringProperty()
     username = db.StringProperty()
     states = set([STATE_CREATING, STATE_PENDING, STATE_RUNNING, STATE_STOPPED, STATE_FAILED,
-                  STATE_TERMINATED, STATE_UNPREPARED])
+                  STATE_TERMINATED, STATE_UNPREPARED, STATE_UNKNOWN])
     state = db.StringProperty(required=True,
                               choices=states)
     description = db.StringProperty()
@@ -101,6 +104,10 @@ class VMStateModel(db.Model):
                     entities.filter('ec2_access_key =', ec2_credentials['EC2_ACCESS_KEY'])\
                         .filter('ec2_secret_key =', ec2_credentials['EC2_SECRET_KEY'])
 
+                if 'reservation_id' in params and params['reservation_id'] != None:
+                    logging.info('For agent {0}, filtering with (res_id = {1})'.format(infra, params['reservation_id']))
+                    entities.filter('res_id = ', params['reservation_id'])
+
                 return entities
 
         except Exception as e:
@@ -130,7 +137,8 @@ class VMStateModel(db.Model):
                     "description": e.description,
                     "username": e.username,
                     "pub_ip": e.pub_ip,
-                    "keyname": e.keyname
+                    "keyname": e.keyname,
+                    "reservation_id": e.res_id
                 }
                 all_vms.append(vm_dict)
 
@@ -192,20 +200,33 @@ class VMStateModel(db.Model):
     @staticmethod
     def terminate_not_active(params):
         '''
-        update all vms that are 'failed' in the last launch to 'terminated'.
+        update all vms that are in 'failed' or 'unknown' state in the last launch to 'terminated'.
         Args
             params    a dictionary of parameters, containing at least 'agent' and 'credentials'.
         '''
+        logging.info('terminate_not_active')
         try:
+            logging.info('Terminating vms with FAILED state')
             entities = VMStateModel._get_all_entities(params)
             entities.filter('state =', VMStateModel.STATE_FAILED)
 
             for e in entities:
                 e.state = VMStateModel.STATE_TERMINATED
                 e.put()
+        except Exception as e:
+            logging.error("Error in updating non-active vms with FAILED state to terminated in db! {0}".format(e))
+
+        try:
+            logging.info('Terminating vms with UNKNOWN state')
+            entities = VMStateModel._get_all_entities(params)
+            entities.filter('state =', VMStateModel.STATE_UNKNOWN)
+
+            for e in entities:
+                e.state = VMStateModel.STATE_TERMINATED
+                e.put()
 
         except Exception as e:
-            logging.error("Error in updating non-active vms to terminated in db! {0}".format(e))
+            logging.error("Error in updating non-active vms with UNKNOWN state to terminated in db! {0}".format(e))
 
     @staticmethod
     def terminate_all(params):
@@ -214,6 +235,7 @@ class VMStateModel(db.Model):
         Args
             params    a dictionary of parameters, containing at least 'agent' and 'credentials'.
         '''
+        logging.info('terminate_all')
         try:
             entities = VMStateModel._get_all_entities(params)
             entities.filter('state !=', VMStateModel.STATE_TERMINATED)
@@ -234,6 +256,7 @@ class VMStateModel(db.Model):
             ids       a list of ids which are the primary keys of VMStateModel
             res_id    the reservation id that should be updated
         '''
+        logging.info('update_res_ids: ids = {0} res_id = {1}'.format(ids, res_id))
         try:
             infra, ec2_credentials, user_id = VMStateModel._validate(params)
             if infra == None or user_id == None:
@@ -259,6 +282,7 @@ class VMStateModel(db.Model):
         '''
         logging.info('update_ins_ids:\nins_ids = {0}\nres_id = {1}'.format(ins_ids, res_id))
         logging.debug('\n\nparams =\n{0}'.format(pprint.pformat(params)))
+
         try:
             entities = VMStateModel._get_all_entities(params)
             entities.filter('res_id =', res_id).filter('state =', VMStateModel.STATE_CREATING)
@@ -322,7 +346,7 @@ class VMStateModel(db.Model):
             state     the state that is going to be set to the instances
             description    (optional) the description to the state
         '''
-        logging.debug('set_state:\nins_ids = {0}\nstate = {1}\ndescription = {2}'.format(ins_ids, state, description))
+        logging.info('set_state:\nins_ids = {0}\nstate = {1}\ndescription = {2}'.format(ins_ids, state, description))
         logging.debug('set_state:\nparams =\n{0}'.format(pprint.pformat(params)))
         try:
             for ins_id in ins_ids:
@@ -350,7 +374,7 @@ class VMStateModel(db.Model):
             agent    the agent that is going to be synchronized with
             credentials    the dictionary containing access_key and secret_key pair of the agent
         '''
-        logging.info('Start Synchronizing DB...')
+        logging.info('For agent {0}, Start Synchronizing DB...'.format(agent.AGENT_NAME))
         instance_list = agent.describe_instances(parameters)
 
         entities = VMStateModel._get_all_entities(params=parameters)

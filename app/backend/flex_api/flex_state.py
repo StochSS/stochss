@@ -19,15 +19,23 @@ class FlexVMState(object):
     @staticmethod
     def get_state_info():
         public_ip = get_public_ip()
+        logging.info('self public_ip = {}'.format(public_ip))
+
         try:
             import celery
             stats = celery.current_app.control.inspect(destination=[public_ip]).stats()
             if stats == None:
+                logging.info('No celery started!')
                 info = {'state': FlexVMState.UNPREPARED}
             else:
+                logging.info('Celery running!')
+
                 broker = stats['broker']
+                logging.info('broker = {}'.format(broker))
+
                 info = {'state': FlexVMState.RUNNING,
                         'queue_head_ip': broker['hostname']}
+
                 if broker['hostname'] == public_ip:
                     info['is_queue_head'] = True
                 else:
@@ -36,6 +44,7 @@ class FlexVMState(object):
             logging.error('Error in fetching broker url: {0}'.format(str(e)))
             info = {'state': FlexVMState.UNKNOWN}
 
+        logging.info('info = {}'.format(info))
         return info
 
     def change_state(self, from_state, to_state):

@@ -199,7 +199,9 @@ class InfrastructureManager(object):
           ValueError  If the input JSON string (parameters) cannot be parsed properly
         """
 
+        reservation_id = parameters['reservation_id']
         logging.info('Received a request to prepare instances.')
+        logging.info('Requested reservation_id = {0}'.format(reservation_id))
 
         logging.info('Request parameters are {0}'.format(parameters))
         for param in self.PREPARE_INSTANCES_REQUIRED_PARAMS:
@@ -221,12 +223,6 @@ class InfrastructureManager(object):
         if keyname is None:
             logging.info('Invalid keyname: ' + keyname)
             return self.__generate_response(False, self.REASON_BAD_ARGUMENTS)
-
-        reservation_id = utils.get_random_alphanumeric()
-
-        VMStateModel.update_res_ids(parameters, parameters[VMStateModel.IDS], reservation_id)
-
-        logging.info('Generated reservation id {0} for this request.'.format(reservation_id))
 
         if self.blocking:
             logging.info('Running __prepare_vms in blocking mode')

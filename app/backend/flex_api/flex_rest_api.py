@@ -2,6 +2,9 @@ __version__ = '1.0.0'
 
 import sys
 import os
+import logging
+import pprint
+
 sys.path.append(os.path.dirname(__file__))
 
 from flex_state import FlexJobState, FlexVMState
@@ -16,7 +19,9 @@ def index():
 
 @app.route('/state', methods=['GET'])
 def state():
-    return jsonify(FlexVMState.get_state_info())
+    state_info = FlexVMState.get_state_info()
+    logging.info('state_info =\n{0}'.format(pprint.pformat(state_info)))
+    return jsonify(state_info)
 
 @app.route('/change_state', methods=['GET', 'POST'])
 def change_state():

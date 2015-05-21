@@ -341,11 +341,13 @@ class EC2Agent(BaseAgent):
         if spot == 'True':
             price = parameters[self.PARAM_SPOT_PRICE]
             conn.request_spot_instances(str(price), image_id, key_name=keyname,
-                                        security_groups=[group], instance_type=instance_type, count=count,
+                                        security_groups=[group],
+                                        instance_type=instance_type, count=count,
                                         user_data=bash_script)
         else:
             conn.run_instances(image_id, count, count, key_name=keyname,
-                               security_groups=[group], instance_type=instance_type, user_data=bash_script,
+                               security_groups=[group], instance_type=instance_type,
+                               user_data=bash_script,
                                instance_initiated_shutdown_behavior=shutdown)
 
         return
