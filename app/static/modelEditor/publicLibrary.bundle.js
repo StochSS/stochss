@@ -446,6 +446,7 @@ module.exports = View.extend({
 });
 
 },{"ampersand-view":786,"jquery":889,"underscore":907}],8:[function(require,module,exports){
+var _ = require('underscore');
 var $ = require('jquery');
 var AmpersandView = require('ampersand-view');
 var AmpersandFormView = require('ampersand-form-view');
@@ -559,7 +560,7 @@ var InitialConditionCollectionFormView = AmpersandView.extend({
 
 module.exports = InitialConditionCollectionFormView
 
-},{"./initial-condition":9,"./paginated-collection-view":18,"./tests":29,"ampersand-form-view":103,"ampersand-input-view":107,"ampersand-select-view":481,"ampersand-view":786,"jquery":889}],9:[function(require,module,exports){
+},{"./initial-condition":9,"./paginated-collection-view":18,"./tests":29,"ampersand-form-view":103,"ampersand-input-view":107,"ampersand-select-view":481,"ampersand-view":786,"jquery":889,"underscore":907}],9:[function(require,module,exports){
 var _ = require('underscore');
 var $ = require('jquery');
 var View = require('ampersand-view');
@@ -2469,6 +2470,7 @@ module.exports = View.extend({
 });
 
 },{"./modifying-input-view":15,"./modifying-number-input-view":16,"./tests":29,"ampersand-view":786,"jquery":889,"underscore":907}],21:[function(require,module,exports){
+var _ = require('underscore');
 var $ = require('jquery');
 var AmpersandView = require('ampersand-view');
 var AmpersandFormView = require('ampersand-form-view');
@@ -2784,7 +2786,7 @@ var ReactionCollectionFormView = AmpersandView.extend({
 
 module.exports = ReactionCollectionFormView;
 
-},{"./paginated-collection-view":18,"./reaction":23,"./reaction-detail":22,"./tests":29,"ampersand-form-view":103,"ampersand-input-view":107,"ampersand-select-view":481,"ampersand-subcollection":574,"ampersand-view":786,"jquery":889,"katex":890}],22:[function(require,module,exports){
+},{"./paginated-collection-view":18,"./reaction":23,"./reaction-detail":22,"./tests":29,"ampersand-form-view":103,"ampersand-input-view":107,"ampersand-select-view":481,"ampersand-subcollection":574,"ampersand-view":786,"jquery":889,"katex":890,"underscore":907}],22:[function(require,module,exports){
 var _ = require('underscore');
 var $ = require('jquery');
 var View = require('ampersand-view');
@@ -3716,6 +3718,7 @@ module.exports = View.extend({
 });
 
 },{"./modifying-input-view":15,"./modifying-number-input-view":16,"./subdomain":28,"./tests":29,"ampersand-view":786,"jquery":889,"underscore":907}],26:[function(require,module,exports){
+var _ = require('underscore');
 var $ = require('jquery');
 var AmpersandView = require('ampersand-view');
 var AmpersandFormView = require('ampersand-form-view');
@@ -3877,7 +3880,7 @@ var StoichSpecieCollectionFormView = AmpersandView.extend({
 
 module.exports = StoichSpecieCollectionFormView
 
-},{"./stoich-specie":27,"./tests":29,"ampersand-form-view":103,"ampersand-input-view":107,"ampersand-select-view":481,"ampersand-view":786,"jquery":889}],27:[function(require,module,exports){
+},{"./stoich-specie":27,"./tests":29,"ampersand-form-view":103,"ampersand-input-view":107,"ampersand-select-view":481,"ampersand-view":786,"jquery":889,"underscore":907}],27:[function(require,module,exports){
 var _ = require('underscore');
 var $ = require('jquery');
 var View = require('ampersand-view');
@@ -16979,6 +16982,7 @@ arguments[4][61][0].apply(exports,arguments)
 arguments[4][68][0].apply(exports,arguments)
 },{"dup":68}],481:[function(require,module,exports){
 ;if (typeof window !== "undefined") {  window.ampersand = window.ampersand || {};  window.ampersand["ampersand-select-view"] = window.ampersand["ampersand-select-view"] || [];  window.ampersand["ampersand-select-view"].push("2.3.0");}
+var _ = require('underscore');
 var domify = require('domify');
 var dom = require('ampersand-dom');
 var matches = require('matches-selector');
@@ -17275,7 +17279,7 @@ SelectView.prototype.createOption = function (value, text, model) {
 
 module.exports = SelectView;
 
-},{"amp-extend":46,"ampersand-dom":69,"ampersand-events":70,"domify":482,"matches-selector":483}],482:[function(require,module,exports){
+},{"amp-extend":46,"ampersand-dom":69,"ampersand-events":70,"domify":482,"matches-selector":483,"underscore":907}],482:[function(require,module,exports){
 
 /**
  * Expose `parse`.
@@ -75285,6 +75289,67 @@ if (typeof exports !== 'undefined') {
 }.call(this));
 
 },{}],908:[function(require,module,exports){
+var Model = require('./models/model');
+var Mesh = require('./models/mesh');
+var AmpersandCollection = require('ampersand-rest-collection');
+
+ModelCollection = AmpersandCollection.extend( {
+    url: "/models",
+    comparator: 'name',
+    model: Model
+});
+
+PublicModelCollection = AmpersandCollection.extend( {
+    url: "/publicModels",
+    comparator: 'name',
+    model: Model
+});
+
+MeshCollection = AmpersandCollection.extend( {
+    url: "/meshes",
+    comparator: 'name',
+    model: Mesh
+});
+
+var publicModelCollection = new PublicModelCollection();
+var modelCollection = new ModelCollection();
+var meshCollection = new MeshCollection();
+
+var modelDownloaded = false; var meshDownloaded = false; var publicModelDownloaded = false;
+
+modelCollection.fetch({
+    success : function(modelCollection, response, options)
+    {
+        modelDownloaded = true;
+        if(meshDownloaded && publicModelDownloaded)
+        {
+            module.exports.blastoff();
+        }
+    }
+});
+
+meshCollection.fetch({
+    success : function(meshCollection, response, options)
+    {
+        meshDownloaded = true;
+        if(modelDownloaded && publicModelDownloaded)
+        {
+            module.exports.blastoff();
+        }
+    }
+});
+
+publicModelCollection.fetch({
+    success : function(publicModelCollection, response, options)
+    {
+        publicModelDownloaded = true;
+        if(meshDownloaded && modelDownloaded)
+        {
+            module.exports.blastoff();
+        }
+    }
+});
+
 /*global app, me, $*/
 var $ = require('jquery');
 var _ = require('underscore');
@@ -75292,12 +75357,9 @@ var config = require('clientconfig');
 
 var View = require('ampersand-view');
 var AmpersandModel = require('ampersand-model');
-var AmpersandCollection = require('ampersand-rest-collection');
 var ModelEditorView = require('./forms/model');
 var ModelSelectView = require('./publicLibrary/model-collection');
-var Model = require('./models/model');
 var domReady = require('domready');
-var Mesh = require('./models/mesh');
 var MeshCollection = require('./models/mesh-collection');
 var MeshSelectView = require('./forms/mesh-collection');
 
@@ -75394,63 +75456,6 @@ var PrimaryView = View.extend({
         );
 
         return this;
-    }
-});
-
-ModelCollection = AmpersandCollection.extend( {
-    url: "/models",
-    comparator: 'name',
-    model: Model
-});
-
-PublicModelCollection = AmpersandCollection.extend( {
-    url: "/publicModels",
-    comparator: 'name',
-    model: Model
-});
-
-MeshCollection = AmpersandCollection.extend( {
-    url: "/meshes",
-    comparator: 'name',
-    model: Mesh
-});
-
-var publicModelCollection = new PublicModelCollection();
-var modelCollection = new ModelCollection();
-var meshCollection = new MeshCollection();
-
-var modelDownloaded = false; var meshDownloaded = false; var publicModelDownloaded = false;
-
-modelCollection.fetch({
-    success : function(modelCollection, response, options)
-    {
-        modelDownloaded = true;
-        if(meshDownloaded && publicModelDownloaded)
-        {
-            module.exports.blastoff();
-        }
-    }
-});
-
-meshCollection.fetch({
-    success : function(meshCollection, response, options)
-    {
-        meshDownloaded = true;
-        if(modelDownloaded && publicModelDownloaded)
-        {
-            module.exports.blastoff();
-        }
-    }
-});
-
-publicModelCollection.fetch({
-    success : function(publicModelCollection, response, options)
-    {
-        publicModelDownloaded = true;
-        if(meshDownloaded && modelDownloaded)
-        {
-            module.exports.blastoff();
-        }
     }
 });
 
