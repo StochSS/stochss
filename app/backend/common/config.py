@@ -11,27 +11,9 @@ class AgentTypes(object):
     FLEX = 'flex'
     FLEX_CLI = 'flex_cli'
 
-class AWSConfig(object):
-    EC2_SETTINGS_FILENAME = os.path.abspath(os.path.join(os.path.dirname(__file__),
-                                                         '..', '..', '..', 'conf', 'ec2_config.json'))
-    EC2_KEY_PREFIX = 'stochss-'
-    EC2_QUEUE_HEAD_KEY_TAG = '-queuehead'
-
-
-class FlexConfig(object):
-    INSTANCE_TYPE = 'flexvm'
-    KEYFILE_DIRNAME = os.path.abspath(os.path.join(os.path.dirname(__file__), '..', 'tmp', 'keyfiles'))
-
-    @staticmethod
-    def get_keyfile_dirname(user_id):
-        return os.path.join(FlexConfig.KEYFILE_DIRNAME, user_id)
-
-    @staticmethod
-    def get_keyfile(keyname, user_id):
-        return os.path.join(FlexConfig.get_keyfile_dirname(user_id), keyname)
-
-
 class AgentConfig(object):
+    TMP_DIRNAME = os.path.abspath(os.path.join(os.path.dirname(__file__), '..', 'tmp'))
+
     @staticmethod
     def get_agent_key_prefix(agent_type, key_prefix=''):
         if agent_type == AgentTypes.EC2:
@@ -61,6 +43,25 @@ class AgentConfig(object):
     def get_random_group_name(prefix):
         random_string = ''.join(random.choice(string.ascii_uppercase + string.digits) for x in range(6))
         return '{0}-{1}'.format(prefix, random_string)
+
+class AWSConfig(object):
+    EC2_SETTINGS_FILENAME = os.path.abspath(os.path.join(os.path.dirname(__file__),
+                                                         '..', '..', '..', 'conf', 'ec2_config.json'))
+    EC2_KEY_PREFIX = 'stochss-'
+    EC2_QUEUE_HEAD_KEY_TAG = '-queuehead'
+
+
+class FlexConfig(object):
+    INSTANCE_TYPE = 'flexvm'
+    KEYFILE_DIRNAME = os.path.join(AgentConfig.TMP_DIRNAME, 'keyfiles')
+
+    @staticmethod
+    def get_keyfile_dirname(user_id):
+        return os.path.join(FlexConfig.KEYFILE_DIRNAME, user_id)
+
+    @staticmethod
+    def get_keyfile(keyname, user_id):
+        return os.path.join(FlexConfig.get_keyfile_dirname(user_id), keyname)
 
 
 class CeleryConfig(object):
@@ -109,4 +110,5 @@ class JobTypes(object):
     STOCHOPTIM = 'mcem2'
 
 class JobConfig:
+    SUPPORTED_AGENT_TYPES = [AgentTypes.EC2, AgentTypes.FLEX]
     SUPPORTED_AGENT_TYPES_FOR_COST_ANALYSIS = [AgentTypes.EC2]

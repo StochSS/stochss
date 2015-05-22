@@ -15,7 +15,7 @@ from boto.s3.connection import S3Connection
 from databases.dynamo_db import DynamoDB
 
 import common.helper as helper
-from common.config import AgentTypes, JobDatabaseConfig, AgentConfig, FlexConfig
+from common.config import AgentTypes, JobDatabaseConfig, AgentConfig, FlexConfig, JobConfig
 from vm_state_model import VMStateModel
 
 class backendservices(object):
@@ -58,19 +58,30 @@ class backendservices(object):
         return ret
 
 
-    def executeTask(self, params, agent, access_key, secret_key, task_id=None,
+    def submit_cloud_task(self, params, agent_type, ec2_access_key, ec2_secret_key, task_id=None,
                     instance_type=None, cost_replay=False, database=None):
+
+        logging.info('agent_type = {0}'.format(agent_type))
+
+        if agent_type not in JobConfig.SUPPORTED_AGENT_TYPES:
+            raise Exception('Unsupported agent type = {}!'.format(agent_type))
+
+        if agent_type == AgentTypes.EC2:
+            if ec2_access_key == None or ec2_access_key == '':
+                raise Exception('EC2 Access Key is not valid!')
+            if ec2_secret_key == None or ec2_secret_key == '':
+                raise Exception('EC2 Secret Key is not valid!')
+
+
         if not database:
-            database = DynamoDB(access_key, secret_key)
-        if not agent:
-            agent = AgentTypes.EC2
+            database = DynamoDB(ec2_access_key, ec2_secret_key)
 
         # if there is no taskid explicit, create one the first run
         if not task_id:
             task_id = str(uuid.uuid4())
 
-        result = helper.execute_cloud_task(params=params, agent_type=agent,
-                                           access_key=access_key, secret_key=secret_key,
+        result = helper.execute_cloud_task(params=params, agent_type=agent_type,
+                                           ec2_access_key=ec2_access_key, ec2_secret_key=ec2_secret_key,
                                            task_id=task_id, instance_type=instance_type,
                                            cost_replay=cost_replay,
                                            database=database)

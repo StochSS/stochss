@@ -53,19 +53,29 @@ def start_celery_on_vm(instance_type, ip, key_file, agent_type,
                    os.path.join(TaskConfig.STOCHSS_HOME, 'app', 'lib', 'cloudtracker')]
     python_path = 'export PYTHONPATH={0}'.format(':'.join(python_path_list))
     commands.append(python_path)
-    command = ';'.join(commands)
+
 
     # Start the shutdown-monitor
-    command += ';python /home/ubuntu/stochss/app/backend/tasks.py shutdown-monitor &'
-
-    command += \
-        "celery -A tasks worker -Q {q1},{q2} -n {worker_name} --autoreload --loglevel={log_level} --workdir /home/{username} > /home/{username}/celery.log 2>&1".format(
+    if agent_type == AgentTypes.EC2:
+        commands.append('python /home/ubuntu/stochss/app/backend/tasks.py shutdown-monitor &' +\
+                        "celery -A tasks worker -Q {q1},{q2} -n {worker_name} --autoreload --loglevel={log_level} --workdir /home/{username} > /home/{username}/celery.log 2>&1".format(
             q1=CeleryConfig.get_queue_name(agent_type=agent_type),
             q2=CeleryConfig.get_queue_name(agent_type=agent_type, instance_type=instance_type),
             log_level=log_level,
             worker_name=worker_name,
             username=username)
+        )
+    else:
+        commands.append("celery -A tasks worker -Q {q1},{q2} -n {worker_name} --autoreload --loglevel={log_level} --workdir /home/{username} > /home/{username}/celery.log 2>&1".format(
+            q1=CeleryConfig.get_queue_name(agent_type=agent_type),
+            q2=CeleryConfig.get_queue_name(agent_type=agent_type, instance_type=instance_type),
+            log_level=log_level,
+            worker_name=worker_name,
+            username=username)
+        )
 
+
+    command = ';'.join(commands)
 
     # start_celery_str = "celery -A tasks worker --autoreload --loglevel=info --workdir /home/ubuntu > /home/ubuntu/celery.log 2>&1"
     # PyURDME must be run inside a 'screen' terminal as part of the FEniCS code depends on the ability to
@@ -179,7 +189,7 @@ def config_celery_queues(agent_type, instance_types):
     tasks.CelerySingleton().configure()
 
 
-def execute_cloud_cost_analysis_task(params, agent, instance_type, task_id, database,
+def __execute_cloud_cost_analysis_task(params, agent_type, instance_type, task_id, database,
                                      access_key, secret_key, start_time,
                                      celery_queue_name, celery_routing_key):
     result = {}
@@ -187,23 +197,30 @@ def execute_cloud_cost_analysis_task(params, agent, instance_type, task_id, data
 
     params["db_table"] = JobDatabaseConfig.COST_ANALYSIS_TABLE_NAME
 
-    data = {}
-    data['status'] = "pending"
-    data['start_time'] = start_time.strftime('%Y-%m-%d %H:%M:%S')
-    data['message'] = "Task sent to Cloud"
-    data['agent'] = agent
-    data['instance_type'] = instance_type
-    data['uuid'] = task_id
-    taskid_prefix = '{0}_{1}_'.format(agent, instance_type)
+    data = {
+        'status': 'pending',
+        'start_time': start_time.strftime('%Y-%m-%d %H:%M:%S'),
+        'message': "Task sent to Cloud",
+        'infrastructure': agent_type,
+        'instance_type': instance_type,
+        'uuid': task_id
+    }
 
-    logging.info("cost analysis task, dynamodb table: {0}".format(params["db_table"]));
-    database.updateEntry(taskid_prefix + task_id, data, params["db_table"])
-    cost_analysis_task = tasks.task.apply_async(args=[task_id, params, agent, database, access_key, secret_key, taskid_prefix],
-                                 queue=celery_queue_name, routing_key=celery_routing_key)
-    logging.info(cost_analysis_task.ready())
+    taskid_prefix = '{0}_{1}_'.format(agent_type, instance_type)
+
+    logging.info("cost analysis task, dynamodb table: {0}".format(params["db_table"]))
+    database.updateEntry(taskid='{0}{1}'.format(taskid_prefix, task_id),
+                         data=data, tablename=params["db_table"])
+
+    cost_analysis_task = tasks.task.apply_async(args=[task_id, params, agent_type, database,
+                                                      access_key, secret_key, taskid_prefix],
+                                                queue=celery_queue_name,
+                                                routing_key=celery_routing_key)
+
+    logging.info('cost_analysis_task.ready() = {}'.format(cost_analysis_task.ready()))
 
     result["celery_pid"] = cost_analysis_task.id
-    logging.info("execute_cloud_cost_analysis_task: result of task : %s", str(cost_analysis_task.id))
+    logging.info("__execute_cloud_cost_analysis_task: result of task : %s", str(cost_analysis_task.id))
 
     result["success"] = True
 
@@ -254,7 +271,7 @@ def get_celery_worker_status():
 
     return core_count, available_workers
 
-def execute_cloud_stochoptim_task(params, data, database, task_id, celery_queue_name, celery_routing_key):
+def __execute_cloud_stochoptim_task(params, data, database, task_id, celery_queue_name, celery_routing_key):
     result = {}
     result["db_id"] = task_id
     queue_name = task_id
@@ -322,7 +339,8 @@ def execute_cloud_stochoptim_task(params, data, database, task_id, celery_queue_
         tasks.reroute_workers(worker_names, queue_name)
 
     # Update DB entry just before sending to worker
-    database.updateEntry(task_id, data, JobDatabaseConfig.TABLE_NAME)
+    database.updateEntry(taskid=task_id, data=data, tablename=JobDatabaseConfig.TABLE_NAME)
+
     params["queue"] = queue_name
     stochss_task = tasks.master_task.apply_async(args=[task_id, params, database],
                                                  queue=celery_queue_name,
@@ -376,13 +394,14 @@ def check_broker_status():
     return True, None, None
 
 
-def execute_cloud_task(params, agent_type, access_key, secret_key, task_id,
+def execute_cloud_task(params, agent_type, ec2_access_key, ec2_secret_key, task_id,
                        instance_type, cost_replay, database):
     '''
     This method instantiates celery tasks in the cloud.
     Returns return value from celery async call and the task ID
     '''
-    logging.debug('execute_cloud_task: Params - %s', str(pprint.pformat(params)))
+    logging.debug('execute_cloud_task: Params = \n %s', str(pprint.pformat(params)))
+    logging.info('agent_type = {}'.format(agent_type))
 
     celery_config = tasks.CelerySingleton()
     celery_config.configure()
@@ -414,12 +433,13 @@ def execute_cloud_task(params, agent_type, access_key, secret_key, task_id,
         data = {
             'status': "pending",
             "start_time": start_time.strftime('%Y-%m-%d %H:%M:%S'),
-            'Message': "Task sent to Cloud",
-            'uuid': task_id
+            'message': "Task sent to Cloud",
+            'uuid': task_id,
+            'infrastructure': agent_type
         }
 
         if params["job_type"] == JobTypes.STOCHOPTIM:
-            result = execute_cloud_stochoptim_task(params=params, data=data,
+            result = __execute_cloud_stochoptim_task(params=params, data=data,
                                                    database=database, task_id=task_id,
                                                    celery_queue_name=celery_queue_name,
                                                    celery_routing_key=celery_routing_key)
@@ -428,9 +448,9 @@ def execute_cloud_task(params, agent_type, access_key, secret_key, task_id,
             # if this is the cost analysis and agent is ec2 replay then update the stochss-cost-analysis table
             if cost_replay:
                 if agent_type in JobConfig.SUPPORTED_AGENT_TYPES_FOR_COST_ANALYSIS:
-                    result = execute_cloud_cost_analysis_task(params=params, agent=agent_type, instance_type=instance_type,
-                                                          task_id=task_id, database=database, access_key=access_key,
-                                                          secret_key=secret_key, start_time=start_time,
+                    result = __execute_cloud_cost_analysis_task(params=params, agent_type=agent_type, instance_type=instance_type,
+                                                          task_id=task_id, database=database, access_key=ec2_access_key,
+                                                          secret_key=ec2_secret_key, start_time=start_time,
                                                           celery_queue_name=celery_queue_name,
                                                           celery_routing_key=celery_routing_key)
                 else:
@@ -442,11 +462,14 @@ def execute_cloud_task(params, agent_type, access_key, secret_key, task_id,
 
                 params["db_table"] = JobDatabaseConfig.TABLE_NAME
                 params["cost_analysis_table"] = JobDatabaseConfig.COST_ANALYSIS_TABLE_NAME
-                database.updateEntry(task_id, data, params["db_table"])
+                database.updateEntry(taskid=task_id, data=data, tablename=params["db_table"])
 
-                tmp = tasks.task.apply_async(args=[task_id, params, agent_type, database, access_key, secret_key],
+                tmp = tasks.task.apply_async(args=[task_id, params, agent_type, database, ec2_access_key, ec2_secret_key],
                                              queue=celery_queue_name, routing_key=celery_routing_key)
-                logging.info(tmp.ready())
+
+                logging.info('tmp.ready() = {}'.format(tmp.ready()))
+                logging.info('tmp.id = {}'.format(tmp.id))
+
                 result["celery_pid"] = tmp.id
 
                 logging.info("execute_cloud_task: result of task : %s", str(tmp.id))

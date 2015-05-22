@@ -19,6 +19,7 @@ from stochss.stochkit import *
 from stochssapp import BaseHandler
 
 from backend.backendservice import backendservices
+from backend.common.config import AgentTypes, JobConfig
 
 import time
 
@@ -37,6 +38,8 @@ jinja_environment = jinja2.Environment(autoescape=True,
                                        loader=(jinja2.FileSystemLoader(os.path.join(os.path.dirname(__file__), '../templates'))))
         
 class SensitivityJobWrapper(db.Model):
+    SUPPORTED_CLOUD_RESOURCES = ["{0}-cloud".format(agent_type) for agent_type in JobConfig.SUPPORTED_AGENT_TYPES]
+
     userId = db.StringProperty()
     pid = db.IntegerProperty()
     startTime = db.StringProperty()
@@ -94,7 +97,7 @@ class SensitivityPage(BaseHandler):
                 self.response.write(json.dumps(["Not the right user"]))
 
             if job.status == "Finished":
-                if job.resource == "cloud" and job.outData is None:
+                if job.resource in SensitivityJobWrapper.SUPPORTED_CLOUD_RESOURCES and job.outData is None:
                     # Let the user decide if they want to download it
                     self.response.headers['Content-Type'] = 'application/json'
                     self.response.write(json.dumps({ "status" : "Finished",
@@ -255,28 +258,43 @@ class SensitivityPage(BaseHandler):
                 # Either local or cloud
                 if data["resource"] == "local":
                     job = self.runLocal(data)
+
                 elif data["resource"] == "cloud":
-                    backend_services = backendservices()
-                    compute_check_params = {
-                        "infrastructure": "ec2",
-                        "credentials": self.user_data.getCredentials(),
-                        "key_prefix": self.user.user_id()
-                    }
-                    if self.user_data.valid_credentials and backend_services.isOneOrMoreComputeNodesRunning(compute_check_params):
-                        job, cloud_result = self.runCloud(data)
-                        if not job:
-                            e = cloud_result["exception"]
-                            self.response.write(json.dumps({"status" : False,
-                                            "msg" : 'Cloud execution failed: '+str(e)}))
-                            return
+                    if self.user_data.valid_flex_cloud_info:
+                        logging.info('Valid Flex Cloud Configured: Using it in preference')
+                        data['resource'] = '{0}-cloud'.format(AgentTypes.FLEX)
+                        job, cloud_result = self.runCloud(data=data, agent_type=AgentTypes.FLEX)
+
                     else:
-                        return self.response.write(json.dumps({
-                            "status": False,
-                            "msg": "You must have at least one active compute node to run in the cloud."
-                        }))
+                        backend_services = backendservices()
+                        compute_check_params = {
+                            "infrastructure": AgentTypes.EC2,
+                            "credentials": self.user_data.getCredentials(),
+                            "key_prefix": self.user.user_id()
+                        }
+                        if self.user_data.valid_credentials and \
+                                backend_services.isOneOrMoreComputeNodesRunning(compute_check_params):
+
+                            data['resource'] = '{0}-cloud'.format(AgentTypes.EC2)
+                            job, cloud_result = self.runCloud(data=data, agent_type=AgentTypes.EC2)
+
+                        else:
+                            return self.response.write(json.dumps({
+                                "status": False,
+                                "msg": "You must have at least one active compute node to run in the cloud."
+                            }))
+
+
+                    if not job:
+                        e = cloud_result["exception"]
+                        self.response.write(json.dumps({"status" : False,
+                                                        "msg" : 'Cloud execution failed: '+str(e)}))
+                        return
+
                 else:
                     return self.response.write(json.dumps({"status" : False,
                                                            "msg" : "Unrecognized resource requested: {0}".format(data.resource)}))
+
                 self.response.write(json.dumps( { "status" : True,
                                                   "msg" : "Job launched",
                                                   "kind" : job.kind(),
@@ -350,11 +368,12 @@ class SensitivityPage(BaseHandler):
         job.put()
         return job
     
-    def runCloud(self, data):
-        '''
-        '''
+    def runCloud(self, data, agent_type):
+        logging.info('agent_type = {}'.format(agent_type))
+
         job = SensitivityJobWrapper()
-        job.resource = "cloud"
+
+        job.resource = "{0}-cloud".format(agent_type)
         job.userId = self.user.user_id()
         model = modeleditor.StochKitModelWrapper.get_by_id(data["id"])
         job.startTime = time.strftime("%Y-%m-%d-%H-%M-%S")
@@ -388,16 +407,25 @@ class SensitivityPage(BaseHandler):
         params = {
             "job_type": "sensitivity",
             "document": str( stochkitmodel.serialize() ),
-            "paramstring": "stochkit_ode.py --sensi --parameters {0} -t {1} -i {2}".format( " ".join(parameters), runtime, int(runtime / dt)),
+            "paramstring": "stochkit_ode.py --sensi --parameters {0} -t {1} -i {2}".format(
+                                " ".join(parameters), runtime, int(runtime / dt)
+                            ),
             "bucketname": self.user_data.getBucketName()
         }
+
         service = backendservices()
         db_credentials = self.user_data.getCredentials()
-        # Set the environmental variables 
+
+        # Set the environmental variables
         os.environ["AWS_ACCESS_KEY_ID"] = db_credentials['EC2_ACCESS_KEY']
         os.environ["AWS_SECRET_ACCESS_KEY"] = db_credentials['EC2_SECRET_KEY']
+
+
         # Send the task to the backend
-        cloud_result = service.executeTask(params, "ec2", db_credentials['EC2_ACCESS_KEY'], db_credentials['EC2_SECRET_KEY'])
+        cloud_result = service.submit_cloud_task(params=params, agent_type=agent_type,
+                                           ec2_access_key=db_credentials['EC2_ACCESS_KEY'],
+                                           ec2_secret_key=db_credentials['EC2_SECRET_KEY'])
+
         # if not cloud_result["success"]:
         if not cloud_result["success"]:
             return None, cloud_result
