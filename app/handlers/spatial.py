@@ -2,8 +2,9 @@ from stochssapp import BaseHandler
 from modeleditor import ModelManager, StochKitModelWrapper
 import stochss
 import exportimport
-import backend.backendservice
 
+import backend.backendservice
+from backend.common.config import AgentTypes
 
 import mesheditor
 
@@ -674,7 +675,14 @@ class SpatialPage(BaseHandler):
             os.environ["AWS_ACCESS_KEY_ID"] = self.user_data.getCredentials()['EC2_ACCESS_KEY']
             os.environ["AWS_SECRET_ACCESS_KEY"] = self.user_data.getCredentials()['EC2_SECRET_KEY']
             service = backend.backendservice.backendservices()
-            cloud_result = service.executeTask(cloud_params, "ec2", os.environ["AWS_ACCESS_KEY_ID"], os.environ["AWS_SECRET_ACCESS_KEY"])
+
+            # execute cloud task
+            cloud_result = service.submit_cloud_task(params=cloud_params,
+                                               agent_type=AgentTypes.EC2,
+                                               ec2_access_key=os.environ["AWS_ACCESS_KEY_ID"],
+                                               ec2_secret_key=os.environ["AWS_SECRET_ACCESS_KEY"])
+
+
             if not cloud_result["success"]:
                 e = cloud_result["exception"]
                 self.response.write(json.dumps({"status" : False,

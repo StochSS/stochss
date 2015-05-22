@@ -98,30 +98,6 @@ function get_flex_cloud_info_input() {
     return flex_cloud_machine_info
 }
 
-//function save_flex_cloud_info() {
-//    var flex_cloud_machine_info = get_flex_cloud_info_input();
-//    if (flex_cloud_machine_info == null) {
-//        return
-//    }
-//
-//    var jsonDataToBeSent = {};
-//    jsonDataToBeSent['flex_cloud_machine_info'] = flex_cloud_machine_info;
-//    jsonDataToBeSent['action'] = 'save_flex_cloud_info';
-//
-//    jsonDataToBeSent = JSON.stringify(jsonDataToBeSent);
-//    $.ajax({
-//        type: "POST",
-//        url: "/credentials",
-//        contentType: "application/json",
-//        dataType: "json",
-//        data: jsonDataToBeSent,
-//        success: function(){},
-//        error: function(x,e){},
-//        complete: function() {
-//            document.location.reload();
-//        }
-//    });
-//}
 
 function refresh_flex_cloud_info() {
     $.ajax({

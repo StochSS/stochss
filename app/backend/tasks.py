@@ -251,7 +251,7 @@ def update_s3_bucket(task_id, bucket_name, output_dir, database):
             'message': 'Task executing in the cloud.',
             'output': "https://s3.amazonaws.com/{0}/{1}.tar".format(bucket_name, output_dir)
         }
-        database.updateEntry(task_id, data, "stochss")
+        database.updateEntry(taskid=task_id, data=data, tablename="stochss")
         # Update the output in S3 every 60 seconds...
         time.sleep(60)
 
@@ -272,7 +272,7 @@ def handle_task_success(task_id, data, s3_data, bucket_name, database):
     print cleanup_string
     os.system(cleanup_string)
     data['output'] = "https://s3.amazonaws.com/{0}/{1}.tar".format(bucket_name, s3_data)
-    database.updateEntry(task_id, data, "stochss")
+    database.updateEntry(taskid=task_id, data=data, tablename="stochss")
 
 
 def handle_task_failure(task_id, data, database, s3_data=None, bucket_name=None):
@@ -283,16 +283,19 @@ def handle_task_failure(task_id, data, database, s3_data=None, bucket_name=None)
         copy_to_s3_str = "python {0} {1}.tar {2}".format(TaskConfig.SCCPY_PATH, s3_data, bucket_name)
         print copy_to_s3_str
         return_code = os.system(copy_to_s3_str)
+
         if return_code != 0:
             print "S3 update conflict, waiting 60 seconds for retry..."
             time.sleep(60)
             return_code = os.system(copy_to_s3_str)
+
         print "Return code after S3 retry is {0}".format(return_code)
         cleanup_string = "rm -rf {0} {0}".format(s3_data)
         print cleanup_string
         os.system(cleanup_string)
         data['output'] = "https://s3.amazonaws.com/{0}/{1}.tar".format(bucket_name, s3_data)
-    database.updateEntry(task_id, data, "stochss")
+
+    database.updateEntry(taskid=task_id, data=data, tablename="stochss")
 
 
 @celery.task(name='tasks.master_task')
@@ -307,7 +310,9 @@ def master_task(task_id, params, database):
             'status': 'active',
             'message': 'Task executing in the cloud.'
         }
-        database.updateEntry(task_id, data, "stochss")
+
+        database.updateEntry(taskid=task_id, data=data, tablename="stochss")
+
         result = {
             'uuid': task_id
         }
@@ -636,12 +641,13 @@ def task(taskid, params, agent, database, access_key, secret_key, task_prefix=""
 
         logging.info('task to be executed at remote location')
         print 'inside celery task method'
-        data = {'status': 'active', 'message': 'Task Executing in cloud'}
+        data = {'status': 'active',
+                'message': 'Task Executing in cloud'}
 
         # will have prefix for cost-anaylsis job
-        taskid = task_prefix + taskid
+        # taskid = '{0}{1}'.format(task_prefix, taskid)
 
-        database.updateEntry(taskid, data, params["db_table"])
+        database.updateEntry(taskid=taskid, data=data, tablename=params["db_table"])
         paramstr = params['paramstring']
 
         job_type = params['job_type']
@@ -707,8 +713,9 @@ def task(taskid, params, agent, database, access_key, secret_key, task_prefix=""
             print "CloudTracker Error: track_output"
             print e
 
-        data = {'status': 'active', 'message': 'Task finished. Generating output.'}
-        database.updateEntry(taskid, data, params["db_table"])
+        data = {'status': 'active',
+                'message': 'Task finished. Generating output.'}
+        database.updateEntry(taskid=taskid, data=data, tablename=params["db_table"])
         diff = timeended - timestarted
 
         if task_prefix != "":
@@ -737,7 +744,7 @@ def task(taskid, params, agent, database, access_key, secret_key, task_prefix=""
             res['output'] = "https://s3.amazonaws.com/{1}/output/{0}.tar".format(uuidstr, bucketname)
             res['time_taken'] = "{0} seconds".format(diff.total_seconds())
 
-        database.updateEntry(taskid, res, params["db_table"])
+        database.updateEntry(taskid=taskid, data=res, tablename=params["db_table"])
         
         # there is no "cost_analysis_table" in params in cost analysis task,
         # but it there should have in normal task and rerun task.
@@ -770,7 +777,7 @@ def task(taskid, params, agent, database, access_key, secret_key, task_prefix=""
                     'time_taken': data['time_taken'],
                     'uuid': data['uuid']
                     }
-            database.updateEntry(taskid, cost_analysis_data, params["cost_analysis_table"])
+            database.updateEntry(taskid=taskid, data=cost_analysis_data, tablename=params["cost_analysis_table"])
     
 
     except Exception, e:
@@ -790,11 +797,12 @@ def task(taskid, params, agent, database, access_key, secret_key, task_prefix=""
             res['output'] = "https://s3.amazonaws.com/{0}/{1}.tar".format(bucketname, expected_output_dir)
             res['status'] = 'failed'
             res['message'] = str(e)
-            database.updateEntry(taskid, res, "stochss")
+            database.updateEntry(taskid=taskid, data=res, tablename="stochss")
         else:
             # Nothing to do here besides send the exception
-            data = {'status': 'failed', 'message': str(e)}
-            database.updateEntry(taskid, data, "stochss")
+            data = {'status': 'failed',
+                    'message': str(e)}
+            database.updateEntry(taskid=taskid, data=data, tablename="stochss")
         raise e
     return res
 

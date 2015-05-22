@@ -1,5 +1,5 @@
 from base_agent import BaseAgent, AgentConfigurationException, AgentRuntimeException
-from common.config import AgentTypes, FlexConfig
+from common.config import AgentTypes, FlexConfig, AgentConfig
 
 import sys
 import os
@@ -261,26 +261,30 @@ class FlexAgent(BaseAgent):
             script_lines.append("echo export STOCHKIT_HOME={0} >> ~/.bashrc".format("~/stochss/StochKit/"))
             script_lines.append("echo export STOCHKIT_ODE={0} >> ~/.bashrc".format("~/stochss/ode/"))
             script_lines.append("echo export R_LIBS={0} >> ~/.bashrc".format("~/stochss/stochoptim/library"))
+            script_lines.append("echo export C_FORCE_ROOT=1 >> ~/.bashrc".format("~/stochss/stochoptim/library"))
 
             if is_queue_head:
                 script_lines.append("sudo rabbitmqctl add_user stochss ucsb")
                 script_lines.append('sudo rabbitmqctl set_permissions -p / stochss ".*" ".*" ".*"')
 
             bash_script = '\n'.join(script_lines)
-            logging.info("bash_script =\n{0}".format(bash_script))
+            logging.info("\n\n\nbash_script =\n{0}\n\n\n".format(bash_script))
 
-            bash_script_file = tempfile.NamedTemporaryFile(mode='w')
+            bash_script_filename = os.path.join(AgentConfig.TMP_DIRNAME, 'stochss_init.sh')
+            bash_script_file = open(bash_script_filename, 'w')
             bash_script_file.write(bash_script)
+            bash_script_file.close()
 
-            scp_command = 'scp -o \'StrictHostKeyChecking no\' -i {keyfile} "{source}" "{target}"'.format(
+            scp_command = 'scp -o \'StrictHostKeyChecking no\' -i {keyfile} {source} {target}'.format(
                                                 keyfile=keyfile,
-                                                source=bash_script_file.name,
+                                                source=bash_script_filename,
                                                 target="{username}@{ip}:~/stochss_init.sh".format(username=username,
                                                                                                   ip=ip))
 
             logging.info('scp command =\n{}'.format(scp_command))
             res = os.system(scp_command)
-            bash_script_file.close()
+
+            os.remove(bash_script_filename)
 
             if res != 0:
                 logging.error('scp failed!'.format(keyfile))

@@ -23,7 +23,10 @@ class FlexVMState(object):
 
         try:
             import celery
+            reload(celery)
+
             stats = celery.current_app.control.inspect(destination=[public_ip]).stats()
+
             if stats == None:
                 logging.info('No celery started!')
                 info = {'state': FlexVMState.UNPREPARED}

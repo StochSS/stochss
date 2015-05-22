@@ -144,6 +144,9 @@ class FlexBackendWorker(BackendWorker):
             VMStateModel.fail_active(parameters)
             return
 
+        helper.update_celery_config_with_queue_head_ip(queue_head_ip=queue_head_machine['ip'],
+                                                               agent_type=self.agent_type)
+
         self.__configure_celery(params=parameters, public_ips=public_ips, instance_ids=instance_ids)
 
         return

@@ -13,6 +13,7 @@ import os
 import subprocess
 import tempfile
 import datetime
+import pprint
 
 from google.appengine.ext import db
 
@@ -20,6 +21,7 @@ from stochssapp import BaseHandler
 from backend.backendservice import backendservices
 
 import sensitivity
+import simulation
 
 class StatusPage(BaseHandler):
     """ The main handler for the Job Status Page. Displays status messages for the jobs, options to delete/kill jobs and
@@ -151,7 +153,7 @@ class StatusPage(BaseHandler):
                                 else:
                                     stochkit_job.status = "Failed"
                 
-                        elif stochkit_job.resource == 'Cloud' and stochkit_job.output_location is not None:
+                        elif stochkit_job.resource in simulation.StochKitJob.SUPPORTED_CLOUD_RESOURCES and stochkit_job.output_location is not None:
                             # The data has been downloaded already
                             # Check if the signature file is present, that will always be the case for a sucessful job.
                             # for ssa and tau leaping, this is means.txt
@@ -166,7 +168,8 @@ class StatusPage(BaseHandler):
                                 stochkit_job.status = "Finished"
                             else:
                                 stochkit_job.status = "Failed"
-                        elif stochkit_job.resource == 'Cloud' and stochkit_job.output_location is None:
+
+                        elif stochkit_job.resource in simulation.StochKitJob.SUPPORTED_CLOUD_RESOURCES and stochkit_job.output_location is None:
                             # Retrive credentials from the datastore
                             if not self.user_data.valid_credentials:
                                 return {'status':False,'msg':'Could not retrieve the status of job '+stochkit_job.name +'. Invalid credentials.'}
@@ -232,10 +235,13 @@ class StatusPage(BaseHandler):
         if allSensQuery != None:
             jobs = list(allSensQuery.run())
 
-            jobs = sorted(jobs, key = lambda x : (datetime.datetime.strptime(x.startTime, '%Y-%m-%d-%H-%M-%S') if hasattr(x, 'startTime') and x.startTime != None else ''), reverse = True)
+            jobs = sorted(jobs, key=lambda x: (datetime.datetime.strptime(x.startTime, '%Y-%m-%d-%H-%M-%S') if hasattr(x, 'startTime') and x.startTime != None else ''), reverse = True)
 
             for number, job in enumerate(jobs):
                 number = len(jobs) - number
+
+                logging.info('For sensitivity job with id: {0}, resource = {1}'.format(job.key().id(), job.resource))
+
                 if job.resource == "local":
                     if job.status != "Finished" or job.status != "Failed":
                         res = service.checkTaskStatusLocal([job.pid])
@@ -247,43 +253,51 @@ class StatusPage(BaseHandler):
                                 job.status = "Finished"
                             else:
                                 job.status = "Failed"
+
                 #elif job.resource == "cloud" and job.status != "Finished":
-                elif job.resource == "cloud" and job.outData is not None:
-                    file_to_check = job.outData + "/result/output.txt"
-                    if os.path.exists(file_to_check):
-                        job.status = "Finished"
+                elif job.resource in sensitivity.SensitivityJobWrapper.SUPPORTED_CLOUD_RESOURCES:
+                    if job.outData is not None:
+                        file_to_check = job.outData + "/result/output.txt"
+                        if os.path.exists(file_to_check):
+                            job.status = "Finished"
+                        else:
+                            job.status = "Failed"
+
                     else:
-                        job.status = "Failed"
-                elif job.resource == "cloud" and job.outData is None:
-                    # Retrive credentials from the datastore
-                    if not self.user_data.valid_credentials:
-                        return {'status':False,'msg':'Could not retrieve the status of job '+stochkit_job.name +'. Invalid credentials.'}
-                    credentials = self.user_data.getCredentials()
-                    # Check the status from backend
-                    taskparams = {'AWS_ACCESS_KEY_ID':credentials['EC2_ACCESS_KEY'],'AWS_SECRET_ACCESS_KEY':credentials['EC2_SECRET_KEY'],'taskids':[job.cloudDatabaseID]}
-                    task_status = service.describeTask(taskparams)
-                    job_status = task_status[job.cloudDatabaseID]
-                    # If it's finished
-                    if job_status['status'] == 'finished':
-                        # Update the job 
-                        job.status = 'Finished'
-                        job.outputURL = job_status['output']
-                    # 
-                    elif job_status['status'] == 'failed':
-                        job.status = 'Failed'
-                        job.exceptionMessage = job_status['message']
-                        # Might not have an output if an exception was raised early on or if there is just no output available
-                        try:
+                        # Retrive credentials from the datastore
+                        if not self.user_data.valid_credentials:
+                            return {'status':False,
+                                    'msg':'Could not retrieve the status of job '+ job.name +'. Invalid credentials.'}
+                        credentials = self.user_data.getCredentials()
+                        # Check the status from backend
+                        taskparams = {'AWS_ACCESS_KEY_ID':credentials['EC2_ACCESS_KEY'],
+                                      'AWS_SECRET_ACCESS_KEY':credentials['EC2_SECRET_KEY'],
+                                      'taskids':[job.cloudDatabaseID]}
+                        task_status = service.describeTask(taskparams)
+                        job_status = task_status[job.cloudDatabaseID]
+                        # If it's finished
+                        if job_status['status'] == 'finished':
+                            # Update the job
+                            job.status = 'Finished'
                             job.outputURL = job_status['output']
-                        except KeyError:
-                            pass
-                    # 
-                    elif job_status['status'] == 'pending':
-                        job.status = 'Pending'
-                    else:
-                        # The state gives more fine-grained results, like if the job is being re-run, but
-                        #  we don't bother the users with this info, we just tell them that it is still running.  
-                        job.status = 'Running'
+                        #
+                        elif job_status['status'] == 'failed':
+                            job.status = 'Failed'
+                            job.exceptionMessage = job_status['message']
+                            # Might not have an output if an exception was raised early on or if there is just no output available
+                            try:
+                                job.outputURL = job_status['output']
+                            except KeyError:
+                                pass
+                        #
+                        elif job_status['status'] == 'pending':
+                            job.status = 'Pending'
+                        else:
+                            # The state gives more fine-grained results, like if the job is being re-run, but
+                            #  we don't bother the users with this info, we just tell them that it is still running.
+                            job.status = 'Running'
+                else:
+                    logging.error('Job Resource {0} not supported!'.format(job.resource))
                 
                 job.put()   
                 allSensJobs.append({ "name" : job.jobName,
