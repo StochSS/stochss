@@ -52,7 +52,7 @@
                     <% for(var model in models) { %>
                     <tr>
                         <td>
-                            <input type="radio" name="model_to_simulate" value="<%= models[model].attributes.id %>" <%= (models[model].attributes.units == 'concentration' || models[model].attributes.isSpatial) ? 'disabled' : 'checked' %>/>
+                            <input type="radio" name="model_to_simulate" value="<%= models[model].attributes.id %>" <%= (models[model].attributes.units == 'concentration' || models[model].attributes.isSpatial) ? 'disabled' : '' %>/>
                         </td>
                         <td>
                             <%= models[model].attributes.name %>
@@ -116,6 +116,10 @@
         <!--List parameters that can be parameter-swept-->
         Select parameters to estimate:<br />
         <div id="activate"></div>
+	<div class="btn-group">
+	    <button class="btn btn-small selectAll">Select All</button>
+	    <button class="btn btn-small clearAll">Clear All</button>
+	</div>
 
         <br />
         <!--List of valid datafiles to include-->

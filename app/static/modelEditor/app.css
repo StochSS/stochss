@@ -46,7 +46,7 @@ select {
     width : 200px;
 }
 
-.reactionsAccordion .accordion-body.in, .selectAccordion .accordion-body.in {
+.reactionsAccordion .accordion-body.in, .selectAccordion .accordion-body.in, .initialConditionsAccordion .accordion-body.in, .parametersAccordion .accordion-body.in, .speciesAccordion .accordion-body.in, .mesh3dAccordion .accordion-body.in {
   overflow:visible;
 }
 

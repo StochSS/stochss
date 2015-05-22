@@ -150,7 +150,7 @@ var ParameterCollectionFormView = View.extend({
   </table> \
   <div data-hook='nav'> \
     <button class='btn' data-hook='previous'>&lt;&lt;</button> \
-    [ <span data-hook='position'></span> / <span data-hook='total'></span> ] \
+    [ <span data-hook='leftPosition'></span> - <span data-hook='rightPosition'></span> of <span data-hook='total'></span> ] \
     <button class='btn' data-hook='next'>&gt;&gt;</button> \
   </div> \
 </div>";
@@ -170,6 +170,7 @@ var ParameterCollectionFormView = View.extend({
 });
 
 module.exports = ParameterCollectionFormView
+
 },{"../forms/paginated-collection-view":18,"./parameter":3,"ampersand-view":786,"jquery":889}],3:[function(require,module,exports){
 var _ = require('underscore');
 var $ = require('jquery');
@@ -205,14 +206,14 @@ var ReactionCollectionView = View.extend({
   <h3>Reactions</h3> \
   <table class='table table-bordered' data-hook='table'> \
     <thead> \
-      <th width='120px'>Name</th><th>Rate</th><th>Summary</th><th>Result</th> \
+      <th width='120px'>Name</th><th width='300px'>Rate</th><th>Summary</th><th>Result</th> \
     </thead> \
     <tbody data-hook='items'> \
     </tbody> \
   </table> \
   <div data-hook='nav'> \
     <button class='btn' data-hook='previous'>&lt;&lt;</button> \
-    [ <span data-hook='position'></span> / <span data-hook='total'></span> ] \
+    [ <span data-hook='leftPosition'></span> - <span data-hook='rightPosition'></span> of <span data-hook='total'></span> ] \
     <button class='btn' data-hook='next'>&gt;&gt;</button> \
   </div> \
 </div>";
@@ -232,6 +233,7 @@ var ReactionCollectionView = View.extend({
 });
 
 module.exports = ReactionCollectionView
+
 },{"../forms/paginated-collection-view":18,"./reaction":5,"ampersand-view":786,"jquery":889}],5:[function(require,module,exports){
 var _ = require('underscore');
 var $ = require('jquery');
@@ -279,6 +281,8 @@ var ReactionView = View.extend({
         else
         {
             result.text('Cannot convert custom propensities automatically');
+
+            $( this.queryByHook('equation') ).text( this.model.equation );
         }
     },
     // On any change of anything, redraw the Latex
@@ -390,7 +394,7 @@ var SpecieCollectionView = View.extend({
   </table> \
   <div data-hook='nav'> \
     <button class='btn' data-hook='previous'>&lt;&lt;</button> \
-    [ <span data-hook='position'></span> / <span data-hook='total'></span> ] \
+    [ <span data-hook='leftPosition'></span> - <span data-hook='rightPosition'></span> of <span data-hook='total'></span> ] \
     <button class='btn' data-hook='next'>&gt;&gt;</button> \
   </div> \
 </div>";
@@ -410,6 +414,7 @@ var SpecieCollectionView = View.extend({
 });
 
 module.exports = SpecieCollectionView
+
 },{"../forms/paginated-collection-view":18,"./specie":7,"ampersand-view":786,"jquery":889}],7:[function(require,module,exports){
 var _ = require('underscore');
 var $ = require('jquery');
@@ -452,9 +457,12 @@ var PaginatedCollectionView = require('./paginated-collection-view');
 var Tests = require('./tests');
 var AddNewInitialConditionForm = AmpersandFormView.extend({
     submitCallback: function (obj) {
-        var model = this.collection.addScatterInitialCondition(this.baseModel.species.at(0), 0, this.baseModel.mesh.uniqueSubdomains.at(0).name);
+        if(this.baseModel.species.models.length > 0)
+        {
+            var model = this.collection.addScatterInitialCondition(this.baseModel.species.at(0), 0, this.baseModel.mesh.uniqueSubdomains.at(0).name);
         
-        this.selectView.select(model, true);
+            this.selectView.select(model, true);
+        }
     },
     initialize: function(attr, options) {
         this.collection = options.collection;
@@ -712,7 +720,7 @@ module.exports = View.extend({
                 name: 'type',
                 parent : this,
                 value: this.model.type,
-                options: [['scatter', 'Scatter'], ['place', 'Place'], ['distribute', 'Distribute Uniformly']],
+                options: [['scatter', 'Scatter'], ['place', 'Place'], ['distribute', 'Distribute Uniformly per Voxel']],
                 required: true,
             }), this.el.querySelector("[data-hook='typeSelect']"));
 
@@ -1167,13 +1175,43 @@ module.exports = View.extend({
         <div data-hook="name"> \
         </div> \
     </div> \
-    <div data-hook="descriptionContainer"> \
+    <div> \
         <br /> \
-        <div> \
-            <h5>Mesh Description:</h5> \
+        <table cellpadding="5" width="100%"> \
+        <tr> \
+        <td data-hook="descriptionContainer" width="33%" valign="top"> \
+            <h5>Description:</h5> \
             <pre data-hook="description"> \
             </pre> \
-        </div> \
+        </td> \
+        <td valign="top"> \
+            <h5>Volumes:</h5> \
+            <table class="table"> \
+                <tr> \
+                    <th>Subdomain</th> \
+                    <th>Volume</th> \
+                </tr> \
+                <tbody data-hook="volume"> \
+                </tbody> \
+            </table> \
+        </td> \
+        <td valign="top"> \
+            <h5>Bounds:</h5> \
+            <table class="table"> \
+                <tr> \
+                    <th>Axis</th> \
+                    <th>Min</th> \
+                    <th>Max</th> \
+                </tr> \
+                <tbody> \
+                    <tr><td>x-axis</td><td data-hook="minx"></td><td data-hook="maxx"></td></tr> \
+                    <tr><td>y-axis</td><td data-hook="miny"></td><td data-hook="maxy"></td></tr> \
+                    <tr><td>z-axis</td><td data-hook="minz"></td><td data-hook="maxz"></td></tr> \
+                </tbody> \
+            </table> \
+        </td> \
+        </tr> \
+        </table> \
     </div> \
 </div>',
     bindings: {
@@ -1202,6 +1240,30 @@ module.exports = View.extend({
     changeModel: function()
     {
 	this.model = this.baseModel.mesh;
+
+        this.render();
+    },
+    render: function()
+    {
+	View.prototype.render.apply(this, arguments);
+        
+        var tbody = $( this.queryByHook( 'volume' ) );
+
+        var sortedSubdomains = _.keys(this.model.volumes);
+
+        for(var i = 0; i < sortedSubdomains.length; i++)
+        {
+            var subdomain = sortedSubdomains[i];
+
+            $( '<tr><td>' + subdomain + '</td><td>' + this.model.volumes[subdomain].toExponential(4) + '</td></tr>' ).appendTo( tbody );
+        }
+
+        $( this.queryByHook( 'minx' ) ).text( this.model.boundingBox[0][0].toExponential(4) );
+        $( this.queryByHook( 'miny' ) ).text( this.model.boundingBox[1][0].toExponential(4) );
+        $( this.queryByHook( 'minz' ) ).text( this.model.boundingBox[2][0].toExponential(4) );
+        $( this.queryByHook( 'maxx' ) ).text( this.model.boundingBox[0][1].toExponential(4) );
+        $( this.queryByHook( 'maxy' ) ).text( this.model.boundingBox[1][1].toExponential(4) );
+        $( this.queryByHook( 'maxz' ) ).text( this.model.boundingBox[2][1].toExponential(4) );
     }
 });
 
@@ -2780,17 +2842,17 @@ module.exports = View.extend({
                     reactants = 2;
                     products = 2;
                 }
-		else if(obj.value == 'massaction')
-		{
-		    if(this.model.reactants.length >= 2)
-		    {
-			reactants = 2;
-		    }
-		    else
-		    {
-			reactants = 1;
-		    }
-		}
+                else if(obj.value == 'massaction')
+                {
+                    if(this.model.reactants.length >= 2)
+                    {
+                        reactants = 2;
+                    }
+                    else
+                    {
+                        reactants = 1;
+                    }
+                }
 
                 while(this.model.reactants.length > reactants)
                     this.model.reactants.remove(this.model.reactants.at(0));
@@ -2808,10 +2870,10 @@ module.exports = View.extend({
                 {
                     this.model.reactants.at(0).stoichiometry = 2;
                 }
-		else if(obj.value == 'massaction' && reactants == 1)
-		{
-		    this.model.reactants.at(0).stoichiometry = Math.min(2, this.model.reactants.at(0).stoichiometry);
-		}
+                else if(obj.value == 'massaction' && reactants == 1)
+                {
+                    this.model.reactants.at(0).stoichiometry = Math.min(2, this.model.reactants.at(0).stoichiometry);
+                }
                 else
                 {
                     this.model.reactants.each( function(reactant) { reactant.stoichiometry = 1; } );
@@ -2963,18 +3025,18 @@ var reactants;
                         return "Select valid reactants!";
                 }
 
-		if(this.model.type == 'massaction')
-		{
-		    var reactantCount = 0;
+                if(this.model.type == 'massaction')
+                {
+                    var reactantCount = 0;
 
-		    for(var i = 0; i < reactants; i++)
-		    {
-			reactantCount += this.model.reactants.at(i).stoichiometry;
-		    }
+                    for(var i = 0; i < reactants; i++)
+                    {
+                        reactantCount += this.model.reactants.at(i).stoichiometry;
+                    }
 
-		    if(reactantCount > 2)
-			return "There may only be two or less reactants in mass action reaction";
-		}
+                    if(reactantCount > 2)
+                        return "There may only be two or less reactants in mass action reaction";
+                }
 
                 for(var i = 0; i < products; i++)
                 {
@@ -3451,6 +3513,7 @@ var SpecieCollectionFormView = AmpersandView.extend({
 });
 
 module.exports = SpecieCollectionFormView
+
 },{"./paginated-collection-view":18,"./specie":25,"./tests":29,"ampersand-form-view":103,"ampersand-input-view":107,"ampersand-view":786,"jquery":889}],25:[function(require,module,exports){
 var _ = require('underscore');
 var $ = require('jquery');
@@ -4131,6 +4194,8 @@ module.exports = Model.extend({
         meshFileId : 'number',
         threeJsMesh : 'object',
         subdomains : 'object',
+        boundingBox : 'object',
+        volumes : 'object',
         uniqueSubdomains : 'object',
         undeletable : { type : 'boolean', default : false },
 	ghost : { type : 'boolean', default : false }
@@ -75264,7 +75329,7 @@ var PrimaryView = View.extend({
         model.is_public = false;
         model.id = undefined;
 
-        //model.setupMesh(this.meshCollection);
+        model.setupMesh(this.meshCollection);
 
         this.collection.add(model);
 
@@ -75322,16 +75387,19 @@ var PrimaryView = View.extend({
 
 ModelCollection = AmpersandCollection.extend( {
     url: "/models",
+    comparator: 'name',
     model: Model
 });
 
 PublicModelCollection = AmpersandCollection.extend( {
     url: "/publicModels",
+    comparator: 'name',
     model: Model
 });
 
 MeshCollection = AmpersandCollection.extend( {
     url: "/meshes",
+    comparator: 'name',
     model: Mesh
 });
 
@@ -75386,13 +75454,13 @@ module.exports = {
         domReady(function () {
             for(var i = 0; i < modelCollection.models.length; i++)
             {
-                //modelCollection.models[i].setupMesh(meshCollection);
+                modelCollection.models[i].setupMesh(meshCollection);
                 modelCollection.models[i].saveState = 'saved';
             }
 
             for(var i = 0; i < publicModelCollection.models.length; i++)
             {
-                //publicModelCollection.models[i].setupMesh(meshCollection);
+                publicModelCollection.models[i].setupMesh(meshCollection);
                 publicModelCollection.models[i].saveState = 'saved';
             }
 

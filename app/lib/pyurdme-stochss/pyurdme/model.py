@@ -2,7 +2,7 @@
     This module defines a model of a well mixed biochemical reaction network.
     
 """
-
+import uuid
 from collections import OrderedDict
 
 
@@ -124,10 +124,14 @@ class Model():
         param_type = type(reacs).__name__
         if param_type == 'list':
             for r in reacs:
+                if r.name is None or r.name == "":
+                    r.name = 'rxn' + str(uuid.uuid4()).replace('-', '_')
                 self.listOfReactions[r.name] = r
         elif param_type == 'dict' or param_type == 'OrderedDict':
             self.listOfReactions = reacs
         elif param_type == 'instance':
+                if reacs.name is None or reacs.name == "":
+                    reacs.name = 'rxn' + str(uuid.uuid4()).replace('-', '_')
                 self.listOfReactions[reacs.name] = reacs
         else:
             raise

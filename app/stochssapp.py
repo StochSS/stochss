@@ -395,64 +395,60 @@ if 'lib' not in sys.path:
     sys.path[0:0] = ['lib']
 
 app = webapp2.WSGIApplication([
-                                  ('/', MainPage),
-                                  ('/models.*', handlers.modeleditor.ModelBackboneInterface),
-                                  ('/publicModels.*', handlers.modeleditor.PublicModelBackboneInterface),
-                                  ('/importFromXML.*', handlers.modeleditor.ImportFromXMLPage),
-                                  ('/meshes.*', handlers.mesheditor.MeshBackboneInterface),
-                                  ('/models/list.*', handlers.modeleditor.ModelBackboneInterface),
-                                  ('/stochkit/list.*', JobBackboneInterface),
-                                  #('/modeleditor/converttopopulation', ConvertToPopulationPage),
-                                  #('/modeleditor/import/fromfile', ModelEditorImportFromFilePage),
-                                  #('/modeleditor/import/publiclibrary', ModelEditorImportFromLibrary),
-                                  #('/modeleditor/export/tostochkit2', ModelEditorExportToStochkit2),
-                                  ('/modeleditor.*', handlers.modeleditor.ModelEditorPage),
-                                  ('/publicLibrary.*', handlers.modeleditor.PublicModelPage),
-                                  ('/simulate', SimulatePage),
-                                  ('/sensitivity', SensitivityPage),
-                                  ('/spatial', handlers.spatial.SpatialPage),
-                                  ('/stochoptim', handlers.stochoptim.StochOptimPage),
-                                  webapp2.Route('/stochoptim/<jobID>',
-                                                handler=handlers.stochoptim.StochOptimVisualization),  #/<queryType>
-                                  webapp2.Route('/stochoptim/<queryType>/<jobID>',
-                                                handler=handlers.stochoptim.StochOptimVisualization),
-                                  ## Fileserver handlers
-                                  # This route is for listing all files
-                                  webapp2.Route('/FileServer/backbone/<key>',
-                                                handler=handlers.fileserver.BackboneFileServerInterface,
-                                                name='backbonefs'),
-                                  # This route is for interacting with single files
-                                  webapp2.Route('/FileServer/backbone/<key>/<fileID>',
-                                                handler=handlers.fileserver.BackboneFileServerInterface,
-                                                name='backbonefs'),
-                                  # This route is for downloading the full file
-                                  webapp2.Route('/FileServer/large/<key>/<fileID>/<filename>',
-                                                handler=handlers.fileserver.LargeFileServerInterface, name='fs'),
-                                  # This route is for file uploads
-                                  webapp2.Route('/FileServer/large/<key>',
-                                                handler=handlers.fileserver.LargeFileServerInterface, name='fs'),
-                                  # This route is for downloading only a few bytes
-                                  webapp2.Route('/FileServer/large/<key>/<fileID>/<numberBytes>/<filename>',
-                                                handler=handlers.fileserver.LargeFileServerInterface, name='fs'),
-                                  ('/export', ExportPage),
-                                  ('/import', ImportPage),
-                                  ('/status', StatusPage),
-                                  ('/reproduce', DataReproductionPage),
-                                  ('/output/visualize', VisualizePage),
-                                  ('/output', JobOutPutPage),
-                                  ('/output/[a-zA-Z0-9-_]*.tgz', JobOutPutPage),
-                                  ('/output/servestatic', StaticFileHandler),
-                                  ('/credentials', CredentialsPage),
-                                  ('/cost_analysis', CostAnalysisPage),
-                                  ('/localsettings', LocalSettingsPage),
-                                  ('/updates', UpdatesPage),
-                                  ('/secret_key', SecretKeyHandler),
-                                  ('/register', UserRegistrationPage),
-                                  ('/login', LoginPage),
-                                  ('/logout', LogoutHandler),
-                                  ('/admin', AdminPage),
-                                  ('/account_settings', AccountSettingsPage),
-                              ],
-                              config=config,
-                              debug=True)
+                               ('/', MainPage),
+                               ('/models.*', handlers.modeleditor.ModelBackboneInterface),
+                               ('/publicModels.*', handlers.modeleditor.PublicModelBackboneInterface),
+                               ('/importFromSBML.*', handlers.modeleditor.ImportFromSBMLPage),
+                               ('/importFromXML.*', handlers.modeleditor.ImportFromXMLPage),
+                               ('/SBMLErrorLogs.*', handlers.modeleditor.SBMLErrorLogsPage),
+                               ('/meshes.*', handlers.mesheditor.MeshBackboneInterface),
+                               ('/models/list.*', handlers.modeleditor.ModelBackboneInterface),
+                               ('/stochkit/list.*', JobBackboneInterface),
+                               #('/modeleditor/converttopopulation', ConvertToPopulationPage),
+                               #('/modeleditor/import/fromfile', ModelEditorImportFromFilePage),
+                               #('/modeleditor/import/publiclibrary', ModelEditorImportFromLibrary),
+                               #('/modeleditor/export/tostochkit2', ModelEditorExportToStochkit2),
+                               ('/modeleditor.*', handlers.modeleditor.ModelEditorPage),
+                               ('/publicLibrary.*', handlers.modeleditor.PublicModelPage),
+                               ('/simulate',SimulatePage),
+                               ('/sensitivity',SensitivityPage),
+                               ('/spatial',handlers.spatial.SpatialPage),
+                               ('/stochoptim', handlers.stochoptim.StochOptimPage),
+                               webapp2.Route('/stochoptim/<jobID>', handler = handlers.stochoptim.StochOptimVisualization),#/<queryType>
+                               webapp2.Route('/stochoptim/<queryType>/<jobID>', handler = handlers.stochoptim.StochOptimVisualization),
+                               ## Fileserver handlers
+                               # This route is for listing all files
+                               webapp2.Route('/FileServer/backbone/<key>', handler = handlers.fileserver.BackboneFileServerInterface, name = 'backbonefs'),
+                               # This route is for interacting with single files
+                               webapp2.Route('/FileServer/backbone/<key>/<fileID>', handler = handlers.fileserver.BackboneFileServerInterface, name = 'backbonefs'),
+                               # This route is for downloading the full file
+                               webapp2.Route('/FileServer/large/<key>/<fileID>/<filename>', handler = handlers.fileserver.LargeFileServerInterface, name = 'fs'),
+                               # This route is for file uploads
+                               webapp2.Route('/FileServer/large/<key>', handler = handlers.fileserver.LargeFileServerInterface, name = 'fs'),
+                               # This route is for downloading only a few bytes
+                               webapp2.Route('/FileServer/large/<key>/<fileID>/<numberBytes>/<filename>', handler = handlers.fileserver.LargeFileServerInterface, name = 'fs'),
+                               ('/export', ExportPage),
+                               ('/import', ImportPage),
+                               ('/status',StatusPage),
+                               ('/reproduce',DataReproductionPage),
+                               ('/output/visualize',VisualizePage),
+                               ('/output',JobOutPutPage),
+                               ('/output/[a-zA-Z0-9-_]*.tgz',JobOutPutPage),
+                               ('/output/servestatic',StaticFileHandler),
+                               ('/credentials',CredentialsPage),
+                               ('/cost_analysis',CostAnalysisPage),
+                               ('/localsettings',LocalSettingsPage),
+                               ('/updates',UpdatesPage),
+                               ('/secret_key', SecretKeyHandler),
+                               ('/register', UserRegistrationPage),
+                               ('/login', LoginPage),
+                               ('/logout', LogoutHandler),
+                               ('/admin', AdminPage),
+                               ('/account_settings', AccountSettingsPage),
+                               ],
+                                config=config,
+                                debug=True)
 
+
+#logging.getLogger().setLevel(logging.DEBUG)
+#pricing.initialize_price_model()
