@@ -17,6 +17,7 @@ import os
 import re
 import pprint
 import time
+import glob
 
 from backend.common.config import AWSConfig, AgentTypes, AgentConfig, FlexConfig
 from backend.databases.dynamo_db import DynamoDB
@@ -33,6 +34,7 @@ class CredentialsPage(BaseHandler):
     FLEX_PREPARE_CLOUD = 'prepare_flex_cloud'
     FLEX_SAVE_KEY_FILE = 'flex_save_keyfile'
     FLEX_DEREGISTER_CLOUD = 'deregister_flex_cloud'
+    FLEX_DELETE_KEY_FILE = 'flex_delete_keyfile'
     
     def authentication_required(self):
         return True
@@ -46,6 +48,17 @@ class CredentialsPage(BaseHandler):
         
         context = self.getContext(user_id)
         self.render_response('credentials.html', **context)
+
+
+    def __handle_flex_delete_key_file(self, keyname, keyfile_dirname):
+        logging.info('Deleting keyfile with keyname: {}'.format(keyname))
+        keyfile_location = os.path.join(keyfile_dirname, keyname)
+
+        if os.path.exists(keyfile_location):
+            os.remove(keyfile_location)
+
+        self.response.headers['Content-Type'] = 'application/json'
+        json.dump({"success": True}, self.response.out)
 
 
     def __handle_flex_save_key_file(self, keyfile_contents, keyname, keyfile_dirname):
@@ -81,6 +94,11 @@ class CredentialsPage(BaseHandler):
             keyname = data_received['keyname']
             keyfile_dirname = FlexConfig.get_keyfile_dirname(user_id)
             self.__handle_flex_save_key_file(keyfile_contents, keyname, keyfile_dirname)
+
+        elif data_received['action'] == CredentialsPage.FLEX_DELETE_KEY_FILE:
+            keyname = data_received['keyname']
+            keyfile_dirname = FlexConfig.get_keyfile_dirname(user_id)
+            self.__handle_flex_delete_key_file(keyname, keyfile_dirname)
 
         elif data_received['action'] == CredentialsPage.FLEX_DEREGISTER_CLOUD:
             flex_cloud_machine_info = self.user_data.get_flex_cloud_machine_info()
@@ -468,7 +486,7 @@ class CredentialsPage(BaseHandler):
         self.user_data.put()
 
         # Check if the flex cloud credentials are valid.
-        if not self.user_data.valid_flex_cloud_info:
+        if not self.user_data.is_flex_cloud_info_set:
             result['flex_cloud_status'] = 'Failure'
             result['flex_cloud_info_msg'] = 'Could not determine the status of the machines: Invalid Flex Cloud Credentials!'
             context['valid_flex_cloud_info'] = False
@@ -478,8 +496,38 @@ class CredentialsPage(BaseHandler):
             result['flex_cloud_info_msg'] = 'At least queue head is running!'
             context['valid_flex_cloud_info'] = True
 
+        # Get Flex SSH Key Info
+        flex_ssh_key_info = self.__get_flex_ssh_key_info()
+        context['flex_ssh_key_info'] = flex_ssh_key_info
+
         context = dict(result, **context)
         return context
+
+    def __get_flex_ssh_key_info(self):
+        flex_ssh_key_info = []
+        flex_ssh_keynames = self.__get_flex_ssh_keynames()
+
+        if self.user_data.valid_flex_cloud_info:
+            flex_ssh_keynames_in_use = [machine['keyname'] for machine in self.user_data.get_flex_cloud_machine_info()]
+
+            for flex_ssh_keyname in flex_ssh_keynames:
+                if flex_ssh_keyname in flex_ssh_keynames_in_use:
+                    flex_ssh_key_info.append({'keyname': flex_ssh_keyname, 'is_deletable': False})
+                else:
+                    flex_ssh_key_info.append({'keyname': flex_ssh_keyname, 'is_deletable': True})
+        else:
+            flex_ssh_key_info = [{'keyname': flex_ssh_keyname, 'is_deletable': True} for flex_ssh_keyname in flex_ssh_keynames]
+
+        return flex_ssh_key_info
+
+    def __get_flex_ssh_keynames(self):
+        ssh_keys = []
+        ssh_keyfile_dirname = FlexConfig.get_keyfile_dirname(user_id=self.user_data.user_id)
+        if os.path.exists(ssh_keyfile_dirname):
+            for keyfile in glob.glob(os.path.join(ssh_keyfile_dirname, '*')):
+                if not os.path.isdir(keyfile):
+                    ssh_keys.append(os.path.basename(keyfile))
+        return ssh_keys
 
     def getContext(self, user_id):
         ec2_context = self.__get_ec2_context(user_id)

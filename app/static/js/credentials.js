@@ -48,22 +48,6 @@ function get_flex_cloud_info_input() {
             }
         }
 
-        if (inputs[i].name == 'keyfile') {
-            var keyname_from_keyfile =  inputs[i].value;
-            if (keyname_from_keyfile.search("/") != -1) {
-                keyname_from_keyfile = keyname_from_keyfile.substring(keyname_from_keyfile.lastIndexOf('/')+1)
-            }
-            if (keyname_from_keyfile.search("\\\\") != -1) {
-                keyname_from_keyfile = keyname_from_keyfile.substring(keyname_from_keyfile.lastIndexOf('\\')+1)
-            }
-
-            flex_cloud_machine['keyname'] = keyname_from_keyfile;
-            if (flex_cloud_machine['keyname'] == '') {
-                alert('Please upload valid key file!');
-                return null
-            }
-        }
-
         if (inputs[i].name == 'queue_head') {
             flex_cloud_machine['queue_head'] = false;
             if (inputs[i].checked) {
@@ -71,10 +55,15 @@ function get_flex_cloud_info_input() {
             }
         }
 
-        if (Object.keys(flex_cloud_machine).length == 4) {
+        if (Object.keys(flex_cloud_machine).length == 3) {
             flex_cloud_machine_info.push(flex_cloud_machine);
             flex_cloud_machine = {};
         }
+    }
+
+    var selects = form.getElementsByTagName("select");
+    for (i = 0; i < selects.length; i++) {
+        flex_cloud_machine_info[i]['keyname'] = selects[i].options[selects[i].selectedIndex].value
     }
 
     var queue_head = null;
@@ -109,6 +98,29 @@ function refresh_flex_cloud_info() {
         },
         complete: function(){
             document.location.reload();
+        }
+    });
+}
+
+function delete_keyfile(keyname){
+    var jsonDataToBeSent = {};
+    jsonDataToBeSent['action'] = 'flex_delete_keyfile';
+    jsonDataToBeSent['keyname'] = keyname;
+
+
+    jsonDataToBeSent = JSON.stringify(jsonDataToBeSent);
+    $.ajax({
+        type: "POST",
+        url: "/credentials",
+        contentType: "application/json",
+        dataType: "json",
+        data: jsonDataToBeSent,
+        success: function(){},
+        error: function(x,e){
+            alert('Could not delete flex ssh key, ' + keyname + '!');
+        },
+        complete: function() {
+            refresh_flex_cloud_info()
         }
     });
 }
@@ -197,8 +209,6 @@ $(document).ready(function () {
         new_row.find("input[name='queue_head']").attr('checked', false);
         $('#flex_cloud_machine_info_table tr:last').after(new_row);
 
-        add_key_file_upload_listeners();
-
         return false;
     });
 
@@ -214,17 +224,10 @@ $(document).ready(function () {
     });
 });
 
-
-
-
-function add_key_file_upload_listeners() {
-    var keyfiles = document.getElementsByName('keyfile');
-    for (var i = 0; i < keyfiles.length; i++ ) {
-        keyfiles[i].addEventListener('change', function(event){
+function add_key_file_upload_listener() {
+    var keyfile_to_upload = document.getElementById('keyfile_to_upload');
+    keyfile_to_upload.addEventListener('change', function(event){
             var first_file = event.target.files[0];
-//            var children = $(event.target).parent().children();
-//            alert(children.length);
-
             if (first_file) {
                 var reader = new FileReader();
                 reader.onload = function(e) {
@@ -236,14 +239,12 @@ function add_key_file_upload_listeners() {
             else {
                 alert("Failed to upload keyfile!");
             }
-        }, false);
-    }
+        },
+     false);
 }
 
-add_key_file_upload_listeners();
-
 window.onload = function () {
-
+    add_key_file_upload_listener();
 };
 
 
