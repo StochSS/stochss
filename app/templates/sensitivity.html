@@ -118,7 +118,7 @@
     <div class="well">
         <h3>Reproduction and Cost Analysis</h3>
         <br />
-    	<% if (resource == "flex-cloud" || resource == "ec2-cloud") { %>
+    	<% if (resource == "ec2-cloud") { %>
     		<% if(output_stored != "True"){ %>
     		<p> Reproduction Node Type: </p>
     		<select id="instance_type" style="width: 100pt;">
@@ -135,7 +135,9 @@
     		
     		<button class="btn btn-primary btn-large" onclick="location.href = '/cost_analysis?job_type=sensitivity&id=<%= id %>';"> Cost Analysis</button>
 
-		<% }else{ %>
+		<% } else if (resource == "flex-cloud") { %>
+        <p>Flex Cloud job. No reproduction and cost analysis available</p>
+    <% }else{ %>
     		<p>Local job. No reproduction and cost analysis available</p>
     	<% } %>    	
     </div>
