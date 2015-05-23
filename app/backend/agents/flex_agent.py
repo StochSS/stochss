@@ -63,7 +63,7 @@ class FlexAgent(BaseAgent):
                 raise AgentConfigurationException('no ' + param)
 
     def __get_flex_instance_id(self, public_ip):
-        return 'flex_{0}'.format(public_ip.replace('.', '', 3))
+        return 'flex_{0}'.format(public_ip.replace('.', '_', 3))
 
     def describe_instances_launched(self, parameters):
         launched_ids = []
