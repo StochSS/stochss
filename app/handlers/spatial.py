@@ -1,10 +1,11 @@
 from stochssapp import BaseHandler
 from modeleditor import ModelManager, StochKitModelWrapper
 import stochss
+import pprint
 import exportimport
 
-import backend.backendservice
-from backend.common.config import AgentTypes
+from backend.backendservice import backendservices
+from backend.common.config import AgentTypes, JobConfig
 
 import mesheditor
 
@@ -36,6 +37,8 @@ sys.path.append(os.path.join(os.path.dirname(__file__), '../lib/cloudtracker'))
 from s3_helper import *
 
 class SpatialJobWrapper(db.Model):
+    SUPPORTED_CLOUD_RESOURCES = ["{0}-cloud".format(agent_type) for agent_type in JobConfig.SUPPORTED_AGENT_TYPES]
+
     # These are all the attributes of a job we use for local storage
     userId = db.StringProperty()
     pid = db.IntegerProperty()
@@ -62,7 +65,7 @@ class SpatialJobWrapper(db.Model):
     # More attributes can obvs. be added
     # The delete operator here is a little fancy. When the item gets deleted from the GOogle db, we need to go clean up files stored locally and remotely
     def delete(self, credentials=None):
-        service = backend.backendservice.backendservices()
+        service = backendservices()
         
         if self.zipFileName:
             if os.path.exists(self.zipFileName):
@@ -83,9 +86,12 @@ class SpatialJobWrapper(db.Model):
             if os.path.exists(str(output_path) + self.uuid):
                 shutil.rmtree(str(output_path) + self.uuid)
         
-        if self.resource.lower() == "cloud":
+        if self.resource in SpatialJobWrapper.SUPPORTED_CLOUD_RESOURCES:
             try:
-                user_data = db.GqlQuery("SELECT * FROM UserData WHERE ec2_access_key = :1 AND ec2_secret_key = :2", credentials['AWS_ACCESS_KEY_ID'], credentials['AWS_SECRET_ACCESS_KEY']).get()
+                user_data = db.GqlQuery("SELECT * FROM UserData WHERE ec2_access_key = :1 AND ec2_secret_key = :2",
+                                            credentials['AWS_ACCESS_KEY_ID'],
+                                            credentials['AWS_SECRET_ACCESS_KEY']
+                                        ).get()
                 
                 bucketname = user_data.S3_bucket_name
                 logging.info(bucketname)
@@ -104,7 +110,9 @@ class SpatialJobWrapper(db.Model):
                     result.delete()
                     
             except:
-                raise Exception('fail to delete cloud output or rerun sources.')  
+                raise Exception('fail to delete cloud output or rerun sources.')
+        else:
+            raise Exception('Job Resource {0} not supported!'.format(self.resource))
         
 
     # Stop the job!
@@ -115,8 +123,9 @@ class SpatialJobWrapper(db.Model):
                     os.killpg(int(self.pid), signal.SIGTERM)
                 except:
                     pass
-            elif self.resource.lower() == "cloud":
-                service = backend.backendservice.backendservices()
+
+            elif self.resource in SpatialJobWrapper.SUPPORTED_CLOUD_RESOURCES:
+                service = backendservices()
                 stop_params = {
                     'credentials': credentials,
                     'ids': [(self.celeryPID, self.cloudDatabaseID)]
@@ -133,10 +142,12 @@ class SpatialJobWrapper(db.Model):
                     return True
                 else:
                     # Something went wrong
-                    print '**************************************************************************************'
-                    print result
-                    print '**************************************************************************************'
+                    logging.info('*' * 80)
+                    logging.info(result)
+                    logging.info('*' * 80)
                     return False
+            else:
+                logging.error('Job Resource {0} not supported!'.format(self.resource))
     
     def mark_final_cloud_data(self):
         flag_file = os.path.join(self.outData, ".final-cloud")
@@ -152,6 +163,7 @@ class SpatialPage(BaseHandler):
         return True
     
     def get(self):
+        logging.debug('GET self.request.body = {}'.format(self.request.body))
         reqType = self.request.get('reqType')
 
         if reqType == 'getJobInfo':
@@ -195,19 +207,27 @@ class SpatialPage(BaseHandler):
                            "stderr" : stderr,
                            "indata" : json.loads(job.indata) })
 
+            logging.debug("result =\n\n{}".format(pprint.pformat(result)))
+
             self.response.headers['Content-Type'] = 'application/json'
             self.response.write(json.dumps(result))
             return
+
         elif reqType == 'timeData':
             try:
                 job = SpatialJobWrapper.get_by_id(int(self.request.get('id')))
 
                 data = json.loads(self.request.get('data'))
 
+                logging.debug("data = {}".format(data))
+
                 trajectory = data["trajectory"]
                 timeIdx = data["timeIdx"]
 
-                with open(str(job.outData + '/results/result{0}'.format(trajectory))) as fd:
+                filename = '{0}/results/result{1}'.format(job.outData, trajectory)
+                logging.info('filename = {}'.format(filename))
+
+                with open(filename) as fd:
                     result = pickle.load(fd)
         
                     species = result.model.get_species_map().keys()
@@ -229,6 +249,7 @@ class SpatialPage(BaseHandler):
 
                 self.response.content_type = 'application/json'
                 self.response.write(json.dumps( threeJS ))
+
             except Exception as e:
                 traceback.print_exc()
                 result = {}
@@ -236,6 +257,7 @@ class SpatialPage(BaseHandler):
                 result['msg'] = 'Error: error fetching results {0}'.format(e)
                 self.response.headers['Content-Type'] = 'application/json'
                 self.response.write(json.dumps(result))
+
             return
 
         self.render_response('spatial.html')
@@ -247,7 +269,10 @@ class SpatialPage(BaseHandler):
         if reqType == 'newJob':
             data = json.loads(self.request.get('data'))
 
-            job = db.GqlQuery("SELECT * FROM SpatialJobWrapper WHERE userId = :1 AND jobName = :2", self.user.user_id(), data["jobName"].strip()).get()
+            logging.debug('data =\n{}'.format(pprint.pformat(data)))
+
+            job = db.GqlQuery("SELECT * FROM SpatialJobWrapper WHERE userId = :1 AND jobName = :2",
+                              self.user.user_id(), data["jobName"].strip()).get()
 
             if job != None:
                 self.response.write(json.dumps({"status" : False,
@@ -258,22 +283,42 @@ class SpatialPage(BaseHandler):
                 # This function (runLocal) takes full responsibility for writing responses out to the world. This is probably a bad design mechanism
                 self.runLocal(data)
                 return
-            else:
-                backend_services = backend.backendservice.backendservices()
-                compute_check_params = {
-                    "infrastructure": "ec2",
-                    "credentials": self.user_data.getCredentials(),
-                    "key_prefix": self.user.user_id()
-                }
-                if self.user_data.valid_credentials and backend_services.isOneOrMoreComputeNodesRunning(compute_check_params):
-                    self.runCloud(data)
+
+            elif data["resource"] == "cloud":
+                if self.user_data.valid_flex_cloud_info:
+                    logging.info('Valid Flex Cloud Configured: Using it in preference')
+                    data['resource'] = '{0}-cloud'.format(AgentTypes.FLEX)
+                    result = self.runCloud(data=data, agent_type=AgentTypes.FLEX)
+                    self.response.write(json.dumps(result))
                     return
+
                 else:
-                    self.response.write(json.dumps({
-                        'status': False,
-                        'msg': 'You must have at least one active compute node to run in the cloud.'
-                    }))
-                    return
+                    compute_check_params = {
+                        "infrastructure": AgentTypes.EC2,
+                        "credentials": self.user_data.getCredentials(),
+                        "key_prefix": self.user.user_id()
+                    }
+                    service = backendservices()
+                    if self.user_data.valid_credentials and \
+                            service.isOneOrMoreComputeNodesRunning(compute_check_params):
+
+                        data['resource'] = '{0}-cloud'.format(AgentTypes.EC2)
+                        result = self.runCloud(data=data, agent_type=AgentTypes.EC2)
+                        self.response.write(json.dumps(result))
+                        return
+
+                    else:
+                        result = {'status': False,
+                                  'msg': 'You must have at least one active EC2 compute node to run in the EC2 cloud.'}
+                        self.response.write(json.dumps(result))
+                        return
+
+            else:
+                result = {'status':False,
+                          'msg':'There was an error processing your request. Job resource selected was invalid!'}
+                self.response.write(json.dumps(result))
+                return
+
         elif reqType == 'stopJob':
             jobID = json.loads(self.request.get('id'))
 
@@ -282,11 +327,11 @@ class SpatialPage(BaseHandler):
             job = SpatialJobWrapper.get_by_id(jobID)
 
             if job.userId == self.user.user_id():
-                if job.resource.lower() == "cloud":
+                if job.resource in SpatialJobWrapper.SUPPORTED_CLOUD_RESOURCES:
                     if not self.user_data.valid_credentials:
                         return self.response.write(json.dumps({
                             'status': False,
-                            'msg': 'Could not stop the job '+stochkit_job.name +'. Invalid credentials.'
+                            'msg': 'Could not stop the job '+ job.jobName +'. Invalid credentials.'
                         }))
                     credentials = self.user_data.getCredentials()
                     success = job.stop(credentials={
@@ -296,7 +341,7 @@ class SpatialPage(BaseHandler):
                     if not success:
                         return self.response.write(json.dumps({
                             'status': False,
-                            'msg': 'Could not stop the job '+stochkit_job.name +'. Unexpected error.'
+                            'msg': 'Could not stop the job '+ job.jobName +'. Unexpected error.'
                         }))
                 else:
                     job.stop()
@@ -304,6 +349,7 @@ class SpatialPage(BaseHandler):
                 self.response.write(json.dumps({"status" : False,
                                                 "msg" : "No permissions to delete this job (this should never happen)"}))
                 return
+
         elif reqType == 'delJob':
             jobID = json.loads(self.request.get('id'))
 
@@ -321,12 +367,13 @@ class SpatialPage(BaseHandler):
                 self.response.write(json.dumps({"status" : False,
                                                 "msg" : "No permissions to delete this job (this should never happen)"}))
                 return
+
         elif reqType == 'getDataCloud':
             try:
                 jobID = json.loads(self.request.get('id'))
                 job = SpatialJobWrapper.get_by_id(int(jobID))
 
-                service = backend.backendservice.backendservices()
+                service = backendservices()
                 # Fetch
                 service.fetchOutput(job.cloud_id, job.output_url)
                 # Unpack
@@ -403,7 +450,9 @@ class SpatialPage(BaseHandler):
                         for specie in result.model.listOfSpecies:
                             result.export_to_vtk(specie, os.path.join(tmpDir, "trajectory_{0}".format(trajectory), "species_{0}".format(specie)))
 
-                    tmpFile = tempfile.NamedTemporaryFile(dir = os.path.abspath(os.path.dirname(__file__) + '/../static/tmp/'), prefix = job.jobName + "_", suffix = '.zip', delete = False)
+                    tmpFile = tempfile.NamedTemporaryFile(dir = os.path.abspath(os.path.dirname(__file__) + '/../static/tmp/'),
+                                                          prefix = job.jobName + "_",
+                                                          suffix = '.zip', delete = False)
 
                     zipf = zipfile.ZipFile(tmpFile, "w")
                     zipdir(tmpDir, zipf, os.path.basename(tmpFile.name))
@@ -446,7 +495,7 @@ class SpatialPage(BaseHandler):
 
                     indata = json.loads(job.indata)
 
-                    tmpDir = tempfile.mkdtemp(dir = os.path.abspath(os.path.dirname(__file__) + '/../static/tmp/'))
+                    tmpDir = tempfile.mkdtemp(dir=os.path.abspath(os.path.dirname(__file__) + '/../static/tmp/'))
 
                     for trajectory in range(indata["realizations"]):
                         resultFile = open(str(job.outData + '/results/result{0}'.format(trajectory)))
@@ -455,7 +504,9 @@ class SpatialPage(BaseHandler):
 
                         result.export_to_csv(os.path.join(tmpDir, "trajectory_{0}".format(trajectory)).encode('ascii', 'ignore'))
 
-                    tmpFile = tempfile.NamedTemporaryFile(dir = os.path.abspath(os.path.dirname(__file__) + '/../static/tmp/'), prefix = job.jobName + "_", suffix = '.zip', delete = False)
+                    tmpFile = tempfile.NamedTemporaryFile(dir = os.path.abspath(os.path.dirname(__file__) + '/../static/tmp/'),
+                                                          prefix = job.jobName + "_",
+                                                          suffix = '.zip', delete = False)
 
                     zipf = zipfile.ZipFile(tmpFile, "w")
                     zipdir(tmpDir, zipf, os.path.basename(tmpFile.name))
@@ -635,9 +686,8 @@ class SpatialPage(BaseHandler):
             return
     
     # This takes in the unserialized JSON object data and runs a model!
-    def runCloud(self, data):
-        '''
-        '''
+    def runCloud(self, data, agent_type):
+        logging.info('agent_type = {}'.format(agent_type))
         try:
             # If the seed is negative, this means choose a seed >= 0 randomly
             if int(data['seed']) < 0:
@@ -669,25 +719,28 @@ class SpatialPage(BaseHandler):
                 "bucketname" : self.user_data.getBucketName(),
                 "paramstring" : '',
             }
+
             cloud_params['document'] = pickle.dumps(pymodel)
             #logging.info('PYURDME: {0}'.format(cloud_params['document']))
             # Set the environmental variables
+
             os.environ["AWS_ACCESS_KEY_ID"] = self.user_data.getCredentials()['EC2_ACCESS_KEY']
             os.environ["AWS_SECRET_ACCESS_KEY"] = self.user_data.getCredentials()['EC2_SECRET_KEY']
-            service = backend.backendservice.backendservices()
+
+            service = backendservices()
 
             # execute cloud task
             cloud_result = service.submit_cloud_task(params=cloud_params,
-                                               agent_type=AgentTypes.EC2,
+                                               agent_type=agent_type,
                                                ec2_access_key=os.environ["AWS_ACCESS_KEY_ID"],
                                                ec2_secret_key=os.environ["AWS_SECRET_ACCESS_KEY"])
 
 
             if not cloud_result["success"]:
                 e = cloud_result["exception"]
-                self.response.write(json.dumps({"status" : False,
-                                                "msg" : "Cloud execution failed: {0}".format(e)}))
-                return
+                result = {"status" : False,
+                          "msg" : "Cloud execution failed: {0}".format(e)}
+                return result
             
             celery_task_id = cloud_result["celery_pid"]
             taskid = cloud_result["db_id"]
@@ -700,22 +753,22 @@ class SpatialPage(BaseHandler):
             job.indata = json.dumps(data)
             job.outData = None  # This is where the data should be locally, when we get data from cloud, it must be put here
             job.modelName = pymodel.name
-            job.resource = "cloud"
+            job.resource = "{0}-cloud".format(agent_type)
             job.cloud_id = taskid
             job.celeryPID = celery_task_id
             job.status = "Running"
             job.output_stored = "True"
             job.put()
 
-            self.response.write(json.dumps({"status" : True,
-                                            "msg" : "Job launched",
-                                            "id" : job.key().id()}))
-            return
+            result = {"status" : True,
+                      "msg" : "Job launched",
+                      "id" : job.key().id()}
+            return result
 
         except Exception as e: 
             traceback.print_exc()
-            self.response.write(json.dumps({"status" : False,
-                                            "msg" : "{0}".format(e)}))
-                                            #"msg" : "{0}: {1}".format(type(e).__name__, e)}))
-            return
+            result = {"status" : False,
+                      "msg" : "{0}".format(e)}
+                      #"msg" : "{0}: {1}".format(type(e).__name__, e)}))
+            return result
 

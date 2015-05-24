@@ -392,10 +392,9 @@ class SimulatePage(BaseHandler):
                                 "units" : model["units"],
                                 "isSpatial" : model["isSpatial"] })
         context = {'all_models': all_models}
-        
-        
-        
+
         self.render_response('simulate.html',**context)
+
     def post(self):
         """ Assemble the input to StochKit2 and submit the job (locally or via cloud). """
 
@@ -571,15 +570,18 @@ class SimulatePage(BaseHandler):
                             vhandle.close()
 
                     self.response.headers['Content-Type'] = 'application/json'
-                    self.response.write(json.dumps({ "status" : "Finished",
-                                                     "values" : values,
-                                                     "job" : JobManager.getJob(self, job.key().id())}))
+                    result = {"status" : "Finished",
+                              "values" : values,
+                              "job" : JobManager.getJob(self, job.key().id())}
+                    logging.debug("result = \n\n{}".format(result))
+                    self.response.write(json.dumps(result))
                     return
+
                 except Exception as e:
                     traceback.print_exc()
                     job.stochkit_job.status = "Failed"
                     job.put()
-                    print "Failed to parse output data. Assuming job failed and continuing"
+                    logging.error("Failed to parse output data. Assuming job failed and continuing")
             
             if job.stochkit_job.status == "Failed":
                 self.response.headers['Content-Type'] = 'application/json'
