@@ -524,7 +524,7 @@ Spatial.Controller = Backbone.View.extend(
 
                 $( "#accessOutput" ).show();
                 // Add event handler to access button
-                if ((data['resource'] == 'ec2-cloud' || data['resource'] == 'flex-cloud') && !data['outData'])
+                if(data['resource'] == 'cloud' && !data['outData'])
                 {
 
                     console.log("at finished");

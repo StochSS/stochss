@@ -22,7 +22,6 @@ from backend.backendservice import backendservices
 
 import sensitivity
 import simulation
-import spatial
 
 class StatusPage(BaseHandler):
     """ The main handler for the Job Status Page. Displays status messages for the jobs, options to delete/kill jobs and
@@ -419,21 +418,15 @@ class StatusPage(BaseHandler):
             if self.user_data.valid_credentials:
                 cloud_task_status = {}
                 for job in jobs:
-                    if job.resource in spatial.SpatialJobWrapper.SUPPORTED_CLOUD_RESOURCES:
+                    if job.resource == "cloud":
                         cloud_task_status[job.cloud_id] = None
-
                 credentials = self.user_data.getCredentials()
 
                 # Check the status on the remote end
-                taskparams = {'AWS_ACCESS_KEY_ID':credentials['EC2_ACCESS_KEY'],
-                              'AWS_SECRET_ACCESS_KEY':credentials['EC2_SECRET_KEY'],
-                              'taskids':cloud_task_status.keys()}
+                taskparams = {'AWS_ACCESS_KEY_ID':credentials['EC2_ACCESS_KEY'],'AWS_SECRET_ACCESS_KEY':credentials['EC2_SECRET_KEY'],'taskids':cloud_task_status.keys()}
                 task_status = service.describeTask(taskparams)
 
-            jobs = sorted(jobs,
-                          key=lambda x : (datetime.datetime.strptime(x.startTime, '%Y-%m-%d-%H-%M-%S')
-                                              if hasattr(x, 'startTime') and x.startTime != None else ''),
-                          reverse = True)
+            jobs = sorted(jobs, key = lambda x : (datetime.datetime.strptime(x.startTime, '%Y-%m-%d-%H-%M-%S') if hasattr(x, 'startTime') and x.startTime != None else ''), reverse = True)
 
             for number, job in enumerate(jobs):
                 number = len(jobs) - number
@@ -447,7 +440,7 @@ class StatusPage(BaseHandler):
                             job.status = "Finished"
                         else:
                             job.status = "Failed"
-                elif job.resource in spatial.SpatialJobWrapper.SUPPORTED_CLOUD_RESOURCES:
+                elif job.resource == "cloud":
                             if job.cloud_id in task_status:
                                 job_status = task_status[job.cloud_id]
                             else:
