@@ -187,7 +187,7 @@ class JobManager():
     def getJob(handler, job_id):
         job = StochKitJobWrapper.get_by_id(job_id)
 
-        print job.stochkit_job.units
+        logging.info(job.stochkit_job.units)
 
         jsonJob = { "id" : job.key().id(),
                     "name" : job.name,
@@ -579,7 +579,7 @@ class SimulatePage(BaseHandler):
                     traceback.print_exc()
                     job.stochkit_job.status = "Failed"
                     job.put()
-                    print "Failed to parse output data. Assuming job failed and continuing"
+                    logging.erro("Failed to parse output data. Assuming job failed and continuing")
             
             if job.stochkit_job.status == "Failed":
                 self.response.headers['Content-Type'] = 'application/json'
@@ -767,7 +767,7 @@ class SimulatePage(BaseHandler):
             access_key = os.environ["AWS_ACCESS_KEY_ID"]
             secret_key = os.environ['AWS_SECRET_ACCESS_KEY']
 
-            print "backendservices.submit_cloud_task() params = {0}".format(params)
+            logging.debug("backendservices.submit_cloud_task() params = {0}".format(params))
 
             cloud_result = service.submit_cloud_task(params=params, agent_type=agent_type,
                                                ec2_access_key=access_key, ec2_secret_key=secret_key)
@@ -894,7 +894,7 @@ class SimulatePage(BaseHandler):
 
             cmd += ' -m {0} --out-dir {1}/result'.format(modelFileName, dataDir)
 
-            print cmd
+            logging.info("cmd =\n{}".format(cmd))
 
             #ode = "{0}/../../ode/stochkit_ode.py {1}".format(path, args)
             exstring = '{0}/backend/wrapper.sh {1}/stdout {1}/stderr {2}'.format(basedir, dataDir, cmd)
