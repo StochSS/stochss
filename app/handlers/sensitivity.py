@@ -161,7 +161,7 @@ class SensitivityPage(BaseHandler):
                 except IOError as ioe:
                     logging.error("caught error {0}".format(ioe))
                     job.status = "Failed"
-                    print "put job.status = Failed"
+                    logging.error("put job.status = Failed")
                     job.put()
                     
             if job.status == "Failed":

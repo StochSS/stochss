@@ -417,7 +417,7 @@ class SpatialPage(BaseHandler):
                     job.put()
                 finally:
                     if tmpDir and os.path.exists(tmpDir):
-                        print "Getting cleaned up"
+                        logging.info("Getting cleaned up")
                         shutil.rmtree(tmpDir)
             
             relpath = '/' + os.path.relpath(job.vtkFileName, os.path.abspath(os.path.dirname(__file__) + '/../'))
@@ -469,7 +469,7 @@ class SpatialPage(BaseHandler):
                     job.put()
                 finally:
                     if tmpDir and os.path.exists(tmpDir):
-                        print "Getting cleaned up"
+                        logging.info("Getting cleaned up")
                         shutil.rmtree(tmpDir)
             
             relpath = '/' + os.path.relpath(job.csvFileName, os.path.abspath(os.path.dirname(__file__) + '/../'))
@@ -616,7 +616,7 @@ class SpatialPage(BaseHandler):
                 pickle.dump(pymodel, fd)
 
             cmd = "{0}/../../pyurdme/pyurdme_wrapper.py {1} {2} {3} {4} {5}".format(path, model_file_pkl, result_dir, simulation_algorithm, simulation_realizations, simulation_seed)
-            print cmd
+            logging.info("cmd =\n{}".format(cmd))
             exstring = '{0}/backend/wrapper.sh {1}/stdout.log {1}/stderr.log {2}'.format(basedir, dataDir, cmd)
             handle = subprocess.Popen(exstring, shell=True, preexec_fn=os.setsid)
             

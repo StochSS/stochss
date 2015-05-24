@@ -579,7 +579,7 @@ class SimulatePage(BaseHandler):
                     traceback.print_exc()
                     job.stochkit_job.status = "Failed"
                     job.put()
-                    logging.erro("Failed to parse output data. Assuming job failed and continuing")
+                    logging.error("Failed to parse output data. Assuming job failed and continuing")
             
             if job.stochkit_job.status == "Failed":
                 self.response.headers['Content-Type'] = 'application/json'
