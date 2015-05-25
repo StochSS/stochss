@@ -376,6 +376,10 @@ FlexCloud.Controller = Backbone.View.extend(
 
 window.onload = function ()
 {
+    $( '#flex_ssh_key_table_table' ).DataTable( { "bSort" : false, "bLengthChange": false, "bFilter" : false } );
+    $( '#flex_ssh_key_table_table' ).css('border-bottom', '1px solid #ddd');
+    $( '#flex_ssh_key_table_table thead th' ).css('border-bottom', '1px solid #ddd');
+
     var cont = new FlexCloud.Controller();
 }
 /*                var select = $( this.el ).find('#initialDataSelect');
