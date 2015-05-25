@@ -142,8 +142,6 @@ class StochOptimModel(stochss.model.Model):
 
         rkind = "rk.ind <- c({0})".format(", ".join([repr(parameterNameToIndex[reaction.marate.name] + 1) for name, reaction in reactions]))
 
-        print os.linesep.join([rnu, pnu, snames, rnames, rparms, rknames, rconstant, rkind])
-
         if returnParameterToIndexMap:
             return os.linesep.join([rnu, pnu, snames, rnames, rparms, rknames, rconstant, rkind]), parameterNameToIndex
         else:

@@ -436,6 +436,7 @@ app = webapp2.WSGIApplication([
                                ('/output/[a-zA-Z0-9-_]*.tgz',JobOutPutPage),
                                ('/output/servestatic',StaticFileHandler),
                                ('/credentials',CredentialsPage),
+                               ('/credentials/flexIsDeletable', FlexCredentialsIsDeletablePage),
                                ('/cost_analysis',CostAnalysisPage),
                                ('/localsettings',LocalSettingsPage),
                                ('/updates',UpdatesPage),

@@ -272,6 +272,7 @@ class LargeFileServerInterface(BaseHandler):
         self.response.content_type = "application/json"
         if 'files[]' in self.request.POST:
             files = []
+
             for name, fieldStorage in self.request.POST.items():
                 # What?
                 if type(fieldStorage) is unicode:

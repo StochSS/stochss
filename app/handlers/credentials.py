@@ -23,6 +23,8 @@ from backend.common.config import AWSConfig, AgentTypes, AgentConfig, FlexConfig
 from backend.databases.dynamo_db import DynamoDB
 from backend.vm_state_model import VMStateModel
 
+import fileserver
+
 class CredentialsPage(BaseHandler):
     EC2_INS_TYPES = ["t1.micro", "m1.small", "m3.medium", "m3.large", "c3.large", "c3.xlarge"]
     HEAD_NODE_TYPES = ["c3.large", "c3.xlarge"]
@@ -85,7 +87,10 @@ class CredentialsPage(BaseHandler):
 
         if data_received['action'] == CredentialsPage.FLEX_PREPARE_CLOUD:
             flex_cloud_machine_info = data_received['flex_cloud_machine_info']
-            result = self.prepare_flex_cloud(user_id, flex_cloud_machine_info)
+            print flex_cloud_machine_info
+            print fileserver.FileWrapper.get_by_id(flex_cloud_machine_info[0]['key_file_id']).delete()
+            print 'HIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIII'
+            #result = self.prepare_flex_cloud(user_id, flex_cloud_machine_info)
             logging.info("result = {0}".format(result))
             self.redirect('/credentials')
 
@@ -504,19 +509,24 @@ class CredentialsPage(BaseHandler):
         return context
 
     def __get_flex_ssh_key_info(self):
+        files = fileserver.FileManager.getFiles(self, 'flexKeyFiles')
+
         flex_ssh_key_info = []
-        flex_ssh_keynames = self.__get_flex_ssh_keynames()
+        flex_ssh_keynames = [f["path"] for f in files]
 
         if self.user_data.valid_flex_cloud_info:
             flex_ssh_keynames_in_use = [machine['keyname'] for machine in self.user_data.get_flex_cloud_machine_info()]
 
-            for flex_ssh_keyname in flex_ssh_keynames:
+            for f in files:
+                flex_ssh_keyname = f["path"]
+                flex_id = f["id"]
+
                 if flex_ssh_keyname in flex_ssh_keynames_in_use:
-                    flex_ssh_key_info.append({'keyname': flex_ssh_keyname, 'is_deletable': False})
+                    flex_ssh_key_info.append({'id': flex_id, 'keyname': f['path']})
                 else:
-                    flex_ssh_key_info.append({'keyname': flex_ssh_keyname, 'is_deletable': True})
+                    flex_ssh_key_info.append({'id': flex_id, 'keyname': f['path']})
         else:
-            flex_ssh_key_info = [{'keyname': flex_ssh_keyname, 'is_deletable': True} for flex_ssh_keyname in flex_ssh_keynames]
+            flex_ssh_key_info = [{'id': f["id"], 'keyname': f['path']} for f in files]
 
         return flex_ssh_key_info
 
@@ -661,3 +671,33 @@ class LocalSettingsPage(BaseHandler):
 
 class InvalidUserException(Exception):
     pass
+
+class FlexCredentialsIsDeletablePage(BaseHandler):
+    def authentication_required(self):
+        return True
+
+    def __get_flex_ssh_key_info(self):
+        files = fileserver.FileManager.getFiles(self, 'flexKeyFiles')
+
+        flex_ssh_key_info = []
+        flex_ssh_keynames = [f["path"] for f in files]
+
+        if self.user_data.valid_flex_cloud_info:
+            flex_ssh_keynames_in_use = [machine['keyname'] for machine in self.user_data.get_flex_cloud_machine_info()]
+
+            for f in files:
+                flex_ssh_keyname = f["path"]
+                flex_id = f["id"]
+
+                if flex_ssh_keyname in flex_ssh_keynames_in_use:
+                    flex_ssh_key_info.append({'id': flex_id, 'is_deletable': False})
+                else:
+                    flex_ssh_key_info.append({'id': flex_id, 'is_deletable': True})
+        else:
+            flex_ssh_key_info = [{'id': f["id"], 'is_deletable': True} for f in files]
+
+        return { f["id"] : { "is_deletable" : f["is_deletable"] } for f in flex_ssh_key_info }
+
+    def get(self):
+        self.response.content_type = 'application/json'
+        self.response.write(json.dumps(self.__get_flex_ssh_key_info()))
