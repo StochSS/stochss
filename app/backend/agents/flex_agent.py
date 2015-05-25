@@ -73,8 +73,8 @@ class FlexAgent(BaseAgent):
         logging.info('launched_ids = {0}'.format(launched_ids))
         return launched_ids
 
-    def __get_flex_vm_state_url(self, ip, port=80):
-        return 'http://{ip}:{port}/state'.format(ip=ip, port=port)
+    def __get_flex_vm_state_url(self, ip):
+        return 'https://{ip}/state'.format(ip=ip)
 
     def __get_flex_vm_state_info(self, ip):
         try:
