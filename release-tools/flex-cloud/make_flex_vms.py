@@ -27,6 +27,9 @@ DEFAULT_FLEX_API_APP_LOCATION = os.path.join('app', 'backend', 'flex_api')
 DEFAULT_FLEX_API_APP_WSGI_LOCATION = os.path.join(DEFAULT_FLEX_API_APP_LOCATION, 'flex_rest_api.wsgi')
 DEFAULT_FLEX_API_APP_NAME = 'flex_rest_api'
 
+DEFAULT_SSL_CERT_NAME = 'server.crt'
+DEFAULT_SSL_KEY_NAME = 'server.key'
+
 
 class ShellCommandException(Exception):
     pass
@@ -120,7 +123,7 @@ class VirtualMachine(object):
             traceback.print_exc()
 
     def __test_flex_api_server(self):
-        json_message = json.loads(urllib2.urlopen("http://{ip}".format(ip=self.ip)).read())
+        json_message = json.loads(urllib2.urlopen("https://{ip}".format(ip=self.ip)).read())
         if json_message['name'] == 'Flex API' and json_message['version'] == '1.0.0':
             print 'Flex API Server running!'
         else:
@@ -129,11 +132,43 @@ class VirtualMachine(object):
     def __get_remote_stochss_dirname(self):
         return os.path.join('/home', self.username, 'stochss')
 
+    def __get_remote_apache2_dirname(self):
+        return '/etc/apache2'
+
+    def __create_ssl_cert_key_pair(self):
+        remote_apache2_dirname = self.__get_remote_apache2_dirname()
+        ssl_dirname = os.path.join(remote_apache2_dirname, 'ssl')
+        cert_filename = os.path.join(ssl_dirname, DEFAULT_SSL_CERT_NAME)
+        key_filename = os.path.join(ssl_dirname, DEFAULT_SSL_KEY_NAME)
+        subj = "/C=/ST=/L=/O=/OU=/CN={ip}".format(ip=self.ip)
+
+        commands = [
+            "sudo mkdir -p {0}".format(ssl_dirname),
+            "rm -f {0} {1}".format(cert_filename, key_filename),
+            "sudo openssl req -x509 -nodes -days 1095 -newkey rsa:2048 -out {cert} -keyout {key} -subj \"{subj}\"".format(
+                cert=cert_filename,
+                key=key_filename,
+                subj=subj
+            )
+        ]
+
+        command = ';'.join(commands)
+        remote_cmd = get_remote_command(user=self.username, ip=self.ip, key_file=self.keyfile,
+                                        command=command)
+
+        if os.system(remote_cmd) != 0:
+            raise Exception('Failed to create ssl cert/key pair!')
+
+        return cert_filename, key_filename
+
+
     def __setup_flex_api_server(self):
         header = 'Setting Flex REST API web server...'
         print '=================================================='
         print header
         stochss_dir = self.__get_remote_stochss_dirname()
+
+        cert_filename, key_filename = self.__create_ssl_cert_key_pair()
 
         with open(DEFAULT_FLEX_API_APACHE_CONF_TEMPLATE) as fin:
             contents = fin.read()
@@ -143,8 +178,10 @@ class VirtualMachine(object):
                                                                                DEFAULT_FLEX_API_APP_LOCATION))
         contents = contents.replace('FLEX_API_APP_WSGI_LOCATION', os.path.join(stochss_dir,
                                                                                DEFAULT_FLEX_API_APP_WSGI_LOCATION))
+        contents = contents.replace('FLEX_API_APP_CERT', cert_filename)
+        contents = contents.replace('FLEX_API_APP_KEY', key_filename)
 
-        # print 'site file config:\n{0}'.format(contents)
+        print 'site file config:\n{0}'.format(contents)
 
         with open(DEFAULT_FLEX_API_APACHE_CONF, 'w') as fout:
             fout.write(contents)
@@ -158,6 +195,7 @@ class VirtualMachine(object):
         result = os.system(scp_command)
         if result != 0:
             print 'scp Failed!'
+
         else:
             site_config_filename = '/etc/apache2/sites-available/{0}.conf'.format(DEFAULT_FLEX_API_APP_NAME)
             print 'site file config filename = {0}'.format(site_config_filename)
@@ -165,6 +203,7 @@ class VirtualMachine(object):
             commands = ['sudo mv {0} {1}'.format('~/{0}.conf'.format(DEFAULT_FLEX_API_APP_NAME),
                                                  site_config_filename),
                         'sudo chown root:root "{0}"'.format(site_config_filename),
+                        'sudo a2enmod ssl',
                         'sudo a2dissite 000-default',
                         'sudo a2ensite {0}.conf'.format(DEFAULT_FLEX_API_APP_NAME),
                         'sudo service apache2 restart']
@@ -175,7 +214,7 @@ class VirtualMachine(object):
 
 
     def __enable_network_ports(self):
-        # TODO: Enable ports 22, 5672, 6379, 11211, 55672, 80
+        # TODO: Enable ports 22, 5672, 6379, 11211, 55672, 80, 443
         pass
 
     def __try_install_dependencies(self):

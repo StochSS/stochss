@@ -1,4 +1,7 @@
-<VirtualHost *:80>
+<VirtualHost *:443>
+    SSLEngine on
+    SSLCertificateFile "FLEX_API_APP_CERT"
+    SSLCertificateKeyFile "FLEX_API_APP_KEY"
 
     WSGIDaemonProcess FLEX_API_APP_NAME threads=1
     WSGIScriptAlias / FLEX_API_APP_WSGI_LOCATION

@@ -106,6 +106,7 @@
         {"name": "redis"},
         {"name": "six"},
         {"name": "boto", "version": "2.9.0"},
-        {"name": "flask"}
+        {"name": "flask"},
+        {"name": "python-libsbml"}
     ]
 }

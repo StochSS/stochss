@@ -108,6 +108,7 @@
         {"name": "ply"},
         {"name": "redis"},
         {"name": "six"},
-        {"name": "boto",    "version": "2.9.0"}
+        {"name": "boto",    "version": "2.9.0"},
+        {"name": "python-libsbml"}
     ]
 }
