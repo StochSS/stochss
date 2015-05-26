@@ -129,14 +129,18 @@
 
                 <td valign=top>
                     Render Type:<br />
-                    <input type="radio" id="withoutWire" name="wireframe" checked>Solid
-                    <input type="radio" id="withWire" name="wireframe">Wireframe
+                    <select id="wireSelect">
+                        <option id="withoutWire" value="solid">Solid</option>
+                        <option id="withWire" value="solid">Wireframe</option>
+                    </select>
                 </td>
                 
                 <td valign=top>
                     Draw Units:<br />
-                    <input type="radio" value="population" name="drawUnits" checked>Population
-                    <input type="radio" value="concentration" name="drawUnits">Concentration
+                    <select id="unitSelect">
+                        <option value="population">Population</option>
+                        <option value="concentration">Concentration</option>
+                    </select>
                 </td>
 
                 <td valign=top>
