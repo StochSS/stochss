@@ -34,9 +34,7 @@ class CredentialsPage(BaseHandler):
     EC2_STOP_VMS = 'ec2_stop'
 
     FLEX_PREPARE_CLOUD = 'prepare_flex_cloud'
-    FLEX_SAVE_KEY_FILE = 'flex_save_keyfile'
     FLEX_DEREGISTER_CLOUD = 'deregister_flex_cloud'
-    FLEX_DELETE_KEY_FILE = 'flex_delete_keyfile'
     
     def authentication_required(self):
         return True
@@ -52,58 +50,14 @@ class CredentialsPage(BaseHandler):
         self.render_response('credentials.html', **context)
 
 
-    def __handle_flex_delete_key_file(self, keyname, keyfile_dirname):
-        logging.info('Deleting keyfile with keyname: {}'.format(keyname))
-        keyfile_location = os.path.join(keyfile_dirname, keyname)
-
-        if os.path.exists(keyfile_location):
-            os.remove(keyfile_location)
-
-        self.response.headers['Content-Type'] = 'application/json'
-        json.dump({"success": True}, self.response.out)
-
-
-    def __handle_flex_save_key_file(self, keyfile_contents, keyname, keyfile_dirname):
-        logging.info('Saving keyfile with keyname: {}'.format(keyname))
-
-        if not os.path.exists(keyfile_dirname):
-            os.makedirs(keyfile_dirname)
-
-        keyfile_location = os.path.join(keyfile_dirname, keyname)
-        if os.path.exists(keyfile_location):
-            logging.info('Keyname: {0} already exists!\n{1} will be overwritten!'.format(keyname, keyfile_location))
-
-        with open(keyfile_location, 'w') as fout:
-            fout.write(keyfile_contents)
-
-        os.chmod(keyfile_location, int('600', 8))
-
-        self.response.headers['Content-Type'] = 'application/json'
-        json.dump({"success": True}, self.response.out)
-
-
     def __handle_json_post_request(self, data_received, user_id):
         logging.info('__handle_json_post_request: action = {}'.format(data_received['action']))
 
         if data_received['action'] == CredentialsPage.FLEX_PREPARE_CLOUD:
             flex_cloud_machine_info = data_received['flex_cloud_machine_info']
-            print flex_cloud_machine_info
-            print fileserver.FileWrapper.get_by_id(flex_cloud_machine_info[0]['key_file_id']).delete()
-            print 'HIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIII'
-            #result = self.prepare_flex_cloud(user_id, flex_cloud_machine_info)
+            result = self.prepare_flex_cloud(user_id, flex_cloud_machine_info)
             logging.info("result = {0}".format(result))
             self.redirect('/credentials')
-
-        elif data_received['action'] == CredentialsPage.FLEX_SAVE_KEY_FILE:
-            keyfile_contents = data_received['contents']
-            keyname = data_received['keyname']
-            keyfile_dirname = FlexConfig.get_keyfile_dirname(user_id)
-            self.__handle_flex_save_key_file(keyfile_contents, keyname, keyfile_dirname)
-
-        elif data_received['action'] == CredentialsPage.FLEX_DELETE_KEY_FILE:
-            keyname = data_received['keyname']
-            keyfile_dirname = FlexConfig.get_keyfile_dirname(user_id)
-            self.__handle_flex_delete_key_file(keyname, keyfile_dirname)
 
         elif data_received['action'] == CredentialsPage.FLEX_DEREGISTER_CLOUD:
             flex_cloud_machine_info = self.user_data.get_flex_cloud_machine_info()
@@ -240,7 +194,7 @@ class CredentialsPage(BaseHandler):
             # Check if the supplied credentials are valid of not
             if service.validateCredentials(params):
                 self.user_data.valid_credentials = True
-                result = {'status': True, 'credentials_msg': ' Credentials saved successfully! The EC2 keys have been validated.'}
+                result = {'status': True, 'credentials_msg': 'Credentials saved successfully! The EC2 keys have been validated.'}
                 # See if the amazon db table is intitalized
                 if not self.user_data.isTable():
                     db_credentials = self.user_data.getCredentials()
@@ -273,6 +227,9 @@ class CredentialsPage(BaseHandler):
         return result
 
     def deregister_flex_cloud(self, user_id, flex_cloud_machine_info):
+        logging.info('deregister_flex_cloud')
+
+        logging.info('flex_cloud_machine_info =\n{}'.format(pprint.pformat(flex_cloud_machine_info)))
 
         service = backendservices(infrastructure=AgentTypes.FLEX)
         credentials = self.user_data.getCredentials()
@@ -312,6 +269,10 @@ class CredentialsPage(BaseHandler):
         self.user_data.is_flex_cloud_info_set = True
         self.user_data.reservation_id = reservation_id
         self.user_data.valid_flex_cloud_info = False
+
+        for machine in flex_cloud_machine_info:
+            machine['keyfile'] = fileserver.FileWrapper.get_by_id( machine['key_file_id']).storePath
+
         self.user_data.set_flex_cloud_machine_info(flex_cloud_machine_info)
         self.user_data.put()
 
@@ -475,6 +436,9 @@ class CredentialsPage(BaseHandler):
                     machine['state'] = VMStateModel.STATE_UNKNOWN
                     machine['description'] = VMStateModel.STATE_UNKNOWN
 
+            for machine in flex_cloud_machine_info:
+                machine['key_file_id'] = int(machine['key_file_id'])
+
             logging.info('After updating from VMStateModel, flex_cloud_machine_info =\n{0}'.format(
                                                                 pprint.pformat(flex_cloud_machine_info)))
 
@@ -510,34 +474,9 @@ class CredentialsPage(BaseHandler):
 
     def __get_flex_ssh_key_info(self):
         files = fileserver.FileManager.getFiles(self, 'flexKeyFiles')
-
-        flex_ssh_key_info = []
-        flex_ssh_keynames = [f["path"] for f in files]
-
-        if self.user_data.valid_flex_cloud_info:
-            flex_ssh_keynames_in_use = [machine['keyname'] for machine in self.user_data.get_flex_cloud_machine_info()]
-
-            for f in files:
-                flex_ssh_keyname = f["path"]
-                flex_id = f["id"]
-
-                if flex_ssh_keyname in flex_ssh_keynames_in_use:
-                    flex_ssh_key_info.append({'id': flex_id, 'keyname': f['path']})
-                else:
-                    flex_ssh_key_info.append({'id': flex_id, 'keyname': f['path']})
-        else:
-            flex_ssh_key_info = [{'id': f["id"], 'keyname': f['path']} for f in files]
-
+        flex_ssh_key_info = {f['id']: {'id': f['id'], 'keyname': f['path']} for f in files}
         return flex_ssh_key_info
 
-    def __get_flex_ssh_keynames(self):
-        ssh_keys = []
-        ssh_keyfile_dirname = FlexConfig.get_keyfile_dirname(user_id=self.user_data.user_id)
-        if os.path.exists(ssh_keyfile_dirname):
-            for keyfile in glob.glob(os.path.join(ssh_keyfile_dirname, '*')):
-                if not os.path.isdir(keyfile):
-                    ssh_keys.append(os.path.basename(keyfile))
-        return ssh_keys
 
     def getContext(self, user_id):
         ec2_context = self.__get_ec2_context(user_id)
@@ -678,24 +617,25 @@ class FlexCredentialsIsDeletablePage(BaseHandler):
 
     def __get_flex_ssh_key_info(self):
         files = fileserver.FileManager.getFiles(self, 'flexKeyFiles')
+        logging.info('files =\n{}'.format(files))
 
         flex_ssh_key_info = []
-        flex_ssh_keynames = [f["path"] for f in files]
-
         if self.user_data.valid_flex_cloud_info:
-            flex_ssh_keynames_in_use = [machine['keyname'] for machine in self.user_data.get_flex_cloud_machine_info()]
+            flex_ssh_keyfiles_in_use = [machine['keyfile'] for machine in self.user_data.get_flex_cloud_machine_info()]
+            logging.debug('flex_ssh_keyfiles_in_use =\n{}'.format(flex_ssh_keyfiles_in_use))
 
             for f in files:
-                flex_ssh_keyname = f["path"]
+                flex_ssh_keyfile = f["storePath"]
                 flex_id = f["id"]
 
-                if flex_ssh_keyname in flex_ssh_keynames_in_use:
+                if flex_ssh_keyfile in flex_ssh_keyfiles_in_use:
                     flex_ssh_key_info.append({'id': flex_id, 'is_deletable': False})
                 else:
                     flex_ssh_key_info.append({'id': flex_id, 'is_deletable': True})
         else:
             flex_ssh_key_info = [{'id': f["id"], 'is_deletable': True} for f in files]
 
+        logging.debug('flex_ssh_key_info =\n{}'.format(pprint.pformat(flex_ssh_key_info)))
         return { f["id"] : { "is_deletable" : f["is_deletable"] } for f in flex_ssh_key_info }
 
     def get(self):

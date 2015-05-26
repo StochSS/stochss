@@ -120,8 +120,6 @@ class UserData(db.Model):
 
     def get_flex_cloud_machine_info(self):
         info = json.loads(self.flex_cloud_machine_info, encoding="ascii")
-        for machine in info:
-            machine['keyfile'] = machine['keyname']
         logging.debug("info = {0}".format(self.flex_cloud_machine_info))
         return info
 
@@ -450,6 +448,3 @@ app = webapp2.WSGIApplication([
                                 config=config,
                                 debug=True)
 
-
-#logging.getLogger().setLevel(logging.DEBUG)
-#pricing.initialize_price_model()

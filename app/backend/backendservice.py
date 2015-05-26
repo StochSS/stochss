@@ -591,8 +591,7 @@ class backendservices(object):
         for machine in machine_info:
             logging.debug('machine = {}'.format(machine))
 
-            keyname = machine["keyname"]
-            keyfile = FlexConfig.get_keyfile(keyname=keyname, user_id=user_id)
+            keyfile = machine["keyfile"]
 
             logging.debug('keyfile = {0}'.format(keyfile))
 

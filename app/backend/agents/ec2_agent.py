@@ -169,6 +169,7 @@ class EC2Agent(BaseAgent):
         public_ips = []
         private_ips = []
         instance_types = []
+
         keynames = []
 
         conn = self.open_connection(parameters)
@@ -182,7 +183,9 @@ class EC2Agent(BaseAgent):
                 instance_types.append(i.instance_type)
                 keynames.append(parameters[self.PARAM_KEYNAME])
 
-        return public_ips, private_ips, instance_ids, instance_types, keynames
+        keyfiles = [os.path.abspath(os.path.join(os.path.dirname(__file__), '..', '..', k)) for k in keynames]
+
+        return public_ips, private_ips, instance_ids, instance_types, keyfiles
 
     def describe_instances_launched(self, parameters):
         """

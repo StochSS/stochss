@@ -45,14 +45,14 @@ class FileWrapper(db.Model):
 
     # I don't check these yet
     def readable(self, handler):
-        if owner == handler.user.user_id():
+        if self.owner == handler.user.user_id():
             return True
         else:
             return False
 
     # Nor these
     def writable(self, handler):
-        if owner == handler.user.user_id():
+        if self.owner == handler.user.user_id():
             return True
         else:
             return False
@@ -65,23 +65,22 @@ class FileWrapper(db.Model):
         super(FileWrapper, self).delete()
 
     @staticmethod
-    def build(handler, pathKey, path, data, perm = 755):
+    def build(handler, pathKey, path, data, perm=int('755', 8)):
         filewrapper = FileWrapper()
-
         filewrapper.fromJSON( { "path" : path,
                                 "pathKey" : pathKey,
                                 "data" : data,
                                 "owner" : handler.user.user_id(),
                                 "perm" : perm } )
-
         return filewrapper
 
     # This is practically the constructor
-    def fromJSON(self, rawData, asString = False):
+    def fromJSON(self, rawData, asString=False):
         if asString:
             data = json.loads(rawData)
         else:
             data = rawData
+
         
         if self.storePath:
             if os.path.exists(self.storePath):
@@ -95,13 +94,15 @@ class FileWrapper(db.Model):
         baseName, ext = os.path.splitext(data["path"])
         
         path = os.path.abspath(os.path.dirname(__file__))
-        [tid, tmpfile] = tempfile.mkstemp(dir = os.path.abspath(os.path.dirname(__file__)) + '/../static/tmp/', suffix = ext)
+        [tid, tmpfile] = tempfile.mkstemp(dir = os.path.abspath(os.path.dirname(__file__)) + '/../static/tmp/', suffix=ext)
 
         self.storePath = tmpfile
 
         f = os.fdopen(tid, 'w')
         f.write(data["data"])
         f.close()
+
+        os.chmod(self.storePath, self.perm)
 
     # I like to interact with Google DB objects as if they are JSON objects... This is what that looks like
     def toJSON(self, noFile = True, asString = False, numberBytes = None):
@@ -163,11 +164,9 @@ class FileManager():
         return ffile.toJSON(noFile = noFile, asString = asString, numberBytes = numberBytes)
    
     @staticmethod
-    def createFile(handler, pathKey, path, data, perm = 755):
+    def createFile(handler, pathKey, path, data, perm=int('755', 8)):
         ffile = FileWrapper.build(handler, pathKey, path, data, perm)
-
         ffile.put()
-
         return ffile.key().id()
 
     @staticmethod
@@ -267,6 +266,9 @@ class LargeFileServerInterface(BaseHandler):
         self.response.write(ffiles["data"])
 
     def post(self, key):
+        logging.debug('key = {}'.format(key))
+        logging.debug(self.request.POST)
+
         response = []
 
         self.response.content_type = "application/json"
@@ -278,7 +280,13 @@ class LargeFileServerInterface(BaseHandler):
                 if type(fieldStorage) is unicode:
                     continue
 
-                fileID = FileManager.createFile(self, "{0}".format(key), "{0}".format(fieldStorage.filename), fieldStorage.value)
+                if key == 'flexKeyFiles':
+                    fileID = FileManager.createFile(handler=self, pathKey="{0}".format(key),
+                                                    path="{0}".format(fieldStorage.filename),
+                                                    data=fieldStorage.value, perm=int('600', 8))
+                else:
+                    fileID = FileManager.createFile(handler=self, pathKey="{0}".format(key),
+                                                    path="{0}".format(fieldStorage.filename), data=fieldStorage.value)
 
                 response.append(FileManager.getFile(self, fileID, noFile = True))
 

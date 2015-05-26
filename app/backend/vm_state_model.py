@@ -41,7 +41,7 @@ class VMStateModel(db.Model):
     ins_id = db.StringProperty()
     pub_ip = db.StringProperty()
     pri_ip = db.StringProperty()
-    keyname = db.StringProperty()
+    keyfile = db.StringProperty()
     username = db.StringProperty()
     states = set([STATE_CREATING, STATE_PENDING, STATE_RUNNING, STATE_STOPPED, STATE_FAILED,
                   STATE_TERMINATED, STATE_UNPREPARED, STATE_UNKNOWN])
@@ -137,7 +137,7 @@ class VMStateModel(db.Model):
                     "description": e.description,
                     "username": e.username,
                     "pub_ip": e.pub_ip,
-                    "keyname": e.keyname,
+                    "keyfile": e.keyfile,
                     "reservation_id": e.res_id
                 }
                 all_vms.append(vm_dict)
@@ -298,9 +298,9 @@ class VMStateModel(db.Model):
             logging.error("Error in updating instance ids in db! {0}".format(e))
 
     @staticmethod
-    def update_ips(params, ins_ids, pub_ips, pri_ips, ins_types, keynames):
+    def update_ips(params, ins_ids, pub_ips, pri_ips, ins_types, keyfiles):
         '''
-        set the the public ips, the private ips, the instance types and the keynames
+        set the the public ips, the private ips, the instance types and the keyfiles
         to corresponding instance ids.
         Args
             params    a dictionary of parameters, containing at least 'agent' and 'credentials'.
@@ -308,18 +308,18 @@ class VMStateModel(db.Model):
             pub_ips   a list of public ips that are going to be set with
             pri_ips   a list of private ips that are going to be set with
             ins_type  a list of instance types that are going to be set with
-            keynames  a list of keynames that is corresponding to this set of instance ids
+            keyfiles  a list of keyfiles that is corresponding to this set of instance ids
         '''
         logging.info(
-            'update_ips:\n\nins_ids = {0}\npub_ips = {1}\npri_ips = {2}\nins_types = {3}\nkeynames = {keynames}'.format(
-                ins_ids, pub_ips, pri_ips, ins_types, keynames=keynames))
+            'update_ips:\n\nins_ids = {0}\npub_ips = {1}\npri_ips = {2}\nins_types = {3}\nkeyfiles = {keyfiles}'.format(
+                ins_ids, pub_ips, pri_ips, ins_types, keyfiles=keyfiles))
         logging.debug('\n\nparams = {}'.format(pprint.pformat(params)))
 
         try:
-            if keynames is None:
-                raise Exception('Error: Cannot find keyname!')
+            if keyfiles is None:
+                raise Exception('Error: Cannot find keyfiles!')
 
-            for (ins_id, pub_ip, pri_ip, ins_type, keyname) in zip(ins_ids, pub_ips, pri_ips, ins_types, keynames):
+            for (ins_id, pub_ip, pri_ip, ins_type, keyfile) in zip(ins_ids, pub_ips, pri_ips, ins_types, keyfiles):
                 entities = VMStateModel._get_all_entities(params)
                 e = entities.filter('ins_id =', ins_id).get()
 
@@ -329,7 +329,7 @@ class VMStateModel(db.Model):
                     e.pub_ip = pub_ip
                     e.pri_ip = pri_ip
                     e.ins_type = ins_type
-                    e.keyname = keyname
+                    e.keyfile = keyfile
                     e.put()
 
         except Exception as e:

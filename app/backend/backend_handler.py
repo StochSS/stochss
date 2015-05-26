@@ -153,7 +153,7 @@ class FlexBackendWorker(BackendWorker):
 
 
     def __prepare_queue_head(self, queue_head_machine, parameters):
-        keyfile = FlexConfig.get_keyfile(queue_head_machine['keyname'], user_id=parameters['user_id'])
+        keyfile = queue_head_machine['keyfile']
         if not os.path.exists(keyfile):
             logging.error('Queue head keyfile: {0} does not exist!'.format(keyfile))
             return False
@@ -267,23 +267,21 @@ class FlexBackendWorker(BackendWorker):
 
         for x in xrange(FlexBackendWorker.POLL_COUNT):
             # get the ips and ids of this keyname
-            public_ips, private_ips, instance_ids, instance_types, keynames, usernames = self.agent.describe_instances_running(
-                                                                                                            parameters)
+            public_ips, private_ips, instance_ids, \
+            instance_types, keyfiles, usernames = self.agent.describe_instances_running(parameters)
 
             logging.info("public_ips = {0}".format(public_ips))
             logging.debug("private_ips = {0}".format(private_ips))
             logging.info("instance_ids = {0}".format(instance_ids))
             logging.info("instance_types = {0}".format(instance_types))
-            logging.debug("keynames = {0}".format(keynames))
+            logging.debug("keyfiles = {0}".format(keyfiles))
             logging.debug("usernames = {0}".format(usernames))
-
-            keyfiles = map(lambda x: FlexConfig.get_keyfile(keyname=x, user_id=parameters['user_id']), keynames)
 
             # if we get the requested number of vms (the requested number will be 1 if this is queue head),
             # update reservation information and send a message to the backend server
             if num_vms == len(public_ips):
                 # update db with new public ips and private ips
-                VMStateModel.update_ips(parameters, instance_ids, public_ips, private_ips, instance_types, keynames)
+                VMStateModel.update_ips(parameters, instance_ids, public_ips, private_ips, instance_types, keyfiles)
                 break
 
             else:
@@ -292,7 +290,7 @@ class FlexBackendWorker(BackendWorker):
                     logging.info('Polling task: sleep 5 seconds...')
 
                 else:
-                    VMStateModel.update_ips(parameters, instance_ids, public_ips, private_ips, instance_types, keynames)
+                    VMStateModel.update_ips(parameters, instance_ids, public_ips, private_ips, instance_types, keyfiles)
 
                     logging.info('Polling timeout. About to terminate some instances:')
                     terminate_ins_ids = []
@@ -344,7 +342,7 @@ class FlexBackendWorker(BackendWorker):
             commands.append('export AWS_SECRET_ACCESS_KEY={0}'.format(credentials['EC2_SECRET_KEY']))
             commands.append('export INSTANCE_TYPE={0}'.format(ins_type))
 
-            keyfile = FlexConfig.get_keyfile(flex_cloud_machine_info_map[ip]['keyname'], user_id=params['user_id'])
+            keyfile = flex_cloud_machine_info_map[ip]['keyfile']
             username = flex_cloud_machine_info_map[ip]['username']
 
             success = helper.start_celery_on_vm(instance_type=ins_type, ip=ip, key_file=keyfile,
@@ -612,24 +610,24 @@ class EC2BackendWorker(BackendWorker):
         public_ips = None
         private_ips = None
         instance_ids = None
-        keynames = None
+        keyfiles = None
 
         for x in xrange(EC2BackendWorker.POLL_COUNT):
             # get the ips and ids of this keyname
-            public_ips, private_ips, instance_ids, instance_types, keynames = self.agent.describe_instances_running(
+            public_ips, private_ips, instance_ids, instance_types, keyfiles = self.agent.describe_instances_running(
                                                                                                             parameters)
 
             logging.info("public_ips = {0}".format(public_ips))
             logging.debug("private_ips = {0}".format(private_ips))
             logging.info("instance_ids = {0}".format(instance_ids))
             logging.info("instance_types = {0}".format(instance_types))
-            logging.debug("keynames = {0}".format(keynames))
+            logging.info("keyfiles = {0}".format(keyfiles))
 
             # if we get the requested number of vms (the requested number will be 1 if this is queue head),
             # update reservation information and send a message to the backend server
             if num_vms == len(public_ips):
                 # update db with new public ips and private ips
-                VMStateModel.update_ips(parameters, instance_ids, public_ips, private_ips, instance_types, keynames)
+                VMStateModel.update_ips(parameters, instance_ids, public_ips, private_ips, instance_types, keyfiles)
                 break
 
             else:
@@ -638,7 +636,7 @@ class EC2BackendWorker(BackendWorker):
                     logging.info('Polling task: sleep 5 seconds...')
 
                 else:
-                    VMStateModel.update_ips(parameters, instance_ids, public_ips, private_ips, instance_types, keynames)
+                    VMStateModel.update_ips(parameters, instance_ids, public_ips, private_ips, instance_types, keyfiles)
 
                     logging.info('Polling timeout. About to terminate some instances:')
                     terminate_ins_ids = []
@@ -649,7 +647,9 @@ class EC2BackendWorker(BackendWorker):
                     # terminate timeout instances
                     self.agent.deregister_some_instances(parameters, terminate_ins_ids)
                     # update db with failure information
-                    VMStateModel.set_state(parameters, terminate_ins_ids, VMStateModel.STATE_FAILED,
+                    VMStateModel.set_state(parameters,
+                                           terminate_ins_ids,
+                                           VMStateModel.STATE_FAILED,
                                            VMStateModel.DESCRI_FAIL_TO_RUN)
 
         return public_ips, private_ips, instance_ids

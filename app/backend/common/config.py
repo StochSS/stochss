@@ -53,15 +53,6 @@ class AWSConfig(object):
 
 class FlexConfig(object):
     INSTANCE_TYPE = 'flexvm'
-    KEYFILE_DIRNAME = os.path.join(AgentConfig.TMP_DIRNAME, 'keyfiles')
-
-    @staticmethod
-    def get_keyfile_dirname(user_id):
-        return os.path.join(FlexConfig.KEYFILE_DIRNAME, user_id)
-
-    @staticmethod
-    def get_keyfile(keyname, user_id):
-        return os.path.join(FlexConfig.get_keyfile_dirname(user_id), keyname)
 
 
 class CeleryConfig(object):

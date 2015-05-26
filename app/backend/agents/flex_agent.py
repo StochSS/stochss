@@ -1,16 +1,15 @@
+import sys
+import os
+
+sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..', 'flex_api')))
+
 from base_agent import BaseAgent, AgentConfigurationException, AgentRuntimeException
 from common.config import AgentTypes, FlexConfig, AgentConfig
 
-import sys
-import os
 import traceback
-
-sys.path.append(os.path.join(os.path.dirname(__file__), '../'))
-sys.path.append(os.path.join(os.path.dirname(__file__), '../flex_api'))
-
+import pprint
 import datetime
 import time
-import pprint
 import logging
 import urllib2
 import json
@@ -18,6 +17,7 @@ import tempfile
 
 from utils import utils
 from tasks import *
+
 
 from flex_state import FlexVMState
 from vm_state_model import VMStateModel
@@ -96,7 +96,7 @@ class FlexAgent(BaseAgent):
         public_ips = []
         private_ips = []
         instance_types = []
-        keynames = []
+        keyfiles = []
         usernames = []
 
         for machine in parameters[self.PARAM_FLEX_CLOUD_MACHINE_INFO]:
@@ -108,15 +108,14 @@ class FlexAgent(BaseAgent):
                 public_ips.append(ip)
                 private_ips.append(ip)
                 instance_types.append(FlexConfig.INSTANCE_TYPE)
-                keynames.append(machine['keyname'])
+                keyfiles.append(machine['keyfile'])
                 usernames.append(machine['username'])
             else:
                 logging.info('ip {0} is already prepared!'.format(ip))
 
-        return public_ips, private_ips, instance_ids, instance_types, keynames, usernames
+        return public_ips, private_ips, instance_ids, instance_types, keyfiles, usernames
 
-    def __deregister_flex_vm(self, ip, username, keyname, user_id, parameters, force=False):
-        keyfile = FlexConfig.get_keyfile(keyname=keyname, user_id=user_id)
+    def __deregister_flex_vm(self, ip, username, keyfile, parameters, force=False):
         deregister_command = self.get_remote_command_string(ip=ip, username=username, keyfile=keyfile,
                                        command="sudo kill -9 $(ps aux | grep celery | awk '{print $2}')")
 
@@ -131,8 +130,10 @@ class FlexAgent(BaseAgent):
         machines = parameters[self.PARAM_FLEX_CLOUD_MACHINE_INFO]
         logging.info('machines to deregistered = {0}'.format(pprint.pformat(machines)))
         for machine in machines:
-            self.__deregister_flex_vm(ip=machine['ip'], username=machine['username'], keyname=machine['keyname'],
-                                      user_id=parameters['user_id'], parameters=parameters)
+            self.__deregister_flex_vm(ip=machine['ip'],
+                                      username=machine['username'],
+                                      keyfile=machine['keyfile'],
+                                      parameters=parameters)
 
     def validate_credentials(self, credentials):
         raise NotImplementedError
@@ -200,11 +201,7 @@ class FlexAgent(BaseAgent):
 
             instance["state"] = self.get_instance_state(ip=machine["ip"],
                                                         username=machine["username"],
-                                                        keyfile=FlexConfig.get_keyfile(
-                                                            keyname=machine["keyname"],
-                                                            user_id=parameters[self.PARAM_USER_ID]))
-
-            instance["key_name"] = os.path.basename(machine["keyname"])
+                                                        keyfile=machine['keyfile'])
             instance_list.append(instance)
 
         logging.info('instance_list = \n{0}'.format(pprint.pformat(instance_list)))
@@ -229,15 +226,19 @@ class FlexAgent(BaseAgent):
         Returns:
           A tuple of the form (instances, public_ips, private_ips)
         """
+        logging.info('prepare_instances')
 
         flex_cloud_machine_info = parameters[self.PARAM_FLEX_CLOUD_MACHINE_INFO]
-        user_id = parameters[self.PARAM_USER_ID]
+        logging.debug('flex_cloud_machine_info =\n{}'.format(pprint.pformat(flex_cloud_machine_info)))
 
         credentials = parameters[self.PARAM_CREDENTIALS]
 
         for machine in flex_cloud_machine_info:
             ip = machine['ip']
-            keyfile = FlexConfig.get_keyfile(keyname=machine['keyname'], user_id=user_id)
+            keyfile = machine['keyfile']
+
+            os.chmod(keyfile, int('600', 8))
+
             username = machine['username']
             is_queue_head = machine[self.PARAM_QUEUE_HEAD]
             id = self.__get_flex_instance_id(public_ip=ip)
@@ -248,7 +249,6 @@ class FlexAgent(BaseAgent):
                                        state=VMStateModel.STATE_FAILED,
                                        description=VMStateModel.DESCRI_INVALID_KEYFILE)
                 continue
-
 
             logging.info("[{0}] [{1}] [{2}] [is_queue_head:{3}]".format(ip, keyfile, username, is_queue_head))
 
