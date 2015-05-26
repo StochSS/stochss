@@ -400,7 +400,7 @@ def execute_cloud_task(params, agent_type, ec2_access_key, ec2_secret_key, task_
     This method instantiates celery tasks in the cloud.
     Returns return value from celery async call and the task ID
     '''
-    logging.debug('execute_cloud_task: Params = \n %s', str(pprint.pformat(params)))
+    logging.debug('execute_cloud_task: Params =\n\n{0}'.format(pprint.pformat(params)))
     logging.info('agent_type = {}'.format(agent_type))
 
     celery_config = tasks.CelerySingleton()
@@ -464,15 +464,15 @@ def execute_cloud_task(params, agent_type, ec2_access_key, ec2_secret_key, task_
                 params["cost_analysis_table"] = JobDatabaseConfig.COST_ANALYSIS_TABLE_NAME
                 database.updateEntry(taskid=task_id, data=data, tablename=params["db_table"])
 
-                tmp = tasks.task.apply_async(args=[task_id, params, agent_type, database, ec2_access_key, ec2_secret_key],
+                celery_task = tasks.task.apply_async(args=[task_id, params, agent_type, database, ec2_access_key, ec2_secret_key],
                                              queue=celery_queue_name, routing_key=celery_routing_key)
 
-                logging.info('tmp.ready() = {}'.format(tmp.ready()))
-                logging.info('tmp.id = {}'.format(tmp.id))
+                logging.info('celery_task.ready() = {}'.format(celery_task.ready()))
+                logging.info('celery_task.id = {}'.format(celery_task.id))
 
-                result["celery_pid"] = tmp.id
+                result["celery_pid"] = celery_task.id
 
-                logging.info("execute_cloud_task: result of task : %s", str(tmp.id))
+                logging.info("execute_cloud_task: result of task with task_id {0} : \n{1}".format(task_id, pprint.pformat(result)))
                 result["success"] = True
 
         return result

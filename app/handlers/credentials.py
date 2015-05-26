@@ -19,7 +19,7 @@ import pprint
 import time
 import glob
 
-from backend.common.config import AWSConfig, AgentTypes, AgentConfig, FlexConfig
+from backend.common.config import AWSConfig, AgentTypes, AgentConfig, FlexConfig, JobDatabaseConfig
 from backend.databases.dynamo_db import DynamoDB
 from backend.vm_state_model import VMStateModel
 
@@ -185,6 +185,7 @@ class CredentialsPage(BaseHandler):
 
     def saveCredentials(self, credentials, database=None):
         """ Save the Credentials to the datastore. """
+        logging.info('Saving EC2 credentials...')
         try:
             service = backendservices()
             params = {}
@@ -204,13 +205,16 @@ class CredentialsPage(BaseHandler):
 
                     try:
                         if not database:
-                            database = DynamoDB(os.environ["AWS_ACCESS_KEY_ID"], os.environ["AWS_SECRET_ACCESS_KEY"])
+                            database = DynamoDB(access_key=os.environ["AWS_ACCESS_KEY_ID"],
+                                                secret_key=os.environ["AWS_SECRET_ACCESS_KEY"])
                             
-                        database.createtable(backendservices.STOCHSS_TABLE)
-                        database.createtable(backendservices.COST_ANALYSIS_TABLE)
-                        self.user_data.is_amazon_db_table=True
+                        database.createtable(JobDatabaseConfig.TABLE_NAME)
+                        database.createtable(JobDatabaseConfig.COST_ANALYSIS_TABLE_NAME)
+
+                        self.user_data.is_amazon_db_table = True
+
                     except Exception,e:
-                        pass
+                        logging.error('Failed to create database tables', str(e))
             else:
                 result = {'status': False,
                           'credentials_msg':' Invalid Secret Key or Access key specified'}

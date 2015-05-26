@@ -80,6 +80,8 @@ class backendservices(object):
         if not task_id:
             task_id = str(uuid.uuid4())
 
+        logging.info('submit_cloud_task: task_id = {}'.format(task_id))
+
         result = helper.execute_cloud_task(params=params, agent_type=agent_type,
                                            ec2_access_key=ec2_access_key, ec2_secret_key=ec2_secret_key,
                                            task_id=task_id, instance_type=instance_type,
