@@ -95,7 +95,7 @@ Spatial.Controller = Backbone.View.extend(
                 
                 if(this.playFlag)
                 {
-                    $( "#playStats" ).html( 'Speeding up...');
+                    //$( "#playStats" ).html( 'Speeding up...');
                     
                     // As speedy as this can be
                     if(this.playMeshInterval <= 100)
@@ -116,7 +116,7 @@ Spatial.Controller = Backbone.View.extend(
                 if(this.playFlag)
                 {
                 
-                    $( "#playStats" ).html( 'Slowing down...');
+                    //$( "#playStats" ).html( 'Slowing down...');
                 
                     if(this.playMeshInterval >= 6000)
                         return;
@@ -160,7 +160,7 @@ Spatial.Controller = Backbone.View.extend(
                 {
 
                     console.log("Playing @time"+this.timeIdx);
-                    $( "#playStats" ).html( 'Running...');
+                    $( "#playStats" ).html( 'running');
                     // $('#timeSelect').trigger('change');
                     this.handleSliderChange();
                     // this.handleMeshColorUpdate(cache[this.timeIdx]);
@@ -179,7 +179,7 @@ Spatial.Controller = Backbone.View.extend(
                 }
                 // If we don't have the value loaded into the cache, wait a few timesteps for it to load before we panic and make an server request
                 else if(this.timeIdx <= this.maxLimit){
-                        $( "#playStats" ).html( 'Buffering...');
+                        $( "#playStats" ).html( 'buffering');
                         if(this.bufferCount == 0)
                             {
                                 this.updateCache(this.timeIdx, this.timeIdx + this.cacheRange, true);
@@ -194,7 +194,7 @@ Spatial.Controller = Backbone.View.extend(
             console.log("Stopping mesh with Id: "+this.intervalID);
             console.log("STOP!");
             clearInterval(this.intervalID);
-            $( "#playStats" ).html( 'Stopped');
+            $( "#playStats" ).html( 'stopped');
             this.playFlag =false;
         },
 
@@ -365,6 +365,7 @@ Spatial.Controller = Backbone.View.extend(
             }
             
             var scene = new THREE.Scene();
+            this.renderer.render(scene, this.camera);
             var loader = new THREE.JSONLoader();
 
 
@@ -378,6 +379,9 @@ Spatial.Controller = Backbone.View.extend(
                               xflag : {type: 'f', value: 0.0},
                               yflag : {type: 'f', value: 0.0}, 
                               zflag : {type: 'f', value: 0.0},
+                              xflip : {type: 'f', value: 1.0},
+                              yflip : {type: 'f', value: 1.0}, 
+                              zflip : {type: 'f', value: 1.0}
                             };
 
             var material = new THREE.ShaderMaterial( {
@@ -483,15 +487,6 @@ Spatial.Controller = Backbone.View.extend(
             $( "#meshPreviewMsg" ).hide();
 
             this.camera.position.z =  this.mesh.geometry.boundingSphere.radius* 2;
-
-
-            if(!this.rendererInitialized)
-            {
-                this.rendererInitialized = true;
-                this.setupPlaneSliders();
-                this.renderFrame();
-            }
-
         },
 
         /* 
@@ -653,29 +648,28 @@ Spatial.Controller = Backbone.View.extend(
                               this.cache[t] = data.colors[t];
                           }
 
+                          this.limits = data.limits;
+
                           if(this.showPopulation)
                           {
-                            $("#maxVal").html("Maximum voxel population : "+data.limits["max"].toExponential(3) );
-                            $("#minVal").html("Minimum voxel population : "+data.limits["min"].toExponential(3) ); 
+                              $("#maxVal").html("Maximum voxel population: " + this.limits[this.selectedSpecies]["max"].toExponential(3) );
+                              $("#minVal").html("Minimum voxel population: " + this.limits[this.selectedSpecies]["min"].toExponential(3) ); 
+                          } else {
+                              $("#maxVal").html("Maximum voxel concentration: " + this.limits[this.selectedSpecies]["max"].toExponential(3) );
+                              $("#minVal").html("Minimum voxel concentration: " + this.limits[this.selectedSpecies]["min"].toExponential(3));  
                           }
-                          else{
 
-                            $("#maxVal").html("Maximum voxel concentration : "+data.limits["max"].toExponential(3) );
-                            $("#minVal").html("Minimum voxel concentration : "+data.limits["min"].toExponential(3));  
-                          
+                          this.handleMeshColorUpdate(this.cache[time[0]]);
+
+                          if(!this.rendererInitialized)
+                          {
+                              this.rendererInitialized = true;
+                              this.setupPlaneSliders();
+                              this.renderFrame();
                           }
-                          
-                          if(colorFlag)
-                              this.handleMeshColorUpdate(this.cache[time[0] ]);
-
-                          
                       }, this)
                     });
         },
-        //$.ajax( { type : "GET", url : "/spatial",  data : { reqType : "onlyColorRange", 
-        //                                                            id : this.attributes.id, 
-        //                                                            data : JSON.stringify({ trajectory : this.trajectory, timeStart : 0 , timeEnd: ( this.jobInfo.indata.time < 50 ?  this.jobInfo.indata.time+1 : 50 ) })
-        //                                                          } } )
 
         getMesh : function(){
             $.ajax( { type : "GET",
@@ -836,6 +830,18 @@ Spatial.Controller = Backbone.View.extend(
             var species = $( event.target ).val();
             this.selectedSpecies = species;
 
+            if(typeof(this.limits) != 'undefined')
+            {
+                if(this.showPopulation)
+                {
+                    $("#maxVal").html("Maximum voxel population: " + this.limits[this.selectedSpecies]["max"].toExponential(3) );
+                    $("#minVal").html("Minimum voxel population: " + this.limits[this.selectedSpecies]["min"].toExponential(3) ); 
+                } else {
+                    $("#maxVal").html("Maximum voxel concentration: " + this.limits[this.selectedSpecies]["max"].toExponential(3) );
+                    $("#minVal").html("Minimum voxel concentration: " + this.limits[this.selectedSpecies]["min"].toExponential(3));  
+                }
+            }
+            
             if(event.originalEvent)
                 this.handleMeshColorUpdate(this.cache[this.timeIdx]);
             else
@@ -1039,7 +1045,43 @@ Spatial.Controller = Backbone.View.extend(
                         
                     }, this));
 
-                    $("#playSpeed").html(1000/ this.playMeshInterval);
+                    var checkbox = $( "#planeXFlip" );
+                    checkbox.click(_.bind(function(){
+                        if($("#planeXFlip").is(':checked'))
+                        {
+                            this.mesh.material.uniforms.xflip.value = -1.0;
+                        } else {
+                            this.mesh.material.uniforms.xflip.value = 1.0;
+                        }
+
+                        this.mesh.material.needsUpdate = true;
+                    }, this));
+
+                    var checkbox = $( "#planeYFlip" );
+                    checkbox.click(_.bind(function(){
+                        if($("#planeYFlip").is(':checked'))
+                        {
+                            this.mesh.material.uniforms.yflip.value = -1.0;
+                        } else {
+                            this.mesh.material.uniforms.yflip.value = 1.0;
+                        }
+
+                        this.mesh.material.needsUpdate = true;
+                    }, this));
+
+                    var checkbox = $( "#planeZFlip" );
+                    checkbox.click(_.bind(function(){
+                        if($("#planeZFlip").is(':checked'))
+                        {
+                            this.mesh.material.uniforms.zflip.value = -1.0;
+                        } else {
+                            this.mesh.material.uniforms.zflip.value = 1.0;
+                        }
+
+                        this.mesh.material.needsUpdate = true;
+                    }, this));
+
+                    $("#playSpeed").html( (1000/ this.playMeshInterval).toFixed(2) );
 
                 }
                 else
