@@ -134,15 +134,16 @@ module.exports = View.extend({
             this.subdomainSelector.remove();
         }
 
-        var validSubdomains = this.model.specie.subdomains.map( function(name) { return [String(name), String(name)]; } );
+        var validSubdomains = this.baseModel.mesh.uniqueSubdomains.map( function(subdomain) { return subdomain.name; } );
+        var validSubdomainOptions = this.baseModel.mesh.uniqueSubdomains.map( function(subdomain) { return [String(subdomain.name), String(subdomain.name)]; } );
 
         this.subdomainSelector = this.renderSubview(
             new SelectView({
                 template: '<div><select></select><div data-hook="message-container"><div class="message" data-hook="message-text"></div></div></div>',
                 label: '',
                 name: 'subdomain',
-                value: (!_.contains(this.model.specie.subdomains, this.model.subdomain)) ? undefined : String(this.model.subdomain),
-                options: validSubdomains,
+                value: (!_.contains(validSubdomains, this.model.subdomain)) ? undefined : String(this.model.subdomain),
+                options: validSubdomainOptions,
                 unselectedText: 'Select subdomain',
                 parent : this,
                 required: true

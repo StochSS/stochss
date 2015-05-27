@@ -1,18 +1,80 @@
-/*global app, me, $*/
-var $ = require('jquery');
-var _ = require('underscore');
-var config = require('clientconfig');
+console.log("Running JS " + performance.now())
 
 //var Router = require('./router');
 //var ConvertModelView = require('./convertToSpatial/model');
+var _ = require('underscore');
+var AmpersandCollection = require('ampersand-rest-collection');
+var Model = require('./models/model');
+var Mesh = require('./models/mesh');
+
+console.log("Requesting models " + performance.now())
+
+ModelCollection = AmpersandCollection.extend( {
+    url: "/models",
+    comparator: 'name',
+    model: Model
+});
+
+PublicModelCollection = AmpersandCollection.extend( {
+    url: "/publicModels",
+    comparator: 'name',
+    model: Model
+});
+
+MeshCollection = AmpersandCollection.extend( {
+    url: "/meshes",
+    comparator: 'name',
+    model: Mesh
+});
+
+var publicModelCollection = new PublicModelCollection();
+var modelCollection = new ModelCollection();
+var meshCollection = new MeshCollection();
+
+var modelDownloaded = false; var meshDownloaded = false; var publicModelDownloaded = false;
+
+modelCollection.fetch({
+    success : function(modelCollection, response, options)
+    {
+        modelDownloaded = true;
+        if(meshDownloaded && publicModelDownloaded)
+        {
+            module.exports.blastoff();
+        }
+    }
+});
+
+meshCollection.fetch({
+    success : function(meshCollection, response, options)
+    {
+        meshDownloaded = true;
+        if(modelDownloaded && publicModelDownloaded)
+        {
+            module.exports.blastoff();
+        }
+    }
+});
+
+publicModelCollection.fetch({
+    success : function(publicModelCollection, response, options)
+    {
+        publicModelDownloaded = true;
+        if(meshDownloaded && modelDownloaded)
+        {
+            module.exports.blastoff();
+        }
+    }
+});
+
+/*global app, me, $*/
+var $ = require('jquery');
+var config = require('clientconfig');
+
 var View = require('ampersand-view');
 var AmpersandModel = require('ampersand-model');
-var AmpersandCollection = require('ampersand-rest-collection');
 var ModelEditorView = require('./forms/model');
 var ModelSelectView = require('./select/model-collection');
-var Model = require('./models/model');
 var domReady = require('domready');
-var Mesh = require('./models/mesh');
 var MeshCollection = require('./models/mesh-collection');
 var MeshSelectView = require('./forms/mesh-collection');
 var URL = require('url-parse');
@@ -374,63 +436,6 @@ var PrimaryView = View.extend({
         this.modelSelector.on('change:selected', _.bind(this.selectModel, this));
 
         return this;
-    }
-});
-
-ModelCollection = AmpersandCollection.extend( {
-    url: "/models",
-    comparator: 'name',
-    model: Model
-});
-
-PublicModelCollection = AmpersandCollection.extend( {
-    url: "/publicModels",
-    comparator: 'name',
-    model: Model
-});
-
-MeshCollection = AmpersandCollection.extend( {
-    url: "/meshes",
-    comparator: 'name',
-    model: Mesh
-});
-
-var publicModelCollection = new PublicModelCollection();
-var modelCollection = new ModelCollection();
-var meshCollection = new MeshCollection();
-
-var modelDownloaded = false; var meshDownloaded = false; var publicModelDownloaded = false;
-
-modelCollection.fetch({
-    success : function(modelCollection, response, options)
-    {
-        modelDownloaded = true;
-        if(meshDownloaded && publicModelDownloaded)
-        {
-            module.exports.blastoff();
-        }
-    }
-});
-
-meshCollection.fetch({
-    success : function(meshCollection, response, options)
-    {
-        meshDownloaded = true;
-        if(modelDownloaded && publicModelDownloaded)
-        {
-            module.exports.blastoff();
-        }
-    }
-});
-
-publicModelCollection.fetch({
-    success : function(publicModelCollection, response, options)
-    {
-        publicModelDownloaded = true;
-        if(meshDownloaded && modelDownloaded)
-        {
-            module.exports.blastoff();
-        }
     }
 });
 

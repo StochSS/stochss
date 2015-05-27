@@ -1,19 +1,81 @@
 (function e(t,n,r){function s(o,u){if(!n[o]){if(!t[o]){var a=typeof require=="function"&&require;if(!u&&a)return a(o,!0);if(i)return i(o,!0);var f=new Error("Cannot find module '"+o+"'");throw f.code="MODULE_NOT_FOUND",f}var l=n[o]={exports:{}};t[o][0].call(l.exports,function(e){var n=t[o][1][e];return s(n?n:e)},l,l.exports,e,t,n,r)}return n[o].exports}var i=typeof require=="function"&&require;for(var o=0;o<r.length;o++)s(r[o]);return s})({1:[function(require,module,exports){
-/*global app, me, $*/
-var $ = require('jquery');
-var _ = require('underscore');
-var config = require('clientconfig');
+console.log("Running JS " + performance.now())
 
 //var Router = require('./router');
 //var ConvertModelView = require('./convertToSpatial/model');
+var _ = require('underscore');
+var AmpersandCollection = require('ampersand-rest-collection');
+var Model = require('./models/model');
+var Mesh = require('./models/mesh');
+
+console.log("Requesting models " + performance.now())
+
+ModelCollection = AmpersandCollection.extend( {
+    url: "/models",
+    comparator: 'name',
+    model: Model
+});
+
+PublicModelCollection = AmpersandCollection.extend( {
+    url: "/publicModels",
+    comparator: 'name',
+    model: Model
+});
+
+MeshCollection = AmpersandCollection.extend( {
+    url: "/meshes",
+    comparator: 'name',
+    model: Mesh
+});
+
+var publicModelCollection = new PublicModelCollection();
+var modelCollection = new ModelCollection();
+var meshCollection = new MeshCollection();
+
+var modelDownloaded = false; var meshDownloaded = false; var publicModelDownloaded = false;
+
+modelCollection.fetch({
+    success : function(modelCollection, response, options)
+    {
+        modelDownloaded = true;
+        if(meshDownloaded && publicModelDownloaded)
+        {
+            module.exports.blastoff();
+        }
+    }
+});
+
+meshCollection.fetch({
+    success : function(meshCollection, response, options)
+    {
+        meshDownloaded = true;
+        if(modelDownloaded && publicModelDownloaded)
+        {
+            module.exports.blastoff();
+        }
+    }
+});
+
+publicModelCollection.fetch({
+    success : function(publicModelCollection, response, options)
+    {
+        publicModelDownloaded = true;
+        if(meshDownloaded && modelDownloaded)
+        {
+            module.exports.blastoff();
+        }
+    }
+});
+
+/*global app, me, $*/
+var $ = require('jquery');
+var config = require('clientconfig');
+
 var View = require('ampersand-view');
 var AmpersandModel = require('ampersand-model');
-var AmpersandCollection = require('ampersand-rest-collection');
 var ModelEditorView = require('./forms/model');
 var ModelSelectView = require('./select/model-collection');
-var Model = require('./models/model');
 var domReady = require('domready');
-var Mesh = require('./models/mesh');
 var MeshCollection = require('./models/mesh-collection');
 var MeshSelectView = require('./forms/mesh-collection');
 var URL = require('url-parse');
@@ -375,63 +437,6 @@ var PrimaryView = View.extend({
         this.modelSelector.on('change:selected', _.bind(this.selectModel, this));
 
         return this;
-    }
-});
-
-ModelCollection = AmpersandCollection.extend( {
-    url: "/models",
-    comparator: 'name',
-    model: Model
-});
-
-PublicModelCollection = AmpersandCollection.extend( {
-    url: "/publicModels",
-    comparator: 'name',
-    model: Model
-});
-
-MeshCollection = AmpersandCollection.extend( {
-    url: "/meshes",
-    comparator: 'name',
-    model: Mesh
-});
-
-var publicModelCollection = new PublicModelCollection();
-var modelCollection = new ModelCollection();
-var meshCollection = new MeshCollection();
-
-var modelDownloaded = false; var meshDownloaded = false; var publicModelDownloaded = false;
-
-modelCollection.fetch({
-    success : function(modelCollection, response, options)
-    {
-        modelDownloaded = true;
-        if(meshDownloaded && publicModelDownloaded)
-        {
-            module.exports.blastoff();
-        }
-    }
-});
-
-meshCollection.fetch({
-    success : function(meshCollection, response, options)
-    {
-        meshDownloaded = true;
-        if(modelDownloaded && publicModelDownloaded)
-        {
-            module.exports.blastoff();
-        }
-    }
-});
-
-publicModelCollection.fetch({
-    success : function(publicModelCollection, response, options)
-    {
-        publicModelDownloaded = true;
-        if(meshDownloaded && modelDownloaded)
-        {
-            module.exports.blastoff();
-        }
     }
 });
 
@@ -910,6 +915,7 @@ module.exports = View.extend({
 });
 
 },{"ampersand-view":787,"jquery":890,"underscore":908}],9:[function(require,module,exports){
+var _ = require('underscore');
 var $ = require('jquery');
 var AmpersandView = require('ampersand-view');
 var AmpersandFormView = require('ampersand-form-view');
@@ -969,7 +975,10 @@ var InitialConditionCollectionFormView = AmpersandView.extend({
     },
     update : function()
     {
-        this.parent.update();
+        this.updateValid();
+
+        if(this.parent && this.parent.update)
+            this.parent.update();
     },
     render: function()
     {
@@ -1012,13 +1021,15 @@ var InitialConditionCollectionFormView = AmpersandView.extend({
 
         //this.addForm.render();
 
+        this.listenTo(this.collection, "remove", _.bind(this.update, this));
+
         return this;
     }
 });
 
 module.exports = InitialConditionCollectionFormView
 
-},{"./initial-condition":10,"./paginated-collection-view":19,"./tests":30,"ampersand-form-view":104,"ampersand-input-view":108,"ampersand-select-view":482,"ampersand-view":787,"jquery":890}],10:[function(require,module,exports){
+},{"./initial-condition":10,"./paginated-collection-view":19,"./tests":30,"ampersand-form-view":104,"ampersand-input-view":108,"ampersand-select-view":482,"ampersand-view":787,"jquery":890,"underscore":908}],10:[function(require,module,exports){
 var _ = require('underscore');
 var $ = require('jquery');
 var View = require('ampersand-view');
@@ -1155,15 +1166,16 @@ module.exports = View.extend({
             this.subdomainSelector.remove();
         }
 
-        var validSubdomains = this.model.specie.subdomains.map( function(name) { return [String(name), String(name)]; } );
+        var validSubdomains = this.baseModel.mesh.uniqueSubdomains.map( function(subdomain) { return subdomain.name; } );
+        var validSubdomainOptions = this.baseModel.mesh.uniqueSubdomains.map( function(subdomain) { return [String(subdomain.name), String(subdomain.name)]; } );
 
         this.subdomainSelector = this.renderSubview(
             new SelectView({
                 template: '<div><select></select><div data-hook="message-container"><div class="message" data-hook="message-text"></div></div></div>',
                 label: '',
                 name: 'subdomain',
-                value: (!_.contains(this.model.specie.subdomains, this.model.subdomain)) ? undefined : String(this.model.subdomain),
-                options: validSubdomains,
+                value: (!_.contains(validSubdomains, this.model.subdomain)) ? undefined : String(this.model.subdomain),
+                options: validSubdomainOptions,
                 unselectedText: 'Select subdomain',
                 parent : this,
                 required: true
@@ -2443,6 +2455,12 @@ var PaginatedCollectionView = AmpersandView.extend({
                     this.subCollectionViews.views[i].updateValid();
                 }
 
+                var model = this.subCollectionViews.views[i].model;
+                var collection = model.collection
+
+                if(typeof(collection.get(model.cid, 'cid')) == "undefined")
+                    continue;
+
                 if(typeof(this.subCollectionViews.views[i].valid) != "undefined")
                 {
                     valid = valid && this.subCollectionViews.views[i].valid;
@@ -2921,6 +2939,7 @@ module.exports = View.extend({
 });
 
 },{"./modifying-input-view":16,"./modifying-number-input-view":17,"./tests":30,"ampersand-view":787,"jquery":890,"underscore":908}],22:[function(require,module,exports){
+var _ = require('underscore');
 var $ = require('jquery');
 var AmpersandView = require('ampersand-view');
 var AmpersandFormView = require('ampersand-form-view');
@@ -3236,7 +3255,7 @@ var ReactionCollectionFormView = AmpersandView.extend({
 
 module.exports = ReactionCollectionFormView;
 
-},{"./paginated-collection-view":19,"./reaction":24,"./reaction-detail":23,"./tests":30,"ampersand-form-view":104,"ampersand-input-view":108,"ampersand-select-view":482,"ampersand-subcollection":575,"ampersand-view":787,"jquery":890,"katex":891}],23:[function(require,module,exports){
+},{"./paginated-collection-view":19,"./reaction":24,"./reaction-detail":23,"./tests":30,"ampersand-form-view":104,"ampersand-input-view":108,"ampersand-select-view":482,"ampersand-subcollection":575,"ampersand-view":787,"jquery":890,"katex":891,"underscore":908}],23:[function(require,module,exports){
 var _ = require('underscore');
 var $ = require('jquery');
 var View = require('ampersand-view');
@@ -4168,6 +4187,7 @@ module.exports = View.extend({
 });
 
 },{"./modifying-input-view":16,"./modifying-number-input-view":17,"./subdomain":29,"./tests":30,"ampersand-view":787,"jquery":890,"underscore":908}],27:[function(require,module,exports){
+var _ = require('underscore');
 var $ = require('jquery');
 var AmpersandView = require('ampersand-view');
 var AmpersandFormView = require('ampersand-form-view');
@@ -4329,7 +4349,7 @@ var StoichSpecieCollectionFormView = AmpersandView.extend({
 
 module.exports = StoichSpecieCollectionFormView
 
-},{"./stoich-specie":28,"./tests":30,"ampersand-form-view":104,"ampersand-input-view":108,"ampersand-select-view":482,"ampersand-view":787,"jquery":890}],28:[function(require,module,exports){
+},{"./stoich-specie":28,"./tests":30,"ampersand-form-view":104,"ampersand-input-view":108,"ampersand-select-view":482,"ampersand-view":787,"jquery":890,"underscore":908}],28:[function(require,module,exports){
 var _ = require('underscore');
 var $ = require('jquery');
 var View = require('ampersand-view');
@@ -4478,7 +4498,7 @@ module.exports = View.extend({
         this.renderSubview(
             new CheckboxView({
                 name: 'checked',
-                template: '<span><span data-hook="label"></span><input type="checkbox"><span data-hook="message-container"><span data-hook="message-text"></span></span></span>&nbsp;',
+                template: '<span><span data-hook="label"></span> <input type="checkbox"><span data-hook="message-container"><span data-hook="message-text"></span></span></span>&nbsp;',
                 label: this.model.name,
                 value: checked,
                 required: false,
@@ -17431,6 +17451,7 @@ arguments[4][62][0].apply(exports,arguments)
 arguments[4][69][0].apply(exports,arguments)
 },{"dup":69}],482:[function(require,module,exports){
 ;if (typeof window !== "undefined") {  window.ampersand = window.ampersand || {};  window.ampersand["ampersand-select-view"] = window.ampersand["ampersand-select-view"] || [];  window.ampersand["ampersand-select-view"].push("2.3.0");}
+var _ = require('underscore');
 var domify = require('domify');
 var dom = require('ampersand-dom');
 var matches = require('matches-selector');
@@ -17727,7 +17748,7 @@ SelectView.prototype.createOption = function (value, text, model) {
 
 module.exports = SelectView;
 
-},{"amp-extend":47,"ampersand-dom":70,"ampersand-events":71,"domify":483,"matches-selector":484}],483:[function(require,module,exports){
+},{"amp-extend":47,"ampersand-dom":70,"ampersand-events":71,"domify":483,"matches-selector":484,"underscore":908}],483:[function(require,module,exports){
 
 /**
  * Expose `parse`.
