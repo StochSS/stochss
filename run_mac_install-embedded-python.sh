@@ -9,6 +9,7 @@ STOCHSS_HOME=$MY_PATH
 STOCHSS_HOME="`( cd \"$STOCHSS_HOME\" && pwd )`" 
 export MYPYTHON="$STOCHSS_HOME/../local/bin/python"
 export MYPIP="$STOCHSS_HOME/../local/bin/pip"
+LIBXML="$(xcodebuild -version Path -sdk macosx)/usr/include/libxml2"
 
 
 #################
@@ -30,16 +31,11 @@ function install_lib {
         return 1 #False
     fi
     export ARCHFLAGS='-Wno-error=unused-command-line-argument-hard-error-in-future'
-    if [ "$1" = "h5py" ]; then
-        pkg="$1==2.4.0b1"
-    elif [ "$1" = "numpy" ]; then
-        pkg="$1==1.8.2"
-    elif [ "$1" = "libsbml" ]; then
-        pkg="python-libsbml"
+    if [ "$1" = "libsbml" ]; then
+	CMD="$MYPYTHON CFLAGS=\"-I$LIBXML\" $MYPIP install python-libsbml"
     else
-        pkg="$1"
+	CMD="$MYPYTHON $MYPIP install $1"
     fi
-    CMD="$MYPYTHON $MYPIP install $pkg"
     echo $CMD >> run_mac_install.log
     eval $CMD
 }

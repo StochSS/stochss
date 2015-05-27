@@ -165,7 +165,7 @@ function install_lib {
     if [ "$answer" == 'y' ] || [ "$answer" == 'yes' ]; then
         export ARCHFLAGS='-Wno-error=unused-command-line-argument-hard-error-in-future'
         if [ "$1" = "h5py" ]; then
-            pkg="$1==2.4.0b1"
+            pkg="$1"
         elif [ "$1" = "libsbml" ]; then
             pkg="python-libsbml"
         else
@@ -244,7 +244,7 @@ function install_pip {
 
 function install_dependencies_via_applescript {
     echo "Installing missing dependencies with Applescript. This will take a few minutes.<br />"
-    /usr/bin/env osascript run_mac_install-embeded-python.scpt
+    /usr/bin/env osascript run_mac_install-embedded-python.scpt
 }
 
 function check_spatial_installation {
