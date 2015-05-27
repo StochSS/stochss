@@ -234,12 +234,19 @@ class BaseHandler(webapp2.RequestHandler):
         template = jinja_environment.get_template(_template)
         self.response.out.write(template.render({'active_upload': True}, **ctx))
 
-class MainPage(BaseHandler):
-    """ The Main page. Renders a welcome message and shortcuts to main menu items. """
+class InitializeDb(BaseHandler):
     def authentication_required(self):
         return True
         
     def get(self):
+        print "1Setting up meshes: ", time.time()
+        mesheditor.setupMeshes(self)
+        print "1Finished setting up meshes: ", time.time()
+
+        print "1Importing example models: ", time.time()
+        modeleditor.importExamplePublicModels(self)
+        print "11Finished importing example models: ", time.time()
+
         self.render_response("mainpage.html")
     
     def post(self):
@@ -333,6 +340,20 @@ from handlers.admin import *
 import handlers.fileserver
 import handlers.spatial
 from backend import pricing
+
+class MainPage(BaseHandler):
+    """ The Main page. Renders a welcome message and shortcuts to main menu items. """
+    def authentication_required(self):
+        return True
+        
+    def get(self):
+        self.render_response("mainpage.html")
+
+        handlers.mesheditor.setupMeshes(self)
+        handlers.modeleditor.importExamplePublicModels(self)
+    
+    def post(self):
+        self.get()
 
 # Handler to serve static files
 class StaticFileHandler(BaseHandler):
