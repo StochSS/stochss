@@ -234,24 +234,6 @@ class BaseHandler(webapp2.RequestHandler):
         template = jinja_environment.get_template(_template)
         self.response.out.write(template.render({'active_upload': True}, **ctx))
 
-class InitializeDb(BaseHandler):
-    def authentication_required(self):
-        return True
-        
-    def get(self):
-        print "1Setting up meshes: ", time.time()
-        mesheditor.setupMeshes(self)
-        print "1Finished setting up meshes: ", time.time()
-
-        print "1Importing example models: ", time.time()
-        modeleditor.importExamplePublicModels(self)
-        print "11Finished importing example models: ", time.time()
-
-        self.render_response("mainpage.html")
-    
-    def post(self):
-        self.get()
-
 class User(WebApp2User):
     """
     Subclass of the WebApp2 User class to add functionality.
@@ -348,12 +330,25 @@ class MainPage(BaseHandler):
         
     def get(self):
         self.render_response("mainpage.html")
-
-        handlers.mesheditor.setupMeshes(self)
-        handlers.modeleditor.importExamplePublicModels(self)
     
     def post(self):
         self.get()
+
+class InitializeDb(BaseHandler):
+    def authentication_required(self):
+        return True
+        
+    def get(self):
+        try:
+            handlers.mesheditor.setupMeshes(self)
+            handlers.modeleditor.importExamplePublicModels(self)
+            
+            self.response.content_type = 'application/json'
+            self.response.write(json.dumps({ "status" : True, "msg" : "Model editor initialized" }))
+        except Exception as e:
+            traceback.print_exc()
+            self.response.content_type = 'application/json'
+            self.response.write(json.dumps({ "status" : False, "msg" : "Model editor initialization failed" }))
 
 # Handler to serve static files
 class StaticFileHandler(BaseHandler):
@@ -371,7 +366,7 @@ class StaticFileHandler(BaseHandler):
             type,encoding = mimetypes.guess_type(filename)
             if type == None:
                 type="text/html"
-        
+                
             self.response.headers.add_header("Content-Type",type)
             self.response.write(filecontent)
         except:
@@ -385,6 +380,7 @@ if 'lib' not in sys.path:
 
 app = webapp2.WSGIApplication([
                                ('/', MainPage),
+                               ('/InitializeDb', InitializeDb),
                                ('/models.*', handlers.modeleditor.ModelBackboneInterface),
                                ('/publicModels.*', handlers.modeleditor.PublicModelBackboneInterface),
                                ('/importFromSBML.*', handlers.modeleditor.ImportFromSBMLPage),
