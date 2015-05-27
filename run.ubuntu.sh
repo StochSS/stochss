@@ -56,7 +56,7 @@ fi
 # Check that the dependencies are satisfied
 echo -n "Are dependencies satisfied?... "
 
-PKGS="gcc g++ make libxml2-dev curl git r-base-core libgsl0-dev build-essential python-dev python-setuptools cython libbz2-dev"
+PKGS="gcc g++ make libxml2-dev curl git r-base-core libgsl0-dev build-essential python-dev python-setuptools cython libbz2-dev libhdf5-mpi-dev"
 if [ `getconf LONG_BIT` != 64 ]; then
     PKGS="gcc-multilib $PKGS"
 fi
@@ -184,7 +184,7 @@ function install_lib_h5py {
         exit -1
     fi
     if [ "$answer" == 'y' ] || [ "$answer" == 'yes' ]; then
-        CMD='sudo CFLAGS="-I/usr/lib/openmpi/include/" pip install h5py'
+        CMD='sudo CC="mpicc" pip install h5py'
         echo $CMD
         eval $CMD
         if [ $? != 0 ]; then
