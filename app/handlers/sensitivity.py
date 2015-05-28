@@ -312,6 +312,9 @@ class SensitivityPage(BaseHandler):
             if data['selections']["pc"][parameter]:
                 parameters.append(parameter)
 
+        if len(parameters) == 0:
+            raise Exception("At least one parameter must be selected");
+
         basedir = path + '/../'
         dataDir = tempfile.mkdtemp(dir = basedir + 'output')
 
@@ -348,7 +351,7 @@ class SensitivityPage(BaseHandler):
         job.pid = handle.pid
 
         job.put()
-        return job, None
+        return job
     
     def runCloud(self, data):
         '''

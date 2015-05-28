@@ -44,6 +44,8 @@ var ReactionView = View.extend({
         else
         {
             result.text('Cannot convert custom propensities automatically');
+
+            $( this.queryByHook('equation') ).text( this.model.equation );
         }
     },
     // On any change of anything, redraw the Latex

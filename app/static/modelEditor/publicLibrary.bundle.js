@@ -129,7 +129,7 @@ module.exports = View.extend({
     }
 });
 
-},{"../forms/tests":29,"./parameter-collection":2,"./reaction":5,"./reaction-collection":4,"./specie-collection":6,"ampersand-input-view":107,"ampersand-view":786,"jquery":889,"underscore":907}],2:[function(require,module,exports){
+},{"../forms/tests":29,"./parameter-collection":2,"./reaction":5,"./reaction-collection":4,"./specie-collection":6,"ampersand-input-view":107,"ampersand-view":446,"jquery":553,"underscore":571}],2:[function(require,module,exports){
 var $ = require('jquery');
 var View = require('ampersand-view');
 var ParameterView = require('./parameter');
@@ -150,7 +150,7 @@ var ParameterCollectionFormView = View.extend({
   </table> \
   <div data-hook='nav'> \
     <button class='btn' data-hook='previous'>&lt;&lt;</button> \
-    [ <span data-hook='position'></span> / <span data-hook='total'></span> ] \
+    [ <span data-hook='leftPosition'></span> - <span data-hook='rightPosition'></span> of <span data-hook='total'></span> ] \
     <button class='btn' data-hook='next'>&gt;&gt;</button> \
   </div> \
 </div>";
@@ -170,7 +170,8 @@ var ParameterCollectionFormView = View.extend({
 });
 
 module.exports = ParameterCollectionFormView
-},{"../forms/paginated-collection-view":18,"./parameter":3,"ampersand-view":786,"jquery":889}],3:[function(require,module,exports){
+
+},{"../forms/paginated-collection-view":18,"./parameter":3,"ampersand-view":446,"jquery":553}],3:[function(require,module,exports){
 var _ = require('underscore');
 var $ = require('jquery');
 var View = require('ampersand-view');
@@ -191,7 +192,7 @@ module.exports = View.extend({
     }
 });
 
-},{"ampersand-view":786,"jquery":889,"underscore":907}],4:[function(require,module,exports){
+},{"ampersand-view":446,"jquery":553,"underscore":571}],4:[function(require,module,exports){
 var $ = require('jquery');
 var View = require('ampersand-view');
 var ReactionView = require('./reaction');
@@ -205,14 +206,14 @@ var ReactionCollectionView = View.extend({
   <h3>Reactions</h3> \
   <table class='table table-bordered' data-hook='table'> \
     <thead> \
-      <th width='120px'>Name</th><th>Rate</th><th>Summary</th><th>Result</th> \
+      <th width='120px'>Name</th><th width='300px'>Rate</th><th>Summary</th><th>Result</th> \
     </thead> \
     <tbody data-hook='items'> \
     </tbody> \
   </table> \
   <div data-hook='nav'> \
     <button class='btn' data-hook='previous'>&lt;&lt;</button> \
-    [ <span data-hook='position'></span> / <span data-hook='total'></span> ] \
+    [ <span data-hook='leftPosition'></span> - <span data-hook='rightPosition'></span> of <span data-hook='total'></span> ] \
     <button class='btn' data-hook='next'>&gt;&gt;</button> \
   </div> \
 </div>";
@@ -232,7 +233,8 @@ var ReactionCollectionView = View.extend({
 });
 
 module.exports = ReactionCollectionView
-},{"../forms/paginated-collection-view":18,"./reaction":5,"ampersand-view":786,"jquery":889}],5:[function(require,module,exports){
+
+},{"../forms/paginated-collection-view":18,"./reaction":5,"ampersand-view":446,"jquery":553}],5:[function(require,module,exports){
 var _ = require('underscore');
 var $ = require('jquery');
 var View = require('ampersand-view');
@@ -279,6 +281,8 @@ var ReactionView = View.extend({
         else
         {
             result.text('Cannot convert custom propensities automatically');
+
+            $( this.queryByHook('equation') ).text( this.model.equation );
         }
     },
     // On any change of anything, redraw the Latex
@@ -369,7 +373,7 @@ ReactionView.computeConversionFactor = function(reaction, volume)
 
 module.exports = ReactionView;
 
-},{"../forms/reaction":23,"ampersand-view":786,"jquery":889,"katex":890,"underscore":907}],6:[function(require,module,exports){
+},{"../forms/reaction":23,"ampersand-view":446,"jquery":553,"katex":554,"underscore":571}],6:[function(require,module,exports){
 var $ = require('jquery');
 var View = require('ampersand-view');
 var SpecieView = require('./specie');
@@ -390,7 +394,7 @@ var SpecieCollectionView = View.extend({
   </table> \
   <div data-hook='nav'> \
     <button class='btn' data-hook='previous'>&lt;&lt;</button> \
-    [ <span data-hook='position'></span> / <span data-hook='total'></span> ] \
+    [ <span data-hook='leftPosition'></span> - <span data-hook='rightPosition'></span> of <span data-hook='total'></span> ] \
     <button class='btn' data-hook='next'>&gt;&gt;</button> \
   </div> \
 </div>";
@@ -410,7 +414,8 @@ var SpecieCollectionView = View.extend({
 });
 
 module.exports = SpecieCollectionView
-},{"../forms/paginated-collection-view":18,"./specie":7,"ampersand-view":786,"jquery":889}],7:[function(require,module,exports){
+
+},{"../forms/paginated-collection-view":18,"./specie":7,"ampersand-view":446,"jquery":553}],7:[function(require,module,exports){
 var _ = require('underscore');
 var $ = require('jquery');
 var View = require('ampersand-view');
@@ -440,7 +445,8 @@ module.exports = View.extend({
     }
 });
 
-},{"ampersand-view":786,"jquery":889,"underscore":907}],8:[function(require,module,exports){
+},{"ampersand-view":446,"jquery":553,"underscore":571}],8:[function(require,module,exports){
+var _ = require('underscore');
 var $ = require('jquery');
 var AmpersandView = require('ampersand-view');
 var AmpersandFormView = require('ampersand-form-view');
@@ -452,9 +458,12 @@ var PaginatedCollectionView = require('./paginated-collection-view');
 var Tests = require('./tests');
 var AddNewInitialConditionForm = AmpersandFormView.extend({
     submitCallback: function (obj) {
-        var model = this.collection.addScatterInitialCondition(this.baseModel.species.at(0), 0, this.baseModel.mesh.uniqueSubdomains.at(0).name);
+        if(this.baseModel.species.models.length > 0)
+        {
+            var model = this.collection.addScatterInitialCondition(this.baseModel.species.at(0), 0, this.baseModel.mesh.uniqueSubdomains.at(0).name);
         
-        this.selectView.select(model, true);
+            this.selectView.select(model, true);
+        }
     },
     initialize: function(attr, options) {
         this.collection = options.collection;
@@ -497,7 +506,10 @@ var InitialConditionCollectionFormView = AmpersandView.extend({
     },
     update : function()
     {
-        this.parent.update();
+        this.updateValid();
+
+        if(this.parent && this.parent.update)
+            this.parent.update();
     },
     render: function()
     {
@@ -540,13 +552,15 @@ var InitialConditionCollectionFormView = AmpersandView.extend({
 
         //this.addForm.render();
 
+        this.listenTo(this.collection, "remove", _.bind(this.update, this));
+
         return this;
     }
 });
 
 module.exports = InitialConditionCollectionFormView
 
-},{"./initial-condition":9,"./paginated-collection-view":18,"./tests":29,"ampersand-form-view":103,"ampersand-input-view":107,"ampersand-select-view":481,"ampersand-view":786,"jquery":889}],9:[function(require,module,exports){
+},{"./initial-condition":9,"./paginated-collection-view":18,"./tests":29,"ampersand-form-view":103,"ampersand-input-view":107,"ampersand-select-view":141,"ampersand-view":446,"jquery":553,"underscore":571}],9:[function(require,module,exports){
 var _ = require('underscore');
 var $ = require('jquery');
 var View = require('ampersand-view');
@@ -559,26 +573,26 @@ var SubdomainFormView = require('./subdomain');
 var Tests = require('./tests');
 module.exports = View.extend({
     template : "<tr data-hook='row'> \
-  <td valign='top'> \
-    <button class='btn' data-hook='delete'>x</button> \
-  </td> \
-  <td data-hook='typeSelect' valign='top'></td> \
-  <td data-hook='specie' valign='top'></td> \
-  <td data-hook='details' valign='top'> \
-    <table> \
-      <tr> \
-        <td>Count:</td><td><div data-hook='count'></div></td> \
-      </tr> \
-      <tbody data-hook='xyz'> \
-        <tr><td>X:</td><td><div data-hook='X'></div></td></tr> \
-        <tr><td>Y:</td><td><div data-hook='Y'></div></td></tr> \
-        <tr><td>Z:</td><td><div data-hook='Z'></div></td></tr> \
-      </tbody> \
-      <tbody data-hook='subdomainTbody'> \
-        <tr><td>Subdomain</td><td><div data-hook='subdomain'></div></td></tr> \
-      </tbody> \
-    </table> \
-  </td> \
+<td valign='top'> \
+<button class='btn' data-hook='delete'>x</button> \
+</td> \
+<td data-hook='typeSelect' valign='top'></td> \
+<td data-hook='specie' valign='top'></td> \
+<td data-hook='details' valign='top'> \
+<table> \
+<tr> \
+<td>Count:</td><td><div data-hook='count'></div></td> \
+</tr> \
+<tbody data-hook='xyz'> \
+<tr><td>X:</td><td><div data-hook='X'></div></td></tr> \
+<tr><td>Y:</td><td><div data-hook='Y'></div></td></tr> \
+<tr><td>Z:</td><td><div data-hook='Z'></div></td></tr> \
+</tbody> \
+<tbody data-hook='subdomainTbody'> \
+<tr><td>Subdomain</td><td><div data-hook='subdomain'></div></td></tr> \
+</tbody> \
+</table> \
+</td> \
 </tr>",
     props : {
         valid : 'boolean',
@@ -679,18 +693,20 @@ module.exports = View.extend({
     {
         if(this.subdomainSelector)
         {
+            this._subviews.pop();
             this.subdomainSelector.remove();
         }
 
-        var validSubdomains = this.baseModel.mesh.uniqueSubdomains.map( function(model) { return [String(model.name), String(model.name)]; } );
+        var validSubdomains = this.baseModel.mesh.uniqueSubdomains.map( function(subdomain) { return subdomain.name; } );
+        var validSubdomainOptions = this.baseModel.mesh.uniqueSubdomains.map( function(subdomain) { return [String(subdomain.name), String(subdomain.name)]; } );
 
         this.subdomainSelector = this.renderSubview(
             new SelectView({
                 template: '<div><select></select><div data-hook="message-container"><div class="message" data-hook="message-text"></div></div></div>',
                 label: '',
                 name: 'subdomain',
-                value: String(this.model.subdomain),
-                options: validSubdomains,
+                value: (!_.contains(validSubdomains, this.model.subdomain)) ? undefined : String(this.model.subdomain),
+                options: validSubdomainOptions,
                 unselectedText: 'Select subdomain',
                 parent : this,
                 required: true
@@ -711,7 +727,7 @@ module.exports = View.extend({
                 name: 'type',
                 parent : this,
                 value: this.model.type,
-                options: [['scatter', 'Scatter'], ['place', 'Place'], ['distribute', 'Distribute Uniformly']],
+                options: [['scatter', 'Scatter'], ['place', 'Place'], ['distribute', 'Distribute Uniformly per Voxel']],
                 required: true,
             }), this.el.querySelector("[data-hook='typeSelect']"));
 
@@ -783,13 +799,15 @@ module.exports = View.extend({
             }), this.el.querySelector("[data-hook='specie']"));
 
         this.listenToAndRun(this.baseModel, 'change:mesh', _.bind(this.renderSubdomainSelector, this));
+	this.listenTo(this.model.specie.collection, 'change:subdomains', _.bind(this.renderSubdomainSelector, this));
+	this.listenTo(this.model, 'change:specie', _.bind(this.renderSubdomainSelector, this));
 
         this.updateValid();
         return this;
     }
 });
 
-},{"./modifying-input-view":15,"./modifying-number-input-view":16,"./modifying-select-view":17,"./subdomain":28,"./tests":29,"ampersand-select-view":481,"ampersand-view":786,"jquery":889,"underscore":907}],10:[function(require,module,exports){
+},{"./modifying-input-view":15,"./modifying-number-input-view":16,"./modifying-select-view":17,"./subdomain":28,"./tests":29,"ampersand-select-view":141,"ampersand-view":446,"jquery":553,"underscore":571}],10:[function(require,module,exports){
 var _ = require('underscore');
 var $ = require('jquery');
 var AmpersandView = require('ampersand-view');
@@ -1151,7 +1169,7 @@ var MeshCollectionSelectView = AmpersandView.extend({
 
 module.exports = MeshCollectionSelectView
 
-},{"../forms/tests.js":29,"../models/mesh":34,"./mesh":12,"./mesh-description":11,"./paginated-collection-view":18,"ampersand-subcollection":574,"ampersand-view":786,"blueimp-file-upload":884,"jquery":889,"underscore":907}],11:[function(require,module,exports){
+},{"../forms/tests.js":29,"../models/mesh":34,"./mesh":12,"./mesh-description":11,"./paginated-collection-view":18,"ampersand-subcollection":234,"ampersand-view":446,"blueimp-file-upload":544,"jquery":553,"underscore":571}],11:[function(require,module,exports){
 var _ = require('underscore');
 var $ = require('jquery');
 var View = require('ampersand-view');
@@ -1164,13 +1182,43 @@ module.exports = View.extend({
         <div data-hook="name"> \
         </div> \
     </div> \
-    <div data-hook="descriptionContainer"> \
+    <div> \
         <br /> \
-        <div> \
-            <h5>Mesh Description:</h5> \
+        <table cellpadding="5" width="100%"> \
+        <tr> \
+        <td data-hook="descriptionContainer" width="33%" valign="top"> \
+            <h5>Description:</h5> \
             <pre data-hook="description"> \
             </pre> \
-        </div> \
+        </td> \
+        <td valign="top"> \
+            <h5>Volumes:</h5> \
+            <table class="table"> \
+                <tr> \
+                    <th>Subdomain</th> \
+                    <th>Volume</th> \
+                </tr> \
+                <tbody data-hook="volume"> \
+                </tbody> \
+            </table> \
+        </td> \
+        <td valign="top"> \
+            <h5>Bounds:</h5> \
+            <table class="table"> \
+                <tr> \
+                    <th>Axis</th> \
+                    <th>Min</th> \
+                    <th>Max</th> \
+                </tr> \
+                <tbody> \
+                    <tr><td>x-axis</td><td data-hook="minx"></td><td data-hook="maxx"></td></tr> \
+                    <tr><td>y-axis</td><td data-hook="miny"></td><td data-hook="maxy"></td></tr> \
+                    <tr><td>z-axis</td><td data-hook="minz"></td><td data-hook="maxz"></td></tr> \
+                </tbody> \
+            </table> \
+        </td> \
+        </tr> \
+        </table> \
     </div> \
 </div>',
     bindings: {
@@ -1199,10 +1247,34 @@ module.exports = View.extend({
     changeModel: function()
     {
 	this.model = this.baseModel.mesh;
+
+        this.render();
+    },
+    render: function()
+    {
+	View.prototype.render.apply(this, arguments);
+        
+        var tbody = $( this.queryByHook( 'volume' ) );
+
+        var sortedSubdomains = _.keys(this.model.volumes);
+
+        for(var i = 0; i < sortedSubdomains.length; i++)
+        {
+            var subdomain = sortedSubdomains[i];
+
+            $( '<tr><td>' + subdomain + '</td><td>' + this.model.volumes[subdomain].toExponential(4) + '</td></tr>' ).appendTo( tbody );
+        }
+
+        $( this.queryByHook( 'minx' ) ).text( this.model.boundingBox[0][0].toExponential(4) );
+        $( this.queryByHook( 'miny' ) ).text( this.model.boundingBox[1][0].toExponential(4) );
+        $( this.queryByHook( 'minz' ) ).text( this.model.boundingBox[2][0].toExponential(4) );
+        $( this.queryByHook( 'maxx' ) ).text( this.model.boundingBox[0][1].toExponential(4) );
+        $( this.queryByHook( 'maxy' ) ).text( this.model.boundingBox[1][1].toExponential(4) );
+        $( this.queryByHook( 'maxz' ) ).text( this.model.boundingBox[2][1].toExponential(4) );
     }
 });
 
-},{"./tests":29,"ampersand-view":786,"jquery":889,"underscore":907}],12:[function(require,module,exports){
+},{"./tests":29,"ampersand-view":446,"jquery":553,"underscore":571}],12:[function(require,module,exports){
 var _ = require('underscore');
 var $ = require('jquery');
 var View = require('ampersand-view');
@@ -1268,7 +1340,7 @@ module.exports = View.extend({
     }
 });
 
-},{"ampersand-view":786,"jquery":889,"underscore":907}],13:[function(require,module,exports){
+},{"ampersand-view":446,"jquery":553,"underscore":571}],13:[function(require,module,exports){
 var _ = require('underscore');
 var $ = require('jquery');
 var View = require('ampersand-view');
@@ -1604,7 +1676,7 @@ module.exports = View.extend({
     }
 });
 
-},{"./subdomain":28,"ampersand-view":786,"jquery":889,"three":906,"three-orbit-controls":905,"underscore":907}],14:[function(require,module,exports){
+},{"./subdomain":28,"ampersand-view":446,"jquery":553,"three":570,"three-orbit-controls":569,"underscore":571}],14:[function(require,module,exports){
 var _ = require('underscore');
 var $ = require('jquery');
 var View = require('ampersand-view');
@@ -1673,31 +1745,6 @@ module.exports = View.extend({
         if(this.parent && this.parent.update)
             this.parent.update();
     },
-    duplicateModel: function()
-    {
-        var model = new Model(this.model.toJSON());
-
-        var names = this.model.collection.map( function(model) { return model.name; } );
-
-        while(1)
-        {
-            var tmpName = this.model.name + '_' + Math.random().toString(36).substr(2, 3);
-
-            if(!_.contains(names, tmpName))
-            {
-                model.name = tmpName;
-                break;
-            }
-        }
-
-        model.id = undefined;
-        
-        model.setupMesh(this.model.mesh.collection);
-
-        this.model.collection.add(model);
-
-        model.save();
-    },
     convertToPopulation: function()
     {
         // If we're currently showing the concentration model editor, switch to showing the convert page
@@ -1742,27 +1789,38 @@ module.exports = View.extend({
         if(this.state == 'concentration')
         {
             $( this.el ).find( '[data-hook="editor"]' ).show();
-            $( '[data-hook="convertToPopulationLink"]' ).show();
             $( this.el ).find( '[data-hook="convertToPopulation"]' ).hide();
-            $( '[data-hook="convertToSpatialLink"]' ).hide();
             $( this.el ).find( '.spatial' ).hide();
+            //$( '[data-hook="convertToPopulationLink"]' ).show();
+            //$( '[data-hook="convertToSpatialLink"]' ).hide();
         }
         else if(this.state == 'converting')
         {
             $( this.el ).find( '[data-hook="convertToPopulation"]' ).show();
             $( this.el ).find( '[data-hook="editor"]' ).hide();
-            $( '[data-hook="convertToPopulationLink"]' ).hide()
-            $( '[data-hook="convertToSpatialLink"]' ).hide();
             $( this.el ).find( '.spatial' ).hide();
+            //$( '[data-hook="convertToPopulationLink"]' ).hide()
+            //$( '[data-hook="convertToSpatialLink"]' ).hide();
         }
         else if(this.state == 'population')
         {
             $( this.el ).find( '[data-hook="convertToPopulation"]' ).hide();
-            $( '[data-hook="convertToPopulationLink"]' ).hide();
             $( this.el ).find( '[data-hook="editor"]' ).show();
-            $( '[data-hook="convertToSpatialLink"]' ).show();
             $( this.el ).find( '.spatial' ).hide();
+            //$( '[data-hook="convertToPopulationLink"]' ).hide();
+            //$( '[data-hook="convertToSpatialLink"]' ).show();
+        }
+        else if(this.state == 'spatial')
+        {
+            $( this.el ).find( '[data-hook="convertToPopulation"]' ).hide();
+            $( this.el ).find( '[data-hook="editor"]' ).show();
+            $( this.el ).find( '.spatial' ).show();
+            //$( '[data-hook="convertToPopulationLink"]' ).hide();
+            //$( '[data-hook="convertToSpatialLink"]' ).hide();
+        }
 
+	if(this.state == 'concentration' || this.state == 'population' || this.state == 'spatial')
+	{
             if(!$( this.el ).find('.speciesAccordion .accordion-body').first().hasClass('in'))
                 $( this.el ).find('.speciesAccordion').find('a').first()[0].click();
             if(!$( this.el ).find('.parametersAccordion .accordion-body').first().hasClass('in'))
@@ -1773,24 +1831,12 @@ module.exports = View.extend({
                 $( this.el ).find('.initialConditionsAccordion').find('a').first()[0].click();
             if(!$( this.el ).find('.reactionsAccordion .accordion-body').first().hasClass('in'))
                 $( this.el ).find('.reactionsAccordion').find('a').first()[0].click();
-        }
-        else if(this.state == 'spatial')
-        {
-            $( this.el ).find( '[data-hook="convertToPopulation"]' ).hide();
-            $( '[data-hook="convertToPopulationLink"]' ).hide();
-            $( this.el ).find( '[data-hook="editor"]' ).show();
-            $( '[data-hook="convertToSpatialLink"]' ).hide();
-            $( this.el ).find( '.spatial' ).show();
-        }
+	}
     },
     initialize: function(attr)
     {
-        // This is weird, but the model must wait for signals that these buttons have been pressed from the model select
-        // THis is because the buttons are shared
-        this.listenTo(this.model, "duplicateLink", _.bind(this.duplicateModel, this));
-        this.listenTo(this.model, "convertToPopulationLink", _.bind(this.convertToPopulation, this));
-        this.listenTo(this.model, "convertToSpatialLink", _.bind(this.convertToSpatial, this));
-
+	this.select = attr.select;
+	
         if(this.model.isSpatial)
         {
             this.state = 'spatial';
@@ -1886,7 +1932,7 @@ module.exports = View.extend({
     }
 });
 
-},{"../convertToPopulation/model":1,"../models/model":35,"./initial-condition-collection":8,"./mesh-collection":10,"./mesh3d":13,"./parameter-collection":19,"./reaction-collection":21,"./specie-collection":24,"ampersand-view":786,"jquery":889,"underscore":907}],15:[function(require,module,exports){
+},{"../convertToPopulation/model":1,"../models/model":35,"./initial-condition-collection":8,"./mesh-collection":10,"./mesh3d":13,"./parameter-collection":19,"./reaction-collection":21,"./specie-collection":24,"ampersand-view":446,"jquery":553,"underscore":571}],15:[function(require,module,exports){
 var $ = require('jquery');
 var _ = require('underscore');
 var InputView = require('ampersand-input-view');
@@ -1914,7 +1960,7 @@ ModifyingInputView = InputView.extend({
 });
 
 module.exports = ModifyingInputView
-},{"ampersand-input-view":107,"jquery":889,"underscore":907}],16:[function(require,module,exports){
+},{"ampersand-input-view":107,"jquery":553,"underscore":571}],16:[function(require,module,exports){
 var $ = require('jquery');
 var _ = require('underscore');
 var ModifyingInputView = require('./modifying-input-view');
@@ -1928,7 +1974,7 @@ ModifyingNumberInputView = ModifyingInputView.extend({
 });
 
 module.exports = ModifyingNumberInputView
-},{"./modifying-input-view":15,"jquery":889,"underscore":907}],17:[function(require,module,exports){
+},{"./modifying-input-view":15,"jquery":553,"underscore":571}],17:[function(require,module,exports){
 var $ = require('jquery');
 var _ = require('underscore');
 var SelectView = require('ampersand-select-view');
@@ -1948,7 +1994,7 @@ var ModifyingSelectView = _.extend(SelectView, {
 });
 
 module.exports = ModifyingSelectView
-},{"ampersand-select-view":481,"jquery":889,"underscore":907}],18:[function(require,module,exports){
+},{"ampersand-select-view":141,"jquery":553,"underscore":571}],18:[function(require,module,exports){
 var AmpersandView = require('ampersand-view');
 var SubCollection = require('ampersand-subcollection');
 var _ = require('underscore');
@@ -1967,6 +2013,12 @@ var PaginatedCollectionView = AmpersandView.extend({
                 {
                     this.subCollectionViews.views[i].updateValid();
                 }
+
+                var model = this.subCollectionViews.views[i].model;
+                var collection = model.collection
+
+                if(typeof(collection.get(model.cid, 'cid')) == "undefined")
+                    continue;
 
                 if(typeof(this.subCollectionViews.views[i].valid) != "undefined")
                 {
@@ -2208,7 +2260,8 @@ var PaginatedCollectionView = AmpersandView.extend({
 
 module.exports = PaginatedCollectionView;
 
-},{"ampersand-subcollection":574,"ampersand-view":786,"underscore":907}],19:[function(require,module,exports){
+},{"ampersand-subcollection":234,"ampersand-view":446,"underscore":571}],19:[function(require,module,exports){
+var _ = require('underscore');
 var $ = require('jquery');
 var AmpersandView = require('ampersand-view');
 var AmpersandFormView = require('ampersand-form-view');
@@ -2330,7 +2383,8 @@ var ParameterCollectionFormView = AmpersandView.extend({
 });
 
 module.exports = ParameterCollectionFormView
-},{"./paginated-collection-view":18,"./parameter":20,"./tests":29,"ampersand-form-view":103,"ampersand-input-view":107,"ampersand-view":786,"jquery":889}],20:[function(require,module,exports){
+
+},{"./paginated-collection-view":18,"./parameter":20,"./tests":29,"ampersand-form-view":103,"ampersand-input-view":107,"ampersand-view":446,"jquery":553,"underscore":571}],20:[function(require,module,exports){
 var _ = require('underscore');
 var $ = require('jquery');
 var View = require('ampersand-view');
@@ -2445,7 +2499,8 @@ module.exports = View.extend({
     }
 });
 
-},{"./modifying-input-view":15,"./modifying-number-input-view":16,"./tests":29,"ampersand-view":786,"jquery":889,"underscore":907}],21:[function(require,module,exports){
+},{"./modifying-input-view":15,"./modifying-number-input-view":16,"./tests":29,"ampersand-view":446,"jquery":553,"underscore":571}],21:[function(require,module,exports){
+var _ = require('underscore');
 var $ = require('jquery');
 var AmpersandView = require('ampersand-view');
 var AmpersandFormView = require('ampersand-form-view');
@@ -2761,7 +2816,7 @@ var ReactionCollectionFormView = AmpersandView.extend({
 
 module.exports = ReactionCollectionFormView;
 
-},{"./paginated-collection-view":18,"./reaction":23,"./reaction-detail":22,"./tests":29,"ampersand-form-view":103,"ampersand-input-view":107,"ampersand-select-view":481,"ampersand-subcollection":574,"ampersand-view":786,"jquery":889,"katex":890}],22:[function(require,module,exports){
+},{"./paginated-collection-view":18,"./reaction":23,"./reaction-detail":22,"./tests":29,"ampersand-form-view":103,"ampersand-input-view":107,"ampersand-select-view":141,"ampersand-subcollection":234,"ampersand-view":446,"jquery":553,"katex":554,"underscore":571}],22:[function(require,module,exports){
 var _ = require('underscore');
 var $ = require('jquery');
 var View = require('ampersand-view');
@@ -2791,7 +2846,7 @@ module.exports = View.extend({
                 }
             }
 
-            if(obj.value != 'custom' && obj.value != 'massaction')
+            if(obj.value != 'custom')
             {
                 var reactants;
                 var products;
@@ -2806,30 +2861,41 @@ module.exports = View.extend({
                     reactants = 1;
                     products = 0;
                 }
-                if(obj.value == 'merge')
+                else if(obj.value == 'merge')
                 {
                     reactants = 2;
                     products = 1;
                 }
-                if(obj.value == 'change')
+                else if(obj.value == 'change')
                 {
                     reactants = 1;
                     products = 1;
                 }
-                if(obj.value == 'dimerization')
+                else if(obj.value == 'dimerization')
                 {
                     reactants = 1;
                     products = 1;
                 }
-                if(obj.value == 'split')
+                else if(obj.value == 'split')
                 {
                     reactants = 1;
                     products = 2;
                 }
-                if(obj.value == 'four')
+                else if(obj.value == 'four')
                 {
                     reactants = 2;
                     products = 2;
+                }
+                else if(obj.value == 'massaction')
+                {
+                    if(this.model.reactants.length >= 2)
+                    {
+                        reactants = 2;
+                    }
+                    else
+                    {
+                        reactants = 1;
+                    }
                 }
 
                 while(this.model.reactants.length > reactants)
@@ -2847,6 +2913,10 @@ module.exports = View.extend({
                 if(obj.value == 'dimerization')
                 {
                     this.model.reactants.at(0).stoichiometry = 2;
+                }
+                else if(obj.value == 'massaction' && reactants == 1)
+                {
+                    this.model.reactants.at(0).stoichiometry = Math.min(2, this.model.reactants.at(0).stoichiometry);
                 }
                 else
                 {
@@ -2997,6 +3067,19 @@ var reactants;
 
                     if(!this.model.reactants.at(i).specie)
                         return "Select valid reactants!";
+                }
+
+                if(this.model.type == 'massaction')
+                {
+                    var reactantCount = 0;
+
+                    for(var i = 0; i < reactants; i++)
+                    {
+                        reactantCount += this.model.reactants.at(i).stoichiometry;
+                    }
+
+                    if(reactantCount > 2)
+                        return "There may only be two or less reactants in mass action reaction";
                 }
 
                 for(var i = 0; i < products; i++)
@@ -3157,7 +3240,7 @@ var reactants;
     }
 });
 
-},{"./modifying-input-view":15,"./modifying-number-input-view":16,"./reaction":23,"./stoich-specie-collection":26,"./subdomain":28,"./tests":29,"ampersand-select-view":481,"ampersand-view":786,"jquery":889,"katex":890,"underscore":907}],23:[function(require,module,exports){
+},{"./modifying-input-view":15,"./modifying-number-input-view":16,"./reaction":23,"./stoich-specie-collection":26,"./subdomain":28,"./tests":29,"ampersand-select-view":141,"ampersand-view":446,"jquery":553,"katex":554,"underscore":571}],23:[function(require,module,exports){
 var _ = require('underscore');
 var $ = require('jquery');
 var View = require('ampersand-view');
@@ -3323,7 +3406,8 @@ module.exports = View.extend({
     }
 });
 
-},{"./modifying-input-view":15,"./modifying-number-input-view":16,"./stoich-specie-collection":26,"./subdomain":28,"./tests":29,"ampersand-select-view":481,"ampersand-view":786,"jquery":889,"katex":890,"underscore":907}],24:[function(require,module,exports){
+},{"./modifying-input-view":15,"./modifying-number-input-view":16,"./stoich-specie-collection":26,"./subdomain":28,"./tests":29,"ampersand-select-view":141,"ampersand-view":446,"jquery":553,"katex":554,"underscore":571}],24:[function(require,module,exports){
+var _ = require('underscore');
 var $ = require('jquery');
 var AmpersandView = require('ampersand-view');
 var AmpersandFormView = require('ampersand-form-view');
@@ -3474,7 +3558,8 @@ var SpecieCollectionFormView = AmpersandView.extend({
 });
 
 module.exports = SpecieCollectionFormView
-},{"./paginated-collection-view":18,"./specie":25,"./tests":29,"ampersand-form-view":103,"ampersand-input-view":107,"ampersand-view":786,"jquery":889}],25:[function(require,module,exports){
+
+},{"./paginated-collection-view":18,"./specie":25,"./tests":29,"ampersand-form-view":103,"ampersand-input-view":107,"ampersand-view":446,"jquery":553,"underscore":571}],25:[function(require,module,exports){
 var _ = require('underscore');
 var $ = require('jquery');
 var View = require('ampersand-view');
@@ -3663,7 +3748,8 @@ module.exports = View.extend({
     }
 });
 
-},{"./modifying-input-view":15,"./modifying-number-input-view":16,"./subdomain":28,"./tests":29,"ampersand-view":786,"jquery":889,"underscore":907}],26:[function(require,module,exports){
+},{"./modifying-input-view":15,"./modifying-number-input-view":16,"./subdomain":28,"./tests":29,"ampersand-view":446,"jquery":553,"underscore":571}],26:[function(require,module,exports){
+var _ = require('underscore');
 var $ = require('jquery');
 var AmpersandView = require('ampersand-view');
 var AmpersandFormView = require('ampersand-form-view');
@@ -3682,6 +3768,8 @@ var AddNewStoichSpecieForm = AmpersandFormView.extend({
             // You might use this to disable the "submit" button
             // any time the form is invalid, for exmaple.
     validCallback: function (valid) {
+	valid &= this.valid;
+
         if (valid) {
             this.button.prop('disabled', false);
         } else {
@@ -3738,6 +3826,34 @@ var StoichSpecieCollectionFormView = AmpersandView.extend({
 
         this.listenToAndRun(this.reaction, 'change:type', _.bind(this.setReactionType, this));
     },
+    //This will only be used if the stoich-specie-collection is a collection of reactants
+    checkValidReactants: function()
+    {
+	if(this.reactionType == 'massaction')
+	{
+	    var reactantCount = 0;
+
+	    for(var i = 0; i < this.collection.models.length; i++)
+	    {
+		var reactant = this.collection.models[i];
+		
+		reactantCount += reactant.stoichiometry;
+	    }
+
+	    if(reactantCount < 2)
+	    {
+		this.addForm.validCallback(true);
+	    }
+	    else
+	    {
+		this.addForm.validCallback(false);
+	    }
+	}
+	else
+	{
+	    this.addForm.validCallback(true);
+	}
+    },
     setReactionType: function()
     {
         this.reactionType = this.reaction.type;
@@ -3781,6 +3897,13 @@ var StoichSpecieCollectionFormView = AmpersandView.extend({
                 collection : this.collection
             }
         );
+
+	// If we're a collection of reactants, apply the mass action limits to the reactants
+	if(this.collection == this.reaction.reactants)
+	{
+            this.listenToAndRun(this.collection, 'add remove change:stoichiometry', _.bind(this.checkValidReactants, this));
+            this.listenTo(this.reaction, 'change:type', _.bind(this.checkValidReactants, this));
+	}
         
         return this;
     }
@@ -3788,7 +3911,7 @@ var StoichSpecieCollectionFormView = AmpersandView.extend({
 
 module.exports = StoichSpecieCollectionFormView
 
-},{"./stoich-specie":27,"./tests":29,"ampersand-form-view":103,"ampersand-input-view":107,"ampersand-select-view":481,"ampersand-view":786,"jquery":889}],27:[function(require,module,exports){
+},{"./stoich-specie":27,"./tests":29,"ampersand-form-view":103,"ampersand-input-view":107,"ampersand-select-view":141,"ampersand-view":446,"jquery":553,"underscore":571}],27:[function(require,module,exports){
 var _ = require('underscore');
 var $ = require('jquery');
 var View = require('ampersand-view');
@@ -3858,7 +3981,26 @@ module.exports = View.extend({
     },
     addOne : function()
     {
-        this.model.stoichiometry = this.model.stoichiometry + 1;
+	var reaction = this.model.collection.parent;
+
+	if(this.model.collection == reaction.reactants && reaction.type == 'massaction')
+	{
+	    var numReactants = 0;
+
+	    for(var i = 0; i < this.model.collection.models.length; i++)
+	    {
+		var reactant = this.model.collection.models[i];
+
+		numReactants += reactant.stoichiometry;
+	    }
+
+	    if(numReactants < 2)
+		this.model.stoichiometry = this.model.stoichiometry + 1;
+	}
+	else
+	{
+            this.model.stoichiometry = this.model.stoichiometry + 1;
+	}
     },
     subtractOne : function()
     {
@@ -3890,7 +4032,7 @@ module.exports = View.extend({
     }
 });
 
-},{"./modifying-number-input-view":16,"./modifying-select-view":17,"./tests":29,"ampersand-view":786,"jquery":889,"underscore":907}],28:[function(require,module,exports){
+},{"./modifying-number-input-view":16,"./modifying-select-view":17,"./tests":29,"ampersand-view":446,"jquery":553,"underscore":571}],28:[function(require,module,exports){
 var _ = require('underscore');
 var $ = require('jquery');
 var View = require('ampersand-view');
@@ -3918,7 +4060,7 @@ module.exports = View.extend({
         this.renderSubview(
             new CheckboxView({
                 name: 'checked',
-                template: '<span><span data-hook="label"></span><input type="checkbox"><span data-hook="message-container"><span data-hook="message-text"></span></span></span>&nbsp;',
+                template: '<span><span data-hook="label"></span> <input type="checkbox"><span data-hook="message-container"><span data-hook="message-text"></span></span></span>&nbsp;',
                 label: this.model.name,
                 value: checked,
                 required: false,
@@ -3929,7 +4071,7 @@ module.exports = View.extend({
     }
 });
 
-},{"./tests":29,"ampersand-checkbox-view":48,"ampersand-view":786,"jquery":889,"underscore":907}],29:[function(require,module,exports){
+},{"./tests":29,"ampersand-checkbox-view":48,"ampersand-view":446,"jquery":553,"underscore":571}],29:[function(require,module,exports){
 var _ = require('underscore');
 
 module.exports = {
@@ -4004,7 +4146,7 @@ module.exports = {
         }
     }
 };
-},{"underscore":907}],30:[function(require,module,exports){
+},{"underscore":571}],30:[function(require,module,exports){
 var AmpCollection = require('ampersand-collection');
 
 module.exports = AmpCollection.extend({
@@ -4078,7 +4220,7 @@ module.exports = State.extend({
 });
 
 
-},{"ampersand-state":484,"underscore":907}],33:[function(require,module,exports){
+},{"ampersand-state":144,"underscore":571}],33:[function(require,module,exports){
 var AmpCollection = require('ampersand-collection');
 var Mesh = require('./mesh');
 
@@ -4098,6 +4240,8 @@ module.exports = Model.extend({
         meshFileId : 'number',
         threeJsMesh : 'object',
         subdomains : 'object',
+        boundingBox : 'object',
+        volumes : 'object',
         uniqueSubdomains : 'object',
         undeletable : { type : 'boolean', default : false },
 	ghost : { type : 'boolean', default : false }
@@ -4148,7 +4292,7 @@ module.exports = Model.extend({
     }
 });
 
-},{"./subdomain-collection":44,"ampersand-model":109,"underscore":907}],35:[function(require,module,exports){
+},{"./subdomain-collection":44,"ampersand-model":108,"underscore":571}],35:[function(require,module,exports){
 var _ = require('underscore');
 var AmpersandModel = require('ampersand-model');
 var SpecieCollection = require('./specie-collection');
@@ -4275,7 +4419,7 @@ var Model = AmpersandModel.extend({
 
         if(!this.reactions.every( function(reaction) { return reaction.valid; } ))
         {
-            this.saveState = 'Model not valid'
+            this.saveState = 'failed'
             return;
         }
 
@@ -4286,12 +4430,17 @@ var Model = AmpersandModel.extend({
         {
             if(this.collection && this.collection.url)
             {
-
-                if(!(this.reactions.every( function(reaction) { return reaction.valid; } ) && this.initialConditions.every( function(initialCondition) { return initialCondition.valid; } )))
+                if(!this.reactions.every( function(reaction) { return reaction.valid; } ))
                 {
-                    this.saveState = 'invalid';
+                    this.saveState = 'failed';
                     return;
                 }
+
+		if(!this.initialConditions.every( function(initialCondition) { return initialCondition.valid; } ))
+		{
+                    this.saveState = 'invalid';
+                    return;
+		}
 
                 try
                 {
@@ -4499,7 +4648,7 @@ Model.buildFromJSON = function(json, model)
 
 module.exports = Model;
 
-},{"./initial-condition-collection":31,"./parameter-collection":36,"./reaction-collection":38,"./specie-collection":40,"ampersand-model":109,"underscore":907}],36:[function(require,module,exports){
+},{"./initial-condition-collection":31,"./parameter-collection":36,"./reaction-collection":38,"./specie-collection":40,"ampersand-model":108,"underscore":571}],36:[function(require,module,exports){
 // parameter Collection - parameter-collection.js
 var Collection = require('./collection');
 var parameter = require('./parameter');
@@ -4563,7 +4712,7 @@ module.exports = AmpModel.extend({
         );
     }
 });
-},{"ampersand-model":109,"underscore":907}],38:[function(require,module,exports){
+},{"ampersand-model":108,"underscore":571}],38:[function(require,module,exports){
 var _ = require('underscore');
 var Collection = require('./collection');
 var Reaction = require('./reaction');
@@ -4608,7 +4757,7 @@ module.exports = Collection.extend({
     }
 });
 
-},{"./collection":30,"./reaction":39,"underscore":907}],39:[function(require,module,exports){
+},{"./collection":30,"./reaction":39,"underscore":571}],39:[function(require,module,exports){
 var _ = require('underscore');
 var State = require('ampersand-state');
 var StoichSpecie = require('./stoich-specie');
@@ -4691,6 +4840,19 @@ var Reaction = State.extend({
                         return false;
                 }
 
+		if(this.type == 'massaction')
+		{
+		    var reactantCount = 0;
+
+		    for(var i = 0; i < reactants; i++)
+		    {
+			reactantCount += this.reactants.at(i).stoichiometry;
+		    }
+
+		    if(reactantCount > 2)
+			return false;
+		}
+
                 for(var i = 0; i < products; i++)
                 {
                     if(!this.products.at(i))
@@ -4747,7 +4909,7 @@ var Reaction = State.extend({
 
 module.exports = Reaction;
 
-},{"./parameter":37,"./stoich-specie":43,"./stoich-specie-collection":42,"ampersand-state":484,"underscore":907}],40:[function(require,module,exports){
+},{"./parameter":37,"./stoich-specie":43,"./stoich-specie-collection":42,"ampersand-state":144,"underscore":571}],40:[function(require,module,exports){
 // specie Collection - specie-collection.js
 var Collection = require('./collection');
 var specie = require('./specie');
@@ -4818,7 +4980,7 @@ module.exports = AmpModel.extend({
         );
     }
 });
-},{"ampersand-model":109,"underscore":907}],42:[function(require,module,exports){
+},{"ampersand-model":108,"underscore":571}],42:[function(require,module,exports){
 var _ = require('underscore');
 var AmpCollection = require('ampersand-collection');
 var StoichSpecie = require('./stoich-specie');
@@ -4853,7 +5015,7 @@ module.exports = AmpCollection.extend({
     }
 });
 
-},{"./stoich-specie":43,"ampersand-collection":50,"underscore":907}],43:[function(require,module,exports){
+},{"./stoich-specie":43,"ampersand-collection":50,"underscore":571}],43:[function(require,module,exports){
 var _ = require('underscore');
 var State = require('ampersand-state');
 var Specie = require('./specie');
@@ -4876,7 +5038,7 @@ var StoichSpecie = State.extend({
 
 module.exports = StoichSpecie;
 
-},{"./specie":41,"ampersand-state":484,"underscore":907}],44:[function(require,module,exports){
+},{"./specie":41,"ampersand-state":144,"underscore":571}],44:[function(require,module,exports){
 var AmpCollection = require('ampersand-collection');
 var Subdomain = require('./subdomain');
 
@@ -4895,7 +5057,7 @@ module.exports = State.extend({
 });
 
 
-},{"ampersand-state":484,"underscore":907}],46:[function(require,module,exports){
+},{"ampersand-state":144,"underscore":571}],46:[function(require,module,exports){
 var isObject = require('amp-is-object');
 
 
@@ -8990,19 +9152,8 @@ module.exports = function(obj) {
 };
 
 },{}],107:[function(require,module,exports){
-;if (typeof window !== "undefined") {  window.ampersand = window.ampersand || {};  window.ampersand["ampersand-input-view"] = window.ampersand["ampersand-input-view"] || [];  window.ampersand["ampersand-input-view"].push("4.0.5");}
 var View = require('ampersand-view');
-var dom = require('ampersand-dom');
-var matchesSelector = require('matches-selector');
 
-var slice = Array.prototype.slice;
-
-function getMatches(el, selector) {
-    if (selector === '') return [el];
-    var matches = [];
-    if (matchesSelector(el, selector)) matches.push(el);
-    return matches.concat(slice.call(el.querySelectorAll(selector)));
-}
 
 module.exports = View.extend({
     template: [
@@ -9041,22 +9192,25 @@ module.exports = View.extend({
             type: 'attribute',
             selector: 'input, textarea',
             name: 'placeholder'
+        },
+        'validityClass': {
+            type: 'class',
+            selector: 'input, textarea'
+        },
+        'rootElementClass': {
+            type: 'class',
+            selector: ''
         }
     },
     initialize: function (spec) {
         spec || (spec = {});
         this.tests = this.tests || spec.tests || [];
         this.on('change:type', this.handleTypeChange, this);
-        this.handleChange = this.handleChange.bind(this);
+        this.handleBlur = this.handleBlur.bind(this);
         this.handleInputChanged = this.handleInputChanged.bind(this);
-        var value = !spec.value && spec.value !== 0 ? '' : spec.value;
-        this.startingValue = value;
-        this.inputValue = value;
+        this.startingValue = this.value;
         this.on('change:valid change:value', this.reportToParent, this);
-        this.on('change:validityClass', this.validityClassChanged, this);
-        if (spec.autoRender) this.autoRender = spec.autoRender;
         if (spec.template) this.template = spec.template;
-        if (spec.beforeSubmit) this.beforeSubmit = spec.beforeSubmit;
     },
     render: function () {
         this.renderWithTemplate();
@@ -9064,13 +9218,10 @@ module.exports = View.extend({
         // switches out input for textarea if that's what we want
         this.handleTypeChange();
         this.initInputBindings();
-        // Skip validation on initial setValue
-        // if the field is not required
-        this.setValue(this.inputValue, !this.required);
-        return this;
+        this.setValue(this.value);
     },
     props: {
-        inputValue: 'any',
+        value: 'any',
         startingValue: 'any',
         name: 'string',
         type: ['string', true, 'text'],
@@ -9083,18 +9234,11 @@ module.exports = View.extend({
         requiredMessage: ['string', true, 'This field is required.'],
         validClass: ['string', true, 'input-valid'],
         invalidClass: ['string', true, 'input-invalid'],
-        validityClassSelector: ['string', true, 'input, textarea']
+        rootElementClass: ['string', true, '']
     },
     derived: {
-        value: {
-            deps: ['inputValue'],
-            fn: function () {
-                return this.inputValue;
-            }
-        },
         valid: {
-            cache: false,
-            deps: ['inputValue'],
+            deps: ['value'],
             fn: function () {
                 return !this.runTests();
             }
@@ -9106,15 +9250,15 @@ module.exports = View.extend({
             }
         },
         changed: {
-            deps: ['inputValue', 'startingValue'],
+            deps: ['value', 'startingValue'],
             fn: function () {
-                return this.inputValue !== this.startingValue;
+                return this.value !== this.startingValue;
             }
         },
         validityClass: {
-            deps: ['valid', 'validClass', 'invalidClass', 'shouldValidate'],
+            deps: ['valid', 'validClass', 'invalidClass', 'shouldValidate', 'changed'],
             fn: function () {
-                if (!this.shouldValidate) {
+                if (!this.shouldValidate || !this.changed) {
                     return '';
                 } else {
                     return this.valid ? this.validClass : this.invalidClass;
@@ -9122,26 +9266,20 @@ module.exports = View.extend({
             }
         }
     },
-    setValue: function (value, skipValidation) {
-        if (!this.input) {
-            this.inputValue = value;
-            return;
-        }
+    setValue: function (value) {
+        this.value = value;
         if (!value && value !== 0) {
             this.input.value = '';
         } else {
-            this.input.value = value.toString();
+            this.input.value = this.value.toString();
         }
-        this.inputValue = this.clean(this.input.value);
-        if (!skipValidation && !this.getErrorMessage()) {
+        if (!this.getErrorMessage(this.value)) {
             this.shouldValidate = true;
-        } else if (skipValidation) {
-            this.shouldValidate = false;
         }
     },
     getErrorMessage: function () {
         var message = '';
-        if (this.required && this.value === '') {
+        if (this.required && !this.value) {
             return this.requiredMessage;
         } else {
             (this.tests || []).some(function (test) {
@@ -9162,29 +9300,22 @@ module.exports = View.extend({
             this.input.type = this.type;
         }
     },
-    clean: function (val) {
-        return (this.type === 'number') ? Number(val) : val.trim();
-    },
-    //`input` event handler
     handleInputChanged: function () {
         if (document.activeElement === this.input) {
             this.directlyEdited = true;
         }
-        this.inputValue = this.clean(this.input.value);
+        this.value = this.clean(this.input.value);
     },
-    //`change` event handler
-    handleChange: function () {
-        if (this.inputValue && this.changed) {
+    clean: function (val) {
+        return (this.type === 'number') ? Number(val) : val.trim();
+    },
+    handleBlur: function () {
+        if (this.value && this.changed) {
             this.shouldValidate = true;
         }
         this.runTests();
     },
     beforeSubmit: function () {
-        // catch undetected input changes that were not caught due to lack of
-        // browser event firing see:
-        // https://github.com/AmpersandJS/ampersand-input-view/issues/2
-        this.inputValue = this.clean(this.input.value);
-
         // at the point where we've tried
         // to submit, we want to validate
         // everything from now on.
@@ -9193,7 +9324,7 @@ module.exports = View.extend({
     },
     runTests: function () {
         var message = this.getErrorMessage();
-        if (!message && this.inputValue && this.changed) {
+        if (!message && this.value && this.changed) {
             // if it's ever been valid,
             // we want to validate from now
             // on.
@@ -9203,88 +9334,32 @@ module.exports = View.extend({
         return message;
     },
     initInputBindings: function () {
+        this.input.addEventListener('blur', this.handleBlur, false);
         this.input.addEventListener('input', this.handleInputChanged, false);
-        this.input.addEventListener('change', this.handleChange,false);
     },
     remove: function () {
         this.input.removeEventListener('input', this.handleInputChanged, false);
-        this.input.removeEventListener('change', this.handleChange, false);
+        this.input.removeEventListener('blur', this.handleBlur, false);
         View.prototype.remove.apply(this, arguments);
     },
     reset: function () {
-        this.setValue(this.startingValue, true); //Skip validation just like on initial render
-    },
-    clear: function () {
-        this.setValue('', true);
-    },
-    validityClassChanged: function (view, newClass) {
-        var oldClass = view.previousAttributes().validityClass;
-        getMatches(this.el, this.validityClassSelector).forEach(function (match) {
-            dom.switchClass(match, oldClass, newClass);
-        });
+        this.setValue('');
     },
     reportToParent: function () {
         if (this.parent) this.parent.update(this);
     }
 });
 
-},{"ampersand-dom":69,"ampersand-view":786,"matches-selector":108}],108:[function(require,module,exports){
-'use strict';
-
-var proto = Element.prototype;
-var vendor = proto.matches
-  || proto.matchesSelector
-  || proto.webkitMatchesSelector
-  || proto.mozMatchesSelector
-  || proto.msMatchesSelector
-  || proto.oMatchesSelector;
-
-module.exports = match;
-
-/**
- * Match `el` to `selector`.
- *
- * @param {Element} el
- * @param {String} selector
- * @return {Boolean}
- * @api public
- */
-
-function match(el, selector) {
-  if (vendor) return vendor.call(el, selector);
-  var nodes = el.parentNode.querySelectorAll(selector);
-  for (var i = 0; i < nodes.length; i++) {
-    if (nodes[i] == el) return true;
-  }
-  return false;
-}
-},{}],109:[function(require,module,exports){
-;if (typeof window !== "undefined") {  window.ampersand = window.ampersand || {};  window.ampersand["ampersand-model"] = window.ampersand["ampersand-model"] || [];  window.ampersand["ampersand-model"].push("5.0.3");}
+},{"ampersand-view":446}],108:[function(require,module,exports){
+;if (typeof window !== "undefined") {  window.ampersand = window.ampersand || {};  window.ampersand["ampersand-model"] = window.ampersand["ampersand-model"] || [];  window.ampersand["ampersand-model"].push("4.1.0");}
 var State = require('ampersand-state');
+var _ = require('underscore');
 var sync = require('ampersand-sync');
-var assign = require('lodash.assign');
-var isObject = require('lodash.isobject');
-var clone = require('lodash.clone');
-var result = require('lodash.result');
 
-
-// Throw an error when a URL is needed, and none is supplied.
-var urlError = function () {
-    throw new Error('A "url" property or function must be specified');
-};
-
-// Wrap an optional error callback with a fallback error event.
-var wrapError = function (model, options) {
-    var error = options.error;
-    options.error = function (resp) {
-        if (error) error(model, resp, options);
-        model.trigger('error', model, resp, options);
-    };
-};
 
 var Model = State.extend({
     save: function (key, val, options) {
-        var attrs, method, sync;
+        var attrs, method, sync, attributes = this.attributes;
 
         // Handle both `"key", value` and `{key: value}` -style arguments.
         if (key == null || typeof key === 'object') {
@@ -9294,7 +9369,7 @@ var Model = State.extend({
             (attrs = {})[key] = val;
         }
 
-        options = assign({validate: true}, options);
+        options = _.extend({validate: true}, options);
 
         // If we're not waiting and attributes exist, save acts as
         // `set(attr).save(null, opts)` with validation. Otherwise, check if
@@ -9312,8 +9387,8 @@ var Model = State.extend({
         var success = options.success;
         options.success = function (resp) {
             var serverAttrs = model.parse(resp, options);
-            if (options.wait) serverAttrs = assign(attrs || {}, serverAttrs);
-            if (isObject(serverAttrs) && !model.set(serverAttrs, options)) {
+            if (options.wait) serverAttrs = _.extend(attrs || {}, serverAttrs);
+            if (_.isObject(serverAttrs) && !model.set(serverAttrs, options)) {
                 return false;
             }
             if (success) success(model, resp, options);
@@ -9325,7 +9400,7 @@ var Model = State.extend({
         if (method === 'patch') options.attrs = attrs;
         // if we're waiting we haven't actually set our attributes yet so
         // we need to do make sure we send right data
-        if (options.wait) options.attrs = assign(model.serialize(), attrs);
+        if (options.wait) options.attrs = _.extend(model.serialize(), attrs);
         sync = this.sync(method, this, options);
 
         return sync;
@@ -9335,7 +9410,7 @@ var Model = State.extend({
     // model differs from its current attributes, they will be overridden,
     // triggering a `"change"` event.
     fetch: function (options) {
-        options = options ? clone(options) : {};
+        options = options ? _.clone(options) : {};
         if (options.parse === void 0) options.parse = true;
         var model = this;
         var success = options.success;
@@ -9352,7 +9427,7 @@ var Model = State.extend({
     // Optimistically removes the model from its collection, if it has one.
     // If `wait: true` is passed, waits for the server to respond before removal.
     destroy: function (options) {
-        options = options ? clone(options) : {};
+        options = options ? _.clone(options) : {};
         var model = this;
         var success = options.success;
 
@@ -9387,20 +9462,30 @@ var Model = State.extend({
     // using Backbone's restful methods, override this to change the endpoint
     // that will be called.
     url: function () {
-        var base = result(this, 'urlRoot') || result(this.collection, 'url') || urlError();
+        var base = _.result(this, 'urlRoot') || _.result(this.collection, 'url') || urlError();
         if (this.isNew()) return base;
         return base + (base.charAt(base.length - 1) === '/' ? '' : '/') + encodeURIComponent(this.getId());
     }
 });
 
+// Throw an error when a URL is needed, and none is supplied.
+var urlError = function () {
+    throw new Error('A "url" property or function must be specified');
+};
+
+// Wrap an optional error callback with a fallback error event.
+var wrapError = function (model, options) {
+    var error = options.error;
+    options.error = function (resp) {
+        if (error) error(model, resp, options);
+        model.trigger('error', model, resp, options);
+    };
+};
+
 module.exports = Model;
 
-},{"ampersand-state":484,"ampersand-sync":110,"lodash.assign":134,"lodash.clone":145,"lodash.isobject":158,"lodash.result":159}],110:[function(require,module,exports){
-;if (typeof window !== "undefined") {  window.ampersand = window.ampersand || {};  window.ampersand["ampersand-sync"] = window.ampersand["ampersand-sync"] || [];  window.ampersand["ampersand-sync"].push("3.0.7");}
-var result = require('lodash.result');
-var defaults = require('lodash.defaults');
-var includes = require('lodash.includes');
-var assign = require('lodash.assign');
+},{"ampersand-state":144,"ampersand-sync":109,"underscore":571}],109:[function(require,module,exports){
+var _ = require('underscore');
 var xhr = require('xhr');
 var qs = require('qs');
 
@@ -9410,25 +9495,15 @@ var urlError = function () {
     throw new Error('A "url" property or function must be specified');
 };
 
-// Map from CRUD to HTTP for our default `Backbone.sync` implementation.
-var methodMap = {
-    'create': 'POST',
-    'update': 'PUT',
-    'patch':  'PATCH',
-    'delete': 'DELETE',
-    'read':   'GET'
-};
 
 module.exports = function (method, model, options) {
     var type = methodMap[method];
     var headers = {};
 
     // Default options, unless specified.
-    defaults(options || (options = {}), {
+    _.defaults(options || (options = {}), {
         emulateHTTP: false,
-        emulateJSON: false,
-        // overrideable primarily to enable testing
-        xhrImplementation: xhr
+        emulateJSON: false
     });
 
     // Default request options.
@@ -9436,7 +9511,7 @@ module.exports = function (method, model, options) {
 
     // Ensure that we have a URL.
     if (!options.url) {
-        options.url = result(model, 'url') || urlError();
+        params.url = _.result(model, 'url') || urlError();
     }
 
     // Ensure that we have the appropriate request data.
@@ -9447,8 +9522,8 @@ module.exports = function (method, model, options) {
     // If passed a data param, we add it to the URL or body depending on request type
     if (options.data && type === 'GET') {
         // make sure we've got a '?'
-        options.url += includes(options.url, '?') ? '&' : '?';
-        options.url += qs.stringify(options.data);
+        params.url += _.contains(params.url, '?') ? '&' : '?';
+        params.url += qs.stringify(options.data);
     }
 
     // For older servers, emulate JSON by encoding the request into an HTML-form.
@@ -9473,11 +9548,11 @@ module.exports = function (method, model, options) {
     }
 
     // Start setting ajaxConfig options (headers, xhrFields).
-    var ajaxConfig = (result(model, 'ajaxConfig') || {});
+    var ajaxConfig = (_.result(model, 'ajaxConfig') || {});
 
     // Combine generated headers with user's headers.
     if (ajaxConfig.headers) {
-        assign(headers, ajaxConfig.headers);
+        _.extend(headers, ajaxConfig.headers);
     }
     params.headers = headers;
 
@@ -9496,345 +9571,44 @@ module.exports = function (method, model, options) {
             if (beforeSend) return beforeSend.apply(this, arguments);
         };
         params.xhrFields = ajaxConfig.xhrFields;
-    } else {
-        params.beforeSend = ajaxConfig.beforeSend;
     }
 
     // Turn a jQuery.ajax formatted request into xhr compatible
     params.method = params.type;
 
-    var ajaxSettings = assign(params, options);
+    var ajaxSettings = _.extend(params, options);
 
     // Make the request. The callback executes functions that are compatible
     // With jQuery.ajax's syntax.
-    var request = options.xhr = options.xhrImplementation(ajaxSettings, function (err, resp, body) {
-        if (err) {
-            if (options.error) return options.error(resp, 'error', err.message);
-        } else {
-            // Parse body as JSON if a string.
-            if (body && typeof body === 'string') {
-                try {
-                    body = JSON.parse(body);
-                } catch (err) {
-                    if (options.error) return options.error(resp, 'error', err.message);
-                }
-            }
-            if (options.success) return options.success(body, 'success', resp);
+    var request = options.xhr = xhr(ajaxSettings, function (err, resp, body) {
+        if (err && options.error) return options.error(resp, 'error', err.message);
+
+        // Parse body as JSON if a string.
+        if (body && typeof body === 'string') {
+            try {
+                body = JSON.parse(body);
+            } catch (e) {}
         }
+        if (options.success) return options.success(body, 'success', resp);
     });
     model.trigger('request', model, request, options, ajaxSettings);
     request.ajaxSettings = ajaxSettings;
     return request;
 };
 
-},{"lodash.assign":134,"lodash.defaults":111,"lodash.includes":113,"lodash.result":159,"qs":122,"xhr":127}],111:[function(require,module,exports){
-/**
- * lodash 3.1.1 (Custom Build) <https://lodash.com/>
- * Build: `lodash modern modularize exports="npm" -o ./`
- * Copyright 2012-2015 The Dojo Foundation <http://dojofoundation.org/>
- * Based on Underscore.js 1.8.3 <http://underscorejs.org/LICENSE>
- * Copyright 2009-2015 Jeremy Ashkenas, DocumentCloud and Investigative Reporters & Editors
- * Available under MIT license <https://lodash.com/license>
- */
-var assign = require('lodash.assign'),
-    restParam = require('lodash.restparam');
+// Map from CRUD to HTTP for our default `Backbone.sync` implementation.
+var methodMap = {
+    'create': 'POST',
+    'update': 'PUT',
+    'patch':  'PATCH',
+    'delete': 'DELETE',
+    'read':   'GET'
+};
 
-/**
- * Used by `_.defaults` to customize its `_.assign` use.
- *
- * @private
- * @param {*} objectValue The destination object property value.
- * @param {*} sourceValue The source object property value.
- * @returns {*} Returns the value to assign to the destination object.
- */
-function assignDefaults(objectValue, sourceValue) {
-  return objectValue === undefined ? sourceValue : objectValue;
-}
+},{"qs":110,"underscore":115,"xhr":116}],110:[function(require,module,exports){
+module.exports = require('./lib');
 
-/**
- * Assigns own enumerable properties of source object(s) to the destination
- * object for all destination properties that resolve to `undefined`. Once a
- * property is set, additional values of the same property are ignored.
- *
- * **Note:** This method mutates `object`.
- *
- * @static
- * @memberOf _
- * @category Object
- * @param {Object} object The destination object.
- * @param {...Object} [sources] The source objects.
- * @returns {Object} Returns `object`.
- * @example
- *
- * _.defaults({ 'user': 'barney' }, { 'age': 36 }, { 'user': 'fred' });
- * // => { 'user': 'barney', 'age': 36 }
- */
-var defaults = restParam(function(args) {
-  var object = args[0];
-  if (object == null) {
-    return object;
-  }
-  args.push(assignDefaults);
-  return assign.apply(undefined, args);
-});
-
-module.exports = defaults;
-
-},{"lodash.assign":134,"lodash.restparam":112}],112:[function(require,module,exports){
-arguments[4][58][0].apply(exports,arguments)
-},{"dup":58}],113:[function(require,module,exports){
-/**
- * lodash 3.1.1 (Custom Build) <https://lodash.com/>
- * Build: `lodash modern modularize exports="npm" -o ./`
- * Copyright 2012-2015 The Dojo Foundation <http://dojofoundation.org/>
- * Based on Underscore.js 1.8.3 <http://underscorejs.org/LICENSE>
- * Copyright 2009-2015 Jeremy Ashkenas, DocumentCloud and Investigative Reporters & Editors
- * Available under MIT license <https://lodash.com/license>
- */
-var baseIndexOf = require('lodash._baseindexof'),
-    baseValues = require('lodash._basevalues'),
-    isIterateeCall = require('lodash._isiterateecall'),
-    isArray = require('lodash.isarray'),
-    isString = require('lodash.isstring'),
-    keys = require('lodash.keys');
-
-/* Native method references for those with the same name as other `lodash` methods. */
-var nativeMax = Math.max;
-
-/**
- * Used as the [maximum length](https://people.mozilla.org/~jorendorff/es6-draft.html#sec-number.max_safe_integer)
- * of an array-like value.
- */
-var MAX_SAFE_INTEGER = Math.pow(2, 53) - 1;
-
-/**
- * The base implementation of `_.property` without support for deep paths.
- *
- * @private
- * @param {string} key The key of the property to get.
- * @returns {Function} Returns the new function.
- */
-function baseProperty(key) {
-  return function(object) {
-    return object == null ? undefined : object[key];
-  };
-}
-
-/**
- * Gets the "length" property value of `object`.
- *
- * **Note:** This function is used to avoid a [JIT bug](https://bugs.webkit.org/show_bug.cgi?id=142792)
- * in Safari on iOS 8.1 ARM64.
- *
- * @private
- * @param {Object} object The object to query.
- * @returns {*} Returns the "length" value.
- */
-var getLength = baseProperty('length');
-
-/**
- * Checks if `value` is a valid array-like length.
- *
- * **Note:** This function is based on [`ToLength`](https://people.mozilla.org/~jorendorff/es6-draft.html#sec-tolength).
- *
- * @private
- * @param {*} value The value to check.
- * @returns {boolean} Returns `true` if `value` is a valid length, else `false`.
- */
-function isLength(value) {
-  return typeof value == 'number' && value > -1 && value % 1 == 0 && value <= MAX_SAFE_INTEGER;
-}
-
-/**
- * Checks if `value` is in `collection` using `SameValueZero` for equality
- * comparisons. If `fromIndex` is negative, it is used as the offset from
- * the end of `collection`.
- *
- * **Note:** [`SameValueZero`](https://people.mozilla.org/~jorendorff/es6-draft.html#sec-samevaluezero)
- * comparisons are like strict equality comparisons, e.g. `===`, except that
- * `NaN` matches `NaN`.
- *
- * @static
- * @memberOf _
- * @alias contains, include
- * @category Collection
- * @param {Array|Object|string} collection The collection to search.
- * @param {*} target The value to search for.
- * @param {number} [fromIndex=0] The index to search from.
- * @param- {Object} [guard] Enables use as a callback for functions like `_.reduce`.
- * @returns {boolean} Returns `true` if a matching element is found, else `false`.
- * @example
- *
- * _.includes([1, 2, 3], 1);
- * // => true
- *
- * _.includes([1, 2, 3], 1, 2);
- * // => false
- *
- * _.includes({ 'user': 'fred', 'age': 40 }, 'fred');
- * // => true
- *
- * _.includes('pebbles', 'eb');
- * // => true
- */
-function includes(collection, target, fromIndex, guard) {
-  var length = collection ? getLength(collection) : 0;
-  if (!isLength(length)) {
-    collection = values(collection);
-    length = collection.length;
-  }
-  if (!length) {
-    return false;
-  }
-  if (typeof fromIndex != 'number' || (guard && isIterateeCall(target, fromIndex, guard))) {
-    fromIndex = 0;
-  } else {
-    fromIndex = fromIndex < 0 ? nativeMax(length + fromIndex, 0) : (fromIndex || 0);
-  }
-  return (typeof collection == 'string' || !isArray(collection) && isString(collection))
-    ? (fromIndex < length && collection.indexOf(target, fromIndex) > -1)
-    : (baseIndexOf(collection, target, fromIndex) > -1);
-}
-
-/**
- * Creates an array of the own enumerable property values of `object`.
- *
- * **Note:** Non-object values are coerced to objects.
- *
- * @static
- * @memberOf _
- * @category Object
- * @param {Object} object The object to query.
- * @returns {Array} Returns the array of property values.
- * @example
- *
- * function Foo() {
- *   this.a = 1;
- *   this.b = 2;
- * }
- *
- * Foo.prototype.c = 3;
- *
- * _.values(new Foo);
- * // => [1, 2] (iteration order is not guaranteed)
- *
- * _.values('hi');
- * // => ['h', 'i']
- */
-function values(object) {
-  return baseValues(object, keys(object));
-}
-
-module.exports = includes;
-
-},{"lodash._baseindexof":114,"lodash._basevalues":115,"lodash._isiterateecall":116,"lodash.isarray":117,"lodash.isstring":118,"lodash.keys":119}],114:[function(require,module,exports){
-/**
- * lodash 3.1.0 (Custom Build) <https://lodash.com/>
- * Build: `lodash modern modularize exports="npm" -o ./`
- * Copyright 2012-2015 The Dojo Foundation <http://dojofoundation.org/>
- * Based on Underscore.js 1.8.2 <http://underscorejs.org/LICENSE>
- * Copyright 2009-2015 Jeremy Ashkenas, DocumentCloud and Investigative Reporters & Editors
- * Available under MIT license <https://lodash.com/license>
- */
-
-/**
- * The base implementation of `_.indexOf` without support for binary searches.
- *
- * @private
- * @param {Array} array The array to search.
- * @param {*} value The value to search for.
- * @param {number} fromIndex The index to search from.
- * @returns {number} Returns the index of the matched value, else `-1`.
- */
-function baseIndexOf(array, value, fromIndex) {
-  if (value !== value) {
-    return indexOfNaN(array, fromIndex);
-  }
-  var index = fromIndex - 1,
-      length = array.length;
-
-  while (++index < length) {
-    if (array[index] === value) {
-      return index;
-    }
-  }
-  return -1;
-}
-
-/**
- * Gets the index at which the first occurrence of `NaN` is found in `array`.
- * If `fromRight` is provided elements of `array` are iterated from right to left.
- *
- * @private
- * @param {Array} array The array to search.
- * @param {number} fromIndex The index to search from.
- * @param {boolean} [fromRight] Specify iterating from right to left.
- * @returns {number} Returns the index of the matched `NaN`, else `-1`.
- */
-function indexOfNaN(array, fromIndex, fromRight) {
-  var length = array.length,
-      index = fromIndex + (fromRight ? 0 : -1);
-
-  while ((fromRight ? index-- : ++index < length)) {
-    var other = array[index];
-    if (other !== other) {
-      return index;
-    }
-  }
-  return -1;
-}
-
-module.exports = baseIndexOf;
-
-},{}],115:[function(require,module,exports){
-/**
- * lodash 3.0.0 (Custom Build) <https://lodash.com/>
- * Build: `lodash modern modularize exports="npm" -o ./`
- * Copyright 2012-2015 The Dojo Foundation <http://dojofoundation.org/>
- * Based on Underscore.js 1.7.0 <http://underscorejs.org/LICENSE>
- * Copyright 2009-2015 Jeremy Ashkenas, DocumentCloud and Investigative Reporters & Editors
- * Available under MIT license <https://lodash.com/license>
- */
-
-/**
- * The base implementation of `_.values` and `_.valuesIn` which creates an
- * array of `object` property values corresponding to the property names
- * returned by `keysFunc`.
- *
- * @private
- * @param {Object} object The object to query.
- * @param {Array} props The property names to get values for.
- * @returns {Object} Returns the array of property values.
- */
-function baseValues(object, props) {
-  var index = -1,
-      length = props.length,
-      result = Array(length);
-
-  while (++index < length) {
-    result[index] = object[props[index]];
-  }
-  return result;
-}
-
-module.exports = baseValues;
-
-},{}],116:[function(require,module,exports){
-arguments[4][57][0].apply(exports,arguments)
-},{"dup":57}],117:[function(require,module,exports){
-arguments[4][68][0].apply(exports,arguments)
-},{"dup":68}],118:[function(require,module,exports){
-arguments[4][94][0].apply(exports,arguments)
-},{"dup":94}],119:[function(require,module,exports){
-arguments[4][60][0].apply(exports,arguments)
-},{"dup":60,"lodash.isarguments":120,"lodash.isarray":117,"lodash.isnative":121}],120:[function(require,module,exports){
-arguments[4][61][0].apply(exports,arguments)
-},{"dup":61}],121:[function(require,module,exports){
-arguments[4][59][0].apply(exports,arguments)
-},{"dup":59}],122:[function(require,module,exports){
-module.exports = require('./lib/');
-
-},{"./lib/":123}],123:[function(require,module,exports){
+},{"./lib":111}],111:[function(require,module,exports){
 // Load modules
 
 var Stringify = require('./stringify');
@@ -9851,7 +9625,7 @@ module.exports = {
     parse: Parse
 };
 
-},{"./parse":124,"./stringify":125}],124:[function(require,module,exports){
+},{"./parse":112,"./stringify":113}],112:[function(require,module,exports){
 // Load modules
 
 var Utils = require('./utils');
@@ -9863,14 +9637,16 @@ var internals = {
     delimiter: '&',
     depth: 5,
     arrayLimit: 20,
-    parameterLimit: 1000
+    parametersLimit: 1000
 };
 
 
-internals.parseValues = function (str, options) {
+internals.parseValues = function (str, delimiter) {
+
+    delimiter = typeof delimiter === 'string' ? delimiter : internals.delimiter;
 
     var obj = {};
-    var parts = str.split(options.delimiter, options.parameterLimit === Infinity ? undefined : options.parameterLimit);
+    var parts = str.split(delimiter, internals.parametersLimit);
 
     for (var i = 0, il = parts.length; i < il; ++i) {
         var part = parts[i];
@@ -9883,11 +9659,7 @@ internals.parseValues = function (str, options) {
             var key = Utils.decode(part.slice(0, pos));
             var val = Utils.decode(part.slice(pos + 1));
 
-            if (Object.prototype.hasOwnProperty(key)) {
-                continue;
-            }
-
-            if (!obj.hasOwnProperty(key)) {
+            if (!obj[key]) {
                 obj[key] = val;
             }
             else {
@@ -9900,7 +9672,7 @@ internals.parseValues = function (str, options) {
 };
 
 
-internals.parseObject = function (chain, val, options) {
+internals.parseObject = function (chain, val) {
 
     if (!chain.length) {
         return val;
@@ -9911,23 +9683,20 @@ internals.parseObject = function (chain, val, options) {
     var obj = {};
     if (root === '[]') {
         obj = [];
-        obj = obj.concat(internals.parseObject(chain, val, options));
+        obj = obj.concat(internals.parseObject(chain, val));
     }
     else {
         var cleanRoot = root[0] === '[' && root[root.length - 1] === ']' ? root.slice(1, root.length - 1) : root;
         var index = parseInt(cleanRoot, 10);
-        var indexString = '' + index;
         if (!isNaN(index) &&
             root !== cleanRoot &&
-            indexString === cleanRoot &&
-            index >= 0 &&
-            index <= options.arrayLimit) {
+            index <= internals.arrayLimit) {
 
             obj = [];
-            obj[index] = internals.parseObject(chain, val, options);
+            obj[index] = internals.parseObject(chain, val);
         }
         else {
-            obj[cleanRoot] = internals.parseObject(chain, val, options);
+            obj[cleanRoot] = internals.parseObject(chain, val);
         }
     }
 
@@ -9935,7 +9704,7 @@ internals.parseObject = function (chain, val, options) {
 };
 
 
-internals.parseKeys = function (key, val, options) {
+internals.parseKeys = function (key, val, depth) {
 
     if (!key) {
         return;
@@ -9966,7 +9735,7 @@ internals.parseKeys = function (key, val, options) {
     // Loop through children appending to the array until we hit depth
 
     var i = 0;
-    while ((segment = child.exec(key)) !== null && i < options.depth) {
+    while ((segment = child.exec(key)) !== null && i < depth) {
 
         ++i;
         if (!Object.prototype.hasOwnProperty(segment[1].replace(/\[|\]/g, ''))) {
@@ -9980,11 +9749,11 @@ internals.parseKeys = function (key, val, options) {
         keys.push('[' + key.slice(segment.index) + ']');
     }
 
-    return internals.parseObject(keys, val, options);
+    return internals.parseObject(keys, val);
 };
 
 
-module.exports = function (str, options) {
+module.exports = function (str, depth, delimiter) {
 
     if (str === '' ||
         str === null ||
@@ -9993,54 +9762,41 @@ module.exports = function (str, options) {
         return {};
     }
 
-    options = options || {};
-    options.delimiter = typeof options.delimiter === 'string' || Utils.isRegExp(options.delimiter) ? options.delimiter : internals.delimiter;
-    options.depth = typeof options.depth === 'number' ? options.depth : internals.depth;
-    options.arrayLimit = typeof options.arrayLimit === 'number' ? options.arrayLimit : internals.arrayLimit;
-    options.parameterLimit = typeof options.parameterLimit === 'number' ? options.parameterLimit : internals.parameterLimit;
+    if (typeof depth !== 'number') {
+        delimiter = depth;
+        depth = internals.depth;
+    }
 
-    var tempObj = typeof str === 'string' ? internals.parseValues(str, options) : str;
+    var tempObj = typeof str === 'string' ? internals.parseValues(str, delimiter) : Utils.clone(str);
     var obj = {};
 
     // Iterate over the keys and setup the new object
-
-    var keys = Object.keys(tempObj);
-    for (var i = 0, il = keys.length; i < il; ++i) {
-        var key = keys[i];
-        var newObj = internals.parseKeys(key, tempObj[key], options);
-        obj = Utils.merge(obj, newObj);
+    //
+    for (var key in tempObj) {
+        if (tempObj.hasOwnProperty(key)) {
+            var newObj = internals.parseKeys(key, tempObj[key], depth);
+            obj = Utils.merge(obj, newObj);
+        }
     }
 
     return Utils.compact(obj);
 };
 
-},{"./utils":126}],125:[function(require,module,exports){
+},{"./utils":114}],113:[function(require,module,exports){
+(function (Buffer){
 // Load modules
-
-var Utils = require('./utils');
 
 
 // Declare internals
 
 var internals = {
-    delimiter: '&',
-    arrayPrefixGenerators: {
-        brackets: function (prefix, key) {
-            return prefix + '[]';
-        },
-        indices: function (prefix, key) {
-            return prefix + '[' + key + ']';
-        },
-        repeat: function (prefix, key) {
-            return prefix;
-        }
-    }
+    delimiter: '&'
 };
 
 
-internals.stringify = function (obj, prefix, generateArrayPrefix) {
+internals.stringify = function (obj, prefix) {
 
-    if (Utils.isBuffer(obj)) {
+    if (Buffer.isBuffer(obj)) {
         obj = obj.toString();
     }
     else if (obj instanceof Date) {
@@ -10059,18 +9815,9 @@ internals.stringify = function (obj, prefix, generateArrayPrefix) {
 
     var values = [];
 
-    if (typeof obj === 'undefined') {
-        return values;
-    }
-
-    var objKeys = Object.keys(obj);
-    for (var i = 0, il = objKeys.length; i < il; ++i) {
-        var key = objKeys[i];
-        if (Array.isArray(obj)) {
-            values = values.concat(internals.stringify(obj[key], generateArrayPrefix(prefix, key), generateArrayPrefix));
-        }
-        else {
-            values = values.concat(internals.stringify(obj[key], prefix + '[' + key + ']', generateArrayPrefix));
+    for (var key in obj) {
+        if (obj.hasOwnProperty(key)) {
+            values = values.concat(internals.stringify(obj[key], prefix + '[' + key + ']'));
         }
     }
 
@@ -10078,42 +9825,24 @@ internals.stringify = function (obj, prefix, generateArrayPrefix) {
 };
 
 
-module.exports = function (obj, options) {
+module.exports = function (obj, delimiter) {
 
-    options = options || {};
-    var delimiter = typeof options.delimiter === 'undefined' ? internals.delimiter : options.delimiter;
+    delimiter = typeof delimiter === 'undefined' ? internals.delimiter : delimiter;
 
     var keys = [];
 
-    if (typeof obj !== 'object' ||
-        obj === null) {
-
-        return '';
-    }
-
-    var arrayFormat;
-    if (options.arrayFormat in internals.arrayPrefixGenerators) {
-        arrayFormat = options.arrayFormat;
-    }
-    else if ('indices' in options) {
-        arrayFormat = options.indices ? 'indices' : 'repeat';
-    }
-    else {
-        arrayFormat = 'indices';
-    }
-
-    var generateArrayPrefix = internals.arrayPrefixGenerators[arrayFormat];
-
-    var objKeys = Object.keys(obj);
-    for (var i = 0, il = objKeys.length; i < il; ++i) {
-        var key = objKeys[i];
-        keys = keys.concat(internals.stringify(obj[key], key, generateArrayPrefix));
+    for (var key in obj) {
+        if (obj.hasOwnProperty(key)) {
+            keys = keys.concat(internals.stringify(obj[key], key));
+        }
     }
 
     return keys.join(delimiter);
 };
 
-},{"./utils":126}],126:[function(require,module,exports){
+}).call(this,require("buffer").Buffer)
+},{"buffer":546}],114:[function(require,module,exports){
+(function (Buffer){
 // Load modules
 
 
@@ -10136,32 +9865,54 @@ exports.arrayToObject = function (source) {
 };
 
 
+exports.clone = function (source) {
+
+    if (typeof source !== 'object' ||
+        source === null) {
+
+        return source;
+    }
+
+    if (Buffer.isBuffer(source)) {
+        return source.toString();
+    }
+
+    var obj = Array.isArray(source) ? [] : {};
+    for (var i in source) {
+        if (source.hasOwnProperty(i)) {
+            obj[i] = exports.clone(source[i]);
+        }
+    }
+
+    return obj;
+};
+
+
 exports.merge = function (target, source) {
 
     if (!source) {
         return target;
     }
 
-    if (typeof source !== 'object') {
-        if (Array.isArray(target)) {
-            target.push(source);
-        }
-        else {
-            target[source] = true;
+    var obj = exports.clone(target);
+
+    if (Array.isArray(source)) {
+        for (var i = 0, il = source.length; i < il; ++i) {
+            if (typeof source[i] !== 'undefined') {
+                if (typeof obj[i] === 'object') {
+                    obj[i] = exports.merge(obj[i], source[i]);
+                }
+                else {
+                    obj[i] = source[i];
+                }
+            }
         }
 
-        return target;
+        return obj;
     }
 
-    if (typeof target !== 'object') {
-        target = [target].concat(source);
-        return target;
-    }
-
-    if (Array.isArray(target) &&
-        !Array.isArray(source)) {
-
-        target = exports.arrayToObject(target);
+    if (Array.isArray(obj)) {
+        obj = exports.arrayToObject(obj);
     }
 
     var keys = Object.keys(source);
@@ -10169,15 +9920,22 @@ exports.merge = function (target, source) {
         var key = keys[k];
         var value = source[key];
 
-        if (!target[key]) {
-            target[key] = value;
+        if (value &&
+            typeof value === 'object') {
+
+            if (!obj[key]) {
+                obj[key] = exports.clone(value);
+            }
+            else {
+                obj[key] = exports.merge(obj[key], value);
+            }
         }
         else {
-            target[key] = exports.merge(target[key], value);
+            obj[key] = value;
         }
     }
 
-    return target;
+    return obj;
 };
 
 
@@ -10191,63 +9949,1381 @@ exports.decode = function (str) {
 };
 
 
-exports.compact = function (obj, refs) {
+exports.compact = function (obj) {
 
-    if (typeof obj !== 'object' ||
-        obj === null) {
-
+    if (typeof obj !== 'object' || obj === null) {
         return obj;
     }
 
-    refs = refs || [];
-    var lookup = refs.indexOf(obj);
-    if (lookup !== -1) {
-        return refs[lookup];
-    }
+    var compacted = {};
 
-    refs.push(obj);
+    for (var key in obj) {
+        if (obj.hasOwnProperty(key)) {
+            if (Array.isArray(obj[key])) {
+                compacted[key] = [];
 
-    if (Array.isArray(obj)) {
-        var compacted = [];
-
-        for (var i = 0, il = obj.length; i < il; ++i) {
-            if (typeof obj[i] !== 'undefined') {
-                compacted.push(obj[i]);
+                for (var i = 0, l = obj[key].length; i < l; i++) {
+                    if (typeof obj[key][i] !== 'undefined') {
+                        compacted[key].push(obj[key][i]);
+                    }
+                }
+            }
+            else {
+                compacted[key] = exports.compact(obj[key]);
             }
         }
-
-        return compacted;
     }
 
-    var keys = Object.keys(obj);
-    for (i = 0, il = keys.length; i < il; ++i) {
-        var key = keys[i];
-        obj[key] = exports.compact(obj[key], refs);
-    }
+    return compacted;
+};
 
+}).call(this,require("buffer").Buffer)
+},{"buffer":546}],115:[function(require,module,exports){
+//     Underscore.js 1.6.0
+//     http://underscorejs.org
+//     (c) 2009-2014 Jeremy Ashkenas, DocumentCloud and Investigative Reporters & Editors
+//     Underscore may be freely distributed under the MIT license.
+
+(function() {
+
+  // Baseline setup
+  // --------------
+
+  // Establish the root object, `window` in the browser, or `exports` on the server.
+  var root = this;
+
+  // Save the previous value of the `_` variable.
+  var previousUnderscore = root._;
+
+  // Establish the object that gets returned to break out of a loop iteration.
+  var breaker = {};
+
+  // Save bytes in the minified (but not gzipped) version:
+  var ArrayProto = Array.prototype, ObjProto = Object.prototype, FuncProto = Function.prototype;
+
+  // Create quick reference variables for speed access to core prototypes.
+  var
+    push             = ArrayProto.push,
+    slice            = ArrayProto.slice,
+    concat           = ArrayProto.concat,
+    toString         = ObjProto.toString,
+    hasOwnProperty   = ObjProto.hasOwnProperty;
+
+  // All **ECMAScript 5** native function implementations that we hope to use
+  // are declared here.
+  var
+    nativeForEach      = ArrayProto.forEach,
+    nativeMap          = ArrayProto.map,
+    nativeReduce       = ArrayProto.reduce,
+    nativeReduceRight  = ArrayProto.reduceRight,
+    nativeFilter       = ArrayProto.filter,
+    nativeEvery        = ArrayProto.every,
+    nativeSome         = ArrayProto.some,
+    nativeIndexOf      = ArrayProto.indexOf,
+    nativeLastIndexOf  = ArrayProto.lastIndexOf,
+    nativeIsArray      = Array.isArray,
+    nativeKeys         = Object.keys,
+    nativeBind         = FuncProto.bind;
+
+  // Create a safe reference to the Underscore object for use below.
+  var _ = function(obj) {
+    if (obj instanceof _) return obj;
+    if (!(this instanceof _)) return new _(obj);
+    this._wrapped = obj;
+  };
+
+  // Export the Underscore object for **Node.js**, with
+  // backwards-compatibility for the old `require()` API. If we're in
+  // the browser, add `_` as a global object via a string identifier,
+  // for Closure Compiler "advanced" mode.
+  if (typeof exports !== 'undefined') {
+    if (typeof module !== 'undefined' && module.exports) {
+      exports = module.exports = _;
+    }
+    exports._ = _;
+  } else {
+    root._ = _;
+  }
+
+  // Current version.
+  _.VERSION = '1.6.0';
+
+  // Collection Functions
+  // --------------------
+
+  // The cornerstone, an `each` implementation, aka `forEach`.
+  // Handles objects with the built-in `forEach`, arrays, and raw objects.
+  // Delegates to **ECMAScript 5**'s native `forEach` if available.
+  var each = _.each = _.forEach = function(obj, iterator, context) {
+    if (obj == null) return obj;
+    if (nativeForEach && obj.forEach === nativeForEach) {
+      obj.forEach(iterator, context);
+    } else if (obj.length === +obj.length) {
+      for (var i = 0, length = obj.length; i < length; i++) {
+        if (iterator.call(context, obj[i], i, obj) === breaker) return;
+      }
+    } else {
+      var keys = _.keys(obj);
+      for (var i = 0, length = keys.length; i < length; i++) {
+        if (iterator.call(context, obj[keys[i]], keys[i], obj) === breaker) return;
+      }
+    }
     return obj;
-};
+  };
 
+  // Return the results of applying the iterator to each element.
+  // Delegates to **ECMAScript 5**'s native `map` if available.
+  _.map = _.collect = function(obj, iterator, context) {
+    var results = [];
+    if (obj == null) return results;
+    if (nativeMap && obj.map === nativeMap) return obj.map(iterator, context);
+    each(obj, function(value, index, list) {
+      results.push(iterator.call(context, value, index, list));
+    });
+    return results;
+  };
 
-exports.isRegExp = function (obj) {
-    return Object.prototype.toString.call(obj) === '[object RegExp]';
-};
+  var reduceError = 'Reduce of empty array with no initial value';
 
+  // **Reduce** builds up a single result from a list of values, aka `inject`,
+  // or `foldl`. Delegates to **ECMAScript 5**'s native `reduce` if available.
+  _.reduce = _.foldl = _.inject = function(obj, iterator, memo, context) {
+    var initial = arguments.length > 2;
+    if (obj == null) obj = [];
+    if (nativeReduce && obj.reduce === nativeReduce) {
+      if (context) iterator = _.bind(iterator, context);
+      return initial ? obj.reduce(iterator, memo) : obj.reduce(iterator);
+    }
+    each(obj, function(value, index, list) {
+      if (!initial) {
+        memo = value;
+        initial = true;
+      } else {
+        memo = iterator.call(context, memo, value, index, list);
+      }
+    });
+    if (!initial) throw new TypeError(reduceError);
+    return memo;
+  };
 
-exports.isBuffer = function (obj) {
+  // The right-associative version of reduce, also known as `foldr`.
+  // Delegates to **ECMAScript 5**'s native `reduceRight` if available.
+  _.reduceRight = _.foldr = function(obj, iterator, memo, context) {
+    var initial = arguments.length > 2;
+    if (obj == null) obj = [];
+    if (nativeReduceRight && obj.reduceRight === nativeReduceRight) {
+      if (context) iterator = _.bind(iterator, context);
+      return initial ? obj.reduceRight(iterator, memo) : obj.reduceRight(iterator);
+    }
+    var length = obj.length;
+    if (length !== +length) {
+      var keys = _.keys(obj);
+      length = keys.length;
+    }
+    each(obj, function(value, index, list) {
+      index = keys ? keys[--length] : --length;
+      if (!initial) {
+        memo = obj[index];
+        initial = true;
+      } else {
+        memo = iterator.call(context, memo, obj[index], index, list);
+      }
+    });
+    if (!initial) throw new TypeError(reduceError);
+    return memo;
+  };
 
-    if (obj === null ||
-        typeof obj === 'undefined') {
+  // Return the first value which passes a truth test. Aliased as `detect`.
+  _.find = _.detect = function(obj, predicate, context) {
+    var result;
+    any(obj, function(value, index, list) {
+      if (predicate.call(context, value, index, list)) {
+        result = value;
+        return true;
+      }
+    });
+    return result;
+  };
 
-        return false;
+  // Return all the elements that pass a truth test.
+  // Delegates to **ECMAScript 5**'s native `filter` if available.
+  // Aliased as `select`.
+  _.filter = _.select = function(obj, predicate, context) {
+    var results = [];
+    if (obj == null) return results;
+    if (nativeFilter && obj.filter === nativeFilter) return obj.filter(predicate, context);
+    each(obj, function(value, index, list) {
+      if (predicate.call(context, value, index, list)) results.push(value);
+    });
+    return results;
+  };
+
+  // Return all the elements for which a truth test fails.
+  _.reject = function(obj, predicate, context) {
+    return _.filter(obj, function(value, index, list) {
+      return !predicate.call(context, value, index, list);
+    }, context);
+  };
+
+  // Determine whether all of the elements match a truth test.
+  // Delegates to **ECMAScript 5**'s native `every` if available.
+  // Aliased as `all`.
+  _.every = _.all = function(obj, predicate, context) {
+    predicate || (predicate = _.identity);
+    var result = true;
+    if (obj == null) return result;
+    if (nativeEvery && obj.every === nativeEvery) return obj.every(predicate, context);
+    each(obj, function(value, index, list) {
+      if (!(result = result && predicate.call(context, value, index, list))) return breaker;
+    });
+    return !!result;
+  };
+
+  // Determine if at least one element in the object matches a truth test.
+  // Delegates to **ECMAScript 5**'s native `some` if available.
+  // Aliased as `any`.
+  var any = _.some = _.any = function(obj, predicate, context) {
+    predicate || (predicate = _.identity);
+    var result = false;
+    if (obj == null) return result;
+    if (nativeSome && obj.some === nativeSome) return obj.some(predicate, context);
+    each(obj, function(value, index, list) {
+      if (result || (result = predicate.call(context, value, index, list))) return breaker;
+    });
+    return !!result;
+  };
+
+  // Determine if the array or object contains a given value (using `===`).
+  // Aliased as `include`.
+  _.contains = _.include = function(obj, target) {
+    if (obj == null) return false;
+    if (nativeIndexOf && obj.indexOf === nativeIndexOf) return obj.indexOf(target) != -1;
+    return any(obj, function(value) {
+      return value === target;
+    });
+  };
+
+  // Invoke a method (with arguments) on every item in a collection.
+  _.invoke = function(obj, method) {
+    var args = slice.call(arguments, 2);
+    var isFunc = _.isFunction(method);
+    return _.map(obj, function(value) {
+      return (isFunc ? method : value[method]).apply(value, args);
+    });
+  };
+
+  // Convenience version of a common use case of `map`: fetching a property.
+  _.pluck = function(obj, key) {
+    return _.map(obj, _.property(key));
+  };
+
+  // Convenience version of a common use case of `filter`: selecting only objects
+  // containing specific `key:value` pairs.
+  _.where = function(obj, attrs) {
+    return _.filter(obj, _.matches(attrs));
+  };
+
+  // Convenience version of a common use case of `find`: getting the first object
+  // containing specific `key:value` pairs.
+  _.findWhere = function(obj, attrs) {
+    return _.find(obj, _.matches(attrs));
+  };
+
+  // Return the maximum element or (element-based computation).
+  // Can't optimize arrays of integers longer than 65,535 elements.
+  // See [WebKit Bug 80797](https://bugs.webkit.org/show_bug.cgi?id=80797)
+  _.max = function(obj, iterator, context) {
+    if (!iterator && _.isArray(obj) && obj[0] === +obj[0] && obj.length < 65535) {
+      return Math.max.apply(Math, obj);
+    }
+    var result = -Infinity, lastComputed = -Infinity;
+    each(obj, function(value, index, list) {
+      var computed = iterator ? iterator.call(context, value, index, list) : value;
+      if (computed > lastComputed) {
+        result = value;
+        lastComputed = computed;
+      }
+    });
+    return result;
+  };
+
+  // Return the minimum element (or element-based computation).
+  _.min = function(obj, iterator, context) {
+    if (!iterator && _.isArray(obj) && obj[0] === +obj[0] && obj.length < 65535) {
+      return Math.min.apply(Math, obj);
+    }
+    var result = Infinity, lastComputed = Infinity;
+    each(obj, function(value, index, list) {
+      var computed = iterator ? iterator.call(context, value, index, list) : value;
+      if (computed < lastComputed) {
+        result = value;
+        lastComputed = computed;
+      }
+    });
+    return result;
+  };
+
+  // Shuffle an array, using the modern version of the
+  // [Fisher-Yates shuffle](http://en.wikipedia.org/wiki/Fisher–Yates_shuffle).
+  _.shuffle = function(obj) {
+    var rand;
+    var index = 0;
+    var shuffled = [];
+    each(obj, function(value) {
+      rand = _.random(index++);
+      shuffled[index - 1] = shuffled[rand];
+      shuffled[rand] = value;
+    });
+    return shuffled;
+  };
+
+  // Sample **n** random values from a collection.
+  // If **n** is not specified, returns a single random element.
+  // The internal `guard` argument allows it to work with `map`.
+  _.sample = function(obj, n, guard) {
+    if (n == null || guard) {
+      if (obj.length !== +obj.length) obj = _.values(obj);
+      return obj[_.random(obj.length - 1)];
+    }
+    return _.shuffle(obj).slice(0, Math.max(0, n));
+  };
+
+  // An internal function to generate lookup iterators.
+  var lookupIterator = function(value) {
+    if (value == null) return _.identity;
+    if (_.isFunction(value)) return value;
+    return _.property(value);
+  };
+
+  // Sort the object's values by a criterion produced by an iterator.
+  _.sortBy = function(obj, iterator, context) {
+    iterator = lookupIterator(iterator);
+    return _.pluck(_.map(obj, function(value, index, list) {
+      return {
+        value: value,
+        index: index,
+        criteria: iterator.call(context, value, index, list)
+      };
+    }).sort(function(left, right) {
+      var a = left.criteria;
+      var b = right.criteria;
+      if (a !== b) {
+        if (a > b || a === void 0) return 1;
+        if (a < b || b === void 0) return -1;
+      }
+      return left.index - right.index;
+    }), 'value');
+  };
+
+  // An internal function used for aggregate "group by" operations.
+  var group = function(behavior) {
+    return function(obj, iterator, context) {
+      var result = {};
+      iterator = lookupIterator(iterator);
+      each(obj, function(value, index) {
+        var key = iterator.call(context, value, index, obj);
+        behavior(result, key, value);
+      });
+      return result;
+    };
+  };
+
+  // Groups the object's values by a criterion. Pass either a string attribute
+  // to group by, or a function that returns the criterion.
+  _.groupBy = group(function(result, key, value) {
+    _.has(result, key) ? result[key].push(value) : result[key] = [value];
+  });
+
+  // Indexes the object's values by a criterion, similar to `groupBy`, but for
+  // when you know that your index values will be unique.
+  _.indexBy = group(function(result, key, value) {
+    result[key] = value;
+  });
+
+  // Counts instances of an object that group by a certain criterion. Pass
+  // either a string attribute to count by, or a function that returns the
+  // criterion.
+  _.countBy = group(function(result, key) {
+    _.has(result, key) ? result[key]++ : result[key] = 1;
+  });
+
+  // Use a comparator function to figure out the smallest index at which
+  // an object should be inserted so as to maintain order. Uses binary search.
+  _.sortedIndex = function(array, obj, iterator, context) {
+    iterator = lookupIterator(iterator);
+    var value = iterator.call(context, obj);
+    var low = 0, high = array.length;
+    while (low < high) {
+      var mid = (low + high) >>> 1;
+      iterator.call(context, array[mid]) < value ? low = mid + 1 : high = mid;
+    }
+    return low;
+  };
+
+  // Safely create a real, live array from anything iterable.
+  _.toArray = function(obj) {
+    if (!obj) return [];
+    if (_.isArray(obj)) return slice.call(obj);
+    if (obj.length === +obj.length) return _.map(obj, _.identity);
+    return _.values(obj);
+  };
+
+  // Return the number of elements in an object.
+  _.size = function(obj) {
+    if (obj == null) return 0;
+    return (obj.length === +obj.length) ? obj.length : _.keys(obj).length;
+  };
+
+  // Array Functions
+  // ---------------
+
+  // Get the first element of an array. Passing **n** will return the first N
+  // values in the array. Aliased as `head` and `take`. The **guard** check
+  // allows it to work with `_.map`.
+  _.first = _.head = _.take = function(array, n, guard) {
+    if (array == null) return void 0;
+    if ((n == null) || guard) return array[0];
+    if (n < 0) return [];
+    return slice.call(array, 0, n);
+  };
+
+  // Returns everything but the last entry of the array. Especially useful on
+  // the arguments object. Passing **n** will return all the values in
+  // the array, excluding the last N. The **guard** check allows it to work with
+  // `_.map`.
+  _.initial = function(array, n, guard) {
+    return slice.call(array, 0, array.length - ((n == null) || guard ? 1 : n));
+  };
+
+  // Get the last element of an array. Passing **n** will return the last N
+  // values in the array. The **guard** check allows it to work with `_.map`.
+  _.last = function(array, n, guard) {
+    if (array == null) return void 0;
+    if ((n == null) || guard) return array[array.length - 1];
+    return slice.call(array, Math.max(array.length - n, 0));
+  };
+
+  // Returns everything but the first entry of the array. Aliased as `tail` and `drop`.
+  // Especially useful on the arguments object. Passing an **n** will return
+  // the rest N values in the array. The **guard**
+  // check allows it to work with `_.map`.
+  _.rest = _.tail = _.drop = function(array, n, guard) {
+    return slice.call(array, (n == null) || guard ? 1 : n);
+  };
+
+  // Trim out all falsy values from an array.
+  _.compact = function(array) {
+    return _.filter(array, _.identity);
+  };
+
+  // Internal implementation of a recursive `flatten` function.
+  var flatten = function(input, shallow, output) {
+    if (shallow && _.every(input, _.isArray)) {
+      return concat.apply(output, input);
+    }
+    each(input, function(value) {
+      if (_.isArray(value) || _.isArguments(value)) {
+        shallow ? push.apply(output, value) : flatten(value, shallow, output);
+      } else {
+        output.push(value);
+      }
+    });
+    return output;
+  };
+
+  // Flatten out an array, either recursively (by default), or just one level.
+  _.flatten = function(array, shallow) {
+    return flatten(array, shallow, []);
+  };
+
+  // Return a version of the array that does not contain the specified value(s).
+  _.without = function(array) {
+    return _.difference(array, slice.call(arguments, 1));
+  };
+
+  // Split an array into two arrays: one whose elements all satisfy the given
+  // predicate, and one whose elements all do not satisfy the predicate.
+  _.partition = function(array, predicate) {
+    var pass = [], fail = [];
+    each(array, function(elem) {
+      (predicate(elem) ? pass : fail).push(elem);
+    });
+    return [pass, fail];
+  };
+
+  // Produce a duplicate-free version of the array. If the array has already
+  // been sorted, you have the option of using a faster algorithm.
+  // Aliased as `unique`.
+  _.uniq = _.unique = function(array, isSorted, iterator, context) {
+    if (_.isFunction(isSorted)) {
+      context = iterator;
+      iterator = isSorted;
+      isSorted = false;
+    }
+    var initial = iterator ? _.map(array, iterator, context) : array;
+    var results = [];
+    var seen = [];
+    each(initial, function(value, index) {
+      if (isSorted ? (!index || seen[seen.length - 1] !== value) : !_.contains(seen, value)) {
+        seen.push(value);
+        results.push(array[index]);
+      }
+    });
+    return results;
+  };
+
+  // Produce an array that contains the union: each distinct element from all of
+  // the passed-in arrays.
+  _.union = function() {
+    return _.uniq(_.flatten(arguments, true));
+  };
+
+  // Produce an array that contains every item shared between all the
+  // passed-in arrays.
+  _.intersection = function(array) {
+    var rest = slice.call(arguments, 1);
+    return _.filter(_.uniq(array), function(item) {
+      return _.every(rest, function(other) {
+        return _.contains(other, item);
+      });
+    });
+  };
+
+  // Take the difference between one array and a number of other arrays.
+  // Only the elements present in just the first array will remain.
+  _.difference = function(array) {
+    var rest = concat.apply(ArrayProto, slice.call(arguments, 1));
+    return _.filter(array, function(value){ return !_.contains(rest, value); });
+  };
+
+  // Zip together multiple lists into a single array -- elements that share
+  // an index go together.
+  _.zip = function() {
+    var length = _.max(_.pluck(arguments, 'length').concat(0));
+    var results = new Array(length);
+    for (var i = 0; i < length; i++) {
+      results[i] = _.pluck(arguments, '' + i);
+    }
+    return results;
+  };
+
+  // Converts lists into objects. Pass either a single array of `[key, value]`
+  // pairs, or two parallel arrays of the same length -- one of keys, and one of
+  // the corresponding values.
+  _.object = function(list, values) {
+    if (list == null) return {};
+    var result = {};
+    for (var i = 0, length = list.length; i < length; i++) {
+      if (values) {
+        result[list[i]] = values[i];
+      } else {
+        result[list[i][0]] = list[i][1];
+      }
+    }
+    return result;
+  };
+
+  // If the browser doesn't supply us with indexOf (I'm looking at you, **MSIE**),
+  // we need this function. Return the position of the first occurrence of an
+  // item in an array, or -1 if the item is not included in the array.
+  // Delegates to **ECMAScript 5**'s native `indexOf` if available.
+  // If the array is large and already in sort order, pass `true`
+  // for **isSorted** to use binary search.
+  _.indexOf = function(array, item, isSorted) {
+    if (array == null) return -1;
+    var i = 0, length = array.length;
+    if (isSorted) {
+      if (typeof isSorted == 'number') {
+        i = (isSorted < 0 ? Math.max(0, length + isSorted) : isSorted);
+      } else {
+        i = _.sortedIndex(array, item);
+        return array[i] === item ? i : -1;
+      }
+    }
+    if (nativeIndexOf && array.indexOf === nativeIndexOf) return array.indexOf(item, isSorted);
+    for (; i < length; i++) if (array[i] === item) return i;
+    return -1;
+  };
+
+  // Delegates to **ECMAScript 5**'s native `lastIndexOf` if available.
+  _.lastIndexOf = function(array, item, from) {
+    if (array == null) return -1;
+    var hasIndex = from != null;
+    if (nativeLastIndexOf && array.lastIndexOf === nativeLastIndexOf) {
+      return hasIndex ? array.lastIndexOf(item, from) : array.lastIndexOf(item);
+    }
+    var i = (hasIndex ? from : array.length);
+    while (i--) if (array[i] === item) return i;
+    return -1;
+  };
+
+  // Generate an integer Array containing an arithmetic progression. A port of
+  // the native Python `range()` function. See
+  // [the Python documentation](http://docs.python.org/library/functions.html#range).
+  _.range = function(start, stop, step) {
+    if (arguments.length <= 1) {
+      stop = start || 0;
+      start = 0;
+    }
+    step = arguments[2] || 1;
+
+    var length = Math.max(Math.ceil((stop - start) / step), 0);
+    var idx = 0;
+    var range = new Array(length);
+
+    while(idx < length) {
+      range[idx++] = start;
+      start += step;
     }
 
-    return !!(obj.constructor &&
-        obj.constructor.isBuffer &&
-        obj.constructor.isBuffer(obj));
-};
+    return range;
+  };
 
-},{}],127:[function(require,module,exports){
+  // Function (ahem) Functions
+  // ------------------
+
+  // Reusable constructor function for prototype setting.
+  var ctor = function(){};
+
+  // Create a function bound to a given object (assigning `this`, and arguments,
+  // optionally). Delegates to **ECMAScript 5**'s native `Function.bind` if
+  // available.
+  _.bind = function(func, context) {
+    var args, bound;
+    if (nativeBind && func.bind === nativeBind) return nativeBind.apply(func, slice.call(arguments, 1));
+    if (!_.isFunction(func)) throw new TypeError;
+    args = slice.call(arguments, 2);
+    return bound = function() {
+      if (!(this instanceof bound)) return func.apply(context, args.concat(slice.call(arguments)));
+      ctor.prototype = func.prototype;
+      var self = new ctor;
+      ctor.prototype = null;
+      var result = func.apply(self, args.concat(slice.call(arguments)));
+      if (Object(result) === result) return result;
+      return self;
+    };
+  };
+
+  // Partially apply a function by creating a version that has had some of its
+  // arguments pre-filled, without changing its dynamic `this` context. _ acts
+  // as a placeholder, allowing any combination of arguments to be pre-filled.
+  _.partial = function(func) {
+    var boundArgs = slice.call(arguments, 1);
+    return function() {
+      var position = 0;
+      var args = boundArgs.slice();
+      for (var i = 0, length = args.length; i < length; i++) {
+        if (args[i] === _) args[i] = arguments[position++];
+      }
+      while (position < arguments.length) args.push(arguments[position++]);
+      return func.apply(this, args);
+    };
+  };
+
+  // Bind a number of an object's methods to that object. Remaining arguments
+  // are the method names to be bound. Useful for ensuring that all callbacks
+  // defined on an object belong to it.
+  _.bindAll = function(obj) {
+    var funcs = slice.call(arguments, 1);
+    if (funcs.length === 0) throw new Error('bindAll must be passed function names');
+    each(funcs, function(f) { obj[f] = _.bind(obj[f], obj); });
+    return obj;
+  };
+
+  // Memoize an expensive function by storing its results.
+  _.memoize = function(func, hasher) {
+    var memo = {};
+    hasher || (hasher = _.identity);
+    return function() {
+      var key = hasher.apply(this, arguments);
+      return _.has(memo, key) ? memo[key] : (memo[key] = func.apply(this, arguments));
+    };
+  };
+
+  // Delays a function for the given number of milliseconds, and then calls
+  // it with the arguments supplied.
+  _.delay = function(func, wait) {
+    var args = slice.call(arguments, 2);
+    return setTimeout(function(){ return func.apply(null, args); }, wait);
+  };
+
+  // Defers a function, scheduling it to run after the current call stack has
+  // cleared.
+  _.defer = function(func) {
+    return _.delay.apply(_, [func, 1].concat(slice.call(arguments, 1)));
+  };
+
+  // Returns a function, that, when invoked, will only be triggered at most once
+  // during a given window of time. Normally, the throttled function will run
+  // as much as it can, without ever going more than once per `wait` duration;
+  // but if you'd like to disable the execution on the leading edge, pass
+  // `{leading: false}`. To disable execution on the trailing edge, ditto.
+  _.throttle = function(func, wait, options) {
+    var context, args, result;
+    var timeout = null;
+    var previous = 0;
+    options || (options = {});
+    var later = function() {
+      previous = options.leading === false ? 0 : _.now();
+      timeout = null;
+      result = func.apply(context, args);
+      context = args = null;
+    };
+    return function() {
+      var now = _.now();
+      if (!previous && options.leading === false) previous = now;
+      var remaining = wait - (now - previous);
+      context = this;
+      args = arguments;
+      if (remaining <= 0) {
+        clearTimeout(timeout);
+        timeout = null;
+        previous = now;
+        result = func.apply(context, args);
+        context = args = null;
+      } else if (!timeout && options.trailing !== false) {
+        timeout = setTimeout(later, remaining);
+      }
+      return result;
+    };
+  };
+
+  // Returns a function, that, as long as it continues to be invoked, will not
+  // be triggered. The function will be called after it stops being called for
+  // N milliseconds. If `immediate` is passed, trigger the function on the
+  // leading edge, instead of the trailing.
+  _.debounce = function(func, wait, immediate) {
+    var timeout, args, context, timestamp, result;
+
+    var later = function() {
+      var last = _.now() - timestamp;
+      if (last < wait) {
+        timeout = setTimeout(later, wait - last);
+      } else {
+        timeout = null;
+        if (!immediate) {
+          result = func.apply(context, args);
+          context = args = null;
+        }
+      }
+    };
+
+    return function() {
+      context = this;
+      args = arguments;
+      timestamp = _.now();
+      var callNow = immediate && !timeout;
+      if (!timeout) {
+        timeout = setTimeout(later, wait);
+      }
+      if (callNow) {
+        result = func.apply(context, args);
+        context = args = null;
+      }
+
+      return result;
+    };
+  };
+
+  // Returns a function that will be executed at most one time, no matter how
+  // often you call it. Useful for lazy initialization.
+  _.once = function(func) {
+    var ran = false, memo;
+    return function() {
+      if (ran) return memo;
+      ran = true;
+      memo = func.apply(this, arguments);
+      func = null;
+      return memo;
+    };
+  };
+
+  // Returns the first function passed as an argument to the second,
+  // allowing you to adjust arguments, run code before and after, and
+  // conditionally execute the original function.
+  _.wrap = function(func, wrapper) {
+    return _.partial(wrapper, func);
+  };
+
+  // Returns a function that is the composition of a list of functions, each
+  // consuming the return value of the function that follows.
+  _.compose = function() {
+    var funcs = arguments;
+    return function() {
+      var args = arguments;
+      for (var i = funcs.length - 1; i >= 0; i--) {
+        args = [funcs[i].apply(this, args)];
+      }
+      return args[0];
+    };
+  };
+
+  // Returns a function that will only be executed after being called N times.
+  _.after = function(times, func) {
+    return function() {
+      if (--times < 1) {
+        return func.apply(this, arguments);
+      }
+    };
+  };
+
+  // Object Functions
+  // ----------------
+
+  // Retrieve the names of an object's properties.
+  // Delegates to **ECMAScript 5**'s native `Object.keys`
+  _.keys = function(obj) {
+    if (!_.isObject(obj)) return [];
+    if (nativeKeys) return nativeKeys(obj);
+    var keys = [];
+    for (var key in obj) if (_.has(obj, key)) keys.push(key);
+    return keys;
+  };
+
+  // Retrieve the values of an object's properties.
+  _.values = function(obj) {
+    var keys = _.keys(obj);
+    var length = keys.length;
+    var values = new Array(length);
+    for (var i = 0; i < length; i++) {
+      values[i] = obj[keys[i]];
+    }
+    return values;
+  };
+
+  // Convert an object into a list of `[key, value]` pairs.
+  _.pairs = function(obj) {
+    var keys = _.keys(obj);
+    var length = keys.length;
+    var pairs = new Array(length);
+    for (var i = 0; i < length; i++) {
+      pairs[i] = [keys[i], obj[keys[i]]];
+    }
+    return pairs;
+  };
+
+  // Invert the keys and values of an object. The values must be serializable.
+  _.invert = function(obj) {
+    var result = {};
+    var keys = _.keys(obj);
+    for (var i = 0, length = keys.length; i < length; i++) {
+      result[obj[keys[i]]] = keys[i];
+    }
+    return result;
+  };
+
+  // Return a sorted list of the function names available on the object.
+  // Aliased as `methods`
+  _.functions = _.methods = function(obj) {
+    var names = [];
+    for (var key in obj) {
+      if (_.isFunction(obj[key])) names.push(key);
+    }
+    return names.sort();
+  };
+
+  // Extend a given object with all the properties in passed-in object(s).
+  _.extend = function(obj) {
+    each(slice.call(arguments, 1), function(source) {
+      if (source) {
+        for (var prop in source) {
+          obj[prop] = source[prop];
+        }
+      }
+    });
+    return obj;
+  };
+
+  // Return a copy of the object only containing the whitelisted properties.
+  _.pick = function(obj) {
+    var copy = {};
+    var keys = concat.apply(ArrayProto, slice.call(arguments, 1));
+    each(keys, function(key) {
+      if (key in obj) copy[key] = obj[key];
+    });
+    return copy;
+  };
+
+   // Return a copy of the object without the blacklisted properties.
+  _.omit = function(obj) {
+    var copy = {};
+    var keys = concat.apply(ArrayProto, slice.call(arguments, 1));
+    for (var key in obj) {
+      if (!_.contains(keys, key)) copy[key] = obj[key];
+    }
+    return copy;
+  };
+
+  // Fill in a given object with default properties.
+  _.defaults = function(obj) {
+    each(slice.call(arguments, 1), function(source) {
+      if (source) {
+        for (var prop in source) {
+          if (obj[prop] === void 0) obj[prop] = source[prop];
+        }
+      }
+    });
+    return obj;
+  };
+
+  // Create a (shallow-cloned) duplicate of an object.
+  _.clone = function(obj) {
+    if (!_.isObject(obj)) return obj;
+    return _.isArray(obj) ? obj.slice() : _.extend({}, obj);
+  };
+
+  // Invokes interceptor with the obj, and then returns obj.
+  // The primary purpose of this method is to "tap into" a method chain, in
+  // order to perform operations on intermediate results within the chain.
+  _.tap = function(obj, interceptor) {
+    interceptor(obj);
+    return obj;
+  };
+
+  // Internal recursive comparison function for `isEqual`.
+  var eq = function(a, b, aStack, bStack) {
+    // Identical objects are equal. `0 === -0`, but they aren't identical.
+    // See the [Harmony `egal` proposal](http://wiki.ecmascript.org/doku.php?id=harmony:egal).
+    if (a === b) return a !== 0 || 1 / a == 1 / b;
+    // A strict comparison is necessary because `null == undefined`.
+    if (a == null || b == null) return a === b;
+    // Unwrap any wrapped objects.
+    if (a instanceof _) a = a._wrapped;
+    if (b instanceof _) b = b._wrapped;
+    // Compare `[[Class]]` names.
+    var className = toString.call(a);
+    if (className != toString.call(b)) return false;
+    switch (className) {
+      // Strings, numbers, dates, and booleans are compared by value.
+      case '[object String]':
+        // Primitives and their corresponding object wrappers are equivalent; thus, `"5"` is
+        // equivalent to `new String("5")`.
+        return a == String(b);
+      case '[object Number]':
+        // `NaN`s are equivalent, but non-reflexive. An `egal` comparison is performed for
+        // other numeric values.
+        return a != +a ? b != +b : (a == 0 ? 1 / a == 1 / b : a == +b);
+      case '[object Date]':
+      case '[object Boolean]':
+        // Coerce dates and booleans to numeric primitive values. Dates are compared by their
+        // millisecond representations. Note that invalid dates with millisecond representations
+        // of `NaN` are not equivalent.
+        return +a == +b;
+      // RegExps are compared by their source patterns and flags.
+      case '[object RegExp]':
+        return a.source == b.source &&
+               a.global == b.global &&
+               a.multiline == b.multiline &&
+               a.ignoreCase == b.ignoreCase;
+    }
+    if (typeof a != 'object' || typeof b != 'object') return false;
+    // Assume equality for cyclic structures. The algorithm for detecting cyclic
+    // structures is adapted from ES 5.1 section 15.12.3, abstract operation `JO`.
+    var length = aStack.length;
+    while (length--) {
+      // Linear search. Performance is inversely proportional to the number of
+      // unique nested structures.
+      if (aStack[length] == a) return bStack[length] == b;
+    }
+    // Objects with different constructors are not equivalent, but `Object`s
+    // from different frames are.
+    var aCtor = a.constructor, bCtor = b.constructor;
+    if (aCtor !== bCtor && !(_.isFunction(aCtor) && (aCtor instanceof aCtor) &&
+                             _.isFunction(bCtor) && (bCtor instanceof bCtor))
+                        && ('constructor' in a && 'constructor' in b)) {
+      return false;
+    }
+    // Add the first object to the stack of traversed objects.
+    aStack.push(a);
+    bStack.push(b);
+    var size = 0, result = true;
+    // Recursively compare objects and arrays.
+    if (className == '[object Array]') {
+      // Compare array lengths to determine if a deep comparison is necessary.
+      size = a.length;
+      result = size == b.length;
+      if (result) {
+        // Deep compare the contents, ignoring non-numeric properties.
+        while (size--) {
+          if (!(result = eq(a[size], b[size], aStack, bStack))) break;
+        }
+      }
+    } else {
+      // Deep compare objects.
+      for (var key in a) {
+        if (_.has(a, key)) {
+          // Count the expected number of properties.
+          size++;
+          // Deep compare each member.
+          if (!(result = _.has(b, key) && eq(a[key], b[key], aStack, bStack))) break;
+        }
+      }
+      // Ensure that both objects contain the same number of properties.
+      if (result) {
+        for (key in b) {
+          if (_.has(b, key) && !(size--)) break;
+        }
+        result = !size;
+      }
+    }
+    // Remove the first object from the stack of traversed objects.
+    aStack.pop();
+    bStack.pop();
+    return result;
+  };
+
+  // Perform a deep comparison to check if two objects are equal.
+  _.isEqual = function(a, b) {
+    return eq(a, b, [], []);
+  };
+
+  // Is a given array, string, or object empty?
+  // An "empty" object has no enumerable own-properties.
+  _.isEmpty = function(obj) {
+    if (obj == null) return true;
+    if (_.isArray(obj) || _.isString(obj)) return obj.length === 0;
+    for (var key in obj) if (_.has(obj, key)) return false;
+    return true;
+  };
+
+  // Is a given value a DOM element?
+  _.isElement = function(obj) {
+    return !!(obj && obj.nodeType === 1);
+  };
+
+  // Is a given value an array?
+  // Delegates to ECMA5's native Array.isArray
+  _.isArray = nativeIsArray || function(obj) {
+    return toString.call(obj) == '[object Array]';
+  };
+
+  // Is a given variable an object?
+  _.isObject = function(obj) {
+    return obj === Object(obj);
+  };
+
+  // Add some isType methods: isArguments, isFunction, isString, isNumber, isDate, isRegExp.
+  each(['Arguments', 'Function', 'String', 'Number', 'Date', 'RegExp'], function(name) {
+    _['is' + name] = function(obj) {
+      return toString.call(obj) == '[object ' + name + ']';
+    };
+  });
+
+  // Define a fallback version of the method in browsers (ahem, IE), where
+  // there isn't any inspectable "Arguments" type.
+  if (!_.isArguments(arguments)) {
+    _.isArguments = function(obj) {
+      return !!(obj && _.has(obj, 'callee'));
+    };
+  }
+
+  // Optimize `isFunction` if appropriate.
+  if (typeof (/./) !== 'function') {
+    _.isFunction = function(obj) {
+      return typeof obj === 'function';
+    };
+  }
+
+  // Is a given object a finite number?
+  _.isFinite = function(obj) {
+    return isFinite(obj) && !isNaN(parseFloat(obj));
+  };
+
+  // Is the given value `NaN`? (NaN is the only number which does not equal itself).
+  _.isNaN = function(obj) {
+    return _.isNumber(obj) && obj != +obj;
+  };
+
+  // Is a given value a boolean?
+  _.isBoolean = function(obj) {
+    return obj === true || obj === false || toString.call(obj) == '[object Boolean]';
+  };
+
+  // Is a given value equal to null?
+  _.isNull = function(obj) {
+    return obj === null;
+  };
+
+  // Is a given variable undefined?
+  _.isUndefined = function(obj) {
+    return obj === void 0;
+  };
+
+  // Shortcut function for checking if an object has a given property directly
+  // on itself (in other words, not on a prototype).
+  _.has = function(obj, key) {
+    return hasOwnProperty.call(obj, key);
+  };
+
+  // Utility Functions
+  // -----------------
+
+  // Run Underscore.js in *noConflict* mode, returning the `_` variable to its
+  // previous owner. Returns a reference to the Underscore object.
+  _.noConflict = function() {
+    root._ = previousUnderscore;
+    return this;
+  };
+
+  // Keep the identity function around for default iterators.
+  _.identity = function(value) {
+    return value;
+  };
+
+  _.constant = function(value) {
+    return function () {
+      return value;
+    };
+  };
+
+  _.property = function(key) {
+    return function(obj) {
+      return obj[key];
+    };
+  };
+
+  // Returns a predicate for checking whether an object has a given set of `key:value` pairs.
+  _.matches = function(attrs) {
+    return function(obj) {
+      if (obj === attrs) return true; //avoid comparing an object to itself.
+      for (var key in attrs) {
+        if (attrs[key] !== obj[key])
+          return false;
+      }
+      return true;
+    }
+  };
+
+  // Run a function **n** times.
+  _.times = function(n, iterator, context) {
+    var accum = Array(Math.max(0, n));
+    for (var i = 0; i < n; i++) accum[i] = iterator.call(context, i);
+    return accum;
+  };
+
+  // Return a random integer between min and max (inclusive).
+  _.random = function(min, max) {
+    if (max == null) {
+      max = min;
+      min = 0;
+    }
+    return min + Math.floor(Math.random() * (max - min + 1));
+  };
+
+  // A (possibly faster) way to get the current timestamp as an integer.
+  _.now = Date.now || function() { return new Date().getTime(); };
+
+  // List of HTML entities for escaping.
+  var entityMap = {
+    escape: {
+      '&': '&amp;',
+      '<': '&lt;',
+      '>': '&gt;',
+      '"': '&quot;',
+      "'": '&#x27;'
+    }
+  };
+  entityMap.unescape = _.invert(entityMap.escape);
+
+  // Regexes containing the keys and values listed immediately above.
+  var entityRegexes = {
+    escape:   new RegExp('[' + _.keys(entityMap.escape).join('') + ']', 'g'),
+    unescape: new RegExp('(' + _.keys(entityMap.unescape).join('|') + ')', 'g')
+  };
+
+  // Functions for escaping and unescaping strings to/from HTML interpolation.
+  _.each(['escape', 'unescape'], function(method) {
+    _[method] = function(string) {
+      if (string == null) return '';
+      return ('' + string).replace(entityRegexes[method], function(match) {
+        return entityMap[method][match];
+      });
+    };
+  });
+
+  // If the value of the named `property` is a function then invoke it with the
+  // `object` as context; otherwise, return it.
+  _.result = function(object, property) {
+    if (object == null) return void 0;
+    var value = object[property];
+    return _.isFunction(value) ? value.call(object) : value;
+  };
+
+  // Add your own custom functions to the Underscore object.
+  _.mixin = function(obj) {
+    each(_.functions(obj), function(name) {
+      var func = _[name] = obj[name];
+      _.prototype[name] = function() {
+        var args = [this._wrapped];
+        push.apply(args, arguments);
+        return result.call(this, func.apply(_, args));
+      };
+    });
+  };
+
+  // Generate a unique integer id (unique within the entire client session).
+  // Useful for temporary DOM ids.
+  var idCounter = 0;
+  _.uniqueId = function(prefix) {
+    var id = ++idCounter + '';
+    return prefix ? prefix + id : id;
+  };
+
+  // By default, Underscore uses ERB-style template delimiters, change the
+  // following template settings to use alternative delimiters.
+  _.templateSettings = {
+    evaluate    : /<%([\s\S]+?)%>/g,
+    interpolate : /<%=([\s\S]+?)%>/g,
+    escape      : /<%-([\s\S]+?)%>/g
+  };
+
+  // When customizing `templateSettings`, if you don't want to define an
+  // interpolation, evaluation or escaping regex, we need one that is
+  // guaranteed not to match.
+  var noMatch = /(.)^/;
+
+  // Certain characters need to be escaped so that they can be put into a
+  // string literal.
+  var escapes = {
+    "'":      "'",
+    '\\':     '\\',
+    '\r':     'r',
+    '\n':     'n',
+    '\t':     't',
+    '\u2028': 'u2028',
+    '\u2029': 'u2029'
+  };
+
+  var escaper = /\\|'|\r|\n|\t|\u2028|\u2029/g;
+
+  // JavaScript micro-templating, similar to John Resig's implementation.
+  // Underscore templating handles arbitrary delimiters, preserves whitespace,
+  // and correctly escapes quotes within interpolated code.
+  _.template = function(text, data, settings) {
+    var render;
+    settings = _.defaults({}, settings, _.templateSettings);
+
+    // Combine delimiters into one regular expression via alternation.
+    var matcher = new RegExp([
+      (settings.escape || noMatch).source,
+      (settings.interpolate || noMatch).source,
+      (settings.evaluate || noMatch).source
+    ].join('|') + '|$', 'g');
+
+    // Compile the template source, escaping string literals appropriately.
+    var index = 0;
+    var source = "__p+='";
+    text.replace(matcher, function(match, escape, interpolate, evaluate, offset) {
+      source += text.slice(index, offset)
+        .replace(escaper, function(match) { return '\\' + escapes[match]; });
+
+      if (escape) {
+        source += "'+\n((__t=(" + escape + "))==null?'':_.escape(__t))+\n'";
+      }
+      if (interpolate) {
+        source += "'+\n((__t=(" + interpolate + "))==null?'':__t)+\n'";
+      }
+      if (evaluate) {
+        source += "';\n" + evaluate + "\n__p+='";
+      }
+      index = offset + match.length;
+      return match;
+    });
+    source += "';\n";
+
+    // If a variable is not specified, place data values in local scope.
+    if (!settings.variable) source = 'with(obj||{}){\n' + source + '}\n';
+
+    source = "var __t,__p='',__j=Array.prototype.join," +
+      "print=function(){__p+=__j.call(arguments,'');};\n" +
+      source + "return __p;\n";
+
+    try {
+      render = new Function(settings.variable || 'obj', '_', source);
+    } catch (e) {
+      e.source = source;
+      throw e;
+    }
+
+    if (data) return render(data, _);
+    var template = function(data) {
+      return render.call(this, data, _);
+    };
+
+    // Provide the compiled function source as a convenience for precompilation.
+    template.source = 'function(' + (settings.variable || 'obj') + '){\n' + source + '}';
+
+    return template;
+  };
+
+  // Add a "chain" function, which will delegate to the wrapper.
+  _.chain = function(obj) {
+    return _(obj).chain();
+  };
+
+  // OOP
+  // ---------------
+  // If Underscore is called as a function, it returns a wrapped object that
+  // can be used OO-style. This wrapper holds altered versions of all the
+  // underscore functions. Wrapped objects may be chained.
+
+  // Helper function to continue chaining intermediate results.
+  var result = function(obj) {
+    return this._chain ? _(obj).chain() : obj;
+  };
+
+  // Add all of the Underscore functions to the wrapper object.
+  _.mixin(_);
+
+  // Add all mutator Array functions to the wrapper.
+  each(['pop', 'push', 'reverse', 'shift', 'sort', 'splice', 'unshift'], function(name) {
+    var method = ArrayProto[name];
+    _.prototype[name] = function() {
+      var obj = this._wrapped;
+      method.apply(obj, arguments);
+      if ((name == 'shift' || name == 'splice') && obj.length === 0) delete obj[0];
+      return result.call(this, obj);
+    };
+  });
+
+  // Add all accessor Array functions to the wrapper.
+  each(['concat', 'join', 'slice'], function(name) {
+    var method = ArrayProto[name];
+    _.prototype[name] = function() {
+      return result.call(this, method.apply(this._wrapped, arguments));
+    };
+  });
+
+  _.extend(_.prototype, {
+
+    // Start chaining a wrapped Underscore object.
+    chain: function() {
+      this._chain = true;
+      return this;
+    },
+
+    // Extracts the result from a wrapped and chained object.
+    value: function() {
+      return this._wrapped;
+    }
+
+  });
+
+  // AMD registration happens at the end for compatibility with AMD loaders
+  // that may not enforce next-turn semantics on modules. Even though general
+  // practice for AMD registration is to be anonymous, underscore registers
+  // as a named module because, like jQuery, it is a base library that is
+  // popular enough to be bundled in a third party lib, but not be part of
+  // an AMD load request. Those cases could generate an error when an
+  // anonymous define() is called outside of a loader request.
+  if (typeof define === 'function' && define.amd) {
+    define('underscore', [], function() {
+      return _;
+    });
+  }
+}).call(this);
+
+},{}],116:[function(require,module,exports){
 var window = require("global/window")
 var once = require("once")
 var parseHeaders = require('parse-headers')
@@ -10426,7 +11502,7 @@ function createXHR(options, callback) {
 
 function noop() {}
 
-},{"global/window":128,"once":129,"parse-headers":133}],128:[function(require,module,exports){
+},{"global/window":117,"once":118,"parse-headers":122}],117:[function(require,module,exports){
 (function (global){
 if (typeof window !== "undefined") {
     module.exports = window;
@@ -10439,7 +11515,7 @@ if (typeof window !== "undefined") {
 }
 
 }).call(this,typeof global !== "undefined" ? global : typeof self !== "undefined" ? self : typeof window !== "undefined" ? window : {})
-},{}],129:[function(require,module,exports){
+},{}],118:[function(require,module,exports){
 module.exports = once
 
 once.proto = once(function () {
@@ -10460,7 +11536,7 @@ function once (fn) {
   }
 }
 
-},{}],130:[function(require,module,exports){
+},{}],119:[function(require,module,exports){
 var isFunction = require('is-function')
 
 module.exports = forEach
@@ -10508,7 +11584,7 @@ function forEachObject(object, iterator, context) {
     }
 }
 
-},{"is-function":131}],131:[function(require,module,exports){
+},{"is-function":120}],120:[function(require,module,exports){
 module.exports = isFunction
 
 var toString = Object.prototype.toString
@@ -10525,7 +11601,7 @@ function isFunction (fn) {
       fn === window.prompt))
 };
 
-},{}],132:[function(require,module,exports){
+},{}],121:[function(require,module,exports){
 
 exports = module.exports = trim;
 
@@ -10541,7 +11617,7 @@ exports.right = function(str){
   return str.replace(/\s*$/, '');
 };
 
-},{}],133:[function(require,module,exports){
+},{}],122:[function(require,module,exports){
 var trim = require('trim')
   , forEach = require('for-each')
   , isArray = function(arg) {
@@ -10573,953 +11649,164 @@ module.exports = function (headers) {
 
   return result
 }
-},{"for-each":130,"trim":132}],134:[function(require,module,exports){
-arguments[4][52][0].apply(exports,arguments)
-},{"dup":52,"lodash._baseassign":135,"lodash._createassigner":137,"lodash.isnative":141,"lodash.keys":142}],135:[function(require,module,exports){
-arguments[4][53][0].apply(exports,arguments)
-},{"dup":53,"lodash._basecopy":136,"lodash.isnative":141,"lodash.keys":142}],136:[function(require,module,exports){
-arguments[4][54][0].apply(exports,arguments)
-},{"dup":54}],137:[function(require,module,exports){
-arguments[4][55][0].apply(exports,arguments)
-},{"dup":55,"lodash._bindcallback":138,"lodash._isiterateecall":139,"lodash.restparam":140}],138:[function(require,module,exports){
-arguments[4][56][0].apply(exports,arguments)
-},{"dup":56}],139:[function(require,module,exports){
-arguments[4][57][0].apply(exports,arguments)
-},{"dup":57}],140:[function(require,module,exports){
-arguments[4][58][0].apply(exports,arguments)
-},{"dup":58}],141:[function(require,module,exports){
-arguments[4][59][0].apply(exports,arguments)
-},{"dup":59}],142:[function(require,module,exports){
-arguments[4][60][0].apply(exports,arguments)
-},{"dup":60,"lodash.isarguments":143,"lodash.isarray":144,"lodash.isnative":141}],143:[function(require,module,exports){
-arguments[4][61][0].apply(exports,arguments)
-},{"dup":61}],144:[function(require,module,exports){
-arguments[4][68][0].apply(exports,arguments)
-},{"dup":68}],145:[function(require,module,exports){
-/**
- * lodash 3.0.1 (Custom Build) <https://lodash.com/>
- * Build: `lodash modern modularize exports="npm" -o ./`
- * Copyright 2012-2015 The Dojo Foundation <http://dojofoundation.org/>
- * Based on Underscore.js 1.7.0 <http://underscorejs.org/LICENSE>
- * Copyright 2009-2015 Jeremy Ashkenas, DocumentCloud and Investigative Reporters & Editors
- * Available under MIT license <https://lodash.com/license>
- */
-var baseClone = require('lodash._baseclone'),
-    bindCallback = require('lodash._bindcallback'),
-    isIterateeCall = require('lodash._isiterateecall');
-
-/**
- * Creates a clone of `value`. If `isDeep` is `true` nested objects are cloned,
- * otherwise they are assigned by reference. If `customizer` is provided it is
- * invoked to produce the cloned values. If `customizer` returns `undefined`
- * cloning is handled by the method instead. The `customizer` is bound to
- * `thisArg` and invoked with two argument; (value [, index|key, object]).
- *
- * **Note:** This method is loosely based on the structured clone algorithm.
- * The enumerable properties of `arguments` objects and objects created by
- * constructors other than `Object` are cloned to plain `Object` objects. An
- * empty object is returned for uncloneable values such as functions, DOM nodes,
- * Maps, Sets, and WeakMaps. See the [HTML5 specification](http://www.w3.org/TR/html5/infrastructure.html#internal-structured-cloning-algorithm)
- * for more details.
- *
- * @static
- * @memberOf _
- * @category Lang
- * @param {*} value The value to clone.
- * @param {boolean} [isDeep] Specify a deep clone.
- * @param {Function} [customizer] The function to customize cloning values.
- * @param {*} [thisArg] The `this` binding of `customizer`.
- * @returns {*} Returns the cloned value.
- * @example
- *
- * var users = [
- *   { 'user': 'barney' },
- *   { 'user': 'fred' }
- * ];
- *
- * var shallow = _.clone(users);
- * shallow[0] === users[0];
- * // => true
- *
- * var deep = _.clone(users, true);
- * deep[0] === users[0];
- * // => false
- *
- * // using a customizer callback
- * var el = _.clone(document.body, function(value) {
- *   if (_.isElement(value)) {
- *     return value.cloneNode(false);
- *   }
- * });
- *
- * el === document.body
- * // => false
- * el.nodeName
- * // => BODY
- * el.childNodes.length;
- * // => 0
- */
-function clone(value, isDeep, customizer, thisArg) {
-  if (isDeep && typeof isDeep != 'boolean' && isIterateeCall(value, isDeep, customizer)) {
-    isDeep = false;
-  }
-  else if (typeof isDeep == 'function') {
-    thisArg = customizer;
-    customizer = isDeep;
-    isDeep = false;
-  }
-  customizer = typeof customizer == 'function' && bindCallback(customizer, thisArg, 1);
-  return baseClone(value, isDeep, customizer);
-}
-
-module.exports = clone;
-
-},{"lodash._baseclone":146,"lodash._bindcallback":156,"lodash._isiterateecall":157}],146:[function(require,module,exports){
-(function (global){
-/**
- * lodash 3.1.0 (Custom Build) <https://lodash.com/>
- * Build: `lodash modern modularize exports="npm" -o ./`
- * Copyright 2012-2015 The Dojo Foundation <http://dojofoundation.org/>
- * Based on Underscore.js 1.8.3 <http://underscorejs.org/LICENSE>
- * Copyright 2009-2015 Jeremy Ashkenas, DocumentCloud and Investigative Reporters & Editors
- * Available under MIT license <https://lodash.com/license>
- */
-var arrayCopy = require('lodash._arraycopy'),
-    arrayEach = require('lodash._arrayeach'),
-    baseAssign = require('lodash._baseassign'),
-    baseFor = require('lodash._basefor'),
-    isArray = require('lodash.isarray'),
-    isNative = require('lodash.isnative'),
-    keys = require('lodash.keys');
-
-/** `Object#toString` result references. */
-var argsTag = '[object Arguments]',
-    arrayTag = '[object Array]',
-    boolTag = '[object Boolean]',
-    dateTag = '[object Date]',
-    errorTag = '[object Error]',
-    funcTag = '[object Function]',
-    mapTag = '[object Map]',
-    numberTag = '[object Number]',
-    objectTag = '[object Object]',
-    regexpTag = '[object RegExp]',
-    setTag = '[object Set]',
-    stringTag = '[object String]',
-    weakMapTag = '[object WeakMap]';
-
-var arrayBufferTag = '[object ArrayBuffer]',
-    float32Tag = '[object Float32Array]',
-    float64Tag = '[object Float64Array]',
-    int8Tag = '[object Int8Array]',
-    int16Tag = '[object Int16Array]',
-    int32Tag = '[object Int32Array]',
-    uint8Tag = '[object Uint8Array]',
-    uint8ClampedTag = '[object Uint8ClampedArray]',
-    uint16Tag = '[object Uint16Array]',
-    uint32Tag = '[object Uint32Array]';
-
-/** Used to match `RegExp` flags from their coerced string values. */
-var reFlags = /\w*$/;
-
-/** Used to identify `toStringTag` values supported by `_.clone`. */
-var cloneableTags = {};
-cloneableTags[argsTag] = cloneableTags[arrayTag] =
-cloneableTags[arrayBufferTag] = cloneableTags[boolTag] =
-cloneableTags[dateTag] = cloneableTags[float32Tag] =
-cloneableTags[float64Tag] = cloneableTags[int8Tag] =
-cloneableTags[int16Tag] = cloneableTags[int32Tag] =
-cloneableTags[numberTag] = cloneableTags[objectTag] =
-cloneableTags[regexpTag] = cloneableTags[stringTag] =
-cloneableTags[uint8Tag] = cloneableTags[uint8ClampedTag] =
-cloneableTags[uint16Tag] = cloneableTags[uint32Tag] = true;
-cloneableTags[errorTag] = cloneableTags[funcTag] =
-cloneableTags[mapTag] = cloneableTags[setTag] =
-cloneableTags[weakMapTag] = false;
-
-/** Used for native method references. */
-var objectProto = Object.prototype;
-
-/** Used to check objects for own properties. */
-var hasOwnProperty = objectProto.hasOwnProperty;
-
-/**
- * Used to resolve the [`toStringTag`](https://people.mozilla.org/~jorendorff/es6-draft.html#sec-object.prototype.tostring)
- * of values.
- */
-var objToString = objectProto.toString;
-
-/** Native method references. */
-var ArrayBuffer = isNative(ArrayBuffer = global.ArrayBuffer) && ArrayBuffer,
-    bufferSlice = isNative(bufferSlice = ArrayBuffer && new ArrayBuffer(0).slice) && bufferSlice,
-    floor = Math.floor,
-    Uint8Array = isNative(Uint8Array = global.Uint8Array) && Uint8Array;
-
-/** Used to clone array buffers. */
-var Float64Array = (function() {
-  // Safari 5 errors when using an array buffer to initialize a typed array
-  // where the array buffer's `byteLength` is not a multiple of the typed
-  // array's `BYTES_PER_ELEMENT`.
-  try {
-    var func = isNative(func = global.Float64Array) && func,
-        result = new func(new ArrayBuffer(10), 0, 1) && func;
-  } catch(e) {}
-  return result;
-}());
-
-/** Used as the size, in bytes, of each `Float64Array` element. */
-var FLOAT64_BYTES_PER_ELEMENT = Float64Array ? Float64Array.BYTES_PER_ELEMENT : 0;
-
-/**
- * The base implementation of `_.clone` without support for argument juggling
- * and `this` binding `customizer` functions.
- *
- * @private
- * @param {*} value The value to clone.
- * @param {boolean} [isDeep] Specify a deep clone.
- * @param {Function} [customizer] The function to customize cloning values.
- * @param {string} [key] The key of `value`.
- * @param {Object} [object] The object `value` belongs to.
- * @param {Array} [stackA=[]] Tracks traversed source objects.
- * @param {Array} [stackB=[]] Associates clones with source counterparts.
- * @returns {*} Returns the cloned value.
- */
-function baseClone(value, isDeep, customizer, key, object, stackA, stackB) {
-  var result;
-  if (customizer) {
-    result = object ? customizer(value, key, object) : customizer(value);
-  }
-  if (result !== undefined) {
-    return result;
-  }
-  if (!isObject(value)) {
-    return value;
-  }
-  var isArr = isArray(value);
-  if (isArr) {
-    result = initCloneArray(value);
-    if (!isDeep) {
-      return arrayCopy(value, result);
-    }
-  } else {
-    var tag = objToString.call(value),
-        isFunc = tag == funcTag;
-
-    if (tag == objectTag || tag == argsTag || (isFunc && !object)) {
-      result = initCloneObject(isFunc ? {} : value);
-      if (!isDeep) {
-        return baseAssign(result, value);
-      }
-    } else {
-      return cloneableTags[tag]
-        ? initCloneByTag(value, tag, isDeep)
-        : (object ? value : {});
-    }
-  }
-  // Check for circular references and return corresponding clone.
-  stackA || (stackA = []);
-  stackB || (stackB = []);
-
-  var length = stackA.length;
-  while (length--) {
-    if (stackA[length] == value) {
-      return stackB[length];
-    }
-  }
-  // Add the source value to the stack of traversed objects and associate it with its clone.
-  stackA.push(value);
-  stackB.push(result);
-
-  // Recursively populate clone (susceptible to call stack limits).
-  (isArr ? arrayEach : baseForOwn)(value, function(subValue, key) {
-    result[key] = baseClone(subValue, isDeep, customizer, key, value, stackA, stackB);
-  });
-  return result;
-}
-
-/**
- * The base implementation of `_.forOwn` without support for callback
- * shorthands and `this` binding.
- *
- * @private
- * @param {Object} object The object to iterate over.
- * @param {Function} iteratee The function invoked per iteration.
- * @returns {Object} Returns `object`.
- */
-function baseForOwn(object, iteratee) {
-  return baseFor(object, iteratee, keys);
-}
-
-/**
- * Creates a clone of the given array buffer.
- *
- * @private
- * @param {ArrayBuffer} buffer The array buffer to clone.
- * @returns {ArrayBuffer} Returns the cloned array buffer.
- */
-function bufferClone(buffer) {
-  return bufferSlice.call(buffer, 0);
-}
-if (!bufferSlice) {
-  // PhantomJS has `ArrayBuffer` and `Uint8Array` but not `Float64Array`.
-  bufferClone = !(ArrayBuffer && Uint8Array) ? constant(null) : function(buffer) {
-    var byteLength = buffer.byteLength,
-        floatLength = Float64Array ? floor(byteLength / FLOAT64_BYTES_PER_ELEMENT) : 0,
-        offset = floatLength * FLOAT64_BYTES_PER_ELEMENT,
-        result = new ArrayBuffer(byteLength);
-
-    if (floatLength) {
-      var view = new Float64Array(result, 0, floatLength);
-      view.set(new Float64Array(buffer, 0, floatLength));
-    }
-    if (byteLength != offset) {
-      view = new Uint8Array(result, offset);
-      view.set(new Uint8Array(buffer, offset));
-    }
-    return result;
-  };
-}
-
-/**
- * Initializes an array clone.
- *
- * @private
- * @param {Array} array The array to clone.
- * @returns {Array} Returns the initialized clone.
- */
-function initCloneArray(array) {
-  var length = array.length,
-      result = new array.constructor(length);
-
-  // Add array properties assigned by `RegExp#exec`.
-  if (length && typeof array[0] == 'string' && hasOwnProperty.call(array, 'index')) {
-    result.index = array.index;
-    result.input = array.input;
-  }
-  return result;
-}
-
-/**
- * Initializes an object clone.
- *
- * @private
- * @param {Object} object The object to clone.
- * @returns {Object} Returns the initialized clone.
- */
-function initCloneObject(object) {
-  var Ctor = object.constructor;
-  if (!(typeof Ctor == 'function' && Ctor instanceof Ctor)) {
-    Ctor = Object;
-  }
-  return new Ctor;
-}
-
-/**
- * Initializes an object clone based on its `toStringTag`.
- *
- * **Note:** This function only supports cloning values with tags of
- * `Boolean`, `Date`, `Error`, `Number`, `RegExp`, or `String`.
- *
- * @private
- * @param {Object} object The object to clone.
- * @param {string} tag The `toStringTag` of the object to clone.
- * @param {boolean} [isDeep] Specify a deep clone.
- * @returns {Object} Returns the initialized clone.
- */
-function initCloneByTag(object, tag, isDeep) {
-  var Ctor = object.constructor;
-  switch (tag) {
-    case arrayBufferTag:
-      return bufferClone(object);
-
-    case boolTag:
-    case dateTag:
-      return new Ctor(+object);
-
-    case float32Tag: case float64Tag:
-    case int8Tag: case int16Tag: case int32Tag:
-    case uint8Tag: case uint8ClampedTag: case uint16Tag: case uint32Tag:
-      var buffer = object.buffer;
-      return new Ctor(isDeep ? bufferClone(buffer) : buffer, object.byteOffset, object.length);
-
-    case numberTag:
-    case stringTag:
-      return new Ctor(object);
-
-    case regexpTag:
-      var result = new Ctor(object.source, reFlags.exec(object));
-      result.lastIndex = object.lastIndex;
-  }
-  return result;
-}
-
-/**
- * Checks if `value` is the [language type](https://es5.github.io/#x8) of `Object`.
- * (e.g. arrays, functions, objects, regexes, `new Number(0)`, and `new String('')`)
- *
- * @static
- * @memberOf _
- * @category Lang
- * @param {*} value The value to check.
- * @returns {boolean} Returns `true` if `value` is an object, else `false`.
- * @example
- *
- * _.isObject({});
- * // => true
- *
- * _.isObject([1, 2, 3]);
- * // => true
- *
- * _.isObject(1);
- * // => false
- */
-function isObject(value) {
-  // Avoid a V8 JIT bug in Chrome 19-20.
-  // See https://code.google.com/p/v8/issues/detail?id=2291 for more details.
-  var type = typeof value;
-  return type == 'function' || (!!value && type == 'object');
-}
-
-/**
- * Creates a function that returns `value`.
- *
- * @static
- * @memberOf _
- * @category Utility
- * @param {*} value The value to return from the new function.
- * @returns {Function} Returns the new function.
- * @example
- *
- * var object = { 'user': 'fred' };
- * var getter = _.constant(object);
- *
- * getter() === object;
- * // => true
- */
-function constant(value) {
-  return function() {
-    return value;
-  };
-}
-
-module.exports = baseClone;
-
-}).call(this,typeof global !== "undefined" ? global : typeof self !== "undefined" ? self : typeof window !== "undefined" ? window : {})
-},{"lodash._arraycopy":147,"lodash._arrayeach":148,"lodash._baseassign":149,"lodash._basefor":151,"lodash.isarray":152,"lodash.isnative":153,"lodash.keys":154}],147:[function(require,module,exports){
-arguments[4][64][0].apply(exports,arguments)
-},{"dup":64}],148:[function(require,module,exports){
-arguments[4][86][0].apply(exports,arguments)
-},{"dup":86}],149:[function(require,module,exports){
-arguments[4][53][0].apply(exports,arguments)
-},{"dup":53,"lodash._basecopy":150,"lodash.isnative":153,"lodash.keys":154}],150:[function(require,module,exports){
-arguments[4][54][0].apply(exports,arguments)
-},{"dup":54}],151:[function(require,module,exports){
-/**
- * lodash 3.0.1 (Custom Build) <https://lodash.com/>
- * Build: `lodash modern modularize exports="npm" -o ./`
- * Copyright 2012-2015 The Dojo Foundation <http://dojofoundation.org/>
- * Based on Underscore.js 1.8.2 <http://underscorejs.org/LICENSE>
- * Copyright 2009-2015 Jeremy Ashkenas, DocumentCloud and Investigative Reporters & Editors
- * Available under MIT license <https://lodash.com/license>
- */
-
-/**
- * The base implementation of `baseForIn` and `baseForOwn` which iterates
- * over `object` properties returned by `keysFunc` invoking `iteratee` for
- * each property. Iterator functions may exit iteration early by explicitly
- * returning `false`.
- *
- * @private
- * @param {Object} object The object to iterate over.
- * @param {Function} iteratee The function invoked per iteration.
- * @param {Function} keysFunc The function to get the keys of `object`.
- * @returns {Object} Returns `object`.
- */
-var baseFor = createBaseFor();
-
-/**
- * Creates a base function for `_.forIn` or `_.forInRight`.
- *
- * @private
- * @param {boolean} [fromRight] Specify iterating from right to left.
- * @returns {Function} Returns the new base function.
- */
-function createBaseFor(fromRight) {
-  return function(object, iteratee, keysFunc) {
-    var iterable = toObject(object),
-        props = keysFunc(object),
-        length = props.length,
-        index = fromRight ? length : -1;
-
-    while ((fromRight ? index-- : ++index < length)) {
-      var key = props[index];
-      if (iteratee(iterable[key], key, iterable) === false) {
-        break;
-      }
-    }
-    return object;
-  };
-}
-
-/**
- * Converts `value` to an object if it is not one.
- *
- * @private
- * @param {*} value The value to process.
- * @returns {Object} Returns the object.
- */
-function toObject(value) {
-  return isObject(value) ? value : Object(value);
-}
-
-/**
- * Checks if `value` is the [language type](https://es5.github.io/#x8) of `Object`.
- * (e.g. arrays, functions, objects, regexes, `new Number(0)`, and `new String('')`)
- *
- * @static
- * @memberOf _
- * @category Lang
- * @param {*} value The value to check.
- * @returns {boolean} Returns `true` if `value` is an object, else `false`.
- * @example
- *
- * _.isObject({});
- * // => true
- *
- * _.isObject([1, 2, 3]);
- * // => true
- *
- * _.isObject(1);
- * // => false
- */
-function isObject(value) {
-  // Avoid a V8 JIT bug in Chrome 19-20.
-  // See https://code.google.com/p/v8/issues/detail?id=2291 for more details.
-  var type = typeof value;
-  return type == 'function' || (!!value && type == 'object');
-}
-
-module.exports = baseFor;
-
-},{}],152:[function(require,module,exports){
-arguments[4][68][0].apply(exports,arguments)
-},{"dup":68}],153:[function(require,module,exports){
-arguments[4][59][0].apply(exports,arguments)
-},{"dup":59}],154:[function(require,module,exports){
-arguments[4][60][0].apply(exports,arguments)
-},{"dup":60,"lodash.isarguments":155,"lodash.isarray":152,"lodash.isnative":153}],155:[function(require,module,exports){
-arguments[4][61][0].apply(exports,arguments)
-},{"dup":61}],156:[function(require,module,exports){
-arguments[4][56][0].apply(exports,arguments)
-},{"dup":56}],157:[function(require,module,exports){
-arguments[4][57][0].apply(exports,arguments)
-},{"dup":57}],158:[function(require,module,exports){
-/**
- * lodash 3.0.1 (Custom Build) <https://lodash.com/>
- * Build: `lodash modern modularize exports="npm" -o ./`
- * Copyright 2012-2015 The Dojo Foundation <http://dojofoundation.org/>
- * Based on Underscore.js 1.8.2 <http://underscorejs.org/LICENSE>
- * Copyright 2009-2015 Jeremy Ashkenas, DocumentCloud and Investigative Reporters & Editors
- * Available under MIT license <https://lodash.com/license>
- */
-
-/**
- * Checks if `value` is the [language type](https://es5.github.io/#x8) of `Object`.
- * (e.g. arrays, functions, objects, regexes, `new Number(0)`, and `new String('')`)
- *
- * @static
- * @memberOf _
- * @category Lang
- * @param {*} value The value to check.
- * @returns {boolean} Returns `true` if `value` is an object, else `false`.
- * @example
- *
- * _.isObject({});
- * // => true
- *
- * _.isObject([1, 2, 3]);
- * // => true
- *
- * _.isObject(1);
- * // => false
- */
-function isObject(value) {
-  // Avoid a V8 JIT bug in Chrome 19-20.
-  // See https://code.google.com/p/v8/issues/detail?id=2291 for more details.
-  var type = typeof value;
-  return type == 'function' || (!!value && type == 'object');
-}
-
-module.exports = isObject;
-
-},{}],159:[function(require,module,exports){
-/**
- * lodash 3.1.1 (Custom Build) <https://lodash.com/>
- * Build: `lodash modern modularize exports="npm" -o ./`
- * Copyright 2012-2015 The Dojo Foundation <http://dojofoundation.org/>
- * Based on Underscore.js 1.8.3 <http://underscorejs.org/LICENSE>
- * Copyright 2009-2015 Jeremy Ashkenas, DocumentCloud and Investigative Reporters & Editors
- * Available under MIT license <https://lodash.com/license>
- */
-var baseGet = require('lodash._baseget'),
-    baseSlice = require('lodash._baseslice'),
-    toPath = require('lodash._topath'),
-    isArray = require('lodash.isarray'),
-    isFunction = require('lodash.isfunction');
-
-/** Used to match property names within property paths. */
-var reIsDeepProp = /\.|\[(?:[^[\]]*|(["'])(?:(?!\1)[^\n\\]|\\.)*?\1)\]/,
-    reIsPlainProp = /^\w*$/;
-
-/**
- * Checks if `value` is a property name and not a property path.
- *
- * @private
- * @param {*} value The value to check.
- * @param {Object} [object] The object to query keys on.
- * @returns {boolean} Returns `true` if `value` is a property name, else `false`.
- */
-function isKey(value, object) {
-  var type = typeof value;
-  if ((type == 'string' && reIsPlainProp.test(value)) || type == 'number') {
-    return true;
-  }
-  if (isArray(value)) {
-    return false;
-  }
-  var result = !reIsDeepProp.test(value);
-  return result || (object != null && value in toObject(object));
-}
-
-/**
- * Converts `value` to an object if it is not one.
- *
- * @private
- * @param {*} value The value to process.
- * @returns {Object} Returns the object.
- */
-function toObject(value) {
-  return isObject(value) ? value : Object(value);
-}
-
-/**
- * Gets the last element of `array`.
- *
- * @static
- * @memberOf _
- * @category Array
- * @param {Array} array The array to query.
- * @returns {*} Returns the last element of `array`.
- * @example
- *
- * _.last([1, 2, 3]);
- * // => 3
- */
-function last(array) {
-  var length = array ? array.length : 0;
-  return length ? array[length - 1] : undefined;
-}
-
-/**
- * Checks if `value` is the [language type](https://es5.github.io/#x8) of `Object`.
- * (e.g. arrays, functions, objects, regexes, `new Number(0)`, and `new String('')`)
- *
- * @static
- * @memberOf _
- * @category Lang
- * @param {*} value The value to check.
- * @returns {boolean} Returns `true` if `value` is an object, else `false`.
- * @example
- *
- * _.isObject({});
- * // => true
- *
- * _.isObject([1, 2, 3]);
- * // => true
- *
- * _.isObject(1);
- * // => false
- */
-function isObject(value) {
-  // Avoid a V8 JIT bug in Chrome 19-20.
-  // See https://code.google.com/p/v8/issues/detail?id=2291 for more details.
-  var type = typeof value;
-  return type == 'function' || (!!value && type == 'object');
-}
-
-/**
- * This method is like `_.get` except that if the resolved value is a function
- * it is invoked with the `this` binding of its parent object and its result
- * is returned.
- *
- * @static
- * @memberOf _
- * @category Object
- * @param {Object} object The object to query.
- * @param {Array|string} path The path of the property to resolve.
- * @param {*} [defaultValue] The value returned if the resolved value is `undefined`.
- * @returns {*} Returns the resolved value.
- * @example
- *
- * var object = { 'a': [{ 'b': { 'c1': 3, 'c2': _.constant(4) } }] };
- *
- * _.result(object, 'a[0].b.c1');
- * // => 3
- *
- * _.result(object, 'a[0].b.c2');
- * // => 4
- *
- * _.result(object, 'a.b.c', 'default');
- * // => 'default'
- *
- * _.result(object, 'a.b.c', _.constant('default'));
- * // => 'default'
- */
-function result(object, path, defaultValue) {
-  var result = object == null ? undefined : object[path];
-  if (result === undefined) {
-    if (object != null && !isKey(path, object)) {
-      path = toPath(path);
-      object = path.length == 1 ? object : baseGet(object, baseSlice(path, 0, -1));
-      result = object == null ? undefined : object[last(path)];
-    }
-    result = result === undefined ? defaultValue : result;
-  }
-  return isFunction(result) ? result.call(object) : result;
-}
-
-module.exports = result;
-
-},{"lodash._baseget":160,"lodash._baseslice":161,"lodash._topath":162,"lodash.isarray":163,"lodash.isfunction":164}],160:[function(require,module,exports){
-/**
- * lodash 3.7.1 (Custom Build) <https://lodash.com/>
- * Build: `lodash modern modularize exports="npm" -o ./`
- * Copyright 2012-2015 The Dojo Foundation <http://dojofoundation.org/>
- * Based on Underscore.js 1.8.3 <http://underscorejs.org/LICENSE>
- * Copyright 2009-2015 Jeremy Ashkenas, DocumentCloud and Investigative Reporters & Editors
- * Available under MIT license <https://lodash.com/license>
- */
-
-/**
- * The base implementation of `get` without support for string paths
- * and default values.
- *
- * @private
- * @param {Object} object The object to query.
- * @param {Array} path The path of the property to get.
- * @param {string} [pathKey] The key representation of path.
- * @returns {*} Returns the resolved value.
- */
-function baseGet(object, path, pathKey) {
-  if (object == null) {
-    return;
-  }
-  if (pathKey !== undefined && pathKey in toObject(object)) {
-    path = [pathKey];
-  }
-  var index = -1,
-      length = path.length;
-
-  while (object != null && ++index < length) {
-    object = object[path[index]];
-  }
-  return (index && index == length) ? object : undefined;
-}
-
-/**
- * Converts `value` to an object if it is not one.
- *
- * @private
- * @param {*} value The value to process.
- * @returns {Object} Returns the object.
- */
-function toObject(value) {
-  return isObject(value) ? value : Object(value);
-}
-
-/**
- * Checks if `value` is the [language type](https://es5.github.io/#x8) of `Object`.
- * (e.g. arrays, functions, objects, regexes, `new Number(0)`, and `new String('')`)
- *
- * @static
- * @memberOf _
- * @category Lang
- * @param {*} value The value to check.
- * @returns {boolean} Returns `true` if `value` is an object, else `false`.
- * @example
- *
- * _.isObject({});
- * // => true
- *
- * _.isObject([1, 2, 3]);
- * // => true
- *
- * _.isObject(1);
- * // => false
- */
-function isObject(value) {
-  // Avoid a V8 JIT bug in Chrome 19-20.
-  // See https://code.google.com/p/v8/issues/detail?id=2291 for more details.
-  var type = typeof value;
-  return type == 'function' || (!!value && type == 'object');
-}
-
-module.exports = baseGet;
-
-},{}],161:[function(require,module,exports){
-/**
- * lodash 3.0.3 (Custom Build) <https://lodash.com/>
- * Build: `lodash modern modularize exports="npm" -o ./`
- * Copyright 2012-2015 The Dojo Foundation <http://dojofoundation.org/>
- * Based on Underscore.js 1.8.3 <http://underscorejs.org/LICENSE>
- * Copyright 2009-2015 Jeremy Ashkenas, DocumentCloud and Investigative Reporters & Editors
- * Available under MIT license <https://lodash.com/license>
- */
-
-/**
- * The base implementation of `_.slice` without an iteratee call guard.
- *
- * @private
- * @param {Array} array The array to slice.
- * @param {number} [start=0] The start position.
- * @param {number} [end=array.length] The end position.
- * @returns {Array} Returns the slice of `array`.
- */
-function baseSlice(array, start, end) {
-  var index = -1,
-      length = array.length;
-
-  start = start == null ? 0 : (+start || 0);
-  if (start < 0) {
-    start = -start > length ? 0 : (length + start);
-  }
-  end = (end === undefined || end > length) ? length : (+end || 0);
-  if (end < 0) {
-    end += length;
-  }
-  length = start > end ? 0 : ((end - start) >>> 0);
-  start >>>= 0;
-
-  var result = Array(length);
-  while (++index < length) {
-    result[index] = array[index + start];
-  }
-  return result;
-}
-
-module.exports = baseSlice;
-
-},{}],162:[function(require,module,exports){
-/**
- * lodash 3.8.0 (Custom Build) <https://lodash.com/>
- * Build: `lodash modern modularize exports="npm" -o ./`
- * Copyright 2012-2015 The Dojo Foundation <http://dojofoundation.org/>
- * Based on Underscore.js 1.8.3 <http://underscorejs.org/LICENSE>
- * Copyright 2009-2015 Jeremy Ashkenas, DocumentCloud and Investigative Reporters & Editors
- * Available under MIT license <https://lodash.com/license>
- */
-var isArray = require('lodash.isarray');
-
-/** Used to match property names within property paths. */
-var rePropName = /[^.[\]]+|\[(?:(-?\d+(?:\.\d+)?)|(["'])((?:(?!\2)[^\n\\]|\\.)*?)\2)\]/g;
-
-/** Used to match backslashes in property paths. */
-var reEscapeChar = /\\(\\)?/g;
-
-/**
- * Converts `value` to a string if it is not one. An empty string is returned
- * for `null` or `undefined` values.
- *
- * @private
- * @param {*} value The value to process.
- * @returns {string} Returns the string.
- */
-function baseToString(value) {
-  if (typeof value == 'string') {
-    return value;
-  }
-  return value == null ? '' : (value + '');
-}
-
-/**
- * Converts `value` to property path array if it is not one.
- *
- * @private
- * @param {*} value The value to process.
- * @returns {Array} Returns the property path array.
- */
-function toPath(value) {
-  if (isArray(value)) {
-    return value;
-  }
-  var result = [];
-  baseToString(value).replace(rePropName, function(match, number, quote, string) {
-    result.push(quote ? string.replace(reEscapeChar, '$1') : (number || match));
-  });
-  return result;
-}
-
-module.exports = toPath;
-
-},{"lodash.isarray":163}],163:[function(require,module,exports){
-arguments[4][68][0].apply(exports,arguments)
-},{"dup":68}],164:[function(require,module,exports){
-arguments[4][93][0].apply(exports,arguments)
-},{"dup":93}],165:[function(require,module,exports){
-;if (typeof window !== "undefined") {  window.ampersand = window.ampersand || {};  window.ampersand["ampersand-rest-collection"] = window.ampersand["ampersand-rest-collection"] || [];  window.ampersand["ampersand-rest-collection"].push("4.0.0");}
+},{"for-each":119,"trim":121}],123:[function(require,module,exports){
+;if (typeof window !== "undefined") {  window.ampersand = window.ampersand || {};  window.ampersand["ampersand-rest-collection"] = window.ampersand["ampersand-rest-collection"] || [];  window.ampersand["ampersand-rest-collection"].push("2.0.4");}
 var Collection = require('ampersand-collection');
-var lodashMixin = require('ampersand-collection-lodash-mixin');
+var underscoreMixin = require('ampersand-collection-underscore-mixin');
 var restMixins = require('ampersand-collection-rest-mixin');
 
 
-module.exports = Collection.extend(lodashMixin, restMixins);
+module.exports = Collection.extend(underscoreMixin, restMixins);
 
-},{"ampersand-collection":50,"ampersand-collection-lodash-mixin":166,"ampersand-collection-rest-mixin":439}],166:[function(require,module,exports){
-;if (typeof window !== "undefined") {  window.ampersand = window.ampersand || {};  window.ampersand["ampersand-collection-lodash-mixin"] = window.ampersand["ampersand-collection-lodash-mixin"] || [];  window.ampersand["ampersand-collection-lodash-mixin"].push("2.0.1");}
-var isFunction = require('lodash.isfunction');
-var _ = {
-    countBy: require('lodash.countby'),
-    difference: require('lodash.difference'),
-    drop: require('lodash.drop'),
-    each: require('lodash.foreach'),
-    every: require('lodash.every'),
-    filter: require('lodash.filter'),
-    find: require('lodash.find'),
-    forEach: require('lodash.foreach'),
-    groupBy: require('lodash.groupby'),
-    includes: require('lodash.includes'),
-    indexBy: require('lodash.indexby'),
-    indexOf: require('lodash.indexof'),
-    initial: require('lodash.initial'),
-    invoke: require('lodash.invoke'),
-    isEmpty: require('lodash.isempty'),
-    lastIndexOf: require('lodash.lastindexof'),
-    map: require('lodash.map'),
-    max: require('lodash.max'),
-    min: require('lodash.min'),
-    partition: require('lodash.partition'),
-    reduce: require('lodash.reduce'),
-    reduceRight: require('lodash.reduceright'),
-    reject: require('lodash.reject'),
-    rest: require('lodash.rest'),
-    sample: require('lodash.sample'),
-    shuffle: require('lodash.shuffle'),
-    some: require('lodash.some'),
-    sortBy: require('lodash.sortby'),
-    take: require('lodash.take'),
-    without: require('lodash.without')
+},{"ampersand-collection":50,"ampersand-collection-rest-mixin":124,"ampersand-collection-underscore-mixin":140}],124:[function(require,module,exports){
+;if (typeof window !== "undefined") {  window.ampersand = window.ampersand || {};  window.ampersand["ampersand-collection-rest-mixin"] = window.ampersand["ampersand-collection-rest-mixin"] || [];  window.ampersand["ampersand-collection-rest-mixin"].push("3.0.1");}
+var sync = require('ampersand-sync');
+var extend = require('extend-object');
+
+
+// Wrap an optional error callback with a fallback error event.
+var wrapError = function(model, options) {
+    var error = options.error;
+    options.error = function(resp) {
+        if (error) error(model, resp, options);
+        model.trigger('error', model, resp, options);
+    };
 };
+
+module.exports = {
+    // Fetch the default set of models for this collection, resetting the
+    // collection when they arrive. If `reset: true` is passed, the response
+    // data will be passed through the `reset` method instead of `set`.
+    fetch: function(options) {
+        options = options ? extend({}, options) : {};
+        if (options.parse === void 0) options.parse = true;
+        var success = options.success;
+        var collection = this;
+        options.success = function(resp) {
+            var method = options.reset ? 'reset' : 'set';
+            collection[method](resp, options);
+            if (success) success(collection, resp, options);
+            collection.trigger('sync', collection, resp, options);
+        };
+        wrapError(this, options);
+        return this.sync('read', this, options);
+    },
+
+    // Create a new instance of a model in this collection. Add the model to the
+    // collection immediately, unless `wait: true` is passed, in which case we
+    // wait for the server to agree.
+    create: function(model, options) {
+        options = options ? extend({}, options) : {};
+        if (!(model = this._prepareModel(model, options))) return false;
+        if (!options.wait) this.add(model, options);
+        var collection = this;
+        var success = options.success;
+        options.success = function(model, resp) {
+            if (options.wait) collection.add(model, options);
+            if (success) success(model, resp, options);
+        };
+        model.save(null, options);
+        return model;
+    },
+
+    sync: function() {
+        return sync.apply(this, arguments);
+    },
+
+    // Get or fetch a model by Id.
+    getOrFetch: function (id, options, cb) {
+        if (arguments.length !== 3) {
+            cb = options;
+            options = {};
+        }
+        var self = this;
+        var model = this.get(id);
+        if (model) return cb(null, model);
+        function done() {
+            var model = self.get(id);
+            if (model) {
+                if (cb) cb(null, model);
+            } else {
+                cb(new Error('not found'));
+            }
+        }
+        if (options.all) {
+            this.fetch({
+                success: done,
+                error: done
+            });
+        } else {
+            this.fetchById(id, cb);
+        }
+    },
+
+    // fetchById: fetches a model and adds it to
+    // collection when fetched.
+    fetchById: function (id, cb) {
+        var self = this;
+        var idObj = {};
+        idObj[this.model.prototype.idAttribute] = id;
+        var model = new this.model(idObj, {collection: this});
+        model.fetch({
+            success: function () {
+                self.add(model);
+                if (cb) cb(null, model);
+            },
+            error: function () {
+                delete model.collection;
+                if (cb) cb(Error('not found'));
+            }
+        });
+    }
+};
+
+},{"ampersand-sync":125,"extend-object":139}],125:[function(require,module,exports){
+arguments[4][109][0].apply(exports,arguments)
+},{"dup":109,"qs":126,"underscore":131,"xhr":132}],126:[function(require,module,exports){
+arguments[4][110][0].apply(exports,arguments)
+},{"./lib":127,"dup":110}],127:[function(require,module,exports){
+arguments[4][111][0].apply(exports,arguments)
+},{"./parse":128,"./stringify":129,"dup":111}],128:[function(require,module,exports){
+arguments[4][112][0].apply(exports,arguments)
+},{"./utils":130,"dup":112}],129:[function(require,module,exports){
+arguments[4][113][0].apply(exports,arguments)
+},{"buffer":546,"dup":113}],130:[function(require,module,exports){
+arguments[4][114][0].apply(exports,arguments)
+},{"buffer":546,"dup":114}],131:[function(require,module,exports){
+arguments[4][115][0].apply(exports,arguments)
+},{"dup":115}],132:[function(require,module,exports){
+arguments[4][116][0].apply(exports,arguments)
+},{"dup":116,"global/window":133,"once":134,"parse-headers":138}],133:[function(require,module,exports){
+arguments[4][117][0].apply(exports,arguments)
+},{"dup":117}],134:[function(require,module,exports){
+arguments[4][118][0].apply(exports,arguments)
+},{"dup":118}],135:[function(require,module,exports){
+arguments[4][119][0].apply(exports,arguments)
+},{"dup":119,"is-function":136}],136:[function(require,module,exports){
+arguments[4][120][0].apply(exports,arguments)
+},{"dup":120}],137:[function(require,module,exports){
+arguments[4][121][0].apply(exports,arguments)
+},{"dup":121}],138:[function(require,module,exports){
+arguments[4][122][0].apply(exports,arguments)
+},{"dup":122,"for-each":135,"trim":137}],139:[function(require,module,exports){
+arguments[4][106][0].apply(exports,arguments)
+},{"dup":106}],140:[function(require,module,exports){
+;if (typeof window !== "undefined") {  window.ampersand = window.ampersand || {};  window.ampersand["ampersand-collection-underscore-mixin"] = window.ampersand["ampersand-collection-underscore-mixin"] || [];  window.ampersand["ampersand-collection-underscore-mixin"].push("1.0.4");}
+var _ = require('underscore');
 var slice = [].slice;
 var mixins = {};
 
 
-// lodash methods that we want to implement on the Collection.
-var methods = ['forEach', 'each', 'map', 'reduce', 'reduceRight', 'find',
-    'filter', 'reject', 'every', 'some', 'includes', 'invoke', 'max', 'min',
-    'take', 'initial', 'rest', 'drop', 'without', 'difference', 'indexOf', 'shuffle',
-    'lastIndexOf', 'isEmpty', 'sample', 'partition'
+// Underscore methods that we want to implement on the Collection.
+var methods = ['forEach', 'each', 'map', 'collect', 'reduce', 'foldl',
+    'inject', 'reduceRight', 'foldr', 'find', 'detect', 'filter', 'select',
+    'reject', 'every', 'all', 'some', 'any', 'include', 'contains', 'invoke',
+    'max', 'min', 'toArray', 'size', 'first', 'head', 'take', 'initial', 'rest',
+    'tail', 'drop', 'last', 'without', 'difference', 'indexOf', 'shuffle',
+    'lastIndexOf', 'isEmpty', 'chain', 'sample', 'partition'
 ];
 
-// Mix in each lodash method as a proxy to `Collection#models`.
+// Mix in each Underscore method as a proxy to `Collection#models`.
 _.each(methods, function (method) {
     if (!_[method]) return;
     mixins[method] = function () {
@@ -11529,14 +11816,14 @@ _.each(methods, function (method) {
     };
 });
 
-// lodash methods that take a property name as an argument.
+// Underscore methods that take a property name as an argument.
 var attributeMethods = ['groupBy', 'countBy', 'sortBy', 'indexBy'];
 
 // Use attributes instead of properties.
 _.each(attributeMethods, function (method) {
     if (!_[method]) return;
     mixins[method] = function (value, context) {
-        var iterator = isFunction(value) ? value : function (model) {
+        var iterator = _.isFunction(value) ? value : function (model) {
             return model.get ? model.get(value) : model[value];
         };
         return _[method](this.models, iterator, context);
@@ -11568,5288 +11855,9 @@ mixins.pluck = function (attr) {
     return _.invoke(this.models, 'get', attr);
 };
 
-// We implement the following trivial methods ourselves.
-
-// Gets first model
-mixins.first = function () {
-    return this.models[0];
-};
-
-// Gets last model
-mixins.last = function () {
-    return this.models[this.models.length - 1];
-};
-
-// Gets size of collection
-mixins.size = function () {
-    return this.models.length;
-};
-
 module.exports = mixins;
 
-},{"lodash.countby":167,"lodash.difference":179,"lodash.drop":189,"lodash.every":192,"lodash.filter":204,"lodash.find":216,"lodash.foreach":228,"lodash.groupby":236,"lodash.includes":248,"lodash.indexby":257,"lodash.indexof":269,"lodash.initial":273,"lodash.invoke":276,"lodash.isempty":287,"lodash.isfunction":293,"lodash.lastindexof":294,"lodash.map":297,"lodash.max":308,"lodash.min":323,"lodash.partition":338,"lodash.reduce":350,"lodash.reduceright":361,"lodash.reject":373,"lodash.rest":385,"lodash.sample":388,"lodash.shuffle":397,"lodash.some":405,"lodash.sortby":416,"lodash.take":429,"lodash.without":432}],167:[function(require,module,exports){
-/**
- * lodash 3.1.0 (Custom Build) <https://lodash.com/>
- * Build: `lodash modern modularize exports="npm" -o ./`
- * Copyright 2012-2015 The Dojo Foundation <http://dojofoundation.org/>
- * Based on Underscore.js 1.8.2 <http://underscorejs.org/LICENSE>
- * Copyright 2009-2015 Jeremy Ashkenas, DocumentCloud and Investigative Reporters & Editors
- * Available under MIT license <https://lodash.com/license>
- */
-var createAggregator = require('lodash._createaggregator'),
-    keys = require('lodash.keys');
-
-/** Used for native method references. */
-var objectProto = Object.prototype;
-
-/** Used to check objects for own properties. */
-var hasOwnProperty = objectProto.hasOwnProperty;
-
-/**
- * Creates an object composed of keys generated from the results of running
- * each element of `collection` through `iteratee`. The corresponding value
- * of each key is the number of times the key was returned by `iteratee`.
- * The `iteratee` is bound to `thisArg` and invoked with three arguments:
- * (value, index|key, collection).
- *
- * If a property name is provided for `iteratee` the created `_.property`
- * style callback returns the property value of the given element.
- *
- * If a value is also provided for `thisArg` the created `_.matchesProperty`
- * style callback returns `true` for elements that have a matching property
- * value, else `false`.
- *
- * If an object is provided for `iteratee` the created `_.matches` style
- * callback returns `true` for elements that have the properties of the given
- * object, else `false`.
- *
- * @static
- * @memberOf _
- * @category Collection
- * @param {Array|Object|string} collection The collection to iterate over.
- * @param {Function|Object|string} [iteratee=_.identity] The function invoked
- *  per iteration.
- * @param {*} [thisArg] The `this` binding of `iteratee`.
- * @returns {Object} Returns the composed aggregate object.
- * @example
- *
- * _.countBy([4.3, 6.1, 6.4], function(n) {
- *   return Math.floor(n);
- * });
- * // => { '4': 1, '6': 2 }
- *
- * _.countBy([4.3, 6.1, 6.4], function(n) {
- *   return this.floor(n);
- * }, Math);
- * // => { '4': 1, '6': 2 }
- *
- * _.countBy(['one', 'two', 'three'], 'length');
- * // => { '3': 2, '5': 1 }
- */
-var countBy = createAggregator(function(result, value, key) {
-  hasOwnProperty.call(result, key) ? ++result[key] : (result[key] = 1);
-});
-
-module.exports = countBy;
-
-},{"lodash._createaggregator":168,"lodash.keys":175}],168:[function(require,module,exports){
-/**
- * lodash 3.0.0 (Custom Build) <https://lodash.com/>
- * Build: `lodash modern modularize exports="npm" -o ./`
- * Copyright 2012-2015 The Dojo Foundation <http://dojofoundation.org/>
- * Based on Underscore.js 1.7.0 <http://underscorejs.org/LICENSE>
- * Copyright 2009-2015 Jeremy Ashkenas, DocumentCloud and Investigative Reporters & Editors
- * Available under MIT license <https://lodash.com/license>
- */
-var baseCallback = require('lodash._basecallback'),
-    baseEach = require('lodash._baseeach'),
-    isArray = require('lodash.isarray');
-
-/**
- * Creates a function that aggregates a collection, creating an accumulator
- * object composed from the results of running each element in the collection
- * through an iteratee. The `setter` sets the keys and values of the accumulator
- * object. If `initializer` is provided initializes the accumulator object.
- *
- * @private
- * @param {Function} setter The function to set keys and values of the accumulator object.
- * @param {Function} [initializer] The function to initialize the accumulator object.
- * @returns {Function} Returns the new aggregator function.
- */
-function createAggregator(setter, initializer) {
-  return function(collection, iteratee, thisArg) {
-    var result = initializer ? initializer() : {};
-    iteratee = baseCallback(iteratee, thisArg, 3);
-
-    if (isArray(collection)) {
-      var index = -1,
-          length = collection.length;
-
-      while (++index < length) {
-        var value = collection[index];
-        setter(result, value, iteratee(value, index, collection), collection);
-      }
-    } else {
-      baseEach(collection, function(value, key, collection) {
-        setter(result, value, iteratee(value, key, collection), collection);
-      });
-    }
-    return result;
-  };
-}
-
-module.exports = createAggregator;
-
-},{"lodash._basecallback":169,"lodash._baseeach":173,"lodash.isarray":174}],169:[function(require,module,exports){
-/**
- * lodash 3.2.1 (Custom Build) <https://lodash.com/>
- * Build: `lodash modern modularize exports="npm" -o ./`
- * Copyright 2012-2015 The Dojo Foundation <http://dojofoundation.org/>
- * Based on Underscore.js 1.8.3 <http://underscorejs.org/LICENSE>
- * Copyright 2009-2015 Jeremy Ashkenas, DocumentCloud and Investigative Reporters & Editors
- * Available under MIT license <https://lodash.com/license>
- */
-var baseIsEqual = require('lodash._baseisequal'),
-    bindCallback = require('lodash._bindcallback'),
-    isArray = require('lodash.isarray'),
-    keys = require('lodash.keys');
-
-/** Used to match property names within property paths. */
-var reIsDeepProp = /\.|\[(?:[^[\]]*|(["'])(?:(?!\1)[^\n\\]|\\.)*?\1)\]/,
-    reIsPlainProp = /^\w*$/,
-    rePropName = /[^.[\]]+|\[(?:(-?\d+(?:\.\d+)?)|(["'])((?:(?!\2)[^\n\\]|\\.)*?)\2)\]/g;
-
-/** Used to match backslashes in property paths. */
-var reEscapeChar = /\\(\\)?/g;
-
-/**
- * Converts `value` to a string if it is not one. An empty string is returned
- * for `null` or `undefined` values.
- *
- * @private
- * @param {*} value The value to process.
- * @returns {string} Returns the string.
- */
-function baseToString(value) {
-  if (typeof value == 'string') {
-    return value;
-  }
-  return value == null ? '' : (value + '');
-}
-
-/**
- * The base implementation of `_.callback` which supports specifying the
- * number of arguments to provide to `func`.
- *
- * @private
- * @param {*} [func=_.identity] The value to convert to a callback.
- * @param {*} [thisArg] The `this` binding of `func`.
- * @param {number} [argCount] The number of arguments to provide to `func`.
- * @returns {Function} Returns the callback.
- */
-function baseCallback(func, thisArg, argCount) {
-  var type = typeof func;
-  if (type == 'function') {
-    return thisArg === undefined
-      ? func
-      : bindCallback(func, thisArg, argCount);
-  }
-  if (func == null) {
-    return identity;
-  }
-  if (type == 'object') {
-    return baseMatches(func);
-  }
-  return thisArg === undefined
-    ? property(func)
-    : baseMatchesProperty(func, thisArg);
-}
-
-/**
- * The base implementation of `get` without support for string paths
- * and default values.
- *
- * @private
- * @param {Object} object The object to query.
- * @param {Array} path The path of the property to get.
- * @param {string} [pathKey] The key representation of path.
- * @returns {*} Returns the resolved value.
- */
-function baseGet(object, path, pathKey) {
-  if (object == null) {
-    return;
-  }
-  if (pathKey !== undefined && pathKey in toObject(object)) {
-    path = [pathKey];
-  }
-  var index = -1,
-      length = path.length;
-
-  while (object != null && ++index < length) {
-    object = object[path[index]];
-  }
-  return (index && index == length) ? object : undefined;
-}
-
-/**
- * The base implementation of `_.isMatch` without support for callback
- * shorthands and `this` binding.
- *
- * @private
- * @param {Object} object The object to inspect.
- * @param {Array} props The source property names to match.
- * @param {Array} values The source values to match.
- * @param {Array} strictCompareFlags Strict comparison flags for source values.
- * @param {Function} [customizer] The function to customize comparing objects.
- * @returns {boolean} Returns `true` if `object` is a match, else `false`.
- */
-function baseIsMatch(object, props, values, strictCompareFlags, customizer) {
-  var index = -1,
-      length = props.length,
-      noCustomizer = !customizer;
-
-  while (++index < length) {
-    if ((noCustomizer && strictCompareFlags[index])
-          ? values[index] !== object[props[index]]
-          : !(props[index] in object)
-        ) {
-      return false;
-    }
-  }
-  index = -1;
-  while (++index < length) {
-    var key = props[index],
-        objValue = object[key],
-        srcValue = values[index];
-
-    if (noCustomizer && strictCompareFlags[index]) {
-      var result = objValue !== undefined || (key in object);
-    } else {
-      result = customizer ? customizer(objValue, srcValue, key) : undefined;
-      if (result === undefined) {
-        result = baseIsEqual(srcValue, objValue, customizer, true);
-      }
-    }
-    if (!result) {
-      return false;
-    }
-  }
-  return true;
-}
-
-/**
- * The base implementation of `_.matches` which does not clone `source`.
- *
- * @private
- * @param {Object} source The object of property values to match.
- * @returns {Function} Returns the new function.
- */
-function baseMatches(source) {
-  var props = keys(source),
-      length = props.length;
-
-  if (!length) {
-    return constant(true);
-  }
-  if (length == 1) {
-    var key = props[0],
-        value = source[key];
-
-    if (isStrictComparable(value)) {
-      return function(object) {
-        if (object == null) {
-          return false;
-        }
-        return object[key] === value && (value !== undefined || (key in toObject(object)));
-      };
-    }
-  }
-  var values = Array(length),
-      strictCompareFlags = Array(length);
-
-  while (length--) {
-    value = source[props[length]];
-    values[length] = value;
-    strictCompareFlags[length] = isStrictComparable(value);
-  }
-  return function(object) {
-    return object != null && baseIsMatch(toObject(object), props, values, strictCompareFlags);
-  };
-}
-
-/**
- * The base implementation of `_.matchesProperty` which does not which does
- * not clone `value`.
- *
- * @private
- * @param {string} path The path of the property to get.
- * @param {*} value The value to compare.
- * @returns {Function} Returns the new function.
- */
-function baseMatchesProperty(path, value) {
-  var isArr = isArray(path),
-      isCommon = isKey(path) && isStrictComparable(value),
-      pathKey = (path + '');
-
-  path = toPath(path);
-  return function(object) {
-    if (object == null) {
-      return false;
-    }
-    var key = pathKey;
-    object = toObject(object);
-    if ((isArr || !isCommon) && !(key in object)) {
-      object = path.length == 1 ? object : baseGet(object, baseSlice(path, 0, -1));
-      if (object == null) {
-        return false;
-      }
-      key = last(path);
-      object = toObject(object);
-    }
-    return object[key] === value
-      ? (value !== undefined || (key in object))
-      : baseIsEqual(value, object[key], null, true);
-  };
-}
-
-/**
- * The base implementation of `_.property` without support for deep paths.
- *
- * @private
- * @param {string} key The key of the property to get.
- * @returns {Function} Returns the new function.
- */
-function baseProperty(key) {
-  return function(object) {
-    return object == null ? undefined : object[key];
-  };
-}
-
-/**
- * A specialized version of `baseProperty` which supports deep paths.
- *
- * @private
- * @param {Array|string} path The path of the property to get.
- * @returns {Function} Returns the new function.
- */
-function basePropertyDeep(path) {
-  var pathKey = (path + '');
-  path = toPath(path);
-  return function(object) {
-    return baseGet(object, path, pathKey);
-  };
-}
-
-/**
- * The base implementation of `_.slice` without an iteratee call guard.
- *
- * @private
- * @param {Array} array The array to slice.
- * @param {number} [start=0] The start position.
- * @param {number} [end=array.length] The end position.
- * @returns {Array} Returns the slice of `array`.
- */
-function baseSlice(array, start, end) {
-  var index = -1,
-      length = array.length;
-
-  start = start == null ? 0 : (+start || 0);
-  if (start < 0) {
-    start = -start > length ? 0 : (length + start);
-  }
-  end = (end === undefined || end > length) ? length : (+end || 0);
-  if (end < 0) {
-    end += length;
-  }
-  length = start > end ? 0 : ((end - start) >>> 0);
-  start >>>= 0;
-
-  var result = Array(length);
-  while (++index < length) {
-    result[index] = array[index + start];
-  }
-  return result;
-}
-
-/**
- * Checks if `value` is a property name and not a property path.
- *
- * @private
- * @param {*} value The value to check.
- * @param {Object} [object] The object to query keys on.
- * @returns {boolean} Returns `true` if `value` is a property name, else `false`.
- */
-function isKey(value, object) {
-  var type = typeof value;
-  if ((type == 'string' && reIsPlainProp.test(value)) || type == 'number') {
-    return true;
-  }
-  if (isArray(value)) {
-    return false;
-  }
-  var result = !reIsDeepProp.test(value);
-  return result || (object != null && value in toObject(object));
-}
-
-/**
- * Checks if `value` is suitable for strict equality comparisons, i.e. `===`.
- *
- * @private
- * @param {*} value The value to check.
- * @returns {boolean} Returns `true` if `value` if suitable for strict
- *  equality comparisons, else `false`.
- */
-function isStrictComparable(value) {
-  return value === value && !isObject(value);
-}
-
-/**
- * Converts `value` to an object if it is not one.
- *
- * @private
- * @param {*} value The value to process.
- * @returns {Object} Returns the object.
- */
-function toObject(value) {
-  return isObject(value) ? value : Object(value);
-}
-
-/**
- * Converts `value` to property path array if it is not one.
- *
- * @private
- * @param {*} value The value to process.
- * @returns {Array} Returns the property path array.
- */
-function toPath(value) {
-  if (isArray(value)) {
-    return value;
-  }
-  var result = [];
-  baseToString(value).replace(rePropName, function(match, number, quote, string) {
-    result.push(quote ? string.replace(reEscapeChar, '$1') : (number || match));
-  });
-  return result;
-}
-
-/**
- * Gets the last element of `array`.
- *
- * @static
- * @memberOf _
- * @category Array
- * @param {Array} array The array to query.
- * @returns {*} Returns the last element of `array`.
- * @example
- *
- * _.last([1, 2, 3]);
- * // => 3
- */
-function last(array) {
-  var length = array ? array.length : 0;
-  return length ? array[length - 1] : undefined;
-}
-
-/**
- * Checks if `value` is the [language type](https://es5.github.io/#x8) of `Object`.
- * (e.g. arrays, functions, objects, regexes, `new Number(0)`, and `new String('')`)
- *
- * @static
- * @memberOf _
- * @category Lang
- * @param {*} value The value to check.
- * @returns {boolean} Returns `true` if `value` is an object, else `false`.
- * @example
- *
- * _.isObject({});
- * // => true
- *
- * _.isObject([1, 2, 3]);
- * // => true
- *
- * _.isObject(1);
- * // => false
- */
-function isObject(value) {
-  // Avoid a V8 JIT bug in Chrome 19-20.
-  // See https://code.google.com/p/v8/issues/detail?id=2291 for more details.
-  var type = typeof value;
-  return type == 'function' || (!!value && type == 'object');
-}
-
-/**
- * Creates a function that returns `value`.
- *
- * @static
- * @memberOf _
- * @category Utility
- * @param {*} value The value to return from the new function.
- * @returns {Function} Returns the new function.
- * @example
- *
- * var object = { 'user': 'fred' };
- * var getter = _.constant(object);
- *
- * getter() === object;
- * // => true
- */
-function constant(value) {
-  return function() {
-    return value;
-  };
-}
-
-/**
- * This method returns the first argument provided to it.
- *
- * @static
- * @memberOf _
- * @category Utility
- * @param {*} value Any value.
- * @returns {*} Returns `value`.
- * @example
- *
- * var object = { 'user': 'fred' };
- *
- * _.identity(object) === object;
- * // => true
- */
-function identity(value) {
-  return value;
-}
-
-/**
- * Creates a function which returns the property value at `path` on a
- * given object.
- *
- * @static
- * @memberOf _
- * @category Utility
- * @param {Array|string} path The path of the property to get.
- * @returns {Function} Returns the new function.
- * @example
- *
- * var objects = [
- *   { 'a': { 'b': { 'c': 2 } } },
- *   { 'a': { 'b': { 'c': 1 } } }
- * ];
- *
- * _.map(objects, _.property('a.b.c'));
- * // => [2, 1]
- *
- * _.pluck(_.sortBy(objects, _.property(['a', 'b', 'c'])), 'a.b.c');
- * // => [1, 2]
- */
-function property(path) {
-  return isKey(path) ? baseProperty(path) : basePropertyDeep(path);
-}
-
-module.exports = baseCallback;
-
-},{"lodash._baseisequal":170,"lodash._bindcallback":172,"lodash.isarray":174,"lodash.keys":175}],170:[function(require,module,exports){
-/**
- * lodash 3.0.5 (Custom Build) <https://lodash.com/>
- * Build: `lodash modern modularize exports="npm" -o ./`
- * Copyright 2012-2015 The Dojo Foundation <http://dojofoundation.org/>
- * Based on Underscore.js 1.8.3 <http://underscorejs.org/LICENSE>
- * Copyright 2009-2015 Jeremy Ashkenas, DocumentCloud and Investigative Reporters & Editors
- * Available under MIT license <https://lodash.com/license>
- */
-var isArray = require('lodash.isarray'),
-    isTypedArray = require('lodash.istypedarray'),
-    keys = require('lodash.keys');
-
-/** `Object#toString` result references. */
-var argsTag = '[object Arguments]',
-    arrayTag = '[object Array]',
-    boolTag = '[object Boolean]',
-    dateTag = '[object Date]',
-    errorTag = '[object Error]',
-    numberTag = '[object Number]',
-    objectTag = '[object Object]',
-    regexpTag = '[object RegExp]',
-    stringTag = '[object String]';
-
-/** Used for native method references. */
-var objectProto = Object.prototype;
-
-/** Used to check objects for own properties. */
-var hasOwnProperty = objectProto.hasOwnProperty;
-
-/**
- * Used to resolve the [`toStringTag`](https://people.mozilla.org/~jorendorff/es6-draft.html#sec-object.prototype.tostring)
- * of values.
- */
-var objToString = objectProto.toString;
-
-/**
- * The base implementation of `_.isEqual` without support for `this` binding
- * `customizer` functions.
- *
- * @private
- * @param {*} value The value to compare.
- * @param {*} other The other value to compare.
- * @param {Function} [customizer] The function to customize comparing values.
- * @param {boolean} [isLoose] Specify performing partial comparisons.
- * @param {Array} [stackA] Tracks traversed `value` objects.
- * @param {Array} [stackB] Tracks traversed `other` objects.
- * @returns {boolean} Returns `true` if the values are equivalent, else `false`.
- */
-function baseIsEqual(value, other, customizer, isLoose, stackA, stackB) {
-  // Exit early for identical values.
-  if (value === other) {
-    return true;
-  }
-  var valType = typeof value,
-      othType = typeof other;
-
-  // Exit early for unlike primitive values.
-  if ((valType != 'function' && valType != 'object' && othType != 'function' && othType != 'object') ||
-      value == null || other == null) {
-    // Return `false` unless both values are `NaN`.
-    return value !== value && other !== other;
-  }
-  return baseIsEqualDeep(value, other, baseIsEqual, customizer, isLoose, stackA, stackB);
-}
-
-/**
- * A specialized version of `baseIsEqual` for arrays and objects which performs
- * deep comparisons and tracks traversed objects enabling objects with circular
- * references to be compared.
- *
- * @private
- * @param {Object} object The object to compare.
- * @param {Object} other The other object to compare.
- * @param {Function} equalFunc The function to determine equivalents of values.
- * @param {Function} [customizer] The function to customize comparing objects.
- * @param {boolean} [isLoose] Specify performing partial comparisons.
- * @param {Array} [stackA=[]] Tracks traversed `value` objects.
- * @param {Array} [stackB=[]] Tracks traversed `other` objects.
- * @returns {boolean} Returns `true` if the objects are equivalent, else `false`.
- */
-function baseIsEqualDeep(object, other, equalFunc, customizer, isLoose, stackA, stackB) {
-  var objIsArr = isArray(object),
-      othIsArr = isArray(other),
-      objTag = arrayTag,
-      othTag = arrayTag;
-
-  if (!objIsArr) {
-    objTag = objToString.call(object);
-    if (objTag == argsTag) {
-      objTag = objectTag;
-    } else if (objTag != objectTag) {
-      objIsArr = isTypedArray(object);
-    }
-  }
-  if (!othIsArr) {
-    othTag = objToString.call(other);
-    if (othTag == argsTag) {
-      othTag = objectTag;
-    } else if (othTag != objectTag) {
-      othIsArr = isTypedArray(other);
-    }
-  }
-  var objIsObj = objTag == objectTag,
-      othIsObj = othTag == objectTag,
-      isSameTag = objTag == othTag;
-
-  if (isSameTag && !(objIsArr || objIsObj)) {
-    return equalByTag(object, other, objTag);
-  }
-  if (!isLoose) {
-    var valWrapped = objIsObj && hasOwnProperty.call(object, '__wrapped__'),
-        othWrapped = othIsObj && hasOwnProperty.call(other, '__wrapped__');
-
-    if (valWrapped || othWrapped) {
-      return equalFunc(valWrapped ? object.value() : object, othWrapped ? other.value() : other, customizer, isLoose, stackA, stackB);
-    }
-  }
-  if (!isSameTag) {
-    return false;
-  }
-  // Assume cyclic values are equal.
-  // For more information on detecting circular references see https://es5.github.io/#JO.
-  stackA || (stackA = []);
-  stackB || (stackB = []);
-
-  var length = stackA.length;
-  while (length--) {
-    if (stackA[length] == object) {
-      return stackB[length] == other;
-    }
-  }
-  // Add `object` and `other` to the stack of traversed objects.
-  stackA.push(object);
-  stackB.push(other);
-
-  var result = (objIsArr ? equalArrays : equalObjects)(object, other, equalFunc, customizer, isLoose, stackA, stackB);
-
-  stackA.pop();
-  stackB.pop();
-
-  return result;
-}
-
-/**
- * A specialized version of `baseIsEqualDeep` for arrays with support for
- * partial deep comparisons.
- *
- * @private
- * @param {Array} array The array to compare.
- * @param {Array} other The other array to compare.
- * @param {Function} equalFunc The function to determine equivalents of values.
- * @param {Function} [customizer] The function to customize comparing arrays.
- * @param {boolean} [isLoose] Specify performing partial comparisons.
- * @param {Array} [stackA] Tracks traversed `value` objects.
- * @param {Array} [stackB] Tracks traversed `other` objects.
- * @returns {boolean} Returns `true` if the arrays are equivalent, else `false`.
- */
-function equalArrays(array, other, equalFunc, customizer, isLoose, stackA, stackB) {
-  var index = -1,
-      arrLength = array.length,
-      othLength = other.length,
-      result = true;
-
-  if (arrLength != othLength && !(isLoose && othLength > arrLength)) {
-    return false;
-  }
-  // Deep compare the contents, ignoring non-numeric properties.
-  while (result && ++index < arrLength) {
-    var arrValue = array[index],
-        othValue = other[index];
-
-    result = undefined;
-    if (customizer) {
-      result = isLoose
-        ? customizer(othValue, arrValue, index)
-        : customizer(arrValue, othValue, index);
-    }
-    if (result === undefined) {
-      // Recursively compare arrays (susceptible to call stack limits).
-      if (isLoose) {
-        var othIndex = othLength;
-        while (othIndex--) {
-          othValue = other[othIndex];
-          result = (arrValue && arrValue === othValue) || equalFunc(arrValue, othValue, customizer, isLoose, stackA, stackB);
-          if (result) {
-            break;
-          }
-        }
-      } else {
-        result = (arrValue && arrValue === othValue) || equalFunc(arrValue, othValue, customizer, isLoose, stackA, stackB);
-      }
-    }
-  }
-  return !!result;
-}
-
-/**
- * A specialized version of `baseIsEqualDeep` for comparing objects of
- * the same `toStringTag`.
- *
- * **Note:** This function only supports comparing values with tags of
- * `Boolean`, `Date`, `Error`, `Number`, `RegExp`, or `String`.
- *
- * @private
- * @param {Object} value The object to compare.
- * @param {Object} other The other object to compare.
- * @param {string} tag The `toStringTag` of the objects to compare.
- * @returns {boolean} Returns `true` if the objects are equivalent, else `false`.
- */
-function equalByTag(object, other, tag) {
-  switch (tag) {
-    case boolTag:
-    case dateTag:
-      // Coerce dates and booleans to numbers, dates to milliseconds and booleans
-      // to `1` or `0` treating invalid dates coerced to `NaN` as not equal.
-      return +object == +other;
-
-    case errorTag:
-      return object.name == other.name && object.message == other.message;
-
-    case numberTag:
-      // Treat `NaN` vs. `NaN` as equal.
-      return (object != +object)
-        ? other != +other
-        : object == +other;
-
-    case regexpTag:
-    case stringTag:
-      // Coerce regexes to strings and treat strings primitives and string
-      // objects as equal. See https://es5.github.io/#x15.10.6.4 for more details.
-      return object == (other + '');
-  }
-  return false;
-}
-
-/**
- * A specialized version of `baseIsEqualDeep` for objects with support for
- * partial deep comparisons.
- *
- * @private
- * @param {Object} object The object to compare.
- * @param {Object} other The other object to compare.
- * @param {Function} equalFunc The function to determine equivalents of values.
- * @param {Function} [customizer] The function to customize comparing values.
- * @param {boolean} [isLoose] Specify performing partial comparisons.
- * @param {Array} [stackA] Tracks traversed `value` objects.
- * @param {Array} [stackB] Tracks traversed `other` objects.
- * @returns {boolean} Returns `true` if the objects are equivalent, else `false`.
- */
-function equalObjects(object, other, equalFunc, customizer, isLoose, stackA, stackB) {
-  var objProps = keys(object),
-      objLength = objProps.length,
-      othProps = keys(other),
-      othLength = othProps.length;
-
-  if (objLength != othLength && !isLoose) {
-    return false;
-  }
-  var skipCtor = isLoose,
-      index = -1;
-
-  while (++index < objLength) {
-    var key = objProps[index],
-        result = isLoose ? key in other : hasOwnProperty.call(other, key);
-
-    if (result) {
-      var objValue = object[key],
-          othValue = other[key];
-
-      result = undefined;
-      if (customizer) {
-        result = isLoose
-          ? customizer(othValue, objValue, key)
-          : customizer(objValue, othValue, key);
-      }
-      if (result === undefined) {
-        // Recursively compare objects (susceptible to call stack limits).
-        result = (objValue && objValue === othValue) || equalFunc(objValue, othValue, customizer, isLoose, stackA, stackB);
-      }
-    }
-    if (!result) {
-      return false;
-    }
-    skipCtor || (skipCtor = key == 'constructor');
-  }
-  if (!skipCtor) {
-    var objCtor = object.constructor,
-        othCtor = other.constructor;
-
-    // Non `Object` object instances with different constructors are not equal.
-    if (objCtor != othCtor &&
-        ('constructor' in object && 'constructor' in other) &&
-        !(typeof objCtor == 'function' && objCtor instanceof objCtor &&
-          typeof othCtor == 'function' && othCtor instanceof othCtor)) {
-      return false;
-    }
-  }
-  return true;
-}
-
-module.exports = baseIsEqual;
-
-},{"lodash.isarray":174,"lodash.istypedarray":171,"lodash.keys":175}],171:[function(require,module,exports){
-/**
- * lodash 3.0.1 (Custom Build) <https://lodash.com/>
- * Build: `lodash modern modularize exports="npm" -o ./`
- * Copyright 2012-2015 The Dojo Foundation <http://dojofoundation.org/>
- * Based on Underscore.js 1.8.2 <http://underscorejs.org/LICENSE>
- * Copyright 2009-2015 Jeremy Ashkenas, DocumentCloud and Investigative Reporters & Editors
- * Available under MIT license <https://lodash.com/license>
- */
-
-/** `Object#toString` result references. */
-var argsTag = '[object Arguments]',
-    arrayTag = '[object Array]',
-    boolTag = '[object Boolean]',
-    dateTag = '[object Date]',
-    errorTag = '[object Error]',
-    funcTag = '[object Function]',
-    mapTag = '[object Map]',
-    numberTag = '[object Number]',
-    objectTag = '[object Object]',
-    regexpTag = '[object RegExp]',
-    setTag = '[object Set]',
-    stringTag = '[object String]',
-    weakMapTag = '[object WeakMap]';
-
-var arrayBufferTag = '[object ArrayBuffer]',
-    float32Tag = '[object Float32Array]',
-    float64Tag = '[object Float64Array]',
-    int8Tag = '[object Int8Array]',
-    int16Tag = '[object Int16Array]',
-    int32Tag = '[object Int32Array]',
-    uint8Tag = '[object Uint8Array]',
-    uint8ClampedTag = '[object Uint8ClampedArray]',
-    uint16Tag = '[object Uint16Array]',
-    uint32Tag = '[object Uint32Array]';
-
-/** Used to identify `toStringTag` values of typed arrays. */
-var typedArrayTags = {};
-typedArrayTags[float32Tag] = typedArrayTags[float64Tag] =
-typedArrayTags[int8Tag] = typedArrayTags[int16Tag] =
-typedArrayTags[int32Tag] = typedArrayTags[uint8Tag] =
-typedArrayTags[uint8ClampedTag] = typedArrayTags[uint16Tag] =
-typedArrayTags[uint32Tag] = true;
-typedArrayTags[argsTag] = typedArrayTags[arrayTag] =
-typedArrayTags[arrayBufferTag] = typedArrayTags[boolTag] =
-typedArrayTags[dateTag] = typedArrayTags[errorTag] =
-typedArrayTags[funcTag] = typedArrayTags[mapTag] =
-typedArrayTags[numberTag] = typedArrayTags[objectTag] =
-typedArrayTags[regexpTag] = typedArrayTags[setTag] =
-typedArrayTags[stringTag] = typedArrayTags[weakMapTag] = false;
-
-/**
- * Checks if `value` is object-like.
- *
- * @private
- * @param {*} value The value to check.
- * @returns {boolean} Returns `true` if `value` is object-like, else `false`.
- */
-function isObjectLike(value) {
-  return !!value && typeof value == 'object';
-}
-
-/** Used for native method references. */
-var objectProto = Object.prototype;
-
-/**
- * Used to resolve the [`toStringTag`](https://people.mozilla.org/~jorendorff/es6-draft.html#sec-object.prototype.tostring)
- * of values.
- */
-var objToString = objectProto.toString;
-
-/**
- * Used as the [maximum length](https://people.mozilla.org/~jorendorff/es6-draft.html#sec-number.max_safe_integer)
- * of an array-like value.
- */
-var MAX_SAFE_INTEGER = Math.pow(2, 53) - 1;
-
-/**
- * Checks if `value` is a valid array-like length.
- *
- * **Note:** This function is based on [`ToLength`](https://people.mozilla.org/~jorendorff/es6-draft.html#sec-tolength).
- *
- * @private
- * @param {*} value The value to check.
- * @returns {boolean} Returns `true` if `value` is a valid length, else `false`.
- */
-function isLength(value) {
-  return typeof value == 'number' && value > -1 && value % 1 == 0 && value <= MAX_SAFE_INTEGER;
-}
-
-/**
- * Checks if `value` is classified as a typed array.
- *
- * @static
- * @memberOf _
- * @category Lang
- * @param {*} value The value to check.
- * @returns {boolean} Returns `true` if `value` is correctly classified, else `false`.
- * @example
- *
- * _.isTypedArray(new Uint8Array);
- * // => true
- *
- * _.isTypedArray([]);
- * // => false
- */
-function isTypedArray(value) {
-  return isObjectLike(value) && isLength(value.length) && !!typedArrayTags[objToString.call(value)];
-}
-
-module.exports = isTypedArray;
-
-},{}],172:[function(require,module,exports){
-arguments[4][56][0].apply(exports,arguments)
-},{"dup":56}],173:[function(require,module,exports){
-arguments[4][87][0].apply(exports,arguments)
-},{"dup":87,"lodash.keys":175}],174:[function(require,module,exports){
-arguments[4][68][0].apply(exports,arguments)
-},{"dup":68}],175:[function(require,module,exports){
-arguments[4][60][0].apply(exports,arguments)
-},{"dup":60,"lodash.isarguments":176,"lodash.isarray":177,"lodash.isnative":178}],176:[function(require,module,exports){
-arguments[4][61][0].apply(exports,arguments)
-},{"dup":61}],177:[function(require,module,exports){
-arguments[4][68][0].apply(exports,arguments)
-},{"dup":68}],178:[function(require,module,exports){
-arguments[4][59][0].apply(exports,arguments)
-},{"dup":59}],179:[function(require,module,exports){
-/**
- * lodash 3.2.0 (Custom Build) <https://lodash.com/>
- * Build: `lodash modern modularize exports="npm" -o ./`
- * Copyright 2012-2015 The Dojo Foundation <http://dojofoundation.org/>
- * Based on Underscore.js 1.8.3 <http://underscorejs.org/LICENSE>
- * Copyright 2009-2015 Jeremy Ashkenas, DocumentCloud and Investigative Reporters & Editors
- * Available under MIT license <https://lodash.com/license>
- */
-var baseDifference = require('lodash._basedifference'),
-    baseFlatten = require('lodash._baseflatten'),
-    restParam = require('lodash.restparam');
-
-/**
- * Used as the [maximum length](https://people.mozilla.org/~jorendorff/es6-draft.html#sec-number.max_safe_integer)
- * of an array-like value.
- */
-var MAX_SAFE_INTEGER = Math.pow(2, 53) - 1;
-
-/**
- * The base implementation of `_.property` without support for deep paths.
- *
- * @private
- * @param {string} key The key of the property to get.
- * @returns {Function} Returns the new function.
- */
-function baseProperty(key) {
-  return function(object) {
-    return object == null ? undefined : object[key];
-  };
-}
-
-/**
- * Gets the "length" property value of `object`.
- *
- * **Note:** This function is used to avoid a [JIT bug](https://bugs.webkit.org/show_bug.cgi?id=142792)
- * that affects Safari on at least iOS 8.1-8.3 ARM64.
- *
- * @private
- * @param {Object} object The object to query.
- * @returns {*} Returns the "length" value.
- */
-var getLength = baseProperty('length');
-
-/**
- * Checks if `value` is array-like.
- *
- * @private
- * @param {*} value The value to check.
- * @returns {boolean} Returns `true` if `value` is array-like, else `false`.
- */
-function isArrayLike(value) {
-  return value != null && isLength(getLength(value));
-}
-
-/**
- * Checks if `value` is a valid array-like length.
- *
- * **Note:** This function is based on [`ToLength`](https://people.mozilla.org/~jorendorff/es6-draft.html#sec-tolength).
- *
- * @private
- * @param {*} value The value to check.
- * @returns {boolean} Returns `true` if `value` is a valid length, else `false`.
- */
-function isLength(value) {
-  return typeof value == 'number' && value > -1 && value % 1 == 0 && value <= MAX_SAFE_INTEGER;
-}
-
-/**
- * Creates an array excluding all values of the provided arrays using
- * [`SameValueZero`](https://people.mozilla.org/~jorendorff/es6-draft.html#sec-samevaluezero)
- * for equality comparisons.
- *
- * @static
- * @memberOf _
- * @category Array
- * @param {Array} array The array to inspect.
- * @param {...Array} [values] The arrays of values to exclude.
- * @returns {Array} Returns the new array of filtered values.
- * @example
- *
- * _.difference([1, 2, 3], [4, 2]);
- * // => [1, 3]
- */
-var difference = restParam(function(array, values) {
-  return isArrayLike(array)
-    ? baseDifference(array, baseFlatten(values, false, true))
-    : [];
-});
-
-module.exports = difference;
-
-},{"lodash._basedifference":180,"lodash._baseflatten":185,"lodash.restparam":188}],180:[function(require,module,exports){
-/**
- * lodash 3.0.2 (Custom Build) <https://lodash.com/>
- * Build: `lodash modern modularize exports="npm" -o ./`
- * Copyright 2012-2015 The Dojo Foundation <http://dojofoundation.org/>
- * Based on Underscore.js 1.8.2 <http://underscorejs.org/LICENSE>
- * Copyright 2009-2015 Jeremy Ashkenas, DocumentCloud and Investigative Reporters & Editors
- * Available under MIT license <https://lodash.com/license>
- */
-var baseIndexOf = require('lodash._baseindexof'),
-    cacheIndexOf = require('lodash._cacheindexof'),
-    createCache = require('lodash._createcache');
-
-/**
- * The base implementation of `_.difference` which accepts a single array
- * of values to exclude.
- *
- * @private
- * @param {Array} array The array to inspect.
- * @param {Array} values The values to exclude.
- * @returns {Array} Returns the new array of filtered values.
- */
-function baseDifference(array, values) {
-  var length = array ? array.length : 0,
-      result = [];
-
-  if (!length) {
-    return result;
-  }
-  var index = -1,
-      indexOf = baseIndexOf,
-      isCommon = true,
-      cache = (isCommon && values.length >= 200) ? createCache(values) : null,
-      valuesLength = values.length;
-
-  if (cache) {
-    indexOf = cacheIndexOf;
-    isCommon = false;
-    values = cache;
-  }
-  outer:
-  while (++index < length) {
-    var value = array[index];
-
-    if (isCommon && value === value) {
-      var valuesIndex = valuesLength;
-      while (valuesIndex--) {
-        if (values[valuesIndex] === value) {
-          continue outer;
-        }
-      }
-      result.push(value);
-    }
-    else if (indexOf(values, value, 0) < 0) {
-      result.push(value);
-    }
-  }
-  return result;
-}
-
-module.exports = baseDifference;
-
-},{"lodash._baseindexof":181,"lodash._cacheindexof":182,"lodash._createcache":183}],181:[function(require,module,exports){
-arguments[4][114][0].apply(exports,arguments)
-},{"dup":114}],182:[function(require,module,exports){
-/**
- * lodash 3.0.1 (Custom Build) <https://lodash.com/>
- * Build: `lodash modern modularize exports="npm" -o ./`
- * Copyright 2012-2015 The Dojo Foundation <http://dojofoundation.org/>
- * Based on Underscore.js 1.8.2 <http://underscorejs.org/LICENSE>
- * Copyright 2009-2015 Jeremy Ashkenas, DocumentCloud and Investigative Reporters & Editors
- * Available under MIT license <https://lodash.com/license>
- */
-
-/**
- * Checks if `value` is in `cache` mimicking the return signature of
- * `_.indexOf` by returning `0` if the value is found, else `-1`.
- *
- * @private
- * @param {Object} cache The cache to search.
- * @param {*} value The value to search for.
- * @returns {number} Returns `0` if `value` is found, else `-1`.
- */
-function cacheIndexOf(cache, value) {
-  var data = cache.data,
-      result = (typeof value == 'string' || isObject(value)) ? data.set.has(value) : data.hash[value];
-
-  return result ? 0 : -1;
-}
-
-/**
- * Checks if `value` is the [language type](https://es5.github.io/#x8) of `Object`.
- * (e.g. arrays, functions, objects, regexes, `new Number(0)`, and `new String('')`)
- *
- * @static
- * @memberOf _
- * @category Lang
- * @param {*} value The value to check.
- * @returns {boolean} Returns `true` if `value` is an object, else `false`.
- * @example
- *
- * _.isObject({});
- * // => true
- *
- * _.isObject([1, 2, 3]);
- * // => true
- *
- * _.isObject(1);
- * // => false
- */
-function isObject(value) {
-  // Avoid a V8 JIT bug in Chrome 19-20.
-  // See https://code.google.com/p/v8/issues/detail?id=2291 for more details.
-  var type = typeof value;
-  return type == 'function' || (!!value && type == 'object');
-}
-
-module.exports = cacheIndexOf;
-
-},{}],183:[function(require,module,exports){
-(function (global){
-/**
- * lodash 3.0.1 (Custom Build) <https://lodash.com/>
- * Build: `lodash modern modularize exports="npm" -o ./`
- * Copyright 2012-2015 The Dojo Foundation <http://dojofoundation.org/>
- * Based on Underscore.js 1.8.2 <http://underscorejs.org/LICENSE>
- * Copyright 2009-2015 Jeremy Ashkenas, DocumentCloud and Investigative Reporters & Editors
- * Available under MIT license <https://lodash.com/license>
- */
-var isNative = require('lodash.isnative');
-
-/** Native method references. */
-var Set = isNative(Set = global.Set) && Set;
-
-/* Native method references for those with the same name as other `lodash` methods. */
-var nativeCreate = isNative(nativeCreate = Object.create) && nativeCreate;
-
-/**
- *
- * Creates a cache object to store unique values.
- *
- * @private
- * @param {Array} [values] The values to cache.
- */
-function SetCache(values) {
-  var length = values ? values.length : 0;
-
-  this.data = { 'hash': nativeCreate(null), 'set': new Set };
-  while (length--) {
-    this.push(values[length]);
-  }
-}
-
-/**
- * Adds `value` to the cache.
- *
- * @private
- * @name push
- * @memberOf SetCache
- * @param {*} value The value to cache.
- */
-function cachePush(value) {
-  var data = this.data;
-  if (typeof value == 'string' || isObject(value)) {
-    data.set.add(value);
-  } else {
-    data.hash[value] = true;
-  }
-}
-
-/**
- * Creates a `Set` cache object to optimize linear searches of large arrays.
- *
- * @private
- * @param {Array} [values] The values to cache.
- * @returns {null|Object} Returns the new cache object if `Set` is supported, else `null`.
- */
-var createCache = !(nativeCreate && Set) ? constant(null) : function(values) {
-  return new SetCache(values);
-};
-
-/**
- * Checks if `value` is the [language type](https://es5.github.io/#x8) of `Object`.
- * (e.g. arrays, functions, objects, regexes, `new Number(0)`, and `new String('')`)
- *
- * @static
- * @memberOf _
- * @category Lang
- * @param {*} value The value to check.
- * @returns {boolean} Returns `true` if `value` is an object, else `false`.
- * @example
- *
- * _.isObject({});
- * // => true
- *
- * _.isObject([1, 2, 3]);
- * // => true
- *
- * _.isObject(1);
- * // => false
- */
-function isObject(value) {
-  // Avoid a V8 JIT bug in Chrome 19-20.
-  // See https://code.google.com/p/v8/issues/detail?id=2291 for more details.
-  var type = typeof value;
-  return type == 'function' || (!!value && type == 'object');
-}
-
-/**
- * Creates a function that returns `value`.
- *
- * @static
- * @memberOf _
- * @category Utility
- * @param {*} value The value to return from the new function.
- * @returns {Function} Returns the new function.
- * @example
- *
- * var object = { 'user': 'fred' };
- * var getter = _.constant(object);
- *
- * getter() === object;
- * // => true
- */
-function constant(value) {
-  return function() {
-    return value;
-  };
-}
-
-// Add functions to the `Set` cache.
-SetCache.prototype.push = cachePush;
-
-module.exports = createCache;
-
-}).call(this,typeof global !== "undefined" ? global : typeof self !== "undefined" ? self : typeof window !== "undefined" ? window : {})
-},{"lodash.isnative":184}],184:[function(require,module,exports){
-arguments[4][59][0].apply(exports,arguments)
-},{"dup":59}],185:[function(require,module,exports){
-/**
- * lodash 3.1.2 (Custom Build) <https://lodash.com/>
- * Build: `lodash modern modularize exports="npm" -o ./`
- * Copyright 2012-2015 The Dojo Foundation <http://dojofoundation.org/>
- * Based on Underscore.js 1.8.3 <http://underscorejs.org/LICENSE>
- * Copyright 2009-2015 Jeremy Ashkenas, DocumentCloud and Investigative Reporters & Editors
- * Available under MIT license <https://lodash.com/license>
- */
-var isArguments = require('lodash.isarguments'),
-    isArray = require('lodash.isarray');
-
-/**
- * Checks if `value` is object-like.
- *
- * @private
- * @param {*} value The value to check.
- * @returns {boolean} Returns `true` if `value` is object-like, else `false`.
- */
-function isObjectLike(value) {
-  return !!value && typeof value == 'object';
-}
-
-/**
- * Used as the [maximum length](https://people.mozilla.org/~jorendorff/es6-draft.html#sec-number.max_safe_integer)
- * of an array-like value.
- */
-var MAX_SAFE_INTEGER = Math.pow(2, 53) - 1;
-
-/**
- * The base implementation of `_.flatten` with added support for restricting
- * flattening and specifying the start index.
- *
- * @private
- * @param {Array} array The array to flatten.
- * @param {boolean} [isDeep] Specify a deep flatten.
- * @param {boolean} [isStrict] Restrict flattening to arrays-like objects.
- * @returns {Array} Returns the new flattened array.
- */
-function baseFlatten(array, isDeep, isStrict) {
-  var index = -1,
-      length = array.length,
-      resIndex = -1,
-      result = [];
-
-  while (++index < length) {
-    var value = array[index];
-    if (isObjectLike(value) && isArrayLike(value) &&
-        (isStrict || isArray(value) || isArguments(value))) {
-      if (isDeep) {
-        // Recursively flatten arrays (susceptible to call stack limits).
-        value = baseFlatten(value, isDeep, isStrict);
-      }
-      var valIndex = -1,
-          valLength = value.length;
-
-      while (++valIndex < valLength) {
-        result[++resIndex] = value[valIndex];
-      }
-    } else if (!isStrict) {
-      result[++resIndex] = value;
-    }
-  }
-  return result;
-}
-
-/**
- * The base implementation of `_.property` without support for deep paths.
- *
- * @private
- * @param {string} key The key of the property to get.
- * @returns {Function} Returns the new function.
- */
-function baseProperty(key) {
-  return function(object) {
-    return object == null ? undefined : object[key];
-  };
-}
-
-/**
- * Gets the "length" property value of `object`.
- *
- * **Note:** This function is used to avoid a [JIT bug](https://bugs.webkit.org/show_bug.cgi?id=142792)
- * that affects Safari on at least iOS 8.1-8.3 ARM64.
- *
- * @private
- * @param {Object} object The object to query.
- * @returns {*} Returns the "length" value.
- */
-var getLength = baseProperty('length');
-
-/**
- * Checks if `value` is array-like.
- *
- * @private
- * @param {*} value The value to check.
- * @returns {boolean} Returns `true` if `value` is array-like, else `false`.
- */
-function isArrayLike(value) {
-  return value != null && isLength(getLength(value));
-}
-
-/**
- * Checks if `value` is a valid array-like length.
- *
- * **Note:** This function is based on [`ToLength`](https://people.mozilla.org/~jorendorff/es6-draft.html#sec-tolength).
- *
- * @private
- * @param {*} value The value to check.
- * @returns {boolean} Returns `true` if `value` is a valid length, else `false`.
- */
-function isLength(value) {
-  return typeof value == 'number' && value > -1 && value % 1 == 0 && value <= MAX_SAFE_INTEGER;
-}
-
-module.exports = baseFlatten;
-
-},{"lodash.isarguments":186,"lodash.isarray":187}],186:[function(require,module,exports){
-arguments[4][61][0].apply(exports,arguments)
-},{"dup":61}],187:[function(require,module,exports){
-arguments[4][68][0].apply(exports,arguments)
-},{"dup":68}],188:[function(require,module,exports){
-arguments[4][58][0].apply(exports,arguments)
-},{"dup":58}],189:[function(require,module,exports){
-/**
- * lodash 3.0.0 (Custom Build) <https://lodash.com/>
- * Build: `lodash modern modularize exports="npm" -o ./`
- * Copyright 2012-2015 The Dojo Foundation <http://dojofoundation.org/>
- * Based on Underscore.js 1.7.0 <http://underscorejs.org/LICENSE>
- * Copyright 2009-2015 Jeremy Ashkenas, DocumentCloud and Investigative Reporters & Editors
- * Available under MIT license <https://lodash.com/license>
- */
-var baseSlice = require('lodash._baseslice'),
-    isIterateeCall = require('lodash._isiterateecall');
-
-/**
- * Creates a slice of `array` with `n` elements dropped from the beginning.
- *
- * @static
- * @memberOf _
- * @type Function
- * @category Array
- * @param {Array} array The array to query.
- * @param {number} [n=1] The number of elements to drop.
- * @param- {Object} [guard] Enables use as a callback for functions like `_.map`.
- * @returns {Array} Returns the slice of `array`.
- * @example
- *
- * _.drop([1, 2, 3]);
- * // => [2, 3]
- *
- * _.drop([1, 2, 3], 2);
- * // => [3]
- *
- * _.drop([1, 2, 3], 5);
- * // => []
- *
- * _.drop([1, 2, 3], 0);
- * // => [1, 2, 3]
- */
-function drop(array, n, guard) {
-  var length = array ? array.length : 0;
-  if (!length) {
-    return [];
-  }
-  if (guard ? isIterateeCall(array, n, guard) : n == null) {
-    n = 1;
-  }
-  return baseSlice(array, n < 0 ? 0 : n);
-}
-
-module.exports = drop;
-
-},{"lodash._baseslice":190,"lodash._isiterateecall":191}],190:[function(require,module,exports){
-arguments[4][161][0].apply(exports,arguments)
-},{"dup":161}],191:[function(require,module,exports){
-arguments[4][57][0].apply(exports,arguments)
-},{"dup":57}],192:[function(require,module,exports){
-/**
- * lodash 3.2.1 (Custom Build) <https://lodash.com/>
- * Build: `lodash modern modularize exports="npm" -o ./`
- * Copyright 2012-2015 The Dojo Foundation <http://dojofoundation.org/>
- * Based on Underscore.js 1.8.3 <http://underscorejs.org/LICENSE>
- * Copyright 2009-2015 Jeremy Ashkenas, DocumentCloud and Investigative Reporters & Editors
- * Available under MIT license <https://lodash.com/license>
- */
-var arrayEvery = require('lodash._arrayevery'),
-    baseCallback = require('lodash._basecallback'),
-    baseEach = require('lodash._baseeach'),
-    isIterateeCall = require('lodash._isiterateecall'),
-    isArray = require('lodash.isarray'),
-    keys = require('lodash.keys');
-
-/**
- * The base implementation of `_.every` without support for callback
- * shorthands and `this` binding.
- *
- * @private
- * @param {Array|Object|string} collection The collection to iterate over.
- * @param {Function} predicate The function invoked per iteration.
- * @returns {boolean} Returns `true` if all elements pass the predicate check,
- *  else `false`
- */
-function baseEvery(collection, predicate) {
-  var result = true;
-  baseEach(collection, function(value, index, collection) {
-    result = !!predicate(value, index, collection);
-    return result;
-  });
-  return result;
-}
-
-/**
- * Checks if `predicate` returns truthy for **all** elements of `collection`.
- * The predicate is bound to `thisArg` and invoked with three arguments:
- * (value, index|key, collection).
- *
- * If a property name is provided for `predicate` the created `_.property`
- * style callback returns the property value of the given element.
- *
- * If a value is also provided for `thisArg` the created `_.matchesProperty`
- * style callback returns `true` for elements that have a matching property
- * value, else `false`.
- *
- * If an object is provided for `predicate` the created `_.matches` style
- * callback returns `true` for elements that have the properties of the given
- * object, else `false`.
- *
- * @static
- * @memberOf _
- * @alias all
- * @category Collection
- * @param {Array|Object|string} collection The collection to iterate over.
- * @param {Function|Object|string} [predicate=_.identity] The function invoked
- *  per iteration.
- * @param {*} [thisArg] The `this` binding of `predicate`.
- * @returns {boolean} Returns `true` if all elements pass the predicate check,
- *  else `false`.
- * @example
- *
- * _.every([true, 1, null, 'yes'], Boolean);
- * // => false
- *
- * var users = [
- *   { 'user': 'barney', 'active': false },
- *   { 'user': 'fred',   'active': false }
- * ];
- *
- * // using the `_.matches` callback shorthand
- * _.every(users, { 'user': 'barney', 'active': false });
- * // => false
- *
- * // using the `_.matchesProperty` callback shorthand
- * _.every(users, 'active', false);
- * // => true
- *
- * // using the `_.property` callback shorthand
- * _.every(users, 'active');
- * // => false
- */
-function every(collection, predicate, thisArg) {
-  var func = isArray(collection) ? arrayEvery : baseEvery;
-  if (thisArg && isIterateeCall(collection, predicate, thisArg)) {
-    predicate = null;
-  }
-  if (typeof predicate != 'function' || thisArg !== undefined) {
-    predicate = baseCallback(predicate, thisArg, 3);
-  }
-  return func(collection, predicate);
-}
-
-module.exports = every;
-
-},{"lodash._arrayevery":193,"lodash._basecallback":194,"lodash._baseeach":198,"lodash._isiterateecall":199,"lodash.isarray":200,"lodash.keys":201}],193:[function(require,module,exports){
-/**
- * lodash 3.0.0 (Custom Build) <https://lodash.com/>
- * Build: `lodash modern modularize exports="npm" -o ./`
- * Copyright 2012-2015 The Dojo Foundation <http://dojofoundation.org/>
- * Based on Underscore.js 1.7.0 <http://underscorejs.org/LICENSE>
- * Copyright 2009-2015 Jeremy Ashkenas, DocumentCloud and Investigative Reporters & Editors
- * Available under MIT license <https://lodash.com/license>
- */
-
-/**
- * A specialized version of `_.every` for arrays without support for callback
- * shorthands or `this` binding.
- *
- * @private
- * @param {Array} array The array to iterate over.
- * @param {Function} predicate The function invoked per iteration.
- * @returns {boolean} Returns `true` if all elements pass the predicate check,
- *  else `false`.
- */
-function arrayEvery(array, predicate) {
-  var index = -1,
-      length = array.length;
-
-  while (++index < length) {
-    if (!predicate(array[index], index, array)) {
-      return false;
-    }
-  }
-  return true;
-}
-
-module.exports = arrayEvery;
-
-},{}],194:[function(require,module,exports){
-arguments[4][169][0].apply(exports,arguments)
-},{"dup":169,"lodash._baseisequal":195,"lodash._bindcallback":197,"lodash.isarray":200,"lodash.keys":201}],195:[function(require,module,exports){
-arguments[4][170][0].apply(exports,arguments)
-},{"dup":170,"lodash.isarray":200,"lodash.istypedarray":196,"lodash.keys":201}],196:[function(require,module,exports){
-arguments[4][171][0].apply(exports,arguments)
-},{"dup":171}],197:[function(require,module,exports){
-arguments[4][56][0].apply(exports,arguments)
-},{"dup":56}],198:[function(require,module,exports){
-arguments[4][87][0].apply(exports,arguments)
-},{"dup":87,"lodash.keys":201}],199:[function(require,module,exports){
-arguments[4][57][0].apply(exports,arguments)
-},{"dup":57}],200:[function(require,module,exports){
-arguments[4][68][0].apply(exports,arguments)
-},{"dup":68}],201:[function(require,module,exports){
-arguments[4][60][0].apply(exports,arguments)
-},{"dup":60,"lodash.isarguments":202,"lodash.isarray":200,"lodash.isnative":203}],202:[function(require,module,exports){
-arguments[4][61][0].apply(exports,arguments)
-},{"dup":61}],203:[function(require,module,exports){
-arguments[4][59][0].apply(exports,arguments)
-},{"dup":59}],204:[function(require,module,exports){
-/**
- * lodash 3.1.0 (Custom Build) <https://lodash.com/>
- * Build: `lodash modern modularize exports="npm" -o ./`
- * Copyright 2012-2015 The Dojo Foundation <http://dojofoundation.org/>
- * Based on Underscore.js 1.8.2 <http://underscorejs.org/LICENSE>
- * Copyright 2009-2015 Jeremy Ashkenas, DocumentCloud and Investigative Reporters & Editors
- * Available under MIT license <https://lodash.com/license>
- */
-var arrayFilter = require('lodash._arrayfilter'),
-    baseCallback = require('lodash._basecallback'),
-    baseFilter = require('lodash._basefilter'),
-    isArray = require('lodash.isarray'),
-    keys = require('lodash.keys');
-
-/**
- * Iterates over elements of `collection`, returning an array of all elements
- * `predicate` returns truthy for. The predicate is bound to `thisArg` and
- * invoked with three arguments: (value, index|key, collection).
- *
- * If a property name is provided for `predicate` the created `_.property`
- * style callback returns the property value of the given element.
- *
- * If a value is also provided for `thisArg` the created `_.matchesProperty`
- * style callback returns `true` for elements that have a matching property
- * value, else `false`.
- *
- * If an object is provided for `predicate` the created `_.matches` style
- * callback returns `true` for elements that have the properties of the given
- * object, else `false`.
- *
- * @static
- * @memberOf _
- * @alias select
- * @category Collection
- * @param {Array|Object|string} collection The collection to iterate over.
- * @param {Function|Object|string} [predicate=_.identity] The function invoked
- *  per iteration.
- * @param {*} [thisArg] The `this` binding of `predicate`.
- * @returns {Array} Returns the new filtered array.
- * @example
- *
- * _.filter([4, 5, 6], function(n) {
- *   return n % 2 == 0;
- * });
- * // => [4, 6]
- *
- * var users = [
- *   { 'user': 'barney', 'age': 36, 'active': true },
- *   { 'user': 'fred',   'age': 40, 'active': false }
- * ];
- *
- * // using the `_.matches` callback shorthand
- * _.pluck(_.filter(users, { 'age': 36, 'active': true }), 'user');
- * // => ['barney']
- *
- * // using the `_.matchesProperty` callback shorthand
- * _.pluck(_.filter(users, 'active', false), 'user');
- * // => ['fred']
- *
- * // using the `_.property` callback shorthand
- * _.pluck(_.filter(users, 'active'), 'user');
- * // => ['barney']
- */
-function filter(collection, predicate, thisArg) {
-  var func = isArray(collection) ? arrayFilter : baseFilter;
-  predicate = baseCallback(predicate, thisArg, 3);
-  return func(collection, predicate);
-}
-
-module.exports = filter;
-
-},{"lodash._arrayfilter":205,"lodash._basecallback":206,"lodash._basefilter":210,"lodash.isarray":212,"lodash.keys":213}],205:[function(require,module,exports){
-/**
- * lodash 3.0.0 (Custom Build) <https://lodash.com/>
- * Build: `lodash modern modularize exports="npm" -o ./`
- * Copyright 2012-2015 The Dojo Foundation <http://dojofoundation.org/>
- * Based on Underscore.js 1.7.0 <http://underscorejs.org/LICENSE>
- * Copyright 2009-2015 Jeremy Ashkenas, DocumentCloud and Investigative Reporters & Editors
- * Available under MIT license <https://lodash.com/license>
- */
-
-/**
- * A specialized version of `_.filter` for arrays without support for callback
- * shorthands or `this` binding.
- *
- * @private
- * @param {Array} array The array to iterate over.
- * @param {Function} predicate The function invoked per iteration.
- * @returns {Array} Returns the new filtered array.
- */
-function arrayFilter(array, predicate) {
-  var index = -1,
-      length = array.length,
-      resIndex = -1,
-      result = [];
-
-  while (++index < length) {
-    var value = array[index];
-    if (predicate(value, index, array)) {
-      result[++resIndex] = value;
-    }
-  }
-  return result;
-}
-
-module.exports = arrayFilter;
-
-},{}],206:[function(require,module,exports){
-arguments[4][169][0].apply(exports,arguments)
-},{"dup":169,"lodash._baseisequal":207,"lodash._bindcallback":209,"lodash.isarray":212,"lodash.keys":213}],207:[function(require,module,exports){
-arguments[4][170][0].apply(exports,arguments)
-},{"dup":170,"lodash.isarray":212,"lodash.istypedarray":208,"lodash.keys":213}],208:[function(require,module,exports){
-arguments[4][171][0].apply(exports,arguments)
-},{"dup":171}],209:[function(require,module,exports){
-arguments[4][56][0].apply(exports,arguments)
-},{"dup":56}],210:[function(require,module,exports){
-/**
- * lodash 3.0.0 (Custom Build) <https://lodash.com/>
- * Build: `lodash modern modularize exports="npm" -o ./`
- * Copyright 2012-2015 The Dojo Foundation <http://dojofoundation.org/>
- * Based on Underscore.js 1.7.0 <http://underscorejs.org/LICENSE>
- * Copyright 2009-2015 Jeremy Ashkenas, DocumentCloud and Investigative Reporters & Editors
- * Available under MIT license <https://lodash.com/license>
- */
-var baseEach = require('lodash._baseeach');
-
-/**
- * The base implementation of `_.filter` without support for callback
- * shorthands or `this` binding.
- *
- * @private
- * @param {Array|Object|string} collection The collection to iterate over.
- * @param {Function} predicate The function invoked per iteration.
- * @returns {Array} Returns the new filtered array.
- */
-function baseFilter(collection, predicate) {
-  var result = [];
-  baseEach(collection, function(value, index, collection) {
-    if (predicate(value, index, collection)) {
-      result.push(value);
-    }
-  });
-  return result;
-}
-
-module.exports = baseFilter;
-
-},{"lodash._baseeach":211}],211:[function(require,module,exports){
-arguments[4][87][0].apply(exports,arguments)
-},{"dup":87,"lodash.keys":213}],212:[function(require,module,exports){
-arguments[4][68][0].apply(exports,arguments)
-},{"dup":68}],213:[function(require,module,exports){
-arguments[4][60][0].apply(exports,arguments)
-},{"dup":60,"lodash.isarguments":214,"lodash.isarray":212,"lodash.isnative":215}],214:[function(require,module,exports){
-arguments[4][61][0].apply(exports,arguments)
-},{"dup":61}],215:[function(require,module,exports){
-arguments[4][59][0].apply(exports,arguments)
-},{"dup":59}],216:[function(require,module,exports){
-/**
- * lodash 3.2.0 (Custom Build) <https://lodash.com/>
- * Build: `lodash modern modularize exports="npm" -o ./`
- * Copyright 2012-2015 The Dojo Foundation <http://dojofoundation.org/>
- * Based on Underscore.js 1.8.2 <http://underscorejs.org/LICENSE>
- * Copyright 2009-2015 Jeremy Ashkenas, DocumentCloud and Investigative Reporters & Editors
- * Available under MIT license <https://lodash.com/license>
- */
-var baseCallback = require('lodash._basecallback'),
-    baseEach = require('lodash._baseeach'),
-    baseFind = require('lodash._basefind'),
-    baseFindIndex = require('lodash._basefindindex'),
-    isArray = require('lodash.isarray'),
-    keys = require('lodash.keys');
-
-/**
- * Creates a `_.find` or `_.findLast` function.
- *
- * @private
- * @param {Function} eachFunc The function to iterate over a collection.
- * @param {boolean} [fromRight] Specify iterating from right to left.
- * @returns {Function} Returns the new find function.
- */
-function createFind(eachFunc, fromRight) {
-  return function(collection, predicate, thisArg) {
-    predicate = baseCallback(predicate, thisArg, 3);
-    if (isArray(collection)) {
-      var index = baseFindIndex(collection, predicate, fromRight);
-      return index > -1 ? collection[index] : undefined;
-    }
-    return baseFind(collection, predicate, eachFunc);
-  }
-}
-
-/**
- * Iterates over elements of `collection`, returning the first element
- * `predicate` returns truthy for. The predicate is bound to `thisArg` and
- * invoked with three arguments: (value, index|key, collection).
- *
- * If a property name is provided for `predicate` the created `_.property`
- * style callback returns the property value of the given element.
- *
- * If a value is also provided for `thisArg` the created `_.matchesProperty`
- * style callback returns `true` for elements that have a matching property
- * value, else `false`.
- *
- * If an object is provided for `predicate` the created `_.matches` style
- * callback returns `true` for elements that have the properties of the given
- * object, else `false`.
- *
- * @static
- * @memberOf _
- * @alias detect
- * @category Collection
- * @param {Array|Object|string} collection The collection to search.
- * @param {Function|Object|string} [predicate=_.identity] The function invoked
- *  per iteration.
- * @param {*} [thisArg] The `this` binding of `predicate`.
- * @returns {*} Returns the matched element, else `undefined`.
- * @example
- *
- * var users = [
- *   { 'user': 'barney',  'age': 36, 'active': true },
- *   { 'user': 'fred',    'age': 40, 'active': false },
- *   { 'user': 'pebbles', 'age': 1,  'active': true }
- * ];
- *
- * _.result(_.find(users, function(chr) {
- *   return chr.age < 40;
- * }), 'user');
- * // => 'barney'
- *
- * // using the `_.matches` callback shorthand
- * _.result(_.find(users, { 'age': 1, 'active': true }), 'user');
- * // => 'pebbles'
- *
- * // using the `_.matchesProperty` callback shorthand
- * _.result(_.find(users, 'active', false), 'user');
- * // => 'fred'
- *
- * // using the `_.property` callback shorthand
- * _.result(_.find(users, 'active'), 'user');
- * // => 'barney'
- */
-var find = createFind(baseEach);
-
-module.exports = find;
-
-},{"lodash._basecallback":217,"lodash._baseeach":221,"lodash._basefind":222,"lodash._basefindindex":223,"lodash.isarray":224,"lodash.keys":225}],217:[function(require,module,exports){
-arguments[4][169][0].apply(exports,arguments)
-},{"dup":169,"lodash._baseisequal":218,"lodash._bindcallback":220,"lodash.isarray":224,"lodash.keys":225}],218:[function(require,module,exports){
-arguments[4][170][0].apply(exports,arguments)
-},{"dup":170,"lodash.isarray":224,"lodash.istypedarray":219,"lodash.keys":225}],219:[function(require,module,exports){
-arguments[4][171][0].apply(exports,arguments)
-},{"dup":171}],220:[function(require,module,exports){
-arguments[4][56][0].apply(exports,arguments)
-},{"dup":56}],221:[function(require,module,exports){
-arguments[4][87][0].apply(exports,arguments)
-},{"dup":87,"lodash.keys":225}],222:[function(require,module,exports){
-/**
- * lodash 3.0.0 (Custom Build) <https://lodash.com/>
- * Build: `lodash modern modularize exports="npm" -o ./`
- * Copyright 2012-2015 The Dojo Foundation <http://dojofoundation.org/>
- * Based on Underscore.js 1.7.0 <http://underscorejs.org/LICENSE>
- * Copyright 2009-2015 Jeremy Ashkenas, DocumentCloud and Investigative Reporters & Editors
- * Available under MIT license <https://lodash.com/license>
- */
-
-/**
- * The base implementation of `_.find`, `_.findLast`, `_.findKey`, and `_.findLastKey`,
- * without support for callback shorthands and `this` binding, which iterates
- * over `collection` using the provided `eachFunc`.
- *
- * @private
- * @param {Array|Object|string} collection The collection to search.
- * @param {Function} predicate The function invoked per iteration.
- * @param {Function} eachFunc The function to iterate over `collection`.
- * @param {boolean} [retKey] Specify returning the key of the found element
- *  instead of the element itself.
- * @returns {*} Returns the found element or its key, else `undefined`.
- */
-function baseFind(collection, predicate, eachFunc, retKey) {
-  var result;
-  eachFunc(collection, function(value, key, collection) {
-    if (predicate(value, key, collection)) {
-      result = retKey ? key : value;
-      return false;
-    }
-  });
-  return result;
-}
-
-module.exports = baseFind;
-
-},{}],223:[function(require,module,exports){
-/**
- * lodash 3.6.0 (Custom Build) <https://lodash.com/>
- * Build: `lodash modern modularize exports="npm" -o ./`
- * Copyright 2012-2015 The Dojo Foundation <http://dojofoundation.org/>
- * Based on Underscore.js 1.8.2 <http://underscorejs.org/LICENSE>
- * Copyright 2009-2015 Jeremy Ashkenas, DocumentCloud and Investigative Reporters & Editors
- * Available under MIT license <https://lodash.com/license>
- */
-
-/**
- * The base implementation of `_.findIndex` and `_.findLastIndex` without
- * support for callback shorthands and `this` binding.
- *
- * @private
- * @param {Array} array The array to search.
- * @param {Function} predicate The function invoked per iteration.
- * @param {boolean} [fromRight] Specify iterating from right to left.
- * @returns {number} Returns the index of the matched value, else `-1`.
- */
-function baseFindIndex(array, predicate, fromRight) {
-  var length = array.length,
-      index = fromRight ? length : -1;
-
-  while ((fromRight ? index-- : ++index < length)) {
-    if (predicate(array[index], index, array)) {
-      return index;
-    }
-  }
-  return -1;
-}
-
-module.exports = baseFindIndex;
-
-},{}],224:[function(require,module,exports){
-arguments[4][68][0].apply(exports,arguments)
-},{"dup":68}],225:[function(require,module,exports){
-arguments[4][60][0].apply(exports,arguments)
-},{"dup":60,"lodash.isarguments":226,"lodash.isarray":224,"lodash.isnative":227}],226:[function(require,module,exports){
-arguments[4][61][0].apply(exports,arguments)
-},{"dup":61}],227:[function(require,module,exports){
-arguments[4][59][0].apply(exports,arguments)
-},{"dup":59}],228:[function(require,module,exports){
-arguments[4][85][0].apply(exports,arguments)
-},{"dup":85,"lodash._arrayeach":229,"lodash._baseeach":230,"lodash._bindcallback":234,"lodash.isarray":235}],229:[function(require,module,exports){
-arguments[4][86][0].apply(exports,arguments)
-},{"dup":86}],230:[function(require,module,exports){
-arguments[4][87][0].apply(exports,arguments)
-},{"dup":87,"lodash.keys":231}],231:[function(require,module,exports){
-arguments[4][60][0].apply(exports,arguments)
-},{"dup":60,"lodash.isarguments":232,"lodash.isarray":235,"lodash.isnative":233}],232:[function(require,module,exports){
-arguments[4][61][0].apply(exports,arguments)
-},{"dup":61}],233:[function(require,module,exports){
-arguments[4][59][0].apply(exports,arguments)
-},{"dup":59}],234:[function(require,module,exports){
-arguments[4][56][0].apply(exports,arguments)
-},{"dup":56}],235:[function(require,module,exports){
-arguments[4][68][0].apply(exports,arguments)
-},{"dup":68}],236:[function(require,module,exports){
-/**
- * lodash 3.1.0 (Custom Build) <https://lodash.com/>
- * Build: `lodash modern modularize exports="npm" -o ./`
- * Copyright 2012-2015 The Dojo Foundation <http://dojofoundation.org/>
- * Based on Underscore.js 1.8.2 <http://underscorejs.org/LICENSE>
- * Copyright 2009-2015 Jeremy Ashkenas, DocumentCloud and Investigative Reporters & Editors
- * Available under MIT license <https://lodash.com/license>
- */
-var createAggregator = require('lodash._createaggregator'),
-    keys = require('lodash.keys');
-
-/** Used for native method references. */
-var objectProto = Object.prototype;
-
-/** Used to check objects for own properties. */
-var hasOwnProperty = objectProto.hasOwnProperty;
-
-/**
- * Creates an object composed of keys generated from the results of running
- * each element of `collection` through `iteratee`. The corresponding value
- * of each key is an array of the elements responsible for generating the key.
- * The `iteratee` is bound to `thisArg` and invoked with three arguments:
- * (value, index|key, collection).
- *
- * If a property name is provided for `iteratee` the created `_.property`
- * style callback returns the property value of the given element.
- *
- * If a value is also provided for `thisArg` the created `_.matchesProperty`
- * style callback returns `true` for elements that have a matching property
- * value, else `false`.
- *
- * If an object is provided for `iteratee` the created `_.matches` style
- * callback returns `true` for elements that have the properties of the given
- * object, else `false`.
- *
- * @static
- * @memberOf _
- * @category Collection
- * @param {Array|Object|string} collection The collection to iterate over.
- * @param {Function|Object|string} [iteratee=_.identity] The function invoked
- *  per iteration.
- * @param {*} [thisArg] The `this` binding of `iteratee`.
- * @returns {Object} Returns the composed aggregate object.
- * @example
- *
- * _.groupBy([4.2, 6.1, 6.4], function(n) {
- *   return Math.floor(n);
- * });
- * // => { '4': [4.2], '6': [6.1, 6.4] }
- *
- * _.groupBy([4.2, 6.1, 6.4], function(n) {
- *   return this.floor(n);
- * }, Math);
- * // => { '4': [4.2], '6': [6.1, 6.4] }
- *
- * // using the `_.property` callback shorthand
- * _.groupBy(['one', 'two', 'three'], 'length');
- * // => { '3': ['one', 'two'], '5': ['three'] }
- */
-var groupBy = createAggregator(function(result, value, key) {
-  if (hasOwnProperty.call(result, key)) {
-    result[key].push(value);
-  } else {
-    result[key] = [value];
-  }
-});
-
-module.exports = groupBy;
-
-},{"lodash._createaggregator":237,"lodash.keys":244}],237:[function(require,module,exports){
-arguments[4][168][0].apply(exports,arguments)
-},{"dup":168,"lodash._basecallback":238,"lodash._baseeach":242,"lodash.isarray":243}],238:[function(require,module,exports){
-arguments[4][169][0].apply(exports,arguments)
-},{"dup":169,"lodash._baseisequal":239,"lodash._bindcallback":241,"lodash.isarray":243,"lodash.keys":244}],239:[function(require,module,exports){
-arguments[4][170][0].apply(exports,arguments)
-},{"dup":170,"lodash.isarray":243,"lodash.istypedarray":240,"lodash.keys":244}],240:[function(require,module,exports){
-arguments[4][171][0].apply(exports,arguments)
-},{"dup":171}],241:[function(require,module,exports){
-arguments[4][56][0].apply(exports,arguments)
-},{"dup":56}],242:[function(require,module,exports){
-arguments[4][87][0].apply(exports,arguments)
-},{"dup":87,"lodash.keys":244}],243:[function(require,module,exports){
-arguments[4][68][0].apply(exports,arguments)
-},{"dup":68}],244:[function(require,module,exports){
-arguments[4][60][0].apply(exports,arguments)
-},{"dup":60,"lodash.isarguments":245,"lodash.isarray":246,"lodash.isnative":247}],245:[function(require,module,exports){
-arguments[4][61][0].apply(exports,arguments)
-},{"dup":61}],246:[function(require,module,exports){
-arguments[4][68][0].apply(exports,arguments)
-},{"dup":68}],247:[function(require,module,exports){
-arguments[4][59][0].apply(exports,arguments)
-},{"dup":59}],248:[function(require,module,exports){
-arguments[4][113][0].apply(exports,arguments)
-},{"dup":113,"lodash._baseindexof":249,"lodash._basevalues":250,"lodash._isiterateecall":251,"lodash.isarray":252,"lodash.isstring":253,"lodash.keys":254}],249:[function(require,module,exports){
-arguments[4][114][0].apply(exports,arguments)
-},{"dup":114}],250:[function(require,module,exports){
-arguments[4][115][0].apply(exports,arguments)
-},{"dup":115}],251:[function(require,module,exports){
-arguments[4][57][0].apply(exports,arguments)
-},{"dup":57}],252:[function(require,module,exports){
-arguments[4][68][0].apply(exports,arguments)
-},{"dup":68}],253:[function(require,module,exports){
-arguments[4][94][0].apply(exports,arguments)
-},{"dup":94}],254:[function(require,module,exports){
-arguments[4][60][0].apply(exports,arguments)
-},{"dup":60,"lodash.isarguments":255,"lodash.isarray":252,"lodash.isnative":256}],255:[function(require,module,exports){
-arguments[4][61][0].apply(exports,arguments)
-},{"dup":61}],256:[function(require,module,exports){
-arguments[4][59][0].apply(exports,arguments)
-},{"dup":59}],257:[function(require,module,exports){
-/**
- * lodash 3.1.0 (Custom Build) <https://lodash.com/>
- * Build: `lodash modern modularize exports="npm" -o ./`
- * Copyright 2012-2015 The Dojo Foundation <http://dojofoundation.org/>
- * Based on Underscore.js 1.8.2 <http://underscorejs.org/LICENSE>
- * Copyright 2009-2015 Jeremy Ashkenas, DocumentCloud and Investigative Reporters & Editors
- * Available under MIT license <https://lodash.com/license>
- */
-var createAggregator = require('lodash._createaggregator'),
-    keys = require('lodash.keys');
-
-/**
- * Creates an object composed of keys generated from the results of running
- * each element of `collection` through `iteratee`. The corresponding value
- * of each key is the last element responsible for generating the key. The
- * iteratee function is bound to `thisArg` and invoked with three arguments:
- * (value, index|key, collection).
- *
- * If a property name is provided for `iteratee` the created `_.property`
- * style callback returns the property value of the given element.
- *
- * If a value is also provided for `thisArg` the created `_.matchesProperty`
- * style callback returns `true` for elements that have a matching property
- * value, else `false`.
- *
- * If an object is provided for `iteratee` the created `_.matches` style
- * callback returns `true` for elements that have the properties of the given
- * object, else `false`.
- *
- * @static
- * @memberOf _
- * @category Collection
- * @param {Array|Object|string} collection The collection to iterate over.
- * @param {Function|Object|string} [iteratee=_.identity] The function invoked
- *  per iteration.
- * @param {*} [thisArg] The `this` binding of `iteratee`.
- * @returns {Object} Returns the composed aggregate object.
- * @example
- *
- * var keyData = [
- *   { 'dir': 'left', 'code': 97 },
- *   { 'dir': 'right', 'code': 100 }
- * ];
- *
- * _.indexBy(keyData, 'dir');
- * // => { 'left': { 'dir': 'left', 'code': 97 }, 'right': { 'dir': 'right', 'code': 100 } }
- *
- * _.indexBy(keyData, function(object) {
- *   return String.fromCharCode(object.code);
- * });
- * // => { 'a': { 'dir': 'left', 'code': 97 }, 'd': { 'dir': 'right', 'code': 100 } }
- *
- * _.indexBy(keyData, function(object) {
- *   return this.fromCharCode(object.code);
- * }, String);
- * // => { 'a': { 'dir': 'left', 'code': 97 }, 'd': { 'dir': 'right', 'code': 100 } }
- */
-var indexBy = createAggregator(function(result, value, key) {
-  result[key] = value;
-});
-
-module.exports = indexBy;
-
-},{"lodash._createaggregator":258,"lodash.keys":265}],258:[function(require,module,exports){
-arguments[4][168][0].apply(exports,arguments)
-},{"dup":168,"lodash._basecallback":259,"lodash._baseeach":263,"lodash.isarray":264}],259:[function(require,module,exports){
-arguments[4][169][0].apply(exports,arguments)
-},{"dup":169,"lodash._baseisequal":260,"lodash._bindcallback":262,"lodash.isarray":264,"lodash.keys":265}],260:[function(require,module,exports){
-arguments[4][170][0].apply(exports,arguments)
-},{"dup":170,"lodash.isarray":264,"lodash.istypedarray":261,"lodash.keys":265}],261:[function(require,module,exports){
-arguments[4][171][0].apply(exports,arguments)
-},{"dup":171}],262:[function(require,module,exports){
-arguments[4][56][0].apply(exports,arguments)
-},{"dup":56}],263:[function(require,module,exports){
-arguments[4][87][0].apply(exports,arguments)
-},{"dup":87,"lodash.keys":265}],264:[function(require,module,exports){
-arguments[4][68][0].apply(exports,arguments)
-},{"dup":68}],265:[function(require,module,exports){
-arguments[4][60][0].apply(exports,arguments)
-},{"dup":60,"lodash.isarguments":266,"lodash.isarray":267,"lodash.isnative":268}],266:[function(require,module,exports){
-arguments[4][61][0].apply(exports,arguments)
-},{"dup":61}],267:[function(require,module,exports){
-arguments[4][68][0].apply(exports,arguments)
-},{"dup":68}],268:[function(require,module,exports){
-arguments[4][59][0].apply(exports,arguments)
-},{"dup":59}],269:[function(require,module,exports){
-/**
- * lodash 3.0.2 (Custom Build) <https://lodash.com/>
- * Build: `lodash modern modularize exports="npm" -o ./`
- * Copyright 2012-2015 The Dojo Foundation <http://dojofoundation.org/>
- * Based on Underscore.js 1.8.2 <http://underscorejs.org/LICENSE>
- * Copyright 2009-2015 Jeremy Ashkenas, DocumentCloud and Investigative Reporters & Editors
- * Available under MIT license <https://lodash.com/license>
- */
-var baseIndexOf = require('lodash._baseindexof'),
-    binaryIndex = require('lodash._binaryindex');
-
-/* Native method references for those with the same name as other `lodash` methods. */
-var nativeMax = Math.max;
-
-/**
- * Gets the index at which the first occurrence of `value` is found in `array`
- * using `SameValueZero` for equality comparisons. If `fromIndex` is negative,
- * it is used as the offset from the end of `array`. If `array` is sorted
- * providing `true` for `fromIndex` performs a faster binary search.
- *
- * **Note:** `SameValueZero` comparisons are like strict equality comparisons,
- * e.g. `===`, except that `NaN` matches `NaN`. See the
- * [ES spec](https://people.mozilla.org/~jorendorff/es6-draft.html#sec-samevaluezero)
- * for more details.
- *
- * @static
- * @memberOf _
- * @category Array
- * @param {Array} array The array to search.
- * @param {*} value The value to search for.
- * @param {boolean|number} [fromIndex=0] The index to search from or `true`
- *  to perform a binary search on a sorted array.
- * @returns {number} Returns the index of the matched value, else `-1`.
- * @example
- *
- * _.indexOf([1, 2, 1, 2], 2);
- * // => 1
- *
- * // using `fromIndex`
- * _.indexOf([1, 2, 1, 2], 2, 2);
- * // => 3
- *
- * // performing a binary search
- * _.indexOf([1, 1, 2, 2], 2, true);
- * // => 2
- */
-function indexOf(array, value, fromIndex) {
-  var length = array ? array.length : 0;
-  if (!length) {
-    return -1;
-  }
-  if (typeof fromIndex == 'number') {
-    fromIndex = fromIndex < 0 ? nativeMax(length + fromIndex, 0) : fromIndex;
-  } else if (fromIndex) {
-    var index = binaryIndex(array, value),
-        other = array[index];
-
-    if (value === value ? (value === other) : (other !== other)) {
-      return index;
-    }
-    return -1;
-  }
-  return baseIndexOf(array, value, fromIndex || 0);
-}
-
-module.exports = indexOf;
-
-},{"lodash._baseindexof":270,"lodash._binaryindex":271}],270:[function(require,module,exports){
-arguments[4][114][0].apply(exports,arguments)
-},{"dup":114}],271:[function(require,module,exports){
-/**
- * lodash 3.0.0 (Custom Build) <https://lodash.com/>
- * Build: `lodash modern modularize exports="npm" -o ./`
- * Copyright 2012-2015 The Dojo Foundation <http://dojofoundation.org/>
- * Based on Underscore.js 1.7.0 <http://underscorejs.org/LICENSE>
- * Copyright 2009-2015 Jeremy Ashkenas, DocumentCloud and Investigative Reporters & Editors
- * Available under MIT license <https://lodash.com/license>
- */
-var binaryIndexBy = require('lodash._binaryindexby');
-
-/** Used as references for the maximum length and index of an array. */
-var MAX_ARRAY_LENGTH = Math.pow(2, 32) - 1,
-    HALF_MAX_ARRAY_LENGTH = MAX_ARRAY_LENGTH >>> 1;
-
-/**
- * Performs a binary search of `array` to determine the index at which `value`
- * should be inserted into `array` in order to maintain its sort order.
- *
- * @private
- * @param {Array} array The sorted array to inspect.
- * @param {*} value The value to evaluate.
- * @param {boolean} [retHighest] Specify returning the highest, instead
- *  of the lowest, index at which a value should be inserted into `array`.
- * @returns {number} Returns the index at which `value` should be inserted
- *  into `array`.
- */
-function binaryIndex(array, value, retHighest) {
-  var low = 0,
-      high = array ? array.length : low;
-
-  if (typeof value == 'number' && value === value && high <= HALF_MAX_ARRAY_LENGTH) {
-    while (low < high) {
-      var mid = (low + high) >>> 1,
-          computed = array[mid];
-
-      if (retHighest ? (computed <= value) : (computed < value)) {
-        low = mid + 1;
-      } else {
-        high = mid;
-      }
-    }
-    return high;
-  }
-  return binaryIndexBy(array, value, identity, retHighest);
-}
-
-/**
- * This method returns the first argument provided to it.
- *
- * @static
- * @memberOf _
- * @category Utility
- * @param {*} value Any value.
- * @returns {*} Returns `value`.
- * @example
- *
- * var object = { 'user': 'fred' };
- * _.identity(object) === object;
- * // => true
- */
-function identity(value) {
-  return value;
-}
-
-module.exports = binaryIndex;
-
-},{"lodash._binaryindexby":272}],272:[function(require,module,exports){
-/**
- * lodash 3.0.1 (Custom Build) <https://lodash.com/>
- * Build: `lodash modern modularize exports="npm" -o ./`
- * Copyright 2012-2015 The Dojo Foundation <http://dojofoundation.org/>
- * Based on Underscore.js 1.8.3 <http://underscorejs.org/LICENSE>
- * Copyright 2009-2015 Jeremy Ashkenas, DocumentCloud and Investigative Reporters & Editors
- * Available under MIT license <https://lodash.com/license>
- */
-
-/** Native method references. */
-var floor = Math.floor;
-
-/* Native method references for those with the same name as other `lodash` methods. */
-var nativeMin = Math.min;
-
-/** Used as references for the maximum length and index of an array. */
-var MAX_ARRAY_LENGTH = Math.pow(2, 32) - 1,
-    MAX_ARRAY_INDEX =  MAX_ARRAY_LENGTH - 1;
-
-/**
- * This function is like `binaryIndex` except that it invokes `iteratee` for
- * `value` and each element of `array` to compute their sort ranking. The
- * iteratee is invoked with one argument; (value).
- *
- * @private
- * @param {Array} array The sorted array to inspect.
- * @param {*} value The value to evaluate.
- * @param {Function} iteratee The function invoked per iteration.
- * @param {boolean} [retHighest] Specify returning the highest qualified index.
- * @returns {number} Returns the index at which `value` should be inserted
- *  into `array`.
- */
-function binaryIndexBy(array, value, iteratee, retHighest) {
-  value = iteratee(value);
-
-  var low = 0,
-      high = array ? array.length : 0,
-      valIsNaN = value !== value,
-      valIsUndef = value === undefined;
-
-  while (low < high) {
-    var mid = floor((low + high) / 2),
-        computed = iteratee(array[mid]),
-        isReflexive = computed === computed;
-
-    if (valIsNaN) {
-      var setLow = isReflexive || retHighest;
-    } else if (valIsUndef) {
-      setLow = isReflexive && (retHighest || computed !== undefined);
-    } else {
-      setLow = retHighest ? (computed <= value) : (computed < value);
-    }
-    if (setLow) {
-      low = mid + 1;
-    } else {
-      high = mid;
-    }
-  }
-  return nativeMin(high, MAX_ARRAY_INDEX);
-}
-
-module.exports = binaryIndexBy;
-
-},{}],273:[function(require,module,exports){
-/**
- * lodash 3.0.0 (Custom Build) <https://lodash.com/>
- * Build: `lodash modern modularize exports="npm" -o ./`
- * Copyright 2012-2015 The Dojo Foundation <http://dojofoundation.org/>
- * Based on Underscore.js 1.7.0 <http://underscorejs.org/LICENSE>
- * Copyright 2009-2015 Jeremy Ashkenas, DocumentCloud and Investigative Reporters & Editors
- * Available under MIT license <https://lodash.com/license>
- */
-var baseSlice = require('lodash._baseslice'),
-    isIterateeCall = require('lodash._isiterateecall');
-
-/**
- * Creates a slice of `array` with `n` elements dropped from the end.
- *
- * @static
- * @memberOf _
- * @type Function
- * @category Array
- * @param {Array} array The array to query.
- * @param {number} [n=1] The number of elements to drop.
- * @param- {Object} [guard] Enables use as a callback for functions like `_.map`.
- * @returns {Array} Returns the slice of `array`.
- * @example
- *
- * _.dropRight([1, 2, 3]);
- * // => [1, 2]
- *
- * _.dropRight([1, 2, 3], 2);
- * // => [1]
- *
- * _.dropRight([1, 2, 3], 5);
- * // => []
- *
- * _.dropRight([1, 2, 3], 0);
- * // => [1, 2, 3]
- */
-function dropRight(array, n, guard) {
-  var length = array ? array.length : 0;
-  if (!length) {
-    return [];
-  }
-  if (guard ? isIterateeCall(array, n, guard) : n == null) {
-    n = 1;
-  }
-  n = length - (+n || 0);
-  return baseSlice(array, 0, n < 0 ? 0 : n);
-}
-
-/**
- * Gets all but the last element of `array`.
- *
- * @static
- * @memberOf _
- * @category Array
- * @param {Array} array The array to query.
- * @returns {Array} Returns the slice of `array`.
- * @example
- *
- * _.initial([1, 2, 3]);
- * // => [1, 2]
- */
-function initial(array) {
-  return dropRight(array, 1);
-}
-
-module.exports = initial;
-
-},{"lodash._baseslice":274,"lodash._isiterateecall":275}],274:[function(require,module,exports){
-arguments[4][161][0].apply(exports,arguments)
-},{"dup":161}],275:[function(require,module,exports){
-arguments[4][57][0].apply(exports,arguments)
-},{"dup":57}],276:[function(require,module,exports){
-/**
- * lodash 3.2.1 (Custom Build) <https://lodash.com/>
- * Build: `lodash modern modularize exports="npm" -o ./`
- * Copyright 2012-2015 The Dojo Foundation <http://dojofoundation.org/>
- * Based on Underscore.js 1.8.3 <http://underscorejs.org/LICENSE>
- * Copyright 2009-2015 Jeremy Ashkenas, DocumentCloud and Investigative Reporters & Editors
- * Available under MIT license <https://lodash.com/license>
- */
-var baseEach = require('lodash._baseeach'),
-    invokePath = require('lodash._invokepath'),
-    isArray = require('lodash.isarray'),
-    restParam = require('lodash.restparam');
-
-/** Used to match property names within property paths. */
-var reIsDeepProp = /\.|\[(?:[^[\]]*|(["'])(?:(?!\1)[^\n\\]|\\.)*?\1)\]/,
-    reIsPlainProp = /^\w*$/;
-
-/**
- * Used as the [maximum length](https://people.mozilla.org/~jorendorff/es6-draft.html#sec-number.max_safe_integer)
- * of an array-like value.
- */
-var MAX_SAFE_INTEGER = Math.pow(2, 53) - 1;
-
-/**
- * The base implementation of `_.property` without support for deep paths.
- *
- * @private
- * @param {string} key The key of the property to get.
- * @returns {Function} Returns the new function.
- */
-function baseProperty(key) {
-  return function(object) {
-    return object == null ? undefined : object[key];
-  };
-}
-
-/**
- * Gets the "length" property value of `object`.
- *
- * **Note:** This function is used to avoid a [JIT bug](https://bugs.webkit.org/show_bug.cgi?id=142792)
- * that affects Safari on at least iOS 8.1-8.3 ARM64.
- *
- * @private
- * @param {Object} object The object to query.
- * @returns {*} Returns the "length" value.
- */
-var getLength = baseProperty('length');
-
-/**
- * Checks if `value` is array-like.
- *
- * @private
- * @param {*} value The value to check.
- * @returns {boolean} Returns `true` if `value` is array-like, else `false`.
- */
-function isArrayLike(value) {
-  return value != null && isLength(getLength(value));
-}
-
-/**
- * Checks if `value` is a property name and not a property path.
- *
- * @private
- * @param {*} value The value to check.
- * @param {Object} [object] The object to query keys on.
- * @returns {boolean} Returns `true` if `value` is a property name, else `false`.
- */
-function isKey(value, object) {
-  var type = typeof value;
-  if ((type == 'string' && reIsPlainProp.test(value)) || type == 'number') {
-    return true;
-  }
-  if (isArray(value)) {
-    return false;
-  }
-  var result = !reIsDeepProp.test(value);
-  return result || (object != null && value in toObject(object));
-}
-
-/**
- * Checks if `value` is a valid array-like length.
- *
- * **Note:** This function is based on [`ToLength`](https://people.mozilla.org/~jorendorff/es6-draft.html#sec-tolength).
- *
- * @private
- * @param {*} value The value to check.
- * @returns {boolean} Returns `true` if `value` is a valid length, else `false`.
- */
-function isLength(value) {
-  return typeof value == 'number' && value > -1 && value % 1 == 0 && value <= MAX_SAFE_INTEGER;
-}
-
-/**
- * Converts `value` to an object if it is not one.
- *
- * @private
- * @param {*} value The value to process.
- * @returns {Object} Returns the object.
- */
-function toObject(value) {
-  return isObject(value) ? value : Object(value);
-}
-
-/**
- * Invokes the method at `path` on each element in `collection`, returning
- * an array of the results of each invoked method. Any additional arguments
- * are provided to each invoked method. If `methodName` is a function it is
- * invoked for, and `this` bound to, each element in `collection`.
- *
- * @static
- * @memberOf _
- * @category Collection
- * @param {Array|Object|string} collection The collection to iterate over.
- * @param {Array|Function|string} path The path of the method to invoke or
- *  the function invoked per iteration.
- * @param {...*} [args] The arguments to invoke the method with.
- * @returns {Array} Returns the array of results.
- * @example
- *
- * _.invoke([[5, 1, 7], [3, 2, 1]], 'sort');
- * // => [[1, 5, 7], [1, 2, 3]]
- *
- * _.invoke([123, 456], String.prototype.split, '');
- * // => [['1', '2', '3'], ['4', '5', '6']]
- */
-var invoke = restParam(function(collection, path, args) {
-  var index = -1,
-      isFunc = typeof path == 'function',
-      isProp = isKey(path),
-      result = isArrayLike(collection) ? Array(collection.length) : [];
-
-  baseEach(collection, function(value) {
-    var func = isFunc ? path : (isProp && value != null && value[path]);
-    result[++index] = func ? func.apply(value, args) : invokePath(value, path, args);
-  });
-  return result;
-});
-
-/**
- * Checks if `value` is the [language type](https://es5.github.io/#x8) of `Object`.
- * (e.g. arrays, functions, objects, regexes, `new Number(0)`, and `new String('')`)
- *
- * @static
- * @memberOf _
- * @category Lang
- * @param {*} value The value to check.
- * @returns {boolean} Returns `true` if `value` is an object, else `false`.
- * @example
- *
- * _.isObject({});
- * // => true
- *
- * _.isObject([1, 2, 3]);
- * // => true
- *
- * _.isObject(1);
- * // => false
- */
-function isObject(value) {
-  // Avoid a V8 JIT bug in Chrome 19-20.
-  // See https://code.google.com/p/v8/issues/detail?id=2291 for more details.
-  var type = typeof value;
-  return type == 'function' || (!!value && type == 'object');
-}
-
-module.exports = invoke;
-
-},{"lodash._baseeach":277,"lodash._invokepath":281,"lodash.isarray":285,"lodash.restparam":286}],277:[function(require,module,exports){
-arguments[4][87][0].apply(exports,arguments)
-},{"dup":87,"lodash.keys":278}],278:[function(require,module,exports){
-arguments[4][60][0].apply(exports,arguments)
-},{"dup":60,"lodash.isarguments":279,"lodash.isarray":285,"lodash.isnative":280}],279:[function(require,module,exports){
-arguments[4][61][0].apply(exports,arguments)
-},{"dup":61}],280:[function(require,module,exports){
-arguments[4][59][0].apply(exports,arguments)
-},{"dup":59}],281:[function(require,module,exports){
-/**
- * lodash 3.7.1 (Custom Build) <https://lodash.com/>
- * Build: `lodash modern modularize exports="npm" -o ./`
- * Copyright 2012-2015 The Dojo Foundation <http://dojofoundation.org/>
- * Based on Underscore.js 1.8.3 <http://underscorejs.org/LICENSE>
- * Copyright 2009-2015 Jeremy Ashkenas, DocumentCloud and Investigative Reporters & Editors
- * Available under MIT license <https://lodash.com/license>
- */
-var baseGet = require('lodash._baseget'),
-    baseSlice = require('lodash._baseslice'),
-    toPath = require('lodash._topath'),
-    isArray = require('lodash.isarray');
-
-/** Used to match property names within property paths. */
-var reIsDeepProp = /\.|\[(?:[^[\]]*|(["'])(?:(?!\1)[^\n\\]|\\.)*?\1)\]/,
-    reIsPlainProp = /^\w*$/;
-
-/**
- * Invokes the method at `path` on `object`.
- *
- * @private
- * @param {Object} object The object to query.
- * @param {Array|string} path The path of the method to invoke.
- * @param {Array} args The arguments to invoke the method with.
- * @returns {*} Returns the result of the invoked method.
- */
-function invokePath(object, path, args) {
-  if (object != null && !isKey(path, object)) {
-    path = toPath(path);
-    object = path.length == 1 ? object : baseGet(object, baseSlice(path, 0, -1));
-    path = last(path);
-  }
-  var func = object == null ? object : object[path];
-  return func == null ? undefined : func.apply(object, args);
-}
-
-/**
- * Checks if `value` is a property name and not a property path.
- *
- * @private
- * @param {*} value The value to check.
- * @param {Object} [object] The object to query keys on.
- * @returns {boolean} Returns `true` if `value` is a property name, else `false`.
- */
-function isKey(value, object) {
-  var type = typeof value;
-  if ((type == 'string' && reIsPlainProp.test(value)) || type == 'number') {
-    return true;
-  }
-  if (isArray(value)) {
-    return false;
-  }
-  var result = !reIsDeepProp.test(value);
-  return result || (object != null && value in toObject(object));
-}
-
-/**
- * Converts `value` to an object if it is not one.
- *
- * @private
- * @param {*} value The value to process.
- * @returns {Object} Returns the object.
- */
-function toObject(value) {
-  return isObject(value) ? value : Object(value);
-}
-
-/**
- * Gets the last element of `array`.
- *
- * @static
- * @memberOf _
- * @category Array
- * @param {Array} array The array to query.
- * @returns {*} Returns the last element of `array`.
- * @example
- *
- * _.last([1, 2, 3]);
- * // => 3
- */
-function last(array) {
-  var length = array ? array.length : 0;
-  return length ? array[length - 1] : undefined;
-}
-
-/**
- * Checks if `value` is the [language type](https://es5.github.io/#x8) of `Object`.
- * (e.g. arrays, functions, objects, regexes, `new Number(0)`, and `new String('')`)
- *
- * @static
- * @memberOf _
- * @category Lang
- * @param {*} value The value to check.
- * @returns {boolean} Returns `true` if `value` is an object, else `false`.
- * @example
- *
- * _.isObject({});
- * // => true
- *
- * _.isObject([1, 2, 3]);
- * // => true
- *
- * _.isObject(1);
- * // => false
- */
-function isObject(value) {
-  // Avoid a V8 JIT bug in Chrome 19-20.
-  // See https://code.google.com/p/v8/issues/detail?id=2291 for more details.
-  var type = typeof value;
-  return type == 'function' || (!!value && type == 'object');
-}
-
-module.exports = invokePath;
-
-},{"lodash._baseget":282,"lodash._baseslice":283,"lodash._topath":284,"lodash.isarray":285}],282:[function(require,module,exports){
-arguments[4][160][0].apply(exports,arguments)
-},{"dup":160}],283:[function(require,module,exports){
-arguments[4][161][0].apply(exports,arguments)
-},{"dup":161}],284:[function(require,module,exports){
-arguments[4][162][0].apply(exports,arguments)
-},{"dup":162,"lodash.isarray":285}],285:[function(require,module,exports){
-arguments[4][68][0].apply(exports,arguments)
-},{"dup":68}],286:[function(require,module,exports){
-arguments[4][58][0].apply(exports,arguments)
-},{"dup":58}],287:[function(require,module,exports){
-arguments[4][90][0].apply(exports,arguments)
-},{"dup":90,"lodash.isarguments":288,"lodash.isarray":289,"lodash.isfunction":293,"lodash.isstring":290,"lodash.keys":291}],288:[function(require,module,exports){
-arguments[4][61][0].apply(exports,arguments)
-},{"dup":61}],289:[function(require,module,exports){
-arguments[4][68][0].apply(exports,arguments)
-},{"dup":68}],290:[function(require,module,exports){
-arguments[4][94][0].apply(exports,arguments)
-},{"dup":94}],291:[function(require,module,exports){
-arguments[4][60][0].apply(exports,arguments)
-},{"dup":60,"lodash.isarguments":288,"lodash.isarray":289,"lodash.isnative":292}],292:[function(require,module,exports){
-arguments[4][59][0].apply(exports,arguments)
-},{"dup":59}],293:[function(require,module,exports){
-arguments[4][93][0].apply(exports,arguments)
-},{"dup":93}],294:[function(require,module,exports){
-/**
- * lodash 3.0.2 (Custom Build) <https://lodash.com/>
- * Build: `lodash modern modularize exports="npm" -o ./`
- * Copyright 2012-2015 The Dojo Foundation <http://dojofoundation.org/>
- * Based on Underscore.js 1.8.2 <http://underscorejs.org/LICENSE>
- * Copyright 2009-2015 Jeremy Ashkenas, DocumentCloud and Investigative Reporters & Editors
- * Available under MIT license <https://lodash.com/license>
- */
-var binaryIndex = require('lodash._binaryindex');
-
-/**
- * Gets the index at which the first occurrence of `NaN` is found in `array`.
- * If `fromRight` is provided elements of `array` are iterated from right to left.
- *
- * @private
- * @param {Array} array The array to search.
- * @param {number} fromIndex The index to search from.
- * @param {boolean} [fromRight] Specify iterating from right to left.
- * @returns {number} Returns the index of the matched `NaN`, else `-1`.
- */
-function indexOfNaN(array, fromIndex, fromRight) {
-  var length = array.length,
-      index = fromIndex + (fromRight ? 0 : -1);
-
-  while ((fromRight ? index-- : ++index < length)) {
-    var other = array[index];
-    if (other !== other) {
-      return index;
-    }
-  }
-  return -1;
-}
-
-/* Native method references for those with the same name as other `lodash` methods. */
-var nativeMax = Math.max,
-    nativeMin = Math.min;
-
-/**
- * This method is like `_.indexOf` except that it iterates over elements of
- * `array` from right to left.
- *
- * @static
- * @memberOf _
- * @category Array
- * @param {Array} array The array to search.
- * @param {*} value The value to search for.
- * @param {boolean|number} [fromIndex=array.length-1] The index to search from
- *  or `true` to perform a binary search on a sorted array.
- * @returns {number} Returns the index of the matched value, else `-1`.
- * @example
- *
- * _.lastIndexOf([1, 2, 1, 2], 2);
- * // => 3
- *
- * // using `fromIndex`
- * _.lastIndexOf([1, 2, 1, 2], 2, 2);
- * // => 1
- *
- * // performing a binary search
- * _.lastIndexOf([1, 1, 2, 2], 2, true);
- * // => 3
- */
-function lastIndexOf(array, value, fromIndex) {
-  var length = array ? array.length : 0;
-  if (!length) {
-    return -1;
-  }
-  var index = length;
-  if (typeof fromIndex == 'number') {
-    index = (fromIndex < 0 ? nativeMax(length + fromIndex, 0) : nativeMin(fromIndex || 0, length - 1)) + 1;
-  } else if (fromIndex) {
-    index = binaryIndex(array, value, true) - 1;
-    var other = array[index];
-    if (value === value ? (value === other) : (other !== other)) {
-      return index;
-    }
-    return -1;
-  }
-  if (value !== value) {
-    return indexOfNaN(array, index, true);
-  }
-  while (index--) {
-    if (array[index] === value) {
-      return index;
-    }
-  }
-  return -1;
-}
-
-module.exports = lastIndexOf;
-
-},{"lodash._binaryindex":295}],295:[function(require,module,exports){
-arguments[4][271][0].apply(exports,arguments)
-},{"dup":271,"lodash._binaryindexby":296}],296:[function(require,module,exports){
-arguments[4][272][0].apply(exports,arguments)
-},{"dup":272}],297:[function(require,module,exports){
-/**
- * lodash 3.1.2 (Custom Build) <https://lodash.com/>
- * Build: `lodash modern modularize exports="npm" -o ./`
- * Copyright 2012-2015 The Dojo Foundation <http://dojofoundation.org/>
- * Based on Underscore.js 1.8.3 <http://underscorejs.org/LICENSE>
- * Copyright 2009-2015 Jeremy Ashkenas, DocumentCloud and Investigative Reporters & Editors
- * Available under MIT license <https://lodash.com/license>
- */
-var arrayMap = require('lodash._arraymap'),
-    baseCallback = require('lodash._basecallback'),
-    baseEach = require('lodash._baseeach'),
-    isArray = require('lodash.isarray'),
-    keys = require('lodash.keys');
-
-/**
- * Used as the [maximum length](https://people.mozilla.org/~jorendorff/es6-draft.html#sec-number.max_safe_integer)
- * of an array-like value.
- */
-var MAX_SAFE_INTEGER = Math.pow(2, 53) - 1;
-
-/**
- * The base implementation of `_.map` without support for callback shorthands
- * and `this` binding.
- *
- * @private
- * @param {Array|Object|string} collection The collection to iterate over.
- * @param {Function} iteratee The function invoked per iteration.
- * @returns {Array} Returns the new mapped array.
- */
-function baseMap(collection, iteratee) {
-  var index = -1,
-      result = isArrayLike(collection) ? Array(collection.length) : [];
-
-  baseEach(collection, function(value, key, collection) {
-    result[++index] = iteratee(value, key, collection);
-  });
-  return result;
-}
-
-/**
- * The base implementation of `_.property` without support for deep paths.
- *
- * @private
- * @param {string} key The key of the property to get.
- * @returns {Function} Returns the new function.
- */
-function baseProperty(key) {
-  return function(object) {
-    return object == null ? undefined : object[key];
-  };
-}
-
-/**
- * Gets the "length" property value of `object`.
- *
- * **Note:** This function is used to avoid a [JIT bug](https://bugs.webkit.org/show_bug.cgi?id=142792)
- * that affects Safari on at least iOS 8.1-8.3 ARM64.
- *
- * @private
- * @param {Object} object The object to query.
- * @returns {*} Returns the "length" value.
- */
-var getLength = baseProperty('length');
-
-/**
- * Checks if `value` is array-like.
- *
- * @private
- * @param {*} value The value to check.
- * @returns {boolean} Returns `true` if `value` is array-like, else `false`.
- */
-function isArrayLike(value) {
-  return value != null && isLength(getLength(value));
-}
-
-/**
- * Checks if `value` is a valid array-like length.
- *
- * **Note:** This function is based on [`ToLength`](https://people.mozilla.org/~jorendorff/es6-draft.html#sec-tolength).
- *
- * @private
- * @param {*} value The value to check.
- * @returns {boolean} Returns `true` if `value` is a valid length, else `false`.
- */
-function isLength(value) {
-  return typeof value == 'number' && value > -1 && value % 1 == 0 && value <= MAX_SAFE_INTEGER;
-}
-
-/**
- * Creates an array of values by running each element in `collection` through
- * `iteratee`. The `iteratee` is bound to `thisArg` and invoked with three
- * arguments: (value, index|key, collection).
- *
- * If a property name is provided for `iteratee` the created `_.property`
- * style callback returns the property value of the given element.
- *
- * If a value is also provided for `thisArg` the created `_.matchesProperty`
- * style callback returns `true` for elements that have a matching property
- * value, else `false`.
- *
- * If an object is provided for `iteratee` the created `_.matches` style
- * callback returns `true` for elements that have the properties of the given
- * object, else `false`.
- *
- * Many lodash methods are guarded to work as interatees for methods like
- * `_.every`, `_.filter`, `_.map`, `_.mapValues`, `_.reject`, and `_.some`.
- *
- * The guarded methods are:
- * `ary`, `callback`, `chunk`, `clone`, `create`, `curry`, `curryRight`,
- * `drop`, `dropRight`, `every`, `fill`, `flatten`, `invert`, `max`, `min`,
- * `parseInt`, `slice`, `sortBy`, `take`, `takeRight`, `template`, `trim`,
- * `trimLeft`, `trimRight`, `trunc`, `random`, `range`, `sample`, `some`,
- * `sum`, `uniq`, and `words`
- *
- * @static
- * @memberOf _
- * @alias collect
- * @category Collection
- * @param {Array|Object|string} collection The collection to iterate over.
- * @param {Function|Object|string} [iteratee=_.identity] The function invoked
- *  per iteration.
- * @param {*} [thisArg] The `this` binding of `iteratee`.
- * @returns {Array} Returns the new mapped array.
- * @example
- *
- * function timesThree(n) {
- *   return n * 3;
- * }
- *
- * _.map([1, 2], timesThree);
- * // => [3, 6]
- *
- * _.map({ 'a': 1, 'b': 2 }, timesThree);
- * // => [3, 6] (iteration order is not guaranteed)
- *
- * var users = [
- *   { 'user': 'barney' },
- *   { 'user': 'fred' }
- * ];
- *
- * // using the `_.property` callback shorthand
- * _.map(users, 'user');
- * // => ['barney', 'fred']
- */
-function map(collection, iteratee, thisArg) {
-  var func = isArray(collection) ? arrayMap : baseMap;
-  iteratee = baseCallback(iteratee, thisArg, 3);
-  return func(collection, iteratee);
-}
-
-module.exports = map;
-
-},{"lodash._arraymap":298,"lodash._basecallback":299,"lodash._baseeach":303,"lodash.isarray":304,"lodash.keys":305}],298:[function(require,module,exports){
-/**
- * lodash 3.0.0 (Custom Build) <https://lodash.com/>
- * Build: `lodash modern modularize exports="npm" -o ./`
- * Copyright 2012-2015 The Dojo Foundation <http://dojofoundation.org/>
- * Based on Underscore.js 1.7.0 <http://underscorejs.org/LICENSE>
- * Copyright 2009-2015 Jeremy Ashkenas, DocumentCloud and Investigative Reporters & Editors
- * Available under MIT license <https://lodash.com/license>
- */
-
-/**
- * A specialized version of `_.map` for arrays without support for callback
- * shorthands or `this` binding.
- *
- * @private
- * @param {Array} array The array to iterate over.
- * @param {Function} iteratee The function invoked per iteration.
- * @returns {Array} Returns the new mapped array.
- */
-function arrayMap(array, iteratee) {
-  var index = -1,
-      length = array.length,
-      result = Array(length);
-
-  while (++index < length) {
-    result[index] = iteratee(array[index], index, array);
-  }
-  return result;
-}
-
-module.exports = arrayMap;
-
-},{}],299:[function(require,module,exports){
-arguments[4][169][0].apply(exports,arguments)
-},{"dup":169,"lodash._baseisequal":300,"lodash._bindcallback":302,"lodash.isarray":304,"lodash.keys":305}],300:[function(require,module,exports){
-arguments[4][170][0].apply(exports,arguments)
-},{"dup":170,"lodash.isarray":304,"lodash.istypedarray":301,"lodash.keys":305}],301:[function(require,module,exports){
-arguments[4][171][0].apply(exports,arguments)
-},{"dup":171}],302:[function(require,module,exports){
-arguments[4][56][0].apply(exports,arguments)
-},{"dup":56}],303:[function(require,module,exports){
-arguments[4][87][0].apply(exports,arguments)
-},{"dup":87,"lodash.keys":305}],304:[function(require,module,exports){
-arguments[4][68][0].apply(exports,arguments)
-},{"dup":68}],305:[function(require,module,exports){
-arguments[4][60][0].apply(exports,arguments)
-},{"dup":60,"lodash.isarguments":306,"lodash.isarray":304,"lodash.isnative":307}],306:[function(require,module,exports){
-arguments[4][61][0].apply(exports,arguments)
-},{"dup":61}],307:[function(require,module,exports){
-arguments[4][59][0].apply(exports,arguments)
-},{"dup":59}],308:[function(require,module,exports){
-/**
- * lodash 3.2.0 (Custom Build) <https://lodash.com/>
- * Build: `lodash modern modularize exports="npm" -o ./`
- * Copyright 2012-2015 The Dojo Foundation <http://dojofoundation.org/>
- * Based on Underscore.js 1.8.2 <http://underscorejs.org/LICENSE>
- * Copyright 2009-2015 Jeremy Ashkenas, DocumentCloud and Investigative Reporters & Editors
- * Available under MIT license <https://lodash.com/license>
- */
-var arrayMax = require('lodash._arraymax'),
-    baseCallback = require('lodash._basecallback'),
-    baseEach = require('lodash._baseeach'),
-    isIterateeCall = require('lodash._isiterateecall'),
-    toIterable = require('lodash._toiterable'),
-    isArray = require('lodash.isarray'),
-    isString = require('lodash.isstring'),
-    keys = require('lodash.keys');
-
-/**
- * Used by `_.max` and `_.min` as the default callback for string values.
- *
- * @private
- * @param {string} string The string to inspect.
- * @returns {number} Returns the code unit of the first character of the string.
- */
-function charAtCallback(string) {
-  return string.charCodeAt(0);
-}
-
-/** Used as references for `-Infinity` and `Infinity`. */
-var NEGATIVE_INFINITY = Number.NEGATIVE_INFINITY,
-    POSITIVE_INFINITY = Number.POSITIVE_INFINITY;
-
-/**
- * Creates a `_.max` or `_.min` function.
- *
- * @private
- * @param {Function} arrayFunc The function to get the extremum value from an array.
- * @param {boolean} [isMin] Specify returning the minimum, instead of the maximum,
- *  extremum value.
- * @returns {Function} Returns the new extremum function.
- */
-function createExtremum(arrayFunc, isMin) {
-  return function(collection, iteratee, thisArg) {
-    if (thisArg && isIterateeCall(collection, iteratee, thisArg)) {
-      iteratee = null;
-    }
-    var noIteratee = iteratee == null;
-
-    iteratee = noIteratee ? iteratee : baseCallback(iteratee, thisArg, 3);
-    if (noIteratee) {
-      var isArr = isArray(collection);
-      if (!isArr && isString(collection)) {
-        iteratee = charAtCallback;
-      } else {
-        return arrayFunc(isArr ? collection : toIterable(collection));
-      }
-    }
-    return extremumBy(collection, iteratee, isMin);
-  };
-}
-
-/**
- * Gets the extremum value of `collection` invoking `iteratee` for each value
- * in `collection` to generate the criterion by which the value is ranked.
- * The `iteratee` is invoked with three arguments: (value, index, collection).
- *
- * @private
- * @param {Array|Object|string} collection The collection to iterate over.
- * @param {Function} iteratee The function invoked per iteration.
- * @param {boolean} [isMin] Specify returning the minimum, instead of the
- *  maximum, extremum value.
- * @returns {*} Returns the extremum value.
- */
-function extremumBy(collection, iteratee, isMin) {
-  var exValue = isMin ? POSITIVE_INFINITY : NEGATIVE_INFINITY,
-      computed = exValue,
-      result = computed;
-
-  baseEach(collection, function(value, index, collection) {
-    var current = iteratee(value, index, collection);
-    if ((isMin ? (current < computed) : (current > computed)) ||
-        (current === exValue && current === result)) {
-      computed = current;
-      result = value;
-    }
-  });
-  return result;
-}
-
-/**
- * Gets the maximum value of `collection`. If `collection` is empty or falsey
- * `-Infinity` is returned. If an iteratee function is provided it is invoked
- * for each value in `collection` to generate the criterion by which the value
- * is ranked. The `iteratee` is bound to `thisArg` and invoked with three
- * arguments: (value, index, collection).
- *
- * If a property name is provided for `iteratee` the created `_.property`
- * style callback returns the property value of the given element.
- *
- * If a value is also provided for `thisArg` the created `_.matchesProperty`
- * style callback returns `true` for elements that have a matching property
- * value, else `false`.
- *
- * If an object is provided for `iteratee` the created `_.matches` style
- * callback returns `true` for elements that have the properties of the given
- * object, else `false`.
- *
- * @static
- * @memberOf _
- * @category Math
- * @param {Array|Object|string} collection The collection to iterate over.
- * @param {Function|Object|string} [iteratee] The function invoked per iteration.
- * @param {*} [thisArg] The `this` binding of `iteratee`.
- * @returns {*} Returns the maximum value.
- * @example
- *
- * _.max([4, 2, 8, 6]);
- * // => 8
- *
- * _.max([]);
- * // => -Infinity
- *
- * var users = [
- *   { 'user': 'barney', 'age': 36 },
- *   { 'user': 'fred',   'age': 40 }
- * ];
- *
- * _.max(users, function(chr) {
- *   return chr.age;
- * });
- * // => { 'user': 'fred', 'age': 40 }
- *
- * // using the `_.property` callback shorthand
- * _.max(users, 'age');
- * // => { 'user': 'fred', 'age': 40 }
- */
-var max = createExtremum(arrayMax);
-
-module.exports = max;
-
-},{"lodash._arraymax":309,"lodash._basecallback":310,"lodash._baseeach":314,"lodash._isiterateecall":315,"lodash._toiterable":316,"lodash.isarray":318,"lodash.isstring":319,"lodash.keys":320}],309:[function(require,module,exports){
-/**
- * lodash 3.0.0 (Custom Build) <https://lodash.com/>
- * Build: `lodash modern modularize exports="npm" -o ./`
- * Copyright 2012-2015 The Dojo Foundation <http://dojofoundation.org/>
- * Based on Underscore.js 1.7.0 <http://underscorejs.org/LICENSE>
- * Copyright 2009-2015 Jeremy Ashkenas, DocumentCloud and Investigative Reporters & Editors
- * Available under MIT license <https://lodash.com/license>
- */
-
-/** Used as references for `-Infinity` and `Infinity`. */
-var NEGATIVE_INFINITY = Number.NEGATIVE_INFINITY;
-
-/**
- * A specialized version of `_.max` for arrays without support for iteratees.
- *
- * @private
- * @param {Array} array The array to iterate over.
- * @returns {*} Returns the maximum value.
- */
-function arrayMax(array) {
-  var index = -1,
-      length = array.length,
-      result = NEGATIVE_INFINITY;
-
-  while (++index < length) {
-    var value = array[index];
-    if (value > result) {
-      result = value;
-    }
-  }
-  return result;
-}
-
-module.exports = arrayMax;
-
-},{}],310:[function(require,module,exports){
-arguments[4][169][0].apply(exports,arguments)
-},{"dup":169,"lodash._baseisequal":311,"lodash._bindcallback":313,"lodash.isarray":318,"lodash.keys":320}],311:[function(require,module,exports){
-arguments[4][170][0].apply(exports,arguments)
-},{"dup":170,"lodash.isarray":318,"lodash.istypedarray":312,"lodash.keys":320}],312:[function(require,module,exports){
-arguments[4][171][0].apply(exports,arguments)
-},{"dup":171}],313:[function(require,module,exports){
-arguments[4][56][0].apply(exports,arguments)
-},{"dup":56}],314:[function(require,module,exports){
-arguments[4][87][0].apply(exports,arguments)
-},{"dup":87,"lodash.keys":320}],315:[function(require,module,exports){
-arguments[4][57][0].apply(exports,arguments)
-},{"dup":57}],316:[function(require,module,exports){
-/**
- * lodash 3.0.3 (Custom Build) <https://lodash.com/>
- * Build: `lodash modern modularize exports="npm" -o ./`
- * Copyright 2012-2015 The Dojo Foundation <http://dojofoundation.org/>
- * Based on Underscore.js 1.8.3 <http://underscorejs.org/LICENSE>
- * Copyright 2009-2015 Jeremy Ashkenas, DocumentCloud and Investigative Reporters & Editors
- * Available under MIT license <https://lodash.com/license>
- */
-var baseValues = require('lodash._basevalues'),
-    keys = require('lodash.keys');
-
-/**
- * Used as the [maximum length](https://people.mozilla.org/~jorendorff/es6-draft.html#sec-number.max_safe_integer)
- * of an array-like value.
- */
-var MAX_SAFE_INTEGER = Math.pow(2, 53) - 1;
-
-/**
- * The base implementation of `_.property` without support for deep paths.
- *
- * @private
- * @param {string} key The key of the property to get.
- * @returns {Function} Returns the new function.
- */
-function baseProperty(key) {
-  return function(object) {
-    return object == null ? undefined : object[key];
-  };
-}
-
-/**
- * Gets the "length" property value of `object`.
- *
- * **Note:** This function is used to avoid a [JIT bug](https://bugs.webkit.org/show_bug.cgi?id=142792)
- * that affects Safari on at least iOS 8.1-8.3 ARM64.
- *
- * @private
- * @param {Object} object The object to query.
- * @returns {*} Returns the "length" value.
- */
-var getLength = baseProperty('length');
-
-/**
- * Checks if `value` is array-like.
- *
- * @private
- * @param {*} value The value to check.
- * @returns {boolean} Returns `true` if `value` is array-like, else `false`.
- */
-function isArrayLike(value) {
-  return value != null && isLength(getLength(value));
-}
-
-/**
- * Checks if `value` is a valid array-like length.
- *
- * **Note:** This function is based on [`ToLength`](https://people.mozilla.org/~jorendorff/es6-draft.html#sec-tolength).
- *
- * @private
- * @param {*} value The value to check.
- * @returns {boolean} Returns `true` if `value` is a valid length, else `false`.
- */
-function isLength(value) {
-  return typeof value == 'number' && value > -1 && value % 1 == 0 && value <= MAX_SAFE_INTEGER;
-}
-
-/**
- * Converts `value` to an array-like object if it is not one.
- *
- * @private
- * @param {*} value The value to process.
- * @returns {Array|Object} Returns the array-like object.
- */
-function toIterable(value) {
-  if (value == null) {
-    return [];
-  }
-  if (!isArrayLike(value)) {
-    return values(value);
-  }
-  return isObject(value) ? value : Object(value);
-}
-
-/**
- * Checks if `value` is the [language type](https://es5.github.io/#x8) of `Object`.
- * (e.g. arrays, functions, objects, regexes, `new Number(0)`, and `new String('')`)
- *
- * @static
- * @memberOf _
- * @category Lang
- * @param {*} value The value to check.
- * @returns {boolean} Returns `true` if `value` is an object, else `false`.
- * @example
- *
- * _.isObject({});
- * // => true
- *
- * _.isObject([1, 2, 3]);
- * // => true
- *
- * _.isObject(1);
- * // => false
- */
-function isObject(value) {
-  // Avoid a V8 JIT bug in Chrome 19-20.
-  // See https://code.google.com/p/v8/issues/detail?id=2291 for more details.
-  var type = typeof value;
-  return type == 'function' || (!!value && type == 'object');
-}
-
-/**
- * Creates an array of the own enumerable property values of `object`.
- *
- * **Note:** Non-object values are coerced to objects.
- *
- * @static
- * @memberOf _
- * @category Object
- * @param {Object} object The object to query.
- * @returns {Array} Returns the array of property values.
- * @example
- *
- * function Foo() {
- *   this.a = 1;
- *   this.b = 2;
- * }
- *
- * Foo.prototype.c = 3;
- *
- * _.values(new Foo);
- * // => [1, 2] (iteration order is not guaranteed)
- *
- * _.values('hi');
- * // => ['h', 'i']
- */
-function values(object) {
-  return baseValues(object, keys(object));
-}
-
-module.exports = toIterable;
-
-},{"lodash._basevalues":317,"lodash.keys":320}],317:[function(require,module,exports){
-arguments[4][115][0].apply(exports,arguments)
-},{"dup":115}],318:[function(require,module,exports){
-arguments[4][68][0].apply(exports,arguments)
-},{"dup":68}],319:[function(require,module,exports){
-arguments[4][94][0].apply(exports,arguments)
-},{"dup":94}],320:[function(require,module,exports){
-arguments[4][60][0].apply(exports,arguments)
-},{"dup":60,"lodash.isarguments":321,"lodash.isarray":318,"lodash.isnative":322}],321:[function(require,module,exports){
-arguments[4][61][0].apply(exports,arguments)
-},{"dup":61}],322:[function(require,module,exports){
-arguments[4][59][0].apply(exports,arguments)
-},{"dup":59}],323:[function(require,module,exports){
-/**
- * lodash 3.2.0 (Custom Build) <https://lodash.com/>
- * Build: `lodash modern modularize exports="npm" -o ./`
- * Copyright 2012-2015 The Dojo Foundation <http://dojofoundation.org/>
- * Based on Underscore.js 1.8.2 <http://underscorejs.org/LICENSE>
- * Copyright 2009-2015 Jeremy Ashkenas, DocumentCloud and Investigative Reporters & Editors
- * Available under MIT license <https://lodash.com/license>
- */
-var arrayMin = require('lodash._arraymin'),
-    baseCallback = require('lodash._basecallback'),
-    baseEach = require('lodash._baseeach'),
-    isIterateeCall = require('lodash._isiterateecall'),
-    toIterable = require('lodash._toiterable'),
-    isArray = require('lodash.isarray'),
-    isString = require('lodash.isstring'),
-    keys = require('lodash.keys');
-
-/**
- * Used by `_.max` and `_.min` as the default callback for string values.
- *
- * @private
- * @param {string} string The string to inspect.
- * @returns {number} Returns the code unit of the first character of the string.
- */
-function charAtCallback(string) {
-  return string.charCodeAt(0);
-}
-
-/** Used as references for `-Infinity` and `Infinity`. */
-var NEGATIVE_INFINITY = Number.NEGATIVE_INFINITY,
-    POSITIVE_INFINITY = Number.POSITIVE_INFINITY;
-
-/**
- * Creates a `_.max` or `_.min` function.
- *
- * @private
- * @param {Function} arrayFunc The function to get the extremum value from an array.
- * @param {boolean} [isMin] Specify returning the minimum, instead of the maximum,
- *  extremum value.
- * @returns {Function} Returns the new extremum function.
- */
-function createExtremum(arrayFunc, isMin) {
-  return function(collection, iteratee, thisArg) {
-    if (thisArg && isIterateeCall(collection, iteratee, thisArg)) {
-      iteratee = null;
-    }
-    var noIteratee = iteratee == null;
-
-    iteratee = noIteratee ? iteratee : baseCallback(iteratee, thisArg, 3);
-    if (noIteratee) {
-      var isArr = isArray(collection);
-      if (!isArr && isString(collection)) {
-        iteratee = charAtCallback;
-      } else {
-        return arrayFunc(isArr ? collection : toIterable(collection));
-      }
-    }
-    return extremumBy(collection, iteratee, isMin);
-  };
-}
-
-/**
- * Gets the extremum value of `collection` invoking `iteratee` for each value
- * in `collection` to generate the criterion by which the value is ranked.
- * The `iteratee` is invoked with three arguments: (value, index, collection).
- *
- * @private
- * @param {Array|Object|string} collection The collection to iterate over.
- * @param {Function} iteratee The function invoked per iteration.
- * @param {boolean} [isMin] Specify returning the minimum, instead of the
- *  maximum, extremum value.
- * @returns {*} Returns the extremum value.
- */
-function extremumBy(collection, iteratee, isMin) {
-  var exValue = isMin ? POSITIVE_INFINITY : NEGATIVE_INFINITY,
-      computed = exValue,
-      result = computed;
-
-  baseEach(collection, function(value, index, collection) {
-    var current = iteratee(value, index, collection);
-    if ((isMin ? (current < computed) : (current > computed)) ||
-        (current === exValue && current === result)) {
-      computed = current;
-      result = value;
-    }
-  });
-  return result;
-}
-
-/**
- * Gets the minimum value of `collection`. If `collection` is empty or falsey
- * `Infinity` is returned. If an iteratee function is provided it is invoked
- * for each value in `collection` to generate the criterion by which the value
- * is ranked. The `iteratee` is bound to `thisArg` and invoked with three
- * arguments: (value, index, collection).
- *
- * If a property name is provided for `iteratee` the created `_.property`
- * style callback returns the property value of the given element.
- *
- * If a value is also provided for `thisArg` the created `_.matchesProperty`
- * style callback returns `true` for elements that have a matching property
- * value, else `false`.
- *
- * If an object is provided for `iteratee` the created `_.matches` style
- * callback returns `true` for elements that have the properties of the given
- * object, else `false`.
- *
- * @static
- * @memberOf _
- * @category Math
- * @param {Array|Object|string} collection The collection to iterate over.
- * @param {Function|Object|string} [iteratee] The function invoked per iteration.
- * @param {*} [thisArg] The `this` binding of `iteratee`.
- * @returns {*} Returns the minimum value.
- * @example
- *
- * _.min([4, 2, 8, 6]);
- * // => 2
- *
- * _.min([]);
- * // => Infinity
- *
- * var users = [
- *   { 'user': 'barney', 'age': 36 },
- *   { 'user': 'fred',   'age': 40 }
- * ];
- *
- * _.min(users, function(chr) {
- *   return chr.age;
- * });
- * // => { 'user': 'barney', 'age': 36 }
- *
- * // using the `_.property` callback shorthand
- * _.min(users, 'age');
- * // => { 'user': 'barney', 'age': 36 }
- */
-var min = createExtremum(arrayMin, true);
-
-module.exports = min;
-
-},{"lodash._arraymin":324,"lodash._basecallback":325,"lodash._baseeach":329,"lodash._isiterateecall":330,"lodash._toiterable":331,"lodash.isarray":333,"lodash.isstring":334,"lodash.keys":335}],324:[function(require,module,exports){
-/**
- * lodash 3.0.0 (Custom Build) <https://lodash.com/>
- * Build: `lodash modern modularize exports="npm" -o ./`
- * Copyright 2012-2015 The Dojo Foundation <http://dojofoundation.org/>
- * Based on Underscore.js 1.7.0 <http://underscorejs.org/LICENSE>
- * Copyright 2009-2015 Jeremy Ashkenas, DocumentCloud and Investigative Reporters & Editors
- * Available under MIT license <https://lodash.com/license>
- */
-
-/** Used as references for `-Infinity` and `Infinity`. */
-var POSITIVE_INFINITY = Number.POSITIVE_INFINITY;
-
-/**
- * A specialized version of `_.min` for arrays without support for iteratees.
- *
- * @private
- * @param {Array} array The array to iterate over.
- * @returns {*} Returns the minimum value.
- */
-function arrayMin(array) {
-  var index = -1,
-      length = array.length,
-      result = POSITIVE_INFINITY;
-
-  while (++index < length) {
-    var value = array[index];
-    if (value < result) {
-      result = value;
-    }
-  }
-  return result;
-}
-
-module.exports = arrayMin;
-
-},{}],325:[function(require,module,exports){
-arguments[4][169][0].apply(exports,arguments)
-},{"dup":169,"lodash._baseisequal":326,"lodash._bindcallback":328,"lodash.isarray":333,"lodash.keys":335}],326:[function(require,module,exports){
-arguments[4][170][0].apply(exports,arguments)
-},{"dup":170,"lodash.isarray":333,"lodash.istypedarray":327,"lodash.keys":335}],327:[function(require,module,exports){
-arguments[4][171][0].apply(exports,arguments)
-},{"dup":171}],328:[function(require,module,exports){
-arguments[4][56][0].apply(exports,arguments)
-},{"dup":56}],329:[function(require,module,exports){
-arguments[4][87][0].apply(exports,arguments)
-},{"dup":87,"lodash.keys":335}],330:[function(require,module,exports){
-arguments[4][57][0].apply(exports,arguments)
-},{"dup":57}],331:[function(require,module,exports){
-arguments[4][316][0].apply(exports,arguments)
-},{"dup":316,"lodash._basevalues":332,"lodash.keys":335}],332:[function(require,module,exports){
-arguments[4][115][0].apply(exports,arguments)
-},{"dup":115}],333:[function(require,module,exports){
-arguments[4][68][0].apply(exports,arguments)
-},{"dup":68}],334:[function(require,module,exports){
-arguments[4][94][0].apply(exports,arguments)
-},{"dup":94}],335:[function(require,module,exports){
-arguments[4][60][0].apply(exports,arguments)
-},{"dup":60,"lodash.isarguments":336,"lodash.isarray":333,"lodash.isnative":337}],336:[function(require,module,exports){
-arguments[4][61][0].apply(exports,arguments)
-},{"dup":61}],337:[function(require,module,exports){
-arguments[4][59][0].apply(exports,arguments)
-},{"dup":59}],338:[function(require,module,exports){
-/**
- * lodash 3.1.0 (Custom Build) <https://lodash.com/>
- * Build: `lodash modern modularize exports="npm" -o ./`
- * Copyright 2012-2015 The Dojo Foundation <http://dojofoundation.org/>
- * Based on Underscore.js 1.8.2 <http://underscorejs.org/LICENSE>
- * Copyright 2009-2015 Jeremy Ashkenas, DocumentCloud and Investigative Reporters & Editors
- * Available under MIT license <https://lodash.com/license>
- */
-var createAggregator = require('lodash._createaggregator'),
-    keys = require('lodash.keys');
-
-/**
- * Creates an array of elements split into two groups, the first of which
- * contains elements `predicate` returns truthy for, while the second of which
- * contains elements `predicate` returns falsey for. The predicate is bound
- * to `thisArg` and invoked with three arguments: (value, index|key, collection).
- *
- * If a property name is provided for `predicate` the created `_.property`
- * style callback returns the property value of the given element.
- *
- * If a value is also provided for `thisArg` the created `_.matchesProperty`
- * style callback returns `true` for elements that have a matching property
- * value, else `false`.
- *
- * If an object is provided for `predicate` the created `_.matches` style
- * callback returns `true` for elements that have the properties of the given
- * object, else `false`.
- *
- * @static
- * @memberOf _
- * @category Collection
- * @param {Array|Object|string} collection The collection to iterate over.
- * @param {Function|Object|string} [predicate=_.identity] The function invoked
- *  per iteration.
- * @param {*} [thisArg] The `this` binding of `predicate`.
- * @returns {Array} Returns the array of grouped elements.
- * @example
- *
- * _.partition([1, 2, 3], function(n) {
- *   return n % 2;
- * });
- * // => [[1, 3], [2]]
- *
- * _.partition([1.2, 2.3, 3.4], function(n) {
- *   return this.floor(n) % 2;
- * }, Math);
- * // => [[1.2, 3.4], [2.3]]
- *
- * var users = [
- *   { 'user': 'barney',  'age': 36, 'active': false },
- *   { 'user': 'fred',    'age': 40, 'active': true },
- *   { 'user': 'pebbles', 'age': 1,  'active': false }
- * ];
- *
- * var mapper = function(array) {
- *   return _.pluck(array, 'user');
- * };
- *
- * // using the `_.matches` callback shorthand
- * _.map(_.partition(users, { 'age': 1, 'active': false }), mapper);
- * // => [['pebbles'], ['barney', 'fred']]
- *
- * // using the `_.matchesProperty` callback shorthand
- * _.map(_.partition(users, 'active', false), mapper);
- * // => [['barney', 'pebbles'], ['fred']]
- *
- * // using the `_.property` callback shorthand
- * _.map(_.partition(users, 'active'), mapper);
- * // => [['fred'], ['barney', 'pebbles']]
- */
-var partition = createAggregator(function(result, value, key) {
-  result[key ? 0 : 1].push(value);
-}, function() { return [[], []]; });
-
-module.exports = partition;
-
-},{"lodash._createaggregator":339,"lodash.keys":346}],339:[function(require,module,exports){
-arguments[4][168][0].apply(exports,arguments)
-},{"dup":168,"lodash._basecallback":340,"lodash._baseeach":344,"lodash.isarray":345}],340:[function(require,module,exports){
-arguments[4][169][0].apply(exports,arguments)
-},{"dup":169,"lodash._baseisequal":341,"lodash._bindcallback":343,"lodash.isarray":345,"lodash.keys":346}],341:[function(require,module,exports){
-arguments[4][170][0].apply(exports,arguments)
-},{"dup":170,"lodash.isarray":345,"lodash.istypedarray":342,"lodash.keys":346}],342:[function(require,module,exports){
-arguments[4][171][0].apply(exports,arguments)
-},{"dup":171}],343:[function(require,module,exports){
-arguments[4][56][0].apply(exports,arguments)
-},{"dup":56}],344:[function(require,module,exports){
-arguments[4][87][0].apply(exports,arguments)
-},{"dup":87,"lodash.keys":346}],345:[function(require,module,exports){
-arguments[4][68][0].apply(exports,arguments)
-},{"dup":68}],346:[function(require,module,exports){
-arguments[4][60][0].apply(exports,arguments)
-},{"dup":60,"lodash.isarguments":347,"lodash.isarray":348,"lodash.isnative":349}],347:[function(require,module,exports){
-arguments[4][61][0].apply(exports,arguments)
-},{"dup":61}],348:[function(require,module,exports){
-arguments[4][68][0].apply(exports,arguments)
-},{"dup":68}],349:[function(require,module,exports){
-arguments[4][59][0].apply(exports,arguments)
-},{"dup":59}],350:[function(require,module,exports){
-/**
- * lodash 3.1.1 (Custom Build) <https://lodash.com/>
- * Build: `lodash modern modularize exports="npm" -o ./`
- * Copyright 2012-2015 The Dojo Foundation <http://dojofoundation.org/>
- * Based on Underscore.js 1.8.3 <http://underscorejs.org/LICENSE>
- * Copyright 2009-2015 Jeremy Ashkenas, DocumentCloud and Investigative Reporters & Editors
- * Available under MIT license <https://lodash.com/license>
- */
-var baseCallback = require('lodash._basecallback'),
-    baseEach = require('lodash._baseeach'),
-    baseReduce = require('lodash._basereduce'),
-    isArray = require('lodash.isarray'),
-    keys = require('lodash.keys');
-
-/**
- * A specialized version of `_.reduce` for arrays without support for callback
- * shorthands and `this` binding.
- *
- * @private
- * @param {Array} array The array to iterate over.
- * @param {Function} iteratee The function invoked per iteration.
- * @param {*} [accumulator] The initial value.
- * @param {boolean} [initFromArray] Specify using the first element of `array`
- *  as the initial value.
- * @returns {*} Returns the accumulated value.
- */
-function arrayReduce(array, iteratee, accumulator, initFromArray) {
-  var index = -1,
-      length = array.length;
-
-  if (initFromArray && length) {
-    accumulator = array[++index];
-  }
-  while (++index < length) {
-    accumulator = iteratee(accumulator, array[index], index, array);
-  }
-  return accumulator;
-}
-
-/**
- * Creates a function for `_.reduce` or `_.reduceRight`.
- *
- * @private
- * @param {Function} arrayFunc The function to iterate over an array.
- * @param {Function} eachFunc The function to iterate over a collection.
- * @returns {Function} Returns the new each function.
- */
-function createReduce(arrayFunc, eachFunc) {
-  return function(collection, iteratee, accumulator, thisArg) {
-    var initFromArray = arguments.length < 3;
-    return (typeof iteratee == 'function' && thisArg === undefined && isArray(collection))
-      ? arrayFunc(collection, iteratee, accumulator, initFromArray)
-      : baseReduce(collection, baseCallback(iteratee, thisArg, 4), accumulator, initFromArray, eachFunc);
-  };
-}
-
-/**
- * Reduces `collection` to a value which is the accumulated result of running
- * each element in `collection` through `iteratee`, where each successive
- * invocation is supplied the return value of the previous. If `accumulator`
- * is not provided the first element of `collection` is used as the initial
- * value. The `iteratee` is bound to `thisArg` and invoked with four arguments:
- * (accumulator, value, index|key, collection).
- *
- * Many lodash methods are guarded to work as interatees for methods like
- * `_.reduce`, `_.reduceRight`, and `_.transform`.
- *
- * The guarded methods are:
- * `assign`, `defaults`, `includes`, `merge`, `sortByAll`, and `sortByOrder`
- *
- * @static
- * @memberOf _
- * @alias foldl, inject
- * @category Collection
- * @param {Array|Object|string} collection The collection to iterate over.
- * @param {Function} [iteratee=_.identity] The function invoked per iteration.
- * @param {*} [accumulator] The initial value.
- * @param {*} [thisArg] The `this` binding of `iteratee`.
- * @returns {*} Returns the accumulated value.
- * @example
- *
- * _.reduce([1, 2], function(total, n) {
- *   return total + n;
- * });
- * // => 3
- *
- * _.reduce({ 'a': 1, 'b': 2 }, function(result, n, key) {
- *   result[key] = n * 3;
- *   return result;
- * }, {});
- * // => { 'a': 3, 'b': 6 } (iteration order is not guaranteed)
- */
-var reduce = createReduce(arrayReduce, baseEach);
-
-module.exports = reduce;
-
-},{"lodash._basecallback":351,"lodash._baseeach":355,"lodash._basereduce":356,"lodash.isarray":357,"lodash.keys":358}],351:[function(require,module,exports){
-arguments[4][169][0].apply(exports,arguments)
-},{"dup":169,"lodash._baseisequal":352,"lodash._bindcallback":354,"lodash.isarray":357,"lodash.keys":358}],352:[function(require,module,exports){
-arguments[4][170][0].apply(exports,arguments)
-},{"dup":170,"lodash.isarray":357,"lodash.istypedarray":353,"lodash.keys":358}],353:[function(require,module,exports){
-arguments[4][171][0].apply(exports,arguments)
-},{"dup":171}],354:[function(require,module,exports){
-arguments[4][56][0].apply(exports,arguments)
-},{"dup":56}],355:[function(require,module,exports){
-arguments[4][87][0].apply(exports,arguments)
-},{"dup":87,"lodash.keys":358}],356:[function(require,module,exports){
-/**
- * lodash 3.0.1 (Custom Build) <https://lodash.com/>
- * Build: `lodash modern modularize exports="npm" -o ./`
- * Copyright 2012-2015 The Dojo Foundation <http://dojofoundation.org/>
- * Based on Underscore.js 1.7.0 <http://underscorejs.org/LICENSE>
- * Copyright 2009-2015 Jeremy Ashkenas, DocumentCloud and Investigative Reporters & Editors
- * Available under MIT license <https://lodash.com/license>
- */
-
-/**
- * The base implementation of `_.reduce` and `_.reduceRight` without support
- * for callback shorthands or `this` binding, which iterates over `collection`
- * using the provided `eachFunc`.
- *
- * @private
- * @param {Array|Object|string} collection The collection to iterate over.
- * @param {Function} iteratee The function invoked per iteration.
- * @param {*} accumulator The initial value.
- * @param {boolean} initFromCollection Specify using the first or last element
- *  of `collection` as the initial value.
- * @param {Function} eachFunc The function to iterate over `collection`.
- * @returns {*} Returns the accumulated value.
- */
-function baseReduce(collection, iteratee, accumulator, initFromCollection, eachFunc) {
-  eachFunc(collection, function(value, index, collection) {
-    accumulator = initFromCollection
-      ? (initFromCollection = false, value)
-      : iteratee(accumulator, value, index, collection);
-  });
-  return accumulator;
-}
-
-module.exports = baseReduce;
-
-},{}],357:[function(require,module,exports){
-arguments[4][68][0].apply(exports,arguments)
-},{"dup":68}],358:[function(require,module,exports){
-arguments[4][60][0].apply(exports,arguments)
-},{"dup":60,"lodash.isarguments":359,"lodash.isarray":357,"lodash.isnative":360}],359:[function(require,module,exports){
-arguments[4][61][0].apply(exports,arguments)
-},{"dup":61}],360:[function(require,module,exports){
-arguments[4][59][0].apply(exports,arguments)
-},{"dup":59}],361:[function(require,module,exports){
-/**
- * lodash 3.1.1 (Custom Build) <https://lodash.com/>
- * Build: `lodash modern modularize exports="npm" -o ./`
- * Copyright 2012-2015 The Dojo Foundation <http://dojofoundation.org/>
- * Based on Underscore.js 1.8.3 <http://underscorejs.org/LICENSE>
- * Copyright 2009-2015 Jeremy Ashkenas, DocumentCloud and Investigative Reporters & Editors
- * Available under MIT license <https://lodash.com/license>
- */
-var baseCallback = require('lodash._basecallback'),
-    baseEachRight = require('lodash._baseeachright'),
-    baseReduce = require('lodash._basereduce'),
-    isArray = require('lodash.isarray'),
-    keys = require('lodash.keys');
-
-/**
- * A specialized version of `_.reduceRight` for arrays without support for
- * callback shorthands and `this` binding.
- *
- * @private
- * @param {Array} array The array to iterate over.
- * @param {Function} iteratee The function invoked per iteration.
- * @param {*} [accumulator] The initial value.
- * @param {boolean} [initFromArray] Specify using the last element of `array`
- *  as the initial value.
- * @returns {*} Returns the accumulated value.
- */
-function arrayReduceRight(array, iteratee, accumulator, initFromArray) {
-  var length = array.length;
-  if (initFromArray && length) {
-    accumulator = array[--length];
-  }
-  while (length--) {
-    accumulator = iteratee(accumulator, array[length], length, array);
-  }
-  return accumulator;
-}
-
-/**
- * Creates a function for `_.reduce` or `_.reduceRight`.
- *
- * @private
- * @param {Function} arrayFunc The function to iterate over an array.
- * @param {Function} eachFunc The function to iterate over a collection.
- * @returns {Function} Returns the new each function.
- */
-function createReduce(arrayFunc, eachFunc) {
-  return function(collection, iteratee, accumulator, thisArg) {
-    var initFromArray = arguments.length < 3;
-    return (typeof iteratee == 'function' && thisArg === undefined && isArray(collection))
-      ? arrayFunc(collection, iteratee, accumulator, initFromArray)
-      : baseReduce(collection, baseCallback(iteratee, thisArg, 4), accumulator, initFromArray, eachFunc);
-  };
-}
-
-/**
- * This method is like `_.reduce` except that it iterates over elements of
- * `collection` from right to left.
- *
- * @static
- * @memberOf _
- * @alias foldr
- * @category Collection
- * @param {Array|Object|string} collection The collection to iterate over.
- * @param {Function} [iteratee=_.identity] The function invoked per iteration.
- * @param {*} [accumulator] The initial value.
- * @param {*} [thisArg] The `this` binding of `iteratee`.
- * @returns {*} Returns the accumulated value.
- * @example
- *
- * var array = [[0, 1], [2, 3], [4, 5]];
- *
- * _.reduceRight(array, function(flattened, other) {
- *   return flattened.concat(other);
- * }, []);
- * // => [4, 5, 2, 3, 0, 1]
- */
-var reduceRight =  createReduce(arrayReduceRight, baseEachRight);
-
-module.exports = reduceRight;
-
-},{"lodash._basecallback":362,"lodash._baseeachright":366,"lodash._basereduce":368,"lodash.isarray":369,"lodash.keys":370}],362:[function(require,module,exports){
-arguments[4][169][0].apply(exports,arguments)
-},{"dup":169,"lodash._baseisequal":363,"lodash._bindcallback":365,"lodash.isarray":369,"lodash.keys":370}],363:[function(require,module,exports){
-arguments[4][170][0].apply(exports,arguments)
-},{"dup":170,"lodash.isarray":369,"lodash.istypedarray":364,"lodash.keys":370}],364:[function(require,module,exports){
-arguments[4][171][0].apply(exports,arguments)
-},{"dup":171}],365:[function(require,module,exports){
-arguments[4][56][0].apply(exports,arguments)
-},{"dup":56}],366:[function(require,module,exports){
-/**
- * lodash 3.0.2 (Custom Build) <https://lodash.com/>
- * Build: `lodash modern modularize exports="npm" -o ./`
- * Copyright 2012-2015 The Dojo Foundation <http://dojofoundation.org/>
- * Based on Underscore.js 1.8.3 <http://underscorejs.org/LICENSE>
- * Copyright 2009-2015 Jeremy Ashkenas, DocumentCloud and Investigative Reporters & Editors
- * Available under MIT license <https://lodash.com/license>
- */
-var baseForRight = require('lodash._baseforright'),
-    keys = require('lodash.keys');
-
-/**
- * Used as the [maximum length](https://people.mozilla.org/~jorendorff/es6-draft.html#sec-number.max_safe_integer)
- * of an array-like value.
- */
-var MAX_SAFE_INTEGER = Math.pow(2, 53) - 1;
-
-/**
- * The base implementation of `_.forEachRight` without support for callback
- * shorthands and `this` binding.
- *
- * @private
- * @param {Array|Object|string} collection The collection to iterate over.
- * @param {Function} iteratee The function invoked per iteration.
- * @returns {Array|Object|string} Returns `collection`.
- */
-var baseEachRight = createBaseEach(baseForOwnRight, true);
-
-/**
- * The base implementation of `_.forOwnRight` without support for callback
- * shorthands and `this` binding.
- *
- * @private
- * @param {Object} object The object to iterate over.
- * @param {Function} iteratee The function invoked per iteration.
- * @returns {Object} Returns `object`.
- */
-function baseForOwnRight(object, iteratee) {
-  return baseForRight(object, iteratee, keys);
-}
-
-/**
- * The base implementation of `_.property` without support for deep paths.
- *
- * @private
- * @param {string} key The key of the property to get.
- * @returns {Function} Returns the new function.
- */
-function baseProperty(key) {
-  return function(object) {
-    return object == null ? undefined : object[key];
-  };
-}
-
-/**
- * Creates a `baseEach` or `baseEachRight` function.
- *
- * @private
- * @param {Function} eachFunc The function to iterate over a collection.
- * @param {boolean} [fromRight] Specify iterating from right to left.
- * @returns {Function} Returns the new base function.
- */
-function createBaseEach(eachFunc, fromRight) {
-  return function(collection, iteratee) {
-    var length = collection ? getLength(collection) : 0;
-    if (!isLength(length)) {
-      return eachFunc(collection, iteratee);
-    }
-    var index = fromRight ? length : -1,
-        iterable = toObject(collection);
-
-    while ((fromRight ? index-- : ++index < length)) {
-      if (iteratee(iterable[index], index, iterable) === false) {
-        break;
-      }
-    }
-    return collection;
-  };
-}
-
-/**
- * Gets the "length" property value of `object`.
- *
- * **Note:** This function is used to avoid a [JIT bug](https://bugs.webkit.org/show_bug.cgi?id=142792)
- * in Safari on iOS 8.1 ARM64.
- *
- * @private
- * @param {Object} object The object to query.
- * @returns {*} Returns the "length" value.
- */
-var getLength = baseProperty('length');
-
-/**
- * Checks if `value` is a valid array-like length.
- *
- * **Note:** This function is based on [`ToLength`](https://people.mozilla.org/~jorendorff/es6-draft.html#sec-tolength).
- *
- * @private
- * @param {*} value The value to check.
- * @returns {boolean} Returns `true` if `value` is a valid length, else `false`.
- */
-function isLength(value) {
-  return typeof value == 'number' && value > -1 && value % 1 == 0 && value <= MAX_SAFE_INTEGER;
-}
-
-/**
- * Converts `value` to an object if it is not one.
- *
- * @private
- * @param {*} value The value to process.
- * @returns {Object} Returns the object.
- */
-function toObject(value) {
-  return isObject(value) ? value : Object(value);
-}
-
-/**
- * Checks if `value` is the [language type](https://es5.github.io/#x8) of `Object`.
- * (e.g. arrays, functions, objects, regexes, `new Number(0)`, and `new String('')`)
- *
- * @static
- * @memberOf _
- * @category Lang
- * @param {*} value The value to check.
- * @returns {boolean} Returns `true` if `value` is an object, else `false`.
- * @example
- *
- * _.isObject({});
- * // => true
- *
- * _.isObject([1, 2, 3]);
- * // => true
- *
- * _.isObject(1);
- * // => false
- */
-function isObject(value) {
-  // Avoid a V8 JIT bug in Chrome 19-20.
-  // See https://code.google.com/p/v8/issues/detail?id=2291 for more details.
-  var type = typeof value;
-  return type == 'function' || (!!value && type == 'object');
-}
-
-module.exports = baseEachRight;
-
-},{"lodash._baseforright":367,"lodash.keys":370}],367:[function(require,module,exports){
-/**
- * lodash 3.0.1 (Custom Build) <https://lodash.com/>
- * Build: `lodash modern modularize exports="npm" -o ./`
- * Copyright 2012-2015 The Dojo Foundation <http://dojofoundation.org/>
- * Based on Underscore.js 1.8.2 <http://underscorejs.org/LICENSE>
- * Copyright 2009-2015 Jeremy Ashkenas, DocumentCloud and Investigative Reporters & Editors
- * Available under MIT license <https://lodash.com/license>
- */
-
-/**
- * This function is like `baseFor` except that it iterates over properties
- * in the opposite order.
- *
- * @private
- * @param {Object} object The object to iterate over.
- * @param {Function} iteratee The function invoked per iteration.
- * @param {Function} keysFunc The function to get the keys of `object`.
- * @returns {Object} Returns `object`.
- */
-var baseForRight = createBaseFor(true);
-
-/**
- * Creates a base function for `_.forIn` or `_.forInRight`.
- *
- * @private
- * @param {boolean} [fromRight] Specify iterating from right to left.
- * @returns {Function} Returns the new base function.
- */
-function createBaseFor(fromRight) {
-  return function(object, iteratee, keysFunc) {
-    var iterable = toObject(object),
-        props = keysFunc(object),
-        length = props.length,
-        index = fromRight ? length : -1;
-
-    while ((fromRight ? index-- : ++index < length)) {
-      var key = props[index];
-      if (iteratee(iterable[key], key, iterable) === false) {
-        break;
-      }
-    }
-    return object;
-  };
-}
-
-/**
- * Converts `value` to an object if it is not one.
- *
- * @private
- * @param {*} value The value to process.
- * @returns {Object} Returns the object.
- */
-function toObject(value) {
-  return isObject(value) ? value : Object(value);
-}
-
-/**
- * Checks if `value` is the [language type](https://es5.github.io/#x8) of `Object`.
- * (e.g. arrays, functions, objects, regexes, `new Number(0)`, and `new String('')`)
- *
- * @static
- * @memberOf _
- * @category Lang
- * @param {*} value The value to check.
- * @returns {boolean} Returns `true` if `value` is an object, else `false`.
- * @example
- *
- * _.isObject({});
- * // => true
- *
- * _.isObject([1, 2, 3]);
- * // => true
- *
- * _.isObject(1);
- * // => false
- */
-function isObject(value) {
-  // Avoid a V8 JIT bug in Chrome 19-20.
-  // See https://code.google.com/p/v8/issues/detail?id=2291 for more details.
-  var type = typeof value;
-  return type == 'function' || (!!value && type == 'object');
-}
-
-module.exports = baseForRight;
-
-},{}],368:[function(require,module,exports){
-arguments[4][356][0].apply(exports,arguments)
-},{"dup":356}],369:[function(require,module,exports){
-arguments[4][68][0].apply(exports,arguments)
-},{"dup":68}],370:[function(require,module,exports){
-arguments[4][60][0].apply(exports,arguments)
-},{"dup":60,"lodash.isarguments":371,"lodash.isarray":369,"lodash.isnative":372}],371:[function(require,module,exports){
-arguments[4][61][0].apply(exports,arguments)
-},{"dup":61}],372:[function(require,module,exports){
-arguments[4][59][0].apply(exports,arguments)
-},{"dup":59}],373:[function(require,module,exports){
-/**
- * lodash 3.1.0 (Custom Build) <https://lodash.com/>
- * Build: `lodash modern modularize exports="npm" -o ./`
- * Copyright 2012-2015 The Dojo Foundation <http://dojofoundation.org/>
- * Based on Underscore.js 1.8.2 <http://underscorejs.org/LICENSE>
- * Copyright 2009-2015 Jeremy Ashkenas, DocumentCloud and Investigative Reporters & Editors
- * Available under MIT license <https://lodash.com/license>
- */
-var arrayFilter = require('lodash._arrayfilter'),
-    baseCallback = require('lodash._basecallback'),
-    baseFilter = require('lodash._basefilter'),
-    isArray = require('lodash.isarray'),
-    keys = require('lodash.keys');
-
-/**
- * The opposite of `_.filter`; this method returns the elements of `collection`
- * that `predicate` does **not** return truthy for.
- *
- * If a property name is provided for `predicate` the created `_.property`
- * style callback returns the property value of the given element.
- *
- * If a value is also provided for `thisArg` the created `_.matchesProperty`
- * style callback returns `true` for elements that have a matching property
- * value, else `false`.
- *
- * If an object is provided for `predicate` the created `_.matches` style
- * callback returns `true` for elements that have the properties of the given
- * object, else `false`.
- *
- * @static
- * @memberOf _
- * @category Collection
- * @param {Array|Object|string} collection The collection to iterate over.
- * @param {Function|Object|string} [predicate=_.identity] The function invoked
- *  per iteration.
- * @param {*} [thisArg] The `this` binding of `predicate`.
- * @returns {Array} Returns the new filtered array.
- * @example
- *
- * _.reject([1, 2, 3, 4], function(n) {
- *   return n % 2 == 0;
- * });
- * // => [1, 3]
- *
- * var users = [
- *   { 'user': 'barney', 'age': 36, 'active': false },
- *   { 'user': 'fred',   'age': 40, 'active': true }
- * ];
- *
- * // using the `_.matches` callback shorthand
- * _.pluck(_.reject(users, { 'age': 40, 'active': true }), 'user');
- * // => ['barney']
- *
- * // using the `_.matchesProperty` callback shorthand
- * _.pluck(_.reject(users, 'active', false), 'user');
- * // => ['fred']
- *
- * // using the `_.property` callback shorthand
- * _.pluck(_.reject(users, 'active'), 'user');
- * // => ['barney']
- */
-function reject(collection, predicate, thisArg) {
-  var func = isArray(collection) ? arrayFilter : baseFilter;
-  predicate = baseCallback(predicate, thisArg, 3);
-  return func(collection, function(value, index, collection) {
-    return !predicate(value, index, collection);
-  });
-}
-
-module.exports = reject;
-
-},{"lodash._arrayfilter":374,"lodash._basecallback":375,"lodash._basefilter":379,"lodash.isarray":381,"lodash.keys":382}],374:[function(require,module,exports){
-arguments[4][205][0].apply(exports,arguments)
-},{"dup":205}],375:[function(require,module,exports){
-arguments[4][169][0].apply(exports,arguments)
-},{"dup":169,"lodash._baseisequal":376,"lodash._bindcallback":378,"lodash.isarray":381,"lodash.keys":382}],376:[function(require,module,exports){
-arguments[4][170][0].apply(exports,arguments)
-},{"dup":170,"lodash.isarray":381,"lodash.istypedarray":377,"lodash.keys":382}],377:[function(require,module,exports){
-arguments[4][171][0].apply(exports,arguments)
-},{"dup":171}],378:[function(require,module,exports){
-arguments[4][56][0].apply(exports,arguments)
-},{"dup":56}],379:[function(require,module,exports){
-arguments[4][210][0].apply(exports,arguments)
-},{"dup":210,"lodash._baseeach":380}],380:[function(require,module,exports){
-arguments[4][87][0].apply(exports,arguments)
-},{"dup":87,"lodash.keys":382}],381:[function(require,module,exports){
-arguments[4][68][0].apply(exports,arguments)
-},{"dup":68}],382:[function(require,module,exports){
-arguments[4][60][0].apply(exports,arguments)
-},{"dup":60,"lodash.isarguments":383,"lodash.isarray":381,"lodash.isnative":384}],383:[function(require,module,exports){
-arguments[4][61][0].apply(exports,arguments)
-},{"dup":61}],384:[function(require,module,exports){
-arguments[4][59][0].apply(exports,arguments)
-},{"dup":59}],385:[function(require,module,exports){
-/**
- * lodash 3.0.0 (Custom Build) <https://lodash.com/>
- * Build: `lodash modern modularize exports="npm" -o ./`
- * Copyright 2012-2015 The Dojo Foundation <http://dojofoundation.org/>
- * Based on Underscore.js 1.7.0 <http://underscorejs.org/LICENSE>
- * Copyright 2009-2015 Jeremy Ashkenas, DocumentCloud and Investigative Reporters & Editors
- * Available under MIT license <https://lodash.com/license>
- */
-var baseSlice = require('lodash._baseslice'),
-    isIterateeCall = require('lodash._isiterateecall');
-
-/**
- * Creates a slice of `array` with `n` elements dropped from the beginning.
- *
- * @static
- * @memberOf _
- * @type Function
- * @category Array
- * @param {Array} array The array to query.
- * @param {number} [n=1] The number of elements to drop.
- * @param- {Object} [guard] Enables use as a callback for functions like `_.map`.
- * @returns {Array} Returns the slice of `array`.
- * @example
- *
- * _.drop([1, 2, 3]);
- * // => [2, 3]
- *
- * _.drop([1, 2, 3], 2);
- * // => [3]
- *
- * _.drop([1, 2, 3], 5);
- * // => []
- *
- * _.drop([1, 2, 3], 0);
- * // => [1, 2, 3]
- */
-function drop(array, n, guard) {
-  var length = array ? array.length : 0;
-  if (!length) {
-    return [];
-  }
-  if (guard ? isIterateeCall(array, n, guard) : n == null) {
-    n = 1;
-  }
-  return baseSlice(array, n < 0 ? 0 : n);
-}
-
-/**
- * Gets all but the first element of `array`.
- *
- * @static
- * @memberOf _
- * @alias tail
- * @category Array
- * @param {Array} array The array to query.
- * @returns {Array} Returns the slice of `array`.
- * @example
- *
- * _.rest([1, 2, 3]);
- * // => [2, 3]
- */
-function rest(array) {
-  return drop(array, 1);
-}
-
-module.exports = rest;
-
-},{"lodash._baseslice":386,"lodash._isiterateecall":387}],386:[function(require,module,exports){
-arguments[4][161][0].apply(exports,arguments)
-},{"dup":161}],387:[function(require,module,exports){
-arguments[4][57][0].apply(exports,arguments)
-},{"dup":57}],388:[function(require,module,exports){
-/**
- * lodash 3.0.0 (Custom Build) <https://lodash.com/>
- * Build: `lodash modern modularize exports="npm" -o ./`
- * Copyright 2012-2015 The Dojo Foundation <http://dojofoundation.org/>
- * Based on Underscore.js 1.7.0 <http://underscorejs.org/LICENSE>
- * Copyright 2009-2015 Jeremy Ashkenas, DocumentCloud and Investigative Reporters & Editors
- * Available under MIT license <https://lodash.com/license>
- */
-var baseRandom = require('lodash._baserandom'),
-    isIterateeCall = require('lodash._isiterateecall'),
-    toIterable = require('lodash._toiterable'),
-    shuffle = require('lodash.shuffle');
-
-/* Native method references for those with the same name as other `lodash` methods. */
-var nativeMin = Math.min;
-
-/**
- * Gets a random element or `n` random elements from a collection.
- *
- * @static
- * @memberOf _
- * @category Collection
- * @param {Array|Object|string} collection The collection to sample.
- * @param {number} [n] The number of elements to sample.
- * @param- {Object} [guard] Enables use as a callback for functions like `_.map`.
- * @returns {*} Returns the random sample(s).
- * @example
- *
- * _.sample([1, 2, 3, 4]);
- * // => 2
- *
- * _.sample([1, 2, 3, 4], 2);
- * // => [3, 1]
- */
-function sample(collection, n, guard) {
-  if (guard ? isIterateeCall(collection, n, guard) : n == null) {
-    collection = toIterable(collection);
-    var length = collection.length;
-    return length > 0 ? collection[baseRandom(0, length - 1)] : undefined;
-  }
-  var result = shuffle(collection);
-  result.length = nativeMin(n < 0 ? 0 : (+n || 0), result.length);
-  return result;
-}
-
-module.exports = sample;
-
-},{"lodash._baserandom":389,"lodash._isiterateecall":390,"lodash._toiterable":391,"lodash.shuffle":397}],389:[function(require,module,exports){
-/**
- * lodash 3.0.0 (Custom Build) <https://lodash.com/>
- * Build: `lodash modern modularize exports="npm" -o ./`
- * Copyright 2012-2015 The Dojo Foundation <http://dojofoundation.org/>
- * Based on Underscore.js 1.7.0 <http://underscorejs.org/LICENSE>
- * Copyright 2009-2015 Jeremy Ashkenas, DocumentCloud and Investigative Reporters & Editors
- * Available under MIT license <https://lodash.com/license>
- */
-
-/** Native method references. */
-var floor = Math.floor;
-
-/* Native method references for those with the same name as other `lodash` methods. */
-var nativeRandom = Math.random;
-
-/**
- * The base implementation of `_.random` without support for argument juggling
- * and returning floating-point numbers.
- *
- * @private
- * @param {number} min The minimum possible value.
- * @param {number} max The maximum possible value.
- * @returns {number} Returns the random number.
- */
-function baseRandom(min, max) {
-  return min + floor(nativeRandom() * (max - min + 1));
-}
-
-module.exports = baseRandom;
-
-},{}],390:[function(require,module,exports){
-arguments[4][57][0].apply(exports,arguments)
-},{"dup":57}],391:[function(require,module,exports){
-arguments[4][316][0].apply(exports,arguments)
-},{"dup":316,"lodash._basevalues":392,"lodash.keys":393}],392:[function(require,module,exports){
-arguments[4][115][0].apply(exports,arguments)
-},{"dup":115}],393:[function(require,module,exports){
-arguments[4][60][0].apply(exports,arguments)
-},{"dup":60,"lodash.isarguments":394,"lodash.isarray":395,"lodash.isnative":396}],394:[function(require,module,exports){
-arguments[4][61][0].apply(exports,arguments)
-},{"dup":61}],395:[function(require,module,exports){
-arguments[4][68][0].apply(exports,arguments)
-},{"dup":68}],396:[function(require,module,exports){
-arguments[4][59][0].apply(exports,arguments)
-},{"dup":59}],397:[function(require,module,exports){
-/**
- * lodash 3.0.0 (Custom Build) <https://lodash.com/>
- * Build: `lodash modern modularize exports="npm" -o ./`
- * Copyright 2012-2015 The Dojo Foundation <http://dojofoundation.org/>
- * Based on Underscore.js 1.7.0 <http://underscorejs.org/LICENSE>
- * Copyright 2009-2015 Jeremy Ashkenas, DocumentCloud and Investigative Reporters & Editors
- * Available under MIT license <https://lodash.com/license>
- */
-var baseRandom = require('lodash._baserandom'),
-    toIterable = require('lodash._toiterable');
-
-/**
- * Creates an array of shuffled values, using a version of the Fisher-Yates
- * shuffle. See [Wikipedia](https://en.wikipedia.org/wiki/Fisher-Yates_shuffle)
- * for more details.
- *
- * @static
- * @memberOf _
- * @category Collection
- * @param {Array|Object|string} collection The collection to shuffle.
- * @returns {Array} Returns the new shuffled array.
- * @example
- *
- * _.shuffle([1, 2, 3, 4]);
- * // => [4, 1, 3, 2]
- */
-function shuffle(collection) {
-  collection = toIterable(collection);
-
-  var index = -1,
-      length = collection.length,
-      result = Array(length);
-
-  while (++index < length) {
-    var rand = baseRandom(0, index);
-    if (index != rand) {
-      result[index] = result[rand];
-    }
-    result[rand] = collection[index];
-  }
-  return result;
-}
-
-module.exports = shuffle;
-
-},{"lodash._baserandom":398,"lodash._toiterable":399}],398:[function(require,module,exports){
-arguments[4][389][0].apply(exports,arguments)
-},{"dup":389}],399:[function(require,module,exports){
-arguments[4][316][0].apply(exports,arguments)
-},{"dup":316,"lodash._basevalues":400,"lodash.keys":401}],400:[function(require,module,exports){
-arguments[4][115][0].apply(exports,arguments)
-},{"dup":115}],401:[function(require,module,exports){
-arguments[4][60][0].apply(exports,arguments)
-},{"dup":60,"lodash.isarguments":402,"lodash.isarray":403,"lodash.isnative":404}],402:[function(require,module,exports){
-arguments[4][61][0].apply(exports,arguments)
-},{"dup":61}],403:[function(require,module,exports){
-arguments[4][68][0].apply(exports,arguments)
-},{"dup":68}],404:[function(require,module,exports){
-arguments[4][59][0].apply(exports,arguments)
-},{"dup":59}],405:[function(require,module,exports){
-/**
- * lodash 3.2.1 (Custom Build) <https://lodash.com/>
- * Build: `lodash modern modularize exports="npm" -o ./`
- * Copyright 2012-2015 The Dojo Foundation <http://dojofoundation.org/>
- * Based on Underscore.js 1.8.3 <http://underscorejs.org/LICENSE>
- * Copyright 2009-2015 Jeremy Ashkenas, DocumentCloud and Investigative Reporters & Editors
- * Available under MIT license <https://lodash.com/license>
- */
-var baseCallback = require('lodash._basecallback'),
-    baseEach = require('lodash._baseeach'),
-    isIterateeCall = require('lodash._isiterateecall'),
-    isArray = require('lodash.isarray'),
-    keys = require('lodash.keys');
-
-/**
- * A specialized version of `_.some` for arrays without support for callback
- * shorthands and `this` binding.
- *
- * @private
- * @param {Array} array The array to iterate over.
- * @param {Function} predicate The function invoked per iteration.
- * @returns {boolean} Returns `true` if any element passes the predicate check,
- *  else `false`.
- */
-function arraySome(array, predicate) {
-  var index = -1,
-      length = array.length;
-
-  while (++index < length) {
-    if (predicate(array[index], index, array)) {
-      return true;
-    }
-  }
-  return false;
-}
-
-/**
- * The base implementation of `_.some` without support for callback shorthands
- * and `this` binding.
- *
- * @private
- * @param {Array|Object|string} collection The collection to iterate over.
- * @param {Function} predicate The function invoked per iteration.
- * @returns {boolean} Returns `true` if any element passes the predicate check,
- *  else `false`.
- */
-function baseSome(collection, predicate) {
-  var result;
-
-  baseEach(collection, function(value, index, collection) {
-    result = predicate(value, index, collection);
-    return !result;
-  });
-  return !!result;
-}
-
-/**
- * Checks if `predicate` returns truthy for **any** element of `collection`.
- * The function returns as soon as it finds a passing value and does not iterate
- * over the entire collection. The predicate is bound to `thisArg` and invoked
- * with three arguments: (value, index|key, collection).
- *
- * If a property name is provided for `predicate` the created `_.property`
- * style callback returns the property value of the given element.
- *
- * If a value is also provided for `thisArg` the created `_.matchesProperty`
- * style callback returns `true` for elements that have a matching property
- * value, else `false`.
- *
- * If an object is provided for `predicate` the created `_.matches` style
- * callback returns `true` for elements that have the properties of the given
- * object, else `false`.
- *
- * @static
- * @memberOf _
- * @alias any
- * @category Collection
- * @param {Array|Object|string} collection The collection to iterate over.
- * @param {Function|Object|string} [predicate=_.identity] The function invoked
- *  per iteration.
- * @param {*} [thisArg] The `this` binding of `predicate`.
- * @returns {boolean} Returns `true` if any element passes the predicate check,
- *  else `false`.
- * @example
- *
- * _.some([null, 0, 'yes', false], Boolean);
- * // => true
- *
- * var users = [
- *   { 'user': 'barney', 'active': true },
- *   { 'user': 'fred',   'active': false }
- * ];
- *
- * // using the `_.matches` callback shorthand
- * _.some(users, { 'user': 'barney', 'active': false });
- * // => false
- *
- * // using the `_.matchesProperty` callback shorthand
- * _.some(users, 'active', false);
- * // => true
- *
- * // using the `_.property` callback shorthand
- * _.some(users, 'active');
- * // => true
- */
-function some(collection, predicate, thisArg) {
-  var func = isArray(collection) ? arraySome : baseSome;
-  if (thisArg && isIterateeCall(collection, predicate, thisArg)) {
-    predicate = null;
-  }
-  if (typeof predicate != 'function' || thisArg !== undefined) {
-    predicate = baseCallback(predicate, thisArg, 3);
-  }
-  return func(collection, predicate);
-}
-
-module.exports = some;
-
-},{"lodash._basecallback":406,"lodash._baseeach":410,"lodash._isiterateecall":411,"lodash.isarray":412,"lodash.keys":413}],406:[function(require,module,exports){
-arguments[4][169][0].apply(exports,arguments)
-},{"dup":169,"lodash._baseisequal":407,"lodash._bindcallback":409,"lodash.isarray":412,"lodash.keys":413}],407:[function(require,module,exports){
-arguments[4][170][0].apply(exports,arguments)
-},{"dup":170,"lodash.isarray":412,"lodash.istypedarray":408,"lodash.keys":413}],408:[function(require,module,exports){
-arguments[4][171][0].apply(exports,arguments)
-},{"dup":171}],409:[function(require,module,exports){
-arguments[4][56][0].apply(exports,arguments)
-},{"dup":56}],410:[function(require,module,exports){
-arguments[4][87][0].apply(exports,arguments)
-},{"dup":87,"lodash.keys":413}],411:[function(require,module,exports){
-arguments[4][57][0].apply(exports,arguments)
-},{"dup":57}],412:[function(require,module,exports){
-arguments[4][68][0].apply(exports,arguments)
-},{"dup":68}],413:[function(require,module,exports){
-arguments[4][60][0].apply(exports,arguments)
-},{"dup":60,"lodash.isarguments":414,"lodash.isarray":412,"lodash.isnative":415}],414:[function(require,module,exports){
-arguments[4][61][0].apply(exports,arguments)
-},{"dup":61}],415:[function(require,module,exports){
-arguments[4][59][0].apply(exports,arguments)
-},{"dup":59}],416:[function(require,module,exports){
-/**
- * lodash 3.1.2 (Custom Build) <https://lodash.com/>
- * Build: `lodash modern modularize exports="npm" -o ./`
- * Copyright 2012-2015 The Dojo Foundation <http://dojofoundation.org/>
- * Based on Underscore.js 1.8.3 <http://underscorejs.org/LICENSE>
- * Copyright 2009-2015 Jeremy Ashkenas, DocumentCloud and Investigative Reporters & Editors
- * Available under MIT license <https://lodash.com/license>
- */
-var baseCallback = require('lodash._basecallback'),
-    baseCompareAscending = require('lodash._basecompareascending'),
-    baseEach = require('lodash._baseeach'),
-    baseSortBy = require('lodash._basesortby'),
-    isIterateeCall = require('lodash._isiterateecall'),
-    isArray = require('lodash.isarray'),
-    keys = require('lodash.keys');
-
-/**
- * Used by `_.sortBy` to compare transformed elements of a collection and stable
- * sort them in ascending order.
- *
- * @private
- * @param {Object} object The object to compare to `other`.
- * @param {Object} other The object to compare to `object`.
- * @returns {number} Returns the sort order indicator for `object`.
- */
-function compareAscending(object, other) {
-  return baseCompareAscending(object.criteria, other.criteria) || (object.index - other.index);
-}
-
-/**
- * Used as the [maximum length](https://people.mozilla.org/~jorendorff/es6-draft.html#sec-number.max_safe_integer)
- * of an array-like value.
- */
-var MAX_SAFE_INTEGER = Math.pow(2, 53) - 1;
-
-/**
- * The base implementation of `_.map` without support for callback shorthands
- * and `this` binding.
- *
- * @private
- * @param {Array|Object|string} collection The collection to iterate over.
- * @param {Function} iteratee The function invoked per iteration.
- * @returns {Array} Returns the new mapped array.
- */
-function baseMap(collection, iteratee) {
-  var index = -1,
-      result = isArrayLike(collection) ? Array(collection.length) : [];
-
-  baseEach(collection, function(value, key, collection) {
-    result[++index] = iteratee(value, key, collection);
-  });
-  return result;
-}
-
-/**
- * The base implementation of `_.property` without support for deep paths.
- *
- * @private
- * @param {string} key The key of the property to get.
- * @returns {Function} Returns the new function.
- */
-function baseProperty(key) {
-  return function(object) {
-    return object == null ? undefined : object[key];
-  };
-}
-
-/**
- * Gets the "length" property value of `object`.
- *
- * **Note:** This function is used to avoid a [JIT bug](https://bugs.webkit.org/show_bug.cgi?id=142792)
- * that affects Safari on at least iOS 8.1-8.3 ARM64.
- *
- * @private
- * @param {Object} object The object to query.
- * @returns {*} Returns the "length" value.
- */
-var getLength = baseProperty('length');
-
-/**
- * Checks if `value` is array-like.
- *
- * @private
- * @param {*} value The value to check.
- * @returns {boolean} Returns `true` if `value` is array-like, else `false`.
- */
-function isArrayLike(value) {
-  return value != null && isLength(getLength(value));
-}
-
-/**
- * Checks if `value` is a valid array-like length.
- *
- * **Note:** This function is based on [`ToLength`](https://people.mozilla.org/~jorendorff/es6-draft.html#sec-tolength).
- *
- * @private
- * @param {*} value The value to check.
- * @returns {boolean} Returns `true` if `value` is a valid length, else `false`.
- */
-function isLength(value) {
-  return typeof value == 'number' && value > -1 && value % 1 == 0 && value <= MAX_SAFE_INTEGER;
-}
-
-/**
- * Creates an array of elements, sorted in ascending order by the results of
- * running each element in a collection through `iteratee`. This method performs
- * a stable sort, that is, it preserves the original sort order of equal elements.
- * The `iteratee` is bound to `thisArg` and invoked with three arguments:
- * (value, index|key, collection).
- *
- * If a property name is provided for `iteratee` the created `_.property`
- * style callback returns the property value of the given element.
- *
- * If a value is also provided for `thisArg` the created `_.matchesProperty`
- * style callback returns `true` for elements that have a matching property
- * value, else `false`.
- *
- * If an object is provided for `iteratee` the created `_.matches` style
- * callback returns `true` for elements that have the properties of the given
- * object, else `false`.
- *
- * @static
- * @memberOf _
- * @category Collection
- * @param {Array|Object|string} collection The collection to iterate over.
- * @param {Function|Object|string} [iteratee=_.identity] The function invoked
- *  per iteration.
- * @param {*} [thisArg] The `this` binding of `iteratee`.
- * @returns {Array} Returns the new sorted array.
- * @example
- *
- * _.sortBy([1, 2, 3], function(n) {
- *   return Math.sin(n);
- * });
- * // => [3, 1, 2]
- *
- * _.sortBy([1, 2, 3], function(n) {
- *   return this.sin(n);
- * }, Math);
- * // => [3, 1, 2]
- *
- * var users = [
- *   { 'user': 'fred' },
- *   { 'user': 'pebbles' },
- *   { 'user': 'barney' }
- * ];
- *
- * // using the `_.property` callback shorthand
- * _.pluck(_.sortBy(users, 'user'), 'user');
- * // => ['barney', 'fred', 'pebbles']
- */
-function sortBy(collection, iteratee, thisArg) {
-  if (collection == null) {
-    return [];
-  }
-  if (thisArg && isIterateeCall(collection, iteratee, thisArg)) {
-    iteratee = null;
-  }
-  var index = -1;
-  iteratee = baseCallback(iteratee, thisArg, 3);
-
-  var result = baseMap(collection, function(value, key, collection) {
-    return { 'criteria': iteratee(value, key, collection), 'index': ++index, 'value': value };
-  });
-  return baseSortBy(result, compareAscending);
-}
-
-module.exports = sortBy;
-
-},{"lodash._basecallback":417,"lodash._basecompareascending":421,"lodash._baseeach":422,"lodash._basesortby":423,"lodash._isiterateecall":424,"lodash.isarray":425,"lodash.keys":426}],417:[function(require,module,exports){
-arguments[4][169][0].apply(exports,arguments)
-},{"dup":169,"lodash._baseisequal":418,"lodash._bindcallback":420,"lodash.isarray":425,"lodash.keys":426}],418:[function(require,module,exports){
-arguments[4][170][0].apply(exports,arguments)
-},{"dup":170,"lodash.isarray":425,"lodash.istypedarray":419,"lodash.keys":426}],419:[function(require,module,exports){
-arguments[4][171][0].apply(exports,arguments)
-},{"dup":171}],420:[function(require,module,exports){
-arguments[4][56][0].apply(exports,arguments)
-},{"dup":56}],421:[function(require,module,exports){
-/**
- * lodash 3.0.1 (Custom Build) <https://lodash.com/>
- * Build: `lodash modern modularize exports="npm" -o ./`
- * Copyright 2012-2015 The Dojo Foundation <http://dojofoundation.org/>
- * Based on Underscore.js 1.8.3 <http://underscorejs.org/LICENSE>
- * Copyright 2009-2015 Jeremy Ashkenas, DocumentCloud and Investigative Reporters & Editors
- * Available under MIT license <https://lodash.com/license>
- */
-
-/**
- * The base implementation of `compareAscending` which compares values and
- * sorts them in ascending order without guaranteeing a stable sort.
- *
- * @private
- * @param {*} value The value to compare to `other`.
- * @param {*} other The value to compare to `value`.
- * @returns {number} Returns the sort order indicator for `value`.
- */
-function baseCompareAscending(value, other) {
-  if (value !== other) {
-    var valIsReflexive = value === value,
-        othIsReflexive = other === other;
-
-    if (value > other || !valIsReflexive || (value === undefined && othIsReflexive)) {
-      return 1;
-    }
-    if (value < other || !othIsReflexive || (other === undefined && valIsReflexive)) {
-      return -1;
-    }
-  }
-  return 0;
-}
-
-module.exports = baseCompareAscending;
-
-},{}],422:[function(require,module,exports){
-arguments[4][87][0].apply(exports,arguments)
-},{"dup":87,"lodash.keys":426}],423:[function(require,module,exports){
-/**
- * lodash 3.0.0 (Custom Build) <https://lodash.com/>
- * Build: `lodash modern modularize exports="npm" -o ./`
- * Copyright 2012-2015 The Dojo Foundation <http://dojofoundation.org/>
- * Based on Underscore.js 1.7.0 <http://underscorejs.org/LICENSE>
- * Copyright 2009-2015 Jeremy Ashkenas, DocumentCloud and Investigative Reporters & Editors
- * Available under MIT license <https://lodash.com/license>
- */
-
-/**
- * The base implementation of `_.sortBy` and `_.sortByAll` which uses `comparer`
- * to define the sort order of `array` and replaces criteria objects with their
- * corresponding values.
- *
- * @private
- * @param {Array} array The array to sort.
- * @param {Function} comparer The function to define sort order.
- * @returns {Array} Returns `array`.
- */
-function baseSortBy(array, comparer) {
-  var length = array.length;
-
-  array.sort(comparer);
-  while (length--) {
-    array[length] = array[length].value;
-  }
-  return array;
-}
-
-module.exports = baseSortBy;
-
-},{}],424:[function(require,module,exports){
-arguments[4][57][0].apply(exports,arguments)
-},{"dup":57}],425:[function(require,module,exports){
-arguments[4][68][0].apply(exports,arguments)
-},{"dup":68}],426:[function(require,module,exports){
-arguments[4][60][0].apply(exports,arguments)
-},{"dup":60,"lodash.isarguments":427,"lodash.isarray":425,"lodash.isnative":428}],427:[function(require,module,exports){
-arguments[4][61][0].apply(exports,arguments)
-},{"dup":61}],428:[function(require,module,exports){
-arguments[4][59][0].apply(exports,arguments)
-},{"dup":59}],429:[function(require,module,exports){
-/**
- * lodash 3.0.0 (Custom Build) <https://lodash.com/>
- * Build: `lodash modern modularize exports="npm" -o ./`
- * Copyright 2012-2015 The Dojo Foundation <http://dojofoundation.org/>
- * Based on Underscore.js 1.7.0 <http://underscorejs.org/LICENSE>
- * Copyright 2009-2015 Jeremy Ashkenas, DocumentCloud and Investigative Reporters & Editors
- * Available under MIT license <https://lodash.com/license>
- */
-var baseSlice = require('lodash._baseslice'),
-    isIterateeCall = require('lodash._isiterateecall');
-
-/**
- * Creates a slice of `array` with `n` elements taken from the beginning.
- *
- * @static
- * @memberOf _
- * @type Function
- * @category Array
- * @param {Array} array The array to query.
- * @param {number} [n=1] The number of elements to take.
- * @param- {Object} [guard] Enables use as a callback for functions like `_.map`.
- * @returns {Array} Returns the slice of `array`.
- * @example
- *
- * _.take([1, 2, 3]);
- * // => [1]
- *
- * _.take([1, 2, 3], 2);
- * // => [1, 2]
- *
- * _.take([1, 2, 3], 5);
- * // => [1, 2, 3]
- *
- * _.take([1, 2, 3], 0);
- * // => []
- */
-function take(array, n, guard) {
-  var length = array ? array.length : 0;
-  if (!length) {
-    return [];
-  }
-  if (guard ? isIterateeCall(array, n, guard) : n == null) {
-    n = 1;
-  }
-  return baseSlice(array, 0, n < 0 ? 0 : n);
-}
-
-module.exports = take;
-
-},{"lodash._baseslice":430,"lodash._isiterateecall":431}],430:[function(require,module,exports){
-arguments[4][161][0].apply(exports,arguments)
-},{"dup":161}],431:[function(require,module,exports){
-arguments[4][57][0].apply(exports,arguments)
-},{"dup":57}],432:[function(require,module,exports){
-/**
- * lodash 3.2.0 (Custom Build) <https://lodash.com/>
- * Build: `lodash modern modularize exports="npm" -o ./`
- * Copyright 2012-2015 The Dojo Foundation <http://dojofoundation.org/>
- * Based on Underscore.js 1.8.3 <http://underscorejs.org/LICENSE>
- * Copyright 2009-2015 Jeremy Ashkenas, DocumentCloud and Investigative Reporters & Editors
- * Available under MIT license <https://lodash.com/license>
- */
-var baseDifference = require('lodash._basedifference'),
-    restParam = require('lodash.restparam');
-
-/**
- * Used as the [maximum length](https://people.mozilla.org/~jorendorff/es6-draft.html#sec-number.max_safe_integer)
- * of an array-like value.
- */
-var MAX_SAFE_INTEGER = Math.pow(2, 53) - 1;
-
-/**
- * The base implementation of `_.property` without support for deep paths.
- *
- * @private
- * @param {string} key The key of the property to get.
- * @returns {Function} Returns the new function.
- */
-function baseProperty(key) {
-  return function(object) {
-    return object == null ? undefined : object[key];
-  };
-}
-
-/**
- * Gets the "length" property value of `object`.
- *
- * **Note:** This function is used to avoid a [JIT bug](https://bugs.webkit.org/show_bug.cgi?id=142792)
- * that affects Safari on at least iOS 8.1-8.3 ARM64.
- *
- * @private
- * @param {Object} object The object to query.
- * @returns {*} Returns the "length" value.
- */
-var getLength = baseProperty('length');
-
-/**
- * Checks if `value` is array-like.
- *
- * @private
- * @param {*} value The value to check.
- * @returns {boolean} Returns `true` if `value` is array-like, else `false`.
- */
-function isArrayLike(value) {
-  return value != null && isLength(getLength(value));
-}
-
-/**
- * Checks if `value` is a valid array-like length.
- *
- * **Note:** This function is based on [`ToLength`](https://people.mozilla.org/~jorendorff/es6-draft.html#sec-tolength).
- *
- * @private
- * @param {*} value The value to check.
- * @returns {boolean} Returns `true` if `value` is a valid length, else `false`.
- */
-function isLength(value) {
-  return typeof value == 'number' && value > -1 && value % 1 == 0 && value <= MAX_SAFE_INTEGER;
-}
-
-/**
- * Creates an array excluding all provided values using
- * [`SameValueZero`](https://people.mozilla.org/~jorendorff/es6-draft.html#sec-samevaluezero)
- * for equality comparisons.
- *
- * @static
- * @memberOf _
- * @category Array
- * @param {Array} array The array to filter.
- * @param {...*} [values] The values to exclude.
- * @returns {Array} Returns the new array of filtered values.
- * @example
- *
- * _.without([1, 2, 1, 3], 1, 2);
- * // => [3]
- */
-var without = restParam(function(array, values) {
-  return isArrayLike(array)
-    ? baseDifference(array, values)
-    : [];
-});
-
-module.exports = without;
-
-},{"lodash._basedifference":433,"lodash.restparam":438}],433:[function(require,module,exports){
-arguments[4][180][0].apply(exports,arguments)
-},{"dup":180,"lodash._baseindexof":434,"lodash._cacheindexof":435,"lodash._createcache":436}],434:[function(require,module,exports){
-arguments[4][114][0].apply(exports,arguments)
-},{"dup":114}],435:[function(require,module,exports){
-arguments[4][182][0].apply(exports,arguments)
-},{"dup":182}],436:[function(require,module,exports){
-arguments[4][183][0].apply(exports,arguments)
-},{"dup":183,"lodash.isnative":437}],437:[function(require,module,exports){
-arguments[4][59][0].apply(exports,arguments)
-},{"dup":59}],438:[function(require,module,exports){
-arguments[4][58][0].apply(exports,arguments)
-},{"dup":58}],439:[function(require,module,exports){
-;if (typeof window !== "undefined") {  window.ampersand = window.ampersand || {};  window.ampersand["ampersand-collection-rest-mixin"] = window.ampersand["ampersand-collection-rest-mixin"] || [];  window.ampersand["ampersand-collection-rest-mixin"].push("4.1.1");}
-var sync = require('ampersand-sync');
-var assign = require('lodash.assign');
-
-
-// Wrap an optional error callback with a fallback error event.
-var wrapError = function(model, options) {
-    var error = options.error;
-    options.error = function(resp) {
-        if (error) error(model, resp, options);
-        model.trigger('error', model, resp, options);
-    };
-};
-
-module.exports = {
-    // Fetch the default set of models for this collection, resetting the
-    // collection when they arrive. If `reset: true` is passed, the response
-    // data will be passed through the `reset` method instead of `set`.
-    fetch: function(options) {
-        options = options ? assign({}, options) : {};
-        if (options.parse === void 0) options.parse = true;
-        var success = options.success;
-        var collection = this;
-        options.success = function(resp) {
-            var method = options.reset ? 'reset' : 'set';
-            collection[method](resp, options);
-            if (success) success(collection, resp, options);
-            collection.trigger('sync', collection, resp, options);
-        };
-        wrapError(this, options);
-        return this.sync('read', this, options);
-    },
-
-    // Create a new instance of a model in this collection. Add the model to the
-    // collection immediately, unless `wait: true` is passed, in which case we
-    // wait for the server to agree.
-    create: function(model, options) {
-        options = options ? assign({}, options) : {};
-        if (!(model = this._prepareModel(model, options))) return false;
-        if (!options.wait) this.add(model, options);
-        var collection = this;
-        var success = options.success;
-        options.success = function(model, resp) {
-            if (options.wait) collection.add(model, options);
-            if (success) success(model, resp, options);
-        };
-        model.save(null, options);
-        return model;
-    },
-
-    sync: function() {
-        return sync.apply(this, arguments);
-    },
-
-    // Get or fetch a model by Id.
-    getOrFetch: function (id, options, cb) {
-
-        if (arguments.length !== 3) {
-            cb = options;
-            options = {};
-        }
-        var self = this;
-        var model = this.get(id);
-        if (model) return cb(null, model);
-        function done() {
-            var model = self.get(id);
-            if (model) {
-                if (cb) cb(null, model);
-            } else {
-                cb(new Error('not found'));
-            }
-        }
-        if (options.all) {
-            options.success = done;
-            options.error = done;
-            return this.fetch(options);
-        } else {
-            return this.fetchById(id, cb);
-        }
-    },
-
-    // fetchById: fetches a model and adds it to
-    // collection when fetched.
-    fetchById: function (id, cb) {
-        var self = this;
-        var idObj = {};
-        idObj[this.model.prototype.idAttribute] = id;
-        var model = new this.model(idObj, {collection: this});
-        return model.fetch({
-            success: function () {
-                self.add(model);
-                if (cb) cb(null, model);
-            },
-            error: function () {
-                delete model.collection;
-                if (cb) cb(Error('not found'));
-            }
-        });
-    }
-};
-
-},{"ampersand-sync":440,"lodash.assign":470}],440:[function(require,module,exports){
-arguments[4][110][0].apply(exports,arguments)
-},{"dup":110,"lodash.assign":470,"lodash.defaults":441,"lodash.includes":443,"lodash.result":452,"qs":458,"xhr":463}],441:[function(require,module,exports){
-arguments[4][111][0].apply(exports,arguments)
-},{"dup":111,"lodash.assign":470,"lodash.restparam":442}],442:[function(require,module,exports){
-arguments[4][58][0].apply(exports,arguments)
-},{"dup":58}],443:[function(require,module,exports){
-arguments[4][113][0].apply(exports,arguments)
-},{"dup":113,"lodash._baseindexof":444,"lodash._basevalues":445,"lodash._isiterateecall":446,"lodash.isarray":447,"lodash.isstring":448,"lodash.keys":449}],444:[function(require,module,exports){
-arguments[4][114][0].apply(exports,arguments)
-},{"dup":114}],445:[function(require,module,exports){
-arguments[4][115][0].apply(exports,arguments)
-},{"dup":115}],446:[function(require,module,exports){
-arguments[4][57][0].apply(exports,arguments)
-},{"dup":57}],447:[function(require,module,exports){
-arguments[4][68][0].apply(exports,arguments)
-},{"dup":68}],448:[function(require,module,exports){
-arguments[4][94][0].apply(exports,arguments)
-},{"dup":94}],449:[function(require,module,exports){
-arguments[4][60][0].apply(exports,arguments)
-},{"dup":60,"lodash.isarguments":450,"lodash.isarray":447,"lodash.isnative":451}],450:[function(require,module,exports){
-arguments[4][61][0].apply(exports,arguments)
-},{"dup":61}],451:[function(require,module,exports){
-arguments[4][59][0].apply(exports,arguments)
-},{"dup":59}],452:[function(require,module,exports){
-arguments[4][159][0].apply(exports,arguments)
-},{"dup":159,"lodash._baseget":453,"lodash._baseslice":454,"lodash._topath":455,"lodash.isarray":456,"lodash.isfunction":457}],453:[function(require,module,exports){
-arguments[4][160][0].apply(exports,arguments)
-},{"dup":160}],454:[function(require,module,exports){
-arguments[4][161][0].apply(exports,arguments)
-},{"dup":161}],455:[function(require,module,exports){
-arguments[4][162][0].apply(exports,arguments)
-},{"dup":162,"lodash.isarray":456}],456:[function(require,module,exports){
-arguments[4][68][0].apply(exports,arguments)
-},{"dup":68}],457:[function(require,module,exports){
-arguments[4][93][0].apply(exports,arguments)
-},{"dup":93}],458:[function(require,module,exports){
-arguments[4][122][0].apply(exports,arguments)
-},{"./lib/":459,"dup":122}],459:[function(require,module,exports){
-arguments[4][123][0].apply(exports,arguments)
-},{"./parse":460,"./stringify":461,"dup":123}],460:[function(require,module,exports){
-arguments[4][124][0].apply(exports,arguments)
-},{"./utils":462,"dup":124}],461:[function(require,module,exports){
-arguments[4][125][0].apply(exports,arguments)
-},{"./utils":462,"dup":125}],462:[function(require,module,exports){
-arguments[4][126][0].apply(exports,arguments)
-},{"dup":126}],463:[function(require,module,exports){
-arguments[4][127][0].apply(exports,arguments)
-},{"dup":127,"global/window":464,"once":465,"parse-headers":469}],464:[function(require,module,exports){
-arguments[4][128][0].apply(exports,arguments)
-},{"dup":128}],465:[function(require,module,exports){
-arguments[4][129][0].apply(exports,arguments)
-},{"dup":129}],466:[function(require,module,exports){
-arguments[4][130][0].apply(exports,arguments)
-},{"dup":130,"is-function":467}],467:[function(require,module,exports){
-arguments[4][131][0].apply(exports,arguments)
-},{"dup":131}],468:[function(require,module,exports){
-arguments[4][132][0].apply(exports,arguments)
-},{"dup":132}],469:[function(require,module,exports){
-arguments[4][133][0].apply(exports,arguments)
-},{"dup":133,"for-each":466,"trim":468}],470:[function(require,module,exports){
-arguments[4][52][0].apply(exports,arguments)
-},{"dup":52,"lodash._baseassign":471,"lodash._createassigner":473,"lodash.isnative":477,"lodash.keys":478}],471:[function(require,module,exports){
-arguments[4][53][0].apply(exports,arguments)
-},{"dup":53,"lodash._basecopy":472,"lodash.isnative":477,"lodash.keys":478}],472:[function(require,module,exports){
-arguments[4][54][0].apply(exports,arguments)
-},{"dup":54}],473:[function(require,module,exports){
-arguments[4][55][0].apply(exports,arguments)
-},{"dup":55,"lodash._bindcallback":474,"lodash._isiterateecall":475,"lodash.restparam":476}],474:[function(require,module,exports){
-arguments[4][56][0].apply(exports,arguments)
-},{"dup":56}],475:[function(require,module,exports){
-arguments[4][57][0].apply(exports,arguments)
-},{"dup":57}],476:[function(require,module,exports){
-arguments[4][58][0].apply(exports,arguments)
-},{"dup":58}],477:[function(require,module,exports){
-arguments[4][59][0].apply(exports,arguments)
-},{"dup":59}],478:[function(require,module,exports){
-arguments[4][60][0].apply(exports,arguments)
-},{"dup":60,"lodash.isarguments":479,"lodash.isarray":480,"lodash.isnative":477}],479:[function(require,module,exports){
-arguments[4][61][0].apply(exports,arguments)
-},{"dup":61}],480:[function(require,module,exports){
-arguments[4][68][0].apply(exports,arguments)
-},{"dup":68}],481:[function(require,module,exports){
+},{"underscore":571}],141:[function(require,module,exports){
 ;if (typeof window !== "undefined") {  window.ampersand = window.ampersand || {};  window.ampersand["ampersand-select-view"] = window.ampersand["ampersand-select-view"] || [];  window.ampersand["ampersand-select-view"].push("2.3.0");}
 var domify = require('domify');
 var dom = require('ampersand-dom');
@@ -17147,7 +12155,7 @@ SelectView.prototype.createOption = function (value, text, model) {
 
 module.exports = SelectView;
 
-},{"amp-extend":46,"ampersand-dom":69,"ampersand-events":70,"domify":482,"matches-selector":483}],482:[function(require,module,exports){
+},{"amp-extend":46,"ampersand-dom":69,"ampersand-events":70,"domify":142,"matches-selector":143}],142:[function(require,module,exports){
 
 /**
  * Expose `parse`.
@@ -17257,9 +12265,37 @@ function parse(html, doc) {
   return fragment;
 }
 
-},{}],483:[function(require,module,exports){
-arguments[4][108][0].apply(exports,arguments)
-},{"dup":108}],484:[function(require,module,exports){
+},{}],143:[function(require,module,exports){
+'use strict';
+
+var proto = Element.prototype;
+var vendor = proto.matches
+  || proto.matchesSelector
+  || proto.webkitMatchesSelector
+  || proto.mozMatchesSelector
+  || proto.msMatchesSelector
+  || proto.oMatchesSelector;
+
+module.exports = match;
+
+/**
+ * Match `el` to `selector`.
+ *
+ * @param {Element} el
+ * @param {String} selector
+ * @return {Boolean}
+ * @api public
+ */
+
+function match(el, selector) {
+  if (vendor) return vendor.call(el, selector);
+  var nodes = el.parentNode.querySelectorAll(selector);
+  for (var i = 0; i < nodes.length; i++) {
+    if (nodes[i] == el) return true;
+  }
+  return false;
+}
+},{}],144:[function(require,module,exports){
 ;if (typeof window !== "undefined") {  window.ampersand = window.ampersand || {};  window.ampersand["ampersand-state"] = window.ampersand["ampersand-state"] || [];  window.ampersand["ampersand-state"].push("4.5.4");}
 var uniqueId = require('lodash.uniqueid');
 var assign = require('lodash.assign');
@@ -18060,7 +13096,7 @@ Base.extend = extend;
 // Our main exports
 module.exports = Base;
 
-},{"ampersand-events":70,"array-next":485,"key-tree-store":486,"lodash.assign":487,"lodash.bind":495,"lodash.clone":501,"lodash.defaults":511,"lodash.escape":513,"lodash.foreach":515,"lodash.has":519,"lodash.includes":523,"lodash.isarray":527,"lodash.isdate":528,"lodash.isempty":529,"lodash.isequal":531,"lodash.isfunction":535,"lodash.isnull":536,"lodash.isobject":537,"lodash.isstring":538,"lodash.isundefined":539,"lodash.keys":540,"lodash.omit":543,"lodash.result":559,"lodash.union":563,"lodash.uniqueid":572}],485:[function(require,module,exports){
+},{"ampersand-events":70,"array-next":145,"key-tree-store":146,"lodash.assign":147,"lodash.bind":155,"lodash.clone":161,"lodash.defaults":171,"lodash.escape":173,"lodash.foreach":175,"lodash.has":179,"lodash.includes":183,"lodash.isarray":187,"lodash.isdate":188,"lodash.isempty":189,"lodash.isequal":191,"lodash.isfunction":195,"lodash.isnull":196,"lodash.isobject":197,"lodash.isstring":198,"lodash.isundefined":199,"lodash.keys":200,"lodash.omit":203,"lodash.result":219,"lodash.union":223,"lodash.uniqueid":232}],145:[function(require,module,exports){
 module.exports = function arrayNext(array, currentItem) {
     var len = array.length;
     var newIndex = array.indexOf(currentItem) + 1;
@@ -18068,7 +13104,7 @@ module.exports = function arrayNext(array, currentItem) {
     return array[newIndex];
 };
 
-},{}],486:[function(require,module,exports){
+},{}],146:[function(require,module,exports){
 var slice = Array.prototype.slice;
 
 // our constructor
@@ -18150,59 +13186,601 @@ KeyTreeStore.prototype.run = function (keypath, context) {
 
 module.exports = KeyTreeStore;
 
-},{}],487:[function(require,module,exports){
+},{}],147:[function(require,module,exports){
 arguments[4][52][0].apply(exports,arguments)
-},{"dup":52,"lodash._baseassign":488,"lodash._createassigner":490,"lodash.isnative":494,"lodash.keys":540}],488:[function(require,module,exports){
+},{"dup":52,"lodash._baseassign":148,"lodash._createassigner":150,"lodash.isnative":154,"lodash.keys":200}],148:[function(require,module,exports){
 arguments[4][53][0].apply(exports,arguments)
-},{"dup":53,"lodash._basecopy":489,"lodash.isnative":494,"lodash.keys":540}],489:[function(require,module,exports){
+},{"dup":53,"lodash._basecopy":149,"lodash.isnative":154,"lodash.keys":200}],149:[function(require,module,exports){
 arguments[4][54][0].apply(exports,arguments)
-},{"dup":54}],490:[function(require,module,exports){
+},{"dup":54}],150:[function(require,module,exports){
 arguments[4][55][0].apply(exports,arguments)
-},{"dup":55,"lodash._bindcallback":491,"lodash._isiterateecall":492,"lodash.restparam":493}],491:[function(require,module,exports){
+},{"dup":55,"lodash._bindcallback":151,"lodash._isiterateecall":152,"lodash.restparam":153}],151:[function(require,module,exports){
 arguments[4][56][0].apply(exports,arguments)
-},{"dup":56}],492:[function(require,module,exports){
+},{"dup":56}],152:[function(require,module,exports){
 arguments[4][57][0].apply(exports,arguments)
-},{"dup":57}],493:[function(require,module,exports){
+},{"dup":57}],153:[function(require,module,exports){
 arguments[4][58][0].apply(exports,arguments)
-},{"dup":58}],494:[function(require,module,exports){
+},{"dup":58}],154:[function(require,module,exports){
 arguments[4][59][0].apply(exports,arguments)
-},{"dup":59}],495:[function(require,module,exports){
+},{"dup":59}],155:[function(require,module,exports){
 arguments[4][62][0].apply(exports,arguments)
-},{"dup":62,"lodash._createwrapper":496,"lodash._replaceholders":499,"lodash.restparam":500}],496:[function(require,module,exports){
+},{"dup":62,"lodash._createwrapper":156,"lodash._replaceholders":159,"lodash.restparam":160}],156:[function(require,module,exports){
 arguments[4][63][0].apply(exports,arguments)
-},{"dup":63,"lodash._arraycopy":497,"lodash._basecreate":498,"lodash._replaceholders":499}],497:[function(require,module,exports){
+},{"dup":63,"lodash._arraycopy":157,"lodash._basecreate":158,"lodash._replaceholders":159}],157:[function(require,module,exports){
 arguments[4][64][0].apply(exports,arguments)
-},{"dup":64}],498:[function(require,module,exports){
+},{"dup":64}],158:[function(require,module,exports){
 arguments[4][65][0].apply(exports,arguments)
-},{"dup":65}],499:[function(require,module,exports){
+},{"dup":65}],159:[function(require,module,exports){
 arguments[4][66][0].apply(exports,arguments)
-},{"dup":66}],500:[function(require,module,exports){
+},{"dup":66}],160:[function(require,module,exports){
 arguments[4][58][0].apply(exports,arguments)
-},{"dup":58}],501:[function(require,module,exports){
-arguments[4][145][0].apply(exports,arguments)
-},{"dup":145,"lodash._baseclone":502,"lodash._bindcallback":509,"lodash._isiterateecall":510}],502:[function(require,module,exports){
-arguments[4][146][0].apply(exports,arguments)
-},{"dup":146,"lodash._arraycopy":503,"lodash._arrayeach":504,"lodash._baseassign":505,"lodash._basefor":507,"lodash.isarray":527,"lodash.isnative":508,"lodash.keys":540}],503:[function(require,module,exports){
+},{"dup":58}],161:[function(require,module,exports){
+/**
+ * lodash 3.0.1 (Custom Build) <https://lodash.com/>
+ * Build: `lodash modern modularize exports="npm" -o ./`
+ * Copyright 2012-2015 The Dojo Foundation <http://dojofoundation.org/>
+ * Based on Underscore.js 1.7.0 <http://underscorejs.org/LICENSE>
+ * Copyright 2009-2015 Jeremy Ashkenas, DocumentCloud and Investigative Reporters & Editors
+ * Available under MIT license <https://lodash.com/license>
+ */
+var baseClone = require('lodash._baseclone'),
+    bindCallback = require('lodash._bindcallback'),
+    isIterateeCall = require('lodash._isiterateecall');
+
+/**
+ * Creates a clone of `value`. If `isDeep` is `true` nested objects are cloned,
+ * otherwise they are assigned by reference. If `customizer` is provided it is
+ * invoked to produce the cloned values. If `customizer` returns `undefined`
+ * cloning is handled by the method instead. The `customizer` is bound to
+ * `thisArg` and invoked with two argument; (value [, index|key, object]).
+ *
+ * **Note:** This method is loosely based on the structured clone algorithm.
+ * The enumerable properties of `arguments` objects and objects created by
+ * constructors other than `Object` are cloned to plain `Object` objects. An
+ * empty object is returned for uncloneable values such as functions, DOM nodes,
+ * Maps, Sets, and WeakMaps. See the [HTML5 specification](http://www.w3.org/TR/html5/infrastructure.html#internal-structured-cloning-algorithm)
+ * for more details.
+ *
+ * @static
+ * @memberOf _
+ * @category Lang
+ * @param {*} value The value to clone.
+ * @param {boolean} [isDeep] Specify a deep clone.
+ * @param {Function} [customizer] The function to customize cloning values.
+ * @param {*} [thisArg] The `this` binding of `customizer`.
+ * @returns {*} Returns the cloned value.
+ * @example
+ *
+ * var users = [
+ *   { 'user': 'barney' },
+ *   { 'user': 'fred' }
+ * ];
+ *
+ * var shallow = _.clone(users);
+ * shallow[0] === users[0];
+ * // => true
+ *
+ * var deep = _.clone(users, true);
+ * deep[0] === users[0];
+ * // => false
+ *
+ * // using a customizer callback
+ * var el = _.clone(document.body, function(value) {
+ *   if (_.isElement(value)) {
+ *     return value.cloneNode(false);
+ *   }
+ * });
+ *
+ * el === document.body
+ * // => false
+ * el.nodeName
+ * // => BODY
+ * el.childNodes.length;
+ * // => 0
+ */
+function clone(value, isDeep, customizer, thisArg) {
+  if (isDeep && typeof isDeep != 'boolean' && isIterateeCall(value, isDeep, customizer)) {
+    isDeep = false;
+  }
+  else if (typeof isDeep == 'function') {
+    thisArg = customizer;
+    customizer = isDeep;
+    isDeep = false;
+  }
+  customizer = typeof customizer == 'function' && bindCallback(customizer, thisArg, 1);
+  return baseClone(value, isDeep, customizer);
+}
+
+module.exports = clone;
+
+},{"lodash._baseclone":162,"lodash._bindcallback":169,"lodash._isiterateecall":170}],162:[function(require,module,exports){
+(function (global){
+/**
+ * lodash 3.1.0 (Custom Build) <https://lodash.com/>
+ * Build: `lodash modern modularize exports="npm" -o ./`
+ * Copyright 2012-2015 The Dojo Foundation <http://dojofoundation.org/>
+ * Based on Underscore.js 1.8.3 <http://underscorejs.org/LICENSE>
+ * Copyright 2009-2015 Jeremy Ashkenas, DocumentCloud and Investigative Reporters & Editors
+ * Available under MIT license <https://lodash.com/license>
+ */
+var arrayCopy = require('lodash._arraycopy'),
+    arrayEach = require('lodash._arrayeach'),
+    baseAssign = require('lodash._baseassign'),
+    baseFor = require('lodash._basefor'),
+    isArray = require('lodash.isarray'),
+    isNative = require('lodash.isnative'),
+    keys = require('lodash.keys');
+
+/** `Object#toString` result references. */
+var argsTag = '[object Arguments]',
+    arrayTag = '[object Array]',
+    boolTag = '[object Boolean]',
+    dateTag = '[object Date]',
+    errorTag = '[object Error]',
+    funcTag = '[object Function]',
+    mapTag = '[object Map]',
+    numberTag = '[object Number]',
+    objectTag = '[object Object]',
+    regexpTag = '[object RegExp]',
+    setTag = '[object Set]',
+    stringTag = '[object String]',
+    weakMapTag = '[object WeakMap]';
+
+var arrayBufferTag = '[object ArrayBuffer]',
+    float32Tag = '[object Float32Array]',
+    float64Tag = '[object Float64Array]',
+    int8Tag = '[object Int8Array]',
+    int16Tag = '[object Int16Array]',
+    int32Tag = '[object Int32Array]',
+    uint8Tag = '[object Uint8Array]',
+    uint8ClampedTag = '[object Uint8ClampedArray]',
+    uint16Tag = '[object Uint16Array]',
+    uint32Tag = '[object Uint32Array]';
+
+/** Used to match `RegExp` flags from their coerced string values. */
+var reFlags = /\w*$/;
+
+/** Used to identify `toStringTag` values supported by `_.clone`. */
+var cloneableTags = {};
+cloneableTags[argsTag] = cloneableTags[arrayTag] =
+cloneableTags[arrayBufferTag] = cloneableTags[boolTag] =
+cloneableTags[dateTag] = cloneableTags[float32Tag] =
+cloneableTags[float64Tag] = cloneableTags[int8Tag] =
+cloneableTags[int16Tag] = cloneableTags[int32Tag] =
+cloneableTags[numberTag] = cloneableTags[objectTag] =
+cloneableTags[regexpTag] = cloneableTags[stringTag] =
+cloneableTags[uint8Tag] = cloneableTags[uint8ClampedTag] =
+cloneableTags[uint16Tag] = cloneableTags[uint32Tag] = true;
+cloneableTags[errorTag] = cloneableTags[funcTag] =
+cloneableTags[mapTag] = cloneableTags[setTag] =
+cloneableTags[weakMapTag] = false;
+
+/** Used for native method references. */
+var objectProto = Object.prototype;
+
+/** Used to check objects for own properties. */
+var hasOwnProperty = objectProto.hasOwnProperty;
+
+/**
+ * Used to resolve the [`toStringTag`](https://people.mozilla.org/~jorendorff/es6-draft.html#sec-object.prototype.tostring)
+ * of values.
+ */
+var objToString = objectProto.toString;
+
+/** Native method references. */
+var ArrayBuffer = isNative(ArrayBuffer = global.ArrayBuffer) && ArrayBuffer,
+    bufferSlice = isNative(bufferSlice = ArrayBuffer && new ArrayBuffer(0).slice) && bufferSlice,
+    floor = Math.floor,
+    Uint8Array = isNative(Uint8Array = global.Uint8Array) && Uint8Array;
+
+/** Used to clone array buffers. */
+var Float64Array = (function() {
+  // Safari 5 errors when using an array buffer to initialize a typed array
+  // where the array buffer's `byteLength` is not a multiple of the typed
+  // array's `BYTES_PER_ELEMENT`.
+  try {
+    var func = isNative(func = global.Float64Array) && func,
+        result = new func(new ArrayBuffer(10), 0, 1) && func;
+  } catch(e) {}
+  return result;
+}());
+
+/** Used as the size, in bytes, of each `Float64Array` element. */
+var FLOAT64_BYTES_PER_ELEMENT = Float64Array ? Float64Array.BYTES_PER_ELEMENT : 0;
+
+/**
+ * The base implementation of `_.clone` without support for argument juggling
+ * and `this` binding `customizer` functions.
+ *
+ * @private
+ * @param {*} value The value to clone.
+ * @param {boolean} [isDeep] Specify a deep clone.
+ * @param {Function} [customizer] The function to customize cloning values.
+ * @param {string} [key] The key of `value`.
+ * @param {Object} [object] The object `value` belongs to.
+ * @param {Array} [stackA=[]] Tracks traversed source objects.
+ * @param {Array} [stackB=[]] Associates clones with source counterparts.
+ * @returns {*} Returns the cloned value.
+ */
+function baseClone(value, isDeep, customizer, key, object, stackA, stackB) {
+  var result;
+  if (customizer) {
+    result = object ? customizer(value, key, object) : customizer(value);
+  }
+  if (result !== undefined) {
+    return result;
+  }
+  if (!isObject(value)) {
+    return value;
+  }
+  var isArr = isArray(value);
+  if (isArr) {
+    result = initCloneArray(value);
+    if (!isDeep) {
+      return arrayCopy(value, result);
+    }
+  } else {
+    var tag = objToString.call(value),
+        isFunc = tag == funcTag;
+
+    if (tag == objectTag || tag == argsTag || (isFunc && !object)) {
+      result = initCloneObject(isFunc ? {} : value);
+      if (!isDeep) {
+        return baseAssign(result, value);
+      }
+    } else {
+      return cloneableTags[tag]
+        ? initCloneByTag(value, tag, isDeep)
+        : (object ? value : {});
+    }
+  }
+  // Check for circular references and return corresponding clone.
+  stackA || (stackA = []);
+  stackB || (stackB = []);
+
+  var length = stackA.length;
+  while (length--) {
+    if (stackA[length] == value) {
+      return stackB[length];
+    }
+  }
+  // Add the source value to the stack of traversed objects and associate it with its clone.
+  stackA.push(value);
+  stackB.push(result);
+
+  // Recursively populate clone (susceptible to call stack limits).
+  (isArr ? arrayEach : baseForOwn)(value, function(subValue, key) {
+    result[key] = baseClone(subValue, isDeep, customizer, key, value, stackA, stackB);
+  });
+  return result;
+}
+
+/**
+ * The base implementation of `_.forOwn` without support for callback
+ * shorthands and `this` binding.
+ *
+ * @private
+ * @param {Object} object The object to iterate over.
+ * @param {Function} iteratee The function invoked per iteration.
+ * @returns {Object} Returns `object`.
+ */
+function baseForOwn(object, iteratee) {
+  return baseFor(object, iteratee, keys);
+}
+
+/**
+ * Creates a clone of the given array buffer.
+ *
+ * @private
+ * @param {ArrayBuffer} buffer The array buffer to clone.
+ * @returns {ArrayBuffer} Returns the cloned array buffer.
+ */
+function bufferClone(buffer) {
+  return bufferSlice.call(buffer, 0);
+}
+if (!bufferSlice) {
+  // PhantomJS has `ArrayBuffer` and `Uint8Array` but not `Float64Array`.
+  bufferClone = !(ArrayBuffer && Uint8Array) ? constant(null) : function(buffer) {
+    var byteLength = buffer.byteLength,
+        floatLength = Float64Array ? floor(byteLength / FLOAT64_BYTES_PER_ELEMENT) : 0,
+        offset = floatLength * FLOAT64_BYTES_PER_ELEMENT,
+        result = new ArrayBuffer(byteLength);
+
+    if (floatLength) {
+      var view = new Float64Array(result, 0, floatLength);
+      view.set(new Float64Array(buffer, 0, floatLength));
+    }
+    if (byteLength != offset) {
+      view = new Uint8Array(result, offset);
+      view.set(new Uint8Array(buffer, offset));
+    }
+    return result;
+  };
+}
+
+/**
+ * Initializes an array clone.
+ *
+ * @private
+ * @param {Array} array The array to clone.
+ * @returns {Array} Returns the initialized clone.
+ */
+function initCloneArray(array) {
+  var length = array.length,
+      result = new array.constructor(length);
+
+  // Add array properties assigned by `RegExp#exec`.
+  if (length && typeof array[0] == 'string' && hasOwnProperty.call(array, 'index')) {
+    result.index = array.index;
+    result.input = array.input;
+  }
+  return result;
+}
+
+/**
+ * Initializes an object clone.
+ *
+ * @private
+ * @param {Object} object The object to clone.
+ * @returns {Object} Returns the initialized clone.
+ */
+function initCloneObject(object) {
+  var Ctor = object.constructor;
+  if (!(typeof Ctor == 'function' && Ctor instanceof Ctor)) {
+    Ctor = Object;
+  }
+  return new Ctor;
+}
+
+/**
+ * Initializes an object clone based on its `toStringTag`.
+ *
+ * **Note:** This function only supports cloning values with tags of
+ * `Boolean`, `Date`, `Error`, `Number`, `RegExp`, or `String`.
+ *
+ * @private
+ * @param {Object} object The object to clone.
+ * @param {string} tag The `toStringTag` of the object to clone.
+ * @param {boolean} [isDeep] Specify a deep clone.
+ * @returns {Object} Returns the initialized clone.
+ */
+function initCloneByTag(object, tag, isDeep) {
+  var Ctor = object.constructor;
+  switch (tag) {
+    case arrayBufferTag:
+      return bufferClone(object);
+
+    case boolTag:
+    case dateTag:
+      return new Ctor(+object);
+
+    case float32Tag: case float64Tag:
+    case int8Tag: case int16Tag: case int32Tag:
+    case uint8Tag: case uint8ClampedTag: case uint16Tag: case uint32Tag:
+      var buffer = object.buffer;
+      return new Ctor(isDeep ? bufferClone(buffer) : buffer, object.byteOffset, object.length);
+
+    case numberTag:
+    case stringTag:
+      return new Ctor(object);
+
+    case regexpTag:
+      var result = new Ctor(object.source, reFlags.exec(object));
+      result.lastIndex = object.lastIndex;
+  }
+  return result;
+}
+
+/**
+ * Checks if `value` is the [language type](https://es5.github.io/#x8) of `Object`.
+ * (e.g. arrays, functions, objects, regexes, `new Number(0)`, and `new String('')`)
+ *
+ * @static
+ * @memberOf _
+ * @category Lang
+ * @param {*} value The value to check.
+ * @returns {boolean} Returns `true` if `value` is an object, else `false`.
+ * @example
+ *
+ * _.isObject({});
+ * // => true
+ *
+ * _.isObject([1, 2, 3]);
+ * // => true
+ *
+ * _.isObject(1);
+ * // => false
+ */
+function isObject(value) {
+  // Avoid a V8 JIT bug in Chrome 19-20.
+  // See https://code.google.com/p/v8/issues/detail?id=2291 for more details.
+  var type = typeof value;
+  return type == 'function' || (!!value && type == 'object');
+}
+
+/**
+ * Creates a function that returns `value`.
+ *
+ * @static
+ * @memberOf _
+ * @category Utility
+ * @param {*} value The value to return from the new function.
+ * @returns {Function} Returns the new function.
+ * @example
+ *
+ * var object = { 'user': 'fred' };
+ * var getter = _.constant(object);
+ *
+ * getter() === object;
+ * // => true
+ */
+function constant(value) {
+  return function() {
+    return value;
+  };
+}
+
+module.exports = baseClone;
+
+}).call(this,typeof global !== "undefined" ? global : typeof self !== "undefined" ? self : typeof window !== "undefined" ? window : {})
+},{"lodash._arraycopy":163,"lodash._arrayeach":164,"lodash._baseassign":165,"lodash._basefor":167,"lodash.isarray":187,"lodash.isnative":168,"lodash.keys":200}],163:[function(require,module,exports){
 arguments[4][64][0].apply(exports,arguments)
-},{"dup":64}],504:[function(require,module,exports){
+},{"dup":64}],164:[function(require,module,exports){
 arguments[4][86][0].apply(exports,arguments)
-},{"dup":86}],505:[function(require,module,exports){
+},{"dup":86}],165:[function(require,module,exports){
 arguments[4][53][0].apply(exports,arguments)
-},{"dup":53,"lodash._basecopy":506,"lodash.isnative":508,"lodash.keys":540}],506:[function(require,module,exports){
+},{"dup":53,"lodash._basecopy":166,"lodash.isnative":168,"lodash.keys":200}],166:[function(require,module,exports){
 arguments[4][54][0].apply(exports,arguments)
-},{"dup":54}],507:[function(require,module,exports){
-arguments[4][151][0].apply(exports,arguments)
-},{"dup":151}],508:[function(require,module,exports){
+},{"dup":54}],167:[function(require,module,exports){
+/**
+ * lodash 3.0.1 (Custom Build) <https://lodash.com/>
+ * Build: `lodash modern modularize exports="npm" -o ./`
+ * Copyright 2012-2015 The Dojo Foundation <http://dojofoundation.org/>
+ * Based on Underscore.js 1.8.2 <http://underscorejs.org/LICENSE>
+ * Copyright 2009-2015 Jeremy Ashkenas, DocumentCloud and Investigative Reporters & Editors
+ * Available under MIT license <https://lodash.com/license>
+ */
+
+/**
+ * The base implementation of `baseForIn` and `baseForOwn` which iterates
+ * over `object` properties returned by `keysFunc` invoking `iteratee` for
+ * each property. Iterator functions may exit iteration early by explicitly
+ * returning `false`.
+ *
+ * @private
+ * @param {Object} object The object to iterate over.
+ * @param {Function} iteratee The function invoked per iteration.
+ * @param {Function} keysFunc The function to get the keys of `object`.
+ * @returns {Object} Returns `object`.
+ */
+var baseFor = createBaseFor();
+
+/**
+ * Creates a base function for `_.forIn` or `_.forInRight`.
+ *
+ * @private
+ * @param {boolean} [fromRight] Specify iterating from right to left.
+ * @returns {Function} Returns the new base function.
+ */
+function createBaseFor(fromRight) {
+  return function(object, iteratee, keysFunc) {
+    var iterable = toObject(object),
+        props = keysFunc(object),
+        length = props.length,
+        index = fromRight ? length : -1;
+
+    while ((fromRight ? index-- : ++index < length)) {
+      var key = props[index];
+      if (iteratee(iterable[key], key, iterable) === false) {
+        break;
+      }
+    }
+    return object;
+  };
+}
+
+/**
+ * Converts `value` to an object if it is not one.
+ *
+ * @private
+ * @param {*} value The value to process.
+ * @returns {Object} Returns the object.
+ */
+function toObject(value) {
+  return isObject(value) ? value : Object(value);
+}
+
+/**
+ * Checks if `value` is the [language type](https://es5.github.io/#x8) of `Object`.
+ * (e.g. arrays, functions, objects, regexes, `new Number(0)`, and `new String('')`)
+ *
+ * @static
+ * @memberOf _
+ * @category Lang
+ * @param {*} value The value to check.
+ * @returns {boolean} Returns `true` if `value` is an object, else `false`.
+ * @example
+ *
+ * _.isObject({});
+ * // => true
+ *
+ * _.isObject([1, 2, 3]);
+ * // => true
+ *
+ * _.isObject(1);
+ * // => false
+ */
+function isObject(value) {
+  // Avoid a V8 JIT bug in Chrome 19-20.
+  // See https://code.google.com/p/v8/issues/detail?id=2291 for more details.
+  var type = typeof value;
+  return type == 'function' || (!!value && type == 'object');
+}
+
+module.exports = baseFor;
+
+},{}],168:[function(require,module,exports){
 arguments[4][59][0].apply(exports,arguments)
-},{"dup":59}],509:[function(require,module,exports){
+},{"dup":59}],169:[function(require,module,exports){
 arguments[4][56][0].apply(exports,arguments)
-},{"dup":56}],510:[function(require,module,exports){
+},{"dup":56}],170:[function(require,module,exports){
 arguments[4][57][0].apply(exports,arguments)
-},{"dup":57}],511:[function(require,module,exports){
-arguments[4][111][0].apply(exports,arguments)
-},{"dup":111,"lodash.assign":487,"lodash.restparam":512}],512:[function(require,module,exports){
+},{"dup":57}],171:[function(require,module,exports){
+/**
+ * lodash 3.1.1 (Custom Build) <https://lodash.com/>
+ * Build: `lodash modern modularize exports="npm" -o ./`
+ * Copyright 2012-2015 The Dojo Foundation <http://dojofoundation.org/>
+ * Based on Underscore.js 1.8.3 <http://underscorejs.org/LICENSE>
+ * Copyright 2009-2015 Jeremy Ashkenas, DocumentCloud and Investigative Reporters & Editors
+ * Available under MIT license <https://lodash.com/license>
+ */
+var assign = require('lodash.assign'),
+    restParam = require('lodash.restparam');
+
+/**
+ * Used by `_.defaults` to customize its `_.assign` use.
+ *
+ * @private
+ * @param {*} objectValue The destination object property value.
+ * @param {*} sourceValue The source object property value.
+ * @returns {*} Returns the value to assign to the destination object.
+ */
+function assignDefaults(objectValue, sourceValue) {
+  return objectValue === undefined ? sourceValue : objectValue;
+}
+
+/**
+ * Assigns own enumerable properties of source object(s) to the destination
+ * object for all destination properties that resolve to `undefined`. Once a
+ * property is set, additional values of the same property are ignored.
+ *
+ * **Note:** This method mutates `object`.
+ *
+ * @static
+ * @memberOf _
+ * @category Object
+ * @param {Object} object The destination object.
+ * @param {...Object} [sources] The source objects.
+ * @returns {Object} Returns `object`.
+ * @example
+ *
+ * _.defaults({ 'user': 'barney' }, { 'age': 36 }, { 'user': 'fred' });
+ * // => { 'user': 'barney', 'age': 36 }
+ */
+var defaults = restParam(function(args) {
+  var object = args[0];
+  if (object == null) {
+    return object;
+  }
+  args.push(assignDefaults);
+  return assign.apply(undefined, args);
+});
+
+module.exports = defaults;
+
+},{"lodash.assign":147,"lodash.restparam":172}],172:[function(require,module,exports){
 arguments[4][58][0].apply(exports,arguments)
-},{"dup":58}],513:[function(require,module,exports){
+},{"dup":58}],173:[function(require,module,exports){
 /**
  * lodash 3.0.0 (Custom Build) <https://lodash.com/>
  * Build: `lodash modern modularize exports="npm" -o ./`
@@ -18280,17 +13858,17 @@ function escape(string) {
 
 module.exports = escape;
 
-},{"lodash._basetostring":514}],514:[function(require,module,exports){
+},{"lodash._basetostring":174}],174:[function(require,module,exports){
 arguments[4][102][0].apply(exports,arguments)
-},{"dup":102}],515:[function(require,module,exports){
+},{"dup":102}],175:[function(require,module,exports){
 arguments[4][85][0].apply(exports,arguments)
-},{"dup":85,"lodash._arrayeach":516,"lodash._baseeach":517,"lodash._bindcallback":518,"lodash.isarray":527}],516:[function(require,module,exports){
+},{"dup":85,"lodash._arrayeach":176,"lodash._baseeach":177,"lodash._bindcallback":178,"lodash.isarray":187}],176:[function(require,module,exports){
 arguments[4][86][0].apply(exports,arguments)
-},{"dup":86}],517:[function(require,module,exports){
+},{"dup":86}],177:[function(require,module,exports){
 arguments[4][87][0].apply(exports,arguments)
-},{"dup":87,"lodash.keys":540}],518:[function(require,module,exports){
+},{"dup":87,"lodash.keys":200}],178:[function(require,module,exports){
 arguments[4][56][0].apply(exports,arguments)
-},{"dup":56}],519:[function(require,module,exports){
+},{"dup":56}],179:[function(require,module,exports){
 /**
  * lodash 3.1.1 (Custom Build) <https://lodash.com/>
  * Build: `lodash modern modularize exports="npm" -o ./`
@@ -18428,23 +14006,419 @@ function has(object, path) {
 
 module.exports = has;
 
-},{"lodash._baseget":520,"lodash._baseslice":521,"lodash._topath":522,"lodash.isarray":527}],520:[function(require,module,exports){
-arguments[4][160][0].apply(exports,arguments)
-},{"dup":160}],521:[function(require,module,exports){
-arguments[4][161][0].apply(exports,arguments)
-},{"dup":161}],522:[function(require,module,exports){
-arguments[4][162][0].apply(exports,arguments)
-},{"dup":162,"lodash.isarray":527}],523:[function(require,module,exports){
-arguments[4][113][0].apply(exports,arguments)
-},{"dup":113,"lodash._baseindexof":524,"lodash._basevalues":525,"lodash._isiterateecall":526,"lodash.isarray":527,"lodash.isstring":538,"lodash.keys":540}],524:[function(require,module,exports){
-arguments[4][114][0].apply(exports,arguments)
-},{"dup":114}],525:[function(require,module,exports){
-arguments[4][115][0].apply(exports,arguments)
-},{"dup":115}],526:[function(require,module,exports){
+},{"lodash._baseget":180,"lodash._baseslice":181,"lodash._topath":182,"lodash.isarray":187}],180:[function(require,module,exports){
+/**
+ * lodash 3.7.1 (Custom Build) <https://lodash.com/>
+ * Build: `lodash modern modularize exports="npm" -o ./`
+ * Copyright 2012-2015 The Dojo Foundation <http://dojofoundation.org/>
+ * Based on Underscore.js 1.8.3 <http://underscorejs.org/LICENSE>
+ * Copyright 2009-2015 Jeremy Ashkenas, DocumentCloud and Investigative Reporters & Editors
+ * Available under MIT license <https://lodash.com/license>
+ */
+
+/**
+ * The base implementation of `get` without support for string paths
+ * and default values.
+ *
+ * @private
+ * @param {Object} object The object to query.
+ * @param {Array} path The path of the property to get.
+ * @param {string} [pathKey] The key representation of path.
+ * @returns {*} Returns the resolved value.
+ */
+function baseGet(object, path, pathKey) {
+  if (object == null) {
+    return;
+  }
+  if (pathKey !== undefined && pathKey in toObject(object)) {
+    path = [pathKey];
+  }
+  var index = -1,
+      length = path.length;
+
+  while (object != null && ++index < length) {
+    object = object[path[index]];
+  }
+  return (index && index == length) ? object : undefined;
+}
+
+/**
+ * Converts `value` to an object if it is not one.
+ *
+ * @private
+ * @param {*} value The value to process.
+ * @returns {Object} Returns the object.
+ */
+function toObject(value) {
+  return isObject(value) ? value : Object(value);
+}
+
+/**
+ * Checks if `value` is the [language type](https://es5.github.io/#x8) of `Object`.
+ * (e.g. arrays, functions, objects, regexes, `new Number(0)`, and `new String('')`)
+ *
+ * @static
+ * @memberOf _
+ * @category Lang
+ * @param {*} value The value to check.
+ * @returns {boolean} Returns `true` if `value` is an object, else `false`.
+ * @example
+ *
+ * _.isObject({});
+ * // => true
+ *
+ * _.isObject([1, 2, 3]);
+ * // => true
+ *
+ * _.isObject(1);
+ * // => false
+ */
+function isObject(value) {
+  // Avoid a V8 JIT bug in Chrome 19-20.
+  // See https://code.google.com/p/v8/issues/detail?id=2291 for more details.
+  var type = typeof value;
+  return type == 'function' || (!!value && type == 'object');
+}
+
+module.exports = baseGet;
+
+},{}],181:[function(require,module,exports){
+/**
+ * lodash 3.0.3 (Custom Build) <https://lodash.com/>
+ * Build: `lodash modern modularize exports="npm" -o ./`
+ * Copyright 2012-2015 The Dojo Foundation <http://dojofoundation.org/>
+ * Based on Underscore.js 1.8.3 <http://underscorejs.org/LICENSE>
+ * Copyright 2009-2015 Jeremy Ashkenas, DocumentCloud and Investigative Reporters & Editors
+ * Available under MIT license <https://lodash.com/license>
+ */
+
+/**
+ * The base implementation of `_.slice` without an iteratee call guard.
+ *
+ * @private
+ * @param {Array} array The array to slice.
+ * @param {number} [start=0] The start position.
+ * @param {number} [end=array.length] The end position.
+ * @returns {Array} Returns the slice of `array`.
+ */
+function baseSlice(array, start, end) {
+  var index = -1,
+      length = array.length;
+
+  start = start == null ? 0 : (+start || 0);
+  if (start < 0) {
+    start = -start > length ? 0 : (length + start);
+  }
+  end = (end === undefined || end > length) ? length : (+end || 0);
+  if (end < 0) {
+    end += length;
+  }
+  length = start > end ? 0 : ((end - start) >>> 0);
+  start >>>= 0;
+
+  var result = Array(length);
+  while (++index < length) {
+    result[index] = array[index + start];
+  }
+  return result;
+}
+
+module.exports = baseSlice;
+
+},{}],182:[function(require,module,exports){
+/**
+ * lodash 3.8.0 (Custom Build) <https://lodash.com/>
+ * Build: `lodash modern modularize exports="npm" -o ./`
+ * Copyright 2012-2015 The Dojo Foundation <http://dojofoundation.org/>
+ * Based on Underscore.js 1.8.3 <http://underscorejs.org/LICENSE>
+ * Copyright 2009-2015 Jeremy Ashkenas, DocumentCloud and Investigative Reporters & Editors
+ * Available under MIT license <https://lodash.com/license>
+ */
+var isArray = require('lodash.isarray');
+
+/** Used to match property names within property paths. */
+var rePropName = /[^.[\]]+|\[(?:(-?\d+(?:\.\d+)?)|(["'])((?:(?!\2)[^\n\\]|\\.)*?)\2)\]/g;
+
+/** Used to match backslashes in property paths. */
+var reEscapeChar = /\\(\\)?/g;
+
+/**
+ * Converts `value` to a string if it is not one. An empty string is returned
+ * for `null` or `undefined` values.
+ *
+ * @private
+ * @param {*} value The value to process.
+ * @returns {string} Returns the string.
+ */
+function baseToString(value) {
+  if (typeof value == 'string') {
+    return value;
+  }
+  return value == null ? '' : (value + '');
+}
+
+/**
+ * Converts `value` to property path array if it is not one.
+ *
+ * @private
+ * @param {*} value The value to process.
+ * @returns {Array} Returns the property path array.
+ */
+function toPath(value) {
+  if (isArray(value)) {
+    return value;
+  }
+  var result = [];
+  baseToString(value).replace(rePropName, function(match, number, quote, string) {
+    result.push(quote ? string.replace(reEscapeChar, '$1') : (number || match));
+  });
+  return result;
+}
+
+module.exports = toPath;
+
+},{"lodash.isarray":187}],183:[function(require,module,exports){
+/**
+ * lodash 3.1.1 (Custom Build) <https://lodash.com/>
+ * Build: `lodash modern modularize exports="npm" -o ./`
+ * Copyright 2012-2015 The Dojo Foundation <http://dojofoundation.org/>
+ * Based on Underscore.js 1.8.3 <http://underscorejs.org/LICENSE>
+ * Copyright 2009-2015 Jeremy Ashkenas, DocumentCloud and Investigative Reporters & Editors
+ * Available under MIT license <https://lodash.com/license>
+ */
+var baseIndexOf = require('lodash._baseindexof'),
+    baseValues = require('lodash._basevalues'),
+    isIterateeCall = require('lodash._isiterateecall'),
+    isArray = require('lodash.isarray'),
+    isString = require('lodash.isstring'),
+    keys = require('lodash.keys');
+
+/* Native method references for those with the same name as other `lodash` methods. */
+var nativeMax = Math.max;
+
+/**
+ * Used as the [maximum length](https://people.mozilla.org/~jorendorff/es6-draft.html#sec-number.max_safe_integer)
+ * of an array-like value.
+ */
+var MAX_SAFE_INTEGER = Math.pow(2, 53) - 1;
+
+/**
+ * The base implementation of `_.property` without support for deep paths.
+ *
+ * @private
+ * @param {string} key The key of the property to get.
+ * @returns {Function} Returns the new function.
+ */
+function baseProperty(key) {
+  return function(object) {
+    return object == null ? undefined : object[key];
+  };
+}
+
+/**
+ * Gets the "length" property value of `object`.
+ *
+ * **Note:** This function is used to avoid a [JIT bug](https://bugs.webkit.org/show_bug.cgi?id=142792)
+ * in Safari on iOS 8.1 ARM64.
+ *
+ * @private
+ * @param {Object} object The object to query.
+ * @returns {*} Returns the "length" value.
+ */
+var getLength = baseProperty('length');
+
+/**
+ * Checks if `value` is a valid array-like length.
+ *
+ * **Note:** This function is based on [`ToLength`](https://people.mozilla.org/~jorendorff/es6-draft.html#sec-tolength).
+ *
+ * @private
+ * @param {*} value The value to check.
+ * @returns {boolean} Returns `true` if `value` is a valid length, else `false`.
+ */
+function isLength(value) {
+  return typeof value == 'number' && value > -1 && value % 1 == 0 && value <= MAX_SAFE_INTEGER;
+}
+
+/**
+ * Checks if `value` is in `collection` using `SameValueZero` for equality
+ * comparisons. If `fromIndex` is negative, it is used as the offset from
+ * the end of `collection`.
+ *
+ * **Note:** [`SameValueZero`](https://people.mozilla.org/~jorendorff/es6-draft.html#sec-samevaluezero)
+ * comparisons are like strict equality comparisons, e.g. `===`, except that
+ * `NaN` matches `NaN`.
+ *
+ * @static
+ * @memberOf _
+ * @alias contains, include
+ * @category Collection
+ * @param {Array|Object|string} collection The collection to search.
+ * @param {*} target The value to search for.
+ * @param {number} [fromIndex=0] The index to search from.
+ * @param- {Object} [guard] Enables use as a callback for functions like `_.reduce`.
+ * @returns {boolean} Returns `true` if a matching element is found, else `false`.
+ * @example
+ *
+ * _.includes([1, 2, 3], 1);
+ * // => true
+ *
+ * _.includes([1, 2, 3], 1, 2);
+ * // => false
+ *
+ * _.includes({ 'user': 'fred', 'age': 40 }, 'fred');
+ * // => true
+ *
+ * _.includes('pebbles', 'eb');
+ * // => true
+ */
+function includes(collection, target, fromIndex, guard) {
+  var length = collection ? getLength(collection) : 0;
+  if (!isLength(length)) {
+    collection = values(collection);
+    length = collection.length;
+  }
+  if (!length) {
+    return false;
+  }
+  if (typeof fromIndex != 'number' || (guard && isIterateeCall(target, fromIndex, guard))) {
+    fromIndex = 0;
+  } else {
+    fromIndex = fromIndex < 0 ? nativeMax(length + fromIndex, 0) : (fromIndex || 0);
+  }
+  return (typeof collection == 'string' || !isArray(collection) && isString(collection))
+    ? (fromIndex < length && collection.indexOf(target, fromIndex) > -1)
+    : (baseIndexOf(collection, target, fromIndex) > -1);
+}
+
+/**
+ * Creates an array of the own enumerable property values of `object`.
+ *
+ * **Note:** Non-object values are coerced to objects.
+ *
+ * @static
+ * @memberOf _
+ * @category Object
+ * @param {Object} object The object to query.
+ * @returns {Array} Returns the array of property values.
+ * @example
+ *
+ * function Foo() {
+ *   this.a = 1;
+ *   this.b = 2;
+ * }
+ *
+ * Foo.prototype.c = 3;
+ *
+ * _.values(new Foo);
+ * // => [1, 2] (iteration order is not guaranteed)
+ *
+ * _.values('hi');
+ * // => ['h', 'i']
+ */
+function values(object) {
+  return baseValues(object, keys(object));
+}
+
+module.exports = includes;
+
+},{"lodash._baseindexof":184,"lodash._basevalues":185,"lodash._isiterateecall":186,"lodash.isarray":187,"lodash.isstring":198,"lodash.keys":200}],184:[function(require,module,exports){
+/**
+ * lodash 3.1.0 (Custom Build) <https://lodash.com/>
+ * Build: `lodash modern modularize exports="npm" -o ./`
+ * Copyright 2012-2015 The Dojo Foundation <http://dojofoundation.org/>
+ * Based on Underscore.js 1.8.2 <http://underscorejs.org/LICENSE>
+ * Copyright 2009-2015 Jeremy Ashkenas, DocumentCloud and Investigative Reporters & Editors
+ * Available under MIT license <https://lodash.com/license>
+ */
+
+/**
+ * The base implementation of `_.indexOf` without support for binary searches.
+ *
+ * @private
+ * @param {Array} array The array to search.
+ * @param {*} value The value to search for.
+ * @param {number} fromIndex The index to search from.
+ * @returns {number} Returns the index of the matched value, else `-1`.
+ */
+function baseIndexOf(array, value, fromIndex) {
+  if (value !== value) {
+    return indexOfNaN(array, fromIndex);
+  }
+  var index = fromIndex - 1,
+      length = array.length;
+
+  while (++index < length) {
+    if (array[index] === value) {
+      return index;
+    }
+  }
+  return -1;
+}
+
+/**
+ * Gets the index at which the first occurrence of `NaN` is found in `array`.
+ * If `fromRight` is provided elements of `array` are iterated from right to left.
+ *
+ * @private
+ * @param {Array} array The array to search.
+ * @param {number} fromIndex The index to search from.
+ * @param {boolean} [fromRight] Specify iterating from right to left.
+ * @returns {number} Returns the index of the matched `NaN`, else `-1`.
+ */
+function indexOfNaN(array, fromIndex, fromRight) {
+  var length = array.length,
+      index = fromIndex + (fromRight ? 0 : -1);
+
+  while ((fromRight ? index-- : ++index < length)) {
+    var other = array[index];
+    if (other !== other) {
+      return index;
+    }
+  }
+  return -1;
+}
+
+module.exports = baseIndexOf;
+
+},{}],185:[function(require,module,exports){
+/**
+ * lodash 3.0.0 (Custom Build) <https://lodash.com/>
+ * Build: `lodash modern modularize exports="npm" -o ./`
+ * Copyright 2012-2015 The Dojo Foundation <http://dojofoundation.org/>
+ * Based on Underscore.js 1.7.0 <http://underscorejs.org/LICENSE>
+ * Copyright 2009-2015 Jeremy Ashkenas, DocumentCloud and Investigative Reporters & Editors
+ * Available under MIT license <https://lodash.com/license>
+ */
+
+/**
+ * The base implementation of `_.values` and `_.valuesIn` which creates an
+ * array of `object` property values corresponding to the property names
+ * returned by `keysFunc`.
+ *
+ * @private
+ * @param {Object} object The object to query.
+ * @param {Array} props The property names to get values for.
+ * @returns {Object} Returns the array of property values.
+ */
+function baseValues(object, props) {
+  var index = -1,
+      length = props.length,
+      result = Array(length);
+
+  while (++index < length) {
+    result[index] = object[props[index]];
+  }
+  return result;
+}
+
+module.exports = baseValues;
+
+},{}],186:[function(require,module,exports){
 arguments[4][57][0].apply(exports,arguments)
-},{"dup":57}],527:[function(require,module,exports){
+},{"dup":57}],187:[function(require,module,exports){
 arguments[4][68][0].apply(exports,arguments)
-},{"dup":68}],528:[function(require,module,exports){
+},{"dup":68}],188:[function(require,module,exports){
 /**
  * lodash 3.0.1 (Custom Build) <https://lodash.com/>
  * Build: `lodash modern modularize exports="npm" -o ./`
@@ -18499,11 +14473,11 @@ function isDate(value) {
 
 module.exports = isDate;
 
-},{}],529:[function(require,module,exports){
+},{}],189:[function(require,module,exports){
 arguments[4][90][0].apply(exports,arguments)
-},{"dup":90,"lodash.isarguments":530,"lodash.isarray":527,"lodash.isfunction":535,"lodash.isstring":538,"lodash.keys":540}],530:[function(require,module,exports){
+},{"dup":90,"lodash.isarguments":190,"lodash.isarray":187,"lodash.isfunction":195,"lodash.isstring":198,"lodash.keys":200}],190:[function(require,module,exports){
 arguments[4][61][0].apply(exports,arguments)
-},{"dup":61}],531:[function(require,module,exports){
+},{"dup":61}],191:[function(require,module,exports){
 /**
  * lodash 3.0.3 (Custom Build) <https://lodash.com/>
  * Build: `lodash modern modularize exports="npm" -o ./`
@@ -18608,15 +14582,426 @@ function isObject(value) {
 
 module.exports = isEqual;
 
-},{"lodash._baseisequal":532,"lodash._bindcallback":534}],532:[function(require,module,exports){
-arguments[4][170][0].apply(exports,arguments)
-},{"dup":170,"lodash.isarray":527,"lodash.istypedarray":533,"lodash.keys":540}],533:[function(require,module,exports){
-arguments[4][171][0].apply(exports,arguments)
-},{"dup":171}],534:[function(require,module,exports){
+},{"lodash._baseisequal":192,"lodash._bindcallback":194}],192:[function(require,module,exports){
+/**
+ * lodash 3.0.5 (Custom Build) <https://lodash.com/>
+ * Build: `lodash modern modularize exports="npm" -o ./`
+ * Copyright 2012-2015 The Dojo Foundation <http://dojofoundation.org/>
+ * Based on Underscore.js 1.8.3 <http://underscorejs.org/LICENSE>
+ * Copyright 2009-2015 Jeremy Ashkenas, DocumentCloud and Investigative Reporters & Editors
+ * Available under MIT license <https://lodash.com/license>
+ */
+var isArray = require('lodash.isarray'),
+    isTypedArray = require('lodash.istypedarray'),
+    keys = require('lodash.keys');
+
+/** `Object#toString` result references. */
+var argsTag = '[object Arguments]',
+    arrayTag = '[object Array]',
+    boolTag = '[object Boolean]',
+    dateTag = '[object Date]',
+    errorTag = '[object Error]',
+    numberTag = '[object Number]',
+    objectTag = '[object Object]',
+    regexpTag = '[object RegExp]',
+    stringTag = '[object String]';
+
+/** Used for native method references. */
+var objectProto = Object.prototype;
+
+/** Used to check objects for own properties. */
+var hasOwnProperty = objectProto.hasOwnProperty;
+
+/**
+ * Used to resolve the [`toStringTag`](https://people.mozilla.org/~jorendorff/es6-draft.html#sec-object.prototype.tostring)
+ * of values.
+ */
+var objToString = objectProto.toString;
+
+/**
+ * The base implementation of `_.isEqual` without support for `this` binding
+ * `customizer` functions.
+ *
+ * @private
+ * @param {*} value The value to compare.
+ * @param {*} other The other value to compare.
+ * @param {Function} [customizer] The function to customize comparing values.
+ * @param {boolean} [isLoose] Specify performing partial comparisons.
+ * @param {Array} [stackA] Tracks traversed `value` objects.
+ * @param {Array} [stackB] Tracks traversed `other` objects.
+ * @returns {boolean} Returns `true` if the values are equivalent, else `false`.
+ */
+function baseIsEqual(value, other, customizer, isLoose, stackA, stackB) {
+  // Exit early for identical values.
+  if (value === other) {
+    return true;
+  }
+  var valType = typeof value,
+      othType = typeof other;
+
+  // Exit early for unlike primitive values.
+  if ((valType != 'function' && valType != 'object' && othType != 'function' && othType != 'object') ||
+      value == null || other == null) {
+    // Return `false` unless both values are `NaN`.
+    return value !== value && other !== other;
+  }
+  return baseIsEqualDeep(value, other, baseIsEqual, customizer, isLoose, stackA, stackB);
+}
+
+/**
+ * A specialized version of `baseIsEqual` for arrays and objects which performs
+ * deep comparisons and tracks traversed objects enabling objects with circular
+ * references to be compared.
+ *
+ * @private
+ * @param {Object} object The object to compare.
+ * @param {Object} other The other object to compare.
+ * @param {Function} equalFunc The function to determine equivalents of values.
+ * @param {Function} [customizer] The function to customize comparing objects.
+ * @param {boolean} [isLoose] Specify performing partial comparisons.
+ * @param {Array} [stackA=[]] Tracks traversed `value` objects.
+ * @param {Array} [stackB=[]] Tracks traversed `other` objects.
+ * @returns {boolean} Returns `true` if the objects are equivalent, else `false`.
+ */
+function baseIsEqualDeep(object, other, equalFunc, customizer, isLoose, stackA, stackB) {
+  var objIsArr = isArray(object),
+      othIsArr = isArray(other),
+      objTag = arrayTag,
+      othTag = arrayTag;
+
+  if (!objIsArr) {
+    objTag = objToString.call(object);
+    if (objTag == argsTag) {
+      objTag = objectTag;
+    } else if (objTag != objectTag) {
+      objIsArr = isTypedArray(object);
+    }
+  }
+  if (!othIsArr) {
+    othTag = objToString.call(other);
+    if (othTag == argsTag) {
+      othTag = objectTag;
+    } else if (othTag != objectTag) {
+      othIsArr = isTypedArray(other);
+    }
+  }
+  var objIsObj = objTag == objectTag,
+      othIsObj = othTag == objectTag,
+      isSameTag = objTag == othTag;
+
+  if (isSameTag && !(objIsArr || objIsObj)) {
+    return equalByTag(object, other, objTag);
+  }
+  if (!isLoose) {
+    var valWrapped = objIsObj && hasOwnProperty.call(object, '__wrapped__'),
+        othWrapped = othIsObj && hasOwnProperty.call(other, '__wrapped__');
+
+    if (valWrapped || othWrapped) {
+      return equalFunc(valWrapped ? object.value() : object, othWrapped ? other.value() : other, customizer, isLoose, stackA, stackB);
+    }
+  }
+  if (!isSameTag) {
+    return false;
+  }
+  // Assume cyclic values are equal.
+  // For more information on detecting circular references see https://es5.github.io/#JO.
+  stackA || (stackA = []);
+  stackB || (stackB = []);
+
+  var length = stackA.length;
+  while (length--) {
+    if (stackA[length] == object) {
+      return stackB[length] == other;
+    }
+  }
+  // Add `object` and `other` to the stack of traversed objects.
+  stackA.push(object);
+  stackB.push(other);
+
+  var result = (objIsArr ? equalArrays : equalObjects)(object, other, equalFunc, customizer, isLoose, stackA, stackB);
+
+  stackA.pop();
+  stackB.pop();
+
+  return result;
+}
+
+/**
+ * A specialized version of `baseIsEqualDeep` for arrays with support for
+ * partial deep comparisons.
+ *
+ * @private
+ * @param {Array} array The array to compare.
+ * @param {Array} other The other array to compare.
+ * @param {Function} equalFunc The function to determine equivalents of values.
+ * @param {Function} [customizer] The function to customize comparing arrays.
+ * @param {boolean} [isLoose] Specify performing partial comparisons.
+ * @param {Array} [stackA] Tracks traversed `value` objects.
+ * @param {Array} [stackB] Tracks traversed `other` objects.
+ * @returns {boolean} Returns `true` if the arrays are equivalent, else `false`.
+ */
+function equalArrays(array, other, equalFunc, customizer, isLoose, stackA, stackB) {
+  var index = -1,
+      arrLength = array.length,
+      othLength = other.length,
+      result = true;
+
+  if (arrLength != othLength && !(isLoose && othLength > arrLength)) {
+    return false;
+  }
+  // Deep compare the contents, ignoring non-numeric properties.
+  while (result && ++index < arrLength) {
+    var arrValue = array[index],
+        othValue = other[index];
+
+    result = undefined;
+    if (customizer) {
+      result = isLoose
+        ? customizer(othValue, arrValue, index)
+        : customizer(arrValue, othValue, index);
+    }
+    if (result === undefined) {
+      // Recursively compare arrays (susceptible to call stack limits).
+      if (isLoose) {
+        var othIndex = othLength;
+        while (othIndex--) {
+          othValue = other[othIndex];
+          result = (arrValue && arrValue === othValue) || equalFunc(arrValue, othValue, customizer, isLoose, stackA, stackB);
+          if (result) {
+            break;
+          }
+        }
+      } else {
+        result = (arrValue && arrValue === othValue) || equalFunc(arrValue, othValue, customizer, isLoose, stackA, stackB);
+      }
+    }
+  }
+  return !!result;
+}
+
+/**
+ * A specialized version of `baseIsEqualDeep` for comparing objects of
+ * the same `toStringTag`.
+ *
+ * **Note:** This function only supports comparing values with tags of
+ * `Boolean`, `Date`, `Error`, `Number`, `RegExp`, or `String`.
+ *
+ * @private
+ * @param {Object} value The object to compare.
+ * @param {Object} other The other object to compare.
+ * @param {string} tag The `toStringTag` of the objects to compare.
+ * @returns {boolean} Returns `true` if the objects are equivalent, else `false`.
+ */
+function equalByTag(object, other, tag) {
+  switch (tag) {
+    case boolTag:
+    case dateTag:
+      // Coerce dates and booleans to numbers, dates to milliseconds and booleans
+      // to `1` or `0` treating invalid dates coerced to `NaN` as not equal.
+      return +object == +other;
+
+    case errorTag:
+      return object.name == other.name && object.message == other.message;
+
+    case numberTag:
+      // Treat `NaN` vs. `NaN` as equal.
+      return (object != +object)
+        ? other != +other
+        : object == +other;
+
+    case regexpTag:
+    case stringTag:
+      // Coerce regexes to strings and treat strings primitives and string
+      // objects as equal. See https://es5.github.io/#x15.10.6.4 for more details.
+      return object == (other + '');
+  }
+  return false;
+}
+
+/**
+ * A specialized version of `baseIsEqualDeep` for objects with support for
+ * partial deep comparisons.
+ *
+ * @private
+ * @param {Object} object The object to compare.
+ * @param {Object} other The other object to compare.
+ * @param {Function} equalFunc The function to determine equivalents of values.
+ * @param {Function} [customizer] The function to customize comparing values.
+ * @param {boolean} [isLoose] Specify performing partial comparisons.
+ * @param {Array} [stackA] Tracks traversed `value` objects.
+ * @param {Array} [stackB] Tracks traversed `other` objects.
+ * @returns {boolean} Returns `true` if the objects are equivalent, else `false`.
+ */
+function equalObjects(object, other, equalFunc, customizer, isLoose, stackA, stackB) {
+  var objProps = keys(object),
+      objLength = objProps.length,
+      othProps = keys(other),
+      othLength = othProps.length;
+
+  if (objLength != othLength && !isLoose) {
+    return false;
+  }
+  var skipCtor = isLoose,
+      index = -1;
+
+  while (++index < objLength) {
+    var key = objProps[index],
+        result = isLoose ? key in other : hasOwnProperty.call(other, key);
+
+    if (result) {
+      var objValue = object[key],
+          othValue = other[key];
+
+      result = undefined;
+      if (customizer) {
+        result = isLoose
+          ? customizer(othValue, objValue, key)
+          : customizer(objValue, othValue, key);
+      }
+      if (result === undefined) {
+        // Recursively compare objects (susceptible to call stack limits).
+        result = (objValue && objValue === othValue) || equalFunc(objValue, othValue, customizer, isLoose, stackA, stackB);
+      }
+    }
+    if (!result) {
+      return false;
+    }
+    skipCtor || (skipCtor = key == 'constructor');
+  }
+  if (!skipCtor) {
+    var objCtor = object.constructor,
+        othCtor = other.constructor;
+
+    // Non `Object` object instances with different constructors are not equal.
+    if (objCtor != othCtor &&
+        ('constructor' in object && 'constructor' in other) &&
+        !(typeof objCtor == 'function' && objCtor instanceof objCtor &&
+          typeof othCtor == 'function' && othCtor instanceof othCtor)) {
+      return false;
+    }
+  }
+  return true;
+}
+
+module.exports = baseIsEqual;
+
+},{"lodash.isarray":187,"lodash.istypedarray":193,"lodash.keys":200}],193:[function(require,module,exports){
+/**
+ * lodash 3.0.1 (Custom Build) <https://lodash.com/>
+ * Build: `lodash modern modularize exports="npm" -o ./`
+ * Copyright 2012-2015 The Dojo Foundation <http://dojofoundation.org/>
+ * Based on Underscore.js 1.8.2 <http://underscorejs.org/LICENSE>
+ * Copyright 2009-2015 Jeremy Ashkenas, DocumentCloud and Investigative Reporters & Editors
+ * Available under MIT license <https://lodash.com/license>
+ */
+
+/** `Object#toString` result references. */
+var argsTag = '[object Arguments]',
+    arrayTag = '[object Array]',
+    boolTag = '[object Boolean]',
+    dateTag = '[object Date]',
+    errorTag = '[object Error]',
+    funcTag = '[object Function]',
+    mapTag = '[object Map]',
+    numberTag = '[object Number]',
+    objectTag = '[object Object]',
+    regexpTag = '[object RegExp]',
+    setTag = '[object Set]',
+    stringTag = '[object String]',
+    weakMapTag = '[object WeakMap]';
+
+var arrayBufferTag = '[object ArrayBuffer]',
+    float32Tag = '[object Float32Array]',
+    float64Tag = '[object Float64Array]',
+    int8Tag = '[object Int8Array]',
+    int16Tag = '[object Int16Array]',
+    int32Tag = '[object Int32Array]',
+    uint8Tag = '[object Uint8Array]',
+    uint8ClampedTag = '[object Uint8ClampedArray]',
+    uint16Tag = '[object Uint16Array]',
+    uint32Tag = '[object Uint32Array]';
+
+/** Used to identify `toStringTag` values of typed arrays. */
+var typedArrayTags = {};
+typedArrayTags[float32Tag] = typedArrayTags[float64Tag] =
+typedArrayTags[int8Tag] = typedArrayTags[int16Tag] =
+typedArrayTags[int32Tag] = typedArrayTags[uint8Tag] =
+typedArrayTags[uint8ClampedTag] = typedArrayTags[uint16Tag] =
+typedArrayTags[uint32Tag] = true;
+typedArrayTags[argsTag] = typedArrayTags[arrayTag] =
+typedArrayTags[arrayBufferTag] = typedArrayTags[boolTag] =
+typedArrayTags[dateTag] = typedArrayTags[errorTag] =
+typedArrayTags[funcTag] = typedArrayTags[mapTag] =
+typedArrayTags[numberTag] = typedArrayTags[objectTag] =
+typedArrayTags[regexpTag] = typedArrayTags[setTag] =
+typedArrayTags[stringTag] = typedArrayTags[weakMapTag] = false;
+
+/**
+ * Checks if `value` is object-like.
+ *
+ * @private
+ * @param {*} value The value to check.
+ * @returns {boolean} Returns `true` if `value` is object-like, else `false`.
+ */
+function isObjectLike(value) {
+  return !!value && typeof value == 'object';
+}
+
+/** Used for native method references. */
+var objectProto = Object.prototype;
+
+/**
+ * Used to resolve the [`toStringTag`](https://people.mozilla.org/~jorendorff/es6-draft.html#sec-object.prototype.tostring)
+ * of values.
+ */
+var objToString = objectProto.toString;
+
+/**
+ * Used as the [maximum length](https://people.mozilla.org/~jorendorff/es6-draft.html#sec-number.max_safe_integer)
+ * of an array-like value.
+ */
+var MAX_SAFE_INTEGER = Math.pow(2, 53) - 1;
+
+/**
+ * Checks if `value` is a valid array-like length.
+ *
+ * **Note:** This function is based on [`ToLength`](https://people.mozilla.org/~jorendorff/es6-draft.html#sec-tolength).
+ *
+ * @private
+ * @param {*} value The value to check.
+ * @returns {boolean} Returns `true` if `value` is a valid length, else `false`.
+ */
+function isLength(value) {
+  return typeof value == 'number' && value > -1 && value % 1 == 0 && value <= MAX_SAFE_INTEGER;
+}
+
+/**
+ * Checks if `value` is classified as a typed array.
+ *
+ * @static
+ * @memberOf _
+ * @category Lang
+ * @param {*} value The value to check.
+ * @returns {boolean} Returns `true` if `value` is correctly classified, else `false`.
+ * @example
+ *
+ * _.isTypedArray(new Uint8Array);
+ * // => true
+ *
+ * _.isTypedArray([]);
+ * // => false
+ */
+function isTypedArray(value) {
+  return isObjectLike(value) && isLength(value.length) && !!typedArrayTags[objToString.call(value)];
+}
+
+module.exports = isTypedArray;
+
+},{}],194:[function(require,module,exports){
 arguments[4][56][0].apply(exports,arguments)
-},{"dup":56}],535:[function(require,module,exports){
+},{"dup":56}],195:[function(require,module,exports){
 arguments[4][93][0].apply(exports,arguments)
-},{"dup":93}],536:[function(require,module,exports){
+},{"dup":93}],196:[function(require,module,exports){
 /**
  * lodash 3.0.0 (Custom Build) <https://lodash.com/>
  * Build: `lodash modern modularize exports="npm" -o ./`
@@ -18648,11 +15033,48 @@ function isNull(value) {
 
 module.exports = isNull;
 
-},{}],537:[function(require,module,exports){
-arguments[4][158][0].apply(exports,arguments)
-},{"dup":158}],538:[function(require,module,exports){
+},{}],197:[function(require,module,exports){
+/**
+ * lodash 3.0.1 (Custom Build) <https://lodash.com/>
+ * Build: `lodash modern modularize exports="npm" -o ./`
+ * Copyright 2012-2015 The Dojo Foundation <http://dojofoundation.org/>
+ * Based on Underscore.js 1.8.2 <http://underscorejs.org/LICENSE>
+ * Copyright 2009-2015 Jeremy Ashkenas, DocumentCloud and Investigative Reporters & Editors
+ * Available under MIT license <https://lodash.com/license>
+ */
+
+/**
+ * Checks if `value` is the [language type](https://es5.github.io/#x8) of `Object`.
+ * (e.g. arrays, functions, objects, regexes, `new Number(0)`, and `new String('')`)
+ *
+ * @static
+ * @memberOf _
+ * @category Lang
+ * @param {*} value The value to check.
+ * @returns {boolean} Returns `true` if `value` is an object, else `false`.
+ * @example
+ *
+ * _.isObject({});
+ * // => true
+ *
+ * _.isObject([1, 2, 3]);
+ * // => true
+ *
+ * _.isObject(1);
+ * // => false
+ */
+function isObject(value) {
+  // Avoid a V8 JIT bug in Chrome 19-20.
+  // See https://code.google.com/p/v8/issues/detail?id=2291 for more details.
+  var type = typeof value;
+  return type == 'function' || (!!value && type == 'object');
+}
+
+module.exports = isObject;
+
+},{}],198:[function(require,module,exports){
 arguments[4][94][0].apply(exports,arguments)
-},{"dup":94}],539:[function(require,module,exports){
+},{"dup":94}],199:[function(require,module,exports){
 /**
  * lodash 3.0.1 (Custom Build) <https://lodash.com/>
  * Build: `lodash modern modularize exports="npm" -o ./`
@@ -18684,13 +15106,13 @@ function isUndefined(value) {
 
 module.exports = isUndefined;
 
-},{}],540:[function(require,module,exports){
+},{}],200:[function(require,module,exports){
 arguments[4][60][0].apply(exports,arguments)
-},{"dup":60,"lodash.isarguments":541,"lodash.isarray":527,"lodash.isnative":542}],541:[function(require,module,exports){
+},{"dup":60,"lodash.isarguments":201,"lodash.isarray":187,"lodash.isnative":202}],201:[function(require,module,exports){
 arguments[4][61][0].apply(exports,arguments)
-},{"dup":61}],542:[function(require,module,exports){
+},{"dup":61}],202:[function(require,module,exports){
 arguments[4][59][0].apply(exports,arguments)
-},{"dup":59}],543:[function(require,module,exports){
+},{"dup":59}],203:[function(require,module,exports){
 /**
  * lodash 3.1.0 (Custom Build) <https://lodash.com/>
  * Build: `lodash modern modularize exports="npm" -o ./`
@@ -18752,25 +15174,398 @@ var omit = restParam(function(object, props) {
 
 module.exports = omit;
 
-},{"lodash._arraymap":544,"lodash._basedifference":545,"lodash._baseflatten":550,"lodash._bindcallback":552,"lodash._pickbyarray":553,"lodash._pickbycallback":554,"lodash.keysin":556,"lodash.restparam":558}],544:[function(require,module,exports){
-arguments[4][298][0].apply(exports,arguments)
-},{"dup":298}],545:[function(require,module,exports){
-arguments[4][180][0].apply(exports,arguments)
-},{"dup":180,"lodash._baseindexof":546,"lodash._cacheindexof":547,"lodash._createcache":548}],546:[function(require,module,exports){
-arguments[4][114][0].apply(exports,arguments)
-},{"dup":114}],547:[function(require,module,exports){
-arguments[4][182][0].apply(exports,arguments)
-},{"dup":182}],548:[function(require,module,exports){
-arguments[4][183][0].apply(exports,arguments)
-},{"dup":183,"lodash.isnative":549}],549:[function(require,module,exports){
+},{"lodash._arraymap":204,"lodash._basedifference":205,"lodash._baseflatten":210,"lodash._bindcallback":212,"lodash._pickbyarray":213,"lodash._pickbycallback":214,"lodash.keysin":216,"lodash.restparam":218}],204:[function(require,module,exports){
+/**
+ * lodash 3.0.0 (Custom Build) <https://lodash.com/>
+ * Build: `lodash modern modularize exports="npm" -o ./`
+ * Copyright 2012-2015 The Dojo Foundation <http://dojofoundation.org/>
+ * Based on Underscore.js 1.7.0 <http://underscorejs.org/LICENSE>
+ * Copyright 2009-2015 Jeremy Ashkenas, DocumentCloud and Investigative Reporters & Editors
+ * Available under MIT license <https://lodash.com/license>
+ */
+
+/**
+ * A specialized version of `_.map` for arrays without support for callback
+ * shorthands or `this` binding.
+ *
+ * @private
+ * @param {Array} array The array to iterate over.
+ * @param {Function} iteratee The function invoked per iteration.
+ * @returns {Array} Returns the new mapped array.
+ */
+function arrayMap(array, iteratee) {
+  var index = -1,
+      length = array.length,
+      result = Array(length);
+
+  while (++index < length) {
+    result[index] = iteratee(array[index], index, array);
+  }
+  return result;
+}
+
+module.exports = arrayMap;
+
+},{}],205:[function(require,module,exports){
+/**
+ * lodash 3.0.2 (Custom Build) <https://lodash.com/>
+ * Build: `lodash modern modularize exports="npm" -o ./`
+ * Copyright 2012-2015 The Dojo Foundation <http://dojofoundation.org/>
+ * Based on Underscore.js 1.8.2 <http://underscorejs.org/LICENSE>
+ * Copyright 2009-2015 Jeremy Ashkenas, DocumentCloud and Investigative Reporters & Editors
+ * Available under MIT license <https://lodash.com/license>
+ */
+var baseIndexOf = require('lodash._baseindexof'),
+    cacheIndexOf = require('lodash._cacheindexof'),
+    createCache = require('lodash._createcache');
+
+/**
+ * The base implementation of `_.difference` which accepts a single array
+ * of values to exclude.
+ *
+ * @private
+ * @param {Array} array The array to inspect.
+ * @param {Array} values The values to exclude.
+ * @returns {Array} Returns the new array of filtered values.
+ */
+function baseDifference(array, values) {
+  var length = array ? array.length : 0,
+      result = [];
+
+  if (!length) {
+    return result;
+  }
+  var index = -1,
+      indexOf = baseIndexOf,
+      isCommon = true,
+      cache = (isCommon && values.length >= 200) ? createCache(values) : null,
+      valuesLength = values.length;
+
+  if (cache) {
+    indexOf = cacheIndexOf;
+    isCommon = false;
+    values = cache;
+  }
+  outer:
+  while (++index < length) {
+    var value = array[index];
+
+    if (isCommon && value === value) {
+      var valuesIndex = valuesLength;
+      while (valuesIndex--) {
+        if (values[valuesIndex] === value) {
+          continue outer;
+        }
+      }
+      result.push(value);
+    }
+    else if (indexOf(values, value, 0) < 0) {
+      result.push(value);
+    }
+  }
+  return result;
+}
+
+module.exports = baseDifference;
+
+},{"lodash._baseindexof":206,"lodash._cacheindexof":207,"lodash._createcache":208}],206:[function(require,module,exports){
+arguments[4][184][0].apply(exports,arguments)
+},{"dup":184}],207:[function(require,module,exports){
+/**
+ * lodash 3.0.1 (Custom Build) <https://lodash.com/>
+ * Build: `lodash modern modularize exports="npm" -o ./`
+ * Copyright 2012-2015 The Dojo Foundation <http://dojofoundation.org/>
+ * Based on Underscore.js 1.8.2 <http://underscorejs.org/LICENSE>
+ * Copyright 2009-2015 Jeremy Ashkenas, DocumentCloud and Investigative Reporters & Editors
+ * Available under MIT license <https://lodash.com/license>
+ */
+
+/**
+ * Checks if `value` is in `cache` mimicking the return signature of
+ * `_.indexOf` by returning `0` if the value is found, else `-1`.
+ *
+ * @private
+ * @param {Object} cache The cache to search.
+ * @param {*} value The value to search for.
+ * @returns {number} Returns `0` if `value` is found, else `-1`.
+ */
+function cacheIndexOf(cache, value) {
+  var data = cache.data,
+      result = (typeof value == 'string' || isObject(value)) ? data.set.has(value) : data.hash[value];
+
+  return result ? 0 : -1;
+}
+
+/**
+ * Checks if `value` is the [language type](https://es5.github.io/#x8) of `Object`.
+ * (e.g. arrays, functions, objects, regexes, `new Number(0)`, and `new String('')`)
+ *
+ * @static
+ * @memberOf _
+ * @category Lang
+ * @param {*} value The value to check.
+ * @returns {boolean} Returns `true` if `value` is an object, else `false`.
+ * @example
+ *
+ * _.isObject({});
+ * // => true
+ *
+ * _.isObject([1, 2, 3]);
+ * // => true
+ *
+ * _.isObject(1);
+ * // => false
+ */
+function isObject(value) {
+  // Avoid a V8 JIT bug in Chrome 19-20.
+  // See https://code.google.com/p/v8/issues/detail?id=2291 for more details.
+  var type = typeof value;
+  return type == 'function' || (!!value && type == 'object');
+}
+
+module.exports = cacheIndexOf;
+
+},{}],208:[function(require,module,exports){
+(function (global){
+/**
+ * lodash 3.0.1 (Custom Build) <https://lodash.com/>
+ * Build: `lodash modern modularize exports="npm" -o ./`
+ * Copyright 2012-2015 The Dojo Foundation <http://dojofoundation.org/>
+ * Based on Underscore.js 1.8.2 <http://underscorejs.org/LICENSE>
+ * Copyright 2009-2015 Jeremy Ashkenas, DocumentCloud and Investigative Reporters & Editors
+ * Available under MIT license <https://lodash.com/license>
+ */
+var isNative = require('lodash.isnative');
+
+/** Native method references. */
+var Set = isNative(Set = global.Set) && Set;
+
+/* Native method references for those with the same name as other `lodash` methods. */
+var nativeCreate = isNative(nativeCreate = Object.create) && nativeCreate;
+
+/**
+ *
+ * Creates a cache object to store unique values.
+ *
+ * @private
+ * @param {Array} [values] The values to cache.
+ */
+function SetCache(values) {
+  var length = values ? values.length : 0;
+
+  this.data = { 'hash': nativeCreate(null), 'set': new Set };
+  while (length--) {
+    this.push(values[length]);
+  }
+}
+
+/**
+ * Adds `value` to the cache.
+ *
+ * @private
+ * @name push
+ * @memberOf SetCache
+ * @param {*} value The value to cache.
+ */
+function cachePush(value) {
+  var data = this.data;
+  if (typeof value == 'string' || isObject(value)) {
+    data.set.add(value);
+  } else {
+    data.hash[value] = true;
+  }
+}
+
+/**
+ * Creates a `Set` cache object to optimize linear searches of large arrays.
+ *
+ * @private
+ * @param {Array} [values] The values to cache.
+ * @returns {null|Object} Returns the new cache object if `Set` is supported, else `null`.
+ */
+var createCache = !(nativeCreate && Set) ? constant(null) : function(values) {
+  return new SetCache(values);
+};
+
+/**
+ * Checks if `value` is the [language type](https://es5.github.io/#x8) of `Object`.
+ * (e.g. arrays, functions, objects, regexes, `new Number(0)`, and `new String('')`)
+ *
+ * @static
+ * @memberOf _
+ * @category Lang
+ * @param {*} value The value to check.
+ * @returns {boolean} Returns `true` if `value` is an object, else `false`.
+ * @example
+ *
+ * _.isObject({});
+ * // => true
+ *
+ * _.isObject([1, 2, 3]);
+ * // => true
+ *
+ * _.isObject(1);
+ * // => false
+ */
+function isObject(value) {
+  // Avoid a V8 JIT bug in Chrome 19-20.
+  // See https://code.google.com/p/v8/issues/detail?id=2291 for more details.
+  var type = typeof value;
+  return type == 'function' || (!!value && type == 'object');
+}
+
+/**
+ * Creates a function that returns `value`.
+ *
+ * @static
+ * @memberOf _
+ * @category Utility
+ * @param {*} value The value to return from the new function.
+ * @returns {Function} Returns the new function.
+ * @example
+ *
+ * var object = { 'user': 'fred' };
+ * var getter = _.constant(object);
+ *
+ * getter() === object;
+ * // => true
+ */
+function constant(value) {
+  return function() {
+    return value;
+  };
+}
+
+// Add functions to the `Set` cache.
+SetCache.prototype.push = cachePush;
+
+module.exports = createCache;
+
+}).call(this,typeof global !== "undefined" ? global : typeof self !== "undefined" ? self : typeof window !== "undefined" ? window : {})
+},{"lodash.isnative":209}],209:[function(require,module,exports){
 arguments[4][59][0].apply(exports,arguments)
-},{"dup":59}],550:[function(require,module,exports){
-arguments[4][185][0].apply(exports,arguments)
-},{"dup":185,"lodash.isarguments":551,"lodash.isarray":527}],551:[function(require,module,exports){
+},{"dup":59}],210:[function(require,module,exports){
+/**
+ * lodash 3.1.2 (Custom Build) <https://lodash.com/>
+ * Build: `lodash modern modularize exports="npm" -o ./`
+ * Copyright 2012-2015 The Dojo Foundation <http://dojofoundation.org/>
+ * Based on Underscore.js 1.8.3 <http://underscorejs.org/LICENSE>
+ * Copyright 2009-2015 Jeremy Ashkenas, DocumentCloud and Investigative Reporters & Editors
+ * Available under MIT license <https://lodash.com/license>
+ */
+var isArguments = require('lodash.isarguments'),
+    isArray = require('lodash.isarray');
+
+/**
+ * Checks if `value` is object-like.
+ *
+ * @private
+ * @param {*} value The value to check.
+ * @returns {boolean} Returns `true` if `value` is object-like, else `false`.
+ */
+function isObjectLike(value) {
+  return !!value && typeof value == 'object';
+}
+
+/**
+ * Used as the [maximum length](https://people.mozilla.org/~jorendorff/es6-draft.html#sec-number.max_safe_integer)
+ * of an array-like value.
+ */
+var MAX_SAFE_INTEGER = Math.pow(2, 53) - 1;
+
+/**
+ * The base implementation of `_.flatten` with added support for restricting
+ * flattening and specifying the start index.
+ *
+ * @private
+ * @param {Array} array The array to flatten.
+ * @param {boolean} [isDeep] Specify a deep flatten.
+ * @param {boolean} [isStrict] Restrict flattening to arrays-like objects.
+ * @returns {Array} Returns the new flattened array.
+ */
+function baseFlatten(array, isDeep, isStrict) {
+  var index = -1,
+      length = array.length,
+      resIndex = -1,
+      result = [];
+
+  while (++index < length) {
+    var value = array[index];
+    if (isObjectLike(value) && isArrayLike(value) &&
+        (isStrict || isArray(value) || isArguments(value))) {
+      if (isDeep) {
+        // Recursively flatten arrays (susceptible to call stack limits).
+        value = baseFlatten(value, isDeep, isStrict);
+      }
+      var valIndex = -1,
+          valLength = value.length;
+
+      while (++valIndex < valLength) {
+        result[++resIndex] = value[valIndex];
+      }
+    } else if (!isStrict) {
+      result[++resIndex] = value;
+    }
+  }
+  return result;
+}
+
+/**
+ * The base implementation of `_.property` without support for deep paths.
+ *
+ * @private
+ * @param {string} key The key of the property to get.
+ * @returns {Function} Returns the new function.
+ */
+function baseProperty(key) {
+  return function(object) {
+    return object == null ? undefined : object[key];
+  };
+}
+
+/**
+ * Gets the "length" property value of `object`.
+ *
+ * **Note:** This function is used to avoid a [JIT bug](https://bugs.webkit.org/show_bug.cgi?id=142792)
+ * that affects Safari on at least iOS 8.1-8.3 ARM64.
+ *
+ * @private
+ * @param {Object} object The object to query.
+ * @returns {*} Returns the "length" value.
+ */
+var getLength = baseProperty('length');
+
+/**
+ * Checks if `value` is array-like.
+ *
+ * @private
+ * @param {*} value The value to check.
+ * @returns {boolean} Returns `true` if `value` is array-like, else `false`.
+ */
+function isArrayLike(value) {
+  return value != null && isLength(getLength(value));
+}
+
+/**
+ * Checks if `value` is a valid array-like length.
+ *
+ * **Note:** This function is based on [`ToLength`](https://people.mozilla.org/~jorendorff/es6-draft.html#sec-tolength).
+ *
+ * @private
+ * @param {*} value The value to check.
+ * @returns {boolean} Returns `true` if `value` is a valid length, else `false`.
+ */
+function isLength(value) {
+  return typeof value == 'number' && value > -1 && value % 1 == 0 && value <= MAX_SAFE_INTEGER;
+}
+
+module.exports = baseFlatten;
+
+},{"lodash.isarguments":211,"lodash.isarray":187}],211:[function(require,module,exports){
 arguments[4][61][0].apply(exports,arguments)
-},{"dup":61}],552:[function(require,module,exports){
+},{"dup":61}],212:[function(require,module,exports){
 arguments[4][56][0].apply(exports,arguments)
-},{"dup":56}],553:[function(require,module,exports){
+},{"dup":56}],213:[function(require,module,exports){
 /**
  * lodash 3.0.1 (Custom Build) <https://lodash.com/>
  * Build: `lodash modern modularize exports="npm" -o ./`
@@ -18845,7 +15640,7 @@ function isObject(value) {
 
 module.exports = pickByArray;
 
-},{}],554:[function(require,module,exports){
+},{}],214:[function(require,module,exports){
 /**
  * lodash 3.0.0 (Custom Build) <https://lodash.com/>
  * Build: `lodash modern modularize exports="npm" -o ./`
@@ -18891,9 +15686,9 @@ function pickByCallback(object, predicate) {
 
 module.exports = pickByCallback;
 
-},{"lodash._basefor":555,"lodash.keysin":556}],555:[function(require,module,exports){
-arguments[4][151][0].apply(exports,arguments)
-},{"dup":151}],556:[function(require,module,exports){
+},{"lodash._basefor":215,"lodash.keysin":216}],215:[function(require,module,exports){
+arguments[4][167][0].apply(exports,arguments)
+},{"dup":167}],216:[function(require,module,exports){
 /**
  * lodash 3.0.6 (Custom Build) <https://lodash.com/>
  * Build: `lodash modern modularize exports="npm" -o ./`
@@ -19064,19 +15859,155 @@ function keysIn(object) {
 
 module.exports = keysIn;
 
-},{"lodash.isarguments":557,"lodash.isarray":527}],557:[function(require,module,exports){
+},{"lodash.isarguments":217,"lodash.isarray":187}],217:[function(require,module,exports){
 arguments[4][61][0].apply(exports,arguments)
-},{"dup":61}],558:[function(require,module,exports){
+},{"dup":61}],218:[function(require,module,exports){
 arguments[4][58][0].apply(exports,arguments)
-},{"dup":58}],559:[function(require,module,exports){
-arguments[4][159][0].apply(exports,arguments)
-},{"dup":159,"lodash._baseget":560,"lodash._baseslice":561,"lodash._topath":562,"lodash.isarray":527,"lodash.isfunction":535}],560:[function(require,module,exports){
-arguments[4][160][0].apply(exports,arguments)
-},{"dup":160}],561:[function(require,module,exports){
-arguments[4][161][0].apply(exports,arguments)
-},{"dup":161}],562:[function(require,module,exports){
-arguments[4][162][0].apply(exports,arguments)
-},{"dup":162,"lodash.isarray":527}],563:[function(require,module,exports){
+},{"dup":58}],219:[function(require,module,exports){
+/**
+ * lodash 3.1.1 (Custom Build) <https://lodash.com/>
+ * Build: `lodash modern modularize exports="npm" -o ./`
+ * Copyright 2012-2015 The Dojo Foundation <http://dojofoundation.org/>
+ * Based on Underscore.js 1.8.3 <http://underscorejs.org/LICENSE>
+ * Copyright 2009-2015 Jeremy Ashkenas, DocumentCloud and Investigative Reporters & Editors
+ * Available under MIT license <https://lodash.com/license>
+ */
+var baseGet = require('lodash._baseget'),
+    baseSlice = require('lodash._baseslice'),
+    toPath = require('lodash._topath'),
+    isArray = require('lodash.isarray'),
+    isFunction = require('lodash.isfunction');
+
+/** Used to match property names within property paths. */
+var reIsDeepProp = /\.|\[(?:[^[\]]*|(["'])(?:(?!\1)[^\n\\]|\\.)*?\1)\]/,
+    reIsPlainProp = /^\w*$/;
+
+/**
+ * Checks if `value` is a property name and not a property path.
+ *
+ * @private
+ * @param {*} value The value to check.
+ * @param {Object} [object] The object to query keys on.
+ * @returns {boolean} Returns `true` if `value` is a property name, else `false`.
+ */
+function isKey(value, object) {
+  var type = typeof value;
+  if ((type == 'string' && reIsPlainProp.test(value)) || type == 'number') {
+    return true;
+  }
+  if (isArray(value)) {
+    return false;
+  }
+  var result = !reIsDeepProp.test(value);
+  return result || (object != null && value in toObject(object));
+}
+
+/**
+ * Converts `value` to an object if it is not one.
+ *
+ * @private
+ * @param {*} value The value to process.
+ * @returns {Object} Returns the object.
+ */
+function toObject(value) {
+  return isObject(value) ? value : Object(value);
+}
+
+/**
+ * Gets the last element of `array`.
+ *
+ * @static
+ * @memberOf _
+ * @category Array
+ * @param {Array} array The array to query.
+ * @returns {*} Returns the last element of `array`.
+ * @example
+ *
+ * _.last([1, 2, 3]);
+ * // => 3
+ */
+function last(array) {
+  var length = array ? array.length : 0;
+  return length ? array[length - 1] : undefined;
+}
+
+/**
+ * Checks if `value` is the [language type](https://es5.github.io/#x8) of `Object`.
+ * (e.g. arrays, functions, objects, regexes, `new Number(0)`, and `new String('')`)
+ *
+ * @static
+ * @memberOf _
+ * @category Lang
+ * @param {*} value The value to check.
+ * @returns {boolean} Returns `true` if `value` is an object, else `false`.
+ * @example
+ *
+ * _.isObject({});
+ * // => true
+ *
+ * _.isObject([1, 2, 3]);
+ * // => true
+ *
+ * _.isObject(1);
+ * // => false
+ */
+function isObject(value) {
+  // Avoid a V8 JIT bug in Chrome 19-20.
+  // See https://code.google.com/p/v8/issues/detail?id=2291 for more details.
+  var type = typeof value;
+  return type == 'function' || (!!value && type == 'object');
+}
+
+/**
+ * This method is like `_.get` except that if the resolved value is a function
+ * it is invoked with the `this` binding of its parent object and its result
+ * is returned.
+ *
+ * @static
+ * @memberOf _
+ * @category Object
+ * @param {Object} object The object to query.
+ * @param {Array|string} path The path of the property to resolve.
+ * @param {*} [defaultValue] The value returned if the resolved value is `undefined`.
+ * @returns {*} Returns the resolved value.
+ * @example
+ *
+ * var object = { 'a': [{ 'b': { 'c1': 3, 'c2': _.constant(4) } }] };
+ *
+ * _.result(object, 'a[0].b.c1');
+ * // => 3
+ *
+ * _.result(object, 'a[0].b.c2');
+ * // => 4
+ *
+ * _.result(object, 'a.b.c', 'default');
+ * // => 'default'
+ *
+ * _.result(object, 'a.b.c', _.constant('default'));
+ * // => 'default'
+ */
+function result(object, path, defaultValue) {
+  var result = object == null ? undefined : object[path];
+  if (result === undefined) {
+    if (object != null && !isKey(path, object)) {
+      path = toPath(path);
+      object = path.length == 1 ? object : baseGet(object, baseSlice(path, 0, -1));
+      result = object == null ? undefined : object[last(path)];
+    }
+    result = result === undefined ? defaultValue : result;
+  }
+  return isFunction(result) ? result.call(object) : result;
+}
+
+module.exports = result;
+
+},{"lodash._baseget":220,"lodash._baseslice":221,"lodash._topath":222,"lodash.isarray":187,"lodash.isfunction":195}],220:[function(require,module,exports){
+arguments[4][180][0].apply(exports,arguments)
+},{"dup":180}],221:[function(require,module,exports){
+arguments[4][181][0].apply(exports,arguments)
+},{"dup":181}],222:[function(require,module,exports){
+arguments[4][182][0].apply(exports,arguments)
+},{"dup":182,"lodash.isarray":187}],223:[function(require,module,exports){
 /**
  * lodash 3.1.0 (Custom Build) <https://lodash.com/>
  * Build: `lodash modern modularize exports="npm" -o ./`
@@ -19113,11 +16044,11 @@ var union = restParam(function(arrays) {
 
 module.exports = union;
 
-},{"lodash._baseflatten":564,"lodash._baseuniq":566,"lodash.restparam":571}],564:[function(require,module,exports){
-arguments[4][185][0].apply(exports,arguments)
-},{"dup":185,"lodash.isarguments":565,"lodash.isarray":527}],565:[function(require,module,exports){
+},{"lodash._baseflatten":224,"lodash._baseuniq":226,"lodash.restparam":231}],224:[function(require,module,exports){
+arguments[4][210][0].apply(exports,arguments)
+},{"dup":210,"lodash.isarguments":225,"lodash.isarray":187}],225:[function(require,module,exports){
 arguments[4][61][0].apply(exports,arguments)
-},{"dup":61}],566:[function(require,module,exports){
+},{"dup":61}],226:[function(require,module,exports){
 /**
  * lodash 3.0.2 (Custom Build) <https://lodash.com/>
  * Build: `lodash modern modularize exports="npm" -o ./`
@@ -19184,21 +16115,21 @@ function baseUniq(array, iteratee) {
 
 module.exports = baseUniq;
 
-},{"lodash._baseindexof":567,"lodash._cacheindexof":568,"lodash._createcache":569}],567:[function(require,module,exports){
-arguments[4][114][0].apply(exports,arguments)
-},{"dup":114}],568:[function(require,module,exports){
-arguments[4][182][0].apply(exports,arguments)
-},{"dup":182}],569:[function(require,module,exports){
-arguments[4][183][0].apply(exports,arguments)
-},{"dup":183,"lodash.isnative":570}],570:[function(require,module,exports){
+},{"lodash._baseindexof":227,"lodash._cacheindexof":228,"lodash._createcache":229}],227:[function(require,module,exports){
+arguments[4][184][0].apply(exports,arguments)
+},{"dup":184}],228:[function(require,module,exports){
+arguments[4][207][0].apply(exports,arguments)
+},{"dup":207}],229:[function(require,module,exports){
+arguments[4][208][0].apply(exports,arguments)
+},{"dup":208,"lodash.isnative":230}],230:[function(require,module,exports){
 arguments[4][59][0].apply(exports,arguments)
-},{"dup":59}],571:[function(require,module,exports){
+},{"dup":59}],231:[function(require,module,exports){
 arguments[4][58][0].apply(exports,arguments)
-},{"dup":58}],572:[function(require,module,exports){
+},{"dup":58}],232:[function(require,module,exports){
 arguments[4][101][0].apply(exports,arguments)
-},{"dup":101,"lodash._basetostring":573}],573:[function(require,module,exports){
+},{"dup":101,"lodash._basetostring":233}],233:[function(require,module,exports){
 arguments[4][102][0].apply(exports,arguments)
-},{"dup":102}],574:[function(require,module,exports){
+},{"dup":102}],234:[function(require,module,exports){
 ;if (typeof window !== "undefined") {  window.ampersand = window.ampersand || {};  window.ampersand["ampersand-subcollection"] = window.ampersand["ampersand-subcollection"] || [];  window.ampersand["ampersand-subcollection"].push("2.0.3");}
 var Events = require('ampersand-events');
 var classExtend = require('ampersand-class-extend');
@@ -19432,429 +16363,4291 @@ SubCollection.extend = classExtend;
 
 module.exports = SubCollection;
 
-},{"ampersand-class-extend":575,"ampersand-collection-lodash-mixin":576,"ampersand-events":70,"lodash.assign":727,"lodash.difference":735,"lodash.foreach":744,"lodash.includes":748,"lodash.isarray":753,"lodash.isequal":754,"lodash.keys":758,"lodash.reduce":761,"lodash.sortby":768,"lodash.union":777}],575:[function(require,module,exports){
+},{"ampersand-class-extend":235,"ampersand-collection-lodash-mixin":236,"ampersand-events":70,"lodash.assign":387,"lodash.difference":395,"lodash.foreach":404,"lodash.includes":408,"lodash.isarray":413,"lodash.isequal":414,"lodash.keys":418,"lodash.reduce":421,"lodash.sortby":428,"lodash.union":437}],235:[function(require,module,exports){
 arguments[4][51][0].apply(exports,arguments)
-},{"dup":51,"lodash.assign":727}],576:[function(require,module,exports){
-arguments[4][166][0].apply(exports,arguments)
-},{"dup":166,"lodash.countby":577,"lodash.difference":735,"lodash.drop":584,"lodash.every":587,"lodash.filter":595,"lodash.find":603,"lodash.foreach":744,"lodash.groupby":611,"lodash.includes":748,"lodash.indexby":618,"lodash.indexof":625,"lodash.initial":629,"lodash.invoke":632,"lodash.isempty":639,"lodash.isfunction":642,"lodash.lastindexof":643,"lodash.map":646,"lodash.max":653,"lodash.min":664,"lodash.partition":675,"lodash.reduce":761,"lodash.reduceright":682,"lodash.reject":690,"lodash.rest":698,"lodash.sample":701,"lodash.shuffle":706,"lodash.some":710,"lodash.sortby":768,"lodash.take":717,"lodash.without":720}],577:[function(require,module,exports){
-arguments[4][167][0].apply(exports,arguments)
-},{"dup":167,"lodash._createaggregator":578,"lodash.keys":758}],578:[function(require,module,exports){
-arguments[4][168][0].apply(exports,arguments)
-},{"dup":168,"lodash._basecallback":579,"lodash._baseeach":583,"lodash.isarray":753}],579:[function(require,module,exports){
-arguments[4][169][0].apply(exports,arguments)
-},{"dup":169,"lodash._baseisequal":580,"lodash._bindcallback":582,"lodash.isarray":753,"lodash.keys":758}],580:[function(require,module,exports){
-arguments[4][170][0].apply(exports,arguments)
-},{"dup":170,"lodash.isarray":753,"lodash.istypedarray":581,"lodash.keys":758}],581:[function(require,module,exports){
-arguments[4][171][0].apply(exports,arguments)
-},{"dup":171}],582:[function(require,module,exports){
-arguments[4][56][0].apply(exports,arguments)
-},{"dup":56}],583:[function(require,module,exports){
-arguments[4][87][0].apply(exports,arguments)
-},{"dup":87,"lodash.keys":758}],584:[function(require,module,exports){
-arguments[4][189][0].apply(exports,arguments)
-},{"dup":189,"lodash._baseslice":585,"lodash._isiterateecall":586}],585:[function(require,module,exports){
-arguments[4][161][0].apply(exports,arguments)
-},{"dup":161}],586:[function(require,module,exports){
-arguments[4][57][0].apply(exports,arguments)
-},{"dup":57}],587:[function(require,module,exports){
+},{"dup":51,"lodash.assign":387}],236:[function(require,module,exports){
+;if (typeof window !== "undefined") {  window.ampersand = window.ampersand || {};  window.ampersand["ampersand-collection-lodash-mixin"] = window.ampersand["ampersand-collection-lodash-mixin"] || [];  window.ampersand["ampersand-collection-lodash-mixin"].push("2.0.1");}
+var isFunction = require('lodash.isfunction');
+var _ = {
+    countBy: require('lodash.countby'),
+    difference: require('lodash.difference'),
+    drop: require('lodash.drop'),
+    each: require('lodash.foreach'),
+    every: require('lodash.every'),
+    filter: require('lodash.filter'),
+    find: require('lodash.find'),
+    forEach: require('lodash.foreach'),
+    groupBy: require('lodash.groupby'),
+    includes: require('lodash.includes'),
+    indexBy: require('lodash.indexby'),
+    indexOf: require('lodash.indexof'),
+    initial: require('lodash.initial'),
+    invoke: require('lodash.invoke'),
+    isEmpty: require('lodash.isempty'),
+    lastIndexOf: require('lodash.lastindexof'),
+    map: require('lodash.map'),
+    max: require('lodash.max'),
+    min: require('lodash.min'),
+    partition: require('lodash.partition'),
+    reduce: require('lodash.reduce'),
+    reduceRight: require('lodash.reduceright'),
+    reject: require('lodash.reject'),
+    rest: require('lodash.rest'),
+    sample: require('lodash.sample'),
+    shuffle: require('lodash.shuffle'),
+    some: require('lodash.some'),
+    sortBy: require('lodash.sortby'),
+    take: require('lodash.take'),
+    without: require('lodash.without')
+};
+var slice = [].slice;
+var mixins = {};
+
+
+// lodash methods that we want to implement on the Collection.
+var methods = ['forEach', 'each', 'map', 'reduce', 'reduceRight', 'find',
+    'filter', 'reject', 'every', 'some', 'includes', 'invoke', 'max', 'min',
+    'take', 'initial', 'rest', 'drop', 'without', 'difference', 'indexOf', 'shuffle',
+    'lastIndexOf', 'isEmpty', 'sample', 'partition'
+];
+
+// Mix in each lodash method as a proxy to `Collection#models`.
+_.each(methods, function (method) {
+    if (!_[method]) return;
+    mixins[method] = function () {
+        var args = slice.call(arguments);
+        args.unshift(this.models);
+        return _[method].apply(_, args);
+    };
+});
+
+// lodash methods that take a property name as an argument.
+var attributeMethods = ['groupBy', 'countBy', 'sortBy', 'indexBy'];
+
+// Use attributes instead of properties.
+_.each(attributeMethods, function (method) {
+    if (!_[method]) return;
+    mixins[method] = function (value, context) {
+        var iterator = isFunction(value) ? value : function (model) {
+            return model.get ? model.get(value) : model[value];
+        };
+        return _[method](this.models, iterator, context);
+    };
+});
+
+// Return models with matching attributes. Useful for simple cases of
+// `filter`.
+mixins.where = function (attrs, first) {
+    if (_.isEmpty(attrs)) return first ? void 0 : [];
+    return this[first ? 'find' : 'filter'](function (model) {
+        var value;
+        for (var key in attrs) {
+            value = model.get ? model.get(key) : model[key];
+            if (attrs[key] !== value) return false;
+        }
+        return true;
+    });
+};
+
+// Return the first model with matching attributes. Useful for simple cases
+// of `find`.
+mixins.findWhere = function (attrs) {
+    return this.where(attrs, true);
+};
+
+// Plucks an attribute from each model in the collection.
+mixins.pluck = function (attr) {
+    return _.invoke(this.models, 'get', attr);
+};
+
+// We implement the following trivial methods ourselves.
+
+// Gets first model
+mixins.first = function () {
+    return this.models[0];
+};
+
+// Gets last model
+mixins.last = function () {
+    return this.models[this.models.length - 1];
+};
+
+// Gets size of collection
+mixins.size = function () {
+    return this.models.length;
+};
+
+module.exports = mixins;
+
+},{"lodash.countby":237,"lodash.difference":395,"lodash.drop":244,"lodash.every":247,"lodash.filter":255,"lodash.find":263,"lodash.foreach":404,"lodash.groupby":271,"lodash.includes":408,"lodash.indexby":278,"lodash.indexof":285,"lodash.initial":289,"lodash.invoke":292,"lodash.isempty":299,"lodash.isfunction":302,"lodash.lastindexof":303,"lodash.map":306,"lodash.max":313,"lodash.min":324,"lodash.partition":335,"lodash.reduce":421,"lodash.reduceright":342,"lodash.reject":350,"lodash.rest":358,"lodash.sample":361,"lodash.shuffle":366,"lodash.some":370,"lodash.sortby":428,"lodash.take":377,"lodash.without":380}],237:[function(require,module,exports){
+/**
+ * lodash 3.1.0 (Custom Build) <https://lodash.com/>
+ * Build: `lodash modern modularize exports="npm" -o ./`
+ * Copyright 2012-2015 The Dojo Foundation <http://dojofoundation.org/>
+ * Based on Underscore.js 1.8.2 <http://underscorejs.org/LICENSE>
+ * Copyright 2009-2015 Jeremy Ashkenas, DocumentCloud and Investigative Reporters & Editors
+ * Available under MIT license <https://lodash.com/license>
+ */
+var createAggregator = require('lodash._createaggregator'),
+    keys = require('lodash.keys');
+
+/** Used for native method references. */
+var objectProto = Object.prototype;
+
+/** Used to check objects for own properties. */
+var hasOwnProperty = objectProto.hasOwnProperty;
+
+/**
+ * Creates an object composed of keys generated from the results of running
+ * each element of `collection` through `iteratee`. The corresponding value
+ * of each key is the number of times the key was returned by `iteratee`.
+ * The `iteratee` is bound to `thisArg` and invoked with three arguments:
+ * (value, index|key, collection).
+ *
+ * If a property name is provided for `iteratee` the created `_.property`
+ * style callback returns the property value of the given element.
+ *
+ * If a value is also provided for `thisArg` the created `_.matchesProperty`
+ * style callback returns `true` for elements that have a matching property
+ * value, else `false`.
+ *
+ * If an object is provided for `iteratee` the created `_.matches` style
+ * callback returns `true` for elements that have the properties of the given
+ * object, else `false`.
+ *
+ * @static
+ * @memberOf _
+ * @category Collection
+ * @param {Array|Object|string} collection The collection to iterate over.
+ * @param {Function|Object|string} [iteratee=_.identity] The function invoked
+ *  per iteration.
+ * @param {*} [thisArg] The `this` binding of `iteratee`.
+ * @returns {Object} Returns the composed aggregate object.
+ * @example
+ *
+ * _.countBy([4.3, 6.1, 6.4], function(n) {
+ *   return Math.floor(n);
+ * });
+ * // => { '4': 1, '6': 2 }
+ *
+ * _.countBy([4.3, 6.1, 6.4], function(n) {
+ *   return this.floor(n);
+ * }, Math);
+ * // => { '4': 1, '6': 2 }
+ *
+ * _.countBy(['one', 'two', 'three'], 'length');
+ * // => { '3': 2, '5': 1 }
+ */
+var countBy = createAggregator(function(result, value, key) {
+  hasOwnProperty.call(result, key) ? ++result[key] : (result[key] = 1);
+});
+
+module.exports = countBy;
+
+},{"lodash._createaggregator":238,"lodash.keys":418}],238:[function(require,module,exports){
+/**
+ * lodash 3.0.0 (Custom Build) <https://lodash.com/>
+ * Build: `lodash modern modularize exports="npm" -o ./`
+ * Copyright 2012-2015 The Dojo Foundation <http://dojofoundation.org/>
+ * Based on Underscore.js 1.7.0 <http://underscorejs.org/LICENSE>
+ * Copyright 2009-2015 Jeremy Ashkenas, DocumentCloud and Investigative Reporters & Editors
+ * Available under MIT license <https://lodash.com/license>
+ */
+var baseCallback = require('lodash._basecallback'),
+    baseEach = require('lodash._baseeach'),
+    isArray = require('lodash.isarray');
+
+/**
+ * Creates a function that aggregates a collection, creating an accumulator
+ * object composed from the results of running each element in the collection
+ * through an iteratee. The `setter` sets the keys and values of the accumulator
+ * object. If `initializer` is provided initializes the accumulator object.
+ *
+ * @private
+ * @param {Function} setter The function to set keys and values of the accumulator object.
+ * @param {Function} [initializer] The function to initialize the accumulator object.
+ * @returns {Function} Returns the new aggregator function.
+ */
+function createAggregator(setter, initializer) {
+  return function(collection, iteratee, thisArg) {
+    var result = initializer ? initializer() : {};
+    iteratee = baseCallback(iteratee, thisArg, 3);
+
+    if (isArray(collection)) {
+      var index = -1,
+          length = collection.length;
+
+      while (++index < length) {
+        var value = collection[index];
+        setter(result, value, iteratee(value, index, collection), collection);
+      }
+    } else {
+      baseEach(collection, function(value, key, collection) {
+        setter(result, value, iteratee(value, key, collection), collection);
+      });
+    }
+    return result;
+  };
+}
+
+module.exports = createAggregator;
+
+},{"lodash._basecallback":239,"lodash._baseeach":243,"lodash.isarray":413}],239:[function(require,module,exports){
+/**
+ * lodash 3.2.1 (Custom Build) <https://lodash.com/>
+ * Build: `lodash modern modularize exports="npm" -o ./`
+ * Copyright 2012-2015 The Dojo Foundation <http://dojofoundation.org/>
+ * Based on Underscore.js 1.8.3 <http://underscorejs.org/LICENSE>
+ * Copyright 2009-2015 Jeremy Ashkenas, DocumentCloud and Investigative Reporters & Editors
+ * Available under MIT license <https://lodash.com/license>
+ */
+var baseIsEqual = require('lodash._baseisequal'),
+    bindCallback = require('lodash._bindcallback'),
+    isArray = require('lodash.isarray'),
+    keys = require('lodash.keys');
+
+/** Used to match property names within property paths. */
+var reIsDeepProp = /\.|\[(?:[^[\]]*|(["'])(?:(?!\1)[^\n\\]|\\.)*?\1)\]/,
+    reIsPlainProp = /^\w*$/,
+    rePropName = /[^.[\]]+|\[(?:(-?\d+(?:\.\d+)?)|(["'])((?:(?!\2)[^\n\\]|\\.)*?)\2)\]/g;
+
+/** Used to match backslashes in property paths. */
+var reEscapeChar = /\\(\\)?/g;
+
+/**
+ * Converts `value` to a string if it is not one. An empty string is returned
+ * for `null` or `undefined` values.
+ *
+ * @private
+ * @param {*} value The value to process.
+ * @returns {string} Returns the string.
+ */
+function baseToString(value) {
+  if (typeof value == 'string') {
+    return value;
+  }
+  return value == null ? '' : (value + '');
+}
+
+/**
+ * The base implementation of `_.callback` which supports specifying the
+ * number of arguments to provide to `func`.
+ *
+ * @private
+ * @param {*} [func=_.identity] The value to convert to a callback.
+ * @param {*} [thisArg] The `this` binding of `func`.
+ * @param {number} [argCount] The number of arguments to provide to `func`.
+ * @returns {Function} Returns the callback.
+ */
+function baseCallback(func, thisArg, argCount) {
+  var type = typeof func;
+  if (type == 'function') {
+    return thisArg === undefined
+      ? func
+      : bindCallback(func, thisArg, argCount);
+  }
+  if (func == null) {
+    return identity;
+  }
+  if (type == 'object') {
+    return baseMatches(func);
+  }
+  return thisArg === undefined
+    ? property(func)
+    : baseMatchesProperty(func, thisArg);
+}
+
+/**
+ * The base implementation of `get` without support for string paths
+ * and default values.
+ *
+ * @private
+ * @param {Object} object The object to query.
+ * @param {Array} path The path of the property to get.
+ * @param {string} [pathKey] The key representation of path.
+ * @returns {*} Returns the resolved value.
+ */
+function baseGet(object, path, pathKey) {
+  if (object == null) {
+    return;
+  }
+  if (pathKey !== undefined && pathKey in toObject(object)) {
+    path = [pathKey];
+  }
+  var index = -1,
+      length = path.length;
+
+  while (object != null && ++index < length) {
+    object = object[path[index]];
+  }
+  return (index && index == length) ? object : undefined;
+}
+
+/**
+ * The base implementation of `_.isMatch` without support for callback
+ * shorthands and `this` binding.
+ *
+ * @private
+ * @param {Object} object The object to inspect.
+ * @param {Array} props The source property names to match.
+ * @param {Array} values The source values to match.
+ * @param {Array} strictCompareFlags Strict comparison flags for source values.
+ * @param {Function} [customizer] The function to customize comparing objects.
+ * @returns {boolean} Returns `true` if `object` is a match, else `false`.
+ */
+function baseIsMatch(object, props, values, strictCompareFlags, customizer) {
+  var index = -1,
+      length = props.length,
+      noCustomizer = !customizer;
+
+  while (++index < length) {
+    if ((noCustomizer && strictCompareFlags[index])
+          ? values[index] !== object[props[index]]
+          : !(props[index] in object)
+        ) {
+      return false;
+    }
+  }
+  index = -1;
+  while (++index < length) {
+    var key = props[index],
+        objValue = object[key],
+        srcValue = values[index];
+
+    if (noCustomizer && strictCompareFlags[index]) {
+      var result = objValue !== undefined || (key in object);
+    } else {
+      result = customizer ? customizer(objValue, srcValue, key) : undefined;
+      if (result === undefined) {
+        result = baseIsEqual(srcValue, objValue, customizer, true);
+      }
+    }
+    if (!result) {
+      return false;
+    }
+  }
+  return true;
+}
+
+/**
+ * The base implementation of `_.matches` which does not clone `source`.
+ *
+ * @private
+ * @param {Object} source The object of property values to match.
+ * @returns {Function} Returns the new function.
+ */
+function baseMatches(source) {
+  var props = keys(source),
+      length = props.length;
+
+  if (!length) {
+    return constant(true);
+  }
+  if (length == 1) {
+    var key = props[0],
+        value = source[key];
+
+    if (isStrictComparable(value)) {
+      return function(object) {
+        if (object == null) {
+          return false;
+        }
+        return object[key] === value && (value !== undefined || (key in toObject(object)));
+      };
+    }
+  }
+  var values = Array(length),
+      strictCompareFlags = Array(length);
+
+  while (length--) {
+    value = source[props[length]];
+    values[length] = value;
+    strictCompareFlags[length] = isStrictComparable(value);
+  }
+  return function(object) {
+    return object != null && baseIsMatch(toObject(object), props, values, strictCompareFlags);
+  };
+}
+
+/**
+ * The base implementation of `_.matchesProperty` which does not which does
+ * not clone `value`.
+ *
+ * @private
+ * @param {string} path The path of the property to get.
+ * @param {*} value The value to compare.
+ * @returns {Function} Returns the new function.
+ */
+function baseMatchesProperty(path, value) {
+  var isArr = isArray(path),
+      isCommon = isKey(path) && isStrictComparable(value),
+      pathKey = (path + '');
+
+  path = toPath(path);
+  return function(object) {
+    if (object == null) {
+      return false;
+    }
+    var key = pathKey;
+    object = toObject(object);
+    if ((isArr || !isCommon) && !(key in object)) {
+      object = path.length == 1 ? object : baseGet(object, baseSlice(path, 0, -1));
+      if (object == null) {
+        return false;
+      }
+      key = last(path);
+      object = toObject(object);
+    }
+    return object[key] === value
+      ? (value !== undefined || (key in object))
+      : baseIsEqual(value, object[key], null, true);
+  };
+}
+
+/**
+ * The base implementation of `_.property` without support for deep paths.
+ *
+ * @private
+ * @param {string} key The key of the property to get.
+ * @returns {Function} Returns the new function.
+ */
+function baseProperty(key) {
+  return function(object) {
+    return object == null ? undefined : object[key];
+  };
+}
+
+/**
+ * A specialized version of `baseProperty` which supports deep paths.
+ *
+ * @private
+ * @param {Array|string} path The path of the property to get.
+ * @returns {Function} Returns the new function.
+ */
+function basePropertyDeep(path) {
+  var pathKey = (path + '');
+  path = toPath(path);
+  return function(object) {
+    return baseGet(object, path, pathKey);
+  };
+}
+
+/**
+ * The base implementation of `_.slice` without an iteratee call guard.
+ *
+ * @private
+ * @param {Array} array The array to slice.
+ * @param {number} [start=0] The start position.
+ * @param {number} [end=array.length] The end position.
+ * @returns {Array} Returns the slice of `array`.
+ */
+function baseSlice(array, start, end) {
+  var index = -1,
+      length = array.length;
+
+  start = start == null ? 0 : (+start || 0);
+  if (start < 0) {
+    start = -start > length ? 0 : (length + start);
+  }
+  end = (end === undefined || end > length) ? length : (+end || 0);
+  if (end < 0) {
+    end += length;
+  }
+  length = start > end ? 0 : ((end - start) >>> 0);
+  start >>>= 0;
+
+  var result = Array(length);
+  while (++index < length) {
+    result[index] = array[index + start];
+  }
+  return result;
+}
+
+/**
+ * Checks if `value` is a property name and not a property path.
+ *
+ * @private
+ * @param {*} value The value to check.
+ * @param {Object} [object] The object to query keys on.
+ * @returns {boolean} Returns `true` if `value` is a property name, else `false`.
+ */
+function isKey(value, object) {
+  var type = typeof value;
+  if ((type == 'string' && reIsPlainProp.test(value)) || type == 'number') {
+    return true;
+  }
+  if (isArray(value)) {
+    return false;
+  }
+  var result = !reIsDeepProp.test(value);
+  return result || (object != null && value in toObject(object));
+}
+
+/**
+ * Checks if `value` is suitable for strict equality comparisons, i.e. `===`.
+ *
+ * @private
+ * @param {*} value The value to check.
+ * @returns {boolean} Returns `true` if `value` if suitable for strict
+ *  equality comparisons, else `false`.
+ */
+function isStrictComparable(value) {
+  return value === value && !isObject(value);
+}
+
+/**
+ * Converts `value` to an object if it is not one.
+ *
+ * @private
+ * @param {*} value The value to process.
+ * @returns {Object} Returns the object.
+ */
+function toObject(value) {
+  return isObject(value) ? value : Object(value);
+}
+
+/**
+ * Converts `value` to property path array if it is not one.
+ *
+ * @private
+ * @param {*} value The value to process.
+ * @returns {Array} Returns the property path array.
+ */
+function toPath(value) {
+  if (isArray(value)) {
+    return value;
+  }
+  var result = [];
+  baseToString(value).replace(rePropName, function(match, number, quote, string) {
+    result.push(quote ? string.replace(reEscapeChar, '$1') : (number || match));
+  });
+  return result;
+}
+
+/**
+ * Gets the last element of `array`.
+ *
+ * @static
+ * @memberOf _
+ * @category Array
+ * @param {Array} array The array to query.
+ * @returns {*} Returns the last element of `array`.
+ * @example
+ *
+ * _.last([1, 2, 3]);
+ * // => 3
+ */
+function last(array) {
+  var length = array ? array.length : 0;
+  return length ? array[length - 1] : undefined;
+}
+
+/**
+ * Checks if `value` is the [language type](https://es5.github.io/#x8) of `Object`.
+ * (e.g. arrays, functions, objects, regexes, `new Number(0)`, and `new String('')`)
+ *
+ * @static
+ * @memberOf _
+ * @category Lang
+ * @param {*} value The value to check.
+ * @returns {boolean} Returns `true` if `value` is an object, else `false`.
+ * @example
+ *
+ * _.isObject({});
+ * // => true
+ *
+ * _.isObject([1, 2, 3]);
+ * // => true
+ *
+ * _.isObject(1);
+ * // => false
+ */
+function isObject(value) {
+  // Avoid a V8 JIT bug in Chrome 19-20.
+  // See https://code.google.com/p/v8/issues/detail?id=2291 for more details.
+  var type = typeof value;
+  return type == 'function' || (!!value && type == 'object');
+}
+
+/**
+ * Creates a function that returns `value`.
+ *
+ * @static
+ * @memberOf _
+ * @category Utility
+ * @param {*} value The value to return from the new function.
+ * @returns {Function} Returns the new function.
+ * @example
+ *
+ * var object = { 'user': 'fred' };
+ * var getter = _.constant(object);
+ *
+ * getter() === object;
+ * // => true
+ */
+function constant(value) {
+  return function() {
+    return value;
+  };
+}
+
+/**
+ * This method returns the first argument provided to it.
+ *
+ * @static
+ * @memberOf _
+ * @category Utility
+ * @param {*} value Any value.
+ * @returns {*} Returns `value`.
+ * @example
+ *
+ * var object = { 'user': 'fred' };
+ *
+ * _.identity(object) === object;
+ * // => true
+ */
+function identity(value) {
+  return value;
+}
+
+/**
+ * Creates a function which returns the property value at `path` on a
+ * given object.
+ *
+ * @static
+ * @memberOf _
+ * @category Utility
+ * @param {Array|string} path The path of the property to get.
+ * @returns {Function} Returns the new function.
+ * @example
+ *
+ * var objects = [
+ *   { 'a': { 'b': { 'c': 2 } } },
+ *   { 'a': { 'b': { 'c': 1 } } }
+ * ];
+ *
+ * _.map(objects, _.property('a.b.c'));
+ * // => [2, 1]
+ *
+ * _.pluck(_.sortBy(objects, _.property(['a', 'b', 'c'])), 'a.b.c');
+ * // => [1, 2]
+ */
+function property(path) {
+  return isKey(path) ? baseProperty(path) : basePropertyDeep(path);
+}
+
+module.exports = baseCallback;
+
+},{"lodash._baseisequal":240,"lodash._bindcallback":242,"lodash.isarray":413,"lodash.keys":418}],240:[function(require,module,exports){
 arguments[4][192][0].apply(exports,arguments)
-},{"dup":192,"lodash._arrayevery":588,"lodash._basecallback":589,"lodash._baseeach":593,"lodash._isiterateecall":594,"lodash.isarray":753,"lodash.keys":758}],588:[function(require,module,exports){
+},{"dup":192,"lodash.isarray":413,"lodash.istypedarray":241,"lodash.keys":418}],241:[function(require,module,exports){
 arguments[4][193][0].apply(exports,arguments)
-},{"dup":193}],589:[function(require,module,exports){
-arguments[4][169][0].apply(exports,arguments)
-},{"dup":169,"lodash._baseisequal":590,"lodash._bindcallback":592,"lodash.isarray":753,"lodash.keys":758}],590:[function(require,module,exports){
-arguments[4][170][0].apply(exports,arguments)
-},{"dup":170,"lodash.isarray":753,"lodash.istypedarray":591,"lodash.keys":758}],591:[function(require,module,exports){
-arguments[4][171][0].apply(exports,arguments)
-},{"dup":171}],592:[function(require,module,exports){
+},{"dup":193}],242:[function(require,module,exports){
 arguments[4][56][0].apply(exports,arguments)
-},{"dup":56}],593:[function(require,module,exports){
+},{"dup":56}],243:[function(require,module,exports){
 arguments[4][87][0].apply(exports,arguments)
-},{"dup":87,"lodash.keys":758}],594:[function(require,module,exports){
+},{"dup":87,"lodash.keys":418}],244:[function(require,module,exports){
+/**
+ * lodash 3.0.0 (Custom Build) <https://lodash.com/>
+ * Build: `lodash modern modularize exports="npm" -o ./`
+ * Copyright 2012-2015 The Dojo Foundation <http://dojofoundation.org/>
+ * Based on Underscore.js 1.7.0 <http://underscorejs.org/LICENSE>
+ * Copyright 2009-2015 Jeremy Ashkenas, DocumentCloud and Investigative Reporters & Editors
+ * Available under MIT license <https://lodash.com/license>
+ */
+var baseSlice = require('lodash._baseslice'),
+    isIterateeCall = require('lodash._isiterateecall');
+
+/**
+ * Creates a slice of `array` with `n` elements dropped from the beginning.
+ *
+ * @static
+ * @memberOf _
+ * @type Function
+ * @category Array
+ * @param {Array} array The array to query.
+ * @param {number} [n=1] The number of elements to drop.
+ * @param- {Object} [guard] Enables use as a callback for functions like `_.map`.
+ * @returns {Array} Returns the slice of `array`.
+ * @example
+ *
+ * _.drop([1, 2, 3]);
+ * // => [2, 3]
+ *
+ * _.drop([1, 2, 3], 2);
+ * // => [3]
+ *
+ * _.drop([1, 2, 3], 5);
+ * // => []
+ *
+ * _.drop([1, 2, 3], 0);
+ * // => [1, 2, 3]
+ */
+function drop(array, n, guard) {
+  var length = array ? array.length : 0;
+  if (!length) {
+    return [];
+  }
+  if (guard ? isIterateeCall(array, n, guard) : n == null) {
+    n = 1;
+  }
+  return baseSlice(array, n < 0 ? 0 : n);
+}
+
+module.exports = drop;
+
+},{"lodash._baseslice":245,"lodash._isiterateecall":246}],245:[function(require,module,exports){
+arguments[4][181][0].apply(exports,arguments)
+},{"dup":181}],246:[function(require,module,exports){
 arguments[4][57][0].apply(exports,arguments)
-},{"dup":57}],595:[function(require,module,exports){
-arguments[4][204][0].apply(exports,arguments)
-},{"dup":204,"lodash._arrayfilter":596,"lodash._basecallback":597,"lodash._basefilter":601,"lodash.isarray":753,"lodash.keys":758}],596:[function(require,module,exports){
-arguments[4][205][0].apply(exports,arguments)
-},{"dup":205}],597:[function(require,module,exports){
-arguments[4][169][0].apply(exports,arguments)
-},{"dup":169,"lodash._baseisequal":598,"lodash._bindcallback":600,"lodash.isarray":753,"lodash.keys":758}],598:[function(require,module,exports){
-arguments[4][170][0].apply(exports,arguments)
-},{"dup":170,"lodash.isarray":753,"lodash.istypedarray":599,"lodash.keys":758}],599:[function(require,module,exports){
-arguments[4][171][0].apply(exports,arguments)
-},{"dup":171}],600:[function(require,module,exports){
+},{"dup":57}],247:[function(require,module,exports){
+/**
+ * lodash 3.2.1 (Custom Build) <https://lodash.com/>
+ * Build: `lodash modern modularize exports="npm" -o ./`
+ * Copyright 2012-2015 The Dojo Foundation <http://dojofoundation.org/>
+ * Based on Underscore.js 1.8.3 <http://underscorejs.org/LICENSE>
+ * Copyright 2009-2015 Jeremy Ashkenas, DocumentCloud and Investigative Reporters & Editors
+ * Available under MIT license <https://lodash.com/license>
+ */
+var arrayEvery = require('lodash._arrayevery'),
+    baseCallback = require('lodash._basecallback'),
+    baseEach = require('lodash._baseeach'),
+    isIterateeCall = require('lodash._isiterateecall'),
+    isArray = require('lodash.isarray'),
+    keys = require('lodash.keys');
+
+/**
+ * The base implementation of `_.every` without support for callback
+ * shorthands and `this` binding.
+ *
+ * @private
+ * @param {Array|Object|string} collection The collection to iterate over.
+ * @param {Function} predicate The function invoked per iteration.
+ * @returns {boolean} Returns `true` if all elements pass the predicate check,
+ *  else `false`
+ */
+function baseEvery(collection, predicate) {
+  var result = true;
+  baseEach(collection, function(value, index, collection) {
+    result = !!predicate(value, index, collection);
+    return result;
+  });
+  return result;
+}
+
+/**
+ * Checks if `predicate` returns truthy for **all** elements of `collection`.
+ * The predicate is bound to `thisArg` and invoked with three arguments:
+ * (value, index|key, collection).
+ *
+ * If a property name is provided for `predicate` the created `_.property`
+ * style callback returns the property value of the given element.
+ *
+ * If a value is also provided for `thisArg` the created `_.matchesProperty`
+ * style callback returns `true` for elements that have a matching property
+ * value, else `false`.
+ *
+ * If an object is provided for `predicate` the created `_.matches` style
+ * callback returns `true` for elements that have the properties of the given
+ * object, else `false`.
+ *
+ * @static
+ * @memberOf _
+ * @alias all
+ * @category Collection
+ * @param {Array|Object|string} collection The collection to iterate over.
+ * @param {Function|Object|string} [predicate=_.identity] The function invoked
+ *  per iteration.
+ * @param {*} [thisArg] The `this` binding of `predicate`.
+ * @returns {boolean} Returns `true` if all elements pass the predicate check,
+ *  else `false`.
+ * @example
+ *
+ * _.every([true, 1, null, 'yes'], Boolean);
+ * // => false
+ *
+ * var users = [
+ *   { 'user': 'barney', 'active': false },
+ *   { 'user': 'fred',   'active': false }
+ * ];
+ *
+ * // using the `_.matches` callback shorthand
+ * _.every(users, { 'user': 'barney', 'active': false });
+ * // => false
+ *
+ * // using the `_.matchesProperty` callback shorthand
+ * _.every(users, 'active', false);
+ * // => true
+ *
+ * // using the `_.property` callback shorthand
+ * _.every(users, 'active');
+ * // => false
+ */
+function every(collection, predicate, thisArg) {
+  var func = isArray(collection) ? arrayEvery : baseEvery;
+  if (thisArg && isIterateeCall(collection, predicate, thisArg)) {
+    predicate = null;
+  }
+  if (typeof predicate != 'function' || thisArg !== undefined) {
+    predicate = baseCallback(predicate, thisArg, 3);
+  }
+  return func(collection, predicate);
+}
+
+module.exports = every;
+
+},{"lodash._arrayevery":248,"lodash._basecallback":249,"lodash._baseeach":253,"lodash._isiterateecall":254,"lodash.isarray":413,"lodash.keys":418}],248:[function(require,module,exports){
+/**
+ * lodash 3.0.0 (Custom Build) <https://lodash.com/>
+ * Build: `lodash modern modularize exports="npm" -o ./`
+ * Copyright 2012-2015 The Dojo Foundation <http://dojofoundation.org/>
+ * Based on Underscore.js 1.7.0 <http://underscorejs.org/LICENSE>
+ * Copyright 2009-2015 Jeremy Ashkenas, DocumentCloud and Investigative Reporters & Editors
+ * Available under MIT license <https://lodash.com/license>
+ */
+
+/**
+ * A specialized version of `_.every` for arrays without support for callback
+ * shorthands or `this` binding.
+ *
+ * @private
+ * @param {Array} array The array to iterate over.
+ * @param {Function} predicate The function invoked per iteration.
+ * @returns {boolean} Returns `true` if all elements pass the predicate check,
+ *  else `false`.
+ */
+function arrayEvery(array, predicate) {
+  var index = -1,
+      length = array.length;
+
+  while (++index < length) {
+    if (!predicate(array[index], index, array)) {
+      return false;
+    }
+  }
+  return true;
+}
+
+module.exports = arrayEvery;
+
+},{}],249:[function(require,module,exports){
+arguments[4][239][0].apply(exports,arguments)
+},{"dup":239,"lodash._baseisequal":250,"lodash._bindcallback":252,"lodash.isarray":413,"lodash.keys":418}],250:[function(require,module,exports){
+arguments[4][192][0].apply(exports,arguments)
+},{"dup":192,"lodash.isarray":413,"lodash.istypedarray":251,"lodash.keys":418}],251:[function(require,module,exports){
+arguments[4][193][0].apply(exports,arguments)
+},{"dup":193}],252:[function(require,module,exports){
 arguments[4][56][0].apply(exports,arguments)
-},{"dup":56}],601:[function(require,module,exports){
-arguments[4][210][0].apply(exports,arguments)
-},{"dup":210,"lodash._baseeach":602}],602:[function(require,module,exports){
+},{"dup":56}],253:[function(require,module,exports){
 arguments[4][87][0].apply(exports,arguments)
-},{"dup":87,"lodash.keys":758}],603:[function(require,module,exports){
-arguments[4][216][0].apply(exports,arguments)
-},{"dup":216,"lodash._basecallback":604,"lodash._baseeach":608,"lodash._basefind":609,"lodash._basefindindex":610,"lodash.isarray":753,"lodash.keys":758}],604:[function(require,module,exports){
-arguments[4][169][0].apply(exports,arguments)
-},{"dup":169,"lodash._baseisequal":605,"lodash._bindcallback":607,"lodash.isarray":753,"lodash.keys":758}],605:[function(require,module,exports){
-arguments[4][170][0].apply(exports,arguments)
-},{"dup":170,"lodash.isarray":753,"lodash.istypedarray":606,"lodash.keys":758}],606:[function(require,module,exports){
-arguments[4][171][0].apply(exports,arguments)
-},{"dup":171}],607:[function(require,module,exports){
-arguments[4][56][0].apply(exports,arguments)
-},{"dup":56}],608:[function(require,module,exports){
-arguments[4][87][0].apply(exports,arguments)
-},{"dup":87,"lodash.keys":758}],609:[function(require,module,exports){
-arguments[4][222][0].apply(exports,arguments)
-},{"dup":222}],610:[function(require,module,exports){
-arguments[4][223][0].apply(exports,arguments)
-},{"dup":223}],611:[function(require,module,exports){
-arguments[4][236][0].apply(exports,arguments)
-},{"dup":236,"lodash._createaggregator":612,"lodash.keys":758}],612:[function(require,module,exports){
-arguments[4][168][0].apply(exports,arguments)
-},{"dup":168,"lodash._basecallback":613,"lodash._baseeach":617,"lodash.isarray":753}],613:[function(require,module,exports){
-arguments[4][169][0].apply(exports,arguments)
-},{"dup":169,"lodash._baseisequal":614,"lodash._bindcallback":616,"lodash.isarray":753,"lodash.keys":758}],614:[function(require,module,exports){
-arguments[4][170][0].apply(exports,arguments)
-},{"dup":170,"lodash.isarray":753,"lodash.istypedarray":615,"lodash.keys":758}],615:[function(require,module,exports){
-arguments[4][171][0].apply(exports,arguments)
-},{"dup":171}],616:[function(require,module,exports){
-arguments[4][56][0].apply(exports,arguments)
-},{"dup":56}],617:[function(require,module,exports){
-arguments[4][87][0].apply(exports,arguments)
-},{"dup":87,"lodash.keys":758}],618:[function(require,module,exports){
-arguments[4][257][0].apply(exports,arguments)
-},{"dup":257,"lodash._createaggregator":619,"lodash.keys":758}],619:[function(require,module,exports){
-arguments[4][168][0].apply(exports,arguments)
-},{"dup":168,"lodash._basecallback":620,"lodash._baseeach":624,"lodash.isarray":753}],620:[function(require,module,exports){
-arguments[4][169][0].apply(exports,arguments)
-},{"dup":169,"lodash._baseisequal":621,"lodash._bindcallback":623,"lodash.isarray":753,"lodash.keys":758}],621:[function(require,module,exports){
-arguments[4][170][0].apply(exports,arguments)
-},{"dup":170,"lodash.isarray":753,"lodash.istypedarray":622,"lodash.keys":758}],622:[function(require,module,exports){
-arguments[4][171][0].apply(exports,arguments)
-},{"dup":171}],623:[function(require,module,exports){
-arguments[4][56][0].apply(exports,arguments)
-},{"dup":56}],624:[function(require,module,exports){
-arguments[4][87][0].apply(exports,arguments)
-},{"dup":87,"lodash.keys":758}],625:[function(require,module,exports){
-arguments[4][269][0].apply(exports,arguments)
-},{"dup":269,"lodash._baseindexof":626,"lodash._binaryindex":627}],626:[function(require,module,exports){
-arguments[4][114][0].apply(exports,arguments)
-},{"dup":114}],627:[function(require,module,exports){
-arguments[4][271][0].apply(exports,arguments)
-},{"dup":271,"lodash._binaryindexby":628}],628:[function(require,module,exports){
-arguments[4][272][0].apply(exports,arguments)
-},{"dup":272}],629:[function(require,module,exports){
-arguments[4][273][0].apply(exports,arguments)
-},{"dup":273,"lodash._baseslice":630,"lodash._isiterateecall":631}],630:[function(require,module,exports){
-arguments[4][161][0].apply(exports,arguments)
-},{"dup":161}],631:[function(require,module,exports){
+},{"dup":87,"lodash.keys":418}],254:[function(require,module,exports){
 arguments[4][57][0].apply(exports,arguments)
-},{"dup":57}],632:[function(require,module,exports){
-arguments[4][276][0].apply(exports,arguments)
-},{"dup":276,"lodash._baseeach":633,"lodash._invokepath":634,"lodash.isarray":753,"lodash.restparam":638}],633:[function(require,module,exports){
+},{"dup":57}],255:[function(require,module,exports){
+/**
+ * lodash 3.1.0 (Custom Build) <https://lodash.com/>
+ * Build: `lodash modern modularize exports="npm" -o ./`
+ * Copyright 2012-2015 The Dojo Foundation <http://dojofoundation.org/>
+ * Based on Underscore.js 1.8.2 <http://underscorejs.org/LICENSE>
+ * Copyright 2009-2015 Jeremy Ashkenas, DocumentCloud and Investigative Reporters & Editors
+ * Available under MIT license <https://lodash.com/license>
+ */
+var arrayFilter = require('lodash._arrayfilter'),
+    baseCallback = require('lodash._basecallback'),
+    baseFilter = require('lodash._basefilter'),
+    isArray = require('lodash.isarray'),
+    keys = require('lodash.keys');
+
+/**
+ * Iterates over elements of `collection`, returning an array of all elements
+ * `predicate` returns truthy for. The predicate is bound to `thisArg` and
+ * invoked with three arguments: (value, index|key, collection).
+ *
+ * If a property name is provided for `predicate` the created `_.property`
+ * style callback returns the property value of the given element.
+ *
+ * If a value is also provided for `thisArg` the created `_.matchesProperty`
+ * style callback returns `true` for elements that have a matching property
+ * value, else `false`.
+ *
+ * If an object is provided for `predicate` the created `_.matches` style
+ * callback returns `true` for elements that have the properties of the given
+ * object, else `false`.
+ *
+ * @static
+ * @memberOf _
+ * @alias select
+ * @category Collection
+ * @param {Array|Object|string} collection The collection to iterate over.
+ * @param {Function|Object|string} [predicate=_.identity] The function invoked
+ *  per iteration.
+ * @param {*} [thisArg] The `this` binding of `predicate`.
+ * @returns {Array} Returns the new filtered array.
+ * @example
+ *
+ * _.filter([4, 5, 6], function(n) {
+ *   return n % 2 == 0;
+ * });
+ * // => [4, 6]
+ *
+ * var users = [
+ *   { 'user': 'barney', 'age': 36, 'active': true },
+ *   { 'user': 'fred',   'age': 40, 'active': false }
+ * ];
+ *
+ * // using the `_.matches` callback shorthand
+ * _.pluck(_.filter(users, { 'age': 36, 'active': true }), 'user');
+ * // => ['barney']
+ *
+ * // using the `_.matchesProperty` callback shorthand
+ * _.pluck(_.filter(users, 'active', false), 'user');
+ * // => ['fred']
+ *
+ * // using the `_.property` callback shorthand
+ * _.pluck(_.filter(users, 'active'), 'user');
+ * // => ['barney']
+ */
+function filter(collection, predicate, thisArg) {
+  var func = isArray(collection) ? arrayFilter : baseFilter;
+  predicate = baseCallback(predicate, thisArg, 3);
+  return func(collection, predicate);
+}
+
+module.exports = filter;
+
+},{"lodash._arrayfilter":256,"lodash._basecallback":257,"lodash._basefilter":261,"lodash.isarray":413,"lodash.keys":418}],256:[function(require,module,exports){
+/**
+ * lodash 3.0.0 (Custom Build) <https://lodash.com/>
+ * Build: `lodash modern modularize exports="npm" -o ./`
+ * Copyright 2012-2015 The Dojo Foundation <http://dojofoundation.org/>
+ * Based on Underscore.js 1.7.0 <http://underscorejs.org/LICENSE>
+ * Copyright 2009-2015 Jeremy Ashkenas, DocumentCloud and Investigative Reporters & Editors
+ * Available under MIT license <https://lodash.com/license>
+ */
+
+/**
+ * A specialized version of `_.filter` for arrays without support for callback
+ * shorthands or `this` binding.
+ *
+ * @private
+ * @param {Array} array The array to iterate over.
+ * @param {Function} predicate The function invoked per iteration.
+ * @returns {Array} Returns the new filtered array.
+ */
+function arrayFilter(array, predicate) {
+  var index = -1,
+      length = array.length,
+      resIndex = -1,
+      result = [];
+
+  while (++index < length) {
+    var value = array[index];
+    if (predicate(value, index, array)) {
+      result[++resIndex] = value;
+    }
+  }
+  return result;
+}
+
+module.exports = arrayFilter;
+
+},{}],257:[function(require,module,exports){
+arguments[4][239][0].apply(exports,arguments)
+},{"dup":239,"lodash._baseisequal":258,"lodash._bindcallback":260,"lodash.isarray":413,"lodash.keys":418}],258:[function(require,module,exports){
+arguments[4][192][0].apply(exports,arguments)
+},{"dup":192,"lodash.isarray":413,"lodash.istypedarray":259,"lodash.keys":418}],259:[function(require,module,exports){
+arguments[4][193][0].apply(exports,arguments)
+},{"dup":193}],260:[function(require,module,exports){
+arguments[4][56][0].apply(exports,arguments)
+},{"dup":56}],261:[function(require,module,exports){
+/**
+ * lodash 3.0.0 (Custom Build) <https://lodash.com/>
+ * Build: `lodash modern modularize exports="npm" -o ./`
+ * Copyright 2012-2015 The Dojo Foundation <http://dojofoundation.org/>
+ * Based on Underscore.js 1.7.0 <http://underscorejs.org/LICENSE>
+ * Copyright 2009-2015 Jeremy Ashkenas, DocumentCloud and Investigative Reporters & Editors
+ * Available under MIT license <https://lodash.com/license>
+ */
+var baseEach = require('lodash._baseeach');
+
+/**
+ * The base implementation of `_.filter` without support for callback
+ * shorthands or `this` binding.
+ *
+ * @private
+ * @param {Array|Object|string} collection The collection to iterate over.
+ * @param {Function} predicate The function invoked per iteration.
+ * @returns {Array} Returns the new filtered array.
+ */
+function baseFilter(collection, predicate) {
+  var result = [];
+  baseEach(collection, function(value, index, collection) {
+    if (predicate(value, index, collection)) {
+      result.push(value);
+    }
+  });
+  return result;
+}
+
+module.exports = baseFilter;
+
+},{"lodash._baseeach":262}],262:[function(require,module,exports){
 arguments[4][87][0].apply(exports,arguments)
-},{"dup":87,"lodash.keys":758}],634:[function(require,module,exports){
-arguments[4][281][0].apply(exports,arguments)
-},{"dup":281,"lodash._baseget":635,"lodash._baseslice":636,"lodash._topath":637,"lodash.isarray":753}],635:[function(require,module,exports){
-arguments[4][160][0].apply(exports,arguments)
-},{"dup":160}],636:[function(require,module,exports){
-arguments[4][161][0].apply(exports,arguments)
-},{"dup":161}],637:[function(require,module,exports){
-arguments[4][162][0].apply(exports,arguments)
-},{"dup":162,"lodash.isarray":753}],638:[function(require,module,exports){
+},{"dup":87,"lodash.keys":418}],263:[function(require,module,exports){
+/**
+ * lodash 3.2.0 (Custom Build) <https://lodash.com/>
+ * Build: `lodash modern modularize exports="npm" -o ./`
+ * Copyright 2012-2015 The Dojo Foundation <http://dojofoundation.org/>
+ * Based on Underscore.js 1.8.2 <http://underscorejs.org/LICENSE>
+ * Copyright 2009-2015 Jeremy Ashkenas, DocumentCloud and Investigative Reporters & Editors
+ * Available under MIT license <https://lodash.com/license>
+ */
+var baseCallback = require('lodash._basecallback'),
+    baseEach = require('lodash._baseeach'),
+    baseFind = require('lodash._basefind'),
+    baseFindIndex = require('lodash._basefindindex'),
+    isArray = require('lodash.isarray'),
+    keys = require('lodash.keys');
+
+/**
+ * Creates a `_.find` or `_.findLast` function.
+ *
+ * @private
+ * @param {Function} eachFunc The function to iterate over a collection.
+ * @param {boolean} [fromRight] Specify iterating from right to left.
+ * @returns {Function} Returns the new find function.
+ */
+function createFind(eachFunc, fromRight) {
+  return function(collection, predicate, thisArg) {
+    predicate = baseCallback(predicate, thisArg, 3);
+    if (isArray(collection)) {
+      var index = baseFindIndex(collection, predicate, fromRight);
+      return index > -1 ? collection[index] : undefined;
+    }
+    return baseFind(collection, predicate, eachFunc);
+  }
+}
+
+/**
+ * Iterates over elements of `collection`, returning the first element
+ * `predicate` returns truthy for. The predicate is bound to `thisArg` and
+ * invoked with three arguments: (value, index|key, collection).
+ *
+ * If a property name is provided for `predicate` the created `_.property`
+ * style callback returns the property value of the given element.
+ *
+ * If a value is also provided for `thisArg` the created `_.matchesProperty`
+ * style callback returns `true` for elements that have a matching property
+ * value, else `false`.
+ *
+ * If an object is provided for `predicate` the created `_.matches` style
+ * callback returns `true` for elements that have the properties of the given
+ * object, else `false`.
+ *
+ * @static
+ * @memberOf _
+ * @alias detect
+ * @category Collection
+ * @param {Array|Object|string} collection The collection to search.
+ * @param {Function|Object|string} [predicate=_.identity] The function invoked
+ *  per iteration.
+ * @param {*} [thisArg] The `this` binding of `predicate`.
+ * @returns {*} Returns the matched element, else `undefined`.
+ * @example
+ *
+ * var users = [
+ *   { 'user': 'barney',  'age': 36, 'active': true },
+ *   { 'user': 'fred',    'age': 40, 'active': false },
+ *   { 'user': 'pebbles', 'age': 1,  'active': true }
+ * ];
+ *
+ * _.result(_.find(users, function(chr) {
+ *   return chr.age < 40;
+ * }), 'user');
+ * // => 'barney'
+ *
+ * // using the `_.matches` callback shorthand
+ * _.result(_.find(users, { 'age': 1, 'active': true }), 'user');
+ * // => 'pebbles'
+ *
+ * // using the `_.matchesProperty` callback shorthand
+ * _.result(_.find(users, 'active', false), 'user');
+ * // => 'fred'
+ *
+ * // using the `_.property` callback shorthand
+ * _.result(_.find(users, 'active'), 'user');
+ * // => 'barney'
+ */
+var find = createFind(baseEach);
+
+module.exports = find;
+
+},{"lodash._basecallback":264,"lodash._baseeach":268,"lodash._basefind":269,"lodash._basefindindex":270,"lodash.isarray":413,"lodash.keys":418}],264:[function(require,module,exports){
+arguments[4][239][0].apply(exports,arguments)
+},{"dup":239,"lodash._baseisequal":265,"lodash._bindcallback":267,"lodash.isarray":413,"lodash.keys":418}],265:[function(require,module,exports){
+arguments[4][192][0].apply(exports,arguments)
+},{"dup":192,"lodash.isarray":413,"lodash.istypedarray":266,"lodash.keys":418}],266:[function(require,module,exports){
+arguments[4][193][0].apply(exports,arguments)
+},{"dup":193}],267:[function(require,module,exports){
+arguments[4][56][0].apply(exports,arguments)
+},{"dup":56}],268:[function(require,module,exports){
+arguments[4][87][0].apply(exports,arguments)
+},{"dup":87,"lodash.keys":418}],269:[function(require,module,exports){
+/**
+ * lodash 3.0.0 (Custom Build) <https://lodash.com/>
+ * Build: `lodash modern modularize exports="npm" -o ./`
+ * Copyright 2012-2015 The Dojo Foundation <http://dojofoundation.org/>
+ * Based on Underscore.js 1.7.0 <http://underscorejs.org/LICENSE>
+ * Copyright 2009-2015 Jeremy Ashkenas, DocumentCloud and Investigative Reporters & Editors
+ * Available under MIT license <https://lodash.com/license>
+ */
+
+/**
+ * The base implementation of `_.find`, `_.findLast`, `_.findKey`, and `_.findLastKey`,
+ * without support for callback shorthands and `this` binding, which iterates
+ * over `collection` using the provided `eachFunc`.
+ *
+ * @private
+ * @param {Array|Object|string} collection The collection to search.
+ * @param {Function} predicate The function invoked per iteration.
+ * @param {Function} eachFunc The function to iterate over `collection`.
+ * @param {boolean} [retKey] Specify returning the key of the found element
+ *  instead of the element itself.
+ * @returns {*} Returns the found element or its key, else `undefined`.
+ */
+function baseFind(collection, predicate, eachFunc, retKey) {
+  var result;
+  eachFunc(collection, function(value, key, collection) {
+    if (predicate(value, key, collection)) {
+      result = retKey ? key : value;
+      return false;
+    }
+  });
+  return result;
+}
+
+module.exports = baseFind;
+
+},{}],270:[function(require,module,exports){
+/**
+ * lodash 3.6.0 (Custom Build) <https://lodash.com/>
+ * Build: `lodash modern modularize exports="npm" -o ./`
+ * Copyright 2012-2015 The Dojo Foundation <http://dojofoundation.org/>
+ * Based on Underscore.js 1.8.2 <http://underscorejs.org/LICENSE>
+ * Copyright 2009-2015 Jeremy Ashkenas, DocumentCloud and Investigative Reporters & Editors
+ * Available under MIT license <https://lodash.com/license>
+ */
+
+/**
+ * The base implementation of `_.findIndex` and `_.findLastIndex` without
+ * support for callback shorthands and `this` binding.
+ *
+ * @private
+ * @param {Array} array The array to search.
+ * @param {Function} predicate The function invoked per iteration.
+ * @param {boolean} [fromRight] Specify iterating from right to left.
+ * @returns {number} Returns the index of the matched value, else `-1`.
+ */
+function baseFindIndex(array, predicate, fromRight) {
+  var length = array.length,
+      index = fromRight ? length : -1;
+
+  while ((fromRight ? index-- : ++index < length)) {
+    if (predicate(array[index], index, array)) {
+      return index;
+    }
+  }
+  return -1;
+}
+
+module.exports = baseFindIndex;
+
+},{}],271:[function(require,module,exports){
+/**
+ * lodash 3.1.0 (Custom Build) <https://lodash.com/>
+ * Build: `lodash modern modularize exports="npm" -o ./`
+ * Copyright 2012-2015 The Dojo Foundation <http://dojofoundation.org/>
+ * Based on Underscore.js 1.8.2 <http://underscorejs.org/LICENSE>
+ * Copyright 2009-2015 Jeremy Ashkenas, DocumentCloud and Investigative Reporters & Editors
+ * Available under MIT license <https://lodash.com/license>
+ */
+var createAggregator = require('lodash._createaggregator'),
+    keys = require('lodash.keys');
+
+/** Used for native method references. */
+var objectProto = Object.prototype;
+
+/** Used to check objects for own properties. */
+var hasOwnProperty = objectProto.hasOwnProperty;
+
+/**
+ * Creates an object composed of keys generated from the results of running
+ * each element of `collection` through `iteratee`. The corresponding value
+ * of each key is an array of the elements responsible for generating the key.
+ * The `iteratee` is bound to `thisArg` and invoked with three arguments:
+ * (value, index|key, collection).
+ *
+ * If a property name is provided for `iteratee` the created `_.property`
+ * style callback returns the property value of the given element.
+ *
+ * If a value is also provided for `thisArg` the created `_.matchesProperty`
+ * style callback returns `true` for elements that have a matching property
+ * value, else `false`.
+ *
+ * If an object is provided for `iteratee` the created `_.matches` style
+ * callback returns `true` for elements that have the properties of the given
+ * object, else `false`.
+ *
+ * @static
+ * @memberOf _
+ * @category Collection
+ * @param {Array|Object|string} collection The collection to iterate over.
+ * @param {Function|Object|string} [iteratee=_.identity] The function invoked
+ *  per iteration.
+ * @param {*} [thisArg] The `this` binding of `iteratee`.
+ * @returns {Object} Returns the composed aggregate object.
+ * @example
+ *
+ * _.groupBy([4.2, 6.1, 6.4], function(n) {
+ *   return Math.floor(n);
+ * });
+ * // => { '4': [4.2], '6': [6.1, 6.4] }
+ *
+ * _.groupBy([4.2, 6.1, 6.4], function(n) {
+ *   return this.floor(n);
+ * }, Math);
+ * // => { '4': [4.2], '6': [6.1, 6.4] }
+ *
+ * // using the `_.property` callback shorthand
+ * _.groupBy(['one', 'two', 'three'], 'length');
+ * // => { '3': ['one', 'two'], '5': ['three'] }
+ */
+var groupBy = createAggregator(function(result, value, key) {
+  if (hasOwnProperty.call(result, key)) {
+    result[key].push(value);
+  } else {
+    result[key] = [value];
+  }
+});
+
+module.exports = groupBy;
+
+},{"lodash._createaggregator":272,"lodash.keys":418}],272:[function(require,module,exports){
+arguments[4][238][0].apply(exports,arguments)
+},{"dup":238,"lodash._basecallback":273,"lodash._baseeach":277,"lodash.isarray":413}],273:[function(require,module,exports){
+arguments[4][239][0].apply(exports,arguments)
+},{"dup":239,"lodash._baseisequal":274,"lodash._bindcallback":276,"lodash.isarray":413,"lodash.keys":418}],274:[function(require,module,exports){
+arguments[4][192][0].apply(exports,arguments)
+},{"dup":192,"lodash.isarray":413,"lodash.istypedarray":275,"lodash.keys":418}],275:[function(require,module,exports){
+arguments[4][193][0].apply(exports,arguments)
+},{"dup":193}],276:[function(require,module,exports){
+arguments[4][56][0].apply(exports,arguments)
+},{"dup":56}],277:[function(require,module,exports){
+arguments[4][87][0].apply(exports,arguments)
+},{"dup":87,"lodash.keys":418}],278:[function(require,module,exports){
+/**
+ * lodash 3.1.0 (Custom Build) <https://lodash.com/>
+ * Build: `lodash modern modularize exports="npm" -o ./`
+ * Copyright 2012-2015 The Dojo Foundation <http://dojofoundation.org/>
+ * Based on Underscore.js 1.8.2 <http://underscorejs.org/LICENSE>
+ * Copyright 2009-2015 Jeremy Ashkenas, DocumentCloud and Investigative Reporters & Editors
+ * Available under MIT license <https://lodash.com/license>
+ */
+var createAggregator = require('lodash._createaggregator'),
+    keys = require('lodash.keys');
+
+/**
+ * Creates an object composed of keys generated from the results of running
+ * each element of `collection` through `iteratee`. The corresponding value
+ * of each key is the last element responsible for generating the key. The
+ * iteratee function is bound to `thisArg` and invoked with three arguments:
+ * (value, index|key, collection).
+ *
+ * If a property name is provided for `iteratee` the created `_.property`
+ * style callback returns the property value of the given element.
+ *
+ * If a value is also provided for `thisArg` the created `_.matchesProperty`
+ * style callback returns `true` for elements that have a matching property
+ * value, else `false`.
+ *
+ * If an object is provided for `iteratee` the created `_.matches` style
+ * callback returns `true` for elements that have the properties of the given
+ * object, else `false`.
+ *
+ * @static
+ * @memberOf _
+ * @category Collection
+ * @param {Array|Object|string} collection The collection to iterate over.
+ * @param {Function|Object|string} [iteratee=_.identity] The function invoked
+ *  per iteration.
+ * @param {*} [thisArg] The `this` binding of `iteratee`.
+ * @returns {Object} Returns the composed aggregate object.
+ * @example
+ *
+ * var keyData = [
+ *   { 'dir': 'left', 'code': 97 },
+ *   { 'dir': 'right', 'code': 100 }
+ * ];
+ *
+ * _.indexBy(keyData, 'dir');
+ * // => { 'left': { 'dir': 'left', 'code': 97 }, 'right': { 'dir': 'right', 'code': 100 } }
+ *
+ * _.indexBy(keyData, function(object) {
+ *   return String.fromCharCode(object.code);
+ * });
+ * // => { 'a': { 'dir': 'left', 'code': 97 }, 'd': { 'dir': 'right', 'code': 100 } }
+ *
+ * _.indexBy(keyData, function(object) {
+ *   return this.fromCharCode(object.code);
+ * }, String);
+ * // => { 'a': { 'dir': 'left', 'code': 97 }, 'd': { 'dir': 'right', 'code': 100 } }
+ */
+var indexBy = createAggregator(function(result, value, key) {
+  result[key] = value;
+});
+
+module.exports = indexBy;
+
+},{"lodash._createaggregator":279,"lodash.keys":418}],279:[function(require,module,exports){
+arguments[4][238][0].apply(exports,arguments)
+},{"dup":238,"lodash._basecallback":280,"lodash._baseeach":284,"lodash.isarray":413}],280:[function(require,module,exports){
+arguments[4][239][0].apply(exports,arguments)
+},{"dup":239,"lodash._baseisequal":281,"lodash._bindcallback":283,"lodash.isarray":413,"lodash.keys":418}],281:[function(require,module,exports){
+arguments[4][192][0].apply(exports,arguments)
+},{"dup":192,"lodash.isarray":413,"lodash.istypedarray":282,"lodash.keys":418}],282:[function(require,module,exports){
+arguments[4][193][0].apply(exports,arguments)
+},{"dup":193}],283:[function(require,module,exports){
+arguments[4][56][0].apply(exports,arguments)
+},{"dup":56}],284:[function(require,module,exports){
+arguments[4][87][0].apply(exports,arguments)
+},{"dup":87,"lodash.keys":418}],285:[function(require,module,exports){
+/**
+ * lodash 3.0.2 (Custom Build) <https://lodash.com/>
+ * Build: `lodash modern modularize exports="npm" -o ./`
+ * Copyright 2012-2015 The Dojo Foundation <http://dojofoundation.org/>
+ * Based on Underscore.js 1.8.2 <http://underscorejs.org/LICENSE>
+ * Copyright 2009-2015 Jeremy Ashkenas, DocumentCloud and Investigative Reporters & Editors
+ * Available under MIT license <https://lodash.com/license>
+ */
+var baseIndexOf = require('lodash._baseindexof'),
+    binaryIndex = require('lodash._binaryindex');
+
+/* Native method references for those with the same name as other `lodash` methods. */
+var nativeMax = Math.max;
+
+/**
+ * Gets the index at which the first occurrence of `value` is found in `array`
+ * using `SameValueZero` for equality comparisons. If `fromIndex` is negative,
+ * it is used as the offset from the end of `array`. If `array` is sorted
+ * providing `true` for `fromIndex` performs a faster binary search.
+ *
+ * **Note:** `SameValueZero` comparisons are like strict equality comparisons,
+ * e.g. `===`, except that `NaN` matches `NaN`. See the
+ * [ES spec](https://people.mozilla.org/~jorendorff/es6-draft.html#sec-samevaluezero)
+ * for more details.
+ *
+ * @static
+ * @memberOf _
+ * @category Array
+ * @param {Array} array The array to search.
+ * @param {*} value The value to search for.
+ * @param {boolean|number} [fromIndex=0] The index to search from or `true`
+ *  to perform a binary search on a sorted array.
+ * @returns {number} Returns the index of the matched value, else `-1`.
+ * @example
+ *
+ * _.indexOf([1, 2, 1, 2], 2);
+ * // => 1
+ *
+ * // using `fromIndex`
+ * _.indexOf([1, 2, 1, 2], 2, 2);
+ * // => 3
+ *
+ * // performing a binary search
+ * _.indexOf([1, 1, 2, 2], 2, true);
+ * // => 2
+ */
+function indexOf(array, value, fromIndex) {
+  var length = array ? array.length : 0;
+  if (!length) {
+    return -1;
+  }
+  if (typeof fromIndex == 'number') {
+    fromIndex = fromIndex < 0 ? nativeMax(length + fromIndex, 0) : fromIndex;
+  } else if (fromIndex) {
+    var index = binaryIndex(array, value),
+        other = array[index];
+
+    if (value === value ? (value === other) : (other !== other)) {
+      return index;
+    }
+    return -1;
+  }
+  return baseIndexOf(array, value, fromIndex || 0);
+}
+
+module.exports = indexOf;
+
+},{"lodash._baseindexof":286,"lodash._binaryindex":287}],286:[function(require,module,exports){
+arguments[4][184][0].apply(exports,arguments)
+},{"dup":184}],287:[function(require,module,exports){
+/**
+ * lodash 3.0.0 (Custom Build) <https://lodash.com/>
+ * Build: `lodash modern modularize exports="npm" -o ./`
+ * Copyright 2012-2015 The Dojo Foundation <http://dojofoundation.org/>
+ * Based on Underscore.js 1.7.0 <http://underscorejs.org/LICENSE>
+ * Copyright 2009-2015 Jeremy Ashkenas, DocumentCloud and Investigative Reporters & Editors
+ * Available under MIT license <https://lodash.com/license>
+ */
+var binaryIndexBy = require('lodash._binaryindexby');
+
+/** Used as references for the maximum length and index of an array. */
+var MAX_ARRAY_LENGTH = Math.pow(2, 32) - 1,
+    HALF_MAX_ARRAY_LENGTH = MAX_ARRAY_LENGTH >>> 1;
+
+/**
+ * Performs a binary search of `array` to determine the index at which `value`
+ * should be inserted into `array` in order to maintain its sort order.
+ *
+ * @private
+ * @param {Array} array The sorted array to inspect.
+ * @param {*} value The value to evaluate.
+ * @param {boolean} [retHighest] Specify returning the highest, instead
+ *  of the lowest, index at which a value should be inserted into `array`.
+ * @returns {number} Returns the index at which `value` should be inserted
+ *  into `array`.
+ */
+function binaryIndex(array, value, retHighest) {
+  var low = 0,
+      high = array ? array.length : low;
+
+  if (typeof value == 'number' && value === value && high <= HALF_MAX_ARRAY_LENGTH) {
+    while (low < high) {
+      var mid = (low + high) >>> 1,
+          computed = array[mid];
+
+      if (retHighest ? (computed <= value) : (computed < value)) {
+        low = mid + 1;
+      } else {
+        high = mid;
+      }
+    }
+    return high;
+  }
+  return binaryIndexBy(array, value, identity, retHighest);
+}
+
+/**
+ * This method returns the first argument provided to it.
+ *
+ * @static
+ * @memberOf _
+ * @category Utility
+ * @param {*} value Any value.
+ * @returns {*} Returns `value`.
+ * @example
+ *
+ * var object = { 'user': 'fred' };
+ * _.identity(object) === object;
+ * // => true
+ */
+function identity(value) {
+  return value;
+}
+
+module.exports = binaryIndex;
+
+},{"lodash._binaryindexby":288}],288:[function(require,module,exports){
+/**
+ * lodash 3.0.1 (Custom Build) <https://lodash.com/>
+ * Build: `lodash modern modularize exports="npm" -o ./`
+ * Copyright 2012-2015 The Dojo Foundation <http://dojofoundation.org/>
+ * Based on Underscore.js 1.8.3 <http://underscorejs.org/LICENSE>
+ * Copyright 2009-2015 Jeremy Ashkenas, DocumentCloud and Investigative Reporters & Editors
+ * Available under MIT license <https://lodash.com/license>
+ */
+
+/** Native method references. */
+var floor = Math.floor;
+
+/* Native method references for those with the same name as other `lodash` methods. */
+var nativeMin = Math.min;
+
+/** Used as references for the maximum length and index of an array. */
+var MAX_ARRAY_LENGTH = Math.pow(2, 32) - 1,
+    MAX_ARRAY_INDEX =  MAX_ARRAY_LENGTH - 1;
+
+/**
+ * This function is like `binaryIndex` except that it invokes `iteratee` for
+ * `value` and each element of `array` to compute their sort ranking. The
+ * iteratee is invoked with one argument; (value).
+ *
+ * @private
+ * @param {Array} array The sorted array to inspect.
+ * @param {*} value The value to evaluate.
+ * @param {Function} iteratee The function invoked per iteration.
+ * @param {boolean} [retHighest] Specify returning the highest qualified index.
+ * @returns {number} Returns the index at which `value` should be inserted
+ *  into `array`.
+ */
+function binaryIndexBy(array, value, iteratee, retHighest) {
+  value = iteratee(value);
+
+  var low = 0,
+      high = array ? array.length : 0,
+      valIsNaN = value !== value,
+      valIsUndef = value === undefined;
+
+  while (low < high) {
+    var mid = floor((low + high) / 2),
+        computed = iteratee(array[mid]),
+        isReflexive = computed === computed;
+
+    if (valIsNaN) {
+      var setLow = isReflexive || retHighest;
+    } else if (valIsUndef) {
+      setLow = isReflexive && (retHighest || computed !== undefined);
+    } else {
+      setLow = retHighest ? (computed <= value) : (computed < value);
+    }
+    if (setLow) {
+      low = mid + 1;
+    } else {
+      high = mid;
+    }
+  }
+  return nativeMin(high, MAX_ARRAY_INDEX);
+}
+
+module.exports = binaryIndexBy;
+
+},{}],289:[function(require,module,exports){
+/**
+ * lodash 3.0.0 (Custom Build) <https://lodash.com/>
+ * Build: `lodash modern modularize exports="npm" -o ./`
+ * Copyright 2012-2015 The Dojo Foundation <http://dojofoundation.org/>
+ * Based on Underscore.js 1.7.0 <http://underscorejs.org/LICENSE>
+ * Copyright 2009-2015 Jeremy Ashkenas, DocumentCloud and Investigative Reporters & Editors
+ * Available under MIT license <https://lodash.com/license>
+ */
+var baseSlice = require('lodash._baseslice'),
+    isIterateeCall = require('lodash._isiterateecall');
+
+/**
+ * Creates a slice of `array` with `n` elements dropped from the end.
+ *
+ * @static
+ * @memberOf _
+ * @type Function
+ * @category Array
+ * @param {Array} array The array to query.
+ * @param {number} [n=1] The number of elements to drop.
+ * @param- {Object} [guard] Enables use as a callback for functions like `_.map`.
+ * @returns {Array} Returns the slice of `array`.
+ * @example
+ *
+ * _.dropRight([1, 2, 3]);
+ * // => [1, 2]
+ *
+ * _.dropRight([1, 2, 3], 2);
+ * // => [1]
+ *
+ * _.dropRight([1, 2, 3], 5);
+ * // => []
+ *
+ * _.dropRight([1, 2, 3], 0);
+ * // => [1, 2, 3]
+ */
+function dropRight(array, n, guard) {
+  var length = array ? array.length : 0;
+  if (!length) {
+    return [];
+  }
+  if (guard ? isIterateeCall(array, n, guard) : n == null) {
+    n = 1;
+  }
+  n = length - (+n || 0);
+  return baseSlice(array, 0, n < 0 ? 0 : n);
+}
+
+/**
+ * Gets all but the last element of `array`.
+ *
+ * @static
+ * @memberOf _
+ * @category Array
+ * @param {Array} array The array to query.
+ * @returns {Array} Returns the slice of `array`.
+ * @example
+ *
+ * _.initial([1, 2, 3]);
+ * // => [1, 2]
+ */
+function initial(array) {
+  return dropRight(array, 1);
+}
+
+module.exports = initial;
+
+},{"lodash._baseslice":290,"lodash._isiterateecall":291}],290:[function(require,module,exports){
+arguments[4][181][0].apply(exports,arguments)
+},{"dup":181}],291:[function(require,module,exports){
+arguments[4][57][0].apply(exports,arguments)
+},{"dup":57}],292:[function(require,module,exports){
+/**
+ * lodash 3.2.1 (Custom Build) <https://lodash.com/>
+ * Build: `lodash modern modularize exports="npm" -o ./`
+ * Copyright 2012-2015 The Dojo Foundation <http://dojofoundation.org/>
+ * Based on Underscore.js 1.8.3 <http://underscorejs.org/LICENSE>
+ * Copyright 2009-2015 Jeremy Ashkenas, DocumentCloud and Investigative Reporters & Editors
+ * Available under MIT license <https://lodash.com/license>
+ */
+var baseEach = require('lodash._baseeach'),
+    invokePath = require('lodash._invokepath'),
+    isArray = require('lodash.isarray'),
+    restParam = require('lodash.restparam');
+
+/** Used to match property names within property paths. */
+var reIsDeepProp = /\.|\[(?:[^[\]]*|(["'])(?:(?!\1)[^\n\\]|\\.)*?\1)\]/,
+    reIsPlainProp = /^\w*$/;
+
+/**
+ * Used as the [maximum length](https://people.mozilla.org/~jorendorff/es6-draft.html#sec-number.max_safe_integer)
+ * of an array-like value.
+ */
+var MAX_SAFE_INTEGER = Math.pow(2, 53) - 1;
+
+/**
+ * The base implementation of `_.property` without support for deep paths.
+ *
+ * @private
+ * @param {string} key The key of the property to get.
+ * @returns {Function} Returns the new function.
+ */
+function baseProperty(key) {
+  return function(object) {
+    return object == null ? undefined : object[key];
+  };
+}
+
+/**
+ * Gets the "length" property value of `object`.
+ *
+ * **Note:** This function is used to avoid a [JIT bug](https://bugs.webkit.org/show_bug.cgi?id=142792)
+ * that affects Safari on at least iOS 8.1-8.3 ARM64.
+ *
+ * @private
+ * @param {Object} object The object to query.
+ * @returns {*} Returns the "length" value.
+ */
+var getLength = baseProperty('length');
+
+/**
+ * Checks if `value` is array-like.
+ *
+ * @private
+ * @param {*} value The value to check.
+ * @returns {boolean} Returns `true` if `value` is array-like, else `false`.
+ */
+function isArrayLike(value) {
+  return value != null && isLength(getLength(value));
+}
+
+/**
+ * Checks if `value` is a property name and not a property path.
+ *
+ * @private
+ * @param {*} value The value to check.
+ * @param {Object} [object] The object to query keys on.
+ * @returns {boolean} Returns `true` if `value` is a property name, else `false`.
+ */
+function isKey(value, object) {
+  var type = typeof value;
+  if ((type == 'string' && reIsPlainProp.test(value)) || type == 'number') {
+    return true;
+  }
+  if (isArray(value)) {
+    return false;
+  }
+  var result = !reIsDeepProp.test(value);
+  return result || (object != null && value in toObject(object));
+}
+
+/**
+ * Checks if `value` is a valid array-like length.
+ *
+ * **Note:** This function is based on [`ToLength`](https://people.mozilla.org/~jorendorff/es6-draft.html#sec-tolength).
+ *
+ * @private
+ * @param {*} value The value to check.
+ * @returns {boolean} Returns `true` if `value` is a valid length, else `false`.
+ */
+function isLength(value) {
+  return typeof value == 'number' && value > -1 && value % 1 == 0 && value <= MAX_SAFE_INTEGER;
+}
+
+/**
+ * Converts `value` to an object if it is not one.
+ *
+ * @private
+ * @param {*} value The value to process.
+ * @returns {Object} Returns the object.
+ */
+function toObject(value) {
+  return isObject(value) ? value : Object(value);
+}
+
+/**
+ * Invokes the method at `path` on each element in `collection`, returning
+ * an array of the results of each invoked method. Any additional arguments
+ * are provided to each invoked method. If `methodName` is a function it is
+ * invoked for, and `this` bound to, each element in `collection`.
+ *
+ * @static
+ * @memberOf _
+ * @category Collection
+ * @param {Array|Object|string} collection The collection to iterate over.
+ * @param {Array|Function|string} path The path of the method to invoke or
+ *  the function invoked per iteration.
+ * @param {...*} [args] The arguments to invoke the method with.
+ * @returns {Array} Returns the array of results.
+ * @example
+ *
+ * _.invoke([[5, 1, 7], [3, 2, 1]], 'sort');
+ * // => [[1, 5, 7], [1, 2, 3]]
+ *
+ * _.invoke([123, 456], String.prototype.split, '');
+ * // => [['1', '2', '3'], ['4', '5', '6']]
+ */
+var invoke = restParam(function(collection, path, args) {
+  var index = -1,
+      isFunc = typeof path == 'function',
+      isProp = isKey(path),
+      result = isArrayLike(collection) ? Array(collection.length) : [];
+
+  baseEach(collection, function(value) {
+    var func = isFunc ? path : (isProp && value != null && value[path]);
+    result[++index] = func ? func.apply(value, args) : invokePath(value, path, args);
+  });
+  return result;
+});
+
+/**
+ * Checks if `value` is the [language type](https://es5.github.io/#x8) of `Object`.
+ * (e.g. arrays, functions, objects, regexes, `new Number(0)`, and `new String('')`)
+ *
+ * @static
+ * @memberOf _
+ * @category Lang
+ * @param {*} value The value to check.
+ * @returns {boolean} Returns `true` if `value` is an object, else `false`.
+ * @example
+ *
+ * _.isObject({});
+ * // => true
+ *
+ * _.isObject([1, 2, 3]);
+ * // => true
+ *
+ * _.isObject(1);
+ * // => false
+ */
+function isObject(value) {
+  // Avoid a V8 JIT bug in Chrome 19-20.
+  // See https://code.google.com/p/v8/issues/detail?id=2291 for more details.
+  var type = typeof value;
+  return type == 'function' || (!!value && type == 'object');
+}
+
+module.exports = invoke;
+
+},{"lodash._baseeach":293,"lodash._invokepath":294,"lodash.isarray":413,"lodash.restparam":298}],293:[function(require,module,exports){
+arguments[4][87][0].apply(exports,arguments)
+},{"dup":87,"lodash.keys":418}],294:[function(require,module,exports){
+/**
+ * lodash 3.7.1 (Custom Build) <https://lodash.com/>
+ * Build: `lodash modern modularize exports="npm" -o ./`
+ * Copyright 2012-2015 The Dojo Foundation <http://dojofoundation.org/>
+ * Based on Underscore.js 1.8.3 <http://underscorejs.org/LICENSE>
+ * Copyright 2009-2015 Jeremy Ashkenas, DocumentCloud and Investigative Reporters & Editors
+ * Available under MIT license <https://lodash.com/license>
+ */
+var baseGet = require('lodash._baseget'),
+    baseSlice = require('lodash._baseslice'),
+    toPath = require('lodash._topath'),
+    isArray = require('lodash.isarray');
+
+/** Used to match property names within property paths. */
+var reIsDeepProp = /\.|\[(?:[^[\]]*|(["'])(?:(?!\1)[^\n\\]|\\.)*?\1)\]/,
+    reIsPlainProp = /^\w*$/;
+
+/**
+ * Invokes the method at `path` on `object`.
+ *
+ * @private
+ * @param {Object} object The object to query.
+ * @param {Array|string} path The path of the method to invoke.
+ * @param {Array} args The arguments to invoke the method with.
+ * @returns {*} Returns the result of the invoked method.
+ */
+function invokePath(object, path, args) {
+  if (object != null && !isKey(path, object)) {
+    path = toPath(path);
+    object = path.length == 1 ? object : baseGet(object, baseSlice(path, 0, -1));
+    path = last(path);
+  }
+  var func = object == null ? object : object[path];
+  return func == null ? undefined : func.apply(object, args);
+}
+
+/**
+ * Checks if `value` is a property name and not a property path.
+ *
+ * @private
+ * @param {*} value The value to check.
+ * @param {Object} [object] The object to query keys on.
+ * @returns {boolean} Returns `true` if `value` is a property name, else `false`.
+ */
+function isKey(value, object) {
+  var type = typeof value;
+  if ((type == 'string' && reIsPlainProp.test(value)) || type == 'number') {
+    return true;
+  }
+  if (isArray(value)) {
+    return false;
+  }
+  var result = !reIsDeepProp.test(value);
+  return result || (object != null && value in toObject(object));
+}
+
+/**
+ * Converts `value` to an object if it is not one.
+ *
+ * @private
+ * @param {*} value The value to process.
+ * @returns {Object} Returns the object.
+ */
+function toObject(value) {
+  return isObject(value) ? value : Object(value);
+}
+
+/**
+ * Gets the last element of `array`.
+ *
+ * @static
+ * @memberOf _
+ * @category Array
+ * @param {Array} array The array to query.
+ * @returns {*} Returns the last element of `array`.
+ * @example
+ *
+ * _.last([1, 2, 3]);
+ * // => 3
+ */
+function last(array) {
+  var length = array ? array.length : 0;
+  return length ? array[length - 1] : undefined;
+}
+
+/**
+ * Checks if `value` is the [language type](https://es5.github.io/#x8) of `Object`.
+ * (e.g. arrays, functions, objects, regexes, `new Number(0)`, and `new String('')`)
+ *
+ * @static
+ * @memberOf _
+ * @category Lang
+ * @param {*} value The value to check.
+ * @returns {boolean} Returns `true` if `value` is an object, else `false`.
+ * @example
+ *
+ * _.isObject({});
+ * // => true
+ *
+ * _.isObject([1, 2, 3]);
+ * // => true
+ *
+ * _.isObject(1);
+ * // => false
+ */
+function isObject(value) {
+  // Avoid a V8 JIT bug in Chrome 19-20.
+  // See https://code.google.com/p/v8/issues/detail?id=2291 for more details.
+  var type = typeof value;
+  return type == 'function' || (!!value && type == 'object');
+}
+
+module.exports = invokePath;
+
+},{"lodash._baseget":295,"lodash._baseslice":296,"lodash._topath":297,"lodash.isarray":413}],295:[function(require,module,exports){
+arguments[4][180][0].apply(exports,arguments)
+},{"dup":180}],296:[function(require,module,exports){
+arguments[4][181][0].apply(exports,arguments)
+},{"dup":181}],297:[function(require,module,exports){
+arguments[4][182][0].apply(exports,arguments)
+},{"dup":182,"lodash.isarray":413}],298:[function(require,module,exports){
 arguments[4][58][0].apply(exports,arguments)
-},{"dup":58}],639:[function(require,module,exports){
+},{"dup":58}],299:[function(require,module,exports){
 arguments[4][90][0].apply(exports,arguments)
-},{"dup":90,"lodash.isarguments":640,"lodash.isarray":753,"lodash.isfunction":642,"lodash.isstring":641,"lodash.keys":758}],640:[function(require,module,exports){
+},{"dup":90,"lodash.isarguments":300,"lodash.isarray":413,"lodash.isfunction":302,"lodash.isstring":301,"lodash.keys":418}],300:[function(require,module,exports){
 arguments[4][61][0].apply(exports,arguments)
-},{"dup":61}],641:[function(require,module,exports){
+},{"dup":61}],301:[function(require,module,exports){
 arguments[4][94][0].apply(exports,arguments)
-},{"dup":94}],642:[function(require,module,exports){
+},{"dup":94}],302:[function(require,module,exports){
 arguments[4][93][0].apply(exports,arguments)
-},{"dup":93}],643:[function(require,module,exports){
-arguments[4][294][0].apply(exports,arguments)
-},{"dup":294,"lodash._binaryindex":644}],644:[function(require,module,exports){
-arguments[4][271][0].apply(exports,arguments)
-},{"dup":271,"lodash._binaryindexby":645}],645:[function(require,module,exports){
-arguments[4][272][0].apply(exports,arguments)
-},{"dup":272}],646:[function(require,module,exports){
-arguments[4][297][0].apply(exports,arguments)
-},{"dup":297,"lodash._arraymap":647,"lodash._basecallback":648,"lodash._baseeach":652,"lodash.isarray":753,"lodash.keys":758}],647:[function(require,module,exports){
-arguments[4][298][0].apply(exports,arguments)
-},{"dup":298}],648:[function(require,module,exports){
-arguments[4][169][0].apply(exports,arguments)
-},{"dup":169,"lodash._baseisequal":649,"lodash._bindcallback":651,"lodash.isarray":753,"lodash.keys":758}],649:[function(require,module,exports){
-arguments[4][170][0].apply(exports,arguments)
-},{"dup":170,"lodash.isarray":753,"lodash.istypedarray":650,"lodash.keys":758}],650:[function(require,module,exports){
-arguments[4][171][0].apply(exports,arguments)
-},{"dup":171}],651:[function(require,module,exports){
+},{"dup":93}],303:[function(require,module,exports){
+/**
+ * lodash 3.0.2 (Custom Build) <https://lodash.com/>
+ * Build: `lodash modern modularize exports="npm" -o ./`
+ * Copyright 2012-2015 The Dojo Foundation <http://dojofoundation.org/>
+ * Based on Underscore.js 1.8.2 <http://underscorejs.org/LICENSE>
+ * Copyright 2009-2015 Jeremy Ashkenas, DocumentCloud and Investigative Reporters & Editors
+ * Available under MIT license <https://lodash.com/license>
+ */
+var binaryIndex = require('lodash._binaryindex');
+
+/**
+ * Gets the index at which the first occurrence of `NaN` is found in `array`.
+ * If `fromRight` is provided elements of `array` are iterated from right to left.
+ *
+ * @private
+ * @param {Array} array The array to search.
+ * @param {number} fromIndex The index to search from.
+ * @param {boolean} [fromRight] Specify iterating from right to left.
+ * @returns {number} Returns the index of the matched `NaN`, else `-1`.
+ */
+function indexOfNaN(array, fromIndex, fromRight) {
+  var length = array.length,
+      index = fromIndex + (fromRight ? 0 : -1);
+
+  while ((fromRight ? index-- : ++index < length)) {
+    var other = array[index];
+    if (other !== other) {
+      return index;
+    }
+  }
+  return -1;
+}
+
+/* Native method references for those with the same name as other `lodash` methods. */
+var nativeMax = Math.max,
+    nativeMin = Math.min;
+
+/**
+ * This method is like `_.indexOf` except that it iterates over elements of
+ * `array` from right to left.
+ *
+ * @static
+ * @memberOf _
+ * @category Array
+ * @param {Array} array The array to search.
+ * @param {*} value The value to search for.
+ * @param {boolean|number} [fromIndex=array.length-1] The index to search from
+ *  or `true` to perform a binary search on a sorted array.
+ * @returns {number} Returns the index of the matched value, else `-1`.
+ * @example
+ *
+ * _.lastIndexOf([1, 2, 1, 2], 2);
+ * // => 3
+ *
+ * // using `fromIndex`
+ * _.lastIndexOf([1, 2, 1, 2], 2, 2);
+ * // => 1
+ *
+ * // performing a binary search
+ * _.lastIndexOf([1, 1, 2, 2], 2, true);
+ * // => 3
+ */
+function lastIndexOf(array, value, fromIndex) {
+  var length = array ? array.length : 0;
+  if (!length) {
+    return -1;
+  }
+  var index = length;
+  if (typeof fromIndex == 'number') {
+    index = (fromIndex < 0 ? nativeMax(length + fromIndex, 0) : nativeMin(fromIndex || 0, length - 1)) + 1;
+  } else if (fromIndex) {
+    index = binaryIndex(array, value, true) - 1;
+    var other = array[index];
+    if (value === value ? (value === other) : (other !== other)) {
+      return index;
+    }
+    return -1;
+  }
+  if (value !== value) {
+    return indexOfNaN(array, index, true);
+  }
+  while (index--) {
+    if (array[index] === value) {
+      return index;
+    }
+  }
+  return -1;
+}
+
+module.exports = lastIndexOf;
+
+},{"lodash._binaryindex":304}],304:[function(require,module,exports){
+arguments[4][287][0].apply(exports,arguments)
+},{"dup":287,"lodash._binaryindexby":305}],305:[function(require,module,exports){
+arguments[4][288][0].apply(exports,arguments)
+},{"dup":288}],306:[function(require,module,exports){
+/**
+ * lodash 3.1.2 (Custom Build) <https://lodash.com/>
+ * Build: `lodash modern modularize exports="npm" -o ./`
+ * Copyright 2012-2015 The Dojo Foundation <http://dojofoundation.org/>
+ * Based on Underscore.js 1.8.3 <http://underscorejs.org/LICENSE>
+ * Copyright 2009-2015 Jeremy Ashkenas, DocumentCloud and Investigative Reporters & Editors
+ * Available under MIT license <https://lodash.com/license>
+ */
+var arrayMap = require('lodash._arraymap'),
+    baseCallback = require('lodash._basecallback'),
+    baseEach = require('lodash._baseeach'),
+    isArray = require('lodash.isarray'),
+    keys = require('lodash.keys');
+
+/**
+ * Used as the [maximum length](https://people.mozilla.org/~jorendorff/es6-draft.html#sec-number.max_safe_integer)
+ * of an array-like value.
+ */
+var MAX_SAFE_INTEGER = Math.pow(2, 53) - 1;
+
+/**
+ * The base implementation of `_.map` without support for callback shorthands
+ * and `this` binding.
+ *
+ * @private
+ * @param {Array|Object|string} collection The collection to iterate over.
+ * @param {Function} iteratee The function invoked per iteration.
+ * @returns {Array} Returns the new mapped array.
+ */
+function baseMap(collection, iteratee) {
+  var index = -1,
+      result = isArrayLike(collection) ? Array(collection.length) : [];
+
+  baseEach(collection, function(value, key, collection) {
+    result[++index] = iteratee(value, key, collection);
+  });
+  return result;
+}
+
+/**
+ * The base implementation of `_.property` without support for deep paths.
+ *
+ * @private
+ * @param {string} key The key of the property to get.
+ * @returns {Function} Returns the new function.
+ */
+function baseProperty(key) {
+  return function(object) {
+    return object == null ? undefined : object[key];
+  };
+}
+
+/**
+ * Gets the "length" property value of `object`.
+ *
+ * **Note:** This function is used to avoid a [JIT bug](https://bugs.webkit.org/show_bug.cgi?id=142792)
+ * that affects Safari on at least iOS 8.1-8.3 ARM64.
+ *
+ * @private
+ * @param {Object} object The object to query.
+ * @returns {*} Returns the "length" value.
+ */
+var getLength = baseProperty('length');
+
+/**
+ * Checks if `value` is array-like.
+ *
+ * @private
+ * @param {*} value The value to check.
+ * @returns {boolean} Returns `true` if `value` is array-like, else `false`.
+ */
+function isArrayLike(value) {
+  return value != null && isLength(getLength(value));
+}
+
+/**
+ * Checks if `value` is a valid array-like length.
+ *
+ * **Note:** This function is based on [`ToLength`](https://people.mozilla.org/~jorendorff/es6-draft.html#sec-tolength).
+ *
+ * @private
+ * @param {*} value The value to check.
+ * @returns {boolean} Returns `true` if `value` is a valid length, else `false`.
+ */
+function isLength(value) {
+  return typeof value == 'number' && value > -1 && value % 1 == 0 && value <= MAX_SAFE_INTEGER;
+}
+
+/**
+ * Creates an array of values by running each element in `collection` through
+ * `iteratee`. The `iteratee` is bound to `thisArg` and invoked with three
+ * arguments: (value, index|key, collection).
+ *
+ * If a property name is provided for `iteratee` the created `_.property`
+ * style callback returns the property value of the given element.
+ *
+ * If a value is also provided for `thisArg` the created `_.matchesProperty`
+ * style callback returns `true` for elements that have a matching property
+ * value, else `false`.
+ *
+ * If an object is provided for `iteratee` the created `_.matches` style
+ * callback returns `true` for elements that have the properties of the given
+ * object, else `false`.
+ *
+ * Many lodash methods are guarded to work as interatees for methods like
+ * `_.every`, `_.filter`, `_.map`, `_.mapValues`, `_.reject`, and `_.some`.
+ *
+ * The guarded methods are:
+ * `ary`, `callback`, `chunk`, `clone`, `create`, `curry`, `curryRight`,
+ * `drop`, `dropRight`, `every`, `fill`, `flatten`, `invert`, `max`, `min`,
+ * `parseInt`, `slice`, `sortBy`, `take`, `takeRight`, `template`, `trim`,
+ * `trimLeft`, `trimRight`, `trunc`, `random`, `range`, `sample`, `some`,
+ * `sum`, `uniq`, and `words`
+ *
+ * @static
+ * @memberOf _
+ * @alias collect
+ * @category Collection
+ * @param {Array|Object|string} collection The collection to iterate over.
+ * @param {Function|Object|string} [iteratee=_.identity] The function invoked
+ *  per iteration.
+ * @param {*} [thisArg] The `this` binding of `iteratee`.
+ * @returns {Array} Returns the new mapped array.
+ * @example
+ *
+ * function timesThree(n) {
+ *   return n * 3;
+ * }
+ *
+ * _.map([1, 2], timesThree);
+ * // => [3, 6]
+ *
+ * _.map({ 'a': 1, 'b': 2 }, timesThree);
+ * // => [3, 6] (iteration order is not guaranteed)
+ *
+ * var users = [
+ *   { 'user': 'barney' },
+ *   { 'user': 'fred' }
+ * ];
+ *
+ * // using the `_.property` callback shorthand
+ * _.map(users, 'user');
+ * // => ['barney', 'fred']
+ */
+function map(collection, iteratee, thisArg) {
+  var func = isArray(collection) ? arrayMap : baseMap;
+  iteratee = baseCallback(iteratee, thisArg, 3);
+  return func(collection, iteratee);
+}
+
+module.exports = map;
+
+},{"lodash._arraymap":307,"lodash._basecallback":308,"lodash._baseeach":312,"lodash.isarray":413,"lodash.keys":418}],307:[function(require,module,exports){
+arguments[4][204][0].apply(exports,arguments)
+},{"dup":204}],308:[function(require,module,exports){
+arguments[4][239][0].apply(exports,arguments)
+},{"dup":239,"lodash._baseisequal":309,"lodash._bindcallback":311,"lodash.isarray":413,"lodash.keys":418}],309:[function(require,module,exports){
+arguments[4][192][0].apply(exports,arguments)
+},{"dup":192,"lodash.isarray":413,"lodash.istypedarray":310,"lodash.keys":418}],310:[function(require,module,exports){
+arguments[4][193][0].apply(exports,arguments)
+},{"dup":193}],311:[function(require,module,exports){
 arguments[4][56][0].apply(exports,arguments)
-},{"dup":56}],652:[function(require,module,exports){
+},{"dup":56}],312:[function(require,module,exports){
 arguments[4][87][0].apply(exports,arguments)
-},{"dup":87,"lodash.keys":758}],653:[function(require,module,exports){
-arguments[4][308][0].apply(exports,arguments)
-},{"dup":308,"lodash._arraymax":654,"lodash._basecallback":655,"lodash._baseeach":659,"lodash._isiterateecall":660,"lodash._toiterable":661,"lodash.isarray":753,"lodash.isstring":663,"lodash.keys":758}],654:[function(require,module,exports){
-arguments[4][309][0].apply(exports,arguments)
-},{"dup":309}],655:[function(require,module,exports){
-arguments[4][169][0].apply(exports,arguments)
-},{"dup":169,"lodash._baseisequal":656,"lodash._bindcallback":658,"lodash.isarray":753,"lodash.keys":758}],656:[function(require,module,exports){
-arguments[4][170][0].apply(exports,arguments)
-},{"dup":170,"lodash.isarray":753,"lodash.istypedarray":657,"lodash.keys":758}],657:[function(require,module,exports){
-arguments[4][171][0].apply(exports,arguments)
-},{"dup":171}],658:[function(require,module,exports){
+},{"dup":87,"lodash.keys":418}],313:[function(require,module,exports){
+/**
+ * lodash 3.2.0 (Custom Build) <https://lodash.com/>
+ * Build: `lodash modern modularize exports="npm" -o ./`
+ * Copyright 2012-2015 The Dojo Foundation <http://dojofoundation.org/>
+ * Based on Underscore.js 1.8.2 <http://underscorejs.org/LICENSE>
+ * Copyright 2009-2015 Jeremy Ashkenas, DocumentCloud and Investigative Reporters & Editors
+ * Available under MIT license <https://lodash.com/license>
+ */
+var arrayMax = require('lodash._arraymax'),
+    baseCallback = require('lodash._basecallback'),
+    baseEach = require('lodash._baseeach'),
+    isIterateeCall = require('lodash._isiterateecall'),
+    toIterable = require('lodash._toiterable'),
+    isArray = require('lodash.isarray'),
+    isString = require('lodash.isstring'),
+    keys = require('lodash.keys');
+
+/**
+ * Used by `_.max` and `_.min` as the default callback for string values.
+ *
+ * @private
+ * @param {string} string The string to inspect.
+ * @returns {number} Returns the code unit of the first character of the string.
+ */
+function charAtCallback(string) {
+  return string.charCodeAt(0);
+}
+
+/** Used as references for `-Infinity` and `Infinity`. */
+var NEGATIVE_INFINITY = Number.NEGATIVE_INFINITY,
+    POSITIVE_INFINITY = Number.POSITIVE_INFINITY;
+
+/**
+ * Creates a `_.max` or `_.min` function.
+ *
+ * @private
+ * @param {Function} arrayFunc The function to get the extremum value from an array.
+ * @param {boolean} [isMin] Specify returning the minimum, instead of the maximum,
+ *  extremum value.
+ * @returns {Function} Returns the new extremum function.
+ */
+function createExtremum(arrayFunc, isMin) {
+  return function(collection, iteratee, thisArg) {
+    if (thisArg && isIterateeCall(collection, iteratee, thisArg)) {
+      iteratee = null;
+    }
+    var noIteratee = iteratee == null;
+
+    iteratee = noIteratee ? iteratee : baseCallback(iteratee, thisArg, 3);
+    if (noIteratee) {
+      var isArr = isArray(collection);
+      if (!isArr && isString(collection)) {
+        iteratee = charAtCallback;
+      } else {
+        return arrayFunc(isArr ? collection : toIterable(collection));
+      }
+    }
+    return extremumBy(collection, iteratee, isMin);
+  };
+}
+
+/**
+ * Gets the extremum value of `collection` invoking `iteratee` for each value
+ * in `collection` to generate the criterion by which the value is ranked.
+ * The `iteratee` is invoked with three arguments: (value, index, collection).
+ *
+ * @private
+ * @param {Array|Object|string} collection The collection to iterate over.
+ * @param {Function} iteratee The function invoked per iteration.
+ * @param {boolean} [isMin] Specify returning the minimum, instead of the
+ *  maximum, extremum value.
+ * @returns {*} Returns the extremum value.
+ */
+function extremumBy(collection, iteratee, isMin) {
+  var exValue = isMin ? POSITIVE_INFINITY : NEGATIVE_INFINITY,
+      computed = exValue,
+      result = computed;
+
+  baseEach(collection, function(value, index, collection) {
+    var current = iteratee(value, index, collection);
+    if ((isMin ? (current < computed) : (current > computed)) ||
+        (current === exValue && current === result)) {
+      computed = current;
+      result = value;
+    }
+  });
+  return result;
+}
+
+/**
+ * Gets the maximum value of `collection`. If `collection` is empty or falsey
+ * `-Infinity` is returned. If an iteratee function is provided it is invoked
+ * for each value in `collection` to generate the criterion by which the value
+ * is ranked. The `iteratee` is bound to `thisArg` and invoked with three
+ * arguments: (value, index, collection).
+ *
+ * If a property name is provided for `iteratee` the created `_.property`
+ * style callback returns the property value of the given element.
+ *
+ * If a value is also provided for `thisArg` the created `_.matchesProperty`
+ * style callback returns `true` for elements that have a matching property
+ * value, else `false`.
+ *
+ * If an object is provided for `iteratee` the created `_.matches` style
+ * callback returns `true` for elements that have the properties of the given
+ * object, else `false`.
+ *
+ * @static
+ * @memberOf _
+ * @category Math
+ * @param {Array|Object|string} collection The collection to iterate over.
+ * @param {Function|Object|string} [iteratee] The function invoked per iteration.
+ * @param {*} [thisArg] The `this` binding of `iteratee`.
+ * @returns {*} Returns the maximum value.
+ * @example
+ *
+ * _.max([4, 2, 8, 6]);
+ * // => 8
+ *
+ * _.max([]);
+ * // => -Infinity
+ *
+ * var users = [
+ *   { 'user': 'barney', 'age': 36 },
+ *   { 'user': 'fred',   'age': 40 }
+ * ];
+ *
+ * _.max(users, function(chr) {
+ *   return chr.age;
+ * });
+ * // => { 'user': 'fred', 'age': 40 }
+ *
+ * // using the `_.property` callback shorthand
+ * _.max(users, 'age');
+ * // => { 'user': 'fred', 'age': 40 }
+ */
+var max = createExtremum(arrayMax);
+
+module.exports = max;
+
+},{"lodash._arraymax":314,"lodash._basecallback":315,"lodash._baseeach":319,"lodash._isiterateecall":320,"lodash._toiterable":321,"lodash.isarray":413,"lodash.isstring":323,"lodash.keys":418}],314:[function(require,module,exports){
+/**
+ * lodash 3.0.0 (Custom Build) <https://lodash.com/>
+ * Build: `lodash modern modularize exports="npm" -o ./`
+ * Copyright 2012-2015 The Dojo Foundation <http://dojofoundation.org/>
+ * Based on Underscore.js 1.7.0 <http://underscorejs.org/LICENSE>
+ * Copyright 2009-2015 Jeremy Ashkenas, DocumentCloud and Investigative Reporters & Editors
+ * Available under MIT license <https://lodash.com/license>
+ */
+
+/** Used as references for `-Infinity` and `Infinity`. */
+var NEGATIVE_INFINITY = Number.NEGATIVE_INFINITY;
+
+/**
+ * A specialized version of `_.max` for arrays without support for iteratees.
+ *
+ * @private
+ * @param {Array} array The array to iterate over.
+ * @returns {*} Returns the maximum value.
+ */
+function arrayMax(array) {
+  var index = -1,
+      length = array.length,
+      result = NEGATIVE_INFINITY;
+
+  while (++index < length) {
+    var value = array[index];
+    if (value > result) {
+      result = value;
+    }
+  }
+  return result;
+}
+
+module.exports = arrayMax;
+
+},{}],315:[function(require,module,exports){
+arguments[4][239][0].apply(exports,arguments)
+},{"dup":239,"lodash._baseisequal":316,"lodash._bindcallback":318,"lodash.isarray":413,"lodash.keys":418}],316:[function(require,module,exports){
+arguments[4][192][0].apply(exports,arguments)
+},{"dup":192,"lodash.isarray":413,"lodash.istypedarray":317,"lodash.keys":418}],317:[function(require,module,exports){
+arguments[4][193][0].apply(exports,arguments)
+},{"dup":193}],318:[function(require,module,exports){
 arguments[4][56][0].apply(exports,arguments)
-},{"dup":56}],659:[function(require,module,exports){
+},{"dup":56}],319:[function(require,module,exports){
 arguments[4][87][0].apply(exports,arguments)
-},{"dup":87,"lodash.keys":758}],660:[function(require,module,exports){
+},{"dup":87,"lodash.keys":418}],320:[function(require,module,exports){
 arguments[4][57][0].apply(exports,arguments)
-},{"dup":57}],661:[function(require,module,exports){
-arguments[4][316][0].apply(exports,arguments)
-},{"dup":316,"lodash._basevalues":662,"lodash.keys":758}],662:[function(require,module,exports){
-arguments[4][115][0].apply(exports,arguments)
-},{"dup":115}],663:[function(require,module,exports){
+},{"dup":57}],321:[function(require,module,exports){
+/**
+ * lodash 3.0.3 (Custom Build) <https://lodash.com/>
+ * Build: `lodash modern modularize exports="npm" -o ./`
+ * Copyright 2012-2015 The Dojo Foundation <http://dojofoundation.org/>
+ * Based on Underscore.js 1.8.3 <http://underscorejs.org/LICENSE>
+ * Copyright 2009-2015 Jeremy Ashkenas, DocumentCloud and Investigative Reporters & Editors
+ * Available under MIT license <https://lodash.com/license>
+ */
+var baseValues = require('lodash._basevalues'),
+    keys = require('lodash.keys');
+
+/**
+ * Used as the [maximum length](https://people.mozilla.org/~jorendorff/es6-draft.html#sec-number.max_safe_integer)
+ * of an array-like value.
+ */
+var MAX_SAFE_INTEGER = Math.pow(2, 53) - 1;
+
+/**
+ * The base implementation of `_.property` without support for deep paths.
+ *
+ * @private
+ * @param {string} key The key of the property to get.
+ * @returns {Function} Returns the new function.
+ */
+function baseProperty(key) {
+  return function(object) {
+    return object == null ? undefined : object[key];
+  };
+}
+
+/**
+ * Gets the "length" property value of `object`.
+ *
+ * **Note:** This function is used to avoid a [JIT bug](https://bugs.webkit.org/show_bug.cgi?id=142792)
+ * that affects Safari on at least iOS 8.1-8.3 ARM64.
+ *
+ * @private
+ * @param {Object} object The object to query.
+ * @returns {*} Returns the "length" value.
+ */
+var getLength = baseProperty('length');
+
+/**
+ * Checks if `value` is array-like.
+ *
+ * @private
+ * @param {*} value The value to check.
+ * @returns {boolean} Returns `true` if `value` is array-like, else `false`.
+ */
+function isArrayLike(value) {
+  return value != null && isLength(getLength(value));
+}
+
+/**
+ * Checks if `value` is a valid array-like length.
+ *
+ * **Note:** This function is based on [`ToLength`](https://people.mozilla.org/~jorendorff/es6-draft.html#sec-tolength).
+ *
+ * @private
+ * @param {*} value The value to check.
+ * @returns {boolean} Returns `true` if `value` is a valid length, else `false`.
+ */
+function isLength(value) {
+  return typeof value == 'number' && value > -1 && value % 1 == 0 && value <= MAX_SAFE_INTEGER;
+}
+
+/**
+ * Converts `value` to an array-like object if it is not one.
+ *
+ * @private
+ * @param {*} value The value to process.
+ * @returns {Array|Object} Returns the array-like object.
+ */
+function toIterable(value) {
+  if (value == null) {
+    return [];
+  }
+  if (!isArrayLike(value)) {
+    return values(value);
+  }
+  return isObject(value) ? value : Object(value);
+}
+
+/**
+ * Checks if `value` is the [language type](https://es5.github.io/#x8) of `Object`.
+ * (e.g. arrays, functions, objects, regexes, `new Number(0)`, and `new String('')`)
+ *
+ * @static
+ * @memberOf _
+ * @category Lang
+ * @param {*} value The value to check.
+ * @returns {boolean} Returns `true` if `value` is an object, else `false`.
+ * @example
+ *
+ * _.isObject({});
+ * // => true
+ *
+ * _.isObject([1, 2, 3]);
+ * // => true
+ *
+ * _.isObject(1);
+ * // => false
+ */
+function isObject(value) {
+  // Avoid a V8 JIT bug in Chrome 19-20.
+  // See https://code.google.com/p/v8/issues/detail?id=2291 for more details.
+  var type = typeof value;
+  return type == 'function' || (!!value && type == 'object');
+}
+
+/**
+ * Creates an array of the own enumerable property values of `object`.
+ *
+ * **Note:** Non-object values are coerced to objects.
+ *
+ * @static
+ * @memberOf _
+ * @category Object
+ * @param {Object} object The object to query.
+ * @returns {Array} Returns the array of property values.
+ * @example
+ *
+ * function Foo() {
+ *   this.a = 1;
+ *   this.b = 2;
+ * }
+ *
+ * Foo.prototype.c = 3;
+ *
+ * _.values(new Foo);
+ * // => [1, 2] (iteration order is not guaranteed)
+ *
+ * _.values('hi');
+ * // => ['h', 'i']
+ */
+function values(object) {
+  return baseValues(object, keys(object));
+}
+
+module.exports = toIterable;
+
+},{"lodash._basevalues":322,"lodash.keys":418}],322:[function(require,module,exports){
+arguments[4][185][0].apply(exports,arguments)
+},{"dup":185}],323:[function(require,module,exports){
 arguments[4][94][0].apply(exports,arguments)
-},{"dup":94}],664:[function(require,module,exports){
-arguments[4][323][0].apply(exports,arguments)
-},{"dup":323,"lodash._arraymin":665,"lodash._basecallback":666,"lodash._baseeach":670,"lodash._isiterateecall":671,"lodash._toiterable":672,"lodash.isarray":753,"lodash.isstring":674,"lodash.keys":758}],665:[function(require,module,exports){
-arguments[4][324][0].apply(exports,arguments)
-},{"dup":324}],666:[function(require,module,exports){
-arguments[4][169][0].apply(exports,arguments)
-},{"dup":169,"lodash._baseisequal":667,"lodash._bindcallback":669,"lodash.isarray":753,"lodash.keys":758}],667:[function(require,module,exports){
-arguments[4][170][0].apply(exports,arguments)
-},{"dup":170,"lodash.isarray":753,"lodash.istypedarray":668,"lodash.keys":758}],668:[function(require,module,exports){
-arguments[4][171][0].apply(exports,arguments)
-},{"dup":171}],669:[function(require,module,exports){
+},{"dup":94}],324:[function(require,module,exports){
+/**
+ * lodash 3.2.0 (Custom Build) <https://lodash.com/>
+ * Build: `lodash modern modularize exports="npm" -o ./`
+ * Copyright 2012-2015 The Dojo Foundation <http://dojofoundation.org/>
+ * Based on Underscore.js 1.8.2 <http://underscorejs.org/LICENSE>
+ * Copyright 2009-2015 Jeremy Ashkenas, DocumentCloud and Investigative Reporters & Editors
+ * Available under MIT license <https://lodash.com/license>
+ */
+var arrayMin = require('lodash._arraymin'),
+    baseCallback = require('lodash._basecallback'),
+    baseEach = require('lodash._baseeach'),
+    isIterateeCall = require('lodash._isiterateecall'),
+    toIterable = require('lodash._toiterable'),
+    isArray = require('lodash.isarray'),
+    isString = require('lodash.isstring'),
+    keys = require('lodash.keys');
+
+/**
+ * Used by `_.max` and `_.min` as the default callback for string values.
+ *
+ * @private
+ * @param {string} string The string to inspect.
+ * @returns {number} Returns the code unit of the first character of the string.
+ */
+function charAtCallback(string) {
+  return string.charCodeAt(0);
+}
+
+/** Used as references for `-Infinity` and `Infinity`. */
+var NEGATIVE_INFINITY = Number.NEGATIVE_INFINITY,
+    POSITIVE_INFINITY = Number.POSITIVE_INFINITY;
+
+/**
+ * Creates a `_.max` or `_.min` function.
+ *
+ * @private
+ * @param {Function} arrayFunc The function to get the extremum value from an array.
+ * @param {boolean} [isMin] Specify returning the minimum, instead of the maximum,
+ *  extremum value.
+ * @returns {Function} Returns the new extremum function.
+ */
+function createExtremum(arrayFunc, isMin) {
+  return function(collection, iteratee, thisArg) {
+    if (thisArg && isIterateeCall(collection, iteratee, thisArg)) {
+      iteratee = null;
+    }
+    var noIteratee = iteratee == null;
+
+    iteratee = noIteratee ? iteratee : baseCallback(iteratee, thisArg, 3);
+    if (noIteratee) {
+      var isArr = isArray(collection);
+      if (!isArr && isString(collection)) {
+        iteratee = charAtCallback;
+      } else {
+        return arrayFunc(isArr ? collection : toIterable(collection));
+      }
+    }
+    return extremumBy(collection, iteratee, isMin);
+  };
+}
+
+/**
+ * Gets the extremum value of `collection` invoking `iteratee` for each value
+ * in `collection` to generate the criterion by which the value is ranked.
+ * The `iteratee` is invoked with three arguments: (value, index, collection).
+ *
+ * @private
+ * @param {Array|Object|string} collection The collection to iterate over.
+ * @param {Function} iteratee The function invoked per iteration.
+ * @param {boolean} [isMin] Specify returning the minimum, instead of the
+ *  maximum, extremum value.
+ * @returns {*} Returns the extremum value.
+ */
+function extremumBy(collection, iteratee, isMin) {
+  var exValue = isMin ? POSITIVE_INFINITY : NEGATIVE_INFINITY,
+      computed = exValue,
+      result = computed;
+
+  baseEach(collection, function(value, index, collection) {
+    var current = iteratee(value, index, collection);
+    if ((isMin ? (current < computed) : (current > computed)) ||
+        (current === exValue && current === result)) {
+      computed = current;
+      result = value;
+    }
+  });
+  return result;
+}
+
+/**
+ * Gets the minimum value of `collection`. If `collection` is empty or falsey
+ * `Infinity` is returned. If an iteratee function is provided it is invoked
+ * for each value in `collection` to generate the criterion by which the value
+ * is ranked. The `iteratee` is bound to `thisArg` and invoked with three
+ * arguments: (value, index, collection).
+ *
+ * If a property name is provided for `iteratee` the created `_.property`
+ * style callback returns the property value of the given element.
+ *
+ * If a value is also provided for `thisArg` the created `_.matchesProperty`
+ * style callback returns `true` for elements that have a matching property
+ * value, else `false`.
+ *
+ * If an object is provided for `iteratee` the created `_.matches` style
+ * callback returns `true` for elements that have the properties of the given
+ * object, else `false`.
+ *
+ * @static
+ * @memberOf _
+ * @category Math
+ * @param {Array|Object|string} collection The collection to iterate over.
+ * @param {Function|Object|string} [iteratee] The function invoked per iteration.
+ * @param {*} [thisArg] The `this` binding of `iteratee`.
+ * @returns {*} Returns the minimum value.
+ * @example
+ *
+ * _.min([4, 2, 8, 6]);
+ * // => 2
+ *
+ * _.min([]);
+ * // => Infinity
+ *
+ * var users = [
+ *   { 'user': 'barney', 'age': 36 },
+ *   { 'user': 'fred',   'age': 40 }
+ * ];
+ *
+ * _.min(users, function(chr) {
+ *   return chr.age;
+ * });
+ * // => { 'user': 'barney', 'age': 36 }
+ *
+ * // using the `_.property` callback shorthand
+ * _.min(users, 'age');
+ * // => { 'user': 'barney', 'age': 36 }
+ */
+var min = createExtremum(arrayMin, true);
+
+module.exports = min;
+
+},{"lodash._arraymin":325,"lodash._basecallback":326,"lodash._baseeach":330,"lodash._isiterateecall":331,"lodash._toiterable":332,"lodash.isarray":413,"lodash.isstring":334,"lodash.keys":418}],325:[function(require,module,exports){
+/**
+ * lodash 3.0.0 (Custom Build) <https://lodash.com/>
+ * Build: `lodash modern modularize exports="npm" -o ./`
+ * Copyright 2012-2015 The Dojo Foundation <http://dojofoundation.org/>
+ * Based on Underscore.js 1.7.0 <http://underscorejs.org/LICENSE>
+ * Copyright 2009-2015 Jeremy Ashkenas, DocumentCloud and Investigative Reporters & Editors
+ * Available under MIT license <https://lodash.com/license>
+ */
+
+/** Used as references for `-Infinity` and `Infinity`. */
+var POSITIVE_INFINITY = Number.POSITIVE_INFINITY;
+
+/**
+ * A specialized version of `_.min` for arrays without support for iteratees.
+ *
+ * @private
+ * @param {Array} array The array to iterate over.
+ * @returns {*} Returns the minimum value.
+ */
+function arrayMin(array) {
+  var index = -1,
+      length = array.length,
+      result = POSITIVE_INFINITY;
+
+  while (++index < length) {
+    var value = array[index];
+    if (value < result) {
+      result = value;
+    }
+  }
+  return result;
+}
+
+module.exports = arrayMin;
+
+},{}],326:[function(require,module,exports){
+arguments[4][239][0].apply(exports,arguments)
+},{"dup":239,"lodash._baseisequal":327,"lodash._bindcallback":329,"lodash.isarray":413,"lodash.keys":418}],327:[function(require,module,exports){
+arguments[4][192][0].apply(exports,arguments)
+},{"dup":192,"lodash.isarray":413,"lodash.istypedarray":328,"lodash.keys":418}],328:[function(require,module,exports){
+arguments[4][193][0].apply(exports,arguments)
+},{"dup":193}],329:[function(require,module,exports){
 arguments[4][56][0].apply(exports,arguments)
-},{"dup":56}],670:[function(require,module,exports){
+},{"dup":56}],330:[function(require,module,exports){
 arguments[4][87][0].apply(exports,arguments)
-},{"dup":87,"lodash.keys":758}],671:[function(require,module,exports){
+},{"dup":87,"lodash.keys":418}],331:[function(require,module,exports){
 arguments[4][57][0].apply(exports,arguments)
-},{"dup":57}],672:[function(require,module,exports){
-arguments[4][316][0].apply(exports,arguments)
-},{"dup":316,"lodash._basevalues":673,"lodash.keys":758}],673:[function(require,module,exports){
-arguments[4][115][0].apply(exports,arguments)
-},{"dup":115}],674:[function(require,module,exports){
+},{"dup":57}],332:[function(require,module,exports){
+arguments[4][321][0].apply(exports,arguments)
+},{"dup":321,"lodash._basevalues":333,"lodash.keys":418}],333:[function(require,module,exports){
+arguments[4][185][0].apply(exports,arguments)
+},{"dup":185}],334:[function(require,module,exports){
 arguments[4][94][0].apply(exports,arguments)
-},{"dup":94}],675:[function(require,module,exports){
-arguments[4][338][0].apply(exports,arguments)
-},{"dup":338,"lodash._createaggregator":676,"lodash.keys":758}],676:[function(require,module,exports){
-arguments[4][168][0].apply(exports,arguments)
-},{"dup":168,"lodash._basecallback":677,"lodash._baseeach":681,"lodash.isarray":753}],677:[function(require,module,exports){
-arguments[4][169][0].apply(exports,arguments)
-},{"dup":169,"lodash._baseisequal":678,"lodash._bindcallback":680,"lodash.isarray":753,"lodash.keys":758}],678:[function(require,module,exports){
-arguments[4][170][0].apply(exports,arguments)
-},{"dup":170,"lodash.isarray":753,"lodash.istypedarray":679,"lodash.keys":758}],679:[function(require,module,exports){
-arguments[4][171][0].apply(exports,arguments)
-},{"dup":171}],680:[function(require,module,exports){
+},{"dup":94}],335:[function(require,module,exports){
+/**
+ * lodash 3.1.0 (Custom Build) <https://lodash.com/>
+ * Build: `lodash modern modularize exports="npm" -o ./`
+ * Copyright 2012-2015 The Dojo Foundation <http://dojofoundation.org/>
+ * Based on Underscore.js 1.8.2 <http://underscorejs.org/LICENSE>
+ * Copyright 2009-2015 Jeremy Ashkenas, DocumentCloud and Investigative Reporters & Editors
+ * Available under MIT license <https://lodash.com/license>
+ */
+var createAggregator = require('lodash._createaggregator'),
+    keys = require('lodash.keys');
+
+/**
+ * Creates an array of elements split into two groups, the first of which
+ * contains elements `predicate` returns truthy for, while the second of which
+ * contains elements `predicate` returns falsey for. The predicate is bound
+ * to `thisArg` and invoked with three arguments: (value, index|key, collection).
+ *
+ * If a property name is provided for `predicate` the created `_.property`
+ * style callback returns the property value of the given element.
+ *
+ * If a value is also provided for `thisArg` the created `_.matchesProperty`
+ * style callback returns `true` for elements that have a matching property
+ * value, else `false`.
+ *
+ * If an object is provided for `predicate` the created `_.matches` style
+ * callback returns `true` for elements that have the properties of the given
+ * object, else `false`.
+ *
+ * @static
+ * @memberOf _
+ * @category Collection
+ * @param {Array|Object|string} collection The collection to iterate over.
+ * @param {Function|Object|string} [predicate=_.identity] The function invoked
+ *  per iteration.
+ * @param {*} [thisArg] The `this` binding of `predicate`.
+ * @returns {Array} Returns the array of grouped elements.
+ * @example
+ *
+ * _.partition([1, 2, 3], function(n) {
+ *   return n % 2;
+ * });
+ * // => [[1, 3], [2]]
+ *
+ * _.partition([1.2, 2.3, 3.4], function(n) {
+ *   return this.floor(n) % 2;
+ * }, Math);
+ * // => [[1.2, 3.4], [2.3]]
+ *
+ * var users = [
+ *   { 'user': 'barney',  'age': 36, 'active': false },
+ *   { 'user': 'fred',    'age': 40, 'active': true },
+ *   { 'user': 'pebbles', 'age': 1,  'active': false }
+ * ];
+ *
+ * var mapper = function(array) {
+ *   return _.pluck(array, 'user');
+ * };
+ *
+ * // using the `_.matches` callback shorthand
+ * _.map(_.partition(users, { 'age': 1, 'active': false }), mapper);
+ * // => [['pebbles'], ['barney', 'fred']]
+ *
+ * // using the `_.matchesProperty` callback shorthand
+ * _.map(_.partition(users, 'active', false), mapper);
+ * // => [['barney', 'pebbles'], ['fred']]
+ *
+ * // using the `_.property` callback shorthand
+ * _.map(_.partition(users, 'active'), mapper);
+ * // => [['fred'], ['barney', 'pebbles']]
+ */
+var partition = createAggregator(function(result, value, key) {
+  result[key ? 0 : 1].push(value);
+}, function() { return [[], []]; });
+
+module.exports = partition;
+
+},{"lodash._createaggregator":336,"lodash.keys":418}],336:[function(require,module,exports){
+arguments[4][238][0].apply(exports,arguments)
+},{"dup":238,"lodash._basecallback":337,"lodash._baseeach":341,"lodash.isarray":413}],337:[function(require,module,exports){
+arguments[4][239][0].apply(exports,arguments)
+},{"dup":239,"lodash._baseisequal":338,"lodash._bindcallback":340,"lodash.isarray":413,"lodash.keys":418}],338:[function(require,module,exports){
+arguments[4][192][0].apply(exports,arguments)
+},{"dup":192,"lodash.isarray":413,"lodash.istypedarray":339,"lodash.keys":418}],339:[function(require,module,exports){
+arguments[4][193][0].apply(exports,arguments)
+},{"dup":193}],340:[function(require,module,exports){
 arguments[4][56][0].apply(exports,arguments)
-},{"dup":56}],681:[function(require,module,exports){
+},{"dup":56}],341:[function(require,module,exports){
 arguments[4][87][0].apply(exports,arguments)
-},{"dup":87,"lodash.keys":758}],682:[function(require,module,exports){
-arguments[4][361][0].apply(exports,arguments)
-},{"dup":361,"lodash._basecallback":683,"lodash._baseeachright":687,"lodash._basereduce":689,"lodash.isarray":753,"lodash.keys":758}],683:[function(require,module,exports){
-arguments[4][169][0].apply(exports,arguments)
-},{"dup":169,"lodash._baseisequal":684,"lodash._bindcallback":686,"lodash.isarray":753,"lodash.keys":758}],684:[function(require,module,exports){
-arguments[4][170][0].apply(exports,arguments)
-},{"dup":170,"lodash.isarray":753,"lodash.istypedarray":685,"lodash.keys":758}],685:[function(require,module,exports){
-arguments[4][171][0].apply(exports,arguments)
-},{"dup":171}],686:[function(require,module,exports){
+},{"dup":87,"lodash.keys":418}],342:[function(require,module,exports){
+/**
+ * lodash 3.1.1 (Custom Build) <https://lodash.com/>
+ * Build: `lodash modern modularize exports="npm" -o ./`
+ * Copyright 2012-2015 The Dojo Foundation <http://dojofoundation.org/>
+ * Based on Underscore.js 1.8.3 <http://underscorejs.org/LICENSE>
+ * Copyright 2009-2015 Jeremy Ashkenas, DocumentCloud and Investigative Reporters & Editors
+ * Available under MIT license <https://lodash.com/license>
+ */
+var baseCallback = require('lodash._basecallback'),
+    baseEachRight = require('lodash._baseeachright'),
+    baseReduce = require('lodash._basereduce'),
+    isArray = require('lodash.isarray'),
+    keys = require('lodash.keys');
+
+/**
+ * A specialized version of `_.reduceRight` for arrays without support for
+ * callback shorthands and `this` binding.
+ *
+ * @private
+ * @param {Array} array The array to iterate over.
+ * @param {Function} iteratee The function invoked per iteration.
+ * @param {*} [accumulator] The initial value.
+ * @param {boolean} [initFromArray] Specify using the last element of `array`
+ *  as the initial value.
+ * @returns {*} Returns the accumulated value.
+ */
+function arrayReduceRight(array, iteratee, accumulator, initFromArray) {
+  var length = array.length;
+  if (initFromArray && length) {
+    accumulator = array[--length];
+  }
+  while (length--) {
+    accumulator = iteratee(accumulator, array[length], length, array);
+  }
+  return accumulator;
+}
+
+/**
+ * Creates a function for `_.reduce` or `_.reduceRight`.
+ *
+ * @private
+ * @param {Function} arrayFunc The function to iterate over an array.
+ * @param {Function} eachFunc The function to iterate over a collection.
+ * @returns {Function} Returns the new each function.
+ */
+function createReduce(arrayFunc, eachFunc) {
+  return function(collection, iteratee, accumulator, thisArg) {
+    var initFromArray = arguments.length < 3;
+    return (typeof iteratee == 'function' && thisArg === undefined && isArray(collection))
+      ? arrayFunc(collection, iteratee, accumulator, initFromArray)
+      : baseReduce(collection, baseCallback(iteratee, thisArg, 4), accumulator, initFromArray, eachFunc);
+  };
+}
+
+/**
+ * This method is like `_.reduce` except that it iterates over elements of
+ * `collection` from right to left.
+ *
+ * @static
+ * @memberOf _
+ * @alias foldr
+ * @category Collection
+ * @param {Array|Object|string} collection The collection to iterate over.
+ * @param {Function} [iteratee=_.identity] The function invoked per iteration.
+ * @param {*} [accumulator] The initial value.
+ * @param {*} [thisArg] The `this` binding of `iteratee`.
+ * @returns {*} Returns the accumulated value.
+ * @example
+ *
+ * var array = [[0, 1], [2, 3], [4, 5]];
+ *
+ * _.reduceRight(array, function(flattened, other) {
+ *   return flattened.concat(other);
+ * }, []);
+ * // => [4, 5, 2, 3, 0, 1]
+ */
+var reduceRight =  createReduce(arrayReduceRight, baseEachRight);
+
+module.exports = reduceRight;
+
+},{"lodash._basecallback":343,"lodash._baseeachright":347,"lodash._basereduce":349,"lodash.isarray":413,"lodash.keys":418}],343:[function(require,module,exports){
+arguments[4][239][0].apply(exports,arguments)
+},{"dup":239,"lodash._baseisequal":344,"lodash._bindcallback":346,"lodash.isarray":413,"lodash.keys":418}],344:[function(require,module,exports){
+arguments[4][192][0].apply(exports,arguments)
+},{"dup":192,"lodash.isarray":413,"lodash.istypedarray":345,"lodash.keys":418}],345:[function(require,module,exports){
+arguments[4][193][0].apply(exports,arguments)
+},{"dup":193}],346:[function(require,module,exports){
 arguments[4][56][0].apply(exports,arguments)
-},{"dup":56}],687:[function(require,module,exports){
-arguments[4][366][0].apply(exports,arguments)
-},{"dup":366,"lodash._baseforright":688,"lodash.keys":758}],688:[function(require,module,exports){
-arguments[4][367][0].apply(exports,arguments)
-},{"dup":367}],689:[function(require,module,exports){
-arguments[4][356][0].apply(exports,arguments)
-},{"dup":356}],690:[function(require,module,exports){
-arguments[4][373][0].apply(exports,arguments)
-},{"dup":373,"lodash._arrayfilter":691,"lodash._basecallback":692,"lodash._basefilter":696,"lodash.isarray":753,"lodash.keys":758}],691:[function(require,module,exports){
+},{"dup":56}],347:[function(require,module,exports){
+/**
+ * lodash 3.0.2 (Custom Build) <https://lodash.com/>
+ * Build: `lodash modern modularize exports="npm" -o ./`
+ * Copyright 2012-2015 The Dojo Foundation <http://dojofoundation.org/>
+ * Based on Underscore.js 1.8.3 <http://underscorejs.org/LICENSE>
+ * Copyright 2009-2015 Jeremy Ashkenas, DocumentCloud and Investigative Reporters & Editors
+ * Available under MIT license <https://lodash.com/license>
+ */
+var baseForRight = require('lodash._baseforright'),
+    keys = require('lodash.keys');
+
+/**
+ * Used as the [maximum length](https://people.mozilla.org/~jorendorff/es6-draft.html#sec-number.max_safe_integer)
+ * of an array-like value.
+ */
+var MAX_SAFE_INTEGER = Math.pow(2, 53) - 1;
+
+/**
+ * The base implementation of `_.forEachRight` without support for callback
+ * shorthands and `this` binding.
+ *
+ * @private
+ * @param {Array|Object|string} collection The collection to iterate over.
+ * @param {Function} iteratee The function invoked per iteration.
+ * @returns {Array|Object|string} Returns `collection`.
+ */
+var baseEachRight = createBaseEach(baseForOwnRight, true);
+
+/**
+ * The base implementation of `_.forOwnRight` without support for callback
+ * shorthands and `this` binding.
+ *
+ * @private
+ * @param {Object} object The object to iterate over.
+ * @param {Function} iteratee The function invoked per iteration.
+ * @returns {Object} Returns `object`.
+ */
+function baseForOwnRight(object, iteratee) {
+  return baseForRight(object, iteratee, keys);
+}
+
+/**
+ * The base implementation of `_.property` without support for deep paths.
+ *
+ * @private
+ * @param {string} key The key of the property to get.
+ * @returns {Function} Returns the new function.
+ */
+function baseProperty(key) {
+  return function(object) {
+    return object == null ? undefined : object[key];
+  };
+}
+
+/**
+ * Creates a `baseEach` or `baseEachRight` function.
+ *
+ * @private
+ * @param {Function} eachFunc The function to iterate over a collection.
+ * @param {boolean} [fromRight] Specify iterating from right to left.
+ * @returns {Function} Returns the new base function.
+ */
+function createBaseEach(eachFunc, fromRight) {
+  return function(collection, iteratee) {
+    var length = collection ? getLength(collection) : 0;
+    if (!isLength(length)) {
+      return eachFunc(collection, iteratee);
+    }
+    var index = fromRight ? length : -1,
+        iterable = toObject(collection);
+
+    while ((fromRight ? index-- : ++index < length)) {
+      if (iteratee(iterable[index], index, iterable) === false) {
+        break;
+      }
+    }
+    return collection;
+  };
+}
+
+/**
+ * Gets the "length" property value of `object`.
+ *
+ * **Note:** This function is used to avoid a [JIT bug](https://bugs.webkit.org/show_bug.cgi?id=142792)
+ * in Safari on iOS 8.1 ARM64.
+ *
+ * @private
+ * @param {Object} object The object to query.
+ * @returns {*} Returns the "length" value.
+ */
+var getLength = baseProperty('length');
+
+/**
+ * Checks if `value` is a valid array-like length.
+ *
+ * **Note:** This function is based on [`ToLength`](https://people.mozilla.org/~jorendorff/es6-draft.html#sec-tolength).
+ *
+ * @private
+ * @param {*} value The value to check.
+ * @returns {boolean} Returns `true` if `value` is a valid length, else `false`.
+ */
+function isLength(value) {
+  return typeof value == 'number' && value > -1 && value % 1 == 0 && value <= MAX_SAFE_INTEGER;
+}
+
+/**
+ * Converts `value` to an object if it is not one.
+ *
+ * @private
+ * @param {*} value The value to process.
+ * @returns {Object} Returns the object.
+ */
+function toObject(value) {
+  return isObject(value) ? value : Object(value);
+}
+
+/**
+ * Checks if `value` is the [language type](https://es5.github.io/#x8) of `Object`.
+ * (e.g. arrays, functions, objects, regexes, `new Number(0)`, and `new String('')`)
+ *
+ * @static
+ * @memberOf _
+ * @category Lang
+ * @param {*} value The value to check.
+ * @returns {boolean} Returns `true` if `value` is an object, else `false`.
+ * @example
+ *
+ * _.isObject({});
+ * // => true
+ *
+ * _.isObject([1, 2, 3]);
+ * // => true
+ *
+ * _.isObject(1);
+ * // => false
+ */
+function isObject(value) {
+  // Avoid a V8 JIT bug in Chrome 19-20.
+  // See https://code.google.com/p/v8/issues/detail?id=2291 for more details.
+  var type = typeof value;
+  return type == 'function' || (!!value && type == 'object');
+}
+
+module.exports = baseEachRight;
+
+},{"lodash._baseforright":348,"lodash.keys":418}],348:[function(require,module,exports){
+/**
+ * lodash 3.0.1 (Custom Build) <https://lodash.com/>
+ * Build: `lodash modern modularize exports="npm" -o ./`
+ * Copyright 2012-2015 The Dojo Foundation <http://dojofoundation.org/>
+ * Based on Underscore.js 1.8.2 <http://underscorejs.org/LICENSE>
+ * Copyright 2009-2015 Jeremy Ashkenas, DocumentCloud and Investigative Reporters & Editors
+ * Available under MIT license <https://lodash.com/license>
+ */
+
+/**
+ * This function is like `baseFor` except that it iterates over properties
+ * in the opposite order.
+ *
+ * @private
+ * @param {Object} object The object to iterate over.
+ * @param {Function} iteratee The function invoked per iteration.
+ * @param {Function} keysFunc The function to get the keys of `object`.
+ * @returns {Object} Returns `object`.
+ */
+var baseForRight = createBaseFor(true);
+
+/**
+ * Creates a base function for `_.forIn` or `_.forInRight`.
+ *
+ * @private
+ * @param {boolean} [fromRight] Specify iterating from right to left.
+ * @returns {Function} Returns the new base function.
+ */
+function createBaseFor(fromRight) {
+  return function(object, iteratee, keysFunc) {
+    var iterable = toObject(object),
+        props = keysFunc(object),
+        length = props.length,
+        index = fromRight ? length : -1;
+
+    while ((fromRight ? index-- : ++index < length)) {
+      var key = props[index];
+      if (iteratee(iterable[key], key, iterable) === false) {
+        break;
+      }
+    }
+    return object;
+  };
+}
+
+/**
+ * Converts `value` to an object if it is not one.
+ *
+ * @private
+ * @param {*} value The value to process.
+ * @returns {Object} Returns the object.
+ */
+function toObject(value) {
+  return isObject(value) ? value : Object(value);
+}
+
+/**
+ * Checks if `value` is the [language type](https://es5.github.io/#x8) of `Object`.
+ * (e.g. arrays, functions, objects, regexes, `new Number(0)`, and `new String('')`)
+ *
+ * @static
+ * @memberOf _
+ * @category Lang
+ * @param {*} value The value to check.
+ * @returns {boolean} Returns `true` if `value` is an object, else `false`.
+ * @example
+ *
+ * _.isObject({});
+ * // => true
+ *
+ * _.isObject([1, 2, 3]);
+ * // => true
+ *
+ * _.isObject(1);
+ * // => false
+ */
+function isObject(value) {
+  // Avoid a V8 JIT bug in Chrome 19-20.
+  // See https://code.google.com/p/v8/issues/detail?id=2291 for more details.
+  var type = typeof value;
+  return type == 'function' || (!!value && type == 'object');
+}
+
+module.exports = baseForRight;
+
+},{}],349:[function(require,module,exports){
+/**
+ * lodash 3.0.1 (Custom Build) <https://lodash.com/>
+ * Build: `lodash modern modularize exports="npm" -o ./`
+ * Copyright 2012-2015 The Dojo Foundation <http://dojofoundation.org/>
+ * Based on Underscore.js 1.7.0 <http://underscorejs.org/LICENSE>
+ * Copyright 2009-2015 Jeremy Ashkenas, DocumentCloud and Investigative Reporters & Editors
+ * Available under MIT license <https://lodash.com/license>
+ */
+
+/**
+ * The base implementation of `_.reduce` and `_.reduceRight` without support
+ * for callback shorthands or `this` binding, which iterates over `collection`
+ * using the provided `eachFunc`.
+ *
+ * @private
+ * @param {Array|Object|string} collection The collection to iterate over.
+ * @param {Function} iteratee The function invoked per iteration.
+ * @param {*} accumulator The initial value.
+ * @param {boolean} initFromCollection Specify using the first or last element
+ *  of `collection` as the initial value.
+ * @param {Function} eachFunc The function to iterate over `collection`.
+ * @returns {*} Returns the accumulated value.
+ */
+function baseReduce(collection, iteratee, accumulator, initFromCollection, eachFunc) {
+  eachFunc(collection, function(value, index, collection) {
+    accumulator = initFromCollection
+      ? (initFromCollection = false, value)
+      : iteratee(accumulator, value, index, collection);
+  });
+  return accumulator;
+}
+
+module.exports = baseReduce;
+
+},{}],350:[function(require,module,exports){
+/**
+ * lodash 3.1.0 (Custom Build) <https://lodash.com/>
+ * Build: `lodash modern modularize exports="npm" -o ./`
+ * Copyright 2012-2015 The Dojo Foundation <http://dojofoundation.org/>
+ * Based on Underscore.js 1.8.2 <http://underscorejs.org/LICENSE>
+ * Copyright 2009-2015 Jeremy Ashkenas, DocumentCloud and Investigative Reporters & Editors
+ * Available under MIT license <https://lodash.com/license>
+ */
+var arrayFilter = require('lodash._arrayfilter'),
+    baseCallback = require('lodash._basecallback'),
+    baseFilter = require('lodash._basefilter'),
+    isArray = require('lodash.isarray'),
+    keys = require('lodash.keys');
+
+/**
+ * The opposite of `_.filter`; this method returns the elements of `collection`
+ * that `predicate` does **not** return truthy for.
+ *
+ * If a property name is provided for `predicate` the created `_.property`
+ * style callback returns the property value of the given element.
+ *
+ * If a value is also provided for `thisArg` the created `_.matchesProperty`
+ * style callback returns `true` for elements that have a matching property
+ * value, else `false`.
+ *
+ * If an object is provided for `predicate` the created `_.matches` style
+ * callback returns `true` for elements that have the properties of the given
+ * object, else `false`.
+ *
+ * @static
+ * @memberOf _
+ * @category Collection
+ * @param {Array|Object|string} collection The collection to iterate over.
+ * @param {Function|Object|string} [predicate=_.identity] The function invoked
+ *  per iteration.
+ * @param {*} [thisArg] The `this` binding of `predicate`.
+ * @returns {Array} Returns the new filtered array.
+ * @example
+ *
+ * _.reject([1, 2, 3, 4], function(n) {
+ *   return n % 2 == 0;
+ * });
+ * // => [1, 3]
+ *
+ * var users = [
+ *   { 'user': 'barney', 'age': 36, 'active': false },
+ *   { 'user': 'fred',   'age': 40, 'active': true }
+ * ];
+ *
+ * // using the `_.matches` callback shorthand
+ * _.pluck(_.reject(users, { 'age': 40, 'active': true }), 'user');
+ * // => ['barney']
+ *
+ * // using the `_.matchesProperty` callback shorthand
+ * _.pluck(_.reject(users, 'active', false), 'user');
+ * // => ['fred']
+ *
+ * // using the `_.property` callback shorthand
+ * _.pluck(_.reject(users, 'active'), 'user');
+ * // => ['barney']
+ */
+function reject(collection, predicate, thisArg) {
+  var func = isArray(collection) ? arrayFilter : baseFilter;
+  predicate = baseCallback(predicate, thisArg, 3);
+  return func(collection, function(value, index, collection) {
+    return !predicate(value, index, collection);
+  });
+}
+
+module.exports = reject;
+
+},{"lodash._arrayfilter":351,"lodash._basecallback":352,"lodash._basefilter":356,"lodash.isarray":413,"lodash.keys":418}],351:[function(require,module,exports){
+arguments[4][256][0].apply(exports,arguments)
+},{"dup":256}],352:[function(require,module,exports){
+arguments[4][239][0].apply(exports,arguments)
+},{"dup":239,"lodash._baseisequal":353,"lodash._bindcallback":355,"lodash.isarray":413,"lodash.keys":418}],353:[function(require,module,exports){
+arguments[4][192][0].apply(exports,arguments)
+},{"dup":192,"lodash.isarray":413,"lodash.istypedarray":354,"lodash.keys":418}],354:[function(require,module,exports){
+arguments[4][193][0].apply(exports,arguments)
+},{"dup":193}],355:[function(require,module,exports){
+arguments[4][56][0].apply(exports,arguments)
+},{"dup":56}],356:[function(require,module,exports){
+arguments[4][261][0].apply(exports,arguments)
+},{"dup":261,"lodash._baseeach":357}],357:[function(require,module,exports){
+arguments[4][87][0].apply(exports,arguments)
+},{"dup":87,"lodash.keys":418}],358:[function(require,module,exports){
+/**
+ * lodash 3.0.0 (Custom Build) <https://lodash.com/>
+ * Build: `lodash modern modularize exports="npm" -o ./`
+ * Copyright 2012-2015 The Dojo Foundation <http://dojofoundation.org/>
+ * Based on Underscore.js 1.7.0 <http://underscorejs.org/LICENSE>
+ * Copyright 2009-2015 Jeremy Ashkenas, DocumentCloud and Investigative Reporters & Editors
+ * Available under MIT license <https://lodash.com/license>
+ */
+var baseSlice = require('lodash._baseslice'),
+    isIterateeCall = require('lodash._isiterateecall');
+
+/**
+ * Creates a slice of `array` with `n` elements dropped from the beginning.
+ *
+ * @static
+ * @memberOf _
+ * @type Function
+ * @category Array
+ * @param {Array} array The array to query.
+ * @param {number} [n=1] The number of elements to drop.
+ * @param- {Object} [guard] Enables use as a callback for functions like `_.map`.
+ * @returns {Array} Returns the slice of `array`.
+ * @example
+ *
+ * _.drop([1, 2, 3]);
+ * // => [2, 3]
+ *
+ * _.drop([1, 2, 3], 2);
+ * // => [3]
+ *
+ * _.drop([1, 2, 3], 5);
+ * // => []
+ *
+ * _.drop([1, 2, 3], 0);
+ * // => [1, 2, 3]
+ */
+function drop(array, n, guard) {
+  var length = array ? array.length : 0;
+  if (!length) {
+    return [];
+  }
+  if (guard ? isIterateeCall(array, n, guard) : n == null) {
+    n = 1;
+  }
+  return baseSlice(array, n < 0 ? 0 : n);
+}
+
+/**
+ * Gets all but the first element of `array`.
+ *
+ * @static
+ * @memberOf _
+ * @alias tail
+ * @category Array
+ * @param {Array} array The array to query.
+ * @returns {Array} Returns the slice of `array`.
+ * @example
+ *
+ * _.rest([1, 2, 3]);
+ * // => [2, 3]
+ */
+function rest(array) {
+  return drop(array, 1);
+}
+
+module.exports = rest;
+
+},{"lodash._baseslice":359,"lodash._isiterateecall":360}],359:[function(require,module,exports){
+arguments[4][181][0].apply(exports,arguments)
+},{"dup":181}],360:[function(require,module,exports){
+arguments[4][57][0].apply(exports,arguments)
+},{"dup":57}],361:[function(require,module,exports){
+/**
+ * lodash 3.0.0 (Custom Build) <https://lodash.com/>
+ * Build: `lodash modern modularize exports="npm" -o ./`
+ * Copyright 2012-2015 The Dojo Foundation <http://dojofoundation.org/>
+ * Based on Underscore.js 1.7.0 <http://underscorejs.org/LICENSE>
+ * Copyright 2009-2015 Jeremy Ashkenas, DocumentCloud and Investigative Reporters & Editors
+ * Available under MIT license <https://lodash.com/license>
+ */
+var baseRandom = require('lodash._baserandom'),
+    isIterateeCall = require('lodash._isiterateecall'),
+    toIterable = require('lodash._toiterable'),
+    shuffle = require('lodash.shuffle');
+
+/* Native method references for those with the same name as other `lodash` methods. */
+var nativeMin = Math.min;
+
+/**
+ * Gets a random element or `n` random elements from a collection.
+ *
+ * @static
+ * @memberOf _
+ * @category Collection
+ * @param {Array|Object|string} collection The collection to sample.
+ * @param {number} [n] The number of elements to sample.
+ * @param- {Object} [guard] Enables use as a callback for functions like `_.map`.
+ * @returns {*} Returns the random sample(s).
+ * @example
+ *
+ * _.sample([1, 2, 3, 4]);
+ * // => 2
+ *
+ * _.sample([1, 2, 3, 4], 2);
+ * // => [3, 1]
+ */
+function sample(collection, n, guard) {
+  if (guard ? isIterateeCall(collection, n, guard) : n == null) {
+    collection = toIterable(collection);
+    var length = collection.length;
+    return length > 0 ? collection[baseRandom(0, length - 1)] : undefined;
+  }
+  var result = shuffle(collection);
+  result.length = nativeMin(n < 0 ? 0 : (+n || 0), result.length);
+  return result;
+}
+
+module.exports = sample;
+
+},{"lodash._baserandom":362,"lodash._isiterateecall":363,"lodash._toiterable":364,"lodash.shuffle":366}],362:[function(require,module,exports){
+/**
+ * lodash 3.0.0 (Custom Build) <https://lodash.com/>
+ * Build: `lodash modern modularize exports="npm" -o ./`
+ * Copyright 2012-2015 The Dojo Foundation <http://dojofoundation.org/>
+ * Based on Underscore.js 1.7.0 <http://underscorejs.org/LICENSE>
+ * Copyright 2009-2015 Jeremy Ashkenas, DocumentCloud and Investigative Reporters & Editors
+ * Available under MIT license <https://lodash.com/license>
+ */
+
+/** Native method references. */
+var floor = Math.floor;
+
+/* Native method references for those with the same name as other `lodash` methods. */
+var nativeRandom = Math.random;
+
+/**
+ * The base implementation of `_.random` without support for argument juggling
+ * and returning floating-point numbers.
+ *
+ * @private
+ * @param {number} min The minimum possible value.
+ * @param {number} max The maximum possible value.
+ * @returns {number} Returns the random number.
+ */
+function baseRandom(min, max) {
+  return min + floor(nativeRandom() * (max - min + 1));
+}
+
+module.exports = baseRandom;
+
+},{}],363:[function(require,module,exports){
+arguments[4][57][0].apply(exports,arguments)
+},{"dup":57}],364:[function(require,module,exports){
+arguments[4][321][0].apply(exports,arguments)
+},{"dup":321,"lodash._basevalues":365,"lodash.keys":418}],365:[function(require,module,exports){
+arguments[4][185][0].apply(exports,arguments)
+},{"dup":185}],366:[function(require,module,exports){
+/**
+ * lodash 3.0.0 (Custom Build) <https://lodash.com/>
+ * Build: `lodash modern modularize exports="npm" -o ./`
+ * Copyright 2012-2015 The Dojo Foundation <http://dojofoundation.org/>
+ * Based on Underscore.js 1.7.0 <http://underscorejs.org/LICENSE>
+ * Copyright 2009-2015 Jeremy Ashkenas, DocumentCloud and Investigative Reporters & Editors
+ * Available under MIT license <https://lodash.com/license>
+ */
+var baseRandom = require('lodash._baserandom'),
+    toIterable = require('lodash._toiterable');
+
+/**
+ * Creates an array of shuffled values, using a version of the Fisher-Yates
+ * shuffle. See [Wikipedia](https://en.wikipedia.org/wiki/Fisher-Yates_shuffle)
+ * for more details.
+ *
+ * @static
+ * @memberOf _
+ * @category Collection
+ * @param {Array|Object|string} collection The collection to shuffle.
+ * @returns {Array} Returns the new shuffled array.
+ * @example
+ *
+ * _.shuffle([1, 2, 3, 4]);
+ * // => [4, 1, 3, 2]
+ */
+function shuffle(collection) {
+  collection = toIterable(collection);
+
+  var index = -1,
+      length = collection.length,
+      result = Array(length);
+
+  while (++index < length) {
+    var rand = baseRandom(0, index);
+    if (index != rand) {
+      result[index] = result[rand];
+    }
+    result[rand] = collection[index];
+  }
+  return result;
+}
+
+module.exports = shuffle;
+
+},{"lodash._baserandom":367,"lodash._toiterable":368}],367:[function(require,module,exports){
+arguments[4][362][0].apply(exports,arguments)
+},{"dup":362}],368:[function(require,module,exports){
+arguments[4][321][0].apply(exports,arguments)
+},{"dup":321,"lodash._basevalues":369,"lodash.keys":418}],369:[function(require,module,exports){
+arguments[4][185][0].apply(exports,arguments)
+},{"dup":185}],370:[function(require,module,exports){
+/**
+ * lodash 3.2.1 (Custom Build) <https://lodash.com/>
+ * Build: `lodash modern modularize exports="npm" -o ./`
+ * Copyright 2012-2015 The Dojo Foundation <http://dojofoundation.org/>
+ * Based on Underscore.js 1.8.3 <http://underscorejs.org/LICENSE>
+ * Copyright 2009-2015 Jeremy Ashkenas, DocumentCloud and Investigative Reporters & Editors
+ * Available under MIT license <https://lodash.com/license>
+ */
+var baseCallback = require('lodash._basecallback'),
+    baseEach = require('lodash._baseeach'),
+    isIterateeCall = require('lodash._isiterateecall'),
+    isArray = require('lodash.isarray'),
+    keys = require('lodash.keys');
+
+/**
+ * A specialized version of `_.some` for arrays without support for callback
+ * shorthands and `this` binding.
+ *
+ * @private
+ * @param {Array} array The array to iterate over.
+ * @param {Function} predicate The function invoked per iteration.
+ * @returns {boolean} Returns `true` if any element passes the predicate check,
+ *  else `false`.
+ */
+function arraySome(array, predicate) {
+  var index = -1,
+      length = array.length;
+
+  while (++index < length) {
+    if (predicate(array[index], index, array)) {
+      return true;
+    }
+  }
+  return false;
+}
+
+/**
+ * The base implementation of `_.some` without support for callback shorthands
+ * and `this` binding.
+ *
+ * @private
+ * @param {Array|Object|string} collection The collection to iterate over.
+ * @param {Function} predicate The function invoked per iteration.
+ * @returns {boolean} Returns `true` if any element passes the predicate check,
+ *  else `false`.
+ */
+function baseSome(collection, predicate) {
+  var result;
+
+  baseEach(collection, function(value, index, collection) {
+    result = predicate(value, index, collection);
+    return !result;
+  });
+  return !!result;
+}
+
+/**
+ * Checks if `predicate` returns truthy for **any** element of `collection`.
+ * The function returns as soon as it finds a passing value and does not iterate
+ * over the entire collection. The predicate is bound to `thisArg` and invoked
+ * with three arguments: (value, index|key, collection).
+ *
+ * If a property name is provided for `predicate` the created `_.property`
+ * style callback returns the property value of the given element.
+ *
+ * If a value is also provided for `thisArg` the created `_.matchesProperty`
+ * style callback returns `true` for elements that have a matching property
+ * value, else `false`.
+ *
+ * If an object is provided for `predicate` the created `_.matches` style
+ * callback returns `true` for elements that have the properties of the given
+ * object, else `false`.
+ *
+ * @static
+ * @memberOf _
+ * @alias any
+ * @category Collection
+ * @param {Array|Object|string} collection The collection to iterate over.
+ * @param {Function|Object|string} [predicate=_.identity] The function invoked
+ *  per iteration.
+ * @param {*} [thisArg] The `this` binding of `predicate`.
+ * @returns {boolean} Returns `true` if any element passes the predicate check,
+ *  else `false`.
+ * @example
+ *
+ * _.some([null, 0, 'yes', false], Boolean);
+ * // => true
+ *
+ * var users = [
+ *   { 'user': 'barney', 'active': true },
+ *   { 'user': 'fred',   'active': false }
+ * ];
+ *
+ * // using the `_.matches` callback shorthand
+ * _.some(users, { 'user': 'barney', 'active': false });
+ * // => false
+ *
+ * // using the `_.matchesProperty` callback shorthand
+ * _.some(users, 'active', false);
+ * // => true
+ *
+ * // using the `_.property` callback shorthand
+ * _.some(users, 'active');
+ * // => true
+ */
+function some(collection, predicate, thisArg) {
+  var func = isArray(collection) ? arraySome : baseSome;
+  if (thisArg && isIterateeCall(collection, predicate, thisArg)) {
+    predicate = null;
+  }
+  if (typeof predicate != 'function' || thisArg !== undefined) {
+    predicate = baseCallback(predicate, thisArg, 3);
+  }
+  return func(collection, predicate);
+}
+
+module.exports = some;
+
+},{"lodash._basecallback":371,"lodash._baseeach":375,"lodash._isiterateecall":376,"lodash.isarray":413,"lodash.keys":418}],371:[function(require,module,exports){
+arguments[4][239][0].apply(exports,arguments)
+},{"dup":239,"lodash._baseisequal":372,"lodash._bindcallback":374,"lodash.isarray":413,"lodash.keys":418}],372:[function(require,module,exports){
+arguments[4][192][0].apply(exports,arguments)
+},{"dup":192,"lodash.isarray":413,"lodash.istypedarray":373,"lodash.keys":418}],373:[function(require,module,exports){
+arguments[4][193][0].apply(exports,arguments)
+},{"dup":193}],374:[function(require,module,exports){
+arguments[4][56][0].apply(exports,arguments)
+},{"dup":56}],375:[function(require,module,exports){
+arguments[4][87][0].apply(exports,arguments)
+},{"dup":87,"lodash.keys":418}],376:[function(require,module,exports){
+arguments[4][57][0].apply(exports,arguments)
+},{"dup":57}],377:[function(require,module,exports){
+/**
+ * lodash 3.0.0 (Custom Build) <https://lodash.com/>
+ * Build: `lodash modern modularize exports="npm" -o ./`
+ * Copyright 2012-2015 The Dojo Foundation <http://dojofoundation.org/>
+ * Based on Underscore.js 1.7.0 <http://underscorejs.org/LICENSE>
+ * Copyright 2009-2015 Jeremy Ashkenas, DocumentCloud and Investigative Reporters & Editors
+ * Available under MIT license <https://lodash.com/license>
+ */
+var baseSlice = require('lodash._baseslice'),
+    isIterateeCall = require('lodash._isiterateecall');
+
+/**
+ * Creates a slice of `array` with `n` elements taken from the beginning.
+ *
+ * @static
+ * @memberOf _
+ * @type Function
+ * @category Array
+ * @param {Array} array The array to query.
+ * @param {number} [n=1] The number of elements to take.
+ * @param- {Object} [guard] Enables use as a callback for functions like `_.map`.
+ * @returns {Array} Returns the slice of `array`.
+ * @example
+ *
+ * _.take([1, 2, 3]);
+ * // => [1]
+ *
+ * _.take([1, 2, 3], 2);
+ * // => [1, 2]
+ *
+ * _.take([1, 2, 3], 5);
+ * // => [1, 2, 3]
+ *
+ * _.take([1, 2, 3], 0);
+ * // => []
+ */
+function take(array, n, guard) {
+  var length = array ? array.length : 0;
+  if (!length) {
+    return [];
+  }
+  if (guard ? isIterateeCall(array, n, guard) : n == null) {
+    n = 1;
+  }
+  return baseSlice(array, 0, n < 0 ? 0 : n);
+}
+
+module.exports = take;
+
+},{"lodash._baseslice":378,"lodash._isiterateecall":379}],378:[function(require,module,exports){
+arguments[4][181][0].apply(exports,arguments)
+},{"dup":181}],379:[function(require,module,exports){
+arguments[4][57][0].apply(exports,arguments)
+},{"dup":57}],380:[function(require,module,exports){
+/**
+ * lodash 3.2.0 (Custom Build) <https://lodash.com/>
+ * Build: `lodash modern modularize exports="npm" -o ./`
+ * Copyright 2012-2015 The Dojo Foundation <http://dojofoundation.org/>
+ * Based on Underscore.js 1.8.3 <http://underscorejs.org/LICENSE>
+ * Copyright 2009-2015 Jeremy Ashkenas, DocumentCloud and Investigative Reporters & Editors
+ * Available under MIT license <https://lodash.com/license>
+ */
+var baseDifference = require('lodash._basedifference'),
+    restParam = require('lodash.restparam');
+
+/**
+ * Used as the [maximum length](https://people.mozilla.org/~jorendorff/es6-draft.html#sec-number.max_safe_integer)
+ * of an array-like value.
+ */
+var MAX_SAFE_INTEGER = Math.pow(2, 53) - 1;
+
+/**
+ * The base implementation of `_.property` without support for deep paths.
+ *
+ * @private
+ * @param {string} key The key of the property to get.
+ * @returns {Function} Returns the new function.
+ */
+function baseProperty(key) {
+  return function(object) {
+    return object == null ? undefined : object[key];
+  };
+}
+
+/**
+ * Gets the "length" property value of `object`.
+ *
+ * **Note:** This function is used to avoid a [JIT bug](https://bugs.webkit.org/show_bug.cgi?id=142792)
+ * that affects Safari on at least iOS 8.1-8.3 ARM64.
+ *
+ * @private
+ * @param {Object} object The object to query.
+ * @returns {*} Returns the "length" value.
+ */
+var getLength = baseProperty('length');
+
+/**
+ * Checks if `value` is array-like.
+ *
+ * @private
+ * @param {*} value The value to check.
+ * @returns {boolean} Returns `true` if `value` is array-like, else `false`.
+ */
+function isArrayLike(value) {
+  return value != null && isLength(getLength(value));
+}
+
+/**
+ * Checks if `value` is a valid array-like length.
+ *
+ * **Note:** This function is based on [`ToLength`](https://people.mozilla.org/~jorendorff/es6-draft.html#sec-tolength).
+ *
+ * @private
+ * @param {*} value The value to check.
+ * @returns {boolean} Returns `true` if `value` is a valid length, else `false`.
+ */
+function isLength(value) {
+  return typeof value == 'number' && value > -1 && value % 1 == 0 && value <= MAX_SAFE_INTEGER;
+}
+
+/**
+ * Creates an array excluding all provided values using
+ * [`SameValueZero`](https://people.mozilla.org/~jorendorff/es6-draft.html#sec-samevaluezero)
+ * for equality comparisons.
+ *
+ * @static
+ * @memberOf _
+ * @category Array
+ * @param {Array} array The array to filter.
+ * @param {...*} [values] The values to exclude.
+ * @returns {Array} Returns the new array of filtered values.
+ * @example
+ *
+ * _.without([1, 2, 1, 3], 1, 2);
+ * // => [3]
+ */
+var without = restParam(function(array, values) {
+  return isArrayLike(array)
+    ? baseDifference(array, values)
+    : [];
+});
+
+module.exports = without;
+
+},{"lodash._basedifference":381,"lodash.restparam":386}],381:[function(require,module,exports){
 arguments[4][205][0].apply(exports,arguments)
-},{"dup":205}],692:[function(require,module,exports){
-arguments[4][169][0].apply(exports,arguments)
-},{"dup":169,"lodash._baseisequal":693,"lodash._bindcallback":695,"lodash.isarray":753,"lodash.keys":758}],693:[function(require,module,exports){
-arguments[4][170][0].apply(exports,arguments)
-},{"dup":170,"lodash.isarray":753,"lodash.istypedarray":694,"lodash.keys":758}],694:[function(require,module,exports){
-arguments[4][171][0].apply(exports,arguments)
-},{"dup":171}],695:[function(require,module,exports){
-arguments[4][56][0].apply(exports,arguments)
-},{"dup":56}],696:[function(require,module,exports){
-arguments[4][210][0].apply(exports,arguments)
-},{"dup":210,"lodash._baseeach":697}],697:[function(require,module,exports){
-arguments[4][87][0].apply(exports,arguments)
-},{"dup":87,"lodash.keys":758}],698:[function(require,module,exports){
-arguments[4][385][0].apply(exports,arguments)
-},{"dup":385,"lodash._baseslice":699,"lodash._isiterateecall":700}],699:[function(require,module,exports){
-arguments[4][161][0].apply(exports,arguments)
-},{"dup":161}],700:[function(require,module,exports){
-arguments[4][57][0].apply(exports,arguments)
-},{"dup":57}],701:[function(require,module,exports){
-arguments[4][388][0].apply(exports,arguments)
-},{"dup":388,"lodash._baserandom":702,"lodash._isiterateecall":703,"lodash._toiterable":704,"lodash.shuffle":706}],702:[function(require,module,exports){
-arguments[4][389][0].apply(exports,arguments)
-},{"dup":389}],703:[function(require,module,exports){
-arguments[4][57][0].apply(exports,arguments)
-},{"dup":57}],704:[function(require,module,exports){
-arguments[4][316][0].apply(exports,arguments)
-},{"dup":316,"lodash._basevalues":705,"lodash.keys":758}],705:[function(require,module,exports){
-arguments[4][115][0].apply(exports,arguments)
-},{"dup":115}],706:[function(require,module,exports){
-arguments[4][397][0].apply(exports,arguments)
-},{"dup":397,"lodash._baserandom":707,"lodash._toiterable":708}],707:[function(require,module,exports){
-arguments[4][389][0].apply(exports,arguments)
-},{"dup":389}],708:[function(require,module,exports){
-arguments[4][316][0].apply(exports,arguments)
-},{"dup":316,"lodash._basevalues":709,"lodash.keys":758}],709:[function(require,module,exports){
-arguments[4][115][0].apply(exports,arguments)
-},{"dup":115}],710:[function(require,module,exports){
-arguments[4][405][0].apply(exports,arguments)
-},{"dup":405,"lodash._basecallback":711,"lodash._baseeach":715,"lodash._isiterateecall":716,"lodash.isarray":753,"lodash.keys":758}],711:[function(require,module,exports){
-arguments[4][169][0].apply(exports,arguments)
-},{"dup":169,"lodash._baseisequal":712,"lodash._bindcallback":714,"lodash.isarray":753,"lodash.keys":758}],712:[function(require,module,exports){
-arguments[4][170][0].apply(exports,arguments)
-},{"dup":170,"lodash.isarray":753,"lodash.istypedarray":713,"lodash.keys":758}],713:[function(require,module,exports){
-arguments[4][171][0].apply(exports,arguments)
-},{"dup":171}],714:[function(require,module,exports){
-arguments[4][56][0].apply(exports,arguments)
-},{"dup":56}],715:[function(require,module,exports){
-arguments[4][87][0].apply(exports,arguments)
-},{"dup":87,"lodash.keys":758}],716:[function(require,module,exports){
-arguments[4][57][0].apply(exports,arguments)
-},{"dup":57}],717:[function(require,module,exports){
-arguments[4][429][0].apply(exports,arguments)
-},{"dup":429,"lodash._baseslice":718,"lodash._isiterateecall":719}],718:[function(require,module,exports){
-arguments[4][161][0].apply(exports,arguments)
-},{"dup":161}],719:[function(require,module,exports){
-arguments[4][57][0].apply(exports,arguments)
-},{"dup":57}],720:[function(require,module,exports){
-arguments[4][432][0].apply(exports,arguments)
-},{"dup":432,"lodash._basedifference":721,"lodash.restparam":726}],721:[function(require,module,exports){
-arguments[4][180][0].apply(exports,arguments)
-},{"dup":180,"lodash._baseindexof":722,"lodash._cacheindexof":723,"lodash._createcache":724}],722:[function(require,module,exports){
-arguments[4][114][0].apply(exports,arguments)
-},{"dup":114}],723:[function(require,module,exports){
-arguments[4][182][0].apply(exports,arguments)
-},{"dup":182}],724:[function(require,module,exports){
-arguments[4][183][0].apply(exports,arguments)
-},{"dup":183,"lodash.isnative":725}],725:[function(require,module,exports){
+},{"dup":205,"lodash._baseindexof":382,"lodash._cacheindexof":383,"lodash._createcache":384}],382:[function(require,module,exports){
+arguments[4][184][0].apply(exports,arguments)
+},{"dup":184}],383:[function(require,module,exports){
+arguments[4][207][0].apply(exports,arguments)
+},{"dup":207}],384:[function(require,module,exports){
+arguments[4][208][0].apply(exports,arguments)
+},{"dup":208,"lodash.isnative":385}],385:[function(require,module,exports){
 arguments[4][59][0].apply(exports,arguments)
-},{"dup":59}],726:[function(require,module,exports){
+},{"dup":59}],386:[function(require,module,exports){
 arguments[4][58][0].apply(exports,arguments)
-},{"dup":58}],727:[function(require,module,exports){
+},{"dup":58}],387:[function(require,module,exports){
 arguments[4][52][0].apply(exports,arguments)
-},{"dup":52,"lodash._baseassign":728,"lodash._createassigner":730,"lodash.isnative":734,"lodash.keys":758}],728:[function(require,module,exports){
+},{"dup":52,"lodash._baseassign":388,"lodash._createassigner":390,"lodash.isnative":394,"lodash.keys":418}],388:[function(require,module,exports){
 arguments[4][53][0].apply(exports,arguments)
-},{"dup":53,"lodash._basecopy":729,"lodash.isnative":734,"lodash.keys":758}],729:[function(require,module,exports){
+},{"dup":53,"lodash._basecopy":389,"lodash.isnative":394,"lodash.keys":418}],389:[function(require,module,exports){
 arguments[4][54][0].apply(exports,arguments)
-},{"dup":54}],730:[function(require,module,exports){
+},{"dup":54}],390:[function(require,module,exports){
 arguments[4][55][0].apply(exports,arguments)
-},{"dup":55,"lodash._bindcallback":731,"lodash._isiterateecall":732,"lodash.restparam":733}],731:[function(require,module,exports){
+},{"dup":55,"lodash._bindcallback":391,"lodash._isiterateecall":392,"lodash.restparam":393}],391:[function(require,module,exports){
 arguments[4][56][0].apply(exports,arguments)
-},{"dup":56}],732:[function(require,module,exports){
+},{"dup":56}],392:[function(require,module,exports){
 arguments[4][57][0].apply(exports,arguments)
-},{"dup":57}],733:[function(require,module,exports){
+},{"dup":57}],393:[function(require,module,exports){
 arguments[4][58][0].apply(exports,arguments)
-},{"dup":58}],734:[function(require,module,exports){
+},{"dup":58}],394:[function(require,module,exports){
 arguments[4][59][0].apply(exports,arguments)
-},{"dup":59}],735:[function(require,module,exports){
-arguments[4][179][0].apply(exports,arguments)
-},{"dup":179,"lodash._basedifference":736,"lodash._baseflatten":741,"lodash.restparam":743}],736:[function(require,module,exports){
-arguments[4][180][0].apply(exports,arguments)
-},{"dup":180,"lodash._baseindexof":737,"lodash._cacheindexof":738,"lodash._createcache":739}],737:[function(require,module,exports){
-arguments[4][114][0].apply(exports,arguments)
-},{"dup":114}],738:[function(require,module,exports){
-arguments[4][182][0].apply(exports,arguments)
-},{"dup":182}],739:[function(require,module,exports){
-arguments[4][183][0].apply(exports,arguments)
-},{"dup":183,"lodash.isnative":740}],740:[function(require,module,exports){
+},{"dup":59}],395:[function(require,module,exports){
+/**
+ * lodash 3.2.0 (Custom Build) <https://lodash.com/>
+ * Build: `lodash modern modularize exports="npm" -o ./`
+ * Copyright 2012-2015 The Dojo Foundation <http://dojofoundation.org/>
+ * Based on Underscore.js 1.8.3 <http://underscorejs.org/LICENSE>
+ * Copyright 2009-2015 Jeremy Ashkenas, DocumentCloud and Investigative Reporters & Editors
+ * Available under MIT license <https://lodash.com/license>
+ */
+var baseDifference = require('lodash._basedifference'),
+    baseFlatten = require('lodash._baseflatten'),
+    restParam = require('lodash.restparam');
+
+/**
+ * Used as the [maximum length](https://people.mozilla.org/~jorendorff/es6-draft.html#sec-number.max_safe_integer)
+ * of an array-like value.
+ */
+var MAX_SAFE_INTEGER = Math.pow(2, 53) - 1;
+
+/**
+ * The base implementation of `_.property` without support for deep paths.
+ *
+ * @private
+ * @param {string} key The key of the property to get.
+ * @returns {Function} Returns the new function.
+ */
+function baseProperty(key) {
+  return function(object) {
+    return object == null ? undefined : object[key];
+  };
+}
+
+/**
+ * Gets the "length" property value of `object`.
+ *
+ * **Note:** This function is used to avoid a [JIT bug](https://bugs.webkit.org/show_bug.cgi?id=142792)
+ * that affects Safari on at least iOS 8.1-8.3 ARM64.
+ *
+ * @private
+ * @param {Object} object The object to query.
+ * @returns {*} Returns the "length" value.
+ */
+var getLength = baseProperty('length');
+
+/**
+ * Checks if `value` is array-like.
+ *
+ * @private
+ * @param {*} value The value to check.
+ * @returns {boolean} Returns `true` if `value` is array-like, else `false`.
+ */
+function isArrayLike(value) {
+  return value != null && isLength(getLength(value));
+}
+
+/**
+ * Checks if `value` is a valid array-like length.
+ *
+ * **Note:** This function is based on [`ToLength`](https://people.mozilla.org/~jorendorff/es6-draft.html#sec-tolength).
+ *
+ * @private
+ * @param {*} value The value to check.
+ * @returns {boolean} Returns `true` if `value` is a valid length, else `false`.
+ */
+function isLength(value) {
+  return typeof value == 'number' && value > -1 && value % 1 == 0 && value <= MAX_SAFE_INTEGER;
+}
+
+/**
+ * Creates an array excluding all values of the provided arrays using
+ * [`SameValueZero`](https://people.mozilla.org/~jorendorff/es6-draft.html#sec-samevaluezero)
+ * for equality comparisons.
+ *
+ * @static
+ * @memberOf _
+ * @category Array
+ * @param {Array} array The array to inspect.
+ * @param {...Array} [values] The arrays of values to exclude.
+ * @returns {Array} Returns the new array of filtered values.
+ * @example
+ *
+ * _.difference([1, 2, 3], [4, 2]);
+ * // => [1, 3]
+ */
+var difference = restParam(function(array, values) {
+  return isArrayLike(array)
+    ? baseDifference(array, baseFlatten(values, false, true))
+    : [];
+});
+
+module.exports = difference;
+
+},{"lodash._basedifference":396,"lodash._baseflatten":401,"lodash.restparam":403}],396:[function(require,module,exports){
+arguments[4][205][0].apply(exports,arguments)
+},{"dup":205,"lodash._baseindexof":397,"lodash._cacheindexof":398,"lodash._createcache":399}],397:[function(require,module,exports){
+arguments[4][184][0].apply(exports,arguments)
+},{"dup":184}],398:[function(require,module,exports){
+arguments[4][207][0].apply(exports,arguments)
+},{"dup":207}],399:[function(require,module,exports){
+arguments[4][208][0].apply(exports,arguments)
+},{"dup":208,"lodash.isnative":400}],400:[function(require,module,exports){
 arguments[4][59][0].apply(exports,arguments)
-},{"dup":59}],741:[function(require,module,exports){
-arguments[4][185][0].apply(exports,arguments)
-},{"dup":185,"lodash.isarguments":742,"lodash.isarray":753}],742:[function(require,module,exports){
+},{"dup":59}],401:[function(require,module,exports){
+arguments[4][210][0].apply(exports,arguments)
+},{"dup":210,"lodash.isarguments":402,"lodash.isarray":413}],402:[function(require,module,exports){
 arguments[4][61][0].apply(exports,arguments)
-},{"dup":61}],743:[function(require,module,exports){
+},{"dup":61}],403:[function(require,module,exports){
 arguments[4][58][0].apply(exports,arguments)
-},{"dup":58}],744:[function(require,module,exports){
+},{"dup":58}],404:[function(require,module,exports){
 arguments[4][85][0].apply(exports,arguments)
-},{"dup":85,"lodash._arrayeach":745,"lodash._baseeach":746,"lodash._bindcallback":747,"lodash.isarray":753}],745:[function(require,module,exports){
+},{"dup":85,"lodash._arrayeach":405,"lodash._baseeach":406,"lodash._bindcallback":407,"lodash.isarray":413}],405:[function(require,module,exports){
 arguments[4][86][0].apply(exports,arguments)
-},{"dup":86}],746:[function(require,module,exports){
+},{"dup":86}],406:[function(require,module,exports){
 arguments[4][87][0].apply(exports,arguments)
-},{"dup":87,"lodash.keys":758}],747:[function(require,module,exports){
+},{"dup":87,"lodash.keys":418}],407:[function(require,module,exports){
 arguments[4][56][0].apply(exports,arguments)
-},{"dup":56}],748:[function(require,module,exports){
-arguments[4][113][0].apply(exports,arguments)
-},{"dup":113,"lodash._baseindexof":749,"lodash._basevalues":750,"lodash._isiterateecall":751,"lodash.isarray":753,"lodash.isstring":752,"lodash.keys":758}],749:[function(require,module,exports){
-arguments[4][114][0].apply(exports,arguments)
-},{"dup":114}],750:[function(require,module,exports){
-arguments[4][115][0].apply(exports,arguments)
-},{"dup":115}],751:[function(require,module,exports){
-arguments[4][57][0].apply(exports,arguments)
-},{"dup":57}],752:[function(require,module,exports){
-arguments[4][94][0].apply(exports,arguments)
-},{"dup":94}],753:[function(require,module,exports){
-arguments[4][68][0].apply(exports,arguments)
-},{"dup":68}],754:[function(require,module,exports){
-arguments[4][531][0].apply(exports,arguments)
-},{"dup":531,"lodash._baseisequal":755,"lodash._bindcallback":757}],755:[function(require,module,exports){
-arguments[4][170][0].apply(exports,arguments)
-},{"dup":170,"lodash.isarray":753,"lodash.istypedarray":756,"lodash.keys":758}],756:[function(require,module,exports){
-arguments[4][171][0].apply(exports,arguments)
-},{"dup":171}],757:[function(require,module,exports){
-arguments[4][56][0].apply(exports,arguments)
-},{"dup":56}],758:[function(require,module,exports){
-arguments[4][60][0].apply(exports,arguments)
-},{"dup":60,"lodash.isarguments":759,"lodash.isarray":753,"lodash.isnative":760}],759:[function(require,module,exports){
-arguments[4][61][0].apply(exports,arguments)
-},{"dup":61}],760:[function(require,module,exports){
-arguments[4][59][0].apply(exports,arguments)
-},{"dup":59}],761:[function(require,module,exports){
-arguments[4][350][0].apply(exports,arguments)
-},{"dup":350,"lodash._basecallback":762,"lodash._baseeach":766,"lodash._basereduce":767,"lodash.isarray":753,"lodash.keys":758}],762:[function(require,module,exports){
-arguments[4][169][0].apply(exports,arguments)
-},{"dup":169,"lodash._baseisequal":763,"lodash._bindcallback":765,"lodash.isarray":753,"lodash.keys":758}],763:[function(require,module,exports){
-arguments[4][170][0].apply(exports,arguments)
-},{"dup":170,"lodash.isarray":753,"lodash.istypedarray":764,"lodash.keys":758}],764:[function(require,module,exports){
-arguments[4][171][0].apply(exports,arguments)
-},{"dup":171}],765:[function(require,module,exports){
-arguments[4][56][0].apply(exports,arguments)
-},{"dup":56}],766:[function(require,module,exports){
-arguments[4][87][0].apply(exports,arguments)
-},{"dup":87,"lodash.keys":758}],767:[function(require,module,exports){
-arguments[4][356][0].apply(exports,arguments)
-},{"dup":356}],768:[function(require,module,exports){
-arguments[4][416][0].apply(exports,arguments)
-},{"dup":416,"lodash._basecallback":769,"lodash._basecompareascending":773,"lodash._baseeach":774,"lodash._basesortby":775,"lodash._isiterateecall":776,"lodash.isarray":753,"lodash.keys":758}],769:[function(require,module,exports){
-arguments[4][169][0].apply(exports,arguments)
-},{"dup":169,"lodash._baseisequal":770,"lodash._bindcallback":772,"lodash.isarray":753,"lodash.keys":758}],770:[function(require,module,exports){
-arguments[4][170][0].apply(exports,arguments)
-},{"dup":170,"lodash.isarray":753,"lodash.istypedarray":771,"lodash.keys":758}],771:[function(require,module,exports){
-arguments[4][171][0].apply(exports,arguments)
-},{"dup":171}],772:[function(require,module,exports){
-arguments[4][56][0].apply(exports,arguments)
-},{"dup":56}],773:[function(require,module,exports){
-arguments[4][421][0].apply(exports,arguments)
-},{"dup":421}],774:[function(require,module,exports){
-arguments[4][87][0].apply(exports,arguments)
-},{"dup":87,"lodash.keys":758}],775:[function(require,module,exports){
-arguments[4][423][0].apply(exports,arguments)
-},{"dup":423}],776:[function(require,module,exports){
-arguments[4][57][0].apply(exports,arguments)
-},{"dup":57}],777:[function(require,module,exports){
-arguments[4][563][0].apply(exports,arguments)
-},{"dup":563,"lodash._baseflatten":778,"lodash._baseuniq":780,"lodash.restparam":785}],778:[function(require,module,exports){
-arguments[4][185][0].apply(exports,arguments)
-},{"dup":185,"lodash.isarguments":779,"lodash.isarray":753}],779:[function(require,module,exports){
-arguments[4][61][0].apply(exports,arguments)
-},{"dup":61}],780:[function(require,module,exports){
-arguments[4][566][0].apply(exports,arguments)
-},{"dup":566,"lodash._baseindexof":781,"lodash._cacheindexof":782,"lodash._createcache":783}],781:[function(require,module,exports){
-arguments[4][114][0].apply(exports,arguments)
-},{"dup":114}],782:[function(require,module,exports){
-arguments[4][182][0].apply(exports,arguments)
-},{"dup":182}],783:[function(require,module,exports){
+},{"dup":56}],408:[function(require,module,exports){
 arguments[4][183][0].apply(exports,arguments)
-},{"dup":183,"lodash.isnative":784}],784:[function(require,module,exports){
+},{"dup":183,"lodash._baseindexof":409,"lodash._basevalues":410,"lodash._isiterateecall":411,"lodash.isarray":413,"lodash.isstring":412,"lodash.keys":418}],409:[function(require,module,exports){
+arguments[4][184][0].apply(exports,arguments)
+},{"dup":184}],410:[function(require,module,exports){
+arguments[4][185][0].apply(exports,arguments)
+},{"dup":185}],411:[function(require,module,exports){
+arguments[4][57][0].apply(exports,arguments)
+},{"dup":57}],412:[function(require,module,exports){
+arguments[4][94][0].apply(exports,arguments)
+},{"dup":94}],413:[function(require,module,exports){
+arguments[4][68][0].apply(exports,arguments)
+},{"dup":68}],414:[function(require,module,exports){
+arguments[4][191][0].apply(exports,arguments)
+},{"dup":191,"lodash._baseisequal":415,"lodash._bindcallback":417}],415:[function(require,module,exports){
+arguments[4][192][0].apply(exports,arguments)
+},{"dup":192,"lodash.isarray":413,"lodash.istypedarray":416,"lodash.keys":418}],416:[function(require,module,exports){
+arguments[4][193][0].apply(exports,arguments)
+},{"dup":193}],417:[function(require,module,exports){
+arguments[4][56][0].apply(exports,arguments)
+},{"dup":56}],418:[function(require,module,exports){
+arguments[4][60][0].apply(exports,arguments)
+},{"dup":60,"lodash.isarguments":419,"lodash.isarray":413,"lodash.isnative":420}],419:[function(require,module,exports){
+arguments[4][61][0].apply(exports,arguments)
+},{"dup":61}],420:[function(require,module,exports){
 arguments[4][59][0].apply(exports,arguments)
-},{"dup":59}],785:[function(require,module,exports){
+},{"dup":59}],421:[function(require,module,exports){
+/**
+ * lodash 3.1.1 (Custom Build) <https://lodash.com/>
+ * Build: `lodash modern modularize exports="npm" -o ./`
+ * Copyright 2012-2015 The Dojo Foundation <http://dojofoundation.org/>
+ * Based on Underscore.js 1.8.3 <http://underscorejs.org/LICENSE>
+ * Copyright 2009-2015 Jeremy Ashkenas, DocumentCloud and Investigative Reporters & Editors
+ * Available under MIT license <https://lodash.com/license>
+ */
+var baseCallback = require('lodash._basecallback'),
+    baseEach = require('lodash._baseeach'),
+    baseReduce = require('lodash._basereduce'),
+    isArray = require('lodash.isarray'),
+    keys = require('lodash.keys');
+
+/**
+ * A specialized version of `_.reduce` for arrays without support for callback
+ * shorthands and `this` binding.
+ *
+ * @private
+ * @param {Array} array The array to iterate over.
+ * @param {Function} iteratee The function invoked per iteration.
+ * @param {*} [accumulator] The initial value.
+ * @param {boolean} [initFromArray] Specify using the first element of `array`
+ *  as the initial value.
+ * @returns {*} Returns the accumulated value.
+ */
+function arrayReduce(array, iteratee, accumulator, initFromArray) {
+  var index = -1,
+      length = array.length;
+
+  if (initFromArray && length) {
+    accumulator = array[++index];
+  }
+  while (++index < length) {
+    accumulator = iteratee(accumulator, array[index], index, array);
+  }
+  return accumulator;
+}
+
+/**
+ * Creates a function for `_.reduce` or `_.reduceRight`.
+ *
+ * @private
+ * @param {Function} arrayFunc The function to iterate over an array.
+ * @param {Function} eachFunc The function to iterate over a collection.
+ * @returns {Function} Returns the new each function.
+ */
+function createReduce(arrayFunc, eachFunc) {
+  return function(collection, iteratee, accumulator, thisArg) {
+    var initFromArray = arguments.length < 3;
+    return (typeof iteratee == 'function' && thisArg === undefined && isArray(collection))
+      ? arrayFunc(collection, iteratee, accumulator, initFromArray)
+      : baseReduce(collection, baseCallback(iteratee, thisArg, 4), accumulator, initFromArray, eachFunc);
+  };
+}
+
+/**
+ * Reduces `collection` to a value which is the accumulated result of running
+ * each element in `collection` through `iteratee`, where each successive
+ * invocation is supplied the return value of the previous. If `accumulator`
+ * is not provided the first element of `collection` is used as the initial
+ * value. The `iteratee` is bound to `thisArg` and invoked with four arguments:
+ * (accumulator, value, index|key, collection).
+ *
+ * Many lodash methods are guarded to work as interatees for methods like
+ * `_.reduce`, `_.reduceRight`, and `_.transform`.
+ *
+ * The guarded methods are:
+ * `assign`, `defaults`, `includes`, `merge`, `sortByAll`, and `sortByOrder`
+ *
+ * @static
+ * @memberOf _
+ * @alias foldl, inject
+ * @category Collection
+ * @param {Array|Object|string} collection The collection to iterate over.
+ * @param {Function} [iteratee=_.identity] The function invoked per iteration.
+ * @param {*} [accumulator] The initial value.
+ * @param {*} [thisArg] The `this` binding of `iteratee`.
+ * @returns {*} Returns the accumulated value.
+ * @example
+ *
+ * _.reduce([1, 2], function(total, n) {
+ *   return total + n;
+ * });
+ * // => 3
+ *
+ * _.reduce({ 'a': 1, 'b': 2 }, function(result, n, key) {
+ *   result[key] = n * 3;
+ *   return result;
+ * }, {});
+ * // => { 'a': 3, 'b': 6 } (iteration order is not guaranteed)
+ */
+var reduce = createReduce(arrayReduce, baseEach);
+
+module.exports = reduce;
+
+},{"lodash._basecallback":422,"lodash._baseeach":426,"lodash._basereduce":427,"lodash.isarray":413,"lodash.keys":418}],422:[function(require,module,exports){
+arguments[4][239][0].apply(exports,arguments)
+},{"dup":239,"lodash._baseisequal":423,"lodash._bindcallback":425,"lodash.isarray":413,"lodash.keys":418}],423:[function(require,module,exports){
+arguments[4][192][0].apply(exports,arguments)
+},{"dup":192,"lodash.isarray":413,"lodash.istypedarray":424,"lodash.keys":418}],424:[function(require,module,exports){
+arguments[4][193][0].apply(exports,arguments)
+},{"dup":193}],425:[function(require,module,exports){
+arguments[4][56][0].apply(exports,arguments)
+},{"dup":56}],426:[function(require,module,exports){
+arguments[4][87][0].apply(exports,arguments)
+},{"dup":87,"lodash.keys":418}],427:[function(require,module,exports){
+arguments[4][349][0].apply(exports,arguments)
+},{"dup":349}],428:[function(require,module,exports){
+/**
+ * lodash 3.1.2 (Custom Build) <https://lodash.com/>
+ * Build: `lodash modern modularize exports="npm" -o ./`
+ * Copyright 2012-2015 The Dojo Foundation <http://dojofoundation.org/>
+ * Based on Underscore.js 1.8.3 <http://underscorejs.org/LICENSE>
+ * Copyright 2009-2015 Jeremy Ashkenas, DocumentCloud and Investigative Reporters & Editors
+ * Available under MIT license <https://lodash.com/license>
+ */
+var baseCallback = require('lodash._basecallback'),
+    baseCompareAscending = require('lodash._basecompareascending'),
+    baseEach = require('lodash._baseeach'),
+    baseSortBy = require('lodash._basesortby'),
+    isIterateeCall = require('lodash._isiterateecall'),
+    isArray = require('lodash.isarray'),
+    keys = require('lodash.keys');
+
+/**
+ * Used by `_.sortBy` to compare transformed elements of a collection and stable
+ * sort them in ascending order.
+ *
+ * @private
+ * @param {Object} object The object to compare to `other`.
+ * @param {Object} other The object to compare to `object`.
+ * @returns {number} Returns the sort order indicator for `object`.
+ */
+function compareAscending(object, other) {
+  return baseCompareAscending(object.criteria, other.criteria) || (object.index - other.index);
+}
+
+/**
+ * Used as the [maximum length](https://people.mozilla.org/~jorendorff/es6-draft.html#sec-number.max_safe_integer)
+ * of an array-like value.
+ */
+var MAX_SAFE_INTEGER = Math.pow(2, 53) - 1;
+
+/**
+ * The base implementation of `_.map` without support for callback shorthands
+ * and `this` binding.
+ *
+ * @private
+ * @param {Array|Object|string} collection The collection to iterate over.
+ * @param {Function} iteratee The function invoked per iteration.
+ * @returns {Array} Returns the new mapped array.
+ */
+function baseMap(collection, iteratee) {
+  var index = -1,
+      result = isArrayLike(collection) ? Array(collection.length) : [];
+
+  baseEach(collection, function(value, key, collection) {
+    result[++index] = iteratee(value, key, collection);
+  });
+  return result;
+}
+
+/**
+ * The base implementation of `_.property` without support for deep paths.
+ *
+ * @private
+ * @param {string} key The key of the property to get.
+ * @returns {Function} Returns the new function.
+ */
+function baseProperty(key) {
+  return function(object) {
+    return object == null ? undefined : object[key];
+  };
+}
+
+/**
+ * Gets the "length" property value of `object`.
+ *
+ * **Note:** This function is used to avoid a [JIT bug](https://bugs.webkit.org/show_bug.cgi?id=142792)
+ * that affects Safari on at least iOS 8.1-8.3 ARM64.
+ *
+ * @private
+ * @param {Object} object The object to query.
+ * @returns {*} Returns the "length" value.
+ */
+var getLength = baseProperty('length');
+
+/**
+ * Checks if `value` is array-like.
+ *
+ * @private
+ * @param {*} value The value to check.
+ * @returns {boolean} Returns `true` if `value` is array-like, else `false`.
+ */
+function isArrayLike(value) {
+  return value != null && isLength(getLength(value));
+}
+
+/**
+ * Checks if `value` is a valid array-like length.
+ *
+ * **Note:** This function is based on [`ToLength`](https://people.mozilla.org/~jorendorff/es6-draft.html#sec-tolength).
+ *
+ * @private
+ * @param {*} value The value to check.
+ * @returns {boolean} Returns `true` if `value` is a valid length, else `false`.
+ */
+function isLength(value) {
+  return typeof value == 'number' && value > -1 && value % 1 == 0 && value <= MAX_SAFE_INTEGER;
+}
+
+/**
+ * Creates an array of elements, sorted in ascending order by the results of
+ * running each element in a collection through `iteratee`. This method performs
+ * a stable sort, that is, it preserves the original sort order of equal elements.
+ * The `iteratee` is bound to `thisArg` and invoked with three arguments:
+ * (value, index|key, collection).
+ *
+ * If a property name is provided for `iteratee` the created `_.property`
+ * style callback returns the property value of the given element.
+ *
+ * If a value is also provided for `thisArg` the created `_.matchesProperty`
+ * style callback returns `true` for elements that have a matching property
+ * value, else `false`.
+ *
+ * If an object is provided for `iteratee` the created `_.matches` style
+ * callback returns `true` for elements that have the properties of the given
+ * object, else `false`.
+ *
+ * @static
+ * @memberOf _
+ * @category Collection
+ * @param {Array|Object|string} collection The collection to iterate over.
+ * @param {Function|Object|string} [iteratee=_.identity] The function invoked
+ *  per iteration.
+ * @param {*} [thisArg] The `this` binding of `iteratee`.
+ * @returns {Array} Returns the new sorted array.
+ * @example
+ *
+ * _.sortBy([1, 2, 3], function(n) {
+ *   return Math.sin(n);
+ * });
+ * // => [3, 1, 2]
+ *
+ * _.sortBy([1, 2, 3], function(n) {
+ *   return this.sin(n);
+ * }, Math);
+ * // => [3, 1, 2]
+ *
+ * var users = [
+ *   { 'user': 'fred' },
+ *   { 'user': 'pebbles' },
+ *   { 'user': 'barney' }
+ * ];
+ *
+ * // using the `_.property` callback shorthand
+ * _.pluck(_.sortBy(users, 'user'), 'user');
+ * // => ['barney', 'fred', 'pebbles']
+ */
+function sortBy(collection, iteratee, thisArg) {
+  if (collection == null) {
+    return [];
+  }
+  if (thisArg && isIterateeCall(collection, iteratee, thisArg)) {
+    iteratee = null;
+  }
+  var index = -1;
+  iteratee = baseCallback(iteratee, thisArg, 3);
+
+  var result = baseMap(collection, function(value, key, collection) {
+    return { 'criteria': iteratee(value, key, collection), 'index': ++index, 'value': value };
+  });
+  return baseSortBy(result, compareAscending);
+}
+
+module.exports = sortBy;
+
+},{"lodash._basecallback":429,"lodash._basecompareascending":433,"lodash._baseeach":434,"lodash._basesortby":435,"lodash._isiterateecall":436,"lodash.isarray":413,"lodash.keys":418}],429:[function(require,module,exports){
+arguments[4][239][0].apply(exports,arguments)
+},{"dup":239,"lodash._baseisequal":430,"lodash._bindcallback":432,"lodash.isarray":413,"lodash.keys":418}],430:[function(require,module,exports){
+arguments[4][192][0].apply(exports,arguments)
+},{"dup":192,"lodash.isarray":413,"lodash.istypedarray":431,"lodash.keys":418}],431:[function(require,module,exports){
+arguments[4][193][0].apply(exports,arguments)
+},{"dup":193}],432:[function(require,module,exports){
+arguments[4][56][0].apply(exports,arguments)
+},{"dup":56}],433:[function(require,module,exports){
+/**
+ * lodash 3.0.1 (Custom Build) <https://lodash.com/>
+ * Build: `lodash modern modularize exports="npm" -o ./`
+ * Copyright 2012-2015 The Dojo Foundation <http://dojofoundation.org/>
+ * Based on Underscore.js 1.8.3 <http://underscorejs.org/LICENSE>
+ * Copyright 2009-2015 Jeremy Ashkenas, DocumentCloud and Investigative Reporters & Editors
+ * Available under MIT license <https://lodash.com/license>
+ */
+
+/**
+ * The base implementation of `compareAscending` which compares values and
+ * sorts them in ascending order without guaranteeing a stable sort.
+ *
+ * @private
+ * @param {*} value The value to compare to `other`.
+ * @param {*} other The value to compare to `value`.
+ * @returns {number} Returns the sort order indicator for `value`.
+ */
+function baseCompareAscending(value, other) {
+  if (value !== other) {
+    var valIsReflexive = value === value,
+        othIsReflexive = other === other;
+
+    if (value > other || !valIsReflexive || (value === undefined && othIsReflexive)) {
+      return 1;
+    }
+    if (value < other || !othIsReflexive || (other === undefined && valIsReflexive)) {
+      return -1;
+    }
+  }
+  return 0;
+}
+
+module.exports = baseCompareAscending;
+
+},{}],434:[function(require,module,exports){
+arguments[4][87][0].apply(exports,arguments)
+},{"dup":87,"lodash.keys":418}],435:[function(require,module,exports){
+/**
+ * lodash 3.0.0 (Custom Build) <https://lodash.com/>
+ * Build: `lodash modern modularize exports="npm" -o ./`
+ * Copyright 2012-2015 The Dojo Foundation <http://dojofoundation.org/>
+ * Based on Underscore.js 1.7.0 <http://underscorejs.org/LICENSE>
+ * Copyright 2009-2015 Jeremy Ashkenas, DocumentCloud and Investigative Reporters & Editors
+ * Available under MIT license <https://lodash.com/license>
+ */
+
+/**
+ * The base implementation of `_.sortBy` and `_.sortByAll` which uses `comparer`
+ * to define the sort order of `array` and replaces criteria objects with their
+ * corresponding values.
+ *
+ * @private
+ * @param {Array} array The array to sort.
+ * @param {Function} comparer The function to define sort order.
+ * @returns {Array} Returns `array`.
+ */
+function baseSortBy(array, comparer) {
+  var length = array.length;
+
+  array.sort(comparer);
+  while (length--) {
+    array[length] = array[length].value;
+  }
+  return array;
+}
+
+module.exports = baseSortBy;
+
+},{}],436:[function(require,module,exports){
+arguments[4][57][0].apply(exports,arguments)
+},{"dup":57}],437:[function(require,module,exports){
+arguments[4][223][0].apply(exports,arguments)
+},{"dup":223,"lodash._baseflatten":438,"lodash._baseuniq":440,"lodash.restparam":445}],438:[function(require,module,exports){
+arguments[4][210][0].apply(exports,arguments)
+},{"dup":210,"lodash.isarguments":439,"lodash.isarray":413}],439:[function(require,module,exports){
+arguments[4][61][0].apply(exports,arguments)
+},{"dup":61}],440:[function(require,module,exports){
+arguments[4][226][0].apply(exports,arguments)
+},{"dup":226,"lodash._baseindexof":441,"lodash._cacheindexof":442,"lodash._createcache":443}],441:[function(require,module,exports){
+arguments[4][184][0].apply(exports,arguments)
+},{"dup":184}],442:[function(require,module,exports){
+arguments[4][207][0].apply(exports,arguments)
+},{"dup":207}],443:[function(require,module,exports){
+arguments[4][208][0].apply(exports,arguments)
+},{"dup":208,"lodash.isnative":444}],444:[function(require,module,exports){
+arguments[4][59][0].apply(exports,arguments)
+},{"dup":59}],445:[function(require,module,exports){
 arguments[4][58][0].apply(exports,arguments)
-},{"dup":58}],786:[function(require,module,exports){
+},{"dup":58}],446:[function(require,module,exports){
 ;if (typeof window !== "undefined") {  window.ampersand = window.ampersand || {};  window.ampersand["ampersand-view"] = window.ampersand["ampersand-view"] || [];  window.ampersand["ampersand-view"].push("7.3.0");}
 var State = require('ampersand-state');
 var CollectionView = require('ampersand-collection-view');
@@ -20234,7 +21027,7 @@ assign(View.prototype, {
 View.extend = BaseState.extend;
 module.exports = View;
 
-},{"ampersand-collection-view":787,"ampersand-dom-bindings":811,"ampersand-state":484,"domify":813,"events-mixin":814,"get-object-path":819,"lodash.assign":820,"lodash.bind":831,"lodash.flatten":837,"lodash.foreach":842,"lodash.invoke":850,"lodash.isstring":861,"lodash.last":862,"lodash.pick":863,"lodash.result":875,"lodash.uniqueid":881,"matches-selector":883}],787:[function(require,module,exports){
+},{"ampersand-collection-view":447,"ampersand-dom-bindings":471,"ampersand-state":144,"domify":473,"events-mixin":474,"get-object-path":479,"lodash.assign":480,"lodash.bind":491,"lodash.flatten":497,"lodash.foreach":502,"lodash.invoke":510,"lodash.isstring":521,"lodash.last":522,"lodash.pick":523,"lodash.result":535,"lodash.uniqueid":541,"matches-selector":543}],447:[function(require,module,exports){
 ;if (typeof window !== "undefined") {  window.ampersand = window.ampersand || {};  window.ampersand["ampersand-collection-view"] = window.ampersand["ampersand-collection-view"] || [];  window.ampersand["ampersand-collection-view"].push("1.4.0");}
 var assign = require('lodash.assign');
 var invoke = require('lodash.invoke');
@@ -20400,53 +21193,53 @@ CollectionView.extend = ampExtend;
 
 module.exports = CollectionView;
 
-},{"ampersand-class-extend":788,"ampersand-events":70,"lodash.assign":820,"lodash.difference":789,"lodash.find":799,"lodash.invoke":850,"lodash.pick":863}],788:[function(require,module,exports){
+},{"ampersand-class-extend":448,"ampersand-events":70,"lodash.assign":480,"lodash.difference":449,"lodash.find":459,"lodash.invoke":510,"lodash.pick":523}],448:[function(require,module,exports){
 arguments[4][51][0].apply(exports,arguments)
-},{"dup":51,"lodash.assign":820}],789:[function(require,module,exports){
-arguments[4][179][0].apply(exports,arguments)
-},{"dup":179,"lodash._basedifference":790,"lodash._baseflatten":795,"lodash.restparam":798}],790:[function(require,module,exports){
-arguments[4][180][0].apply(exports,arguments)
-},{"dup":180,"lodash._baseindexof":791,"lodash._cacheindexof":792,"lodash._createcache":793}],791:[function(require,module,exports){
-arguments[4][114][0].apply(exports,arguments)
-},{"dup":114}],792:[function(require,module,exports){
-arguments[4][182][0].apply(exports,arguments)
-},{"dup":182}],793:[function(require,module,exports){
-arguments[4][183][0].apply(exports,arguments)
-},{"dup":183,"lodash.isnative":794}],794:[function(require,module,exports){
+},{"dup":51,"lodash.assign":480}],449:[function(require,module,exports){
+arguments[4][395][0].apply(exports,arguments)
+},{"dup":395,"lodash._basedifference":450,"lodash._baseflatten":455,"lodash.restparam":458}],450:[function(require,module,exports){
+arguments[4][205][0].apply(exports,arguments)
+},{"dup":205,"lodash._baseindexof":451,"lodash._cacheindexof":452,"lodash._createcache":453}],451:[function(require,module,exports){
+arguments[4][184][0].apply(exports,arguments)
+},{"dup":184}],452:[function(require,module,exports){
+arguments[4][207][0].apply(exports,arguments)
+},{"dup":207}],453:[function(require,module,exports){
+arguments[4][208][0].apply(exports,arguments)
+},{"dup":208,"lodash.isnative":454}],454:[function(require,module,exports){
 arguments[4][59][0].apply(exports,arguments)
-},{"dup":59}],795:[function(require,module,exports){
-arguments[4][185][0].apply(exports,arguments)
-},{"dup":185,"lodash.isarguments":796,"lodash.isarray":797}],796:[function(require,module,exports){
+},{"dup":59}],455:[function(require,module,exports){
+arguments[4][210][0].apply(exports,arguments)
+},{"dup":210,"lodash.isarguments":456,"lodash.isarray":457}],456:[function(require,module,exports){
 arguments[4][61][0].apply(exports,arguments)
-},{"dup":61}],797:[function(require,module,exports){
+},{"dup":61}],457:[function(require,module,exports){
 arguments[4][68][0].apply(exports,arguments)
-},{"dup":68}],798:[function(require,module,exports){
+},{"dup":68}],458:[function(require,module,exports){
 arguments[4][58][0].apply(exports,arguments)
-},{"dup":58}],799:[function(require,module,exports){
-arguments[4][216][0].apply(exports,arguments)
-},{"dup":216,"lodash._basecallback":800,"lodash._baseeach":804,"lodash._basefind":805,"lodash._basefindindex":806,"lodash.isarray":807,"lodash.keys":808}],800:[function(require,module,exports){
-arguments[4][169][0].apply(exports,arguments)
-},{"dup":169,"lodash._baseisequal":801,"lodash._bindcallback":803,"lodash.isarray":807,"lodash.keys":808}],801:[function(require,module,exports){
-arguments[4][170][0].apply(exports,arguments)
-},{"dup":170,"lodash.isarray":807,"lodash.istypedarray":802,"lodash.keys":808}],802:[function(require,module,exports){
-arguments[4][171][0].apply(exports,arguments)
-},{"dup":171}],803:[function(require,module,exports){
+},{"dup":58}],459:[function(require,module,exports){
+arguments[4][263][0].apply(exports,arguments)
+},{"dup":263,"lodash._basecallback":460,"lodash._baseeach":464,"lodash._basefind":465,"lodash._basefindindex":466,"lodash.isarray":467,"lodash.keys":468}],460:[function(require,module,exports){
+arguments[4][239][0].apply(exports,arguments)
+},{"dup":239,"lodash._baseisequal":461,"lodash._bindcallback":463,"lodash.isarray":467,"lodash.keys":468}],461:[function(require,module,exports){
+arguments[4][192][0].apply(exports,arguments)
+},{"dup":192,"lodash.isarray":467,"lodash.istypedarray":462,"lodash.keys":468}],462:[function(require,module,exports){
+arguments[4][193][0].apply(exports,arguments)
+},{"dup":193}],463:[function(require,module,exports){
 arguments[4][56][0].apply(exports,arguments)
-},{"dup":56}],804:[function(require,module,exports){
+},{"dup":56}],464:[function(require,module,exports){
 arguments[4][87][0].apply(exports,arguments)
-},{"dup":87,"lodash.keys":808}],805:[function(require,module,exports){
-arguments[4][222][0].apply(exports,arguments)
-},{"dup":222}],806:[function(require,module,exports){
-arguments[4][223][0].apply(exports,arguments)
-},{"dup":223}],807:[function(require,module,exports){
+},{"dup":87,"lodash.keys":468}],465:[function(require,module,exports){
+arguments[4][269][0].apply(exports,arguments)
+},{"dup":269}],466:[function(require,module,exports){
+arguments[4][270][0].apply(exports,arguments)
+},{"dup":270}],467:[function(require,module,exports){
 arguments[4][68][0].apply(exports,arguments)
-},{"dup":68}],808:[function(require,module,exports){
+},{"dup":68}],468:[function(require,module,exports){
 arguments[4][60][0].apply(exports,arguments)
-},{"dup":60,"lodash.isarguments":809,"lodash.isarray":807,"lodash.isnative":810}],809:[function(require,module,exports){
+},{"dup":60,"lodash.isarguments":469,"lodash.isarray":467,"lodash.isnative":470}],469:[function(require,module,exports){
 arguments[4][61][0].apply(exports,arguments)
-},{"dup":61}],810:[function(require,module,exports){
+},{"dup":61}],470:[function(require,module,exports){
 arguments[4][59][0].apply(exports,arguments)
-},{"dup":59}],811:[function(require,module,exports){
+},{"dup":59}],471:[function(require,module,exports){
 ;if (typeof window !== "undefined") {  window.ampersand = window.ampersand || {};  window.ampersand["ampersand-dom-bindings"] = window.ampersand["ampersand-dom-bindings"] || [];  window.ampersand["ampersand-dom-bindings"].push("3.5.0");}
 var Store = require('key-tree-store');
 var dom = require('ampersand-dom');
@@ -20695,11 +21488,11 @@ function getBindingFunc(binding, context) {
     }
 }
 
-},{"ampersand-dom":69,"key-tree-store":812,"matches-selector":883}],812:[function(require,module,exports){
-arguments[4][486][0].apply(exports,arguments)
-},{"dup":486}],813:[function(require,module,exports){
-arguments[4][482][0].apply(exports,arguments)
-},{"dup":482}],814:[function(require,module,exports){
+},{"ampersand-dom":69,"key-tree-store":472,"matches-selector":543}],472:[function(require,module,exports){
+arguments[4][146][0].apply(exports,arguments)
+},{"dup":146}],473:[function(require,module,exports){
+arguments[4][142][0].apply(exports,arguments)
+},{"dup":142}],474:[function(require,module,exports){
 
 /**
  * Module dependencies.
@@ -20889,7 +21682,7 @@ function parse(event) {
   }
 }
 
-},{"component-event":815,"delegate-events":816}],815:[function(require,module,exports){
+},{"component-event":475,"delegate-events":476}],475:[function(require,module,exports){
 var bind = window.addEventListener ? 'addEventListener' : 'attachEvent',
     unbind = window.removeEventListener ? 'removeEventListener' : 'detachEvent',
     prefix = bind !== 'addEventListener' ? 'on' : '';
@@ -20925,7 +21718,7 @@ exports.unbind = function(el, type, fn, capture){
   el[unbind](prefix + type, fn, capture || false);
   return fn;
 };
-},{}],816:[function(require,module,exports){
+},{}],476:[function(require,module,exports){
 /**
  * Module dependencies.
  */
@@ -20977,7 +21770,7 @@ exports.unbind = function(el, type, fn, capture){
   event.unbind(el, type, fn, capture);
 };
 
-},{"closest":817,"event":815}],817:[function(require,module,exports){
+},{"closest":477,"event":475}],477:[function(require,module,exports){
 var matches = require('matches-selector')
 
 module.exports = function (element, selector, checkYoSelf) {
@@ -20989,7 +21782,7 @@ module.exports = function (element, selector, checkYoSelf) {
   }
 }
 
-},{"matches-selector":818}],818:[function(require,module,exports){
+},{"matches-selector":478}],478:[function(require,module,exports){
 
 /**
  * Element prototype.
@@ -21030,7 +21823,7 @@ function match(el, selector) {
   }
   return false;
 }
-},{}],819:[function(require,module,exports){
+},{}],479:[function(require,module,exports){
 module.exports = get;
 
 function get (context, path) {
@@ -21053,41 +21846,41 @@ function get (context, path) {
   return result;
 }
 
-},{}],820:[function(require,module,exports){
+},{}],480:[function(require,module,exports){
 arguments[4][52][0].apply(exports,arguments)
-},{"dup":52,"lodash._baseassign":821,"lodash._createassigner":823,"lodash.isnative":827,"lodash.keys":828}],821:[function(require,module,exports){
+},{"dup":52,"lodash._baseassign":481,"lodash._createassigner":483,"lodash.isnative":487,"lodash.keys":488}],481:[function(require,module,exports){
 arguments[4][53][0].apply(exports,arguments)
-},{"dup":53,"lodash._basecopy":822,"lodash.isnative":827,"lodash.keys":828}],822:[function(require,module,exports){
+},{"dup":53,"lodash._basecopy":482,"lodash.isnative":487,"lodash.keys":488}],482:[function(require,module,exports){
 arguments[4][54][0].apply(exports,arguments)
-},{"dup":54}],823:[function(require,module,exports){
+},{"dup":54}],483:[function(require,module,exports){
 arguments[4][55][0].apply(exports,arguments)
-},{"dup":55,"lodash._bindcallback":824,"lodash._isiterateecall":825,"lodash.restparam":826}],824:[function(require,module,exports){
+},{"dup":55,"lodash._bindcallback":484,"lodash._isiterateecall":485,"lodash.restparam":486}],484:[function(require,module,exports){
 arguments[4][56][0].apply(exports,arguments)
-},{"dup":56}],825:[function(require,module,exports){
+},{"dup":56}],485:[function(require,module,exports){
 arguments[4][57][0].apply(exports,arguments)
-},{"dup":57}],826:[function(require,module,exports){
+},{"dup":57}],486:[function(require,module,exports){
 arguments[4][58][0].apply(exports,arguments)
-},{"dup":58}],827:[function(require,module,exports){
+},{"dup":58}],487:[function(require,module,exports){
 arguments[4][59][0].apply(exports,arguments)
-},{"dup":59}],828:[function(require,module,exports){
+},{"dup":59}],488:[function(require,module,exports){
 arguments[4][60][0].apply(exports,arguments)
-},{"dup":60,"lodash.isarguments":829,"lodash.isarray":830,"lodash.isnative":827}],829:[function(require,module,exports){
+},{"dup":60,"lodash.isarguments":489,"lodash.isarray":490,"lodash.isnative":487}],489:[function(require,module,exports){
 arguments[4][61][0].apply(exports,arguments)
-},{"dup":61}],830:[function(require,module,exports){
+},{"dup":61}],490:[function(require,module,exports){
 arguments[4][68][0].apply(exports,arguments)
-},{"dup":68}],831:[function(require,module,exports){
+},{"dup":68}],491:[function(require,module,exports){
 arguments[4][62][0].apply(exports,arguments)
-},{"dup":62,"lodash._createwrapper":832,"lodash._replaceholders":835,"lodash.restparam":836}],832:[function(require,module,exports){
+},{"dup":62,"lodash._createwrapper":492,"lodash._replaceholders":495,"lodash.restparam":496}],492:[function(require,module,exports){
 arguments[4][63][0].apply(exports,arguments)
-},{"dup":63,"lodash._arraycopy":833,"lodash._basecreate":834,"lodash._replaceholders":835}],833:[function(require,module,exports){
+},{"dup":63,"lodash._arraycopy":493,"lodash._basecreate":494,"lodash._replaceholders":495}],493:[function(require,module,exports){
 arguments[4][64][0].apply(exports,arguments)
-},{"dup":64}],834:[function(require,module,exports){
+},{"dup":64}],494:[function(require,module,exports){
 arguments[4][65][0].apply(exports,arguments)
-},{"dup":65}],835:[function(require,module,exports){
+},{"dup":65}],495:[function(require,module,exports){
 arguments[4][66][0].apply(exports,arguments)
-},{"dup":66}],836:[function(require,module,exports){
+},{"dup":66}],496:[function(require,module,exports){
 arguments[4][58][0].apply(exports,arguments)
-},{"dup":58}],837:[function(require,module,exports){
+},{"dup":58}],497:[function(require,module,exports){
 /**
  * lodash 3.0.2 (Custom Build) <https://lodash.com/>
  * Build: `lodash modern modularize exports="npm" -o ./`
@@ -21129,55 +21922,55 @@ function flatten(array, isDeep, guard) {
 
 module.exports = flatten;
 
-},{"lodash._baseflatten":838,"lodash._isiterateecall":841}],838:[function(require,module,exports){
-arguments[4][185][0].apply(exports,arguments)
-},{"dup":185,"lodash.isarguments":839,"lodash.isarray":840}],839:[function(require,module,exports){
+},{"lodash._baseflatten":498,"lodash._isiterateecall":501}],498:[function(require,module,exports){
+arguments[4][210][0].apply(exports,arguments)
+},{"dup":210,"lodash.isarguments":499,"lodash.isarray":500}],499:[function(require,module,exports){
 arguments[4][61][0].apply(exports,arguments)
-},{"dup":61}],840:[function(require,module,exports){
+},{"dup":61}],500:[function(require,module,exports){
 arguments[4][68][0].apply(exports,arguments)
-},{"dup":68}],841:[function(require,module,exports){
+},{"dup":68}],501:[function(require,module,exports){
 arguments[4][57][0].apply(exports,arguments)
-},{"dup":57}],842:[function(require,module,exports){
+},{"dup":57}],502:[function(require,module,exports){
 arguments[4][85][0].apply(exports,arguments)
-},{"dup":85,"lodash._arrayeach":843,"lodash._baseeach":844,"lodash._bindcallback":848,"lodash.isarray":849}],843:[function(require,module,exports){
+},{"dup":85,"lodash._arrayeach":503,"lodash._baseeach":504,"lodash._bindcallback":508,"lodash.isarray":509}],503:[function(require,module,exports){
 arguments[4][86][0].apply(exports,arguments)
-},{"dup":86}],844:[function(require,module,exports){
+},{"dup":86}],504:[function(require,module,exports){
 arguments[4][87][0].apply(exports,arguments)
-},{"dup":87,"lodash.keys":845}],845:[function(require,module,exports){
+},{"dup":87,"lodash.keys":505}],505:[function(require,module,exports){
 arguments[4][60][0].apply(exports,arguments)
-},{"dup":60,"lodash.isarguments":846,"lodash.isarray":849,"lodash.isnative":847}],846:[function(require,module,exports){
+},{"dup":60,"lodash.isarguments":506,"lodash.isarray":509,"lodash.isnative":507}],506:[function(require,module,exports){
 arguments[4][61][0].apply(exports,arguments)
-},{"dup":61}],847:[function(require,module,exports){
+},{"dup":61}],507:[function(require,module,exports){
 arguments[4][59][0].apply(exports,arguments)
-},{"dup":59}],848:[function(require,module,exports){
+},{"dup":59}],508:[function(require,module,exports){
 arguments[4][56][0].apply(exports,arguments)
-},{"dup":56}],849:[function(require,module,exports){
+},{"dup":56}],509:[function(require,module,exports){
 arguments[4][68][0].apply(exports,arguments)
-},{"dup":68}],850:[function(require,module,exports){
-arguments[4][276][0].apply(exports,arguments)
-},{"dup":276,"lodash._baseeach":851,"lodash._invokepath":855,"lodash.isarray":859,"lodash.restparam":860}],851:[function(require,module,exports){
+},{"dup":68}],510:[function(require,module,exports){
+arguments[4][292][0].apply(exports,arguments)
+},{"dup":292,"lodash._baseeach":511,"lodash._invokepath":515,"lodash.isarray":519,"lodash.restparam":520}],511:[function(require,module,exports){
 arguments[4][87][0].apply(exports,arguments)
-},{"dup":87,"lodash.keys":852}],852:[function(require,module,exports){
+},{"dup":87,"lodash.keys":512}],512:[function(require,module,exports){
 arguments[4][60][0].apply(exports,arguments)
-},{"dup":60,"lodash.isarguments":853,"lodash.isarray":859,"lodash.isnative":854}],853:[function(require,module,exports){
+},{"dup":60,"lodash.isarguments":513,"lodash.isarray":519,"lodash.isnative":514}],513:[function(require,module,exports){
 arguments[4][61][0].apply(exports,arguments)
-},{"dup":61}],854:[function(require,module,exports){
+},{"dup":61}],514:[function(require,module,exports){
 arguments[4][59][0].apply(exports,arguments)
-},{"dup":59}],855:[function(require,module,exports){
-arguments[4][281][0].apply(exports,arguments)
-},{"dup":281,"lodash._baseget":856,"lodash._baseslice":857,"lodash._topath":858,"lodash.isarray":859}],856:[function(require,module,exports){
-arguments[4][160][0].apply(exports,arguments)
-},{"dup":160}],857:[function(require,module,exports){
-arguments[4][161][0].apply(exports,arguments)
-},{"dup":161}],858:[function(require,module,exports){
-arguments[4][162][0].apply(exports,arguments)
-},{"dup":162,"lodash.isarray":859}],859:[function(require,module,exports){
+},{"dup":59}],515:[function(require,module,exports){
+arguments[4][294][0].apply(exports,arguments)
+},{"dup":294,"lodash._baseget":516,"lodash._baseslice":517,"lodash._topath":518,"lodash.isarray":519}],516:[function(require,module,exports){
+arguments[4][180][0].apply(exports,arguments)
+},{"dup":180}],517:[function(require,module,exports){
+arguments[4][181][0].apply(exports,arguments)
+},{"dup":181}],518:[function(require,module,exports){
+arguments[4][182][0].apply(exports,arguments)
+},{"dup":182,"lodash.isarray":519}],519:[function(require,module,exports){
 arguments[4][68][0].apply(exports,arguments)
-},{"dup":68}],860:[function(require,module,exports){
+},{"dup":68}],520:[function(require,module,exports){
 arguments[4][58][0].apply(exports,arguments)
-},{"dup":58}],861:[function(require,module,exports){
+},{"dup":58}],521:[function(require,module,exports){
 arguments[4][94][0].apply(exports,arguments)
-},{"dup":94}],862:[function(require,module,exports){
+},{"dup":94}],522:[function(require,module,exports){
 /**
  * lodash 3.0.0 (Custom Build) <https://lodash.com/>
  * Build: `lodash modern modularize exports="npm" -o ./`
@@ -21207,7 +22000,7 @@ function last(array) {
 
 module.exports = last;
 
-},{}],863:[function(require,module,exports){
+},{}],523:[function(require,module,exports){
 /**
  * lodash 3.1.0 (Custom Build) <https://lodash.com/>
  * Build: `lodash modern modularize exports="npm" -o ./`
@@ -21259,47 +22052,47 @@ var pick = restParam(function(object, props) {
 
 module.exports = pick;
 
-},{"lodash._baseflatten":864,"lodash._bindcallback":867,"lodash._pickbyarray":868,"lodash._pickbycallback":869,"lodash.restparam":874}],864:[function(require,module,exports){
-arguments[4][185][0].apply(exports,arguments)
-},{"dup":185,"lodash.isarguments":865,"lodash.isarray":866}],865:[function(require,module,exports){
+},{"lodash._baseflatten":524,"lodash._bindcallback":527,"lodash._pickbyarray":528,"lodash._pickbycallback":529,"lodash.restparam":534}],524:[function(require,module,exports){
+arguments[4][210][0].apply(exports,arguments)
+},{"dup":210,"lodash.isarguments":525,"lodash.isarray":526}],525:[function(require,module,exports){
 arguments[4][61][0].apply(exports,arguments)
-},{"dup":61}],866:[function(require,module,exports){
+},{"dup":61}],526:[function(require,module,exports){
 arguments[4][68][0].apply(exports,arguments)
-},{"dup":68}],867:[function(require,module,exports){
+},{"dup":68}],527:[function(require,module,exports){
 arguments[4][56][0].apply(exports,arguments)
-},{"dup":56}],868:[function(require,module,exports){
-arguments[4][553][0].apply(exports,arguments)
-},{"dup":553}],869:[function(require,module,exports){
-arguments[4][554][0].apply(exports,arguments)
-},{"dup":554,"lodash._basefor":870,"lodash.keysin":871}],870:[function(require,module,exports){
-arguments[4][151][0].apply(exports,arguments)
-},{"dup":151}],871:[function(require,module,exports){
-arguments[4][556][0].apply(exports,arguments)
-},{"dup":556,"lodash.isarguments":872,"lodash.isarray":873}],872:[function(require,module,exports){
+},{"dup":56}],528:[function(require,module,exports){
+arguments[4][213][0].apply(exports,arguments)
+},{"dup":213}],529:[function(require,module,exports){
+arguments[4][214][0].apply(exports,arguments)
+},{"dup":214,"lodash._basefor":530,"lodash.keysin":531}],530:[function(require,module,exports){
+arguments[4][167][0].apply(exports,arguments)
+},{"dup":167}],531:[function(require,module,exports){
+arguments[4][216][0].apply(exports,arguments)
+},{"dup":216,"lodash.isarguments":532,"lodash.isarray":533}],532:[function(require,module,exports){
 arguments[4][61][0].apply(exports,arguments)
-},{"dup":61}],873:[function(require,module,exports){
+},{"dup":61}],533:[function(require,module,exports){
 arguments[4][68][0].apply(exports,arguments)
-},{"dup":68}],874:[function(require,module,exports){
+},{"dup":68}],534:[function(require,module,exports){
 arguments[4][58][0].apply(exports,arguments)
-},{"dup":58}],875:[function(require,module,exports){
-arguments[4][159][0].apply(exports,arguments)
-},{"dup":159,"lodash._baseget":876,"lodash._baseslice":877,"lodash._topath":878,"lodash.isarray":879,"lodash.isfunction":880}],876:[function(require,module,exports){
-arguments[4][160][0].apply(exports,arguments)
-},{"dup":160}],877:[function(require,module,exports){
-arguments[4][161][0].apply(exports,arguments)
-},{"dup":161}],878:[function(require,module,exports){
-arguments[4][162][0].apply(exports,arguments)
-},{"dup":162,"lodash.isarray":879}],879:[function(require,module,exports){
+},{"dup":58}],535:[function(require,module,exports){
+arguments[4][219][0].apply(exports,arguments)
+},{"dup":219,"lodash._baseget":536,"lodash._baseslice":537,"lodash._topath":538,"lodash.isarray":539,"lodash.isfunction":540}],536:[function(require,module,exports){
+arguments[4][180][0].apply(exports,arguments)
+},{"dup":180}],537:[function(require,module,exports){
+arguments[4][181][0].apply(exports,arguments)
+},{"dup":181}],538:[function(require,module,exports){
+arguments[4][182][0].apply(exports,arguments)
+},{"dup":182,"lodash.isarray":539}],539:[function(require,module,exports){
 arguments[4][68][0].apply(exports,arguments)
-},{"dup":68}],880:[function(require,module,exports){
+},{"dup":68}],540:[function(require,module,exports){
 arguments[4][93][0].apply(exports,arguments)
-},{"dup":93}],881:[function(require,module,exports){
+},{"dup":93}],541:[function(require,module,exports){
 arguments[4][101][0].apply(exports,arguments)
-},{"dup":101,"lodash._basetostring":882}],882:[function(require,module,exports){
+},{"dup":101,"lodash._basetostring":542}],542:[function(require,module,exports){
 arguments[4][102][0].apply(exports,arguments)
-},{"dup":102}],883:[function(require,module,exports){
-arguments[4][108][0].apply(exports,arguments)
-},{"dup":108}],884:[function(require,module,exports){
+},{"dup":102}],543:[function(require,module,exports){
+arguments[4][143][0].apply(exports,arguments)
+},{"dup":143}],544:[function(require,module,exports){
 /*
  * jQuery File Upload Plugin 5.42.3
  * https://github.com/blueimp/jQuery-File-Upload
@@ -22768,7 +23561,7 @@ arguments[4][108][0].apply(exports,arguments)
 
 }));
 
-},{"./vendor/jquery.ui.widget":885,"jquery":889}],885:[function(require,module,exports){
+},{"./vendor/jquery.ui.widget":545,"jquery":553}],545:[function(require,module,exports){
 /*! jQuery UI - v1.11.1+CommonJS - 2014-09-17
 * http://jqueryui.com
 * Includes: widget.js
@@ -23333,7 +24126,1670 @@ var widget = $.widget;
 
 }));
 
-},{"jquery":889}],886:[function(require,module,exports){
+},{"jquery":553}],546:[function(require,module,exports){
+/*!
+ * The buffer module from node.js, for the browser.
+ *
+ * @author   Feross Aboukhadijeh <feross@feross.org> <http://feross.org>
+ * @license  MIT
+ */
+
+var base64 = require('base64-js')
+var ieee754 = require('ieee754')
+var isArray = require('is-array')
+
+exports.Buffer = Buffer
+exports.SlowBuffer = SlowBuffer
+exports.INSPECT_MAX_BYTES = 50
+Buffer.poolSize = 8192 // not used by this implementation
+
+var kMaxLength = 0x3fffffff
+var rootParent = {}
+
+/**
+ * If `Buffer.TYPED_ARRAY_SUPPORT`:
+ *   === true    Use Uint8Array implementation (fastest)
+ *   === false   Use Object implementation (most compatible, even IE6)
+ *
+ * Browsers that support typed arrays are IE 10+, Firefox 4+, Chrome 7+, Safari 5.1+,
+ * Opera 11.6+, iOS 4.2+.
+ *
+ * Note:
+ *
+ * - Implementation must support adding new properties to `Uint8Array` instances.
+ *   Firefox 4-29 lacked support, fixed in Firefox 30+.
+ *   See: https://bugzilla.mozilla.org/show_bug.cgi?id=695438.
+ *
+ *  - Chrome 9-10 is missing the `TypedArray.prototype.subarray` function.
+ *
+ *  - IE10 has a broken `TypedArray.prototype.subarray` function which returns arrays of
+ *    incorrect length in some situations.
+ *
+ * We detect these buggy browsers and set `Buffer.TYPED_ARRAY_SUPPORT` to `false` so they will
+ * get the Object implementation, which is slower but will work correctly.
+ */
+Buffer.TYPED_ARRAY_SUPPORT = (function () {
+  try {
+    var buf = new ArrayBuffer(0)
+    var arr = new Uint8Array(buf)
+    arr.foo = function () { return 42 }
+    return arr.foo() === 42 && // typed array instances can be augmented
+        typeof arr.subarray === 'function' && // chrome 9-10 lack `subarray`
+        new Uint8Array(1).subarray(1, 1).byteLength === 0 // ie10 has broken `subarray`
+  } catch (e) {
+    return false
+  }
+})()
+
+/**
+ * Class: Buffer
+ * =============
+ *
+ * The Buffer constructor returns instances of `Uint8Array` that are augmented
+ * with function properties for all the node `Buffer` API functions. We use
+ * `Uint8Array` so that square bracket notation works as expected -- it returns
+ * a single octet.
+ *
+ * By augmenting the instances, we can avoid modifying the `Uint8Array`
+ * prototype.
+ */
+function Buffer (arg) {
+  if (!(this instanceof Buffer)) {
+    // Avoid going through an ArgumentsAdaptorTrampoline in the common case.
+    if (arguments.length > 1) return new Buffer(arg, arguments[1])
+    return new Buffer(arg)
+  }
+
+  this.length = 0
+  this.parent = undefined
+
+  // Common case.
+  if (typeof arg === 'number') {
+    return fromNumber(this, arg)
+  }
+
+  // Slightly less common case.
+  if (typeof arg === 'string') {
+    return fromString(this, arg, arguments.length > 1 ? arguments[1] : 'utf8')
+  }
+
+  // Unusual.
+  return fromObject(this, arg)
+}
+
+function fromNumber (that, length) {
+  that = allocate(that, length < 0 ? 0 : checked(length) | 0)
+  if (!Buffer.TYPED_ARRAY_SUPPORT) {
+    for (var i = 0; i < length; i++) {
+      that[i] = 0
+    }
+  }
+  return that
+}
+
+function fromString (that, string, encoding) {
+  if (typeof encoding !== 'string' || encoding === '') encoding = 'utf8'
+
+  // Assumption: byteLength() return value is always < kMaxLength.
+  var length = byteLength(string, encoding) | 0
+  that = allocate(that, length)
+
+  that.write(string, encoding)
+  return that
+}
+
+function fromObject (that, object) {
+  if (Buffer.isBuffer(object)) return fromBuffer(that, object)
+
+  if (isArray(object)) return fromArray(that, object)
+
+  if (object == null) {
+    throw new TypeError('must start with number, buffer, array or string')
+  }
+
+  if (typeof ArrayBuffer !== 'undefined' && object.buffer instanceof ArrayBuffer) {
+    return fromTypedArray(that, object)
+  }
+
+  if (object.length) return fromArrayLike(that, object)
+
+  return fromJsonObject(that, object)
+}
+
+function fromBuffer (that, buffer) {
+  var length = checked(buffer.length) | 0
+  that = allocate(that, length)
+  buffer.copy(that, 0, 0, length)
+  return that
+}
+
+function fromArray (that, array) {
+  var length = checked(array.length) | 0
+  that = allocate(that, length)
+  for (var i = 0; i < length; i += 1) {
+    that[i] = array[i] & 255
+  }
+  return that
+}
+
+// Duplicate of fromArray() to keep fromArray() monomorphic.
+function fromTypedArray (that, array) {
+  var length = checked(array.length) | 0
+  that = allocate(that, length)
+  // Truncating the elements is probably not what people expect from typed
+  // arrays with BYTES_PER_ELEMENT > 1 but it's compatible with the behavior
+  // of the old Buffer constructor.
+  for (var i = 0; i < length; i += 1) {
+    that[i] = array[i] & 255
+  }
+  return that
+}
+
+function fromArrayLike (that, array) {
+  var length = checked(array.length) | 0
+  that = allocate(that, length)
+  for (var i = 0; i < length; i += 1) {
+    that[i] = array[i] & 255
+  }
+  return that
+}
+
+// Deserialize { type: 'Buffer', data: [1,2,3,...] } into a Buffer object.
+// Returns a zero-length buffer for inputs that don't conform to the spec.
+function fromJsonObject (that, object) {
+  var array
+  var length = 0
+
+  if (object.type === 'Buffer' && isArray(object.data)) {
+    array = object.data
+    length = checked(array.length) | 0
+  }
+  that = allocate(that, length)
+
+  for (var i = 0; i < length; i += 1) {
+    that[i] = array[i] & 255
+  }
+  return that
+}
+
+function allocate (that, length) {
+  if (Buffer.TYPED_ARRAY_SUPPORT) {
+    // Return an augmented `Uint8Array` instance, for best performance
+    that = Buffer._augment(new Uint8Array(length))
+  } else {
+    // Fallback: Return an object instance of the Buffer class
+    that.length = length
+    that._isBuffer = true
+  }
+
+  var fromPool = length !== 0 && length <= Buffer.poolSize >>> 1
+  if (fromPool) that.parent = rootParent
+
+  return that
+}
+
+function checked (length) {
+  // Note: cannot use `length < kMaxLength` here because that fails when
+  // length is NaN (which is otherwise coerced to zero.)
+  if (length >= kMaxLength) {
+    throw new RangeError('Attempt to allocate Buffer larger than maximum ' +
+                         'size: 0x' + kMaxLength.toString(16) + ' bytes')
+  }
+  return length | 0
+}
+
+function SlowBuffer (subject, encoding) {
+  if (!(this instanceof SlowBuffer)) return new SlowBuffer(subject, encoding)
+
+  var buf = new Buffer(subject, encoding)
+  delete buf.parent
+  return buf
+}
+
+Buffer.isBuffer = function isBuffer (b) {
+  return !!(b != null && b._isBuffer)
+}
+
+Buffer.compare = function compare (a, b) {
+  if (!Buffer.isBuffer(a) || !Buffer.isBuffer(b)) {
+    throw new TypeError('Arguments must be Buffers')
+  }
+
+  if (a === b) return 0
+
+  var x = a.length
+  var y = b.length
+
+  var i = 0
+  var len = Math.min(x, y)
+  while (i < len) {
+    if (a[i] !== b[i]) break
+
+    ++i
+  }
+
+  if (i !== len) {
+    x = a[i]
+    y = b[i]
+  }
+
+  if (x < y) return -1
+  if (y < x) return 1
+  return 0
+}
+
+Buffer.isEncoding = function isEncoding (encoding) {
+  switch (String(encoding).toLowerCase()) {
+    case 'hex':
+    case 'utf8':
+    case 'utf-8':
+    case 'ascii':
+    case 'binary':
+    case 'base64':
+    case 'raw':
+    case 'ucs2':
+    case 'ucs-2':
+    case 'utf16le':
+    case 'utf-16le':
+      return true
+    default:
+      return false
+  }
+}
+
+Buffer.concat = function concat (list, length) {
+  if (!isArray(list)) throw new TypeError('list argument must be an Array of Buffers.')
+
+  if (list.length === 0) {
+    return new Buffer(0)
+  } else if (list.length === 1) {
+    return list[0]
+  }
+
+  var i
+  if (length === undefined) {
+    length = 0
+    for (i = 0; i < list.length; i++) {
+      length += list[i].length
+    }
+  }
+
+  var buf = new Buffer(length)
+  var pos = 0
+  for (i = 0; i < list.length; i++) {
+    var item = list[i]
+    item.copy(buf, pos)
+    pos += item.length
+  }
+  return buf
+}
+
+function byteLength (string, encoding) {
+  if (typeof string !== 'string') string = String(string)
+
+  if (string.length === 0) return 0
+
+  switch (encoding || 'utf8') {
+    case 'ascii':
+    case 'binary':
+    case 'raw':
+      return string.length
+    case 'ucs2':
+    case 'ucs-2':
+    case 'utf16le':
+    case 'utf-16le':
+      return string.length * 2
+    case 'hex':
+      return string.length >>> 1
+    case 'utf8':
+    case 'utf-8':
+      return utf8ToBytes(string).length
+    case 'base64':
+      return base64ToBytes(string).length
+    default:
+      return string.length
+  }
+}
+Buffer.byteLength = byteLength
+
+// pre-set for values that may exist in the future
+Buffer.prototype.length = undefined
+Buffer.prototype.parent = undefined
+
+// toString(encoding, start=0, end=buffer.length)
+Buffer.prototype.toString = function toString (encoding, start, end) {
+  var loweredCase = false
+
+  start = start | 0
+  end = end === undefined || end === Infinity ? this.length : end | 0
+
+  if (!encoding) encoding = 'utf8'
+  if (start < 0) start = 0
+  if (end > this.length) end = this.length
+  if (end <= start) return ''
+
+  while (true) {
+    switch (encoding) {
+      case 'hex':
+        return hexSlice(this, start, end)
+
+      case 'utf8':
+      case 'utf-8':
+        return utf8Slice(this, start, end)
+
+      case 'ascii':
+        return asciiSlice(this, start, end)
+
+      case 'binary':
+        return binarySlice(this, start, end)
+
+      case 'base64':
+        return base64Slice(this, start, end)
+
+      case 'ucs2':
+      case 'ucs-2':
+      case 'utf16le':
+      case 'utf-16le':
+        return utf16leSlice(this, start, end)
+
+      default:
+        if (loweredCase) throw new TypeError('Unknown encoding: ' + encoding)
+        encoding = (encoding + '').toLowerCase()
+        loweredCase = true
+    }
+  }
+}
+
+Buffer.prototype.equals = function equals (b) {
+  if (!Buffer.isBuffer(b)) throw new TypeError('Argument must be a Buffer')
+  if (this === b) return true
+  return Buffer.compare(this, b) === 0
+}
+
+Buffer.prototype.inspect = function inspect () {
+  var str = ''
+  var max = exports.INSPECT_MAX_BYTES
+  if (this.length > 0) {
+    str = this.toString('hex', 0, max).match(/.{2}/g).join(' ')
+    if (this.length > max) str += ' ... '
+  }
+  return '<Buffer ' + str + '>'
+}
+
+Buffer.prototype.compare = function compare (b) {
+  if (!Buffer.isBuffer(b)) throw new TypeError('Argument must be a Buffer')
+  if (this === b) return 0
+  return Buffer.compare(this, b)
+}
+
+Buffer.prototype.indexOf = function indexOf (val, byteOffset) {
+  if (byteOffset > 0x7fffffff) byteOffset = 0x7fffffff
+  else if (byteOffset < -0x80000000) byteOffset = -0x80000000
+  byteOffset >>= 0
+
+  if (this.length === 0) return -1
+  if (byteOffset >= this.length) return -1
+
+  // Negative offsets start from the end of the buffer
+  if (byteOffset < 0) byteOffset = Math.max(this.length + byteOffset, 0)
+
+  if (typeof val === 'string') {
+    if (val.length === 0) return -1 // special case: looking for empty string always fails
+    return String.prototype.indexOf.call(this, val, byteOffset)
+  }
+  if (Buffer.isBuffer(val)) {
+    return arrayIndexOf(this, val, byteOffset)
+  }
+  if (typeof val === 'number') {
+    if (Buffer.TYPED_ARRAY_SUPPORT && Uint8Array.prototype.indexOf === 'function') {
+      return Uint8Array.prototype.indexOf.call(this, val, byteOffset)
+    }
+    return arrayIndexOf(this, [ val ], byteOffset)
+  }
+
+  function arrayIndexOf (arr, val, byteOffset) {
+    var foundIndex = -1
+    for (var i = 0; byteOffset + i < arr.length; i++) {
+      if (arr[byteOffset + i] === val[foundIndex === -1 ? 0 : i - foundIndex]) {
+        if (foundIndex === -1) foundIndex = i
+        if (i - foundIndex + 1 === val.length) return byteOffset + foundIndex
+      } else {
+        foundIndex = -1
+      }
+    }
+    return -1
+  }
+
+  throw new TypeError('val must be string, number or Buffer')
+}
+
+// `get` will be removed in Node 0.13+
+Buffer.prototype.get = function get (offset) {
+  console.log('.get() is deprecated. Access using array indexes instead.')
+  return this.readUInt8(offset)
+}
+
+// `set` will be removed in Node 0.13+
+Buffer.prototype.set = function set (v, offset) {
+  console.log('.set() is deprecated. Access using array indexes instead.')
+  return this.writeUInt8(v, offset)
+}
+
+function hexWrite (buf, string, offset, length) {
+  offset = Number(offset) || 0
+  var remaining = buf.length - offset
+  if (!length) {
+    length = remaining
+  } else {
+    length = Number(length)
+    if (length > remaining) {
+      length = remaining
+    }
+  }
+
+  // must be an even number of digits
+  var strLen = string.length
+  if (strLen % 2 !== 0) throw new Error('Invalid hex string')
+
+  if (length > strLen / 2) {
+    length = strLen / 2
+  }
+  for (var i = 0; i < length; i++) {
+    var parsed = parseInt(string.substr(i * 2, 2), 16)
+    if (isNaN(parsed)) throw new Error('Invalid hex string')
+    buf[offset + i] = parsed
+  }
+  return i
+}
+
+function utf8Write (buf, string, offset, length) {
+  return blitBuffer(utf8ToBytes(string, buf.length - offset), buf, offset, length)
+}
+
+function asciiWrite (buf, string, offset, length) {
+  return blitBuffer(asciiToBytes(string), buf, offset, length)
+}
+
+function binaryWrite (buf, string, offset, length) {
+  return asciiWrite(buf, string, offset, length)
+}
+
+function base64Write (buf, string, offset, length) {
+  return blitBuffer(base64ToBytes(string), buf, offset, length)
+}
+
+function ucs2Write (buf, string, offset, length) {
+  return blitBuffer(utf16leToBytes(string, buf.length - offset), buf, offset, length)
+}
+
+Buffer.prototype.write = function write (string, offset, length, encoding) {
+  // Buffer#write(string)
+  if (offset === undefined) {
+    encoding = 'utf8'
+    length = this.length
+    offset = 0
+  // Buffer#write(string, encoding)
+  } else if (length === undefined && typeof offset === 'string') {
+    encoding = offset
+    length = this.length
+    offset = 0
+  // Buffer#write(string, offset[, length][, encoding])
+  } else if (isFinite(offset)) {
+    offset = offset | 0
+    if (isFinite(length)) {
+      length = length | 0
+      if (encoding === undefined) encoding = 'utf8'
+    } else {
+      encoding = length
+      length = undefined
+    }
+  // legacy write(string, encoding, offset, length) - remove in v0.13
+  } else {
+    var swap = encoding
+    encoding = offset
+    offset = length | 0
+    length = swap
+  }
+
+  var remaining = this.length - offset
+  if (length === undefined || length > remaining) length = remaining
+
+  if ((string.length > 0 && (length < 0 || offset < 0)) || offset > this.length) {
+    throw new RangeError('attempt to write outside buffer bounds')
+  }
+
+  if (!encoding) encoding = 'utf8'
+
+  var loweredCase = false
+  for (;;) {
+    switch (encoding) {
+      case 'hex':
+        return hexWrite(this, string, offset, length)
+
+      case 'utf8':
+      case 'utf-8':
+        return utf8Write(this, string, offset, length)
+
+      case 'ascii':
+        return asciiWrite(this, string, offset, length)
+
+      case 'binary':
+        return binaryWrite(this, string, offset, length)
+
+      case 'base64':
+        // Warning: maxLength not taken into account in base64Write
+        return base64Write(this, string, offset, length)
+
+      case 'ucs2':
+      case 'ucs-2':
+      case 'utf16le':
+      case 'utf-16le':
+        return ucs2Write(this, string, offset, length)
+
+      default:
+        if (loweredCase) throw new TypeError('Unknown encoding: ' + encoding)
+        encoding = ('' + encoding).toLowerCase()
+        loweredCase = true
+    }
+  }
+}
+
+Buffer.prototype.toJSON = function toJSON () {
+  return {
+    type: 'Buffer',
+    data: Array.prototype.slice.call(this._arr || this, 0)
+  }
+}
+
+function base64Slice (buf, start, end) {
+  if (start === 0 && end === buf.length) {
+    return base64.fromByteArray(buf)
+  } else {
+    return base64.fromByteArray(buf.slice(start, end))
+  }
+}
+
+function utf8Slice (buf, start, end) {
+  var res = ''
+  var tmp = ''
+  end = Math.min(buf.length, end)
+
+  for (var i = start; i < end; i++) {
+    if (buf[i] <= 0x7F) {
+      res += decodeUtf8Char(tmp) + String.fromCharCode(buf[i])
+      tmp = ''
+    } else {
+      tmp += '%' + buf[i].toString(16)
+    }
+  }
+
+  return res + decodeUtf8Char(tmp)
+}
+
+function asciiSlice (buf, start, end) {
+  var ret = ''
+  end = Math.min(buf.length, end)
+
+  for (var i = start; i < end; i++) {
+    ret += String.fromCharCode(buf[i] & 0x7F)
+  }
+  return ret
+}
+
+function binarySlice (buf, start, end) {
+  var ret = ''
+  end = Math.min(buf.length, end)
+
+  for (var i = start; i < end; i++) {
+    ret += String.fromCharCode(buf[i])
+  }
+  return ret
+}
+
+function hexSlice (buf, start, end) {
+  var len = buf.length
+
+  if (!start || start < 0) start = 0
+  if (!end || end < 0 || end > len) end = len
+
+  var out = ''
+  for (var i = start; i < end; i++) {
+    out += toHex(buf[i])
+  }
+  return out
+}
+
+function utf16leSlice (buf, start, end) {
+  var bytes = buf.slice(start, end)
+  var res = ''
+  for (var i = 0; i < bytes.length; i += 2) {
+    res += String.fromCharCode(bytes[i] + bytes[i + 1] * 256)
+  }
+  return res
+}
+
+Buffer.prototype.slice = function slice (start, end) {
+  var len = this.length
+  start = ~~start
+  end = end === undefined ? len : ~~end
+
+  if (start < 0) {
+    start += len
+    if (start < 0) start = 0
+  } else if (start > len) {
+    start = len
+  }
+
+  if (end < 0) {
+    end += len
+    if (end < 0) end = 0
+  } else if (end > len) {
+    end = len
+  }
+
+  if (end < start) end = start
+
+  var newBuf
+  if (Buffer.TYPED_ARRAY_SUPPORT) {
+    newBuf = Buffer._augment(this.subarray(start, end))
+  } else {
+    var sliceLen = end - start
+    newBuf = new Buffer(sliceLen, undefined)
+    for (var i = 0; i < sliceLen; i++) {
+      newBuf[i] = this[i + start]
+    }
+  }
+
+  if (newBuf.length) newBuf.parent = this.parent || this
+
+  return newBuf
+}
+
+/*
+ * Need to make sure that buffer isn't trying to write out of bounds.
+ */
+function checkOffset (offset, ext, length) {
+  if ((offset % 1) !== 0 || offset < 0) throw new RangeError('offset is not uint')
+  if (offset + ext > length) throw new RangeError('Trying to access beyond buffer length')
+}
+
+Buffer.prototype.readUIntLE = function readUIntLE (offset, byteLength, noAssert) {
+  offset = offset | 0
+  byteLength = byteLength | 0
+  if (!noAssert) checkOffset(offset, byteLength, this.length)
+
+  var val = this[offset]
+  var mul = 1
+  var i = 0
+  while (++i < byteLength && (mul *= 0x100)) {
+    val += this[offset + i] * mul
+  }
+
+  return val
+}
+
+Buffer.prototype.readUIntBE = function readUIntBE (offset, byteLength, noAssert) {
+  offset = offset | 0
+  byteLength = byteLength | 0
+  if (!noAssert) {
+    checkOffset(offset, byteLength, this.length)
+  }
+
+  var val = this[offset + --byteLength]
+  var mul = 1
+  while (byteLength > 0 && (mul *= 0x100)) {
+    val += this[offset + --byteLength] * mul
+  }
+
+  return val
+}
+
+Buffer.prototype.readUInt8 = function readUInt8 (offset, noAssert) {
+  if (!noAssert) checkOffset(offset, 1, this.length)
+  return this[offset]
+}
+
+Buffer.prototype.readUInt16LE = function readUInt16LE (offset, noAssert) {
+  if (!noAssert) checkOffset(offset, 2, this.length)
+  return this[offset] | (this[offset + 1] << 8)
+}
+
+Buffer.prototype.readUInt16BE = function readUInt16BE (offset, noAssert) {
+  if (!noAssert) checkOffset(offset, 2, this.length)
+  return (this[offset] << 8) | this[offset + 1]
+}
+
+Buffer.prototype.readUInt32LE = function readUInt32LE (offset, noAssert) {
+  if (!noAssert) checkOffset(offset, 4, this.length)
+
+  return ((this[offset]) |
+      (this[offset + 1] << 8) |
+      (this[offset + 2] << 16)) +
+      (this[offset + 3] * 0x1000000)
+}
+
+Buffer.prototype.readUInt32BE = function readUInt32BE (offset, noAssert) {
+  if (!noAssert) checkOffset(offset, 4, this.length)
+
+  return (this[offset] * 0x1000000) +
+    ((this[offset + 1] << 16) |
+    (this[offset + 2] << 8) |
+    this[offset + 3])
+}
+
+Buffer.prototype.readIntLE = function readIntLE (offset, byteLength, noAssert) {
+  offset = offset | 0
+  byteLength = byteLength | 0
+  if (!noAssert) checkOffset(offset, byteLength, this.length)
+
+  var val = this[offset]
+  var mul = 1
+  var i = 0
+  while (++i < byteLength && (mul *= 0x100)) {
+    val += this[offset + i] * mul
+  }
+  mul *= 0x80
+
+  if (val >= mul) val -= Math.pow(2, 8 * byteLength)
+
+  return val
+}
+
+Buffer.prototype.readIntBE = function readIntBE (offset, byteLength, noAssert) {
+  offset = offset | 0
+  byteLength = byteLength | 0
+  if (!noAssert) checkOffset(offset, byteLength, this.length)
+
+  var i = byteLength
+  var mul = 1
+  var val = this[offset + --i]
+  while (i > 0 && (mul *= 0x100)) {
+    val += this[offset + --i] * mul
+  }
+  mul *= 0x80
+
+  if (val >= mul) val -= Math.pow(2, 8 * byteLength)
+
+  return val
+}
+
+Buffer.prototype.readInt8 = function readInt8 (offset, noAssert) {
+  if (!noAssert) checkOffset(offset, 1, this.length)
+  if (!(this[offset] & 0x80)) return (this[offset])
+  return ((0xff - this[offset] + 1) * -1)
+}
+
+Buffer.prototype.readInt16LE = function readInt16LE (offset, noAssert) {
+  if (!noAssert) checkOffset(offset, 2, this.length)
+  var val = this[offset] | (this[offset + 1] << 8)
+  return (val & 0x8000) ? val | 0xFFFF0000 : val
+}
+
+Buffer.prototype.readInt16BE = function readInt16BE (offset, noAssert) {
+  if (!noAssert) checkOffset(offset, 2, this.length)
+  var val = this[offset + 1] | (this[offset] << 8)
+  return (val & 0x8000) ? val | 0xFFFF0000 : val
+}
+
+Buffer.prototype.readInt32LE = function readInt32LE (offset, noAssert) {
+  if (!noAssert) checkOffset(offset, 4, this.length)
+
+  return (this[offset]) |
+    (this[offset + 1] << 8) |
+    (this[offset + 2] << 16) |
+    (this[offset + 3] << 24)
+}
+
+Buffer.prototype.readInt32BE = function readInt32BE (offset, noAssert) {
+  if (!noAssert) checkOffset(offset, 4, this.length)
+
+  return (this[offset] << 24) |
+    (this[offset + 1] << 16) |
+    (this[offset + 2] << 8) |
+    (this[offset + 3])
+}
+
+Buffer.prototype.readFloatLE = function readFloatLE (offset, noAssert) {
+  if (!noAssert) checkOffset(offset, 4, this.length)
+  return ieee754.read(this, offset, true, 23, 4)
+}
+
+Buffer.prototype.readFloatBE = function readFloatBE (offset, noAssert) {
+  if (!noAssert) checkOffset(offset, 4, this.length)
+  return ieee754.read(this, offset, false, 23, 4)
+}
+
+Buffer.prototype.readDoubleLE = function readDoubleLE (offset, noAssert) {
+  if (!noAssert) checkOffset(offset, 8, this.length)
+  return ieee754.read(this, offset, true, 52, 8)
+}
+
+Buffer.prototype.readDoubleBE = function readDoubleBE (offset, noAssert) {
+  if (!noAssert) checkOffset(offset, 8, this.length)
+  return ieee754.read(this, offset, false, 52, 8)
+}
+
+function checkInt (buf, value, offset, ext, max, min) {
+  if (!Buffer.isBuffer(buf)) throw new TypeError('buffer must be a Buffer instance')
+  if (value > max || value < min) throw new RangeError('value is out of bounds')
+  if (offset + ext > buf.length) throw new RangeError('index out of range')
+}
+
+Buffer.prototype.writeUIntLE = function writeUIntLE (value, offset, byteLength, noAssert) {
+  value = +value
+  offset = offset | 0
+  byteLength = byteLength | 0
+  if (!noAssert) checkInt(this, value, offset, byteLength, Math.pow(2, 8 * byteLength), 0)
+
+  var mul = 1
+  var i = 0
+  this[offset] = value & 0xFF
+  while (++i < byteLength && (mul *= 0x100)) {
+    this[offset + i] = (value / mul) & 0xFF
+  }
+
+  return offset + byteLength
+}
+
+Buffer.prototype.writeUIntBE = function writeUIntBE (value, offset, byteLength, noAssert) {
+  value = +value
+  offset = offset | 0
+  byteLength = byteLength | 0
+  if (!noAssert) checkInt(this, value, offset, byteLength, Math.pow(2, 8 * byteLength), 0)
+
+  var i = byteLength - 1
+  var mul = 1
+  this[offset + i] = value & 0xFF
+  while (--i >= 0 && (mul *= 0x100)) {
+    this[offset + i] = (value / mul) & 0xFF
+  }
+
+  return offset + byteLength
+}
+
+Buffer.prototype.writeUInt8 = function writeUInt8 (value, offset, noAssert) {
+  value = +value
+  offset = offset | 0
+  if (!noAssert) checkInt(this, value, offset, 1, 0xff, 0)
+  if (!Buffer.TYPED_ARRAY_SUPPORT) value = Math.floor(value)
+  this[offset] = value
+  return offset + 1
+}
+
+function objectWriteUInt16 (buf, value, offset, littleEndian) {
+  if (value < 0) value = 0xffff + value + 1
+  for (var i = 0, j = Math.min(buf.length - offset, 2); i < j; i++) {
+    buf[offset + i] = (value & (0xff << (8 * (littleEndian ? i : 1 - i)))) >>>
+      (littleEndian ? i : 1 - i) * 8
+  }
+}
+
+Buffer.prototype.writeUInt16LE = function writeUInt16LE (value, offset, noAssert) {
+  value = +value
+  offset = offset | 0
+  if (!noAssert) checkInt(this, value, offset, 2, 0xffff, 0)
+  if (Buffer.TYPED_ARRAY_SUPPORT) {
+    this[offset] = value
+    this[offset + 1] = (value >>> 8)
+  } else {
+    objectWriteUInt16(this, value, offset, true)
+  }
+  return offset + 2
+}
+
+Buffer.prototype.writeUInt16BE = function writeUInt16BE (value, offset, noAssert) {
+  value = +value
+  offset = offset | 0
+  if (!noAssert) checkInt(this, value, offset, 2, 0xffff, 0)
+  if (Buffer.TYPED_ARRAY_SUPPORT) {
+    this[offset] = (value >>> 8)
+    this[offset + 1] = value
+  } else {
+    objectWriteUInt16(this, value, offset, false)
+  }
+  return offset + 2
+}
+
+function objectWriteUInt32 (buf, value, offset, littleEndian) {
+  if (value < 0) value = 0xffffffff + value + 1
+  for (var i = 0, j = Math.min(buf.length - offset, 4); i < j; i++) {
+    buf[offset + i] = (value >>> (littleEndian ? i : 3 - i) * 8) & 0xff
+  }
+}
+
+Buffer.prototype.writeUInt32LE = function writeUInt32LE (value, offset, noAssert) {
+  value = +value
+  offset = offset | 0
+  if (!noAssert) checkInt(this, value, offset, 4, 0xffffffff, 0)
+  if (Buffer.TYPED_ARRAY_SUPPORT) {
+    this[offset + 3] = (value >>> 24)
+    this[offset + 2] = (value >>> 16)
+    this[offset + 1] = (value >>> 8)
+    this[offset] = value
+  } else {
+    objectWriteUInt32(this, value, offset, true)
+  }
+  return offset + 4
+}
+
+Buffer.prototype.writeUInt32BE = function writeUInt32BE (value, offset, noAssert) {
+  value = +value
+  offset = offset | 0
+  if (!noAssert) checkInt(this, value, offset, 4, 0xffffffff, 0)
+  if (Buffer.TYPED_ARRAY_SUPPORT) {
+    this[offset] = (value >>> 24)
+    this[offset + 1] = (value >>> 16)
+    this[offset + 2] = (value >>> 8)
+    this[offset + 3] = value
+  } else {
+    objectWriteUInt32(this, value, offset, false)
+  }
+  return offset + 4
+}
+
+Buffer.prototype.writeIntLE = function writeIntLE (value, offset, byteLength, noAssert) {
+  value = +value
+  offset = offset | 0
+  if (!noAssert) {
+    var limit = Math.pow(2, 8 * byteLength - 1)
+
+    checkInt(this, value, offset, byteLength, limit - 1, -limit)
+  }
+
+  var i = 0
+  var mul = 1
+  var sub = value < 0 ? 1 : 0
+  this[offset] = value & 0xFF
+  while (++i < byteLength && (mul *= 0x100)) {
+    this[offset + i] = ((value / mul) >> 0) - sub & 0xFF
+  }
+
+  return offset + byteLength
+}
+
+Buffer.prototype.writeIntBE = function writeIntBE (value, offset, byteLength, noAssert) {
+  value = +value
+  offset = offset | 0
+  if (!noAssert) {
+    var limit = Math.pow(2, 8 * byteLength - 1)
+
+    checkInt(this, value, offset, byteLength, limit - 1, -limit)
+  }
+
+  var i = byteLength - 1
+  var mul = 1
+  var sub = value < 0 ? 1 : 0
+  this[offset + i] = value & 0xFF
+  while (--i >= 0 && (mul *= 0x100)) {
+    this[offset + i] = ((value / mul) >> 0) - sub & 0xFF
+  }
+
+  return offset + byteLength
+}
+
+Buffer.prototype.writeInt8 = function writeInt8 (value, offset, noAssert) {
+  value = +value
+  offset = offset | 0
+  if (!noAssert) checkInt(this, value, offset, 1, 0x7f, -0x80)
+  if (!Buffer.TYPED_ARRAY_SUPPORT) value = Math.floor(value)
+  if (value < 0) value = 0xff + value + 1
+  this[offset] = value
+  return offset + 1
+}
+
+Buffer.prototype.writeInt16LE = function writeInt16LE (value, offset, noAssert) {
+  value = +value
+  offset = offset | 0
+  if (!noAssert) checkInt(this, value, offset, 2, 0x7fff, -0x8000)
+  if (Buffer.TYPED_ARRAY_SUPPORT) {
+    this[offset] = value
+    this[offset + 1] = (value >>> 8)
+  } else {
+    objectWriteUInt16(this, value, offset, true)
+  }
+  return offset + 2
+}
+
+Buffer.prototype.writeInt16BE = function writeInt16BE (value, offset, noAssert) {
+  value = +value
+  offset = offset | 0
+  if (!noAssert) checkInt(this, value, offset, 2, 0x7fff, -0x8000)
+  if (Buffer.TYPED_ARRAY_SUPPORT) {
+    this[offset] = (value >>> 8)
+    this[offset + 1] = value
+  } else {
+    objectWriteUInt16(this, value, offset, false)
+  }
+  return offset + 2
+}
+
+Buffer.prototype.writeInt32LE = function writeInt32LE (value, offset, noAssert) {
+  value = +value
+  offset = offset | 0
+  if (!noAssert) checkInt(this, value, offset, 4, 0x7fffffff, -0x80000000)
+  if (Buffer.TYPED_ARRAY_SUPPORT) {
+    this[offset] = value
+    this[offset + 1] = (value >>> 8)
+    this[offset + 2] = (value >>> 16)
+    this[offset + 3] = (value >>> 24)
+  } else {
+    objectWriteUInt32(this, value, offset, true)
+  }
+  return offset + 4
+}
+
+Buffer.prototype.writeInt32BE = function writeInt32BE (value, offset, noAssert) {
+  value = +value
+  offset = offset | 0
+  if (!noAssert) checkInt(this, value, offset, 4, 0x7fffffff, -0x80000000)
+  if (value < 0) value = 0xffffffff + value + 1
+  if (Buffer.TYPED_ARRAY_SUPPORT) {
+    this[offset] = (value >>> 24)
+    this[offset + 1] = (value >>> 16)
+    this[offset + 2] = (value >>> 8)
+    this[offset + 3] = value
+  } else {
+    objectWriteUInt32(this, value, offset, false)
+  }
+  return offset + 4
+}
+
+function checkIEEE754 (buf, value, offset, ext, max, min) {
+  if (value > max || value < min) throw new RangeError('value is out of bounds')
+  if (offset + ext > buf.length) throw new RangeError('index out of range')
+  if (offset < 0) throw new RangeError('index out of range')
+}
+
+function writeFloat (buf, value, offset, littleEndian, noAssert) {
+  if (!noAssert) {
+    checkIEEE754(buf, value, offset, 4, 3.4028234663852886e+38, -3.4028234663852886e+38)
+  }
+  ieee754.write(buf, value, offset, littleEndian, 23, 4)
+  return offset + 4
+}
+
+Buffer.prototype.writeFloatLE = function writeFloatLE (value, offset, noAssert) {
+  return writeFloat(this, value, offset, true, noAssert)
+}
+
+Buffer.prototype.writeFloatBE = function writeFloatBE (value, offset, noAssert) {
+  return writeFloat(this, value, offset, false, noAssert)
+}
+
+function writeDouble (buf, value, offset, littleEndian, noAssert) {
+  if (!noAssert) {
+    checkIEEE754(buf, value, offset, 8, 1.7976931348623157E+308, -1.7976931348623157E+308)
+  }
+  ieee754.write(buf, value, offset, littleEndian, 52, 8)
+  return offset + 8
+}
+
+Buffer.prototype.writeDoubleLE = function writeDoubleLE (value, offset, noAssert) {
+  return writeDouble(this, value, offset, true, noAssert)
+}
+
+Buffer.prototype.writeDoubleBE = function writeDoubleBE (value, offset, noAssert) {
+  return writeDouble(this, value, offset, false, noAssert)
+}
+
+// copy(targetBuffer, targetStart=0, sourceStart=0, sourceEnd=buffer.length)
+Buffer.prototype.copy = function copy (target, targetStart, start, end) {
+  if (!start) start = 0
+  if (!end && end !== 0) end = this.length
+  if (targetStart >= target.length) targetStart = target.length
+  if (!targetStart) targetStart = 0
+  if (end > 0 && end < start) end = start
+
+  // Copy 0 bytes; we're done
+  if (end === start) return 0
+  if (target.length === 0 || this.length === 0) return 0
+
+  // Fatal error conditions
+  if (targetStart < 0) {
+    throw new RangeError('targetStart out of bounds')
+  }
+  if (start < 0 || start >= this.length) throw new RangeError('sourceStart out of bounds')
+  if (end < 0) throw new RangeError('sourceEnd out of bounds')
+
+  // Are we oob?
+  if (end > this.length) end = this.length
+  if (target.length - targetStart < end - start) {
+    end = target.length - targetStart + start
+  }
+
+  var len = end - start
+
+  if (len < 1000 || !Buffer.TYPED_ARRAY_SUPPORT) {
+    for (var i = 0; i < len; i++) {
+      target[i + targetStart] = this[i + start]
+    }
+  } else {
+    target._set(this.subarray(start, start + len), targetStart)
+  }
+
+  return len
+}
+
+// fill(value, start=0, end=buffer.length)
+Buffer.prototype.fill = function fill (value, start, end) {
+  if (!value) value = 0
+  if (!start) start = 0
+  if (!end) end = this.length
+
+  if (end < start) throw new RangeError('end < start')
+
+  // Fill 0 bytes; we're done
+  if (end === start) return
+  if (this.length === 0) return
+
+  if (start < 0 || start >= this.length) throw new RangeError('start out of bounds')
+  if (end < 0 || end > this.length) throw new RangeError('end out of bounds')
+
+  var i
+  if (typeof value === 'number') {
+    for (i = start; i < end; i++) {
+      this[i] = value
+    }
+  } else {
+    var bytes = utf8ToBytes(value.toString())
+    var len = bytes.length
+    for (i = start; i < end; i++) {
+      this[i] = bytes[i % len]
+    }
+  }
+
+  return this
+}
+
+/**
+ * Creates a new `ArrayBuffer` with the *copied* memory of the buffer instance.
+ * Added in Node 0.12. Only available in browsers that support ArrayBuffer.
+ */
+Buffer.prototype.toArrayBuffer = function toArrayBuffer () {
+  if (typeof Uint8Array !== 'undefined') {
+    if (Buffer.TYPED_ARRAY_SUPPORT) {
+      return (new Buffer(this)).buffer
+    } else {
+      var buf = new Uint8Array(this.length)
+      for (var i = 0, len = buf.length; i < len; i += 1) {
+        buf[i] = this[i]
+      }
+      return buf.buffer
+    }
+  } else {
+    throw new TypeError('Buffer.toArrayBuffer not supported in this browser')
+  }
+}
+
+// HELPER FUNCTIONS
+// ================
+
+var BP = Buffer.prototype
+
+/**
+ * Augment a Uint8Array *instance* (not the Uint8Array class!) with Buffer methods
+ */
+Buffer._augment = function _augment (arr) {
+  arr.constructor = Buffer
+  arr._isBuffer = true
+
+  // save reference to original Uint8Array set method before overwriting
+  arr._set = arr.set
+
+  // deprecated, will be removed in node 0.13+
+  arr.get = BP.get
+  arr.set = BP.set
+
+  arr.write = BP.write
+  arr.toString = BP.toString
+  arr.toLocaleString = BP.toString
+  arr.toJSON = BP.toJSON
+  arr.equals = BP.equals
+  arr.compare = BP.compare
+  arr.indexOf = BP.indexOf
+  arr.copy = BP.copy
+  arr.slice = BP.slice
+  arr.readUIntLE = BP.readUIntLE
+  arr.readUIntBE = BP.readUIntBE
+  arr.readUInt8 = BP.readUInt8
+  arr.readUInt16LE = BP.readUInt16LE
+  arr.readUInt16BE = BP.readUInt16BE
+  arr.readUInt32LE = BP.readUInt32LE
+  arr.readUInt32BE = BP.readUInt32BE
+  arr.readIntLE = BP.readIntLE
+  arr.readIntBE = BP.readIntBE
+  arr.readInt8 = BP.readInt8
+  arr.readInt16LE = BP.readInt16LE
+  arr.readInt16BE = BP.readInt16BE
+  arr.readInt32LE = BP.readInt32LE
+  arr.readInt32BE = BP.readInt32BE
+  arr.readFloatLE = BP.readFloatLE
+  arr.readFloatBE = BP.readFloatBE
+  arr.readDoubleLE = BP.readDoubleLE
+  arr.readDoubleBE = BP.readDoubleBE
+  arr.writeUInt8 = BP.writeUInt8
+  arr.writeUIntLE = BP.writeUIntLE
+  arr.writeUIntBE = BP.writeUIntBE
+  arr.writeUInt16LE = BP.writeUInt16LE
+  arr.writeUInt16BE = BP.writeUInt16BE
+  arr.writeUInt32LE = BP.writeUInt32LE
+  arr.writeUInt32BE = BP.writeUInt32BE
+  arr.writeIntLE = BP.writeIntLE
+  arr.writeIntBE = BP.writeIntBE
+  arr.writeInt8 = BP.writeInt8
+  arr.writeInt16LE = BP.writeInt16LE
+  arr.writeInt16BE = BP.writeInt16BE
+  arr.writeInt32LE = BP.writeInt32LE
+  arr.writeInt32BE = BP.writeInt32BE
+  arr.writeFloatLE = BP.writeFloatLE
+  arr.writeFloatBE = BP.writeFloatBE
+  arr.writeDoubleLE = BP.writeDoubleLE
+  arr.writeDoubleBE = BP.writeDoubleBE
+  arr.fill = BP.fill
+  arr.inspect = BP.inspect
+  arr.toArrayBuffer = BP.toArrayBuffer
+
+  return arr
+}
+
+var INVALID_BASE64_RE = /[^+\/0-9A-z\-]/g
+
+function base64clean (str) {
+  // Node strips out invalid characters like \n and \t from the string, base64-js does not
+  str = stringtrim(str).replace(INVALID_BASE64_RE, '')
+  // Node converts strings with length < 2 to ''
+  if (str.length < 2) return ''
+  // Node allows for non-padded base64 strings (missing trailing ===), base64-js does not
+  while (str.length % 4 !== 0) {
+    str = str + '='
+  }
+  return str
+}
+
+function stringtrim (str) {
+  if (str.trim) return str.trim()
+  return str.replace(/^\s+|\s+$/g, '')
+}
+
+function toHex (n) {
+  if (n < 16) return '0' + n.toString(16)
+  return n.toString(16)
+}
+
+function utf8ToBytes (string, units) {
+  units = units || Infinity
+  var codePoint
+  var length = string.length
+  var leadSurrogate = null
+  var bytes = []
+  var i = 0
+
+  for (; i < length; i++) {
+    codePoint = string.charCodeAt(i)
+
+    // is surrogate component
+    if (codePoint > 0xD7FF && codePoint < 0xE000) {
+      // last char was a lead
+      if (leadSurrogate) {
+        // 2 leads in a row
+        if (codePoint < 0xDC00) {
+          if ((units -= 3) > -1) bytes.push(0xEF, 0xBF, 0xBD)
+          leadSurrogate = codePoint
+          continue
+        } else {
+          // valid surrogate pair
+          codePoint = leadSurrogate - 0xD800 << 10 | codePoint - 0xDC00 | 0x10000
+          leadSurrogate = null
+        }
+      } else {
+        // no lead yet
+
+        if (codePoint > 0xDBFF) {
+          // unexpected trail
+          if ((units -= 3) > -1) bytes.push(0xEF, 0xBF, 0xBD)
+          continue
+        } else if (i + 1 === length) {
+          // unpaired lead
+          if ((units -= 3) > -1) bytes.push(0xEF, 0xBF, 0xBD)
+          continue
+        } else {
+          // valid lead
+          leadSurrogate = codePoint
+          continue
+        }
+      }
+    } else if (leadSurrogate) {
+      // valid bmp char, but last char was a lead
+      if ((units -= 3) > -1) bytes.push(0xEF, 0xBF, 0xBD)
+      leadSurrogate = null
+    }
+
+    // encode utf8
+    if (codePoint < 0x80) {
+      if ((units -= 1) < 0) break
+      bytes.push(codePoint)
+    } else if (codePoint < 0x800) {
+      if ((units -= 2) < 0) break
+      bytes.push(
+        codePoint >> 0x6 | 0xC0,
+        codePoint & 0x3F | 0x80
+      )
+    } else if (codePoint < 0x10000) {
+      if ((units -= 3) < 0) break
+      bytes.push(
+        codePoint >> 0xC | 0xE0,
+        codePoint >> 0x6 & 0x3F | 0x80,
+        codePoint & 0x3F | 0x80
+      )
+    } else if (codePoint < 0x200000) {
+      if ((units -= 4) < 0) break
+      bytes.push(
+        codePoint >> 0x12 | 0xF0,
+        codePoint >> 0xC & 0x3F | 0x80,
+        codePoint >> 0x6 & 0x3F | 0x80,
+        codePoint & 0x3F | 0x80
+      )
+    } else {
+      throw new Error('Invalid code point')
+    }
+  }
+
+  return bytes
+}
+
+function asciiToBytes (str) {
+  var byteArray = []
+  for (var i = 0; i < str.length; i++) {
+    // Node's code seems to be doing this and not & 0x7F..
+    byteArray.push(str.charCodeAt(i) & 0xFF)
+  }
+  return byteArray
+}
+
+function utf16leToBytes (str, units) {
+  var c, hi, lo
+  var byteArray = []
+  for (var i = 0; i < str.length; i++) {
+    if ((units -= 2) < 0) break
+
+    c = str.charCodeAt(i)
+    hi = c >> 8
+    lo = c % 256
+    byteArray.push(lo)
+    byteArray.push(hi)
+  }
+
+  return byteArray
+}
+
+function base64ToBytes (str) {
+  return base64.toByteArray(base64clean(str))
+}
+
+function blitBuffer (src, dst, offset, length) {
+  for (var i = 0; i < length; i++) {
+    if ((i + offset >= dst.length) || (i >= src.length)) break
+    dst[i + offset] = src[i]
+  }
+  return i
+}
+
+function decodeUtf8Char (str) {
+  try {
+    return decodeURIComponent(str)
+  } catch (err) {
+    return String.fromCharCode(0xFFFD) // UTF 8 invalid char
+  }
+}
+
+},{"base64-js":547,"ieee754":548,"is-array":549}],547:[function(require,module,exports){
+var lookup = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/';
+
+;(function (exports) {
+	'use strict';
+
+  var Arr = (typeof Uint8Array !== 'undefined')
+    ? Uint8Array
+    : Array
+
+	var PLUS   = '+'.charCodeAt(0)
+	var SLASH  = '/'.charCodeAt(0)
+	var NUMBER = '0'.charCodeAt(0)
+	var LOWER  = 'a'.charCodeAt(0)
+	var UPPER  = 'A'.charCodeAt(0)
+	var PLUS_URL_SAFE = '-'.charCodeAt(0)
+	var SLASH_URL_SAFE = '_'.charCodeAt(0)
+
+	function decode (elt) {
+		var code = elt.charCodeAt(0)
+		if (code === PLUS ||
+		    code === PLUS_URL_SAFE)
+			return 62 // '+'
+		if (code === SLASH ||
+		    code === SLASH_URL_SAFE)
+			return 63 // '/'
+		if (code < NUMBER)
+			return -1 //no match
+		if (code < NUMBER + 10)
+			return code - NUMBER + 26 + 26
+		if (code < UPPER + 26)
+			return code - UPPER
+		if (code < LOWER + 26)
+			return code - LOWER + 26
+	}
+
+	function b64ToByteArray (b64) {
+		var i, j, l, tmp, placeHolders, arr
+
+		if (b64.length % 4 > 0) {
+			throw new Error('Invalid string. Length must be a multiple of 4')
+		}
+
+		// the number of equal signs (place holders)
+		// if there are two placeholders, than the two characters before it
+		// represent one byte
+		// if there is only one, then the three characters before it represent 2 bytes
+		// this is just a cheap hack to not do indexOf twice
+		var len = b64.length
+		placeHolders = '=' === b64.charAt(len - 2) ? 2 : '=' === b64.charAt(len - 1) ? 1 : 0
+
+		// base64 is 4/3 + up to two characters of the original data
+		arr = new Arr(b64.length * 3 / 4 - placeHolders)
+
+		// if there are placeholders, only get up to the last complete 4 chars
+		l = placeHolders > 0 ? b64.length - 4 : b64.length
+
+		var L = 0
+
+		function push (v) {
+			arr[L++] = v
+		}
+
+		for (i = 0, j = 0; i < l; i += 4, j += 3) {
+			tmp = (decode(b64.charAt(i)) << 18) | (decode(b64.charAt(i + 1)) << 12) | (decode(b64.charAt(i + 2)) << 6) | decode(b64.charAt(i + 3))
+			push((tmp & 0xFF0000) >> 16)
+			push((tmp & 0xFF00) >> 8)
+			push(tmp & 0xFF)
+		}
+
+		if (placeHolders === 2) {
+			tmp = (decode(b64.charAt(i)) << 2) | (decode(b64.charAt(i + 1)) >> 4)
+			push(tmp & 0xFF)
+		} else if (placeHolders === 1) {
+			tmp = (decode(b64.charAt(i)) << 10) | (decode(b64.charAt(i + 1)) << 4) | (decode(b64.charAt(i + 2)) >> 2)
+			push((tmp >> 8) & 0xFF)
+			push(tmp & 0xFF)
+		}
+
+		return arr
+	}
+
+	function uint8ToBase64 (uint8) {
+		var i,
+			extraBytes = uint8.length % 3, // if we have 1 byte left, pad 2 bytes
+			output = "",
+			temp, length
+
+		function encode (num) {
+			return lookup.charAt(num)
+		}
+
+		function tripletToBase64 (num) {
+			return encode(num >> 18 & 0x3F) + encode(num >> 12 & 0x3F) + encode(num >> 6 & 0x3F) + encode(num & 0x3F)
+		}
+
+		// go through the array every three bytes, we'll deal with trailing stuff later
+		for (i = 0, length = uint8.length - extraBytes; i < length; i += 3) {
+			temp = (uint8[i] << 16) + (uint8[i + 1] << 8) + (uint8[i + 2])
+			output += tripletToBase64(temp)
+		}
+
+		// pad the end with zeros, but make sure to not forget the extra bytes
+		switch (extraBytes) {
+			case 1:
+				temp = uint8[uint8.length - 1]
+				output += encode(temp >> 2)
+				output += encode((temp << 4) & 0x3F)
+				output += '=='
+				break
+			case 2:
+				temp = (uint8[uint8.length - 2] << 8) + (uint8[uint8.length - 1])
+				output += encode(temp >> 10)
+				output += encode((temp >> 4) & 0x3F)
+				output += encode((temp << 2) & 0x3F)
+				output += '='
+				break
+		}
+
+		return output
+	}
+
+	exports.toByteArray = b64ToByteArray
+	exports.fromByteArray = uint8ToBase64
+}(typeof exports === 'undefined' ? (this.base64js = {}) : exports))
+
+},{}],548:[function(require,module,exports){
+exports.read = function(buffer, offset, isLE, mLen, nBytes) {
+  var e, m,
+      eLen = nBytes * 8 - mLen - 1,
+      eMax = (1 << eLen) - 1,
+      eBias = eMax >> 1,
+      nBits = -7,
+      i = isLE ? (nBytes - 1) : 0,
+      d = isLE ? -1 : 1,
+      s = buffer[offset + i];
+
+  i += d;
+
+  e = s & ((1 << (-nBits)) - 1);
+  s >>= (-nBits);
+  nBits += eLen;
+  for (; nBits > 0; e = e * 256 + buffer[offset + i], i += d, nBits -= 8);
+
+  m = e & ((1 << (-nBits)) - 1);
+  e >>= (-nBits);
+  nBits += mLen;
+  for (; nBits > 0; m = m * 256 + buffer[offset + i], i += d, nBits -= 8);
+
+  if (e === 0) {
+    e = 1 - eBias;
+  } else if (e === eMax) {
+    return m ? NaN : ((s ? -1 : 1) * Infinity);
+  } else {
+    m = m + Math.pow(2, mLen);
+    e = e - eBias;
+  }
+  return (s ? -1 : 1) * m * Math.pow(2, e - mLen);
+};
+
+exports.write = function(buffer, value, offset, isLE, mLen, nBytes) {
+  var e, m, c,
+      eLen = nBytes * 8 - mLen - 1,
+      eMax = (1 << eLen) - 1,
+      eBias = eMax >> 1,
+      rt = (mLen === 23 ? Math.pow(2, -24) - Math.pow(2, -77) : 0),
+      i = isLE ? 0 : (nBytes - 1),
+      d = isLE ? 1 : -1,
+      s = value < 0 || (value === 0 && 1 / value < 0) ? 1 : 0;
+
+  value = Math.abs(value);
+
+  if (isNaN(value) || value === Infinity) {
+    m = isNaN(value) ? 1 : 0;
+    e = eMax;
+  } else {
+    e = Math.floor(Math.log(value) / Math.LN2);
+    if (value * (c = Math.pow(2, -e)) < 1) {
+      e--;
+      c *= 2;
+    }
+    if (e + eBias >= 1) {
+      value += rt / c;
+    } else {
+      value += rt * Math.pow(2, 1 - eBias);
+    }
+    if (value * c >= 2) {
+      e++;
+      c /= 2;
+    }
+
+    if (e + eBias >= eMax) {
+      m = 0;
+      e = eMax;
+    } else if (e + eBias >= 1) {
+      m = (value * c - 1) * Math.pow(2, mLen);
+      e = e + eBias;
+    } else {
+      m = value * Math.pow(2, eBias - 1) * Math.pow(2, mLen);
+      e = 0;
+    }
+  }
+
+  for (; mLen >= 8; buffer[offset + i] = m & 0xff, i += d, m /= 256, mLen -= 8);
+
+  e = (e << mLen) | m;
+  eLen += mLen;
+  for (; eLen > 0; buffer[offset + i] = e & 0xff, i += d, e /= 256, eLen -= 8);
+
+  buffer[offset + i - d] |= s * 128;
+};
+
+},{}],549:[function(require,module,exports){
+
+/**
+ * isArray
+ */
+
+var isArray = Array.isArray;
+
+/**
+ * toString
+ */
+
+var str = Object.prototype.toString;
+
+/**
+ * Whether or not the given `val`
+ * is an array.
+ *
+ * example:
+ *
+ *        isArray([]);
+ *        // > true
+ *        isArray(arguments);
+ *        // > false
+ *        isArray('');
+ *        // > false
+ *
+ * @param {mixed} val
+ * @return {bool}
+ */
+
+module.exports = isArray || function (val) {
+  return !! val && '[object Array]' == str.call(val);
+};
+
+},{}],550:[function(require,module,exports){
 var cookies = require('cookie-getter'),
     config = cookies('config') || {};
 
@@ -23348,7 +25804,7 @@ document.cookie = 'config=;expires=Thu, 01 Jan 1970 00:00:00 GMT';
 // export it
 module.exports = config;
 
-},{"cookie-getter":887}],887:[function(require,module,exports){
+},{"cookie-getter":551}],551:[function(require,module,exports){
 // simple commonJS cookie reader, best perf according to http://jsperf.com/cookie-parsing
 module.exports = function (name) {
     var cookie = document.cookie,
@@ -23360,7 +25816,7 @@ module.exports = function (name) {
     return (res.charAt(0) === '{') ? JSON.parse(res) : res;
 };
 
-},{}],888:[function(require,module,exports){
+},{}],552:[function(require,module,exports){
 /*!
   * domready (c) Dustin Diaz 2014 - License MIT
   */
@@ -23392,7 +25848,7 @@ module.exports = function (name) {
 
 });
 
-},{}],889:[function(require,module,exports){
+},{}],553:[function(require,module,exports){
 /*!
  * jQuery JavaScript Library v2.1.4
  * http://jquery.com/
@@ -32604,7 +35060,7 @@ return jQuery;
 
 }));
 
-},{}],890:[function(require,module,exports){
+},{}],554:[function(require,module,exports){
 /**
  * This is the main entry point for KaTeX. Here, we expose functions for
  * rendering expressions either to DOM nodes or to markup strings.
@@ -32660,7 +35116,7 @@ module.exports = {
     ParseError: ParseError
 };
 
-},{"./src/ParseError":893,"./src/buildTree":897,"./src/parseTree":902,"./src/utils":904}],891:[function(require,module,exports){
+},{"./src/ParseError":557,"./src/buildTree":561,"./src/parseTree":566,"./src/utils":568}],555:[function(require,module,exports){
 /**
  * The Lexer class handles tokenizing the input in various ways. Since our
  * parser expects us to be able to backtrack, the lexer allows lexing from any
@@ -32852,7 +35308,7 @@ Lexer.prototype.lex = function(pos, mode) {
 
 module.exports = Lexer;
 
-},{"./ParseError":893}],892:[function(require,module,exports){
+},{"./ParseError":557}],556:[function(require,module,exports){
 /**
  * This file contains information about the options that the Parser carries
  * around with it while parsing. Data is held in an `Options` object, and when
@@ -32939,7 +35395,7 @@ Options.prototype.getColor = function() {
 
 module.exports = Options;
 
-},{}],893:[function(require,module,exports){
+},{}],557:[function(require,module,exports){
 /**
  * This is the ParseError class, which is the main error thrown by KaTeX
  * functions when something has gone wrong. This is used to distinguish internal
@@ -32981,7 +35437,7 @@ ParseError.prototype.__proto__ = Error.prototype;
 
 module.exports = ParseError;
 
-},{}],894:[function(require,module,exports){
+},{}],558:[function(require,module,exports){
 var functions = require("./functions");
 var Lexer = require("./Lexer");
 var symbols = require("./symbols");
@@ -33622,7 +36078,7 @@ Parser.prototype.parseSymbol = function(pos, mode) {
 
 module.exports = Parser;
 
-},{"./Lexer":891,"./ParseError":893,"./functions":901,"./symbols":903,"./utils":904}],895:[function(require,module,exports){
+},{"./Lexer":555,"./ParseError":557,"./functions":565,"./symbols":567,"./utils":568}],559:[function(require,module,exports){
 /**
  * This file contains information and classes for the various kinds of styles
  * used in TeX. It provides a generic `Style` class, which holds information
@@ -33750,7 +36206,7 @@ module.exports = {
     SCRIPTSCRIPT: styles[SS]
 };
 
-},{}],896:[function(require,module,exports){
+},{}],560:[function(require,module,exports){
 /**
  * This module contains general functions that can be used for building
  * different kinds of domTree nodes in a consistent manner.
@@ -34023,7 +36479,7 @@ module.exports = {
     makeVList: makeVList
 };
 
-},{"./domTree":899,"./fontMetrics":900,"./symbols":903}],897:[function(require,module,exports){
+},{"./domTree":563,"./fontMetrics":564,"./symbols":567}],561:[function(require,module,exports){
 /**
  * This file does the main work of building a domTree structure from a parse
  * tree. The entry point is the `buildTree` function, which takes a parse tree.
@@ -35192,7 +37648,7 @@ var buildTree = function(tree) {
 
 module.exports = buildTree;
 
-},{"./Options":892,"./ParseError":893,"./Style":895,"./buildCommon":896,"./delimiter":898,"./domTree":899,"./fontMetrics":900,"./utils":904}],898:[function(require,module,exports){
+},{"./Options":556,"./ParseError":557,"./Style":559,"./buildCommon":560,"./delimiter":562,"./domTree":563,"./fontMetrics":564,"./utils":568}],562:[function(require,module,exports){
 /**
  * This file deals with creating delimiters of various sizes. The TeXbook
  * discusses these routines on page 441-442, in the "Another subroutine sets box
@@ -35735,7 +38191,7 @@ module.exports = {
     leftRightDelim: makeLeftRightDelim
 };
 
-},{"./ParseError":893,"./Style":895,"./buildCommon":896,"./fontMetrics":900,"./symbols":903,"./utils":904}],899:[function(require,module,exports){
+},{"./ParseError":557,"./Style":559,"./buildCommon":560,"./fontMetrics":564,"./symbols":567,"./utils":568}],563:[function(require,module,exports){
 /**
  * These objects store the data about the DOM nodes we create, as well as some
  * extra data. They can then be transformed into real DOM nodes with the toNode
@@ -35978,7 +38434,7 @@ module.exports = {
     symbolNode: symbolNode
 };
 
-},{"./utils":904}],900:[function(require,module,exports){
+},{"./utils":568}],564:[function(require,module,exports){
 /* jshint unused:false */
 
 var Style = require("./Style");
@@ -36109,7 +38565,7 @@ module.exports = {
     getCharacterMetrics: getCharacterMetrics
 };
 
-},{"./Style":895}],901:[function(require,module,exports){
+},{"./Style":559}],565:[function(require,module,exports){
 var utils = require("./utils");
 var ParseError = require("./ParseError");
 
@@ -36650,7 +39106,7 @@ module.exports = {
     getGreediness: getGreediness
 };
 
-},{"./ParseError":893,"./utils":904}],902:[function(require,module,exports){
+},{"./ParseError":557,"./utils":568}],566:[function(require,module,exports){
 /**
  * Provides a single function for parsing an expression using a Parser
  * TODO(emily): Remove this
@@ -36669,7 +39125,7 @@ var parseTree = function(toParse) {
 
 module.exports = parseTree;
 
-},{"./Parser":894}],903:[function(require,module,exports){
+},{"./Parser":558}],567:[function(require,module,exports){
 /**
  * This file holds a list of all no-argument functions and single-character
  * symbols (like 'a' or ';').
@@ -37677,7 +40133,7 @@ for (var i = 0; i < letters.length; i++) {
 
 module.exports = symbols;
 
-},{}],904:[function(require,module,exports){
+},{}],568:[function(require,module,exports){
 /**
  * This file contains a list of utility functions which are useful in other
  * files.
@@ -37776,7 +40232,7 @@ module.exports = {
     clearNode: clearNode
 };
 
-},{}],905:[function(require,module,exports){
+},{}],569:[function(require,module,exports){
 module.exports = function(THREE) {
     var MOUSE = THREE.MOUSE
     if (!MOUSE)
@@ -38458,14 +40914,14 @@ module.exports = function(THREE) {
     OrbitControls.prototype.constructor = OrbitControls;
     return OrbitControls;
 }
-},{}],906:[function(require,module,exports){
+},{}],570:[function(require,module,exports){
 var self = self || {};// File:src/Three.js
 
 /**
  * @author mrdoob / http://mrdoob.com/
  */
 
-var THREE = { REVISION: '71' };
+var THREE = { REVISION: '70' };
 
 // browserify support
 
@@ -38479,22 +40935,13 @@ if ( typeof module === 'object' ) {
 
 if ( Math.sign === undefined ) {
 
-	// https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Math/sign
-
 	Math.sign = function ( x ) {
 
-		return ( x < 0 ) ? - 1 : ( x > 0 ) ? 1 : +x;
+		return ( x < 0 ) ? - 1 : ( x > 0 ) ? 1 : 0;
 
 	};
 
 }
-
-
-// set the default log handlers
-THREE.log = function() { console.log.apply( console, arguments ); }
-THREE.warn = function() { console.warn.apply( console, arguments ); }
-THREE.error = function() { console.error.apply( console, arguments ); }
-
 
 // https://developer.mozilla.org/en-US/docs/Web/API/MouseEvent.button
 
@@ -38621,7 +41068,6 @@ THREE.UnsignedShortType = 1012;
 THREE.IntType = 1013;
 THREE.UnsignedIntType = 1014;
 THREE.FloatType = 1015;
-THREE.HalfFloatType = 1025;
 
 // Pixel types
 
@@ -38660,25 +41106,25 @@ THREE.RGBA_PVRTC_2BPPV1_Format = 2103;
 
 THREE.Projector = function () {
 
-	THREE.error( 'THREE.Projector has been moved to /examples/js/renderers/Projector.js.' );
+	console.error( 'THREE.Projector has been moved to /examples/js/renderers/Projector.js.' );
 
 	this.projectVector = function ( vector, camera ) {
 
-		THREE.warn( 'THREE.Projector: .projectVector() is now vector.project().' );
+		console.warn( 'THREE.Projector: .projectVector() is now vector.project().' );
 		vector.project( camera );
 
 	};
 
 	this.unprojectVector = function ( vector, camera ) {
 
-		THREE.warn( 'THREE.Projector: .unprojectVector() is now vector.unproject().' );
+		console.warn( 'THREE.Projector: .unprojectVector() is now vector.unproject().' );
 		vector.unproject( camera );
 
 	};
 
 	this.pickingRay = function ( vector, camera ) {
 
-		THREE.error( 'THREE.Projector: .pickingRay() is now raycaster.setFromCamera().' );
+		console.error( 'THREE.Projector: .pickingRay() is now raycaster.setFromCamera().' );
 
 	};
 
@@ -38686,7 +41132,7 @@ THREE.Projector = function () {
 
 THREE.CanvasRenderer = function () {
 
-	THREE.error( 'THREE.CanvasRenderer has been moved to /examples/js/renderers/CanvasRenderer.js' );
+	console.error( 'THREE.CanvasRenderer has been moved to /examples/js/renderers/CanvasRenderer.js' );
 
 	this.domElement = document.createElement( 'canvas' );
 	this.clear = function () {};
@@ -38873,27 +41319,21 @@ THREE.Color.prototype = {
 
 	},
 
-	copyGammaToLinear: function ( color, gammaFactor ) {
+	copyGammaToLinear: function ( color ) {
 
-		if ( gammaFactor === undefined ) gammaFactor = 2.0;
-
-		this.r = Math.pow( color.r, gammaFactor );
-		this.g = Math.pow( color.g, gammaFactor );
-		this.b = Math.pow( color.b, gammaFactor );
+		this.r = color.r * color.r;
+		this.g = color.g * color.g;
+		this.b = color.b * color.b;
 
 		return this;
 
 	},
 
-	copyLinearToGamma: function ( color, gammaFactor ) {
+	copyLinearToGamma: function ( color ) {
 
-		if ( gammaFactor === undefined ) gammaFactor = 2.0;
-
-		var safeInverse = ( gammaFactor > 0 ) ? ( 1.0 / gammaFactor ) : 1.0;
-
-		this.r = Math.pow( color.r, safeInverse );
-		this.g = Math.pow( color.g, safeInverse );
-		this.b = Math.pow( color.b, safeInverse );
+		this.r = Math.sqrt( color.r );
+		this.g = Math.sqrt( color.g );
+		this.b = Math.sqrt( color.b );
 
 		return this;
 
@@ -39072,16 +41512,10 @@ THREE.Color.prototype = {
 
 	},
 
-	toArray: function ( array, offset ) {
+	toArray: function () {
 
-		if ( array === undefined ) array = [];
-		if ( offset === undefined ) offset = 0;
+		return [ this.r, this.g, this.b ];
 
-		array[ offset ] = this.r;
-		array[ offset + 1 ] = this.g;
-		array[ offset + 2 ] = this.b;
-
-		return array;
 	},
 
 	clone: function () {
@@ -39484,7 +41918,7 @@ THREE.Quaternion.prototype = {
 
 		if ( p !== undefined ) {
 
-			THREE.warn( 'THREE.Quaternion: .multiply() now only accepts one argument. Use .multiplyQuaternions( a, b ) instead.' );
+			console.warn( 'THREE.Quaternion: .multiply() now only accepts one argument. Use .multiplyQuaternions( a, b ) instead.' );
 			return this.multiplyQuaternions( q, p );
 
 		}
@@ -39513,7 +41947,7 @@ THREE.Quaternion.prototype = {
 
 	multiplyVector3: function ( vector ) {
 
-		THREE.warn( 'THREE.Quaternion: .multiplyVector3() has been removed. Use is now vector.applyQuaternion( quaternion ) instead.' );
+		console.warn( 'THREE.Quaternion: .multiplyVector3() has been removed. Use is now vector.applyQuaternion( quaternion ) instead.' );
 		return vector.applyQuaternion( this );
 
 	},
@@ -39724,22 +42158,13 @@ THREE.Vector2.prototype = {
 
 		if ( w !== undefined ) {
 
-			THREE.warn( 'THREE.Vector2: .add() now only accepts one argument. Use .addVectors( a, b ) instead.' );
+			console.warn( 'THREE.Vector2: .add() now only accepts one argument. Use .addVectors( a, b ) instead.' );
 			return this.addVectors( v, w );
 
 		}
 
 		this.x += v.x;
 		this.y += v.y;
-
-		return this;
-
-	},
-
-	addScalar: function ( s ) {
-
-		this.x += s;
-		this.y += s;
 
 		return this;
 
@@ -39754,26 +42179,26 @@ THREE.Vector2.prototype = {
 
 	},
 
+	addScalar: function ( s ) {
+
+		this.x += s;
+		this.y += s;
+
+		return this;
+
+	},
+
 	sub: function ( v, w ) {
 
 		if ( w !== undefined ) {
 
-			THREE.warn( 'THREE.Vector2: .sub() now only accepts one argument. Use .subVectors( a, b ) instead.' );
+			console.warn( 'THREE.Vector2: .sub() now only accepts one argument. Use .subVectors( a, b ) instead.' );
 			return this.subVectors( v, w );
 
 		}
 
 		this.x -= v.x;
 		this.y -= v.y;
-
-		return this;
-
-	},
-
-	subScalar: function ( s ) {
-
-		this.x -= s;
-		this.y -= s;
 
 		return this;
 
@@ -40024,14 +42449,6 @@ THREE.Vector2.prototype = {
 
 	},
 
-	lerpVectors: function ( v1, v2, alpha ) {
-
-		this.subVectors( v2, v1 ).multiplyScalar( alpha ).add( v1 );
-
-		return this;
-
-	},
-
 	equals: function ( v ) {
 
 		return ( ( v.x === this.x ) && ( v.y === this.y ) );
@@ -40063,14 +42480,14 @@ THREE.Vector2.prototype = {
 
 	fromAttribute: function ( attribute, index, offset ) {
 
-		if ( offset === undefined ) offset = 0;
+	    if ( offset === undefined ) offset = 0;
 
-		index = index * attribute.itemSize + offset;
+	    index = index * attribute.itemSize + offset;
 
-		this.x = attribute.array[ index ];
-		this.y = attribute.array[ index + 1 ];
+	    this.x = attribute.array[ index ];
+	    this.y = attribute.array[ index + 1 ];
 
-		return this;
+	    return this;
 
 	},
 
@@ -40179,7 +42596,7 @@ THREE.Vector3.prototype = {
 
 		if ( w !== undefined ) {
 
-			THREE.warn( 'THREE.Vector3: .add() now only accepts one argument. Use .addVectors( a, b ) instead.' );
+			console.warn( 'THREE.Vector3: .add() now only accepts one argument. Use .addVectors( a, b ) instead.' );
 			return this.addVectors( v, w );
 
 		}
@@ -40216,7 +42633,7 @@ THREE.Vector3.prototype = {
 
 		if ( w !== undefined ) {
 
-			THREE.warn( 'THREE.Vector3: .sub() now only accepts one argument. Use .subVectors( a, b ) instead.' );
+			console.warn( 'THREE.Vector3: .sub() now only accepts one argument. Use .subVectors( a, b ) instead.' );
 			return this.subVectors( v, w );
 
 		}
@@ -40224,16 +42641,6 @@ THREE.Vector3.prototype = {
 		this.x -= v.x;
 		this.y -= v.y;
 		this.z -= v.z;
-
-		return this;
-
-	},
-	
-	subScalar: function ( s ) {
-
-		this.x -= s;
-		this.y -= s;
-		this.z -= s;
 
 		return this;
 
@@ -40253,7 +42660,7 @@ THREE.Vector3.prototype = {
 
 		if ( w !== undefined ) {
 
-			THREE.warn( 'THREE.Vector3: .multiply() now only accepts one argument. Use .multiplyVectors( a, b ) instead.' );
+			console.warn( 'THREE.Vector3: .multiply() now only accepts one argument. Use .multiplyVectors( a, b ) instead.' );
 			return this.multiplyVectors( v, w );
 
 		}
@@ -40294,7 +42701,7 @@ THREE.Vector3.prototype = {
 
 			if ( euler instanceof THREE.Euler === false ) {
 
-				THREE.error( 'THREE.Vector3: .applyEuler() now expects a Euler rotation rather than a Vector3 and order.' );
+				console.error( 'THREE.Vector3: .applyEuler() now expects a Euler rotation rather than a Vector3 and order.' );
 
 			}
 
@@ -40693,19 +43100,11 @@ THREE.Vector3.prototype = {
 
 	},
 
-	lerpVectors: function ( v1, v2, alpha ) {
-
-		this.subVectors( v2, v1 ).multiplyScalar( alpha ).add( v1 );
-
-		return this;
-
-	},
-
 	cross: function ( v, w ) {
 
 		if ( w !== undefined ) {
 
-			THREE.warn( 'THREE.Vector3: .cross() now only accepts one argument. Use .crossVectors( a, b ) instead.' );
+			console.warn( 'THREE.Vector3: .cross() now only accepts one argument. Use .crossVectors( a, b ) instead.' );
 			return this.crossVectors( v, w );
 
 		}
@@ -40812,19 +43211,19 @@ THREE.Vector3.prototype = {
 
 	setEulerFromRotationMatrix: function ( m, order ) {
 
-		THREE.error( 'THREE.Vector3: .setEulerFromRotationMatrix() has been removed. Use Euler.setFromRotationMatrix() instead.' );
+		console.error( 'THREE.Vector3: .setEulerFromRotationMatrix() has been removed. Use Euler.setFromRotationMatrix() instead.' );
 
 	},
 
 	setEulerFromQuaternion: function ( q, order ) {
 
-		THREE.error( 'THREE.Vector3: .setEulerFromQuaternion() has been removed. Use Euler.setFromQuaternion() instead.' );
+		console.error( 'THREE.Vector3: .setEulerFromQuaternion() has been removed. Use Euler.setFromQuaternion() instead.' );
 
 	},
 
 	getPositionFromMatrix: function ( m ) {
 
-		THREE.warn( 'THREE.Vector3: .getPositionFromMatrix() has been renamed to .setFromMatrixPosition().' );
+		console.warn( 'THREE.Vector3: .getPositionFromMatrix() has been renamed to .setFromMatrixPosition().' );
 
 		return this.setFromMatrixPosition( m );
 
@@ -40832,14 +43231,14 @@ THREE.Vector3.prototype = {
 
 	getScaleFromMatrix: function ( m ) {
 
-		THREE.warn( 'THREE.Vector3: .getScaleFromMatrix() has been renamed to .setFromMatrixScale().' );
+		console.warn( 'THREE.Vector3: .getScaleFromMatrix() has been renamed to .setFromMatrixScale().' );
 
 		return this.setFromMatrixScale( m );
 	},
 
 	getColumnFromMatrix: function ( index, matrix ) {
 
-		THREE.warn( 'THREE.Vector3: .getColumnFromMatrix() has been renamed to .setFromMatrixColumn().' );
+		console.warn( 'THREE.Vector3: .getColumnFromMatrix() has been renamed to .setFromMatrixColumn().' );
 
 		return this.setFromMatrixColumn( index, matrix );
 
@@ -40869,7 +43268,7 @@ THREE.Vector3.prototype = {
 	},
 
 	setFromMatrixColumn: function ( index, matrix ) {
-		
+
 		var offset = index * 4;
 
 		var me = matrix.elements;
@@ -40915,15 +43314,15 @@ THREE.Vector3.prototype = {
 
 	fromAttribute: function ( attribute, index, offset ) {
 
-		if ( offset === undefined ) offset = 0;
+	    if ( offset === undefined ) offset = 0;
 
-		index = index * attribute.itemSize + offset;
+	    index = index * attribute.itemSize + offset;
 
-		this.x = attribute.array[ index ];
-		this.y = attribute.array[ index + 1 ];
-		this.z = attribute.array[ index + 2 ];
+	    this.x = attribute.array[ index ];
+	    this.y = attribute.array[ index + 1 ];
+	    this.z = attribute.array[ index + 2 ];
 
-		return this;
+	    return this;
 
 	},
 
@@ -41044,7 +43443,7 @@ THREE.Vector4.prototype = {
 
 		if ( w !== undefined ) {
 
-			THREE.warn( 'THREE.Vector4: .add() now only accepts one argument. Use .addVectors( a, b ) instead.' );
+			console.warn( 'THREE.Vector4: .add() now only accepts one argument. Use .addVectors( a, b ) instead.' );
 			return this.addVectors( v, w );
 
 		}
@@ -41084,7 +43483,7 @@ THREE.Vector4.prototype = {
 
 		if ( w !== undefined ) {
 
-			THREE.warn( 'THREE.Vector4: .sub() now only accepts one argument. Use .subVectors( a, b ) instead.' );
+			console.warn( 'THREE.Vector4: .sub() now only accepts one argument. Use .subVectors( a, b ) instead.' );
 			return this.subVectors( v, w );
 
 		}
@@ -41093,17 +43492,6 @@ THREE.Vector4.prototype = {
 		this.y -= v.y;
 		this.z -= v.z;
 		this.w -= v.w;
-
-		return this;
-
-	},
-
-	subScalar: function ( s ) {
-
-		this.x -= s;
-		this.y -= s;
-		this.z -= s;
-		this.w -= s;
 
 		return this;
 
@@ -41455,49 +43843,49 @@ THREE.Vector4.prototype = {
 
 	} )(),
 
-  floor: function () {
+    floor: function () {
 
-		this.x = Math.floor( this.x );
-		this.y = Math.floor( this.y );
-		this.z = Math.floor( this.z );
-		this.w = Math.floor( this.w );
+        this.x = Math.floor( this.x );
+        this.y = Math.floor( this.y );
+        this.z = Math.floor( this.z );
+        this.w = Math.floor( this.w );
 
-		return this;
+        return this;
 
-  },
+    },
 
-  ceil: function () {
+    ceil: function () {
 
-		this.x = Math.ceil( this.x );
-		this.y = Math.ceil( this.y );
-		this.z = Math.ceil( this.z );
-		this.w = Math.ceil( this.w );
+        this.x = Math.ceil( this.x );
+        this.y = Math.ceil( this.y );
+        this.z = Math.ceil( this.z );
+        this.w = Math.ceil( this.w );
 
-		return this;
+        return this;
 
-  },
+    },
 
-  round: function () {
+    round: function () {
 
-		this.x = Math.round( this.x );
-		this.y = Math.round( this.y );
-		this.z = Math.round( this.z );
-		this.w = Math.round( this.w );
+        this.x = Math.round( this.x );
+        this.y = Math.round( this.y );
+        this.z = Math.round( this.z );
+        this.w = Math.round( this.w );
 
-		return this;
+        return this;
 
-  },
+    },
 
-  roundToZero: function () {
+    roundToZero: function () {
 
-		this.x = ( this.x < 0 ) ? Math.ceil( this.x ) : Math.floor( this.x );
-		this.y = ( this.y < 0 ) ? Math.ceil( this.y ) : Math.floor( this.y );
-		this.z = ( this.z < 0 ) ? Math.ceil( this.z ) : Math.floor( this.z );
-		this.w = ( this.w < 0 ) ? Math.ceil( this.w ) : Math.floor( this.w );
+        this.x = ( this.x < 0 ) ? Math.ceil( this.x ) : Math.floor( this.x );
+        this.y = ( this.y < 0 ) ? Math.ceil( this.y ) : Math.floor( this.y );
+        this.z = ( this.z < 0 ) ? Math.ceil( this.z ) : Math.floor( this.z );
+        this.w = ( this.w < 0 ) ? Math.ceil( this.w ) : Math.floor( this.w );
 
-		return this;
+        return this;
 
-  },
+    },
 
 	negate: function () {
 
@@ -41565,14 +43953,6 @@ THREE.Vector4.prototype = {
 
 	},
 
-	lerpVectors: function ( v1, v2, alpha ) {
-
-		this.subVectors( v2, v1 ).multiplyScalar( alpha ).add( v1 );
-
-		return this;
-
-	},
-
 	equals: function ( v ) {
 
 		return ( ( v.x === this.x ) && ( v.y === this.y ) && ( v.z === this.z ) && ( v.w === this.w ) );
@@ -41608,16 +43988,16 @@ THREE.Vector4.prototype = {
 
 	fromAttribute: function ( attribute, index, offset ) {
 
-		if ( offset === undefined ) offset = 0;
+	    if ( offset === undefined ) offset = 0;
 
-		index = index * attribute.itemSize + offset;
+	    index = index * attribute.itemSize + offset;
 
-		this.x = attribute.array[ index ];
-		this.y = attribute.array[ index + 1 ];
-		this.z = attribute.array[ index + 2 ];
-		this.w = attribute.array[ index + 3 ];
+	    this.x = attribute.array[ index ];
+	    this.y = attribute.array[ index + 1 ];
+	    this.z = attribute.array[ index + 2 ];
+	    this.w = attribute.array[ index + 3 ];
 
-		return this;
+	    return this;
 
 	},
 
@@ -41845,7 +44225,7 @@ THREE.Euler.prototype = {
 
 		} else {
 
-			THREE.warn( 'THREE.Euler: .setFromRotationMatrix() given unsupported order: ' + order )
+			console.warn( 'THREE.Euler: .setFromRotationMatrix() given unsupported order: ' + order )
 
 		}
 
@@ -41913,17 +44293,10 @@ THREE.Euler.prototype = {
 
 	},
 
-	toArray: function ( array, offset ) {
+	toArray: function () {
 
-		if ( array === undefined ) array = [];
-		if ( offset === undefined ) offset = 0;
+		return [ this._x, this._y, this._z, this._order ];
 
-		array[ offset ] = this._x;
-		array[ offset + 1 ] = this._y;
-		array[ offset + 2 ] = this._z;
-		array[ offset + 3 ] = this._order;
-
-		return array;
 	},
 
 	toVector3: function ( optionalResult ) {
@@ -42700,7 +45073,7 @@ THREE.Matrix3 = function () {
 
 	if ( arguments.length > 0 ) {
 
-		THREE.error( 'THREE.Matrix3: the constructor no longer reads arguments. use .set() instead.' );
+		console.error( 'THREE.Matrix3: the constructor no longer reads arguments. use .set() instead.' );
 
 	}
 
@@ -42754,14 +45127,14 @@ THREE.Matrix3.prototype = {
 
 	multiplyVector3: function ( vector ) {
 
-		THREE.warn( 'THREE.Matrix3: .multiplyVector3() has been removed. Use vector.applyMatrix3( matrix ) instead.' );
+		console.warn( 'THREE.Matrix3: .multiplyVector3() has been removed. Use vector.applyMatrix3( matrix ) instead.' );
 		return vector.applyMatrix3( this );
 
 	},
 
 	multiplyVector3Array: function ( a ) {
 
-		THREE.warn( 'THREE.Matrix3: .multiplyVector3Array() has been renamed. Use matrix.applyToVector3Array( array ) instead.' );
+		console.warn( 'THREE.Matrix3: .multiplyVector3Array() has been renamed. Use matrix.applyToVector3Array( array ) instead.' );
 		return this.applyToVector3Array( a );
 
 	},
@@ -42775,7 +45148,7 @@ THREE.Matrix3.prototype = {
 			if ( offset === undefined ) offset = 0;
 			if ( length === undefined ) length = array.length;
 
-			for ( var i = 0, j = offset; i < length; i += 3, j += 3 ) {
+			for ( var i = 0, j = offset, il; i < length; i += 3, j += 3 ) {
 
 				v1.x = array[ j ];
 				v1.y = array[ j + 1 ];
@@ -42851,7 +45224,7 @@ THREE.Matrix3.prototype = {
 
 			} else {
 
-				THREE.warn( msg );
+				console.warn( msg );
 
 			}
 
@@ -42983,7 +45356,7 @@ THREE.Matrix4 = function () {
 
 	if ( arguments.length > 0 ) {
 
-		THREE.error( 'THREE.Matrix4: the constructor no longer reads arguments. use .set() instead.' );
+		console.error( 'THREE.Matrix4: the constructor no longer reads arguments. use .set() instead.' );
 
 	}
 
@@ -43031,7 +45404,7 @@ THREE.Matrix4.prototype = {
 
 	extractPosition: function ( m ) {
 
-		THREE.warn( 'THREE.Matrix4: .extractPosition() has been renamed to .copyPosition().' );
+		console.warn( 'THREE.Matrix4: .extractPosition() has been renamed to .copyPosition().' );
 		return this.copyPosition( m );
 
 	},
@@ -43051,15 +45424,15 @@ THREE.Matrix4.prototype = {
 
 	extractBasis: function ( xAxis, yAxis, zAxis ) {
  
-		var te = this.elements;
+ 		var te = this.elements;
  
 		xAxis.set( te[ 0 ], te[ 1 ], te[ 2 ] );
 		yAxis.set( te[ 4 ], te[ 5 ], te[ 6 ] );
 		zAxis.set( te[ 8 ], te[ 9 ], te[ 10 ] );
  
-		return this;
+ 		return this;
  		
-	},
+ 	},
  
 	makeBasis: function ( xAxis, yAxis, zAxis ) {
 
@@ -43070,7 +45443,7 @@ THREE.Matrix4.prototype = {
 			0,       0,       0,       1
 		);
 
-		return this;
+	    return this;
 
 	},
 
@@ -43109,7 +45482,7 @@ THREE.Matrix4.prototype = {
 
 		if ( euler instanceof THREE.Euler === false ) {
 
-			THREE.error( 'THREE.Matrix: .makeRotationFromEuler() now expects a Euler rotation rather than a Vector3 and order.' );
+			console.error( 'THREE.Matrix: .makeRotationFromEuler() now expects a Euler rotation rather than a Vector3 and order.' );
 
 		}
 
@@ -43235,7 +45608,7 @@ THREE.Matrix4.prototype = {
 
 	setRotationFromQuaternion: function ( q ) {
 
-		THREE.warn( 'THREE.Matrix4: .setRotationFromQuaternion() has been renamed to .makeRotationFromQuaternion().' );
+		console.warn( 'THREE.Matrix4: .setRotationFromQuaternion() has been renamed to .makeRotationFromQuaternion().' );
 
 		return this.makeRotationFromQuaternion( q );
 
@@ -43322,7 +45695,7 @@ THREE.Matrix4.prototype = {
 
 		if ( n !== undefined ) {
 
-			THREE.warn( 'THREE.Matrix4: .multiply() now only accepts one argument. Use .multiplyMatrices( a, b ) instead.' );
+			console.warn( 'THREE.Matrix4: .multiply() now only accepts one argument. Use .multiplyMatrices( a, b ) instead.' );
 			return this.multiplyMatrices( m, n );
 
 		}
@@ -43401,21 +45774,21 @@ THREE.Matrix4.prototype = {
 
 	multiplyVector3: function ( vector ) {
 
-		THREE.warn( 'THREE.Matrix4: .multiplyVector3() has been removed. Use vector.applyMatrix4( matrix ) or vector.applyProjection( matrix ) instead.' );
+		console.warn( 'THREE.Matrix4: .multiplyVector3() has been removed. Use vector.applyMatrix4( matrix ) or vector.applyProjection( matrix ) instead.' );
 		return vector.applyProjection( this );
 
 	},
 
 	multiplyVector4: function ( vector ) {
 
-		THREE.warn( 'THREE.Matrix4: .multiplyVector4() has been removed. Use vector.applyMatrix4( matrix ) instead.' );
+		console.warn( 'THREE.Matrix4: .multiplyVector4() has been removed. Use vector.applyMatrix4( matrix ) instead.' );
 		return vector.applyMatrix4( this );
 
 	},
 
 	multiplyVector3Array: function ( a ) {
 
-		THREE.warn( 'THREE.Matrix4: .multiplyVector3Array() has been renamed. Use matrix.applyToVector3Array( array ) instead.' );
+		console.warn( 'THREE.Matrix4: .multiplyVector3Array() has been renamed. Use matrix.applyToVector3Array( array ) instead.' );
 		return this.applyToVector3Array( a );
 
 	},
@@ -43429,7 +45802,7 @@ THREE.Matrix4.prototype = {
 			if ( offset === undefined ) offset = 0;
 			if ( length === undefined ) length = array.length;
 
-			for ( var i = 0, j = offset; i < length; i += 3, j += 3 ) {
+			for ( var i = 0, j = offset, il; i < length; i += 3, j += 3 ) {
 
 				v1.x = array[ j ];
 				v1.y = array[ j + 1 ];
@@ -43451,7 +45824,7 @@ THREE.Matrix4.prototype = {
 
 	rotateAxis: function ( v ) {
 
-		THREE.warn( 'THREE.Matrix4: .rotateAxis() has been removed. Use Vector3.transformDirection( matrix ) instead.' );
+		console.warn( 'THREE.Matrix4: .rotateAxis() has been removed. Use Vector3.transformDirection( matrix ) instead.' );
 
 		v.transformDirection( this );
 
@@ -43459,7 +45832,7 @@ THREE.Matrix4.prototype = {
 
 	crossVector: function ( vector ) {
 
-		THREE.warn( 'THREE.Matrix4: .crossVector() has been removed. Use vector.applyMatrix4( matrix ) instead.' );
+		console.warn( 'THREE.Matrix4: .crossVector() has been removed. Use vector.applyMatrix4( matrix ) instead.' );
 		return vector.applyMatrix4( this );
 
 	},
@@ -43565,7 +45938,7 @@ THREE.Matrix4.prototype = {
 
 		return function () {
 
-			THREE.warn( 'THREE.Matrix4: .getPosition() has been removed. Use Vector3.setFromMatrixPosition( matrix ) instead.' );
+			console.warn( 'THREE.Matrix4: .getPosition() has been removed. Use Vector3.setFromMatrixPosition( matrix ) instead.' );
 
 			var te = this.elements;
 			return v1.set( te[ 12 ], te[ 13 ], te[ 14 ] );
@@ -43618,7 +45991,7 @@ THREE.Matrix4.prototype = {
 
 		if ( det == 0 ) {
 
-			var msg = "THREE.Matrix4.getInverse(): can't invert matrix, determinant is 0";
+			var msg = "Matrix4.getInverse(): can't invert matrix, determinant is 0";
 
 			if ( throwOnInvertible || false ) {
 
@@ -43626,7 +45999,7 @@ THREE.Matrix4.prototype = {
 
 			} else {
 
-				THREE.warn( msg );
+				console.warn( msg );
 
 			}
 
@@ -43643,31 +46016,31 @@ THREE.Matrix4.prototype = {
 
 	translate: function ( v ) {
 
-		THREE.error( 'THREE.Matrix4: .translate() has been removed.' );
+		console.warn( 'THREE.Matrix4: .translate() has been removed.' );
 
 	},
 
 	rotateX: function ( angle ) {
 
-		THREE.error( 'THREE.Matrix4: .rotateX() has been removed.' );
+		console.warn( 'THREE.Matrix4: .rotateX() has been removed.' );
 
 	},
 
 	rotateY: function ( angle ) {
 
-		THREE.error( 'THREE.Matrix4: .rotateY() has been removed.' );
+		console.warn( 'THREE.Matrix4: .rotateY() has been removed.' );
 
 	},
 
 	rotateZ: function ( angle ) {
 
-		THREE.error( 'THREE.Matrix4: .rotateZ() has been removed.' );
+		console.warn( 'THREE.Matrix4: .rotateZ() has been removed.' );
 
 	},
 
 	rotateByAxis: function ( axis, angle ) {
 
-		THREE.error( 'THREE.Matrix4: .rotateByAxis() has been removed.' );
+		console.warn( 'THREE.Matrix4: .rotateByAxis() has been removed.' );
 
 	},
 
@@ -44295,7 +46668,7 @@ THREE.Ray.prototype = {
 
 	}(),
 
-	intersectBox: function ( box, optionalTarget ) {
+	intersectBox: function ( box , optionalTarget ) {
 
 		// http://www.scratchapixel.com/lessons/3d-basic-lessons/lesson-7-intersecting-simple-shapes/ray-box-intersection/
 
@@ -44500,7 +46873,7 @@ THREE.Sphere.prototype = {
 
 		var box = new THREE.Box3();
 
-		return function ( points, optionalCenter ) {
+		return function ( points, optionalCenter )  {
 
 			var center = this.center;
 
@@ -44526,7 +46899,7 @@ THREE.Sphere.prototype = {
 
 			return this;
 
-		};
+ 		};
 
 	}(),
 
@@ -45186,20 +47559,6 @@ THREE.Math = {
 
 		return ( value & ( value - 1 ) ) === 0 && value !== 0;
 
-	},
-
-	nextPowerOfTwo: function ( value ) {
-
-		value --;
-		value |= value >> 1;
-		value |= value >> 2;
-		value |= value >> 4;
-		value |= value >> 8;
-		value |= value >> 16;
-		value ++;
-
-		return value;
-
 	}
 
 };
@@ -45333,7 +47692,7 @@ THREE.Spline = function ( points ) {
 
 		var i, j,
 			index, indexCurrent, indexNext,
-			realDistance,
+			linearDistance, realDistance,
 			sampling, position,
 			newpoints = [],
 			tmpVec = new THREE.Vector3(),
@@ -45846,7 +48205,7 @@ THREE.EventDispatcher.prototype = {
 
 			} else {
 
-				THREE.error( 'THREE.Raycaster: Unsupported camera type.' );
+				console.error( 'THREE.Raycaster: Unsupported camera type.' );
 
 			}
 
@@ -45870,7 +48229,7 @@ THREE.EventDispatcher.prototype = {
 
 			if ( objects instanceof Array === false ) {
 
-				THREE.warn( 'THREE.Raycaster.intersectObjects: objects is not an Array.' );
+				console.log( 'THREE.Raycaster.intersectObjects: objects is not an Array.' );
 				return intersects;
 
 			}
@@ -45914,6 +48273,8 @@ THREE.Object3D = function () {
 
 	this.up = THREE.Object3D.DefaultUp.clone();
 
+	var scope = this;
+
 	var position = new THREE.Vector3();
 	var rotation = new THREE.Euler();
 	var quaternion = new THREE.Quaternion();
@@ -45946,7 +48307,7 @@ THREE.Object3D = function () {
 		scale: {
 			enumerable: true,
 			value: scale
-		}
+		},
 	} );
 
 	this.rotationAutoUpdate = true;
@@ -45963,7 +48324,6 @@ THREE.Object3D = function () {
 	this.receiveShadow = false;
 
 	this.frustumCulled = true;
-	this.renderOrder = 0;
 
 	this.userData = {};
 
@@ -45977,7 +48337,7 @@ THREE.Object3D.prototype = {
 
 	get eulerOrder () {
 
-		THREE.warn( 'THREE.Object3D: .eulerOrder has been moved to .rotation.order.' );
+		console.warn( 'THREE.Object3D: .eulerOrder has been moved to .rotation.order.' );
 
 		return this.rotation.order;
 
@@ -45985,7 +48345,7 @@ THREE.Object3D.prototype = {
 
 	set eulerOrder ( value ) {
 
-		THREE.warn( 'THREE.Object3D: .eulerOrder has been moved to .rotation.order.' );
+		console.warn( 'THREE.Object3D: .eulerOrder has been moved to .rotation.order.' );
 
 		this.rotation.order = value;
 
@@ -45993,13 +48353,13 @@ THREE.Object3D.prototype = {
 
 	get useQuaternion () {
 
-		THREE.warn( 'THREE.Object3D: .useQuaternion has been removed. The library now uses quaternions by default.' );
+		console.warn( 'THREE.Object3D: .useQuaternion has been removed. The library now uses quaternions by default.' );
 
 	},
 
 	set useQuaternion ( value ) {
 
-		THREE.warn( 'THREE.Object3D: .useQuaternion has been removed. The library now uses quaternions by default.' );
+		console.warn( 'THREE.Object3D: .useQuaternion has been removed. The library now uses quaternions by default.' );
 
 	},
 
@@ -46117,7 +48477,7 @@ THREE.Object3D.prototype = {
 
 	translate: function ( distance, axis ) {
 
-		THREE.warn( 'THREE.Object3D: .translate() has been removed. Use .translateOnAxis( axis, distance ) instead.' );
+		console.warn( 'THREE.Object3D: .translate() has been removed. Use .translateOnAxis( axis, distance ) instead.' );
 		return this.translateOnAxis( axis, distance );
 
 	},
@@ -46196,7 +48556,7 @@ THREE.Object3D.prototype = {
 
 		if ( arguments.length > 1 ) {
 
-			for ( var i = 0; i < arguments.length; i ++ ) {
+			for ( var i = 0; i < arguments.length; i++ ) {
 
 				this.add( arguments[ i ] );
 
@@ -46208,7 +48568,7 @@ THREE.Object3D.prototype = {
 
 		if ( object === this ) {
 
-			THREE.error( "THREE.Object3D.add: object can't be added as a child of itself.", object );
+			console.error( "THREE.Object3D.add:", object, "can't be added as a child of itself." );
 			return this;
 
 		}
@@ -46228,7 +48588,7 @@ THREE.Object3D.prototype = {
 
 		} else {
 
-			THREE.error( "THREE.Object3D.add: object not an instance of THREE.Object3D.", object );
+			console.error( "THREE.Object3D.add:", object, "is not an instance of THREE.Object3D." );
 
 		}
 
@@ -46240,7 +48600,7 @@ THREE.Object3D.prototype = {
 
 		if ( arguments.length > 1 ) {
 
-			for ( var i = 0; i < arguments.length; i ++ ) {
+			for ( var i = 0; i < arguments.length; i++ ) {
 
 				this.remove( arguments[ i ] );
 
@@ -46262,33 +48622,33 @@ THREE.Object3D.prototype = {
 
 	},
 
-	getChildByName: function ( name ) {
+	getChildByName: function ( name, recursive ) {
 
-		THREE.warn( 'THREE.Object3D: .getChildByName() has been renamed to .getObjectByName().' );
-		return this.getObjectByName( name );
-
-	},
-
-	getObjectById: function ( id ) {
-
-		return this.getObjectByProperty( 'id', id );
+		console.warn( 'THREE.Object3D: .getChildByName() has been renamed to .getObjectByName().' );
+		return this.getObjectByName( name, recursive );
 
 	},
 
-	getObjectByName: function ( name ) {
+	getObjectById: function ( id, recursive ) {
 
-		return this.getObjectByProperty( 'name', name );
+		return this.getObjectByProperty( 'id', id, recursive );
 
 	},
 
-	getObjectByProperty: function ( name, value ) {
+	getObjectByName: function ( name, recursive ) {
+
+		return this.getObjectByProperty( 'name', name, recursive );
+
+	},
+
+	getObjectByProperty: function ( name, value, recursive ) {
 
 		if ( this[ name ] === value ) return this;
 
 		for ( var i = 0, l = this.children.length; i < l; i ++ ) {
 
 			var child = this.children[ i ];
-			var object = child.getObjectByProperty( name, value );
+			var object = child.getObjectByProperty( name, value, recursive );
 
 			if ( object !== undefined ) {
 
@@ -46571,7 +48931,6 @@ THREE.Object3D.prototype = {
 				data.color = object.color.getHex();
 				data.intensity = object.intensity;
 				data.distance = object.distance;
-				data.decay = object.decay;
 
 			} else if ( object instanceof THREE.SpotLight ) {
 
@@ -46580,19 +48939,21 @@ THREE.Object3D.prototype = {
 				data.distance = object.distance;
 				data.angle = object.angle;
 				data.exponent = object.exponent;
-				data.decay = object.decay;
 
 			} else if ( object instanceof THREE.HemisphereLight ) {
 
 				data.color = object.color.getHex();
 				data.groundColor = object.groundColor.getHex();
 
-			} else if ( object instanceof THREE.Mesh || object instanceof THREE.Line || object instanceof THREE.PointCloud ) {
+			} else if ( object instanceof THREE.Mesh ) {
 
 				data.geometry = parseGeometry( object.geometry );
 				data.material = parseMaterial( object.material );
 
-				if ( object instanceof THREE.Line ) data.mode = object.mode;
+			} else if ( object instanceof THREE.Line ) {
+
+				data.geometry = parseGeometry( object.geometry );
+				data.material = parseMaterial( object.material );
 
 			} else if ( object instanceof THREE.Sprite ) {
 
@@ -46745,7 +49106,7 @@ THREE.Face3.prototype = {
 
 THREE.Face4 = function ( a, b, c, d, normal, color, materialIndex ) {
 
-	THREE.warn( 'THREE.Face4 has been removed. A THREE.Face3 will be created instead.' )
+	console.warn( 'THREE.Face4 has been removed. A THREE.Face3 will be created instead.' )
 	return new THREE.Face3( a, b, c, normal, color, materialIndex );
 
 };
@@ -46786,15 +49147,11 @@ THREE.BufferAttribute.prototype = {
 
 		}
 
-		return this;
-
 	},
 
-	set: function ( value, offset ) {
+	set: function ( value ) {
 
-		if ( offset === undefined ) offset = 0;
-
-		this.array.set( value, offset );
+		this.array.set( value );
 
 		return this;
 
@@ -46872,21 +49229,21 @@ THREE.BufferAttribute.prototype = {
 
 THREE.Int8Attribute = function ( data, itemSize ) {
 
-	THREE.warn( 'THREE.Int8Attribute has been removed. Use THREE.BufferAttribute( array, itemSize ) instead.' );
+	console.warn( 'THREE.Int8Attribute has been removed. Use THREE.BufferAttribute( array, itemSize ) instead.' );
 	return new THREE.BufferAttribute( data, itemSize );
 
 };
 
 THREE.Uint8Attribute = function ( data, itemSize ) {
 
-	THREE.warn( 'THREE.Uint8Attribute has been removed. Use THREE.BufferAttribute( array, itemSize ) instead.' );
+	console.warn( 'THREE.Uint8Attribute has been removed. Use THREE.BufferAttribute( array, itemSize ) instead.' );
 	return new THREE.BufferAttribute( data, itemSize );
 
 };
 
 THREE.Uint8ClampedAttribute = function ( data, itemSize ) {
 
-	THREE.warn( 'THREE.Uint8ClampedAttribute has been removed. Use THREE.BufferAttribute( array, itemSize ) instead.' );
+	console.warn( 'THREE.Uint8ClampedAttribute has been removed. Use THREE.BufferAttribute( array, itemSize ) instead.' );
 	return new THREE.BufferAttribute( data, itemSize );
 
 
@@ -46894,67 +49251,43 @@ THREE.Uint8ClampedAttribute = function ( data, itemSize ) {
 
 THREE.Int16Attribute = function ( data, itemSize ) {
 
-	THREE.warn( 'THREE.Int16Attribute has been removed. Use THREE.BufferAttribute( array, itemSize ) instead.' );
+	console.warn( 'THREE.Int16Attribute has been removed. Use THREE.BufferAttribute( array, itemSize ) instead.' );
 	return new THREE.BufferAttribute( data, itemSize );
 
 };
 
 THREE.Uint16Attribute = function ( data, itemSize ) {
 
-	THREE.warn( 'THREE.Uint16Attribute has been removed. Use THREE.BufferAttribute( array, itemSize ) instead.' );
+	console.warn( 'THREE.Uint16Attribute has been removed. Use THREE.BufferAttribute( array, itemSize ) instead.' );
 	return new THREE.BufferAttribute( data, itemSize );
 
 };
 
 THREE.Int32Attribute = function ( data, itemSize ) {
 
-	THREE.warn( 'THREE.Int32Attribute has been removed. Use THREE.BufferAttribute( array, itemSize ) instead.' );
+	console.warn( 'THREE.Int32Attribute has been removed. Use THREE.BufferAttribute( array, itemSize ) instead.' );
 	return new THREE.BufferAttribute( data, itemSize );
 
 };
 
 THREE.Uint32Attribute = function ( data, itemSize ) {
 
-	THREE.warn( 'THREE.Uint32Attribute has been removed. Use THREE.BufferAttribute( array, itemSize ) instead.' );
+	console.warn( 'THREE.Uint32Attribute has been removed. Use THREE.BufferAttribute( array, itemSize ) instead.' );
 	return new THREE.BufferAttribute( data, itemSize );
 
 };
 
 THREE.Float32Attribute = function ( data, itemSize ) {
 
-	THREE.warn( 'THREE.Float32Attribute has been removed. Use THREE.BufferAttribute( array, itemSize ) instead.' );
+	console.warn( 'THREE.Float32Attribute has been removed. Use THREE.BufferAttribute( array, itemSize ) instead.' );
 	return new THREE.BufferAttribute( data, itemSize );
 
 };
 
 THREE.Float64Attribute = function ( data, itemSize ) {
 
-	THREE.warn( 'THREE.Float64Attribute has been removed. Use THREE.BufferAttribute( array, itemSize ) instead.' );
+	console.warn( 'THREE.Float64Attribute has been removed. Use THREE.BufferAttribute( array, itemSize ) instead.' );
 	return new THREE.BufferAttribute( data, itemSize );
-
-};
-
-// File:src/core/DynamicBufferAttribute.js
-
-/**
- * @author benaadams / https://twitter.com/ben_a_adams
- * @author mrdoob / http://mrdoob.com/
- */
-
-THREE.DynamicBufferAttribute = function ( array, itemSize ) {
-
-	THREE.BufferAttribute.call( this, array, itemSize );
-
-	this.updateRange = { offset: 0, count: -1 };
-
-};
-
-THREE.DynamicBufferAttribute.prototype = Object.create( THREE.BufferAttribute.prototype );
-THREE.DynamicBufferAttribute.prototype.constructor = THREE.DynamicBufferAttribute;
-
-THREE.DynamicBufferAttribute.prototype.clone = function () {
-
-	return new THREE.DynamicBufferAttribute( new this.array.constructor( this.array ), this.itemSize );
 
 };
 
@@ -46993,7 +49326,7 @@ THREE.BufferGeometry.prototype = {
 
 		if ( attribute instanceof THREE.BufferAttribute === false ) {
 
-			THREE.warn( 'THREE.BufferGeometry: .addAttribute() now expects ( name, attribute ).' );
+			console.warn( 'THREE.BufferGeometry: .addAttribute() now expects ( name, attribute ).' );
 
 			this.attributes[ name ] = { array: arguments[ 1 ], itemSize: arguments[ 2 ] };
 
@@ -47046,29 +49379,11 @@ THREE.BufferGeometry.prototype = {
 
 		}
 
-		if ( this.boundingBox !== null ) {
-
-			this.computeBoundingBox();
-
-		}
-
-		if ( this.boundingSphere !== null ) {
-
-			this.computeBoundingSphere();
-
-		}
-
 	},
 
 	center: function () {
 
-		this.computeBoundingBox();
-
-		var offset = this.boundingBox.center().negate();
-
-		this.applyMatrix( new THREE.Matrix4().setPosition( offset ) );
-
-		return offset;
+		// TODO
 
 	},
 
@@ -47257,7 +49572,7 @@ THREE.BufferGeometry.prototype = {
 
 			if ( isNaN( this.boundingBox.min.x ) || isNaN( this.boundingBox.min.y ) || isNaN( this.boundingBox.min.z ) ) {
 
-				THREE.error( 'THREE.BufferGeometry.computeBoundingBox: Computed min/max have NaN values. The "position" attribute is likely to have NaN values.' );
+				console.error( 'THREE.BufferGeometry.computeBoundingBox: Computed min/max have NaN values. The "position" attribute is likely to have NaN values.' );
 
 			}
 
@@ -47311,7 +49626,7 @@ THREE.BufferGeometry.prototype = {
 
 				if ( isNaN( this.boundingSphere.radius ) ) {
 
-					THREE.error( 'THREE.BufferGeometry.computeBoundingSphere(): Computed radius is NaN. The "position" attribute is likely to have NaN values.' );
+					console.error( 'THREE.BufferGeometry.computeBoundingSphere(): Computed radius is NaN. The "position" attribute is likely to have NaN values.' );
 
 				}
 
@@ -47456,7 +49771,7 @@ THREE.BufferGeometry.prototype = {
 			 this.attributes.normal === undefined ||
 			 this.attributes.uv === undefined ) {
 
-			THREE.warn( 'THREE.BufferGeometry: Missing required attributes (index, position, normal or uv) in BufferGeometry.computeTangents()' );
+			console.warn( 'Missing required attributes (index, position, normal or uv) in BufferGeometry.computeTangents()' );
 			return;
 
 		}
@@ -47629,18 +49944,24 @@ THREE.BufferGeometry.prototype = {
 	},
 
 	/*
-	Compute the draw offset for large models by chunking the index buffer into chunks of 65k addressable vertices.
-	This method will effectively rewrite the index buffer and remap all attributes to match the new indices.
-	WARNING: This method will also expand the vertex count to prevent sprawled triangles across draw offsets.
-	size - Defaults to 65535, but allows for larger or smaller chunks.
+		computeOffsets
+		Compute the draw offset for large models by chunking the index buffer into chunks of 65k addressable vertices.
+		This method will effectively rewrite the index buffer and remap all attributes to match the new indices.
+		WARNING: This method will also expand the vertex count to prevent sprawled triangles across draw offsets.
+		indexBufferSize - Defaults to 65535, but allows for larger or smaller chunks.
 	*/
-	computeOffsets: function ( size ) {
+	computeOffsets: function ( indexBufferSize ) {
 
-		if ( size === undefined ) size = 65535; // WebGL limits type of index buffer values to 16-bit.
+		var size = indexBufferSize;
+		if ( indexBufferSize === undefined )
+			size = 65535; //WebGL limits type of index buffer values to 16-bit.
+
+		var s = Date.now();
 
 		var indices = this.attributes.index.array;
 		var vertices = this.attributes.position.array;
 
+		var verticesCount = ( vertices.length / 3 );
 		var facesCount = ( indices.length / 3 );
 
 		/*
@@ -47720,8 +50041,7 @@ THREE.BufferGeometry.prototype = {
 
 		/* Move all attribute values to map to the new computed indices , also expand the vertice stack to match our new vertexPtr. */
 		this.reorderBuffers( sortedIndices, revVertexMap, vertexPtr );
-		this.offsets = offsets; // TODO: Deprecate
-		this.drawcalls = offsets;
+		this.offsets = offsets;
 
 		/*
 		var orderTime = Date.now();
@@ -47739,7 +50059,7 @@ THREE.BufferGeometry.prototype = {
 
 		if ( geometry instanceof THREE.BufferGeometry === false ) {
 
-			THREE.error( 'THREE.BufferGeometry.merge(): geometry not an instance of THREE.BufferGeometry.', geometry );
+			console.error( 'THREE.BufferGeometry.merge(): geometry not an instance of THREE.BufferGeometry.', geometry );
 			return;
 
 		}
@@ -47859,7 +50179,13 @@ THREE.BufferGeometry.prototype = {
 
 			var attribute = attributes[ key ];
 
-			var array = Array.prototype.slice.call( attribute.array );
+			var array = [], typeArray = attribute.array;
+
+			for ( var i = 0, l = typeArray.length; i < l; i ++ ) {
+
+				array[ i ] = typeArray[ i ];
+
+			}
 
 			output.data.attributes[ key ] = {
 				itemSize: attribute.itemSize,
@@ -48012,20 +50338,17 @@ THREE.Geometry.prototype = {
 
 		}
 
-		if ( this.boundingBox !== null ) {
+		if ( this.boundingBox instanceof THREE.Box3 ) {
 
 			this.computeBoundingBox();
 
 		}
 
-		if ( this.boundingSphere !== null ) {
+		if ( this.boundingSphere instanceof THREE.Sphere ) {
 
 			this.computeBoundingSphere();
 
 		}
-
-		this.verticesNeedUpdate = true;
-		this.normalsNeedUpdate = true;
 
 	},
 
@@ -48085,33 +50408,9 @@ THREE.Geometry.prototype = {
 
 		if ( indices !== undefined ) {
 
-			var drawcalls = geometry.drawcalls;
+			for ( var i = 0; i < indices.length; i += 3 ) {
 
-			if ( drawcalls.length > 0 ) {
-
-				for ( var i = 0; i < drawcalls.length; i ++ ) {
-
-					var drawcall = drawcalls[ i ];
-
-					var start = drawcall.start;
-					var count = drawcall.count;
-					var index = drawcall.index;
-
-					for ( var j = start, jl = start + count; j < jl; j += 3 ) {
-
-						addFace( index + indices[ j ], index + indices[ j + 1 ], index + indices[ j + 2 ] );
-
-					}
-
-				}
-
-			} else {
-
-				for ( var i = 0; i < indices.length; i += 3 ) {
-
-					addFace( indices[ i ], indices[ i + 1 ], indices[ i + 2 ] );
-
-				}
+				addFace( indices[ i ], indices[ i + 1 ], indices[ i + 2 ] );
 
 			}
 
@@ -48147,9 +50446,13 @@ THREE.Geometry.prototype = {
 
 		this.computeBoundingBox();
 
-		var offset = this.boundingBox.center().negate();
+		var offset = new THREE.Vector3();
 
-		this.applyMatrix( new THREE.Matrix4().setPosition( offset ) );
+		offset.addVectors( this.boundingBox.min, this.boundingBox.max );
+		offset.multiplyScalar( - 0.5 );
+
+		this.applyMatrix( new THREE.Matrix4().makeTranslation( offset.x, offset.y, offset.z ) );
+		this.computeBoundingBox();
 
 		return offset;
 
@@ -48196,8 +50499,9 @@ THREE.Geometry.prototype = {
 			// vertex normals weighted by triangle areas
 			// http://www.iquilezles.org/www/articles/normals/normals.htm
 
-			var vA, vB, vC;
-			var cb = new THREE.Vector3(), ab = new THREE.Vector3();
+			var vA, vB, vC, vD;
+			var cb = new THREE.Vector3(), ab = new THREE.Vector3(),
+				db = new THREE.Vector3(), dc = new THREE.Vector3(), bc = new THREE.Vector3();
 
 			for ( f = 0, fl = this.faces.length; f < fl; f ++ ) {
 
@@ -48371,7 +50675,7 @@ THREE.Geometry.prototype = {
 		// based on http://www.terathon.com/code/tangent.html
 		// tangents go to vertices
 
-		var f, fl, v, vl, i, vertexIndex,
+		var f, fl, v, vl, i, il, vertexIndex,
 			face, uv, vA, vB, vC, uvA, uvB, uvC,
 			x1, x2, y1, y2, z1, z2,
 			s1, s2, t1, t2, r, t, test,
@@ -48518,7 +50822,7 @@ THREE.Geometry.prototype = {
 
 		if ( geometry instanceof THREE.Geometry === false ) {
 
-			THREE.error( 'THREE.Geometry.merge(): geometry not an instance of THREE.Geometry.', geometry );
+			console.error( 'THREE.Geometry.merge(): geometry not an instance of THREE.Geometry.', geometry );
 			return;
 
 		}
@@ -48628,7 +50932,7 @@ THREE.Geometry.prototype = {
 
 		if ( mesh instanceof THREE.Mesh === false ) {
 
-			THREE.error( 'THREE.Geometry.mergeMesh(): mesh not an instance of THREE.Mesh.', mesh );
+			console.error( 'THREE.Geometry.mergeMesh(): mesh not an instance of THREE.Mesh.', mesh );
 			return;
 
 		}
@@ -48653,8 +50957,8 @@ THREE.Geometry.prototype = {
 		var v, key;
 		var precisionPoints = 4; // number of decimal points, eg. 4 for epsilon of 0.0001
 		var precision = Math.pow( 10, precisionPoints );
-		var i, il, face;
-		var indices, j, jl;
+		var i,il, face;
+		var indices, k, j, jl, u;
 
 		for ( i = 0, il = this.vertices.length; i < il; i ++ ) {
 
@@ -49489,7 +51793,7 @@ THREE.DirectionalLight = function ( color, intensity ) {
 	this.shadowCascadeHeight = [ 512, 512, 512 ];
 
 	this.shadowCascadeNearZ = [ - 1.000, 0.990, 0.998 ];
-	this.shadowCascadeFarZ  = [ 0.990, 0.998, 1.000 ];
+	this.shadowCascadeFarZ  = [  0.990, 0.998, 1.000 ];
 
 	this.shadowCascadeArray = [];
 
@@ -49595,7 +51899,7 @@ THREE.HemisphereLight.prototype.clone = function () {
  * @author mrdoob / http://mrdoob.com/
  */
 
-THREE.PointLight = function ( color, intensity, distance, decay ) {
+THREE.PointLight = function ( color, intensity, distance ) {
 
 	THREE.Light.call( this, color );
 
@@ -49603,7 +51907,6 @@ THREE.PointLight = function ( color, intensity, distance, decay ) {
 
 	this.intensity = ( intensity !== undefined ) ? intensity : 1;
 	this.distance = ( distance !== undefined ) ? distance : 0;
-	this.decay = ( decay !== undefined ) ? decay : 1;	// for physically correct lights, should be 2.
 
 };
 
@@ -49618,7 +51921,6 @@ THREE.PointLight.prototype.clone = function () {
 
 	light.intensity = this.intensity;
 	light.distance = this.distance;
-	light.decay = this.decay;
 
 	return light;
 
@@ -49630,7 +51932,7 @@ THREE.PointLight.prototype.clone = function () {
  * @author alteredq / http://alteredqualia.com/
  */
 
-THREE.SpotLight = function ( color, intensity, distance, angle, exponent, decay ) {
+THREE.SpotLight = function ( color, intensity, distance, angle, exponent ) {
 
 	THREE.Light.call( this, color );
 
@@ -49643,7 +51945,6 @@ THREE.SpotLight = function ( color, intensity, distance, angle, exponent, decay 
 	this.distance = ( distance !== undefined ) ? distance : 0;
 	this.angle = ( angle !== undefined ) ? angle : Math.PI / 3;
 	this.exponent = ( exponent !== undefined ) ? exponent : 10;
-	this.decay = ( decay !== undefined ) ? decay : 1;	// for physically correct lights, should be 2.
 
 	this.castShadow = false;
 	this.onlyShadow = false;
@@ -49686,7 +51987,6 @@ THREE.SpotLight.prototype.clone = function () {
 	light.distance = this.distance;
 	light.angle = this.angle;
 	light.exponent = this.exponent;
-	light.decay = this.decay;
 
 	light.castShadow = this.castShadow;
 	light.onlyShadow = this.onlyShadow;
@@ -49715,9 +52015,15 @@ THREE.SpotLight.prototype.clone = function () {
  * @author mrdoob / http://mrdoob.com/
  */
 
-THREE.Cache = {
+THREE.Cache = function () {
 
-	files: {},
+	this.files = {};
+
+};
+
+THREE.Cache.prototype = {
+
+	constructor: THREE.Cache,
 
 	add: function ( key, file ) {
 
@@ -49979,15 +52285,9 @@ THREE.Loader.prototype = {
 
 		}
 
-		if ( m.transparent !== undefined ) {
+		if ( m.transparent !== undefined || m.opacity < 1.0 ) {
 
 			mpars.transparent = m.transparent;
-
-		}
-
-		if ( m.opacity !== undefined && m.opacity < 1.0 ) {
-
-			mpars.transparent = true;
 
 		}
 
@@ -50059,6 +52359,12 @@ THREE.Loader.prototype = {
 
 		}
 
+		if ( m.colorAmbient ) {
+
+			mpars.ambient = rgb2hex( m.colorAmbient );
+
+		}
+
 		if ( m.colorEmissive ) {
 
 			mpars.emissive = rgb2hex( m.colorEmissive );
@@ -50067,16 +52373,9 @@ THREE.Loader.prototype = {
 
 		// modifiers
 
-		if ( m.transparency !== undefined ) {
+		if ( m.transparency ) {
 
-			console.warn( 'THREE.Loader: transparency has been renamed to opacity' );
-			m.opacity = m.transparency;
-
-		}
-
-		if ( m.opacity !== undefined ) {
-
-			mpars.opacity = m.opacity;
+			mpars.opacity = m.transparency;
 
 		}
 
@@ -50187,6 +52486,7 @@ THREE.Loader.Handlers = {
 
 THREE.XHRLoader = function ( manager ) {
 
+	this.cache = new THREE.Cache();
 	this.manager = ( manager !== undefined ) ? manager : THREE.DefaultLoadingManager;
 
 };
@@ -50199,7 +52499,7 @@ THREE.XHRLoader.prototype = {
 
 		var scope = this;
 
-		var cached = THREE.Cache.get( url );
+		var cached = scope.cache.get( url );
 
 		if ( cached !== undefined ) {
 
@@ -50213,7 +52513,7 @@ THREE.XHRLoader.prototype = {
 
 		request.addEventListener( 'load', function ( event ) {
 
-			THREE.Cache.add( url, this.response );
+			scope.cache.add( url, this.response );
 
 			if ( onLoad ) onLoad( this.response );
 
@@ -50272,6 +52572,7 @@ THREE.XHRLoader.prototype = {
 
 THREE.ImageLoader = function ( manager ) {
 
+	this.cache = new THREE.Cache();
 	this.manager = ( manager !== undefined ) ? manager : THREE.DefaultLoadingManager;
 
 };
@@ -50284,7 +52585,7 @@ THREE.ImageLoader.prototype = {
 
 		var scope = this;
 
-		var cached = THREE.Cache.get( url );
+		var cached = scope.cache.get( url );
 
 		if ( cached !== undefined ) {
 
@@ -50295,15 +52596,18 @@ THREE.ImageLoader.prototype = {
 
 		var image = document.createElement( 'img' );
 
-		image.addEventListener( 'load', function ( event ) {
+		if ( onLoad !== undefined ) {
 
-			THREE.Cache.add( url, this );
+			image.addEventListener( 'load', function ( event ) {
 
-			if ( onLoad ) onLoad( this );
-			
-			scope.manager.itemEnd( url );
+				scope.cache.add( url, this );
 
-		}, false );
+				onLoad( this );
+				scope.manager.itemEnd( url );
+
+			}, false );
+
+		}
 
 		if ( onProgress !== undefined ) {
 
@@ -50363,6 +52667,8 @@ THREE.JSONLoader.prototype.constructor = THREE.JSONLoader;
 
 THREE.JSONLoader.prototype.load = function ( url, callback, texturePath ) {
 
+	var scope = this;
+
 	// todo: unify load API to for easier SceneLoader use
 
 	texturePath = texturePath && ( typeof texturePath === 'string' ) ? texturePath : this.extractUrlBase( url );
@@ -50387,23 +52693,11 @@ THREE.JSONLoader.prototype.loadAjaxJSON = function ( context, url, callback, tex
 				if ( xhr.responseText ) {
 
 					var json = JSON.parse( xhr.responseText );
-					var metadata = json.metadata;
 
-					if ( metadata !== undefined ) {
+					if ( json.metadata !== undefined && json.metadata.type === 'scene' ) {
 
-						if ( metadata.type === 'object' ) {
-
-							THREE.error( 'THREE.JSONLoader: ' + url + ' should be loaded with THREE.ObjectLoader instead.' );
-							return;
-
-						}
-
-						if ( metadata.type === 'scene' ) {
-
-							THREE.error( 'THREE.JSONLoader: ' + url + ' seems to be a Scene. Use THREE.SceneLoader instead.' );
-							return;
-
-						}
+						console.error( 'THREE.JSONLoader: "' + url + '" seems to be a Scene. Use THREE.SceneLoader instead.' );
+						return;
 
 					}
 
@@ -50412,7 +52706,7 @@ THREE.JSONLoader.prototype.loadAjaxJSON = function ( context, url, callback, tex
 
 				} else {
 
-					THREE.error( 'THREE.JSONLoader: ' + url + ' seems to be unreachable or the file is empty.' );
+					console.error( 'THREE.JSONLoader: "' + url + '" seems to be unreachable or the file is empty.' );
 
 				}
 
@@ -50424,7 +52718,7 @@ THREE.JSONLoader.prototype.loadAjaxJSON = function ( context, url, callback, tex
 
 			} else {
 
-				THREE.error( 'THREE.JSONLoader: Couldn\'t load ' + url + ' (' + xhr.status + ')' );
+				console.error( 'THREE.JSONLoader: Couldn\'t load "' + url + '" (' + xhr.status + ')' );
 
 			}
 
@@ -50462,7 +52756,8 @@ THREE.JSONLoader.prototype.loadAjaxJSON = function ( context, url, callback, tex
 
 THREE.JSONLoader.prototype.parse = function ( json, texturePath ) {
 
-	var geometry = new THREE.Geometry(),
+	var scope = this,
+	geometry = new THREE.Geometry(),
 	scale = ( json.scale !== undefined ) ? 1.0 / json.scale : 1.0;
 
 	parseModel( scale );
@@ -50494,7 +52789,7 @@ THREE.JSONLoader.prototype.parse = function ( json, texturePath ) {
 		hasFaceNormal, hasFaceVertexNormal,
 		hasFaceColor, hasFaceVertexColor,
 
-		vertex, face, faceA, faceB, hex, normal,
+		vertex, face, faceA, faceB, color, hex, normal,
 
 		uvLayer, uv, u, v,
 
@@ -50810,7 +53105,7 @@ THREE.JSONLoader.prototype.parse = function ( json, texturePath ) {
 
 		if ( geometry.bones && geometry.bones.length > 0 && ( geometry.skinWeights.length !== geometry.skinIndices.length || geometry.skinIndices.length !== geometry.vertices.length ) ) {
 
-			THREE.warn( 'THREE.JSONLoader: When skinning, number of vertices (' + geometry.vertices.length + '), skinIndices (' +
+				console.warn( 'When skinning, number of vertices (' + geometry.vertices.length + '), skinIndices (' +
 					geometry.skinIndices.length + '), and skinWeights (' + geometry.skinWeights.length + ') should match.' );
 
 		}
@@ -50984,7 +53279,7 @@ THREE.BufferGeometryLoader.prototype = {
 
 		var geometry = new THREE.BufferGeometry();
 
-		var attributes = json.data.attributes;
+		var attributes = json.attributes;
 
 		for ( var key in attributes ) {
 
@@ -50995,7 +53290,7 @@ THREE.BufferGeometryLoader.prototype = {
 
 		}
 
-		var offsets = json.data.offsets;
+		var offsets = json.offsets;
 
 		if ( offsets !== undefined ) {
 
@@ -51003,7 +53298,7 @@ THREE.BufferGeometryLoader.prototype = {
 
 		}
 
-		var boundingSphere = json.data.boundingSphere;
+		var boundingSphere = json.boundingSphere;
 
 		if ( boundingSphere !== undefined ) {
 
@@ -51066,6 +53361,7 @@ THREE.MaterialLoader.prototype = {
 		var material = new THREE[ json.type ];
 
 		if ( json.color !== undefined ) material.color.setHex( json.color );
+		if ( json.ambient !== undefined ) material.ambient.setHex( json.ambient );
 		if ( json.emissive !== undefined ) material.emissive.setHex( json.emissive );
 		if ( json.specular !== undefined ) material.specular.setHex( json.specular );
 		if ( json.shininess !== undefined ) material.shininess = json.shininess;
@@ -51079,10 +53375,6 @@ THREE.MaterialLoader.prototype = {
 		if ( json.opacity !== undefined ) material.opacity = json.opacity;
 		if ( json.transparent !== undefined ) material.transparent = json.transparent;
 		if ( json.wireframe !== undefined ) material.wireframe = json.wireframe;
-
-		// for PointCloudMaterial
-		if ( json.size !== undefined ) material.size = json.size;
-		if ( json.sizeAttenuation !== undefined ) material.sizeAttenuation = json.sizeAttenuation;
 
 		if ( json.materials !== undefined ) {
 
@@ -51109,7 +53401,6 @@ THREE.MaterialLoader.prototype = {
 THREE.ObjectLoader = function ( manager ) {
 
 	this.manager = ( manager !== undefined ) ? manager : THREE.DefaultLoadingManager;
-	this.texturePath = '';
 
 };
 
@@ -51119,27 +53410,15 @@ THREE.ObjectLoader.prototype = {
 
 	load: function ( url, onLoad, onProgress, onError ) {
 
-		if ( this.texturePath === '' ) {
-
-			this.texturePath = url.substring( 0, url.lastIndexOf( '/' ) + 1 );
-
-		}
-
 		var scope = this;
 
 		var loader = new THREE.XHRLoader( scope.manager );
 		loader.setCrossOrigin( this.crossOrigin );
 		loader.load( url, function ( text ) {
 
-			scope.parse( JSON.parse( text ), onLoad );
+			onLoad( scope.parse( JSON.parse( text ) ) );
 
 		}, onProgress, onError );
-
-	},
-
-	setTexturePath: function ( value ) {
-
-		this.texturePath = value;
 
 	},
 
@@ -51149,24 +53428,11 @@ THREE.ObjectLoader.prototype = {
 
 	},
 
-	parse: function ( json, onLoad ) {
+	parse: function ( json ) {
 
 		var geometries = this.parseGeometries( json.geometries );
-
-		var images = this.parseImages( json.images, function () {
-
-			if ( onLoad !== undefined ) onLoad( object );
-
-		} );
-		var textures  = this.parseTextures( json.textures, images );
-		var materials = this.parseMaterials( json.materials, textures );
+		var materials = this.parseMaterials( json.materials );
 		var object = this.parseObject( json.object, geometries, materials );
-
-		if ( json.images === undefined || json.images.length === 0 ) {
-
-			if ( onLoad !== undefined ) onLoad( object );
-
-		}
 
 		return object;
 
@@ -51189,9 +53455,8 @@ THREE.ObjectLoader.prototype = {
 				switch ( data.type ) {
 
 					case 'PlaneGeometry':
-					case 'PlaneBufferGeometry':
 
-						geometry = new THREE[ data.type ](
+						geometry = new THREE.PlaneGeometry(
 							data.width,
 							data.height,
 							data.widthSegments,
@@ -51287,7 +53552,7 @@ THREE.ObjectLoader.prototype = {
 
 					case 'BufferGeometry':
 
-						geometry = bufferGeometryLoader.parse( data );
+						geometry = bufferGeometryLoader.parse( data.data );
 
 						break;
 
@@ -51313,23 +53578,11 @@ THREE.ObjectLoader.prototype = {
 
 	},
 
-	parseMaterials: function ( json, textures ) {
+	parseMaterials: function ( json ) {
 
 		var materials = {};
 
 		if ( json !== undefined ) {
-
-			var getTexture = function ( name ) {
-
-				if ( textures[ name ] === undefined ) {
-
-					THREE.warn( 'THREE.ObjectLoader: Undefined texture', name );
-
-				}
-
-				return textures[ name ];
-
-			};
 
 			var loader = new THREE.MaterialLoader();
 
@@ -51342,54 +53595,6 @@ THREE.ObjectLoader.prototype = {
 
 				if ( data.name !== undefined ) material.name = data.name;
 
-				if ( data.map !== undefined ) {
-
-					material.map = getTexture( data.map );
-
-				}
-
-				if ( data.bumpMap !== undefined ) {
-
-					material.bumpMap = getTexture( data.bumpMap );
-					if ( data.bumpScale ) {
-						material.bumpScale = new THREE.Vector2( data.bumpScale, data.bumpScale );
-					}
-
-				}
-
-				if ( data.alphaMap !== undefined ) {
-
-					material.alphaMap = getTexture( data.alphaMap );
-
-				}
-
-				if ( data.envMap !== undefined ) {
-
-					material.envMap = getTexture( data.envMap );
-
-				}
-
-				if ( data.normalMap !== undefined ) {
-
-					material.normalMap = getTexture( data.normalMap );
-					if ( data.normalScale ) {
-						material.normalScale = new THREE.Vector2( data.normalScale, data.normalScale );
-					}
-
-				}
-
-				if ( data.lightMap !== undefined ) {
-
-					material.lightMap = getTexture( data.lightMap );
-
-				}
-
-				if ( data.specularMap !== undefined ) {
-
-					material.specularMap = getTexture( data.specularMap );
-
-				}
-
 				materials[ data.uuid ] = material;
 
 			}
@@ -51400,94 +53605,6 @@ THREE.ObjectLoader.prototype = {
 
 	},
 
-	parseImages: function ( json, onLoad ) {
-
-		var scope = this;
-		var images = {};
-
-		if ( json !== undefined && json.length > 0 ) {
-
-			var manager = new THREE.LoadingManager( onLoad );
-
-			var loader = new THREE.ImageLoader( manager );
-			loader.setCrossOrigin( this.crossOrigin );
-
-			var loadImage = function ( url ) {
-
-				scope.manager.itemStart( url );
-
-				return loader.load( url, function () {
-
-					scope.manager.itemEnd( url );
-
-				} );
-
-			};
-
-			for ( var i = 0, l = json.length; i < l; i ++ ) {
-
-				var image = json[ i ];
-				var path = /^(\/\/)|([a-z]+:(\/\/)?)/i.test( image.url ) ? image.url : scope.texturePath + image.url;
-
-				images[ image.uuid ] = loadImage( path );
-
-			}
-
-		}
-
-		return images;
-
-	},
-
-	parseTextures: function ( json, images ) {
-
-		var textures = {};
-
-		if ( json !== undefined ) {
-
-			for ( var i = 0, l = json.length; i < l; i ++ ) {
-
-				var data = json[ i ];
-
-				if ( data.image === undefined ) {
-
-					THREE.warn( 'THREE.ObjectLoader: No "image" speficied for', data.uuid );
-
-				}
-
-				if ( images[ data.image ] === undefined ) {
-
-					THREE.warn( 'THREE.ObjectLoader: Undefined image', data.image );
-
-				}
-
-				var texture = new THREE.Texture( images[ data.image ] );
-				texture.needsUpdate = true;
-
-				texture.uuid = data.uuid;
-
-				if ( data.name !== undefined ) texture.name = data.name;
-				if ( data.repeat !== undefined ) texture.repeat = new THREE.Vector2( data.repeat[ 0 ], data.repeat[ 1 ] );
-				if ( data.minFilter !== undefined ) texture.minFilter = THREE[ data.minFilter ];
-				if ( data.magFilter !== undefined ) texture.magFilter = THREE[ data.magFilter ];
-				if ( data.anisotropy !== undefined ) texture.anisotropy = data.anisotropy;
-				if ( data.wrap instanceof Array ) {
-
-					texture.wrapS = THREE[ data.wrap[ 0 ] ];
-					texture.wrapT = THREE[ data.wrap[ 1 ] ];
-
-				}
-
-				textures[ data.uuid ] = texture;
-
-			}
-
-		}
-
-		return textures;
-
-	},
-
 	parseObject: function () {
 
 		var matrix = new THREE.Matrix4();
@@ -51495,30 +53612,6 @@ THREE.ObjectLoader.prototype = {
 		return function ( data, geometries, materials ) {
 
 			var object;
-
-			var getGeometry = function ( name ) {
-
-				if ( geometries[ name ] === undefined ) {
-
-					THREE.warn( 'THREE.ObjectLoader: Undefined geometry', name );
-
-				}
-
-				return geometries[ name ];
-
-			};
-
-			var getMaterial = function ( name ) {
-
-				if ( materials[ name ] === undefined ) {
-
-					THREE.warn( 'THREE.ObjectLoader: Undefined material', name );
-
-				}
-
-				return materials[ name ];
-
-			};
 
 			switch ( data.type ) {
 
@@ -51554,13 +53647,13 @@ THREE.ObjectLoader.prototype = {
 
 				case 'PointLight':
 
-					object = new THREE.PointLight( data.color, data.intensity, data.distance, data.decay );
+					object = new THREE.PointLight( data.color, data.intensity, data.distance );
 
 					break;
 
 				case 'SpotLight':
 
-					object = new THREE.SpotLight( data.color, data.intensity, data.distance, data.angle, data.exponent, data.decay );
+					object = new THREE.SpotLight( data.color, data.intensity, data.distance, data.angle, data.exponent );
 
 					break;
 
@@ -51572,25 +53665,57 @@ THREE.ObjectLoader.prototype = {
 
 				case 'Mesh':
 
-					object = new THREE.Mesh( getGeometry( data.geometry ), getMaterial( data.material ) );
+					var geometry = geometries[ data.geometry ];
+					var material = materials[ data.material ];
+
+					if ( geometry === undefined ) {
+
+						console.warn( 'THREE.ObjectLoader: Undefined geometry', data.geometry );
+
+					}
+
+					if ( material === undefined ) {
+
+						console.warn( 'THREE.ObjectLoader: Undefined material', data.material );
+
+					}
+
+					object = new THREE.Mesh( geometry, material );
 
 					break;
 
 				case 'Line':
 
-					object = new THREE.Line( getGeometry( data.geometry ), getMaterial( data.material ), data.mode );
+					var geometry = geometries[ data.geometry ];
+					var material = materials[ data.material ];
 
-					break;
+					if ( geometry === undefined ) {
 
-				case 'PointCloud':
+						console.warn( 'THREE.ObjectLoader: Undefined geometry', data.geometry );
 
-					object = new THREE.PointCloud( getGeometry( data.geometry ), getMaterial( data.material ) );
+					}
+
+					if ( material === undefined ) {
+
+						console.warn( 'THREE.ObjectLoader: Undefined material', data.material );
+
+					}
+
+					object = new THREE.Line( geometry, material );
 
 					break;
 
 				case 'Sprite':
 
-					object = new THREE.Sprite( getMaterial( data.material ) );
+					var material = materials[ data.material ];
+
+					if ( material === undefined ) {
+
+						console.warn( 'THREE.ObjectLoader: Undefined material', data.material );
+
+					}
+
+					object = new THREE.Sprite( material );
 
 					break;
 
@@ -51726,7 +53851,7 @@ THREE.BinaryTextureLoader.prototype = {
 
 				texture.image = texData.image;
 
-			} else if ( undefined !== texData.data ) {
+			} else if ( undefined !== texData.data ){
 
 				texture.image.width = texData.width;
 				texture.image.height = texData.height;
@@ -51831,7 +53956,7 @@ THREE.CompressedTextureLoader.prototype = {
 
 					if ( loaded === 6 ) {
 
-						if (texDatas.mipmapCount == 1)
+ 						if (texDatas.mipmapCount == 1)
  							texture.minFilter = THREE.LinearFilter;
 
 						texture.format = texDatas.format;
@@ -51933,14 +54058,9 @@ THREE.Material = function () {
 	this.blendSrc = THREE.SrcAlphaFactor;
 	this.blendDst = THREE.OneMinusSrcAlphaFactor;
 	this.blendEquation = THREE.AddEquation;
-	this.blendSrcAlpha = null;
-	this.blendDstAlpha = null;
-	this.blendEquationAlpha = null;
 
 	this.depthTest = true;
 	this.depthWrite = true;
-
-	this.colorWrite = true;
 
 	this.polygonOffset = false;
 	this.polygonOffsetFactor = 0;
@@ -51952,27 +54072,13 @@ THREE.Material = function () {
 
 	this.visible = true;
 
-	this._needsUpdate = true;
+	this.needsUpdate = true;
 
 };
 
 THREE.Material.prototype = {
 
 	constructor: THREE.Material,
-
-	get needsUpdate () {
-
-		return this._needsUpdate;
-
-	},
-
-	set needsUpdate ( value ) {
-
-		if ( value === true ) this.update();
-
-		this._needsUpdate = value;
-
-	},
 
 	setValues: function ( values ) {
 
@@ -51984,7 +54090,7 @@ THREE.Material.prototype = {
 
 			if ( newValue === undefined ) {
 
-				THREE.warn( "THREE.Material: '" + key + "' parameter is undefined." );
+				console.warn( "THREE.Material: '" + key + "' parameter is undefined." );
 				continue;
 
 			}
@@ -52042,25 +54148,26 @@ THREE.Material.prototype = {
 		} else if ( this instanceof THREE.MeshLambertMaterial ) {
 
 			output.color = this.color.getHex();
+			output.ambient = this.ambient.getHex();
 			output.emissive = this.emissive.getHex();
 			if ( this.vertexColors !== THREE.NoColors ) output.vertexColors = this.vertexColors;
-			if ( this.shading !== THREE.SmoothShading ) output.shading = this.shading;
 			if ( this.blending !== THREE.NormalBlending ) output.blending = this.blending;
 			if ( this.side !== THREE.FrontSide ) output.side = this.side;
 
 		} else if ( this instanceof THREE.MeshPhongMaterial ) {
 
 			output.color = this.color.getHex();
+			output.ambient = this.ambient.getHex();
 			output.emissive = this.emissive.getHex();
 			output.specular = this.specular.getHex();
 			output.shininess = this.shininess;
 			if ( this.vertexColors !== THREE.NoColors ) output.vertexColors = this.vertexColors;
-			if ( this.shading !== THREE.SmoothShading ) output.shading = this.shading;
 			if ( this.blending !== THREE.NormalBlending ) output.blending = this.blending;
 			if ( this.side !== THREE.FrontSide ) output.side = this.side;
 
 		} else if ( this instanceof THREE.MeshNormalMaterial ) {
 
+			if ( this.shading !== THREE.FlatShading ) output.shading = this.shading;
 			if ( this.blending !== THREE.NormalBlending ) output.blending = this.blending;
 			if ( this.side !== THREE.FrontSide ) output.side = this.side;
 
@@ -52068,15 +54175,6 @@ THREE.Material.prototype = {
 
 			if ( this.blending !== THREE.NormalBlending ) output.blending = this.blending;
 			if ( this.side !== THREE.FrontSide ) output.side = this.side;
-
-		} else if ( this instanceof THREE.PointCloudMaterial ) {
-
-			output.size  = this.size;
-			output.sizeAttenuation = this.sizeAttenuation;
-			output.color = this.color.getHex();
-
-			if ( this.vertexColors !== THREE.NoColors ) output.vertexColors = this.vertexColors;
-			if ( this.blending !== THREE.NormalBlending ) output.blending = this.blending;
 
 		} else if ( this instanceof THREE.ShaderMaterial ) {
 
@@ -52114,9 +54212,6 @@ THREE.Material.prototype = {
 		material.blendSrc = this.blendSrc;
 		material.blendDst = this.blendDst;
 		material.blendEquation = this.blendEquation;
-		material.blendSrcAlpha = this.blendSrcAlpha;
-		material.blendDstAlpha = this.blendDstAlpha;
-		material.blendEquationAlpha = this.blendEquationAlpha;
 
 		material.depthTest = this.depthTest;
 		material.depthWrite = this.depthWrite;
@@ -52132,12 +54227,6 @@ THREE.Material.prototype = {
 		material.visible = this.visible;
 
 		return material;
-
-	},
-
-	update: function () {
-
-		this.dispatchEvent( { type: 'update' } );
 
 	},
 
@@ -52420,6 +54509,7 @@ THREE.MeshBasicMaterial.prototype.clone = function () {
  *
  * parameters = {
  *  color: <hex>,
+ *  ambient: <hex>,
  *  emissive: <hex>,
  *  opacity: <float>,
  *
@@ -52461,6 +54551,7 @@ THREE.MeshLambertMaterial = function ( parameters ) {
 	this.type = 'MeshLambertMaterial';
 
 	this.color = new THREE.Color( 0xffffff ); // diffuse
+	this.ambient = new THREE.Color( 0xffffff );
 	this.emissive = new THREE.Color( 0x000000 );
 
 	this.wrapAround = false;
@@ -52508,6 +54599,7 @@ THREE.MeshLambertMaterial.prototype.clone = function () {
 	THREE.Material.prototype.clone.call( this, material );
 
 	material.color.copy( this.color );
+	material.ambient.copy( this.ambient );
 	material.emissive.copy( this.emissive );
 
 	material.wrapAround = this.wrapAround;
@@ -52553,6 +54645,7 @@ THREE.MeshLambertMaterial.prototype.clone = function () {
  *
  * parameters = {
  *  color: <hex>,
+ *  ambient: <hex>,
  *  emissive: <hex>,
  *  specular: <hex>,
  *  shininess: <float>,
@@ -52602,6 +54695,7 @@ THREE.MeshPhongMaterial = function ( parameters ) {
 	this.type = 'MeshPhongMaterial';
 
 	this.color = new THREE.Color( 0xffffff ); // diffuse
+	this.ambient = new THREE.Color( 0xffffff );
 	this.emissive = new THREE.Color( 0x000000 );
 	this.specular = new THREE.Color( 0x111111 );
 	this.shininess = 30;
@@ -52659,6 +54753,7 @@ THREE.MeshPhongMaterial.prototype.clone = function () {
 	THREE.Material.prototype.clone.call( this, material );
 
 	material.color.copy( this.color );
+	material.ambient.copy( this.ambient );
 	material.emissive.copy( this.emissive );
 	material.specular.copy( this.specular );
 	material.shininess = this.shininess;
@@ -52778,6 +54873,8 @@ THREE.MeshNormalMaterial = function ( parameters ) {
 
 	this.type = 'MeshNormalMaterial';
 
+	this.shading = THREE.FlatShading;
+
 	this.wireframe = false;
 	this.wireframeLinewidth = 1;
 
@@ -52795,6 +54892,8 @@ THREE.MeshNormalMaterial.prototype.clone = function () {
 	var material = new THREE.MeshNormalMaterial();
 
 	THREE.Material.prototype.clone.call( this, material );
+
+	material.shading = this.shading;
 
 	material.wireframe = this.wireframe;
 	material.wireframeLinewidth = this.wireframeLinewidth;
@@ -52935,14 +55034,14 @@ THREE.PointCloudMaterial.prototype.clone = function () {
 
 THREE.ParticleBasicMaterial = function ( parameters ) {
 
-	THREE.warn( 'THREE.ParticleBasicMaterial has been renamed to THREE.PointCloudMaterial.' );
+	console.warn( 'THREE.ParticleBasicMaterial has been renamed to THREE.PointCloudMaterial.' );
 	return new THREE.PointCloudMaterial( parameters );
 
 };
 
 THREE.ParticleSystemMaterial = function ( parameters ) {
 
-	THREE.warn( 'THREE.ParticleSystemMaterial has been renamed to THREE.PointCloudMaterial.' );
+	console.warn( 'THREE.ParticleSystemMaterial has been renamed to THREE.PointCloudMaterial.' );
 	return new THREE.PointCloudMaterial( parameters );
 
 };
@@ -53163,7 +55262,6 @@ THREE.Texture = function ( image, mapping, wrapS, wrapT, magFilter, minFilter, f
 	this.uuid = THREE.Math.generateUUID();
 
 	this.name = '';
-	this.sourceFile = '';
 
 	this.image = image !== undefined ? image : THREE.Texture.DEFAULT_IMAGE;
 	this.mipmaps = [];
@@ -53506,7 +55604,7 @@ THREE.PointCloud.prototype.raycast = ( function () {
 
 				}
 
-				for ( var oi = 0, ol = offsets.length; oi < ol; ++ oi ) {
+				for ( var oi = 0, ol = offsets.length; oi < ol; ++oi ) {
 
 					var start = offsets[ oi ].start;
 					var count = offsets[ oi ].count;
@@ -53572,7 +55670,7 @@ THREE.PointCloud.prototype.clone = function ( object ) {
 
 THREE.ParticleSystem = function ( geometry, material ) {
 
-	THREE.warn( 'THREE.ParticleSystem has been renamed to THREE.PointCloud.' );
+	console.warn( 'THREE.ParticleSystem has been renamed to THREE.PointCloud.' );
 	return new THREE.PointCloud( geometry, material );
 
 };
@@ -53592,7 +55690,7 @@ THREE.Line = function ( geometry, material, mode ) {
 	this.geometry = geometry !== undefined ? geometry : new THREE.Geometry();
 	this.material = material !== undefined ? material : new THREE.LineBasicMaterial( { color: Math.random() * 0xffffff } );
 
-	this.mode = mode !== undefined ? mode : THREE.LineStrip;
+	this.mode = ( mode !== undefined ) ? mode : THREE.LineStrip;
 
 };
 
@@ -53653,7 +55751,7 @@ THREE.Line.prototype.raycast = ( function () {
 
 				}
 
-				for ( var oi = 0; oi < offsets.length; oi ++) {
+				for ( var oi = 0; oi < offsets.length; oi++){
 
 					var start = offsets[ oi ].start;
 					var count = offsets[ oi ].count;
@@ -53681,8 +55779,6 @@ THREE.Line.prototype.raycast = ( function () {
 							// What do we want? intersection point on the ray or on the segment??
 							// point: raycaster.ray.at( distance ),
 							point: interSegment.clone().applyMatrix4( this.matrixWorld ),
-							index: i,
-							offsetIndex: oi,
 							face: null,
 							faceIndex: null,
 							object: this
@@ -53716,7 +55812,6 @@ THREE.Line.prototype.raycast = ( function () {
 						// What do we want? intersection point on the ray or on the segment??
 						// point: raycaster.ray.at( distance ),
 						point: interSegment.clone().applyMatrix4( this.matrixWorld ),
-						index: i,
 						face: null,
 						faceIndex: null,
 						object: this
@@ -53748,7 +55843,6 @@ THREE.Line.prototype.raycast = ( function () {
 					// What do we want? intersection point on the ray or on the segment??
 					// point: raycaster.ray.at( distance ),
 					point: interSegment.clone().applyMatrix4( this.matrixWorld ),
-					index: i,
 					face: null,
 					faceIndex: null,
 					object: this
@@ -53826,7 +55920,7 @@ THREE.Mesh.prototype.getMorphTargetIndexByName = function ( name ) {
 
 	}
 
-	THREE.warn( 'THREE.Mesh.getMorphTargetIndexByName: morph target ' + name + ' does not exist. Returning 0.' );
+	console.log( 'THREE.Mesh.getMorphTargetIndexByName: morph target ' + name + ' does not exist. Returning 0.' );
 
 	return 0;
 
@@ -53867,7 +55961,7 @@ THREE.Mesh.prototype.raycast = ( function () {
 
 		if ( geometry.boundingBox !== null ) {
 
-			if ( ray.isIntersectionBox( geometry.boundingBox ) === false ) {
+			if ( ray.isIntersectionBox( geometry.boundingBox ) === false )  {
 
 				return;
 
@@ -53898,7 +55992,7 @@ THREE.Mesh.prototype.raycast = ( function () {
 
 				}
 
-				for ( var oi = 0, ol = offsets.length; oi < ol; ++ oi ) {
+				for ( var oi = 0, ol = offsets.length; oi < ol; ++oi ) {
 
 					var start = offsets[ oi ].start;
 					var count = offsets[ oi ].count;
@@ -53997,7 +56091,7 @@ THREE.Mesh.prototype.raycast = ( function () {
 			var isFaceMaterial = this.material instanceof THREE.MeshFaceMaterial;
 			var objectMaterials = isFaceMaterial === true ? this.material.materials : null;
 
-			var a, b, c;
+			var a, b, c, d;
 			var precision = raycaster.precision;
 
 			var vertices = geometry.vertices;
@@ -54109,18 +56203,17 @@ THREE.Mesh.prototype.clone = function ( object, recursive ) {
  * @author ikerr / http://verold.com
  */
 
-THREE.Bone = function ( skin ) {
+THREE.Bone = function ( belongsToSkin ) {
 
 	THREE.Object3D.call( this );
 
-	this.type = 'Bone';
-
-	this.skin = skin;
+	this.skin = belongsToSkin;
 
 };
 
 THREE.Bone.prototype = Object.create( THREE.Object3D.prototype );
 THREE.Bone.prototype.constructor = THREE.Bone;
+
 
 // File:src/objects/Skeleton.js
 
@@ -54195,7 +56288,7 @@ THREE.Skeleton = function ( bones, boneInverses, useVertexTexture ) {
 
 		} else {
 
-			THREE.warn( 'THREE.Skeleton bonInverses is the wrong length.' );
+			console.warn( 'THREE.Skeleton bonInverses is the wrong length.' );
 
 			this.boneInverses = [];
 
@@ -54335,7 +56428,7 @@ THREE.SkinnedMesh = function ( geometry, material, useVertexTexture ) {
 
 		var bone, gbone, p, q, s;
 
-		for ( var b = 0, bl = this.geometry.bones.length; b < bl; ++ b ) {
+		for ( var b = 0, bl = this.geometry.bones.length; b < bl; ++b ) {
 
 			gbone = this.geometry.bones[ b ];
 
@@ -54362,7 +56455,7 @@ THREE.SkinnedMesh = function ( geometry, material, useVertexTexture ) {
 
 		}
 
-		for ( var b = 0, bl = this.geometry.bones.length; b < bl; ++ b ) {
+		for ( var b = 0, bl = this.geometry.bones.length; b < bl; ++b ) {
 
 			gbone = this.geometry.bones[ b ];
 
@@ -54458,7 +56551,7 @@ THREE.SkinnedMesh.prototype.updateMatrixWorld = function( force ) {
 
 	} else {
 
-		THREE.warn( 'THREE.SkinnedMesh unreckognized bindMode: ' + this.bindMode );
+		console.warn( 'THREE.SkinnedMesh unreckognized bindMode: ' + this.bindMode );
 
 	}
 
@@ -54553,6 +56646,7 @@ THREE.MorphAnimMesh.prototype.parseAnimations = function () {
 		if ( parts && parts.length > 1 ) {
 
 			var label = parts[ 1 ];
+			var num = parts[ 2 ];
 
 			if ( ! animations[ label ] ) animations[ label ] = { start: Infinity, end: - Infinity };
 
@@ -54591,7 +56685,7 @@ THREE.MorphAnimMesh.prototype.playAnimation = function ( label, fps ) {
 
 	} else {
 
-		THREE.warn( 'THREE.MorphAnimMesh: animation[' + label + '] undefined in .playAnimation()' );
+		console.warn( 'animation[' + label + '] undefined' );
 
 	}
 
@@ -54920,7 +57014,7 @@ THREE.LensFlare = function ( texture, size, distance, blending, color ) {
 	this.positionScreen = new THREE.Vector3();
 	this.customUpdateCallback = undefined;
 
-	if ( texture !== undefined ) {
+	if( texture !== undefined ) {
 
 		this.add( texture, size, distance, blending, color );
 
@@ -54972,7 +57066,7 @@ THREE.LensFlare.prototype.updateLensFlares = function () {
 	var vecX = - this.positionScreen.x * 2;
 	var vecY = - this.positionScreen.y * 2;
 
-	for ( f = 0; f < fl; f ++ ) {
+	for( f = 0; f < fl; f ++ ) {
 
 		flare = this.lensFlares[ f ];
 
@@ -55075,21 +57169,17 @@ THREE.FogExp2.prototype.clone = function () {
 
 THREE.ShaderChunk = {};
 
-// File:src/renderers/shaders/ShaderChunk/common.glsl
-
-THREE.ShaderChunk[ 'common'] = "#define PI 3.14159\n#define PI2 6.28318\n#define RECIPROCAL_PI2 0.15915494\n#define LOG2 1.442695\n#define EPSILON 1e-6\n\nfloat square( in float a ) { return a*a; }\nvec2  square( in vec2 a )  { return vec2( a.x*a.x, a.y*a.y ); }\nvec3  square( in vec3 a )  { return vec3( a.x*a.x, a.y*a.y, a.z*a.z ); }\nvec4  square( in vec4 a )  { return vec4( a.x*a.x, a.y*a.y, a.z*a.z, a.w*a.w ); }\nfloat saturate( in float a ) { return clamp( a, 0.0, 1.0 ); }\nvec2  saturate( in vec2 a )  { return clamp( a, 0.0, 1.0 ); }\nvec3  saturate( in vec3 a )  { return clamp( a, 0.0, 1.0 ); }\nvec4  saturate( in vec4 a )  { return clamp( a, 0.0, 1.0 ); }\nfloat average( in float a ) { return a; }\nfloat average( in vec2 a )  { return ( a.x + a.y) * 0.5; }\nfloat average( in vec3 a )  { return ( a.x + a.y + a.z) / 3.0; }\nfloat average( in vec4 a )  { return ( a.x + a.y + a.z + a.w) * 0.25; }\nfloat whiteCompliment( in float a ) { return saturate( 1.0 - a ); }\nvec2  whiteCompliment( in vec2 a )  { return saturate( vec2(1.0) - a ); }\nvec3  whiteCompliment( in vec3 a )  { return saturate( vec3(1.0) - a ); }\nvec4  whiteCompliment( in vec4 a )  { return saturate( vec4(1.0) - a ); }\nvec3 transformDirection( in vec3 normal, in mat4 matrix ) {\n	return normalize( ( matrix * vec4( normal, 0.0 ) ).xyz );\n}\n// http://en.wikibooks.org/wiki/GLSL_Programming/Applying_Matrix_Transformations\nvec3 inverseTransformDirection( in vec3 normal, in mat4 matrix ) {\n	return normalize( ( vec4( normal, 0.0 ) * matrix ).xyz );\n}\nvec3 projectOnPlane(in vec3 point, in vec3 pointOnPlane, in vec3 planeNormal) {\n	float distance = dot( planeNormal, point-pointOnPlane );\n	return point - distance * planeNormal;\n}\nfloat sideOfPlane( in vec3 point, in vec3 pointOnPlane, in vec3 planeNormal ) {\n	return sign( dot( point - pointOnPlane, planeNormal ) );\n}\nvec3 linePlaneIntersect( in vec3 pointOnLine, in vec3 lineDirection, in vec3 pointOnPlane, in vec3 planeNormal ) {\n	return pointOnLine + lineDirection * ( dot( planeNormal, pointOnPlane - pointOnLine ) / dot( planeNormal, lineDirection ) );\n}\nfloat calcLightAttenuation( float lightDistance, float cutoffDistance, float decayExponent ) {\n	if ( decayExponent > 0.0 ) {\n	  return pow( saturate( 1.0 - lightDistance / cutoffDistance ), decayExponent );\n	}\n	return 1.0;\n}\n\nvec3 inputToLinear( in vec3 a ) {\n#ifdef GAMMA_INPUT\n	return pow( a, vec3( float( GAMMA_FACTOR ) ) );\n#else\n	return a;\n#endif\n}\nvec3 linearToOutput( in vec3 a ) {\n#ifdef GAMMA_OUTPUT\n	return pow( a, vec3( 1.0 / float( GAMMA_FACTOR ) ) );\n#else\n	return a;\n#endif\n}\n";
-
 // File:src/renderers/shaders/ShaderChunk/alphatest_fragment.glsl
 
-THREE.ShaderChunk[ 'alphatest_fragment'] = "#ifdef ALPHATEST\n\n	if ( diffuseColor.a < ALPHATEST ) discard;\n\n#endif\n";
+THREE.ShaderChunk[ 'alphatest_fragment'] = "#ifdef ALPHATEST\n\n	if ( gl_FragColor.a < ALPHATEST ) discard;\n\n#endif\n";
 
 // File:src/renderers/shaders/ShaderChunk/lights_lambert_vertex.glsl
 
-THREE.ShaderChunk[ 'lights_lambert_vertex'] = "vLightFront = vec3( 0.0 );\n\n#ifdef DOUBLE_SIDED\n\n	vLightBack = vec3( 0.0 );\n\n#endif\n\ntransformedNormal = normalize( transformedNormal );\n\n#if MAX_DIR_LIGHTS > 0\n\nfor( int i = 0; i < MAX_DIR_LIGHTS; i ++ ) {\n\n	vec3 dirVector = transformDirection( directionalLightDirection[ i ], viewMatrix );\n\n	float dotProduct = dot( transformedNormal, dirVector );\n	vec3 directionalLightWeighting = vec3( max( dotProduct, 0.0 ) );\n\n	#ifdef DOUBLE_SIDED\n\n		vec3 directionalLightWeightingBack = vec3( max( -dotProduct, 0.0 ) );\n\n		#ifdef WRAP_AROUND\n\n			vec3 directionalLightWeightingHalfBack = vec3( max( -0.5 * dotProduct + 0.5, 0.0 ) );\n\n		#endif\n\n	#endif\n\n	#ifdef WRAP_AROUND\n\n		vec3 directionalLightWeightingHalf = vec3( max( 0.5 * dotProduct + 0.5, 0.0 ) );\n		directionalLightWeighting = mix( directionalLightWeighting, directionalLightWeightingHalf, wrapRGB );\n\n		#ifdef DOUBLE_SIDED\n\n			directionalLightWeightingBack = mix( directionalLightWeightingBack, directionalLightWeightingHalfBack, wrapRGB );\n\n		#endif\n\n	#endif\n\n	vLightFront += directionalLightColor[ i ] * directionalLightWeighting;\n\n	#ifdef DOUBLE_SIDED\n\n		vLightBack += directionalLightColor[ i ] * directionalLightWeightingBack;\n\n	#endif\n\n}\n\n#endif\n\n#if MAX_POINT_LIGHTS > 0\n\n	for( int i = 0; i < MAX_POINT_LIGHTS; i ++ ) {\n\n		vec4 lPosition = viewMatrix * vec4( pointLightPosition[ i ], 1.0 );\n		vec3 lVector = lPosition.xyz - mvPosition.xyz;\n\n		float attenuation = calcLightAttenuation( length( lVector ), pointLightDistance[ i ], pointLightDecay[ i ] );\n\n		lVector = normalize( lVector );\n		float dotProduct = dot( transformedNormal, lVector );\n\n		vec3 pointLightWeighting = vec3( max( dotProduct, 0.0 ) );\n\n		#ifdef DOUBLE_SIDED\n\n			vec3 pointLightWeightingBack = vec3( max( -dotProduct, 0.0 ) );\n\n			#ifdef WRAP_AROUND\n\n				vec3 pointLightWeightingHalfBack = vec3( max( -0.5 * dotProduct + 0.5, 0.0 ) );\n\n			#endif\n\n		#endif\n\n		#ifdef WRAP_AROUND\n\n			vec3 pointLightWeightingHalf = vec3( max( 0.5 * dotProduct + 0.5, 0.0 ) );\n			pointLightWeighting = mix( pointLightWeighting, pointLightWeightingHalf, wrapRGB );\n\n			#ifdef DOUBLE_SIDED\n\n				pointLightWeightingBack = mix( pointLightWeightingBack, pointLightWeightingHalfBack, wrapRGB );\n\n			#endif\n\n		#endif\n\n		vLightFront += pointLightColor[ i ] * pointLightWeighting * attenuation;\n\n		#ifdef DOUBLE_SIDED\n\n			vLightBack += pointLightColor[ i ] * pointLightWeightingBack * attenuation;\n\n		#endif\n\n	}\n\n#endif\n\n#if MAX_SPOT_LIGHTS > 0\n\n	for( int i = 0; i < MAX_SPOT_LIGHTS; i ++ ) {\n\n		vec4 lPosition = viewMatrix * vec4( spotLightPosition[ i ], 1.0 );\n		vec3 lVector = lPosition.xyz - mvPosition.xyz;\n\n		float spotEffect = dot( spotLightDirection[ i ], normalize( spotLightPosition[ i ] - worldPosition.xyz ) );\n\n		if ( spotEffect > spotLightAngleCos[ i ] ) {\n\n			spotEffect = max( pow( max( spotEffect, 0.0 ), spotLightExponent[ i ] ), 0.0 );\n\n			float attenuation = calcLightAttenuation( length( lVector ), spotLightDistance[ i ], spotLightDecay[ i ] );\n\n			lVector = normalize( lVector );\n\n			float dotProduct = dot( transformedNormal, lVector );\n			vec3 spotLightWeighting = vec3( max( dotProduct, 0.0 ) );\n\n			#ifdef DOUBLE_SIDED\n\n				vec3 spotLightWeightingBack = vec3( max( -dotProduct, 0.0 ) );\n\n				#ifdef WRAP_AROUND\n\n					vec3 spotLightWeightingHalfBack = vec3( max( -0.5 * dotProduct + 0.5, 0.0 ) );\n\n				#endif\n\n			#endif\n\n			#ifdef WRAP_AROUND\n\n				vec3 spotLightWeightingHalf = vec3( max( 0.5 * dotProduct + 0.5, 0.0 ) );\n				spotLightWeighting = mix( spotLightWeighting, spotLightWeightingHalf, wrapRGB );\n\n				#ifdef DOUBLE_SIDED\n\n					spotLightWeightingBack = mix( spotLightWeightingBack, spotLightWeightingHalfBack, wrapRGB );\n\n				#endif\n\n			#endif\n\n			vLightFront += spotLightColor[ i ] * spotLightWeighting * attenuation * spotEffect;\n\n			#ifdef DOUBLE_SIDED\n\n				vLightBack += spotLightColor[ i ] * spotLightWeightingBack * attenuation * spotEffect;\n\n			#endif\n\n		}\n\n	}\n\n#endif\n\n#if MAX_HEMI_LIGHTS > 0\n\n	for( int i = 0; i < MAX_HEMI_LIGHTS; i ++ ) {\n\n		vec3 lVector = transformDirection( hemisphereLightDirection[ i ], viewMatrix );\n\n		float dotProduct = dot( transformedNormal, lVector );\n\n		float hemiDiffuseWeight = 0.5 * dotProduct + 0.5;\n		float hemiDiffuseWeightBack = -0.5 * dotProduct + 0.5;\n\n		vLightFront += mix( hemisphereLightGroundColor[ i ], hemisphereLightSkyColor[ i ], hemiDiffuseWeight );\n\n		#ifdef DOUBLE_SIDED\n\n			vLightBack += mix( hemisphereLightGroundColor[ i ], hemisphereLightSkyColor[ i ], hemiDiffuseWeightBack );\n\n		#endif\n\n	}\n\n#endif\n\nvLightFront += ambientLightColor;\n\n#ifdef DOUBLE_SIDED\n\n	vLightBack += ambientLightColor;\n\n#endif\n";
+THREE.ShaderChunk[ 'lights_lambert_vertex'] = "vLightFront = vec3( 0.0 );\n\n#ifdef DOUBLE_SIDED\n\n	vLightBack = vec3( 0.0 );\n\n#endif\n\ntransformedNormal = normalize( transformedNormal );\n\n#if MAX_DIR_LIGHTS > 0\n\nfor( int i = 0; i < MAX_DIR_LIGHTS; i ++ ) {\n\n	vec4 lDirection = viewMatrix * vec4( directionalLightDirection[ i ], 0.0 );\n	vec3 dirVector = normalize( lDirection.xyz );\n\n	float dotProduct = dot( transformedNormal, dirVector );\n	vec3 directionalLightWeighting = vec3( max( dotProduct, 0.0 ) );\n\n	#ifdef DOUBLE_SIDED\n\n		vec3 directionalLightWeightingBack = vec3( max( -dotProduct, 0.0 ) );\n\n		#ifdef WRAP_AROUND\n\n			vec3 directionalLightWeightingHalfBack = vec3( max( -0.5 * dotProduct + 0.5, 0.0 ) );\n\n		#endif\n\n	#endif\n\n	#ifdef WRAP_AROUND\n\n		vec3 directionalLightWeightingHalf = vec3( max( 0.5 * dotProduct + 0.5, 0.0 ) );\n		directionalLightWeighting = mix( directionalLightWeighting, directionalLightWeightingHalf, wrapRGB );\n\n		#ifdef DOUBLE_SIDED\n\n			directionalLightWeightingBack = mix( directionalLightWeightingBack, directionalLightWeightingHalfBack, wrapRGB );\n\n		#endif\n\n	#endif\n\n	vLightFront += directionalLightColor[ i ] * directionalLightWeighting;\n\n	#ifdef DOUBLE_SIDED\n\n		vLightBack += directionalLightColor[ i ] * directionalLightWeightingBack;\n\n	#endif\n\n}\n\n#endif\n\n#if MAX_POINT_LIGHTS > 0\n\n	for( int i = 0; i < MAX_POINT_LIGHTS; i ++ ) {\n\n		vec4 lPosition = viewMatrix * vec4( pointLightPosition[ i ], 1.0 );\n		vec3 lVector = lPosition.xyz - mvPosition.xyz;\n\n		float lDistance = 1.0;\n		if ( pointLightDistance[ i ] > 0.0 )\n			lDistance = 1.0 - min( ( length( lVector ) / pointLightDistance[ i ] ), 1.0 );\n\n		lVector = normalize( lVector );\n		float dotProduct = dot( transformedNormal, lVector );\n\n		vec3 pointLightWeighting = vec3( max( dotProduct, 0.0 ) );\n\n		#ifdef DOUBLE_SIDED\n\n			vec3 pointLightWeightingBack = vec3( max( -dotProduct, 0.0 ) );\n\n			#ifdef WRAP_AROUND\n\n				vec3 pointLightWeightingHalfBack = vec3( max( -0.5 * dotProduct + 0.5, 0.0 ) );\n\n			#endif\n\n		#endif\n\n		#ifdef WRAP_AROUND\n\n			vec3 pointLightWeightingHalf = vec3( max( 0.5 * dotProduct + 0.5, 0.0 ) );\n			pointLightWeighting = mix( pointLightWeighting, pointLightWeightingHalf, wrapRGB );\n\n			#ifdef DOUBLE_SIDED\n\n				pointLightWeightingBack = mix( pointLightWeightingBack, pointLightWeightingHalfBack, wrapRGB );\n\n			#endif\n\n		#endif\n\n		vLightFront += pointLightColor[ i ] * pointLightWeighting * lDistance;\n\n		#ifdef DOUBLE_SIDED\n\n			vLightBack += pointLightColor[ i ] * pointLightWeightingBack * lDistance;\n\n		#endif\n\n	}\n\n#endif\n\n#if MAX_SPOT_LIGHTS > 0\n\n	for( int i = 0; i < MAX_SPOT_LIGHTS; i ++ ) {\n\n		vec4 lPosition = viewMatrix * vec4( spotLightPosition[ i ], 1.0 );\n		vec3 lVector = lPosition.xyz - mvPosition.xyz;\n\n		float spotEffect = dot( spotLightDirection[ i ], normalize( spotLightPosition[ i ] - worldPosition.xyz ) );\n\n		if ( spotEffect > spotLightAngleCos[ i ] ) {\n\n			spotEffect = max( pow( max( spotEffect, 0.0 ), spotLightExponent[ i ] ), 0.0 );\n\n			float lDistance = 1.0;\n			if ( spotLightDistance[ i ] > 0.0 )\n				lDistance = 1.0 - min( ( length( lVector ) / spotLightDistance[ i ] ), 1.0 );\n\n			lVector = normalize( lVector );\n\n			float dotProduct = dot( transformedNormal, lVector );\n			vec3 spotLightWeighting = vec3( max( dotProduct, 0.0 ) );\n\n			#ifdef DOUBLE_SIDED\n\n				vec3 spotLightWeightingBack = vec3( max( -dotProduct, 0.0 ) );\n\n				#ifdef WRAP_AROUND\n\n					vec3 spotLightWeightingHalfBack = vec3( max( -0.5 * dotProduct + 0.5, 0.0 ) );\n\n				#endif\n\n			#endif\n\n			#ifdef WRAP_AROUND\n\n				vec3 spotLightWeightingHalf = vec3( max( 0.5 * dotProduct + 0.5, 0.0 ) );\n				spotLightWeighting = mix( spotLightWeighting, spotLightWeightingHalf, wrapRGB );\n\n				#ifdef DOUBLE_SIDED\n\n					spotLightWeightingBack = mix( spotLightWeightingBack, spotLightWeightingHalfBack, wrapRGB );\n\n				#endif\n\n			#endif\n\n			vLightFront += spotLightColor[ i ] * spotLightWeighting * lDistance * spotEffect;\n\n			#ifdef DOUBLE_SIDED\n\n				vLightBack += spotLightColor[ i ] * spotLightWeightingBack * lDistance * spotEffect;\n\n			#endif\n\n		}\n\n	}\n\n#endif\n\n#if MAX_HEMI_LIGHTS > 0\n\n	for( int i = 0; i < MAX_HEMI_LIGHTS; i ++ ) {\n\n		vec4 lDirection = viewMatrix * vec4( hemisphereLightDirection[ i ], 0.0 );\n		vec3 lVector = normalize( lDirection.xyz );\n\n		float dotProduct = dot( transformedNormal, lVector );\n\n		float hemiDiffuseWeight = 0.5 * dotProduct + 0.5;\n		float hemiDiffuseWeightBack = -0.5 * dotProduct + 0.5;\n\n		vLightFront += mix( hemisphereLightGroundColor[ i ], hemisphereLightSkyColor[ i ], hemiDiffuseWeight );\n\n		#ifdef DOUBLE_SIDED\n\n			vLightBack += mix( hemisphereLightGroundColor[ i ], hemisphereLightSkyColor[ i ], hemiDiffuseWeightBack );\n\n		#endif\n\n	}\n\n#endif\n\nvLightFront = vLightFront * diffuse + ambient * ambientLightColor + emissive;\n\n#ifdef DOUBLE_SIDED\n\n	vLightBack = vLightBack * diffuse + ambient * ambientLightColor + emissive;\n\n#endif";
 
 // File:src/renderers/shaders/ShaderChunk/map_particle_pars_fragment.glsl
 
-THREE.ShaderChunk[ 'map_particle_pars_fragment'] = "#ifdef USE_MAP\n\n	uniform vec4 offsetRepeat;\n	uniform sampler2D map;\n\n#endif\n";
+THREE.ShaderChunk[ 'map_particle_pars_fragment'] = "#ifdef USE_MAP\n\n	uniform sampler2D map;\n\n#endif";
 
 // File:src/renderers/shaders/ShaderChunk/default_vertex.glsl
 
@@ -55113,7 +57203,7 @@ THREE.ShaderChunk[ 'lightmap_pars_vertex'] = "#ifdef USE_LIGHTMAP\n\n	varying ve
 
 // File:src/renderers/shaders/ShaderChunk/lights_phong_fragment.glsl
 
-THREE.ShaderChunk[ 'lights_phong_fragment'] = "#ifndef FLAT_SHADED\n\n	vec3 normal = normalize( vNormal );\n\n	#ifdef DOUBLE_SIDED\n\n		normal = normal * ( -1.0 + 2.0 * float( gl_FrontFacing ) );\n\n	#endif\n\n#else\n\n	vec3 fdx = dFdx( vViewPosition );\n	vec3 fdy = dFdy( vViewPosition );\n	vec3 normal = normalize( cross( fdx, fdy ) );\n\n#endif\n\nvec3 viewPosition = normalize( vViewPosition );\n\n#ifdef USE_NORMALMAP\n\n	normal = perturbNormal2Arb( -vViewPosition, normal );\n\n#elif defined( USE_BUMPMAP )\n\n	normal = perturbNormalArb( -vViewPosition, normal, dHdxy_fwd() );\n\n#endif\n\nvec3 totalDiffuseLight = vec3( 0.0 );\nvec3 totalSpecularLight = vec3( 0.0 );\n\n#if MAX_POINT_LIGHTS > 0\n\n	for ( int i = 0; i < MAX_POINT_LIGHTS; i ++ ) {\n\n		vec4 lPosition = viewMatrix * vec4( pointLightPosition[ i ], 1.0 );\n		vec3 lVector = lPosition.xyz + vViewPosition.xyz;\n\n		float attenuation = calcLightAttenuation( length( lVector ), pointLightDistance[ i ], pointLightDecay[ i ] );\n\n		lVector = normalize( lVector );\n\n		// diffuse\n\n		float dotProduct = dot( normal, lVector );\n\n		#ifdef WRAP_AROUND\n\n			float pointDiffuseWeightFull = max( dotProduct, 0.0 );\n			float pointDiffuseWeightHalf = max( 0.5 * dotProduct + 0.5, 0.0 );\n\n			vec3 pointDiffuseWeight = mix( vec3( pointDiffuseWeightFull ), vec3( pointDiffuseWeightHalf ), wrapRGB );\n\n		#else\n\n			float pointDiffuseWeight = max( dotProduct, 0.0 );\n\n		#endif\n\n		totalDiffuseLight += pointLightColor[ i ] * pointDiffuseWeight * attenuation;\n\n				// specular\n\n		vec3 pointHalfVector = normalize( lVector + viewPosition );\n		float pointDotNormalHalf = max( dot( normal, pointHalfVector ), 0.0 );\n		float pointSpecularWeight = specularStrength * max( pow( pointDotNormalHalf, shininess ), 0.0 );\n\n		float specularNormalization = ( shininess + 2.0 ) / 8.0;\n\n		vec3 schlick = specular + vec3( 1.0 - specular ) * pow( max( 1.0 - dot( lVector, pointHalfVector ), 0.0 ), 5.0 );\n		totalSpecularLight += schlick * pointLightColor[ i ] * pointSpecularWeight * pointDiffuseWeight * attenuation * specularNormalization;\n\n	}\n\n#endif\n\n#if MAX_SPOT_LIGHTS > 0\n\n	for ( int i = 0; i < MAX_SPOT_LIGHTS; i ++ ) {\n\n		vec4 lPosition = viewMatrix * vec4( spotLightPosition[ i ], 1.0 );\n		vec3 lVector = lPosition.xyz + vViewPosition.xyz;\n\n		float attenuation = calcLightAttenuation( length( lVector ), spotLightDistance[ i ], spotLightDecay[ i ] );\n\n		lVector = normalize( lVector );\n\n		float spotEffect = dot( spotLightDirection[ i ], normalize( spotLightPosition[ i ] - vWorldPosition ) );\n\n		if ( spotEffect > spotLightAngleCos[ i ] ) {\n\n			spotEffect = max( pow( max( spotEffect, 0.0 ), spotLightExponent[ i ] ), 0.0 );\n\n			// diffuse\n\n			float dotProduct = dot( normal, lVector );\n\n			#ifdef WRAP_AROUND\n\n				float spotDiffuseWeightFull = max( dotProduct, 0.0 );\n				float spotDiffuseWeightHalf = max( 0.5 * dotProduct + 0.5, 0.0 );\n\n				vec3 spotDiffuseWeight = mix( vec3( spotDiffuseWeightFull ), vec3( spotDiffuseWeightHalf ), wrapRGB );\n\n			#else\n\n				float spotDiffuseWeight = max( dotProduct, 0.0 );\n\n			#endif\n\n			totalDiffuseLight += spotLightColor[ i ] * spotDiffuseWeight * attenuation * spotEffect;\n\n			// specular\n\n			vec3 spotHalfVector = normalize( lVector + viewPosition );\n			float spotDotNormalHalf = max( dot( normal, spotHalfVector ), 0.0 );\n			float spotSpecularWeight = specularStrength * max( pow( spotDotNormalHalf, shininess ), 0.0 );\n\n			float specularNormalization = ( shininess + 2.0 ) / 8.0;\n\n			vec3 schlick = specular + vec3( 1.0 - specular ) * pow( max( 1.0 - dot( lVector, spotHalfVector ), 0.0 ), 5.0 );\n			totalSpecularLight += schlick * spotLightColor[ i ] * spotSpecularWeight * spotDiffuseWeight * attenuation * specularNormalization * spotEffect;\n\n		}\n\n	}\n\n#endif\n\n#if MAX_DIR_LIGHTS > 0\n\n	for( int i = 0; i < MAX_DIR_LIGHTS; i ++ ) {\n\n		vec3 dirVector = transformDirection( directionalLightDirection[ i ], viewMatrix );\n\n		// diffuse\n\n		float dotProduct = dot( normal, dirVector );\n\n		#ifdef WRAP_AROUND\n\n			float dirDiffuseWeightFull = max( dotProduct, 0.0 );\n			float dirDiffuseWeightHalf = max( 0.5 * dotProduct + 0.5, 0.0 );\n\n			vec3 dirDiffuseWeight = mix( vec3( dirDiffuseWeightFull ), vec3( dirDiffuseWeightHalf ), wrapRGB );\n\n		#else\n\n			float dirDiffuseWeight = max( dotProduct, 0.0 );\n\n		#endif\n\n		totalDiffuseLight += directionalLightColor[ i ] * dirDiffuseWeight;\n\n		// specular\n\n		vec3 dirHalfVector = normalize( dirVector + viewPosition );\n		float dirDotNormalHalf = max( dot( normal, dirHalfVector ), 0.0 );\n		float dirSpecularWeight = specularStrength * max( pow( dirDotNormalHalf, shininess ), 0.0 );\n\n		/*\n		// fresnel term from skin shader\n		const float F0 = 0.128;\n\n		float base = 1.0 - dot( viewPosition, dirHalfVector );\n		float exponential = pow( base, 5.0 );\n\n		float fresnel = exponential + F0 * ( 1.0 - exponential );\n		*/\n\n		/*\n		// fresnel term from fresnel shader\n		const float mFresnelBias = 0.08;\n		const float mFresnelScale = 0.3;\n		const float mFresnelPower = 5.0;\n\n		float fresnel = mFresnelBias + mFresnelScale * pow( 1.0 + dot( normalize( -viewPosition ), normal ), mFresnelPower );\n		*/\n\n		float specularNormalization = ( shininess + 2.0 ) / 8.0;\n\n		// 		dirSpecular += specular * directionalLightColor[ i ] * dirSpecularWeight * dirDiffuseWeight * specularNormalization * fresnel;\n\n		vec3 schlick = specular + vec3( 1.0 - specular ) * pow( max( 1.0 - dot( dirVector, dirHalfVector ), 0.0 ), 5.0 );\n		totalSpecularLight += schlick * directionalLightColor[ i ] * dirSpecularWeight * dirDiffuseWeight * specularNormalization;\n\n\n	}\n\n#endif\n\n#if MAX_HEMI_LIGHTS > 0\n\n	for( int i = 0; i < MAX_HEMI_LIGHTS; i ++ ) {\n\n		vec3 lVector = transformDirection( hemisphereLightDirection[ i ], viewMatrix );\n\n		// diffuse\n\n		float dotProduct = dot( normal, lVector );\n		float hemiDiffuseWeight = 0.5 * dotProduct + 0.5;\n\n		vec3 hemiColor = mix( hemisphereLightGroundColor[ i ], hemisphereLightSkyColor[ i ], hemiDiffuseWeight );\n\n		totalDiffuseLight += hemiColor;\n\n		// specular (sky light)\n\n		vec3 hemiHalfVectorSky = normalize( lVector + viewPosition );\n		float hemiDotNormalHalfSky = 0.5 * dot( normal, hemiHalfVectorSky ) + 0.5;\n		float hemiSpecularWeightSky = specularStrength * max( pow( max( hemiDotNormalHalfSky, 0.0 ), shininess ), 0.0 );\n\n		// specular (ground light)\n\n		vec3 lVectorGround = -lVector;\n\n		vec3 hemiHalfVectorGround = normalize( lVectorGround + viewPosition );\n		float hemiDotNormalHalfGround = 0.5 * dot( normal, hemiHalfVectorGround ) + 0.5;\n		float hemiSpecularWeightGround = specularStrength * max( pow( max( hemiDotNormalHalfGround, 0.0 ), shininess ), 0.0 );\n\n		float dotProductGround = dot( normal, lVectorGround );\n\n		float specularNormalization = ( shininess + 2.0 ) / 8.0;\n\n		vec3 schlickSky = specular + vec3( 1.0 - specular ) * pow( max( 1.0 - dot( lVector, hemiHalfVectorSky ), 0.0 ), 5.0 );\n		vec3 schlickGround = specular + vec3( 1.0 - specular ) * pow( max( 1.0 - dot( lVectorGround, hemiHalfVectorGround ), 0.0 ), 5.0 );\n		totalSpecularLight += hemiColor * specularNormalization * ( schlickSky * hemiSpecularWeightSky * max( dotProduct, 0.0 ) + schlickGround * hemiSpecularWeightGround * max( dotProductGround, 0.0 ) );\n\n	}\n\n#endif\n\n#ifdef METAL\n\n	outgoingLight += diffuseColor.rgb * ( totalDiffuseLight + ambientLightColor ) * specular + totalSpecularLight + emissive;\n\n#else\n\n	outgoingLight += diffuseColor.rgb * ( totalDiffuseLight + ambientLightColor ) + totalSpecularLight + emissive;\n\n#endif\n";
+THREE.ShaderChunk[ 'lights_phong_fragment'] = "vec3 normal = normalize( vNormal );\nvec3 viewPosition = normalize( vViewPosition );\n\n#ifdef DOUBLE_SIDED\n\n	normal = normal * ( -1.0 + 2.0 * float( gl_FrontFacing ) );\n\n#endif\n\n#ifdef USE_NORMALMAP\n\n	normal = perturbNormal2Arb( -vViewPosition, normal );\n\n#elif defined( USE_BUMPMAP )\n\n	normal = perturbNormalArb( -vViewPosition, normal, dHdxy_fwd() );\n\n#endif\n\n#if MAX_POINT_LIGHTS > 0\n\n	vec3 pointDiffuse = vec3( 0.0 );\n	vec3 pointSpecular = vec3( 0.0 );\n\n	for ( int i = 0; i < MAX_POINT_LIGHTS; i ++ ) {\n\n		vec4 lPosition = viewMatrix * vec4( pointLightPosition[ i ], 1.0 );\n		vec3 lVector = lPosition.xyz + vViewPosition.xyz;\n\n		float lDistance = 1.0;\n		if ( pointLightDistance[ i ] > 0.0 )\n			lDistance = 1.0 - min( ( length( lVector ) / pointLightDistance[ i ] ), 1.0 );\n\n		lVector = normalize( lVector );\n\n				// diffuse\n\n		float dotProduct = dot( normal, lVector );\n\n		#ifdef WRAP_AROUND\n\n			float pointDiffuseWeightFull = max( dotProduct, 0.0 );\n			float pointDiffuseWeightHalf = max( 0.5 * dotProduct + 0.5, 0.0 );\n\n			vec3 pointDiffuseWeight = mix( vec3( pointDiffuseWeightFull ), vec3( pointDiffuseWeightHalf ), wrapRGB );\n\n		#else\n\n			float pointDiffuseWeight = max( dotProduct, 0.0 );\n\n		#endif\n\n		pointDiffuse += diffuse * pointLightColor[ i ] * pointDiffuseWeight * lDistance;\n\n				// specular\n\n		vec3 pointHalfVector = normalize( lVector + viewPosition );\n		float pointDotNormalHalf = max( dot( normal, pointHalfVector ), 0.0 );\n		float pointSpecularWeight = specularStrength * max( pow( pointDotNormalHalf, shininess ), 0.0 );\n\n		float specularNormalization = ( shininess + 2.0 ) / 8.0;\n\n		vec3 schlick = specular + vec3( 1.0 - specular ) * pow( max( 1.0 - dot( lVector, pointHalfVector ), 0.0 ), 5.0 );\n		pointSpecular += schlick * pointLightColor[ i ] * pointSpecularWeight * pointDiffuseWeight * lDistance * specularNormalization;\n\n	}\n\n#endif\n\n#if MAX_SPOT_LIGHTS > 0\n\n	vec3 spotDiffuse = vec3( 0.0 );\n	vec3 spotSpecular = vec3( 0.0 );\n\n	for ( int i = 0; i < MAX_SPOT_LIGHTS; i ++ ) {\n\n		vec4 lPosition = viewMatrix * vec4( spotLightPosition[ i ], 1.0 );\n		vec3 lVector = lPosition.xyz + vViewPosition.xyz;\n\n		float lDistance = 1.0;\n		if ( spotLightDistance[ i ] > 0.0 )\n			lDistance = 1.0 - min( ( length( lVector ) / spotLightDistance[ i ] ), 1.0 );\n\n		lVector = normalize( lVector );\n\n		float spotEffect = dot( spotLightDirection[ i ], normalize( spotLightPosition[ i ] - vWorldPosition ) );\n\n		if ( spotEffect > spotLightAngleCos[ i ] ) {\n\n			spotEffect = max( pow( max( spotEffect, 0.0 ), spotLightExponent[ i ] ), 0.0 );\n\n					// diffuse\n\n			float dotProduct = dot( normal, lVector );\n\n			#ifdef WRAP_AROUND\n\n				float spotDiffuseWeightFull = max( dotProduct, 0.0 );\n				float spotDiffuseWeightHalf = max( 0.5 * dotProduct + 0.5, 0.0 );\n\n				vec3 spotDiffuseWeight = mix( vec3( spotDiffuseWeightFull ), vec3( spotDiffuseWeightHalf ), wrapRGB );\n\n			#else\n\n				float spotDiffuseWeight = max( dotProduct, 0.0 );\n\n			#endif\n\n			spotDiffuse += diffuse * spotLightColor[ i ] * spotDiffuseWeight * lDistance * spotEffect;\n\n					// specular\n\n			vec3 spotHalfVector = normalize( lVector + viewPosition );\n			float spotDotNormalHalf = max( dot( normal, spotHalfVector ), 0.0 );\n			float spotSpecularWeight = specularStrength * max( pow( spotDotNormalHalf, shininess ), 0.0 );\n\n			float specularNormalization = ( shininess + 2.0 ) / 8.0;\n\n			vec3 schlick = specular + vec3( 1.0 - specular ) * pow( max( 1.0 - dot( lVector, spotHalfVector ), 0.0 ), 5.0 );\n			spotSpecular += schlick * spotLightColor[ i ] * spotSpecularWeight * spotDiffuseWeight * lDistance * specularNormalization * spotEffect;\n\n		}\n\n	}\n\n#endif\n\n#if MAX_DIR_LIGHTS > 0\n\n	vec3 dirDiffuse = vec3( 0.0 );\n	vec3 dirSpecular = vec3( 0.0 );\n\n	for( int i = 0; i < MAX_DIR_LIGHTS; i ++ ) {\n\n		vec4 lDirection = viewMatrix * vec4( directionalLightDirection[ i ], 0.0 );\n		vec3 dirVector = normalize( lDirection.xyz );\n\n				// diffuse\n\n		float dotProduct = dot( normal, dirVector );\n\n		#ifdef WRAP_AROUND\n\n			float dirDiffuseWeightFull = max( dotProduct, 0.0 );\n			float dirDiffuseWeightHalf = max( 0.5 * dotProduct + 0.5, 0.0 );\n\n			vec3 dirDiffuseWeight = mix( vec3( dirDiffuseWeightFull ), vec3( dirDiffuseWeightHalf ), wrapRGB );\n\n		#else\n\n			float dirDiffuseWeight = max( dotProduct, 0.0 );\n\n		#endif\n\n		dirDiffuse += diffuse * directionalLightColor[ i ] * dirDiffuseWeight;\n\n		// specular\n\n		vec3 dirHalfVector = normalize( dirVector + viewPosition );\n		float dirDotNormalHalf = max( dot( normal, dirHalfVector ), 0.0 );\n		float dirSpecularWeight = specularStrength * max( pow( dirDotNormalHalf, shininess ), 0.0 );\n\n		/*\n		// fresnel term from skin shader\n		const float F0 = 0.128;\n\n		float base = 1.0 - dot( viewPosition, dirHalfVector );\n		float exponential = pow( base, 5.0 );\n\n		float fresnel = exponential + F0 * ( 1.0 - exponential );\n		*/\n\n		/*\n		// fresnel term from fresnel shader\n		const float mFresnelBias = 0.08;\n		const float mFresnelScale = 0.3;\n		const float mFresnelPower = 5.0;\n\n		float fresnel = mFresnelBias + mFresnelScale * pow( 1.0 + dot( normalize( -viewPosition ), normal ), mFresnelPower );\n		*/\n\n		float specularNormalization = ( shininess + 2.0 ) / 8.0;\n\n		// 		dirSpecular += specular * directionalLightColor[ i ] * dirSpecularWeight * dirDiffuseWeight * specularNormalization * fresnel;\n\n		vec3 schlick = specular + vec3( 1.0 - specular ) * pow( max( 1.0 - dot( dirVector, dirHalfVector ), 0.0 ), 5.0 );\n		dirSpecular += schlick * directionalLightColor[ i ] * dirSpecularWeight * dirDiffuseWeight * specularNormalization;\n\n\n	}\n\n#endif\n\n#if MAX_HEMI_LIGHTS > 0\n\n	vec3 hemiDiffuse = vec3( 0.0 );\n	vec3 hemiSpecular = vec3( 0.0 );\n\n	for( int i = 0; i < MAX_HEMI_LIGHTS; i ++ ) {\n\n		vec4 lDirection = viewMatrix * vec4( hemisphereLightDirection[ i ], 0.0 );\n		vec3 lVector = normalize( lDirection.xyz );\n\n		// diffuse\n\n		float dotProduct = dot( normal, lVector );\n		float hemiDiffuseWeight = 0.5 * dotProduct + 0.5;\n\n		vec3 hemiColor = mix( hemisphereLightGroundColor[ i ], hemisphereLightSkyColor[ i ], hemiDiffuseWeight );\n\n		hemiDiffuse += diffuse * hemiColor;\n\n		// specular (sky light)\n\n		vec3 hemiHalfVectorSky = normalize( lVector + viewPosition );\n		float hemiDotNormalHalfSky = 0.5 * dot( normal, hemiHalfVectorSky ) + 0.5;\n		float hemiSpecularWeightSky = specularStrength * max( pow( max( hemiDotNormalHalfSky, 0.0 ), shininess ), 0.0 );\n\n		// specular (ground light)\n\n		vec3 lVectorGround = -lVector;\n\n		vec3 hemiHalfVectorGround = normalize( lVectorGround + viewPosition );\n		float hemiDotNormalHalfGround = 0.5 * dot( normal, hemiHalfVectorGround ) + 0.5;\n		float hemiSpecularWeightGround = specularStrength * max( pow( max( hemiDotNormalHalfGround, 0.0 ), shininess ), 0.0 );\n\n		float dotProductGround = dot( normal, lVectorGround );\n\n		float specularNormalization = ( shininess + 2.0 ) / 8.0;\n\n		vec3 schlickSky = specular + vec3( 1.0 - specular ) * pow( max( 1.0 - dot( lVector, hemiHalfVectorSky ), 0.0 ), 5.0 );\n		vec3 schlickGround = specular + vec3( 1.0 - specular ) * pow( max( 1.0 - dot( lVectorGround, hemiHalfVectorGround ), 0.0 ), 5.0 );\n		hemiSpecular += hemiColor * specularNormalization * ( schlickSky * hemiSpecularWeightSky * max( dotProduct, 0.0 ) + schlickGround * hemiSpecularWeightGround * max( dotProductGround, 0.0 ) );\n\n	}\n\n#endif\n\nvec3 totalDiffuse = vec3( 0.0 );\nvec3 totalSpecular = vec3( 0.0 );\n\n#if MAX_DIR_LIGHTS > 0\n\n	totalDiffuse += dirDiffuse;\n	totalSpecular += dirSpecular;\n\n#endif\n\n#if MAX_HEMI_LIGHTS > 0\n\n	totalDiffuse += hemiDiffuse;\n	totalSpecular += hemiSpecular;\n\n#endif\n\n#if MAX_POINT_LIGHTS > 0\n\n	totalDiffuse += pointDiffuse;\n	totalSpecular += pointSpecular;\n\n#endif\n\n#if MAX_SPOT_LIGHTS > 0\n\n	totalDiffuse += spotDiffuse;\n	totalSpecular += spotSpecular;\n\n#endif\n\n#ifdef METAL\n\n	gl_FragColor.xyz = gl_FragColor.xyz * ( emissive + totalDiffuse + ambientLightColor * ambient + totalSpecular );\n\n#else\n\n	gl_FragColor.xyz = gl_FragColor.xyz * ( emissive + totalDiffuse + ambientLightColor * ambient ) + totalSpecular;\n\n#endif";
 
 // File:src/renderers/shaders/ShaderChunk/fog_pars_fragment.glsl
 
@@ -55133,7 +57223,7 @@ THREE.ShaderChunk[ 'logdepthbuf_fragment'] = "#if defined(USE_LOGDEPTHBUF) && de
 
 // File:src/renderers/shaders/ShaderChunk/normalmap_pars_fragment.glsl
 
-THREE.ShaderChunk[ 'normalmap_pars_fragment'] = "#ifdef USE_NORMALMAP\n\n	uniform sampler2D normalMap;\n	uniform vec2 normalScale;\n\n	// Per-Pixel Tangent Space Normal Mapping\n	// http://hacksoflife.blogspot.ch/2009/11/per-pixel-tangent-space-normal-mapping.html\n\n	vec3 perturbNormal2Arb( vec3 eye_pos, vec3 surf_norm ) {\n\n		vec3 q0 = dFdx( eye_pos.xyz );\n		vec3 q1 = dFdy( eye_pos.xyz );\n		vec2 st0 = dFdx( vUv.st );\n		vec2 st1 = dFdy( vUv.st );\n\n		vec3 S = normalize( q0 * st1.t - q1 * st0.t );\n		vec3 T = normalize( -q0 * st1.s + q1 * st0.s );\n		vec3 N = normalize( surf_norm );\n\n		vec3 mapN = texture2D( normalMap, vUv ).xyz * 2.0 - 1.0;\n		mapN.xy = normalScale * mapN.xy;\n		mat3 tsn = mat3( S, T, N );\n		return normalize( tsn * mapN );\n\n	}\n\n#endif\n";
+THREE.ShaderChunk[ 'normalmap_pars_fragment'] = "#ifdef USE_NORMALMAP\n\n	uniform sampler2D normalMap;\n	uniform vec2 normalScale;\n\n			// Per-Pixel Tangent Space Normal Mapping\n			// http://hacksoflife.blogspot.ch/2009/11/per-pixel-tangent-space-normal-mapping.html\n\n	vec3 perturbNormal2Arb( vec3 eye_pos, vec3 surf_norm ) {\n\n		vec3 q0 = dFdx( eye_pos.xyz );\n		vec3 q1 = dFdy( eye_pos.xyz );\n		vec2 st0 = dFdx( vUv.st );\n		vec2 st1 = dFdy( vUv.st );\n\n		vec3 S = normalize( q0 * st1.t - q1 * st0.t );\n		vec3 T = normalize( -q0 * st1.s + q1 * st0.s );\n		vec3 N = normalize( surf_norm );\n\n		vec3 mapN = texture2D( normalMap, vUv ).xyz * 2.0 - 1.0;\n		mapN.xy = normalScale * mapN.xy;\n		mat3 tsn = mat3( S, T, N );\n		return normalize( tsn * mapN );\n\n	}\n\n#endif\n";
 
 // File:src/renderers/shaders/ShaderChunk/lights_phong_pars_vertex.glsl
 
@@ -55153,7 +57243,7 @@ THREE.ShaderChunk[ 'lights_phong_vertex'] = "#if MAX_SPOT_LIGHTS > 0 || defined(
 
 // File:src/renderers/shaders/ShaderChunk/map_fragment.glsl
 
-THREE.ShaderChunk[ 'map_fragment'] = "#ifdef USE_MAP\n\n	vec4 texelColor = texture2D( map, vUv );\n\n	texelColor.xyz = inputToLinear( texelColor.xyz );\n\n	diffuseColor *= texelColor;\n\n#endif";
+THREE.ShaderChunk[ 'map_fragment'] = "#ifdef USE_MAP\n\n	vec4 texelColor = texture2D( map, vUv );\n\n	#ifdef GAMMA_INPUT\n\n		texelColor.xyz *= texelColor.xyz;\n\n	#endif\n\n	gl_FragColor = gl_FragColor * texelColor;\n\n#endif";
 
 // File:src/renderers/shaders/ShaderChunk/lightmap_vertex.glsl
 
@@ -55161,7 +57251,7 @@ THREE.ShaderChunk[ 'lightmap_vertex'] = "#ifdef USE_LIGHTMAP\n\n	vUv2 = uv2;\n\n
 
 // File:src/renderers/shaders/ShaderChunk/map_particle_fragment.glsl
 
-THREE.ShaderChunk[ 'map_particle_fragment'] = "#ifdef USE_MAP\n\n	diffuseColor *= texture2D( map, vec2( gl_PointCoord.x, 1.0 - gl_PointCoord.y ) * offsetRepeat.zw + offsetRepeat.xy );\n\n#endif\n";
+THREE.ShaderChunk[ 'map_particle_fragment'] = "#ifdef USE_MAP\n\n	gl_FragColor = gl_FragColor * texture2D( map, vec2( gl_PointCoord.x, 1.0 - gl_PointCoord.y ) );\n\n#endif";
 
 // File:src/renderers/shaders/ShaderChunk/color_pars_fragment.glsl
 
@@ -55169,7 +57259,7 @@ THREE.ShaderChunk[ 'color_pars_fragment'] = "#ifdef USE_COLOR\n\n	varying vec3 v
 
 // File:src/renderers/shaders/ShaderChunk/color_vertex.glsl
 
-THREE.ShaderChunk[ 'color_vertex'] = "#ifdef USE_COLOR\n\n	vColor.xyz = inputToLinear( color.xyz );\n\n#endif";
+THREE.ShaderChunk[ 'color_vertex'] = "#ifdef USE_COLOR\n\n	#ifdef GAMMA_INPUT\n\n		vColor = color * color;\n\n	#else\n\n		vColor = color;\n\n	#endif\n\n#endif";
 
 // File:src/renderers/shaders/ShaderChunk/skinning_vertex.glsl
 
@@ -55181,7 +57271,7 @@ THREE.ShaderChunk[ 'envmap_pars_vertex'] = "#if defined( USE_ENVMAP ) && ! defin
 
 // File:src/renderers/shaders/ShaderChunk/linear_to_gamma_fragment.glsl
 
-THREE.ShaderChunk[ 'linear_to_gamma_fragment'] = "\n	outgoingLight = linearToOutput( outgoingLight );\n";
+THREE.ShaderChunk[ 'linear_to_gamma_fragment'] = "#ifdef GAMMA_OUTPUT\n\n	gl_FragColor.xyz = sqrt( gl_FragColor.xyz );\n\n#endif";
 
 // File:src/renderers/shaders/ShaderChunk/color_pars_vertex.glsl
 
@@ -55189,7 +57279,7 @@ THREE.ShaderChunk[ 'color_pars_vertex'] = "#ifdef USE_COLOR\n\n	varying vec3 vCo
 
 // File:src/renderers/shaders/ShaderChunk/lights_lambert_pars_vertex.glsl
 
-THREE.ShaderChunk[ 'lights_lambert_pars_vertex'] = "uniform vec3 ambientLightColor;\n\n#if MAX_DIR_LIGHTS > 0\n\n	uniform vec3 directionalLightColor[ MAX_DIR_LIGHTS ];\n	uniform vec3 directionalLightDirection[ MAX_DIR_LIGHTS ];\n\n#endif\n\n#if MAX_HEMI_LIGHTS > 0\n\n	uniform vec3 hemisphereLightSkyColor[ MAX_HEMI_LIGHTS ];\n	uniform vec3 hemisphereLightGroundColor[ MAX_HEMI_LIGHTS ];\n	uniform vec3 hemisphereLightDirection[ MAX_HEMI_LIGHTS ];\n\n#endif\n\n#if MAX_POINT_LIGHTS > 0\n\n	uniform vec3 pointLightColor[ MAX_POINT_LIGHTS ];\n	uniform vec3 pointLightPosition[ MAX_POINT_LIGHTS ];\n	uniform float pointLightDistance[ MAX_POINT_LIGHTS ];\n	uniform float pointLightDecay[ MAX_POINT_LIGHTS ];\n\n#endif\n\n#if MAX_SPOT_LIGHTS > 0\n\n	uniform vec3 spotLightColor[ MAX_SPOT_LIGHTS ];\n	uniform vec3 spotLightPosition[ MAX_SPOT_LIGHTS ];\n	uniform vec3 spotLightDirection[ MAX_SPOT_LIGHTS ];\n	uniform float spotLightDistance[ MAX_SPOT_LIGHTS ];\n	uniform float spotLightAngleCos[ MAX_SPOT_LIGHTS ];\n	uniform float spotLightExponent[ MAX_SPOT_LIGHTS ];\n	uniform float spotLightDecay[ MAX_SPOT_LIGHTS ];\n\n#endif\n\n#ifdef WRAP_AROUND\n\n	uniform vec3 wrapRGB;\n\n#endif\n";
+THREE.ShaderChunk[ 'lights_lambert_pars_vertex'] = "uniform vec3 ambient;\nuniform vec3 diffuse;\nuniform vec3 emissive;\n\nuniform vec3 ambientLightColor;\n\n#if MAX_DIR_LIGHTS > 0\n\n	uniform vec3 directionalLightColor[ MAX_DIR_LIGHTS ];\n	uniform vec3 directionalLightDirection[ MAX_DIR_LIGHTS ];\n\n#endif\n\n#if MAX_HEMI_LIGHTS > 0\n\n	uniform vec3 hemisphereLightSkyColor[ MAX_HEMI_LIGHTS ];\n	uniform vec3 hemisphereLightGroundColor[ MAX_HEMI_LIGHTS ];\n	uniform vec3 hemisphereLightDirection[ MAX_HEMI_LIGHTS ];\n\n#endif\n\n#if MAX_POINT_LIGHTS > 0\n\n	uniform vec3 pointLightColor[ MAX_POINT_LIGHTS ];\n	uniform vec3 pointLightPosition[ MAX_POINT_LIGHTS ];\n	uniform float pointLightDistance[ MAX_POINT_LIGHTS ];\n\n#endif\n\n#if MAX_SPOT_LIGHTS > 0\n\n	uniform vec3 spotLightColor[ MAX_SPOT_LIGHTS ];\n	uniform vec3 spotLightPosition[ MAX_SPOT_LIGHTS ];\n	uniform vec3 spotLightDirection[ MAX_SPOT_LIGHTS ];\n	uniform float spotLightDistance[ MAX_SPOT_LIGHTS ];\n	uniform float spotLightAngleCos[ MAX_SPOT_LIGHTS ];\n	uniform float spotLightExponent[ MAX_SPOT_LIGHTS ];\n\n#endif\n\n#ifdef WRAP_AROUND\n\n	uniform vec3 wrapRGB;\n\n#endif\n";
 
 // File:src/renderers/shaders/ShaderChunk/map_pars_vertex.glsl
 
@@ -55197,7 +57287,7 @@ THREE.ShaderChunk[ 'map_pars_vertex'] = "#if defined( USE_MAP ) || defined( USE_
 
 // File:src/renderers/shaders/ShaderChunk/envmap_fragment.glsl
 
-THREE.ShaderChunk[ 'envmap_fragment'] = "#ifdef USE_ENVMAP\n\n	#if defined( USE_BUMPMAP ) || defined( USE_NORMALMAP ) || defined( PHONG )\n\n		vec3 cameraToVertex = normalize( vWorldPosition - cameraPosition );\n\n		// Transforming Normal Vectors with the Inverse Transformation\n		vec3 worldNormal = inverseTransformDirection( normal, viewMatrix );\n\n		#ifdef ENVMAP_MODE_REFLECTION\n\n			vec3 reflectVec = reflect( cameraToVertex, worldNormal );\n\n		#else\n\n			vec3 reflectVec = refract( cameraToVertex, worldNormal, refractionRatio );\n\n		#endif\n\n	#else\n\n		vec3 reflectVec = vReflect;\n\n	#endif\n\n	#ifdef DOUBLE_SIDED\n		float flipNormal = ( -1.0 + 2.0 * float( gl_FrontFacing ) );\n	#else\n		float flipNormal = 1.0;\n	#endif\n\n	#ifdef ENVMAP_TYPE_CUBE\n		vec4 envColor = textureCube( envMap, flipNormal * vec3( flipEnvMap * reflectVec.x, reflectVec.yz ) );\n\n	#elif defined( ENVMAP_TYPE_EQUIREC )\n		vec2 sampleUV;\n		sampleUV.y = saturate( flipNormal * reflectVec.y * 0.5 + 0.5 );\n		sampleUV.x = atan( flipNormal * reflectVec.z, flipNormal * reflectVec.x ) * RECIPROCAL_PI2 + 0.5;\n		vec4 envColor = texture2D( envMap, sampleUV );\n\n	#elif defined( ENVMAP_TYPE_SPHERE )\n		vec3 reflectView = flipNormal * normalize((viewMatrix * vec4( reflectVec, 0.0 )).xyz + vec3(0.0,0.0,1.0));\n		vec4 envColor = texture2D( envMap, reflectView.xy * 0.5 + 0.5 );\n	#endif\n\n	envColor.xyz = inputToLinear( envColor.xyz );\n\n	#ifdef ENVMAP_BLENDING_MULTIPLY\n\n		outgoingLight = mix( outgoingLight, outgoingLight * envColor.xyz, specularStrength * reflectivity );\n\n	#elif defined( ENVMAP_BLENDING_MIX )\n\n		outgoingLight = mix( outgoingLight, envColor.xyz, specularStrength * reflectivity );\n\n	#elif defined( ENVMAP_BLENDING_ADD )\n\n		outgoingLight += envColor.xyz * specularStrength * reflectivity;\n\n	#endif\n\n#endif\n";
+THREE.ShaderChunk[ 'envmap_fragment'] = "#ifdef USE_ENVMAP\n\n	#if defined( USE_BUMPMAP ) || defined( USE_NORMALMAP ) || defined( PHONG )\n\n		vec3 cameraToVertex = normalize( vWorldPosition - cameraPosition );\n\n		// http://en.wikibooks.org/wiki/GLSL_Programming/Applying_Matrix_Transformations\n		// Transforming Normal Vectors with the Inverse Transformation\n\n		vec3 worldNormal = normalize( vec3( vec4( normal, 0.0 ) * viewMatrix ) );\n\n		#ifdef ENVMAP_MODE_REFLECTION\n\n			vec3 reflectVec = reflect( cameraToVertex, worldNormal );\n\n		#else\n\n			vec3 reflectVec = refract( cameraToVertex, worldNormal, refractionRatio );\n\n		#endif\n\n	#else\n\n		vec3 reflectVec = vReflect;\n\n	#endif\n\n	#ifdef DOUBLE_SIDED\n		float flipNormal = ( -1.0 + 2.0 * float( gl_FrontFacing ) );\n	#else\n		float flipNormal = 1.0;\n	#endif\n\n	#ifdef ENVMAP_TYPE_CUBE\n		vec4 envColor = textureCube( envMap, flipNormal * vec3( flipEnvMap * reflectVec.x, reflectVec.yz ) );\n\n	#elif defined( ENVMAP_TYPE_EQUIREC )\n		vec2 sampleUV;\n		sampleUV.y = clamp( flipNormal * reflectVec.y * 0.5 + 0.5, 0.0, 1.0);\n		sampleUV.x = atan( flipNormal * reflectVec.z, flipNormal * reflectVec.x ) * 0.15915494309189533576888376337251 + 0.5; // reciprocal( 2 PI ) + 0.5\n		vec4 envColor = texture2D( envMap, sampleUV );\n		\n	#elif defined( ENVMAP_TYPE_SPHERE )\n		vec3 reflectView = flipNormal * normalize((viewMatrix * vec4( reflectVec, 0.0 )).xyz + vec3(0.0,0.0,1.0));\n		vec4 envColor = texture2D( envMap, reflectView.xy * 0.5 + 0.5 );\n	#endif\n\n	#ifdef GAMMA_INPUT\n\n		envColor.xyz *= envColor.xyz;\n\n	#endif\n\n	#ifdef ENVMAP_BLENDING_MULTIPLY\n\n		gl_FragColor.xyz = mix( gl_FragColor.xyz, gl_FragColor.xyz * envColor.xyz, specularStrength * reflectivity );\n\n	#elif defined( ENVMAP_BLENDING_MIX )\n\n		gl_FragColor.xyz = mix( gl_FragColor.xyz, envColor.xyz, specularStrength * reflectivity );\n\n	#elif defined( ENVMAP_BLENDING_ADD )\n\n		gl_FragColor.xyz += envColor.xyz * specularStrength * reflectivity;\n\n	#endif\n\n#endif\n";
 
 // File:src/renderers/shaders/ShaderChunk/specularmap_pars_fragment.glsl
 
@@ -55205,7 +57295,7 @@ THREE.ShaderChunk[ 'specularmap_pars_fragment'] = "#ifdef USE_SPECULARMAP\n\n	un
 
 // File:src/renderers/shaders/ShaderChunk/logdepthbuf_vertex.glsl
 
-THREE.ShaderChunk[ 'logdepthbuf_vertex'] = "#ifdef USE_LOGDEPTHBUF\n\n	gl_Position.z = log2(max( EPSILON, gl_Position.w + 1.0 )) * logDepthBufFC;\n\n	#ifdef USE_LOGDEPTHBUF_EXT\n\n		vFragDepth = 1.0 + gl_Position.w;\n\n#else\n\n		gl_Position.z = (gl_Position.z - 1.0) * gl_Position.w;\n\n	#endif\n\n#endif";
+THREE.ShaderChunk[ 'logdepthbuf_vertex'] = "#ifdef USE_LOGDEPTHBUF\n\n	gl_Position.z = log2(max(1e-6, gl_Position.w + 1.0)) * logDepthBufFC;\n\n	#ifdef USE_LOGDEPTHBUF_EXT\n\n		vFragDepth = 1.0 + gl_Position.w;\n\n#else\n\n		gl_Position.z = (gl_Position.z - 1.0) * gl_Position.w;\n\n	#endif\n\n#endif";
 
 // File:src/renderers/shaders/ShaderChunk/morphtarget_pars_vertex.glsl
 
@@ -55217,11 +57307,11 @@ THREE.ShaderChunk[ 'specularmap_fragment'] = "float specularStrength;\n\n#ifdef 
 
 // File:src/renderers/shaders/ShaderChunk/fog_fragment.glsl
 
-THREE.ShaderChunk[ 'fog_fragment'] = "#ifdef USE_FOG\n\n	#ifdef USE_LOGDEPTHBUF_EXT\n\n		float depth = gl_FragDepthEXT / gl_FragCoord.w;\n\n	#else\n\n		float depth = gl_FragCoord.z / gl_FragCoord.w;\n\n	#endif\n\n	#ifdef FOG_EXP2\n\n		float fogFactor = exp2( - square( fogDensity ) * square( depth ) * LOG2 );\n		fogFactor = whiteCompliment( fogFactor );\n\n	#else\n\n		float fogFactor = smoothstep( fogNear, fogFar, depth );\n\n	#endif\n	\n	outgoingLight = mix( outgoingLight, fogColor, fogFactor );\n\n#endif";
+THREE.ShaderChunk[ 'fog_fragment'] = "#ifdef USE_FOG\n\n	#ifdef USE_LOGDEPTHBUF_EXT\n\n		float depth = gl_FragDepthEXT / gl_FragCoord.w;\n\n	#else\n\n		float depth = gl_FragCoord.z / gl_FragCoord.w;\n\n	#endif\n\n	#ifdef FOG_EXP2\n\n		const float LOG2 = 1.442695;\n		float fogFactor = exp2( - fogDensity * fogDensity * depth * depth * LOG2 );\n		fogFactor = 1.0 - clamp( fogFactor, 0.0, 1.0 );\n\n	#else\n\n		float fogFactor = smoothstep( fogNear, fogFar, depth );\n\n	#endif\n	\n	gl_FragColor = mix( gl_FragColor, vec4( fogColor, gl_FragColor.w ), fogFactor );\n\n#endif";
 
 // File:src/renderers/shaders/ShaderChunk/bumpmap_pars_fragment.glsl
 
-THREE.ShaderChunk[ 'bumpmap_pars_fragment'] = "#ifdef USE_BUMPMAP\n\n	uniform sampler2D bumpMap;\n	uniform float bumpScale;\n\n	// Derivative maps - bump mapping unparametrized surfaces by Morten Mikkelsen\n	// http://mmikkelsen3d.blogspot.sk/2011/07/derivative-maps.html\n\n	// Evaluate the derivative of the height w.r.t. screen-space using forward differencing (listing 2)\n\n	vec2 dHdxy_fwd() {\n\n		vec2 dSTdx = dFdx( vUv );\n		vec2 dSTdy = dFdy( vUv );\n\n		float Hll = bumpScale * texture2D( bumpMap, vUv ).x;\n		float dBx = bumpScale * texture2D( bumpMap, vUv + dSTdx ).x - Hll;\n		float dBy = bumpScale * texture2D( bumpMap, vUv + dSTdy ).x - Hll;\n\n		return vec2( dBx, dBy );\n\n	}\n\n	vec3 perturbNormalArb( vec3 surf_pos, vec3 surf_norm, vec2 dHdxy ) {\n\n		vec3 vSigmaX = dFdx( surf_pos );\n		vec3 vSigmaY = dFdy( surf_pos );\n		vec3 vN = surf_norm;		// normalized\n\n		vec3 R1 = cross( vSigmaY, vN );\n		vec3 R2 = cross( vN, vSigmaX );\n\n		float fDet = dot( vSigmaX, R1 );\n\n		vec3 vGrad = sign( fDet ) * ( dHdxy.x * R1 + dHdxy.y * R2 );\n		return normalize( abs( fDet ) * surf_norm - vGrad );\n\n	}\n\n#endif\n";
+THREE.ShaderChunk[ 'bumpmap_pars_fragment'] = "#ifdef USE_BUMPMAP\n\n	uniform sampler2D bumpMap;\n	uniform float bumpScale;\n\n			// Derivative maps - bump mapping unparametrized surfaces by Morten Mikkelsen\n			//	http://mmikkelsen3d.blogspot.sk/2011/07/derivative-maps.html\n\n			// Evaluate the derivative of the height w.r.t. screen-space using forward differencing (listing 2)\n\n	vec2 dHdxy_fwd() {\n\n		vec2 dSTdx = dFdx( vUv );\n		vec2 dSTdy = dFdy( vUv );\n\n		float Hll = bumpScale * texture2D( bumpMap, vUv ).x;\n		float dBx = bumpScale * texture2D( bumpMap, vUv + dSTdx ).x - Hll;\n		float dBy = bumpScale * texture2D( bumpMap, vUv + dSTdy ).x - Hll;\n\n		return vec2( dBx, dBy );\n\n	}\n\n	vec3 perturbNormalArb( vec3 surf_pos, vec3 surf_norm, vec2 dHdxy ) {\n\n		vec3 vSigmaX = dFdx( surf_pos );\n		vec3 vSigmaY = dFdy( surf_pos );\n		vec3 vN = surf_norm;		// normalized\n\n		vec3 R1 = cross( vSigmaY, vN );\n		vec3 R2 = cross( vN, vSigmaX );\n\n		float fDet = dot( vSigmaX, R1 );\n\n		vec3 vGrad = sign( fDet ) * ( dHdxy.x * R1 + dHdxy.y * R2 );\n		return normalize( abs( fDet ) * surf_norm - vGrad );\n\n	}\n\n#endif";
 
 // File:src/renderers/shaders/ShaderChunk/defaultnormal_vertex.glsl
 
@@ -55229,7 +57319,7 @@ THREE.ShaderChunk[ 'defaultnormal_vertex'] = "#ifdef USE_SKINNING\n\n	vec3 objec
 
 // File:src/renderers/shaders/ShaderChunk/lights_phong_pars_fragment.glsl
 
-THREE.ShaderChunk[ 'lights_phong_pars_fragment'] = "uniform vec3 ambientLightColor;\n\n#if MAX_DIR_LIGHTS > 0\n\n	uniform vec3 directionalLightColor[ MAX_DIR_LIGHTS ];\n	uniform vec3 directionalLightDirection[ MAX_DIR_LIGHTS ];\n\n#endif\n\n#if MAX_HEMI_LIGHTS > 0\n\n	uniform vec3 hemisphereLightSkyColor[ MAX_HEMI_LIGHTS ];\n	uniform vec3 hemisphereLightGroundColor[ MAX_HEMI_LIGHTS ];\n	uniform vec3 hemisphereLightDirection[ MAX_HEMI_LIGHTS ];\n\n#endif\n\n#if MAX_POINT_LIGHTS > 0\n\n	uniform vec3 pointLightColor[ MAX_POINT_LIGHTS ];\n\n	uniform vec3 pointLightPosition[ MAX_POINT_LIGHTS ];\n	uniform float pointLightDistance[ MAX_POINT_LIGHTS ];\n	uniform float pointLightDecay[ MAX_POINT_LIGHTS ];\n\n#endif\n\n#if MAX_SPOT_LIGHTS > 0\n\n	uniform vec3 spotLightColor[ MAX_SPOT_LIGHTS ];\n	uniform vec3 spotLightPosition[ MAX_SPOT_LIGHTS ];\n	uniform vec3 spotLightDirection[ MAX_SPOT_LIGHTS ];\n	uniform float spotLightAngleCos[ MAX_SPOT_LIGHTS ];\n	uniform float spotLightExponent[ MAX_SPOT_LIGHTS ];\n	uniform float spotLightDistance[ MAX_SPOT_LIGHTS ];\n	uniform float spotLightDecay[ MAX_SPOT_LIGHTS ];\n\n#endif\n\n#if MAX_SPOT_LIGHTS > 0 || defined( USE_BUMPMAP ) || defined( USE_ENVMAP )\n\n	varying vec3 vWorldPosition;\n\n#endif\n\n#ifdef WRAP_AROUND\n\n	uniform vec3 wrapRGB;\n\n#endif\n\nvarying vec3 vViewPosition;\n\n#ifndef FLAT_SHADED\n\n	varying vec3 vNormal;\n\n#endif\n";
+THREE.ShaderChunk[ 'lights_phong_pars_fragment'] = "uniform vec3 ambientLightColor;\n\n#if MAX_DIR_LIGHTS > 0\n\n	uniform vec3 directionalLightColor[ MAX_DIR_LIGHTS ];\n	uniform vec3 directionalLightDirection[ MAX_DIR_LIGHTS ];\n\n#endif\n\n#if MAX_HEMI_LIGHTS > 0\n\n	uniform vec3 hemisphereLightSkyColor[ MAX_HEMI_LIGHTS ];\n	uniform vec3 hemisphereLightGroundColor[ MAX_HEMI_LIGHTS ];\n	uniform vec3 hemisphereLightDirection[ MAX_HEMI_LIGHTS ];\n\n#endif\n\n#if MAX_POINT_LIGHTS > 0\n\n	uniform vec3 pointLightColor[ MAX_POINT_LIGHTS ];\n\n	uniform vec3 pointLightPosition[ MAX_POINT_LIGHTS ];\n	uniform float pointLightDistance[ MAX_POINT_LIGHTS ];\n\n#endif\n\n#if MAX_SPOT_LIGHTS > 0\n\n	uniform vec3 spotLightColor[ MAX_SPOT_LIGHTS ];\n	uniform vec3 spotLightPosition[ MAX_SPOT_LIGHTS ];\n	uniform vec3 spotLightDirection[ MAX_SPOT_LIGHTS ];\n	uniform float spotLightAngleCos[ MAX_SPOT_LIGHTS ];\n	uniform float spotLightExponent[ MAX_SPOT_LIGHTS ];\n\n	uniform float spotLightDistance[ MAX_SPOT_LIGHTS ];\n\n#endif\n\n#if MAX_SPOT_LIGHTS > 0 || defined( USE_BUMPMAP ) || defined( USE_ENVMAP )\n\n	varying vec3 vWorldPosition;\n\n#endif\n\n#ifdef WRAP_AROUND\n\n	uniform vec3 wrapRGB;\n\n#endif\n\nvarying vec3 vViewPosition;\nvarying vec3 vNormal;";
 
 // File:src/renderers/shaders/ShaderChunk/skinbase_vertex.glsl
 
@@ -55241,7 +57331,7 @@ THREE.ShaderChunk[ 'map_vertex'] = "#if defined( USE_MAP ) || defined( USE_BUMPM
 
 // File:src/renderers/shaders/ShaderChunk/lightmap_fragment.glsl
 
-THREE.ShaderChunk[ 'lightmap_fragment'] = "#ifdef USE_LIGHTMAP\n\n	outgoingLight *= diffuseColor.xyz * texture2D( lightMap, vUv2 ).xyz;\n\n#endif";
+THREE.ShaderChunk[ 'lightmap_fragment'] = "#ifdef USE_LIGHTMAP\n\n	gl_FragColor = gl_FragColor * texture2D( lightMap, vUv2 );\n\n#endif";
 
 // File:src/renderers/shaders/ShaderChunk/shadowmap_pars_vertex.glsl
 
@@ -55249,7 +57339,7 @@ THREE.ShaderChunk[ 'shadowmap_pars_vertex'] = "#ifdef USE_SHADOWMAP\n\n	varying 
 
 // File:src/renderers/shaders/ShaderChunk/color_fragment.glsl
 
-THREE.ShaderChunk[ 'color_fragment'] = "#ifdef USE_COLOR\n\n	diffuseColor.rgb *= vColor;\n\n#endif";
+THREE.ShaderChunk[ 'color_fragment'] = "#ifdef USE_COLOR\n\n	gl_FragColor = gl_FragColor * vec4( vColor, 1.0 );\n\n#endif";
 
 // File:src/renderers/shaders/ShaderChunk/morphtarget_vertex.glsl
 
@@ -55257,11 +57347,11 @@ THREE.ShaderChunk[ 'morphtarget_vertex'] = "#ifdef USE_MORPHTARGETS\n\n	vec3 mor
 
 // File:src/renderers/shaders/ShaderChunk/envmap_vertex.glsl
 
-THREE.ShaderChunk[ 'envmap_vertex'] = "#if defined( USE_ENVMAP ) && ! defined( USE_BUMPMAP ) && ! defined( USE_NORMALMAP ) && ! defined( PHONG )\n\n	vec3 worldNormal = transformDirection( objectNormal, modelMatrix );\n\n	vec3 cameraToVertex = normalize( worldPosition.xyz - cameraPosition );\n\n	#ifdef ENVMAP_MODE_REFLECTION\n\n		vReflect = reflect( cameraToVertex, worldNormal );\n\n	#else\n\n		vReflect = refract( cameraToVertex, worldNormal, refractionRatio );\n\n	#endif\n\n#endif\n";
+THREE.ShaderChunk[ 'envmap_vertex'] = "#if defined( USE_ENVMAP ) && ! defined( USE_BUMPMAP ) && ! defined( USE_NORMALMAP ) && ! defined( PHONG )\n\n	vec3 worldNormal = mat3( modelMatrix[ 0 ].xyz, modelMatrix[ 1 ].xyz, modelMatrix[ 2 ].xyz ) * objectNormal;\n	worldNormal = normalize( worldNormal );\n\n	vec3 cameraToVertex = normalize( worldPosition.xyz - cameraPosition );\n\n	#ifdef ENVMAP_MODE_REFLECTION\n\n		vReflect = reflect( cameraToVertex, worldNormal );\n\n	#else\n\n		vReflect = refract( cameraToVertex, worldNormal, refractionRatio );\n\n	#endif\n\n#endif\n";
 
 // File:src/renderers/shaders/ShaderChunk/shadowmap_fragment.glsl
 
-THREE.ShaderChunk[ 'shadowmap_fragment'] = "#ifdef USE_SHADOWMAP\n\n	#ifdef SHADOWMAP_DEBUG\n\n		vec3 frustumColors[3];\n		frustumColors[0] = vec3( 1.0, 0.5, 0.0 );\n		frustumColors[1] = vec3( 0.0, 1.0, 0.8 );\n		frustumColors[2] = vec3( 0.0, 0.5, 1.0 );\n\n	#endif\n\n	#ifdef SHADOWMAP_CASCADE\n\n		int inFrustumCount = 0;\n\n	#endif\n\n	float fDepth;\n	vec3 shadowColor = vec3( 1.0 );\n\n	for( int i = 0; i < MAX_SHADOWS; i ++ ) {\n\n		vec3 shadowCoord = vShadowCoord[ i ].xyz / vShadowCoord[ i ].w;\n\n				// if ( something && something ) breaks ATI OpenGL shader compiler\n				// if ( all( something, something ) ) using this instead\n\n		bvec4 inFrustumVec = bvec4 ( shadowCoord.x >= 0.0, shadowCoord.x <= 1.0, shadowCoord.y >= 0.0, shadowCoord.y <= 1.0 );\n		bool inFrustum = all( inFrustumVec );\n\n				// don't shadow pixels outside of light frustum\n				// use just first frustum (for cascades)\n				// don't shadow pixels behind far plane of light frustum\n\n		#ifdef SHADOWMAP_CASCADE\n\n			inFrustumCount += int( inFrustum );\n			bvec3 frustumTestVec = bvec3( inFrustum, inFrustumCount == 1, shadowCoord.z <= 1.0 );\n\n		#else\n\n			bvec2 frustumTestVec = bvec2( inFrustum, shadowCoord.z <= 1.0 );\n\n		#endif\n\n		bool frustumTest = all( frustumTestVec );\n\n		if ( frustumTest ) {\n\n			shadowCoord.z += shadowBias[ i ];\n\n			#if defined( SHADOWMAP_TYPE_PCF )\n\n						// Percentage-close filtering\n						// (9 pixel kernel)\n						// http://fabiensanglard.net/shadowmappingPCF/\n\n				float shadow = 0.0;\n\n		/*\n						// nested loops breaks shader compiler / validator on some ATI cards when using OpenGL\n						// must enroll loop manually\n\n				for ( float y = -1.25; y <= 1.25; y += 1.25 )\n					for ( float x = -1.25; x <= 1.25; x += 1.25 ) {\n\n						vec4 rgbaDepth = texture2D( shadowMap[ i ], vec2( x * xPixelOffset, y * yPixelOffset ) + shadowCoord.xy );\n\n								// doesn't seem to produce any noticeable visual difference compared to simple texture2D lookup\n								//vec4 rgbaDepth = texture2DProj( shadowMap[ i ], vec4( vShadowCoord[ i ].w * ( vec2( x * xPixelOffset, y * yPixelOffset ) + shadowCoord.xy ), 0.05, vShadowCoord[ i ].w ) );\n\n						float fDepth = unpackDepth( rgbaDepth );\n\n						if ( fDepth < shadowCoord.z )\n							shadow += 1.0;\n\n				}\n\n				shadow /= 9.0;\n\n		*/\n\n				const float shadowDelta = 1.0 / 9.0;\n\n				float xPixelOffset = 1.0 / shadowMapSize[ i ].x;\n				float yPixelOffset = 1.0 / shadowMapSize[ i ].y;\n\n				float dx0 = -1.25 * xPixelOffset;\n				float dy0 = -1.25 * yPixelOffset;\n				float dx1 = 1.25 * xPixelOffset;\n				float dy1 = 1.25 * yPixelOffset;\n\n				fDepth = unpackDepth( texture2D( shadowMap[ i ], shadowCoord.xy + vec2( dx0, dy0 ) ) );\n				if ( fDepth < shadowCoord.z ) shadow += shadowDelta;\n\n				fDepth = unpackDepth( texture2D( shadowMap[ i ], shadowCoord.xy + vec2( 0.0, dy0 ) ) );\n				if ( fDepth < shadowCoord.z ) shadow += shadowDelta;\n\n				fDepth = unpackDepth( texture2D( shadowMap[ i ], shadowCoord.xy + vec2( dx1, dy0 ) ) );\n				if ( fDepth < shadowCoord.z ) shadow += shadowDelta;\n\n				fDepth = unpackDepth( texture2D( shadowMap[ i ], shadowCoord.xy + vec2( dx0, 0.0 ) ) );\n				if ( fDepth < shadowCoord.z ) shadow += shadowDelta;\n\n				fDepth = unpackDepth( texture2D( shadowMap[ i ], shadowCoord.xy ) );\n				if ( fDepth < shadowCoord.z ) shadow += shadowDelta;\n\n				fDepth = unpackDepth( texture2D( shadowMap[ i ], shadowCoord.xy + vec2( dx1, 0.0 ) ) );\n				if ( fDepth < shadowCoord.z ) shadow += shadowDelta;\n\n				fDepth = unpackDepth( texture2D( shadowMap[ i ], shadowCoord.xy + vec2( dx0, dy1 ) ) );\n				if ( fDepth < shadowCoord.z ) shadow += shadowDelta;\n\n				fDepth = unpackDepth( texture2D( shadowMap[ i ], shadowCoord.xy + vec2( 0.0, dy1 ) ) );\n				if ( fDepth < shadowCoord.z ) shadow += shadowDelta;\n\n				fDepth = unpackDepth( texture2D( shadowMap[ i ], shadowCoord.xy + vec2( dx1, dy1 ) ) );\n				if ( fDepth < shadowCoord.z ) shadow += shadowDelta;\n\n				shadowColor = shadowColor * vec3( ( 1.0 - shadowDarkness[ i ] * shadow ) );\n\n			#elif defined( SHADOWMAP_TYPE_PCF_SOFT )\n\n						// Percentage-close filtering\n						// (9 pixel kernel)\n						// http://fabiensanglard.net/shadowmappingPCF/\n\n				float shadow = 0.0;\n\n				float xPixelOffset = 1.0 / shadowMapSize[ i ].x;\n				float yPixelOffset = 1.0 / shadowMapSize[ i ].y;\n\n				float dx0 = -1.0 * xPixelOffset;\n				float dy0 = -1.0 * yPixelOffset;\n				float dx1 = 1.0 * xPixelOffset;\n				float dy1 = 1.0 * yPixelOffset;\n\n				mat3 shadowKernel;\n				mat3 depthKernel;\n\n				depthKernel[0][0] = unpackDepth( texture2D( shadowMap[ i ], shadowCoord.xy + vec2( dx0, dy0 ) ) );\n				depthKernel[0][1] = unpackDepth( texture2D( shadowMap[ i ], shadowCoord.xy + vec2( dx0, 0.0 ) ) );\n				depthKernel[0][2] = unpackDepth( texture2D( shadowMap[ i ], shadowCoord.xy + vec2( dx0, dy1 ) ) );\n				depthKernel[1][0] = unpackDepth( texture2D( shadowMap[ i ], shadowCoord.xy + vec2( 0.0, dy0 ) ) );\n				depthKernel[1][1] = unpackDepth( texture2D( shadowMap[ i ], shadowCoord.xy ) );\n				depthKernel[1][2] = unpackDepth( texture2D( shadowMap[ i ], shadowCoord.xy + vec2( 0.0, dy1 ) ) );\n				depthKernel[2][0] = unpackDepth( texture2D( shadowMap[ i ], shadowCoord.xy + vec2( dx1, dy0 ) ) );\n				depthKernel[2][1] = unpackDepth( texture2D( shadowMap[ i ], shadowCoord.xy + vec2( dx1, 0.0 ) ) );\n				depthKernel[2][2] = unpackDepth( texture2D( shadowMap[ i ], shadowCoord.xy + vec2( dx1, dy1 ) ) );\n\n				vec3 shadowZ = vec3( shadowCoord.z );\n				shadowKernel[0] = vec3(lessThan(depthKernel[0], shadowZ ));\n				shadowKernel[0] *= vec3(0.25);\n\n				shadowKernel[1] = vec3(lessThan(depthKernel[1], shadowZ ));\n				shadowKernel[1] *= vec3(0.25);\n\n				shadowKernel[2] = vec3(lessThan(depthKernel[2], shadowZ ));\n				shadowKernel[2] *= vec3(0.25);\n\n				vec2 fractionalCoord = 1.0 - fract( shadowCoord.xy * shadowMapSize[i].xy );\n\n				shadowKernel[0] = mix( shadowKernel[1], shadowKernel[0], fractionalCoord.x );\n				shadowKernel[1] = mix( shadowKernel[2], shadowKernel[1], fractionalCoord.x );\n\n				vec4 shadowValues;\n				shadowValues.x = mix( shadowKernel[0][1], shadowKernel[0][0], fractionalCoord.y );\n				shadowValues.y = mix( shadowKernel[0][2], shadowKernel[0][1], fractionalCoord.y );\n				shadowValues.z = mix( shadowKernel[1][1], shadowKernel[1][0], fractionalCoord.y );\n				shadowValues.w = mix( shadowKernel[1][2], shadowKernel[1][1], fractionalCoord.y );\n\n				shadow = dot( shadowValues, vec4( 1.0 ) );\n\n				shadowColor = shadowColor * vec3( ( 1.0 - shadowDarkness[ i ] * shadow ) );\n\n			#else\n\n				vec4 rgbaDepth = texture2D( shadowMap[ i ], shadowCoord.xy );\n				float fDepth = unpackDepth( rgbaDepth );\n\n				if ( fDepth < shadowCoord.z )\n\n		// spot with multiple shadows is darker\n\n					shadowColor = shadowColor * vec3( 1.0 - shadowDarkness[ i ] );\n\n		// spot with multiple shadows has the same color as single shadow spot\n\n		// 					shadowColor = min( shadowColor, vec3( shadowDarkness[ i ] ) );\n\n			#endif\n\n		}\n\n\n		#ifdef SHADOWMAP_DEBUG\n\n			#ifdef SHADOWMAP_CASCADE\n\n				if ( inFrustum && inFrustumCount == 1 ) outgoingLight *= frustumColors[ i ];\n\n			#else\n\n				if ( inFrustum ) outgoingLight *= frustumColors[ i ];\n\n			#endif\n\n		#endif\n\n	}\n\n	// NOTE: I am unsure if this is correct in linear space.  -bhouston, Dec 29, 2014\n	shadowColor = inputToLinear( shadowColor );\n\n	outgoingLight = outgoingLight * shadowColor;\n\n#endif\n";
+THREE.ShaderChunk[ 'shadowmap_fragment'] = "#ifdef USE_SHADOWMAP\n\n	#ifdef SHADOWMAP_DEBUG\n\n		vec3 frustumColors[3];\n		frustumColors[0] = vec3( 1.0, 0.5, 0.0 );\n		frustumColors[1] = vec3( 0.0, 1.0, 0.8 );\n		frustumColors[2] = vec3( 0.0, 0.5, 1.0 );\n\n	#endif\n\n	#ifdef SHADOWMAP_CASCADE\n\n		int inFrustumCount = 0;\n\n	#endif\n\n	float fDepth;\n	vec3 shadowColor = vec3( 1.0 );\n\n	for( int i = 0; i < MAX_SHADOWS; i ++ ) {\n\n		vec3 shadowCoord = vShadowCoord[ i ].xyz / vShadowCoord[ i ].w;\n\n				// if ( something && something ) breaks ATI OpenGL shader compiler\n				// if ( all( something, something ) ) using this instead\n\n		bvec4 inFrustumVec = bvec4 ( shadowCoord.x >= 0.0, shadowCoord.x <= 1.0, shadowCoord.y >= 0.0, shadowCoord.y <= 1.0 );\n		bool inFrustum = all( inFrustumVec );\n\n				// don't shadow pixels outside of light frustum\n				// use just first frustum (for cascades)\n				// don't shadow pixels behind far plane of light frustum\n\n		#ifdef SHADOWMAP_CASCADE\n\n			inFrustumCount += int( inFrustum );\n			bvec3 frustumTestVec = bvec3( inFrustum, inFrustumCount == 1, shadowCoord.z <= 1.0 );\n\n		#else\n\n			bvec2 frustumTestVec = bvec2( inFrustum, shadowCoord.z <= 1.0 );\n\n		#endif\n\n		bool frustumTest = all( frustumTestVec );\n\n		if ( frustumTest ) {\n\n			shadowCoord.z += shadowBias[ i ];\n\n			#if defined( SHADOWMAP_TYPE_PCF )\n\n						// Percentage-close filtering\n						// (9 pixel kernel)\n						// http://fabiensanglard.net/shadowmappingPCF/\n\n				float shadow = 0.0;\n\n		/*\n						// nested loops breaks shader compiler / validator on some ATI cards when using OpenGL\n						// must enroll loop manually\n\n				for ( float y = -1.25; y <= 1.25; y += 1.25 )\n					for ( float x = -1.25; x <= 1.25; x += 1.25 ) {\n\n						vec4 rgbaDepth = texture2D( shadowMap[ i ], vec2( x * xPixelOffset, y * yPixelOffset ) + shadowCoord.xy );\n\n								// doesn't seem to produce any noticeable visual difference compared to simple texture2D lookup\n								//vec4 rgbaDepth = texture2DProj( shadowMap[ i ], vec4( vShadowCoord[ i ].w * ( vec2( x * xPixelOffset, y * yPixelOffset ) + shadowCoord.xy ), 0.05, vShadowCoord[ i ].w ) );\n\n						float fDepth = unpackDepth( rgbaDepth );\n\n						if ( fDepth < shadowCoord.z )\n							shadow += 1.0;\n\n				}\n\n				shadow /= 9.0;\n\n		*/\n\n				const float shadowDelta = 1.0 / 9.0;\n\n				float xPixelOffset = 1.0 / shadowMapSize[ i ].x;\n				float yPixelOffset = 1.0 / shadowMapSize[ i ].y;\n\n				float dx0 = -1.25 * xPixelOffset;\n				float dy0 = -1.25 * yPixelOffset;\n				float dx1 = 1.25 * xPixelOffset;\n				float dy1 = 1.25 * yPixelOffset;\n\n				fDepth = unpackDepth( texture2D( shadowMap[ i ], shadowCoord.xy + vec2( dx0, dy0 ) ) );\n				if ( fDepth < shadowCoord.z ) shadow += shadowDelta;\n\n				fDepth = unpackDepth( texture2D( shadowMap[ i ], shadowCoord.xy + vec2( 0.0, dy0 ) ) );\n				if ( fDepth < shadowCoord.z ) shadow += shadowDelta;\n\n				fDepth = unpackDepth( texture2D( shadowMap[ i ], shadowCoord.xy + vec2( dx1, dy0 ) ) );\n				if ( fDepth < shadowCoord.z ) shadow += shadowDelta;\n\n				fDepth = unpackDepth( texture2D( shadowMap[ i ], shadowCoord.xy + vec2( dx0, 0.0 ) ) );\n				if ( fDepth < shadowCoord.z ) shadow += shadowDelta;\n\n				fDepth = unpackDepth( texture2D( shadowMap[ i ], shadowCoord.xy ) );\n				if ( fDepth < shadowCoord.z ) shadow += shadowDelta;\n\n				fDepth = unpackDepth( texture2D( shadowMap[ i ], shadowCoord.xy + vec2( dx1, 0.0 ) ) );\n				if ( fDepth < shadowCoord.z ) shadow += shadowDelta;\n\n				fDepth = unpackDepth( texture2D( shadowMap[ i ], shadowCoord.xy + vec2( dx0, dy1 ) ) );\n				if ( fDepth < shadowCoord.z ) shadow += shadowDelta;\n\n				fDepth = unpackDepth( texture2D( shadowMap[ i ], shadowCoord.xy + vec2( 0.0, dy1 ) ) );\n				if ( fDepth < shadowCoord.z ) shadow += shadowDelta;\n\n				fDepth = unpackDepth( texture2D( shadowMap[ i ], shadowCoord.xy + vec2( dx1, dy1 ) ) );\n				if ( fDepth < shadowCoord.z ) shadow += shadowDelta;\n\n				shadowColor = shadowColor * vec3( ( 1.0 - shadowDarkness[ i ] * shadow ) );\n\n			#elif defined( SHADOWMAP_TYPE_PCF_SOFT )\n\n						// Percentage-close filtering\n						// (9 pixel kernel)\n						// http://fabiensanglard.net/shadowmappingPCF/\n\n				float shadow = 0.0;\n\n				float xPixelOffset = 1.0 / shadowMapSize[ i ].x;\n				float yPixelOffset = 1.0 / shadowMapSize[ i ].y;\n\n				float dx0 = -1.0 * xPixelOffset;\n				float dy0 = -1.0 * yPixelOffset;\n				float dx1 = 1.0 * xPixelOffset;\n				float dy1 = 1.0 * yPixelOffset;\n\n				mat3 shadowKernel;\n				mat3 depthKernel;\n\n				depthKernel[0][0] = unpackDepth( texture2D( shadowMap[ i ], shadowCoord.xy + vec2( dx0, dy0 ) ) );\n				depthKernel[0][1] = unpackDepth( texture2D( shadowMap[ i ], shadowCoord.xy + vec2( dx0, 0.0 ) ) );\n				depthKernel[0][2] = unpackDepth( texture2D( shadowMap[ i ], shadowCoord.xy + vec2( dx0, dy1 ) ) );\n				depthKernel[1][0] = unpackDepth( texture2D( shadowMap[ i ], shadowCoord.xy + vec2( 0.0, dy0 ) ) );\n				depthKernel[1][1] = unpackDepth( texture2D( shadowMap[ i ], shadowCoord.xy ) );\n				depthKernel[1][2] = unpackDepth( texture2D( shadowMap[ i ], shadowCoord.xy + vec2( 0.0, dy1 ) ) );\n				depthKernel[2][0] = unpackDepth( texture2D( shadowMap[ i ], shadowCoord.xy + vec2( dx1, dy0 ) ) );\n				depthKernel[2][1] = unpackDepth( texture2D( shadowMap[ i ], shadowCoord.xy + vec2( dx1, 0.0 ) ) );\n				depthKernel[2][2] = unpackDepth( texture2D( shadowMap[ i ], shadowCoord.xy + vec2( dx1, dy1 ) ) );\n\n				vec3 shadowZ = vec3( shadowCoord.z );\n				shadowKernel[0] = vec3(lessThan(depthKernel[0], shadowZ ));\n				shadowKernel[0] *= vec3(0.25);\n\n				shadowKernel[1] = vec3(lessThan(depthKernel[1], shadowZ ));\n				shadowKernel[1] *= vec3(0.25);\n\n				shadowKernel[2] = vec3(lessThan(depthKernel[2], shadowZ ));\n				shadowKernel[2] *= vec3(0.25);\n\n				vec2 fractionalCoord = 1.0 - fract( shadowCoord.xy * shadowMapSize[i].xy );\n\n				shadowKernel[0] = mix( shadowKernel[1], shadowKernel[0], fractionalCoord.x );\n				shadowKernel[1] = mix( shadowKernel[2], shadowKernel[1], fractionalCoord.x );\n\n				vec4 shadowValues;\n				shadowValues.x = mix( shadowKernel[0][1], shadowKernel[0][0], fractionalCoord.y );\n				shadowValues.y = mix( shadowKernel[0][2], shadowKernel[0][1], fractionalCoord.y );\n				shadowValues.z = mix( shadowKernel[1][1], shadowKernel[1][0], fractionalCoord.y );\n				shadowValues.w = mix( shadowKernel[1][2], shadowKernel[1][1], fractionalCoord.y );\n\n				shadow = dot( shadowValues, vec4( 1.0 ) );\n\n				shadowColor = shadowColor * vec3( ( 1.0 - shadowDarkness[ i ] * shadow ) );\n\n			#else\n\n				vec4 rgbaDepth = texture2D( shadowMap[ i ], shadowCoord.xy );\n				float fDepth = unpackDepth( rgbaDepth );\n\n				if ( fDepth < shadowCoord.z )\n\n		// spot with multiple shadows is darker\n\n					shadowColor = shadowColor * vec3( 1.0 - shadowDarkness[ i ] );\n\n		// spot with multiple shadows has the same color as single shadow spot\n\n		// 					shadowColor = min( shadowColor, vec3( shadowDarkness[ i ] ) );\n\n			#endif\n\n		}\n\n\n		#ifdef SHADOWMAP_DEBUG\n\n			#ifdef SHADOWMAP_CASCADE\n\n				if ( inFrustum && inFrustumCount == 1 ) gl_FragColor.xyz *= frustumColors[ i ];\n\n			#else\n\n				if ( inFrustum ) gl_FragColor.xyz *= frustumColors[ i ];\n\n			#endif\n\n		#endif\n\n	}\n\n	#ifdef GAMMA_OUTPUT\n\n		shadowColor *= shadowColor;\n\n	#endif\n\n	gl_FragColor.xyz = gl_FragColor.xyz * shadowColor;\n\n#endif\n";
 
 // File:src/renderers/shaders/ShaderChunk/worldpos_vertex.glsl
 
@@ -55281,7 +57371,7 @@ THREE.ShaderChunk[ 'logdepthbuf_pars_fragment'] = "#ifdef USE_LOGDEPTHBUF\n\n	un
 
 // File:src/renderers/shaders/ShaderChunk/alphamap_fragment.glsl
 
-THREE.ShaderChunk[ 'alphamap_fragment'] = "#ifdef USE_ALPHAMAP\n\n	diffuseColor.a *= texture2D( alphaMap, vUv ).g;\n\n#endif\n";
+THREE.ShaderChunk[ 'alphamap_fragment'] = "#ifdef USE_ALPHAMAP\n\n	gl_FragColor.a *= texture2D( alphaMap, vUv ).g;\n\n#endif\n";
 
 // File:src/renderers/shaders/ShaderChunk/alphamap_pars_fragment.glsl
 
@@ -55421,15 +57511,13 @@ THREE.UniformsLib = {
 		"pointLightColor" : { type: "fv", value: [] },
 		"pointLightPosition" : { type: "fv", value: [] },
 		"pointLightDistance" : { type: "fv1", value: [] },
-		"pointLightDecay" : { type: "fv1", value: [] },
 
 		"spotLightColor" : { type: "fv", value: [] },
 		"spotLightPosition" : { type: "fv", value: [] },
 		"spotLightDirection" : { type: "fv", value: [] },
 		"spotLightDistance" : { type: "fv1", value: [] },
 		"spotLightAngleCos" : { type: "fv1", value: [] },
-		"spotLightExponent" : { type: "fv1", value: [] },
-		"spotLightDecay" : { type: "fv1", value: [] }
+		"spotLightExponent" : { type: "fv1", value: [] }
 
 	},
 
@@ -55440,7 +57528,6 @@ THREE.UniformsLib = {
 		"size" : { type: "f", value: 1.0 },
 		"scale" : { type: "f", value: 1.0 },
 		"map" : { type: "t", value: null },
-		"offsetRepeat" : { type: "v4", value: new THREE.Vector4( 0, 0, 1, 1 ) },
 
 		"fogDensity" : { type: "f", value: 0.00025 },
 		"fogNear" : { type: "f", value: 1 },
@@ -55488,7 +57575,6 @@ THREE.ShaderLib = {
 
 		vertexShader: [
 
-			THREE.ShaderChunk[ "common" ],
 			THREE.ShaderChunk[ "map_pars_vertex" ],
 			THREE.ShaderChunk[ "lightmap_pars_vertex" ],
 			THREE.ShaderChunk[ "envmap_pars_vertex" ],
@@ -55531,7 +57617,6 @@ THREE.ShaderLib = {
 			"uniform vec3 diffuse;",
 			"uniform float opacity;",
 
-			THREE.ShaderChunk[ "common" ],
 			THREE.ShaderChunk[ "color_pars_fragment" ],
 			THREE.ShaderChunk[ "map_pars_fragment" ],
 			THREE.ShaderChunk[ "alphamap_pars_fragment" ],
@@ -55544,27 +57629,21 @@ THREE.ShaderLib = {
 
 			"void main() {",
 
-			"	vec3 outgoingLight = vec3( 0.0 );",	// outgoing light does not have an alpha, the surface does
-			"	vec4 diffuseColor = vec4( diffuse, opacity );",
+			"	gl_FragColor = vec4( diffuse, opacity );",
 
 				THREE.ShaderChunk[ "logdepthbuf_fragment" ],
 				THREE.ShaderChunk[ "map_fragment" ],
-				THREE.ShaderChunk[ "color_fragment" ],
 				THREE.ShaderChunk[ "alphamap_fragment" ],
 				THREE.ShaderChunk[ "alphatest_fragment" ],
 				THREE.ShaderChunk[ "specularmap_fragment" ],
-
-			"	outgoingLight = diffuseColor.rgb;", // simple shader
-
-				THREE.ShaderChunk[ "lightmap_fragment" ],		// TODO: Light map on an otherwise unlit surface doesn't make sense.
+				THREE.ShaderChunk[ "lightmap_fragment" ],
+				THREE.ShaderChunk[ "color_fragment" ],
 				THREE.ShaderChunk[ "envmap_fragment" ],
-				THREE.ShaderChunk[ "shadowmap_fragment" ],		// TODO: Shadows on an otherwise unlit surface doesn't make sense.
+				THREE.ShaderChunk[ "shadowmap_fragment" ],
 
 				THREE.ShaderChunk[ "linear_to_gamma_fragment" ],
 
 				THREE.ShaderChunk[ "fog_fragment" ],
-
-			"	gl_FragColor = vec4( outgoingLight, diffuseColor.a );",	// TODO, this should be pre-multiplied to allow for bright highlights on very transparent objects
 
 			"}"
 
@@ -55582,6 +57661,7 @@ THREE.ShaderLib = {
 			THREE.UniformsLib[ "shadowmap" ],
 
 			{
+				"ambient"  : { type: "c", value: new THREE.Color( 0xffffff ) },
 				"emissive" : { type: "c", value: new THREE.Color( 0x000000 ) },
 				"wrapRGB"  : { type: "v3", value: new THREE.Vector3( 1, 1, 1 ) }
 			}
@@ -55600,7 +57680,6 @@ THREE.ShaderLib = {
 
 			"#endif",
 
-			THREE.ShaderChunk[ "common" ],
 			THREE.ShaderChunk[ "map_pars_vertex" ],
 			THREE.ShaderChunk[ "lightmap_pars_vertex" ],
 			THREE.ShaderChunk[ "envmap_pars_vertex" ],
@@ -55638,8 +57717,6 @@ THREE.ShaderLib = {
 
 		fragmentShader: [
 
-			"uniform vec3 diffuse;",
-			"uniform vec3 emissive;",
 			"uniform float opacity;",
 
 			"varying vec3 vLightFront;",
@@ -55650,7 +57727,6 @@ THREE.ShaderLib = {
 
 			"#endif",
 
-			THREE.ShaderChunk[ "common" ],
 			THREE.ShaderChunk[ "color_pars_fragment" ],
 			THREE.ShaderChunk[ "map_pars_fragment" ],
 			THREE.ShaderChunk[ "alphamap_pars_fragment" ],
@@ -55663,12 +57739,10 @@ THREE.ShaderLib = {
 
 			"void main() {",
 
-			"	vec3 outgoingLight = vec3( 0.0 );",	// outgoing light does not have an alpha, the surface does
-			"	vec4 diffuseColor = vec4( diffuse, opacity );",
+			"	gl_FragColor = vec4( vec3( 1.0 ), opacity );",
 
 				THREE.ShaderChunk[ "logdepthbuf_fragment" ],
 				THREE.ShaderChunk[ "map_fragment" ],
-				THREE.ShaderChunk[ "color_fragment" ],
 				THREE.ShaderChunk[ "alphamap_fragment" ],
 				THREE.ShaderChunk[ "alphatest_fragment" ],
 				THREE.ShaderChunk[ "specularmap_fragment" ],
@@ -55679,25 +57753,24 @@ THREE.ShaderLib = {
 					//"gl_FragColor.xyz *= isFront * vLightFront + ( 1.0 - isFront ) * vLightBack;",
 
 			"		if ( gl_FrontFacing )",
-			"			outgoingLight += diffuseColor.rgb * vLightFront + emissive;",
+			"			gl_FragColor.xyz *= vLightFront;",
 			"		else",
-			"			outgoingLight += diffuseColor.rgb * vLightBack + emissive;",
+			"			gl_FragColor.xyz *= vLightBack;",
 
 			"	#else",
 
-			"		outgoingLight += diffuseColor.rgb * vLightFront + emissive;",
+			"		gl_FragColor.xyz *= vLightFront;",
 
 			"	#endif",
 
 				THREE.ShaderChunk[ "lightmap_fragment" ],
+				THREE.ShaderChunk[ "color_fragment" ],
 				THREE.ShaderChunk[ "envmap_fragment" ],
 				THREE.ShaderChunk[ "shadowmap_fragment" ],
 
 				THREE.ShaderChunk[ "linear_to_gamma_fragment" ],
 
 				THREE.ShaderChunk[ "fog_fragment" ],
-
-			"	gl_FragColor = vec4( outgoingLight, diffuseColor.a );",	// TODO, this should be pre-multiplied to allow for bright highlights on very transparent objects
 
 			"}"
 
@@ -55717,6 +57790,7 @@ THREE.ShaderLib = {
 			THREE.UniformsLib[ "shadowmap" ],
 
 			{
+				"ambient"  : { type: "c", value: new THREE.Color( 0xffffff ) },
 				"emissive" : { type: "c", value: new THREE.Color( 0x000000 ) },
 				"specular" : { type: "c", value: new THREE.Color( 0x111111 ) },
 				"shininess": { type: "f", value: 30 },
@@ -55730,14 +57804,8 @@ THREE.ShaderLib = {
 			"#define PHONG",
 
 			"varying vec3 vViewPosition;",
+			"varying vec3 vNormal;",
 
-			"#ifndef FLAT_SHADED",
-
-			"	varying vec3 vNormal;",
-
-			"#endif",
-
-			THREE.ShaderChunk[ "common" ],
 			THREE.ShaderChunk[ "map_pars_vertex" ],
 			THREE.ShaderChunk[ "lightmap_pars_vertex" ],
 			THREE.ShaderChunk[ "envmap_pars_vertex" ],
@@ -55759,11 +57827,7 @@ THREE.ShaderLib = {
 				THREE.ShaderChunk[ "skinnormal_vertex" ],
 				THREE.ShaderChunk[ "defaultnormal_vertex" ],
 
-			"#ifndef FLAT_SHADED", // Normal computed with derivatives when FLAT_SHADED
-
 			"	vNormal = normalize( transformedNormal );",
-
-			"#endif",
 
 				THREE.ShaderChunk[ "morphtarget_vertex" ],
 				THREE.ShaderChunk[ "skinning_vertex" ],
@@ -55786,12 +57850,13 @@ THREE.ShaderLib = {
 			"#define PHONG",
 
 			"uniform vec3 diffuse;",
+			"uniform float opacity;",
+
+			"uniform vec3 ambient;",
 			"uniform vec3 emissive;",
 			"uniform vec3 specular;",
 			"uniform float shininess;",
-			"uniform float opacity;",
 
-			THREE.ShaderChunk[ "common" ],
 			THREE.ShaderChunk[ "color_pars_fragment" ],
 			THREE.ShaderChunk[ "map_pars_fragment" ],
 			THREE.ShaderChunk[ "alphamap_pars_fragment" ],
@@ -55807,12 +57872,10 @@ THREE.ShaderLib = {
 
 			"void main() {",
 
-			"	vec3 outgoingLight = vec3( 0.0 );",	// outgoing light does not have an alpha, the surface does
-			"	vec4 diffuseColor = vec4( diffuse, opacity );",
+			"	gl_FragColor = vec4( vec3( 1.0 ), opacity );",
 
 				THREE.ShaderChunk[ "logdepthbuf_fragment" ],
 				THREE.ShaderChunk[ "map_fragment" ],
-				THREE.ShaderChunk[ "color_fragment" ],
 				THREE.ShaderChunk[ "alphamap_fragment" ],
 				THREE.ShaderChunk[ "alphatest_fragment" ],
 				THREE.ShaderChunk[ "specularmap_fragment" ],
@@ -55820,14 +57883,13 @@ THREE.ShaderLib = {
 				THREE.ShaderChunk[ "lights_phong_fragment" ],
 
 				THREE.ShaderChunk[ "lightmap_fragment" ],
+				THREE.ShaderChunk[ "color_fragment" ],
 				THREE.ShaderChunk[ "envmap_fragment" ],
 				THREE.ShaderChunk[ "shadowmap_fragment" ],
 
 				THREE.ShaderChunk[ "linear_to_gamma_fragment" ],
 
 				THREE.ShaderChunk[ "fog_fragment" ],
-
-			"	gl_FragColor = vec4( outgoingLight, diffuseColor.a );",	// TODO, this should be pre-multiplied to allow for bright highlights on very transparent objects
 
 			"}"
 
@@ -55849,7 +57911,6 @@ THREE.ShaderLib = {
 			"uniform float size;",
 			"uniform float scale;",
 
-			THREE.ShaderChunk[ "common" ],
 			THREE.ShaderChunk[ "color_pars_vertex" ],
 			THREE.ShaderChunk[ "shadowmap_pars_vertex" ],
 			THREE.ShaderChunk[ "logdepthbuf_pars_vertex" ],
@@ -55881,7 +57942,6 @@ THREE.ShaderLib = {
 			"uniform vec3 psColor;",
 			"uniform float opacity;",
 
-			THREE.ShaderChunk[ "common" ],
 			THREE.ShaderChunk[ "color_pars_fragment" ],
 			THREE.ShaderChunk[ "map_particle_pars_fragment" ],
 			THREE.ShaderChunk[ "fog_pars_fragment" ],
@@ -55890,20 +57950,14 @@ THREE.ShaderLib = {
 
 			"void main() {",
 
-			"	vec3 outgoingLight = vec3( 0.0 );",	// outgoing light does not have an alpha, the surface does
-			"	vec4 diffuseColor = vec4( psColor, opacity );",
+			"	gl_FragColor = vec4( psColor, opacity );",
 
 				THREE.ShaderChunk[ "logdepthbuf_fragment" ],
 				THREE.ShaderChunk[ "map_particle_fragment" ],
-				THREE.ShaderChunk[ "color_fragment" ],
 				THREE.ShaderChunk[ "alphatest_fragment" ],
-
-			"	outgoingLight = diffuseColor.rgb;", // simple shader
-
+				THREE.ShaderChunk[ "color_fragment" ],
 				THREE.ShaderChunk[ "shadowmap_fragment" ],
 				THREE.ShaderChunk[ "fog_fragment" ],
-
-			"	gl_FragColor = vec4( outgoingLight, diffuseColor.a );",	// TODO, this should be pre-multiplied to allow for bright highlights on very transparent objects
 
 			"}"
 
@@ -55933,7 +57987,6 @@ THREE.ShaderLib = {
 
 			"varying float vLineDistance;",
 
-			THREE.ShaderChunk[ "common" ],
 			THREE.ShaderChunk[ "color_pars_vertex" ],
 			THREE.ShaderChunk[ "logdepthbuf_pars_vertex" ],
 
@@ -55962,7 +58015,6 @@ THREE.ShaderLib = {
 
 			"varying float vLineDistance;",
 
-			THREE.ShaderChunk[ "common" ],
 			THREE.ShaderChunk[ "color_pars_fragment" ],
 			THREE.ShaderChunk[ "fog_pars_fragment" ],
 			THREE.ShaderChunk[ "logdepthbuf_pars_fragment" ],
@@ -55975,17 +58027,11 @@ THREE.ShaderLib = {
 
 			"	}",
 
-			"	vec3 outgoingLight = vec3( 0.0 );",	// outgoing light does not have an alpha, the surface does
-			"	vec4 diffuseColor = vec4( diffuse, opacity );",
+			"	gl_FragColor = vec4( diffuse, opacity );",
 
 				THREE.ShaderChunk[ "logdepthbuf_fragment" ],
 				THREE.ShaderChunk[ "color_fragment" ],
-
-			"	outgoingLight = diffuseColor.rgb;", // simple shader
-
 				THREE.ShaderChunk[ "fog_fragment" ],
-
-			"	gl_FragColor = vec4( outgoingLight, diffuseColor.a );",	// TODO, this should be pre-multiplied to allow for bright highlights on very transparent objects
 
 			"}"
 
@@ -56005,7 +58051,6 @@ THREE.ShaderLib = {
 
 		vertexShader: [
 
-			THREE.ShaderChunk[ "common" ],
 			THREE.ShaderChunk[ "morphtarget_pars_vertex" ],
 			THREE.ShaderChunk[ "logdepthbuf_pars_vertex" ],
 
@@ -56025,7 +58070,6 @@ THREE.ShaderLib = {
 			"uniform float mFar;",
 			"uniform float opacity;",
 
-			THREE.ShaderChunk[ "common" ],
 			THREE.ShaderChunk[ "logdepthbuf_pars_fragment" ],
 
 			"void main() {",
@@ -56043,7 +58087,7 @@ THREE.ShaderLib = {
 			"	#endif",
 
 			"	float color = 1.0 - smoothstep( mNear, mFar, depth );",
-			"	gl_FragColor = vec4( vec3( color ), opacity );",   // TODO, this should be pre-multiplied to allow for bright highlights on very transparent objects
+			"	gl_FragColor = vec4( vec3( color ), opacity );",
 
 			"}"
 
@@ -56063,7 +58107,6 @@ THREE.ShaderLib = {
 
 			"varying vec3 vNormal;",
 
-			THREE.ShaderChunk[ "common" ],
 			THREE.ShaderChunk[ "morphtarget_pars_vertex" ],
 			THREE.ShaderChunk[ "logdepthbuf_pars_vertex" ],
 
@@ -56084,7 +58127,6 @@ THREE.ShaderLib = {
 			"uniform float opacity;",
 			"varying vec3 vNormal;",
 
-			THREE.ShaderChunk[ "common" ],
 			THREE.ShaderChunk[ "logdepthbuf_pars_fragment" ],
 
 			"void main() {",
@@ -56112,12 +58154,12 @@ THREE.ShaderLib = {
 
 			"varying vec3 vWorldPosition;",
 
-			THREE.ShaderChunk[ "common" ],
 			THREE.ShaderChunk[ "logdepthbuf_pars_vertex" ],
 
 			"void main() {",
 
-			"	vWorldPosition = transformDirection( position, modelMatrix );",
+			"	vec4 worldPosition = modelMatrix * vec4( position, 1.0 );",
+			"	vWorldPosition = worldPosition.xyz;",
 
 			"	gl_Position = projectionMatrix * modelViewMatrix * vec4( position, 1.0 );",
 
@@ -56134,7 +58176,6 @@ THREE.ShaderLib = {
 
 			"varying vec3 vWorldPosition;",
 
-			THREE.ShaderChunk[ "common" ],
 			THREE.ShaderChunk[ "logdepthbuf_pars_fragment" ],
 
 			"void main() {",
@@ -56162,12 +58203,12 @@ THREE.ShaderLib = {
 
 			"varying vec3 vWorldPosition;",
 
-			THREE.ShaderChunk[ "common" ],
 			THREE.ShaderChunk[ "logdepthbuf_pars_vertex" ],
 
 			"void main() {",
 
-			"	vWorldPosition = transformDirection( position, modelMatrix );",
+			"	vec4 worldPosition = modelMatrix * vec4( position, 1.0 );",
+			"	vWorldPosition = worldPosition.xyz;",
 
 			"	gl_Position = projectionMatrix * modelViewMatrix * vec4( position, 1.0 );",
 
@@ -56184,7 +58225,6 @@ THREE.ShaderLib = {
 
 			"varying vec3 vWorldPosition;",
 
-			THREE.ShaderChunk[ "common" ],
 			THREE.ShaderChunk[ "logdepthbuf_pars_fragment" ],
 
 			"void main() {",
@@ -56192,8 +58232,8 @@ THREE.ShaderLib = {
 				// "	gl_FragColor = textureCube( tCube, vec3( tFlip * vWorldPosition.x, vWorldPosition.yz ) );",
 				"vec3 direction = normalize( vWorldPosition );",
 				"vec2 sampleUV;",
-				"sampleUV.y = saturate( tFlip * direction.y * -0.5 + 0.5 );",
-				"sampleUV.x = atan( direction.z, direction.x ) * RECIPROCAL_PI2 + 0.5;",
+				"sampleUV.y = clamp( tFlip * direction.y * -0.5 + 0.5, 0.0, 1.0);",
+				"sampleUV.x = atan( direction.z, direction.x ) * 0.15915494309189533576888376337251 + 0.5;", // reciprocal( 2 PI ) + 0.5
 				"gl_FragColor = texture2D( tEquirect, sampleUV );",
 
 				THREE.ShaderChunk[ "logdepthbuf_fragment" ],
@@ -56222,7 +58262,6 @@ THREE.ShaderLib = {
 
 		vertexShader: [
 
-			THREE.ShaderChunk[ "common" ],
 			THREE.ShaderChunk[ "morphtarget_pars_vertex" ],
 			THREE.ShaderChunk[ "skinning_pars_vertex" ],
 			THREE.ShaderChunk[ "logdepthbuf_pars_vertex" ],
@@ -56241,7 +58280,6 @@ THREE.ShaderLib = {
 
 		fragmentShader: [
 
-			THREE.ShaderChunk[ "common" ],
 			THREE.ShaderChunk[ "logdepthbuf_pars_fragment" ],
 
 			"vec4 pack_depth( const in float depth ) {",
@@ -56343,7 +58381,6 @@ THREE.WebGLRenderer = function ( parameters ) {
 
 	// physically based shading
 
-	this.gammaFactor = 2.0;	// for backwards compatibility
 	this.gammaInput = false;
 	this.gammaOutput = false;
 
@@ -56403,12 +58440,35 @@ THREE.WebGLRenderer = function ( parameters ) {
 
 	_usedTextureUnits = 0,
 
+	// GL state cache
+
+	_oldDoubleSided = - 1,
+	_oldFlipSided = - 1,
+
+	_oldBlending = - 1,
+
+	_oldBlendEquation = - 1,
+	_oldBlendSrc = - 1,
+	_oldBlendDst = - 1,
+
+	_oldDepthTest = - 1,
+	_oldDepthWrite = - 1,
+
+	_oldPolygonOffset = null,
+	_oldPolygonOffsetFactor = null,
+	_oldPolygonOffsetUnits = null,
+
+	_oldLineWidth = null,
+
 	_viewportX = 0,
 	_viewportY = 0,
 	_viewportWidth = _canvas.width,
 	_viewportHeight = _canvas.height,
 	_currentWidth = 0,
 	_currentHeight = 0,
+
+	_newAttributes = new Uint8Array( 16 ),
+	_enabledAttributes = new Uint8Array( 16 ),
 
 	// frustum
 
@@ -56417,6 +58477,7 @@ THREE.WebGLRenderer = function ( parameters ) {
 	 // camera matrices cache
 
 	_projScreenMatrix = new THREE.Matrix4(),
+	_projScreenMatrixPS = new THREE.Matrix4(),
 
 	_vector3 = new THREE.Vector3(),
 
@@ -56430,8 +58491,8 @@ THREE.WebGLRenderer = function ( parameters ) {
 
 		ambient: [ 0, 0, 0 ],
 		directional: { length: 0, colors:[], positions: [] },
-		point: { length: 0, colors: [], positions: [], distances: [], decays: [] },
-		spot: { length: 0, colors: [], positions: [], distances: [], directions: [], anglesCos: [], exponents: [], decays: [] },
+		point: { length: 0, colors: [], positions: [], distances: [] },
+		spot: { length: 0, colors: [], positions: [], distances: [], directions: [], anglesCos: [], exponents: [] },
 		hemi: { length: 0, skyColors: [], groundColors: [], positions: [] }
 
 	};
@@ -56480,11 +58541,9 @@ THREE.WebGLRenderer = function ( parameters ) {
 
 	} catch ( error ) {
 
-		THREE.error( 'THREE.WebGLRenderer: ' + error );
+		console.error( error );
 
 	}
-
-	var state = new THREE.WebGLState( _gl, paramThreeToGL );
 
 	if ( _gl.getShaderPrecisionFormat === undefined ) {
 
@@ -56504,8 +58563,6 @@ THREE.WebGLRenderer = function ( parameters ) {
 
 	extensions.get( 'OES_texture_float' );
 	extensions.get( 'OES_texture_float_linear' );
-	extensions.get( 'OES_texture_half_float' );
-	extensions.get( 'OES_texture_half_float_linear' );
 	extensions.get( 'OES_standard_derivatives' );
 
 	if ( _logarithmicDepthBuffer ) {
@@ -56515,18 +58572,6 @@ THREE.WebGLRenderer = function ( parameters ) {
 	}
 
 	//
-
-	var glClearColor = function ( r, g, b, a ) {
-
-		if ( _premultipliedAlpha === true ) {
-
-			r *= a; g *= a; b *= a;
-
-		}
-
-		_gl.clearColor( r, g, b, a );
-
-	};
 
 	var setDefaultGLState = function () {
 
@@ -56547,7 +58592,7 @@ THREE.WebGLRenderer = function ( parameters ) {
 
 		_gl.viewport( _viewportX, _viewportY, _viewportWidth, _viewportHeight );
 
-		glClearColor( _clearColor.r, _clearColor.g, _clearColor.b, _clearAlpha );
+		_gl.clearColor( _clearColor.r, _clearColor.g, _clearColor.b, _clearAlpha );
 
 	};
 
@@ -56556,19 +58601,27 @@ THREE.WebGLRenderer = function ( parameters ) {
 		_currentProgram = null;
 		_currentCamera = null;
 
+		_oldBlending = - 1;
+		_oldDepthTest = - 1;
+		_oldDepthWrite = - 1;
+		_oldDoubleSided = - 1;
+		_oldFlipSided = - 1;
 		_currentGeometryProgram = '';
 		_currentMaterialId = - 1;
 
 		_lightsNeedUpdate = true;
 
-		state.reset();
+		for ( var i = 0; i < _enabledAttributes.length; i ++ ) {
+
+			_enabledAttributes[ i ] = 0;
+
+		}
 
 	};
 
 	setDefaultGLState();
 
 	this.context = _gl;
-	this.state = state;
 
 	// GPU capabilities
 
@@ -56584,9 +58637,11 @@ THREE.WebGLRenderer = function ( parameters ) {
 
 	var _vertexShaderPrecisionHighpFloat = _gl.getShaderPrecisionFormat( _gl.VERTEX_SHADER, _gl.HIGH_FLOAT );
 	var _vertexShaderPrecisionMediumpFloat = _gl.getShaderPrecisionFormat( _gl.VERTEX_SHADER, _gl.MEDIUM_FLOAT );
+	var _vertexShaderPrecisionLowpFloat = _gl.getShaderPrecisionFormat( _gl.VERTEX_SHADER, _gl.LOW_FLOAT );
 
 	var _fragmentShaderPrecisionHighpFloat = _gl.getShaderPrecisionFormat( _gl.FRAGMENT_SHADER, _gl.HIGH_FLOAT );
 	var _fragmentShaderPrecisionMediumpFloat = _gl.getShaderPrecisionFormat( _gl.FRAGMENT_SHADER, _gl.MEDIUM_FLOAT );
+	var _fragmentShaderPrecisionLowpFloat = _gl.getShaderPrecisionFormat( _gl.FRAGMENT_SHADER, _gl.LOW_FLOAT );
 
 	var getCompressedTextureFormats = ( function () {
 
@@ -56606,7 +58661,7 @@ THREE.WebGLRenderer = function ( parameters ) {
 
 				var formats = _gl.getParameter( _gl.COMPRESSED_TEXTURE_FORMATS );
 
-				for ( var i = 0; i < formats.length; i ++ ) {
+				for ( var i = 0; i < formats.length; i ++ ){
 
 					array.push( formats[ i ] );
 
@@ -56630,12 +58685,12 @@ THREE.WebGLRenderer = function ( parameters ) {
 		if ( mediumpAvailable ) {
 
 			_precision = 'mediump';
-			THREE.warn( 'THREE.WebGLRenderer: highp not supported, using mediump.' );
+			console.warn( 'THREE.WebGLRenderer: highp not supported, using mediump.' );
 
 		} else {
 
 			_precision = 'lowp';
-			THREE.warn( 'THREE.WebGLRenderer: highp and mediump not supported, using lowp.' );
+			console.warn( 'THREE.WebGLRenderer: highp and mediump not supported, using lowp.' );
 
 		}
 
@@ -56644,7 +58699,7 @@ THREE.WebGLRenderer = function ( parameters ) {
 	if ( _precision === 'mediump' && ! mediumpAvailable ) {
 
 		_precision = 'lowp';
-		THREE.warn( 'THREE.WebGLRenderer: mediump not supported, using lowp.' );
+		console.warn( 'THREE.WebGLRenderer: mediump not supported, using lowp.' );
 
 	}
 
@@ -56678,12 +58733,6 @@ THREE.WebGLRenderer = function ( parameters ) {
 	this.supportsFloatTextures = function () {
 
 		return extensions.get( 'OES_texture_float' );
-
-	};
-
-	this.supportsHalfFloatTextures = function () {
-
-		return extensions.get( 'OES_texture_half_float' );
 
 	};
 
@@ -56807,10 +58856,9 @@ THREE.WebGLRenderer = function ( parameters ) {
 	this.setClearColor = function ( color, alpha ) {
 
 		_clearColor.set( color );
-
 		_clearAlpha = alpha !== undefined ? alpha : 1;
 
-		glClearColor( _clearColor.r, _clearColor.g, _clearColor.b, _clearAlpha );
+		_gl.clearColor( _clearColor.r, _clearColor.g, _clearColor.b, _clearAlpha );
 
 	};
 
@@ -56824,7 +58872,7 @@ THREE.WebGLRenderer = function ( parameters ) {
 
 		_clearAlpha = alpha;
 
-		glClearColor( _clearColor.r, _clearColor.g, _clearColor.b, _clearAlpha );
+		_gl.clearColor( _clearColor.r, _clearColor.g, _clearColor.b, _clearAlpha );
 
 	};
 
@@ -57302,6 +59350,8 @@ THREE.WebGLRenderer = function ( parameters ) {
 		geometry.__vertexArray = new Float32Array( nvertices * 3 );
 		geometry.__colorArray = new Float32Array( nvertices * 3 );
 
+		geometry.__sortArray = [];
+
 		geometry.__webglParticleCount = nvertices;
 
 		initCustomAttributes( object );
@@ -57459,19 +59509,19 @@ THREE.WebGLRenderer = function ( parameters ) {
 			 ? object.material.materials[ geometryGroup.materialIndex ]
 			 : object.material;
 
-	}
+	};
 
-	function materialNeedsFaceNormals ( material ) {
+	function materialNeedsSmoothNormals ( material ) {
 
-		return material instanceof THREE.MeshPhongMaterial === false && material.shading === THREE.FlatShading;
+		return material && material.shading !== undefined && material.shading === THREE.SmoothShading;
 
-	}
+	};
 
 	// Buffer setting
 
 	function setParticleBuffers ( geometry, hint, object ) {
 
-		var v, c, vertex, offset, color,
+		var v, c, vertex, offset, index, color,
 
 		vertices = geometry.vertices,
 		vl = vertices.length,
@@ -57482,12 +59532,15 @@ THREE.WebGLRenderer = function ( parameters ) {
 		vertexArray = geometry.__vertexArray,
 		colorArray = geometry.__colorArray,
 
+		sortArray = geometry.__sortArray,
+
 		dirtyVertices = geometry.verticesNeedUpdate,
+		dirtyElements = geometry.elementsNeedUpdate,
 		dirtyColors = geometry.colorsNeedUpdate,
 
 		customAttributes = geometry.__webglCustomAttributesList,
 		i, il,
-		ca, cal, value,
+		a, ca, cal, value,
 		customAttribute;
 
 		if ( dirtyVertices ) {
@@ -57646,7 +59699,7 @@ THREE.WebGLRenderer = function ( parameters ) {
 		customAttributes = geometry.__webglCustomAttributesList,
 
 		i, il,
-		ca, cal, value,
+		a, ca, cal, value,
 		customAttribute;
 
 		if ( dirtyVertices ) {
@@ -57803,20 +59856,23 @@ THREE.WebGLRenderer = function ( parameters ) {
 
 		}
 
-		var needsFaceNormals = materialNeedsFaceNormals( material );
+		var needsSmoothNormals = materialNeedsSmoothNormals( material );
 
 		var f, fl, fi, face,
-		vertexNormals, faceNormal,
+		vertexNormals, faceNormal, normal,
 		vertexColors, faceColor,
 		vertexTangents,
-		uv, uv2, v1, v2, v3, t1, t2, t3, n1, n2, n3,
+		uv, uv2, v1, v2, v3, v4, t1, t2, t3, t4, n1, n2, n3, n4,
 		c1, c2, c3,
-		sw1, sw2, sw3,
-		si1, si2, si3,
-		i, il,
+		sw1, sw2, sw3, sw4,
+		si1, si2, si3, si4,
+		sa1, sa2, sa3, sa4,
+		sb1, sb2, sb3, sb4,
+		m, ml, i, il,
 		vn, uvi, uv2i,
 		vk, vkl, vka,
 		nka, chf, faceVertexNormals,
+		a,
 
 		vertexIndex = 0,
 
@@ -57831,6 +59887,7 @@ THREE.WebGLRenderer = function ( parameters ) {
 		offset_skin = 0,
 		offset_morphTarget = 0,
 		offset_custom = 0,
+		offset_customSrc = 0,
 
 		value,
 
@@ -57869,6 +59926,8 @@ THREE.WebGLRenderer = function ( parameters ) {
 
 		obj_uvs  = geometry.faceVertexUvs[ 0 ],
 		obj_uvs2 = geometry.faceVertexUvs[ 1 ],
+
+		obj_colors = geometry.colors,
 
 		obj_skinIndices = geometry.skinIndices,
 		obj_skinWeights = geometry.skinWeights,
@@ -57942,19 +60001,19 @@ THREE.WebGLRenderer = function ( parameters ) {
 
 					if ( material.morphNormals ) {
 
-						if ( needsFaceNormals ) {
-
-							n1 = morphNormals[ vk ].faceNormals[ chf ];
-							n2 = n1;
-							n3 = n1;
-
-						} else {
+						if ( needsSmoothNormals ) {
 
 							faceVertexNormals = morphNormals[ vk ].vertexNormals[ chf ];
 
 							n1 = faceVertexNormals.a;
 							n2 = faceVertexNormals.b;
 							n3 = faceVertexNormals.c;
+
+						} else {
+
+							n1 = morphNormals[ vk ].faceNormals[ chf ];
+							n2 = n1;
+							n3 = n1;
 
 						}
 
@@ -58151,7 +60210,7 @@ THREE.WebGLRenderer = function ( parameters ) {
 				vertexNormals = face.vertexNormals;
 				faceNormal = face.normal;
 
-				if ( vertexNormals.length === 3 && needsFaceNormals === false ) {
+				if ( vertexNormals.length === 3 && needsSmoothNormals ) {
 
 					for ( i = 0; i < 3; i ++ ) {
 
@@ -58292,6 +60351,7 @@ THREE.WebGLRenderer = function ( parameters ) {
 				if ( ! customAttribute.__original.needsUpdate ) continue;
 
 				offset_custom = 0;
+				offset_customSrc = 0;
 
 				if ( customAttribute.size === 1 ) {
 
@@ -58591,7 +60651,7 @@ THREE.WebGLRenderer = function ( parameters ) {
 
 	this.renderBufferImmediate = function ( object, program, material ) {
 
-		state.initAttributes();
+		initAttributes();
 
 		if ( object.hasPositions && ! object.__webglVertexBuffer ) object.__webglVertexBuffer = _gl.createBuffer();
 		if ( object.hasNormals && ! object.__webglNormalBuffer ) object.__webglNormalBuffer = _gl.createBuffer();
@@ -58602,9 +60662,7 @@ THREE.WebGLRenderer = function ( parameters ) {
 
 			_gl.bindBuffer( _gl.ARRAY_BUFFER, object.__webglVertexBuffer );
 			_gl.bufferData( _gl.ARRAY_BUFFER, object.positionArray, _gl.DYNAMIC_DRAW );
-
-			state.enableAttribute( program.attributes.position );
-
+			enableAttribute( program.attributes.position );
 			_gl.vertexAttribPointer( program.attributes.position, 3, _gl.FLOAT, false, 0, 0 );
 
 		}
@@ -58613,8 +60671,7 @@ THREE.WebGLRenderer = function ( parameters ) {
 
 			_gl.bindBuffer( _gl.ARRAY_BUFFER, object.__webglNormalBuffer );
 
-			if ( material instanceof THREE.MeshPhongMaterial === false &&
-				   material.shading === THREE.FlatShading ) {
+			if ( material.shading === THREE.FlatShading ) {
 
 				var nx, ny, nz,
 					nax, nbx, ncx, nay, nby, ncy, naz, nbz, ncz,
@@ -58658,9 +60715,7 @@ THREE.WebGLRenderer = function ( parameters ) {
 			}
 
 			_gl.bufferData( _gl.ARRAY_BUFFER, object.normalArray, _gl.DYNAMIC_DRAW );
-
-			state.enableAttribute( program.attributes.normal );
-
+			enableAttribute( program.attributes.normal );
 			_gl.vertexAttribPointer( program.attributes.normal, 3, _gl.FLOAT, false, 0, 0 );
 
 		}
@@ -58669,9 +60724,7 @@ THREE.WebGLRenderer = function ( parameters ) {
 
 			_gl.bindBuffer( _gl.ARRAY_BUFFER, object.__webglUvBuffer );
 			_gl.bufferData( _gl.ARRAY_BUFFER, object.uvArray, _gl.DYNAMIC_DRAW );
-
-			state.enableAttribute( program.attributes.uv );
-
+			enableAttribute( program.attributes.uv );
 			_gl.vertexAttribPointer( program.attributes.uv, 2, _gl.FLOAT, false, 0, 0 );
 
 		}
@@ -58680,14 +60733,12 @@ THREE.WebGLRenderer = function ( parameters ) {
 
 			_gl.bindBuffer( _gl.ARRAY_BUFFER, object.__webglColorBuffer );
 			_gl.bufferData( _gl.ARRAY_BUFFER, object.colorArray, _gl.DYNAMIC_DRAW );
-
-			state.enableAttribute( program.attributes.color );
-
+			enableAttribute( program.attributes.color );
 			_gl.vertexAttribPointer( program.attributes.color, 3, _gl.FLOAT, false, 0, 0 );
 
 		}
 
-		state.disableUnusedAttributes();
+		disableUnusedAttributes();
 
 		_gl.drawArrays( _gl.TRIANGLES, 0, object.count );
 
@@ -58717,7 +60768,7 @@ THREE.WebGLRenderer = function ( parameters ) {
 
 					_gl.bindBuffer( _gl.ARRAY_BUFFER, geometryAttribute.buffer );
 
-					state.enableAttribute( programAttribute );
+					enableAttribute( programAttribute );
 
 					_gl.vertexAttribPointer( programAttribute, size, _gl.FLOAT, false, 0, startIndex * size * 4 ); // 4 bytes per Float32
 
@@ -58739,7 +60790,7 @@ THREE.WebGLRenderer = function ( parameters ) {
 
 		}
 
-		state.disableUnusedAttributes();
+		disableUnusedAttributes();
 
 	}
 
@@ -58764,7 +60815,7 @@ THREE.WebGLRenderer = function ( parameters ) {
 
 		if ( updateBuffers ) {
 
-			state.initAttributes();
+			initAttributes();
 
 		}
 
@@ -58856,11 +60907,11 @@ THREE.WebGLRenderer = function ( parameters ) {
 
 				// render non-indexed triangles
 
-				_gl.drawArrays( mode, 0, position.array.length / position.itemSize );
+				_gl.drawArrays( mode, 0, position.array.length / 3 );
 
 				_this.info.render.calls ++;
-				_this.info.render.vertices += position.array.length / position.itemSize;
-				_this.info.render.faces += position.array.length / ( 3 * position.itemSize );
+				_this.info.render.vertices += position.array.length / 3;
+				_this.info.render.faces += position.array.length / 9;
 
 			}
 
@@ -58975,7 +61026,7 @@ THREE.WebGLRenderer = function ( parameters ) {
 
 			var mode = ( object.mode === THREE.LineStrip ) ? _gl.LINE_STRIP : _gl.LINES;
 
-			state.setLineWidth( material.linewidth * pixelRatio );
+			setLineWidth( material.linewidth );
 
 			var index = geometry.attributes.index;
 
@@ -59105,7 +61156,7 @@ THREE.WebGLRenderer = function ( parameters ) {
 
 		if ( updateBuffers ) {
 
-			state.initAttributes();
+			initAttributes();
 
 		}
 
@@ -59116,9 +61167,7 @@ THREE.WebGLRenderer = function ( parameters ) {
 			if ( updateBuffers ) {
 
 				_gl.bindBuffer( _gl.ARRAY_BUFFER, geometryGroup.__webglVertexBuffer );
-
-				state.enableAttribute( attributes.position );
-
+				enableAttribute( attributes.position );
 				_gl.vertexAttribPointer( attributes.position, 3, _gl.FLOAT, false, 0, 0 );
 
 			}
@@ -59149,9 +61198,7 @@ THREE.WebGLRenderer = function ( parameters ) {
 					if ( attributes[ attribute.buffer.belongsToAttribute ] >= 0 ) {
 
 						_gl.bindBuffer( _gl.ARRAY_BUFFER, attribute.buffer );
-
-						state.enableAttribute( attributes[ attribute.buffer.belongsToAttribute ] );
-
+						enableAttribute( attributes[ attribute.buffer.belongsToAttribute ] );
 						_gl.vertexAttribPointer( attributes[ attribute.buffer.belongsToAttribute ], attribute.size, _gl.FLOAT, false, 0, 0 );
 
 					}
@@ -59168,9 +61215,7 @@ THREE.WebGLRenderer = function ( parameters ) {
 				if ( object.geometry.colors.length > 0 || object.geometry.faces.length > 0 ) {
 
 					_gl.bindBuffer( _gl.ARRAY_BUFFER, geometryGroup.__webglColorBuffer );
-
-					state.enableAttribute( attributes.color );
-
+					enableAttribute( attributes.color );
 					_gl.vertexAttribPointer( attributes.color, 3, _gl.FLOAT, false, 0, 0 );
 
 				} else if ( material.defaultAttributeValues !== undefined ) {
@@ -59187,9 +61232,7 @@ THREE.WebGLRenderer = function ( parameters ) {
 			if ( attributes.normal >= 0 ) {
 
 				_gl.bindBuffer( _gl.ARRAY_BUFFER, geometryGroup.__webglNormalBuffer );
-
-				state.enableAttribute( attributes.normal );
-
+				enableAttribute( attributes.normal );
 				_gl.vertexAttribPointer( attributes.normal, 3, _gl.FLOAT, false, 0, 0 );
 
 			}
@@ -59199,9 +61242,7 @@ THREE.WebGLRenderer = function ( parameters ) {
 			if ( attributes.tangent >= 0 ) {
 
 				_gl.bindBuffer( _gl.ARRAY_BUFFER, geometryGroup.__webglTangentBuffer );
-
-				state.enableAttribute( attributes.tangent );
-
+				enableAttribute( attributes.tangent );
 				_gl.vertexAttribPointer( attributes.tangent, 4, _gl.FLOAT, false, 0, 0 );
 
 			}
@@ -59213,9 +61254,7 @@ THREE.WebGLRenderer = function ( parameters ) {
 				if ( object.geometry.faceVertexUvs[ 0 ] ) {
 
 					_gl.bindBuffer( _gl.ARRAY_BUFFER, geometryGroup.__webglUVBuffer );
-
-					state.enableAttribute( attributes.uv );
-
+					enableAttribute( attributes.uv );
 					_gl.vertexAttribPointer( attributes.uv, 2, _gl.FLOAT, false, 0, 0 );
 
 				} else if ( material.defaultAttributeValues !== undefined ) {
@@ -59232,9 +61271,7 @@ THREE.WebGLRenderer = function ( parameters ) {
 				if ( object.geometry.faceVertexUvs[ 1 ] ) {
 
 					_gl.bindBuffer( _gl.ARRAY_BUFFER, geometryGroup.__webglUV2Buffer );
-
-					state.enableAttribute( attributes.uv2 );
-
+					enableAttribute( attributes.uv2 );
 					_gl.vertexAttribPointer( attributes.uv2, 2, _gl.FLOAT, false, 0, 0 );
 
 				} else if ( material.defaultAttributeValues !== undefined ) {
@@ -59250,15 +61287,11 @@ THREE.WebGLRenderer = function ( parameters ) {
 				 attributes.skinIndex >= 0 && attributes.skinWeight >= 0 ) {
 
 				_gl.bindBuffer( _gl.ARRAY_BUFFER, geometryGroup.__webglSkinIndicesBuffer );
-
-				state.enableAttribute( attributes.skinIndex );
-
+				enableAttribute( attributes.skinIndex );
 				_gl.vertexAttribPointer( attributes.skinIndex, 4, _gl.FLOAT, false, 0, 0 );
 
 				_gl.bindBuffer( _gl.ARRAY_BUFFER, geometryGroup.__webglSkinWeightsBuffer );
-
-				state.enableAttribute( attributes.skinWeight );
-
+				enableAttribute( attributes.skinWeight );
 				_gl.vertexAttribPointer( attributes.skinWeight, 4, _gl.FLOAT, false, 0, 0 );
 
 			}
@@ -59268,16 +61301,14 @@ THREE.WebGLRenderer = function ( parameters ) {
 			if ( attributes.lineDistance >= 0 ) {
 
 				_gl.bindBuffer( _gl.ARRAY_BUFFER, geometryGroup.__webglLineDistanceBuffer );
-
-				state.enableAttribute( attributes.lineDistance );
-
+				enableAttribute( attributes.lineDistance );
 				_gl.vertexAttribPointer( attributes.lineDistance, 1, _gl.FLOAT, false, 0, 0 );
 
 			}
 
 		}
 
-		state.disableUnusedAttributes();
+		disableUnusedAttributes();
 
 		// render mesh
 
@@ -59289,8 +61320,7 @@ THREE.WebGLRenderer = function ( parameters ) {
 
 			if ( material.wireframe ) {
 
-				state.setLineWidth( material.wireframeLinewidth * pixelRatio );
-
+				setLineWidth( material.wireframeLinewidth );
 				if ( updateBuffers ) _gl.bindBuffer( _gl.ELEMENT_ARRAY_BUFFER, geometryGroup.__webglLineBuffer );
 				_gl.drawElements( _gl.LINES, geometryGroup.__webglLineCount, type, 0 );
 
@@ -59313,7 +61343,7 @@ THREE.WebGLRenderer = function ( parameters ) {
 
 			var mode = ( object.mode === THREE.LineStrip ) ? _gl.LINE_STRIP : _gl.LINES;
 
-			state.setLineWidth( material.linewidth * pixelRatio );
+			setLineWidth( material.linewidth );
 
 			_gl.drawArrays( mode, 0, geometryGroup.__webglLineCount );
 
@@ -59332,6 +61362,44 @@ THREE.WebGLRenderer = function ( parameters ) {
 
 	};
 
+	function initAttributes() {
+
+		for ( var i = 0, l = _newAttributes.length; i < l; i ++ ) {
+
+			_newAttributes[ i ] = 0;
+
+		}
+
+	}
+
+	function enableAttribute( attribute ) {
+
+		_newAttributes[ attribute ] = 1;
+
+		if ( _enabledAttributes[ attribute ] === 0 ) {
+
+			_gl.enableVertexAttribArray( attribute );
+			_enabledAttributes[ attribute ] = 1;
+
+		}
+
+	}
+
+	function disableUnusedAttributes() {
+
+		for ( var i = 0, l = _enabledAttributes.length; i < l; i ++ ) {
+
+			if ( _enabledAttributes[ i ] !== _newAttributes[ i ] ) {
+
+				_gl.disableVertexAttribArray( i );
+				_enabledAttributes[ i ] = 0;
+
+			}
+
+		}
+
+	}
+
 	function setupMorphTargets ( material, geometryGroup, object ) {
 
 		// set base
@@ -59341,17 +61409,13 @@ THREE.WebGLRenderer = function ( parameters ) {
 		if ( object.morphTargetBase !== - 1 && attributes.position >= 0 ) {
 
 			_gl.bindBuffer( _gl.ARRAY_BUFFER, geometryGroup.__webglMorphTargetsBuffers[ object.morphTargetBase ] );
-
-			state.enableAttribute( attributes.position );
-
+			enableAttribute( attributes.position );
 			_gl.vertexAttribPointer( attributes.position, 3, _gl.FLOAT, false, 0, 0 );
 
 		} else if ( attributes.position >= 0 ) {
 
 			_gl.bindBuffer( _gl.ARRAY_BUFFER, geometryGroup.__webglVertexBuffer );
-
-			state.enableAttribute( attributes.position );
-
+			enableAttribute( attributes.position );
 			_gl.vertexAttribPointer( attributes.position, 3, _gl.FLOAT, false, 0, 0 );
 
 		}
@@ -59373,9 +61437,7 @@ THREE.WebGLRenderer = function ( parameters ) {
 				if ( attribute >= 0 ) {
 
 					_gl.bindBuffer( _gl.ARRAY_BUFFER, geometryGroup.__webglMorphTargetsBuffers[ order[ m ] ] );
-
-					state.enableAttribute( attribute );
-
+					enableAttribute( attribute );
 					_gl.vertexAttribPointer( attribute, 3, _gl.FLOAT, false, 0, 0 );
 
 				}
@@ -59385,9 +61447,7 @@ THREE.WebGLRenderer = function ( parameters ) {
 				if ( attribute >= 0 && material.morphNormals ) {
 
 					_gl.bindBuffer( _gl.ARRAY_BUFFER, geometryGroup.__webglMorphNormalsBuffers[ order[ m ] ] );
-
-					state.enableAttribute( attribute );
-
+					enableAttribute( attribute );
 					_gl.vertexAttribPointer( attribute, 3, _gl.FLOAT, false, 0, 0 );
 
 				}
@@ -59404,14 +61464,6 @@ THREE.WebGLRenderer = function ( parameters ) {
 
 			var activeInfluenceIndices = [];
 			var influences = object.morphTargetInfluences;
-			var morphTargets = object.geometry.morphTargets;
-
-			if ( influences.length > morphTargets.length ) {
-
-				console.warn( 'THREE.WebGLRenderer: Influences array is bigger than morphTargets array.' );
-				influences.length = morphTargets.length;
-
-			}
 
 			for ( var i = 0, il = influences.length; i < il; i ++ ) {
 
@@ -59449,9 +61501,7 @@ THREE.WebGLRenderer = function ( parameters ) {
 					if ( attribute >= 0 ) {
 
 						_gl.bindBuffer( _gl.ARRAY_BUFFER, geometryGroup.__webglMorphTargetsBuffers[ influenceIndex ] );
-
-						state.enableAttribute( attribute );
-
+						enableAttribute( attribute );
 						_gl.vertexAttribPointer( attribute, 3, _gl.FLOAT, false, 0, 0 );
 
 					}
@@ -59461,10 +61511,9 @@ THREE.WebGLRenderer = function ( parameters ) {
 					if ( attribute >= 0 && material.morphNormals ) {
 
 						_gl.bindBuffer( _gl.ARRAY_BUFFER, geometryGroup.__webglMorphNormalsBuffers[ influenceIndex ] );
-
-						state.enableAttribute( attribute );
-
+						enableAttribute( attribute );
 						_gl.vertexAttribPointer( attribute, 3, _gl.FLOAT, false, 0, 0 );
+
 
 					}
 
@@ -59504,11 +61553,7 @@ THREE.WebGLRenderer = function ( parameters ) {
 
 	function painterSortStable ( a, b ) {
 
-		if ( a.object.renderOrder !== b.object.renderOrder ) {
-
-			return a.object.renderOrder - b.object.renderOrder;
-
-		} else if ( a.material.id !== b.material.id ) {
+		if ( a.material.id !== b.material.id ) {
 
 			return a.material.id - b.material.id;
 
@@ -59526,11 +61571,7 @@ THREE.WebGLRenderer = function ( parameters ) {
 
 	function reversePainterSortStable ( a, b ) {
 
-		if ( a.object.renderOrder !== b.object.renderOrder ) {
-
-			return a.object.renderOrder - b.object.renderOrder;
-
-		} if ( a.z !== b.z ) {
+		if ( a.z !== b.z ) {
 
 			return b.z - a.z;
 
@@ -59554,7 +61595,7 @@ THREE.WebGLRenderer = function ( parameters ) {
 
 		if ( camera instanceof THREE.Camera === false ) {
 
-			THREE.error( 'THREE.WebGLRenderer.render: camera is not an instance of THREE.Camera.' );
+			console.error( 'THREE.WebGLRenderer.render: camera is not an instance of THREE.Camera.' );
 			return;
 
 		}
@@ -59647,27 +61688,32 @@ THREE.WebGLRenderer = function ( parameters ) {
 
 		if ( scene.overrideMaterial ) {
 
-			var overrideMaterial = scene.overrideMaterial;
+			var material = scene.overrideMaterial;
 
-			setMaterial( overrideMaterial );
+			this.setBlending( material.blending, material.blendEquation, material.blendSrc, material.blendDst );
+			this.setDepthTest( material.depthTest );
+			this.setDepthWrite( material.depthWrite );
+			setPolygonOffset( material.polygonOffset, material.polygonOffsetFactor, material.polygonOffsetUnits );
 
-			renderObjects( opaqueObjects, camera, lights, fog, overrideMaterial );
-			renderObjects( transparentObjects, camera, lights, fog, overrideMaterial );
-			renderObjectsImmediate( _webglObjectsImmediate, '', camera, lights, fog, overrideMaterial );
+			renderObjects( opaqueObjects, camera, lights, fog, true, material );
+			renderObjects( transparentObjects, camera, lights, fog, true, material );
+			renderObjectsImmediate( _webglObjectsImmediate, '', camera, lights, fog, false, material );
 
 		} else {
 
+			var material = null;
+
 			// opaque pass (front-to-back order)
 
-			state.setBlending( THREE.NoBlending );
+			this.setBlending( THREE.NoBlending );
 
-			renderObjects( opaqueObjects, camera, lights, fog, null );
-			renderObjectsImmediate( _webglObjectsImmediate, 'opaque', camera, lights, fog, null );
+			renderObjects( opaqueObjects, camera, lights, fog, false, material );
+			renderObjectsImmediate( _webglObjectsImmediate, 'opaque', camera, lights, fog, false, material );
 
 			// transparent pass (back-to-front order)
 
-			renderObjects( transparentObjects, camera, lights, fog, null );
-			renderObjectsImmediate( _webglObjectsImmediate, 'transparent', camera, lights, fog, null );
+			renderObjects( transparentObjects, camera, lights, fog, true, material );
+			renderObjectsImmediate( _webglObjectsImmediate, 'transparent', camera, lights, fog, true, material );
 
 		}
 
@@ -59686,9 +61732,8 @@ THREE.WebGLRenderer = function ( parameters ) {
 
 		// Ensure depth buffer writing is enabled so it can be cleared on next render
 
-		state.setDepthTest( true );
-		state.setDepthWrite( true );
-		state.setColorWrite( true );
+		this.setDepthTest( true );
+		this.setDepthWrite( true );
 
 		// _gl.finish();
 
@@ -59726,7 +61771,7 @@ THREE.WebGLRenderer = function ( parameters ) {
 
 					for ( var i = 0, l = webglObjects.length; i < l; i ++ ) {
 
-						var webglObject = webglObjects[ i ];
+						var webglObject = webglObjects[i];
 
 						unrollBufferMaterial( webglObject );
 
@@ -59757,7 +61802,7 @@ THREE.WebGLRenderer = function ( parameters ) {
 
 	}
 
-	function renderObjects( renderList, camera, lights, fog, overrideMaterial ) {
+	function renderObjects( renderList, camera, lights, fog, useBlending, overrideMaterial ) {
 
 		var material;
 
@@ -59780,7 +61825,11 @@ THREE.WebGLRenderer = function ( parameters ) {
 
 				if ( ! material ) continue;
 
-				setMaterial( material );
+				if ( useBlending ) _this.setBlending( material.blending, material.blendEquation, material.blendSrc, material.blendDst );
+
+				_this.setDepthTest( material.depthTest );
+				_this.setDepthWrite( material.depthWrite );
+				setPolygonOffset( material.polygonOffset, material.polygonOffsetFactor, material.polygonOffsetUnits );
 
 			}
 
@@ -59800,7 +61849,7 @@ THREE.WebGLRenderer = function ( parameters ) {
 
 	}
 
-	function renderObjectsImmediate ( renderList, materialType, camera, lights, fog, overrideMaterial ) {
+	function renderObjectsImmediate ( renderList, materialType, camera, lights, fog, useBlending, overrideMaterial ) {
 
 		var material;
 
@@ -59821,7 +61870,11 @@ THREE.WebGLRenderer = function ( parameters ) {
 
 					if ( ! material ) continue;
 
-					setMaterial( material );
+					if ( useBlending ) _this.setBlending( material.blending, material.blendEquation, material.blendSrc, material.blendDst );
+
+					_this.setDepthTest( material.depthTest );
+					_this.setDepthWrite( material.depthWrite );
+					setPolygonOffset( material.polygonOffset, material.polygonOffsetFactor, material.polygonOffsetUnits );
 
 				}
 
@@ -60193,36 +62246,20 @@ THREE.WebGLRenderer = function ( parameters ) {
 
 				var key = attributesKeys[ i ];
 				var attribute = attributes[ key ];
-				var bufferType = ( key === 'index' ) ? _gl.ELEMENT_ARRAY_BUFFER : _gl.ARRAY_BUFFER;
 
 				if ( attribute.buffer === undefined ) {
 
 					attribute.buffer = _gl.createBuffer();
+					attribute.needsUpdate = true;
+
+				}
+
+				if ( attribute.needsUpdate === true ) {
+
+					var bufferType = ( key === 'index' ) ? _gl.ELEMENT_ARRAY_BUFFER : _gl.ARRAY_BUFFER;
+
 					_gl.bindBuffer( bufferType, attribute.buffer );
-					_gl.bufferData( bufferType, attribute.array, ( attribute instanceof THREE.DynamicBufferAttribute ) ? _gl.DYNAMIC_DRAW : _gl.STATIC_DRAW );
-
-					attribute.needsUpdate = false;
-
-				} else if ( attribute.needsUpdate === true ) {
-
-					_gl.bindBuffer( bufferType, attribute.buffer );
-
-					if ( attribute.updateRange === undefined || attribute.updateRange.count === -1 ) { // Not using update ranges
-
-						_gl.bufferSubData( bufferType, 0, attribute.array );
-
-					} else if ( attribute.updateRange.count === 0 ) {
-
-						console.error( 'THREE.WebGLRenderer.updateObject: using updateRange for THREE.DynamicBufferAttribute and marked as needsUpdate but count is 0, ensure you are using set methods or updating manually.' );
-
-					} else {
-
-						_gl.bufferSubData( bufferType, attribute.updateRange.offset * attribute.array.BYTES_PER_ELEMENT,
-										   attribute.array.subarray( attribute.updateRange.offset, attribute.updateRange.offset + attribute.updateRange.count ) );
-
-						attribute.updateRange.count = 0; // reset range
-
-					}
+					_gl.bufferData( bufferType, attribute.array, _gl.STATIC_DRAW );
 
 					attribute.needsUpdate = false;
 
@@ -60246,6 +62283,12 @@ THREE.WebGLRenderer = function ( parameters ) {
 
 				var geometryGroup = geometryGroupsList[ i ];
 				var material = getBufferMaterial( object, geometryGroup );
+
+				if ( geometry.groupsNeedUpdate === true ) {
+
+					initMeshBuffers( geometryGroup, object );
+
+				}
 
 				var customAttributesDirty = material.attributes && areCustomAttributesDirty( material );
 
@@ -60436,8 +62479,6 @@ THREE.WebGLRenderer = function ( parameters ) {
 			useFog: material.fog,
 			fogExp: fog instanceof THREE.FogExp2,
 
-			flatShading: material.shading === THREE.FlatShading,
-
 			sizeAttenuation: material.sizeAttenuation,
 			logarithmicDepthBuffer: _logarithmicDepthBuffer,
 
@@ -60587,25 +62628,6 @@ THREE.WebGLRenderer = function ( parameters ) {
 			}
 
 		}
-
-	}
-
-	function setMaterial( material ) {
-
-		if ( material.transparent === true ) {
-
-			state.setBlending( material.blending, material.blendEquation, material.blendSrc, material.blendDst, material.blendEquationAlpha, material.blendSrcAlpha, material.blendDstAlpha );
-
-		} else {
-
-			state.setBlending( THREE.NoBlending );
-
-		}
-
-		state.setDepthTest( material.depthTest );
-		state.setDepthWrite( material.depthWrite );
-		state.setColorWrite( material.colorWrite );
-		state.setPolygonOffset( material.polygonOffset, material.polygonOffsetFactor, material.polygonOffsetUnits );
 
 	}
 
@@ -60861,7 +62883,15 @@ THREE.WebGLRenderer = function ( parameters ) {
 
 		uniforms.opacity.value = material.opacity;
 
-		uniforms.diffuse.value = material.color;
+		if ( _this.gammaInput ) {
+
+			uniforms.diffuse.value.copyGammaToLinear( material.color );
+
+		} else {
+
+			uniforms.diffuse.value = material.color;
+
+		}
 
 		uniforms.map.value = material.map;
 		uniforms.lightMap.value = material.lightMap;
@@ -60925,7 +62955,17 @@ THREE.WebGLRenderer = function ( parameters ) {
 		uniforms.envMap.value = material.envMap;
 		uniforms.flipEnvMap.value = ( material.envMap instanceof THREE.WebGLRenderTargetCube ) ? 1 : - 1;
 
-		uniforms.reflectivity.value = material.reflectivity;
+		if ( _this.gammaInput ) {
+
+			//uniforms.reflectivity.value = material.reflectivity * material.reflectivity;
+			uniforms.reflectivity.value = material.reflectivity;
+
+		} else {
+
+			uniforms.reflectivity.value = material.reflectivity;
+
+		}
+
 		uniforms.refractionRatio.value = material.refractionRatio;
 
 	}
@@ -60954,15 +62994,6 @@ THREE.WebGLRenderer = function ( parameters ) {
 
 		uniforms.map.value = material.map;
 
-		if ( material.map !== null ) {
-
-			var offset = material.map.offset;
-			var repeat = material.map.repeat;
-
-			uniforms.offsetRepeat.value.set( offset.x, offset.y, repeat.x, repeat.y );
-
-		}
-
 	}
 
 	function refreshUniformsFog ( uniforms, fog ) {
@@ -60986,8 +63017,19 @@ THREE.WebGLRenderer = function ( parameters ) {
 
 		uniforms.shininess.value = material.shininess;
 
-		uniforms.emissive.value = material.emissive;
-		uniforms.specular.value = material.specular;
+		if ( _this.gammaInput ) {
+
+			uniforms.ambient.value.copyGammaToLinear( material.ambient );
+			uniforms.emissive.value.copyGammaToLinear( material.emissive );
+			uniforms.specular.value.copyGammaToLinear( material.specular );
+
+		} else {
+
+			uniforms.ambient.value = material.ambient;
+			uniforms.emissive.value = material.emissive;
+			uniforms.specular.value = material.specular;
+
+		}
 
 		if ( material.wrapAround ) {
 
@@ -60999,7 +63041,17 @@ THREE.WebGLRenderer = function ( parameters ) {
 
 	function refreshUniformsLambert ( uniforms, material ) {
 
-		uniforms.emissive.value = material.emissive;
+		if ( _this.gammaInput ) {
+
+			uniforms.ambient.value.copyGammaToLinear( material.ambient );
+			uniforms.emissive.value.copyGammaToLinear( material.emissive );
+
+		} else {
+
+			uniforms.ambient.value = material.ambient;
+			uniforms.emissive.value = material.emissive;
+
+		}
 
 		if ( material.wrapAround ) {
 
@@ -61019,7 +63071,6 @@ THREE.WebGLRenderer = function ( parameters ) {
 		uniforms.pointLightColor.value = lights.point.colors;
 		uniforms.pointLightPosition.value = lights.point.positions;
 		uniforms.pointLightDistance.value = lights.point.distances;
-		uniforms.pointLightDecay.value = lights.point.decays;
 
 		uniforms.spotLightColor.value = lights.spot.colors;
 		uniforms.spotLightPosition.value = lights.spot.positions;
@@ -61027,7 +63078,6 @@ THREE.WebGLRenderer = function ( parameters ) {
 		uniforms.spotLightDirection.value = lights.spot.directions;
 		uniforms.spotLightAngleCos.value = lights.spot.anglesCos;
 		uniforms.spotLightExponent.value = lights.spot.exponents;
-		uniforms.spotLightDecay.value = lights.spot.decays;
 
 		uniforms.hemisphereLightSkyColor.value = lights.hemi.skyColors;
 		uniforms.hemisphereLightGroundColor.value = lights.hemi.groundColors;
@@ -61037,29 +63087,27 @@ THREE.WebGLRenderer = function ( parameters ) {
 
 	// If uniforms are marked as clean, they don't need to be loaded to the GPU.
 
-	function markUniformsLightsNeedsUpdate ( uniforms, value ) {
+	function markUniformsLightsNeedsUpdate ( uniforms, boolean ) {
 
-		uniforms.ambientLightColor.needsUpdate = value;
+		uniforms.ambientLightColor.needsUpdate = boolean;
 
-		uniforms.directionalLightColor.needsUpdate = value;
-		uniforms.directionalLightDirection.needsUpdate = value;
+		uniforms.directionalLightColor.needsUpdate = boolean;
+		uniforms.directionalLightDirection.needsUpdate = boolean;
 
-		uniforms.pointLightColor.needsUpdate = value;
-		uniforms.pointLightPosition.needsUpdate = value;
-		uniforms.pointLightDistance.needsUpdate = value;
-		uniforms.pointLightDecay.needsUpdate = value;
+		uniforms.pointLightColor.needsUpdate = boolean;
+		uniforms.pointLightPosition.needsUpdate = boolean;
+		uniforms.pointLightDistance.needsUpdate = boolean;
 
-		uniforms.spotLightColor.needsUpdate = value;
-		uniforms.spotLightPosition.needsUpdate = value;
-		uniforms.spotLightDistance.needsUpdate = value;
-		uniforms.spotLightDirection.needsUpdate = value;
-		uniforms.spotLightAngleCos.needsUpdate = value;
-		uniforms.spotLightExponent.needsUpdate = value;
-		uniforms.spotLightDecay.needsUpdate = value;
+		uniforms.spotLightColor.needsUpdate = boolean;
+		uniforms.spotLightPosition.needsUpdate = boolean;
+		uniforms.spotLightDistance.needsUpdate = boolean;
+		uniforms.spotLightDirection.needsUpdate = boolean;
+		uniforms.spotLightAngleCos.needsUpdate = boolean;
+		uniforms.spotLightExponent.needsUpdate = boolean;
 
-		uniforms.hemisphereLightSkyColor.needsUpdate = value;
-		uniforms.hemisphereLightGroundColor.needsUpdate = value;
-		uniforms.hemisphereLightDirection.needsUpdate = value;
+		uniforms.hemisphereLightSkyColor.needsUpdate = boolean;
+		uniforms.hemisphereLightGroundColor.needsUpdate = boolean;
+		uniforms.hemisphereLightDirection.needsUpdate = boolean;
 
 	}
 
@@ -61115,7 +63163,7 @@ THREE.WebGLRenderer = function ( parameters ) {
 
 		if ( textureUnit >= _maxTextures ) {
 
-			THREE.warn( 'WebGLRenderer: trying to use ' + textureUnit + ' texture units while this GPU supports only ' + _maxTextures );
+			console.warn( 'WebGLRenderer: trying to use ' + textureUnit + ' texture units while this GPU supports only ' + _maxTextures );
 
 		}
 
@@ -61453,7 +63501,7 @@ THREE.WebGLRenderer = function ( parameters ) {
 
 				default:
 
-					THREE.warn( 'THREE.WebGLRenderer: Unknown uniform type: ' + type );
+					console.warn( 'THREE.WebGLRenderer: Unknown uniform type: ' + type );
 
 			}
 
@@ -61468,6 +63516,16 @@ THREE.WebGLRenderer = function ( parameters ) {
 
 	}
 
+	//
+
+	function setColorGamma( array, offset, color, intensitySq ) {
+
+		array[ offset ]     = color.r * color.r * intensitySq;
+		array[ offset + 1 ] = color.g * color.g * intensitySq;
+		array[ offset + 2 ] = color.b * color.b * intensitySq;
+
+	}
+
 	function setColorLinear( array, offset, color, intensity ) {
 
 		array[ offset ]     = color.r * intensity;
@@ -61478,10 +63536,11 @@ THREE.WebGLRenderer = function ( parameters ) {
 
 	function setupLights ( lights ) {
 
-		var l, ll, light,
+		var l, ll, light, n,
 		r = 0, g = 0, b = 0,
 		color, skyColor, groundColor,
-		intensity,
+		intensity,  intensitySq,
+		position,
 		distance,
 
 		zlights = _lights,
@@ -61492,7 +63551,6 @@ THREE.WebGLRenderer = function ( parameters ) {
 		pointColors = zlights.point.colors,
 		pointPositions = zlights.point.positions,
 		pointDistances = zlights.point.distances,
-		pointDecays = zlights.point.decays,
 
 		spotColors = zlights.spot.colors,
 		spotPositions = zlights.spot.positions,
@@ -61500,7 +63558,6 @@ THREE.WebGLRenderer = function ( parameters ) {
 		spotDirections = zlights.spot.directions,
 		spotAnglesCos = zlights.spot.anglesCos,
 		spotExponents = zlights.spot.exponents,
-		spotDecays = zlights.spot.decays,
 
 		hemiSkyColors = zlights.hemi.skyColors,
 		hemiGroundColors = zlights.hemi.groundColors,
@@ -61535,9 +63592,19 @@ THREE.WebGLRenderer = function ( parameters ) {
 
 				if ( ! light.visible ) continue;
 
-				r += color.r;
-				g += color.g;
-				b += color.b;
+				if ( _this.gammaInput ) {
+
+					r += color.r * color.r;
+					g += color.g * color.g;
+					b += color.b * color.b;
+
+				} else {
+
+					r += color.r;
+					g += color.g;
+					b += color.b;
+
+				}
 
 			} else if ( light instanceof THREE.DirectionalLight ) {
 
@@ -61556,7 +63623,15 @@ THREE.WebGLRenderer = function ( parameters ) {
 				dirPositions[ dirOffset + 1 ] = _direction.y;
 				dirPositions[ dirOffset + 2 ] = _direction.z;
 
-				setColorLinear( dirColors, dirOffset, color, intensity );
+				if ( _this.gammaInput ) {
+
+					setColorGamma( dirColors, dirOffset, color, intensity * intensity );
+
+				} else {
+
+					setColorLinear( dirColors, dirOffset, color, intensity );
+
+				}
 
 				dirLength += 1;
 
@@ -61568,7 +63643,15 @@ THREE.WebGLRenderer = function ( parameters ) {
 
 				pointOffset = pointLength * 3;
 
-				setColorLinear( pointColors, pointOffset, color, intensity );
+				if ( _this.gammaInput ) {
+
+					setColorGamma( pointColors, pointOffset, color, intensity * intensity );
+
+				} else {
+
+					setColorLinear( pointColors, pointOffset, color, intensity );
+
+				}
 
 				_vector3.setFromMatrixPosition( light.matrixWorld );
 
@@ -61576,9 +63659,7 @@ THREE.WebGLRenderer = function ( parameters ) {
 				pointPositions[ pointOffset + 1 ] = _vector3.y;
 				pointPositions[ pointOffset + 2 ] = _vector3.z;
 
-				// distance is 0 if decay is 0, because there is no attenuation at all.
 				pointDistances[ pointLength ] = distance;
-				pointDecays[ pointLength ] = ( light.distance === 0 ) ? 0.0 : light.decay;
 
 				pointLength += 1;
 
@@ -61590,7 +63671,15 @@ THREE.WebGLRenderer = function ( parameters ) {
 
 				spotOffset = spotLength * 3;
 
-				setColorLinear( spotColors, spotOffset, color, intensity );
+				if ( _this.gammaInput ) {
+
+					setColorGamma( spotColors, spotOffset, color, intensity * intensity );
+
+				} else {
+
+					setColorLinear( spotColors, spotOffset, color, intensity );
+
+				}
 
 				_direction.setFromMatrixPosition( light.matrixWorld );
 
@@ -61610,7 +63699,6 @@ THREE.WebGLRenderer = function ( parameters ) {
 
 				spotAnglesCos[ spotLength ] = Math.cos( light.angle );
 				spotExponents[ spotLength ] = light.exponent;
-				spotDecays[ spotLength ] = ( light.distance === 0 ) ? 0.0 : light.decay;
 
 				spotLength += 1;
 
@@ -61632,8 +63720,19 @@ THREE.WebGLRenderer = function ( parameters ) {
 				skyColor = light.color;
 				groundColor = light.groundColor;
 
-				setColorLinear( hemiSkyColors, hemiOffset, skyColor, intensity );
-				setColorLinear( hemiGroundColors, hemiOffset, groundColor, intensity );
+				if ( _this.gammaInput ) {
+
+					intensitySq = intensity * intensity;
+
+					setColorGamma( hemiSkyColors, hemiOffset, skyColor, intensitySq );
+					setColorGamma( hemiGroundColors, hemiOffset, groundColor, intensitySq );
+
+				} else {
+
+					setColorLinear( hemiSkyColors, hemiOffset, skyColor, intensity );
+					setColorLinear( hemiGroundColors, hemiOffset, groundColor, intensity );
+
+				}
 
 				hemiLength += 1;
 
@@ -61703,8 +63802,187 @@ THREE.WebGLRenderer = function ( parameters ) {
 
 	this.setMaterialFaces = function ( material ) {
 
-		state.setDoubleSided( material.side === THREE.DoubleSide );
-		state.setFlipSided( material.side === THREE.BackSide );
+		var doubleSided = material.side === THREE.DoubleSide;
+		var flipSided = material.side === THREE.BackSide;
+
+		if ( _oldDoubleSided !== doubleSided ) {
+
+			if ( doubleSided ) {
+
+				_gl.disable( _gl.CULL_FACE );
+
+			} else {
+
+				_gl.enable( _gl.CULL_FACE );
+
+			}
+
+			_oldDoubleSided = doubleSided;
+
+		}
+
+		if ( _oldFlipSided !== flipSided ) {
+
+			if ( flipSided ) {
+
+				_gl.frontFace( _gl.CW );
+
+			} else {
+
+				_gl.frontFace( _gl.CCW );
+
+			}
+
+			_oldFlipSided = flipSided;
+
+		}
+
+	};
+
+	this.setDepthTest = function ( depthTest ) {
+
+		if ( _oldDepthTest !== depthTest ) {
+
+			if ( depthTest ) {
+
+				_gl.enable( _gl.DEPTH_TEST );
+
+			} else {
+
+				_gl.disable( _gl.DEPTH_TEST );
+
+			}
+
+			_oldDepthTest = depthTest;
+
+		}
+
+	};
+
+	this.setDepthWrite = function ( depthWrite ) {
+
+		if ( _oldDepthWrite !== depthWrite ) {
+
+			_gl.depthMask( depthWrite );
+			_oldDepthWrite = depthWrite;
+
+		}
+
+	};
+
+	function setLineWidth ( width ) {
+
+		width *= pixelRatio;
+
+		if ( width !== _oldLineWidth ) {
+
+			_gl.lineWidth( width );
+
+			_oldLineWidth = width;
+
+		}
+
+	}
+
+	function setPolygonOffset ( polygonoffset, factor, units ) {
+
+		if ( _oldPolygonOffset !== polygonoffset ) {
+
+			if ( polygonoffset ) {
+
+				_gl.enable( _gl.POLYGON_OFFSET_FILL );
+
+			} else {
+
+				_gl.disable( _gl.POLYGON_OFFSET_FILL );
+
+			}
+
+			_oldPolygonOffset = polygonoffset;
+
+		}
+
+		if ( polygonoffset && ( _oldPolygonOffsetFactor !== factor || _oldPolygonOffsetUnits !== units ) ) {
+
+			_gl.polygonOffset( factor, units );
+
+			_oldPolygonOffsetFactor = factor;
+			_oldPolygonOffsetUnits = units;
+
+		}
+
+	}
+
+	this.setBlending = function ( blending, blendEquation, blendSrc, blendDst ) {
+
+		if ( blending !== _oldBlending ) {
+
+			if ( blending === THREE.NoBlending ) {
+
+				_gl.disable( _gl.BLEND );
+
+			} else if ( blending === THREE.AdditiveBlending ) {
+
+				_gl.enable( _gl.BLEND );
+				_gl.blendEquation( _gl.FUNC_ADD );
+				_gl.blendFunc( _gl.SRC_ALPHA, _gl.ONE );
+
+			} else if ( blending === THREE.SubtractiveBlending ) {
+
+				// TODO: Find blendFuncSeparate() combination
+				_gl.enable( _gl.BLEND );
+				_gl.blendEquation( _gl.FUNC_ADD );
+				_gl.blendFunc( _gl.ZERO, _gl.ONE_MINUS_SRC_COLOR );
+
+			} else if ( blending === THREE.MultiplyBlending ) {
+
+				// TODO: Find blendFuncSeparate() combination
+				_gl.enable( _gl.BLEND );
+				_gl.blendEquation( _gl.FUNC_ADD );
+				_gl.blendFunc( _gl.ZERO, _gl.SRC_COLOR );
+
+			} else if ( blending === THREE.CustomBlending ) {
+
+				_gl.enable( _gl.BLEND );
+
+			} else {
+
+				_gl.enable( _gl.BLEND );
+				_gl.blendEquationSeparate( _gl.FUNC_ADD, _gl.FUNC_ADD );
+				_gl.blendFuncSeparate( _gl.SRC_ALPHA, _gl.ONE_MINUS_SRC_ALPHA, _gl.ONE, _gl.ONE_MINUS_SRC_ALPHA );
+
+			}
+
+			_oldBlending = blending;
+
+		}
+
+		if ( blending === THREE.CustomBlending ) {
+
+			if ( blendEquation !== _oldBlendEquation ) {
+
+				_gl.blendEquation( paramThreeToGL( blendEquation ) );
+
+				_oldBlendEquation = blendEquation;
+
+			}
+
+			if ( blendSrc !== _oldBlendSrc || blendDst !== _oldBlendDst ) {
+
+				_gl.blendFunc( paramThreeToGL( blendSrc ), paramThreeToGL( blendDst ) );
+
+				_oldBlendSrc = blendSrc;
+				_oldBlendDst = blendDst;
+
+			}
+
+		} else {
+
+			_oldBlendEquation = null;
+			_oldBlendSrc = null;
+			_oldBlendDst = null;
+
+		}
 
 	};
 
@@ -61729,7 +64007,7 @@ THREE.WebGLRenderer = function ( parameters ) {
 
 			if ( texture.wrapS !== THREE.ClampToEdgeWrapping || texture.wrapT !== THREE.ClampToEdgeWrapping ) {
 
-				THREE.warn( 'THREE.WebGLRenderer: Texture is not power of two. Texture.wrapS and Texture.wrapT should be set to THREE.ClampToEdgeWrapping. ( ' + texture.sourceFile + ' )' );
+				console.warn( 'THREE.WebGLRenderer: Texture is not power of two. Texture.wrapS and Texture.wrapT is set to THREE.ClampToEdgeWrapping. ( ' + texture.sourceFile + ' )' );
 
 			}
 
@@ -61738,7 +64016,7 @@ THREE.WebGLRenderer = function ( parameters ) {
 
 			if ( texture.minFilter !== THREE.NearestFilter && texture.minFilter !== THREE.LinearFilter ) {
 
-				THREE.warn( 'THREE.WebGLRenderer: Texture is not power of two. Texture.minFilter should be set to THREE.NearestFilter or THREE.LinearFilter. ( ' + texture.sourceFile + ' )' );
+				console.warn( 'THREE.WebGLRenderer: Texture is not power of two. Texture.minFilter is set to THREE.LinearFilter or THREE.NearestFilter. ( ' + texture.sourceFile + ' )' );
 
 			}
 
@@ -61746,12 +64024,12 @@ THREE.WebGLRenderer = function ( parameters ) {
 
 		extension = extensions.get( 'EXT_texture_filter_anisotropic' );
 
-		if ( extension && texture.type !== THREE.FloatType && texture.type !== THREE.HalfFloatType ) {
+		if ( extension && texture.type !== THREE.FloatType ) {
 
-			if ( texture.anisotropy > 1 || texture.__currentAnisotropy ) {
+			if ( texture.anisotropy > 1 || texture.__oldAnisotropy ) {
 
 				_gl.texParameterf( textureType, extension.TEXTURE_MAX_ANISOTROPY_EXT, Math.min( texture.anisotropy, _this.getMaxAnisotropy() ) );
-				texture.__currentAnisotropy = texture.anisotropy;
+				texture.__oldAnisotropy = texture.anisotropy;
 
 			}
 
@@ -61827,7 +64105,7 @@ THREE.WebGLRenderer = function ( parameters ) {
 
 					} else {
 
-						THREE.warn( "THREE.WebGLRenderer: Attempt to load unsupported compressed texture format in .uploadTexture()" );
+						console.warn( "Attempt to load unsupported compressed texture format" );
 
 					}
 
@@ -61904,7 +64182,7 @@ THREE.WebGLRenderer = function ( parameters ) {
 			var context = canvas.getContext( '2d' );
 			context.drawImage( image, 0, 0, image.width, image.height, 0, 0, canvas.width, canvas.height );
 
-			THREE.warn( 'THREE.WebGLRenderer: image is too big (' + image.width + 'x' + image.height + '). Resized to ' + canvas.width + 'x' + canvas.height, image );
+			console.log( 'THREE.WebGLRenderer:', image, 'is too big (' + image.width + 'x' + image.height + '). Resized to ' + canvas.width + 'x' + canvas.height + '.' );
 
 			return canvas;
 
@@ -61991,7 +64269,7 @@ THREE.WebGLRenderer = function ( parameters ) {
 
 								} else {
 
-									THREE.warn( "THREE.WebGLRenderer: Attempt to load unsupported compressed texture format in .setCubeTexture()" );
+									console.warn( "Attempt to load unsupported compressed texture format" );
 
 								}
 
@@ -62221,54 +64499,6 @@ THREE.WebGLRenderer = function ( parameters ) {
 
 	};
 
-	this.readRenderTargetPixels = function( renderTarget, x, y, width, height, buffer ) {
-
-		if ( ! ( renderTarget instanceof THREE.WebGLRenderTarget ) ) {
-
-			console.error( 'THREE.WebGLRenderer.readRenderTargetPixels: renderTarget is not THREE.WebGLRenderTarget.' );
-			return;
-
-		}
-
-		if ( renderTarget.__webglFramebuffer ) {
-
-			if ( renderTarget.format !== THREE.RGBAFormat ) {
-
-				console.error( 'THREE.WebGLRenderer.readRenderTargetPixels: renderTarget is not in RGBA format. readPixels can read only RGBA format.' );
-				return;
-
-			}
-
-			var restore = false;
-
-			if ( renderTarget.__webglFramebuffer !== _currentFramebuffer ) {
-
-				_gl.bindFramebuffer( _gl.FRAMEBUFFER, renderTarget.__webglFramebuffer );
-
-				restore = true;
-
-			}
-
-			if ( _gl.checkFramebufferStatus( _gl.FRAMEBUFFER ) === _gl.FRAMEBUFFER_COMPLETE ) {
-
-				_gl.readPixels( x, y, width, height, _gl.RGBA, _gl.UNSIGNED_BYTE, buffer );
-
-			} else {
-
-				console.error( 'THREE.WebGLRenderer.readRenderTargetPixels: readPixels from renderTarget failed. Framebuffer not complete.' );
-
-			}
-
-			if ( restore ) {
-
-				_gl.bindFramebuffer( _gl.FRAMEBUFFER, _currentFramebuffer );
-
-			}
-
-		}
-
-	};
-
 	function updateRenderTargetMipmap ( renderTarget ) {
 
 		if ( renderTarget instanceof THREE.WebGLRenderTargetCube ) {
@@ -62330,14 +64560,6 @@ THREE.WebGLRenderer = function ( parameters ) {
 		if ( p === THREE.IntType ) return _gl.INT;
 		if ( p === THREE.UnsignedIntType ) return _gl.UNSIGNED_INT;
 		if ( p === THREE.FloatType ) return _gl.FLOAT;
-
-		extension = extensions.get( 'OES_texture_half_float' );
-
-		if ( extension !== null ) {
-
-			if ( p === THREE.HalfFloatType ) return extension.HALF_FLOAT_OES;
-
-		}
 
 		if ( p === THREE.AlphaFormat ) return _gl.ALPHA;
 		if ( p === THREE.RGBFormat ) return _gl.RGB;
@@ -62426,7 +64648,7 @@ THREE.WebGLRenderer = function ( parameters ) {
 
 				if ( maxBones < object.skeleton.bones.length ) {
 
-					THREE.warn( 'WebGLRenderer: too many bones - ' + object.skeleton.bones.length + ', this GPU supports just ' + maxBones + ' (try OpenGL instead of ANGLE)' );
+					console.warn( 'WebGLRenderer: too many bones - ' + object.skeleton.bones.length + ', this GPU supports just ' + maxBones + ' (try OpenGL instead of ANGLE)' );
 
 				}
 
@@ -62485,25 +64707,25 @@ THREE.WebGLRenderer = function ( parameters ) {
 
 	this.initMaterial = function () {
 
-		THREE.warn( 'THREE.WebGLRenderer: .initMaterial() has been removed.' );
+		console.warn( 'THREE.WebGLRenderer: .initMaterial() has been removed.' );
 
 	};
 
 	this.addPrePlugin = function () {
 
-		THREE.warn( 'THREE.WebGLRenderer: .addPrePlugin() has been removed.' );
+		console.warn( 'THREE.WebGLRenderer: .addPrePlugin() has been removed.' );
 
 	};
 
 	this.addPostPlugin = function () {
 
-		THREE.warn( 'THREE.WebGLRenderer: .addPostPlugin() has been removed.' );
+		console.warn( 'THREE.WebGLRenderer: .addPostPlugin() has been removed.' );
 
 	};
 
 	this.updateShadowMap = function () {
 
-		THREE.warn( 'THREE.WebGLRenderer: .updateShadowMap() has been removed.' );
+		console.warn( 'THREE.WebGLRenderer: .updateShadowMap() has been removed.' );
 
 	};
 
@@ -62542,7 +64764,7 @@ THREE.WebGLRenderTarget = function ( width, height, options ) {
 
 	this.generateMipmaps = true;
 
-	this.shareDepthFrom = options.shareDepthFrom !== undefined ? options.shareDepthFrom : null;
+	this.shareDepthFrom = null;
 
 };
 
@@ -62654,7 +64876,7 @@ THREE.WebGLExtensions = function ( gl ) {
 
 		if ( extension === null ) {
 
-			THREE.warn( 'THREE.WebGLRenderer: ' + name + ' extension not supported.' );
+			console.log( 'THREE.WebGLRenderer: ' + name + ' extension not supported.' );
 
 		}
 
@@ -62805,8 +65027,6 @@ THREE.WebGLProgram = ( function () {
 
 		}
 
-		var gammaFactorDefine = ( renderer.gammaFactor > 0 ) ? renderer.gammaFactor : 1.0;
-
 		// console.log( 'building new program ' );
 
 		//
@@ -62837,7 +65057,6 @@ THREE.WebGLProgram = ( function () {
 
 				_this.gammaInput ? '#define GAMMA_INPUT' : '',
 				_this.gammaOutput ? '#define GAMMA_OUTPUT' : '',
-				'#define GAMMA_FACTOR ' + gammaFactorDefine,
 
 				'#define MAX_DIR_LIGHTS ' + parameters.maxDirLights,
 				'#define MAX_POINT_LIGHTS ' + parameters.maxPointLights,
@@ -62857,8 +65076,6 @@ THREE.WebGLProgram = ( function () {
 				parameters.specularMap ? '#define USE_SPECULARMAP' : '',
 				parameters.alphaMap ? '#define USE_ALPHAMAP' : '',
 				parameters.vertexColors ? '#define USE_COLOR' : '',
-
-				parameters.flatShading ? '#define FLAT_SHADED': '',
 
 				parameters.skinning ? '#define USE_SKINNING' : '',
 				parameters.useVertexTexture ? '#define BONE_TEXTURE' : '',
@@ -62939,7 +65156,7 @@ THREE.WebGLProgram = ( function () {
 				'precision ' + parameters.precision + ' float;',
 				'precision ' + parameters.precision + ' int;',
 
-				( parameters.bumpMap || parameters.normalMap || parameters.flatShading ) ? '#extension GL_OES_standard_derivatives : enable' : '',
+				( parameters.bumpMap || parameters.normalMap ) ? '#extension GL_OES_standard_derivatives : enable' : '',
 
 				customDefines,
 
@@ -62950,11 +65167,10 @@ THREE.WebGLProgram = ( function () {
 
 				'#define MAX_SHADOWS ' + parameters.maxShadows,
 
-				parameters.alphaTest ? '#define ALPHATEST ' + parameters.alphaTest : '',
+				parameters.alphaTest ? '#define ALPHATEST ' + parameters.alphaTest: '',
 
 				_this.gammaInput ? '#define GAMMA_INPUT' : '',
 				_this.gammaOutput ? '#define GAMMA_OUTPUT' : '',
-				'#define GAMMA_FACTOR ' + gammaFactorDefine,
 
 				( parameters.useFog && parameters.fog ) ? '#define USE_FOG' : '',
 				( parameters.useFog && parameters.fogExp ) ? '#define FOG_EXP2' : '',
@@ -62970,8 +65186,6 @@ THREE.WebGLProgram = ( function () {
 				parameters.specularMap ? '#define USE_SPECULARMAP' : '',
 				parameters.alphaMap ? '#define USE_ALPHAMAP' : '',
 				parameters.vertexColors ? '#define USE_COLOR' : '',
-
-				parameters.flatShading ? '#define FLAT_SHADED': '',
 
 				parameters.metal ? '#define METAL' : '',
 				parameters.wrapAround ? '#define WRAP_AROUND' : '',
@@ -63012,19 +65226,19 @@ THREE.WebGLProgram = ( function () {
 
 		_gl.linkProgram( program );
 
-		var programLogInfo = _gl.getProgramInfoLog( program );
-
 		if ( _gl.getProgramParameter( program, _gl.LINK_STATUS ) === false ) {
 
-			THREE.error( 'THREE.WebGLProgram: shader error: ' + _gl.getError(), 'gl.VALIDATE_STATUS', _gl.getProgramParameter( program, _gl.VALIDATE_STATUS ), 'gl.getPRogramInfoLog', programLogInfo );
+			console.error( 'THREE.WebGLProgram: Could not initialise shader.' );
+			console.error( 'gl.VALIDATE_STATUS', _gl.getProgramParameter( program, _gl.VALIDATE_STATUS ) );
+			console.error( 'gl.getError()', _gl.getError() );
 
 		}
 
-		if ( programLogInfo !== '' ) {
+		if ( _gl.getProgramInfoLog( program ) !== '' ) {
 
-			THREE.warn( 'THREE.WebGLProgram: gl.getProgramInfoLog()' + programLogInfo );
-			// THREE.warn( _gl.getExtension( 'WEBGL_debug_shaders' ).getTranslatedShaderSource( glVertexShader ) );
-			// THREE.warn( _gl.getExtension( 'WEBGL_debug_shaders' ).getTranslatedShaderSource( glFragmentShader ) );
+			console.warn( 'THREE.WebGLProgram: gl.getProgramInfoLog()', _gl.getProgramInfoLog( program ) );
+			// console.warn( _gl.getExtension( 'WEBGL_debug_shaders' ).getTranslatedShaderSource( glVertexShader ) );
+			// console.warn( _gl.getExtension( 'WEBGL_debug_shaders' ).getTranslatedShaderSource( glFragmentShader ) );
 
 		}
 
@@ -63155,13 +65369,14 @@ THREE.WebGLShader = ( function () {
 
 		if ( gl.getShaderParameter( shader, gl.COMPILE_STATUS ) === false ) {
 
-			THREE.error( 'THREE.WebGLShader: Shader couldn\'t compile.' );
+			console.error( 'THREE.WebGLShader: Shader couldn\'t compile.' );
 
 		}
 
 		if ( gl.getShaderInfoLog( shader ) !== '' ) {
 
-			THREE.warn( 'THREE.WebGLShader: gl.getShaderInfoLog()', gl.getShaderInfoLog( shader ), addLineNumbers( string ) );
+			console.warn( 'THREE.WebGLShader: gl.getShaderInfoLog()', gl.getShaderInfoLog( shader ) );
+			console.warn( addLineNumbers( string ) );
 
 		}
 
@@ -63173,302 +65388,6 @@ THREE.WebGLShader = ( function () {
 	};
 
 } )();
-
-// File:src/renderers/webgl/WebGLState.js
-
-/**
-* @author mrdoob / http://mrdoob.com/
-*/
-
-THREE.WebGLState = function ( gl, paramThreeToGL ) {
-
-	var newAttributes = new Uint8Array( 16 );
-	var enabledAttributes = new Uint8Array( 16 );
-
-	var currentBlending = null;
-	var currentBlendEquation = null;
-	var currentBlendSrc = null;
-	var currentBlendDst = null;
-	var currentBlendEquationAlpha = null;
-	var currentBlendSrcAlpha = null;
-	var currentBlendDstAlpha = null;
-
-	var currentDepthTest = null;
-	var currentDepthWrite = null;
-
-	var currentColorWrite = null;
-
-	var currentDoubleSided = null;
-	var currentFlipSided = null;
-
-	var currentLineWidth = null;
-
-	var currentPolygonOffset = null;
-	var currentPolygonOffsetFactor = null;
-	var currentPolygonOffsetUnits = null;
-
-	this.initAttributes = function () {
-
-		for ( var i = 0, l = newAttributes.length; i < l; i ++ ) {
-
-			newAttributes[ i ] = 0;
-
-		}
-
-	};
-
-	this.enableAttribute = function ( attribute ) {
-
-		newAttributes[ attribute ] = 1;
-
-		if ( enabledAttributes[ attribute ] === 0 ) {
-
-			gl.enableVertexAttribArray( attribute );
-			enabledAttributes[ attribute ] = 1;
-
-		}
-
-	};
-
-	this.disableUnusedAttributes = function () {
-
-		for ( var i = 0, l = enabledAttributes.length; i < l; i ++ ) {
-
-			if ( enabledAttributes[ i ] !== newAttributes[ i ] ) {
-
-				gl.disableVertexAttribArray( i );
-				enabledAttributes[ i ] = 0;
-
-			}
-
-		}
-
-	};
-
-	this.setBlending = function ( blending, blendEquation, blendSrc, blendDst, blendEquationAlpha, blendSrcAlpha, blendDstAlpha ) {
-
-		if ( blending !== currentBlending ) {
-
-			if ( blending === THREE.NoBlending ) {
-
-				gl.disable( gl.BLEND );
-
-			} else if ( blending === THREE.AdditiveBlending ) {
-
-				gl.enable( gl.BLEND );
-				gl.blendEquation( gl.FUNC_ADD );
-				gl.blendFunc( gl.SRC_ALPHA, gl.ONE );
-
-			} else if ( blending === THREE.SubtractiveBlending ) {
-
-				// TODO: Find blendFuncSeparate() combination
-				gl.enable( gl.BLEND );
-				gl.blendEquation( gl.FUNC_ADD );
-				gl.blendFunc( gl.ZERO, gl.ONE_MINUS_SRC_COLOR );
-
-			} else if ( blending === THREE.MultiplyBlending ) {
-
-				// TODO: Find blendFuncSeparate() combination
-				gl.enable( gl.BLEND );
-				gl.blendEquation( gl.FUNC_ADD );
-				gl.blendFunc( gl.ZERO, gl.SRC_COLOR );
-
-			} else if ( blending === THREE.CustomBlending ) {
-
-				gl.enable( gl.BLEND );
-
-			} else {
-
-				gl.enable( gl.BLEND );
-				gl.blendEquationSeparate( gl.FUNC_ADD, gl.FUNC_ADD );
-				gl.blendFuncSeparate( gl.SRC_ALPHA, gl.ONE_MINUS_SRC_ALPHA, gl.ONE, gl.ONE_MINUS_SRC_ALPHA );
-
-			}
-
-			currentBlending = blending;
-
-		}
-
-		if ( blending === THREE.CustomBlending ) {
-
-			blendEquationAlpha = blendEquationAlpha || blendEquation;
-			blendSrcAlpha = blendSrcAlpha || blendSrc;
-			blendDstAlpha = blendDstAlpha || blendDst;
-
-			if ( blendEquation !== currentBlendEquation || blendEquationAlpha !== currentBlendEquationAlpha ) {
-
-				gl.blendEquationSeparate( paramThreeToGL( blendEquation ), paramThreeToGL( blendEquationAlpha ) );
-
-				currentBlendEquation = blendEquation;
-				currentBlendEquationAlpha = blendEquationAlpha;
-
-			}
-
-			if ( blendSrc !== currentBlendSrc || blendDst !== currentBlendDst || blendSrcAlpha !== currentBlendSrcAlpha || blendDstAlpha !== currentBlendDstAlpha ) {
-
-				gl.blendFuncSeparate( paramThreeToGL( blendSrc ), paramThreeToGL( blendDst ), paramThreeToGL( blendSrcAlpha ), paramThreeToGL( blendDstAlpha ) );
-
-				currentBlendSrc = blendSrc;
-				currentBlendDst = blendDst;
-				currentBlendSrcAlpha = blendSrcAlpha;
-				currentBlendDstAlpha = blendDstAlpha;
-
-			}
-
-		} else {
-
-			currentBlendEquation = null;
-			currentBlendSrc = null;
-			currentBlendDst = null;
-			currentBlendEquationAlpha = null;
-			currentBlendSrcAlpha = null;
-			currentBlendDstAlpha = null;
-
-		}
-
-	};
-
-	this.setDepthTest = function ( depthTest ) {
-
-		if ( currentDepthTest !== depthTest ) {
-
-			if ( depthTest ) {
-
-				gl.enable( gl.DEPTH_TEST );
-
-			} else {
-
-				gl.disable( gl.DEPTH_TEST );
-
-			}
-
-			currentDepthTest = depthTest;
-
-		}
-
-	};
-
-	this.setDepthWrite = function ( depthWrite ) {
-
-		if ( currentDepthWrite !== depthWrite ) {
-
-			gl.depthMask( depthWrite );
-			currentDepthWrite = depthWrite;
-
-		}
-
-	};
-
-	this.setColorWrite = function ( colorWrite ) {
-
-		if ( currentColorWrite !== colorWrite ) {
-
-			gl.colorMask( colorWrite, colorWrite, colorWrite, colorWrite );
-			currentColorWrite = colorWrite;
-
-		}
-
-	};
-
-	this.setDoubleSided = function ( doubleSided ) {
-
-		if ( currentDoubleSided !== doubleSided ) {
-
-			if ( doubleSided ) {
-
-				gl.disable( gl.CULL_FACE );
-
-			} else {
-
-				gl.enable( gl.CULL_FACE );
-
-			}
-
-			currentDoubleSided = doubleSided;
-
-		}
-
-	};
-
-	this.setFlipSided = function ( flipSided ) {
-
-		if ( currentFlipSided !== flipSided ) {
-
-			if ( flipSided ) {
-
-				gl.frontFace( gl.CW );
-
-			} else {
-
-				gl.frontFace( gl.CCW );
-
-			}
-
-			currentFlipSided = flipSided;
-
-		}
-
-	};
-
-	this.setLineWidth = function ( width ) {
-
-		if ( width !== currentLineWidth ) {
-
-			gl.lineWidth( width );
-
-			currentLineWidth = width;
-
-		}
-
-	};
-
-	this.setPolygonOffset = function ( polygonoffset, factor, units ) {
-
-		if ( currentPolygonOffset !== polygonoffset ) {
-
-			if ( polygonoffset ) {
-
-				gl.enable( gl.POLYGON_OFFSET_FILL );
-
-			} else {
-
-				gl.disable( gl.POLYGON_OFFSET_FILL );
-
-			}
-
-			currentPolygonOffset = polygonoffset;
-
-		}
-
-		if ( polygonoffset && ( currentPolygonOffsetFactor !== factor || currentPolygonOffsetUnits !== units ) ) {
-
-			gl.polygonOffset( factor, units );
-
-			currentPolygonOffsetFactor = factor;
-			currentPolygonOffsetUnits = units;
-
-		}
-
-	};
-
-	this.reset = function () {
-
-		for ( var i = 0; i < enabledAttributes.length; i ++ ) {
-
-			enabledAttributes[ i ] = 0;
-
-		}
-
-		currentBlending = null;
-		currentDepthTest = null;
-		currentDepthWrite = null;
-		currentColorWrite = null;
-		currentDoubleSided = null;
-		currentFlipSided = null;
-
-	};
-
-};
 
 // File:src/renderers/webgl/plugins/LensFlarePlugin.js
 
@@ -63795,7 +65714,7 @@ THREE.LensFlarePlugin = function ( renderer, flares ) {
 			// calc object screen position
 
 			var flare = flares[ i ];
-
+			
 			tempPosition.set( flare.matrixWorld.elements[12], flare.matrixWorld.elements[13], flare.matrixWorld.elements[14] );
 
 			tempPosition.applyMatrix4( camera.matrixWorldInverse );
@@ -63893,7 +65812,7 @@ THREE.LensFlarePlugin = function ( renderer, flares ) {
 						gl.uniform1f( uniforms.opacity, sprite.opacity );
 						gl.uniform3f( uniforms.color, sprite.color.r, sprite.color.g, sprite.color.b );
 
-						renderer.state.setBlending( sprite.blending, sprite.blendEquation, sprite.blendSrc, sprite.blendDst );
+						renderer.setBlending( sprite.blending, sprite.blendEquation, sprite.blendSrc, sprite.blendDst );
 						renderer.setTexture( sprite.texture, 1 );
 
 						gl.drawElements( gl.TRIANGLES, 6, gl.UNSIGNED_SHORT, 0 );
@@ -63961,7 +65880,7 @@ THREE.ShadowMapPlugin = function ( _renderer, _lights, _webglObjects, _webglObje
 	_max = new THREE.Vector3(),
 
 	_matrixPosition = new THREE.Vector3(),
-
+	
 	_renderList = [];
 
 	// init
@@ -64009,7 +65928,7 @@ THREE.ShadowMapPlugin = function ( _renderer, _lights, _webglObjects, _webglObje
 		var i, il, j, jl, n,
 
 		shadowMap, shadowMatrix, shadowCamera,
-		buffer, material,
+		program, buffer, material,
 		webglObject, object, light,
 
 		lights = [],
@@ -64035,7 +65954,7 @@ THREE.ShadowMapPlugin = function ( _renderer, _lights, _webglObjects, _webglObje
 
 		}
 
-		_renderer.state.setDepthTest( true );
+		_renderer.setDepthTest( true );
 
 		// preprocess lights
 		// 	- skip lights that are not casting shadows
@@ -64068,7 +65987,7 @@ THREE.ShadowMapPlugin = function ( _renderer, _lights, _webglObjects, _webglObje
 
 						light.shadowCascadeArray[ n ] = virtualLight;
 
-						//console.log( "Created virtualLight", virtualLight );
+						console.log( "Created virtualLight", virtualLight );
 
 					} else {
 
@@ -64129,7 +66048,7 @@ THREE.ShadowMapPlugin = function ( _renderer, _lights, _webglObjects, _webglObje
 
 				} else {
 
-					THREE.error( "THREE.ShadowMapPlugin: Unsupported light type for shadow", light );
+					console.error( "Unsupported light type for shadow" );
 					continue;
 
 				}
@@ -64294,7 +66213,7 @@ THREE.ShadowMapPlugin = function ( _renderer, _lights, _webglObjects, _webglObje
 
 	};
 
-	function projectObject( scene, object, shadowCamera ) {
+	function projectObject( scene, object, shadowCamera ){
 
 		if ( object.visible ) {
 
@@ -64685,9 +66604,9 @@ THREE.SpritePlugin = function ( renderer, sprites ) {
 			gl.uniform1f( uniforms.rotation, material.rotation );
 			gl.uniform2fv( uniforms.scale, scale );
 
-			renderer.state.setBlending( material.blending, material.blendEquation, material.blendSrc, material.blendDst );
-			renderer.state.setDepthTest( material.depthTest );
-			renderer.state.setDepthWrite( material.depthWrite );
+			renderer.setBlending( material.blending, material.blendEquation, material.blendSrc, material.blendDst );
+			renderer.setDepthTest( material.depthTest );
+			renderer.setDepthWrite( material.depthWrite );
 
 			if ( material.map && material.map.image && material.map.image.width ) {
 
@@ -64844,7 +66763,7 @@ THREE.GeometryUtils = {
 
 	merge: function ( geometry1, geometry2, materialIndexOffset ) {
 
-		THREE.warn( 'THREE.GeometryUtils: .merge() has been moved to Geometry. Use geometry.merge( geometry2, matrix, materialIndexOffset ) instead.' );
+		console.warn( 'THREE.GeometryUtils: .merge() has been moved to Geometry. Use geometry.merge( geometry2, matrix, materialIndexOffset ) instead.' );
 
 		var matrix;
 
@@ -64863,7 +66782,7 @@ THREE.GeometryUtils = {
 
 	center: function ( geometry ) {
 
-		THREE.warn( 'THREE.GeometryUtils: .center() has been moved to Geometry. Use geometry.center() instead.' );
+		console.warn( 'THREE.GeometryUtils: .center() has been moved to Geometry. Use geometry.center() instead.' );
 		return geometry.center();
 
 	}
@@ -64955,13 +66874,13 @@ THREE.ImageUtils = {
 
 	loadCompressedTexture: function () {
 
-		THREE.error( 'THREE.ImageUtils.loadCompressedTexture has been removed. Use THREE.DDSLoader instead.' )
+		console.error( 'THREE.ImageUtils.loadCompressedTexture has been removed. Use THREE.DDSLoader instead.' )
 
 	},
 
 	loadCompressedTextureCube: function () {
 
-		THREE.error( 'THREE.ImageUtils.loadCompressedTextureCube has been removed. Use THREE.DDSLoader instead.' )
+		console.error( 'THREE.ImageUtils.loadCompressedTextureCube has been removed. Use THREE.DDSLoader instead.' )
 
 	},
 
@@ -65018,7 +66937,7 @@ THREE.ImageUtils = {
 				points.push( [ - 1, 0, data[ ( y * width + lx ) * 4 ] / 255 * depth ] );
 				points.push( [ - 1, - 1, data[ ( ly * width + lx ) * 4 ] / 255 * depth ] );
 				points.push( [ 0, - 1, data[ ( ly * width + x ) * 4 ] / 255 * depth ] );
-				points.push( [ 1, - 1, data[ ( ly * width + ux ) * 4 ] / 255 * depth ] );
+				points.push( [  1, - 1, data[ ( ly * width + ux ) * 4 ] / 255 * depth ] );
 				points.push( [ 1, 0, data[ ( y * width + ux ) * 4 ] / 255 * depth ] );
 				points.push( [ 1, 1, data[ ( uy * width + ux ) * 4 ] / 255 * depth ] );
 				points.push( [ 0, 1, data[ ( uy * width + x ) * 4 ] / 255 * depth ] );
@@ -65197,7 +67116,7 @@ THREE.FontUtils = {
 		ThreeFont.faces[ family ][ data.cssFontWeight ] = ThreeFont.faces[ family ][ data.cssFontWeight ] || {};
 		ThreeFont.faces[ family ][ data.cssFontWeight ][ data.cssFontStyle ] = data;
 
-		ThreeFont.faces[ family ][ data.cssFontWeight ][ data.cssFontStyle ] = data;
+		var face = ThreeFont.faces[ family ][ data.cssFontWeight ][ data.cssFontStyle ] = data;
 
 		return data;
 
@@ -65205,9 +67124,11 @@ THREE.FontUtils = {
 
 	drawText: function ( text ) {
 
+		var characterPts = [], allPts = [];
+
 		// RenderText
 
-		var i,
+		var i, p,
 			face = this.getFace(),
 			scale = this.size / face.resolution,
 			offset = 0,
@@ -65295,7 +67216,7 @@ THREE.FontUtils = {
 
 					x = outline[ i ++ ] * scaleX + offset;
 					y = outline[ i ++ ] * scaleY;
-					path.lineTo( x, y );
+					path.lineTo( x,y );
 					break;
 
 				case 'q':
@@ -65319,13 +67240,13 @@ THREE.FontUtils = {
 						for ( i2 = 1, divisions = this.divisions; i2 <= divisions; i2 ++ ) {
 
 							var t = i2 / divisions;
-							THREE.Shape.Utils.b2( t, cpx0, cpx1, cpx );
-							THREE.Shape.Utils.b2( t, cpy0, cpy1, cpy );
-						}
+							var tx = THREE.Shape.Utils.b2( t, cpx0, cpx1, cpx );
+							var ty = THREE.Shape.Utils.b2( t, cpy0, cpy1, cpy );
+					  }
 
-					}
+				  }
 
-					break;
+				  break;
 
 				case 'b':
 
@@ -65350,8 +67271,8 @@ THREE.FontUtils = {
 						for ( i2 = 1, divisions = this.divisions; i2 <= divisions; i2 ++ ) {
 
 							var t = i2 / divisions;
-							THREE.Shape.Utils.b3( t, cpx0, cpx1, cpx2, cpx );
-							THREE.Shape.Utils.b3( t, cpy0, cpy1, cpy2, cpy );
+							var tx = THREE.Shape.Utils.b3( t, cpx0, cpx1, cpx2, cpx );
+							var ty = THREE.Shape.Utils.b3( t, cpy0, cpy1, cpy2, cpy );
 
 						}
 
@@ -65472,7 +67393,7 @@ THREE.FontUtils.generateShapes = function ( text, parameters ) {
 				//throw ( "Warning, unable to triangulate polygon!" );
 				//return null;
 				// Sometimes warning is fine, especially polygons are triangulated in reverse.
-				THREE.warn( 'THREE.FontUtils: Warning, unable to triangulate polygon! in Triangulate.process()' );
+				console.log( 'Warning, unable to triangulate polygon!' );
 
 				if ( indices ) return vertIndices;
 				return result;
@@ -65506,7 +67427,7 @@ THREE.FontUtils.generateShapes = function ( text, parameters ) {
 
 				/* remove v from the remaining polygon */
 
-				for ( s = v, t = v + 1; t < nv; s ++, t ++ ) {
+				for ( s = v, t = v + 1; t < nv; s++, t++ ) {
 
 					verts[ s ] = verts[ t ];
 
@@ -65622,18 +67543,12 @@ THREE.Audio = function ( listener ) {
 
 	this.context = listener.context;
 	this.source = this.context.createBufferSource();
-	this.source.onended = this.onEnded.bind(this);
 
 	this.gain = this.context.createGain();
 	this.gain.connect( this.context.destination );
 
 	this.panner = this.context.createPanner();
 	this.panner.connect( this.gain );
-
-	this.autoplay = false;
-
-	this.startTime = 0;
-	this.isPlaying = false;
 
 };
 
@@ -65652,8 +67567,8 @@ THREE.Audio.prototype.load = function ( file ) {
 		scope.context.decodeAudioData( this.response, function ( buffer ) {
 
 			scope.source.buffer = buffer;
-
-			if( scope.autoplay ) scope.play();
+			scope.source.connect( scope.panner );
+			scope.source.start( 0 );
 
 		} );
 
@@ -65661,49 +67576,6 @@ THREE.Audio.prototype.load = function ( file ) {
 	request.send();
 
 	return this;
-
-};
-
-THREE.Audio.prototype.play = function () {
-
-	if ( this.isPlaying === true ) {
-
-		THREE.warn( 'THREE.Audio: Audio is already playing.' );
-		return;
-
-	}
-
-	var source = this.context.createBufferSource();
-
-	source.buffer = this.source.buffer;
-	source.loop = this.source.loop;
-	source.onended = this.source.onended;
-	source.connect( this.panner );
-	source.start( 0, this.startTime );
-
-	this.isPlaying = true;
-
-	this.source = source;
-
-};
-
-THREE.Audio.prototype.pause = function () {
-
-	this.source.stop();
-	this.startTime = this.context.currentTime;
-
-};
-
-THREE.Audio.prototype.stop = function () {
-
-	this.source.stop();
-	this.startTime = 0;
-
-};
-
-THREE.Audio.prototype.onEnded = function() {
-
-	this.isPlaying = false;
 
 };
 
@@ -65722,12 +67594,6 @@ THREE.Audio.prototype.setRefDistance = function ( value ) {
 THREE.Audio.prototype.setRolloffFactor = function ( value ) {
 
 	this.panner.rolloffFactor = value;
-
-};
-
-THREE.Audio.prototype.setVolume = function ( value ) {
-
-	this.gain.gain.value = value;
 
 };
 
@@ -65846,7 +67712,7 @@ THREE.Curve = function () {
 
 THREE.Curve.prototype.getPoint = function ( t ) {
 
-	THREE.warn( "THREE.Curve: Warning, getPoint() not implemented!" );
+	console.log( "Warning, getPoint() not implemented!" );
 	return null;
 
 };
@@ -65910,7 +67776,7 @@ THREE.Curve.prototype.getLength = function () {
 
 THREE.Curve.prototype.getLengths = function ( divisions ) {
 
-	if ( ! divisions ) divisions = (this.__arcLengthDivisions) ? (this.__arcLengthDivisions) : 200;
+	if ( ! divisions ) divisions = (this.__arcLengthDivisions) ? (this.__arcLengthDivisions): 200;
 
 	if ( this.cacheArcLengths
 		&& ( this.cacheArcLengths.length == divisions + 1 )
@@ -65985,10 +67851,12 @@ THREE.Curve.prototype.getUtoTmapping = function ( u, distance ) {
 		if ( comparison < 0 ) {
 
 			low = i + 1;
+			continue;
 
 		} else if ( comparison > 0 ) {
 
 			high = i - 1;
+			continue;
 
 		} else {
 
@@ -66015,17 +67883,17 @@ THREE.Curve.prototype.getUtoTmapping = function ( u, distance ) {
 	// we could get finer grain at lengths, or use simple interpolatation between two points
 
 	var lengthBefore = arcLengths[ i ];
-	var lengthAfter = arcLengths[ i + 1 ];
+    var lengthAfter = arcLengths[ i + 1 ];
 
-	var segmentLength = lengthAfter - lengthBefore;
+    var segmentLength = lengthAfter - lengthBefore;
 
     // determine where we are between the 'before' and 'after' points
 
-	var segmentFraction = ( targetArcLength - lengthBefore ) / segmentLength;
+    var segmentFraction = ( targetArcLength - lengthBefore ) / segmentLength;
 
     // add that fractional amount to t
 
-	var t = ( i + segmentFraction ) / ( il - 1 );
+    var t = ( i + segmentFraction ) / ( il -1 );
 
 	return t;
 
@@ -66084,8 +67952,8 @@ THREE.Curve.Utils = {
 	tangentCubicBezier: function (t, p0, p1, p2, p3 ) {
 
 		return - 3 * p0 * (1 - t) * (1 - t)  +
-			3 * p1 * (1 - t) * (1 - t) - 6 * t * p1 * (1 - t) +
-			6 * t *  p2 * (1 - t) - 3 * t * t * p2 +
+			3 * p1 * (1 - t) * (1-t) - 6 *t *p1 * (1-t) +
+			6 * t *  p2 * (1-t) - 3 * t * t * p2 +
 			3 * t * t * p3;
 
 	},
@@ -66176,7 +68044,7 @@ THREE.CurvePath.prototype.closePath = function() {
 	// and verify for vector3 (needs to implement equals)
 	// Add a line curve if start and end of lines are not connected
 	var startPoint = this.curves[0].getPoint(0);
-	var endPoint = this.curves[this.curves.length - 1].getPoint(1);
+	var endPoint = this.curves[this.curves.length-1].getPoint(1);
 	
 	if (! startPoint.equals(endPoint)) {
 		this.curves.push( new THREE.LineCurve(endPoint, startPoint) );
@@ -66212,6 +68080,7 @@ THREE.CurvePath.prototype.getPoint = function( t ) {
 
 			return curve.getPointAt( u );
 
+			break;
 		}
 
 		i ++;
@@ -66764,7 +68633,7 @@ THREE.Path.prototype.getPoints = function( divisions, closedPath ) {
 		action = item.action;
 		args = item.args;
 
-		switch ( action ) {
+		switch( action ) {
 
 		case THREE.PathActions.MOVE_TO:
 
@@ -66911,7 +68780,7 @@ THREE.Path.prototype.getPoints = function( divisions, closedPath ) {
 
 			//console.log(points);
 
-			break;
+		  break;
 		  
 		case THREE.PathActions.ELLIPSE:
 
@@ -66949,7 +68818,7 @@ THREE.Path.prototype.getPoints = function( divisions, closedPath ) {
 
 			//console.log(points);
 
-			break;
+		  break;
 
 		} // end switch
 
@@ -67056,7 +68925,7 @@ THREE.Path.prototype.toShapes = function( isCCW, noHoles ) {
 		//  with the horizontal line through inPt, left of inPt
 		//  not counting lowerY endpoints of edges and whole edges on that line
 		var inside = false;
-		for ( var p = polyLen - 1, q = 0; q < polyLen; p = q ++ ) {
+		for( var p = polyLen - 1, q = 0; q < polyLen; p = q ++ ) {
 			var edgeLowPt  = inPolygon[ p ];
 			var edgeHighPt = inPolygon[ q ];
 
@@ -67169,6 +69038,7 @@ THREE.Path.prototype.toShapes = function( isCCW, noHoles ) {
 			betterShapeHoles[sIdx] = [];
 		}
 		for (var sIdx = 0, sLen = newShapes.length; sIdx < sLen; sIdx ++ ) {
+			var sh = newShapes[sIdx];
 			var sho = newShapeHoles[sIdx];
 			for (var hIdx = 0; hIdx < sho.length; hIdx ++ ) {
 				var ho = sho[hIdx];
@@ -67387,16 +69257,16 @@ THREE.Shape.Utils = {
 				if ( perpSeg2 == 0 ) {
 					if ( ( inExcludeAdjacentSegs ) &&
 						 ( ( perpSeg1 == 0 ) || ( perpSeg1 == limit ) ) )		return [];
-					return [ inSeg1Pt1 ];
+					return  [ inSeg1Pt1 ];
 				}
 				if ( perpSeg2 == limit ) {
 					if ( ( inExcludeAdjacentSegs ) &&
 						 ( ( perpSeg1 == 0 ) || ( perpSeg1 == limit ) ) )		return [];
-					return [ inSeg1Pt2 ];
+					return  [ inSeg1Pt2 ];
 				}
 				// intersection at endpoint of segment#2?
-				if ( perpSeg1 == 0 )		return [ inSeg2Pt1 ];
-				if ( perpSeg1 == limit )	return [ inSeg2Pt2 ];
+				if ( perpSeg1 == 0 )		return  [ inSeg2Pt1 ];
+				if ( perpSeg1 == limit )	return  [ inSeg2Pt2 ];
 
 				// return real intersection point
 				var factorSeg1 = perpSeg2 / limit;
@@ -67414,17 +69284,17 @@ THREE.Shape.Utils = {
 				if ( seg1Pt && seg2Pt ) {
 					if ( (inSeg1Pt1.x != inSeg2Pt1.x) ||
 						 (inSeg1Pt1.y != inSeg2Pt1.y) )		return [];   	// they are distinct  points
-					return [ inSeg1Pt1 ];                 					// they are the same point
+					return  [ inSeg1Pt1 ];                 					// they are the same point
 				}
 				// segment#1  is a single point
 				if ( seg1Pt ) {
 					if (! point_in_segment_2D_colin( inSeg2Pt1, inSeg2Pt2, inSeg1Pt1 ) )		return [];		// but not in segment#2
-					return [ inSeg1Pt1 ];
+					return  [ inSeg1Pt1 ];
 				}
 				// segment#2  is a single point
 				if ( seg2Pt ) {
 					if (! point_in_segment_2D_colin( inSeg1Pt1, inSeg1Pt2, inSeg2Pt1 ) )		return [];		// but not in segment#1
-					return [ inSeg2Pt1 ];
+					return  [ inSeg2Pt1 ];
 				}
 
 				// they are collinear segments, which might overlap
@@ -67555,7 +69425,7 @@ THREE.Shape.Utils = {
 				// checks for intersections with shape edges
 				var sIdx, nextIdx, intersection;
 				for ( sIdx = 0; sIdx < shape.length; sIdx ++ ) {
-					nextIdx = sIdx + 1; nextIdx %= shape.length;
+					nextIdx = sIdx+1; nextIdx %= shape.length;
 					intersection = intersect_segments_2D( inShapePt, inHolePt, shape[sIdx], shape[nextIdx], true );
 					if ( intersection.length > 0 )		return	true;
 				}
@@ -67572,7 +69442,7 @@ THREE.Shape.Utils = {
 				for ( ihIdx = 0; ihIdx < indepHoles.length; ihIdx ++ ) {
 					chkHole = holes[indepHoles[ihIdx]];
 					for ( hIdx = 0; hIdx < chkHole.length; hIdx ++ ) {
-						nextIdx = hIdx + 1; nextIdx %= chkHole.length;
+						nextIdx = hIdx+1; nextIdx %= chkHole.length;
 						intersection = intersect_segments_2D( inShapePt, inHolePt, chkHole[hIdx], chkHole[nextIdx], true );
 						if ( intersection.length > 0 )		return	true;
 					}
@@ -67624,12 +69494,12 @@ THREE.Shape.Utils = {
 							if ( intersectsHoleEdge( shapePt, holePt ) )		continue;
 
 							holeIndex = h2;
-							indepHoles.splice(h, 1);
+							indepHoles.splice(h,1);
 
-							tmpShape1 = shape.slice( 0, shapeIndex + 1 );
+							tmpShape1 = shape.slice( 0, shapeIndex+1 );
 							tmpShape2 = shape.slice( shapeIndex );
 							tmpHole1 = hole.slice( holeIndex );
-							tmpHole2 = hole.slice( 0, holeIndex + 1 );
+							tmpHole2 = hole.slice( 0, holeIndex+1 );
 
 							shape = tmpShape1.concat( tmpHole1 ).concat( tmpHole2 ).concat( tmpShape2 );
 
@@ -67676,7 +69546,7 @@ THREE.Shape.Utils = {
 
 			if ( allPointsMap[ key ] !== undefined ) {
 
-				THREE.warn( "THREE.Shape: Duplicate point", key );
+				console.log( "Duplicate point", key );
 
 			}
 
@@ -67943,8 +69813,8 @@ THREE.SplineCurve.prototype.getPoint = function ( t ) {
 
 	var point0 = points[ intPoint == 0 ? intPoint : intPoint - 1 ]
 	var point1 = points[ intPoint ]
-	var point2 = points[ intPoint > points.length - 2 ? points.length - 1 : intPoint + 1 ]
-	var point3 = points[ intPoint > points.length - 3 ? points.length - 1 : intPoint + 2 ]
+	var point2 = points[ intPoint > points.length - 2 ? points.length -1 : intPoint + 1 ]
+	var point3 = points[ intPoint > points.length - 3 ? points.length -1 : intPoint + 2 ]
 
 	var vector = new THREE.Vector2();
 
@@ -68207,9 +70077,9 @@ THREE.AnimationHandler = {
 
 	//
 
-	add: function () { THREE.warn( 'THREE.AnimationHandler.add() has been deprecated.' ); },
-	get: function () { THREE.warn( 'THREE.AnimationHandler.get() has been deprecated.' ); },
-	remove: function () { THREE.warn( 'THREE.AnimationHandler.remove() has been deprecated.' ); },
+	add: function () { console.warn( 'THREE.AnimationHandler.add() has been deprecated.' ); },
+	get: function () { console.warn( 'THREE.AnimationHandler.get() has been deprecated.' ); },
+	remove: function () { console.warn( 'THREE.AnimationHandler.remove() has been deprecated.' ); },
 
 	//
 
@@ -68429,387 +70299,384 @@ THREE.Animation = function ( root, data ) {
 
 };
 
-THREE.Animation.prototype = {
 
-	constructor: THREE.Animation,
+THREE.Animation.prototype.keyTypes = [ "pos", "rot", "scl" ];
 
-	keyTypes:  [ "pos", "rot", "scl" ],
 
-	play: function ( startTime, weight ) {
+THREE.Animation.prototype.play = function ( startTime, weight ) {
 
-		this.currentTime = startTime !== undefined ? startTime : 0;
-		this.weight = weight !== undefined ? weight : 1;
+	this.currentTime = startTime !== undefined ? startTime : 0;
+	this.weight = weight !== undefined ? weight: 1;
 
-		this.isPlaying = true;
+	this.isPlaying = true;
 
-		this.reset();
+	this.reset();
 
-		THREE.AnimationHandler.play( this );
+	THREE.AnimationHandler.play( this );
 
-	},
+};
 
-	stop: function() {
 
-		this.isPlaying = false;
+THREE.Animation.prototype.stop = function() {
 
-		THREE.AnimationHandler.stop( this );
+	this.isPlaying = false;
 
-	},
+	THREE.AnimationHandler.stop( this );
 
-	reset: function () {
+};
+
+THREE.Animation.prototype.reset = function () {
+
+	for ( var h = 0, hl = this.hierarchy.length; h < hl; h ++ ) {
+
+		var object = this.hierarchy[ h ];
+
+		if ( object.animationCache === undefined ) {
+
+			object.animationCache = {
+				animations: {},
+				blending: {
+					positionWeight: 0.0,
+					quaternionWeight: 0.0,
+					scaleWeight: 0.0
+				}
+			};
+		}
+
+		if ( object.animationCache.animations[this.data.name] === undefined ) {
+
+			object.animationCache.animations[this.data.name] = {};
+			object.animationCache.animations[this.data.name].prevKey = { pos: 0, rot: 0, scl: 0 };
+			object.animationCache.animations[this.data.name].nextKey = { pos: 0, rot: 0, scl: 0 };
+			object.animationCache.animations[this.data.name].originalMatrix = object.matrix;
+
+		}
+
+		var animationCache = object.animationCache.animations[this.data.name];
+
+		// Get keys to match our current time
+
+		for ( var t = 0; t < 3; t ++ ) {
+
+			var type = this.keyTypes[ t ];
+
+			var prevKey = this.data.hierarchy[ h ].keys[ 0 ];
+			var nextKey = this.getNextKeyWith( type, h, 1 );
+
+			while ( nextKey.time < this.currentTime && nextKey.index > prevKey.index ) {
+
+				prevKey = nextKey;
+				nextKey = this.getNextKeyWith( type, h, nextKey.index + 1 );
+
+			}
+
+			animationCache.prevKey[ type ] = prevKey;
+			animationCache.nextKey[ type ] = nextKey;
+
+		}
+
+	}
+
+};
+
+THREE.Animation.prototype.resetBlendWeights = function () {
+
+	for ( var h = 0, hl = this.hierarchy.length; h < hl; h ++ ) {
+
+		var object = this.hierarchy[ h ];
+
+		if ( object.animationCache !== undefined ) {
+
+			object.animationCache.blending.positionWeight = 0.0;
+			object.animationCache.blending.quaternionWeight = 0.0;
+			object.animationCache.blending.scaleWeight = 0.0;
+
+		}
+
+	}
+
+};
+
+THREE.Animation.prototype.update = (function(){
+
+	var points = [];
+	var target = new THREE.Vector3();
+	var newVector = new THREE.Vector3();
+	var newQuat = new THREE.Quaternion();
+
+	// Catmull-Rom spline
+
+	var interpolateCatmullRom = function ( points, scale ) {
+
+		var c = [], v3 = [],
+		point, intPoint, weight, w2, w3,
+		pa, pb, pc, pd;
+
+		point = ( points.length - 1 ) * scale;
+		intPoint = Math.floor( point );
+		weight = point - intPoint;
+
+		c[ 0 ] = intPoint === 0 ? intPoint : intPoint - 1;
+		c[ 1 ] = intPoint;
+		c[ 2 ] = intPoint > points.length - 2 ? intPoint : intPoint + 1;
+		c[ 3 ] = intPoint > points.length - 3 ? intPoint : intPoint + 2;
+
+		pa = points[ c[ 0 ] ];
+		pb = points[ c[ 1 ] ];
+		pc = points[ c[ 2 ] ];
+		pd = points[ c[ 3 ] ];
+
+		w2 = weight * weight;
+		w3 = weight * w2;
+
+		v3[ 0 ] = interpolate( pa[ 0 ], pb[ 0 ], pc[ 0 ], pd[ 0 ], weight, w2, w3 );
+		v3[ 1 ] = interpolate( pa[ 1 ], pb[ 1 ], pc[ 1 ], pd[ 1 ], weight, w2, w3 );
+		v3[ 2 ] = interpolate( pa[ 2 ], pb[ 2 ], pc[ 2 ], pd[ 2 ], weight, w2, w3 );
+
+		return v3;
+
+	};
+
+	var interpolate = function ( p0, p1, p2, p3, t, t2, t3 ) {
+
+		var v0 = ( p2 - p0 ) * 0.5,
+			v1 = ( p3 - p1 ) * 0.5;
+
+		return ( 2 * ( p1 - p2 ) + v0 + v1 ) * t3 + ( - 3 * ( p1 - p2 ) - 2 * v0 - v1 ) * t2 + v0 * t + p1;
+
+	};
+
+	return function ( delta ) {
+
+		if ( this.isPlaying === false ) return;
+
+		this.currentTime += delta * this.timeScale;
+
+		if ( this.weight === 0 )
+			return;
+
+		//
+
+		var duration = this.data.length;
+
+		if ( this.currentTime > duration || this.currentTime < 0 ) {
+
+			if ( this.loop ) {
+
+				this.currentTime %= duration;
+
+				if ( this.currentTime < 0 )
+					this.currentTime += duration;
+
+				this.reset();
+
+			} else {
+
+				this.stop();
+
+			}
+
+		}
 
 		for ( var h = 0, hl = this.hierarchy.length; h < hl; h ++ ) {
 
 			var object = this.hierarchy[ h ];
+			var animationCache = object.animationCache.animations[this.data.name];
+			var blending = object.animationCache.blending;
 
-			if ( object.animationCache === undefined ) {
-
-				object.animationCache = {
-					animations: {},
-					blending: {
-						positionWeight: 0.0,
-						quaternionWeight: 0.0,
-						scaleWeight: 0.0
-					}
-				};
-			}
-
-			var name = this.data.name;
-			var animations = object.animationCache.animations;
-			var animationCache = animations[ name ];
-
-			if ( animationCache === undefined ) {
-
-				animationCache = {
-					prevKey: { pos: 0, rot: 0, scl: 0 },
-					nextKey: { pos: 0, rot: 0, scl: 0 },
-					originalMatrix: object.matrix
-				};
-
-				animations[ name ] = animationCache;
-
-			}
-
-			// Get keys to match our current time
+			// loop through pos/rot/scl
 
 			for ( var t = 0; t < 3; t ++ ) {
 
-				var type = this.keyTypes[ t ];
+				// get keys
 
-				var prevKey = this.data.hierarchy[ h ].keys[ 0 ];
-				var nextKey = this.getNextKeyWith( type, h, 1 );
+				var type    = this.keyTypes[ t ];
+				var prevKey = animationCache.prevKey[ type ];
+				var nextKey = animationCache.nextKey[ type ];
 
-				while ( nextKey.time < this.currentTime && nextKey.index > prevKey.index ) {
+				if ( ( this.timeScale > 0 && nextKey.time <= this.currentTime ) ||
+					( this.timeScale < 0 && prevKey.time >= this.currentTime ) ) {
 
-					prevKey = nextKey;
-					nextKey = this.getNextKeyWith( type, h, nextKey.index + 1 );
+					prevKey = this.data.hierarchy[ h ].keys[ 0 ];
+					nextKey = this.getNextKeyWith( type, h, 1 );
 
-				}
+					while ( nextKey.time < this.currentTime && nextKey.index > prevKey.index ) {
 
-				animationCache.prevKey[ type ] = prevKey;
-				animationCache.nextKey[ type ] = nextKey;
-
-			}
-
-		}
-
-	},
-
-	resetBlendWeights: function () {
-
-		for ( var h = 0, hl = this.hierarchy.length; h < hl; h ++ ) {
-
-			var object = this.hierarchy[ h ];
-			var animationCache = object.animationCache;
-
-			if ( animationCache !== undefined ) {
-
-				var blending = animationCache.blending;
-
-				blending.positionWeight = 0.0;
-				blending.quaternionWeight = 0.0;
-				blending.scaleWeight = 0.0;
-
-			}
-
-		}
-
-	},
-
-	update: ( function() {
-
-		var points = [];
-		var target = new THREE.Vector3();
-		var newVector = new THREE.Vector3();
-		var newQuat = new THREE.Quaternion();
-
-		// Catmull-Rom spline
-
-		var interpolateCatmullRom = function ( points, scale ) {
-
-			var c = [], v3 = [],
-			point, intPoint, weight, w2, w3,
-			pa, pb, pc, pd;
-
-			point = ( points.length - 1 ) * scale;
-			intPoint = Math.floor( point );
-			weight = point - intPoint;
-
-			c[ 0 ] = intPoint === 0 ? intPoint : intPoint - 1;
-			c[ 1 ] = intPoint;
-			c[ 2 ] = intPoint > points.length - 2 ? intPoint : intPoint + 1;
-			c[ 3 ] = intPoint > points.length - 3 ? intPoint : intPoint + 2;
-
-			pa = points[ c[ 0 ] ];
-			pb = points[ c[ 1 ] ];
-			pc = points[ c[ 2 ] ];
-			pd = points[ c[ 3 ] ];
-
-			w2 = weight * weight;
-			w3 = weight * w2;
-
-			v3[ 0 ] = interpolate( pa[ 0 ], pb[ 0 ], pc[ 0 ], pd[ 0 ], weight, w2, w3 );
-			v3[ 1 ] = interpolate( pa[ 1 ], pb[ 1 ], pc[ 1 ], pd[ 1 ], weight, w2, w3 );
-			v3[ 2 ] = interpolate( pa[ 2 ], pb[ 2 ], pc[ 2 ], pd[ 2 ], weight, w2, w3 );
-
-			return v3;
-
-		};
-
-		var interpolate = function ( p0, p1, p2, p3, t, t2, t3 ) {
-
-			var v0 = ( p2 - p0 ) * 0.5,
-				v1 = ( p3 - p1 ) * 0.5;
-
-			return ( 2 * ( p1 - p2 ) + v0 + v1 ) * t3 + ( - 3 * ( p1 - p2 ) - 2 * v0 - v1 ) * t2 + v0 * t + p1;
-
-		};
-
-		return function ( delta ) {
-
-			if ( this.isPlaying === false ) return;
-
-			this.currentTime += delta * this.timeScale;
-
-			if ( this.weight === 0 )
-				return;
-
-			//
-
-			var duration = this.data.length;
-
-			if ( this.currentTime > duration || this.currentTime < 0 ) {
-
-				if ( this.loop ) {
-
-					this.currentTime %= duration;
-
-					if ( this.currentTime < 0 )
-						this.currentTime += duration;
-
-					this.reset();
-
-				} else {
-
-					this.stop();
-
-				}
-
-			}
-
-			for ( var h = 0, hl = this.hierarchy.length; h < hl; h ++ ) {
-
-				var object = this.hierarchy[ h ];
-				var animationCache = object.animationCache.animations[this.data.name];
-				var blending = object.animationCache.blending;
-
-				// loop through pos/rot/scl
-
-				for ( var t = 0; t < 3; t ++ ) {
-
-					// get keys
-
-					var type    = this.keyTypes[ t ];
-					var prevKey = animationCache.prevKey[ type ];
-					var nextKey = animationCache.nextKey[ type ];
-
-					if ( ( this.timeScale > 0 && nextKey.time <= this.currentTime ) ||
-						( this.timeScale < 0 && prevKey.time >= this.currentTime ) ) {
-
-						prevKey = this.data.hierarchy[ h ].keys[ 0 ];
-						nextKey = this.getNextKeyWith( type, h, 1 );
-
-						while ( nextKey.time < this.currentTime && nextKey.index > prevKey.index ) {
-
-							prevKey = nextKey;
-							nextKey = this.getNextKeyWith( type, h, nextKey.index + 1 );
-
-						}
-
-						animationCache.prevKey[ type ] = prevKey;
-						animationCache.nextKey[ type ] = nextKey;
+						prevKey = nextKey;
+						nextKey = this.getNextKeyWith( type, h, nextKey.index + 1 );
 
 					}
 
-					var scale = ( this.currentTime - prevKey.time ) / ( nextKey.time - prevKey.time );
+					animationCache.prevKey[ type ] = prevKey;
+					animationCache.nextKey[ type ] = nextKey;
 
-					var prevXYZ = prevKey[ type ];
-					var nextXYZ = nextKey[ type ];
+				}
 
-					if ( scale < 0 ) scale = 0;
-					if ( scale > 1 ) scale = 1;
+				var scale = ( this.currentTime - prevKey.time ) / ( nextKey.time - prevKey.time );
 
-					// interpolate
+				var prevXYZ = prevKey[ type ];
+				var nextXYZ = nextKey[ type ];
 
-					if ( type === "pos" ) {
+				if ( scale < 0 ) scale = 0;
+				if ( scale > 1 ) scale = 1;
 
-						if ( this.interpolationType === THREE.AnimationHandler.LINEAR ) {
+				// interpolate
 
-							newVector.x = prevXYZ[ 0 ] + ( nextXYZ[ 0 ] - prevXYZ[ 0 ] ) * scale;
-							newVector.y = prevXYZ[ 1 ] + ( nextXYZ[ 1 ] - prevXYZ[ 1 ] ) * scale;
-							newVector.z = prevXYZ[ 2 ] + ( nextXYZ[ 2 ] - prevXYZ[ 2 ] ) * scale;
+				if ( type === "pos" ) {
 
-							// blend
-							var proportionalWeight = this.weight / ( this.weight + blending.positionWeight );
-							object.position.lerp( newVector, proportionalWeight );
-							blending.positionWeight += this.weight;
-
-						} else if ( this.interpolationType === THREE.AnimationHandler.CATMULLROM ||
-									this.interpolationType === THREE.AnimationHandler.CATMULLROM_FORWARD ) {
-
-							points[ 0 ] = this.getPrevKeyWith( "pos", h, prevKey.index - 1 )[ "pos" ];
-							points[ 1 ] = prevXYZ;
-							points[ 2 ] = nextXYZ;
-							points[ 3 ] = this.getNextKeyWith( "pos", h, nextKey.index + 1 )[ "pos" ];
-
-							scale = scale * 0.33 + 0.33;
-
-							var currentPoint = interpolateCatmullRom( points, scale );
-							var proportionalWeight = this.weight / ( this.weight + blending.positionWeight );
-							blending.positionWeight += this.weight;
-
-							// blend
-
-							var vector = object.position;
-
-							vector.x = vector.x + ( currentPoint[ 0 ] - vector.x ) * proportionalWeight;
-							vector.y = vector.y + ( currentPoint[ 1 ] - vector.y ) * proportionalWeight;
-							vector.z = vector.z + ( currentPoint[ 2 ] - vector.z ) * proportionalWeight;
-
-							if ( this.interpolationType === THREE.AnimationHandler.CATMULLROM_FORWARD ) {
-
-								var forwardPoint = interpolateCatmullRom( points, scale * 1.01 );
-
-								target.set( forwardPoint[ 0 ], forwardPoint[ 1 ], forwardPoint[ 2 ] );
-								target.sub( vector );
-								target.y = 0;
-								target.normalize();
-
-								var angle = Math.atan2( target.x, target.z );
-								object.rotation.set( 0, angle, 0 );
-
-							}
-
-						}
-
-					} else if ( type === "rot" ) {
-
-						THREE.Quaternion.slerp( prevXYZ, nextXYZ, newQuat, scale );
-
-						// Avoid paying the cost of an additional slerp if we don't have to
-						if ( blending.quaternionWeight === 0 ) {
-
-							object.quaternion.copy(newQuat);
-							blending.quaternionWeight = this.weight;
-
-						} else {
-
-							var proportionalWeight = this.weight / ( this.weight + blending.quaternionWeight );
-							THREE.Quaternion.slerp( object.quaternion, newQuat, object.quaternion, proportionalWeight );
-							blending.quaternionWeight += this.weight;
-
-						}
-
-					} else if ( type === "scl" ) {
+					if ( this.interpolationType === THREE.AnimationHandler.LINEAR ) {
 
 						newVector.x = prevXYZ[ 0 ] + ( nextXYZ[ 0 ] - prevXYZ[ 0 ] ) * scale;
 						newVector.y = prevXYZ[ 1 ] + ( nextXYZ[ 1 ] - prevXYZ[ 1 ] ) * scale;
 						newVector.z = prevXYZ[ 2 ] + ( nextXYZ[ 2 ] - prevXYZ[ 2 ] ) * scale;
 
-						var proportionalWeight = this.weight / ( this.weight + blending.scaleWeight );
-						object.scale.lerp( newVector, proportionalWeight );
-						blending.scaleWeight += this.weight;
+						// blend
+						var proportionalWeight = this.weight / ( this.weight + blending.positionWeight );
+						object.position.lerp( newVector, proportionalWeight );
+						blending.positionWeight += this.weight;
+
+					} else if ( this.interpolationType === THREE.AnimationHandler.CATMULLROM ||
+								this.interpolationType === THREE.AnimationHandler.CATMULLROM_FORWARD ) {
+
+						points[ 0 ] = this.getPrevKeyWith( "pos", h, prevKey.index - 1 )[ "pos" ];
+						points[ 1 ] = prevXYZ;
+						points[ 2 ] = nextXYZ;
+						points[ 3 ] = this.getNextKeyWith( "pos", h, nextKey.index + 1 )[ "pos" ];
+
+						scale = scale * 0.33 + 0.33;
+
+						var currentPoint = interpolateCatmullRom( points, scale );
+						var proportionalWeight = this.weight / ( this.weight + blending.positionWeight );
+						blending.positionWeight += this.weight;
+
+						// blend
+
+						var vector = object.position;
+						
+						vector.x = vector.x + ( currentPoint[ 0 ] - vector.x ) * proportionalWeight;
+						vector.y = vector.y + ( currentPoint[ 1 ] - vector.y ) * proportionalWeight;
+						vector.z = vector.z + ( currentPoint[ 2 ] - vector.z ) * proportionalWeight;
+
+						if ( this.interpolationType === THREE.AnimationHandler.CATMULLROM_FORWARD ) {
+
+							var forwardPoint = interpolateCatmullRom( points, scale * 1.01 );
+
+							target.set( forwardPoint[ 0 ], forwardPoint[ 1 ], forwardPoint[ 2 ] );
+							target.sub( vector );
+							target.y = 0;
+							target.normalize();
+
+							var angle = Math.atan2( target.x, target.z );
+							object.rotation.set( 0, angle, 0 );
+
+						}
 
 					}
+
+				} else if ( type === "rot" ) {
+
+					THREE.Quaternion.slerp( prevXYZ, nextXYZ, newQuat, scale );
+
+					// Avoid paying the cost of an additional slerp if we don't have to
+					if ( blending.quaternionWeight === 0 ) {
+
+						object.quaternion.copy(newQuat);
+						blending.quaternionWeight = this.weight;
+
+					} else {
+
+						var proportionalWeight = this.weight / ( this.weight + blending.quaternionWeight );
+						THREE.Quaternion.slerp( object.quaternion, newQuat, object.quaternion, proportionalWeight );
+						blending.quaternionWeight += this.weight;
+
+					}
+
+				} else if ( type === "scl" ) {
+
+					newVector.x = prevXYZ[ 0 ] + ( nextXYZ[ 0 ] - prevXYZ[ 0 ] ) * scale;
+					newVector.y = prevXYZ[ 1 ] + ( nextXYZ[ 1 ] - prevXYZ[ 1 ] ) * scale;
+					newVector.z = prevXYZ[ 2 ] + ( nextXYZ[ 2 ] - prevXYZ[ 2 ] ) * scale;
+
+					var proportionalWeight = this.weight / ( this.weight + blending.scaleWeight );
+					object.scale.lerp( newVector, proportionalWeight );
+					blending.scaleWeight += this.weight;
 
 				}
 
 			}
 
-			return true;
-
-		};
-
-	} )(),
-
-	getNextKeyWith: function ( type, h, key ) {
-
-		var keys = this.data.hierarchy[ h ].keys;
-
-		if ( this.interpolationType === THREE.AnimationHandler.CATMULLROM ||
-			 this.interpolationType === THREE.AnimationHandler.CATMULLROM_FORWARD ) {
-
-			key = key < keys.length - 1 ? key : keys.length - 1;
-
-		} else {
-
-			key = key % keys.length;
-
 		}
 
-		for ( ; key < keys.length; key ++ ) {
+		return true;
 
-			if ( keys[ key ][ type ] !== undefined ) {
+	};
 
-				return keys[ key ];
-
-			}
-
-		}
-
-		return this.data.hierarchy[ h ].keys[ 0 ];
-
-	},
-
-	getPrevKeyWith: function ( type, h, key ) {
-
-		var keys = this.data.hierarchy[ h ].keys;
-
-		if ( this.interpolationType === THREE.AnimationHandler.CATMULLROM ||
-			this.interpolationType === THREE.AnimationHandler.CATMULLROM_FORWARD ) {
-
-			key = key > 0 ? key : 0;
-
-		} else {
-
-			key = key >= 0 ? key : key + keys.length;
-
-		}
+})();
 
 
-		for ( ; key >= 0; key -- ) {
 
-			if ( keys[ key ][ type ] !== undefined ) {
 
-				return keys[ key ];
 
-			}
+// Get next key with
 
-		}
+THREE.Animation.prototype.getNextKeyWith = function ( type, h, key ) {
 
-		return this.data.hierarchy[ h ].keys[ keys.length - 1 ];
+	var keys = this.data.hierarchy[ h ].keys;
+
+	if ( this.interpolationType === THREE.AnimationHandler.CATMULLROM ||
+		 this.interpolationType === THREE.AnimationHandler.CATMULLROM_FORWARD ) {
+
+		key = key < keys.length - 1 ? key : keys.length - 1;
+
+	} else {
+
+		key = key % keys.length;
 
 	}
+
+	for ( ; key < keys.length; key ++ ) {
+
+		if ( keys[ key ][ type ] !== undefined ) {
+
+			return keys[ key ];
+
+		}
+
+	}
+
+	return this.data.hierarchy[ h ].keys[ 0 ];
+
+};
+
+// Get previous key with
+
+THREE.Animation.prototype.getPrevKeyWith = function ( type, h, key ) {
+
+	var keys = this.data.hierarchy[ h ].keys;
+
+	if ( this.interpolationType === THREE.AnimationHandler.CATMULLROM ||
+		this.interpolationType === THREE.AnimationHandler.CATMULLROM_FORWARD ) {
+
+		key = key > 0 ? key : 0;
+
+	} else {
+
+		key = key >= 0 ? key : key + keys.length;
+
+	}
+
+
+	for ( ; key >= 0; key -- ) {
+
+		if ( keys[ key ][ type ] !== undefined ) {
+
+			return keys[ key ];
+
+		}
+
+	}
+
+	return this.data.hierarchy[ h ].keys[ keys.length - 1 ];
 
 };
 
@@ -68867,193 +70734,196 @@ THREE.KeyFrameAnimation = function ( data ) {
 
 };
 
-THREE.KeyFrameAnimation.prototype = {
 
-	constructor: THREE.KeyFrameAnimation,
+THREE.KeyFrameAnimation.prototype.play = function ( startTime ) {
 
-	play: function ( startTime ) {
+	this.currentTime = startTime !== undefined ? startTime : 0;
 
-		this.currentTime = startTime !== undefined ? startTime : 0;
+	if ( this.isPlaying === false ) {
 
-		if ( this.isPlaying === false ) {
+		this.isPlaying = true;
 
-			this.isPlaying = true;
+		// reset key cache
 
-			// reset key cache
+		var h, hl = this.hierarchy.length,
+			object,
+			node;
 
-			var h, hl = this.hierarchy.length,
-				object,
-				node;
+		for ( h = 0; h < hl; h ++ ) {
 
-			for ( h = 0; h < hl; h ++ ) {
+			object = this.hierarchy[ h ];
+			node = this.data.hierarchy[ h ];
 
-				object = this.hierarchy[ h ];
-				node = this.data.hierarchy[ h ];
+			if ( node.animationCache === undefined ) {
 
-				if ( node.animationCache === undefined ) {
-
-					node.animationCache = {};
-					node.animationCache.prevKey = null;
-					node.animationCache.nextKey = null;
-					node.animationCache.originalMatrix = object.matrix;
-
-				}
-
-				var keys = this.data.hierarchy[h].keys;
-
-				if (keys.length) {
-
-					node.animationCache.prevKey = keys[ 0 ];
-					node.animationCache.nextKey = keys[ 1 ];
-
-					this.startTime = Math.min( keys[0].time, this.startTime );
-					this.endTime = Math.max( keys[keys.length - 1].time, this.endTime );
-
-				}
+				node.animationCache = {};
+				node.animationCache.prevKey = null;
+				node.animationCache.nextKey = null;
+				node.animationCache.originalMatrix = object.matrix;
 
 			}
 
-			this.update( 0 );
+			var keys = this.data.hierarchy[h].keys;
 
-		}
+			if (keys.length) {
 
-		this.isPaused = false;
+				node.animationCache.prevKey = keys[ 0 ];
+				node.animationCache.nextKey = keys[ 1 ];
 
-		THREE.AnimationHandler.play( this );
-
-	},
-
-	stop: function () {
-
-		this.isPlaying = false;
-		this.isPaused  = false;
-
-		THREE.AnimationHandler.stop( this );
-
-		// reset JIT matrix and remove cache
-
-		for ( var h = 0; h < this.data.hierarchy.length; h ++ ) {
-
-			var obj = this.hierarchy[ h ];
-			var node = this.data.hierarchy[ h ];
-
-			if ( node.animationCache !== undefined ) {
-
-				var original = node.animationCache.originalMatrix;
-
-				original.copy( obj.matrix );
-				obj.matrix = original;
-
-				delete node.animationCache;
+				this.startTime = Math.min( keys[0].time, this.startTime );
+				this.endTime = Math.max( keys[keys.length - 1].time, this.endTime );
 
 			}
 
 		}
 
-	},
-
-	update: function ( delta ) {
-
-		if ( this.isPlaying === false ) return;
-
-		this.currentTime += delta * this.timeScale;
-
-		//
-
-		var duration = this.data.length;
-
-		if ( this.loop === true && this.currentTime > duration ) {
-
-			this.currentTime %= duration;
-
-		}
-
-		this.currentTime = Math.min( this.currentTime, duration );
-
-		for ( var h = 0, hl = this.hierarchy.length; h < hl; h ++ ) {
-
-			var object = this.hierarchy[ h ];
-			var node = this.data.hierarchy[ h ];
-
-			var keys = node.keys,
-				animationCache = node.animationCache;
-
-
-			if ( keys.length ) {
-
-				var prevKey = animationCache.prevKey;
-				var nextKey = animationCache.nextKey;
-
-				if ( nextKey.time <= this.currentTime ) {
-
-					while ( nextKey.time < this.currentTime && nextKey.index > prevKey.index ) {
-
-						prevKey = nextKey;
-						nextKey = keys[ prevKey.index + 1 ];
-
-					}
-
-					animationCache.prevKey = prevKey;
-					animationCache.nextKey = nextKey;
-
-				}
-
-				if ( nextKey.time >= this.currentTime ) {
-
-					prevKey.interpolate( nextKey, this.currentTime );
-
-				} else {
-
-					prevKey.interpolate( nextKey, nextKey.time );
-
-				}
-
-				this.data.hierarchy[ h ].node.updateMatrix();
-				object.matrixWorldNeedsUpdate = true;
-
-			}
-
-		}
-
-	},
-
-	getNextKeyWith: function ( sid, h, key ) {
-
-		var keys = this.data.hierarchy[ h ].keys;
-		key = key % keys.length;
-
-		for ( ; key < keys.length; key ++ ) {
-
-			if ( keys[ key ].hasTarget( sid ) ) {
-
-				return keys[ key ];
-
-			}
-
-		}
-
-		return keys[ 0 ];
-
-	},
-
-	getPrevKeyWith: function ( sid, h, key ) {
-
-		var keys = this.data.hierarchy[ h ].keys;
-		key = key >= 0 ? key : key + keys.length;
-
-		for ( ; key >= 0; key -- ) {
-
-			if ( keys[ key ].hasTarget( sid ) ) {
-
-				return keys[ key ];
-
-			}
-
-		}
-
-		return keys[ keys.length - 1 ];
+		this.update( 0 );
 
 	}
+
+	this.isPaused = false;
+
+	THREE.AnimationHandler.play( this );
+
+};
+
+
+THREE.KeyFrameAnimation.prototype.stop = function() {
+
+	this.isPlaying = false;
+	this.isPaused  = false;
+
+	THREE.AnimationHandler.stop( this );
+
+	// reset JIT matrix and remove cache
+
+	for ( var h = 0; h < this.data.hierarchy.length; h ++ ) {
+		
+		var obj = this.hierarchy[ h ];
+		var node = this.data.hierarchy[ h ];
+
+		if ( node.animationCache !== undefined ) {
+
+			var original = node.animationCache.originalMatrix;
+
+			original.copy( obj.matrix );
+			obj.matrix = original;
+
+			delete node.animationCache;
+
+		}
+
+	}
+
+};
+
+
+// Update
+
+THREE.KeyFrameAnimation.prototype.update = function ( delta ) {
+
+	if ( this.isPlaying === false ) return;
+
+	this.currentTime += delta * this.timeScale;
+
+	//
+
+	var duration = this.data.length;
+
+	if ( this.loop === true && this.currentTime > duration ) {
+
+		this.currentTime %= duration;
+
+	}
+
+	this.currentTime = Math.min( this.currentTime, duration );
+
+	for ( var h = 0, hl = this.hierarchy.length; h < hl; h ++ ) {
+
+		var object = this.hierarchy[ h ];
+		var node = this.data.hierarchy[ h ];
+
+		var keys = node.keys,
+			animationCache = node.animationCache;
+
+
+		if ( keys.length ) {
+
+			var prevKey = animationCache.prevKey;
+			var nextKey = animationCache.nextKey;
+
+			if ( nextKey.time <= this.currentTime ) {
+
+				while ( nextKey.time < this.currentTime && nextKey.index > prevKey.index ) {
+
+					prevKey = nextKey;
+					nextKey = keys[ prevKey.index + 1 ];
+
+				}
+
+				animationCache.prevKey = prevKey;
+				animationCache.nextKey = nextKey;
+
+			}
+
+			if ( nextKey.time >= this.currentTime ) {
+
+				prevKey.interpolate( nextKey, this.currentTime );
+
+			} else {
+
+				prevKey.interpolate( nextKey, nextKey.time );
+
+			}
+
+			this.data.hierarchy[ h ].node.updateMatrix();
+			object.matrixWorldNeedsUpdate = true;
+
+		}
+
+	}
+
+};
+
+// Get next key with
+
+THREE.KeyFrameAnimation.prototype.getNextKeyWith = function( sid, h, key ) {
+
+	var keys = this.data.hierarchy[ h ].keys;
+	key = key % keys.length;
+
+	for ( ; key < keys.length; key ++ ) {
+
+		if ( keys[ key ].hasTarget( sid ) ) {
+
+			return keys[ key ];
+
+		}
+
+	}
+
+	return keys[ 0 ];
+
+};
+
+// Get previous key with
+
+THREE.KeyFrameAnimation.prototype.getPrevKeyWith = function( sid, h, key ) {
+
+	var keys = this.data.hierarchy[ h ].keys;
+	key = key >= 0 ? key : key + keys.length;
+
+	for ( ; key >= 0; key -- ) {
+
+		if ( keys[ key ].hasTarget( sid ) ) {
+
+			return keys[ key ];
+
+		}
+
+	}
+
+	return keys[ keys.length - 1 ];
 
 };
 
@@ -69111,21 +70981,19 @@ THREE.MorphAnimation.prototype = {
 		var interpolation = this.duration / this.frames;
 		var frame = Math.floor( this.currentTime / interpolation );
 
-		var influences = this.mesh.morphTargetInfluences;
-
 		if ( frame != this.currentFrame ) {
 
-			influences[ this.lastFrame ] = 0;
-			influences[ this.currentFrame ] = 1;
-			influences[ frame ] = 0;
+			this.mesh.morphTargetInfluences[ this.lastFrame ] = 0;
+			this.mesh.morphTargetInfluences[ this.currentFrame ] = 1;
+			this.mesh.morphTargetInfluences[ frame ] = 0;
 
 			this.lastFrame = this.currentFrame;
 			this.currentFrame = frame;
 
 		}
 
-		influences[ frame ] = ( this.currentTime % interpolation ) / interpolation;
-		influences[ this.lastFrame ] = 1 - influences[ frame ];
+		this.mesh.morphTargetInfluences[ frame ] = ( this.currentTime % interpolation ) / interpolation;
+		this.mesh.morphTargetInfluences[ this.lastFrame ] = 1 - this.mesh.morphTargetInfluences[ frame ];
 
 	}
 
@@ -69332,7 +71200,7 @@ THREE.CircleGeometry.prototype.constructor = THREE.CircleGeometry;
 
 THREE.CubeGeometry = function ( width, height, depth, widthSegments, heightSegments, depthSegments ) {
 
-	THREE.warn( 'THREE.CubeGeometry has been renamed to THREE.BoxGeometry.' );
+	console.warn( 'THREE.CubeGeometry has been renamed to THREE.BoxGeometry.' );
 	return new THREE.BoxGeometry( width, height, depth, widthSegments, heightSegments, depthSegments );
 
  };
@@ -69639,6 +71507,7 @@ THREE.ExtrudeGeometry.prototype.addShape = function ( shape, options ) {
 
 	var ahole, h, hl; // looping of holes
 	var scope = this;
+	var bevelPoints = [];
 
 	var shapesOffset = this.vertices.length;
 
@@ -69678,7 +71547,7 @@ THREE.ExtrudeGeometry.prototype.addShape = function ( shape, options ) {
 
 	var contour = vertices; // vertices has all points but contour has only points of circumference
 
-	for ( h = 0, hl = holes.length; h < hl; h ++ ) {
+	for ( h = 0, hl = holes.length;  h < hl; h ++ ) {
 
 		ahole = holes[ h ];
 
@@ -69689,7 +71558,7 @@ THREE.ExtrudeGeometry.prototype.addShape = function ( shape, options ) {
 
 	function scalePt2 ( pt, vec, size ) {
 
-		if ( ! vec ) THREE.error( "THREE.ExtrudeGeometry: vec does not exist" );
+		if ( ! vec ) console.log( "die" );
 
 		return vec.clone().multiplyScalar( size ).add( pt );
 
@@ -69697,10 +71566,13 @@ THREE.ExtrudeGeometry.prototype.addShape = function ( shape, options ) {
 
 	var b, bs, t, z,
 		vert, vlen = vertices.length,
-		face, flen = faces.length;
+		face, flen = faces.length,
+		cont, clen = contour.length;
 
 
 	// Find directions for point movement
+
+	var RAD_TO_DEGREES = 180 / Math.PI;
 
 
 	function getBevelVec( inPt, inPrev, inNext ) {
@@ -69804,7 +71676,11 @@ THREE.ExtrudeGeometry.prototype.addShape = function ( shape, options ) {
 		//  (j)---(i)---(k)
 		// console.log('i,j,k', i, j , k)
 
-		contourMovements[ i ] = getBevelVec( contour[ i ], contour[ j ], contour[ k ] );
+		var pt_i = contour[ i ];
+		var pt_j = contour[ j ];
+		var pt_k = contour[ k ];
+
+		contourMovements[ i ]= getBevelVec( contour[ i ], contour[ j ], contour[ k ] );
 
 	}
 
@@ -69822,7 +71698,7 @@ THREE.ExtrudeGeometry.prototype.addShape = function ( shape, options ) {
 			if ( k === il ) k = 0;
 
 			//  (j)---(i)---(k)
-			oneHoleMovements[ i ] = getBevelVec( ahole[ i ], ahole[ j ], ahole[ k ] );
+			oneHoleMovements[ i ]= getBevelVec( ahole[ i ], ahole[ j ], ahole[ k ] );
 
 		}
 
@@ -69841,7 +71717,7 @@ THREE.ExtrudeGeometry.prototype.addShape = function ( shape, options ) {
 		z = bevelThickness * ( 1 - t );
 
 		//z = bevelThickness * t;
-		bs = bevelSize * ( Math.sin ( t * Math.PI / 2 ) ) ; // curved
+		bs = bevelSize * ( Math.sin ( t * Math.PI/2 ) ) ; // curved
 		//bs = bevelSize * t ; // linear
 
 		// contract shape
@@ -69941,7 +71817,7 @@ THREE.ExtrudeGeometry.prototype.addShape = function ( shape, options ) {
 		t = b / bevelSegments;
 		z = bevelThickness * ( 1 - t );
 		//bs = bevelSize * ( 1-Math.sin ( ( 1 - t ) * Math.PI/2 ) );
-		bs = bevelSize * Math.sin ( t * Math.PI / 2 ) ;
+		bs = bevelSize * Math.sin ( t * Math.PI/2 ) ;
 
 		// contract shape
 
@@ -70004,7 +71880,7 @@ THREE.ExtrudeGeometry.prototype.addShape = function ( shape, options ) {
 			for ( i = 0; i < flen; i ++ ) {
 
 				face = faces[ i ];
-				f3( face[ 2 ] + offset, face[ 1 ] + offset, face[ 0 ] + offset );
+				f3( face[ 2 ]+ offset, face[ 1 ]+ offset, face[ 0 ] + offset );
 
 			}
 
@@ -70051,7 +71927,7 @@ THREE.ExtrudeGeometry.prototype.addShape = function ( shape, options ) {
 		sidewalls( contour, layeroffset );
 		layeroffset += contour.length;
 
-		for ( h = 0, hl = holes.length; h < hl; h ++ ) {
+		for ( h = 0, hl = holes.length;  h < hl; h ++ ) {
 
 			ahole = holes[ h ];
 			sidewalls( ahole, layeroffset );
@@ -70068,7 +71944,7 @@ THREE.ExtrudeGeometry.prototype.addShape = function ( shape, options ) {
 		var j, k;
 		i = contour.length;
 
-		while ( -- i >= 0 ) {
+		while ( --i >= 0 ) {
 
 			j = i;
 			k = i - 1;
@@ -70113,7 +71989,7 @@ THREE.ExtrudeGeometry.prototype.addShape = function ( shape, options ) {
 
 		var uvs = uvgen.generateTopUV( scope, a, b, c );
 
-		scope.faceVertexUvs[ 0 ].push( uvs );
+ 		scope.faceVertexUvs[ 0 ].push( uvs );
 
 	}
 
@@ -70124,13 +72000,13 @@ THREE.ExtrudeGeometry.prototype.addShape = function ( shape, options ) {
 		c += shapesOffset;
 		d += shapesOffset;
 
-		scope.faces.push( new THREE.Face3( a, b, d, null, null, extrudeMaterial ) );
-		scope.faces.push( new THREE.Face3( b, c, d, null, null, extrudeMaterial ) );
+ 		scope.faces.push( new THREE.Face3( a, b, d, null, null, extrudeMaterial ) );
+ 		scope.faces.push( new THREE.Face3( b, c, d, null, null, extrudeMaterial ) );
 
-		var uvs = uvgen.generateSideWallUV( scope, a, b, c, d );
+ 		var uvs = uvgen.generateSideWallUV( scope, a, b, c, d );
 
-		scope.faceVertexUvs[ 0 ].push( [ uvs[ 0 ], uvs[ 1 ], uvs[ 3 ] ] );
-		scope.faceVertexUvs[ 0 ].push( [ uvs[ 1 ], uvs[ 2 ], uvs[ 3 ] ] );
+ 		scope.faceVertexUvs[ 0 ].push( [ uvs[ 0 ], uvs[ 1 ], uvs[ 3 ] ] );
+ 		scope.faceVertexUvs[ 0 ].push( [ uvs[ 1 ], uvs[ 2 ], uvs[ 3 ] ] );
 
 	}
 
@@ -70244,7 +72120,7 @@ THREE.ShapeGeometry.prototype.addShape = function ( shape, options ) {
 
 	//
 
-	var i, l, hole;
+	var i, l, hole, s;
 
 	var shapesOffset = this.vertices.length;
 	var shapePoints = shape.extractPoints( curveSegments );
@@ -70293,6 +72169,7 @@ THREE.ShapeGeometry.prototype.addShape = function ( shape, options ) {
 
 	var vert, vlen = vertices.length;
 	var face, flen = faces.length;
+	var cont, clen = contour.length;
 
 	for ( i = 0; i < vlen; i ++ ) {
 
@@ -71065,6 +72942,8 @@ THREE.TubeGeometry = function ( path, segments, radius, radialSegments, closed, 
 
 		numpoints = segments + 1,
 
+		x, y, z,
+		tx, ty, tz,
 		u, v, r,
 
 		cx, cy,
@@ -71175,7 +73054,9 @@ THREE.TubeGeometry.SinusoidalTaper = function ( u ) {
 // For computing of Frenet frames, exposing the tangents, normals and binormals the spline
 THREE.TubeGeometry.FrenetFrames = function ( path, segments, closed ) {
 
-	var	normal = new THREE.Vector3(),
+	var	tangent = new THREE.Vector3(),
+		normal = new THREE.Vector3(),
+		binormal = new THREE.Vector3(),
 
 		tangents = [],
 		normals = [],
@@ -71190,7 +73071,7 @@ THREE.TubeGeometry.FrenetFrames = function ( path, segments, closed ) {
 		smallest,
 
 		tx, ty, tz,
-		i, u;
+		i, u, v;
 
 
 	// expose internals
@@ -71271,17 +73152,17 @@ THREE.TubeGeometry.FrenetFrames = function ( path, segments, closed ) {
 
 	for ( i = 1; i < numpoints; i ++ ) {
 
-		normals[ i ] = normals[ i - 1 ].clone();
+		normals[ i ] = normals[ i-1 ].clone();
 
-		binormals[ i ] = binormals[ i - 1 ].clone();
+		binormals[ i ] = binormals[ i-1 ].clone();
 
-		vec.crossVectors( tangents[ i - 1 ], tangents[ i ] );
+		vec.crossVectors( tangents[ i-1 ], tangents[ i ] );
 
 		if ( vec.length() > epsilon ) {
 
 			vec.normalize();
 
-			theta = Math.acos( THREE.Math.clamp( tangents[ i - 1 ].dot( tangents[ i ] ), - 1, 1 ) ); // clamp for floating pt errors
+			theta = Math.acos( THREE.Math.clamp( tangents[ i-1 ].dot( tangents[ i ] ), - 1, 1 ) ); // clamp for floating pt errors
 
 			normals[ i ].applyMatrix4( mat.makeRotationAxis( vec, theta ) );
 
@@ -71296,10 +73177,10 @@ THREE.TubeGeometry.FrenetFrames = function ( path, segments, closed ) {
 
 	if ( closed ) {
 
-		theta = Math.acos( THREE.Math.clamp( normals[ 0 ].dot( normals[ numpoints - 1 ] ), - 1, 1 ) );
+		theta = Math.acos( THREE.Math.clamp( normals[ 0 ].dot( normals[ numpoints-1 ] ), - 1, 1 ) );
 		theta /= ( numpoints - 1 );
 
-		if ( tangents[ 0 ].dot( vec.crossVectors( normals[ 0 ], normals[ numpoints - 1 ] ) ) > 0 ) {
+		if ( tangents[ 0 ].dot( vec.crossVectors( normals[ 0 ], normals[ numpoints-1 ] ) ) > 0 ) {
 
 			theta = - theta;
 
@@ -71348,7 +73229,7 @@ THREE.PolyhedronGeometry = function ( vertices, indices, radius, detail ) {
 
 	}
 
-	var p = this.vertices;
+	var midpoints = [], p = this.vertices;
 
 	var faces = [];
 
@@ -71456,6 +73337,7 @@ THREE.PolyhedronGeometry = function ( vertices, indices, radius, detail ) {
 	function subdivide( face, detail ) {
 
 		var cols = Math.pow(2, detail);
+		var cells = Math.pow(4, detail);
 		var a = prepare( that.vertices[ face.a ] );
 		var b = prepare( that.vertices[ face.b ] );
 		var c = prepare( that.vertices[ face.c ] );
@@ -71740,9 +73622,10 @@ THREE.ParametricGeometry = function ( func, slices, stacks ) {
 	var faces = this.faces;
 	var uvs = this.faceVertexUvs[ 0 ];
 
-	var i, j, p;
+	var i, il, j, p;
 	var u, v;
 
+	var stackCount = stacks + 1;
 	var sliceCount = slices + 1;
 
 	for ( i = 0; i <= stacks; i ++ ) {
@@ -72361,20 +74244,11 @@ THREE.DirectionalLightHelper.prototype.update = function () {
 
 /**
  * @author WestLangley / http://github.com/WestLangley
- * @param object THREE.Mesh whose geometry will be used
- * @param hex line color
- * @param thresholdAngle the minimim angle (in degrees),
- * between the face normals of adjacent faces,
- * that is required to render an edge. A value of 10 means
- * an edge is only rendered if the angle is at least 10 degrees.
  */
 
-THREE.EdgesHelper = function ( object, hex, thresholdAngle ) {
+THREE.EdgesHelper = function ( object, hex ) {
 
 	var color = ( hex !== undefined ) ? hex : 0xffffff;
-	thresholdAngle = ( thresholdAngle !== undefined ) ? thresholdAngle : 1;
-
-	var thresholdDot = Math.cos( THREE.Math.degToRad( thresholdAngle ) );
 
 	var edge = [ 0, 0 ], hash = {};
 	var sortFunction = function ( a, b ) { return a - b };
@@ -72382,18 +74256,7 @@ THREE.EdgesHelper = function ( object, hex, thresholdAngle ) {
 	var keys = [ 'a', 'b', 'c' ];
 	var geometry = new THREE.BufferGeometry();
 
-	var geometry2;
-
-	if ( object.geometry instanceof THREE.BufferGeometry ) {
-
-		geometry2 = new THREE.Geometry();
-		geometry2.fromBufferGeometry( object.geometry );
-
-	} else {
-
-		geometry2 = object.geometry.clone();
-
-	}
+	var geometry2 = object.geometry.clone();
 
 	geometry2.mergeVertices();
 	geometry2.computeFaceNormals();
@@ -72437,7 +74300,7 @@ THREE.EdgesHelper = function ( object, hex, thresholdAngle ) {
 
 		var h = hash[ key ];
 
-		if ( h.face2 === undefined || faces[ h.face1 ].normal.dot( faces[ h.face2 ].normal ) <= thresholdDot ) {
+		if ( h.face2 === undefined || faces[ h.face1 ].normal.dot( faces[ h.face2 ].normal ) < 0.9999 ) { // hardwired const OK
 
 			var vertex = vertices[ h.vert1 ];
 			coords[ index ++ ] = vertex.x;
@@ -72593,7 +74456,7 @@ THREE.GridHelper.prototype.setColors = function( colorCenterLine, colorGrid ) {
  * @author mrdoob / http://mrdoob.com/
  */
 
-THREE.HemisphereLightHelper = function ( light, sphereSize ) {
+THREE.HemisphereLightHelper = function ( light, sphereSize, arrowLength, domeSize ) {
 
 	THREE.Object3D.call( this );
 
@@ -72905,6 +74768,8 @@ THREE.VertexNormalsHelper = function ( object, size, hex, linewidth ) {
 
 	var geometry = new THREE.Geometry();
 
+	var vertices = object.geometry.vertices;
+
 	var faces = object.geometry.faces;
 
 	for ( var i = 0, l = faces.length; i < l; i ++ ) {
@@ -73005,6 +74870,8 @@ THREE.VertexTangentsHelper = function ( object, size, hex, linewidth ) {
 	var width = ( linewidth !== undefined ) ? linewidth : 1;
 
 	var geometry = new THREE.Geometry();
+
+	var vertices = object.geometry.vertices;
 
 	var faces = object.geometry.faces;
 
@@ -73362,6 +75229,7 @@ THREE.MorphBlendMesh.prototype.autoCreateAnimations = function ( fps ) {
 		if ( chunks && chunks.length > 1 ) {
 
 			var name = chunks[ 1 ];
+			var num = chunks[ 2 ];
 
 			if ( ! frameRanges[ name ] ) frameRanges[ name ] = { start: Infinity, end: - Infinity };
 
@@ -73506,7 +75374,7 @@ THREE.MorphBlendMesh.prototype.playAnimation = function ( name ) {
 
 	} else {
 
-		THREE.warn( "THREE.MorphBlendMesh: animation[" + name + "] undefined in .playAnimation()" );
+		console.warn( "animation[" + name + "] undefined" );
 
 	}
 
@@ -73606,7 +75474,7 @@ if (typeof exports !== 'undefined') {
   this['THREE'] = THREE;
 }
 
-},{}],907:[function(require,module,exports){
+},{}],571:[function(require,module,exports){
 //     Underscore.js 1.8.3
 //     http://underscorejs.org
 //     (c) 2009-2015 Jeremy Ashkenas, DocumentCloud and Investigative Reporters & Editors
@@ -75156,7 +77024,68 @@ if (typeof exports !== 'undefined') {
   }
 }.call(this));
 
-},{}],908:[function(require,module,exports){
+},{}],572:[function(require,module,exports){
+var Model = require('./models/model');
+var Mesh = require('./models/mesh');
+var AmpersandCollection = require('ampersand-rest-collection');
+
+ModelCollection = AmpersandCollection.extend( {
+    url: "/models",
+    comparator: 'name',
+    model: Model
+});
+
+PublicModelCollection = AmpersandCollection.extend( {
+    url: "/publicModels",
+    comparator: 'name',
+    model: Model
+});
+
+MeshCollection = AmpersandCollection.extend( {
+    url: "/meshes",
+    comparator: 'name',
+    model: Mesh
+});
+
+var publicModelCollection = new PublicModelCollection();
+var modelCollection = new ModelCollection();
+var meshCollection = new MeshCollection();
+
+var modelDownloaded = false; var meshDownloaded = false; var publicModelDownloaded = false;
+
+modelCollection.fetch({
+    success : function(modelCollection, response, options)
+    {
+        modelDownloaded = true;
+        if(meshDownloaded && publicModelDownloaded)
+        {
+            module.exports.blastoff();
+        }
+    }
+});
+
+meshCollection.fetch({
+    success : function(meshCollection, response, options)
+    {
+        meshDownloaded = true;
+        if(modelDownloaded && publicModelDownloaded)
+        {
+            module.exports.blastoff();
+        }
+    }
+});
+
+publicModelCollection.fetch({
+    success : function(publicModelCollection, response, options)
+    {
+        publicModelDownloaded = true;
+        if(meshDownloaded && modelDownloaded)
+        {
+            module.exports.blastoff();
+        }
+    }
+});
+
 /*global app, me, $*/
 var $ = require('jquery');
 var _ = require('underscore');
@@ -75164,12 +77093,9 @@ var config = require('clientconfig');
 
 var View = require('ampersand-view');
 var AmpersandModel = require('ampersand-model');
-var AmpersandCollection = require('ampersand-rest-collection');
 var ModelEditorView = require('./forms/model');
 var ModelSelectView = require('./publicLibrary/model-collection');
-var Model = require('./models/model');
 var domReady = require('domready');
-var Mesh = require('./models/mesh');
 var MeshCollection = require('./models/mesh-collection');
 var MeshSelectView = require('./forms/mesh-collection');
 
@@ -75269,60 +77195,6 @@ var PrimaryView = View.extend({
     }
 });
 
-ModelCollection = AmpersandCollection.extend( {
-    url: "/models",
-    model: Model
-});
-
-PublicModelCollection = AmpersandCollection.extend( {
-    url: "/publicModels",
-    model: Model
-});
-
-MeshCollection = AmpersandCollection.extend( {
-    url: "/meshes",
-    model: Mesh
-});
-
-var publicModelCollection = new PublicModelCollection();
-var modelCollection = new ModelCollection();
-var meshCollection = new MeshCollection();
-
-var modelDownloaded = false; var meshDownloaded = false; var publicModelDownloaded = false;
-
-modelCollection.fetch({
-    success : function(modelCollection, response, options)
-    {
-        modelDownloaded = true;
-        if(meshDownloaded && publicModelDownloaded)
-        {
-            module.exports.blastoff();
-        }
-    }
-});
-
-meshCollection.fetch({
-    success : function(meshCollection, response, options)
-    {
-        meshDownloaded = true;
-        if(modelDownloaded && publicModelDownloaded)
-        {
-            module.exports.blastoff();
-        }
-    }
-});
-
-publicModelCollection.fetch({
-    success : function(publicModelCollection, response, options)
-    {
-        publicModelDownloaded = true;
-        if(meshDownloaded && modelDownloaded)
-        {
-            module.exports.blastoff();
-        }
-    }
-});
-
 module.exports = {
     blastoff: function () {
         var self = window.app = this;
@@ -75358,7 +77230,7 @@ module.exports = {
 };
 
 
-},{"./forms/mesh-collection":10,"./forms/model":14,"./models/mesh":34,"./models/mesh-collection":33,"./models/model":35,"./publicLibrary/model-collection":909,"ampersand-model":109,"ampersand-rest-collection":165,"ampersand-view":786,"clientconfig":886,"domready":888,"jquery":889,"underscore":907}],909:[function(require,module,exports){
+},{"./forms/mesh-collection":10,"./forms/model":14,"./models/mesh":34,"./models/mesh-collection":33,"./models/model":35,"./publicLibrary/model-collection":573,"ampersand-model":108,"ampersand-rest-collection":123,"ampersand-view":446,"clientconfig":550,"domready":552,"jquery":553,"underscore":571}],573:[function(require,module,exports){
 var _ = require('underscore');
 var $ = require('jquery');
 var AmpersandView = require('ampersand-view');
@@ -75433,7 +77305,7 @@ var ModelCollectionSelectView = AmpersandView.extend({
 
 module.exports = ModelCollectionSelectView
 
-},{"../forms/tests.js":29,"../models/model":35,"./model":910,"ampersand-checkbox-view":48,"ampersand-form-view":103,"ampersand-input-view":107,"ampersand-select-view":481,"ampersand-view":786,"jquery":889,"underscore":907}],910:[function(require,module,exports){
+},{"../forms/tests.js":29,"../models/model":35,"./model":574,"ampersand-checkbox-view":48,"ampersand-form-view":103,"ampersand-input-view":107,"ampersand-select-view":141,"ampersand-view":446,"jquery":553,"underscore":571}],574:[function(require,module,exports){
 var _ = require('underscore');
 var $ = require('jquery');
 var View = require('ampersand-view');
@@ -75544,4 +77416,4 @@ module.exports = View.extend({
     }
 });
 
-},{"../forms/tests":29,"ampersand-view":786,"jquery":889,"underscore":907}]},{},[908]);
+},{"../forms/tests":29,"ampersand-view":446,"jquery":553,"underscore":571}]},{},[572]);

@@ -1,7 +1,5 @@
 #!/usr/bin/env python
 import pyurdme
-from examples.cylinder_demo.cylinder_demo3D import cylinderDemo3D
-from examples.simple_diffusion import simple_diffusion
 import pyurdme.nsmsolver
 import scipy.fftpack
 
@@ -56,7 +54,7 @@ class TestSolverFunctionality(unittest.TestCase):
         model.listOfSpecies["A"].diffusion_constant = 0.0
         result = model.run()
         A = result.get_species("A")
-        self.assertFalse((numpy.mean(A,axis=0)-model.u0).any())
+        self.assertFalse((A[:,0]-model.u0).any())
     
     def test_same_seed(self):
         """ Test that the output is the same if the same seed is used, edxplicit solver creation  """
@@ -84,6 +82,11 @@ class TestSolverFunctionality(unittest.TestCase):
         result1 = solver.run()
         result2 = solver.run()
         self.assertNotEqual(result1,result2)
+
+    def test_mesh_pickle(self):
+        meshstr = pickle.dumps(self.model.mesh)
+        mesh = pickle.loads(meshstr)
+
 
     def test_model_pickle(self):
         """ Test that the model is picklable. We do not compare models directly, but rather the results after simulation. """

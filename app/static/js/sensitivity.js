@@ -16,7 +16,7 @@ Sensitivity.SelectTable = Backbone.View.extend(
         {
             this.$el = $( "#selectTable" );
 
-	    this.rowTemplate = _.template('<span><input type="checkbox" /><%= name %></span>');
+            this.rowTemplate = _.template('<span><input type="checkbox" /><%= name %></span>');
 
             this.pc = this.$el.find('#parameterContainer');
             this.icc = this.$el.find('#initialConditionContainer');
@@ -90,6 +90,20 @@ Sensitivity.SelectTable = Backbone.View.extend(
                         state[id] = $( event.target ).prop( 'checked' );
                     }, this.state.selections.pc, id) );
                 }
+
+                $( '.selectAll' ).click( _.bind(function() {
+                    this.pc.find('input').each(function() {
+                        if(!this.checked)
+                            this.click();
+                    });
+                }, this));
+
+                $( '.clearAll' ).click( _.bind(function() {
+                    this.pc.find('input').each(function() {
+                        if(this.checked)
+                            this.click();
+                    });
+                }, this));
 
                 /*var species = this.model.SpeciesList.children();
 

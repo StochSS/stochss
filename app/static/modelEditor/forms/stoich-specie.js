@@ -67,7 +67,26 @@ module.exports = View.extend({
     },
     addOne : function()
     {
-        this.model.stoichiometry = this.model.stoichiometry + 1;
+	var reaction = this.model.collection.parent;
+
+	if(this.model.collection == reaction.reactants && reaction.type == 'massaction')
+	{
+	    var numReactants = 0;
+
+	    for(var i = 0; i < this.model.collection.models.length; i++)
+	    {
+		var reactant = this.model.collection.models[i];
+
+		numReactants += reactant.stoichiometry;
+	    }
+
+	    if(numReactants < 2)
+		this.model.stoichiometry = this.model.stoichiometry + 1;
+	}
+	else
+	{
+            this.model.stoichiometry = this.model.stoichiometry + 1;
+	}
     },
     subtractOne : function()
     {

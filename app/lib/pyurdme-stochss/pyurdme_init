@@ -17,7 +17,6 @@ fi
 export PYURDMEHOME=$MY_PATH
 export PYTHONPATH="$PYURDMEHOME:$PYTHONPATH"
 export C_INCLUDE_PATH=/usr/lib/openmpi/include
-#echo "PYURDMEHOME=$PYURDMEHOME"
-#echo "PYTHONPATH=$PYTHONPATH"
 export C_INCLUDE_PATH=/usr/lib/openmpi/include
+export INSTANT_SYSTEM_CALL_METHOD=SUBPROCESS
 

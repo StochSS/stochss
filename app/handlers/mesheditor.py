@@ -12,6 +12,7 @@ import fileserver
 import shlex
 import sys
 import pyurdme
+import numpy
 import tempfile
 import shutil
 
@@ -27,6 +28,8 @@ class MeshWrapper(db.Model):
     meshFileId = db.IntegerProperty()
     subdomains = ObjectProperty()
     uniqueSubdomains = ObjectProperty()
+    volumes = ObjectProperty()
+    boundingBox = ObjectProperty()
     undeletable = db.BooleanProperty()
     ghost = db.BooleanProperty()
 
@@ -36,6 +39,8 @@ class MeshWrapper(db.Model):
                  "description" : self.description,
                  "meshFileId" : self.meshFileId,
                  "subdomains" : self.subdomains if not reduced else [],
+                 "volumes" : self.volumes,
+                 "boundingBox" : self.boundingBox,
                  "uniqueSubdomains" : self.uniqueSubdomains,
                  "undeletable" : bool(self.undeletable),
                  "ghost" : bool(self.ghost),
@@ -118,6 +123,36 @@ class MeshManager():
         meshDb.uniqueSubdomains = jsonMesh["uniqueSubdomains"]
         meshDb.undeletable = jsonMesh["undeletable"]
 
+        pymodel = pyurdme.URDMEModel(name = 'test')
+        meshFileObj = fileserver.FileManager.getFile(handler, meshDb.meshFileId)
+        pymodel.mesh = pyurdme.URDMEMesh.read_dolfin_mesh(str(meshFileObj["storePath"]))
+        coordinates = pymodel.mesh.coordinates()
+        minx = numpy.min(coordinates[:, 0])
+        maxx = numpy.max(coordinates[:, 0])
+        miny = numpy.min(coordinates[:, 1])
+        maxy = numpy.max(coordinates[:, 1])
+        minz = numpy.min(coordinates[:, 2])
+        maxz = numpy.max(coordinates[:, 2])
+        pymodel.add_species(pyurdme.Species('T', 1))
+
+        if len(meshDb.subdomains) == 0:
+            meshDb.subdomains = [1] * len(coordinates)
+            meshDb.uniqueSubdomains = [1]
+
+        pymodel.set_subdomain_vector(numpy.array(meshDb.subdomains))
+        sd = pymodel.get_subdomain_vector()
+        vol_accumulator = numpy.zeros(numpy.unique(sd).shape)
+        for ndx, v in enumerate(pymodel.get_solver_datastructure()['vol']):
+            vol_accumulator[sd[ndx] - 1] += v
+
+        volumes = {}
+
+        for s, v in enumerate(vol_accumulator):
+            volumes[s + 1] = v
+
+        meshDb.volumes = volumes
+        meshDb.boundingBox = [[minx, maxx], [miny, maxy], [minz, maxz]]
+
         return meshDb.put().id()
 
     @staticmethod
@@ -193,215 +228,90 @@ class MeshBackboneInterface(BaseHandler):
         self.response.write(json.dumps([]))
 
 def setupMeshes(handler):
-    base = os.path.dirname(os.path.realpath(__file__)) + '/../static/spatial/'
+    try:
+        base = os.path.dirname(os.path.realpath(__file__)) + '/../static/spatial/'
 
-    files = [ 'coli_with_membrane_mesh.xml',
-              'cylinder_mesh.xml',
-              'unit_cube_with_membrane_mesh.xml',
-              'unit_sphere_with_membrane_mesh.xml' ]
+        files = [ 'coli_with_membrane_mesh.xml',
+                  'cylinder_mesh.xml',
+                  'unit_cube_with_membrane_mesh.xml',
+                  'unit_sphere_with_membrane_mesh.xml' ]
                 
-    descriptions = { 'coli_with_membrane_mesh.xml' : 'Mesh for simulation of E. coli or similar rod-shaped bacteria.\n\nBounding box:\n-0.25 to 0.25 on x-axis\n-0.25 to 2.25 on y-axis\n-0.25 to 0.25 on z-axis',
-                     'cylinder_mesh.xml' : 'Mesh for simulations in a cylindrical domain.\n\nBounding box:\n-5.0 to 5.0 on x-axis\n-1.0 to 1.0 on y-axis\n-1.0 to 1.0 on z-axis',
-                     'unit_cube_with_membrane_mesh.xml' : 'Simulations on a unit cube domain.\n\nBounding box:\n0.0 to 1.0 on x-axis\n0.0 to 1.0 on y-axis\n0.0 to 1.0 on z-axis',
-                     'unit_sphere_with_membrane_mesh.xml' : 'Simulations on a unit sphere domain.\n\nBounding box:\n-1.0 to 1.0 on x-axis\n-1.0 to 1.0 on y-axis\n-1.0 to 1.0 on z-axis' }
+        descriptions = { 'coli_with_membrane_mesh.xml' : 'Simplified E-coli model mesh',
+                         'cylinder_mesh.xml' : 'Cylindrical domain',
+                         'unit_cube_with_membrane_mesh.xml' : 'Cubic domain of edge length 1.0',
+                         'unit_sphere_with_membrane_mesh.xml' : 'Spherical domain with radius 1.0' }
     
-    namesToFilenames = { 'E-coli with membrane' : 'coli_with_membrane_mesh.xml',
-                         'Cylinder' : 'cylinder_mesh.xml',
-                         'Unit cube' : 'unit_cube_with_membrane_mesh.xml',
-                         'Unit sphere' : 'unit_sphere_with_membrane_mesh.xml' }
+        namesToFilenames = { 'E-coli with membrane' : 'coli_with_membrane_mesh.xml',
+                             'Cylinder' : 'cylinder_mesh.xml',
+                             'Unit cube' : 'unit_cube_with_membrane_mesh.xml',
+                             'Unit sphere' : 'unit_sphere_with_membrane_mesh.xml' }
     
-    converted = set()
-    for wrapper in db.GqlQuery("SELECT * FROM MeshWrapper WHERE userId = :1", handler.user.user_id()).run():
-        converted.add(wrapper.name)
+        converted = set()
+        for wrapper in db.GqlQuery("SELECT * FROM MeshWrapper WHERE userId = :1", handler.user.user_id()).run():
+            converted.add(wrapper.name)
 
-    for name in set(namesToFilenames.keys()) - converted:
-        fileName = namesToFilenames[name]
+        for name in set(namesToFilenames.keys()) - converted:
+            fileName = namesToFilenames[name]
         
-        meshDb = MeshWrapper()
-        
-        # To get the subdomains, there is a .txt file stored along with every .xml
-        baseName, ext = os.path.splitext(fileName)
-        subdomainsFile = open(os.path.join(base, baseName + '.txt'), 'r')
-
-        subdomains = []
-
-        for line in subdomainsFile.read().split():
-            v, s = line.strip().split(',')
-
-            v = int(v)
-            s = int(float(s))
-                        
-            subdomains.append((v, s))
-
-        subdomainsFile.close()
-
-        subdomains = [y for x, y in sorted(subdomains, key = lambda x : x[0])]
-        uniqueSubdomains = list(set(subdomains))
-
-        meshFile = open(os.path.join(base, fileName), 'r')
-        meshFileId = fileserver.FileManager.createFile(handler, "meshFiles", fileName, meshFile.read(), 777)
-        meshFile.close()
-        
-        meshDb.userId = handler.user.user_id()
-        meshDb.name = name
-        meshDb.description = descriptions[fileName]
-        meshDb.meshFileId = int(meshFileId)
-        meshDb.subdomains = subdomains
-        meshDb.uniqueSubdomains = uniqueSubdomains
-        meshDb.undeletable = True
-
-        meshDb.put()
-        
-    """def post(self):
-        try:
-            # First, check to see if it's an update request and then route it to the appropriate function.
-            reqType = self.request.get('reqType')
-            self.response.content_type = 'application/json'
-
-        
-            model_edited = self.get_session_property('model_edited')
-            if model_edited == None:
-                self.render_response('modeleditor/specieseditor.html')
-                return
-
-            row = db.GqlQuery("SELECT * FROM StochKitModelWrapper WHERE user_id = :1 AND model_name = :2", self.user.user_id(), model_edited.name).get()
-
-            if row is None:
-                self.render_response('modeleditor/specieseditor.html')
-                return
-
-            if self.request.get('reqType') == 'setMesh':
-                # Looks like a speciesSubdomainAssignments request
-                self.response.content_type = 'application/json'
-
-                #print 'QWTASDFFASDFASDFSDAJKL;FSADFDSAJKL;FASD'
+            meshDb = MeshWrapper()
             
-                data = json.loads( self.request.get('data') );
-
-                meshWrapperId = data['meshWrapperId']
-
-                # Acquire updated subdomains (if there are any)
-                meshDb = MeshWrapper.get_by_id(meshWrapperId)
-
-                meshFile = fileserver.FileManager.getFile(self, meshDb.meshFileId)
-                
-                row.spatial['subdomains'] = []
-                if meshDb.subdomainsFileId:
-                    sdFile = fileserver.FileManager.getFile(self, meshDb.subdomainsFileId)
-                    newSubdomains = set()
-
-                    sdHandle = open(sdFile['storePath'], 'r')
-                    for line in sdHandle:
-                        v, l = line.strip().split(',')
-                
-                        l = int(float(l))
-                
-                        newSubdomains.add(l)
-
-                    sdHandle.close()
-
-                    row.spatial['subdomains'] = list(newSubdomains)
-
-                    row.spatial['species_subdomain_assignments'] = {}
-                    row.spatial['reactions_subdomain_assignments'] = {}
-
-                    for speciesId in row.model.listOfSpecies.keys():
-                        row.spatial['species_subdomain_assignments'][speciesId] = list(newSubdomains)
-
-                    for reactionId in row.model.listOfReactions.keys():
-                        row.spatial['reactions_subdomain_assignments'][reactionId] = list(newSubdomains)
-                else:
-                    row.spatial['subdomains'] = [1]
-
-                    for speciesId in row.spatial['species_subdomain_assignments']:
-                        row.spatial['species_subdomain_assignments'][speciesId] = [1]
-
-                    for reactionId in row.spatial['reactions_subdomain_assignments']:
-                        row.spatial['reactions_subdomain_assignments'][reactionId] = [1]
-
-                    row.spatial['initial_conditions'] = {}
-
-                row.spatial['mesh_wrapper_id'] = meshWrapperId
-
-                row.put()
+            # To get the subdomains, there is a .txt file stored along with every .xml
+            baseName, ext = os.path.splitext(fileName)
+            subdomainsFile = open(os.path.join(base, baseName + '.txt'), 'r')
             
-                meshWrappers = []
-                for wrapperRow in db.GqlQuery("SELECT * FROM MeshWrapper").run():
-                    meshWrappers.append( wrapperRow.toJSON() )
+            subdomains = []
 
-                data = { 'meshes' : meshWrappers,
-                         'meshWrapperId' : row.spatial['mesh_wrapper_id'],
-                         'selectedMesh' : meshDb.toJSON(),
-                         'subdomains' : row.spatial['subdomains'],
-                         'initialConditions' : row.spatial['initial_conditions'],
-                         'reactionsSubdomainAssignments' : row.spatial['reactions_subdomain_assignments'],
-                         'speciesSubdomainAssignments' : row.spatial['species_subdomain_assignments'] }
-
-                self.response.write(json.dumps( data ))
-                return
-            if self.request.get('reqType') == 'setName':
-                # Looks like a speciesSubdomainAssignments request
-                self.response.content_type = 'application/json'
-
-                data = json.loads( self.request.get('data') );
-
-                meshWrapperId = data['id']
-
-                meshDb = MeshWrapper.get_by_id(meshWrapperId)
-
-                meshDb.name = data['newName']
+            for line in subdomainsFile.read().split():
+                v, s = line.strip().split(',')
                 
-                meshDb.put()
+                v = int(v)
+                s = int(float(s))
+                
+                subdomains.append((v, s))
+
+            subdomainsFile.close()
+
+            subdomains = [y for x, y in sorted(subdomains, key = lambda x : x[0])]
+            uniqueSubdomains = list(set(subdomains))
             
-                self.response.write(json.dumps( { "statu" : True,
-                                                  "msg" : 'Name updated' } ))
-                return
-            elif self.request.get('reqType') == 'getMesh':
-                return
-            elif self.request.get('reqType') == 'deleteMesh':
-                data = json.loads( self.request.get('data') );
-                meshWrapperDb = MeshWrapper.get_by_id(data['id'])
+            meshFile = open(os.path.join(base, fileName), 'r')
+            meshFileId = fileserver.FileManager.createFile(handler, "meshFiles", fileName, meshFile.read(), 777)
+            meshFile.close()
+            
+            meshDb.userId = handler.user.user_id()
+            meshDb.name = name
+            meshDb.description = descriptions[fileName]
+            meshDb.meshFileId = int(meshFileId)
+            meshDb.subdomains = subdomains
+            meshDb.uniqueSubdomains = uniqueSubdomains
+            meshDb.undeletable = True
 
-                meshWrapperDb.delete()
+            pymodel = pyurdme.URDMEModel(name = 'test')
+            pymodel.mesh = pyurdme.URDMEMesh.read_dolfin_mesh(str(os.path.join(base, fileName)))
+            coordinates = pymodel.mesh.coordinates()
+            minx = numpy.min(coordinates[:, 0])
+            maxx = numpy.max(coordinates[:, 0])
+            miny = numpy.min(coordinates[:, 1])
+            maxy = numpy.max(coordinates[:, 1])
+            minz = numpy.min(coordinates[:, 2])
+            maxz = numpy.max(coordinates[:, 2])
+            pymodel.add_species(pyurdme.Species('T', 1))
+            pymodel.set_subdomain_vector(numpy.array(subdomains))
+            sd = pymodel.get_subdomain_vector()
+            vol_accumulator = numpy.zeros(numpy.unique(sd).shape)
+            for ndx, v in enumerate(pymodel.get_solver_datastructure()['vol']):
+                vol_accumulator[sd[ndx] - 1] += v
 
-                self.response.write( { "status" : False, "msg" : "Mesh deleted" })
-                return
-            elif self.request.get('reqType') == 'setInitialConditions':
-                data = json.loads( self.request.get('data') );
+            volumes = {}
 
-                row.spatial['initial_conditions'] = data['initialConditions']
+            for s, v in enumerate(vol_accumulator):
+                volumes[s + 1] = v
 
-                #print data['initialConditions']
-                #print row.spatial['initial_conditions']
+            meshDb.volumes = volumes
+            meshDb.boundingBox = [[minx, maxx], [miny, maxy], [minz, maxz]]
+            
+            meshDb.put()
+    except:
+        traceback.print_exc()
+        print "ERROR: Failed to import example public models"
 
-                row.put()
-
-                self.response.write( json.dumps( { "status" : True, "msg" : "Initial conditions updated" } ) )
-                return
-            elif reqType == 'addMeshWrapper':
-                meshDb = MeshWrapper()
-                data = json.loads(self.request.get('data'))
-
-                meshFile = fileserver.FileManager.getFile(self, data['meshFileId'])
-                basename, ext = os.path.splitext(meshFile['path'])
-
-                meshDb.userId = self.user.user_id()
-                meshDb.name = data['name']
-                meshDb.description = data['description']
-                meshDb.meshFileId = data['meshFileId']
-                meshDb.subdomainsFileId = data['subdomainsFileId'] if 'subdomainsFileId' in data else None
-                meshDb.ghost = False
-                meshDb.undeletable = False
-                
-                meshDb.put()
-                
-                self.response.write( json.dumps( meshDb.toJSON() ) )
-                return
-        except Exception, error:
-            traceback.print_exc()
-            result = { "status" : False,
-                       "msg" : 'Internal StochSS error: {0}'.format(error) }
-            self.error(500)
-            self.response.headers['Content-Type'] = 'application/json'
-            self.response.write(json.dumps(result))
-"""

@@ -14,24 +14,26 @@
                     <tr>
                       <th width="25px"></th>
                       <th width="200px">Name</th>
-                      <th>Type</th>
-                      <th>Spatial</th>
+                      <th>Properties</th>
                     </tr>
                   </thead>
                   <tbody>
                 {% for item in all_models %}
                     <tr>
                       <td>
-                        <input type="radio" name="model_to_simulate" value="{{ item.name }} {{ item.id }} {{ item.units }}" checked />
+                        <input type="radio" name="model_to_simulate" value="{{ item.name }} {{ item.id }} {{ item.units }}" />
                       </td>
                       <td>
                         {{ item.name }}
                       </td>
                       <td>
-                        {{ item.units }}
-                      </td>
-                      <td>
-                        {{ item.isSpatial }}
+			{% if item.units == "concentration" and not item.isSpatial %}
+			Mass action, concentration, non-spatial
+			{% elif item.units == "population" and not item.isSpatial %}
+			Mass action, population, non-spatial
+			{% elif item.units == "population" and item.isSpatial %}
+			Mass action, population, spatial
+			{% endif %}
                       </td>
                     </tr>
                     {% endfor %}
@@ -134,6 +136,10 @@
             <br />
             <div id="parameterContainer">
             </div>
+	    <div class="btn-group">
+		<button class="btn btn-small selectAll">Select All</button>
+		<button class="btn btn-small clearAll">Clear All</button>
+	    </div>
         </div>
 
         <!--<table id="selectTable2" class="sensitivity" border=1 width="50%">

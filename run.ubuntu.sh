@@ -56,7 +56,7 @@ fi
 # Check that the dependencies are satisfied
 echo -n "Are dependencies satisfied?... "
 
-PKGS="gcc g++ make libxml2-dev curl git r-base-core libgsl0-dev build-essential python-dev python-setuptools cython"
+PKGS="gcc g++ make libxml2-dev curl git r-base-core libgsl0-dev build-essential python-dev python-setuptools cython libbz2-dev libhdf5-mpi-dev"
 if [ `getconf LONG_BIT` != 64 ]; then
     PKGS="gcc-multilib $PKGS"
 fi
@@ -145,6 +145,57 @@ function check_lib {
     echo "$1 not found"
     return 1 #False
 }
+function check_pip {
+    if which pip > /dev/null;then
+        echo "pip is installed on your system, using it<br />"
+        return 0 #True
+    else
+        echo "pip is not installed on your system<br />"
+        return 1 #False
+    fi
+}
+
+function install_pip {
+    echo "We need to install python pip from https://bootstrap.pypa.io/get-pip.py"
+    read -p "Do you want me to try to use sudo to install required packages [you may be prompted for the admin password] (y/n): " answer
+
+    if [ $? != 0 ]; then
+        exit -1
+    fi
+
+    if [ "$answer" == 'y' ] || [ "$answer" == 'yes' ]; then
+        CMD="curl -o get-pip.py https://bootstrap.pypa.io/get-pip.py"
+        echo $CMD
+        eval $CMD
+        CMD="sudo python get-pip.py"
+        echo $CMD
+        eval $CMD
+    else
+        exit -1
+    fi
+}
+function install_lib_h5py {
+    if ! check_pip;then
+        install_pip
+    fi
+    echo "We need install the following packages: h5py"
+    read -p "Do you want me to try to use sudo to install required package(s) (y/n): " answer
+    if [ $? != 0 ]; then
+        exit -1
+    fi
+    if [ "$answer" == 'y' ] || [ "$answer" == 'yes' ]; then
+        CMD='sudo CC="mpicc" pip install h5py'
+        echo $CMD
+        eval $CMD
+        if [ $? != 0 ]; then
+            exit -1
+        fi
+        echo "$1 installed successfully"
+    else
+        echo "Exiting"
+        exit -1
+    fi
+}
 function install_lib {
     if [ -z "$1" ];then
         return 1 #False
@@ -168,9 +219,35 @@ function install_lib {
     fi
 }
 
+function install_lib_pip {
+    if [ -z "$1" ];then
+        return 1 #False
+    fi
+    if ! check_pip;then
+        install_pip
+    fi
+    echo "We need install the following packages: $1"
+    read -p "Do you want me to try to install required package(s) with pip (y/n): " answer
+    if [ $? != 0 ]; then
+        exit -1
+    fi
+    if [ "$answer" == 'y' ] || [ "$answer" == 'yes' ]; then
+        CMD="sudo pip install $1"
+        echo $CMD
+        eval $CMD
+        if [ $? != 0 ]; then
+            exit -1
+        fi
+        echo "$1 installed successfully"
+    else
+        echo "Exiting"
+        exit -1
+    fi
+}
+
 function check_and_install_deps {
     if ! check_lib "h5py";then
-        install_lib "python-h5py"
+        install_lib_h5py
     fi
     if ! check_lib "numpy";then
         install_lib "python-numpy"
@@ -180,6 +257,9 @@ function check_and_install_deps {
     fi
     if ! check_lib "matplotlib";then
         install_lib "python-matplotlib"
+    fi
+    if ! check_lib "libsbml";then
+        install_lib_pip "python-libsbml"
     fi
 }
 

@@ -1,0 +1,59 @@
+{% extends "base.html" %}
+{% block title%}Import Model from SBML{% endblock %}
+{% block content %}
+{% block csscontent %}
+<link href="/static/modelEditor/app.css" rel="stylesheet">
+{% endblock %}
+
+<div class="span9">
+    <div class="well well-large">
+        <h3>Import From SBML</h3>
+        <form action="/importFromSBML" enctype="multipart/form-data" method="post">
+            Please specify an SBML file to import:<br>
+            <input type="file" name="datafile" size="40" required>
+            <button type="submit">Submit</button>
+	    {% if status == False %}
+	    <br><br>
+	    <div id="msg" class="alert alert-error">{{ msg }}</div>
+	    {% endif %}
+            {% if errors | length > 0 %}
+            <br>
+            <br>
+            <h3>SBML Import Error Logs:</h3>
+            <table cellpadding="0" cellspacing="0" border="0" class="table table-striped table-bordered" id="dataTable">
+                <thead>
+                    <tr>
+                        <th width="100pt"></th>
+                        <th>Filename</th>
+                        <th>Model Created</th>
+                        <th>Date</th>
+                        <th></th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for e in errors %}
+                    <tr>
+                        <td>
+                            <a href="/importFromSBML?reqType=delete&id={{ e.id }}">Delete Logs</a>
+                        </td>
+                        <td>
+                            {{ e.fileName }}
+                        </td>
+                        <td>
+                          {% if modelName %} {{ e.modelName }} {% else %} [ model deleted ] {% endif %}
+                        </td>
+                        <td>
+                            {{ e.date }}
+                        </td>
+                        <td>
+                            <a href="/SBMLErrorLogs?id={{ e.id }}">View Logs</a>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+            {% endif %}
+        </form>
+    </div>
+
+    {% endblock %}

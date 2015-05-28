@@ -54,7 +54,7 @@ Import.ArchiveSelect = Backbone.View.extend(
                         $.post("/import?reqType=delJob&id=" + id,
                                success = function(data)
                                {
-                                   location.reload();
+                                   window.location = '/import?tab=1';
                                });
                     }, this.data[i].id));
                 }
