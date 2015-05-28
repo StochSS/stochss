@@ -153,7 +153,7 @@
                     Render Type:<br />
                     <select style="width : 120px;" id="wireSelect">
                         <option id="withoutWire" value="solid">Solid</option>
-                        <option id="withWire" value="wireframe">Wireframe</option>
+                        <option id="withWire" value="wireframes">Wireframe</option>
                     </select>
                 </td>
                 
@@ -251,14 +251,16 @@
     </div>
       
     <div id="msg" style="clear:both; display: none;"></div>
-    
     <div id="accessOutput" class="well" style="clear:both; display: none;">
-        <span> Enable: </span>
+        
+        <div class="button-container  button-container-left">
+        <span> <b>Domain Clipping Controls</b> </span><br/>
+        <span> Clip: </span>
         <input type="checkbox" id="planeXCheck"/>X-plane &nbsp;&nbsp;&nbsp; 
         <input type="checkbox" id="planeYCheck"/>Y-plane &nbsp;&nbsp;&nbsp;
         <input type="checkbox" id="planeZCheck"/>Z-plane 
         <br/>
-        <span> Flip: </span>
+        <span> Flip: </span> &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
         <input type="checkbox" id="planeXFlip"/>X-plane &nbsp;&nbsp;&nbsp; 
         <input type="checkbox" id="planeYFlip"/>Y-plane &nbsp;&nbsp;&nbsp;
         <input type="checkbox" id="planeZFlip"/>Z-plane 
@@ -273,10 +275,11 @@
 
         <span> Z-Axis </span>
         <input id="planeZSelect" type="range" min="-5" max="+5" step="1" value="0">
-
-
+        </div>
+        
         <h3>Output</h3>
         <br />
+        
         
 
         <% if (resource =="local" || output_stored == "True"){ %>
@@ -290,6 +293,7 @@
     		<p>No output stored.</p>
     		<% } %>		
     	<% } %>
+
     </div>
 
     <% if (jobStatus != "Failed" ){ %>

@@ -140,10 +140,19 @@ Spatial.Controller = Backbone.View.extend(
         playMesh: function(){
 
             this.spt = this.timeIdx;
+
+            if(this.timeIdx >= this.maxLimit && this.playFlag == false)
+            {
+                this.timeIdx = 0;
+            }
+
             this.playFlag = true;
             this.bufferCount = 0;
             this.playCount = 0;
+
+
             this.intervalID = setInterval(_.bind(this.play, this), this.playMeshInterval);
+
         },
 
         play: function(dt){

@@ -310,7 +310,7 @@ class SpatialPage(BaseHandler):
                     dataTmp = {}
 
                     for specie in dataFile.keys():
-                        data2 = dataFile[specie][dataType][sTime:eTime]
+                        data2 = dataFile[specie][dataType][sTime:eTime + 1]
                         
                         limits[specie] = { 'min' : dataFile[specie][dataType].attrs['min'],
                                            'max' : dataFile[specie][dataType].attrs['max'] }
