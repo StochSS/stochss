@@ -953,19 +953,27 @@ Spatial.Controller = Backbone.View.extend(
                     slider.trigger('change');
 
                     // Set up radio buttons
-                    var withWire = $("#withWire");
-                    withWire.click(_.bind(function(){
-                        console.log('withWire.click');
-                        this.mesh.material.wireframe = true;
-                        this.mesh.material.needsUpdate = true;
+
+                    var wireSelect = $("#wireSelect");
+                    wireSelect.change(_.bind(function(){
+                        console.log('unitSelect.click');
+                        selectedIndex =  $("#wireSelect")[0].options["selectedIndex"]
+                        selectedOption = $("#wireSelect")[0].options[selectedIndex].value
+                        if( selectedOption == 'solid')
+                            {
+                             this.mesh.material.wireframe = false;
+                            this.mesh.material.needsUpdate = true;
+                            }
+                        else
+                            {
+                                this.mesh.material.wireframe = true;
+                                this.mesh.material.needsUpdate = true;
+                            }
+
+                        this.cache = {}
+                        this.updateCache(this.timeIdx, this.timeIdx + this.cacheRange, true);
                     }, this));
 
-                    var withoutWire = $("#withoutWire");
-                    withoutWire.click(_.bind(function(){
-                        console.log('withoutWire.click');  
-                        this.mesh.material.wireframe = false;
-                        this.mesh.material.needsUpdate = true;
-                    }, this));
 
                     var drawUnits = $("#unitSelect");
                     drawUnits.change(_.bind(function(){
