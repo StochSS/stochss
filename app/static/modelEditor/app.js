@@ -6,24 +6,25 @@ var _ = require('underscore');
 var AmpersandCollection = require('ampersand-rest-collection');
 var Model = require('./models/model');
 var Mesh = require('./models/mesh');
+var util = require('./forms/util');
 
 console.log("Requesting models " + performance.now())
 
 ModelCollection = AmpersandCollection.extend( {
     url: "/models",
-    comparator: 'name',
+    comparator: util.alphaNumByName,
     model: Model
 });
 
 PublicModelCollection = AmpersandCollection.extend( {
     url: "/publicModels",
-    comparator: 'name',
+    comparator: util.alphaNumByName,
     model: Model
 });
 
 MeshCollection = AmpersandCollection.extend( {
     url: "/meshes",
-    comparator: 'name',
+    comparator: util.alphaNumByName,
     model: Mesh
 });
 
