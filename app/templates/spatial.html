@@ -254,18 +254,24 @@
     <div id="accessOutput" class="well" style="clear:both; display: none;">
         
         <div class="button-container  button-container-left">
-        <span> <b>Domain Clipping Controls</b> </span><br/>
-        <span> Clip: </span>
-        <input type="checkbox" id="planeXCheck"/>X-plane &nbsp;&nbsp;&nbsp; 
-        <input type="checkbox" id="planeYCheck"/>Y-plane &nbsp;&nbsp;&nbsp;
-        <input type="checkbox" id="planeZCheck"/>Z-plane 
-        <br/>
-        <span> Flip: </span> &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
-        <input type="checkbox" id="planeXFlip"/>X-plane &nbsp;&nbsp;&nbsp; 
-        <input type="checkbox" id="planeYFlip"/>Y-plane &nbsp;&nbsp;&nbsp;
-        <input type="checkbox" id="planeZFlip"/>Z-plane 
-        <br/>
-        <br/>
+
+        <span><b>Domain Clipping Controls</b> </span><br/>
+        <table>
+        
+          <tr>
+              <td> <span> Clip: </span </td>
+            <td> <input type="checkbox" id="planeXCheck"/>X-plane </td> 
+            <td><input type="checkbox" id="planeYCheck"/>Y-plane </td>
+            <td><input type="checkbox" id="planeZCheck"/>Z-plane </td>
+        </tr>
+        
+        <tr>
+            <td><span> Flip: </span></td>
+            <td><input type="checkbox" id="planeXFlip"/>X-plane </td> 
+            <td><input type="checkbox" id="planeYFlip"/>Y-plane </td>
+            <td><input type="checkbox" id="planeZFlip"/>Z-plane </td>
+        </tr>
+        </table> 
         
         <span> X-Axis </span>
         <input id="planeXSelect" type="range" min="-5" max="+5" step="1" value="0">
