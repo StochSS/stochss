@@ -4588,6 +4588,8 @@ module.exports = {
 },{"underscore":909}],31:[function(require,module,exports){
 var _ = require('underscore');
 
+// Taken from: http://web.archive.org/web/20130826203933/http://my.opera.com/GreyWyvern/blog/show.dml/1671288
+
 var alphaNum = function (a, b) {
     function chunkify(t) {
         var tz = [], x = 0, y = -1, n = 0, i, j;
