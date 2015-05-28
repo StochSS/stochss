@@ -968,7 +968,7 @@ Spatial.Controller = Backbone.View.extend(
                     }, this));
 
                     var drawUnits = $("#unitSelect");
-                    drawUnits.click(_.bind(function(){
+                    drawUnits.change(_.bind(function(){
                         console.log('unitSelect.click');
                         selectedIndex =  $("#unitSelect")[0].options["selectedIndex"]
                         selectedOption = $("#unitSelect")[0].options[selectedIndex].value
