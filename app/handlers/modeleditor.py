@@ -576,39 +576,39 @@ class PublicModelPage(BaseHandler):
         return True
     
     def get(self):
-        try:
-            self.importExamplePublicModels()
-        except:
-            traceback.print_exc()
-            print "ERROR: Failed to import example public models"
+        #importExamplePublicModels(self)
 
         self.render_response('publicLibrary.html')
 
-    def importExamplePublicModels(self):
+def importExamplePublicModels(handler):
+    try:
         path = os.path.abspath(os.path.dirname(__file__))
         szip = exportimport.SuperZip(zipFileName = path + "/../../examples/examples.zip")
-
+    
         toImport = {}
         for name in szip.zipfb.namelist():
             if re.search('models/[a-zA-Z0-9\-_]*\.json$', name):
                 toImport[json.loads(szip.zipfb.read(name))['name']] = name
 
-        names = [model['name'] for model in ModelManager.getModels(self, public = True)]
+        names = [model['name'] for model in ModelManager.getModels(handler, public = True)]
 
         for name in set(toImport.keys()) - set(names):
             path = toImport[name]
-            modelDb = szip.extractStochKitModel(path, "", self, rename = True)
+            modelDb = szip.extractStochKitModel(path, "", handler, rename = True)
             modelDb.user_id = ""
             modelDb.name = name
             modelDb.is_public = True
             modelDb.put()
-
+        
             if modelDb.isSpatial:
                 meshDb = mesheditor.MeshWrapper.get_by_id(modelDb.spatial["mesh_wrapper_id"])
                 #meshDb.undeletable = True
                 meshDb.put()
 
         szip.close()
+    except:
+        traceback.print_exc()
+        print "ERROR: Failed to import example public models"
 
 class ImportFromXMLPage(BaseHandler):
     def authentication_required(self):
@@ -769,9 +769,6 @@ class ModelEditorPage(BaseHandler):
 
             return
 
-        mesheditor.setupMeshes(self)
+        #mesheditor.setupMeshes(self)
 
-        #f = open('/home/bbales2/stochss/test/modelEditor/client/index.html')
-        #self.response.out.write(f.read())
-        #f.close()
         self.render_response('modelEditor.html')
