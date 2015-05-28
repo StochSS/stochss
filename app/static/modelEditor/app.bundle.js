@@ -2702,6 +2702,7 @@ var PaginatedCollectionView = AmpersandView.extend({
 module.exports = PaginatedCollectionView;
 
 },{"ampersand-subcollection":575,"ampersand-view":787,"underscore":908}],20:[function(require,module,exports){
+var _ = require('underscore');
 var $ = require('jquery');
 var AmpersandView = require('ampersand-view');
 var AmpersandFormView = require('ampersand-form-view');
@@ -2823,7 +2824,8 @@ var ParameterCollectionFormView = AmpersandView.extend({
 });
 
 module.exports = ParameterCollectionFormView
-},{"./paginated-collection-view":19,"./parameter":21,"./tests":30,"ampersand-form-view":104,"ampersand-input-view":108,"ampersand-view":787,"jquery":890}],21:[function(require,module,exports){
+
+},{"./paginated-collection-view":19,"./parameter":21,"./tests":30,"ampersand-form-view":104,"ampersand-input-view":108,"ampersand-view":787,"jquery":890,"underscore":908}],21:[function(require,module,exports){
 var _ = require('underscore');
 var $ = require('jquery');
 var View = require('ampersand-view');
@@ -3846,6 +3848,7 @@ module.exports = View.extend({
 });
 
 },{"./modifying-input-view":16,"./modifying-number-input-view":17,"./stoich-specie-collection":27,"./subdomain":29,"./tests":30,"ampersand-select-view":482,"ampersand-view":787,"jquery":890,"katex":891,"underscore":908}],25:[function(require,module,exports){
+var _ = require('underscore');
 var $ = require('jquery');
 var AmpersandView = require('ampersand-view');
 var AmpersandFormView = require('ampersand-form-view');
@@ -3997,7 +4000,7 @@ var SpecieCollectionFormView = AmpersandView.extend({
 
 module.exports = SpecieCollectionFormView
 
-},{"./paginated-collection-view":19,"./specie":26,"./tests":30,"ampersand-form-view":104,"ampersand-input-view":108,"ampersand-view":787,"jquery":890}],26:[function(require,module,exports){
+},{"./paginated-collection-view":19,"./specie":26,"./tests":30,"ampersand-form-view":104,"ampersand-input-view":108,"ampersand-view":787,"jquery":890,"underscore":908}],26:[function(require,module,exports){
 var _ = require('underscore');
 var $ = require('jquery');
 var View = require('ampersand-view');
