@@ -402,9 +402,8 @@ class EC2Agent(BaseAgent):
           conn = boto.connect_ec2(str(credentials['EC2_ACCESS_KEY']), str(credentials['EC2_SECRET_KEY']))
           conn.get_all_instances()
           return True
-      except EC2ResponseError:
-          print '\nIn validate_Credentials'
-          traceback.print_exc()
+      except EC2ResponseError as e:
+          logging.error('validate_credentials(): got EC2ResponseError') 
           return False
 
   def handle_failure(self, msg):
