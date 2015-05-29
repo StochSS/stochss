@@ -1,22 +1,23 @@
 var Model = require('./models/model');
 var Mesh = require('./models/mesh');
 var AmpersandCollection = require('ampersand-rest-collection');
+var util = require('./forms/util');
 
 ModelCollection = AmpersandCollection.extend( {
     url: "/models",
-    comparator: 'name',
+    comparator: util.alphaNumByName,
     model: Model
 });
 
 PublicModelCollection = AmpersandCollection.extend( {
     url: "/publicModels",
-    comparator: 'name',
+    comparator: util.alphaNumByName,
     model: Model
 });
 
 MeshCollection = AmpersandCollection.extend( {
     url: "/meshes",
-    comparator: 'name',
+    comparator: util.alphaNumByName,
     model: Mesh
 });
 
