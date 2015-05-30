@@ -5,6 +5,9 @@ __email__ = 'dnath@cs.ucsb.edu'
 
 import sys
 import os
+
+sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..', '..', 'app', 'backend', 'common')))
+
 import time
 import json
 import threading
@@ -15,6 +18,11 @@ import pprint
 import argparse
 import glob
 import urllib2
+import string
+import random
+import MySQLdb
+
+from config import JobDatabaseConfig
 
 
 DEFAULT_SETTINGS_FILE = os.path.join(os.path.dirname(__file__), "settings.json")
@@ -115,12 +123,59 @@ class VirtualMachine(object):
             self.__download_stochss_repo()
             self.__compile_stochss()
             self.run_tests()
+            self.__setup_job_db()
             self.__setup_flex_api_server()
             self.__test_flex_api_server()
             # self.__cleanup_instance()
 
         except:
             traceback.print_exc()
+
+    def __setup_job_db(self):
+        header = 'Setting Job DB...'
+        print '=================================================='
+        print header
+
+        username = 'root'
+        password = ''.join(random.choice(string.ascii_letters + string.digits) for _ in range(16))
+
+        sql_lines = [
+            "CREATE DATABASE IF NOT EXISTS {db_name}".format(db_name=JobDatabaseConfig.DATABASE_NAME),
+            "GRANT ALL PRIVILEGES ON {db_name}.* TO '{username}'@'%' IDENTIFIED BY '{password}' WITH GRANT OPTION".format(
+                db_name=JobDatabaseConfig.DATABASE_NAME, username=username, password=password),
+            ""
+        ]
+
+        commands = [
+            "sudo debconf-set-selections <<< 'mysql-server mysql-server/root_password password {password}'".format(password=password),
+            "sudo debconf-set-selections <<< 'mysql-server mysql-server/root_password_again password {password}'".format(password=password),
+            "sudo apt-get -y install mysql-server > mysql_install.stdout.log 2> mysql_install.stderr.log",
+            "mysql -u root --password={password} --execute=\\\"{sql}\\\"".format(password=password,
+                                                                              sql=';'.join(sql_lines)),
+            "sudo sed -i 's/bind-address\s*=\s*127.0.0.1/bind-address = 0.0.0.0/g' /etc/mysql/my.cnf",
+            "sudo service mysql restart"
+        ]
+
+        command = ';'.join(commands)
+        # print command
+        self.__run_remote_command(command=command, log_header=header)
+        self.__test_job_db(db_username=username, db_password=password)
+
+
+    def __test_job_db(self, db_username, db_password):
+        try:
+            db = MySQLdb.connect(host=self.ip, user=db_username, passwd=db_password, db=JobDatabaseConfig.DATABASE_NAME)
+            db.query('SHOW DATABASES LIKE "{db_name}"'.format(db_name=JobDatabaseConfig.DATABASE_NAME))
+            results = db.store_result()
+            row = results.fetch_row()
+            if row != ():
+                print 'MySQL setup successful!'
+            else:
+                print 'MySQL setup failed!'
+
+        except Exception as e:
+            print 'Error: Failed to setup MySQL Job Database : {}'.format(str(e))
+
 
     def __test_flex_api_server(self):
         json_message = json.loads(urllib2.urlopen("https://{ip}".format(ip=self.ip)).read())
@@ -181,7 +236,7 @@ class VirtualMachine(object):
         contents = contents.replace('FLEX_API_APP_CERT', cert_filename)
         contents = contents.replace('FLEX_API_APP_KEY', key_filename)
 
-        print 'site file config:\n{0}'.format(contents)
+        # print 'site file config:\n{0}'.format(contents)
 
         with open(DEFAULT_FLEX_API_APACHE_CONF, 'w') as fout:
             fout.write(contents)
@@ -214,7 +269,7 @@ class VirtualMachine(object):
 
 
     def __enable_network_ports(self):
-        # TODO: Enable ports 22, 5672, 6379, 11211, 55672, 80, 443
+        # TODO: Enable ports 22, 5672, 6379, 11211, 55672, 80[?], 443, 3306
         pass
 
     def __try_install_dependencies(self):

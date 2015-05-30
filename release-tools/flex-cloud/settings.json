@@ -16,6 +16,7 @@
         "automake",
         "autotools-dev",
         "blt",
+        "build-essential",
         "cmake",
         "comerr-dev",
         "cython",
@@ -84,6 +85,7 @@
         "libxt-dev",
         "mesa-common-dev",
         "python-cairo",
+        "python-dev",
         "python-gtk2",
         "python-h5py",
         "python-matplotlib",
@@ -107,6 +109,7 @@
         {"name": "six"},
         {"name": "boto", "version": "2.9.0"},
         {"name": "flask"},
-        {"name": "python-libsbml"}
+        {"name": "python-libsbml"},
+        {"name": "MySQL-python"}
     ]
 }

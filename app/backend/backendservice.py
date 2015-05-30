@@ -13,6 +13,7 @@ from boto.exception import S3ResponseError
 from boto.s3.connection import S3Connection
 
 from databases.dynamo_db import DynamoDB
+from databases.flex_db import FlexDB
 
 import common.helper as helper
 from common.config import AgentTypes, JobDatabaseConfig, AgentConfig, FlexConfig, JobConfig
@@ -74,7 +75,20 @@ class backendservices(object):
 
 
         if not database:
-            database = DynamoDB(ec2_access_key, ec2_secret_key)
+            if agent_type == AgentTypes.EC2:
+                database = DynamoDB(ec2_access_key, ec2_secret_key)
+
+            if agent_type == AgentTypes.FLEX:
+                queue_head_machine = None
+                for machine in params['flex_machine_cloud_info']:
+                    if machine['queue_head'] == True:
+                        if queue_head_machine == None:
+                            queue_head_machine = machine
+                        else:
+                            logging.error('There can only be 1 queue head!')
+
+                database = FlexDB(ip=queue_head_machine['ip'],
+                                  password=params['flex_db_password'])
 
         # if there is no taskid explicit, create one the first run
         if not task_id:
@@ -272,18 +286,18 @@ class backendservices(object):
                 logging.error("deleteTaskLocal : couldn't kill process. error: %s", str(e))
         logging.info("deleteTaskLocal : exiting method")
 
-    def __create_flexdb_stochss_table(self, ec2_access_key, ec2_secret_key):
-        self.__create_dynamodb_stochss_table(ec2_access_key=ec2_access_key, ec2_secret_key=ec2_secret_key)
+    def __create_flex_db_tables(self, password):
+        # database = FlexDB(password=password)
+        # self.__create_dynamodb_stochss_table(ec2_access_key=ec2_access_key, ec2_secret_key=ec2_secret_key)
+        pass
 
     def __create_dynamodb_stochss_table(self, ec2_access_key, ec2_secret_key):
         database = DynamoDB(ec2_access_key, ec2_secret_key)
-        dynamo = boto.connect_dynamodb(ec2_access_key, ec2_secret_key)
-        if not database.tableexists(dynamo, JobDatabaseConfig.TABLE_NAME):
-            results = database.createtable(JobDatabaseConfig.TABLE_NAME)
-            if results:
-                logging.info("creating table {0}".format(JobDatabaseConfig.TABLE_NAME))
-            else:
-                logging.error("FAILED on creating table {0}".format(JobDatabaseConfig.TABLE_NAME))
+        result = database.createtable(JobDatabaseConfig.TABLE_NAME)
+        if result:
+            logging.info("creating table {0}".format(JobDatabaseConfig.TABLE_NAME))
+        else:
+            logging.error("FAILED on creating table {0}".format(JobDatabaseConfig.TABLE_NAME))
 
     def __get_required_parameter(self, parameter_key, params):
         if parameter_key in params and params[parameter_key] != None:
@@ -359,7 +373,7 @@ class backendservices(object):
             res = i.prepare_instances(params)
 
             # 5, check and create stochss table exists if it does not exist
-            self.__create_flexdb_stochss_table(ec2_access_key=ec2_access_key, ec2_secret_key=ec2_secret_key)
+            self.__create_flex_db_tables(password=params['flex_db_password'])
 
             logging.info("prepare_flex_cloud_machines : exiting method with result : %s", str(res))
             return True, None

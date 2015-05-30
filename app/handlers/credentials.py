@@ -278,6 +278,7 @@ class CredentialsPage(BaseHandler):
             machine['keyfile'] = fileserver.FileWrapper.get_by_id( machine['key_file_id']).storePath
 
         self.user_data.set_flex_cloud_machine_info(flex_cloud_machine_info)
+        self.user_data.flex_db_password = ''.join(random.choice(string.ascii_letters + string.digits) for _ in range(16))
         self.user_data.put()
 
         params = {
@@ -288,7 +289,8 @@ class CredentialsPage(BaseHandler):
             'email': [user_id],
             'user_id': user_id,
             'credentials': credentials,
-            'reservation_id': reservation_id
+            'reservation_id': reservation_id,
+            'flex_db_password': self.user_data.flex_db_password
         }
 
         service = backendservices(infrastructure=AgentTypes.FLEX)
@@ -621,7 +623,7 @@ class FlexCredentialsIsDeletablePage(BaseHandler):
 
     def __get_flex_ssh_key_info(self):
         files = fileserver.FileManager.getFiles(self, 'flexKeyFiles')
-        logging.info('files =\n{}'.format(files))
+        logging.debug('files =\n{}'.format(files))
 
         flex_ssh_key_info = []
         if self.user_data.valid_flex_cloud_info:

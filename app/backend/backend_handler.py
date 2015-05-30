@@ -60,6 +60,7 @@ class FlexBackendWorker(BackendWorker):
 
     PARAM_IS_QUEUE_HEAD = 'queue_head'
     PARAM_FLEX_CLOUD_MACHINE_INFO = 'flex_cloud_machine_info'
+    PARAM_FLEX_DB_PASSWORD = 'flex_db_password'
 
 
     def __init__(self, agent, infra_manager, reservation_id):
@@ -173,7 +174,8 @@ class FlexBackendWorker(BackendWorker):
                 'infrastructure': AgentTypes.FLEX,
                 self.PARAM_FLEX_CLOUD_MACHINE_INFO: [queue_head_machine],
                 'credentials': parameters['credentials'],
-                'user_id': parameters['user_id']
+                'user_id': parameters['user_id'],
+                self.PARAM_FLEX_DB_PASSWORD: parameters[self.PARAM_FLEX_DB_PASSWORD]
             }
             self.agent.prepare_instances(params)
             return True

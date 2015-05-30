@@ -5,18 +5,18 @@ Created on Dec 11, 2014
 '''
 
 
-class BaseDB:
+class BaseDB(object):
     def describetask(self, taskids, tablename):
         raise NotImplementedError
 
     def removetask(self, tablename, taskid):
         raise NotImplementedError
 
-    def createtable(self, tablename=str()):
+    def createtable(self, tablename):
         raise NotImplementedError
 
-    def tableexists(self, dynamo, tablename):
+    def tableexists(self, tablename):
         raise NotImplementedError
 
-    def updateEntry(self, taskid=str(), data=dict(), tablename=str()):
+    def updateEntry(self, taskid, data, tablename):
         raise NotImplementedError

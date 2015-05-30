@@ -183,7 +183,7 @@ class EC2Agent(BaseAgent):
                 instance_types.append(i.instance_type)
                 keynames.append(parameters[self.PARAM_KEYNAME])
 
-        keyfiles = [os.path.abspath(os.path.join(os.path.dirname(__file__), '..', '..', k)) for k in keynames]
+        keyfiles = [os.path.abspath(os.path.join(os.path.dirname(__file__), '..', '..', '{}.key'.format(k))) for k in keynames]
 
         return public_ips, private_ips, instance_ids, instance_types, keyfiles
 

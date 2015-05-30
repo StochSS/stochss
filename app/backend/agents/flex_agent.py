@@ -33,15 +33,18 @@ class FlexAgent(BaseAgent):
     PARAM_QUEUE_HEAD = 'queue_head'
     PARAM_FLEX_CLOUD_MACHINE_INFO = 'flex_cloud_machine_info'
     PARAM_USER_ID = 'user_id'
+    PARAM_FLEX_DB_PASSWORD = 'flex_db_password'
 
     REQUIRED_FLEX_PREPARE_INSTANCES_PARAMS = (
         PARAM_FLEX_CLOUD_MACHINE_INFO,
-        PARAM_USER_ID
+        PARAM_USER_ID,
+        PARAM_FLEX_DB_PASSWORD
     )
 
     REQUIRED_FLEX_DEREGISTER_INSTANCES_PARAMS = (
         PARAM_FLEX_CLOUD_MACHINE_INFO,
-        PARAM_USER_ID
+        PARAM_USER_ID,
+        PARAM_FLEX_DB_PASSWORD
     )
 
     def configure_instance_security(self, parameters):
@@ -160,8 +163,10 @@ class FlexAgent(BaseAgent):
 
         for machine in machines_to_deregister:
             logging.info('Instance with ip {0} was terminated'.format(machine['ip']))
-            self.__deregister_flex_vm(ip=machine['ip'], username=machine['username'], keyname=machine['keyname'],
-                                      user_id=parameters['user_id'], parameters=parameters)
+            self.__deregister_flex_vm(ip=machine['ip'],
+                                      username=machine['username'],
+                                      keyfile=machine['keyfile'],
+                                      parameters=parameters)
 
     def get_instance_state(self, ip, username, keyfile):
         logging.info('Checking state...')
@@ -264,16 +269,22 @@ class FlexAgent(BaseAgent):
             script_lines.append("echo export C_FORCE_ROOT=1 >> ~/.bashrc".format("~/stochss/stochoptim/library"))
 
             if is_queue_head:
+                logging.info('Adding extra commnds for configuring queue head...')
                 script_lines.append("sudo rabbitmqctl add_user stochss ucsb")
                 script_lines.append('sudo rabbitmqctl set_permissions -p / stochss ".*" ".*" ".*"')
+
+                reset_mysql_script = '~/stochss/release-tools/flex-cloud/reset_mysql_pwd.sh'
+                script_lines.append("sudo {reset_mysql_script} root {flex_db_password}".format(
+                                                            reset_mysql_script=reset_mysql_script,
+                                                            flex_db_password=parameters[self.PARAM_FLEX_DB_PASSWORD]))
+
 
             bash_script = '\n'.join(script_lines)
             logging.info("\n\n\nbash_script =\n{0}\n\n\n".format(bash_script))
 
             bash_script_filename = os.path.join(AgentConfig.TMP_DIRNAME, 'stochss_init.sh')
-            bash_script_file = open(bash_script_filename, 'w')
-            bash_script_file.write(bash_script)
-            bash_script_file.close()
+            with open(bash_script_filename, 'w') as bash_script_file:
+                bash_script_file.write(bash_script)
 
             scp_command = 'scp -o \'StrictHostKeyChecking no\' -i {keyfile} {source} {target}'.format(
                                                 keyfile=keyfile,

@@ -91,6 +91,7 @@ class UserData(db.Model):
     flex_cloud_machine_info = db.StringProperty(default="[]")
     valid_flex_cloud_info = db.BooleanProperty(default=False)
     is_flex_cloud_info_set = db.BooleanProperty(default=False)
+    flex_db_password = db.StringProperty()
 
     # reservation ID for Flex Cloud
     reservation_id = db.StringProperty()
