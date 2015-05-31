@@ -113,7 +113,7 @@ class VirtualMachine(object):
         self.start_time = None
 
     def make_flex_vm(self):
-        self.start_time = time.clock()
+        self.start_time = time.time()
 
         try:
             self.__is_machine_reachable()
@@ -134,7 +134,7 @@ class VirtualMachine(object):
         except:
             traceback.print_exc()
 
-        print 'Done in {} seconds'.format(time.clock() - self.start_time)
+        print 'Done in {} seconds'.format(time.time() - self.start_time)
 
     def __setup_job_db(self):
         header = 'Setting up Job DB : MySQL...'
@@ -614,7 +614,7 @@ class FlexVMMaker(object):
             self.stderr_log.close()
 
     def run(self):
-        self.overall_start_time = time.clock()
+        self.overall_start_time = time.time()
 
         for machine in self.machine_info:
             ip = machine['ip']
@@ -639,7 +639,7 @@ class FlexVMMaker(object):
             vm.make_flex_vm()
 
         self.__cleanup()
-        print 'Completed all machines in {} seconds.'.format(time.clock() - self.overall_start_time)
+        print 'Completed all machines in {} seconds.'.format(time.time() - self.overall_start_time)
 
 
 def cleanup_local_files():

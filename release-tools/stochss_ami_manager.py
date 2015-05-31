@@ -138,7 +138,7 @@ class AmiManager:
         self.start_time = None
             
     def run(self):
-        self.start_time = time.clock()
+        self.start_time = time.time()
 
         try:
             self.__launch_instance()
@@ -474,7 +474,7 @@ class AmiManager:
         print '=================================================='
         print 'Terminating launched instance...'
         self.ec2_connection.terminate_instances(instance_ids=[self.instance_id])
-        print 'Done in {} seconds.'.format(time.clock() - self.start_time)
+        print 'Done in {} seconds.'.format(time.time() - self.start_time)
 
     def __check_dependency_installation(self):
         header = 'Checking dependencies...'

@@ -137,12 +137,14 @@ class FlexAgent(BaseAgent):
 
             if response['status'] == 'success':
                 logging.info('Successfully deregistered Flex VM with ip={}'.format(ip))
+                logging.info('Full Deregister Response:\n{}'.format(pprint.pformat(response)))
             else:
                 logging.info('Failed to deregister Flex VM with ip={}'.format(ip))
                 logging.info('Full Deregister Response:\n{}'.format(pprint.pformat(response)))
 
         except Exception as e:
             logging.error('Failed to deregister Flex VM: '.format(str(e)))
+            logging.error(sys.exc_info())
 
         finally:
             VMStateModel.set_state(params=parameters, ins_ids=[self.__get_flex_instance_id(public_ip=ip)],

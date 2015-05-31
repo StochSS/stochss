@@ -27,34 +27,31 @@ class FlexVMState(object):
         celery_hostname = public_ip.replace('.', '_')
 
         try:
-            import celery
-            reload(celery)
+            commands = [
+                'rm -f /tmp/celery_report',
+                'celery inspect stats -d {celery_hostname} > /tmp/celery_report'.format(celery_hostname=celery_hostname)
+            ]
+            command = ';'.join(commands)
+            os.system(command)
 
-            stats = celery.current_app.control.inspect(destination=[celery_hostname]).stats()
+            with open('/tmp/celery_report') as fin:
+                lines = fin.readlines()
 
-            if stats == None:
-                logging.info('No celery started!')
+            if len(lines) < 2:
                 info = {'state': FlexVMState.UNPREPARED}
-
             else:
-                logging.info('Celery running!')
+                celery_report_dict = eval('\n'.join(lines[1:]))
+                broker = celery_report_dict['consumer']['broker']
+                info = {
+                    'state': FlexVMState.RUNNING,
+                    'queue_head_ip': broker['hostname']
+                }
 
-                if celery_hostname not in stats:
-                    info = {'state': FlexVMState.UNPREPARED}
-
+                if broker['hostname'] == public_ip:
+                    info['is_queue_head'] = True
                 else:
-                    broker = stats[celery_hostname]['broker']
-                    logging.info('broker = {}'.format(broker))
+                    info['is_queue_head'] = False
 
-                    info = {
-                        'state': FlexVMState.RUNNING,
-                        'queue_head_ip': broker['hostname']
-                    }
-
-                    if broker['hostname'] == public_ip:
-                        info['is_queue_head'] = True
-                    else:
-                        info['is_queue_head'] = False
         except Exception, e:
             logging.error('Error in fetching broker url: {0}'.format(str(e)))
             info = {'state': FlexVMState.UNKNOWN}
