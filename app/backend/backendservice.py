@@ -63,7 +63,7 @@ class backendservices(object):
                     instance_type=None, cost_replay=False, database=None, flex_db_credentials=None):
 
         logging.info('agent_type = {0}'.format(agent_type))
-        logging.info('params =\n{}\n\n'.format(pprint.pformat(params)))
+        logging.debug('params =\n{}\n\n'.format(pprint.pformat(params)))
 
         if agent_type not in JobConfig.SUPPORTED_AGENT_TYPES:
             raise Exception('Unsupported agent type = {}!'.format(agent_type))

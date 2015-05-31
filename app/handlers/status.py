@@ -127,7 +127,7 @@ class StatusPage(BaseHandler):
                           key=lambda x:
                                 (datetime.datetime.strptime(x.startDate, '%Y-%m-%d-%H-%M-%S')
                                      if hasattr(x, 'startDate') and x.startDate != None else datetime.datetime.now()),
-                          reverse = True)
+                          reverse=True)
 
             for number, job in enumerate(jobs):
                 number = len(jobs) - number
@@ -176,20 +176,24 @@ class StatusPage(BaseHandler):
                                 stochkit_job.status = "Failed"
 
                         elif stochkit_job.resource in simulation.StochKitJob.SUPPORTED_CLOUD_RESOURCES and stochkit_job.output_location is None:
-                            # Retrieve credentials from the datastore
-                            if not self.user_data.valid_credentials:
-                                return {'status':False,'msg':'Could not retrieve the status of job '+stochkit_job.name +'. Invalid credentials.'}
-                            credentials = self.user_data.getCredentials()
 
                             # Check the status from backend
                             taskparams = {}
                             if stochkit_job.resource == simulation.StochKitJob.EC2_CLOUD_RESOURCE:
+                                # Retrieve credentials from the datastore
+                                if not self.user_data.valid_credentials:
+                                    return {'status':False,
+                                            'msg':'Could not retrieve the status of job '+stochkit_job.name +'. Invalid credentials.'}
+
+                                credentials = self.user_data.getCredentials()
+
                                 taskparams = {
                                     'AWS_ACCESS_KEY_ID': credentials['EC2_ACCESS_KEY'],
                                     'AWS_SECRET_ACCESS_KEY': credentials['EC2_SECRET_KEY'],
                                     'taskids': [stochkit_job.pid],
                                     'agent_type': AgentTypes.EC2
                                 }
+
                             elif stochkit_job.resource == simulation.StochKitJob.FLEX_CLOUD_RESOURCE:
                                 queue_head_machine = self.user_data.get_flex_queue_head_machine()
                                 taskparams = {
@@ -290,23 +294,23 @@ class StatusPage(BaseHandler):
                             job.status = "Finished"
                         else:
                             job.status = "Failed"
-
                     else:
-                        # Retrive credentials from the datastore
-                        if not self.user_data.valid_credentials:
-                            return {'status':False,
-                                    'msg':'Could not retrieve the status of job '+ job.name +'. Invalid credentials.'}
-                        credentials = self.user_data.getCredentials()
-
                         # Check the status from backend
                         taskparams = {}
                         if job.resource == sensitivity.SensitivityJobWrapper.EC2_CLOUD_RESOURCE:
+                             # Retrive credentials from the datastore
+                            if not self.user_data.valid_credentials:
+                                return {'status': False,
+                                        'msg': 'Could not retrieve the status of job '+ job.name +'. Invalid credentials.'}
+                            credentials = self.user_data.getCredentials()
+
                             taskparams = {
                                 'AWS_ACCESS_KEY_ID': credentials['EC2_ACCESS_KEY'],
                                 'AWS_SECRET_ACCESS_KEY': credentials['EC2_SECRET_KEY'],
                                 'taskids': [job.cloudDatabaseID],
                                 'agent_type': AgentTypes.EC2
                             }
+
                         elif job.resource == sensitivity.SensitivityJobWrapper.FLEX_CLOUD_RESOURCE:
                             queue_head_machine = self.user_data.get_flex_queue_head_machine()
                             taskparams = {
@@ -418,7 +422,8 @@ class StatusPage(BaseHandler):
                     taskparams = {
                         'AWS_ACCESS_KEY_ID': credentials['EC2_ACCESS_KEY'],
                         'AWS_SECRET_ACCESS_KEY': credentials['EC2_SECRET_KEY'],
-                        'taskids': [job.cloudDatabaseID]
+                        'taskids': [job.cloudDatabaseID],
+                        'agent_type': AgentTypes.EC2
                     }
                     task_status = service.describeTask(taskparams)
                     job_status = task_status[job.cloudDatabaseID]
@@ -465,22 +470,6 @@ class StatusPage(BaseHandler):
         if allSpatialJobsQuery != None:
             jobs = list(allSpatialJobsQuery.run())
 
-            task_status = {}
-            if self.user_data.valid_credentials:
-                cloud_task_status = {}
-                for job in jobs:
-                    if job.resource in spatial.SpatialJobWrapper.SUPPORTED_CLOUD_RESOURCES:
-                        cloud_task_status[job.cloud_id] = None
-
-                credentials = self.user_data.getCredentials()
-
-                # Check the status on the remote end
-                taskparams = {'AWS_ACCESS_KEY_ID':credentials['EC2_ACCESS_KEY'],
-                              'AWS_SECRET_ACCESS_KEY':credentials['EC2_SECRET_KEY'],
-                              'taskids':cloud_task_status.keys(),
-                              'agent_type': AgentTypes.EC2}
-                task_status = service.describeTask(taskparams)
-
             jobs = sorted(jobs,
                           key=lambda x : (datetime.datetime.strptime(x.startTime, '%Y-%m-%d-%H-%M-%S')
                                               if hasattr(x, 'startTime') and x.startTime != None else ''),
@@ -498,44 +487,72 @@ class StatusPage(BaseHandler):
                             job.status = "Finished"
                         else:
                             job.status = "Failed"
+
                 elif job.resource in spatial.SpatialJobWrapper.SUPPORTED_CLOUD_RESOURCES:
-                            if job.cloud_id in task_status:
-                                job_status = task_status[job.cloud_id]
+                    # Check the status from backend
+                    taskparams = {}
+                    if job.resource == spatial.SpatialJobWrapper.EC2_CLOUD_RESOURCE:
+                        # Retrieve credentials from the datastore
+                        if not self.user_data.valid_credentials:
+                            return {'status': False,
+                                    'msg': 'Could not retrieve the status of job '+ job.name +'. Invalid credentials.'}
+                        credentials = self.user_data.getCredentials()
+
+                        taskparams = {
+                            'AWS_ACCESS_KEY_ID': credentials['EC2_ACCESS_KEY'],
+                            'AWS_SECRET_ACCESS_KEY': credentials['EC2_SECRET_KEY'],
+                            'taskids': [job.cloud_id],
+                            'agent_type': AgentTypes.EC2
+                        }
+                    elif job.resource == spatial.SpatialJobWrapper.FLEX_CLOUD_RESOURCE:
+                        queue_head_machine = self.user_data.get_flex_queue_head_machine()
+                        taskparams = {
+                            'flex_db_password': self.user_data.flex_db_password,
+                            'queue_head_ip': queue_head_machine['ip'],
+                            'taskids':[job.cloud_id],
+                            'agent_type': AgentTypes.FLEX
+                        }
+
+                    task_status = service.describeTask(taskparams)
+                    logging.info('task_status =\n{}'.format(pprint.pformat(task_status)))
+
+                    if job.cloud_id in task_status:
+                        job_status = task_status[job.cloud_id]
+                    else:
+                        job_status = None
+                    # It frequently happens that describeTasks return None before the job is finsihed.
+                    if job_status == None:
+                        job.status = "Unknown"
+                    else:
+                        if job_status['status'] == 'finished':
+                            # Update the spatial job
+                            job.output_url = job_status['output']
+                            job.uuid = job_status['uuid']
+                            job.status = 'Finished'
+                            if job.outData is None:
+                                job.status = 'Finished'
                             else:
-                                job_status = None
-                            # It frequently happens that describeTasks return None before the job is finsihed.
-                            if job_status == None:
-                                job.status = "Unknown"
-                            else:
-                                if job_status['status'] == 'finished':
-                                    # Update the spatial job 
-                                    job.output_url = job_status['output']
-                                    job.uuid = job_status['uuid']
-                                    job.status = 'Finished'
-                                    if job.outData is None:
-                                        job.status = 'Finished'
-                                    else:
-                                        if os.path.exists("{0}/results/complete".format(job.outData)):
-                                            job.status = "Finished"
-                                        else:
-                                            job.status = "Failed"
-                                
-                                elif job_status['status'] == 'failed':
-                                    job.status = 'Failed'
-                                    job.exception_message = job_status['message']
-                                    # Might not have a uuid or output if an exception was raised early on or if there is just no output available
-                                    try:
-                                        job.uuid = job_status['uuid']
-                                        job.output_url = job_status['output']
-                                    except KeyError:
-                                        pass
-                                    
-                                elif job_status['status'] == 'pending':
-                                    job.status = 'Pending'
+                                if os.path.exists("{0}/results/complete".format(job.outData)):
+                                    job.status = "Finished"
                                 else:
-                                    # The state gives more fine-grained results, like if the job is being re-run, but
-                                    #  we don't bother the users with this info, we just tell them that it is still running.  
-                                    job.status = 'Running'
+                                    job.status = "Failed"
+
+                        elif job_status['status'] == 'failed':
+                            job.status = 'Failed'
+                            job.exception_message = job_status['message']
+                            # Might not have a uuid or output if an exception was raised early on or if there is just no output available
+                            try:
+                                job.uuid = job_status['uuid']
+                                job.output_url = job_status['output']
+                            except KeyError:
+                                pass
+
+                        elif job_status['status'] == 'pending':
+                            job.status = 'Pending'
+                        else:
+                            # The state gives more fine-grained results, like if the job is being re-run, but
+                            #  we don't bother the users with this info, we just tell them that it is still running.
+                            job.status = 'Running'
                                        
                 job.put()
 
