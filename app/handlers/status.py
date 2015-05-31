@@ -291,6 +291,7 @@ class StatusPage(BaseHandler):
                             }
 
                         task_status = service.describeTask(taskparams)
+                        logging.info('task_status =\n{}'.format(pprint.pformat(task_status)))
                         job_status = task_status[job.cloudDatabaseID]
 
                         # If it's finished

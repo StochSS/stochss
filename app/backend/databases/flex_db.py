@@ -194,7 +194,7 @@ class FlexDB(BaseDB):
                 rows = ()
                 num_rows = 0
                 with closing(db.cursor()) as db_cursor:
-                    sql = "SELECT * FROM `{table_name}` WHERE {attribute_name} = {attribute_value};".format(
+                    sql = "SELECT * FROM `{table_name}` WHERE {attribute_name} = '{attribute_value}';".format(
                         table_name=table_name,
                         attribute_name=attribute_name,
                         attribute_value=attribute_value)
@@ -243,12 +243,15 @@ class FlexDB(BaseDB):
             field_value_list = "({})".format(','.join(map(lambda x: "'{}'".format(x),
                                                           field_values)))
 
+            update_field_list = ", ".join(map(lambda x: "`{x}`=VALUES(`{x}`)".format(x=x), data.keys()))
+
             db = self.__open_db_connection()
             with closing(db.cursor()) as db_cursor:
-                sql = "REPLACE INTO `{tablename}` {field_name_list} VALUES {field_value_list};".format(
+                sql = "INSERT INTO `{tablename}` {field_name_list} VALUES {field_value_list} ON DUPLICATE KEY UPDATE {update_field_list};".format(
                     tablename=tablename,
                     field_name_list=field_name_list,
-                    field_value_list=field_value_list)
+                    field_value_list=field_value_list,
+                    update_field_list=update_field_list)
                 logging.info("sql = {}".format(sql))
 
                 db_cursor.execute(sql)
