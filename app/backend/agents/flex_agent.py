@@ -81,7 +81,7 @@ class FlexAgent(BaseAgent):
 
     def __get_flex_vm_state_info(self, ip):
         try:
-            data_received = urllib2.urlopen(self.__get_flex_vm_state_url(ip)).read()
+            data_received = urllib2.urlopen(url=self.__get_flex_vm_state_url(ip), timeout=10).read()
             state_info = json.loads(data_received)
 
             logging.info('From ip {0}: json = {1}'.format(ip, state_info))
@@ -126,13 +126,13 @@ class FlexAgent(BaseAgent):
         # os.system(deregister_command)
 
         try:
-            url = "https://{ip}/deregister".format(ip)
+            url = "https://{ip}/deregister".format(ip=ip)
             data = json.dumps({
                 'queue_head_ip': queue_head_ip
             })
-            req = urllib2.Request(url, data, {'Content-Type': 'application/json'})
-            f = urllib2.urlopen(req)
-            response = f.read()
+            req = urllib2.Request(url=url, data=data, headers={'Content-Type': 'application/json'})
+            f = urllib2.urlopen(req, timeout=10)
+            response = json.loads(f.read())
             f.close()
 
             if response['status'] == 'success':

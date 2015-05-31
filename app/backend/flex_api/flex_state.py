@@ -41,16 +41,20 @@ class FlexVMState(object):
                 info = {'state': FlexVMState.UNPREPARED}
             else:
                 celery_report_dict = eval('\n'.join(lines[1:]))
-                broker = celery_report_dict['consumer']['broker']
-                info = {
-                    'state': FlexVMState.RUNNING,
-                    'queue_head_ip': broker['hostname']
-                }
+                if 'consumer' in celery_report_dict and 'broker' in celery_report_dict['consumer']:
+                    broker = celery_report_dict['consumer']['broker']
+                    info = {
+                        'state': FlexVMState.RUNNING,
+                        'queue_head_ip': broker['hostname']
+                    }
 
-                if broker['hostname'] == public_ip:
-                    info['is_queue_head'] = True
+                    if broker['hostname'] == public_ip:
+                        info['is_queue_head'] = True
+                    else:
+                        info['is_queue_head'] = False
+
                 else:
-                    info['is_queue_head'] = False
+                    info = {'state': FlexVMState.UNPREPARED}
 
         except Exception, e:
             logging.error('Error in fetching broker url: {0}'.format(str(e)))
@@ -76,7 +80,7 @@ class FlexVMState(object):
             queue_head_ip = request_info['queue_head_ip']
             if queue_head_ip == state_info['queue_head_ip']:
                 # Kill celery and restart rabbitmq
-                os.system("sudo {script}".format(script=DEREGISTER_FLEX_VM_SCRIPT))
+                os.system("sudo {script} > ~/flex_log 2> &".format(script=DEREGISTER_FLEX_VM_SCRIPT))
                 info = {
                     'status': 'success',
                     'message': 'Flex VM Deregistered.',
