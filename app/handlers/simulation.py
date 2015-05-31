@@ -329,7 +329,9 @@ class JobBackboneInterface(BaseHandler):
       self.response.write(json.dumps([]))
 
 class StochKitJob(Job):
-    SUPPORTED_CLOUD_RESOURCES = ["{0}-cloud".format(agent_type) for agent_type in JobConfig.SUPPORTED_AGENT_TYPES]
+    FLEX_CLOUD_RESOURCE = "{0}-cloud".format(AgentTypes.FLEX)
+    EC2_CLOUD_RESOURCE = "{0}-cloud".format(AgentTypes.EC2)
+    SUPPORTED_CLOUD_RESOURCES = [EC2_CLOUD_RESOURCE, FLEX_CLOUD_RESOURCE]
 
     """ Model for a StochKit job. Contains all the parameters associated with the call. """
     

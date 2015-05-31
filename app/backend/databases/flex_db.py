@@ -60,7 +60,7 @@ class FlexDB(BaseDB):
                     num_rows = db_cursor.execute(sql)
                     logging.info("Number of rows fetched: {}".format(num_rows))
 
-                    field_name_index_map = {i[0]: i for i in db_cursor.description}
+                    field_name_index_map = {field[0]: index for index, field in enumerate(db_cursor.description)}
                     rows = db_cursor.fetchall()
 
                 if num_rows > 0 and rows != ():

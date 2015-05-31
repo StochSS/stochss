@@ -123,7 +123,11 @@ class StatusPage(BaseHandler):
 
             jobs = list(all_stochkit_jobs.run())
 
-            jobs = sorted(jobs, key = lambda x : (datetime.datetime.strptime(x.startDate, '%Y-%m-%d-%H-%M-%S') if hasattr(x, 'startDate') and x.startDate != None else datetime.datetime.now()), reverse = True)
+            jobs = sorted(jobs,
+                          key=lambda x:
+                                (datetime.datetime.strptime(x.startDate, '%Y-%m-%d-%H-%M-%S')
+                                     if hasattr(x, 'startDate') and x.startDate != None else datetime.datetime.now()),
+                          reverse = True)
 
             for number, job in enumerate(jobs):
                 number = len(jobs) - number
@@ -172,19 +176,37 @@ class StatusPage(BaseHandler):
                                 stochkit_job.status = "Failed"
 
                         elif stochkit_job.resource in simulation.StochKitJob.SUPPORTED_CLOUD_RESOURCES and stochkit_job.output_location is None:
-                            # Retrive credentials from the datastore
+                            # Retrieve credentials from the datastore
                             if not self.user_data.valid_credentials:
                                 return {'status':False,'msg':'Could not retrieve the status of job '+stochkit_job.name +'. Invalid credentials.'}
                             credentials = self.user_data.getCredentials()
 
-                            # Check the status on the remote end
-                            taskparams = {'AWS_ACCESS_KEY_ID':credentials['EC2_ACCESS_KEY'],'AWS_SECRET_ACCESS_KEY':credentials['EC2_SECRET_KEY'],'taskids':[stochkit_job.pid]}
+                            # Check the status from backend
+                            taskparams = {}
+                            if stochkit_job.resource == simulation.StochKitJob.EC2_CLOUD_RESOURCE:
+                                taskparams = {
+                                    'AWS_ACCESS_KEY_ID': credentials['EC2_ACCESS_KEY'],
+                                    'AWS_SECRET_ACCESS_KEY': credentials['EC2_SECRET_KEY'],
+                                    'taskids': [stochkit_job.pid],
+                                    'agent_type': AgentTypes.EC2
+                                }
+                            elif stochkit_job.resource == simulation.StochKitJob.FLEX_CLOUD_RESOURCE:
+                                queue_head_machine = self.user_data.get_flex_queue_head_machine()
+                                taskparams = {
+                                    'flex_db_password': self.user_data.flex_db_password,
+                                    'queue_head_ip': queue_head_machine['ip'],
+                                    'taskids':[stochkit_job.pid],
+                                    'agent_type': AgentTypes.FLEX
+                                }
+
                             task_status = service.describeTask(taskparams)
-                            job_status = task_status[stochkit_job.pid]
+                            logging.info('task_status =\n{}'.format(pprint.pformat(task_status)))
+
                             # It frequently happens that describeTasks return None before the job is finsihed.
-                            if job_status == None:
+                            if stochkit_job.pid not in task_status or task_status[stochkit_job.pid] == None:
                                 stochkit_job.status = "Unknown"
                             else:
+                                job_status = task_status[stochkit_job.pid]
 
                                 if job_status['status'] == 'finished':
                                     # Update the stochkit job 
@@ -237,7 +259,11 @@ class StatusPage(BaseHandler):
         if allSensQuery != None:
             jobs = list(allSensQuery.run())
 
-            jobs = sorted(jobs, key=lambda x: (datetime.datetime.strptime(x.startTime, '%Y-%m-%d-%H-%M-%S') if hasattr(x, 'startTime') and x.startTime != None else ''), reverse = True)
+            jobs = sorted(jobs,
+                          key=lambda x:
+                                (datetime.datetime.strptime(x.startTime, '%Y-%m-%d-%H-%M-%S')
+                                 if hasattr(x, 'startTime') and x.startTime != None else ''),
+                          reverse = True)
 
             for number, job in enumerate(jobs):
                 number = len(jobs) - number
@@ -292,29 +318,35 @@ class StatusPage(BaseHandler):
 
                         task_status = service.describeTask(taskparams)
                         logging.info('task_status =\n{}'.format(pprint.pformat(task_status)))
-                        job_status = task_status[job.cloudDatabaseID]
 
-                        # If it's finished
-                        if job_status['status'] == 'finished':
-                            # Update the job
-                            job.status = 'Finished'
-                            job.outputURL = job_status['output']
-                        #
-                        elif job_status['status'] == 'failed':
-                            job.status = 'Failed'
-                            job.exceptionMessage = job_status['message']
-                            # Might not have an output if an exception was raised early on or if there is just no output available
-                            try:
-                                job.outputURL = job_status['output']
-                            except KeyError:
-                                pass
-                        #
-                        elif job_status['status'] == 'pending':
-                            job.status = 'Pending'
+                        if job.cloudDatabaseID not in task_status:
+                            job.status = 'Unknown'
+                            job.exceptionMessage = 'Failed to retreive job status from Job Database.'
+
                         else:
-                            # The state gives more fine-grained results, like if the job is being re-run, but
-                            #  we don't bother the users with this info, we just tell them that it is still running.
-                            job.status = 'Running'
+                            job_status = task_status[job.cloudDatabaseID]
+
+                            # If it's finished
+                            if job_status['status'] == 'finished':
+                                # Update the job
+                                job.status = 'Finished'
+                                job.outputURL = job_status['output']
+                            #
+                            elif job_status['status'] == 'failed':
+                                job.status = 'Failed'
+                                job.exceptionMessage = job_status['message']
+                                # Might not have an output if an exception was raised early on or if there is just no output available
+                                try:
+                                    job.outputURL = job_status['output']
+                                except KeyError:
+                                    pass
+                            #
+                            elif job_status['status'] == 'pending':
+                                job.status = 'Pending'
+                            else:
+                                # The state gives more fine-grained results, like if the job is being re-run, but
+                                #  we don't bother the users with this info, we just tell them that it is still running.
+                                job.status = 'Running'
                 else:
                     logging.error('Job Resource {0} not supported!'.format(job.resource))
                 
@@ -445,7 +477,8 @@ class StatusPage(BaseHandler):
                 # Check the status on the remote end
                 taskparams = {'AWS_ACCESS_KEY_ID':credentials['EC2_ACCESS_KEY'],
                               'AWS_SECRET_ACCESS_KEY':credentials['EC2_SECRET_KEY'],
-                              'taskids':cloud_task_status.keys()}
+                              'taskids':cloud_task_status.keys(),
+                              'agent_type': AgentTypes.EC2}
                 task_status = service.describeTask(taskparams)
 
             jobs = sorted(jobs,

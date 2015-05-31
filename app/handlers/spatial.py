@@ -37,7 +37,9 @@ sys.path.append(os.path.join(os.path.dirname(__file__), '../lib/cloudtracker'))
 from s3_helper import *
 
 class SpatialJobWrapper(db.Model):
-    SUPPORTED_CLOUD_RESOURCES = ["{0}-cloud".format(agent_type) for agent_type in JobConfig.SUPPORTED_AGENT_TYPES]
+    FLEX_CLOUD_RESOURCE = "{0}-cloud".format(AgentTypes.FLEX)
+    EC2_CLOUD_RESOURCE = "{0}-cloud".format(AgentTypes.EC2)
+    SUPPORTED_CLOUD_RESOURCES = [EC2_CLOUD_RESOURCE, FLEX_CLOUD_RESOURCE]
 
     # These are all the attributes of a job we use for local storage
     userId = db.StringProperty()
