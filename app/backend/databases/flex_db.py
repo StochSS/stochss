@@ -12,7 +12,11 @@ from backend.common.config import JobDatabaseConfig
 
 
 class FlexDB(BaseDB):
+    DATABASE_NAME = JobDatabaseConfig.DATABASE_NAME
+    STOCHSS_TABLE_NAME = JobDatabaseConfig.TABLE_NAME
+
     DB_CONNECT_TIMEOUT = 5
+
     TABLE_FIELD_NAMES = {
         JobDatabaseConfig.TABLE_NAME: ('taskid', 'infrastructure', 'message', 'output',
                                        'pid', 'uuid', 'start_time', 'status', 'time_taken'),
@@ -32,7 +36,7 @@ class FlexDB(BaseDB):
 
     def __open_db_connection(self):
         return MySQLdb.connect(host=self.ip, user=self.username, passwd=self.password,
-                               db=JobDatabaseConfig.DATABASE_NAME,
+                               db=self.DATABASE_NAME,
                                connect_timeout=self.DB_CONNECT_TIMEOUT)
 
     def describetask(self, taskids, tablename):
@@ -87,8 +91,8 @@ class FlexDB(BaseDB):
             if self.tableexists(tablename):
                 db = self.__open_db_connection()
                 with closing(db.cursor()) as db_cursor:
-                    sql = "DELETE FROM `{table}` WHERE taskid = '{taskid}';".format(table=tablename,
-                                                                                    taskid=taskid)
+                    sql = "DELETE FROM `{tablename}` WHERE taskid = '{taskid}';".format(tablename=tablename,
+                                                                                        taskid=taskid)
                     logging.info("sql = {}".format(sql))
 
                     db_cursor.execute(sql)
@@ -190,8 +194,8 @@ class FlexDB(BaseDB):
                 rows = ()
                 num_rows = 0
                 with closing(db.cursor()) as db_cursor:
-                    sql = "SELECT * FROM `{table}` WHERE {attribute_name} = {attribute_value};".format(
-                        table=JobDatabaseConfig.TABLE_NAME,
+                    sql = "SELECT * FROM `{table_name}` WHERE {attribute_name} = {attribute_value};".format(
+                        table_name=table_name,
                         attribute_name=attribute_name,
                         attribute_value=attribute_value)
                     logging.info("sql = {}".format(sql))
@@ -206,7 +210,7 @@ class FlexDB(BaseDB):
                     results = []
                     for row in rows:
                         result = {}
-                        for field_name in self.TABLE_FIELD_NAMES[tablename]:
+                        for field_name in self.TABLE_FIELD_NAMES[table_name]:
                             result[field_name] = row[field_name_index_map[field_name]]
 
                         results.append(result)
@@ -232,7 +236,7 @@ class FlexDB(BaseDB):
         result = False
 
         try:
-            field_name_list = "({})".format(','.join(map(lambda x: "'{}'".format(x),
+            field_name_list = "({})".format(','.join(map(lambda x: "`{}`".format(x),
                                                          self.TABLE_FIELD_NAMES[tablename])))
             field_values = [data.get(field_name, '') for field_name in self.TABLE_FIELD_NAMES[tablename]]
 
@@ -241,8 +245,8 @@ class FlexDB(BaseDB):
 
             db = self.__open_db_connection()
             with closing(db.cursor()) as db_cursor:
-                sql = "REPLACE INTO `{table}` {field_name_list} VALUES {field_value_list};".format(
-                    table=JobDatabaseConfig.TABLE_NAME,
+                sql = "REPLACE INTO `{tablename}` {field_name_list} VALUES {field_value_list};".format(
+                    tablename=tablename,
                     field_name_list=field_name_list,
                     field_value_list=field_value_list)
                 logging.info("sql = {}".format(sql))
