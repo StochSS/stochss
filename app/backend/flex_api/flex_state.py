@@ -84,7 +84,7 @@ class FlexVMState(object):
                 info = {
                     'status': 'success',
                     'message': 'Flex VM Deregistered.',
-                    'state': state_info['state']
+                    'old_state': state_info['state']
                 }
             else:
                 info = {

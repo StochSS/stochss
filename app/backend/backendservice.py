@@ -75,7 +75,6 @@ class backendservices(object):
                 raise Exception('EC2 Secret Key is not valid!')
 
         if not database:
-            logging.info('Creating Database...')
             if agent_type == AgentTypes.EC2:
                 database = DynamoDB(ec2_access_key, ec2_secret_key)
 
@@ -289,10 +288,6 @@ class backendservices(object):
                 logging.error("deleteTaskLocal : couldn't kill process. error: %s", str(e))
         logging.info("deleteTaskLocal : exiting method")
 
-    def __create_flex_db_tables(self, password):
-        # database = FlexDB(password=password)
-        # self.__create_dynamodb_stochss_table(ec2_access_key=ec2_access_key, ec2_secret_key=ec2_secret_key)
-        pass
 
     def __create_dynamodb_stochss_table(self, ec2_access_key, ec2_secret_key):
         database = DynamoDB(ec2_access_key, ec2_secret_key)
@@ -374,9 +369,6 @@ class backendservices(object):
             # 4. Prepare Instances
             params[VMStateModel.IDS] = ids
             res = i.prepare_instances(params)
-
-            # 5, check and create stochss table exists if it does not exist
-            self.__create_flex_db_tables(password=params['flex_db_password'])
 
             logging.info("prepare_flex_cloud_machines : exiting method with result : %s", str(res))
             return True, None

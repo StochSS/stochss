@@ -23,8 +23,9 @@ import pprint
 from google.appengine.ext import db
 from kombu import Queue, Exchange
 
-from common.config import AgentTypes, AgentConfig, FlexConfig
+from common.config import AgentTypes, AgentConfig, FlexConfig, JobDatabaseConfig
 import common.helper as helper
+from databases.flex_db import FlexDB
 from vm_state_model import VMStateModel
 
 __author__ = 'mengyuan, dev'
@@ -170,14 +171,19 @@ class FlexBackendWorker(BackendWorker):
             return False
 
         try:
-            params = {
+            queue_head_prepare_params = {
                 'infrastructure': AgentTypes.FLEX,
                 self.PARAM_FLEX_CLOUD_MACHINE_INFO: [queue_head_machine],
                 'credentials': parameters['credentials'],
                 'user_id': parameters['user_id'],
                 self.PARAM_FLEX_DB_PASSWORD: parameters[self.PARAM_FLEX_DB_PASSWORD]
             }
-            self.agent.prepare_instances(params)
+            self.agent.prepare_instances(queue_head_prepare_params)
+
+            # Create stochss table in flex db in queue head
+            database = FlexDB(password=parameters[self.PARAM_FLEX_DB_PASSWORD], ip=queue_head_machine['ip'])
+            database.createtable(JobDatabaseConfig.TABLE_NAME)
+
             return True
 
         except Exception as e:

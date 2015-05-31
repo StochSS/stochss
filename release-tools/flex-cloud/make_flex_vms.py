@@ -154,7 +154,7 @@ class VirtualMachine(object):
 
         contents = contents.replace('EXECUTABLES', ','.join(allowed_executables))
 
-        print 'add sudoer file:\n{0}'.format(contents)
+        # print 'add sudoer file:\n{0}'.format(contents)
 
         with open(DEFAULT_ADD_SUDOER_SCRIPT, 'w') as fout:
             fout.write(contents)
@@ -171,6 +171,7 @@ class VirtualMachine(object):
 
         else:
             commands = [
+                'chmod +x ~/add_sudoer.sh',
                 'sudo ~/add_sudoer.sh'
             ]
 
