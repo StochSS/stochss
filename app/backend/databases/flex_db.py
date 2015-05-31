@@ -239,13 +239,18 @@ class FlexDB(BaseDB):
             update_field_list = ", ".join(map(lambda x: "`{x}`=VALUES(`{x}`)".format(x=x), data.keys()))
 
             data['taskid'] = taskid
+            logging.info('data =\n{}'.format(pprint.pformat(data)))
+
             field_name_list = "({})".format(','.join(map(lambda x: "`{}`".format(x),
                                                          self.TABLE_FIELD_NAMES[tablename])))
+            logging.info('field_name_list = {}'.format(field_name_list))
+
             field_values = [data.get(field_name, '') for field_name in self.TABLE_FIELD_NAMES[tablename]]
 
             field_value_list = "({})".format(','.join(map(lambda x: "'{}'".format(x),
                                                           field_values)))
 
+            logging.info('field_value_list = {}'.format(field_value_list))
 
 
             db = self.__open_db_connection()
