@@ -236,6 +236,9 @@ class FlexDB(BaseDB):
         result = False
 
         try:
+            update_field_list = ", ".join(map(lambda x: "`{x}`=VALUES(`{x}`)".format(x=x), data.keys()))
+
+            data['taskid'] = taskid
             field_name_list = "({})".format(','.join(map(lambda x: "`{}`".format(x),
                                                          self.TABLE_FIELD_NAMES[tablename])))
             field_values = [data.get(field_name, '') for field_name in self.TABLE_FIELD_NAMES[tablename]]
@@ -243,7 +246,7 @@ class FlexDB(BaseDB):
             field_value_list = "({})".format(','.join(map(lambda x: "'{}'".format(x),
                                                           field_values)))
 
-            update_field_list = ", ".join(map(lambda x: "`{x}`=VALUES(`{x}`)".format(x=x), data.keys()))
+
 
             db = self.__open_db_connection()
             with closing(db.cursor()) as db_cursor:
