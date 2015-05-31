@@ -38,7 +38,9 @@ jinja_environment = jinja2.Environment(autoescape=True,
                                        loader=(jinja2.FileSystemLoader(os.path.join(os.path.dirname(__file__), '../templates'))))
         
 class SensitivityJobWrapper(db.Model):
-    SUPPORTED_CLOUD_RESOURCES = ["{0}-cloud".format(agent_type) for agent_type in JobConfig.SUPPORTED_AGENT_TYPES]
+    FLEX_CLOUD_RESOURCE = "{0}-cloud".format(AgentTypes.FLEX)
+    EC2_CLOUD_RESOURCE = "{0}-cloud".format(AgentTypes.EC2)
+    SUPPORTED_CLOUD_RESOURCES = [FLEX_CLOUD_RESOURCE, EC2_CLOUD_RESOURCE]
 
     userId = db.StringProperty()
     pid = db.IntegerProperty()
@@ -417,17 +419,34 @@ class SensitivityPage(BaseHandler):
         }
 
         service = backendservices()
-        db_credentials = self.user_data.getCredentials()
+        ec2_credentials = self.user_data.getCredentials()
 
         # Set the environmental variables
-        os.environ["AWS_ACCESS_KEY_ID"] = db_credentials['EC2_ACCESS_KEY']
-        os.environ["AWS_SECRET_ACCESS_KEY"] = db_credentials['EC2_SECRET_KEY']
+        os.environ["AWS_ACCESS_KEY_ID"] = ec2_credentials['EC2_ACCESS_KEY']
+        os.environ["AWS_SECRET_ACCESS_KEY"] = ec2_credentials['EC2_SECRET_KEY']
 
+        if agent_type == AgentTypes.EC2:
+            # Send the task to the backend
+            cloud_result = service.submit_cloud_task(params=params, agent_type=agent_type,
+                                               ec2_access_key=ec2_credentials['EC2_ACCESS_KEY'],
+                                               ec2_secret_key=ec2_credentials['EC2_SECRET_KEY'])
+        elif agent_type == AgentTypes.FLEX:
+            queue_head_machine = self.user_data.get_flex_queue_head_machine()
+            logging.info('queue_head_machine = {}'.format(queue_head_machine))
 
-        # Send the task to the backend
-        cloud_result = service.submit_cloud_task(params=params, agent_type=agent_type,
-                                           ec2_access_key=db_credentials['EC2_ACCESS_KEY'],
-                                           ec2_secret_key=db_credentials['EC2_SECRET_KEY'])
+            flex_db_credentials = {
+                'flex_db_password': self.user_data.flex_db_password,
+                'queue_head_ip': queue_head_machine['ip'],
+            }
+
+            # Send the task to the backend
+            cloud_result = service.submit_cloud_task(params=params, agent_type=agent_type,
+                                                     flex_db_credentials=flex_db_credentials,
+                                                     ec2_access_key=ec2_credentials['EC2_ACCESS_KEY'],
+                                                     ec2_secret_key=ec2_credentials['EC2_SECRET_KEY'])
+
+        else:
+            raise Exception('Invalid agent type!')
 
         # if not cloud_result["success"]:
         if not cloud_result["success"]:

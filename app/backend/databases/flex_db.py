@@ -48,7 +48,7 @@ class FlexDB(BaseDB):
                 rows = ()
                 num_rows = 0
                 with closing(db.cursor()) as db_cursor:
-                    sql = "SELECT * FROM '{table}' WHERE taskid IN {taskid_list}".format(table=tablename,
+                    sql = "SELECT * FROM `{table}` WHERE taskid IN {taskid_list};".format(table=tablename,
                                                                                          taskid_list=taskid_list)
                     logging.info("sql = {}".format(sql))
 
@@ -86,7 +86,7 @@ class FlexDB(BaseDB):
             if self.tableexists(tablename):
                 db = self.__open_db_connection()
                 with closing(db.cursor()) as db_cursor:
-                    sql = "DELETE FROM '{table}' WHERE taskid = '{taskid}'".format(table=tablename, taskid=taskid)
+                    sql = "DELETE FROM `{table}` WHERE taskid = '{taskid}';".format(table=tablename, taskid=taskid)
                     logging.info("sql = {}".format(sql))
 
                     db_cursor.execute(sql)
@@ -156,7 +156,7 @@ class FlexDB(BaseDB):
             db.query("SHOW TABLES LIKE '{}';".format(tablename))
             tables = db.store_result()
 
-            row = tables.get_row()
+            row = tables.fetch_row()
 
             if row != () and row[0][0] == tablename:
                 logging.info('Table {} exists!'.format(tablename))
@@ -188,7 +188,7 @@ class FlexDB(BaseDB):
                 rows = ()
                 num_rows = 0
                 with closing(db.cursor()) as db_cursor:
-                    sql = "SELECT * FROM '{table}' WHERE {attribute_name} = {attribute_value}".format(
+                    sql = "SELECT * FROM `{table}` WHERE {attribute_name} = {attribute_value};".format(
                                                                                     attribute_name=attribute_name,
                                                                                     attribute_value=attribute_value)
                     logging.info("sql = {}".format(sql))
@@ -238,7 +238,7 @@ class FlexDB(BaseDB):
 
             db = self.__open_db_connection()
             with closing(db.cursor()) as db_cursor:
-                sql = "INSERT INTO '{table}' {field_name_list} VALUES {field_value_list}".format(
+                sql = "REPLACE INTO `{table}` {field_name_list} VALUES {field_value_list};".format(
                                                                                     field_name_list=field_name_list,
                                                                                     field_value_list=field_value_list)
                 logging.info("sql = {}".format(sql))

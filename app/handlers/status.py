@@ -19,6 +19,7 @@ from google.appengine.ext import db
 
 from stochssapp import BaseHandler
 from backend.backendservice import backendservices
+from backend.common.config import AgentTypes
 
 import sensitivity
 import simulation
@@ -270,12 +271,28 @@ class StatusPage(BaseHandler):
                             return {'status':False,
                                     'msg':'Could not retrieve the status of job '+ job.name +'. Invalid credentials.'}
                         credentials = self.user_data.getCredentials()
+
                         # Check the status from backend
-                        taskparams = {'AWS_ACCESS_KEY_ID':credentials['EC2_ACCESS_KEY'],
-                                      'AWS_SECRET_ACCESS_KEY':credentials['EC2_SECRET_KEY'],
-                                      'taskids':[job.cloudDatabaseID]}
+                        taskparams = {}
+                        if job.resource == sensitivity.SensitivityJobWrapper.EC2_CLOUD_RESOURCE:
+                            taskparams = {
+                                'AWS_ACCESS_KEY_ID': credentials['EC2_ACCESS_KEY'],
+                                'AWS_SECRET_ACCESS_KEY': credentials['EC2_SECRET_KEY'],
+                                'taskids': [job.cloudDatabaseID],
+                                'agent_type': AgentTypes.EC2
+                            }
+                        elif job.resource == sensitivity.SensitivityJobWrapper.FLEX_CLOUD_RESOURCE:
+                            queue_head_machine = self.user_data.get_flex_queue_head_machine()
+                            taskparams = {
+                                'flex_db_password': self.user_data.flex_db_password,
+                                'queue_head_ip': queue_head_machine['ip'],
+                                'taskids':[job.cloudDatabaseID],
+                                'agent_type': AgentTypes.FLEX
+                            }
+
                         task_status = service.describeTask(taskparams)
                         job_status = task_status[job.cloudDatabaseID]
+
                         # If it's finished
                         if job_status['status'] == 'finished':
                             # Update the job
@@ -503,17 +520,6 @@ class StatusPage(BaseHandler):
     def getJobStatus(self,task_id):
         # TODO: request the status from the backend.
         return True
-
-    def get_all_urls(self):
-        """
-            Get the URLs of 
-        """
-        model = self.get_session_property('model_edited')
-        if model is None:
-            return None
-        else:
-        	result = backendservice.describeTask(valid_username)
-		self.render_response('status.html', **result)
 
 
 class JobOutPutPage(BaseHandler):

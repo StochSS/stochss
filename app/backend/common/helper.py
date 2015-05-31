@@ -39,6 +39,7 @@ def copy_celery_config_to_vm(instance_type, ip, key_file, agent_type, username):
     else:
         raise Exception("scp failure: {0} not transfered to {1}".format(celery_config_filename, ip))
 
+
 def start_celery_on_vm(instance_type, ip, key_file, agent_type,
                        worker_name='%h', username="ubuntu", prepend_commands=None, log_level='info'):
     copy_celery_config_to_vm(instance_type=instance_type, ip=ip, key_file=key_file,
@@ -47,33 +48,33 @@ def start_celery_on_vm(instance_type, ip, key_file, agent_type,
     commands = prepend_commands if prepend_commands is not None else []
 
     python_path_list = [TaskConfig.STOCHSS_HOME,
-                   TaskConfig.PYURDME_DIR,
-                   os.path.join(TaskConfig.STOCHSS_HOME, 'app'),
-                   os.path.join(TaskConfig.STOCHSS_HOME, 'app', 'backend'),
-                   os.path.join(TaskConfig.STOCHSS_HOME, 'app', 'lib', 'cloudtracker')]
+                        TaskConfig.PYURDME_DIR,
+                        os.path.join(TaskConfig.STOCHSS_HOME, 'app'),
+                        os.path.join(TaskConfig.STOCHSS_HOME, 'app', 'backend'),
+                        os.path.join(TaskConfig.STOCHSS_HOME, 'app', 'lib', 'cloudtracker')]
     python_path = 'export PYTHONPATH={0}'.format(':'.join(python_path_list))
     commands.append(python_path)
 
 
     # Start the shutdown-monitor
     if agent_type == AgentTypes.EC2:
-        commands.append('python /home/ubuntu/stochss/app/backend/tasks.py shutdown-monitor &' +\
+        commands.append('python /home/ubuntu/stochss/app/backend/tasks.py shutdown-monitor &' + \
                         "celery -A tasks worker -Q {q1},{q2} -n {worker_name} --autoreload --loglevel={log_level} --workdir /home/{username} > /home/{username}/celery.log 2>&1".format(
-            q1=CeleryConfig.get_queue_name(agent_type=agent_type),
-            q2=CeleryConfig.get_queue_name(agent_type=agent_type, instance_type=instance_type),
-            log_level=log_level,
-            worker_name=worker_name,
-            username=username)
+                            q1=CeleryConfig.get_queue_name(agent_type=agent_type),
+                            q2=CeleryConfig.get_queue_name(agent_type=agent_type, instance_type=instance_type),
+                            log_level=log_level,
+                            worker_name=worker_name,
+                            username=username)
         )
     else:
-        commands.append("celery -A tasks worker -Q {q1},{q2} -n {worker_name} --autoreload --loglevel={log_level} --workdir /home/{username} > /home/{username}/celery.log 2>&1".format(
-            q1=CeleryConfig.get_queue_name(agent_type=agent_type),
-            q2=CeleryConfig.get_queue_name(agent_type=agent_type, instance_type=instance_type),
-            log_level=log_level,
-            worker_name=worker_name,
-            username=username)
+        commands.append(
+            "celery -A tasks worker -Q {q1},{q2} -n {worker_name} --autoreload --loglevel={log_level} --workdir /home/{username} > /home/{username}/celery.log 2>&1".format(
+                q1=CeleryConfig.get_queue_name(agent_type=agent_type),
+                q2=CeleryConfig.get_queue_name(agent_type=agent_type, instance_type=instance_type),
+                log_level=log_level,
+                worker_name=worker_name,
+                username=username)
         )
-
 
     command = ';'.join(commands)
 
@@ -90,6 +91,7 @@ def start_celery_on_vm(instance_type, ip, key_file, agent_type,
     success = os.system(cmd)
     logging.debug("success = {0}".format(success))
     return success
+
 
 def update_celery_config_with_queue_head_ip(queue_head_ip, agent_type):
     '''
@@ -151,14 +153,15 @@ def wait_for_ssh_connection(key_file, ip, username="ubuntu"):
     logging.info('Timeout waiting to connect to node via SSH.')
     return False
 
+
 def config_celery_queues(agent_type, instance_types):
     exchange = "exchange = Exchange('{0}', type='direct')".format(CeleryConfig.get_exchange_name(agent_type=agent_type))
     logging.debug(exchange)
 
     queue_list = map(lambda instance_type: "Queue('{0}', exchange, routing_key='{1}')".format(
-                                    CeleryConfig.get_queue_name(agent_type=agent_type, instance_type=instance_type),
-                                    CeleryConfig.get_routing_key_name(agent_type=agent_type, instance_type=instance_type)),
-                    instance_types)
+        CeleryConfig.get_queue_name(agent_type=agent_type, instance_type=instance_type),
+        CeleryConfig.get_routing_key_name(agent_type=agent_type, instance_type=instance_type)),
+                     instance_types)
 
     agent_queue_name = CeleryConfig.get_queue_name(agent_type=agent_type)
     agent_routing_key = CeleryConfig.get_routing_key_name(agent_type=agent_type)
@@ -177,9 +180,9 @@ def config_celery_queues(agent_type, instance_types):
         if clear_following:
             f.write("")
         elif line.strip().startswith('exchange'):
-            f.write(exchange+"\n")
+            f.write(exchange + "\n")
         elif line.strip().startswith('CELERY_QUEUES'):
-            f.write(queues_string+"\n")
+            f.write(queues_string + "\n")
             clear_following = True
         else:
             f.write(line)
@@ -190,8 +193,8 @@ def config_celery_queues(agent_type, instance_types):
 
 
 def __execute_cloud_cost_analysis_task(params, agent_type, instance_type, task_id, database,
-                                     access_key, secret_key, start_time,
-                                     celery_queue_name, celery_routing_key):
+                                       ec2_access_key, ec2_secret_key, start_time,
+                                       celery_queue_name, celery_routing_key):
     result = {}
     result["db_id"] = task_id
 
@@ -213,7 +216,7 @@ def __execute_cloud_cost_analysis_task(params, agent_type, instance_type, task_i
                          data=data, tablename=params["db_table"])
 
     cost_analysis_task = tasks.task.apply_async(args=[task_id, params, agent_type, database,
-                                                      access_key, secret_key, taskid_prefix],
+                                                      ec2_access_key, ec2_secret_key, taskid_prefix],
                                                 queue=celery_queue_name,
                                                 routing_key=celery_routing_key)
 
@@ -226,13 +229,14 @@ def __execute_cloud_cost_analysis_task(params, agent_type, instance_type, task_i
 
     return result
 
+
 def get_celery_worker_status():
     # ###############################################################################
     # The master task can run on any node...
     # TODO: master task might need to run on node with at least 2 cores...
     # launch_params["instance_type"] = "c3.large"
     # launch_params["num_vms"] = 1
-    ################################################################################
+    # ###############################################################################
 
     celery_info = tasks.CelerySingleton().app.control.inspect()
 
@@ -270,6 +274,7 @@ def get_celery_worker_status():
             break
 
     return core_count, available_workers
+
 
 def __execute_cloud_stochoptim_task(params, data, database, task_id, celery_queue_name, celery_routing_key):
     result = {}
@@ -346,7 +351,7 @@ def __execute_cloud_stochoptim_task(params, data, database, task_id, celery_queu
                                                  queue=celery_queue_name,
                                                  routing_key=celery_routing_key)
     # TODO: This should really be done as a background_thread as soon as the task is sent
-    #      to a worker, but this would require an update to GAE SDK.
+    # to a worker, but this would require an update to GAE SDK.
     # call the poll task process
     poll_task_path = os.path.join(os.path.dirname(os.path.abspath(__file__)), "..", "poll_task.py")
 
@@ -394,13 +399,13 @@ def check_broker_status():
     return True, None, None
 
 
-def execute_cloud_task(params, agent_type, ec2_access_key, ec2_secret_key, task_id,
-                       instance_type, cost_replay, database):
+def execute_cloud_task(params, agent_type, ec2_access_key, ec2_secret_key,
+                       task_id, instance_type, cost_replay, database):
     '''
     This method instantiates celery tasks in the cloud.
     Returns return value from celery async call and the task ID
     '''
-    logging.debug('execute_cloud_task: Params =\n\n{0}'.format(pprint.pformat(params)))
+    logging.info('execute_cloud_task: Params =\n\n{0}'.format(pprint.pformat(params)))
     logging.info('agent_type = {}'.format(agent_type))
 
     celery_config = tasks.CelerySingleton()
@@ -426,7 +431,7 @@ def execute_cloud_task(params, agent_type, ec2_access_key, ec2_secret_key, task_
                 "traceback": trace
             }
 
-        #create a celery task
+        # create a celery task
         logging.info("execute_cloud_task : executing task with uuid : %s ", task_id)
 
         start_time = datetime.now()
@@ -440,19 +445,21 @@ def execute_cloud_task(params, agent_type, ec2_access_key, ec2_secret_key, task_
 
         if params["job_type"] == JobTypes.STOCHOPTIM:
             result = __execute_cloud_stochoptim_task(params=params, data=data,
-                                                   database=database, task_id=task_id,
-                                                   celery_queue_name=celery_queue_name,
-                                                   celery_routing_key=celery_routing_key)
+                                                     database=database, task_id=task_id,
+                                                     celery_queue_name=celery_queue_name,
+                                                     celery_routing_key=celery_routing_key)
 
         else:
             # if this is the cost analysis and agent is ec2 replay then update the stochss-cost-analysis table
             if cost_replay:
                 if agent_type in JobConfig.SUPPORTED_AGENT_TYPES_FOR_COST_ANALYSIS:
-                    result = __execute_cloud_cost_analysis_task(params=params, agent_type=agent_type, instance_type=instance_type,
-                                                          task_id=task_id, database=database, access_key=ec2_access_key,
-                                                          secret_key=ec2_secret_key, start_time=start_time,
-                                                          celery_queue_name=celery_queue_name,
-                                                          celery_routing_key=celery_routing_key)
+                    result = __execute_cloud_cost_analysis_task(params=params, agent_type=agent_type,
+                                                                instance_type=instance_type,
+                                                                task_id=task_id, database=database,
+                                                                ec2_access_key=ec2_access_key,
+                                                                ec2_secret_key=ec2_secret_key, start_time=start_time,
+                                                                celery_queue_name=celery_queue_name,
+                                                                celery_routing_key=celery_routing_key)
                 else:
                     raise Exception("cost replay not supported for agent type = {0}".format(agent_type))
 
@@ -464,15 +471,18 @@ def execute_cloud_task(params, agent_type, ec2_access_key, ec2_secret_key, task_
                 params["cost_analysis_table"] = JobDatabaseConfig.COST_ANALYSIS_TABLE_NAME
                 database.updateEntry(taskid=task_id, data=data, tablename=params["db_table"])
 
-                celery_task = tasks.task.apply_async(args=[task_id, params, agent_type, database, ec2_access_key, ec2_secret_key],
-                                             queue=celery_queue_name, routing_key=celery_routing_key)
+                celery_task = tasks.task.apply_async(
+                    args=[task_id, params, agent_type, database, ec2_access_key, ec2_secret_key],
+                    queue=celery_queue_name, routing_key=celery_routing_key)
 
                 logging.info('celery_task.ready() = {}'.format(celery_task.ready()))
                 logging.info('celery_task.id = {}'.format(celery_task.id))
 
                 result["celery_pid"] = celery_task.id
 
-                logging.info("execute_cloud_task: result of task with task_id {0} : \n{1}".format(task_id, pprint.pformat(result)))
+                logging.info("execute_cloud_task: result of task with task_id {0} : \n{1}".format(task_id,
+                                                                                                  pprint.pformat(
+                                                                                                      result)))
                 result["success"] = True
 
         return result

@@ -124,6 +124,16 @@ class UserData(db.Model):
         logging.debug("info = {0}".format(self.flex_cloud_machine_info))
         return info
 
+    def get_flex_queue_head_machine(self):
+        flex_cloud_machine_info = self.get_flex_cloud_machine_info()
+        queue_head_machine = None
+        for machine in flex_cloud_machine_info:
+            if machine['queue_head']:
+                queue_head_machine = machine
+                break
+        logging.info('flex_queue_head_machine = {}'.format(queue_head_machine))
+        return queue_head_machine
+
 
 class BaseHandler(webapp2.RequestHandler):
     """

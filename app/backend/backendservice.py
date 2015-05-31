@@ -59,10 +59,11 @@ class backendservices(object):
         return ret
 
 
-    def submit_cloud_task(self, params, agent_type, ec2_access_key, ec2_secret_key, task_id=None,
-                    instance_type=None, cost_replay=False, database=None):
+    def submit_cloud_task(self, params, agent_type, ec2_access_key=None, ec2_secret_key=None, task_id=None,
+                    instance_type=None, cost_replay=False, database=None, flex_db_credentials=None):
 
         logging.info('agent_type = {0}'.format(agent_type))
+        logging.info('params =\n{}\n\n'.format(pprint.pformat(params)))
 
         if agent_type not in JobConfig.SUPPORTED_AGENT_TYPES:
             raise Exception('Unsupported agent type = {}!'.format(agent_type))
@@ -73,22 +74,14 @@ class backendservices(object):
             if ec2_secret_key == None or ec2_secret_key == '':
                 raise Exception('EC2 Secret Key is not valid!')
 
-
         if not database:
+            logging.info('Creating Database...')
             if agent_type == AgentTypes.EC2:
                 database = DynamoDB(ec2_access_key, ec2_secret_key)
 
-            if agent_type == AgentTypes.FLEX:
-                queue_head_machine = None
-                for machine in params['flex_machine_cloud_info']:
-                    if machine['queue_head'] == True:
-                        if queue_head_machine == None:
-                            queue_head_machine = machine
-                        else:
-                            logging.error('There can only be 1 queue head!')
-
-                database = FlexDB(ip=queue_head_machine['ip'],
-                                  password=params['flex_db_password'])
+            elif agent_type == AgentTypes.FLEX:
+                database = FlexDB(ip=flex_db_credentials['queue_head_ip'],
+                                  password=flex_db_credentials['flex_db_password'])
 
         # if there is no taskid explicit, create one the first run
         if not task_id:
@@ -97,7 +90,8 @@ class backendservices(object):
         logging.info('submit_cloud_task: task_id = {}'.format(task_id))
 
         result = helper.execute_cloud_task(params=params, agent_type=agent_type,
-                                           ec2_access_key=ec2_access_key, ec2_secret_key=ec2_secret_key,
+                                           ec2_access_key=ec2_access_key,
+                                           ec2_secret_key=ec2_secret_key,
                                            task_id=task_id, instance_type=instance_type,
                                            cost_replay=cost_replay,
                                            database=database)
@@ -199,7 +193,7 @@ class backendservices(object):
         raise NotImplementedError
 
 
-    def describeTask(self, params, database=None):
+    def describeTask(self, params):
         '''
         @param params: A dictionary with the following fields
          "AWS_ACCESS_KEY_ID" : AWS access key
@@ -209,22 +203,31 @@ class backendservices(object):
          a dictionary of the form :
          {"taskid":"result:"","state":""} 
         '''
+        logging.info('describeTask: params =\n{}'.format(pprint.pformat(params)))
 
-        logging.debug("describeTask : setting environment variables : AWS_ACCESS_KEY_ID - %s",
-                      params['AWS_ACCESS_KEY_ID'])
-        os.environ["AWS_ACCESS_KEY_ID"] = params['AWS_ACCESS_KEY_ID']
-        logging.debug("describeTask : setting environment variables : AWS_SECRET_ACCESS_KEY - %s",
-                      params['AWS_SECRET_ACCESS_KEY'])
-        os.environ["AWS_SECRET_ACCESS_KEY"] = params['AWS_SECRET_ACCESS_KEY']
-        if not database:
-            database = DynamoDB(params['AWS_ACCESS_KEY_ID'], params['AWS_SECRET_ACCESS_KEY'])
+        if params['agent_type'] == AgentTypes.EC2:
+            os.environ["AWS_ACCESS_KEY_ID"] = params['AWS_ACCESS_KEY_ID']
+            os.environ["AWS_SECRET_ACCESS_KEY"] = params['AWS_SECRET_ACCESS_KEY']
+            database = DynamoDB(access_key=params['AWS_ACCESS_KEY_ID'],
+                                secret_key=params['AWS_SECRET_ACCESS_KEY'])
+
+        elif params['agent_type'] == AgentTypes.FLEX:
+            database = FlexDB(password=params['flex_db_password'],
+                              ip=params['queue_head_ip'])
+
+        else:
+            logging.error('Invalid agent type!')
+            return None
+
         result = {}
         try:
             result = database.describetask(params['taskids'], JobDatabaseConfig.TABLE_NAME)
         except Exception, e:
             logging.error("describeTask : exiting with error : %s", str(e))
             return None
+
         return result
+
 
     def stopTasks(self, params):
         '''

@@ -110,8 +110,11 @@ class VirtualMachine(object):
         self.log_type = log_type
         self.stderr_log = stderr_log
         self.stdout_log = stdout_log
+        self.start_time = None
 
     def make_flex_vm(self):
+        self.start_time = time.clock()
+
         try:
             self.__is_machine_reachable()
             self.__enable_network_ports()
@@ -131,8 +134,10 @@ class VirtualMachine(object):
         except:
             traceback.print_exc()
 
+        print 'Done in {} seconds'.format(time.clock() - self.start_time)
+
     def __setup_job_db(self):
-        header = 'Setting Job DB...'
+        header = 'Setting up Job DB : MySQL...'
         print '=================================================='
         print header
 
@@ -600,6 +605,8 @@ class FlexVMMaker(object):
             self.stdout_log = None
             self.stderr_log = None
 
+        self.overall_start_time = None
+
 
     def __cleanup(self):
         if self.log_type == "file":
@@ -607,6 +614,8 @@ class FlexVMMaker(object):
             self.stderr_log.close()
 
     def run(self):
+        self.overall_start_time = time.clock()
+
         for machine in self.machine_info:
             ip = machine['ip']
             username = machine['username']
@@ -630,7 +639,7 @@ class FlexVMMaker(object):
             vm.make_flex_vm()
 
         self.__cleanup()
-        print 'Done.'
+        print 'Completed all machines in {} seconds.'.format(time.clock() - self.overall_start_time)
 
 
 def cleanup_local_files():

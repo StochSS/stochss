@@ -20,6 +20,7 @@
         "automake",
         "autotools-dev",
         "blt",
+        "build-essential",
         "cmake",
         "comerr-dev",
         "cython",
@@ -86,6 +87,7 @@
         "libxss-dev",
         "libxt-dev",
         "mesa-common-dev",
+        "python-dev",
         "python-cairo",
         "python-gtk2",
         "python-h5py",
@@ -109,6 +111,7 @@
         {"name": "redis"},
         {"name": "six"},
         {"name": "boto",    "version": "2.9.0"},
-        {"name": "python-libsbml"}
+        {"name": "python-libsbml"},
+        {"name": "MySQL-python"}
     ]
 }
