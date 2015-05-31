@@ -10,11 +10,12 @@ from contextlib import closing
 from base_db import BaseDB
 from backend.common.config import JobDatabaseConfig
 
+
 class FlexDB(BaseDB):
     DB_CONNECT_TIMEOUT = 5
     TABLE_FIELD_NAMES = {
         JobDatabaseConfig.TABLE_NAME: ('taskid', 'infrastructure', 'message', 'output',
-                                       'pid', 'uuid', 'start_time', 'status','time_taken'),
+                                       'pid', 'uuid', 'start_time', 'status', 'time_taken'),
         JobDatabaseConfig.COST_ANALYSIS_TABLE_NAME: ('taskid', 'agent', 'instance_type', 'message',
                                                      'start_time', 'status', 'time_taken', 'uuid')
     }
@@ -49,13 +50,13 @@ class FlexDB(BaseDB):
                 num_rows = 0
                 with closing(db.cursor()) as db_cursor:
                     sql = "SELECT * FROM `{table}` WHERE taskid IN {taskid_list};".format(table=tablename,
-                                                                                         taskid_list=taskid_list)
+                                                                                          taskid_list=taskid_list)
                     logging.info("sql = {}".format(sql))
 
                     num_rows = db_cursor.execute(sql)
                     logging.info("Number of rows fetched: {}".format(num_rows))
 
-                    field_name_index_map = {i[0]:i for i in db_cursor.description}
+                    field_name_index_map = {i[0]: i for i in db_cursor.description}
                     rows = db_cursor.fetchall()
 
                 if num_rows > 0 and rows != ():
@@ -68,7 +69,7 @@ class FlexDB(BaseDB):
 
                 logging.info('Successfully fetched data from database.')
 
-        except Exception,e:
+        except Exception, e:
             logging.error("describetask  with error : {0}".format(str(e)))
 
         finally:
@@ -86,7 +87,8 @@ class FlexDB(BaseDB):
             if self.tableexists(tablename):
                 db = self.__open_db_connection()
                 with closing(db.cursor()) as db_cursor:
-                    sql = "DELETE FROM `{table}` WHERE taskid = '{taskid}';".format(table=tablename, taskid=taskid)
+                    sql = "DELETE FROM `{table}` WHERE taskid = '{taskid}';".format(table=tablename,
+                                                                                    taskid=taskid)
                     logging.info("sql = {}".format(sql))
 
                     db_cursor.execute(sql)
@@ -98,7 +100,7 @@ class FlexDB(BaseDB):
             else:
                 logging.info('exiting removetask with error : table doesn\'t exists')
 
-        except Exception,e:
+        except Exception, e:
             logging.error('exiting removetask with error {0}'.format(str(e)))
 
         finally:
@@ -116,7 +118,7 @@ class FlexDB(BaseDB):
             logging.info('checking if table {0} exists'.format(tablename))
 
             if not self.tableexists(tablename):
-                logging.info( 'creating table schema')
+                logging.info('creating table schema')
                 stochss_db_schema_filename = os.path.abspath(os.path.join(os.path.dirname(__file__),
                                                                           'flex_db_schema.sql'))
                 with open(stochss_db_schema_filename) as fin:
@@ -136,7 +138,7 @@ class FlexDB(BaseDB):
 
             result = True
 
-        except Exception,e:
+        except Exception, e:
             logging.error('exiting createtable with error {0}'.format(str(e)))
 
         finally:
@@ -162,7 +164,7 @@ class FlexDB(BaseDB):
                 logging.info('Table {} exists!'.format(tablename))
                 result = True
             else:
-                logging.info( "Table with name: {0} doesn't exist!".format(tablename))
+                logging.info("Table with name: {0} doesn't exist!".format(tablename))
 
         except Exception as e:
             logging.error('tableexists failed with error {0}'.format(str(e)))
@@ -181,22 +183,23 @@ class FlexDB(BaseDB):
         db = None
         results = None
         try:
-            if attribute_name != None and  attribute_value != None and \
-                    attribute_name != '' and  attribute_value != '' and self.tableexists(table_name):
+            if attribute_name != None and attribute_value != None and \
+                            attribute_name != '' and attribute_value != '' and self.tableexists(table_name):
 
                 db = self.__open_db_connection()
                 rows = ()
                 num_rows = 0
                 with closing(db.cursor()) as db_cursor:
                     sql = "SELECT * FROM `{table}` WHERE {attribute_name} = {attribute_value};".format(
-                                                                                    attribute_name=attribute_name,
-                                                                                    attribute_value=attribute_value)
+                        table=JobDatabaseConfig.TABLE_NAME,
+                        attribute_name=attribute_name,
+                        attribute_value=attribute_value)
                     logging.info("sql = {}".format(sql))
 
                     num_rows = db_cursor.execute(sql)
                     logging.info("Number of rows fetched: {}".format(num_rows))
 
-                    field_name_index_map = {i[0]:i for i in db_cursor.description}
+                    field_name_index_map = {i[0]: i for i in db_cursor.description}
                     rows = db_cursor.fetchall()
 
                 if num_rows > 0 and rows != ():
@@ -210,7 +213,7 @@ class FlexDB(BaseDB):
 
                 logging.info('Successfully fetched data from database.')
 
-        except Exception,e:
+        except Exception, e:
             logging.error('exiting getEntry with error {0}'.format(str(e)))
             results = None
 
@@ -234,13 +237,14 @@ class FlexDB(BaseDB):
             field_values = [data.get(field_name, '') for field_name in self.TABLE_FIELD_NAMES[tablename]]
 
             field_value_list = "({})".format(','.join(map(lambda x: "'{}'".format(x),
-                                                         field_values)))
+                                                          field_values)))
 
             db = self.__open_db_connection()
             with closing(db.cursor()) as db_cursor:
                 sql = "REPLACE INTO `{table}` {field_name_list} VALUES {field_value_list};".format(
-                                                                                    field_name_list=field_name_list,
-                                                                                    field_value_list=field_value_list)
+                    table=JobDatabaseConfig.TABLE_NAME,
+                    field_name_list=field_name_list,
+                    field_value_list=field_value_list)
                 logging.info("sql = {}".format(sql))
 
                 db_cursor.execute(sql)
@@ -249,8 +253,8 @@ class FlexDB(BaseDB):
             logging.info("updateEntry is successful!")
             result = True
 
-        except Exception,e:
-            logging.error( 'updateEntry error : {0}'.format(str(e)))
+        except Exception, e:
+            logging.error('updateEntry error : {0}'.format(str(e)))
 
         finally:
             if db:
