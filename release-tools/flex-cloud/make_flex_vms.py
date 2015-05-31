@@ -28,6 +28,9 @@ from config import JobDatabaseConfig
 DEFAULT_SETTINGS_FILE = os.path.join(os.path.dirname(__file__), "settings.json")
 DEFAULT_MACHINE_CONFIG_FILE = os.path.join(os.path.dirname(__file__), "machines.json")
 
+DEFAULT_ADD_SUDOER_SCRIPT_TEMPLATE = os.path.join(os.path.dirname(__file__), "add_sudoer.sh.template")
+DEFAULT_ADD_SUDOER_SCRIPT = os.path.join(os.path.dirname(__file__), "add_sudoer.sh")
+
 DEFAULT_FLEX_API_APACHE_CONF_TEMPLATE = os.path.join(os.path.dirname(__file__), "flex_api_site.conf.template")
 DEFAULT_FLEX_API_APACHE_CONF = os.path.join(os.path.dirname(__file__), "flex_api_site.conf")
 
@@ -129,12 +132,52 @@ class VirtualMachine(object):
             self.__setup_job_db()
             self.__setup_flex_api_server()
             self.__test_flex_api_server()
+            self.__add_sudoer()
             # self.__cleanup_instance()
 
         except:
             traceback.print_exc()
 
         print 'Done in {} seconds'.format(time.time() - self.start_time)
+
+    def __add_sudoer(self):
+        header = 'Adding restricted sudo rights to apache user...'
+        print '=================================================='
+        print header
+
+        with open(DEFAULT_ADD_SUDOER_SCRIPT_TEMPLATE) as fin:
+            contents = fin.read()
+
+        allowed_executables = [
+            "/home/{username}/stochss/release-tools/flex-cloud/deregister_flex_vm.sh".format(username=self.username)
+        ]
+
+        contents = contents.replace('EXECUTABLES', ','.join(allowed_executables))
+
+        print 'add sudoer file:\n{0}'.format(contents)
+
+        with open(DEFAULT_ADD_SUDOER_SCRIPT, 'w') as fout:
+            fout.write(contents)
+
+        scp_command = get_scp_command(user=self.username, ip =self.ip, key_file=self.keyfile,
+                                      source=DEFAULT_ADD_SUDOER_SCRIPT,
+                                      target='~/add_sudoer.sh')
+
+        # print 'scp command:\n{0}'.format(scp_command)
+
+        result = os.system(scp_command)
+        if result != 0:
+            print 'scp Failed!'
+
+        else:
+            commands = [
+                'sudo ~/add_sudoer.sh'
+            ]
+
+            command = ';'.join(commands)
+            # print command
+            self.__run_remote_command(command=command, log_header=header)
+
 
     def __setup_job_db(self):
         header = 'Setting up Job DB : MySQL...'

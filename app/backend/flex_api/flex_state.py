@@ -80,7 +80,7 @@ class FlexVMState(object):
             queue_head_ip = request_info['queue_head_ip']
             if queue_head_ip == state_info['queue_head_ip']:
                 # Kill celery and restart rabbitmq
-                os.system("sudo {script} > ~/flex_log 2> &".format(script=DEREGISTER_FLEX_VM_SCRIPT))
+                os.system("sudo {script}".format(script=DEREGISTER_FLEX_VM_SCRIPT))
                 info = {
                     'status': 'success',
                     'message': 'Flex VM Deregistered.',
