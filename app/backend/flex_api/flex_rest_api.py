@@ -23,13 +23,17 @@ def state():
     logging.info('state_info =\n{0}'.format(pprint.pformat(state_info)))
     return jsonify(state_info)
 
-@app.route('/change_state', methods=['GET', 'POST'])
-def change_state():
+@app.route('/deregister', methods=['GET', 'POST'])
+def deregister():
     data = request.get_json()
+    response_info = FlexVMState.deregister(request_info=data)
+    return jsonify(response_info)
 
-@app.route('/job_state')
-def job_state():
-    return jsonify({'job_state': FlexJobState.IDLE})
+@app.route('/prepare', methods=['GET', 'POST'])
+def prepare():
+    data = request.get_json()
+    response_info = FlexVMState.prepare(request_info=data)
+    return jsonify(response_info)
 
 if __name__ == '__main__':
     app.run(host='0.0.0.0')

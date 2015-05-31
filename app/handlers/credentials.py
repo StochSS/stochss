@@ -256,6 +256,7 @@ class CredentialsPage(BaseHandler):
             self.user_data.is_flex_cloud_info_set = False
             self.user_data.set_flex_cloud_machine_info([])
             self.user_data.reservation_id = None
+            self.user_data.flex_db_password = None
             self.user_data.put()
         else:
             logging.error('deregister_flex_cloud failed!')

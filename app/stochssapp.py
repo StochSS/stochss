@@ -131,7 +131,8 @@ class UserData(db.Model):
             if machine['queue_head']:
                 queue_head_machine = machine
                 break
-        logging.info('flex_queue_head_machine = {}'.format(queue_head_machine))
+
+        logging.debug('flex_queue_head_machine = {}'.format(queue_head_machine))
         return queue_head_machine
 
 
