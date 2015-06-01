@@ -32,6 +32,8 @@ import tempfile, time
 import signal
 import pprint
 from cloudtracker import CloudTracker
+from common.config import AgentTypes
+
 from kombu import Exchange, Queue
 import time
 
@@ -242,7 +244,8 @@ def update_s3_bucket(task_id, bucket_name, output_dir, database):
         tar_output_str = "tar -zcf {0}.tar {0}".format(output_dir)
         print "S3 update", tar_output_str
         os.system(tar_output_str)
-        copy_to_s3_str = "python {0} {1}.tar {2}".format(TaskConfig.SCCPY_PATH, output_dir, bucket_name)
+        copy_to_s3_str = "python {sccpy} -f {output_dir}.tar --ec2 {bucket_name}".format(sccpy=TaskConfig.SCCPY_PATH,
+                                                                    output_dir=output_dir, bucket_name=bucket_name)
         print "S3 update", copy_to_s3_str
         os.system(copy_to_s3_str)
         data = {
@@ -260,7 +263,8 @@ def handle_task_success(task_id, data, s3_data, bucket_name, database):
     tar_output_str = "tar -zcf {0}.tar {0}".format(s3_data)
     print tar_output_str
     os.system(tar_output_str)
-    copy_to_s3_str = "python {0} {1}.tar {2}".format(TaskConfig.SCCPY_PATH, s3_data, bucket_name)
+    copy_to_s3_str = "python {sccpy} -f {s3_data}.tar --ec2 {2}".format(sccpy=TaskConfig.SCCPY_PATH,
+                                                                        s3_data=s3_data, bucket_name=bucket_name)
     print copy_to_s3_str
     return_code = os.system(copy_to_s3_str)
     if return_code != 0:
@@ -280,7 +284,8 @@ def handle_task_failure(task_id, data, database, s3_data=None, bucket_name=None)
         tar_output_str = "tar -zcf {0}.tar {0}".format(s3_data)
         print tar_output_str
         os.system(tar_output_str)
-        copy_to_s3_str = "python {0} {1}.tar {2}".format(TaskConfig.SCCPY_PATH, s3_data, bucket_name)
+        copy_to_s3_str = "python {sccpy} -f {s3_data}.tar --ec2 {bucket_name}".format(sccpy=TaskConfig.SCCPY_PATH,
+                                                                        s3_data=s3_data, bucket_name=bucket_name)
         print copy_to_s3_str
         return_code = os.system(copy_to_s3_str)
 
@@ -620,24 +625,28 @@ def task(taskid, params, agent, database, access_key, secret_key, task_prefix=""
     This is the actual work done by a task worker
     params    should contain at least 'bucketname'
     '''
+    uuidstr = taskid
+    res = {}
 
     try:
-        res = {}
-        uuidstr = taskid
-
         bucketname = params['bucketname']
         if_tracking = False
-        try:
-            # Initialize cloudtracker with the task's UUID
-            ct = CloudTracker(access_key, secret_key, uuidstr, bucketname)
-            if_tracking = ct.if_tracking()
+        ct = None
 
-            logging.info('This is the first time to execute the job? '.format(if_tracking))
-            if if_tracking:
-                ct.track_input(params)
+        if agent == AgentTypes.EC2:
+            logging.info('Trying to track via CloudTracker...')
+            try:
+                # Initialize cloudtracker with the task's UUID
+                ct = CloudTracker(access_key, secret_key, uuidstr, bucketname)
+                if_tracking = ct.if_tracking()
 
-        except Exception:
-            print "Error initializing tracking"
+                logging.info('This is the first time to execute the job? '.format(if_tracking))
+                if if_tracking:
+                    ct.track_input(params)
+
+            except Exception:
+                print "Error initializing tracking"
+
 
         logging.info('task to be executed at remote location')
         print 'inside celery task method'
@@ -706,12 +715,13 @@ def task(taskid, params, agent, database, access_key, secret_key, task_prefix=""
         filepath = os.path.join('output', uuidstr)
         absolute_file_path = os.path.abspath(filepath)
 
-        try:
-            if if_tracking:
-                ct.track_output(absolute_file_path)
-        except Exception, e:
-            print "CloudTracker Error: track_output"
-            print e
+        if agent == AgentTypes.EC2:
+            try:
+                if if_tracking:
+                    ct.track_output(absolute_file_path)
+            except Exception, e:
+                print "CloudTracker Error: track_output"
+                print e
 
         data = {'status': 'active',
                 'message': 'Task finished. Generating output.'}
@@ -725,15 +735,25 @@ def task(taskid, params, agent, database, access_key, secret_key, task_prefix=""
             print 'generating tar file'
             create_tar_output_str = "tar -zcvf output/{0}.tar output/{0}".format(uuidstr)
             print create_tar_output_str
-            copy_to_s3_str = "python {2} output/{0}.tar {1}".format(uuidstr, bucketname, TaskConfig.SCCPY_PATH)
             os.system(create_tar_output_str)
-            print 'copying file to s3 : {0}'.format(copy_to_s3_str)
-            os.system(copy_to_s3_str)
-            print 'removing xml file'
+
+            upload_output_command = \
+                "python {sccpy} -f output/{uuid}.tar --ec2 {bucketname} {ec2_access_key} {ec2_secret_key}".format(
+                                    uuid=uuidstr, ec2_access_key=access_key, ec2_secret_key=secret_key,
+                                    bucketname=bucketname, sccpy=TaskConfig.SCCPY_PATH)
+
+            print 'upload_output_command: {0}'.format(upload_output_command)
+            os.system(upload_output_command)
+
+            print 'removing xml file...'
             removefilestr = "rm {0}".format(xmlfilepath)
             os.system(removefilestr)
+
+            print 'removing output tar...'
             removetarstr = "rm output/{0}.tar".format(uuidstr)
             os.system(removetarstr)
+
+            print 'removing output dir...'
             removeoutputdirstr = "rm -r output/{0}".format(uuidstr)
             os.system(removeoutputdirstr)
 
@@ -746,38 +766,42 @@ def task(taskid, params, agent, database, access_key, secret_key, task_prefix=""
 
         database.updateEntry(taskid=taskid, data=res, tablename=params["db_table"])
         
-        # there is no "cost_analysis_table" in params in cost analysis task,
-        # but it there should have in normal task and rerun task.
-        if "cost_analysis_table" in params:
-            if "INSTANCE_TYPE" not in os.environ:
-                logging.error("Error: there is no INSTANCE_TYPE in environment variable.")
-                res['message'] = "Error: there is no INSTANCE_TYPE in environment variable."
-                return res
-        
-            result = database.getEntry('taskid', taskid, params["db_table"])
-            data = None
-            for one in result:
-                data = one
-                logging.info("{0} data in stochss table: {1}".format(taskid, one))
-                break
-            if data == None:
-                logging.error("Error: there is no data in stochss table with {0}.".format(taskid))
-                res['message'] = "EError: there is no data in stochss table with {0}.".format(taskid)
-                return res
-            
-            instance_type = os.environ["INSTANCE_TYPE"]
-            taskid_prefix = '{0}_{1}_'.format(agent, instance_type)
-            taskid = taskid_prefix+taskid
-            cost_analysis_data = {
-                    'agent': agent,
-                    'instance_type': instance_type,
-                    'message': data['message'],
-                    'start_time': data['start_time'],
-                    'status': data['status'],
-                    'time_taken': data['time_taken'],
-                    'uuid': data['uuid']
-                    }
-            database.updateEntry(taskid=taskid, data=cost_analysis_data, tablename=params["cost_analysis_table"])
+
+        if agent == AgentTypes.EC2:
+            # there is no "cost_analysis_table" in params in cost analysis task,
+            # but it there should have in normal task and rerun task.
+
+            logging.info('Updating cost analysis table for normal/rerun task...')
+            if "cost_analysis_table" in params:
+                if "INSTANCE_TYPE" not in os.environ:
+                    logging.error("Error: there is no INSTANCE_TYPE in environment variable.")
+                    res['message'] = "Error: there is no INSTANCE_TYPE in environment variable."
+                    return res
+
+                result = database.getEntry('taskid', taskid, params["db_table"])
+                data = None
+                for one in result:
+                    data = one
+                    logging.info("{0} data in stochss table: {1}".format(taskid, one))
+                    break
+                if data == None:
+                    logging.error("Error: there is no data in stochss table with {0}.".format(taskid))
+                    res['message'] = "EError: there is no data in stochss table with {0}.".format(taskid)
+                    return res
+
+                instance_type = os.environ["INSTANCE_TYPE"]
+                taskid_prefix = '{0}_{1}_'.format(agent, instance_type)
+                taskid = taskid_prefix+taskid
+                cost_analysis_data = {
+                        'agent': agent,
+                        'instance_type': instance_type,
+                        'message': data['message'],
+                        'start_time': data['start_time'],
+                        'status': data['status'],
+                        'time_taken': data['time_taken'],
+                        'uuid': data['uuid']
+                        }
+                database.updateEntry(taskid=taskid, data=cost_analysis_data, tablename=params["cost_analysis_table"])
     
 
     except Exception, e:
@@ -787,17 +811,26 @@ def task(taskid, params, agent, database, access_key, secret_key, task_prefix=""
             # Then we should store this in S3 for debugging purposes
             create_tar_output_str = "tar -zcvf {0}.tar {0}".format(expected_output_dir)
             os.system(create_tar_output_str)
+
             bucketname = params['bucketname']
-            copy_to_s3_str = "python {0} {1}.tar {2}".format(TaskConfig.SCCPY_PATH, expected_output_dir, bucketname)
-            os.system(copy_to_s3_str)
+            upload_output_command = \
+                "python {sccpy} -f {expected_output_dir}.tar --ec2 {bucketname} {ec2_access_key} {ec2_secret_key}".format(
+                                    expected_output_dir=expected_output_dir,
+                                    ec2_access_key=access_key, ec2_secret_key=secret_key,
+                                    bucketname=bucketname, sccpy=TaskConfig.SCCPY_PATH)
+            os.system(upload_output_command)
+
             # Now clean up
             remove_output_str = "rm {0}.tar {0}".format(expected_output_dir)
             os.system(remove_output_str)
+
             # Update the DB entry
             res['output'] = "https://s3.amazonaws.com/{0}/{1}.tar".format(bucketname, expected_output_dir)
             res['status'] = 'failed'
             res['message'] = str(e)
+
             database.updateEntry(taskid=taskid, data=res, tablename="stochss")
+
         else:
             # Nothing to do here besides send the exception
             data = {'status': 'failed',
