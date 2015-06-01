@@ -600,7 +600,8 @@ class StochOptimVisualization(BaseHandler):
                 taskparams = {
                     'AWS_ACCESS_KEY_ID': credentials['EC2_ACCESS_KEY'],
                     'AWS_SECRET_ACCESS_KEY': credentials['EC2_SECRET_KEY'],
-                    'taskids': [optimization.cloudDatabaseID]
+                    'taskids': [optimization.cloudDatabaseID],
+                    'agent_type': AgentTypes.EC2
                 }
                 task_status = service.describeTask(taskparams)
                 job_status = task_status[optimization.cloudDatabaseID]
@@ -759,7 +760,8 @@ class StochOptimVisualization(BaseHandler):
                 taskparams = {
                     'AWS_ACCESS_KEY_ID': credentials['EC2_ACCESS_KEY'],
                     'AWS_SECRET_ACCESS_KEY': credentials['EC2_SECRET_KEY'],
-                    'taskids': [job_wrapper.cloudDatabaseID]
+                    'taskids': [job_wrapper.cloudDatabaseID],
+                    'agent_type': AgentTypes.EC2
                 }
                 task_status = service.describeTask(taskparams)
                 logging.info("job_status = task_status[job.cloudDatabaseID={0}] = {1}".format(job_wrapper.cloudDatabaseID, task_status))
