@@ -738,9 +738,8 @@ def task(taskid, params, agent, database, access_key, secret_key, task_prefix=""
             os.system(create_tar_output_str)
 
             upload_output_command = \
-                "python {sccpy} -f output/{uuid}.tar --ec2 {bucketname} {ec2_access_key} {ec2_secret_key}".format(
-                                    uuid=uuidstr, ec2_access_key=access_key, ec2_secret_key=secret_key,
-                                    bucketname=bucketname, sccpy=TaskConfig.SCCPY_PATH)
+                "python {sccpy} -f output/{uuid}.tar --ec2 {bucketname}".format(
+                                    uuid=uuidstr, bucketname=bucketname, sccpy=TaskConfig.SCCPY_PATH)
 
             print 'upload_output_command: {0}'.format(upload_output_command)
             os.system(upload_output_command)
@@ -814,9 +813,8 @@ def task(taskid, params, agent, database, access_key, secret_key, task_prefix=""
 
             bucketname = params['bucketname']
             upload_output_command = \
-                "python {sccpy} -f {expected_output_dir}.tar --ec2 {bucketname} {ec2_access_key} {ec2_secret_key}".format(
+                "python {sccpy} -f {expected_output_dir}.tar --ec2 {bucketname}".format(
                                     expected_output_dir=expected_output_dir,
-                                    ec2_access_key=access_key, ec2_secret_key=secret_key,
                                     bucketname=bucketname, sccpy=TaskConfig.SCCPY_PATH)
             os.system(upload_output_command)
 
