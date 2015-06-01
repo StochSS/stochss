@@ -63,6 +63,28 @@ class DynamoDB(BaseDB):
             logging.error('exiting removetask with error {0}'.format(str(e)))
             return False
 
+    def remove_tasks_by_attribute(self, tablename, attribute_name, attribute_value):
+        logging.info('remove_tasks_by_attribute: tablename = {0} attribute_name = {1} attribute_value = {2}'.format(tablename,
+                                                                                                  attribute_name,
+                                                                                                  attribute_value))
+        try:
+            dynamo = boto.connect_dynamodb(aws_access_key_id=self.access_key,
+                                           aws_secret_access_key=self.secret_key)
+
+            if self.tableexists(tablename):
+                table = dynamo.get_table(tablename)
+                results = table.scan(scan_filter={attribute_name :condition.EQ(attribute_value)})
+                for result in results:
+                    result.delete()
+                return True
+
+            else:
+                logging.info('exiting removetask with error : table doesn\'t exists')
+                return False
+
+        except Exception, e:
+            logging.error('exiting removetask with error {0}'.format(str(e)))
+
     def createtable(self, tablename):
         logging.info('inside create table method with tablename :: {0}'.format(tablename))
 
