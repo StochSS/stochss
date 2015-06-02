@@ -715,7 +715,7 @@ Spatial.Controller = Backbone.View.extend(
 
             this.updateCache(0, this.cacheRange);
 
-            var sortedSpecies = data.hjgjspecies.sort();
+            var sortedSpecies = data.species.sort();
             this.setUpSpeciesSelect(sortedSpecies);
             }
           
