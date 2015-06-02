@@ -2,15 +2,7 @@ $( document ).ready( function() {
     waitForTemplates(run);
 });
 
-var updateMsg = function(data)
-{
-    $( "#msg" ).text(data.msg);
-    if(data.status)
-        $( "#msg" ).prop('class', 'alert alert-success');
-    else
-        $( "#msg" ).prop('class', 'alert alert-error');
-    $( "#msg" ).show();
-};
+
 
 var Spatial = Spatial || {}
 
@@ -18,6 +10,21 @@ Spatial.Controller = Backbone.View.extend(
     {
         el : $("#jobInfo"),
 
+        updateMsg : function(data, ele)
+        {
+            if(!ele)
+            {
+                ele = "msg";
+            }
+
+            var html_ele = $("#"+ele);
+            html_ele.text(data.msg);
+            if(data.status)
+                html_ele.prop('class', 'alert alert-success');
+            else
+                html_ele.prop('class', 'alert alert-error');
+            html_ele.show();
+        },
 
         initialize : function(attributes)
         {
@@ -650,7 +657,7 @@ Spatial.Controller = Backbone.View.extend(
                                    timeStart : start,
                                    timeEnd: stop} )},
                       success : _.bind(function(data) {
-                          
+                          try{
                           var time = _.keys(data.colors).sort();
                           for (var i = 0; i < time.length; i++) {
                               var t = time[i]; 
@@ -676,7 +683,15 @@ Spatial.Controller = Backbone.View.extend(
                               this.setupPlaneSliders();
                               this.renderFrame();
                           }
-                      }, this)
+
+                      }
+                      catch(err)
+                      {
+                        this.updateMsg( { status : false, msg : 'Error retrieving time series data from server: ' + err.message}, "meshMsg" );
+                      }}
+                      
+                      ,this)
+
                     });
         },
 
@@ -694,13 +709,21 @@ Spatial.Controller = Backbone.View.extend(
         },
 
         handleGetMesh : function(data) {
+            try{
             $( '#speciesSelect' ).empty();
             this.meshData = data.mesh;
 
             this.updateCache(0, this.cacheRange);
 
-            var sortedSpecies = data.species.sort();
+            var sortedSpecies = data.hjgjspecies.sort();
             this.setUpSpeciesSelect(sortedSpecies);
+            }
+          
+            catch(err)
+            {
+                this.updateMsg( { status : false, msg : 'Error retrieving mesh from server: ' + err.message} ,"meshMsg");
+            }
+        
         },
 
         acquireNewData : function()
