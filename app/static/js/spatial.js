@@ -167,6 +167,7 @@ Spatial.Controller = Backbone.View.extend(
                 // stopping animation when time limit is reached
                 if(this.timeIdx > this.maxLimit)
                 {
+                    this.timeIdx = this.maxLimit;
                     this.stopMesh();
                     return;
                 }
