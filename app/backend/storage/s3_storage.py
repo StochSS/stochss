@@ -37,6 +37,7 @@ class S3StorageAgent(BaseStorageAgent):
 
         except Exception, e:
             logging.error("S3StorageAgent failed with exception:\n{0}".format(str(e)))
+            logging.error(sys.exc_info())
             raise e
 
     def percent_cb(self, complete, total):

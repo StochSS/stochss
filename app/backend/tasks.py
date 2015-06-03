@@ -806,6 +806,9 @@ def task(taskid, params, agent, database, storage_agent, access_key, secret_key,
     
 
     except Exception, e:
+        logging.error('Error in stochss task: {}'.format(str(e)))
+        logging.error(sys.exc_info())
+
         expected_output_dir = "output/%s" % uuidstr
         # First check for existence of output directory
         if os.path.isdir(expected_output_dir):
