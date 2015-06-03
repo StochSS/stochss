@@ -291,7 +291,8 @@ class CredentialsPage(BaseHandler):
             'user_id': user_id,
             'credentials': credentials,
             'reservation_id': reservation_id,
-            'flex_db_password': self.user_data.flex_db_password
+            'flex_db_password': self.user_data.flex_db_password,
+            'flex_queue_head': self.user_data.get_flex_queue_head_machine()
         }
 
         service = backendservices(infrastructure=AgentTypes.FLEX)

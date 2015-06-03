@@ -400,7 +400,7 @@ def check_broker_status():
 
 
 def execute_cloud_task(params, agent_type, ec2_access_key, ec2_secret_key,
-                       task_id, instance_type, cost_replay, database):
+                       task_id, instance_type, cost_replay, database, storage_agent):
     '''
     This method instantiates celery tasks in the cloud.
     Returns return value from celery async call and the task ID
@@ -472,7 +472,7 @@ def execute_cloud_task(params, agent_type, ec2_access_key, ec2_secret_key,
                 database.updateEntry(taskid=task_id, data=data, tablename=params["db_table"])
 
                 celery_task = tasks.task.apply_async(
-                    args=[task_id, params, agent_type, database, ec2_access_key, ec2_secret_key],
+                    args=[task_id, params, agent_type, database, storage_agent, ec2_access_key, ec2_secret_key],
                     queue=celery_queue_name, routing_key=celery_routing_key)
 
                 logging.info('celery_task.ready() = {}'.format(celery_task.ready()))

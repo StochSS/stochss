@@ -18,7 +18,6 @@ import tempfile
 from utils import utils
 from tasks import *
 
-
 from flex_state import FlexVMState
 from vm_state_model import VMStateModel
 
@@ -34,17 +33,20 @@ class FlexAgent(BaseAgent):
     PARAM_FLEX_CLOUD_MACHINE_INFO = 'flex_cloud_machine_info'
     PARAM_USER_ID = 'user_id'
     PARAM_FLEX_DB_PASSWORD = 'flex_db_password'
+    PARAM_FLEX_QUEUE_HEAD = 'flex_queue_head'
 
     REQUIRED_FLEX_PREPARE_INSTANCES_PARAMS = (
         PARAM_FLEX_CLOUD_MACHINE_INFO,
         PARAM_USER_ID,
-        PARAM_FLEX_DB_PASSWORD
+        PARAM_FLEX_DB_PASSWORD,
+        PARAM_FLEX_QUEUE_HEAD
     )
 
     REQUIRED_FLEX_DEREGISTER_INSTANCES_PARAMS = (
         PARAM_FLEX_CLOUD_MACHINE_INFO,
         PARAM_USER_ID,
-        PARAM_FLEX_DB_PASSWORD
+        PARAM_FLEX_DB_PASSWORD,
+        PARAM_FLEX_QUEUE_HEAD
     )
 
     def configure_instance_security(self, parameters):
@@ -120,7 +122,7 @@ class FlexAgent(BaseAgent):
 
     def __deregister_flex_vm(self, ip, username, keyfile, parameters, queue_head_ip, force=False):
         # deregister_command = self.get_remote_command_string(ip=ip, username=username, keyfile=keyfile,
-        #                                command="sudo ~/stochss/release-tools/flex-cloud/deregister_flex_vm.sh")
+        # command="sudo ~/stochss/release-tools/flex-cloud/deregister_flex_vm.sh")
         #
         # logging.info('deregister_command =\n{}'.format(deregister_command))
         # os.system(deregister_command)
@@ -135,12 +137,11 @@ class FlexAgent(BaseAgent):
             response = json.loads(f.read())
             f.close()
 
+            logging.info('Full Deregister Response:\n{}'.format(pprint.pformat(response)))
             if response['status'] == 'success':
                 logging.info('Successfully deregistered Flex VM with ip={}'.format(ip))
-                logging.info('Full Deregister Response:\n{}'.format(pprint.pformat(response)))
             else:
                 logging.info('Failed to deregister Flex VM with ip={}'.format(ip))
-                logging.info('Full Deregister Response:\n{}'.format(pprint.pformat(response)))
 
         except Exception as e:
             logging.error('Failed to deregister Flex VM: '.format(str(e)))
@@ -148,7 +149,7 @@ class FlexAgent(BaseAgent):
 
         finally:
             VMStateModel.set_state(params=parameters, ins_ids=[self.__get_flex_instance_id(public_ip=ip)],
-                               state=VMStateModel.STATE_TERMINATED, description='VM Deregistered.')
+                                   state=VMStateModel.STATE_TERMINATED, description='VM Deregistered.')
 
 
     def deregister_instances(self, parameters, terminate=False):
@@ -268,6 +269,12 @@ class FlexAgent(BaseAgent):
         flex_cloud_machine_info = parameters[self.PARAM_FLEX_CLOUD_MACHINE_INFO]
         logging.debug('flex_cloud_machine_info =\n{}'.format(pprint.pformat(flex_cloud_machine_info)))
 
+        queue_head = parameters[self.PARAM_FLEX_QUEUE_HEAD]
+        logging.info('queue_head = {}'.format(queue_head))
+        queue_head_keyfile = queue_head['keyfile']
+        remote_queue_head_keyfile = os.path.join(FlexConfig.QUEUE_HEAD_KEY_DIR,
+                                                 os.path.basename(queue_head_keyfile))
+
         credentials = parameters[self.PARAM_CREDENTIALS]
 
         for machine in flex_cloud_machine_info:
@@ -289,16 +296,37 @@ class FlexAgent(BaseAgent):
 
             logging.info("[{0}] [{1}] [{2}] [is_queue_head:{3}]".format(ip, keyfile, username, is_queue_head))
 
+            scp_command = \
+                'scp -o \'StrictHostKeyChecking no\' -i {keyfile} {source} {target}'.format(
+                    keyfile=keyfile,
+                    source=queue_head_keyfile,
+                    target="{username}@{ip}:{remote_queue_head_keyfile}".format(
+                        username=username, ip=ip, remote_queue_head_keyfile=remote_queue_head_keyfile
+                    )
+                )
+
+            logging.info('scp command for queue head keyfile =\n{}'.format(scp_command))
+            res = os.system(scp_command)
+            if res != 0:
+                logging.error('scp for queue head keyfile failed!'.format(keyfile))
+                VMStateModel.set_state(params=parameters, ins_ids=[id],
+                                       state=VMStateModel.STATE_FAILED,
+                                       description=VMStateModel.DESCRI_FAIL_TO_PREPARE)
+                continue
+
             script_lines = []
             script_lines.append("#!/bin/bash")
 
             script_lines.append("echo export AWS_ACCESS_KEY_ID={0} >> ~/.bashrc".format(credentials['EC2_ACCESS_KEY']))
-            script_lines.append("echo export AWS_SECRET_ACCESS_KEY={0} >> ~/.bashrc".format(credentials['EC2_SECRET_KEY']))
+            script_lines.append(
+                "echo export AWS_SECRET_ACCESS_KEY={0} >> ~/.bashrc".format(credentials['EC2_SECRET_KEY']))
 
             script_lines.append("echo export STOCHKIT_HOME={0} >> ~/.bashrc".format("~/stochss/StochKit/"))
             script_lines.append("echo export STOCHKIT_ODE={0} >> ~/.bashrc".format("~/stochss/ode/"))
             script_lines.append("echo export R_LIBS={0} >> ~/.bashrc".format("~/stochss/stochoptim/library"))
             script_lines.append("echo export C_FORCE_ROOT=1 >> ~/.bashrc".format("~/stochss/stochoptim/library"))
+            script_lines.append("chmod 600 {remote_queue_head_keyfile}".format(
+                                                        remote_queue_head_keyfile=remote_queue_head_keyfile))
 
             if is_queue_head:
                 logging.info('Adding extra commnds for configuring queue head...')
@@ -307,9 +335,8 @@ class FlexAgent(BaseAgent):
 
                 reset_mysql_script = '~/stochss/release-tools/flex-cloud/reset_mysql_pwd.sh'
                 script_lines.append("sudo {reset_mysql_script} root {flex_db_password}".format(
-                                                            reset_mysql_script=reset_mysql_script,
-                                                            flex_db_password=parameters[self.PARAM_FLEX_DB_PASSWORD]))
-
+                    reset_mysql_script=reset_mysql_script,
+                    flex_db_password=parameters[self.PARAM_FLEX_DB_PASSWORD]))
 
             bash_script = '\n'.join(script_lines)
             logging.info("\n\n\nbash_script =\n{0}\n\n\n".format(bash_script))
@@ -319,10 +346,10 @@ class FlexAgent(BaseAgent):
                 bash_script_file.write(bash_script)
 
             scp_command = 'scp -o \'StrictHostKeyChecking no\' -i {keyfile} {source} {target}'.format(
-                                                keyfile=keyfile,
-                                                source=bash_script_filename,
-                                                target="{username}@{ip}:~/stochss_init.sh".format(username=username,
-                                                                                                  ip=ip))
+                keyfile=keyfile,
+                source=bash_script_filename,
+                target="{username}@{ip}:~/stochss_init.sh".format(username=username,
+                                                                  ip=ip))
 
             logging.info('scp command =\n{}'.format(scp_command))
             res = os.system(scp_command)
@@ -352,7 +379,6 @@ class FlexAgent(BaseAgent):
                                        state=VMStateModel.STATE_FAILED,
                                        description=VMStateModel.DESCRI_FAIL_TO_PREPARE)
                 continue
-
 
 
     def handle_failure(self, msg):

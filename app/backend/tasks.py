@@ -620,7 +620,7 @@ def execute_task(exec_str):
 
 
 @celery.task(name='stochss')
-def task(taskid, params, agent, database, access_key, secret_key, task_prefix=""):
+def task(taskid, params, agent, database, storage_agent, access_key, secret_key, task_prefix=""):
     '''
     This is the actual work done by a task worker
     params    should contain at least 'bucketname'
@@ -737,12 +737,14 @@ def task(taskid, params, agent, database, access_key, secret_key, task_prefix=""
             print create_tar_output_str
             os.system(create_tar_output_str)
 
-            upload_output_command = \
-                "python {sccpy} -f output/{uuid}.tar --ec2 {bucketname}".format(
-                                    uuid=uuidstr, bucketname=bucketname, sccpy=TaskConfig.SCCPY_PATH)
+            storage_agent.upload_file(filename="output/{uuid}.tar".format(uuidstr))
 
-            print 'upload_output_command: {0}'.format(upload_output_command)
-            os.system(upload_output_command)
+            # upload_output_command = \
+            #     "python {sccpy} -f output/{uuid}.tar --ec2 {bucketname}".format(
+            #                         uuid=uuidstr, bucketname=bucketname, sccpy=TaskConfig.SCCPY_PATH)
+            #
+            # print 'upload_output_command: {0}'.format(upload_output_command)
+            # os.system(upload_output_command)
 
             print 'removing xml file...'
             removefilestr = "rm {0}".format(xmlfilepath)
@@ -811,12 +813,16 @@ def task(taskid, params, agent, database, access_key, secret_key, task_prefix=""
             create_tar_output_str = "tar -zcvf {0}.tar {0}".format(expected_output_dir)
             os.system(create_tar_output_str)
 
+            storage_agent.upload_file(filename="{expected_output_dir}.tar".format(
+                                                    expected_output_dir=expected_output_dir))
+
             bucketname = params['bucketname']
-            upload_output_command = \
-                "python {sccpy} -f {expected_output_dir}.tar --ec2 {bucketname}".format(
-                                    expected_output_dir=expected_output_dir,
-                                    bucketname=bucketname, sccpy=TaskConfig.SCCPY_PATH)
-            os.system(upload_output_command)
+
+            # upload_output_command = \
+            #     "python {sccpy} -f {expected_output_dir}.tar --ec2 {bucketname}".format(
+            #                         expected_output_dir=expected_output_dir,
+            #                         bucketname=bucketname, sccpy=TaskConfig.SCCPY_PATH)
+            # os.system(upload_output_command)
 
             # Now clean up
             remove_output_str = "rm {0}.tar {0}".format(expected_output_dir)

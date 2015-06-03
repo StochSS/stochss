@@ -14,6 +14,8 @@ from boto.s3.connection import S3Connection
 
 from databases.dynamo_db import DynamoDB
 from databases.flex_db import FlexDB
+from storage.s3_storage import S3StorageAgent
+from storage.flex_storage import FlexStorageAgent
 
 import common.helper as helper
 from common.config import AgentTypes, JobDatabaseConfig, AgentConfig, FlexConfig, JobConfig
@@ -60,7 +62,7 @@ class backendservices(object):
 
 
     def submit_cloud_task(self, params, agent_type, ec2_access_key=None, ec2_secret_key=None, task_id=None,
-                    instance_type=None, cost_replay=False, database=None, flex_db_credentials=None):
+                    instance_type=None, cost_replay=False, database=None, flex_credentials=None, storage_agent=None):
 
         logging.info('agent_type = {0}'.format(agent_type))
         logging.debug('params =\n{}\n\n'.format(pprint.pformat(params)))
@@ -73,14 +75,31 @@ class backendservices(object):
                 raise Exception('EC2 Access Key is not valid!')
             if ec2_secret_key == None or ec2_secret_key == '':
                 raise Exception('EC2 Secret Key is not valid!')
+        elif agent_type == AgentTypes.FLEX:
+            if flex_credentials == None or 'flex_queue_head' not in flex_credentials \
+                    or 'flex_db_password' not in flex_credentials:
+                raise Exception('Please pass valid Flex credentials!')
 
         if not database:
             if agent_type == AgentTypes.EC2:
                 database = DynamoDB(ec2_access_key, ec2_secret_key)
 
             elif agent_type == AgentTypes.FLEX:
-                database = FlexDB(ip=flex_db_credentials['queue_head_ip'],
-                                  password=flex_db_credentials['flex_db_password'])
+                database = FlexDB(ip=flex_credentials['flex_queue_head']['ip'],
+                                  password=flex_credentials['flex_db_password'])
+
+        if not storage_agent:
+            if agent_type == AgentTypes.EC2:
+                storage_agent = S3StorageAgent(bucket_name=params['bucketname'],
+                                               ec2_secret_key=ec2_secret_key,
+                                               ec2_access_key=ec2_access_key)
+
+            elif agent_type == AgentTypes.FLEX:
+                storage_agent = FlexStorageAgent(queue_head_ip=flex_credentials['flex_queue_head']['ip'],
+                                                 queue_head_username=flex_credentials['flex_queue_head']['username'],
+                                                 queue_head_keyfile=os.path.join(FlexConfig.QUEUE_HEAD_KEY_DIR,
+                                                                                 os.path.basename(flex_credentials['flex_queue_head']['keyfile'])))
+
 
         # if there is no taskid explicit, create one the first run
         if not task_id:
@@ -93,7 +112,8 @@ class backendservices(object):
                                            ec2_secret_key=ec2_secret_key,
                                            task_id=task_id, instance_type=instance_type,
                                            cost_replay=cost_replay,
-                                           database=database)
+                                           database=database,
+                                           storage_agent=storage_agent)
 
         return result
 
