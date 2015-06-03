@@ -644,6 +644,9 @@ Spatial.Controller = Backbone.View.extend(
             var start = start1;
             var stop = Math.min(stop1, this.maxLimit);
 
+            if(start > stop)
+                return;
+
             console.log(" updateCache : function("+start+", "+stop+")");
 
 
