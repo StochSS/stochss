@@ -657,41 +657,45 @@ Spatial.Controller = Backbone.View.extend(
                                    timeStart : start,
                                    timeEnd: stop} )},
                       success : _.bind(function(data) {
-                          try{
-                          var time = _.keys(data.colors).sort();
-                          for (var i = 0; i < time.length; i++) {
-                              var t = time[i]; 
-                              this.cache[t] = data.colors[t];
+                          try {
+                              if(typeof(data.colors) == 'undefined')
+                                  return
+
+                              var time = _.keys(data.colors).sort();
+
+                              if(time.length == 0)
+                                  return
+                              for (var i = 0; i < time.length; i++) {
+                                  var t = time[i]; 
+                                  this.cache[t] = data.colors[t];
+                              }
+
+                              this.limits = data.limits;
+
+                              if(this.showPopulation)
+                              {
+                                  $("#maxVal").html("Maximum voxel population: " + this.limits[this.selectedSpecies]["max"].toExponential(3) );
+                                  $("#minVal").html("Minimum voxel population: " + this.limits[this.selectedSpecies]["min"].toExponential(3) ); 
+                              } else {
+                                  $("#maxVal").html("Maximum voxel concentration: " + this.limits[this.selectedSpecies]["max"].toExponential(3) );
+                                  $("#minVal").html("Minimum voxel concentration: " + this.limits[this.selectedSpecies]["min"].toExponential(3));  
+                              }
+
+                              this.handleMeshColorUpdate(this.cache[time[0]]);
+
+                              if(!this.rendererInitialized)
+                              {
+                                  this.rendererInitialized = true;
+                                  this.setupPlaneSliders();
+                                  this.renderFrame();
+                              }
+
                           }
-
-                          this.limits = data.limits;
-
-                          if(this.showPopulation)
+                          catch(err)
                           {
-                              $("#maxVal").html("Maximum voxel population: " + this.limits[this.selectedSpecies]["max"].toExponential(3) );
-                              $("#minVal").html("Minimum voxel population: " + this.limits[this.selectedSpecies]["min"].toExponential(3) ); 
-                          } else {
-                              $("#maxVal").html("Maximum voxel concentration: " + this.limits[this.selectedSpecies]["max"].toExponential(3) );
-                              $("#minVal").html("Minimum voxel concentration: " + this.limits[this.selectedSpecies]["min"].toExponential(3));  
+                              this.updateMsg( { status : false, msg : 'Error retrieving time series data from server: ' + err.message}, "meshMsg" );
                           }
-
-                          this.handleMeshColorUpdate(this.cache[time[0]]);
-
-                          if(!this.rendererInitialized)
-                          {
-                              this.rendererInitialized = true;
-                              this.setupPlaneSliders();
-                              this.renderFrame();
-                          }
-
-                      }
-                      catch(err)
-                      {
-                        this.updateMsg( { status : false, msg : 'Error retrieving time series data from server: ' + err.message}, "meshMsg" );
-                      }}
-                      
-                      ,this)
-
+                      }, this)
                     });
         },
 
