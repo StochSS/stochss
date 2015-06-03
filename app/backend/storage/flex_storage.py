@@ -30,6 +30,11 @@ class FlexStorageAgent(BaseStorageAgent):
             if os.system(scp_command) != 0:
                 raise Exception('FlexStorageAgent: scp failed!')
 
+            return "scp://{username}@{ip}:{keyname}:{output_tar}".format(username=self.queue_head_username,
+                                                                         ip=self.queue_head_ip,
+                                                                         keyname=os.path.basename(self.queue_head_keyfile),
+                                                                         output_tar=filename)
+
         except Exception, e:
             logging.error("FlexStorageAgent failed with exception:\n{0}".format(str(e)))
             raise e

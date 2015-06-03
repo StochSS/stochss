@@ -39,7 +39,8 @@ import time
 
 
 class TaskConfig:
-    STOCHSS_HOME = os.path.join('/home', 'ubuntu', 'stochss')
+    USERNAME = 'ubuntu'
+    STOCHSS_HOME = os.path.join('~', 'stochss')
     STOCHKIT_DIR = os.path.join(STOCHSS_HOME, 'StochKit')
     ODE_DIR = os.path.join(STOCHSS_HOME, 'ode')
     STOCHOPTIM_DIR = os.path.join(STOCHSS_HOME, 'stochoptim')
@@ -676,35 +677,43 @@ def task(taskid, params, agent, database, storage_agent, access_key, secret_key,
         stderr = os.path.join('output', uuidstr, 'stderr.log')
 
         exec_str = ''
+
+        logging.info('job_type = {}'.format(job_type))
         if job_type == 'stochkit':
-            # The following executiong string is of the form : stochkit_exec_str = "~/StochKit/ssa -m ~/output/%s/dimer_decay.xml -t 20 -i 10 -r 1000" % (uuidstr)
+            # The following executiong string is of the form :
+            # stochkit_exec_str = "~/StochKit/ssa -m ~/output/%s/dimer_decay.xml -t 20 -i 10 -r 1000" % (uuidstr)
             exec_str = "{0}/{1} -m {2} --force --out-dir output/{3}/result 2>{4} > {5}".format(TaskConfig.STOCHKIT_DIR,
                                                                                                paramstr, xmlfilepath,
                                                                                                uuidstr, stderr, stdout)
         elif job_type == 'stochkit_ode' or job_type == 'sensitivity':
-            logging.info('SENSITIVITY JOB!!!')
+            logging.info('sensitivity job')
             exec_str = "{0}/{1} -m {2} --force --out-dir output/{3}/result 2>{4} > {5}".format(TaskConfig.ODE_DIR,
                                                                                                paramstr, xmlfilepath,
                                                                                                uuidstr, stderr, stdout)
         elif job_type == 'spatial':
-            cmd = "chown -R ubuntu output/{0}".format(uuidstr)
+            cmd = "chown -R {username} output/{uuidstr}".format(username=TaskConfig.USERNAME, uuidstr=uuidstr)
             print cmd
             os.system(cmd)
-            exec_str = "sudo -E -u ubuntu {0} {1} {2} {3} {4} {5} 2>{6} > {7}".format(TaskConfig.PYURDME_WRAPPER_PATH,
-                                                                                      xmlfilepath,
-                                                                                      os.path.join('output', uuidstr, 'results'),
-                                                                                      params['simulation_algorithm'],
-                                                                                      params['simulation_realizations'],
-                                                                                      params['simulation_seed'],
-                                                                                      stderr, stdout)
+            exec_str = \
+                "sudo -E -u {username} {pyurdme_wrapper} {model_xml_file} {output_dir} {sim_algorithm} {sim_realizations} {sim_seed} 2>{stderr} > {stdout}".format(
+                    username=TaskConfig.USERNAME,
+                    pyurdme_wrapper=TaskConfig.PYURDME_WRAPPER_PATH,
+                    model_xml_file=xmlfilepath,
+                    output_dir=os.path.join('output', uuidstr, 'results'),
+                    sim_algorithm=params['simulation_algorithm'],
+                    sim_realizations=params['simulation_realizations'],
+                    sim_seed=params['simulation_seed'],
+                    stderr=stderr,
+                    stdout=stdout)
 
         print "======================="
         print " Command to be executed : "
         print "{0}".format(exec_str)
         print "======================="
         print "To test if the command string was correct. Copy the above line and execute in terminal."
+
         timestarted = datetime.now()
-        #os.system(exec_str)
+        # os.system(exec_str)
         execute_task(exec_str)
         timeended = datetime.now()
 
@@ -732,37 +741,35 @@ def task(taskid, params, agent, database, storage_agent, access_key, secret_key,
             res['status'] = "finished"
             res['time_taken'] = "{0} seconds".format(diff.total_seconds())
         else:
-            print 'generating tar file'
-            create_tar_output_str = "tar -zcvf output/{0}.tar output/{0}".format(uuidstr)
-            print create_tar_output_str
-            os.system(create_tar_output_str)
 
-            storage_agent.upload_file(filename="output/{uuid}.tar".format(uuidstr))
+            logging.info('Generating output tar file...')
+            output_dir = os.path.join("output", uuidstr)
+            output_tar_filename = os.path.join("output", "{}.tar".format(uuidstr))
 
-            # upload_output_command = \
-            #     "python {sccpy} -f output/{uuid}.tar --ec2 {bucketname}".format(
-            #                         uuid=uuidstr, bucketname=bucketname, sccpy=TaskConfig.SCCPY_PATH)
-            #
-            # print 'upload_output_command: {0}'.format(upload_output_command)
-            # os.system(upload_output_command)
+            create_output_tar_command = \
+                "tar -zcvf {output_tar_filename} {output_dir}".format(output_tar_filename=output_tar_filename,
+                                                                      output_dir=output_dir)
+            logging.info(create_output_tar_command)
+            os.system(create_output_tar_command)
 
-            print 'removing xml file...'
+            output_url = storage_agent.upload_file(filename=output_tar_filename)
+            logging.info('output_url = {}'.format(output_url))
+
+            logging.info('Removing xml file...')
             removefilestr = "rm {0}".format(xmlfilepath)
             os.system(removefilestr)
 
-            print 'removing output tar...'
-            removetarstr = "rm output/{0}.tar".format(uuidstr)
-            os.system(removetarstr)
-
-            print 'removing output dir...'
-            removeoutputdirstr = "rm -r output/{0}".format(uuidstr)
-            os.system(removeoutputdirstr)
+            logging.info('Removing output ...')
+            remove_output_command = \
+                "rm -r {output_tar_filename} {output_dir}".format(output_tar_filename=output_tar_filename,
+                                                                  output_dir=output_dir)
+            os.system(remove_output_command)
 
             # if there is some task prefix, meaning that it is cost replay,
             # update the table another way
             res['status'] = "finished"
             res['pid'] = uuidstr
-            res['output'] = "https://s3.amazonaws.com/{1}/output/{0}.tar".format(uuidstr, bucketname)
+            res['output'] = output_url
             res['time_taken'] = "{0} seconds".format(diff.total_seconds())
 
         database.updateEntry(taskid=taskid, data=res, tablename=params["db_table"])
@@ -807,32 +814,32 @@ def task(taskid, params, agent, database, storage_agent, access_key, secret_key,
 
     except Exception, e:
         logging.error('Error in stochss task: {}'.format(str(e)))
-        logging.error(sys.exc_info())
+        logging.error(traceback.format_exc())
 
-        expected_output_dir = "output/%s" % uuidstr
+        expected_output_dir = os.path.join("output", uuidstr)
+        output_tar_filename = "{expected_output_dir}.tar".format(expected_output_dir=expected_output_dir)
+
         # First check for existence of output directory
         if os.path.isdir(expected_output_dir):
             # Then we should store this in S3 for debugging purposes
-            create_tar_output_str = "tar -zcvf {0}.tar {0}".format(expected_output_dir)
-            os.system(create_tar_output_str)
+            create_output_tar_command = \
+                "tar -zcvf {output_tar_filename} {expected_output_dir}".format(expected_output_dir=expected_output_dir,
+                                                                               output_tar_filename=output_tar_filename)
+            logging.info(create_output_tar_command)
+            os.system(create_output_tar_command)
 
-            storage_agent.upload_file(filename="{expected_output_dir}.tar".format(
-                                                    expected_output_dir=expected_output_dir))
-
-            bucketname = params['bucketname']
-
-            # upload_output_command = \
-            #     "python {sccpy} -f {expected_output_dir}.tar --ec2 {bucketname}".format(
-            #                         expected_output_dir=expected_output_dir,
-            #                         bucketname=bucketname, sccpy=TaskConfig.SCCPY_PATH)
-            # os.system(upload_output_command)
+            logging.info('Uploading output...')
+            output_url = storage_agent.upload_file(filename="{dir}.tar".format(dir=expected_output_dir))
+            logging.info("output_url = {}".format(output_url))
 
             # Now clean up
-            remove_output_str = "rm {0}.tar {0}".format(expected_output_dir)
+            remove_output_str = \
+                "rm -r {output_tar_filename} {expected_output_dir}".format(output_tar_filename=output_tar_filename,
+                                                                        expected_output_dir=expected_output_dir)
             os.system(remove_output_str)
 
             # Update the DB entry
-            res['output'] = "https://s3.amazonaws.com/{0}/{1}.tar".format(bucketname, expected_output_dir)
+            res['output'] = output_url
             res['status'] = 'failed'
             res['message'] = str(e)
 

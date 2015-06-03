@@ -2,6 +2,7 @@ from base_storage import BaseStorageAgent
 
 import logging
 import sys
+import traceback
 
 import boto
 import boto.s3
@@ -35,9 +36,11 @@ class S3StorageAgent(BaseStorageAgent):
             k.set_contents_from_filename(filename, cb=self.percent_cb, num_cb=10)
             k.set_acl('public-read-write')
 
+            return "https://s3.amazonaws.com/{bucket}/{filename}".format(bucket=self.bucket_name, filename=filename)
+
         except Exception, e:
             logging.error("S3StorageAgent failed with exception:\n{0}".format(str(e)))
-            logging.error(sys.exc_info())
+            logging.error(traceback.format_exc())
             raise e
 
     def percent_cb(self, complete, total):
