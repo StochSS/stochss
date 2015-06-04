@@ -4,7 +4,7 @@ __email__ = 'dnath@cs.ucsb.edu'
 import logging
 import os
 import pprint
-import MySQLdb
+import mysql.connector
 from contextlib import closing
 
 from base_db import BaseDB
@@ -35,9 +35,9 @@ class FlexDB(BaseDB):
             logging.error("FlexDB init failed  with error : {0}".format(str(e)))
 
     def __open_db_connection(self):
-        return MySQLdb.connect(host=self.ip, user=self.username, passwd=self.password,
-                               db=self.DATABASE_NAME,
-                               connect_timeout=self.DB_CONNECT_TIMEOUT)
+        return mysql.connector.connect(host=self.ip, user=self.username, passwd=self.password,
+                                       db=self.DATABASE_NAME,
+                                       connect_timeout=self.DB_CONNECT_TIMEOUT)
 
     def describetask(self, taskids, tablename):
         logging.info('describetask: taskids = {0} tablename = {1}'.format(taskids, tablename))
@@ -159,12 +159,12 @@ class FlexDB(BaseDB):
         try:
             db = self.__open_db_connection()
 
-            db.query("SHOW TABLES LIKE '{}';".format(tablename))
-            tables = db.store_result()
+            with closing(db.cursor()) as db_cursor:
+                db_cursor.execute("SHOW TABLES LIKE '{}';".format(tablename))
+                results = db_cursor.fetchall()
 
-            row = tables.fetch_row()
-
-            if row != () and row[0][0] == tablename:
+            tables_in_db = map(lambda x:x[0], results)
+            if tablename in tables_in_db:
                 logging.info('Table {} exists!'.format(tablename))
                 result = True
             else:
