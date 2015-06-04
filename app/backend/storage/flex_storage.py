@@ -21,11 +21,10 @@ class FlexStorageAgent(BaseStorageAgent):
 
     def upload_file(self, filename):
         try:
+            remote_filename = os.path.join(FlexConfig.OUTPUT_STORE_DIR, os.path.basename(filename))
             scp_command = \
-                self.__get_scp_command(target="{user}@{ip}:{file}".format(file=os.path.join(FlexConfig.OUTPUT_STORE_DIR,
-                                                                                            os.path.basename(filename))
-                                                ),
-                                    source=filename)
+                self.__get_scp_command(target="{user}@{ip}:{file}".format(file=remote_filename),
+                                       source=filename)
 
             logging.info(scp_command)
 
@@ -35,7 +34,7 @@ class FlexStorageAgent(BaseStorageAgent):
             return "scp://{username}@{ip}:{keyname}:{output_tar}".format(username=self.queue_head_username,
                                                                          ip=self.queue_head_ip,
                                                                          keyname=os.path.basename(self.queue_head_keyfile),
-                                                                         output_tar=filename)
+                                                                         output_tar=remote_filename)
 
         except Exception, e:
             logging.error("FlexStorageAgent failed with exception:\n{0}".format(str(e)))
