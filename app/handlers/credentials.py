@@ -47,7 +47,13 @@ class CredentialsPage(BaseHandler):
             raise InvalidUserException('Cannot determine the current user!')
         
         context = self.getContext(user_id)
-        self.render_response('credentials.html', **context)
+
+        if self.request.path == '/credentials':
+            self.render_response('credentials.html', **context)
+        if self.request.path == '/ec2Credentials':
+            self.render_response('ec2_credentials.html', **context)
+        elif self.request.path == '/flexCloudCredentials':
+            self.render_response('flex_cloud_credentials.html', **context)
 
 
     def __handle_json_post_request(self, data_received, user_id):
@@ -57,16 +63,16 @@ class CredentialsPage(BaseHandler):
             flex_cloud_machine_info = data_received['flex_cloud_machine_info']
             result = self.prepare_flex_cloud(user_id, flex_cloud_machine_info)
             logging.info("result = {0}".format(result))
-            self.redirect('/credentials')
+            self.redirect('/flexCloudCredentials')
 
         elif data_received['action'] == CredentialsPage.FLEX_DEREGISTER_CLOUD:
             flex_cloud_machine_info = self.user_data.get_flex_cloud_machine_info()
             result = self.deregister_flex_cloud(user_id, flex_cloud_machine_info)
             logging.info("result = {0}".format(result))
-            self.redirect('/credentials')
+            self.redirect('/flexCloudCredentials')
 
         else:
-            self.redirect('/credentials')
+            self.redirect('/flexCloudCredentials')
 
     def post(self):
         logging.info('POST')
@@ -112,7 +118,7 @@ class CredentialsPage(BaseHandler):
             self.render_response('credentials.html',**(dict(context,**result)))
             return
 
-        self.redirect('/credentials')
+        self.redirect('/ec2Credentials')
 
     def __handle_ec2_start_vms_request(self, params, user_id):
         logging.info('__handle_ec2_start_vms_request:\n\nparams =\n{0}\n'.format(pprint.pformat(params)))
@@ -155,7 +161,7 @@ class CredentialsPage(BaseHandler):
         else:
             context['starting_vms'] = False
 
-        self.redirect('/credentials')
+        self.redirect('/ec2Credentials')
 
     def __handle_ec2_save_credentials(self, params):
         # Save the access and private keys to the datastore
@@ -166,7 +172,7 @@ class CredentialsPage(BaseHandler):
         # TODO: This is a hack to make it unlikely that the db transaction has not completed
         # before we re-render the page (which would cause an error). We need some real solution for this...
         time.sleep(0.5)
-        self.redirect('/credentials')
+        self.redirect('/ec2Credentials')
 
     def __handle_form_post_request(self, user_id, params):
         if CredentialsPage.EC2_SAVE_CREDENTIALS in params:
@@ -180,7 +186,7 @@ class CredentialsPage(BaseHandler):
 
         else:
             # This happens when you click the refresh button
-            self.redirect('/credentials')
+            self.redirect('/ec2Credentials')
 
 
     def saveCredentials(self, credentials, database=None):
@@ -260,7 +266,7 @@ class CredentialsPage(BaseHandler):
         else:
             logging.error('deregister_flex_cloud failed!')
 
-        self.redirect('/credentials')
+        self.redirect('/flexCloudCredentials')
 
     def prepare_flex_cloud(self, user_id, flex_cloud_machine_info):
         logging.info('prepare_flex_cloud: flex_cloud_machine_info =\n{0}'.format(pprint.pformat(flex_cloud_machine_info)))
@@ -405,7 +411,7 @@ class CredentialsPage(BaseHandler):
         # Fill with dummy if empty
         if flex_cloud_machine_info == None or len(flex_cloud_machine_info) == 0:
             logging.info('Adding dummy flex cloud machine for UI rendering...')
-            flex_cloud_machine_info = [{'ip': '', 'keyname': '', 'username': '', 'queue_head': False}]
+            flex_cloud_machine_info = [{'ip': '', 'keyname': '', 'username': '', 'queue_head': True, 'state': ''}]
 
         else:
             reservation_id = self.user_data.reservation_id
@@ -445,6 +451,9 @@ class CredentialsPage(BaseHandler):
 
             logging.info('After updating from VMStateModel, flex_cloud_machine_info =\n{0}'.format(
                                                                 pprint.pformat(flex_cloud_machine_info)))
+
+        # We must ensure queue head is first element in this list for GUI to work properly
+        flex_cloud_machine_info = sorted(flex_cloud_machine_info, key = lambda x : x['queue_head'], reverse = True)
 
         context['flex_cloud_machine_info'] = flex_cloud_machine_info
 
