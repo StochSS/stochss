@@ -20,17 +20,19 @@ import tasks
 from tasks import TaskConfig
 
 
+def get_scp_command(keyfile, target, source):
+    return 'scp -o UserKnownHostsFile=/dev/null -o StrictHostKeyChecking=no -i {keyfile} {source} {target}'.format(
+                                                    keyfile=keyfile, source=source, target=target)
+
+
 def copy_celery_config_to_vm(instance_type, ip, key_file, agent_type, username):
     celery_config_filename = CeleryConfig.get_config_filename(agent_type=agent_type)
     if not os.path.exists(celery_config_filename):
         raise Exception("celery config file not found: {0}".format(celery_config_filename))
 
     config_celery_queues(agent_type=agent_type, instance_types=[instance_type])
-    cmd = "scp -o 'StrictHostKeyChecking no' -i {key_file} {file_to_transfer} {user}@{ip}:~/celeryconfig.py".format(
-                                                                           key_file=key_file,
-                                                                           file_to_transfer=celery_config_filename,
-                                                                           ip=ip,
-                                                                           user=username)
+    cmd = get_scp_command(keyfile=key_file, source=celery_config_filename,
+                        target="{user}@{ip}:~/celeryconfig.py".format(user=username, ip=ip))
     logging.info(cmd)
     success = os.system(cmd)
     if success == 0:

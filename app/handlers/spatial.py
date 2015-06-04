@@ -739,13 +739,14 @@ class SpatialPage(BaseHandler):
                 cloud_result = service.submit_cloud_task(params=cloud_params, agent_type=agent_type,
                                                ec2_access_key=ec2_credentials['EC2_ACCESS_KEY'],
                                                ec2_secret_key=ec2_credentials['EC2_SECRET_KEY'])
+
             elif agent_type == AgentTypes.FLEX:
                 queue_head_machine = self.user_data.get_flex_queue_head_machine()
                 logging.info('queue_head_machine = {}'.format(queue_head_machine))
 
                 flex_credentials = {
                     'flex_db_password': self.user_data.flex_db_password,
-                    'flex_queue_head': queue_head_machine['ip'],
+                    'flex_queue_head': queue_head_machine,
                 }
 
                 # Send the task to the backend

@@ -377,6 +377,9 @@ def master_task(task_id, params, database):
         if not environ.has_key('R_LIBS'):
             environ['R_LIBS'] = TaskConfig.STOCHOPTIM_R_LIB_DIR
 
+        pid_file = None
+        p = None
+
         with open(stdout, 'w') as stdout_fh:
             with open(stderr, 'w') as stderr_fh:
                 execution_start = datetime.now()
@@ -416,12 +419,19 @@ def master_task(task_id, params, database):
                     signal.signal(signal.SIGTERM, handler)
                     # Wait on program execution...
                     stdout, stderr = p.communicate() # wait for process to complete
+
                 except Exception as e:
-                    logging.error(e)
+                    logging.error('Error: {}'.format(str(e)))
+                    logging.error(traceback.format_exc())
+
                 finally:
+                    #clean up pid file
                     logging.info("[Master] deleting PID file '{0}'".format(pid_file))
-                    os.remove(pid_file) #clean up pid file
+                    if pid_file != None and os.path.exists(pid_file):
+                        os.remove(pid_file)
+
                     last_command_completed_file = os.path.join(TaskConfig.STOCHSS_PID_DIR, TaskConfig.STOCHSS_COMPLETED_FILE)
+
                     logging.info("[Master] touching file '{0}'".format(last_command_completed_file))
                     os.system("touch {0}".format(last_command_completed_file))
                 
@@ -430,7 +440,8 @@ def master_task(task_id, params, database):
                 print "Should be empty:", stderr
                 print "Return code:", p.returncode
         # Done
-        print "Master: finished execution of executable"
+        logging.info("Master: finished execution of executable")
+
         poll_process.terminate()
         update_process.terminate()
         # 0 means success

@@ -5,6 +5,7 @@ All the input validation is performed in this class.
 '''
 from infrastructure_manager import InfrastructureManager
 import uuid
+import re
 import logging
 from tasks import *
 
@@ -29,6 +30,10 @@ class backendservices(object):
 
     # Class Constants
     INFRA_SUPPORTED = [AgentTypes.EC2, AgentTypes.FLEX]
+
+    # Hack
+    # TODO: Query File Wrapper to get flex ssh key file dirname
+    FLEX_SSH_KEYFILE_DIR = os.path.abspath(os.path.join(os.path.dirname(__file__), '..', 'static', 'tmp'))
 
     def __init__(self, **kwargs):
         '''
@@ -75,6 +80,7 @@ class backendservices(object):
                 raise Exception('EC2 Access Key is not valid!')
             if ec2_secret_key == None or ec2_secret_key == '':
                 raise Exception('EC2 Secret Key is not valid!')
+
         elif agent_type == AgentTypes.FLEX:
             if flex_credentials == None or 'flex_queue_head' not in flex_credentials \
                     or 'flex_db_password' not in flex_credentials:
@@ -720,19 +726,49 @@ class backendservices(object):
         @return: True : if successful or False : if failed 
         '''
         try:
-            logging.info("fetchOutput: inside method with taskid : {0} and url {1}".format(taskid, outputurl))
-            filename = "{0}.tar".format(taskid)
+            logging.info("fetchOutput: taskid: {0} and url: {1}".format(taskid, outputurl))
 
+            filename = "{0}.tar".format(taskid)
             logging.debug("fetchOutput : the name of file to be fetched : {0}".format(filename))
 
-            logging.debug("url to be fetched : {0}".format(taskid))
-            fetch_url_cmd_str = "curl --remote-name {0}".format(outputurl)
-            logging.debug("fetchOutput : Fetching file using command : {0}".format(fetch_url_cmd_str))
-            os.system(fetch_url_cmd_str)
+            if outputurl.startswith('scp://'):
+                logging.info('output uploaded via FlexStorageAgent')
+
+                match_object = re.search(pattern='scp://([^:@]+)@([^:@]+):([^:@]+):([^:@]+)', string=outputurl)
+                username = match_object.group(1)
+                ip = match_object.group(2)
+                keyname = match_object.group(3)
+                output_tar_file_path = match_object.group(4)
+
+                scp_command = \
+                    helper.get_scp_command(keyfile=os.path.join(self.FLEX_SSH_KEYFILE_DIR, keyname),
+                                           source="{user}@{ip}:{output_file}".format(user=username,
+                                                                                 ip=ip,
+                                                                                 output_file=output_tar_file_path),
+                                           target=filename)
+
+                logging.info(scp_command)
+                os.system(scp_command)
+
+            elif outputurl.startswith('https://') or outputurl.startswith('http://'):
+                logging.info('output uploaded via S3StorageAgent')
+
+                logging.debug("url to be fetched : {0}".format(taskid))
+                fetch_url_cmd_str = "curl --remote-name {0}".format(outputurl)
+
+                logging.debug("fetchOutput : Fetching file using command : {0}".format(fetch_url_cmd_str))
+                os.system(fetch_url_cmd_str)
+
+            else:
+                logging.error('Invalid output url!')
+                return False
+
             if not os.path.exists(filename):
                 logging.error('unable to download file. Returning result as False')
                 return False
+
             return True
+
         except Exception, e:
             logging.error("fetchOutput : exiting with error : %s", str(e))
             return False

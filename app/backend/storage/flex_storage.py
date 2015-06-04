@@ -6,10 +6,6 @@ import os
 
 from common.config import FlexConfig
 
-def get_scp_command(user, ip, keyfile, target, source):
-    return 'scp -o UserKnownHostsFile=/dev/null -o StrictHostKeyChecking=no -i {keyfile} {source} {user}@{ip}:{target}'.format(
-        keyfile=keyfile, user=user, ip=ip,
-        source=source, target=target)
 
 class FlexStorageAgent(BaseStorageAgent):
 
@@ -18,12 +14,18 @@ class FlexStorageAgent(BaseStorageAgent):
         self.queue_head_username = queue_head_username
         self.queue_head_keyfile = queue_head_keyfile
 
+    def __get_scp_command(self, target, source):
+        return 'scp -o UserKnownHostsFile=/dev/null -o StrictHostKeyChecking=no -i {keyfile} {source} {target}'.format(
+            keyfile=self.queue_head_keyfile, user=self.queue_head_username, ip=self.queue_head_ip,
+            source=source, target=target)
+
     def upload_file(self, filename):
         try:
-            scp_command = get_scp_command(user=self.queue_head_username, ip=self.queue_head_ip,
-                                      keyfile=self.queue_head_keyfile,
-                                      target=os.path.join(FlexConfig.OUTPUT_STORE_DIR, os.path.basename(filename)),
-                                      source=filename)
+            scp_command = \
+                self.__get_scp_command(target="{user}@{ip}:{file}".format(file=os.path.join(FlexConfig.OUTPUT_STORE_DIR,
+                                                                                            os.path.basename(filename))
+                                                ),
+                                    source=filename)
 
             logging.info(scp_command)
 
