@@ -696,19 +696,6 @@ class SpatialPage(BaseHandler):
                 random.seed()
                 data['seed'] = random.randint(0, 2147483647)
 
-            db_credentials = self.user_data.getCredentials()
-            # Set the environmental variables 
-            os.environ["AWS_ACCESS_KEY_ID"] = db_credentials['EC2_ACCESS_KEY']
-            os.environ["AWS_SECRET_ACCESS_KEY"] = db_credentials['EC2_SECRET_KEY']
-
-            if os.environ["AWS_ACCESS_KEY_ID"] == '':
-                result = {'status':False,'msg':'Access Key not set. Check : Settings > Cloud Computing'}
-                return self.response.write(json.dumps(result))
-
-            if os.environ["AWS_SECRET_ACCESS_KEY"] == '':
-                result = {'status':False,'msg':'Secret Key not set. Check : Settings > Cloud Computing'}
-                return self.response.write(json.dumps(result))
-                    ####
             pymodel = self.construct_pyurdme_model(data)
             #logging.info('DATA: {0}'.format(data))
             #####
@@ -722,19 +709,31 @@ class SpatialPage(BaseHandler):
                 "paramstring" : '',
             }
 
+            logging.debug('cloud_params = {}'.format(pprint.pformat(cloud_params)))
+
             cloud_params['document'] = pickle.dumps(pymodel)
-            #logging.info('PYURDME: {0}'.format(cloud_params['document']))
-            # Set the environmental variables
-
-            ec2_credentials = self.user_data.getCredentials()
-            logging.info('ec2_credentials = {}'.format(ec2_credentials))
-
-            os.environ["AWS_ACCESS_KEY_ID"] = ec2_credentials['EC2_ACCESS_KEY']
-            os.environ["AWS_SECRET_ACCESS_KEY"] = ec2_credentials['EC2_SECRET_KEY']
+            logging.debug('PYURDME: {0}'.format(cloud_params['document']))
 
             service = backendservices()
 
             if agent_type == AgentTypes.EC2:
+                ec2_credentials = self.user_data.getCredentials()
+                logging.info('ec2_credentials = {}'.format(ec2_credentials))
+
+                if os.environ["AWS_ACCESS_KEY_ID"] == '':
+                    result = {'status':False,
+                              'msg':'Access Key not set. Check : Settings > Cloud Computing'}
+                    return self.response.write(json.dumps(result))
+
+                if os.environ["AWS_SECRET_ACCESS_KEY"] == '':
+                    result = {'status':False,
+                              'msg':'Secret Key not set. Check : Settings > Cloud Computing'}
+                    return self.response.write(json.dumps(result))
+
+                # Set the environmental variables
+                os.environ["AWS_ACCESS_KEY_ID"] = ec2_credentials['EC2_ACCESS_KEY']
+                os.environ["AWS_SECRET_ACCESS_KEY"] = ec2_credentials['EC2_SECRET_KEY']
+
                 # Send the task to the backend
                 cloud_result = service.submit_cloud_task(params=cloud_params, agent_type=agent_type,
                                                ec2_access_key=ec2_credentials['EC2_ACCESS_KEY'],
@@ -751,9 +750,7 @@ class SpatialPage(BaseHandler):
 
                 # Send the task to the backend
                 cloud_result = service.submit_cloud_task(params=cloud_params, agent_type=agent_type,
-                                                         flex_credentials=flex_credentials,
-                                                         ec2_access_key=ec2_credentials['EC2_ACCESS_KEY'],
-                                                         ec2_secret_key=ec2_credentials['EC2_SECRET_KEY'])
+                                                         flex_credentials=flex_credentials)
 
             else:
                 raise Exception('Invalid agent type!')

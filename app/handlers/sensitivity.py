@@ -419,13 +419,14 @@ class SensitivityPage(BaseHandler):
         }
 
         service = backendservices()
-        ec2_credentials = self.user_data.getCredentials()
 
-        # Set the environmental variables
-        os.environ["AWS_ACCESS_KEY_ID"] = ec2_credentials['EC2_ACCESS_KEY']
-        os.environ["AWS_SECRET_ACCESS_KEY"] = ec2_credentials['EC2_SECRET_KEY']
 
         if agent_type == AgentTypes.EC2:
+            ec2_credentials = self.user_data.getCredentials()
+
+            # Set the environmental variables
+            os.environ["AWS_ACCESS_KEY_ID"] = ec2_credentials['EC2_ACCESS_KEY']
+            os.environ["AWS_SECRET_ACCESS_KEY"] = ec2_credentials['EC2_SECRET_KEY']
             # Send the task to the backend
             cloud_result = service.submit_cloud_task(params=params, agent_type=agent_type,
                                                ec2_access_key=ec2_credentials['EC2_ACCESS_KEY'],
@@ -441,9 +442,7 @@ class SensitivityPage(BaseHandler):
 
             # Send the task to the backend
             cloud_result = service.submit_cloud_task(params=params, agent_type=agent_type,
-                                                     flex_credentials=flex_credentials,
-                                                     ec2_access_key=ec2_credentials['EC2_ACCESS_KEY'],
-                                                     ec2_secret_key=ec2_credentials['EC2_SECRET_KEY'])
+                                                     flex_credentials=flex_credentials)
 
         else:
             raise Exception('Invalid agent type!')

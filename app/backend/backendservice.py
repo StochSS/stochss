@@ -71,6 +71,8 @@ class backendservices(object):
 
         logging.info('agent_type = {0}'.format(agent_type))
         logging.debug('params =\n{}\n\n'.format(pprint.pformat(params)))
+        logging.debug('ec2_access_key = {0}, ec2_secret_key = {1}'.format(ec2_access_key, ec2_secret_key))
+        logging.debug('flex_credentials = {}'.format(flex_credentials))
 
         if agent_type not in JobConfig.SUPPORTED_AGENT_TYPES:
             raise Exception('Unsupported agent type = {}!'.format(agent_type))

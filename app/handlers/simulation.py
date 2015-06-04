@@ -658,24 +658,37 @@ class SimulatePage(BaseHandler):
             self.response.write(json.dumps(result))
     
     def runCloud(self, params, agent_type):
-        
         try:
             model = StochKitModelWrapper.get_by_id(params["id"]).createStochKitModel()
 
             if not model:
                 return {'status':False,'msg':'Failed to retrive the model to simulate.'}
 
-            db_credentials = self.user_data.getCredentials()
-            # Set the environmental variables 
-            os.environ["AWS_ACCESS_KEY_ID"] = db_credentials['EC2_ACCESS_KEY']
-            os.environ["AWS_SECRET_ACCESS_KEY"] = db_credentials['EC2_SECRET_KEY']
+            ec2_credentials = None
+            if agent_type == AgentTypes.EC2:
+                ec2_credentials = self.user_data.getCredentials()
+                # Set the environmental variables
+                os.environ["AWS_ACCESS_KEY_ID"] = ec2_credentials['EC2_ACCESS_KEY']
+                os.environ["AWS_SECRET_ACCESS_KEY"] = ec2_credentials['EC2_SECRET_KEY']
 
-            if os.environ["AWS_ACCESS_KEY_ID"] == '':
-                result = {'status':False,'msg':'Access Key not set. Check : Settings > Cloud Computing'}
-                return result
+                if os.environ["AWS_ACCESS_KEY_ID"] == '':
+                    result = {'status':False,
+                              'msg':'Access Key not set. Check : Settings > Cloud Computing'}
+                    return result
 
-            if os.environ["AWS_SECRET_ACCESS_KEY"] == '':
-                result = {'status':False,'msg':'Secret Key not set. Check : Settings > Cloud Computing'}
+                if os.environ["AWS_SECRET_ACCESS_KEY"] == '':
+                    result = {'status':False,'msg':'Secret Key not set. Check : Settings > Cloud Computing'}
+                    return result
+
+            elif agent_type == AgentTypes.FLEX:
+                if not self.user_data.valid_flex_cloud_info:
+                    result = {'status':False,
+                              'msg':'Flex Cloud credentials are not valid. Check : Settings > Cloud Computing'}
+                    return result
+
+            else:
+                result = {'status': False,
+                          'msg': 'Invalid Cloud infrastructure!'}
                 return result
         
             #the parameter dictionary to be passed to the backend
@@ -768,8 +781,7 @@ class SimulatePage(BaseHandler):
         
             # Call backendservices and execute StochKit
             service = backendservices()
-            ec2_credentials = self.user_data.getCredentials()
-
+            logging.info('Calling service.submit_cloud_task...')
             if agent_type == AgentTypes.EC2:
                 # Send the task to the backend
                 cloud_result = service.submit_cloud_task(params=params, agent_type=agent_type,
@@ -786,9 +798,7 @@ class SimulatePage(BaseHandler):
 
                 # Send the task to the backend
                 cloud_result = service.submit_cloud_task(params=params, agent_type=agent_type,
-                                                         flex_credentials=flex_credentials,
-                                                         ec2_access_key=ec2_credentials['EC2_ACCESS_KEY'],
-                                                         ec2_secret_key=ec2_credentials['EC2_SECRET_KEY'])
+                                                         flex_credentials=flex_credentials)
 
             else:
                 raise Exception('Invalid agent type!')
@@ -947,10 +957,12 @@ class SimulatePage(BaseHandler):
             stochkit_job_db.modelName = model.name
             stochkit_job_db.put()
     
-            result = {'status':True,'msg':'Job submitted successfully'}
+            result = {'status':True,
+                      'msg':'Job submitted successfully'}
             
         except Exception, e:
             logging.error(e)
+            logging.error(traceback.format_exc())
             raise e
         #result = {'status':False,'msg':'Local execution failed: '+str(e)}
                 
