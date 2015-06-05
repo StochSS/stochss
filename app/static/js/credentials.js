@@ -48,11 +48,15 @@ function get_flex_cloud_info_input() {
             return null
         }
 
-        flex_cloud_machine['queue_head'] = false;
-        if (row.find('input[name="queue_head"]').prop("checked")) {
-            flex_cloud_machine['queue_head'] = true
+        if(i == 0)
+        {
+            flex_cloud_machine['queue_head'] = true;
         }
-
+        else
+        {
+            flex_cloud_machine['queue_head'] = false;
+        }
+        
         flex_cloud_machine['key_file_id'] = parseInt(row.find('select').val());
         if (!flex_cloud_machine['key_file_id']) {
             updateMsg({ status: false, msg: 'Please select a key file' }, '#flexCloudInfoMsg');
@@ -148,10 +152,13 @@ function prepare_flex_cloud() {
 
 $(document).ready(function () {
     $("#append_flex_cloud_machine").click(function () {
-        var new_row = $('#flex_cloud_machine_info_table tr:last').clone(true);
-        new_row.find('input').val("");
-        new_row.find("input[name='queue_head']").attr('checked', false);
-        $('#flex_cloud_machine_info_table tr:last').after(new_row);
+        var prior_row = $('#flex_cloud_machine_info_table tr:last');
+        var new_row = prior_row.clone(true);
+        new_row.find('input[name="ip"]').val("");
+        new_row.find('input[name="username"]').val(prior_row.find('input[name="username"]').val());
+        new_row.find('i').remove();
+        new_row.find('select').val(prior_row.find('select').val());
+        prior_row.after(new_row);
 
         return false;
     });
@@ -337,23 +344,34 @@ FlexCloud.Controller = Backbone.View.extend({
 </td> \
 <td> \
 <% if(is_deletable) { %> \
-    <button><i class='icon-trash'></i> Delete</button> \
+<button><i class='icon-trash'></i> Delete</button> \
 <% } else { %> \
-    <td class='span2'>In Use</td> \
+<td class='span2'>In Use</td> \
 <% } %> \
 </td> \
 </tr>");
 
-            for (var i = 0; i < this.flexKeyFiles.models.length; i++) {
-                var keyFile = this.flexKeyFiles.models[i];
+            if(this.flexKeyFiles.length > 0)
+            {
+                $( "#flex_ssh_key_table_div" ).show();
+                $( "#flex_ssh_key_table_div_loading" ).hide();
 
-                var keyRow = $(row_template({ keyname: keyFile.attributes.path, is_deletable: this.isDeletable[keyFile.id]["is_deletable"] })).appendTo("#flex_ssh_key_table");
+                for (var i = 0; i < this.flexKeyFiles.models.length; i++) {
+                    var keyFile = this.flexKeyFiles.models[i];
 
-                if (keyRow.find('button').length) {
-                    var button = keyRow.find('button');
+                    var keyRow = $(row_template({ keyname: keyFile.attributes.path, is_deletable: this.isDeletable[keyFile.id]["is_deletable"] })).appendTo("#flex_ssh_key_table");
 
-                    button.click(_.bind(_.partial(this.deleteKeyFile, keyFile.id), this));
+                    if (keyRow.find('button').length) {
+                        var button = keyRow.find('button');
+
+                        button.click(_.bind(_.partial(this.deleteKeyFile, keyFile.id), this));
+                    }
                 }
+            }
+            else
+            {
+                $( "#flex_ssh_key_table_div" ).hide();
+                $( "#flex_ssh_key_table_div_loading" ).hide();
             }
         }
     }

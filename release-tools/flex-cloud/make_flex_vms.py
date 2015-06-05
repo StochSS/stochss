@@ -20,7 +20,9 @@ import glob
 import urllib2
 import string
 import random
-import MySQLdb
+
+import mysql.connector
+from contextlib import closing
 
 from config import JobDatabaseConfig
 
@@ -213,11 +215,13 @@ class VirtualMachine(object):
 
     def __test_job_db(self, db_username, db_password):
         try:
-            db = MySQLdb.connect(host=self.ip, user=db_username, passwd=db_password, db=JobDatabaseConfig.DATABASE_NAME)
-            db.query('SHOW DATABASES LIKE "{db_name}"'.format(db_name=JobDatabaseConfig.DATABASE_NAME))
-            results = db.store_result()
-            row = results.fetch_row()
-            if row != ():
+            db = mysql.connector.connect(host=self.ip, user=db_username, passwd=db_password,
+                                         db=JobDatabaseConfig.DATABASE_NAME)
+            with closing(db.cursor()) as db_cursor:
+                db_cursor.execute("SHOW DATABASES LIKE '{db_name}'".format(db_name=JobDatabaseConfig.DATABASE_NAME))
+                rows = db_cursor.fetchall()
+
+            if len(rows) > 0:
                 print 'MySQL setup successful!'
             else:
                 print 'MySQL setup failed!'

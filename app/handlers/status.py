@@ -495,7 +495,7 @@ class StatusPage(BaseHandler):
                         # Retrieve credentials from the datastore
                         if not self.user_data.valid_credentials:
                             return {'status': False,
-                                    'msg': 'Could not retrieve the status of job '+ job.name +'. Invalid credentials.'}
+                                    'msg': 'Could not retrieve the status of spatial ob '+ job.jobName +'. Invalid credentials.'}
                         credentials = self.user_data.getCredentials()
 
                         taskparams = {
