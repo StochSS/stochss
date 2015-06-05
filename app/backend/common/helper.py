@@ -407,7 +407,7 @@ def execute_cloud_task(params, agent_type, ec2_access_key, ec2_secret_key,
     This method instantiates celery tasks in the cloud.
     Returns return value from celery async call and the task ID
     '''
-    logging.info('execute_cloud_task: Params =\n\n{0}'.format(pprint.pformat(params)))
+    logging.debug('execute_cloud_task: params =\n\n{0}'.format(pprint.pformat(params)))
     logging.info('agent_type = {}'.format(agent_type))
 
     celery_config = tasks.CelerySingleton()

@@ -20,7 +20,6 @@ import glob
 import urllib2
 import string
 import random
-import MySQLdb
 
 from config import JobDatabaseConfig
 
