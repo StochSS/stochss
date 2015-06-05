@@ -37,7 +37,9 @@ sys.path.append(os.path.join(os.path.dirname(__file__), '../lib/cloudtracker'))
 from s3_helper import *
 
 class SpatialJobWrapper(db.Model):
-    SUPPORTED_CLOUD_RESOURCES = ["{0}-cloud".format(agent_type) for agent_type in JobConfig.SUPPORTED_AGENT_TYPES]
+    FLEX_CLOUD_RESOURCE = "{0}-cloud".format(AgentTypes.FLEX)
+    EC2_CLOUD_RESOURCE = "{0}-cloud".format(AgentTypes.EC2)
+    SUPPORTED_CLOUD_RESOURCES = [EC2_CLOUD_RESOURCE, FLEX_CLOUD_RESOURCE]
 
     # These are all the attributes of a job we use for local storage
     userId = db.StringProperty()
@@ -694,19 +696,6 @@ class SpatialPage(BaseHandler):
                 random.seed()
                 data['seed'] = random.randint(0, 2147483647)
 
-            db_credentials = self.user_data.getCredentials()
-            # Set the environmental variables 
-            os.environ["AWS_ACCESS_KEY_ID"] = db_credentials['EC2_ACCESS_KEY']
-            os.environ["AWS_SECRET_ACCESS_KEY"] = db_credentials['EC2_SECRET_KEY']
-
-            if os.environ["AWS_ACCESS_KEY_ID"] == '':
-                result = {'status':False,'msg':'Access Key not set. Check : Settings > Cloud Computing'}
-                return self.response.write(json.dumps(result))
-
-            if os.environ["AWS_SECRET_ACCESS_KEY"] == '':
-                result = {'status':False,'msg':'Secret Key not set. Check : Settings > Cloud Computing'}
-                return self.response.write(json.dumps(result))
-                    ####
             pymodel = self.construct_pyurdme_model(data)
             #logging.info('DATA: {0}'.format(data))
             #####
@@ -720,20 +709,51 @@ class SpatialPage(BaseHandler):
                 "paramstring" : '',
             }
 
-            cloud_params['document'] = pickle.dumps(pymodel)
-            #logging.info('PYURDME: {0}'.format(cloud_params['document']))
-            # Set the environmental variables
+            logging.debug('cloud_params = {}'.format(pprint.pformat(cloud_params)))
 
-            os.environ["AWS_ACCESS_KEY_ID"] = self.user_data.getCredentials()['EC2_ACCESS_KEY']
-            os.environ["AWS_SECRET_ACCESS_KEY"] = self.user_data.getCredentials()['EC2_SECRET_KEY']
+            cloud_params['document'] = pickle.dumps(pymodel)
+            logging.debug('PYURDME: {0}'.format(cloud_params['document']))
 
             service = backendservices()
 
-            # execute cloud task
-            cloud_result = service.submit_cloud_task(params=cloud_params,
-                                               agent_type=agent_type,
-                                               ec2_access_key=os.environ["AWS_ACCESS_KEY_ID"],
-                                               ec2_secret_key=os.environ["AWS_SECRET_ACCESS_KEY"])
+            if agent_type == AgentTypes.EC2:
+                ec2_credentials = self.user_data.getCredentials()
+                logging.info('ec2_credentials = {}'.format(ec2_credentials))
+
+                if os.environ["AWS_ACCESS_KEY_ID"] == '':
+                    result = {'status':False,
+                              'msg':'Access Key not set. Check : Settings > Cloud Computing'}
+                    return self.response.write(json.dumps(result))
+
+                if os.environ["AWS_SECRET_ACCESS_KEY"] == '':
+                    result = {'status':False,
+                              'msg':'Secret Key not set. Check : Settings > Cloud Computing'}
+                    return self.response.write(json.dumps(result))
+
+                # Set the environmental variables
+                os.environ["AWS_ACCESS_KEY_ID"] = ec2_credentials['EC2_ACCESS_KEY']
+                os.environ["AWS_SECRET_ACCESS_KEY"] = ec2_credentials['EC2_SECRET_KEY']
+
+                # Send the task to the backend
+                cloud_result = service.submit_cloud_task(params=cloud_params, agent_type=agent_type,
+                                               ec2_access_key=ec2_credentials['EC2_ACCESS_KEY'],
+                                               ec2_secret_key=ec2_credentials['EC2_SECRET_KEY'])
+
+            elif agent_type == AgentTypes.FLEX:
+                queue_head_machine = self.user_data.get_flex_queue_head_machine()
+                logging.info('queue_head_machine = {}'.format(queue_head_machine))
+
+                flex_credentials = {
+                    'flex_db_password': self.user_data.flex_db_password,
+                    'flex_queue_head': queue_head_machine,
+                }
+
+                # Send the task to the backend
+                cloud_result = service.submit_cloud_task(params=cloud_params, agent_type=agent_type,
+                                                         flex_credentials=flex_credentials)
+
+            else:
+                raise Exception('Invalid agent type!')
 
 
             if not cloud_result["success"]:

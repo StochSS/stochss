@@ -5,6 +5,7 @@ All the input validation is performed in this class.
 '''
 from infrastructure_manager import InfrastructureManager
 import uuid
+import re
 import logging
 from tasks import *
 
@@ -13,6 +14,9 @@ from boto.exception import S3ResponseError
 from boto.s3.connection import S3Connection
 
 from databases.dynamo_db import DynamoDB
+from databases.flex_db import FlexDB
+from storage.s3_storage import S3StorageAgent
+from storage.flex_storage import FlexStorageAgent
 
 import common.helper as helper
 from common.config import AgentTypes, JobDatabaseConfig, AgentConfig, FlexConfig, JobConfig
@@ -26,6 +30,10 @@ class backendservices(object):
 
     # Class Constants
     INFRA_SUPPORTED = [AgentTypes.EC2, AgentTypes.FLEX]
+
+    # Hack
+    # TODO: Query File Wrapper to get flex ssh key file dirname
+    FLEX_SSH_KEYFILE_DIR = os.path.abspath(os.path.join(os.path.dirname(__file__), '..', 'static', 'tmp'))
 
     def __init__(self, **kwargs):
         '''
@@ -58,10 +66,13 @@ class backendservices(object):
         return ret
 
 
-    def submit_cloud_task(self, params, agent_type, ec2_access_key, ec2_secret_key, task_id=None,
-                    instance_type=None, cost_replay=False, database=None):
+    def submit_cloud_task(self, params, agent_type, ec2_access_key=None, ec2_secret_key=None, task_id=None,
+                    instance_type=None, cost_replay=False, database=None, flex_credentials=None, storage_agent=None):
 
         logging.info('agent_type = {0}'.format(agent_type))
+        logging.debug('params =\n{}\n\n'.format(pprint.pformat(params)))
+        logging.debug('ec2_access_key = {0}, ec2_secret_key = {1}'.format(ec2_access_key, ec2_secret_key))
+        logging.debug('flex_credentials = {}'.format(flex_credentials))
 
         if agent_type not in JobConfig.SUPPORTED_AGENT_TYPES:
             raise Exception('Unsupported agent type = {}!'.format(agent_type))
@@ -72,9 +83,31 @@ class backendservices(object):
             if ec2_secret_key == None or ec2_secret_key == '':
                 raise Exception('EC2 Secret Key is not valid!')
 
+        elif agent_type == AgentTypes.FLEX:
+            if flex_credentials == None or 'flex_queue_head' not in flex_credentials \
+                    or 'flex_db_password' not in flex_credentials:
+                raise Exception('Please pass valid Flex credentials!')
 
         if not database:
-            database = DynamoDB(ec2_access_key, ec2_secret_key)
+            if agent_type == AgentTypes.EC2:
+                database = DynamoDB(ec2_access_key, ec2_secret_key)
+
+            elif agent_type == AgentTypes.FLEX:
+                database = FlexDB(ip=flex_credentials['flex_queue_head']['ip'],
+                                  password=flex_credentials['flex_db_password'])
+
+        if not storage_agent:
+            if agent_type == AgentTypes.EC2:
+                storage_agent = S3StorageAgent(bucket_name=params['bucketname'],
+                                               ec2_secret_key=ec2_secret_key,
+                                               ec2_access_key=ec2_access_key)
+
+            elif agent_type == AgentTypes.FLEX:
+                storage_agent = FlexStorageAgent(queue_head_ip=flex_credentials['flex_queue_head']['ip'],
+                                                 queue_head_username=flex_credentials['flex_queue_head']['username'],
+                                                 queue_head_keyfile=os.path.join(FlexConfig.QUEUE_HEAD_KEY_DIR,
+                                                                                 os.path.basename(flex_credentials['flex_queue_head']['keyfile'])))
+
 
         # if there is no taskid explicit, create one the first run
         if not task_id:
@@ -83,10 +116,12 @@ class backendservices(object):
         logging.info('submit_cloud_task: task_id = {}'.format(task_id))
 
         result = helper.execute_cloud_task(params=params, agent_type=agent_type,
-                                           ec2_access_key=ec2_access_key, ec2_secret_key=ec2_secret_key,
+                                           ec2_access_key=ec2_access_key,
+                                           ec2_secret_key=ec2_secret_key,
                                            task_id=task_id, instance_type=instance_type,
                                            cost_replay=cost_replay,
-                                           database=database)
+                                           database=database,
+                                           storage_agent=storage_agent)
 
         return result
 
@@ -185,7 +220,7 @@ class backendservices(object):
         raise NotImplementedError
 
 
-    def describeTask(self, params, database=None):
+    def describeTask(self, params):
         '''
         @param params: A dictionary with the following fields
          "AWS_ACCESS_KEY_ID" : AWS access key
@@ -195,22 +230,31 @@ class backendservices(object):
          a dictionary of the form :
          {"taskid":"result:"","state":""} 
         '''
+        logging.info('describeTask: params =\n{}'.format(pprint.pformat(params)))
 
-        logging.debug("describeTask : setting environment variables : AWS_ACCESS_KEY_ID - %s",
-                      params['AWS_ACCESS_KEY_ID'])
-        os.environ["AWS_ACCESS_KEY_ID"] = params['AWS_ACCESS_KEY_ID']
-        logging.debug("describeTask : setting environment variables : AWS_SECRET_ACCESS_KEY - %s",
-                      params['AWS_SECRET_ACCESS_KEY'])
-        os.environ["AWS_SECRET_ACCESS_KEY"] = params['AWS_SECRET_ACCESS_KEY']
-        if not database:
-            database = DynamoDB(params['AWS_ACCESS_KEY_ID'], params['AWS_SECRET_ACCESS_KEY'])
+        if params['agent_type'] == AgentTypes.EC2:
+            os.environ["AWS_ACCESS_KEY_ID"] = params['AWS_ACCESS_KEY_ID']
+            os.environ["AWS_SECRET_ACCESS_KEY"] = params['AWS_SECRET_ACCESS_KEY']
+            database = DynamoDB(access_key=params['AWS_ACCESS_KEY_ID'],
+                                secret_key=params['AWS_SECRET_ACCESS_KEY'])
+
+        elif params['agent_type'] == AgentTypes.FLEX:
+            database = FlexDB(password=params['flex_db_password'],
+                              ip=params['queue_head_ip'])
+
+        else:
+            logging.error('Invalid agent type!')
+            return None
+
         result = {}
         try:
             result = database.describetask(params['taskids'], JobDatabaseConfig.TABLE_NAME)
         except Exception, e:
             logging.error("describeTask : exiting with error : %s", str(e))
             return None
+
         return result
+
 
     def stopTasks(self, params):
         '''
@@ -272,18 +316,14 @@ class backendservices(object):
                 logging.error("deleteTaskLocal : couldn't kill process. error: %s", str(e))
         logging.info("deleteTaskLocal : exiting method")
 
-    def __create_flexdb_stochss_table(self, ec2_access_key, ec2_secret_key):
-        self.__create_dynamodb_stochss_table(ec2_access_key=ec2_access_key, ec2_secret_key=ec2_secret_key)
 
     def __create_dynamodb_stochss_table(self, ec2_access_key, ec2_secret_key):
         database = DynamoDB(ec2_access_key, ec2_secret_key)
-        dynamo = boto.connect_dynamodb(ec2_access_key, ec2_secret_key)
-        if not database.tableexists(dynamo, JobDatabaseConfig.TABLE_NAME):
-            results = database.createtable(JobDatabaseConfig.TABLE_NAME)
-            if results:
-                logging.info("creating table {0}".format(JobDatabaseConfig.TABLE_NAME))
-            else:
-                logging.error("FAILED on creating table {0}".format(JobDatabaseConfig.TABLE_NAME))
+        result = database.createtable(JobDatabaseConfig.TABLE_NAME)
+        if result:
+            logging.info("creating table {0}".format(JobDatabaseConfig.TABLE_NAME))
+        else:
+            logging.error("FAILED on creating table {0}".format(JobDatabaseConfig.TABLE_NAME))
 
     def __get_required_parameter(self, parameter_key, params):
         if parameter_key in params and params[parameter_key] != None:
@@ -357,9 +397,6 @@ class backendservices(object):
             # 4. Prepare Instances
             params[VMStateModel.IDS] = ids
             res = i.prepare_instances(params)
-
-            # 5, check and create stochss table exists if it does not exist
-            self.__create_flexdb_stochss_table(ec2_access_key=ec2_access_key, ec2_secret_key=ec2_secret_key)
 
             logging.info("prepare_flex_cloud_machines : exiting method with result : %s", str(res))
             return True, None
@@ -691,19 +728,49 @@ class backendservices(object):
         @return: True : if successful or False : if failed 
         '''
         try:
-            logging.info("fetchOutput: inside method with taskid : {0} and url {1}".format(taskid, outputurl))
-            filename = "{0}.tar".format(taskid)
+            logging.info("fetchOutput: taskid: {0} and url: {1}".format(taskid, outputurl))
 
+            filename = "{0}.tar".format(taskid)
             logging.debug("fetchOutput : the name of file to be fetched : {0}".format(filename))
 
-            logging.debug("url to be fetched : {0}".format(taskid))
-            fetch_url_cmd_str = "curl --remote-name {0}".format(outputurl)
-            logging.debug("fetchOutput : Fetching file using command : {0}".format(fetch_url_cmd_str))
-            os.system(fetch_url_cmd_str)
+            if outputurl.startswith('scp://'):
+                logging.info('output uploaded via FlexStorageAgent')
+
+                match_object = re.search(pattern='scp://([^:@]+)@([^:@]+):([^:@]+):([^:@]+)', string=outputurl)
+                username = match_object.group(1)
+                ip = match_object.group(2)
+                keyname = match_object.group(3)
+                output_tar_file_path = match_object.group(4)
+
+                scp_command = \
+                    helper.get_scp_command(keyfile=os.path.join(self.FLEX_SSH_KEYFILE_DIR, keyname),
+                                           source="{user}@{ip}:{output_file}".format(user=username,
+                                                                                 ip=ip,
+                                                                                 output_file=output_tar_file_path),
+                                           target=filename)
+
+                logging.info(scp_command)
+                os.system(scp_command)
+
+            elif outputurl.startswith('https://') or outputurl.startswith('http://'):
+                logging.info('output uploaded via S3StorageAgent')
+
+                logging.debug("url to be fetched : {0}".format(taskid))
+                fetch_url_cmd_str = "curl --remote-name {0}".format(outputurl)
+
+                logging.debug("fetchOutput : Fetching file using command : {0}".format(fetch_url_cmd_str))
+                os.system(fetch_url_cmd_str)
+
+            else:
+                logging.error('Invalid output url!')
+                return False
+
             if not os.path.exists(filename):
                 logging.error('unable to download file. Returning result as False')
                 return False
+
             return True
+
         except Exception, e:
             logging.error("fetchOutput : exiting with error : %s", str(e))
             return False

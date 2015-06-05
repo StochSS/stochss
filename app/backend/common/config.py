@@ -53,6 +53,8 @@ class AWSConfig(object):
 
 class FlexConfig(object):
     INSTANCE_TYPE = 'flexvm'
+    QUEUE_HEAD_KEY_DIR = '~/stochss/app/backend/tmp/flex/keyfiles'
+    OUTPUT_STORE_DIR = '~/stochss/app/backend/tmp/flex/output'
 
 
 class CeleryConfig(object):
@@ -94,6 +96,7 @@ class CeleryConfig(object):
             return "{0}_{1}".format(CeleryConfig.ROUTING_KEY_PREFIX, agent_type)
 
 class JobDatabaseConfig(object):
+    DATABASE_NAME = 'stochss'
     TABLE_NAME = 'stochss'
     COST_ANALYSIS_TABLE_NAME = 'stochss_cost_analysis'
 

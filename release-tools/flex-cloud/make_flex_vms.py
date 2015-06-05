@@ -5,6 +5,9 @@ __email__ = 'dnath@cs.ucsb.edu'
 
 import sys
 import os
+
+sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..', '..', 'app', 'backend', 'common')))
+
 import time
 import json
 import threading
@@ -15,10 +18,18 @@ import pprint
 import argparse
 import glob
 import urllib2
+import string
+import random
+import MySQLdb
+
+from config import JobDatabaseConfig
 
 
 DEFAULT_SETTINGS_FILE = os.path.join(os.path.dirname(__file__), "settings.json")
 DEFAULT_MACHINE_CONFIG_FILE = os.path.join(os.path.dirname(__file__), "machines.json")
+
+DEFAULT_ADD_SUDOER_SCRIPT_TEMPLATE = os.path.join(os.path.dirname(__file__), "add_sudoer.sh.template")
+DEFAULT_ADD_SUDOER_SCRIPT = os.path.join(os.path.dirname(__file__), "add_sudoer.sh")
 
 DEFAULT_FLEX_API_APACHE_CONF_TEMPLATE = os.path.join(os.path.dirname(__file__), "flex_api_site.conf.template")
 DEFAULT_FLEX_API_APACHE_CONF = os.path.join(os.path.dirname(__file__), "flex_api_site.conf")
@@ -102,8 +113,11 @@ class VirtualMachine(object):
         self.log_type = log_type
         self.stderr_log = stderr_log
         self.stdout_log = stdout_log
+        self.start_time = None
 
     def make_flex_vm(self):
+        self.start_time = time.time()
+
         try:
             self.__is_machine_reachable()
             self.__enable_network_ports()
@@ -115,12 +129,102 @@ class VirtualMachine(object):
             self.__download_stochss_repo()
             self.__compile_stochss()
             self.run_tests()
+            self.__setup_job_db()
             self.__setup_flex_api_server()
             self.__test_flex_api_server()
+            self.__add_sudoer()
             # self.__cleanup_instance()
 
         except:
             traceback.print_exc()
+
+        print 'Done in {} seconds'.format(time.time() - self.start_time)
+
+    def __add_sudoer(self):
+        header = 'Adding restricted sudo rights to apache user...'
+        print '=================================================='
+        print header
+
+        with open(DEFAULT_ADD_SUDOER_SCRIPT_TEMPLATE) as fin:
+            contents = fin.read()
+
+        allowed_executables = [
+            "/home/{username}/stochss/release-tools/flex-cloud/deregister_flex_vm.sh".format(username=self.username)
+        ]
+
+        contents = contents.replace('EXECUTABLES', ','.join(allowed_executables))
+
+        # print 'add sudoer file:\n{0}'.format(contents)
+
+        with open(DEFAULT_ADD_SUDOER_SCRIPT, 'w') as fout:
+            fout.write(contents)
+
+        scp_command = get_scp_command(user=self.username, ip =self.ip, key_file=self.keyfile,
+                                      source=DEFAULT_ADD_SUDOER_SCRIPT,
+                                      target='~/add_sudoer.sh')
+
+        # print 'scp command:\n{0}'.format(scp_command)
+
+        result = os.system(scp_command)
+        if result != 0:
+            print 'scp Failed!'
+
+        else:
+            commands = [
+                'chmod +x ~/add_sudoer.sh',
+                'sudo ~/add_sudoer.sh'
+            ]
+
+            command = ';'.join(commands)
+            # print command
+            self.__run_remote_command(command=command, log_header=header)
+
+
+    def __setup_job_db(self):
+        header = 'Setting up Job DB : MySQL...'
+        print '=================================================='
+        print header
+
+        username = 'root'
+        password = ''.join(random.choice(string.ascii_letters + string.digits) for _ in range(16))
+
+        sql_lines = [
+            "CREATE DATABASE IF NOT EXISTS {db_name}".format(db_name=JobDatabaseConfig.DATABASE_NAME),
+            "GRANT ALL PRIVILEGES ON {db_name}.* TO '{username}'@'%' IDENTIFIED BY '{password}' WITH GRANT OPTION".format(
+                db_name=JobDatabaseConfig.DATABASE_NAME, username=username, password=password),
+            ""
+        ]
+
+        commands = [
+            "sudo debconf-set-selections <<< 'mysql-server mysql-server/root_password password {password}'".format(password=password),
+            "sudo debconf-set-selections <<< 'mysql-server mysql-server/root_password_again password {password}'".format(password=password),
+            "sudo apt-get -y install mysql-server > mysql_install.stdout.log 2> mysql_install.stderr.log",
+            "mysql -u root --password={password} --execute=\\\"{sql}\\\"".format(password=password,
+                                                                              sql=';'.join(sql_lines)),
+            "sudo sed -i 's/bind-address\s*=\s*127.0.0.1/bind-address = 0.0.0.0/g' /etc/mysql/my.cnf",
+            "sudo service mysql restart"
+        ]
+
+        command = ';'.join(commands)
+        # print command
+        self.__run_remote_command(command=command, log_header=header)
+        self.__test_job_db(db_username=username, db_password=password)
+
+
+    def __test_job_db(self, db_username, db_password):
+        try:
+            db = MySQLdb.connect(host=self.ip, user=db_username, passwd=db_password, db=JobDatabaseConfig.DATABASE_NAME)
+            db.query('SHOW DATABASES LIKE "{db_name}"'.format(db_name=JobDatabaseConfig.DATABASE_NAME))
+            results = db.store_result()
+            row = results.fetch_row()
+            if row != ():
+                print 'MySQL setup successful!'
+            else:
+                print 'MySQL setup failed!'
+
+        except Exception as e:
+            print 'Error: Failed to setup MySQL Job Database : {}'.format(str(e))
+
 
     def __test_flex_api_server(self):
         json_message = json.loads(urllib2.urlopen("https://{ip}".format(ip=self.ip)).read())
@@ -181,7 +285,7 @@ class VirtualMachine(object):
         contents = contents.replace('FLEX_API_APP_CERT', cert_filename)
         contents = contents.replace('FLEX_API_APP_KEY', key_filename)
 
-        print 'site file config:\n{0}'.format(contents)
+        # print 'site file config:\n{0}'.format(contents)
 
         with open(DEFAULT_FLEX_API_APACHE_CONF, 'w') as fout:
             fout.write(contents)
@@ -214,7 +318,7 @@ class VirtualMachine(object):
 
 
     def __enable_network_ports(self):
-        # TODO: Enable ports 22, 5672, 6379, 11211, 55672, 80, 443
+        # TODO: Enable ports 22, 5672, 6379, 11211, 55672, 80[?], 443, 3306
         pass
 
     def __try_install_dependencies(self):
@@ -545,6 +649,8 @@ class FlexVMMaker(object):
             self.stdout_log = None
             self.stderr_log = None
 
+        self.overall_start_time = None
+
 
     def __cleanup(self):
         if self.log_type == "file":
@@ -552,6 +658,8 @@ class FlexVMMaker(object):
             self.stderr_log.close()
 
     def run(self):
+        self.overall_start_time = time.time()
+
         for machine in self.machine_info:
             ip = machine['ip']
             username = machine['username']
@@ -575,7 +683,7 @@ class FlexVMMaker(object):
             vm.make_flex_vm()
 
         self.__cleanup()
-        print 'Done.'
+        print 'Completed all machines in {} seconds.'.format(time.time() - self.overall_start_time)
 
 
 def cleanup_local_files():

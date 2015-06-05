@@ -262,6 +262,7 @@ class CredentialsPage(BaseHandler):
             self.user_data.is_flex_cloud_info_set = False
             self.user_data.set_flex_cloud_machine_info([])
             self.user_data.reservation_id = None
+            self.user_data.flex_db_password = None
             self.user_data.put()
         else:
             logging.error('deregister_flex_cloud failed!')
@@ -284,6 +285,7 @@ class CredentialsPage(BaseHandler):
             machine['keyfile'] = fileserver.FileWrapper.get_by_id( machine['key_file_id']).storePath
 
         self.user_data.set_flex_cloud_machine_info(flex_cloud_machine_info)
+        self.user_data.flex_db_password = ''.join(random.choice(string.ascii_letters + string.digits) for _ in range(16))
         self.user_data.put()
 
         params = {
@@ -294,7 +296,9 @@ class CredentialsPage(BaseHandler):
             'email': [user_id],
             'user_id': user_id,
             'credentials': credentials,
-            'reservation_id': reservation_id
+            'reservation_id': reservation_id,
+            'flex_db_password': self.user_data.flex_db_password,
+            'flex_queue_head': self.user_data.get_flex_queue_head_machine()
         }
 
         service = backendservices(infrastructure=AgentTypes.FLEX)
@@ -468,15 +472,16 @@ class CredentialsPage(BaseHandler):
         self.user_data.put()
 
         # Check if the flex cloud credentials are valid.
-        if not self.user_data.is_flex_cloud_info_set:
-            result['flex_cloud_status'] = 'Failure'
-            result['flex_cloud_info_msg'] = 'Could not determine the status of the machines: Invalid Flex Cloud Credentials!'
-            context['valid_flex_cloud_info'] = False
-
+        if self.user_data.is_flex_cloud_info_set:
+            if self.user_data.valid_flex_cloud_info:
+                context['flex_cloud_status'] = 'Success'
+                context['flex_cloud_info_msg'] = 'At least queue head is running!'
+            else:
+                context['flex_cloud_status'] = 'Info'
+                context['flex_cloud_info_msg'] = 'Flex Cloud Info set. Trying to validate it...'
         else:
-            result['flex_cloud_status'] = 'Success'
-            result['flex_cloud_info_msg'] = 'At least queue head is running!'
-            context['valid_flex_cloud_info'] = True
+            context['flex_cloud_status'] = 'Failure'
+            context['flex_cloud_info_msg'] = 'Could not determine the status of the machines: Invalid Flex Cloud Credentials!'
 
         # Get Flex SSH Key Info
         flex_ssh_key_info = self.__get_flex_ssh_key_info()
@@ -630,7 +635,7 @@ class FlexCredentialsIsDeletablePage(BaseHandler):
 
     def __get_flex_ssh_key_info(self):
         files = fileserver.FileManager.getFiles(self, 'flexKeyFiles')
-        logging.info('files =\n{}'.format(files))
+        logging.debug('files =\n{}'.format(files))
 
         flex_ssh_key_info = []
         if self.user_data.valid_flex_cloud_info:
