@@ -463,15 +463,16 @@ class CredentialsPage(BaseHandler):
         self.user_data.put()
 
         # Check if the flex cloud credentials are valid.
-        if not self.user_data.is_flex_cloud_info_set:
-            result['flex_cloud_status'] = 'Failure'
-            result['flex_cloud_info_msg'] = 'Could not determine the status of the machines: Invalid Flex Cloud Credentials!'
-            context['valid_flex_cloud_info'] = False
-
+        if self.user_data.is_flex_cloud_info_set:
+            if self.user_data.valid_flex_cloud_info:
+                context['flex_cloud_status'] = 'Success'
+                context['flex_cloud_info_msg'] = 'At least queue head is running!'
+            else:
+                context['flex_cloud_status'] = 'Info'
+                context['flex_cloud_info_msg'] = 'Flex Cloud Info set. Trying to validate it...'
         else:
-            result['flex_cloud_status'] = 'Success'
-            result['flex_cloud_info_msg'] = 'At least queue head is running!'
-            context['valid_flex_cloud_info'] = True
+            context['flex_cloud_status'] = 'Failure'
+            context['flex_cloud_info_msg'] = 'Could not determine the status of the machines: Invalid Flex Cloud Credentials!'
 
         # Get Flex SSH Key Info
         flex_ssh_key_info = self.__get_flex_ssh_key_info()
