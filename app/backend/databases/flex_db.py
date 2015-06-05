@@ -57,13 +57,12 @@ class FlexDB(BaseDB):
                                                                                           taskid_list=taskid_list)
                     logging.info("sql = {}".format(sql))
 
-                    num_rows = db_cursor.execute(sql)
-                    logging.info("Number of rows fetched: {}".format(num_rows))
+                    db_cursor.execute(sql)
 
                     field_name_index_map = {field[0]: index for index, field in enumerate(db_cursor.description)}
                     rows = db_cursor.fetchall()
 
-                if num_rows > 0 and rows != ():
+                if len(rows) > 0:
                     for row in rows:
                         result = {}
                         for field_name in self.TABLE_FIELD_NAMES[tablename]:
@@ -200,13 +199,12 @@ class FlexDB(BaseDB):
                         attribute_value=attribute_value)
                     logging.info("sql = {}".format(sql))
 
-                    num_rows = db_cursor.execute(sql)
-                    logging.info("Number of rows fetched: {}".format(num_rows))
+                    db_cursor.execute(sql)
 
                     field_name_index_map = {field[0]: index for index, field in enumerate(db_cursor.description)}
                     rows = db_cursor.fetchall()
 
-                if num_rows > 0 and rows != ():
+                if len(rows) > 0:
                     results = []
                     for row in rows:
                         result = {}
