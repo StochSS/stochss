@@ -146,7 +146,7 @@ function download_pyurdme {
     fi
 }
 
-function check_spatial_dependencies {
+function check_python_dependencies {
     deps=("numpy" "scipy" "matplotlib" "h5py" "libsbml" "mysql-connector-python")
     for dep in "${deps[@]}"
     do
@@ -165,13 +165,13 @@ function install_dependencies_via_applescript {
     /usr/bin/env osascript run_mac_install.scpt
 }
 
-function check_spatial_installation {
-    if check_spatial_dependencies; then
-        echo "All spatial dependencies detected.<br />"
+function check_python_installation {
+    if check_python_dependencies; then
+        echo "All python dependencies detected.<br />"
     else
         install_dependencies_via_applescript
-        if check_spatial_dependencies; then
-            echo "All spatial dependencies detected.<br />"
+        if check_python_dependencies; then
+            echo "All python dependencies detected.<br />"
         else
             echo "Error: dependencies not installed, exiting.<br />"
             return 1 #False
@@ -203,11 +203,11 @@ function check_spatial_installation {
 
 #####################
 
-echo "Check if spatial libraries are installed.<br />"
-if check_spatial_installation;then
+echo "Check if python libraries are installed.<br />"
+if check_python_installation;then
     echo "Spatial libraries installed correctly.<br />"
 else
-    echo "Error checking the spatial libraries.<br />"
+    echo "Error checking the python libraries.<br />"
     exit 1
 fi
 #################
