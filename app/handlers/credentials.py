@@ -471,6 +471,8 @@ class CredentialsPage(BaseHandler):
         logging.info('user_data.valid_flex_cloud_info = {0}'.format(self.user_data.valid_flex_cloud_info))
         self.user_data.put()
 
+        context['valid_flex_cloud_info'] = valid_flex_cloud_info
+
         # Check if the flex cloud credentials are valid.
         if self.user_data.is_flex_cloud_info_set:
             if self.user_data.valid_flex_cloud_info:
