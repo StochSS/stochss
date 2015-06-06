@@ -1,3 +1,4 @@
+var _ = require('underscore');
 var $ = require('jquery');
 var AmpersandView = require('ampersand-view');
 var AmpersandFormView = require('ampersand-form-view');
@@ -57,7 +58,10 @@ var InitialConditionCollectionFormView = AmpersandView.extend({
     },
     update : function()
     {
-        this.parent.update();
+        this.updateValid();
+
+        if(this.parent && this.parent.update)
+            this.parent.update();
     },
     render: function()
     {
@@ -99,6 +103,8 @@ var InitialConditionCollectionFormView = AmpersandView.extend({
         );
 
         //this.addForm.render();
+
+        this.listenTo(this.collection, "remove", _.bind(this.update, this));
 
         return this;
     }

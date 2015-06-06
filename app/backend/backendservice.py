@@ -275,7 +275,8 @@ class backendservices(object):
         describe_params = {
             'AWS_ACCESS_KEY_ID': credentials['AWS_ACCESS_KEY_ID'],
             'AWS_SECRET_ACCESS_KEY': credentials['AWS_SECRET_ACCESS_KEY'],
-            'taskids': db_ids
+            'taskids': db_ids,
+            'agent_type' : AgentTypes.EC2
         }
         return self.describeTask(describe_params)
 

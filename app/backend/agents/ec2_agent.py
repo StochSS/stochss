@@ -417,9 +417,8 @@ class EC2Agent(BaseAgent):
             conn.get_all_instances()
             return True
 
-        except EC2ResponseError:
-            logging.error('Invalid EC2 Credentials!')
-            traceback.print_exc()
+        except EC2ResponseError as e:
+            logging.error('validate_credentials(): got EC2ResponseError') 
             return False
 
     def handle_failure(self, msg):

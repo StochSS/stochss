@@ -274,73 +274,6 @@ class ModelManager():
                 
         return jsonModel
 
-    #@staticmethod
-    #def createModel(handler, model, rename = None):
-    #    userID = None
-
-        # Set up defaults
-    #    if 'isSpatial' not in model or 'spatial' not in model:
-    #        model['isSpatial'] = False
-    #        model['spatial'] = { 'subdomains' : [],
-    #                             'mesh_wrapper_id' : None,
-    #                             'species_diffusion_coefficients' : {} ,
-    #                             'species_subdomain_assignments' : {} ,
-    #                             'reactions_subdomain_assignments' : {},
-    #                             'initial_conditions' : [] }
-
-    #    if 'is_public' not in model:
-    #        model['is_public'] = False
-
-    #    if 'user_id' in model:
-    #        userID = model['user_id']
-    #    else:
-    #        userID = handler.user.user_id()
-
-        # Make sure name isn't taken, or build one that isn't taken
-    #    if "name" in model:
-    #        tryName = model["name"]
-    #        if tryName in [x.name for x in db.Query(StochKitModelWrapper).filter('user_id =', userID).run()]:
-    #            if rename:
-    #                i = 1
-    #                tryName = '{0}_{1}'.format(model["name"], i)
-
-    #                while tryName in [x.name for x in db.Query(StochKitModelWrapper).filter('user_id =', userID).run()]:
-    #                    i = i + 1
-    #                    tryName = '{0}_{1}'.format(model["name"], i)
-    #            else:
-    #                return None
-
-    #    modelWrap = StochKitModelWrapper()
-
-    #    if rename:
-    #        model["name"] = tryName
-
-    #    if "name" in model:
-    #        name = model["name"]
-    #    else:
-    #        raise Exception("Why is this code here? modeleditor.py 185")
-            #name = "tmpname"
-
-    #    if 'isSpatial' in model:
-    #        modelWrap.isSpatial = model['isSpatial']
-
-    #    if 'spatial' in model:
-    #        modelWrap.spatial = model['spatial']
-
-    #    modelWrap.name = name
-
-    #    modelWrap.species = model["species"]
-    #    modelWrap.parameters = model["parameters"]
-    #    modelWrap.reactions = model["reactions"]
-    #    modelWrap.type = model["type"]
-    #    modelWrap.spatial = model["spatial"]
-    #    modelWrap.isSpatial = model["isSpatial"]
-    #    modelWrap.is_public = model["is_public"]
-    #    modelWrap.units = model["units"]
-    #    modelWrap.user_id = userID
-
-    #    return modelWrap.put().id()
-
     @staticmethod
     def deleteModel(handler, model_id):
         model = StochKitModelWrapper.get_by_id(model_id)
@@ -576,39 +509,39 @@ class PublicModelPage(BaseHandler):
         return True
     
     def get(self):
-        try:
-            self.importExamplePublicModels()
-        except:
-            traceback.print_exc()
-            print "ERROR: Failed to import example public models"
+        #importExamplePublicModels(self)
 
         self.render_response('publicLibrary.html')
 
-    def importExamplePublicModels(self):
+def importExamplePublicModels(handler):
+    try:
         path = os.path.abspath(os.path.dirname(__file__))
         szip = exportimport.SuperZip(zipFileName = path + "/../../examples/examples.zip")
-
+    
         toImport = {}
         for name in szip.zipfb.namelist():
             if re.search('models/[a-zA-Z0-9\-_]*\.json$', name):
                 toImport[json.loads(szip.zipfb.read(name))['name']] = name
 
-        names = [model['name'] for model in ModelManager.getModels(self, public = True)]
+        names = [model['name'] for model in ModelManager.getModels(handler, public = True)]
 
         for name in set(toImport.keys()) - set(names):
             path = toImport[name]
-            modelDb = szip.extractStochKitModel(path, "", self, rename = True)
+            modelDb = szip.extractStochKitModel(path, "", handler, rename = True)
             modelDb.user_id = ""
             modelDb.name = name
             modelDb.is_public = True
             modelDb.put()
-
+        
             if modelDb.isSpatial:
                 meshDb = mesheditor.MeshWrapper.get_by_id(modelDb.spatial["mesh_wrapper_id"])
                 #meshDb.undeletable = True
                 meshDb.put()
 
         szip.close()
+    except:
+        traceback.print_exc()
+        print "ERROR: Failed to import example public models"
 
 class ImportFromXMLPage(BaseHandler):
     def authentication_required(self):
@@ -769,9 +702,6 @@ class ModelEditorPage(BaseHandler):
 
             return
 
-        mesheditor.setupMeshes(self)
+        #mesheditor.setupMeshes(self)
 
-        #f = open('/home/bbales2/stochss/test/modelEditor/client/index.html')
-        #self.response.out.write(f.read())
-        #f.close()
         self.render_response('modelEditor.html')

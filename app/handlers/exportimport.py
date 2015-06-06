@@ -434,6 +434,11 @@ class SuperZip:
             minz = numpy.min(coordinates[:, 2])
             maxz = numpy.max(coordinates[:, 2])
             pymodel.add_species(pyurdme.Species('T', 1))
+
+            if len(meshDb.subdomains) == 0:
+                meshDb.subdomains = [1] * len(coordinates)
+                meshDb.uniqueSubdomains = [1]
+
             pymodel.set_subdomain_vector(numpy.array(subdomainsData))
             sd = pymodel.get_subdomain_vector()
             vol_accumulator = numpy.zeros(numpy.unique(sd).shape)
