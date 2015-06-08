@@ -364,6 +364,9 @@ class FlexBackendWorker(BackendWorker):
             }
 
             try:
+                helper.copy_celery_config_to_vm(instance_type=ins_type, ip=ip, key_file=keyfile,
+                             agent_type=self.agent_type, username=username)
+
                 url = "https://{ip}/prepare".format(ip=ip)
                 data = json.dumps(prepare_info)
                 req = urllib2.Request(url, data, {'Content-Type': 'application/json'})

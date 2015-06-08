@@ -81,9 +81,9 @@ class FlexVMState(object):
             stochss_dir = os.path.join(stochss_parent_dir, 'stochss')
             if os.path.exists(stochss_dir):
                 celery_config_filename = os.path.join(stochss_parent_dir, 'celeryconfig.py')
-                FlexVMState.__create_celery_config(celery_config_filename=celery_config_filename,
-                                                   queue_head_ip=queue_head_ip,
-                                                   instance_type=instance_type)
+                # FlexVMState.__create_celery_config(celery_config_filename=celery_config_filename,
+                #                                    queue_head_ip=queue_head_ip,
+                #                                    instance_type=instance_type)
                 FlexVMState.__start_celery(stochss_parent_dir=stochss_parent_dir,
                                            celery_log_level=celery_log_level,
                                            celery_worker_name=celery_worker_name,
@@ -154,49 +154,49 @@ class FlexVMState(object):
 
         return info
 
-    @staticmethod
-    def __create_celery_config(celery_config_filename, queue_head_ip, instance_type):
-        celery_config_template = os.path.abspath(os.path.join(os.path.dirname(__file__),
-                                                              '..', '..', 'backend', 'celeryconfig.py.template'))
-
-        with open(celery_config_template) as fin:
-            celery_config_lines = fin.readlines()
-
-        for line in celery_config_lines:
-            if line.strip().startswith('BROKER_URL'):
-                line = 'BROKER_URL = "amqp://stochss:ucsb@{0}:5672/"\n'.format(queue_head_ip)
-
-
-        exchange = "exchange = Exchange('{0}', type='direct')".format(
-                                                CeleryConfig.get_exchange_name(agent_type=AgentTypes.FLEX))
-        logging.debug(exchange)
-
-        queue_list = map(lambda instance_type: "Queue('{0}', exchange, routing_key='{1}')".format(
-            CeleryConfig.get_queue_name(agent_type=AgentTypes.FLEX, instance_type=instance_type),
-            CeleryConfig.get_routing_key_name(agent_type=AgentTypes.FLEX, instance_type=instance_type)),
-                         [instance_type])
-
-        agent_queue_name = CeleryConfig.get_queue_name(agent_type=AgentTypes.FLEX)
-        agent_routing_key = CeleryConfig.get_routing_key_name(agent_type=AgentTypes.FLEX)
-        queue_list.insert(0, "Queue('{0}', exchange, routing_key='{1}')".format(agent_queue_name, agent_routing_key))
-        logging.debug(queue_list)
-
-        queues_string = 'CELERY_QUEUES = ({0})'.format(', '.join(queue_list))
-        logging.debug(queues_string)
-
-        fout = open(celery_config_filename, 'w')
-        clear_following = False
-        for line in celery_config_lines:
-            if clear_following:
-                fout.write("")
-            elif line.strip().startswith('exchange'):
-                fout.write(exchange + "\n")
-            elif line.strip().startswith('CELERY_QUEUES'):
-                fout.write(queues_string + "\n")
-                clear_following = True
-            else:
-                fout.write(line)
-        fout.close()
+    # @staticmethod
+    # def __create_celery_config(celery_config_filename, queue_head_ip, instance_type):
+    #     celery_config_template = os.path.abspath(os.path.join(os.path.dirname(__file__),
+    #                                                           '..', '..', 'backend', 'celeryconfig.py.template'))
+    #
+    #     with open(celery_config_template) as fin:
+    #         celery_config_lines = fin.readlines()
+    #
+    #     for line in celery_config_lines:
+    #         if line.strip().startswith('BROKER_URL'):
+    #             line = 'BROKER_URL = "amqp://stochss:ucsb@{0}:5672/"\n'.format(queue_head_ip)
+    #
+    #
+    #     exchange = "exchange = Exchange('{0}', type='direct')".format(
+    #                                             CeleryConfig.get_exchange_name(agent_type=AgentTypes.FLEX))
+    #     logging.debug(exchange)
+    #
+    #     queue_list = map(lambda instance_type: "Queue('{0}', exchange, routing_key='{1}')".format(
+    #         CeleryConfig.get_queue_name(agent_type=AgentTypes.FLEX, instance_type=instance_type),
+    #         CeleryConfig.get_routing_key_name(agent_type=AgentTypes.FLEX, instance_type=instance_type)),
+    #                      [instance_type])
+    #
+    #     agent_queue_name = CeleryConfig.get_queue_name(agent_type=AgentTypes.FLEX)
+    #     agent_routing_key = CeleryConfig.get_routing_key_name(agent_type=AgentTypes.FLEX)
+    #     queue_list.insert(0, "Queue('{0}', exchange, routing_key='{1}')".format(agent_queue_name, agent_routing_key))
+    #     logging.debug(queue_list)
+    #
+    #     queues_string = 'CELERY_QUEUES = ({0})'.format(', '.join(queue_list))
+    #     logging.debug(queues_string)
+    #
+    #     fout = open(celery_config_filename, 'w')
+    #     clear_following = False
+    #     for line in celery_config_lines:
+    #         if clear_following:
+    #             fout.write("")
+    #         elif line.strip().startswith('exchange'):
+    #             fout.write(exchange + "\n")
+    #         elif line.strip().startswith('CELERY_QUEUES'):
+    #             fout.write(queues_string + "\n")
+    #             clear_following = True
+    #         else:
+    #             fout.write(line)
+    #     fout.close()
 
 
     @staticmethod
