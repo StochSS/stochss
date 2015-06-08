@@ -399,12 +399,24 @@ class SpatialPage(BaseHandler):
                 return
 
             elif data["resource"] == "cloud":
-                if self.user_data.valid_flex_cloud_info:
-                    logging.info('Valid Flex Cloud Configured: Using it in preference')
-                    data['resource'] = '{0}-cloud'.format(AgentTypes.FLEX)
-                    result = self.runCloud(data=data, agent_type=AgentTypes.FLEX)
-                    self.response.write(json.dumps(result))
-                    return
+                service = backendservices()
+
+                if self.user_data.is_flex_cloud_info_set:
+                    self.user_data.update_flex_cloud_machine_info_from_db()
+                    flex_queue_head_machine = self.user_data.get_flex_queue_head_machine()
+
+                    if service.is_flex_queue_head_running(flex_queue_head_machine):
+                        logging.info('Flex Queue Head is running')
+                        data['resource'] = '{0}-cloud'.format(AgentTypes.FLEX)
+                        result = self.runCloud(data=data, agent_type=AgentTypes.FLEX)
+                        self.response.write(json.dumps(result))
+                        return
+
+                    else:
+                        result = {'status': False,
+                                  'msg': 'You must have at least queue head running to run in the flex cloud.'}
+                        self.response.write(json.dumps(result))
+                        return
 
                 else:
                     compute_check_params = {
@@ -412,7 +424,7 @@ class SpatialPage(BaseHandler):
                         "credentials": self.user_data.getCredentials(),
                         "key_prefix": self.user.user_id()
                     }
-                    service = backendservices()
+
                     if self.user_data.valid_credentials and \
                             service.isOneOrMoreComputeNodesRunning(compute_check_params):
 

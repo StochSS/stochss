@@ -262,20 +262,32 @@ class SensitivityPage(BaseHandler):
                     job = self.runLocal(data)
 
                 elif data["resource"] == "cloud":
-                    if self.user_data.valid_flex_cloud_info:
-                        logging.info('Valid Flex Cloud Configured: Using it in preference')
-                        data['resource'] = '{0}-cloud'.format(AgentTypes.FLEX)
-                        job, cloud_result = self.runCloud(data=data, agent_type=AgentTypes.FLEX)
+                    backend_service = backendservices()
+
+                    if self.user_data.is_flex_cloud_info_set:
+                        self.user_data.update_flex_cloud_machine_info_from_db()
+                        flex_queue_head_machine = self.user_data.get_flex_queue_head_machine()
+
+                        if backend_service.is_flex_queue_head_running(flex_queue_head_machine):
+                            logging.info('Flex Queue Head is running')
+                            data['resource'] = '{0}-cloud'.format(AgentTypes.FLEX)
+                            job, cloud_result = self.runCloud(data=data, agent_type=AgentTypes.FLEX)
+
+                        else:
+                            return self.response.write(json.dumps({
+                                "status": False,
+                                "msg": "You must have at least queue head running to run in flex cloud."
+                            }))
 
                     else:
-                        backend_services = backendservices()
+
                         compute_check_params = {
                             "infrastructure": AgentTypes.EC2,
                             "credentials": self.user_data.getCredentials(),
                             "key_prefix": self.user.user_id()
                         }
                         if self.user_data.valid_credentials and \
-                                backend_services.isOneOrMoreComputeNodesRunning(compute_check_params):
+                                backend_service.isOneOrMoreComputeNodesRunning(compute_check_params):
 
                             data['resource'] = '{0}-cloud'.format(AgentTypes.EC2)
                             job, cloud_result = self.runCloud(data=data, agent_type=AgentTypes.EC2)

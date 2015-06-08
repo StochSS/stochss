@@ -418,60 +418,16 @@ class CredentialsPage(BaseHandler):
             flex_cloud_machine_info = [{'ip': '', 'keyname': '', 'username': '', 'queue_head': True, 'state': ''}]
 
         else:
-            reservation_id = self.user_data.reservation_id
-            logging.info('From user_data, reservation_id = {}'.format(reservation_id))
-
-            params = {'infrastructure': AgentTypes.FLEX,
-                      'user_id': user_id,
-                      'flex_cloud_machine_info': self.user_data.get_flex_cloud_machine_info(),
-                      'reservation_id': reservation_id}
-
-            all_vms = self.__get_all_vms(params)
-            logging.debug('flex: all_vms =\n{0}'.format(pprint.pformat(all_vms)))
-
-            all_vms_map = {vm['pub_ip']: vm for vm in all_vms}
-            logging.debug('flex: all_vms_map =\n{0}'.format(pprint.pformat(all_vms_map)))
-
-            for machine in flex_cloud_machine_info:
-                ip = machine['ip']
-                if ip in all_vms_map:
-                    if all_vms_map[ip]['reservation_id'] == reservation_id:
-                        machine['state'] = all_vms_map[ip]['state']
-                        machine['description'] = all_vms_map[ip]['description']
-                    else:
-                        logging.error('From VMStateModel, reservation_id = {} != user_data.reservation_id'.format(
-                            all_vms_map[ip]['reservation_id']
-                        ))
-                        machine['state'] = VMStateModel.STATE_UNKNOWN
-                        machine['description'] = VMStateModel.STATE_UNKNOWN
-
-                else:
-                    logging.error('Could not find machine with ip : {0}'.format(ip))
-                    machine['state'] = VMStateModel.STATE_UNKNOWN
-                    machine['description'] = VMStateModel.STATE_UNKNOWN
-
-            for machine in flex_cloud_machine_info:
-                machine['key_file_id'] = int(machine['key_file_id'])
-
-            logging.info('After updating from VMStateModel, flex_cloud_machine_info =\n{0}'.format(
-                                                                pprint.pformat(flex_cloud_machine_info)))
+            self.user_data.update_flex_cloud_machine_info_from_db()
+            flex_cloud_machine_info = self.user_data.get_flex_cloud_machine_info()
 
         # We must ensure queue head is first element in this list for GUI to work properly
-        flex_cloud_machine_info = sorted(flex_cloud_machine_info, key = lambda x : x['queue_head'], reverse = True)
+        flex_cloud_machine_info = sorted(flex_cloud_machine_info, key=lambda x: x['queue_head'], reverse=True)
 
         context['flex_cloud_machine_info'] = flex_cloud_machine_info
 
-        # Update Flex Cloud Status
-        valid_flex_cloud_info = False
-        for machine in flex_cloud_machine_info:
-            if machine['queue_head'] and machine['state'] == VMStateModel.STATE_RUNNING:
-                valid_flex_cloud_info = True
-
-        self.user_data.valid_flex_cloud_info = valid_flex_cloud_info
         logging.info('user_data.valid_flex_cloud_info = {0}'.format(self.user_data.valid_flex_cloud_info))
-        self.user_data.put()
-
-        context['valid_flex_cloud_info'] = valid_flex_cloud_info
+        context['valid_flex_cloud_info'] = self.user_data.valid_flex_cloud_info
 
         # Check if the flex cloud credentials are valid.
         if self.user_data.is_flex_cloud_info_set:

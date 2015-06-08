@@ -626,13 +626,20 @@ class SimulatePage(BaseHandler):
 
             # Create a stochhkit_job instance
             if params['resource'] == "local":
-                result=self.runStochKitLocal(params)
+                result = self.runStochKitLocal(params)
 
             elif params['resource'] == 'cloud':
-                if self.user_data.valid_flex_cloud_info:
-                    logging.info('Valid Flex Cloud Configured: Using it in preference')
-                    params['resource'] = '{0}-cloud'.format(AgentTypes.FLEX)
-                    result = self.runCloud(params, agent_type=AgentTypes.FLEX)
+                if self.user_data.is_flex_cloud_info_set:
+                    self.user_data.update_flex_cloud_machine_info_from_db()
+                    flex_queue_head_machine = self.user_data.get_flex_queue_head_machine()
+
+                    if backend_services.is_flex_queue_head_running(flex_queue_head_machine):
+                        logging.info('Flex Queue Head is running')
+                        params['resource'] = '{0}-cloud'.format(AgentTypes.FLEX)
+                        result = self.runCloud(params, agent_type=AgentTypes.FLEX)
+                    else:
+                        result = {'status': False,
+                                  'msg': 'You must have at least queue head running to run in the flex cloud.' }
 
                 else:
                     compute_check_params = {
@@ -651,8 +658,8 @@ class SimulatePage(BaseHandler):
                                    'msg': 'You must have at least one active EC2 compute node to run in the EC2 cloud.' }
 
             else:
-                result={'status':False,
-                        'msg':'There was an error processing your request.'}
+                result = {'status':False,
+                          'msg':'There was an error processing your request.'}
 
             self.response.headers['Content-Type'] = 'application/json'
             self.response.write(json.dumps(result))

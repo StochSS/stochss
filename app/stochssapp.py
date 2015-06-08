@@ -135,6 +135,70 @@ class UserData(db.Model):
         logging.debug('flex_queue_head_machine = {}'.format(queue_head_machine))
         return queue_head_machine
 
+    def __get_all_vms(self, params):
+        try:
+            service = backendservices()
+            result = service.describe_machines_from_db(params)
+            return result
+        except Exception as e:
+            logging.error(str(e))
+            return None
+
+    def update_flex_cloud_machine_info_from_db(self):
+        flex_cloud_machine_info = self.get_flex_cloud_machine_info()
+
+        if flex_cloud_machine_info == None or len(flex_cloud_machine_info) == 0:
+            return
+
+        params = {
+            'infrastructure': AgentTypes.FLEX,
+            'user_id': self.user_id,
+            'flex_cloud_machine_info': flex_cloud_machine_info,
+            'reservation_id': self.reservation_id
+        }
+
+        all_vms = self.__get_all_vms(params)
+        logging.debug('flex: all_vms =\n{0}'.format(pprint.pformat(all_vms)))
+
+        all_vms_map = {vm['pub_ip']: vm for vm in all_vms}
+        logging.debug('flex: all_vms_map =\n{0}'.format(pprint.pformat(all_vms_map)))
+
+        for machine in flex_cloud_machine_info:
+            ip = machine['ip']
+            if ip in all_vms_map:
+                if all_vms_map[ip]['reservation_id'] == self.reservation_id:
+                    machine['state'] = all_vms_map[ip]['state']
+                    machine['description'] = all_vms_map[ip]['description']
+                else:
+                    logging.error('From VMStateModel, reservation_id = {} != user_data.reservation_id'.format(
+                        all_vms_map[ip]['reservation_id']
+                    ))
+                    machine['state'] = VMStateModel.STATE_UNKNOWN
+                    machine['description'] = VMStateModel.STATE_UNKNOWN
+
+            else:
+                logging.error('Could not find machine with ip : {0}'.format(ip))
+                machine['state'] = VMStateModel.STATE_UNKNOWN
+                machine['description'] = VMStateModel.STATE_UNKNOWN
+
+        for machine in flex_cloud_machine_info:
+            machine['key_file_id'] = int(machine['key_file_id'])
+
+        logging.info('After updating from VMStateModel, flex_cloud_machine_info =\n{0}'.format(
+                                                            pprint.pformat(flex_cloud_machine_info)))
+
+        # Update Flex Cloud Status
+        valid_flex_cloud_info = False
+        for machine in flex_cloud_machine_info:
+            if machine['queue_head'] and machine['state'] == VMStateModel.STATE_RUNNING:
+                valid_flex_cloud_info = True
+
+        self.valid_flex_cloud_info = valid_flex_cloud_info
+        self.set_flex_cloud_machine_info(flex_cloud_machine_info)
+        self.put()
+
+        logging.info('valid_flex_cloud_info = {0}'.format(self.valid_flex_cloud_info))
+
 
 class BaseHandler(webapp2.RequestHandler):
     """

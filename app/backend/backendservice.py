@@ -6,6 +6,8 @@ All the input validation is performed in this class.
 from infrastructure_manager import InfrastructureManager
 import uuid
 import re
+import urllib2
+import json
 import logging
 from tasks import *
 
@@ -487,6 +489,27 @@ class backendservices(object):
             traceback.print_exc()
             logging.error("start_ec2_vms : exiting method with error : {0}".format(str(e)))
             return False, 'Errors occur in starting machines:' + str(e)
+
+
+    def is_flex_queue_head_running(self, flex_queue_head_machine):
+        if flex_queue_head_machine == None or flex_queue_head_machine['queue_head'] == False:
+            return False
+
+        try:
+            ip = flex_queue_head_machine['ip']
+            url = "https://{ip}/state".format(ip=ip)
+            response = json.loads(urllib2.urlopen(url).read())
+            logging.info('Response from flex queue head - GET {url} :\n{resp}'.format(url=url,
+                                                                                      resp=pprint.pformat(response)))
+            if response['state'] == 'running' and response['is_queue_head'] == True \
+                    and response['queue_head_ip'] == ip:
+                return True
+
+        except Exception as e:
+            logging.error(traceback.format_exc())
+            logging.error('Error: {}'.format(str(e)))
+
+        return False
 
 
     def isOneOrMoreComputeNodesRunning(self, params, ins_type=None):  # credentials):
