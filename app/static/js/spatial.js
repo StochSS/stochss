@@ -1016,85 +1016,86 @@ Spatial.Controller = Backbone.View.extend(
                         return;
                 }
                 
-                if(data['jobStatus'] == 'Finished' && data['complete'] == 'yes')
+                if(data['jobStatus'] == 'Finished' && data['complete'] == 'yes' )
                 {
-                    if(data['outData'])
+                    if(data['outData']){
                         $( '#plotRegion' ).show();
-                    //Set up trajectory select
-                    trajectorySelect = $("#trajectorySelect");
-                    for(var i = 0; i < this.jobInfo.indata.realizations; i++)
-                    {
-                        $( '<option value="' + i + '">Trajectory ' + i + '</option>' ).appendTo( trajectorySelect );
-                    }
-                    
-                    trajectorySelect.off('change');
-                    trajectorySelect.on('change', _.bind(this.handleTrajectorySelectChange, this));
-
-                    //Set up slider
-                    var slider = $( '#timeSelect' );
-
-                    slider.prop('max', this.jobInfo.indata.time);
-                    slider.val(slider.prop('max'));
-                    slider.prop('step', this.jobInfo.indata.increment);
-
-                    this.maxLimit = this.jobInfo.indata.time;
-
-                    //Add event handler to slider
-                    slider.off('change');
-                    slider.on('change', _.throttle(_.bind(this.handleSliderChange, this), 1000));
-                    slider.trigger('change');
-
-                    // Set up radio buttons
-
-                    var wireSelect = $("#wireSelect");
-                    wireSelect.change(_.bind(function(){
-                        console.log('unitSelect.click');
-                        selectedIndex =  $("#wireSelect")[0].options["selectedIndex"]
-                        selectedOption = $("#wireSelect")[0].options[selectedIndex].value
-                        if( selectedOption == 'solid')
-                            {
-                             this.mesh.material.wireframe = false;
-                            this.mesh.material.needsUpdate = true;
-                            }
-                        else
-                            {
-                                this.mesh.material.wireframe = true;
-                                this.mesh.material.needsUpdate = true;
-                            }
-
-                        this.cache = {}
-                        this.updateCache(this.timeIdx, this.timeIdx + this.cacheRange, true);
-                    }, this));
-
-
-                    var drawUnits = $("#unitSelect");
-                    drawUnits.change(_.bind(function(){
-                        console.log('unitSelect.click');
-                        selectedIndex =  $("#unitSelect")[0].options["selectedIndex"]
-                        selectedOption = $("#unitSelect")[0].options[selectedIndex].value
-                        if( selectedOption == 'population')
-                            {
-                                this.showPopulation  = true;
-                            }
-                        else
-                            {
-                                this.showPopulation  = false;
-                            }
-
-                        this.cache = {}
-                        this.updateCache(this.timeIdx, this.timeIdx + this.cacheRange, true);
-                    }, this));
-
-                    var checkbox = $( "#planeXCheck" );
-                    checkbox.click(_.bind(function(){
-                        
-                        console.log('checkbox x click');
-                        var val = 0.0;
-                        if($("#planeXCheck").is(':checked'))
+                        $( '#domainControls' ).show();
+                        //Set up trajectory select
+                        trajectorySelect = $("#trajectorySelect");
+                        for(var i = 0; i < this.jobInfo.indata.realizations; i++)
                         {
-                            planeX.visible = true; planeXEdges.visible = true; 
-                            val = 1.0;
+                            $( '<option value="' + i + '">Trajectory ' + i + '</option>' ).appendTo( trajectorySelect );
                         }
+                        
+                        trajectorySelect.off('change');
+                        trajectorySelect.on('change', _.bind(this.handleTrajectorySelectChange, this));
+
+                        //Set up slider
+                        var slider = $( '#timeSelect' );
+
+                        slider.prop('max', this.jobInfo.indata.time);
+                        slider.val(slider.prop('max'));
+                        slider.prop('step', this.jobInfo.indata.increment);
+
+                        this.maxLimit = this.jobInfo.indata.time;
+
+                        //Add event handler to slider
+                        slider.off('change');
+                        slider.on('change', _.throttle(_.bind(this.handleSliderChange, this), 1000));
+                        slider.trigger('change');
+
+                        // Set up radio buttons
+
+                        var wireSelect = $("#wireSelect");
+                        wireSelect.change(_.bind(function(){
+                            console.log('unitSelect.click');
+                            selectedIndex =  $("#wireSelect")[0].options["selectedIndex"]
+                            selectedOption = $("#wireSelect")[0].options[selectedIndex].value
+                            if( selectedOption == 'solid')
+                                {
+                                 this.mesh.material.wireframe = false;
+                                this.mesh.material.needsUpdate = true;
+                                }
+                            else
+                                {
+                                    this.mesh.material.wireframe = true;
+                                    this.mesh.material.needsUpdate = true;
+                                }
+
+                            this.cache = {}
+                            this.updateCache(this.timeIdx, this.timeIdx + this.cacheRange, true);
+                        }, this));
+
+
+                        var drawUnits = $("#unitSelect");
+                        drawUnits.change(_.bind(function(){
+                            console.log('unitSelect.click');
+                            selectedIndex =  $("#unitSelect")[0].options["selectedIndex"]
+                            selectedOption = $("#unitSelect")[0].options[selectedIndex].value
+                            if( selectedOption == 'population')
+                                {
+                                    this.showPopulation  = true;
+                                }
+                            else
+                                {
+                                    this.showPopulation  = false;
+                                }
+
+                            this.cache = {}
+                            this.updateCache(this.timeIdx, this.timeIdx + this.cacheRange, true);
+                        }, this));
+
+                        var checkbox = $( "#planeXCheck" );
+                        checkbox.click(_.bind(function(){
+                            
+                            console.log('checkbox x click');
+                            var val = 0.0;
+                            if($("#planeXCheck").is(':checked'))
+                            {
+                                planeX.visible = true; planeXEdges.visible = true; 
+                                val = 1.0;
+                            }
 
                         else{
                             planeX.visible = false; planeXEdges.visible = false;
@@ -1103,86 +1104,87 @@ Spatial.Controller = Backbone.View.extend(
                         this.mesh.material.uniforms.xflag.value = val;
                         this.mesh.material.needsUpdate = true;
 
-                    }, this));
+                        }, this));
 
-                    var checkbox = $( "#planeYCheck" );
-                    checkbox.click(_.bind(function(){ 
-                        console.log('checkbox y click');
-                        
-                        var val = 0.0;
-                        if($("#planeYCheck").is(':checked'))
-                        {
-                            planeY.visible = true; planeYEdges.visible = true;
-                            val = 1.0;
-                        }
+                        var checkbox = $( "#planeYCheck" );
+                        checkbox.click(_.bind(function(){ 
+                            console.log('checkbox y click');
+                            
+                            var val = 0.0;
+                            if($("#planeYCheck").is(':checked'))
+                            {
+                                planeY.visible = true; planeYEdges.visible = true;
+                                val = 1.0;
+                            }
 
-                        else{
-                            planeY.visible = false; planeYEdges.visible = false;
+                            else{
+                                planeY.visible = false; planeYEdges.visible = false;
 
-                        }
-                        planeY.position.z = $( "#planeYSelect" ).val();
-                        this.mesh.material.uniforms.yflag.value = val;
-                        this.mesh.material.needsUpdate = true;
+                            }
+                            planeY.position.z = $( "#planeYSelect" ).val();
+                            this.mesh.material.uniforms.yflag.value = val;
+                            this.mesh.material.needsUpdate = true;
 
-                    }, this));
+                        }, this));
 
-                    var checkbox = $( "#planeZCheck" );
-                    checkbox.click(_.bind(function(){
-                        console.log('checkbox z click');
-                        var val = 0.0;
-                        if($("#planeZCheck").is(':checked'))
-                        {
-                            planeZ.visible = true; planeZEdges.visible = true; val = 1.0;
-                        }
+                        var checkbox = $( "#planeZCheck" );
+                        checkbox.click(_.bind(function(){
+                            console.log('checkbox z click');
+                            var val = 0.0;
+                            if($("#planeZCheck").is(':checked'))
+                            {
+                                planeZ.visible = true; planeZEdges.visible = true; val = 1.0;
+                            }
 
-                        else{
-                            planeZ.visible = false; planeZEdges.visible = false;
+                            else{
+                                planeZ.visible = false; planeZEdges.visible = false;
 
-                        }
-                        planeZ.position.y = $( "#planeZSelect" ).val();
-                        this.mesh.material.uniforms.zflag.value = val;
-                        this.mesh.material.needsUpdate = true;
-                        
-                    }, this));
+                            }
+                            planeZ.position.y = $( "#planeZSelect" ).val();
+                            this.mesh.material.uniforms.zflag.value = val;
+                            this.mesh.material.needsUpdate = true;
+                            
+                        }, this));
 
-                    var checkbox = $( "#planeXFlip" );
-                    checkbox.click(_.bind(function(){
-                        if($("#planeXFlip").is(':checked'))
-                        {
-                            this.mesh.material.uniforms.xflip.value = -1.0;
-                        } else {
-                            this.mesh.material.uniforms.xflip.value = 1.0;
-                        }
+                        var checkbox = $( "#planeXFlip" );
+                        checkbox.click(_.bind(function(){
+                            if($("#planeXFlip").is(':checked'))
+                            {
+                                this.mesh.material.uniforms.xflip.value = -1.0;
+                            } else {
+                                this.mesh.material.uniforms.xflip.value = 1.0;
+                            }
 
-                        this.mesh.material.needsUpdate = true;
-                    }, this));
+                            this.mesh.material.needsUpdate = true;
+                        }, this));
 
-                    var checkbox = $( "#planeYFlip" );
-                    checkbox.click(_.bind(function(){
-                        if($("#planeYFlip").is(':checked'))
-                        {
-                            this.mesh.material.uniforms.yflip.value = -1.0;
-                        } else {
-                            this.mesh.material.uniforms.yflip.value = 1.0;
-                        }
+                        var checkbox = $( "#planeYFlip" );
+                        checkbox.click(_.bind(function(){
+                            if($("#planeYFlip").is(':checked'))
+                            {
+                                this.mesh.material.uniforms.yflip.value = -1.0;
+                            } else {
+                                this.mesh.material.uniforms.yflip.value = 1.0;
+                            }
 
-                        this.mesh.material.needsUpdate = true;
-                    }, this));
+                            this.mesh.material.needsUpdate = true;
+                        }, this));
 
-                    var checkbox = $( "#planeZFlip" );
-                    checkbox.click(_.bind(function(){
-                        if($("#planeZFlip").is(':checked'))
-                        {
-                            this.mesh.material.uniforms.zflip.value = -1.0;
-                        } else {
-                            this.mesh.material.uniforms.zflip.value = 1.0;
-                        }
+                        var checkbox = $( "#planeZFlip" );
+                        checkbox.click(_.bind(function(){
+                            if($("#planeZFlip").is(':checked'))
+                            {
+                                this.mesh.material.uniforms.zflip.value = -1.0;
+                            } else {
+                                this.mesh.material.uniforms.zflip.value = 1.0;
+                            }
 
-                        this.mesh.material.needsUpdate = true;
-                    }, this));
+                            this.mesh.material.needsUpdate = true;
+                        }, this));
 
-                    $("#playSpeed").html( (1000/ this.playMeshInterval).toFixed(2) );
+                        $("#playSpeed").html( (1000/ this.playMeshInterval).toFixed(2) );
 
+                    }
                 }
                 else
                 {
