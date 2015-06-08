@@ -505,23 +505,26 @@ class StatusPage(BaseHandler):
                             'agent_type': AgentTypes.EC2
                         }
                     elif job.resource == spatial.SpatialJobWrapper.FLEX_CLOUD_RESOURCE:
-                        queue_head_machine = self.user_data.get_flex_queue_head_machine()
-                        taskparams = {
-                            'flex_db_password': self.user_data.flex_db_password,
-                            'queue_head_ip': queue_head_machine['ip'],
-                            'taskids':[job.cloud_id],
-                            'agent_type': AgentTypes.FLEX
-                        }
+                        try:
+                            queue_head_machine = self.user_data.get_flex_queue_head_machine()
+                            taskparams = {
+                                'flex_db_password': self.user_data.flex_db_password,
+                                'queue_head_ip': queue_head_machine['ip'],
+                                'taskids':[job.cloud_id],
+                                'agent_type': AgentTypes.FLEX
+                            }
+                        except Exception as e:
+                            logging.exception(e)
 
                     task_status = service.describeTask(taskparams)
                     logging.info('task_status =\n{}'.format(pprint.pformat(task_status)))
 
-                    if job.cloud_id in task_status:
+                    if task_status is not None and job.cloud_id in task_status:
                         job_status = task_status[job.cloud_id]
                     else:
                         job_status = None
                     # It frequently happens that describeTasks return None before the job is finsihed.
-                    if job_status == None:
+                    if job_status is None:
                         job.status = "Unknown"
                     else:
                         if job_status['status'] == 'finished':

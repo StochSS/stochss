@@ -834,19 +834,20 @@ class SpatialPage(BaseHandler):
                 ec2_credentials = self.user_data.getCredentials()
                 logging.info('ec2_credentials = {}'.format(ec2_credentials))
 
-                if os.environ["AWS_ACCESS_KEY_ID"] == '':
+                if 'EC2_ACCESS_KEY' not in ec2_credentials:
                     result = {'status':False,
                               'msg':'Access Key not set. Check : Settings > Cloud Computing'}
                     return self.response.write(json.dumps(result))
 
-                if os.environ["AWS_SECRET_ACCESS_KEY"] == '':
+                if 'EC2_SECRET_KEY' not in ec2_credentials: 
                     result = {'status':False,
                               'msg':'Secret Key not set. Check : Settings > Cloud Computing'}
                     return self.response.write(json.dumps(result))
 
                 # Set the environmental variables
-                os.environ["AWS_ACCESS_KEY_ID"] = ec2_credentials['EC2_ACCESS_KEY']
-                os.environ["AWS_SECRET_ACCESS_KEY"] = ec2_credentials['EC2_SECRET_KEY']
+                #TODO delete all reference to AWS_ACCESS_KEY_ID and AWS_SECRET_ACCESS_KEY - wrong names
+                #os.environ["AWS_ACCESS_KEY_ID"] = ec2_credentials['EC2_ACCESS_KEY']
+                #os.environ["AWS_SECRET_ACCESS_KEY"] = ec2_credentials['EC2_SECRET_KEY']
 
                 # Send the task to the backend
                 cloud_result = service.submit_cloud_task(params=cloud_params, agent_type=agent_type,

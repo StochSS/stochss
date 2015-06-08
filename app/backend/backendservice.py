@@ -231,6 +231,9 @@ class backendservices(object):
          {"taskid":"result:"","state":""} 
         '''
         logging.info('describeTask: params =\n{}'.format(pprint.pformat(params)))
+        if not 'agent_type' in params:
+            logging.error('Invalid agent type!')
+            return None
 
         if params['agent_type'] == AgentTypes.EC2:
             os.environ["AWS_ACCESS_KEY_ID"] = params['AWS_ACCESS_KEY_ID']

@@ -40,7 +40,7 @@ import time
 
 class TaskConfig:
     USERNAME = 'ubuntu'
-    STOCHSS_HOME = os.path.join('~', 'stochss')
+    STOCHSS_HOME = os.path.join('/','home',USERNAME, 'stochss')
     STOCHKIT_DIR = os.path.join(STOCHSS_HOME, 'StochKit')
     ODE_DIR = os.path.join(STOCHSS_HOME, 'ode')
     STOCHOPTIM_DIR = os.path.join(STOCHSS_HOME, 'stochoptim')
