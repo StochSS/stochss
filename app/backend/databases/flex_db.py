@@ -55,7 +55,7 @@ class FlexDB(BaseDB):
                 with closing(db.cursor()) as db_cursor:
                     sql = "SELECT * FROM `{table}` WHERE taskid IN {taskid_list};".format(table=tablename,
                                                                                           taskid_list=taskid_list)
-                    logging.info("sql = {}".format(sql))
+                    logging.debug("sql = {}".format(sql))
 
                     db_cursor.execute(sql)
 
@@ -92,7 +92,7 @@ class FlexDB(BaseDB):
                 with closing(db.cursor()) as db_cursor:
                     sql = "DELETE FROM `{tablename}` WHERE taskid = '{taskid}';".format(tablename=tablename,
                                                                                         taskid=taskid)
-                    logging.info("sql = {}".format(sql))
+                    logging.debug("sql = {}".format(sql))
 
                     db_cursor.execute(sql)
                 db.commit()
@@ -127,7 +127,7 @@ class FlexDB(BaseDB):
                 with open(stochss_db_schema_filename) as fin:
                     create_schema_sql = fin.read().replace('\n', ' ')
 
-                logging.info('create_schema_sql =\n{}'.format(create_schema_sql))
+                logging.debug('create_schema_sql =\n{}'.format(create_schema_sql))
 
                 db = self.__open_db_connection()
                 with closing(db.cursor()) as db_cursor:
@@ -197,7 +197,7 @@ class FlexDB(BaseDB):
                         table_name=table_name,
                         attribute_name=attribute_name,
                         attribute_value=attribute_value)
-                    logging.info("sql = {}".format(sql))
+                    logging.debug("sql = {}".format(sql))
 
                     db_cursor.execute(sql)
 
@@ -258,7 +258,7 @@ class FlexDB(BaseDB):
                     field_name_list=field_name_list,
                     field_value_list=field_value_list,
                     update_field_list=update_field_list)
-                logging.info("sql = {}".format(sql))
+                logging.debug("sql = {}".format(sql))
 
                 db_cursor.execute(sql)
             db.commit()

@@ -151,7 +151,7 @@ class VirtualMachine(object):
             contents = fin.read()
 
         allowed_executables = [
-            "/home/{username}/stochss/release-tools/flex-cloud/deregister_flex_vm.sh".format(username=self.username)
+            "/home/{username}/stochss/release-tools/flex-cloud/deregister_flex_vm.sh, /tmp/start_celery.sh".format(username=self.username)
         ]
 
         contents = contents.replace('EXECUTABLES', ','.join(allowed_executables))
