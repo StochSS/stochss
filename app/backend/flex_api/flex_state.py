@@ -245,7 +245,7 @@ class FlexVMState(object):
         st = os.stat(start_celery_script)
         os.chmod(start_celery_script, st.st_mode | stat.S_IEXEC)
 
-        os.system('sudo {}'.format(start_celery_script))
+        os.system('sudo -H -u ubuntu \"{}\"'.format(start_celery_script))
 
 
 class AgentTypes(object):
