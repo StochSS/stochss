@@ -5,9 +5,6 @@ import sys
 import stat
 import json
 
-sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..', 'common')))
-
-from common.config import AgentTypes, FlexConfig, CeleryConfig
 
 DEREGISTER_FLEX_VM_SCRIPT = os.path.abspath(os.path.join(os.path.dirname(__file__), '..',
                                                 '..', '..', 'release-tools', 'flex-cloud', 'deregister_flex_vm.sh'))
@@ -202,7 +199,7 @@ class FlexVMState(object):
 
 
     @staticmethod
-    def __start_celery(stochss_parent_dir, celery_log_level, celery_worker_name):
+    def __start_celery(stochss_parent_dir, celery_log_level, celery_worker_name, instance_type):
         stochss_dir = os.path.join(stochss_parent_dir, 'stochss')
         commands = []
         commands.append('export STOCHKIT_HOME={}'.format(os.path.join(stochss_dir, 'StochKit')))
@@ -221,7 +218,7 @@ class FlexVMState(object):
         commands.append(
             "celery -A tasks worker -Q {q1},{q2} -n {worker_name} --autoreload --loglevel={log_level} --workdir {workdir} > {celery_log} 2>&1".format(
                 q1=CeleryConfig.get_queue_name(agent_type=AgentTypes.FLEX),
-                q2=CeleryConfig.get_queue_name(agent_type=AgentTypes.FLEX, instance_type=FlexConfig.INSTANCE_TYPE),
+                q2=CeleryConfig.get_queue_name(agent_type=AgentTypes.FLEX, instance_type=instance_type),
                 log_level=celery_log_level,
                 worker_name=celery_worker_name,
                 work_dir=stochss_parent_dir,
@@ -249,3 +246,32 @@ class FlexVMState(object):
 
         os.system('sudo {}'.format(start_celery_script))
 
+
+class AgentTypes(object):
+    FLEX = 'flex'
+
+class CeleryConfig(object):
+    EXCHANGE_PREFIX = "exchange_stochss"
+    QUEUE_PREFIX = "queue_stochss"
+    ROUTING_KEY_PREFIX = "routing_key_stochss"
+
+    @staticmethod
+    def get_exchange_name(agent_type, instance_type=None):
+        if instance_type != None:
+            return "{0}_{1}_{2}".format(CeleryConfig.EXCHANGE_PREFIX, agent_type, instance_type.replace(".", ""))
+        else:
+            return "{0}_{1}".format(CeleryConfig.EXCHANGE_PREFIX, agent_type)
+
+    @staticmethod
+    def get_queue_name(agent_type, instance_type=None):
+        if instance_type != None:
+            return "{0}_{1}_{2}".format(CeleryConfig.QUEUE_PREFIX, agent_type, instance_type.replace(".", ""))
+        else:
+            return "{0}_{1}".format(CeleryConfig.QUEUE_PREFIX, agent_type)
+
+    @staticmethod
+    def get_routing_key_name(agent_type, instance_type=None):
+        if instance_type != None:
+            return "{0}_{1}_{2}".format(CeleryConfig.ROUTING_KEY_PREFIX, agent_type, instance_type.replace(".", ""))
+        else:
+            return "{0}_{1}".format(CeleryConfig.ROUTING_KEY_PREFIX, agent_type)

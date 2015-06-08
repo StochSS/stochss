@@ -198,7 +198,8 @@ class FlexAgent(BaseAgent):
             self.__deregister_flex_vm(ip=machine['ip'],
                                       username=machine['username'],
                                       keyfile=machine['keyfile'],
-                                      parameters=parameters)
+                                      parameters=parameters,
+                                      queue_head_ip=parameters[self.PARAM_FLEX_QUEUE_HEAD]['ip'])
 
     def get_instance_state(self, ip, username, keyfile):
         logging.info('Checking state...')
