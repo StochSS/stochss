@@ -296,7 +296,7 @@ function install_dolfin {
     fi
 }
 
-function check_spatial_installation {
+function check_python_package_installation {
     check_and_install_deps
     echo "Checking for FEniCS/Dolfin"
     if check_dolfin; then
@@ -329,10 +329,10 @@ function check_spatial_installation {
 
 #####################
 
-if check_spatial_installation;then
-    echo "Spatial libraries installed correctly"
+if check_python_package_installation;then
+    echo "Python packages installed correctly"
 else
-    echo "Error checking the spatial libraries"
+    echo "Error checking the Python packages"
     exit 1
 fi
 #####################
