@@ -86,7 +86,8 @@ class FlexVMState(object):
                                                    instance_type=instance_type)
                 FlexVMState.__start_celery(stochss_parent_dir=stochss_parent_dir,
                                            celery_log_level=celery_log_level,
-                                           celery_worker_name=celery_worker_name)
+                                           celery_worker_name=celery_worker_name,
+                                           instance_type=instance_type)
 
                 state_info = FlexVMState.get_state_info()
                 if state_info['state'] == 'running' and state_info['queue_head_ip'] == queue_head_ip:
@@ -156,7 +157,7 @@ class FlexVMState(object):
     @staticmethod
     def __create_celery_config(celery_config_filename, queue_head_ip, instance_type):
         celery_config_template = os.path.abspath(os.path.join(os.path.dirname(__file__),
-                                                              '..', '..', 'app', 'backend', 'celeryconfig.py.template'))
+                                                              '..', '..', 'backend', 'celeryconfig.py.template'))
 
         with open(celery_config_template) as fin:
             celery_config_lines = fin.readlines()
