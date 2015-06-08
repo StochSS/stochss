@@ -222,7 +222,7 @@ class FlexVMState(object):
                 q2=CeleryConfig.get_queue_name(agent_type=AgentTypes.FLEX, instance_type=instance_type),
                 log_level=celery_log_level,
                 worker_name=celery_worker_name,
-                work_dir=stochss_parent_dir,
+                workdir=stochss_parent_dir,
                 celery_log=os.path.join(stochss_parent_dir, 'celery.log'),
             )
         )
