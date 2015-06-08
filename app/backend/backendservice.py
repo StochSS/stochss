@@ -105,9 +105,10 @@ class backendservices(object):
                                                ec2_access_key=ec2_access_key)
 
             elif agent_type == AgentTypes.FLEX:
+                username =flex_credentials['flex_queue_head']['username']
                 storage_agent = FlexStorageAgent(queue_head_ip=flex_credentials['flex_queue_head']['ip'],
-                                                 queue_head_username=flex_credentials['flex_queue_head']['username'],
-                                                 queue_head_keyfile=os.path.join(FlexConfig.QUEUE_HEAD_KEY_DIR,
+                                                 queue_head_username=username,
+                                                 queue_head_keyfile=os.path.join('/home', username, FlexConfig.QUEUE_HEAD_KEY_DIR,
                                                                                  os.path.basename(flex_credentials['flex_queue_head']['keyfile'])))
 
 

@@ -53,7 +53,7 @@ class AWSConfig(object):
 
 class FlexConfig(object):
     INSTANCE_TYPE = 'flexvm'
-    QUEUE_HEAD_KEY_DIR = '~/stochss/app/backend/tmp/flex/keyfiles'
+    QUEUE_HEAD_KEY_DIR = 'stochss/app/backend/tmp/flex/keyfiles'
     OUTPUT_STORE_DIR = '~/stochss/app/backend/tmp/flex/output'
 
 
