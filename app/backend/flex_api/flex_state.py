@@ -239,7 +239,7 @@ class FlexVMState(object):
         ])
 
         start_celery_script = '/tmp/start_celery.sh'
-        with open(os.path.join(start_celery_script)) as fin:
+        with open(os.path.join(start_celery_script), 'w') as fin:
             fin.write(script)
 
         st = os.stat(start_celery_script)
