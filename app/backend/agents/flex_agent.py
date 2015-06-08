@@ -28,7 +28,6 @@ __email__ = 'dnath@cs.ucsb.edu'
 class FlexAgent(BaseAgent):
     AGENT_NAME = AgentTypes.FLEX
 
-    PARAM_CREDENTIALS = 'credentials'
     PARAM_QUEUE_HEAD = 'queue_head'
     PARAM_FLEX_CLOUD_MACHINE_INFO = 'flex_cloud_machine_info'
     PARAM_USER_ID = 'user_id'
@@ -275,8 +274,6 @@ class FlexAgent(BaseAgent):
         remote_queue_head_keyfile = os.path.join(FlexConfig.QUEUE_HEAD_KEY_DIR,
                                                  os.path.basename(queue_head_keyfile))
 
-        credentials = parameters[self.PARAM_CREDENTIALS]
-
         for machine in flex_cloud_machine_info:
             ip = machine['ip']
             keyfile = machine['keyfile']
@@ -317,10 +314,6 @@ class FlexAgent(BaseAgent):
             script_lines = []
             script_lines.append("#!/bin/bash")
 
-            script_lines.append("echo export AWS_ACCESS_KEY_ID={0} >> ~/.bashrc".format(credentials['EC2_ACCESS_KEY']))
-            script_lines.append(
-                "echo export AWS_SECRET_ACCESS_KEY={0} >> ~/.bashrc".format(credentials['EC2_SECRET_KEY']))
-
             script_lines.append("echo export STOCHKIT_HOME={0} >> ~/.bashrc".format("~/stochss/StochKit/"))
             script_lines.append("echo export STOCHKIT_ODE={0} >> ~/.bashrc".format("~/stochss/ode/"))
             script_lines.append("echo export R_LIBS={0} >> ~/.bashrc".format("~/stochss/stochoptim/library"))
@@ -329,7 +322,7 @@ class FlexAgent(BaseAgent):
                                                         remote_queue_head_keyfile=remote_queue_head_keyfile))
 
             if is_queue_head:
-                logging.info('Adding extra commnds for configuring queue head...')
+                logging.info('Adding extra commands for configuring queue head...')
                 script_lines.append("sudo rabbitmqctl add_user stochss ucsb")
                 script_lines.append('sudo rabbitmqctl set_permissions -p / stochss ".*" ".*" ".*"')
 

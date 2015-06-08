@@ -19,6 +19,9 @@ import logging
 from threading import Timer
 import datetime
 import pprint
+import traceback
+import urllib2
+import json
 
 from google.appengine.ext import db
 from kombu import Queue, Exchange
@@ -150,7 +153,8 @@ class FlexBackendWorker(BackendWorker):
         helper.update_celery_config_with_queue_head_ip(queue_head_ip=queue_head_machine['ip'],
                                                                agent_type=self.agent_type)
 
-        self.__configure_celery(params=parameters, public_ips=public_ips, instance_ids=instance_ids)
+        self.__configure_celery(params=parameters, public_ips=public_ips, instance_ids=instance_ids,
+                                                                        queue_head_ip=queue_head_machine['ip'])
 
         return
 
@@ -319,7 +323,7 @@ class FlexBackendWorker(BackendWorker):
         return public_ips, private_ips, instance_ids, keyfiles, usernames
 
 
-    def __configure_celery(self, params, public_ips, instance_ids):
+    def __configure_celery(self, params, public_ips, instance_ids, queue_head_ip):
         '''
         Private method used for uploading the current celery configuration to each instance
         that is running and ssh connectable.
@@ -338,29 +342,53 @@ class FlexBackendWorker(BackendWorker):
         flex_cloud_machine_info = params[self.PARAM_FLEX_CLOUD_MACHINE_INFO]
         flex_cloud_machine_info_map = {machine['ip']: machine for machine in flex_cloud_machine_info}
 
-        credentials = params['credentials']
-
-
         for ip, ins_id in zip(public_ips, instance_ids):
             # helper.wait_for_ssh_connection(key_file, ip)
             ins_type = VMStateModel.get_instance_type(params, ins_id)
             logging.info('For ip: {0} ins_type = {1}'.format(ip, ins_type))
 
-            commands = []
-            commands.append('source ~/.bashrc')
-            commands.append('export AWS_ACCESS_KEY_ID={0}'.format(credentials['EC2_ACCESS_KEY']))
-            commands.append('export AWS_SECRET_ACCESS_KEY={0}'.format(credentials['EC2_SECRET_KEY']))
-            commands.append('export INSTANCE_TYPE={0}'.format(ins_type))
-
-            keyfile = flex_cloud_machine_info_map[ip]['keyfile']
+            # commands = []
+            # commands.append('source ~/.bashrc')
+            #
+            # keyfile = flex_cloud_machine_info_map[ip]['keyfile']
             username = flex_cloud_machine_info_map[ip]['username']
 
-            success = helper.start_celery_on_vm(instance_type=ins_type, ip=ip, key_file=keyfile,
-                                                username=username,
-                                                agent_type=self.agent_type,
-                                                worker_name=ip.replace('.', '_'),
-                                                prepend_commands=commands)
-            if success == 0:
+            success = False
+            prepare_info = {
+                'worker_name': ip.replace('.', '_'),
+                'instance_type': ins_type,
+                'stochss_parent_dir': os.path.join('/home', username),
+                'queue_head_ip': queue_head_ip,
+                'flex_db_password': params[self.PARAM_FLEX_DB_PASSWORD],
+                'celery_log_level': 'info'
+            }
+
+            try:
+                url = "https://{ip}/prepare".format(ip=ip)
+                data = json.dumps(prepare_info)
+                req = urllib2.Request(url, data, {'Content-Type': 'application/json'})
+                f = urllib2.urlopen(req)
+                data_recv = f.read()
+                f.close()
+
+                response = json.loads(data_recv)
+                logging.info('response =\n{}'.format(pprint.pformat(response)))
+
+                if response['status'] == 'success':
+                    success = True
+                else:
+                    logging.error('Failed to setup celery!')
+
+            except Exception as e:
+                logging.error(traceback.format_exc())
+                logging.error('Error: {}'.format(str(e)))
+
+            # success = helper.start_celery_on_vm(instance_type=ins_type, ip=ip, key_file=keyfile,
+            #                                     username=username,
+            #                                     agent_type=self.agent_type,
+            #                                     worker_name=ip.replace('.', '_'),
+            #                                     prepend_commands=commands)
+            if success:
                 # update db with successful running vms
                 logging.info("celery started! ")
                 logging.info("host ip: {0}".format(ip))
