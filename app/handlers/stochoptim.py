@@ -15,6 +15,7 @@ import sys
 import os
 import re
 import signal
+import pprint
 import shlex
 import subprocess
 import tempfile
@@ -656,21 +657,44 @@ class StochOptimVisualization(BaseHandler):
                         optimization.status = "Finished"
                     else:
                         optimization.status = "Failed"
-            else: #cloud
+            else:
+                #cloud
                 # Retrive credentials from the datastore
-                if not self.user_data.valid_credentials:
+
+                if optimization.resource == StochOptimJobWrapper.EC2_CLOUD_RESOURCE:
+                    if not self.user_data.valid_credentials:
+                        return {'status':False,
+                                'msg':'Could not retrieve the status of job '+ optimization.jobName +'. Invalid credentials.'}
+                    credentials = self.user_data.getCredentials()
+                    # Check the status from backend
+                    taskparams = {
+                        'AWS_ACCESS_KEY_ID': credentials['EC2_ACCESS_KEY'],
+                        'AWS_SECRET_ACCESS_KEY': credentials['EC2_SECRET_KEY'],
+                        'taskids': [optimization.cloudDatabaseID],
+                        'agent_type': AgentTypes.EC2
+                    }
+
+                elif optimization.resource == StochOptimJobWrapper.FLEX_CLOUD_RESOURCE:
+                    if not self.user_data.valid_flex_cloud_info:
+                        return {'status':False,
+                                'msg':'Could not retrieve the status of job '+optimization.jobName +'. Invalid flex cloud info.'}
+
+                    queue_head_machine = self.user_data.get_flex_queue_head_machine()
+                    taskparams = {
+                        'flex_db_password': self.user_data.flex_db_password,
+                        'queue_head_ip': queue_head_machine['ip'],
+                        'taskids':[optimization.cloudDatabaseID],
+                        'agent_type': AgentTypes.FLEX
+                    }
+
+                else:
                     return {'status':False,
-                            'msg':'Could not retrieve the status of job '+ optimization.jobName +'. Invalid credentials.'}
-                credentials = self.user_data.getCredentials()
-                # Check the status from backend
-                taskparams = {
-                    'AWS_ACCESS_KEY_ID': credentials['EC2_ACCESS_KEY'],
-                    'AWS_SECRET_ACCESS_KEY': credentials['EC2_SECRET_KEY'],
-                    'taskids': [optimization.cloudDatabaseID],
-                    'agent_type': AgentTypes.EC2
-                }
+                             'msg':'Could not retrieve the status of job '+optimization.jobName +'. Invalid Cloud resource.'}
+
                 task_status = service.describeTask(taskparams)
+                logging.info('task_status =\n{}'.format(pprint.pformat(task_status)))
                 job_status = task_status[optimization.cloudDatabaseID]
+
                 # If it's finished
                 if job_status['status'] == 'finished':
                     # Update the job 
@@ -700,7 +724,7 @@ class StochOptimVisualization(BaseHandler):
 
             optimization.put()
         # Might need to download the cloud data
-        if optimization.resource == "cloud":
+        if optimization.resource in StochOptimJobWrapper.SUPPORTED_CLOUD_RESOURCES:
             if optimization.status == "Finished":
                 if optimization.has_final_cloud_data():
                     # Nothing to do here
@@ -810,30 +834,53 @@ class StochOptimVisualization(BaseHandler):
             return
     
     def __fetch_cloud_output(self, job_wrapper):
-        '''
-        '''
+        result = {}
+
         try:
-            result = {}
             service = backend.backendservice.backendservices()
             # check if the outputURL is empty, if so, update it from the DB
             if job_wrapper.outputURL is None:
                 logging.info("stochoptim.outputURL is None")
                 # Retrive credentials from the datastore
-                if not self.user_data.valid_credentials:
-                    return {'status':False,'msg':'Could not retrieve the status of job '+job_wrapper.jobName +'. Invalid credentials.'}
-                credentials = self.user_data.getCredentials()
-                # Check the status from backend
-                taskparams = {
-                    'AWS_ACCESS_KEY_ID': credentials['EC2_ACCESS_KEY'],
-                    'AWS_SECRET_ACCESS_KEY': credentials['EC2_SECRET_KEY'],
-                    'taskids': [job_wrapper.cloudDatabaseID],
-                    'agent_type': AgentTypes.EC2
-                }
+
+                if job_wrapper.resource == StochOptimJobWrapper.EC2_CLOUD_RESOURCE:
+                    if not self.user_data.valid_credentials:
+                        return {'status':False,
+                                'msg':'Could not retrieve the status of job '+job_wrapper.jobName +'. Invalid credentials.'}
+                    credentials = self.user_data.getCredentials()
+                    # Check the status from backend
+                    taskparams = {
+                        'AWS_ACCESS_KEY_ID': credentials['EC2_ACCESS_KEY'],
+                        'AWS_SECRET_ACCESS_KEY': credentials['EC2_SECRET_KEY'],
+                        'taskids': [job_wrapper.cloudDatabaseID],
+                        'agent_type': AgentTypes.EC2
+                    }
+
+                elif job_wrapper.resource == StochOptimJobWrapper.FLEX_CLOUD_RESOURCE:
+                    if not self.user_data.valid_flex_cloud_info:
+                        return {'status':False,
+                                'msg':'Could not retrieve the status of job '+job_wrapper.jobName +'. Invalid flex cloud info.'}
+
+                    queue_head_machine = self.user_data.get_flex_queue_head_machine()
+                    taskparams = {
+                        'flex_db_password': self.user_data.flex_db_password,
+                        'queue_head_ip': queue_head_machine['ip'],
+                        'taskids':[job_wrapper.cloudDatabaseID],
+                        'agent_type': AgentTypes.FLEX
+                    }
+
+                else:
+                    return {'status':False,
+                             'msg':'Could not retrieve the status of job '+job_wrapper.jobName +'. Invalid Cloud resource.'}
+
                 task_status = service.describeTask(taskparams)
-                logging.info("job_status = task_status[job.cloudDatabaseID={0}] = {1}".format(job_wrapper.cloudDatabaseID, task_status))
+                logging.info("job_status = task_status[job.cloudDatabaseID={0}] = {1}".format(
+                                                            job_wrapper.cloudDatabaseID, task_status))
                 job_status = task_status[job_wrapper.cloudDatabaseID]
                 logging.info("job_status = {0}".format(job_status))
                 job_wrapper.outputURL = job_status['output']
+
+
             # Grab the remote files
             service.fetchOutput(job_wrapper.cloudDatabaseID, job_wrapper.outputURL)
             # Unpack it to its local output location...
@@ -841,12 +888,15 @@ class StochOptimVisualization(BaseHandler):
             job_wrapper.outData = os.path.abspath(
                 os.path.dirname(os.path.abspath(__file__))+'/../output/'+job_wrapper.cloudDatabaseID
             )
+
             # Clean up
             os.remove(job_wrapper.cloudDatabaseID+'.tar')
+
             # Save the updated status
             job_wrapper.put()
             result['status']=True
             result['msg'] = "Successfully fetched the remote output files."
+
         except Exception,e:
             logging.info('************************************* {0}'.format(e))
             result['status']=False
