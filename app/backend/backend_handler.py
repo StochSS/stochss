@@ -373,52 +373,20 @@ class FlexBackendWorker(BackendWorker):
             ins_type = VMStateModel.get_instance_type(params, ins_id)
             logging.info('For ip: {0} ins_type = {1}'.format(ip, ins_type))
 
-            # commands = []
-            # commands.append('source ~/.bashrc')
-            #
-            # keyfile = flex_cloud_machine_info_map[ip]['keyfile']
+
+            commands = []
+            commands.append('source ~/.bashrc')
+            commands.append('export INSTANCE_TYPE={0}'.format(ins_type))
+
+            keyfile = flex_cloud_machine_info_map[ip]['keyfile']
             username = flex_cloud_machine_info_map[ip]['username']
 
-            success = False
-            prepare_info = {
-                'worker_name': ip.replace('.', '_'),
-                'instance_type': ins_type,
-                'stochss_parent_dir': os.path.join('/home', username),
-                'queue_head_ip': queue_head_ip,
-                'flex_db_password': params[self.PARAM_FLEX_DB_PASSWORD],
-                'celery_log_level': 'info'
-            }
-
-            try:
-                helper.copy_celery_config_to_vm(instance_type=ins_type, ip=ip,
-                                                key_file=flex_cloud_machine_info_map[ip]['keyfile'],
-                                                agent_type=self.agent_type, username=username)
-
-                url = "https://{ip}/prepare".format(ip=ip)
-                data = json.dumps(prepare_info)
-                req = urllib2.Request(url, data, {'Content-Type': 'application/json'})
-                f = urllib2.urlopen(req)
-                data_recv = f.read()
-                f.close()
-
-                response = json.loads(data_recv)
-                logging.info('response =\n{}'.format(pprint.pformat(response)))
-
-                if response['status'] == 'success':
-                    success = True
-                else:
-                    logging.error('Failed to setup celery!')
-
-            except Exception as e:
-                logging.error(traceback.format_exc())
-                logging.error('Error: {}'.format(str(e)))
-
-            # success = helper.start_celery_on_vm(instance_type=ins_type, ip=ip, key_file=keyfile,
-            #                                     username=username,
-            #                                     agent_type=self.agent_type,
-            #                                     worker_name=ip.replace('.', '_'),
-            #                                     prepend_commands=commands)
-            if success:
+            success = helper.start_celery_on_vm(instance_type=ins_type, ip=ip, key_file=keyfile,
+                                                username=username,
+                                                agent_type=self.agent_type,
+                                                worker_name=ip.replace('.', '_'),
+                                                prepend_commands=commands)
+            if success == 0:
                 # update db with successful running vms
                 logging.info("celery started! ")
                 logging.info("host ip: {0}".format(ip))
@@ -429,6 +397,54 @@ class FlexBackendWorker(BackendWorker):
                 VMStateModel.set_state(params, [ins_id], VMStateModel.STATE_FAILED,
                                        VMStateModel.DESCRI_FAIL_TO_COFIGURE_CELERY)
                 raise Exception("Fail to start celery on {0}".format(ip))
+
+            username = flex_cloud_machine_info_map[ip]['username']
+
+            # success = False
+            # prepare_info = {
+            #     'worker_name': ip.replace('.', '_'),
+            #     'instance_type': ins_type,
+            #     'stochss_parent_dir': os.path.join('/home', username),
+            #     'queue_head_ip': queue_head_ip,
+            #     'flex_db_password': params[self.PARAM_FLEX_DB_PASSWORD],
+            #     'celery_log_level': 'info'
+            # }
+            #
+            # try:
+            #     helper.copy_celery_config_to_vm(instance_type=ins_type, ip=ip,
+            #                                     key_file=flex_cloud_machine_info_map[ip]['keyfile'],
+            #                                     agent_type=self.agent_type, username=username)
+            #
+            #     url = "https://{ip}/prepare".format(ip=ip)
+            #     data = json.dumps(prepare_info)
+            #     req = urllib2.Request(url, data, {'Content-Type': 'application/json'})
+            #     f = urllib2.urlopen(req)
+            #     data_recv = f.read()
+            #     f.close()
+            #
+            #     response = json.loads(data_recv)
+            #     logging.info('response =\n{}'.format(pprint.pformat(response)))
+            #
+            #     if response['status'] == 'success':
+            #         success = True
+            #     else:
+            #         logging.error('Failed to setup celery!')
+            #
+            # except Exception as e:
+            #     logging.error(traceback.format_exc())
+            #     logging.error('Error: {}'.format(str(e)))
+            #
+            # if success:
+            #     # update db with successful running vms
+            #     logging.info("celery started! ")
+            #     logging.info("host ip: {0}".format(ip))
+            #     VMStateModel.set_state(params, [ins_id], VMStateModel.STATE_RUNNING, VMStateModel.DESCRI_SUCCESS)
+            #
+            # else:
+            #     self.agent.deregister_some_instances(params, [ins_id])
+            #     VMStateModel.set_state(params, [ins_id], VMStateModel.STATE_FAILED,
+            #                            VMStateModel.DESCRI_FAIL_TO_COFIGURE_CELERY)
+            #     raise Exception("Fail to start celery on {0}".format(ip))
 
         # get all intstance types and configure the celeryconfig.py locally
         instance_types = VMStateModel.get_running_instance_types(params)
