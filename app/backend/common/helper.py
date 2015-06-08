@@ -278,7 +278,7 @@ def get_celery_worker_status():
     return core_count, available_workers
 
 
-def __execute_cloud_stochoptim_task(params, data, database, task_id, celery_queue_name, celery_routing_key):
+def __execute_cloud_stochoptim_task(params, data, database, task_id, celery_queue_name, celery_routing_key, storage_agent):
     result = {}
     result["db_id"] = task_id
     queue_name = task_id
@@ -349,7 +349,7 @@ def __execute_cloud_stochoptim_task(params, data, database, task_id, celery_queu
     database.updateEntry(taskid=task_id, data=data, tablename=JobDatabaseConfig.TABLE_NAME)
 
     params["queue"] = queue_name
-    stochss_task = tasks.master_task.apply_async(args=[task_id, params, database],
+    stochss_task = tasks.master_task.apply_async(args=[task_id, params, database, storage_agent],
                                                  queue=celery_queue_name,
                                                  routing_key=celery_routing_key)
     # TODO: This should really be done as a background_thread as soon as the task is sent
@@ -449,7 +449,8 @@ def execute_cloud_task(params, agent_type, ec2_access_key, ec2_secret_key,
             result = __execute_cloud_stochoptim_task(params=params, data=data,
                                                      database=database, task_id=task_id,
                                                      celery_queue_name=celery_queue_name,
-                                                     celery_routing_key=celery_routing_key)
+                                                     celery_routing_key=celery_routing_key,
+                                                     storage_agent=storage_agent)
 
         else:
             # if this is the cost analysis and agent is ec2 replay then update the stochss-cost-analysis table

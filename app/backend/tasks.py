@@ -237,75 +237,131 @@ def poll_commands(queue_name):
         print "Polling process: done writing output files"
 
 
-def update_s3_bucket(task_id, bucket_name, output_dir, database):
-    print "S3 update process just started..."
+def update_output_store(task_id, bucket_name, output_dir, database, storage_agent):
+    print "Output update process just started..."
     # Wait 60 seconds initially for some output to build up
     time.sleep(60)
     while True:
         tar_output_str = "tar -zcf {0}.tar {0}".format(output_dir)
         print "S3 update", tar_output_str
         os.system(tar_output_str)
-        copy_to_s3_str = "python {sccpy} -f {output_dir}.tar --ec2 {bucket_name}".format(sccpy=TaskConfig.SCCPY_PATH,
-                                                                    output_dir=output_dir, bucket_name=bucket_name)
-        print "S3 update", copy_to_s3_str
-        os.system(copy_to_s3_str)
+
+        logging.info('Uploading output...')
+        trials = 0
+        output_url = None
+        while trials < 2 and output_url == None:
+            try:
+                output_url = storage_agent.upload_file(filename="{dir}.tar".format(dir=output_dir))
+            except Exception as e:
+                logging.error(traceback.format_exc())
+                logging.error('Error in file upload: {}'.format(e))
+                time.sleep(60)
+            finally:
+                trials += 1
+
+        logging.info("output_url = {}".format(output_url))
+
+
+        # copy_to_s3_str = "python {sccpy} -f {output_dir}.tar --ec2 {bucket_name}".format(sccpy=TaskConfig.SCCPY_PATH,
+        #                                                             output_dir=output_dir, bucket_name=bucket_name)
+        # print "S3 update", copy_to_s3_str
+        # os.system(copy_to_s3_str)
+
         data = {
             'uuid': task_id,
             'status': 'active',
             'message': 'Task executing in the cloud.',
-            'output': "https://s3.amazonaws.com/{0}/{1}.tar".format(bucket_name, output_dir)
+            'output': output_url
         }
         database.updateEntry(taskid=task_id, data=data, tablename="stochss")
+
         # Update the output in S3 every 60 seconds...
         time.sleep(60)
 
 
-def handle_task_success(task_id, data, s3_data, bucket_name, database):
-    tar_output_str = "tar -zcf {0}.tar {0}".format(s3_data)
+def handle_task_success(task_id, data, output_dir, bucket_name, database, storage_agent):
+    tar_output_str = "tar -zcf {0}.tar {0}".format(output_dir)
     print tar_output_str
     os.system(tar_output_str)
-    copy_to_s3_str = "python {sccpy} -f {s3_data}.tar --ec2 {2}".format(sccpy=TaskConfig.SCCPY_PATH,
-                                                                        s3_data=s3_data, bucket_name=bucket_name)
-    print copy_to_s3_str
-    return_code = os.system(copy_to_s3_str)
-    if return_code != 0:
-        print "S3 update conflict, waiting 60 seconds for retry..."
-        time.sleep(60)
-        return_code = os.system(copy_to_s3_str)
-    print "Return code after S3 retry is {0}".format(return_code)
-    cleanup_string = "rm -rf {0} {0}".format(s3_data)
+
+    logging.info('Uploading output...')
+    trials = 0
+    output_url = None
+    while trials < 2 and output_url == None:
+        try:
+            output_url = storage_agent.upload_file(filename="{dir}.tar".format(dir=output_dir))
+        except Exception as e:
+            logging.error(traceback.format_exc())
+            logging.error('Error in file upload: {}'.format(e))
+            time.sleep(60)
+        finally:
+            trials += 1
+
+    logging.info("output_url = {}".format(output_url))
+
+    # copy_to_s3_str = "python {sccpy} -f {output_dir}.tar --ec2 {2}".format(sccpy=TaskConfig.SCCPY_PATH,
+    #                                                                      output_dir=output_dir, bucket_name=bucket_name)
+    # print copy_to_s3_str
+    # return_code = os.system(copy_to_s3_str)
+    # if return_code != 0:
+    #     print "S3 update conflict, waiting 60 seconds for retry..."
+    #     time.sleep(60)
+    #     return_code = os.system(copy_to_s3_str)
+    # print "Return code after S3 retry is {0}".format(return_code)
+
+    cleanup_string = "rm -rf {0} {0}".format(output_dir)
     print cleanup_string
     os.system(cleanup_string)
-    data['output'] = "https://s3.amazonaws.com/{0}/{1}.tar".format(bucket_name, s3_data)
+
+    data['output'] = output_url
     database.updateEntry(taskid=task_id, data=data, tablename="stochss")
 
 
-def handle_task_failure(task_id, data, database, s3_data=None, bucket_name=None):
-    if s3_data and bucket_name:
-        tar_output_str = "tar -zcf {0}.tar {0}".format(s3_data)
+def handle_task_failure(task_id, data, database, storage_agent, output_dir=None, bucket_name=None):
+    if output_dir and bucket_name:
+        tar_output_str = "tar -zcf {0}.tar {0}".format(output_dir)
         print tar_output_str
         os.system(tar_output_str)
-        copy_to_s3_str = "python {sccpy} -f {s3_data}.tar --ec2 {bucket_name}".format(sccpy=TaskConfig.SCCPY_PATH,
-                                                                        s3_data=s3_data, bucket_name=bucket_name)
-        print copy_to_s3_str
-        return_code = os.system(copy_to_s3_str)
 
-        if return_code != 0:
-            print "S3 update conflict, waiting 60 seconds for retry..."
-            time.sleep(60)
-            return_code = os.system(copy_to_s3_str)
+        logging.info('Uploading output...')
+        trials = 0
+        output_url = None
+        while trials < 2 and output_url == None:
+            try:
+                output_url = storage_agent.upload_file(filename="{dir}.tar".format(dir=output_dir))
+            except Exception as e:
+                logging.error(traceback.format_exc())
+                logging.error('Error in file upload: {}'.format(e))
+                time.sleep(60)
+            finally:
+                trials += 1
 
-        print "Return code after S3 retry is {0}".format(return_code)
-        cleanup_string = "rm -rf {0} {0}".format(s3_data)
+        logging.info("output_url = {}".format(output_url))
+
+
+        # copy_to_s3_str = "python {sccpy} -f {output_dir}.tar --ec2 {bucket_name}".format(sccpy=TaskConfig.SCCPY_PATH,
+        #                                                               output_dir=output_dir, bucket_name=bucket_name)
+        # print copy_to_s3_str
+        # return_code = os.system(copy_to_s3_str)
+        #
+        # if return_code != 0:
+        #     print "S3 update conflict, waiting 60 seconds for retry..."
+        #     time.sleep(60)
+        #     return_code = os.system(copy_to_s3_str)
+        #
+        # print "Return code after S3 retry is {0}".format(return_code)
+
+        cleanup_string = "rm -rf {0} {0}".format(output_dir)
         print cleanup_string
         os.system(cleanup_string)
-        data['output'] = "https://s3.amazonaws.com/{0}/{1}.tar".format(bucket_name, s3_data)
+
+        data['output'] = output_url
 
     database.updateEntry(taskid=task_id, data=data, tablename="stochss")
 
 
 @celery.task(name='tasks.master_task')
-def master_task(task_id, params, database):
+def master_task(task_id, params, database, storage_agent):
     '''
     This task encapsulates the logic behind the new R program.
     '''
@@ -355,8 +411,8 @@ def master_task(task_id, params, database):
         # and stderr in S3 bucket.
         bucket_name = params["bucketname"]
         update_process = Process(
-            target=update_s3_bucket,
-            args=(task_id, bucket_name, output_dir, database)
+            target=update_output_store,
+            args=(task_id, bucket_name, output_dir, database, storage_agent)
         )
         # Construct execution string and call it
         exec_str = "{0}/{1} --model {2} --data {3}".format(
@@ -452,7 +508,8 @@ def master_task(task_id, params, database):
                 'status': 'failed',
                 'message': 'The executable failed with an exit status of {0}.'.format(p.returncode)
             }
-            handle_task_failure(task_id, data, database, output_dir, bucket_name)
+            handle_task_failure(task_id=task_id, data=data, database=database, output_dir=output_dir,
+                                bucket_name=bucket_name, storage_agent=storage_agent)
             return
         # Else just send final output to S3
         data = {
@@ -461,14 +518,15 @@ def master_task(task_id, params, database):
             'total_time': (datetime.now() - start_time).total_seconds(),
             'execution_time': execution_time
         }
-        handle_task_success(task_id, data, output_dir, bucket_name, database)
+        handle_task_success(task_id=task_id, data=data, output_dir=output_dir,
+                            bucket_name=bucket_name, database=database, storage_agent=storage_agent)
     except Exception, e:
         data = {
             'status': 'failed',
             'message': str(e),
             'traceback': traceback.format_exc()
         }
-        handle_task_failure(task_id, data, database)
+        handle_task_failure(task_id=task_id, data=data, database=database, storage_agent=storage_agent)
 
 
 @celery.task(name='tasks.slave_task')
