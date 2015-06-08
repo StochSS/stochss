@@ -27,7 +27,7 @@ module.exports = View.extend({
                 }
             }
 
-            if(obj.value != 'custom' && obj.value != 'massaction')
+            if(obj.value != 'custom')
             {
                 var reactants;
                 var products;
@@ -42,30 +42,41 @@ module.exports = View.extend({
                     reactants = 1;
                     products = 0;
                 }
-                if(obj.value == 'merge')
+                else if(obj.value == 'merge')
                 {
                     reactants = 2;
                     products = 1;
                 }
-                if(obj.value == 'change')
+                else if(obj.value == 'change')
                 {
                     reactants = 1;
                     products = 1;
                 }
-                if(obj.value == 'dimerization')
+                else if(obj.value == 'dimerization')
                 {
                     reactants = 1;
                     products = 1;
                 }
-                if(obj.value == 'split')
+                else if(obj.value == 'split')
                 {
                     reactants = 1;
                     products = 2;
                 }
-                if(obj.value == 'four')
+                else if(obj.value == 'four')
                 {
                     reactants = 2;
                     products = 2;
+                }
+                else if(obj.value == 'massaction')
+                {
+                    if(this.model.reactants.length >= 2)
+                    {
+                        reactants = 2;
+                    }
+                    else
+                    {
+                        reactants = 1;
+                    }
                 }
 
                 while(this.model.reactants.length > reactants)
@@ -83,6 +94,10 @@ module.exports = View.extend({
                 if(obj.value == 'dimerization')
                 {
                     this.model.reactants.at(0).stoichiometry = 2;
+                }
+                else if(obj.value == 'massaction' && reactants == 1)
+                {
+                    this.model.reactants.at(0).stoichiometry = Math.min(2, this.model.reactants.at(0).stoichiometry);
                 }
                 else
                 {
@@ -233,6 +248,19 @@ var reactants;
 
                     if(!this.model.reactants.at(i).specie)
                         return "Select valid reactants!";
+                }
+
+                if(this.model.type == 'massaction')
+                {
+                    var reactantCount = 0;
+
+                    for(var i = 0; i < reactants; i++)
+                    {
+                        reactantCount += this.model.reactants.at(i).stoichiometry;
+                    }
+
+                    if(reactantCount > 2)
+                        return "There may only be two or less reactants in mass action reaction";
                 }
 
                 for(var i = 0; i < products; i++)

@@ -76,6 +76,18 @@ function check_dolfin {
     return 1 #False
 }
 
+function check_for_lib {
+    if [ -z "$1" ];then
+        return 1 #False
+    fi
+    RET=`python -c "import $1" 2>/dev/null`
+    RC=$?
+    if [[ $RC != 0 ]];then
+        return 1 #False
+    fi
+    return 0 #True
+}
+
 function check_pyurdme_sub {
     RET=`python -c "import pyurdme" 2>/dev/null`
     RC=$?
@@ -129,71 +141,8 @@ function download_pyurdme {
     fi
 }
 
-function check_for_lib {
-    if [ -z "$1" ];then
-        return 1 #False
-    fi
-    RET=`python -c "import $1" 2>/dev/null`
-    RC=$?
-    if [[ $RC != 0 ]];then
-        return 1 #False
-    fi
-    return 0 #True
-}
-
-function install_lib {
-    if [ -z "$1" ];then
-        return 1 #False
-    fi
-    if check_pip;then
-        echo ""
-    else
-        install_pip
-    fi
-    echo "We need to install the python package: $1 from the python pip package manager."
-    read -p "Do you want me to try to use sudo to install required package [you may be prompted for the admin password] (y/n): " answer
-
-    if [ $? != 0 ]; then
-        exit -1
-    fi
-
-    if [ "$answer" == 'y' ] || [ "$answer" == 'yes' ]; then
-        export ARCHFLAGS='-Wno-error=unused-command-line-argument-hard-error-in-future'
-	if [ "$1" = "h5py" ]; then
-            pkg="$1==2.4.0b1"
-	else
-            pkg="$1"
-	fi
-	CMD="sudo pip install $pkg"
-        echo $CMD
-        eval $CMD
-    else
-        exit -1
-    fi
-}
-
-function check_and_install_dependencies {
-    deps=("numpy" "scipy" "matplotlib" "h5py")
-    for dep in "${deps[@]}"
-    do
-        echo "Checking for $dep<br />"
-        if check_for_lib "$dep";then
-            echo "$dep detected successfully.<br />"
-        else
-            install_lib "$dep"
-            if check_for_lib "$dep";then
-                echo "$dep installed successfully.<br />"
-            else
-                echo "$dep install failed.<br />"
-                return 1 #False
-            fi
-        fi
-    done
-    return 0 #True
-}
-
 function check_spatial_dependencies {
-    deps=("numpy" "scipy" "matplotlib" "h5py")
+    deps=("numpy" "scipy" "matplotlib" "h5py" "libsbml")
     for dep in "${deps[@]}"
     do
         echo "Checking for $dep<br />"
@@ -204,35 +153,6 @@ function check_spatial_dependencies {
         fi
     done
     return 0 #True
-}
-function check_pip {
-    if which pip > /dev/null;then
-        echo "pip is installed on your system, using it<br />"
-        return 0 #True
-    else
-        echo "pip is not installed on your system<br />"
-        return 1 #False
-    fi
-}
-
-function install_pip {
-    echo "We need to install python pip from https://bootstrap.pypa.io/get-pip.py"
-    read -p "Do you want me to try to use sudo to install required packages [you may be prompted for the admin password] (y/n): " answer
-
-    if [ $? != 0 ]; then
-        exit -1
-    fi
-
-    if [ "$answer" == 'y' ] || [ "$answer" == 'yes' ]; then
-        CMD="curl -o get-pip.py https://bootstrap.pypa.io/get-pip.py"
-        echo $CMD
-        eval $CMD
-        CMD="sudo python get-pip.py"
-        echo $CMD
-        eval $CMD
-    else
-        exit -1
-    fi
 }
 
 function install_dependencies_via_applescript {

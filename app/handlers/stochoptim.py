@@ -7,6 +7,8 @@ import backend.backendservice
 from google.appengine.ext import db
 
 import copy
+import csv
+import StringIO
 import fileserver
 import json
 import sys
@@ -40,7 +42,7 @@ class StochOptimModel(stochss.model.Model):
         if model.units.lower() == "concentration":
             msgs.append("StochOptimModel cannot be based on a concentration model")
             return False, msgs
-        
+
         # Species
         # Any species can be converted to StochOptim format
         self.listOfSpecies = copy.deepcopy(model.listOfSpecies)
@@ -355,7 +357,25 @@ class StochOptimPage(BaseHandler):
 
         self.response.write(json.dumps({ 'status' : True,
                                          'msg' : 'Success'}))
-    
+
+    def addWeightColumnIfNecessary(self, string):
+        data = list(csv.reader(StringIO.StringIO(string), delimiter='\t'))
+
+        if 'weight' == data[0][2].strip().lower():
+            return string
+        else:
+            data[0].insert(2, 'Weight')
+
+            for row in data[1:]:
+                row.insert(2, '1')
+
+            output = []
+
+            for row in data:
+                output.append("\t".join(row))
+
+            return os.linesep.join(output)
+
     def runLocal(self, data):
         '''
         '''
@@ -396,17 +416,18 @@ class StochOptimPage(BaseHandler):
         mff.close()
         data["model_file_file"] = model_file_file
 
+        
         model_data_file = tempfile.mktemp(prefix = 'dataFile', suffix = '.txt', dir = dataDir)
         mdf = open(model_data_file, 'w')
         jFileData = fileserver.FileManager.getFile(self, data["trajectoriesID"], noFile = False)
-        mdf.write(jFileData["data"])
+        mdf.write(self.addWeightColumnIfNecessary(jFileData["data"]))
         mdf.close()
         data["model_data_file"] = model_data_file
 
         model_initial_data_file = tempfile.mktemp(prefix = 'dataFile', suffix = '.txt', dir = dataDir)
         midf = open(model_initial_data_file, 'w')
         iFileData = fileserver.FileManager.getFile(self, data["initialDataID"], noFile = False)
-        midf.write(iFileData["data"])
+        midf.write(self.addWeightColumnIfNecessary(iFileData["data"]))
         midf.close()
         data["model_initial_data_file"] = model_initial_data_file
 
@@ -490,11 +511,11 @@ class StochOptimPage(BaseHandler):
             "paramstring": cmd,
             "model_file": stringModel,
             "model_data": {
-                "content": iFileData["data"],
+                "content": self.addWeightColumnIfNecessary(iFileData["data"]),
                 "extension": "txt"
             },
             "final_data": {
-                "content": jFileData["data"],
+                "content": self.addWeightColumnIfNecessary(jFileData["data"]),
                 "extension": "txt"
             },
             "key_prefix": self.user.user_id(),

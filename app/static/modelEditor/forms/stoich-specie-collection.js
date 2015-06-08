@@ -1,3 +1,4 @@
+var _ = require('underscore');
 var $ = require('jquery');
 var AmpersandView = require('ampersand-view');
 var AmpersandFormView = require('ampersand-form-view');
@@ -16,6 +17,8 @@ var AddNewStoichSpecieForm = AmpersandFormView.extend({
             // You might use this to disable the "submit" button
             // any time the form is invalid, for exmaple.
     validCallback: function (valid) {
+	valid &= this.valid;
+
         if (valid) {
             this.button.prop('disabled', false);
         } else {
@@ -72,6 +75,34 @@ var StoichSpecieCollectionFormView = AmpersandView.extend({
 
         this.listenToAndRun(this.reaction, 'change:type', _.bind(this.setReactionType, this));
     },
+    //This will only be used if the stoich-specie-collection is a collection of reactants
+    checkValidReactants: function()
+    {
+	if(this.reactionType == 'massaction')
+	{
+	    var reactantCount = 0;
+
+	    for(var i = 0; i < this.collection.models.length; i++)
+	    {
+		var reactant = this.collection.models[i];
+		
+		reactantCount += reactant.stoichiometry;
+	    }
+
+	    if(reactantCount < 2)
+	    {
+		this.addForm.validCallback(true);
+	    }
+	    else
+	    {
+		this.addForm.validCallback(false);
+	    }
+	}
+	else
+	{
+	    this.addForm.validCallback(true);
+	}
+    },
     setReactionType: function()
     {
         this.reactionType = this.reaction.type;
@@ -115,6 +146,13 @@ var StoichSpecieCollectionFormView = AmpersandView.extend({
                 collection : this.collection
             }
         );
+
+	// If we're a collection of reactants, apply the mass action limits to the reactants
+	if(this.collection == this.reaction.reactants)
+	{
+            this.listenToAndRun(this.collection, 'add remove change:stoichiometry', _.bind(this.checkValidReactants, this));
+            this.listenTo(this.reaction, 'change:type', _.bind(this.checkValidReactants, this));
+	}
         
         return this;
     }

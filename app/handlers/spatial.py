@@ -12,6 +12,7 @@ from google.appengine.ext import db
 import copy
 import fileserver
 import json
+import h5py
 import os, sys
 import re
 import signal
@@ -22,6 +23,7 @@ import time
 import logging
 import numbers
 import random
+import zipfile
 
 import pyurdme
 import pickle
@@ -32,6 +34,10 @@ import boto
 from boto.dynamodb import condition
 sys.path.append(os.path.join(os.path.dirname(__file__), '../lib/cloudtracker'))
 from s3_helper import *
+
+import matplotlib.cm
+
+cm = matplotlib.cm.ScalarMappable()
 
 class SpatialJobWrapper(db.Model):
     # These are all the attributes of a job we use for local storage
@@ -44,8 +50,14 @@ class SpatialJobWrapper(db.Model):
     indata = db.TextProperty() # This is a dump of the json data sent from the html/js that was used to start the job. We save it
     outData = db.StringProperty() # THis is a path to the output data on the filesystem
     status = db.StringProperty()
-    zipFileName = db.StringProperty() # This is a temporary file that the server uses to store a zipped up copy of the output
     
+    preprocessed = db.BooleanProperty()
+    preprocessedDir = db.StringProperty() # THis is a path to the output data on the filesystem
+    
+    zipFileName = db.StringProperty() # This is a temporary file that the server uses to store a zipped up copy of the output
+    vtkFileName = db.StringProperty()
+    csvFileName = db.StringProperty()
+
     # These are the cloud attributes
     resource = db.StringProperty()
     uuid = db.StringProperty()
@@ -55,6 +67,56 @@ class SpatialJobWrapper(db.Model):
     exception_message = db.StringProperty()
     output_stored = db.StringProperty()
 
+
+    def preprocess(self, trajectory):      
+        print "Preprocessing ... "
+        ''' Job is already processed check '''
+        if self.preprocessed == True and self.preprocessedDir and os.path.exists(self.preprocessedDir):
+            #print "Job is preprocessed"
+            return
+
+        ''' Unpickle data file '''
+        with open(str(self.outData + '/results/result{0}'.format(trajectory))) as fd:
+            #print "Unpickling data file"
+            indataStr = json.loads(self.indata)
+            
+            result = pickle.load(fd)
+
+            if not self.preprocessedDir:
+                self.preprocessedDir = '../preprocessed/{0}/'.format(self.key().id())
+
+            #print "Directory:", self.preprocessedDir
+
+            if not os.path.exists(self.preprocessedDir):
+                os.makedirs(self.preprocessedDir)
+                
+            target = os.path.join(self.preprocessedDir, "result{0}".format(trajectory)) 
+
+            f = os.path.join(self.preprocessedDir, "mesh.json")
+
+            species = result.model.get_species_map().keys()
+
+            with open(f, 'w') as meshFile:
+                json.dump(json.loads(result.export_to_three_js(species[0], 0)), meshFile) 
+
+            hdf5File = h5py.File(target, 'w')
+
+            for specie in species:
+                populationValues = result.get_species(specie, concentration = False)
+                concentrationValues = result.get_species(specie, concentration = True)
+                population = hdf5File.create_dataset(specie + "/population", data = populationValues)
+                population.attrs["min"] = min(populationValues.flatten())
+                population.attrs["max"] = max(populationValues.flatten())
+                concentration = hdf5File.create_dataset(specie + "/concentration", data = concentrationValues)
+                concentration.attrs["min"] = min(concentrationValues.flatten())
+                concentration.attrs["max"] = max(concentrationValues.flatten())
+            
+            hdf5File.close()
+
+        self.preprocessed = True
+        self.put()
+        return
+
     # More attributes can obvs. be added
     # The delete operator here is a little fancy. When the item gets deleted from the GOogle db, we need to go clean up files stored locally and remotely
     def delete(self, credentials=None):
@@ -63,6 +125,14 @@ class SpatialJobWrapper(db.Model):
         if self.zipFileName:
             if os.path.exists(self.zipFileName):
                 os.remove(self.zipFileName)
+
+        if self.preprocessedDir:
+            if os.path.exists(str(self.preprocessedDir)):
+                shutil.rmtree(str(self.preprocessedDir))
+                
+        if self.vtkFileName:
+            if os.path.exists(self.vtkFileName):
+                os.remove(self.vtkFileName)
 
         self.stop(credentials=credentials)        
         #service.deleteTaskLocal([self.pid])
@@ -190,6 +260,7 @@ class SpatialPage(BaseHandler):
             self.response.headers['Content-Type'] = 'application/json'
             self.response.write(json.dumps(result))
             return
+
         elif reqType == 'timeData':
             try:
                 job = SpatialJobWrapper.get_by_id(int(self.request.get('id')))
@@ -197,30 +268,83 @@ class SpatialPage(BaseHandler):
                 data = json.loads(self.request.get('data'))
 
                 trajectory = data["trajectory"]
-                timeIdx = data["timeIdx"]
+                timeIdx = data["timeIdx"]                
+                resultJS = {}
 
-                with open(str(job.outData + '/results/result{0}'.format(trajectory))) as fd:
-                    result = pickle.load(fd)
-        
-                    species = result.model.get_species_map().keys()
+                #if not job.preprocessed or not os.path.exists(job.preprocessedDir):
+                job.preprocess(trajectory)
 
-                    threeJS = {}
-                    #print "exporting ", timeIdx
-
+                indir = job.preprocessedDir
                     
-                    for specie in species:
-                        concVals = result.get_species(specie, timeIdx, concentration=True)
-                        popVals = result.get_species(specie, timeIdx, concentration=False)
+                with open(os.path.join(indir, 'mesh.json') ,'r') as meshfile:
+                    mesh = json.load(meshfile)
 
-                        minIdx = numpy.argmin(concVals)
-                        maxIdx = numpy.argmax(concVals)
-
-                        threeJS[specie] = { "mesh" : json.loads(result.export_to_three_js(specie, timeIdx)),
-                                            "max" : int(popVals[maxIdx]),
-                                            "min" : int(popVals[minIdx]) }
+                f = os.path.join(indir, 'result{0}'.format(trajectory))
+                
+                with h5py.File(f, 'r') as dataFile:
+                    species = dataFile.keys()
 
                 self.response.content_type = 'application/json'
-                self.response.write(json.dumps( threeJS ))
+                self.response.write(json.dumps({ "mesh" : mesh, "species" : species }))
+            
+            except Exception as e:
+                traceback.print_exc()
+                result = {}
+                result['status'] = False
+                result['msg'] = 'Error: error fetching results {0}'.format(e)
+                self.response.headers['Content-Type'] = 'application/json'
+
+                self.response.write(json.dumps(result))
+            return
+        
+        elif reqType == 'onlyColorRange':
+            try:
+                job = SpatialJobWrapper.get_by_id(int(self.request.get('id')))
+                data = json.loads(self.request.get('data'))
+                trajectory = data["trajectory"]
+                sTime= data["timeStart"]
+                eTime = data["timeEnd"]
+                dataType = "population" if "showPopulation" in data and data["showPopulation"] else "concentration"
+
+                resultJS = {}
+                data = {}
+
+                f = os.path.join(job.preprocessedDir, 'result{0}'.format(trajectory))
+
+                limits = {}
+                
+                with h5py.File(f, 'r') as dataFile:
+                    dataTmp = {}
+
+                    for specie in dataFile.keys():
+                        data2 = dataFile[specie][dataType][sTime:eTime + 1]
+                        
+                        limits[specie] = { 'min' : dataFile[specie][dataType].attrs['min'],
+                                           'max' : dataFile[specie][dataType].attrs['max'] }
+
+                        cm.set_clim(dataFile[specie][dataType].attrs['min'], dataFile[specie][dataType].attrs['max'])
+                        rgbas = cm.to_rgba(data2, bytes = True).astype('uint32')
+
+                        rgbas = numpy.left_shift(rgbas[:, :, 0], 16) + numpy.left_shift(rgbas[:, :, 1], 8) + rgbas[:, :, 2]
+
+                        #rgbaInts = numpy.zeros((rgbas.shape[0], rgbas.shape[1]))
+
+                        #for i in range(rgbas.shape[0]):
+                        #    for j in range(rgbas.shape[1]):
+                        #        rgbaInts[i, j] = int('0x%02x%02x%02x' % tuple(rgbas[i, j][0:3]), 0)
+
+                        dataTmp[specie] = []
+                        for i in range(rgbas.shape[0]):
+                            dataTmp[specie].append(list(rgbas[i].astype('int')))
+
+                    for i in range(len(dataTmp.values()[0])):
+                        data[sTime + i] = {}
+                        for specie in dataFile.keys():
+                            data[sTime + i][specie] = dataTmp[specie][i]
+
+                self.response.content_type = 'application/json'
+                self.response.write(json.dumps( { "colors" : data, "limits" : limits } ))
+
             except Exception as e:
                 traceback.print_exc()
                 result = {}
@@ -229,7 +353,7 @@ class SpatialPage(BaseHandler):
                 self.response.headers['Content-Type'] = 'application/json'
                 self.response.write(json.dumps(result))
             return
-
+        
         self.render_response('spatial.html')
 
     def post(self):
@@ -325,6 +449,8 @@ class SpatialPage(BaseHandler):
                 os.system('tar -xf' +job.uuid+'.tar')
                 # Record location
                 job.outData = os.path.abspath(os.path.dirname(__file__))+'/../output/'+job.uuid
+                job.preprocessedDir = os.path.abspath(os.path.dirname(__file__))+'/../preprocessed/'+job.uuid
+                
                 # Clean up
                 os.remove(job.uuid+'.tar')
                 # Save the updated status
@@ -360,6 +486,111 @@ class SpatialPage(BaseHandler):
                 job.put()
             
             relpath = '/' + os.path.relpath(job.zipFileName, os.path.abspath(os.path.dirname(__file__) + '/../'))
+
+            self.response.headers['Content-Type'] = 'application/json'
+            self.response.write(json.dumps({ 'status' : True,
+                                             'msg' : 'Job downloaded',
+                                             'url' : relpath }))
+            return
+        elif reqType == 'getVtkLocal':
+            def zipdir(path, ziph, prefix):
+                # ziph is zipfile handle
+                for root, dirs, files in os.walk(path):
+                    for file in files:
+                        ziph.write(os.path.join(root, file), os.path.join(prefix, os.path.relpath(os.path.join(root, file), path)))
+
+            jobID = json.loads(self.request.get('id'))
+
+            jobID = int(jobID)
+
+            job = SpatialJobWrapper.get_by_id(jobID)
+
+            if not job.vtkFileName:
+                try:
+                    tmpDir = None
+
+                    indata = json.loads(job.indata)
+
+                    tmpDir = tempfile.mkdtemp(dir = os.path.abspath(os.path.dirname(__file__) + '/../static/tmp/'))
+
+                    for trajectory in range(indata["realizations"]):
+                        resultFile = open(str(job.outData + '/results/result{0}'.format(trajectory)))
+                        result = pickle.load(resultFile)
+                        resultFile.close()
+
+                        for specie in result.model.listOfSpecies:
+                            result.export_to_vtk(specie, os.path.join(tmpDir, "trajectory_{0}".format(trajectory), "species_{0}".format(specie)))
+
+                    tmpFile = tempfile.NamedTemporaryFile(dir = os.path.abspath(os.path.dirname(__file__) + '/../static/tmp/'), prefix = job.jobName + "_", suffix = '.zip', delete = False)
+
+                    zipf = zipfile.ZipFile(tmpFile, "w")
+                    zipdir(tmpDir, zipf, os.path.basename(tmpFile.name))
+                    zipf.close()
+
+                    job.vtkFileName = tmpFile.name
+                    
+                    tmpFile.close()
+
+                    # Save the updated status
+                    job.put()
+                finally:
+                    if tmpDir and os.path.exists(tmpDir):
+                        print "Getting cleaned up"
+                        shutil.rmtree(tmpDir)
+            
+            relpath = '/' + os.path.relpath(job.vtkFileName, os.path.abspath(os.path.dirname(__file__) + '/../'))
+
+            self.response.headers['Content-Type'] = 'application/json'
+            self.response.write(json.dumps({ 'status' : True,
+                                             'msg' : 'Job downloaded',
+                                             'url' : relpath }))
+            return
+        elif reqType == 'getCsvLocal':
+            def zipdir(path, ziph, prefix):
+                # ziph is zipfile handle
+                for root, dirs, files in os.walk(path):
+                    for file in files:
+                        ziph.write(os.path.join(root, file), os.path.join(prefix, os.path.relpath(os.path.join(root, file), path)))
+
+            jobID = json.loads(self.request.get('id'))
+
+            jobID = int(jobID)
+
+            job = SpatialJobWrapper.get_by_id(jobID)
+
+            if not job.csvFileName:
+                try:
+                    tmpDir = None
+
+                    indata = json.loads(job.indata)
+
+                    tmpDir = tempfile.mkdtemp(dir = os.path.abspath(os.path.dirname(__file__) + '/../static/tmp/'))
+
+                    for trajectory in range(indata["realizations"]):
+                        resultFile = open(str(job.outData + '/results/result{0}'.format(trajectory)))
+                        result = pickle.load(resultFile)
+                        resultFile.close()
+
+                        result.export_to_csv(os.path.join(tmpDir, "trajectory_{0}".format(trajectory)).encode('ascii', 'ignore'))
+
+                    tmpFile = tempfile.NamedTemporaryFile(dir = os.path.abspath(os.path.dirname(__file__) + '/../static/tmp/'), prefix = job.jobName + "_", suffix = '.zip', delete = False)
+
+                    zipf = zipfile.ZipFile(tmpFile, "w")
+                    zipdir(tmpDir, zipf, os.path.basename(tmpFile.name))
+                    zipf.close()
+
+                    job.csvFileName = tmpFile.name
+                    
+                    tmpFile.close()
+
+                    # Save the updated status
+                    job.put()
+                finally:
+                    if tmpDir and os.path.exists(tmpDir):
+                        print "Getting cleaned up"
+                        shutil.rmtree(tmpDir)
+            
+            relpath = '/' + os.path.relpath(job.csvFileName, os.path.abspath(os.path.dirname(__file__) + '/../'))
 
             self.response.headers['Content-Type'] = 'application/json'
             self.response.write(json.dumps({ 'status' : True,
@@ -598,4 +829,3 @@ class SpatialPage(BaseHandler):
                                             "msg" : "{0}".format(e)}))
                                             #"msg" : "{0}: {1}".format(type(e).__name__, e)}))
             return
-

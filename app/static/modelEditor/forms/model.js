@@ -66,31 +66,6 @@ module.exports = View.extend({
         if(this.parent && this.parent.update)
             this.parent.update();
     },
-    duplicateModel: function()
-    {
-        var model = new Model(this.model.toJSON());
-
-        var names = this.model.collection.map( function(model) { return model.name; } );
-
-        while(1)
-        {
-            var tmpName = this.model.name + '_' + Math.random().toString(36).substr(2, 3);
-
-            if(!_.contains(names, tmpName))
-            {
-                model.name = tmpName;
-                break;
-            }
-        }
-
-        model.id = undefined;
-        
-        model.setupMesh(this.model.mesh.collection);
-
-        this.model.collection.add(model);
-
-        model.save();
-    },
     convertToPopulation: function()
     {
         // If we're currently showing the concentration model editor, switch to showing the convert page
@@ -135,27 +110,38 @@ module.exports = View.extend({
         if(this.state == 'concentration')
         {
             $( this.el ).find( '[data-hook="editor"]' ).show();
-            $( '[data-hook="convertToPopulationLink"]' ).show();
             $( this.el ).find( '[data-hook="convertToPopulation"]' ).hide();
-            $( '[data-hook="convertToSpatialLink"]' ).hide();
             $( this.el ).find( '.spatial' ).hide();
+            //$( '[data-hook="convertToPopulationLink"]' ).show();
+            //$( '[data-hook="convertToSpatialLink"]' ).hide();
         }
         else if(this.state == 'converting')
         {
             $( this.el ).find( '[data-hook="convertToPopulation"]' ).show();
             $( this.el ).find( '[data-hook="editor"]' ).hide();
-            $( '[data-hook="convertToPopulationLink"]' ).hide()
-            $( '[data-hook="convertToSpatialLink"]' ).hide();
             $( this.el ).find( '.spatial' ).hide();
+            //$( '[data-hook="convertToPopulationLink"]' ).hide()
+            //$( '[data-hook="convertToSpatialLink"]' ).hide();
         }
         else if(this.state == 'population')
         {
             $( this.el ).find( '[data-hook="convertToPopulation"]' ).hide();
-            $( '[data-hook="convertToPopulationLink"]' ).hide();
             $( this.el ).find( '[data-hook="editor"]' ).show();
-            $( '[data-hook="convertToSpatialLink"]' ).show();
             $( this.el ).find( '.spatial' ).hide();
+            //$( '[data-hook="convertToPopulationLink"]' ).hide();
+            //$( '[data-hook="convertToSpatialLink"]' ).show();
+        }
+        else if(this.state == 'spatial')
+        {
+            $( this.el ).find( '[data-hook="convertToPopulation"]' ).hide();
+            $( this.el ).find( '[data-hook="editor"]' ).show();
+            $( this.el ).find( '.spatial' ).show();
+            //$( '[data-hook="convertToPopulationLink"]' ).hide();
+            //$( '[data-hook="convertToSpatialLink"]' ).hide();
+        }
 
+	if(this.state == 'concentration' || this.state == 'population' || this.state == 'spatial')
+	{
             if(!$( this.el ).find('.speciesAccordion .accordion-body').first().hasClass('in'))
                 $( this.el ).find('.speciesAccordion').find('a').first()[0].click();
             if(!$( this.el ).find('.parametersAccordion .accordion-body').first().hasClass('in'))
@@ -166,24 +152,12 @@ module.exports = View.extend({
                 $( this.el ).find('.initialConditionsAccordion').find('a').first()[0].click();
             if(!$( this.el ).find('.reactionsAccordion .accordion-body').first().hasClass('in'))
                 $( this.el ).find('.reactionsAccordion').find('a').first()[0].click();
-        }
-        else if(this.state == 'spatial')
-        {
-            $( this.el ).find( '[data-hook="convertToPopulation"]' ).hide();
-            $( '[data-hook="convertToPopulationLink"]' ).hide();
-            $( this.el ).find( '[data-hook="editor"]' ).show();
-            $( '[data-hook="convertToSpatialLink"]' ).hide();
-            $( this.el ).find( '.spatial' ).show();
-        }
+	}
     },
     initialize: function(attr)
     {
-        // This is weird, but the model must wait for signals that these buttons have been pressed from the model select
-        // THis is because the buttons are shared
-        this.listenTo(this.model, "duplicateLink", _.bind(this.duplicateModel, this));
-        this.listenTo(this.model, "convertToPopulationLink", _.bind(this.convertToPopulation, this));
-        this.listenTo(this.model, "convertToSpatialLink", _.bind(this.convertToSpatial, this));
-
+	this.select = attr.select;
+	
         if(this.model.isSpatial)
         {
             this.state = 'spatial';
