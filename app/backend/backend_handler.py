@@ -100,6 +100,8 @@ class FlexBackendWorker(BackendWorker):
     def prepare_vms(self, parameters):
         logging.info('\n\nprepare_vms:\n\n{0}'.format(pprint.pformat(parameters)))
 
+        queue_head_machine = parameters[self.PARAM_FLEX_QUEUE_HEAD]
+
         if self.PARAM_FLEX_CLOUD_MACHINE_INFO not in parameters \
                 or parameters[self.PARAM_FLEX_CLOUD_MACHINE_INFO] == None \
                 or parameters[self.PARAM_FLEX_CLOUD_MACHINE_INFO] == []:
@@ -110,7 +112,27 @@ class FlexBackendWorker(BackendWorker):
 
         flex_cloud_machine_info = parameters[self.PARAM_FLEX_CLOUD_MACHINE_INFO]
 
-        num_vms_to_prepare = len(flex_cloud_machine_info)
+        all_flex_vms = VMStateModel.get_all(parameters)
+        logging.info('\n\nall_flex_vms =\n{}'.format(all_flex_vms))
+        all_flex_vm_map = {vm['pub_ip']:vm for vm in all_flex_vms}
+
+        filtered_flex_machine_info = []
+        running_flex_ips = []
+        for machine in flex_cloud_machine_info:
+            if machine['ip'] not in all_flex_vm_map or all_flex_vm_map[machine['ip']]['state'] != VMStateModel.STATE_RUNNING:
+                filtered_flex_machine_info.append(machine)
+            else:
+                running_flex_ips.append(machine['ip'])
+
+        if len(filtered_flex_machine_info) < 1:
+            logging.info('Nothing to do!')
+            return
+
+        logging.info('\n\nfiltered_flex_machine_info =\n{}'.format(pprint.pformat(filtered_flex_machine_info)))
+
+        parameters[self.PARAM_FLEX_CLOUD_MACHINE_INFO] = filtered_flex_machine_info
+
+        num_vms_to_prepare = len(filtered_flex_machine_info)
         public_ips, private_ips, instance_ids, keyfiles, usernames = self.__poll_instances_status(
                                                                                 num_vms=num_vms_to_prepare,
                                                                                 parameters=parameters)
@@ -121,18 +143,19 @@ class FlexBackendWorker(BackendWorker):
         logging.info('keyfiles = {}'.format(keyfiles))
         logging.info('usernames = {}'.format(usernames))
 
-        queue_head_machine = self.__get_queue_head_from_params(flex_cloud_machine_info, parameters)
 
-        if queue_head_machine == None or queue_head_machine['ip'] not in public_ips:
-            logging.error('Found no viable queue head machine!')
+
+        if queue_head_machine == None or (queue_head_machine['ip'] not in public_ips and queue_head_machine['ip'] not in running_flex_ips):
+            logging.error('Found no viable ssh-able/running queue head machine!')
             VMStateModel.fail_active(parameters)
             return
 
-        result = self.__prepare_queue_head(queue_head_machine, parameters)
-        if result == False:
-            logging.error('Error: could not prepare queue head! Failing other creating nodes.')
-            VMStateModel.fail_active(parameters)
-            return
+        if queue_head_machine['ip'] not in running_flex_ips:
+            result = self.__prepare_queue_head(queue_head_machine, parameters)
+            if result == False:
+                logging.error('Error: could not prepare queue head! Failing other creating nodes.')
+                VMStateModel.fail_active(parameters)
+                return
 
         self.__prepare_workers(public_ips, parameters)
 
@@ -145,7 +168,8 @@ class FlexBackendWorker(BackendWorker):
             VMStateModel.fail_active(parameters)
             return
 
-        if queue_head_machine['ip'] not in connected_public_ips:
+        if queue_head_machine['ip'] not in connected_public_ips \
+                and queue_head_machine['ip'] not in running_flex_ips:
             logging.info('queue_head_machine with ip {0} was not reachable!'.format(queue_head_machine['ip']))
             VMStateModel.fail_active(parameters)
             return
@@ -208,7 +232,9 @@ class FlexBackendWorker(BackendWorker):
                 'infrastructure': AgentTypes.FLEX,
                 self.PARAM_FLEX_CLOUD_MACHINE_INFO: flex_cloud_machine_info,
                 'credentials': parameters['credentials'],
-                'user_id': parameters['user_id']
+                'user_id': parameters['user_id'],
+                self.PARAM_FLEX_QUEUE_HEAD: parameters[self.PARAM_FLEX_QUEUE_HEAD],
+                'reservation_id': parameters['reservation_id']
             }
             self.agent.prepare_instances(params)
 
