@@ -869,11 +869,24 @@ class ImportPage(BaseHandler):
             'isAdminUser': self.user.is_admin_user()
         }
         # We can only pull results from S3 if we have valid AWS credentials
-        if self.user_data.valid_credentials:
-            credentials = self.user_data.getCredentials()
+
+        resource = None
+
+        if self.user_data.is_flex_cloud_info_set:
+            self.user_data.update_flex_cloud_machine_info_from_db()
+            flex_queue_head_machine = self.user_data.get_flex_queue_head_machine()
+
+            if backend_service.is_flex_queue_head_running(flex_queue_head_machine):
+                resource = simulation.StochKitJobWrapper.FLEX_CLOUD_RESOURCE
+
+        if resource == None:
+            if self.user_data.valid_credentials:
+                resource = simulation.StochKitJobWrapper.EC2_CLOUD_RESOURCE
+
+        if resource:
             # Get all the cloud jobs
             stochkit_jobs = db.GqlQuery("SELECT * FROM StochKitJobWrapper WHERE user_id = :1", self.user.user_id()).fetch(100000)
-            stochkit_jobs = [job for job in stochkit_jobs if job.stochkit_job.resource == "Cloud" and job.stochkit_job.status == "Finished"]
+            stochkit_jobs = [job for job in stochkit_jobs if ((job.stochkit_job.resource.lower() == resource) and (resource in simulation.StochKitJobWrapper.SUPPORTED_CLOUD_RESOURCES)) and job.stochkit_job.status == "Finished"]
             # Create the dictionary to pass to backend to check for sizes
             output_results_to_check = {}
             for cloud_job in stochkit_jobs:
@@ -888,7 +901,7 @@ class ImportPage(BaseHandler):
                     output_results_to_check[bucket_name] = [(key_name, cloud_job.name)]
             # Sensitivity Jobs
             sensi_jobs = db.GqlQuery("SELECT * FROM SensitivityJobWrapper WHERE userId = :1", self.user.user_id())
-            sensi_jobs = [job for job in sensi_jobs if job.resource == "cloud" and job.status == "Finished"]
+            sensi_jobs = [job for job in sensi_jobs if ((job.resource.lower() == resource) and (job.resource.lower() in sensitivity.SensitivityJobWrapper.SUPPORTED_CLOUD_RESOURCES)) and job.status == "Finished"]
             for cloud_job in sensi_jobs:
                 s3_url_segments = cloud_job.outputURL.split('/')
                 # S3 URLs are in the form https://s3.amazonaws.com/bucket_name/key/name
@@ -902,10 +915,11 @@ class ImportPage(BaseHandler):
             # StochOptim Jobs
             stochoptim_jobs_query = stochoptim.StochOptimJobWrapper.all()
             stochoptim_jobs_query.filter("userId =", self.user.user_id())
-            stochoptim_jobs_query.filter("resource =", "cloud")
             stochoptim_jobs_query.filter("status =", "Finished")
             stochoptim_jobs = []
             for cloud_job in stochoptim_jobs_query.run():
+                if (cloud_job.resource != resource) or (cloud_job.resource not in stochoptim.StochOptimJobWrapper.SUPPORTED_CLOUD_RESOURCES):
+                    continue
                 if cloud_job.outputURL is None:
                     #print vars(cloud_job)
                     continue
@@ -923,10 +937,11 @@ class ImportPage(BaseHandler):
             # Spatial Jobs
             spatial_jobs_query = spatial.SpatialJobWrapper.all()
             spatial_jobs_query.filter("userId =", self.user.user_id())
-            spatial_jobs_query.filter("resource =", "cloud")
             spatial_jobs_query.filter("status =", "Finished")
             spatial_jobs = []
             for cloud_job in spatial_jobs_query.run():
+                if (cloud_job.resource != resource) or (cloud_job.resource.lower() not in spatial.SpatialJobWrapper.SUPPORTED_CLOUD_RESOURCES):
+                    continue
                 if cloud_job.output_url is None:
                     #print vars(cloud_job)
                     continue
@@ -943,7 +958,11 @@ class ImportPage(BaseHandler):
 
             # Get all the job sizes from the backend
             service = backendservices()
-            job_sizes = service.getSizeOfOutputResults(credentials['EC2_ACCESS_KEY'], credentials['EC2_SECRET_KEY'], output_results_to_check)
+            if resource == simulation.StochKitJobWrapper.FLEX_CLOUD_RESOURCE:
+                pass
+            elif resource == simulation.StochKitJobWrapper.EC2_CLOUD_RESOURCE:
+                credentials = self.user_data.getCredentials()
+                job_sizes = service.getSizeOfOutputResults(credentials['EC2_ACCESS_KEY'], credentials['EC2_SECRET_KEY'], output_results_to_check)
             # Add all of the relevant jobs to the context so they will be rendered on the page
             context["stochkit_jobs"] = []
             context["sensitivity_jobs"] = []
