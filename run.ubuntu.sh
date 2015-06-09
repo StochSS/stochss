@@ -567,6 +567,6 @@ echo "Done!"
 if [ "$mode" = "run" ]; then
     echo "Running StochSS..."
     export PATH=$PATH:$STOCHKIT_HOME
-    exec python "$STOCHSS_HOME/launchapp.py" $0
+    exec python "$STOCHSS_HOME/launchapp.py" $0 $1
 fi
 
