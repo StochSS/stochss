@@ -122,7 +122,7 @@ class VirtualMachine(object):
 
         try:
             self.__is_machine_reachable()
-            self.__enable_network_ports()
+            self.__check_network_ports()
             self.__try_install_dependencies()
             self.__update_fenics()
             self.__reboot_machine()
@@ -321,9 +321,20 @@ class VirtualMachine(object):
             self.__run_remote_command(command=command, log_header=header)
 
 
-    def __enable_network_ports(self):
+    def __check_network_ports(self):
         # TODO: Enable ports 22, 5672, 6379, 11211, 55672, 80[?], 443, 3306
-        pass
+
+        ports = [22, 5672, 6379, 11211, 55672, 80, 443, 3306]
+        success = True
+        for port in ports:
+            ret = subprocess.call("nc -z {ip} {port}".format(yp=self.ip, port=port), shell=True)
+            if ret != 0:
+                print 'Error: Port {port} not open on {ip}!'.format(port=port, ip=self.ip)
+                success = False
+
+        if not success:
+            raise Exception('Need ports = {} to be open!'.format(ports))
+
 
     def __try_install_dependencies(self):
         trial = 0
