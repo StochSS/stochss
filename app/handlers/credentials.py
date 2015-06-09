@@ -258,7 +258,16 @@ class CredentialsPage(BaseHandler):
             logging.info('deregister_flex_cloud succeeded!')
             self.user_data.valid_flex_cloud_info = False
             self.user_data.is_flex_cloud_info_set = False
-            #self.user_data.set_flex_cloud_machine_info([])
+
+            # delete state, description from old_flex_cloud_machine_info
+            old_flex_cloud_machine_info = self.user_data.get_flex_cloud_machine_info()
+            for machine in old_flex_cloud_machine_info:
+                if 'state' in machine:
+                    del machine['state']
+                if 'description' in machine:
+                    del machine['description']
+
+            self.user_data.set_flex_cloud_machine_info(old_flex_cloud_machine_info)
             self.user_data.reservation_id = None
             self.user_data.flex_db_password = None
             self.user_data.put()
