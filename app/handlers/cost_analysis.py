@@ -6,12 +6,14 @@ except ImportError:
 import os
 from google.appengine.ext import db
 import boto
+from backend.common.config import AgentTypes
 from backend import backendservice
 from backend.pricing import Price
 from cloudtracker import CloudTracker
 import simulation, spatial, sensitivity
 import logging
 from backend.databases.dynamo_db import DynamoDB
+from backend.common.config import AgentTypes, JobDatabaseConfig
 
 from stochssapp import BaseHandler
 
@@ -20,7 +22,8 @@ ALL_INSTANCE_TYPES = ['t1.micro', 'm1.small', 'm3.medium', 'm3.large', 'c3.large
 def get_all_jobs_time_cost(uuid, access_key, secret_key):
     
     database = DynamoDB(access_key, secret_key)
-    results = database.getEntry('uuid', uuid, backendservice.backendservices.COST_ANALYSIS_TABLE)
+    results = database.getEntry(attribute_name='uuid', attribute_value=uuid,
+                                table_name=JobDatabaseConfig.COST_ANALYSIS_TABLE_NAME)
              
     jobs = []
     if results is None:
@@ -29,8 +32,9 @@ def get_all_jobs_time_cost(uuid, access_key, secret_key):
     try:
         seen_instance_types = {} # so we don't get duplicate entries
         for result in results:
+            logging.info('result = {0}'.format(result))
             job = {}
-            job['agent'] = result['agent']
+            job['agent'] = result['infrastructure']
             job['instance_type'] = result['instance_type']
             if job['instance_type'] in seen_instance_types:
                 continue
@@ -110,7 +114,7 @@ class CostAnalysisPage(BaseHandler):
             backend_services = backendservice.backendservices()
             
             compute_check_params = {
-                    "infrastructure": "ec2",
+                    "infrastructure": AgentTypes.EC2,
                     "credentials": credentials,
                     "key_prefix": self.user.user_id()
             }
@@ -139,7 +143,9 @@ class CostAnalysisPage(BaseHandler):
                     params = ct.get_input()
                     
                     
-                    cloud_result = backend_services.executeTask(params, "ec2", access_key, secret_key, uuid, instance_type, True)  #calls task(taskid,params,access_key,secret_key)
+                    cloud_result = backend_services.submit_cloud_task(params=params, agent_type=AgentTypes.EC2,
+                                                                ec2_access_key=access_key, ec2_secret_key=secret_key,
+                                                                task_id=uuid, instance_type=instance_type, cost_replay=True)
                     
                     if not cloud_result["success"]:
                         e = cloud_result["exception"]

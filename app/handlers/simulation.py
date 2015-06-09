@@ -25,6 +25,8 @@ from modeleditor import StochKitModelWrapper, ObjectProperty
 import modeleditor
 
 from backend.backendservice import backendservices
+from backend.common.config import AgentTypes, JobConfig
+
 sys.path.append(os.path.join(os.path.dirname(__file__), '../lib/cloudtracker'))
 from s3_helper import *
 
@@ -112,7 +114,8 @@ class StochKitJobWrapper(db.Model):
             service.deleteTasks([(stochkit_job.celery_pid,stochkit_job.pid)])
             
             try:
-                user_data = db.GqlQuery("SELECT * FROM UserData WHERE ec2_access_key = :1 AND ec2_secret_key = :2", db_credentials['EC2_ACCESS_KEY'], db_credentials['EC2_SECRET_KEY']).get()
+                user_data = db.GqlQuery("SELECT * FROM UserData WHERE ec2_access_key = :1 AND ec2_secret_key = :2",
+                                        db_credentials['EC2_ACCESS_KEY'], db_credentials['EC2_SECRET_KEY']).get()
                 
                 bucketname = user_data.S3_bucket_name
                 logging.info(bucketname)
@@ -124,7 +127,8 @@ class StochKitJobWrapper(db.Model):
                 logging.info('delete the output tar file output/{1}.tar in bucket {0}'.format(bucketname, stochkit_job.pid))
                 
                 #delete dynamodb entries
-                dynamo=boto.connect_dynamodb(aws_access_key_id=os.environ["AWS_ACCESS_KEY_ID"], aws_secret_access_key=os.environ["AWS_SECRET_ACCESS_KEY"])
+                dynamo=boto.connect_dynamodb(aws_access_key_id=os.environ["AWS_ACCESS_KEY_ID"],
+                                             aws_secret_access_key=os.environ["AWS_SECRET_ACCESS_KEY"])
                 table = dynamo.get_table("stochss_cost_analysis")
                 results = table.scan(scan_filter={'uuid' :condition.EQ(stochkit_job.pid)})
                 for result in results:
@@ -183,7 +187,7 @@ class JobManager():
     def getJob(handler, job_id):
         job = StochKitJobWrapper.get_by_id(job_id)
 
-        print job.stochkit_job.units
+        logging.info(job.stochkit_job.units)
 
         jsonJob = { "id" : job.key().id(),
                     "name" : job.name,
@@ -325,6 +329,10 @@ class JobBackboneInterface(BaseHandler):
       self.response.write(json.dumps([]))
 
 class StochKitJob(Job):
+    FLEX_CLOUD_RESOURCE = "{0}-cloud".format(AgentTypes.FLEX)
+    EC2_CLOUD_RESOURCE = "{0}-cloud".format(AgentTypes.EC2)
+    SUPPORTED_CLOUD_RESOURCES = [EC2_CLOUD_RESOURCE, FLEX_CLOUD_RESOURCE]
+
     """ Model for a StochKit job. Contains all the parameters associated with the call. """
     
     def __init__(self,name=None, final_time=None, increment=None, realizations=1, exec_type="stochastic",store_only_mean=False, label_column_names=True,create_histogram_data=False, seed=None, epsilon=0.1,threshold = 10, output_url = None, units = None, type = None, status = None, output_location = "", zipFileName = None, **kwargs):
@@ -386,10 +394,9 @@ class SimulatePage(BaseHandler):
                                 "units" : model["units"],
                                 "isSpatial" : model["isSpatial"] })
         context = {'all_models': all_models}
-        
-        
-        
+
         self.render_response('simulate.html',**context)
+
     def post(self):
         """ Assemble the input to StochKit2 and submit the job (locally or via cloud). """
 
@@ -477,7 +484,10 @@ class SimulatePage(BaseHandler):
 
             if job.stochkit_job.status == "Finished":
                 try:
-                    if job.stochkit_job.resource == 'Cloud' and job.output_stored == 'False' or job.stochkit_job.resource == 'Cloud' and job.stochkit_job.output_location is None:
+                    if job.stochkit_job.resource in StochKitJob.SUPPORTED_CLOUD_RESOURCES \
+                            and job.output_stored == 'False' \
+                            or job.stochkit_job.resource in StochKitJob.SUPPORTED_CLOUD_RESOURCES \
+                                    and job.stochkit_job.output_location is None:
                         self.response.headers['Content-Type'] = 'application/json'
                         self.response.write(json.dumps({ "status" : "Finished",
                                                          "values" : [],
@@ -562,15 +572,18 @@ class SimulatePage(BaseHandler):
                             vhandle.close()
 
                     self.response.headers['Content-Type'] = 'application/json'
-                    self.response.write(json.dumps({ "status" : "Finished",
-                                                     "values" : values,
-                                                     "job" : JobManager.getJob(self, job.key().id())}))
+                    result = {"status" : "Finished",
+                              "values" : values,
+                              "job" : JobManager.getJob(self, job.key().id())}
+                    logging.debug("result = \n\n{}".format(result))
+                    self.response.write(json.dumps(result))
                     return
+
                 except Exception as e:
                     traceback.print_exc()
                     job.stochkit_job.status = "Failed"
                     job.put()
-                    print "Failed to parse output data. Assuming job failed and continuing"
+                    logging.error("Failed to parse output data. Assuming job failed and continuing")
             
             if job.stochkit_job.status == "Failed":
                 self.response.headers['Content-Type'] = 'application/json'
@@ -601,7 +614,8 @@ class SimulatePage(BaseHandler):
             params = json.loads(self.request.get('data'))
 
             self.response.headers['Content-Type'] = 'application/json'
-            job = db.GqlQuery("SELECT * FROM StochKitJobWrapper WHERE user_id = :1 AND name = :2", self.user.user_id(), params["jobName"].strip()).get()
+            job = db.GqlQuery("SELECT * FROM StochKitJobWrapper WHERE user_id = :1 AND name = :2",
+                              self.user.user_id(), params["jobName"].strip()).get()
 
             if job != None:
                 self.response.write(json.dumps({"status" : False,
@@ -609,44 +623,79 @@ class SimulatePage(BaseHandler):
                 return
             
             backend_services = backendservices()
-            compute_check_params = {
-                "infrastructure": "ec2",
-                "credentials": self.user_data.getCredentials(),
-                "key_prefix": self.user.user_id()
-            }
+
             # Create a stochhkit_job instance
             if params['resource'] == "local":
-                result=self.runStochKitLocal(params)
+                result = self.runStochKitLocal(params)
+
             elif params['resource'] == 'cloud':
-                if self.user_data.valid_credentials and backend_services.isOneOrMoreComputeNodesRunning(compute_check_params):
-                    result=self.runCloud(params)
+                if self.user_data.is_flex_cloud_info_set:
+                    self.user_data.update_flex_cloud_machine_info_from_db()
+                    flex_queue_head_machine = self.user_data.get_flex_queue_head_machine()
+
+                    if backend_services.is_flex_queue_head_running(flex_queue_head_machine):
+                        logging.info('Flex Queue Head is running')
+                        params['resource'] = '{0}-cloud'.format(AgentTypes.FLEX)
+                        result = self.runCloud(params, agent_type=AgentTypes.FLEX)
+                    else:
+                        result = {'status': False,
+                                  'msg': 'You must have at least queue head running to run in the flex cloud.' }
+
                 else:
-                    result = { 'status': False, 'msg': 'You must have at least one active compute node to run in the cloud.' }
+                    compute_check_params = {
+                        "infrastructure": AgentTypes.EC2,
+                        "credentials": self.user_data.getCredentials(),
+                        "key_prefix": self.user.user_id()
+                    }
+                    if self.user_data.valid_credentials and \
+                            backend_services.isOneOrMoreComputeNodesRunning(compute_check_params):
+
+                        params['resource'] = '{0}-cloud'.format(AgentTypes.EC2)
+                        result = self.runCloud(params, agent_type=AgentTypes.EC2)
+
+                    else:
+                        result = { 'status': False,
+                                   'msg': 'You must have at least one active EC2 compute node to run in the EC2 cloud.' }
+
             else:
-                result={'status':False,'msg':'There was an error processing your request.'}
+                result = {'status':False,
+                          'msg':'There was an error processing your request.'}
 
             self.response.headers['Content-Type'] = 'application/json'
             self.response.write(json.dumps(result))
     
-    def runCloud(self, params):
-        
+    def runCloud(self, params, agent_type):
         try:
             model = StochKitModelWrapper.get_by_id(params["id"]).createStochKitModel()
 
             if not model:
                 return {'status':False,'msg':'Failed to retrive the model to simulate.'}
 
-            db_credentials = self.user_data.getCredentials()
-            # Set the environmental variables 
-            os.environ["AWS_ACCESS_KEY_ID"] = db_credentials['EC2_ACCESS_KEY']
-            os.environ["AWS_SECRET_ACCESS_KEY"] = db_credentials['EC2_SECRET_KEY']
+            ec2_credentials = None
+            if agent_type == AgentTypes.EC2:
+                ec2_credentials = self.user_data.getCredentials()
+                # Set the environmental variables
+                os.environ["AWS_ACCESS_KEY_ID"] = ec2_credentials['EC2_ACCESS_KEY']
+                os.environ["AWS_SECRET_ACCESS_KEY"] = ec2_credentials['EC2_SECRET_KEY']
 
-            if os.environ["AWS_ACCESS_KEY_ID"] == '':
-                result = {'status':False,'msg':'Access Key not set. Check : Settings > Cloud Computing'}
-                return result
+                if os.environ["AWS_ACCESS_KEY_ID"] == '':
+                    result = {'status':False,
+                              'msg':'Access Key not set. Check : Settings > Cloud Computing'}
+                    return result
 
-            if os.environ["AWS_SECRET_ACCESS_KEY"] == '':
-                result = {'status':False,'msg':'Secret Key not set. Check : Settings > Cloud Computing'}
+                if os.environ["AWS_SECRET_ACCESS_KEY"] == '':
+                    result = {'status':False,'msg':'Secret Key not set. Check : Settings > Cloud Computing'}
+                    return result
+
+            elif agent_type == AgentTypes.FLEX:
+                if not self.user_data.valid_flex_cloud_info:
+                    result = {'status':False,
+                              'msg':'Flex Cloud credentials are not valid. Check : Settings > Cloud Computing'}
+                    return result
+
+            else:
+                result = {'status': False,
+                          'msg': 'Invalid Cloud infrastructure!'}
                 return result
         
             #the parameter dictionary to be passed to the backend
@@ -739,10 +788,28 @@ class SimulatePage(BaseHandler):
         
             # Call backendservices and execute StochKit
             service = backendservices()
-            access_key = os.environ["AWS_ACCESS_KEY_ID"]
-            secret_key = os.environ['AWS_SECRET_ACCESS_KEY']
-            print "backendservices.executeTask() params = {0}".format(params)
-            cloud_result = service.executeTask(params, "ec2", access_key, secret_key)
+            logging.info('Calling service.submit_cloud_task...')
+            if agent_type == AgentTypes.EC2:
+                # Send the task to the backend
+                cloud_result = service.submit_cloud_task(params=params, agent_type=agent_type,
+                                               ec2_access_key=ec2_credentials['EC2_ACCESS_KEY'],
+                                               ec2_secret_key=ec2_credentials['EC2_SECRET_KEY'])
+            elif agent_type == AgentTypes.FLEX:
+                queue_head_machine = self.user_data.get_flex_queue_head_machine()
+                logging.info('queue_head_machine = {}'.format(queue_head_machine))
+
+                flex_credentials = {
+                    'flex_db_password': self.user_data.flex_db_password,
+                    'flex_queue_head': queue_head_machine,
+                }
+
+                # Send the task to the backend
+                cloud_result = service.submit_cloud_task(params=params, agent_type=agent_type,
+                                                         flex_credentials=flex_credentials)
+
+            else:
+                raise Exception('Invalid agent type!')
+
             if not cloud_result["success"]:
                 e = cloud_result["exception"]
                 result = {
@@ -755,7 +822,7 @@ class SimulatePage(BaseHandler):
             taskid = cloud_result["db_id"]
             # Create a StochKitJob instance
             stochkit_job = StochKitJob(name = ensemblename, final_time = stime, realizations = realizations, increment = increment, seed = seed, exec_type = exec_type, units = model.units.lower())
-            stochkit_job.resource = 'Cloud'
+            stochkit_job.resource = '{0}-cloud'.format(agent_type)
             stochkit_job.type = 'StochKit2 Ensemble'
             
             # The jobs pid is the DB/S3 ID.
@@ -792,7 +859,8 @@ class SimulatePage(BaseHandler):
             modelDb = StochKitModelWrapper.get_by_id(params["id"])
 
             if not modelDb:
-                return {'status':False,'msg':'Failed to retrive the model to simulate.'}
+                return {'status':False,
+                        'msg':'Failed to retrive the model to simulate.'}
 
             try:
                 model = modelDb.createStochKitModel()
@@ -864,7 +932,7 @@ class SimulatePage(BaseHandler):
 
             cmd += ' -m {0} --out-dir {1}/result'.format(modelFileName, dataDir)
 
-            print cmd
+            logging.info("cmd =\n{}".format(cmd))
 
             #ode = "{0}/../../ode/stochkit_ode.py {1}".format(path, args)
             exstring = '{0}/backend/wrapper.sh {1}/stdout {1}/stderr {2}'.format(basedir, dataDir, cmd)
@@ -896,9 +964,12 @@ class SimulatePage(BaseHandler):
             stochkit_job_db.modelName = model.name
             stochkit_job_db.put()
     
-            result = {'status':True,'msg':'Job submitted successfully'}
+            result = {'status':True,
+                      'msg':'Job submitted successfully'}
             
-        except None:#Exception,e:
+        except Exception, e:
+            logging.error(e)
+            logging.error(traceback.format_exc())
             raise e
         #result = {'status':False,'msg':'Local execution failed: '+str(e)}
                 

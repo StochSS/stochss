@@ -80,8 +80,13 @@ function check_for_lib {
     if [ -z "$1" ];then
         return 1 #False
     fi
-    RET=`python -c "import $1" 2>/dev/null`
-    RC=$?
+    if [ "$1" = "mysql-connector-python" ]; then
+        RET=`python -c "import mysql.connector" 2>/dev/null`
+        RC=$?
+    else
+        RET=`python -c "import $1" 2>/dev/null`
+        RC=$?
+    fi
     if [[ $RC != 0 ]];then
         return 1 #False
     fi
@@ -141,8 +146,8 @@ function download_pyurdme {
     fi
 }
 
-function check_spatial_dependencies {
-    deps=("numpy" "scipy" "matplotlib" "h5py" "libsbml")
+function check_python_dependencies {
+    deps=("numpy" "scipy" "matplotlib" "h5py" "libsbml" "mysql-connector-python")
     for dep in "${deps[@]}"
     do
         echo "Checking for $dep<br />"
@@ -160,13 +165,13 @@ function install_dependencies_via_applescript {
     /usr/bin/env osascript run_mac_install.scpt
 }
 
-function check_spatial_installation {
-    if check_spatial_dependencies; then
-        echo "All spatial dependencies detected.<br />"
+function check_python_installation {
+    if check_python_dependencies; then
+        echo "All python dependencies detected.<br />"
     else
         install_dependencies_via_applescript
-        if check_spatial_dependencies; then
-            echo "All spatial dependencies detected.<br />"
+        if check_python_dependencies; then
+            echo "All python dependencies detected.<br />"
         else
             echo "Error: dependencies not installed, exiting.<br />"
             return 1 #False
@@ -198,11 +203,11 @@ function check_spatial_installation {
 
 #####################
 
-echo "Check if spatial libraries are installed.<br />"
-if check_spatial_installation;then
+echo "Check if python libraries are installed.<br />"
+if check_python_installation;then
     echo "Spatial libraries installed correctly.<br />"
 else
-    echo "Error checking the spatial libraries.<br />"
+    echo "Error checking the python libraries.<br />"
     exit 1
 fi
 #################
@@ -431,4 +436,4 @@ echo "$STOCHKIT_HOME" > "$STOCHSS_HOME/conf/config"
 echo -n "$STOCHKIT_ODE" >> "$STOCHSS_HOME/conf/config"
 echo "Done!"
 
-exec python "$STOCHSS_HOME/launchapp.py" 1 $0
+exec python "$STOCHSS_HOME/launchapp.py" 1 $0 $1

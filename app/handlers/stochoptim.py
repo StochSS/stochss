@@ -15,6 +15,7 @@ import sys
 import os
 import re
 import signal
+import pprint
 import shlex
 import subprocess
 import tempfile
@@ -22,6 +23,7 @@ import time
 import logging
 import traceback
 from backend.backendservice import backendservices
+from backend.common.config import AgentTypes
 
 def int_or_float(s):
     try:
@@ -141,14 +143,16 @@ class StochOptimModel(stochss.model.Model):
 
         rkind = "rk.ind <- c({0})".format(", ".join([repr(parameterNameToIndex[reaction.marate.name] + 1) for name, reaction in reactions]))
 
-        print os.linesep.join([rnu, pnu, snames, rnames, rparms, rknames, rconstant, rkind])
-
         if returnParameterToIndexMap:
             return os.linesep.join([rnu, pnu, snames, rnames, rparms, rknames, rconstant, rkind]), parameterNameToIndex
         else:
             return os.linesep.join([rnu, pnu, snames, rnames, rparms, rknames, rconstant, rkind])
 
 class StochOptimJobWrapper(db.Model):
+    FLEX_CLOUD_RESOURCE = "{0}-cloud".format(AgentTypes.FLEX)
+    EC2_CLOUD_RESOURCE = "{0}-cloud".format(AgentTypes.EC2)
+    SUPPORTED_CLOUD_RESOURCES = [FLEX_CLOUD_RESOURCE, EC2_CLOUD_RESOURCE]
+
     userId = db.StringProperty()
     pid = db.IntegerProperty()
     startTime = db.StringProperty()
@@ -185,7 +189,8 @@ class StochOptimJobWrapper(db.Model):
                     os.killpg(self.pid, signal.SIGTERM)
                 except:
                     pass
-            elif self.resource.lower() == "cloud":
+
+            elif self.resource.lower() in StochOptimJobWrapper.SUPPORTED_CLOUD_RESOURCES:
                 service = backend.backendservice.backendservices()
                 stop_params = {
                     'credentials': credentials,
@@ -244,32 +249,65 @@ class StochOptimPage(BaseHandler):
                     # This function takes full responsibility for writing responses out to the world. This is probably a bad design mechanism
                     self.runLocal(data)
                     return
+
                 else:
+                    # cloud
+
                     backend_services = backend.backendservice.backendservices()
-                    compute_check_params = {
-                        "infrastructure": "ec2",
-                        "credentials": self.user_data.getCredentials(),
-                        "key_prefix": self.user.user_id()
-                    }
-                    if self.user_data.valid_credentials and backend_services.isOneOrMoreComputeNodesRunning(compute_check_params):
-                        result = self.runCloud(data)
-                        logging.info("Run cloud finished with result: {0}, generating JSON response".format(result))
-                        if not result["success"]:
-                            return self.response.write(json.dumps({
-                                "status": False,
-                                "msg": result["msg"]
-                            }))
+
+                    if self.user_data.is_flex_cloud_info_set:
+                        self.user_data.update_flex_cloud_machine_info_from_db()
+                        flex_queue_head_machine = self.user_data.get_flex_queue_head_machine()
+
+                        if backend_services.is_flex_queue_head_running(flex_queue_head_machine):
+                            logging.info('Flex Queue Head is running')
+                            data['resource'] = '{0}-cloud'.format(AgentTypes.FLEX)
+                            result = self.runCloud(data=data, agent_type=AgentTypes.FLEX)
+
+                            logging.info("Run cloud finished with result: {0}, generating JSON response".format(result))
+                            if not result["success"]:
+                                return self.response.write(json.dumps({
+                                    "status": False,
+                                    "msg": result["msg"]
+                                }))
+                            else:
+                                return self.response.write(json.dumps({
+                                    "status": True,
+                                    "msg": "Job launched",
+                                    "id": result["job"].key().id()
+                                }))
+
                         else:
                             return self.response.write(json.dumps({
-                                "status": True,
-                                "msg": "Job launched",
-                                "id": result["job"].key().id()
+                                "status": False,
+                                "msg": "You must have at least queue head running to run in flex cloud."
                             }))
+
                     else:
-                        return self.response.write(json.dumps({
-                            'status': False,
-                            'msg': 'You must have at least one active compute node to run in the cloud.'
-                        }))
+                        compute_check_params = {
+                            "infrastructure": AgentTypes.EC2,
+                            "credentials": self.user_data.getCredentials(),
+                            "key_prefix": self.user.user_id()
+                        }
+                        if self.user_data.valid_credentials and backend_services.isOneOrMoreComputeNodesRunning(compute_check_params):
+                            result = self.runCloud(data, agent_type=AgentTypes.EC2)
+                            logging.info("Run cloud finished with result: {0}, generating JSON response".format(result))
+                            if not result["success"]:
+                                return self.response.write(json.dumps({
+                                    "status": False,
+                                    "msg": result["msg"]
+                                }))
+                            else:
+                                return self.response.write(json.dumps({
+                                    "status": True,
+                                    "msg": "Job launched",
+                                    "id": result["job"].key().id()
+                                }))
+                        else:
+                            return self.response.write(json.dumps({
+                                'status': False,
+                                'msg': 'You must have at least one active compute node to run in the cloud.'
+                            }))
             except Exception as e:
                 traceback.print_exc()
                 result = {}
@@ -287,7 +325,7 @@ class StochOptimPage(BaseHandler):
             job = StochOptimJobWrapper.get_by_id(jobID)
 
             if job.userId == self.user.user_id():
-                if job.resource.lower() == "cloud":
+                if job.resource.lower() in StochOptimJobWrapper.SUPPORTED_CLOUD_RESOURCES:
                     try:
                         logging.info("KILL TASK {0}".format(job.pollProcessPID))
                         os.kill(job.pollProcessPID, signal.SIGTERM)
@@ -459,9 +497,9 @@ class StochOptimPage(BaseHandler):
                                         "msg" : "Job launched",
                                         "id" : job.key().id()}))
     
-    def runCloud(self, data):
-        '''
-        '''
+    def runCloud(self, data, agent_type):
+        logging.info('runCloud: agent_type = {}'.format(agent_type))
+
         modelDb = StochKitModelWrapper.get_by_id(data["modelID"])
 
         berniemodel = StochOptimModel()
@@ -488,7 +526,7 @@ class StochOptimPage(BaseHandler):
         job.modelName = modelDb.name
         job.outData = dataDir
         job.status = "Pending"
-        job.resource = "cloud"
+        job.resource = "{0}-cloud".format(agent_type)
 
         data["exec"] = "'bash'"
 
@@ -526,7 +564,40 @@ class StochOptimPage(BaseHandler):
         os.environ["AWS_ACCESS_KEY_ID"] = self.user_data.getCredentials()['EC2_ACCESS_KEY']
         os.environ["AWS_SECRET_ACCESS_KEY"] = self.user_data.getCredentials()['EC2_SECRET_KEY']
         service = backend.backendservice.backendservices()
-        cloud_result = service.executeTask(cloud_params, "ec2", os.environ["AWS_ACCESS_KEY_ID"], os.environ["AWS_SECRET_ACCESS_KEY"])
+
+
+        if agent_type == AgentTypes.EC2:
+            ec2_credentials = self.user_data.getCredentials()
+
+            # Set the environmental variables
+            os.environ["AWS_ACCESS_KEY_ID"] = ec2_credentials['EC2_ACCESS_KEY']
+            os.environ["AWS_SECRET_ACCESS_KEY"] = ec2_credentials['EC2_SECRET_KEY']
+            # Send the task to the backend
+            cloud_result = service.submit_cloud_task(params=cloud_params, agent_type=agent_type,
+                                               ec2_access_key=ec2_credentials['EC2_ACCESS_KEY'],
+                                               ec2_secret_key=ec2_credentials['EC2_SECRET_KEY'])
+        elif agent_type == AgentTypes.FLEX:
+            queue_head_machine = self.user_data.get_flex_queue_head_machine()
+            logging.info('queue_head_machine = {}'.format(queue_head_machine))
+
+            flex_credentials = {
+                'flex_db_password': self.user_data.flex_db_password,
+                'flex_queue_head': queue_head_machine,
+            }
+
+            # Send the task to the backend
+            cloud_result = service.submit_cloud_task(params=cloud_params, agent_type=agent_type,
+                                                     flex_credentials=flex_credentials)
+
+        else:
+            raise Exception('Invalid agent type!')
+
+        # # execute cloud task
+        # cloud_result = service.submit_cloud_task(params=cloud_params,
+        #                                    agent_type=AgentTypes.EC2,
+        #                                    ec2_access_key=os.environ["AWS_ACCESS_KEY_ID"],
+        #                                    ec2_secret_key=os.environ["AWS_SECRET_ACCESS_KEY"])
+
         if not cloud_result["success"]:
             result = {
                 "success": False,
@@ -586,19 +657,44 @@ class StochOptimVisualization(BaseHandler):
                         optimization.status = "Finished"
                     else:
                         optimization.status = "Failed"
-            else: #cloud
+            else:
+                #cloud
                 # Retrive credentials from the datastore
-                if not self.user_data.valid_credentials:
-                    return {'status':False,'msg':'Could not retrieve the status of job '+stochkit_job.name +'. Invalid credentials.'}
-                credentials = self.user_data.getCredentials()
-                # Check the status from backend
-                taskparams = {
-                    'AWS_ACCESS_KEY_ID': credentials['EC2_ACCESS_KEY'],
-                    'AWS_SECRET_ACCESS_KEY': credentials['EC2_SECRET_KEY'],
-                    'taskids': [optimization.cloudDatabaseID]
-                }
+
+                if optimization.resource == StochOptimJobWrapper.EC2_CLOUD_RESOURCE:
+                    if not self.user_data.valid_credentials:
+                        return {'status':False,
+                                'msg':'Could not retrieve the status of job '+ optimization.jobName +'. Invalid credentials.'}
+                    credentials = self.user_data.getCredentials()
+                    # Check the status from backend
+                    taskparams = {
+                        'AWS_ACCESS_KEY_ID': credentials['EC2_ACCESS_KEY'],
+                        'AWS_SECRET_ACCESS_KEY': credentials['EC2_SECRET_KEY'],
+                        'taskids': [optimization.cloudDatabaseID],
+                        'agent_type': AgentTypes.EC2
+                    }
+
+                elif optimization.resource == StochOptimJobWrapper.FLEX_CLOUD_RESOURCE:
+                    if not self.user_data.valid_flex_cloud_info:
+                        return {'status':False,
+                                'msg':'Could not retrieve the status of job '+optimization.jobName +'. Invalid flex cloud info.'}
+
+                    queue_head_machine = self.user_data.get_flex_queue_head_machine()
+                    taskparams = {
+                        'flex_db_password': self.user_data.flex_db_password,
+                        'queue_head_ip': queue_head_machine['ip'],
+                        'taskids':[optimization.cloudDatabaseID],
+                        'agent_type': AgentTypes.FLEX
+                    }
+
+                else:
+                    return {'status':False,
+                             'msg':'Could not retrieve the status of job '+optimization.jobName +'. Invalid Cloud resource.'}
+
                 task_status = service.describeTask(taskparams)
+                logging.info('task_status =\n{}'.format(pprint.pformat(task_status)))
                 job_status = task_status[optimization.cloudDatabaseID]
+
                 # If it's finished
                 if job_status['status'] == 'finished':
                     # Update the job 
@@ -628,7 +724,7 @@ class StochOptimVisualization(BaseHandler):
 
             optimization.put()
         # Might need to download the cloud data
-        if optimization.resource == "cloud":
+        if optimization.resource in StochOptimJobWrapper.SUPPORTED_CLOUD_RESOURCES:
             if optimization.status == "Finished":
                 if optimization.has_final_cloud_data():
                     # Nothing to do here
@@ -738,29 +834,53 @@ class StochOptimVisualization(BaseHandler):
             return
     
     def __fetch_cloud_output(self, job_wrapper):
-        '''
-        '''
+        result = {}
+
         try:
-            result = {}
             service = backend.backendservice.backendservices()
             # check if the outputURL is empty, if so, update it from the DB
             if job_wrapper.outputURL is None:
                 logging.info("stochoptim.outputURL is None")
                 # Retrive credentials from the datastore
-                if not self.user_data.valid_credentials:
-                    return {'status':False,'msg':'Could not retrieve the status of job '+job_wrapper.jobName +'. Invalid credentials.'}
-                credentials = self.user_data.getCredentials()
-                # Check the status from backend
-                taskparams = {
-                    'AWS_ACCESS_KEY_ID': credentials['EC2_ACCESS_KEY'],
-                    'AWS_SECRET_ACCESS_KEY': credentials['EC2_SECRET_KEY'],
-                    'taskids': [job_wrapper.cloudDatabaseID]
-                }
+
+                if job_wrapper.resource == StochOptimJobWrapper.EC2_CLOUD_RESOURCE:
+                    if not self.user_data.valid_credentials:
+                        return {'status':False,
+                                'msg':'Could not retrieve the status of job '+job_wrapper.jobName +'. Invalid credentials.'}
+                    credentials = self.user_data.getCredentials()
+                    # Check the status from backend
+                    taskparams = {
+                        'AWS_ACCESS_KEY_ID': credentials['EC2_ACCESS_KEY'],
+                        'AWS_SECRET_ACCESS_KEY': credentials['EC2_SECRET_KEY'],
+                        'taskids': [job_wrapper.cloudDatabaseID],
+                        'agent_type': AgentTypes.EC2
+                    }
+
+                elif job_wrapper.resource == StochOptimJobWrapper.FLEX_CLOUD_RESOURCE:
+                    if not self.user_data.valid_flex_cloud_info:
+                        return {'status':False,
+                                'msg':'Could not retrieve the status of job '+job_wrapper.jobName +'. Invalid flex cloud info.'}
+
+                    queue_head_machine = self.user_data.get_flex_queue_head_machine()
+                    taskparams = {
+                        'flex_db_password': self.user_data.flex_db_password,
+                        'queue_head_ip': queue_head_machine['ip'],
+                        'taskids':[job_wrapper.cloudDatabaseID],
+                        'agent_type': AgentTypes.FLEX
+                    }
+
+                else:
+                    return {'status':False,
+                             'msg':'Could not retrieve the status of job '+job_wrapper.jobName +'. Invalid Cloud resource.'}
+
                 task_status = service.describeTask(taskparams)
-                logging.info("job_status = task_status[job.cloudDatabaseID={0}] = {1}".format(job_wrapper.cloudDatabaseID, task_status))
+                logging.info("job_status = task_status[job.cloudDatabaseID={0}] = {1}".format(
+                                                            job_wrapper.cloudDatabaseID, task_status))
                 job_status = task_status[job_wrapper.cloudDatabaseID]
                 logging.info("job_status = {0}".format(job_status))
                 job_wrapper.outputURL = job_status['output']
+
+
             # Grab the remote files
             service.fetchOutput(job_wrapper.cloudDatabaseID, job_wrapper.outputURL)
             # Unpack it to its local output location...
@@ -768,12 +888,15 @@ class StochOptimVisualization(BaseHandler):
             job_wrapper.outData = os.path.abspath(
                 os.path.dirname(os.path.abspath(__file__))+'/../output/'+job_wrapper.cloudDatabaseID
             )
+
             # Clean up
             os.remove(job_wrapper.cloudDatabaseID+'.tar')
+
             # Save the updated status
             job_wrapper.put()
             result['status']=True
             result['msg'] = "Successfully fetched the remote output files."
+
         except Exception,e:
             logging.info('************************************* {0}'.format(e))
             result['status']=False

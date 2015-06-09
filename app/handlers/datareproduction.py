@@ -13,6 +13,7 @@ import logging
 import shutil
 from backend import tasks
 from backend.backendservice import backendservices
+from backend.common.config import AgentTypes
 
 DEFAULT_BUCKET_NAME = ''
 
@@ -121,7 +122,9 @@ class DataReproductionPage(BaseHandler):
                     logging.info("OUT_PUT SIZE: {0}".format(params['output_size']))
                 
                     time = datetime.datetime.now()
-                    cloud_result = service.executeTask(params, "ec2", access_key, secret_key, uuid, instance_type)  #calls task(taskid,params,access_key,secret_key)
+                    cloud_result = service.submit_cloud_task(params=params, agent_type=AgentTypes.EC2,
+                                                       ec2_access_key=access_key, ec2_secret_key=secret_key,
+                                                       uuid=uuid, instance_type=instance_type)
                     
                     if not cloud_result["success"]:
                         e = cloud_result["exception"]
@@ -165,7 +168,11 @@ class DataReproductionPage(BaseHandler):
                     params = ct.get_input()
                 
                     time = datetime.datetime.now()
-                    cloud_result = service.executeTask(params, "ec2", access_key, secret_key, uuid)  #calls task(taskid,params,access_key,secret_key)
+
+                    # execute task in cloud
+                    cloud_result = service.submit_cloud_task(params=params, agent_type="ec2",
+                                                       ec2_access_key=access_key, ec2_secret_key=secret_key,
+                                                       uuid=uuid)
                     
                     if not cloud_result["success"]:
                         e = cloud_result["exception"]
@@ -206,7 +213,10 @@ class DataReproductionPage(BaseHandler):
                     params = ct.get_input()
                 
                     time = datetime.datetime.now()
-                    cloud_result = service.executeTask(params, "ec2", access_key, secret_key, uuid)  #calls task(taskid,params,access_key,secret_key)
+
+                    # execute task in cloud
+                    cloud_result = service.submit_cloud_task(params=params, agent_type="ec2",
+                                                       ec2_access_key=access_key, ec2_secret_key=secret_key, uuid=uuid)
                     
                     if not cloud_result["success"]:
                         e = cloud_result["exception"]
