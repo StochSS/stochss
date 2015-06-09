@@ -95,7 +95,7 @@ class FlexAgent(BaseAgent):
 
         return {'state': FlexVMState.UNKNOWN}
 
-    def describe_instances_running(self, parameters):
+    def describe_unprepared_instances(self, parameters):
         instance_ids = []
         public_ips = []
         private_ips = []
@@ -105,9 +105,9 @@ class FlexAgent(BaseAgent):
 
         for machine in parameters[self.PARAM_FLEX_CLOUD_MACHINE_INFO]:
             ip = machine['ip']
-            state_info = self.__get_flex_vm_state_info(ip)
+            state = self.get_instance_state(ip=ip, username=machine['username'], keyfile=machine['keyfile'])
 
-            if state_info['state'] == FlexVMState.UNPREPARED:
+            if state == FlexVMState.UNPREPARED:
                 instance_ids.append(self.__get_flex_instance_id(ip))
                 public_ips.append(ip)
                 private_ips.append(ip)
@@ -155,12 +155,7 @@ class FlexAgent(BaseAgent):
         machines = parameters[self.PARAM_FLEX_CLOUD_MACHINE_INFO]
         logging.info('machines to deregistered = {0}'.format(pprint.pformat(machines)))
 
-        queue_head_machine = None
-        for machine in machines:
-            if machine['queue_head']:
-                queue_head_machine = machine
-                break
-
+        queue_head_machine = parameters[self.PARAM_FLEX_QUEUE_HEAD]
         logging.info('queue_head_machine = {}'.format(queue_head_machine))
 
         for machine in machines:
@@ -202,19 +197,35 @@ class FlexAgent(BaseAgent):
                                       queue_head_ip=parameters[self.PARAM_FLEX_QUEUE_HEAD]['ip'])
 
     def get_instance_state(self, ip, username, keyfile):
-        logging.info('Checking state...')
-        command = '[ -d ~/stochss ] && echo yes'
+        logging.info('Checking state for {ip}...'.format(ip=ip))
 
-        cmd = self.get_remote_command_string(ip=ip, username=username, keyfile=keyfile,
-                                             command=command)
-        logging.info('cmd = {0}'.format(cmd))
+        state = VMStateModel.STATE_UNKNOWN
+        try:
+            command = '[ -d ~/stochss ] && echo yes'
+            cmd = self.get_remote_command_string(ip=ip, username=username,
+                                                 keyfile=keyfile,
+                                                 command=command)
+            logging.info('cmd = {0}'.format(cmd))
+            if os.system(cmd) != 0:
+                state = VMStateModel.STATE_UNACCESSIBLE
+            else:
+                state = VMStateModel.STATE_ACCESSIBLE
 
-        if os.system(cmd) == 0:
-            return 'running'
+                url = self.__get_flex_vm_state_url(ip)
+                logging.info('GET {url}'.format(url=url))
 
-        # TODO: Check if state is prepared
+                response = json.loads(urllib2.urlopen(url).read())
+                logging.info('response =\n{}'.format(pprint.pformat(response)))
 
-        return 'unknown'
+                if 'state' in response:
+                    state = response['state']
+
+        except Exception as e:
+            logging.error(traceback.format_exc())
+            logging.error('Error: {}'.format(str(e)))
+            state = VMStateModel.STATE_UNKNOWN
+
+        return state
 
     def describe_instances(self, parameters, prefix=''):
         """

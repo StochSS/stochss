@@ -22,6 +22,8 @@ class VMStateModel(db.Model):
     STATE_TERMINATED = 'terminated'
     STATE_UNPREPARED = 'unprepared'
     STATE_UNKNOWN = 'unknown'
+    STATE_ACCESSIBLE = 'accessible'
+    STATE_UNACCESSIBLE = 'unaccessible'
 
     DESCRI_FAIL_TO_RUN = 'fail to run the instance'
     DESCRI_TIMEOUT_ON_SSH = 'timeout to connect instance via ssh'
@@ -44,7 +46,7 @@ class VMStateModel(db.Model):
     keyfile = db.StringProperty()
     username = db.StringProperty()
     states = set([STATE_CREATING, STATE_PENDING, STATE_RUNNING, STATE_STOPPED, STATE_FAILED,
-                  STATE_TERMINATED, STATE_UNPREPARED, STATE_UNKNOWN])
+                  STATE_TERMINATED, STATE_UNPREPARED, STATE_UNKNOWN, STATE_ACCESSIBLE, STATE_UNACCESSIBLE])
     state = db.StringProperty(required=True,
                               choices=states)
     description = db.StringProperty()
@@ -272,7 +274,7 @@ class VMStateModel(db.Model):
             logging.error("Error in updating reservation ids in db! {0}".format(e))
 
     @staticmethod
-    def update_ins_ids(params, ins_ids, res_id):
+    def update_ins_ids(params, ins_ids, res_id, from_state, to_state):
         '''
         set the instance ids within the certain reservation,
         Args
@@ -281,16 +283,17 @@ class VMStateModel(db.Model):
             res_id    the reservation id that is based on
         '''
         logging.info('update_ins_ids:\nins_ids = {0}\nres_id = {1}'.format(ins_ids, res_id))
+        logging.info('update_ins_ids:\nfrom_state = {0}\nto_state = {1}'.format(from_state, to_state))
         logging.debug('\n\nparams =\n{0}'.format(pprint.pformat(params)))
 
         try:
             entities = VMStateModel._get_all_entities(params)
-            entities.filter('res_id =', res_id).filter('state =', VMStateModel.STATE_CREATING)
+            entities.filter('res_id =', res_id).filter('state =', from_state)
 
             for (ins_id, e) in zip(ins_ids, entities.run(limit=len(ins_ids))):
                 logging.info('ins_id = {0}'.format(ins_id))
                 e.ins_id = ins_id
-                e.state = VMStateModel.STATE_PENDING
+                e.state = to_state
                 e.put()
             logging.info('Updated ins_ids = {0}'.format(ins_ids))
 

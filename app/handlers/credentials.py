@@ -66,8 +66,7 @@ class CredentialsPage(BaseHandler):
             self.redirect('/flexCloudCredentials')
 
         elif data_received['action'] == CredentialsPage.FLEX_DEREGISTER_CLOUD:
-            flex_cloud_machine_info = self.user_data.get_flex_cloud_machine_info()
-            result = self.deregister_flex_cloud(user_id, flex_cloud_machine_info)
+            result = self.deregister_flex_cloud(user_id)
             logging.info("result = {0}".format(result))
             self.redirect('/flexCloudCredentials')
 
@@ -236,16 +235,15 @@ class CredentialsPage(BaseHandler):
         
         return result
 
-    def deregister_flex_cloud(self, user_id, flex_cloud_machine_info):
+    def deregister_flex_cloud(self, user_id):
         logging.info('deregister_flex_cloud')
-
-        logging.info('flex_cloud_machine_info =\n{}'.format(pprint.pformat(flex_cloud_machine_info)))
 
         service = backendservices(infrastructure=AgentTypes.FLEX)
         credentials = self.user_data.getCredentials()
         params = {
             'infrastructure': AgentTypes.FLEX,
-            'flex_cloud_machine_info': flex_cloud_machine_info,
+            'flex_cloud_machine_info': self.user_data.get_flex_cloud_machine_info(),
+            'flex_queue_head': self.user_data.get_flex_queue_head_machine(),
             'key_prefix': '', # no prefix
             'keyname': '',
             'email': [user_id],

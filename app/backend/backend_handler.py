@@ -297,7 +297,8 @@ class FlexBackendWorker(BackendWorker):
         logging.info("ins_ids = {0}".format(ins_ids))
 
         # update db with new instance ids and 'pending'
-        VMStateModel.update_ins_ids(parameters, ins_ids, self.reservation_id)
+        VMStateModel.update_ins_ids(parameters, ins_ids, self.reservation_id, from_state=VMStateModel.STATE_CREATING,
+                                    to_state=VMStateModel.STATE_UNPREPARED)
 
         public_ips = None
         private_ips = None
@@ -308,7 +309,7 @@ class FlexBackendWorker(BackendWorker):
         for x in xrange(FlexBackendWorker.POLL_COUNT):
             # get the ips and ids of this keyname
             public_ips, private_ips, instance_ids, \
-            instance_types, keyfiles, usernames = self.agent.describe_instances_running(parameters)
+            instance_types, keyfiles, usernames = self.agent.describe_unprepared_instances(parameters)
 
             logging.info("public_ips = {0}".format(public_ips))
             logging.debug("private_ips = {0}".format(private_ips))
@@ -689,7 +690,8 @@ class EC2BackendWorker(BackendWorker):
         logging.info("ins_ids = {0}".format(ins_ids))
 
         # update db with new instance ids and 'pending'
-        VMStateModel.update_ins_ids(parameters, ins_ids, self.reservation_id)
+        VMStateModel.update_ins_ids(parameters, ins_ids, self.reservation_id, from_state=VMStateModel.STATE_CREATING,
+                                    to_state=VMStateModel.STATE_PENDING)
 
         public_ips = None
         private_ips = None
