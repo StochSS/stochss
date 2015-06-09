@@ -596,7 +596,7 @@ class FlexCredentialsIsDeletablePage(BaseHandler):
         logging.debug('files =\n{}'.format(files))
 
         flex_ssh_key_info = []
-        if self.user_data.valid_flex_cloud_info:
+        if self.user_data.is_flex_cloud_info_set:
             flex_ssh_keyfiles_in_use = [machine['keyfile'] for machine in self.user_data.get_flex_cloud_machine_info()]
             logging.debug('flex_ssh_keyfiles_in_use =\n{}'.format(flex_ssh_keyfiles_in_use))
 

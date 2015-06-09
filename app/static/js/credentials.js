@@ -342,11 +342,11 @@ FlexCloud.Controller = Backbone.View.extend({
 <td> \
 <%= keyname %> \
 </td> \
-<td> \
+<td width='100px'> \
 <% if(is_deletable) { %> \
 <button><i class='icon-trash'></i> Delete</button> \
 <% } else { %> \
-<td class='span2'>In Use</td> \
+In Use \
 <% } %> \
 </td> \
 </tr>");
