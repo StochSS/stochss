@@ -436,4 +436,4 @@ echo "$STOCHKIT_HOME" > "$STOCHSS_HOME/conf/config"
 echo -n "$STOCHKIT_ODE" >> "$STOCHSS_HOME/conf/config"
 echo "Done!"
 
-exec python "$STOCHSS_HOME/launchapp.py" 1 $0
+exec python "$STOCHSS_HOME/launchapp.py" 1 $0 $1
