@@ -705,7 +705,7 @@ class backendservices(object):
         return is_valid, error_reason
 
 
-    def getSizeOfOutputResults(self, output_urls, agent_type, credentials = None):
+    def getSizeOfOutputResults(self, output_urls, agent_type, credentials=None):
         '''
         This method checks the size of the output results stored in S3 for all of the buckets and keys
          specified in output_buckets.
@@ -719,34 +719,63 @@ class backendservices(object):
          A dictionary whose keys are job names and whose values are output sizes of those jobs.
          The output size is either the size specified in bytes or None if no output was found.
         '''
-        try:
-            logging.info("getSizeOfOutputResults: inside method with output_buckets: {0}".format(output_buckets))
-            # Connect to S3
-            conn = S3Connection(aws_access_key, aws_secret_key)
-            # Output is a dictionary
-            result = {}
-            for bucket_name in output_buckets:
-                # Try to get the bucket
-                try:
-                    bucket = conn.get_bucket(bucket_name)
-                except S3ResponseError:
-                    # If the bucket doesn't exist, neither do any of the keys
-                    for key_name, job_name in output_buckets[bucket_name]:
-                        result[job_name] = None
-                else:
-                    # Ok the bucket exists, now for the keys
-                    for key_name, job_name in output_buckets[bucket_name]:
-                        key = bucket.get_key(key_name)
-                        if key is None:
-                            # No output exists for this key
-                            result[job_name] = None
-                        else:
-                            # Output exists for this key
-                            result[job_name] = key.size
-            return result
-        except Exception, e:
-            logging.error("getSizeOfOutputResults: unable to get size with exception: {0}".format(e))
+        logging.info('agent_type = {}'.format(agent_type))
+        logging.info("getSizeOfOutputResults: inside method with output_urls: {0}".format(output_urls))
+
+        if agent_type == AgentTypes.EC2:
+            try:
+                aws_access_key = credentials['EC2_ACCESS_KEY']
+                aws_secret_key = credentials['EC2_SECRET_KEY']
+
+                # Connect to S3
+                conn = S3Connection(aws_access_key, aws_secret_key)
+
+                # Output is a dictionary
+                result = {}
+
+                bucket_map = {}
+                for job_id, output_url in output_urls.items():
+                    s3_url_segments = output_url.split('/')
+                    # S3 URLs are in the form https://s3.amazonaws.com/bucket_name/key/name
+                    bucket_name = s3_url_segments[3]
+                    # key_name is the concatenation of all segments after the bucket_name
+                    key_name = '/'.join(s3_url_segments[4:])
+
+                    if bucket_name in bucket_map:
+                        bucket_map[bucket_name] += [(key_name, job_id)]
+                    else:
+                        bucket_map[bucket_name] = [(key_name, job_id)]
+
+
+                for bucket_name in bucket_map:
+                    # Try to get the bucket
+                    try:
+                        bucket = conn.get_bucket(bucket_name)
+                    except S3ResponseError:
+                        # If the bucket doesn't exist, neither do any of the keys
+                        for key_name, job_id in bucket_map[bucket_name]:
+                            result[job_id] = None
+                    else:
+                        # Ok the bucket exists, now for the keys
+                        for key_name, job_id in bucket_map[bucket_name]:
+                            key = bucket.get_key(key_name)
+                            if key is None:
+                                # No output exists for this key
+                                result[job_id] = None
+                            else:
+                                # Output exists for this key
+                                result[job_id] = key.size
+                return result
+
+            except Exception, e:
+                logging.error("getSizeOfOutputResults: unable to get size with exception: {0}".format(e))
+                return None
+
+        elif agent_type == AgentTypes.FLEX:
             return None
+
+        return None
+
 
     def fetchOutput(self, taskid, outputurl):
         '''

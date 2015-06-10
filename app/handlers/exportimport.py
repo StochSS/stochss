@@ -1,7 +1,11 @@
+import os
+
 try:
   import json
 except ImportError:
   from django.utils import simplejson as json
+
+import pprint
 import jinja2
 from google.appengine.ext import db
 import pickle
@@ -28,6 +32,7 @@ from stochss.model import *
 import stochss.stochkit
 from stochss.examplemodels import *
 from backend.backendservice import backendservices
+from backend.common.config import AgentTypes
 
 import webapp2
 
@@ -172,7 +177,7 @@ class SuperZip:
                         "pid" : stochkit_job.pid,
                         "result" : stochkit_job.result }
             # For cloud jobs, we need to include the output_url and possibly grab the results from S3
-            if stochkit_job.resource == 'Cloud':
+            if stochkit_job.resource in simulation.StochKitJob.SUPPORTED_CLOUD_RESOURCES:
                 #jsonJob["output_url"] = job.stochkit_job.output_url
                 # Only grab S3 data if user wants us to
                 #print 'globalOP', globalOp
@@ -217,7 +222,7 @@ class SuperZip:
                     "status" : job.status }
         
         # For cloud jobs, we need to include the output_url and possibly grab the results from S3
-        if job.resource == 'cloud':
+        if job.resource in stochoptim.StochOptimJobWrapper.SUPPORTED_CLOUD_RESOURCES:
             #jsonJob["output_url"] = job.outputURL
             # Only grab S3 data if user wants us to
             if (job.jobName in self.stochOptimJobsToDownload) or globalOp:
@@ -259,7 +264,7 @@ class SuperZip:
             if job.resource == "local":
                 outputLocation = self.addFolder('sensitivityJobs/data/{0}'.format(job.jobName), job.outData)
                 jsonJob["outData"] = outputLocation
-            elif job.resource == "cloud":
+            elif job.resource in sensitivity.SensitivityJobWrapper.SUPPORTED_CLOUD_RESOURCES:
                 #jsonJob["outputURL"] = job.outputURL
                 # Only grab S3 data if user wants us to
                 if (job.jobName in self.sensitivityJobsToDownload) or globalOp:
@@ -292,7 +297,7 @@ class SuperZip:
                     "uuid" : job.uuid,
                     "status" : job.status }
         
-        if job.resource == "cloud":
+        if job.resource in spatial.SpatialJobWrapper.SUPPORTED_CLOUD_RESOURCES:
             #jsonJob["output_url"] = job.output_url
             # Only grab S3 data if user wants us to
             if (job.jobName in self.spatialJobsToDownload) or globalOp:
@@ -876,27 +881,36 @@ class ImportPage(BaseHandler):
             self.user_data.update_flex_cloud_machine_info_from_db()
             flex_queue_head_machine = self.user_data.get_flex_queue_head_machine()
 
+            backend_service = backendservices()
             if backend_service.is_flex_queue_head_running(flex_queue_head_machine):
-                resource = simulation.StochKitJobWrapper.FLEX_CLOUD_RESOURCE
+                resource = "{}-cloud".format(AgentTypes.FLEX)
 
         if resource == None:
             if self.user_data.valid_credentials:
-                resource = simulation.StochKitJobWrapper.EC2_CLOUD_RESOURCE
+                resource = "{}-cloud".format(AgentTypes.EC2)
 
         if resource:
             # Get all the cloud jobs
-            stochkit_jobs = db.GqlQuery("SELECT * FROM StochKitJobWrapper WHERE user_id = :1", self.user.user_id()).fetch(100000)
-            stochkit_jobs = [job for job in stochkit_jobs if ((job.stochkit_job.resource.lower() == resource) and (resource in simulation.StochKitJobWrapper.SUPPORTED_CLOUD_RESOURCES)) and job.stochkit_job.status == "Finished"]
+            stochkit_jobs = db.GqlQuery("SELECT * FROM StochKitJobWrapper WHERE user_id = :1",
+                                                                            self.user.user_id()).fetch(100000)
+            stochkit_jobs = [job for job in stochkit_jobs
+                                if ((job.stochkit_job.resource == resource)
+                                    and (resource in simulation.StochKitJob.SUPPORTED_CLOUD_RESOURCES))
+                                    and job.stochkit_job.status == "Finished"]
+
             # Create the dictionary to pass to backend to check for sizes
             output_results_to_check = {}
             for cloud_job in stochkit_jobs:
-                output_results_to_check[cloud_job.key.id()] = cloud_job.stochkit_job.output_url
+                output_results_to_check[cloud_job.key().id()] = cloud_job.stochkit_job.output_url
 
             # Sensitivity Jobs
             sensi_jobs = db.GqlQuery("SELECT * FROM SensitivityJobWrapper WHERE userId = :1", self.user.user_id())
-            sensi_jobs = [job for job in sensi_jobs if ((job.resource.lower() == resource) and (job.resource.lower() in sensitivity.SensitivityJobWrapper.SUPPORTED_CLOUD_RESOURCES)) and job.status == "Finished"]
+            sensi_jobs = [job for job in sensi_jobs
+                          if ((job.resource == resource)
+                              and (job.resource in sensitivity.SensitivityJobWrapper.SUPPORTED_CLOUD_RESOURCES))
+                          and job.status == "Finished"]
             for cloud_job in sensi_jobs:
-                output_results_to_check[cloud_job.key.id()] = cloud_job.outputURL
+                output_results_to_check[cloud_job.key().id()] = cloud_job.outputURL
 
             # StochOptim Jobs
             stochoptim_jobs_query = stochoptim.StochOptimJobWrapper.all()
@@ -904,13 +918,15 @@ class ImportPage(BaseHandler):
             stochoptim_jobs_query.filter("status =", "Finished")
             stochoptim_jobs = []
             for cloud_job in stochoptim_jobs_query.run():
-                if (cloud_job.resource != resource) or (cloud_job.resource not in stochoptim.StochOptimJobWrapper.SUPPORTED_CLOUD_RESOURCES):
+                if (cloud_job.resource != resource) \
+                        or (cloud_job.resource not in stochoptim.StochOptimJobWrapper.SUPPORTED_CLOUD_RESOURCES):
                     continue
                 if cloud_job.outputURL is None:
                     #print vars(cloud_job)
                     continue
 
-                output_results_to_check[cloud_job.key.id()] = cloud_job.outputURL
+                output_results_to_check[cloud_job.key().id()] = cloud_job.outputURL
+                stochoptim_jobs.append(cloud_job)
 
             # Spatial Jobs
             spatial_jobs_query = spatial.SpatialJobWrapper.all()
@@ -918,24 +934,27 @@ class ImportPage(BaseHandler):
             spatial_jobs_query.filter("status =", "Finished")
             spatial_jobs = []
             for cloud_job in spatial_jobs_query.run():
-                if (cloud_job.resource != resource) or (cloud_job.resource.lower() not in spatial.SpatialJobWrapper.SUPPORTED_CLOUD_RESOURCES):
+                if (cloud_job.resource != resource) \
+                        or (cloud_job.resource not in spatial.SpatialJobWrapper.SUPPORTED_CLOUD_RESOURCES):
                     continue
-                if flex:
-                  output_results_to_check.append(job.url)
-                else:
                 if cloud_job.output_url is None:
                     #print vars(cloud_job)
                     continue
 
-                output_results_to_check[cloud_job.key.id()] = cloud_job.output_url
+                output_results_to_check[cloud_job.key().id()] = cloud_job.output_url
+                spatial_jobs.append(cloud_job)
 
             # Get all the job sizes from the backend
             service = backendservices()
-            if resource == simulation.StochKitJobWrapper.FLEX_CLOUD_RESOURCE:
+            if resource == simulation.StochKitJob.FLEX_CLOUD_RESOURCE:
                 job_sizes = service.getSizeOfOutputResults(output_results_to_check, AgentTypes.FLEX)
-            elif resource == simulation.StochKitJobWrapper.EC2_CLOUD_RESOURCE:
+
+            elif resource == simulation.StochKitJob.EC2_CLOUD_RESOURCE:
                 credentials = self.user_data.getCredentials()
                 job_sizes = service.getSizeOfOutputResults(output_results_to_check, AgentTypes.EC2, credentials)
+
+            logging.info('job_sizes = \n{}'.format(pprint.pformat(job_sizes)))
+
             # Add all of the relevant jobs to the context so they will be rendered on the page
             context["stochkit_jobs"] = []
             context["sensitivity_jobs"] = []
@@ -943,14 +962,18 @@ class ImportPage(BaseHandler):
             context["spatial_jobs"] = []
             for cloud_job in stochkit_jobs:
                 job_name = cloud_job.name
-                if job_name in job_sizes:
+                job_id = cloud_job.key().id()
+                if job_id in job_sizes:
                     # These are the relevant jobs
-                    if job_sizes[job_name] is None:
+                    if job_sizes[job_id] is None:
                         size = 0
                         no_data = True
                     else:
-                        size = float(job_sizes[cloud_job.key.id()])
+                        size = float(job_sizes[job_id])
                         no_data = False
+                    print "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaajkas;asfkdfk;skd;fasdkjl;fads;klf;ak"
+                    print ""
+                    print ""
                     context["stochkit_jobs"].append({
                         'name': job_name,
                         'exec_type': cloud_job.stochkit_job.exec_type,
@@ -959,12 +982,13 @@ class ImportPage(BaseHandler):
                     })
             for cloud_job in sensi_jobs:
                 job_name = cloud_job.jobName
-                if job_name in job_sizes:
-                    if job_sizes[job_name] is None:
+                job_id = cloud_job.key().id()
+                if job_id in job_sizes:
+                    if job_sizes[job_id] is None:
                         size = 0
                         no_data = True
                     else:
-                        size = float(job_sizes[cloud_job.key.id()])
+                        size = float(job_sizes[job_id])
                         no_data = False
                     context["sensitivity_jobs"].append({
                         'name': job_name,
@@ -974,12 +998,13 @@ class ImportPage(BaseHandler):
                     })
             for cloud_job in stochoptim_jobs:
                 job_name = cloud_job.jobName
-                if job_name in job_sizes:
-                    if job_sizes[job_name] is None:
+                job_id = cloud_job.key().id()
+                if job_id in job_sizes:
+                    if job_sizes[job_id] is None:
                         size = 0
                         no_data = True
                     else:
-                        size = float(job_sizes[cloud_job.key.id()])
+                        size = float(job_sizes[job_id])
                         no_data = False
                     context["stochoptim_jobs"].append({
                         'name': job_name,
@@ -989,12 +1014,13 @@ class ImportPage(BaseHandler):
                     })
             for cloud_job in spatial_jobs:
                 job_name = cloud_job.jobName
-                if job_name in job_sizes:
-                    if job_sizes[job_name] is None:
+                job_id = cloud_job.key().id()
+                if job_id in job_sizes:
+                    if job_sizes[job_id] is None:
                         size = 0
                         no_data = True
                     else:
-                        size = float(job_sizes[cloud_job.key.id()])
+                        size = float(job_sizes[job_id])
                         no_data = False
                     context["spatial_jobs"].append({
                         'name': job_name,
