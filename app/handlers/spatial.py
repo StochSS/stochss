@@ -339,12 +339,6 @@ class SpatialPage(BaseHandler):
 
                         rgbas = numpy.left_shift(rgbas[:, :, 0], 16) + numpy.left_shift(rgbas[:, :, 1], 8) + rgbas[:, :, 2]
 
-                        #rgbaInts = numpy.zeros((rgbas.shape[0], rgbas.shape[1]))
-
-                        #for i in range(rgbas.shape[0]):
-                        #    for j in range(rgbas.shape[1]):
-                        #        rgbaInts[i, j] = int('0x%02x%02x%02x' % tuple(rgbas[i, j][0:3]), 0)
-
                         dataTmp[specie] = []
                         for i in range(rgbas.shape[0]):
                             dataTmp[specie].append(list(rgbas[i].astype('int')))
