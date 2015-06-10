@@ -890,28 +890,14 @@ class ImportPage(BaseHandler):
             # Create the dictionary to pass to backend to check for sizes
             output_results_to_check = {}
             for cloud_job in stochkit_jobs:
-                s3_url_segments = cloud_job.stochkit_job.output_url.split('/')
-                # S3 URLs are in the form https://s3.amazonaws.com/bucket_name/key/name
-                bucket_name = s3_url_segments[3]
-                # key_name is the concatenation of all segments after the bucket_name
-                key_name = '/'.join(s3_url_segments[4:])
-                if bucket_name in output_results_to_check:
-                    output_results_to_check[bucket_name] += [(key_name, cloud_job.name)]
-                else:
-                    output_results_to_check[bucket_name] = [(key_name, cloud_job.name)]
+                output_results_to_check[cloud_job.key.id()] = cloud_job.stochkit_job.output_url
+
             # Sensitivity Jobs
             sensi_jobs = db.GqlQuery("SELECT * FROM SensitivityJobWrapper WHERE userId = :1", self.user.user_id())
             sensi_jobs = [job for job in sensi_jobs if ((job.resource.lower() == resource) and (job.resource.lower() in sensitivity.SensitivityJobWrapper.SUPPORTED_CLOUD_RESOURCES)) and job.status == "Finished"]
             for cloud_job in sensi_jobs:
-                s3_url_segments = cloud_job.outputURL.split('/')
-                # S3 URLs are in the form https://s3.amazonaws.com/bucket_name/key/name
-                bucket_name = s3_url_segments[3]
-                # key_name is the concatenation of all segments after the bucket_name
-                key_name = '/'.join(s3_url_segments[4:])
-                if bucket_name in output_results_to_check:
-                    output_results_to_check[bucket_name] += [(key_name, cloud_job.jobName)]
-                else:
-                    output_results_to_check[bucket_name] = [(key_name, cloud_job.jobName)]
+                output_results_to_check[cloud_job.key.id()] = cloud_job.outputURL
+
             # StochOptim Jobs
             stochoptim_jobs_query = stochoptim.StochOptimJobWrapper.all()
             stochoptim_jobs_query.filter("userId =", self.user.user_id())
@@ -923,16 +909,8 @@ class ImportPage(BaseHandler):
                 if cloud_job.outputURL is None:
                     #print vars(cloud_job)
                     continue
-                stochoptim_jobs.append(cloud_job)
-                s3_url_segments = cloud_job.outputURL.split('/')
-                # S3 URLs are in the form https://s3.amazonaws.com/bucket_name/key/name
-                bucket_name = s3_url_segments[3]
-                # key_name is the concatenation of all segments after the bucket_name
-                key_name = '/'.join(s3_url_segments[4:])
-                if bucket_name in output_results_to_check:
-                    output_results_to_check[bucket_name] += [(key_name, cloud_job.jobName)]
-                else:
-                    output_results_to_check[bucket_name] = [(key_name, cloud_job.jobName)]
+
+                output_results_to_check[cloud_job.key.id()] = cloud_job.outputURL
 
             # Spatial Jobs
             spatial_jobs_query = spatial.SpatialJobWrapper.all()
@@ -942,27 +920,22 @@ class ImportPage(BaseHandler):
             for cloud_job in spatial_jobs_query.run():
                 if (cloud_job.resource != resource) or (cloud_job.resource.lower() not in spatial.SpatialJobWrapper.SUPPORTED_CLOUD_RESOURCES):
                     continue
+                if flex:
+                  output_results_to_check.append(job.url)
+                else:
                 if cloud_job.output_url is None:
                     #print vars(cloud_job)
                     continue
-                spatial_jobs.append(cloud_job)
-                s3_url_segments = cloud_job.output_url.split('/')
-                # S3 URLs are in the form https://s3.amazonaws.com/bucket_name/key/name
-                bucket_name = s3_url_segments[3]
-                # key_name is the concatenation of all segments after the bucket_name
-                key_name = '/'.join(s3_url_segments[4:])
-                if bucket_name in output_results_to_check:
-                    output_results_to_check[bucket_name] += [(key_name, cloud_job.jobName)]
-                else:
-                    output_results_to_check[bucket_name] = [(key_name, cloud_job.jobName)]
+
+                output_results_to_check[cloud_job.key.id()] = cloud_job.output_url
 
             # Get all the job sizes from the backend
             service = backendservices()
             if resource == simulation.StochKitJobWrapper.FLEX_CLOUD_RESOURCE:
-                pass
+                job_sizes = service.getSizeOfOutputResults(output_results_to_check, AgentTypes.FLEX)
             elif resource == simulation.StochKitJobWrapper.EC2_CLOUD_RESOURCE:
                 credentials = self.user_data.getCredentials()
-                job_sizes = service.getSizeOfOutputResults(credentials['EC2_ACCESS_KEY'], credentials['EC2_SECRET_KEY'], output_results_to_check)
+                job_sizes = service.getSizeOfOutputResults(output_results_to_check, AgentTypes.EC2, credentials)
             # Add all of the relevant jobs to the context so they will be rendered on the page
             context["stochkit_jobs"] = []
             context["sensitivity_jobs"] = []
@@ -976,7 +949,7 @@ class ImportPage(BaseHandler):
                         size = 0
                         no_data = True
                     else:
-                        size = float(job_sizes[job_name])
+                        size = float(job_sizes[cloud_job.key.id()])
                         no_data = False
                     context["stochkit_jobs"].append({
                         'name': job_name,
@@ -991,7 +964,7 @@ class ImportPage(BaseHandler):
                         size = 0
                         no_data = True
                     else:
-                        size = float(job_sizes[job_name])
+                        size = float(job_sizes[cloud_job.key.id()])
                         no_data = False
                     context["sensitivity_jobs"].append({
                         'name': job_name,
@@ -1006,7 +979,7 @@ class ImportPage(BaseHandler):
                         size = 0
                         no_data = True
                     else:
-                        size = float(job_sizes[job_name])
+                        size = float(job_sizes[cloud_job.key.id()])
                         no_data = False
                     context["stochoptim_jobs"].append({
                         'name': job_name,
@@ -1021,7 +994,7 @@ class ImportPage(BaseHandler):
                         size = 0
                         no_data = True
                     else:
-                        size = float(job_sizes[job_name])
+                        size = float(job_sizes[cloud_job.key.id()])
                         no_data = False
                     context["spatial_jobs"].append({
                         'name': job_name,

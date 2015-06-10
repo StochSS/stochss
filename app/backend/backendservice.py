@@ -705,7 +705,7 @@ class backendservices(object):
         return is_valid, error_reason
 
 
-    def getSizeOfOutputResults(self, aws_access_key, aws_secret_key, output_buckets):
+    def getSizeOfOutputResults(self, output_urls, agent_type, credentials = None):
         '''
         This method checks the size of the output results stored in S3 for all of the buckets and keys
          specified in output_buckets.
