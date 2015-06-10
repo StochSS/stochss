@@ -442,34 +442,39 @@ class StatusPage(BaseHandler):
 
                     task_status = service.describeTask(taskparams)
                     logging.info('task_status =\n{}'.format(pprint.pformat(task_status)))
-                    job_status = task_status[job.cloudDatabaseID]
-
-                    # If it's finished
-                    if job_status['status'] == 'finished':
-                        # Update the job 
-                        job.status = 'Finished'
-                        job.outputURL = job_status['output']
-                    # 
-                    elif job_status['status'] == 'failed':
-                        job.status = 'Failed'
-                        job.exceptionMessage = job_status['message']
-                        # Might not have an output if an exception was raised early on or if there is just no output available
-                        try:
-                            job.outputURL = job_status['output']
-                        except KeyError:
-                            pass
-                    # 
-                    elif job_status['status'] == 'pending':
-                        job.status = 'Pending'
+                    if task_status is None or job.cloudDatabaseID not in task_status
+                        logging.error("'Could not find job with cloudDatabaseID {} in fetched task_status!'.format(optimization.cloudDatabaseID))")
+                        job.status = 'Unknown'
+                        job.exceptionMessage = 'Failed to retreive job status from Job Database.'
                     else:
-                        # The state gives more fine-grained results, like if the job is being re-run, but
-                        #  we don't bother the users with this info, we just tell them that it is still running.  
-                        job.status = 'Running'
-                        try:
+                        job_status = task_status[job.cloudDatabaseID]
+
+                        # If it's finished
+                        if job_status['status'] == 'finished':
+                            # Update the job 
+                            job.status = 'Finished'
                             job.outputURL = job_status['output']
-                            logging.info("Found running stochoptim job with S3 output: {0}".format(job.outputURL))
-                        except KeyError:
-                            pass
+                        # 
+                        elif job_status['status'] == 'failed':
+                            job.status = 'Failed'
+                            job.exceptionMessage = job_status['message']
+                            # Might not have an output if an exception was raised early on or if there is just no output available
+                            try:
+                                job.outputURL = job_status['output']
+                            except KeyError:
+                                pass
+                        # 
+                        elif job_status['status'] == 'pending':
+                            job.status = 'Pending'
+                        else:
+                            # The state gives more fine-grained results, like if the job is being re-run, but
+                            #  we don't bother the users with this info, we just tell them that it is still running.  
+                            job.status = 'Running'
+                            try:
+                                job.outputURL = job_status['output']
+                                logging.info("Found running stochoptim job with S3 output: {0}".format(job.outputURL))
+                            except KeyError:
+                                pass
 
                 job.put()
 
