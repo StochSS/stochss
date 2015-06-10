@@ -207,7 +207,7 @@ class FlexAgent(BaseAgent):
                                                  command=command)
             logging.info('cmd = {0}'.format(cmd))
             if os.system(cmd) != 0:
-                state = VMStateModel.STATE_UNACCESSIBLE
+                state = VMStateModel.STATE_INACCESSIBLE
             else:
                 state = VMStateModel.STATE_ACCESSIBLE
 
