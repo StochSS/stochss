@@ -309,6 +309,7 @@ from handlers.exportimport import *
 import handlers.modeleditor
 import handlers.stochoptim
 import handlers.mesheditor
+import handlers.volume
 from handlers.simulation import *
 from handlers.sensitivity import *
 from handlers.credentials import *
@@ -398,6 +399,7 @@ app = webapp2.WSGIApplication([
                                ('/simulate',SimulatePage),
                                ('/sensitivity',SensitivityPage),
                                ('/spatial',handlers.spatial.SpatialPage),
+                               ('/volume',handlers.volume.VolumePage),
                                ('/stochoptim', handlers.stochoptim.StochOptimPage),
                                webapp2.Route('/stochoptim/<jobID>', handler = handlers.stochoptim.StochOptimVisualization),#/<queryType>
                                webapp2.Route('/stochoptim/<queryType>/<jobID>', handler = handlers.stochoptim.StochOptimVisualization),

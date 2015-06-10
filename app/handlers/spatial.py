@@ -85,8 +85,6 @@ class SpatialJobWrapper(db.Model):
             if not self.preprocessedDir:
                 self.preprocessedDir = '../preprocessed/{0}/'.format(self.key().id())
 
-            #print "Directory:", self.preprocessedDir
-
             if not os.path.exists(self.preprocessedDir):
                 os.makedirs(self.preprocessedDir)
                 
@@ -98,6 +96,17 @@ class SpatialJobWrapper(db.Model):
 
             with open(f, 'w') as meshFile:
                 json.dump(json.loads(result.export_to_three_js(species[0], 0)), meshFile) 
+
+            f = os.path.join(self.preprocessedDir, "voxelTuples.json")
+
+            result.model.mesh.init(2,0)
+            voxelTopology = result.model.mesh.topology()(3, 0)
+            Ncells = result.model.mesh.num_cells()
+
+            voxelTuples = [list(voxelTopology(i).astype('int')) for i in range(Ncells)]
+
+            with open(f, 'w') as voxelTuplesFile:
+                json.dump(voxelTuples, voxelTuplesFile) 
 
             hdf5File = h5py.File(target, 'w')
 
@@ -279,13 +288,16 @@ class SpatialPage(BaseHandler):
                 with open(os.path.join(indir, 'mesh.json') ,'r') as meshfile:
                     mesh = json.load(meshfile)
 
+                with open(os.path.join(indir, 'voxelTuples.json') ,'r') as voxelTuplesFile:
+                    voxelTuples = json.load(voxelTuplesFile)
+
                 f = os.path.join(indir, 'result{0}'.format(trajectory))
                 
                 with h5py.File(f, 'r') as dataFile:
                     species = dataFile.keys()
 
                 self.response.content_type = 'application/json'
-                self.response.write(json.dumps({ "mesh" : mesh, "species" : species }))
+                self.response.write(json.dumps({ "mesh" : mesh, "voxelTuples" : voxelTuples, "species" : species }))
             
             except Exception as e:
                 traceback.print_exc()
@@ -309,10 +321,10 @@ class SpatialPage(BaseHandler):
                 resultJS = {}
                 data = {}
 
-                f = os.path.join(job.preprocessedDir, 'result{0}'.format(trajectory))
+                f = os.path.abspath(os.path.join(job.preprocessedDir, 'result{0}'.format(trajectory)))
 
                 limits = {}
-                
+
                 with h5py.File(f, 'r') as dataFile:
                     dataTmp = {}
 
