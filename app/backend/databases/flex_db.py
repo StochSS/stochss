@@ -19,7 +19,8 @@ class FlexDB(BaseDB):
 
     TABLE_FIELD_NAMES = {
         JobDatabaseConfig.TABLE_NAME: ('taskid', 'infrastructure', 'message', 'output',
-                                       'pid', 'uuid', 'start_time', 'status', 'time_taken'),
+                                       'pid', 'uuid', 'start_time', 'status', 'time_taken',
+                                        'total_time', 'execution_time', 'queue'),
         JobDatabaseConfig.COST_ANALYSIS_TABLE_NAME: ('taskid', 'agent', 'instance_type', 'message',
                                                      'start_time', 'status', 'time_taken', 'uuid')
     }
