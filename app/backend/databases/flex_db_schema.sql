@@ -8,8 +8,8 @@ CREATE TABLE IF NOT EXISTS `stochss` (
   `start_time` TEXT,
   `status` TEXT,
   `time_taken` TEXT,
-  `total_time` FLOAT, # for stochoptim
-  `execution_time` FLOAT  # for stochoptim
+  `total_time` FLOAT,     /* for stochoptim */
+  `execution_time` FLOAT  /* for stochoptim */
 );
 
 CREATE TABLE IF NOT EXISTS `stochss_cost_analysis` (
