@@ -244,7 +244,10 @@ class FlexDB(BaseDB):
                                                          self.TABLE_FIELD_NAMES[tablename])))
             logging.info('field_name_list = {}'.format(field_name_list))
 
-            field_values = [data.get(field_name, '').replace("'", "[quote]") for field_name in self.TABLE_FIELD_NAMES[tablename]]
+            field_values = [data.get(field_name, '').replace("'", "[quote]")
+                                    if isinstance(data.get(field_name, ''), basestring)
+                                    else data.get(field_name, '')
+                                        for field_name in self.TABLE_FIELD_NAMES[tablename]]
 
             field_value_list = "({})".format(','.join(map(lambda x: "'{}'".format(x),
                                                           field_values)))
