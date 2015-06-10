@@ -7,7 +7,10 @@ CREATE TABLE IF NOT EXISTS `stochss` (
   `uuid` VARCHAR(64),
   `start_time` TEXT,
   `status` TEXT,
-  `time_taken` TEXT
+  `time_taken` TEXT,
+  `total_time` FLOAT,     /* for stochoptim */
+  `execution_time` FLOAT, /* for stochoptim */
+  `queue` VARCHAR(64)     /* for stochoptim */
 );
 
 CREATE TABLE IF NOT EXISTS `stochss_cost_analysis` (

@@ -693,6 +693,11 @@ class StochOptimVisualization(BaseHandler):
 
                 task_status = service.describeTask(taskparams)
                 logging.info('task_status =\n{}'.format(pprint.pformat(task_status)))
+
+                if optimization.cloudDatabaseID not in task_status:
+                    logging.error('Could not find job with cloudDatabaseID {} in fetched task_status!'.format(optimization.cloudDatabaseID))
+                    return
+
                 job_status = task_status[optimization.cloudDatabaseID]
 
                 # If it's finished
