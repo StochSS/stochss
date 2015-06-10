@@ -262,7 +262,7 @@ class backendservices(object):
         return result
 
 
-    def stopTasks(self, params):
+    def stopTasks(self, params, agent_type=None):
         '''
         @param id_pairs: a list of (database_id, task_id) pairs, each representing
                           a task to be stopped
@@ -278,12 +278,22 @@ class backendservices(object):
             remove_task(task_id)
             db_ids.append(database_id)
         # Then we need to return the final description of the tasks
-        describe_params = {
-            'AWS_ACCESS_KEY_ID': credentials['AWS_ACCESS_KEY_ID'],
-            'AWS_SECRET_ACCESS_KEY': credentials['AWS_SECRET_ACCESS_KEY'],
-            'taskids': db_ids,
-            'agent_type' : AgentTypes.EC2
-        }
+        if agent_type is None or agent_type==AgentTypes.EC2:
+            describe_params = {
+                'AWS_ACCESS_KEY_ID': credentials['AWS_ACCESS_KEY_ID'],
+                'AWS_SECRET_ACCESS_KEY': credentials['AWS_SECRET_ACCESS_KEY'],
+                'taskids': db_ids,
+                'agent_type' : AgentTypes.EC2
+            }
+        elif agent_type is not None and agent_type == AgentTypes.FLEX:
+            describe_params = {
+                'flex_db_password' : credentials['flex_db_password'],
+                'queue_head_ip' : credentials['flex_queue_head']['ip'],
+                'taskids' : db_ids,
+                'agent_type' : AgentTypes.FLEX
+            }
+        else:
+            logging.error("Agent_type is not set")
         return self.describeTask(describe_params)
 
     def deleteTasks(self, taskids, database=None):
