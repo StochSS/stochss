@@ -122,7 +122,7 @@ class VirtualMachine(object):
 
         try:
             self.__is_machine_reachable()
-            self.__check_network_ports()
+            self.__enable_network_ports()
             self.__try_install_dependencies()
             self.__update_fenics()
             self.__reboot_machine()
@@ -321,19 +321,18 @@ class VirtualMachine(object):
             self.__run_remote_command(command=command, log_header=header)
 
 
-    def __check_network_ports(self):
-        # TODO: Enable ports 22, 5672, 6379, 11211, 55672, 80[?], 443, 3306
-
+    def __enable_network_ports(self):
+        # Enable ports 22, 5672, 6379, 11211, 55672, 80, 443, 3306
         ports = [22, 5672, 6379, 11211, 55672, 80, 443, 3306]
-        success = True
-        for port in ports:
-            ret = subprocess.call("nc -z {ip} {port}".format(yp=self.ip, port=port), shell=True)
-            if ret != 0:
-                print 'Error: Port {port} not open on {ip}!'.format(port=port, ip=self.ip)
-                success = False
 
-        if not success:
-            raise Exception('Need ports = {} to be open!'.format(ports))
+        print '===================================================='
+        print 'Trying to enable ports = {}'.format(ports)
+
+        for port in ports:
+            print 'For port {}'.format(port)
+            remote_cmd = get_remote_command(user=self.username, ip=self.ip, key_file=self.keyfile,
+                                            command="sudo ufw allow {port}".format(port=port))
+            subprocess.call(remote_cmd, shell=True)
 
 
     def __try_install_dependencies(self):

@@ -23,7 +23,7 @@ class VMStateModel(db.Model):
     STATE_UNPREPARED = 'unprepared'
     STATE_UNKNOWN = 'unknown'
     STATE_ACCESSIBLE = 'accessible'
-    STATE_UNACCESSIBLE = 'unaccessible'
+    STATE_INACCESSIBLE = 'inaccessible'
 
     DESCRI_FAIL_TO_RUN = 'fail to run the instance'
     DESCRI_TIMEOUT_ON_SSH = 'timeout to connect instance via ssh'
@@ -46,7 +46,7 @@ class VMStateModel(db.Model):
     keyfile = db.StringProperty()
     username = db.StringProperty()
     states = set([STATE_CREATING, STATE_PENDING, STATE_RUNNING, STATE_STOPPED, STATE_FAILED,
-                  STATE_TERMINATED, STATE_UNPREPARED, STATE_UNKNOWN, STATE_ACCESSIBLE, STATE_UNACCESSIBLE])
+                  STATE_TERMINATED, STATE_UNPREPARED, STATE_UNKNOWN, STATE_ACCESSIBLE, STATE_INACCESSIBLE])
     state = db.StringProperty(required=True,
                               choices=states)
     description = db.StringProperty()
