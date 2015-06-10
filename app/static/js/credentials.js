@@ -4,6 +4,22 @@ if (typeof(String.prototype.trim) === "undefined") {
     };
 }
 
+function update_cloud_info(status, msg)
+{
+    var el = $( '.flex_cloud_info' );
+
+    el.text(msg);
+
+    if(status)
+    {
+        el.css('color', 'green');
+    }
+    else
+    {
+        el.css('color', 'red');
+    }
+}
+
 function set_basic() {
     var compute_power = document.getElementsByName("compute_power");
     if (!$('#advanced-settings').hasClass("in")) {
@@ -107,6 +123,8 @@ function deregister_flex_cloud() {
     jsonDataToBeSent['action'] = 'deregister_flex_cloud';
 
     jsonDataToBeSent = JSON.stringify(jsonDataToBeSent);
+
+    update_cloud_info( true, "Stopping Flex Cloud..." );
     $.ajax({
         type: "POST",
         url: "/credentials",
@@ -118,6 +136,8 @@ function deregister_flex_cloud() {
         error: function (x, e) {
         },
         complete: function () {
+            update_cloud_info( true, "Stop request sent, refreshing page" );
+
             refresh_flex_cloud_info()
         }
     });
@@ -134,6 +154,8 @@ function prepare_flex_cloud() {
     jsonDataToBeSent['action'] = 'prepare_flex_cloud';
 
     jsonDataToBeSent = JSON.stringify(jsonDataToBeSent);
+    update_cloud_info( true, "Requesting Flex Cloud deploy..." );
+
     $.ajax({
         type: "POST",
         url: "/credentials",
@@ -145,6 +167,8 @@ function prepare_flex_cloud() {
         error: function (x, e) {
         },
         complete: function () {
+            update_cloud_info( true, "Deploy request sent, refreshing page" );
+
             refresh_flex_cloud_info()
         }
     });
@@ -381,6 +405,11 @@ window.onload = function () {
     $('#flex_ssh_key_table_table').DataTable({ "bSort": false, "bLengthChange": false, "bFilter": false, "bPaginate": false, "bInfo": false });
     $('#flex_ssh_key_table_table').css('border-bottom', '1px solid #ddd');
     $('#flex_ssh_key_table_table thead th').css('border-bottom', '1px solid #ddd');
+
+    $( '#prepare_flex_button' ).click( prepare_flex_cloud );
+    $( '#deregister_flex_button' ).click( deregister_flex_cloud );
+
+    $( '#refresh_flex_button' ).click( refresh_flex_cloud_info );
 
     var cont = new FlexCloud.Controller();
 };
