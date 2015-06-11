@@ -19,7 +19,12 @@ from google.appengine.ext import db
 
 from stochssapp import BaseHandler
 from backend.backendservice import backendservices
-from backend.common.config import AgentTypes
+from backend.common.config import AgentTypes, JobDatabaseConfig
+
+from backend.storage.s3_storage import S3StorageAgent
+from backend.storage.flex_storage import FlexStorageAgent
+from backend.databases.flex_db import FlexDB
+from backend.databases.dynamo_db import DynamoDB
 
 import sensitivity
 import simulation
@@ -68,11 +73,49 @@ class StatusPage(BaseHandler):
                         if status:
                             raise Exception("")
                     else:
-                        db_credentials = self.user_data.getCredentials()
-                        os.environ["AWS_ACCESS_KEY_ID"] = db_credentials['EC2_ACCESS_KEY']
-                        os.environ["AWS_SECRET_ACCESS_KEY"] = db_credentials['EC2_SECRET_KEY']
-                        service.deleteTasks([(stochkit_job.celery_pid,stochkit_job.pid)])
+                        if stochkit_job.resource == '{}-cloud'.format(AgentTypes.EC2):
+                            bucketname = self.user_data.S3_bucket_name
+                            logging.info('bucketname = {}'.format(bucketname))
+
+                            ec2_credentials = self.user_data.getCredentials()
+
+                            # # delete the folder that contains the replay sources
+                            # logging.info('deleting the rerun source folder {1} in bucket {0}'.format(bucketname, stochkit_job.pid))
+                            # delete_folder(bucketname, stochkit_job.pid, ec2_credentials['EC2_ACCESS_KEY'], ec2_credentials['EC2_SECRET_KEY'])
+
+                            # delete the output tar file
+                            storage_agent = S3StorageAgent(bucket_name=bucketname,
+                                                           ec2_access_key=ec2_credentials['EC2_ACCESS_KEY'],
+                                                           ec2_secret_key=ec2_credentials['EC2_SECRET_KEY'])
+                            filename = 'output/' + stochkit_job.pid + '.tar'
+
+                            logging.info('deleting the output tar file output/{1}.tar in bucket {0}'.format(bucketname, stochkit_job.pid))
+                            storage_agent.delete_file(filename=filename)
+
+                            database = DynamoDB(access_key=ec2_credentials['EC2_ACCESS_KEY'],
+                                                secret_key=ec2_credentials['EC2_SECRET_KEY'])
+                            service.deleteTasks(taskids=[(stochkit_job.celery_pid, stochkit_job.pid)], database=database)
+
+                            # delete dynamodb entries for cost analysis
+                            database.remove_tasks_by_attribute(self, tablename=JobDatabaseConfig.COST_ANALYSIS_TABLE_NAME,
+                                                               attribute_name='uuid', attribute_value=stochkit_job.pid)
+
+                        elif stochkit_job.resource == '{}-cloud'.format(AgentTypes.FLEX):
+                            flex_queue_head_machine = self.user_data.get_flex_queue_head_machine()
+
+                            # delete the output tar file
+                            storage_agent = FlexStorageAgent(queue_head_ip=flex_queue_head_machine['ip'],
+                                                             queue_head_username=flex_queue_head_machine['username'],
+                                                             queue_head_keyfile=flex_queue_head_machine['keyfile'])
+
+                            filename = stochkit_job.pid + '.tar'
+                            storage_agent.delete_file(filename=filename)
+
+                            database = FlexDB(password=self.user_data.flex_db_password, ip=flex_queue_head_machine['ip'])
+                            service.deleteTasks(taskids=[(stochkit_job.celery_pid, stochkit_job.pid)], database=database)
+
                     isdeleted_backend = True
+
                 except Exception,e:
                     isdeleted_backend = False
                     result['status']=False

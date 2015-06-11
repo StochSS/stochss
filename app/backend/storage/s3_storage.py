@@ -7,6 +7,7 @@ import traceback
 import boto
 import boto.s3
 from boto.s3.lifecycle import Lifecycle, Expiration
+from boto.s3.key import Key
 
 class S3StorageAgent(BaseStorageAgent):
     def __init__(self, bucket_name, ec2_access_key, ec2_secret_key):
@@ -46,3 +47,45 @@ class S3StorageAgent(BaseStorageAgent):
     def percent_cb(self, complete, total):
         sys.stdout.write('.')
         sys.stdout.flush()
+
+
+    def delete_file(self, filename):
+        s3_bucket = self.__get_s3_bucket()
+
+        if s3_bucket == None:
+            logging.error('Could not fetch bucket with name {} from S3!'.format(self.bucket_name))
+            return
+
+        k = Key(s3_bucket, filename)
+        if k.exists():
+            k1 = Key(s3_bucket)
+            k1.key = filename
+            s3_bucket.delete_key(k1)
+            logging.info('File {file} deleted from bucket {bucket}'.format(bucket=self.bucket_name,
+                                                                   file=filename))
+        else:
+            logging.error('File {file} does not exist in bucket {bucket}'.format(bucket=self.bucket_name,
+                                                                                 file=filename))
+
+
+    def __get_s3_bucket(self):
+        conn = None
+        try:
+            conn = boto.connect_s3(aws_secret_access_key=self.ec2_secret_key,
+                                   aws_access_key_id=self.ec2_access_key)
+
+            # If the bucket exists, return the existing bucket
+            if conn.lookup(self.bucket_name):
+                bucket = conn.get_bucket(self.bucket_name)
+            else:
+                bucket = None
+
+        except Exception:
+            logging.error('Cannot get bucket with name {} from S3.'.format(self.bucket_name))
+            bucket = None
+
+        finally:
+            if conn:
+                conn.close()
+
+        return bucket

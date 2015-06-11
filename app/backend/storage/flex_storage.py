@@ -19,6 +19,13 @@ class FlexStorageAgent(BaseStorageAgent):
                                                                                 keyfile=self.queue_head_keyfile,
                                                                                 source=source, target=target)
 
+    def __get_remote_command(self, command):
+        return 'ssh -o UserKnownHostsFile=/dev/null -o StrictHostKeyChecking=no -i {keyfile} {user}@{ip} "{cmd}"'.format(
+                                                                                keyfile=self.queue_head_keyfile,
+                                                                                user=self.queue_head_username,
+                                                                                ip=self.queue_head_ip,
+                                                                                cmd=command)
+
     def upload_file(self, filename):
         try:
             remote_filename = os.path.join(FlexConfig.OUTPUT_STORE_DIR, os.path.basename(filename))
@@ -37,6 +44,22 @@ class FlexStorageAgent(BaseStorageAgent):
                                                                          ip=self.queue_head_ip,
                                                                          keyname=os.path.basename(self.queue_head_keyfile),
                                                                          output_tar=remote_filename)
+
+        except Exception, e:
+            logging.error("FlexStorageAgent failed with exception:\n{0}".format(str(e)))
+            raise e
+
+
+    def delete_file(self, filename):
+        try:
+            remote_filename = os.path.join(FlexConfig.OUTPUT_STORE_DIR, os.path.basename(filename))
+            remote_command = \
+                self.__get_remote_command(command='rm -f {0}'.format(remote_filename))
+
+            logging.info(remote_command)
+
+            if os.system(remote_command) != 0:
+                logging.info('Deletion was not successful!')
 
         except Exception, e:
             logging.error("FlexStorageAgent failed with exception:\n{0}".format(str(e)))

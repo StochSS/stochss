@@ -25,7 +25,11 @@ from modeleditor import StochKitModelWrapper, ObjectProperty
 import modeleditor
 
 from backend.backendservice import backendservices
-from backend.common.config import AgentTypes, JobConfig
+from backend.common.config import AgentTypes, JobConfig, JobDatabaseConfig
+from backend.storage.s3_storage import S3StorageAgent
+from backend.storage.flex_storage import FlexStorageAgent
+from backend.databases.flex_db import FlexDB
+from backend.databases.dynamo_db import DynamoDB
 
 sys.path.append(os.path.join(os.path.dirname(__file__), '../lib/cloudtracker'))
 from s3_helper import *
@@ -107,34 +111,58 @@ class StochKitJobWrapper(db.Model):
             time.sleep(0.25)
             
             status = service.checkTaskStatusLocal([stochkit_job.pid]).values()[0]
+
         else:
-            db_credentials = handler.user_data.getCredentials()
-            os.environ["AWS_ACCESS_KEY_ID"] = db_credentials['EC2_ACCESS_KEY']
-            os.environ["AWS_SECRET_ACCESS_KEY"] = db_credentials['EC2_SECRET_KEY']
-            service.deleteTasks([(stochkit_job.celery_pid,stochkit_job.pid)])
+            # cloud
             
             try:
-                user_data = db.GqlQuery("SELECT * FROM UserData WHERE ec2_access_key = :1 AND ec2_secret_key = :2",
-                                        db_credentials['EC2_ACCESS_KEY'], db_credentials['EC2_SECRET_KEY']).get()
-                
-                bucketname = user_data.S3_bucket_name
-                logging.info(bucketname)
-                #delete the folder that contains the replay sources
-                delete_folder(bucketname, stochkit_job.pid, db_credentials['EC2_ACCESS_KEY'], db_credentials['EC2_SECRET_KEY'])
-                logging.info('delete the rerun source folder {1} in bucket {0}'.format(bucketname, stochkit_job.pid))
-                #delete the output tar file
-                delete_file(bucketname, 'output/'+stochkit_job.pid+'.tar', db_credentials['EC2_ACCESS_KEY'], db_credentials['EC2_SECRET_KEY'])
-                logging.info('delete the output tar file output/{1}.tar in bucket {0}'.format(bucketname, stochkit_job.pid))
-                
-                #delete dynamodb entries
-                dynamo=boto.connect_dynamodb(aws_access_key_id=os.environ["AWS_ACCESS_KEY_ID"],
-                                             aws_secret_access_key=os.environ["AWS_SECRET_ACCESS_KEY"])
-                table = dynamo.get_table("stochss_cost_analysis")
-                results = table.scan(scan_filter={'uuid' :condition.EQ(stochkit_job.pid)})
-                for result in results:
-                    result.delete()
-                
-            except:
+                user_data = handler.user_data
+
+                if stochkit_job.resource == StochKitJob.EC2_CLOUD_RESOURCE:
+                    bucketname = user_data.S3_bucket_name
+                    logging.info('bucketname = {}'.format(bucketname))
+
+                    ec2_credentials = handler.user_data.getCredentials()
+
+                    # delete the folder that contains the replay sources
+                    logging.info('deleting the rerun source folder {1} in bucket {0}'.format(bucketname, stochkit_job.pid))
+                    delete_folder(bucketname, stochkit_job.pid, ec2_credentials['EC2_ACCESS_KEY'], ec2_credentials['EC2_SECRET_KEY'])
+
+                    # delete the output tar file
+                    storage_agent = S3StorageAgent(bucket_name=bucketname,
+                                                   ec2_access_key=ec2_credentials['EC2_ACCESS_KEY'],
+                                                   ec2_secret_key=ec2_credentials['EC2_SECRET_KEY'])
+                    filename = 'output/' + stochkit_job.pid + '.tar'
+
+                    logging.info('deleting the output tar file output/{1}.tar in bucket {0}'.format(bucketname, stochkit_job.pid))
+                    storage_agent.delete_file(filename=filename)
+
+                    database = DynamoDB(access_key=ec2_credentials['EC2_ACCESS_KEY'],
+                                        secret_key=ec2_credentials['EC2_SECRET_KEY'])
+                    service.deleteTasks(taskids=[(stochkit_job.celery_pid, stochkit_job.pid)], database=database)
+
+                    # delete dynamodb entries for cost analysis
+                    database.remove_tasks_by_attribute(tablename=JobDatabaseConfig.COST_ANALYSIS_TABLE_NAME,
+                                                       attribute_name='uuid', attribute_value=stochkit_job.pid)
+
+
+                elif stochkit_job.resource == StochKitJob.FLEX_CLOUD_RESOURCE:
+                    flex_queue_head_machine = user_data.get_flex_queue_head_machine()
+
+                    # delete the output tar file
+                    storage_agent = FlexStorageAgent(queue_head_ip=flex_queue_head_machine['ip'],
+                                                     queue_head_username=flex_queue_head_machine['username'],
+                                                     queue_head_keyfile=flex_queue_head_machine['keyfile'])
+
+                    filename = stochkit_job.pid + '.tar'
+                    storage_agent.delete_file(filename=filename)
+
+                    database = FlexDB(password=user_data.flex_db_password, ip=flex_queue_head_machine['ip'])
+                    service.deleteTasks(taskids=[(stochkit_job.celery_pid, stochkit_job.pid)], database=database)
+
+            except Exception as e:
+                logging.error(traceback.format_exc())
+                logging.error('Error: {}'.format(str(e)))
                 raise Exception('fail to delete cloud output or rerun sources.')
 
         if stochkit_job.output_location is not None and os.path.exists(str(stochkit_job.output_location)):

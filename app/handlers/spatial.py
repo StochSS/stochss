@@ -5,7 +5,11 @@ import pprint
 import exportimport
 
 from backend.backendservice import backendservices
-from backend.common.config import AgentTypes, JobConfig
+from backend.common.config import AgentTypes, JobConfig, JobDatabaseConfig
+from backend.storage.s3_storage import S3StorageAgent
+from backend.storage.flex_storage import FlexStorageAgent
+from backend.databases.flex_db import FlexDB
+from backend.databases.dynamo_db import DynamoDB
 
 import mesheditor
 
@@ -157,24 +161,52 @@ class SpatialJobWrapper(db.Model):
                                             credentials['AWS_ACCESS_KEY_ID'],
                                             credentials['AWS_SECRET_ACCESS_KEY']
                                         ).get()
-                
-                bucketname = user_data.S3_bucket_name
-                logging.info(bucketname)
-                #delete the folder that contains the replay sources
-                delete_folder(bucketname, self.cloud_id, credentials['AWS_ACCESS_KEY_ID'], credentials['AWS_SECRET_ACCESS_KEY'])
-                logging.info('delete the rerun source folder {1} in bucket {0}'.format(bucketname, self.cloud_id))
-                #delete the output tar file
-                delete_file(bucketname, 'output/'+self.cloud_id+'.tar', credentials['AWS_ACCESS_KEY_ID'], credentials['AWS_SECRET_ACCESS_KEY'])
-                logging.info('delete the output tar file output/{1}.tar in bucket {0}'.format(bucketname, self.cloud_id))
-                
-                #delete dynamodb entries
-                dynamo=boto.connect_dynamodb(aws_access_key_id=os.environ["AWS_ACCESS_KEY_ID"], aws_secret_access_key=os.environ["AWS_SECRET_ACCESS_KEY"])
-                table = dynamo.get_table("stochss_cost_analysis")
-                results = table.scan(scan_filter={'uuid' :condition.EQ(self.cloud_id)})
-                for result in results:
-                    result.delete()
-                    
-            except:
+
+                if self.resource == SpatialJobWrapper.EC2_CLOUD_RESOURCE:
+                    bucketname = user_data.S3_bucket_name
+                    logging.info('bucketname = {}'.format(bucketname))
+
+                    ec2_credentials = user_data.getCredentials()
+
+                    # delete the folder that contains the replay sources
+                    logging.info('deleting the rerun source folder {1} in bucket {0}'.format(bucketname, self.cloud_id))
+                    delete_folder(bucketname, self.cloud_id, ec2_credentials['EC2_ACCESS_KEY'], ec2_credentials['EC2_SECRET_KEY'])
+
+                    # delete the output tar file
+                    storage_agent = S3StorageAgent(bucket_name=bucketname,
+                                                   ec2_access_key=ec2_credentials['EC2_ACCESS_KEY'],
+                                                   ec2_secret_key=ec2_credentials['EC2_SECRET_KEY'])
+                    filename = 'output/' + self.cloud_id + '.tar'
+
+                    logging.info('deleting the output tar file output/{1}.tar in bucket {0}'.format(bucketname, self.cloud_id))
+                    storage_agent.delete_file(filename=filename)
+
+                    database = DynamoDB(access_key=ec2_credentials['EC2_ACCESS_KEY'],
+                                        secret_key=ec2_credentials['EC2_SECRET_KEY'])
+                    service.deleteTasks(taskids=[(self.celeryPID, self.cloud_id)], database=database)
+
+                    # delete dynamodb entries for cost analysis
+                    database.remove_tasks_by_attribute(tablename=JobDatabaseConfig.COST_ANALYSIS_TABLE_NAME,
+                                                       attribute_name='uuid', attribute_value=self.cloud_id)
+
+
+                elif self.resource == SpatialJobWrapper.FLEX_CLOUD_RESOURCE:
+                    flex_queue_head_machine = user_data.get_flex_queue_head_machine()
+
+                    # delete the output tar file
+                    storage_agent = FlexStorageAgent(queue_head_ip=flex_queue_head_machine['ip'],
+                                                     queue_head_username=flex_queue_head_machine['username'],
+                                                     queue_head_keyfile=flex_queue_head_machine['keyfile'])
+
+                    filename = self.cloud_id + '.tar'
+                    storage_agent.delete_file(filename=filename)
+
+                    database = FlexDB(password=user_data.flex_db_password, ip=flex_queue_head_machine['ip'])
+                    service.deleteTasks(taskids=[(self.celeryPID, self.cloud_id)], database=database)
+
+            except Exception as e:
+                logging.error(traceback.format_exc())
+                logging.error('Error: {}'.format(str(e)))
                 raise Exception('fail to delete cloud output or rerun sources.')
         else:
             raise Exception('Job Resource {0} not supported!'.format(self.resource))
