@@ -340,8 +340,10 @@ class SpatialPage(BaseHandler):
                         rgbas = numpy.left_shift(rgbas[:, :, 0], 16) + numpy.left_shift(rgbas[:, :, 1], 8) + rgbas[:, :, 2]
 
                         dataTmp[specie] = []
-                        for i in range(rgbas.shape[0]):
-                            dataTmp[specie].append(list(rgbas[i].astype('int')))
+                        for i in range(data2.shape[0]):
+                            dataTmp[specie].append(list(data2[i]))
+                        #for i in range(rgbas.shape[0]):
+                        #    dataTmp[specie].append(list(rgbas[i].astype('int')))
 
                     for i in range(len(dataTmp.values()[0])):
                         data[sTime + i] = {}
