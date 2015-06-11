@@ -20,6 +20,10 @@ import tasks
 from tasks import TaskConfig
 
 
+def get_remote_command(user, ip, key_file, command):
+    return 'ssh -o UserKnownHostsFile=/dev/null -o StrictHostKeyChecking=no -i {0} {1}@{2} "{3}"'.format(key_file, user,
+                                                                                                         ip, command)
+
 def get_scp_command(keyfile, target, source):
     return 'scp -o UserKnownHostsFile=/dev/null -o StrictHostKeyChecking=no -i {keyfile} {source} {target}'.format(
                                                     keyfile=keyfile, source=source, target=target)
