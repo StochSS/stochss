@@ -117,6 +117,7 @@ class FlexDB(BaseDB):
         logging.info('createtable: tablename = {0}'.format(tablename))
         result = False
         db = None
+        save_e = None
 
         try:
             logging.info('checking if table {0} exists'.format(tablename))
@@ -142,13 +143,15 @@ class FlexDB(BaseDB):
 
             result = True
 
-        except Exception, e:
+        except Exception as e:
             logging.error('exiting createtable with error {0}'.format(str(e)))
+            save_e = e
 
         finally:
             if db:
                 db.close()
-
+        if save_e is not None:
+            raise save_e
         return result
 
     def tableexists(self, tablename):
