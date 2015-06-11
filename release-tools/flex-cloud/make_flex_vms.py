@@ -20,6 +20,8 @@ import glob
 import urllib2
 import string
 import random
+import socket
+import errno
 
 import mysql.connector
 from contextlib import closing
@@ -100,6 +102,8 @@ class ShellCommand(object):
 class VirtualMachine(object):
     NUM_TRIALS = 5
     NUM_SSH_TRIALS = 10
+    PORTS = [22, 5672, 6379, 11211, 55672, 80, 443, 3306]
+    PORT_TIMEOUT = 5
 
     def __init__(self, ip, username, keyfile, dependencies, python_packages, git_repo,
                  log_type="screen", stderr_log=None, stdout_log=None, verbose=False):
@@ -123,6 +127,7 @@ class VirtualMachine(object):
         try:
             self.__is_machine_reachable()
             self.__enable_network_ports()
+            self.__check_network_ports()
             self.__try_install_dependencies()
             self.__update_fenics()
             self.__reboot_machine()
@@ -141,6 +146,40 @@ class VirtualMachine(object):
             traceback.print_exc()
 
         print 'Done in {} seconds'.format(time.time() - self.start_time)
+
+    def __check_network_ports(self):
+        header = 'Trying to check if  ports = {} are open...'.format(self.PORTS)
+        print '=================================================='
+        print header
+
+        success = True
+        for port in self.PORTS:
+            try:
+                s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+                s.settimeout(self.PORT_TIMEOUT)
+                s.connect((self.ip, port))
+                s.close()
+                print 'Port {0} is open on ip {1}!'.format(port, self.ip)
+
+            except socket.timeout as st:
+                print 'Socket timeout on port {0} for ip {1}'.format(port, self.ip)
+                success = False
+
+            except socket.error as se:
+                if se.errno == errno.ECONNREFUSED:
+                    print 'Port {0} is open on ip {1}, but no one is listening!'.format(port, self.ip)
+                else:
+                    print 'Error in connecting to ip {0} on port {1}'.format(port, self.ip)
+                    print traceback.format_exc()
+
+            except Exception as e:
+                print 'Error in connecting to ip {0} on port {1}'.format(port, self.ip)
+                print traceback.format_exc()
+
+        if not success:
+            raise Exception('Ports = {} must be enabled!'.format(self.PORTS, self.ip))
+
+
 
     def __add_sudoer(self):
         header = 'Adding restricted sudo rights to apache user...'
@@ -322,17 +361,12 @@ class VirtualMachine(object):
 
 
     def __enable_network_ports(self):
-        # Enable ports 22, 5672, 6379, 11211, 55672, 80, 443, 3306
-        ports = [22, 5672, 6379, 11211, 55672, 80, 443, 3306]
+        header = 'Trying to enable ports = {}...'.format(self.PORTS)
+        print '=================================================='
+        print header
+        command = ';'.join(map(lambda x: "sudo ufw allow {port}".format(port=x), self.PORTS))
 
-        print '===================================================='
-        print 'Trying to enable ports = {}'.format(ports)
-
-        for port in ports:
-            print 'For port {}'.format(port)
-            remote_cmd = get_remote_command(user=self.username, ip=self.ip, key_file=self.keyfile,
-                                            command="sudo ufw allow {port}".format(port=port))
-            subprocess.call(remote_cmd, shell=True)
+        self.__run_remote_command(command=command, log_header=header)
 
 
     def __try_install_dependencies(self):
