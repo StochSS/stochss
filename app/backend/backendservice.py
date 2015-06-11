@@ -8,6 +8,7 @@ import uuid
 import re
 import urllib2
 import json
+import shlex
 import logging
 from tasks import *
 
@@ -772,7 +773,40 @@ class backendservices(object):
                 return None
 
         elif agent_type == AgentTypes.FLEX:
-            return None
+            try:
+                result = {}
+                for job_id, output_url in output_urls.items():
+                    match_object = re.search(pattern='scp://([^:@]+)@([^:@]+):([^:@]+):([^:@]+)', string=output_url)
+                    username = match_object.group(1)
+                    ip = match_object.group(2)
+                    keyname = match_object.group(3)
+                    output_tar_file_path = match_object.group(4)
+
+                    command = "du -b {output_file}".format(output_file=output_tar_file_path)
+                    remote_cmd = helper.get_remote_command(user=username, ip=ip,
+                                                        key_file=os.path.join(self.FLEX_SSH_KEYFILE_DIR, keyname),
+                                                        command=command)
+
+                    logging.info('command = {}'.format(remote_cmd))
+                    handle = subprocess.Popen(shlex.split(remote_cmd), stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+                    stdout, stderr = handle.communicate()
+
+                    match_object = re.search(pattern='([^\s]+)(\s+)([^\s]+)', string=stdout)
+                    if match_object:
+                        output_size = int(match_object.group(1))
+                        logging.info('For job_id = {0}, size = {1}'.format(job_id, output_size))
+                        result[job_id] = output_size
+                    else:
+                        result[job_id] = None
+
+                return result
+
+            except Exception as e:
+                logging.error(traceback.format_exc())
+                logging.error('Error in getSizeOfOutputResults: {}'.format(str(e)))
+                return None
+        else:
+            logging.error('Invalid Agent type = {}!'.format(agent_type))
 
         return None
 
@@ -831,4 +865,3 @@ class backendservices(object):
         except Exception, e:
             logging.error("fetchOutput : exiting with error : %s", str(e))
             return False
-
