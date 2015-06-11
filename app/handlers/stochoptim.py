@@ -190,13 +190,19 @@ class StochOptimJobWrapper(db.Model):
                 except:
                     pass
 
-            elif self.resource.lower() in StochOptimJobWrapper.SUPPORTED_CLOUD_RESOURCES:
+            elif self.resource in StochOptimJobWrapper.SUPPORTED_CLOUD_RESOURCES:
                 service = backend.backendservice.backendservices()
                 stop_params = {
                     'credentials': credentials,
                     'ids': [(self.celeryPID, self.cloudDatabaseID)]
                 }
-                result = service.stopTasks(stop_params)
+                if self.resource == StochOptimJobWrapper.EC2_CLOUD_RESOURCE:
+                    result = service.stopTasks(stop_params, agent_type=AgentTypes.EC2)
+                elif self.resource == StochOptimJobWrapper.FLEX_CLOUD_RESOURCE:
+                    result = service.stopTasks(stop_params, agent_type=AgentTypes.FLEX)
+                else:
+                    logging.error("Cloud resource is not EC2 or FLEX, job.stop() failed")
+
                 if result and result[self.cloudDatabaseID]:
                     final_cloud_result = result[self.cloudDatabaseID]
                     try:
@@ -331,16 +337,37 @@ class StochOptimPage(BaseHandler):
                         os.kill(job.pollProcessPID, signal.SIGTERM)
                     except Exception as e:
                         logging.error("StochOptimPage.post.stopJob(): exception during kill process: {0}".format(e))
-                    if not self.user_data.valid_credentials:
-                        return self.response.write(json.dumps({
-                            'status': False,
-                            'msg': 'Could not stop the job '+job.jobName +'. Invalid credentials.'
-                        }))
-                    credentials = self.user_data.getCredentials()
-                    success = job.stop(credentials={
-                        'AWS_ACCESS_KEY_ID': credentials['EC2_ACCESS_KEY'],
-                        'AWS_SECRET_ACCESS_KEY': credentials['EC2_SECRET_KEY']
-                    })
+                    if job.resource == StochOptimJobWrapper.EC2_CLOUD_RESOURCE:
+                        if not self.user_data.valid_credentials:
+                            return self.response.write(json.dumps({
+                                'status': False,
+                                'msg': 'Could not stop the job '+job.jobName +'. Invalid credentials.'
+                            }))
+                        credentials = self.user_data.getCredentials()
+                        job_credentials={
+                            'AWS_ACCESS_KEY_ID': credentials['EC2_ACCESS_KEY'],
+                            'AWS_SECRET_ACCESS_KEY': credentials['EC2_SECRET_KEY']
+                        }
+                    elif job.resource == StochOptimJobWrapper.FLEX_CLOUD_RESOURCE:
+                        service = backend.backendservice.backendservices()
+                        job_credentials = None
+                        if self.user_data.is_flex_cloud_info_set:
+                            self.user_data.update_flex_cloud_machine_info_from_db()
+                            flex_queue_head_machine = self.user_data.get_flex_queue_head_machine()
+                            if service.is_flex_queue_head_running(flex_queue_head_machine):
+                                job_credentials={
+                                    'flex_db_password' : self.user_data.flex_db_password,
+                                    'flex_queue_head' : self.user_data.get_flex_queue_head_machine()
+                                }
+                        if job_credentials is None:
+                            return self.response.write(json.dumps({
+                                'status': False,
+                                'msg': 'Could not stop the job '+job.jobName +'. Invalid credentials.'
+                            }))
+                    else:
+                        logging.error("Cloud resource is not EC2 or FLEX, job.stop() failed")
+
+                    success = job.stop(credentials=job_credentials)
                     if not success:
                         return self.response.write(json.dumps({
                             'status': False,
