@@ -20,6 +20,10 @@ from stochssapp import BaseHandler
 
 from backend.backendservice import backendservices
 from backend.common.config import AgentTypes, JobConfig
+from backend.storage.s3_storage import S3StorageAgent
+from backend.storage.flex_storage import FlexStorageAgent
+from backend.databases.flex_db import FlexDB
+from backend.databases.dynamo_db import DynamoDB
 
 import time
 
@@ -58,17 +62,62 @@ class SensitivityJobWrapper(db.Model):
     exceptionMessage = db.StringProperty()
     output_stored = db.StringProperty()
 
-    def delete(self):
-        if self.outData:
-            if os.path.exists(self.outData):
-                shutil.rmtree(self.outData)
+    def delete(self, handler):
+        logging.debug("SensitivityJobWrapper.delete(cloudDatabaseID={0})".format(self.cloudDatabaseID))
+        if self.outData is not None and os.path.exists(self.outData):
+            shutil.rmtree(self.outData)
 
-        if self.zipFileName:
-            if os.path.exists(self.zipFileName):
+        if self.zipFileName is not None and os.path.exists(self.zipFileName):
                 os.remove(self.zipFileName)
-                
-            
+        logging.debug("\tresource={0}".format(self.resource))
 
+        service = backendservices()
+        if self.resource == 'Local':
+            logging.debug('service.deleteTaskLocal([{0}])'.format(self.pid))
+            service.deleteTaskLocal([self.pid])
+            time.sleep(0.25)
+            status = service.checkTaskStatusLocal([self.pid]).values()[0]
+            logging.debug('status = service.checkTaskStatusLocal([self.pid]).values()[0] = {0}'.format(status))
+        else: # cloud
+            try:
+                user_data = handler.user_data
+                if self.resource == self.EC2_CLOUD_RESOURCE:
+                    bucketname = user_data.S3_bucket_name
+                    logging.info('bucketname = {}'.format(bucketname))
+                    ec2_credentials = handler.user_data.getCredentials()
+                    # delete the folder that contains the replay sources
+                    logging.info('deleting the rerun source folder {1} in bucket {0}'.format(bucketname, self.pid))
+                    delete_folder(bucketname, self.pid, ec2_credentials['EC2_ACCESS_KEY'], ec2_credentials['EC2_SECRET_KEY'])
+                    # delete the output tar file
+                    storage_agent = S3StorageAgent(bucket_name=bucketname,
+                                                   ec2_access_key=ec2_credentials['EC2_ACCESS_KEY'],
+                                                   ec2_secret_key=ec2_credentials['EC2_SECRET_KEY'])
+                    filename = 'output/' + self.cloudDatabaseID + '.tar'
+                    logging.info('deleting the output tar file output/{1}.tar in bucket {0}'.format(bucketname, self.pid))
+                    storage_agent.delete_file(filename=filename)
+                    database = DynamoDB(access_key=ec2_credentials['EC2_ACCESS_KEY'],
+                                        secret_key=ec2_credentials['EC2_SECRET_KEY'])
+                    service.deleteTasks(taskids=[(self.celeryPID, self.cloudDatabaseID)], database=database)
+                    # delete dynamodb entries for cost analysis
+                    database.remove_tasks_by_attribute(tablename=JobDatabaseConfig.COST_ANALYSIS_TABLE_NAME,
+                                                       attribute_name='uuid', attribute_value=self.pid)
+                elif self.resource == self.FLEX_CLOUD_RESOURCE:
+                    flex_queue_head_machine = user_data.get_flex_queue_head_machine()
+                    # delete the output tar file
+                    storage_agent = FlexStorageAgent(queue_head_ip=flex_queue_head_machine['ip'],
+                                                     queue_head_username=flex_queue_head_machine['username'],
+                                                     queue_head_keyfile=flex_queue_head_machine['keyfile'])
+                    filename = self.cloudDatabaseID + '.tar'
+                    storage_agent.delete_file(filename=filename)
+                    database = FlexDB(password=user_data.flex_db_password, ip=flex_queue_head_machine['ip'])
+                    service.deleteTasks(taskids=[(self.celeryPID, self.cloudDatabaseID)], database=database)
+                else:
+                    logging.error(traceback.format_exc())
+                    logging.error("UNKNOWN job.resource = {0}".format(self.resource))
+            except Exception as e:
+                logging.error(traceback.format_exc())
+                logging.error('Error: {}'.format(str(e)))
+                raise Exception('fail to delete cloud output or rerun sources.')
         super(SensitivityJobWrapper, self).delete()
 
 class SensitivityPage(BaseHandler):
@@ -241,7 +290,7 @@ class SensitivityPage(BaseHandler):
                 self.response.write(json.dumps(["Not the right user"]))
                 return
 
-            job.delete()
+            job.delete(self)
             self.response.headers['Content-Type'] = 'application/json'
             self.response.write(json.dumps({ "status" : True,
                                              "msg" : "Job deleted"}));

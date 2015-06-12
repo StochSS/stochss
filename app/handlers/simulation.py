@@ -114,7 +114,6 @@ class StochKitJobWrapper(db.Model):
 
         else:
             # cloud
-            
             try:
                 user_data = handler.user_data
 
@@ -159,6 +158,9 @@ class StochKitJobWrapper(db.Model):
 
                     database = FlexDB(password=user_data.flex_db_password, ip=flex_queue_head_machine['ip'])
                     service.deleteTasks(taskids=[(stochkit_job.celery_pid, stochkit_job.pid)], database=database)
+                else:
+                    logging.error(traceback.format_exc())
+                    logging.error("UNKNOWN job.resource = {0}".format(stochkit_job.resource))
 
             except Exception as e:
                 logging.error(traceback.format_exc())
