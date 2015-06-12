@@ -856,8 +856,6 @@ class SynchronizeDB(webapp2.RequestHandler):
 
         self.is_start = False
 
-        print 'self is_start', self.is_start, self.agent, type(self.agent), self.parameters
-
         id = background_thread.start_new_background_thread(self.begin, [])
         logging.info('Started a background thread to synchronize db. id: {0} agent: {1}'.format(id, self.agent_type))
         return
