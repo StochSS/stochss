@@ -610,9 +610,9 @@ class backendservices(object):
             logging.error("error : %s", str(e))
             return None
 
-    def describe_machines_from_db(self, params):
+    def describe_machines_from_db(self, params, force = False):
         i = InfrastructureManager()
-        i.synchronize_db(params)
+        i.synchronize_db(params, force = True)
         all_vms = VMStateModel.get_all(params)
         return all_vms
 

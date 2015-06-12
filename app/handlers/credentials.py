@@ -423,7 +423,6 @@ class CredentialsPage(BaseHandler):
         if flex_cloud_machine_info == None or len(flex_cloud_machine_info) == 0:
             logging.info('Adding dummy flex cloud machine for UI rendering...')
             flex_cloud_machine_info = [{'ip': '', 'keyname': '', 'username': '', 'queue_head': True, 'state': ''}]
-
         else:
             self.user_data.update_flex_cloud_machine_info_from_db()
             flex_cloud_machine_info = self.user_data.get_flex_cloud_machine_info()
