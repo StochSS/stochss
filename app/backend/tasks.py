@@ -309,7 +309,7 @@ def handle_task_success(task_id, data, output_dir, bucket_name, database, storag
     #     return_code = os.system(copy_to_s3_str)
     # print "Return code after S3 retry is {0}".format(return_code)
 
-    cleanup_string = "rm -rf {0} {0}".format(output_dir)
+    cleanup_string = "rm -rf {0} {0}.tar".format(output_dir)
     print cleanup_string
     os.system(cleanup_string)
 
