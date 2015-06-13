@@ -57,15 +57,18 @@ class CredentialsPage(BaseHandler):
 
 
     def __handle_json_post_request(self, data_received, user_id):
-        logging.info('__handle_json_post_request: action = {}'.format(data_received['action']))
+        logging.debug('__handle_json_post_request: action = {}'.format(data_received['action']))
 
         if data_received['action'] == CredentialsPage.FLEX_PREPARE_CLOUD:
+            logging.debug("data_received['action'] = {0} = CredentialsPage.FLEX_PREPARE_CLOUD".format(data_received['action']))
             flex_cloud_machine_info = data_received['flex_cloud_machine_info']
+            logging.debug("flex_cloud_machine_info = {0}".format(flex_cloud_machine_info))
             result = self.prepare_flex_cloud(user_id, flex_cloud_machine_info)
-            logging.info("result = {0}".format(result))
+            logging.debug("result = {0}".format(result))
             self.redirect('/flexCloudCredentials')
 
         elif data_received['action'] == CredentialsPage.FLEX_DEREGISTER_CLOUD:
+            logging.debug("data_received['action'] = {0} = CredentialsPage.FLEX_DEREGISTER_CLOUD".format(data_received['action']))
             result = self.deregister_flex_cloud(user_id)
             logging.info("result = {0}".format(result))
             self.redirect('/flexCloudCredentials')
@@ -277,12 +280,12 @@ class CredentialsPage(BaseHandler):
         self.redirect('/flexCloudCredentials')
 
     def prepare_flex_cloud(self, user_id, flex_cloud_machine_info):
-        logging.info('prepare_flex_cloud: flex_cloud_machine_info =\n{0}'.format(pprint.pformat(flex_cloud_machine_info)))
+        logging.debug('prepare_flex_cloud: flex_cloud_machine_info =\n{0}'.format(pprint.pformat(flex_cloud_machine_info)))
 
         credentials = self.user_data.getCredentials()
 
         reservation_id = backendservices.get_random_alphanumeric()
-        logging.info('Generated reservation_id = {0}'.format(reservation_id))
+        logging.debug('Generated reservation_id = {0}'.format(reservation_id))
 
         self.user_data.is_flex_cloud_info_set = True
         self.user_data.reservation_id = reservation_id

@@ -116,12 +116,12 @@ class UserData(db.Model):
         return self.is_amazon_db_table
 
     def set_flex_cloud_machine_info(self, machine_info):
-        logging.debug("machine_info = {0}".format(machine_info))
+        logging.debug("set_flex_cloud_machine_info() machine_info = {0}".format(machine_info))
         self.flex_cloud_machine_info = json.dumps(machine_info, encoding="ascii")
 
     def get_flex_cloud_machine_info(self):
         info = json.loads(self.flex_cloud_machine_info, encoding="ascii")
-        logging.debug("info = {0}".format(self.flex_cloud_machine_info))
+        logging.debug("get_flex_cloud_machine_info() info = {0}".format(self.flex_cloud_machine_info))
         return info
 
     def get_flex_queue_head_machine(self):
@@ -142,15 +142,15 @@ class UserData(db.Model):
             return result
         except Exception as e:
             logging.error(str(e))
-            return None
+            return {}
 
     def update_flex_cloud_machine_info_from_db(self):
-        logging.info('update_flex_cloud_machine_info_from_db')
+        logging.debug('update_flex_cloud_machine_info_from_db')
 
         if self.is_flex_cloud_info_set:
             flex_cloud_machine_info = self.get_flex_cloud_machine_info()
 
-            if flex_cloud_machine_info == None or len(flex_cloud_machine_info) == 0:
+            if flex_cloud_machine_info is None or len(flex_cloud_machine_info) == 0:
                 return
 
             params = {
@@ -162,13 +162,16 @@ class UserData(db.Model):
 
 
             all_vms = self.__get_all_vms(params)
-            logging.debug('flex: all_vms =\n{0}'.format(pprint.pformat(all_vms)))
+            #logging.debug('flex: all_vms =\n{0}'.format(pprint.pformat(all_vms)))
+            logging.debug('flex: all_vms =\n{0}'.format(all_vms))
 
             all_vms_map = {vm['pub_ip']: vm for vm in all_vms}
-            logging.debug('flex: all_vms_map =\n{0}'.format(pprint.pformat(all_vms_map)))
+            #logging.debug('flex: all_vms_map =\n{0}'.format(pprint.pformat(all_vms_map)))
+            logging.debug('flex: all_vms_map =\n{0}'.format(all_vms_map))
 
             for machine in flex_cloud_machine_info:
                 ip = machine['ip']
+                logging.debug('all_vms_map = {0}'.format(all_vms_map))
                 if ip in all_vms_map:
                     if all_vms_map[ip]['reservation_id'] == self.reservation_id:
                         machine['state'] = all_vms_map[ip]['state']

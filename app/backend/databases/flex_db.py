@@ -45,6 +45,8 @@ class FlexDB(BaseDB):
 
         db = None
         results = {}
+        save_e = None
+
 
         try:
             if len(taskids) > 0 and self.tableexists(tablename):
@@ -75,18 +77,19 @@ class FlexDB(BaseDB):
 
         except Exception, e:
             logging.error("describetask  with error : {0}".format(str(e)))
-
+            save_e = e
         finally:
             if db:
                 db.close()
-
+        if save_e is not None:
+            raise save_e
         return results
 
     def removetask(self, tablename, taskid):
         logging.info('removetask: tablename = {0}, taskid = {1}'.format(tablename, taskid))
         result = False
         db = None
-
+        save_e = None
         try:
             if self.tableexists(tablename):
                 db = self.__open_db_connection()
@@ -106,11 +109,12 @@ class FlexDB(BaseDB):
 
         except Exception, e:
             logging.error('exiting removetask with error {0}'.format(str(e)))
-
+            save_e = e
         finally:
             if db:
                 db.close()
-
+        if save_e is not None:
+            raise save_e
         return result
 
     def createtable(self, tablename):
@@ -175,11 +179,12 @@ class FlexDB(BaseDB):
 
         except Exception as e:
             logging.error('tableexists failed with error {0}'.format(str(e)))
-
+            save_e = e
         finally:
             if db:
                 db.close()
-
+        if save_e is not None:
+            raise save_e
         return result
 
 
@@ -189,6 +194,7 @@ class FlexDB(BaseDB):
                                                                                                     table_name))
         db = None
         results = None
+        save_e = None
         try:
             if attribute_name != None and attribute_value != None and \
                             attribute_name != '' and attribute_value != '' and self.tableexists(table_name):
@@ -222,11 +228,12 @@ class FlexDB(BaseDB):
         except Exception, e:
             logging.error('exiting getEntry with error {0}'.format(str(e)))
             results = None
-
+            save_e = e
         finally:
             if db:
                 db.close()
-
+        if save_e is not None:
+            raise save_e
         return results
 
 
@@ -236,6 +243,7 @@ class FlexDB(BaseDB):
 
         db = None
         result = False
+        save_e = None
 
         try:
             update_field_list = ", ".join(map(lambda x: "`{x}`=VALUES(`{x}`)".format(x=x), data.keys()))
@@ -275,9 +283,10 @@ class FlexDB(BaseDB):
 
         except Exception, e:
             logging.error('updateEntry error : {0}'.format(str(e)))
-
+            save_e = e
         finally:
             if db:
                 db.close()
-
+        if save_e is not None:
+            raise save_e
         return result

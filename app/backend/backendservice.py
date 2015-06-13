@@ -399,14 +399,14 @@ class backendservices(object):
                     ec2_access_key = params['credentials']['EC2_ACCESS_KEY']
                     ec2_secret_key = params['credentials']['EC2_SECRET_KEY']
 
-            logging.info('ec2_access_key = {0} ec2_secret_key = {1}'.format(ec2_access_key, ec2_secret_key))
+            logging.debug('ec2_access_key = {0} ec2_secret_key = {1}'.format(ec2_access_key, ec2_secret_key))
 
             # 3. create exact number of entities in db for this launch, and set the status to 'creating'
             num_vms = len(params['flex_cloud_machine_info'])
-            logging.info('num_vms = {0}'.format(num_vms))
+            logging.debug('num_vms = {0}'.format(num_vms))
 
             reservation_id = params['reservation_id']
-            logging.info('flex: reservation_id = {0}'.format(reservation_id))
+            logging.debug('flex: reservation_id = {0}'.format(reservation_id))
 
             ids = self.__create_vm_state_model_entries(ec2_access_key=ec2_access_key, ec2_secret_key=ec2_secret_key,
                                                        infrastructure=infrastructure, num_vms=num_vms, user_id=user_id,
@@ -416,7 +416,7 @@ class backendservices(object):
             params[VMStateModel.IDS] = ids
             res = i.prepare_instances(params)
 
-            logging.info("prepare_flex_cloud_machines : exiting method with result : %s", str(res))
+            logging.debug("prepare_flex_cloud_machines : exiting method with result : %s", str(res))
             return True, None
 
         except Exception, e:
