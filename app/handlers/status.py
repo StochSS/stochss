@@ -102,6 +102,7 @@ class StatusPage(BaseHandler):
 
                         elif stochkit_job.resource == '{}-cloud'.format(AgentTypes.FLEX):
                             flex_queue_head_machine = self.user_data.get_flex_queue_head_machine()
+                            logging.debug("flex_queue_head_machine = {0}".format(flex_queue_head_machine))
 
                             # delete the output tar file
                             storage_agent = FlexStorageAgent(queue_head_ip=flex_queue_head_machine['ip'],
@@ -251,7 +252,9 @@ class StatusPage(BaseHandler):
                             logging.info('task_status =\n{}'.format(pprint.pformat(task_status)))
 
                             # It frequently happens that describeTasks return None before the job is finsihed.
-                            if stochkit_job.pid not in task_status or task_status[stochkit_job.pid] == None:
+                            if task_status is None:
+                                stochkit_job.status = "Inaccessible"
+                            elif stochkit_job.pid not in task_status or task_status[stochkit_job.pid] == None:
                                 stochkit_job.status = "Unknown"
                             else:
                                 job_status = task_status[stochkit_job.pid]
@@ -280,6 +283,7 @@ class StatusPage(BaseHandler):
                                     stochkit_job.status = 'Running'
                     
                     except Exception,e:
+                        logging.exception(e)
                         result = {'status':False,'msg':'Could not determine the status of the jobs.'+str(e)}                
                 else:
                     logging.info("Job {0} has status {1}".format(stochkit_job.name, stochkit_job.status))
@@ -366,8 +370,9 @@ class StatusPage(BaseHandler):
 
                         task_status = service.describeTask(taskparams)
                         logging.info('task_status =\n{}'.format(pprint.pformat(task_status)))
-
-                        if job.cloudDatabaseID not in task_status:
+                        if task_status is None:
+                            job.status = "Inaccessible"
+                        elif job.cloudDatabaseID not in task_status:
                             job.status = 'Unknown'
                             job.exceptionMessage = 'Failed to retreive job status from Job Database.'
 
@@ -484,8 +489,10 @@ class StatusPage(BaseHandler):
 
 
                     task_status = service.describeTask(taskparams)
-                    logging.info('task_status =\n{}'.format(pprint.pformat(task_status)))
-                    if task_status is None or job.cloudDatabaseID not in task_status:
+                    logging.info('StochOptim task_status =\n{}'.format(pprint.pformat(task_status)))
+                    if task_status is None:
+                        job.status = 'Inaccessible'
+                    elif task_status is not None and job.cloudDatabaseID not in task_status:
                         logging.error("'Could not find job with cloudDatabaseID {} in fetched task_status!'.format(optimization.cloudDatabaseID))")
                         job.status = 'Unknown'
                         job.exceptionMessage = 'Failed to retreive job status from Job Database.'
@@ -582,16 +589,15 @@ class StatusPage(BaseHandler):
                             logging.exception(e)
 
                     task_status = service.describeTask(taskparams)
-                    logging.info('task_status =\n{}'.format(pprint.pformat(task_status)))
+                    logging.info('Spatial task_status =\n{}'.format(pprint.pformat(task_status)))
 
-                    if task_status is not None and job.cloud_id in task_status:
-                        job_status = task_status[job.cloud_id]
-                    else:
+                    if task_status is None:
+                        job.status = "Inaccessible"
                         job_status = None
-                    # It frequently happens that describeTasks return None before the job is finsihed.
-                    if job_status is None:
+                    elif task_status is not None and job.cloud_id not in task_status:
                         job.status = "Unknown"
                     else:
+                        job_status = task_status[job.cloud_id]
                         if job_status['status'] == 'finished':
                             # Update the spatial job
                             job.output_url = job_status['output']
