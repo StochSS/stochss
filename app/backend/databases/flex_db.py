@@ -162,6 +162,7 @@ class FlexDB(BaseDB):
         logging.debug('Checking if table {0} exists!'.format(tablename))
         result = False
         db = None
+        save_e = None
 
         try:
             db = self.__open_db_connection()
