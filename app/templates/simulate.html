@@ -277,6 +277,7 @@
     <div class="well">
         <h3>Output</h3>
         <br />
+        <div id="outputWell">
         <% if (resource =="Local" || output_stored == "True"){ %>
         	<button id="access" type="submit" class="btn btn-primary btn-large"><i class="icon-download-alt"></i> Fetch Data from Cloud</button>
     	<% } %>
@@ -285,9 +286,10 @@
     		<% if(output_stored == "True"){ %>
     		<button class="btn btn-primary btn-large" onclick="rerun('/reproduce?req_type=delOutput&job_type=stochkit&uuid=<%= pid %>', 'delete', '/simulate?id=<%=id%>');"> Delete Output</button>
     		<% }else{ %>
-    		<p>No output stored.</p>
+    		<p>No output stored</p>
     		<% } %>		
     	<% } %>
+        </div>
     </div>
 
     <% if(status != "Failed"){ %>

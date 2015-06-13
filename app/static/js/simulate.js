@@ -321,6 +321,13 @@ var run = function()
                               }, id));
                           }
                       }
+                      else if(data.status == "Unknown")
+                      {
+                          updateMsg( { status : false,
+                                       msg : "Job is in unknown state. This can happen when the cloud storing the data is inaccessible (for instance when the private keys to a Flex Cloud server are deleted)" } );
+
+                          $( "#outputWell" ).text( 'No output available' );
+                      }
                       else
                       {
                           $( "#error" ).html('<span><h4>Job Failed</h4><br />Stdout:<br /><pre>' + data.stdout + '</pre></span><br /><span>Stderr:<br /><pre>' + data.stderr + '</pre></span>');
@@ -354,7 +361,7 @@ var run = function()
                           }
                           else
                           {
-                              $( "#access" ).text( '<i class="icon-download-alt"></i>No input data available for debugging' );
+                              $( "#access" ).html( '<i class="icon-download-alt"></i>No input data available for debugging' );
                               $( "#access" ).prop("disabled",true);
                           }
                       }

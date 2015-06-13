@@ -636,6 +636,11 @@ class SimulatePage(BaseHandler):
                                                  "job" : JobManager.getJob(self, job.key().id()),
                                                  "stdout" : stdout,
                                                  "stderr" : stderr}))
+            if job.stochkit_job.status == "Unknown":
+                self.response.headers['Content-Type'] = 'application/json'
+                
+                self.response.write(json.dumps({ "status" : "Unknown",
+                                                 "job" : JobManager.getJob(self, job.key().id())}))
             else:
                 self.response.headers['Content-Type'] = 'application/json'
                 self.response.write(json.dumps({ "status" : "asdfasfdfdsa" }))
