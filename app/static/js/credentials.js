@@ -332,7 +332,9 @@ window.onload = function () {
     $( '#prepare_flex_button' ).click( prepare_flex_cloud );
     $( '#deregister_flex_button' ).click( deregister_flex_cloud );
 
-    $( '#refresh_flex_button' ).click( refresh_flex_cloud_info );
+    $( '#refresh_flex_button' ).click( function() {
+        document.location.reload();
+    } );
 
     console.log("rendering", performance.now());
     cont.render();
