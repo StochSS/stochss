@@ -75,7 +75,7 @@
                                 
                                 	<a href="/simulate?id={{job.id}}">View</a>
                                 
-                                {% else %}
+                                {% elif job.status == "Failed"%}
                           
                                 	<a href="/simulate?id={{job.id}}">Get Debugging Info</a>
                                 
