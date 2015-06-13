@@ -659,6 +659,12 @@ class SimulatePage(BaseHandler):
                 result = self.runStochKitLocal(params)
 
             elif params['resource'] == 'cloud':
+                compute_check_params = {
+                    "infrastructure": AgentTypes.EC2,
+                    "credentials": self.user_data.getCredentials(),
+                    "key_prefix": self.user.user_id()
+                }
+
                 if self.user_data.is_flex_cloud_info_set:
                     self.user_data.update_flex_cloud_machine_info_from_db()
                     flex_queue_head_machine = self.user_data.get_flex_queue_head_machine()
@@ -669,27 +675,20 @@ class SimulatePage(BaseHandler):
                         result = self.runCloud(params, agent_type=AgentTypes.FLEX)
                     else:
                         result = {'status': False,
-                                  'msg': 'You must have at least queue head running to run in the flex cloud.' }
-
-                else:
-                    compute_check_params = {
-                        "infrastructure": AgentTypes.EC2,
-                        "credentials": self.user_data.getCredentials(),
-                        "key_prefix": self.user.user_id()
-                    }
-                    if self.user_data.valid_credentials and \
+                                  'msg': 'Flex Cloud is configured but not accessible' }
+                elif self.user_data.valid_credentials and \
                             backend_services.isOneOrMoreComputeNodesRunning(compute_check_params):
 
-                        params['resource'] = '{0}-cloud'.format(AgentTypes.EC2)
-                        result = self.runCloud(params, agent_type=AgentTypes.EC2)
+                    params['resource'] = '{0}-cloud'.format(AgentTypes.EC2)
+                    result = self.runCloud(params, agent_type=AgentTypes.EC2)
 
-                    else:
-                        result = { 'status': False,
-                                   'msg': 'You must have at least one active EC2 compute node to run in the EC2 cloud.' }
+                else:
+                    result = { 'status': False,
+                               'msg': 'No cloud computing resources found' }
 
             else:
-                result = {'status':False,
-                          'msg':'There was an error processing your request.'}
+                result = { 'status' : False,
+                          'msg' : 'There was an error processing your request'}
 
             self.response.headers['Content-Type'] = 'application/json'
             self.response.write(json.dumps(result))

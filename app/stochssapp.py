@@ -545,7 +545,6 @@ app = webapp2.WSGIApplication([
                                ('/credentials', CredentialsPage),
                                ('/ec2Credentials', CredentialsPage),
                                ('/flexCloudCredentials', CredentialsPage),
-                               ('/credentials/flexIsDeletable', FlexCredentialsIsDeletablePage),
                                ('/cost_analysis',CostAnalysisPage),
                                ('/localsettings',LocalSettingsPage),
                                ('/updates',UpdatesPage),

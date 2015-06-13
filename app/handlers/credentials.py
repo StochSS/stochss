@@ -312,11 +312,11 @@ class CredentialsPage(BaseHandler):
 
         res, msg = service.prepare_flex_cloud_machines(params)
         if res == True:
-            result = {'flex_cloud_status': 'Success',
-                      'flex_cloud_info_msg': 'Successfully preparing flex cloud machines...'}
+            result = {'flex_cloud_status': True,
+                      'flex_cloud_info_msg': 'Preparing Flex Cloud'}
         else:
-            result = {'flex_cloud_status': 'Failure',
-                      'flex_cloud_info_msg': msg}
+            result = {'flex_cloud_status': False,
+                      'flex_cloud_info_msg': msg }
         return result
 
 
@@ -438,15 +438,15 @@ class CredentialsPage(BaseHandler):
 
         # Check if the flex cloud credentials are valid.
         if self.user_data.is_flex_cloud_info_set:
-            if self.user_data.valid_flex_cloud_info:
-                context['flex_cloud_status'] = 'Success'
-                context['flex_cloud_info_msg'] = 'At least queue head is running!'
-            else:
-                context['flex_cloud_status'] = 'Info'
-                context['flex_cloud_info_msg'] = 'Flex Cloud Info set. Trying to validate it...'
-        else:
-            context['flex_cloud_status'] = 'Failure'
-            context['flex_cloud_info_msg'] = 'Could not determine the status of the machines: Invalid Flex Cloud Credentials!'
+          #context['flex_cloud_status'] = True
+          #      context['flex_cloud_info_msg'] = 'Flex Cloud deployed'
+            if not self.user_data.valid_flex_cloud_info:
+              #else:
+                context['flex_cloud_status'] = True
+                context['flex_cloud_info_msg'] = 'Flex Cloud configured. Waiting for workers to become available...'
+        #else:
+        #    context['flex_cloud_status'] = 'Failure'
+        #    context['flex_cloud_info_msg'] = 'Could not determine the status of the machines: Invalid Flex Cloud Credentials!'
 
         # Get Flex SSH Key Info
         flex_ssh_key_info = self.__get_flex_ssh_key_info()
@@ -593,34 +593,3 @@ class LocalSettingsPage(BaseHandler):
 
 class InvalidUserException(Exception):
     pass
-
-class FlexCredentialsIsDeletablePage(BaseHandler):
-    def authentication_required(self):
-        return True
-
-    def __get_flex_ssh_key_info(self):
-        files = fileserver.FileManager.getFiles(self, 'flexKeyFiles')
-        logging.debug('files =\n{}'.format(files))
-
-        flex_ssh_key_info = []
-        if self.user_data.is_flex_cloud_info_set:
-            flex_ssh_keyfiles_in_use = [machine['keyfile'] for machine in self.user_data.get_flex_cloud_machine_info()]
-            logging.debug('flex_ssh_keyfiles_in_use =\n{}'.format(flex_ssh_keyfiles_in_use))
-
-            for f in files:
-                flex_ssh_keyfile = f["storePath"]
-                flex_id = f["id"]
-
-                if flex_ssh_keyfile in flex_ssh_keyfiles_in_use:
-                    flex_ssh_key_info.append({'id': flex_id, 'is_deletable': False})
-                else:
-                    flex_ssh_key_info.append({'id': flex_id, 'is_deletable': True})
-        else:
-            flex_ssh_key_info = [{'id': f["id"], 'is_deletable': True} for f in files]
-
-        logging.debug('flex_ssh_key_info =\n{}'.format(pprint.pformat(flex_ssh_key_info)))
-        return { f["id"] : { "is_deletable" : f["is_deletable"] } for f in flex_ssh_key_info }
-
-    def get(self):
-        self.response.content_type = 'application/json'
-        self.response.write(json.dumps(self.__get_flex_ssh_key_info()))

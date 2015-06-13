@@ -1,23 +1,8 @@
+console.log('starting ' + performance.now());
 if (typeof(String.prototype.trim) === "undefined") {
     String.prototype.trim = function () {
         return String(this).replace(/^\s+|\s+$/g, '');
     };
-}
-
-function update_cloud_info(status, msg)
-{
-    var el = $( '.flex_cloud_info' );
-
-    el.text(msg);
-
-    if(status)
-    {
-        el.css('color', 'green');
-    }
-    else
-    {
-        el.css('color', 'red');
-    }
 }
 
 function set_basic() {
@@ -104,27 +89,14 @@ function get_flex_cloud_info_input() {
 }
 
 
-function refresh_flex_cloud_info() {
-    $.ajax({
-        type: "GET",
-        url: "/credentials#flex_cloud",
-        success: function () {
-        },
-        error: function (x, e) {
-        },
-        complete: function () {
-            document.location.reload();
-        }
-    });
-}
-
 function deregister_flex_cloud() {
     var jsonDataToBeSent = {};
     jsonDataToBeSent['action'] = 'deregister_flex_cloud';
 
     jsonDataToBeSent = JSON.stringify(jsonDataToBeSent);
 
-    update_cloud_info( true, "Stopping Flex Cloud..." );
+    updateMsg( { status : true, msg : "Stopping Flex Cloud..." }, '#flexCloudInfoMsg' );
+
     $.ajax({
         type: "POST",
         url: "/credentials",
@@ -136,9 +108,7 @@ function deregister_flex_cloud() {
         error: function (x, e) {
         },
         complete: function () {
-            update_cloud_info( true, "Stop request sent, refreshing page" );
-
-            refresh_flex_cloud_info()
+            document.location.reload();
         }
     });
 }
@@ -154,7 +124,7 @@ function prepare_flex_cloud() {
     jsonDataToBeSent['action'] = 'prepare_flex_cloud';
 
     jsonDataToBeSent = JSON.stringify(jsonDataToBeSent);
-    update_cloud_info( true, "Requesting Flex Cloud deploy..." );
+    updateMsg( { status : true, msg : "Requesting Flex Cloud deploy..." }, '#flexCloudInfoMsg');
 
     $.ajax({
         type: "POST",
@@ -167,9 +137,7 @@ function prepare_flex_cloud() {
         error: function (x, e) {
         },
         complete: function () {
-            update_cloud_info( true, "Deploy request sent, refreshing page" );
-
-            refresh_flex_cloud_info()
+            document.location.reload();
         }
     });
 }
@@ -198,23 +166,6 @@ $(document).ready(function () {
         return false;
     });
 });
-
-/* START: remember opened tab pane */
-$('#cred_tabs a').click(function (e) {
-    e.preventDefault();
-    $(this).tab('show');
-});
-
-// store the currently selected tab in the hash value
-$("ul.nav-tabs > li > a").on("shown.bs.tab", function (e) {
-    var id = $(e.target).attr("href").substr(1);
-    window.location.hash = id;
-});
-
-// on load of the page: switch to the currently selected tab
-var hash = window.location.hash;
-$('#cred_tabs a[href="' + hash + '"]').tab('show');
-/* END: remember opened tab pane */
 
 var FlexCloud = FlexCloud || {}
 
@@ -246,25 +197,16 @@ FlexCloud.Controller = Backbone.View.extend({
         this.attributes = attributes;
         this.flexKeyFiles = undefined;
 
+        this.flexIsRunning = $( "#prepare_flex_button" ).prop('disabled');
+
         this.loaded = 0;
 
         this.flexKeyFiles = new fileserver.FileList([], { key: 'flexKeyFiles' });
         this.flexKeyFiles.fetch({ success: _.bind(_.partial(this.update_loaded, undefined), this) });
-
-        $.ajax({ url: '/credentials/flexIsDeletable',
-            type: 'GET',
-            success: _.bind(this.update_loaded, this) }
-        );
     },
 
     update_loaded: function (data) {
-        if (typeof(data) != "undefined") {
-            this.isDeletable = data;
-        }
-
-        this.loaded += 1;
-
-        if (this.loaded == 2) {
+        if ($.isReady) {
             this.render();
         }
     },
@@ -289,6 +231,7 @@ FlexCloud.Controller = Backbone.View.extend({
                 if (!inUse) {
                     if (data.autoUpload || (data.autoUpload !== false && $(this).fileupload('option', 'autoUpload'))) {
                         data.process().done(function () {
+                            updateMsg({ status: true, msg: 'Uploading private key...' }, '#flexKeyMsg');
                             data.submit();
                         });
                     }
@@ -301,33 +244,9 @@ FlexCloud.Controller = Backbone.View.extend({
                 }
             }, this),
 
-            send: _.bind(function (e, data) {
-                names = "";
-
-                for (var i in data.files) {
-                    names += data.files[i].name + " ";
-                }
-
-                var progressbar = _.template('<span><%= name %> :<div class="progress"> \
-<div class="bar" style="width:0%;"> \
-</div> \
-</div> \
-</span>');
-
-                progressHandle = $(this.el).find('#progresses');
-
-                progressHandle.empty();
-                $(progressbar({ name: names })).appendTo(progressHandle);
-            }, this),
-
             done: _.bind(function (e, data) {
+                updateMsg({ status: true, msg: 'Key uploaded. Page reloading' }, '#flexKeyMsg');
                 location.reload();
-            }, this),
-
-            progressall: _.bind(function (e, data) {
-                var progress = parseInt(data.loaded / data.total * 100, 10);
-                $(this.el).find('#progresses').find('.bar').css('width', progress + '%');
-                $(this.el).find('#progresses').find('.bar').text(progress + '%');
             }, this),
 
             error: function (data) {
@@ -377,13 +296,10 @@ In Use \
 
             if(this.flexKeyFiles.length > 0)
             {
-                $( "#flex_ssh_key_table_div" ).show();
-                $( "#flex_ssh_key_table_div_loading" ).hide();
-
                 for (var i = 0; i < this.flexKeyFiles.models.length; i++) {
                     var keyFile = this.flexKeyFiles.models[i];
 
-                    var keyRow = $(row_template({ keyname: keyFile.attributes.path, is_deletable: this.isDeletable[keyFile.id]["is_deletable"] })).appendTo("#flex_ssh_key_table");
+                    var keyRow = $(row_template({ keyname: keyFile.attributes.path, is_deletable: !this.flexIsRunning })).appendTo("#flex_ssh_key_table");
 
                     if (keyRow.find('button').length) {
                         var button = keyRow.find('button');
@@ -391,6 +307,9 @@ In Use \
                         button.click(_.bind(_.partial(this.deleteKeyFile, keyFile.id), this));
                     }
                 }
+
+                $( "#flex_ssh_key_table_div" ).show();
+                $( "#flex_ssh_key_table_div_loading" ).hide();
             }
             else
             {
@@ -401,7 +320,11 @@ In Use \
     }
 });
 
+console.log("Initializing controller" + performance.now());
+var cont = new FlexCloud.Controller();
+
 window.onload = function () {
+    console.log(performance.now());
     $('#flex_ssh_key_table_table').DataTable({ "bSort": false, "bLengthChange": false, "bFilter": false, "bPaginate": false, "bInfo": false });
     $('#flex_ssh_key_table_table').css('border-bottom', '1px solid #ddd');
     $('#flex_ssh_key_table_table thead th').css('border-bottom', '1px solid #ddd');
@@ -411,5 +334,7 @@ window.onload = function () {
 
     $( '#refresh_flex_button' ).click( refresh_flex_cloud_info );
 
-    var cont = new FlexCloud.Controller();
+    console.log("rendering", performance.now());
+    cont.render();
+    console.log(performance.now());
 };
