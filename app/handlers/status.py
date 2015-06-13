@@ -252,7 +252,7 @@ class StatusPage(BaseHandler):
 
                             # It frequently happens that describeTasks return None before the job is finsihed.
                             if stochkit_job.pid not in task_status or task_status[stochkit_job.pid] == None:
-                                stochkit_job.status = "Unknown"
+                                stochkit_job.status = "Inaccessible"
                             else:
                                 job_status = task_status[stochkit_job.pid]
 
@@ -368,7 +368,7 @@ class StatusPage(BaseHandler):
                         logging.info('task_status =\n{}'.format(pprint.pformat(task_status)))
 
                         if job.cloudDatabaseID not in task_status:
-                            job.status = 'Unknown'
+                            job.status = 'Inaccessible'
                             job.exceptionMessage = 'Failed to retreive job status from Job Database.'
 
                         else:
@@ -487,7 +487,7 @@ class StatusPage(BaseHandler):
                     logging.info('task_status =\n{}'.format(pprint.pformat(task_status)))
                     if task_status is None or job.cloudDatabaseID not in task_status:
                         logging.error("'Could not find job with cloudDatabaseID {} in fetched task_status!'.format(optimization.cloudDatabaseID))")
-                        job.status = 'Unknown'
+                        job.status = 'Inaccessible'
                         job.exceptionMessage = 'Failed to retreive job status from Job Database.'
                     else:
                         job_status = task_status[job.cloudDatabaseID]
@@ -590,7 +590,7 @@ class StatusPage(BaseHandler):
                         job_status = None
                     # It frequently happens that describeTasks return None before the job is finsihed.
                     if job_status is None:
-                        job.status = "Unknown"
+                        job.status = "Inaccessible"
                     else:
                         if job_status['status'] == 'finished':
                             # Update the spatial job
