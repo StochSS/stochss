@@ -17,13 +17,18 @@ import re
 import signal
 import pprint
 import shlex
+import shutil
 import subprocess
 import tempfile
 import time
 import logging
 import traceback
 from backend.backendservice import backendservices
-from backend.common.config import AgentTypes
+from backend.common.config import AgentTypes, JobConfig
+from backend.storage.s3_storage import S3StorageAgent
+from backend.storage.flex_storage import FlexStorageAgent
+from backend.databases.flex_db import FlexDB
+from backend.databases.dynamo_db import DynamoDB
 
 def int_or_float(s):
     try:
@@ -170,15 +175,53 @@ class StochOptimJobWrapper(db.Model):
     celeryPID = db.StringProperty()
     pollProcessPID = db.IntegerProperty()
 
-    def delete(self):
-        service = backend.backendservice.backendservices()
+    def delete(self, handler):
+        logging.debug("StochOptimJobWrapper(cloudDatabaseID={0})".format(self.cloudDatabaseID))
+        if self.outData is not None and os.path.exists(self.outData):
+            shutil.rmtree(self.outData)
         
-        if self.zipFileName:
-            if os.path.exists(self.zipFileName):
+        if self.zipFileName is not None and os.path.exists(self.zipFileName):
                 os.remove(self.zipFileName)
 
         self.stop()
-        #service.deleteTaskLocal([self.pid])
+        
+        if self.resource in StochOptimJobWrapper.SUPPORTED_CLOUD_RESOURCES:
+            service = backend.backendservice.backendservices()
+            try:
+                user_data = handler.user_data
+                if self.resource == self.EC2_CLOUD_RESOURCE:
+                    bucketname = user_data.S3_bucket_name
+                    logging.debug('bucketname = {}'.format(bucketname))
+                    ec2_credentials = handler.user_data.getCredentials()
+                    # delete the folder that contains the replay sources
+                    logging.debug('deleting the rerun source folder {1} in bucket {0}'.format(bucketname, self.pid))
+                    delete_folder(bucketname, self.pid, ec2_credentials['EC2_ACCESS_KEY'], ec2_credentials['EC2_SECRET_KEY'])
+                    # delete the output tar file
+                    storage_agent = S3StorageAgent(bucket_name=bucketname,
+                                                   ec2_access_key=ec2_credentials['EC2_ACCESS_KEY'],
+                                                   ec2_secret_key=ec2_credentials['EC2_SECRET_KEY'])
+                    filename = 'output/' + self.cloudDatabaseID + '.tar'
+                    logging.debug('deleting the output tar file output/{1}.tar in bucket {0}'.format(bucketname, self.pid))
+                    storage_agent.delete_file(filename=filename)
+                    database = DynamoDB(access_key=ec2_credentials['EC2_ACCESS_KEY'],
+                                        secret_key=ec2_credentials['EC2_SECRET_KEY'])
+                elif self.resource == self.FLEX_CLOUD_RESOURCE:
+                    flex_queue_head_machine = user_data.get_flex_queue_head_machine()
+                    # delete the output tar file
+                    storage_agent = FlexStorageAgent(queue_head_ip=flex_queue_head_machine['ip'],
+                                                     queue_head_username=flex_queue_head_machine['username'],
+                                                     queue_head_keyfile=flex_queue_head_machine['keyfile'])
+                    filename = self.cloudDatabaseID + '.tar'
+                    storage_agent.delete_file(filename=filename)
+                    database = FlexDB(password=user_data.flex_db_password, ip=flex_queue_head_machine['ip'])
+                    service.deleteTasks(taskids=[(self.celeryPID, self.cloudDatabaseID)], database=database)
+                else:
+                    logging.error(traceback.format_exc())
+                    logging.error("UNKNOWN job.resource = {0}".format(self.resource))
+            except Exception as e:
+                logging.error(traceback.format_exc())
+                logging.error('Error: {}'.format(str(e)))
+                raise Exception('fail to delete cloud output.')
 
         super(StochOptimJobWrapper, self).delete()
 
@@ -218,6 +261,8 @@ class StochOptimJobWrapper(db.Model):
                     print result
                     print '**************************************************************************************'
                     return False
+            else:
+                raise Exception("Unknown job resource '{0}'".format(sef.resource))
     
     def mark_final_cloud_data(self):
         flag_file = os.path.join(self.outData, ".final-cloud")
@@ -387,7 +432,7 @@ class StochOptimPage(BaseHandler):
             job = StochOptimJobWrapper.get_by_id(jobID)
 
             if job.userId == self.user.user_id():
-                job.delete()
+                job.delete(self)
             else:
                 self.response.write(json.dumps({"status" : False,
                                                 "msg" : "No permissions to delete this job (this should never happen)"}))
