@@ -250,7 +250,7 @@ class InfrastructureManager(object):
             logging.info('Successfully sent request to backend server, reservation_id: {0}.'.format(reservation_id))
             return self.__generate_response(True, 'Succeeded in sending request to backend server.')
 
-    def synchronize_db(self, params):
+    def synchronize_db(self, params, force = False):
         last_time = None
         set_gap_large = False
         try:
@@ -279,13 +279,18 @@ class InfrastructureManager(object):
             logging.info('Time last synchronization: {0}'.format(last_time))
             logging.info('Time in between: {0}'.format(gap))
 
+            infrastructure = params[self.PARAM_INFRASTRUCTURE]
+            agent = self.agent_factory.create_agent(infrastructure)
+
+            if force:
+                VMStateModel.synchronize(agent = agent, parameters = params)
+
             if gap < backend_handler.SynchronizeDB.PAUSE + 1:
                 logging.info('Less than {0} seconds to synchronize db.'.format(backend_handler.SynchronizeDB.PAUSE))
                 return
 
             logging.info('Start synchronize db every {0} seconds.'.format(backend_handler.SynchronizeDB.PAUSE))
-            infrastructure = params[self.PARAM_INFRASTRUCTURE]
-            agent = self.agent_factory.create_agent(infrastructure)
+
             from_fields = {
                 'op': 'start_db_syn',
                 'agent': pickle.dumps(agent),

@@ -138,7 +138,7 @@ class UserData(db.Model):
     def __get_all_vms(self, params):
         try:
             service = backendservices()
-            result = service.describe_machines_from_db(params)
+            result = service.describe_machines_from_db(params, force = True)
             return result
         except Exception as e:
             logging.error(str(e))
