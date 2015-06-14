@@ -417,7 +417,7 @@ class backendservices(object):
             res = i.prepare_instances(params)
 
             logging.debug("prepare_flex_cloud_machines : exiting method with result : %s", str(res))
-            return True, None
+            return True, None, ids
 
         except Exception, e:
             traceback.print_exc()

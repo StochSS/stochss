@@ -170,21 +170,16 @@ class UserData(db.Model):
             logging.debug('flex: all_vms_map =\n{0}'.format(all_vms_map))
 
             for machine in flex_cloud_machine_info:
-                ip = machine['ip']
+                idN = machine['database_id']
+                vms = VMStateModel.get_by_id(idN)
                 logging.debug('all_vms_map = {0}'.format(all_vms_map))
-                if ip in all_vms_map:
-                    if all_vms_map[ip]['reservation_id'] == self.reservation_id:
-                        machine['state'] = all_vms_map[ip]['state']
-                        machine['description'] = all_vms_map[ip]['description']
-                    else:
-                        logging.error('From VMStateModel, reservation_id = {} != user_data.reservation_id'.format(
-                            all_vms_map[ip]['reservation_id']
-                        ))
-                        machine['state'] = VMStateModel.STATE_UNKNOWN
-                        machine['description'] = VMStateModel.STATE_UNKNOWN
-
+                if vms.res_id == self.reservation_id:
+                    machine['state'] = vms.state
+                    machine['description'] = vms.description
                 else:
-                    logging.error('Could not find machine with ip : {0}'.format(ip))
+                    logging.error('From VMStateModel, reservation_id = {0} != user_data.reservation_id'.format(
+                        vms.res_id
+                    ))
                     machine['state'] = VMStateModel.STATE_UNKNOWN
                     machine['description'] = VMStateModel.STATE_UNKNOWN
 

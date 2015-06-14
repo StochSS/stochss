@@ -313,7 +313,13 @@ class CredentialsPage(BaseHandler):
 
         service = backendservices(infrastructure=AgentTypes.FLEX)
 
-        res, msg = service.prepare_flex_cloud_machines(params)
+        res, msg, ids = service.prepare_flex_cloud_machines(params)
+
+        for idN, machine in zip(ids, flex_cloud_machine_info):
+            machine['database_id'] = idN
+
+        self.user_data.set_flex_cloud_machine_info(flex_cloud_machine_info)
+        self.user_data.put()
         if res == True:
             result = {'flex_cloud_status': True,
                       'flex_cloud_info_msg': 'Preparing Flex Cloud'}
@@ -430,6 +436,16 @@ class CredentialsPage(BaseHandler):
             self.user_data.update_flex_cloud_machine_info_from_db()
             flex_cloud_machine_info = self.user_data.get_flex_cloud_machine_info()
 
+            if self.user_data.is_flex_cloud_info_set:
+                for machine in flex_cloud_machine_info:
+                    if machine['state'] != 'terminated':
+                        terminated = False
+                        
+                if terminated:
+                    self.deregister_flex_cloud(self.user.user_id())
+
+            self.user_data.update_flex_cloud_machine_info_from_db()
+            flex_cloud_machine_info = self.user_data.get_flex_cloud_machine_info()
         # We must ensure queue head is first element in this list for GUI to work properly
         flex_cloud_machine_info = sorted(flex_cloud_machine_info, key=lambda x: x['queue_head'], reverse=True)
 

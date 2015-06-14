@@ -128,11 +128,12 @@ class VMStateModel(db.Model):
         '''
         try:
             entities = VMStateModel._get_all_entities(params)
-            entities.filter('state !=', VMStateModel.STATE_TERMINATED)
+            #entities.filter('state !=', VMStateModel.STATE_TERMINATED)
 
             all_vms = []
             for e in entities:
                 vm_dict = {
+                    "database_id" : e.key().id(),
                     "ins_id": e.ins_id,
                     "instance_type": e.ins_type,
                     "state": e.state,
