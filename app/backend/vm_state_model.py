@@ -382,7 +382,7 @@ class VMStateModel(db.Model):
         instance_list = agent.describe_instances(parameters)
 
         entities = VMStateModel._get_all_entities(params=parameters)
-        entities.filter('state !=', VMStateModel.STATE_TERMINATED).filter('state !=', VMStateModel.STATE_CREATING)
+        #entities.filter('state !=', VMStateModel.STATE_TERMINATED).filter('state !=', VMStateModel.STATE_CREATING)
 
         for e in entities:
             found = False

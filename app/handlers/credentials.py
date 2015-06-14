@@ -437,8 +437,9 @@ class CredentialsPage(BaseHandler):
             flex_cloud_machine_info = self.user_data.get_flex_cloud_machine_info()
 
             if self.user_data.is_flex_cloud_info_set:
+                terminated = True
                 for machine in flex_cloud_machine_info:
-                    if machine['state'] != 'terminated':
+                    if machine['state'] != 'terminated' and machine['state'] != 'inaccessible':
                         terminated = False
                         
                 if terminated:
@@ -446,6 +447,9 @@ class CredentialsPage(BaseHandler):
 
             self.user_data.update_flex_cloud_machine_info_from_db()
             flex_cloud_machine_info = self.user_data.get_flex_cloud_machine_info()
+
+            context['flex_cloud_status'] = False
+            context['flex_cloud_info_msg'] = 'Flex Cloud failed to deploy'
         # We must ensure queue head is first element in this list for GUI to work properly
         flex_cloud_machine_info = sorted(flex_cloud_machine_info, key=lambda x: x['queue_head'], reverse=True)
 
