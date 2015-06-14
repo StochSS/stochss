@@ -445,11 +445,11 @@ class CredentialsPage(BaseHandler):
                 if terminated:
                     self.deregister_flex_cloud(self.user.user_id())
 
-            self.user_data.update_flex_cloud_machine_info_from_db()
-            flex_cloud_machine_info = self.user_data.get_flex_cloud_machine_info()
+                    context['flex_cloud_status'] = False
+                    context['flex_cloud_info_msg'] = 'Flex Cloud failed to deploy'
 
-            context['flex_cloud_status'] = False
-            context['flex_cloud_info_msg'] = 'Flex Cloud failed to deploy'
+                    self.user_data.update_flex_cloud_machine_info_from_db()
+                    flex_cloud_machine_info = self.user_data.get_flex_cloud_machine_info()
         # We must ensure queue head is first element in this list for GUI to work properly
         flex_cloud_machine_info = sorted(flex_cloud_machine_info, key=lambda x: x['queue_head'], reverse=True)
 
