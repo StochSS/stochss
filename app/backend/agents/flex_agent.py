@@ -201,7 +201,7 @@ class FlexAgent(BaseAgent):
 
         state = VMStateModel.STATE_UNKNOWN
         try:
-            command = '[ -d ~/stochss ] && echo yes'
+            command = '[ -d ~/stochss ] && true'
             cmd = self.get_remote_command_string(ip=ip, username=username,
                                                  keyfile=keyfile,
                                                  command=command)

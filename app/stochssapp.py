@@ -170,6 +170,8 @@ class UserData(db.Model):
             logging.debug('flex: all_vms_map =\n{0}'.format(all_vms_map))
 
             for machine in flex_cloud_machine_info:
+                if 'database_id' not in machine:
+                    continue
                 idN = machine['database_id']
                 vms = VMStateModel.get_by_id(idN)
                 logging.debug('all_vms_map = {0}'.format(all_vms_map))
@@ -186,7 +188,7 @@ class UserData(db.Model):
             for machine in flex_cloud_machine_info:
                 machine['key_file_id'] = int(machine['key_file_id'])
 
-            logging.info('After updating from VMStateModel, flex_cloud_machine_info =\n{0}'.format(
+            logging.debug('After updating from VMStateModel, flex_cloud_machine_info =\n{0}'.format(
                                                                 pprint.pformat(flex_cloud_machine_info)))
 
             # Update Flex Cloud Status
@@ -199,7 +201,7 @@ class UserData(db.Model):
             self.set_flex_cloud_machine_info(flex_cloud_machine_info)
             self.put()
 
-            logging.info('valid_flex_cloud_info = {0}'.format(self.valid_flex_cloud_info))
+            logging.debug('valid_flex_cloud_info = {0}'.format(self.valid_flex_cloud_info))
 
         else:
             flex_cloud_machine_info = []

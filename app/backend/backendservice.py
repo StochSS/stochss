@@ -72,7 +72,7 @@ class backendservices(object):
     def submit_cloud_task(self, params, agent_type, ec2_access_key=None, ec2_secret_key=None, task_id=None,
                     instance_type=None, cost_replay=False, database=None, flex_credentials=None, storage_agent=None):
 
-        logging.info('agent_type = {0}'.format(agent_type))
+        logging.debug('agent_type = {0}'.format(agent_type))
         logging.debug('params =\n{}\n\n'.format(pprint.pformat(params)))
         logging.debug('ec2_access_key = {0}, ec2_secret_key = {1}'.format(ec2_access_key, ec2_secret_key))
         logging.debug('flex_credentials = {}'.format(flex_credentials))
@@ -117,7 +117,7 @@ class backendservices(object):
         if not task_id:
             task_id = str(uuid.uuid4())
 
-        logging.info('submit_cloud_task: task_id = {}'.format(task_id))
+        logging.debug('submit_cloud_task: task_id = {}'.format(task_id))
 
         result = helper.execute_cloud_task(params=params, agent_type=agent_type,
                                            ec2_access_key=ec2_access_key,
@@ -143,7 +143,7 @@ class backendservices(object):
         '''
 
         try:
-            logging.info("executeTaskLocal : inside method with params : %s ",
+            logging.debug("executeTaskLocal : inside method with params : %s ",
                          str(params))
             res = {}
 
@@ -170,7 +170,7 @@ class backendservices(object):
                 paramstr, xmlfilepath, uuid_str, stdout=res['stdout'], stderr=res['stderr'],
                 backenddir=os.path.abspath(os.path.dirname(__file__)))
 
-            logging.info("STOCHKIT_EXEX_STR: {0}".format(stochkit_exec_str))
+            logging.debug("STOCHKIT_EXEX_STR: {0}".format(stochkit_exec_str))
             logging.debug("executeTaskLocal : Spawning StochKit Task. String : %s",
                           stochkit_exec_str)
 
@@ -186,7 +186,7 @@ class backendservices(object):
             logging.debug("executeTaskLocal : Output file - %s", absolute_file_path)
             res['output'] = absolute_file_path
 
-            logging.info("executeTaskLocal: exiting with result : %s", str(res))
+            logging.debug("executeTaskLocal: exiting with result : %s", str(res))
             return res
 
         except Exception as e:
@@ -201,7 +201,7 @@ class backendservices(object):
         returns a dictionary as {"pid1":"status", "pid2":"status", "pid3":"status"}
         '''
         res = {}
-        logging.info("checkTaskStatusLocal : inside with params {0}".format(pids))
+        logging.debug("checkTaskStatusLocal : inside with params {0}".format(pids))
         try:
             for pid in pids:
                 try:
@@ -209,7 +209,7 @@ class backendservices(object):
                     res[pid] = True
                 except Exception, e:
                     res[pid] = False
-            logging.info("checkTaskStatusLocal : exiting with result : {0}".format(res))
+            logging.debug("checkTaskStatusLocal : exiting with result : {0}".format(res))
             return res
         except Exception as e:
             logging.error("checkTaskStatusLocal: Exiting with error : {0}".format(e))
@@ -234,7 +234,7 @@ class backendservices(object):
          a dictionary of the form :
          {"taskid":"result:"","state":""} 
         '''
-        logging.info('describeTask: params =\n{}'.format(pprint.pformat(params)))
+        logging.debug('describeTask: params =\n{}'.format(pprint.pformat(params)))
         if not 'agent_type' in params:
             logging.error('Invalid agent type!')
             return None
@@ -275,7 +275,7 @@ class backendservices(object):
         for id_pair in id_pairs:
             task_id = id_pair[0]
             database_id = id_pair[1]
-            logging.info("stopTasks calling removeTask('{0}')".format(task_id))
+            logging.debug("stopTasks calling removeTask('{0}')".format(task_id))
             remove_task(task_id)
             db_ids.append(database_id)
         # Then we need to return the final description of the tasks
@@ -306,7 +306,7 @@ class backendservices(object):
         if not database:
             database = DynamoDB(os.environ["AWS_ACCESS_KEY_ID"], os.environ["AWS_SECRET_ACCESS_KEY"])
 
-        logging.info("deleteTasks : inside method with taskids : %s", taskids)
+        logging.debug("deleteTasks : inside method with taskids : %s", taskids)
         try:
             for taskid_pair in taskids:
                 print 'deleteTasks: removing task {0}'.format(str(taskid_pair))
@@ -314,7 +314,7 @@ class backendservices(object):
                 database.removetask(JobDatabaseConfig.TABLE_NAME,
                                     taskid_pair[1])
                 # this removes task information from DB. ToDo: change the name of method
-            logging.info("deleteTasks: All tasks removed")
+            logging.debug("deleteTasks: All tasks removed")
         except Exception, e:
             logging.error("deleteTasks : exiting with error : %s", str(e))
 
@@ -325,21 +325,21 @@ class backendservices(object):
         Terminates the processes associated with the PID. 
         This methods ignores the PID which are  not active.
         """
-        logging.info("deleteTaskLocal : inside method with pids : %s", pids)
+        logging.debug("deleteTaskLocal : inside method with pids : %s", pids)
         for pid in pids:
             try:
                 logging.error("KILL TASK {0}".format(pid))
                 os.kill(pid, signal.SIGTERM)
             except Exception, e:
                 logging.error("deleteTaskLocal : couldn't kill process. error: %s", str(e))
-        logging.info("deleteTaskLocal : exiting method")
+        logging.debug("deleteTaskLocal : exiting method")
 
 
     def __create_dynamodb_stochss_table(self, ec2_access_key, ec2_secret_key):
         database = DynamoDB(ec2_access_key, ec2_secret_key)
         result = database.createtable(JobDatabaseConfig.TABLE_NAME)
         if result:
-            logging.info("creating table {0}".format(JobDatabaseConfig.TABLE_NAME))
+            logging.debug("creating table {0}".format(JobDatabaseConfig.TABLE_NAME))
         else:
             logging.error("FAILED on creating table {0}".format(JobDatabaseConfig.TABLE_NAME))
 
@@ -353,8 +353,8 @@ class backendservices(object):
     def __create_vm_state_model_entries(self, infrastructure, num_vms,
                                         ec2_secret_key, ec2_access_key,
                                         user_id, reservation_id):
-        logging.info('__create_vm_state_model_entries')
-        logging.info('num_vms = {0} user_id = {1} reservation_id = {2}'.format(num_vms, user_id, reservation_id))
+        logging.debug('__create_vm_state_model_entries')
+        logging.debug('num_vms = {0} user_id = {1} reservation_id = {2}'.format(num_vms, user_id, reservation_id))
 
         ids = []
         for _ in xrange(num_vms):
@@ -367,11 +367,11 @@ class backendservices(object):
             vm_state.put()
             ids.append(vm_state.key().id())
 
-        logging.info('__create_vm_state_model_entries: ids = {0}'.format(ids))
+        logging.debug('__create_vm_state_model_entries: ids = {0}'.format(ids))
         return ids
 
     def prepare_flex_cloud_machines(self, params, blocking=False):
-        logging.info("prepare_flex_cloud_machines : params : \n%s", pprint.pformat(params))
+        logging.debug("prepare_flex_cloud_machines : params : \n%s", pprint.pformat(params))
 
         try:
             # NOTE: We are forcing blocking mode within the InfrastructureManager class
@@ -429,7 +429,7 @@ class backendservices(object):
         '''
         This method instantiates EC2 vm instances
         '''
-        logging.info("start_ec2_vms : inside method with params : \n%s", pprint.pformat(params))
+        logging.debug("start_ec2_vms : inside method with params : \n%s", pprint.pformat(params))
         try:
             # make sure that any keynames we use are prefixed with stochss so that
             #we can do a terminate all based on keyname prefix
@@ -458,7 +458,7 @@ class backendservices(object):
             infrastructure = self.__get_required_parameter(parameter_key='infrastructure', params=params)
             reservation_id = self.__get_required_parameter(parameter_key='reservation_id', params=params)
 
-            logging.info('ec2: reservation_id = {0}'.format(reservation_id))
+            logging.debug('ec2: reservation_id = {0}'.format(reservation_id))
 
             if 'credentials' in params:
                 if 'EC2_ACCESS_KEY' in params['credentials'] and 'EC2_SECRET_KEY' in params['credentials']:
@@ -476,12 +476,12 @@ class backendservices(object):
             num_vms = 0
             if 'vms' in params:
                 for vm in params['vms']:
-                    logging.info('vm: {0}, num: {1}'.format(vm['instance_type'], vm['num_vms']))
+                    logging.debug('vm: {0}, num: {1}'.format(vm['instance_type'], vm['num_vms']))
                     num_vms += vm['num_vms']
             if 'head_node' in params:
                 num_vms += 1
 
-            logging.info('num = {0}'.format(num_vms))
+            logging.debug('num = {0}'.format(num_vms))
 
             ids = self.__create_vm_state_model_entries(ec2_access_key=ec2_access_key, ec2_secret_key=ec2_secret_key,
                                                        infrastructure=infrastructure, num_vms=num_vms, user_id=user_id,
@@ -494,7 +494,7 @@ class backendservices(object):
             # 5, check and create stochss table exists if it does not exist
             self.__create_dynamodb_stochss_table(ec2_access_key=ec2_access_key, ec2_secret_key=ec2_secret_key)
 
-            logging.info("start_ec2_vms : exiting method with result : %s", str(res))
+            logging.debug("start_ec2_vms : exiting method with result : %s", str(res))
             return True, None
 
         except Exception, e:
@@ -511,7 +511,7 @@ class backendservices(object):
             ip = flex_queue_head_machine['ip']
             url = "https://{ip}/state".format(ip=ip)
             response = json.loads(urllib2.urlopen(url).read())
-            logging.info('Response from flex queue head - GET {url} :\n{resp}'.format(url=url,
+            logging.debug('Response from flex queue head - GET {url} :\n{resp}'.format(url=url,
                                                                                       resp=pprint.pformat(response)))
             if response['state'] == 'running' and response['is_queue_head'] == True \
                     and response['queue_head_ip'] == ip:
@@ -573,7 +573,7 @@ class backendservices(object):
         key_prefix = AgentConfig.get_agent_key_prefix(agent_type=self.infrastructure,
                                                       key_prefix=params.get('key_prefix', ''))
         try:
-            logging.info("Stopping compute nodes with key_prefix: {0}".format(key_prefix))
+            logging.debug("Stopping compute nodes with key_prefix: {0}".format(key_prefix))
             i = InfrastructureManager(blocking=blocking)
             res = i.deregister_instances(parameters=params, terminate=True)
             ret = True
@@ -597,7 +597,7 @@ class backendservices(object):
 
         key_prefix = AgentConfig.get_agent_key_prefix(agent_type=self.infrastructure,
                                                       key_prefix=params.get('key_prefix', ''))
-        logging.info('key_prefix = {0}'.format(key_prefix))
+        logging.debug('key_prefix = {0}'.format(key_prefix))
 
         params["key_prefix"] = key_prefix
         try:
@@ -635,10 +635,10 @@ class backendservices(object):
             logging.error("validateCredentials: credentials EC2_ACCESS_KEY not set")
             return False
 
-        logging.info("validateCredentials: inside method with params : %s", str(params))
+        logging.debug("validateCredentials: inside method with params : %s", str(params))
         try:
             i = InfrastructureManager()
-            logging.info("validateCredentials: exiting with result : %s", str(i))
+            logging.debug("validateCredentials: exiting with result : %s", str(i))
             return i.validate_credentials(params)
 
         except Exception, e:
@@ -688,7 +688,7 @@ class backendservices(object):
 
                 else:
                     queue_head = machine
-                    logging.info("queue head = {0}".format(queue_head))
+                    logging.debug("queue head = {0}".format(queue_head))
                     cmd = "[ -d ~/stochss ] && echo yes".format(username=queue_head["username"])
                     remote_cmd = backendservices.__get_remote_command_string(command=cmd,
                                                                             keyfile=keyfile,
@@ -696,9 +696,9 @@ class backendservices(object):
                                                                             ip=queue_head["ip"])
                     result = os.system(remote_cmd)
 
-                    logging.info("Result of \n{0} \n= {1}".format(remote_cmd, result))
+                    logging.debug("Result of \n{0} \n= {1}".format(remote_cmd, result))
                     if result == 0:
-                        logging.info('Validation successful!')
+                        logging.debug('Validation successful!')
                     else:
                         error_message = 'Could not successfully connect to queue head with ip: {ip}!'.format(ip=queue_head['ip'])
                         logging.error(error_message)
@@ -730,8 +730,8 @@ class backendservices(object):
          A dictionary whose keys are job names and whose values are output sizes of those jobs.
          The output size is either the size specified in bytes or None if no output was found.
         '''
-        logging.info('agent_type = {}'.format(agent_type))
-        logging.info("getSizeOfOutputResults: inside method with output_urls: {0}".format(output_urls))
+        logging.debug('agent_type = {}'.format(agent_type))
+        logging.debug("getSizeOfOutputResults: inside method with output_urls: {0}".format(output_urls))
 
         if agent_type == AgentTypes.EC2:
             try:
@@ -797,14 +797,14 @@ class backendservices(object):
                                                         key_file=os.path.join(self.FLEX_SSH_KEYFILE_DIR, keyname),
                                                         command=command)
 
-                    logging.info('command = {}'.format(remote_cmd))
+                    logging.debug('command = {}'.format(remote_cmd))
                     handle = subprocess.Popen(shlex.split(remote_cmd), stdout=subprocess.PIPE, stderr=subprocess.PIPE)
                     stdout, stderr = handle.communicate()
 
                     match_object = re.search(pattern='([^\s]+)(\s+)([^\s]+)', string=stdout)
                     if match_object:
                         output_size = int(match_object.group(1))
-                        logging.info('For job_id = {0}, size = {1}'.format(job_id, output_size))
+                        logging.debug('For job_id = {0}, size = {1}'.format(job_id, output_size))
                         result[job_id] = output_size
                     else:
                         result[job_id] = None
@@ -829,13 +829,13 @@ class backendservices(object):
         @return: True : if successful or False : if failed 
         '''
         try:
-            logging.info("fetchOutput: taskid: {0} and url: {1}".format(taskid, outputurl))
+            logging.debug("fetchOutput: taskid: {0} and url: {1}".format(taskid, outputurl))
 
             filename = "{0}.tar".format(taskid)
             logging.debug("fetchOutput : the name of file to be fetched : {0}".format(filename))
 
             if outputurl.startswith('scp://'):
-                logging.info('output uploaded via FlexStorageAgent')
+                logging.debug('output uploaded via FlexStorageAgent')
 
                 match_object = re.search(pattern='scp://([^:@]+)@([^:@]+):([^:@]+):([^:@]+)', string=outputurl)
                 username = match_object.group(1)
@@ -850,11 +850,11 @@ class backendservices(object):
                                                                                  output_file=output_tar_file_path),
                                            target=filename)
 
-                logging.info(scp_command)
+                logging.debug(scp_command)
                 os.system(scp_command)
 
             elif outputurl.startswith('https://') or outputurl.startswith('http://'):
-                logging.info('output uploaded via S3StorageAgent')
+                logging.debug('output uploaded via S3StorageAgent')
 
                 logging.debug("url to be fetched : {0}".format(taskid))
                 fetch_url_cmd_str = "curl --remote-name {0}".format(outputurl)
