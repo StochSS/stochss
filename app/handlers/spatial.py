@@ -423,8 +423,8 @@ class SpatialPage(BaseHandler):
                 else:
                     raise Exception("Unknown resource {0}".format(data["resource"]))
                 self.response.write(json.dumps({"status" : True,
-                                            "msg" : "Job launched",
-                                            "id" : result.key().id()}))
+                                                "msg" : "Job launched",
+                                                "id" : result.key().id()}))
                 return
             except Exception as e:
                 logging.exception(e)

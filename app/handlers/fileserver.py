@@ -214,25 +214,25 @@ class BackboneFileServerInterface(BaseHandler):
             self.response.write(json.dumps(ffile))
 
     def post(self):
-        jsonJob = json.loads(self.request.body)
-        job = JobManager.createJob(self, jsonJob)
-      
-        print 'CREATE', job["id"]
+        raise Exception("This function is totally untested")
+
+        jsonData = json.loads(self.request.body)
+        data = FileManager.createFile(self, jsonData)
       
         self.response.content_type = "application/json"
-        self.response.write(json.dumps(job))
+        self.response.write(json.dumps(data))
 
     def put(self):
+        raise Exception("This function is totally untested")
+
         req = request.uri.split('/')[-1]
 
-        jobId = int(req)
-        jsonJob = json.loads(self.request.body)
-        job = JobManager.updateJob(self, jsonJob)
+        dataId = int(req)
+        jsonData = json.loads(self.request.body)
+        data = FileManager.updateFile(self, jsonData)
         
-        print 'UPDATE', req, job["id"]
-
         self.response.content_type = "application/json"
-        self.response.write(json.dumps(job))
+        self.response.write(json.dumps(data))
 
     def delete(self, key = None, fileID = None):
         self.response.content_type = 'application/json'
