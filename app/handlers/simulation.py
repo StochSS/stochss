@@ -50,25 +50,25 @@ jinja_environment = jinja2.Environment(autoescape=True,
                                        loader=(jinja2.FileSystemLoader(os.path.join(os.path.dirname(__file__), '../templates'))))
 
 
-class JobWrapper(db.Model):
-    """ A wrapper around the Job object """
-    # user_id =  db.StringProperty()
-    # job_id = db.StringProperty()
-    # job_type = db.StringProperty()
-    # job = ObjectProperty()
-
-class Job():
-    """ Representation of a Job in StochSS. A Job consists of a collection of Tasks. """
-
-    def __init__(self):
-        # tasks is a dict where the task_id is key and a task object is the value. 
-        self.tasks = {}
-
-class Task():
-    """ Representation of a Task in StochSS """
-
-    def __init__(self,task_id = None):
-        self.task_id = task_id
+#class JobWrapper(db.Model):
+#    """ A wrapper around the Job object """
+#    # user_id =  db.StringProperty()
+#    # job_id = db.StringProperty()
+#    # job_type = db.StringProperty()
+#    # job = ObjectProperty()
+#
+#class Job():
+#    """ Representation of a Job in StochSS. A Job consists of a collection of Tasks. """
+#
+#    def __init__(self):
+#        # tasks is a dict where the task_id is key and a task object is the value. 
+#        self.tasks = {}
+#
+#class Task():
+#    """ Representation of a Task in StochSS """
+#
+#    def __init__(self,task_id = None):
+#        self.task_id = task_id
 
 
 class StochKitJobWrapper(db.Model):
@@ -99,13 +99,12 @@ class StochKitJobWrapper(db.Model):
             if os.path.exists(job.stochkit_job.zipFileName):
                 os.remove(job.stochkit_job.zipFileName)
         
-#         #delete the ouput results of execution locally, if exists.       
-#         if stochkit_job.output_location:
-#             if os.path.exists(stochkit_job.output_location):
-#                 shutil.rmtree(stochkit_job.output_location)
+         #delete the ouput results of execution locally, if exists.       
+         if stochkit_job.output_location:
+             if os.path.exists(stochkit_job.output_location):
+                 shutil.rmtree(stochkit_job.output_location)
 
         if stochkit_job.resource == 'Local':
-            output_path = os.path.join(os.path.dirname(__file__), '../output/joblib/boto')
             service.deleteTaskLocal([stochkit_job.pid])
             
             time.sleep(0.25)

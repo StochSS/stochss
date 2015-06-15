@@ -33,23 +33,21 @@ class backendservices(object):
 
     # Class Constants
     INFRA_SUPPORTED = [AgentTypes.EC2, AgentTypes.FLEX]
+    
+    FLEX_CLOUD_RESOURCE = "{0}-cloud".format(AgentTypes.FLEX)
+    EC2_CLOUD_RESOURCE = "{0}-cloud".format(AgentTypes.EC2)
+    SUPPORTED_CLOUD_RESOURCES = [EC2_CLOUD_RESOURCE, FLEX_CLOUD_RESOURCE]
 
     # Hack
     # TODO: Query File Wrapper to get flex ssh key file dirname
     FLEX_SSH_KEYFILE_DIR = os.path.abspath(os.path.join(os.path.dirname(__file__), '..', 'static', 'tmp'))
 
-    def __init__(self, **kwargs):
+    def __init__(self, handler):
         '''
-        constructor to set the path of various libraries and infra type
+        constructor
         '''
-        sys.path.append(os.path.join(os.path.dirname(__file__), 'lib/boto'))
-        sys.path.append(os.path.join(os.path.dirname(__file__), 'lib/celery'))
-        sys.path.append(os.path.join(os.path.dirname(__file__),
-                                     '/Library/Python/2.7/site-packages/amqp'))
+        self.handler = handler
 
-        self.infrastructure = kwargs.get("infrastructure", AgentTypes.EC2)
-        if self.infrastructure not in backendservices.INFRA_SUPPORTED:
-            raise Exception("Infrastructure {0} not supported!".format(self.infrastructure))
 
     def deregister_flex_cloud(self, parameters, blocking=True):
         try:

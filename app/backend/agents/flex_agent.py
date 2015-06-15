@@ -106,6 +106,7 @@ class FlexAgent(BaseAgent):
         for machine in parameters[self.PARAM_FLEX_CLOUD_MACHINE_INFO]:
             ip = machine['ip']
             state = self.get_instance_state(ip=ip, username=machine['username'], keyfile=machine['keyfile'])
+            logging.info('describe_unprepared_instances() ip {0} has state'.format(ip, state))
 
             if state == FlexVMState.UNPREPARED:
                 instance_ids.append(self.__get_flex_instance_id(ip))
