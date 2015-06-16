@@ -64,7 +64,7 @@ class SensitivityJobWrapper(db.Model):
 
             elif self.resource in backendservices.SUPPORTED_CLOUD_RESOURCES:
                 service = backendservices(handler)
-                result = service.stopTasks({'ids': [(self.celeryPID, self.cloudDatabaseID)]})
+                result = service.stopTask(self)
                 
                 if result and result[self.cloudDatabaseID]:
                     final_cloud_result = result[self.cloudDatabaseID]
@@ -90,7 +90,7 @@ class SensitivityJobWrapper(db.Model):
             os.remove(self.zipFileName)
 
         if self.resource is not None and self.resource in backservices.SUPPORTED_CLOUD_RESOURCES:
-            service.deleteTasks(taskids=[(self.celeryPID, self.cloudDatabaseID)])
+            service.deleteTask(self)
 
         super(SensitivityJobWrapper, self).delete()
 

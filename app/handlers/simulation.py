@@ -58,7 +58,8 @@ class StochKitJobWrapper(db.Model):
     stdout = db.StringProperty()
     stderr = db.StringProperty()
     
-    cloud_id = db.StringProperty()
+    celeryPID = db.StringProperty()
+    cloudDatabaseID = db.StringProperty()
 
     def stop(self, handler):
         # TODO: Call the backend to kill and delete the job and all associated files.
@@ -66,13 +67,8 @@ class StochKitJobWrapper(db.Model):
 
         if stochkit_job.resource.lower() == 'local':
             service.deleteTaskLocal([stochkit_job.pid])
-            
-            # Should we check after we stop a job? Does that make sense? Or should we just send a signal and bail?
-            #time.sleep(0.25)
-            
-            #status = service.checkTaskStatusLocal([stochkit_job.pid]).values()[0]
         else:
-            service.deleteTasks(taskids = [(stochkit_job.celery_pid, stochkit_job.pid)])
+            service.stopTask(self)
 
     def delete(self, handler):
         self.stop(handler)
@@ -92,7 +88,7 @@ class StochKitJobWrapper(db.Model):
 
         if stochkit_job.resource.lower() != 'local':
             filename = 'output/' + stochkit_job.pid + '.tar'
-            service.delete_file(filename=filename)
+            service.deleteTask(self)
             # There's gonna be an error! The Flex cloud files were stored at this path
             #filename = stochkit_job.pid + '.tar'
             #storage_agent.delete_file(filename=filename)
