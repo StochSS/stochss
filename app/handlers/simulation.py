@@ -64,12 +64,13 @@ class StochKitJobWrapper(db.Model):
         # TODO: Call the backend to kill and delete the job and all associated files.
         service = backendservices(handler)
 
-        if stochkit_job.resource == 'Local':
+        if stochkit_job.resource.lower() == 'local':
             service.deleteTaskLocal([stochkit_job.pid])
             
-            time.sleep(0.25)
+            # Should we check after we stop a job? Does that make sense? Or should we just send a signal and bail?
+            #time.sleep(0.25)
             
-            status = service.checkTaskStatusLocal([stochkit_job.pid]).values()[0]
+            #status = service.checkTaskStatusLocal([stochkit_job.pid]).values()[0]
         else:
             service.deleteTasks(taskids = [(stochkit_job.celery_pid, stochkit_job.pid)])
 

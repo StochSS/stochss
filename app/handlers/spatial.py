@@ -146,7 +146,7 @@ class SpatialJobWrapper(db.Model):
             shutil.rmtree(self.outData)
 
         # delete on cloud
-        if self.resource in backendservices.SUPPORTED_CLOUD_RESOURCES:
+        if self.resource is not None and self.resource in backendservices.SUPPORTED_CLOUD_RESOURCES:
             service.deleteTasks(taskids=[(self.celeryPID, self.cloud_id)])
         
         super(SpatialJobWrapper, self).delete()
@@ -787,8 +787,6 @@ class SpatialPage(BaseHandler):
         service = backendservices(self)
         if not service.isOneOrMoreComputeNodesRunning():
             raise Exception('No cloud computing resources found')
-            return {"status" : False,
-                       "msg" : 'No cloud computing resources found'}
 
         # If the seed is negative, this means choose a seed >= 0 randomly
         if int(data['seed']) < 0:
