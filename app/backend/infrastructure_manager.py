@@ -17,9 +17,6 @@ import logging
 import os
 import datetime
 
-__author__ = 'hiranya'
-__email__ = 'hiranya@appscale.com'
-
 
 class InfrastructureManager(object):
     """

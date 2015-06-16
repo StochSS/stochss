@@ -105,7 +105,7 @@ class StochKitJobWrapper(db.Model):
                  shutil.rmtree(stochkit_job.output_location)
 
         if stochkit_job.resource == 'Local':
-            service.deleteTaskLocal([stochkit_job.pid])
+            service.stopTaskLocal([stochkit_job.pid])
             
             time.sleep(0.25)
             

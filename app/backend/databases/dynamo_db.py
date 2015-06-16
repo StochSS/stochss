@@ -1,8 +1,3 @@
-'''
-Created on Dec 11, 2014
-
-@author: gumengyuan
-'''
 import boto.dynamodb
 from base_db import BaseDB
 from boto.dynamodb import condition

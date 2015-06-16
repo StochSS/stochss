@@ -53,8 +53,7 @@ class S3StorageAgent(BaseStorageAgent):
         s3_bucket = self.__get_s3_bucket()
 
         if s3_bucket == None:
-            logging.error('Could not fetch bucket with name {} from S3!'.format(self.bucket_name))
-            return
+            raise Exception('Could not fetch bucket with name {} from S3!'.format(self.bucket_name))
 
         k = Key(s3_bucket, filename)
         if k.exists():

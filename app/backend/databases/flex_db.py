@@ -1,6 +1,3 @@
-__author__ = 'Dibyendu Nath'
-__email__ = 'dnath@cs.ucsb.edu'
-
 import logging
 import os
 import pprint

@@ -73,8 +73,8 @@ class SensitivityJobWrapper(db.Model):
 
         service = backendservices()
         if self.resource == 'Local':
-            logging.debug('service.deleteTaskLocal([{0}])'.format(self.pid))
-            service.deleteTaskLocal([self.pid])
+            logging.debug('service.stopTaskLocal([{0}])'.format(self.pid))
+            service.stopTaskLocal([self.pid])
             time.sleep(0.25)
             status = service.checkTaskStatusLocal([self.pid]).values()[0]
             logging.debug('status = service.checkTaskStatusLocal([self.pid]).values()[0] = {0}'.format(status))

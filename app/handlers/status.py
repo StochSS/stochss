@@ -64,7 +64,7 @@ class StatusPage(BaseHandler):
                 # TODO: Call the backend to kill and delete the job and all associated files.
                 try:
                     if stochkit_job.resource == 'Local':
-                        service.deleteTaskLocal([stochkit_job.pid])
+                        service.stopTaskLocal([stochkit_job.pid])
 
                         time.sleep(0.25)
 
