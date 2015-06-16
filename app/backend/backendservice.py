@@ -66,23 +66,27 @@ class backendservices(object):
 
     def get_database(self, job):
         ''' Get a database backend for this job's resource type'''
+        logging.debug("get_database() job.resource = {0}".format(job.resource))
         # Use cached handles if we can
         if job.resource in self.database_connections:
+            logging.debug("get_database() returning cached connection to {0}".format(job.resource))
             return self.database_connections[job.resource]
         # Make a new connection
-        if job.resource == self.FLEX_CLOUD_RESOURCE:
+        if job.resource == self.EC2_CLOUD_RESOURCE:
             params = self.get_credentials()
             #os.environ["AWS_ACCESS_KEY_ID"] = params['AWS_ACCESS_KEY_ID']
             #os.environ["AWS_SECRET_ACCESS_KEY"] = params['AWS_SECRET_ACCESS_KEY']
             db = DynamoDB(access_key=params['EC2_ACCESS_KEY'],
                                 secret_key=params['EC2_SECRET_KEY'])
             self.database_connections[job.resource] = db
+            logging.debug("get_database() returning new connection to {0}".format(job.resource))
             return db
         elif job.resource == self.FLEX_CLOUD_RESOURCE:
             params = self.get_credentials()
             db = FlexDB(password=params['flex_db_password'],
                               ip=params['queue_head_ip'])
             self.database_connections[job.resource] = db
+            logging.debug("get_database() returning new connection to {0}".format(job.resource))
             return db
         else:
             raise Exception("Unknown job.resource = '{0}'".format(job.resource))
@@ -112,7 +116,8 @@ class backendservices(object):
         credentials = self.get_credentials()
 
         if agent_type == AgentTypes.EC2:
-            param['resource'] = self.EC2_CLOUD_RESOURCE
+            params['resource'] = self.EC2_CLOUD_RESOURCE
+            params['bucketname'] = self.user_data.S3_bucket_name
             if 'EC2_ACCESS_KEY' not in credentials or credentials['EC2_ACCESS_KEY'] == '':
                 raise Exception('EC2 Access Key is not valid!')
             if 'EC2_SECRET_KEY' not in credentials or credentials['EC2_SECRET_KEY'] == '':
@@ -127,6 +132,7 @@ class backendservices(object):
 
         elif agent_type == AgentTypes.FLEX:
             params['resource'] = self.FLEX_CLOUD_RESOURCE
+            params['bucketname'] = ''
 #            if flex_credentials == None or 'flex_queue_head' not in flex_credentials \
 #                    or 'flex_db_password' not in flex_credentials:
 #                raise Exception('Please pass valid Flex credentials!')
@@ -135,7 +141,9 @@ class backendservices(object):
             flex_queue_head_machine = self.user_data.get_flex_queue_head_machine()
             storage_agent = FlexStorageAgent(queue_head_ip=flex_queue_head_machine['ip'],
                                              queue_head_username=flex_queue_head_machine['username'],
-                                             queue_head_keyfile=flex_queue_head_machine['keyfile'])
+                                             queue_head_keyfile= os.path.join('/home', flex_queue_head_machine['username'], FlexConfig.QUEUE_HEAD_KEY_DIR, os.path.basename(flex_queue_head_machine['keyfile']))
+                                             )
+                                             #queue_head_keyfile=flex_queue_head_machine['keyfile'])
             ec2_access_key = None
             ec2_secret_key = None
 
@@ -254,11 +262,9 @@ class backendservices(object):
         '''
         @param job
         '''
+        logging.debug("describeTask() job = {0}".format(job))
         database = self.get_database(job)
-        try:
-            return database.describetask(job.cloudDatabaseID, JobDatabaseConfig.TABLE_NAME)
-        except Exception, e:
-            logging.error("describeTask : exiting with error : %s", str(e))
+        return database.describetask(job.cloudDatabaseID, JobDatabaseConfig.TABLE_NAME)
 
 
     def stopTasks(self, job):
@@ -297,13 +303,13 @@ class backendservices(object):
             # delete dynamodb entries for cost analysis
             database.remove_tasks_by_attribute(tablename=JobDatabaseConfig.COST_ANALYSIS_TABLE_NAME,
                                                attribute_name='uuid', attribute_value=job.cloudDatabaseID)
-        elif self.resource == backendservices.FLEX_CLOUD_RESOURCE:
+        elif job.resource == backendservices.FLEX_CLOUD_RESOURCE:
             flex_queue_head_machine = self.user_data.get_flex_queue_head_machine()
             # delete the output tar file
             storage_agent = FlexStorageAgent(queue_head_ip=flex_queue_head_machine['ip'],
                                              queue_head_username=flex_queue_head_machine['username'],
                                              queue_head_keyfile=flex_queue_head_machine['keyfile'])
-            filename = self.cloudDatabaseID + '.tar'
+            filename = job.cloudDatabaseID + '.tar'
             storage_agent.delete_file(filename=filename)
         else:
             raise Exception("Unknown job Resource '{0}'".format(self.resource))

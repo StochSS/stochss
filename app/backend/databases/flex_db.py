@@ -38,7 +38,7 @@ class FlexDB(BaseDB):
                                        connect_timeout=self.DB_CONNECT_TIMEOUT)
 
     def describetask(self, taskids, tablename):
-        logging.info('describetask: taskids = {0} tablename = {1}'.format(taskids, tablename))
+        logging.debug('describetask: taskids = {0} tablename = {1}'.format(taskids, tablename))
 
         db = None
         results = {}
@@ -47,7 +47,12 @@ class FlexDB(BaseDB):
 
         try:
             if len(taskids) > 0 and self.tableexists(tablename):
-                taskid_list = "({})".format(','.join(map(lambda x: "'{}'".format(x), taskids)))
+                if isinstance(taskids, list):
+                    logging.debug("describetask() list taskids = '{0}'".format(taskids))
+                    taskid_list = "({})".format(','.join(map(lambda x: "'{}'".format(x), taskids)))
+                else:
+                    logging.debug("describetask() not-list taskids = '{0}'".format(taskids))
+                    taskid_list = "({})".format(','.join(map(lambda x: "'{}'".format(x), [taskids])))
 
                 db = self.__open_db_connection()
                 rows = ()
@@ -70,7 +75,7 @@ class FlexDB(BaseDB):
 
                         results[result['taskid']] = result
 
-                logging.info('Successfully fetched data from database.')
+                logging.debug('Successfully fetched data from database.')
 
         except Exception, e:
             logging.error("describetask  with error : {0}".format(str(e)))
@@ -83,7 +88,7 @@ class FlexDB(BaseDB):
         return results
 
     def removetask(self, tablename, taskid):
-        logging.info('removetask: tablename = {0}, taskid = {1}'.format(tablename, taskid))
+        logging.debug('removetask: tablename = {0}, taskid = {1}'.format(tablename, taskid))
         result = False
         db = None
         save_e = None
@@ -98,11 +103,11 @@ class FlexDB(BaseDB):
                     db_cursor.execute(sql)
                 db.commit()
 
-                logging.info('removetask successful!')
+                logging.debug('removetask successful!')
                 result = True
 
             else:
-                logging.info('exiting removetask with error : table doesn\'t exists')
+                logging.debug('exiting removetask with error : table doesn\'t exists')
 
         except Exception, e:
             logging.error('exiting removetask with error {0}'.format(str(e)))
@@ -115,16 +120,16 @@ class FlexDB(BaseDB):
         return result
 
     def createtable(self, tablename):
-        logging.info('createtable: tablename = {0}'.format(tablename))
+        logging.debug('createtable: tablename = {0}'.format(tablename))
         result = False
         db = None
         save_e = None
 
         try:
-            logging.info('checking if table {0} exists'.format(tablename))
+            logging.debug('checking if table {0} exists'.format(tablename))
 
             if not self.tableexists(tablename):
-                logging.info('creating table schema')
+                logging.debug('creating table schema')
                 stochss_db_schema_filename = os.path.abspath(os.path.join(os.path.dirname(__file__),
                                                                           'flex_db_schema.sql'))
                 with open(stochss_db_schema_filename) as fin:
@@ -137,10 +142,10 @@ class FlexDB(BaseDB):
                     db_cursor.execute(create_schema_sql)
                 db.commit()
 
-                logging.info('StochSS Schema creation successful!')
+                logging.debug('StochSS Schema creation successful!')
 
             else:
-                logging.info("table already exists")
+                logging.debug("table already exists")
 
             result = True
 
@@ -170,10 +175,10 @@ class FlexDB(BaseDB):
 
             tables_in_db = map(lambda x:x[0], results)
             if tablename in tables_in_db:
-                logging.info('Table {} exists!'.format(tablename))
+                logging.debug('Table {} exists!'.format(tablename))
                 result = True
             else:
-                logging.info("Table with name: {0} doesn't exist!".format(tablename))
+                logging.debug("Table with name: {0} doesn't exist!".format(tablename))
 
         except Exception as e:
             logging.error('tableexists failed with error {0}'.format(str(e)))
@@ -187,7 +192,7 @@ class FlexDB(BaseDB):
 
 
     def getEntry(self, attribute_name, attribute_value, table_name):
-        logging.info('getEntry: attribute_name = {0} attribute_value = {1} table_name = {2}'.format(attribute_name,
+        logging.debug('getEntry: attribute_name = {0} attribute_value = {1} table_name = {2}'.format(attribute_name,
                                                                                                     attribute_value,
                                                                                                     table_name))
         db = None
@@ -221,7 +226,7 @@ class FlexDB(BaseDB):
 
                         results.append(result)
 
-                logging.info('Successfully fetched data from database.')
+                logging.debug('Successfully fetched data from database.')
 
         except Exception, e:
             logging.error('exiting getEntry with error {0}'.format(str(e)))
@@ -236,8 +241,8 @@ class FlexDB(BaseDB):
 
 
     def updateEntry(self, taskid, data, tablename):
-        logging.info('updateEntry: taskid = {0} tablename = {1}'.format(taskid, tablename))
-        logging.info("data =\n{}".format(pprint.pformat(data)))
+        logging.debug('updateEntry: taskid = {0} tablename = {1}'.format(taskid, tablename))
+        logging.debug("data =\n{}".format(pprint.pformat(data)))
 
         db = None
         result = False
@@ -247,11 +252,11 @@ class FlexDB(BaseDB):
             update_field_list = ", ".join(map(lambda x: "`{x}`=VALUES(`{x}`)".format(x=x), data.keys()))
 
             data['taskid'] = taskid
-            logging.info('data =\n{}'.format(pprint.pformat(data)))
+            logging.debug('data =\n{}'.format(pprint.pformat(data)))
 
             field_name_list = "({})".format(','.join(map(lambda x: "`{}`".format(x),
                                                          self.TABLE_FIELD_NAMES[tablename])))
-            logging.info('field_name_list = {}'.format(field_name_list))
+            logging.debug('field_name_list = {}'.format(field_name_list))
 
             field_values = [data.get(field_name, '').replace("'", "[quote]")
                                     if isinstance(data.get(field_name, ''), basestring)
@@ -261,7 +266,7 @@ class FlexDB(BaseDB):
             field_value_list = "({})".format(','.join(map(lambda x: "'{}'".format(x),
                                                           field_values)))
 
-            logging.info('field_value_list = {}'.format(field_value_list))
+            logging.debug('field_value_list = {}'.format(field_value_list))
 
 
             db = self.__open_db_connection()
@@ -276,7 +281,7 @@ class FlexDB(BaseDB):
                 db_cursor.execute(sql)
             db.commit()
 
-            logging.info("updateEntry is successful!")
+            logging.debug("updateEntry is successful!")
             result = True
 
         except Exception, e:

@@ -146,7 +146,7 @@ class SpatialJobWrapper(db.Model):
 
         # delete on cloud
         if self.resource in backendservices.SUPPORTED_CLOUD_RESOURCES:
-            service.deleteTasks(taskids=[(self.celeryPID, self.cloudDatabaseID)])
+            service.deleteTasks(self)
         
         super(SpatialJobWrapper, self).delete()
 
@@ -389,7 +389,7 @@ class SpatialPage(BaseHandler):
             try:
                 job.delete(self)
             except Exception as e:
-                logging.execption(e)
+                logging.exception(e)
                 self.response.write(json.dumps({"status" : False,
                                                     "msg" : "Error: {0}".format(e)}))
                 return
@@ -749,7 +749,7 @@ class SpatialPage(BaseHandler):
         logging.debug('cloud_params = {}'.format(pprint.pformat(cloud_params)))
 
         cloud_params['document'] = pickle.dumps(pymodel)
-        logging.debug('PYURDME: {0}'.format(cloud_params['document']))
+        #logging.debug('PYURDME: {0}'.format(cloud_params['document']))
 
 
 #        if agent_type == AgentTypes.EC2:
