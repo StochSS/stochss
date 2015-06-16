@@ -412,7 +412,7 @@ def execute_cloud_task(params, agent_type, ec2_access_key, ec2_secret_key,
     Returns return value from celery async call and the task ID
     '''
     logging.debug('execute_cloud_task: params =\n\n{0}'.format(pprint.pformat(params)))
-    logging.info('agent_type = {}'.format(agent_type))
+    logging.debug('agent_type = {}'.format(agent_type))
 
     celery_config = tasks.CelerySingleton()
     celery_config.configure()
@@ -438,7 +438,7 @@ def execute_cloud_task(params, agent_type, ec2_access_key, ec2_secret_key,
             }
 
         # create a celery task
-        logging.info("execute_cloud_task : executing task with uuid : %s ", task_id)
+        logging.debug("execute_cloud_task : executing task with uuid : %s ", task_id)
 
         start_time = datetime.now()
         data = {
@@ -491,7 +491,7 @@ def execute_cloud_task(params, agent_type, ec2_access_key, ec2_secret_key,
                                                                                                   pprint.pformat(
                                                                                                       result)))
                 result["success"] = True
-
+        result['resource'] = params['resource']
         return result
 
     except Exception, e:

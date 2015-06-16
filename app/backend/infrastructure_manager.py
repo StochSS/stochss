@@ -247,7 +247,7 @@ class InfrastructureManager(object):
             logging.info('Successfully sent request to backend server, reservation_id: {0}.'.format(reservation_id))
             return self.__generate_response(True, 'Succeeded in sending request to backend server.')
 
-    def synchronize_db(self, params, force = False):
+    def synchronize_db(self, params, force=False):
         last_time = None
         set_gap_large = False
         try:

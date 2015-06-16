@@ -59,10 +59,10 @@ class FlexAgent(BaseAgent):
         elif operation == BaseAgent.OPERATION_DEREGISTER:
             required_params = self.REQUIRED_FLEX_DEREGISTER_INSTANCES_PARAMS
 
-        logging.info('required_params: {0}'.format(required_params))
+        logging.debug('required_params: {0}'.format(required_params))
 
         for param in required_params:
-            logging.info('param: {0}'.format(param))
+            logging.debug('param: {0}'.format(param))
             if not utils.has_parameter(param, parameters):
                 raise AgentConfigurationException('no ' + param)
 
@@ -74,7 +74,7 @@ class FlexAgent(BaseAgent):
         for machine in parameters[self.PARAM_FLEX_CLOUD_MACHINE_INFO]:
             launched_ids.append(self.__get_flex_instance_id(machine['ip']))
 
-        logging.info('launched_ids = {0}'.format(launched_ids))
+        logging.debug('launched_ids = {0}'.format(launched_ids))
         return launched_ids
 
     def __get_flex_vm_state_url(self, ip):
@@ -85,7 +85,7 @@ class FlexAgent(BaseAgent):
             data_received = urllib2.urlopen(url=self.__get_flex_vm_state_url(ip), timeout=10).read()
             state_info = json.loads(data_received)
 
-            logging.info('From ip {0}: json = {1}'.format(ip, state_info))
+            logging.debug('From ip {0}: json = {1}'.format(ip, state_info))
 
             if state_info['state'] in FlexVMState.VALID_STATES:
                 return state_info
@@ -106,7 +106,7 @@ class FlexAgent(BaseAgent):
         for machine in parameters[self.PARAM_FLEX_CLOUD_MACHINE_INFO]:
             ip = machine['ip']
             state = self.get_instance_state(ip=ip, username=machine['username'], keyfile=machine['keyfile'])
-            logging.info('describe_unprepared_instances() ip {0} has state'.format(ip, state))
+            logging.debug('describe_unprepared_instances() ip {0} has state'.format(ip, state))
 
             if state == FlexVMState.UNPREPARED:
                 instance_ids.append(self.__get_flex_instance_id(ip))
@@ -116,7 +116,7 @@ class FlexAgent(BaseAgent):
                 keyfiles.append(machine['keyfile'])
                 usernames.append(machine['username'])
             else:
-                logging.info('ip {0} is already prepared!'.format(ip))
+                logging.debug('ip {0} is already prepared!'.format(ip))
 
         return public_ips, private_ips, instance_ids, instance_types, keyfiles, usernames
 
@@ -124,7 +124,7 @@ class FlexAgent(BaseAgent):
         # deregister_command = self.get_remote_command_string(ip=ip, username=username, keyfile=keyfile,
         # command="sudo ~/stochss/release-tools/flex-cloud/deregister_flex_vm.sh")
         #
-        # logging.info('deregister_command =\n{}'.format(deregister_command))
+        # logging.debug('deregister_command =\n{}'.format(deregister_command))
         # os.system(deregister_command)
 
         try:
@@ -137,11 +137,11 @@ class FlexAgent(BaseAgent):
             response = json.loads(f.read())
             f.close()
 
-            logging.info('Full Deregister Response:\n{}'.format(pprint.pformat(response)))
+            logging.debug('Full Deregister Response:\n{}'.format(pprint.pformat(response)))
             if response['status'] == 'success':
-                logging.info('Successfully deregistered Flex VM with ip={}'.format(ip))
+                logging.debug('Successfully deregistered Flex VM with ip={}'.format(ip))
             else:
-                logging.info('Failed to deregister Flex VM with ip={}'.format(ip))
+                logging.debug('Failed to deregister Flex VM with ip={}'.format(ip))
 
         except Exception as e:
             logging.error('Failed to deregister Flex VM: '.format(str(e)))
@@ -154,10 +154,10 @@ class FlexAgent(BaseAgent):
 
     def deregister_instances(self, parameters, terminate=False):
         machines = parameters[self.PARAM_FLEX_CLOUD_MACHINE_INFO]
-        logging.info('machines to deregistered = {0}'.format(pprint.pformat(machines)))
+        logging.debug('machines to deregistered = {0}'.format(pprint.pformat(machines)))
 
         queue_head_machine = parameters[self.PARAM_FLEX_QUEUE_HEAD]
-        logging.info('queue_head_machine = {}'.format(queue_head_machine))
+        logging.debug('queue_head_machine = {}'.format(queue_head_machine))
 
         for machine in machines:
             self.__deregister_flex_vm(ip=machine['ip'],
@@ -177,20 +177,20 @@ class FlexAgent(BaseAgent):
           parameters      A dictionary of parameters
           instance_ids    The list of instance ids that is going to be terminated
         """
-        logging.info('instance_ids to be deregistered = {0}'.format(instance_ids))
+        logging.debug('instance_ids to be deregistered = {0}'.format(instance_ids))
 
         machines_to_deregister = []
         for machine in parameters[self.PARAM_FLEX_CLOUD_MACHINE_INFO]:
             if self.__get_flex_instance_id(machine['ip']) in instance_ids:
                 machines_to_deregister.append(machine)
 
-        logging.info('machines_to_deregister:\n{0}'.format(pprint.pformat(machines_to_deregister)))
+        logging.debug('machines_to_deregister:\n{0}'.format(pprint.pformat(machines_to_deregister)))
 
         if len(machines_to_deregister) != len(instance_ids):
             logging.error('Could not find all instances to be deregistered!')
 
         for machine in machines_to_deregister:
-            logging.info('Instance with ip {0} was terminated'.format(machine['ip']))
+            logging.debug('Instance with ip {0} was terminated'.format(machine['ip']))
             self.__deregister_flex_vm(ip=machine['ip'],
                                       username=machine['username'],
                                       keyfile=machine['keyfile'],
@@ -198,7 +198,7 @@ class FlexAgent(BaseAgent):
                                       queue_head_ip=parameters[self.PARAM_FLEX_QUEUE_HEAD]['ip'])
 
     def get_instance_state(self, ip, username, keyfile):
-        logging.info('Checking state for {ip}...'.format(ip=ip))
+        logging.debug('Checking state for {ip}...'.format(ip=ip))
 
         state = VMStateModel.STATE_UNKNOWN
         try:
@@ -206,17 +206,17 @@ class FlexAgent(BaseAgent):
             cmd = self.get_remote_command_string(ip=ip, username=username,
                                                  keyfile=keyfile,
                                                  command=command)
-            logging.info('cmd = {0}'.format(cmd))
+            logging.debug('cmd = {0}'.format(cmd))
             if os.system(cmd) != 0:
                 state = VMStateModel.STATE_INACCESSIBLE
             else:
                 state = VMStateModel.STATE_ACCESSIBLE
 
                 url = self.__get_flex_vm_state_url(ip)
-                logging.info('GET {url}'.format(url=url))
+                logging.debug('GET {url}'.format(url=url))
 
                 response = json.loads(urllib2.urlopen(url).read())
-                logging.info('response =\n{}'.format(pprint.pformat(response)))
+                logging.debug('response =\n{}'.format(pprint.pformat(response)))
 
                 if 'state' in response:
                     state = response['state']
@@ -254,7 +254,7 @@ class FlexAgent(BaseAgent):
                                                         keyfile=machine['keyfile'])
             instance_list.append(instance)
 
-        logging.info('instance_list = \n{0}'.format(pprint.pformat(instance_list)))
+        logging.debug('instance_list = \n{0}'.format(pprint.pformat(instance_list)))
         return instance_list
 
 
@@ -276,13 +276,13 @@ class FlexAgent(BaseAgent):
         Returns:
           A tuple of the form (instances, public_ips, private_ips)
         """
-        logging.info('prepare_instances')
+        logging.debug('prepare_instances')
 
         flex_cloud_machine_info = parameters[self.PARAM_FLEX_CLOUD_MACHINE_INFO]
         logging.debug('flex_cloud_machine_info =\n{}'.format(pprint.pformat(flex_cloud_machine_info)))
 
         queue_head = parameters[self.PARAM_FLEX_QUEUE_HEAD]
-        logging.info('queue_head = {}'.format(queue_head))
+        logging.debug('queue_head = {}'.format(queue_head))
         queue_head_keyfile = queue_head['keyfile']
         remote_queue_head_keyfile = os.path.join(FlexConfig.QUEUE_HEAD_KEY_DIR,
                                                  os.path.basename(queue_head_keyfile))
@@ -304,7 +304,7 @@ class FlexAgent(BaseAgent):
                                        description=VMStateModel.DESCRI_INVALID_KEYFILE)
                 continue
 
-            logging.info("[{0}] [{1}] [{2}] [is_queue_head:{3}]".format(ip, keyfile, username, is_queue_head))
+            logging.debug("[{0}] [{1}] [{2}] [is_queue_head:{3}]".format(ip, keyfile, username, is_queue_head))
 
             scp_command = \
                 'scp -o \'StrictHostKeyChecking no\' -i {keyfile} {source} {target}'.format(
@@ -315,7 +315,7 @@ class FlexAgent(BaseAgent):
                     )
                 )
 
-            logging.info('scp command for queue head keyfile =\n{}'.format(scp_command))
+            logging.debug('scp command for queue head keyfile =\n{}'.format(scp_command))
             res = os.system(scp_command)
             if res != 0:
                 logging.error('scp for queue head keyfile failed!'.format(keyfile))
@@ -335,7 +335,7 @@ class FlexAgent(BaseAgent):
                                                         remote_queue_head_keyfile=remote_queue_head_keyfile))
 
             if is_queue_head:
-                logging.info('Adding extra commands for configuring queue head...')
+                logging.debug('Adding extra commands for configuring queue head...')
                 script_lines.append("sudo rabbitmqctl add_user stochss ucsb")
                 script_lines.append('sudo rabbitmqctl set_permissions -p / stochss ".*" ".*" ".*"')
 
@@ -345,7 +345,7 @@ class FlexAgent(BaseAgent):
                     flex_db_password=parameters[self.PARAM_FLEX_DB_PASSWORD]))
 
             bash_script = '\n'.join(script_lines)
-            logging.info("\n\n\nbash_script =\n{0}\n\n\n".format(bash_script))
+            logging.debug("\n\n\nbash_script =\n{0}\n\n\n".format(bash_script))
 
             bash_script_filename = os.path.join(AgentConfig.TMP_DIRNAME, 'stochss_init.sh')
             with open(bash_script_filename, 'w') as bash_script_file:
@@ -357,7 +357,7 @@ class FlexAgent(BaseAgent):
                 target="{username}@{ip}:~/stochss_init.sh".format(username=username,
                                                                   ip=ip))
 
-            logging.info('scp command =\n{}'.format(scp_command))
+            logging.debug('scp command =\n{}'.format(scp_command))
             res = os.system(scp_command)
 
             os.remove(bash_script_filename)
@@ -376,7 +376,7 @@ class FlexAgent(BaseAgent):
             remote_command_string = self.get_remote_command_string(ip=ip, username=username,
                                                                    keyfile=keyfile, command=command)
 
-            logging.info('remote_command_string =\n{}'.format(remote_command_string))
+            logging.debug('remote_command_string =\n{}'.format(remote_command_string))
             res = os.system(remote_command_string)
 
             if res != 0:
@@ -397,7 +397,7 @@ class FlexAgent(BaseAgent):
         Raises:
           AgentRuntimeException Contains the input error message
         """
-        logging.info(msg)
+        logging.debug(msg)
         raise AgentRuntimeException(msg)
 
     @staticmethod

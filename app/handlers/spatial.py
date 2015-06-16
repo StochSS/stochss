@@ -5,7 +5,7 @@ import pprint
 import exportimport
 
 from backend.backendservice import backendservices
-#from backend.common.config import AgentTypes, JobConfig, JobDatabaseConfig
+from backend.common.config import AgentTypes, JobConfig, JobDatabaseConfig
 #from backend.storage.s3_storage import S3StorageAgent
 #from backend.storage.flex_storage import FlexStorageAgent
 #from backend.databases.flex_db import FlexDB
@@ -129,7 +129,7 @@ class SpatialJobWrapper(db.Model):
     # The delete operator here is a little fancy. When the item gets deleted from the GOogle db, we need to go clean up files stored locally and remotely
     def delete(self, handler):
         self.stop(handler)
-        service = backendservices(handler)
+        service = backendservices(handler.user_data)
         
         #delete the local output
         if self.zipFileName is not None and os.path.exists(self.zipFileName):
@@ -153,7 +153,7 @@ class SpatialJobWrapper(db.Model):
     # Stop the job!
     def stop(self, handler):
         if self.status == "Running":
-            service = backendservices(handler)
+            service = backendservices(handler.user_data)
             if self.resource == "local":
                 service.deleteTaskLocal([int(self.pid)])
             elif self.resource in backendservices.SUPPORTED_CLOUD_RESOURCES:
@@ -354,7 +354,7 @@ class SpatialPage(BaseHandler):
             try:
                 if data["resource"] == "local":
                     result = self.runLocal(data)
-                else data["resource"] == "cloud":
+                elif data["resource"] == "cloud":
                     result = self.runCloud(data)
                 else:
                     raise Exception("Unknown resource {0}".format(data["resource"]))
@@ -376,10 +376,6 @@ class SpatialPage(BaseHandler):
             job = SpatialJobWrapper.get_by_id(jobID)
             try:
                 job.stop(self)
-                else:
-                    self.response.write(json.dumps({"status" : False,
-                                                    "msg" : "No permissions to delete this job (this should never happen)"}))
-                    return
             except Exception as e:
                 logging.execption(e)
                 self.response.write(json.dumps({"status" : False,
@@ -402,7 +398,7 @@ class SpatialPage(BaseHandler):
             try:
                 jobID = json.loads(self.request.get('id'))
                 job = SpatialJobWrapper.get_by_id(int(jobID))
-                service = backendservices(self)
+                service = backendservices(self.user_data)
                 # Fetch
                 service.fetchOutput(job.cloudDatabaseID, job.output_url)
                 # Unpack
@@ -637,62 +633,56 @@ class SpatialPage(BaseHandler):
 
     def runLocal(self, data):
         ''' Run a PyURDME run using local compute recources. '''
-        try:
-            #####
-            pymodel = self.construct_pyurdme_model(data)
-            #####
-            simulation_algorithm = data['algorithm'] # Don't trust this! I haven't implemented the algorithm selection for this yet
-            simulation_realizations = data['realizations']
+        #####
+        pymodel = self.construct_pyurdme_model(data)
+        #####
+        simulation_algorithm = data['algorithm'] # Don't trust this! I haven't implemented the algorithm selection for this yet
+        simulation_realizations = data['realizations']
 
-            # If the seed is negative, this means choose a seed >= 0 randomly
-            if int(data['seed']) < 0:
-                random.seed()
-                data['seed'] = random.randint(0, 2147483647)
+        # If the seed is negative, this means choose a seed >= 0 randomly
+        if int(data['seed']) < 0:
+            random.seed()
+            data['seed'] = random.randint(0, 2147483647)
 
-            simulation_seed = data['seed']
-            #####
+        simulation_seed = data['seed']
+        #####
 
-            path = os.path.abspath(os.path.dirname(__file__))
+        path = os.path.abspath(os.path.dirname(__file__))
 
-            basedir = path + '/../'
-            dataDir = tempfile.mkdtemp(dir = basedir + 'output')
+        basedir = path + '/../'
+        dataDir = tempfile.mkdtemp(dir = basedir + 'output')
 
-            job = SpatialJobWrapper()
-            job.userId = self.user.user_id()
-            job.startTime = time.strftime("%Y-%m-%d-%H-%M-%S")
-            job.jobName = data["jobName"]
-            job.indata = json.dumps(data)
-            job.outData = dataDir
-            job.modelName = pymodel.name
-            job.resource = "local"
+        job = SpatialJobWrapper()
+        job.userId = self.user.user_id()
+        job.startTime = time.strftime("%Y-%m-%d-%H-%M-%S")
+        job.jobName = data["jobName"]
+        job.indata = json.dumps(data)
+        job.outData = dataDir
+        job.modelName = pymodel.name
+        job.resource = "local"
 
-            job.status = "Running"
+        job.status = "Running"
 
-            model_file_pkl = "{0}/model_file.pkl".format(dataDir)
-            result_dir = "{0}/results/".format(dataDir)
-            os.makedirs(result_dir)
+        model_file_pkl = "{0}/model_file.pkl".format(dataDir)
+        result_dir = "{0}/results/".format(dataDir)
+        os.makedirs(result_dir)
 
-            # searilize the model and write it to a file in the data dir
-            with open(model_file_pkl, 'w') as fd:
-                pickle.dump(pymodel, fd)
+        # searilize the model and write it to a file in the data dir
+        with open(model_file_pkl, 'w') as fd:
+            pickle.dump(pymodel, fd)
 
-            cmd = "{0}/../../pyurdme/pyurdme_wrapper.py {1} {2} {3} {4} {5}".format(path, model_file_pkl, result_dir, simulation_algorithm, simulation_realizations, simulation_seed)
-            logging.info("cmd =\n{}".format(cmd))
-            exstring = '{0}/backend/wrapper.sh {1}/stdout.log {1}/stderr.log {2}'.format(basedir, dataDir, cmd)
-            handle = subprocess.Popen(exstring, shell=True, preexec_fn=os.setsid)
-            
-            job.pid = int(handle.pid)
-
-            job.put()
-            
-            
-
-            return job
+        cmd = "{0}/../../pyurdme/pyurdme_wrapper.py {1} {2} {3} {4} {5}".format(path, model_file_pkl, result_dir, simulation_algorithm, simulation_realizations, simulation_seed)
+        logging.info("cmd =\n{}".format(cmd))
+        exstring = '{0}/backend/wrapper.sh {1}/stdout.log {1}/stderr.log {2}'.format(basedir, dataDir, cmd)
+        handle = subprocess.Popen(exstring, shell=True, preexec_fn=os.setsid)
+        
+        job.pid = int(handle.pid)
+        job.put()
+        return job
     
     # This takes in the unserialized JSON object data and runs a model!
     def runCloud(self, data):
-        logging.debug('Spatial.runCloud() agent_type = {}'.format(agent_type))
-        service = backendservices(self)
+        service = backendservices(self.user_data)
         if not service.isOneOrMoreComputeNodesRunning():
             raise Exception('No cloud computing resources found')
             
@@ -801,7 +791,7 @@ class SpatialPage(BaseHandler):
         job.indata = json.dumps(data)
         job.outData = None  # This is where the data should be locally, when we get data from cloud, it must be put here
         job.modelName = pymodel.name
-        job.resource = "{0}-cloud".format(agent_type)
+        job.resource = cloud_result['resource']
         job.cloudDatabaseID = taskid
         job.celeryPID = celery_task_id
         job.status = "Running"

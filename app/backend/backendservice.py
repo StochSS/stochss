@@ -47,19 +47,20 @@ class backendservices(object):
     # TODO: Query File Wrapper to get flex ssh key file dirname
     FLEX_SSH_KEYFILE_DIR = os.path.abspath(os.path.join(os.path.dirname(__file__), '..', 'static', 'tmp'))
 
-    def __init__(self, handler):
+    def __init__(self, user_data):
         '''
         constructor
         '''
-        self.handler = handler
+        self.user_data = user_data
         self.database_connections = {}
+        self.active_agent_type = None
     
     def get_credentials(self):
         ''' Get the user_data credentials'''
-        ret = self.handler.user_data.getCredentials()
+        ret = self.user_data.getCredentials()
         #TODO how return these conditionally
-        flex_queue_head_machine = user_data.get_flex_queue_head_machine()
-        ret['flex_db_password'] = user_data.flex_db_password
+        flex_queue_head_machine = self.user_data.get_flex_queue_head_machine()
+        ret['flex_db_password'] = self.user_data.flex_db_password
         ret['queue_head_ip'] = flex_queue_head_machine['ip']
         return ret
 
@@ -73,8 +74,8 @@ class backendservices(object):
             params = self.get_credentials()
             #os.environ["AWS_ACCESS_KEY_ID"] = params['AWS_ACCESS_KEY_ID']
             #os.environ["AWS_SECRET_ACCESS_KEY"] = params['AWS_SECRET_ACCESS_KEY']
-            db = DynamoDB(access_key=params['AWS_ACCESS_KEY_ID'],
-                                secret_key=params['AWS_SECRET_ACCESS_KEY'])
+            db = DynamoDB(access_key=params['EC2_ACCESS_KEY'],
+                                secret_key=params['EC2_SECRET_KEY'])
             self.database_connections[job.resource] = db
             return db
         elif job.resource == self.FLEX_CLOUD_RESOURCE:
@@ -88,53 +89,59 @@ class backendservices(object):
 
 
 
-    def submit_cloud_task(self, params, agent_type, ec2_access_key=None, ec2_secret_key=None, task_id=None,
-                    instance_type=None, cost_replay=False, database=None, flex_credentials=None, storage_agent=None):
+#    def submit_cloud_task(self, params, agent_type=None, ec2_access_key=None, ec2_secret_key=None, task_id=None,
+#                    instance_type=None, cost_replay=False, database=None, flex_credentials=None, storage_agent=None):
+    def submit_cloud_task(self, params, agent_type=None, cost_replay=False, instance_type=None):
 
-        logging.debug('agent_type = {0}'.format(agent_type))
-        logging.debug('params =\n{}\n\n'.format(pprint.pformat(params)))
-        logging.debug('ec2_access_key = {0}, ec2_secret_key = {1}'.format(ec2_access_key, ec2_secret_key))
-        logging.debug('flex_credentials = {}'.format(flex_credentials))
+        logging.debug('submit_cloud_task() agent_type = {0}'.format(agent_type))
+        logging.debug('submit_cloud_task() params =\n{}\n\n'.format(pprint.pformat(params)))
+
+        if agent_type is None:
+            if self.active_agent_type is not None:
+                agent_type = self.active_agent_type
+            else:
+                self.isOneOrMoreComputeNodesRunning()
+                if self.active_agent_type is not None:
+                    agent_type = self.active_agent_type
+                else:
+                    raise Exception("No Cloud resources found")
 
         if agent_type not in JobConfig.SUPPORTED_AGENT_TYPES:
-            raise Exception('Unsupported agent type = {}!'.format(agent_type))
+            raise Exception('Unsupported agent type {0}'.format(agent_type))
+
+        credentials = self.get_credentials()
 
         if agent_type == AgentTypes.EC2:
-            if ec2_access_key == None or ec2_access_key == '':
+            param['resource'] = self.EC2_CLOUD_RESOURCE
+            if 'EC2_ACCESS_KEY' not in credentials or credentials['EC2_ACCESS_KEY'] == '':
                 raise Exception('EC2 Access Key is not valid!')
-            if ec2_secret_key == None or ec2_secret_key == '':
+            if 'EC2_SECRET_KEY' not in credentials or credentials['EC2_SECRET_KEY'] == '':
                 raise Exception('EC2 Secret Key is not valid!')
+            ec2_access_key = credentials['EC2_ACCESS_KEY']
+            ec2_secret_key = credentials['EC2_SECRET_KEY']
+            logging.debug('ec2_access_key = {0}, ec2_secret_key = {1}'.format(ec2_access_key, ec2_secret_key))
+            database = DynamoDB(ec2_access_key, ec2_secret_key)
+            storage_agent = S3StorageAgent(bucket_name=self.user_data.S3_bucket_name,
+                                           ec2_secret_key=ec2_secret_key,
+                                           ec2_access_key=ec2_access_key)
 
         elif agent_type == AgentTypes.FLEX:
-            if flex_credentials == None or 'flex_queue_head' not in flex_credentials \
-                    or 'flex_db_password' not in flex_credentials:
-                raise Exception('Please pass valid Flex credentials!')
-
-        if not database:
-            if agent_type == AgentTypes.EC2:
-                database = DynamoDB(ec2_access_key, ec2_secret_key)
-
-            elif agent_type == AgentTypes.FLEX:
-                database = FlexDB(ip=flex_credentials['flex_queue_head']['ip'],
-                                  password=flex_credentials['flex_db_password'])
-
-        if not storage_agent:
-            if agent_type == AgentTypes.EC2:
-                storage_agent = S3StorageAgent(bucket_name=params['bucketname'],
-                                               ec2_secret_key=ec2_secret_key,
-                                               ec2_access_key=ec2_access_key)
-
-            elif agent_type == AgentTypes.FLEX:
-                username =flex_credentials['flex_queue_head']['username']
-                storage_agent = FlexStorageAgent(queue_head_ip=flex_credentials['flex_queue_head']['ip'],
-                                                 queue_head_username=username,
-                                                 queue_head_keyfile=os.path.join('/home', username, FlexConfig.QUEUE_HEAD_KEY_DIR,
-                                                                                 os.path.basename(flex_credentials['flex_queue_head']['keyfile'])))
+            params['resource'] = self.FLEX_CLOUD_RESOURCE
+#            if flex_credentials == None or 'flex_queue_head' not in flex_credentials \
+#                    or 'flex_db_password' not in flex_credentials:
+#                raise Exception('Please pass valid Flex credentials!')
+            database = FlexDB(ip=credentials['queue_head_ip'],
+                              password=credentials['flex_db_password'])
+            flex_queue_head_machine = self.user_data.get_flex_queue_head_machine()
+            storage_agent = FlexStorageAgent(queue_head_ip=flex_queue_head_machine['ip'],
+                                             queue_head_username=flex_queue_head_machine['username'],
+                                             queue_head_keyfile=flex_queue_head_machine['keyfile'])
+            ec2_access_key = None
+            ec2_secret_key = None
 
 
         # if there is no taskid explicit, create one the first run
-        if not task_id:
-            task_id = str(uuid.uuid4())
+        task_id = str(uuid.uuid4())
 
         logging.debug('submit_cloud_task: task_id = {}'.format(task_id))
 
@@ -210,7 +217,7 @@ class backendservices(object):
 #
 #        except Exception as e:
 #            logging.error("executeTaskLocal : exception raised : %s", str(e))
-            return None
+#            return None
 
 
     def checkTaskStatusLocal(self, pids):
@@ -247,7 +254,6 @@ class backendservices(object):
         '''
         @param job
         '''
-        logging.debug('describeTask: params =\n{}'.format(pprint.pformat(params)))
         database = self.get_database(job)
         try:
             return database.describetask(job.cloudDatabaseID, JobDatabaseConfig.TABLE_NAME)
@@ -279,7 +285,7 @@ class backendservices(object):
                         job.cloudDatabaseID)
         if job.resource == self.EC2_CLOUD_RESOURCE:
             credentials = self.get_credentials()
-            bucket_name = self.handler.user_data.S3_bucket_name
+            bucket_name = self.user_data.S3_bucket_name
             s3_helper.delete_folder(bucketname, job.cloudDatabaseID, credentials['EC2_ACCESS_KEY'], credentials['EC2_SECRET_KEY'])
             # delete the output tar file
             storage_agent = S3StorageAgent(bucket_name=bucket_name,
@@ -292,7 +298,7 @@ class backendservices(object):
             database.remove_tasks_by_attribute(tablename=JobDatabaseConfig.COST_ANALYSIS_TABLE_NAME,
                                                attribute_name='uuid', attribute_value=job.cloudDatabaseID)
         elif self.resource == backendservices.FLEX_CLOUD_RESOURCE:
-            flex_queue_head_machine = self.handler.user_data.get_flex_queue_head_machine()
+            flex_queue_head_machine = self.user_data.get_flex_queue_head_machine()
             # delete the output tar file
             storage_agent = FlexStorageAgent(queue_head_ip=flex_queue_head_machine['ip'],
                                              queue_head_username=flex_queue_head_machine['username'],
@@ -526,45 +532,47 @@ class backendservices(object):
         return False
 
 
-    def isOneOrMoreComputeNodesRunning(self, params, ins_type=None):  # credentials):
+    def isOneOrMoreComputeNodesRunning(self, ins_type=None):
         '''
         Checks for the existence of running compute nodes. Only need one of running compute node
         to be able to run a job in the cloud.
         '''
         credentials = self.get_credentials()
-
-        key_prefix = AgentConfig.get_agent_key_prefix(agent_type=self.infrastructure,
-                                                      key_prefix=params.get('key_prefix', ''))
-
-        try:
-            parameters = {
-                "infrastructure": self.infrastructure,
-                "credentials": credentials,
-                "key_prefix": key_prefix
-            }
-
-            if self.infrastructure == AgentTypes.FLEX:
-                parameters['flex_cloud_machine_info'] = params['flex_cloud_machine_info']
-
-            all_vms = self.describeMachines(parameters)
-            if all_vms == None:
-                return False
-
-            # Just need one running vm
-            if ins_type:
-                for vm in all_vms:
-                    if vm != None and vm['state'] == 'running' and vm['instance_type'] == ins_type:
+        logging.debug('credentials = {0}'.format(credentials))
+        #Check all infrastructures
+        for infrastructure in JobConfig.SUPPORTED_AGENT_TYPES:
+            # Check Flex
+            if infrastructure == AgentTypes.FLEX:
+                if self.user_data.is_flex_cloud_info_set:
+                    self.user_data.update_flex_cloud_machine_info_from_db()
+                    flex_queue_head_machine = self.user_data.get_flex_queue_head_machine()
+                    if self.is_flex_queue_head_running(flex_queue_head_machine):
+                        self.active_agent_type = infrastructure
                         return True
-
-            else:
-                for vm in all_vms:
-                    if vm != None and vm['state'] == 'running':
-                        return True
-
-            return False
-
-        except:
-            return False
+                else:
+                    continue
+            elif infrastructure == AgentTypes.EC2:
+                if 'EC2_ACCESS_KEY' not in credentials or 'EC2_SECRET_KEY' not in credentials or \
+                    credentials['EC2_ACCESS_KEY'] == '' or credentials['EC2_SECRET_KEY'] == '':
+                    continue
+#                key_prefix = AgentConfig.get_agent_key_prefix(agent_type=infrastructure,
+#                                                              key_prefix=self.user_data.user_id)
+                all_vms = self.describe_machines_from_db(infrastructure)
+                if all_vms is None:
+                    return False
+                # Just need one running vm
+                if ins_type:
+                    for vm in all_vms:
+                        if vm != None and vm['state'] == 'running' and vm['instance_type'] == ins_type:
+                            self.active_agent_type = infrastructure
+                            return True
+                else:
+                    for vm in all_vms:
+                        if vm != None and vm['state'] == 'running':
+                            self.active_agent_type = infrastructure
+                            return True
+        self.active_agent_type = None
+        return False
 
     def stop_ec2_vms(self, params, blocking=False):
         '''
@@ -590,32 +598,41 @@ class backendservices(object):
 
         return ret
 
-    def describeMachines(self, params):
-        '''
-        This method gets the status of all the instances
-        '''
-        # add calls to the infrastructure manager for getting details of machines
-        logging.debug("describeMachines() params =\n%s", pprint.pformat(params))
+#    def describeMachines(self, params):
+#        '''
+#        This method gets the status of all the instances
+#        '''
+#        # add calls to the infrastructure manager for getting details of machines
+#        logging.debug("describeMachines() params =\n%s", pprint.pformat(params))
+#
+#        key_prefix = AgentConfig.get_agent_key_prefix(agent_type=self.infrastructure,
+#                                                      key_prefix=params.get('key_prefix', ''))
+#        logging.debug('key_prefix = {0}'.format(key_prefix))
+#
+#        params["key_prefix"] = key_prefix
+#        try:
+#            i = InfrastructureManager()
+#            res = i.describe_instances(params, [], key_prefix)
+#            logging.debug("instances = \n%s", pprint.pformat(res))
+#            return res
+#
+#        except Exception, e:
+#            logging.error("error : %s", str(e))
+#            return None
 
-        key_prefix = AgentConfig.get_agent_key_prefix(agent_type=self.infrastructure,
-                                                      key_prefix=params.get('key_prefix', ''))
-        logging.debug('key_prefix = {0}'.format(key_prefix))
-
-        params["key_prefix"] = key_prefix
-        try:
-            i = InfrastructureManager()
-            res = i.describe_instances(params, [], key_prefix)
-            logging.debug("instances = \n%s", pprint.pformat(res))
-            return res
-
-        except Exception, e:
-            logging.error("error : %s", str(e))
-            return None
-
-    def describe_machines_from_db(self, params, force = False):
+    def describe_machines_from_db(self, infrastructure, force=False):
+        parameters = {
+            "infrastructure": infrastructure,
+            "credentials": self.get_credentials(),
+            "key_prefix": self.user_data.user_id,
+            "user_id": self.user_data.user_id,
+        }
+        if infrastructure == AgentTypes.FLEX:
+            parameters['flex_cloud_machine_info'] = self.user_data.get_flex_cloud_machine_info()
+            parameters['reservation_id'] = self.user_data.reservation_id
         i = InfrastructureManager()
-        i.synchronize_db(params, force = True)
-        all_vms = VMStateModel.get_all(params)
+        i.synchronize_db(parameters, force=force)
+        all_vms = VMStateModel.get_all(parameters)
         return all_vms
 
     def validateCredentials(self, params):

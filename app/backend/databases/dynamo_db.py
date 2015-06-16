@@ -122,7 +122,7 @@ class DynamoDB(BaseDB):
                 return True
 
         except Exception, e:
-            logging.error('tableexists failed with error {0}'.format(str(e)))
+            logging.exception('tableexists failed with error {0}'.format(e))
             return False
 
     def getEntry(self, attribute_name=str(), attribute_value=str(), table_name=str()):

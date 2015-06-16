@@ -50,7 +50,7 @@ class StatusPage(BaseHandler):
             # The jobs to delete are specified in the checkboxes
             jobs_to_delete = params.getall('select_job')
         
-            service = backendservices()
+            service = backendservices(self.user_data)
 
             # Select the jobs to delete from the datastore
             result = {}
@@ -158,7 +158,7 @@ class StatusPage(BaseHandler):
         """
         context = {}
         result = {}
-        service = backendservices()
+        service = backendservices(self.user_data)
         # Grab references to all the user's StochKitJobs in the system
         all_stochkit_jobs = db.GqlQuery("SELECT * FROM StochKitJobWrapper WHERE user_id = :1", self.user.user_id())
         all_jobs = []
@@ -292,7 +292,7 @@ class StatusPage(BaseHandler):
                 job.put()
 
                 all_jobs.append({ "name" : stochkit_job.name,
-                                  "uuid": job.cloud_id, 
+                                  "uuid": job.cloudDatabaseID, 
                                   "status" : stochkit_job.status,
                                   "resource" : stochkit_job.resource,
                                   "execType" : stochkit_job.exec_type,
@@ -560,10 +560,10 @@ class StatusPage(BaseHandler):
                         else:
                             job.status = "Failed"
 
-                elif job.resource in spatial.SpatialJobWrapper.SUPPORTED_CLOUD_RESOURCES:
+                elif job.resource in backendservices.SUPPORTED_CLOUD_RESOURCES:
                     # Check the status from backend
                     taskparams = {}
-                    if job.resource == spatial.SpatialJobWrapper.EC2_CLOUD_RESOURCE:
+                    if job.resource == backendservices.EC2_CLOUD_RESOURCE:
                         # Retrieve credentials from the datastore
                         if not self.user_data.valid_credentials:
                             return {'status': False,
@@ -573,31 +573,31 @@ class StatusPage(BaseHandler):
                         taskparams = {
                             'AWS_ACCESS_KEY_ID': credentials['EC2_ACCESS_KEY'],
                             'AWS_SECRET_ACCESS_KEY': credentials['EC2_SECRET_KEY'],
-                            'taskids': [job.cloud_id],
+                            'taskids': [job.cloudDatabaseID],
                             'agent_type': AgentTypes.EC2
                         }
-                    elif job.resource == spatial.SpatialJobWrapper.FLEX_CLOUD_RESOURCE:
+                    elif job.resource == backendservices.FLEX_CLOUD_RESOURCE:
                         try:
                             queue_head_machine = self.user_data.get_flex_queue_head_machine()
                             taskparams = {
                                 'flex_db_password': self.user_data.flex_db_password,
                                 'queue_head_ip': queue_head_machine['ip'],
-                                'taskids':[job.cloud_id],
+                                'taskids':[job.cloudDatabaseID],
                                 'agent_type': AgentTypes.FLEX
                             }
                         except Exception as e:
                             logging.exception(e)
 
-                    task_status = service.describeTask(taskparams)
+                    task_status = service.describeTask(job)
                     logging.info('Spatial task_status =\n{}'.format(pprint.pformat(task_status)))
 
                     if task_status is None:
                         job.status = "Inaccessible"
                         job_status = None
-                    elif task_status is not None and job.cloud_id not in task_status:
+                    elif task_status is not None and job.cloudDatabaseID not in task_status:
                         job.status = "Unknown"
                     else:
-                        job_status = task_status[job.cloud_id]
+                        job_status = task_status[job.cloudDatabaseID]
                         if job_status['status'] == 'finished':
                             # Update the spatial job
                             job.output_url = job_status['output']
@@ -632,7 +632,7 @@ class StatusPage(BaseHandler):
 
                 allSpatialJobs.append({ "status" : job.status,
                                         "name" : job.jobName,
-                                        "uuid" : job.cloud_id,
+                                        "uuid" : job.cloudDatabaseID,
                                         "output_stored": job.output_stored,
                                         "resource": job.resource,
                                         "number" : number,
@@ -784,7 +784,7 @@ class JobOutPutPage(BaseHandler):
             result = {}
             stochkit_job = stochkit_job_wrapper.stochkit_job
             # Grab the remote files
-            service = backendservices()
+            service = backendservices(self.user_data)
             service.fetchOutput(stochkit_job.pid, stochkit_job.output_url)
             
             # Unpack it to its local output location

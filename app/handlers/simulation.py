@@ -284,53 +284,53 @@ class JobBackboneInterface(BaseHandler):
       request.setHeader("Content-Type", "application/json")
       self.response.write(json.dumps([]))
 
-class StochKitJob(Job):
-    """ Model for a StochKit job. Contains all the parameters associated with the call. """
-    
-    def __init__(self,name=None, final_time=None, increment=None, realizations=1, exec_type="stochastic",store_only_mean=False, label_column_names=True,create_histogram_data=False, seed=None, epsilon=0.1,threshold = 10, output_url = None, units = None, type = None, status = None, output_location = "", zipFileName = None, **kwargs):
-        """ fdsgfhsj """
-        
-        # Type of the job {'Local','Cloud'}
-        self.type = type
-        
-        # The status of the job. Valid statuses are 'Running', 'Finished', 'Failed'
-        self.status = status
-        
-        # URL to the result (valid after a sucessful execution)
-        self.output_location = output_location
-        self.output_url = output_url
-        self.zipFileName = zipFileName
-        # In case of failure
-        self.exception_message = ""
-        
-        # Input parameters
-        self.name = name
-        self.final_time = final_time
-        self.increment = increment
-        self.realizations = realizations
-        self.exec_type = exec_type
-        self.units = units
-        
-        self.store_only_mean = store_only_mean
-        self.label_column_names = label_column_names
-        self.create_histogram_data = create_histogram_data
-        
-        self.epsilon = epsilon
-        self.threshold = threshold
-        self.resource = "Local"
+#class StochKitJob(db.model):
+#    """ Model for a StochKit job. Contains all the parameters associated with the call. """
+#    
+#    def __init__(self,name=None, final_time=None, increment=None, realizations=1, exec_type="stochastic",store_only_mean=False, label_column_names=True,create_histogram_data=False, seed=None, epsilon=0.1,threshold = 10, output_url = None, units = None, type = None, status = None, output_location = "", zipFileName = None, **kwargs):
+#        """ fdsgfhsj """
+#        
+#        # Type of the job {'Local','Cloud'}
+#        self.type = type
+#        
+#        # The status of the job. Valid statuses are 'Running', 'Finished', 'Failed'
+#        self.status = status
+#        
+#        # URL to the result (valid after a sucessful execution)
+#        self.output_location = output_location
+#        self.output_url = output_url
+#        self.zipFileName = zipFileName
+#        # In case of failure
+#        self.exception_message = ""
+#        
+#        # Input parameters
+#        self.name = name
+#        self.final_time = final_time
+#        self.increment = increment
+#        self.realizations = realizations
+#        self.exec_type = exec_type
+#        self.units = units
+#        
+#        self.store_only_mean = store_only_mean
+#        self.label_column_names = label_column_names
+#        self.create_histogram_data = create_histogram_data
+#        
+#        self.epsilon = epsilon
+#        self.threshold = threshold
+#        self.resource = "Local"
+#
+#    
+#        # Status of the Job (Running, Pending, Done)
+#        status = 'Pending'
+#        #  Process ID
+#        self.pid = None
+#        # Celery Task ID
+#        self.celery_pid = None
+#    
+#        # The result dict returned by the cloud submission
+#        self.result = None
+#    
 
-    
-        # Status of the Job (Running, Pending, Done)
-        status = 'Pending'
-        #  Process ID
-        self.pid = None
-        # Celery Task ID
-        self.celery_pid = None
-    
-        # The result dict returned by the cloud submission
-        self.result = None
-    
-        
 
 class SimulatePage(BaseHandler):
     """ Render a page that lists the available models. """    
@@ -405,7 +405,6 @@ class SimulatePage(BaseHandler):
         elif reqType == 'delJob':
             try:
                 job = StochKitJobWrapper.get_by_id(int(self.request.get('id')))
-('id'))+ " from the datastore."}))
 
                 if job.user_id == self.user.user_id():
                     job.delete(self)
@@ -585,7 +584,7 @@ class SimulatePage(BaseHandler):
         model = StochKitModelWrapper.get_by_id(params["id"]).createStochKitModel()
 
         if not model:
-            raise Exception('Failed to retrive the model \'{0}\' to simulate'.format(params["id"])}
+            raise Exception('Failed to retrive the model \'{0}\' to simulate'.format(params["id"]))
 
         #the parameter dictionary to be passed to the backend
         param = {}
@@ -597,7 +596,7 @@ class SimulatePage(BaseHandler):
             raise Exception('exec_type must be concentration or population. Found \'{0}\''.format(exec_type))
 
         if model.units.lower() == 'concentration' and exec_type.lower() == 'stochastic':
-            raise Exception('Concentration models cannot be executed Stochastically' }
+            raise Exception('Concentration models cannot be executed Stochastically' )
 
         executable = exec_type.lower()
         document = model.serialize()
