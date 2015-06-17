@@ -142,6 +142,34 @@ function prepare_flex_cloud() {
     });
 }
 
+function refresh_flex_cloud() {
+    var flex_cloud_machine_info = get_flex_cloud_info_input();
+    if (flex_cloud_machine_info == null) {
+        return
+    }
+
+    var jsonDataToBeSent = {};
+    jsonDataToBeSent['action'] = 'refresh_flex_cloud';
+
+    jsonDataToBeSent = JSON.stringify(jsonDataToBeSent);
+    updateMsg( { status : true, msg : "Updating Flex Cloud status..." }, '#flexCloudInfoMsg');
+
+    $.ajax({
+        type: "POST",
+        url: "/credentials",
+        contentType: "application/json",
+        dataType: "json",
+        data: jsonDataToBeSent,
+        success: function () {
+        },
+        error: function (x, e) {
+        },
+        complete: function () {
+            document.location.reload();
+        }
+    });
+}
+
 $(document).ready(function () {
     $("#append_flex_cloud_machine").click(function () {
         var prior_row = $('#flex_cloud_machine_info_table tr:last');

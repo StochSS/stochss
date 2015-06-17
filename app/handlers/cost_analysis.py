@@ -195,7 +195,7 @@ class CostAnalysisPage(BaseHandler):
         elif job_type == 'spatial':
             job = spatial.SpatialJobWrapper.get_by_id(int(id))
             name = job.jobName
-            uuid = job.cloud_id
+            uuid = job.cloudDatabaseID
         elif job_type == 'sensitivity':
             job = sensitivity.SensitivityJobWrapper.get_by_id(int(id))
             name = job.jobName

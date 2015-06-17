@@ -25,7 +25,8 @@ from google.appengine.ext import db
 
 # from google.appengine.tools import dev_appserver
 
-from backend.backendservice import *
+from backend.backendservice import backendservices  #from backend.backendservice import *
+from backend.common.config import AgentTypes, JobConfig, JobDatabaseConfig
 
 import mimetypes
 
@@ -136,13 +137,10 @@ class UserData(db.Model):
         return queue_head_machine
 
     def __get_all_vms(self, params):
-        try:
-            service = backendservices()
-            result = service.describe_machines_from_db(params, force = True)
-            return result
-        except Exception as e:
-            logging.error(str(e))
-            return {}
+        logging.debug('__get_all_vms() params={0}'.format(params))
+        service = backendservices(self)
+        result = service.describe_machines_from_db(params, force=False)
+        return result
 
     def update_flex_cloud_machine_info_from_db(self):
         logging.debug('update_flex_cloud_machine_info_from_db')
@@ -153,15 +151,7 @@ class UserData(db.Model):
             if flex_cloud_machine_info is None or len(flex_cloud_machine_info) == 0:
                 return
 
-            params = {
-                'infrastructure': AgentTypes.FLEX,
-                'user_id': self.user_id,
-                'flex_cloud_machine_info': flex_cloud_machine_info,
-                'reservation_id': self.reservation_id
-            }
-
-
-            all_vms = self.__get_all_vms(params)
+            all_vms = self.__get_all_vms(AgentTypes.FLEX)
             #logging.debug('flex: all_vms =\n{0}'.format(pprint.pformat(all_vms)))
             logging.debug('flex: all_vms =\n{0}'.format(all_vms))
 
@@ -204,16 +194,8 @@ class UserData(db.Model):
             logging.debug('valid_flex_cloud_info = {0}'.format(self.valid_flex_cloud_info))
 
         else:
-            flex_cloud_machine_info = []
-            params = {
-                'infrastructure': AgentTypes.FLEX,
-                'user_id': self.user_id,
-                'flex_cloud_machine_info': flex_cloud_machine_info,
-                'reservation_id': self.reservation_id
-            }
-
             # for clearing out db syn requests
-            all_vms = self.__get_all_vms(params)
+            all_vms = self.__get_all_vms(AgentTypes.FLEX)
             logging.debug('flex: all_vms =\n{0}'.format(pprint.pformat(all_vms)))
 
 
@@ -261,7 +243,7 @@ class BaseHandler(webapp2.RequestHandler):
                 user_data.setCredentials(credentials)
 
                 # Check if the credentials are valid
-                service = backendservices()
+                service = backendservices(user_data)
                 params = {}
                 params['credentials'] = credentials
                 params["infrastructure"] = "ec2"

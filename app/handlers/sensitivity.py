@@ -55,15 +55,12 @@ class SensitivityJobWrapper(db.Model):
     output_stored = db.StringProperty()
 
     def stop(self, handler):
+        service = backendservices(handler.user_data)
+
         if self.status == "Running":
             if self.resource.lower() == "local":
-                try:
-                    os.killpg(int(self.pid), signal.SIGTERM)
-                except:
-                    pass
-
+                service.deleteTaskLocal([int(self.pid)])
             elif self.resource in backendservices.SUPPORTED_CLOUD_RESOURCES:
-                service = backendservices(handler)
                 result = service.stopTask(self)
                 
                 if result and result[self.cloudDatabaseID]:
@@ -418,9 +415,6 @@ class SensitivityPage(BaseHandler):
 
         # Send the task to the backend
         cloud_result = service.submit_cloud_task(params)
-
-        else:
-            raise Exception('Invalid agent type!')
 
         # if not cloud_result["success"]:
         if not cloud_result["success"]:

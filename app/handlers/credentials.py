@@ -35,6 +35,7 @@ class CredentialsPage(BaseHandler):
 
     FLEX_PREPARE_CLOUD = 'prepare_flex_cloud'
     FLEX_DEREGISTER_CLOUD = 'deregister_flex_cloud'
+    FLEX_REFRESH_CLOUD = 'refresh_flex_cloud'
     
     def authentication_required(self):
         return True
@@ -73,6 +74,11 @@ class CredentialsPage(BaseHandler):
             logging.info("result = {0}".format(result))
             self.redirect('/flexCloudCredentials')
 
+        elif data_received['action'] == CredentialsPage.FLEX_REFRESH_CLOUD:
+            logging.debug("data_received['action'] = {0} = CredentialsPage.FLEX_REFRESH_CLOUD".format(data_received['action']))
+            result = self.refresh_flex_cloud(user_id)
+            logging.info("result = {0}".format(result))
+            self.redirect('/flexCloudCredentials')
         else:
             self.redirect('/flexCloudCredentials')
 
@@ -99,7 +105,7 @@ class CredentialsPage(BaseHandler):
     def __handle_ec2_stop_vms_request(self, params, user_id):
          # Kill all running VMs.
         try:
-            service = backendservices()
+            service = backendservices(self.user_data)
             credentials = self.user_data.getCredentials()
             terminate_params = {
               "infrastructure": AgentTypes.EC2,
@@ -195,7 +201,7 @@ class CredentialsPage(BaseHandler):
         """ Save the Credentials to the datastore. """
         logging.info('Saving EC2 credentials...')
         try:
-            service = backendservices()
+            service = backendservices(self.user_data)
             params = {}
             params['credentials'] = credentials
             params["infrastructure"] = AgentTypes.EC2
@@ -208,13 +214,13 @@ class CredentialsPage(BaseHandler):
                 if not self.user_data.isTable():
                     db_credentials = self.user_data.getCredentials()
                     # Set the environmental variables
-                    os.environ["AWS_ACCESS_KEY_ID"] = credentials['EC2_ACCESS_KEY']
-                    os.environ["AWS_SECRET_ACCESS_KEY"] = credentials['EC2_SECRET_KEY']
+#                    os.environ["AWS_ACCESS_KEY_ID"] = credentials['EC2_ACCESS_KEY']
+#                    os.environ["AWS_SECRET_ACCESS_KEY"] = credentials['EC2_SECRET_KEY']
 
                     try:
                         if not database:
-                            database = DynamoDB(access_key=os.environ["AWS_ACCESS_KEY_ID"],
-                                                secret_key=os.environ["AWS_SECRET_ACCESS_KEY"])
+                            database = DynamoDB(access_key=credentials['EC2_ACCESS_KEY'],
+                                                secret_key=credentials['EC2_SECRET_KEY'])
                             
                         database.createtable(JobDatabaseConfig.TABLE_NAME)
                         database.createtable(JobDatabaseConfig.COST_ANALYSIS_TABLE_NAME)
@@ -241,7 +247,7 @@ class CredentialsPage(BaseHandler):
     def deregister_flex_cloud(self, user_id):
         logging.info('deregister_flex_cloud')
 
-        service = backendservices(infrastructure=AgentTypes.FLEX)
+        service = backendservices(self.user_data) #infrastructure=AgentTypes.FLEX)
         credentials = self.user_data.getCredentials()
         params = {
             'infrastructure': AgentTypes.FLEX,
@@ -311,7 +317,7 @@ class CredentialsPage(BaseHandler):
             'flex_queue_head': self.user_data.get_flex_queue_head_machine()
         }
 
-        service = backendservices(infrastructure=AgentTypes.FLEX)
+        service = backendservices(self.user_data)
 
         res, msg, ids = service.prepare_flex_cloud_machines(params)
 
@@ -327,7 +333,12 @@ class CredentialsPage(BaseHandler):
             result = {'flex_cloud_status': False,
                       'flex_cloud_info_msg': msg }
         return result
+##############
+    def refresh_flex_cloud(self, user_id):
+        service = backendservices(self.user_data)
+        service.describe_machines_from_db(AgentTypes.FLEX, force=True)
 
+##############
 
     def __get_ec2_context(self, user_id):
         context = {}
@@ -491,7 +502,7 @@ class CredentialsPage(BaseHandler):
     
     def __get_all_vms(self, params):
         try:
-            service = backendservices()
+            service = backendservices(self.user_data)
             result = service.describe_machines_from_db(params)
             return result
         except Exception as e:
@@ -552,7 +563,7 @@ class CredentialsPage(BaseHandler):
             params['image_id'] = image_id
 
 
-        service = backendservices()
+        service = backendservices(self.user_data)
         
         if active_nodes == 0:
             if head_node is None:

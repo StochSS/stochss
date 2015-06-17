@@ -50,87 +50,17 @@ class StatusPage(BaseHandler):
             # The jobs to delete are specified in the checkboxes
             jobs_to_delete = params.getall('select_job')
         
-            service = backendservices()
+            service = backendservices(self.user_data)
 
             # Select the jobs to delete from the datastore
             result = {}
             for job_name in jobs_to_delete:
                 try:
                     job = db.GqlQuery("SELECT * FROM StochKitJobWrapper WHERE user_id = :1 AND name = :2", self.user.user_id(),job_name).get()
-                    stochkit_job = job.stochkit_job
                 except Exception,e:
                     result = {'status':False,'msg':"Could not retrieve the jobs"+job_name+ " from the datastore."}
         
-                # TODO: Call the backend to kill and delete the job and all associated files.
-                try:
-                    if stochkit_job.resource == 'Local':
-                        service.deleteTaskLocal([stochkit_job.pid])
-
-                        time.sleep(0.25)
-
-                        status = service.checkTaskStatusLocal([stochkit_job.pid]).values()[0]
-
-                        if status:
-                            raise Exception("")
-                    else:
-                        if stochkit_job.resource == '{}-cloud'.format(AgentTypes.EC2):
-                            bucketname = self.user_data.S3_bucket_name
-                            logging.info('bucketname = {}'.format(bucketname))
-
-                            ec2_credentials = self.user_data.getCredentials()
-
-                            # # delete the folder that contains the replay sources
-                            # logging.info('deleting the rerun source folder {1} in bucket {0}'.format(bucketname, stochkit_job.pid))
-                            # delete_folder(bucketname, stochkit_job.pid, ec2_credentials['EC2_ACCESS_KEY'], ec2_credentials['EC2_SECRET_KEY'])
-
-                            # delete the output tar file
-                            storage_agent = S3StorageAgent(bucket_name=bucketname,
-                                                           ec2_access_key=ec2_credentials['EC2_ACCESS_KEY'],
-                                                           ec2_secret_key=ec2_credentials['EC2_SECRET_KEY'])
-                            filename = 'output/' + stochkit_job.pid + '.tar'
-
-                            logging.info('deleting the output tar file output/{1}.tar in bucket {0}'.format(bucketname, stochkit_job.pid))
-                            storage_agent.delete_file(filename=filename)
-
-                            database = DynamoDB(access_key=ec2_credentials['EC2_ACCESS_KEY'],
-                                                secret_key=ec2_credentials['EC2_SECRET_KEY'])
-                            service.deleteTasks(taskids=[(stochkit_job.celery_pid, stochkit_job.pid)], database=database)
-
-                            # delete dynamodb entries for cost analysis
-                            database.remove_tasks_by_attribute(self, tablename=JobDatabaseConfig.COST_ANALYSIS_TABLE_NAME,
-                                                               attribute_name='uuid', attribute_value=stochkit_job.pid)
-
-                        elif stochkit_job.resource == '{}-cloud'.format(AgentTypes.FLEX):
-                            flex_queue_head_machine = self.user_data.get_flex_queue_head_machine()
-                            logging.debug("flex_queue_head_machine = {0}".format(flex_queue_head_machine))
-
-                            # delete the output tar file
-                            storage_agent = FlexStorageAgent(queue_head_ip=flex_queue_head_machine['ip'],
-                                                             queue_head_username=flex_queue_head_machine['username'],
-                                                             queue_head_keyfile=flex_queue_head_machine['keyfile'])
-
-                            filename = stochkit_job.pid + '.tar'
-                            storage_agent.delete_file(filename=filename)
-
-                            database = FlexDB(password=self.user_data.flex_db_password, ip=flex_queue_head_machine['ip'])
-                            service.deleteTasks(taskids=[(stochkit_job.celery_pid, stochkit_job.pid)], database=database)
-
-                    isdeleted_backend = True
-
-                except Exception,e:
-                    isdeleted_backend = False
-                    result['status']=False
-                    result['msg'] = "Failed to delete task with PID " + str(stochkit_job.celery_pid) + str(e)
-                #        
-                if isdeleted_backend:
-                    # Delete all the local files and delete the job from the datastore
-                    try:
-                        # We remove the local entry of the job output directory
-                        if os.path.exists(stochkit_job.output_location):
-                            shutil.rmtree(stochkit_job.output_location)
-                        db.delete(job)
-                    except Exception,e:
-                        result = {'status':False,'msg':"Failed to delete job "+job_name+str(e)}
+                job.delete()
     
             # Render the status page 
             # AH: This is a hack to prevent the page from reloading before the datastore transactions
@@ -158,7 +88,7 @@ class StatusPage(BaseHandler):
         """
         context = {}
         result = {}
-        service = backendservices()
+        service = backendservices(self.user_data)
         # Grab references to all the user's StochKitJobs in the system
         all_stochkit_jobs = db.GqlQuery("SELECT * FROM StochKitJobWrapper WHERE user_id = :1", self.user.user_id())
         all_jobs = []
@@ -177,54 +107,51 @@ class StatusPage(BaseHandler):
             for number, job in enumerate(jobs):
                 number = len(jobs) - number
 
-                # Get the job id
-                stochkit_job = job.stochkit_job
-                
                 # Query the backend for the status of the job, but only if the current status is not Finished
                 #if not stochkit_job.status == "Finished":
                 if True:
                     try:
-                        if stochkit_job.resource == 'Local':
+                        if job.resource.lower() == 'local':
                             # First, check if the job is still running
-                            res = service.checkTaskStatusLocal([stochkit_job.pid])
-                            if res[stochkit_job.pid]:
-                                stochkit_job.status = "Running"
+                            res = service.checkTaskStatusLocal([job.pid])
+                            if res[job.pid]:
+                                job.status = "Running"
                             else:
                                 # Check if the signature file is present, that will always be the case for a sucessful job.
                                 # for ssa and tau leaping, this is means.txt
                                 # for ode, this is output.txt
 
-                                if stochkit_job.exec_type == 'stochastic':
-                                    file_to_check = stochkit_job.output_location+"/result/stats/means.txt"
+                                if job.indata["exec_type"] == 'stochastic':
+                                    file_to_check = os.path.join(job.output_location, "result/stats/means.txt")
                                 else:
-                                    file_to_check = stochkit_job.output_location+"/result/output.txt"
+                                    file_to_check = os.path.join(job.output_location, "/result/output.txt")
                                 
                                 if os.path.exists(file_to_check):
-                                    stochkit_job.status = "Finished"
+                                    job.status = "Finished"
                                 else:
-                                    stochkit_job.status = "Failed"
+                                    job.status = "Failed"
                 
-                        elif stochkit_job.resource in simulation.StochKitJob.SUPPORTED_CLOUD_RESOURCES and stochkit_job.output_location is not None:
+                        elif job.resource in backendservices.SUPPORTED_CLOUD_RESOURCES and job.output_location is not None:
                             # The data has been downloaded already
                             # Check if the signature file is present, that will always be the case for a sucessful job.
                             # for ssa and tau leaping, this is means.txt
                             # for ode, this is output.txt
 
-                            if stochkit_job.exec_type == 'stochastic':
-                                file_to_check = stochkit_job.output_location+"/result/stats/means.txt"
+                            if job["indata"].exec_type == 'stochastic':
+                                file_to_check = os.path.join(job.output_location, "result/stats/means.txt")
                             else:
-                                file_to_check = stochkit_job.output_location+"/result/output.txt"
+                                file_to_check = os.path.join(job.output_location, "result/output.txt")
                             
                             if os.path.exists(file_to_check):
-                                stochkit_job.status = "Finished"
+                                job.status = "Finished"
                             else:
-                                stochkit_job.status = "Failed"
+                                job.status = "Failed"
 
-                        elif stochkit_job.resource in simulation.StochKitJob.SUPPORTED_CLOUD_RESOURCES and stochkit_job.output_location is None:
+                        elif job.resource in backendservices.SUPPORTED_CLOUD_RESOURCES and job.output_location is None:
 
                             # Check the status from backend
                             taskparams = {}
-                            if stochkit_job.resource == simulation.StochKitJob.EC2_CLOUD_RESOURCE:
+                            if job.resource == simulation.StochKitJob.EC2_CLOUD_RESOURCE:
                                 # Retrieve credentials from the datastore
                                 if not self.user_data.valid_credentials:
                                     return {'status':False,
@@ -292,7 +219,7 @@ class StatusPage(BaseHandler):
                 job.put()
 
                 all_jobs.append({ "name" : stochkit_job.name,
-                                  "uuid": job.cloud_id, 
+                                  "uuid": job.cloudDatabaseID, 
                                   "status" : stochkit_job.status,
                                   "resource" : stochkit_job.resource,
                                   "execType" : stochkit_job.exec_type,
@@ -560,10 +487,10 @@ class StatusPage(BaseHandler):
                         else:
                             job.status = "Failed"
 
-                elif job.resource in spatial.SpatialJobWrapper.SUPPORTED_CLOUD_RESOURCES:
+                elif job.resource in backendservices.SUPPORTED_CLOUD_RESOURCES:
                     # Check the status from backend
                     taskparams = {}
-                    if job.resource == spatial.SpatialJobWrapper.EC2_CLOUD_RESOURCE:
+                    if job.resource == backendservices.EC2_CLOUD_RESOURCE:
                         # Retrieve credentials from the datastore
                         if not self.user_data.valid_credentials:
                             return {'status': False,
@@ -573,31 +500,31 @@ class StatusPage(BaseHandler):
                         taskparams = {
                             'AWS_ACCESS_KEY_ID': credentials['EC2_ACCESS_KEY'],
                             'AWS_SECRET_ACCESS_KEY': credentials['EC2_SECRET_KEY'],
-                            'taskids': [job.cloud_id],
+                            'taskids': [job.cloudDatabaseID],
                             'agent_type': AgentTypes.EC2
                         }
-                    elif job.resource == spatial.SpatialJobWrapper.FLEX_CLOUD_RESOURCE:
+                    elif job.resource == backendservices.FLEX_CLOUD_RESOURCE:
                         try:
                             queue_head_machine = self.user_data.get_flex_queue_head_machine()
                             taskparams = {
                                 'flex_db_password': self.user_data.flex_db_password,
                                 'queue_head_ip': queue_head_machine['ip'],
-                                'taskids':[job.cloud_id],
+                                'taskids':[job.cloudDatabaseID],
                                 'agent_type': AgentTypes.FLEX
                             }
                         except Exception as e:
                             logging.exception(e)
 
-                    task_status = service.describeTask(taskparams)
+                    task_status = service.describeTask(job)
                     logging.info('Spatial task_status =\n{}'.format(pprint.pformat(task_status)))
 
                     if task_status is None:
                         job.status = "Inaccessible"
                         job_status = None
-                    elif task_status is not None and job.cloud_id not in task_status:
+                    elif task_status is not None and job.cloudDatabaseID not in task_status:
                         job.status = "Unknown"
                     else:
-                        job_status = task_status[job.cloud_id]
+                        job_status = task_status[job.cloudDatabaseID]
                         if job_status['status'] == 'finished':
                             # Update the spatial job
                             job.output_url = job_status['output']
@@ -632,7 +559,7 @@ class StatusPage(BaseHandler):
 
                 allSpatialJobs.append({ "status" : job.status,
                                         "name" : job.jobName,
-                                        "uuid" : job.cloud_id,
+                                        "uuid" : job.cloudDatabaseID,
                                         "output_stored": job.output_stored,
                                         "resource": job.resource,
                                         "number" : number,
@@ -784,7 +711,7 @@ class JobOutPutPage(BaseHandler):
             result = {}
             stochkit_job = stochkit_job_wrapper.stochkit_job
             # Grab the remote files
-            service = backendservices()
+            service = backendservices(self.user_data)
             service.fetchOutput(stochkit_job.pid, stochkit_job.output_url)
             
             # Unpack it to its local output location

@@ -61,6 +61,6 @@ class FlexStorageAgent(BaseStorageAgent):
             if os.system(remote_command) != 0:
                 logging.info('Deletion was not successful!')
 
-        except Exception, e:
-            logging.error("FlexStorageAgent failed with exception:\n{0}".format(str(e)))
+        except Exception as e:
+            logging.exception("FlexStorageAgent failed with exception:\n{0}".format(str(e)))
             raise e
