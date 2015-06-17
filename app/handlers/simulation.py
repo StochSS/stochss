@@ -230,8 +230,18 @@ class JobManager():
         # This is probably not a good idea...
         jobWrap.indata = dict([(k, job[k]) for k in ['type', 'final_time', 'increment', 'realizations', 'exec_type', 'units', 'epsilon', 'threshold', 'seed'] if k in job])
 
-        if 'startDate' in job:
-            jobWrap.startDate = job['startDate']
+        if 'startTime' in job:
+            jobWrap.startTime = job['startTime']
+
+        if 'resource' in job:
+            jobWrap.resource = job['resource']
+        else:
+            jobWrap.resource = 'Local'
+
+        jobWrap.output_location = job['output_location']
+
+        if 'output_url' in job:
+            jobWrap.output_url = job['output_url']
 
         jobWrap.stdout = job['stdout']
         jobWrap.stderr = job['stderr']

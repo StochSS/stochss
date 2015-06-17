@@ -159,7 +159,7 @@ class SuperZip:
                         "stderr" : job.stderr,
                         "type" : job.indata["type"],
                         "status" : job.status,
-                        "startDate" : job.startTime,
+                        "startTime" : job.startTime,
                         "modelName" : job.modelName,
                         "final_time" : job.indata["final_time"],
                         "increment" : job.indata["increment"],
@@ -167,6 +167,7 @@ class SuperZip:
                         "realizations" : job.indata["realizations"],
                         "exec_type" : job.indata["exec_type"],
                         "epsilon" : job.indata["epsilon"],
+                        "seed" : job.indata["seed"],
                         "threshold" : job.indata["threshold"],
                         "pid" : job.pid,
                         "result" : job.result }
@@ -534,6 +535,7 @@ class SuperZip:
 
         jobj["modelName"] = jobj["modelName"] if "modelName" in jobj else None
 
+        jobj["resource"] = 'Local'
         jobj["output_location"] = outPath
         jobj["stdout"] = "{0}/stdout".format(outPath)
         jobj["stderr"] = "{0}/stderr".format(outPath)
@@ -872,7 +874,7 @@ class ImportPage(BaseHandler):
         # Get all the cloud jobs
         stochkit_jobs = db.GqlQuery("SELECT * FROM StochKitJobWrapper WHERE user_id = :1", self.user.user_id())
         stochkit_jobs = [job for job in stochkit_jobs
-                         if job.resource is not None and job.stochkit_job.resource in backendservices.SUPPORTED_CLOUD_RESOURCES
+                         if job.resource is not None and job.resource in backendservices.SUPPORTED_CLOUD_RESOURCES
                          and job.status == "Finished"]
 
         # Create the dictionary to pass to backend to check for sizes
