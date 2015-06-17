@@ -314,7 +314,7 @@ class SensitivityPage(BaseHandler):
                     backend_service = backendservices()
 
                     if self.user_data.is_flex_cloud_info_set:
-                        self.user_data.update_flex_cloud_machine_info_from_db()
+                        self.user_data.update_flex_cloud_machine_info_from_db(backend_service)
                         flex_queue_head_machine = self.user_data.get_flex_queue_head_machine()
 
                         if backend_service.is_flex_queue_head_running(flex_queue_head_machine):

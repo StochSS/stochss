@@ -14,7 +14,7 @@ import logging
 import urllib2
 import json
 import tempfile
-
+import socket
 from utils import utils
 from tasks import *
 
@@ -106,7 +106,7 @@ class FlexAgent(BaseAgent):
         for machine in parameters[self.PARAM_FLEX_CLOUD_MACHINE_INFO]:
             ip = machine['ip']
             state = self.get_instance_state(ip=ip, username=machine['username'], keyfile=machine['keyfile'])
-            logging.debug('describe_unprepared_instances() ip {0} has state'.format(ip, state))
+            logging.debug('describe_unprepared_instances() ip {0} has state {1}'.format(ip, state))
 
             if state == FlexVMState.UNPREPARED:
                 instance_ids.append(self.__get_flex_instance_id(ip))
@@ -115,8 +115,8 @@ class FlexAgent(BaseAgent):
                 instance_types.append(FlexConfig.INSTANCE_TYPE)
                 keyfiles.append(machine['keyfile'])
                 usernames.append(machine['username'])
-            else:
-                logging.debug('ip {0} is already prepared!'.format(ip))
+            #else:
+            #    logging.debug('ip {0} is already prepared!'.format(ip))
 
         return public_ips, private_ips, instance_ids, instance_types, keyfiles, usernames
 
@@ -197,19 +197,45 @@ class FlexAgent(BaseAgent):
                                       parameters=parameters,
                                       queue_head_ip=parameters[self.PARAM_FLEX_QUEUE_HEAD]['ip'])
 
+    def __check_network_ports(self, ip, ports):
+        logging.debug("Checking if ports = {0} are open for ip = '{1}'".format(ports, ip))
+        PORT_TIMEOUT = 5
+        for port in ports:
+            try:
+                s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+                s.settimeout(PORT_TIMEOUT)
+                s.connect((ip, port))
+                s.close()
+                logging.debug('Port {0} is open on ip {1}'.format(port, ip))
+            except socket.timeout as st:
+                logging.debug('Socket timeout on port {0} for ip {1}'.format(port, ip))
+                return False
+            except socket.error as se:
+                if se.errno == errno.ECONNREFUSED:
+                    logging.debug('Port {0} is open on ip {1}, but no one is listening'.format(port, ip))
+                else:
+                    logging.debug('Error in connecting to ip {0} on port {1}'.format(port, ip))
+            except Exception as e:
+                logging.error('Error in connecting to ip {0} on port {1}'.format(port, ip))
+        return True
+
     def get_instance_state(self, ip, username, keyfile):
         logging.debug('Checking state for {ip}...'.format(ip=ip))
 
         state = VMStateModel.STATE_UNKNOWN
         try:
-            command = '[ -d ~/stochss ] && true'
-            cmd = self.get_remote_command_string(ip=ip, username=username,
-                                                 keyfile=keyfile,
-                                                 command=command)
-            logging.debug('cmd = {0}'.format(cmd))
-            if os.system(cmd) != 0:
+            #command = '[ -d ~/stochss ] && true'
+            #cmd = self.get_remote_command_string(ip=ip, username=username,
+            #                                     keyfile=keyfile,
+            #                                     command=command)
+            #logging.debug('cmd = {0}'.format(cmd))
+            #if os.system(cmd) != 0:
+            #    logging.debug('get_instance_state() os.system({0}) == 0'.format(cmd))
+            if not self.__check_network_ports(ip, [22, 443]):
+                logging.debug('get_instance_state() __check_network_ports() == False')
                 state = VMStateModel.STATE_INACCESSIBLE
             else:
+                logging.debug('get_instance_state() __check_network_ports() == True')
                 state = VMStateModel.STATE_ACCESSIBLE
 
                 url = self.__get_flex_vm_state_url(ip)
@@ -222,10 +248,10 @@ class FlexAgent(BaseAgent):
                     state = response['state']
 
         except Exception as e:
-            logging.error(traceback.format_exc())
-            logging.error('Error: {}'.format(str(e)))
+            logging.exception(e)
             state = VMStateModel.STATE_UNKNOWN
 
+        logging.debug('get_instance_state() state = {0}'.format(state))
         return state
 
     def describe_instances(self, parameters, prefix=''):
