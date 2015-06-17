@@ -366,34 +366,10 @@ class StatusPage(BaseHandler):
                             job.status = "Failed"
 
                 #    asd
-                elif job.resource in stochoptim.StochOptimJobWrapper.SUPPORTED_CLOUD_RESOURCES and job.status != "Finished":
+                elif job.resource in backendservices.SUPPORTED_CLOUD_RESOURCES and job.status != "Finished":
                     taskparams = {}
-                    if job.resource == stochoptim.StochOptimJobWrapper.EC2_CLOUD_RESOURCE:
-                         # Retrive credentials from the datastore
-                        if not self.user_data.valid_credentials:
-                            return {'status': False,
-                                    'msg': 'Could not retrieve the status of job '+ job.name +'. Invalid credentials.'}
-                        credentials = self.user_data.getCredentials()
-
-                        taskparams = {
-                            'AWS_ACCESS_KEY_ID': credentials['EC2_ACCESS_KEY'],
-                            'AWS_SECRET_ACCESS_KEY': credentials['EC2_SECRET_KEY'],
-                            'taskids': [job.cloudDatabaseID],
-                            'agent_type': AgentTypes.EC2
-                        }
-
-                    elif job.resource == stochoptim.StochOptimJobWrapper.FLEX_CLOUD_RESOURCE:
-                        queue_head_machine = self.user_data.get_flex_queue_head_machine()
-                        taskparams = {
-                            'flex_db_password': self.user_data.flex_db_password,
-                            'queue_head_ip': queue_head_machine['ip'],
-                            'taskids':[job.cloudDatabaseID],
-                            'agent_type': AgentTypes.FLEX
-                        }
-
-
-                    task_status = service.describeTask(taskparams)
-                    logging.info('StochOptim task_status =\n{}'.format(pprint.pformat(task_status)))
+                    task_status = service.describeTask(job)
+                    logging.debug('StochOptim task_status =\n{}'.format(pprint.pformat(task_status)))
                     if task_status is None:
                         job.status = 'Inaccessible'
                     elif task_status is not None and job.cloudDatabaseID not in task_status:

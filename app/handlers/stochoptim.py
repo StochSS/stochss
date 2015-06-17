@@ -25,10 +25,6 @@ import logging
 import traceback
 from backend.backendservice import backendservices
 from backend.common.config import AgentTypes, JobConfig
-from backend.storage.s3_storage import S3StorageAgent
-from backend.storage.flex_storage import FlexStorageAgent
-from backend.databases.flex_db import FlexDB
-from backend.databases.dynamo_db import DynamoDB
 
 def int_or_float(s):
     try:
@@ -154,9 +150,6 @@ class StochOptimModel(stochss.model.Model):
             return os.linesep.join([rnu, pnu, snames, rnames, rparms, rknames, rconstant, rkind])
 
 class StochOptimJobWrapper(db.Model):
-    FLEX_CLOUD_RESOURCE = "{0}-cloud".format(AgentTypes.FLEX)
-    EC2_CLOUD_RESOURCE = "{0}-cloud".format(AgentTypes.EC2)
-    SUPPORTED_CLOUD_RESOURCES = [FLEX_CLOUD_RESOURCE, EC2_CLOUD_RESOURCE]
 
     userId = db.StringProperty()
     pid = db.IntegerProperty()
@@ -185,67 +178,20 @@ class StochOptimJobWrapper(db.Model):
 
         self.stop()
         
-        if self.resource in StochOptimJobWrapper.SUPPORTED_CLOUD_RESOURCES:
-            service = backend.backendservice.backendservices()
-            try:
-                user_data = handler.user_data
-                if self.resource == self.EC2_CLOUD_RESOURCE:
-                    bucketname = user_data.S3_bucket_name
-                    logging.debug('bucketname = {}'.format(bucketname))
-                    ec2_credentials = handler.user_data.getCredentials()
-                    # delete the folder that contains the replay sources
-                    logging.debug('deleting the rerun source folder {1} in bucket {0}'.format(bucketname, self.pid))
-                    delete_folder(bucketname, self.pid, ec2_credentials['EC2_ACCESS_KEY'], ec2_credentials['EC2_SECRET_KEY'])
-                    # delete the output tar file
-                    storage_agent = S3StorageAgent(bucket_name=bucketname,
-                                                   ec2_access_key=ec2_credentials['EC2_ACCESS_KEY'],
-                                                   ec2_secret_key=ec2_credentials['EC2_SECRET_KEY'])
-                    filename = 'output/' + self.cloudDatabaseID + '.tar'
-                    logging.debug('deleting the output tar file output/{1}.tar in bucket {0}'.format(bucketname, self.pid))
-                    storage_agent.delete_file(filename=filename)
-                    database = DynamoDB(access_key=ec2_credentials['EC2_ACCESS_KEY'],
-                                        secret_key=ec2_credentials['EC2_SECRET_KEY'])
-                elif self.resource == self.FLEX_CLOUD_RESOURCE:
-                    flex_queue_head_machine = user_data.get_flex_queue_head_machine()
-                    # delete the output tar file
-                    storage_agent = FlexStorageAgent(queue_head_ip=flex_queue_head_machine['ip'],
-                                                     queue_head_username=flex_queue_head_machine['username'],
-                                                     queue_head_keyfile=flex_queue_head_machine['keyfile'])
-                    filename = self.cloudDatabaseID + '.tar'
-                    storage_agent.delete_file(filename=filename)
-                    database = FlexDB(password=user_data.flex_db_password, ip=flex_queue_head_machine['ip'])
-                    service.deleteTasks(taskids=[(self.celeryPID, self.cloudDatabaseID)], database=database)
-                else:
-                    logging.error(traceback.format_exc())
-                    logging.error("UNKNOWN job.resource = {0}".format(self.resource))
-            except Exception as e:
-                logging.error(traceback.format_exc())
-                logging.error('Error: {}'.format(str(e)))
-                raise Exception('fail to delete cloud output.')
+        # delete on cloud
+        if self.resource in backendservices.SUPPORTED_CLOUD_RESOURCES:
+            service = backend.backendservice.backendservices(handler.user_data)
+            service.deleteTasks(self)
 
         super(StochOptimJobWrapper, self).delete()
 
     def stop(self, credentials=None):
         if self.status == "Running" or self.status == "Pending":
+            service = backend.backendservice.backendservices(self.user_data)
             if self.resource.lower() == "local":
-                try:
-                    os.killpg(self.pid, signal.SIGTERM)
-                except:
-                    pass
-
-            elif self.resource in StochOptimJobWrapper.SUPPORTED_CLOUD_RESOURCES:
-                service = backend.backendservice.backendservices()
-                stop_params = {
-                    'credentials': credentials,
-                    'ids': [(self.celeryPID, self.cloudDatabaseID)]
-                }
-                if self.resource == StochOptimJobWrapper.EC2_CLOUD_RESOURCE:
-                    result = service.stopTasks(stop_params, agent_type=AgentTypes.EC2)
-                elif self.resource == StochOptimJobWrapper.FLEX_CLOUD_RESOURCE:
-                    result = service.stopTasks(stop_params, agent_type=AgentTypes.FLEX)
-                else:
-                    logging.error("Cloud resource is not EC2 or FLEX, job.stop() failed")
-
+                service.deleteTaskLocal([int(self.pid)])
+            elif self.resource in backendservices.SUPPORTED_CLOUD_RESOURCES:
+                result = service.stopTasks(self)
                 if result and result[self.cloudDatabaseID]:
                     final_cloud_result = result[self.cloudDatabaseID]
                     try:
@@ -257,9 +203,7 @@ class StochOptimJobWrapper(db.Model):
                     return True
                 else:
                     # Something went wrong
-                    print '**************************************************************************************'
-                    print result
-                    print '**************************************************************************************'
+                    logging.error(result)
                     return False
             else:
                 raise Exception("Unknown job resource '{0}'".format(sef.resource))
@@ -304,10 +248,10 @@ class StochOptimPage(BaseHandler):
                 else:
                     # cloud
 
-                    backend_services = backend.backendservice.backendservices()
+                    backend_services = backend.backendservice.backendservices(self.user_data)
 
                     if self.user_data.is_flex_cloud_info_set:
-                        self.user_data.update_flex_cloud_machine_info_from_db()
+                        self.user_data.update_flex_cloud_machine_info_from_db(backend_services)
                         flex_queue_head_machine = self.user_data.get_flex_queue_head_machine()
 
                         if backend_services.is_flex_queue_head_running(flex_queue_head_machine):
@@ -376,43 +320,13 @@ class StochOptimPage(BaseHandler):
             job = StochOptimJobWrapper.get_by_id(jobID)
 
             if job.userId == self.user.user_id():
-                if job.resource.lower() in StochOptimJobWrapper.SUPPORTED_CLOUD_RESOURCES:
+                if job.resource.lower() in backendservices.SUPPORTED_CLOUD_RESOURCES:
                     try:
-                        logging.info("KILL TASK {0}".format(job.pollProcessPID))
+                        logging.info("Stopping StochOptim poll task pid={0}".format(job.pollProcessPID))
                         os.kill(job.pollProcessPID, signal.SIGTERM)
                     except Exception as e:
                         logging.error("StochOptimPage.post.stopJob(): exception during kill process: {0}".format(e))
-                    if job.resource == StochOptimJobWrapper.EC2_CLOUD_RESOURCE:
-                        if not self.user_data.valid_credentials:
-                            return self.response.write(json.dumps({
-                                'status': False,
-                                'msg': 'Could not stop the job '+job.jobName +'. Invalid credentials.'
-                            }))
-                        credentials = self.user_data.getCredentials()
-                        job_credentials={
-                            'AWS_ACCESS_KEY_ID': credentials['EC2_ACCESS_KEY'],
-                            'AWS_SECRET_ACCESS_KEY': credentials['EC2_SECRET_KEY']
-                        }
-                    elif job.resource == StochOptimJobWrapper.FLEX_CLOUD_RESOURCE:
-                        service = backend.backendservice.backendservices()
-                        job_credentials = None
-                        if self.user_data.is_flex_cloud_info_set:
-                            self.user_data.update_flex_cloud_machine_info_from_db()
-                            flex_queue_head_machine = self.user_data.get_flex_queue_head_machine()
-                            if service.is_flex_queue_head_running(flex_queue_head_machine):
-                                job_credentials={
-                                    'flex_db_password' : self.user_data.flex_db_password,
-                                    'flex_queue_head' : self.user_data.get_flex_queue_head_machine()
-                                }
-                        if job_credentials is None:
-                            return self.response.write(json.dumps({
-                                'status': False,
-                                'msg': 'Could not stop the job '+job.jobName +'. Invalid credentials.'
-                            }))
-                    else:
-                        logging.error("Cloud resource is not EC2 or FLEX, job.stop() failed")
-
-                    success = job.stop(credentials=job_credentials)
+                    success = job.stop(job)
                     if not success:
                         return self.response.write(json.dumps({
                             'status': False,
@@ -632,43 +546,10 @@ class StochOptimPage(BaseHandler):
             "credentials": self.user_data.getCredentials(),
             "bucketname": self.user_data.getBucketName()
         }
-        # Set the environmental variables 
-        os.environ["AWS_ACCESS_KEY_ID"] = self.user_data.getCredentials()['EC2_ACCESS_KEY']
-        os.environ["AWS_SECRET_ACCESS_KEY"] = self.user_data.getCredentials()['EC2_SECRET_KEY']
-        service = backend.backendservice.backendservices()
-
-
-        if agent_type == AgentTypes.EC2:
-            ec2_credentials = self.user_data.getCredentials()
-
-            # Set the environmental variables
-            os.environ["AWS_ACCESS_KEY_ID"] = ec2_credentials['EC2_ACCESS_KEY']
-            os.environ["AWS_SECRET_ACCESS_KEY"] = ec2_credentials['EC2_SECRET_KEY']
-            # Send the task to the backend
-            cloud_result = service.submit_cloud_task(params=cloud_params, agent_type=agent_type,
-                                               ec2_access_key=ec2_credentials['EC2_ACCESS_KEY'],
-                                               ec2_secret_key=ec2_credentials['EC2_SECRET_KEY'])
-        elif agent_type == AgentTypes.FLEX:
-            queue_head_machine = self.user_data.get_flex_queue_head_machine()
-            logging.info('queue_head_machine = {}'.format(queue_head_machine))
-
-            flex_credentials = {
-                'flex_db_password': self.user_data.flex_db_password,
-                'flex_queue_head': queue_head_machine,
-            }
-
-            # Send the task to the backend
-            cloud_result = service.submit_cloud_task(params=cloud_params, agent_type=agent_type,
-                                                     flex_credentials=flex_credentials)
-
-        else:
-            raise Exception('Invalid agent type!')
 
         # # execute cloud task
-        # cloud_result = service.submit_cloud_task(params=cloud_params,
-        #                                    agent_type=AgentTypes.EC2,
-        #                                    ec2_access_key=os.environ["AWS_ACCESS_KEY_ID"],
-        #                                    ec2_secret_key=os.environ["AWS_SECRET_ACCESS_KEY"])
+        service = backend.backendservice.backendservices(self.user_data)
+        cloud_result = service.submit_cloud_task(params=cloud_params)
 
         if not cloud_result["success"]:
             result = {
@@ -712,7 +593,7 @@ class StochOptimVisualization(BaseHandler):
         optimization = StochOptimJobWrapper.get_by_id(jobID)
         # check if job is finised, if so, mark finished
         if optimization.status != "Finished":
-            service = backendservices()
+            service = backendservices(self.user_data)
             if optimization.resource == "local" or not optimization.resource:
                 res = service.checkTaskStatusLocal([optimization.pid])
                 if res[optimization.pid] and optimization.pid:
@@ -731,42 +612,10 @@ class StochOptimVisualization(BaseHandler):
                         optimization.status = "Failed"
             else:
                 #cloud
-                # Retrive credentials from the datastore
-
-                if optimization.resource == StochOptimJobWrapper.EC2_CLOUD_RESOURCE:
-                    if not self.user_data.valid_credentials:
-                        return {'status':False,
-                                'msg':'Could not retrieve the status of job '+ optimization.jobName +'. Invalid credentials.'}
-                    credentials = self.user_data.getCredentials()
-                    # Check the status from backend
-                    taskparams = {
-                        'AWS_ACCESS_KEY_ID': credentials['EC2_ACCESS_KEY'],
-                        'AWS_SECRET_ACCESS_KEY': credentials['EC2_SECRET_KEY'],
-                        'taskids': [optimization.cloudDatabaseID],
-                        'agent_type': AgentTypes.EC2
-                    }
-
-                elif optimization.resource == StochOptimJobWrapper.FLEX_CLOUD_RESOURCE:
-                    if not self.user_data.valid_flex_cloud_info:
-                        return {'status':False,
-                                'msg':'Could not retrieve the status of job '+optimization.jobName +'. Invalid flex cloud info.'}
-
-                    queue_head_machine = self.user_data.get_flex_queue_head_machine()
-                    taskparams = {
-                        'flex_db_password': self.user_data.flex_db_password,
-                        'queue_head_ip': queue_head_machine['ip'],
-                        'taskids':[optimization.cloudDatabaseID],
-                        'agent_type': AgentTypes.FLEX
-                    }
-
-                else:
-                    return {'status':False,
-                             'msg':'Could not retrieve the status of job '+optimization.jobName +'. Invalid Cloud resource.'}
-
-                task_status = service.describeTask(taskparams)
+                task_status = service.describeTask(optimization)
                 logging.info('task_status =\n{}'.format(pprint.pformat(task_status)))
 
-                if optimization.cloudDatabaseID not in task_status:
+                if task_status is None or optimization.cloudDatabaseID not in task_status:
                     logging.error('Could not find job with cloudDatabaseID {} in fetched task_status!'.format(optimization.cloudDatabaseID))
                     return
 
@@ -801,7 +650,7 @@ class StochOptimVisualization(BaseHandler):
 
             optimization.put()
         # Might need to download the cloud data
-        if optimization.resource in StochOptimJobWrapper.SUPPORTED_CLOUD_RESOURCES:
+        if optimization.resource in backendservices.SUPPORTED_CLOUD_RESOURCES:
             if optimization.status == "Finished":
                 if optimization.has_final_cloud_data():
                     # Nothing to do here
@@ -914,47 +763,17 @@ class StochOptimVisualization(BaseHandler):
         result = {}
 
         try:
-            service = backend.backendservice.backendservices()
+            service = backend.backendservice.backendservices(self.user_data)
             # check if the outputURL is empty, if so, update it from the DB
             if job_wrapper.outputURL is None:
-                logging.info("stochoptim.outputURL is None")
-                # Retrive credentials from the datastore
+                logging.debug("stochoptim.outputURL is None")
 
-                if job_wrapper.resource == StochOptimJobWrapper.EC2_CLOUD_RESOURCE:
-                    if not self.user_data.valid_credentials:
-                        return {'status':False,
-                                'msg':'Could not retrieve the status of job '+job_wrapper.jobName +'. Invalid credentials.'}
-                    credentials = self.user_data.getCredentials()
-                    # Check the status from backend
-                    taskparams = {
-                        'AWS_ACCESS_KEY_ID': credentials['EC2_ACCESS_KEY'],
-                        'AWS_SECRET_ACCESS_KEY': credentials['EC2_SECRET_KEY'],
-                        'taskids': [job_wrapper.cloudDatabaseID],
-                        'agent_type': AgentTypes.EC2
-                    }
 
-                elif job_wrapper.resource == StochOptimJobWrapper.FLEX_CLOUD_RESOURCE:
-                    if not self.user_data.valid_flex_cloud_info:
-                        return {'status':False,
-                                'msg':'Could not retrieve the status of job '+job_wrapper.jobName +'. Invalid flex cloud info.'}
-
-                    queue_head_machine = self.user_data.get_flex_queue_head_machine()
-                    taskparams = {
-                        'flex_db_password': self.user_data.flex_db_password,
-                        'queue_head_ip': queue_head_machine['ip'],
-                        'taskids':[job_wrapper.cloudDatabaseID],
-                        'agent_type': AgentTypes.FLEX
-                    }
-
-                else:
-                    return {'status':False,
-                             'msg':'Could not retrieve the status of job '+job_wrapper.jobName +'. Invalid Cloud resource.'}
-
-                task_status = service.describeTask(taskparams)
-                logging.info("job_status = task_status[job.cloudDatabaseID={0}] = {1}".format(
+                task_status = service.describeTask(job_wrapper)
+                logging.debug("job_status = task_status[job.cloudDatabaseID={0}] = {1}".format(
                                                             job_wrapper.cloudDatabaseID, task_status))
                 job_status = task_status[job_wrapper.cloudDatabaseID]
-                logging.info("job_status = {0}".format(job_status))
+                logging.debug("job_status = {0}".format(job_status))
                 job_wrapper.outputURL = job_status['output']
 
 

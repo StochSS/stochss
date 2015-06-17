@@ -260,6 +260,9 @@ class CredentialsPage(BaseHandler):
             'user_id': user_id,
             'reservation_id': self.user_data.reservation_id
         }
+        self.user_data.flex_cloud_status = True
+        self.user_data.flex_cloud_info_msg = 'Deregistering Flex Cloud'
+        self.user_data.put()
 
         result = service.deregister_flex_cloud(parameters=params, blocking=True)
 
@@ -279,9 +282,15 @@ class CredentialsPage(BaseHandler):
             self.user_data.set_flex_cloud_machine_info(old_flex_cloud_machine_info)
             self.user_data.reservation_id = None
             self.user_data.flex_db_password = None
+            self.user_data.flex_cloud_status = None
+            self.user_data.flex_cloud_info_msg = ''
             self.user_data.put()
         else:
             logging.error('deregister_flex_cloud failed!')
+            self.user_data.flex_cloud_status = True
+            self.user_data.flex_cloud_info_msg = 'Error when deregistering Flex Cloud'
+            self.user_data.put()
+
 
         self.redirect('/flexCloudCredentials')
 
@@ -325,7 +334,11 @@ class CredentialsPage(BaseHandler):
             machine['database_id'] = idN
 
         self.user_data.set_flex_cloud_machine_info(flex_cloud_machine_info)
+        self.user_data.flex_cloud_status = True
+        #self.user_data.flex_cloud_info_msg = 'Flex Cloud configured. Waiting for workers to become available...'
+        self.user_data.flex_cloud_info_msg = 'Preparing Flex Cloud'
         self.user_data.put()
+
         if res == True:
             result = {'flex_cloud_status': True,
                       'flex_cloud_info_msg': 'Preparing Flex Cloud'}
@@ -440,46 +453,51 @@ class CredentialsPage(BaseHandler):
         result['is_flex_cloud_info_set'] = self.user_data.is_flex_cloud_info_set
 
         # Fill with dummy if empty
-        if flex_cloud_machine_info == None or len(flex_cloud_machine_info) == 0:
-            logging.info('Adding dummy flex cloud machine for UI rendering...')
+        if flex_cloud_machine_info is None or len(flex_cloud_machine_info) == 0:
+            logging.debug('Adding dummy flex cloud machine for UI rendering...')
             flex_cloud_machine_info = [{'ip': '', 'keyname': '', 'username': '', 'queue_head': True, 'state': ''}]
         else:
-            self.user_data.update_flex_cloud_machine_info_from_db()
+            service = backendservices(self.user_data)
+            self.user_data.update_flex_cloud_machine_info_from_db(service)
             flex_cloud_machine_info = self.user_data.get_flex_cloud_machine_info()
 
             if self.user_data.is_flex_cloud_info_set:
                 terminated = True
+                all_running = True
                 for machine in flex_cloud_machine_info:
                     if machine['state'] != 'terminated' and machine['state'] != 'inaccessible':
                         terminated = False
-                        
+                    if machine['state'] != 'running':
+                        all_running = False
+            
                 if terminated:
                     self.deregister_flex_cloud(self.user.user_id())
 
-                    context['flex_cloud_status'] = False
-                    context['flex_cloud_info_msg'] = 'Flex Cloud failed to deploy'
+                    self.user_data.flex_cloud_status = False
+                    self.user_data.flex_cloud_info_msg = 'Flex Cloud failed to deploy'
+                    self.user_data.put()
 
-                    self.user_data.update_flex_cloud_machine_info_from_db()
+                    self.user_data.update_flex_cloud_machine_info_from_db(service)
                     flex_cloud_machine_info = self.user_data.get_flex_cloud_machine_info()
+                elif all_running:
+                    self.user_data.flex_cloud_status = True
+                    self.user_data.flex_cloud_info_msg = 'Flex Cloud Deployed'
+                    self.user_data.put()
         # We must ensure queue head is first element in this list for GUI to work properly
         flex_cloud_machine_info = sorted(flex_cloud_machine_info, key=lambda x: x['queue_head'], reverse=True)
 
         context['flex_cloud_machine_info'] = flex_cloud_machine_info
 
-        logging.info('user_data.valid_flex_cloud_info = {0}'.format(self.user_data.valid_flex_cloud_info))
+        logging.debug('user_data.valid_flex_cloud_info = {0}'.format(self.user_data.valid_flex_cloud_info))
         context['valid_flex_cloud_info'] = self.user_data.valid_flex_cloud_info
 
         # Check if the flex cloud credentials are valid.
-        if self.user_data.is_flex_cloud_info_set:
-          #context['flex_cloud_status'] = True
-          #      context['flex_cloud_info_msg'] = 'Flex Cloud deployed'
-            if not self.user_data.valid_flex_cloud_info:
-              #else:
-                context['flex_cloud_status'] = True
-                context['flex_cloud_info_msg'] = 'Flex Cloud configured. Waiting for workers to become available...'
-        #else:
-        #    context['flex_cloud_status'] = 'Failure'
-        #    context['flex_cloud_info_msg'] = 'Could not determine the status of the machines: Invalid Flex Cloud Credentials!'
+        context['flex_cloud_status'] = self.user_data.flex_cloud_status
+        context['flex_cloud_info_msg'] = self.user_data.flex_cloud_info_msg
+#        if self.user_data.is_flex_cloud_info_set:
+#            if not self.user_data.valid_flex_cloud_info:
+#                context['flex_cloud_status'] = True
+#                context['flex_cloud_info_msg'] = 'Flex Cloud configured. Waiting for workers to become available...'
 
         # Get Flex SSH Key Info
         flex_ssh_key_info = self.__get_flex_ssh_key_info()

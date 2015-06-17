@@ -694,49 +694,6 @@ class SpatialPage(BaseHandler):
         pymodel = self.construct_pyurdme_model(data)
         #logging.info('DATA: {0}'.format(data))
         #####
-        
-        
-
-#                if self.user_data.is_flex_cloud_info_set:
-#                    self.user_data.update_flex_cloud_machine_info_from_db()
-#                    flex_queue_head_machine = self.user_data.get_flex_queue_head_machine()
-#
-#                    if service.is_flex_queue_head_running(flex_queue_head_machine):
-#                        logging.info('Flex Queue Head is running')
-#                        data['resource'] = '{0}-cloud'.format(AgentTypes.FLEX)
-#                        result = self.runCloud(data=data, agent_type=AgentTypes.FLEX)
-#                        self.response.write(json.dumps(result))
-#                        return
-#
-#                    else:
-#                        result = {'status': False,
-#                                  'msg': 'You must have at least queue head running to run in the flex cloud.'}
-#                        self.response.write(json.dumps(result))
-#                        return
-#
-#                else:
-#                    compute_check_params = {
-#                        "infrastructure": AgentTypes.EC2,
-#                        "credentials": self.user_data.getCredentials(),
-#                        "key_prefix": self.user.user_id()
-#                    }
-#
-#                    if self.user_data.valid_credentials and \
-#                            service.isOneOrMoreComputeNodesRunning(compute_check_params):
-#
-#                        data['resource'] = '{0}-cloud'.format(AgentTypes.EC2)
-#                        result = self.runCloud(data=data, agent_type=AgentTypes.EC2)
-#                        self.response.write(json.dumps(result))
-#                        return
-#
-#                    else:
-#                        result = {'status': False,
-#                                  'msg': 'You must have at least one active EC2 compute node to run in the EC2 cloud.'}
-#                        self.response.write(json.dumps(result))
-#                        return
-
-        
-
         cloud_params = {
             "job_type": "spatial",
             "simulation_algorithm" : data['algorithm'],
@@ -751,30 +708,8 @@ class SpatialPage(BaseHandler):
         cloud_params['document'] = pickle.dumps(pymodel)
         #logging.debug('PYURDME: {0}'.format(cloud_params['document']))
 
-
-#        if agent_type == AgentTypes.EC2:
-#            ec2_credentials = self.user_data.getCredentials()
-#            logging.info('ec2_credentials = {}'.format(ec2_credentials))
-#
-#            if 'EC2_ACCESS_KEY' not in ec2_credentials:
-#                result = {'status':False,
-#                          'msg':'Access Key not set. Check : Settings > Cloud Computing'}
-#                return self.response.write(json.dumps(result))
-#
-#            if 'EC2_SECRET_KEY' not in ec2_credentials: 
-#                result = {'status':False,
-#                          'msg':'Secret Key not set. Check : Settings > Cloud Computing'}
-#                return self.response.write(json.dumps(result))
-
-            # Set the environmental variables
-            #TODO delete all reference to AWS_ACCESS_KEY_ID and AWS_SECRET_ACCESS_KEY - wrong names
-            #os.environ["AWS_ACCESS_KEY_ID"] = ec2_credentials['EC2_ACCESS_KEY']
-            #os.environ["AWS_SECRET_ACCESS_KEY"] = ec2_credentials['EC2_SECRET_KEY']
-
         # Send the task to the backend
         cloud_result = service.submit_cloud_task(params=cloud_params)
-
-
 
         if not cloud_result["success"]:
             e = cloud_result["exception"]
