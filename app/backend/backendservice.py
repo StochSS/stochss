@@ -61,7 +61,9 @@ class backendservices(object):
         #TODO how return these conditionally
         flex_queue_head_machine = self.user_data.get_flex_queue_head_machine()
         ret['flex_db_password'] = self.user_data.flex_db_password
-        ret['queue_head_ip'] = flex_queue_head_machine['ip']
+        ret['queue_head_ip'] = ''
+        if flex_queue_head_machine is not None and 'ip' in flex_queue_head_machine:
+            ret['queue_head_ip'] = flex_queue_head_machine['ip']
         return ret
 
     def get_database(self, job):
