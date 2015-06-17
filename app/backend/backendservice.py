@@ -741,33 +741,52 @@ class backendservices(object):
         return is_valid, error_reason
 
 
-    def getSizeOfOutputResults(self, output_urls, agent_type, credentials=None):
+    def getSizeOfOutputResults(self, output_urls):
         '''
         This method checks the size of the output results stored in S3 for all of the buckets and keys
          specified in output_buckets.
-        @param aws_access_key
-         The AWS access key of the user whose output is being examined.
-        @param aws_secret_key
-         The AWS secret key of the user whose output is being examined.
-        @param output_buckets
-         A dictionary whose keys are bucket names and whose values are lists of (key name, job name) pairs.
         @return
          A dictionary whose keys are job names and whose values are output sizes of those jobs.
          The output size is either the size specified in bytes or None if no output was found.
         '''
-        logging.debug('agent_type = {}'.format(agent_type))
         logging.debug("getSizeOfOutputResults: inside method with output_urls: {0}".format(output_urls))
 
-        if agent_type == AgentTypes.EC2:
-            try:
+        credentials = self.get_credentials()
+        logging.debug('credentials = {0}'.format(credentials))
+
+        result = {}
+        #Check all infrastructures
+        for output_url in output_urls:
+            if output_url.startswith('scp://'):
+                for job_id, output_url in output_urls.items():
+                    match_object = re.search(pattern='scp://([^:@]+)@([^:@]+):([^:@]+):([^:@]+)', string = output_url)
+                    username = match_object.group(1)
+                    ip = match_object.group(2)
+                    keyname = match_object.group(3)
+                    output_tar_file_path = match_object.group(4)
+                        
+                    command = "du -b {output_file}".format(output_file=output_tar_file_path)
+                    remote_cmd = helper.get_remote_command(user=username, ip=ip,
+                                                           key_file=os.path.join(self.FLEX_SSH_KEYFILE_DIR, keyname),
+                                                           command=command)
+                        
+                    logging.debug('command = {}'.format(remote_cmd))
+                    handle = subprocess.Popen(shlex.split(remote_cmd), stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+                    stdout, stderr = handle.communicate()
+                    
+                    match_object = re.search(pattern='([^\s]+)(\s+)([^\s]+)', string=stdout)
+                    if match_object:
+                        output_size = int(match_object.group(1))
+                        logging.debug('For job_id = {0}, size = {1}'.format(job_id, output_size))
+                        result[job_id] = output_size
+                    else:
+                        result[job_id] = None
+            elif output_url.startswith('https://') or output_url.startswith('http://'):
                 aws_access_key = credentials['EC2_ACCESS_KEY']
                 aws_secret_key = credentials['EC2_SECRET_KEY']
 
                 # Connect to S3
                 conn = S3Connection(aws_access_key, aws_secret_key)
-
-                # Output is a dictionary
-                result = {}
 
                 bucket_map = {}
                 for job_id, output_url in output_urls.items():
@@ -781,7 +800,6 @@ class backendservices(object):
                         bucket_map[bucket_name] += [(key_name, job_id)]
                     else:
                         bucket_map[bucket_name] = [(key_name, job_id)]
-
 
                 for bucket_name in bucket_map:
                     # Try to get the bucket
@@ -801,49 +819,7 @@ class backendservices(object):
                             else:
                                 # Output exists for this key
                                 result[job_id] = key.size
-                return result
-
-            except Exception, e:
-                logging.error("getSizeOfOutputResults: unable to get size with exception: {0}".format(e))
-                return None
-
-        elif agent_type == AgentTypes.FLEX:
-            try:
-                result = {}
-                for job_id, output_url in output_urls.items():
-                    match_object = re.search(pattern='scp://([^:@]+)@([^:@]+):([^:@]+):([^:@]+)', string=output_url)
-                    username = match_object.group(1)
-                    ip = match_object.group(2)
-                    keyname = match_object.group(3)
-                    output_tar_file_path = match_object.group(4)
-
-                    command = "du -b {output_file}".format(output_file=output_tar_file_path)
-                    remote_cmd = helper.get_remote_command(user=username, ip=ip,
-                                                        key_file=os.path.join(self.FLEX_SSH_KEYFILE_DIR, keyname),
-                                                        command=command)
-
-                    logging.debug('command = {}'.format(remote_cmd))
-                    handle = subprocess.Popen(shlex.split(remote_cmd), stdout=subprocess.PIPE, stderr=subprocess.PIPE)
-                    stdout, stderr = handle.communicate()
-
-                    match_object = re.search(pattern='([^\s]+)(\s+)([^\s]+)', string=stdout)
-                    if match_object:
-                        output_size = int(match_object.group(1))
-                        logging.debug('For job_id = {0}, size = {1}'.format(job_id, output_size))
-                        result[job_id] = output_size
-                    else:
-                        result[job_id] = None
-
-                return result
-
-            except Exception as e:
-                logging.error(traceback.format_exc())
-                logging.error('Error in getSizeOfOutputResults: {}'.format(str(e)))
-                return None
-        else:
-            logging.error('Invalid Agent type = {}!'.format(agent_type))
-
-        return None
+        return result
 
 
     def fetchOutput(self, taskid, outputurl):

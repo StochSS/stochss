@@ -106,7 +106,7 @@ class StochKitJobWrapper(db.Model):
         # TODO: Call the backend to kill and delete the job and all associated files.
         service = backendservices(user_data)
 
-        if self.zipFileName is not None os.path.exists(self.zipFileName):
+        if self.zipFileName is not None and os.path.exists(self.zipFileName):
             os.remove(self.zipFileName)
         
         #delete the ouput results of execution locally, if exists.       
@@ -142,6 +142,7 @@ class JobManager():
                         # These are things contained in the stochkit_job object
                         "type" : job.indata["type"],
                         "status" : job.status,
+                        "startTime" : job.startTime,
                         "modelName" : job.modelName,
                         "output_stored": job.output_stored,
                         "output_location" : job.output_location,
@@ -153,9 +154,6 @@ class JobManager():
                         "exec_type" : job.indata["exec_type"],
                         "units" : job.indata["units"],
                         "resource" : job.indata["resource"],
-                        "store_only_mean" : job.indata["store_only_mean"],
-                        "label_column_names" : job.indata["label_column_names"],
-                        "create_histogram_data" : job.indata["create_histogram_data"],
                         "epsilon" : job.indata["epsilon"],
                         "threshold" : job.indata["threshold"],
                         "seed" : job.indata["seed"],
@@ -170,34 +168,30 @@ class JobManager():
     def getJob(handler, job_id):
         job = StochKitJobWrapper.get_by_id(job_id)
 
-        logging.info(job.stochkit_job.units)
-
         jsonJob = { "id" : job.key().id(),
-                        "name" : job.name,
-                        "stdout" : job.stdout,
-                        "stderr" : job.stderr,
-                        # These are things contained in the stochkit_job object
-                        "type" : job.indata["type"],
-                        "status" : job.status,
-                        "modelName" : job.modelName,
-                        "output_stored": job.output_stored,
-                        "output_location" : job.output_location,
-                        "zipFileName" : job.zipFileName,
-                        "output_url" : job.output_url,
-                        "final_time" : job.indata["final_time"],
-                        "increment" : job.indata["increment"],
-                        "realizations" : job.indata["realizations"],
-                        "exec_type" : job.indata["exec_type"],
-                        "units" : job.indata["units"],
-                        "resource" : job.indata["resource"],
-                        "store_only_mean" : job.indata["store_only_mean"],
-                        "label_column_names" : job.indata["label_column_names"],
-                        "create_histogram_data" : job.indata["create_histogram_data"],
-                        "epsilon" : job.indata["epsilon"],
-                        "threshold" : job.indata["threshold"],
-                        "seed" : job.indata["seed"],
-                        "pid" : job.pid,
-                        "result" : job.result }
+                    "name" : job.name,
+                    "stdout" : job.stdout,
+                    "stderr" : job.stderr,
+                    # These are things contained in the stochkit_job object
+                    "type" : job.indata["type"],
+                    "status" : job.status,
+                    "startDate" : job.startTime,
+                    "modelName" : job.modelName,
+                    "output_stored": job.output_stored,
+                    "output_location" : job.output_location,
+                    "zipFileName" : job.zipFileName,
+                    "output_url" : job.output_url,
+                    "final_time" : job.indata["final_time"],
+                    "increment" : job.indata["increment"],
+                    "realizations" : job.indata["realizations"],
+                    "exec_type" : job.indata["exec_type"],
+                    "units" : job.indata["units"],
+                    "resource" : job.resource,
+                    "epsilon" : job.indata["epsilon"],
+                    "threshold" : job.indata["threshold"],
+                    "seed" : job.indata["seed"],
+                    "pid" : job.pid,
+                    "result" : job.result }
             
         return jsonJob
 
@@ -234,7 +228,7 @@ class JobManager():
         
         jobWrap.modelName = job['modelName']
         # This is probably not a good idea...
-        jobWrap.indata = dict([(k, job[k]) for k in ['type', 'final_time', 'increment', 'realizations', 'exec_type', 'units', 'store_only_mean', 'label_column_names', 'create_histogram_data', 'epsilon', 'threshold', 'seed'] if k in job])
+        jobWrap.indata = dict([(k, job[k]) for k in ['type', 'final_time', 'increment', 'realizations', 'exec_type', 'units', 'epsilon', 'threshold', 'seed'] if k in job])
 
         if 'startDate' in job:
             jobWrap.startDate = job['startDate']
@@ -378,11 +372,11 @@ class SimulatePage(BaseHandler):
         if reqType == 'getFromCloud':
             job = StochKitJobWrapper.get_by_id(int(self.request.get('id')))
 
-            service = backendservices(self)
-            service.fetchOutput(job.pid, job.output_url)
+            service = backendservices(self.user_data)
+            service.fetchOutput(job.pid, job.outputURL)
             
             # Unpack it to its local output location
-            os.system('tar -xf {0}.tar'.format(stochkit_job.uuid))
+            os.system('tar -xf {0}.tar'.format(job.uuid))
             job.output_location = os.path.abspath('{0}/../output/{1}'.format(os.path.abspath(os.path.dirname(__file__)), stochkit_job.uuid))
 
             job.stdout = os.path.join(job.output_location, '/stdout.log')
@@ -432,6 +426,7 @@ class SimulatePage(BaseHandler):
                 self.response.write(json.dumps({ 'status' : True,
                                                  'msg' : "Job deleted from the datastore."}))
             except Exception as e:
+                logging.exception(e)
                 self.response.headers['Content-Type'] = 'application/json'
                 self.response.write(json.dumps({ 'status' : False,
                                                  'msg' : "Error: {0}".format(e) }))
@@ -446,7 +441,7 @@ class SimulatePage(BaseHandler):
 
             if job.status == "Finished":
                 try:
-                    if (job.resource in StochKitJob.SUPPORTED_CLOUD_RESOURCES and job.output_stored == 'False') or (job.resource in StochKitJob.SUPPORTED_CLOUD_RESOURCES and job.output_location is None):
+                    if (job.resource in backendservices.SUPPORTED_CLOUD_RESOURCES and job.output_stored == 'False') or (job.resource in backendservices.SUPPORTED_CLOUD_RESOURCES and job.output_location is None):
                         self.response.headers['Content-Type'] = 'application/json'
                         self.response.write(json.dumps({ "status" : "Finished",
                                                          "values" : [],
@@ -454,8 +449,8 @@ class SimulatePage(BaseHandler):
                         return
                     else:
                         outputdir = job.output_location
-                    # Load all data from file in JSON format
-                        if job.exec_type == 'stochastic':
+                        # Load all data from file in JSON format
+                        if job.indata['exec_type'] == 'stochastic':
                             tid = self.request.get('tid')
 
                             if tid != '' and tid != 'mean':
@@ -697,36 +692,41 @@ class SimulatePage(BaseHandler):
             
         celery_task_id = cloud_result["celery_pid"]
         taskid = cloud_result["db_id"]
-        # Create a StochKitJob instance
-        stochkit_job = StochKitJob(name = ensemblename, final_time = stime, realizations = realizations, increment = increment, seed = seed, exec_type = exec_type, units = model.units.lower())
-        stochkit_job.resource = service.agent_type()
-        stochkit_job.type = 'StochKit2 Ensemble'
-            
-        # The jobs pid is the DB/S3 ID.
-        stochkit_job.pid = taskid
-        # The celery_pid is the Celery Task ID.
-        stochkit_job.celery_pid = celery_task_id
-        stochkit_job.status = 'Running'
-        stochkit_job.output_location = None
-        # stochkit_job.output_location = 'output/%s' % taskid
-        # stochkit_job.stdout = stochkit_job.output_location + '/stdout.log'
-        # stochkit_job.stderr = stochkit_job.output_location + '/stderr.log'
-        
-        # Create a wrapper to store the Job description in the datastore
-        stochkit_job_db = StochKitJobWrapper()
-        stochkit_job_db.startDate = time.strftime("%Y-%m-%d-%H-%M-%S")
-        stochkit_job_db.user_id = self.user.user_id()
-        stochkit_job_db.name = stochkit_job.name
-        stochkit_job_db.stochkit_job = stochkit_job
-        stochkit_job_db.modelName = model.name
-        stochkit_job_db.output_stored = 'True'
-        stochkit_job_db.cloud_id = taskid
-        stochkit_job_db.put()
 
-        return stochkit_job_db
+        # Create a StochKitJob instance
+        job = StochKitJobWrapper()
+        job.resource = service.agent_type()
         
-  
-    
+        # stochkit_job.uuid = res['uuid']
+            
+        
+        
+        job.user_id = self.user.user_id()
+        job.startDate = time.strftime("%Y-%m-%d-%H-%M-%S")
+        job.name = params['jobName']
+        job.modelName = model.name
+        job.pid = taskid
+        job.celeryPID = celery_task_id
+        job.cloudDatabaseID = taskid
+
+        # Create a StochKitJob instance
+        job.indata = { "type" : 'StochKit2 Ensemble',
+                       "final_time" : params['time'],
+                       "realizations" : params['realizations'],
+                       "increment" : params['increment'],
+                       "seed" : params['seed'],
+                       "exec_type" : params['execType'],
+                       "units" : model.units.lower() }
+
+        job.output_stored = 'True'
+        job.output_location = None
+        job.stdout = '{0}/stdout'.format(dataDir)
+        job.stderr = '{0}/stderr'.format(dataDir)
+        job.status = 'Running'
+        job.put()
+
+        return job
+
     def runStochKitLocal(self, params):
         """ Submit a local StochKit job """
         modelDb = StochKitModelWrapper.get_by_id(params["id"])
@@ -801,14 +801,14 @@ class SimulatePage(BaseHandler):
 
         handle = subprocess.Popen(exstring.split())
 
+        # Create a wrapper to store the Job description in the datastore
+        job = StochKitJobWrapper()
         job.resource = 'Local'
         
         # stochkit_job.uuid = res['uuid']
             
         
         
-        # Create a wrapper to store the Job description in the datastore
-        job = StochKitJobWrapper()
         job.user_id = self.user.user_id()
         job.startDate = time.strftime("%Y-%m-%d-%H-%M-%S")
         job.name = params['jobName']
@@ -822,13 +822,14 @@ class SimulatePage(BaseHandler):
                        "increment" : params['increment'],
                        "seed" : params['seed'],
                        "exec_type" : params['execType'],
-                       "units" : model.units.lower()) }
+                       "units" : model.units.lower(),
+                       "epsilon" : params['epsilon'],
+                       "threshold" : params['threshold'] }
 
         job.output_location = dataDir
-        job.stochkit_job = stochkit_job
         job.stdout = '{0}/stdout'.format(dataDir)
         job.stderr = '{0}/stderr'.format(dataDir)
         job.status = 'Running'
         job.put()
             
-        return stochkit_job_db
+        return job

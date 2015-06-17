@@ -149,63 +149,55 @@ class SuperZip:
         self.addBytes('models/{0}.json'.format(model.name), json.dumps(jsonModel, sort_keys=True, indent=4, separators=(', ', ': ')))
 
     def addStochKitJob(self, job, globalOp = False, ignoreStatus = False):
-        stochkit_job = job.stochkit_job
-
         # Only export finished jobs unless flag says to export them all
-        if stochkit_job.status == "Finished" or ignoreStatus:
+        if job.status == "Finished" or ignoreStatus:
             # These are fields shared among all jobs
             jsonJob = { "version" : self.version,
                         "name" : job.name,
                         "user_id" : job.user_id,
                         "stdout" : job.stdout,
                         "stderr" : job.stderr,
-                        # These are things contained in the stochkit_job object
-                        "type" : stochkit_job.type,
-                        "status" : stochkit_job.status,
+                        "type" : job.indata["type"],
+                        "status" : job.status,
+                        "startDate" : job.startTime,
                         "modelName" : job.modelName,
-                        "startDate" : job.startDate,
-                        "final_time" : stochkit_job.final_time,
-                        "increment" : stochkit_job.increment,
-                        "units" : job.stochkit_job.units,
-                        "realizations" : stochkit_job.realizations,
-                        "exec_type" : stochkit_job.exec_type,
-                        "store_only_mean" : stochkit_job.store_only_mean,
-                        "label_column_names" : stochkit_job.label_column_names,
-                        "create_histogram_data" : stochkit_job.create_histogram_data,
-                        "epsilon" : stochkit_job.epsilon,
-                        "threshold" : stochkit_job.threshold,
-                        "pid" : stochkit_job.pid,
-                        "result" : stochkit_job.result }
+                        "final_time" : job.indata["final_time"],
+                        "increment" : job.indata["increment"],
+                        "units" : job.indata["units"],
+                        "realizations" : job.indata["realizations"],
+                        "exec_type" : job.indata["exec_type"],
+                        "epsilon" : job.indata["epsilon"],
+                        "threshold" : job.indata["threshold"],
+                        "pid" : job.pid,
+                        "result" : job.result }
             # For cloud jobs, we need to include the output_url and possibly grab the results from S3
-            if stochkit_job.resource in simulation.StochKitJob.SUPPORTED_CLOUD_RESOURCES:
-                #jsonJob["output_url"] = job.stochkit_job.output_url
+            if job.resource in backendservices.SUPPORTED_CLOUD_RESOURCES:
+                #jsonJob["output_url"] = job.outputURL
                 # Only grab S3 data if user wants us to
                 #print 'globalOP', globalOp
                 if (job.name in self.stochKitJobsToDownload) or globalOp:
-                    if stochkit_job.output_location is None or (stochkit_job.output_location is not None and not os.path.exists(stochkit_job.output_location)):
+                    if job.output_location is None or (job.output_location is not None and not os.path.exists(job.output_location)):
                         # Grab the output from S3 if we need to
-                        service = backendservices(self)
-                        service.fetchOutput(stochkit_job.pid, stochkit_job.output_url)
+                        service = backendservices(self.user_data)
+                        service.fetchOutput(job.pid, job.outputURL)
                         # Unpack it to its local output location
-                        os.system('tar -xf' +stochkit_job.uuid+'.tar')
-                        stochkit_job.output_location = os.path.dirname(os.path.abspath(__file__))+'/../output/'+stochkit_job.uuid
-                        stochkit_job.output_location = os.path.abspath(stochkit_job.output_location)
+                        os.system('tar -xf {0}.tar'.format(job.uuid))
+                        job.output_location = os.path.dirname(os.path.join(os.path.abspath(__file__), '../output', str(job.uuid)))
+                        job.output_location = os.path.abspath(job.output_location)
                         # Update the DB entry
                         job.put()
                         # Clean up
-                        os.remove(stochkit_job.uuid+'.tar')
+                        os.remove('{0}.tar'.format(job.uuid))
                     # Add its data to the zip archive
-                    outputLocation = self.addFolder('stochkitJobs/data/{0}'.format(job.name), stochkit_job.output_location)
+                    outputLocation = self.addFolder('stochkitJobs/data/{0}'.format(job.name), job.output_location)
                     jsonJob["output_location"] = outputLocation
             # For local jobs, we need to include the output location in the zip archive
-            elif stochkit_job.resource == 'Local':
-                outputLocation = self.addFolder('stochkitJobs/data/{0}'.format(job.name), stochkit_job.output_location)
+            elif job.resource == 'Local':
+                outputLocation = self.addFolder('stochkitJobs/data/{0}'.format(job.name), job.output_location)
                 jsonJob["stdout"] = "{0}/stdout".format(outputLocation)
                 jsonJob["stderr"] = "{0}/stderr".format(outputLocation)
                 jsonJob["output_location"] = outputLocation
-            # Also be sure to include any extra attributes of job
-            if job.attributes:
-                jsonJob.update(job.attributes)
+
             # Add the JSON to the zip archive
             self.addBytes('stochkitJobs/{0}.json'.format(job.name), json.dumps(jsonJob, sort_keys=True, indent=4, separators=(', ', ': ')))
 
@@ -227,7 +219,7 @@ class SuperZip:
             # Only grab S3 data if user wants us to
             if (job.jobName in self.stochOptimJobsToDownload) or globalOp:
                 # Grab the remote files
-                service = backendservices(self)
+                service = backendservices(self.user_data)
                 service.fetchOutput(job.cloudDatabaseID, job.outputURL)
                 # Unpack it to its local output location...
                 
@@ -270,7 +262,7 @@ class SuperZip:
                 if (job.jobName in self.sensitivityJobsToDownload) or globalOp:
                     if job.outData is None or (job.outData is not None and not os.path.exists(job.outData)):
                         # Grab the output from S3 if we need to
-                        service = backendservices(self)
+                        service = backendservices(self.user_data)
                         service.fetchOutput(job.cloudDatabaseID, job.outputURL)
                         # Unpack it to its local output location
                         os.system('tar -xf' +job.cloudDatabaseID+'.tar')
@@ -303,7 +295,7 @@ class SuperZip:
             if (job.jobName in self.spatialJobsToDownload) or globalOp:
                 if job.outData is None or (job.outData is not None and not os.path.exists(job.outData)):
                     # Grab the output from S3 if we need to
-                    service = backendservices(self)
+                    service = backendservices(self.user_data)
                     # Fetch
                     service.fetchOutput(job.cloud_id, job.output_url)
                     # Unpack
@@ -700,12 +692,10 @@ class ExportPage(BaseHandler):
             jobs = db.GqlQuery("SELECT * FROM StochKitJobWrapper WHERE user_id = :1", self.user.user_id()).fetch(100000)
 
             for job in jobs:
-                stochkit_job = job.stochkit_job
-
-                if stochkit_job.status == "Finished":
-                    if stochkit_job.resource == 'Local':
+                if job.status == "Finished":
+                    if job.resource == 'Local':
                         numberOfFiles += 1
-                        totalSize += get_size(job.stochkit_job.output_location)
+                        totalSize += get_size(job.job.output_location)
 
             self.response.headers['Content-Type'] = 'application/json'
             self.response.write(json.dumps( { "numberOfFiles" : numberOfFiles, "totalSize" : totalSize } ))
@@ -877,18 +867,18 @@ class ImportPage(BaseHandler):
 
         resource = None
 
-        service = backendservices(self)
+        service = backendservices(self.user_data)
 
         # Get all the cloud jobs
         stochkit_jobs = db.GqlQuery("SELECT * FROM StochKitJobWrapper WHERE user_id = :1", self.user.user_id())
         stochkit_jobs = [job for job in stochkit_jobs
-                         if job.stochkit_job.resource is not None and job.stochkit_job.resource in backendservices.SUPPORTED_CLOUD_RESOURCES
-                         and job.stochkit_job.status == "Finished"]
+                         if job.resource is not None and job.stochkit_job.resource in backendservices.SUPPORTED_CLOUD_RESOURCES
+                         and job.status == "Finished"]
 
         # Create the dictionary to pass to backend to check for sizes
         output_results_to_check = {}
         for cloud_job in stochkit_jobs:
-            output_results_to_check[cloud_job.key().id()] = cloud_job.stochkit_job.output_url
+            output_results_to_check[cloud_job.key().id()] = cloud_job.output_url
 
         # Sensitivity Jobs
         sensi_jobs = db.GqlQuery("SELECT * FROM SensitivityJobWrapper WHERE userId = :1", self.user.user_id())
@@ -948,7 +938,7 @@ class ImportPage(BaseHandler):
                     no_data = False
                 context["stochkit_jobs"].append({
                     'name': job_name,
-                    'exec_type': cloud_job.stochkit_job.exec_type,
+                    'exec_type': cloud_job.indata["exec_type"],
                     'size': '{0} KB'.format(round(size/1024, 1)),
                     'no_data' : no_data
                 })

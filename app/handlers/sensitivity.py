@@ -86,7 +86,7 @@ class SensitivityJobWrapper(db.Model):
         if self.zipFileName is not None and os.path.exists(self.zipFileName):
             os.remove(self.zipFileName)
 
-        if self.resource is not None and self.resource in backservices.SUPPORTED_CLOUD_RESOURCES:
+        if self.resource is not None and self.resource in backendservices.SUPPORTED_CLOUD_RESOURCES:
             service.deleteTask(self)
 
         super(SensitivityJobWrapper, self).delete()
@@ -119,7 +119,7 @@ class SensitivityPage(BaseHandler):
                 self.response.write(json.dumps(["Not the right user"]))
 
             if job.status == "Finished":
-                if job.resource in SensitivityJobWrapper.SUPPORTED_CLOUD_RESOURCES and job.outData is None:
+                if job.resource in backendservices.SUPPORTED_CLOUD_RESOURCES and job.outData is None:
                     # Let the user decide if they want to download it
                     self.response.headers['Content-Type'] = 'application/json'
                     self.response.write(json.dumps({ "status" : "Finished",
