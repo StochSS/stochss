@@ -248,7 +248,7 @@ class FlexAgent(BaseAgent):
                     state = response['state']
 
         except Exception as e:
-            logging.exception(e)
+            logging.debug(e)
             state = VMStateModel.STATE_UNKNOWN
 
         logging.debug('get_instance_state() state = {0}'.format(state))
