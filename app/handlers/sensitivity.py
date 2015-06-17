@@ -19,10 +19,6 @@ from stochss.stochkit import *
 from stochssapp import BaseHandler
 
 from backend.backendservice import backendservices
-from backend.common.config import AgentTypes, JobConfig
-from backend.storage.s3_storage import S3StorageAgent
-from backend.storage.flex_storage import FlexStorageAgent
-from backend.databases.flex_db import FlexDB
 from backend.databases.dynamo_db import DynamoDB
 
 import time
@@ -42,10 +38,6 @@ jinja_environment = jinja2.Environment(autoescape=True,
                                        loader=(jinja2.FileSystemLoader(os.path.join(os.path.dirname(__file__), '../templates'))))
         
 class SensitivityJobWrapper(db.Model):
-    FLEX_CLOUD_RESOURCE = "{0}-cloud".format(AgentTypes.FLEX)
-    EC2_CLOUD_RESOURCE = "{0}-cloud".format(AgentTypes.EC2)
-    SUPPORTED_CLOUD_RESOURCES = [FLEX_CLOUD_RESOURCE, EC2_CLOUD_RESOURCE]
-
     userId = db.StringProperty()
     pid = db.IntegerProperty()
     startTime = db.StringProperty()
@@ -62,62 +54,41 @@ class SensitivityJobWrapper(db.Model):
     exceptionMessage = db.StringProperty()
     output_stored = db.StringProperty()
 
+    def stop(self, handler):
+        service = backendservices(handler.user_data)
+
+        if self.status == "Running":
+            if self.resource.lower() == "local":
+                service.deleteTaskLocal([int(self.pid)])
+            elif self.resource in backendservices.SUPPORTED_CLOUD_RESOURCES:
+                result = service.stopTask(self)
+                
+                if result and result[self.cloudDatabaseID]:
+                    final_cloud_result = result[self.cloudDatabaseID]
+                    try:
+                        self.outputURL = final_cloud_result['output']
+                    except KeyError:
+                        pass
+                    self.status = "Finished"
+                    self.put()
+                    return True
+                else:
+                    # Something went wrong
+                    logging.error(result)
+                    return False
+            else:
+                logging.error('Job Resource {0} not supported!'.format(self.resource))
+
     def delete(self, handler):
-        logging.debug("SensitivityJobWrapper.delete(cloudDatabaseID={0})".format(self.cloudDatabaseID))
         if self.outData is not None and os.path.exists(self.outData):
             shutil.rmtree(self.outData)
 
         if self.zipFileName is not None and os.path.exists(self.zipFileName):
-                os.remove(self.zipFileName)
-        logging.debug("\tresource={0}".format(self.resource))
+            os.remove(self.zipFileName)
 
-        service = backendservices()
-        if self.resource == 'Local':
-            logging.debug('service.stopTaskLocal([{0}])'.format(self.pid))
-            service.stopTaskLocal([self.pid])
-            time.sleep(0.25)
-            status = service.checkTaskStatusLocal([self.pid]).values()[0]
-            logging.debug('status = service.checkTaskStatusLocal([self.pid]).values()[0] = {0}'.format(status))
-        else: # cloud
-            try:
-                user_data = handler.user_data
-                if self.resource == self.EC2_CLOUD_RESOURCE:
-                    bucketname = user_data.S3_bucket_name
-                    logging.info('bucketname = {}'.format(bucketname))
-                    ec2_credentials = handler.user_data.getCredentials()
-                    # delete the folder that contains the replay sources
-                    logging.info('deleting the rerun source folder {1} in bucket {0}'.format(bucketname, self.pid))
-                    delete_folder(bucketname, self.pid, ec2_credentials['EC2_ACCESS_KEY'], ec2_credentials['EC2_SECRET_KEY'])
-                    # delete the output tar file
-                    storage_agent = S3StorageAgent(bucket_name=bucketname,
-                                                   ec2_access_key=ec2_credentials['EC2_ACCESS_KEY'],
-                                                   ec2_secret_key=ec2_credentials['EC2_SECRET_KEY'])
-                    filename = 'output/' + self.cloudDatabaseID + '.tar'
-                    logging.info('deleting the output tar file output/{1}.tar in bucket {0}'.format(bucketname, self.pid))
-                    storage_agent.delete_file(filename=filename)
-                    database = DynamoDB(access_key=ec2_credentials['EC2_ACCESS_KEY'],
-                                        secret_key=ec2_credentials['EC2_SECRET_KEY'])
-                    service.deleteTasks(taskids=[(self.celeryPID, self.cloudDatabaseID)], database=database)
-                    # delete dynamodb entries for cost analysis
-                    database.remove_tasks_by_attribute(tablename=JobDatabaseConfig.COST_ANALYSIS_TABLE_NAME,
-                                                       attribute_name='uuid', attribute_value=self.pid)
-                elif self.resource == self.FLEX_CLOUD_RESOURCE:
-                    flex_queue_head_machine = user_data.get_flex_queue_head_machine()
-                    # delete the output tar file
-                    storage_agent = FlexStorageAgent(queue_head_ip=flex_queue_head_machine['ip'],
-                                                     queue_head_username=flex_queue_head_machine['username'],
-                                                     queue_head_keyfile=flex_queue_head_machine['keyfile'])
-                    filename = self.cloudDatabaseID + '.tar'
-                    storage_agent.delete_file(filename=filename)
-                    database = FlexDB(password=user_data.flex_db_password, ip=flex_queue_head_machine['ip'])
-                    service.deleteTasks(taskids=[(self.celeryPID, self.cloudDatabaseID)], database=database)
-                else:
-                    logging.error(traceback.format_exc())
-                    logging.error("UNKNOWN job.resource = {0}".format(self.resource))
-            except Exception as e:
-                logging.error(traceback.format_exc())
-                logging.error('Error: {}'.format(str(e)))
-                raise Exception('fail to delete cloud output or rerun sources.')
+        if self.resource is not None and self.resource in backendservices.SUPPORTED_CLOUD_RESOURCES:
+            service.deleteTask(self)
+
         super(SensitivityJobWrapper, self).delete()
 
 class SensitivityPage(BaseHandler):
@@ -148,7 +119,7 @@ class SensitivityPage(BaseHandler):
                 self.response.write(json.dumps(["Not the right user"]))
 
             if job.status == "Finished":
-                if job.resource in SensitivityJobWrapper.SUPPORTED_CLOUD_RESOURCES and job.outData is None:
+                if job.resource in backendservices.SUPPORTED_CLOUD_RESOURCES and job.outData is None:
                     # Let the user decide if they want to download it
                     self.response.headers['Content-Type'] = 'application/json'
                     self.response.write(json.dumps({ "status" : "Finished",
@@ -311,61 +282,19 @@ class SensitivityPage(BaseHandler):
                     job = self.runLocal(data)
 
                 elif data["resource"] == "cloud":
-                    backend_service = backendservices()
-
-                    if self.user_data.is_flex_cloud_info_set:
-                        self.user_data.update_flex_cloud_machine_info_from_db(backend_service)
-                        flex_queue_head_machine = self.user_data.get_flex_queue_head_machine()
-
-                        if backend_service.is_flex_queue_head_running(flex_queue_head_machine):
-                            logging.info('Flex Queue Head is running')
-                            data['resource'] = '{0}-cloud'.format(AgentTypes.FLEX)
-                            job, cloud_result = self.runCloud(data=data, agent_type=AgentTypes.FLEX)
-
-                        else:
-                            return self.response.write(json.dumps({
-                                "status": False,
-                                "msg": "You must have at least queue head running to run in flex cloud."
-                            }))
-
-                    else:
-
-                        compute_check_params = {
-                            "infrastructure": AgentTypes.EC2,
-                            "credentials": self.user_data.getCredentials(),
-                            "key_prefix": self.user.user_id()
-                        }
-                        if self.user_data.valid_credentials and \
-                                backend_service.isOneOrMoreComputeNodesRunning(compute_check_params):
-
-                            data['resource'] = '{0}-cloud'.format(AgentTypes.EC2)
-                            job, cloud_result = self.runCloud(data=data, agent_type=AgentTypes.EC2)
-
-                        else:
-                            return self.response.write(json.dumps({
-                                "status": False,
-                                "msg": "You must have at least one active compute node to run in the cloud."
-                            }))
-
-
-                    if not job:
-                        e = cloud_result["exception"]
-                        self.response.write(json.dumps({"status" : False,
-                                                        "msg" : 'Cloud execution failed: '+str(e)}))
-                        return
-
+                    job = self.runCloud(data)
                 else:
-                    return self.response.write(json.dumps({"status" : False,
-                                                           "msg" : "Unrecognized resource requested: {0}".format(data.resource)}))
+                    raise Exception("Unknown resource {0}".format(data["resource"]))
 
                 self.response.write(json.dumps( { "status" : True,
                                                   "msg" : "Job launched",
-                                                  "kind" : job.kind(),
                                                   "id" : job.key().id() }))
+                return
             except Exception as e:
-                traceback.print_exc()
+                logging.exception(e)
                 self.response.write(json.dumps({ "status" : False,
                                                  "msg" : "Error: {0}".format(e) }))
+                return
         else:
             self.response.write(json.dumps({"status" : False,
                                             "msg" : "No data submitted"}))
@@ -439,6 +368,11 @@ class SensitivityPage(BaseHandler):
 
         job = SensitivityJobWrapper()
 
+        service = backendservices(self)
+
+        if not service.isOneOrMoreComputeNodesRunning():
+            raise Exception('No cloud computing resources found')
+
         job.resource = "{0}-cloud".format(agent_type)
         job.userId = self.user.user_id()
         model = modeleditor.StochKitModelWrapper.get_by_id(data["id"])
@@ -479,34 +413,8 @@ class SensitivityPage(BaseHandler):
             "bucketname": self.user_data.getBucketName()
         }
 
-        service = backendservices()
-
-
-        if agent_type == AgentTypes.EC2:
-            ec2_credentials = self.user_data.getCredentials()
-
-            # Set the environmental variables
-            os.environ["AWS_ACCESS_KEY_ID"] = ec2_credentials['EC2_ACCESS_KEY']
-            os.environ["AWS_SECRET_ACCESS_KEY"] = ec2_credentials['EC2_SECRET_KEY']
-            # Send the task to the backend
-            cloud_result = service.submit_cloud_task(params=params, agent_type=agent_type,
-                                               ec2_access_key=ec2_credentials['EC2_ACCESS_KEY'],
-                                               ec2_secret_key=ec2_credentials['EC2_SECRET_KEY'])
-        elif agent_type == AgentTypes.FLEX:
-            queue_head_machine = self.user_data.get_flex_queue_head_machine()
-            logging.info('queue_head_machine = {}'.format(queue_head_machine))
-
-            flex_credentials = {
-                'flex_db_password': self.user_data.flex_db_password,
-                'flex_queue_head': queue_head_machine,
-            }
-
-            # Send the task to the backend
-            cloud_result = service.submit_cloud_task(params=params, agent_type=agent_type,
-                                                     flex_credentials=flex_credentials)
-
-        else:
-            raise Exception('Invalid agent type!')
+        # Send the task to the backend
+        cloud_result = service.submit_cloud_task(params)
 
         # if not cloud_result["success"]:
         if not cloud_result["success"]:
