@@ -80,6 +80,8 @@ class SensitivityJobWrapper(db.Model):
                 logging.error('Job Resource {0} not supported!'.format(self.resource))
 
     def delete(self, handler):
+        self.stop(handler)
+        
         if self.outData is not None and os.path.exists(self.outData):
             shutil.rmtree(self.outData)
 
@@ -87,7 +89,8 @@ class SensitivityJobWrapper(db.Model):
             os.remove(self.zipFileName)
 
         if self.resource is not None and self.resource in backendservices.SUPPORTED_CLOUD_RESOURCES:
-            service.deleteTask(self)
+            service = backendservices(handler.user_data)
+            service.deleteTasks(self)
 
         super(SensitivityJobWrapper, self).delete()
 
@@ -213,7 +216,7 @@ class SensitivityPage(BaseHandler):
         elif reqType == "getFromCloud":
             job = SensitivityJobWrapper.get_by_id(int(self.request.get('id')))
 
-            service = backendservices()
+            service = backendservices(self.user_data)
             service.fetchOutput(job.cloudDatabaseID, job.outputURL)
             # Unpack it to its local output location
             os.system('tar -xf' +job.cloudDatabaseID+'.tar')
@@ -363,17 +366,14 @@ class SensitivityPage(BaseHandler):
         job.put()
         return job
     
-    def runCloud(self, data, agent_type):
-        logging.info('agent_type = {}'.format(agent_type))
-
+    def runCloud(self, data):
         job = SensitivityJobWrapper()
 
-        service = backendservices(self)
+        service = backendservices(self.user_data)
 
         if not service.isOneOrMoreComputeNodesRunning():
             raise Exception('No cloud computing resources found')
 
-        job.resource = "{0}-cloud".format(agent_type)
         job.userId = self.user.user_id()
         model = modeleditor.StochKitModelWrapper.get_by_id(data["id"])
         job.startTime = time.strftime("%Y-%m-%d-%H-%M-%S")
@@ -422,8 +422,9 @@ class SensitivityPage(BaseHandler):
             
         job.cloudDatabaseID = cloud_result["db_id"]
         job.celeryPID = cloud_result["celery_pid"]
+        job.resource = cloud_result['resource']
         job.outData = None
         job.zipFileName = None
         job.output_stored = 'True'
         job.put()
-        return job, None
+        return job
