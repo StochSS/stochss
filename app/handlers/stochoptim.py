@@ -176,7 +176,7 @@ class StochOptimJobWrapper(db.Model):
         if self.zipFileName is not None and os.path.exists(self.zipFileName):
                 os.remove(self.zipFileName)
 
-        self.stop()
+        self.stop(handler)
         
         # delete on cloud
         if self.resource in backendservices.SUPPORTED_CLOUD_RESOURCES:
@@ -185,9 +185,9 @@ class StochOptimJobWrapper(db.Model):
 
         super(StochOptimJobWrapper, self).delete()
 
-    def stop(self, credentials=None):
+    def stop(self, handler):
         if self.status == "Running" or self.status == "Pending":
-            service = backend.backendservice.backendservices(self.user_data)
+            service = backend.backendservice.backendservices(handler.user_data)
             if self.resource.lower() == "local":
                 service.deleteTaskLocal([int(self.pid)])
             elif self.resource in backendservices.SUPPORTED_CLOUD_RESOURCES:
@@ -326,14 +326,14 @@ class StochOptimPage(BaseHandler):
                         os.kill(job.pollProcessPID, signal.SIGTERM)
                     except Exception as e:
                         logging.error("StochOptimPage.post.stopJob(): exception during kill process: {0}".format(e))
-                    success = job.stop(job)
+                    success = job.stop(self)
                     if not success:
                         return self.response.write(json.dumps({
                             'status': False,
                             'msg': 'Could not stop the job '+job.jobName +'. Unexpected error.'
                         }))
                 else:
-                    job.stop()
+                    job.stop(self)
             else:
                 self.response.write(json.dumps({"status" : False,
                                                 "msg" : "No permissions to delete this job (this should never happen)"}))
@@ -612,7 +612,7 @@ class StochOptimVisualization(BaseHandler):
                         optimization.status = "Failed"
             else:
                 #cloud
-                task_status = service.describeTask(optimization)
+                task_status = service.describeTasks(optimization)
                 logging.info('task_status =\n{}'.format(pprint.pformat(task_status)))
 
                 if task_status is None or optimization.cloudDatabaseID not in task_status:
@@ -769,7 +769,7 @@ class StochOptimVisualization(BaseHandler):
                 logging.debug("stochoptim.outputURL is None")
 
 
-                task_status = service.describeTask(job_wrapper)
+                task_status = service.describeTasks(job_wrapper)
                 logging.debug("job_status = task_status[job.cloudDatabaseID={0}] = {1}".format(
                                                             job_wrapper.cloudDatabaseID, task_status))
                 job_status = task_status[job_wrapper.cloudDatabaseID]

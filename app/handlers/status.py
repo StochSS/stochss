@@ -21,10 +21,10 @@ from stochssapp import BaseHandler
 from backend.backendservice import backendservices
 from backend.common.config import AgentTypes, JobDatabaseConfig
 
-from backend.storage.s3_storage import S3StorageAgent
-from backend.storage.flex_storage import FlexStorageAgent
-from backend.databases.flex_db import FlexDB
-from backend.databases.dynamo_db import DynamoDB
+#from backend.storage.s3_storage import S3StorageAgent
+#from backend.storage.flex_storage import FlexStorageAgent
+#from backend.databases.flex_db import FlexDB
+#from backend.databases.dynamo_db import DynamoDB
 
 import sensitivity
 import simulation
@@ -150,16 +150,16 @@ class StatusPage(BaseHandler):
 
                             # Check the status from backend
 
-                            task_status = service.describeTask({ 'taskids' : [job.pid] })
+                            task_status = service.describeTasks(job)
                             logging.info('task_status =\n{}'.format(pprint.pformat(task_status)))
 
                             # It frequently happens that describeTasks return None before the job is finsihed.
                             if task_status is None:
                                 job.status = "Inaccessible"
-                            elif job.pid not in task_status or task_status[job.pid] == None:
+                            elif job.cloudDatabaseID not in task_status or task_status[job.cloudDatabaseID] == None:
                                 job.status = "Unknown"
                             else:
-                                job_status = task_status[job.pid]
+                                job_status = task_status[job.cloudDatabaseID]
 
                                 if job_status['status'] == 'finished':
                                     # Update the stochkit job 
@@ -239,7 +239,7 @@ class StatusPage(BaseHandler):
                                 job.status = "Failed"
 
                 #elif job.resource == "cloud" and job.status != "Finished":
-                elif job.resource in sensitivity.SensitivityJobWrapper.SUPPORTED_CLOUD_RESOURCES:
+                elif job.resource in backendservices.SUPPORTED_CLOUD_RESOURCES:
                     if job.outData is not None:
                         file_to_check = job.outData + "/result/output.txt"
                         if os.path.exists(file_to_check):
@@ -248,31 +248,31 @@ class StatusPage(BaseHandler):
                             job.status = "Failed"
                     else:
                         # Check the status from backend
-                        taskparams = {}
-                        if job.resource == sensitivity.SensitivityJobWrapper.EC2_CLOUD_RESOURCE:
-                             # Retrive credentials from the datastore
-                            if not self.user_data.valid_credentials:
-                                return {'status': False,
-                                        'msg': 'Could not retrieve the status of job '+ job.name +'. Invalid credentials.'}
-                            credentials = self.user_data.getCredentials()
+#                        taskparams = {}
+#                        if job.resource == backendservices.EC2_CLOUD_RESOURCE:
+#                             # Retrive credentials from the datastore
+#                            if not self.user_data.valid_credentials:
+#                                return {'status': False,
+#                                        'msg': 'Could not retrieve the status of job '+ job.name +'. Invalid credentials.'}
+#                            credentials = self.user_data.getCredentials()
+#
+#                            taskparams = {
+#                                'AWS_ACCESS_KEY_ID': credentials['EC2_ACCESS_KEY'],
+#                                'AWS_SECRET_ACCESS_KEY': credentials['EC2_SECRET_KEY'],
+#                                'taskids': [job.cloudDatabaseID],
+#                                'agent_type': AgentTypes.EC2
+#                            }
+#
+#                        elif job.resource == backendservices.FLEX_CLOUD_RESOURCE:
+#                            queue_head_machine = self.user_data.get_flex_queue_head_machine()
+#                            taskparams = {
+#                                'flex_db_password': self.user_data.flex_db_password,
+#                                'queue_head_ip': queue_head_machine['ip'],
+#                                'taskids':[job.cloudDatabaseID],
+#                                'agent_type': AgentTypes.FLEX
+#                            }
 
-                            taskparams = {
-                                'AWS_ACCESS_KEY_ID': credentials['EC2_ACCESS_KEY'],
-                                'AWS_SECRET_ACCESS_KEY': credentials['EC2_SECRET_KEY'],
-                                'taskids': [job.cloudDatabaseID],
-                                'agent_type': AgentTypes.EC2
-                            }
-
-                        elif job.resource == sensitivity.SensitivityJobWrapper.FLEX_CLOUD_RESOURCE:
-                            queue_head_machine = self.user_data.get_flex_queue_head_machine()
-                            taskparams = {
-                                'flex_db_password': self.user_data.flex_db_password,
-                                'queue_head_ip': queue_head_machine['ip'],
-                                'taskids':[job.cloudDatabaseID],
-                                'agent_type': AgentTypes.FLEX
-                            }
-
-                        task_status = service.describeTask(taskparams)
+                        task_status = service.describeTasks(job)
                         logging.info('task_status =\n{}'.format(pprint.pformat(task_status)))
                         if task_status is None:
                             job.status = "Inaccessible"
@@ -368,7 +368,7 @@ class StatusPage(BaseHandler):
                 #    asd
                 elif job.resource in backendservices.SUPPORTED_CLOUD_RESOURCES and job.status != "Finished":
                     taskparams = {}
-                    task_status = service.describeTask(job)
+                    task_status = service.describeTasks(job)
                     logging.debug('StochOptim task_status =\n{}'.format(pprint.pformat(task_status)))
                     if task_status is None:
                         job.status = 'Inaccessible'
@@ -442,33 +442,33 @@ class StatusPage(BaseHandler):
 
                 elif job.resource in backendservices.SUPPORTED_CLOUD_RESOURCES:
                     # Check the status from backend
-                    taskparams = {}
-                    if job.resource == backendservices.EC2_CLOUD_RESOURCE:
-                        # Retrieve credentials from the datastore
-                        if not self.user_data.valid_credentials:
-                            return {'status': False,
-                                    'msg': 'Could not retrieve the status of spatial ob '+ job.jobName +'. Invalid credentials.'}
-                        credentials = self.user_data.getCredentials()
+#                    taskparams = {}
+#                    if job.resource == backendservices.EC2_CLOUD_RESOURCE:
+#                        # Retrieve credentials from the datastore
+#                        if not self.user_data.valid_credentials:
+#                            return {'status': False,
+#                                    'msg': 'Could not retrieve the status of spatial ob '+ job.jobName +'. Invalid credentials.'}
+#                        credentials = self.user_data.getCredentials()
+#
+#                        taskparams = {
+#                            'AWS_ACCESS_KEY_ID': credentials['EC2_ACCESS_KEY'],
+#                            'AWS_SECRET_ACCESS_KEY': credentials['EC2_SECRET_KEY'],
+#                            'taskids': [job.cloudDatabaseID],
+#                            'agent_type': AgentTypes.EC2
+#                        }
+#                    elif job.resource == backendservices.FLEX_CLOUD_RESOURCE:
+#                        try:
+#                            queue_head_machine = self.user_data.get_flex_queue_head_machine()
+#                            taskparams = {
+#                                'flex_db_password': self.user_data.flex_db_password,
+#                                'queue_head_ip': queue_head_machine['ip'],
+#                                'taskids':[job.cloudDatabaseID],
+#                                'agent_type': AgentTypes.FLEX
+#                            }
+#                        except Exception as e:
+#                            logging.exception(e)
 
-                        taskparams = {
-                            'AWS_ACCESS_KEY_ID': credentials['EC2_ACCESS_KEY'],
-                            'AWS_SECRET_ACCESS_KEY': credentials['EC2_SECRET_KEY'],
-                            'taskids': [job.cloudDatabaseID],
-                            'agent_type': AgentTypes.EC2
-                        }
-                    elif job.resource == backendservices.FLEX_CLOUD_RESOURCE:
-                        try:
-                            queue_head_machine = self.user_data.get_flex_queue_head_machine()
-                            taskparams = {
-                                'flex_db_password': self.user_data.flex_db_password,
-                                'queue_head_ip': queue_head_machine['ip'],
-                                'taskids':[job.cloudDatabaseID],
-                                'agent_type': AgentTypes.FLEX
-                            }
-                        except Exception as e:
-                            logging.exception(e)
-
-                    task_status = service.describeTask(job)
+                    task_status = service.describeTasks(job)
                     logging.info('Spatial task_status =\n{}'.format(pprint.pformat(task_status)))
 
                     if task_status is None:
@@ -478,7 +478,9 @@ class StatusPage(BaseHandler):
                         job.status = "Unknown"
                     else:
                         job_status = task_status[job.cloudDatabaseID]
-                        if job_status['status'] == 'finished':
+                        if job_status is None or 'status' not in job_status:
+                            job.status = "Unknown"
+                        elif job_status['status'] == 'finished':
                             # Update the spatial job
                             job.output_url = job_status['output']
                             job.uuid = job_status['uuid']

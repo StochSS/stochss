@@ -2,7 +2,7 @@ from google.appengine.ext import db
 import pprint
 import sys
 import os
-#sys.path.append(os.path.join(os.path.dirname(__file__), 'backend' ))
+sys.path.append(os.path.join(os.path.dirname(__file__), 'backend' ))
 #import backendservice
 from backend.common.config import AgentTypes, JobConfig, JobDatabaseConfig
 import logging

@@ -41,7 +41,7 @@ class CredentialsPage(BaseHandler):
         return True
     
     def get(self):
-        logging.info('GET')
+        logging.debug('GET')
 
         user_id = self.user.user_id()
         if user_id is None:
@@ -71,21 +71,21 @@ class CredentialsPage(BaseHandler):
         elif data_received['action'] == CredentialsPage.FLEX_DEREGISTER_CLOUD:
             logging.debug("data_received['action'] = {0} = CredentialsPage.FLEX_DEREGISTER_CLOUD".format(data_received['action']))
             result = self.deregister_flex_cloud(user_id)
-            logging.info("result = {0}".format(result))
+            logging.debug("result = {0}".format(result))
             self.redirect('/flexCloudCredentials')
 
         elif data_received['action'] == CredentialsPage.FLEX_REFRESH_CLOUD:
             logging.debug("data_received['action'] = {0} = CredentialsPage.FLEX_REFRESH_CLOUD".format(data_received['action']))
             result = self.refresh_flex_cloud(user_id)
-            logging.info("result = {0}".format(result))
+            logging.debug("result = {0}".format(result))
             self.redirect('/flexCloudCredentials')
         else:
             self.redirect('/flexCloudCredentials')
 
     def post(self):
-        logging.info('POST')
+        logging.debug('POST')
         logging.debug("request.body = {0}".format(self.request.body))
-        logging.info("CONTENT_TYPE = {0}".format(self.request.environ['CONTENT_TYPE']))
+        logging.debug("CONTENT_TYPE = {0}".format(self.request.environ['CONTENT_TYPE']))
         
         user_id = self.user.user_id()
         if user_id is None:
@@ -98,7 +98,7 @@ class CredentialsPage(BaseHandler):
 
         else:
             params = self.request.POST
-            logging.info('params = self.request.POST = {0}'.format(params))
+            logging.debug('params = self.request.POST = {0}'.format(params))
             self.__handle_form_post_request(user_id, params)
 
 
@@ -129,7 +129,7 @@ class CredentialsPage(BaseHandler):
         self.redirect('/ec2Credentials')
 
     def __handle_ec2_start_vms_request(self, params, user_id):
-        logging.info('__handle_ec2_start_vms_request:\n\nparams =\n{0}\n'.format(pprint.pformat(params)))
+        logging.debug('__handle_ec2_start_vms_request:\n\nparams =\n{0}\n'.format(pprint.pformat(params)))
 
         context = self.getContext(user_id)
         vms = []
@@ -199,7 +199,7 @@ class CredentialsPage(BaseHandler):
 
     def saveCredentials(self, credentials, database=None):
         """ Save the Credentials to the datastore. """
-        logging.info('Saving EC2 credentials...')
+        logging.debug('Saving EC2 credentials...')
         try:
             service = backendservices(self.user_data)
             params = {}
@@ -245,7 +245,7 @@ class CredentialsPage(BaseHandler):
         return result
 
     def deregister_flex_cloud(self, user_id):
-        logging.info('deregister_flex_cloud')
+        logging.debug('deregister_flex_cloud')
 
         service = backendservices(self.user_data) #infrastructure=AgentTypes.FLEX)
         credentials = self.user_data.getCredentials()
@@ -267,7 +267,7 @@ class CredentialsPage(BaseHandler):
         result = service.deregister_flex_cloud(parameters=params, blocking=True)
 
         if result == True:
-            logging.info('deregister_flex_cloud succeeded!')
+            logging.debug('deregister_flex_cloud succeeded!')
             self.user_data.valid_flex_cloud_info = False
             self.user_data.is_flex_cloud_info_set = False
 
@@ -356,6 +356,8 @@ class CredentialsPage(BaseHandler):
     def __get_ec2_context(self, user_id):
         context = {}
         result = {}
+        # Need a default
+        context['active_vms'] = False
 
         credentials = self.user_data.getCredentials()
         params = {'infrastructure': AgentTypes.EC2,
@@ -379,14 +381,14 @@ class CredentialsPage(BaseHandler):
             context['valid_credentials'] = True
 
             all_vms = self.__get_all_vms(params)
-            logging.info('ec2: all_vms = {0}'.format(pprint.pformat(all_vms)))
+            logging.debug('ec2: all_vms = {0}'.format(pprint.pformat(all_vms)))
 
-            if all_vms == None:
+            if all_vms is None:
                 result = {'status': False,
                           'vm_status': False,
                           'vm_status_msg': 'Could not determine the status of the VMs.'}
 
-                context = {'vm_names': all_vms}
+                context['vm_names'] = all_vms
 
             else:
                 number_creating = 0
@@ -412,10 +414,10 @@ class CredentialsPage(BaseHandler):
 
                 number_of_vms = len(all_vms)
 
-                logging.info("number creating = {0}".format(number_creating))
-                logging.info("number pending = {0}".format(number_pending))
-                logging.info("number running = {0}".format(number_running))
-                logging.info("number failed = {0}".format(number_failed))
+                logging.debug("number creating = {0}".format(number_creating))
+                logging.debug("number pending = {0}".format(number_pending))
+                logging.debug("number running = {0}".format(number_running))
+                logging.debug("number failed = {0}".format(number_failed))
 
                 context['number_of_vms'] = number_of_vms
                 context['vm_names'] = all_vms
@@ -440,6 +442,10 @@ class CredentialsPage(BaseHandler):
         context = dict(context, **fake_credentials)
         context = dict(result, **context)
 
+
+        logging.debug('*'*80)
+        logging.debug("context['active_vms'] = '{0}'".format(context['active_vms']))
+        logging.debug('*'*80)
         return context
 
 
@@ -448,7 +454,7 @@ class CredentialsPage(BaseHandler):
         result = {}
 
         flex_cloud_machine_info = self.user_data.get_flex_cloud_machine_info()
-        logging.info("flex_cloud_machine_info =\n{0}".format(pprint.pformat(flex_cloud_machine_info)))
+        logging.debug("flex_cloud_machine_info =\n{0}".format(pprint.pformat(flex_cloud_machine_info)))
 
         result['is_flex_cloud_info_set'] = self.user_data.is_flex_cloud_info_set
 
@@ -519,13 +525,11 @@ class CredentialsPage(BaseHandler):
         return context
     
     def __get_all_vms(self, params):
-        try:
-            service = backendservices(self.user_data)
-            result = service.describe_machines_from_db(params)
-            return result
-        except Exception as e:
-            logging.error(str(e))
-            return None
+        logging.debug('__get_all_vms() params={0}'.format(params))
+        service = backendservices(self.user_data)
+        result = service.describe_machines_from_db(params['infrastructure'])
+        logging.debug('service.describe_machines_from_db = {0}'.format(result))
+        return result
 
     def __get_ec2_image_id(self):
         '''
@@ -536,17 +540,22 @@ class CredentialsPage(BaseHandler):
             with open(AWSConfig.EC2_SETTINGS_FILENAME) as fd:
                 ec2_config = json.load(fd)
                 image_id = ec2_config['ami_id']
-        except Exception as e:
+        except IOError as e:
             logging.error('Failed to read ami id from {0}: {1}'.format(AWSConfig.EC2_SETTINGS_FILENAME, str(e)))
             image_id = None
 
         return image_id
                     
     def start_ec2_vms(self, user_id, credentials, head_node, vms_info, active_nodes):
-        logging.info('\n\nstart_vms:\nhead_node = {0}\nvms_info = {1}\nactive_nodes = {2}'.format(
+        logging.debug('\n\nstart_vms:\nhead_node = {0}\nvms_info = {1}\nactive_nodes = {2}'.format(
             pprint.pformat(head_node),
             pprint.pformat(vms_info),
             pprint.pformat(active_nodes)))
+            
+        logging.debug('*'*80)
+        logging.debug("Cleaning up TERMINATED entries in the DB")
+        VMStateModel.delete_terminated(user_id)
+        logging.debug('*'*80)
 
         key_prefix = AgentConfig.get_agent_key_prefix(AgentTypes.EC2, key_prefix=user_id)
         group_random_name = AgentConfig.get_random_group_name(prefix=key_prefix)
@@ -555,7 +564,7 @@ class CredentialsPage(BaseHandler):
         logging.debug("group_random_name = {0}".format(group_random_name))
 
         reservation_id = backendservices.get_random_alphanumeric()
-        logging.info('Generated reservation_id = {0}'.format(reservation_id))
+        logging.debug('Generated reservation_id = {0}'.format(reservation_id))
 
         params ={
             "infrastructure": AgentTypes.EC2,
@@ -622,7 +631,7 @@ class LocalSettingsPage(BaseHandler):
         else:
             context = json.loads(env_variables)
         
-        logging.info(context)
+        logging.debug(context)
         self.render_response("localsettings.html",**context)
     
     def post(self):

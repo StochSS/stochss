@@ -98,13 +98,13 @@ class StochKitJobWrapper(db.Model):
         if self.resource.lower() == 'local':
             service.stopTaskLocal([self.pid])
         else:
-            service.stopTask(self)
+            service.stopTasks(self)
 
-    def delete(self, user_data):
-        self.stop(user_data)
+    def delete(self, handle):
+        self.stop(handle.user_data)
 
         # TODO: Call the backend to kill and delete the job and all associated files.
-        service = backendservices(user_data)
+        service = backendservices(handle.user_data)
 
         if self.zipFileName is not None and os.path.exists(self.zipFileName):
             os.remove(self.zipFileName)
@@ -114,11 +114,7 @@ class StochKitJobWrapper(db.Model):
             shutil.rmtree(self.output_location)
 
         if self.resource.lower() != 'local':
-            filename = 'output/{0}.tar'.format(self.pid)
-            service.deleteTask(self)
-            # There's gonna be an error! The Flex cloud files were stored at this path
-            #filename = stochkit_job.pid + '.tar'
-            #storage_agent.delete_file(filename=filename)
+            service.deleteTasks(self)
 
         super(StochKitJobWrapper, self).delete()
 
@@ -167,6 +163,7 @@ class JobManager():
     @staticmethod
     def getJob(handler, job_id):
         job = StochKitJobWrapper.get_by_id(job_id)
+        logging.debug('getJob() job.id = {0} job.indata = {1}'.format(job.key().id(), job.indata))
 
         jsonJob = { "id" : job.key().id(),
                     "name" : job.name,
@@ -383,17 +380,17 @@ class SimulatePage(BaseHandler):
             job = StochKitJobWrapper.get_by_id(int(self.request.get('id')))
 
             service = backendservices(self.user_data)
-            service.fetchOutput(job.pid, job.outputURL)
+            service.fetchOutput(job.cloudDatabaseID, job.output_url)
             
             # Unpack it to its local output location
-            os.system('tar -xf {0}.tar'.format(job.uuid))
-            job.output_location = os.path.abspath('{0}/../output/{1}'.format(os.path.abspath(os.path.dirname(__file__)), stochkit_job.uuid))
+            os.system('tar -xf {0}.tar'.format(job.cloudDatabaseID))
+            job.output_location = os.path.abspath('{0}/../output/{1}'.format(os.path.abspath(os.path.dirname(__file__)), job.cloudDatabaseID))
 
             job.stdout = os.path.join(job.output_location, '/stdout.log')
             job.stderr = os.path.join(job.output_location, '/stderr.log')
 
             # Clean up
-            os.remove('{0}.tar'.format(stochkit_job.uuid))
+            os.remove('{0}.tar'.format(job.cloudDatabaseID))
 
             # Save the updated status
             job.put()
@@ -552,19 +549,20 @@ class SimulatePage(BaseHandler):
             if job.status == "Failed":
                 self.response.headers['Content-Type'] = 'application/json'
                 
-                if os.path.isfile(job.output_location + '/stdout'):
-                    fstdoutHandle = open(job.output_location + '/stdout', 'r')
-                else:
-                    fstdoutHandle = open(job.output_location + '/stdout.log', 'r')
-                stdout = fstdoutHandle.read()
-                fstdoutHandle.close()
+                if job.output_location is not None:
+                    if os.path.isfile(job.output_location + '/stdout'):
+                        fstdoutHandle = open(job.output_location + '/stdout', 'r')
+                    else:
+                        fstdoutHandle = open(job.output_location + '/stdout.log', 'r')
+                    stdout = fstdoutHandle.read()
+                    fstdoutHandle.close()
 
-                if os.path.isfile(job.output_location + '/stderr'):
-                    fstderrHandle = open(job.output_location + '/stderr', 'r')
-                else:
-                    fstderrHandle = open(job.output_location + '/stderr.log', 'r')
-                stderr = fstderrHandle.read()
-                fstderrHandle.close()
+                    if os.path.isfile(job.output_location + '/stderr'):
+                        fstderrHandle = open(job.output_location + '/stderr', 'r')
+                    else:
+                        fstderrHandle = open(job.output_location + '/stderr.log', 'r')
+                    stderr = fstderrHandle.read()
+                    fstderrHandle.close()
 
                 self.response.write(json.dumps({ "status" : "Failed",
                                                  "job" : JobManager.getJob(self, job.key().id()),
@@ -586,7 +584,7 @@ class SimulatePage(BaseHandler):
                                                 "msg" : "Job name must be unique"}))
                 return
             
-            backend_services = backendservices(self)
+            backend_services = backendservices(self.user_data)
 
             # Create a stochhkit_job instance
             if params['resource'] == "local":
@@ -601,7 +599,7 @@ class SimulatePage(BaseHandler):
                                               "msg" : "Job launched",
                                               "id" : job.key().id() } ))
     
-    def runCloud(self, params, agent_type):
+    def runCloud(self, params):
         model = StochKitModelWrapper.get_by_id(params["id"]).createStochKitModel()
 
         if not model:
@@ -692,7 +690,7 @@ class SimulatePage(BaseHandler):
         params['user_id'] = self.user.user_id()       
         
         # Call backendservices and execute StochKit
-        service = backendservices(self)
+        service = backendservices(self.user_data)
 
         cloud_result = service.submit_cloud_task(params)
 
@@ -705,7 +703,7 @@ class SimulatePage(BaseHandler):
 
         # Create a StochKitJob instance
         job = StochKitJobWrapper()
-        job.resource = service.agent_type()
+        job.resource = cloud_result['resource']
         
         # stochkit_job.uuid = res['uuid']
             
@@ -715,7 +713,7 @@ class SimulatePage(BaseHandler):
         job.startDate = time.strftime("%Y-%m-%d-%H-%M-%S")
         job.name = params['jobName']
         job.modelName = model.name
-        job.pid = taskid
+        #job.pid = taskid
         job.celeryPID = celery_task_id
         job.cloudDatabaseID = taskid
 
@@ -726,12 +724,14 @@ class SimulatePage(BaseHandler):
                        "increment" : params['increment'],
                        "seed" : params['seed'],
                        "exec_type" : params['execType'],
-                       "units" : model.units.lower() }
+                       "units" : model.units.lower(),
+                       "epsilon" : params['epsilon'],
+                       "threshold" : params['threshold'] }
 
         job.output_stored = 'True'
         job.output_location = None
-        job.stdout = '{0}/stdout'.format(dataDir)
-        job.stderr = '{0}/stderr'.format(dataDir)
+        #job.stdout = '{0}/stdout'.format(dataDir)
+        #job.stderr = '{0}/stderr'.format(dataDir)
         job.status = 'Running'
         job.put()
 

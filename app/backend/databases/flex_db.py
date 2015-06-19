@@ -23,6 +23,7 @@ class FlexDB(BaseDB):
     }
 
     def __init__(self, password, ip, username='root', port=3306):
+        self.table_exists = None
         try:
             self.username = username
             self.password = password
@@ -161,6 +162,8 @@ class FlexDB(BaseDB):
         return result
 
     def tableexists(self, tablename):
+        if self.table_exists is not None:
+            return self.table_exists
         logging.debug('Checking if table {0} exists!'.format(tablename))
         result = False
         db = None
@@ -188,6 +191,7 @@ class FlexDB(BaseDB):
                 db.close()
         if save_e is not None:
             raise save_e
+        self.table_exists = result
         return result
 
 

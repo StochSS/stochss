@@ -260,13 +260,17 @@ class backendservices(object):
 #        raise NotImplementedError
 
 
-    def describeTask(self, job):
+    def describeTasks(self, job):
         '''
         @param job
         '''
-        logging.debug("describeTask() job = {0}".format(job))
+        logging.debug("describeTasks() job = {0}".format(job))
         database = self.get_database(job)
-        return database.describetask(job.cloudDatabaseID, JobDatabaseConfig.TABLE_NAME)
+        try:
+            return database.describetask(job.cloudDatabaseID, JobDatabaseConfig.TABLE_NAME)
+        except Exception as e:
+            logging.error(e)
+            return None
 
 
     def stopTasks(self, job):
@@ -278,7 +282,7 @@ class backendservices(object):
         task_id = job.celeryPID
         logging.debug("deleteTasks() calling removeTask('{0}')".format(job.celeryPID))
         remove_task(task_id)
-        return self.describeTask(job)
+        return self.describeTasks(job)
 
     def deleteTasks(self, job):
         '''
@@ -449,7 +453,7 @@ class backendservices(object):
         try:
             # make sure that any keynames we use are prefixed with stochss so that
             #we can do a terminate all based on keyname prefix
-            key_prefix = AgentConfig.get_agent_key_prefix(agent_type=self.infrastructure,
+            key_prefix = AgentConfig.get_agent_key_prefix(agent_type=AgentTypes.EC2,
                                                           key_prefix=params.get('key_prefix', ''))
 
             key_name = params["keyname"]
@@ -513,9 +517,8 @@ class backendservices(object):
             logging.debug("start_ec2_vms : exiting method with result : %s", str(res))
             return True, None
 
-        except Exception, e:
-            traceback.print_exc()
-            logging.error("start_ec2_vms : exiting method with error : {0}".format(str(e)))
+        except Exception as e:
+            logging.exception("start_ec2_vms : exiting method with error : {0}".format(str(e)))
             return False, 'Errors occur in starting machines:' + str(e)
 
 

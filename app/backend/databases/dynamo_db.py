@@ -113,8 +113,6 @@ class DynamoDB(BaseDB):
 
     def tableexists(self, tablename):
         logging.debug('Checking if table {0} exists!'.format(tablename))
-        #logging.error(traceback.format_exc())
-        traceback.print_stack()
         try:
             dynamo = boto.connect_dynamodb(aws_access_key_id=self.access_key,
                                            aws_secret_access_key=self.secret_key)
