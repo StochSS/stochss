@@ -136,7 +136,7 @@ class StatusPage(BaseHandler):
                             # for ssa and tau leaping, this is means.txt
                             # for ode, this is output.txt
 
-                            if job["indata"].exec_type == 'stochastic':
+                            if job.indata["exec_type"] == 'stochastic':
                                 file_to_check = os.path.join(job.output_location, "result/stats/means.txt")
                             else:
                                 file_to_check = os.path.join(job.output_location, "result/output.txt")

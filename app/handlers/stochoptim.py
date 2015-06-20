@@ -249,66 +249,16 @@ class StochOptimPage(BaseHandler):
                     # cloud
 
                     backend_services = backend.backendservice.backendservices(self.user_data)
-
-                    if self.user_data.is_flex_cloud_info_set:
-                        self.user_data.update_flex_cloud_machine_info_from_db(backend_services)
-                        flex_queue_head_machine = self.user_data.get_flex_queue_head_machine()
-
-                        if backend_services.is_flex_queue_head_running(flex_queue_head_machine):
-                            logging.info('Flex Queue Head is running')
-                            data['resource'] = '{0}-cloud'.format(AgentTypes.FLEX)
-                            result = self.runCloud(data=data, agent_type=AgentTypes.FLEX)
-
-                            logging.info("Run cloud finished with result: {0}, generating JSON response".format(result))
-                            if not result["success"]:
-                                return self.response.write(json.dumps({
-                                    "status": False,
-                                    "msg": result["msg"]
-                                }))
-                            else:
-                                return self.response.write(json.dumps({
-                                    "status": True,
-                                    "msg": "Job launched",
-                                    "id": result["job"].key().id()
-                                }))
-
-                        else:
-                            return self.response.write(json.dumps({
-                                "status": False,
-                                "msg": "You must have at least queue head running to run in flex cloud."
-                            }))
-
-                    else:
-                        compute_check_params = {
-                            "infrastructure": AgentTypes.EC2,
-                            "credentials": self.user_data.getCredentials(),
-                            "key_prefix": self.user.user_id()
-                        }
-                        if self.user_data.valid_credentials and backend_services.isOneOrMoreComputeNodesRunning(compute_check_params):
-                            result = self.runCloud(data, agent_type=AgentTypes.EC2)
-                            logging.info("Run cloud finished with result: {0}, generating JSON response".format(result))
-                            if not result["success"]:
-                                return self.response.write(json.dumps({
-                                    "status": False,
-                                    "msg": result["msg"]
-                                }))
-                            else:
-                                return self.response.write(json.dumps({
-                                    "status": True,
-                                    "msg": "Job launched",
-                                    "id": result["job"].key().id()
-                                }))
-                        else:
-                            return self.response.write(json.dumps({
-                                'status': False,
-                                'msg': 'You must have at least one active compute node to run in the cloud.'
-                            }))
+                    result = self.runCloud(data=data)
+                return self.response.write(json.dumps({
+                    "status": True,
+                    "msg": "Job launched",
+                    "id": result.key().id()
+                }))
             except Exception as e:
-                traceback.print_exc()
-                result = {}
-                result['status'] = False
-                result['msg'] = 'Error: {0}'.format(e)
-                self.response.headers['Content-Type'] = 'application/json'
+                logging.exception(e)
+                result = {'status':False,
+                          'msg':'Error: {0}'.format(e)}
                 self.response.write(json.dumps(result))
                 return
 
@@ -410,10 +360,7 @@ class StochOptimPage(BaseHandler):
         success, msgs = berniemodel.fromStochKitModel(modelDb.createStochKitModel())
 
         if not success:
-            self.response.content_type = 'application/json'
-            self.response.write(json.dumps({"status" : False,
-                                            "msg" : msgs }))
-            return
+            raise Exception(msgs)
 
         path = os.path.abspath(os.path.dirname(__file__))
 
@@ -479,25 +426,17 @@ class StochOptimPage(BaseHandler):
 
         job.put()
         
-        self.response.write(json.dumps({"status" : True,
-                                        "msg" : "Job launched",
-                                        "id" : job.key().id()}))
-    
-    def runCloud(self, data, agent_type):
-        logging.info('runCloud: agent_type = {}'.format(agent_type))
+        return job
 
+    def runCloud(self, data):
         modelDb = StochKitModelWrapper.get_by_id(data["modelID"])
 
         berniemodel = StochOptimModel()
 
         success, msgs = berniemodel.fromStochKitModel(modelDb.createStochKitModel())
 
-        result = {
-            "success": success
-        }
         if not success:
-            result["msg"] = os.linesep.join(msgs)
-            return result
+            raise Exception(msgs)
 
         path = os.path.abspath(os.path.dirname(__file__))
 
@@ -512,7 +451,6 @@ class StochOptimPage(BaseHandler):
         job.modelName = modelDb.name
         job.outData = dataDir
         job.status = "Pending"
-        job.resource = "{0}-cloud".format(agent_type)
 
         data["exec"] = "'bash'"
 
@@ -565,14 +503,13 @@ class StochOptimPage(BaseHandler):
             return result
         
         job.cloudDatabaseID = cloud_result["db_id"]
+        job.resource = cloud_result['resource']
         job.celeryPID = cloud_result["celery_pid"]
         job.pollProcessPID = int(cloud_result["poll_process_pid"])
         # job.pid = handle.pid
         job.put()
-        result["job"] = job
-        result["id"] = job.key().id()
-        return result
-        
+        return job
+
 
 class StochOptimVisualization(BaseHandler):
     def authentication_required(self):

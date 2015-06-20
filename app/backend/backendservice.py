@@ -298,13 +298,13 @@ class backendservices(object):
         if job.resource == self.EC2_CLOUD_RESOURCE:
             credentials = self.get_credentials()
             bucket_name = self.user_data.S3_bucket_name
-            s3_helper.delete_folder(bucketname, job.cloudDatabaseID, credentials['EC2_ACCESS_KEY'], credentials['EC2_SECRET_KEY'])
+            s3_helper.delete_folder(bucket_name, job.cloudDatabaseID, credentials['EC2_ACCESS_KEY'], credentials['EC2_SECRET_KEY'])
             # delete the output tar file
             storage_agent = S3StorageAgent(bucket_name=bucket_name,
                                            ec2_access_key=credentials['EC2_ACCESS_KEY'],
                                            ec2_secret_key=credentials['EC2_SECRET_KEY'])
             filename = 'output/' + job.cloudDatabaseID + '.tar'
-            logging.debug('deleting the output tar file output/{1}.tar in bucket {0}'.format(bucketname, job.cloudDatabaseID))
+            logging.debug('deleting the output tar file output/{1}.tar in bucket {0}'.format(bucket_name, job.cloudDatabaseID))
             storage_agent.delete_file(filename=filename)
             # delete dynamodb entries for cost analysis
             database.remove_tasks_by_attribute(tablename=JobDatabaseConfig.COST_ANALYSIS_TABLE_NAME,

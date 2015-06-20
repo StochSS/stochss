@@ -400,6 +400,7 @@ class VMStateModel(db.Model):
             credentials    the dictionary containing access_key and secret_key pair of the agent
         '''
         logging.info('For agent {0}, Start Synchronizing DB...'.format(agent.AGENT_NAME))
+        logging.debug("synchronize() parameters={0}".format(parameters))
         instance_list = agent.describe_instances(parameters)
 
         entities = VMStateModel._get_all_entities(params=parameters)
