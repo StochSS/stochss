@@ -219,8 +219,6 @@ class SpatialPage(BaseHandler):
         if reqType == 'getJobInfo':
             job = SpatialJobWrapper.get_by_id(int(self.request.get('id')))
 
-            job.preprocess(trajectory)
-
             if self.user.user_id() != job.userId:
                 self.response.headers['Content-Type'] = 'application/json'
                 self.response.write({ "status" : False, "msg" : "Not the right user" })
