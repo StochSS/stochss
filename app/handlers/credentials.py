@@ -550,16 +550,17 @@ class EC2CredentialsPage(BaseHandler):
                   'user_id': user_id}
 
         if not self.user_data.valid_credentials:
-            result = {'status': False,
-                      'vm_status': False,
-                      'vm_status_msg': 'Could not determine the status of the VMs: Invalid Credentials!'}
+            if len(credentials['EC2_ACCESS_KEY']) > 0 or len(credentials['EC2_SECRET_KEY']) > 0:
+                result = {'status': False,
+                          'credentials_status': False,
+                          'credentials_msg': 'Could not determine the status of the VMs: Invalid Credentials!'}
 
             context['vm_names'] = None
             context['valid_credentials']=False
             context['active_vms']=False
 
-            fake_credentials = { 'EC2_ACCESS_KEY': '',
-                                 'EC2_SECRET_KEY': ''}
+            fake_credentials = { 'EC2_ACCESS_KEY': '*' * len(credentials['EC2_ACCESS_KEY']),
+                                 'EC2_SECRET_KEY': '*' * len(credentials['EC2_SECRET_KEY']) }
         else:
             fake_credentials = { 'EC2_ACCESS_KEY': '*' * len(credentials['EC2_ACCESS_KEY']),
                                  'EC2_SECRET_KEY': '*' * len(credentials['EC2_SECRET_KEY'])}

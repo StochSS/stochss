@@ -207,56 +207,6 @@
                 </table>
                 <br />
                 {% endif %}
-                {% if allExportJobs %}
-                Export Jobs (YYYY-MM-DD, hh-mm-ss GMT):
-                <br />
-                <table cellpadding="0" cellspacing="0" border="0" class="table table-striped table-bordered" id="dataTable">
-                    <thead>
-                        <tr>
-                            <th width="40pt"></th>
-                            <th width="40pt">Job #</th>
-                            <th>Export Date</th>
-                            <th width="200pt">Status</th>
-                            <th width="200pt"></th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        {% for job in allExportJobs %}
-                        <tr>
-                            <td><a href="javascript:void(0)" onclick="deleteJob('/export?reqType=delJob&id={{job.id}}');">Delete</a></td>
-                            <td>
-                                <span>{{job.number}}</span>
-                            </td>
-                            <td>
-                                <span>{{job.startTime}}</span>
-                            </td>
-                            <td>
-                                {% if job.status == "Running" or job.status == "Finished" %}
-                                <span style="color: green" class="create_msg">{{job.status}}</span>
-                               
-                                {% endif %}
-                                {% if job.status == "Pending" %}
-                                <span style="color: orange" class="create_msg">{{job.status}}</span>
-                                {% endif %}
-                                {% if job.status == "Failed" or job.status == "Unknown" or job.status == "Inaccessible" %}
-                                <span style="color: red" class="create_msg">{{job.status}}</span>
-                                {% endif %}
-                            </td>
-                            <td>
-                                {% if job.status == "Finished" %}
-                                <a href="/static/tmp/{{job.outData}}">Download Archive</a>
-                                {% else %}
-                                {% if job.status == "Failed" %}
-                                <a href="/static/tmp/{{job.outData}}">Get Debugging Info</a>
-                                {% endif %}
-                                {% endif %}
-                            </td>
-                        </tr>
-                        
-                        {% endfor %}
-                    </tbody>
-                </table>
-                {% endif %}
 
                 {% if allParameterJobs %}
                 Parameter Estimation Jobs:
@@ -317,6 +267,57 @@
                                 {% endif %}
                             </td>
                             
+                        </tr>
+                        
+                        {% endfor %}
+                    </tbody>
+                </table>
+                {% endif %}
+
+                {% if allExportJobs %}
+                Export Jobs (YYYY-MM-DD, hh-mm-ss GMT):
+                <br />
+                <table cellpadding="0" cellspacing="0" border="0" class="table table-striped table-bordered" id="dataTable">
+                    <thead>
+                        <tr>
+                            <th width="40pt"></th>
+                            <th width="40pt">Job #</th>
+                            <th>Export Date</th>
+                            <th width="200pt">Status</th>
+                            <th width="200pt"></th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for job in allExportJobs %}
+                        <tr>
+                            <td><a href="javascript:void(0)" onclick="deleteJob('/export?reqType=delJob&id={{job.id}}');">Delete</a></td>
+                            <td>
+                                <span>{{job.number}}</span>
+                            </td>
+                            <td>
+                                <span>{{job.startTime}}</span>
+                            </td>
+                            <td>
+                                {% if job.status == "Running" or job.status == "Finished" %}
+                                <span style="color: green" class="create_msg">{{job.status}}</span>
+                               
+                                {% endif %}
+                                {% if job.status == "Pending" %}
+                                <span style="color: orange" class="create_msg">{{job.status}}</span>
+                                {% endif %}
+                                {% if job.status == "Failed" or job.status == "Unknown" or job.status == "Inaccessible" %}
+                                <span style="color: red" class="create_msg">{{job.status}}</span>
+                                {% endif %}
+                            </td>
+                            <td>
+                                {% if job.status == "Finished" %}
+                                <a href="/static/tmp/{{job.outData}}">Download Archive</a>
+                                {% else %}
+                                {% if job.status == "Failed" %}
+                                <a href="/static/tmp/{{job.outData}}">Get Debugging Info</a>
+                                {% endif %}
+                                {% endif %}
+                            </td>
                         </tr>
                         
                         {% endfor %}

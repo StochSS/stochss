@@ -148,7 +148,7 @@ class SuperZip:
 
         self.addBytes('models/{0}.json'.format(model.name), json.dumps(jsonModel, sort_keys=True, indent=4, separators=(', ', ': ')))
 
-    def addStochKitJob(self, job, globalOp = False, ignoreStatus = False):
+    def addStochKitJob(self, job, globalOp = False, ignoreStatus = False, handler = None):
         # Only export finished jobs unless flag says to export them all
         if job.status == "Finished" or ignoreStatus:
             # These are fields shared among all jobs
@@ -179,16 +179,17 @@ class SuperZip:
                 if (job.name in self.stochKitJobsToDownload) or globalOp:
                     if job.output_location is None or (job.output_location is not None and not os.path.exists(job.output_location)):
                         # Grab the output from S3 if we need to
-                        service = backendservices(self.user_data)
-                        service.fetchOutput(job.pid, job.outputURL)
+                        service = backendservices(handler.user_data)
+                        service.fetchOutput(job.cloudDatabaseID, job.output_url)
                         # Unpack it to its local output location
-                        os.system('tar -xf {0}.tar'.format(job.uuid))
-                        job.output_location = os.path.dirname(os.path.join(os.path.abspath(__file__), '../output', str(job.uuid)))
-                        job.output_location = os.path.abspath(job.output_location)
+                        os.system('tar -xf {0}.tar'.format(job.cloudDatabaseID))
+                        job.output_location = os.path.abspath('{0}/../output/{1}'.format(os.path.abspath(os.path.dirname(__file__)), job.cloudDatabaseID))
                         # Update the DB entry
                         job.put()
                         # Clean up
-                        os.remove('{0}.tar'.format(job.uuid))
+                        os.remove('{0}.tar'.format(job.cloudDatabaseID))
+
+                if job.output_location is not None:
                     # Add its data to the zip archive
                     outputLocation = self.addFolder('stochkitJobs/data/{0}'.format(job.name), job.output_location)
                     jsonJob["output_location"] = outputLocation
@@ -202,7 +203,7 @@ class SuperZip:
             # Add the JSON to the zip archive
             self.addBytes('stochkitJobs/{0}.json'.format(job.name), json.dumps(jsonJob, sort_keys=True, indent=4, separators=(', ', ': ')))
 
-    def addStochOptimJob(self, job, globalOp = False):
+    def addStochOptimJob(self, job, globalOp = False, handler = None):
         jsonJob = { "version" : self.version,
                     "userId" : job.userId,
                     "pid" : job.pid,
@@ -215,12 +216,12 @@ class SuperZip:
                     "status" : job.status }
         
         # For cloud jobs, we need to include the output_url and possibly grab the results from S3
-        if job.resource in stochoptim.StochOptimJobWrapper.SUPPORTED_CLOUD_RESOURCES:
+        if job.resource in backendservices.SUPPORTED_CLOUD_RESOURCES:
             #jsonJob["output_url"] = job.outputURL
             # Only grab S3 data if user wants us to
             if (job.jobName in self.stochOptimJobsToDownload) or globalOp:
                 # Grab the remote files
-                service = backendservices(self.user_data)
+                service = backendservices(handler.user_data)
                 service.fetchOutput(job.cloudDatabaseID, job.outputURL)
                 # Unpack it to its local output location...
                 
@@ -244,7 +245,7 @@ class SuperZip:
 
         self.addBytes('stochOptimJobs/{0}.json'.format(job.jobName), json.dumps(jsonJob, sort_keys=True, indent=4, separators=(', ', ': ')))
     
-    def addSensitivityJob(self, job, globalOp = False, ignoreStatus = False):
+    def addSensitivityJob(self, job, globalOp = False, ignoreStatus = False, handler = None):
         if job.status == "Finished" or ignoreStatus:
             # Shared fields
             jsonJob = { "version" : self.version,
@@ -257,13 +258,13 @@ class SuperZip:
             if job.resource == "local":
                 outputLocation = self.addFolder('sensitivityJobs/data/{0}'.format(job.jobName), job.outData)
                 jsonJob["outData"] = outputLocation
-            elif job.resource in sensitivity.SensitivityJobWrapper.SUPPORTED_CLOUD_RESOURCES:
+            elif job.resource in backendservices.SUPPORTED_CLOUD_RESOURCES:
                 #jsonJob["outputURL"] = job.outputURL
                 # Only grab S3 data if user wants us to
                 if (job.jobName in self.sensitivityJobsToDownload) or globalOp:
                     if job.outData is None or (job.outData is not None and not os.path.exists(job.outData)):
                         # Grab the output from S3 if we need to
-                        service = backendservices(self.user_data)
+                        service = backendservices(handler.user_data)
                         service.fetchOutput(job.cloudDatabaseID, job.outputURL)
                         # Unpack it to its local output location
                         os.system('tar -xf' +job.cloudDatabaseID+'.tar')
@@ -273,11 +274,13 @@ class SuperZip:
                         job.put()
                         # Clean up
                         os.remove(job.cloudDatabaseID+'.tar')
+
+                if job.outData is not None:
                     outputLocation = self.addFolder('sensitivityJobs/data/{0}'.format(job.jobName), job.outData)
                     jsonJob["outData"] = outputLocation
             self.addBytes('sensitivityJobs/{0}.json'.format(job.jobName), json.dumps(jsonJob, sort_keys=True, indent=4, separators=(', ', ': ')))
 
-    def addSpatialJob(self, job, globalOp = False):
+    def addSpatialJob(self, job, globalOp = False, handler = None):
         jsonJob = { "version" : self.version,
                     "userId" : job.userId,
                     "pid" : job.pid,
@@ -290,15 +293,15 @@ class SuperZip:
                     "uuid" : job.uuid,
                     "status" : job.status }
         
-        if job.resource in spatial.SpatialJobWrapper.SUPPORTED_CLOUD_RESOURCES:
+        if job.resource in backendservices.SUPPORTED_CLOUD_RESOURCES:
             #jsonJob["output_url"] = job.output_url
             # Only grab S3 data if user wants us to
             if (job.jobName in self.spatialJobsToDownload) or globalOp:
                 if job.outData is None or (job.outData is not None and not os.path.exists(job.outData)):
                     # Grab the output from S3 if we need to
-                    service = backendservices(self.user_data)
+                    service = backendservices(handler.user_data)
                     # Fetch
-                    service.fetchOutput(job.cloud_id, job.output_url)
+                    service.fetchOutput(job.cloudDatabaseID, job.output_url)
                     # Unpack
                     os.system('tar -xf' +job.uuid+'.tar')
                     # Record location
@@ -772,7 +775,7 @@ class ExportPage(BaseHandler):
                 jobs = db.GqlQuery("SELECT * FROM StochOptimJobWrapper").run()
 
             for job in jobs:
-                szip.addStochOptimJob(job, globalOp)
+                szip.addStochOptimJob(job, globalOp, handler = self)
 
             if not globalOp:
                 jobs = db.GqlQuery("SELECT * FROM SpatialJobWrapper WHERE userId = :1", self.user.user_id()).run()
@@ -780,7 +783,7 @@ class ExportPage(BaseHandler):
                 jobs = db.GqlQuery("SELECT * FROM SpatialJobWrapper").run()
 
             for job in jobs:
-                szip.addSpatialJob(job, globalOp)
+                szip.addSpatialJob(job, globalOp, handler = self)
 
             if not globalOp:
                 jobs = db.GqlQuery("SELECT * FROM SensitivityJobWrapper WHERE userId = :1", self.user.user_id()).run()
@@ -788,7 +791,7 @@ class ExportPage(BaseHandler):
                 jobs = db.GqlQuery("SELECT * FROM SensitivityJobWrapper").run()
 
             for job in jobs:
-                szip.addSensitivityJob(job, globalOp)
+                szip.addSensitivityJob(job, globalOp, handler = self)
 
             if not globalOp:
                 jobs = db.GqlQuery("SELECT * FROM StochKitJobWrapper WHERE user_id = :1", self.user.user_id()).run()
@@ -796,7 +799,7 @@ class ExportPage(BaseHandler):
                 jobs = db.GqlQuery("SELECT * FROM StochKitJobWrapper").run()
 
             for job in jobs:
-                szip.addStochKitJob(job, globalOp)
+                szip.addStochKitJob(job, globalOp, handler = self)
 
             szip.close()
 
@@ -875,7 +878,8 @@ class ImportPage(BaseHandler):
         stochkit_jobs = db.GqlQuery("SELECT * FROM StochKitJobWrapper WHERE user_id = :1", self.user.user_id())
         stochkit_jobs = [job for job in stochkit_jobs
                          if job.resource is not None and job.resource in backendservices.SUPPORTED_CLOUD_RESOURCES
-                         and job.status == "Finished"]
+                         and job.status == "Finished"
+                         and job.output_location is None]
 
         # Create the dictionary to pass to backend to check for sizes
         output_results_to_check = {}
@@ -886,7 +890,8 @@ class ImportPage(BaseHandler):
         sensi_jobs = db.GqlQuery("SELECT * FROM SensitivityJobWrapper WHERE userId = :1", self.user.user_id())
         sensi_jobs = [job for job in sensi_jobs
                       if job.resource is not None and job.resource in backendservices.SUPPORTED_CLOUD_RESOURCES
-                      and job.status == "Finished"]
+                      and job.status == "Finished"
+                      and job.outData is None]
         for cloud_job in sensi_jobs:
             output_results_to_check[cloud_job.key().id()] = cloud_job.outputURL
 
@@ -898,7 +903,7 @@ class ImportPage(BaseHandler):
         for cloud_job in stochoptim_jobs_query.run():
             if cloud_job.resource is None or cloud_job.resource not in backendservices.SUPPORTED_CLOUD_RESOURCES:
                 continue
-            if cloud_job.outputURL is None:
+            if cloud_job.outputURL is None or cloud_job.outData is not None:
                 continue
 
             output_results_to_check[cloud_job.key().id()] = cloud_job.outputURL
@@ -912,7 +917,7 @@ class ImportPage(BaseHandler):
         for cloud_job in spatial_jobs_query.run():
             if cloud_job.resource is None or cloud_job.resource not in backendservices.SUPPORTED_CLOUD_RESOURCES:
                 continue
-            if cloud_job.output_url is None:
+            if cloud_job.output_url is None or cloud_job.outData is not None:
                 continue
 
             output_results_to_check[cloud_job.key().id()] = cloud_job.output_url
