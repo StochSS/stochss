@@ -21,7 +21,7 @@ import glob
 
 from backend.common.config import AWSConfig, AgentTypes, AgentConfig, FlexConfig, JobDatabaseConfig
 from backend.databases.dynamo_db import DynamoDB
-from backend.vm_state_model import VMStateModel
+from db_models.vm_state_model import VMStateModel
 
 import fileserver
 

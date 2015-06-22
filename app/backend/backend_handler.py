@@ -24,7 +24,7 @@ import urllib2
 import json
 
 sys.path.append(os.path.join(os.path.dirname(__file__), '..' ))
-from user_data import UserData
+from db_models.user_data import UserData
 
 from google.appengine.ext import db
 from kombu import Queue, Exchange
@@ -32,7 +32,7 @@ from kombu import Queue, Exchange
 from common.config import AgentTypes, AgentConfig, FlexConfig, JobDatabaseConfig
 import common.helper as helper
 from databases.flex_db import FlexDB
-from vm_state_model import VMStateModel
+from db_models.vm_state_model import VMStateModel
 
 BACKEND_NAME = 'backendthread'
 BACKEND_URL = 'http://%s' % modules.get_hostname(BACKEND_NAME)

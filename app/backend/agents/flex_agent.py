@@ -19,10 +19,7 @@ from utils import utils
 from tasks import *
 
 from flex_state import FlexVMState
-from vm_state_model import VMStateModel
-
-__author__ = 'dev'
-__email__ = 'dnath@cs.ucsb.edu'
+from db_models.vm_state_model import VMStateModel
 
 
 class FlexAgent(BaseAgent):

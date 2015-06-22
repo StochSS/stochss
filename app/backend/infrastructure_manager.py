@@ -6,7 +6,7 @@ from utils import utils
 from utils.persistent_dictionary import PersistentStoreFactory, PersistentDictionary
 from common.config import AgentTypes
 import backend_handler
-from vm_state_model import VMStateModel
+from db_models.vm_state_model import VMStateModel
 from google.appengine.api import background_thread, modules, urlfetch
 from google.appengine.api import taskqueue
 from google.appengine.ext import db

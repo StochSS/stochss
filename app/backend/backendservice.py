@@ -23,7 +23,7 @@ from storage.flex_storage import FlexStorageAgent
 
 import common.helper as helper
 from common.config import AgentTypes, JobDatabaseConfig, AgentConfig, FlexConfig, JobConfig
-from vm_state_model import VMStateModel
+from db_models.vm_state_model import VMStateModel
 
 sys.path.append(os.path.join(os.path.dirname(__file__), '../lib/cloudtracker'))
 #from s3_helper import *
@@ -102,7 +102,6 @@ class backendservices(object):
 #                    instance_type=None, cost_replay=False, database=None, flex_credentials=None, storage_agent=None):
     def submit_cloud_task(self, params, agent_type=None, cost_replay=False, instance_type=None):
 
-        logging.debug('submit_cloud_task() agent_type = {0}'.format(agent_type))
         logging.debug('submit_cloud_task() params =\n{}\n\n'.format(pprint.pformat(params)))
 
         if agent_type is None:

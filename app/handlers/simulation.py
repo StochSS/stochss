@@ -43,80 +43,8 @@ except ImportError:
 jinja_environment = jinja2.Environment(autoescape=True,
                                        loader=(jinja2.FileSystemLoader(os.path.join(os.path.dirname(__file__), '../templates'))))
 
-class StochKitJobWrapper(db.Model):
-    # A reference to the user that owns this job
-    user_id =  db.StringProperty()
-    pid = db.IntegerProperty()
-    name = db.StringProperty()
-    modelName = db.StringProperty()
-    indata = ObjectProperty()
-    # Indata contains data from the GUI. These are:
-    # type, final_time, increment, realizations, exec_type, units, store_only_mean, label_column_names,
-    #  create_histogram_data, epsilon, threshold
+from db_models.stochkit_job import StochKitJobWrapper
 
-#                        "type" : job.stochkit_job.type,
-#                        "final_time" : job.stochkit_job.final_time,
-#                        "increment" : job.stochkit_job.increment,
-#                        "realizations" : job.stochkit_job.realizations,
-#                        "exec_type" : job.stochkit_job.exec_type,
-#                        "units" : job.stochkit_job.units,
-#                        "store_only_mean" : job.stochkit_job.store_only_mean,
-#                        "label_column_names" : job.stochkit_job.label_column_names,
-#                        "create_histogram_data" : job.stochkit_job.create_histogram_data,
-#                        "epsilon" : job.stochkit_job.epsilon,
-#                        "threshold" : job.stochkit_job.threshold,
-
-
-    # The type if the job {'local', 'cloud'}
-    zipFileName = db.StringProperty()
-    status = db.StringProperty()
-    resource = db.StringProperty()
-    startTime = db.StringProperty()
-    output_stored = db.StringProperty()
-    output_location = db.StringProperty()
-    output_url = db.StringProperty()
-    result = db.StringProperty()
-
-    stdout = db.StringProperty()
-    stderr = db.StringProperty()
-    
-    celeryPID = db.StringProperty()
-    cloudDatabaseID = db.StringProperty()
-
-#            jsonJob = { "id" : job.key().id(),
-#                        "name" : job.name,
-#                        "stdout" : job.stdout,
-#                        "stderr" : job.stderr,
-
-
-
-
-    def stop(self, user_data):
-        # TODO: Call the backend to kill and delete the job and all associated files.
-        service = backendservices(user_data)
-
-        if self.resource.lower() == 'local':
-            service.stopTaskLocal([self.pid])
-        else:
-            service.stopTasks(self)
-
-    def delete(self, handle):
-        self.stop(handle.user_data)
-
-        # TODO: Call the backend to kill and delete the job and all associated files.
-        service = backendservices(handle.user_data)
-
-        if self.zipFileName is not None and os.path.exists(self.zipFileName):
-            os.remove(self.zipFileName)
-        
-        #delete the ouput results of execution locally, if exists.       
-        if self.output_location is not None and os.path.exists(str(self.output_location)):
-            shutil.rmtree(self.output_location)
-
-        if self.resource.lower() != 'local':
-            service.deleteTasks(self)
-
-        super(StochKitJobWrapper, self).delete()
 
 class JobManager():
     @staticmethod
@@ -587,17 +515,21 @@ class SimulatePage(BaseHandler):
             backend_services = backendservices(self.user_data)
 
             # Create a stochhkit_job instance
-            if params['resource'] == "local":
-                job = self.runStochKitLocal(params)
-            elif params['resource'] == 'cloud':
-                job = self.runCloud(params)
-            else:
-                raise Exception("Unknown resource {0}".format(params["resource"]))
-
-            self.response.headers['Content-Type'] = 'application/json'
-            self.response.write(json.dumps( { "status" : True,
-                                              "msg" : "Job launched",
-                                              "id" : job.key().id() } ))
+            try:
+                if params['resource'] == "local":
+                    job = self.runStochKitLocal(params)
+                elif params['resource'] == 'cloud':
+                    job = self.runCloud(params)
+                else:
+                    raise Exception("Unknown resource {0}".format(params["resource"]))
+                self.response.headers['Content-Type'] = 'application/json'
+                self.response.write(json.dumps( { "status" : True,
+                                                  "msg" : "Job launched",
+                                                  "id" : job.key().id() } ))
+            except Exception as e:
+                self.response.headers['Content-Type'] = 'application/json'
+                self.response.write(json.dumps( { "status" : False,
+                                                  "msg" : str(e) } ))
     
     def runCloud(self, params):
         model = StochKitModelWrapper.get_by_id(params["id"]).createStochKitModel()

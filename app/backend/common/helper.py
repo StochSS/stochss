@@ -353,6 +353,7 @@ def __execute_cloud_stochoptim_task(params, data, database, task_id, celery_queu
     database.updateEntry(taskid=task_id, data=data, tablename=JobDatabaseConfig.TABLE_NAME)
 
     params["queue"] = queue_name
+    logging.debug('params = {0}'.format(params))
     stochss_task = tasks.master_task.apply_async(args=[task_id, params, database, storage_agent],
                                                  queue=celery_queue_name,
                                                  routing_key=celery_routing_key)
@@ -362,10 +363,12 @@ def __execute_cloud_stochoptim_task(params, data, database, task_id, celery_queu
     poll_task_path = os.path.join(os.path.dirname(os.path.abspath(__file__)), "..", "poll_task.py")
 
     logging.info("Task sent to cloud with celery id {0}...".format(stochss_task.id))
-    poll_task_string = "python {0} {1} {2}".format(poll_task_path, stochss_task.id, queue_name)
+    poll_task_string = "python {0} {1} {2} {3}".format(poll_task_path, stochss_task.id, queue_name, params['job_id'])
 
     try:
-        p = subprocess.Popen(shlex.split(poll_task_string))
+        my_env =  os.environ.copy()
+        my_env['PYTHONPATH'] = os.pathsep.join(sys.path)
+        p = subprocess.Popen(shlex.split(poll_task_string), env=my_env)
         result["poll_process_pid"] = p.pid
     except Exception as e:
         logging.error("Caught exception {0}".format(e))
@@ -496,14 +499,11 @@ def execute_cloud_task(params, agent_type, ec2_access_key, ec2_secret_key,
         result['resource'] = params['resource']
         return result
 
-    except Exception, e:
-        trace = traceback.format_exc()
-        logging.error("execute_cloud_task : error = %s", str(e))
-        logging.error(trace)
+    except Exception as e:
+        logging.exception(e)
 
         return {
             "success": False,
             "reason": str(e),
             "exception": str(e),
-            "traceback": trace
         }

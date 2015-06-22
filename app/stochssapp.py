@@ -30,7 +30,7 @@ from backend.common.config import AgentTypes, JobConfig, JobDatabaseConfig
 
 import mimetypes
 
-from user_data import UserData
+from db_models.user_data import UserData
 
 """ Initializer section """
 # Initialize the jinja environment
@@ -39,38 +39,23 @@ jinja_environment = jinja2.Environment(autoescape=True,
                                        jinja2.FileSystemLoader(os.path.join(os.path.dirname(__file__), 'templates'))))
 
 
-class ObjectProperty(db.Property):
-    """  A db property to store objects. """
+from db_models.object_property import ObjectProperty
 
-    def get_value_for_datastore(self, model_instance):
-        result = super(ObjectProperty, self).get_value_for_datastore(model_instance)
-        result = pickle.dumps(result)
-        return db.Blob(result)
-
-    def make_value_from_datastore(self, value):
-        if value is None:
-            return None
-        return pickle.loads(value)
-
-    def empty(self, value):
-        return value is None
-
-
-class DictionaryProperty(db.Property):
-    """  A db property to store objects. """
-
-    def get_value_for_datastore(self, dict_prty):
-        result = super(DictionaryProperty, self).get_value_for_datastore(dict_prty)
-        result = pickle.dumps(dict_prty)
-        return db.Blob(result)
-
-    def make_value_from_datastore(self, value):
-        if value is None:
-            return None
-        return pickle.loads(value)
-
-    def empty(self, value):
-        return value is None
+#?class DictionaryProperty(db.Property):
+#?    """  A db property to store objects. """
+#?
+#?    def get_value_for_datastore(self, dict_prty):
+#?        result = super(DictionaryProperty, self).get_value_for_datastore(dict_prty)
+#?        result = pickle.dumps(dict_prty)
+#?        return db.Blob(result)
+#?
+#?    def make_value_from_datastore(self, value):
+#?        if value is None:
+#?            return None
+#?        return pickle.loads(value)
+#?
+#?    def empty(self, value):
+#?        return value is None
 
 
 

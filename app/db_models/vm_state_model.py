@@ -7,7 +7,8 @@ from google.appengine.ext import db
 class VMStateModelException(Exception):
     pass
 
-from common.config import AgentTypes
+from backend.common.config import AgentTypes
+
 
 class VMStateModel(db.Model):
     SUPPORTED_INFRA = [AgentTypes.EC2, AgentTypes.FLEX]
