@@ -242,14 +242,11 @@ class StochOptimPage(BaseHandler):
             try:
                 if data["resource"] == "local":
                     # This function takes full responsibility for writing responses out to the world. This is probably a bad design mechanism
-                    self.runLocal(data)
-                    return
-
+                    result = self.runLocal(data)
                 else:
                     # cloud
-
-                    backend_services = backend.backendservice.backendservices(self.user_data)
                     result = self.runCloud(data=data)
+
                 return self.response.write(json.dumps({
                     "status": True,
                     "msg": "Job launched",
@@ -490,17 +487,7 @@ class StochOptimPage(BaseHandler):
         cloud_result = service.submit_cloud_task(params=cloud_params)
 
         if not cloud_result["success"]:
-            result = {
-                "success": False,
-                "msg": cloud_result["reason"]
-            }
-            try:
-                result["poll_process_pid"] = cloud_result["poll_process_pid"]
-                result["exception"] = cloud_result["exception"]
-                result["traceback"] = cloud_result["traceback"]
-            except KeyError:
-                pass
-            return result
+            raise Exception(cloud_result["reason"])
         
         job.cloudDatabaseID = cloud_result["db_id"]
         job.resource = cloud_result['resource']
