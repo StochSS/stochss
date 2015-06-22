@@ -764,31 +764,30 @@ class backendservices(object):
 
         result = {}
         #Check all infrastructures
-        for output_url in output_urls:
+        for job_id, output_url in output_urls.items():
             if output_url.startswith('scp://'):
-                for job_id, output_url in output_urls.items():
-                    match_object = re.search(pattern='scp://([^:@]+)@([^:@]+):([^:@]+):([^:@]+)', string = output_url)
-                    username = match_object.group(1)
-                    ip = match_object.group(2)
-                    keyname = match_object.group(3)
-                    output_tar_file_path = match_object.group(4)
-                        
-                    command = "du -b {output_file}".format(output_file=output_tar_file_path)
-                    remote_cmd = helper.get_remote_command(user=username, ip=ip,
-                                                           key_file=os.path.join(self.FLEX_SSH_KEYFILE_DIR, keyname),
-                                                           command=command)
-                        
-                    logging.debug('command = {}'.format(remote_cmd))
-                    handle = subprocess.Popen(shlex.split(remote_cmd), stdout=subprocess.PIPE, stderr=subprocess.PIPE)
-                    stdout, stderr = handle.communicate()
-                    
-                    match_object = re.search(pattern='([^\s]+)(\s+)([^\s]+)', string=stdout)
-                    if match_object:
-                        output_size = int(match_object.group(1))
-                        logging.debug('For job_id = {0}, size = {1}'.format(job_id, output_size))
-                        result[job_id] = output_size
-                    else:
-                        result[job_id] = None
+                match_object = re.search(pattern='scp://([^:@]+)@([^:@]+):([^:@]+):([^:@]+)', string = output_url)
+                username = match_object.group(1)
+                ip = match_object.group(2)
+                keyname = match_object.group(3)
+                output_tar_file_path = match_object.group(4)
+                
+                command = "du -b {output_file}".format(output_file=output_tar_file_path)
+                remote_cmd = helper.get_remote_command(user=username, ip=ip,
+                                                       key_file=os.path.join(self.FLEX_SSH_KEYFILE_DIR, keyname),
+                                                       command=command)
+                
+                logging.debug('command = {}'.format(remote_cmd))
+                handle = subprocess.Popen(shlex.split(remote_cmd), stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+                stdout, stderr = handle.communicate()
+                
+                match_object = re.search(pattern='([^\s]+)(\s+)([^\s]+)', string=stdout)
+                if match_object:
+                    output_size = int(match_object.group(1))
+                    logging.debug('For job_id = {0}, size = {1}'.format(job_id, output_size))
+                    result[job_id] = output_size
+                else:
+                    result[job_id] = None
             elif output_url.startswith('https://') or output_url.startswith('http://'):
                 aws_access_key = credentials['EC2_ACCESS_KEY']
                 aws_secret_key = credentials['EC2_SECRET_KEY']

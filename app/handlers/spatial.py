@@ -405,7 +405,6 @@ class SpatialPage(BaseHandler):
                 os.system('tar -xf' +job.uuid+'.tar')
                 # Record location
                 job.outData = os.path.abspath(os.path.dirname(__file__))+'/../output/'+job.uuid
-                job.preprocessedDir = os.path.abspath(os.path.dirname(__file__))+'/../preprocessed/'+job.uuid
                 # Clean up
                 os.remove(job.uuid+'.tar')
                 # Save the updated status
