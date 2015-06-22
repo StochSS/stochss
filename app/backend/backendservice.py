@@ -594,7 +594,7 @@ class backendservices(object):
 	    that have a keyname prefixed with stochss (all instances created by the backend service)
 	    params must contain credentials key/value
         '''
-        key_prefix = AgentConfig.get_agent_key_prefix(agent_type=self.infrastructure,
+        key_prefix = AgentConfig.get_agent_key_prefix(agent_type=AgentTypes.EC2,
                                                       key_prefix=params.get('key_prefix', ''))
         try:
             logging.debug("Stopping compute nodes with key_prefix: {0}".format(key_prefix))
