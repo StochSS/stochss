@@ -1,4 +1,3 @@
-console.log('starting ' + performance.now());
 if (typeof(String.prototype.trim) === "undefined") {
     String.prototype.trim = function () {
         return String(this).replace(/^\s+|\s+$/g, '');
@@ -99,7 +98,7 @@ function deregister_flex_cloud() {
 
     $.ajax({
         type: "POST",
-        url: "/credentials",
+        url: "/flexCloudCredentials",
         contentType: "application/json",
         dataType: "json",
         data: jsonDataToBeSent,
@@ -128,7 +127,7 @@ function prepare_flex_cloud() {
 
     $.ajax({
         type: "POST",
-        url: "/credentials",
+        url: "/flexCloudCredentials",
         contentType: "application/json",
         dataType: "json",
         data: jsonDataToBeSent,
@@ -156,7 +155,7 @@ function refresh_flex_cloud() {
 
     $.ajax({
         type: "POST",
-        url: "/credentials",
+        url: "/flexCloudCredentials",
         contentType: "application/json",
         dataType: "json",
         data: jsonDataToBeSent,
@@ -348,11 +347,9 @@ In Use \
     }
 });
 
-console.log("Initializing controller" + performance.now());
 var cont = new FlexCloud.Controller();
 
 window.onload = function () {
-    console.log(performance.now());
     $('#flex_ssh_key_table_table').DataTable({ "bSort": false, "bLengthChange": false, "bFilter": false, "bPaginate": false, "bInfo": false });
     $('#flex_ssh_key_table_table').css('border-bottom', '1px solid #ddd');
     $('#flex_ssh_key_table_table thead th').css('border-bottom', '1px solid #ddd');
@@ -364,7 +361,5 @@ window.onload = function () {
         document.location.reload();
     } );
 
-    console.log("rendering", performance.now());
     cont.render();
-    console.log(performance.now());
 };
