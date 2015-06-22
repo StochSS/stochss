@@ -64,6 +64,9 @@ class backendservices(object):
         ret['queue_head_ip'] = ''
         if flex_queue_head_machine is not None and 'ip' in flex_queue_head_machine:
             ret['queue_head_ip'] = flex_queue_head_machine['ip']
+        ret['queue_head_keyfile'] = ''
+        if flex_queue_head_machine is not None and 'keyfile' in flex_queue_head_machine:
+            ret['queue_head_keyfile'] = flex_queue_head_machine['keyfile']
         return ret
 
     def get_database(self, job):
