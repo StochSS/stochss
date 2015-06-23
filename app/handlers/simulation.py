@@ -100,7 +100,7 @@ class JobManager():
                     # These are things contained in the stochkit_job object
                     "type" : job.indata["type"],
                     "status" : job.status,
-                    "startDate" : job.startTime,
+                    "startTime" : job.startTime,
                     "modelName" : job.modelName,
                     "output_stored": job.output_stored,
                     "output_location" : job.outData,
@@ -153,7 +153,7 @@ class JobManager():
         
         jobWrap.modelName = job['modelName']
         # This is probably not a good idea...
-        jobWrap.indata = dict([(k, job[k]) for k in ['type', 'final_time', 'increment', 'realizations', 'exec_type', 'units', 'epsilon', 'threshold', 'seed'] if k in job])
+        jobWrap.indata = json.dumps(dict([(k, job[k]) for k in ['type', 'final_time', 'increment', 'realizations', 'exec_type', 'units', 'epsilon', 'threshold', 'seed'] if k in job]))
 
         if 'startTime' in job:
             jobWrap.startTime = job['startTime']
@@ -642,7 +642,7 @@ class SimulatePage(BaseHandler):
         
         
         job.user_id = self.user.user_id()
-        job.startDate = time.strftime("%Y-%m-%d-%H-%M-%S")
+        job.startTime = time.strftime("%Y-%m-%d-%H-%M-%S")
         job.name = params['jobName']
         job.modelName = model.name
         #job.pid = taskid
@@ -650,15 +650,15 @@ class SimulatePage(BaseHandler):
         job.cloudDatabaseID = taskid
 
         # Create a StochKitJob instance
-        job.indata = { "type" : 'StochKit2 Ensemble',
-                       "final_time" : params['time'],
-                       "realizations" : params['realizations'],
-                       "increment" : params['increment'],
-                       "seed" : params['seed'],
-                       "exec_type" : params['execType'],
-                       "units" : model.units.lower(),
-                       "epsilon" : params['epsilon'],
-                       "threshold" : params['threshold'] }
+        job.indata = json.dumps({ "type" : 'StochKit2 Ensemble',
+                                  "final_time" : params['time'],
+                                  "realizations" : params['realizations'],
+                                  "increment" : params['increment'],
+                                  "seed" : params['seed'],
+                                  "exec_type" : params['execType'],
+                                  "units" : model.units.lower(),
+                                  "epsilon" : params['epsilon'],
+                                  "threshold" : params['threshold'] })
 
         job.output_stored = 'True'
         job.outData = None
@@ -752,21 +752,21 @@ class SimulatePage(BaseHandler):
         
         
         job.user_id = self.user.user_id()
-        job.startDate = time.strftime("%Y-%m-%d-%H-%M-%S")
+        job.startTime = time.strftime("%Y-%m-%d-%H-%M-%S")
         job.name = params['jobName']
         job.modelName = model.name
         job.pid = handle.pid
 
         # Create a StochKitJob instance
-        job.indata = { "type" : 'StochKit2 Ensemble',
-                       "final_time" : params['time'],
-                       "realizations" : params['realizations'],
-                       "increment" : params['increment'],
-                       "seed" : params['seed'],
-                       "exec_type" : params['execType'],
-                       "units" : model.units.lower(),
-                       "epsilon" : params['epsilon'],
-                       "threshold" : params['threshold'] }
+        job.indata = json.dumps( { "type" : 'StochKit2 Ensemble',
+                                   "final_time" : params['time'],
+                                   "realizations" : params['realizations'],
+                                   "increment" : params['increment'],
+                                   "seed" : params['seed'],
+                                   "exec_type" : params['execType'],
+                                   "units" : model.units.lower(),
+                                   "epsilon" : params['epsilon'],
+                                   "threshold" : params['threshold'] } )
 
         job.outData = dataDir
         job.stdout = '{0}/stdout'.format(dataDir)

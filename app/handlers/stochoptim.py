@@ -168,7 +168,7 @@ class StochOptimPage(BaseHandler):
         if reqType == 'newJob':
             data = json.loads(self.request.get('data'))
 
-            job = db.GqlQuery("SELECT * FROM StochOptimJobWrapper WHERE userId = :1 AND jobName = :2",
+            job = db.GqlQuery("SELECT * FROM StochOptimJobWrapper WHERE user_id = :1 AND name = :2",
                               self.user.user_id(),
                               data["jobName"].strip()).get()
 
@@ -204,7 +204,7 @@ class StochOptimPage(BaseHandler):
 
             job = StochOptimJobWrapper.get_by_id(jobID)
 
-            if job.userId == self.user.user_id():
+            if job.user_id == self.user.user_id():
                 if job.resource.lower() in backendservices.SUPPORTED_CLOUD_RESOURCES:
                     try:
                         logging.info("Stopping StochOptim poll task pid={0}".format(job.pollProcessPID))
@@ -215,7 +215,7 @@ class StochOptimPage(BaseHandler):
                     if not success:
                         return self.response.write(json.dumps({
                             'status': False,
-                            'msg': 'Could not stop the job '+job.jobName +'. Unexpected error.'
+                            'msg': 'Could not stop the job '+job.name +'. Unexpected error.'
                         }))
                 else:
                     job.stop(self)
@@ -230,7 +230,7 @@ class StochOptimPage(BaseHandler):
 
             job = StochOptimJobWrapper.get_by_id(jobID)
 
-            if job.userId == self.user.user_id():
+            if job.user_id == self.user.user_id():
                 job.delete(self)
             else:
                 self.response.write(json.dumps({"status" : False,
@@ -244,7 +244,7 @@ class StochOptimPage(BaseHandler):
             job = StochOptimJobWrapper.get_by_id(jobID)
 
             if not job.zipFileName:
-                szip = exportimport.SuperZip(os.path.abspath(os.path.dirname(__file__) + '/../static/tmp/'), preferredName = job.jobName + "_")
+                szip = exportimport.SuperZip(os.path.abspath(os.path.dirname(__file__) + '/../static/tmp/'), preferredName = job.name + "_")
                 
                 job.zipFileName = szip.getFileName()
 
@@ -303,9 +303,9 @@ class StochOptimPage(BaseHandler):
         dataDir = tempfile.mkdtemp(dir = basedir + 'output')
 
         job = StochOptimJobWrapper()
-        job.userId = self.user.user_id()
+        job.user_id = self.user.user_id()
         job.startTime = time.strftime("%Y-%m-%d-%H-%M-%S")
-        job.jobName = data["jobName"]
+        job.name = data["jobName"]
         job.indata = json.dumps(data)
         job.outData = dataDir
         job.modelName = modelDb.name
@@ -353,7 +353,7 @@ class StochOptimPage(BaseHandler):
 
         cmd = "Rscript --vanilla {path}/../../stochoptim/exec/mcem2.r --model {model_file_file} --data {model_initial_data_file} --finalData {model_data_file} --steps {steps} --seed {seed} --cores {cores} --K.ce {Kce} --K.em {Kem} --K.lik {Klik} --K.cov {Kcov} --rho {rho} --perturb {perturb} --alpha {alpha} --beta {beta} --gamma {gamma} --k {k} --pcutoff {pcutoff} --qcutoff {qcutoff} --numIter {numIter} --numConverge {numConverge} --command {exec}".format(**data)
 
-        exstring = '{0}/backend/wrapper.sh {1}/stdout {1}/stderr {2}'.format(basedir, dataDir, cmd)
+        exstring = '{0}/backend/wrapper.sh {1}/stdout {1}/stderr {1}/ret {2}'.format(basedir, dataDir, cmd)
 
         handle = subprocess.Popen(exstring, shell=True, preexec_fn=os.setsid)
         
@@ -379,9 +379,9 @@ class StochOptimPage(BaseHandler):
         dataDir = tempfile.mkdtemp(dir = basedir + 'output')
 
         job = StochOptimJobWrapper()
-        job.userId = self.user.user_id()
+        job.user_id = self.user.user_id()
         job.startTime = time.strftime("%Y-%m-%d-%H-%M-%S")
-        job.jobName = data["jobName"]
+        job.name = data["jobName"]
         job.indata = json.dumps(data)
         job.modelName = modelDb.name
         job.outData = dataDir
@@ -485,7 +485,7 @@ class StochOptimVisualization(BaseHandler):
 
                     output["nameToIndex"] = json.loads(optimization.nameToIndex)
                     output["status"] = "Inaccessible"
-                    output["jobName"] = optimization.jobName
+                    output["jobName"] = optimization.name
                     output["modelName"] = optimization.modelName
                     output["resource"] = optimization.resource
                     output["activate"] = json.loads(optimization.indata)["activate"]
@@ -537,7 +537,7 @@ class StochOptimVisualization(BaseHandler):
                         optimization.mark_final_cloud_data()
                     else:
                         logging.info("Failed to download final output data of {0} with reason {1}".format(
-                            optimization.jobName,
+                            optimization.name,
                             cloud_result["msg"]
                         ))
             else:
@@ -546,7 +546,7 @@ class StochOptimVisualization(BaseHandler):
                 if not cloud_result["status"]:
                     #TODO: Display message to user?
                     logging.info("Failed to download output data of {0} with reason {1}".format(
-                        optimization.jobName,
+                        optimization.name,
                         cloud_result["msg"]
                     ))
 
@@ -581,7 +581,7 @@ class StochOptimVisualization(BaseHandler):
 
         output["nameToIndex"] = json.loads(optimization.nameToIndex)
         output["status"] = optimization.status
-        output["jobName"] = optimization.jobName
+        output["jobName"] = optimization.name
         output["modelName"] = optimization.modelName
         output["resource"] = optimization.resource
         output["activate"] = json.loads(optimization.indata)["activate"]

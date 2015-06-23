@@ -251,18 +251,20 @@ class StatusPage(BaseHandler):
         indata = json.loads(job.indata)
         file_to_check = None
         if job.outData is not None:
-            if indata["exec_type"] == 'spatial':
+            if "execType" in indata and indata["execType"] == 'spatial':
                 file_to_check = "{0}/results/complete".format(job.outData)
+            elif "execType" in indata and indata["execType"] == 'sensitivity':
+                file_to_check = os.path.join(job.outData, "result/output.txt")
             elif indata["exec_type"] == 'stochastic':
                 file_to_check = os.path.join(job.outData, "result/stats/means.txt")
             elif indata["exec_type"] == 'deterministic':
-                file_to_check = os.path.join(job.outData, "/result/output.txt")
+                file_to_check = os.path.join(job.outData, "result/output.txt")
             else:
                 raise Exception('Unknown exec_type={0}'.format(indata["exec_type"]))
         logging.debug('status.getJobStatus() file_to_check={0}'.format(file_to_check))
-        if job.resource == "local" or job.outData is not None:
+        if job.resource.lower() == "local" or job.outData is not None:
             job_status_found = False
-            if job.resource == "local":
+            if job.resource.lower() == "local":
                 # First, check if the job is still running
                 res = service.checkTaskStatusLocal([job.pid])
                 if res[job.pid] and job.pid:
