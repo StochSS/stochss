@@ -35,9 +35,13 @@ class StochOptimJobWrapper(db.Model):
         self.stop(handler)
         
         # delete on cloud
-        if self.resource in backendservices.SUPPORTED_CLOUD_RESOURCES:
-            service = backendservices(handler.user_data)
-            service.deleteTasks(self)
+        if self.resource is not None and self.resource in backendservices.SUPPORTED_CLOUD_RESOURCES:
+            try:
+                service = backendservices(handler.user_data)
+                service.deleteTasks(self)
+            except Exception as e:
+                logging.error("Failed to delete cloud resources of job {0}".format(self.key().id()))
+                logging.error(e)
 
         super(StochOptimJobWrapper, self).delete()
 

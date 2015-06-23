@@ -76,7 +76,11 @@ class StochKitJobWrapper(db.Model):
         if self.outData is not None and os.path.exists(str(self.outData)):
             shutil.rmtree(self.outData)
 
-        if self.resource.lower() != 'local':
-            service.deleteTasks(self)
+        if self.resource is not None and self.resource in backendservices.SUPPORTED_CLOUD_RESOURCES:
+            try:
+                service.deleteTasks(self)
+            except Exception as e:
+                logging.error("Failed to delete cloud resources of job {0}".format(self.key().id()))
+                logging.error(e)
 
         super(StochKitJobWrapper, self).delete()
