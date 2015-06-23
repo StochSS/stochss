@@ -180,7 +180,7 @@ class SuperZip:
                     if job.outData is None or (job.outData is not None and not os.path.exists(job.outData)):
                         # Grab the output from S3 if we need to
                         service = backendservices(handler.user_data)
-                        service.fetchOutput(job.cloudDatabaseID, job.output_url)
+                        service.fetchOutput(job.cloudDatabaseID, job.outputURL)
                         # Unpack it to its local output location
                         os.system('tar -xf {0}.tar'.format(job.cloudDatabaseID))
                         job.outData = os.path.abspath('{0}/../output/{1}'.format(os.path.abspath(os.path.dirname(__file__)), job.cloudDatabaseID))
@@ -294,14 +294,13 @@ class SuperZip:
                     "status" : job.status }
         
         if job.resource in backendservices.SUPPORTED_CLOUD_RESOURCES:
-            #jsonJob["output_url"] = job.output_url
             # Only grab S3 data if user wants us to
             if (job.jobName in self.spatialJobsToDownload) or globalOp:
                 if job.outData is None or (job.outData is not None and not os.path.exists(job.outData)):
                     # Grab the output from S3 if we need to
                     service = backendservices(handler.user_data)
                     # Fetch
-                    service.fetchOutput(job.cloudDatabaseID, job.output_url)
+                    service.fetchOutput(job.cloudDatabaseID, job.outputURL)
                     # Unpack
                     os.system('tar -xf' +job.uuid+'.tar')
                     # Record location
@@ -884,7 +883,7 @@ class ImportPage(BaseHandler):
         # Create the dictionary to pass to backend to check for sizes
         output_results_to_check = {}
         for cloud_job in stochkit_jobs:
-            output_results_to_check[cloud_job.key().id()] = cloud_job.output_url
+            output_results_to_check[cloud_job.key().id()] = cloud_job.outputURL
 
         # Sensitivity Jobs
         sensi_jobs = db.GqlQuery("SELECT * FROM SensitivityJobWrapper WHERE userId = :1", self.user.user_id())
@@ -917,10 +916,10 @@ class ImportPage(BaseHandler):
         for cloud_job in spatial_jobs_query.run():
             if cloud_job.resource is None or cloud_job.resource not in backendservices.SUPPORTED_CLOUD_RESOURCES:
                 continue
-            if cloud_job.output_url is None or cloud_job.outData is not None:
+            if cloud_job.outputURL is None or cloud_job.outData is not None:
                 continue
 
-            output_results_to_check[cloud_job.key().id()] = cloud_job.output_url
+            output_results_to_check[cloud_job.key().id()] = cloud_job.outputURL
             spatial_jobs.append(cloud_job)
 
         job_sizes = service.getSizeOfOutputResults(output_results_to_check)

@@ -166,6 +166,7 @@ class StatusPage(BaseHandler):
         indata = json.loads(job.indata)
         file_to_check = "{0}/return_code".format(job.outData)
         logging.debug('status.getJobStatus() file_to_check={0}'.format(file_to_check))
+        logging.debug('status.getJobStatus() job.outData={0}'.format(job.outData))
         if job.resource.lower() == "local" or job.outData is not None:
             job_status_found = False
             if job.resource.lower() == "local":

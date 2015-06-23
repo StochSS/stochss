@@ -37,7 +37,7 @@ class StochKitJobWrapper(db.Model):
     startTime = db.StringProperty()
     output_stored = db.StringProperty()
     outData = db.StringProperty()
-    output_url = db.StringProperty()
+    outputURL = db.StringProperty()
     result = db.StringProperty()
 
     stdout = db.StringProperty()
