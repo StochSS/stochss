@@ -2,19 +2,22 @@ from backend.backendservice import backendservices
 import logging
 import os
 import shutil
+import json
+import pickle
+import h5py
 from google.appengine.ext import db
 
 
 class SpatialJobWrapper(db.Model):
 
     # These are all the attributes of a job we use for local storage
-    userId = db.StringProperty()
+    user_id = db.StringProperty()
     pid = db.IntegerProperty()
     cloudDatabaseID = db.StringProperty()
     startTime = db.StringProperty()
-    jobName = db.StringProperty()
+    name = db.StringProperty()
     modelName = db.StringProperty() # This is a reference to the model. I should probably use a modelId instead. I'm not sure why I store it as a name
-    indata = db.TextProperty() # This is a dump of the json data sent from the html/js that was used to start the job. We save it
+    indata = db.TextProperty() 
     outData = db.StringProperty() # THis is a path to the output data on the filesystem
     status = db.StringProperty()
     
@@ -28,7 +31,7 @@ class SpatialJobWrapper(db.Model):
     # These are the cloud attributes
     resource = db.StringProperty()
     uuid = db.StringProperty()
-    output_url = db.StringProperty()
+    outputURL = db.StringProperty()
     celeryPID = db.StringProperty()
     exception_message = db.StringProperty()
     output_stored = db.StringProperty()
@@ -44,7 +47,7 @@ class SpatialJobWrapper(db.Model):
         ''' Unpickle data file '''
         with open(str(self.outData + '/results/result{0}'.format(trajectory))) as fd:
             #print "Unpickling data file"
-            indataStr = json.loads(self.indata)
+            #indataStr = json.loads(self.indata)
             
             result = pickle.load(fd)
 
@@ -113,7 +116,7 @@ class SpatialJobWrapper(db.Model):
         if self.status == "Running":
             service = backendservices(handler.user_data)
             if self.resource == "local":
-                service.deleteTaskLocal([int(self.pid)])
+                service.stopTaskLocal([int(self.pid)])
             elif self.resource in backendservices.SUPPORTED_CLOUD_RESOURCES:
                 result = service.stopTasks(self)
                 if result and result[self.cloudDatabaseID]:

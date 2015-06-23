@@ -51,8 +51,8 @@ class SensitivityPage(BaseHandler):
             job = SensitivityJobWrapper.get_by_id(int(self.request.get('id')))
             
             jsonJob = { "id": int(self.request.get('id')),
-                        "userId" : job.userId,
-                        "jobName" : job.jobName,
+                        "userId" : job.user_id,
+                        "jobName" : job.name,
                         "startTime" : job.startTime,
                         "indata" : json.loads(job.indata),
                         "outData" : job.outData,
@@ -62,7 +62,7 @@ class SensitivityPage(BaseHandler):
                         "output_stored": job.output_stored,
                         "modelName" : job.modelName }
             
-            if self.user.user_id() != job.userId:
+            if self.user.user_id() != job.user_id:
                 self.response.headers['Content-Type'] = 'application/json'
                 self.response.write(json.dumps(["Not the right user"]))
 
@@ -181,7 +181,7 @@ class SensitivityPage(BaseHandler):
             job = SensitivityJobWrapper.get_by_id(int(self.request.get('id')))
             
             if not job.zipFileName:
-                szip = exportimport.SuperZip(os.path.abspath(os.path.dirname(__file__) + '/../static/tmp/'), preferredName = job.jobName + "_")
+                szip = exportimport.SuperZip(os.path.abspath(os.path.dirname(__file__) + '/../static/tmp/'), preferredName = job.name + "_")
                 
                 job.zipFileName = szip.getFileName()
 
@@ -204,7 +204,7 @@ class SensitivityPage(BaseHandler):
         elif reqType == "delJob":
             job = SensitivityJobWrapper.get_by_id(int(self.request.get('id')))
 
-            if self.user.user_id() != job.userId:
+            if self.user.user_id() != job.user_id:
                 self.response.headers['Content-Type'] = 'application/json'
                 self.response.write(json.dumps(["Not the right user"]))
                 return
@@ -217,7 +217,7 @@ class SensitivityPage(BaseHandler):
         elif reqType == "newJob":
             data = json.loads(self.request.get('data'))
 
-            job = db.GqlQuery("SELECT * FROM SensitivityJobWrapper WHERE userId = :1 AND jobName = :2", self.user.user_id(), data["jobName"].strip()).get()
+            job = db.GqlQuery("SELECT * FROM SensitivityJobWrapper WHERE user_id = :1 AND name = :2", self.user.user_id(), data["jobName"].strip()).get()
 
             if job != None:
                 self.response.write(json.dumps({"status" : False,
@@ -252,10 +252,10 @@ class SensitivityPage(BaseHandler):
         '''
         job = SensitivityJobWrapper()
         job.resource = "local"
-        job.userId = self.user.user_id()
+        job.user_id = self.user.user_id()
         model = modeleditor.StochKitModelWrapper.get_by_id(data["id"])
         job.startTime = time.strftime("%Y-%m-%d-%H-%M-%S")
-        job.jobName = data["jobName"]
+        job.name = data["jobName"]
         job.modelName = model.name
         
         runtime = float(data["time"])
@@ -319,10 +319,10 @@ class SensitivityPage(BaseHandler):
         if not service.isOneOrMoreComputeNodesRunning():
             raise Exception('No cloud computing resources found')
 
-        job.userId = self.user.user_id()
+        job.user_id = self.user.user_id()
         model = modeleditor.StochKitModelWrapper.get_by_id(data["id"])
         job.startTime = time.strftime("%Y-%m-%d-%H-%M-%S")
-        job.jobName = data["jobName"]
+        job.name = data["jobName"]
         job.status = "Pending"
         job.modelName = model.name
 

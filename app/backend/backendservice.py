@@ -267,6 +267,8 @@ class backendservices(object):
         '''
         @param job
         '''
+        #logging.debug('*'*80)
+        #logging.debug('*'*80)
         logging.debug("describeTasks() job = {0}".format(job))
         database = self.get_database(job)
 
@@ -276,17 +278,24 @@ class backendservices(object):
             if result is not None and job.cloudDatabaseID in result and result[job.cloudDatabaseID]['status'] == 'active' and job.resource == self.EC2_CLOUD_RESOURCE:
                 try:
                     celery_app = CelerySingleton().app
-                    result2 = AsyncResult(task_id)
+                    result2 = AsyncResult(job.celeryPID)
+                    logging.debug('describeTasks(): AsyncResult.status = {0}'.format(result2.status))
                     if result2.failed():
                         result[job.cloudDatabaseID]["status"] = "failed"
                 except Exception as e:
+                    logging.debug('describeTasks(): AsyncResult raised exception')
                     logging.exception(e)
                     result[job.cloudDatabaseID]["status"] = "failed"
 
         except Exception as e:
-            logging.exception(e)
+            logging.error(e)
+            logging.debug('describeTasks() return result=None')
+            #logging.debug('*'*80)
+            #logging.debug('*'*80)
             return None
-
+        logging.debug('describeTasks() return result={0}'.format(result))
+        #logging.debug('*'*80)
+        #logging.debug('*'*80)
         return result
 
     def stopTasks(self, job):
@@ -342,13 +351,13 @@ class backendservices(object):
         Terminates the processes associated with the PID. 
         This methods ignores the PID which are  not active.
         """
-        logging.debug("deleteTaskLocal : inside method with pids : %s", pids)
+        logging.debug("stopTaskLocal : inside method with pids : %s", pids)
         for pid in pids:
             try:
-                logging.debug("deleteTaskLocal(): KILL TASK {0}".format(pid))
+                logging.debug("stopTaskLocal(): KILL TASK {0}".format(pid))
                 os.kill(pid, signal.SIGTERM)
             except Exception, e:
-                logging.error("deleteTaskLocal(): couldn't kill process. error: {0}".format(e))
+                logging.error("stopTaskLocal(): couldn't kill process. error: {0}".format(e))
 
 
     def __create_dynamodb_stochss_table(self, ec2_access_key, ec2_secret_key):

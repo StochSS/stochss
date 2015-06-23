@@ -69,7 +69,7 @@ class JobManager():
                         "startTime" : job.startTime,
                         "modelName" : job.modelName,
                         "output_stored": job.output_stored,
-                        "output_location" : job.output_location,
+                        "output_location" : job.outData,
                         "zipFileName" : job.zipFileName,
                         "output_url" : job.output_url,
                         "final_time" : job.indata["final_time"],
@@ -103,7 +103,7 @@ class JobManager():
                     "startDate" : job.startTime,
                     "modelName" : job.modelName,
                     "output_stored": job.output_stored,
-                    "output_location" : job.output_location,
+                    "output_location" : job.outData,
                     "zipFileName" : job.zipFileName,
                     "output_url" : job.output_url,
                     "final_time" : job.indata["final_time"],
@@ -163,7 +163,7 @@ class JobManager():
         else:
             jobWrap.resource = 'Local'
 
-        jobWrap.output_location = job['output_location']
+        jobWrap.outData = job['output_location']
 
         if 'output_url' in job:
             jobWrap.output_url = job['output_url']
@@ -247,7 +247,7 @@ class JobBackboneInterface(BaseHandler):
 #        self.status = status
 #        
 #        # URL to the result (valid after a sucessful execution)
-#        self.output_location = output_location
+#        self.outData = output_location
 #        self.output_url = output_url
 #        self.zipFileName = zipFileName
 #        # In case of failure
@@ -312,10 +312,10 @@ class SimulatePage(BaseHandler):
             
             # Unpack it to its local output location
             os.system('tar -xf {0}.tar'.format(job.cloudDatabaseID))
-            job.output_location = os.path.abspath('{0}/../output/{1}'.format(os.path.abspath(os.path.dirname(__file__)), job.cloudDatabaseID))
+            job.outData = os.path.abspath('{0}/../output/{1}'.format(os.path.abspath(os.path.dirname(__file__)), job.cloudDatabaseID))
 
-            job.stdout = os.path.join(job.output_location, '/stdout.log')
-            job.stderr = os.path.join(job.output_location, '/stderr.log')
+            job.stdout = os.path.join(job.outData, '/stdout.log')
+            job.stderr = os.path.join(job.outData, '/stderr.log')
 
             # Clean up
             os.remove('{0}.tar'.format(job.cloudDatabaseID))
@@ -376,14 +376,14 @@ class SimulatePage(BaseHandler):
 
             if job.status == "Finished":
                 try:
-                    if (job.resource in backendservices.SUPPORTED_CLOUD_RESOURCES and job.output_stored == 'False') or (job.resource in backendservices.SUPPORTED_CLOUD_RESOURCES and job.output_location is None):
+                    if (job.resource in backendservices.SUPPORTED_CLOUD_RESOURCES and job.output_stored == 'False') or (job.resource in backendservices.SUPPORTED_CLOUD_RESOURCES and job.outData is None):
                         self.response.headers['Content-Type'] = 'application/json'
                         self.response.write(json.dumps({ "status" : "Finished",
                                                          "values" : [],
                                                          "job" : JobManager.getJob(self, job.key().id())}))
                         return
                     else:
-                        outputdir = job.output_location
+                        outputdir = job.outData
                         # Load all data from file in JSON format
                         if job.indata['exec_type'] == 'stochastic':
                             tid = self.request.get('tid')
@@ -477,18 +477,18 @@ class SimulatePage(BaseHandler):
             if job.status == "Failed":
                 self.response.headers['Content-Type'] = 'application/json'
                 
-                if job.output_location is not None:
-                    if os.path.isfile(job.output_location + '/stdout'):
-                        fstdoutHandle = open(job.output_location + '/stdout', 'r')
+                if job.outData is not None:
+                    if os.path.isfile(job.outData + '/stdout'):
+                        fstdoutHandle = open(job.outData + '/stdout', 'r')
                     else:
-                        fstdoutHandle = open(job.output_location + '/stdout.log', 'r')
+                        fstdoutHandle = open(job.outData + '/stdout.log', 'r')
                     stdout = fstdoutHandle.read()
                     fstdoutHandle.close()
 
-                    if os.path.isfile(job.output_location + '/stderr'):
-                        fstderrHandle = open(job.output_location + '/stderr', 'r')
+                    if os.path.isfile(job.outData + '/stderr'):
+                        fstderrHandle = open(job.outData + '/stderr', 'r')
                     else:
-                        fstderrHandle = open(job.output_location + '/stderr.log', 'r')
+                        fstderrHandle = open(job.outData + '/stderr.log', 'r')
                     stderr = fstderrHandle.read()
                     fstderrHandle.close()
 
@@ -661,7 +661,7 @@ class SimulatePage(BaseHandler):
                        "threshold" : params['threshold'] }
 
         job.output_stored = 'True'
-        job.output_location = None
+        job.outData = None
         #job.stdout = '{0}/stdout'.format(dataDir)
         #job.stderr = '{0}/stderr'.format(dataDir)
         job.status = 'Running'
@@ -768,7 +768,7 @@ class SimulatePage(BaseHandler):
                        "epsilon" : params['epsilon'],
                        "threshold" : params['threshold'] }
 
-        job.output_location = dataDir
+        job.outData = dataDir
         job.stdout = '{0}/stdout'.format(dataDir)
         job.stderr = '{0}/stderr'.format(dataDir)
         job.status = 'Running'

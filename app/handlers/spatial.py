@@ -63,7 +63,7 @@ class SpatialPage(BaseHandler):
         if reqType == 'getJobInfo':
             job = SpatialJobWrapper.get_by_id(int(self.request.get('id')))
 
-            if self.user.user_id() != job.userId:
+            if self.user.user_id() != job.user_id:
                 self.response.headers['Content-Type'] = 'application/json'
                 self.response.write({ "status" : False, "msg" : "Not the right user" })
 
@@ -94,12 +94,12 @@ class SpatialPage(BaseHandler):
                            "resource" : job.resource,
                            "modelName" : job.modelName,
                            "outData" : job.outData,
-                           "name" : job.jobName,
+                           "name" : job.name,
                            "uuid": job.cloudDatabaseID,
                            "output_stored": job.output_stored,
                            "stdout" : stdout,
                            "stderr" : stderr,
-                           "indata" : json.loads(job.indata) })
+                           "indata" : job.indata })
 
             logging.debug("result =\n\n{}".format(pprint.pformat(result)))
 
@@ -149,17 +149,25 @@ class SpatialPage(BaseHandler):
             try:
                 job = SpatialJobWrapper.get_by_id(int(self.request.get('id')))
                 data = json.loads(self.request.get('data'))
+                logging.debug('patial.get(onlyColorRange): data={0}'.format(data))
                 trajectory = data["trajectory"]
                 sTime= data["timeStart"]
                 eTime = data["timeEnd"]
+                #TODO: what is the right value here?
+                if eTime is None:
+                    eTime = 0
                 dataType = "population" if "showPopulation" in data and data["showPopulation"] else "concentration"
 
                 resultJS = {}
                 data = {}
 
+                if not job.preprocessed or not os.path.exists(job.preprocessedDir):
+                    job.preprocess(trajectory)
                 f = os.path.join(job.preprocessedDir, 'result{0}'.format(trajectory))
 
                 limits = {}
+
+                logging.debug('Spatial.get(onlyColorRange): sTime={0} eTime={0}'.format(sTime,eTime))
                 
                 with h5py.File(f, 'r') as dataFile:
                     dataTmp = {}
@@ -212,7 +220,7 @@ class SpatialPage(BaseHandler):
         if reqType == 'newJob':
             data = json.loads(self.request.get('data'))
             logging.debug('data =\n{}'.format(pprint.pformat(data)))
-            job = db.GqlQuery("SELECT * FROM SpatialJobWrapper WHERE userId = :1 AND jobName = :2",
+            job = db.GqlQuery("SELECT * FROM SpatialJobWrapper WHERE user_id = :1 AND name = :2",
                               self.user.user_id(), data["jobName"].strip()).get()
 
             if job != None:
@@ -269,7 +277,7 @@ class SpatialPage(BaseHandler):
                 job = SpatialJobWrapper.get_by_id(int(jobID))
                 service = backendservices(self.user_data)
                 # Fetch
-                service.fetchOutput(job.cloudDatabaseID, job.output_url)
+                service.fetchOutput(job.cloudDatabaseID, job.outputURL)
                 # Unpack
                 os.system('tar -xf' +job.uuid+'.tar')
                 # Record location
@@ -293,7 +301,7 @@ class SpatialPage(BaseHandler):
             jobID = int(jobID)
             job = SpatialJobWrapper.get_by_id(jobID)
             if not job.zipFileName:
-                szip = exportimport.SuperZip(os.path.abspath(os.path.dirname(__file__) + '/../static/tmp/'), preferredName = job.jobName + "_")
+                szip = exportimport.SuperZip(os.path.abspath(os.path.dirname(__file__) + '/../static/tmp/'), preferredName = job.name + "_")
                 job.zipFileName = szip.getFileName()
                 szip.addSpatialJob(job, True)
                 szip.close()
@@ -328,7 +336,7 @@ class SpatialPage(BaseHandler):
                             result.export_to_vtk(specie, os.path.join(tmpDir, "trajectory_{0}".format(trajectory), "species_{0}".format(specie)))
 
                     tmpFile = tempfile.NamedTemporaryFile(dir = os.path.abspath(os.path.dirname(__file__) + '/../static/tmp/'),
-                                                          prefix = job.jobName + "_",
+                                                          prefix = job.name + "_",
                                                           suffix = '.zip', delete = False)
 
                     zipf = zipfile.ZipFile(tmpFile, "w")
@@ -379,7 +387,7 @@ class SpatialPage(BaseHandler):
                         result.export_to_csv(os.path.join(tmpDir, "trajectory_{0}".format(trajectory)).encode('ascii', 'ignore'))
 
                     tmpFile = tempfile.NamedTemporaryFile(dir = os.path.abspath(os.path.dirname(__file__) + '/../static/tmp/'),
-                                                          prefix = job.jobName + "_",
+                                                          prefix = job.name + "_",
                                                           suffix = '.zip', delete = False)
 
                     zipf = zipfile.ZipFile(tmpFile, "w")
@@ -521,9 +529,9 @@ class SpatialPage(BaseHandler):
         dataDir = tempfile.mkdtemp(dir = basedir + 'output')
 
         job = SpatialJobWrapper()
-        job.userId = self.user.user_id()
+        job.user_id = self.user.user_id()
         job.startTime = time.strftime("%Y-%m-%d-%H-%M-%S")
-        job.jobName = data["jobName"]
+        job.name = data["jobName"]
         job.indata = json.dumps(data)
         job.outData = dataDir
         job.modelName = pymodel.name
@@ -588,9 +596,9 @@ class SpatialPage(BaseHandler):
 
         job = SpatialJobWrapper()
         job.type = 'PyURDME Ensemble'
-        job.userId = self.user.user_id()
+        job.user_id = self.user.user_id()
         job.startTime = time.strftime("%Y-%m-%d-%H-%M-%S")
-        job.jobName = data["jobName"]
+        job.name = data["jobName"]
         job.indata = json.dumps(data)
         job.outData = None  # This is where the data should be locally, when we get data from cloud, it must be put here
         job.modelName = pymodel.name

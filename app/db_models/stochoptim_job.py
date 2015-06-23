@@ -7,10 +7,10 @@ from backend.backendservice import backendservices
 
 class StochOptimJobWrapper(db.Model):
 
-    userId = db.StringProperty()
+    user_id = db.StringProperty()
     pid = db.IntegerProperty()
     startTime = db.StringProperty()
-    jobName = db.StringProperty()
+    name = db.StringProperty()
     modelName = db.StringProperty()
     indata = db.TextProperty()
     nameToIndex = db.TextProperty()
@@ -45,7 +45,7 @@ class StochOptimJobWrapper(db.Model):
         if self.status == "Running" or self.status == "Pending":
             service = backendservices(handler.user_data)
             if self.resource.lower() == "local":
-                service.deleteTaskLocal([int(self.pid)])
+                service.stopTaskLocal([int(self.pid)])
             elif self.resource in backendservices.SUPPORTED_CLOUD_RESOURCES:
                 result = service.stopTasks(self)
                 if result and result[self.cloudDatabaseID]:
