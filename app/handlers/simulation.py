@@ -71,7 +71,7 @@ class JobManager():
                         "output_stored": job.output_stored,
                         "output_location" : job.outData,
                         "zipFileName" : job.zipFileName,
-                        "output_url" : job.output_url,
+                        "output_url" : job.outputURL,
                         "final_time" : indata["final_time"],
                         "increment" : indata["increment"],
                         "realizations" : indata["realizations"],
@@ -106,7 +106,7 @@ class JobManager():
                     "output_stored": job.output_stored,
                     "output_location" : job.outData,
                     "zipFileName" : job.zipFileName,
-                    "output_url" : job.output_url,
+                    "output_url" : job.outputURL,
                     "final_time" : indata["final_time"],
                     "increment" : indata["increment"],
                     "realizations" : indata["realizations"],
@@ -167,7 +167,7 @@ class JobManager():
         jobWrap.outData = job['output_location']
 
         if 'output_url' in job:
-            jobWrap.output_url = job['output_url']
+            jobWrap.outputURL = job['output_url']
 
         jobWrap.stdout = job['stdout']
         jobWrap.stderr = job['stderr']
@@ -235,53 +235,6 @@ class JobBackboneInterface(BaseHandler):
       request.setHeader("Content-Type", "application/json")
       self.response.write(json.dumps([]))
 
-#class StochKitJob(db.model):
-#    """ Model for a StochKit job. Contains all the parameters associated with the call. """
-#    
-#    def __init__(self,name=None, final_time=None, increment=None, realizations=1, exec_type="stochastic",store_only_mean=False, label_column_names=True,create_histogram_data=False, seed=None, epsilon=0.1,threshold = 10, output_url = None, units = None, type = None, status = None, output_location = "", zipFileName = None, **kwargs):
-#        """ fdsgfhsj """
-#        
-#        # Type of the job {'Local','Cloud'}
-#        self.type = type
-#        
-#        # The status of the job. Valid statuses are 'Running', 'Finished', 'Failed'
-#        self.status = status
-#        
-#        # URL to the result (valid after a sucessful execution)
-#        self.outData = output_location
-#        self.output_url = output_url
-#        self.zipFileName = zipFileName
-#        # In case of failure
-#        self.exception_message = ""
-#        
-#        # Input parameters
-#        self.name = name
-#        self.final_time = final_time
-#        self.increment = increment
-#        self.realizations = realizations
-#        self.exec_type = exec_type
-#        self.units = units
-#        
-#        self.store_only_mean = store_only_mean
-#        self.label_column_names = label_column_names
-#        self.create_histogram_data = create_histogram_data
-#        
-#        self.epsilon = epsilon
-#        self.threshold = threshold
-#        self.resource = "Local"
-#
-#    
-#        # Status of the Job (Running, Pending, Done)
-#        status = 'Pending'
-#        #  Process ID
-#        self.pid = None
-#        # Celery Task ID
-#        self.celery_pid = None
-#    
-#        # The result dict returned by the cloud submission
-#        self.result = None
-#    
-
 
 class SimulatePage(BaseHandler):
     """ Render a page that lists the available models. """    
@@ -309,7 +262,7 @@ class SimulatePage(BaseHandler):
             job = StochKitJobWrapper.get_by_id(int(self.request.get('id')))
 
             service = backendservices(self.user_data)
-            service.fetchOutput(job.cloudDatabaseID, job.output_url)
+            service.fetchOutput(job.cloudDatabaseID, job.outputURL)
             
             # Unpack it to its local output location
             os.system('tar -xf {0}.tar'.format(job.cloudDatabaseID))
