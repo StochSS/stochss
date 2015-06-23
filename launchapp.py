@@ -103,11 +103,11 @@ def startserver():
     if '--debug' in sys.argv:
         h = subprocess.Popen((
                          "python " + path + "/sdk/python/dev_appserver.py --host=localhost --datastore_path={0}/mydatastore --skip_sdk_update_check YES --datastore_consistency_policy=consistent --log_level=debug app".format(
-                             path)).split(), stdout=stdout, stderr=stderr, preexec_fn=os.setsid)
+                             path)).split(), stdout=stdout, stderr=stderr)
     else:
         h = subprocess.Popen((
                          "python " + path + "/sdk/python/dev_appserver.py --host=localhost --datastore_path={0}/mydatastore --skip_sdk_update_check YES --datastore_consistency_policy=consistent app".format(
-                             path)).split(), stdout=stdout, stderr=stderr, preexec_fn=os.setsid)
+                             path)).split(), stdout=stdout, stderr=stderr)
 
 
 startserver()
@@ -125,7 +125,7 @@ def clean_up_and_exit(signal, stack):
     sys.stdout.flush()
 
     try:
-        os.killpg(h.pid)
+        h.terminate()
     except:
         pass
 
