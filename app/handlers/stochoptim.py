@@ -353,7 +353,7 @@ class StochOptimPage(BaseHandler):
 
         cmd = "Rscript --vanilla {path}/../../stochoptim/exec/mcem2.r --model {model_file_file} --data {model_initial_data_file} --finalData {model_data_file} --steps {steps} --seed {seed} --cores {cores} --K.ce {Kce} --K.em {Kem} --K.lik {Klik} --K.cov {Kcov} --rho {rho} --perturb {perturb} --alpha {alpha} --beta {beta} --gamma {gamma} --k {k} --pcutoff {pcutoff} --qcutoff {qcutoff} --numIter {numIter} --numConverge {numConverge} --command {exec}".format(**data)
 
-        exstring = '{0}/backend/wrapper.sh {1}/stdout {1}/stderr {1}/ret {2}'.format(basedir, dataDir, cmd)
+        exstring = '{0}/backend/wrapper.py {1}/stdout {1}/stderr {1}/return_code {2}'.format(basedir, dataDir, cmd)
 
         handle = subprocess.Popen(exstring, shell=True, preexec_fn=os.setsid)
         

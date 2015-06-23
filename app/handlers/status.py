@@ -82,55 +82,44 @@ class StatusPage(BaseHandler):
             with info to display on the page. 
         """
         context = {}
-        result = {}
         service = backendservices(self.user_data)
-        # Grab references to all the user's StochKitJobs in the system
+        # StochKit jobs
         all_stochkit_jobs = db.GqlQuery("SELECT * FROM StochKitJobWrapper WHERE user_id = :1", self.user.user_id())
         all_jobs = []
         if all_stochkit_jobs != None:
-            # We want to display the name of the job and the status of the Job.
-            status = {}
-
             jobs = list(all_stochkit_jobs.run())
-
             jobs = sorted(jobs,
                           key=lambda x:
                                 (datetime.datetime.strptime(x.startDate, '%Y-%m-%d-%H-%M-%S')
                                      if hasattr(x, 'startDate') and x.startDate != None else datetime.datetime.now()),
                           reverse=True)
-
             for number, job in enumerate(jobs):
                 number = len(jobs) - number
                 all_jobs.append(self.getJobStatus(service, number,job))
-
         context['all_jobs']=all_jobs
 
+        # Sensitivity
         allSensJobs = []
-        # Grab references to all the user's StochKitJobs in the system
-        allSensQuery = sensitivity.SensitivityJobWrapper.all().filter('user_id =', self.user.user_id())
-
+        allSensQuery = db.GqlQuery("SELECT * FROM SensitivityJobWrapper WHERE user_id = :1", self.user.user_id())
         if allSensQuery != None:
             jobs = list(allSensQuery.run())
-
             jobs = sorted(jobs,
                           key=lambda x:
                                 (datetime.datetime.strptime(x.startTime, '%Y-%m-%d-%H-%M-%S')
                                  if hasattr(x, 'startTime') and x.startTime != None else ''),
                           reverse = True)
-
             for number, job in enumerate(jobs):
                 number = len(jobs) - number
                 allSensJobs.append(self.getJobStatus(service, number,job))
         context['allSensJobs']=allSensJobs
 
+
+        # Export
         allExportJobs = []
         exportJobsQuery = db.GqlQuery("SELECT * FROM ExportJobWrapper WHERE user_id = :1", self.user.user_id())
-
         if exportJobsQuery != None:
             jobs = list(exportJobsQuery.run())
-
             jobs = sorted(jobs, key = lambda x : (datetime.datetime.strptime(x.startTime, '%Y-%m-%d-%H-%M-%S') if hasattr(x, 'startTime') and x.startTime != None else ''), reverse = True)
-
             for number, job in enumerate(jobs):
                 number = len(jobs) - number
                 allExportJobs.append({ "startTime" : job.startTime,
@@ -138,108 +127,34 @@ class StatusPage(BaseHandler):
                                        "number" : number,
                                        "outData" : os.path.basename(job.outData if job.outData else ""),
                                        "id" : job.key().id()})
-        
         context['allExportJobs'] = allExportJobs
 
+        # Parameter Estimation
         allParameterJobs = []
         allParameterJobsQuery = db.GqlQuery("SELECT * FROM StochOptimJobWrapper WHERE user_id = :1", self.user.user_id())
-
         if allParameterJobsQuery != None:
             jobs = list(allParameterJobsQuery.run())
-
             jobs = sorted(jobs, key = lambda x : (datetime.datetime.strptime(x.startTime, '%Y-%m-%d-%H-%M-%S') if hasattr(x, 'startTime') and x.startTime != None else ''), reverse = True)
-
             for number, job in enumerate(jobs):
                 number = len(jobs) - number
-                if job.resource == "local" or not job.resource:
-                    # First, check if the job is still running
-                    res = service.checkTaskStatusLocal([job.pid])
-                    if res[job.pid] and job.pid:
-                        job.status = "Running"
-                    else:
-                        try:
-                            fd = os.open("{0}/stderr".format(job.outData), os.O_RDONLY)
-                            f = os.fdopen(fd)
-                            stderr = f.read().strip()
-                            f.close()
-                        except:
-                            stderr = '1'
-
-                        if len(stderr) == 0:
-                            job.status = "Finished"
-                        else:
-                            job.status = "Failed"
-
-                #    asd
-                elif job.resource in backendservices.SUPPORTED_CLOUD_RESOURCES and job.status != "Finished":
-                    taskparams = {}
-                    task_status = service.describeTasks(job)
-                    logging.debug('StochOptim task_status =\n{}'.format(pprint.pformat(task_status)))
-                    if task_status is None:
-                        task.status = 'Inaccessible'
-                    elif task_status is not None and job.cloudDatabaseID not in task_status:
-                        logging.error("'Could not find job with cloudDatabaseID {} in fetched task_status!'.format(optimization.cloudDatabaseID))")
-                        job.status = 'Unknown'
-                        job.exceptionMessage = 'Failed to retreive job status from Job Database.'
-                    else:
-                        job_status = task_status[job.cloudDatabaseID]
-
-                        # If it's finished
-                        if job_status['status'] == 'finished':
-                            # Update the job 
-                            job.status = 'Finished'
-                            job.outputURL = job_status['output']
-                        # 
-                        elif job_status['status'] == 'failed':
-                            job.status = 'Failed'
-                            job.exceptionMessage = job_status['message']
-                            # Might not have an output if an exception was raised early on or if there is just no output available
-                            try:
-                                job.outputURL = job_status['output']
-                            except KeyError:
-                                pass
-                        # 
-                        elif job_status['status'] == 'pending':
-                            job.status = 'Pending'
-                        else:
-                            # The state gives more fine-grained results, like if the job is being re-run, but
-                            #  we don't bother the users with this info, we just tell them that it is still running.  
-                            job.status = 'Running'
-                            try:
-                                job.outputURL = job_status['output']
-                                logging.info("Found running stochoptim job with S3 output: {0}".format(job.outputURL))
-                            except KeyError:
-                                pass
-
-                job.put()
-                
-                allParameterJobs.append({ "status" : job.status,
-                                       "name" : job.name,
-                                       "resource": job.resource,
-                                       "number" : number,
-                                       "id" : job.key().id()})
-        
+                allParameterJobs.append(self.getJobStatus(service, number,job))
         context['allParameterJobs'] = allParameterJobs
 
+        #Spatial Jobs
         allSpatialJobs = []
         allSpatialJobsQuery = db.GqlQuery("SELECT * FROM SpatialJobWrapper WHERE user_id = :1", self.user.user_id())
-
         if allSpatialJobsQuery != None:
             jobs = list(allSpatialJobsQuery.run())
-
             jobs = sorted(jobs,
                           key=lambda x : (datetime.datetime.strptime(x.startTime, '%Y-%m-%d-%H-%M-%S')
                                               if hasattr(x, 'startTime') and x.startTime != None else ''),
                           reverse = True)
-
             for number, job in enumerate(jobs):
                 number = len(jobs) - number
                 allSpatialJobs.append(self.getJobStatus(service, number,job))
-
-
         context['allSpatialJobs'] = allSpatialJobs
     
-        return dict(result,**context)
+        return context
 
     def getJobStatus(self, service, number, job):
         logging.debug('*'*80)
@@ -249,18 +164,7 @@ class StatusPage(BaseHandler):
         logging.debug('status.getJobStatus() job.indata = {0}'.format(job.indata))
         logging.debug('status.getJobStatus() type(job.indata) = {0}'.format(type(job.indata)))
         indata = json.loads(job.indata)
-        file_to_check = None
-        if job.outData is not None:
-            if "execType" in indata and indata["execType"] == 'spatial':
-                file_to_check = "{0}/results/complete".format(job.outData)
-            elif "execType" in indata and indata["execType"] == 'sensitivity':
-                file_to_check = os.path.join(job.outData, "result/output.txt")
-            elif indata["exec_type"] == 'stochastic':
-                file_to_check = os.path.join(job.outData, "result/stats/means.txt")
-            elif indata["exec_type"] == 'deterministic':
-                file_to_check = os.path.join(job.outData, "result/output.txt")
-            else:
-                raise Exception('Unknown exec_type={0}'.format(indata["exec_type"]))
+        file_to_check = "{0}/return_code".format(job.outData)
         logging.debug('status.getJobStatus() file_to_check={0}'.format(file_to_check))
         if job.resource.lower() == "local" or job.outData is not None:
             job_status_found = False
@@ -271,10 +175,20 @@ class StatusPage(BaseHandler):
                     job.status = "Running"
                     job_status_found = True
             if not job_status_found:
-                if os.path.exists(file_to_check):
-                    job.status = "Finished"
-                else:
+                if not os.path.exists(file_to_check):
                     job.status = "Failed"
+                else:
+                    try:
+                        with open(file_to_check) as fd:
+                            return_code = fd.readline()
+                            logging.debug('status.getJobStatus() file_to_check={0} return_code={1}'.format(file_to_check, return_code))
+                            if int(return_code) == 0:
+                                job.status = "Finished"
+                            else:
+                                job.status = "Failed"
+                    except Exception as e:
+                        logging.exception(e)
+                        job.status = "Failed"
 
         elif job.resource in backendservices.SUPPORTED_CLOUD_RESOURCES:
             task_status = service.describeTasks(job)
@@ -323,11 +237,13 @@ class StatusPage(BaseHandler):
         logging.debug('status.getJobStatus() job.status = {0}'.format(job.status))
         logging.debug('*'*80)
         logging.debug('*'*80)
+        
+         
 
         return {    "status" : job.status,
                     "name" : job.name,
                     "uuid" : job.cloudDatabaseID,
-                    "output_stored": job.output_stored,
+                    "output_stored": job.output_stored if hasattr(job, 'output_stored') else None,
                     "resource": job.resource,
                     "number" : number,
                     "id" : job.key().id()}

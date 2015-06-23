@@ -352,7 +352,7 @@ class backendservices(object):
         for pid in pids:
             try:
                 logging.debug("stopTaskLocal(): KILL TASK {0}".format(pid))
-                os.kill(pid, signal.SIGTERM)
+                os.killpg(pid, signal.SIGTERM)
             except Exception, e:
                 logging.error("stopTaskLocal(): couldn't kill process. error: {0}".format(e))
 

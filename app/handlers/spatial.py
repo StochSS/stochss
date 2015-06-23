@@ -549,7 +549,7 @@ class SpatialPage(BaseHandler):
 
         cmd = "{0}/../../pyurdme/pyurdme_wrapper.py {1} {2} {3} {4} {5}".format(path, model_file_pkl, result_dir, simulation_algorithm, simulation_realizations, simulation_seed)
         logging.info("cmd =\n{}".format(cmd))
-        exstring = '{0}/backend/wrapper.sh {1}/stdout.log {1}/stderr.log {2}'.format(basedir, dataDir, cmd)
+        exstring = '{0}/backend/wrapper.py {1}/stdout.log {1}/stderr.log {1}/return_code {2}'.format(basedir, dataDir, cmd)
         handle = subprocess.Popen(exstring, shell=True, preexec_fn=os.setsid)
         
         job.pid = int(handle.pid)
