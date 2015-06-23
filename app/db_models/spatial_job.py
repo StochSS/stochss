@@ -104,7 +104,11 @@ class SpatialJobWrapper(db.Model):
 
         # delete on cloud
         if self.resource is not None and self.resource in backendservices.SUPPORTED_CLOUD_RESOURCES:
-            service.deleteTasks(self)
+            try:
+                service.deleteTasks(self)
+            except Exception as e:
+                logging.error("Failed to delete cloud resources of job {0}".format(self.key().id()))
+                logging.error(e)
         
         super(SpatialJobWrapper, self).delete()
 

@@ -284,7 +284,7 @@ class backendservices(object):
                     result[job.cloudDatabaseID]["status"] = "failed"
 
         except Exception as e:
-            logging.exception(e)
+            logging.error(e)
             return None
 
         return result

@@ -56,7 +56,11 @@ class SensitivityJobWrapper(db.Model):
             os.remove(self.zipFileName)
 
         if self.resource is not None and self.resource in backendservices.SUPPORTED_CLOUD_RESOURCES:
-            service = backendservices(handler.user_data)
-            service.deleteTasks(self)
+            try:
+                service = backendservices(handler.user_data)
+                service.deleteTasks(self)
+            except Exception as e:
+                logging.error("Failed to delete cloud resources of job {0}".format(self.key().id()))
+                logging.error(e)
 
         super(SensitivityJobWrapper, self).delete()

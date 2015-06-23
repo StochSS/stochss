@@ -44,11 +44,7 @@
                         {% for job in all_jobs %}
                         <tr>
                             <td>
-                            {% if job.status == "Running" %}
-                            <a href="javascript:void(0)" onclick="deleteJob('/simulate?reqType=delJob&id={{job.id}}');">Stop</a>
-                            {% else %}
                             <a href="javascript:void(0)" onclick="deleteJob('/simulate?reqType=delJob&id={{job.id}}');">Delete</a>
-                            {% endif %}
                             </td>
                             <td>
                                 <span>{{job.number}}</span>
@@ -105,11 +101,7 @@
                         {% for job in allSpatialJobs %}
                         <tr>
                             <td>
-                            {% if job.status == "Running" %}
-                            <a href="javascript:void(0)" onclick="deleteJob('/spatial?reqType=delJob&id={{job.id}}');">Stop</a>
-                            {% else %}
                             <a href="javascript:void(0)" onclick="deleteJob('/spatial?reqType=delJob&id={{job.id}}');">Delete</a>
-                            {% endif %}
                             </td>
                             <td>
                                 <span>{{job.number}}</span>

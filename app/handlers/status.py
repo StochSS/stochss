@@ -193,8 +193,6 @@ class StatusPage(BaseHandler):
                 # Save changes to the status
                 job.put()
 
-                print job.key().id(), job.status
-
                 all_jobs.append({ "name" : job.name,
                                   "uuid": job.cloudDatabaseID, 
                                   "status" : job.status,
