@@ -98,9 +98,6 @@ class backendservices(object):
             raise Exception("Unknown job.resource = '{0}'".format(job.resource))
 
 
-
-#    def submit_cloud_task(self, params, agent_type=None, ec2_access_key=None, ec2_secret_key=None, task_id=None,
-#                    instance_type=None, cost_replay=False, database=None, flex_credentials=None, storage_agent=None):
     def submit_cloud_task(self, params, agent_type=None, cost_replay=False, instance_type=None):
 
         logging.debug('submit_cloud_task() params =\n{}\n\n'.format(pprint.pformat(params)))
