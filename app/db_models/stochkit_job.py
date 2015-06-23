@@ -3,7 +3,6 @@ import shutil
 import os
 import logging
 from backend.backendservice import backendservices
-from db_models.object_property import ObjectProperty
 
 
 
@@ -13,7 +12,7 @@ class StochKitJobWrapper(db.Model):
     pid = db.IntegerProperty()
     name = db.StringProperty()
     modelName = db.StringProperty()
-    indata = ObjectProperty()
+    indata = db.TextProperty()
     # Indata contains data from the GUI. These are:
     # type, final_time, increment, realizations, exec_type, units, store_only_mean, label_column_names,
     #  create_histogram_data, epsilon, threshold
@@ -37,7 +36,7 @@ class StochKitJobWrapper(db.Model):
     resource = db.StringProperty()
     startTime = db.StringProperty()
     output_stored = db.StringProperty()
-    output_location = db.StringProperty()
+    outData = db.StringProperty()
     output_url = db.StringProperty()
     result = db.StringProperty()
 
@@ -74,8 +73,8 @@ class StochKitJobWrapper(db.Model):
             os.remove(self.zipFileName)
         
         #delete the ouput results of execution locally, if exists.       
-        if self.output_location is not None and os.path.exists(str(self.output_location)):
-            shutil.rmtree(self.output_location)
+        if self.outData is not None and os.path.exists(str(self.outData)):
+            shutil.rmtree(self.outData)
 
         if self.resource is not None and self.resource in backendservices.SUPPORTED_CLOUD_RESOURCES:
             try:

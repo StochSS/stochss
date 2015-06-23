@@ -177,25 +177,25 @@ class SuperZip:
                 # Only grab S3 data if user wants us to
                 #print 'globalOP', globalOp
                 if (job.name in self.stochKitJobsToDownload) or globalOp:
-                    if job.output_location is None or (job.output_location is not None and not os.path.exists(job.output_location)):
+                    if job.outData is None or (job.outData is not None and not os.path.exists(job.outData)):
                         # Grab the output from S3 if we need to
                         service = backendservices(handler.user_data)
                         service.fetchOutput(job.cloudDatabaseID, job.output_url)
                         # Unpack it to its local output location
                         os.system('tar -xf {0}.tar'.format(job.cloudDatabaseID))
-                        job.output_location = os.path.abspath('{0}/../output/{1}'.format(os.path.abspath(os.path.dirname(__file__)), job.cloudDatabaseID))
+                        job.outData = os.path.abspath('{0}/../output/{1}'.format(os.path.abspath(os.path.dirname(__file__)), job.cloudDatabaseID))
                         # Update the DB entry
                         job.put()
                         # Clean up
                         os.remove('{0}.tar'.format(job.cloudDatabaseID))
 
-                if job.output_location is not None:
+                if job.outData is not None:
                     # Add its data to the zip archive
-                    outputLocation = self.addFolder('stochkitJobs/data/{0}'.format(job.name), job.output_location)
+                    outputLocation = self.addFolder('stochkitJobs/data/{0}'.format(job.name), job.outData)
                     jsonJob["output_location"] = outputLocation
             # For local jobs, we need to include the output location in the zip archive
             elif job.resource == 'Local':
-                outputLocation = self.addFolder('stochkitJobs/data/{0}'.format(job.name), job.output_location)
+                outputLocation = self.addFolder('stochkitJobs/data/{0}'.format(job.name), job.outData)
                 jsonJob["stdout"] = "{0}/stdout".format(outputLocation)
                 jsonJob["stderr"] = "{0}/stderr".format(outputLocation)
                 jsonJob["output_location"] = outputLocation
@@ -700,7 +700,7 @@ class ExportPage(BaseHandler):
                 if job.status == "Finished":
                     if job.resource == 'Local':
                         numberOfFiles += 1
-                        totalSize += get_size(job.job.output_location)
+                        totalSize += get_size(job.job.outData)
 
             self.response.headers['Content-Type'] = 'application/json'
             self.response.write(json.dumps( { "numberOfFiles" : numberOfFiles, "totalSize" : totalSize } ))
@@ -879,7 +879,7 @@ class ImportPage(BaseHandler):
         stochkit_jobs = [job for job in stochkit_jobs
                          if job.resource is not None and job.resource in backendservices.SUPPORTED_CLOUD_RESOURCES
                          and job.status == "Finished"
-                         and job.output_location is None]
+                         and job.outData is None]
 
         # Create the dictionary to pass to backend to check for sizes
         output_results_to_check = {}

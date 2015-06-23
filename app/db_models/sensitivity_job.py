@@ -5,10 +5,10 @@ import logging
 from backend.backendservice import backendservices
 
 class SensitivityJobWrapper(db.Model):
-    userId = db.StringProperty()
+    user_id = db.StringProperty()
     pid = db.IntegerProperty()
     startTime = db.StringProperty()
-    jobName = db.StringProperty()
+    name = db.StringProperty()
     modelName = db.StringProperty()
     indata = db.TextProperty()
     outData = db.StringProperty()
@@ -26,7 +26,7 @@ class SensitivityJobWrapper(db.Model):
 
         if self.status == "Running":
             if self.resource.lower() == "local":
-                service.deleteTaskLocal([int(self.pid)])
+                service.stopTaskLocal([int(self.pid)])
             elif self.resource in backendservices.SUPPORTED_CLOUD_RESOURCES:
                 result = service.stopTask(self)
                 
