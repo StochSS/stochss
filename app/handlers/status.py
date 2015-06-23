@@ -371,7 +371,7 @@ class StatusPage(BaseHandler):
                     task_status = service.describeTasks(job)
                     logging.debug('StochOptim task_status =\n{}'.format(pprint.pformat(task_status)))
                     if task_status is None:
-                        job.status = 'Inaccessible'
+                        task.status = 'Inaccessible'
                     elif task_status is not None and job.cloudDatabaseID not in task_status:
                         logging.error("'Could not find job with cloudDatabaseID {} in fetched task_status!'.format(optimization.cloudDatabaseID))")
                         job.status = 'Unknown'
@@ -407,7 +407,7 @@ class StatusPage(BaseHandler):
                                 pass
 
                 job.put()
-
+                
                 allParameterJobs.append({ "status" : job.status,
                                        "name" : job.jobName,
                                        "resource": job.resource,

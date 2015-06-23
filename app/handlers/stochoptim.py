@@ -482,6 +482,16 @@ class StochOptimVisualization(BaseHandler):
 
                 if task_status is None or optimization.cloudDatabaseID not in task_status:
                     logging.error('Could not find job with cloudDatabaseID {} in fetched task_status!'.format(optimization.cloudDatabaseID))
+
+                    output["nameToIndex"] = json.loads(optimization.nameToIndex)
+                    output["status"] = "Inaccessible"
+                    output["jobName"] = optimization.jobName
+                    output["modelName"] = optimization.modelName
+                    output["resource"] = optimization.resource
+                    output["activate"] = json.loads(optimization.indata)["activate"]
+            
+                    self.response.content_type = 'application/json'
+                    self.response.write(json.dumps(output))
                     return
 
                 job_status = task_status[optimization.cloudDatabaseID]

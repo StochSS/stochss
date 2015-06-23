@@ -24,6 +24,7 @@ from storage.flex_storage import FlexStorageAgent
 import common.helper as helper
 from common.config import AgentTypes, JobDatabaseConfig, AgentConfig, FlexConfig, JobConfig
 from db_models.vm_state_model import VMStateModel
+from celery.result import AsyncResult
 
 sys.path.append(os.path.join(os.path.dirname(__file__), '../lib/cloudtracker'))
 #from s3_helper import *
@@ -268,12 +269,25 @@ class backendservices(object):
         '''
         logging.debug("describeTasks() job = {0}".format(job))
         database = self.get_database(job)
+
         try:
-            return database.describetask(job.cloudDatabaseID, JobDatabaseConfig.TABLE_NAME)
+            result = database.describetask(job.cloudDatabaseID, JobDatabaseConfig.TABLE_NAME)
+
+            if result is not None and job.cloudDatabaseID in result and result[job.cloudDatabaseID]['status'] == 'active' and job.resource == self.EC2_CLOUD_RESOURCE:
+                try:
+                    celery_app = CelerySingleton().app
+                    result2 = AsyncResult(task_id)
+                    if result2.failed():
+                        result[job.cloudDatabaseID]["status"] = "failed"
+                except Exception as e:
+                    logging.exception(e)
+                    result[job.cloudDatabaseID]["status"] = "failed"
+
         except Exception as e:
-            logging.error(e)
+            logging.exception(e)
             return None
 
+        return result
 
     def stopTasks(self, job):
         '''

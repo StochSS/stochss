@@ -13,7 +13,7 @@ import uuid
 source_exec = sys.argv[1]
 
 mac = False
-if len(sys.argv) == 3:
+if 'mac' in sys.argv:
     mac = True
 
 path = os.path.abspath(os.path.dirname(__file__))
@@ -100,9 +100,9 @@ stderr = open('stderr.log', 'w')
 # print path
 def startserver():
     import sys
-    if len(sys.argv) == 4 and sys.argv[3] == '--debug':
+    if '--debug' in sys.argv:
         h = subprocess.Popen((
-                         "python " + path + "/sdk/python/dev_appserver.py --host=localhost --datastore_path={0}/mydatastore --skip_sdk_update_check YES --datastore_consistency_policy=consistent --log_leve=debug app".format(
+                         "python " + path + "/sdk/python/dev_appserver.py --host=localhost --datastore_path={0}/mydatastore --skip_sdk_update_check YES --datastore_consistency_policy=consistent --log_level=debug app".format(
                              path)).split(), stdout=stdout, stderr=stderr)
     else:
         h = subprocess.Popen((
