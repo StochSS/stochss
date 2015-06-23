@@ -303,9 +303,9 @@ class SensitivityPage(BaseHandler):
         args = "--sensi -m {0} --parameters {1} -t {2} --out-dir {3} -i {4}".format(modelFileName, " ".join(parameters), runtime, dataDir + '/result', int(runtime / dt))
 
         ode = "{0}/../../ode/stochkit_ode.py {1}".format(path, args)
-        exstring = '{0}/backend/wrapper.sh {1}/stdout {1}/stderr {2}'.format(basedir, dataDir, ode)
+        exstring = '{0}/backend/wrapper.py {1}/stdout {1}/stderr {1}/return_code {2}'.format(basedir, dataDir, ode)
 
-        handle = subprocess.Popen(exstring.split())
+        handle = subprocess.Popen(exstring.split(), preexec_fn=os.setsid)
         job.pid = handle.pid
 
         job.put()

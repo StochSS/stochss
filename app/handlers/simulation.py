@@ -64,7 +64,7 @@ class JobManager():
                         "stdout" : job.stdout,
                         "stderr" : job.stderr,
                         # These are things contained in the stochkit_job object
-                        "type" : job.indata["type"],
+                        "type" : indata["type"],
                         "status" : job.status,
                         "startTime" : job.startTime,
                         "modelName" : job.modelName,
@@ -72,15 +72,15 @@ class JobManager():
                         "output_location" : job.outData,
                         "zipFileName" : job.zipFileName,
                         "output_url" : job.output_url,
-                        "final_time" : job.indata["final_time"],
-                        "increment" : job.indata["increment"],
-                        "realizations" : job.indata["realizations"],
-                        "exec_type" : job.indata["exec_type"],
-                        "units" : job.indata["units"],
-                        "resource" : job.indata["resource"],
-                        "epsilon" : job.indata["epsilon"],
-                        "threshold" : job.indata["threshold"],
-                        "seed" : job.indata["seed"],
+                        "final_time" : indata["final_time"],
+                        "increment" : indata["increment"],
+                        "realizations" : indata["realizations"],
+                        "exec_type" : indata["exec_type"],
+                        "units" : indata["units"],
+                        "resource" : indata["resource"],
+                        "epsilon" : indata["epsilon"],
+                        "threshold" : indata["threshold"],
+                        "seed" : indata["seed"],
                         "pid" : job.pid,
                         "result" : job.result }
 
@@ -91,14 +91,15 @@ class JobManager():
     @staticmethod
     def getJob(handler, job_id):
         job = StochKitJobWrapper.get_by_id(job_id)
-        logging.debug('getJob() job.id = {0} job.indata = {1}'.format(job.key().id(), job.indata))
+        indata = json.loads(job.indata)
+        logging.debug('getJob() job.id = {0} job.indata = {1}'.format(job.key().id(), indata))
 
         jsonJob = { "id" : job.key().id(),
                     "name" : job.name,
                     "stdout" : job.stdout,
                     "stderr" : job.stderr,
                     # These are things contained in the stochkit_job object
-                    "type" : job.indata["type"],
+                    "type" : indata["type"],
                     "status" : job.status,
                     "startTime" : job.startTime,
                     "modelName" : job.modelName,
@@ -106,15 +107,15 @@ class JobManager():
                     "output_location" : job.outData,
                     "zipFileName" : job.zipFileName,
                     "output_url" : job.output_url,
-                    "final_time" : job.indata["final_time"],
-                    "increment" : job.indata["increment"],
-                    "realizations" : job.indata["realizations"],
-                    "exec_type" : job.indata["exec_type"],
-                    "units" : job.indata["units"],
+                    "final_time" : indata["final_time"],
+                    "increment" : indata["increment"],
+                    "realizations" : indata["realizations"],
+                    "exec_type" : indata["exec_type"],
+                    "units" : indata["units"],
                     "resource" : job.resource,
-                    "epsilon" : job.indata["epsilon"],
-                    "threshold" : job.indata["threshold"],
-                    "seed" : job.indata["seed"],
+                    "epsilon" : indata["epsilon"],
+                    "threshold" : indata["threshold"],
+                    "seed" : indata["seed"],
                     "pid" : job.pid,
                     "result" : job.result }
             
@@ -369,6 +370,7 @@ class SimulatePage(BaseHandler):
             return
         elif reqType == 'jobInfo':
             job = StochKitJobWrapper.get_by_id(int(self.request.get('id')))
+            indata = json.loads(job.indata)
 
             if self.user.user_id() != job.user_id:
                 self.response.headers['Content-Type'] = 'application/json'
@@ -385,7 +387,7 @@ class SimulatePage(BaseHandler):
                     else:
                         outputdir = job.outData
                         # Load all data from file in JSON format
-                        if job.indata['exec_type'] == 'stochastic':
+                        if indata['exec_type'] == 'stochastic':
                             tid = self.request.get('tid')
 
                             if tid != '' and tid != 'mean':
@@ -737,11 +739,17 @@ class SimulatePage(BaseHandler):
         cmd += ' -m {0} --out-dir {1}/result'.format(modelFileName, dataDir)
 
         logging.info("cmd =\n{}".format(cmd))
+        logging.debug('simulation.runLocal(): cmd={0}'.format(cmd))
+        logging.debug('*'*80)
+        logging.debug('*'*80)
 
         #ode = "{0}/../../ode/stochkit_ode.py {1}".format(path, args)
-        exstring = '{0}/backend/wrapper.sh {1}/stdout {1}/stderr {2}'.format(basedir, dataDir, cmd)
+        exstring = '{0}/backend/wrapper.py {1}/stdout {1}/stderr {1}/return_code {2}'.format(basedir, dataDir, cmd)
 
-        handle = subprocess.Popen(exstring.split())
+        logging.debug('simulation.runLocal(): exstring={0}'.format(exstring))
+        logging.debug('*'*80)
+        logging.debug('*'*80)
+        handle = subprocess.Popen(exstring.split(), preexec_fn=os.setsid)
 
         # Create a wrapper to store the Job description in the datastore
         job = StochKitJobWrapper()
