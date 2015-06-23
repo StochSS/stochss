@@ -99,7 +99,7 @@ class SpatialPage(BaseHandler):
                            "output_stored": job.output_stored,
                            "stdout" : stdout,
                            "stderr" : stderr,
-                           "indata" : job.indata })
+                           "indata" : json.loads(job.indata) })
 
             logging.debug("result =\n\n{}".format(pprint.pformat(result)))
 
