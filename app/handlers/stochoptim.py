@@ -424,18 +424,24 @@ class StochOptimPage(BaseHandler):
         }
 
         # # execute cloud task
-        service = backend.backendservice.backendservices(self.user_data)
-        cloud_result = service.submit_cloud_task(params=cloud_params)
+        try:
+            service = backend.backendservice.backendservices(self.user_data)
+            cloud_result = service.submit_cloud_task(params=cloud_params)
+            
+            if not cloud_result["success"]:
+                raise Exception(cloud_result["reason"])
+                
+            job.cloudDatabaseID = cloud_result["db_id"]
+            job.resource = cloud_result['resource']
+            job.celeryPID = cloud_result["celery_pid"]
+            job.pollProcessPID = int(cloud_result["poll_process_pid"])
+            # job.pid = handle.pid
+            job.put()
+        except Exception as e:
+            job.delete()
 
-        if not cloud_result["success"]:
-            raise Exception(cloud_result["reason"])
-        
-        job.cloudDatabaseID = cloud_result["db_id"]
-        job.resource = cloud_result['resource']
-        job.celeryPID = cloud_result["celery_pid"]
-        job.pollProcessPID = int(cloud_result["poll_process_pid"])
-        # job.pid = handle.pid
-        job.put()
+            raise e
+
         return job
 
 
