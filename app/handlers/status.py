@@ -206,7 +206,6 @@ def getJobStatus(service, number, job):
                 if job_status is None or 'status' not in job_status:
                     job.status = "Unknown"
                 elif job_status['status'] == 'finished':
-                    # Update the spatial job
                     job.outputURL = job_status['output']
                     job.uuid = job_status['uuid']
                     job.status = 'Finished'

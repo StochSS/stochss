@@ -205,7 +205,7 @@ class StochOptimPage(BaseHandler):
             job = StochOptimJobWrapper.get_by_id(jobID)
 
             if job.user_id == self.user.user_id():
-                if job.resource.lower() in backendservices.SUPPORTED_CLOUD_RESOURCES:
+                if job.resource in backendservices.SUPPORTED_CLOUD_RESOURCES:
                     try:
                         logging.info("Stopping StochOptim poll task pid={0}".format(job.pollProcessPID))
                         os.kill(job.pollProcessPID, signal.SIGTERM)

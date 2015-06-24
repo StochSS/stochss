@@ -215,7 +215,7 @@
                         {% for job in allParameterJobs %}
                         <tr>
                             <td>
-                                {% if job.status|lower == "finished" or job.status|lower == "failed" %}
+                                {% if job.status|lower == "finished" or job.status|lower == "failed" or job.status|lower == "inaccessible" %}
                                 <a href="javascript:void(0)" onclick="deleteJob('/stochoptim?reqType=delJob&id={{job.id}}');">Delete</a>
                                 {% else %}
                                 <a href="javascript:void(0)" onclick="deleteJob('/stochoptim?reqType=stopJob&id={{job.id}}', deleting = false);">Stop</a>
