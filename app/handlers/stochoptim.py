@@ -28,7 +28,7 @@ from backend.common.config import AgentTypes, JobConfig
 
 from db_models.stochoptim_job import StochOptimJobWrapper
 
-
+import status
 
 def int_or_float(s):
     try:
@@ -438,7 +438,7 @@ class StochOptimPage(BaseHandler):
             # job.pid = handle.pid
             job.put()
         except Exception as e:
-            job.delete()
+            job.delete(self)
 
             raise e
 
@@ -462,99 +462,10 @@ class StochOptimVisualization(BaseHandler):
             return
 
         optimization = StochOptimJobWrapper.get_by_id(jobID)
-        # check if job is finised, if so, mark finished
-        if optimization.status != "Finished":
-            service = backendservices(self.user_data)
-            if optimization.resource == "local" or not optimization.resource:
-                res = service.checkTaskStatusLocal([optimization.pid])
-                if res[optimization.pid] and optimization.pid:
-                    optimization.status = "Running"
-                else:
-                    try:
-                        fd = os.open("{0}/stderr".format(optimization.outData), os.O_RDONLY)
-                        f = os.fdopen(fd)
-                        stderr = f.read().strip()
-                        f.close()
-                    except:
-                        stderr = '1'
-                    if len(stderr) == 0:
-                        optimization.status = "Finished"
-                    else:
-                        optimization.status = "Failed"
-            else:
-                #cloud
-                task_status = service.describeTasks(optimization)
-                logging.info('task_status =\n{}'.format(pprint.pformat(task_status)))
 
-                if task_status is None or optimization.cloudDatabaseID not in task_status:
-                    logging.error('Could not find job with cloudDatabaseID {} in fetched task_status!'.format(optimization.cloudDatabaseID))
+        service = backend.backendservice.backendservices(self.user_data)
 
-                    output["nameToIndex"] = json.loads(optimization.nameToIndex)
-                    output["status"] = "Inaccessible"
-                    output["jobName"] = optimization.name
-                    output["modelName"] = optimization.modelName
-                    output["resource"] = optimization.resource
-                    output["activate"] = json.loads(optimization.indata)["activate"]
-            
-                    self.response.content_type = 'application/json'
-                    self.response.write(json.dumps(output))
-                    return
-
-                job_status = task_status[optimization.cloudDatabaseID]
-
-                # If it's finished
-                if job_status['status'] == 'finished':
-                    # Update the job 
-                    optimization.status = 'Finished'
-                    optimization.outputURL = job_status['output']
-                # 
-                elif job_status['status'] == 'failed':
-                    optimization.status = 'Failed'
-                    optimization.exceptionMessage = job_status['message']
-                    # Might not have an output if an exception was raised early on or if there is just no output available
-                    try:
-                        optimization.outputURL = job_status['output']
-                    except KeyError:
-                        pass
-                # 
-                elif job_status['status'] == 'pending':
-                    optimization.status = 'Pending'
-                else:
-                    # The state gives more fine-grained results, like if the job is being re-run, but
-                    #  we don't bother the users with this info, we just tell them that it is still running.  
-                    optimization.status = 'Running'
-                    try:
-                        optimization.outputURL = job_status['output']
-                        logging.info("Found running stochoptim job with S3 output: {0}".format(optimization.outputURL))
-                    except KeyError:
-                        pass
-
-            optimization.put()
-        # Might need to download the cloud data
-        if optimization.resource in backendservices.SUPPORTED_CLOUD_RESOURCES:
-            if optimization.status == "Finished":
-                if optimization.has_final_cloud_data():
-                    # Nothing to do here
-                    pass
-                else:
-                    # Download the final data and mark it finished
-                    cloud_result = self.__fetch_cloud_output(optimization)
-                    if cloud_result["status"]:
-                        optimization.mark_final_cloud_data()
-                    else:
-                        logging.info("Failed to download final output data of {0} with reason {1}".format(
-                            optimization.name,
-                            cloud_result["msg"]
-                        ))
-            else:
-                # Just assume we need to re-download the data...
-                cloud_result = self.__fetch_cloud_output(optimization)
-                if not cloud_result["status"]:
-                    #TODO: Display message to user?
-                    logging.info("Failed to download output data of {0} with reason {1}".format(
-                        optimization.name,
-                        cloud_result["msg"]
-                    ))
+        result = status.getJobStatus(service, 0, optimization)
 
         try:
             fd = os.open("{0}/stdout".format(optimization.outData), os.O_RDONLY)
@@ -586,7 +497,7 @@ class StochOptimVisualization(BaseHandler):
 #        print optimization.indata
 
         output["nameToIndex"] = json.loads(optimization.nameToIndex)
-        output["status"] = optimization.status
+        output["status"] = result["status"]
         output["jobName"] = optimization.name
         output["modelName"] = optimization.modelName
         output["resource"] = optimization.resource

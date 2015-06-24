@@ -32,7 +32,10 @@ class StochOptimJobWrapper(db.Model):
         if self.zipFileName is not None and os.path.exists(self.zipFileName):
                 os.remove(self.zipFileName)
 
-        self.stop(handler)
+        try:
+            self.stop(handler)
+        except Exception as e:
+            logging.exception(e)
         
         # delete on cloud
         if self.resource is not None and self.resource in backendservices.SUPPORTED_CLOUD_RESOURCES:
@@ -48,7 +51,7 @@ class StochOptimJobWrapper(db.Model):
     def stop(self, handler):
         if self.status == "Running" or self.status == "Pending":
             service = backendservices(handler.user_data)
-            if self.resource.lower() == "local":
+            if self.resource is not None and self.resource.lower() == "local":
                 service.stopTaskLocal([int(self.pid)])
             elif self.resource in backendservices.SUPPORTED_CLOUD_RESOURCES:
                 result = service.stopTasks(self)
@@ -66,7 +69,7 @@ class StochOptimJobWrapper(db.Model):
                     logging.error(result)
                     return False
             else:
-                raise Exception("Unknown job resource '{0}'".format(sef.resource))
+                raise Exception("Unknown job resource '{0}'".format(self.resource))
     
     def mark_final_cloud_data(self):
         flag_file = os.path.join(self.outData, ".final-cloud")

@@ -95,7 +95,7 @@ class StatusPage(BaseHandler):
                           reverse=True)
             for number, job in enumerate(jobs):
                 number = len(jobs) - number
-                all_jobs.append(self.getJobStatus(service, number,job))
+                all_jobs.append(getJobStatus(service, number,job))
         context['all_jobs']=all_jobs
 
         # Sensitivity
@@ -110,7 +110,7 @@ class StatusPage(BaseHandler):
                           reverse = True)
             for number, job in enumerate(jobs):
                 number = len(jobs) - number
-                allSensJobs.append(self.getJobStatus(service, number,job))
+                allSensJobs.append(getJobStatus(service, number,job))
         context['allSensJobs']=allSensJobs
 
 
@@ -137,7 +137,7 @@ class StatusPage(BaseHandler):
             jobs = sorted(jobs, key = lambda x : (datetime.datetime.strptime(x.startTime, '%Y-%m-%d-%H-%M-%S') if hasattr(x, 'startTime') and x.startTime != None else ''), reverse = True)
             for number, job in enumerate(jobs):
                 number = len(jobs) - number
-                allParameterJobs.append(self.getJobStatus(service, number,job))
+                allParameterJobs.append(getJobStatus(service, number,job))
         context['allParameterJobs'] = allParameterJobs
 
         #Spatial Jobs
@@ -151,12 +151,12 @@ class StatusPage(BaseHandler):
                           reverse = True)
             for number, job in enumerate(jobs):
                 number = len(jobs) - number
-                allSpatialJobs.append(self.getJobStatus(service, number,job))
+                allSpatialJobs.append(getJobStatus(service, number,job))
         context['allSpatialJobs'] = allSpatialJobs
     
         return context
 
-    def getJobStatus(self, service, number, job):
+def getJobStatus(service, number, job):
         logging.debug('*'*80)
         logging.debug('*'*80)
         logging.debug('status.getJobStatus() job = {0}'.format(job))

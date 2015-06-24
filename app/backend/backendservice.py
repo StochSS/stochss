@@ -277,7 +277,7 @@ class backendservices(object):
                     celery_app = CelerySingleton().app
                     result2 = AsyncResult(job.celeryPID)
                     logging.debug('describeTasks(): AsyncResult.status = {0}'.format(result2.status))
-                    if result2.failed():
+                    if result2.failed() or (result2.pending() and job.status.lower() != 'pending'):
                         result[job.cloudDatabaseID]["status"] = "failed"
                 except Exception as e:
                     logging.debug('describeTasks(): AsyncResult raised exception')
