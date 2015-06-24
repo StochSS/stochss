@@ -95,7 +95,7 @@ class StatusPage(BaseHandler):
                           reverse=True)
             for number, job in enumerate(jobs):
                 number = len(jobs) - number
-                all_jobs.append(getJobStatus(service, number,job))
+                all_jobs.append(self.__process_getJobStatus(service,job, number))
         context['all_jobs']=all_jobs
 
         # Sensitivity
@@ -110,7 +110,7 @@ class StatusPage(BaseHandler):
                           reverse = True)
             for number, job in enumerate(jobs):
                 number = len(jobs) - number
-                allSensJobs.append(getJobStatus(service, number,job))
+                allSensJobs.append(self.__process_getJobStatus(service,job, number))
         context['allSensJobs']=allSensJobs
 
 
@@ -137,7 +137,7 @@ class StatusPage(BaseHandler):
             jobs = sorted(jobs, key = lambda x : (datetime.datetime.strptime(x.startTime, '%Y-%m-%d-%H-%M-%S') if hasattr(x, 'startTime') and x.startTime != None else ''), reverse = True)
             for number, job in enumerate(jobs):
                 number = len(jobs) - number
-                allParameterJobs.append(getJobStatus(service, number,job))
+                allParameterJobs.append(self.__process_getJobStatus(service,job, number))
         context['allParameterJobs'] = allParameterJobs
 
         #Spatial Jobs
@@ -151,12 +151,26 @@ class StatusPage(BaseHandler):
                           reverse = True)
             for number, job in enumerate(jobs):
                 number = len(jobs) - number
-                allSpatialJobs.append(getJobStatus(service, number,job))
+                allSpatialJobs.append(self.__process_getJobStatus(service,job, number))
         context['allSpatialJobs'] = allSpatialJobs
     
         return context
 
-def getJobStatus(service, number, job):
+    def __process_getJobStatus(self,service,job,number):
+        try:
+            status = getJobStatus(service, job)
+        except Exception as e:
+            status = {  "status" : 'Error: {0}'.format(e),
+                        "name" : job.name,
+                        "uuid" : job.cloudDatabaseID,
+                        "output_stored": None,
+                        "resource": 'Error',
+                        "id" : job.key().id()}
+        status['number'] = number
+        return status
+
+
+def getJobStatus(service, job):
         logging.debug('*'*80)
         logging.debug('*'*80)
         logging.debug('status.getJobStatus() job = {0}'.format(job))
@@ -167,6 +181,16 @@ def getJobStatus(service, number, job):
         file_to_check = "{0}/return_code".format(job.outData)
         logging.debug('status.getJobStatus() file_to_check={0}'.format(file_to_check))
         logging.debug('status.getJobStatus() job.outData={0}'.format(job.outData))
+        if job.resource is None:
+            logging.debug('status.getJobStatus() job = {0}'.format(job))
+            logging.debug('status.getJobStatus() job.resource = {0}'.format(job.resource))
+            #raise Exception("job.resource is None, job is broken")
+            return { "status" : job.message,
+                    "name" : job.name,
+                    "uuid" : job.cloudDatabaseID,
+                    "output_stored": None,
+                    "resource": None,
+                    "id" : job.key().id()}
         if job.outData is not None and os.path.exists(file_to_check):
             # job finished
             try:
@@ -198,27 +222,34 @@ def getJobStatus(service, number, job):
 
             if task_status is None:
                 job.status = "Inaccessible"
+                logging.debug("status.getJobStatus() job.status = {0}".format(job.status))
                 job_status = None
             elif task_status is not None and job.cloudDatabaseID not in task_status:
                 job.status = "Unknown"
+                logging.debug("status.getJobStatus() job.status = {0}".format(job.status))
             else:
                 job_status = task_status[job.cloudDatabaseID]
                 if job_status is None or 'status' not in job_status:
                     job.status = "Unknown"
+                    logging.debug("status.getJobStatus() job.status = {0}".format(job.status))
                 elif job_status['status'] == 'finished':
                     job.outputURL = job_status['output']
                     job.uuid = job_status['uuid']
                     job.status = 'Finished'
                     if job.outData is None:
                         job.status = 'Finished'
+                        logging.debug("status.getJobStatus() job.status = {0}".format(job.status))
                     else:
                         if os.path.exists(file_to_check):
                             job.status = "Finished"
+                            logging.debug("status.getJobStatus() job.status = {0}".format(job.status))
                         else:
                             job.status = "Failed"
+                            logging.debug("status.getJobStatus() job.status = {0}".format(job.status))
 
                 elif job_status['status'] == 'failed':
                     job.status = 'Failed'
+                    logging.debug("status.getJobStatus() job.status = {0}".format(job.status))
                     job.exception_message = job_status['message']
                     # Might not have a uuid or output if an exception was raised early on or if there is just no output available
                     try:
@@ -229,11 +260,13 @@ def getJobStatus(service, number, job):
 
                 elif job_status['status'] == 'pending':
                     job.status = 'Pending'
+                    logging.debug("status.getJobStatus() job.status = {0}".format(job.status))
                 else:
                     # The state gives more fine-grained results, like if the job is being re-run, but
                     #  we don't bother the users with this info, we just tell them that it is still running.
                     job.status = 'Running'
-                               
+                    logging.debug("status.getJobStatus() job.status = {0}".format(job.status))
+
         job.put()
         logging.debug('status.getJobStatus() job.status = {0}'.format(job.status))
         logging.debug('*'*80)
@@ -246,6 +279,5 @@ def getJobStatus(service, number, job):
                     "uuid" : job.cloudDatabaseID,
                     "output_stored": job.output_stored if hasattr(job, 'output_stored') else None,
                     "resource": job.resource,
-                    "number" : number,
                     "id" : job.key().id()}
 
