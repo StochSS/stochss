@@ -167,31 +167,32 @@ def getJobStatus(service, number, job):
         file_to_check = "{0}/return_code".format(job.outData)
         logging.debug('status.getJobStatus() file_to_check={0}'.format(file_to_check))
         logging.debug('status.getJobStatus() job.outData={0}'.format(job.outData))
-        if job.resource.lower() == "local" or job.outData is not None:
-            job_status_found = False
-            if job.resource.lower() == "local":
-                # First, check if the job is still running
-                res = service.checkTaskStatusLocal([job.pid])
-                if res[job.pid] and job.pid:
-                    job.status = "Running"
-                    job_status_found = True
-            if not job_status_found:
-                if not os.path.exists(file_to_check):
-                    job.status = "Failed"
-                else:
-                    try:
-                        with open(file_to_check) as fd:
-                            return_code = fd.readline()
-                            logging.debug('status.getJobStatus() file_to_check={0} return_code={1}'.format(file_to_check, return_code))
-                            if int(return_code) == 0:
-                                job.status = "Finished"
-                            else:
-                                job.status = "Failed"
-                    except Exception as e:
-                        logging.exception(e)
+        if job.outData is not None and os.path.exists(file_to_check):
+            # job finished
+            try:
+                with open(file_to_check) as fd:
+                    return_code = fd.readline()
+                    logging.debug('status.getJobStatus() file_to_check={0} return_code={1}'.format(file_to_check, return_code))
+                    if int(return_code) == 0:
+                        job.status = "Finished"
+                    else:
                         job.status = "Failed"
+            except Exception as e:
+                logging.exception(e)
+                job.status = "Failed"
+    
+        elif job.resource.lower() == "local":
+            # running Locally
+            # check if the job is still running
+            res = service.checkTaskStatusLocal([job.pid])
+            if res[job.pid] and job.pid:
+                job.status = "Running"
+            else:
+                job.status = "Failed"
+
 
         elif job.resource in backendservices.SUPPORTED_CLOUD_RESOURCES:
+            # running in cloud
             task_status = service.describeTasks(job)
             logging.info('status.getJobStatus()  task_status =\n{}'.format(pprint.pformat(task_status)))
 

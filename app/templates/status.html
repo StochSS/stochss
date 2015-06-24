@@ -243,7 +243,8 @@
                                 {% endif %}
                             </td>
                             <td>
-                                {% if job.status|lower == "running" or job.status|lower == "finished" %}
+                                <a href="/stochoptim/{{job.id}}">View Progress</a>
+                                <!--{% if job.status|lower == "running" or job.status|lower == "finished" %}
                                 <a href="/stochoptim/{{job.id}}">View Progress</a>
                                 {% else %}
                                 {% if job.status|lower == "finished" %}
@@ -253,7 +254,7 @@
                                 <a href="/stochoptim/{{job.id}}">View Progress</a>
                                 {% endif %}
                                 {% endif %}
-                                {% endif %}
+                                {% endif %}-->
                             </td>
                             
                         </tr>
