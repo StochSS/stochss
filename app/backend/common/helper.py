@@ -65,7 +65,7 @@ def start_celery_on_vm(instance_type, ip, key_file, agent_type,
     # Start the shutdown-monitor
     if agent_type == AgentTypes.EC2:
         commands.append('python /home/ubuntu/stochss/app/backend/tasks.py shutdown-monitor &' + \
-                        "celery -A tasks worker -Q {q1},{q2} -n {worker_name} --autoreload --pool=solo --loglevel={log_level} --workdir /home/{username} > /home/{username}/celery.log 2>&1".format(
+                        "celery -A tasks worker -Q {q1},{q2} -n {worker_name} --autoreload --loglevel={log_level} --workdir /home/{username} > /home/{username}/celery.log 2>&1".format(
                             q1=CeleryConfig.get_queue_name(agent_type=agent_type),
                             q2=CeleryConfig.get_queue_name(agent_type=agent_type, instance_type=instance_type),
                             log_level=log_level,
@@ -74,7 +74,7 @@ def start_celery_on_vm(instance_type, ip, key_file, agent_type,
         )
     else:
         commands.append(
-            "celery -A tasks worker -Q {q1},{q2} -n {worker_name} --autoreload --pool=solo --loglevel={log_level} --workdir /home/{username} > /home/{username}/celery.log 2>&1".format(
+            "celery -A tasks worker -Q {q1},{q2} -n {worker_name} --autoreload --loglevel={log_level} --workdir /home/{username} > /home/{username}/celery.log 2>&1".format(
                 q1=CeleryConfig.get_queue_name(agent_type=agent_type),
                 q2=CeleryConfig.get_queue_name(agent_type=agent_type, instance_type=instance_type),
                 log_level=log_level,
