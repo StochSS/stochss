@@ -272,11 +272,14 @@ class backendservices(object):
         try:
             result = database.describetask(job.cloudDatabaseID, JobDatabaseConfig.TABLE_NAME)
 
-            if result is not None and job.cloudDatabaseID in result and result[job.cloudDatabaseID]['status'] == 'active' and job.resource == self.EC2_CLOUD_RESOURCE:
+            if result is not None and job.cloudDatabaseID in result and result[job.cloudDatabaseID]['status'] == 'active' and job.resource in self.SUPPORTED_CLOUD_RESOURCES:
                 try:
                     celery_app = CelerySingleton().app
                     result2 = AsyncResult(job.celeryPID)
                     logging.debug('describeTasks(): AsyncResult.status = {0}'.format(result2.status))
+                    logging.debug('describeTasks(): AsyncResult.failed() = {0}'.format(result2.failed()))
+                    logging.debug('describeTasks(): AsyncResult.ready() = {0}'.format(result2.ready()))
+                    #if result2.failed() or (job.status.lower() != 'pending'):
                     if result2.failed():
                         result[job.cloudDatabaseID]["status"] = "failed"
                 except Exception as e:
@@ -890,7 +893,7 @@ class backendservices(object):
                 os.system(fetch_url_cmd_str)
 
             else:
-                logging.error('Invalid output url!')
+                logging.error('Invalid output url "{0}"'.format(outputurl))
                 return False
 
             if not os.path.exists(filename):

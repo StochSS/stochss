@@ -58,11 +58,9 @@
                             <td>
                                 {% if job.status == "Running" or job.status == "Finished" %}
                                 <span style="color: green" class="create_msg">{{job.status}}</span>
-                                {% endif %}
-                                {% if job.status == "Pending" %}
+                                {% elif job.status == "Pending" %}
                                 <span style="color: orange" class="create_msg">{{job.status}}</span>
-                                {% endif %}
-                                {% if job.status == "Failed" or job.status == "Unknown" or job.status == "Inaccessible" %}
+                                {% else %}
                                 <span style="color: red" class="create_msg">{{job.status}}</span>
                                 {% endif %}
                             </td>
@@ -115,11 +113,9 @@
                             <td>
                                 {% if job.status == "Running" or job.status == "Finished" %}
                                 <span style="color: green" class="create_msg">{{job.status}}</span>
-                                {% endif %}
-                                {% if job.status == "Pending" %}
+                                {% elif job.status == "Pending" %}
                                 <span style="color: orange" class="create_msg">{{job.status}}</span>
-                                {% endif %}
-                                {% if job.status == "Failed" or job.status == "Unknown" or job.status == "Inaccessible" %}
+                                {% else %}
                                 <span style="color: red" class="create_msg">{{job.status}}</span>
                                 {% endif %}
                             </td>
@@ -171,11 +167,9 @@
                             <td>
                                 {% if job.status == "Running" or job.status == "Finished" %}
                                 <span style="color: green" class="create_msg">{{job.status}}</span>
-                                {% endif %}
-                                {% if job.status == "Pending" %}
+                                {% elif job.status == "Pending" %}
                                 <span style="color: orange" class="create_msg">{{job.status}}</span>
-                                {% endif %}
-                                {% if job.status == "Failed" or job.status == "Unknown" or job.status == "Inaccessible" %}
+                                {% else %}
                                 <span style="color: red" class="create_msg">{{job.status}}</span>
                                 {% endif %}
                             </td>
@@ -215,10 +209,10 @@
                         {% for job in allParameterJobs %}
                         <tr>
                             <td>
-                                {% if job.status|lower == "finished" or job.status|lower == "failed" %}
-                                <a href="javascript:void(0)" onclick="deleteJob('/stochoptim?reqType=delJob&id={{job.id}}');">Delete</a>
-                                {% else %}
+                                {% if job.status|lower == "pending" or job.status|lower == "running" %}
                                 <a href="javascript:void(0)" onclick="deleteJob('/stochoptim?reqType=stopJob&id={{job.id}}', deleting = false);">Stop</a>
+                                {% else %}
+                                <a href="javascript:void(0)" onclick="deleteJob('/stochoptim?reqType=delJob&id={{job.id}}');">Delete</a>
                                 {% endif %}
                             </td>
                             <td>
@@ -233,12 +227,9 @@
                             <td>
                                 {% if job.status|lower == "running" or job.status|lower == "finished" %}
                                 <span style="color: green" class="create_msg">{{job.status}}</span>
-                               
-                                {% endif %}
-                                {% if job.status|lower == "pending" %}
+                                {% elif job.status|lower == "pending" %}
                                 <span style="color: orange" class="create_msg">{{job.status}}</span>
-                                {% endif %}
-                                {% if job.status|lower == "failed" or job.status|lower == "unknown" or job.status == "Inaccessible" %}
+                                {% else %}
                                 <span style="color: red" class="create_msg">{{job.status}}</span>
                                 {% endif %}
                             </td>
@@ -291,11 +282,9 @@
                                 {% if job.status == "Running" or job.status == "Finished" %}
                                 <span style="color: green" class="create_msg">{{job.status}}</span>
                                
-                                {% endif %}
-                                {% if job.status == "Pending" %}
+                                {% elif job.status == "Pending" %}
                                 <span style="color: orange" class="create_msg">{{job.status}}</span>
-                                {% endif %}
-                                {% if job.status == "Failed" or job.status == "Unknown" or job.status == "Inaccessible" %}
+                                {% else %}
                                 <span style="color: red" class="create_msg">{{job.status}}</span>
                                 {% endif %}
                             </td>
