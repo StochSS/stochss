@@ -54,6 +54,27 @@ class StochOptimJobWrapper(db.Model):
             if self.resource is not None and self.resource.lower() == "local":
                 service.stopTaskLocal([int(self.pid)])
             elif self.resource in backendservices.SUPPORTED_CLOUD_RESOURCES:
+                # Write the finalized file
+                if self.outData is None or not os.path.exists(self.outData):
+                    self.outData = os.path.abspath(
+                        os.path.dirname(os.path.abspath(__file__))+'/../output/'+self.cloudDatabaseID
+                    )
+                    try:
+                        logging.debug('stochoptim_job.stop() outData is None, makeing direcotry = {0}'.format(self.outData))
+                        os.mkdir(self.outData)
+                    except Exception as e:
+                        logging.exception(e)
+                        #TODO, comment out above
+                        #pass
+                else:
+                    logging.debug('stochoptim_job.stop() outData is not None, = {0}'.format(self.outData))
+                try:
+                    file_to_check = "{0}/return_code".format(self.outData)
+                    if not os.path.exists(file_to_check):
+                        with open(file_to_check,'w+') as fd:
+                            fd.write(str(1))
+                except Exception as e:
+                    logging.exception(e)
                 result = service.stopTasks(self)
                 if result and result[self.cloudDatabaseID]:
                     final_cloud_result = result[self.cloudDatabaseID]
