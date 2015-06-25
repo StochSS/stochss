@@ -206,11 +206,11 @@ class StochOptimPage(BaseHandler):
 
             if job.user_id == self.user.user_id():
                 if job.resource in backendservices.SUPPORTED_CLOUD_RESOURCES:
-                    try:
-                        logging.info("Stopping StochOptim poll task pid={0}".format(job.pollProcessPID))
-                        os.kill(job.pollProcessPID, signal.SIGTERM)
-                    except Exception as e:
-                        logging.error("StochOptimPage.post.stopJob(): exception during kill process: {0}".format(e))
+#                    try:
+#                        logging.info("Stopping StochOptim poll task pid={0}".format(job.pollProcessPID))
+#                        os.kill(job.pollProcessPID, signal.SIGTERM)
+#                    except Exception as e:
+#                        logging.error("StochOptimPage.post.stopJob(): exception during kill process: {0}".format(e))
                     success = job.stop(self)
                     if not success:
                         return self.response.write(json.dumps({
@@ -434,7 +434,7 @@ class StochOptimPage(BaseHandler):
             job.cloudDatabaseID = cloud_result["db_id"]
             job.resource = cloud_result['resource']
             job.celeryPID = cloud_result["celery_pid"]
-            job.pollProcessPID = int(cloud_result["poll_process_pid"])
+#            job.pollProcessPID = int(cloud_result["poll_process_pid"])
             # job.pid = handle.pid
             job.put()
         except Exception as e:

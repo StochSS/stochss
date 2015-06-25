@@ -217,7 +217,7 @@ class FlexVMState(object):
         commands.append(python_path)
 
         commands.append(
-            "celery -A tasks worker -Q {q1},{q2} -n {worker_name} --autoreload --loglevel={log_level} --workdir {workdir} > {celery_log} 2>&1".format(
+            "celery -A tasks worker -Q {q1},{q2} -n {worker_name} --autoreload --pool=solo --loglevel={log_level} --workdir {workdir} > {celery_log} 2>&1".format(
                 q1=CeleryConfig.get_queue_name(agent_type=AgentTypes.FLEX),
                 q2=CeleryConfig.get_queue_name(agent_type=AgentTypes.FLEX, instance_type=instance_type),
                 log_level=celery_log_level,
