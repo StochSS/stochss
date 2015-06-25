@@ -581,14 +581,14 @@ class StochOptimVisualization(BaseHandler):
             # check if the outputURL is empty, if so, update it from the DB
             logging.debug("stochoptim.__fetch_cloud_output() stochoptim.outputURL={0}".format(job_wrapper.outputURL))
             if job_wrapper.outputURL is None or job_wrapper.outputURL == '':
-
-
                 task_status = service.describeTasks(job_wrapper)
                 logging.debug("stochoptim.__fetch_cloud_output() job_status = task_status[job.cloudDatabaseID={0}] = {1}".format(
                                                             job_wrapper.cloudDatabaseID, task_status))
-                job_status = task_status[job_wrapper.cloudDatabaseID]
-                logging.debug("stochoptim.__fetch_cloud_output() job_status = {0}".format(job_status))
-                job_wrapper.outputURL = job_status['output']
+                if task_status is not None and job_wrapper.cloudDatabaseID in task_status:
+                    job_status = task_status[job_wrapper.cloudDatabaseID]
+                    logging.debug("stochoptim.__fetch_cloud_output() job_status = {0}".format(job_status))
+                    if 'output' in job_status:
+                        job_wrapper.outputURL = job_status['output']
 
 
             # Grab the remote files

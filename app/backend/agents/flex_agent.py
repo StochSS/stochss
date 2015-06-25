@@ -118,31 +118,30 @@ class FlexAgent(BaseAgent):
         return public_ips, private_ips, instance_ids, instance_types, keyfiles, usernames
 
     def __deregister_flex_vm(self, ip, username, keyfile, parameters, queue_head_ip, force=False):
-        # deregister_command = self.get_remote_command_string(ip=ip, username=username, keyfile=keyfile,
-        # command="sudo ~/stochss/release-tools/flex-cloud/deregister_flex_vm.sh")
-        #
-        # logging.debug('deregister_command =\n{}'.format(deregister_command))
-        # os.system(deregister_command)
 
         try:
-            url = "https://{ip}/deregister".format(ip=ip)
-            data = json.dumps({
-                'queue_head_ip': queue_head_ip
-            })
-            req = urllib2.Request(url=url, data=data, headers={'Content-Type': 'application/json'})
-            f = urllib2.urlopen(req, timeout=10)
-            response = json.loads(f.read())
-            f.close()
-
-            logging.debug('Full Deregister Response:\n{}'.format(pprint.pformat(response)))
-            if response['status'] == 'success':
-                logging.debug('Successfully deregistered Flex VM with ip={}'.format(ip))
-            else:
-                logging.debug('Failed to deregister Flex VM with ip={}'.format(ip))
+            deregister_command = self.get_remote_command_string(ip=ip, username=username, keyfile=keyfile,
+            command="sudo ~/stochss/release-tools/flex-cloud/deregister_flex_vm.sh")
+            logging.debug('deregister_command =\n{}'.format(deregister_command))
+            os.system(deregister_command)
+#            url = "https://{ip}/deregister".format(ip=ip)
+#            data = json.dumps({
+#                'queue_head_ip': queue_head_ip
+#            })
+#            req = urllib2.Request(url=url, data=data, headers={'Content-Type': 'application/json'})
+#            f = urllib2.urlopen(req, timeout=10)
+#            response = json.loads(f.read())
+#            f.close()
+#
+#            logging.debug('Full Deregister Response:\n{}'.format(pprint.pformat(response)))
+#            if response['status'] == 'success':
+#                logging.debug('Successfully deregistered Flex VM with ip={}'.format(ip))
+#            else:
+#                logging.debug('Failed to deregister Flex VM with ip={}'.format(ip))
 
         except Exception as e:
-            logging.error('Failed to deregister Flex VM: '.format(str(e)))
-            logging.error(sys.exc_info())
+            logging.exception('Failed to deregister Flex VM: {0}'.format(e))
+#            logging.error(sys.exc_info())
 
         finally:
             VMStateModel.set_state(params=parameters, ins_ids=[self.__get_flex_instance_id(public_ip=ip)],
