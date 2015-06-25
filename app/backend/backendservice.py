@@ -893,7 +893,7 @@ class backendservices(object):
                 os.system(fetch_url_cmd_str)
 
             else:
-                logging.error('Invalid output url!')
+                logging.error('Invalid output url "{0}"'.format(outputurl))
                 return False
 
             if not os.path.exists(filename):

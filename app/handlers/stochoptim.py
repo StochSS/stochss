@@ -438,9 +438,9 @@ class StochOptimPage(BaseHandler):
             # job.pid = handle.pid
             job.put()
         except Exception as e:
-            job.delete(self)
-
-            raise e
+            job.status='Failed'
+            job.delete()
+            raise
 
         return job
 
@@ -465,7 +465,24 @@ class StochOptimVisualization(BaseHandler):
 
         service = backend.backendservice.backendservices(self.user_data)
 
-        result = status.getJobStatus(service, 0, optimization)
+        # Might need to download the cloud data
+        if optimization.resource in backendservices.SUPPORTED_CLOUD_RESOURCES:
+#            if optimization.status == "Finished":
+            if optimization.status == "Finished" and optimization.has_final_cloud_data():
+                # Nothing to do here
+                pass
+            else:
+                # Download the final data and mark it finished
+                cloud_result = self.__fetch_cloud_output(optimization)
+                if cloud_result["status"]:
+                    optimization.mark_final_cloud_data()
+                else:
+                    logging.info("Failed to download final output data of {0} with reason {1}".format(
+                        optimization.name,
+                        cloud_result["msg"]
+                    ))
+
+        result = status.getJobStatus(service, optimization)
 
         try:
             fd = os.open("{0}/stdout".format(optimization.outData), os.O_RDONLY)
@@ -558,14 +575,14 @@ class StochOptimVisualization(BaseHandler):
             service = backend.backendservice.backendservices(self.user_data)
             # check if the outputURL is empty, if so, update it from the DB
             if job_wrapper.outputURL is None:
-                logging.debug("stochoptim.outputURL is None")
+                logging.debug("stochoptim.__fetch_cloud_output() stochoptim.outputURL is None")
 
 
                 task_status = service.describeTasks(job_wrapper)
-                logging.debug("job_status = task_status[job.cloudDatabaseID={0}] = {1}".format(
+                logging.debug("stochoptim.__fetch_cloud_output() job_status = task_status[job.cloudDatabaseID={0}] = {1}".format(
                                                             job_wrapper.cloudDatabaseID, task_status))
                 job_status = task_status[job_wrapper.cloudDatabaseID]
-                logging.debug("job_status = {0}".format(job_status))
+                logging.debug("stochoptim.__fetch_cloud_output() job_status = {0}".format(job_status))
                 job_wrapper.outputURL = job_status['output']
 
 

@@ -236,16 +236,7 @@ def getJobStatus(service, job):
                     job.outputURL = job_status['output']
                     job.uuid = job_status['uuid']
                     job.status = 'Finished'
-                    if job.outData is None:
-                        job.status = 'Finished'
-                        logging.debug("status.getJobStatus() job.status = {0}".format(job.status))
-                    else:
-                        if os.path.exists(file_to_check):
-                            job.status = "Finished"
-                            logging.debug("status.getJobStatus() job.status = {0}".format(job.status))
-                        else:
-                            job.status = "Failed"
-                            logging.debug("status.getJobStatus() job.status = {0}".format(job.status))
+                    logging.debug("status.getJobStatus() job.status = {0}".format(job.status))
 
                 elif job_status['status'] == 'failed':
                     job.status = 'Failed'
