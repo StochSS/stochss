@@ -171,21 +171,14 @@ class StatusPage(BaseHandler):
 
 
 def getJobStatus(service, job):
-        logging.debug('*'*80)
-        logging.debug('*'*80)
         logging.debug('status.getJobStatus() job = {0}'.format(job))
         logging.debug('status.getJobStatus() job.status={0} job.resource={1} job.outData={2}'.format(job.status, job.resource, job.outData))
-        logging.debug('status.getJobStatus() job.indata = {0}'.format(job.indata))
-        logging.debug('status.getJobStatus() type(job.indata) = {0}'.format(type(job.indata)))
         indata = json.loads(job.indata)
         file_to_check = "{0}/return_code".format(job.outData)
         logging.debug('status.getJobStatus() file_to_check={0}'.format(file_to_check))
         logging.debug('status.getJobStatus() job.outData={0}'.format(job.outData))
         if job.resource is None:
-            logging.debug('status.getJobStatus() job = {0}'.format(job))
-            logging.debug('status.getJobStatus() job.resource = {0}'.format(job.resource))
-            #raise Exception("job.resource is None, job is broken")
-            return { "status" : job.message,
+            return { "status" : 'Error',
                     "name" : job.name,
                     "uuid" : job.cloudDatabaseID,
                     "output_stored": None,
@@ -259,9 +252,6 @@ def getJobStatus(service, job):
                     logging.debug("status.getJobStatus() job.status = {0}".format(job.status))
 
         job.put()
-        logging.debug('status.getJobStatus() job.status = {0}'.format(job.status))
-        logging.debug('*'*80)
-        logging.debug('*'*80)
         
          
 

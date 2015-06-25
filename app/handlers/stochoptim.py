@@ -439,7 +439,7 @@ class StochOptimPage(BaseHandler):
             job.put()
         except Exception as e:
             job.status='Failed'
-            job.delete()
+            job.delete(self)
             raise
 
         return job
@@ -469,18 +469,21 @@ class StochOptimVisualization(BaseHandler):
         if optimization.resource in backendservices.SUPPORTED_CLOUD_RESOURCES:
 #            if optimization.status == "Finished":
             if optimization.status == "Finished" and optimization.has_final_cloud_data():
-                # Nothing to do here
+                # Nothing more to do
                 pass
-            else:
+            elif optimization.status == "Finished" and not optimization.has_final_cloud_data():
                 # Download the final data and mark it finished
                 cloud_result = self.__fetch_cloud_output(optimization)
                 if cloud_result["status"]:
                     optimization.mark_final_cloud_data()
-                else:
-                    logging.info("Failed to download final output data of {0} with reason {1}".format(
-                        optimization.name,
-                        cloud_result["msg"]
-                    ))
+            else:
+                # Download current progress
+                cloud_result = self.__fetch_cloud_output(optimization)
+#                else:
+#                    logging.error("Failed to download final output data of {0} with reason {1}".format(
+#                        optimization.name,
+#                        cloud_result["msg"]
+#                    ))
 
         result = status.getJobStatus(service, optimization)
 
@@ -570,12 +573,14 @@ class StochOptimVisualization(BaseHandler):
     
     def __fetch_cloud_output(self, job_wrapper):
         result = {}
+        
+        logging.debug('stochoptim.__fetch_cloud_output(): job={0}'.format(job_wrapper))
 
         try:
             service = backend.backendservice.backendservices(self.user_data)
             # check if the outputURL is empty, if so, update it from the DB
-            if job_wrapper.outputURL is None:
-                logging.debug("stochoptim.__fetch_cloud_output() stochoptim.outputURL is None")
+            logging.debug("stochoptim.__fetch_cloud_output() stochoptim.outputURL={0}".format(job_wrapper.outputURL))
+            if job_wrapper.outputURL is None or job_wrapper.outputURL == '':
 
 
                 task_status = service.describeTasks(job_wrapper)
@@ -587,23 +592,29 @@ class StochOptimVisualization(BaseHandler):
 
 
             # Grab the remote files
+            logging.debug('stochoptim.__fetch_cloud_output(): job_wrapper.cloudDatabaseID={0}'.format(job_wrapper.cloudDatabaseID))
+            logging.debug('stochoptim.__fetch_cloud_output(): job_wrapper.outputURL={0}'.format(job_wrapper.outputURL))
             service.fetchOutput(job_wrapper.cloudDatabaseID, job_wrapper.outputURL)
             # Unpack it to its local output location...
-            os.system('tar -xf' +job_wrapper.cloudDatabaseID+'.tar')
-            job_wrapper.outData = os.path.abspath(
-                os.path.dirname(os.path.abspath(__file__))+'/../output/'+job_wrapper.cloudDatabaseID
-            )
+            try:
+                os.system('tar -xf' +job_wrapper.cloudDatabaseID+'.tar')
+                job_wrapper.outData = os.path.abspath(
+                    os.path.dirname(os.path.abspath(__file__))+'/../output/'+job_wrapper.cloudDatabaseID
+                )
 
-            # Clean up
-            os.remove(job_wrapper.cloudDatabaseID+'.tar')
-
+                # Clean up
+                os.remove(job_wrapper.cloudDatabaseID+'.tar')
+            except Exception as e:
+                logging.exception('stochoptim.__fetch_cloud_output():  caught exeption {0}'.format(e))
+    
             # Save the updated status
             job_wrapper.put()
             result['status']=True
             result['msg'] = "Successfully fetched the remote output files."
 
         except Exception as e:
-            logging.info('StochOptim: Failed to fetch the remote files. {0}'.format(e))
+            logging.debug('stochoptim.__fetch_cloud_output():  caught exeption {0}'.format(e))
+            logging.exception('StochOptim: Failed to fetch the remote files. {0}'.format(e))
             result['status']=False
             result['msg'] = "Failed to fetch the remote files."
         return result
