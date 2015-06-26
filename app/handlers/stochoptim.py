@@ -206,11 +206,11 @@ class StochOptimPage(BaseHandler):
 
             if job.user_id == self.user.user_id():
                 if job.resource in backendservices.SUPPORTED_CLOUD_RESOURCES:
-                    try:
-                        logging.info("Stopping StochOptim poll task pid={0}".format(job.pollProcessPID))
-                        os.kill(job.pollProcessPID, signal.SIGTERM)
-                    except Exception as e:
-                        logging.error("StochOptimPage.post.stopJob(): exception during kill process: {0}".format(e))
+#                    try:
+#                        logging.info("Stopping StochOptim poll task pid={0}".format(job.pollProcessPID))
+#                        os.kill(job.pollProcessPID, signal.SIGTERM)
+#                    except Exception as e:
+#                        logging.error("StochOptimPage.post.stopJob(): exception during kill process: {0}".format(e))
                     success = job.stop(self)
                     if not success:
                         return self.response.write(json.dumps({
@@ -434,7 +434,7 @@ class StochOptimPage(BaseHandler):
             job.cloudDatabaseID = cloud_result["db_id"]
             job.resource = cloud_result['resource']
             job.celeryPID = cloud_result["celery_pid"]
-            job.pollProcessPID = int(cloud_result["poll_process_pid"])
+#            job.pollProcessPID = int(cloud_result["poll_process_pid"])
             # job.pid = handle.pid
             job.put()
         except Exception as e:
@@ -581,14 +581,14 @@ class StochOptimVisualization(BaseHandler):
             # check if the outputURL is empty, if so, update it from the DB
             logging.debug("stochoptim.__fetch_cloud_output() stochoptim.outputURL={0}".format(job_wrapper.outputURL))
             if job_wrapper.outputURL is None or job_wrapper.outputURL == '':
-
-
                 task_status = service.describeTasks(job_wrapper)
                 logging.debug("stochoptim.__fetch_cloud_output() job_status = task_status[job.cloudDatabaseID={0}] = {1}".format(
                                                             job_wrapper.cloudDatabaseID, task_status))
-                job_status = task_status[job_wrapper.cloudDatabaseID]
-                logging.debug("stochoptim.__fetch_cloud_output() job_status = {0}".format(job_status))
-                job_wrapper.outputURL = job_status['output']
+                if task_status is not None and job_wrapper.cloudDatabaseID in task_status:
+                    job_status = task_status[job_wrapper.cloudDatabaseID]
+                    logging.debug("stochoptim.__fetch_cloud_output() job_status = {0}".format(job_status))
+                    if 'output' in job_status:
+                        job_wrapper.outputURL = job_status['output']
 
 
             # Grab the remote files

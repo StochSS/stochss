@@ -378,6 +378,12 @@ def master_task(task_id, params, database, storage_agent):
         result = {
             'uuid': task_id
         }
+        try:
+            import multiprocessing
+            core_count = multiprocessing.cpu_count()
+            params["paramstring"] += " --cores {0}".format(core_count)
+        except Exception as e:
+            logging.exception(e)
         paramstr = params['paramstring']
         output_dir = "output/{0}".format(task_id)
         return_code_file = "output/{0}/return_code".format(task_id)

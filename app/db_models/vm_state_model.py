@@ -202,6 +202,26 @@ class VMStateModel(db.Model):
             logging.error("Error in updating 'creating' vms to 'failed' in db! {0}".format(e))
 
     @staticmethod
+    def cleanup_flex_old_flex_entries(user_id):
+        '''
+        update all flex vms that , and delete those entried
+        Args
+            params
+        '''
+        logging.debug('cleanup_flex_old_flex_entries()')
+        try:
+            if user_id != None:
+                entities = VMStateModel.all()
+                entities.filter('user_id =', user_id)
+                entities.filter('infra = ', 'flex')
+                for e in entities:
+                    logging.debug('Deleting {0}'.format(e.ins_type))
+                    e.delete()
+
+        except Exception as e:
+            logging.exception("Error deleteing flex VMStateModel entities in db {0}".format(e))
+
+    @staticmethod
     def delete_terminated(user_id):
         '''
         update all vms that are in 'terminated' state, and delete those entried

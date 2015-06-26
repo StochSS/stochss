@@ -131,6 +131,8 @@ class FlexCredentialsPage(BaseHandler):
             self.user_data.flex_cloud_info_msg = 'Error when deregistering Flex Cloud'
             self.user_data.put()
 
+        logging.debug("Cleaning up old flex-cloud entries in the DB")
+        VMStateModel.cleanup_flex_old_flex_entries(user_id)
 
         self.redirect('/flexCloudCredentials')
 
