@@ -787,6 +787,7 @@ class backendservices(object):
         result = {}
         #Check all infrastructures
         for job_id, output_url in output_urls.items():
+            print job_id, output_url
             if output_url.startswith('scp://'):
                 match_object = re.search(pattern='scp://([^:@]+)@([^:@]+):([^:@]+):([^:@]+)', string = output_url)
                 username = match_object.group(1)
