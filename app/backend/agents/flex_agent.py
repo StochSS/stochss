@@ -298,115 +298,119 @@ class FlexAgent(BaseAgent):
         Returns:
           A tuple of the form (instances, public_ips, private_ips)
         """
-        logging.debug('prepare_instances')
+        logging.debug('flex_agent.prepare_instances()')
+        try:
 
-        flex_cloud_machine_info = parameters[self.PARAM_FLEX_CLOUD_MACHINE_INFO]
-        logging.debug('flex_cloud_machine_info =\n{}'.format(pprint.pformat(flex_cloud_machine_info)))
+            flex_cloud_machine_info = parameters[self.PARAM_FLEX_CLOUD_MACHINE_INFO]
+            logging.debug('flex_cloud_machine_info =\n{}'.format(pprint.pformat(flex_cloud_machine_info)))
 
-        queue_head = parameters[self.PARAM_FLEX_QUEUE_HEAD]
-        logging.debug('queue_head = {}'.format(queue_head))
-        queue_head_keyfile = queue_head['keyfile']
-        remote_queue_head_keyfile = os.path.join(FlexConfig.QUEUE_HEAD_KEY_DIR,
-                                                 os.path.basename(queue_head_keyfile))
+            queue_head = parameters[self.PARAM_FLEX_QUEUE_HEAD]
+            logging.debug('queue_head = {}'.format(queue_head))
+            queue_head_keyfile = queue_head['keyfile']
+            remote_queue_head_keyfile = os.path.join(FlexConfig.QUEUE_HEAD_KEY_DIR,
+                                                     os.path.basename(queue_head_keyfile))
 
-        for machine in flex_cloud_machine_info:
-            ip = machine['ip']
-            keyfile = machine['keyfile']
+            for machine in flex_cloud_machine_info:
+                ip = machine['ip']
+                keyfile = machine['keyfile']
 
-            os.chmod(keyfile, int('600', 8))
+                os.chmod(keyfile, int('600', 8))
 
-            username = machine['username']
-            is_queue_head = machine[self.PARAM_QUEUE_HEAD]
-            id = self.__get_flex_instance_id(public_ip=ip)
+                username = machine['username']
+                is_queue_head = machine[self.PARAM_QUEUE_HEAD]
+                id = self.__get_flex_instance_id(public_ip=ip)
 
-            if not os.path.exists(keyfile):
-                logging.error('Keyfile: {0} does not exist!'.format(keyfile))
-                VMStateModel.set_state(params=parameters, ins_ids=[id],
-                                       state=VMStateModel.STATE_FAILED,
-                                       description=VMStateModel.DESCRI_INVALID_KEYFILE)
-                continue
+                if not os.path.exists(keyfile):
+                    logging.error('Keyfile: {0} does not exist!'.format(keyfile))
+                    VMStateModel.set_state(params=parameters, ins_ids=[id],
+                                           state=VMStateModel.STATE_FAILED,
+                                           description=VMStateModel.DESCRI_INVALID_KEYFILE)
+                    continue
 
-            logging.debug("[{0}] [{1}] [{2}] [is_queue_head:{3}]".format(ip, keyfile, username, is_queue_head))
+                logging.debug("[{0}] [{1}] [{2}] [is_queue_head:{3}]".format(ip, keyfile, username, is_queue_head))
 
-            scp_command = \
-                'scp -o \'StrictHostKeyChecking no\' -i {keyfile} {source} {target}'.format(
-                    keyfile=keyfile,
-                    source=queue_head_keyfile,
-                    target="{username}@{ip}:{remote_queue_head_keyfile}".format(
-                        username=username, ip=ip, remote_queue_head_keyfile=remote_queue_head_keyfile
+                scp_command = \
+                    'scp -o \'StrictHostKeyChecking no\' -i {keyfile} {source} {target}'.format(
+                        keyfile=keyfile,
+                        source=queue_head_keyfile,
+                        target="{username}@{ip}:{remote_queue_head_keyfile}".format(
+                            username=username, ip=ip, remote_queue_head_keyfile=remote_queue_head_keyfile
+                        )
                     )
-                )
 
-            logging.debug('scp command for queue head keyfile =\n{}'.format(scp_command))
-            res = os.system(scp_command)
-            if res != 0:
-                logging.error('scp for queue head keyfile failed!'.format(keyfile))
-                VMStateModel.set_state(params=parameters, ins_ids=[id],
-                                       state=VMStateModel.STATE_FAILED,
-                                       description=VMStateModel.DESCRI_FAIL_TO_PREPARE)
-                continue
+                logging.debug('scp command for queue head keyfile =\n{}'.format(scp_command))
+                res = os.system(scp_command)
+                if res != 0:
+                    logging.error('scp for queue head keyfile failed!'.format(keyfile))
+                    VMStateModel.set_state(params=parameters, ins_ids=[id],
+                                           state=VMStateModel.STATE_FAILED,
+                                           description=VMStateModel.DESCRI_FAIL_TO_PREPARE)
+                    continue
 
-            script_lines = []
-            script_lines.append("#!/bin/bash")
+                script_lines = []
+                script_lines.append("#!/bin/bash")
 
-            script_lines.append("echo export STOCHKIT_HOME={0} >> ~/.bashrc".format("~/stochss/StochKit/"))
-            script_lines.append("echo export STOCHKIT_ODE={0} >> ~/.bashrc".format("~/stochss/ode/"))
-            script_lines.append("echo export R_LIBS={0} >> ~/.bashrc".format("~/stochss/stochoptim/library"))
-            script_lines.append("echo export C_FORCE_ROOT=1 >> ~/.bashrc".format("~/stochss/stochoptim/library"))
-            script_lines.append("chmod 600 {remote_queue_head_keyfile}".format(
-                                                        remote_queue_head_keyfile=remote_queue_head_keyfile))
+                script_lines.append("echo export STOCHKIT_HOME={0} >> ~/.bashrc".format("~/stochss/StochKit/"))
+                script_lines.append("echo export STOCHKIT_ODE={0} >> ~/.bashrc".format("~/stochss/ode/"))
+                script_lines.append("echo export R_LIBS={0} >> ~/.bashrc".format("~/stochss/stochoptim/library"))
+                script_lines.append("echo export C_FORCE_ROOT=1 >> ~/.bashrc".format("~/stochss/stochoptim/library"))
+                script_lines.append("chmod 600 {remote_queue_head_keyfile}".format(
+                                                            remote_queue_head_keyfile=remote_queue_head_keyfile))
 
-            if is_queue_head:
-                logging.debug('Adding extra commands for configuring queue head...')
-                script_lines.append("sudo rabbitmqctl add_user stochss ucsb")
-                script_lines.append('sudo rabbitmqctl set_permissions -p / stochss ".*" ".*" ".*"')
+                if is_queue_head:
+                    logging.debug('Adding extra commands for configuring queue head...')
+                    script_lines.append("sudo rabbitmqctl add_user stochss ucsb")
+                    script_lines.append('sudo rabbitmqctl set_permissions -p / stochss ".*" ".*" ".*"')
 
-                reset_mysql_script = '~/stochss/release-tools/flex-cloud/reset_mysql_pwd.sh'
-                script_lines.append("sudo {reset_mysql_script} root {flex_db_password}".format(
-                    reset_mysql_script=reset_mysql_script,
-                    flex_db_password=parameters[self.PARAM_FLEX_DB_PASSWORD]))
+                    reset_mysql_script = '~/stochss/release-tools/flex-cloud/reset_mysql_pwd.sh'
+                    script_lines.append("sudo {reset_mysql_script} root {flex_db_password}".format(
+                        reset_mysql_script=reset_mysql_script,
+                        flex_db_password=parameters[self.PARAM_FLEX_DB_PASSWORD]))
 
-            bash_script = '\n'.join(script_lines)
-            logging.debug("\n\n\nbash_script =\n{0}\n\n\n".format(bash_script))
+                bash_script = '\n'.join(script_lines)
+                logging.debug("\n\n\nbash_script =\n{0}\n\n\n".format(bash_script))
 
-            bash_script_filename = os.path.join(AgentConfig.TMP_DIRNAME, 'stochss_init.sh')
-            with open(bash_script_filename, 'w') as bash_script_file:
-                bash_script_file.write(bash_script)
+                bash_script_filename = os.path.join(AgentConfig.TMP_DIRNAME, 'stochss_init.sh')
+                with open(bash_script_filename, 'w') as bash_script_file:
+                    bash_script_file.write(bash_script)
 
-            scp_command = 'scp -o \'StrictHostKeyChecking no\' -i {keyfile} {source} {target}'.format(
-                keyfile=keyfile,
-                source=bash_script_filename,
-                target="{username}@{ip}:~/stochss_init.sh".format(username=username,
-                                                                  ip=ip))
+                scp_command = 'scp -o \'StrictHostKeyChecking no\' -i {keyfile} {source} {target}'.format(
+                    keyfile=keyfile,
+                    source=bash_script_filename,
+                    target="{username}@{ip}:~/stochss_init.sh".format(username=username,
+                                                                      ip=ip))
 
-            logging.debug('scp command =\n{}'.format(scp_command))
-            res = os.system(scp_command)
+                logging.debug('scp command =\n{}'.format(scp_command))
+                res = os.system(scp_command)
 
-            os.remove(bash_script_filename)
+                os.remove(bash_script_filename)
 
-            if res != 0:
-                logging.error('scp failed!'.format(keyfile))
-                VMStateModel.set_state(params=parameters, ins_ids=[id],
-                                       state=VMStateModel.STATE_FAILED,
-                                       description=VMStateModel.DESCRI_FAIL_TO_PREPARE)
-                continue
+                if res != 0:
+                    logging.error('scp failed!'.format(keyfile))
+                    VMStateModel.set_state(params=parameters, ins_ids=[id],
+                                           state=VMStateModel.STATE_FAILED,
+                                           description=VMStateModel.DESCRI_FAIL_TO_PREPARE)
+                    continue
 
-            commands = ['chmod +x ~/stochss_init.sh',
-                        '~/stochss_init.sh']
-            command = ';'.join(commands)
+                commands = ['chmod +x ~/stochss_init.sh',
+                            '~/stochss_init.sh']
+                command = ';'.join(commands)
 
-            remote_command_string = self.get_remote_command_string(ip=ip, username=username,
-                                                                   keyfile=keyfile, command=command)
+                remote_command_string = self.get_remote_command_string(ip=ip, username=username,
+                                                                       keyfile=keyfile, command=command)
 
-            logging.debug('remote_command_string =\n{}'.format(remote_command_string))
-            res = os.system(remote_command_string)
+                logging.debug('remote_command_string =\n{}'.format(remote_command_string))
+                res = os.system(remote_command_string)
 
-            if res != 0:
-                logging.error('remote command failed!'.format(keyfile))
-                VMStateModel.set_state(params=parameters, ins_ids=[id],
-                                       state=VMStateModel.STATE_FAILED,
-                                       description=VMStateModel.DESCRI_FAIL_TO_PREPARE)
-                continue
+                if res != 0:
+                    logging.error('remote command failed!'.format(keyfile))
+                    VMStateModel.set_state(params=parameters, ins_ids=[id],
+                                           state=VMStateModel.STATE_FAILED,
+                                           description=VMStateModel.DESCRI_FAIL_TO_PREPARE)
+                    continue
+        except Exception as e:
+            logging.exception(e)
+            raise
 
 
     def handle_failure(self, msg):

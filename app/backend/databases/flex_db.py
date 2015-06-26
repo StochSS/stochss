@@ -140,7 +140,7 @@ class FlexDB(BaseDB):
 
                 db = self.__open_db_connection()
                 with closing(db.cursor()) as db_cursor:
-                    db_cursor.execute(create_schema_sql)
+                    db_cursor.execute(create_schema_sql, multi=True)
                 db.commit()
 
                 logging.debug('StochSS Schema creation successful!')

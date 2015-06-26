@@ -130,7 +130,7 @@ class VirtualMachine(object):
             self.__check_network_ports()
             self.__try_install_dependencies()
             self.__update_fenics()
-            self.__reboot_machine()
+            #self.__reboot_machine()
             self.__check_fenics_installation()
             self.__try_install_python_packages()
             self.__download_stochss_repo()
@@ -139,7 +139,7 @@ class VirtualMachine(object):
             self.__setup_job_db()
             self.__setup_flex_api_server()
             self.__test_flex_api_server()
-            self.__add_sudoer()
+            #self.__add_sudoer()
             # self.__cleanup_instance()
 
         except:
