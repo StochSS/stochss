@@ -115,7 +115,7 @@ class StochKitModelWrapper(db.Model):
         reactions = []
 
         mesheditor.setupMeshes(handler)
-        meshWrapperDb = db.GqlQuery("SELECT * FROM MeshWrapper WHERE userId = :1", handler.user.user_id()).get()
+        meshWrapperDb = db.GqlQuery("SELECT * FROM MeshWrapper WHERE user_id = :1", handler.user.user_id()).get()
 
         def fixName(name):
             if re.match('^[^a-zA-Z_]', name):
@@ -330,13 +330,13 @@ class ModelManager():
                 meshDbCurrent = mesheditor.MeshWrapper.get_by_id(modelWrap.spatial["mesh_wrapper_id"])
 
                 if createModel:
-                    if meshDbCurrent.userId != userID:
+                    if meshDbCurrent.user_id != userID:
                         meshDb = mesheditor.MeshWrapper()
 
-                        meshDb.userId = userID
+                        meshDb.user_id = userID
 
 
-                        names = [x.name for x in db.Query(mesheditor.MeshWrapper).filter('userId =', handler.user.user_id()).run()]
+                        names = [x.name for x in db.Query(mesheditor.MeshWrapper).filter('user_id =', handler.user.user_id()).run()]
                     
                         tmpName = meshDbCurrent.name
                         i = 0

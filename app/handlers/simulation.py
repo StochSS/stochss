@@ -151,6 +151,9 @@ class JobManager():
         jobWrap = StochKitJobWrapper()
         jobWrap.user_id = userID
         jobWrap.name = job['name']
+
+        if 'seed' not in job:
+            job['seed'] = -1
         
         jobWrap.modelName = job['modelName']
         # This is probably not a good idea...

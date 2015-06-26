@@ -22,7 +22,7 @@ from stochss.model import *
 #right here
 
 class MeshWrapper(db.Model):
-    userId = db.StringProperty()
+    user_id = db.StringProperty()
     name = db.StringProperty()
     description = db.TextProperty()
     meshFileId = db.IntegerProperty()
@@ -34,7 +34,7 @@ class MeshWrapper(db.Model):
     ghost = db.BooleanProperty()
 
     def toJSON(self, reduced = True):
-        return { "userId" : self.userId,
+        return { "user_id" : self.user_id,
                  "name" : self.name,
                  "description" : self.description,
                  "meshFileId" : self.meshFileId,
@@ -63,7 +63,7 @@ def int_or_float(s):
 class MeshManager():
     @staticmethod
     def getMeshes(handler):
-        meshes = db.GqlQuery("SELECT * FROM MeshWrapper WHERE userId = :1", handler.user.user_id()).run()
+        meshes = db.GqlQuery("SELECT * FROM MeshWrapper WHERE user_id = :1", handler.user.user_id()).run()
 
         output = []
 
@@ -89,8 +89,8 @@ class MeshManager():
             jsonMesh["undeletable"] = False
 
         # This basically says to prefer the userId in the input
-        if 'userId' in jsonMesh:
-            userId = jsonMesh['userId']
+        if 'user_id' in jsonMesh:
+            userId = jsonMesh['user_id']
         else:
             userId = handler.user.user_id()
 
@@ -101,7 +101,7 @@ class MeshManager():
             # Make sure name isn't taken, or build one that isn't taken
             if "name" in jsonMesh:
                 name = jsonMesh["name"]
-                usedNames = set([x.name for x in db.Query(MeshWrapper).filter('userId =', userId).run()])
+                usedNames = set([x.name for x in db.Query(MeshWrapper).filter('user_id =', userId).run()])
                 if name in usedNames:
                     if rename:
                         i = 1
@@ -115,7 +115,7 @@ class MeshManager():
 
             meshDb = MeshWrapper()
 
-        meshDb.userId = userId
+        meshDb.user_id = userId
         meshDb.name = name
         meshDb.description = jsonMesh["description"]
         meshDb.meshFileId = jsonMesh["meshFileId"]
@@ -247,7 +247,7 @@ def setupMeshes(handler):
                              'Unit sphere' : 'unit_sphere_with_membrane_mesh.xml' }
     
         converted = set()
-        for wrapper in db.GqlQuery("SELECT * FROM MeshWrapper WHERE userId = :1", handler.user.user_id()).run():
+        for wrapper in db.GqlQuery("SELECT * FROM MeshWrapper WHERE user_id = :1", handler.user.user_id()).run():
             converted.add(wrapper.name)
 
         for name in set(namesToFilenames.keys()) - converted:
@@ -278,7 +278,7 @@ def setupMeshes(handler):
             meshFileId = fileserver.FileManager.createFile(handler, "meshFiles", fileName, meshFile.read(), 777)
             meshFile.close()
             
-            meshDb.userId = handler.user.user_id()
+            meshDb.user_id = handler.user.user_id()
             meshDb.name = name
             meshDb.description = descriptions[fileName]
             meshDb.meshFileId = int(meshFileId)

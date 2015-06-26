@@ -184,20 +184,27 @@ def getJobStatus(service, job):
                     "output_stored": None,
                     "resource": None,
                     "id" : job.key().id()}
-        if job.outData is not None and os.path.exists(file_to_check):
+
+        return_code = None
+        try:
+            if os.path.exists(file_to_check):
+                with open(file_to_check, 'r') as fd:
+                    line = fd.readline().strip()
+                
+                    if len(line) > 0:
+                        return_code = int(line)
+        except Exception as e:
+            logging.exception(e)
+            job.status = "Failed"
+            
+
+        if job.outData is not None and return_code is not None:
             # job finished
-            try:
-                with open(file_to_check) as fd:
-                    return_code = fd.readline()
-                    logging.debug('status.getJobStatus() file_to_check={0} return_code={1}'.format(file_to_check, return_code))
-                    if int(return_code) == 0:
-                        job.status = "Finished"
-                    else:
-                        job.status = "Failed"
-            except Exception as e:
-                logging.exception(e)
+            logging.debug('status.getJobStatus() file_to_check={0} return_code={1}'.format(file_to_check, return_code))
+            if return_code == 0:
+                job.status = "Finished"
+            else:
                 job.status = "Failed"
-    
         elif job.resource.lower() == "local":
             # running Locally
             # check if the job is still running
